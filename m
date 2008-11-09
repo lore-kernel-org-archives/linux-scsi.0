@@ -1,22 +1,29 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 11990] New: Kernel hang in spin_unlock_irq from
-	scsi_request_fn from do_IRQ
-Date: Sun, 09 Nov 2008 09:22:47 -0600
-Message-ID: <1226244167.19841.3.camel@localhost.localdomain>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11990] Kernel hang in spin_unlock_irq from scsi_request_fn from do_IRQ
+Date: Sun,  9 Nov 2008 07:23:02 -0800 (PST)
+Message-ID: <20081109152302.1F873108056@picon.linux-foundation.org>
 References: <bug-11990-11613@http.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:39655 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754971AbYKIPWv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Nov 2008 10:22:51 -0500
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:53030 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754912AbYKIPXe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Nov 2008 10:23:34 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mA9FN2sI003592
+	for <linux-scsi@vger.kernel.org>; Sun, 9 Nov 2008 07:23:03 -0800
 In-Reply-To: <bug-11990-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugme-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org, yanmin_zhang@linux.intel.com
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=11990
+
+
+
+
+
+------- Comment #2 from anonymous@kernel-bugs.osdl.org  2008-11-09 07:22 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Sat, 2008-11-08 at 19:50 -0800, bugme-daemon@bugzilla.kernel.org
 wrote:
@@ -102,25 +109,29 @@ index f5d3b96..e09a661 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
 @@ -606,6 +606,7 @@ static void scsi_run_queue(struct request_queue *q)
- 		}
- 
- 		list_del_init(&sdev->starved_entry);
-+		starved_head = NULL;
- 		spin_unlock(shost->host_lock);
- 
- 		spin_lock(sdev->request_queue->queue_lock);
+                }
+
+                list_del_init(&sdev->starved_entry);
++               starved_head = NULL;
+                spin_unlock(shost->host_lock);
+
+                spin_lock(sdev->request_queue->queue_lock);
 @@ -620,6 +621,12 @@ static void scsi_run_queue(struct request_queue *q)
- 		spin_unlock(sdev->request_queue->queue_lock);
- 
- 		spin_lock(shost->host_lock);
-+		if (unlikely(!list_empty(&sdev->starved_entry)))
-+			/* 
-+			 * sdev got put back on the starved list
-+			 * so finish starved handling
-+			 */
-+			break;
- 	}
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- 
+                spin_unlock(sdev->request_queue->queue_lock);
+
+                spin_lock(shost->host_lock);
++               if (unlikely(!list_empty(&sdev->starved_entry)))
++                       /* 
++                        * sdev got put back on the starved list
++                        * so finish starved handling
++                        */
++                       break;
+        }
+        spin_unlock_irqrestore(shost->host_lock, flags);
 
 
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
