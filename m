@@ -1,23 +1,33 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 11898] mke2fs hang on AIC79 device.
-Date: Sun, 09 Nov 2008 09:47:17 -0600
-Message-ID: <1226245637.19841.7.camel@localhost.localdomain>
-References: <20081105040154.9690A108048@picon.linux-foundation.org>
-	 <1225898691.4703.32.camel@localhost.localdomain>
-	 <4911D6F2.2080309@cs.wisc.edu>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11898] mke2fs hang on AIC79 device.
+Date: Sun,  9 Nov 2008 07:47:56 -0800 (PST)
+Message-ID: <20081109154756.4AEC4108057@picon.linux-foundation.org>
+References: <bug-11898-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:58571 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755114AbYKIPrV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Nov 2008 10:47:21 -0500
-In-Reply-To: <4911D6F2.2080309@cs.wisc.edu>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:46482 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755152AbYKIPs1 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 9 Nov 2008 10:48:27 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mA9FluVK006012
+	for <linux-scsi@vger.kernel.org>; Sun, 9 Nov 2008 07:47:57 -0800
+In-Reply-To: <bug-11898-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=11898
+
+
+
+
+
+------- Comment #28 from anonymous@kernel-bugs.osdl.org  2008-11-09 07:47 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Wed, 2008-11-05 at 11:25 -0600, Mike Christie wrote:
 > James Bottomley wrote:
@@ -78,61 +88,67 @@ diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
 index f5d3b96..979e07a 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -567,15 +567,18 @@ static inline int scsi_host_is_busy(struct Scsi_Host *shost)
+@@ -567,15 +567,18 @@ static inline int scsi_host_is_busy(struct Scsi_Host
+*shost)
   */
  static void scsi_run_queue(struct request_queue *q)
  {
--	struct scsi_device *starved_head = NULL, *sdev = q->queuedata;
-+	struct scsi_device *tmp, *sdev = q->queuedata;
- 	struct Scsi_Host *shost = sdev->host;
-+	LIST_HEAD(starved_list);
- 	unsigned long flags;
- 
- 	if (scsi_target(sdev)->single_lun)
- 		scsi_single_lun_run(sdev);
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
--	while (!list_empty(&shost->starved_list) && !scsi_host_is_busy(shost)) {
-+	list_splice_init(&shost->starved_list, &starved_list);
+-       struct scsi_device *starved_head = NULL, *sdev = q->queuedata;
++       struct scsi_device *tmp, *sdev = q->queuedata;
+        struct Scsi_Host *shost = sdev->host;
++       LIST_HEAD(starved_list);
+        unsigned long flags;
+
+        if (scsi_target(sdev)->single_lun)
+                scsi_single_lun_run(sdev);
+
+        spin_lock_irqsave(shost->host_lock, flags);
+-       while (!list_empty(&shost->starved_list) && !scsi_host_is_busy(shost))
+{
++       list_splice_init(&shost->starved_list, &starved_list);
 +
-+	list_for_each_entry_safe(sdev, tmp, &starved_list, starved_entry) {
- 		int flagset;
- 
- 		/*
++       list_for_each_entry_safe(sdev, tmp, &starved_list, starved_entry) {
+                int flagset;
+
+                /*
 @@ -588,22 +591,10 @@ static void scsi_run_queue(struct request_queue *q)
- 		 * scsi_request_fn must get the host_lock before checking
- 		 * or modifying starved_list or starved_entry.
- 		 */
--		sdev = list_entry(shost->starved_list.next,
--					  struct scsi_device, starved_entry);
--		/*
--		 * The *queue_ready functions can add a device back onto the
--		 * starved list's tail, so we must check for a infinite loop.
--		 */
--		if (sdev == starved_head)
-+		if (scsi_host_is_busy(shost))
- 			break;
--		if (!starved_head)
--			starved_head = sdev;
+                 * scsi_request_fn must get the host_lock before checking
+                 * or modifying starved_list or starved_entry.
+                 */
+-               sdev = list_entry(shost->starved_list.next,
+-                                         struct scsi_device, starved_entry);
+-               /*
+-                * The *queue_ready functions can add a device back onto the
+-                * starved list's tail, so we must check for a infinite loop.
+-                */
+-               if (sdev == starved_head)
++               if (scsi_host_is_busy(shost))
+                        break;
+-               if (!starved_head)
+-                       starved_head = sdev;
 -
--		if (scsi_target_is_busy(scsi_target(sdev))) {
--			list_move_tail(&sdev->starved_entry,
--				       &shost->starved_list);
-+		if (scsi_target_is_busy(scsi_target(sdev)))
- 			continue;
--		}
- 
- 		list_del_init(&sdev->starved_entry);
- 		spin_unlock(shost->host_lock);
+-               if (scsi_target_is_busy(scsi_target(sdev))) {
+-                       list_move_tail(&sdev->starved_entry,
+-                                      &shost->starved_list);
++               if (scsi_target_is_busy(scsi_target(sdev)))
+                        continue;
+-               }
+
+                list_del_init(&sdev->starved_entry);
+                spin_unlock(shost->host_lock);
 @@ -621,6 +612,9 @@ static void scsi_run_queue(struct request_queue *q)
- 
- 		spin_lock(shost->host_lock);
- 	}
+
+                spin_lock(shost->host_lock);
+        }
 +
-+	/* put any unprocessed entries back */
-+	list_splice(&starved_list, &shost->starved_list);
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- 
- 	blk_run_queue(q);
++       /* put any unprocessed entries back */
++       list_splice(&starved_list, &shost->starved_list);
+        spin_unlock_irqrestore(shost->host_lock, flags);
+
+        blk_run_queue(q);
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
