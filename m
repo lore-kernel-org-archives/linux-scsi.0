@@ -1,73 +1,53 @@
-From: David Woodhouse <dwmw2@infradead.org>
-Subject: Re: Thin provisioning & arrays
-Date: Mon, 10 Nov 2008 10:59:49 +0100
-Message-ID: <1226311189.4367.30.camel@macbook.infradead.org>
-References: <4913028B.6010405@redhat.com>
-	 <1225984628.4703.80.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0811061519350.3431@Nokia-N800-26>
-	 <20081107120534.GO21867@kernel.dk>
-	 <1226072970.15281.46.camel@think.oraclecorp.com>
-	 <20081109233639.GT4985@disturbed>
-	 <9FA859626025B64FBC2AF149D97C944A8A648D@CORPUSMX80A.corp.emc.com>
-	 <20081110083126.GF2373@disturbed>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCHSET 00/18] open-osd: OSD Initiator library for Linux
+Date: Mon, 10 Nov 2008 14:52:21 +0200
+Message-ID: <49182E85.9010405@panasas.com>
+References: <48876009.8010701@panasas.com>	<491073BB.4000900@panasas.com>	<20081104111923.bb19c238.akpm@linux-foundation.org>	<4916FAB3.4010409@panasas.com> <20081110102607.378c3279.sfr@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:49769 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751335AbYKJKAX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Nov 2008 05:00:23 -0500
-In-Reply-To: <20081110083126.GF2373@disturbed>
+Received: from gw-ca.panasas.com ([66.104.249.162]:10087 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754701AbYKJMwN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Nov 2008 07:52:13 -0500
+In-Reply-To: <20081110102607.378c3279.sfr@canb.auug.org.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dave Chinner <david@fromorbit.com>
-Cc: Black_David@emc.com, martin.petersen@oracle.com, chris.mason@oracle.com, jens.axboe@oracle.com, James.Bottomley@hansenpartnership.com, rwheeler@redhat.com, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, coughlan@redhat.com, matthew@wil.cx
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Andrew Morton <akpm@linux-foundation.org>, James.Bottomley@HansenPartnership.com, linux-next@vger.kernel.org, Sam Ravnborg <sam@ravnborg.org>, michaelc@cs.wisc.edu, fujita.tomonori@lab.ntt.co.jp, jeff@garzik.org, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, Sami.Iren@seagate.com, Pete Wyckoff <pw@padd.com>, linux-kernel@vger.kernel.org
 
-On Mon, 2008-11-10 at 19:31 +1100, Dave Chinner wrote:
-> On Sun, Nov 09, 2008 at 10:40:24PM -0500, Black_David@emc.com wrote:
-> > There will be a chunk size value available in a VPD page that can be
-> > used to determine minimum size/alignment.  For openers, I see
-> > essentially
-> > no point in a 512-byte UNMAP, even though it's allowed by the standard -
-> > I suspect most arrays (and many SSDs) will ignore it, and ignoring
-> > it is definitely within the spirit of the proposed T10 standard (hint:
-> > I'm one of the people directly working on that proposal).
->
-> I think this is the crux of the issue. IMO, it's not much of a standard
-> when the spirit of the standard is to allow everyone to implement
-> different, non-deterministic behaviour....
+Stephen Rothwell wrote:
+> Hi Boaz,
+> 
+> On Sun, 09 Nov 2008 16:58:59 +0200 Boaz Harrosh <bharrosh@panasas.com> wrote:
+>> I have prepared a branch for linux-next based on today's Linus tree
+>> It is here:
+>>     git://git.open-osd.org/linux-open-osd.git linux-next
+>> This is if it's OK with James, as these bits are his responsibility.
+>> They need only sit in linux-next for a couple of weeks to get some wider
+>> compilation exposure. Other then that they are totally new code and
+>> are safe. Eventually they should be included into Linux-next through
+>> scsi-misc-2.6.
+> 
+> I have added that tree to linux-next for today.
+> 
+> What I say to everyone:  commits in that branch must have been posted
+> somewhere appropriate, reviewed, unit tested and destined for the next
+> merge window.  Also, note that my (new) practise is to temporarily drop a
+> tree if it causes non-trivial conflicts (especially with Linus' tree), so
+> don't be too upset if you get a message from me to that effect.
+> 
 
-I disagree. The discard request is a _hint_ from the upper layers, and
-the storage device can act on that hint as it sees fit. There's nothing
-wrong with that; it doesn't make it "not much of a standard".
+Thank you Stephen, very much
 
-Storage devices are complex enough that they _already_ exhibit behaviour
-which is fairly much non-deterministic in a number of ways. Especially
-if we're talking about SSDs or large arrays, rather than just disks.
+This has proven itself already. I found some warnings on some ARCHs
+concerning printk of u64 types. I have made a sweep and fixed all these
+places and others.
+(same place: git://git.open-osd.org/linux-open-osd.git linux-next)
 
-A standard needs to be clear about what _is_ guaranteed, and what is
-_not_ guaranteed. If it is explicit that the storage device is permitted
-to ignore the discard hint, and some storage devices do so under some
-circumstances, then that is just fine.
+If you could keep it for the next round it could be grate. So I can make
+sure I got rid of all the warnings.
 
-> Unmapping can and should be made reliable so that we don't have to
-> waste effort trying to fix up mismatches that shouldn't have occurred
-> in the first place...
-
-Perhaps so. But remember, this can only really be considered a
-correctness issue on thin-provisioned arrays -- because they may run out
-of space sooner than they should. But that kind of failure mode is
-something that is explicitly accepted by those designing and using such
-thin-provisioned arrays. It's not as if we're introducing any _new_ kind
-of problem.
-
-So I think it's perfectly acceptable for the operating system to treat
-discard requests as a hint, with best-effort semantics. And any device
-which _really_ cares will need to make sure for _itself_ that it handles
-those hints reliably.
-
--- 
-David Woodhouse                            Open Source Technology Centre
-David.Woodhouse@intel.com                              Intel Corporation
-
+Thanks again
+Boaz
