@@ -1,125 +1,93 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Thin provisioning & arrays
-Date: Mon, 10 Nov 2008 19:31:26 +1100
-Message-ID: <20081110083126.GF2373@disturbed>
-References: <4913028B.6010405@redhat.com> <1225984628.4703.80.camel@localhost.localdomain> <Pine.LNX.4.64.0811061519350.3431@Nokia-N800-26> <20081107120534.GO21867@kernel.dk> <1226072970.15281.46.camel@think.oraclecorp.com> <20081109233639.GT4985@disturbed> <9FA859626025B64FBC2AF149D97C944A8A648D@CORPUSMX80A.corp.emc.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 03/18 ver2] libosd: OSDv1 Headers
+Date: Mon, 10 Nov 2008 10:47:07 +0200
+Message-ID: <4917F50B.3000905@panasas.com>
+References: <491073BB.4000900@panasas.com> <1225817046-5946-1-git-send-email-bharrosh@panasas.com> <4916F934.4090205@panasas.com> <20081109174509.GB5350@logfs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <9FA859626025B64FBC2AF149D97C944A8A648D@CORPUSMX80A.corp.emc.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Black_David@emc.com
-Cc: martin.petersen@oracle.com, chris.mason@oracle.com, jens.axboe@oracle.com, dwmw2@infradead.org, James.Bottomley@hansenpartnership.com, rwheeler@redhat.com, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, coughlan@redhat.com, matthew@wil.cx
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gw-ca.panasas.com ([66.104.249.162]:6424 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753643AbYKJIq6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Nov 2008 03:46:58 -0500
+In-Reply-To: <20081109174509.GB5350@logfs.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, open-osd development <osd-dev@open-osd.org>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, Sami.Iren@seagate.com, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Sun, Nov 09, 2008 at 10:40:24PM -0500, Black_David@emc.com wrote:
-> Wow, this discussion can generate a lot of traffic ....  I think
-> Dave Chinner's recent message is as good a place as any to start:
->  
-> > It also ignores the fact that as the filesystem ages they will have
-> > fewer and fewer aligned free chunks as the free space fragments.
-> > Over time, arrays using large allocation chunks are simply going to
-> > be full of wasted space as filesystem allocation patterns degrade
-> > if the array vendors ignore this problem.
+J=C3=B6rn Engel wrote:
+> On Sun, 9 November 2008 16:52:36 +0200, Boaz Harrosh wrote:
+>> +struct osdv1_cdb {
+>> +	struct osd_cdb_head h;
+>> +	u8 caps[OSDv1_CAP_LEN];
+>> +	struct osd_security_parameters sec_params;
+>> +} __packed;
+>=20
+> __packed can result in slow code being generated.  But removing the
+> attribute can lead to bugs on other architectures.  F.e. the size of
+> the structure below is different for i386 and x86_64.
+>=20
+> struct foo {
+> 	u64 bar;
+> 	u32 baz;
+> };
+>=20
+> My personal solution is to use this little macro and then just follow
+> every structure defition with a size check.
+>=20
+> #define SIZE_CHECK(type, size)					\
+> static inline void check_##type(void)				\
+> {								\
+> 	BUILD_BUG_ON(sizeof(struct type) !=3D (size));		\
+> }
+> ...
+> struct foo {
+> 	u64 bar;
+> 	u32 baz;
+> };
+>=20
+> SIZE_CHECK(foo, 12);
+>=20
+> The above would not compile on x86_64 and clearly indicate a missing
+> __packed.  In other cases the attribute can be removed.
+>=20
+> J=C3=B6rn
+>=20
 
-[snip a bunch of stuff I can't add anything too ;]
+Hi J=C3=B6rn
+Thank you for your comments
 
-> My take on this is that I agree with Ric's comment:
-> 
-> > In another email Ted mentions that it makes sense for the FS allocator
-> > to notice we've just freed the last block in an aligned region of size
-> > X, and I'd agree with that.
-> >
-> > The trim command we send down when we free the block could just
-> contain
-> > the entire range that is free (and easy for the FS to determine) every
-> > time.
-> 
-> In other words, the filesystem ought to do a small amount of work to
-> send down the largest (reasonable) range that it knows is free - this
-> seems likely to be more effective than relying on the elevators to
-> make this happen.  
-> 
-> There will be a chunk size value available in a VPD page that can be
-> used to determine minimum size/alignment.  For openers, I see
-> essentially
-> no point in a 512-byte UNMAP, even though it's allowed by the standard -
-> I suspect most arrays (and many SSDs) will ignore it, and ignoring
-> it is definitely within the spirit of the proposed T10 standard (hint:
-> I'm one of the people directly working on that proposal).
+I do have a size check that governs the complete structure it is the fi=
+rst
+code in osd_initiator.c at build_test(). It will catch any discrepancie=
+s
+from the protocol.
 
-I think this is the crux of the issue. IMO, it's not much of a standard
-when the spirit of the standard is to allow everyone to implement
-different, non-deterministic behaviour....
+I have done some experimentation with __packed both on 32 and 64 bit x8=
+6.
+When it does nothing like the above foo in 32bit, then there is no code
+difference with it or with out it, but on 64bit I must have it otherwis=
+e
+the structure grows.
 
-> OTOH, it
-> may not be possible to frequently assemble large chunks for arrays
-> that use them, and I agree with Dave Chinner's remarks on free space
-> fragmentation (quoted above) - there's no "free lunch" there.
+These are all, on-the-wire structures. I must have __packed, otherwise
+I'm at the compiler mercy and that's bad.
 
-> Beyond this, I think there may be an underlying assumption that the
-> array and filesystem ought to be in sync (or close to it) on based
-> on overhead and diminishing marginal returns of trying to get ever-
-> closer sync. 
+If the assembly - size and offsets - of foo is exactly the same with or
+without the __packed, but the generated code is different then clearly =
+this
+is a compiler bug. I've herd of this myth before, and at least with my
+gcc 4.1.2 there is no such bug. Either the structure gets packed, or th=
+ere is
+no difference. All the places I have __packed in the code are absolutel=
+y must
+be so, stated by the protocol.
 
-I'm not sure I follow - it's possible to have perfect
-synchronisation between the array and the filesystem, including
-crash recovery.
-
-> Elsewhere, mention has been made of having the
-> filesystem's free list behavior be LIFO-like, rather than constantly
-> allocating new blocks from previously-unused space.  IMHO, that's a
-> good idea for thin provisioning. 
-
-Which is at odds with preventing fragmentation and minimising the
-effect of aging on the filesystem. This, in turn, is bad for thin
-provisioning because file fragmentation leads to free space
-fragmentation over time.
-
-I think the overall goal for filesystems in thin provisioned
-environments should be to minimise free space fragmentation - it's
-when you fail to have large contiguous regions of free space in 
-the filesystem that thin provisioning becomes difficult. How this
-is acheived will be different for every filesystem.
-
-> Now, if the workload running on the filesystem causes the capacity
-> used to stay within a range, there will be a set of relatively "hot"
-> blocks on the free list that are being frequently freed and reallocated.
-> It's a performance win not to UNMAP those blocks (saves work in both
-> the kernel and on the array), and hence to have the filesystem and
-> array views of what's in use not line up.
-
-In that case, the filesystem tracks what it has not issued unmaps
-on, so really there is no discrepancy between the filesystem and the
-array in terms of free sapce. The filesystem simply has a "free but
-not quite free" list of blocks that haven't been unmapped.
-
-This is like the typical two-stage inode delete that most
-journalling filesystems use - one stage to remove it from the
-namespace and move it to a "to be freed" list, and then a second
-stage to really free it. Inodes on the "to be freed" list can be
-reused without being freed, and if a crash occurs they can be
-really freed up during recovery. Issuing unmaps is conceptually
-little different to this.....
-
-> Despite the derogatory comment about defrag, it's making a comeback.
-> I already know of two thin-provisioning-specific defrag utilities from
-> other storage vendors (neither is for Linux, AFAIK).  While defrag is
-> not a wonderful solution, it does free up space in large contiguous
-> ranges, and most of what it frees will be "cold".
-
-The problem is that it is the wrong model to be using for thin
-provisioning. It assumes that unmapping blocks as we free them
-is fundamentally broken - if unmapping as we go works and is made
-reliable, then there is no need for such a defrag tool. Unmapping
-can and should be made reliable so that we don't have to waste
-effort trying to fix up mismatches that shouldn't have occurred in
-the first place...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Boaz
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
