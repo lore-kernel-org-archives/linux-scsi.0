@@ -1,47 +1,70 @@
-From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
-Subject: Re: [PATCH 03/18 ver2] libosd: OSDv1 Headers
-Date: Mon, 10 Nov 2008 16:17:33 +0100
-Message-ID: <20081110151733.GB16520@logfs.org>
-References: <491073BB.4000900@panasas.com> <1225817046-5946-1-git-send-email-bharrosh@panasas.com> <4916F934.4090205@panasas.com> <20081109174509.GB5350@logfs.org> <4917F50B.3000905@panasas.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: Question about spun-down USB disk
+Date: Mon, 10 Nov 2008 18:01:28 +0100
+Message-ID: <491868E8.2040108@s5r6.in-berlin.de>
+References: <491799d8.2435440a.1153.3886@mx.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lazybastard.de ([212.112.238.170]:59999 "EHLO
-	longford.logfs.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751149AbYKJPSV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Nov 2008 10:18:21 -0500
-Content-Disposition: inline
-In-Reply-To: <4917F50B.3000905@panasas.com>
+Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:34700 "EHLO
+	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753608AbYKJRDE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Nov 2008 12:03:04 -0500
+In-Reply-To: <491799d8.2435440a.1153.3886@mx.google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, open-osd development <osd-dev@open-osd.org>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, Sami.Iren@seagate.com, linux-kernel <linux-kernel@vger.kernel.org>
+To: Kit Gerrits <kitgerrits@gmail.com>
+Cc: dgilbert@interlog.com, linux-scsi@vger.kernel.org
 
-On Mon, 10 November 2008 10:47:07 +0200, Boaz Harrosh wrote:
->=20
-> If the assembly - size and offsets - of foo is exactly the same with =
-or
-> without the __packed, but the generated code is different then clearl=
-y this
-> is a compiler bug. I've herd of this myth before, and at least with m=
-y
-> gcc 4.1.2 there is no such bug. Either the structure gets packed, or =
-there is
-> no difference. All the places I have __packed in the code are absolut=
-ely must
-> be so, stated by the protocol.
+Kit Gerrits wrote:
+> How do you expect them to know -in advance- that their disk will spin down,
+> possibly killing their filesystem?
 
-Ok, if current compilers are fine, I won't complain.
+(Well, this has of course nothing to do with the sg_start utility.)
 
-J=C3=B6rn
+> People are alresdy reporting these problems:
+> http://www.nslu2-linux.org/wiki/FAQ/DealWithAutoSpinDownOnSeagateFreeAgent
+> http://www.mail-archive.com/linux-usb-devel@lists.sourceforge.net/msg52952.html
 
---=20
-There's nothing better for promoting creativity in a medium than
-making an audience feel "Hmm =C2=AD I could do better than that!"
--- Douglas Adams in a slashdot interview
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The second report (about Seagate Freeagent USB, FireWire, eSATA with
+Linux 2.6.21-rc7) doesn't have enough detail.  The former report (about
+Seagate Freeagent USB?) suggests a seemingly successful workaround for
+Seagate Freeagent disks:  Switch on the allow_restart flag via sysfs.
+In Linux 2.6.24 and later, this flag is already enabled by default for
+all USB HDDs, i.e. the user doesn't have to do anything anymore to
+activate this fix.
+
+I guess the problem with /your/ disk could be that the kernel cannot
+easily tell from the type of error status which it gets from the
+firmware of the disk (of its USB chip, to be precise) that it should
+issue the START STOP UNIT command to get the disk going again.
+
+> I can understand Linux' UN*X roots imply big servers with SCSI disks that
+> need to be highly available.
+> It would, however, be nice if the O/S could optionally manage disks the way
+> 'a certain other O/S' does.
+> 
+> If everyone could save those 10 watts per disk with their little server at
+> home, they might even save a few pennies.
+
+About auto-spin-down:  Auto-spin-down (and thus auto-spin-up) managed by
+the kernel for SCSI disks (as opt-in feature; and thus for USB disks
+too) has been in the works, but I don't know what the status of this
+work is.
+
+About auto-spin-up:  Note that many firmwares of cheap devices don't
+care a damn about standards; they just barely work with some luck with
+some versions of Windows if the Windows user doesn't do anything
+extraordinary with them.  From what I understand, proper sense data from
+the disk would be enough for the kernel to send a START STOP UNIT to
+switch the motor on and to retry the last request.  Somebody correct me
+if I'm wrong.
+
+BTW, if you stopped the disk with sg_start --stop, can you always
+successfully start it again with sg_start --start (if you run it before
+any other accesses to this disk)?
+-- 
+Stefan Richter
+-=====-==--- =-== -=-=-
+http://arcgraph.de/sr/
