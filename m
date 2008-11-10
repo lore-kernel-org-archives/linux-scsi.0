@@ -1,21 +1,30 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [Bugme-new] [Bug 11804] New: iscsi: LRO plus iSCSI causes panic
-Date: Mon, 10 Nov 2008 12:11:40 -0600
-Message-ID: <4918795C.5070607@cs.wisc.edu>
-References: <bug-11804-10286@http.bugzilla.kernel.org/> <20081021172721.027d9e1c.akpm@linux-foundation.org> <F169D4F5E1F1974DBFAFABF47F60C10A0E9DB65A@orsmsx507.amr.corp.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11804] iscsi: LRO plus iSCSI causes panic
+Date: Mon, 10 Nov 2008 10:12:26 -0800 (PST)
+Message-ID: <20081110181226.30EB9108047@picon.linux-foundation.org>
+References: <bug-11804-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:48617 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752857AbYKJSM7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:40126 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753164AbYKJSM7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 10 Nov 2008 13:12:59 -0500
-In-Reply-To: <F169D4F5E1F1974DBFAFABF47F60C10A0E9DB65A@orsmsx507.amr.corp.intel.com>
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mAAICQAU009291
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Nov 2008 10:12:27 -0800
+In-Reply-To: <bug-11804-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Brandeburg, Jesse" <jesse.brandeburg@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "bugme-daemon@bugzilla.kernel.org" <bugme-daemon@bugzilla.kernel.org>
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=11804
+
+
+
+
+
+------- Comment #4 from anonymous@kernel-bugs.osdl.org  2008-11-10 10:12 -------
+Reply-To: michaelc@cs.wisc.edu
 
 Brandeburg, Jesse wrote:
 > Andrew Morton wrote:
@@ -27,3 +36,9 @@ Brandeburg, Jesse wrote:
 
 Sorry this was my fault. I misread your first mail. I am trying to 
 replicate this now here.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
