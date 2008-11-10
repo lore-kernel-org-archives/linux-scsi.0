@@ -1,93 +1,69 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 03/18 ver2] libosd: OSDv1 Headers
-Date: Mon, 10 Nov 2008 10:47:07 +0200
-Message-ID: <4917F50B.3000905@panasas.com>
-References: <491073BB.4000900@panasas.com> <1225817046-5946-1-git-send-email-bharrosh@panasas.com> <4916F934.4090205@panasas.com> <20081109174509.GB5350@logfs.org>
+Subject: Re: [osd-dev] [PATCH 04/18] libosd: OSDv1 preliminary implementation
+Date: Mon, 10 Nov 2008 11:00:29 +0200
+Message-ID: <4917F82D.2080307@panasas.com>
+References: <491073BB.4000900@panasas.com>	<1225817069-5969-1-git-send-email-bharrosh@panasas.com>	<20081104180347.GA9818@uranus.ravnborg.org> <49119BAF.6040603@panasas.com> <4916F9F5.9040409@panasas.com> <4917C89A.70909@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:6424 "EHLO
+Received: from gw-ca.panasas.com ([66.104.249.162]:2696 "EHLO
 	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753643AbYKJIq6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Nov 2008 03:46:58 -0500
-In-Reply-To: <20081109174509.GB5350@logfs.org>
+	with ESMTP id S1750970AbYKJJAU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Nov 2008 04:00:20 -0500
+In-Reply-To: <4917C89A.70909@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, open-osd development <osd-dev@open-osd.org>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, Sami.Iren@seagate.com, linux-kernel <linux-kernel@vger.kernel.org>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Sam Ravnborg <sam@ravnborg.org>, open-osd development <osd-dev@open-osd.org>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Sami.Iren@seagate.com, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>
 
-J=C3=B6rn Engel wrote:
-> On Sun, 9 November 2008 16:52:36 +0200, Boaz Harrosh wrote:
->> +struct osdv1_cdb {
->> +	struct osd_cdb_head h;
->> +	u8 caps[OSDv1_CAP_LEN];
->> +	struct osd_security_parameters sec_params;
->> +} __packed;
->=20
-> __packed can result in slow code being generated.  But removing the
-> attribute can lead to bugs on other architectures.  F.e. the size of
-> the structure below is different for i386 and x86_64.
->=20
-> struct foo {
-> 	u64 bar;
-> 	u32 baz;
-> };
->=20
-> My personal solution is to use this little macro and then just follow
-> every structure defition with a size check.
->=20
-> #define SIZE_CHECK(type, size)					\
-> static inline void check_##type(void)				\
-> {								\
-> 	BUILD_BUG_ON(sizeof(struct type) !=3D (size));		\
-> }
-> ...
-> struct foo {
-> 	u64 bar;
-> 	u32 baz;
-> };
->=20
-> SIZE_CHECK(foo, 12);
->=20
-> The above would not compile on x86_64 and clearly indicate a missing
-> __packed.  In other cases the attribute can be removed.
->=20
-> J=C3=B6rn
->=20
+Randy Dunlap wrote:
+> Boaz Harrosh wrote:
+>> Boaz Harrosh wrote:
+>>> Sam Ravnborg wrote:
+>>>>> +EXPORT_SYMBOL(osd_dev_init);
+>>>> kernel-doc comments for all exported funtions / variables.
+>>>>
+>>> I have some kernel-doc comments of exported functions in the Header
+>>> file. I have not yet finished all of them. (Laziness on my part).
+>>>
+>>> Are kernel-doc comments in headers a big NO-NO. I like it this way,
+>>> so when I have to learn a new Library all the information
+>>> I need to know is in the header. Also the header is a much better place
+>>> when you do programing by shopping, that is you don't know what you need
+>>> and you look for what's available.
+>>>
+>>> Thanks
+>>> Boaz
+>> Sam please comment if kernel-doc comments are OK in headers
+> 
+> Hi,
+> 
+> The de facto standard for kernel-doc comments is at the implementation site,
+> which means normally in .c files, except for macros or inline functions.
+> 
+> Sure you can find some exceptions to that.  And there is no hard requirement
+> in Documentation/kernel-doc-nano-HOWTO.txt.
+> 
+> IMO the biggest concern is making sure that the (kernel-doc) comments are
+> updated when the function implementation changes (if updates are needed).
+> Where would be the best place for this to be more likely to happen?
+> Usually at the function implementation, I would say.
+> 
+> ~Randy
+> 
+> 
+Thanks Randy
 
-Hi J=C3=B6rn
-Thank you for your comments
+I would like to keep them in the Headers then. This is because I make
+sure that the implementation includes the declaring header, so any miss-matches
+are caught by the compiler. 
+And because these are all library routines exported to other modules. The important
+thing is the API you linked with. If the API/parametrization change it must first
+change in the header. The internal implementation is not documented only the external
+black-box functionality is documented in these places.
 
-I do have a size check that governs the complete structure it is the fi=
-rst
-code in osd_initiator.c at build_test(). It will catch any discrepancie=
-s
-from the protocol.
-
-I have done some experimentation with __packed both on 32 and 64 bit x8=
-6.
-When it does nothing like the above foo in 32bit, then there is no code
-difference with it or with out it, but on 64bit I must have it otherwis=
-e
-the structure grows.
-
-These are all, on-the-wire structures. I must have __packed, otherwise
-I'm at the compiler mercy and that's bad.
-
-If the assembly - size and offsets - of foo is exactly the same with or
-without the __packed, but the generated code is different then clearly =
-this
-is a compiler bug. I've herd of this myth before, and at least with my
-gcc 4.1.2 there is no such bug. Either the structure gets packed, or th=
-ere is
-no difference. All the places I have __packed in the code are absolutel=
-y must
-be so, stated by the protocol.
+I will think about it some more, but for now, if it's OK I would like to keep them
+like submitted. In this particular library they make more sense to me in the header.
 
 Boaz
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
