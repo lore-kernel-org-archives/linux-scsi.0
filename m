@@ -1,45 +1,101 @@
-From: "Moger, Babu" <Babu.Moger@lsi.com>
-Subject: [PATCH] scsi_dh: Adding LSI vendor and product ids in
- rdac device list
-Date: Mon, 10 Nov 2008 16:17:48 -0700
-Message-ID: <E463DF2B2E584B4A82673F53D62C2EF45BE75982@cosmail01.lsi.com>
-References: <1225944321.14830.1109.camel@chandra-ubuntu>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: aacraid: Adaptec 2200S support broken on x86_64 by commit
+ 94cf6ba11b068b8a8f68a1e88bffb6827e92124b
+Date: Mon, 10 Nov 2008 15:20:06 -0800
+Message-ID: <20081110152006.8982133b.akpm@linux-foundation.org>
+References: <48D10E1A.8030804@siemens.com>
+	<48EB6600.9020204@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Language: en-US
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: device-mapper development <dm-devel@redhat.com>, "andmike@linux.vnet.ibm.com" <andmike@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:39437 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751594AbYKJXVG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Nov 2008 18:21:06 -0500
+In-Reply-To: <48EB6600.9020204@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: gernot.hillier@siemens.com, aacraid@adaptec.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, mark_salyzyn@adaptec.com, Thomas Guyot-Sionnest <dermoth@aei.ca>, stable@kernel.org
 
-From: Babu Moger <babu.moger@lsi.com>
+On Tue, 07 Oct 2008 15:37:04 +0200
+Tomas Henzl <thenzl@redhat.com> wrote:
 
-This patch adds LSI vendor and product ids in rdac device handler.
+> Hillier, Gernot wrote:
+> > Hi there!
+> >
+> > On our AMD64 machines equipped with old Adaptec 2200S controllers, we
+> > experienced a regression when updating to 2.6.25. The machines won't
+> > boot anymore (in a reasonable time), but instead spit out tons of those
+> > messages:
+> > aac_srb: aac_fib_send failed with status: 8195
+> >
+> > This is already reported in quite some places including LKML:
+> > http://lkml.org/lkml/2008/5/12/365
+> > https://bugzilla.redhat.com/show_bug.cgi?id=450444
+> > https://bugzilla.redhat.com/show_bug.cgi?id=453472
+> > http://www.linuxquestions.org/questions/red-hat-31/aacsrb-aacfibsend-failed-with-status-8195-651078/
+> > http://forums.gentoo.org/viewtopic-p-5077382.html?sid=a51c3a0fba6aa854c0b49b8fae5cc15a
+> >
+> > We found that this regression seems to be introduced by the bugfix
+> > "aacraid: fix driver failure with Dell PowerEdge
+> > Expandable RAID Controller 3/Di":
+> > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=94cf6ba11b068b8a8f68a1e88bffb6827e92124b
+> >
+> > By simply removing the quirk flag for our controller, we could boot again.
+> >
+> > We did some quick stress tests on an AMD64bit machine with 16GB of RAM 
+> > and saw no problems after this change:
+> >
+> > diff -ur linux-2.6.25.11-0.1.ct1.orig/drivers/scsi/aacraid/linit.c linux-2.6.25.11-0.1.ct1/drivers/scsi/aacraid/linit.c
+> > --- linux-2.6.25.11-0.1.ct1.orig/drivers/scsi/aacraid/linit.c	2008-09-15 16:07:14.000000000 +0100
+> > +++ linux-2.6.25.11-0.1.ct1/drivers/scsi/aacraid/linit.c	2008-09-15 16:09:26.000000000 +0100
+> > @@ -176,7 +176,7 @@
+> >  	{ aac_rx_init, "aacraid",  "ADAPTEC ", "catapult        ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* catapult */
+> >  	{ aac_rx_init, "aacraid",  "ADAPTEC ", "tomcat          ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* tomcat */
+> >  	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2120S   ", 1, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2120S (Crusader) */
+> > -	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2200S (Vulcan) */
+> > +	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG }, /* Adaptec 2200S (Vulcan) */
+> >  	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2200S (Vulcan-2m) */
+> >  	{ aac_rx_init, "aacraid",  "Legend  ", "Legend S220     ", 1, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Legend S220 (Legend Crusader) */
+> >  	{ aac_rx_init, "aacraid",  "Legend  ", "Legend S230     ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Legend S230 (Legend Vulcan) */
+> >
+> > Can this be safely changed/merged? Or is this the wrong way to fix it?
+> >
+> > Please note that we also have machines equipped with newer Adaptec 2230S
+> > controllers (PCI ID 9005:0286) which run perfectly with the current driver.
+> >
+> >   
+> Hi,
+> from what I read about this it seems to me that people are complaining also about issues with the 2120S Controller.
+> So if the patch is taken in this form the original patch should be extended to cover both controllers.
+> 
+> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+> 
+> ---
+> diff -Naurp linux-2.6.18.i686b/drivers/scsi/aacraid/linit.c linux-2.6.18.i686p6/drivers/scsi/aacraid/linit.c
+> --- linux-2.6.18.i686b/drivers/scsi/aacraid/linit.c	2008-09-25 18:06:23.000000000 +0200
+> +++ linux-2.6.18.i686p6/drivers/scsi/aacraid/linit.c	2008-10-03 12:12:06.000000000 +0200
+> @@ -175,8 +175,8 @@ static struct aac_driver_ident aac_drive
+>  	{ aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* PERC 3/Di (Boxster/PERC3DiB) */
+>  	{ aac_rx_init, "aacraid",  "ADAPTEC ", "catapult        ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* catapult */
+>  	{ aac_rx_init, "aacraid",  "ADAPTEC ", "tomcat          ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* tomcat */
+> -	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2120S   ", 1, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2120S (Crusader) */
+> -	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2200S (Vulcan) */
+> +	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2120S   ", 1, AAC_QUIRK_31BIT | AAC_QUIRK_34SG },		      /* Adaptec 2120S (Crusader) */
+> +	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG },		      /* Adaptec 2200S (Vulcan) */
+>  	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2200S (Vulcan-2m) */
+>  	{ aac_rx_init, "aacraid",  "Legend  ", "Legend S220     ", 1, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Legend S220 (Legend Crusader) */
+>  	{ aac_rx_init, "aacraid",  "Legend  ", "Legend S230     ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Legend S230 (Legend Vulcan) */
+> 
+> 
 
-Signed-off-by: Babu Moger <Babu.Moger@lsi.com>
+I added this to my tree with Tomas's title&changelog (thanks - I was
+about to whine about that).  Thanks Thomas for the reminder.  I tagged
+it as backportable to 2.6.25.x, 2.6.26.x and 2.6.27.x.
 
----
 
---- linux-2.6.28-rc4/drivers/scsi/device_handler/scsi_dh_rdac.c.orig    2=
-008-11-10 16:56:01.000000000 -0600
-+++ linux-2.6.28-rc4/drivers/scsi/device_handler/scsi_dh_rdac.c 2008-11-1=
-0 16:56:20.000000000 -0600
-@@ -594,6 +594,8 @@ static const struct scsi_dh_devlist rdac
-        {"SUN", "LCSM100_F"},
-        {"DELL", "MD3000"},
-        {"DELL", "MD3000i"},
-+       {"LSI", "INF-01-00"},
-+       {"ENGENIO", "INF-01-00"},
-        {NULL, NULL},
- };
+This bugfix has been there for a month and this driver has been busted
+since 2.6.24.  Is anyone out there?  Mark?  James?
