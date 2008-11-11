@@ -1,449 +1,123 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 1/2] FC pass through support - revised III
-Date: Tue, 11 Nov 2008 18:41:46 +0900
-Message-ID: <20081111182539S.fujita.tomonori@lab.ntt.co.jp>
-References: <6026BA47-0809-4AE1-9565-82F2453349B0@qlogic.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: aacraid: Adaptec 2200S support broken on x86_64 by commit	94cf6ba11b068b8a8f68a1e88bffb6827e92124b
+Date: Tue, 11 Nov 2008 10:56:51 +0100
+Message-ID: <491956E3.4020405@redhat.com>
+References: <48D10E1A.8030804@siemens.com> <48EB6600.9020204@redhat.com>	 <20081110152006.8982133b.akpm@linux-foundation.org> <1226377257.5014.88.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:46524 "EHLO sh.osrg.net"
+Received: from mx2.redhat.com ([66.187.237.31]:57753 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755056AbYKKJmP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Nov 2008 04:42:15 -0500
-In-Reply-To: <6026BA47-0809-4AE1-9565-82F2453349B0@qlogic.com>
+	id S1754731AbYKKJ5j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Nov 2008 04:57:39 -0500
+In-Reply-To: <1226377257.5014.88.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: seokmann.ju@qlogic.com
-Cc: James.Smart@Emulex.Com, James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, michaelc@cs.wisc.edu, robert.w.love@intel.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, gernot.hillier@siemens.com, aacraid@adaptec.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, mark_salyzyn@adaptec.com, Thomas Guyot-Sionnest <dermoth@aei.ca>, stable@kernel.org, Matt Domsch <Matt_Domsch@dell.com>, "Leubner, Achim" <Achim_Leubner@adaptec.com>
 
-On Fri, 31 Oct 2008 08:34:35 -0700
-Seokmann Ju <seokmann.ju@qlogic.com> wrote:
+James Bottomley wrote:
+> On Mon, 2008-11-10 at 15:20 -0800, Andrew Morton wrote:
+>   
+>> On Tue, 07 Oct 2008 15:37:04 +0200
+>> Tomas Henzl <thenzl@redhat.com> wrote:
+>>
+>>     
+>>> Hillier, Gernot wrote:
+>>>       
+>>>> Hi there!
+>>>>
+>>>> On our AMD64 machines equipped with old Adaptec 2200S controllers, we
+>>>> experienced a regression when updating to 2.6.25. The machines won't
+>>>> boot anymore (in a reasonable time), but instead spit out tons of those
+>>>> messages:
+>>>> aac_srb: aac_fib_send failed with status: 8195
+>>>>
+>>>> This is already reported in quite some places including LKML:
+>>>> http://lkml.org/lkml/2008/5/12/365
+>>>> https://bugzilla.redhat.com/show_bug.cgi?id=450444
+>>>> https://bugzilla.redhat.com/show_bug.cgi?id=453472
+>>>> http://www.linuxquestions.org/questions/red-hat-31/aacsrb-aacfibsend-failed-with-status-8195-651078/
+>>>> http://forums.gentoo.org/viewtopic-p-5077382.html?sid=a51c3a0fba6aa854c0b49b8fae5cc15a
+>>>>
+>>>> We found that this regression seems to be introduced by the bugfix
+>>>> "aacraid: fix driver failure with Dell PowerEdge
+>>>> Expandable RAID Controller 3/Di":
+>>>> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=94cf6ba11b068b8a8f68a1e88bffb6827e92124b
+>>>>
+>>>> By simply removing the quirk flag for our controller, we could boot again.
+>>>>
+>>>> We did some quick stress tests on an AMD64bit machine with 16GB of RAM 
+>>>> and saw no problems after this change:
+>>>>
+>>>> diff -ur linux-2.6.25.11-0.1.ct1.orig/drivers/scsi/aacraid/linit.c linux-2.6.25.11-0.1.ct1/drivers/scsi/aacraid/linit.c
+>>>> --- linux-2.6.25.11-0.1.ct1.orig/drivers/scsi/aacraid/linit.c	2008-09-15 16:07:14.000000000 +0100
+>>>> +++ linux-2.6.25.11-0.1.ct1/drivers/scsi/aacraid/linit.c	2008-09-15 16:09:26.000000000 +0100
+>>>> @@ -176,7 +176,7 @@
+>>>>  	{ aac_rx_init, "aacraid",  "ADAPTEC ", "catapult        ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* catapult */
+>>>>  	{ aac_rx_init, "aacraid",  "ADAPTEC ", "tomcat          ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* tomcat */
+>>>>  	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2120S   ", 1, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2120S (Crusader) */
+>>>> -	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2200S (Vulcan) */
+>>>> +	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG }, /* Adaptec 2200S (Vulcan) */
+>>>>  	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2200S (Vulcan-2m) */
+>>>>  	{ aac_rx_init, "aacraid",  "Legend  ", "Legend S220     ", 1, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Legend S220 (Legend Crusader) */
+>>>>  	{ aac_rx_init, "aacraid",  "Legend  ", "Legend S230     ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Legend S230 (Legend Vulcan) */
+>>>>
+>>>> Can this be safely changed/merged? Or is this the wrong way to fix it?
+>>>>
+>>>> Please note that we also have machines equipped with newer Adaptec 2230S
+>>>> controllers (PCI ID 9005:0286) which run perfectly with the current driver.
+>>>>
+>>>>   
+>>>>         
+>>> Hi,
+>>> from what I read about this it seems to me that people are complaining also about issues with the 2120S Controller.
+>>> So if the patch is taken in this form the original patch should be extended to cover both controllers.
+>>>
+>>> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+>>>
+>>> ---
+>>> diff -Naurp linux-2.6.18.i686b/drivers/scsi/aacraid/linit.c linux-2.6.18.i686p6/drivers/scsi/aacraid/linit.c
+>>> --- linux-2.6.18.i686b/drivers/scsi/aacraid/linit.c	2008-09-25 18:06:23.000000000 +0200
+>>> +++ linux-2.6.18.i686p6/drivers/scsi/aacraid/linit.c	2008-10-03 12:12:06.000000000 +0200
+>>> @@ -175,8 +175,8 @@ static struct aac_driver_ident aac_drive
+>>>  	{ aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* PERC 3/Di (Boxster/PERC3DiB) */
+>>>  	{ aac_rx_init, "aacraid",  "ADAPTEC ", "catapult        ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* catapult */
+>>>  	{ aac_rx_init, "aacraid",  "ADAPTEC ", "tomcat          ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* tomcat */
+>>> -	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2120S   ", 1, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2120S (Crusader) */
+>>> -	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2200S (Vulcan) */
+>>> +	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2120S   ", 1, AAC_QUIRK_31BIT | AAC_QUIRK_34SG },		      /* Adaptec 2120S (Crusader) */
+>>> +	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG },		      /* Adaptec 2200S (Vulcan) */
+>>>  	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2200S (Vulcan-2m) */
+>>>  	{ aac_rx_init, "aacraid",  "Legend  ", "Legend S220     ", 1, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Legend S220 (Legend Crusader) */
+>>>  	{ aac_rx_init, "aacraid",  "Legend  ", "Legend S230     ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Legend S230 (Legend Vulcan) */
+>>>
+>>>
+>>>       
+>> I added this to my tree with Tomas's title&changelog (thanks - I was
+>> about to whine about that).  Thanks Thomas for the reminder.  I tagged
+>> it as backportable to 2.6.25.x, 2.6.26.x and 2.6.27.x.
+>>     
+>
+> Could someone from Adaptec and Dell please verify that this is correct?
+> Mark Salyzyn no longer works there, but the aacraid@adaptec.com address
+> is supposed to still be working.
+>
+> Thanks,
+>
+> James
+>   
+Adding Achim Leubner from Adaptec to the CC:list,
+he is the new person responsible for the driver.
+Achim what do you think about this patch ?
 
-> Attachment is also available at the bottom.
-> ---
->  From 47f113766853dcabec329013fd1c2eb9e04f8c92 Mon Sep 17 00:00:00 2001
-> From: root <root@linux-atl-00.qlogic.com>
-> Date: Fri, 31 Oct 2008 08:13:15 -0700
-> Subject: [PATCH] scsi_transport_fc: FC pass through support
-> 
-> This patch will add FC pass through support.
-> The FC pass through support is service request handling mechanism
-> for FC specification defined services including,
-> - Link Services (Basic LS, Extended LS)
-> - Generic Services (FC-CT - Common Transport)
-> The support utilize BSG (Block layer SCSI Generic) interface with
-> bidi (bi-directional) nature in handling the service requests.
-> 
-> This patch added following featues in the support
-> - FC service structure has defined to transport service requests
-> - Handles the service request in asynchronous manner - LLD
-> - Timeout capability
-> - Abort capability
-> 
-> Signed-off-by: Seokmann Ju <seokmann.ju@qlogic.com>
-> ---
->   drivers/scsi/scsi_transport_fc.c |  212 +++++++++++++++++++++++++++++ 
-> ++++++++-
->   include/scsi/scsi_transport_fc.h |   79 ++++++++++++++-
->   2 files changed, 288 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/ 
-> scsi_transport_fc.c
-> index 1e71abf..a0c1430 100644
-> --- a/drivers/scsi/scsi_transport_fc.c
-> +++ b/drivers/scsi/scsi_transport_fc.c
-> @@ -43,6 +43,11 @@ static void fc_vport_sched_delete(struct  
-> work_struct *work);
->   static int fc_vport_setup(struct Scsi_Host *shost, int channel,
->   	struct device *pdev, struct fc_vport_identifiers  *ids,
->   	struct fc_vport **vport);
-> +static enum blk_eh_timer_return fc_service_timeout(struct request  
-> *req);
-> +static void fc_service_done(struct fc_service *);
-> +static int fc_service_handler(struct Scsi_Host *, struct fc_rport *,
-> +    struct request *, struct request_queue *);
-> +static void fc_bsg_remove(struct Scsi_Host *, struct fc_rport *);
-> 
->   /*
->    * Redefine so that we can have same named attributes in the
-> @@ -2413,11 +2418,214 @@ fc_rport_final_delete(struct work_struct *work)
-> 
->   	transport_remove_device(dev);
->   	device_del(dev);
-> +	fc_bsg_remove(shost, rport);
->   	transport_destroy_device(dev);
->   	put_device(&shost->shost_gendev);	/* for fc_host->rport list */
->   	put_device(dev);			/* for self-reference */
->   }
-> 
-> +static enum blk_eh_timer_return fc_service_timeout(struct request *req)
-> +{
-> +	struct fc_service *service = (void *) req->special;
-> +	struct Scsi_Host *shost = rport_to_shost(service->rport);
-> +	struct fc_internal *i = to_fc_internal(shost->transportt);
-> +	unsigned long flags;
-> +	int res = 0;
-> +
-> +	if (service->rport->port_state == FC_PORTSTATE_BLOCKED)
-> +		return BLK_EH_RESET_TIMER;
-> +
-> +	spin_lock_irqsave(&service->service_state_lock, flags);
-> +	if (!(service->service_state_flag & FC_SERVICE_STATE_DONE))
-> +		service->service_state_flag |= FC_SERVICE_STATE_TIMEOUT;
-> +	spin_unlock_irqrestore(&service->service_state_lock, flags);
-> +
-> +	if (i->f->abort_fc_service)
-> +		res = i->f->abort_fc_service(service);
-> +
-> +	if (res) {
-> +		printk(KERN_ERR "ERROR: issuing FC service to the LLD "
-> +		"failed with status %d\n", res);
-> +		fc_service_done(service);
-> +	}
-> +
-> +	/* the blk_end_sync_io() doesn't check the error */
-> +	return BLK_EH_NOT_HANDLED;
-> +}
-> +
-> +static void fc_service_done(struct fc_service *service)
-> +{
-> +
-> +	if (service->service_state_flag != FC_SERVICE_STATE_DONE) {
-> +		if (service->service_state_flag == FC_SERVICE_STATE_TIMEOUT)
-> +			printk(KERN_ERR "ERROR: FC service timed out\n");
-> +		else if (service->service_state_flag ==
-> +		    FC_SERVICE_STATE_ABORTED)
-> +			printk(KERN_ERR "ERROR: FC service aborted\n");
-> +		else
-> +			printk(KERN_ERR "ERROR: FC service not finished\n");
-> +	}
-> +
-> +	if (service->srv_reply.status != FC_SERVICE_COMPLETE) {
-> +		printk(KERN_ERR "ERROR: FC service to rport %p failed with"
-> +		    " status 0x%x\n", service->rport,
-> +		    service->srv_reply.status);
-> +	}
-> +
-> +	service->req->errors = service->srv_reply.status;
-> +
-> +	blk_end_bidi_request(service->req,
-> +	    service->srv_reply.status ? -EIO : 0, blk_rq_bytes(service->req),
-> +	    service->req->next_rq ? blk_rq_bytes(service->req->next_rq) : 0);
-> +
-> +	kfree(service->sg_req);
-> +	kfree(service->sg_rsp);
-> +	kfree(service);
-> +}
-> +
-> +static int
-> +issue_fc_service(struct fc_rport *rport, struct request *req,
-> +    struct request *rsp, struct request_queue *q)
-> +{
-> +	int res = -ECOMM;
-> +	struct fc_service *service;
-> +	struct Scsi_Host *shost = rport_to_shost(rport);
-> +	struct fc_internal *i = to_fc_internal(shost->transportt);
-> +	struct fc_service_request *srv_request = (struct fc_service_request *)
-> +	    req->cmd;
-> +
-> +	service = kzalloc(sizeof(struct fc_service), GFP_KERNEL);
-> +	if (!service)
-> +		return -ENOMEM;
-> +
-> +	req->special = service;
-> +	service->rport = rport;
-> +	service->req = req;
-> +	service->q = q;
-> +	service->srv_request = srv_request;
-> +
-> +	service->sg_req =
-> +	    kzalloc(sizeof(struct scatterlist) * req->nr_phys_segments,
-> +	    GFP_KERNEL);
+Thanks,
+Tomas
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>   
 
-Needs to check the allocation failure.
-
-
-> +	sg_init_table(service->sg_req, req->nr_phys_segments);
-> +	service->req_sg_cnt =
-> +	    blk_rq_map_sg(q, req, service->sg_req);
-> +	service->req_size = req->data_len;
-> +
-> +	service->sg_rsp =
-> +	    kzalloc(sizeof(struct scatterlist) * rsp->nr_phys_segments,
-> +	    GFP_KERNEL);
-
-Ditto.
-
-
-> +	sg_init_table(service->sg_rsp, rsp->nr_phys_segments);
-> +	service->rsp_sg_cnt =
-> +	    blk_rq_map_sg(q, rsp, service->sg_rsp);
-> +	service->rsp_size = rsp->data_len;
-> +
-> +	/* sense area of the request structure */
-> +	service->reply_seq = req->sense;
-> +	service->service_done = fc_service_done;
-> +	service->service_state_flag = FC_SERVICE_STATE_PENDING;
-> +
-> +	if (i->f->execute_fc_service)
-> +		res = i->f->execute_fc_service(service);
-> +
-> +	if (res) {
-> +		printk(KERN_ERR "ERROR: issuing FC service to the LLD "
-> +		"failed with status %d\n", res);
-> +		fc_service_done(service);
-> +		return res;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static int
-> +fc_service_handler(struct Scsi_Host *shost, struct fc_rport *rport,
-> +			  struct request *req, struct request_queue *q)
-> +{
-> +	int ret;
-> +	struct request *rsp = req->next_rq;
-> +
-> +	if (!rsp) {
-> +		printk(KERN_ERR "ERROR: space for a FC service"
-> +		   " response is missing\n");
-> +		return -EINVAL;
-
-Needs to complete the request unless the request leaks, I think.
-
-
-> +	}
-> +
-> +	ret = issue_fc_service(rport, req, rsp, q);
-> +
-> +	return ret;
-> +}
-> +
-> +static void fc_service_dispatch(struct request_queue *q)
-> +{
-> +	struct request *req;
-> +	struct fc_rport *rport = q->queuedata;
-> +	struct Scsi_Host *shost = rport_to_shost(rport);
-> +
-> +	while (!blk_queue_plugged(q)) {
-> +		req = elv_next_request(q);
-> +		if (!req)
-> +			break;
-> +
-> +		blkdev_dequeue_request(req);
-> +		spin_unlock_irq(q->queue_lock);
-> +
-> +		fc_service_handler(shost, rport, req, q);
-> +
-> +		spin_lock_irq(q->queue_lock);
-> +	}
-> +}
-> +
-> +static int
-> +fc_bsg_initialize(struct Scsi_Host *shost, struct fc_rport *rport)
-> +{
-> +	struct request_queue *q;
-> +	int error;
-> +	struct device *dev;
-> +	const char *name;
-> +	void (*release)(struct device *);
-
-Not necessary.
-
-
-> +	if (!rport) {
-> +		printk(KERN_ERR "ERROR: rport is NULL\n");
-> +		return -ENOMEM;
-> +	}
-> +
-> +	q = blk_init_queue(fc_service_dispatch, NULL);
-> +	if (!q)
-> +		return -ENOMEM;
-> +
-> +	dev = &rport->dev;
-> +	name = dev->bus_id;
-> +	release = NULL;
-> +
-> +	error = bsg_register_queue(q, dev, name, release);
-
-You can just use NULL here.
-
-	error = bsg_register_queue(q, dev, name, NULL);
-
-
-> +	if (error) {
-> +		blk_cleanup_queue(q);
-> +		return -ENOMEM;
-> +	}
-> +
-> +	blk_queue_max_hw_segments(q, shost->sg_tablesize);
-> +	blk_queue_max_phys_segments(q, SCSI_MAX_SG_CHAIN_SEGMENTS);
-> +	blk_queue_rq_timed_out(q, fc_service_timeout);
-> +	blk_queue_rq_timeout(q, BLK_DEFAULT_SG_TIMEOUT);
-> +
-> +	rport->q = q;
-> +	q->queuedata = rport;
-> +	queue_flag_set_unlocked(QUEUE_FLAG_BIDI, q);
-> +
-> +	return 0;
-> +}
-> +
-> +static void
-> +fc_bsg_remove(struct Scsi_Host *shost, struct fc_rport *rport)
-> +{
-> +	struct request_queue *q = rport->q;
-> +
-> +	if (!q)
-> +		return;
-> +
-> +	bsg_unregister_queue(q);
-> +}
-> 
->   /**
->    * fc_rport_create - allocates and creates a remote FC port.
-> @@ -2478,8 +2686,8 @@ fc_rport_create(struct Scsi_Host *shost, int  
-> channel,
->   	else
->   		rport->scsi_target_id = -1;
->   	list_add_tail(&rport->peers, &fc_host->rports);
-> -	get_device(&shost->shost_gendev);	/* for fc_host->rport list */
-> 
-> +	get_device(&shost->shost_gendev);	/* for fc_host->rport list */
->   	spin_unlock_irqrestore(shost->host_lock, flags);
-> 
->   	dev = &rport->dev;
-> @@ -2498,6 +2706,8 @@ fc_rport_create(struct Scsi_Host *shost, int  
-> channel,
->   	transport_add_device(dev);
->   	transport_configure_device(dev);
-> 
-> +	fc_bsg_initialize(shost, rport);
-> +
->   	if (rport->roles & FC_PORT_ROLE_FCP_TARGET) {
->   		/* initiate a scan of the target */
->   		rport->flags |= FC_RPORT_SCAN_PENDING;
-> diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/ 
-> scsi_transport_fc.h
-> index 49d8913..8367d48 100644
-> --- a/include/scsi/scsi_transport_fc.h
-> +++ b/include/scsi/scsi_transport_fc.h
-> @@ -33,7 +33,6 @@
-> 
->   struct scsi_transport_template;
-> 
-> -
->   /*
->    * FC Port definitions - Following FC HBAAPI guidelines
->    *
-> @@ -352,6 +351,7 @@ struct fc_rport {	/* aka fc_starget_attrs */
->    	struct delayed_work fail_io_work;
->    	struct work_struct stgt_delete_work;
->   	struct work_struct rport_delete_work;
-> +	struct request_queue *q;
->   } __attribute__((aligned(sizeof(unsigned long))));
-> 
->   /* bit field values for struct fc_rport "flags" field: */
-> @@ -515,6 +515,78 @@ struct fc_host_attrs {
->   	struct workqueue_struct *devloss_work_q;
->   };
-> 
-> +#define FC_STATUS_BUF_SIZE 96
-> +
-> +enum fc_frame_type {
-> +	FC_FRAME_TYPE_BS,
-> +	FC_FRAME_TYPE_ELS,
-> +	FC_FRAME_TYPE_IEC = 4,
-> +	FC_FRAME_TYPE_IP,
-> +	FC_FRAME_TYPE_FCP = 8,
-> +	FC_FRAME_TYPE_GPP,
-> +	FC_FRAME_TYPE_FC_CT = 0x20,
-> +};
-> +
-> +enum fc_service_status {
-> +	FC_SERVICE_COMPLETE,
-> +	FC_SERVICE_TIMEOUT,
-> +	FC_SERVICE_ABORT,
-> +	FC_SERVICE_UNSUPPORTED,
-> +	FC_SERVICE_ERROR = -1,
-> +};
-> +
-> +#define FC_SERVICE_STATE_PENDING      1
-> +#define FC_SERVICE_STATE_DONE         2
-> +#define FC_SERVICE_STATE_ABORTED      4
-> +#define FC_SERVICE_STATE_TIMEOUT      8
-> +
-> +#define FC_SERVICE_TIMEOUT 10
-> +
-> +/* request (CDB) structure of the sg_io_v4 */
-> +struct fc_service_request {
-> +	u8   request_type;
-> +	u8   reserved0;
-> +	u8   reserved1;
-> +	u8   reserved2;
-> +	u32  reserved3[3];
-> +};
-> +
-> +/* response  (request sense data) structure of the sg_io_v4 */
-> +struct fc_service_reply {
-> +	enum fc_service_status status;
-> +	u16  error_code;
-> +	u16  additional_error_code;
-> +	u32  residual;
-> +};
-> +
-> +struct fc_service {
-> +	struct fc_rport  *rport;
-> +	struct list_head list;
-> +
-> +	spinlock_t   service_state_lock;
-> +	unsigned     service_state_flag;
-> +
-> +	struct request *req;
-> +	struct request_queue *q;
-> +
-> +	/* Used by the discovery code. */
-> +	struct completion  completion;
-> +
-> +	struct fc_service_request *srv_request;
-> +	struct scatterlist *sg_req;
-> +	int   req_sg_cnt;
-> +	int   req_size;
-> +	struct scatterlist *sg_rsp;
-> +	int   rsp_sg_cnt;
-> +	int   rsp_size;
-> +
-> +	struct fc_service_reply srv_reply;
-> +	void  *reply_seq;   /* pointer to sense area of request */
-> +	void  (*service_done)(struct fc_service *);
-> +
-> +	void *lld_pkt;
-> +};
-> +
->   #define shost_to_fc_host(x) \
->   	((struct fc_host_attrs *)(x)->shost_data)
-> 
-> @@ -613,6 +685,10 @@ struct fc_function_template {
->   	int     (* tsk_mgmt_response)(struct Scsi_Host *, u64, u64, int);
->   	int     (* it_nexus_response)(struct Scsi_Host *, u64, int);
-> 
-> +	/* fc service handler */
-> +	int	(*execute_fc_service)(struct fc_service *);
-> +	int	(*abort_fc_service)(struct fc_service *);
-> +
->   	/* allocation lengths for host-specific data */
->   	u32	 			dd_fcrport_size;
->   	u32	 			dd_fcvport_size;
-> @@ -736,7 +812,6 @@ fc_vport_set_state(struct fc_vport *vport, enum  
-> fc_vport_state new_state)
->   	vport->vport_state = new_state;
->   }
-> 
-> -
->   struct scsi_transport_template *fc_attach_transport(
->   			struct fc_function_template *);
->   void fc_release_transport(struct scsi_transport_template *);
-> -- 
-> 1.6.0.2
-> 
