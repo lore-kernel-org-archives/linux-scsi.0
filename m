@@ -1,24 +1,44 @@
-From: "Shi, Harris" <Harris.Shi@lsi.com>
-Subject: Question on block-layer timeout change
-Date: Tue, 11 Nov 2008 09:26:01 -0700
-Message-ID: <3568BBCB98C00041A9E622952FD5F24EA11CA00A@cosmail03.lsi.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: thin provisioned LUN support
+Date: Tue, 11 Nov 2008 11:40:29 -0500
+Message-ID: <20081111164028.GA29902@infradead.org>
+References: <4913028B.6010405@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:53657 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751657AbYKKQ0j convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Nov 2008 11:26:39 -0500
-Content-Language: en-US
+Received: from bombadil.infradead.org ([18.85.46.34]:57098 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751144AbYKKQlA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Nov 2008 11:41:00 -0500
+Content-Disposition: inline
+In-Reply-To: <4913028B.6010405@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: David Woodhouse <dwmw2@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Black_David@emc.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Tom Coughlan <coughlan@redhat.com>, Matthew Wilcox <matthew@wil.cx>, Jens Axboe <jens.axboe@oracle.com>
 
-Due to the current timeout management change, LSI RDAC (failover) driver had some difficulties in handling SCSI I/O timeout. The RDAC driver is in the similar layer as HBA driver in that it will register into scsi mid-layer as scsi_host_template and stays below mid-layer. All SCSI I/Os coming to RDAC stack are routed by an available path then dispatched to the real HBA driver via mid-layer. We used to rely on the timer in scsi_cmnd->eh_timeout to deal with scsi i/o coming into the RDAC stack. Basically when I/O is coming to RDAC stack, we need to delete the timer for each individual I/O. Then after selecting a specific path for this I/O, we need to send the I/O back to mid-layer with a larger timeout value just to avoid the forced failover. When I/O completes successfully, we added the ori
- ginal timer back to the I/O and pass it over to upper block layer for further process.
+Sorry for beeing so late to the game, been on the road for a couple of
+days.
 
-However, with the current timeout management functions moving to block layer, it became difficult for us to explicitly control the timeout value for specific SCSI I/O, which ended up causing many issues on failover. Can you shed some lights on how to handle the I/O based timeout in this case?
 
-Harris
+Why do most people assume that sending unmap/trim commands for every
+deletet extent ASAP is a good idea?  What this means is that we
+basically duplicate the space allocator in the array.  Everytime we
+free something we don't just have to do a local btree insert in the
+filesystem code but another behind a couple of abstractions, and
+similarly on each allocation the storage device would have to allocate
+from it's pool.  Worth off all the interesting preallocation
+optimization we've done in the filesystem, be thos explicit
+pre-allocation from the application or implicit ones in the allocator
+will be lost due to the abstraction boundary.
+
+So I think not actually doing these on every alloc/free is a good idea.
+Instead the filesystem would free bits when big enough regions happen,
+which is something simple enough to do with most btree implementations.
+
+That is of course not an excuse for just having the UNMAP as a hint. I
+think having the UNMAP a an exact operation that is either guaranteed
+to release the underlying space or fail will make the whole storage
+setup a lot more robust.  And while odd "unmap block" sizes will make
+it a lot harder for the filesystem I think we could find ways to deal
+with them, even if it might be ugly in places.
