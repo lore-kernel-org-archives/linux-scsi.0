@@ -1,66 +1,66 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: best userspace iscsi target lib?
-Date: Wed, 12 Nov 2008 00:02:39 +0900
-Message-ID: <20081112000239T.fujita.tomonori@lab.ntt.co.jp>
-References: <4918B5B2.8050003@garzik.org>
-	<20081111152229J.fujita.tomonori@lab.ntt.co.jp>
-	<4919917C.4030109@garzik.org>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: Thin provisioning & arrays
+Date: Tue, 11 Nov 2008 10:38:45 -0500
+Message-ID: <4919A705.2070301@redhat.com>
+References: <28572.1226369378@ocs10w> <49198FC3.7080301@redhat.com> <49199CFF.8080002@hp.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama500.ecl.ntt.co.jp ([129.60.39.148]:62619 "EHLO
-	tama500.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751486AbYKKPaE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Nov 2008 10:30:04 -0500
-In-Reply-To: <4919917C.4030109@garzik.org>
+Received: from mx2.redhat.com ([66.187.237.31]:54198 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750757AbYKKPjQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Nov 2008 10:39:16 -0500
+In-Reply-To: <49199CFF.8080002@hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jeff@garzik.org
-Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org
+To: jim owens <jowens@hp.com>
+Cc: Keith Owens <kaos@ocs.com.au>, Black_David@emc.com, david@fromorbit.com, dwmw2@infradead.org, martin.petersen@oracle.com, chris.mason@oracle.com, jens.axboe@oracle.com, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, coughlan@redhat.com, matthew@wil.cx
 
-On Tue, 11 Nov 2008 09:06:52 -0500
-Jeff Garzik <jeff@garzik.org> wrote:
+jim owens wrote:
+> Ric Wheeler wrote:
+>> Thing is being pitched to answer a very specific customer use case - 
+>> shared storage (mid to high end almost exclusively) with several 
+>> different users and applications....
+>
+> And by "different users" these customers almost always mean
+> different operating systems.  They are combining storage into
+> a central location for easier management.
 
-> FUJITA Tomonori wrote:
-> > On Mon, 10 Nov 2008 17:29:06 -0500
-> > Jeff Garzik <jeff@garzik.org> wrote:
-> > 
-> >> Can someone recommend an open source userspace library that enables one 
-> >> to implement a userspace iSCSI target?
-> > 
-> > I'm not sure there is an open source userspace library enables you to
-> > easily implement your own userspace iSCSI target but there are some
-> > userspace iSCSI target implementations, which might useful.
-> > 
-> > Some Linux distributions use:
-> > 
-> > http://stgt.berlios.de/
-> > 
-> > OpenSolaris also has one:
-> > 
-> > http://opensolaris.org/os/project/iscsitgt/
-> > 
-> > *BSD also have userspace iSCSI target implementations.
-> 
-> Thanks much, I will take a look.  I have already found and read the code 
-> for NetBSD's iSCSI target.
-> 
-> I am mainly interested in 100% userspace solution, because in my case, 
-> the storage software (distributed goop) is also in userspace.  Something 
-> that exports through the kernel actually adds overhead, when a 
-> straight-to-sockets userspace implementation would be more efficient.
+When you have one specific LUN exported from an array, it is owned by 
+one OS. You can definitely have different LUN's used by different OS's, 
+but that seems to be irrelevant to our challenges here, right?
+ 
+>
+> So "exact unmapped tracking by the filesystem" is impossible
+> and not part of the requirement.  Doesn't mean we can't make our
+> filesystems better, but forget about a perfect ability to known
+> just how much space we really have once we do an unmap.
 
-All the implementations that I referred to above are 100% userspace
-solution (if I correctly remember *BSD's implementations).
+My understanding is that most of this kind of information (how much real 
+space is provisioned/utilized/etc) is handled out of band by a user 
+space app.
 
-You might think that stgt is a kernel space solution but it's 100%
-userspace solution if you use only its iSCSI (or FCoE) support. As you
-expect, it's just a userspace daemon. It doesn't require any fancy
-kernel features.
+>
+> We can't tell how much of our unmapped space the device has
+> given away to someone else and we cannot prevent the device
+> from failing a write to an unmapped block if all the space
+> is gone.  It is just an IO error, and possible fs-is-offline
+> if that block we failed was metadata!
 
-About OSD support, I think that Pete and other osc.edu people
-implemented iSCSI OSD target with stgt (though I've not merged their
-OSD code to stgt or tried it yet):
+This is where things really fall apart - odd IO errors on a device that 
+seems to us to have lots of space. If it becomes common in the field, I 
+suspect that users will flee thin luns :-)  I also understand that other 
+os'es are mutually unable to react.
 
-http://mailman.open-osd.org/pipermail/osd-dev/2008-June/000047.html
+>
+> It is up to the customer to manage their storage so it never
+> reaches the unable-to-write state.
+>
+> jim
+
+Agreed - the high water marks should be set to allow the sys admin 
+(storage admin?) to reallocate space....
+
+ric
+
