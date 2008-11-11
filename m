@@ -1,54 +1,49 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: best userspace iscsi target lib?
-Date: Tue, 11 Nov 2008 15:07:32 +0200
-Message-ID: <49198394.6070709@panasas.com>
-References: <4918B5B2.8050003@garzik.org> <4919796F.1020300@vlnb.net> <49197DFF.9080901@garzik.org>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: Thin provisioning & arrays
+Date: Tue, 11 Nov 2008 08:59:31 -0500
+Message-ID: <49198FC3.7080301@redhat.com>
+References: <28572.1226369378@ocs10w>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:4767 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755134AbYKKNHU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Nov 2008 08:07:20 -0500
-In-Reply-To: <49197DFF.9080901@garzik.org>
+Received: from mx2.redhat.com ([66.187.237.31]:37875 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756170AbYKKOAI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Nov 2008 09:00:08 -0500
+In-Reply-To: <28572.1226369378@ocs10w>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Vladislav Bolkhovitin <vst@vlnb.net>, linux-scsi <linux-scsi@vger.kernel.org>, Bart Van Assche <bart.vanassche@gmail.com>, scst-devel <scst-devel@lists.sourceforge.net>
+To: Keith Owens <kaos@ocs.com.au>
+Cc: Black_David@emc.com, david@fromorbit.com, dwmw2@infradead.org, martin.petersen@oracle.com, chris.mason@oracle.com, jens.axboe@oracle.com, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, coughlan@redhat.com, matthew@wil.cx
 
-Jeff Garzik wrote:
-> Vladislav Bolkhovitin wrote:
->> Jeff Garzik wrote:
->>> Can someone recommend an open source userspace library that enables 
->>> one to implement a userspace iSCSI target?
->> Check SCST (http://scst.sf.net). Few weeks ago scst_local module added 
->> to it ability to create user space target drivers using regular sg/bsg 
->> interface. It's at the moment under active development, so still has a 
->> number of issues, but they shouldn't prevent you from evaluating it. You 
->> can find the code in the SVN using command:
->>
->> $ svn co https://scst.svn.sourceforge.net/svnroot/scst/trunk
->>
->> But there is a plenty of open source iSCSI targets in the world, 
->> including one fully implemented in user space, so I wonder, what's wrong 
->> with them to create another one?
-> 
-> None of them are massively distributed OSD and SBC targets, which are 
-> part of my experiments in distributed computing :)
-> 
+Keith Owens wrote:
+> On Mon, 10 Nov 2008 20:23:17 -0500, 
+> Black_David@emc.com wrote:
+>   
+>> Dave,
+>> The thin provisioning chunk size (coming) in the VPD page is a
+>> possible place to start.
+>>     
+>
+> VPD page for which device?  Consider a filesystem that is striped
+> across devices from multiple arrays or even multiple vendors.  How is
+> the filesystem supposed to "align" an unmap command when the underlying
+> disks all have different alignments?
+>
+>   
 
-OK now it sounds even more interesting. Do you have any public
-information/documentation on these experiments.
+I think that we are losing focus on the core use case here. Big arrays 
+that implement thin luns also implement RAID in the box. If you are 
+building a clustered file system, it would be extremely unlikely to 
+build it with storage from different vendors.
 
-There might be some interesting links on http://open-osd.org
+You always have the option to disable thin luns or simply fully 
+provision LUN's for more complex situations.
 
-also look up at: http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.1.4604
-It's a project from UCSC that implements a local object storage SW. It might
-look interesting for embedded systems that don't want to invest in a complete
-file system, and might give better performance in implementation of OSD protocol.
+Thing is being pitched to answer a very specific customer use case - 
+shared storage (mid to high end almost exclusively) with several 
+different users and applications....
 
-> 	Jeff
-> 
+ric
 
-Boaz
