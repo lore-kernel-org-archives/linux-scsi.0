@@ -1,111 +1,79 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11898] mke2fs hang on AIC79 device.
-Date: Tue, 11 Nov 2008 11:43:20 -0800 (PST)
-Message-ID: <20081111194320.656FB108058@picon.linux-foundation.org>
-References: <bug-11898-11613@http.bugzilla.kernel.org/>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:50718 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750929AbYKKToS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Nov 2008 14:44:18 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mABJhlYo010150
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Nov 2008 11:43:48 -0800
-In-Reply-To: <bug-11898-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: RE: DM does not activate the paths if there are more
+	than	one path in path group during failover
+Date: Tue, 11 Nov 2008 13:00:47 -0800
+Message-ID: <1226437247.8998.0.camel@chandra-ubuntu>
+References: <1225944321.14830.1109.camel@chandra-ubuntu>
+	<E463DF2B2E584B4A82673F53D62C2EF45BE759CF@cosmail01.lsi.com>
+	<20081111005920.GN16649@agk.fab.redhat.com>
+	<E463DF2B2E584B4A82673F53D62C2EF45BE75B7F@cosmail01.lsi.com>
+Reply-To: sekharan@us.ibm.com, device-mapper development <dm-devel@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF45BE75B7F@cosmail01.lsi.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: device-mapper development <dm-devel@redhat.com>
+Cc: "andmike@linux.vnet.ibm.com" <andmike@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11898
+Will look into this problem and get back to you.
 
-
-
-
-
-------- Comment #36 from anonymous@kernel-bugs.osdl.org  2008-11-11 11:43 -------
-Reply-To: michaelc@cs.wisc.edu
-
-Mike Christie wrote:
-> I can sort of replicate this now. Let me do some testing on the changes 
-> and I will submit something in a minute.
-
-I do not think I am replicating the original problem. The attached patch 
-should fix the oops in James's splice use patch though.
-Close possible infinite loop when devices are added back to the
-starved list.
-
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index f5d3b96..fa45a1a 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -567,15 +567,18 @@ static inline int scsi_host_is_busy(struct Scsi_Host
-*shost)
-  */
- static void scsi_run_queue(struct request_queue *q)
- {
--       struct scsi_device *starved_head = NULL, *sdev = q->queuedata;
-+       struct scsi_device *sdev = q->queuedata;
-        struct Scsi_Host *shost = sdev->host;
-+       LIST_HEAD(starved_list);
-        unsigned long flags;
-
-        if (scsi_target(sdev)->single_lun)
-                scsi_single_lun_run(sdev);
-
-        spin_lock_irqsave(shost->host_lock, flags);
--       while (!list_empty(&shost->starved_list) && !scsi_host_is_busy(shost))
-{
-+       list_splice_init(&shost->starved_list, &starved_list);
-+
-+       while (!list_empty(&starved_list)) {
-                int flagset;
-
-                /*
-@@ -588,24 +591,18 @@ static void scsi_run_queue(struct request_queue *q)
-                 * scsi_request_fn must get the host_lock before checking
-                 * or modifying starved_list or starved_entry.
-                 */
--               sdev = list_entry(shost->starved_list.next,
--                                         struct scsi_device, starved_entry);
--               /*
--                * The *queue_ready functions can add a device back onto the
--                * starved list's tail, so we must check for a infinite loop.
--                */
--               if (sdev == starved_head)
-+               if (scsi_host_is_busy(shost))
-                        break;
--               if (!starved_head)
--                       starved_head = sdev;
-
-+               sdev = list_entry(starved_list.next,
-+                                 struct scsi_device, starved_entry);
-+               list_del_init(&sdev->starved_entry);
-                if (scsi_target_is_busy(scsi_target(sdev))) {
-                        list_move_tail(&sdev->starved_entry,
-                                       &shost->starved_list);
-                        continue;
-                }
-
--               list_del_init(&sdev->starved_entry);
-                spin_unlock(shost->host_lock);
-
-                spin_lock(sdev->request_queue->queue_lock);
-@@ -621,6 +618,8 @@ static void scsi_run_queue(struct request_queue *q)
-
-                spin_lock(shost->host_lock);
-        }
-+       /* put any unprocessed entries back */
-+       list_splice(&starved_list, &shost->starved_list);
-        spin_unlock_irqrestore(shost->host_lock, flags);
-
-        blk_run_queue(q);
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+chandra
+On Tue, 2008-11-11 at 10:13 -0700, Moger, Babu wrote:
+> Thanks for the response.
+> 
+> If pg_init is intended to be called only once then problem is elsewhere.
+> 
+> During the pg_init, the activate_path is called. The activate_path calls scsi_dh_activate(then rdac_activate) which will set path state to active(h->state = RDAC_STATE_ACTIVE;). My understanding is, h->state is specific to each path. How does d-m sets h->state to RDAC_STATE_ACTIVE for all the paths available in the path group.
+> 
+> This is what happening in my case. On path group failure, d-m switches the path group initiates path group. It then selects the first path (in the path group) starts I/O. After exhausting the repeat_count it then selects the next path in the path group.  Then rdac_prep_fn is called. This function finds h->state is still passive and fails the path which becomes unusable.
+> 
+> This function returns BLKPREP_KILL which is leading to fail failure.
+> 
+> static int rdac_prep_fn(struct scsi_device *sdev, struct request *req)
+> {
+>         struct rdac_dh_data *h = get_rdac_data(sdev);
+>         int ret = BLKPREP_OK;
+> 
+>         if (h->state != RDAC_STATE_ACTIVE) {
+>                 ret = BLKPREP_KILL;
+>                 req->cmd_flags |= REQ_QUIET;
+>         }
+>         return ret;
+> }
+> 
+> This is my understanding so far. Please correct me if there is anything wrong.
+> 
+> 
+> -----Original Message-----
+> From: dm-devel-bounces@redhat.com [mailto:dm-devel-bounces@redhat.com] On Behalf Of Alasdair G Kergon
+> Sent: Monday, November 10, 2008 6:59 PM
+> To: device-mapper development
+> Cc: andmike@linux.vnet.ibm.com; linux-scsi@vger.kernel.org
+> Subject: Re: [dm-devel] DM does not activate the paths if there are more than one path in path group during failover
+> 
+> pg_init is a function intended to be called *once* when there is a switch to a new group of paths.  It is not per-path initialisation.
+> 
+> Alasdair
+> --
+> agk@redhat.com
+> 
+> --
+> dm-devel mailing list
+> dm-devel@redhat.com
+> https://www.redhat.com/mailman/listinfo/dm-devel
+> 
+> --
+> dm-devel mailing list
+> dm-devel@redhat.com
+> https://www.redhat.com/mailman/listinfo/dm-devel
