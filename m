@@ -1,21 +1,33 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [Bug 11898] mke2fs hang on AIC79 device.
-Date: Tue, 11 Nov 2008 12:22:38 -0600
-Message-ID: <4919CD6E.7010901@cs.wisc.edu>
-References: <20081105040154.9690A108048@picon.linux-foundation.org>	 <1225898691.4703.32.camel@localhost.localdomain>	 <4911D6F2.2080309@cs.wisc.edu> <1226245637.19841.7.camel@localhost.localdomain>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11898] mke2fs hang on AIC79 device.
+Date: Tue, 11 Nov 2008 10:23:25 -0800 (PST)
+Message-ID: <20081111182325.9F805108058@picon.linux-foundation.org>
+References: <bug-11898-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:56493 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750773AbYKKSX0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Nov 2008 13:23:26 -0500
-In-Reply-To: <1226245637.19841.7.camel@localhost.localdomain>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:59980 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751055AbYKKSY0 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Nov 2008 13:24:26 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mABINtSR001155
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Nov 2008 10:23:56 -0800
+In-Reply-To: <bug-11898-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=11898
+
+
+
+
+
+------- Comment #35 from anonymous@kernel-bugs.osdl.org  2008-11-11 10:23 -------
+Reply-To: michaelc@cs.wisc.edu
 
 James Bottomley wrote:
 > 
@@ -61,3 +73,9 @@ think list_for_each_entry_safe can handle that.
 
 I can sort of replicate this now. Let me do some testing on the changes 
 and I will submit something in a minute.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
