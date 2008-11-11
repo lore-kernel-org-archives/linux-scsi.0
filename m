@@ -1,47 +1,53 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: best userspace iscsi target lib?
-Date: Tue, 11 Nov 2008 17:05:11 +0300
-Message-ID: <49199117.2050808@vlnb.net>
-References: <4918B5B2.8050003@garzik.org> <4919796F.1020300@vlnb.net> <49197DFF.9080901@garzik.org>
+Date: Tue, 11 Nov 2008 09:06:52 -0500
+Message-ID: <4919917C.4030109@garzik.org>
+References: <4918B5B2.8050003@garzik.org> <20081111152229J.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:56453 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756170AbYKKOFG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Nov 2008 09:05:06 -0500
-In-Reply-To: <49197DFF.9080901@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:33991 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755949AbYKKOG4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Nov 2008 09:06:56 -0500
+In-Reply-To: <20081111152229J.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Bart Van Assche <bart.vanassche@gmail.com>, scst-devel <scst-devel@lists.sourceforge.net>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org
 
-Jeff Garzik wrote:
-> Vladislav Bolkhovitin wrote:
->> Jeff Garzik wrote:
->>> Can someone recommend an open source userspace library that enables 
->>> one to implement a userspace iSCSI target?
->> Check SCST (http://scst.sf.net). Few weeks ago scst_local module added 
->> to it ability to create user space target drivers using regular sg/bsg 
->> interface. It's at the moment under active development, so still has a 
->> number of issues, but they shouldn't prevent you from evaluating it. You 
->> can find the code in the SVN using command:
->>
->> $ svn co https://scst.svn.sourceforge.net/svnroot/scst/trunk
->>
->> But there is a plenty of open source iSCSI targets in the world, 
->> including one fully implemented in user space, so I wonder, what's wrong 
->> with them to create another one?
+FUJITA Tomonori wrote:
+> On Mon, 10 Nov 2008 17:29:06 -0500
+> Jeff Garzik <jeff@garzik.org> wrote:
 > 
-> None of them are massively distributed OSD and SBC targets, which are 
-> part of my experiments in distributed computing :)
+>> Can someone recommend an open source userspace library that enables one 
+>> to implement a userspace iSCSI target?
+> 
+> I'm not sure there is an open source userspace library enables you to
+> easily implement your own userspace iSCSI target but there are some
+> userspace iSCSI target implementations, which might useful.
+> 
+> Some Linux distributions use:
+> 
+> http://stgt.berlios.de/
+> 
+> OpenSolaris also has one:
+> 
+> http://opensolaris.org/os/project/iscsitgt/
+> 
+> *BSD also have userspace iSCSI target implementations.
 
-Yes, OSD is a good thing. I'd love to add an OSD backend in SCST.
+Thanks much, I will take a look.  I have already found and read the code 
+for NetBSD's iSCSI target.
 
-> 	Jeff
-> 
-> 
-> 
-> 
+I am mainly interested in 100% userspace solution, because in my case, 
+the storage software (distributed goop) is also in userspace.  Something 
+that exports through the kernel actually adds overhead, when a 
+straight-to-sockets userspace implementation would be more efficient.
+
+	Jeff
+
+
+
 
