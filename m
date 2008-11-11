@@ -1,55 +1,109 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: Problems with the block-layer timeouts
-Date: Tue, 11 Nov 2008 20:19:36 +0100
-Message-ID: <20081111191936.GK26778@kernel.dk>
-References: <20081111155458M.fujita.tomonori@lab.ntt.co.jp> <Pine.LNX.4.44L0.0811111205390.29125-100000@netrider.rowland.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [Bug 11898] mke2fs hang on AIC79 device.
+Date: Tue, 11 Nov 2008 13:42:35 -0600
+Message-ID: <4919E02B.9050204@cs.wisc.edu>
+References: <20081105040154.9690A108048@picon.linux-foundation.org>	 <1225898691.4703.32.camel@localhost.localdomain>	 <4911D6F2.2080309@cs.wisc.edu> <1226245637.19841.7.camel@localhost.localdomain> <4919CD6E.7010901@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------010404070905090409000000"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pasmtpa.tele.dk ([80.160.77.114]:56777 "EHLO pasmtpA.tele.dk"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:37510 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751122AbYKKTVM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Nov 2008 14:21:12 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0811111205390.29125-100000@netrider.rowland.org>
+	id S1751425AbYKKTnV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Nov 2008 14:43:21 -0500
+In-Reply-To: <4919CD6E.7010901@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Nov 11 2008, Alan Stern wrote:
-> On Tue, 11 Nov 2008, FUJITA Tomonori wrote:
-> 
-> > I don't worry about anything. I just think that these round_jiffies_up
-> > are pointless because they were added for the block-layer users that
-> > care about exact timeouts, however the block-layer doesn't export
-> > blk_add_timer() so the block-layer users can't control the exact time
-> > when the timer starts. So doing round_jiffies_up calculation per every
-> > request doesn't make sense for me.
-> 
-> In fact the round_jiffies_up() routines were added for other users as
-> well as the block layer.  However none of the others could be changed
-> until the routines were merged.  Now that the routines are in the 
-> mainline, you should see them start to be called in multiple places.
-> 
-> Also, the users of the block layer _don't_ care about exact timeouts.  
-> That's an important aspect of round_jiffies() and round_jiffies_up() --
-> you don't use them if you want an exact timeout.
-> 
-> The reason for using round_jiffies() is to insure that the timeout
-> will occur at a 1-second boundary.  If several timeouts are set for
-> about the same time and they all use round_jiffies() or
-> round_jiffies_up(), then they will all occur at the same tick instead
-> of spread out among several different ticks during the course of that
-> 1-second interval.  As a result, the system will need to wake up only
-> once to service all those timeouts, instead of waking up several
-> different times.  It is a power-saving scheme.
+This is a multi-part message in MIME format.
+--------------010404070905090409000000
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-I can't add anything else, can't say it any better either. The main
-point of using round_jiffies_up() is to align with other timers. I don't
-understand why you (Tomo) think that timeouts are exact? They really are
-not, and within the same second is quite adequate here.
+Mike Christie wrote:
+> I can sort of replicate this now. Let me do some testing on the changes 
+> and I will submit something in a minute.
 
--- 
-Jens Axboe
+I do not think I am replicating the original problem. The attached patch 
+should fix the oops in James's splice use patch though.
 
+--------------010404070905090409000000
+Content-Type: text/x-patch;
+ name="splice2.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="splice2.patch"
+
+Close possible infinite loop when devices are added back to the
+starved list.
+
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f5d3b96..fa45a1a 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -567,15 +567,18 @@ static inline int scsi_host_is_busy(struct Scsi_Host *shost)
+  */
+ static void scsi_run_queue(struct request_queue *q)
+ {
+-	struct scsi_device *starved_head = NULL, *sdev = q->queuedata;
++	struct scsi_device *sdev = q->queuedata;
+ 	struct Scsi_Host *shost = sdev->host;
++	LIST_HEAD(starved_list);
+ 	unsigned long flags;
+ 
+ 	if (scsi_target(sdev)->single_lun)
+ 		scsi_single_lun_run(sdev);
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+-	while (!list_empty(&shost->starved_list) && !scsi_host_is_busy(shost)) {
++	list_splice_init(&shost->starved_list, &starved_list);
++
++	while (!list_empty(&starved_list)) {
+ 		int flagset;
+ 
+ 		/*
+@@ -588,24 +591,18 @@ static void scsi_run_queue(struct request_queue *q)
+ 		 * scsi_request_fn must get the host_lock before checking
+ 		 * or modifying starved_list or starved_entry.
+ 		 */
+-		sdev = list_entry(shost->starved_list.next,
+-					  struct scsi_device, starved_entry);
+-		/*
+-		 * The *queue_ready functions can add a device back onto the
+-		 * starved list's tail, so we must check for a infinite loop.
+-		 */
+-		if (sdev == starved_head)
++		if (scsi_host_is_busy(shost))
+ 			break;
+-		if (!starved_head)
+-			starved_head = sdev;
+ 
++		sdev = list_entry(starved_list.next,
++				  struct scsi_device, starved_entry);
++		list_del_init(&sdev->starved_entry);
+ 		if (scsi_target_is_busy(scsi_target(sdev))) {
+ 			list_move_tail(&sdev->starved_entry,
+ 				       &shost->starved_list);
+ 			continue;
+ 		}
+ 
+-		list_del_init(&sdev->starved_entry);
+ 		spin_unlock(shost->host_lock);
+ 
+ 		spin_lock(sdev->request_queue->queue_lock);
+@@ -621,6 +618,8 @@ static void scsi_run_queue(struct request_queue *q)
+ 
+ 		spin_lock(shost->host_lock);
+ 	}
++	/* put any unprocessed entries back */
++	list_splice(&starved_list, &shost->starved_list);
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 
+ 	blk_run_queue(q);
+
+--------------010404070905090409000000--
