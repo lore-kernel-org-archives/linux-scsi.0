@@ -1,44 +1,31 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: thin provisioned LUN support
-Date: Tue, 11 Nov 2008 11:40:29 -0500
-Message-ID: <20081111164028.GA29902@infradead.org>
-References: <4913028B.6010405@redhat.com>
+From: jim owens <jowens@hp.com>
+Subject: Re: Thin provisioning & arrays
+Date: Tue, 11 Nov 2008 11:53:16 -0500
+Message-ID: <4919B87C.8030100@hp.com>
+References: <28572.1226369378@ocs10w> <49198FC3.7080301@redhat.com> <49199CFF.8080002@hp.com> <4919A705.2070301@redhat.com> <4919ABC6.8030606@hp.com> <4919B1DD.3030207@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:57098 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751144AbYKKQlA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Nov 2008 11:41:00 -0500
-Content-Disposition: inline
-In-Reply-To: <4913028B.6010405@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <4919B1DD.3030207@redhat.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
 To: Ric Wheeler <rwheeler@redhat.com>
-Cc: David Woodhouse <dwmw2@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Black_David@emc.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Tom Coughlan <coughlan@redhat.com>, Matthew Wilcox <matthew@wil.cx>, Jens Axboe <jens.axboe@oracle.com>
+Cc: Keith Owens <kaos@ocs.com.au>, Black_David@emc.com, david@fromorbit.com, dwmw2@infradead.org, martin.petersen@oracle.com, chris.mason@oracle.com, jens.axboe@oracle.com, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, coughlan@redhat.com, matthew@wil.cx
+List-Id: linux-scsi@vger.kernel.org
 
-Sorry for beeing so late to the game, been on the road for a couple of
-days.
+Ric Wheeler wrote:
+> 
+> I think that the concern is that the exact implementation is actually 
+> already coded and relatively easy for us to do (i.e., send down unmap 
+> commands at natural file system level units after a truncate/delete).
+> 
+> The irony is that the hard part is to try to approach that level of 
+> exactness with the other techniques (coalescing unmaps, defrag, etc) :-)
 
+I was using "exact" in the second sense... our battle about
+matching exactly with an array where the thin unmap chunk is
+greater than the natural file system level unit.
 
-Why do most people assume that sending unmap/trim commands for every
-deletet extent ASAP is a good idea?  What this means is that we
-basically duplicate the space allocator in the array.  Everytime we
-free something we don't just have to do a local btree insert in the
-filesystem code but another behind a couple of abstractions, and
-similarly on each allocation the storage device would have to allocate
-from it's pool.  Worth off all the interesting preallocation
-optimization we've done in the filesystem, be thos explicit
-pre-allocation from the application or implicit ones in the allocator
-will be lost due to the abstraction boundary.
+Saying in that case, extreme measures are not justified.
 
-So I think not actually doing these on every alloc/free is a good idea.
-Instead the filesystem would free bits when big enough regions happen,
-which is something simple enough to do with most btree implementations.
-
-That is of course not an excuse for just having the UNMAP as a hint. I
-think having the UNMAP a an exact operation that is either guaranteed
-to release the underlying space or fail will make the whole storage
-setup a lot more robust.  And while odd "unmap block" sizes will make
-it a lot harder for the filesystem I think we could find ways to deal
-with them, even if it might be ugly in places.
+jim
