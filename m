@@ -1,152 +1,449 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 2/2] FC pass through support - revised III
-Date: Tue, 11 Nov 2008 18:41:49 +0900
-Message-ID: <20081111184216Q.fujita.tomonori@lab.ntt.co.jp>
-References: <B125BA56-8293-4C42-AEBC-0C0DCAC365D0@qlogic.com>
+Subject: Re: [PATCH 1/2] FC pass through support - revised III
+Date: Tue, 11 Nov 2008 18:41:46 +0900
+Message-ID: <20081111182539S.fujita.tomonori@lab.ntt.co.jp>
+References: <6026BA47-0809-4AE1-9565-82F2453349B0@qlogic.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:46523 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:46524 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755007AbYKKJmO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Nov 2008 04:42:14 -0500
-In-Reply-To: <B125BA56-8293-4C42-AEBC-0C0DCAC365D0@qlogic.com>
+	id S1755056AbYKKJmP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Nov 2008 04:42:15 -0500
+In-Reply-To: <6026BA47-0809-4AE1-9565-82F2453349B0@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: seokmann.ju@qlogic.com
 Cc: James.Smart@Emulex.Com, James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, michaelc@cs.wisc.edu, robert.w.love@intel.com
 
-On Fri, 31 Oct 2008 08:34:47 -0700
+On Fri, 31 Oct 2008 08:34:35 -0700
 Seokmann Ju <seokmann.ju@qlogic.com> wrote:
 
 > Attachment is also available at the bottom.
 > ---
->  From 4c6fc04a25afd6dd495975434e9732ede4a1bae1 Mon Sep 17 00:00:00 2001
+>  From 47f113766853dcabec329013fd1c2eb9e04f8c92 Mon Sep 17 00:00:00 2001
 > From: root <root@linux-atl-00.qlogic.com>
-> Date: Fri, 31 Oct 2008 08:15:56 -0700
-> Subject: [PATCH] qla2xxx: FC pass through support
+> Date: Fri, 31 Oct 2008 08:13:15 -0700
+> Subject: [PATCH] scsi_transport_fc: FC pass through support
 > 
-> This patch will add FC passs through support.
-> With this patch, the driver support,
-> - ELS (Extended Link Services)
-> - FC-CT (Generic Services)
+> This patch will add FC pass through support.
+> The FC pass through support is service request handling mechanism
+> for FC specification defined services including,
+> - Link Services (Basic LS, Extended LS)
+> - Generic Services (FC-CT - Common Transport)
+> The support utilize BSG (Block layer SCSI Generic) interface with
+> bidi (bi-directional) nature in handling the service requests.
+> 
+> This patch added following featues in the support
+> - FC service structure has defined to transport service requests
+> - Handles the service request in asynchronous manner - LLD
+> - Timeout capability
+> - Abort capability
 > 
 > Signed-off-by: Seokmann Ju <seokmann.ju@qlogic.com>
 > ---
->   drivers/scsi/qla2xxx/qla_attr.c |  253 ++++++++++++++++++++++++++++++ 
-> +++++++++
->   drivers/scsi/qla2xxx/qla_def.h  |    5 +
->   drivers/scsi/qla2xxx/qla_fw.h   |   35 ++++++
->   drivers/scsi/qla2xxx/qla_gbl.h  |    4 +
->   drivers/scsi/qla2xxx/qla_gs.c   |    2 +-
->   drivers/scsi/qla2xxx/qla_init.c |   11 ++
->   drivers/scsi/qla2xxx/qla_iocb.c |    9 +-
->   drivers/scsi/qla2xxx/qla_isr.c  |   68 +++++++++++
->   8 files changed, 380 insertions(+), 7 deletions(-)
+>   drivers/scsi/scsi_transport_fc.c |  212 +++++++++++++++++++++++++++++ 
+> ++++++++-
+>   include/scsi/scsi_transport_fc.h |   79 ++++++++++++++-
+>   2 files changed, 288 insertions(+), 3 deletions(-)
 > 
-> diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/ 
-> qla_attr.c
-> index b223842..945c840 100644
-> --- a/drivers/scsi/qla2xxx/qla_attr.c
-> +++ b/drivers/scsi/qla2xxx/qla_attr.c
-> @@ -1257,6 +1257,253 @@ qla24xx_vport_disable(struct fc_vport  
-> *fc_vport, bool disable)
->   	return 0;
+> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/ 
+> scsi_transport_fc.c
+> index 1e71abf..a0c1430 100644
+> --- a/drivers/scsi/scsi_transport_fc.c
+> +++ b/drivers/scsi/scsi_transport_fc.c
+> @@ -43,6 +43,11 @@ static void fc_vport_sched_delete(struct  
+> work_struct *work);
+>   static int fc_vport_setup(struct Scsi_Host *shost, int channel,
+>   	struct device *pdev, struct fc_vport_identifiers  *ids,
+>   	struct fc_vport **vport);
+> +static enum blk_eh_timer_return fc_service_timeout(struct request  
+> *req);
+> +static void fc_service_done(struct fc_service *);
+> +static int fc_service_handler(struct Scsi_Host *, struct fc_rport *,
+> +    struct request *, struct request_queue *);
+> +static void fc_bsg_remove(struct Scsi_Host *, struct fc_rport *);
+> 
+>   /*
+>    * Redefine so that we can have same named attributes in the
+> @@ -2413,11 +2418,214 @@ fc_rport_final_delete(struct work_struct *work)
+> 
+>   	transport_remove_device(dev);
+>   	device_del(dev);
+> +	fc_bsg_remove(shost, rport);
+>   	transport_destroy_device(dev);
+>   	put_device(&shost->shost_gendev);	/* for fc_host->rport list */
+>   	put_device(dev);			/* for self-reference */
 >   }
 > 
-> +static int
-> +qla2x00_execute_fc_service(struct fc_service *service)
+> +static enum blk_eh_timer_return fc_service_timeout(struct request *req)
 > +{
-> +	struct fc_rport *rport = service->rport;
-> +	fc_port_t *fcport = *(fc_port_t **) rport->dd_data;
-> +	struct Scsi_Host *host = rport_to_shost(rport);
-> +	scsi_qla_host_t *vha = shost_priv(host);
-> +	struct qla_hw_data *ha = vha->hw;
-> +	scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
-> +	struct req_que *req = ha->req;
-> +	struct els_entry_24xx *els_iocb;
-> +	struct ct_entry_24xx *ct_iocb;
-> +	request_t *iocb;
-> +	srb_t *sp;
+> +	struct fc_service *service = (void *) req->special;
+> +	struct Scsi_Host *shost = rport_to_shost(service->rport);
+> +	struct fc_internal *i = to_fc_internal(shost->transportt);
 > +	unsigned long flags;
-> +	uint32_t  handle;
-> +	int  index;
-> +	int  req_sg_cnt, rsp_sg_cnt;
-> +	uint8_t  els_pkt[20];
-> +	size_t   copy_size;
-> +	uint16_t avail_dsds;
-> +	uint32_t *cur_dsd;
-> +	struct scatterlist *sg;
+> +	int res = 0;
 > +
-> +	/* At this time, pass throug supported by 4Gb or higher */
-> +	if (!IS_FWI2_CAPABLE(ha))
-> +		goto pt_error0;
+> +	if (service->rport->port_state == FC_PORTSTATE_BLOCKED)
+> +		return BLK_EH_RESET_TIMER;
 > +
-> +	if (rport->port_state != FC_PORTSTATE_ONLINE || !fcport)
-> +		goto pt_error0;
+> +	spin_lock_irqsave(&service->service_state_lock, flags);
+> +	if (!(service->service_state_flag & FC_SERVICE_STATE_DONE))
+> +		service->service_state_flag |= FC_SERVICE_STATE_TIMEOUT;
+> +	spin_unlock_irqrestore(&service->service_state_lock, flags);
 > +
-> +	if ((service->srv_request->request_type != FC_FRAME_TYPE_ELS) &&
-> +	    (service->srv_request->request_type != FC_FRAME_TYPE_FC_CT))
-> +		goto pt_error0;
+> +	if (i->f->abort_fc_service)
+> +		res = i->f->abort_fc_service(service);
 > +
-> +	/* ELS doesn't support multiple SG */
-> +	if ((service->srv_request->request_type == FC_FRAME_TYPE_ELS) &&
-> +	    (service->req_sg_cnt > 1 || service->rsp_sg_cnt > 1)) {
-> +		printk(KERN_WARNING "ERROR: multiple SG of request/response "
-> +		    "[%u/%u]  are not supported for ELS services\n",
-> +		    service->req_sg_cnt, service->rsp_sg_cnt);
-> +		service->srv_reply.status = FC_SERVICE_UNSUPPORTED;
-> +		goto pt_error0;
+> +	if (res) {
+> +		printk(KERN_ERR "ERROR: issuing FC service to the LLD "
+> +		"failed with status %d\n", res);
+> +		fc_service_done(service);
 > +	}
 > +
-> +	sp = mempool_alloc(ha->srb_mempool, GFP_ATOMIC);
-> +	if (!sp)
-> +		goto pt_error0;
+> +	/* the blk_end_sync_io() doesn't check the error */
+> +	return BLK_EH_NOT_HANDLED;
+> +}
 > +
-> +	sp->vha = vha;
-> +	sp->fcport = fcport;
-> +	sp->cmd = (struct scsi_cmnd *)service;
-> +	sp->flags = SRB_ELS_CT;
+> +static void fc_service_done(struct fc_service *service)
+> +{
 > +
-> +	spin_lock_irqsave(&ha->hardware_lock, flags);
-> +	iocb = qla2x00_req_pkt(base_vha);
-> +	if (iocb == NULL) {
-> +		qla_printk(KERN_WARNING, ha,
-> +		    "Passthru request failed to get request packet\n");
-> +		goto pt_error1;
+> +	if (service->service_state_flag != FC_SERVICE_STATE_DONE) {
+> +		if (service->service_state_flag == FC_SERVICE_STATE_TIMEOUT)
+> +			printk(KERN_ERR "ERROR: FC service timed out\n");
+> +		else if (service->service_state_flag ==
+> +		    FC_SERVICE_STATE_ABORTED)
+> +			printk(KERN_ERR "ERROR: FC service aborted\n");
+> +		else
+> +			printk(KERN_ERR "ERROR: FC service not finished\n");
 > +	}
 > +
-> +	req_sg_cnt = dma_map_sg(&ha->pdev->dev, service->sg_req,
-> +	    service->req_sg_cnt, DMA_TO_DEVICE);
-> +	if (!req_sg_cnt)
-> +		goto pt_error1;
-> +	rsp_sg_cnt = dma_map_sg(&ha->pdev->dev, service->sg_rsp,
-> +	    service->rsp_sg_cnt, DMA_FROM_DEVICE);
-> +	if (!rsp_sg_cnt)
-> +		goto pt_error2;
+> +	if (service->srv_reply.status != FC_SERVICE_COMPLETE) {
+> +		printk(KERN_ERR "ERROR: FC service to rport %p failed with"
+> +		    " status 0x%x\n", service->rport,
+> +		    service->srv_reply.status);
+> +	}
 > +
-> +	copy_size = sg_copy_to_buffer(service->sg_req, req_sg_cnt,
-> +	    els_pkt, 20);
-
-You need to use service->sg_rsp instead of req_sg_cnt here.
-
-sg_copy_to_buffer takes the number entry of scatter gather. dma_map_sg
-returns the number of physical segments mapped. They could be
-different (when IOMMU merges the entries).
-
-
-> +	if (!copy_size)
-> +		goto pt_error3;
+> +	service->req->errors = service->srv_reply.status;
 > +
-> +	/* Check for room in outstanding command list. */
-> +	handle = req->current_outstanding_cmd;
-> +	for (index = 1; index < MAX_OUTSTANDING_COMMANDS; index++) {
-> +		handle++;
-> +		if (handle == MAX_OUTSTANDING_COMMANDS)
-> +			handle = 1;
-> +		if (!req->outstanding_cmds[handle])
+> +	blk_end_bidi_request(service->req,
+> +	    service->srv_reply.status ? -EIO : 0, blk_rq_bytes(service->req),
+> +	    service->req->next_rq ? blk_rq_bytes(service->req->next_rq) : 0);
+> +
+> +	kfree(service->sg_req);
+> +	kfree(service->sg_rsp);
+> +	kfree(service);
+> +}
+> +
+> +static int
+> +issue_fc_service(struct fc_rport *rport, struct request *req,
+> +    struct request *rsp, struct request_queue *q)
+> +{
+> +	int res = -ECOMM;
+> +	struct fc_service *service;
+> +	struct Scsi_Host *shost = rport_to_shost(rport);
+> +	struct fc_internal *i = to_fc_internal(shost->transportt);
+> +	struct fc_service_request *srv_request = (struct fc_service_request *)
+> +	    req->cmd;
+> +
+> +	service = kzalloc(sizeof(struct fc_service), GFP_KERNEL);
+> +	if (!service)
+> +		return -ENOMEM;
+> +
+> +	req->special = service;
+> +	service->rport = rport;
+> +	service->req = req;
+> +	service->q = q;
+> +	service->srv_request = srv_request;
+> +
+> +	service->sg_req =
+> +	    kzalloc(sizeof(struct scatterlist) * req->nr_phys_segments,
+> +	    GFP_KERNEL);
+
+Needs to check the allocation failure.
+
+
+> +	sg_init_table(service->sg_req, req->nr_phys_segments);
+> +	service->req_sg_cnt =
+> +	    blk_rq_map_sg(q, req, service->sg_req);
+> +	service->req_size = req->data_len;
+> +
+> +	service->sg_rsp =
+> +	    kzalloc(sizeof(struct scatterlist) * rsp->nr_phys_segments,
+> +	    GFP_KERNEL);
+
+Ditto.
+
+
+> +	sg_init_table(service->sg_rsp, rsp->nr_phys_segments);
+> +	service->rsp_sg_cnt =
+> +	    blk_rq_map_sg(q, rsp, service->sg_rsp);
+> +	service->rsp_size = rsp->data_len;
+> +
+> +	/* sense area of the request structure */
+> +	service->reply_seq = req->sense;
+> +	service->service_done = fc_service_done;
+> +	service->service_state_flag = FC_SERVICE_STATE_PENDING;
+> +
+> +	if (i->f->execute_fc_service)
+> +		res = i->f->execute_fc_service(service);
+> +
+> +	if (res) {
+> +		printk(KERN_ERR "ERROR: issuing FC service to the LLD "
+> +		"failed with status %d\n", res);
+> +		fc_service_done(service);
+> +		return res;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int
+> +fc_service_handler(struct Scsi_Host *shost, struct fc_rport *rport,
+> +			  struct request *req, struct request_queue *q)
+> +{
+> +	int ret;
+> +	struct request *rsp = req->next_rq;
+> +
+> +	if (!rsp) {
+> +		printk(KERN_ERR "ERROR: space for a FC service"
+> +		   " response is missing\n");
+> +		return -EINVAL;
+
+Needs to complete the request unless the request leaks, I think.
+
+
+> +	}
+> +
+> +	ret = issue_fc_service(rport, req, rsp, q);
+> +
+> +	return ret;
+> +}
+> +
+> +static void fc_service_dispatch(struct request_queue *q)
+> +{
+> +	struct request *req;
+> +	struct fc_rport *rport = q->queuedata;
+> +	struct Scsi_Host *shost = rport_to_shost(rport);
+> +
+> +	while (!blk_queue_plugged(q)) {
+> +		req = elv_next_request(q);
+> +		if (!req)
 > +			break;
+> +
+> +		blkdev_dequeue_request(req);
+> +		spin_unlock_irq(q->queue_lock);
+> +
+> +		fc_service_handler(shost, rport, req, q);
+> +
+> +		spin_lock_irq(q->queue_lock);
 > +	}
+> +}
+> +
+> +static int
+> +fc_bsg_initialize(struct Scsi_Host *shost, struct fc_rport *rport)
+> +{
+> +	struct request_queue *q;
+> +	int error;
+> +	struct device *dev;
+> +	const char *name;
+> +	void (*release)(struct device *);
 
-Hmm, needs to check the index overflow here?
+Not necessary.
+
+
+> +	if (!rport) {
+> +		printk(KERN_ERR "ERROR: rport is NULL\n");
+> +		return -ENOMEM;
+> +	}
+> +
+> +	q = blk_init_queue(fc_service_dispatch, NULL);
+> +	if (!q)
+> +		return -ENOMEM;
+> +
+> +	dev = &rport->dev;
+> +	name = dev->bus_id;
+> +	release = NULL;
+> +
+> +	error = bsg_register_queue(q, dev, name, release);
+
+You can just use NULL here.
+
+	error = bsg_register_queue(q, dev, name, NULL);
+
+
+> +	if (error) {
+> +		blk_cleanup_queue(q);
+> +		return -ENOMEM;
+> +	}
+> +
+> +	blk_queue_max_hw_segments(q, shost->sg_tablesize);
+> +	blk_queue_max_phys_segments(q, SCSI_MAX_SG_CHAIN_SEGMENTS);
+> +	blk_queue_rq_timed_out(q, fc_service_timeout);
+> +	blk_queue_rq_timeout(q, BLK_DEFAULT_SG_TIMEOUT);
+> +
+> +	rport->q = q;
+> +	q->queuedata = rport;
+> +	queue_flag_set_unlocked(QUEUE_FLAG_BIDI, q);
+> +
+> +	return 0;
+> +}
+> +
+> +static void
+> +fc_bsg_remove(struct Scsi_Host *shost, struct fc_rport *rport)
+> +{
+> +	struct request_queue *q = rport->q;
+> +
+> +	if (!q)
+> +		return;
+> +
+> +	bsg_unregister_queue(q);
+> +}
+> 
+>   /**
+>    * fc_rport_create - allocates and creates a remote FC port.
+> @@ -2478,8 +2686,8 @@ fc_rport_create(struct Scsi_Host *shost, int  
+> channel,
+>   	else
+>   		rport->scsi_target_id = -1;
+>   	list_add_tail(&rport->peers, &fc_host->rports);
+> -	get_device(&shost->shost_gendev);	/* for fc_host->rport list */
+> 
+> +	get_device(&shost->shost_gendev);	/* for fc_host->rport list */
+>   	spin_unlock_irqrestore(shost->host_lock, flags);
+> 
+>   	dev = &rport->dev;
+> @@ -2498,6 +2706,8 @@ fc_rport_create(struct Scsi_Host *shost, int  
+> channel,
+>   	transport_add_device(dev);
+>   	transport_configure_device(dev);
+> 
+> +	fc_bsg_initialize(shost, rport);
+> +
+>   	if (rport->roles & FC_PORT_ROLE_FCP_TARGET) {
+>   		/* initiate a scan of the target */
+>   		rport->flags |= FC_RPORT_SCAN_PENDING;
+> diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/ 
+> scsi_transport_fc.h
+> index 49d8913..8367d48 100644
+> --- a/include/scsi/scsi_transport_fc.h
+> +++ b/include/scsi/scsi_transport_fc.h
+> @@ -33,7 +33,6 @@
+> 
+>   struct scsi_transport_template;
+> 
+> -
+>   /*
+>    * FC Port definitions - Following FC HBAAPI guidelines
+>    *
+> @@ -352,6 +351,7 @@ struct fc_rport {	/* aka fc_starget_attrs */
+>    	struct delayed_work fail_io_work;
+>    	struct work_struct stgt_delete_work;
+>   	struct work_struct rport_delete_work;
+> +	struct request_queue *q;
+>   } __attribute__((aligned(sizeof(unsigned long))));
+> 
+>   /* bit field values for struct fc_rport "flags" field: */
+> @@ -515,6 +515,78 @@ struct fc_host_attrs {
+>   	struct workqueue_struct *devloss_work_q;
+>   };
+> 
+> +#define FC_STATUS_BUF_SIZE 96
+> +
+> +enum fc_frame_type {
+> +	FC_FRAME_TYPE_BS,
+> +	FC_FRAME_TYPE_ELS,
+> +	FC_FRAME_TYPE_IEC = 4,
+> +	FC_FRAME_TYPE_IP,
+> +	FC_FRAME_TYPE_FCP = 8,
+> +	FC_FRAME_TYPE_GPP,
+> +	FC_FRAME_TYPE_FC_CT = 0x20,
+> +};
+> +
+> +enum fc_service_status {
+> +	FC_SERVICE_COMPLETE,
+> +	FC_SERVICE_TIMEOUT,
+> +	FC_SERVICE_ABORT,
+> +	FC_SERVICE_UNSUPPORTED,
+> +	FC_SERVICE_ERROR = -1,
+> +};
+> +
+> +#define FC_SERVICE_STATE_PENDING      1
+> +#define FC_SERVICE_STATE_DONE         2
+> +#define FC_SERVICE_STATE_ABORTED      4
+> +#define FC_SERVICE_STATE_TIMEOUT      8
+> +
+> +#define FC_SERVICE_TIMEOUT 10
+> +
+> +/* request (CDB) structure of the sg_io_v4 */
+> +struct fc_service_request {
+> +	u8   request_type;
+> +	u8   reserved0;
+> +	u8   reserved1;
+> +	u8   reserved2;
+> +	u32  reserved3[3];
+> +};
+> +
+> +/* response  (request sense data) structure of the sg_io_v4 */
+> +struct fc_service_reply {
+> +	enum fc_service_status status;
+> +	u16  error_code;
+> +	u16  additional_error_code;
+> +	u32  residual;
+> +};
+> +
+> +struct fc_service {
+> +	struct fc_rport  *rport;
+> +	struct list_head list;
+> +
+> +	spinlock_t   service_state_lock;
+> +	unsigned     service_state_flag;
+> +
+> +	struct request *req;
+> +	struct request_queue *q;
+> +
+> +	/* Used by the discovery code. */
+> +	struct completion  completion;
+> +
+> +	struct fc_service_request *srv_request;
+> +	struct scatterlist *sg_req;
+> +	int   req_sg_cnt;
+> +	int   req_size;
+> +	struct scatterlist *sg_rsp;
+> +	int   rsp_sg_cnt;
+> +	int   rsp_size;
+> +
+> +	struct fc_service_reply srv_reply;
+> +	void  *reply_seq;   /* pointer to sense area of request */
+> +	void  (*service_done)(struct fc_service *);
+> +
+> +	void *lld_pkt;
+> +};
+> +
+>   #define shost_to_fc_host(x) \
+>   	((struct fc_host_attrs *)(x)->shost_data)
+> 
+> @@ -613,6 +685,10 @@ struct fc_function_template {
+>   	int     (* tsk_mgmt_response)(struct Scsi_Host *, u64, u64, int);
+>   	int     (* it_nexus_response)(struct Scsi_Host *, u64, int);
+> 
+> +	/* fc service handler */
+> +	int	(*execute_fc_service)(struct fc_service *);
+> +	int	(*abort_fc_service)(struct fc_service *);
+> +
+>   	/* allocation lengths for host-specific data */
+>   	u32	 			dd_fcrport_size;
+>   	u32	 			dd_fcvport_size;
+> @@ -736,7 +812,6 @@ fc_vport_set_state(struct fc_vport *vport, enum  
+> fc_vport_state new_state)
+>   	vport->vport_state = new_state;
+>   }
+> 
+> -
+>   struct scsi_transport_template *fc_attach_transport(
+>   			struct fc_function_template *);
+>   void fc_release_transport(struct scsi_transport_template *);
+> -- 
+> 1.6.0.2
+> 
