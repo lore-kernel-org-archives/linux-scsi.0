@@ -1,44 +1,35 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: best userspace iscsi target lib?
-Date: Tue, 11 Nov 2008 12:55:34 +0200
-Message-ID: <491964A6.8020309@panasas.com>
-References: <4918B5B2.8050003@garzik.org> <20081111152229J.fujita.tomonori@lab.ntt.co.jp>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11898] mke2fs hang on AIC79 device.
+Date: Tue, 11 Nov 2008 03:23:08 -0800 (PST)
+Message-ID: <20081111112308.5C650108048@picon.linux-foundation.org>
+References: <bug-11898-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:32910 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755244AbYKKKzW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Nov 2008 05:55:22 -0500
-In-Reply-To: <20081111152229J.fujita.tomonori@lab.ntt.co.jp>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:33695 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755382AbYKKLXZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Nov 2008 06:23:25 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mABBN8l2007458
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Nov 2008 03:23:09 -0800
+In-Reply-To: <bug-11898-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: jeff@garzik.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-FUJITA Tomonori wrote:
-> On Mon, 10 Nov 2008 17:29:06 -0500
-> Jeff Garzik <jeff@garzik.org> wrote:
-> 
->> Can someone recommend an open source userspace library that enables one 
->> to implement a userspace iSCSI target?
-> 
-> I'm not sure there is an open source userspace library enables you to
-> easily implement your own userspace iSCSI target but there are some
-> userspace iSCSI target implementations, which might useful.
-> 
-> Some Linux distributions use:
-> 
-> http://stgt.berlios.de/
-> 
+http://bugzilla.kernel.org/show_bug.cgi?id=11898
 
-Look in this patch how we added an external OSD scsi-implementor to stgt:
-http://git.open-osd.org/gitweb.cgi?p=osc-osd/tgt/.git;a=commitdiff;h=5f3b25ef217ee417d8afe255d1a9bc5ed7f25f79
-The implementation itself is in an external library.
 
-I find stgt very easy to be extended.
 
-<snip>
 
-Boaz
+
+------- Comment #33 from vandrove@vc.cvut.cz  2008-11-11 03:23 -------
+Created an attachment (id=18799)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=18799&action=view)
+Kernel NULL pointer dereference with patch from update #28
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
