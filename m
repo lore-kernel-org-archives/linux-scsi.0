@@ -1,70 +1,38 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: aacraid: Adaptec 2200S support broken on x86_64 by commit
- 94cf6ba11b068b8a8f68a1e88bffb6827e92124b
-Date: Mon, 10 Nov 2008 20:54:53 -0800
-Message-ID: <20081110205453.1c0e4f69.akpm@linux-foundation.org>
-References: <48D10E1A.8030804@siemens.com>
-	<48EB6600.9020204@redhat.com>
-	<20081110152006.8982133b.akpm@linux-foundation.org>
-	<1226377257.5014.88.camel@localhost.localdomain>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: best userspace iscsi target lib?
+Date: Tue, 11 Nov 2008 15:22:00 +0900
+Message-ID: <20081111152229J.fujita.tomonori@lab.ntt.co.jp>
+References: <4918B5B2.8050003@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:56324 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754389AbYKKEzv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Nov 2008 23:55:51 -0500
-In-Reply-To: <1226377257.5014.88.camel@localhost.localdomain>
+Received: from sh.osrg.net ([192.16.179.4]:52132 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751707AbYKKGWM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Nov 2008 01:22:12 -0500
+In-Reply-To: <4918B5B2.8050003@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Tomas Henzl <thenzl@redhat.com>, gernot.hillier@siemens.com, aacraid@adaptec.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, mark_salyzyn@adaptec.com, Thomas Guyot-Sionnest <dermoth@aei.ca>, stable@kernel.org, Matt Domsch <Matt_Domsch@dell.com>
+To: jeff@garzik.org
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 10 Nov 2008 20:20:57 -0800 James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+On Mon, 10 Nov 2008 17:29:06 -0500
+Jeff Garzik <jeff@garzik.org> wrote:
 
-> Could someone from Adaptec and Dell please verify that this is correct?
-> Mark Salyzyn no longer works there, but the aacraid@adaptec.com address
-> is supposed to still be working.
+> Can someone recommend an open source userspace library that enables one 
+> to implement a userspace iSCSI target?
 
-Here is the patch:
+I'm not sure there is an open source userspace library enables you to
+easily implement your own userspace iSCSI target but there are some
+userspace iSCSI target implementations, which might useful.
 
+Some Linux distributions use:
 
+http://stgt.berlios.de/
 
-From: Tomas Henzl <thenzl@redhat.com>
+OpenSolaris also has one:
 
-A lot of 64bit machines with Adaptec 2200S and 2120S controllers don't
-recognize SCSI disks any more with the patch "fix driver failure with Dell
-PowerEdge Expandable RAID Controller 3/Di", but fail with tons of "aac_srb:
-aac_fib_send failed with status: 8195" instead. This patch disables the
-quirk introduced in the change cited above for those two controllers again.
+http://opensolaris.org/os/project/iscsitgt/
 
-Signed-off-by: Gernot Hillier <gernot.hillier@siemens.com>
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-Cc: <aacraid@adaptec.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Tested-by: Thomas Guyot-Sionnest <dermoth@aei.ca>
-Cc: <stable@kernel.org>		[2.6.27.x, 2.6.26.x, 2.6.25.x]
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
-
- drivers/scsi/aacraid/linit.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff -puN drivers/scsi/aacraid/linit.c~aacraid-disable-dell-percraid-quirk-on-adaptec-2200s-and-2120s drivers/scsi/aacraid/linit.c
---- a/drivers/scsi/aacraid/linit.c~aacraid-disable-dell-percraid-quirk-on-adaptec-2200s-and-2120s
-+++ a/drivers/scsi/aacraid/linit.c
-@@ -175,8 +175,8 @@ static struct aac_driver_ident aac_drive
- 	{ aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* PERC 3/Di (Boxster/PERC3DiB) */
- 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "catapult        ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* catapult */
- 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "tomcat          ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* tomcat */
--	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2120S   ", 1, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2120S (Crusader) */
--	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2200S (Vulcan) */
-+	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2120S   ", 1, AAC_QUIRK_31BIT | AAC_QUIRK_34SG },		      /* Adaptec 2120S (Crusader) */
-+	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG },		      /* Adaptec 2200S (Vulcan) */
- 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2200S (Vulcan-2m) */
- 	{ aac_rx_init, "aacraid",  "Legend  ", "Legend S220     ", 1, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Legend S220 (Legend Crusader) */
- 	{ aac_rx_init, "aacraid",  "Legend  ", "Legend S230     ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Legend S230 (Legend Vulcan) */
-_
-
+*BSD also have userspace iSCSI target implementations.
