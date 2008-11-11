@@ -1,73 +1,58 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: best userspace iscsi target lib?
-Date: Tue, 11 Nov 2008 18:12:25 +0200
-Message-ID: <4919AEE9.3040802@panasas.com>
-References: <4918B5B2.8050003@garzik.org>	<20081111152229J.fujita.tomonori@lab.ntt.co.jp>	<4919917C.4030109@garzik.org> <20081112000239T.fujita.tomonori@lab.ntt.co.jp>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: Thin provisioning & arrays
+Date: Tue, 11 Nov 2008 11:25:01 -0500
+Message-ID: <4919B1DD.3030207@redhat.com>
+References: <28572.1226369378@ocs10w> <49198FC3.7080301@redhat.com> <49199CFF.8080002@hp.com> <4919A705.2070301@redhat.com> <4919ABC6.8030606@hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:14131 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751458AbYKKQMN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Nov 2008 11:12:13 -0500
-In-Reply-To: <20081112000239T.fujita.tomonori@lab.ntt.co.jp>
+Received: from mx2.redhat.com ([66.187.237.31]:46823 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751715AbYKKQZ1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Nov 2008 11:25:27 -0500
+In-Reply-To: <4919ABC6.8030606@hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: jeff@garzik.org, linux-scsi@vger.kernel.org
+To: jim owens <jowens@hp.com>
+Cc: Keith Owens <kaos@ocs.com.au>, Black_David@emc.com, david@fromorbit.com, dwmw2@infradead.org, martin.petersen@oracle.com, chris.mason@oracle.com, jens.axboe@oracle.com, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, coughlan@redhat.com, matthew@wil.cx
 
-FUJITA Tomonori wrote:
-> On Tue, 11 Nov 2008 09:06:52 -0500
-> Jeff Garzik <jeff@garzik.org> wrote:
-> 
->> FUJITA Tomonori wrote:
->>> On Mon, 10 Nov 2008 17:29:06 -0500
->>> Jeff Garzik <jeff@garzik.org> wrote:
+jim owens wrote:
+> Ric Wheeler wrote:
+>> jim owens wrote:
 >>>
->>>> Can someone recommend an open source userspace library that enables one 
->>>> to implement a userspace iSCSI target?
->>> I'm not sure there is an open source userspace library enables you to
->>> easily implement your own userspace iSCSI target but there are some
->>> userspace iSCSI target implementations, which might useful.
->>>
->>> Some Linux distributions use:
->>>
->>> http://stgt.berlios.de/
->>>
->>> OpenSolaris also has one:
->>>
->>> http://opensolaris.org/os/project/iscsitgt/
->>>
->>> *BSD also have userspace iSCSI target implementations.
->> Thanks much, I will take a look.  I have already found and read the code 
->> for NetBSD's iSCSI target.
+>>> And by "different users" these customers almost always mean
+>>> different operating systems.  They are combining storage into
+>>> a central location for easier management.
 >>
->> I am mainly interested in 100% userspace solution, because in my case, 
->> the storage software (distributed goop) is also in userspace.  Something 
->> that exports through the kernel actually adds overhead, when a 
->> straight-to-sockets userspace implementation would be more efficient.
-> 
-> All the implementations that I referred to above are 100% userspace
-> solution (if I correctly remember *BSD's implementations).
-> 
-> You might think that stgt is a kernel space solution but it's 100%
-> userspace solution if you use only its iSCSI (or FCoE) support. As you
-> expect, it's just a userspace daemon. It doesn't require any fancy
-> kernel features.
-> 
-> About OSD support, I think that Pete and other osc.edu people
-> implemented iSCSI OSD target with stgt (though I've not merged their
-> OSD code to stgt or tried it yet):
-> 
+>> When you have one specific LUN exported from an array, it is owned by 
+>> one OS. You can definitely have different LUN's used by different 
+>> OS's, but that seems to be irrelevant to our challenges here, right?
+>
+> But the total thin storage pool is shared by multiple luns
+> and thus maybe multiple not-able-to-cooperate hosts.
 
-Do not use these URL's they are out of date. The OSC OSD project
-is now hosted on open-osd.org git tree's.
+agreed...
+>
+> I was only pointing this out because earlier threads seemed
+> to be "linux filesystems to be exact across multiple hosts"
+> (which is really a cluster design) and even if we did that
+> for linux it would not solve the customer need.
+>
+> I just wanted to make it clear why trying to do a complicated
+> change to linux for exactness is pointless because the customer
+> requirement is for more than linux attached to the thin pool.
+>
+> So the relevance is our design boundary.
+>
+> jim
 
-Look here for latest git tree and instructions:
-http://www.open-osd.org/bin/view/Main/OscOsdProject
+I think that the concern is that the exact implementation is actually 
+already coded and relatively easy for us to do (i.e., send down unmap 
+commands at natural file system level units after a truncate/delete).
 
-We also have stgt + osd-patches hosted as a sub-module under
-the OSC OSD target.
+The irony is that the hard part is to try to approach that level of 
+exactness with the other techniques (coalescing unmaps, defrag, etc) :-)
 
-Boaz
+ric
+
