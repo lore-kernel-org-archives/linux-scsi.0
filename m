@@ -1,49 +1,77 @@
-From: kasture <mayuresh.kasture@gmail.com>
-Subject: Writing to a sector listed in GList
-Date: Tue, 11 Nov 2008 19:51:36 -0800 (PST)
-Message-ID: <20453709.post@talk.nabble.com>
+From: Mike Anderson <andmike@linux.vnet.ibm.com>
+Subject: Re: question on block-layer timeout change
+Date: Tue, 11 Nov 2008 23:29:19 -0800
+Message-ID: <20081112072919.GB12192@linux.vnet.ibm.com>
+References: <3568BBCB98C00041A9E622952FD5F24EA11C9F3A@cosmail03.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kuber.nabble.com ([216.139.236.158]:47644 "EHLO
-	kuber.nabble.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751122AbYKLDvh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Nov 2008 22:51:37 -0500
-Received: from isper.nabble.com ([192.168.236.156])
-	by kuber.nabble.com with esmtp (Exim 4.63)
-	(envelope-from <lists@nabble.com>)
-	id 1L06lU-0000H5-DH
-	for linux-scsi@vger.kernel.org; Tue, 11 Nov 2008 19:51:36 -0800
+Received: from e38.co.us.ibm.com ([32.97.110.159]:38878 "EHLO
+	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751214AbYKLIBZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Nov 2008 03:01:25 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e38.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id mAC80Xl4018383
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Nov 2008 01:00:33 -0700
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id mAC81O1u078624
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Nov 2008 01:01:24 -0700
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id mAC81KsT003990
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Nov 2008 01:01:24 -0700
+Content-Disposition: inline
+In-Reply-To: <3568BBCB98C00041A9E622952FD5F24EA11C9F3A@cosmail03.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Shi, Harris" <Harris.Shi@lsi.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
+Shi, Harris <Harris.Shi@lsi.com> wrote:
+>    Due to the current timeout management change, our RDAC (failover) driver
+>    had some difficulties in handling SCSI I/O timeout. The RDAC driver is in
+>    the similar        layer as HBA driver in that it will register into scsi
+>    mid-layer as scsi_host_template and stays below mid-layer. However, all
+>    scsi I/Os coming to RDAC stack are routed by a path then dispatched to the
+>    real HBA driver via mid-layer. We used to rely on the timer in
+>    scsi_cmnd->eh_timeout to deal with scsi i/o coming into the RDAC stack.
+>    Basically when I/O is coming to RDAC stack, we need to delete the timer
+>    for each I/O. Then after selecting a specific path for this I/O, we need
+>    to send the I/O back to mid-layer with a larger timeout value just to
+>    avoid the forced failover. When I/O completes successfully, we added the
+>    original timer back to the I/O and pass it over to upper block layer for
+>    further process.
+> 
+> 
+> 
+>    However, with the current timeout management functions moving to block
+>    layer, it became difficult for us to explicitly control the timeout value
+>    for specific I/O.
+> 
+>    Can you shed some lights on how to handle the I/O based timeout in this
+>    case?
+> 
 
-Hello All:
+Since long term mpp capabilities should be handled by dm-mp and the SCSI
+RDAC handler exporting functions to allow direct adding and deleting of the
+timer may not be something that would be needed long term. It may not be
+really clean to add these interfaces in.
 
-Can anybody explain me how I can write to a sector which is listed in GList?
+Could similar prior functionality be created by the following?
+	1.) To the RDAC vhba add a hostt->eh_timed_out function. In this
+	timeout function return BLK_EH_RESET_TIMER until it is done with
+	the command. Since the vhba does not have a transport
+	scsi_times_out should call this function on every timeout. There is
+	some overhead here depending on the default timeout value set in
+	timing out and then resetting the timer.
 
-Here is what I want to do(why? Well, there may not be any practical use. I
-am just exploring reamapping for academic purposes and as part of that I
-want to be able to do this). 
+	2.) For each sdev that is taken over store the previous
+	rq_timed_out_fn and then use blk_queue_rq_timed_out to set a mpp
+	specific function for the requests sent to the real HBA drivers.
 
-If somebody issues a command to reassign a healthy sector, it will be marked
-as bad and will be listed in GList even if it is not a defective sector. So,
-if we send LBA of that sector to sg_write_long, it should be able to write
-there. But, the issue here is that READ DEFECT DATA does not provide any
-DEFECT LIST FORMAT to retrieve the address as LBA. We can get CHS address
-though. I don't know how to convert CHS into LBA if the drive uses zone bit
-recording. Given all this I am not quite able to figure out how I can use
-the CHS address that I retrieved to write some stuff on that sector.
+	3.) Set the timeout in the real HBA driver requests prior to
+	sending it to the mid layer.
 
-Any comments will be very useful. Please reply even if you think that there
-is NO way to do this.
-
-Thanks in advance...
-
-- Mayuresh
--- 
-View this message in context: http://www.nabble.com/Writing-to-a-sector-listed-in-GList-tp20453709p20453709.html
-Sent from the linux-scsi mailing list archive at Nabble.com.
-
+-andmike
+--
+Michael Anderson
+andmike@linux.vnet.ibm.com
