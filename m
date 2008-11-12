@@ -1,70 +1,57 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: Problems with the block-layer timeouts
-Date: Wed, 12 Nov 2008 11:08:57 +0900
-Message-ID: <20081112110840W.fujita.tomonori@lab.ntt.co.jp>
-References: <20081111155458M.fujita.tomonori@lab.ntt.co.jp>
-	<Pine.LNX.4.44L0.0811111205390.29125-100000@netrider.rowland.org>
-	<20081111191936.GK26778@kernel.dk>
+Subject: Re: [PATCH 2/2] FC pass through support - revised III
+Date: Wed, 12 Nov 2008 11:58:36 +0900
+Message-ID: <20081112115900T.fujita.tomonori@lab.ntt.co.jp>
+References: <B125BA56-8293-4C42-AEBC-0C0DCAC365D0@qlogic.com>
+	<20081111184216Q.fujita.tomonori@lab.ntt.co.jp>
+	<D9222461-3AC2-438D-9DB1-63F12DB244C1@qlogic.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:45446 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:46986 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750956AbYKLCJL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Nov 2008 21:09:11 -0500
-In-Reply-To: <20081111191936.GK26778@kernel.dk>
+	id S1751129AbYKLC7G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Nov 2008 21:59:06 -0500
+In-Reply-To: <D9222461-3AC2-438D-9DB1-63F12DB244C1@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: seokmann.ju@qlogic.com
+Cc: fujita.tomonori@lab.ntt.co.jp, James.Smart@Emulex.Com, James.Bottomley@HansenPartnership.com, bharrosh@panasas.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, michaelc@cs.wisc.edu, robert.w.love@intel.com
 
-On Tue, 11 Nov 2008 20:19:36 +0100
-Jens Axboe <jens.axboe@oracle.com> wrote:
+On Tue, 11 Nov 2008 06:47:17 -0800
+Seokmann Ju <seokmann.ju@qlogic.com> wrote:
 
-> On Tue, Nov 11 2008, Alan Stern wrote:
-> > On Tue, 11 Nov 2008, FUJITA Tomonori wrote:
-> > 
-> > > I don't worry about anything. I just think that these round_jiffies_up
-> > > are pointless because they were added for the block-layer users that
-> > > care about exact timeouts, however the block-layer doesn't export
-> > > blk_add_timer() so the block-layer users can't control the exact time
-> > > when the timer starts. So doing round_jiffies_up calculation per every
-> > > request doesn't make sense for me.
-> > 
-> > In fact the round_jiffies_up() routines were added for other users as
-> > well as the block layer.  However none of the others could be changed
-> > until the routines were merged.  Now that the routines are in the 
-> > mainline, you should see them start to be called in multiple places.
-> > 
-> > Also, the users of the block layer _don't_ care about exact timeouts.  
-> > That's an important aspect of round_jiffies() and round_jiffies_up() --
-> > you don't use them if you want an exact timeout.
-> > 
-> > The reason for using round_jiffies() is to insure that the timeout
-> > will occur at a 1-second boundary.  If several timeouts are set for
-> > about the same time and they all use round_jiffies() or
-> > round_jiffies_up(), then they will all occur at the same tick instead
-> > of spread out among several different ticks during the course of that
-> > 1-second interval.  As a result, the system will need to wake up only
-> > once to service all those timeouts, instead of waking up several
-> > different times.  It is a power-saving scheme.
+> >> +	if (!copy_size)
+> >> +		goto pt_error3;
+> >> +
+> >> +	/* Check for room in outstanding command list. */
+> >> +	handle = req->current_outstanding_cmd;
+> >> +	for (index = 1; index < MAX_OUTSTANDING_COMMANDS; index++) {
+> >> +		handle++;
+> >> +		if (handle == MAX_OUTSTANDING_COMMANDS)
+> >> +			handle = 1;
+> >> +		if (!req->outstanding_cmds[handle])
+> >> +			break;
+> >> +	}
+> >
+> > Hmm, needs to check the index overflow here?
+> I think I've missed your point, here.
+> Could you please elaborate a bit further?
 
-Hmm, but for 99.9% of the cases, the timeout of the block layer
-doesn't expire, the timeout rarely happens. The power-saving scheme
-can be applied to only 0.1%, but at the cost of the round_jiffies
-overhead per every request.
+I meant that you need to check index after the loop like this:
 
-If I understand correctly, round_jiffies() is designed for timers that
-will expire, such as periodic checking. The power-saving scheme nicely
-works for such usages.
++	/* Check for room in outstanding command list. */
++	handle = req->current_outstanding_cmd;
++	for (index = 1; index < MAX_OUTSTANDING_COMMANDS; index++) {
++		handle++;
++		if (handle == MAX_OUTSTANDING_COMMANDS)
++			handle = 1;
++		if (!req->outstanding_cmds[handle])
++			break;
++	}
++	if (index == MAX_OUTSTANDING_COMMANDS)
++		goto handle_error;
 
+qla2xxx and qla1280 drivers do the similar thing.
 
-> I can't add anything else, can't say it any better either. The main
-> point of using round_jiffies_up() is to align with other timers. I don't
-> understand why you (Tomo) think that timeouts are exact? They really are
-> not, and within the same second is quite adequate here.
-
-My exact argument is for switching from round_jiffies() to
-round_jiffies_up. But I wrote above, in the first place, the
-round_jiffies didn't make sense to me.
