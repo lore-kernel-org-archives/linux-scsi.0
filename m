@@ -1,70 +1,77 @@
-From: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 03/18 ver2] libosd: OSDv1 Headers
-Date: Wed, 12 Nov 2008 18:15:13 +0100
-Message-ID: <1226510113.14186.22.camel@johannes.berg>
-References: <491073BB.4000900@panasas.com>
-	 <1225817046-5946-1-git-send-email-bharrosh@panasas.com>
-	 <4916F934.4090205@panasas.com>
-	 <20081110092940.57b4c169.randy.dunlap@oracle.com>
-	 <491AD5C8.8030406@panasas.com>  <491B08DB.1030809@oracle.com>
+From: malahal@us.ibm.com
+Subject: Re: question on block-layer timeout change
+Date: Wed, 12 Nov 2008 09:16:52 -0800
+Message-ID: <20081112171652.GA30108@us.ibm.com>
+References: <3568BBCB98C00041A9E622952FD5F24EA11C9F3A@cosmail03.lsi.com> <20081112072919.GB12192@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-X41jqdmptpee6s+KjMag"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54823 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752703AbYKLRPx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Nov 2008 12:15:53 -0500
-In-Reply-To: <491B08DB.1030809@oracle.com>
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:54093 "EHLO e1.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752450AbYKLRQ7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Nov 2008 12:16:59 -0500
+Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
+	by e1.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id mACHGpmv031950
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Nov 2008 12:16:51 -0500
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id mACHGsLS1949742
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Nov 2008 12:16:55 -0500
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id mACHGr6Y021224
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Nov 2008 10:16:54 -0700
+Content-Disposition: inline
+In-Reply-To: <20081112072919.GB12192@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>, =?ISO-8859-1?Q?J=F6rn?= Engel <joern@logfs.org>, open-osd development <osd-dev@open-osd.org>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, Sami.Iren@seagate.com, linux-kernel <linux-kernel@vger.kernel.org>
+To: Mike Anderson <andmike@linux.vnet.ibm.com>
+Cc: "Shi, Harris" <Harris.Shi@lsi.com>, Jens Axboe <jens.axboe@oracle.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
+Mike Anderson [andmike@linux.vnet.ibm.com] wrote:
+> Shi, Harris <Harris.Shi@lsi.com> wrote:
+> >    Due to the current timeout management change, our RDAC (failover) driver
+> >    had some difficulties in handling SCSI I/O timeout. The RDAC driver is in
+> >    the similar        layer as HBA driver in that it will register into scsi
+> >    mid-layer as scsi_host_template and stays below mid-layer. However, all
+> >    scsi I/Os coming to RDAC stack are routed by a path then dispatched to the
+> >    real HBA driver via mid-layer. We used to rely on the timer in
+> >    scsi_cmnd->eh_timeout to deal with scsi i/o coming into the RDAC stack.
+> >    Basically when I/O is coming to RDAC stack, we need to delete the timer
+> >    for each I/O. Then after selecting a specific path for this I/O, we need
+> >    to send the I/O back to mid-layer with a larger timeout value just to
+> >    avoid the forced failover. When I/O completes successfully, we added the
+> >    original timer back to the I/O and pass it over to upper block layer for
+> >    further process.
+> > 
+> > 
+> > 
+> >    However, with the current timeout management functions moving to block
+> >    layer, it became difficult for us to explicitly control the timeout value
+> >    for specific I/O.
+> > 
+> >    Can you shed some lights on how to handle the I/O based timeout in this
+> >    case?
+> > 
+> 
+> Since long term mpp capabilities should be handled by dm-mp and the SCSI
+> RDAC handler exporting functions to allow direct adding and deleting of the
+> timer may not be something that would be needed long term. It may not be
+> really clean to add these interfaces in.
+> 
+> Could similar prior functionality be created by the following?
+> 	1.) To the RDAC vhba add a hostt->eh_timed_out function. In this
+> 	timeout function return BLK_EH_RESET_TIMER until it is done with
+> 	the command. Since the vhba does not have a transport
+> 	scsi_times_out should call this function on every timeout. There is
+> 	some overhead here depending on the default timeout value set in
+> 	timing out and then resetting the timer.
 
---=-X41jqdmptpee6s+KjMag
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I believe, GDTG driver does this sort of thing for a different purpose.
 
-On Wed, 2008-11-12 at 08:48 -0800, Randy Dunlap wrote:
+> 	2.) For each sdev that is taken over store the previous
+> 	rq_timed_out_fn and then use blk_queue_rq_timed_out to set a mpp
+> 	specific function for the requests sent to the real HBA drivers.
+> 
+> 	3.) Set the timeout in the real HBA driver requests prior to
+> 	sending it to the mid layer.
 
-> /** DOC <topic_name>:
->  * <these lines are added to kernel-doc output when you use:
-> !P<filename> <topic_name>
->  * a Documentation/DocBook/*.tmpl file.
->  */
->=20
-> See Documentation/DocBook/mac80211.tmpl for examples.
->=20
-> Johannes, I thought that you had some usage documentation for DOC:.
-> Did you not or did it not get merged??
-> It needs to be added to Documentation/kernel-doc-nano-HOWTO.txt.
-
-I honestly don't remember! Grepping through all my old patches didn't
-find anything though, so I suspect I didn't have anything.
-
-johannes
-
---=-X41jqdmptpee6s+KjMag
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJGw8eAAoJEKVg1VMiehFY3OAP/iC/9HsRRWOEyN+wofcd6xA4
-JJEJvFgBZgfQEd5KiCuuLcecO4mOuLUQb0ruW1U9rLFoPo38Vh30fQLDCkSDwXrN
-stJ1eK50Ze3bS5kM2M+1Su+Ep/GDD0wPYE6Jcu0X1mHlvVGHjqTxL7Ut8PoIf0Ty
-2m+pzzshhNMWoFBTWxbRu4Jxc2Fp2VPtn1tUR0bcWO4eONSUp3DrC3LMRW5IGByR
-rK2n3x1UTXK8zhCma5WvbB2egUTM54EGUFkWh60fJGsfSrZ0sXzVCeeJY+AFUBUT
-vBSrBfw+H70mhuSduYziNElvEyUNZYZOlW7XIY2YxkfXmF7feAZ3EVFdCuOlPYAD
-psLSd3StEzkeJ6Ere3o5E0VK4xqywkIek0+N0ym6MG1EKNKOA0K5MbVwKQ4h0ele
-yHZsFli8OVIK+7NsRtqHVXZS3MKlhcjwfeKRkb834ECKTE9FjNv7F9gA8NmPDWL4
-6ErwWC45VDxFZ+Z4ZfL/fAe4pZhJpRZZQVvMpoC02EMWlPgaeZfiuK4pNCARVXYi
-Azwq+xvxjVykUHIiES1Q58blyGHbDKjxrXZVJyxBbdrackSdUe7jt7lJFKyel9PG
-sJy4qk1JoMf+EBmXazOWThn3cQR1Kproz6kd5BJ/7I3SCd0RS84oE6BptfSvPQtg
-aJ7hlbA227uxgYfyt9vU
-=XdLQ
------END PGP SIGNATURE-----
-
---=-X41jqdmptpee6s+KjMag--
-
+Should work, I guess...
