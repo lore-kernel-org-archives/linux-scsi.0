@@ -1,62 +1,59 @@
-From: Luciano Rocha <luciano@eurotux.com>
-Subject: Re: usb hdd problems with 2.6.27.2
-Date: Thu, 13 Nov 2008 17:10:57 +0000
-Message-ID: <20081113171057.GA3223@bit.office.eurotux.com>
-References: <20081105102614.GB3586@bit.office.eurotux.com> <Pine.LNX.4.44L0.0811051149500.2187-100000@iolanthe.rowland.org>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [PATCH 03/18 ver4] libosd: OSDv1 Headers
+Date: Thu, 13 Nov 2008 10:16:54 -0800
+Message-ID: <20081113101654.f2f25b1b.randy.dunlap@oracle.com>
+References: <491073BB.4000900@panasas.com>
+	<1225817046-5946-1-git-send-email-bharrosh@panasas.com>
+	<4916F934.4090205@panasas.com>
+	<20081110092940.57b4c169.randy.dunlap@oracle.com>
+	<491AD697.9030305@panasas.com>
+	<20081112105945.f4ec0089.randy.dunlap@oracle.com>
+	<491C1CBF.6080504@panasas.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ibTvN161/egqYuK8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from os.eurotux.com ([216.75.63.6]:41816 "EHLO os.eurotux.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751546AbYKMRLF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Nov 2008 12:11:05 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0811051149500.2187-100000@iolanthe.rowland.org>
+Received: from rcsinet13.oracle.com ([148.87.113.125]:45494 "EHLO
+	rgminet13.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751817AbYKMSSW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Nov 2008 13:18:22 -0500
+In-Reply-To: <491C1CBF.6080504@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linux-Kernel <linux-kernel@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>, =?ISO-8859-1?Q?J=F6rn?= Engel <joern@logfs.org>, open-osd development <osd-dev@open-osd.org>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, Sami.Iren@seagate.com, linux-kernel <linux-kernel@vger.kernel.org>
 
+On Thu, 13 Nov 2008 14:25:35 +0200 Boaz Harrosh wrote:
 
---ibTvN161/egqYuK8
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> Headers only patch.
+> 
+> osd_protocol.h
+> 	Contains a C-fied definition of the T10 OSD standard
+> osd_types.h
+> 	Contains CPU order common used types
+> osd_initiator.h
+> 	API definition of the osd_initiator library
+> osd_sec.h
+> 	Contains High level API for the security manager.
+> 
+> [Note that checkpatch spews errors on things that are valid in this context
+> and will not be fixed]
+> 
+> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> Reviewed-by: Benny Halevy <bhalevy@panasas.com>
 
-On Wed, Nov 05, 2008 at 11:51:41AM -0500, Alan Stern wrote:
-> On Wed, 5 Nov 2008, Luciano Rocha wrote:
->=20
-> > > Please rerun the A+B and A+B+C tests, but this time using the B' patch
-> > > below instead of B.
-> >=20
-> > New test data in the bugzilla.
->=20
-> Sorry, dumb mistake on my part.  B'' is below.  It is the same as B'=20
-> except for one character.
+OK by me.  Thanks for the changes.
 
-A+B''+C seems to have done it. The bugzilla entry was updated with the
-kernel messages and usb traffic.
+> ---
+>  include/scsi/osd_initiator.h |  332 ++++++++++++++++++++++++++++
+>  include/scsi/osd_protocol.h  |  497 ++++++++++++++++++++++++++++++++++++++++++
+>  include/scsi/osd_sec.h       |   45 ++++
+>  include/scsi/osd_types.h     |   40 ++++
+>  4 files changed, 914 insertions(+), 0 deletions(-)
+>  create mode 100644 include/scsi/osd_initiator.h
+>  create mode 100644 include/scsi/osd_protocol.h
+>  create mode 100644 include/scsi/osd_sec.h
+>  create mode 100644 include/scsi/osd_types.h
 
-  http://bugzilla.kernel.org/show_bug.cgi?id=3D11843
-
-Regards,
-Luciano Rocha
-
---=20
-Luciano Rocha <luciano@eurotux.com>
-Eurotux Inform=E1tica, S.A. <http://www.eurotux.com/>
-
---ibTvN161/egqYuK8
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkkcX6EACgkQinSul6a7oB96NACdEkdPb1R6y4blXdb4jb5W/D8L
-9YIAn3pTsHyx8+yPc/bjLpvzemdFDLex
-=erlF
------END PGP SIGNATURE-----
-
---ibTvN161/egqYuK8--
+---
+~Randy
