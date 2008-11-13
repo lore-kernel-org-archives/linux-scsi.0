@@ -1,58 +1,86 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH] [6/21] Remove unchecked_isa_dma in advansys.c
-Date: Sun, 16 Nov 2008 23:33:08 +0100
-Message-ID: <20081116223308.GF6703@one.firstfloor.org>
-References: <200811161211.212948789@firstfloor.org> <20081115231106.686F43E661A@basil.firstfloor.org> <1226854581.3556.14.camel@localhost.localdomain>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug 12020] New: scsi_times_out NULL pointer dereference
+Date: Thu, 13 Nov 2008 16:46:54 -0600
+Message-ID: <1226616414.3537.26.camel@localhost.localdomain>
+References: <bug-12020-11613@http.bugzilla.kernel.org/>
+	 <1226603010.3537.18.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:55936 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753364AbYKPWXc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Nov 2008 17:23:32 -0500
-Content-Disposition: inline
-In-Reply-To: <1226854581.3556.14.camel@localhost.localdomain>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:40131 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753197AbYKMWrD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Nov 2008 17:47:03 -0500
+In-Reply-To: <1226603010.3537.18.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andi Kleen <andi@firstfloor.org>, axboe@kernel.dk, linux-scsi@vger.kernel.org
+To: bugme-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org, Jens Axboe <Jens.Axboe@oracle.com>
 
-On Sun, Nov 16, 2008 at 11:56:21AM -0500, James Bottomley wrote:
-> On Sun, 2008-11-16 at 00:11 +0100, Andi Kleen wrote:
-> > That patch is a little more complicated than the others. advansys
-> > was the only ISA driver who actually passed ->cmnd to the firmware.
-> > So I implemented a simple own bounce buffer scheme for this case.
-> > Also did sense_buffer bouncing in the driver while I was at it;
-> > which means it doesn't require the mid layer to do this anymore.
-> > 
-> > - allocate hostdata with GFP_DMA separately for the ISA case
-> > - Tell block layer explicitely to bounce for ISA case
-> > - remove unchecked_isa_dma
-> > 
-> > Untested due to lack of hardware
-> > 
-> > v2: use dma api for all allocations
+On Thu, 2008-11-13 at 13:03 -0600, James Bottomley wrote:
+> Actually, I think the trace is slightly off.  I suspect this is the
+> problem:
 > 
-> Just a minute:  this is another driver where you allocate coherent
-> memory for the host structure but fail to use it for I/O as far as I can
-> tell.
+> 	struct scsi_cmnd *scmd = req->special;
 > 
-> What's going on here?  If this is just a ploy to get GFP_DMA memory,
-> then this isn't the way to do it.  Firstly, it doesn't seem to be needed
+> I bet req->special is NULL because the command timed out even before it
+> was prepared by the subsystem.
+> 
+> Does this fix it?
+> 
+> The fix is more of a bandaid than anything ... we can't really have
+> commands timing out in the mid-layer because we expect we have full
+> control of them.  With this patch, if we run out of resets, block will
+> complete a command we're still processing.
+> 
+> James
+> 
+> ---
+> 
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 94ed262..5612c42 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -127,6 +127,13 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
+>  	enum blk_eh_timer_return (*eh_timed_out)(struct scsi_cmnd *);
+>  	enum blk_eh_timer_return rtn = BLK_EH_NOT_HANDLED;
+>  
+> +	if (!scmd)
+> +		/*
+> +		 * nasty: command timed out before the mid layer
+> +		 * even prepared it
+> +		 */
+> +		return BLK_EH_RESET_TIMER;
+> +
+>  	scsi_log_completion(scmd, TIMEOUT_ERROR);
+>  
+>  	if (scmd->device->host->transportt->eh_timed_out)
 
-It's just that the structure was in GFP_DMA before due to unchecked_isa_dma
-so I wanted to do a equivalent convertion
+Mike Anderson pointed out that we have a potential window where the
+timer can fire after we've unprepped the request in SCSI (so making
+req->special NULL) but before we call blk_requeue_request() which stops
+the timer.  We can rejig the locking to prevent this from happening, so
+could you (separately) try this patch?
 
-> and secondly, coherent memory is hard (or impossible) to manufacture on
-> certain platforms.  You should only use it for DMA mailboxes and other
-> register exchanges between the device and main memory ... expanding its
-> use is asking for resource exhaustion.
+James
 
-It's not expanding it, in fact it lowers it because they allocate
-less in GFP_DMA now than with unchecked_isa_dma (e.g. no more commands
-and sense buffers)
+---
 
--Andi
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f5d3b96..3475b74 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -649,8 +643,8 @@ static void scsi_requeue_command(struct request_queue *q, struct scsi_cmnd *cmd)
+ 	struct request *req = cmd->request;
+ 	unsigned long flags;
+ 
+-	scsi_unprep_request(req);
+ 	spin_lock_irqsave(q->queue_lock, flags);
++	scsi_unprep_request(req);
+ 	blk_requeue_request(q, req);
+ 	spin_unlock_irqrestore(q->queue_lock, flags);
+ 
 
--- 
-ak@linux.intel.com
+
