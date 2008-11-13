@@ -1,22 +1,30 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 12020] New: scsi_times_out NULL pointer dereference
-Date: Thu, 13 Nov 2008 13:03:30 -0600
-Message-ID: <1226603010.3537.18.camel@localhost.localdomain>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12020] scsi_times_out NULL pointer dereference
+Date: Thu, 13 Nov 2008 11:03:42 -0800 (PST)
+Message-ID: <20081113190342.2EB6611D107@picon.linux-foundation.org>
 References: <bug-12020-11613@http.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:39184 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751345AbYKMTDe (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:37096 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751886AbYKMTDw (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Nov 2008 14:03:34 -0500
+	Thu, 13 Nov 2008 14:03:52 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mADJ3g3p005496
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Nov 2008 11:03:43 -0800
 In-Reply-To: <bug-12020-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugme-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org, Jens Axboe <Jens.Axboe@oracle.com>
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=12020
+
+
+
+
+
+------- Comment #1 from anonymous@kernel-bugs.osdl.org  2008-11-13 11:03 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Thu, 2008-11-13 at 10:30 -0800, bugme-daemon@bugzilla.kernel.org
 wrote:
@@ -69,7 +77,7 @@ wrote:
 Actually, I think the trace is slightly off.  I suspect this is the
 problem:
 
-	struct scsi_cmnd *scmd = req->special;
+        struct scsi_cmnd *scmd = req->special;
 
 I bet req->special is NULL because the command timed out even before it
 was prepared by the subsystem.
@@ -89,19 +97,24 @@ diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
 index 94ed262..5612c42 100644
 --- a/drivers/scsi/scsi_error.c
 +++ b/drivers/scsi/scsi_error.c
-@@ -127,6 +127,13 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
- 	enum blk_eh_timer_return (*eh_timed_out)(struct scsi_cmnd *);
- 	enum blk_eh_timer_return rtn = BLK_EH_NOT_HANDLED;
- 
-+	if (!scmd)
-+		/*
-+		 * nasty: command timed out before the mid layer
-+		 * even prepared it
-+		 */
-+		return BLK_EH_RESET_TIMER;
+@@ -127,6 +127,13 @@ enum blk_eh_timer_return scsi_times_out(struct request
+*req)
+        enum blk_eh_timer_return (*eh_timed_out)(struct scsi_cmnd *);
+        enum blk_eh_timer_return rtn = BLK_EH_NOT_HANDLED;
+
++       if (!scmd)
++               /*
++                * nasty: command timed out before the mid layer
++                * even prepared it
++                */
++               return BLK_EH_RESET_TIMER;
 +
- 	scsi_log_completion(scmd, TIMEOUT_ERROR);
- 
- 	if (scmd->device->host->transportt->eh_timed_out)
+        scsi_log_completion(scmd, TIMEOUT_ERROR);
+
+        if (scmd->device->host->transportt->eh_timed_out)
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
