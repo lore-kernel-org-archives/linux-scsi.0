@@ -1,23 +1,33 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 12020] New: scsi_times_out NULL pointer dereference
-Date: Thu, 13 Nov 2008 16:46:54 -0600
-Message-ID: <1226616414.3537.26.camel@localhost.localdomain>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12020] scsi_times_out NULL pointer dereference
+Date: Thu, 13 Nov 2008 14:47:09 -0800 (PST)
+Message-ID: <20081113224709.D126511D108@picon.linux-foundation.org>
 References: <bug-12020-11613@http.bugzilla.kernel.org/>
-	 <1226603010.3537.18.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:40131 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753197AbYKMWrD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Nov 2008 17:47:03 -0500
-In-Reply-To: <1226603010.3537.18.camel@localhost.localdomain>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:51473 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751715AbYKMWrl convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Nov 2008 17:47:41 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mADMl91W019785
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Nov 2008 14:47:10 -0800
+In-Reply-To: <bug-12020-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugme-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org, Jens Axboe <Jens.Axboe@oracle.com>
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=12020
+
+
+
+
+
+------- Comment #4 from anonymous@kernel-bugs.osdl.org  2008-11-13 14:47 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Thu, 2008-11-13 at 13:03 -0600, James Bottomley wrote:
 > Actually, I think the trace is slightly off.  I suspect this is the
@@ -72,15 +82,20 @@ diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
 index f5d3b96..3475b74 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -649,8 +643,8 @@ static void scsi_requeue_command(struct request_queue *q, struct scsi_cmnd *cmd)
- 	struct request *req = cmd->request;
- 	unsigned long flags;
- 
--	scsi_unprep_request(req);
- 	spin_lock_irqsave(q->queue_lock, flags);
-+	scsi_unprep_request(req);
- 	blk_requeue_request(q, req);
- 	spin_unlock_irqrestore(q->queue_lock, flags);
- 
+@@ -649,8 +643,8 @@ static void scsi_requeue_command(struct request_queue *q,
+struct scsi_cmnd *cmd)
+        struct request *req = cmd->request;
+        unsigned long flags;
+
+-       scsi_unprep_request(req);
+        spin_lock_irqsave(q->queue_lock, flags);
++       scsi_unprep_request(req);
+        blk_requeue_request(q, req);
+        spin_unlock_irqrestore(q->queue_lock, flags);
 
 
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
