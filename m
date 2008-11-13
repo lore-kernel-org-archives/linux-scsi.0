@@ -1,76 +1,112 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: Problems with the block-layer timeouts
-Date: Thu, 13 Nov 2008 11:34:56 +0100
-Message-ID: <20081113103456.GB26778@kernel.dk>
-References: <20081111155458M.fujita.tomonori@lab.ntt.co.jp> <Pine.LNX.4.44L0.0811111205390.29125-100000@netrider.rowland.org> <20081111191936.GK26778@kernel.dk> <20081112110840W.fujita.tomonori@lab.ntt.co.jp>
+From: "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+Subject: RE: [PATCH 4/8] drivers/message/fusion: use ARRAY_SIZE
+Date: Thu, 13 Nov 2008 16:19:24 +0530
+Message-ID: <B73941C4DE6A3D4EA1AE128E9565E244238A2D123F@inbmail01.lsi.com>
+References: <Pine.LNX.4.64.0811091755050.32509@ask.diku.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pasmtpa.tele.dk ([80.160.77.114]:58182 "EHLO pasmtpA.tele.dk"
+Received: from mail0.lsil.com ([147.145.40.20]:64782 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750966AbYKMKgf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Nov 2008 05:36:35 -0500
-Content-Disposition: inline
-In-Reply-To: <20081112110840W.fujita.tomonori@lab.ntt.co.jp>
+	id S1751747AbYKMKtf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Nov 2008 05:49:35 -0500
+In-Reply-To: <Pine.LNX.4.64.0811091755050.32509@ask.diku.dk>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: stern@rowland.harvard.edu, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Julia Lawall <julia@diku.dk>, "Moore, Eric" <Eric.Moore@lsi.com>, "Support, Software" <support@lsi.com>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, linux-scsi@vger.kernel.org
 
-On Wed, Nov 12 2008, FUJITA Tomonori wrote:
-> On Tue, 11 Nov 2008 20:19:36 +0100
-> Jens Axboe <jens.axboe@oracle.com> wrote:
-> 
-> > On Tue, Nov 11 2008, Alan Stern wrote:
-> > > On Tue, 11 Nov 2008, FUJITA Tomonori wrote:
-> > > 
-> > > > I don't worry about anything. I just think that these round_jiffies_up
-> > > > are pointless because they were added for the block-layer users that
-> > > > care about exact timeouts, however the block-layer doesn't export
-> > > > blk_add_timer() so the block-layer users can't control the exact time
-> > > > when the timer starts. So doing round_jiffies_up calculation per every
-> > > > request doesn't make sense for me.
-> > > 
-> > > In fact the round_jiffies_up() routines were added for other users as
-> > > well as the block layer.  However none of the others could be changed
-> > > until the routines were merged.  Now that the routines are in the 
-> > > mainline, you should see them start to be called in multiple places.
-> > > 
-> > > Also, the users of the block layer _don't_ care about exact timeouts.  
-> > > That's an important aspect of round_jiffies() and round_jiffies_up() --
-> > > you don't use them if you want an exact timeout.
-> > > 
-> > > The reason for using round_jiffies() is to insure that the timeout
-> > > will occur at a 1-second boundary.  If several timeouts are set for
-> > > about the same time and they all use round_jiffies() or
-> > > round_jiffies_up(), then they will all occur at the same tick instead
-> > > of spread out among several different ticks during the course of that
-> > > 1-second interval.  As a result, the system will need to wake up only
-> > > once to service all those timeouts, instead of waking up several
-> > > different times.  It is a power-saving scheme.
-> 
-> Hmm, but for 99.9% of the cases, the timeout of the block layer
-> doesn't expire, the timeout rarely happens. The power-saving scheme
-> can be applied to only 0.1%, but at the cost of the round_jiffies
-> overhead per every request.
-> 
-> If I understand correctly, round_jiffies() is designed for timers that
-> will expire, such as periodic checking. The power-saving scheme nicely
-> works for such usages.
+ACK
+--Sathya
 
-Your understanding is correct. The overhead of round_jiffies() is not
-large, though.
+-----Original Message-----
+From: Julia Lawall [mailto:julia@diku.dk]
+Sent: Sunday, November 09, 2008 10:25 PM
+To: Moore, Eric; Support, Software; DL-MPT Fusion Linux; linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; kernel-janitors@vger.kernel.org
+Subject: [PATCH 4/8] drivers/message/fusion: use ARRAY_SIZE
 
-I want to get rid of this in blk_delete_timer():
+From: Julia Lawall <julia@diku.dk>
 
-        if (list_empty(&q->timeout_list))
-                del_timer(&q->timeout);
+ARRAY_SIZE is more concise to use when the size of an array is divided by the size of its type or the size of its first element.
 
-though and simply let the timer run even if the list is empty, since for
-sync sequential IO we'll be fiddling a much with the timer as we did
-before unifying it. And then the timer will expire every x seconds
-always and it becomes more important with the grouping.
+The semantic patch that makes this change is as follows:
+(http://www.emn.fr/x-info/coccinelle/)
 
--- 
-Jens Axboe
+// <smpl>
+@i@
+@@
 
+#include <linux/kernel.h>
+
+@depends on i using "paren.iso"@
+type T;
+T[] E;
+@@
+
+- (sizeof(E)/sizeof(E[...]))
++ ARRAY_SIZE(E)
+
+@depends on i using "paren.iso"@
+type T;
+T[] E;
+@@
+
+- (sizeof(E)/sizeof(T))
++ ARRAY_SIZE(E)
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+ drivers/message/fusion/mptbase.c    |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index d6a0074..7a313f3 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -4563,7 +4563,7 @@ WaitForDoorbellReply(MPT_ADAPTER *ioc, int howlong, int sleepFlag)
+                        failcnt++;
+                hword = le16_to_cpu(CHIPREG_READ32(&ioc->chip->Doorbell) & 0x0000FFFF);
+                /* don't overflow our IOC hs_reply[] buffer! */
+-               if (u16cnt < sizeof(ioc->hs_reply) / sizeof(ioc->hs_reply[0]))
++               if (u16cnt < ARRAY_SIZE(ioc->hs_reply))
+                        hs_reply[u16cnt] = hword;
+                CHIPREG_WRITE32(&ioc->chip->IntStatus, 0);
+        }
+@@ -7176,7 +7176,7 @@ union loginfo_type {
+
+        sas_loginfo.loginfo = log_info;
+        if ((sas_loginfo.dw.bus_type != 3 /*SAS*/) &&
+-           (sas_loginfo.dw.originator < sizeof(originator_str)/sizeof(char*)))
++           (sas_loginfo.dw.originator < ARRAY_SIZE(originator_str)))
+                return;
+
+        originator_desc = originator_str[sas_loginfo.dw.originator];
+@@ -7185,21 +7185,21 @@ union loginfo_type {
+
+                case 0:  /* IOP */
+                        if (sas_loginfo.dw.code <
+-                           sizeof(iop_code_str)/sizeof(char*))
++                           ARRAY_SIZE(iop_code_str))
+                                code_desc = iop_code_str[sas_loginfo.dw.code];
+                        break;
+                case 1:  /* PL */
+                        if (sas_loginfo.dw.code <
+-                           sizeof(pl_code_str)/sizeof(char*))
++                           ARRAY_SIZE(pl_code_str))
+                                code_desc = pl_code_str[sas_loginfo.dw.code];
+                        break;
+                case 2:  /* IR */
+                        if (sas_loginfo.dw.code >=
+-                           sizeof(ir_code_str)/sizeof(char*))
++                           ARRAY_SIZE(ir_code_str))
+                                break;
+                        code_desc = ir_code_str[sas_loginfo.dw.code];
+                        if (sas_loginfo.dw.subcode >=
+-                           sizeof(raid_sub_code_str)/sizeof(char*))
++                           ARRAY_SIZE(raid_sub_code_str))
+                        break;
+                        if (sas_loginfo.dw.code == 0)
+                                sub_code_desc =
