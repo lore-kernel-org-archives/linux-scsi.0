@@ -1,62 +1,91 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [RFC][PATCH] Handle multipath paths in a path group properly
-	during pg_init (was "RE: [dm-devel] DM does not activate the paths if there
-	are more than one path in path group during failover")
-Date: Fri, 14 Nov 2008 12:24:46 -0800
-Message-ID: <1226694286.8998.104.camel@chandra-ubuntu>
-References: <1225944321.14830.1109.camel@chandra-ubuntu>
-	 <E463DF2B2E584B4A82673F53D62C2EF45BE759CF@cosmail01.lsi.com>
-	 <20081111005920.GN16649@agk.fab.redhat.com>
-	 <E463DF2B2E584B4A82673F53D62C2EF45BE75B7F@cosmail01.lsi.com>
-	 <1226620138.8998.64.camel@chandra-ubuntu>
-	 <20081114001205.GQ30569@agk.fab.redhat.com>
-	 <1226689728.8998.76.camel@chandra-ubuntu>
-	 <20081114193458.GV30569@agk.fab.redhat.com>
-Reply-To: sekharan@us.ibm.com
+From: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
+Subject: [PATCH] qla2xxx: Code changes for vport bus reset
+Date: Fri, 14 Nov 2008 13:48:12 -0800 (PST)
+Message-ID: <alpine.OSX.1.00.0811141332570.6342@ac-mac.local>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:34951 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753015AbYKNUY4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Nov 2008 15:24:56 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e31.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id mAEKO0dx002382
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Nov 2008 13:24:00 -0700
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id mAEKOt7D116486
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Nov 2008 13:24:55 -0700
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id mAEKOtej006518
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Nov 2008 13:24:55 -0700
-In-Reply-To: <20081114193458.GV30569@agk.fab.redhat.com>
+Received: from avexch2.qlogic.com ([198.70.193.116]:52267 "EHLO
+	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755416AbYKNVsW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Nov 2008 16:48:22 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alasdair G Kergon <agk@redhat.com>
-Cc: Mike Anderson <andmike@us.ibm.com>, Levy_Jerome <Levy_Jerome@emc.com>, device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, asson_ronald <asson_ronald@emc.com>, Mike Christie <mchristi@redhat.com>
+To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+Cc: linux-driver@qlogic.com
 
+The following patch changes the handling of bus reset when issued from a 
+vport. In the bus reset code, an extra check is made to make sure that the lip 
+reset is not done before resetting the targets if the bus reset came from a 
+vport. The patch is based on scsi-misc-2.6.
+Please apply.
 
-On Fri, 2008-11-14 at 19:34 +0000, Alasdair G Kergon wrote:
-> On Fri, Nov 14, 2008 at 11:08:48AM -0800, Chandra Seetharaman wrote:
-> > No, I "replaced" the "per-group" pg_init with "per-path" init.
-> 
-> Indeed, but I'm pointing out that the per-group initialisation was
-> originally added for EMC and arguing that per-group initialisation
-> and per-path initialisation are independent conceptually and the
-> code may need to support both: adding one to deal with the problem
-> reported here need not necessitate removing the other.
+Thanks,
+Anirban
 
-It was the case earlier. But Ed changed it (to send a mode select only
-when needed) before I moved the emc code to be under SCSI Hardware
-Handler. Later Hannes made it still better.
+Signed-off-by: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
 
-IOW, The EMC code in SCSI hardware handler is smart to find out if the
-trespass/mode_select command need to be sent down the wire (they first
-do a inquiry and if the state is "OWNED", they just return).
+---
+ drivers/scsi/qla2xxx/qla_mbx.c |    2 +-
+ drivers/scsi/qla2xxx/qla_os.c  |   17 ++++++++++-------
+ 2 files changed, 11 insertions(+), 8 deletions(-)
 
-Hannes, MikeC, correct me if I am wrong.
-
-> 
-> Alasdair
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index bc52aa0..bbe7181 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -2256,7 +2256,7 @@ __qla24xx_issue_tmf(char *name, uint32_t type, struct fc_port *fcport,
+ 	scsi_qla_host_t *vha;
+ 	struct qla_hw_data *ha;
+ 
+-	DEBUG11(printk("%s(%ld): entered.\n", __func__, fcport->ha->host_no));
++	DEBUG11(printk("%s(%ld): entered.\n", __func__, fcport->vha->host_no));
+ 
+ 	vha = fcport->vha;
+ 	ha = vha->hw;
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 9830fcb..f636588 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -918,7 +918,7 @@ qla2xxx_eh_bus_reset(struct scsi_cmnd *cmd)
+ 		return ret;
+ 
+ 	qla_printk(KERN_INFO, vha->hw,
+-	    "scsi(%ld:%d:%d): LOOP RESET ISSUED.\n", vha->host_no, id, lun);
++	    "scsi(%ld:%d:%d): BUS RESET ISSUED.\n", vha->host_no, id, lun);
+ 
+ 	if (qla2x00_wait_for_hba_online(vha) != QLA_SUCCESS) {
+ 		DEBUG2(printk("%s failed:board disabled\n",__func__));
+@@ -1039,20 +1039,23 @@ qla2x00_loop_reset(scsi_qla_host_t *vha)
+ 	struct fc_port *fcport;
+ 	struct qla_hw_data *ha = vha->hw;
+ 
+-	if (ha->flags.enable_lip_full_login) {
++	if (ha->flags.enable_lip_full_login && !vha->vp_idx) {
+ 		ret = qla2x00_full_login_lip(vha);
+ 		if (ret != QLA_SUCCESS) {
+-			DEBUG2_3(printk("%s(%ld): bus_reset failed: "
++			DEBUG2_3(printk("%s(%ld): failed: "
+ 			    "full_login_lip=%d.\n", __func__, vha->host_no,
+ 			    ret));
+-		} else
+-			qla2x00_wait_for_loop_ready(vha);
++		}
++		atomic_set(&vha->loop_state, LOOP_DOWN);
++		atomic_set(&vha->loop_down_timer, LOOP_DOWN_TIME);
++		qla2x00_mark_all_devices_lost(vha, 0);
++		qla2x00_wait_for_loop_ready(vha);
+ 	}
+ 
+-	if (ha->flags.enable_lip_reset) {
++	if (ha->flags.enable_lip_reset && !vha->vp_idx) {
+ 		ret = qla2x00_lip_reset(vha);
+ 		if (ret != QLA_SUCCESS) {
+-			DEBUG2_3(printk("%s(%ld): bus_reset failed: "
++			DEBUG2_3(printk("%s(%ld): failed: "
+ 			    "lip_reset=%d.\n", __func__, vha->host_no, ret));
+ 		} else
+ 			qla2x00_wait_for_loop_ready(vha);
+-- 
+1.5.5
 
