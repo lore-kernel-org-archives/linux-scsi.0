@@ -1,42 +1,88 @@
-From: Dmitri Vorobiev <dmitri.vorobiev@movial.fi>
-Subject: Re: [PATCH] Allow SCSI_WAIT_SCAN to be deselected
-Date: Fri, 14 Nov 2008 14:32:39 +0200
-Message-ID: <491D6FE7.3080404@movial.fi>
-References: <1226585472-12559-1-git-send-email-bwalle@suse.de>    <b637ec0b0811130618o2f76e34bh17055f2f165d89a5@mail.gmail.com>    <491C3813.1070305@movial.fi> <0cff1148a04c9f90c98e26eff6e0bfc968e4574c@8b5064a13e22126c1b9329f0dc35b8915774b7c3.invalid>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug 11898] mke2fs hang on AIC79 device.
+Date: Fri, 14 Nov 2008 09:40:49 -0600
+Message-ID: <1226677249.3289.2.camel@localhost.localdomain>
+References: <20081112104742.0B56D108056@picon.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.movial.fi ([62.236.91.34]:58517 "EHLO smtp.movial.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751345AbYKNMck (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Nov 2008 07:32:40 -0500
-In-Reply-To: <0cff1148a04c9f90c98e26eff6e0bfc968e4574c@8b5064a13e22126c1b9329f0dc35b8915774b7c3.invalid>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:60513 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751159AbYKNPky (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Nov 2008 10:40:54 -0500
+In-Reply-To: <20081112104742.0B56D108056@picon.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Simon Arlott <simon@fire.lp0.eu>
-Cc: Fabio Comolli <fabio.comolli@gmail.com>, Bernhard Walle <bwalle@suse.de>, james.bottomley@steeleye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: bugme-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-Simon Arlott wrote:
-> On Thu, November 13, 2008 14:22, Dmitri Vorobiev wrote:
->> Fabio Comolli wrote:
->>> So I'm not the only one :-)
->>> Please see this thread:
->>>
->>> http://lkml.org/lkml/2008/10/22/355
->> See also:
->>
->> http://marc.info/?l=linux-scsi&m=122538386519971&w=2
->> http://marc.info/?l=linux-scsi&m=122539443509753&w=2
+On Wed, 2008-11-12 at 02:47 -0800, bugme-daemon@bugzilla.kernel.org
+wrote:
+> http://bugzilla.kernel.org/show_bug.cgi?id=11898
 > 
-> I suggest reading http://lkml.org/lkml/2007/5/13/75.
 > 
-> Basically, if you want to get rid of it you need to provide
-> a viable alternative.
-
-Blocking read on a character device or a /proc file? A new system call (this is a bit overkill, of course, but strictly speaking it _is_ an alternative)?
-
-Dmitri
-
 > 
+> 
+> 
+> ------- Comment #37 from vandrove@vc.cvut.cz  2008-11-12 02:47 -------
+> Patch from #36 fixes hangs & crashes.  Thanks.
+
+Great, thanks!
+
+> So only remaining problem (for me...) is that with default setup I'm now
+> getting only 50% of throughput I was getting with 2.6.27 - I can get ~40% back
+> by limiting disks to 8 requests (so 31 per SATA controller is not hit that
+> frequently), at the cost of making random I/O much worse...  Here are
+> sequential write data (dd if=/dev/zero of=/xxx) - with default setting ~25MBps
+> * 4, with restricting disks to 8 commands ~39MBps * 4.  2.6.27 gets ~47MBps *
+> 4, and 2.6.27 with sata_sil24 patch to increase PCIe read length gets ~51MBps *
+> 4 (which is present in current git tree tested here).
+> 
+> Default setting:
+> 
+> gwy:~# ./x.sh
+> 4000+0 records in
+> 4000+0 records out
+> 4194304000 bytes (4.2 GB) copied, 110.417 s, 38.0 MB/s
+> gwy:~# 4000+0 records in
+> 4000+0 records out
+> 4194304000 bytes (4.2 GB) copied, 155.827 s, 26.9 MB/s
+> 4000+0 records in
+> 4000+0 records out
+> 4194304000 bytes (4.2 GB) copied, 206.971 s, 20.3 MB/s
+> 4000+0 records in
+> 4000+0 records out
+> 4194304000 bytes (4.2 GB) copied, 206.301 s, 20.3 MB/s
+> 
+> Only 8 requests per drive; there are 4 drives sharing one tag map with 31
+> entries:
+> 
+> gwy:~# for a in /sys/block/*/queue/nr_requests; do echo 8 > $a; done
+> gwy:~# ./x.sh
+> 4000+0 records in
+> 4000+0 records out
+> 4194304000 bytes (4.2 GB) copied, 103.588 s, 40.5 MB/s
+> gwy:~# 4000+0 records in
+> 4000+0 records out
+> 4194304000 bytes (4.2 GB) copied, 110.86 s, 37.8 MB/s
+> 4000+0 records in
+> 4000+0 records out
+> 4194304000 bytes (4.2 GB) copied, 105.978 s, 39.6 MB/s
+> 4000+0 records in
+> 4000+0 records out
+> 4194304000 bytes (4.2 GB) copied, 107.94 s, 38.9 MB/s
+
+Um, you might want to report this one separately.  I'd suggest to both
+the IDE and SCSI lists:
+
+linux-scsi@vger.kernel.org
+linux-ide@vger.kernel.org
+
+Appending it to a bug report we're getting ready to close is a sure way
+of losing the information.
+
+James
+
 
