@@ -1,173 +1,127 @@
 From: Andi Kleen <andi@firstfloor.org>
-Subject: [PATCH] [3/21] Pass gfp to scsi_allocate_command
-Date: Sun, 16 Nov 2008 00:11:03 +0100 (CET)
-Message-ID: <20081115231103.59DC93E661B@basil.firstfloor.org>
+Subject: [PATCH] [9/21] Remove unchecked_isa_dma in aha1542
+Date: Sun, 16 Nov 2008 00:11:09 +0100 (CET)
+Message-ID: <20081115231109.79FF53E661A@basil.firstfloor.org>
 References: <200811161211.212948789@firstfloor.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:44176 "EHLO
+Received: from one.firstfloor.org ([213.235.205.2]:44180 "EHLO
 	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752207AbYKOXLD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Nov 2008 18:11:03 -0500
+	with ESMTP id S1752444AbYKOXLG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Nov 2008 18:11:06 -0500
 In-Reply-To: <200811161211.212948789@firstfloor.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
 
 
-Instead of deciding low level based on unchecked_isa_dma pass in the GFP.
-This makes it easier to remove unchecked_isa_dma later and also simplifies some code.
+- Audited ->cmnd use and it always copies
+- Allocate DMAable hostdata separately 
+- Tell block layer explicitely to bounce
+- Audited sense_buffer use and it always copies
+- Remove unchecked_isa_dma finally
 
+Untested due to lack of hardware
+
+Signed-off-by: Andi Kleen <ak@suse.de>
 Signed-off-by: Andi Kleen <andi@firstfloor.org>
 Signed-off-by: Andi Kleen <ak@linux.intel.com>
 
 ---
- drivers/scsi/scsi.c      |   45 +++++++++++++++++++++++++++++----------------
- include/scsi/scsi_cmnd.h |    5 +++--
- 2 files changed, 32 insertions(+), 18 deletions(-)
+ drivers/scsi/aha1542.c |   40 ++++++++++++++++++++++++++++++----------
+ 1 file changed, 30 insertions(+), 10 deletions(-)
 
-Index: linux/include/scsi/scsi_cmnd.h
+Index: linux/drivers/scsi/aha1542.c
 ===================================================================
---- linux.orig/include/scsi/scsi_cmnd.h	2008-11-15 22:37:11.000000000 +0100
-+++ linux/include/scsi/scsi_cmnd.h	2008-11-15 22:37:12.000000000 +0100
-@@ -148,8 +148,9 @@
- extern int scsi_dma_map(struct scsi_cmnd *cmd);
- extern void scsi_dma_unmap(struct scsi_cmnd *cmd);
+--- linux.orig/drivers/scsi/aha1542.c	2008-11-15 22:37:10.000000000 +0100
++++ linux/drivers/scsi/aha1542.c	2008-11-15 22:37:12.000000000 +0100
+@@ -151,7 +151,13 @@
+ 	struct ccb ccb[AHA1542_MAILBOXES];
+ };
  
--struct scsi_cmnd *scsi_allocate_command(gfp_t gfp_mask);
--void scsi_free_command(gfp_t gfp_mask, struct scsi_cmnd *cmd);
-+struct scsi_cmnd *scsi_allocate_command(struct Scsi_Host *shost,
-+					gfp_t gfp_mask);
-+void scsi_free_command(struct Scsi_Host *shost, struct scsi_cmnd *cmd);
- 
- static inline unsigned scsi_sg_count(struct scsi_cmnd *cmd)
- {
-Index: linux/drivers/scsi/scsi.c
-===================================================================
---- linux.orig/drivers/scsi/scsi.c	2008-11-15 22:37:11.000000000 +0100
-+++ linux/drivers/scsi/scsi.c	2008-11-15 23:50:59.000000000 +0100
-@@ -352,7 +352,8 @@
- }
- EXPORT_SYMBOL(scsi_put_command);
- 
--static struct scsi_host_cmd_pool *scsi_get_host_cmd_pool(gfp_t gfp_mask)
-+static struct scsi_host_cmd_pool *
-+scsi_get_host_cmd_pool(struct Scsi_Host *shost, gfp_t gfp_mask)
- {
- 	struct scsi_host_cmd_pool *retval = NULL, *pool;
- 	/*
-@@ -360,8 +361,9 @@
- 	 * yet existent.
- 	 */
- 	mutex_lock(&host_cmd_pool_mutex);
--	pool = (gfp_mask & __GFP_DMA) ? &scsi_cmd_dma_pool :
--		&scsi_cmd_pool;
-+	pool = &scsi_cmd_pool;
-+	if (shost && shost->unchecked_isa_dma)
-+		pool = &scsi_cmd_dma_pool;
- 	if (!pool->users) {
- 		pool->cmd_slab = kmem_cache_create(pool->cmd_name,
- 						   sizeof(struct scsi_cmnd), 0,
-@@ -385,12 +387,12 @@
- 	return retval;
- }
- 
--static void scsi_put_host_cmd_pool(gfp_t gfp_mask)
-+static void scsi_put_host_cmd_pool(struct Scsi_Host *shost)
- {
- 	struct scsi_host_cmd_pool *pool;
- 
- 	mutex_lock(&host_cmd_pool_mutex);
--	pool = (gfp_mask & __GFP_DMA) ? &scsi_cmd_dma_pool :
-+	pool = (shost && shost->unchecked_isa_dma) ? &scsi_cmd_dma_pool :
- 		&scsi_cmd_pool;
- 	/*
- 	 * This may happen if a driver has a mismatched get and put
-@@ -408,6 +410,10 @@
- 
- /**
-  * scsi_allocate_command - get a fully allocated SCSI command
-+ * @shost:	SCSI host. Can be NULL, then we assume you have no
-+ *		special DMA address requirements for command/sense buffer.
-+ *		If you have special DMA requirements you must record
-+ *		them in the shost before calling this.
-  * @gfp_mask:	allocation mask
-  *
-  * This function is for use outside of the normal host based pools.
-@@ -419,9 +425,16 @@
-  * This function should *only* be used by drivers that need a static
-  * command allocation at start of day for internal functions.
-  */
--struct scsi_cmnd *scsi_allocate_command(gfp_t gfp_mask)
-+struct scsi_cmnd *scsi_allocate_command(struct Scsi_Host *shost, gfp_t gfp_mask)
- {
--	struct scsi_host_cmd_pool *pool = scsi_get_host_cmd_pool(gfp_mask);
-+	struct scsi_host_cmd_pool *pool;
+-#define HOSTDATA(host) ((struct aha1542_hostdata *) &host->hostdata)
++struct hd_ptr {
++	struct aha1542_hostdata *hostptr;
++	dma_addr_t dma;
++};
 +
-+	/*
-+	 * ISA-DMAness should be only decided by flags in shost. Only use the gfp for
-+	 * sleeping vs non sleeping if at all.
-+	 */
-+	BUG_ON(gfp_mask & __GFP_DMA);
-+	pool = scsi_get_host_cmd_pool(shost, gfp_mask);
++#define HOSTDATA(host) (((struct hd_ptr *)shost_priv(host))->hostptr)
++#define HOSTDMA(host) (((struct hd_ptr *)shost_priv(host))->dma)
  
- 	if (!pool)
- 		return NULL;
-@@ -432,16 +445,16 @@
+ static DEFINE_SPINLOCK(aha1542_lock);
  
- /**
-  * scsi_free_command - free a command allocated by scsi_allocate_command
-- * @gfp_mask:	mask used in the original allocation
-+ * @shost:	shost used in the original allocation or NULL
-  * @cmd:	command to free
-  *
-- * Note: using the original allocation mask is vital because that's
-+ * Note: using the original shost is vital because that's
-  * what determines which command pool we use to free the command.  Any
-  * mismatch will cause the system to BUG eventually.
-  */
--void scsi_free_command(gfp_t gfp_mask, struct scsi_cmnd *cmd)
-+void scsi_free_command(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
- {
--	struct scsi_host_cmd_pool *pool = scsi_get_host_cmd_pool(gfp_mask);
-+	struct scsi_host_cmd_pool *pool = scsi_get_host_cmd_pool(shost, 0);
- 
- 	/*
- 	 * this could trigger if the mask to scsi_allocate_command
-@@ -457,8 +470,8 @@
- 	 * reference we took above, and once to release the reference
- 	 * originally taken by scsi_allocate_command
- 	 */
--	scsi_put_host_cmd_pool(gfp_mask);
--	scsi_put_host_cmd_pool(gfp_mask);
-+	scsi_put_host_cmd_pool(shost);
-+	scsi_put_host_cmd_pool(shost);
- }
- EXPORT_SYMBOL(scsi_free_command);
- 
-@@ -480,7 +493,7 @@
- 	spin_lock_init(&shost->free_list_lock);
- 	INIT_LIST_HEAD(&shost->free_list);
- 
--	shost->cmd_pool = scsi_get_host_cmd_pool(gfp_mask);
-+	shost->cmd_pool = scsi_get_host_cmd_pool(shost, 0);
- 
- 	if (!shost->cmd_pool)
- 		return -ENOMEM;
-@@ -490,7 +503,7 @@
- 	 */
- 	cmd = scsi_host_alloc_command(shost, gfp_mask);
- 	if (!cmd) {
--		scsi_put_host_cmd_pool(gfp_mask);
-+		scsi_put_host_cmd_pool(shost);
- 		shost->cmd_pool = NULL;
- 		return -ENOMEM;
+@@ -1125,23 +1131,28 @@
  	}
-@@ -519,7 +532,7 @@
- 		scsi_pool_free_command(shost->cmd_pool, cmd);
- 	}
- 	shost->cmd_pool = NULL;
--	scsi_put_host_cmd_pool(shost->unchecked_isa_dma ? GFP_DMA : GFP_KERNEL);
-+	scsi_put_host_cmd_pool(shost);
- }
+ 	for (indx = 0; indx < ARRAY_SIZE(bases); indx++)
+ 		if (bases[indx] != 0 && request_region(bases[indx], 4, "aha1542")) {
+-			shpnt = scsi_register(tpnt,
+-					sizeof(struct aha1542_hostdata));
++			struct aha1542_hostdata *host;
++
++			shpnt = scsi_register(tpnt, sizeof(struct hd_ptr));
  
- #ifdef CONFIG_SCSI_LOGGING
+ 			if(shpnt==NULL) {
+ 				release_region(bases[indx], 4);
+ 				continue;
+ 			}
+-			/* For now we do this - until kmalloc is more intelligent
+-			   we are resigned to stupid hacks like this */
+-			if (SCSI_BUF_PA(shpnt) >= ISA_DMA_THRESHOLD) {
+-				printk(KERN_ERR "Invalid address for shpnt with 1542.\n");
+-				goto unregister;
++
++			host = dma_alloc_coherent(NULL, sizeof(*host),
++						  &HOSTDMA(shpnt), GFP_KERNEL);
++			if (!host) {
++				scsi_unregister(shpnt);
++				release_region(bases[indx], 4);
++				continue;
+ 			}
++
++			HOSTDATA(shpnt) = host;
++
+ 			if (!aha1542_test_port(bases[indx], shpnt))
+ 				goto unregister;
+ 
+-
+ 			base_io = bases[indx];
+ 
+ 			/* Set the Bus on/off-times as not to ruin floppy performance */
+@@ -1259,6 +1270,8 @@
+ 			continue;
+ unregister:
+ 			release_region(bases[indx], 4);
++			dma_free_coherent(NULL, sizeof(struct aha1542_hostdata),
++					  HOSTDATA(shpnt), HOSTDMA(shpnt));
+ 			scsi_unregister(shpnt);
+ 			continue;
+ 
+@@ -1275,6 +1288,8 @@
+ 		free_dma(shost->dma_channel);
+ 	if (shost->io_port && shost->n_io_port)
+ 		release_region(shost->io_port, shost->n_io_port);
++	dma_free_coherent(NULL, sizeof(struct aha1542_hostdata),
++			  HOSTDATA(shost), HOSTDMA(shost));
+ 	scsi_unregister(shost);
+ 	return 0;
+ }
+@@ -1746,6 +1761,11 @@
+ }
+ MODULE_LICENSE("GPL");
+ 
++static int aha154x_adjust_queue(struct scsi_device *device)
++{
++	blk_queue_bounce_limit(device->request_queue, BLK_BOUNCE_ISA);
++	return 0;
++}
+ 
+ static struct scsi_host_template driver_template = {
+ 	.proc_name		= "aha1542",
+@@ -1761,7 +1781,7 @@
+ 	.this_id		= 7,
+ 	.sg_tablesize		= AHA1542_SCATTER,
+ 	.cmd_per_lun		= AHA1542_CMDLUN,
+-	.unchecked_isa_dma	= 1, 
+ 	.use_clustering		= ENABLE_CLUSTERING,
++	.slave_alloc		= aha154x_adjust_queue,
+ };
+ #include "scsi_module.c"
