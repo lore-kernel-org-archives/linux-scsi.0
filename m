@@ -1,189 +1,119 @@
 From: Andi Kleen <andi@firstfloor.org>
-Subject: [PATCH] [8/21] Remove unchecked_isa_dma in eata.c
-Date: Sun, 16 Nov 2008 00:11:08 +0100 (CET)
-Message-ID: <20081115231108.743A53E6619@basil.firstfloor.org>
+Subject: [PATCH] [4/21] Add sense_buffer_isa to host template
+Date: Sun, 16 Nov 2008 00:11:04 +0100 (CET)
+Message-ID: <20081115231104.5EC503E6618@basil.firstfloor.org>
 References: <200811161211.212948789@firstfloor.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from one.firstfloor.org ([213.235.205.2]:44179 "EHLO
 	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752335AbYKOXLF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Nov 2008 18:11:05 -0500
+	with ESMTP id S1752141AbYKOXLD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Nov 2008 18:11:03 -0500
 In-Reply-To: <200811161211.212948789@firstfloor.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
 
 
-- Allocate hostdata with DMA separately in the driver
-- Audited ->cmnd uses and it only ever copies them
-- Enable sense_buffer bouncing using new sense_buffer_isa flag
-- Enable block layer bouncing explicitely
-- Remove unchecked_isa_dma
+Instead of having the global "unchecked_isa_dma" bit add a single
+bit that tells the mid layer that the sense buffer needs to be ISA
+DMA'able.
 
-Untested due to lack of hardware
+Right now when the bit is set we still force all commands to the ISA
+DMA zone too, but that can change in the future.
 
 Signed-off-by: Andi Kleen <ak@suse.de>
 Signed-off-by: Andi Kleen <andi@firstfloor.org>
 Signed-off-by: Andi Kleen <ak@linux.intel.com>
 
 ---
- drivers/scsi/eata.c |   54 +++++++++++++++++++++++++++++++++++++---------------
- 1 file changed, 39 insertions(+), 15 deletions(-)
+ Documentation/scsi/scsi_mid_low_api.txt |    1 +
+ drivers/scsi/hosts.c                    |    1 +
+ drivers/scsi/scsi.c                     |   10 ++++++----
+ include/scsi/scsi_host.h                |    8 ++++++++
+ 4 files changed, 16 insertions(+), 4 deletions(-)
 
-Index: linux/drivers/scsi/eata.c
+Index: linux/include/scsi/scsi_host.h
 ===================================================================
---- linux.orig/drivers/scsi/eata.c	2008-11-15 22:37:10.000000000 +0100
-+++ linux/drivers/scsi/eata.c	2008-11-15 22:37:12.000000000 +0100
-@@ -512,6 +512,13 @@
- 			     sector_t, int *);
- static int eata2x_slave_configure(struct scsi_device *);
+--- linux.orig/include/scsi/scsi_host.h	2008-11-15 22:37:11.000000000 +0100
++++ linux/include/scsi/scsi_host.h	2008-11-15 23:50:55.000000000 +0100
+@@ -447,6 +447,11 @@
+ 	unsigned ordered_tag:1;
  
-+static int eata_adjust_queue(struct scsi_device *device)
-+{
-+	if (device->host->sense_buffer_isa)
-+		blk_queue_bounce_limit(device->request_queue, BLK_BOUNCE_ISA);
-+	return 0;
-+}
+ 	/*
++	 * True if sense buffers need to be ISA-DMAable
++	 */
++	unsigned sense_buffer_isa:1;
 +
- static struct scsi_host_template driver_template = {
- 	.name = "EATA/DMA 2.0x rev. 8.10.00 ",
- 	.detect = eata2x_detect,
-@@ -522,8 +529,8 @@
- 	.bios_param = eata2x_bios_param,
- 	.slave_configure = eata2x_slave_configure,
- 	.this_id = 7,
--	.unchecked_isa_dma = 1,
- 	.use_clustering = ENABLE_CLUSTERING,
-+	.slave_alloc = eata_adjust_queue,
- };
++	/*
+ 	 * Countdown for host blocking with no commands outstanding.
+ 	 */
+ 	unsigned int max_host_blocked;
+@@ -607,6 +612,9 @@
+ 	 */
+ 	unsigned ordered_tag:1;
  
- #if !defined(__BIG_ENDIAN_BITFIELD) && !defined(__LITTLE_ENDIAN_BITFIELD)
-@@ -834,6 +841,16 @@
- 	struct mssp sp;		/* Local copy of sp buffer */
- };
- 
-+struct hostdata_ptr {
-+	struct hostdata *host;
-+	dma_addr_t dma;
-+};
++	/* Sense buffer needs to be ISA dma'able */
++	unsigned sense_buffer_isa:1;
 +
-+#define eata_shost_priv(shost) \
-+	(((struct hostdata_ptr *)shost_priv(shost))->host)
-+#define eata_shost_dma(shost) \
-+	(((struct hostdata_ptr *)shost_priv(shost))->dma)
-+
- static struct Scsi_Host *sh[MAX_BOARDS];
- static const char *driver_name = "EATA";
- static char sha[MAX_BOARDS];
-@@ -1266,14 +1283,23 @@
- #endif
+ 	/* Task mgmt function in progress */
+ 	unsigned tmf_in_progress:1;
  
- 	spin_unlock_irq(&driver_lock);
--	sh[j] = shost = scsi_register(tpnt, sizeof(struct hostdata));
-+	sh[j] = shost = scsi_register(tpnt, sizeof(struct hostdata_ptr));
-+	ha = dma_alloc_coherent(pdev ? &pdev->dev : NULL,
-+				sizeof(struct hostdata),
-+				&eata_shost_dma(shost), GFP_KERNEL);
- 	spin_lock_irq(&driver_lock);
+Index: linux/Documentation/scsi/scsi_mid_low_api.txt
+===================================================================
+--- linux.orig/Documentation/scsi/scsi_mid_low_api.txt	2008-11-15 22:37:11.000000000 +0100
++++ linux/Documentation/scsi/scsi_mid_low_api.txt	2008-11-15 23:50:55.000000000 +0100
+@@ -1268,6 +1268,7 @@
+                    instances (currently ordered by ascending host_no)
+     my_devices   - a double linked list of pointers to struct scsi_device 
+                    instances that belong to this host.
++    sense_buffer_isa - bit flag; true when the sense buffer needs to be ISA DMAable
+     hostdata[0]  - area reserved for LLD at end of struct Scsi_Host. Size
+                    is set by the second argument (named 'xtr_bytes') to
+                    scsi_host_alloc() or scsi_register().
+Index: linux/drivers/scsi/hosts.c
+===================================================================
+--- linux.orig/drivers/scsi/hosts.c	2008-11-15 22:37:11.000000000 +0100
++++ linux/drivers/scsi/hosts.c	2008-11-15 23:50:57.000000000 +0100
+@@ -364,6 +364,7 @@
+ 		shost->active_mode = MODE_INITIATOR;
+ 	else
+ 		shost->active_mode = sht->supported_mode;
++	shost->sense_buffer_isa = sht->sense_buffer_isa;
  
--	if (shost == NULL) {
-+	if (shost == NULL || ha == NULL) {
-+		if (ha)
-+			dma_free_coherent(pdev ? &pdev->dev : NULL,
-+					  sizeof(struct hostdata),
-+					  ha, eata_shost_dma(shost));
- 		printk("%s: unable to register host, detaching.\n", name);
- 		goto freedma;
- 	}
+ 	if (sht->max_host_blocked)
+ 		shost->max_host_blocked = sht->max_host_blocked;
+Index: linux/drivers/scsi/scsi.c
+===================================================================
+--- linux.orig/drivers/scsi/scsi.c	2008-11-15 22:37:12.000000000 +0100
++++ linux/drivers/scsi/scsi.c	2008-11-15 23:50:56.000000000 +0100
+@@ -362,7 +362,7 @@
+ 	 */
+ 	mutex_lock(&host_cmd_pool_mutex);
+ 	pool = &scsi_cmd_pool;
+-	if (shost && shost->unchecked_isa_dma)
++	if (shost && (shost->unchecked_isa_dma || shost->sense_buffer_isa))
+ 		pool = &scsi_cmd_dma_pool;
+ 	if (!pool->users) {
+ 		pool->cmd_slab = kmem_cache_create(pool->cmd_name,
+@@ -392,8 +392,8 @@
+ 	struct scsi_host_cmd_pool *pool;
  
-+	eata_shost_priv(shost) = ha;
-+
- 	shost->io_port = port_base;
- 	shost->unique_id = port_base;
- 	shost->n_io_port = REGION_SIZE;
-@@ -1283,8 +1309,6 @@
- 	shost->this_id = (ushort) info.host_addr[3];
- 	shost->can_queue = (ushort) info.queue_size;
- 	shost->cmd_per_lun = MAX_CMD_PER_LUN;
--
--	ha = (struct hostdata *)shost->hostdata;
- 	
- 	memset(ha, 0, sizeof(struct hostdata));
- 	ha->subversion = subversion;
-@@ -1293,11 +1317,9 @@
- 	ha->pdev = pdev;
- 	ha->board_number = j;
- 
--	if (ha->subversion == ESA)
--		shost->unchecked_isa_dma = 0;
--	else {
-+	if (ha->subversion != ESA) {
- 		unsigned long flags;
--		shost->unchecked_isa_dma = 1;
-+		shost->sense_buffer_isa = 1;
- 
- 		flags = claim_dma_lock();
- 		disable_dma(dma_channel);
-@@ -1355,7 +1377,7 @@
- 
- 	for (i = 0; i < shost->can_queue; i++) {
- 		size_t sz = shost->sg_tablesize *sizeof(struct sg_list);
--		gfp_t gfp_mask = (shost->unchecked_isa_dma ? GFP_DMA : 0) | GFP_ATOMIC;
-+		gfp_t gfp_mask = (shost->sense_buffer_isa ? GFP_DMA : 0) | GFP_ATOMIC;
- 		ha->cp[i].sglist = kmalloc(sz, gfp_mask);
- 		if (!ha->cp[i].sglist) {
- 			printk
-@@ -1752,7 +1774,7 @@
- 			       void (*done) (struct scsi_cmnd *))
+ 	mutex_lock(&host_cmd_pool_mutex);
+-	pool = (shost && shost->unchecked_isa_dma) ? &scsi_cmd_dma_pool :
+-		&scsi_cmd_pool;
++	pool = (shost && (shost->unchecked_isa_dma || shost->sense_buffer_isa)) ?
++		&scsi_cmd_dma_pool : &scsi_cmd_pool;
+ 	/*
+ 	 * This may happen if a driver has a mismatched get and put
+ 	 * of the command pool; the driver should be implicated in
+@@ -488,7 +488,9 @@
+ int scsi_setup_command_freelist(struct Scsi_Host *shost)
  {
- 	struct Scsi_Host *shost = SCpnt->device->host;
--	struct hostdata *ha = (struct hostdata *)shost->hostdata;
-+	struct hostdata *ha = eata_shost_priv(shost);
- 	unsigned int i, k;
- 	struct mscp *cpp;
+ 	struct scsi_cmnd *cmd;
+-	const gfp_t gfp_mask = shost->unchecked_isa_dma ? GFP_DMA : GFP_KERNEL;
++	gfp_t gfp_mask = GFP_KERNEL;
++	if (shost->unchecked_isa_dma || shost->sense_buffer_isa)
++		gfp_mask = GFP_DMA;
  
-@@ -1836,7 +1858,7 @@
- static int eata2x_eh_abort(struct scsi_cmnd *SCarg)
- {
- 	struct Scsi_Host *shost = SCarg->device->host;
--	struct hostdata *ha = (struct hostdata *)shost->hostdata;
-+	struct hostdata *ha = eata_shost_priv(shost);
- 	unsigned int i;
- 
- 	if (SCarg->host_scribble == NULL) {
-@@ -1906,7 +1928,7 @@
- 	int arg_done = 0;
- 	struct scsi_cmnd *SCpnt;
- 	struct Scsi_Host *shost = SCarg->device->host;
--	struct hostdata *ha = (struct hostdata *)shost->hostdata;
-+	struct hostdata *ha = eata_shost_priv(shost);
- 
- 	scmd_printk(KERN_INFO, SCarg,
- 		"reset, enter, pid %ld.\n", SCarg->serial_number);
-@@ -2292,7 +2314,7 @@
- 	unsigned int i, k, c, status, tstatus, reg;
- 	struct mssp *spp;
- 	struct mscp *cpp;
--	struct hostdata *ha = (struct hostdata *)shost->hostdata;
-+	struct hostdata *ha = eata_shost_priv(shost);
- 	int irq = shost->irq;
- 
- 	/* Check if this board need to be serviced */
-@@ -2552,7 +2574,7 @@
- 
- static int eata2x_release(struct Scsi_Host *shost)
- {
--	struct hostdata *ha = (struct hostdata *)shost->hostdata;
-+	struct hostdata *ha = eata_shost_priv(shost);
- 	unsigned int i;
- 
- 	for (i = 0; i < shost->can_queue; i++)
-@@ -2572,6 +2594,8 @@
- 		free_dma(shost->dma_channel);
- 
- 	release_region(shost->io_port, shost->n_io_port);
-+	dma_free_coherent(ha->pdev ? &ha->pdev->dev : NULL,
-+			  sizeof(*ha), ha, eata_shost_dma(shost));
- 	scsi_unregister(shost);
- 	return 0;
- }
+ 	spin_lock_init(&shost->free_list_lock);
+ 	INIT_LIST_HEAD(&shost->free_list);
