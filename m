@@ -1,24 +1,24 @@
 From: Andi Kleen <andi@firstfloor.org>
-Subject: [PATCH] [9/21] Remove unchecked_isa_dma in aha1542
-Date: Sun, 16 Nov 2008 00:11:09 +0100 (CET)
-Message-ID: <20081115231109.79FF53E661A@basil.firstfloor.org>
+Subject: [PATCH] [8/21] Remove unchecked_isa_dma in eata.c
+Date: Sun, 16 Nov 2008 00:11:08 +0100 (CET)
+Message-ID: <20081115231108.743A53E6619@basil.firstfloor.org>
 References: <200811161211.212948789@firstfloor.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:44180 "EHLO
+Received: from one.firstfloor.org ([213.235.205.2]:44179 "EHLO
 	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752444AbYKOXLG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Nov 2008 18:11:06 -0500
+	with ESMTP id S1752335AbYKOXLF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Nov 2008 18:11:05 -0500
 In-Reply-To: <200811161211.212948789@firstfloor.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
 
 
-- Audited ->cmnd use and it always copies
-- Allocate DMAable hostdata separately 
-- Tell block layer explicitely to bounce
-- Audited sense_buffer use and it always copies
-- Remove unchecked_isa_dma finally
+- Allocate hostdata with DMA separately in the driver
+- Audited ->cmnd uses and it only ever copies them
+- Enable sense_buffer bouncing using new sense_buffer_isa flag
+- Enable block layer bouncing explicitely
+- Remove unchecked_isa_dma
 
 Untested due to lack of hardware
 
@@ -27,101 +27,163 @@ Signed-off-by: Andi Kleen <andi@firstfloor.org>
 Signed-off-by: Andi Kleen <ak@linux.intel.com>
 
 ---
- drivers/scsi/aha1542.c |   40 ++++++++++++++++++++++++++++++----------
- 1 file changed, 30 insertions(+), 10 deletions(-)
+ drivers/scsi/eata.c |   54 +++++++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 39 insertions(+), 15 deletions(-)
 
-Index: linux/drivers/scsi/aha1542.c
+Index: linux/drivers/scsi/eata.c
 ===================================================================
---- linux.orig/drivers/scsi/aha1542.c	2008-11-15 22:37:10.000000000 +0100
-+++ linux/drivers/scsi/aha1542.c	2008-11-15 22:37:12.000000000 +0100
-@@ -151,7 +151,13 @@
- 	struct ccb ccb[AHA1542_MAILBOXES];
+--- linux.orig/drivers/scsi/eata.c	2008-11-15 22:37:10.000000000 +0100
++++ linux/drivers/scsi/eata.c	2008-11-15 22:37:12.000000000 +0100
+@@ -512,6 +512,13 @@
+ 			     sector_t, int *);
+ static int eata2x_slave_configure(struct scsi_device *);
+ 
++static int eata_adjust_queue(struct scsi_device *device)
++{
++	if (device->host->sense_buffer_isa)
++		blk_queue_bounce_limit(device->request_queue, BLK_BOUNCE_ISA);
++	return 0;
++}
++
+ static struct scsi_host_template driver_template = {
+ 	.name = "EATA/DMA 2.0x rev. 8.10.00 ",
+ 	.detect = eata2x_detect,
+@@ -522,8 +529,8 @@
+ 	.bios_param = eata2x_bios_param,
+ 	.slave_configure = eata2x_slave_configure,
+ 	.this_id = 7,
+-	.unchecked_isa_dma = 1,
+ 	.use_clustering = ENABLE_CLUSTERING,
++	.slave_alloc = eata_adjust_queue,
  };
  
--#define HOSTDATA(host) ((struct aha1542_hostdata *) &host->hostdata)
-+struct hd_ptr {
-+	struct aha1542_hostdata *hostptr;
+ #if !defined(__BIG_ENDIAN_BITFIELD) && !defined(__LITTLE_ENDIAN_BITFIELD)
+@@ -834,6 +841,16 @@
+ 	struct mssp sp;		/* Local copy of sp buffer */
+ };
+ 
++struct hostdata_ptr {
++	struct hostdata *host;
 +	dma_addr_t dma;
 +};
 +
-+#define HOSTDATA(host) (((struct hd_ptr *)shost_priv(host))->hostptr)
-+#define HOSTDMA(host) (((struct hd_ptr *)shost_priv(host))->dma)
++#define eata_shost_priv(shost) \
++	(((struct hostdata_ptr *)shost_priv(shost))->host)
++#define eata_shost_dma(shost) \
++	(((struct hostdata_ptr *)shost_priv(shost))->dma)
++
+ static struct Scsi_Host *sh[MAX_BOARDS];
+ static const char *driver_name = "EATA";
+ static char sha[MAX_BOARDS];
+@@ -1266,14 +1283,23 @@
+ #endif
  
- static DEFINE_SPINLOCK(aha1542_lock);
+ 	spin_unlock_irq(&driver_lock);
+-	sh[j] = shost = scsi_register(tpnt, sizeof(struct hostdata));
++	sh[j] = shost = scsi_register(tpnt, sizeof(struct hostdata_ptr));
++	ha = dma_alloc_coherent(pdev ? &pdev->dev : NULL,
++				sizeof(struct hostdata),
++				&eata_shost_dma(shost), GFP_KERNEL);
+ 	spin_lock_irq(&driver_lock);
  
-@@ -1125,23 +1131,28 @@
+-	if (shost == NULL) {
++	if (shost == NULL || ha == NULL) {
++		if (ha)
++			dma_free_coherent(pdev ? &pdev->dev : NULL,
++					  sizeof(struct hostdata),
++					  ha, eata_shost_dma(shost));
+ 		printk("%s: unable to register host, detaching.\n", name);
+ 		goto freedma;
  	}
- 	for (indx = 0; indx < ARRAY_SIZE(bases); indx++)
- 		if (bases[indx] != 0 && request_region(bases[indx], 4, "aha1542")) {
--			shpnt = scsi_register(tpnt,
--					sizeof(struct aha1542_hostdata));
-+			struct aha1542_hostdata *host;
-+
-+			shpnt = scsi_register(tpnt, sizeof(struct hd_ptr));
  
- 			if(shpnt==NULL) {
- 				release_region(bases[indx], 4);
- 				continue;
- 			}
--			/* For now we do this - until kmalloc is more intelligent
--			   we are resigned to stupid hacks like this */
--			if (SCSI_BUF_PA(shpnt) >= ISA_DMA_THRESHOLD) {
--				printk(KERN_ERR "Invalid address for shpnt with 1542.\n");
--				goto unregister;
++	eata_shost_priv(shost) = ha;
 +
-+			host = dma_alloc_coherent(NULL, sizeof(*host),
-+						  &HOSTDMA(shpnt), GFP_KERNEL);
-+			if (!host) {
-+				scsi_unregister(shpnt);
-+				release_region(bases[indx], 4);
-+				continue;
- 			}
-+
-+			HOSTDATA(shpnt) = host;
-+
- 			if (!aha1542_test_port(bases[indx], shpnt))
- 				goto unregister;
- 
+ 	shost->io_port = port_base;
+ 	shost->unique_id = port_base;
+ 	shost->n_io_port = REGION_SIZE;
+@@ -1283,8 +1309,6 @@
+ 	shost->this_id = (ushort) info.host_addr[3];
+ 	shost->can_queue = (ushort) info.queue_size;
+ 	shost->cmd_per_lun = MAX_CMD_PER_LUN;
 -
- 			base_io = bases[indx];
+-	ha = (struct hostdata *)shost->hostdata;
+ 	
+ 	memset(ha, 0, sizeof(struct hostdata));
+ 	ha->subversion = subversion;
+@@ -1293,11 +1317,9 @@
+ 	ha->pdev = pdev;
+ 	ha->board_number = j;
  
- 			/* Set the Bus on/off-times as not to ruin floppy performance */
-@@ -1259,6 +1270,8 @@
- 			continue;
- unregister:
- 			release_region(bases[indx], 4);
-+			dma_free_coherent(NULL, sizeof(struct aha1542_hostdata),
-+					  HOSTDATA(shpnt), HOSTDMA(shpnt));
- 			scsi_unregister(shpnt);
- 			continue;
+-	if (ha->subversion == ESA)
+-		shost->unchecked_isa_dma = 0;
+-	else {
++	if (ha->subversion != ESA) {
+ 		unsigned long flags;
+-		shost->unchecked_isa_dma = 1;
++		shost->sense_buffer_isa = 1;
  
-@@ -1275,6 +1288,8 @@
+ 		flags = claim_dma_lock();
+ 		disable_dma(dma_channel);
+@@ -1355,7 +1377,7 @@
+ 
+ 	for (i = 0; i < shost->can_queue; i++) {
+ 		size_t sz = shost->sg_tablesize *sizeof(struct sg_list);
+-		gfp_t gfp_mask = (shost->unchecked_isa_dma ? GFP_DMA : 0) | GFP_ATOMIC;
++		gfp_t gfp_mask = (shost->sense_buffer_isa ? GFP_DMA : 0) | GFP_ATOMIC;
+ 		ha->cp[i].sglist = kmalloc(sz, gfp_mask);
+ 		if (!ha->cp[i].sglist) {
+ 			printk
+@@ -1752,7 +1774,7 @@
+ 			       void (*done) (struct scsi_cmnd *))
+ {
+ 	struct Scsi_Host *shost = SCpnt->device->host;
+-	struct hostdata *ha = (struct hostdata *)shost->hostdata;
++	struct hostdata *ha = eata_shost_priv(shost);
+ 	unsigned int i, k;
+ 	struct mscp *cpp;
+ 
+@@ -1836,7 +1858,7 @@
+ static int eata2x_eh_abort(struct scsi_cmnd *SCarg)
+ {
+ 	struct Scsi_Host *shost = SCarg->device->host;
+-	struct hostdata *ha = (struct hostdata *)shost->hostdata;
++	struct hostdata *ha = eata_shost_priv(shost);
+ 	unsigned int i;
+ 
+ 	if (SCarg->host_scribble == NULL) {
+@@ -1906,7 +1928,7 @@
+ 	int arg_done = 0;
+ 	struct scsi_cmnd *SCpnt;
+ 	struct Scsi_Host *shost = SCarg->device->host;
+-	struct hostdata *ha = (struct hostdata *)shost->hostdata;
++	struct hostdata *ha = eata_shost_priv(shost);
+ 
+ 	scmd_printk(KERN_INFO, SCarg,
+ 		"reset, enter, pid %ld.\n", SCarg->serial_number);
+@@ -2292,7 +2314,7 @@
+ 	unsigned int i, k, c, status, tstatus, reg;
+ 	struct mssp *spp;
+ 	struct mscp *cpp;
+-	struct hostdata *ha = (struct hostdata *)shost->hostdata;
++	struct hostdata *ha = eata_shost_priv(shost);
+ 	int irq = shost->irq;
+ 
+ 	/* Check if this board need to be serviced */
+@@ -2552,7 +2574,7 @@
+ 
+ static int eata2x_release(struct Scsi_Host *shost)
+ {
+-	struct hostdata *ha = (struct hostdata *)shost->hostdata;
++	struct hostdata *ha = eata_shost_priv(shost);
+ 	unsigned int i;
+ 
+ 	for (i = 0; i < shost->can_queue; i++)
+@@ -2572,6 +2594,8 @@
  		free_dma(shost->dma_channel);
- 	if (shost->io_port && shost->n_io_port)
- 		release_region(shost->io_port, shost->n_io_port);
-+	dma_free_coherent(NULL, sizeof(struct aha1542_hostdata),
-+			  HOSTDATA(shost), HOSTDMA(shost));
+ 
+ 	release_region(shost->io_port, shost->n_io_port);
++	dma_free_coherent(ha->pdev ? &ha->pdev->dev : NULL,
++			  sizeof(*ha), ha, eata_shost_dma(shost));
  	scsi_unregister(shost);
  	return 0;
  }
-@@ -1746,6 +1761,11 @@
- }
- MODULE_LICENSE("GPL");
- 
-+static int aha154x_adjust_queue(struct scsi_device *device)
-+{
-+	blk_queue_bounce_limit(device->request_queue, BLK_BOUNCE_ISA);
-+	return 0;
-+}
- 
- static struct scsi_host_template driver_template = {
- 	.proc_name		= "aha1542",
-@@ -1761,7 +1781,7 @@
- 	.this_id		= 7,
- 	.sg_tablesize		= AHA1542_SCATTER,
- 	.cmd_per_lun		= AHA1542_CMDLUN,
--	.unchecked_isa_dma	= 1, 
- 	.use_clustering		= ENABLE_CLUSTERING,
-+	.slave_alloc		= aha154x_adjust_queue,
- };
- #include "scsi_module.c"
