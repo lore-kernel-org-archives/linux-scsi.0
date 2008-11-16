@@ -1,46 +1,57 @@
 From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH] [3/21] Pass gfp to scsi_allocate_command
-Date: Sun, 16 Nov 2008 23:21:17 +0100
-Message-ID: <20081116222117.GD6703@one.firstfloor.org>
-References: <200811161211.212948789@firstfloor.org> <20081115231103.59DC93E661B@basil.firstfloor.org> <1226849345.3556.7.camel@localhost.localdomain>
+Subject: Re: [PATCH] [5/21] Remove unchecked_isa in BusLogic
+Date: Sun, 16 Nov 2008 23:31:05 +0100
+Message-ID: <20081116223105.GE6703@one.firstfloor.org>
+References: <200811161211.212948789@firstfloor.org> <20081115231105.63B2F3E6619@basil.firstfloor.org> <1226850376.3556.9.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:56670 "EHLO
+Received: from one.firstfloor.org ([213.235.205.2]:47451 "EHLO
 	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752595AbYKPWLl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Nov 2008 17:11:41 -0500
+	with ESMTP id S1752130AbYKPWV3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Nov 2008 17:21:29 -0500
 Content-Disposition: inline
-In-Reply-To: <1226849345.3556.7.camel@localhost.localdomain>
+In-Reply-To: <1226850376.3556.9.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Andi Kleen <andi@firstfloor.org>, axboe@kernel.dk, linux-scsi@vger.kernel.org
 
-On Sun, Nov 16, 2008 at 09:29:05AM -0600, James Bottomley wrote:
+On Sun, Nov 16, 2008 at 10:46:16AM -0500, James Bottomley wrote:
 > On Sun, 2008-11-16 at 00:11 +0100, Andi Kleen wrote:
-> > -static void scsi_put_host_cmd_pool(gfp_t gfp_mask)
-> > +static void scsi_put_host_cmd_pool(struct Scsi_Host *shost)
-> >  {
-> >         struct scsi_host_cmd_pool *pool;
-> >  
-> >         mutex_lock(&host_cmd_pool_mutex);
-> > -       pool = (gfp_mask & __GFP_DMA) ? &scsi_cmd_dma_pool :
-> > +       pool = (shost && shost->unchecked_isa_dma) ?
-> > &scsi_cmd_dma_pool :
-> >                 &scsi_cmd_pool;
+> > +static struct Scsi_Host *buslogic_host_alloc(gfp_t gfp)
+> > +{
+> > +       struct BusLogic_HostAdapter *board;
+> > +       struct Scsi_Host *shost;
+> > +
+> > +
+> > +       shost = scsi_host_alloc(&Bus_Logic_template, sizeof(struct host_ptr));
+> > +       if (!shost)
+> > +               return NULL;
+> > +
+> > +       board = dma_alloc_coherent(NULL, sizeof(struct BusLogic_HostAdapter),
+> > +                                       &bl_shost_dma(shost), GFP_KERNEL);
+> > +       if (!board) {
+> > +               scsi_host_put(shost);
+> > +               return NULL;
+> > +       }
 > 
-> There's a conceptual problem with this:  The API is designed to be used
-> on host setup (i.e. when allocating a host based command for the driver)
-> so the scsi_host may not be available (or at least not fully set up)
-> when this is called.
+> What makes you think that BusLogic_HostAdapter has to be in coherent
+> memory?  You can tell from your own patch that nothing ever uses its DMA
+> address, so the card never actually DMAs data to or from this area.
 
-I think it wasn't a problem on the ISA drivers I changed.
+Hmm I think it was mostly about having an equivalent transformation.
+The structure was in GFP_DMA before, so I wanted to keep that
 
-> 
-> What about making it take a mask instead?  That should always be known
-> by the driver.
+Also the driver does some funny things with transforming some
+bus addresses on its own, which made me double conservative.
+On looking more closely it doesn't do virt_to_bus, but at least
+one bus_to_virt (but it seems to data outside BusAdapter)
 
-Ok. 
+I don't have that hardware so I wanted to be very conservative
+in any
+
+But I'll fix it in the next version.
 
 -Andi
+
