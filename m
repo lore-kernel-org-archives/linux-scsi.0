@@ -1,31 +1,33 @@
-From: Frans Pop <elendil@planet.nl>
-Subject: Re: extra bytes written to SATA DVD drive on kernel 2.6.23 till 2.6.24.2
-Date: Mon, 17 Nov 2008 09:18:08 +0100
-Message-ID: <200811170918.10516.elendil@planet.nl>
-References: <200802252005.22663.gml@inode.at> <E1JXic1-0000Yo-K8@faramir.fjphome.nl> <4920DF5C.3030400@gmail.com>
+From: Theodore Tso <tytso@mit.edu>
+Subject: Re: [PATCH] [2/21] Add blk_q_mask
+Date: Sun, 16 Nov 2008 12:40:24 -0500
+Message-ID: <20081116174024.GF6958@mit.edu>
+References: <200811161211.212948789@firstfloor.org> <20081115231102.54DF53E661A@basil.firstfloor.org> <1226845288.3556.4.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754957AbYKQISZ@vger.kernel.org>
-In-Reply-To: <4920DF5C.3030400@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from www.church-of-our-saviour.ORG ([69.25.196.31]:56436 "EHLO
+	thunker.thunk.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753206AbYKQI4i (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Nov 2008 03:56:38 -0500
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Gerold Jury <gml@inode.at>, efault@gmx.de, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, vsu@altlinux.ru
+In-Reply-To: <1226845288.3556.4.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andi Kleen <andi@firstfloor.org>, axboe@kernel.dk, linux-scsi@vger.kernel.org
 
-On Monday 17 November 2008, Tejun Heo wrote:
-> Can you guys please add yourselves to bz#10743?
->
->   http://bugzilla.kernel.org/show_bug.cgi?id=10743
->
-> Please test 2.6.28-rc5 as it contains sata_via changes (TF access
-> needed specific workaround) and see whether the problem is fixed and
-> report on bz.
+On Sun, Nov 16, 2008 at 08:21:28AM -0600, James Bottomley wrote:
+> Could you just pick one?  If it's about credit, then the reporting stats
+> go by Author. All three signoffs  will do is inflate your rank in the
+> Signed-off-by stats (which I suppose we use for the kernel summit), but
+> I don't think it will give equal credit to the three entities.
 
-I cannot really help here. I never saw the problem myself, but just 
-thought I saw some pattern in the breakage that might provide a clue.
+It also risks annoying the person who collects stats for the kernel
+summit, who might react if he noticed someone was trying to game the
+system by arbitrary dividing the person's signed-off stats by 3, or
+otherwise adjust the statistic so it matches with reality, plus a
+little extra discount for the annoyance factor.  :-)
 
-Sorry,
-FJP
+							- Ted
+
