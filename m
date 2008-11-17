@@ -1,107 +1,54 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] Reattach device handler for multipath devices
-Date: Mon, 17 Nov 2008 12:29:55 +0100
-Message-ID: <492155B3.6030204@suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] [6/21] Remove unchecked_isa_dma in advansys.c
+Date: Mon, 17 Nov 2008 20:32:01 +0900
+Message-ID: <1226921521.8582.3.camel@localhost.localdomain>
+References: <200811161211.212948789@firstfloor.org>
+	 <20081115231106.686F43E661A@basil.firstfloor.org>
+	 <1226854581.3556.14.camel@localhost.localdomain>
+	 <20081116223308.GF6703@one.firstfloor.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------030206020509090707060601"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53409 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753381AbYKQL35 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Nov 2008 06:29:57 -0500
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:37647 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753303AbYKQLcH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Nov 2008 06:32:07 -0500
+In-Reply-To: <20081116223308.GF6703@one.firstfloor.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Alasdair G Kergon <agk@redhat.com>, christophe varoqui <christophe.varoqui@free.fr>, device-mapper development <dm-devel@redhat.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Andi Kleen <andi@firstfloor.org>
+Cc: axboe@kernel.dk, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------030206020509090707060601
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8bit
+On Sun, 2008-11-16 at 23:33 +0100, Andi Kleen wrote:
+> On Sun, Nov 16, 2008 at 11:56:21AM -0500, James Bottomley wrote:
+> > > v2: use dma api for all allocations
+> > 
+> > Just a minute:  this is another driver where you allocate coherent
+> > memory for the host structure but fail to use it for I/O as far as I can
+> > tell.
+> > 
+> > What's going on here?  If this is just a ploy to get GFP_DMA memory,
+> > then this isn't the way to do it.  Firstly, it doesn't seem to be needed
+> 
+> It's just that the structure was in GFP_DMA before due to unchecked_isa_dma
+> so I wanted to do a equivalent convertion
+> 
+> > and secondly, coherent memory is hard (or impossible) to manufacture on
+> > certain platforms.  You should only use it for DMA mailboxes and other
+> > register exchanges between the device and main memory ... expanding its
+> > use is asking for resource exhaustion.
+> 
+> It's not expanding it, in fact it lowers it because they allocate
+> less in GFP_DMA now than with unchecked_isa_dma (e.g. no more commands
+> and sense buffers)
 
-Hi James, Aladair,
+but dma_alloc_coherent() isn't equivalent to an allocator with the
+dma_mask on most platforms.  It is on x86 because that platform is fully
+coherent, but on most others it's taking memory from a special coherent
+pool.  This is the resource which can exhaust easily.
 
-when using multipath the daemon might have specified
-a different device handler than used by default.
-(Eg Clariion in ALUA mode).
-For these cases we currently cannot setup a multipath map
-automatically as scsi_dh_attach() will fail.
-Instead we should be trying to reattach with the correct
-device handler and only return an error if that fails.
+James
 
-Please apply.
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Markus Rex, HRB 16746 (AG Nürnberg)
-
---------------030206020509090707060601
-Content-Type: text/plain;
- name="dm-mpath-reattach-dh"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="dm-mpath-reattach-dh"
-
-Reattach device handler for multipath devices
-
-The multipath daemon might have specified a different device_handler
-than the one a device is attached to by default.
-So we should try to re-attach with the user-specified device_handler
-and only return an error if that fails.
-
-Signed-off-by: Hannes Reinecke <hare@suse.de
-
-diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-index 4840733..4e39966 100644
---- a/drivers/md/dm-mpath.c
-+++ b/drivers/md/dm-mpath.c
-@@ -592,9 +592,19 @@ static struct pgpath *parse_path(struct arg_set *as, struct path_selector *ps,
- 	}
- 
- 	if (m->hw_handler_name) {
--		r = scsi_dh_attach(bdev_get_queue(p->path.dev->bdev),
--				   m->hw_handler_name);
-+		struct request_queue *q = bdev_get_queue(p->path.dev->bdev);
-+
-+		r = scsi_dh_attach(q, m->hw_handler_name);
-+		if (r == -EBUSY) {
-+			/*
-+			 * Already attached to different hw_handler,
-+			 * try to reattach with correct one.
-+			 */
-+			scsi_dh_detach(q);
-+			r = scsi_dh_attach(q, m->hw_handler_name);
-+		}
- 		if (r < 0) {
-+			ti->error = "error attaching hardware handler";
- 			dm_put_device(ti, p->path.dev);
- 			goto bad;
- 		}
-diff --git a/drivers/scsi/device_handler/scsi_dh.c b/drivers/scsi/device_handler/scsi_dh.c
-index a518f2e..f5d592f 100644
---- a/drivers/scsi/device_handler/scsi_dh.c
-+++ b/drivers/scsi/device_handler/scsi_dh.c
-@@ -504,12 +504,9 @@ void scsi_dh_detach(struct request_queue *q)
- 	if (!sdev)
- 		return;
- 
--	if (sdev->scsi_dh_data) {
--		/* if sdev is not on internal list, detach */
--		scsi_dh = sdev->scsi_dh_data->scsi_dh;
--		if (!device_handler_match(scsi_dh, sdev))
--			scsi_dh_handler_detach(sdev, scsi_dh);
--	}
-+	if (sdev->scsi_dh_data)
-+		scsi_dh_handler_detach(sdev, sdev->scsi_dh_data->scsi_dh);
-+
- 	put_device(&sdev->sdev_gendev);
- }
- EXPORT_SYMBOL_GPL(scsi_dh_detach);
-
---------------030206020509090707060601--
