@@ -1,70 +1,45 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] [5/21] Remove unchecked_isa in BusLogic
-Date: Mon, 17 Nov 2008 20:03:50 +0900
-Message-ID: <1226919830.7520.4.camel@localhost.localdomain>
-References: <200811161211.212948789@firstfloor.org>
-	 <20081115231105.63B2F3E6619@basil.firstfloor.org>
-	 <1226850376.3556.9.camel@localhost.localdomain>
-	 <20081116223105.GE6703@one.firstfloor.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] [13/21] Use blk_q_mask/get_pages_mask in sg driver
+Date: Mon, 17 Nov 2008 20:07:20 +0900
+Message-ID: <20081117200720M.fujita.tomonori@lab.ntt.co.jp>
+References: <20081116221722.GB6703@one.firstfloor.org>
+	<20081117141240X.fujita.tomonori@lab.ntt.co.jp>
+	<20081117102227.GG6703@one.firstfloor.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:53720 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752835AbYKQLD4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Nov 2008 06:03:56 -0500
-In-Reply-To: <20081116223105.GE6703@one.firstfloor.org>
+Received: from tama500.ecl.ntt.co.jp ([129.60.39.148]:60816 "EHLO
+	tama500.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751630AbYKQLGW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Nov 2008 06:06:22 -0500
+In-Reply-To: <20081117102227.GG6703@one.firstfloor.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: axboe@kernel.dk, linux-scsi@vger.kernel.org
+To: andi@firstfloor.org
+Cc: fujita.tomonori@lab.ntt.co.jp, dgilbert@interlog.com, James.Bottomley@HansenPartnership.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
 
-On Sun, 2008-11-16 at 23:31 +0100, Andi Kleen wrote:
-> On Sun, Nov 16, 2008 at 10:46:16AM -0500, James Bottomley wrote:
-> > On Sun, 2008-11-16 at 00:11 +0100, Andi Kleen wrote:
-> > > +static struct Scsi_Host *buslogic_host_alloc(gfp_t gfp)
-> > > +{
-> > > +       struct BusLogic_HostAdapter *board;
-> > > +       struct Scsi_Host *shost;
-> > > +
-> > > +
-> > > +       shost = scsi_host_alloc(&Bus_Logic_template, sizeof(struct host_ptr));
-> > > +       if (!shost)
-> > > +               return NULL;
-> > > +
-> > > +       board = dma_alloc_coherent(NULL, sizeof(struct BusLogic_HostAdapter),
-> > > +                                       &bl_shost_dma(shost), GFP_KERNEL);
-> > > +       if (!board) {
-> > > +               scsi_host_put(shost);
-> > > +               return NULL;
-> > > +       }
-> > 
-> > What makes you think that BusLogic_HostAdapter has to be in coherent
-> > memory?  You can tell from your own patch that nothing ever uses its DMA
-> > address, so the card never actually DMAs data to or from this area.
+On Mon, 17 Nov 2008 11:22:28 +0100
+Andi Kleen <andi@firstfloor.org> wrote:
+
+> > Well, I don't think that they are useful or a nice feature. They would
+> > become pointless when you finish your dma allocation rework. But I
+> > don't think that we can remove the existing API exported to userspace.
 > 
-> Hmm I think it was mostly about having an equivalent transformation.
-> The structure was in GFP_DMA before, so I wanted to keep that
-> 
-> Also the driver does some funny things with transforming some
-> bus addresses on its own, which made me double conservative.
-> On looking more closely it doesn't do virt_to_bus, but at least
-> one bus_to_virt (but it seems to data outside BusAdapter)
-> 
-> I don't have that hardware so I wanted to be very conservative
-> in any
-> 
-> But I'll fix it in the next version.
+> Ok I'll restore the defines. But readding the ioctls would
+> be messy. Do you really think that is needed?
 
-Yes, the problem is that on several architectures dma_alloc_coherent()
-uses a special vaddr to get coherent memory.  Unless you use it by the
-returned handle (which I've checked the patch doesn't do) the use is
-likely invalid.  In particular, you can't call dma_map_... on it because
-usually that sets up a dual mapping (one cached and one uncached most
-likely) which is illegal on most CPUs (even x86, I believe).
-
-James
+As I wrote in the previous mail, I don't think that it's useful. But
+it's not the point. My point is that we can't remove the existing sg
+ioctl interface like we can't remove the system calls. Do I
+misunderstand the rules about the userspace API?
 
 
+> I would rather prefer to fix the driver to always GFP_DMA, but I am
+> not aware of any driver who needs it. Are you?
+
+Well, theoretically, there migth be an user who want these ioctl with
+all the drivers that are not capable of 64bit DMA since sg allocates
+the reserved buffer with GFP_KERNEL. These driver might use the
+block-layer bounce buffer. Users might want to use
+SG_SET_FORCE_LOW_DMA to avoid the bounce buffer latency.
