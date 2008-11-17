@@ -1,350 +1,48 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] Add TGPS setting to scsi devices
-Date: Mon, 17 Nov 2008 13:03:35 +0100
-Message-ID: <49215D97.5070402@suse.de>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH] scsi: Eliminate compile warning in ibmvfc.c
+Date: Mon, 17 Nov 2008 10:56:16 -0600
+Message-ID: <4921A230.9010508@linux.vnet.ibm.com>
+References: <18707.45838.704492.589455@cargo.ozlabs.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040004040008020303070607"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:54726 "EHLO mx2.suse.de"
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:37610 "EHLO e3.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756641AbYKQMDi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Nov 2008 07:03:38 -0500
+	id S1751620AbYKQQ4t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Nov 2008 11:56:49 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e3.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id mAHGuf7M022356
+	for <linux-scsi@vger.kernel.org>; Mon, 17 Nov 2008 11:56:41 -0500
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id mAHGumQg158776
+	for <linux-scsi@vger.kernel.org>; Mon, 17 Nov 2008 11:56:48 -0500
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id mAHGumUk031119
+	for <linux-scsi@vger.kernel.org>; Mon, 17 Nov 2008 11:56:48 -0500
+In-Reply-To: <18707.45838.704492.589455@cargo.ozlabs.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Paul Mackerras <paulus@samba.org>
+Cc: linux-scsi@vger.kernel.org, sfr@canb.auug.org.au
 
-This is a multi-part message in MIME format.
---------------040004040008020303070607
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8bit
+Paul Mackerras wrote:
+> Recent gcc (4.3.2) gives this compile warning on
+> drivers/scsi/ibmvscsi/ibmvfc.o:
+> 
+>   CC      drivers/scsi/ibmvscsi/ibmvfc.o
+> .../drivers/scsi/ibmvscsi/ibmvfc.c: In function 'ibmvfc_reset_device':
+> .../drivers/scsi/ibmvscsi/ibmvfc.c:1630: warning: 'evt' may be used uninitialized in this function
 
-Hi James,
+There is a patch already queued up in scsi-misc to fix this as well:
 
-this patch adds the TGPS setting to scsi devices.
-With this patch we can handle storage arrays running
-in compatible mode (ie supporting both the proprietary
-failover mode and ALUA mode) properly and we save us
-to keep a rather largish device table in the ALUA
-device handler.
-And the correct hardware selection in multipath-tools
-will become a lot easier.
+http://git.kernel.org/gitweb.cgi?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commitdiff;h=eaf5d80a9e7fae4de7f899fd5efc8f3e9f49efa6
 
-As usual, comments etc are welcome.
+-Brian
 
-Cheers,
-
-Hannes
 -- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Markus Rex, HRB 16746 (AG Nürnberg)
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
 
---------------040004040008020303070607
-Content-Type: text/plain;
- name="scsi-add-tgps-setting"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="scsi-add-tgps-setting"
 
-Add TGPS setting to scsi devices
-
-Some multipath-capable storage arrays are capable of running
-in compatible mode, ie supporting both the original vendor-specific
-failover mode and the SPC-3 compliant ALUA mode.
-This patch stores the TGPS setting in the sdev so that we can directly
-match onto it and select the correct device handler automatically.
-And we can save code in the ALUA device handler.
-
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-
-diff --git a/drivers/scsi/device_handler/scsi_dh.c b/drivers/scsi/device_handler/scsi_dh.c
-index a518f2e..872b80d 100644
---- a/drivers/scsi/device_handler/scsi_dh.c
-+++ b/drivers/scsi/device_handler/scsi_dh.c
-@@ -28,6 +28,7 @@ struct scsi_dh_devinfo_list {
- 	struct list_head node;
- 	char vendor[9];
- 	char model[17];
-+	char tgps;
- 	struct scsi_device_handler *handler;
- };
- 
-@@ -60,7 +61,8 @@ scsi_dh_cache_lookup(struct scsi_device *sdev)
- 	spin_lock(&list_lock);
- 	list_for_each_entry(tmp, &scsi_dh_dev_list, node) {
- 		if (!strncmp(sdev->vendor, tmp->vendor, strlen(tmp->vendor)) &&
--		    !strncmp(sdev->model, tmp->model, strlen(tmp->model))) {
-+		    !strncmp(sdev->model, tmp->model, strlen(tmp->model)) &&
-+		    (!tmp->tgps || (sdev->tgps & tmp->tgps) != 0)) {
- 			found_dh = tmp->handler;
- 			break;
- 		}
-@@ -79,7 +81,9 @@ static int scsi_dh_handler_lookup(struct scsi_device_handler *scsi_dh,
- 		if (!strncmp(sdev->vendor, scsi_dh->devlist[i].vendor,
- 			     strlen(scsi_dh->devlist[i].vendor)) &&
- 		    !strncmp(sdev->model, scsi_dh->devlist[i].model,
--			     strlen(scsi_dh->devlist[i].model))) {
-+			     strlen(scsi_dh->devlist[i].model)) &&
-+		    (!scsi_dh->devlist[i].tgps ||
-+		     (sdev->tgps & scsi_dh->devlist[i].tgps) != 0)) {
- 			found = 1;
- 			break;
- 		}
-@@ -128,6 +132,7 @@ device_handler_match(struct scsi_device_handler *scsi_dh,
- 			strncpy(tmp->model, sdev->model, 16);
- 			tmp->vendor[8] = '\0';
- 			tmp->model[16] = '\0';
-+			tmp->tgps = sdev->tgps;
- 			tmp->handler = found_dh;
- 			spin_lock(&list_lock);
- 			list_add(&tmp->node, &scsi_dh_dev_list);
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index e356b43..f1a3fca 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -118,43 +118,6 @@ static struct request *get_alua_req(struct scsi_device *sdev,
- }
- 
- /*
-- * submit_std_inquiry - Issue a standard INQUIRY command
-- * @sdev: sdev the command should be send to
-- */
--static int submit_std_inquiry(struct scsi_device *sdev, struct alua_dh_data *h)
--{
--	struct request *rq;
--	int err = SCSI_DH_RES_TEMP_UNAVAIL;
--
--	rq = get_alua_req(sdev, h->inq, ALUA_INQUIRY_SIZE, READ);
--	if (!rq)
--		goto done;
--
--	/* Prepare the command. */
--	rq->cmd[0] = INQUIRY;
--	rq->cmd[1] = 0;
--	rq->cmd[2] = 0;
--	rq->cmd[4] = ALUA_INQUIRY_SIZE;
--	rq->cmd_len = COMMAND_SIZE(INQUIRY);
--
--	rq->sense = h->sense;
--	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
--	rq->sense_len = h->senselen = 0;
--
--	err = blk_execute_rq(rq->q, NULL, rq, 1);
--	if (err == -EIO) {
--		sdev_printk(KERN_INFO, sdev,
--			    "%s: std inquiry failed with %x\n",
--			    ALUA_DH_NAME, rq->errors);
--		h->senselen = rq->sense_len;
--		err = SCSI_DH_IO;
--	}
--	blk_put_request(rq);
--done:
--	return err;
--}
--
--/*
-  * submit_vpd_inquiry - Issue an INQUIRY VPD page 0x83 command
-  * @sdev: sdev the command should be sent to
-  */
-@@ -281,23 +244,19 @@ done:
- }
- 
- /*
-- * alua_std_inquiry - Evaluate standard INQUIRY command
-+ * alua_check_tgps - Evaluate TGPS setting
-  * @sdev: device to be checked
-  *
-- * Just extract the TPGS setting to find out if ALUA
-+ * Just examine the TPGS setting of the device to find out if ALUA
-  * is supported.
-  */
--static int alua_std_inquiry(struct scsi_device *sdev, struct alua_dh_data *h)
-+static int alua_check_tgps(struct scsi_device *sdev, struct alua_dh_data *h)
- {
--	int err;
--
--	err = submit_std_inquiry(sdev, h);
--
--	if (err != SCSI_DH_OK)
--		return err;
-+	int err = SCSI_DH_OK;
- 
- 	/* Check TPGS setting */
--	h->tpgs = (h->inq[5] >> 4) & 0x3;
-+	h->tpgs = sdev->tgps;
-+
- 	switch (h->tpgs) {
- 	case TPGS_MODE_EXPLICIT|TPGS_MODE_IMPLICIT:
- 		sdev_printk(KERN_INFO, sdev,
-@@ -617,7 +576,7 @@ static int alua_initialize(struct scsi_device *sdev, struct alua_dh_data *h)
- {
- 	int err;
- 
--	err = alua_std_inquiry(sdev, h);
-+	err = alua_check_tgps(sdev, h);
- 	if (err != SCSI_DH_OK)
- 		goto out;
- 
-@@ -682,16 +641,8 @@ static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
- }
- 
- static const struct scsi_dh_devlist alua_dev_list[] = {
--	{"HP", "MSA VOLUME" },
--	{"HP", "HSV101" },
--	{"HP", "HSV111" },
--	{"HP", "HSV200" },
--	{"HP", "HSV210" },
--	{"HP", "HSV300" },
--	{"IBM", "2107900" },
--	{"IBM", "2145" },
--	{"Pillar", "Axiom" },
--	{NULL, NULL}
-+	{"", "", 3 },
-+	{NULL, NULL, 0}
- };
- 
- static int alua_bus_attach(struct scsi_device *sdev);
-diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
-index 0e572d2..ff2e653 100644
---- a/drivers/scsi/device_handler/scsi_dh_emc.c
-+++ b/drivers/scsi/device_handler/scsi_dh_emc.c
-@@ -563,10 +563,10 @@ done:
- }
- 
- static const struct scsi_dh_devlist clariion_dev_list[] = {
--	{"DGC", "RAID"},
--	{"DGC", "DISK"},
--	{"DGC", "VRAID"},
--	{NULL, NULL},
-+	{"DGC", "RAID", 0},
-+	{"DGC", "DISK", 0},
-+	{"DGC", "VRAID", 0},
-+	{NULL, NULL, 0},
- };
- 
- static int clariion_bus_attach(struct scsi_device *sdev);
-diff --git a/drivers/scsi/device_handler/scsi_dh_hp_sw.c b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-index 9aec4ca..ffd8a06 100644
---- a/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-+++ b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-@@ -283,11 +283,11 @@ static int hp_sw_activate(struct scsi_device *sdev)
- }
- 
- static const struct scsi_dh_devlist hp_sw_dh_data_list[] = {
--	{"COMPAQ", "MSA1000 VOLUME"},
--	{"COMPAQ", "HSV110"},
--	{"HP", "HSV100"},
--	{"DEC", "HSG80"},
--	{NULL, NULL},
-+	{"COMPAQ", "MSA1000 VOLUME", 0},
-+	{"COMPAQ", "HSV110", 0},
-+	{"HP", "HSV100", 0},
-+	{"DEC", "HSG80", 0},
-+	{NULL, NULL, 0},
- };
- 
- static int hp_sw_bus_attach(struct scsi_device *sdev);
-diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
-index 6eae101..df5cb2e 100644
---- a/drivers/scsi/device_handler/scsi_dh_rdac.c
-+++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
-@@ -586,23 +586,23 @@ static int rdac_check_sense(struct scsi_device *sdev,
- }
- 
- static const struct scsi_dh_devlist rdac_dev_list[] = {
--	{"IBM", "1722"},
--	{"IBM", "1724"},
--	{"IBM", "1726"},
--	{"IBM", "1742"},
--	{"IBM", "1814"},
--	{"IBM", "1815"},
--	{"IBM", "1818"},
--	{"IBM", "3526"},
--	{"SGI", "TP9400"},
--	{"SGI", "TP9500"},
--	{"SGI", "IS"},
--	{"STK", "OPENstorage D280"},
--	{"SUN", "CSM200_R"},
--	{"SUN", "LCSM100_F"},
--	{"DELL", "MD3000"},
--	{"DELL", "MD3000i"},
--	{NULL, NULL},
-+	{"IBM", "1722", 0},
-+	{"IBM", "1724", 0},
-+	{"IBM", "1726", 0},
-+	{"IBM", "1742", 0},
-+	{"IBM", "1814", 0},
-+	{"IBM", "1815", 0},
-+	{"IBM", "1818", 0},
-+	{"IBM", "3526", 0},
-+	{"SGI", "TP9400", 0},
-+	{"SGI", "TP9500", 0},
-+	{"SGI", "IS", 0},
-+	{"STK", "OPENstorage D280", 0},
-+	{"SUN", "CSM200_R", 0},
-+	{"SUN", "LCSM100_F", 0},
-+	{"DELL", "MD3000", 0},
-+	{"DELL", "MD3000i", 0},
-+	{NULL, NULL, 0},
- };
- 
- static int rdac_bus_attach(struct scsi_device *sdev);
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index b14dc02..c586b71 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -821,6 +821,7 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 	sdev->inq_periph_qual = (inq_result[0] >> 5) & 7;
- 	sdev->lockable = sdev->removable;
- 	sdev->soft_reset = (inq_result[7] & 1) && ((inq_result[3] & 7) == 2);
-+	sdev->tgps = (inq_result[5] >> 4) & 3;
- 
- 	if (sdev->scsi_level >= SCSI_3 ||
- 			(sdev->inquiry_len > 56 && inq_result[56] & 0x04))
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 93c28f3..becc2fc 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -560,6 +560,7 @@ sdev_rd_attr (scsi_level, "%d\n");
- sdev_rd_attr (vendor, "%.8s\n");
- sdev_rd_attr (model, "%.16s\n");
- sdev_rd_attr (rev, "%.4s\n");
-+sdev_rd_attr (tgps, "%d\n");
- 
- /*
-  * TODO: can we make these symlinks to the block layer ones?
-@@ -745,6 +746,7 @@ static struct attribute *scsi_sdev_attrs[] = {
- 	&dev_attr_vendor.attr,
- 	&dev_attr_model.attr,
- 	&dev_attr_rev.attr,
-+	&dev_attr_tgps.attr,
- 	&dev_attr_rescan.attr,
- 	&dev_attr_delete.attr,
- 	&dev_attr_state.attr,
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index a37a814..9e61a76 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -96,7 +96,8 @@ struct scsi_device {
- 	void *hostdata;		/* available to low-level driver */
- 	char type;
- 	char scsi_level;
--	char inq_periph_qual;	/* PQ from INQUIRY data */	
-+	char inq_periph_qual;	/* PQ from INQUIRY data */
-+	char tgps;		/* Target port group support */
- 	unsigned char inquiry_len;	/* valid bytes in 'inquiry' */
- 	unsigned char * inquiry;	/* INQUIRY response data */
- 	const char * vendor;		/* [back_compat] point into 'inquiry' ... */
-@@ -174,6 +175,7 @@ struct scsi_device {
- struct scsi_dh_devlist {
- 	char *vendor;
- 	char *model;
-+	char tgps;
- };
- 
- struct scsi_device_handler {
-
---------------040004040008020303070607--
