@@ -1,46 +1,42 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH] [13/21] Use blk_q_mask/get_pages_mask in sg driver
-Date: Mon, 17 Nov 2008 12:43:38 +0100
-Message-ID: <20081117114338.GJ6703@one.firstfloor.org>
-References: <20081117102227.GG6703@one.firstfloor.org> <20081117200720M.fujita.tomonori@lab.ntt.co.jp> <20081117112346.GI6703@one.firstfloor.org> <20081117202248D.fujita.tomonori@lab.ntt.co.jp>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: 2.6.28-rc5: Reported regressions from 2.6.27
+Date: Mon, 17 Nov 2008 20:36:46 +0900
+Message-ID: <1226921806.8582.6.camel@localhost.localdomain>
+References: <VwdsQNEjR_C.A.CiD.9_FIJB@chimera>
+	 <20081116182953.6231ae8c@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:37138 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753286AbYKQLd7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Nov 2008 06:33:59 -0500
-Content-Disposition: inline
-In-Reply-To: <20081117202248D.fujita.tomonori@lab.ntt.co.jp>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:56407 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753380AbYKQLgz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Nov 2008 06:36:55 -0500
+In-Reply-To: <20081116182953.6231ae8c@lxorguk.ukuu.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: andi@firstfloor.org, dgilbert@interlog.com, James.Bottomley@HansenPartnership.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
 
-> Yeah, I know. It's not nice (as I wrote in the first mail), it doesn't
-> work well, etc. But it's not the point (as I wrote in the previous
-> mail). I'm against the patch just because I don't think the rules
-> about the userspace API permit removing the exiting API like this.
-
-Ok perhaps removing the define was a bit much, but at least stubbing
-the ioctl should be transparent to the application.
-
-Ok except that I return EINVAL in the set variant now. I could lie and return 0
-instead, although I suspect it wouldn't make much difference either 
-way.
- 
+On Sun, 2008-11-16 at 18:29 +0000, Alan Cox wrote:
+> >      the majority of these patches have not been merged for over two weeks
+> >      (for almost three weeks in many cases and for over a _month_ in one case).
+> >      IMO, this is insane.]
 > 
-> If the rules permit, I'm happy to try to remove more old features of
-> sg.
+> Some of them are quite serious too - some stuff is basically unusable in
+> 2.6.28rc due to the vmalloc bug.
+> 
+> Is there any reason why someone (Rafael ?) shouldn't simply submit all of
+> those patches that look sensible, are reported to fix regressions and
+> whose maintainer has not provided a reason to NOT apply them into the
+> tree ?
 
-As long as old binaries don't break I don't see a problem with
-any such changes (afaik that's true for my change)
+There is for SCSI.  Our two bugzilla entries each have several patches
+(one has two, the other has four).  The patches listed in the
+regressions aren't necessarily going to be the ones applied (depending
+on how the arguing and testing goes).
 
-If you want to break something you have to just go through
-feature deprecation and printk, but normally it's only a good
-idea to do that if it saves a lot of code or ugliness.
+James
 
--Andi
 
--- 
-ak@linux.intel.com
