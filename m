@@ -1,177 +1,56 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH] mac_esp: fix for quadras with two esp chips
-Date: Mon, 17 Nov 2008 21:37:45 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0811172137080.14521@anakin>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11404] BUG: in 2.6.23-rc3-git7 in do_cciss_intr
+Date: Mon, 17 Nov 2008 13:29:39 -0800 (PST)
+Message-ID: <20081117212939.3763D108043@picon.linux-foundation.org>
+References: <bug-11404-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Sender: linux-m68k-owner@vger.kernel.org
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: Linux/m68k <linux-m68k@vger.kernel.org>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:52244 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752267AbYKQVaN convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Nov 2008 16:30:13 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mAHLTdxK032288
+	for <linux-scsi@vger.kernel.org>; Mon, 17 Nov 2008 13:29:40 -0800
+In-Reply-To: <bug-11404-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-From: Finn Thain <fthain@telegraphics.com.au>
+http://bugzilla.kernel.org/show_bug.cgi?id=11404
 
-On the Quadra 900 and 950 there are two ESP chips sharing one IRQ. Because 
-the shared IRQ is edge-triggered, we must make sure that an IRQ transition 
-from one chip doesn't go unnoticed when the shared IRQ is already active 
-due to the other. This patch prevents interrupts getting lost so that both 
-SCSI busses may be used simultaneously.
 
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
----
-Can I queue it in the m68k tree for 2.6.29, or do you want it to go in through
-the SCSI tree?
 
- drivers/scsi/mac_esp.c |   83 ++++++++++++++++++++++++++++++++++---------------
- 1 file changed, 59 insertions(+), 24 deletions(-)
 
---- a/drivers/scsi/mac_esp.c
-+++ b/drivers/scsi/mac_esp.c
-@@ -53,7 +53,8 @@ struct mac_esp_priv {
- 	void __iomem *pdma_io;
- 	int error;
- };
--static struct platform_device *internal_esp, *external_esp;
-+static struct platform_device *internal_pdev, *external_pdev;
-+static struct esp *esp_chips[2];
- 
- #define MAC_ESP_GET_PRIV(esp) ((struct mac_esp_priv *) \
- 			       platform_get_drvdata((struct platform_device *) \
-@@ -443,6 +444,32 @@ static u32 mac_esp_dma_length_limit(stru
- 	return dma_len > 0xFFFF ? 0xFFFF : dma_len;
- }
- 
-+static irqreturn_t mac_scsi_esp_intr(int irq, void *dev_id)
-+{
-+	int got_intr;
-+
-+	/*
-+	 * This is an edge triggered IRQ, so we have to be careful to
-+	 * avoid missing a transition when it is shared by two ESP devices.
-+	 */
-+
-+	do {
-+		got_intr = 0;
-+		if (esp_chips[0] &&
-+		    (mac_esp_read8(esp_chips[0], ESP_STATUS) & ESP_STAT_INTR)) {
-+			(void)scsi_esp_intr(irq, esp_chips[0]);
-+			got_intr = 1;
-+		}
-+		if (esp_chips[1] &&
-+		    (mac_esp_read8(esp_chips[1], ESP_STATUS) & ESP_STAT_INTR)) {
-+			(void)scsi_esp_intr(irq, esp_chips[1]);
-+			got_intr = 1;
-+		}
-+	} while (got_intr);
-+
-+	return IRQ_HANDLED;
-+}
-+
- static struct esp_driver_ops mac_esp_ops = {
- 	.esp_write8       = mac_esp_write8,
- 	.esp_read8        = mac_esp_read8,
-@@ -557,10 +584,16 @@ static int __devinit esp_mac_probe(struc
- 	}
- 
- 	host->irq = IRQ_MAC_SCSI;
--	err = request_irq(host->irq, scsi_esp_intr, IRQF_SHARED, "Mac ESP",
--			  esp);
--	if (err < 0)
--		goto fail_free_priv;
-+	esp_chips[dev->id] = esp;
-+	mb();
-+	if (esp_chips[!dev->id] == NULL) {
-+		err = request_irq(host->irq, mac_scsi_esp_intr, 0,
-+		                  "Mac ESP", NULL);
-+		if (err < 0) {
-+			esp_chips[dev->id] = NULL;
-+			goto fail_free_priv;
-+		}
-+	}
- 
- 	err = scsi_esp_register(esp, &dev->dev);
- 	if (err)
-@@ -569,7 +602,8 @@ static int __devinit esp_mac_probe(struc
- 	return 0;
- 
- fail_free_irq:
--	free_irq(host->irq, esp);
-+	if (esp_chips[!dev->id] == NULL)
-+		free_irq(host->irq, esp);
- fail_free_priv:
- 	kfree(mep);
- fail_free_command_block:
-@@ -588,7 +622,9 @@ static int __devexit esp_mac_remove(stru
- 
- 	scsi_esp_unregister(esp);
- 
--	free_irq(irq, esp);
-+	esp_chips[dev->id] = NULL;
-+	if (!(esp_chips[0] || esp_chips[1]))
-+		free_irq(irq, NULL);
- 
- 	kfree(mep);
- 
-@@ -615,19 +651,18 @@ static int __init mac_esp_init(void)
- 	if (err)
- 		return err;
- 
--	internal_esp = platform_device_alloc(DRV_MODULE_NAME, 0);
--	if (internal_esp && platform_device_add(internal_esp)) {
--		platform_device_put(internal_esp);
--		internal_esp = NULL;
-+	internal_pdev = platform_device_alloc(DRV_MODULE_NAME, 0);
-+	if (internal_pdev && platform_device_add(internal_pdev)) {
-+		platform_device_put(internal_pdev);
-+		internal_pdev = NULL;
- 	}
--
--	external_esp = platform_device_alloc(DRV_MODULE_NAME, 1);
--	if (external_esp && platform_device_add(external_esp)) {
--		platform_device_put(external_esp);
--		external_esp = NULL;
-+	external_pdev = platform_device_alloc(DRV_MODULE_NAME, 1);
-+	if (external_pdev && platform_device_add(external_pdev)) {
-+		platform_device_put(external_pdev);
-+		external_pdev = NULL;
- 	}
- 
--	if (internal_esp || external_esp) {
-+	if (internal_pdev || external_pdev) {
- 		return 0;
- 	} else {
- 		platform_driver_unregister(&esp_mac_driver);
-@@ -639,13 +674,13 @@ static void __exit mac_esp_exit(void)
- {
- 	platform_driver_unregister(&esp_mac_driver);
- 
--	if (internal_esp) {
--		platform_device_unregister(internal_esp);
--		internal_esp = NULL;
--	}
--	if (external_esp) {
--		platform_device_unregister(external_esp);
--		external_esp = NULL;
-+	if (internal_pdev) {
-+		platform_device_unregister(internal_pdev);
-+		internal_pdev = NULL;
-+	}
-+	if (external_pdev) {
-+		platform_device_unregister(external_pdev);
-+		external_pdev = NULL;
- 	}
- }
- 
 
-Gr{oetje,eeting}s,
+------- Comment #7 from rjw@sisk.pl  2008-11-17 13:29 -------
+On Monday, 17 of November 2008, Randy Dunlap wrote:
+> Rafael J. Wysocki wrote:
+> > This message has been generated automatically as a part of a report
+> > of regressions introduced between 2.6.26 and 2.6.27.
+> > 
+> > The following bug entry is on the current list of known regressions
+> > introduced between 2.6.26 and 2.6.27.  Please verify if it still should
+> > be listed and let me know (either way).
+> > 
+> 
+> Nothing has changed.  IMO that means leave the bug as is (alive).
+> 
+> > 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=11404
+> > Subject		: BUG: in 2.6.23-rc3-git7 in do_cciss_intr
+> > Submitter	: rdunlap <randy.dunlap@oracle.com>
+> > Date		: 2008-08-21 5:52 (88 days old)
+> > References	: http://marc.info/?l=linux-kernel&m=121929819616273&w=4
+> > 		  http://marc.info/?l=linux-kernel&m=121932889105368&w=4
+> > Handled-By	: Miller, Mike (OS Dev) <Mike.Miller@hp.com>
+> > 		  James Bottomley <James.Bottomley@hansenpartnership.com>
 
-						Geert
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
