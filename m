@@ -1,101 +1,39 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12020] scsi_times_out NULL pointer dereference
-Date: Thu, 13 Nov 2008 14:47:09 -0800 (PST)
-Message-ID: <20081113224709.D126511D108@picon.linux-foundation.org>
-References: <bug-12020-11613@http.bugzilla.kernel.org/>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: extra bytes written to SATA DVD drive on kernel 2.6.23 till 2.6.24.2
+Date: Mon, 17 Nov 2008 12:05:00 +0900
+Message-ID: <4920DF5C.3030400@gmail.com>
+References: <200802252005.22663.gml@inode.at> <200803011329.11315.gml@inode.at> <47D0FF67.8050503@gmail.com> <47D0FF67.8050503@gmail.com> <200803072009.22551.gml@inode.at> <E1JXic1-0000Yo-K8@faramir.fjphome.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:51473 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751715AbYKMWrl convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Nov 2008 17:47:41 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mADMl91W019785
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Nov 2008 14:47:10 -0800
-In-Reply-To: <bug-12020-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <E1JXic1-0000Yo-K8@faramir.fjphome.nl>
+Sender: linux-ide-owner@vger.kernel.org
+To: Frans Pop <elendil@planet.nl>
+Cc: Gerold Jury <gml@inode.at>, efault@gmx.de, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, vsu@altlinux.ru
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12020
-
-
-
-
-
-------- Comment #4 from anonymous@kernel-bugs.osdl.org  2008-11-13 14:47 -------
-Reply-To: James.Bottomley@HansenPartnership.com
-
-On Thu, 2008-11-13 at 13:03 -0600, James Bottomley wrote:
-> Actually, I think the trace is slightly off.  I suspect this is the
-> problem:
+Frans Pop wrote:
+> Gerold Jury wrote:
+>> 0001ffe0  e0 ff e1 ff e2 ff e3 ff  e4 ff e5 ff e6 ff e7 ff  |................|
+>> 0001fff0  e8 ff e9 ff ea ff eb ff  ec ff ed ff ee ff ef ff  |................|
+>> 00020000  2a 00 00 00 00 40 00 00  40 00 00 00 00 40 00 00  |*....@..@....@..|
 > 
-> 	struct scsi_cmnd *scmd = req->special;
+> Looks broken here too.
 > 
-> I bet req->special is NULL because the command timed out even before it
-> was prepared by the subsystem.
+>> 00020010  08 ff 09 ff 0a ff 0b ff  08 ff 09 ff 0a ff 0b ff  |................|
+>> 00020020  00 00 01 00 02 00 03 00  04 00 05 00 06 00 07 00  |................|
 > 
-> Does this fix it?
-> 
-> The fix is more of a bandaid than anything ... we can't really have
-> commands timing out in the mid-layer because we expect we have full
-> control of them.  With this patch, if we run out of resets, block will
-> complete a command we're still processing.
-> 
-> James
-> 
-> ---
-> 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 94ed262..5612c42 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -127,6 +127,13 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
->  	enum blk_eh_timer_return (*eh_timed_out)(struct scsi_cmnd *);
->  	enum blk_eh_timer_return rtn = BLK_EH_NOT_HANDLED;
->  
-> +	if (!scmd)
-> +		/*
-> +		 * nasty: command timed out before the mid layer
-> +		 * even prepared it
-> +		 */
-> +		return BLK_EH_RESET_TIMER;
-> +
->  	scsi_log_completion(scmd, TIMEOUT_ERROR);
->  
->  	if (scmd->device->host->transportt->eh_timed_out)
+> It also seems like part gets repeated after the break in both cases.
 
-Mike Anderson pointed out that we have a potential window where the
-timer can fire after we've unprepped the request in SCSI (so making
-req->special NULL) but before we call blk_requeue_request() which stops
-the timer.  We can rejig the locking to prevent this from happening, so
-could you (separately) try this patch?
+Can you guys please add yourselves to bz#10743?
 
-James
+  http://bugzilla.kernel.org/show_bug.cgi?id=10743
 
----
+Please test 2.6.28-rc5 as it contains sata_via changes (TF access needed
+specific workaround) and see whether the problem is fixed and report on bz.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index f5d3b96..3475b74 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -649,8 +643,8 @@ static void scsi_requeue_command(struct request_queue *q,
-struct scsi_cmnd *cmd)
-        struct request *req = cmd->request;
-        unsigned long flags;
-
--       scsi_unprep_request(req);
-        spin_lock_irqsave(q->queue_lock, flags);
-+       scsi_unprep_request(req);
-        blk_requeue_request(q, req);
-        spin_unlock_irqrestore(q->queue_lock, flags);
-
-
+Thanks a lot.  Let's get this thing solved.
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+tejun
