@@ -1,56 +1,41 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11404] BUG: in 2.6.23-rc3-git7 in do_cciss_intr
-Date: Mon, 17 Nov 2008 13:29:39 -0800 (PST)
-Message-ID: <20081117212939.3763D108043@picon.linux-foundation.org>
-References: <bug-11404-11613@http.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Enterprise workload testing for storage and filesystems
+Date: Tue, 18 Nov 2008 07:47:42 +0900
+Message-ID: <1226962063.3403.13.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:52244 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752267AbYKQVaN convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Nov 2008 16:30:13 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mAHLTdxK032288
-	for <linux-scsi@vger.kernel.org>; Mon, 17 Nov 2008 13:29:40 -0800
-In-Reply-To: <bug-11404-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel@vger.kernel.org
+Cc: "K.S. Bhaskar" <ks.bhaskar@fnis.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11404
+Hi all,
 
+High on our list at the recent Linux Foundation end user summit was
+obtaining a method of obtaining enterprise workloads (or simulators) we
+can run in our own testing environments.  The main problem being that
+the data sets used by the systems are usually secret or under regulatory
+embargo and thus unobtainable.  However, several participants noted that
+regulatory prohibitions also extended to their own in-house IT team,
+thus they had had to develop simulators for the workloads which, since
+they contained no customer data, might be more widely distributable.
 
+Fidelity National Information Service were the first to try this.
+They've kicked off a sourceforge site for their stress testing tool
+(which is the same tool they use in their own qualification labs).  The
+source for the tool is available here:
 
+http://sourceforge.net/project/showfiles.php?group_id=11026&package_id=298597
 
+And it comes with a fairly detailed readme explaining what it's trying
+to simulate and why.  Hopefully this will give us all a much better
+insight into both enterprise workloads and the way enterprise IT
+departments conduct testing.
 
-------- Comment #7 from rjw@sisk.pl  2008-11-17 13:29 -------
-On Monday, 17 of November 2008, Randy Dunlap wrote:
-> Rafael J. Wysocki wrote:
-> > This message has been generated automatically as a part of a report
-> > of regressions introduced between 2.6.26 and 2.6.27.
-> > 
-> > The following bug entry is on the current list of known regressions
-> > introduced between 2.6.26 and 2.6.27.  Please verify if it still should
-> > be listed and let me know (either way).
-> > 
-> 
-> Nothing has changed.  IMO that means leave the bug as is (alive).
-> 
-> > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=11404
-> > Subject		: BUG: in 2.6.23-rc3-git7 in do_cciss_intr
-> > Submitter	: rdunlap <randy.dunlap@oracle.com>
-> > Date		: 2008-08-21 5:52 (88 days old)
-> > References	: http://marc.info/?l=linux-kernel&m=121929819616273&w=4
-> > 		  http://marc.info/?l=linux-kernel&m=121932889105368&w=4
-> > Handled-By	: Miller, Mike (OS Dev) <Mike.Miller@hp.com>
-> > 		  James Bottomley <James.Bottomley@hansenpartnership.com>
+Let's see how our storage and filesystem tuning measures up to this.
+
+James
 
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
