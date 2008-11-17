@@ -1,44 +1,107 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH] [13/21] Use blk_q_mask/get_pages_mask in sg driver
-Date: Mon, 17 Nov 2008 20:22:16 +0900
-Message-ID: <20081117202248D.fujita.tomonori@lab.ntt.co.jp>
-References: <20081117102227.GG6703@one.firstfloor.org>
-	<20081117200720M.fujita.tomonori@lab.ntt.co.jp>
-	<20081117112346.GI6703@one.firstfloor.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] Reattach device handler for multipath devices
+Date: Mon, 17 Nov 2008 12:29:55 +0100
+Message-ID: <492155B3.6030204@suse.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------030206020509090707060601"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:43127 "EHLO sh.osrg.net"
+Received: from cantor2.suse.de ([195.135.220.15]:53409 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756414AbYKQLWa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Nov 2008 06:22:30 -0500
-In-Reply-To: <20081117112346.GI6703@one.firstfloor.org>
+	id S1753381AbYKQL35 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Nov 2008 06:29:57 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: andi@firstfloor.org
-Cc: fujita.tomonori@lab.ntt.co.jp, dgilbert@interlog.com, James.Bottomley@HansenPartnership.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Alasdair G Kergon <agk@redhat.com>, christophe varoqui <christophe.varoqui@free.fr>, device-mapper development <dm-devel@redhat.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, 17 Nov 2008 12:23:46 +0100
-Andi Kleen <andi@firstfloor.org> wrote:
+This is a multi-part message in MIME format.
+--------------030206020509090707060601
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 8bit
 
-> > > I would rather prefer to fix the driver to always GFP_DMA, but I am
-> > > not aware of any driver who needs it. Are you?
-> > 
-> > Well, theoretically, there migth be an user who want these ioctl with
-> > all the drivers that are not capable of 64bit DMA since sg allocates
-> > the reserved buffer with GFP_KERNEL. These driver might use the
-> > block-layer bounce buffer. Users might want to use
-> > SG_SET_FORCE_LOW_DMA to avoid the bounce buffer latency.
-> 
-> But that would force everything through the 16MB zone,
-> putting a lot of pressure on it and might even overflow on some
-> loads. I don't think that's a good strategy for any application.
+Hi James, Aladair,
 
-Yeah, I know. It's not nice (as I wrote in the first mail), it doesn't
-work well, etc. But it's not the point (as I wrote in the previous
-mail). I'm against the patch just because I don't think the rules
-about the userspace API permit removing the exiting API like this.
+when using multipath the daemon might have specified
+a different device handler than used by default.
+(Eg Clariion in ALUA mode).
+For these cases we currently cannot setup a multipath map
+automatically as scsi_dh_attach() will fail.
+Instead we should be trying to reattach with the correct
+device handler and only return an error if that fails.
 
-If the rules permit, I'm happy to try to remove more old features of
-sg.
+Please apply.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Markus Rex, HRB 16746 (AG Nürnberg)
+
+--------------030206020509090707060601
+Content-Type: text/plain;
+ name="dm-mpath-reattach-dh"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="dm-mpath-reattach-dh"
+
+Reattach device handler for multipath devices
+
+The multipath daemon might have specified a different device_handler
+than the one a device is attached to by default.
+So we should try to re-attach with the user-specified device_handler
+and only return an error if that fails.
+
+Signed-off-by: Hannes Reinecke <hare@suse.de
+
+diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+index 4840733..4e39966 100644
+--- a/drivers/md/dm-mpath.c
++++ b/drivers/md/dm-mpath.c
+@@ -592,9 +592,19 @@ static struct pgpath *parse_path(struct arg_set *as, struct path_selector *ps,
+ 	}
+ 
+ 	if (m->hw_handler_name) {
+-		r = scsi_dh_attach(bdev_get_queue(p->path.dev->bdev),
+-				   m->hw_handler_name);
++		struct request_queue *q = bdev_get_queue(p->path.dev->bdev);
++
++		r = scsi_dh_attach(q, m->hw_handler_name);
++		if (r == -EBUSY) {
++			/*
++			 * Already attached to different hw_handler,
++			 * try to reattach with correct one.
++			 */
++			scsi_dh_detach(q);
++			r = scsi_dh_attach(q, m->hw_handler_name);
++		}
+ 		if (r < 0) {
++			ti->error = "error attaching hardware handler";
+ 			dm_put_device(ti, p->path.dev);
+ 			goto bad;
+ 		}
+diff --git a/drivers/scsi/device_handler/scsi_dh.c b/drivers/scsi/device_handler/scsi_dh.c
+index a518f2e..f5d592f 100644
+--- a/drivers/scsi/device_handler/scsi_dh.c
++++ b/drivers/scsi/device_handler/scsi_dh.c
+@@ -504,12 +504,9 @@ void scsi_dh_detach(struct request_queue *q)
+ 	if (!sdev)
+ 		return;
+ 
+-	if (sdev->scsi_dh_data) {
+-		/* if sdev is not on internal list, detach */
+-		scsi_dh = sdev->scsi_dh_data->scsi_dh;
+-		if (!device_handler_match(scsi_dh, sdev))
+-			scsi_dh_handler_detach(sdev, scsi_dh);
+-	}
++	if (sdev->scsi_dh_data)
++		scsi_dh_handler_detach(sdev, sdev->scsi_dh_data->scsi_dh);
++
+ 	put_device(&sdev->sdev_gendev);
+ }
+ EXPORT_SYMBOL_GPL(scsi_dh_detach);
+
+--------------030206020509090707060601--
