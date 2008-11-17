@@ -1,39 +1,83 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: extra bytes written to SATA DVD drive on kernel 2.6.23 till 2.6.24.2
-Date: Mon, 17 Nov 2008 12:05:00 +0900
-Message-ID: <4920DF5C.3030400@gmail.com>
-References: <200802252005.22663.gml@inode.at> <200803011329.11315.gml@inode.at> <47D0FF67.8050503@gmail.com> <47D0FF67.8050503@gmail.com> <200803072009.22551.gml@inode.at> <E1JXic1-0000Yo-K8@faramir.fjphome.nl>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: Problems with the block-layer timeouts
+Date: Mon, 17 Nov 2008 12:48:46 +0900
+Message-ID: <20081117120029M.fujita.tomonori@lab.ntt.co.jp>
+References: <20081111191936.GK26778@kernel.dk>
+	<20081112110840W.fujita.tomonori@lab.ntt.co.jp>
+	<20081113103456.GB26778@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <E1JXic1-0000Yo-K8@faramir.fjphome.nl>
-Sender: linux-ide-owner@vger.kernel.org
-To: Frans Pop <elendil@planet.nl>
-Cc: Gerold Jury <gml@inode.at>, efault@gmx.de, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, vsu@altlinux.ru
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sh.osrg.net ([192.16.179.4]:50269 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755607AbYKQDtC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 16 Nov 2008 22:49:02 -0500
+In-Reply-To: <20081113103456.GB26778@kernel.dk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jens.axboe@oracle.com
+Cc: fujita.tomonori@lab.ntt.co.jp, stern@rowland.harvard.edu, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Frans Pop wrote:
-> Gerold Jury wrote:
->> 0001ffe0  e0 ff e1 ff e2 ff e3 ff  e4 ff e5 ff e6 ff e7 ff  |................|
->> 0001fff0  e8 ff e9 ff ea ff eb ff  ec ff ed ff ee ff ef ff  |................|
->> 00020000  2a 00 00 00 00 40 00 00  40 00 00 00 00 40 00 00  |*....@..@....@..|
+On Thu, 13 Nov 2008 11:34:56 +0100
+Jens Axboe <jens.axboe@oracle.com> wrote:
+
+> On Wed, Nov 12 2008, FUJITA Tomonori wrote:
+> > On Tue, 11 Nov 2008 20:19:36 +0100
+> > Jens Axboe <jens.axboe@oracle.com> wrote:
+> > 
+> > > On Tue, Nov 11 2008, Alan Stern wrote:
+> > > > On Tue, 11 Nov 2008, FUJITA Tomonori wrote:
+> > > > 
+> > > > > I don't worry about anything. I just think that these round_jiffies_up
+> > > > > are pointless because they were added for the block-layer users that
+> > > > > care about exact timeouts, however the block-layer doesn't export
+> > > > > blk_add_timer() so the block-layer users can't control the exact time
+> > > > > when the timer starts. So doing round_jiffies_up calculation per every
+> > > > > request doesn't make sense for me.
+> > > > 
+> > > > In fact the round_jiffies_up() routines were added for other users as
+> > > > well as the block layer.  However none of the others could be changed
+> > > > until the routines were merged.  Now that the routines are in the 
+> > > > mainline, you should see them start to be called in multiple places.
+> > > > 
+> > > > Also, the users of the block layer _don't_ care about exact timeouts.  
+> > > > That's an important aspect of round_jiffies() and round_jiffies_up() --
+> > > > you don't use them if you want an exact timeout.
+> > > > 
+> > > > The reason for using round_jiffies() is to insure that the timeout
+> > > > will occur at a 1-second boundary.  If several timeouts are set for
+> > > > about the same time and they all use round_jiffies() or
+> > > > round_jiffies_up(), then they will all occur at the same tick instead
+> > > > of spread out among several different ticks during the course of that
+> > > > 1-second interval.  As a result, the system will need to wake up only
+> > > > once to service all those timeouts, instead of waking up several
+> > > > different times.  It is a power-saving scheme.
+> > 
+> > Hmm, but for 99.9% of the cases, the timeout of the block layer
+> > doesn't expire, the timeout rarely happens. The power-saving scheme
+> > can be applied to only 0.1%, but at the cost of the round_jiffies
+> > overhead per every request.
+> > 
+> > If I understand correctly, round_jiffies() is designed for timers that
+> > will expire, such as periodic checking. The power-saving scheme nicely
+> > works for such usages.
 > 
-> Looks broken here too.
+> Your understanding is correct. The overhead of round_jiffies() is not
+> large, though.
 > 
->> 00020010  08 ff 09 ff 0a ff 0b ff  08 ff 09 ff 0a ff 0b ff  |................|
->> 00020020  00 00 01 00 02 00 03 00  04 00 05 00 06 00 07 00  |................|
+> I want to get rid of this in blk_delete_timer():
 > 
-> It also seems like part gets repeated after the break in both cases.
+>         if (list_empty(&q->timeout_list))
+>                 del_timer(&q->timeout);
+> 
+> though and simply let the timer run even if the list is empty, since for
+> sync sequential IO we'll be fiddling a much with the timer as we did
+> before unifying it. And then the timer will expire every x seconds
+> always and it becomes more important with the grouping.
 
-Can you guys please add yourselves to bz#10743?
+I see. It depends on workloads but the above 'periodic expiration'
+scheme might be better than the current one, I guess. It doesn't gives
+large impact though.
 
-  http://bugzilla.kernel.org/show_bug.cgi?id=10743
-
-Please test 2.6.28-rc5 as it contains sata_via changes (TF access needed
-specific workaround) and see whether the problem is fixed and report on bz.
-
-Thanks a lot.  Let's get this thing solved.
-
--- 
-tejun
+Thanks for the clarification.
