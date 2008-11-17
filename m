@@ -1,20 +1,22 @@
 From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH] m68k: mac_esp asm fix
-Date: Mon, 17 Nov 2008 21:37:07 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0811172135200.14521@anakin>
+Subject: [PATCH] mac_esp: fix for quadras with two esp chips
+Date: Mon, 17 Nov 2008 21:37:45 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0811172137080.14521@anakin>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-m68k-owner@vger.kernel.org>
 Sender: linux-m68k-owner@vger.kernel.org
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, Linux/m68k <linux-m68k@vger.kernel.org>
+Cc: Linux/m68k <linux-m68k@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 From: Finn Thain <fthain@telegraphics.com.au>
 
-Fix asm constraints and arguments so as not to transfer an odd byte when 
-there may be more words to transfer. The bug would probably also cause 
-exceptions sometimes by transferring one too many bytes.
+On the Quadra 900 and 950 there are two ESP chips sharing one IRQ. Because 
+the shared IRQ is edge-triggered, we must make sure that an IRQ transition 
+from one chip doesn't go unnoticed when the shared IRQ is already active 
+due to the other. This patch prevents interrupts getting lost so that both 
+SCSI busses may be used simultaneously.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
@@ -22,73 +24,146 @@ Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
 Can I queue it in the m68k tree for 2.6.29, or do you want it to go in through
 the SCSI tree?
 
- drivers/scsi/mac_esp.c |   19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
+ drivers/scsi/mac_esp.c |   83 ++++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 59 insertions(+), 24 deletions(-)
 
 --- a/drivers/scsi/mac_esp.c
 +++ b/drivers/scsi/mac_esp.c
-@@ -170,7 +170,7 @@ static inline int mac_esp_wait_for_dreq(
+@@ -53,7 +53,8 @@ struct mac_esp_priv {
+ 	void __iomem *pdma_io;
+ 	int error;
+ };
+-static struct platform_device *internal_esp, *external_esp;
++static struct platform_device *internal_pdev, *external_pdev;
++static struct esp *esp_chips[2];
  
- #define MAC_ESP_PDMA_LOOP(operands) \
- 	asm volatile ( \
--	     "       tstw %2                   \n" \
-+	     "       tstw %1                   \n" \
- 	     "       jbeq 20f                  \n" \
- 	     "1:     movew " operands "        \n" \
- 	     "2:     movew " operands "        \n" \
-@@ -188,14 +188,14 @@ static inline int mac_esp_wait_for_dreq(
- 	     "14:    movew " operands "        \n" \
- 	     "15:    movew " operands "        \n" \
- 	     "16:    movew " operands "        \n" \
--	     "       subqw #1,%2               \n" \
-+	     "       subqw #1,%1               \n" \
- 	     "       jbne 1b                   \n" \
--	     "20:    tstw %3                   \n" \
-+	     "20:    tstw %2                   \n" \
- 	     "       jbeq 30f                  \n" \
- 	     "21:    movew " operands "        \n" \
--	     "       subqw #1,%3               \n" \
-+	     "       subqw #1,%2               \n" \
- 	     "       jbne 21b                  \n" \
--	     "30:    tstw %4                   \n" \
-+	     "30:    tstw %3                   \n" \
- 	     "       jbeq 40f                  \n" \
- 	     "31:    moveb " operands "        \n" \
- 	     "32:    nop                       \n" \
-@@ -223,8 +223,8 @@ static inline int mac_esp_wait_for_dreq(
- 	     "       .long  31b,40b            \n" \
- 	     "       .long  32b,40b            \n" \
- 	     "       .previous                 \n" \
--	     : "+a" (addr) \
--	     : "a" (mep->pdma_io), "r" (count32), "r" (count2), "g" (esp_count))
-+	     : "+a" (addr), "+r" (count32), "+r" (count2) \
-+	     : "g" (count1), "a" (mep->pdma_io))
+ #define MAC_ESP_GET_PRIV(esp) ((struct mac_esp_priv *) \
+ 			       platform_get_drvdata((struct platform_device *) \
+@@ -443,6 +444,32 @@ static u32 mac_esp_dma_length_limit(stru
+ 	return dma_len > 0xFFFF ? 0xFFFF : dma_len;
+ }
  
- static void mac_esp_send_pdma_cmd(struct esp *esp, u32 addr, u32 esp_count,
- 				  u32 dma_count, int write, u8 cmd)
-@@ -247,19 +247,20 @@ static void mac_esp_send_pdma_cmd(struct
- 	do {
- 		unsigned int count32 = esp_count >> 5;
- 		unsigned int count2 = (esp_count & 0x1F) >> 1;
-+		unsigned int count1 = esp_count & 1;
- 		unsigned int start_addr = addr;
++static irqreturn_t mac_scsi_esp_intr(int irq, void *dev_id)
++{
++	int got_intr;
++
++	/*
++	 * This is an edge triggered IRQ, so we have to be careful to
++	 * avoid missing a transition when it is shared by two ESP devices.
++	 */
++
++	do {
++		got_intr = 0;
++		if (esp_chips[0] &&
++		    (mac_esp_read8(esp_chips[0], ESP_STATUS) & ESP_STAT_INTR)) {
++			(void)scsi_esp_intr(irq, esp_chips[0]);
++			got_intr = 1;
++		}
++		if (esp_chips[1] &&
++		    (mac_esp_read8(esp_chips[1], ESP_STATUS) & ESP_STAT_INTR)) {
++			(void)scsi_esp_intr(irq, esp_chips[1]);
++			got_intr = 1;
++		}
++	} while (got_intr);
++
++	return IRQ_HANDLED;
++}
++
+ static struct esp_driver_ops mac_esp_ops = {
+ 	.esp_write8       = mac_esp_write8,
+ 	.esp_read8        = mac_esp_read8,
+@@ -557,10 +584,16 @@ static int __devinit esp_mac_probe(struc
+ 	}
  
- 		if (mac_esp_wait_for_dreq(esp))
- 			break;
+ 	host->irq = IRQ_MAC_SCSI;
+-	err = request_irq(host->irq, scsi_esp_intr, IRQF_SHARED, "Mac ESP",
+-			  esp);
+-	if (err < 0)
+-		goto fail_free_priv;
++	esp_chips[dev->id] = esp;
++	mb();
++	if (esp_chips[!dev->id] == NULL) {
++		err = request_irq(host->irq, mac_scsi_esp_intr, 0,
++		                  "Mac ESP", NULL);
++		if (err < 0) {
++			esp_chips[dev->id] = NULL;
++			goto fail_free_priv;
++		}
++	}
  
- 		if (write) {
--			MAC_ESP_PDMA_LOOP("%1@,%0@+");
-+			MAC_ESP_PDMA_LOOP("%4@,%0@+");
+ 	err = scsi_esp_register(esp, &dev->dev);
+ 	if (err)
+@@ -569,7 +602,8 @@ static int __devinit esp_mac_probe(struc
+ 	return 0;
  
- 			esp_count -= addr - start_addr;
- 		} else {
- 			unsigned int n;
+ fail_free_irq:
+-	free_irq(host->irq, esp);
++	if (esp_chips[!dev->id] == NULL)
++		free_irq(host->irq, esp);
+ fail_free_priv:
+ 	kfree(mep);
+ fail_free_command_block:
+@@ -588,7 +622,9 @@ static int __devexit esp_mac_remove(stru
  
--			MAC_ESP_PDMA_LOOP("%0@+,%1@");
-+			MAC_ESP_PDMA_LOOP("%0@+,%4@");
+ 	scsi_esp_unregister(esp);
  
- 			if (mac_esp_wait_for_empty_fifo(esp))
- 				break;
+-	free_irq(irq, esp);
++	esp_chips[dev->id] = NULL;
++	if (!(esp_chips[0] || esp_chips[1]))
++		free_irq(irq, NULL);
+ 
+ 	kfree(mep);
+ 
+@@ -615,19 +651,18 @@ static int __init mac_esp_init(void)
+ 	if (err)
+ 		return err;
+ 
+-	internal_esp = platform_device_alloc(DRV_MODULE_NAME, 0);
+-	if (internal_esp && platform_device_add(internal_esp)) {
+-		platform_device_put(internal_esp);
+-		internal_esp = NULL;
++	internal_pdev = platform_device_alloc(DRV_MODULE_NAME, 0);
++	if (internal_pdev && platform_device_add(internal_pdev)) {
++		platform_device_put(internal_pdev);
++		internal_pdev = NULL;
+ 	}
+-
+-	external_esp = platform_device_alloc(DRV_MODULE_NAME, 1);
+-	if (external_esp && platform_device_add(external_esp)) {
+-		platform_device_put(external_esp);
+-		external_esp = NULL;
++	external_pdev = platform_device_alloc(DRV_MODULE_NAME, 1);
++	if (external_pdev && platform_device_add(external_pdev)) {
++		platform_device_put(external_pdev);
++		external_pdev = NULL;
+ 	}
+ 
+-	if (internal_esp || external_esp) {
++	if (internal_pdev || external_pdev) {
+ 		return 0;
+ 	} else {
+ 		platform_driver_unregister(&esp_mac_driver);
+@@ -639,13 +674,13 @@ static void __exit mac_esp_exit(void)
+ {
+ 	platform_driver_unregister(&esp_mac_driver);
+ 
+-	if (internal_esp) {
+-		platform_device_unregister(internal_esp);
+-		internal_esp = NULL;
+-	}
+-	if (external_esp) {
+-		platform_device_unregister(external_esp);
+-		external_esp = NULL;
++	if (internal_pdev) {
++		platform_device_unregister(internal_pdev);
++		internal_pdev = NULL;
++	}
++	if (external_pdev) {
++		platform_device_unregister(external_pdev);
++		external_pdev = NULL;
+ 	}
+ }
+ 
 
 Gr{oetje,eeting}s,
 
