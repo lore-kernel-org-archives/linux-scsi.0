@@ -1,121 +1,114 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: SCSI regression in 2.6.27 and Nokia phones
-Date: Tue, 18 Nov 2008 17:12:58 -0500
-Message-ID: <49233DEA.8040700@emulex.com>
-References: <Pine.LNX.4.44L0.0811181524240.23191-100000@netrider.rowland.org>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH 0/3] Open-FCoE Submission
+Date: Tue, 18 Nov 2008 14:20:51 -0800
+Message-ID: <20081118222051.2289.81361.stgit@fritz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:44460 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752503AbYKRWM7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Nov 2008 17:12:59 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0811181524240.23191-100000@netrider.rowland.org>
+Received: from mga02.intel.com ([134.134.136.20]:24891 "EHLO mga02.intel.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753946AbYKRWU6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Nov 2008 17:20:58 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>, "stable@kernel.org" <stable@kernel.org>
+To: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org
+Cc: jgarzik@redhat.com, james.smart@emulex.com, davem@davemloft.net, michaelc@cs.wisc.edu, jeffrey.t.kirsher@intel.com, jeykholt@cisco.com
 
-Alan,
+The following series adds the following code to the SCSI subsystem.
 
-It was probably this change:
-http://marc.info/?l=linux-scsi&m=122118359130474&w=2
+1) FC and FCoE protocol definitions in header files
+        - Files are added in include/scsi/fc/
+        - New files are: fc_els.h, fc_encaps.h, fc_fc2.h,
+          fc_fcp.h, fc_fs.h, fc_gs.h and fc_ns.h
 
-However, I would *not* back it out. It's a silent data corruption if you 
-do. Past behavior reset good_bytes to indicate all data was transfered 
-and ignored any residual - which meant if no data was transfered, we 
-misinform the callee and the callee gets stuck with whatever data is in 
-the buffer. Current behavior, the patch, uses residual, and likely falls 
-into an i/o retry path.
+2) libfc - a FC assist library
+        - Composed of 5 sub-components: Exchange Manager, Local Port
+          Remote Port, Discovery and SCSI-FCP
+        - Uses libfc_function_template for cross-layer calls
+        - Uses struct fc_lport as primary object shared by all
+	  sub-modules
+        - Common code defined in include/scsi/libfc.h
 
--- james s
+3) fcoe - a FCoE initiator implementation
+        - Simple encapsulation and unpacking layer
+        - Interacts with netdev
+	- Initial support for FCoE offload
+        - Uses /sys/module/fcoe/parameters/create and destroy for
+          enabling/disabling FCoE connection over a particular Ethernet
+          adapter
+        - Works on any Ethernet adapter
+
+These patches apply to both the scsi-misc and scsi-rc-fixes trees.
+
+We've spent a lot of time recently improving stability and creating
+different interfaces for potential users. We'd like to be queued for
+the 2.6.29 merge window. We're actively developing this stack and
+we will continue to have a lot of changes, but I think that the code is
+at a good place right now and it's ready for inclusion. Please let me
+know what you think.
+
+---
+
+Robert Love (3):
+      fcoe: Fibre Channel over Ethernet
+      libfc: A modular Fibre Channel library
+      FC protocol definition header files
 
 
-Alan Stern wrote:
-> Everybody:
-> 
-> Nokia's phones are a real nuisance.  They've got lots of different
-> models, with more coming out all the time, and every single one of them
-> has a USB firmware bug causing it to report that it has one more sector
-> of mass-storage than it really does.
-> 
-> On other operatings systems this isn't terribly noticeable.  But with
-> Linux, things like the EFI GUID partitioning code and udev's vol_id
-> program look specifically at the last sector to find partition and
-> label information.
-> 
-> As it happens, these phones return no data and NO SENSE when asked for
-> the nonexistent "last" sector.  Up through 2.6.26 this apparently
-> worked okay.  There would be "Unable to read sector" errors in the
-> system log, but at least the owner could use the stupid thing.
-> 
-> However in 2.6.27 something changed, and now the SCSI midlayer goes
-> into an endless retry loop trying to read the invalid sector.  A bunch
-> of people have noticed and they are unhappy.
-> 
-> For the models we already know about, there are blacklist entries in
-> usb-storage indicating that the number of sectors is really one less
-> than what the device claims.  But this is a losing game: Nokia keeps
-> coming out with more models, and there are plenty of existing ones not
-> in the blacklist.  See the later comments in Bugzilla #11768 for
-> examples.
-> 
-> How should we handle this?  I have already submitted to James a pair of
-> patches for 2.6.29 which will (taken together) fix the problem.  (They
-> were submitted two weeks ago, and so far there has not been any
-> feedback either positive or negative.)  For 2.6.27 and 2.6.28, the
-> simpler patch below will also break the endless loop.  But this one
-> hasn't been reviewed and it conflicts with the pair already submitted
-> -- and I firmly believe those two are the right way to go.
-> 
-> Since patches aren't supposed to go into a stable tree until they are
-> in the mainline kernel, the best course forward isn't clear.  What
-> should we do?
-> 
-> Alan Stern
-> 
-> 
-> ------------------------------------------------------------------
-> 
-> 
-> Decrement the request's retry count when it is retried without making
-> any forward progress.  When the count drops below 0, fail the request.
-> This prevents infinite retry loops of the sort seen with Nokia phones
-> when asked to read their nonexistent "last" sector.
-> 
-> Signed-Off-By: Alan Stern <stern@rowland.harvard.edu>
-> 
-> ---
-> 
-> Index: 2.6.27.4/drivers/scsi/scsi_lib.c
-> ===================================================================
-> --- 2.6.27.4.orig/drivers/scsi/scsi_lib.c
-> +++ 2.6.27.4/drivers/scsi/scsi_lib.c
-> @@ -611,6 +611,11 @@ static void scsi_requeue_command(struct
->         struct request *req = cmd->request;
->         unsigned long flags;
-> 
-> +       if (--req->retries < 0) {
-> +               blk_end_request(req, -EIO, blk_rq_bytes(req));
-> +               scsi_next_command(cmd);
-> +               return;
-> +       }
->         scsi_unprep_request(req);
->         spin_lock_irqsave(q->queue_lock, flags);
->         blk_requeue_request(q, req);
-> @@ -690,6 +695,8 @@ static struct scsi_cmnd *scsi_end_reques
->                                  * leftovers in the front of the
->                                  * queue, and goose the queue again.
->                                  */
-> +                               if (bytes > 0)          /* Made progress */
-> +                                       ++req->retries;
->                                 scsi_requeue_command(q, cmd);
->                                 cmd = NULL;
->                         }
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+ drivers/scsi/Kconfig                  |   13 
+ drivers/scsi/Makefile                 |    2 
+ drivers/scsi/fcoe/Makefile            |    8 
+ drivers/scsi/fcoe/fc_transport_fcoe.c |  446 +++++++
+ drivers/scsi/fcoe/fcoe_sw.c           |  488 ++++++++
+ drivers/scsi/fcoe/libfcoe.c           | 1506 +++++++++++++++++++++++
+ drivers/scsi/libfc/Makefile           |   12 
+ drivers/scsi/libfc/fc_disc.c          |  932 ++++++++++++++
+ drivers/scsi/libfc/fc_elsct.c         |   71 +
+ drivers/scsi/libfc/fc_exch.c          | 1971 +++++++++++++++++++++++++++++++
+ drivers/scsi/libfc/fc_fcp.c           | 2130 +++++++++++++++++++++++++++++++++
+ drivers/scsi/libfc/fc_frame.c         |   89 +
+ drivers/scsi/libfc/fc_lport.c         | 1525 ++++++++++++++++++++++++
+ drivers/scsi/libfc/fc_rport.c         | 1277 ++++++++++++++++++++
+ include/scsi/fc/fc_els.h              |  802 ++++++++++++
+ include/scsi/fc/fc_encaps.h           |  138 ++
+ include/scsi/fc/fc_fc2.h              |  124 ++
+ include/scsi/fc/fc_fcoe.h             |  102 ++
+ include/scsi/fc/fc_fcp.h              |  199 +++
+ include/scsi/fc/fc_fs.h               |  340 +++++
+ include/scsi/fc/fc_gs.h               |   93 +
+ include/scsi/fc/fc_ns.h               |  159 ++
+ include/scsi/fc_encode.h              |  309 +++++
+ include/scsi/fc_frame.h               |  239 ++++
+ include/scsi/fc_transport_fcoe.h      |   54 +
+ include/scsi/libfc.h                  |  917 ++++++++++++++
+ include/scsi/libfcoe.h                |  177 +++
+ 27 files changed, 14123 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/scsi/fcoe/Makefile
+ create mode 100644 drivers/scsi/fcoe/fc_transport_fcoe.c
+ create mode 100644 drivers/scsi/fcoe/fcoe_sw.c
+ create mode 100644 drivers/scsi/fcoe/libfcoe.c
+ create mode 100644 drivers/scsi/libfc/Makefile
+ create mode 100644 drivers/scsi/libfc/fc_disc.c
+ create mode 100644 drivers/scsi/libfc/fc_elsct.c
+ create mode 100644 drivers/scsi/libfc/fc_exch.c
+ create mode 100644 drivers/scsi/libfc/fc_fcp.c
+ create mode 100644 drivers/scsi/libfc/fc_frame.c
+ create mode 100644 drivers/scsi/libfc/fc_lport.c
+ create mode 100644 drivers/scsi/libfc/fc_rport.c
+ create mode 100644 include/scsi/fc/fc_els.h
+ create mode 100644 include/scsi/fc/fc_encaps.h
+ create mode 100644 include/scsi/fc/fc_fc2.h
+ create mode 100644 include/scsi/fc/fc_fcoe.h
+ create mode 100644 include/scsi/fc/fc_fcp.h
+ create mode 100644 include/scsi/fc/fc_fs.h
+ create mode 100644 include/scsi/fc/fc_gs.h
+ create mode 100644 include/scsi/fc/fc_ns.h
+ create mode 100644 include/scsi/fc_encode.h
+ create mode 100644 include/scsi/fc_frame.h
+ create mode 100644 include/scsi/fc_transport_fcoe.h
+ create mode 100644 include/scsi/libfc.h
+ create mode 100644 include/scsi/libfcoe.h
+
+-- 
+//Rob
