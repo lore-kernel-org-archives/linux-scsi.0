@@ -1,78 +1,121 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: RE: in 2.6.23-rc3-git7 in do_cciss_intr
-Date: Tue, 18 Nov 2008 21:32:14 +0000
-Message-ID: <0F5B06BAB751E047AB5C87D1F77A77884EACB793EB@GVW0547EXC.americas.hpqcorp.net>
-References: <20080821091514.8f56e2d5.randy.dunlap@oracle.com>
-	<0F5B06BAB751E047AB5C87D1F77A778835118100D6@GVW0547EXC.americas.hpqcorp.net>
-	<20080821172653.3e3e855c.randy.dunlap@oracle.com>
-	<0F5B06BAB751E047AB5C87D1F77A77883511810706@GVW0547EXC.americas.hpqcorp.net>
-	<1219420487.3339.22.camel@localhost.localdomain>
-	<48AEEE0A.1010900@oracle.com>
-	<1219424538.3339.51.camel@localhost.localdomain>
-	<0F5B06BAB751E047AB5C87D1F77A77883511810894@GVW0547EXC.americas.hpqcorp.net>
-	<48C013D9.7060309@oracle.com>
-	<0F5B06BAB751E047AB5C87D1F77A7788413663D229@GVW0547EXC.americas.hpqcorp.net>
-	<20080905092838.GS20055@kernel.dk>	<48DBF583.3050307@oracle.com>
- <20080925134000.9b133f8c.randy.dunlap@oracle.com>
- <0F5B06BAB751E047AB5C87D1F77A77884BFF5D1F76@GVW0547EXC.americas.hpqcorp.net>
- <49232232.10604@oracle.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: SCSI regression in 2.6.27 and Nokia phones
+Date: Tue, 18 Nov 2008 17:12:58 -0500
+Message-ID: <49233DEA.8040700@emulex.com>
+References: <Pine.LNX.4.44L0.0811181524240.23191-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0007.atlanta.hp.com ([15.192.0.44]:4853 "EHLO
-	g5t0007.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752855AbYKRVdA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Nov 2008 16:33:00 -0500
-In-Reply-To: <49232232.10604@oracle.com>
-Content-Language: en-US
+Received: from emulex.emulex.com ([138.239.112.1]:44460 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752503AbYKRWM7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Nov 2008 17:12:59 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0811181524240.23191-100000@netrider.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: scsi <linux-scsi@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, lkml <linux-kernel@vger.kernel.org>, akpm <akpm@linux-foundation.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>, "stable@kernel.org" <stable@kernel.org>
+
+Alan,
+
+It was probably this change:
+http://marc.info/?l=linux-scsi&m=122118359130474&w=2
+
+However, I would *not* back it out. It's a silent data corruption if you 
+do. Past behavior reset good_bytes to indicate all data was transfered 
+and ignored any residual - which meant if no data was transfered, we 
+misinform the callee and the callee gets stuck with whatever data is in 
+the buffer. Current behavior, the patch, uses residual, and likely falls 
+into an i/o retry path.
+
+-- james s
 
 
-> FS:  00000000008558f0(0000) GS:ffff88017fc01c80(0000)
-> knlGS:0000000000000000
-> CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-> CR2: 0000000000000248 CR3: 0000000000201000 CR4: 00000000000006e0
-> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:
-> 0000000000000400 Process swapper (pid: 0, threadinfo
-> ffff88027f660000, task ffff88027f635400)
-> Stack:
->  0000000000000030 ffff88017ea73640 0000000000000000 0000000000000000
->  0000000000000057 0000000000000000 ffff88017fa9ff48
-> ffffffff8026a8b9  ffffffff8074ab00 0000000000000057
-> ffff88017ea73640 ffffffff8074ab58 Call Trace:
->  <IRQ> <0> [<ffffffff8026a8b9>] handle_IRQ_event+0x27/0x57
-> [<ffffffff8026c424>] handle_edge_irq+0xde/0x11f
-> [<ffffffff8020e29b>] do_IRQ+0xfc/0x175  [<ffffffff8020c3e6>]
-> ret_from_intr+0x0/0xa  <EOI> <0> [<ffffffff8023c7d2>] ?
-> ksoftirqd+0x0/0xa6  [<ffffffff80212575>] ?
-> default_idle+0x2b/0x40  [<ffffffff80212799>] ?
-> c1e_idle+0xe5/0xec  [<ffffffff8056a7f6>] ?
-> atomic_notifier_call_chain+0xf/0x11
->  [<ffffffff8020acd1>] ? cpu_idle+0x40/0x5e
-> [<ffffffff8056284e>] ? start_secondary+0x174/0x179
-> Code: 8b 83 48 02 00 00 48 39 d8 74 37 49 39 9c 24 c0 00 01
-> 00 75 08 49 89 84 24 c0 00 01 00 48 8b 83 40 02 00 00 48 8b
-> 93 48 02 00 00 <48> 89 90 48 02 00 00 48 8b 93 48 02 00 00 48
-> 89 82 40 02 00 00 RIP  [<ffffffffa002502b>]
-> do_cciss_intr+0x6c8/0xb10 [cciss]  RSP <ffff88017fa9fee8>
-> CR2: 0000000000000248
-> Kernel panic - not syncing: Fatal exception in interrupt
->
->
-> Any ideas/suggestions?
->
-> Thanks,
-> ~Randy
->
-
-Randy,
-I been in and out of the office, mostly out. I finally tracked down a blade. I can't reproduce this on a 385 and the e200 isn't detected in my 585.
-
-So I'm back on this, for what it's worth.
-
--- mikem
+Alan Stern wrote:
+> Everybody:
+> 
+> Nokia's phones are a real nuisance.  They've got lots of different
+> models, with more coming out all the time, and every single one of them
+> has a USB firmware bug causing it to report that it has one more sector
+> of mass-storage than it really does.
+> 
+> On other operatings systems this isn't terribly noticeable.  But with
+> Linux, things like the EFI GUID partitioning code and udev's vol_id
+> program look specifically at the last sector to find partition and
+> label information.
+> 
+> As it happens, these phones return no data and NO SENSE when asked for
+> the nonexistent "last" sector.  Up through 2.6.26 this apparently
+> worked okay.  There would be "Unable to read sector" errors in the
+> system log, but at least the owner could use the stupid thing.
+> 
+> However in 2.6.27 something changed, and now the SCSI midlayer goes
+> into an endless retry loop trying to read the invalid sector.  A bunch
+> of people have noticed and they are unhappy.
+> 
+> For the models we already know about, there are blacklist entries in
+> usb-storage indicating that the number of sectors is really one less
+> than what the device claims.  But this is a losing game: Nokia keeps
+> coming out with more models, and there are plenty of existing ones not
+> in the blacklist.  See the later comments in Bugzilla #11768 for
+> examples.
+> 
+> How should we handle this?  I have already submitted to James a pair of
+> patches for 2.6.29 which will (taken together) fix the problem.  (They
+> were submitted two weeks ago, and so far there has not been any
+> feedback either positive or negative.)  For 2.6.27 and 2.6.28, the
+> simpler patch below will also break the endless loop.  But this one
+> hasn't been reviewed and it conflicts with the pair already submitted
+> -- and I firmly believe those two are the right way to go.
+> 
+> Since patches aren't supposed to go into a stable tree until they are
+> in the mainline kernel, the best course forward isn't clear.  What
+> should we do?
+> 
+> Alan Stern
+> 
+> 
+> ------------------------------------------------------------------
+> 
+> 
+> Decrement the request's retry count when it is retried without making
+> any forward progress.  When the count drops below 0, fail the request.
+> This prevents infinite retry loops of the sort seen with Nokia phones
+> when asked to read their nonexistent "last" sector.
+> 
+> Signed-Off-By: Alan Stern <stern@rowland.harvard.edu>
+> 
+> ---
+> 
+> Index: 2.6.27.4/drivers/scsi/scsi_lib.c
+> ===================================================================
+> --- 2.6.27.4.orig/drivers/scsi/scsi_lib.c
+> +++ 2.6.27.4/drivers/scsi/scsi_lib.c
+> @@ -611,6 +611,11 @@ static void scsi_requeue_command(struct
+>         struct request *req = cmd->request;
+>         unsigned long flags;
+> 
+> +       if (--req->retries < 0) {
+> +               blk_end_request(req, -EIO, blk_rq_bytes(req));
+> +               scsi_next_command(cmd);
+> +               return;
+> +       }
+>         scsi_unprep_request(req);
+>         spin_lock_irqsave(q->queue_lock, flags);
+>         blk_requeue_request(q, req);
+> @@ -690,6 +695,8 @@ static struct scsi_cmnd *scsi_end_reques
+>                                  * leftovers in the front of the
+>                                  * queue, and goose the queue again.
+>                                  */
+> +                               if (bytes > 0)          /* Made progress */
+> +                                       ++req->retries;
+>                                 scsi_requeue_command(q, cmd);
+>                                 cmd = NULL;
+>                         }
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
