@@ -1,144 +1,77 @@
-From: Sven Schuetz <sven@linux.vnet.ibm.com>
-Subject: Re: [PATCH 0/2] FC pass through support via bsg interface
-Date: Tue, 18 Nov 2008 15:17:52 +0100
-Message-ID: <4922CE90.3070402@linux.vnet.ibm.com>
-References: <56AAA08B-4276-4CA2-92E2-D539AD1AB769@qlogic.com> <48CA9DB3.20005@emulex.com> <A5FD7683-581F-4F53-A86D-BFDEC10AFC5C@qlogic.com> <490EEB18.2060402@linux.vnet.ibm.com> <490F2013.70507@emulex.com>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: [PATCH] cciss: fix DEBUG printk formats
+Date: Tue, 18 Nov 2008 11:55:14 -0800
+Message-ID: <49231DA2.3070502@xenotime.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate4.de.ibm.com ([195.212.29.153]:33862 "EHLO
-	mtagate4.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753024AbYKRORy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Nov 2008 09:17:54 -0500
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate4.de.ibm.com (8.13.8/8.13.8) with ESMTP id mAIEHroF278520
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Nov 2008 14:17:53 GMT
-Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
-	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id mAIEHrHd3104788
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Nov 2008 15:17:53 +0100
-Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av02.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id mAIEHqHD010686
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Nov 2008 15:17:53 +0100
-In-Reply-To: <490F2013.70507@emulex.com>
+Received: from xenotime.net ([72.52.64.118]:37782 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752319AbYKRUF0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Nov 2008 15:05:26 -0500
+Received: from ::ffff:24.21.38.27 ([24.21.38.27]) by xenotime.net for <linux-scsi@vger.kernel.org>; Tue, 18 Nov 2008 11:55:20 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: Seokmann Ju <seokmann.ju@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: scsi <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>, iss_storagedev@hp.com, akpm <akpm@linux-foundation.org>
 
-James Smart wrote:
-> 
-> 
-> Sven Schuetz wrote:
->> Hi Seokmann,
->>
->> first of all, thanks for your efforts so far, good work!
-> 
-> I second this!
-> 
->> Regarding the following statement from James and your question to it:
->>
->> Seokmann Ju wrote:
->>> On Sep 12, 2008, at 9:49 AM, James Smart wrote:
->>>
->>>> Seokmann,
->>>>
->>>> There are number of fundamental issues with this patch that need to be
->>>> corrected. I'll be at plumbers conference next week, and will be able
->>>> to work through this. Please look me up if you will be there.
->>>> Otherwise, I'll just post a revised patch.
->>>>
->>>> Here are the issues as I see them:
->>>>
->>
->> <snip>
->>
->>>> - We really should add support, for the initial merge, to talk to an
->>>>  address that doesn't exist via an rport (think fabric service).
->>>>  This means adding some request types to the fc_host too.
->>> This one too, please.
->>>> -- james s
->>>>
->>
->> <snip>
->>
->>
->>  From what I have seen, that's still missing from your latest
->> submission. What
->> James means by that (James, correct me when I am wrong) is that at the
->> moment we
->> only have devices for rports under /dev.
->> That's good for ELS requests, but for CT requests that are not
->> directed to
->> individual rports but to some well known address that's not
->> appropriate. I think
->> there might also be situations when there are no rports available and
->> yet you
->> still want to issue a CT request. In my opinion we would need devices
->> for the
->> fc_hosts under /dev as well. I have not looked at it in detail yet but it
->> probably means to add a device struct to the fc_host_attrs struct
->> similar as it
->> is done for rports and register them with the block layer as well.
->> Maybe it's
->> feasible to have a dedicated ELS and CT handler in the transport layer
->> instead
->> of a generic service handler than (CT requets come in via
->> /dev/fc_hostx and are
->> handled by some fc_ct_service function and ELS requests come in via
->> /dev/rportxxx and are handled by sme fc_els_service function), but that's
->> something that needs to be looked at.
->> If you already have some ideas on how to do that, please let me know.
->> I might
->> start some experiments as well if I find the time.
->>
->> Sven
-> 
-> I've started this work, and am merging it with Seokman's patches.  The
-> recent respins have reset it.  This work is also good for validating the
->  request/response formats, as it extends the requests to target
-> transport handlers that do more than ELS/CT. So it's a good reference to
-> ensure things are partitioned correctly.
-> 
-> Seokman:  I applied your last "revised III" patches - and the qla (2nd)
-> patch failed miserably against scsi-misc-2.6. What were the patches cut
-> against ?
-> 
-> -- james s
-> 
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Hi James, Hi Seokmann,
+Fix printk format warnings when CCISS_DEBUG is defined.
 
-I have been able to get CT and ELS requests working with our zfcp device driver
-with your patch, great!
-At the moment there are only two issues left:
-- the one I described above (not having an adapter device for CT requests).
-James, if you need any help or want me to test your patch, I'd happily do so.
-- in our driver we need to distinguish the incoming CT requests so that we can
-open the according WKA port and send the request to it. To do this at the
-moment, I have to read the first few bytes of the CT frame from the
-scatter-gather-list to see what generic service is targeted (byte 5 in the frame
-specifies the service). That's bit awkward. What about extending the request
-structures Seokmann defined in scsi_transport_fc.h in a manner like:
+drivers/block/cciss.c:2856: warning: format '%d' expects type 'int', but argument 2 has type 'long unsigned int'
+drivers/block/cciss.c:3205: warning: format '%x' expects type 'unsigned int', but argument 2 has type 'long unsigned int'
+drivers/block/cciss.c:3236: warning: format '%x' expects type 'unsigned int', but argument 2 has type '__u64'
+drivers/block/cciss.c:3246: warning: format '%x' expects type 'unsigned int', but argument 2 has type '__u64'
 
-struct fc_service_request {
-	u8   request_type;
-	u8   timeout;
-	u8   reserved0;
-	u8   reserved1;
-};
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
 
-becomes:
+Mike, I have hit the oops in do_cciss_intr() 4 times today.
+I'll try to track it down.  Please let me know if you have suggestions
+for debugging.
 
-struct fc_service_request {
-	u8   request_type;
-	u8   request_subtype;
-	u8   timeout;
-	u8   reserved1;
-};
 
-Then we could define the type of generic service (directory service,  alias
-service etc) in the subtype field, without having to look at the
-scatter-gather-list in the driver.
+ drivers/block/cciss.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-Sven
+--- lin2628-rc5.orig/drivers/block/cciss.c
++++ lin2628-rc5/drivers/block/cciss.c
+@@ -2852,7 +2852,7 @@ static void do_cciss_request(struct requ
+ 		h->maxSG = seg;
+ 
+ #ifdef CCISS_DEBUG
+-	printk(KERN_DEBUG "cciss: Submitting %d sectors in %d segments\n",
++	printk(KERN_DEBUG "cciss: Submitting %lu sectors in %d segments\n",
+ 	       creq->nr_sectors, seg);
+ #endif				/* CCISS_DEBUG */
+ 
+@@ -3202,7 +3202,7 @@ static int __devinit cciss_pci_init(ctlr
+ 
+ 	c->paddr = pci_resource_start(pdev, 0);	/* addressing mode bits already removed */
+ #ifdef CCISS_DEBUG
+-	printk("address 0 = %x\n", c->paddr);
++	printk("address 0 = %lx\n", c->paddr);
+ #endif				/* CCISS_DEBUG */
+ 	c->vaddr = remap_pci_mem(c->paddr, 0x250);
+ 	if (!c->vaddr) {
+@@ -3233,7 +3233,8 @@ static int __devinit cciss_pci_init(ctlr
+ #endif				/* CCISS_DEBUG */
+ 	cfg_base_addr_index = find_PCI_BAR_index(pdev, cfg_base_addr);
+ #ifdef CCISS_DEBUG
+-	printk("cfg base address index = %x\n", cfg_base_addr_index);
++	printk("cfg base address index = %llx\n",
++		(unsigned long long)cfg_base_addr_index);
+ #endif				/* CCISS_DEBUG */
+ 	if (cfg_base_addr_index == -1) {
+ 		printk(KERN_WARNING "cciss: Cannot find cfg_base_addr_index\n");
+@@ -3243,7 +3244,7 @@ static int __devinit cciss_pci_init(ctlr
+ 
+ 	cfg_offset = readl(c->vaddr + SA5_CTMEM_OFFSET);
+ #ifdef CCISS_DEBUG
+-	printk("cfg offset = %x\n", cfg_offset);
++	printk("cfg offset = %llx\n", (unsigned long long)cfg_offset);
+ #endif				/* CCISS_DEBUG */
+ 	c->cfgtable = remap_pci_mem(pci_resource_start(pdev,
+ 						       cfg_base_addr_index) +
