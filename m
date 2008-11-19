@@ -1,218 +1,198 @@
-From: "Koskinen Aaro (NSN - FI/Helsinki)" <aaro.koskinen@nsn.com>
-Subject: [PATCH] sym53c8xx_2: slave_alloc/destroy safety (2.6.27.5)
-Date: Wed, 19 Nov 2008 16:58:53 +0200 (EET)
-Message-ID: <Pine.LNX.4.64.0811191652570.17161@fi-hi32-dhcp068123.emea.nsn-net.net>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: in 2.6.23-rc3-git7 in do_cciss_intr
+Date: Wed, 19 Nov 2008 17:00:57 +0000
+Message-ID: <0F5B06BAB751E047AB5C87D1F77A77884EACB7986A@GVW0547EXC.americas.hpqcorp.net>
+References: <0F5B06BAB751E047AB5C87D1F77A77883511810894@GVW0547EXC.americas.hpqcorp.net>
+ <48C013D9.7060309@oracle.com>
+ <0F5B06BAB751E047AB5C87D1F77A7788413663D229@GVW0547EXC.americas.hpqcorp.net>
+ <20080905092838.GS20055@kernel.dk> <48DBF583.3050307@oracle.com>
+ <20080925134000.9b133f8c.randy.dunlap@oracle.com>
+ <0F5B06BAB751E047AB5C87D1F77A77884BFF5D1F76@GVW0547EXC.americas.hpqcorp.net>
+ <49232232.10604@oracle.com> <4923237B.9090707@xenotime.net>
+ <4923347D.8000205@oracle.com> <20081119085227.GQ26308@kernel.dk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:51519 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753574AbYKSO7J (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Nov 2008 09:59:09 -0500
+Received: from g1t0029.austin.hp.com ([15.216.28.36]:46645 "EHLO
+	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751556AbYKSRBn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Nov 2008 12:01:43 -0500
+In-Reply-To: <20081119085227.GQ26308@kernel.dk>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: matthew@wil.cx
+To: Jens Axboe <jens.axboe@oracle.com>, Randy Dunlap <randy.dunlap@oracle.com>
+Cc: scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, lkml <linux-kernel@vger.kernel.org>, akpm <akpm@linux-foundation.org>
 
 
-Make the sym53c8xx_2 driver slave_alloc/destroy less unsafe. References
-to the destroyed LCB are cleared from the target structure (instead of
-leaving a dangling pointer), and when the last LCB for the target is
-destroyed the reference to the upper layer target data is cleared. The
-host lock is used to prevent a race with the interrupt handler. Also
-user commands are prevented for targets with all LCBs destroyed.
 
-Signed-off-by: aaro.koskinen@nsn.com
+> -----Original Message-----
+> From: Jens Axboe [mailto:jens.axboe@oracle.com]
+> Sent: Wednesday, November 19, 2008 2:52 AM
+> To: Randy Dunlap
+> Cc: scsi; Miller, Mike (OS Dev); James Bottomley; lkml; akpm
+> Subject: Re: in 2.6.23-rc3-git7 in do_cciss_intr
+>
+> On Tue, Nov 18 2008, Randy Dunlap wrote:
+> > Randy Dunlap wrote:
+> > > Randy Dunlap wrote:
+> > >> Miller, Mike (OS Dev) wrote:
+> > >>>> -----Original Message-----
+> > >>>> From: Randy Dunlap [mailto:randy.dunlap@oracle.com]
+> > >>>> Sent: Thursday, September 25, 2008 3:40 PM
+> > >>>> To: scsi
+> > >>>> Cc: Jens Axboe; Miller, Mike (OS Dev); James Bottomley; lkml;
+> > >>>> akpm
+> > >>>> Subject: Re: in 2.6.23-rc3-git7 in do_cciss_intr
+> > >>>>
+> > >>>> On Thu, 25 Sep 2008 13:33:07 -0700 Randy Dunlap wrote:
+> > >>>>
+> > >>>>> Jens Axboe wrote:
+> > >>>>>> On Thu, Sep 04 2008, Miller, Mike (OS Dev) wrote:
+> > >>>>>>>>>>> 0x3bb2 <do_cciss_intr+1649>:    mov    0x2(%r8),%dx
+> > >>>>>>>>>>> 0x3bb7 <do_cciss_intr+1654>:    test   %dx,%dx
+> > >>>>>>>>>>> 0x3bba <do_cciss_intr+1657>:    je     0x3f0e
+> > >>>> <do_cciss_intr+2509>
+> > >>>>>>>>>>> $ addr2line -e cciss.o -f  do_cciss_intr+0x627
+> > >>>>>>>>>>> SA5_fifo_full
+> > >>>>>>>>>>>
+> > >>>>
+> /home/rdunlap/linsrc/linux-2.6.27-rc3-git7/drivers/block/cciss.h:
+> > >>>> 2
+> > >>>>>>>> 06
+> > >>>>>>>>>> OK ...that's confusing.  It seems to be saying that
+> > >>>> ctrlr_info_t
+> > >>>>>>>>>> * was NULL.  However, I can't see a way of
+> getting into the
+> > >>>>>>>> fifo_full
+> > >>>>>>>>>> callback from do_cciss_intr ..
+> > >>>>>>>>>> especially not with an NULL host.
+> > >>>>>>>>>>
+> > >>>>>>>>>> James
+> > >>>>>>>>> That is weird. Even if we could get there
+> fifo_full doesn't
+> > >>>>>>>> do anything but wait for a bit.
+> > >>>>>>>>
+> > >>>>>>>> Hi,
+> > >>>>>>>>
+> > >>>>>>>> This just happened again.  This time it's on
+> 2.6.27-rc5-git3.
+> > >>>>>>>>
+> > >>>>>>>> ~Randy
+> > >>>>>>> Thanks Randy. I think. :)
+> > >>>>>>>
+> > >>>>>>> I'll try to recreate in my lab.
+> > >>>>>> This looks somewhat strange, mostly like 'c' is NULL
+> and it's
+> > >>>>>> oopsing in in removeQ (I don't think Randy's analysis is
+> > >>>> correct in
+> > >>>>>> assuming it's 'h' and it's in fifo_full). Given that 'c'
+> > >>>> cannot be
+> > >>>>>> NULL, it's c->prev or c->next that are NULL.
+> > >> This BUG: has happened (now) 5 times today.  Higher
+> frequency than
+> > >> usual for some reason.
+> > >>
+> > >> I enabled CCISS_DEBUG and added one printk in removeQ().  On the
+> > >> first call
+> > >
+> > > s/first/second/
+> > >
+> > >
+> > >> to removeQ(), both c->next and c->prev are NULL.
+> > >>
+> > >> Here's the kernel log output from cciss:
+> >
+> > I added a printk() in addQ() as well.  Here's the new output:
+> >
+> > HP CISS Driver (v 3.6.20)
+> > ACPI: PCI Interrupt Link [LNKA] enabled at IRQ 54 cciss
+> 0000:42:08.0:
+> > PCI INT A -> Link[LNKA] -> GSI 54 (level, high) -> IRQ 54 command =
+> > 147 irq = 36 board_id = 3211103c cciss 0000:42:08.0: irq 87 for
+> > MSI/MSI-X address 0 = fdf80000 cfg base address = 10 cfg
+> base address
+> > index = 0 cfg offset = 400 Controller Configuration information
+> > ------------------------------------
+> >    Signature = CISS
+> >    Spec Number = 1
+> >    Transport methods supported = 0x6
+> >    Transport methods active = 0x3
+> >    Requested transport Method = 0x0
+> >    Coalesce Interrupt Delay = 0x0
+> >    Coalesce Interrupt Count = 0x1
+> >    Max outstanding commands = 0x256
+> >    Bus Types = 0x200000
+> >    Server Name =
+> >    Heartbeat Counter = 0x1672
+> >
+> >
+> > Trying to put board into Simple mode
+> > I counter got to 1 0
+> > Controller Configuration information
+> > ------------------------------------
+> >    Signature = CISS
+> >    Spec Number = 1
+> >    Transport methods supported = 0x6
+> >    Transport methods active = 0x3
+> >    Requested transport Method = 0x0
+> >    Coalesce Interrupt Delay = 0x0
+> >    Coalesce Interrupt Count = 0x1
+> >    Max outstanding commands = 0x256
+> >    Bus Types = 0x200000
+> >    Server Name =
+> >    Heartbeat Counter = 0x1672
+> >
+> >
+> > cciss0: <0x3238> at PCI 0000:42:08.0 IRQ 87 using DAC
+> > cciss: intr_pending 8
+> > cciss: addQ: Qptr=ffff88027e0100b8, c=ffff88007f83e000
+> > cciss: removeQ: Qptr=ffff88027e0100b8, c=ffff88007f83e000,
+> > next=ffff88007f83e000, prev=ffff88007f83e000 Sending
+> 7f83e000 - down
+> > to controller
+> > cciss: addQ: Qptr=ffff88027e0100c0, c=ffff88007f83e000
+> > cciss: intr_pending 8
+> > cciss:  Read 4 back from board
+> > cciss: removeQ: Qptr=ffff88027e0100c0, c=ffff88007f840000,
+> > next=0000000000000000, prev=0000000000000000
+> > BUG: unable to handle kernel NULL pointer dereference at
+> > 0000000000000248
+>
+> Randy, can you post the debug patch you used? The above goes
+> boom when it attempts to remove a command that isn't on the
+> list, the Qptr in the last example should be empty, hence the
+> oops. So I'd be interested in seeing what removeQ() calls
+> this is, I'm assuming it's this bit in
+> do_cciss_intr():
+>
+>       ...
+>               while (c->busaddr != a) {
+>                        c = c->next;
+>                        if (c == h->cmpQ)
+>                                break;
+>                }
+>        }
+>        /*
+>         * If we've found the command, take it off the
+>         * completion Q and free it
+>         */
+>        if (c->busaddr == a) {
+>                removeQ(&h->cmpQ, c);
+>                if (c->cmd_type == CMD_RWREQ) {
+>                        complete_command(h, c, 0);
+>                         ...
+>
+> If so, what part of the c lookup are you hitting - the on that does:
+>
+>         c = h->cmd_pool + a2;
+>
+> or the c->busaddr check that his shown above?
+>
+> --
+Randy,
+I still can't reproduce this bug. I have your config file on a BL465c w/e200i. Just to confirm, you only see this at init time, correct?
+Please post your debug patch as Jens requested.
 
----
-
-diff -uprN -X linux-2.6.27.5-orig/Documentation/dontdiff linux-2.6.27.5-orig/drivers/scsi/sym53c8xx_2/sym_glue.c linux-2.6.27.5/drivers/scsi/sym53c8xx_2/sym_glue.c
---- linux-2.6.27.5-orig/drivers/scsi/sym53c8xx_2/sym_glue.c	2008-11-07 19:55:34.000000000 +0200
-+++ linux-2.6.27.5/drivers/scsi/sym53c8xx_2/sym_glue.c	2008-11-19 12:19:03.000000000 +0200
-@@ -737,11 +737,14 @@ static int sym53c8xx_slave_alloc(struct 
- 	struct sym_hcb *np = sym_get_hcb(sdev->host);
- 	struct sym_tcb *tp = &np->target[sdev->id];
- 	struct sym_lcb *lp;
-+	unsigned long flags;
-+	int error;
- 
- 	if (sdev->id >= SYM_CONF_MAX_TARGET || sdev->lun >= SYM_CONF_MAX_LUN)
- 		return -ENXIO;
- 
--	tp->starget = sdev->sdev_target;
-+	spin_lock_irqsave(np->s.host->host_lock, flags);
-+
- 	/*
- 	 * Fail the device init if the device is flagged NOSCAN at BOOT in
- 	 * the NVRAM.  This may speed up boot and maintain coherency with
-@@ -755,24 +758,41 @@ static int sym53c8xx_slave_alloc(struct 
- 		tp->usrflags &= ~SYM_SCAN_BOOT_DISABLED;
- 		starget_printk(KERN_INFO, tp->starget,
- 				"Scan at boot disabled in NVRAM\n");
--		return -ENXIO;
-+		error = -ENXIO;
-+		goto out;
- 	}
- 
- 	if (tp->usrflags & SYM_SCAN_LUNS_DISABLED) {
--		if (sdev->lun != 0)
--			return -ENXIO;
-+		if (sdev->lun != 0) {
-+			error = -ENXIO;
-+			goto out;
-+		}
- 		starget_printk(KERN_INFO, tp->starget,
- 				"Multiple LUNs disabled in NVRAM\n");
- 	}
- 
-+	if (tp->nlcb && tp->starget != sdev->sdev_target) {
-+		error = -EBUSY;
-+		goto out;
-+	}
-+
- 	lp = sym_alloc_lcb(np, sdev->id, sdev->lun);
--	if (!lp)
--		return -ENOMEM;
-+	if (!lp) {
-+		error = -ENOMEM;
-+		goto out;
-+	}
-+	if (tp->nlcb == 1) {
-+		tp->starget = sdev->sdev_target;
-+	}
- 
- 	spi_min_period(tp->starget) = tp->usr_period;
- 	spi_max_width(tp->starget) = tp->usr_width;
- 
--	return 0;
-+	error = 0;
-+out:
-+	spin_unlock_irqrestore(np->s.host->host_lock, flags);
-+
-+	return error;
- }
- 
- /*
-@@ -819,12 +839,34 @@ static int sym53c8xx_slave_configure(str
- static void sym53c8xx_slave_destroy(struct scsi_device *sdev)
- {
- 	struct sym_hcb *np = sym_get_hcb(sdev->host);
--	struct sym_lcb *lp = sym_lp(&np->target[sdev->id], sdev->lun);
-+	struct sym_tcb *tp = &np->target[sdev->id];
-+	struct sym_lcb *lp = sym_lp(tp, sdev->lun);
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(np->s.host->host_lock, flags);
- 
--	if (lp->itlq_tbl)
--		sym_mfree_dma(lp->itlq_tbl, SYM_CONF_MAX_TASK * 4, "ITLQ_TBL");
--	kfree(lp->cb_tags);
--	sym_mfree_dma(lp, sizeof(*lp), "LCB");
-+	if (lp->busy_itlq || lp->busy_itl) {
-+		/*
-+		 * This really shouldn't happen, but we can't return an error
-+		 * so let's try to stop all on-going I/O.
-+		 */
-+		starget_printk(KERN_WARNING, tp->starget,
-+			       "Removing busy LCB (%d)\n", sdev->lun);
-+		sym_reset_scsi_bus(np, 1);
-+	}
-+
-+ 	if (sym_free_lcb(np, sdev->id, sdev->lun) == 0) {
-+		/*
-+ 		 * It was the last unit for this target.
-+ 		 */
-+ 		tp->head.sval        = 0;
-+ 		tp->head.wval        = np->rv_scntl3;
-+ 		tp->head.uval        = 0;
-+ 		tp->tgoal.check_nego = 1;
-+ 		tp->starget	     = NULL;
-+ 	}
-+ 
-+	spin_unlock_irqrestore(np->s.host->host_lock, flags);
- }
- 
- /*
-@@ -890,6 +932,8 @@ static void sym_exec_user_command (struc
- 			if (!((uc->target >> t) & 1))
- 				continue;
- 			tp = &np->target[t];
-+			if (!tp->nlcb)
-+				continue;
- 
- 			switch (uc->cmd) {
- 
-diff -uprN -X linux-2.6.27.5-orig/Documentation/dontdiff linux-2.6.27.5-orig/drivers/scsi/sym53c8xx_2/sym_hipd.c linux-2.6.27.5/drivers/scsi/sym53c8xx_2/sym_hipd.c
---- linux-2.6.27.5-orig/drivers/scsi/sym53c8xx_2/sym_hipd.c	2008-11-07 19:55:34.000000000 +0200
-+++ linux-2.6.27.5/drivers/scsi/sym53c8xx_2/sym_hipd.c	2008-11-19 12:19:01.000000000 +0200
-@@ -4973,6 +4973,7 @@ struct sym_lcb *sym_alloc_lcb (struct sy
- 		tp->lun0p = lp;
- 		tp->head.lun0_sa = cpu_to_scr(vtobus(lp));
- 	}
-+	tp->nlcb++;
- 
- 	/*
- 	 *  Let the itl task point to error handling.
-@@ -5050,6 +5051,43 @@ fail:
- }
- 
- /*
-+ *  Lun control block deallocation. Returns the number of valid remaing LCBs
-+ *  for the target.
-+ */
-+int sym_free_lcb (struct sym_hcb *np, u_char tn, u_char ln)
-+{
-+	struct sym_tcb *tp = &np->target[tn];
-+	struct sym_lcb *lp = sym_lp(tp, ln);
-+
-+	tp->nlcb--;
-+
-+	if (ln) {
-+		if (!tp->nlcb) {
-+			kfree(tp->lunmp);
-+			sym_mfree_dma(tp->luntbl, 256, "LUNTBL");
-+			tp->lunmp = NULL;
-+			tp->luntbl = NULL;
-+			tp->head.luntbl_sa = cpu_to_scr(vtobus(np->badluntbl));
-+		} else {
-+			tp->luntbl[ln] = cpu_to_scr(vtobus(&np->badlun_sa));
-+			tp->lunmp[ln] = NULL;
-+		}
-+	} else {
-+		tp->lun0p = NULL;
-+		tp->head.lun0_sa = cpu_to_scr(vtobus(&np->badlun_sa));
-+	}
-+
-+	if (lp->itlq_tbl) {
-+		sym_mfree_dma(lp->itlq_tbl, SYM_CONF_MAX_TASK*4, "ITLQ_TBL");
-+		kfree(lp->cb_tags);
-+	}
-+
-+	sym_mfree_dma(lp, sizeof(*lp), "LCB");
-+
-+	return tp->nlcb;
-+}
-+
-+/*
-  *  Queue a SCSI IO to the controller.
-  */
- int sym_queue_scsiio(struct sym_hcb *np, struct scsi_cmnd *cmd, struct sym_ccb *cp)
-diff -uprN -X linux-2.6.27.5-orig/Documentation/dontdiff linux-2.6.27.5-orig/drivers/scsi/sym53c8xx_2/sym_hipd.h linux-2.6.27.5/drivers/scsi/sym53c8xx_2/sym_hipd.h
---- linux-2.6.27.5-orig/drivers/scsi/sym53c8xx_2/sym_hipd.h	2008-11-07 19:55:34.000000000 +0200
-+++ linux-2.6.27.5/drivers/scsi/sym53c8xx_2/sym_hipd.h	2008-11-19 12:19:00.000000000 +0200
-@@ -400,6 +400,7 @@ struct sym_tcb {
- 	 *  An array of bus addresses is used on reselection.
- 	 */
- 	u32	*luntbl;	/* LCBs bus address table	*/
-+	int	nlcb;		/* Number of valid LCBs (including LUN #0) */
- 
- 	/*
- 	 *  LUN table used by the C code.
-@@ -1061,6 +1062,7 @@ int sym_clear_tasks(struct sym_hcb *np, 
- struct sym_ccb *sym_get_ccb(struct sym_hcb *np, struct scsi_cmnd *cmd, u_char tag_order);
- void sym_free_ccb(struct sym_hcb *np, struct sym_ccb *cp);
- struct sym_lcb *sym_alloc_lcb(struct sym_hcb *np, u_char tn, u_char ln);
-+int sym_free_lcb(struct sym_hcb *np, u_char tn, u_char ln);
- int sym_queue_scsiio(struct sym_hcb *np, struct scsi_cmnd *csio, struct sym_ccb *cp);
- int sym_abort_scsiio(struct sym_hcb *np, struct scsi_cmnd *ccb, int timed_out);
- int sym_reset_scsi_target(struct sym_hcb *np, int target);
+-- mikem
