@@ -1,167 +1,148 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: in 2.6.23-rc3-git7 in do_cciss_intr
-Date: Wed, 19 Nov 2008 09:52:28 +0100
-Message-ID: <20081119085227.GQ26308@kernel.dk>
-References: <0F5B06BAB751E047AB5C87D1F77A77883511810894@GVW0547EXC.americas.hpqcorp.net> <48C013D9.7060309@oracle.com> <0F5B06BAB751E047AB5C87D1F77A7788413663D229@GVW0547EXC.americas.hpqcorp.net> <20080905092838.GS20055@kernel.dk> <48DBF583.3050307@oracle.com> <20080925134000.9b133f8c.randy.dunlap@oracle.com> <0F5B06BAB751E047AB5C87D1F77A77884BFF5D1F76@GVW0547EXC.americas.hpqcorp.net> <49232232.10604@oracle.com> <4923237B.9090707@xenotime.net> <4923347D.8000205@oracle.com>
+From: "Koskinen Aaro (NSN - FI/Helsinki)" <aaro.koskinen@nsn.com>
+Subject: [PATCH] sym53c8xx_2: Keep transfer negotiations valid (2.6.27.5)
+Date: Wed, 19 Nov 2008 15:23:45 +0200 (EET)
+Message-ID: <Pine.LNX.4.64.0811191436450.15796@fi-hi32-dhcp068123.emea.nsn-net.net>
+References: <1219004320-6384-1-git-send-email-michaelc@cs.wisc.edu>
+ <1219030321.3917.44.camel@localhost.localdomain>  <48A8F0D8.3030000@cs.wisc.edu>
+ <1219068634.3261.6.camel@localhost.localdomain> <48A9BD74.7050706@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pasmtpb.tele.dk ([80.160.77.98]:57281 "EHLO pasmtpB.tele.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752005AbYKSIyR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Nov 2008 03:54:17 -0500
-Content-Disposition: inline
-In-Reply-To: <4923347D.8000205@oracle.com>
+Received: from smtp.nokia.com ([192.100.122.233]:48091 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752948AbYKSNYN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Nov 2008 08:24:13 -0500
+In-Reply-To: <48A9BD74.7050706@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: scsi <linux-scsi@vger.kernel.org>, "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, lkml <linux-kernel@vger.kernel.org>, akpm <akpm@linux-foundation.org>
+To: linux-scsi@vger.kernel.org
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Wilcox <matthew@wil.cx>, michaelc@cs.wisc.edu
 
-On Tue, Nov 18 2008, Randy Dunlap wrote:
-> Randy Dunlap wrote:
-> > Randy Dunlap wrote:
-> >> Miller, Mike (OS Dev) wrote:
-> >>>> -----Original Message-----
-> >>>> From: Randy Dunlap [mailto:randy.dunlap@oracle.com]
-> >>>> Sent: Thursday, September 25, 2008 3:40 PM
-> >>>> To: scsi
-> >>>> Cc: Jens Axboe; Miller, Mike (OS Dev); James Bottomley; lkml; akpm
-> >>>> Subject: Re: in 2.6.23-rc3-git7 in do_cciss_intr
-> >>>>
-> >>>> On Thu, 25 Sep 2008 13:33:07 -0700 Randy Dunlap wrote:
-> >>>>
-> >>>>> Jens Axboe wrote:
-> >>>>>> On Thu, Sep 04 2008, Miller, Mike (OS Dev) wrote:
-> >>>>>>>>>>> 0x3bb2 <do_cciss_intr+1649>:    mov    0x2(%r8),%dx
-> >>>>>>>>>>> 0x3bb7 <do_cciss_intr+1654>:    test   %dx,%dx
-> >>>>>>>>>>> 0x3bba <do_cciss_intr+1657>:    je     0x3f0e
-> >>>> <do_cciss_intr+2509>
-> >>>>>>>>>>> $ addr2line -e cciss.o -f  do_cciss_intr+0x627 SA5_fifo_full
-> >>>>>>>>>>>
-> >>>> /home/rdunlap/linsrc/linux-2.6.27-rc3-git7/drivers/block/cciss.h:2
-> >>>>>>>> 06
-> >>>>>>>>>> OK ...that's confusing.  It seems to be saying that
-> >>>> ctrlr_info_t
-> >>>>>>>>>> * was NULL.  However, I can't see a way of getting into the
-> >>>>>>>> fifo_full
-> >>>>>>>>>> callback from do_cciss_intr ..
-> >>>>>>>>>> especially not with an NULL host.
-> >>>>>>>>>>
-> >>>>>>>>>> James
-> >>>>>>>>> That is weird. Even if we could get there fifo_full doesn't
-> >>>>>>>> do anything but wait for a bit.
-> >>>>>>>>
-> >>>>>>>> Hi,
-> >>>>>>>>
-> >>>>>>>> This just happened again.  This time it's on 2.6.27-rc5-git3.
-> >>>>>>>>
-> >>>>>>>> ~Randy
-> >>>>>>> Thanks Randy. I think. :)
-> >>>>>>>
-> >>>>>>> I'll try to recreate in my lab.
-> >>>>>> This looks somewhat strange, mostly like 'c' is NULL and it's
-> >>>>>> oopsing in in removeQ (I don't think Randy's analysis is
-> >>>> correct in
-> >>>>>> assuming it's 'h' and it's in fifo_full). Given that 'c'
-> >>>> cannot be
-> >>>>>> NULL, it's c->prev or c->next that are NULL.
-> >> This BUG: has happened (now) 5 times today.  Higher frequency than usual for
-> >> some reason.
-> >>
-> >> I enabled CCISS_DEBUG and added one printk in removeQ().  On the first call
-> > 
-> > s/first/second/
-> > 
-> > 
-> >> to removeQ(), both c->next and c->prev are NULL.
-> >>
-> >> Here's the kernel log output from cciss:
-> 
-> I added a printk() in addQ() as well.  Here's the new output:
-> 
-> HP CISS Driver (v 3.6.20)
-> ACPI: PCI Interrupt Link [LNKA] enabled at IRQ 54
-> cciss 0000:42:08.0: PCI INT A -> Link[LNKA] -> GSI 54 (level, high) -> IRQ 54
-> command = 147
-> irq = 36
-> board_id = 3211103c
-> cciss 0000:42:08.0: irq 87 for MSI/MSI-X
-> address 0 = fdf80000
-> cfg base address = 10
-> cfg base address index = 0
-> cfg offset = 400
-> Controller Configuration information
-> ------------------------------------
->    Signature = CISS
->    Spec Number = 1
->    Transport methods supported = 0x6
->    Transport methods active = 0x3
->    Requested transport Method = 0x0
->    Coalesce Interrupt Delay = 0x0
->    Coalesce Interrupt Count = 0x1
->    Max outstanding commands = 0x256
->    Bus Types = 0x200000
->    Server Name =
->    Heartbeat Counter = 0x1672
-> 
-> 
-> Trying to put board into Simple mode
-> I counter got to 1 0
-> Controller Configuration information
-> ------------------------------------
->    Signature = CISS
->    Spec Number = 1
->    Transport methods supported = 0x6
->    Transport methods active = 0x3
->    Requested transport Method = 0x0
->    Coalesce Interrupt Delay = 0x0
->    Coalesce Interrupt Count = 0x1
->    Max outstanding commands = 0x256
->    Bus Types = 0x200000
->    Server Name =
->    Heartbeat Counter = 0x1672
-> 
-> 
-> cciss0: <0x3238> at PCI 0000:42:08.0 IRQ 87 using DAC
-> cciss: intr_pending 8
-> cciss: addQ: Qptr=ffff88027e0100b8, c=ffff88007f83e000
-> cciss: removeQ: Qptr=ffff88027e0100b8, c=ffff88007f83e000, next=ffff88007f83e000, prev=ffff88007f83e000
-> Sending 7f83e000 - down to controller
-> cciss: addQ: Qptr=ffff88027e0100c0, c=ffff88007f83e000
-> cciss: intr_pending 8
-> cciss:  Read 4 back from board
-> cciss: removeQ: Qptr=ffff88027e0100c0, c=ffff88007f840000, next=0000000000000000, prev=0000000000000000
-> BUG: unable to handle kernel NULL pointer dereference at 0000000000000248
+I have reworked (simplified) the patch that was discussed couple months
+back (http://marc.info/?l=linux-scsi&m=121900434020133&w=2). Again the
+goal is to ensure that host/target transfer parameters do not go out of
+sync (in the case the target is removed and added back either forcibly
+or by using remove/add-single-device through /proc/scsi/scsi):
 
-Randy, can you post the debug patch you used? The above goes boom when
-it attempts to remove a command that isn't on the list, the Qptr in the
-last example should be empty, hence the oops. So I'd be interested in
-seeing what removeQ() calls this is, I'm assuming it's this bit in
-do_cciss_intr():
+	- sym_prepare_nego() now always fills a message which is either
+	  wide or ppr (the driver will do sync after wide when needed
+	  as before).
 
-      ...
-              while (c->busaddr != a) {
-                       c = c->next;
-                       if (c == h->cmpQ)
-                               break;
-               }
-       }
-       /*
-        * If we've found the command, take it off the
-        * completion Q and free it
-        */
-       if (c->busaddr == a) {
-               removeQ(&h->cmpQ, c);
-               if (c->cmd_type == CMD_RWREQ) {
-                       complete_command(h, c, 0);
-                        ...
+	- it is called when the host changes parameters, or if the
+	command is INQUIRY or REQUEST SENSE (including check cond case).
 
-If so, what part of the c lookup are you hitting - the on that does:
+---
 
-        c = h->cmd_pool + a2;
+Change the sym53c8xx_2 driver negotiation logic so that the driver will
+tolerate better device removals. Negotiation message(s) will be sent
+with every INQUIRY and REQUEST SENSE command, and whenever there is a
+change in goals or when the device reports check condition.
 
-or the c->busaddr check that his shown above?
+Signed-off-by: aaro.koskinen@nsn.com
 
--- 
-Jens Axboe
+---
 
+diff -uprN -X linux-2.6.27.5-orig/Documentation/dontdiff linux-2.6.27.5-orig/drivers/scsi/sym53c8xx_2/sym_hipd.c linux-2.6.27.5/drivers/scsi/sym53c8xx_2/sym_hipd.c
+--- linux-2.6.27.5-orig/drivers/scsi/sym53c8xx_2/sym_hipd.c	2008-11-07 19:55:34.000000000 +0200
++++ linux-2.6.27.5/drivers/scsi/sym53c8xx_2/sym_hipd.c	2008-11-19 12:15:05.000000000 +0200
+@@ -1413,7 +1413,7 @@ static void sym_check_goals(struct sym_h
+ }
+ 
+ /*
+- *  Prepare the next negotiation message if needed.
++ *  Prepare the next negotiation message.
+  *
+  *  Fill in the part of message buffer that contains the 
+  *  negotiation and the nego_status field of the CCB.
+@@ -1433,24 +1433,14 @@ static int sym_prepare_nego(struct sym_h
+ 	 * Many devices implement PPR in a buggy way, so only use it if we
+ 	 * really want to.
+ 	 */
+-	if (goal->offset &&
+-	    (goal->iu || goal->dt || goal->qas || (goal->period < 0xa))) {
++	if (goal->renego == NS_PPR || (goal->offset &&
++	    (goal->iu || goal->dt || goal->qas || (goal->period < 0xa)))) {
+ 		nego = NS_PPR;
+-	} else if (spi_width(starget) != goal->width) {
+-		nego = NS_WIDE;
+-	} else if (spi_period(starget) != goal->period ||
+-		   spi_offset(starget) != goal->offset) {
+-		nego = NS_SYNC;
+ 	} else {
+-		goal->check_nego = 0;
+-		nego = 0;
++		nego = NS_WIDE; /* SYNC will follow WIDE if needed. */
+ 	}
+ 
+ 	switch (nego) {
+-	case NS_SYNC:
+-		msglen += spi_populate_sync_msg(msgptr + msglen, goal->period,
+-				goal->offset);
+-		break;
+ 	case NS_WIDE:
+ 		msglen += spi_populate_width_msg(msgptr + msglen, goal->width);
+ 		break;
+@@ -1469,7 +1459,6 @@ static int sym_prepare_nego(struct sym_h
+ 		tp->nego_cp = cp; /* Keep track a nego will be performed */
+ 		if (DEBUG_FLAGS & DEBUG_NEGO) {
+ 			sym_print_nego_msg(np, cp->target, 
+-					  nego == NS_SYNC ? "sync msgout" :
+ 					  nego == NS_WIDE ? "wide msgout" :
+ 					  "ppr msgout", msgptr);
+ 		}
+@@ -2049,11 +2038,9 @@ static void sym_setwide(struct sym_hcb *
+ 	struct sym_tcb *tp = &np->target[target];
+ 	struct scsi_target *starget = tp->starget;
+ 
+-	if (spi_width(starget) == wide)
+-		return;
+-
+ 	sym_settrans(np, target, 0, 0, 0, wide, 0, 0);
+ 
++	tp->tgoal.renego = NS_WIDE;
+ 	tp->tgoal.width = wide;
+ 	spi_offset(starget) = 0;
+ 	spi_period(starget) = 0;
+@@ -2080,6 +2067,7 @@ sym_setsync(struct sym_hcb *np, int targ
+ 
+ 	sym_settrans(np, target, 0, ofs, per, wide, div, fak);
+ 
++	tp->tgoal.renego = NS_WIDE; /* SYNC will follow WIDE. */
+ 	spi_period(starget) = per;
+ 	spi_offset(starget) = ofs;
+ 	spi_iu(starget) = spi_dt(starget) = spi_qas(starget) = 0;
+@@ -2106,6 +2094,7 @@ sym_setpprot(struct sym_hcb *np, int tar
+ 
+ 	sym_settrans(np, target, opts, ofs, per, wide, div, fak);
+ 
++	tp->tgoal.renego = NS_PPR;
+ 	spi_width(starget) = tp->tgoal.width = wide;
+ 	spi_period(starget) = tp->tgoal.period = per;
+ 	spi_offset(starget) = tp->tgoal.offset = ofs;
+@@ -5135,9 +5124,14 @@ int sym_queue_scsiio(struct sym_hcb *np,
+ 	/*
+ 	 *  Build a negotiation message if needed.
+ 	 *  (nego_status is filled by sym_prepare_nego())
++	 *
++	 *  Always negotiate on INQUIRY and REQUEST SENSE.
++	 *
+ 	 */
+ 	cp->nego_status = 0;
+-	if (tp->tgoal.check_nego && !tp->nego_cp && lp) {
++	if ((tp->tgoal.check_nego ||
++	     cmd->cmnd[0] == INQUIRY || cmd->cmnd[0] == REQUEST_SENSE) &&
++	    !tp->nego_cp && lp) {
+ 		msglen += sym_prepare_nego(np, cp, msgptr + msglen);
+ 	}
+ 
+diff -uprN -X linux-2.6.27.5-orig/Documentation/dontdiff linux-2.6.27.5-orig/drivers/scsi/sym53c8xx_2/sym_hipd.h linux-2.6.27.5/drivers/scsi/sym53c8xx_2/sym_hipd.h
+--- linux-2.6.27.5-orig/drivers/scsi/sym53c8xx_2/sym_hipd.h	2008-11-07 19:55:34.000000000 +0200
++++ linux-2.6.27.5/drivers/scsi/sym53c8xx_2/sym_hipd.h	2008-11-19 12:14:46.000000000 +0200
+@@ -354,6 +354,7 @@ struct sym_trans {
+ 	unsigned int dt:1;
+ 	unsigned int qas:1;
+ 	unsigned int check_nego:1;
++	unsigned int renego:2;
+ };
+ 
+ /*
