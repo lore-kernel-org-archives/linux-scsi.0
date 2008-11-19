@@ -1,41 +1,42 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: RE: in 2.6.23-rc3-git7 in do_cciss_intr
-Date: Wed, 19 Nov 2008 19:15:46 +0000
-Message-ID: <0F5B06BAB751E047AB5C87D1F77A77884EACB799CC@GVW0547EXC.americas.hpqcorp.net>
-References: <48DBF583.3050307@oracle.com>
- <20080925134000.9b133f8c.randy.dunlap@oracle.com>
- <0F5B06BAB751E047AB5C87D1F77A77884BFF5D1F76@GVW0547EXC.americas.hpqcorp.net>
- <49232232.10604@oracle.com> <4923237B.9090707@xenotime.net>
- <4923347D.8000205@oracle.com> <20081119085227.GQ26308@kernel.dk>
- <0F5B06BAB751E047AB5C87D1F77A77884EACB7986A@GVW0547EXC.americas.hpqcorp.net>
- <49244B69.80903@oracle.com>
- <0F5B06BAB751E047AB5C87D1F77A77884EACB798C4@GVW0547EXC.americas.hpqcorp.net>
- <20081119172919.GT26308@kernel.dk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11404] BUG: in 2.6.23-rc3-git7 in do_cciss_intr
+Date: Wed, 19 Nov 2008 11:39:26 -0800 (PST)
+Message-ID: <20081119193926.3A0E9108042@picon.linux-foundation.org>
+References: <bug-11404-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:37102 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754050AbYKSTQa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Nov 2008 14:16:30 -0500
-In-Reply-To: <20081119172919.GT26308@kernel.dk>
-Content-Language: en-US
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:55575 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752305AbYKSTj6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Nov 2008 14:39:58 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mAJJdQeo015187
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Nov 2008 11:39:27 -0800
+In-Reply-To: <bug-11404-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, lkml <linux-kernel@vger.kernel.org>, akpm <akpm@linux-foundation.org>
+To: linux-scsi@vger.kernel.org
 
-Jens wrote:
+http://bugzilla.kernel.org/show_bug.cgi?id=11404
 
->
-> Yeah, kexec is definitely a clue. My guess is that we got
-> some sort of left over completion. Regardless of the status
-> of this particular bug or not, I think it would be a good
-> idea to add some checks for when a command is attempted
-> removed from a queue it isn't currently on.
->
 
-I agree, I'll fix.
+randy.dunlap@oracle.com changed:
 
--- mikem
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |REJECTED
+         Resolution|                            |INVALID
+
+
+
+
+------- Comment #8 from randy.dunlap@oracle.com  2008-11-19 11:39 -------
+This currently only happens when loading a new kernel via kexec
+and the first kernel is "old" (like 2.6.18; using 2.6.25 to load
+the kernel-under-test works OK).
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
