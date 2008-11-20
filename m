@@ -1,71 +1,54 @@
-From: "Nick Cheng" <nick.cheng@areca.com.tw>
-Subject: RE: Performance issues with Areca 1680 SAS Controllers
-Date: Thu, 20 Nov 2008 15:39:40 +0800
-Message-ID: <DB3A7CF1B9EB4E1B80FCEF215C16EA24@arecac12242173>
-References: <492403B8.5090007@fuckner.net> <20081119171820.0823457d.akpm@linux-foundation.org>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: in 2.6.23-rc3-git7 in do_cciss_intr
+Date: Thu, 20 Nov 2008 10:13:03 +0100
+Message-ID: <20081120091303.GF26308@kernel.dk>
+References: <49232232.10604@oracle.com> <4923237B.9090707@xenotime.net> <4923347D.8000205@oracle.com> <20081119085227.GQ26308@kernel.dk> <0F5B06BAB751E047AB5C87D1F77A77884EACB7986A@GVW0547EXC.americas.hpqcorp.net> <49244B69.80903@oracle.com> <0F5B06BAB751E047AB5C87D1F77A77884EACB798C4@GVW0547EXC.americas.hpqcorp.net> <20081119172919.GT26308@kernel.dk> <0F5B06BAB751E047AB5C87D1F77A77884EACB799CC@GVW0547EXC.americas.hpqcorp.net> <20081119204624.GW26308@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754445AbYKTHkN@vger.kernel.org>
-In-Reply-To: <20081119171820.0823457d.akpm@linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: 'Andrew Morton' <akpm@linux-foundation.org>, 'Michael Fuckner' <michael@fuckner.net>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 'Erich Chen' <erich@areca.com.tw>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pasmtpb.tele.dk ([80.160.77.98]:53905 "EHLO pasmtpB.tele.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753968AbYKTJOy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Nov 2008 04:14:54 -0500
+Content-Disposition: inline
+In-Reply-To: <20081119204624.GW26308@kernel.dk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>, scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, lkml <linux-kernel@vger.kernel.org>, akpm <akpm@linux-foundation.org>
 
-Hi Michael,
-I will get around handling your issue.
-Thanks for your kindly patience,
+On Wed, Nov 19 2008, Jens Axboe wrote:
+> On Wed, Nov 19 2008, Miller, Mike (OS Dev) wrote:
+> > Jens wrote:
+> > 
+> > >
+> > > Yeah, kexec is definitely a clue. My guess is that we got
+> > > some sort of left over completion. Regardless of the status
+> > > of this particular bug or not, I think it would be a good
+> > > idea to add some checks for when a command is attempted
+> > > removed from a queue it isn't currently on.
+> > >
+> > 
+> > I agree, I'll fix.
+> 
+> I'd propose just converting it to list_head instead of doing it
+> manually. Heck, that should be a 5 minute job, let me just do it...
+> 
+> OK, here it is, totally untested (it compiles, must be golden...)
 
------Original Message-----
-From: Andrew Morton [mailto:akpm@linux-foundation.org] 
-Sent: Thursday, November 20, 2008 9:18 AM
-To: Michael Fuckner
-Cc: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org; Nick Cheng;
-Erich Chen
-Subject: Re: Performance issues with Areca 1680 SAS Controllers
+It was missing a list_entry() in fail_all_cmds(), apart from that it was
+fine. I changed it to use hlist instead, as that is more appropriate and
+similar to how it worked before. It also means there's no extra space
+usage in the controller structure. I've tested it and it works fine for
+me.
 
-(cc's added)
+Mike, can you give this a look-over and give me a Reviewed-by or
+similar? As an extra bonus, it also gets rid of some code.
 
-On Wed, 19 Nov 2008 13:16:56 +0100
-Michael Fuckner <michael@fuckner.net> wrote:
+ 3 files changed, 33 insertions(+), 46 deletions(-)
 
-> Hi,
-> 
-> I am using an Areca 1680-SAS-Controller with 16 SAS-HDD (Seagate 1TB
-> ST31000640SS). I set up a Raid6 with all 16 disks and formatted it with
-> XFS. The Controller has 512MB RAM and a BBU. The OS is installed to
-> another disk attached to the onboard AHCI controller.
-> 
-> After doing some IO, the areca raidset is slower compared to the rate 
-> directly
-> after boot.
-> 
-> 
-> [root@storage ~]# dd if=/dev/sdb1 of=/dev/null bs=1M count=50k
-iflag=direct
-> 51200+0 records in
-> 51200+0 records out
-> 53687091200 bytes (54 GB) copied, 59.6494 seconds, 900 MB/s
-> [root@storage ~]# mount /dev/sdb1 /data
-> [root@storage ~]# cd /data/
-> [root@storage data]# ./iozone -i 0 -i 1 -s 32g -r 16m -S 6144 -t 8 -+r
-> -o  >raid6_sync_t8.log
-> [root@storage data]# cd
-> [root@storage ~]# umount /data/
-> [root@storage ~]# dd if=/dev/sdb1 of=/dev/null bs=1M count=50k
-iflag=direct
-> 51200+0 records in
-> 51200+0 records out
-> 53687091200 bytes (54 GB) copied, 76.4036 seconds, 703 MB/s
-> 
-> I tested different Versions of Linux (Centos 5.2, OpenSUSE 11, Debian
-> Lenny) and Vanilla kernels 2.6.22-2.6.27, all show this behaviour.
-> 
-> Idea why the device slows down after IO- or better: how to keep the high
-> rate? Is this reproducible foer Areca SATA Controllers (Type 11XX and
-12XX)
-> 
-> Regards,
->    Michael!
+http://git.kernel.dk/?p=linux-2.6-block.git;a=commit;h=e303054e55acd1b6478b8859a5f8648bfaf69a44
+
+-- 
+Jens Axboe
+
