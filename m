@@ -1,55 +1,52 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH]  fc_transport: fix old bug on bitflag definitions
-Date: Thu, 20 Nov 2008 10:58:01 -0500
-Message-ID: <1227196681.7483.3.camel@ogier>
-Reply-To: James.Smart@Emulex.Com
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: in 2.6.23-rc3-git7 in do_cciss_intr
+Date: Thu, 20 Nov 2008 16:41:39 +0000
+Message-ID: <0F5B06BAB751E047AB5C87D1F77A77884EACB79F52@GVW0547EXC.americas.hpqcorp.net>
+References: <49232232.10604@oracle.com> <4923237B.9090707@xenotime.net>
+ <4923347D.8000205@oracle.com> <20081119085227.GQ26308@kernel.dk>
+ <0F5B06BAB751E047AB5C87D1F77A77884EACB7986A@GVW0547EXC.americas.hpqcorp.net>
+ <49244B69.80903@oracle.com>
+ <0F5B06BAB751E047AB5C87D1F77A77884EACB798C4@GVW0547EXC.americas.hpqcorp.net>
+ <20081119172919.GT26308@kernel.dk>
+ <0F5B06BAB751E047AB5C87D1F77A77884EACB799CC@GVW0547EXC.americas.hpqcorp.net>
+ <20081119204624.GW26308@kernel.dk> <20081120091303.GF26308@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:48529 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754905AbYKTP5J (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Nov 2008 10:57:09 -0500
-Received: from xcm.ad.emulex.com (xcm.emulex.com [138.239.112.69])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id mAKFv8Kt023520
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Nov 2008 07:57:08 -0800 (PST)
+Received: from g1t0026.austin.hp.com ([15.216.28.33]:45245 "EHLO
+	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753471AbYKTQmE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Nov 2008 11:42:04 -0500
+In-Reply-To: <20081120091303.GF26308@kernel.dk>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>, scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, lkml <linux-kernel@vger.kernel.org>, akpm <akpm@linux-foundation.org>
 
-I thought we had corrected this a while ago - however, it's still
-in 2.6.28-rc?.
+Jens wrote:
 
-When the fastfail flag was added, it did not account for the flags
-being bit fields. Correct the definition so there is no longer a
-conflict.
+> >
+> > I'd propose just converting it to list_head instead of doing it
+> > manually. Heck, that should be a 5 minute job, let me just do it...
+> >
+> > OK, here it is, totally untested (it compiles, must be golden...)
+>
+> It was missing a list_entry() in fail_all_cmds(), apart from
+> that it was fine. I changed it to use hlist instead, as that
+> is more appropriate and similar to how it worked before. It
+> also means there's no extra space usage in the controller
+> structure. I've tested it and it works fine for me.
+>
+> Mike, can you give this a look-over and give me a Reviewed-by
+> or similar? As an extra bonus, it also gets rid of some code.
+>
+>  3 files changed, 33 insertions(+), 46 deletions(-)
+>
+> http://git.kernel.dk/?p=linux-2.6-block.git;a=commit;h=e303054
+> e55acd1b6478b8859a5f8648bfaf69a44
 
-James - we need to get this into 2.6.28
+That works for me. :)
 
--- james s
-
-
-
- Signed-off-by: James Smart <james.smart@emulex.com>
-
- ---
-
- scsi_transport_fc.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-
-diff -upNr a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
---- a/include/scsi/scsi_transport_fc.h	2008-10-18 10:32:54.000000000 -0400
-+++ b/include/scsi/scsi_transport_fc.h	2008-11-20 10:54:02.000000000 -0500
-@@ -357,7 +357,7 @@ struct fc_rport {	/* aka fc_starget_attr
- /* bit field values for struct fc_rport "flags" field: */
- #define FC_RPORT_DEVLOSS_PENDING	0x01
- #define FC_RPORT_SCAN_PENDING		0x02
--#define FC_RPORT_FAST_FAIL_TIMEDOUT	0x03
-+#define FC_RPORT_FAST_FAIL_TIMEDOUT	0x04
- 
- #define	dev_to_rport(d)				\
- 	container_of(d, struct fc_rport, dev)
-
-
+Acked-by: Mike Miller <mike.miller@hp.com>
