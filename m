@@ -1,30 +1,30 @@
-From: Mike Anderson <andmike@linux.vnet.ibm.com>
-Subject: Re: [Bug 12020] scsi_times_out NULL pointer dereference
-Date: Thu, 20 Nov 2008 11:36:33 -0800
-Message-ID: <20081120193633.GB28370@linux.vnet.ibm.com>
-References: <bug-12020-11613@http.bugzilla.kernel.org/> <20081120151224.EB880108042@picon.linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12020] scsi_times_out NULL pointer dereference
+Date: Thu, 20 Nov 2008 11:36:44 -0800 (PST)
+Message-ID: <20081120193644.A4F4B108043@picon.linux-foundation.org>
+References: <bug-12020-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:50931 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755123AbYKTTgf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Nov 2008 14:36:35 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e36.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id mAKJZvZN025314
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Nov 2008 12:35:57 -0700
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id mAKJaYeW079370
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Nov 2008 12:36:34 -0700
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id mAKJaXAj006077
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Nov 2008 12:36:34 -0700
-Content-Disposition: inline
-In-Reply-To: <20081120151224.EB880108042@picon.linux-foundation.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:57768 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755185AbYKTTgq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Nov 2008 14:36:46 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mAKJaimk005856
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Nov 2008 11:36:45 -0800
+In-Reply-To: <bug-12020-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugme-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org, Jens Axboe <Jens.Axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=12020
+
+
+
+
+
+------- Comment #7 from anonymous@kernel-bugs.osdl.org  2008-11-20 11:36 -------
+Reply-To: andmike@linux.vnet.ibm.com
 
 I have two systems that are hitting similar signatures in scsi_times_out.
 
@@ -78,3 +78,9 @@ being called if we are not really starting a SCSI cmd.
 --
 Michael Anderson
 andmike@linux.vnet.ibm.com
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
