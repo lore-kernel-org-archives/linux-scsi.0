@@ -1,76 +1,80 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: RE: in 2.6.23-rc3-git7 in do_cciss_intr
-Date: Thu, 20 Nov 2008 19:12:36 +0000
-Message-ID: <0F5B06BAB751E047AB5C87D1F77A77884EACB7A11D@GVW0547EXC.americas.hpqcorp.net>
-References: <4923347D.8000205@oracle.com> <20081119085227.GQ26308@kernel.dk>
- <0F5B06BAB751E047AB5C87D1F77A77884EACB7986A@GVW0547EXC.americas.hpqcorp.net>
- <49244B69.80903@oracle.com>
- <0F5B06BAB751E047AB5C87D1F77A77884EACB798C4@GVW0547EXC.americas.hpqcorp.net>
- <20081119172919.GT26308@kernel.dk>
- <0F5B06BAB751E047AB5C87D1F77A77884EACB799CC@GVW0547EXC.americas.hpqcorp.net>
- <20081119204624.GW26308@kernel.dk> <20081120091303.GF26308@kernel.dk>
- <0F5B06BAB751E047AB5C87D1F77A77884EACB79F52@GVW0547EXC.americas.hpqcorp.net>
- <20081120175029.GM26308@kernel.dk>
+From: Mike Anderson <andmike@linux.vnet.ibm.com>
+Subject: Re: [Bug 12020] scsi_times_out NULL pointer dereference
+Date: Thu, 20 Nov 2008 11:36:33 -0800
+Message-ID: <20081120193633.GB28370@linux.vnet.ibm.com>
+References: <bug-12020-11613@http.bugzilla.kernel.org/> <20081120151224.EB880108042@picon.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0016.houston.hp.com ([15.201.24.19]:34912 "EHLO
-	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756742AbYKTTNc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Nov 2008 14:13:32 -0500
-In-Reply-To: <20081120175029.GM26308@kernel.dk>
-Content-Language: en-US
+Received: from e36.co.us.ibm.com ([32.97.110.154]:50931 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755123AbYKTTgf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Nov 2008 14:36:35 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e36.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id mAKJZvZN025314
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Nov 2008 12:35:57 -0700
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id mAKJaYeW079370
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Nov 2008 12:36:34 -0700
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id mAKJaXAj006077
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Nov 2008 12:36:34 -0700
+Content-Disposition: inline
+In-Reply-To: <20081120151224.EB880108042@picon.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, lkml <linux-kernel@vger.kernel.org>, akpm <akpm@linux-foundation.org>
+To: bugme-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org, Jens Axboe <Jens.Axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>
 
+I have two systems that are hitting similar signatures in scsi_times_out.
 
+Note: that my testing is using a distro kernel, but in this area the code
+is very similar. I will work to get a reproduction on mainline.
 
-> -----Original Message-----
-> From: Jens Axboe [mailto:jens.axboe@oracle.com]
-> Sent: Thursday, November 20, 2008 11:51 AM
-> To: Miller, Mike (OS Dev)
-> Cc: Randy Dunlap; scsi; James Bottomley; lkml; akpm
-> Subject: Re: in 2.6.23-rc3-git7 in do_cciss_intr
->
-> On Thu, Nov 20 2008, Miller, Mike (OS Dev) wrote:
-> > Jens wrote:
-> >
-> > > >
-> > > > I'd propose just converting it to list_head instead of doing it
-> > > > manually. Heck, that should be a 5 minute job, let me
-> just do it...
-> > > >
-> > > > OK, here it is, totally untested (it compiles, must be
-> golden...)
-> > >
-> > > It was missing a list_entry() in fail_all_cmds(), apart
-> from that it
-> > > was fine. I changed it to use hlist instead, as that is more
-> > > appropriate and similar to how it worked before. It also means
-> > > there's no extra space usage in the controller structure. I've
-> > > tested it and it works fine for me.
-> > >
-> > > Mike, can you give this a look-over and give me a Reviewed-by or
-> > > similar? As an extra bonus, it also gets rid of some code.
-> > >
-> > >  3 files changed, 33 insertions(+), 46 deletions(-)
-> > >
-> > > http://git.kernel.dk/?p=linux-2.6-block.git;a=commit;h=e303054
-> > > e55acd1b6478b8859a5f8648bfaf69a44
-> >
-> > That works for me. :)
-> >
-> > Acked-by: Mike Miller <mike.miller@hp.com>
->
-> Excellent, thanks Mike. If you could run it through a cycle
-> or so of your regular testing, I'd feel 100% confident in it.
+..but..
 
-Jens,
-I'm porting the changes into our build environment so they will go thru the full QA cycle. I'm also testing in my lab before giving the changes to QA.
+I added some debug to scsi_times_out and noticed that the request with no
+scmd set in req->special also did not have REQ_STARTED set.
 
-Thanks for the quick fix.
+I added a WARN_ON check to blk_add_timer for any requests 
+that we where starting a timer for that did not have REQ_STARTED. This is
+shown below. This does not look good as the elv_dequeue_request is being
+called off elv_next_request for some cases.
 
--- mikem
+Call Trace:
+[c00000007b747580] [c00000000027808c] .blk_add_timer+0x74/0x134
+(unreliable)
+[c00000007b747610] [c00000000026f9b8] .elv_dequeue_request+0x78/0x8c
+[c00000007b747680] [c000000000275830] .blk_do_ordered+0x8c/0x31c
+[c00000007b747720] [c00000000026fc18] .elv_next_request+0x24c/0x2d4
+[c00000007b7477c0] [d000000000368004] .scsi_request_fn+0xc8/0x628
+[scsi_mod]
+[c00000007b7478a0] [c00000000026fdf4] .elv_insert+0x154/0x38c
+[c00000007b747940] [c000000000273ad0] .__make_request+0x4e4/0x568
+[c00000007b7479f0] [c000000000271a68] .generic_make_request+0x3f4/0x468
+[c00000007b747af0] [c000000000271bd8] .submit_bio+0xfc/0x124
+[c00000007b747bb0] [c000000000160a00] .submit_bh+0x14c/0x198
+[c00000007b747c40] [c0000000001630a0] .sync_dirty_buffer+0xbc/0x15c
+[c00000007b747cd0] [c0000000001fcac0]
+.journal_commit_transaction+0x1014/0x158c
+[c00000007b747e10] [c00000000020111c] .kjournald+0x104/0x2f4
+[c00000007b747f00] [c0000000000a909c] .kthread+0x78/0xc4
+[c00000007b747f90] [c00000000002ae2c] .kernel_thread+0x4c/0x68
+
+I changed the previous mentioned WARN_ON to just do a return if the request
+does not have REQ_STARTED. This corrected the issue of seeing an oops in
+scsi_times_out. But this is just a hack.
+
+Hope this analysis is not flawed because of kernel deltas. It also may not
+address this specific issue being seen in this bug, but does appear to
+indicate a possible path to get a request on the timeout list with out a
+req->special set.
+
+I think we may need to look at some of the paths that are calling
+blkdev_dequeue_request and understand how to prevent blk_add_timer from
+being called if we are not really starting a SCSI cmd.
+
+-andmike
+--
+Michael Anderson
+andmike@linux.vnet.ibm.com
