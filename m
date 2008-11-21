@@ -1,67 +1,106 @@
-From: "K.S. Bhaskar" <ks.bhaskar@fnis.com>
-Subject: Re: Enterprise workload testing for storage and filesystems
-Date: Fri, 21 Nov 2008 11:42:41 -0500
-Message-ID: <4926E501.9010802@fnis.com>
-References: <1226962063.3403.13.camel@localhost.localdomain> <x49y6zegjum.fsf@segfault.boston.devel.redhat.com> <4926DAFC.5070006@fnis.com> <4926DF63.1030107@hp.com>
-Reply-To: "K.S. Bhaskar" <ks.bhaskar@fnis.com>
+From: Joe Eykholt <jeykholt@cisco.com>
+Subject: FCoE FIP:  User code or driver module?
+Date: Fri, 21 Nov 2008 12:26:33 -0800
+Message-ID: <49271979.40608@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <4926DF63.1030107@hp.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Cc: Jeff Moyer <jmoyer@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sj-iport-6.cisco.com ([171.71.176.117]:32101 "EHLO
+	sj-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754532AbYKUU0i (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Nov 2008 15:26:38 -0500
+Received: from sj-core-2.cisco.com (sj-core-2.cisco.com [171.71.177.254])
+	by sj-dkim-2.cisco.com (8.12.11/8.12.11) with ESMTP id mALKQcAS004701
+	for <linux-scsi@vger.kernel.org>; Fri, 21 Nov 2008 12:26:38 -0800
+Received: from feynman.nuovasystems.com ([172.30.136.71])
+	by sj-core-2.cisco.com (8.13.8/8.13.8) with ESMTP id mALKQcTU006824
+	for <linux-scsi@vger.kernel.org>; Fri, 21 Nov 2008 20:26:38 GMT
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 11/21/2008 11:18 AM, Alan D. Brunelle wrote:
-> K.S. Bhaskar wrote:
+Hi all,
 
-[KSB2] <...snip...>
+I'm working on one implementation of FIP for FCoE.
+FIP is the FCoE initialization protocol, which is used to discover
+which MAC address to use to get to a Fibre-Channel fabric.  In this
+way it is somewhat like IPv6 neighbor discovery.  It also performs
+keep-alives to detect when connectivity is lost.
 
-> Thanks for additional feedback Bhaskar - I've been playing with this
-> on-and-off the last couple of days trying to stress one testbed (16 way
-> AMD, 128GB RAM, two P800 Smart Arrays (48 disks total put into a single
-> LVM2/DM volume)). I've been able to get the I/O subsystem 100% utilized,
-> but in so doing really didn't stress the system (something like 80-90%
-> idle).
-> 
-> In order to stress the whole system, it sounds like it _may_ be better
-> to use 48 separate file systems on 48 separate platters (each with its
-> own DB)? Or are there other knobs to play with to get more of the system
-> involved besides the I/O? Is it a good idea to separate the journals
-> from the DB (separate FS/platter)?
+There has been some mention that this should be done in user space
+because the iSCSI equivalent was done that way.  I'd like to know
+your opinions on whether I should go forward with an in-kernel module
+implementation or if that is unlikely to be accepted.
 
-[KSB2] The intent of io_thrash is to stress the IO subsystem.  So, I am 
-not at all surprised that CPU and memory were not stressed.
+The protocol is fairly simple, the resulting code adds only 8K
+bytes of text to the FCoE module, and none to the base kernel.
 
-With the 48 platters on your system, perhaps consider creating 4 logical 
-volumes each striped across 12 physical volumes.  Try 8 databases, with 
-each logical volume having two databases and journal files for two 
-databases that reside on different file systems.
+Here are some rationales for putting this in the FCoE module:
 
-In the real world, yes one would separate each journal file from its 
-database file, at least putting them on separate platters, because if 
-the journal platters, disk controller, or file system croak, you still 
-have the database, and if the database underpinnings die, the database 
-is recoverable from a backup and the journal file.  One aims to get 
-maximum separation from the database and its journal file.
+1.  It's simpler.  A user-based implementation would have to have
+communication code to talk to the kernel FCoE, to send it
+the parameters learned by discovery.
 
-If you want to simulate an application that produces a more balanced 
-load, perhaps you can set %ioUnderLock to 0 and modify io_thrash to do 
-some compute intensive task (like fill a large block of memory with 
-pseudo random numbers) before each IO operation.  You would probably 
-want to increase the number of processes so that the IO subsystem 
-continues to be driven hard.
+2. It uses less memory. It is required for FCoE and since it
+would be part of the fcoe module it would not
+take kernel memory unless fcoe is in use. It wouldn't need as
+much code space (see 1) or the overhead of a process. A kernel
+implementation should be about 1200 lines or 8K bytes.
 
-Regards
--- Bhaskar
+3.  It is easier to distribute.  In the kernel, it's always in
+sync with the module.  There are no interoperability issues as
+there would be between a user-level implementation and the fcoe
+driver.  Distros would have to take care of more startup issues
+if there were a user-level daemon.
 
-_____________
+4.  It is better for FCoE "HBA"s.  Some FCoE device drivers
+won't have a  netdev interface, so if FIP is user-level,
+they would have to add something to allow them to send and
+receive FIP frames, or add a netlink interface (see point 1).
 
-The information contained in this message is proprietary and/or confidential. If you are not the 
-intended recipient, please: (i) delete the message and all copies; (ii) do not disclose, 
-distribute or use the message in any manner; and (iii) notify the sender immediately. In addition, 
-please be aware that any message addressed to our domain is subject to archiving and review by 
-persons other than the intended recipient. Thank you.
-_____________
+5.  It's easier to keep common between LLDs.
+A user-level implementation may need to be aware of the quirks
+of the various hardware implementations.  The other HBAs coming may be
+forced to do their own implementations in the kernel anyway. or add
+patches to the user-mode implementation, see (3).
+
+5.  It simplifies correctness issues.  In the kernel we can hold locks
+so that the state changes decided by FIP and by the upper layers
+can be acted on atomicly.
+
+6.  Fewer soft "real-time" issues. FIP involves keep-alives and link-resets,
+which may be critical to system operation.  A user-level process would
+have to address these needs.  The timing isn't too constraining, but
+the process shouldn't be delayed by very much or storage connectivity
+could be lost.  The daemon shouldn't be swapped out, especially
+not to an FCoE drive!
+
+7.  The booting story is simpler.  Booting over FCoE would require
+the user-level discovery to be part of initrd, not too hard, but
+something to think about.
+
+What are the advantages to doing FIP user level?  Simpler development?
+Killable/restartable?  Smaller code size in kernel git trees?
+
+One point on the user-level side is that if the implementation
+becomes more complex, it simplifies maintenance.
+
+Here are some references for those who might like to dig into this
+further:
+
+FIP patch series (now out of date and missing a few bug fixes):
+http://www.open-fcoe.org/pipermail/devel/2008-October/001130.html
+http://www.open-fcoe.org/pipermail/devel/2008-October/001131.html
+http://www.open-fcoe.org/pipermail/devel/2008-October/001132.html
+
+FCoE doc describing FIP:
+http://www.t11.org/ftp/t11/pub/fc/bb-5/08-569v1.pdf
+
+	Thanks for your consideration,
+	Joe Eykholt
+
+
+
+
+
