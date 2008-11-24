@@ -1,28 +1,50 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: Conversion of old Amiga NCR53C9x drivers to esp_scsi
-Date: Mon, 24 Nov 2008 13:50:26 -0800 (PST)
-Message-ID: <20081124.135026.241886343.davem@davemloft.net>
-References: <1227560510.15190.18.camel@kars.perseus.home>
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: next-20081119: general protection fault:
+ get_next_timer_interrupt()
+Date: Mon, 24 Nov 2008 23:33:36 +0100 (CET)
+Message-ID: <alpine.LFD.2.00.0811242327130.3235@localhost.localdomain>
+References: <a4423d670811190714k13721ae8s125e63d520892440@mail.gmail.com> <alpine.LFD.2.00.0811191308030.3119@localhost.localdomain> <a4423d670811210250t6b75645evd9646ffb07745867@mail.gmail.com> <alpine.LFD.2.00.0811241816120.3301@localhost.localdomain>
+ <1227554117.25499.46.camel@localhost.localdomain> <alpine.LFD.2.00.0811242018370.3235@localhost.localdomain> <20081124213517.GA25898@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <1227560510.15190.18.camel@kars.perseus.home>
-Sender: linux-m68k-owner@vger.kernel.org
-To: jongk@linux-m68k.org
-Cc: linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <20081124213517.GA25898@linux.vnet.ibm.com>
+Sender: linux-next-owner@vger.kernel.org
+To: Mike Anderson <andmike@linux.vnet.ibm.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Alexander Beregalov <a.beregalov@gmail.com>, LKML <linux-kernel@vger.kernel.org>, linux-next@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, linux-scsi@vger.kernel.org, David Miller <davem@davemloft.net>, Jens Axboe <jens.axboe@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Kars de Jong <jongk@linux-m68k.org>
-Date: Mon, 24 Nov 2008 22:01:50 +0100
-
-> What is the way to go? Revive the glue named drivers/scsi/blz1230.c?
-> Or should it be renamed?
+On Mon, 24 Nov 2008, Mike Anderson wrote:
+> Thomas Gleixner <tglx@linutronix.de> wrote:
+> > Yeah, block could it be as well. Jens, Mike ?
 > 
-> Some of the other drivers may be a little more problematic because they
-> had more driver operations which are not present in the esp_scsi DMA
-> abstraction.
+> I added a comment to bug 12020 on Thursday about a few other systems that
+> where seeing the signature shown in bug 12020. It appeared from debug that
+> there where a few paths that where adding timers for requests that where
+> not expected.
+> 
+> http://bugzilla.kernel.org/show_bug.cgi?id=12020
+> 
+> It would be good to know if the debug patch below effects your problem as while.
+> 
+> If it does we need to investigated a solution to resolve not adding a
+> timer for these requests.
 
-Whatever tweaks you need to make to the DMA abstraction to make
-your parts work are probably fine.  Get your hardware working
-and then post your esp_scsi core changes for review here.
+Wrong. 
+
+The problem is not a timer which is armed in the first place.
+
+The problem is an armed timer which is not canceled before the data
+structure which contains it is freed.
+
+So not arming the timer will probably prevent this particular scan
+problem, but it does not solve the general wreckage of freeing a data
+structure with a possibly armed timer in it.
+
+You need to fix the code path which frees the data structure which
+contains the timer and cancel the timer _before_ freeing the data
+structure.
+
+Thanks,
+
+	tglx
