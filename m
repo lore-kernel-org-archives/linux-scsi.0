@@ -1,70 +1,104 @@
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: next-20081119: general protection fault:
- get_next_timer_interrupt()
-Date: Mon, 24 Nov 2008 20:31:08 +0100 (CET)
-Message-ID: <alpine.LFD.2.00.0811242018370.3235@localhost.localdomain>
-References: <a4423d670811190714k13721ae8s125e63d520892440@mail.gmail.com>  <alpine.LFD.2.00.0811191308030.3119@localhost.localdomain>  <a4423d670811210250t6b75645evd9646ffb07745867@mail.gmail.com>  <alpine.LFD.2.00.0811241816120.3301@localhost.localdomain>
- <1227554117.25499.46.camel@localhost.localdomain>
+From: Michael Reed <mdr@sgi.com>
+Subject: [PATCH] qla2xxx: Conditionally disable automatic queue full tracking
+Date: Mon, 24 Nov 2008 14:16:20 -0600
+Message-ID: <492B0B94.3080409@sgi.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <1227554117.25499.46.camel@localhost.localdomain>
-Sender: linux-next-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Alexander Beregalov <a.beregalov@gmail.com>, LKML <linux-kernel@vger.kernel.org>, linux-next@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, linux-scsi@vger.kernel.org, David Miller <davem@davemloft.net>, Jens Axboe <jens.axboe@oracle.com>, Mike Anderson <andmike@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from relay3.sgi.com ([192.48.171.31]:37013 "EHLO relay.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751597AbYKXU1N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Nov 2008 15:27:13 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Seokmann Ju <seokmann.ju@qlogic.com>, Jeremy Higdon <jeremy@sgi.com>, Hannes Reinecke <hare@suse.de>
 
-On Mon, 24 Nov 2008, James Bottomley wrote:
-> On Mon, 2008-11-24 at 18:43 +0100, Thomas Gleixner wrote:
-> > > scsi0 : LSI SAS based MegaRAID driver
-> > > Driver 'sd' needs updating - please use bus_type methods
-> > > scsi 0:0:0:0: Direct-Access     ATA      SAMSUNG HE160HJ  0-24 PQ: 0 ANSI: 5
-> > > ------------[ cut here ]------------
-> > > WARNING: at lib/debugobjects.c:215 debug_print_object+0x4f/0x57()
-> > > ODEBUG: free active object type: timer_list
-> > 
-> > That's the cause for your boot crash. The scsi/blk code is freeing a
-> > page which contains an active timer, so the timer code references gone
-> > memory. You triggered it because DEBUG_PAGEALLOC unmaps the page when
-> > it's freed.
-> > 
-> > James, or other scsi experts please.
-> 
-> Well, not sure.  Most likely candidate is the new block timer code.
-> What seems to be happening is that the queue is being released with
-> either an outstanding request (refcounting problem) or ticking timer
-> with no work (block timer problem).  The way scanning works is that we
-> create a request queue for each device we probe and then delete it again
-> if nothing appears after the bus settle time.   The argument against
-> this is that it should show up on every scanned bus.  However, these are
-> getting rarer; I was just about to write that I hadn't seen it when I
-> remembered that all my SCSI testing systems are currently running
-> hotplug reporting busses (i.e. don't do scanning).  However,
-> fortunately, I've also booted voyager recently which does use parallel
-> SCSI and doesn't see this either, so it could also be megaraid_sas
-> specific.
+Changing a lun's queue depth (/sys/block/sdX/device/queue_depth) isn't
+sticky when the device is connected via a QLogic fibre channel adapter.
 
-Yeah, block could it be as well. Jens, Mike ?
+The QLogic qla2xxx fibre channel driver dynamically adjusts a lun's queue
+depth.  If a user has a specific need to limit the number of commands issued
+to a lun (say a tape drive, or a shared raid where the total commands issued
+to all luns is limited at the controller level, for example) and writes a
+limiting value to /sys/block/sdXX/device/queue_depth, the qla2xxx driver will
+silently and gradually increase the queue depth back to the driver limit
+of ql2xmaxqdepth.  While reducing this value (module parameter) or increasing
+the interval between ramp ups (ql2xqfullrampup) offers the potential for a
+work around it would be better to have the option of just disabling the
+dynamic adjustment of queue depth.
 
-One note about not seeing it: We have had such bugs before where the
-page was freed but not touched and the timer survived w/o tripping the
-system over. Alexander noticed because of DEBUG_PAGEALLOC and you can
-also see it by enabling debugobjects, which will give you the nice
-backtrace.
+This patch implements an "off switch" as a module parameter.  Applies to
+2.6.28-rc6-git1.
 
-CONFIG_DEBUG_OBJECTS=y
-CONFIG_DEBUG_OBJECTS_FREE=y
-CONFIG_DEBUG_OBJECTS_TIMERS=Y
+Signed-off-by: Michael Reed <mdr@sgi.com>
 
-and add "debug_objects" to the kernel command line.
+
+--- a/drivers/scsi/qla2xxx/qla_gbl.h	2008-11-11 08:57:26.000000000 -0600
++++ b/drivers/scsi/qla2xxx/qla_gbl.h	2008-11-24 10:11:48.948835394 -0600
+@@ -62,6 +62,7 @@ extern int ql2xfdmienable;
+ extern int ql2xallocfwdump;
+ extern int ql2xextended_error_logging;
+ extern int ql2xqfullrampup;
++extern int ql2xqfulltracking;
+ extern int ql2xiidmaenable;
  
-> Could you turn on SCSI logging so we can see the sequences.  Probably
-> since this is boot time, just enable all logging:
-> 
-> echo 0xffffffff > /sys/module/scsi_mod/parameters/scsi_logging_level
-> 
-> (kernel must be compiled with CONFIG_SCSI_LOGGING=y
-> 
-> James
-> 
-> 
+ extern int qla2x00_loop_reset(scsi_qla_host_t *);
+--- a/drivers/scsi/qla2xxx/qla_isr.c	2008-11-11 08:57:26.000000000 -0600
++++ b/drivers/scsi/qla2xxx/qla_isr.c	2008-11-21 17:23:46.065443427 -0600
+@@ -691,6 +691,9 @@ qla2x00_adjust_sdev_qdepth_up(struct scs
+ {
+ 	fc_port_t *fcport = data;
+ 
++	if (!ql2xqfulltracking)
++		return;
++
+ 	if (fcport->ha->max_q_depth <= sdev->queue_depth)
+ 		return;
+ 
+@@ -729,6 +732,9 @@ qla2x00_ramp_up_queue_depth(scsi_qla_hos
+ 	fc_port_t *fcport;
+ 	struct scsi_device *sdev;
+ 
++	if (!ql2xqfulltracking)
++		return;
++
+ 	sdev = sp->cmd->device;
+ 	if (sdev->queue_depth >= ha->max_q_depth)
+ 		return;
+@@ -1043,6 +1049,8 @@ qla2x00_status_entry(scsi_qla_host_t *ha
+ 			    scsi_status));
+ 
+ 			/* Adjust queue depth for all luns on the port. */
++			if (!ql2xqfulltracking)
++				break;
+ 			fcport->last_queue_full = jiffies;
+ 			starget_for_each_device(cp->device->sdev_target,
+ 			    fcport, qla2x00_adjust_sdev_qdepth_down);
+@@ -1102,6 +1110,8 @@ qla2x00_status_entry(scsi_qla_host_t *ha
+ 				 * Adjust queue depth for all luns on the
+ 				 * port.
+ 				 */
++				if (!ql2xqfulltracking)
++					break;
+ 				fcport->last_queue_full = jiffies;
+ 				starget_for_each_device(
+ 				    cp->device->sdev_target, fcport,
+--- a/drivers/scsi/qla2xxx/qla_os.c	2008-11-11 08:57:26.000000000 -0600
++++ b/drivers/scsi/qla2xxx/qla_os.c	2008-11-21 17:23:46.093443556 -0600
+@@ -79,6 +79,14 @@ module_param(ql2xmaxqdepth, int, S_IRUGO
+ MODULE_PARM_DESC(ql2xmaxqdepth,
+ 		"Maximum queue depth to report for target devices.");
+ 
++int ql2xqfulltracking = 1;
++module_param(ql2xqfulltracking, int, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(ql2xqfulltracking,
++		"Controls whether the driver tracks queue full status "
++		"returns and dynamically adjusts a scsi device's queue "
++		"depth.  Default is 1, perform tracking.  Set to 0 to "
++		"disable dynamic tracking and adjustment of queue depth.");
++
+ int ql2xqfullrampup = 120;
+ module_param(ql2xqfullrampup, int, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(ql2xqfullrampup,
