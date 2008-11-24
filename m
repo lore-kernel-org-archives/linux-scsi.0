@@ -1,57 +1,31 @@
-From: Sven Schuetz <sven@linux.vnet.ibm.com>
-Subject: Re: [RFC] FC pass thru - Rev IV
-Date: Mon, 24 Nov 2008 16:46:39 +0100
-Message-ID: <492ACC5F.8070004@linux.vnet.ibm.com>
-References: <1227043498.4949.21.camel@ogier>
+From: Grant Grundler <grundler@google.com>
+Subject: Re: Question regarding SAS controllers.
+Date: Mon, 24 Nov 2008 08:11:05 -0800
+Message-ID: <da824cf30811240811l416431f5kf56e0925f561342@mail.gmail.com>
+References: <alpine.DEB.1.10.0811221645250.707@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate7.uk.ibm.com ([195.212.29.140]:42039 "EHLO
-	mtagate7.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752225AbYKXPqm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Nov 2008 10:46:42 -0500
-Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
-	by mtagate7.uk.ibm.com (8.13.8/8.13.8) with ESMTP id mAOFkfT5246800
-	for <linux-scsi@vger.kernel.org>; Mon, 24 Nov 2008 15:46:41 GMT
-Received: from d06av01.portsmouth.uk.ibm.com (d06av01.portsmouth.uk.ibm.com [9.149.37.212])
-	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id mAOFkepp1560708
-	for <linux-scsi@vger.kernel.org>; Mon, 24 Nov 2008 15:46:40 GMT
-Received: from d06av01.portsmouth.uk.ibm.com (loopback [127.0.0.1])
-	by d06av01.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id mAOFkeYF032398
-	for <linux-scsi@vger.kernel.org>; Mon, 24 Nov 2008 15:46:40 GMT
-In-Reply-To: <1227043498.4949.21.camel@ogier>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753840AbYKXQLW@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.10.0811221645250.707@p34.internal.lan>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org, seokmann.ju@qlogic.com, andrew.vasquez@qlogic.com
 
-Hi James,
+On Sat, Nov 22, 2008 at 1:46 PM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+> Do any SAS controllers exist that are not RAID?
+>
+> Or to put it another way, if one wants to use SAS disks for example and NOT
+> export them as JBOD or use them as RAID, is there a normal controller?
 
-thanks for the rework, looks pretty good two me :)
-One first question below.
+Besides mptsas, there is mvsas (Marvell 6480 chip , IIRC).
 
-James Smart wrote:
-<snip>
-> +	/* fc_host Message Codes */
-> +#define FC_BSG_HST_ADD_RPORT		(FC_BSG_HST_MASK | 0x00000001)
-> +#define FC_BSG_HST_DEL_RPORT		(FC_BSG_HST_MASK | 0x00000002)
-> +#define FC_BSG_HST_ELS_NOLOGIN		(FC_BSG_HST_MASK | 0x00000003)
-> +#define FC_BSG_HST_VENDOR		(FC_BSG_HST_MASK | 0x000000FF)
-> +
+> Back in the days of regular SCSI you had SCSI controllers and SCSI raid
+> controllers, when searching for SAS controllers now, all that comes up is
+> hundreds of SAS-Raid controllers.
 
-Shouldn't we add FC_BSG_HST_CT_NOLOGIN as well?
-As far as I can see from looking over the patch (correct me when I am wrong),
-the way to issue a CT request now is to send an FC_BSG_HST_ADD_RPORT for the wka
-port in question (if not enumerated by the driver, which zfcp does not do), then
-send the FC_BSG_RPT_CT followed by a FC_BSG_HST_DEL_RPORT. I was under the
-impression the CT stuff was one of the main reasons to have devices for the
-fc_host. What do you think?
+Because lots of the windows server users demand HW RAID?
+And it's a "value add"; vendors can charge more money for the RAID cards.
 
-> +	/* fc_rport Message Codes */
-> +#define FC_BSG_RPT_ELS			(FC_BSG_RPT_MASK | 0x00000001)
-> +#define FC_BSG_RPT_CT			(FC_BSG_RPT_MASK | 0x00000002)
-> +
-</snip>
-
-Sven
+grant
