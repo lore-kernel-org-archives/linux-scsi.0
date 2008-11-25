@@ -1,501 +1,914 @@
-From: "Love, Robert W" <robert.w.love@intel.com>
-Subject: RE: [PATCH 2/3] libfc: A modular Fibre Channel library
-Date: Tue, 25 Nov 2008 13:47:47 -0700
-Message-ID: <273D38FBE7C6FE46A1689FCD014A0B8B27BB82AE@azsmsx505.amr.corp.intel.com>
-References: <20081118222051.2289.81361.stgit@fritz>
-	<20081118222111.2289.35843.stgit@fritz> <87tz9xh1o6.fsf@basil.nowhere.org>
+From: "Rhine, Jay \(Jay\)" <jrhine@alcatel-lucent.com>
+Subject: Devices going offline on Adaptec 29320 using driver AIC79XX after messages "Attempting to queue an ABORT message:CDB"
+Date: Tue, 25 Nov 2008 14:54:42 -0600
+Message-ID: <CA39D769C8FE694788CE376026984BAB0117D222@ILEXC1U01.ndc.lucent.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:18266 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752023AbYKYUsE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Nov 2008 15:48:04 -0500
-In-Reply-To: <87tz9xh1o6.fsf@basil.nowhere.org>
-Content-Language: en-US
+Received: from ihemail4.lucent.com ([135.245.0.39]:41329 "EHLO
+	ihemail4.lucent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751597AbYKYUyw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Nov 2008 15:54:52 -0500
+Received: from ilexp03.ndc.lucent.com (h135-3-39-50.lucent.com [135.3.39.50])
+	by ihemail4.lucent.com (8.13.8/IER-o) with ESMTP id mAPKsPgw021588
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Nov 2008 14:54:49 -0600 (CST)
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jgarzik@redhat.com" <jgarzik@redhat.com>, "james.smart@emulex.com" <james.smart@emulex.com>, "davem@davemloft.net" <davem@davemloft.net>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>, "jeykholt@cisco.com" <jeykholt@cisco.com>
+To: linux-scsi@vger.kernel.org
 
-Andi Kleen wrote:
-> Robert Love <robert.w.love@intel.com> writes:
->
-> A quick review. I'm not a SCSI layer expert, so it's
-> more general code comments.
->
-Thanks. I appreciate all reviews.
+Folks,
 
-> Could you perhaps give a brief design overview of the library
-> in the description?
->
-Sure. I'll put it in the description when I re-submit.
+	I'm having a problem with the devices on my Adaptec 29320 cards.
+My best guess is this a bug in the AIC79XX (and possible AIX7XXX) device
+driver, possibly releated to SMP.  However, I'm not really sure how to
+determine if that is really the case.  I've previosly posted this
+message 
+to the linux-kernel mailing list, but I think it got lost in the many
+messages on that list.  This problem has been really causing me havoc.  
+I would really appreciate any help / suggestions with this.
 
-It's fairly complicated, so even though I'm trying to be
-breif, this overview got a bit long. The library has 5 major
-layers/blocks- the EM, FCP, LP, RP, and disc. The EM is the
-Exchange Manager and it is used by each of the other four blocks.
-FCP is the mapping of SCSI commands to FC frames, it's the I/O
-path. The RP layer handles individual targets (i.e. remote ports).
-The LP block handles the host (or local port) for example, fabric
-login, registration with the directoy server, etc... The disc
-layer handles discovery, it queries the directoy server to find
-the targets/RPs that are in its zone.
+	Here's the scenario. I have an IBM System X 3400 server with 3
+Adaptec SCSI Cards - Adaptec 29320LPE PCIe Ultra320 SCSI adapter,
+Adaptec 29320ALP PCIx Ultra320 SCSI adapter, and Adaptec 2944 Ultra SCSI
+adapter (as well as some other cards unrelated to this problem - an LSI
+SAS Card, Emulex Fiber Channel Card, an Intel SATA Controller, and an
+Intel 4 Port Ethernet card).  The system has 2 Intel E5405 2.00GHz
+Quad-Core processors.  I'm running Centos 5.2.  This system is running
+in SMP mode.  I've seen this problem on the most recent Centos5.2
+kernels, 2.6.18-92.1.18.el5PAE, 2.6.18-92.1.17.el5PAE and 
+2.6.18-92.1.13.el5PAE.  I've also tried this on vanilla kernels 2.6.27 
+and 2.6.28-rc5 with the same result.  The logs in this email are from 
+the 2.6.18-92.1.13.el5PAE kernel (but they look the same on the other 
+kernels).
 
-The FC transport class already provides us some remote port
-functionality. It doesn't manage our RP state machine, but we
-interact with it to add/delete RPs from both sysfs, it's also
-what makes the SCSI-ml aware that there is storage available.
+	Currently I have 8 SCSI hard drives connected to each Adaptec
+29320 (one is PCIx and one is PCIe).  I find that after using these
+devices for a while (usually when doing massive data transfers), I will
+see the following message (fuller details below):
 
-We have some diagrams that might be helpful, but they haven't
-been refreshed in a few months. They're at:
-http://www.open-fcoe.org/openfc/wiki/index.php/Architecture
+Nov 5 20:06:11 xxx kernel: sd 32:0:1:0: Attempting to queue an ABORT
+message:CDB: 0x28 0x0 0x5 0x8b 0x89 0xf8 0x0 0x0
+0x2 0x0
+Nov 5 20:06:11 xxx kernel: scsi32: At time of recovery, card was not
+paused
+Nov 5 20:06:11 xxx kernel: >>>>>>>>>>>>>>>>>> Dump Card State Begins
+<<<<<<<<<<<<<<<<
 
-My incomplete ASCII representation looks like this.
+This would occur, in succession, for each device on the SCSI bus.
+Usually, the first time I saw this, the devices would recover after a
+few minutes.  The second time I see it, one or both of the buses would
+go down (I do belive, but I'm not 100% positive on this, that sometimes
+only one of the two SCSI buses will go down.)
 
----------------------------
-| FC Transport Class
----------------------------
-   ^
-   | (add/delete)
-   v
----------------------------
-| RP
----------------------------
-   ^                       ^
-   |    (targets)          | (directory server)
-   v                       |
---------------     |
-| Disc             |
---------------     |
-   ^                       |
-   |                       |
-   v                       v
----------------------------
-| LP
----------------------------
+Now, after this has occurred, I found that it was impossible to recover
+the drives (even hours afterward) by doing:
 
-The EM is in-use by each of the blocks drawn above.
+echo "scsi remove-single-device X 0 Y 0" > /proc/scsi/scsi
+echo "scsi add-single-device X 0 Y 0" > /proc/scsi/scsi
 
-The I/O path is pretty straight-forward, kind of silly to draw.
+I would in fact get the same error message in the logs after running the
+add-single-device. However, if I removed the module and reprobed, as
+follows, everything would come up fine and I could access the devices
+again:
 
--------------------------
-| SCSI-ml
--------------------------
-   ^
-   |
-   v
--------------------------
-| FCP
--------------------------
-   ^
-   |
-   v
--------------------------
-| EM
--------------------------
+rmmod aic79xx
+modprobe 
 
-> What it does, where it sits on the stack etc.? Doesn't need
-> to be very extensive, but should be understandable even
-> for people not intimate with the FCoE spec.
->
-So, libfc is an assist library, fcoe is the LLD. The stack looks
-roughly like this.
+This morning, I had another issue releted to this driver / controllers.
+When I checked the server this morning, it had Kernel Paniced with
+references to the AIC79XX driver!  Checking the logs, this occured an
+hour or so after the devices went offline during a copy test I was
+running.  I managed to screan capture the part of the panic on the
+screen via the built in "Remote Supervisor Adapter".  I've copied the
+text of the stack trace here (minus the addresses).  Note, that the
+panic seems to have occurred as a result of the AIC79XX driver handling
+an interrupt.
 
------------  --------------------
-| SCSI-ml |  | FC transport class
------------  --------------------
-   ^                    ^
-   |                    |
-   v                    v
----------------------------             -------------
-| FCoE                    | <- - -> | libfc     |
----------------------------             -------------
-   ^
-   |
-   v
---------------------------
-| netdev
---------------------------
+i8042_panic_blink
+panic
+die
+do_page_fault
+do_page_fault
+scrup
+do_page_fault
+error_code
+ahd_done [aic79xx]
+printk
+ahd_flush_quotfifo [aic79xx]
+ahd_search_qinfifo [aic79xx]
+find_busiest_group
+ahd_abort_scbs [aic79xx] 
+ahd_handle_devreset [aic79xx]
+ahd_handle_scsiint [aic79xx]
+ahd_linux_isr [aic79xx]
+handle_IRQ_event
+__do_IRQ
+do_IRQ
+common_interrupt
+mwait_idle
+cpu_idle
+
+One other interesting piece of information is that this same error
+message showed up on my other adaptec card (with the Sun Storedge A1000
+connected to it).
+
+Nov 6 04:09:01 xxx kernel: sd 6:0:5:0: Attempting to queue an ABORT
+message
+Nov 6 04:09:01 xxx kernel: CDB: 0x28 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x8 0x0
+Nov 6 04:09:01 xxx kernel: scsi6: At time of recovery, card was not
+paused
+
+Note, that I do not even currently have the right utilities to set this
+array up, so it is not being used. It is not mounted, and nothing is
+copying data from it.
+
+The fact that both SCSI buses have this same issue, and that remove and
+reprobing the module will fix the problem makes me suspect the kernel
+driver.  Also, seeing this same message on a different driver, but one
+that probably share much of the same codebase, points me in this
+direction.
+
+I have found one message on this list (from 2 year ago) which sounds
+like a similiar problem, but has not responses:
+http://marc.info/?l=linux-kernel&m=116593449901940&w=2
+
+Previously, I've asked a similiar question on the CentOS 5.2 Hardware
+forum, but have not seen any responses.  Since this may be driver
+related, I decided to ask this question here as well. 
+
+http://www.centos.org/modules/newbb/viewtopic.php?topic_id=17134&forum=3
+9
+
+I appreciate and help / suggestion people may have.  Also, if anyone can
+better decipher what this error message really means that would be
+helpful.
+
+Thanks!
+
+Jay
+
+System and Log Details follow,
+
+System kernel details- "Uname -a":
+Linux xxx 2.6.18-92.1.13.el5PAE #1 SMP Wed Sep 24 20:07:49 EDT 2008 i686
+i6 i386 GNU/Linux
+
+Here are the details of the cards on startup:
+
+# cat /var/log/messages | grep -i adaptec
+Nov 3 10:28:48 xxxxxxxxxx kernel: scsi6 : Adaptec AIC7XXX EISA/VLB/PCI
+SCSI HBA DRIVER, Rev 7.0
+Nov 3 10:28:48 xxxxxxxxxx kernel: <Adaptec 2944 Ultra SCSI adapter>
+Nov 3 10:28:50 xxxxxxxxxx kernel: scsi8 : Adaptec AIC79XX PCI-X SCSI HBA
+DRIVER, Rev 3.0
+Nov 3 10:28:50 xxxxxxxxxx kernel: <Adaptec 29320LPE PCIe Ultra320 SCSI
+adapter>
+Nov 3 10:28:50 xxxxxxxxxx kernel: scsi9 : Adaptec AIC79XX PCI-X SCSI HBA
+DRIVER, Rev 3.0
+Nov 3 10:28:50 xxxxxxxxxx kernel: <Adaptec 29320ALP PCIx Ultra320 SCSI
+adapter>
+
+# lspci | grep -i adaptec
+05:04.0 SCSI storage controller: Adaptec ASC-29320ALP U320 (rev 10)
+08:01.0 SCSI storage controller: Adaptec ASC-29320ALP U320 (rev 10)
+1c:01.0 SCSI storage controller: Adaptec AHA-2944UW / AIC-7884U (rev 01)
+
+# After setting the iu parameter to 0 in all of my drives, you can see
+the speed reduce to U160 from U320
+echo 0 > "/sys/class/spi_transport/target${PCI_TARGET}\:0\:$i/iu"
+
+Nov 6 07:52:22 xxx kernel: target34:0:1: FAST-160 WIDE SCSI 320.0 MB/s
+DT IU QAS RDSTRM RTI WRFLOW PCOMP (6.25 ns, offset 63)
+Nov 6 07:52:22 xxx kernel: target34:0:2: FAST-160 WIDE SCSI 320.0 MB/s
+DT IU QAS RDSTRM RTI WRFLOW PCOMP (6.25 ns, offset 63)
+Nov 6 07:52:22 xxx kernel: target34:0:3: FAST-160 WIDE SCSI 320.0 MB/s
+DT IU QAS RDSTRM RTI WRFLOW PCOMP (6.25 ns, offset 63)
+Nov 6 07:52:22 xxx kernel: target34:0:4: FAST-160 WIDE SCSI 320.0 MB/s
+DT IU QAS RDSTRM RTI WRFLOW PCOMP (6.25 ns, offset 63)
+Nov 6 07:52:22 xxx kernel: target34:0:5: FAST-160 WIDE SCSI 320.0 MB/s
+DT IU QAS RDSTRM RTI WRFLOW PCOMP (6.25 ns, offset 63)
+Nov 6 07:52:22 xxx kernel: target34:0:6: FAST-160 WIDE SCSI 320.0 MB/s
+DT IU QAS RDSTRM RTI WRFLOW PCOMP (6.25 ns, offset 63)
+Nov 6 07:52:22 xxx kernel: target34:0:8: FAST-160 WIDE SCSI 320.0 MB/s
+DT IU QAS RDSTRM RTI WRFLOW PCOMP (6.25 ns, offset 63)
+Nov 6 07:52:24 xxx kernel: target34:0:15: FAST-160 WIDE SCSI 320.0 MB/s
+DT IU QAS RDSTRM RTI WRFLOW PCOMP (6.25 ns, offset 63)
+Nov 6 07:52:25 xxx kernel: target34:0:8: FAST-80 WIDE SCSI 160.0 MB/s DT
+(12.5 ns, offset 63)
+Nov 6 07:52:25 xxx kernel: target34:0:6: FAST-80 WIDE SCSI 160.0 MB/s DT
+(12.5 ns, offset 63)
+Nov 6 07:52:25 xxx kernel: target34:0:5: FAST-80 WIDE SCSI 160.0 MB/s DT
+(12.5 ns, offset 63)
+Nov 6 07:52:25 xxx kernel: target34:0:15: FAST-80 WIDE SCSI 160.0 MB/s
+DT (12.5 ns, offset 63)
+Nov 6 07:52:26 xxx kernel: target34:0:3: FAST-80 WIDE SCSI 160.0 MB/s DT
+(12.5 ns, offset 63)
+Nov 6 07:52:26 xxx kernel: target34:0:1: FAST-80 WIDE SCSI 160.0 MB/s DT
+(12.5 ns, offset 63)
+Nov 6 07:52:26 xxx kernel: target34:0:4: FAST-80 WIDE SCSI 160.0 MB/s DT
+(12.5 ns, offset 63)
+Nov 6 07:52:26 xxx kernel: target34:0:2: FAST-80 WIDE SCSI 160.0 MB/s DT
+(12.5 ns, offset 63)
+
+# Here is a pretty complete snapshot of the error messages for one SCSI
+drive, note that this test has started at 13:21, so the first errors
+does not occur for nearly 7 hours.
+
+# Here's the first message in the logs for 32:0:1:0 (note this is
+originaly scsi9, but has been renamed by removing and adding back the
+kernel module 
+# This will repeat for the other 7 devices on the SCSI bus
+Nov 5 20:06:11 xxx kernel: sd 32:0:1:0: Attempting to queue an ABORT
+message:CDB: 0x28 0x0 0x5 0x8b 0x89 0xf8 0x0 0x0
+0x2 0x0
+Nov 5 20:06:11 xxx kernel: scsi32: At time of recovery, card was not
+paused
+Nov 5 20:06:11 xxx kernel: >>>>>>>>>>>>>>>>>> Dump Card State Begins
+<<<<<<<<<<<<<<<<<
+Nov 5 20:06:11 xxx kernel: scsi32: Dumping Card State at program address
+0x215 Mode 0x11
+Nov 5 20:06:11 xxx kernel: Card was paused
+Nov 5 20:06:11 xxx kernel: INTSTAT[0x0] SELOID[0x4] SELID[0x10]
+HS_MAILBOX[0x0]
+Nov 5 20:06:11 xxx kernel: INTCTL[0xc0] SEQINTSTAT[0x0] SAVED_MODE[0x11]
+DFFSTAT[0x19]
+Nov 5 20:06:11 xxx kernel: SCSISIGI[0x64] SCSIPHASE[0x0] SCSIBUS[0x0]
+LASTPHASE[0x60]
+Nov 5 20:06:11 xxx kernel: SCSISEQ0[0x0] SCSISEQ1[0x12] SEQCTL0[0x0]
+SEQINTCTL[0x0]
+Nov 5 20:06:11 xxx kernel: SEQ_FLAGS[0x20] SEQ_FLAGS2[0x4]
+QFREEZE_COUNT[0xf]
+
+Nov 5 20:06:11 xxx kernel: KERNEL_QFREEZE_COUNT[0xf]
+MK_MESSAGE_SCB[0xff00]
+Nov 5 20:06:11 xxx kernel: MK_MESSAGE_SCSIID[0xff] SSTAT0[0x0]
+SSTAT1[0x8]
+Nov 5 20:06:11 xxx kernel: SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0x0]
+SIMODE1[0xac]
+Nov 5 20:06:11 xxx kernel: LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0]
+LQOSTAT0[0x0]
+Nov 5 20:06:11 xxx kernel: LQOSTAT1[0x0] LQOSTAT2[0x0]
+Nov 5 20:06:11 xxx kernel:
+Nov 5 20:06:11 xxx kernel: SCB Count = 32 CMDS_PENDING = 26 LASTSCB 0x6
+CURRSCB 0x16 NEXTSCB 0xff00
+Nov 5 20:06:11 xxx kernel: qinstart = 33233 qinfifonext = 33233
+Nov 5 20:06:11 xxx kernel: QINFIFO:
+Nov 5 20:06:11 xxx kernel: WAITING_TID_QUEUES:
+Nov 5 20:06:11 xxx kernel: 1 ( 0x14 0x15 0xd 0x12 )
+Nov 5 20:06:11 xxx kernel: 5 ( 0x10 0x8 0x6 0x1a )
+Nov 5 20:06:11 xxx kernel: 6 ( 0x1f 0x0 0x9 0x11 )
+Nov 5 20:06:11 xxx kernel: 8 ( 0x1 0xc 0x2 0x3 )
+Nov 5 20:06:11 xxx kernel: 3 ( 0xe 0x17 0xb )
+Nov 5 20:06:11 xxx kernel: 15 ( 0x4 0x1b 0xa 0x18 )
+Nov 5 20:06:11 xxx kernel: 4 ( 0x13 0x19 )
+Nov 5 20:06:11 xxx kernel: Pending list:
+Nov 5 20:06:11 xxx kernel: 24 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0xf7]
+Nov 5 20:06:11 xxx kernel: 10 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0xf7]
+Nov 5 20:06:11 xxx kernel: 11 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x37]
+Nov 5 20:06:11 xxx kernel: 23 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x37]
+Nov 5 20:06:11 xxx kernel: 3 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x87]
+Nov 5 20:06:11 xxx kernel: 2 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x87]
+Nov 5 20:06:11 xxx kernel: 17 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x67]
+Nov 5 20:06:11 xxx kernel: 9 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x67]
+Nov 5 20:06:11 xxx kernel: 26 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x57]
+Nov 5 20:06:11 xxx kernel: 6 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x57]
+Nov 5 20:06:11 xxx kernel: 18 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x17]
+Nov 5 20:06:11 xxx kernel: 25 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x47]
+Nov 5 20:06:11 xxx kernel: 19 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x47]
+Nov 5 20:06:11 xxx kernel: 13 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x17]
+Nov 5 20:06:11 xxx kernel: 27 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0xf7]
+Nov 5 20:06:11 xxx kernel: 4 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0xf7]
+Nov 5 20:06:11 xxx kernel: 14 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x37]
+Nov 5 20:06:11 xxx kernel: 12 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x87]
+Nov 5 20:06:11 xxx kernel: 1 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x87]
+Nov 5 20:06:11 xxx kernel: 0 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x67]
+Nov 5 20:06:11 xxx kernel: 31 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x67]
+Nov 5 20:06:11 xxx kernel: 8 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x57]
+Nov 5 20:06:11 xxx kernel: 16 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x57]
+Nov 5 20:06:11 xxx kernel: 21 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x17]
+Nov 5 20:06:11 xxx kernel: 20 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x17]
+Nov 5 20:06:11 xxx kernel: 22 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x47]
+Nov 5 20:06:11 xxx kernel: Total 26
+Nov 5 20:06:11 xxx kernel: Kernel Free SCB list: 5 7 15 30 29 28
+Nov 5 20:06:11 xxx kernel: Sequencer Complete DMA-inprog list:
+Nov 5 20:06:11 xxx kernel: Sequencer Complete list:
+Nov 5 20:06:11 xxx kernel: Sequencer DMA-Up and Complete list:
+Nov 5 20:06:11 xxx kernel: Sequencer On QFreeze and Complete list:
+Nov 5 20:06:11 xxx kernel:
+Nov 5 20:06:11 xxx kernel:
+Nov 5 20:06:11 xxx kernel: scsi32: FIFO0 Free, LONGJMP == 0x8254, SCB
+0x0
+Nov 5 20:06:11 xxx kernel: SEQIMODE[0x3f] SEQINTSRC[0x0] DFCNTRL[0x0]
+DFSTATUS[0x89]
+Nov 5 20:06:11 xxx kernel: SG_CACHE_SHADOW[0x2] SG_STATE[0x0]
+DFFSXFRCTL[0x0]
+Nov 5 20:06:11 xxx kernel: SOFFCNT[0x0] MDFFSTAT[0x5] SHADDR = 0x00,
+SHCNT = 0x0
+Nov 5 20:06:11 xxx kernel: HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]
+Nov 5 20:06:11 xxx kernel:
+Nov 5 20:06:11 xxx kernel: scsi32: FIFO1 Active, LONGJMP == 0x81f2, SCB
+0x16
+Nov 5 20:06:11 xxx kernel: SEQIMODE[0x3f] SEQINTSRC[0x0] DFCNTRL[0x8]
+DFSTATUS[0x89]
+Nov 5 20:06:11 xxx kernel: SG_CACHE_SHADOW[0x3] SG_STATE[0x0]
+DFFSXFRCTL[0x0]
+Nov 5 20:06:11 xxx kernel: SOFFCNT[0x0] MDFFSTAT[0x14] SHADDR =
+0x024e4c000, SHCNT = 0x0
+Nov 5 20:06:11 xxx kernel: HADDR = 0x024e4c000, HCNT = 0x0 CCSGCTL[0x10]
+Nov 5 20:06:11 xxx kernel: LQIN: 0x8 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+Nov 5 20:06:11 xxx kernel: scsi32: LQISTATE = 0x0, LQOSTATE = 0x0,
+OPTIONMODE = 0x52
+Nov 5 20:06:11 xxx kernel: scsi32: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x2
+Nov 5 20:06:11 xxx kernel: scsi32: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
+Nov 5 20:06:11 xxx kernel: SIMODE0[0xc]
+Nov 5 20:06:11 xxx kernel: CCSCBCTL[0x4]
+Nov 5 20:06:11 xxx kernel: scsi32: REG0 == 0x5, SINDEX = 0x120, DINDEX =
+0x120
+Nov 5 20:06:11 xxx kernel: scsi32: SCBPTR == 0x16, SCB_NEXT == 0x13,
+SCB_NEXT2 == 0x14
+Nov 5 20:06:11 xxx kernel: CDB 28 0 6 80 1 89
+Nov 5 20:06:11 xxx kernel: STACK: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+Nov 5 20:06:11 xxx kernel: <<<<<<<<<<<<<<<<< Dump Card State Ends
+>>>>>>>>>>>>>>>>>>
+Nov 5 20:06:11 xxx kernel: scsi32:0:1:0: Cmd aborted from QINFIFO
+Nov 5 20:06:21 xxx kernel: sd 32:0:1:0: Attempting to queue an ABORT
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
+Nov 5 20:06:21 xxx kernel: scsi32: At time of recovery, card was not
+paused
+Nov 5 20:06:21 xxx kernel: >>>>>>>>>>>>>>>>>> Dump Card State Begins
+<<<<<<<<<<<<<<<<<
+Nov 5 20:06:21 xxx kernel: scsi32: Dumping Card State at program address
+0x215 Mode 0x11
+Nov 5 20:06:21 xxx kernel: Card was paused
+Nov 5 20:06:21 xxx kernel: INTSTAT[0x0] SELOID[0x4] SELID[0x10]
+HS_MAILBOX[0x0]
+Nov 5 20:06:21 xxx kernel: INTCTL[0xc0] SEQINTSTAT[0x0] SAVED_MODE[0x11]
+DFFSTAT[0x19]
+Nov 5 20:06:21 xxx kernel: SCSISIGI[0x64] SCSIPHASE[0x0] SCSIBUS[0x0]
+LASTPHASE[0x60]
+Nov 5 20:06:21 xxx kernel: SCSISEQ0[0x0] SCSISEQ1[0x12] SEQCTL0[0x0]
+SEQINTCTL[0x0]
+Nov 5 20:06:21 xxx kernel: SEQ_FLAGS[0x20] SEQ_FLAGS2[0x4]
+QFREEZE_COUNT[0xf]
+Nov 5 20:06:21 xxx kernel: KERNEL_QFREEZE_COUNT[0xf]
+MK_MESSAGE_SCB[0xff00]
+Nov 5 20:06:21 xxx kernel: MK_MESSAGE_SCSIID[0xff] SSTAT0[0x0]
+SSTAT1[0x8]
+Nov 5 20:06:21 xxx kernel: SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0x0]
+SIMODE1[0xac]
+Nov 5 20:06:21 xxx kernel: LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0]
+LQOSTAT0[0x0]
+Nov 5 20:06:21 xxx kernel: LQOSTAT1[0x0] LQOSTAT2[0x0]
+Nov 5 20:06:21 xxx kernel:
+Nov 5 20:06:21 xxx kernel: SCB Count = 32 CMDS_PENDING = 22 LASTSCB 0x6
+CURRSCB 0x16 NEXTSCB 0xff00
+Nov 5 20:06:21 xxx kernel: qinstart = 33233 qinfifonext = 33234
+Nov 5 20:06:21 xxx kernel: QINFIFO: 0x12
+Nov 5 20:06:21 xxx kernel: WAITING_TID_QUEUES:
+Nov 5 20:06:21 xxx kernel: 5 ( 0x10 0x8 0x6 0x1a )
+Nov 5 20:06:21 xxx kernel: 6 ( 0x1f 0x0 0x9 0x11 )
+Nov 5 20:06:21 xxx kernel: 8 ( 0x1 0xc 0x2 0x3 )
+Nov 5 20:06:21 xxx kernel: 3 ( 0xe 0x17 0xb )
+Nov 5 20:06:21 xxx kernel: 15 ( 0x4 0x1b 0xa 0x18 )
+Nov 5 20:06:21 xxx kernel: 4 ( 0x13 0x19 )
+
+Nov 5 20:06:21 xxx kernel: Pending list:
+Nov 5 20:06:21 xxx kernel: 18 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x17]
+Nov 5 20:06:21 xxx kernel: 24 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0xf7]
+Nov 5 20:06:21 xxx kernel: 10 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0xf7]
+Nov 5 20:06:21 xxx kernel: 11 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x37]
+Nov 5 20:06:21 xxx kernel: 23 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x37]
+Nov 5 20:06:21 xxx kernel: 3 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x87]
+Nov 5 20:06:21 xxx kernel: 2 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x87]
+Nov 5 20:06:21 xxx kernel: 17 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x67]
+Nov 5 20:06:21 xxx kernel: 9 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x67]
+Nov 5 20:06:21 xxx kernel: 26 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x57]
+Nov 5 20:06:21 xxx kernel: 6 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x57]
+Nov 5 20:06:21 xxx kernel: 25 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x47]
+Nov 5 20:06:21 xxx kernel: 19 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x47]
+Nov 5 20:06:21 xxx kernel: 27 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0xf7]
+Nov 5 20:06:21 xxx kernel: 4 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0xf7]
+Nov 5 20:06:21 xxx kernel: 14 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x37]
+Nov 5 20:06:21 xxx kernel: 12 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x87]
+Nov 5 20:06:21 xxx kernel: 1 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x87]
+Nov 5 20:06:21 xxx kernel: 0 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x67]
+Nov 5 20:06:21 xxx kernel: 31 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x67]
+Nov 5 20:06:21 xxx kernel: 8 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x57]
+Nov 5 20:06:21 xxx kernel: 16 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x57]
+Nov 5 20:06:21 xxx kernel: 22 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x47]
+Nov 5 20:06:21 xxx kernel: Total 23
+Nov 5 20:06:21 xxx kernel: Kernel Free SCB list: 13 21 20 5 7 15 30 29
+28
+Nov 5 20:06:21 xxx kernel: Sequencer Complete DMA-inprog list:
+Nov 5 20:06:21 xxx kernel: Sequencer Complete list:
+Nov 5 20:06:21 xxx kernel: Sequencer DMA-Up and Complete list:
+Nov 5 20:06:21 xxx kernel: Sequencer On QFreeze and Complete list:
+Nov 5 20:06:21 xxx kernel:
+Nov 5 20:06:21 xxx kernel:
+Nov 5 20:06:21 xxx kernel: scsi32: FIFO0 Free, LONGJMP == 0x8254, SCB
+0x0
+Nov 5 20:06:21 xxx kernel: SEQIMODE[0x3f] SEQINTSRC[0x0] DFCNTRL[0x0]
+DFSTATUS[0x89]
+Nov 5 20:06:21 xxx kernel: SG_CACHE_SHADOW[0x2] SG_STATE[0x0]
+DFFSXFRCTL[0x0]
+Nov 5 20:06:21 xxx kernel: SOFFCNT[0x0] MDFFSTAT[0x5] SHADDR = 0x00,
+SHCNT = 0x0
+Nov 5 20:06:21 xxx kernel: HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]
+Nov 5 20:06:21 xxx kernel:
+Nov 5 20:06:21 xxx kernel: scsi32: FIFO1 Active, LONGJMP == 0x81f2, SCB
+0x16
+Nov 5 20:06:21 xxx kernel: SEQIMODE[0x3f] SEQINTSRC[0x0] DFCNTRL[0x8]
+DFSTATUS[0x89]
+Nov 5 20:06:21 xxx kernel: SG_CACHE_SHADOW[0x3] SG_STATE[0x0]
+DFFSXFRCTL[0x0]
+Nov 5 20:06:21 xxx kernel: SOFFCNT[0x0] MDFFSTAT[0x14] SHADDR =
+0x024e4c000, SHCNT = 0x0
+Nov 5 20:06:21 xxx kernel: HADDR = 0x024e4c000, HCNT = 0x0 CCSGCTL[0x10]
+Nov 5 20:06:21 xxx kernel: LQIN: 0x8 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+Nov 5 20:06:21 xxx kernel: scsi32: LQISTATE = 0x0, LQOSTATE = 0x0,
+OPTIONMODE = 0x52
+Nov 5 20:06:21 xxx kernel: scsi32: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x2
+Nov 5 20:06:21 xxx kernel: scsi32: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
+Nov 5 20:06:21 xxx kernel: SIMODE0[0xc]
+Nov 5 20:06:21 xxx kernel: CCSCBCTL[0x4]
+Nov 5 20:06:21 xxx kernel: scsi32: REG0 == 0x5, SINDEX = 0x120, DINDEX =
+0x120
+Nov 5 20:06:21 xxx kernel: scsi32: SCBPTR == 0x16, SCB_NEXT == 0x13,
+SCB_NEXT2 == 0x14
+Nov 5 20:06:21 xxx kernel: CDB 28 0 6 80 1 89
+Nov 5 20:06:21 xxx kernel: STACK: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+Nov 5 20:06:21 xxx kernel: <<<<<<<<<<<<<<<<< Dump Card State Ends
+>>>>>>>>>>>>>>>>>>
+Nov 5 20:06:21 xxx kernel: scsi32:0:1:0: Cmd aborted from QINFIFO
+
+# Followed a few minutes later by:
+# This will repeat for the other 7 devices on the SCSI bus
+Nov 5 20:10:31 xxx kernel: sd 32:0:1:0: Attempting to queue a TARGET
+RESET message:CDB: 0x28 0x0 0x5 0x8b 0x89 0xf8 0x
+0 0x0 0x2 0x0
+Nov 5 20:10:31 xxx kernel: scsi32: Device reset code sleeping
+Nov 5 20:10:36 xxx kernel: scsi32: Device reset timer expired (active 1)
+Nov 5 20:10:36 xxx kernel: scsi32: Device reset returning 0x2003
+
+# Several hours later we see this message for the second time .... the
+drives are NOT going to recover this time
+# This will repeat for the other 7 devices on the SCSI bus
+Nov 5 23:08:39 xxx kernel: sd 32:0:1:0: Attempting to queue an ABORT
+message:CDB: 0x28 0x0 0x4 0x91 0x31 0xf8 0x0 0x0
+0x2 0x0
+Nov 5 23:08:39 xxx kernel: scsi32: At time of recovery, card was not
+paused
+Nov 5 23:08:39 xxx kernel: >>>>>>>>>>>>>>>>>> Dump Card State Begins
+<<<<<<<<<<<<<<<<<
+Nov 5 23:08:39 xxx kernel: scsi32: Dumping Card State at program address
+0x215 Mode 0x11
+Nov 5 23:08:39 xxx kernel: Card was paused
+Nov 5 23:08:39 xxx kernel: INTSTAT[0x0] SELOID[0x3] SELID[0x30]
+HS_MAILBOX[0x40]
+Nov 5 23:08:39 xxx kernel: INTCTL[0xc0] SEQINTSTAT[0x0] SAVED_MODE[0x11]
+DFFSTAT[0x19]
+Nov 5 23:08:39 xxx kernel: SCSISIGI[0x64] SCSIPHASE[0x0] SCSIBUS[0x0]
+LASTPHASE[0x60]
+Nov 5 23:08:39 xxx kernel: SCSISEQ0[0x0] SCSISEQ1[0x12] SEQCTL0[0x0]
+SEQINTCTL[0x0]
+Nov 5 23:08:39 xxx kernel: SEQ_FLAGS[0x20] SEQ_FLAGS2[0x4]
+QFREEZE_COUNT[0x17]
+Nov 5 23:08:39 xxx kernel: KERNEL_QFREEZE_COUNT[0x17]
+MK_MESSAGE_SCB[0xff00]
+Nov 5 23:08:39 xxx kernel: MK_MESSAGE_SCSIID[0xff] SSTAT0[0x0]
+SSTAT1[0x8]
+Nov 5 23:08:39 xxx kernel: SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0x0]
+SIMODE1[0xac]
+Nov 5 23:08:39 xxx kernel: LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0]
+LQOSTAT0[0x0]
+Nov 5 23:08:39 xxx kernel: LQOSTAT1[0x0] LQOSTAT2[0x0]
+Nov 5 23:08:39 xxx kernel:
+Nov 5 23:08:39 xxx kernel: SCB Count = 32 CMDS_PENDING = 7 LASTSCB 0x6
+CURRSCB 0x8 NEXTSCB 0xff00
+Nov 5 23:08:39 xxx kernel: qinstart = 61346 qinfifonext = 61348
+Nov 5 23:08:39 xxx kernel: QINFIFO: 0x1 0xd
+Nov 5 23:08:39 xxx kernel: WAITING_TID_QUEUES:
+Nov 5 23:08:39 xxx kernel: 1 ( 0x13 0x17 0x1b 0x2 )
+Nov 5 23:08:39 xxx kernel: 5 ( 0x14 0x16 )
+Nov 5 23:08:39 xxx kernel: Pending list:
+Nov 5 23:08:39 xxx kernel: 13 FIFO_USE[0x0] SCB_CONTROL[0x68]
+SCB_SCSIID[0x57]
+Nov 5 23:08:39 xxx kernel: 1 FIFO_USE[0x0] SCB_CONTROL[0x68]
+SCB_SCSIID[0x57]
+Nov 5 23:08:39 xxx kernel: 2 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x17]
+Nov 5 23:08:39 xxx kernel: 27 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x17]
+Nov 5 23:08:39 xxx kernel: 22 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x57]
+Nov 5 23:08:39 xxx kernel: 20 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x57]
+Nov 5 23:08:39 xxx kernel: 23 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x17]
+Nov 5 23:08:39 xxx kernel: 19 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x17]
+Nov 5 23:08:39 xxx kernel: 8 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x37]
+Nov 5 23:08:39 xxx kernel: Total 9
+Nov 5 23:08:39 xxx kernel: Kernel Free SCB list: 26 17 0 15 9 6 21 7 3
+31 4 14 12 24 11 25 18 16 10 5 30 29 28
+Nov 5 23:08:39 xxx kernel: Sequencer Complete DMA-inprog list:
+Nov 5 23:08:39 xxx kernel: Sequencer Complete list:
+Nov 5 23:08:39 xxx kernel: Sequencer DMA-Up and Complete list:
+Nov 5 23:08:39 xxx kernel: Sequencer On QFreeze and Complete list:
+Nov 5 23:08:39 xxx kernel:
+Nov 5 23:08:39 xxx kernel:
+Nov 5 23:08:39 xxx kernel: scsi32: FIFO0 Free, LONGJMP == 0x8054, SCB
+0x0
+Nov 5 23:08:39 xxx kernel: SEQIMODE[0x3f] SEQINTSRC[0x0] DFCNTRL[0x0]
+DFSTATUS[0x89]
+Nov 5 23:08:39 xxx kernel: SG_CACHE_SHADOW[0x2] SG_STATE[0x0]
+DFFSXFRCTL[0x0]
+Nov 5 23:08:39 xxx kernel: SOFFCNT[0x0] MDFFSTAT[0x5] SHADDR = 0x00,
+SHCNT = 0x0
+Nov 5 23:08:39 xxx kernel: HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]
+Nov 5 23:08:39 xxx kernel:
+Nov 5 23:08:39 xxx kernel: scsi32: FIFO1 Active, LONGJMP == 0x81f2, SCB
+0x8
+Nov 5 23:08:39 xxx kernel: SEQIMODE[0x3f] SEQINTSRC[0x0] DFCNTRL[0x8]
+DFSTATUS[0x89]
+Nov 5 23:08:39 xxx kernel: SG_CACHE_SHADOW[0x3] SG_STATE[0x0]
+DFFSXFRCTL[0x0]
+Nov 5 23:08:39 xxx kernel: SOFFCNT[0x0] MDFFSTAT[0x14] SHADDR =
+0x0275b1000, SHCNT = 0x0
+Nov 5 23:08:39 xxx kernel: HADDR = 0x0275b1000, HCNT = 0x0 CCSGCTL[0x10]
+Nov 5 23:08:39 xxx kernel: LQIN: 0x8 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+Nov 5 23:08:39 xxx kernel: scsi32: LQISTATE = 0x0, LQOSTATE = 0x0,
+OPTIONMODE = 0x52
+Nov 5 23:08:39 xxx kernel: scsi32: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x2
+Nov 5 23:08:39 xxx kernel: scsi32: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
+Nov 5 23:08:39 xxx kernel: SIMODE0[0xc]
+Nov 5 23:08:39 xxx kernel: CCSCBCTL[0x4]
+Nov 5 23:08:39 xxx kernel: scsi32: REG0 == 0x5, SINDEX = 0x102, DINDEX =
+0x104
+Nov 5 23:08:39 xxx kernel: scsi32: SCBPTR == 0x8, SCB_NEXT == 0xb,
+SCB_NEXT2 == 0xc
+Nov 5 23:08:39 xxx kernel: CDB 28 0 5 80 1 91
+Nov 5 23:08:39 xxx kernel: STACK: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+Nov 5 23:08:39 xxx kernel: <<<<<<<<<<<<<<<<< Dump Card State Ends
+>>>>>>>>>>>>>>>>>>
+Nov 5 23:08:39 xxx kernel: scsi32:0:1:0: Cmd aborted from QINFIFO
+Nov 5 23:08:49 xxx kernel: sd 32:0:1:0: Attempting to queue an ABORT
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
+Nov 5 23:08:49 xxx kernel: scsi32: At time of recovery, card was not
+paused
+Nov 5 23:08:49 xxx kernel: >>>>>>>>>>>>>>>>>> Dump Card State Begins
+<<<<<<<<<<<<<<<<<
+Nov 5 23:08:49 xxx kernel: scsi32: Dumping Card State at program address
+0x215 Mode 0x11
+Nov 5 23:08:49 xxx kernel: Card was paused
+Nov 5 23:08:49 xxx kernel: INTSTAT[0x0] SELOID[0x3] SELID[0x30]
+HS_MAILBOX[0x40]
+Nov 5 23:08:49 xxx kernel: INTCTL[0xc0] SEQINTSTAT[0x0] SAVED_MODE[0x11]
+DFFSTAT[0x19]
+Nov 5 23:08:49 xxx kernel: SCSISIGI[0x64] SCSIPHASE[0x0] SCSIBUS[0x0]
+LASTPHASE[0x60]
+Nov 5 23:08:49 xxx kernel: SCSISEQ0[0x0] SCSISEQ1[0x12] SEQCTL0[0x0]
+SEQINTCTL[0x0]
+Nov 5 23:08:49 xxx kernel: SEQ_FLAGS[0x20] SEQ_FLAGS2[0x4]
+QFREEZE_COUNT[0x17]
+Nov 5 23:08:49 xxx kernel: KERNEL_QFREEZE_COUNT[0x17]
+MK_MESSAGE_SCB[0xff00]
+Nov 5 23:08:49 xxx kernel: MK_MESSAGE_SCSIID[0xff] SSTAT0[0x0]
+SSTAT1[0x8]
+Nov 5 23:08:49 xxx kernel: SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0x0]
+SIMODE1[0xac]
+Nov 5 23:08:49 xxx kernel: LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0]
+LQOSTAT0[0x0]
+Nov 5 23:08:49 xxx kernel: LQOSTAT1[0x0] LQOSTAT2[0x0]
+Nov 5 23:08:49 xxx kernel:
+Nov 5 23:08:49 xxx kernel: SCB Count = 32 CMDS_PENDING = 3 LASTSCB 0x6
+CURRSCB 0x8 NEXTSCB 0xff00
+Nov 5 23:08:49 xxx kernel: qinstart = 61346 qinfifonext = 61349
+Nov 5 23:08:49 xxx kernel: QINFIFO: 0x1 0xd 0x2
+Nov 5 23:08:49 xxx kernel: WAITING_TID_QUEUES:
+Nov 5 23:08:49 xxx kernel: 5 ( 0x14 0x16 )
+Nov 5 23:08:49 xxx kernel: Pending list:
+Nov 5 23:08:49 xxx kernel: 2 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x17]
+Nov 5 23:08:49 xxx kernel: 13 FIFO_USE[0x0] SCB_CONTROL[0x68]
+SCB_SCSIID[0x57]
+Nov 5 23:08:49 xxx kernel: 1 FIFO_USE[0x0] SCB_CONTROL[0x68]
+SCB_SCSIID[0x57]
+Nov 5 23:08:49 xxx kernel: 22 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x57]
+Nov 5 23:08:49 xxx kernel: 20 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x57]
+Nov 5 23:08:49 xxx kernel: 8 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x37]
+Nov 5 23:08:49 xxx kernel: Total 6
+Nov 5 23:08:49 xxx kernel: Kernel Free SCB list: 27 23 19 26 17 0 15 9 6
+21 7 3 31 4 14 12 24 11 25 18 16 10 5 30 29 2
+8
+Nov 5 23:08:49 xxx kernel: Sequencer Complete DMA-inprog list:
+Nov 5 23:08:49 xxx kernel: Sequencer Complete list:
+Nov 5 23:08:49 xxx kernel: Sequencer DMA-Up and Complete list:
+Nov 5 23:08:49 xxx kernel: Sequencer On QFreeze and Complete list:
+Nov 5 23:08:49 xxx kernel:
+Nov 5 23:08:49 xxx kernel:
+Nov 5 23:08:49 xxx kernel: scsi32: FIFO0 Free, LONGJMP == 0x8054, SCB
+0x0
+Nov 5 23:08:49 xxx kernel: SEQIMODE[0x3f] SEQINTSRC[0x0] DFCNTRL[0x0]
+DFSTATUS[0x89]
+Nov 5 23:08:49 xxx kernel: SG_CACHE_SHADOW[0x2] SG_STATE[0x0]
+DFFSXFRCTL[0x0]
+Nov 5 23:08:49 xxx kernel: SOFFCNT[0x0] MDFFSTAT[0x5] SHADDR = 0x00,
+SHCNT = 0x0
+Nov 5 23:08:49 xxx kernel: HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]
+Nov 5 23:08:49 xxx kernel:
+Nov 5 23:08:49 xxx kernel: scsi32: FIFO1 Active, LONGJMP == 0x81f2, SCB
+0x8
+Nov 5 23:08:49 xxx kernel: SEQIMODE[0x3f] SEQINTSRC[0x0] DFCNTRL[0x8]
+DFSTATUS[0x89]
+Nov 5 23:08:49 xxx kernel: SG_CACHE_SHADOW[0x3] SG_STATE[0x0]
+DFFSXFRCTL[0x0]
+Nov 5 23:08:49 xxx kernel: SOFFCNT[0x0] MDFFSTAT[0x14] SHADDR =
+0x0275b1000, SHCNT = 0x0
+Nov 5 23:08:49 xxx kernel: HADDR = 0x0275b1000, HCNT = 0x0 CCSGCTL[0x10]
+Nov 5 23:08:49 xxx kernel: LQIN: 0x8 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+Nov 5 23:08:49 xxx kernel: scsi32: LQISTATE = 0x0, LQOSTATE = 0x0,
+OPTIONMODE = 0x52
+Nov 5 23:08:49 xxx kernel: scsi32: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x2
+Nov 5 23:08:49 xxx kernel: scsi32: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
+Nov 5 23:08:49 xxx kernel: SIMODE0[0xc]
+Nov 5 23:08:49 xxx kernel: CCSCBCTL[0x4]
+Nov 5 23:08:49 xxx kernel: scsi32: REG0 == 0x5, SINDEX = 0x102, DINDEX =
+0x104
+Nov 5 23:08:49 xxx kernel: scsi32: SCBPTR == 0x8, SCB_NEXT == 0xb,
+SCB_NEXT2 == 0xc
+Nov 5 23:08:49 xxx kernel: CDB 28 0 5 80 1 91
+Nov 5 23:08:49 xxx kernel: STACK: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+Nov 5 23:08:49 xxx kernel: <<<<<<<<<<<<<<<<< Dump Card State Ends
+>>>>>>>>>>>>>>>>>>
+Nov 5 23:08:49 xxx kernel: scsi32:0:1:0: Cmd aborted from QINFIFO
+Nov 5 23:08:49 xxx kernel: sd 32:0:1:0: Attempting to queue an ABORT
+message:CDB: 0x28 0x0 0x4 0x91 0x31 0xfa 0x0 0x0
+0xfe 0x0
+Nov 5 23:08:49 xxx kernel: sd 32:0:1:0: Command not found
+Nov 5 23:08:59 xxx kernel: sd 32:0:1:0: Attempting to queue an ABORT
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
+Nov 5 23:08:59 xxx kernel: scsi32: At time of recovery, card was not
+paused
+Nov 5 23:08:59 xxx kernel: >>>>>>>>>>>>>>>>>> Dump Card State Begins
+<<<<<<<<<<<<<<<<<
+Nov 5 23:08:59 xxx kernel: scsi32: Dumping Card State at program address
+0x215 Mode 0x11
+Nov 5 23:08:59 xxx kernel: Card was paused
+Nov 5 23:08:59 xxx kernel: INTSTAT[0x0] SELOID[0x3] SELID[0x30]
+HS_MAILBOX[0x40]
+Nov 5 23:08:59 xxx kernel: INTCTL[0xc0] SEQINTSTAT[0x0] SAVED_MODE[0x11]
+DFFSTAT[0x19]
+Nov 5 23:08:59 xxx kernel: SCSISIGI[0x64] SCSIPHASE[0x0] SCSIBUS[0x0]
+LASTPHASE[0x60]
+Nov 5 23:08:59 xxx kernel: SCSISEQ0[0x0] SCSISEQ1[0x12] SEQCTL0[0x0]
+SEQINTCTL[0x0]
+Nov 5 23:08:59 xxx kernel: SEQ_FLAGS[0x20] SEQ_FLAGS2[0x4]
+QFREEZE_COUNT[0x17]
+Nov 5 23:08:59 xxx kernel: KERNEL_QFREEZE_COUNT[0x17]
+MK_MESSAGE_SCB[0xff00]
+Nov 5 23:08:59 xxx kernel: MK_MESSAGE_SCSIID[0xff] SSTAT0[0x0]
+SSTAT1[0x8]
+Nov 5 23:08:59 xxx kernel: SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0x0]
+SIMODE1[0xac]
+Nov 5 23:08:59 xxx kernel: LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0]
+LQOSTAT0[0x0]
+Nov 5 23:08:59 xxx kernel: LQOSTAT1[0x0] LQOSTAT2[0x0]
+Nov 5 23:08:59 xxx kernel:
+Nov 5 23:08:59 xxx kernel: SCB Count = 32 CMDS_PENDING = 3 LASTSCB 0x6
+CURRSCB 0x8 NEXTSCB 0xff00
+Nov 5 23:08:59 xxx kernel: qinstart = 61346 qinfifonext = 61349
+Nov 5 23:08:59 xxx kernel: QINFIFO: 0x1 0xd 0x2
+Nov 5 23:08:59 xxx kernel: WAITING_TID_QUEUES:
+Nov 5 23:08:59 xxx kernel: 5 ( 0x14 0x16 )
+Nov 5 23:08:59 xxx kernel: Pending list:
+Nov 5 23:08:59 xxx kernel: 2 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x17]
+Nov 5 23:08:59 xxx kernel: 13 FIFO_USE[0x0] SCB_CONTROL[0x68]
+SCB_SCSIID[0x57]
+Nov 5 23:08:59 xxx kernel: 1 FIFO_USE[0x0] SCB_CONTROL[0x68]
+SCB_SCSIID[0x57]
+Nov 5 23:08:59 xxx kernel: 22 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x57]
+Nov 5 23:08:59 xxx kernel: 20 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x57]
+Nov 5 23:08:59 xxx kernel: 8 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x37]
+Nov 5 23:08:59 xxx kernel: Total 6
+Nov 5 23:08:59 xxx kernel: Kernel Free SCB list: 27 23 19 26 17 0 15 9 6
+21 7 3 31 4 14 12 24 11 25 18 16 10 5 30 29 2
+8
+Nov 5 23:08:59 xxx kernel: Sequencer Complete DMA-inprog list:
+Nov 5 23:08:59 xxx kernel: Sequencer Complete list:
+Nov 5 23:08:59 xxx kernel: Sequencer DMA-Up and Complete list:
+Nov 5 23:08:59 xxx kernel: Sequencer On QFreeze and Complete list:
+Nov 5 23:08:59 xxx kernel:
+Nov 5 23:08:59 xxx kernel:
+Nov 5 23:08:59 xxx kernel: scsi32: FIFO0 Free, LONGJMP == 0x8054, SCB
+0x0
+Nov 5 23:08:59 xxx kernel: SEQIMODE[0x3f] SEQINTSRC[0x0] DFCNTRL[0x0]
+DFSTATUS[0x89]
+Nov 5 23:08:59 xxx kernel: SG_CACHE_SHADOW[0x2] SG_STATE[0x0]
+DFFSXFRCTL[0x0]
+Nov 5 23:08:59 xxx kernel: SOFFCNT[0x0] MDFFSTAT[0x5] SHADDR = 0x00,
+SHCNT = 0x0
+Nov 5 23:08:59 xxx kernel: HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]
+Nov 5 23:08:59 xxx kernel:
+Nov 5 23:08:59 xxx kernel: scsi32: FIFO1 Active, LONGJMP == 0x81f2, SCB
+0x8
+Nov 5 23:08:59 xxx kernel: SEQIMODE[0x3f] SEQINTSRC[0x0] DFCNTRL[0x8]
+DFSTATUS[0x89]
+Nov 5 23:08:59 xxx kernel: SG_CACHE_SHADOW[0x3] SG_STATE[0x0]
+DFFSXFRCTL[0x0]
+Nov 5 23:08:59 xxx kernel: SOFFCNT[0x0] MDFFSTAT[0x14] SHADDR =
+0x0275b1000, SHCNT = 0x0
+Nov 5 23:08:59 xxx kernel: HADDR = 0x0275b1000, HCNT = 0x0 CCSGCTL[0x10]
+Nov 5 23:08:59 xxx kernel: LQIN: 0x8 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+Nov 5 23:08:59 xxx kernel: scsi32: LQISTATE = 0x0, LQOSTATE = 0x0,
+OPTIONMODE = 0x52
+Nov 5 23:08:59 xxx kernel: scsi32: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x2
+Nov 5 23:08:59 xxx kernel: scsi32: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
+Nov 5 23:08:59 xxx kernel: SIMODE0[0xc]
+Nov 5 23:08:59 xxx kernel: CCSCBCTL[0x4]
+Nov 5 23:08:59 xxx kernel: scsi32: REG0 == 0x5, SINDEX = 0x102, DINDEX =
+0x104
+Nov 5 23:08:59 xxx kernel: scsi32: SCBPTR == 0x8, SCB_NEXT == 0xb,
+SCB_NEXT2 == 0xc
+Nov 5 23:08:59 xxx kernel: CDB 28 0 5 80 1 91
+Nov 5 23:08:59 xxx kernel: STACK: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+Nov 5 23:08:59 xxx kernel: <<<<<<<<<<<<<<<<< Dump Card State Ends
+>>>>>>>>>>>>>>>>>>
+Nov 5 23:08:59 xxx kernel: scsi32:0:1:0: Cmd aborted from QINFIFO
+Nov 5 23:08:59 xxx kernel: sd 32:0:5:0: Attempting to queue an ABORT
+message:CDB: 0x28 0x0 0x5 0x44 0xbf 0x0 0x0 0x0 0
+x8 0x0
+Nov 5 23:08:59 xxx kernel: scsi32: At time of recovery, card was not
+paused
+Nov 5 23:08:59 xxx kernel: >>>>>>>>>>>>>>>>>> Dump Card State Begins
+<<<<<<<<<<<<<<<<<
+Nov 5 23:08:59 xxx kernel: scsi32: Dumping Card State at program address
+0x215 Mode 0x11
+Nov 5 23:08:59 xxx kernel: Card was paused
+Nov 5 23:08:59 xxx kernel: INTSTAT[0x0] SELOID[0x3] SELID[0x30]
+HS_MAILBOX[0x40]
+Nov 5 23:08:59 xxx kernel: INTCTL[0xc0] SEQINTSTAT[0x0] SAVED_MODE[0x11]
+DFFSTAT[0x19]
+Nov 5 23:08:59 xxx kernel: SCSISIGI[0x64] SCSIPHASE[0x0] SCSIBUS[0x0]
+LASTPHASE[0x60]
+Nov 5 23:08:59 xxx kernel: SCSISEQ0[0x0] SCSISEQ1[0x12] SEQCTL0[0x0]
+SEQINTCTL[0x0]
+Nov 5 23:08:59 xxx kernel: SEQ_FLAGS[0x20] SEQ_FLAGS2[0x4]
+QFREEZE_COUNT[0x17]
+Nov 5 23:08:59 xxx kernel: KERNEL_QFREEZE_COUNT[0x17]
+MK_MESSAGE_SCB[0xff00]
+Nov 5 23:08:59 xxx kernel: MK_MESSAGE_SCSIID[0xff] SSTAT0[0x0]
+SSTAT1[0x8]
+Nov 5 23:08:59 xxx kernel: SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0x0]
+SIMODE1[0xac]
+Nov 5 23:08:59 xxx kernel: LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0]
+LQOSTAT0[0x0]
+Nov 5 23:08:59 xxx kernel: LQOSTAT1[0x0] LQOSTAT2[0x0]
+Nov 5 23:08:59 xxx kernel:
+Nov 5 23:08:59 xxx kernel: SCB Count = 32 CMDS_PENDING = 3 LASTSCB 0x6
+CURRSCB 0x8 NEXTSCB 0xff00
+Nov 5 23:08:59 xxx kernel: qinstart = 61346 qinfifonext = 61348
+Nov 5 23:08:59 xxx kernel: QINFIFO: 0x1 0xd
+Nov 5 23:08:59 xxx kernel: WAITING_TID_QUEUES:
+Nov 5 23:08:59 xxx kernel: 5 ( 0x14 0x16 )
+Nov 5 23:08:59 xxx kernel: Pending list:
+Nov 5 23:08:59 xxx kernel: 13 FIFO_USE[0x0] SCB_CONTROL[0x68]
+SCB_SCSIID[0x57]
+Nov 5 23:08:59 xxx kernel: 1 FIFO_USE[0x0] SCB_CONTROL[0x68]
+SCB_SCSIID[0x57]
+Nov 5 23:08:59 xxx kernel: 22 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x57]
+Nov 5 23:08:59 xxx kernel: 20 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x57]
+Nov 5 23:08:59 xxx kernel: 8 FIFO_USE[0x0] SCB_CONTROL[0x60]
+SCB_SCSIID[0x37]
+Nov 5 23:08:59 xxx kernel: Total 5
+Nov 5 23:08:59 xxx kernel: Kernel Free SCB list: 2 27 23 19 26 17 0 15 9
+6 21 7 3 31 4 14 12 24 11 25 18 16 10 5 30 29
+28
+Nov 5 23:08:59 xxx kernel: Sequencer Complete DMA-inprog list:
+Nov 5 23:08:59 xxx kernel: Sequencer Complete list:
+Nov 5 23:08:59 xxx kernel: Sequencer DMA-Up and Complete list:
+Nov 5 23:08:59 xxx kernel: Sequencer On QFreeze and Complete list:
+Nov 5 23:08:59 xxx kernel:
+Nov 5 23:08:59 xxx kernel:
+Nov 5 23:08:59 xxx kernel: scsi32: FIFO0 Free, LONGJMP == 0x8054, SCB
+0x0
+Nov 5 23:08:59 xxx kernel: SEQIMODE[0x3f] SEQINTSRC[0x0] DFCNTRL[0x0]
+DFSTATUS[0x89]
+Nov 5 23:08:59 xxx kernel: SG_CACHE_SHADOW[0x2] SG_STATE[0x0]
+DFFSXFRCTL[0x0]
+Nov 5 23:08:59 xxx kernel: SOFFCNT[0x0] MDFFSTAT[0x5] SHADDR = 0x00,
+SHCNT = 0x0
+Nov 5 23:08:59 xxx kernel: HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]
+Nov 5 23:08:59 xxx kernel:
+Nov 5 23:08:59 xxx kernel: scsi32: FIFO1 Active, LONGJMP == 0x81f2, SCB
+0x8
+Nov 5 23:08:59 xxx kernel: SEQIMODE[0x3f] SEQINTSRC[0x0] DFCNTRL[0x8]
+DFSTATUS[0x89]
+Nov 5 23:08:59 xxx kernel: SG_CACHE_SHADOW[0x3] SG_STATE[0x0]
+DFFSXFRCTL[0x0]
+Nov 5 23:08:59 xxx kernel: SOFFCNT[0x0] MDFFSTAT[0x14] SHADDR =
+0x0275b1000, SHCNT = 0x0
+Nov 5 23:08:59 xxx kernel: HADDR = 0x0275b1000, HCNT = 0x0 CCSGCTL[0x10]
+Nov 5 23:08:59 xxx kernel: LQIN: 0x8 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+Nov 5 23:08:59 xxx kernel: scsi32: LQISTATE = 0x0, LQOSTATE = 0x0,
+OPTIONMODE = 0x52
+Nov 5 23:08:59 xxx kernel: scsi32: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x2
+Nov 5 23:08:59 xxx kernel: scsi32: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
+Nov 5 23:08:59 xxx kernel: SIMODE0[0xc]
+Nov 5 23:08:59 xxx kernel: CCSCBCTL[0x4]
+Nov 5 23:08:59 xxx kernel: scsi32: REG0 == 0x5, SINDEX = 0x102, DINDEX =
+0x104
+Nov 5 23:08:59 xxx kernel: scsi32: SCBPTR == 0x8, SCB_NEXT == 0xb,
+SCB_NEXT2 == 0xc
+Nov 5 23:08:59 xxx kernel: CDB 28 0 5 80 1 91
+Nov 5 23:08:59 xxx kernel: STACK: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+Nov 5 23:08:59 xxx kernel: <<<<<<<<<<<<<<<<< Dump Card State Ends
+>>>>>>>>>>>>>>>>>>
+
+# This will be followed by this again
+# This will repeat for the other 7 devices on the SCSI bus
+Nov 5 23:11:39 xxx kernel: sd 32:0:1:0: Attempting to queue a TARGET
+RESET message:CDB: 0x28 0x0 0x4 0x91 0x31 0xf8 0x
+0 0x0 0x2 0x0
+Nov 5 23:11:39 xxx kernel: scsi32: Device reset code sleeping
+Nov 5 23:11:44 xxx kernel: scsi32: Device reset timer expired (active 1)
+Nov 5 23:11:44 xxx kernel: scsi32: Device reset returning 0x2003
+
+# Finaly the device will go offline
+# This will repeat for the other 7 devices on the SCSI bus
+Nov 5 23:16:24 xxx kernel: sd 32:0:1:0: scsi: Device offlined - not
+ready after error recovery 
+
+----
+Jay Rhine, CISSP
+Email:  jrhine@alcatel-lucent.com
 
 
-fcoe is the LLD to the SCSI-ml and it allocates the scsi_host.
-When allocating the scsi_host it requests some memory for the
-fc_lport (as well as a fcoe structure) and then uses the libfc
-state machine to login to the fabric and register with the
-necessary entities. This process requires the lport to start a
-fc_rport for the directory server (we must be logged in to do
-discovery). Once that has occurred we start discovery which
-queries the directory server and returns us a list of targets.
-We create a fc_rport for each of those targets and have the RP
-layer log us into each of those targets. Once we're logged into
-a target we "add" it to the transport layer. It show up in sysfs
-and the SCSI-ml begins querying it (I/O).
-
-We've been trying to make libfc as flexible as possible as we
-expect a variety of LLDs to use it eventually. Users could be
-traditional FC HBAs, SW only FCoE HBAs or offloaded FC/FCoE HBAs.
-Therefore each block (EM, FCP, RP, LP, disc) can be implemented
-by libfc or by a LLD. Our transport template in libfc.h defines
-all of the transition points between each of these blocks so that
-a LLD that doesn't want to use the library provided block can
-just assign its own functions in the template before starting the
-library.
-
-For libfc we've also added an interface at the FCP layer to allow
-LLDs to partially use that layer. This interface allows the
-library to do the SCSI->FC mapping and then pass the FCP command
-down to the LLD. A mini FC framing mini-library, in fc_encode.h
-and an ELS/CT interface is also available.
-
-For FCoE there has been recent work to support FCoE HBAs that
-offload various functionality.
-
->> +#define FC_DISC_RETRY_LIMIT 3       /* max retries */
->> +#define FC_DISC_RETRY_DELAY 500UL   /* (msecs) delay */
->
-> Define is not used?
->
-Yeah, I think you caught this below. I will fix it.
-
->> +
->> +#define     FC_DISC_DELAY           3
->> +
->> +static int fc_disc_debug;
->> +
->> +#define FC_DEBUG_DISC(fmt...)                       \
->> +    do {                                    \
->> +            if (fc_disc_debug)              \
->> +                    FC_DBG(fmt);            \
->> +    } while (0)
->
-> In 2.6.28 there is dynamic_printk.h now to handle this.
->
-Excellent, we have this block in a few places. I'll change this.
-
->
->> +
->> +static struct mutex         disc_list_lock;
->> +static struct list_head             disc_list;
->> +
->> +struct fc_disc {
->> +    unsigned char           retry_count;
->> +    unsigned char           delay;
->> +    unsigned char           pending;
->> +    unsigned char           requested;
->> +    unsigned short          seq_count;
->> +    unsigned char           buf_len;
->> +    enum fc_disc_event      event;
->> +
->> +    void (*disc_callback)(struct fc_lport *,
->> +                          enum fc_disc_event);
->
-> While it may seem excessive for a single callback
-> the tend is towards separate ->ops structures. They
-> have the advantage that they can be made const
-> which has at least some theoretical security advantages.
-> Also callback numbers tend to grow over time.
->
->> +/**
->> + * fc_disc_lookup_rport - lookup a remote port by port_id
->> + * @lport: Fibre Channel host port instance
->> + * @port_id: remote port port_id to match
->> + */
->> +struct fc_rport *fc_disc_lookup_rport(const struct fc_lport *lport,
->> +                                  u32 port_id) +{
->> +    struct fc_disc *disc;
->> +    struct fc_rport *rport, *found = NULL;
->> +    struct fc_rport_libfc_priv *rdata;
->> +    int disc_found = 0;
->> +
->> +    mutex_lock(&disc_list_lock);
->> +    list_for_each_entry(disc, &disc_list, list) {
->> +            if (disc->lport == lport) {
->> +                    list_for_each_entry(rdata, &disc->rports, peers) {
->
-> Hopefully the max numbers of either of those are strictly bounded.
->
-The max number of discovery objects? It isn't bound now. I don't think
-that this discovery list is working out as well as I had hoped that it
-would. There is a patch on our mailing list now that removes this list
-and just attaches the disc object to the lport. This means that there
-is no lookup anymore. Since all incoming FC requests go though the
-lport first it can just follow its pointer, get the disc object and
-use it.
-
->> +
->> +/**
->> + * fc_disc_alloc - Allocate a discovery work object
->> + * @lport: The FC lport associated with the discovery job + */
->> +static inline struct fc_disc *fc_disc_alloc(struct fc_lport *lport)
->> +{ + struct fc_disc *disc;
->> +
->> +    disc = kzalloc(sizeof(struct fc_disc), GFP_KERNEL);
->
-> This misses a NULL check
->
-OK, will fix.
-
->> +    INIT_LIST_HEAD(&disc->list);
->> +    INIT_DELAYED_WORK(&disc->disc_work, fc_disc_timeout);
->> +    mutex_init(&disc->disc_mutex);
->> +    INIT_LIST_HEAD(&disc->rports);
->> +
->> +    disc->lport = lport;
->> +    disc->delay = FC_DISC_DELAY;
->> +    disc->event = DISC_EV_NONE;
->
-> Is it ok that the callback (and probably some other fields) is not
-> initialized here yet?
->
->> +
->> +    mutex_lock(&disc_list_lock);
->> +    list_add_tail(&disc->list, &disc_list);
->> +    mutex_unlock(&disc_list_lock);
->
-> ... when you make this globally visible?
->
->> +    if (event == RPORT_EV_CREATED) {
->> +            mutex_lock(&disc_list_lock);
->> +            list_for_each_entry(disc, &disc_list, list) {
->> +                    if (disc->lport == lport) {
->> +                            found = 1;
->> +                            mutex_lock(&disc->disc_mutex);
->> +                            list_add_tail(&rdata->peers, &disc->rports);
->> +                            mutex_unlock(&disc->disc_mutex);
->> +                    }
->> +            }
->> +            mutex_unlock(&disc_list_lock);
->
-> That's a lot of locks. Did you have a locking order comment somewhere?
->
-I have a locking comment at the top of fc_lport.c as well as fc_rport.c,
-but they don't mention the discovery code. After we change the disc object
-management I'll make sure they're up-to-date. The locking has been
-particularly troublesome for me, so I'm sure it can be improved.
-
->> +    if (!rp || rp->rscn_page_len != sizeof(*pp))
->> +            goto reject;
->> +
->> +    len = ntohs(rp->rscn_plen);
->> +    if (len < sizeof(*rp))
->> +            goto reject;
->> +    len -= sizeof(*rp);
->
-> Don't you need to check here than len is a multiple of sizeof(*pp) ?
-> Otherwise bad input could make it loop a very long time.
->
-I'll have to look into this. You're comment seems reasonable though.
-
->> +
->> +    for (pp = (void *)(rp + 1); len; len -= sizeof(*pp), pp++) {
->
-> Also len >= 0 is always safer.
->
-Noted.
-
->> +                          redisc, lport->state, disc->pending);
->> +            list_for_each_entry_safe(dp, next, &disc_ports, peers) {
->> +                    list_del(&dp->peers); +                 rport = lport->tt.rport_lookup(lport,
->> dp->ids.port_id); +                  if (rport) { +                          rdata = RPORT_TO_PRIV(rport);
->> +                            list_del(&rdata->peers);
->
-> Hopefully there's a mutex here hold for that list.
->
->> +                            lport->tt.rport_logoff(rport);
->> +                    }
->> +                    fc_disc_single(disc, dp);
->> +            }
->> +    }
->> +    fc_frame_free(fp);
->> +    return;
->> +reject:
->> +    rjt_data.fp = NULL;
->> +    rjt_data.reason = ELS_RJT_LOGIC;
->> +    rjt_data.explan = ELS_EXPL_NONE;
->> +    lport->tt.seq_els_rsp_send(sp, ELS_LS_RJT, &rjt_data);
->> +    fc_frame_free(fp);
->
-> Some statistics counter for that case would be probably useful.
->> +
->> +    op = fc_frame_payload_op(fp);
->> +    switch (op) {
->> +    case ELS_RSCN:
->> +            mutex_lock(&disc->disc_mutex);
->> +            fc_disc_recv_rscn_req(sp, fp, disc);
->> +            mutex_unlock(&disc->disc_mutex);
->
-> Ok yes seems the lock is hold.
->> +
->> +    list_for_each_entry_safe(rdata, next, &disc->rports, peers) {
->> +            rport = PRIV_TO_RPORT(rdata);
->> +            FC_DEBUG_DISC("list_del(%6x)\n", rport->port_id);
->> +            list_del(&rdata->peers); +              lport->tt.rport_logoff(rport);
->
-> Hopefully that callback knows for which peer that is.
->
-I'm a little confused what you're referring to here. rport_logoff() is
-one of our transport template function pointers, so for the purely SW
-case the rport layer will handle the logoff(). I'm not sure if this
-is what you were getting at though.
-
->> +static void fc_disc_start(void (*disc_callback)(struct fc_lport *,
->> +                                            enum fc_disc_event), +                    struct fc_lport *lport)
->> +{
->> +    struct fc_rport *rport;
->> +    struct fc_rport_identifiers ids;
->> +    struct fc_disc *disc;
->> +    int found = 0;
->> +
->> +    mutex_lock(&disc_list_lock);
->> +    list_for_each_entry(disc, &disc_list, list) {
->> +            if (disc->lport == lport) {
->> +                    found = 1;
->> +                    break;
->> +            }
->> +    }
->> +    mutex_unlock(&disc_list_lock);
->
-> This seems to be opencoded a lot. Put it into some helper.
-Yes, we probably do this too much. If we end up not using the
-discovery list we can dump a lot of this code.
-
->> +
->> +    /*
->> +     * Handle point-to-point mode as a simple discovery
->> +     * of the remote port. Yucky, yucky, yuck, yuck!
->> +     */
->> +    rport = disc->lport->ptp_rp;
->> +    if (rport) {
->> +            ids.port_id = rport->port_id;
->> +            ids.port_name = rport->port_name;
->> +            ids.node_name = rport->node_name;
->> +            ids.roles = FC_RPORT_ROLE_UNKNOWN;
->> +            get_device(&rport->dev);
->> +
->> +            if (!fc_disc_new_target(disc, rport, &ids)) {
->> +                    disc->event = DISC_EV_SUCCESS;
->> +                    fc_disc_done(disc);
->> +            }
->> +            put_device(&rport->dev);
->
-> The ref counting here seems a little dubious. If it's because
-> disc_new_target can sleep then preemptible kernels can
-> do that anyways. Or it's not needed.
->
-OK, I'll have to look into this.
-
->> +    }
->> +    if (((ids->port_name != -1) || (ids->port_id != -1)) &&
->> +        ids->port_id != fc_host_port_id(lport->host) &&
->> +        ids->port_name != lport->wwpn) {
->> +            if (!rport) {
->> +                    rport = lport->tt.rport_lookup(lport, ids->port_id); +                  if
->> (!rport) { +                         struct fc_disc_port dp;
->> +                            dp.lp = lport;
->> +                            dp.ids.port_id = ids->port_id;
->> +                            dp.ids.port_name = ids->port_name;
->> +                            dp.ids.node_name = ids->node_name;
->> +                            dp.ids.roles = ids->roles;
->> +                            rport = fc_rport_rogue_create(&dp);
->> +                    }
->> +                    if (!rport)
->> +                            error = ENOMEM;
->> +            }
->> +            if (rport) {
->> +                    rp = rport->dd_data;
->> +                    rp->event_callback = fc_disc_rport_event;
->> +                    rp->rp_state = RPORT_ST_INIT;
->> +                    lport->tt.rport_login(rport);
->> +            }
->> +    }
->> +    return error;
->
-> Unusual positive error return convention. Ok?
->
-Just an oversight, I'll correct this.
-
->> +            FC_DBG("Error %ld, retries %d/%d\n",
->> +                   PTR_ERR(fp), disc->retry_count,
->> +                   FC_DISC_RETRY_LIMIT);
->> +
->> +    if (!fp || PTR_ERR(fp) == -FC_EX_TIMEOUT) {
->
-> The mixing of non errnos into PTR_ERR is also unusual,
-> but ok, but make sure you never leak them.
->
->> +            /*
->> +             * Memory allocation failure, or the exchange timed out, +               *
->> retry after delay. +          */
->> +            if (disc->retry_count < FC_DISC_RETRY_LIMIT) {
->> +                    /* go ahead and retry */
->> +                    if (!fp)
->> +                            delay = msecs_to_jiffies(500);
->
-> Ah that was the missing define above?
->
-Yeah, we'll take care of this.
-
->> +                    else {
->> +                            delay = jiffies +
->> +                                    msecs_to_jiffies(lport->e_d_tov);
->> +
->> +                            /* timeout faster first time */
->> +                            if (!disc->retry_count)
->> +                                    delay /= 4;
->
-> You have to divide by four before you add to jiffies, dividing
-> absolute jiffies doesn't make sense.
->
-Will do.
-
->> +    /*
->> +     * Handle partial name record left over from previous call. +    */
->> +    bp = buf;
->> +    plen = len;
->> +    np = (struct fc_gpn_ft_resp *)bp;
->> +    tlen = disc->buf_len;
->> +    if (tlen) {
->> +            WARN_ON(tlen >= sizeof(*np));
->> +            plen = sizeof(*np) - tlen;
->> +            WARN_ON(plen <= 0);
->> +            WARN_ON(plen >= sizeof(*np));
->
-> I hope none of these WARN_ONs in network controllable. They nearly
-> look like some of them are.
->
-> Ok stopping here for now. That's a lot of code. Perhaps split it up
-> into a little smaller patches?
->
-OK, I can do that. Honestly, preparing these patches is a pain. We have
-a full git tree that isn't reviewable. So, I diff, splitdiff and then
-start putting things back together manually. Maybe, patches by the
-different blocks would be more easily reviewable...?
-
-Most people are on vacation this week, including myself. We'll correct
-the called-out problems and re-send a patch next week.
-
-> General impressions:
-> - Your locking is to complicated I think. Less locks is often more.
-
-So, the question for me is really if the discovery object should have
-its own lock or if it should share the lport's lock. I liked it having
-its own lock because it seemed to make it more modular, but the discovery
-code (as well as the EM) still relies on the lport and so it is in
-limbo a bit. It has its own members and lock, but still relies on the
-lport. If the pointer to the discovery object moves into the lport and
-the disc list goes away then maybe it makes sense to just use the lport
-lock. I guess I envisioned some meta-data eventually being passed between
-the lport and the discovery layer so they were more independent.
-
-> For short locks we also recommend spinlocks which perform
-> better (although you have to make sure you don't sleep then of course)
-> - I would double check everything that handles network data to
-> make sure it's not exploitable.
->
-> -Andi
-
-Thanks,
-
-//Rob
