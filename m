@@ -1,91 +1,99 @@
-From: Sven Schuetz <sven@linux.vnet.ibm.com>
-Subject: Re: [RFC] FC pass thru - Rev IV
-Date: Tue, 25 Nov 2008 16:08:13 +0100
-Message-ID: <492C14DD.9050800@linux.vnet.ibm.com>
-References: <1227043498.4949.21.camel@ogier> <492ACC5F.8070004@linux.vnet.ibm.com> <492AD651.7020307@emulex.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH] Fix SCSI regression in 2.6.27 [was [Bugme-new] [Bug 12099]
+ New: Nokia 5310 storage-mode]
+Date: Tue, 25 Nov 2008 10:34:58 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0811251026500.2457-100000@iolanthe.rowland.org>
+References: <20081125055939.a96796ec.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate1.uk.ibm.com ([194.196.100.161]:41059 "EHLO
-	mtagate1.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751410AbYKYPIP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Nov 2008 10:08:15 -0500
-Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
-	by mtagate1.uk.ibm.com (8.13.1/8.13.1) with ESMTP id mAPF8Ekt004063
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Nov 2008 15:08:14 GMT
-Received: from d06av01.portsmouth.uk.ibm.com (d06av01.portsmouth.uk.ibm.com [9.149.37.212])
-	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id mAPF8EGe2580486
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Nov 2008 15:08:14 GMT
-Received: from d06av01.portsmouth.uk.ibm.com (loopback [127.0.0.1])
-	by d06av01.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id mAPF8EoW014798
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Nov 2008 15:08:14 GMT
-In-Reply-To: <492AD651.7020307@emulex.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:44640 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751370AbYKYPe7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Nov 2008 10:34:59 -0500
+In-Reply-To: <20081125055939.a96796ec.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "seokmann.ju@qlogic.com" <seokmann.ju@qlogic.com>, "andrew.vasquez@qlogic.com" <andrew.vasquez@qlogic.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>, stable@kernel.org
 
-James Smart wrote:
-> Sven Schuetz wrote:
->> Shouldn't we add FC_BSG_HST_CT_NOLOGIN as well?
+This patch is intended for 2.6.27.stable and 2.6.28.  It's a temporary 
+fix for a problem affecting a number of USB mass-storage devices 
+(including many Nokia phones): When trying to access a nonexistent 
+"last" sector, the SCSI midlayer gets caught in an endless retry loop.
+
+See for example Bugzilla #11843 and #12099.
+
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+
+---
+
+On Tue, 25 Nov 2008, Andrew Morton wrote:
+
+> On Tue, 25 Nov 2008 01:07:43 -0800 (PST) bugme-daemon@bugzilla.kernel.org wrote:
 > 
-> I didn't add this as FC-GS-6 r9.21, which defines the CT protocol, says:
->  4.5.2.1 Fabric login and N_Port login
->   An Nx_Port shall perform Fabric Login, and shall perform N_Port Login
->   with the WKA or N_Port Identifier where the Service is offered, in the
->   manner that is specified in FC-FS, before making any requests
->   of a Server provided by the Service. An Nx_Port that has completed its
->   registration with a Server shall perform explicit N_Port Logout with
->   the Service. An Nx_Port that has completed any other requests with a
->   Server should also perform explicit N_Port Logout with the Service.
+> > http://bugzilla.kernel.org/show_bug.cgi?id=12099
+> > 
+> >            Summary: Nokia 5310 storage-mode
+> >            Product: Drivers
+> >            Version: 2.5
+> >      KernelVersion: 2.6.27
+> >           Platform: All
+> >         OS/Version: Linux
+> >               Tree: Mainline
+> >             Status: NEW
+> >           Severity: normal
+> >           Priority: P1
+> >          Component: USB
+> >         AssignedTo: greg@kroah.com
+> >         ReportedBy: robsonpeixoto@gmail.com
+> > 
+> > 
+> > Latest working kernel version: 2.6.26
+> > Earliest failing kernel version: 2.6.27
 > 
-> So - a login for CT requests is a must (at least as I read it).
+> A regression.
 > 
-> That's not the case for ELS's, which can usually survive on an implicit
-> login - especially things like ADISC/PDISC.   Login is also the
-> distinction in my opinion for whether something should or should not be
-> exported via an rport in the transport.
+> > Distribution: ArchLinux
+> > Hardware Environment: USB(ohci,ehci)
+> > Software Environment: gcc 4.3.2, glibc 2.8
+> > Problem Description: 
+> > 
+> > When I plug in my Nokia 5310 show a msg in cel "Transferring data" and in
+> > computer nothing happend.
 
-Hi James,
+Unless we want to keep on receiving regression reports like this one,
+this patch or something like it needs to be applied.  We can hope
+2.6.29 will work better...  But unhappily, to date James has not
+responded to any of my patch submissions in this area.
 
-I agree.
+Alan Stern
 
->> As far as I can see from looking over the patch (correct me when I am
->> wrong),
->> the way to issue a CT request now is to send an FC_BSG_HST_ADD_RPORT
->> for the wka
->> port in question (if not enumerated by the driver, which zfcp does not
->> do), then
->> send the FC_BSG_RPT_CT followed by a FC_BSG_HST_DEL_RPORT. I was under
->> the
->> impression the CT stuff was one of the main reasons to have devices
->> for the
->> fc_host. What do you think?
-> 
-> Your flow is exactly what I intended...
 
-OK, let me be a bit more precise. Maybe I shouldn't have called it
-FC_BSG_HST_CT_NOLOGIN but something like FC_BSG_HST_CT_NOT_ENUMERATE.
 
-As the FS-GS dictates, we do a port login and logout for CT requests, but
-completely in the driver. We do that for some internal CT stuff and I have
-implemented it for userspace CT requests with Seokmanns patch as well. We just
-do not advertise the ports to fc_transport (we are only logged in for the
-duration of the request). Having to react to FC_BSG_HST_ADD_RPORT would mean to
-rewrite our wka port handling, plus some of it is done in our firmware and not
-in zfcp.
+Index: 2.6.27.4/drivers/scsi/scsi_lib.c
+===================================================================
+--- 2.6.27.4.orig/drivers/scsi/scsi_lib.c
++++ 2.6.27.4/drivers/scsi/scsi_lib.c
+@@ -611,6 +611,11 @@ static void scsi_requeue_command(struct 
+ 	struct request *req = cmd->request;
+ 	unsigned long flags;
+ 
++	if (--req->retries < 0) {
++		blk_end_request(req, -EIO, blk_rq_bytes(req));
++		scsi_next_command(cmd);
++		return;
++	}
+ 	scsi_unprep_request(req);
+ 	spin_lock_irqsave(q->queue_lock, flags);
+ 	blk_requeue_request(q, req);
+@@ -690,6 +695,8 @@ static struct scsi_cmnd *scsi_end_reques
+ 				 * leftovers in the front of the
+ 				 * queue, and goose the queue again.
+ 				 */
++				if (bytes > 0)		/* Made progress */
++					++req->retries;
+ 				scsi_requeue_command(q, cmd);
+ 				cmd = NULL;
+ 			}
 
-So my suggestion would be to add something like FC_BSG_HST_CT_NOT_ENUMERATE for
-drivers that do the port logins on their own. Other drivers can respond with an
-error code, making it necessary for the app to do the port login on their own
-(FC_BSG_HST_ADD_RPORT), that means following the procedure I outlined in my
-previous mail.
-
-In addition, userspace apps that deal with complete CT frames (like
-implementations of HBA API) would not have to rip the frame apapart to find out
-the generic service/wka port in question and then do the port login. They can
-just send the frame to the driver and rely on the driver to do the port
-login/logout.
-
-Sven
