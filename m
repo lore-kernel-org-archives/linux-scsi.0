@@ -1,99 +1,49 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] Fix SCSI regression in 2.6.27 [was [Bugme-new] [Bug 12099]
- New: Nokia 5310 storage-mode]
-Date: Tue, 25 Nov 2008 10:34:58 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0811251026500.2457-100000@iolanthe.rowland.org>
-References: <20081125055939.a96796ec.akpm@linux-foundation.org>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [RFC] FC pass thru - Rev IV
+Date: Tue, 25 Nov 2008 10:47:57 -0500
+Message-ID: <492C1E2D.2050300@emulex.com>
+References: <1227043498.4949.21.camel@ogier> <C49C4ADF-8DA1-4D86-AEBB-AC46A04FCA62@qlogic.com> <492B1685.4020709@emulex.com> <F285E2FA-64A5-4BB6-ACC4-1B31EB19AFE6@qlogic.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:44640 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751370AbYKYPe7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Nov 2008 10:34:59 -0500
-In-Reply-To: <20081125055939.a96796ec.akpm@linux-foundation.org>
+Received: from emulex.emulex.com ([138.239.112.1]:42550 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753176AbYKYPrR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Nov 2008 10:47:17 -0500
+In-Reply-To: <F285E2FA-64A5-4BB6-ACC4-1B31EB19AFE6@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>, stable@kernel.org
-
-This patch is intended for 2.6.27.stable and 2.6.28.  It's a temporary 
-fix for a problem affecting a number of USB mass-storage devices 
-(including many Nokia phones): When trying to access a nonexistent 
-"last" sector, the SCSI midlayer gets caught in an endless retry loop.
-
-See for example Bugzilla #11843 and #12099.
-
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-
----
-
-On Tue, 25 Nov 2008, Andrew Morton wrote:
-
-> On Tue, 25 Nov 2008 01:07:43 -0800 (PST) bugme-daemon@bugzilla.kernel.org wrote:
-> 
-> > http://bugzilla.kernel.org/show_bug.cgi?id=12099
-> > 
-> >            Summary: Nokia 5310 storage-mode
-> >            Product: Drivers
-> >            Version: 2.5
-> >      KernelVersion: 2.6.27
-> >           Platform: All
-> >         OS/Version: Linux
-> >               Tree: Mainline
-> >             Status: NEW
-> >           Severity: normal
-> >           Priority: P1
-> >          Component: USB
-> >         AssignedTo: greg@kroah.com
-> >         ReportedBy: robsonpeixoto@gmail.com
-> > 
-> > 
-> > Latest working kernel version: 2.6.26
-> > Earliest failing kernel version: 2.6.27
-> 
-> A regression.
-> 
-> > Distribution: ArchLinux
-> > Hardware Environment: USB(ohci,ehci)
-> > Software Environment: gcc 4.3.2, glibc 2.8
-> > Problem Description: 
-> > 
-> > When I plug in my Nokia 5310 show a msg in cel "Transferring data" and in
-> > computer nothing happend.
-
-Unless we want to keep on receiving regression reports like this one,
-this patch or something like it needs to be applied.  We can hope
-2.6.29 will work better...  But unhappily, to date James has not
-responded to any of my patch submissions in this area.
-
-Alan Stern
+To: Seokmann Ju <seokmann.ju@qlogic.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "andrew.vasquez@qlogic.com" <andrew.vasquez@qlogic.com>, "sven@linux.vnet.ibm.com" <sven@linux.vnet.ibm.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Jens Axboe <jens.axboe@oracle.com>
 
 
 
-Index: 2.6.27.4/drivers/scsi/scsi_lib.c
-===================================================================
---- 2.6.27.4.orig/drivers/scsi/scsi_lib.c
-+++ 2.6.27.4/drivers/scsi/scsi_lib.c
-@@ -611,6 +611,11 @@ static void scsi_requeue_command(struct 
- 	struct request *req = cmd->request;
- 	unsigned long flags;
- 
-+	if (--req->retries < 0) {
-+		blk_end_request(req, -EIO, blk_rq_bytes(req));
-+		scsi_next_command(cmd);
-+		return;
-+	}
- 	scsi_unprep_request(req);
- 	spin_lock_irqsave(q->queue_lock, flags);
- 	blk_requeue_request(q, req);
-@@ -690,6 +695,8 @@ static struct scsi_cmnd *scsi_end_reques
- 				 * leftovers in the front of the
- 				 * queue, and goose the queue again.
- 				 */
-+				if (bytes > 0)		/* Made progress */
-+					++req->retries;
- 				scsi_requeue_command(q, cmd);
- 				cmd = NULL;
- 			}
+Seokmann Ju wrote:
+>>>> +
+>>>> +             spin_unlock_irq(q->queue_lock);
+>>>> +
+>>>> +             ret = fc_req_to_bsgjob(shost, rport, req);
+>>>> +             if (ret) {
+>>>> +                     req->errors = ret;
+>>>> +                     spin_lock_irq(q->queue_lock);
+>>>> +                     blk_complete_request(req);
+>>> Shouldn't this be blk_end_bidi_request()/blk_end_request()?
+>> A good question, that I was hoping to have cleared up. If this was
+>> true, there were a lot of errors in the last passthru code.
+> I'm not sure whether the previous code had the
+> 'blk_complete_request()' somewhere in the code, but my main concern
+> was to make sure that the code completes the requests in such a way so
+> that it remove the requests from the timeout_list by hitting
+> blk_delete_timer().
 
+Hopefully, Jens, Fujita, or Boaz can give us some guidance...
+
+I'd really like to ensure I'm calling the right callback :
+a) if it differs based on being a bidi request or not
+b) if it differs based on based on whether I've called blk_rq_map_sg()
+c) if I don't dequeue it, whether my "goose queue" is handled right.
+
+I found the blk api to be rather confusing on what when.
+
+-- james
