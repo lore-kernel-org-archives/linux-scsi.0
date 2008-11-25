@@ -1,148 +1,91 @@
-From: Seokmann Ju <seokmann.ju@qlogic.com>
+From: Sven Schuetz <sven@linux.vnet.ibm.com>
 Subject: Re: [RFC] FC pass thru - Rev IV
-Date: Tue, 25 Nov 2008 06:38:19 -0800
-Message-ID: <F285E2FA-64A5-4BB6-ACC4-1B31EB19AFE6@qlogic.com>
-References: <1227043498.4949.21.camel@ogier> <C49C4ADF-8DA1-4D86-AEBB-AC46A04FCA62@qlogic.com> <492B1685.4020709@emulex.com>
-Mime-Version: 1.0 (Apple Message framework v929.2)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Date: Tue, 25 Nov 2008 16:08:13 +0100
+Message-ID: <492C14DD.9050800@linux.vnet.ibm.com>
+References: <1227043498.4949.21.camel@ogier> <492ACC5F.8070004@linux.vnet.ibm.com> <492AD651.7020307@emulex.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch2.qlogic.com ([198.70.193.116]:32204 "EHLO
-	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751038AbYKYOiW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Nov 2008 09:38:22 -0500
-In-Reply-To: <492B1685.4020709@emulex.com>
+Received: from mtagate1.uk.ibm.com ([194.196.100.161]:41059 "EHLO
+	mtagate1.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751410AbYKYPIP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Nov 2008 10:08:15 -0500
+Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
+	by mtagate1.uk.ibm.com (8.13.1/8.13.1) with ESMTP id mAPF8Ekt004063
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Nov 2008 15:08:14 GMT
+Received: from d06av01.portsmouth.uk.ibm.com (d06av01.portsmouth.uk.ibm.com [9.149.37.212])
+	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id mAPF8EGe2580486
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Nov 2008 15:08:14 GMT
+Received: from d06av01.portsmouth.uk.ibm.com (loopback [127.0.0.1])
+	by d06av01.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id mAPF8EoW014798
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Nov 2008 15:08:14 GMT
+In-Reply-To: <492AD651.7020307@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <James.Smart@Emulex.Com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "andrew.vasquez@qlogic.com" <andrew.vasquez@qlogic.com>, "sven@linux.vnet.ibm.com" <sven@linux.vnet.ibm.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "seokmann.ju@qlogic.com" <seokmann.ju@qlogic.com>, "andrew.vasquez@qlogic.com" <andrew.vasquez@qlogic.com>
 
+James Smart wrote:
+> Sven Schuetz wrote:
+>> Shouldn't we add FC_BSG_HST_CT_NOLOGIN as well?
+> 
+> I didn't add this as FC-GS-6 r9.21, which defines the CT protocol, says:
+>  4.5.2.1 Fabric login and N_Port login
+>   An Nx_Port shall perform Fabric Login, and shall perform N_Port Login
+>   with the WKA or N_Port Identifier where the Service is offered, in the
+>   manner that is specified in FC-FS, before making any requests
+>   of a Server provided by the Service. An Nx_Port that has completed its
+>   registration with a Server shall perform explicit N_Port Logout with
+>   the Service. An Nx_Port that has completed any other requests with a
+>   Server should also perform explicit N_Port Logout with the Service.
+> 
+> So - a login for CT requests is a must (at least as I read it).
+> 
+> That's not the case for ELS's, which can usually survive on an implicit
+> login - especially things like ADISC/PDISC.   Login is also the
+> distinction in my opinion for whether something should or should not be
+> exported via an rport in the transport.
 
-On Nov 24, 2008, at 1:03 PM, James Smart wrote:
+Hi James,
 
->
->
-> Seokmann Ju wrote:
->> A couple of questions.
->> 1. Should 'loopback' considered at this time?
->
-> :)
->
-> This is a topic for the transport generically, independent of any  
-> pass-thru thing.
->
->> 2. Would  it be valuable to consider sending requests with
->>    WWNN:WWPN?
->
-> I considered this, especially for the fchost ELS request. But it  
-> means the LLDD has to do a nameserver query to find the n_port_id
-> corresponding to the names before it sent the ELS. It started to feel
-> like too much ancillary stuff for the LLDD to do to support the
-> request - so I punted.  However, the app, where we typically don't
-> care if it has to do more work, is free to do this and resolve it to
-> the basic primitives. :)
-Thanks, I've got it.
+I agree.
 
->
->
->>> +/**
->>> + * fc_bsg_job_timeout - handler for when a bsg request timesout
->>> + * @req:     request that timed out
->>> + */
->>> +static enum blk_eh_timer_return
->>> +fc_bsg_job_timeout(struct request *req)
->>> +{
->>> +     struct fc_bsg_job *job = (void *) req->special;
->>> +     struct Scsi_Host *shost = job->shost;
->>> +     struct fc_internal *i = to_fc_internal(shost->transportt);
->>> +     unsigned long flags;
->>> +     int err = 0, done = 0;
->>> +
->>> +     if (job->rport && job->rport->port_state ==  
->>> FC_PORTSTATE_BLOCKED)
->>> +             return BLK_EH_RESET_TIMER;
->>> +
->>> +     spin_lock_irqsave(&job->job_lock, flags);
->>> +     if (job->state_flags & FC_RQST_STATE_DONE)
->>> +             done = 1;
->>> +     else
->>> +             job->ref_cnt++;
->> Any reason to increase ref_cnt here?
->> I think that the ref_cnt is already 1 when it came here so that we  
->> don't
->> want to change it to destroy the job successfully.
->
-> Yes - I'm taking an additional reference on the job, so that if the
-> completion routine is completing in parallel to the timeout code path,
-> it won't free the job out from under the timeout call that calls back
-> into the LLDD.
-I see.. I've got it. Thanks.
+>> As far as I can see from looking over the patch (correct me when I am
+>> wrong),
+>> the way to issue a CT request now is to send an FC_BSG_HST_ADD_RPORT
+>> for the wka
+>> port in question (if not enumerated by the driver, which zfcp does not
+>> do), then
+>> send the FC_BSG_RPT_CT followed by a FC_BSG_HST_DEL_RPORT. I was under
+>> the
+>> impression the CT stuff was one of the main reasons to have devices
+>> for the
+>> fc_host. What do you think?
+> 
+> Your flow is exactly what I intended...
 
->
->
->
->>> +/**
->>> + * fc_bsg_request_handler - generic handler for bsg requests
->>> + * @q:               request queue to manage
->>> + * @shost:   Scsi_Host related to the bsg object
->>> + * @rport:   FC remote port related to the bsg object (optional)
->>> + * @dev:     device structure for bsg object
->>> + */
->>> +static void
->>> +fc_bsg_request_handler(struct request_queue *q, struct Scsi_Host
->>> *shost,
->>> +                    struct fc_rport *rport, struct device *dev)
->>> +{
->>> +     struct request *req;
->>> +     struct fc_bsg_job *job;
->>> +     enum fc_dispatch_result ret;
->>> +
->>> +     if (!get_device(dev))
->>> +             return;
->>> +
->>> +     while (!blk_queue_plugged(q)) {
->>> +             req = elv_next_request(q);
->>> +             if (!req)
->>> +                     break;
->>> +
->>> +             if (rport && (rport->port_state ==  
->>> FC_PORTSTATE_BLOCKED))
->>> +                             break;
->> Shouldn't this be moved to into fc_bsg_rport_dispatch()?
->
-> I had originally done this, but moved it back to this location.
->
-> Why ?  if I moved this out, I also had to move out the code between  
-> this
-> and the call to fc_bsg_rport_dispatch() too.  This was just a code
-> organization choice so I could keep the calls to allocate the job, etc
-> within this one routine. It also created a nice division on which
-> code-path-on-error had to be dealt with when it fails.  Now, this
-> generic routine is the only one that would call blk_complete_request()
-> or leave the request queued, while the rport/fchost dispatch functions
-> *always* call the fc_bsg_jobdone() function - on error or completion.
-OK. I see your point and I agree on that "...error had to be dealt  
-with when it fails.".
+OK, let me be a bit more precise. Maybe I shouldn't have called it
+FC_BSG_HST_CT_NOLOGIN but something like FC_BSG_HST_CT_NOT_ENUMERATE.
 
->
->
->>> +
->>> +             spin_unlock_irq(q->queue_lock);
->>> +
->>> +             ret = fc_req_to_bsgjob(shost, rport, req);
->>> +             if (ret) {
->>> +                     req->errors = ret;
->>> +                     spin_lock_irq(q->queue_lock);
->>> +                     blk_complete_request(req);
->> Shouldn't this be blk_end_bidi_request()/blk_end_request()?
->
-> A good question, that I was hoping to have cleared up. If this was  
-> true, there were a lot of errors in the last passthru code.
-I'm not sure whether the previous code had the  
-'blk_complete_request()' somewhere in the code, but my main concern  
-was to make sure that the code completes the requests in such a way so  
-that it remove the requests from the timeout_list by hitting  
-blk_delete_timer().
+As the FS-GS dictates, we do a port login and logout for CT requests, but
+completely in the driver. We do that for some internal CT stuff and I have
+implemented it for userspace CT requests with Seokmanns patch as well. We just
+do not advertise the ports to fc_transport (we are only logged in for the
+duration of the request). Having to react to FC_BSG_HST_ADD_RPORT would mean to
+rewrite our wka port handling, plus some of it is done in our firmware and not
+in zfcp.
 
-Seokmann
+So my suggestion would be to add something like FC_BSG_HST_CT_NOT_ENUMERATE for
+drivers that do the port logins on their own. Other drivers can respond with an
+error code, making it necessary for the app to do the port login on their own
+(FC_BSG_HST_ADD_RPORT), that means following the procedure I outlined in my
+previous mail.
 
+In addition, userspace apps that deal with complete CT frames (like
+implementations of HBA API) would not have to rip the frame apapart to find out
+the generic service/wka port in question and then do the port login. They can
+just send the frame to the driver and rely on the driver to do the port
+login/logout.
+
+Sven
