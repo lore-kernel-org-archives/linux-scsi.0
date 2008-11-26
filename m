@@ -1,143 +1,134 @@
-From: Bernd Schubert <bs@q-leap.de>
-Subject: [PATCH 2/7] Allow requeuement on DID_SOFT_ERROR
-Date: Wed, 26 Nov 2008 18:46:50 +0100
-Message-ID: <200811261846.51644.bs@q-leap.de>
-References: <200811261840.45360.bs@q-leap.de>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [osd-dev] [PATCH 01/18] major.h: char-major number for OSD device
+ driver
+Date: Wed, 26 Nov 2008 10:07:31 -0800
+Message-ID: <492D9063.9090507@oracle.com>
+References: <491073BB.4000900@panasas.com> <1225815420-5721-1-git-send-email-bharrosh@panasas.com> <492D8863.1000104@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------080202060701020107080205"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.q-leap.de ([88.79.172.217]:53707 "EHLO mail.q-leap.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751788AbYKZRq5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Nov 2008 12:46:57 -0500
-In-Reply-To: <200811261840.45360.bs@q-leap.de>
-Content-Disposition: inline
+Received: from acsinet12.oracle.com ([141.146.126.234]:30323 "EHLO
+	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750909AbYKZSIe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Nov 2008 13:08:34 -0500
+In-Reply-To: <492D8863.1000104@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: open-osd development <osd-dev@open-osd.org>, Torben Mathiasen <device@lanana.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, Sami.Iren@seagate.com, linux-kernel <linux-kernel@vger.kernel.org>device@lanana.org, hpa@zytor.com
 
-Activate the error handler if DID_SOFT_ERROR failed to often, but only 
-for commands which have a scmd->allowed > 1. 
-Also make a function out of a goto-block.
+This is a multi-part message in MIME format.
+--------------080202060701020107080205
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Bernd Schubert <bs@q-leap.de>
+Boaz Harrosh wrote:
+> Boaz Harrosh wrote:
+>> We need a major for a char device for our OSD device driver.
+>> Attached is a proposed patch for the Documentation/devices.txt
+>> and include/linux/major.h files.
+>>
+>> I have allocated the *260* char device as it looked like the next
+>> available on the lanana.org web-site
+>> (http://lanana.org/docs/device-list/devices-2.6+.txt)
+>>
+>> Any number will do. Please allocate a number for us
+>>
+>> (See http:/open-osd.org for further information)
+>>
+>> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+>> CC: Torben Mathiasen <device@lanana.org>
+> 
+> Hi Torben Mathiasen
+> 
+> The maintainers file as well as the lanana.org website only states
+> this <device@lanana.org> email address. I hope it is the right one.
+> 
+> Please you have not confirmed or revoked my ability to use 260 
+> as a Major for a new char-device. Please review
 
+Was it cc-ed to device@lanana.org?  I can't see that.  Adding it now.
+
+John Cagle, can you comment on this, please?
+
+And also have the attached patch merged into the MAINTAINERS file, please.
+
+The www.lanana.org web page also needs to be updated:
+  Maintained by Torben Mathiasen
+is no longer correct.
+
+
+> What git tree should this go through?
+> 
+> Thanks 
+> Boaz
+> 
+>> ---
+>>  Documentation/devices.txt |    6 ++++++
+>>  include/linux/major.h     |    1 +
+>>  2 files changed, 7 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/Documentation/devices.txt b/Documentation/devices.txt
+>> index 05c8064..d18070b 100644
+>> --- a/Documentation/devices.txt
+>> +++ b/Documentation/devices.txt
+>> @@ -3142,6 +3142,12 @@ Your cooperation is appreciated.
+>>  		  1 = /dev/blockrom1	Second ROM card's translation layer interface
+>>  		  ...
+>>  
+>> +260 char	OSD (Object-based-device) SCSI Device
+>> +		  0 = /dev/osd0		First OSD Device
+>> +		  1 = /dev/osd1		Second OSD Device
+>> +		  ...
+>> +		  255 = /dev/osd255	256th OSD Device
+>> +
+>>   ****	ADDITIONAL /dev DIRECTORY ENTRIES
+>>  
+>>  This section details additional entries that should or may exist in
+>> diff --git a/include/linux/major.h b/include/linux/major.h
+>> index 8824945..058ec15 100644
+>> --- a/include/linux/major.h
+>> +++ b/include/linux/major.h
+>> @@ -171,5 +171,6 @@
+>>  #define VIOTAPE_MAJOR		230
+>>  
+>>  #define BLOCK_EXT_MAJOR		259
+>> +#define SCSI_OSD_MAJOR		260	/* open-osd's OSD scsi device */
+>>  
+>>  #endif
+> 
+
+
+-- 
+~Randy
+
+--------------080202060701020107080205
+Content-Type: text/x-patch;
+ name="maint-update-lanana.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="maint-update-lanana.patch"
+
+From: Randy Dunlap <randy.dunlap@oracle.com>
+
+Update the DEVICE NUMBER REGISTRY (LANANA) maintainer entry.
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 ---
- drivers/scsi/scsi_error.c |   65 +++++++++++++++++++++++++++++++---------------
- 1 file changed, 45 insertions(+), 20 deletions(-)
+ MAINTAINERS |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Index: linux-2.6/drivers/scsi/scsi_error.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/scsi_error.c
-+++ linux-2.6/drivers/scsi/scsi_error.c
-@@ -1271,6 +1271,47 @@ int scsi_noretry_cmd(struct scsi_cmnd *s
- }
+--- linux-next-20081126.orig/MAINTAINERS
++++ linux-next-20081126/MAINTAINERS
+@@ -1372,7 +1372,7 @@ M:	Douglas_Warzecha@dell.com
+ S:	Maintained
  
- /**
-+ * maybe_retry - decide if to retry a scsi-command or to return an error
-+ * @scmd:	scsi command to examine
-+ * @retry_code	ADD_TO_MLQUEUE or NEEDS_RETRY
-+ *
-+ * Notes:
-+ *    Returning FAILED will activate the error handler,
-+ *    returning SUCCESS will fail the scsi command
-+ **/
-+static int maybe_retry(struct scsi_cmnd *scmd, int retry_code)
-+{
-+	struct scsi_device *sdev = scmd->device;
-+
-+	scmd->retries++;
-+
-+	/* we requeue for retry because the error was retryable, and
-+	 * the request was not marked fast fail.  Note that above,
-+	 * even if the request is marked fast fail, we still requeue
-+	 * for queue congestion conditions (QUEUE_FULL or BUSY) */
-+	if (scmd->retries <= scmd->allowed
-+	    && !blk_noretry_request(scmd->request)) {
-+		return retry_code;
-+	} else  if (scmd->retries <= scmd->allowed + 1
-+		&& !blk_noretry_request(scmd->request)
-+		&& retry_code == ADD_TO_MLQUEUE
-+		&& scmd->allowed > 1) {
-+		/*
-+		 * activate error recovery
-+		 */
-+		sdev_printk(KERN_INFO, sdev, "scmd retry %d/%d\n",
-+			    scmd->retries, scmd->allowed + 1);
-+		return FAILED;
-+	} else {
-+		/*
-+		 * no more retries - report this one back to upper level.
-+		 */
-+		return SUCCESS;
-+	}
-+}
-+
-+
-+/**
-  * scsi_decide_disposition - Disposition a cmd on return from LLD.
-  * @scmd:	SCSI cmd to examine.
-  *
-@@ -1336,7 +1377,7 @@ int scsi_decide_disposition(struct scsi_
- 		 * and not get stuck in a loop.
- 		 */
- 	case DID_SOFT_ERROR:
--		goto maybe_retry;
-+		return maybe_retry(scmd, ADD_TO_MLQUEUE);
- 	case DID_IMM_RETRY:
- 		return NEEDS_RETRY;
- 
-@@ -1350,7 +1391,7 @@ int scsi_decide_disposition(struct scsi_
- 		 * based on its timers and recovery capablilities if
- 		 * there are enough retries.
- 		 */
--		goto maybe_retry;
-+		return maybe_retry(scmd, NEEDS_RETRY);
- 	case DID_TRANSPORT_FAILFAST:
- 		/*
- 		 * The transport decided to failfast the IO (most likely
-@@ -1369,7 +1410,7 @@ int scsi_decide_disposition(struct scsi_
- 
- 	case DID_BUS_BUSY:
- 	case DID_PARITY:
--		goto maybe_retry;
-+		return maybe_retry(scmd, NEEDS_RETRY);
- 	case DID_TIME_OUT:
- 		/*
- 		 * when we scan the bus, we get timeout messages for
-@@ -1418,7 +1459,7 @@ int scsi_decide_disposition(struct scsi_
- 	case CHECK_CONDITION:
- 		rtn = scsi_check_sense(scmd);
- 		if (rtn == NEEDS_RETRY)
--			goto maybe_retry;
-+			return maybe_retry(scmd, NEEDS_RETRY);
- 		/* if rtn == FAILED, we have no sense information;
- 		 * returning FAILED will wake the error handler thread
- 		 * to collect the sense and redo the decide
-@@ -1441,22 +1482,6 @@ int scsi_decide_disposition(struct scsi_
- 		return FAILED;
- 	}
- 	return FAILED;
--
--      maybe_retry:
--
--	/* we requeue for retry because the error was retryable, and
--	 * the request was not marked fast fail.  Note that above,
--	 * even if the request is marked fast fail, we still requeue
--	 * for queue congestion conditions (QUEUE_FULL or BUSY) */
--	if ((++scmd->retries) <= scmd->allowed
--	    && !scsi_noretry_cmd(scmd)) {
--		return NEEDS_RETRY;
--	} else {
--		/*
--		 * no more retries - report this one back to upper level.
--		 */
--		return SUCCESS;
--	}
- }
- 
- /**
+ DEVICE NUMBER REGISTRY
+-P:	Torben Mathiasen
++P:	John Cagle
+ M:	device@lanana.org
+ W:	http://lanana.org/docs/device-list/index.html
+ L:	linux-kernel@vger.kernel.org
 
+--------------080202060701020107080205--
