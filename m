@@ -1,157 +1,165 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [RFC] FC pass thru - Rev IV
-Date: Wed, 26 Nov 2008 13:58:39 -0500
-Message-ID: <492D9C5F.1070304@emulex.com>
-References: <1227043498.4949.21.camel@ogier> <492D94B0.9000003@linux.vnet.ibm.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/2] SCSI: simplify scsi_io_completion()
+Date: Wed, 26 Nov 2008 13:02:43 -0600
+Message-ID: <1227726163.3387.27.camel@localhost.localdomain>
+References: <Pine.LNX.4.44L0.0811031553530.2186-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:53640 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752479AbYKZS5l (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Nov 2008 13:57:41 -0500
-In-Reply-To: <492D94B0.9000003@linux.vnet.ibm.com>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:51377 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751449AbYKZTCr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Nov 2008 14:02:47 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0811031553530.2186-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sven Schuetz <sven@linux.vnet.ibm.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "seokmann.ju@qlogic.com" <seokmann.ju@qlogic.com>, "andrew.vasquez@qlogic.com" <andrew.vasquez@qlogic.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-
-
-Sven Schuetz wrote:
-> James Smart wrote:
+On Mon, 2008-11-03 at 15:56 -0500, Alan Stern wrote:
+> This patch (as1142b) consolidates a lot of repetitious code in
+> scsi_io_completion().  It also fixes a few comments.  Most
+> importantly, however, it clearly distinguishes among the three sorts
+> of retries that can be done when a command fails to complete:
 > 
->> - A new file was created, scsi_bsg_fc.h, which contains the
->>  request/response data structures that should be shared
->>  between the application and the kernel entities.
+> 	Unprepare the request and resubmit it, so that a new
+> 	command will be created for it.
 > 
-> So we need to add this to include/scsi/Kbuild, right?
-
-yes, whatever file(s) control the inventory
-
->> +/**
->> + * fc_bsg_jobdone - completion routine for bsg requests that the LLD has
->> + *                  completed
->> + * @job:     fc_bsg_job that is complete
->> + */
->> +static void
->> +fc_bsg_jobdone(struct fc_bsg_job *job)
->> +{
->> +     struct request *req = job->req->next_rq;
+> 	Requeue the request directly so that it will be retried
+> 	immediately using the same command.
 > 
-> Shouldn't this be just job->req?
-
-yes
-
->> +     struct request *rsp = req->next_rq;
->> +     unsigned long flags;
->> +     int err;
->> +
->> +     spin_lock_irqsave(&job->job_lock, flags);
->> +     job->state_flags |= FC_RQST_STATE_DONE;
->> +     job->ref_cnt--;
->> +     spin_unlock_irqrestore(&job->job_lock, flags);
->> +
->> +     err = job->req->errors = job->reply->result;
->> +     if (err < 0)
->> +             /* we're only returning the result field in the reply */
->> +             job->req->sense_len = sizeof(uint32_t);
->> +     else
->> +             job->req->sense_len = job->reply_len;
->> +
->> +     /*
->> +      * we'll cheat: tell blk layer all of the xmt data was sent.
->> +      * but try to be honest about the amount of rcv data received
->> +      */
->> +     if (rsp)
->> +             blk_end_bidi_request(job->req, err, blk_rq_bytes(job->req),
->> +                                  job->reply->reply_payload_rcv_len);
+> 	Requeue the request so that it will be retried following
+> 	a short delay.
 > 
-> Here is a problem when a LLD does not set job->reply->reply_payload_rcv_len, but
-> has created a response.
-> blk_end_bidi_request will be called with a length of 0 for the last parameter
-> and will thus return "1: still buffers pending for this request", which we do
-> not evaluate. A few lines later the job is destroyed. But a few seconds later
-> the timeout kicks in, leading to a crash (I suppose because the job has been
-> destroyed).
-> I see two options:
-> 1. check if we have a response and see if a length has been set - but what do
-> for cases which have a response and no length set? throw the request away?
-> 2. always use the blk_rq_bytes(job->req->next_rq) from Seokmanns initial patch
-> (which I prefer)
-
-Good Questions..
-- If the driver isn't setting reply_payload_rcv_len, isn't it a driver
-   bug ? (which we don't work around).
-
-- But, I can see a 0 length receive being a valid value as well, which
-   implies the blk infrastructure can't deal with it - this should be
-   fixed.  How is this working with normal BIDI commands ?
-
-- I tried to use the real length for the response, so that it tracked
-   back through the calling sequences to bsg.c, so that it could return
-   the length to the app. If we don't have the correct value being
-   passed back - how does the app know how much data it actually
-   received ?  This is the flaw I see in choosing #2.
-
-
->> +/**
->> + * fc_bsg_rport_dispatch - process rport bsg requests and dispatch to LLDD
->> + * @shost:   scsi host rport attached to
->> + * @rport:   rport request destined to
->> + * @job:     bsg job to be processed
->> + */
->> +static enum fc_dispatch_result
->> +fc_bsg_rport_dispatch(struct request_queue *q, struct Scsi_Host *shost,
->> +                      struct fc_rport *rport, struct fc_bsg_job *job)
->> +{
->> +     struct fc_internal *i = to_fc_internal(shost->transportt);
->> +     int cmdlen = sizeof(uint32_t);  /* start with length of msgcode */
->> +     int ret;
->> +
->> +     /* Validate the rport command */
->> +     switch (job->request->msgcode) {
->> +     case FC_BSG_RPT_ELS:
->> +     case FC_BSG_RPT_CT:
->> +             cmdlen += sizeof(struct fc_bsg_rport_els);
+> 	Complete the remainder of the request with an I/O error.
 > 
-> Why do we do the same here for ELS and CT? The struct fc_bsg_rport_ct is some
-> bytes larger than for the ELS and should get its own case.
+> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
 
-A bug...
+OK, how about this as an update to the patch.  It corrects several
+things:
 
->> +struct fc_bsg_job {
->> +     struct Scsi_Host *shost;
->> +     struct fc_rport *rport;
->> +     struct device *dev;
->> +     struct request *req;
->> +     spinlock_t job_lock;
->> +     unsigned int state_flags;
->> +     unsigned int ref_cnt;
->> +     void (*job_done)(struct fc_bsg_job *);
->> +
->> +     struct fc_bsg_request *request;
->> +     struct fc_bsg_reply *reply;
->> +     unsigned int request_len;
->> +     unsigned int reply_len;
->> +     /*
->> +      * On entry : reply_len indicates the buffer size allocated for
->> +      * the reply.
->> +      *
->> +      * Upon completion : the message handler must set reply_len
->> +      *  to indicates the size of the reply to be returned to the
->> +      *  caller.
->> +      */
-> 
-> Do we need this field (reply_len)? Both the fc_bsg_buffer struct (for the vector
-> i/o) as well as the fc_bsg_reply struct (for the sense data) contain fields for
-> the payload length.
+     1. For several error conditions, we would now print the sense twice
+        in slightly different ways, so unify the location of sense
+        printing.
+     2. I added more descriptions to actual failure conditions for
+        better debugging
+     3. according to spec, ABORTED_COMMAND is supposed to be retried
+        (except on DIF failure).  Our old behaviour of erroring it looks
+        to be a bug.
+     4. I'd prefer not to default initialise the action variable because
+        that ensures that every leg of the error handler has an
+        associated action and the compiler will warn if someone later
+        accidentally misses one or removes one.
 
-Yes. This isn't the "dma reply" length, but rather the amount of the 
-sense buffer that is returned with "reply" or status information for the 
-the actual request. E.g. upon finishing a job, the driver should always 
-set this to sizeof(struct fc_bsg_ctels_reply), or whatever the reply 
-structure is to be.
+It also looks like 
 
--- james
+James
+
+---
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 6994cde..4eaace8 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -906,7 +906,8 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	int sense_valid = 0;
+ 	int sense_deferred = 0;
+ 	enum {ACTION_FAIL, ACTION_REPREP, ACTION_RETRY,
+-			ACTION_DELAYED_RETRY} action;
++	      ACTION_DELAYED_RETRY} action;
++	char *description = NULL;
+ 
+ 	if (result) {
+ 		sense_valid = scsi_command_normalize_sense(cmd, &sshdr);
+@@ -957,7 +958,6 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	if (scsi_end_request(cmd, error, good_bytes, result == 0) == NULL)
+ 		return;
+ 	this_count = blk_rq_bytes(req);
+-	action = ACTION_FAIL;
+ 
+ 	if (host_byte(result) == DID_RESET) {
+ 		/* Third party bus reset or reset for error recovery
+@@ -973,6 +973,8 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 				 * and quietly refuse further access.
+ 				 */
+ 				cmd->device->changed = 1;
++				description = "Media Changed";
++				action = ACTION_FAIL;
+ 			} else {
+ 				/* Must have been a power glitch, or a
+ 				 * bus reset.  Could not have been a
+@@ -998,9 +1000,15 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 				/* This will issue a new 6-byte command. */
+ 				cmd->device->use_10_for_rw = 0;
+ 				action = ACTION_REPREP;
+-			}
++			} else
++				action = ACTION_FAIL;
+ 			break;
+ 		case ABORTED_COMMAND:
++			if (sshdr.asc == 0x10) { /* DIF */
++				action = ACTION_FAIL;
++				description = "Data Integrity Failure";
++			} else
++				action = ACTION_RETRY;
+ 			break;
+ 		case NOT_READY:
+ 			/* If the device is in the process of becoming
+@@ -1018,34 +1026,36 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 					action = ACTION_DELAYED_RETRY;
+ 					break;
+ 				}
++			} else {
++				description = "Device not ready";
++				action = ACTION_FAIL;
+ 			}
+-			if (!(req->cmd_flags & REQ_QUIET) &&
+-					action == ACTION_FAIL)
+-				scsi_cmd_print_sense_hdr(cmd,
+-							 "Device not ready",
+-							 &sshdr);
+ 			break;
+ 		case VOLUME_OVERFLOW:
+-			if (!(req->cmd_flags & REQ_QUIET)) {
+-				scmd_printk(KERN_INFO, cmd,
+-					    "Volume overflow, CDB: ");
+-				__scsi_print_command(cmd->cmnd);
+-				scsi_print_sense("", cmd);
+-			}
++			description = "Volume Overflow";
+ 			/* See SSC3rXX or current. */
++			action = ACTION_FAIL;
++			break;
++		default:
++			description = "Unhandled sense code";
++			action = ACTION_FAIL;
+ 			break;
+ 		}
++	} else {
++		description = "Unhandled error code";
++		action = ACTION_FAIL;
+ 	}
+ 
+ 	switch (action) {
+ 	case ACTION_FAIL:
+ 		/* Give up and fail the remainder of the request */
+-		if (result) {
+-			if (!(req->cmd_flags & REQ_QUIET)) {
+-				scsi_print_result(cmd);
+-				if (driver_byte(result) & DRIVER_SENSE)
+-					scsi_print_sense("", cmd);
+-			}
++		if (!(req->cmd_flags & REQ_QUIET)) {
++			if (description)
++				scmd_printk(KERN_INFO, cmd, "%s",
++					    description);
++			scsi_print_result(cmd);
++			if (driver_byte(result) & DRIVER_SENSE)
++				scsi_print_sense("", cmd);
+ 		}
+ 		blk_end_request(req, -EIO, blk_rq_bytes(req));
+ 		scsi_next_command(cmd);
+
+
