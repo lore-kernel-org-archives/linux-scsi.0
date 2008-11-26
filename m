@@ -1,18 +1,16 @@
 From: Bernd Schubert <bs@q-leap.de>
-Subject: [PATCH 0/7] trivial: move a variable from function to if-scope
-Date: Wed, 26 Nov 2008 19:32:34 +0100
-Message-ID: <200811261932.35098.bs@q-leap.de>
-References: <200811261840.45360.bs@q-leap.de>
+Subject: [PATCH 7/7] trivial: move a variable from function to if-scope
+Date: Wed, 26 Nov 2008 19:32:53 +0100
+Message-ID: <200811261932.54416.bs@q-leap.de>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.q-leap.de ([88.79.172.217]:57627 "EHLO mail.q-leap.de"
+Received: from ns2.q-leap.de ([88.79.172.217]:57641 "EHLO mail.q-leap.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752248AbYKZScj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Nov 2008 13:32:39 -0500
-In-Reply-To: <200811261840.45360.bs@q-leap.de>
+	id S1752284AbYKZSc7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Nov 2008 13:32:59 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
