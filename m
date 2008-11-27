@@ -1,33 +1,31 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 1/2] SCSI: simplify scsi_io_completion()
-Date: Wed, 26 Nov 2008 18:31:28 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0811261830350.1675-100000@netrider.rowland.org>
-References: <1227738589.3387.57.camel@localhost.localdomain>
+From: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>
+Subject: Bug about mke2fs hang on AIC79 device
+Date: Thu, 27 Nov 2008 10:18:38 +0800
+Message-ID: <1227752318.2866.163.camel@ymzhang>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:2545 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752606AbYKZXbc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Nov 2008 18:31:32 -0500
-In-Reply-To: <1227738589.3387.57.camel@localhost.localdomain>
+Received: from mga09.intel.com ([134.134.136.24]:31213 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750974AbYK0CTV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Nov 2008 21:19:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: James.Bottomley@HansenPartnership.com
+Cc: rjw@sisk.pl, michaelc@cs.wisc.edu, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wed, 26 Nov 2008, James Bottomley wrote:
+James,
 
-> > I was going to suggest adding a description to the ILLEGAL REQUEST
-> > case.  But that case arises normally under various circumstances, so
-> > perhaps it wouldn't be appropriate.  In fact, do you really want to
-> > print out the result and sense data every time that case occurs?
-> 
-> I think it's OK.  I thought some of the CD probing routines triggered
-> illegal requests, but I can't seem to see it on my test machines (it
-> could be I have the wrong type of CD, though).
+2.6.28-rc1 introduced a bug about scsi lib. We reported it at
+http://bugzilla.kernel.org/show_bug.cgi?id=11898.
 
-So then it would make sense to add a description to that case as well.
+Patch at http://bugzilla.kernel.org/show_bug.cgi?id=11898#c36 already fixes
+the bug. But 2.6.28-rc6 has no the patch. Although there is a performance issue,
+could you push the patch to upstream firstly? It seems the performance issue
+isn't related to the patch.
 
-Alan Stern
+Thanks,
+Yanmin
+
 
