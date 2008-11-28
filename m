@@ -1,155 +1,143 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2.6.28-rc6] block: internal dequeue shouldn't start timer
-Date: Fri, 28 Nov 2008 13:05:16 +0900
-Message-ID: <492F6DFC.3010103@kernel.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] block: integrate blk_end_bidi_request into blk_end_request
+Date: Fri, 28 Nov 2008 14:52:22 +0900
+Message-ID: <20081128145221I.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:59563 "EHLO hera.kernel.org"
+Received: from sh.osrg.net ([192.16.179.4]:58310 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752564AbYK1EFc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Nov 2008 23:05:32 -0500
+	id S1750985AbYK1Fwl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Nov 2008 00:52:41 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Anderson <andmike@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linu
-Cc: Hannes Reinecke <hare@suse.de>
+To: jens.axboe@oracle.com
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, bharrosh@panasas.com
 
-blkdev_dequeue_request() and elv_dequeue_request() are equivalent and
-both start the timeout timer.  Barrier code dequeues the original
-barrier request but doesn't passes the request itself to lower level
-driver, only broken down proxy requests; however, as the original
-barrier code goes through the same dequeue path and timeout timer is
-started on it.  If barrier sequence takes long enough, this timer
-expires but the low level driver has no idea about this request and
-oops follows.
+Hi Jens,
 
-Timeout timer shouldn't have been started on the original barrier
-request as it never goes through actual IO.  This patch unexports
-elv_dequeue_request(), which has no external user anyway, and makes it
-operate on elevator proper w/o adding the timer and make
-blkdev_dequeue_request() call elv_dequeue_request() and add timer.
-Internal users which don't pass the request to driver - barrier code
-and end_that_request_last() - are converted to use
-elv_dequeue_request().
+FC people have been working on FC pass thru feature using bsg bidi
+support. Seems that the bidi API confuse them:
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Mike Anderson <andmike@linux.vnet.ibm.com>
+http://marc.info/?l=linux-scsi&m=122704347209856&w=2
+
+=
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+[PATCH] block: integrate blk_end_bidi_request with blk_end_request
+
+This integrates blk_end_bidi_request into blk_end_request. IOW, it
+changes blk_end_request to handle both bidi and non-bidi requests and
+removes blk_end_bidi_request.
+
+Currently, we have two functions to complete a request,
+blk_end_bidi_request and blk_end_request. The former is for bidi
+requests and the latter is for non-bidi. This seems to confuse
+developers. Questions like "can blk_end_bidi_request be used with
+non-bidi requests?", "what should be passed as the bidi_bytes argument
+in blk_end_bidi_request" are often asked.
+
+The callers don't care about whether a request is bidi or not. All
+they want to do is to complete a request. I think that a single
+function that can complete any request would be easy to understand.
+
+We always must complete all bytes on both sides with bidi. So
+blk_end_request easily can do it for the callers and handle both both
+bidi and non-bidi requests.
+
+
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
-Mike, this should fix the problem you were seeing (blk_add_timer on
-requests w/o REQ_STARTED set).
+ block/blk-core.c        |   35 +++++++++++++----------------------
+ drivers/scsi/scsi_lib.c |    3 +--
+ include/linux/blkdev.h  |    2 --
+ 3 files changed, 14 insertions(+), 26 deletions(-)
 
- block/blk-barrier.c    |    4 ++--
- block/blk-core.c       |   24 +++++++++++++++++++++++-
- block/elevator.c       |    7 -------
- include/linux/blkdev.h |    7 ++-----
- 4 files changed, 27 insertions(+), 15 deletions(-)
-
-Index: work/block/blk-core.c
-===================================================================
---- work.orig/block/blk-core.c
-+++ work/block/blk-core.c
-@@ -1637,6 +1637,28 @@ int blk_insert_cloned_request(struct req
- EXPORT_SYMBOL_GPL(blk_insert_cloned_request);
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 10e8a64..634f918 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1943,7 +1943,19 @@ static int blk_end_io(struct request *rq, int error, unsigned int nr_bytes,
+  **/
+ int blk_end_request(struct request *rq, int error, unsigned int nr_bytes)
+ {
+-	return blk_end_io(rq, error, nr_bytes, 0, NULL);
++ 	unsigned int bidi_bytes	= 0;
++
++	if (blk_bidi_rq(rq)) {
++		struct bio *bio;
++		/*
++		 * We can't use rq->next_rq->data_len here because the
++		 * callers might set it to a residual length.
++		 */
++		__rq_for_each_bio(bio, rq->next_rq)
++			bidi_bytes += bio->bi_size;
++	}
++
++	return blk_end_io(rq, error, nr_bytes, bidi_bytes, NULL);
+ }
+ EXPORT_SYMBOL_GPL(blk_end_request);
+ 
+@@ -1974,27 +1986,6 @@ int __blk_end_request(struct request *rq, int error, unsigned int nr_bytes)
+ EXPORT_SYMBOL_GPL(__blk_end_request);
  
  /**
-+ * blkdev_dequeue_request - dequeue request and start timeout timer
-+ * @req: request to dequeue
-+ *
-+ * Dequeue @req and start timeout timer on it.  This hands off the
-+ * request to the driver.
-+ *
-+ * Block internal functions which don't want to start timer should
-+ * call elv_dequeue_request().
-+ */
-+void blkdev_dequeue_request(struct request *req)
-+{
-+	elv_dequeue_request(req->q, req);
-+
-+	/*
-+	 * We are now handing the request to the hardware, add the
-+	 * timeout handler.
-+	 */
-+	blk_add_timer(req);
-+}
-+EXPORT_SYMBOL(blkdev_dequeue_request);
-+
-+/**
-  * __end_that_request_first - end I/O on a request
-  * @req:      the request being processed
-  * @error:    %0 for success, < %0 for error
-@@ -1774,7 +1796,7 @@ static void end_that_request_last(struct
- 		blk_queue_end_tag(req->q, req);
- 
- 	if (blk_queued_rq(req))
--		blkdev_dequeue_request(req);
-+		elv_dequeue_request(req->q, req);
- 
- 	if (unlikely(laptop_mode) && blk_fs_request(req))
- 		laptop_io_completion();
-Index: work/block/elevator.c
-===================================================================
---- work.orig/block/elevator.c
-+++ work/block/elevator.c
-@@ -844,14 +844,7 @@ void elv_dequeue_request(struct request_
- 	 */
- 	if (blk_account_rq(rq))
- 		q->in_flight++;
--
--	/*
--	 * We are now handing the request to the hardware, add the
--	 * timeout handler.
--	 */
--	blk_add_timer(rq);
- }
--EXPORT_SYMBOL(elv_dequeue_request);
- 
- int elv_queue_empty(struct request_queue *q)
- {
-Index: work/include/linux/blkdev.h
-===================================================================
---- work.orig/include/linux/blkdev.h
-+++ work/include/linux/blkdev.h
-@@ -786,6 +786,8 @@ static inline void blk_run_address_space
- 		blk_run_backing_dev(mapping->backing_dev_info, NULL);
- }
- 
-+extern void blkdev_dequeue_request(struct request *req);
-+
- /*
-  * blk_end_request() and friends.
-  * __blk_end_request() and end_request() must be called with
-@@ -820,11 +822,6 @@ extern void blk_update_request(struct re
- extern unsigned int blk_rq_bytes(struct request *rq);
- extern unsigned int blk_rq_cur_bytes(struct request *rq);
- 
--static inline void blkdev_dequeue_request(struct request *req)
+- * blk_end_bidi_request - Helper function for drivers to complete bidi request.
+- * @rq:         the bidi request being processed
+- * @error:      %0 for success, < %0 for error
+- * @nr_bytes:   number of bytes to complete @rq
+- * @bidi_bytes: number of bytes to complete @rq->next_rq
+- *
+- * Description:
+- *     Ends I/O on a number of bytes attached to @rq and @rq->next_rq.
+- *
+- * Return:
+- *     %0 - we are done with this request
+- *     %1 - still buffers pending for this request
+- **/
+-int blk_end_bidi_request(struct request *rq, int error, unsigned int nr_bytes,
+-			 unsigned int bidi_bytes)
 -{
--	elv_dequeue_request(req->q, req);
+-	return blk_end_io(rq, error, nr_bytes, bidi_bytes, NULL);
 -}
+-EXPORT_SYMBOL_GPL(blk_end_bidi_request);
 -
- /*
-  * Access functions for manipulating queue properties
-  */
-Index: work/block/blk-barrier.c
-===================================================================
---- work.orig/block/blk-barrier.c
-+++ work/block/blk-barrier.c
-@@ -161,7 +161,7 @@ static inline struct request *start_orde
- 	/*
- 	 * Prep proxy barrier request.
- 	 */
--	blkdev_dequeue_request(rq);
-+	elv_dequeue_request(q, rq);
- 	q->orig_bar_rq = rq;
- 	rq = &q->bar_rq;
- 	blk_rq_init(q, rq);
-@@ -219,7 +219,7 @@ int blk_do_ordered(struct request_queue
- 			 * This can happen when the queue switches to
- 			 * ORDERED_NONE while this request is on it.
- 			 */
--			blkdev_dequeue_request(rq);
-+			elv_dequeue_request(q, rq);
- 			if (__blk_end_request(rq, -EOPNOTSUPP,
- 					      blk_rq_bytes(rq)))
- 				BUG();
+-/**
+  * blk_update_request - Special helper function for request stacking drivers
+  * @rq:           the request being processed
+  * @error:        %0 for success, < %0 for error
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f5d3b96..e550e3b 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -842,13 +842,12 @@ static void scsi_end_bidi_request(struct scsi_cmnd *cmd)
+ {
+ 	struct request *req = cmd->request;
+ 	unsigned int dlen = req->data_len;
+-	unsigned int next_dlen = req->next_rq->data_len;
+ 
+ 	req->data_len = scsi_out(cmd)->resid;
+ 	req->next_rq->data_len = scsi_in(cmd)->resid;
+ 
+ 	/* The req and req->next_rq have not been completed */
+-	BUG_ON(blk_end_bidi_request(req, 0, dlen, next_dlen));
++	BUG_ON(blk_end_request(req, 0, dlen));
+ 
+ 	scsi_release_buffers(cmd);
+ 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index a135256..2a22755 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -799,8 +799,6 @@ extern int blk_end_request(struct request *rq, int error,
+ 				unsigned int nr_bytes);
+ extern int __blk_end_request(struct request *rq, int error,
+ 				unsigned int nr_bytes);
+-extern int blk_end_bidi_request(struct request *rq, int error,
+-				unsigned int nr_bytes, unsigned int bidi_bytes);
+ extern void end_request(struct request *, int);
+ extern int blk_end_request_callback(struct request *rq, int error,
+ 				unsigned int nr_bytes,
+-- 
+1.5.5.GIT
+
