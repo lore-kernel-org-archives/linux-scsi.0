@@ -1,24 +1,30 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 12120] New: [Block layer or SCSI] requests aborted too
-	early during check_partition()
-Date: Sat, 29 Nov 2008 12:35:28 -0600
-Message-ID: <1227983728.4636.2.camel@localhost.localdomain>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12120] [Block layer or SCSI] requests aborted too early during check_partition()
+Date: Sat, 29 Nov 2008 10:36:11 -0800 (PST)
+Message-ID: <20081129183611.8AD15108041@picon.linux-foundation.org>
 References: <bug-12120-11613@http.bugzilla.kernel.org/>
-	 <tkrat.ff41089ef3c5d74f@s5r6.in-berlin.de>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:45847 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751042AbYK2Sfb (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:55206 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751766AbYK2Sgo (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Nov 2008 13:35:31 -0500
-In-Reply-To: <tkrat.ff41089ef3c5d74f@s5r6.in-berlin.de>
+	Sat, 29 Nov 2008 13:36:44 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mATIaBDq017659
+	for <linux-scsi@vger.kernel.org>; Sat, 29 Nov 2008 10:36:12 -0800
+In-Reply-To: <bug-12120-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net, bugme-daemon@bugzilla.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=12120
+
+
+
+
+
+------- Comment #2 from anonymous@kernel-bugs.osdl.org  2008-11-29 10:36 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Sat, 2008-11-29 at 16:12 +0100, Stefan Richter wrote:
 > On 29 Nov, bugme-daemon@bugzilla.kernel.org wrote:
@@ -77,3 +83,7 @@ echo 0xffffffff > /sys/module/scsi_mod/parameters/scsi_logging_level
 James
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
