@@ -1,26 +1,27 @@
 From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12119] New: iscsi repeatedly times out
-Date: Sat, 29 Nov 2008 03:10:39 -0800 (PST)
-Message-ID: <bug-12119-11613@http.bugzilla.kernel.org/>
+Subject: [Bug 12120] New: [Block layer or SCSI] requests aborted too early during check_partition()
+Date: Sat, 29 Nov 2008 05:19:55 -0800 (PST)
+Message-ID: <bug-12120-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:46149 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:37679 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751146AbYK2LKm (ORCPT
+	by vger.kernel.org with ESMTP id S1751290AbYK2NU1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Nov 2008 06:10:42 -0500
+	Sat, 29 Nov 2008 08:20:27 -0500
 Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mATBAd6P030836
-	for <linux-scsi@vger.kernel.org>; Sat, 29 Nov 2008 03:10:40 -0800
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mATDJtw1003569
+	for <linux-scsi@vger.kernel.org>; Sat, 29 Nov 2008 05:19:56 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12119
+http://bugzilla.kernel.org/show_bug.cgi?id=12120
 
-           Summary: iscsi repeatedly times out
+           Summary: [Block layer or SCSI] requests aborted too early during
+                    check_partition()
            Product: IO/Storage
            Version: 2.5
-     KernelVersion: 2.6.27.7
+     KernelVersion: 2.6.28-rc
           Platform: All
         OS/Version: Linux
               Tree: Mainline
@@ -29,31 +30,23 @@ http://bugzilla.kernel.org/show_bug.cgi?id=12119
           Priority: P1
          Component: SCSI
         AssignedTo: linux-scsi@vger.kernel.org
-        ReportedBy: ian@beware.dropbear.id.au
+        ReportedBy: stefan-r-bz@s5r6.in-berlin.de
+OtherBugsDependingO 11808
+             nThis:
+        Regression: 1
 
 
-Latest working kernel version:2.6.24.4-64
-Earliest failing kernel version:2.6.27.5
-Distribution:fc8
-Hardware Environment:diskless i386, swap on iscsi device
-Software Environment:open-iscsi v 6.2
-Problem Description:As soon as the iscsi device is activated, the following
-messages are logged:
-Nov 29 21:24:51 dhcp-0-20-34-211-135-63 iscsid: Nop-out timedout after 15
-seconds on connection 1:0 state (3). Dropping session.
-Nov 29 21:24:55 dhcp-0-20-34-211-135-63 iscsid: connection1:0 is operational
-after recovery (2 attempts)
+Latest working kernel version: 2.6.27.4
+Earliest failing kernel version: 2.6.28-rc6  (I didn't test earlier -rcs yet)
 
-These repeat precisely every 30 seconds essentially forever, seemingly
-independent of activity on the iscsi device.
+Hardware Environment: OxSemi 912 and 92x based FireWire harddisks
 
-IO to the device seems to actually work OK (eg dd if=/dev/sdb of=dev/null
-bs=64k count=100)
 
-The messages are obviously from the iscsid userland daemon, but booting with an
-older kernel 2.6.24.4-64 does not cause these messages.
-
-Steps to reproduce:
+See http://marc.info/?l=linux-scsi&m=122774022130397 --
+Disks may still spin their motor up when the kernel attempts to read
+partitions. In kernel 2.6.27, this was handled transparently.  But since
+2.6.28-rc?, the kernel immediately aborts the associated requests and sets the
+new scsi_device offline.
 
 
 -- 
