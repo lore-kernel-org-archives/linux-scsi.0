@@ -1,30 +1,22 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12120] [Block layer or SCSI] requests aborted too early during check_partition()
-Date: Sat, 29 Nov 2008 07:12:35 -0800 (PST)
-Message-ID: <20081129151235.C9895108041@picon.linux-foundation.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [Bug 12120] New: [Block layer or SCSI] requests aborted too early
+ during check_partition()
+Date: Sat, 29 Nov 2008 16:12:25 +0100 (CET)
+Message-ID: <tkrat.ff41089ef3c5d74f@s5r6.in-berlin.de>
 References: <bug-12120-11613@http.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; CHARSET=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:51695 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751342AbYK2PMh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Nov 2008 10:12:37 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mATFCZv8008519
-	for <linux-scsi@vger.kernel.org>; Sat, 29 Nov 2008 07:12:36 -0800
+Received: from einhorn.in-berlin.de ([192.109.42.8]:51605 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751396AbYK2PMm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Nov 2008 10:12:42 -0500
 In-Reply-To: <bug-12120-11613@http.bugzilla.kernel.org/>
+Content-Disposition: INLINE
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=12120
-
-
-
-
-
-------- Comment #1 from anonymous@kernel-bugs.osdl.org  2008-11-29 07:12 -------
-Reply-To: stefanr@s5r6.in-berlin.de
+Cc: linux1394-devel@lists.sourceforge.net, bugme-daemon@bugzilla.kernel.org
 
 On 29 Nov, bugme-daemon@bugzilla.kernel.org wrote:
 > http://bugzilla.kernel.org/show_bug.cgi?id=12120
@@ -72,9 +64,8 @@ everything again.  However,
   - The workaround would be very hard to implement in the older
     ieee1394/sbp2 driver.
   - Other hardware besides FireWire may be affected.
-
-
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Stefan Richter
+-=====-==--- =-== ===-=
+http://arcgraph.de/sr/
+
