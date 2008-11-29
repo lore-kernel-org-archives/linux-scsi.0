@@ -1,71 +1,76 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [Bug 12120] New: [Block layer or SCSI] requests aborted too early
- during check_partition()
-Date: Sat, 29 Nov 2008 16:12:25 +0100 (CET)
-Message-ID: <tkrat.ff41089ef3c5d74f@s5r6.in-berlin.de>
-References: <bug-12120-11613@http.bugzilla.kernel.org/>
+From: roel kluin <roel.kluin@gmail.com>
+Subject: [PATCH] [SCSI] libsas: fix test for negative unsigned and typos
+Date: Sat, 29 Nov 2008 11:31:08 -0500
+Message-ID: <49316E4C.7070808@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; CHARSET=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:51605 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751396AbYK2PMm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Nov 2008 10:12:42 -0500
-In-Reply-To: <bug-12120-11613@http.bugzilla.kernel.org/>
-Content-Disposition: INLINE
+Received: from ug-out-1314.google.com ([66.249.92.173]:25878 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751423AbYK2QbP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Nov 2008 11:31:15 -0500
+Received: by ug-out-1314.google.com with SMTP id 39so2226680ugf.37
+        for <linux-scsi@vger.kernel.org>; Sat, 29 Nov 2008 08:31:13 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux1394-devel@lists.sourceforge.net, bugme-daemon@bugzilla.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 29 Nov, bugme-daemon@bugzilla.kernel.org wrote:
-> http://bugzilla.kernel.org/show_bug.cgi?id=12120
-> 
->            Summary: [Block layer or SCSI] requests aborted too early during
->                     check_partition()
->            Product: IO/Storage
->            Version: 2.5
->      KernelVersion: 2.6.28-rc
->           Platform: All
->         OS/Version: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: SCSI
->         AssignedTo: linux-scsi@vger.kernel.org
->         ReportedBy: stefan-r-bz@s5r6.in-berlin.de
-> OtherBugsDependingO 11808
->              nThis:
->         Regression: 1
-> 
-> 
-> Latest working kernel version: 2.6.27.4
-> Earliest failing kernel version: 2.6.28-rc6  (I didn't test earlier -rcs yet)
-> 
-> Hardware Environment: OxSemi 912 and 92x based FireWire harddisks
-> 
-> 
-> See http://marc.info/?l=linux-scsi&m=122774022130397 --
-> Disks may still spin their motor up when the kernel attempts to read
-> partitions. In kernel 2.6.27, this was handled transparently.  But since
-> 2.6.28-rc?, the kernel immediately aborts the associated requests and sets the
-> new scsi_device offline.
-> 
-> 
+unsigned req->data_len cannot be negative, and fix typo
 
-I tried a workaround in firewire-sbp2:  Check whether the new sdev is
-offline right after scsi_add_device.  If so, remove the sdev and try
-everything again.  However,
-  - a regression still remains because the addition of the HDD takes
-    about 30...40 seconds instead of only a few seconds like in 2.6.27.
-  - The workaround works with OXFW912 and OXUF922, but not with
-    OXUF924DSB.  Login retries don't succeed with the latter at all.
-  - The workaround would be very hard to implement in the older
-    ieee1394/sbp2 driver.
-  - Other hardware besides FireWire may be affected.
--- 
-Stefan Richter
--=====-==--- =-== ===-=
-http://arcgraph.de/sr/
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+I am not sure whether this is what was intended, please review.
+
+diff --git a/drivers/scsi/libsas/sas_host_smp.c b/drivers/scsi/libsas/sas_host_smp.c
+index 16f9312..6eb0779 100644
+--- a/drivers/scsi/libsas/sas_host_smp.c
++++ b/drivers/scsi/libsas/sas_host_smp.c
+@@ -199,12 +199,12 @@ int sas_smp_host_handler(struct Scsi_Host *shost, struct request *req,
+ 		break;
+ 
+ 	case SMP_DISCOVER:
+-		req->data_len =- 16;
+-		if (req->data_len < 0) {
++		if (req->data_len < 15) {
+ 			req->data_len = 0;
+ 			error = -EINVAL;
+ 			goto out;
+ 		}
++		req->data_len -= 16;
+ 		resp_data_len -= 56;
+ 		sas_host_smp_discover(sas_ha, resp_data, req_data[9]);
+ 		break;
+@@ -215,12 +215,12 @@ int sas_smp_host_handler(struct Scsi_Host *shost, struct request *req,
+ 		break;
+ 
+ 	case SMP_REPORT_PHY_SATA:
+-		req->data_len =- 16;
+-		if (req->data_len < 0) {
++		if (req->data_len < 15) {
+ 			req->data_len = 0;
+ 			error = -EINVAL;
+ 			goto out;
+ 		}
++		req->data_len -= 16;
+ 		resp_data_len -= 60;
+ 		sas_report_phy_sata(sas_ha, resp_data, req_data[9]);
+ 		break;
+@@ -238,12 +238,12 @@ int sas_smp_host_handler(struct Scsi_Host *shost, struct request *req,
+ 		break;
+ 
+ 	case SMP_PHY_CONTROL:
+-		req->data_len =- 44;
+-		if (req->data_len < 0) {
++		if (req->data_len < 43) {
+ 			req->data_len = 0;
+ 			error = -EINVAL;
+ 			goto out;
+ 		}
++		req->data_len -= 44;
+ 		resp_data_len -= 8;
+ 		sas_phy_control(sas_ha, req_data[9], req_data[10],
+ 				req_data[32] >> 4, req_data[33] >> 4,
+
 
