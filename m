@@ -1,27 +1,33 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 12120] [Block layer or SCSI] requests aborted too early
-	during check_partition()
-Date: Sun, 30 Nov 2008 10:16:37 -0600
-Message-ID: <1228061797.4115.18.camel@localhost.localdomain>
-References: <20081129193241.9EC3B10800F@picon.linux-foundation.org>
-	 <1227988491.4636.14.camel@localhost.localdomain>
-	 <tkrat.08c6487c76d999a8@s5r6.in-berlin.de>
-	 <1228003702.4636.29.camel@localhost.localdomain>
-	 <49326062.6000800@s5r6.in-berlin.de>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12120] [Block layer or SCSI] requests aborted too early during check_partition()
+Date: Sun, 30 Nov 2008 08:16:45 -0800 (PST)
+Message-ID: <20081130161645.B9D56108041@picon.linux-foundation.org>
+References: <bug-12120-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:50770 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751144AbYK3QQg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 30 Nov 2008 11:16:36 -0500
-In-Reply-To: <49326062.6000800@s5r6.in-berlin.de>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:54894 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751324AbYK3QQr convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 30 Nov 2008 11:16:47 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mAUGGjm8020051
+	for <linux-scsi@vger.kernel.org>; Sun, 30 Nov 2008 08:16:46 -0800
+In-Reply-To: <bug-12120-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=12120
+
+
+
+
+
+------- Comment #10 from anonymous@kernel-bugs.osdl.org  2008-11-30 08:16 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Sun, 2008-11-30 at 10:44 +0100, Stefan Richter wrote:
 > James Bottomley wrote:
@@ -73,3 +79,7 @@ problems than firewire.
 James
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
