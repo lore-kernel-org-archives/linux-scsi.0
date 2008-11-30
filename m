@@ -1,25 +1,30 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 12120] [Block layer or SCSI] requests aborted too early
-	during check_partition()
-Date: Sat, 29 Nov 2008 18:08:22 -0600
-Message-ID: <1228003702.4636.29.camel@localhost.localdomain>
-References: <20081129193241.9EC3B10800F@picon.linux-foundation.org>
-	 <1227988491.4636.14.camel@localhost.localdomain>
-	 <tkrat.08c6487c76d999a8@s5r6.in-berlin.de>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12120] [Block layer or SCSI] requests aborted too early during check_partition()
+Date: Sat, 29 Nov 2008 16:08:31 -0800 (PST)
+Message-ID: <20081130000831.2B11110800F@picon.linux-foundation.org>
+References: <bug-12120-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:48741 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752915AbYK3AIX (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:56783 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753366AbYK3AId (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Nov 2008 19:08:23 -0500
-In-Reply-To: <tkrat.08c6487c76d999a8@s5r6.in-berlin.de>
+	Sat, 29 Nov 2008 19:08:33 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mAU08Vi6030728
+	for <linux-scsi@vger.kernel.org>; Sat, 29 Nov 2008 16:08:32 -0800
+In-Reply-To: <bug-12120-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=12120
+
+
+
+
+
+------- Comment #8 from anonymous@kernel-bugs.osdl.org  2008-11-29 16:08 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Sat, 2008-11-29 at 22:30 +0100, Stefan Richter wrote:
 > Nov 29 22:12:53 mini scsi_eh_2: Sending START_UNIT to sdev: 0xffff8800712ef000
@@ -62,13 +67,17 @@ index 3863617..de3f6d0 100644
 --- a/drivers/scsi/scsi_error.c
 +++ b/drivers/scsi/scsi_error.c
 @@ -933,7 +933,7 @@ static int scsi_eh_try_stu(struct scsi_cmnd *scmd)
- 
- 		for (i = 0; rtn == NEEDS_RETRY && i < 2; i++)
- 			rtn = scsi_send_eh_cmnd(scmd, stu_command, 6,
--						scmd->device->timeout, 0);
-+						3*SENSE_TIMEOUT, 0);
- 
- 		if (rtn == SUCCESS)
- 			return 0;
+
+                for (i = 0; rtn == NEEDS_RETRY && i < 2; i++)
+                        rtn = scsi_send_eh_cmnd(scmd, stu_command, 6,
+-                                               scmd->device->timeout, 0);
++                                               3*SENSE_TIMEOUT, 0);
+
+                if (rtn == SUCCESS)
+                        return 0;
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
