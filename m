@@ -1,41 +1,40 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH 6/7] stex: switch to block timeout
-Date: Sun, 30 Nov 2008 10:38:08 -0600
-Message-ID: <1228063088.4115.44.camel@localhost.localdomain>
+Subject: [PATCH 7/7] remove timeout from struct scsi_device
+Date: Sun, 30 Nov 2008 10:39:01 -0600
+Message-ID: <1228063141.4115.46.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:40485 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:40498 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751213AbYK3QiH (ORCPT
+	by vger.kernel.org with ESMTP id S1751381AbYK3QjB (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 30 Nov 2008 11:38:07 -0500
+	Sun, 30 Nov 2008 11:39:01 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Mike Anderson <andmike@linux.vnet.ibm.com>, Jens Axboe <Jens.Axboe@oracle.com>, Ed Lin <ed.lin@promise.com>
+Cc: Mike Anderson <andmike@linux.vnet.ibm.com>, Jens Axboe <Jens.Axboe@oracle.com>
 
-stex sets the timeout in its slave configure routine for all devices.
-This now needs to update the request queue timeout in block.
+by removing the unused timeout parameter we ensure a compile failure if
+anyone is accidentally still using it rather than the block timeout.
 
-Cc: Ed Lin <ed.lin@promise.com>
 Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 
 ---
 
-diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-index fd3d4f5..a3a18ad 100644
---- a/drivers/scsi/stex.c
-+++ b/drivers/scsi/stex.c
-@@ -477,7 +477,7 @@ stex_slave_config(struct scsi_device *sdev)
- {
- 	sdev->use_10_for_rw = 1;
- 	sdev->use_10_for_ms = 1;
--	sdev->timeout = 60 * HZ;
-+	blk_queue_rq_timeout(sdev->request_queue, 60 * HZ);
- 	sdev->tagged_supported = 1;
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index a37a814..2a1c141 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -159,8 +159,6 @@ struct scsi_device {
+ 	atomic_t iodone_cnt;
+ 	atomic_t ioerr_cnt;
  
- 	return 0;
+-	int timeout;
+-
+ 	struct device		sdev_gendev,
+ 				sdev_dev;
+ 
 
 
