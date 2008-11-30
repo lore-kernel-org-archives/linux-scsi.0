@@ -1,58 +1,80 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 07/11] st: convert st_flush to use st_scsi_kern_execute
-Date: Sun, 30 Nov 2008 17:08:01 +0900
-Message-ID: <1228032485-10328-8-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 01/11] st: move st_request initialization to st_allocate_request form st_do_scsi
+Date: Sun, 30 Nov 2008 17:07:55 +0900
+Message-ID: <1228032485-10328-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 References: <1228032485-10328-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1228032485-10328-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1228032485-10328-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1228032485-10328-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1228032485-10328-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1228032485-10328-6-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1228032485-10328-7-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mfo11.iij4u.or.jp ([210.138.174.81]:38621 "EHLO
+Received: from mfo11.iij4u.or.jp ([210.138.174.81]:38619 "EHLO
 	mfo11.iij4u.or.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750930AbYK3ISt (ORCPT
+	with ESMTP id S1750874AbYK3ISt (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Nov 2008 03:18:49 -0500
-In-Reply-To: <1228032485-10328-7-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <1228032485-10328-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Kai.Makisara@kolumbus.fi
 Cc: James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org
 
-This replaces st_do_scsi in st_flush (WRITE FILEMARKS) with
-st_scsi_kern_execute.
+This moves st_request initialization code to st_allocate_request()
+form st_do_scsi(). This is a preparation for making
+st_allocate_request() usable for everyone, not only st_do_scsi().
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- drivers/scsi/st.c |   13 ++++++++++---
- 1 files changed, 10 insertions(+), 3 deletions(-)
+ drivers/scsi/st.c |   32 +++++++++++++++++++-------------
+ 1 files changed, 19 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 4bfdc96..43651cd 100644
+index c959bdc..878493d 100644
 --- a/drivers/scsi/st.c
 +++ b/drivers/scsi/st.c
-@@ -1311,10 +1311,17 @@ static int st_flush(struct file *filp, fl_owner_t id)
- 		cmd[0] = WRITE_FILEMARKS;
- 		cmd[4] = 1 + STp->two_fm;
+@@ -451,9 +451,23 @@ static void st_sleep_done(void *data, char *sense, int result, int resid)
+ 		complete(SRpnt->waiting);
+ }
  
--		SRpnt = st_do_scsi(NULL, STp, cmd, 0, DMA_NONE,
--				   STp->device->timeout, MAX_WRITE_RETRIES, 1);
-+		SRpnt = st_allocate_request(STp);
- 		if (!SRpnt) {
--			result = (STp->buffer)->syscall_result;
-+			result = STp->buffer->syscall_result;
-+			goto out;
-+		}
+-static struct st_request *st_allocate_request(void)
++static struct st_request *st_allocate_request(struct scsi_tape *stp)
+ {
+-	return kzalloc(sizeof(struct st_request), GFP_KERNEL);
++	struct st_request *streq;
 +
-+		result = st_scsi_kern_execute(SRpnt, cmd, DMA_NONE, NULL, 0,
-+					      STp->device->timeout,
-+					      MAX_WRITE_RETRIES);
-+		if (result) {
-+			st_release_request(SRpnt);
- 			goto out;
- 		}
++	streq = kzalloc(sizeof(*streq), GFP_KERNEL);
++	if (streq)
++		streq->stp = stp;
++	else {
++		DEBC(printk(KERN_ERR "%s: Can't get SCSI request.\n",
++			    tape_name(stp)););
++		if (signal_pending(current))
++			stp->buffer->syscall_result = -EINTR;
++		else
++			stp->buffer->syscall_result = -EBUSY;
++	}
++
++	return streq;
+ }
  
+ static void st_release_request(struct st_request *streq)
+@@ -481,18 +495,10 @@ st_do_scsi(struct st_request * SRpnt, struct scsi_tape * STp, unsigned char *cmd
+ 		return NULL;
+ 	}
+ 
+-	if (SRpnt == NULL) {
+-		SRpnt = st_allocate_request();
+-		if (SRpnt == NULL) {
+-			DEBC( printk(KERN_ERR "%s: Can't get SCSI request.\n",
+-				     tape_name(STp)); );
+-			if (signal_pending(current))
+-				(STp->buffer)->syscall_result = (-EINTR);
+-			else
+-				(STp->buffer)->syscall_result = (-EBUSY);
++	if (!SRpnt) {
++		SRpnt = st_allocate_request(STp);
++		if (!SRpnt)
+ 			return NULL;
+-		}
+-		SRpnt->stp = STp;
+ 	}
+ 
+ 	/* If async IO, set last_SRpnt. This ptr tells write_behind_check
 -- 
 1.5.6.5
 
