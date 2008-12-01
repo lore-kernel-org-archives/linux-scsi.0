@@ -1,78 +1,55 @@
-From: akpm@linux-foundation.org
-Subject: [patch 08/10] scsi: annotate gdth_rdcap_data, gdth_rdcap16_data endianness
-Date: Mon, 01 Dec 2008 14:32:14 -0800
-Message-ID: <200812012232.mB1MWFbF019550@imap1.linux-foundation.org>
+From: Mike Anderson <andmike@linux.vnet.ibm.com>
+Subject: Re: [PATCH 2.6.28-rc6] block: internal dequeue shouldn't start
+	timer
+Date: Mon, 1 Dec 2008 15:45:29 -0800
+Message-ID: <20081201234529.GA14025@linux.vnet.ibm.com>
+References: <492F6DFC.3010103@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:33756 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751922AbYLAWen (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Dec 2008 17:34:43 -0500
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:45682 "EHLO e6.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751068AbYLAXpg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Dec 2008 18:45:36 -0500
+Content-Disposition: inline
+In-Reply-To: <492F6DFC.3010103@kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com, bharrosh@panasas.com
+To: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
+Tejun Heo <tj@kernel.org> wrote:
+> blkdev_dequeue_request() and elv_dequeue_request() are equivalent and
+> both start the timeout timer.  Barrier code dequeues the original
+> barrier request but doesn't passes the request itself to lower level
+> driver, only broken down proxy requests; however, as the original
+> barrier code goes through the same dequeue path and timeout timer is
+> started on it.  If barrier sequence takes long enough, this timer
+> expires but the low level driver has no idea about this request and
+> oops follows.
+> 
+> Timeout timer shouldn't have been started on the original barrier
+> request as it never goes through actual IO.  This patch unexports
+> elv_dequeue_request(), which has no external user anyway, and makes it
+> operate on elevator proper w/o adding the timer and make
+> blkdev_dequeue_request() call elv_dequeue_request() and add timer.
+> Internal users which don't pass the request to driver - barrier code
+> and end_that_request_last() - are converted to use
+> elv_dequeue_request().
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Mike Anderson <andmike@linux.vnet.ibm.com>
+> ---
+> Mike, this should fix the problem you were seeing (blk_add_timer on
+> requests w/o REQ_STARTED set).
+> 
 
-It would be easy to get rid of the typedefs too, but I kept this
-minimal.
+Yes this fixed the "w/o REQ_STARTED" error I was seeing on a distro kernel
+and a mainline system. 
 
-Noticed by sparse:
-drivers/scsi/gdth.c:2395:31: warning: incorrect type in assignment (different base types)
-drivers/scsi/gdth.c:2395:31:    expected unsigned int [unsigned] [assigned] [usertype] last_block_no
-drivers/scsi/gdth.c:2395:31:    got restricted __be32 [usertype] <noident>
-drivers/scsi/gdth.c:2396:27: warning: incorrect type in assignment (different base types)
-drivers/scsi/gdth.c:2396:27:    expected unsigned int [unsigned] [assigned] [usertype] block_length
-drivers/scsi/gdth.c:2396:27:    got restricted __be32 [usertype] <noident>
-drivers/scsi/gdth.c:2406:33: warning: incorrect type in assignment (different base types)
-drivers/scsi/gdth.c:2406:33:    expected unsigned long long [unsigned] [usertype] last_block_no
-drivers/scsi/gdth.c:2406:33:    got restricted __be64 [usertype] <noident>
-drivers/scsi/gdth.c:2407:33: warning: incorrect type in assignment (different base types)
-drivers/scsi/gdth.c:2407:33:    expected unsigned int [unsigned] [usertype] block_length
-drivers/scsi/gdth.c:2407:33:    got restricted __be32 [usertype] <noident>
+Thanks,
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
-
- drivers/scsi/gdth.c |    2 +-
- drivers/scsi/gdth.h |    8 ++++----
- 2 files changed, 5 insertions(+), 5 deletions(-)
-
-diff -puN drivers/scsi/gdth.c~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness drivers/scsi/gdth.c
---- a/drivers/scsi/gdth.c~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness
-+++ a/drivers/scsi/gdth.c
-@@ -2391,7 +2391,7 @@ static int gdth_internal_cache_cmd(gdth_
-       case READ_CAPACITY:
-         TRACE2(("Read capacity hdrive %d\n",t));
-         if (ha->hdr[t].size > (ulong64)0xffffffff)
--            rdc.last_block_no = 0xffffffff;
-+            rdc.last_block_no = cpu_to_be32(0xffffffff);
-         else
-             rdc.last_block_no = cpu_to_be32(ha->hdr[t].size-1);
-         rdc.block_length  = cpu_to_be32(SECTOR_SIZE);
-diff -puN drivers/scsi/gdth.h~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness drivers/scsi/gdth.h
---- a/drivers/scsi/gdth.h~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness
-+++ a/drivers/scsi/gdth.h
-@@ -968,14 +968,14 @@ typedef struct {
- 
- /* READ_CAPACITY data format */
- typedef struct {
--    ulong32     last_block_no;
--    ulong32     block_length;
-+	__be32 last_block_no;
-+	__be32 block_length;
- } PACKED gdth_rdcap_data;
- 
- /* READ_CAPACITY (16) data format */
- typedef struct {
--    ulong64     last_block_no;
--    ulong32     block_length;
-+	__be64 last_block_no;
-+	__be32 block_length;
- } PACKED gdth_rdcap16_data;
- 
- /* REQUEST_SENSE data format */
-_
+-andmike
+--
+Michael Anderson
+andmike@linux.vnet.ibm.com
