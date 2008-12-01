@@ -1,44 +1,50 @@
-From: Seokmann Ju <seokmann.ju@qlogic.com>
-Subject: Re: [RFC] FC pass thru - Rev IV
-Date: Mon, 1 Dec 2008 13:49:31 -0800
-Message-ID: <BA2B0040-C95D-42CE-9D12-EF8E1A752328@qlogic.com>
-References: <1227043498.4949.21.camel@ogier> <C49C4ADF-8DA1-4D86-AEBB-AC46A04FCA62@qlogic.com> <492B1685.4020709@emulex.com> <F285E2FA-64A5-4BB6-ACC4-1B31EB19AFE6@qlogic.com>
-Mime-Version: 1.0 (Apple Message framework v929.2)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
+From: akpm@linux-foundation.org
+Subject: [patch for 2.6.28? 1/1] aacraid: disable Dell Percraid quirk on Adaptec 2200S and 2120S
+Date: Mon, 01 Dec 2008 14:04:12 -0800
+Message-ID: <200812012204.mB1M4C4l003416@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch2.qlogic.com ([198.70.193.116]:9006 "EHLO
-	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751059AbYLAVte (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Dec 2008 16:49:34 -0500
-In-Reply-To: <F285E2FA-64A5-4BB6-ACC4-1B31EB19AFE6@qlogic.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:34506 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752133AbYLAWFX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Dec 2008 17:05:23 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Seokmann Ju <seokmann.ju@qlogic.com>
-Cc: James Smart <James.Smart@Emulex.Com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "andrew.vasquez@qlogic.com" <andrew.vasquez@qlogic.com>, "sven@linux.vnet.ibm.com" <sven@linux.vnet.ibm.com>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, thenzl@redhat.com, Achim_Leubner@adaptec.com, aacraid@adaptec.com, dermoth@aei.ca, gernot.hillier@siemens.com, stable@kernel.org
 
-Hi James,
+From: Tomas Henzl <thenzl@redhat.com>
 
-On Nov 25, 2008, at 6:38 AM, Seokmann Ju wrote:
->
-> On Nov 24, 2008, at 1:03 PM, James Smart wrote:
-[snip]
->>
->>> 2. Would  it be valuable to consider sending requests with
->>>   WWNN:WWPN?
->>
->> I considered this, especially for the fchost ELS request. But it  
->> means the LLDD has to do a nameserver query to find the n_port_id
->> corresponding to the names before it sent the ELS. It started to feel
->> like too much ancillary stuff for the LLDD to do to support the
->> request - so I punted.  However, the app, where we typically don't
->> care if it has to do more work, is free to do this and resolve it to
->> the basic primitives. :)
-> Thanks, I've got it.
-One minor questions/clarification.
-If I understood correctly, ELS only supports single sg. If this is  
-true, shouldn't it checked somewhere before the transport layer calls  
-LLD?
+A lot of 64bit machines with Adaptec 2200S and 2120S controllers don't
+recognize SCSI disks any more with the patch "fix driver failure with Dell
+PowerEdge Expandable RAID Controller 3/Di", but fail with tons of "aac_srb:
+aac_fib_send failed with status: 8195" instead. This patch disables the
+quirk introduced in the change cited above for those two controllers again.
 
-Thank you,
-Seokmann
+Signed-off-by: Gernot Hillier <gernot.hillier@siemens.com>
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+Cc: <aacraid@adaptec.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Tested-by: Thomas Guyot-Sionnest <dermoth@aei.ca>
+Cc: "Leubner, Achim" <Achim_Leubner@adaptec.com>
+Cc: <stable@kernel.org>		[2.6.27.x, 2.6.26.x, 2.6.25.x]
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/scsi/aacraid/linit.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff -puN drivers/scsi/aacraid/linit.c~aacraid-disable-dell-percraid-quirk-on-adaptec-2200s-and-2120s drivers/scsi/aacraid/linit.c
+--- a/drivers/scsi/aacraid/linit.c~aacraid-disable-dell-percraid-quirk-on-adaptec-2200s-and-2120s
++++ a/drivers/scsi/aacraid/linit.c
+@@ -175,8 +175,8 @@ static struct aac_driver_ident aac_drive
+ 	{ aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* PERC 3/Di (Boxster/PERC3DiB) */
+ 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "catapult        ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* catapult */
+ 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "tomcat          ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* tomcat */
+-	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2120S   ", 1, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2120S (Crusader) */
+-	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2200S (Vulcan) */
++	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2120S   ", 1, AAC_QUIRK_31BIT | AAC_QUIRK_34SG },		      /* Adaptec 2120S (Crusader) */
++	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG },		      /* Adaptec 2200S (Vulcan) */
+ 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Adaptec 2200S (Vulcan-2m) */
+ 	{ aac_rx_init, "aacraid",  "Legend  ", "Legend S220     ", 1, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Legend S220 (Legend Crusader) */
+ 	{ aac_rx_init, "aacraid",  "Legend  ", "Legend S230     ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG | AAC_QUIRK_SCSI_32 }, /* Legend S230 (Legend Vulcan) */
+_
