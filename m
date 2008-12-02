@@ -1,68 +1,35 @@
-From: "Karen Xie" <kxie@chelsio.com>
-Subject: RE: [Fwd: Re: iscsi update for 2.6.29]
-Date: Tue, 2 Dec 2008 10:23:41 -0800
-Message-ID: <8A71B368A89016469F72CD08050AD33403E32F0A@maui.asicdesigners.com>
-References: <4935764C.4080007@cs.wisc.edu>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [PATCH 5/7] st: update to use block timeout
+Date: Tue, 2 Dec 2008 20:25:18 +0200 (EET)
+Message-ID: <alpine.LNX.2.00.0812022020350.6407@kai.makisara.local>
+References: <1228062986.4115.41.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.22.49.110]:24755 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752571AbYLBSY3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Dec 2008 13:24:29 -0500
-Content-class: urn:content-classes:message
+Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:56210 "EHLO
+	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753234AbYLBSdZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Dec 2008 13:33:25 -0500
+In-Reply-To: <1228062986.4115.41.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mike Anderson <andmike@linux.vnet.ibm.com>, Jens Axboe <Jens.Axboe@oracle.com>
 
-SGksIEJvYXosDQoNClNvcnJ5LCBJIG11c3QgaGF2ZSBtaXNzZWQgeW91ciBiaWRpIGNvbW1lbnQu
-IEkgdHJpZWQgdG8gc2VhcmNoIHRoZSBhcmNoaXZlIGJ1dCBkb2VzIG5vdCBzZWVtIHRvIGJlIGFi
-bGUgdG8gZmluZCBhbnl0aGluZy4gRG8geW91IG1pbmQgZm9yd2FyZCBtZSB0aGUgZW1haWwgaWYg
-eW91IHN0aWxsIGhhdmUgaXQ/DQoNClNvcnJ5IGZvciB0aGUgaW5jb252ZW5pZW5jZS4NClRoYW5r
-cywNCkthcmVuDQoNCi0tLS0tLS0tIE9yaWdpbmFsIE1lc3NhZ2UgLS0tLS0tLS0NClN1YmplY3Q6
-IFJlOiBpc2NzaSB1cGRhdGUgZm9yIDIuNi4yOQ0KRGF0ZTogVHVlLCAwMiBEZWMgMjAwOCAxOTox
-MDo0OSArMDIwMA0KRnJvbTogQm9heiBIYXJyb3NoIDxiaGFycm9zaEBwYW5hc2FzLmNvbT4NClRv
-OiBtaWNoYWVsY0Bjcy53aXNjLmVkdQ0KQ0M6IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnDQpS
-ZWZlcmVuY2VzOiA8MTIyODE5OTUzNi0xMjU5NS0xLWdpdC1zZW5kLWVtYWlsLW1pY2hhZWxjQGNz
-Lndpc2MuZWR1Pg0KDQptaWNoYWVsY0Bjcy53aXNjLmVkdSB3cm90ZToNCj4gVGhpcyBwYXRjaHNl
-dCBpcyBmb3IgMi42LjI5LiBUaGlzIHNob3VsZCBiZSB0aGUgZmluYWwgcGF0Y2hlcw0KPiB0byBw
-cmVwYXJlIHRoZSBpc2NzaSBsYXllciBmb3IgY3hnYjNpLCB3aGljaCBsb29rcyBsaWtlIGl0DQo+
-IGhhcyBnb25lIHRocm91Z2ggdGhlIG5ldGRldiByZXZpZXcgYW5kIHdpbGwgYmUgc2VudCBoZXJl
-IG5leHQNCj4gc2hvcnRseS4NCj4gDQo+IFRoaXMgcGF0Y2hzZXQgd2FzIG1hZGUgb3ZlciBzY3Np
-LW1pc2MsIGFuZCB0aGUgZml4IGhlcmUuDQo+IGh0dHA6Ly9tYXJjLmluZm8vP2w9bGludXgtc2Nz
-aSZtPTEyMjgxNTUxOTMyNjIwNyZ3PTINCj4gKHRoZSBmaXggaW4gdGhhdCBlbWFpbCBkb2VzIG5v
-dCBjb25mbGljdCB3aXRoIHRoaXMgcGF0Y2hzZXQNCj4gYW5kIGNhbiBiZSBhcHBsaWVkIG92ZXIg
-b3IgYmVmb3JlIHRoZXNlIHBhdGNoZXMpLg0KPiANCj4gY3hnYjNpIGFkZHMgYSBuZXcgb2ZmbG9h
-ZCBtb2RlbC4gV2hlcmUgcWxhNHh4eCBvZmZsb2FkZWQgcHJldHR5DQo+IG11Y2ggZXZlcnl0aGlu
-ZywgYW5kIGJueDJpIG9mZmxvYWRlZCB0aGUgaXNjc2kgc2VxdWVuY2UgcHJvY2Vzc2luZw0KPiAo
-Z2l2ZSBpdCB0aGUgaXNjc2kgc2NzaSBjb21tYW5kIHBkdSBhbmQgdGhlIG9mZmxvYWQgZW5naW5l
-IHdpbGwNCj4gaGFuZGxlIGV2ZXJ5dGhpbmcgYmV0d2VlbiksIGN4Z2IzaSBvZmZsb2FkcyBvcGVy
-YXRpb25zIGxpa2UNCj4gZGlnZXN0LCBwYWRkaW5nLCBhbmQgZGF0YSB0cmFuc2ZlcnMuIEl0IHJl
-bGllcyBvbiB0aGUgaXNjc2kgbGF5ZXINCj4gZm9yIHRoZSBzZXF1ZW5jZSBzdGF0ZSBtYWNoaW5l
-LCBzbyB0aGlzIHBhdGNoc2V0IGlzIGJhc2ljYWxseQ0KPiBqdXN0IGJyZWFraW5nIHVwIGlzY3Np
-X3RjcCBpbnRvIGEgbGliIGxheWVyIHNvIGN4Z2IzaSBjYW4gc2hhcmUNCj4gdGhlIGNvZGUuDQo+
-IA0KDQpPSyBJIHRlc3RlZCB0aGF0IGxvdCBmaW5hbGx5LCBhbmQgaXQncyBnb29kLiBJJ20gYWJs
-ZSB0byBiYW5nDQpiaWRpIGNvbW1hbmRzIG9uIGl0IGFuZCBpdCBzZWVtcyB0byB3b3Jrcy4gZXhv
-ZnMgKHdhcyBvc2RmcykgbW91bnRzDQphbmQgd29ya3MgYXMgYmVmb3JlLiBJJ2xsIGxldCBpdCBy
-dW4gdGhyb3VnaCB0aGUgbmlnaHQgYW5kIHNlZSBpZg0KaXQgaG9sZHMuIChJdCBzaG91bGQpDQoN
-ClNvIHRoZSBnZW5lcmljIGxheWVyIG9mIHRoaXMgcGF0Y2hzZXQgaXMgdGVzdGVkLg0KDQpJIGhh
-dmUgc2VudCBjb21tZW50cyBhYm91dCBiaWRpIG1pc3Rha2VzIG1hZGUgaW4gdGhlIGN4Z2IzaSBz
-aWRlDQpvZiB0aGlzIHBhdGNoc2V0IGJ1dCBuZXZlciBnb3QgYSByZXNwb25zZSBhbmQgaXQgc2Vl
-bXMgdGhleSBoYXZlIG5vdA0KYmVlbiBmaXhlZC4gQnV0IEkgbWlnaHQgaGF2ZSBtaXNzZWQgdGhl
-IGZpeGVzLiBpcyB0aGUgY3hnYjNpIGJyYW5jaCBvbg0KZ2l0Oi8vZ2l0Lmtlcm5lbC5vcmcvcHVi
-L3NjbS9saW51eC9rZXJuZWwvZ2l0L21uYy9saW51eC0yLjYtaXNjc2kuZ2l0DQp0aGUgbGF0ZXN0
-IGl0ZXJhdGlvbiBvZiB0aGVzZSBwYXRjaGVzPyBJJ2xsIGhhdmUgYW5vdGhlciBsb29rIGlmIHlv
-dSB3YW50Pw0KDQpJZiB5b3Ugd2FudCBJIGNhbiBoZWxwIHlvdSBzZXQgdXAgYSBTVyBvbmx5IE9T
-RCBzZXR1cCwgdG8gdGVzdCBpZiBjeGdiM2kNCmlzIGJpZGkgY2xlYW4uIFdoYXQgYWJvdXQgdGhl
-IG90aGVyIGFjY2VsIGNhcmRzPw0KDQpPbmUgbW9yZSB0ZXN0IHRoYXQgSSBuZXZlciBkaWQgaXMg
-T1NEIChiaWRpKSBjb21tYW5kcyB3aXRoIGhlYWRlcitkYXRhDQpkaWdlc3QgZW5hYmxlZC4gTm93
-IHdpdGggT1NDJ3MgT1NEIHRhcmdldCBvdmVyIFRPTU8ncyBzdGd0IEkgc2hvdWxkIGJlDQphYmxl
-IHRvIHRlc3QgdGhhdC4gSUJNJ3MgdGFyZ2V0IGRpZCBub3Qgc3VwcG9ydCBpdCBiZWNhdXNlIE9T
-RCBoYXMgaXRzDQpvd24gZGlnZXN0IHN0dWZmLiBUT01PJ3Mgc3RndCBkb2VzIHN1cHBvcnRzIGhl
-YWRlcitkYXRhIGRpZ2VzdCByaWdodD8NCkkgc2hvdWxkIHJ1biB0aGVzZSB0ZXN0cyBsYXRlciB0
-aGlzIHdlZWsuIEp1c3QgdG8gbWFrZSBzdXJlIHRoZSBkaWdlc3QNCnN0dWZmIGlzIGJpZGkgc2Fm
-ZS4gSSdtIHN1cmUgaXQgaXMgYnV0IGp1c3QgdGhhdCBJIG5ldmVyIHRlc3RlZCBpdC4NCg0KVGhh
-bmtzDQpCb2F6DQo=
+On Sun, 30 Nov 2008, James Bottomley wrote:
+
+> Since we're trying to eliminate struct scsi_device timeout, the tape
+> driver has to be updated to use the block queue timeout instead.  The
+> tape use of scsi_device timeout looks to be self consistent, so I don't
+> think this necessarily fixes any bug, but it has to be done to allow me
+> to remove the timeout parameter from struct scsi_device.
+> 
+Looks OK and passes the simple tests.
+
+> Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>
+> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+> 
+Acked-by: Kai Makisara <Kai.Makisara@kolumbus.fi>
+
+Thanks,
+Kai
