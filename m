@@ -1,38 +1,33 @@
-From: Martin Michlmayr <tbm@cyrius.com>
-Subject: Re: [patch 10/10] scsi: fix bad use of udelay in atp870u.c
-Date: Tue, 2 Dec 2008 07:56:28 +0100
-Message-ID: <20081202065628.GH15428@deprecation.cyrius.com>
-References: <200812012232.mB1MWGFe019560@imap1.linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11898] mke2fs hang on AIC79 device.
+Date: Mon,  1 Dec 2008 23:20:04 -0800 (PST)
+Message-ID: <20081202072004.A7206108043@picon.linux-foundation.org>
+References: <bug-11898-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sorrow.cyrius.com ([65.19.161.204]:1088 "EHLO sorrow.cyrius.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754075AbYLBG4j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Dec 2008 01:56:39 -0500
-Content-Disposition: inline
-In-Reply-To: <200812012232.mB1MWGFe019560@imap1.linux-foundation.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:43669 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751305AbYLBHUg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Dec 2008 02:20:36 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mB27K4eJ013424
+	for <linux-scsi@vger.kernel.org>; Mon, 1 Dec 2008 23:20:05 -0800
+In-Reply-To: <bug-11898-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-* akpm@linux-foundation.org <akpm@linux-foundation.org> [2008-12-01 14:32]:
-> The ACARD driver calls udelay() with a value > 2000, which leads to
-> to the following compilation error on ARM:
->   ERROR: "__bad_udelay" [drivers/scsi/atp870u.ko] undefined!
->   make[1]: *** [__modpost] Error 1
-> Fix this by using a combination of mdelay and udelay.
+http://bugzilla.kernel.org/show_bug.cgi?id=11898
 
-Well, James Bottomley said that this simple patch is wrong, so I guess
-you should drop it.  On the other hand, this probably means this build
-failure will never get fixed.
 
-Except for this build failure and another, unrelated build failure of
-a SCSI module, I managed to get all the build failures I see when
-compiling the Debian kernel on ARM and MIPS fixed.  It's a pity the
-SCSI folks aren't as responsive as the rest of the world...
+
+
+
+------- Comment #41 from alex.shi@intel.com  2008-12-01 23:20 -------
+seems the 2.6.28-rc7 kernel still hang due to this bug. we will appreciate if
+the patch can be added into upstream kernel. :) 
+
 
 -- 
-Martin Michlmayr
-http://www.cyrius.com/
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
