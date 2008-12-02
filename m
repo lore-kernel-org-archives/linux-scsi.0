@@ -1,108 +1,68 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: iscsi update for 2.6.29
-Date: Tue, 02 Dec 2008 11:52:55 -0600
-Message-ID: <493575F7.5090706@cs.wisc.edu>
-References: <1228199536-12595-1-git-send-email-michaelc@cs.wisc.edu> <49356C19.3020207@panasas.com>
+From: "Karen Xie" <kxie@chelsio.com>
+Subject: RE: [Fwd: Re: iscsi update for 2.6.29]
+Date: Tue, 2 Dec 2008 10:23:41 -0800
+Message-ID: <8A71B368A89016469F72CD08050AD33403E32F0A@maui.asicdesigners.com>
+References: <4935764C.4080007@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:41044 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754591AbYLBRxJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Dec 2008 12:53:09 -0500
-In-Reply-To: <49356C19.3020207@panasas.com>
+Received: from stargate.chelsio.com ([12.22.49.110]:24755 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752571AbYLBSY3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Dec 2008 13:24:29 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: linux-scsi@vger.kernel.org
+To: bharrosh@panasas.com
+Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-Boaz Harrosh wrote:
-> michaelc@cs.wisc.edu wrote:
->> This patchset is for 2.6.29. This should be the final patches
->> to prepare the iscsi layer for cxgb3i, which looks like it
->> has gone through the netdev review and will be sent here next
->> shortly.
->>
->> This patchset was made over scsi-misc, and the fix here.
->> http://marc.info/?l=linux-scsi&m=122815519326207&w=2
->> (the fix in that email does not conflict with this patchset
->> and can be applied over or before these patches).
->>
->> cxgb3i adds a new offload model. Where qla4xxx offloaded pretty
->> much everything, and bnx2i offloaded the iscsi sequence processing
->> (give it the iscsi scsi command pdu and the offload engine will
->> handle everything between), cxgb3i offloads operations like
->> digest, padding, and data transfers. It relies on the iscsi layer
->> for the sequence state machine, so this patchset is basically
->> just breaking up iscsi_tcp into a lib layer so cxgb3i can share
->> the code.
->>
-> 
-> OK I tested that lot finally, and it's good. I'm able to bang
-> bidi commands on it and it seems to works. exofs (was osdfs) mounts
-> and works as before. I'll let it run through the night and see if
-> it holds. (It should)
-> 
-> So the generic layer of this patchset is tested.
-> 
-
-Thanks.
-
-
-> I have sent comments about bidi mistakes made in the cxgb3i side
-> of this patchset but never got a response and it seems they have not
-> been fixed. But I might have missed the fixes. is the cxgb3i branch on
-
-
-You mean you have sent comments about cxgb3i patches right? I think they 
-are saving them for last.
-
-
-> git://git.kernel.org/pub/scm/linux/kernel/git/mnc/linux-2.6-iscsi.git
-> the latest iteration of these patches? I'll have another look if you want?
-> 
-
-
-Yes, but my cxgb3i driver in there is a little old. It is the latest 
-they have sent to the lists, but there are lots of fixes floating around.
-
-
-> If you want I can help you set up a SW only OSD setup, to test if cxgb3i
-> is bidi clean. What about the other accel cards?
-
-I do not think cxgb3i is ready for ahs in the send path. See the comment 
-in cxgb3i_ulp.c's cxgb3i_conn_ulp2_alloc_pdu callout. It requires some 
-changes to iscsi_prep_scsi_cmd_pdu header setup so we have the size 
-before we allocate the header (cxgb3i works with skbs and uses the skb 
-allocators from the network layer for its header allocation and does not 
-preallocate like iscsi_tcp), or that we allocate a skb large enough to 
-hold any header then trim it if we have extra space. Your help in this 
-area would be really helpful. I did not want to much around a lot 
-because I could not test and did not want to add a regression to the 
-existing ahs code.
-
-qla4xxx is a offload card you might want to test. Then there is iser, 
-and I thought you had patches for them already.
-
-bnx2i is reworking their firmware according to the netdev review, so you 
-can look at the driver in the bnx2i branch, but it is really old. It 
-would probably be helpful to get an idea of how they are working with 
-the scatterlists and scsi commands though.
-
-
-> 
-> One more test that I never did is OSD (bidi) commands with header+data
-> digest enabled. Now with OSC's OSD target over TOMO's stgt I should be
-> able to test that. IBM's target did not support it because OSD has its
-> own digest stuff. TOMO's stgt does supports header+data digest right?
-> I should run these tests later this week. Just to make sure the digest
-> stuff is bidi safe. I'm sure it is but just that I never tested it.
-> 
-
-I think there might be a bug in the data digest code. When testing this 
-code I noticed that around the time the scatterlist changes started 
-showing up a couple kernels ago, data digests did not work in iscsi. I 
-started tracking it down and I think it might be in the crypto 
-scatterlist code. I am not sure and do not have enough info to make a 
-bug report yet.
+SGksIEJvYXosDQoNClNvcnJ5LCBJIG11c3QgaGF2ZSBtaXNzZWQgeW91ciBiaWRpIGNvbW1lbnQu
+IEkgdHJpZWQgdG8gc2VhcmNoIHRoZSBhcmNoaXZlIGJ1dCBkb2VzIG5vdCBzZWVtIHRvIGJlIGFi
+bGUgdG8gZmluZCBhbnl0aGluZy4gRG8geW91IG1pbmQgZm9yd2FyZCBtZSB0aGUgZW1haWwgaWYg
+eW91IHN0aWxsIGhhdmUgaXQ/DQoNClNvcnJ5IGZvciB0aGUgaW5jb252ZW5pZW5jZS4NClRoYW5r
+cywNCkthcmVuDQoNCi0tLS0tLS0tIE9yaWdpbmFsIE1lc3NhZ2UgLS0tLS0tLS0NClN1YmplY3Q6
+IFJlOiBpc2NzaSB1cGRhdGUgZm9yIDIuNi4yOQ0KRGF0ZTogVHVlLCAwMiBEZWMgMjAwOCAxOTox
+MDo0OSArMDIwMA0KRnJvbTogQm9heiBIYXJyb3NoIDxiaGFycm9zaEBwYW5hc2FzLmNvbT4NClRv
+OiBtaWNoYWVsY0Bjcy53aXNjLmVkdQ0KQ0M6IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnDQpS
+ZWZlcmVuY2VzOiA8MTIyODE5OTUzNi0xMjU5NS0xLWdpdC1zZW5kLWVtYWlsLW1pY2hhZWxjQGNz
+Lndpc2MuZWR1Pg0KDQptaWNoYWVsY0Bjcy53aXNjLmVkdSB3cm90ZToNCj4gVGhpcyBwYXRjaHNl
+dCBpcyBmb3IgMi42LjI5LiBUaGlzIHNob3VsZCBiZSB0aGUgZmluYWwgcGF0Y2hlcw0KPiB0byBw
+cmVwYXJlIHRoZSBpc2NzaSBsYXllciBmb3IgY3hnYjNpLCB3aGljaCBsb29rcyBsaWtlIGl0DQo+
+IGhhcyBnb25lIHRocm91Z2ggdGhlIG5ldGRldiByZXZpZXcgYW5kIHdpbGwgYmUgc2VudCBoZXJl
+IG5leHQNCj4gc2hvcnRseS4NCj4gDQo+IFRoaXMgcGF0Y2hzZXQgd2FzIG1hZGUgb3ZlciBzY3Np
+LW1pc2MsIGFuZCB0aGUgZml4IGhlcmUuDQo+IGh0dHA6Ly9tYXJjLmluZm8vP2w9bGludXgtc2Nz
+aSZtPTEyMjgxNTUxOTMyNjIwNyZ3PTINCj4gKHRoZSBmaXggaW4gdGhhdCBlbWFpbCBkb2VzIG5v
+dCBjb25mbGljdCB3aXRoIHRoaXMgcGF0Y2hzZXQNCj4gYW5kIGNhbiBiZSBhcHBsaWVkIG92ZXIg
+b3IgYmVmb3JlIHRoZXNlIHBhdGNoZXMpLg0KPiANCj4gY3hnYjNpIGFkZHMgYSBuZXcgb2ZmbG9h
+ZCBtb2RlbC4gV2hlcmUgcWxhNHh4eCBvZmZsb2FkZWQgcHJldHR5DQo+IG11Y2ggZXZlcnl0aGlu
+ZywgYW5kIGJueDJpIG9mZmxvYWRlZCB0aGUgaXNjc2kgc2VxdWVuY2UgcHJvY2Vzc2luZw0KPiAo
+Z2l2ZSBpdCB0aGUgaXNjc2kgc2NzaSBjb21tYW5kIHBkdSBhbmQgdGhlIG9mZmxvYWQgZW5naW5l
+IHdpbGwNCj4gaGFuZGxlIGV2ZXJ5dGhpbmcgYmV0d2VlbiksIGN4Z2IzaSBvZmZsb2FkcyBvcGVy
+YXRpb25zIGxpa2UNCj4gZGlnZXN0LCBwYWRkaW5nLCBhbmQgZGF0YSB0cmFuc2ZlcnMuIEl0IHJl
+bGllcyBvbiB0aGUgaXNjc2kgbGF5ZXINCj4gZm9yIHRoZSBzZXF1ZW5jZSBzdGF0ZSBtYWNoaW5l
+LCBzbyB0aGlzIHBhdGNoc2V0IGlzIGJhc2ljYWxseQ0KPiBqdXN0IGJyZWFraW5nIHVwIGlzY3Np
+X3RjcCBpbnRvIGEgbGliIGxheWVyIHNvIGN4Z2IzaSBjYW4gc2hhcmUNCj4gdGhlIGNvZGUuDQo+
+IA0KDQpPSyBJIHRlc3RlZCB0aGF0IGxvdCBmaW5hbGx5LCBhbmQgaXQncyBnb29kLiBJJ20gYWJs
+ZSB0byBiYW5nDQpiaWRpIGNvbW1hbmRzIG9uIGl0IGFuZCBpdCBzZWVtcyB0byB3b3Jrcy4gZXhv
+ZnMgKHdhcyBvc2RmcykgbW91bnRzDQphbmQgd29ya3MgYXMgYmVmb3JlLiBJJ2xsIGxldCBpdCBy
+dW4gdGhyb3VnaCB0aGUgbmlnaHQgYW5kIHNlZSBpZg0KaXQgaG9sZHMuIChJdCBzaG91bGQpDQoN
+ClNvIHRoZSBnZW5lcmljIGxheWVyIG9mIHRoaXMgcGF0Y2hzZXQgaXMgdGVzdGVkLg0KDQpJIGhh
+dmUgc2VudCBjb21tZW50cyBhYm91dCBiaWRpIG1pc3Rha2VzIG1hZGUgaW4gdGhlIGN4Z2IzaSBz
+aWRlDQpvZiB0aGlzIHBhdGNoc2V0IGJ1dCBuZXZlciBnb3QgYSByZXNwb25zZSBhbmQgaXQgc2Vl
+bXMgdGhleSBoYXZlIG5vdA0KYmVlbiBmaXhlZC4gQnV0IEkgbWlnaHQgaGF2ZSBtaXNzZWQgdGhl
+IGZpeGVzLiBpcyB0aGUgY3hnYjNpIGJyYW5jaCBvbg0KZ2l0Oi8vZ2l0Lmtlcm5lbC5vcmcvcHVi
+L3NjbS9saW51eC9rZXJuZWwvZ2l0L21uYy9saW51eC0yLjYtaXNjc2kuZ2l0DQp0aGUgbGF0ZXN0
+IGl0ZXJhdGlvbiBvZiB0aGVzZSBwYXRjaGVzPyBJJ2xsIGhhdmUgYW5vdGhlciBsb29rIGlmIHlv
+dSB3YW50Pw0KDQpJZiB5b3Ugd2FudCBJIGNhbiBoZWxwIHlvdSBzZXQgdXAgYSBTVyBvbmx5IE9T
+RCBzZXR1cCwgdG8gdGVzdCBpZiBjeGdiM2kNCmlzIGJpZGkgY2xlYW4uIFdoYXQgYWJvdXQgdGhl
+IG90aGVyIGFjY2VsIGNhcmRzPw0KDQpPbmUgbW9yZSB0ZXN0IHRoYXQgSSBuZXZlciBkaWQgaXMg
+T1NEIChiaWRpKSBjb21tYW5kcyB3aXRoIGhlYWRlcitkYXRhDQpkaWdlc3QgZW5hYmxlZC4gTm93
+IHdpdGggT1NDJ3MgT1NEIHRhcmdldCBvdmVyIFRPTU8ncyBzdGd0IEkgc2hvdWxkIGJlDQphYmxl
+IHRvIHRlc3QgdGhhdC4gSUJNJ3MgdGFyZ2V0IGRpZCBub3Qgc3VwcG9ydCBpdCBiZWNhdXNlIE9T
+RCBoYXMgaXRzDQpvd24gZGlnZXN0IHN0dWZmLiBUT01PJ3Mgc3RndCBkb2VzIHN1cHBvcnRzIGhl
+YWRlcitkYXRhIGRpZ2VzdCByaWdodD8NCkkgc2hvdWxkIHJ1biB0aGVzZSB0ZXN0cyBsYXRlciB0
+aGlzIHdlZWsuIEp1c3QgdG8gbWFrZSBzdXJlIHRoZSBkaWdlc3QNCnN0dWZmIGlzIGJpZGkgc2Fm
+ZS4gSSdtIHN1cmUgaXQgaXMgYnV0IGp1c3QgdGhhdCBJIG5ldmVyIHRlc3RlZCBpdC4NCg0KVGhh
+bmtzDQpCb2F6DQo=
