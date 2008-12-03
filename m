@@ -1,65 +1,54 @@
-From: Bernd Schubert <bs@q-leap.de>
-Subject: Re: [PATCH 1/7] print eh activation
-Date: Wed, 3 Dec 2008 12:19:20 +0100
-Message-ID: <200812031219.20662.bs@q-leap.de>
-References: <200811261840.45360.bs@q-leap.de> <200811261844.02732.bs@q-leap.de> <1227725222.3387.19.camel@localhost.localdomain>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 2.6.28-rc6] block: internal dequeue shouldn't start timer
+Date: Wed, 3 Dec 2008 12:36:36 +0100
+Message-ID: <20081203113636.GK18255@kernel.dk>
+References: <492F6DFC.3010103@kernel.org> <20081201234529.GA14025@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.q-leap.de ([88.79.172.217]:38152 "EHLO mail.q-leap.de"
+Received: from brick.kernel.dk ([93.163.65.50]:16630 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751575AbYLCLTZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Dec 2008 06:19:25 -0500
-In-Reply-To: <1227725222.3387.19.camel@localhost.localdomain>
+	id S1751351AbYLCMCL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Dec 2008 07:02:11 -0500
 Content-Disposition: inline
+In-Reply-To: <20081201234529.GA14025@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@linux.vnet.ibm.com>
+Cc: Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
 
-On Wednesday 26 November 2008 19:47:02 James Bottomley wrote:
-> On Wed, 2008-11-26 at 18:44 +0100, Bernd Schubert wrote:
-> > Print activation of the scsi error handler to let the user know what was
-> > the the error handler was activated. These information are essential to
-> > diagnose hardware issues.
->
-> But it can be turned on already with SCSI logging ... at least the
-> activation message.  I don't think we want this to be printed all the
-> time, because the error handler can be activated in non-error situations
-> for some HBAs (like sense collection for non-ACA emulating drivers).
+On Mon, Dec 01 2008, Mike Anderson wrote:
+> Tejun Heo <tj@kernel.org> wrote:
+> > blkdev_dequeue_request() and elv_dequeue_request() are equivalent and
+> > both start the timeout timer.  Barrier code dequeues the original
+> > barrier request but doesn't passes the request itself to lower level
+> > driver, only broken down proxy requests; however, as the original
+> > barrier code goes through the same dequeue path and timeout timer is
+> > started on it.  If barrier sequence takes long enough, this timer
+> > expires but the low level driver has no idea about this request and
+> > oops follows.
+> > 
+> > Timeout timer shouldn't have been started on the original barrier
+> > request as it never goes through actual IO.  This patch unexports
+> > elv_dequeue_request(), which has no external user anyway, and makes it
+> > operate on elevator proper w/o adding the timer and make
+> > blkdev_dequeue_request() call elv_dequeue_request() and add timer.
+> > Internal users which don't pass the request to driver - barrier code
+> > and end_that_request_last() - are converted to use
+> > elv_dequeue_request().
+> > 
+> > Signed-off-by: Tejun Heo <tj@kernel.org>
+> > Cc: Mike Anderson <andmike@linux.vnet.ibm.com>
+> > ---
+> > Mike, this should fix the problem you were seeing (blk_add_timer on
+> > requests w/o REQ_STARTED set).
+> > 
+> 
+> Yes this fixed the "w/o REQ_STARTED" error I was seeing on a distro kernel
+> and a mainline system. 
 
-Sorry for the late reply, I didn't have access to my mails for a few days. 
-
-Actually I entirely disagree, activating the error handler should be an 
-exception and as such exception, it shall print it was activated and also the 
-reason why it was activated. Without these information we see quite often in 
-our logs something like:
-
-[12165690.357905] mptscsih: ioc1: attempting task abort! (sc=ffff81012a957500)
-[12165690.357966] sd 3:0:1:0:
-[12165690.358018]         command: cdb[0]=0x28: 28 00 37 10 e9 4f 00 00 08 00
-[12165690.732712] mptbase: ioc1: IOCStatus(0x0048): SCSI Task Terminated
-[12165690.733699] mptscsih: ioc1: task abort: SUCCESS (sc=ffff81012a957500)
-
-But this gives you no chance to see, where it comes from. After adding the 
-additional printks from my patch, we recognized the error handler was 
-activated mostly due to command timeouts. So increasing the timeouts to >90s 
-already solved 2/3rds of our problems. Please also see patch nr. 6, the 
-additional printks did help me to recognize always only one special scsi 
-command fails.
-
-In my opinion, if a driver needs the error handler for specific actions, we 
-should create another interface for that. Could you please point me to such a 
-non-ACA river?
-I also only see two calling functions of scsi_eh_scmd_add(), namely 
-scsi_times_out() and scsi_softirq_done() and only for these calls the 
-additinal printks will be done (since scmd is required to do the printks).
-
-Thanks,
-Bernd
+Thanks Tejun, this makes sense. I'll make sure it goes upstream asap.
 
 -- 
-Bernd Schubert
-Q-Leap Networks GmbH
+Jens Axboe
+
