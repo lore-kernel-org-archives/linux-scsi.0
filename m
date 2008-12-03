@@ -1,35 +1,56 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v2] SCSI: detect missing data for INQUIRY
-Date: Wed, 03 Dec 2008 12:00:38 -0600
-Message-ID: <1228327238.5551.34.camel@localhost.localdomain>
-References: <Pine.LNX.4.44L0.0812031243140.2518-100000@iolanthe.rowland.org>
+Subject: Re: [PATCH] SCSI: fix the return type of the remove() method in
+	sgiwd93.c
+Date: Wed, 03 Dec 2008 12:01:46 -0600
+Message-ID: <1228327306.5551.36.camel@localhost.localdomain>
+References: <1227140357-29921-1-git-send-email-dmitri.vorobiev@movial.fi>
+	 <46353.88.114.226.209.1228321494.squirrel@webmail.movial.fi>
+	 <1228324123.5551.25.camel@localhost.localdomain>
+	 <ac3eb2510812030952k5b57a9c7qb68e3684de170d75@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:42268 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:42284 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752002AbYLCSAh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Dec 2008 13:00:37 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0812031243140.2518-100000@iolanthe.rowland.org>
+	by vger.kernel.org with ESMTP id S1752117AbYLCSBo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Dec 2008 13:01:44 -0500
+In-Reply-To: <ac3eb2510812030952k5b57a9c7qb68e3684de170d75@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: Vorobiev Dmitri <dmitri.vorobiev@movial.fi>, linux-scsi@vger.kernel.org, linux-mips@linux-mips.org, Greg KH <greg@kroah.com>
 
-On Wed, 2008-12-03 at 12:44 -0500, Alan Stern wrote:
-> James:
+On Wed, 2008-12-03 at 18:52 +0100, Kay Sievers wrote:
+> On Wed, Dec 3, 2008 at 18:08, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+> > On Wed, 2008-12-03 at 18:24 +0200, Vorobiev Dmitri wrote:
+> >> > This patch fixes the following compilation warning:
+> >> >
+> >> >   CC [M]  drivers/scsi/sgiwd93.o
+> >> > drivers/scsi/sgiwd93.c:314: warning: initialization from incompatible
+> >> > pointer type
+> >>
+> >> Any news about this one? I think this patch should go via linux-scsi,
+> >> unless you would be insisting on pushing it via linux-mips, in which case
+> >> I'll politely bug Ralf about it. :)
+> >
+> > Looks OK for the local change.
+> >
+> > Globally, having driver->remove and platform_driver->remove return int
+> > instead of void looks wrong.  Particularly when the only use cases are
+> > in drivers/base/ and they all ignore the return code.
+> >
+> > Greg and Kay ... shouldn't we simply redefine the return values for the
+> > remove methods in these structures to return void (and thus match the
+> > use case)?
 > 
-> There hasn't been any feedback on this patch:
-> 
-> 	http://marc.info/?l=linux-scsi&m=122513368301598&w=2
-> 
-> It was modified in the way you requested.  Does it need to be revised 
-> any more?
+> Aren't there many many drivers across the tree, using the "int remove" version?
 
-Probably not.  I really dislike a check and retry on something which is
-theoretically a legal return, but I suppose I can put it in and see if
-anything breaks.
+Yes ... since it's a function prototype.
+
+However, if drivers/base simply discards the return, it's a trap we
+shouldn't be setting.
 
 James
 
