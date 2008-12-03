@@ -1,29 +1,30 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: 2.6.28-rc7-git2: Reported regressions from 2.6.27
-Date: Wed, 03 Dec 2008 18:17:21 -0600
-Message-ID: <1228349841.5551.100.camel@localhost.localdomain>
-References: <QFIA5HSHV8B.A.2aG.hoxNJB@chimera>
+From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
+Subject: [Bug #12099] Nokia 5310 storage-mode
+Date: Wed,  3 Dec 2008 23:40:32 +0100 (CET)
+Message-ID: <TpbYvO5GPt.A.4XE.KGyNJB@chimera>
+References: <49ZBswjGjrL.A.ECE.BGyNJB@chimera>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <QFIA5HSHV8B.A.2aG.hoxNJB@chimera>
-Sender: netdev-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <49ZBswjGjrL.A.ECE.BGyNJB@chimera>
+Content-Disposition: inline
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Robson Roberto Souza Peixoto <robsonpeixoto-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2008-12-03 at 22:49 +0100, Rafael J. Wysocki wrote:
-> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=12120
-> Subject         : [Block layer or SCSI] requests aborted too early
-> during check_partition()
-> Submitter       : Stefan Richter <stefan-r-bz@s5r6.in-berlin.de>
-> Date            : 2008-11-29 05:19 (5 days old)
+This message has been generated automatically as a part of a report
+of regressions introduced between 2.6.26 and 2.6.27.
 
-Fixed by this patch:
-
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=9728c0814ecb505546696a659858fdb761375544
-
-James
+The following bug entry is on the current list of known regressions
+introduced between 2.6.26 and 2.6.27.  Please verify if it still should
+be listed and let me know (either way).
 
 
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12099
+Subject		: Nokia 5310 storage-mode
+Submitter	: Robson Roberto Souza Peixoto <robsonpeixoto-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2008-11-25 01:07 (9 days old)
+Handled-By	: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Patch		: http://marc.info/?l=linux-kernel&m=122762731503933&w=4
