@@ -1,44 +1,24 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [Fwd: Re: iscsi update for 2.6.29]
-Date: Wed, 03 Dec 2008 10:43:55 +0200
-Message-ID: <493646CB.5080602@panasas.com>
-References: <4935764C.4080007@cs.wisc.edu> <8A71B368A89016469F72CD08050AD33403E32F0A@maui.asicdesigners.com> <49364476.5010608@panasas.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] remove ide-scsi
+Date: Wed, 3 Dec 2008 05:06:43 -0500
+Message-ID: <20081203100643.GA29340@infradead.org>
+References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:21897 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750859AbYLCIn7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Dec 2008 03:43:59 -0500
-In-Reply-To: <49364476.5010608@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-ide-owner@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, osst@riede.org
 List-Id: linux-scsi@vger.kernel.org
-To: Karen Xie <kxie@chelsio.com>
-Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-Boaz Harrosh wrote:
-> http://groups.google.com/group/open-iscsi/msg/dd660ab6b0def64f?&q=cxgb3i%3A+cxgb3+iSCSI+initiator+boaz
+On Wed, Dec 03, 2008 at 10:38:54AM +0900, FUJITA Tomonori wrote:
+> This is for 2.6.29 (not 2.6.28) as feature-removal-schedule.txt says.
 > 
-> Karen Xie wrote:
->> Hi, Boaz,
->>
->> Sorry, I must have missed your bidi comment. I tried to search the archive but does not seem to be able to find anything. Do you mind forward me the email if you still have it?
->>
->> Sorry for the inconvenience.
->> Thanks,
->> Karen
->>
+> It's against linux-next (which seems to has some changes to ide-scsi
+> for 2.6.29 from the ide tree). 
 
-Karen Hi.
+Isn't ide-scsi the only way to use ATAPI OnStream tapes supported by
+the osst driver?
 
-Please point me to the latest code. Do you have it on a public git/web
-based on Mike's latest kernel?
-
-Would you be interested in testing a bidi setup with SW OSD target and
-initiator? One machine runs a user-mode target the second an initiator
-on top of open-iscsi. This way you can test full bidi and extended cdb
-commands.
-
-Thanks
-Boaz
