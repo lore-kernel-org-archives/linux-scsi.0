@@ -1,994 +1,164 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] remove ide-scsi
-Date: Wed, 3 Dec 2008 10:38:54 +0900
-Message-ID: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] [Target_Core_Mod]: Update PSCSI, IBLOCK, FILEIO and
+	RAMDISK for se_task_t->task_sg
+Date: Tue, 02 Dec 2008 18:15:16 -0800
+Message-ID: <1228270516.6229.139.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:38814 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751342AbYLCBjF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Dec 2008 20:39:05 -0500
+Received: from smtp116.sbc.mail.sp1.yahoo.com ([69.147.64.89]:22617 "HELO
+	smtp116.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753245AbYLCCPT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Dec 2008 21:15:19 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: James.Bottomley@HansenPartnership.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>
 
-This is for 2.6.29 (not 2.6.28) as feature-removal-schedule.txt says.
+>From e030ca2b9bbb81402b3ed669bb5e1d54fed0dff7 Mon Sep 17 00:00:00 2001
+From: Nicholas Bellinger <nab@linux-iscsi.org>
+Date: Tue, 2 Dec 2008 18:07:40 -0800
+Subject: [PATCH] [Target_Core_Mod]: Update PSCSI, IBLOCK, FILEIO and RAMDISK for se_task_t->task_sg
 
-It's against linux-next (which seems to has some changes to ide-scsi
-for 2.6.29 from the ide tree). 
+This patch changes the generic target core subsystem plugins to use se_task_t->task_sg
+and gets rid of a handful of casts from the original se_task_t->task_buf, which if present,
+will always contain a contigious array of struct scatterlist memory.
 
-=
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] remove ide-scsi
-
-As planed, this removes ide-scsi.
-
-The 2.6 kernel supports direct writing to ide CD drives, which
-eliminates the need for ide-scsi. ide-scsi has been unmaintained and
-marked as deprecated.
-
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- Documentation/feature-removal-schedule.txt |    9 -
- MAINTAINERS                                |    5 -
- drivers/ide/Kconfig                        |   17 -
- drivers/scsi/Kconfig                       |    8 +-
- drivers/scsi/Makefile                      |    1 -
- drivers/scsi/ide-scsi.c                    |  840 ----------------------------
- 6 files changed, 4 insertions(+), 876 deletions(-)
- delete mode 100644 drivers/scsi/ide-scsi.c
+ drivers/lio-core/target_core_file.c   |   12 ++++++------
+ drivers/lio-core/target_core_iblock.c |    4 ++--
+ drivers/lio-core/target_core_pscsi.c  |   11 ++++-------
+ drivers/lio-core/target_core_rd.c     |    2 +-
+ 4 files changed, 13 insertions(+), 16 deletions(-)
 
-diff --git a/Documentation/feature-removal-schedule.txt b/Documentation/feature-removal-schedule.txt
-index 77eb6b1..31f7906 100644
---- a/Documentation/feature-removal-schedule.txt
-+++ b/Documentation/feature-removal-schedule.txt
-@@ -322,15 +322,6 @@ Who:  Krzysztof Piotr Oledzki <ole@ans.pl>
+diff --git a/drivers/lio-core/target_core_file.c b/drivers/lio-core/target_core_file.c
+index 5b9b5dd..be1314d 100644
+--- a/drivers/lio-core/target_core_file.c
++++ b/drivers/lio-core/target_core_file.c
+@@ -586,7 +586,7 @@ static int fd_do_readv (fd_request_t *req, se_task_t *task)
+ 	u32 i;
+ 	mm_segment_t old_fs;
+ 	struct file *fd = req->fd_dev->fd_file;
+-	struct scatterlist *sg = (struct scatterlist *) req->fd_buf;
++	struct scatterlist *sg = task->task_sg;
+ 	struct iovec iov[req->fd_sg_count];	
  
- ---------------------------
+ 	memset(iov, 0, sizeof(struct iovec) + req->fd_sg_count);
+@@ -638,7 +638,7 @@ static int fd_do_aio_read (fd_request_t *req, se_task_t *task)
+ 	unsigned long long offset, lba = req->fd_lba;;
+ 	mm_segment_t old_fs;
+ 	struct file *fd = req->fd_dev->fd_file;
+-	struct scatterlist *sg = (struct scatterlist *) req->fd_buf;
++	struct scatterlist *sg = task->task_sg;
+ 	struct iovec *iov;
+ 	struct kiocb	*iocb;
  
--What: ide-scsi (BLK_DEV_IDESCSI)
--When: 2.6.29
--Why:  The 2.6 kernel supports direct writing to ide CD drives, which
--      eliminates the need for ide-scsi. The new method is more
--      efficient in every way.
--Who:  FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
--
-----------------------------
--
- What:	i2c_attach_client(), i2c_detach_client(), i2c_driver->detach_client()
- When:	2.6.29 (ideally) or 2.6.30 (more likely)
- Why:	Deprecated by the new (standard) device driver binding model. Use
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 758dd7a..8e07bb9 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -2138,11 +2138,6 @@ M:	Gadi Oxman <gadio@netvision.net.il>
- L:	linux-kernel@vger.kernel.org
- S:	Maintained
+@@ -716,7 +716,7 @@ static int fd_sendactor (read_descriptor_t * desc, struct page *page, unsigned l
+ 	unsigned long count = desc->count;
+ 	se_task_t *task = desc->arg.data;
+ 	fd_request_t *req = (fd_request_t *) task->transport_req;	
+-	struct scatterlist *sg = (struct scatterlist *) req->fd_buf;
++	struct scatterlist *sg = task->task_sg;
  
--IDE-SCSI DRIVER
--L:	linux-ide@vger.kernel.org
--L:	linux-scsi@vger.kernel.org
--S:	Orphan
--
- IDLE-I7300
- P:	Andy Henroid
- M:	andrew.d.henroid@intel.com
-diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
-index 8d84fe4..d806271 100644
---- a/drivers/ide/Kconfig
-+++ b/drivers/ide/Kconfig
-@@ -185,23 +185,6 @@ config BLK_DEV_IDETAPE
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called ide-tape.
+ //	PYXPRINT("page: %p offset: %lu size: %lu\n", page, offset, size);
  
--config BLK_DEV_IDESCSI
--	tristate "SCSI emulation support (DEPRECATED)"
--	depends on SCSI
--	select IDE_ATAPI
--	---help---
--	  WARNING: ide-scsi is no longer needed for cd writing applications!
--	  The 2.6 kernel supports direct writing to ide-cd, which eliminates
--	  the need for ide-scsi + the entire scsi stack just for writing a
--	  cd. The new method is more efficient in every way.
--
--	  This will provide SCSI host adapter emulation for IDE ATAPI devices,
--	  and will allow you to use a SCSI device driver instead of a native
--	  ATAPI driver.
--
--	  If both this SCSI emulation and native ATAPI support are compiled
--	  into the kernel, the native support will be used.
--
- config BLK_DEV_IDEACPI
- 	bool "IDE ACPI support"
- 	depends on ACPI
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index e6af21c..2eb172d 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -21,7 +21,7 @@ config SCSI
- 	  You also need to say Y here if you have a device which speaks
- 	  the SCSI protocol.  Examples of this include the parallel port
- 	  version of the IOMEGA ZIP drive, USB storage devices, Fibre
--	  Channel, FireWire storage and the IDE-SCSI emulation driver.
-+	  Channel, and FireWire storage.
+@@ -767,7 +767,7 @@ static int fd_do_writev (fd_request_t *req, se_task_t *task)
+ 	int ret = 0;
+ 	u32 i;
+ 	struct file *fd = req->fd_dev->fd_file;
+-	struct scatterlist *sg = (struct scatterlist *) req->fd_buf;
++	struct scatterlist *sg = task->task_sg;
+ 	mm_segment_t old_fs;
+ 	struct iovec iov[req->fd_sg_count];
  
- 	  To compile this driver as a module, choose M here and read
- 	  <file:Documentation/scsi/scsi.txt>.
-@@ -101,9 +101,9 @@ config CHR_DEV_OSST
- 	---help---
- 	  The OnStream SC-x0 SCSI tape drives cannot be driven by the
- 	  standard st driver, but instead need this special osst driver and
--	  use the  /dev/osstX char device nodes (major 206).  Via usb-storage
--	  and ide-scsi, you may be able to drive the USB-x0 and DI-x0 drives
--	  as well.  Note that there is also a second generation of OnStream
-+	  use the  /dev/osstX char device nodes (major 206).  Via usb-storage,
-+	  you may be able to drive the USB-x0 and DI-x0 drives as well.
-+	  Note that there is also a second generation of OnStream
- 	  tape drives (ADR-x0) that supports the standard SCSI-2 commands for
- 	  tapes (QIC-157) and can be driven by the standard driver st.
- 	  For more information, you may have a look at the SCSI-HOWTO
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index 1e49632..42bf88b 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -103,7 +103,6 @@ obj-$(CONFIG_SCSI_GDTH)		+= gdth.o
- obj-$(CONFIG_SCSI_INITIO)	+= initio.o
- obj-$(CONFIG_SCSI_INIA100)	+= a100u2w.o
- obj-$(CONFIG_SCSI_QLOGICPTI)	+= qlogicpti.o
--obj-$(CONFIG_BLK_DEV_IDESCSI)	+= ide-scsi.o
- obj-$(CONFIG_SCSI_MESH)		+= mesh.o
- obj-$(CONFIG_SCSI_MAC53C94)	+= mac53c94.o
- obj-$(CONFIG_BLK_DEV_3W_XXXX_RAID) += 3w-xxxx.o
-diff --git a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
-deleted file mode 100644
-index c24140a..0000000
---- a/drivers/scsi/ide-scsi.c
-+++ /dev/null
-@@ -1,840 +0,0 @@
--/*
-- * Copyright (C) 1996-1999  Gadi Oxman <gadio@netvision.net.il>
-- * Copyright (C) 2004-2005  Bartlomiej Zolnierkiewicz
-- */
--
--/*
-- * Emulation of a SCSI host adapter for IDE ATAPI devices.
-- *
-- * With this driver, one can use the Linux SCSI drivers instead of the
-- * native IDE ATAPI drivers.
-- *
-- * Ver 0.1   Dec  3 96   Initial version.
-- * Ver 0.2   Jan 26 97   Fixed bug in cleanup_module() and added emulation
-- *                        of MODE_SENSE_6/MODE_SELECT_6 for cdroms. Thanks
-- *                        to Janos Farkas for pointing this out.
-- *                       Avoid using bitfields in structures for m68k.
-- *                       Added Scatter/Gather and DMA support.
-- * Ver 0.4   Dec  7 97   Add support for ATAPI PD/CD drives.
-- *                       Use variable timeout for each command.
-- * Ver 0.5   Jan  2 98   Fix previous PD/CD support.
-- *                       Allow disabling of SCSI-6 to SCSI-10 transformation.
-- * Ver 0.6   Jan 27 98   Allow disabling of SCSI command translation layer
-- *                        for access through /dev/sg.
-- *                       Fix MODE_SENSE_6/MODE_SELECT_6/INQUIRY translation.
-- * Ver 0.7   Dec 04 98   Ignore commands where lun != 0 to avoid multiple
-- *                        detection of devices with CONFIG_SCSI_MULTI_LUN
-- * Ver 0.8   Feb 05 99   Optical media need translation too. Reverse 0.7.
-- * Ver 0.9   Jul 04 99   Fix a bug in SG_SET_TRANSFORM.
-- * Ver 0.91  Jun 10 02   Fix "off by one" error in transforms
-- * Ver 0.92  Dec 31 02   Implement new SCSI mid level API
-- */
--
--#define IDESCSI_VERSION "0.92"
--
--#include <linux/module.h>
--#include <linux/types.h>
--#include <linux/string.h>
--#include <linux/kernel.h>
--#include <linux/mm.h>
--#include <linux/ioport.h>
--#include <linux/blkdev.h>
--#include <linux/errno.h>
--#include <linux/slab.h>
--#include <linux/ide.h>
--#include <linux/scatterlist.h>
--#include <linux/delay.h>
--#include <linux/mutex.h>
--#include <linux/bitops.h>
--
--#include <asm/io.h>
--#include <asm/uaccess.h>
--
--#include <scsi/scsi.h>
--#include <scsi/scsi_cmnd.h>
--#include <scsi/scsi_device.h>
--#include <scsi/scsi_host.h>
--#include <scsi/scsi_tcq.h>
--#include <scsi/sg.h>
--
--#define IDESCSI_DEBUG_LOG		0
--
--#if IDESCSI_DEBUG_LOG
--#define debug_log(fmt, args...) \
--	printk(KERN_INFO "ide-scsi: " fmt, ## args)
--#else
--#define debug_log(fmt, args...) do {} while (0)
--#endif
--
--/*
-- *	SCSI command transformation layer
-- */
--#define IDESCSI_SG_TRANSFORM		1	/* /dev/sg transformation */
--
--/*
-- *	Log flags
-- */
--#define IDESCSI_LOG_CMD			0	/* Log SCSI commands */
--
--typedef struct ide_scsi_obj {
--	ide_drive_t		*drive;
--	ide_driver_t		*driver;
--	struct gendisk		*disk;
--	struct Scsi_Host	*host;
--
--	unsigned long transform;		/* SCSI cmd translation layer */
--	unsigned long log;			/* log flags */
--} idescsi_scsi_t;
--
--static DEFINE_MUTEX(idescsi_ref_mutex);
--/* Set by module param to skip cd */
--static int idescsi_nocd;
--
--#define ide_scsi_g(disk) \
--	container_of((disk)->private_data, struct ide_scsi_obj, driver)
--
--static struct ide_scsi_obj *ide_scsi_get(struct gendisk *disk)
--{
--	struct ide_scsi_obj *scsi = NULL;
--
--	mutex_lock(&idescsi_ref_mutex);
--	scsi = ide_scsi_g(disk);
--	if (scsi) {
--		if (ide_device_get(scsi->drive))
--			scsi = NULL;
--		else
--			scsi_host_get(scsi->host);
--	}
--	mutex_unlock(&idescsi_ref_mutex);
--	return scsi;
--}
--
--static void ide_scsi_put(struct ide_scsi_obj *scsi)
--{
--	ide_drive_t *drive = scsi->drive;
--
--	mutex_lock(&idescsi_ref_mutex);
--	scsi_host_put(scsi->host);
--	ide_device_put(drive);
--	mutex_unlock(&idescsi_ref_mutex);
--}
--
--static inline idescsi_scsi_t *scsihost_to_idescsi(struct Scsi_Host *host)
--{
--	return (idescsi_scsi_t*) (&host[1]);
--}
--
--static inline idescsi_scsi_t *drive_to_idescsi(ide_drive_t *ide_drive)
--{
--	return scsihost_to_idescsi(ide_drive->driver_data);
--}
--
--static void ide_scsi_hex_dump(u8 *data, int len)
--{
--	print_hex_dump(KERN_CONT, "", DUMP_PREFIX_NONE, 16, 1, data, len, 0);
--}
--
--static int idescsi_end_request(ide_drive_t *, int, int);
--
--static void ide_scsi_callback(ide_drive_t *drive, int dsc)
--{
--	idescsi_scsi_t *scsi = drive_to_idescsi(drive);
--	struct ide_atapi_pc *pc = drive->pc;
--
--	if (pc->flags & PC_FLAG_TIMEDOUT)
--		debug_log("%s: got timed out packet %lu at %lu\n", __func__,
--			  pc->scsi_cmd->serial_number, jiffies);
--		/* end this request now - scsi should retry it*/
--	else if (test_bit(IDESCSI_LOG_CMD, &scsi->log))
--		printk(KERN_INFO "Packet command completed, %d bytes"
--				 " transferred\n", pc->xferred);
--
--	idescsi_end_request(drive, 1, 0);
--}
--
--static int idescsi_check_condition(ide_drive_t *drive,
--		struct request *failed_cmd)
--{
--	idescsi_scsi_t *scsi = drive_to_idescsi(drive);
--	struct ide_atapi_pc   *pc;
--	struct request *rq;
--	u8             *buf;
--
--	/* stuff a sense request in front of our current request */
--	pc = kzalloc(sizeof(struct ide_atapi_pc), GFP_ATOMIC);
--	rq = blk_get_request(drive->queue, READ, GFP_ATOMIC);
--	buf = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_ATOMIC);
--	if (!pc || !rq || !buf) {
--		kfree(buf);
--		if (rq)
--			blk_put_request(rq);
--		kfree(pc);
--		return -ENOMEM;
--	}
--	rq->special = (char *) pc;
--	pc->rq = rq;
--	pc->buf = buf;
--	pc->c[0] = REQUEST_SENSE;
--	pc->c[4] = pc->req_xfer = pc->buf_size = SCSI_SENSE_BUFFERSIZE;
--	rq->cmd_type = REQ_TYPE_SENSE;
--	rq->cmd_flags |= REQ_PREEMPT;
--	pc->timeout = jiffies + WAIT_READY;
--	/* NOTE! Save the failed packet command in "rq->buffer" */
--	rq->buffer = (void *) failed_cmd->special;
--	pc->scsi_cmd = ((struct ide_atapi_pc *) failed_cmd->special)->scsi_cmd;
--	if (test_bit(IDESCSI_LOG_CMD, &scsi->log)) {
--		printk ("ide-scsi: %s: queue cmd = ", drive->name);
--		ide_scsi_hex_dump(pc->c, 6);
--	}
--	rq->rq_disk = scsi->disk;
--	rq->ref_count++;
--	memcpy(rq->cmd, pc->c, 12);
--	ide_do_drive_cmd(drive, rq);
--	return 0;
--}
--
--static ide_startstop_t
--idescsi_atapi_error(ide_drive_t *drive, struct request *rq, u8 stat, u8 err)
--{
--	ide_hwif_t *hwif = drive->hwif;
--
--	if (hwif->tp_ops->read_status(hwif) & (ATA_BUSY | ATA_DRQ))
--		/* force an abort */
--		hwif->tp_ops->exec_command(hwif, ATA_CMD_IDLEIMMEDIATE);
--
--	rq->errors++;
--
--	idescsi_end_request(drive, 0, 0);
--
--	return ide_stopped;
--}
--
--static int idescsi_end_request (ide_drive_t *drive, int uptodate, int nrsecs)
--{
--	idescsi_scsi_t *scsi = drive_to_idescsi(drive);
--	struct request *rq = HWGROUP(drive)->rq;
--	struct ide_atapi_pc *pc = (struct ide_atapi_pc *) rq->special;
--	int log = test_bit(IDESCSI_LOG_CMD, &scsi->log);
--	struct Scsi_Host *host;
--	int errors = rq->errors;
--	unsigned long flags;
--
--	if (!blk_special_request(rq) && !blk_sense_request(rq)) {
--		ide_end_request(drive, uptodate, nrsecs);
--		return 0;
--	}
--	ide_end_drive_cmd (drive, 0, 0);
--	if (blk_sense_request(rq)) {
--		struct ide_atapi_pc *opc = (struct ide_atapi_pc *) rq->buffer;
--		if (log) {
--			printk ("ide-scsi: %s: wrap up check %lu, rst = ", drive->name, opc->scsi_cmd->serial_number);
--			ide_scsi_hex_dump(pc->buf, 16);
--		}
--		memcpy((void *) opc->scsi_cmd->sense_buffer, pc->buf,
--			SCSI_SENSE_BUFFERSIZE);
--		kfree(pc->buf);
--		kfree(pc);
--		blk_put_request(rq);
--		pc = opc;
--		rq = pc->rq;
--		pc->scsi_cmd->result = (CHECK_CONDITION << 1) |
--				(((pc->flags & PC_FLAG_TIMEDOUT) ?
--				  DID_TIME_OUT :
--				  DID_OK) << 16);
--	} else if (pc->flags & PC_FLAG_TIMEDOUT) {
--		if (log)
--			printk (KERN_WARNING "ide-scsi: %s: timed out for %lu\n",
--					drive->name, pc->scsi_cmd->serial_number);
--		pc->scsi_cmd->result = DID_TIME_OUT << 16;
--	} else if (errors >= ERROR_MAX) {
--		pc->scsi_cmd->result = DID_ERROR << 16;
--		if (log)
--			printk ("ide-scsi: %s: I/O error for %lu\n", drive->name, pc->scsi_cmd->serial_number);
--	} else if (errors) {
--		if (log)
--			printk ("ide-scsi: %s: check condition for %lu\n", drive->name, pc->scsi_cmd->serial_number);
--		if (!idescsi_check_condition(drive, rq))
--			/* we started a request sense, so we'll be back, exit for now */
--			return 0;
--		pc->scsi_cmd->result = (CHECK_CONDITION << 1) | (DID_OK << 16);
--	} else {
--		pc->scsi_cmd->result = DID_OK << 16;
--	}
--	host = pc->scsi_cmd->device->host;
--	spin_lock_irqsave(host->host_lock, flags);
--	pc->done(pc->scsi_cmd);
--	spin_unlock_irqrestore(host->host_lock, flags);
--	kfree(pc);
--	blk_put_request(rq);
--	drive->pc = NULL;
--	return 0;
--}
--
--static inline int idescsi_set_direction(struct ide_atapi_pc *pc)
--{
--	switch (pc->c[0]) {
--		case READ_6: case READ_10: case READ_12:
--			pc->flags &= ~PC_FLAG_WRITING;
--			return 0;
--		case WRITE_6: case WRITE_10: case WRITE_12:
--			pc->flags |= PC_FLAG_WRITING;
--			return 0;
--		default:
--			return 1;
--	}
--}
--
--static int idescsi_map_sg(ide_drive_t *drive, struct ide_atapi_pc *pc)
--{
--	ide_hwif_t *hwif = drive->hwif;
--	struct scatterlist *sg, *scsi_sg;
--	int segments;
--
--	if (!pc->req_xfer || pc->req_xfer % 1024)
--		return 1;
--
--	if (idescsi_set_direction(pc))
--		return 1;
--
--	sg = hwif->sg_table;
--	scsi_sg = scsi_sglist(pc->scsi_cmd);
--	segments = scsi_sg_count(pc->scsi_cmd);
--
--	if (segments > hwif->sg_max_nents)
--		return 1;
--
--	hwif->sg_nents = segments;
--	memcpy(sg, scsi_sg, sizeof(*sg) * segments);
--
--	return 0;
--}
--
--static ide_startstop_t idescsi_issue_pc(ide_drive_t *drive,
--		struct ide_atapi_pc *pc)
--{
--	/* Set the current packet command */
--	drive->pc = pc;
--
--	return ide_issue_pc(drive, ide_scsi_get_timeout(pc), ide_scsi_expiry);
--}
--
--/*
-- *	idescsi_do_request is our request handling function.
-- */
--static ide_startstop_t idescsi_do_request (ide_drive_t *drive, struct request *rq, sector_t block)
--{
--	debug_log("dev: %s, cmd: %x, errors: %d\n", rq->rq_disk->disk_name,
--		  rq->cmd[0], rq->errors);
--	debug_log("sector: %ld, nr_sectors: %ld, current_nr_sectors: %d\n",
--		  rq->sector, rq->nr_sectors, rq->current_nr_sectors);
--
--	if (blk_sense_request(rq) || blk_special_request(rq)) {
--		struct ide_atapi_pc *pc = (struct ide_atapi_pc *)rq->special;
--
--		if ((drive->dev_flags & IDE_DFLAG_USING_DMA) &&
--		    idescsi_map_sg(drive, pc) == 0)
--			pc->flags |= PC_FLAG_DMA_OK;
--
--		return idescsi_issue_pc(drive, pc);
--	}
--	blk_dump_rq_flags(rq, "ide-scsi: unsup command");
--	idescsi_end_request (drive, 0, 0);
--	return ide_stopped;
--}
--
--#ifdef CONFIG_IDE_PROC_FS
--static ide_proc_entry_t idescsi_proc[] = {
--	{ "capacity", S_IFREG|S_IRUGO, proc_ide_read_capacity, NULL },
--	{ NULL, 0, NULL, NULL }
--};
--
--#define ide_scsi_devset_get(name, field) \
--static int get_##name(ide_drive_t *drive) \
--{ \
--	idescsi_scsi_t *scsi = drive_to_idescsi(drive); \
--	return scsi->field; \
--}
--
--#define ide_scsi_devset_set(name, field) \
--static int set_##name(ide_drive_t *drive, int arg) \
--{ \
--	idescsi_scsi_t *scsi = drive_to_idescsi(drive); \
--	scsi->field = arg; \
--	return 0; \
--}
--
--#define ide_scsi_devset_rw_field(_name, _field) \
--ide_scsi_devset_get(_name, _field); \
--ide_scsi_devset_set(_name, _field); \
--IDE_DEVSET(_name, DS_SYNC, get_##_name, set_##_name);
--
--ide_devset_rw_field(bios_cyl, bios_cyl);
--ide_devset_rw_field(bios_head, bios_head);
--ide_devset_rw_field(bios_sect, bios_sect);
--
--ide_scsi_devset_rw_field(transform, transform);
--ide_scsi_devset_rw_field(log, log);
--
--static const struct ide_proc_devset idescsi_settings[] = {
--	IDE_PROC_DEVSET(bios_cyl,  0, 1023),
--	IDE_PROC_DEVSET(bios_head, 0,  255),
--	IDE_PROC_DEVSET(bios_sect, 0,	63),
--	IDE_PROC_DEVSET(log,	   0,	 1),
--	IDE_PROC_DEVSET(transform, 0,	 3),
--	{ 0 },
--};
--
--static ide_proc_entry_t *ide_scsi_proc_entries(ide_drive_t *drive)
--{
--	return idescsi_proc;
--}
--
--static const struct ide_proc_devset *ide_scsi_proc_devsets(ide_drive_t *drive)
--{
--	return idescsi_settings;
--}
--#endif
--
--/*
-- *	Driver initialization.
-- */
--static void idescsi_setup (ide_drive_t *drive, idescsi_scsi_t *scsi)
--{
--	clear_bit(IDESCSI_SG_TRANSFORM, &scsi->transform);
--#if IDESCSI_DEBUG_LOG
--	set_bit(IDESCSI_LOG_CMD, &scsi->log);
--#endif /* IDESCSI_DEBUG_LOG */
--
--	drive->pc_callback	 = ide_scsi_callback;
--	drive->pc_update_buffers = NULL;
--	drive->pc_io_buffers	 = ide_io_buffers;
--
--	ide_proc_register_driver(drive, scsi->driver);
--}
--
--static void ide_scsi_remove(ide_drive_t *drive)
--{
--	struct Scsi_Host *scsihost = drive->driver_data;
--	struct ide_scsi_obj *scsi = scsihost_to_idescsi(scsihost);
--	struct gendisk *g = scsi->disk;
--
--	scsi_remove_host(scsihost);
--	ide_proc_unregister_driver(drive, scsi->driver);
--
--	ide_unregister_region(g);
--
--	drive->driver_data = NULL;
--	g->private_data = NULL;
--	put_disk(g);
--
--	ide_scsi_put(scsi);
--
--	drive->dev_flags &= ~IDE_DFLAG_SCSI;
--}
--
--static int ide_scsi_probe(ide_drive_t *);
--
--static ide_driver_t idescsi_driver = {
--	.gen_driver = {
--		.owner		= THIS_MODULE,
--		.name		= "ide-scsi",
--		.bus		= &ide_bus_type,
--	},
--	.probe			= ide_scsi_probe,
--	.remove			= ide_scsi_remove,
--	.version		= IDESCSI_VERSION,
--	.do_request		= idescsi_do_request,
--	.end_request		= idescsi_end_request,
--	.error                  = idescsi_atapi_error,
--#ifdef CONFIG_IDE_PROC_FS
--	.proc_entries		= ide_scsi_proc_entries,
--	.proc_devsets		= ide_scsi_proc_devsets,
--#endif
--};
--
--static int idescsi_ide_open(struct block_device *bdev, fmode_t mode)
--{
--	struct ide_scsi_obj *scsi = ide_scsi_get(bdev->bd_disk);
--
--	if (!scsi)
--		return -ENXIO;
--
--	return 0;
--}
--
--static int idescsi_ide_release(struct gendisk *disk, fmode_t mode)
--{
--	ide_scsi_put(ide_scsi_g(disk));
--	return 0;
--}
--
--static int idescsi_ide_ioctl(struct block_device *bdev, fmode_t mode,
--			unsigned int cmd, unsigned long arg)
--{
--	struct ide_scsi_obj *scsi = ide_scsi_g(bdev->bd_disk);
--	return generic_ide_ioctl(scsi->drive, bdev, cmd, arg);
--}
--
--static struct block_device_operations idescsi_ops = {
--	.owner		= THIS_MODULE,
--	.open		= idescsi_ide_open,
--	.release	= idescsi_ide_release,
--	.locked_ioctl	= idescsi_ide_ioctl,
--};
--
--static int idescsi_slave_configure(struct scsi_device * sdp)
--{
--	/* Configure detected device */
--	sdp->use_10_for_rw = 1;
--	sdp->use_10_for_ms = 1;
--	scsi_adjust_queue_depth(sdp, MSG_SIMPLE_TAG, sdp->host->cmd_per_lun);
--	return 0;
--}
--
--static const char *idescsi_info (struct Scsi_Host *host)
--{
--	return "SCSI host adapter emulation for IDE ATAPI devices";
--}
--
--static int idescsi_ioctl (struct scsi_device *dev, int cmd, void __user *arg)
--{
--	idescsi_scsi_t *scsi = scsihost_to_idescsi(dev->host);
--
--	if (cmd == SG_SET_TRANSFORM) {
--		if (arg)
--			set_bit(IDESCSI_SG_TRANSFORM, &scsi->transform);
--		else
--			clear_bit(IDESCSI_SG_TRANSFORM, &scsi->transform);
--		return 0;
--	} else if (cmd == SG_GET_TRANSFORM)
--		return put_user(test_bit(IDESCSI_SG_TRANSFORM, &scsi->transform), (int __user *) arg);
--	return -EINVAL;
--}
--
--static int idescsi_queue (struct scsi_cmnd *cmd,
--		void (*done)(struct scsi_cmnd *))
--{
--	struct Scsi_Host *host = cmd->device->host;
--	idescsi_scsi_t *scsi = scsihost_to_idescsi(host);
--	ide_drive_t *drive = scsi->drive;
--	struct request *rq = NULL;
--	struct ide_atapi_pc *pc = NULL;
--	int write = cmd->sc_data_direction == DMA_TO_DEVICE;
--
--	if (!drive) {
--		scmd_printk (KERN_ERR, cmd, "drive not present\n");
--		goto abort;
--	}
--	scsi = drive_to_idescsi(drive);
--	pc = kmalloc(sizeof(struct ide_atapi_pc), GFP_ATOMIC);
--	rq = blk_get_request(drive->queue, write, GFP_ATOMIC);
--	if (rq == NULL || pc == NULL) {
--		printk (KERN_ERR "ide-scsi: %s: out of memory\n", drive->name);
--		goto abort;
--	}
--
--	memset (pc->c, 0, 12);
--	pc->flags = 0;
--	if (cmd->sc_data_direction == DMA_TO_DEVICE)
--		pc->flags |= PC_FLAG_WRITING;
--	pc->rq = rq;
--	memcpy (pc->c, cmd->cmnd, cmd->cmd_len);
--	pc->buf = NULL;
--	pc->sg = scsi_sglist(cmd);
--	pc->sg_cnt = scsi_sg_count(cmd);
--	pc->b_count = 0;
--	pc->req_xfer = pc->buf_size = scsi_bufflen(cmd);
--	pc->scsi_cmd = cmd;
--	pc->done = done;
--	pc->timeout = jiffies + cmd->request->timeout;
--
--	if (test_bit(IDESCSI_LOG_CMD, &scsi->log)) {
--		printk ("ide-scsi: %s: que %lu, cmd = ", drive->name, cmd->serial_number);
--		ide_scsi_hex_dump(cmd->cmnd, cmd->cmd_len);
--		if (memcmp(pc->c, cmd->cmnd, cmd->cmd_len)) {
--			printk ("ide-scsi: %s: que %lu, tsl = ", drive->name, cmd->serial_number);
--			ide_scsi_hex_dump(pc->c, 12);
--		}
--	}
--
--	rq->special = (char *) pc;
--	rq->cmd_type = REQ_TYPE_SPECIAL;
--	spin_unlock_irq(host->host_lock);
--	rq->ref_count++;
--	memcpy(rq->cmd, pc->c, 12);
--	blk_execute_rq_nowait(drive->queue, scsi->disk, rq, 0, NULL);
--	spin_lock_irq(host->host_lock);
--	return 0;
--abort:
--	kfree (pc);
--	if (rq)
--		blk_put_request(rq);
--	cmd->result = DID_ERROR << 16;
--	done(cmd);
--	return 0;
--}
--
--static int idescsi_eh_abort (struct scsi_cmnd *cmd)
--{
--	idescsi_scsi_t *scsi  = scsihost_to_idescsi(cmd->device->host);
--	ide_drive_t    *drive = scsi->drive;
--	ide_hwif_t     *hwif;
--	ide_hwgroup_t  *hwgroup;
--	int		busy;
--	int             ret   = FAILED;
--
--	struct ide_atapi_pc *pc;
--
--	/* In idescsi_eh_abort we try to gently pry our command from the ide subsystem */
--
--	if (test_bit(IDESCSI_LOG_CMD, &scsi->log))
--		printk (KERN_WARNING "ide-scsi: abort called for %lu\n", cmd->serial_number);
--
--	if (!drive) {
--		printk (KERN_WARNING "ide-scsi: Drive not set in idescsi_eh_abort\n");
--		WARN_ON(1);
--		goto no_drive;
--	}
--
--	hwif = drive->hwif;
--	hwgroup = hwif->hwgroup;
--
--	/* First give it some more time, how much is "right" is hard to say :-(
--	   FIXME - uses mdelay which causes latency? */
--	busy = ide_wait_not_busy(hwif, 100);
--	if (test_bit(IDESCSI_LOG_CMD, &scsi->log))
--		printk (KERN_WARNING "ide-scsi: drive did%s become ready\n", busy?" not":"");
--
--	spin_lock_irq(&hwgroup->lock);
--
--	/* If there is no pc running we're done (our interrupt took care of it) */
--	pc = drive->pc;
--	if (pc == NULL) {
--		ret = SUCCESS;
--		goto ide_unlock;
--	}
--
--	/* It's somewhere in flight. Does ide subsystem agree? */
--	if (pc->scsi_cmd->serial_number == cmd->serial_number && !busy &&
--	    elv_queue_empty(drive->queue) && HWGROUP(drive)->rq != pc->rq) {
--		/*
--		 * FIXME - not sure this condition can ever occur
--		 */
--		printk (KERN_ERR "ide-scsi: cmd aborted!\n");
--
--		if (blk_sense_request(pc->rq))
--			kfree(pc->buf);
--		/* we need to call blk_put_request twice. */
--		blk_put_request(pc->rq);
--		blk_put_request(pc->rq);
--		kfree(pc);
--		drive->pc = NULL;
--
--		ret = SUCCESS;
--	}
--
--ide_unlock:
--	spin_unlock_irq(&hwgroup->lock);
--no_drive:
--	if (test_bit(IDESCSI_LOG_CMD, &scsi->log))
--		printk (KERN_WARNING "ide-scsi: abort returns %s\n", ret == SUCCESS?"success":"failed");
--
--	return ret;
--}
--
--static int idescsi_eh_reset (struct scsi_cmnd *cmd)
--{
--	struct request *req;
--	idescsi_scsi_t *scsi  = scsihost_to_idescsi(cmd->device->host);
--	ide_drive_t    *drive = scsi->drive;
--	ide_hwgroup_t  *hwgroup;
--	int             ready = 0;
--	int             ret   = SUCCESS;
--
--	struct ide_atapi_pc *pc;
--
--	/* In idescsi_eh_reset we forcefully remove the command from the ide subsystem and reset the device. */
--
--	if (test_bit(IDESCSI_LOG_CMD, &scsi->log))
--		printk (KERN_WARNING "ide-scsi: reset called for %lu\n", cmd->serial_number);
--
--	if (!drive) {
--		printk (KERN_WARNING "ide-scsi: Drive not set in idescsi_eh_reset\n");
--		WARN_ON(1);
--		return FAILED;
--	}
--
--	hwgroup = drive->hwif->hwgroup;
--
--	spin_lock_irq(cmd->device->host->host_lock);
--	spin_lock(&hwgroup->lock);
--
--	pc = drive->pc;
--	if (pc)
--		req = pc->rq;
--
--	if (pc == NULL || req != hwgroup->rq || hwgroup->handler == NULL) {
--		printk (KERN_WARNING "ide-scsi: No active request in idescsi_eh_reset\n");
--		spin_unlock(&hwgroup->lock);
--		spin_unlock_irq(cmd->device->host->host_lock);
--		return FAILED;
--	}
--
--	/* kill current request */
--	if (__blk_end_request(req, -EIO, 0))
--		BUG();
--	if (blk_sense_request(req))
--		kfree(pc->buf);
--	kfree(pc);
--	drive->pc = NULL;
--	blk_put_request(req);
--
--	/* now nuke the drive queue */
--	while ((req = elv_next_request(drive->queue))) {
--		if (__blk_end_request(req, -EIO, 0))
--			BUG();
--	}
--
--	hwgroup->rq = NULL;
--	hwgroup->handler = NULL;
--	hwgroup->busy = 1; /* will set this to zero when ide reset finished */
--	spin_unlock(&hwgroup->lock);
--
--	ide_do_reset(drive);
--
--	/* ide_do_reset starts a polling handler which restarts itself every 50ms until the reset finishes */
--
--	do {
--		spin_unlock_irq(cmd->device->host->host_lock);
--		msleep(50);
--		spin_lock_irq(cmd->device->host->host_lock);
--	} while ( HWGROUP(drive)->handler );
--
--	ready = drive_is_ready(drive);
--	HWGROUP(drive)->busy--;
--	if (!ready) {
--		printk (KERN_ERR "ide-scsi: reset failed!\n");
--		ret = FAILED;
--	}
--
--	spin_unlock_irq(cmd->device->host->host_lock);
--	return ret;
--}
--
--static int idescsi_bios(struct scsi_device *sdev, struct block_device *bdev,
--		sector_t capacity, int *parm)
--{
--	idescsi_scsi_t *idescsi = scsihost_to_idescsi(sdev->host);
--	ide_drive_t *drive = idescsi->drive;
--
--	if (drive->bios_cyl && drive->bios_head && drive->bios_sect) {
--		parm[0] = drive->bios_head;
--		parm[1] = drive->bios_sect;
--		parm[2] = drive->bios_cyl;
--	}
--	return 0;
--}
--
--static struct scsi_host_template idescsi_template = {
--	.module			= THIS_MODULE,
--	.name			= "idescsi",
--	.info			= idescsi_info,
--	.slave_configure        = idescsi_slave_configure,
--	.ioctl			= idescsi_ioctl,
--	.queuecommand		= idescsi_queue,
--	.eh_abort_handler	= idescsi_eh_abort,
--	.eh_host_reset_handler  = idescsi_eh_reset,
--	.bios_param		= idescsi_bios,
--	.can_queue		= 40,
--	.this_id		= -1,
--	.sg_tablesize		= 256,
--	.cmd_per_lun		= 5,
--	.max_sectors		= 128,
--	.use_clustering		= DISABLE_CLUSTERING,
--	.emulated		= 1,
--	.proc_name		= "ide-scsi",
--};
--
--static int ide_scsi_probe(ide_drive_t *drive)
--{
--	idescsi_scsi_t *idescsi;
--	struct Scsi_Host *host;
--	struct gendisk *g;
--	static int warned;
--	int err = -ENOMEM;
--	u16 last_lun;
--
--	if (!warned && drive->media == ide_cdrom) {
--		printk(KERN_WARNING "ide-scsi is deprecated for cd burning! Use ide-cd and give dev=/dev/hdX as device\n");
--		warned = 1;
--	}
--
--	if (idescsi_nocd && drive->media == ide_cdrom)
--		return -ENODEV;
--
--	if (!strstr("ide-scsi", drive->driver_req) ||
--	    drive->media == ide_disk ||
--	    !(host = scsi_host_alloc(&idescsi_template,sizeof(idescsi_scsi_t))))
--		return -ENODEV;
--
--	drive->dev_flags |= IDE_DFLAG_SCSI;
--
--	g = alloc_disk(1 << PARTN_BITS);
--	if (!g)
--		goto out_host_put;
--
--	ide_init_disk(g, drive);
--
--	host->max_id = 1;
--
--	last_lun = drive->id[ATA_ID_LAST_LUN];
--	if (last_lun)
--		debug_log("%s: last_lun=%u\n", drive->name, last_lun);
--
--	if ((last_lun & 7) != 7)
--		host->max_lun = (last_lun & 7) + 1;
--	else
--		host->max_lun = 1;
--
--	drive->driver_data = host;
--	idescsi = scsihost_to_idescsi(host);
--	idescsi->drive = drive;
--	idescsi->driver = &idescsi_driver;
--	idescsi->host = host;
--	idescsi->disk = g;
--	g->private_data = &idescsi->driver;
--	err = 0;
--	idescsi_setup(drive, idescsi);
--	g->fops = &idescsi_ops;
--	ide_register_region(g);
--	err = scsi_add_host(host, &drive->gendev);
--	if (!err) {
--		scsi_scan_host(host);
--		return 0;
--	}
--	/* fall through on error */
--	ide_unregister_region(g);
--	ide_proc_unregister_driver(drive, &idescsi_driver);
--
--	put_disk(g);
--out_host_put:
--	drive->dev_flags &= ~IDE_DFLAG_SCSI;
--	scsi_host_put(host);
--	return err;
--}
--
--static int __init init_idescsi_module(void)
--{
--	return driver_register(&idescsi_driver.gen_driver);
--}
--
--static void __exit exit_idescsi_module(void)
--{
--	driver_unregister(&idescsi_driver.gen_driver);
--}
--
--module_param(idescsi_nocd, int, 0600);
--MODULE_PARM_DESC(idescsi_nocd, "Disable handling of CD-ROMs so they may be driven by ide-cd");
--module_init(init_idescsi_module);
--module_exit(exit_idescsi_module);
--MODULE_LICENSE("GPL");
+@@ -803,7 +803,7 @@ static int fd_do_aio_write (fd_request_t *req, se_task_t *task)
+ 	unsigned long long offset, lba = req->fd_lba;
+ 	mm_segment_t old_fs;
+ 	struct file *fd = req->fd_dev->fd_file;
+-	struct scatterlist *sg = (struct scatterlist *) req->fd_buf;
++	struct scatterlist *sg = task->task_sg;
+ 	struct iovec *iov;
+ 	struct kiocb    *iocb;
+ 
+@@ -1065,7 +1065,7 @@ extern void fd_map_task_SG (se_task_t *task)
+ 	fd_request_t *req = (fd_request_t *) task->transport_req;
+ 
+ 	req->fd_bufflen		= task->task_size;
+-	req->fd_buf		= (void *)task->task_buf;
++	req->fd_buf		= NULL;
+ 	req->fd_sg_count	= task->task_sg_num;
+ 
+ 	return;
+diff --git a/drivers/lio-core/target_core_iblock.c b/drivers/lio-core/target_core_iblock.c
+index 50e2a2a..962dc35 100644
+--- a/drivers/lio-core/target_core_iblock.c
++++ b/drivers/lio-core/target_core_iblock.c
+@@ -755,7 +755,7 @@ extern int iblock_map_task_SG (se_task_t *task)
+ 	iblock_dev_t *ib_dev = (iblock_dev_t *) task->iscsi_dev->dev_ptr;
+ 	iblock_req_t *ib_req = (iblock_req_t *) task->transport_req;
+ 	struct bio *bio = NULL, *hbio = NULL, *tbio = NULL;
+-	struct scatterlist *sg = (struct scatterlist *)task->task_buf;
++	struct scatterlist *sg = task->task_sg;
+ 	int ret = 0;
+ 	u32 i, sg_num = task->task_sg_num;
+ 	u64 lba = task->task_lba;
+@@ -769,7 +769,7 @@ extern int iblock_map_task_SG (se_task_t *task)
+ 	hbio = tbio = bio;
+ 	/*
+ 	 * Use fs/bio.c:bio_add_pages() to setup the bio_vec maplist
+-	 * from LIO-SE se_mem_t -> task->task_buf -> struct scatterlist memory.
++	 * from LIO-SE se_mem_t -> task->task_sg -> struct scatterlist memory.
+ 	 */
+ 	for (i = 0; i < task->task_sg_num; i++) {
+ 		DEBUG_IBLOCK("task: %p bio: %p Calling bio_add_page(): page: %p len:"
+diff --git a/drivers/lio-core/target_core_pscsi.c b/drivers/lio-core/target_core_pscsi.c
+index 862ad26..0ce57e6 100644
+--- a/drivers/lio-core/target_core_pscsi.c
++++ b/drivers/lio-core/target_core_pscsi.c
+@@ -1165,22 +1165,19 @@ extern int pscsi_map_task_SG (se_task_t *task)
+         pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
+ 	int ret = 0;
+ 
+-	pt->pscsi_buf = (void *)task->task_buf;
++	pt->pscsi_buf = (void *)task->task_sg;
+ 
+ 	if (!task->task_size)
+ 		return(0);
+ #if 0
+ 	if ((ret = blk_rq_map_sg(pdv->pdv_sd->request_queue,
+-			pt->pscsi_req,
+-			(struct scatterlist *)pt->pscsi_buf)) < 0) {
++			pt->pscsi_req, task->task_sg)) < 0) {
+ 		printk(KERN_ERR "PSCSI: blk_rq_map_sg() returned %d\n", ret);
+ 		return(PYX_TRANSPORT_LOGICAL_UNIT_COMMUNICATION_FAILURE);
+ 	}
+ #else
+-	if ((ret = scsi_req_map_sg(pt->pscsi_req,
+-			(struct scatterlist *)pt->pscsi_buf,
+-			task->task_sg_num, task->task_size,
+-			GFP_KERNEL)) < 0) {
++	if ((ret = scsi_req_map_sg(pt->pscsi_req, task->task_sg,
++			task->task_sg_num, task->task_size, GFP_KERNEL)) < 0) {
+ 		printk(KERN_ERR "PSCSI: scsi_req_map_sg() failed: %d\n", ret);
+ 		return(PYX_TRANSPORT_LOGICAL_UNIT_COMMUNICATION_FAILURE);
+ 	}
+diff --git a/drivers/lio-core/target_core_rd.c b/drivers/lio-core/target_core_rd.c
+index 3bc0d77..ac32e4b 100644
+--- a/drivers/lio-core/target_core_rd.c
++++ b/drivers/lio-core/target_core_rd.c
+@@ -1195,7 +1195,7 @@ extern void rd_map_task_SG (se_task_t *task)
+ 	rd_request_t *req = (rd_request_t *) task->transport_req;
+ 
+ 	req->rd_bufflen		= task->task_size;
+-	req->rd_buf		= (void *)task->task_buf;
++	req->rd_buf		= task->task_sg;
+ 	req->rd_sg_count	= task->task_sg_num;
+ 
+ 	return;
 -- 
-1.5.5.GIT
+1.5.4.1
+
+
 
