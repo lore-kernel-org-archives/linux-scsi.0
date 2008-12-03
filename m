@@ -1,162 +1,110 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] [Target_Core_Mod]: Update PSCSI, IBLOCK, FILEIO and
-	RAMDISK for se_task_t->task_sg
-Date: Tue, 02 Dec 2008 18:15:16 -0800
-Message-ID: <1228270516.6229.139.camel@haakon2.linux-iscsi.org>
+Subject: [PATCH] [Target_Core_Mod]: Convert to se_task_t->task_sg usage in
+	core and subsystem plugins
+Date: Tue, 02 Dec 2008 18:44:36 -0800
+Message-ID: <1228272276.6229.142.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp116.sbc.mail.sp1.yahoo.com ([69.147.64.89]:22617 "HELO
-	smtp116.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753245AbYLCCPT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Dec 2008 21:15:19 -0500
+Received: from smtp120.sbc.mail.sp1.yahoo.com ([69.147.64.93]:35681 "HELO
+	smtp120.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751688AbYLCCoj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Dec 2008 21:44:39 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
->From e030ca2b9bbb81402b3ed669bb5e1d54fed0dff7 Mon Sep 17 00:00:00 2001
+>From 41e98940da5ffaf7e31fce8d1f706e3e0a679654 Mon Sep 17 00:00:00 2001
 From: Nicholas Bellinger <nab@linux-iscsi.org>
-Date: Tue, 2 Dec 2008 18:07:40 -0800
-Subject: [PATCH] [Target_Core_Mod]: Update PSCSI, IBLOCK, FILEIO and RAMDISK for se_task_t->task_sg
+Date: Tue, 2 Dec 2008 18:06:54 -0800
+Subject: [PATCH] [Target_Core_Mod]: Convert to se_task_t->task_sg usage in core and subsystem plugins
 
-This patch changes the generic target core subsystem plugins to use se_task_t->task_sg
-and gets rid of a handful of casts from the original se_task_t->task_buf, which if present,
-will always contain a contigious array of struct scatterlist memory.
+This patch adds makes the existing se_task_t->task_buf become se_task_t->task_sg of
+type struct scatterlist.  Changes to target_core_transport.c in transport_calc_sg_num()
+and transport_free_dev_tasks() are simple, along with a one-liner change in
+target_core_seobj.c:dev_obj_do_se_mem_map().
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/lio-core/target_core_file.c   |   12 ++++++------
- drivers/lio-core/target_core_iblock.c |    4 ++--
- drivers/lio-core/target_core_pscsi.c  |   11 ++++-------
- drivers/lio-core/target_core_rd.c     |    2 +-
- 4 files changed, 13 insertions(+), 16 deletions(-)
+ drivers/lio-core/target_core_base.h      |    2 +-
+ drivers/lio-core/target_core_seobj.c     |   11 ++++++-----
+ drivers/lio-core/target_core_transport.c |    9 ++++-----
+ 3 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/lio-core/target_core_file.c b/drivers/lio-core/target_core_file.c
-index 5b9b5dd..be1314d 100644
---- a/drivers/lio-core/target_core_file.c
-+++ b/drivers/lio-core/target_core_file.c
-@@ -586,7 +586,7 @@ static int fd_do_readv (fd_request_t *req, se_task_t *task)
- 	u32 i;
- 	mm_segment_t old_fs;
- 	struct file *fd = req->fd_dev->fd_file;
--	struct scatterlist *sg = (struct scatterlist *) req->fd_buf;
-+	struct scatterlist *sg = task->task_sg;
- 	struct iovec iov[req->fd_sg_count];	
+diff --git a/drivers/lio-core/target_core_base.h b/drivers/lio-core/target_core_base.h
+index 5ee04d3..b866613 100644
+--- a/drivers/lio-core/target_core_base.h
++++ b/drivers/lio-core/target_core_base.h
+@@ -249,7 +249,7 @@ typedef struct se_transport_task_s {
  
- 	memset(iov, 0, sizeof(struct iovec) + req->fd_sg_count);
-@@ -638,7 +638,7 @@ static int fd_do_aio_read (fd_request_t *req, se_task_t *task)
- 	unsigned long long offset, lba = req->fd_lba;;
- 	mm_segment_t old_fs;
- 	struct file *fd = req->fd_dev->fd_file;
--	struct scatterlist *sg = (struct scatterlist *) req->fd_buf;
-+	struct scatterlist *sg = task->task_sg;
- 	struct iovec *iov;
- 	struct kiocb	*iocb;
- 
-@@ -716,7 +716,7 @@ static int fd_sendactor (read_descriptor_t * desc, struct page *page, unsigned l
- 	unsigned long count = desc->count;
- 	se_task_t *task = desc->arg.data;
- 	fd_request_t *req = (fd_request_t *) task->transport_req;	
--	struct scatterlist *sg = (struct scatterlist *) req->fd_buf;
-+	struct scatterlist *sg = task->task_sg;
- 
- //	PYXPRINT("page: %p offset: %lu size: %lu\n", page, offset, size);
- 
-@@ -767,7 +767,7 @@ static int fd_do_writev (fd_request_t *req, se_task_t *task)
- 	int ret = 0;
- 	u32 i;
- 	struct file *fd = req->fd_dev->fd_file;
--	struct scatterlist *sg = (struct scatterlist *) req->fd_buf;
-+	struct scatterlist *sg = task->task_sg;
- 	mm_segment_t old_fs;
- 	struct iovec iov[req->fd_sg_count];
- 
-@@ -803,7 +803,7 @@ static int fd_do_aio_write (fd_request_t *req, se_task_t *task)
- 	unsigned long long offset, lba = req->fd_lba;
- 	mm_segment_t old_fs;
- 	struct file *fd = req->fd_dev->fd_file;
--	struct scatterlist *sg = (struct scatterlist *) req->fd_buf;
-+	struct scatterlist *sg = task->task_sg;
- 	struct iovec *iov;
- 	struct kiocb    *iocb;
- 
-@@ -1065,7 +1065,7 @@ extern void fd_map_task_SG (se_task_t *task)
- 	fd_request_t *req = (fd_request_t *) task->transport_req;
- 
- 	req->fd_bufflen		= task->task_size;
--	req->fd_buf		= (void *)task->task_buf;
-+	req->fd_buf		= NULL;
- 	req->fd_sg_count	= task->task_sg_num;
- 
- 	return;
-diff --git a/drivers/lio-core/target_core_iblock.c b/drivers/lio-core/target_core_iblock.c
-index 50e2a2a..962dc35 100644
---- a/drivers/lio-core/target_core_iblock.c
-+++ b/drivers/lio-core/target_core_iblock.c
-@@ -755,7 +755,7 @@ extern int iblock_map_task_SG (se_task_t *task)
- 	iblock_dev_t *ib_dev = (iblock_dev_t *) task->iscsi_dev->dev_ptr;
- 	iblock_req_t *ib_req = (iblock_req_t *) task->transport_req;
- 	struct bio *bio = NULL, *hbio = NULL, *tbio = NULL;
--	struct scatterlist *sg = (struct scatterlist *)task->task_buf;
-+	struct scatterlist *sg = task->task_sg;
- 	int ret = 0;
- 	u32 i, sg_num = task->task_sg_num;
- 	u64 lba = task->task_lba;
-@@ -769,7 +769,7 @@ extern int iblock_map_task_SG (se_task_t *task)
- 	hbio = tbio = bio;
- 	/*
- 	 * Use fs/bio.c:bio_add_pages() to setup the bio_vec maplist
--	 * from LIO-SE se_mem_t -> task->task_buf -> struct scatterlist memory.
-+	 * from LIO-SE se_mem_t -> task->task_sg -> struct scatterlist memory.
+ typedef struct se_task_s {
+         unsigned char   task_sense;
+-        unsigned char   *task_buf;
++	struct scatterlist *task_sg;
+         void            *transport_req;
+         u8              task_scsi_status;
+         u8              task_flags;
+diff --git a/drivers/lio-core/target_core_seobj.c b/drivers/lio-core/target_core_seobj.c
+index 8e8c951..d013f2c 100644
+--- a/drivers/lio-core/target_core_seobj.c
++++ b/drivers/lio-core/target_core_seobj.c
+@@ -348,8 +348,9 @@ extern int dev_obj_do_se_mem_map (
+ 	 * been done by the transport plugin.
  	 */
- 	for (i = 0; i < task->task_sg_num; i++) {
- 		DEBUG_IBLOCK("task: %p bio: %p Calling bio_add_page(): page: %p len:"
-diff --git a/drivers/lio-core/target_core_pscsi.c b/drivers/lio-core/target_core_pscsi.c
-index 862ad26..0ce57e6 100644
---- a/drivers/lio-core/target_core_pscsi.c
-+++ b/drivers/lio-core/target_core_pscsi.c
-@@ -1165,22 +1165,19 @@ extern int pscsi_map_task_SG (se_task_t *task)
-         pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
- 	int ret = 0;
+ 	if (TRANSPORT(dev)->do_se_mem_map) {
+-		if ((ret = TRANSPORT(dev)->do_se_mem_map(task, se_mem_list, in_mem, in_se_mem,
+-				out_se_mem, se_mem_cnt, task_offset)) == 0)
++		if ((ret = TRANSPORT(dev)->do_se_mem_map(task, se_mem_list,
++				in_mem, in_se_mem, out_se_mem, se_mem_cnt,
++				task_offset)) == 0)
+ 			T_TASK(task->iscsi_cmd)->t_task_se_num += *se_mem_cnt;
  
--	pt->pscsi_buf = (void *)task->task_buf;
-+	pt->pscsi_buf = (void *)task->task_sg;
+ 		return(ret);
+@@ -362,10 +363,10 @@ extern int dev_obj_do_se_mem_map (
+ 		return(-1);
+ 	
+ 	/*
+-	 * se_task_t->task_buf now contains the struct scatterlist array.
++	 * se_task_t->task_sg now contains the struct scatterlist array.
+ 	 */
+-	return(transport_map_mem_to_sg(task, se_mem_list, task->task_buf, in_se_mem, out_se_mem,
+-			se_mem_cnt, task_offset));
++	return(transport_map_mem_to_sg(task, se_mem_list, task->task_sg,
++		in_se_mem, out_se_mem, se_mem_cnt, task_offset));
+ }
  
- 	if (!task->task_size)
- 		return(0);
- #if 0
- 	if ((ret = blk_rq_map_sg(pdv->pdv_sd->request_queue,
--			pt->pscsi_req,
--			(struct scatterlist *)pt->pscsi_buf)) < 0) {
-+			pt->pscsi_req, task->task_sg)) < 0) {
- 		printk(KERN_ERR "PSCSI: blk_rq_map_sg() returned %d\n", ret);
- 		return(PYX_TRANSPORT_LOGICAL_UNIT_COMMUNICATION_FAILURE);
+ extern int dev_obj_get_mem_buf (void *p, iscsi_cmd_t *cmd)
+diff --git a/drivers/lio-core/target_core_transport.c b/drivers/lio-core/target_core_transport.c
+index d92814c..b8e8294 100644
+--- a/drivers/lio-core/target_core_transport.c
++++ b/drivers/lio-core/target_core_transport.c
+@@ -4643,7 +4643,7 @@ extern void transport_free_dev_tasks (iscsi_cmd_t *cmd)
+ 		if (!task->transport_req)
+ 			continue;
+ 		
+-		kfree(task->task_buf);
++		kfree(task->task_sg);
+ 		
+ 		spin_unlock_irqrestore(&T_TASK(cmd)->t_state_lock, flags);
+ 		if (task->iscsi_dev)
+@@ -5097,13 +5097,12 @@ extern u32 transport_calc_sg_num (
+ 			break;
  	}
- #else
--	if ((ret = scsi_req_map_sg(pt->pscsi_req,
--			(struct scatterlist *)pt->pscsi_buf,
--			task->task_sg_num, task->task_size,
--			GFP_KERNEL)) < 0) {
-+	if ((ret = scsi_req_map_sg(pt->pscsi_req, task->task_sg,
-+			task->task_sg_num, task->task_size, GFP_KERNEL)) < 0) {
- 		printk(KERN_ERR "PSCSI: scsi_req_map_sg() failed: %d\n", ret);
- 		return(PYX_TRANSPORT_LOGICAL_UNIT_COMMUNICATION_FAILURE);
+ 
+-	if (!(task->task_buf = kmalloc(task->task_sg_num * sizeof(struct scatterlist), GFP_KERNEL))) {
+-		TRACE_ERROR("Unable to allocate memory for task->task_buf\n");
++	if (!(task->task_sg = kzalloc(task->task_sg_num * sizeof(struct scatterlist), GFP_KERNEL))) {
++		TRACE_ERROR("Unable to allocate memory for task->task_sg\n");
+ 		return(0);	
  	}
-diff --git a/drivers/lio-core/target_core_rd.c b/drivers/lio-core/target_core_rd.c
-index 3bc0d77..ac32e4b 100644
---- a/drivers/lio-core/target_core_rd.c
-+++ b/drivers/lio-core/target_core_rd.c
-@@ -1195,7 +1195,7 @@ extern void rd_map_task_SG (se_task_t *task)
- 	rd_request_t *req = (rd_request_t *) task->transport_req;
+-	memset(task->task_buf, 0, task->task_sg_num * sizeof(struct scatterlist));
  
- 	req->rd_bufflen		= task->task_size;
--	req->rd_buf		= (void *)task->task_buf;
-+	req->rd_buf		= task->task_sg;
- 	req->rd_sg_count	= task->task_sg_num;
+-	sg_init_table((struct scatterlist *)&task->task_buf[0], task->task_sg_num);
++	sg_init_table(&task->task_sg[0], task->task_sg_num);
  
- 	return;
+ 	DEBUG_SC("Successfully allocated task->task_sg_num: %u\n", task->task_sg_num);
+ 	
 -- 
 1.5.4.1
 
