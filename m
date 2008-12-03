@@ -1,34 +1,85 @@
-From: "Bart Van Assche" <bart.vanassche@gmail.com>
-Subject: Re: [PATCH] [Target_Core_Mod/PSCSI]: Use struct request to struct scsi_device->request_queue
-Date: Wed, 3 Dec 2008 08:19:38 +0100
-Message-ID: <e2e108260812022319n1b4363cai86ca0caafb5839aa@mail.gmail.com>
-References: <1228265348.6229.130.camel@haakon2.linux-iscsi.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [Fwd: Re: iscsi update for 2.6.29]
+Date: Wed, 03 Dec 2008 10:33:58 +0200
+Message-ID: <49364476.5010608@panasas.com>
+References: <4935764C.4080007@cs.wisc.edu> <8A71B368A89016469F72CD08050AD33403E32F0A@maui.asicdesigners.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:64893 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752940AbYLCHTj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Dec 2008 02:19:39 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so2396015fgg.17
-        for <linux-scsi@vger.kernel.org>; Tue, 02 Dec 2008 23:19:38 -0800 (PST)
-In-Reply-To: <1228265348.6229.130.camel@haakon2.linux-iscsi.org>
-Content-Disposition: inline
+Received: from gw-ca.panasas.com ([66.104.249.162]:1589 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752655AbYLCIeD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Dec 2008 03:34:03 -0500
+In-Reply-To: <8A71B368A89016469F72CD08050AD33403E32F0A@maui.asicdesigners.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-iscsi-target-dev@googlegroups.com
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Karen Xie <kxie@chelsio.com>
+Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-On Wed, Dec 3, 2008 at 1:49 AM, Nicholas A. Bellinger
-<nab@linux-iscsi.org> wrote:
->  drivers/lio-core/target_core_pscsi.c |  206 +++++++++++++++++++++++++---------
->  drivers/lio-core/target_core_pscsi.h |    5 +-
->  drivers/scsi/scsi_lib.c              |    6 +-
+http://groups.google.com/group/open-iscsi/msg/dd660ab6b0def64f?&q=cxgb3i%3A+cxgb3+iSCSI+initiator+boaz
 
-Patches that contain changes for multiple subsystems must be split and
-submitted separately. E.g. the above patch should be split in one
-patch that is posted on the LIO mailing list and one patch that is
-posted on the linux-scsi mailing list.
+Karen Xie wrote:
+> Hi, Boaz,
+> 
+> Sorry, I must have missed your bidi comment. I tried to search the archive but does not seem to be able to find anything. Do you mind forward me the email if you still have it?
+> 
+> Sorry for the inconvenience.
+> Thanks,
+> Karen
+> 
+> -------- Original Message --------
+> Subject: Re: iscsi update for 2.6.29
+> Date: Tue, 02 Dec 2008 19:10:49 +0200
+> From: Boaz Harrosh <bharrosh@panasas.com>
+> To: michaelc@cs.wisc.edu
+> CC: linux-scsi@vger.kernel.org
+> References: <1228199536-12595-1-git-send-email-michaelc@cs.wisc.edu>
+> 
+> michaelc@cs.wisc.edu wrote:
+>> This patchset is for 2.6.29. This should be the final patches
+>> to prepare the iscsi layer for cxgb3i, which looks like it
+>> has gone through the netdev review and will be sent here next
+>> shortly.
+>>
+>> This patchset was made over scsi-misc, and the fix here.
+>> http://marc.info/?l=linux-scsi&m=122815519326207&w=2
+>> (the fix in that email does not conflict with this patchset
+>> and can be applied over or before these patches).
+>>
+>> cxgb3i adds a new offload model. Where qla4xxx offloaded pretty
+>> much everything, and bnx2i offloaded the iscsi sequence processing
+>> (give it the iscsi scsi command pdu and the offload engine will
+>> handle everything between), cxgb3i offloads operations like
+>> digest, padding, and data transfers. It relies on the iscsi layer
+>> for the sequence state machine, so this patchset is basically
+>> just breaking up iscsi_tcp into a lib layer so cxgb3i can share
+>> the code.
+>>
+> 
+> OK I tested that lot finally, and it's good. I'm able to bang
+> bidi commands on it and it seems to works. exofs (was osdfs) mounts
+> and works as before. I'll let it run through the night and see if
+> it holds. (It should)
+> 
+> So the generic layer of this patchset is tested.
+> 
+> I have sent comments about bidi mistakes made in the cxgb3i side
+> of this patchset but never got a response and it seems they have not
+> been fixed. But I might have missed the fixes. is the cxgb3i branch on
+> git://git.kernel.org/pub/scm/linux/kernel/git/mnc/linux-2.6-iscsi.git
+> the latest iteration of these patches? I'll have another look if you want?
+> 
+> If you want I can help you set up a SW only OSD setup, to test if cxgb3i
+> is bidi clean. What about the other accel cards?
+> 
+> One more test that I never did is OSD (bidi) commands with header+data
+> digest enabled. Now with OSC's OSD target over TOMO's stgt I should be
+> able to test that. IBM's target did not support it because OSD has its
+> own digest stuff. TOMO's stgt does supports header+data digest right?
+> I should run these tests later this week. Just to make sure the digest
+> stuff is bidi safe. I'm sure it is but just that I never tested it.
+> 
+> Thanks
+> Boaz
 
-Bart.
