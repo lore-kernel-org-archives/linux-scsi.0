@@ -1,92 +1,117 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] SCSI: fix the return type of the remove() method in
-	sgiwd93.c
-Date: Wed, 03 Dec 2008 15:33:45 -0600
-Message-ID: <1228340025.5551.87.camel@localhost.localdomain>
-References: <1227140357-29921-1-git-send-email-dmitri.vorobiev@movial.fi>
-	 <ac3eb2510812030952k5b57a9c7qb68e3684de170d75@mail.gmail.com>
-	 <1228327306.5551.36.camel@localhost.localdomain>
-	 <35647.88.114.226.209.1228329736.squirrel@webmail.movial.fi>
-	 <ac3eb2510812031051k9d9312bma119bfae35afc230@mail.gmail.com>
-	 <1228330800.5551.58.camel@localhost.localdomain>
-	 <ac3eb2510812031229l51912169o3e96346ed51c48f0@mail.gmail.com>
-	 <1228337529.5551.72.camel@localhost.localdomain>
-	 <ac3eb2510812031259v1a4ebe25tc841daaa2fe5a722@mail.gmail.com>
-	 <1228338142.5551.77.camel@localhost.localdomain>
-	 <ac3eb2510812031328x38559660rcc13db195e01ea15@mail.gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] [Target_Core_Mod/PSCSI]: Use struct request to struct
+	scsi_device->request_queue
+Date: Wed, 03 Dec 2008 13:40:47 -0800
+Message-ID: <1228340447.4153.53.camel@haakon2.linux-iscsi.org>
+References: <1228265348.6229.130.camel@haakon2.linux-iscsi.org>
+	 <49366289.2010500@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:34392 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754803AbYLCVdq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Dec 2008 16:33:46 -0500
-In-Reply-To: <ac3eb2510812031328x38559660rcc13db195e01ea15@mail.gmail.com>
+Received: from smtp123.sbc.mail.sp1.yahoo.com ([69.147.64.96]:28828 "HELO
+	smtp123.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752461AbYLCVlR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Dec 2008 16:41:17 -0500
+In-Reply-To: <49366289.2010500@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kay Sievers <kay.sievers@vrfy.org>
-Cc: Vorobiev Dmitri <dmitri.vorobiev@movial.fi>, linux-scsi@vger.kernel.org, linux-mips@linux-mips.org, Greg KH <greg@kroah.com>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, 2008-12-03 at 22:28 +0100, Kay Sievers wrote:
-> On Wed, Dec 3, 2008 at 22:02, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
-> > On Wed, 2008-12-03 at 21:59 +0100, Kay Sievers wrote:
-> >> On Wed, Dec 3, 2008 at 21:52, James Bottomley
-> >> <James.Bottomley@hansenpartnership.com> wrote:
-> >> > On Wed, 2008-12-03 at 21:29 +0100, Kay Sievers wrote:
-> >> >> On Wed, Dec 3, 2008 at 20:00, James Bottomley
-> >> >> <James.Bottomley@hansenpartnership.com> wrote:
-> >> >> >> We are already in the middle of a ~400 files "struct device" bus_id
-> >> >> >> conversion, and only very few maintainers respond to these patches. We
-> >> >> >> also never got any reply to the SCSI bus_id patch we sent weeks ago.
-> >> >> >> :)
-> >> >> >
-> >> >> > When did you send it?  Searching the scsi archives on bus_id produces no
-> >> >> > results, what was the subject line?
-> >> >>
-> >> >> http://git.kernel.org/?p=linux/kernel/git/gregkh/patches.git;a=blob;f=driver-core/bus_id-scsi.patch;hb=HEAD
-> >> >
-> >> > Hmm, OK ... if you want a review, over the SCSI list is best.
-> >> >
-> >> > Things like this:
-> >> >
-> >> >
-> >> >> --- a/drivers/scsi/scsi_ioctl.c
-> >> >> 182 +++ b/drivers/scsi/scsi_ioctl.c
-> >> >> 183 @@ -170,7 +170,8 @@ static int scsi_ioctl_get_pci(struct scs
-> >> >> 184
-> >> >> 185          if (!dev)
-> >> >> 186                 return -ENXIO;
-> >> >> 187
-> >> >> -        return copy_to_user(arg, dev->bus_id, sizeof(dev->bus_id))? -EFAULT: 0;
-> >> >> 188 +        return copy_to_user(arg,
-> >> >> 189
-> >> >> +                           dev_name(dev), strlen(dev_name(dev)))? -EFAULT: 0;
-> >> >> 190  }
-> >> >
-> >> > Give cause for concern:  in the original, we know we scribble over 20
-> >> > bytes of user space.  With the new one we scribble over an unknown
-> >> > number (which could potentially be much greater than 20).  That's an
-> >> > accident waiting to happen in userspace.
-> >>
-> >> Yeah, but the name will have no real limit. What should we do here?
-> >> Just Truncate at 20, because we "know" it's not longer?
-> >
-> > Well, the problem is the stupid ioctl which gives nowhere to say how
-> > many bytes the buffer is.  For safety's sake, yes, I think you have to
-> > limit it to 20 bytes.  Otherwise, on the day we introduce long names
-> > some random application using this ioctl will die with data corruption
-> > and that will be extremely hard to debug.
+On Wed, 2008-12-03 at 12:42 +0200, Boaz Harrosh wrote:
+> Nicholas A. Bellinger wrote:
+> >>From 1b14b5e1fc9a7074322b1015bb86eca2a8ef4560 Mon Sep 17 00:00:00 2001
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > Date: Tue, 2 Dec 2008 16:30:51 -0800
+> > Subject: [PATCH] [Target_Core_Mod/PSCSI]: Use struct request to struct scsi_device->request_queue
+> > 
+> > This patch begins to remove the usage of scsi_execute_async() from the PSCSI
+> > subsystem plugin for v3.0 generic target core.
+> > 
+> > It uses blk_get_request() to allocate struct request in pscsi_blk_get_request()
+> > and used by all CDB types and both memory backing types.  struct request is then
+> > released with __blk_put_request() in the struct request->end_io() context in
+> > pscsi_req_done().
+> > 
+> > Also, this patch adds a temporary EXPORT_SYMBOL_GPL() for
+> > scsi/drivers/scsi_lib.c:scsi_req_map_sg() (which will also be going away at
+> > some point).  At that point, the upstream struct scatterlist and/or
+> > struct page -> struct request mapping for usage with struct scsi_device->request_queue
+> > will be dropped into place in drivers/lio-core/target_core_pscsi.c:pscsi_map_task_SG()
+> > 
+> > Tested on v2.6.28-rc7 32-bit x86 with virtual VMware TYPE_DISK on virtual MPT-Fusion
+> > 
+> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> > ---
+> >  drivers/lio-core/target_core_pscsi.c |  206 +++++++++++++++++++++++++---------
+> >  drivers/lio-core/target_core_pscsi.h |    5 +-
+> >  drivers/scsi/scsi_lib.c              |    6 +-
+> >  3 files changed, 161 insertions(+), 56 deletions(-)
+> > 
 > 
-> Do you want to take over the patch to the scsi tree, and we will work
-> from there. It's through Greg's tree in -next since a while.
+> This patch confuses me. Is this the same one posted few days ago minus the double-free
+> bug? It would be nice if you said that somewhere. Like [PATCH ver2] ...
+> 
 
-Sure ... can you send a copy of it rather than me having to pull it out
-of your git tree.
+<nod> sorry for the confusion.
 
-Thanks,
+> But what confuses me are the previous two patches you sent that makes this patch not
+> compile. (Rename of se_task_t->task_buf => se_task_t->task_sg).
+> 
 
-James
+Ok yes, this one is the 2nd rev of the original patch to remove the
+usage of scsi_execute_async().  The other two are for getting rid of the
+casts in between target_core_mod se_task_t scatterlist memory and
+mapping into target core subsystem plugins (PSCSI, IBLOCK, FILEIO)
+following your recommendations. 
+
+> The previous two patches are not bisectable btw. Numbering a patchset could maybe help
+> a little, but will not help here, whichever way you order them they will only compile at
+> the very end (Well not even that, not with this one applied).
+> 
+
+<nod, point taken.
+
+> Sorry but I'm unable to farther review any of the patches. Please re-post everything
+> as a patchset so I can understand whats going on.
+> 
+
+Ok, here commit diffs for the three patches that affect target_core_mod:
+
+[PATCH] [Target_Core_Mod/PSCSI]: Use struct request to struct scsi_device->request_queue
+
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=commitdiff;h=1b14b5e1fc9a7074322b1015bb86eca2a8ef4560
+
+[PATCH] [Target_Core_Mod]: Convert to se_task_t->task_sg usage in core and subsystem plugins
+
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=commitdiff;h=41e98940da5ffaf7e31fce8d1f706e3e0a679654
+
+[PATCH] [Target_Core_Mod]: Update PSCSI, IBLOCK, FILEIO and RAMDISK for se_task_t->task_sg
+
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=commitdiff;h=e030ca2b9bbb81402b3ed669bb5e1d54fed0dff7
+
+
+> (And please give the URL of the git tree they are based on in each [PATCH 00/xx] mail.
+> Usually one states what the patchset is based on, eg. "based on scsi-misc as of ..."
+> but we all know where scsi-misc is)
+> 
+
+Ok, these patches are against the development lio-core-2.6.git (v3.0)
+tree (currently at v2.6.28-rc7) which tracks linux-2.6.git.  I will be
+sure to include this in futher postings.  
+
+Also, I am posting the patches related to the generic target core
+(target_core_mod) and plugins that hook into Linux storage subsystems
+(PSCSI, IBLOCK, FILEIO) to start getting some feedback on the current
+work in the v3.0 development tree.  The code in
+lio-core-2.6.git/drivers/lio-core is the ConfigFS enabled generic target
+engine, subsystem plugins, and traditional LIO iSCSI target engine that
+will be submitted for upstream inclusion (most likely in that order) as
+work continues, sometime in the v2.6.29 timeframe.
+
+Many thanks for your comments,
+
+--nab
 
 
