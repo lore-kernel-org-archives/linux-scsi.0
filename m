@@ -1,47 +1,75 @@
-From: Bob Tracy <rct@gherkin.frus.com>
-Subject: Re: [GIT PATCH] SCSI fixes for 2.6.28-rc7
-Date: Thu, 4 Dec 2008 08:30:23 -0600
-Message-ID: <20081204143023.GA2240@gherkin.frus.com>
-References: <1228237136.3331.17.camel@localhost.localdomain> <20081202192834.GA26259@gherkin.frus.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug 12163] mptsas driver cannot discover some hotplugged
+	SATA/SAS disks
+Date: Thu, 04 Dec 2008 09:30:39 -0600
+Message-ID: <1228404639.3363.6.camel@localhost.localdomain>
+References: <20081204084754.63F38108043@picon.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gherkin.frus.com ([192.158.254.49]:58848 "EHLO gherkin.frus.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752287AbYLDOa0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Dec 2008 09:30:26 -0500
-Content-Disposition: inline
-In-Reply-To: <20081202192834.GA26259@gherkin.frus.com>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:36147 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752260AbYLDPag (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Dec 2008 10:30:36 -0500
+In-Reply-To: <20081204084754.63F38108043@picon.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: bugme-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Dec 02, 2008 at 01:28:34PM -0600, Bob Tracy wrote:
-> On Tue, Dec 02, 2008 at 10:58:56AM -0600, James Bottomley wrote:
-> > This is quite a hefty update for so late. It includes a slew of block
-> > timer related fixes (we moved to using block timers when the 2.6.28
-> > merge window opened).  The bad news is that I still don't think we have
-> > all the block timer related bugs caught and fixed.  There's also a slew
-> > of zfcp (s390 driver) fixes and a few miscellaneous others (including
-> > another regression bugzilla fix, the hang in starved list processing).
+On Thu, 2008-12-04 at 00:47 -0800, bugme-daemon@bugzilla.kernel.org
+wrote:
+> http://bugzilla.kernel.org/show_bug.cgi?id=12163
+
+
+> Latest working kernel version: No
+> Earliest failing kernel version: 2.6.22.16
+> Distribution: LinuxFromScratch-6.4
+> Hardware Environment: LSI-MPTSAS-1068E
+> (http://www.lsi.com/storage_home/products_home/standard_product_ics/sas_ics/lsisas1068e/index.html)
+> Software Environment:
+> Problem Description: mptsas driver cannot discover some hotplugged SATA/SAS
+> disks
 > 
-> I'll give this a try.  None of the 2.6.28-rcX versions I've tried have
-> lasted more than a few hours at best before panicing with a block layer
-> timeout.  My test system uses the aic7xxx driver with a 2930U2 adapter.
-> I didn't report the regression relative to 2.6.27 because I figured
-> something this major was going to get caught without another "me too"
-> report that I was too busy to generate and provide the necessary
-> diagnostic and followup on anyway :-).
+> Steps to reproduce:
+> 1. use LSI-SAS-1068E controller to manage multiple disks, including disks on
+> multiple JBODs;
+> 2. hotunplug and hotplug the disks at random places;
+> 
+> Result:
+> 1. disks direct attached can can rediscovered, disks on the last JBOD can also
+> be rediscovered, other disks cannot.
+> 
+> Like this, disks on HEAD and JBOD3 can be rediscovered, others on JBOD1 and
+> JBOD2 cannot.
+> 
+> HEAD  <=> JBOD1 <=> JBOD2 <=> JBOD3
 
-2.6.28-rc7 without the SCSI update panics as the prior -rcX kernels did.
-With the update applied, life is good (so far).  I can at least type
-"sync" at the command prompt and get away with it :-).  With a current
-uptime of less than 5 minutes, I need to let the patched -rc7 soak a
-bit.  Otherwise, I'm willing to call it "good."
+My suspicion is that this is because there's no firmware event triggered
+(the LSI is a fat firmware device, it relies on firmware for almost
+everything to function including hotplug).  If this is true, it's
+unfixable in the driver.
 
--- 
-------------------------------------------------------------------------
-Bob Tracy          |  "I was a beta tester for dirt.  They never did
-rct@frus.com       |   get all the bugs out." - Steve McGrew on /.
-------------------------------------------------------------------------
+To verify, try this patch which will print out all the fw events and see
+if it prints anything when you hotplug.
+
+James
+
+---
+
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index 12b7325..e755bdd 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -2600,6 +2600,8 @@ mptsas_hotplug_work(struct work_struct *work)
+ 	VirtTarget *vtarget;
+ 	VirtDevice *vdevice;
+ 
++	printk("mptsas hotplug event: event %d ioc%d SAS addr %llx device info %x phy_id %d phys_disk_num %d\n", ev->event_type, ioc->id, ev->sas_address, ev->device_info, ev->phy_id, ev->phys_disk_num);
++
+ 	mutex_lock(&ioc->sas_discovery_mutex);
+ 	switch (ev->event_type) {
+ 	case MPTSAS_DEL_DEVICE:
+
+
