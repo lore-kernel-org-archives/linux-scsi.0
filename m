@@ -1,22 +1,29 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 12163] mptsas driver cannot discover some hotplugged
-	SATA/SAS disks
-Date: Thu, 04 Dec 2008 09:30:39 -0600
-Message-ID: <1228404639.3363.6.camel@localhost.localdomain>
-References: <20081204084754.63F38108043@picon.linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12163] mptsas driver cannot discover some hotplugged SATA/SAS disks
+Date: Thu,  4 Dec 2008 07:30:45 -0800 (PST)
+Message-ID: <20081204153045.AFF7110800F@picon.linux-foundation.org>
+References: <bug-12163-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:36147 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752260AbYLDPag (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Dec 2008 10:30:36 -0500
-In-Reply-To: <20081204084754.63F38108043@picon.linux-foundation.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:44248 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753232AbYLDPar (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Dec 2008 10:30:47 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mB4FUjJC012092
+	for <linux-scsi@vger.kernel.org>; Thu, 4 Dec 2008 07:30:46 -0800
+In-Reply-To: <bug-12163-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugme-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=12163
+
+
+
+
+
+------- Comment #1 from anonymous@kernel-bugs.osdl.org  2008-12-04 07:30 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Thu, 2008-12-04 at 00:47 -0800, bugme-daemon@bugzilla.kernel.org
 wrote:
@@ -63,13 +70,19 @@ index 12b7325..e755bdd 100644
 --- a/drivers/message/fusion/mptsas.c
 +++ b/drivers/message/fusion/mptsas.c
 @@ -2600,6 +2600,8 @@ mptsas_hotplug_work(struct work_struct *work)
- 	VirtTarget *vtarget;
- 	VirtDevice *vdevice;
- 
-+	printk("mptsas hotplug event: event %d ioc%d SAS addr %llx device info %x phy_id %d phys_disk_num %d\n", ev->event_type, ioc->id, ev->sas_address, ev->device_info, ev->phy_id, ev->phys_disk_num);
+        VirtTarget *vtarget;
+        VirtDevice *vdevice;
+
++       printk("mptsas hotplug event: event %d ioc%d SAS addr %llx device info
+%x phy_id %d phys_disk_num %d\n", ev->event_type, ioc->id, ev->sas_address,
+ev->device_info, ev->phy_id, ev->phys_disk_num);
 +
- 	mutex_lock(&ioc->sas_discovery_mutex);
- 	switch (ev->event_type) {
- 	case MPTSAS_DEL_DEVICE:
+        mutex_lock(&ioc->sas_discovery_mutex);
+        switch (ev->event_type) {
+        case MPTSAS_DEL_DEVICE:
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
