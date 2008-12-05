@@ -1,85 +1,67 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 08/12] st: convert check_tape to use st_scsi_kern_execute
-Date: Fri,  5 Dec 2008 15:25:27 +0900
-Message-ID: <1228458331-8500-9-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 02/12] st: add st_scsi_kern_execute helper function
+Date: Fri,  5 Dec 2008 15:25:21 +0900
+Message-ID: <1228458331-8500-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 References: <1228458331-8500-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1228458331-8500-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1228458331-8500-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1228458331-8500-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1228458331-8500-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1228458331-8500-6-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1228458331-8500-7-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1228458331-8500-8-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:53434 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:53436 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751514AbYLEGZj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1751463AbYLEGZj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 5 Dec 2008 01:25:39 -0500
-In-Reply-To: <1228458331-8500-8-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <1228458331-8500-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Kai.Makisara@kolumbus.fi
 Cc: James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org
 
-This replaces st_do_scsi in check_tape (READ_BLOCK_LIMITS and
-MODE_SENSE) with st_scsi_kern_execute.
+st_scsi_kern_execute is a helper function to perform SCSI commands
+synchronously. It supports data transfer with a liner in-kernel buffer
+(not scatter gather). st_scsi_kern_execute internally uses
+scsi_execute().
+
+The majority of st_do_scsi can be replaced with
+st_scsi_kern_execute. This is a preparation for rewriting st_do_scsi
+to remove obsolete scsi_execute_async().
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Acked-by: Kai Makisara <Kai.Makisara@kolumbus.fi>
 ---
- drivers/scsi/st.c |   26 ++++++++++++++++++--------
- 1 files changed, 18 insertions(+), 8 deletions(-)
+ drivers/scsi/st.c |   22 ++++++++++++++++++++++
+ 1 files changed, 22 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 49dc247..bbf431a 100644
+index 878493d..9379071 100644
 --- a/drivers/scsi/st.c
 +++ b/drivers/scsi/st.c
-@@ -1018,16 +1018,24 @@ static int check_tape(struct scsi_tape *STp, struct file *filp)
- 		}
- 	}
+@@ -533,6 +533,28 @@ st_do_scsi(struct st_request * SRpnt, struct scsi_tape * STp, unsigned char *cmd
+ 	return SRpnt;
+ }
  
-+	SRpnt = st_allocate_request(STp);
-+	if (!SRpnt) {
-+		retval = STp->buffer->syscall_result;
-+		goto err_out;
-+	}
++static int st_scsi_kern_execute(struct st_request *streq,
++				const unsigned char *cmd, int data_direction,
++				void *buffer, unsigned bufflen, int timeout,
++				int retries)
++{
++	struct scsi_tape *stp = streq->stp;
++	int ret, resid;
 +
- 	if (STp->omit_blklims)
- 		STp->min_block = STp->max_block = (-1);
- 	else {
- 		memset((void *) &cmd[0], 0, MAX_COMMAND_SIZE);
- 		cmd[0] = READ_BLOCK_LIMITS;
++	stp->buffer->cmdstat.have_sense = 0;
++	memcpy(streq->cmd, cmd, sizeof(streq->cmd));
++
++	ret = scsi_execute(stp->device, cmd, data_direction, buffer, bufflen,
++			   streq->sense, timeout, retries, 0, &resid);
++	if (driver_byte(ret) & DRIVER_ERROR)
++		return -EBUSY;
++
++	stp->buffer->cmdstat.midlevel_result = streq->result = ret;
++	stp->buffer->cmdstat.residual = resid;
++	stp->buffer->syscall_result = st_chk_result(stp, streq);
++
++	return 0;
++}
  
--		SRpnt = st_do_scsi(SRpnt, STp, cmd, 6, DMA_FROM_DEVICE,
--				   STp->device->timeout, MAX_READY_RETRIES, 1);
--		if (!SRpnt) {
--			retval = (STp->buffer)->syscall_result;
-+		retval = st_scsi_kern_execute(SRpnt, cmd, DMA_FROM_DEVICE,
-+					      STp->buffer->b_data, 6,
-+					      STp->device->timeout,
-+					      MAX_READY_RETRIES);
-+		if (retval) {
-+			st_release_request(SRpnt);
- 			goto err_out;
- 		}
- 
-@@ -1051,10 +1059,12 @@ static int check_tape(struct scsi_tape *STp, struct file *filp)
- 	cmd[0] = MODE_SENSE;
- 	cmd[4] = 12;
- 
--	SRpnt = st_do_scsi(SRpnt, STp, cmd, 12, DMA_FROM_DEVICE,
--			STp->device->timeout, MAX_READY_RETRIES, 1);
--	if (!SRpnt) {
--		retval = (STp->buffer)->syscall_result;
-+	retval = st_scsi_kern_execute(SRpnt, cmd, DMA_FROM_DEVICE,
-+				      STp->buffer->b_data, 12,
-+				      STp->device->timeout,
-+				      MAX_READY_RETRIES);
-+	if (retval) {
-+		st_release_request(SRpnt);
- 		goto err_out;
- 	}
- 
+ /* Handle the write-behind checking (waits for completion). Returns -ENOSPC if
+    write has been correct but EOM early warning reached, -EIO if write ended in
 -- 
 1.5.5.GIT
 
