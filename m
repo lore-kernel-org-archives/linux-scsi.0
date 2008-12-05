@@ -1,7 +1,7 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 09/12] st: convert read_mode_page to use st_scsi_kern_execute
-Date: Fri,  5 Dec 2008 15:25:28 +0900
-Message-ID: <1228458331-8500-10-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 11/12] st: convert get_location to use st_scsi_kern_execute
+Date: Fri,  5 Dec 2008 15:25:30 +0900
+Message-ID: <1228458331-8500-12-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 References: <1228458331-8500-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1228458331-8500-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1228458331-8500-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
@@ -11,61 +11,59 @@ References: <1228458331-8500-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1228458331-8500-7-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1228458331-8500-8-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1228458331-8500-9-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1228458331-8500-10-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1228458331-8500-11-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:53443 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:53449 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751543AbYLEGZj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Dec 2008 01:25:39 -0500
-In-Reply-To: <1228458331-8500-9-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	id S1751558AbYLEGZl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Dec 2008 01:25:41 -0500
+In-Reply-To: <1228458331-8500-11-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Kai.Makisara@kolumbus.fi
 Cc: James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org
 
-This replaces st_do_scsi in read_mode_page (MODE_SENSE) with
+This replaces st_do_scsi in get_location (READ_POSITION) with
 st_scsi_kern_execute.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Acked-by: Kai Makisara <Kai.Makisara@kolumbus.fi>
 ---
- drivers/scsi/st.c |   15 +++++++++------
- 1 files changed, 9 insertions(+), 6 deletions(-)
+ drivers/scsi/st.c |   13 ++++++++++---
+ 1 files changed, 10 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index bbf431a..9d4ec54 100644
+index 61f5b1e..b13841a 100644
 --- a/drivers/scsi/st.c
 +++ b/drivers/scsi/st.c
-@@ -2366,7 +2366,8 @@ static int st_set_options(struct scsi_tape *STp, long options)
- static int read_mode_page(struct scsi_tape *STp, int page, int omit_block_descs)
- {
- 	unsigned char cmd[MAX_COMMAND_SIZE];
--	struct st_request *SRpnt = NULL;
-+	struct st_request *SRpnt;
-+	int ret;
- 
- 	memset(cmd, 0, MAX_COMMAND_SIZE);
- 	cmd[0] = MODE_SENSE;
-@@ -2375,14 +2376,16 @@ static int read_mode_page(struct scsi_tape *STp, int page, int omit_block_descs)
- 	cmd[2] = page;
- 	cmd[4] = 255;
- 
--	SRpnt = st_do_scsi(SRpnt, STp, cmd, cmd[4], DMA_FROM_DEVICE,
--			   STp->device->timeout, 0, 1);
--	if (SRpnt == NULL)
--		return (STp->buffer)->syscall_result;
+@@ -3012,10 +3012,16 @@ static int get_location(struct scsi_tape *STp, unsigned int *block, int *partiti
+ 		if (!logical && !STp->scsi2_logical)
+ 			scmd[1] = 1;
+ 	}
+-	SRpnt = st_do_scsi(NULL, STp, scmd, 20, DMA_FROM_DEVICE,
+-			STp->device->timeout, MAX_READY_RETRIES, 1);
++
 +	SRpnt = st_allocate_request(STp);
-+	if (!SRpnt)
+ 	if (!SRpnt)
+-		return (STp->buffer)->syscall_result;
 +		return STp->buffer->syscall_result;
++
++	result = st_scsi_kern_execute(SRpnt, scmd, DMA_FROM_DEVICE,
++				      STp->buffer->b_data, 20,
++				      STp->device->timeout, MAX_READY_RETRIES);
++	if (result)
++		goto out;
  
-+	ret = st_scsi_kern_execute(SRpnt, cmd, DMA_FROM_DEVICE,
-+				   STp->buffer->b_data, cmd[4],
-+				   STp->device->timeout, MAX_RETRIES);
+ 	if ((STp->buffer)->syscall_result != 0 ||
+ 	    (STp->device->scsi_level >= SCSI_2 &&
+@@ -3043,6 +3049,7 @@ static int get_location(struct scsi_tape *STp, unsigned int *block, int *partiti
+                 DEBC(printk(ST_DEB_MSG "%s: Got tape pos. blk %d part %d.\n", name,
+                             *block, *partition));
+ 	}
++out:
  	st_release_request(SRpnt);
- 
--	return (STp->buffer)->syscall_result;
-+	return ret ? : STp->buffer->syscall_result;
- }
- 
+ 	SRpnt = NULL;
  
 -- 
 1.5.5.GIT
