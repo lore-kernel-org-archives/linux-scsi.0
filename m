@@ -1,37 +1,51 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12163] mptsas driver cannot discover some hotplugged SATA/SAS disks
-Date: Fri,  5 Dec 2008 05:20:25 -0800 (PST)
-Message-ID: <20081205132025.D114C10800F@picon.linux-foundation.org>
-References: <bug-12163-11613@http.bugzilla.kernel.org/>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: oops in ibmvstgt
+Date: Fri, 5 Dec 2008 22:26:03 +0900
+Message-ID: <20081205221802G.fujita.tomonori@lab.ntt.co.jp>
+References: <20081203145857.GA10070@suse.de>
+	<20081204212414H.fujita.tomonori@lab.ntt.co.jp>
+	<20081205105309.GA2198@suse.de>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:39887 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751984AbYLENU1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Dec 2008 08:20:27 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mB5DKPAw013421
-	for <linux-scsi@vger.kernel.org>; Fri, 5 Dec 2008 05:20:26 -0800
-In-Reply-To: <bug-12163-11613@http.bugzilla.kernel.org/>
+Received: from sh.osrg.net ([192.16.179.4]:42665 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752730AbYLEN0L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Dec 2008 08:26:11 -0500
+In-Reply-To: <20081205105309.GA2198@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: olh@suse.de
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12163
+On Fri, 5 Dec 2008 11:53:09 +0100
+Olaf Hering <olh@suse.de> wrote:
 
+> On Thu, Dec 04, FUJITA Tomonori wrote:
+> 
+> > On Wed, 3 Dec 2008 15:58:57 +0100
+> > Olaf Hering <olh@suse.de> wrote:
+> > 
+> > > 
+> > > change init order to fix crash due to uninitalized shost_data
+> > 
+> > I think that calling crq_queue_create leads to the creation of a rport
+> > so we need to set up everything before that. The current code is racy.
+> > 
+> > 
+> > > No idea if the patch is correct.
+> > 
+> > Almost correct, I think. Needs to modify the error handling
+> > too. Probably, it would be better to call scsi_tgt_alloc_queue before
+> > crq_queue_create.
+> > 
+> > How about this?
+> 
+> Yes, that works for me.
 
+Thanks!
 
+> Would be nice to get this into 2.6.28 to avoid a crash.
 
-
-------- Comment #3 from crquan@gmail.com  2008-12-05 05:20 -------
-Created an attachment (id=19156)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=19156&action=view)
-port vendor driver 4.00.43.00 for RHEL5.1 to the latest mainstream git kernel
-
-with the previous 4.00.43.00 driver and this, you can run it on the latest git
-kernel.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Yeah, hopefully we can. I'll resend this with a proper description.
