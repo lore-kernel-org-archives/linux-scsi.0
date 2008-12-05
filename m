@@ -1,70 +1,45 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 11/12] st: convert get_location to use st_scsi_kern_execute
-Date: Fri,  5 Dec 2008 15:25:30 +0900
-Message-ID: <1228458331-8500-12-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-References: <1228458331-8500-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1228458331-8500-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1228458331-8500-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1228458331-8500-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1228458331-8500-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1228458331-8500-6-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1228458331-8500-7-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1228458331-8500-8-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1228458331-8500-9-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1228458331-8500-10-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1228458331-8500-11-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] scsi_transport_spi: fix the misuse of scsi_execute return
+ value
+Date: Fri, 5 Dec 2008 15:37:52 +0900
+Message-ID: <20081205153716R.fujita.tomonori@lab.ntt.co.jp>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:53449 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:34013 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751558AbYLEGZl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Dec 2008 01:25:41 -0500
-In-Reply-To: <1228458331-8500-11-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	id S1751754AbYLEGh5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Dec 2008 01:37:57 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai.Makisara@kolumbus.fi
-Cc: James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com
 
-This replaces st_do_scsi in get_location (READ_POSITION) with
-st_scsi_kern_execute.
+looks like scsi_transport_spi misuses the return value of scsi_execute()?
+
+=
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] scsi_transport_spi: fix the misuse of scsi_execute return value
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Acked-by: Kai Makisara <Kai.Makisara@kolumbus.fi>
 ---
- drivers/scsi/st.c |   13 ++++++++++---
- 1 files changed, 10 insertions(+), 3 deletions(-)
+ drivers/scsi/scsi_transport_spi.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 61f5b1e..b13841a 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -3012,10 +3012,16 @@ static int get_location(struct scsi_tape *STp, unsigned int *block, int *partiti
- 		if (!logical && !STp->scsi2_logical)
- 			scmd[1] = 1;
- 	}
--	SRpnt = st_do_scsi(NULL, STp, scmd, 20, DMA_FROM_DEVICE,
--			STp->device->timeout, MAX_READY_RETRIES, 1);
-+
-+	SRpnt = st_allocate_request(STp);
- 	if (!SRpnt)
--		return (STp->buffer)->syscall_result;
-+		return STp->buffer->syscall_result;
-+
-+	result = st_scsi_kern_execute(SRpnt, scmd, DMA_FROM_DEVICE,
-+				      STp->buffer->b_data, 20,
-+				      STp->device->timeout, MAX_READY_RETRIES);
-+	if (result)
-+		goto out;
- 
- 	if ((STp->buffer)->syscall_result != 0 ||
- 	    (STp->device->scsi_level >= SCSI_2 &&
-@@ -3043,6 +3049,7 @@ static int get_location(struct scsi_tape *STp, unsigned int *block, int *partiti
-                 DEBC(printk(ST_DEB_MSG "%s: Got tape pos. blk %d part %d.\n", name,
-                             *block, *partition));
- 	}
-+out:
- 	st_release_request(SRpnt);
- 	SRpnt = NULL;
- 
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index 7c2d289..3d16ccd 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -112,7 +112,7 @@ static int spi_execute(struct scsi_device *sdev, const void *cmd,
+ 				      REQ_FAILFAST_DEV |
+ 				      REQ_FAILFAST_TRANSPORT |
+ 				      REQ_FAILFAST_DRIVER);
+-		if (result & DRIVER_SENSE) {
++		if (driver_byte(result) & DRIVER_SENSE) {
+ 			struct scsi_sense_hdr sshdr_tmp;
+ 			if (!sshdr)
+ 				sshdr = &sshdr_tmp;
 -- 
 1.5.5.GIT
 
