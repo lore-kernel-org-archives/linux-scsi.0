@@ -1,365 +1,226 @@
 From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH 8/14] lpfc 8.3.0 :  Fix minor issues
-Date: Thu, 4 Dec 2008 22:39:29 -0500
-Message-ID: <1228448369.19053.49.camel@ogier>
+Subject: [PATCH 10/14] lpfc 8.3.0 :  Fix some memory handling issues
+Date: Thu, 4 Dec 2008 22:39:40 -0500
+Message-ID: <1228448380.19053.53.camel@ogier>
 Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:45936 "EHLO
+Received: from emulex.emulex.com ([138.239.112.1]:45962 "EHLO
 	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752094AbYLEOnk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Dec 2008 09:43:40 -0500
+	with ESMTP id S1752263AbYLEOnr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Dec 2008 09:43:47 -0500
 Received: from xcm.ad.emulex.com (xcm.emulex.com [138.239.112.69])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id mB5Ehecn004246
-	for <linux-scsi@vger.kernel.org>; Fri, 5 Dec 2008 06:43:40 -0800 (PST)
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id mB5EhkhZ004271
+	for <linux-scsi@vger.kernel.org>; Fri, 5 Dec 2008 06:43:46 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-lpfc 8.3.0 : Fix several minor issues
+lpfc 8.3.0 : Fix some memory handling issues
 
-- Avoid polling HBA Error Attention when HBA's PCI channel is offline
-  due to PCI EEH
+- Fix mailbox buffer leak on dump mailbox completion
 
-- Fix handling of RSCN with non-zero event qualifiers
+- Fix mbuf leak in lpfc_pci_probe_one() SLI-2 mode error path
 
-- Remove unnecessary sleeps during HBA initialization which slow down
-  driver load
+- Don't allocate HBQs in interrupt context
 
-- Fix internal and external loopback on FCoE HBAs
+- Use correct size for FCP response buffer so that all available sense
+  data is copied
 
-- Fix incorrect decrement of cmd_pending count in lpfc_queuecomand
-  error path
-
-- Fix reporting of port busy events to management application
-
-- Rename lpfc_adjust_queue_depth() to lpfc_rampdown_queue_depth() for
-  consistency with its partner lpfc_rampup_queue_depth()
-
-- Delete redundant lpfc_cmd->start_time = jiffies assignment in
-  lpfc_queuecommand()
-
-- Fix handling for ELS, mailbox and heartbeat time outs in the worker
-  thread by removing unnecessary checking of the work_port_events
-  flags.
-
-- Fix NULL pointer dereference in lpfc_prep_els_iocb
-
-- In lpfc_device_recov_npr_node(), move clearing of NLP_NPR_2B_DISC
-  flag after call to lpfc_cancel_retry_delay_tmo() to keep
-  targets-in-discovery count correct
-
-- Remove lpfc_probe_one()'s call to scsi_scan_host() which could cause
-  concurrent SCSI scans to step on each other
+- Fix jiffies calculation to prevent crash when collecting statistical
+  data
 
 
 Signed-off-by: James Smart <James.Smart@emulex.com>
 
-
 ---
 
- drivers/scsi/lpfc/lpfc_crtn.h      |    2 +-
- drivers/scsi/lpfc/lpfc_els.c       |   32 ++++++++++++++++----------------
- drivers/scsi/lpfc/lpfc_hbadisc.c   |    2 +-
- drivers/scsi/lpfc/lpfc_hw.h        |    6 ++++++
- drivers/scsi/lpfc/lpfc_init.c      |    7 -------
- drivers/scsi/lpfc/lpfc_nportdisc.c |    2 +-
- drivers/scsi/lpfc/lpfc_scsi.c      |   13 ++++++-------
- drivers/scsi/lpfc/lpfc_sli.c       |   27 ++++++++++-----------------
- 8 files changed, 41 insertions(+), 50 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c |    7 +++-
+ drivers/scsi/lpfc/lpfc_scsi.c |   14 +++++---
+ drivers/scsi/lpfc/lpfc_sli.c  |   76 ++++-------------------------------------
+ 3 files changed, 23 insertions(+), 74 deletions(-)
 
---- a/drivers/scsi/lpfc/lpfc_crtn.h
-+++ b/drivers/scsi/lpfc/lpfc_crtn.h
-@@ -290,7 +290,7 @@ void lpfc_fabric_abort_nport(struct lpfc_nodelist *);
- void lpfc_fabric_abort_hba(struct lpfc_hba *);
- void lpfc_fabric_block_timeout(unsigned long);
- void lpfc_unblock_fabric_iocbs(struct lpfc_hba *);
--void lpfc_adjust_queue_depth(struct lpfc_hba *);
-+void lpfc_rampdown_queue_depth(struct lpfc_hba *);
- void lpfc_ramp_down_queue_handler(struct lpfc_hba *);
- void lpfc_ramp_up_queue_handler(struct lpfc_hba *);
- void lpfc_scsi_dev_block(struct lpfc_hba *);
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -275,7 +275,8 @@ lpfc_prep_els_iocb(struct lpfc_vport *vport, uint8_t expectRsp,
- 	return elsiocb;
- 
- els_iocb_free_pbuf_exit:
--	lpfc_mbuf_free(phba, prsp->virt, prsp->phys);
-+	if (expectRsp)
-+		lpfc_mbuf_free(phba, prsp->virt, prsp->phys);
- 	kfree(pbuflist);
- 
- els_iocb_free_prsp_exit:
-@@ -2472,6 +2473,15 @@ lpfc_els_retry(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	case IOSTAT_LOCAL_REJECT:
- 		switch ((irsp->un.ulpWord[4] & 0xff)) {
- 		case IOERR_LOOP_OPEN_FAILURE:
-+			if (cmd == ELS_CMD_FLOGI) {
-+				if (PCI_DEVICE_ID_HORNET ==
-+					phba->pcidev->device) {
-+					phba->fc_topology = TOPOLOGY_LOOP;
-+					phba->pport->fc_myDID = 0;
-+					phba->alpa_map[0] = 0;
-+					phba->alpa_map[1] = 0;
-+				}
-+			}
- 			if (cmd == ELS_CMD_PLOGI && cmdiocb->retry == 0)
- 				delay = 1000;
- 			retry = 1;
-@@ -3827,27 +3837,21 @@ lpfc_rscn_payload_check(struct lpfc_vport *vport, uint32_t did)
- 		while (payload_len) {
- 			rscn_did.un.word = be32_to_cpu(*lp++);
- 			payload_len -= sizeof(uint32_t);
--			switch (rscn_did.un.b.resv) {
--			case 0:	/* Single N_Port ID effected */
-+			switch (rscn_did.un.b.resv & RSCN_ADDRESS_FORMAT_MASK) {
-+			case RSCN_ADDRESS_FORMAT_PORT:
- 				if (ns_did.un.word == rscn_did.un.word)
- 					goto return_did_out;
- 				break;
--			case 1:	/* Whole N_Port Area effected */
-+			case RSCN_ADDRESS_FORMAT_AREA:
- 				if ((ns_did.un.b.domain == rscn_did.un.b.domain)
- 				    && (ns_did.un.b.area == rscn_did.un.b.area))
- 					goto return_did_out;
- 				break;
--			case 2:	/* Whole N_Port Domain effected */
-+			case RSCN_ADDRESS_FORMAT_DOMAIN:
- 				if (ns_did.un.b.domain == rscn_did.un.b.domain)
- 					goto return_did_out;
- 				break;
--			default:
--				/* Unknown Identifier in RSCN node */
--				lpfc_printf_vlog(vport, KERN_ERR, LOG_DISCOVERY,
--						 "0217 Unknown Identifier in "
--						 "RSCN payload Data: x%x\n",
--						 rscn_did.un.word);
--			case 3:	/* Whole Fabric effected */
-+			case RSCN_ADDRESS_FORMAT_FABRIC:
- 				goto return_did_out;
- 			}
- 		}
-@@ -4935,10 +4939,6 @@ lpfc_els_timeout_handler(struct lpfc_vport *vport)
- 	uint32_t timeout;
- 	uint32_t remote_ID = 0xffffffff;
- 
--	/* If the timer is already canceled do nothing */
--	if ((vport->work_port_events & WORKER_ELS_TMO) == 0) {
--		return;
--	}
- 	spin_lock_irq(&phba->hbalock);
- 	timeout = (uint32_t)(phba->fc_ratov << 1);
- 
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -350,7 +350,7 @@ lpfc_send_fastpath_evt(struct lpfc_hba *phba,
- 			evt_data_size = sizeof(fast_evt_data->un.
- 				read_check_error);
- 		} else if ((evt_sub_category == LPFC_EVENT_FABRIC_BUSY) ||
--			(evt_sub_category == IOSTAT_NPORT_BSY)) {
-+			(evt_sub_category == LPFC_EVENT_PORT_BUSY)) {
- 			evt_data = (char *) &fast_evt_data->un.fabric_evt;
- 			evt_data_size = sizeof(fast_evt_data->un.fabric_evt);
- 		} else {
---- a/drivers/scsi/lpfc/lpfc_hw.h
-+++ b/drivers/scsi/lpfc/lpfc_hw.h
-@@ -869,6 +869,12 @@ typedef struct _D_ID {		/* Structure is in Big Endian format */
- 	} un;
- } D_ID;
- 
-+#define RSCN_ADDRESS_FORMAT_PORT	0x0
-+#define RSCN_ADDRESS_FORMAT_AREA	0x1
-+#define RSCN_ADDRESS_FORMAT_DOMAIN	0x2
-+#define RSCN_ADDRESS_FORMAT_FABRIC	0x3
-+#define RSCN_ADDRESS_FORMAT_MASK	0x3
-+
- /*
-  *  Structure to define all ELS Payload types
-  */
 --- a/drivers/scsi/lpfc/lpfc_init.c
 +++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -742,11 +742,6 @@ lpfc_hb_timeout_handler(struct lpfc_hba *phba)
+@@ -255,8 +255,10 @@ lpfc_dump_wakeup_param_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmboxq)
+ 	/* character array used for decoding dist type. */
+ 	char dist_char[] = "nabx";
+ 
+-	if (pmboxq->mb.mbxStatus != MBX_SUCCESS)
++	if (pmboxq->mb.mbxStatus != MBX_SUCCESS) {
++		mempool_free(pmboxq, phba->mbox_mem_pool);
  		return;
++	}
  
- 	spin_lock_irq(&phba->pport->work_port_lock);
--	/* If the timer is already canceled do nothing */
--	if (!(phba->pport->work_port_events & WORKER_HB_TMO)) {
--		spin_unlock_irq(&phba->pport->work_port_lock);
--		return;
--	}
+ 	prg = (struct prog_id *) &prog_id_word;
  
- 	if (time_after(phba->last_completion_time + LPFC_HB_MBOX_INTERVAL * HZ,
- 		jiffies)) {
-@@ -2702,8 +2697,6 @@ lpfc_pci_probe_one(struct pci_dev *pdev, const struct pci_device_id *pid)
- 		(char *) &adapter_event,
- 		LPFC_NL_VENDOR_ID);
- 
--	scsi_scan_host(shost);
--
- 	return 0;
- 
- out_remove_device:
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -1929,10 +1929,10 @@ lpfc_device_recov_npr_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	if (vport->fc_flag & FC_RSCN_DEFERRED)
- 		return ndlp->nlp_state;
- 
-+	lpfc_cancel_retry_delay_tmo(vport, ndlp);
- 	spin_lock_irq(shost->host_lock);
- 	ndlp->nlp_flag &= ~(NLP_NODEV_REMOVE | NLP_NPR_2B_DISC);
- 	spin_unlock_irq(shost->host_lock);
--	lpfc_cancel_retry_delay_tmo(vport, ndlp);
- 	return ndlp->nlp_state;
+@@ -274,6 +276,7 @@ lpfc_dump_wakeup_param_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmboxq)
+ 		sprintf(phba->OptionROMVersion, "%d.%d%d%c%d",
+ 			prg->ver, prg->rev, prg->lev,
+ 			dist, prg->num);
++	mempool_free(pmboxq, phba->mbox_mem_pool);
+ 	return;
  }
  
+@@ -2889,6 +2892,8 @@ out_remove_device:
+ 	lpfc_stop_phba_timers(phba);
+ 	phba->pport->work_port_events = 0;
+ 	lpfc_disable_intr(phba);
++	lpfc_sli_hba_down(phba);
++	lpfc_sli_brdrestart(phba);
+ out_free_sysfs_attr:
+ 	lpfc_free_sysfs_attr(vport);
+ out_destroy_port:
 --- a/drivers/scsi/lpfc/lpfc_scsi.c
 +++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -148,7 +148,7 @@ lpfc_send_sdev_queuedepth_change_event(struct lpfc_hba *phba,
+@@ -66,6 +66,8 @@ lpfc_update_stats(struct lpfc_hba *phba, struct  lpfc_scsi_buf *lpfc_cmd)
+ 	if (cmd->result)
+ 		return;
+ 
++	latency = jiffies_to_msecs((long)jiffies - (long)lpfc_cmd->start_time);
++
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	if (!vport->stat_data_enabled ||
+ 		vport->stat_data_blocked ||
+@@ -74,13 +76,15 @@ lpfc_update_stats(struct lpfc_hba *phba, struct  lpfc_scsi_buf *lpfc_cmd)
+ 		spin_unlock_irqrestore(shost->host_lock, flags);
+ 		return;
+ 	}
+-	latency = jiffies_to_msecs(jiffies - lpfc_cmd->start_time);
+ 
+ 	if (phba->bucket_type == LPFC_LINEAR_BUCKET) {
+ 		i = (latency + phba->bucket_step - 1 - phba->bucket_base)/
+ 			phba->bucket_step;
+-		if (i >= LPFC_MAX_BUCKET_COUNT)
+-			i = LPFC_MAX_BUCKET_COUNT;
++		/* check array subscript bounds */
++		if (i < 0)
++			i = 0;
++		else if (i >= LPFC_MAX_BUCKET_COUNT)
++			i = LPFC_MAX_BUCKET_COUNT - 1;
+ 	} else {
+ 		for (i = 0; i < LPFC_MAX_BUCKET_COUNT-1; i++)
+ 			if (latency <= (phba->bucket_base +
+@@ -444,14 +448,14 @@ lpfc_new_scsi_buf(struct lpfc_vport *vport)
+ 	bpl[0].addrLow = le32_to_cpu(putPaddrLow(pdma_phys_fcp_cmd));
+ 	bpl[0].tus.f.bdeSize = sizeof(struct fcp_cmnd);
+ 	bpl[0].tus.f.bdeFlags = BUFF_TYPE_BDE_64;
+-	bpl[0].tus.w = le32_to_cpu(bpl->tus.w);
++	bpl[0].tus.w = le32_to_cpu(bpl[0].tus.w);
+ 
+ 	/* Setup the physical region for the FCP RSP */
+ 	bpl[1].addrHigh = le32_to_cpu(putPaddrHigh(pdma_phys_fcp_rsp));
+ 	bpl[1].addrLow = le32_to_cpu(putPaddrLow(pdma_phys_fcp_rsp));
+ 	bpl[1].tus.f.bdeSize = sizeof(struct fcp_rsp);
+ 	bpl[1].tus.f.bdeFlags = BUFF_TYPE_BDE_64;
+-	bpl[1].tus.w = le32_to_cpu(bpl->tus.w);
++	bpl[1].tus.w = le32_to_cpu(bpl[1].tus.w);
+ 
+ 	/*
+ 	 * Since the IOCB for the FCP I/O is built into this lpfc_scsi_buf,
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -1259,68 +1259,6 @@ lpfc_sli_handle_mb_event(struct lpfc_hba *phba)
  }
  
  /**
-- * lpfc_adjust_queue_depth: Post RAMP_DOWN_QUEUE event for worker thread.
-+ * lpfc_rampdown_queue_depth: Post RAMP_DOWN_QUEUE event to worker thread.
-  * @phba: The Hba for which this call is being executed.
-  *
-  * This routine is called when there is resource error in driver or firmware.
-@@ -159,7 +159,7 @@ lpfc_send_sdev_queuedepth_change_event(struct lpfc_hba *phba,
-  * This routine should be called with no lock held.
+- * lpfc_sli_replace_hbqbuff: Replace the HBQ buffer with a new buffer.
+- * @phba: Pointer to HBA context object.
+- * @tag: Tag for the HBQ buffer.
+- *
+- * This function is called from unsolicited event handler code path to get the
+- * HBQ buffer associated with an unsolicited iocb. This function is called with
+- * no lock held. It returns the buffer associated with the given tag and posts
+- * another buffer to the firmware. Note that the new buffer must be allocated
+- * before taking the hbalock and that the hba lock must be held until it is
+- * finished with the hbq entry swap.
+- **/
+-static struct lpfc_dmabuf *
+-lpfc_sli_replace_hbqbuff(struct lpfc_hba *phba, uint32_t tag)
+-{
+-	struct hbq_dmabuf *hbq_entry, *new_hbq_entry;
+-	uint32_t hbqno;
+-	void *virt;		/* virtual address ptr */
+-	dma_addr_t phys;	/* mapped address */
+-	unsigned long flags;
+-
+-	hbqno = tag >> 16;
+-	new_hbq_entry = (phba->hbqs[hbqno].hbq_alloc_buffer)(phba);
+-	/* Check whether HBQ is still in use */
+-	spin_lock_irqsave(&phba->hbalock, flags);
+-	if (!phba->hbq_in_use) {
+-		if (new_hbq_entry)
+-			(phba->hbqs[hbqno].hbq_free_buffer)(phba,
+-							    new_hbq_entry);
+-		spin_unlock_irqrestore(&phba->hbalock, flags);
+-		return NULL;
+-	}
+-
+-	hbq_entry = lpfc_sli_hbqbuf_find(phba, tag);
+-	if (hbq_entry == NULL) {
+-		if (new_hbq_entry)
+-			(phba->hbqs[hbqno].hbq_free_buffer)(phba,
+-							    new_hbq_entry);
+-		spin_unlock_irqrestore(&phba->hbalock, flags);
+-		return NULL;
+-	}
+-	list_del(&hbq_entry->dbuf.list);
+-
+-	if (new_hbq_entry == NULL) {
+-		list_add_tail(&hbq_entry->dbuf.list, &phba->hbqbuf_in_list);
+-		spin_unlock_irqrestore(&phba->hbalock, flags);
+-		return &hbq_entry->dbuf;
+-	}
+-	new_hbq_entry->tag = -1;
+-	phys = new_hbq_entry->dbuf.phys;
+-	virt = new_hbq_entry->dbuf.virt;
+-	new_hbq_entry->dbuf.phys = hbq_entry->dbuf.phys;
+-	new_hbq_entry->dbuf.virt = hbq_entry->dbuf.virt;
+-	hbq_entry->dbuf.phys = phys;
+-	hbq_entry->dbuf.virt = virt;
+-	lpfc_sli_free_hbq(phba, hbq_entry);
+-	list_add_tail(&new_hbq_entry->dbuf.list, &phba->hbqbuf_in_list);
+-	spin_unlock_irqrestore(&phba->hbalock, flags);
+-
+-	return &new_hbq_entry->dbuf;
+-}
+-
+-/**
+  * lpfc_sli_get_buff: Get the buffer associated with the buffer tag.
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+@@ -1334,13 +1272,17 @@ lpfc_sli_replace_hbqbuff(struct lpfc_hba *phba, uint32_t tag)
   **/
- void
--lpfc_adjust_queue_depth(struct lpfc_hba *phba)
-+lpfc_rampdown_queue_depth(struct lpfc_hba *phba)
+ static struct lpfc_dmabuf *
+ lpfc_sli_get_buff(struct lpfc_hba *phba,
+-			struct lpfc_sli_ring *pring,
+-			uint32_t tag)
++		  struct lpfc_sli_ring *pring,
++		  uint32_t tag)
  {
- 	unsigned long flags;
- 	uint32_t evt_posted;
-@@ -1551,7 +1551,7 @@ lpfc_queuecommand(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
- 
- 	lpfc_cmd = lpfc_get_scsi_buf(phba);
- 	if (lpfc_cmd == NULL) {
--		lpfc_adjust_queue_depth(phba);
-+		lpfc_rampdown_queue_depth(phba);
- 
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_FCP,
- 				 "0707 driver's buffer pool is empty, "
-@@ -1559,7 +1559,6 @@ lpfc_queuecommand(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
- 		goto out_host_busy;
- 	}
- 
--	lpfc_cmd->start_time = jiffies;
- 	/*
- 	 * Store the midlayer's command structure for the completion phase
- 	 * and complete the command initialization.
-@@ -1580,9 +1579,10 @@ lpfc_queuecommand(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
- 	atomic_inc(&ndlp->cmd_pending);
- 	err = lpfc_sli_issue_iocb(phba, &phba->sli.ring[psli->fcp_ring],
- 				  &lpfc_cmd->cur_iocbq, SLI_IOCB_RET_IOCB);
--	if (err)
-+	if (err) {
-+		atomic_dec(&ndlp->cmd_pending);
- 		goto out_host_busy_free_buf;
--
-+	}
- 	if (phba->cfg_poll & ENABLE_FCP_RING_POLLING) {
- 		lpfc_sli_poll_fcp_ring(phba);
- 		if (phba->cfg_poll & DISABLE_FCP_RING_INT)
-@@ -1592,7 +1592,6 @@ lpfc_queuecommand(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
- 	return 0;
- 
-  out_host_busy_free_buf:
--	atomic_dec(&ndlp->cmd_pending);
- 	lpfc_scsi_unprep_dma_buf(phba, lpfc_cmd);
- 	lpfc_release_scsi_buf(phba, lpfc_cmd);
-  out_host_busy:
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -1982,7 +1982,7 @@ lpfc_sli_handle_fast_ring_event(struct lpfc_hba *phba,
- 			if ((irsp->ulpStatus == IOSTAT_LOCAL_REJECT) &&
- 				(irsp->un.ulpWord[4] == IOERR_NO_RESOURCES)) {
- 				spin_unlock_irqrestore(&phba->hbalock, iflag);
--				lpfc_adjust_queue_depth(phba);
-+				lpfc_rampdown_queue_depth(phba);
- 				spin_lock_irqsave(&phba->hbalock, iflag);
- 			}
- 
-@@ -2225,7 +2225,7 @@ lpfc_sli_handle_slow_ring_event(struct lpfc_hba *phba,
- 			if ((irsp->ulpStatus == IOSTAT_LOCAL_REJECT) &&
- 			     (irsp->un.ulpWord[4] == IOERR_NO_RESOURCES)) {
- 				spin_unlock_irqrestore(&phba->hbalock, iflag);
--				lpfc_adjust_queue_depth(phba);
-+				lpfc_rampdown_queue_depth(phba);
- 				spin_lock_irqsave(&phba->hbalock, iflag);
- 			}
- 
-@@ -2790,7 +2790,6 @@ lpfc_sli_brdrestart(struct lpfc_hba *phba)
- {
- 	MAILBOX_t *mb;
- 	struct lpfc_sli *psli;
--	uint16_t skip_post;
- 	volatile uint32_t word0;
- 	void __iomem *to_slim;
- 
-@@ -2815,13 +2814,10 @@ lpfc_sli_brdrestart(struct lpfc_hba *phba)
- 	readl(to_slim); /* flush */
- 
- 	/* Only skip post after fc_ffinit is completed */
--	if (phba->pport->port_state) {
--		skip_post = 1;
-+	if (phba->pport->port_state)
- 		word0 = 1;	/* This is really setting up word1 */
--	} else {
--		skip_post = 0;
-+	else
- 		word0 = 0;	/* This is really setting up word1 */
--	}
- 	to_slim = phba->MBslimaddr + sizeof (uint32_t);
- 	writel(*(uint32_t *) mb, to_slim);
- 	readl(to_slim); /* flush */
-@@ -2835,10 +2831,8 @@ lpfc_sli_brdrestart(struct lpfc_hba *phba)
- 	memset(&psli->lnk_stat_offsets, 0, sizeof(psli->lnk_stat_offsets));
- 	psli->stats_start = get_seconds();
- 
--	if (skip_post)
--		mdelay(100);
--	else
--		mdelay(2000);
-+	/* Give the INITFF and Post time to settle. */
-+	mdelay(100);
- 
- 	lpfc_hba_down_post(phba);
- 
-@@ -3084,7 +3078,6 @@ lpfc_sli_config_port(struct lpfc_hba *phba, int sli_mode)
- 		spin_unlock_irq(&phba->hbalock);
- 		phba->pport->port_state = LPFC_VPORT_UNKNOWN;
- 		lpfc_sli_brdrestart(phba);
--		msleep(2500);
- 		rc = lpfc_sli_chipset_init(phba);
- 		if (rc)
- 			break;
-@@ -3308,10 +3301,6 @@ lpfc_mbox_timeout_handler(struct lpfc_hba *phba)
- 	struct lpfc_sli *psli = &phba->sli;
- 	struct lpfc_sli_ring *pring;
- 
--	if (!(phba->pport->work_port_events & WORKER_MBOX_TMO)) {
--		return;
--	}
--
- 	/* Mbox cmd <mbxCommand> timeout */
- 	lpfc_printf_log(phba, KERN_ERR, LOG_MBOX | LOG_SLI,
- 			"0310 Mailbox command x%x timeout Data: x%x x%x x%p\n",
-@@ -5187,6 +5176,10 @@ lpfc_sli_check_eratt(struct lpfc_hba *phba)
- {
- 	uint32_t ha_copy;
- 
-+	/* If PCI channel is offline, don't process it */
-+	if (unlikely(pci_channel_offline(phba->pcidev)))
-+		return 0;
++	struct hbq_dmabuf *hbq_entry;
 +
- 	/* If somebody is waiting to handle an eratt, don't process it
- 	 * here. The brdkill function will do this.
- 	 */
+ 	if (tag & QUE_BUFTAG_BIT)
+ 		return lpfc_sli_ring_taggedbuf_get(phba, pring, tag);
+-	else
+-		return lpfc_sli_replace_hbqbuff(phba, tag);
++	hbq_entry = lpfc_sli_hbqbuf_find(phba, tag);
++	if (!hbq_entry)
++		return NULL;
++	return &hbq_entry->dbuf;
+ }
+ 
+
+@@ -1372,8 +1314,6 @@ lpfc_sli_process_unsol_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 	match = 0;
+ 	irsp = &(saveq->iocb);
+ 
+-	if (irsp->ulpStatus == IOSTAT_NEED_BUFFER)
+-		return 1;
+ 	if (irsp->ulpCommand == CMD_ASYNC_STATUS) {
+ 		if (pring->lpfc_sli_rcv_async_status)
+ 			pring->lpfc_sli_rcv_async_status(phba, pring, saveq);
 
 
