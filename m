@@ -1,291 +1,365 @@
 From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH 6/14] lpfc 8.3.0 :  Add small features, enhance PCIE EEH
-	support
-Date: Thu, 4 Dec 2008 22:39:19 -0500
-Message-ID: <1228448359.19053.45.camel@ogier>
+Subject: [PATCH 8/14] lpfc 8.3.0 :  Fix minor issues
+Date: Thu, 4 Dec 2008 22:39:29 -0500
+Message-ID: <1228448369.19053.49.camel@ogier>
 Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:45909 "EHLO
+Received: from emulex.emulex.com ([138.239.112.1]:45936 "EHLO
 	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752070AbYLEOnc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Dec 2008 09:43:32 -0500
+	with ESMTP id S1752094AbYLEOnk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Dec 2008 09:43:40 -0500
 Received: from xcm.ad.emulex.com (xcm.emulex.com [138.239.112.69])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id mB5EhVe6004221
-	for <linux-scsi@vger.kernel.org>; Fri, 5 Dec 2008 06:43:31 -0800 (PST)
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id mB5Ehecn004246
+	for <linux-scsi@vger.kernel.org>; Fri, 5 Dec 2008 06:43:40 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-lpfc 8.3.0 : Added 3 small features and improve PCI EEH support
+lpfc 8.3.0 : Fix several minor issues
 
-- Added FC_REG_VPORTRSCN_EVENT to lpfc_nl.h
+- Avoid polling HBA Error Attention when HBA's PCI channel is offline
+  due to PCI EEH
 
-- Added code to provide option ROM version from HBA and via sysfs
+- Fix handling of RSCN with non-zero event qualifiers
 
-- Added support for HPS bit in config port mailbox command to tell HBA
-  that host group pointers are in host memory.
+- Remove unnecessary sleeps during HBA initialization which slow down
+  driver load
 
-- Bugfix for Extended Error Handling (EEH) support on IBM PowerPC P6
-  platform with MSI enabled
+- Fix internal and external loopback on FCoE HBAs
+
+- Fix incorrect decrement of cmd_pending count in lpfc_queuecomand
+  error path
+
+- Fix reporting of port busy events to management application
+
+- Rename lpfc_adjust_queue_depth() to lpfc_rampdown_queue_depth() for
+  consistency with its partner lpfc_rampup_queue_depth()
+
+- Delete redundant lpfc_cmd->start_time = jiffies assignment in
+  lpfc_queuecommand()
+
+- Fix handling for ELS, mailbox and heartbeat time outs in the worker
+  thread by removing unnecessary checking of the work_port_events
+  flags.
+
+- Fix NULL pointer dereference in lpfc_prep_els_iocb
+
+- In lpfc_device_recov_npr_node(), move clearing of NLP_NPR_2B_DISC
+  flag after call to lpfc_cancel_retry_delay_tmo() to keep
+  targets-in-discovery count correct
+
+- Remove lpfc_probe_one()'s call to scsi_scan_host() which could cause
+  concurrent SCSI scans to step on each other
 
 
 Signed-off-by: James Smart <James.Smart@emulex.com>
 
+
 ---
 
- drivers/scsi/lpfc/lpfc_crtn.h |    1 +
- drivers/scsi/lpfc/lpfc_hw.h   |   37 +++++++++++++++++++++++--
- drivers/scsi/lpfc/lpfc_init.c |   61 ++++++++++++++++++++++++++++++++++++++++-
- drivers/scsi/lpfc/lpfc_mbox.c |   35 ++++++++++++++++++++++++
- drivers/scsi/lpfc/lpfc_nl.h   |   16 ++++++-----
- 5 files changed, 139 insertions(+), 11 deletions(-)
+ drivers/scsi/lpfc/lpfc_crtn.h      |    2 +-
+ drivers/scsi/lpfc/lpfc_els.c       |   32 ++++++++++++++++----------------
+ drivers/scsi/lpfc/lpfc_hbadisc.c   |    2 +-
+ drivers/scsi/lpfc/lpfc_hw.h        |    6 ++++++
+ drivers/scsi/lpfc/lpfc_init.c      |    7 -------
+ drivers/scsi/lpfc/lpfc_nportdisc.c |    2 +-
+ drivers/scsi/lpfc/lpfc_scsi.c      |   13 ++++++-------
+ drivers/scsi/lpfc/lpfc_sli.c       |   27 ++++++++++-----------------
+ 8 files changed, 41 insertions(+), 50 deletions(-)
 
 --- a/drivers/scsi/lpfc/lpfc_crtn.h
 +++ b/drivers/scsi/lpfc/lpfc_crtn.h
-@@ -22,6 +22,7 @@ typedef int (*node_filter)(struct lpfc_nodelist *, void *);
+@@ -290,7 +290,7 @@ void lpfc_fabric_abort_nport(struct lpfc_nodelist *);
+ void lpfc_fabric_abort_hba(struct lpfc_hba *);
+ void lpfc_fabric_block_timeout(unsigned long);
+ void lpfc_unblock_fabric_iocbs(struct lpfc_hba *);
+-void lpfc_adjust_queue_depth(struct lpfc_hba *);
++void lpfc_rampdown_queue_depth(struct lpfc_hba *);
+ void lpfc_ramp_down_queue_handler(struct lpfc_hba *);
+ void lpfc_ramp_up_queue_handler(struct lpfc_hba *);
+ void lpfc_scsi_dev_block(struct lpfc_hba *);
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -275,7 +275,8 @@ lpfc_prep_els_iocb(struct lpfc_vport *vport, uint8_t expectRsp,
+ 	return elsiocb;
  
- struct fc_rport;
- void lpfc_dump_mem(struct lpfc_hba *, LPFC_MBOXQ_t *, uint16_t);
-+void lpfc_dump_wakeup_param(struct lpfc_hba *, LPFC_MBOXQ_t *);
- void lpfc_read_nv(struct lpfc_hba *, LPFC_MBOXQ_t *);
- void lpfc_config_async(struct lpfc_hba *, LPFC_MBOXQ_t *, uint32_t);
+ els_iocb_free_pbuf_exit:
+-	lpfc_mbuf_free(phba, prsp->virt, prsp->phys);
++	if (expectRsp)
++		lpfc_mbuf_free(phba, prsp->virt, prsp->phys);
+ 	kfree(pbuflist);
  
+ els_iocb_free_prsp_exit:
+@@ -2472,6 +2473,15 @@ lpfc_els_retry(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	case IOSTAT_LOCAL_REJECT:
+ 		switch ((irsp->un.ulpWord[4] & 0xff)) {
+ 		case IOERR_LOOP_OPEN_FAILURE:
++			if (cmd == ELS_CMD_FLOGI) {
++				if (PCI_DEVICE_ID_HORNET ==
++					phba->pcidev->device) {
++					phba->fc_topology = TOPOLOGY_LOOP;
++					phba->pport->fc_myDID = 0;
++					phba->alpa_map[0] = 0;
++					phba->alpa_map[1] = 0;
++				}
++			}
+ 			if (cmd == ELS_CMD_PLOGI && cmdiocb->retry == 0)
+ 				delay = 1000;
+ 			retry = 1;
+@@ -3827,27 +3837,21 @@ lpfc_rscn_payload_check(struct lpfc_vport *vport, uint32_t did)
+ 		while (payload_len) {
+ 			rscn_did.un.word = be32_to_cpu(*lp++);
+ 			payload_len -= sizeof(uint32_t);
+-			switch (rscn_did.un.b.resv) {
+-			case 0:	/* Single N_Port ID effected */
++			switch (rscn_did.un.b.resv & RSCN_ADDRESS_FORMAT_MASK) {
++			case RSCN_ADDRESS_FORMAT_PORT:
+ 				if (ns_did.un.word == rscn_did.un.word)
+ 					goto return_did_out;
+ 				break;
+-			case 1:	/* Whole N_Port Area effected */
++			case RSCN_ADDRESS_FORMAT_AREA:
+ 				if ((ns_did.un.b.domain == rscn_did.un.b.domain)
+ 				    && (ns_did.un.b.area == rscn_did.un.b.area))
+ 					goto return_did_out;
+ 				break;
+-			case 2:	/* Whole N_Port Domain effected */
++			case RSCN_ADDRESS_FORMAT_DOMAIN:
+ 				if (ns_did.un.b.domain == rscn_did.un.b.domain)
+ 					goto return_did_out;
+ 				break;
+-			default:
+-				/* Unknown Identifier in RSCN node */
+-				lpfc_printf_vlog(vport, KERN_ERR, LOG_DISCOVERY,
+-						 "0217 Unknown Identifier in "
+-						 "RSCN payload Data: x%x\n",
+-						 rscn_did.un.word);
+-			case 3:	/* Whole Fabric effected */
++			case RSCN_ADDRESS_FORMAT_FABRIC:
+ 				goto return_did_out;
+ 			}
+ 		}
+@@ -4935,10 +4939,6 @@ lpfc_els_timeout_handler(struct lpfc_vport *vport)
+ 	uint32_t timeout;
+ 	uint32_t remote_ID = 0xffffffff;
+ 
+-	/* If the timer is already canceled do nothing */
+-	if ((vport->work_port_events & WORKER_ELS_TMO) == 0) {
+-		return;
+-	}
+ 	spin_lock_irq(&phba->hbalock);
+ 	timeout = (uint32_t)(phba->fc_ratov << 1);
+ 
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -350,7 +350,7 @@ lpfc_send_fastpath_evt(struct lpfc_hba *phba,
+ 			evt_data_size = sizeof(fast_evt_data->un.
+ 				read_check_error);
+ 		} else if ((evt_sub_category == LPFC_EVENT_FABRIC_BUSY) ||
+-			(evt_sub_category == IOSTAT_NPORT_BSY)) {
++			(evt_sub_category == LPFC_EVENT_PORT_BUSY)) {
+ 			evt_data = (char *) &fast_evt_data->un.fabric_evt;
+ 			evt_data_size = sizeof(fast_evt_data->un.fabric_evt);
+ 		} else {
 --- a/drivers/scsi/lpfc/lpfc_hw.h
 +++ b/drivers/scsi/lpfc/lpfc_hw.h
-@@ -2362,6 +2362,30 @@ typedef struct {
- #define  DMP_RSP_OFFSET          0x14   /* word 5 contains first word of rsp */
- #define  DMP_RSP_SIZE            0x6C   /* maximum of 27 words of rsp data */
+@@ -869,6 +869,12 @@ typedef struct _D_ID {		/* Structure is in Big Endian format */
+ 	} un;
+ } D_ID;
  
-+#define  WAKE_UP_PARMS_REGION_ID    4
-+#define  WAKE_UP_PARMS_WORD_SIZE   15
++#define RSCN_ADDRESS_FORMAT_PORT	0x0
++#define RSCN_ADDRESS_FORMAT_AREA	0x1
++#define RSCN_ADDRESS_FORMAT_DOMAIN	0x2
++#define RSCN_ADDRESS_FORMAT_FABRIC	0x3
++#define RSCN_ADDRESS_FORMAT_MASK	0x3
 +
-+/* Option rom version structure */
-+struct prog_id {
-+#ifdef __BIG_ENDIAN_BITFIELD
-+	uint8_t  type;
-+	uint8_t  id;
-+	uint32_t ver:4;  /* Major Version */
-+	uint32_t rev:4;  /* Revision */
-+	uint32_t lev:2;  /* Level */
-+	uint32_t dist:2; /* Dist Type */
-+	uint32_t num:4;  /* number after dist type */
-+#else /*  __LITTLE_ENDIAN_BITFIELD */
-+	uint32_t num:4;  /* number after dist type */
-+	uint32_t dist:2; /* Dist Type */
-+	uint32_t lev:2;  /* Level */
-+	uint32_t rev:4;  /* Revision */
-+	uint32_t ver:4;  /* Major Version */
-+	uint8_t  id;
-+	uint8_t  type;
-+#endif
-+};
-+
- /* Structure for MB Command UPDATE_CFG (0x1B) */
- 
- struct update_cfg_var {
-@@ -2555,10 +2579,17 @@ typedef struct {
- 
- 	uint32_t pcbLow;       /* bit 31:0  of memory based port config block */
- 	uint32_t pcbHigh;      /* bit 63:32 of memory based port config block */
--	uint32_t hbainit[6];
-+	uint32_t hbainit[5];
-+#ifdef __BIG_ENDIAN_BITFIELD
-+	uint32_t hps	   :  1; /* bit 31 word9 Host Pointer in slim */
-+	uint32_t rsvd	   : 31; /* least significant 31 bits of word 9 */
-+#else   /*  __LITTLE_ENDIAN */
-+	uint32_t rsvd      : 31; /* least significant 31 bits of word 9 */
-+	uint32_t hps	   :  1; /* bit 31 word9 Host Pointer in slim */
-+#endif
- 
- #ifdef __BIG_ENDIAN_BITFIELD
--	uint32_t rsvd      : 24;  /* Reserved                             */
-+	uint32_t rsvd1     : 24;  /* Reserved                             */
- 	uint32_t cmv	   :  1;  /* Configure Max VPIs                   */
- 	uint32_t ccrp      :  1;  /* Config Command Ring Polling          */
- 	uint32_t csah      :  1;  /* Configure Synchronous Abort Handling */
-@@ -2576,7 +2607,7 @@ typedef struct {
- 	uint32_t csah      :  1;  /* Configure Synchronous Abort Handling */
- 	uint32_t ccrp      :  1;  /* Config Command Ring Polling          */
- 	uint32_t cmv	   :  1;  /* Configure Max VPIs                   */
--	uint32_t rsvd      : 24;  /* Reserved                             */
-+	uint32_t rsvd1     : 24;  /* Reserved                             */
- #endif
- #ifdef __BIG_ENDIAN_BITFIELD
- 	uint32_t rsvd2     : 24;  /* Reserved                             */
+ /*
+  *  Structure to define all ELS Payload types
+  */
 --- a/drivers/scsi/lpfc/lpfc_init.c
 +++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -236,6 +236,48 @@ lpfc_config_async_cmpl(struct lpfc_hba * phba, LPFC_MBOXQ_t * pmboxq)
- }
+@@ -742,11 +742,6 @@ lpfc_hb_timeout_handler(struct lpfc_hba *phba)
+ 		return;
  
- /**
-+ * lpfc_dump_wakeup_param_cmpl: Completion handler for dump memory mailbox
-+ *     command used for getting wake up parameters.
-+ * @phba: pointer to lpfc hba data structure.
-+ * @pmboxq: pointer to the driver internal queue element for mailbox command.
-+ *
-+ * This is the completion handler for dump mailbox command for getting
-+ * wake up parameters. When this command complete, the response contain
-+ * Option rom version of the HBA. This function translate the version number
-+ * into a human readable string and store it in OptionROMVersion.
-+ **/
-+static void
-+lpfc_dump_wakeup_param_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmboxq)
-+{
-+	struct prog_id *prg;
-+	uint32_t prog_id_word;
-+	char dist = ' ';
-+	/* character array used for decoding dist type. */
-+	char dist_char[] = "nabx";
-+
-+	if (pmboxq->mb.mbxStatus != MBX_SUCCESS)
-+		return;
-+
-+	prg = (struct prog_id *) &prog_id_word;
-+
-+	/* word 7 contain option rom version */
-+	prog_id_word = pmboxq->mb.un.varWords[7];
-+
-+	/* Decode the Option rom version word to a readable string */
-+	if (prg->dist < 4)
-+		dist = dist_char[prg->dist];
-+
-+	if ((prg->dist == 3) && (prg->num == 0))
-+		sprintf(phba->OptionROMVersion, "%d.%d%d",
-+			prg->ver, prg->rev, prg->lev);
-+	else
-+		sprintf(phba->OptionROMVersion, "%d.%d%d%c%d",
-+			prg->ver, prg->rev, prg->lev,
-+			dist, prg->num);
-+	return;
-+}
-+
-+/**
-  * lpfc_config_port_post: Perform lpfc initialization after config port.
-  * @phba: pointer to lpfc hba data structure.
-  *
-@@ -482,6 +524,20 @@ lpfc_config_port_post(struct lpfc_hba *phba)
- 				rc);
- 		mempool_free(pmb, phba->mbox_mem_pool);
- 	}
-+
-+	/* Get Option rom version */
-+	pmb = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
-+	lpfc_dump_wakeup_param(phba, pmb);
-+	pmb->mbox_cmpl = lpfc_dump_wakeup_param_cmpl;
-+	pmb->vport = phba->pport;
-+	rc = lpfc_sli_issue_mbox(phba, pmb, MBX_NOWAIT);
-+
-+	if ((rc != MBX_BUSY) && (rc != MBX_SUCCESS)) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_INIT, "0435 Adapter failed "
-+				"to get Option ROM version status x%x\n.", rc);
-+		mempool_free(pmb, phba->mbox_mem_pool);
-+	}
-+
+ 	spin_lock_irq(&phba->pport->work_port_lock);
+-	/* If the timer is already canceled do nothing */
+-	if (!(phba->pport->work_port_events & WORKER_HB_TMO)) {
+-		spin_unlock_irq(&phba->pport->work_port_lock);
+-		return;
+-	}
+ 
+ 	if (time_after(phba->last_completion_time + LPFC_HB_MBOX_INTERVAL * HZ,
+ 		jiffies)) {
+@@ -2702,8 +2697,6 @@ lpfc_pci_probe_one(struct pci_dev *pdev, const struct pci_device_id *pid)
+ 		(char *) &adapter_event,
+ 		LPFC_NL_VENDOR_ID);
+ 
+-	scsi_scan_host(shost);
+-
  	return 0;
+ 
+ out_remove_device:
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -1929,10 +1929,10 @@ lpfc_device_recov_npr_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 	if (vport->fc_flag & FC_RSCN_DEFERRED)
+ 		return ndlp->nlp_state;
+ 
++	lpfc_cancel_retry_delay_tmo(vport, ndlp);
+ 	spin_lock_irq(shost->host_lock);
+ 	ndlp->nlp_flag &= ~(NLP_NODEV_REMOVE | NLP_NPR_2B_DISC);
+ 	spin_unlock_irq(shost->host_lock);
+-	lpfc_cancel_retry_delay_tmo(vport, ndlp);
+ 	return ndlp->nlp_state;
  }
  
-@@ -2406,6 +2462,7 @@ lpfc_pci_probe_one(struct pci_dev *pdev, const struct pci_device_id *pid)
- 	phba->eratt_poll.data = (unsigned long) phba;
- 
- 	pci_set_master(pdev);
-+	pci_save_state(pdev);
- 	pci_try_set_mwi(pdev);
- 
- 	if (pci_set_dma_mask(phba->pcidev, DMA_64BIT_MASK) != 0)
-@@ -2982,7 +3039,9 @@ static pci_ers_result_t lpfc_io_slot_reset(struct pci_dev *pdev)
- 		return PCI_ERS_RESULT_DISCONNECT;
- 	}
- 
--	pci_set_master(pdev);
-+	pci_restore_state(pdev);
-+	if (pdev->is_busmaster)
-+		pci_set_master(pdev);
- 
- 	spin_lock_irq(&phba->hbalock);
- 	psli->sli_flag &= ~LPFC_SLI2_ACTIVE;
---- a/drivers/scsi/lpfc/lpfc_mbox.c
-+++ b/drivers/scsi/lpfc/lpfc_mbox.c
-@@ -77,6 +77,38 @@ lpfc_dump_mem(struct lpfc_hba * phba, LPFC_MBOXQ_t * pmb, uint16_t offset)
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -148,7 +148,7 @@ lpfc_send_sdev_queuedepth_change_event(struct lpfc_hba *phba,
  }
  
  /**
-+ * lpfc_dump_mem: Prepare a mailbox command for retrieving wakeup params.
-+ * @phba: pointer to lpfc hba data structure.
-+ * @pmb: pointer to the driver internal queue element for mailbox command.
-+ * This function create a dump memory mailbox command to dump wake up
-+ * parameters.
-+ */
-+void
-+lpfc_dump_wakeup_param(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
-+{
-+	MAILBOX_t *mb;
-+	void *ctx;
-+
-+	mb = &pmb->mb;
-+	/* Save context so that we can restore after memset */
-+	ctx = pmb->context2;
-+
-+	/* Setup to dump VPD region */
-+	memset(pmb, 0, sizeof(LPFC_MBOXQ_t));
-+	mb->mbxCommand = MBX_DUMP_MEMORY;
-+	mb->mbxOwner = OWN_HOST;
-+	mb->un.varDmp.cv = 1;
-+	mb->un.varDmp.type = DMP_NV_PARAMS;
-+	mb->un.varDmp.entry_index = 0;
-+	mb->un.varDmp.region_id = WAKE_UP_PARMS_REGION_ID;
-+	mb->un.varDmp.word_cnt = WAKE_UP_PARMS_WORD_SIZE;
-+	mb->un.varDmp.co = 0;
-+	mb->un.varDmp.resp_offset = 0;
-+	pmb->context2 = ctx;
-+	return;
-+}
-+
-+/**
-  * lpfc_read_nv: Prepare a mailbox command for reading HBA's NVRAM param.
-  * @phba: pointer to lpfc hba data structure.
-  * @pmb: pointer to the driver internal queue element for mailbox command.
-@@ -1061,6 +1093,9 @@ lpfc_config_port(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 	mb->un.varCfgPort.pcbLow = putPaddrLow(pdma_addr);
- 	mb->un.varCfgPort.pcbHigh = putPaddrHigh(pdma_addr);
+- * lpfc_adjust_queue_depth: Post RAMP_DOWN_QUEUE event for worker thread.
++ * lpfc_rampdown_queue_depth: Post RAMP_DOWN_QUEUE event to worker thread.
+  * @phba: The Hba for which this call is being executed.
+  *
+  * This routine is called when there is resource error in driver or firmware.
+@@ -159,7 +159,7 @@ lpfc_send_sdev_queuedepth_change_event(struct lpfc_hba *phba,
+  * This routine should be called with no lock held.
+  **/
+ void
+-lpfc_adjust_queue_depth(struct lpfc_hba *phba)
++lpfc_rampdown_queue_depth(struct lpfc_hba *phba)
+ {
+ 	unsigned long flags;
+ 	uint32_t evt_posted;
+@@ -1551,7 +1551,7 @@ lpfc_queuecommand(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
  
-+	/* Always Host Group Pointer is in SLIM */
-+	mb->un.varCfgPort.hps = 1;
-+
- 	/* If HBA supports SLI=3 ask for it */
+ 	lpfc_cmd = lpfc_get_scsi_buf(phba);
+ 	if (lpfc_cmd == NULL) {
+-		lpfc_adjust_queue_depth(phba);
++		lpfc_rampdown_queue_depth(phba);
  
- 	if (phba->sli_rev == 3 && phba->vpd.sli3Feat.cerbm) {
---- a/drivers/scsi/lpfc/lpfc_nl.h
-+++ b/drivers/scsi/lpfc/lpfc_nl.h
-@@ -22,18 +22,20 @@
- #define FC_REG_LINK_EVENT		0x0001	/* link up / down events */
- #define FC_REG_RSCN_EVENT		0x0002	/* RSCN events */
- #define FC_REG_CT_EVENT			0x0004	/* CT request events */
--#define FC_REG_DUMP_EVENT		0x0008	/* Dump events */
--#define FC_REG_TEMPERATURE_EVENT	0x0010	/* temperature events */
--#define FC_REG_ELS_EVENT		0x0020	/* lpfc els events */
--#define FC_REG_FABRIC_EVENT		0x0040	/* lpfc fabric events */
--#define FC_REG_SCSI_EVENT		0x0080	/* lpfc scsi events */
--#define FC_REG_BOARD_EVENT		0x0100	/* lpfc board events */
--#define FC_REG_ADAPTER_EVENT		0x0200	/* lpfc adapter events */
-+#define FC_REG_DUMP_EVENT		0x0010	/* Dump events */
-+#define FC_REG_TEMPERATURE_EVENT	0x0020	/* temperature events */
-+#define FC_REG_VPORTRSCN_EVENT		0x0040	/* Vport RSCN events */
-+#define FC_REG_ELS_EVENT		0x0080	/* lpfc els events */
-+#define FC_REG_FABRIC_EVENT		0x0100	/* lpfc fabric events */
-+#define FC_REG_SCSI_EVENT		0x0200	/* lpfc scsi events */
-+#define FC_REG_BOARD_EVENT		0x0400	/* lpfc board events */
-+#define FC_REG_ADAPTER_EVENT		0x0800	/* lpfc adapter events */
- #define FC_REG_EVENT_MASK		(FC_REG_LINK_EVENT | \
- 						FC_REG_RSCN_EVENT | \
- 						FC_REG_CT_EVENT | \
- 						FC_REG_DUMP_EVENT | \
- 						FC_REG_TEMPERATURE_EVENT | \
-+						FC_REG_VPORTRSCN_EVENT | \
- 						FC_REG_ELS_EVENT | \
- 						FC_REG_FABRIC_EVENT | \
- 						FC_REG_SCSI_EVENT | \
+ 		lpfc_printf_vlog(vport, KERN_INFO, LOG_FCP,
+ 				 "0707 driver's buffer pool is empty, "
+@@ -1559,7 +1559,6 @@ lpfc_queuecommand(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
+ 		goto out_host_busy;
+ 	}
+ 
+-	lpfc_cmd->start_time = jiffies;
+ 	/*
+ 	 * Store the midlayer's command structure for the completion phase
+ 	 * and complete the command initialization.
+@@ -1580,9 +1579,10 @@ lpfc_queuecommand(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
+ 	atomic_inc(&ndlp->cmd_pending);
+ 	err = lpfc_sli_issue_iocb(phba, &phba->sli.ring[psli->fcp_ring],
+ 				  &lpfc_cmd->cur_iocbq, SLI_IOCB_RET_IOCB);
+-	if (err)
++	if (err) {
++		atomic_dec(&ndlp->cmd_pending);
+ 		goto out_host_busy_free_buf;
+-
++	}
+ 	if (phba->cfg_poll & ENABLE_FCP_RING_POLLING) {
+ 		lpfc_sli_poll_fcp_ring(phba);
+ 		if (phba->cfg_poll & DISABLE_FCP_RING_INT)
+@@ -1592,7 +1592,6 @@ lpfc_queuecommand(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
+ 	return 0;
+ 
+  out_host_busy_free_buf:
+-	atomic_dec(&ndlp->cmd_pending);
+ 	lpfc_scsi_unprep_dma_buf(phba, lpfc_cmd);
+ 	lpfc_release_scsi_buf(phba, lpfc_cmd);
+  out_host_busy:
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -1982,7 +1982,7 @@ lpfc_sli_handle_fast_ring_event(struct lpfc_hba *phba,
+ 			if ((irsp->ulpStatus == IOSTAT_LOCAL_REJECT) &&
+ 				(irsp->un.ulpWord[4] == IOERR_NO_RESOURCES)) {
+ 				spin_unlock_irqrestore(&phba->hbalock, iflag);
+-				lpfc_adjust_queue_depth(phba);
++				lpfc_rampdown_queue_depth(phba);
+ 				spin_lock_irqsave(&phba->hbalock, iflag);
+ 			}
+ 
+@@ -2225,7 +2225,7 @@ lpfc_sli_handle_slow_ring_event(struct lpfc_hba *phba,
+ 			if ((irsp->ulpStatus == IOSTAT_LOCAL_REJECT) &&
+ 			     (irsp->un.ulpWord[4] == IOERR_NO_RESOURCES)) {
+ 				spin_unlock_irqrestore(&phba->hbalock, iflag);
+-				lpfc_adjust_queue_depth(phba);
++				lpfc_rampdown_queue_depth(phba);
+ 				spin_lock_irqsave(&phba->hbalock, iflag);
+ 			}
+ 
+@@ -2790,7 +2790,6 @@ lpfc_sli_brdrestart(struct lpfc_hba *phba)
+ {
+ 	MAILBOX_t *mb;
+ 	struct lpfc_sli *psli;
+-	uint16_t skip_post;
+ 	volatile uint32_t word0;
+ 	void __iomem *to_slim;
+ 
+@@ -2815,13 +2814,10 @@ lpfc_sli_brdrestart(struct lpfc_hba *phba)
+ 	readl(to_slim); /* flush */
+ 
+ 	/* Only skip post after fc_ffinit is completed */
+-	if (phba->pport->port_state) {
+-		skip_post = 1;
++	if (phba->pport->port_state)
+ 		word0 = 1;	/* This is really setting up word1 */
+-	} else {
+-		skip_post = 0;
++	else
+ 		word0 = 0;	/* This is really setting up word1 */
+-	}
+ 	to_slim = phba->MBslimaddr + sizeof (uint32_t);
+ 	writel(*(uint32_t *) mb, to_slim);
+ 	readl(to_slim); /* flush */
+@@ -2835,10 +2831,8 @@ lpfc_sli_brdrestart(struct lpfc_hba *phba)
+ 	memset(&psli->lnk_stat_offsets, 0, sizeof(psli->lnk_stat_offsets));
+ 	psli->stats_start = get_seconds();
+ 
+-	if (skip_post)
+-		mdelay(100);
+-	else
+-		mdelay(2000);
++	/* Give the INITFF and Post time to settle. */
++	mdelay(100);
+ 
+ 	lpfc_hba_down_post(phba);
+ 
+@@ -3084,7 +3078,6 @@ lpfc_sli_config_port(struct lpfc_hba *phba, int sli_mode)
+ 		spin_unlock_irq(&phba->hbalock);
+ 		phba->pport->port_state = LPFC_VPORT_UNKNOWN;
+ 		lpfc_sli_brdrestart(phba);
+-		msleep(2500);
+ 		rc = lpfc_sli_chipset_init(phba);
+ 		if (rc)
+ 			break;
+@@ -3308,10 +3301,6 @@ lpfc_mbox_timeout_handler(struct lpfc_hba *phba)
+ 	struct lpfc_sli *psli = &phba->sli;
+ 	struct lpfc_sli_ring *pring;
+ 
+-	if (!(phba->pport->work_port_events & WORKER_MBOX_TMO)) {
+-		return;
+-	}
+-
+ 	/* Mbox cmd <mbxCommand> timeout */
+ 	lpfc_printf_log(phba, KERN_ERR, LOG_MBOX | LOG_SLI,
+ 			"0310 Mailbox command x%x timeout Data: x%x x%x x%p\n",
+@@ -5187,6 +5176,10 @@ lpfc_sli_check_eratt(struct lpfc_hba *phba)
+ {
+ 	uint32_t ha_copy;
+ 
++	/* If PCI channel is offline, don't process it */
++	if (unlikely(pci_channel_offline(phba->pcidev)))
++		return 0;
++
+ 	/* If somebody is waiting to handle an eratt, don't process it
+ 	 * here. The brdkill function will do this.
+ 	 */
 
 
