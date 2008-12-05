@@ -1,99 +1,102 @@
-From: Mike Anderson <andmike@linux.vnet.ibm.com>
-Subject: Re: [PATCH] SCSI: handle HARDWARE_ERROR sense correctly
-Date: Thu, 4 Dec 2008 15:39:42 -0800
-Message-ID: <20081204233942.GA4950@linux.vnet.ibm.com>
-References: <1228424573.3363.54.camel@localhost.localdomain> <Pine.LNX.4.44L0.0812041629320.2577-100000@iolanthe.rowland.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] retry with missing data for INQUIRY
+Date: Fri, 5 Dec 2008 11:21:46 +0900
+Message-ID: <20081205112146Z.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:52494 "EHLO
-	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751428AbYLDXjo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Dec 2008 18:39:44 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e34.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id mB4Ncx0q008883
-	for <linux-scsi@vger.kernel.org>; Thu, 4 Dec 2008 16:38:59 -0700
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id mB4NdhYU208454
-	for <linux-scsi@vger.kernel.org>; Thu, 4 Dec 2008 16:39:43 -0700
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id mB4Ndgfn000402
-	for <linux-scsi@vger.kernel.org>; Thu, 4 Dec 2008 16:39:43 -0700
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0812041629320.2577-100000@iolanthe.rowland.org>
+Received: from sh.osrg.net ([192.16.179.4]:37623 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754083AbYLECV7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Dec 2008 21:21:59 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: orjan.nordlund@gmail.com, stern@rowland.harvard.edu
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-Alan Stern <stern@rowland.harvard.edu> wrote:
-> On Thu, 4 Dec 2008, James Bottomley wrote:
-> 
-> > On Thu, 2008-12-04 at 15:49 -0500, Alan Stern wrote:
-> > > This patch (as1183) fixes a bug in scsi_check_sense().  The routine is
-> > > documented as returning one of SUCCESS, FAILED, or NEEDS_RETRY.  But
-> > > in the HARDWARE_ERROR case it can return ADD_TO_MLQUEUE.  And since it
-> > > does this without bothering to increment the retry count, it can lead
-> > > to an infinite retry loop.
-> > > 
-> > > The fix is to return NEEDS_RETRY instead.  Then the caller,
-> > > scsi_decide_disposition(), will do the right thing.
-> > 
-> > OK, but why?
-> > 
-> > The current behaviour is to retry the error until the command timeout
-> > expires, which, I think is what was needed by the annoying arrays that
-> > have retryable hardware errors.
-> > 
+This depends on the following patch, adds residual argument to
+scsi_execute and scsi_execute_req:
 
-Yes there are some arrays that need this behavior. The two users: 
-usb disks and the devinfo entries with BLIST_RETRY_HWERROR appear to have
-two different expected behaviors.
+http://marc.info/?l=linux-scsi&m=122836830920741&w=2
 
-> > What bug would this patch fix?  Because I can see it causing problems
-> > with the arrays that originally reported this problem.
-> 
-> You're right and I was wrong.  It only _appeared_ to be an infinite
-> retry loop because there were 6 iterations allowed and each iteration
-> had a 60-second timeout.  So I retract the patch submission.
-> 
-> Waiting six minutes for a command to complete is a bit ridiculous,
-> though -- especially when the user program generating that command
-> decides to reissue it a few times.  Can we do anything to expedite the
-> failure?
 
-A short term hack until retry policy is aligned and updated would be to
-use the sdev_bflags to differentiate the usb case from use of the
-BLIST_RETRY_HWERROR bflag.
+With the above patch, we can fix the Thecus N2050 storage device
+problem more cleanly, which was solved by Alan's patch:
 
-> For example, does it really make sense for scsi_softirq_done
-> to multiply cmd->allowed by rq->timeout?  After all, if a command
-> aborts with a timeout instead of failing outright, what point is there
-> in retrying it?  The proper approach would have been to use a longer 
-> timeout initially.
-> 
+http://marc.info/?l=linux-scsi&m=122513368301598&w=2
 
-The wait_for is used for more than retries of timeouts.
 
-I had thought it might be a good idea to expose the wait_for value and
-then users could control the wait_for behavior if needed by using a udev
-rule to set it near the IO timeout value if so required.
+This patch is intended to replace Alan's patch in scsi-misc. Needs to
+drop his patch, and then apply the above 'residual' patch and this.
 
-> By the way, is there any reason to keep scmd->retries now?  If commands
-> are going to be retried until they timeout, why bother to count the
-> retries? 
+I don't have the Thecus N2050 storage device so I changed the iSCSI
+target code to simulate the wired INQUIRY behavior and tested this
+patch. It would be nice to test this patch with the real hardware.
 
-Previously I had submitted some patches on scsi mid retry with a short text
-on current retry policy (this cover mid retry policy vs
-scsi_io_completion, which should be unified).
+I prepared a patch for v2.6.28-rc7 to enable you to test this patch
+easily:
 
-http://marc.info/?l=linux-scsi&m=122210133628085&w=2
+http://www.kernel.org/pub/linux/kernel/people/tomo/misc/usb-workaround.diff
 
-I will try to refresh my patches with a updated policy document and also
-align that with the changes to scsi_io_completion posted prior to
-re-submit.
 
--andmike
---
-Michael Anderson
-andmike@linux.vnet.ibm.com
+Thanks,
+
+=
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] retry with missing data for INQUIRY
+
+This patch changes scsi_probe_lun() to retry INQUIRY if the device has
+actually sent back any INQUIRY data,
+
+This enables the Thecus N2050 storage device to work better. The
+firmware on that device starts up strangely; it sends no data in
+response to the initial INQUIRY, and it sends the INQUIRY information
+in response to the followup REQUEST SENSE. But after that it works
+better, so retrying the INQUIRY is enough to get it going.
+
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/scsi_scan.c |   12 +++++++++++-
+ 1 files changed, 11 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 6963d52..18486b5 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -573,6 +573,8 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 
+ 	/* Each pass gets up to three chances to ignore Unit Attention */
+ 	for (count = 0; count < 3; ++count) {
++		int resid;
++
+ 		memset(scsi_cmd, 0, 6);
+ 		scsi_cmd[0] = INQUIRY;
+ 		scsi_cmd[4] = (unsigned char) try_inquiry_len;
+@@ -582,7 +584,7 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 		result = scsi_execute_req(sdev,  scsi_cmd, DMA_FROM_DEVICE,
+ 					  inq_result, try_inquiry_len, &sshdr,
+ 					  HZ / 2 + HZ * scsi_inq_timeout, 3,
+-					  NULL);
++					  &resid);
+ 
+ 		SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO "scsi scan: INQUIRY %s "
+ 				"with code 0x%x\n",
+@@ -603,6 +605,14 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 				    (sshdr.ascq == 0))
+ 					continue;
+ 			}
++		} else {
++			/*
++			 * if nothing was transferred, we try
++			 * again. It's a workaround for some USB
++			 * devices.
++			 */
++			if (resid == try_inquiry_len)
++				continue;
+ 		}
+ 		break;
+ 	}
+-- 
+1.5.5.GIT
+
