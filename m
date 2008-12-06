@@ -1,47 +1,39 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Dan =?UTF-8?B?Tm/DqQ==?= <dpn@isomerica.net>
 Subject: Re: [PATCH] remove ide-scsi
-Date: Sat, 6 Dec 2008 17:29:15 +0100
-Message-ID: <200812061729.15895.bzolnier@gmail.com>
-References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp> <200812061551.08525.bzolnier@gmail.com> <20081206150625.224aa97f@lxorguk.ukuu.org.uk>
+Date: Sat, 6 Dec 2008 12:00:01 -0500
+Message-ID: <20081206120001.3580b9e3@tuna>
+References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>
+	<20081203100643.GA29340@infradead.org>
+	<1228316941.5551.6.camel@localhost.localdomain>
+	<200812061551.08525.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20081206150625.224aa97f@lxorguk.ukuu.org.uk>
-Content-Disposition: inline
+In-Reply-To: <200812061551.08525.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, osst@riede.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Saturday 06 December 2008, Alan Cox wrote:
-> > ide-scsi has been practically a dead code for a long time now (IIRC it has
-> > even been broken -- by some general kernel changes -- for few releases and
-> > nobody noticed, till Boaz discovered it while doing unrelated SCSI fixes)
-> > but I kept it on the live support anyway.  However there needs to be some
-> > limit to it, especially given that driver has been officially orphaned for
-> > over a year now and nobody stepped in...
-> 
-> And it basically still works. You've just removed some hardware support
-> for folks still trapped with the old IDE legacy drivers and some tape
-> drives etc.
+On Sat, 6 Dec 2008 15:51:08 +0100
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
-Please note that I already offered to put my time into helping people
-potentially affected by the change.
+> PS If somebody wants to work on OSST support for IDE we can provide a=
+n
+> assistance into porting osst.c over generic ATAPI code -- it would
+> still be much less hassle than trying to figure out remaining
+> ide-scsi issues (lifetime rules for IDE / SCSI / IDE-SCSI objects,
+> error handling etc.). --
 
-> I shall certainly be asking Linus not to apply your changeset.
+I wouldn't mind doing this - I was a user of an IDE OnStream for many
+years but alas my drive died years ago and OnStream is out of
+business.  If someone had a drive to offer maybe it could be done.
 
-If you actually cared about such folks (whose must be really tough on
-their luck since both IDE/ide-tape and SCSI/libata/st+osst should cover
-99.9% of tape drives) you would be proposing constructive solutions
-(i.e. offering better libata PATA support) instead of threats.
+Cheers,
+Dan
 
-Thanks,
-Bart
-
-PS Looking at the patch history since 2002 (I'm lazy I didn't look past
-tglx's tree) it was mostly Willem, James or me who paid the cost of keeping
-ide-scsi and were targetted with insane bugreports.  Your actual ide-scsi
-contributions in the meantime are near non-existing and I think that it
-could account into the weight of your voice...
+--=20
+                    /--------------- - -  -  -   -   -
+                   |  Dan No=C3=A9
+                   |  http://isomerica.net/~dpn/
