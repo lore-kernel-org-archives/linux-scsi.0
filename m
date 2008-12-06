@@ -1,51 +1,80 @@
-From: Robert Jennings <rcj@linux.vnet.ibm.com>
-Subject: [PATCH 1/1] ibmvscsi: correct command abort logic
-Date: Sat, 6 Dec 2008 09:41:39 -0600
-Message-ID: <20081206154139.GA13534@austin.ibm.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] remove ide-scsi
+Date: Sat, 6 Dec 2008 16:59:01 +0100
+Message-ID: <200812061659.02200.bzolnier@gmail.com>
+References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp> <200812061551.08525.bzolnier@gmail.com> <150283e90812060725x482d8428kfc7e41f8bc509e12@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:58158 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755925AbYLFPlq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Dec 2008 10:41:46 -0500
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e36.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id mB6Ff3hn017680
-	for <linux-scsi@vger.kernel.org>; Sat, 6 Dec 2008 08:41:03 -0700
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id mB6FfkwT210504
-	for <linux-scsi@vger.kernel.org>; Sat, 6 Dec 2008 08:41:46 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id mB6FfjZo002626
-	for <linux-scsi@vger.kernel.org>; Sat, 6 Dec 2008 08:41:45 -0700
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <150283e90812060725x482d8428kfc7e41f8bc509e12@mail.gmail.com>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+To: Willem Riede <osst@riede.org>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, Brian King <brking@linux.vnet.ibm.com>, Santiago Leon <santil@us.ibm.com>
 
-The logic is swapped when we determine if a command that we're trying
-to abort has already completed.  This will keep us from freeing event
-structures at the correct time, fail to unmap command data properly 
-and throw off our request_limit count.
+On Saturday 06 December 2008, Willem Riede wrote:
+> On Sat, Dec 6, 2008 at 7:51 AM, Bartlomiej Zolnierkiewicz
+> <bzolnier@gmail.com> wrote:
+> > On Wednesday 03 December 2008, James Bottomley wrote:
+> >> On Wed, 2008-12-03 at 05:06 -0500, Christoph Hellwig wrote:
+> >> > On Wed, Dec 03, 2008 at 10:38:54AM +0900, FUJITA Tomonori wrote:
+> >> > > This is for 2.6.29 (not 2.6.28) as feature-removal-schedule.txt says.
+> >> > >
+> >> > > It's against linux-next (which seems to has some changes to ide-scsi
+> >> > > for 2.6.29 from the ide tree).
+> >> >
+> >> > Isn't ide-scsi the only way to use ATAPI OnStream tapes supported by
+> >> > the osst driver?
+> >>
+> >> Depends.  If you're still using drivers/ide then yes, it is.  With
+> >> libata (which is what most modern distros use), osst just works as an
+> >> ATAPI transport.
+> >>
+> >> git log tells me ide-scsi has been updated quite a bit recently, but it
+> >> mostly looks to be fallout around the drivers/ide churn.  Can we get ide
+> >> maintainer's buy in for this (I think they've been maintaining ide-tape
+> >> and ide-cd in preference to ide-scsi)?
+> >
+> > Certainly, native ide-{cd,gd,tape} drivers are far superior over ide-scsi
+> > and are actively maintained.
+> >
+> > ide-scsi has been practically a dead code for a long time now (IIRC it has
+> > even been broken -- by some general kernel changes -- for few releases and
+> > nobody noticed, till Boaz discovered it while doing unrelated SCSI fixes)
+> > but I kept it on the live support anyway.  However there needs to be some
+> > limit to it, especially given that driver has been officially orphaned for
+> > over a year now and nobody stepped in...
+> >
+> > I applied the scheduled removal patch to pata-2.6 tree, thanks Tomo!
+> >
+> > Thanks,
+> > Bart
+> >
+> > PS If somebody wants to work on OSST support for IDE we can provide an
+> > assistance into porting osst.c over generic ATAPI code -- it would still
+> > be much less hassle than trying to figure out remaining ide-scsi issues
+> > (lifetime rules for IDE / SCSI / IDE-SCSI objects, error handling etc.).
+> >
+> Don't know exactly what you mean with "porting osst.c over generic ATAPI code",
+> but osst is SCSI by design - a SCSI version of the drive exists.
+> Making osst ATAPI
 
-Signed-off-by: Robert Jennings <rcjenn@us.ibm.com>
+I mean porting it over generic IDE ATAPI code (ide-atapi.c) in case somebody
+wants to use it with drivers/ide instead of libata.
 
----
+> is therefore not appropriate. If osst works with libata as earlier suggested,
+> then that would be the best solution.
 
- ibmvscsi.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+It should work fine I just doubt that anybody has ever tested it because of
+lack of osst users in general.
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index 6cad175..2d9db9b 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -1099,7 +1099,7 @@ static int ibmvscsi_eh_abort_handler(struct scsi_cmnd *cmd)
- 		}
- 	}
- 
--	if (found_evt == NULL) {
-+	if (found_evt != NULL) {
- 		spin_unlock_irqrestore(hostdata->host->host_lock, flags);
- 		sdev_printk(KERN_INFO, cmd->device, "aborted task tag 0x%lx completed\n",
- 			    tsk_mgmt->task_tag);
+> Unfortunately, my IDE test drive died, OnStream went out of business some time
+> ago, so I can't get a new one, hence I (osst maintainer) can't test this :-(
+
+:-( indeed.
+
+Thanks,
+Bart
