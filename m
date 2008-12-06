@@ -1,44 +1,35 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH] fc transport: pre-emptively terminate i/o upon	dev_loss_tmo
- timeout
-Date: Fri, 5 Dec 2008 17:41:26 -0500
-Message-ID: <4939AE16.5060506@emulex.com>
-References: <1228497483.8775.1.camel@ogier> <4939AB67.5010509@cs.wisc.edu>
+From: Pete Zaitcev <zaitcev@redhat.com>
+Subject: Re: [PATCH] remove ide-scsi
+Date: Fri, 5 Dec 2008 23:12:00 -0700
+Message-ID: <20081205231200.ecc39dc5.zaitcev@redhat.com>
+References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>
+	<20081203100643.GA29340@infradead.org>
+	<1228316941.5551.6.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:55577 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755907AbYLEWkW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Dec 2008 17:40:22 -0500
-In-Reply-To: <4939AB67.5010509@cs.wisc.edu>
+Received: from mx2.redhat.com ([66.187.237.31]:43360 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750790AbYLFGM0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 6 Dec 2008 01:12:26 -0500
+In-Reply-To: <1228316941.5551.6.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, osst@riede.org
 
-Agreed - thanks Mike.
+On Wed, 03 Dec 2008 09:09:00 -0600, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
--- james s
+> git log tells me ide-scsi has been updated quite a bit recently, but it
+> mostly looks to be fallout around the drivers/ide churn.  Can we get ide
+> maintainer's buy in for this (I think they've been maintaining ide-tape
+> and ide-cd in preference to ide-scsi)?
 
-Mike Christie wrote:
-> James Smart wrote:
->> diff -upNr a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
->> --- a/drivers/scsi/scsi_transport_fc.c        2008-10-18 10:32:52.000000000 -0400
->> +++ b/drivers/scsi/scsi_transport_fc.c        2008-12-05 12:13:54.000000000 -0500
->> @@ -3012,6 +3012,16 @@ fc_timeout_deleted_rport(struct work_str
->> @@ -3035,7 +3045,6 @@ fc_timeout_deleted_rport(struct work_str
->>        * went away and didn't come back - we'll remove
->>        * all attached scsi devices.
->>        */
->> -     spin_unlock_irqrestore(shost->host_lock, flags);
->>
->>       scsi_target_unblock(&rport->dev);
->>       fc_queue_work(shost, &rport->stgt_delete_work);
->>
-> 
-> We do not need this unblock call anymore. The added
-> fc_terminate_rport_io will do this. I attached a patch that removes it
-> for you.
-> 
+They must be bonkers to do it. I fixed a couple of bugs in ide-tape
+and it was one of the worst drivers I worked on, ever (worse than
+floppy.c, I kid you not). It definitely must die before ide-scsi.
+Fortunately, I solved this issue by hooking my tape to USB bridge,
+or else I'd be up in arms and wanting Tomo's blood.
+
+-- Pete
