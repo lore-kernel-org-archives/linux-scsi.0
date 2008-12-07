@@ -1,96 +1,64 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [Fwd: Re: iscsi update for 2.6.29]
-Date: Sun, 07 Dec 2008 15:05:43 +0200
-Message-ID: <493BCA27.1090107@panasas.com>
-References: <4935764C.4080007@cs.wisc.edu> <8A71B368A89016469F72CD08050AD33403E32F0A@maui.asicdesigners.com> <49364476.5010608@panasas.com> <493646CB.5080602@panasas.com> <8A71B368A89016469F72CD08050AD334D71369@maui.asicdesigners.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] remove ide-scsi
+Date: Sun, 07 Dec 2008 17:46:57 +0300
+Message-ID: <493BE1E1.9020807@ru.mvista.com>
+References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>	<200812061551.08525.bzolnier@gmail.com>	<20081206120001.3580b9e3@tuna>	<200812062241.35601.bzolnier@gmail.com>	<20081206222423.04aada70@lxorguk.ukuu.org.uk>	<493B022B.3050406@ru.mvista.com>	<20081206230227.07b00e2f@lxorguk.ukuu.org.uk>	<493B0867.5020700@ru.mvista.com>	<20081206233235.2a3f1602@lxorguk.ukuu.org.uk>	<493B13E6.3010807@ru.mvista.com> <20081207114040.24bedc8c@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:44153 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753888AbYLGNFu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Dec 2008 08:05:50 -0500
-Received: by ug-out-1314.google.com with SMTP id 39so394536ugf.37
-        for <linux-scsi@vger.kernel.org>; Sun, 07 Dec 2008 05:05:48 -0800 (PST)
-In-Reply-To: <8A71B368A89016469F72CD08050AD334D71369@maui.asicdesigners.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20081207114040.24bedc8c@lxorguk.ukuu.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, =?ISO-8859-1?Q?Dan_?= =?ISO-8859-1?Q?No=E9?= <dpn@isomerica.net>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, osst@riede.org
 List-Id: linux-scsi@vger.kernel.org
-To: Karen Xie <kxie@chelsio.com>
-Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-Karen Xie wrote:
-> Hi, Boaz,
-> 
+Hello.
 
-Hi Karen Xie
+Alan Cox wrote:
 
-> I've just sent the patch out to the list, you can apply the patch to the cxgb3i branch of Mike's
-> linux-2.6-iscsi tree. The patchset includes a file cxgb3i.txt in Document/scsi. I hope it addresses
-> some of your comments.
-> 
+>>> Because the chunks of scsi midlayer we inherit (actually nowdays mostly
+>>> block) are the pieces you need anyway to do multiple command queues,
+>>>   
+>>>       
+>>    Er, what does this term mean? Several queues per device or a tagged 
+>> queue?
+>>     
+>
+> Anything beyond issuing one command at a time. The moment you get errors
+> with multiple command queues you really need the rest of the block
+> supporting logic (small bits of which are still in scsi).
+>   
 
-I will review the full source code during the next week, and see if I can spot any problems.
-Specifically, I will check for extended-commands/AHS and bidi problems.
+   Something like freezing the queue while error handling is done I guess?
 
-Should the HW support bidi and extended-commands? that is: it will need two scaterlists in parallel,
-and support for AHSs with the spilt command (first 16 bytes in main command header and the rest in an AHS).
-Perhaps, if the HW does not support this in accelerated mode, then it should switch to SW mode (regular
-TCP/IP) when receiving a bidi-command.
+>>    So, you're just presenting SCSI emulation as a "lesser evil". But 5 
+>> years seems a long enough term to unbind all that stuff from SCSI.
+>>     
+>
+> It's being done bit by bit. I wasn't aware it was a race, I always
+>   
 
-> And, yes, I am interested to have bidi setup. How do I go about getting and setting up the OSD sw target?
-> 
+  5 years seems like libata has been running a marathon distance. :-)
+   IMHO, you're kind of trying to turn that into a race with constant 
+appeals of getting rid of IDE, clearly without enough efforts spent to 
+bring about that step so far (looks like there's just not much interest 
+in doing that now that all major x86 distributions have adopted libata 
+anyway).
 
-Thank you, that could be nice.
+> thought that being correct, logical, testable and evolutionary bisectable
+> steps was more important somehow.
+>   
 
-Start at http://open-osd.org, follow the links to the target page. Please tell me if you have
-any problems or questions, and I will be happy to help.
-The Target side is easy, just git-clone, compile and run. Initiator is a bit more involved but
-should work also.
+    I'd question the "evolutionary" and "bisectable" properties of the 
+major distributions' decision to switch from IDE to libata. Though I 
+guess the state in which IDE code had been at that point contributed to 
+that (well, anyway I don't know exactly what was the history beyond the 
+stopping of active IDE work)...
 
-> Thanks,
-> Karen
-> 
+> Alan
+>   
 
-Thank you
-Boaz
+MBR, Sergei
 
-> -----Original Message-----
-> From: Boaz Harrosh [mailto:bharrosh@panasas.com]
-> Sent: Wed 12/3/2008 12:43 AM
-> To: Karen Xie
-> Cc: linux-scsi@vger.kernel.org; michaelc@cs.wisc.edu
-> Subject: Re: [Fwd: Re: iscsi update for 2.6.29]
->  
-> Boaz Harrosh wrote:
->> http://groups.google.com/group/open-iscsi/msg/dd660ab6b0def64f?&q=cxgb3i%3A+cxgb3+iSCSI+initiator+boaz
->>
->> Karen Xie wrote:
->>> Hi, Boaz,
->>>
->>> Sorry, I must have missed your bidi comment. I tried to search the archive but does not seem to be able to find anything. Do you mind forward me the email if you still have it?
->>>
->>> Sorry for the inconvenience.
->>> Thanks,
->>> Karen
->>>
-> 
-> Karen Hi.
-> 
-> Please point me to the latest code. Do you have it on a public git/web
-> based on Mike's latest kernel?
-> 
-> Would you be interested in testing a bidi setup with SW OSD target and
-> initiator? One machine runs a user-mode target the second an initiator
-> on top of open-iscsi. This way you can test full bidi and extended cdb
-> commands.
-> 
-> Thanks
-> Boaz
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
 
