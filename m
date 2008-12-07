@@ -1,36 +1,56 @@
-From: Al Viro <viro@ZenIV.linux.org.uk>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: [PATCH] remove ide-scsi
-Date: Sun, 7 Dec 2008 00:09:29 +0000
-Message-ID: <20081207000929.GU28946@ZenIV.linux.org.uk>
-References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp> <200812061551.08525.bzolnier@gmail.com> <20081206120001.3580b9e3@tuna> <200812062241.35601.bzolnier@gmail.com> <20081206223307.GS28946@ZenIV.linux.org.uk> <150283e90812061517q61cd315fh90008659973d0b20@mail.gmail.com>
+Date: Sun, 07 Dec 2008 03:19:03 +0300
+Message-ID: <493B1677.5090705@ru.mvista.com>
+References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>	<200812061551.08525.bzolnier@gmail.com>	<20081206120001.3580b9e3@tuna>	<200812062241.35601.bzolnier@gmail.com>	<20081206222423.04aada70@lxorguk.ukuu.org.uk>	<493B022B.3050406@ru.mvista.com> <20081206230227.07b00e2f@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:39841 "EHLO
-	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753675AbYLGAJg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Dec 2008 19:09:36 -0500
-Content-Disposition: inline
-In-Reply-To: <150283e90812061517q61cd315fh90008659973d0b20@mail.gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:9287 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753417AbYLGATM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 6 Dec 2008 19:19:12 -0500
+In-Reply-To: <20081206230227.07b00e2f@lxorguk.ukuu.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Willem Riede <osst@riede.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Dan No?? <dpn@isomerica.net>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, =?ISO-8859-1?Q?Dan_?= =?ISO-8859-1?Q?No=E9?= <dpn@isomerica.net>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, osst@riede.org
 
-On Sat, Dec 06, 2008 at 04:17:55PM -0700, Willem Riede wrote:
-> On Sat, Dec 6, 2008 at 3:33 PM, Al Viro <viro@zeniv.linux.org.uk> wrote:
-> > On Sat, Dec 06, 2008 at 10:41:34PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> >
-> >> It would be great but it seems like IDE OnStream drives are a real rarity
-> >> nowadays (unfortunately I won't be of a much help here, don't have any)...
-> >
-> > I have one, actually.  If you want it sent your way...
-> >
-> If you would be willing to send it to me to replace the now defective drive I
-> used to develop and maintain osst with, I'll test against libata.
-> Contact me directly, if you would, to discuss arrangements.
-> 
-> Thanks, Willem Riede.
 
-Argh...  Having tested them...  SC30 (SCSI one) is alive, DI30 is *not* ;-/
-Sorry.
+
+Alan Cox wrote:
+>>    Oh, yes. SCSI emulation is just what Linux embedded world is asking 
+>> for...
+>>     
+>
+> Well ATAPI is SCSI emulation (its a sort of pidgin SCSI admittedly).
+>
+> I'm actually seeing two strands of requests (including from embedded)
+>
+> - CF only small "dumb as president" type driver that is written to be as
+> compact as possible and preferably considers IRQs as optional
+>   
+
+   IDE core seems much closer to the "dumb" driver (not that it's 
+actually that dumb :-) at this point. The only thing it lacks for "being 
+dumb enough" is the polled mode support... The idea of creating yet 
+another driver framework just for dumb CF doesn't appeal to me. And 
+liabat iscertainly an overkill. If I only had time to look into adding 
+the polled mode support now... and a project needing that (well, Octeon 
+did but I wasn't involved and it had a standalone driver at that time)...
+   Actually, embedded world is much more diverse in its IDE 
+implementations/requirements (you can still encounter a full fledged 
+UltraDMA/133 PATA contoller embedded within a modern SoC), even to the 
+point of complete perversions. I know of a flash device which claims to 
+be IDE compatible (and is indeed registrer level compatible) but only 
+supports certain standard commands, but implements internal paritioning 
+scheme with reads/writes done by vendor specific commands (not even 
+using the standard IDE command execution protocol, IIRC :-).
+
+> Alan
+>   
+
+WBR, Sergei
+
+
