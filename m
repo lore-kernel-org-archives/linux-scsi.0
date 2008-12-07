@@ -1,93 +1,96 @@
-From: Reinhard Nissl <rnissl@gmx.de>
-Subject: [Fwd: mvsas determines most often an incorrect phy addr of 0 while
- attaching phy to port (Was: ERROR: Unidentified device type 0)]
-Date: Sun, 07 Dec 2008 13:54:07 +0100
-Message-ID: <493BC76F.3060105@gmx.de>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [Fwd: Re: iscsi update for 2.6.29]
+Date: Sun, 07 Dec 2008 15:05:43 +0200
+Message-ID: <493BCA27.1090107@panasas.com>
+References: <4935764C.4080007@cs.wisc.edu> <8A71B368A89016469F72CD08050AD33403E32F0A@maui.asicdesigners.com> <49364476.5010608@panasas.com> <493646CB.5080602@panasas.com> <8A71B368A89016469F72CD08050AD334D71369@maui.asicdesigners.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:52807 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753723AbYLGMyS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 7 Dec 2008 07:54:18 -0500
+Received: from ug-out-1314.google.com ([66.249.92.168]:44153 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753888AbYLGNFu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Dec 2008 08:05:50 -0500
+Received: by ug-out-1314.google.com with SMTP id 39so394536ugf.37
+        for <linux-scsi@vger.kernel.org>; Sun, 07 Dec 2008 05:05:48 -0800 (PST)
+In-Reply-To: <8A71B368A89016469F72CD08050AD334D71369@maui.asicdesigners.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Karen Xie <kxie@chelsio.com>
+Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-Hi,
-
-sorry for cross posting but it seems to me that this list is more
-appropriate for my issue.
-
--------- Original-Nachricht --------
-Betreff: mvsas determines most often an incorrect phy addr of 0
-while attaching phy to port (Was: ERROR: Unidentified device type 0)
-Datum: Sun, 07 Dec 2008 00:01:25 +0100
-Von: Reinhard Nissl <rnissl@gmx.de>
-An: linux-kernel@vger.kernel.org
-CC: kewei@marvell.com
-Referenzen: <4939ABA5.4090402@gmx.de>
-
-Hi,
-
-I've meanwhile investigated this issue a little bit further and
-changed the subject accordingly.
-
-Reinhard Nissl schrieb:
-
-> I've got the ASUS P6T WS Professional mainboard including Marvell
-> 88SE6320 SAS controller and attached a single Seagate 10k6 SAS
-> harddrive to the first SAS port.
+Karen Xie wrote:
+> Hi, Boaz,
 > 
-> Installation of openSUSE 11.1rc1 went well but after rebooting,
-> the harddrive doesn't get found. When the initrd script loads the
-> mvsas module, the following output appears on screen:
+
+Hi Karen Xie
+
+> I've just sent the patch out to the list, you can apply the patch to the cxgb3i branch of Mike's
+> linux-2.6-iscsi tree. The patchset includes a file cxgb3i.txt in Document/scsi. I hope it addresses
+> some of your comments.
 > 
-> sas: phy-10:1 added to port-10:0, phy_mask:0x2 (             0)
-> ERROR: Unidentified device type 0
+
+I will review the full source code during the next week, and see if I can spot any problems.
+Specifically, I will check for extended-commands/AHS and bidi problems.
+
+Should the HW support bidi and extended-commands? that is: it will need two scaterlists in parallel,
+and support for AHSs with the spilt command (first 16 bytes in main command header and the rest in an AHS).
+Perhaps, if the HW does not support this in accelerated mode, then it should switch to SW mode (regular
+TCP/IP) when receiving a bidi-command.
+
+> And, yes, I am interested to have bidi setup. How do I go about getting and setting up the OSD sw target?
 > 
-> I first tried to install openSUSE 11.0 but the installer didn't
-> find the harddrive. If I recall correctly, it was for the same
-> reason as it is now when trying to boot the 11.1rc1 system.
 
-This was not completely correct. I forgot that the 11.0 installer
-saw the drive at least once. And my investigations today showed
-that the 11.1rc1 installer / rescue system can run into the same
-error. But most often they see the drive (sometimes only after a
-power cycle) while initrd didn't succeed at all (looks like a
-timing issue).
+Thank you, that could be nice.
 
-> So I think, there exists already a fix for this issue, as the
-> 11.1rc1 installer sees the drive, which is still missing in the
-> initrd environment.
+Start at http://open-osd.org, follow the links to the target page. Please tell me if you have
+any problems or questions, and I will be happy to help.
+The Target side is easy, just git-clone, compile and run. Initiator is a bit more involved but
+should work also.
+
+> Thanks,
+> Karen
 > 
-> I really would like to help solving this issue, but I need a
-> pointer where and how to start digging. I've started a openSUSE
-> bug (https://bugzilla.novell.com/show_bug.cgi?id=450302, Bug
-> 450302 - mvsas doesn't find SAS drive anymore after installation)
-> almost a week ago but didn't get much help there.
 
-Some more findings:
-After the rescue system booted successfully and detected the
-drive, I tried to unload mvsas. modprobe -r mvsas didn't succeed
-as the module was still in use, but lsmod didn't report any user.
-So I've unloaded mvsas with rmmod -f mvsas which succeeded. After
-that, modprobe mvsas was loading the module successfully again
-but the above error appeared. I've put up a loop with modprobe -r
-/ modprobe but it never succeeded to detect the drive anymore.
+Thank you
+Boaz
 
-My plans for the next days are to attach a SATA drive to one of
-the south bridge SATA ports, install an openSUSE system there
-which I will use to investigate this issue further, i. e. setup a
-build environment to be able to compile the module, activate (and
-possibly add additional) debug output and load the module without
-having to reboot.
+> -----Original Message-----
+> From: Boaz Harrosh [mailto:bharrosh@panasas.com]
+> Sent: Wed 12/3/2008 12:43 AM
+> To: Karen Xie
+> Cc: linux-scsi@vger.kernel.org; michaelc@cs.wisc.edu
+> Subject: Re: [Fwd: Re: iscsi update for 2.6.29]
+>  
+> Boaz Harrosh wrote:
+>> http://groups.google.com/group/open-iscsi/msg/dd660ab6b0def64f?&q=cxgb3i%3A+cxgb3+iSCSI+initiator+boaz
+>>
+>> Karen Xie wrote:
+>>> Hi, Boaz,
+>>>
+>>> Sorry, I must have missed your bidi comment. I tried to search the archive but does not seem to be able to find anything. Do you mind forward me the email if you still have it?
+>>>
+>>> Sorry for the inconvenience.
+>>> Thanks,
+>>> Karen
+>>>
+> 
+> Karen Hi.
+> 
+> Please point me to the latest code. Do you have it on a public git/web
+> based on Mike's latest kernel?
+> 
+> Would you be interested in testing a bidi setup with SW OSD target and
+> initiator? One machine runs a user-mode target the second an initiator
+> on top of open-iscsi. This way you can test full bidi and extended cdb
+> commands.
+> 
+> Thanks
+> Boaz
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-I really hope that someone will drop me some lines to guide me in
-investigating this issue. Thanks in advance.
-
-Bye.
--- 
-Dipl.-Inform. (FH) Reinhard Nissl
-mailto:rnissl@gmx.de
