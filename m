@@ -1,44 +1,37 @@
-From: "Yinghai Lu" <yinghai@kernel.org>
-Subject: Re: [PATCH] remove ide-scsi
-Date: Sat, 6 Dec 2008 21:07:32 -0800
-Message-ID: <86802c440812062107h37f0d9f1w1304c4f0ab6856ec@mail.gmail.com>
-References: <20081203103856S.fujita.tomonori@lab.ntt.co.jp>
-	 <20081206120001.3580b9e3@tuna> <200812062241.35601.bzolnier@gmail.com>
-	 <20081206222423.04aada70@lxorguk.ukuu.org.uk>
-	 <493B022B.3050406@ru.mvista.com> <493B0A8E.7000506@garzik.org>
-	 <493B0DF2.4090901@ru.mvista.com> <493B0F36.6030509@garzik.org>
-	 <86802c440812061936v4629857ehbd2705e389e4378b@mail.gmail.com>
-	 <493B4E52.6080905@garzik.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <493B4E52.6080905@garzik.org>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, =?ISO-8859-1?Q?Dan_No=E9?= <dpn@isomerica.net>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, osst@riede.org
+From: Karen Xie <kxie@chelsio.com>
+Subject: [PATCH 0/3 2.6.29] cxgb3i -- driver fixes & updates
+Date: Sat, 6 Dec 2008 23:09:36 -0800
+Message-ID: <200812070709.mB779a5T020861@localhost.localdomain>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stargate.chelsio.com ([12.22.49.110]:1524 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752154AbYLGHIi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Dec 2008 02:08:38 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
+Cc: michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com, kxie@chelsio.com
 
-On Sat, Dec 6, 2008 at 8:17 PM, Jeff Garzik <jeff@garzik.org> wrote:
->> anyone one is building block layer for USB disk? will get /dev/uda?
->
-> That already exists -- drivers/block/ub   :)
+[PATCH 0/3 2.6.29] cxgb3i -- open-iscsi initiator acceleration 
 
-this one ?
+From: Karen Xie <kxie@chelsio.com>
 
-config BLK_DEV_UB
-        tristate "Low Performance USB Block driver"
-        depends on USB
-        help
-          This driver supports certain USB attached storage devices
-          such as flash keys.
+Hi, everyone,
 
-          If you enable this driver, it is recommended to avoid conflicts
-          with usb-storage by enabling USB_LIBUSUAL.
+This patchset is for 2.6.29.
 
-          If unsure, say N.
+It is based on the cxgb3i branch of Mike's linux-2.6-iscsi tree. It needs the
+patch Mike sent several days ago on preparing the iscsi core libary for pdu
+offload (http://marc.info/?l=linux-scsi&m=122819956917473).
 
-I was thinking it should be more faster with less one layer.
+The cxgb3i driver, especially the part handles the offloaded iscsi tcp
+connection mangement, has gone through the netdev review (
+http://marc.info/?l=linux-netdev&m=121944339211552,
+http://marc.info/?l=linux-netdev&m=121989660016124).
 
-YH
+The cxgb3i driver provides iscsi acceleration (PDU offload and payload data
+direct placement) to the open-iscsi initiator. It accesses the hardware through
+the cxgb3 module.
+
+Thanks.
+Karen
