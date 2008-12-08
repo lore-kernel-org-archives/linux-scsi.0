@@ -1,115 +1,64 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 2/2] mpt fusion: port "4.00.43.00" to mainstream git
-	kernel
-Date: Mon, 08 Dec 2008 09:17:34 -0600
-Message-ID: <1228749454.3260.12.camel@localhost.localdomain>
-References: <1228483610-18502-1-git-send-email-crquan@gmail.com>
-	 <1228483610-18502-2-git-send-email-crquan@gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 0/3 2.6.29] cxgb3i -- driver fixes & updates
+Date: Mon, 08 Dec 2008 09:56:30 -0600
+Message-ID: <493D43AE.8090404@cs.wisc.edu>
+References: <200812070709.mB779a5T020861@localhost.localdomain> <20081206.235356.237924993.davem@davemloft.net> <8A71B368A89016469F72CD08050AD334D7136A@maui.asicdesigners.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754317AbYLHPRo@vger.kernel.org>
-In-Reply-To: <1228483610-18502-2-git-send-email-crquan@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: crquan@gmail.com
-Cc: Eric Moore <Eric.Moore@lsi.com>, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:34852 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752060AbYLHP4n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Dec 2008 10:56:43 -0500
+In-Reply-To: <8A71B368A89016469F72CD08050AD334D7136A@maui.asicdesigners.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Karen Xie <kxie@chelsio.com>
+Cc: David Miller <davem@davemloft.net>, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, James.Bottomley@HansenPartnership.com
 
-On Fri, 2008-12-05 at 21:26 +0800, crquan@gmail.com wrote:
-> From: Cheng Renquan <crquan@gmail.com>
+Karen Xie wrote:
+> Hi, Dave & Mike,
 > 
-> this one just can build with mainstream git kernel, I did not even test it.
+> I guess I need some clarification on how this driver code could be merged.
 > 
-> I just have tested it with kernel 2.6.26.2, that patch is very similar to
-> this, and it did work well with 2.6.26.2.
+
+I think you want to send a patch with the entire driver like you were 
+before. Do not send against my branch so James and others do not have to 
+dig around in there.
+
+
+> The cxgb3i driver addition consists of 2 parts:
 > 
-> Signed-off-by: Cheng Renquan <crquan@gmail.com>
-> ---
->  drivers/message/fusion/linux_compat.h |    3 +-
-
-I don't quite understand what this patch is about.  This file isn't in
-the upstream and hasn't been for a while if I recall, so what is this
-patch actually patching?
-
->  drivers/message/fusion/mptbase.c      |   10 +-
->  drivers/message/fusion/mptbase.h      |    6 +-
->  drivers/message/fusion/mptfc.c        |    4 +-
->  drivers/message/fusion/mptsas.c       |   14 +---
->  drivers/message/fusion/mptscsih.c     |  169 +++++++++++++--------------------
->  drivers/message/fusion/mptscsih.h     |    2 +-
->  7 files changed, 79 insertions(+), 129 deletions(-)
+> 1. the new cxgb3i driver. It resides under drivers/scsi, this part has the dependency on the open-iscsi core changes I referred in the previous email. I was under the impression this goes into scsi-misc?
 > 
-> diff --git a/drivers/message/fusion/linux_compat.h b/drivers/message/fusion/linux_compat.h
-> index 24ad3f1..92e9797 100644
-> --- a/drivers/message/fusion/linux_compat.h
-> +++ b/drivers/message/fusion/linux_compat.h
-> @@ -31,7 +31,6 @@ static inline void *shost_private(struct Scsi_Host *shost)
->  #define spi_dv_pending(x) (((struct spi_transport_attrs *)&(x)->starget_data)->dv_pending)
->  #endif
+> 2. some iscsi related changes in cxgb3 driver (driver/net). This part does not have any dependency. Dave, I suppose this part goes into net-next? If so, this does not need Mike's patch at all.
+> 
+
+There is no dependency with network stuff right (just the cxgb3 driver 
+which is upstream already)? If so I think it would be easier to just 
+send the driver through James.
+
+
+> Thanks a lot.
+> Karen
+> 
+> -----Original Message-----
+> From: David Miller [mailto:davem@davemloft.net]
+> Sent: Sat 12/6/2008 11:53 PM
+> To: Karen Xie
+> Cc: linux-scsi@vger.kernel.org; open-iscsi@googlegroups.com; michaelc@cs.wisc.edu; James.Bottomley@HansenPartnership.com
+> Subject: Re: [PATCH 0/3 2.6.29] cxgb3i -- driver fixes & updates
 >  
-> -#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
->  /**
->   * mpt_scsilun_to_int: convert a scsi_lun to an int
->   * @scsilun:    struct scsi_lun to be converted.
-> @@ -62,7 +61,7 @@ static inline int mpt_scsilun_to_int(struct scsi_lun *scsilun)
->                                scsilun->scsi_lun[i + 1]) << (i * 8));
->          return lun;
->  }
-> -#endif
-> +
->  #if (defined(CONFIG_SUSE_KERNEL) && !defined(scsi_is_sas_phy_local))
->  #define SUSE_KERNEL_BASE	1
->  #endif
-> diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-> index 2979b63..36dd62a 100644
-> --- a/drivers/message/fusion/mptbase.c
-> +++ b/drivers/message/fusion/mptbase.c
-> @@ -1618,7 +1618,7 @@ mpt_mapresources(MPT_ADAPTER *ioc)
->  	}
->  #else
->  	ioc->bars = pci_select_bars(pdev, IORESOURCE_MEM);
-> -	if (pci_enable_device_bars(pdev, ioc->bars)) {
-> +	if (pci_enable_device(pdev)) {
+> From: Karen Xie <kxie@chelsio.com>
+> Date: Sat, 6 Dec 2008 23:09:36 -0800
+> 
+>> It is based on the cxgb3i branch of Mike's linux-2.6-iscsi tree. It needs the
+>> patch Mike sent several days ago on preparing the iscsi core libary for pdu
+>> offload (http://marc.info/?l=linux-scsi&m=122819956917473).
+> 
+> If this dependency exists I probably can't pull this into the
+> net-next-2.6 then, just FYI but you probably already understand
+> this :-)
+> 
 
-API reversal.
-
->  		printk(MYIOC_s_ERR_FMT "pci_enable_device_bars() with MEM "
->  		    "failed\n",ioc->name);
->  		return r;
-> @@ -1826,7 +1826,8 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
->  #endif
->  
->  	/* Initialize workqueue */
-> -	snprintf(ioc->reset_work_q_name, KOBJ_NAME_LEN, "mpt_poll_%d", ioc->id);
-> +	snprintf(ioc->reset_work_q_name, sizeof(ioc->reset_work_q_name),
-> +			"mpt_poll_%d", ioc->id);
->  	ioc->reset_work_q =
->  		create_singlethread_workqueue(ioc->reset_work_q_name);
->  	if (!ioc->reset_work_q) {
-> @@ -1949,7 +1950,8 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
->  
->  	INIT_LIST_HEAD(&ioc->fw_event_list);
->  	spin_lock_init(&ioc->fw_event_lock);
-> -	snprintf(ioc->fw_event_q_name, KOBJ_NAME_LEN, "mpt/%d", ioc->id);
-> +	snprintf(ioc->fw_event_q_name, sizeof(ioc->fw_event_q_name),
-> +			"mpt/%d", ioc->id);
->  	ioc->fw_event_q = create_singlethread_workqueue(ioc->fw_event_q_name);
->  
->  	if ((r = mpt_do_ioc_recovery(ioc, MPT_HOSTEVENT_IOC_BRINGUP,
-> @@ -2303,7 +2305,7 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
->  		pci_release_selected_regions(ioc->pcidev, ioc->bars);
->  		ioc->bars = pci_select_bars(ioc->pcidev, IORESOURCE_MEM |
->  		    IORESOURCE_IO);
-> -		if (pci_enable_device_bars(ioc->pcidev, ioc->bars))
-> +		if (pci_enable_device(ioc->pcidev))
-
-Things like this are reversing kernel API changes and can't go in.
-
-What you need to do is isolate the necessary changes to current git head
-(or scsi-misc) and then send it to the LSI maintainers.  The route to
-inclusion is via them.
-
-Alternatively, we can just continue on with debugging the actual problem
-you have rather than trying to upport some vendor driver.
-
-James
