@@ -1,50 +1,45 @@
-From: "Karen Xie" <kxie@chelsio.com>
-Subject: RE: [PATCH 1/2 2.6.29] cxgb3 - manage private iSCSI IP address
-Date: Mon, 8 Dec 2008 13:11:20 -0800
-Message-ID: <8A71B368A89016469F72CD08050AD33403F15217@maui.asicdesigners.com>
-References: <200812082030.mB8KU37N029242@localhost.localdomain>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 2/2 2.6.29] cxgb3i - accelerating open-iscsi initiator
+Date: Mon, 08 Dec 2008 15:21:18 -0600
+Message-ID: <493D8FCE.5020500@cs.wisc.edu>
+References: <200812082030.mB8KUOMD029251@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.22.49.110]:17855 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751950AbYLHVLS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Dec 2008 16:11:18 -0500
-Content-class: urn:content-classes:message
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:59351 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752089AbYLHVVb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Dec 2008 16:21:31 -0500
+In-Reply-To: <200812082030.mB8KUOMD029251@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Karen Xie <kxie@chelsio.com>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
-Cc: michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com
+To: Karen Xie <kxie@chelsio.com>
+Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-Sorry, forgot to add my signed off line, it should be:
+Karen Xie wrote:
+> [PATCH 2/2 2.6.29] cxgb3i - accelerating open-iscsi initiator
+> 
+> From: Karen Xie <kxie@chelsio.com> 
+> 
+> Add cxgb3i iSCSI driver.
+> 
+> This patch implements the cxgb3i iscsi connection acceleration for the
+> open-iscsi initiator.
+> 
+> The cxgb3i driver offers the iscsi PDU based offload:
+> - digest insertion and verification
+> - payload direct-placement into host memory buffer.
+> 
+> Signed-off-by: Karen Xie <kxie@chelsio.com>
 
-Signed-off-by: Divy Le Ray <divy@chelsio.com>
-Signed-off-by: Karen Xie <kxie@chelsio.com>
+There are a couple issues with using network functions instead of 
+defining your own (I guess some are not widespread because other code is 
+not using it yet) and a function that is no longer used (cxgb3 net 
+driver function replaced by common iscsi functionality), but they are 
+small and can probably be fixed up after the merge with a simple patch 
+(I can submit it after it is merged if you guys want).
 
+The iscsi hook in parts look ok.
 
------Original Message-----
-From: Karen Xie [mailto:kxie@chelsio.com] 
-Sent: Monday, December 08, 2008 12:30 PM
-To: open-iscsi@googlegroups.com; linux-scsi@vger.kernel.org
-Cc: michaelc@cs.wisc.edu; James.Bottomley@HansenPartnership.com; Karen
-Xie
-Subject: [PATCH 1/2 2.6.29] cxgb3 - manage private iSCSI IP address
-
-[PATCH 1/2 2.6.29] cxgb3 - manage private iSCSI IP address
-
-From: Karen Xie <kxie@chelsio.com>
-
-The accelerated iSCSI traffic could use a private IP address unknown to
-the OS:
-- Create a per port sysfs entry to pass an IP address to the NIC driver,
-and a
-  control call for the iSCSI driver to grab it.
-- The IP address is required in both drivers to manage ARP requests and
-  connection set up.
-- Reply to ARP requests dedicated to the private IP address.
-
-Signed-off-by: Divy Le Ray <divy@chelsio.com>
----
-
+Acked-by: Mike Christie <michaelc@cs.wisc.edu>
