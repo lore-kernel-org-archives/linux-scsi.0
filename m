@@ -1,102 +1,99 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: oops in ibmvstgt
-Date: Tue, 9 Dec 2008 20:03:50 +0900
-Message-ID: <20081209200428P.fujita.tomonori@lab.ntt.co.jp>
-References: <20081203145857.GA10070@suse.de>
-	<20081204212414H.fujita.tomonori@lab.ntt.co.jp>
-	<493D73CE.6040405@linux.vnet.ibm.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: rmmod qlogic driver stuck
+Date: Tue, 09 Dec 2008 14:04:55 +0300
+Message-ID: <493E50D7.3020808@vlnb.net>
+References: <1228736014.6291.221.camel@galr-linux.storwiz.com>	 <9BECC90A-21CB-4600-A6F9-9ABEAEB48839@qlogic.com>	 <1228758532.6291.229.camel@galr-linux.storwiz.com> <1228805044.6291.248.camel@galr-linux.storwiz.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=KOI8-R; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:60850 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754169AbYLILEB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Dec 2008 06:04:01 -0500
-In-Reply-To: <493D73CE.6040405@linux.vnet.ibm.com>
+Received: from moutng.kundenserver.de ([212.227.126.177]:54918 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751962AbYLILEt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Dec 2008 06:04:49 -0500
+In-Reply-To: <1228805044.6291.248.camel@galr-linux.storwiz.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brking@linux.vnet.ibm.com
-Cc: fujita.tomonori@lab.ntt.co.jp, olh@suse.de, linux-scsi@vger.kernel.org
+To: Gal Rosen <galr@storwize.com>
+Cc: Seokmann Ju <seokmann.ju@qlogic.com>, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com
 
-On Mon, 08 Dec 2008 13:21:50 -0600
-Brian King <brking@linux.vnet.ibm.com> wrote:
 
-> FUJITA Tomonori wrote:
-> > On Wed, 3 Dec 2008 15:58:57 +0100
-> > Olaf Hering <olh@suse.de> wrote:
-> > 
-> >> change init order to fix crash due to uninitalized shost_data
-> > 
-> > I think that calling crq_queue_create leads to the creation of a rport
-> > so we need to set up everything before that. The current code is racy.
-> > 
-> > 
-> >> No idea if the patch is correct.
-> > 
-> > Almost correct, I think. Needs to modify the error handling
-> > too. Probably, it would be better to call scsi_tgt_alloc_queue before
-> > crq_queue_create.
-> > 
-> > How about this?
+Gal Rosen wrote:
+> Ok, now the picture is more clear.
+> It happened only with the virtual ports.
+> With physical port and LUNs that defined with write cache enable rmmod
+> succeeded, and on the messages file I see:
+> [57972.480234] sd 40:0:0:1: [sdb] Synchronizing SCSI cache
+> [57972.530263] sd 40:0:0:1: [sdb] Result: hostbyte=DID_NO_CONNECT
+> driverbyte=DRIVER_OK,SUGGEST_OK
 > 
-> Don't we need to do a little more in the error handling like this:
+> While with virtual port I see only:
+> [57972.480234] sd 40:0:0:1: [sdb] Synchronizing SCSI cache
+> and never get the Result.
+> 
+> Anyone has an idea?
 
-Duh, you are right. Thanks a lot!
+I can guess that the remote device was disconnected before 
+SYNCHRONIZE_CACHE command was sent to it, so it either doesn't go to 
+anywhere, or goes to nowhere. Then SCSI mid-layer is waiting for it to 
+finish, maybe, infinitely (unlikely) or until some timeout.
 
-I slightly modified the description.
-
-=
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH] ibmvstgt: move crq_queue_create at the end of initialization
-
-Calling crq_queue_create could lead to the creation of a rport. We
-need to set up everything before creating a rport. This moves
-crq_queue_create at the end of initialization to avoid a race.
-
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Reported-by: Olaf Hering <olh@suse.de>
-Cc: stable@kernel.org
----
- drivers/scsi/ibmvscsi/ibmvstgt.c |   16 +++++++++-------
- 1 files changed, 9 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/ibmvscsi/ibmvstgt.c b/drivers/scsi/ibmvscsi/ibmvstgt.c
-index 2a5b29d..e2dd6a4 100644
---- a/drivers/scsi/ibmvscsi/ibmvstgt.c
-+++ b/drivers/scsi/ibmvscsi/ibmvstgt.c
-@@ -864,21 +864,23 @@ static int ibmvstgt_probe(struct vio_dev *dev, const struct vio_device_id *id)
- 
- 	INIT_WORK(&vport->crq_work, handle_crq);
- 
--	err = crq_queue_create(&vport->crq_queue, target);
-+	err = scsi_add_host(shost, target->dev);
- 	if (err)
- 		goto free_srp_target;
- 
--	err = scsi_add_host(shost, target->dev);
-+	err = scsi_tgt_alloc_queue(shost);
- 	if (err)
--		goto destroy_queue;
-+		goto remove_host;
- 
--	err = scsi_tgt_alloc_queue(shost);
-+	err = crq_queue_create(&vport->crq_queue, target);
- 	if (err)
--		goto destroy_queue;
-+		goto free_queue;
- 
- 	return 0;
--destroy_queue:
--	crq_queue_destroy(target);
-+free_queue:
-+	scsi_tgt_free_queue(shost);
-+remove_host:
-+	scsi_remove_host(shost);
- free_srp_target:
- 	srp_target_free(target);
- put_host:
--- 
-1.5.5.GIT
-
+> Thanks,
+> Gal.
+> 
+> On Mon, 2008-12-08 at 19:48 +0200, Gal Rosen wrote:
+>> On Mon, 2008-12-08 at 09:23 -0800, Seokmann Ju wrote:
+>>> On Dec 8, 2008, at 3:33 AM, Gal Rosen wrote:
+>>>
+>>>> Hi,
+>>>>
+>>>> I am working against IBM Total Storage DS4000 with LSI INF-01-00 Rev:
+>>>> 0534 controller. First I don't understand why this controller  
+>>>> present 32
+>>>> access LUNs instead of one.
+>>>>
+>>>> But my main issue is when I create virtual port and then try to rmmod
+>>>> the qlogic driver, it stuck. I must say that I made changes to the
+>>>> qlogic driver which add possibility to create virtual port in FC-AL
+>>>> topology. The base driver is from kernel 2.6.26.2.
+>>>>
+>>>> Here is a part of the messages file:
+>>>>
+>>>> [ 1814.053285] scsi(7): DPC handler exiting
+>>> [snip]
+>>>> host5 is the physical port, and host8 is the virtual port that created
+>>>> on host5.
+>>>> This issue does not occur against CLARiiON for instanse.
+>>> As you may know, the NPIV feature implemented in such a way to work only
+>>> in switched fabric topology.
+>>> It requires certain switch with NPIV capable to be able to make the
+>>> feature fully working.
+>> Yes, I know that, but we use the Multi ID feature in Qlogic 24xx
+>> firmware, to create the virtual port in LOOP topology.
+>>
+>> I found that if I configure the LUN in the array to write cache disable
+>> this problem does not occur; does this tell something to anyone ?
+>> I don't think that it related to the vport, it will happened also with
+>> physical port.
+>>
+>> Gal.
+>>> Thank you,
+>>> Seokmann
+>>>
+>>>>
+>>>> Please help !!!
+>>>>
+>>>> Thanks,
+>>>> Gal Rosen.
+>>>>
+>>>>
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux- 
+>>>> scsi" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
