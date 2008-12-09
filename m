@@ -1,35 +1,54 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] Correctly release and allocate a new request upon retries
-Date: Tue, 9 Dec 2008 15:51:19 +0100
-Message-ID: <20081209145119.GA23742@kernel.dk>
-References: <493D2E05.3070108@hp.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 2/2 2.6.29] cxgb3i - accelerating open-iscsi initiator
+Date: Tue, 09 Dec 2008 11:10:35 -0600
+Message-ID: <493EA68B.9090902@cs.wisc.edu>
+References: <200812082030.mB8KUOMD029251@localhost.localdomain> <493E82C6.5030609@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:1390 "EHLO kernel.dk"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:56604 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752263AbYLIOvd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Dec 2008 09:51:33 -0500
-Content-Disposition: inline
-In-Reply-To: <493D2E05.3070108@hp.com>
+	id S1751419AbYLIRKp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Dec 2008 12:10:45 -0500
+In-Reply-To: <493E82C6.5030609@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Mike Anderson <andmike@linux.vnet.ibm.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, LKML-scsi <linux-scsi@vger.kernel.org>
+To: open-iscsi@googlegroups.com
+Cc: Karen Xie <kxie@chelsio.com>, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-On Mon, Dec 08 2008, Alan D. Brunelle wrote:
+Boaz Harrosh wrote:
 
-> Commands needing to be retried require a complete re-initialization.
+>> +	if (!ddp) {
+>> +		ddp_log_warn("%s unable to alloc ddp 0x%d, ddp disabled.\n",
+>> +			     tdev->name, ppmax);
+>> +		return 0;
+>> +	}
+>> +	ddp->gl_map = (struct cxgb3i_gather_list **)(ddp + 1);
+>> +	ddp->gl_skb = (struct sk_buff **)(((char *)ddp->gl_map) +
+>> +					  ppmax *
+>> +					  sizeof(struct cxgb3i_gather_list *));
+>> +	spin_lock_init(&ddp->map_lock);
+>> +
+>> +	ddp->tdev = tdev;
+>> +	ddp->pdev = uinfo.pdev;
+>> +	ddp->max_txsz = min_t(unsigned int, uinfo.max_txsz, ULP2_MAX_PKT_SIZE);
+>> +	ddp->max_rxsz = min_t(unsigned int, uinfo.max_rxsz, ULP2_MAX_PKT_SIZE);
 > 
-> The test-unit-ready portion of this patch was causing boots to fail on
-> my test machine (as in http://lkml.org/lkml/2008/12/5/161). With this
-> patch in place, the system is booting reliably.
+> Please note that from what I understand, only the out-going headers can be
+> big, like iscsi_cmd header. But the in-coming headers are always size_of(struct iscsi_hdr).
+> So there is no symmetry here. Actually only iscsi_cmd can get big, the other out-going 
+> data packets are with small headers, but I guess that is an open-iscsi limitation.
 > 
-> Mike Anderson found the same problem in the hp_hw_start_stop code,
-> and I applied the same solution in cdrom_read_cdda_bpc.
+> Mike correct me if I'm wrong?
 
-Thanks Alan, applied for 2.6.28.
+Yeah, correct. Other iscsi pdus like tmfs and scsi data out could have 
+ahs but we do not support it. You did the code, so I assumed you only 
+did what you needed and could test.
 
--- 
-Jens Axboe
-
+On the recv side, I thought scsi cmd response or scsi data-in could have 
+ahses, but libiscsi_tcp/libiscsi just reads as much as it can in and 
+does not process it (actually it only reads in as much buffer space as 
+it has then fails if we overflow). I believe Olaf did this code to be 
+complete as he could with the existing code for the future, and to make 
+sure his abstraction would work for ahs if we needed it.
