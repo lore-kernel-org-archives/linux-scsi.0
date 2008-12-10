@@ -1,74 +1,57 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12190] New: kernel 2.6 PPC64 - IPS driver failure with IBM ServeRAID 4H
-Date: Wed, 10 Dec 2008 02:33:53 -0800 (PST)
-Message-ID: <bug-12190-11613@http.bugzilla.kernel.org/>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: libata / scsi separation
+Date: Wed, 10 Dec 2008 08:24:45 -0700
+Message-ID: <20081210152445.GW25548@parisc-linux.org>
+References: <493B022B.3050406@ru.mvista.com> <20081206230227.07b00e2f@lxorguk.ukuu.org.uk> <493B0867.5020700@ru.mvista.com> <1228662298.3501.19.camel@localhost.localdomain> <20081209222113.GU25548@parisc-linux.org> <493F2151.6010702@gmail.com> <da824cf30812091829g180b3e45i843e356364bc2f9f@mail.gmail.com> <493F2DA9.7040008@gmail.com> <da824cf30812091923j241f915dmbcb27245c0d0491b@mail.gmail.com> <493F3B33.8010607@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:39358 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754759AbYLJKdz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Dec 2008 05:33:55 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBAAXrAE003363
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2008 02:33:54 -0800
+Received: from palinux.external.hp.com ([192.25.206.14]:53327 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751278AbYLJPZD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Dec 2008 10:25:03 -0500
+Content-Disposition: inline
+In-Reply-To: <493F3B33.8010607@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Grant Grundler <grundler@google.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12190
+On Wed, Dec 10, 2008 at 12:44:51PM +0900, Tejun Heo wrote:
+> >> and thus have SG on the host bus side in mode cases
+> >> but never on the device side.
+> > 
+> > SG == scatter-gather? I'm not sure why that is specific to rotating media.
+> > Or is this referring to "SCSI-generic" pass through?
+> 
+> I was talking about scatter-gather.  All the IO commands are about one
+> continuous extent of data on the device and the whole stack from the
+> bio is built that way and the overhead of libata is minute compared to
+> the whole thing including emitting single command and receiving
+> completion for each 4k transfer.
 
-           Summary: kernel 2.6 PPC64 - IPS driver failure with IBM ServeRAID
-                    4H
-           Product: SCSI Drivers
-           Version: 2.5
-     KernelVersion: 2.6.18-6-powerpc64
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: Other
-        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
-        ReportedBy: bozy@pisem.net
-                CC: bozy@pisem.net
+I think what Tejun means is add a new command, say READ_SG which would
+transfer a page of LBA ranges (see how TRIM works for details), then the
+drive would do a single transfer which contained the data from all those
+ranges.
 
+This would work, but (ignoring the political / standardisation efforts
+required to make this happen), this is just a cop-out.  When networking
+people were first faced with gigabit, they tried the same thing (oooh,
+9000 byte packets, oooh, TCP Offload, etc), all in the name of passing
+larger amounts of data to the card in a single transaction so they
+didn't have to fix their per-transaction overheads.
 
-Latest working kernel version: NONE
-Earliest failing kernel version: 2.6.18-6-powerpc64 #1 SMP Sat Jan 26 17:58:12
-UTC 2008 ppc64 unknown
-Distribution: Debian Etch (4.0)
-Hardware Environment: IBM 7025-6F0
-Software Environment: Installing Debian 4.0 (Etch), latest stable release as of
-10-DEC-2008
-Problem Description:
-IPS driver fails to load, following is recorded in dmesg:
----
-PCI: Enabling device: (0001:2a:01.0), cmd 143
-ips 0001:2a:01.0: Unable to initialize controller
-ips: probe of 0001:2a:01.0 failed with error -1
-ips 0001:2a:01.0: Couldn't allocate IO space 18ec00 len 256.
-ips: probe of 0001:2a:01.0 failed with error -1
----
-lspci -v output:
----
-0001:2a:01.0 RAID bus controller: IBM SCSI RAID Adapter [ServeRAID] (rev 10)
-Subsystem: IBM Unknown device 022e
-Flags: medium devsel, IRQ 42
-I/O ports at fefff8ec00 [size=256]
-Memory at ff38000000 (32-bit, non-prefetchable) [size=1M]
-Expansion ROM at ff38100000 [disabled] [size=32K]
-Capabilities: [40] Vital Product Data
-Capabilities: [48] Power Management version 2
----
-Steps to reproduce:
-Load IPS driver (modprobe ips) on either IBM 7025-6F0 (64-bit arch & kernel) or
-IBM 7025-F50 (32-bit arch & kernel) machine.
+Users weren't interested.  They wanted to keep sending 1500 byte packets
+(because most equipment couldn't handle jumbo frames) and they wanted
+netfilter and SACK and all the other goodies that the Linux networking
+stack offered and the card's TCP stack didn't.
 
-Note: this bug has been recorded at Debian Bugzilla with bug#375092
-
+We should stop denying that users actually want to do 4k IOs and just
+get on with fixing the storage stack to cope with lots of them.
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
