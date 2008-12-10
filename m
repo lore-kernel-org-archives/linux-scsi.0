@@ -1,61 +1,78 @@
-From: Evgeniy Polyakov <zbr@ioremap.net>
-Subject: Re: [PATCH][RFC 23/23]: Support for zero-copy TCP transmit of user space data
-Date: Thu, 11 Dec 2008 00:45:00 +0300
-Message-ID: <20081210214500.GA24212@ioremap.net>
-References: <494009D7.4020602@vlnb.net> <494012C4.7090304@vlnb.net>
+From: "Vorobiev Dmitri" <dmitri.vorobiev@movial.fi>
+Subject: Re: [PATCH 1/28] drivers/base/platform.c: Drop return value from
+     platform_driver remove functions
+Date: Thu, 11 Dec 2008 00:06:34 +0200 (EET)
+Message-ID: <42393.88.114.236.15.1228946794.squirrel@webmail.movial.fi>
+References: <Pine.LNX.4.64.0812101725540.21998@ask.diku.dk>
+    <20081210163819.17cf4628@lxorguk.ukuu.org.uk>
+    <45755.88.114.236.15.1228932236.squirrel@webmail.movial.fi>
+    <20081210212659.GA6132@zarina>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netgear.net.ru ([195.178.208.66]:32869 "EHLO tservice.net.ru"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1755656AbYLJVpE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Dec 2008 16:45:04 -0500
-Content-Disposition: inline
-In-Reply-To: <494012C4.7090304@vlnb.net>
+Received: from smtp.movial.fi ([62.236.91.34]:42748 "EHLO smtp.movial.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755717AbYLJWGg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Dec 2008 17:06:36 -0500
+In-Reply-To: <20081210212659.GA6132@zarina>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Boaz Harrosh <bharrosh@panasas.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, netdev@vger.kernel.org
+To: cbouatmailru@gmail.com
+Cc: Vorobiev Dmitri <dmitri.vorobiev@movial.fi>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Julia Lawall <julia@diku.dk>, gregkh@suse.de, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi Vladislav.
+> On Wed, Dec 10, 2008 at 08:03:56PM +0200, Vorobiev Dmitri wrote:
+>> > On Wed, 10 Dec 2008 17:26:26 +0100 (CET)
+>> > Julia Lawall <julia@diku.dk> wrote:
+>> >
+>> >> From: Julia Lawall <julia@diku.dk>
+>> >>
+>> >> The return value of the remove function of a driver structure, and
+>> thus
+>> >> of
+>> >> a platform_driver structure, is ultimately ignored
+>> >
+>> > Currently
+>>
+>> Are there really any plans about actually using the return value?
+>
+> It's often used by the drivers, but currently not handled by
+> the subsystem. For example, _remove() callback might return -EBUSY
+> or -EAGAIN, which means that whoever called the _remove() should
+> try later.
 
-On Wed, Dec 10, 2008 at 10:04:36PM +0300, Vladislav Bolkhovitin (vst@vlnb.net) wrote:
-> In the chosen approach new optional field void *net_priv was added to 
-> struct page. It is enclosed by
+Sure, it's easy to find drivers, which that return a non-dummy value from
+the remove() callback thinking that someone up there will take care of the
+error.
 
-There is a huge no-no in networking land on increasing skb.
-Reason is simple every skb will carry potentially unneded data as long
-as given option is enabled, and most of the time it will.
-To break this barrier one has to have (I wanted to write ego, but then
-decided to replace it with mojo) so huge reason to do this, that it is
-almost impossible to have.
+The point is, however, that
 
-Something tells me that increasing page structure with 8 bytes because
-of zero-copy iscsi transfer is not that great idea, since basically every
-user out there will have it enabled in the distro config and will waste
-noticeble amount of ram.
+1) the SGI Indy SCSI controller driver doesn't compile cleanly [2], and
+SCSI maintainers do not apply the patch because, in principle, the
+(*remove)() callback should not return int since the return value is
+discarded [1];
 
-The same problem of not sending any kind of notification to the user
-when his pages are 'acked' by receiving some packet or freeing the data
-exists long ago and was tried to be fixed several times.
+2) the changes in the platform driver framework are, as it seems, not
+acceptable because the non-dummy return values can, in principle, be used
+for error checking.
 
-The most applicable to your case maybe DST experience. DST is a block
-layer device and all its pages starting from quite recent kernels are
-not allowed to be slab ones (xfs was the last one who provided slab
-pages in the bios), so each page has two 'unused' pointers in lru list
-entry, which you may reuse. If scsi layer may have slab pages from some
-place (although this does not sound like a good idea, ->sendpage() will
-bug on on them anyway), this hack will not work, otherwise you only need
-to have net_page_get/put stuff in and do not mess with increasing page.
-And this was tested 3-4 kernel releases ago, so things may be changed.
+All that I actually care about is to get rid of this:
 
-Another appropach is to increase skb's shared data (at the end of the
-skb->data), and this approach was not frowned upon too much either, but
-it requires to mess with skb->destructor, which may not be appropriate
-in some cases. If iscsi does not use sockets (it does iirc), things are
-much simpler.
+<<<
 
-Hope this helps.
+  CC [M]  drivers/scsi/sgiwd93.o
+drivers/scsi/sgiwd93.c:314: warning: initialization from incompatible
+pointer type
 
--- 
-	Evgeniy Polyakov
+<<<
+
+I don't care whether the compilation warning is gone because [2] is
+applied, or the entire platform driver framework is combed though to
+change int to void.
+
+Thanks,
+Dmitri
+
+[1] http://kerneltrap.org/mailarchive/linux-scsi/2008/12/3/4300474
+
+[2] http://kerneltrap.org/mailarchive/linux-scsi/2008/11/20/4169644
