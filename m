@@ -1,128 +1,54 @@
 From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: [PATCH][RFC 20/23]: Documentation for scst_local driver
-Date: Wed, 10 Dec 2008 22:00:21 +0300
-Message-ID: <494011C5.6090704@vlnb.net>
+Subject: [PATCH][RFC 21/23]: iSCSI target driver
+Date: Wed, 10 Dec 2008 22:01:25 +0300
+Message-ID: <49401205.8010207@vlnb.net>
 References: <494009D7.4020602@vlnb.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.177]:56833 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755630AbYLJTAO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Dec 2008 14:00:14 -0500
+Return-path: <netdev-owner@vger.kernel.org>
 In-Reply-To: <494009D7.4020602@vlnb.net>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: netdev-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Boaz Harrosh <bharrosh@panasas.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, Richard Sharpe <realrichardsharpe@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Boaz Harrosh <bharrosh@panasas.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, netdev@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-This patch contains documentation for scst_local driver.
+This patch contains iSCSI-SCST target driver. This driver is a heavily 
+modified forked with all respects IET 
+(http://iscsitarget.sourceforge.net). Modifications were aimed to make a 
+clearer, more reviewable and maintainable code as well as to fix many 
+problems and make many improvements. See 
+http://scst.sourceforge.net/target_iscsi.html for more details.
 
-Signed-off-by: Richard Sharpe <realrichardsharpe@gmail.com>
+It has split user/kernel space architecture, where all management, 
+sessions creation, parameters negotiation, etc. made in user space and 
+data are transferred in the kernel space. Such architecture for iSCSI 
+processing was many times acknowledged as the right one. Particularly, 
+in-kernel iSCSI initiator (open-iscsi) has such architecture.
+
 Signed-off-by: Vladislav Bolkhovitin <vst@vlnb.net>
 ---
-  Documentation/scst/README.scst_local |   95 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  1 file changed, 95 insertions(+)
+  drivers/scst/iscsi-scst/Kconfig     |   25
+  drivers/scst/iscsi-scst/Makefile    |    6
+  drivers/scst/iscsi-scst/config.c    |  597 +++++++
+  drivers/scst/iscsi-scst/conn.c      |  488 +++++
+  drivers/scst/iscsi-scst/digest.c    |  221 ++
+  drivers/scst/iscsi-scst/digest.h    |   31
+  drivers/scst/iscsi-scst/event.c     |  116 +
+  drivers/scst/iscsi-scst/iscsi.c     | 3066 ++++++++++++++++++++++++++++++++++++
+  drivers/scst/iscsi-scst/iscsi.h     |  577 ++++++
+  drivers/scst/iscsi-scst/iscsi_dbg.h |   73
+  drivers/scst/iscsi-scst/iscsi_hdr.h |  517 ++++++
+  drivers/scst/iscsi-scst/nthread.c   | 1522 +++++++++++++++++
+  drivers/scst/iscsi-scst/param.c     |  263 +++
+  drivers/scst/iscsi-scst/session.c   |  210 ++
+  drivers/scst/iscsi-scst/target.c    |  306 +++
+  include/scst/iscsi_scst.h           |  156 +
+  include/scst/iscsi_scst_ver.h       |   16
+  17 files changed, 8190 insertions(+)
 
-diff -uprN orig/linux-2.6.27/Documentation/scst/README.scst_local linux-2.6.27/Documentation/scst/README.scst_local
---- orig/linux-2.6.27/Documentation/scst/README.scst_local
-+++ linux-2.6.27/Documentation/scst/README.scst_local
-@@ -0,0 +1,95 @@
-+SCST Debug ...
-+Richard Sharpe, 30-Nov-2008
-+
-+This is the SCST Local driver. Its function is to allow you to access devices
-+that are exported via SCST directly on the same Linux system that they are
-+exported from.
-+
-+No assumptions are made in the code about the device types on the target, so
-+any device handlers that you load in SCST should be visible, including tapes
-+and so forth.
-+
-+To build, simply issue 'make' in the scst-local directory.
-+
-+Try 'modinfo scst_local' for a listing of module parameters so far.
-+
-+NOTE! This is now part of scst and supports being built in the scst tree.
-+
-+Here is how I have used it so far:
-+
-+1. Load up scst:
-+
-+  modprobe scst
-+  modprobe scst_vdisk
-+
-+2. Create a virtual disk (or your own device handler):
-+
-+  dd if=/dev/zero of=/some/path/vdisk1.img bs=16384 count=1000000
-+#  dd if=/dev/zero of=/some/path/vdisk2.img bs=16384 count=1000000
-+  echo "open vm_disk1 /some/path/vdisk1.img" > /proc/scsi_tgt/vdisk/vdisk 
-+#  echo "open vm_disk2 /some/path/vdisk2.img" > /proc/scsi_tgt/vdisk/vdisk 
-+  echo "add vm_disk1 0" > /proc/scsi_tgt/groups/Default/devices 
-+#  echo "add vm_disk2 1" > /proc/scsi_tgt/groups/Default/devices 
-+
-+3. Load the scst_local driver:
-+
-+  insmod scst_local
-+# insmod scst_local max_luns=8
-+
-+4. Check what you have
-+
-+   cat /proc/scsi/scsi
-+  Attached devices:
-+  Host: scsi0 Channel: 00 Id: 00 Lun: 00
-+    Vendor: ATA      Model: ST9320320AS      Rev: 0303
-+    Type:   Direct-Access                    ANSI  SCSI revision: 05
-+  Host: scsi4 Channel: 00 Id: 00 Lun: 00
-+    Vendor: TSSTcorp Model: CD/DVDW TS-L632D Rev: TO04
-+    Type:   CD-ROM                           ANSI  SCSI revision: 05
-+  Host: scsi7 Channel: 00 Id: 00 Lun: 00
-+    Vendor: SCST_FIO Model: vm_disk1         Rev:  101
-+    Type:   Direct-Access                    ANSI  SCSI revision: 04
-+
-+5. Have fun.
-+
-+Some of this was coded while in Santa Clara, some in Bangalore, and some in 
-+Hyderabad. Noe doubt some will be coded on the way back to Santa Clara.
-+
-+The code still has bugs, so if you encounter any, email me the fixes at:
-+
-+   realrichardsharpe@gmail.com
-+
-+I am thinking of renaming this to something more interesting. 
-+
-+6. Change log
-+
-+V0.1 24-Sep-2008 (Hyderabad) Initial coding, pretty chatty and messy, 
-+                             but worked.
-+
-+V0.2 25-Sep-2008 (Hong Kong) Cleaned up the code a lot, reduced the log
-+			     chatter, fixed a bug where multiple LUNs did not
-+			     work. Also, added logging control. Tested with
-+			     five virtual disks. They all came up as /dev/sdb
-+			     through /dev/sdf and I could dd to them. Also
-+			     fixed a bug preventing multiple adapters.
-+
-+V0.3 26-Sep-2008 (Santa Clara) Added back a copyright plus cleaned up some
-+			       unused functions and structures.
-+
-+V0.4 5-Oct-2008 (Santa Clara) Changed name to scst_local as suggested, cleaned
-+			      up some unused variables (made them used) and
-+			      change allocation to a kmem_cache pool.
-+
-+V0.5 5-Oct-2008 (Santa Clara) Added mgmt commands to handle dev reset and 
-+			      aborts. Not sure if aborts works. Also corrected
-+			      the version info and renamed readme to README.
-+
-+V0.6 7-Oct-2008 (Santa Clara) Removed some redundant code and made some
-+			      changes suggested by Vladislav.
-+
-+V0.7 11-Oct-2008 (Santa Clara) Moved into the scst tree. Cleaned up some
-+			       unused functions, used TRACE macros etc.
-+
-+V0.9 30-Nov-2008 (Mtn View) Cleaned up an additional problem with symbols not
-+			    being defined in older version of the kernel. Also
-+			    fixed some English and cleaned up this doc.
+The patch is too big to be submitted inline. You can find it in 
+http://scst.sourceforge.net/patches/iscsi-scst.diff
+
 
 
