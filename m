@@ -1,63 +1,85 @@
-From: Krishna Gudipati <gudipati@usc.edu>
-Subject: Creating a subdirectory under fc_host statistics using
- fc_function_template
-Date: Wed, 10 Dec 2008 11:39:33 -0800
-Message-ID: <ddedcbc75baf.493faa75@usc.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7BIT
+From: michaelc@cs.wisc.edu
+Subject: [PATCH] qla4xxx: log into all portals
+Date: Wed, 10 Dec 2008 14:19:51 -0600
+Message-ID: <1228940391-22890-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from msg-scanner2.usc.edu ([128.125.137.211]:51334 "EHLO
-	msg-scanner2.usc.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754621AbYLJTjf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Dec 2008 14:39:35 -0500
-Received: from msg-store3.usc.edu ([128.125.137.14])
- by msg-scanner0.usc.edu (Sun Java System Messaging Server 6.2-3.04 (built Jul
- 15 2005)) with ESMTP id <0KBO00HCEELYF150@msg-scanner0.usc.edu> for
- linux-scsi@vger.kernel.org; Wed, 10 Dec 2008 11:39:34 -0800 (PST)
-Received: from usc.edu (localhost [127.0.0.1])
- by msg-store3.usc.edu (Sun Java System Messaging Server 6.2-7.05 (built Sep  5
- 2006)) with ESMTP id <0KBO00HWQELX1B50@msg-store3.usc.edu> for
- linux-scsi@vger.kernel.org; Wed, 10 Dec 2008 11:39:34 -0800 (PST)
-Content-language: en
-Content-disposition: inline
+Received: from mx2.redhat.com ([66.187.237.31]:55651 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753218AbYLJUTz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Dec 2008 15:19:55 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-Hello Everyone,
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-I have a small question on how to create a sub-directory to store my driver specific data under fc_host statistics.
+This patch was made over scsi-misc and is for
+2.6.29.
 
-Currently i am using the fc_function_template's  .get_fc_host_stats to export all my fc_host statistics. 
+qla4xxx does not check the I_T nexus values correctly
+so it ends up creating one session to the target. If
+a portal should disappear or they should be reported
+in different order the driver will think it is already
+logged in when it could now be speaking to a different
+target portal or accessing it through a different
+initiatir port (iscsi initiator port is not tied to
+hardware and is just the initiator name plus isid
+so you could end up with multiple ports through one
+host).
 
-But now i need a way to create a directory under the /sys/class/fc_host/statistics 
+This patch has the driver check the iscsi scsi port
+values when matching sessions (we do not check
+the initiator name because that is static). It results
+in all portals getting logged into, so you can also
+now do multipath with the driver.
 
-lets say /sys/class/fc_host/statistics/hba/ns_stats to store all the specific information regarding name_server or 
-this type of information for different stats we want to collect. Basically we are thinking of having a hierarchy 
-under the fc_host/statistics folder so that we can display our driver specific information in a much cleaner fashion.
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/scsi/qla4xxx/ql4_def.h  |    1 +
+ drivers/scsi/qla4xxx/ql4_init.c |   10 ++++++++--
+ 2 files changed, 9 insertions(+), 2 deletions(-)
 
-I researched looking at the current "struct fc_function_template" under scsi_transport_fc.c but did not find a way where i can specify 
-that i need to create a folder under this statistics folder. I am not aware as of now if this feature of creating a hierarchy of directories for fc_host stats is in development.  
+diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+index d6be076..b586f27 100644
+--- a/drivers/scsi/qla4xxx/ql4_def.h
++++ b/drivers/scsi/qla4xxx/ql4_def.h
+@@ -244,6 +244,7 @@ struct ddb_entry {
+ 	uint8_t ip_addr[ISCSI_IPADDR_SIZE];
+ 	uint8_t iscsi_name[ISCSI_NAME_SIZE];	/* 72 x48 */
+ 	uint8_t iscsi_alias[0x20];
++	uint8_t isid[6];
+ };
+ 
+ /*
+diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
+index 109c5f5..af8c323 100644
+--- a/drivers/scsi/qla4xxx/ql4_init.c
++++ b/drivers/scsi/qla4xxx/ql4_init.c
+@@ -342,8 +342,12 @@ static struct ddb_entry* qla4xxx_get_ddb_entry(struct scsi_qla_host *ha,
+ 	DEBUG2(printk("scsi%ld: %s: Looking for ddb[%d]\n", ha->host_no,
+ 		      __func__, fw_ddb_index));
+ 	list_for_each_entry(ddb_entry, &ha->ddb_list, list) {
+-		if (memcmp(ddb_entry->iscsi_name, fw_ddb_entry->iscsi_name,
+-			   ISCSI_NAME_SIZE) == 0) {
++		if ((memcmp(ddb_entry->iscsi_name, fw_ddb_entry->iscsi_name,
++			   ISCSI_NAME_SIZE) == 0) &&
++			(ddb_entry->tpgt ==
++				le32_to_cpu(fw_ddb_entry->tgt_portal_grp)) &&
++			(memcmp(ddb_entry->isid, fw_ddb_entry->isid,
++				sizeof(ddb_entry->isid)) == 0)) {
+ 			found++;
+ 			break;
+ 		}
+@@ -430,6 +434,8 @@ static int qla4xxx_update_ddb_entry(struct scsi_qla_host *ha,
+ 
+ 	ddb_entry->port = le16_to_cpu(fw_ddb_entry->port);
+ 	ddb_entry->tpgt = le32_to_cpu(fw_ddb_entry->tgt_portal_grp);
++	memcpy(ddb_entry->isid, fw_ddb_entry->isid, sizeof(ddb_entry->isid));
++
+ 	memcpy(&ddb_entry->iscsi_name[0], &fw_ddb_entry->iscsi_name[0],
+ 	       min(sizeof(ddb_entry->iscsi_name),
+ 		   sizeof(fw_ddb_entry->iscsi_name)));
+-- 
+1.5.6.5
 
-But we think that having our driver specific information under a subdirectory would make things look nicer. 
-
-Can any of you linux guru's help me understand if this feature is currently in development? 
-or 
-is there any good way to tweak in and create a new subdirectory under the fc_host stats using the current fc_function_template? 
-
-If this feature is not currently present or in dev can we add some code to the scsi_transport_fc.c to support this feature? 
-
-Because we have a lot of driver specific information and we don't want to dump everything under the stats which can make things look a little messy. So we are planning to have a hierarchy so that we can sort out these properly.
-
-Any help in this regard is really appreciated.
-
-thanks in advance,
-
-
-with regards,
-
-KRISHNA CHAITANYA GUDIPATI
-MS CS(COMPUTER NETWORKS)
-UNIVERSITY OF SOUTHERN CALIFORNIA 
