@@ -1,52 +1,47 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] qla4xxx: log into all portals
-Date: Wed, 10 Dec 2008 14:28:12 -0600
-Message-ID: <4940265C.8010703@cs.wisc.edu>
-References: <1228940391-22890-1-git-send-email-michaelc@cs.wisc.edu>
+From: "Dmitri Vorobiev" <dmitri.vorobiev@gmail.com>
+Subject: cache `scsi_sense_cache': double free detected
+Date: Wed, 10 Dec 2008 22:41:10 +0200
+Message-ID: <90edad820812101241k50b95448hb5b3d753edf95b9e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:60450 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756786AbYLJU2T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Dec 2008 15:28:19 -0500
-Received: from [20.15.0.4] (c-75-73-66-60.hsd1.mn.comcast.net [75.73.66.60])
-	(authenticated bits=0)
-	by sabe.cs.wisc.edu (8.14.1/8.14.1) with ESMTP id mBAKSH4K002002
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2008 14:28:18 -0600
-In-Reply-To: <1228940391-22890-1-git-send-email-michaelc@cs.wisc.edu>
+Received: from yx-out-2324.google.com ([74.125.44.30]:47608 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754849AbYLJUlL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Dec 2008 15:41:11 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so334807yxm.1
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2008 12:41:10 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-michaelc@cs.wisc.edu wrote:
-> From: Mike Christie <michaelc@cs.wisc.edu>
-> 
-> This patch was made over scsi-misc and is for
-> 2.6.29.
-> 
-> qla4xxx does not check the I_T nexus values correctly
-> so it ends up creating one session to the target. If
-> a portal should disappear or they should be reported
-> in different order the driver will think it is already
-> logged in when it could now be speaking to a different
-> target portal or accessing it through a different
-> initiatir port (iscsi initiator port is not tied to
-> hardware and is just the initiator name plus isid
-> so you could end up with multiple ports through one
-> host).
-> 
-> This patch has the driver check the iscsi scsi port
-> values when matching sessions (we do not check
-> the initiator name because that is static). It results
-> in all portals getting logged into, so you can also
-> now do multipath with the driver.
-> 
-> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
->
+Hi,
 
-Let me take this patch back. It only logs into one portal per scsi 
-target port so if you have multiple portals in one portal group we only 
-log into one. I will resend a different patch later.
+wd33c93-0: chip=WD33c93B/13 no_sync=0x0 no_dma=0 debug_flags=0x00
+           setup_args=,,,,,,,,,,
+           Version 1.26++ - 10/Feb/2007, Compiled Dec 10 2008 at 22:08:31
+scsi0 : SGI WD93
+ sending SDTR 010301190c 010301190c sync_xfer=ac
+scsi 0:0:4:0: Direct-Access     IBM      DNES-309170      SA30 PQ: 0 ANSI: 3
+slab error in verify_redzone_free(): cache `scsi_sense_cache': double
+free detected
+Call Trace:
+[<ffffffff8800a228>] dump_stack+0x8/0x38
+[<ffffffff8809a218>] cache_free_debugcheck+0x2d0/0x300
+[<ffffffff8809a7f0>] kmem_cache_free+0x58/0x130
+[<ffffffff88192680>] scsi_pool_free_command+0x38/0x58
+[<ffffffff88192750>] __scsi_put_command+0xb0/0xf8
+[<ffffffff88199514>] scsi_next_command+0x34/0x58
+[<ffffffff8819988c>] scsi_end_request+0xcc/0x108
+[<ffffffff88199f34>] scsi_io_completion+0xe4/0x470
+[<ffffffff881960b8>] scsi_eh_flush_done_q+0xb0/0x100
+[<ffffffff8819750c>] scsi_error_handler+0x424/0x488
+[<ffffffff8804e018>] kthread+0x58/0xa8
+[<ffffffff8800fb68>] kernel_thread_helper+0x10/0x18
+
+ffffffff8fa3f740: redzone 1:0x9f911029d74e35b, redzone 2:0x9f911029d74e35b.
+
+BR,
+Dmitri
