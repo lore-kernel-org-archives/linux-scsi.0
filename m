@@ -1,46 +1,47 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: [PATCH] qla2xxx: Fix for incorrect unconditionally interrupts enabling
- on IRQ context
-Date: Wed, 10 Dec 2008 19:22:37 +0300
-Message-ID: <493FECCD.6060904@vlnb.net>
+From: Grant Grundler <grundler@google.com>
+Subject: Re: libata / scsi separation
+Date: Wed, 10 Dec 2008 09:11:34 -0800
+Message-ID: <da824cf30812100911o1f7f23bbi3277dfa3932f8964@mail.gmail.com>
+References: <493B022B.3050406@ru.mvista.com>
+	 <1228662298.3501.19.camel@localhost.localdomain>
+	 <20081209222113.GU25548@parisc-linux.org> <493F2151.6010702@gmail.com>
+	 <da824cf30812091829g180b3e45i843e356364bc2f9f@mail.gmail.com>
+	 <493F2DA9.7040008@gmail.com>
+	 <da824cf30812091923j241f915dmbcb27245c0d0491b@mail.gmail.com>
+	 <493F3B33.8010607@gmail.com> <20081210152445.GW25548@parisc-linux.org>
+	 <493FE15C.4060907@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-relay-04.mailcluster.net ([77.221.130.216]:53002 "EHLO
-	mail-relay-02.mailcluster.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754278AbYLJQWc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Dec 2008 11:22:32 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <493FE15C.4060907@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-driver@qlogic.com
-Cc: linux-scsi@vger.kernel.org
 
-A rather trivial patch. Function qla2x00_schedule_rport_del() can be called on IRQ
-context, so it can't unconditionally enable interrupts. Spotted by lockdep.
+On Wed, Dec 10, 2008 at 7:33 AM, Tejun Heo <htejun@gmail.com> wrote:
+...
+> And yeap we definitely should try to do that too but I don't think
+> RW_SG would be as useless as jumbo frames (much less compatibility
+> problem and no loss of functionality),
 
-This patch is against 2.6.27.2, but applies also on 2.6.28-rc7.
+Jumbo frames aren't useless. They just don't apply to the "small message
+passing overhead" problem. Users doing bulk data transfer (NAS, FTP, etc)
+are pretty happy with TCP Segmentation Offloading (cousin of Jumbo Frames).
 
-Signed-off-by: Vladislav Bolkhovitin <vst@vlnb.net>
-	
- qla_os.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+> and the actual hardware
+> overhead of issuing separate commands for each 4k segment is way
+> higher than anything we do along the block and low level driver layers
+> in terms of IO access, host bus and ATA (or SAS) bus overhead.
 
-diff -upr linux-2.6.27.2/drivers/scsi/qla2xxx/qla_os.c linux-2.6.27.2/drivers/scsi/qla2xxx/qla_os.c
---- linux-2.6.27.2/drivers/scsi/qla2xxx/qla_os.c	2008-10-21 13:57:15.000000000 +0400
-+++ linux-2.6.27.2/drivers/scsi/qla2xxx/qla_os.c	2008-12-05 11:14:21.000000000 +0300
-@@ -1862,9 +1885,10 @@ qla2x00_schedule_rport_del(struct scsi_q
- 
- 	rport = fcport->rport;
- 	if (defer) {
--		spin_lock_irq(ha->host->host_lock);
-+		unsigned long flags;
-+		spin_lock_irqsave(ha->host->host_lock, flags);
- 		fcport->drport = rport;
--		spin_unlock_irq(ha->host->host_lock);
-+		spin_unlock_irqrestore(ha->host->host_lock, flags);
- 		set_bit(FCPORT_UPDATE_NEEDED, &pha->dpc_flags);
- 		qla2xxx_wake_dpc(pha);
- 	} else
+That's true and it was also true gigabit NICs in the 90's. NIC HW vendors
+have figured out host to avoid doing MMIO reads/writes during normal IO.
+Infiniband has an even more efficient interface that's mostly Host RAM based
+(a few MMIO writes). Last time I measured (~2006), TCP stack was 4x the
+CPU cost of the HW interface. I don't know what the current ratio is for
+any given SATA controller vs libata/SCSI stack, but I'm certain it will
+change as new controllers are introduced.
 
+hth,
+grant
