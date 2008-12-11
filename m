@@ -1,83 +1,412 @@
-From: "Chris Leech" <christopher.leech@intel.com>
-Subject: Re: [PATCH 2/3] libfc: A modular Fibre Channel library
-Date: Wed, 10 Dec 2008 16:49:53 -0800
-Message-ID: <41b516cb0812101649w128cf6a8rd35169f55679ab5b@mail.gmail.com>
-References: <20081209231005.17830.92133.stgit@fritz>
-	 <20081209231016.17830.87180.stgit@fritz>
-	 <20081210000333.GC23556@one.firstfloor.org>
-Reply-To: chris.leech@gmail.com
+From: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
+Subject: mpt fusion device warning 5 times
+Date: Thu, 11 Dec 2008 10:15:43 +0900 (JST)
+Message-ID: <20081211094533.4FEB.KOSAKI.MOTOHIRO@jp.fujitsu.com>
+References: <20081210164659.9ebb8158.sfr@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:29561 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754849AbYLKAty (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Dec 2008 19:49:54 -0500
-Received: by wf-out-1314.google.com with SMTP id 27so449241wfd.4
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2008 16:49:53 -0800 (PST)
-In-Reply-To: <20081210000333.GC23556@one.firstfloor.org>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <20081210164659.9ebb8158.sfr@canb.auug.org.au>
+Sender: linux-next-owner@vger.kernel.org
+To: Eric.Moore@lsi.com, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org
+Cc: kosaki.motohiro@jp.fujitsu.com, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Stephen Rothwell <sfr@canb.auug.org.au>
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: Robert Love <robert.w.love@intel.com>, james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, jgarzik@redhat.com, davem@davemloft.net, james.smart@emulex.com, michaelc@cs.wisc.edu, jeykholt@cisco.com, jeffrey.t.kirsher@intel.com
 
-On Tue, Dec 9, 2008 at 4:03 PM, Andi Kleen <andi@firstfloor.org> wrote:
+Hi Eric,
 
-> Is the put_page() here really correct? The original reference in the skb
-> will be still around, won't it?
+> Hi all,
+> 
+> Changes since 20081209:
+> 
+> Undropped tree:
+> 	mmc
+> 
+> Dropped trees (temporarily):
+> 	v4l-dvb (build problem)
+> 	sound (build problem)
+> 	drm (build problem)
+> 	semaphore-removal (due to unfixed conflicts against Linus' tree)
+> 	cpu_alloc (build problem)
+> 	perfmon3 (concerns from the x86 team)
+> 	audit (difficult conflicts)
+> 	staging (build failure)
+> 
+> The mtd tree transferred its conflict to the driver-core tree (by being
+> merged into Linus' tree).
+> 
+> The sound tree gained a build failure and was dropped.
 
-But you didn't quote the part with the alloc_page call.  Here's the
-whole function.
+my ia64 box output following warnings.
 
-> static int fcoe_get_paged_crc_eof(struct sk_buff *skb, int tlen)
-> {
-> 	struct fcoe_percpu_s *fps;
-> 	struct page *page;
-> 	int cpu_idx;
->
-> 	cpu_idx = get_cpu();
-> 	fps = fcoe_percpu[cpu_idx];
-> 	page = fps->crc_eof_page;
-> 	if (!page) {
-> 		page = alloc_page(GFP_ATOMIC);
-> 		if (!page) {
-> 			put_cpu();
-> 			return -ENOMEM;
-> 		}
-> 		fps->crc_eof_page = page;
-> 		WARN_ON(fps->crc_eof_offset != 0);
-> 	}
->
-> 	get_page(page);
-> 	skb_fill_page_desc(skb, skb_shinfo(skb)->nr_frags, page,
-> 			   fps->crc_eof_offset, tlen);
-> 	skb->len += tlen;
-> 	skb->data_len += tlen;
-> 	skb->truesize += tlen;
-> 	fps->crc_eof_offset += sizeof(struct fcoe_crc_eof);
->
-> 	if (fps->crc_eof_offset >= PAGE_SIZE) {
-> 		fps->crc_eof_page = NULL;
-> 		fps->crc_eof_offset = 0;
-> 		put_page(page);
-> 	}
-> 	put_cpu();
-> 	return 0;
-> }
+The init_timer() expect timer object stay in heap, but the timer of mpt stay in stack.
+Is this a real bug?
 
-FCoE needs to attach an 8 byte trailer to all FC frames created by
-libfc before transmitting.  If the skb is non-linear, say a SCSI write
-data frame, the only way to do that is to attach a fragment page to
-the skb.
 
-In order to avoid repeated calls to alloc_page when only 8 bytes are
-needed, the fcoe module keeps a reference to the page using it
-repeatedly until it reaches the end.  Then then call to put_page
-happens, and a new page is allocated on the next transmit.  At this
-point the page may still have references from any skbs that are still
-outstanding (get_page before skb_fill_page_desc).  With 4k pages 512
-fragmented frames can be sent before calling alloc_page again.
+====================================================
+ODEBUG: object is on stack, but not annotated
+------------[ cut here ]------------
+WARNING: at lib/debugobjects.c:253 __debug_object_init+0x420/0x840()
+Modules linked in: mptspi(+) mptscsih mptbase ehci_hcd ohci_hcd uhci_hcd usbcore
 
-- Chris
+Call Trace:
+ [<a000000100017940>] show_stack+0x80/0xa0
+                                sp=e0000040c30af760 bsp=e0000040c30a1450
+ [<a000000100017990>] dump_stack+0x30/0x60
+                                sp=e0000040c30af930 bsp=e0000040c30a1438
+ [<a0000001000a96e0>] warn_slowpath+0x140/0x1a0
+                                sp=e0000040c30af930 bsp=e0000040c30a13c8
+ [<a0000001003682a0>] __debug_object_init+0x420/0x840
+                                sp=e0000040c30afa60 bsp=e0000040c30a1370
+ [<a000000100368790>] debug_object_init+0x50/0x80
+                                sp=e0000040c30afa70 bsp=e0000040c30a1348
+ [<a0000001000c3430>] init_timer+0x30/0x60
+                                sp=e0000040c30afa70 bsp=e0000040c30a1328
+ [<a000000201a4aa30>] mpt_config+0x390/0x6a0 [mptbase]
+                                sp=e0000040c30afa70 bsp=e0000040c30a12c8
+ [<a000000201a4d7d0>] mpt_do_ioc_recovery+0x1710/0x2ee0 [mptbase]
+                                sp=e0000040c30afaa0 bsp=e0000040c30a11f0
+ [<a000000201a52230>] mpt_attach+0x890/0x1f40 [mptbase]
+                                sp=e0000040c30afd70 bsp=e0000040c30a1178
+ [<a000000201b92650>] mptspi_probe+0x30/0x7e0 [mptspi]
+                                sp=e0000040c30afd80 bsp=e0000040c30a1128
+ [<a00000010037a770>] local_pci_probe+0x70/0xa0
+                                sp=e0000040c30afd80 bsp=e0000040c30a1108
+ [<a00000010037b110>] pci_device_probe+0x310/0x360
+                                sp=e0000040c30afd80 bsp=e0000040c30a10d0
+ [<a00000010046d370>] driver_probe_device+0x190/0x3a0
+                                sp=e0000040c30afde0 bsp=e0000040c30a1088
+ [<a00000010046d660>] __driver_attach+0xe0/0x140
+                                sp=e0000040c30afde0 bsp=e0000040c30a1050
+ [<a00000010046b900>] bus_for_each_dev+0xc0/0x140
+                                sp=e0000040c30afde0 bsp=e0000040c30a1018
+ [<a00000010046cf80>] driver_attach+0x40/0x60
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0ff0
+ [<a00000010046c930>] bus_add_driver+0x370/0x4a0
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0fa8
+ [<a00000010046dad0>] driver_register+0xd0/0x340
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0f60
+ [<a00000010037b640>] __pci_register_driver+0xa0/0x120
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0f28
+ [<a000000201bd01b0>] mptspi_init+0x1b0/0x300 [mptspi]
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0ef8
+ [<a00000010000a920>] do_one_initcall+0x60/0x360
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0eb8
+ [<a000000100107460>] sys_init_module+0x140/0x3c0
+                                sp=e0000040c30afe30 bsp=e0000040c30a0e48
+ [<a00000010000c6c0>] ia64_ret_from_syscall+0x0/0x20
+                                sp=e0000040c30afe30 bsp=e0000040c30a0e48
+ [<a000000000010720>] __kernel_syscall_via_break+0x0/0x20
+                                sp=e0000040c30b0000 bsp=e0000040c30a0e48
+---[ end trace aef9c69889c77119 ]---
+ODEBUG: object is on stack, but not annotated
+------------[ cut here ]------------
+WARNING: at lib/debugobjects.c:253 __debug_object_init+0x420/0x840()
+Modules linked in: mptspi(+) mptscsih mptbase ehci_hcd ohci_hcd uhci_hcd usbcore
+
+Call Trace:
+ [<a000000100017940>] show_stack+0x80/0xa0
+                                sp=e0000040c30af760 bsp=e0000040c30a1450
+ [<a000000100017990>] dump_stack+0x30/0x60
+                                sp=e0000040c30af930 bsp=e0000040c30a1438
+ [<a0000001000a96e0>] warn_slowpath+0x140/0x1a0
+                                sp=e0000040c30af930 bsp=e0000040c30a13c8
+ [<a0000001003682a0>] __debug_object_init+0x420/0x840
+                                sp=e0000040c30afa60 bsp=e0000040c30a1370
+ [<a000000100368790>] debug_object_init+0x50/0x80
+                                sp=e0000040c30afa70 bsp=e0000040c30a1348
+ [<a0000001000c3430>] init_timer+0x30/0x60
+                                sp=e0000040c30afa70 bsp=e0000040c30a1328
+ [<a000000201a4aa30>] mpt_config+0x390/0x6a0 [mptbase]
+                                sp=e0000040c30afa70 bsp=e0000040c30a12c8
+ [<a000000201a4dcf0>] mpt_do_ioc_recovery+0x1c30/0x2ee0 [mptbase]
+                                sp=e0000040c30afaa0 bsp=e0000040c30a11f0
+ [<a000000201a52230>] mpt_attach+0x890/0x1f40 [mptbase]
+                                sp=e0000040c30afd70 bsp=e0000040c30a1178
+ [<a000000201b92650>] mptspi_probe+0x30/0x7e0 [mptspi]
+                                sp=e0000040c30afd80 bsp=e0000040c30a1128
+ [<a00000010037a770>] local_pci_probe+0x70/0xa0
+                                sp=e0000040c30afd80 bsp=e0000040c30a1108
+ [<a00000010037b110>] pci_device_probe+0x310/0x360
+                                sp=e0000040c30afd80 bsp=e0000040c30a10d0
+ [<a00000010046d370>] driver_probe_device+0x190/0x3a0
+                                sp=e0000040c30afde0 bsp=e0000040c30a1088
+ [<a00000010046d660>] __driver_attach+0xe0/0x140
+                                sp=e0000040c30afde0 bsp=e0000040c30a1050
+ [<a00000010046b900>] bus_for_each_dev+0xc0/0x140
+                                sp=e0000040c30afde0 bsp=e0000040c30a1018
+ [<a00000010046cf80>] driver_attach+0x40/0x60
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0ff0
+ [<a00000010046c930>] bus_add_driver+0x370/0x4a0
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0fa8
+ [<a00000010046dad0>] driver_register+0xd0/0x340
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0f60
+ [<a00000010037b640>] __pci_register_driver+0xa0/0x120
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0f28
+ [<a000000201bd01b0>] mptspi_init+0x1b0/0x300 [mptspi]
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0ef8
+ [<a00000010000a920>] do_one_initcall+0x60/0x360
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0eb8
+ [<a000000100107460>] sys_init_module+0x140/0x3c0
+                                sp=e0000040c30afe30 bsp=e0000040c30a0e48
+ [<a00000010000c6c0>] ia64_ret_from_syscall+0x0/0x20
+                                sp=e0000040c30afe30 bsp=e0000040c30a0e48
+ [<a000000000010720>] __kernel_syscall_via_break+0x0/0x20
+                                sp=e0000040c30b0000 bsp=e0000040c30a0e48
+---[ end trace aef9c69889c77119 ]---
+ODEBUG: object is on stack, but not annotated
+------------[ cut here ]------------
+WARNING: at lib/debugobjects.c:253 __debug_object_init+0x420/0x840()
+Modules linked in: mptspi(+) mptscsih mptbase ehci_hcd ohci_hcd uhci_hcd usbcore
+
+Call Trace:
+ [<a000000100017940>] show_stack+0x80/0xa0
+                                sp=e0000040c30af760 bsp=e0000040c30a1450
+ [<a000000100017990>] dump_stack+0x30/0x60
+                                sp=e0000040c30af930 bsp=e0000040c30a1438
+ [<a0000001000a96e0>] warn_slowpath+0x140/0x1a0
+                                sp=e0000040c30af930 bsp=e0000040c30a13c8
+ [<a0000001003682a0>] __debug_object_init+0x420/0x840
+                                sp=e0000040c30afa60 bsp=e0000040c30a1370
+ [<a000000100368790>] debug_object_init+0x50/0x80
+                                sp=e0000040c30afa70 bsp=e0000040c30a1348
+ [<a0000001000c3430>] init_timer+0x30/0x60
+                                sp=e0000040c30afa70 bsp=e0000040c30a1328
+ [<a000000201a4aa30>] mpt_config+0x390/0x6a0 [mptbase]
+                                sp=e0000040c30afa70 bsp=e0000040c30a12c8
+ [<a000000201a4e440>] mpt_do_ioc_recovery+0x2380/0x2ee0 [mptbase]
+                                sp=e0000040c30afaa0 bsp=e0000040c30a11f0
+ [<a000000201a52230>] mpt_attach+0x890/0x1f40 [mptbase]
+                                sp=e0000040c30afd70 bsp=e0000040c30a1178
+ [<a000000201b92650>] mptspi_probe+0x30/0x7e0 [mptspi]
+                                sp=e0000040c30afd80 bsp=e0000040c30a1128
+ [<a00000010037a770>] local_pci_probe+0x70/0xa0
+                                sp=e0000040c30afd80 bsp=e0000040c30a1108
+ [<a00000010037b110>] pci_device_probe+0x310/0x360
+                                sp=e0000040c30afd80 bsp=e0000040c30a10d0
+ [<a00000010046d370>] driver_probe_device+0x190/0x3a0
+                                sp=e0000040c30afde0 bsp=e0000040c30a1088
+ [<a00000010046d660>] __driver_attach+0xe0/0x140
+                                sp=e0000040c30afde0 bsp=e0000040c30a1050
+ [<a00000010046b900>] bus_for_each_dev+0xc0/0x140
+                                sp=e0000040c30afde0 bsp=e0000040c30a1018
+ [<a00000010046cf80>] driver_attach+0x40/0x60
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0ff0
+ [<a00000010046c930>] bus_add_driver+0x370/0x4a0
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0fa8
+ [<a00000010046dad0>] driver_register+0xd0/0x340
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0f60
+ [<a00000010037b640>] __pci_register_driver+0xa0/0x120
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0f28
+ [<a000000201bd01b0>] mptspi_init+0x1b0/0x300 [mptspi]
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0ef8
+ [<a00000010000a920>] do_one_initcall+0x60/0x360
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0eb8
+ [<a000000100107460>] sys_init_module+0x140/0x3c0
+                                sp=e0000040c30afe30 bsp=e0000040c30a0e48
+ [<a00000010000c6c0>] ia64_ret_from_syscall+0x0/0x20
+                                sp=e0000040c30afe30 bsp=e0000040c30a0e48
+ [<a000000000010720>] __kernel_syscall_via_break+0x0/0x20
+                                sp=e0000040c30b0000 bsp=e0000040c30a0e48
+---[ end trace aef9c69889c77119 ]---
+ODEBUG: object is on stack, but not annotated
+------------[ cut here ]------------
+WARNING: at lib/debugobjects.c:253 __debug_object_init+0x420/0x840()
+Modules linked in: mptspi(+) mptscsih mptbase ehci_hcd ohci_hcd uhci_hcd usbcore
+
+Call Trace:
+ [<a000000100017940>] show_stack+0x80/0xa0
+                                sp=e0000040c30af760 bsp=e0000040c30a1450
+ [<a000000100017990>] dump_stack+0x30/0x60
+                                sp=e0000040c30af930 bsp=e0000040c30a1438
+ [<a0000001000a96e0>] warn_slowpath+0x140/0x1a0
+                                sp=e0000040c30af930 bsp=e0000040c30a13c8
+ [<a0000001003682a0>] __debug_object_init+0x420/0x840
+                                sp=e0000040c30afa60 bsp=e0000040c30a1370
+ [<a000000100368790>] debug_object_init+0x50/0x80
+                                sp=e0000040c30afa70 bsp=e0000040c30a1348
+ [<a0000001000c3430>] init_timer+0x30/0x60
+                                sp=e0000040c30afa70 bsp=e0000040c30a1328
+ [<a000000201a4aa30>] mpt_config+0x390/0x6a0 [mptbase]
+                                sp=e0000040c30afa70 bsp=e0000040c30a12c8
+ [<a000000201a4dfb0>] mpt_do_ioc_recovery+0x1ef0/0x2ee0 [mptbase]
+                                sp=e0000040c30afaa0 bsp=e0000040c30a11f0
+ [<a000000201a52230>] mpt_attach+0x890/0x1f40 [mptbase]
+                                sp=e0000040c30afd70 bsp=e0000040c30a1178
+ [<a000000201b92650>] mptspi_probe+0x30/0x7e0 [mptspi]
+                                sp=e0000040c30afd80 bsp=e0000040c30a1128
+ [<a00000010037a770>] local_pci_probe+0x70/0xa0
+                                sp=e0000040c30afd80 bsp=e0000040c30a1108
+ [<a00000010037b110>] pci_device_probe+0x310/0x360
+                                sp=e0000040c30afd80 bsp=e0000040c30a10d0
+ [<a00000010046d370>] driver_probe_device+0x190/0x3a0
+                                sp=e0000040c30afde0 bsp=e0000040c30a1088
+ [<a00000010046d660>] __driver_attach+0xe0/0x140
+                                sp=e0000040c30afde0 bsp=e0000040c30a1050
+ [<a00000010046b900>] bus_for_each_dev+0xc0/0x140
+                                sp=e0000040c30afde0 bsp=e0000040c30a1018
+ [<a00000010046cf80>] driver_attach+0x40/0x60
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0ff0
+ [<a00000010046c930>] bus_add_driver+0x370/0x4a0
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0fa8
+ [<a00000010046dad0>] driver_register+0xd0/0x340
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0f60
+ [<a00000010037b640>] __pci_register_driver+0xa0/0x120
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0f28
+ [<a000000201bd01b0>] mptspi_init+0x1b0/0x300 [mptspi]
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0ef8
+ [<a00000010000a920>] do_one_initcall+0x60/0x360
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0eb8
+ [<a000000100107460>] sys_init_module+0x140/0x3c0
+                                sp=e0000040c30afe30 bsp=e0000040c30a0e48
+ [<a00000010000c6c0>] ia64_ret_from_syscall+0x0/0x20
+                                sp=e0000040c30afe30 bsp=e0000040c30a0e48
+ [<a000000000010720>] __kernel_syscall_via_break+0x0/0x20
+                                sp=e0000040c30b0000 bsp=e0000040c30a0e48
+---[ end trace aef9c69889c77119 ]---
+ODEBUG: object is on stack, but not annotated
+------------[ cut here ]------------
+WARNING: at lib/debugobjects.c:253 __debug_object_init+0x420/0x840()
+Modules linked in: mptspi(+) mptscsih mptbase ehci_hcd ohci_hcd uhci_hcd usbcore
+
+Call Trace:
+ [<a000000100017940>] show_stack+0x80/0xa0
+                                sp=e0000040c30af760 bsp=e0000040c30a1450
+ [<a000000100017990>] dump_stack+0x30/0x60
+                                sp=e0000040c30af930 bsp=e0000040c30a1438
+ [<a0000001000a96e0>] warn_slowpath+0x140/0x1a0
+                                sp=e0000040c30af930 bsp=e0000040c30a13c8
+ [<a0000001003682a0>] __debug_object_init+0x420/0x840
+                                sp=e0000040c30afa60 bsp=e0000040c30a1370
+ [<a000000100368790>] debug_object_init+0x50/0x80
+                                sp=e0000040c30afa70 bsp=e0000040c30a1348
+ [<a0000001000c3430>] init_timer+0x30/0x60
+                                sp=e0000040c30afa70 bsp=e0000040c30a1328
+ [<a000000201a4aa30>] mpt_config+0x390/0x6a0 [mptbase]
+                                sp=e0000040c30afa70 bsp=e0000040c30a12c8
+ [<a000000201a4cfb0>] mpt_do_ioc_recovery+0xef0/0x2ee0 [mptbase]
+                                sp=e0000040c30afaa0 bsp=e0000040c30a11f0
+ [<a000000201a52230>] mpt_attach+0x890/0x1f40 [mptbase]
+                                sp=e0000040c30afd70 bsp=e0000040c30a1178
+ [<a000000201b92650>] mptspi_probe+0x30/0x7e0 [mptspi]
+                                sp=e0000040c30afd80 bsp=e0000040c30a1128
+ [<a00000010037a770>] local_pci_probe+0x70/0xa0
+                                sp=e0000040c30afd80 bsp=e0000040c30a1108
+ [<a00000010037b110>] pci_device_probe+0x310/0x360
+                                sp=e0000040c30afd80 bsp=e0000040c30a10d0
+ [<a00000010046d370>] driver_probe_device+0x190/0x3a0
+                                sp=e0000040c30afde0 bsp=e0000040c30a1088
+ [<a00000010046d660>] __driver_attach+0xe0/0x140
+                                sp=e0000040c30afde0 bsp=e0000040c30a1050
+ [<a00000010046b900>] bus_for_each_dev+0xc0/0x140
+                                sp=e0000040c30afde0 bsp=e0000040c30a1018
+ [<a00000010046cf80>] driver_attach+0x40/0x60
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0ff0
+ [<a00000010046c930>] bus_add_driver+0x370/0x4a0
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0fa8
+ [<a00000010046dad0>] driver_register+0xd0/0x340
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0f60
+ [<a00000010037b640>] __pci_register_driver+0xa0/0x120
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0f28
+ [<a000000201bd01b0>] mptspi_init+0x1b0/0x300 [mptspi]
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0ef8
+ [<a00000010000a920>] do_one_initcall+0x60/0x360
+                                sp=e0000040c30afdf0 bsp=e0000040c30a0eb8
+ [<a000000100107460>] sys_init_module+0x140/0x3c0
+                                sp=e0000040c30afe30 bsp=e0000040c30a0e48
+ [<a00000010000c6c0>] ia64_ret_from_syscall+0x0/0x20
+                                sp=e0000040c30afe30 bsp=e0000040c30a0e48
+ [<a000000000010720>] __kernel_syscall_via_break+0x0/0x20
+                                sp=e0000040c30b0000 bsp=e0000040c30a0e48
+---[ end trace aef9c69889c77119 ]---
+
+========================================
+
+
+if it is merely wrong annotation problem (I think so), fixing patch is here.
+
+
+=====
+Subject: [PATCH] mpt: timer annotaion fix in mpt_config()
+
+The mpt_config() call to init_timer(), not init_tiemr_on_stack().
+but all caller of the mpt_config() create a timer object on stack.
+
+Then, if CONFIG_DEBUG_OBJECTS=y, kernel output following warning at boot time.
+
+
+	ODEBUG: object is on stack, but not annotated
+	------------[ cut here ]------------
+	WARNING: at lib/debugobjects.c:253 __debug_object_init+0x420/0x840()
+	Modules linked in: mptspi(+) mptscsih mptbase ehci_hcd ohci_hcd uhci_hcd usbcore
+	
+	Call Trace:
+	 [<a000000100017940>] show_stack+0x80/0xa0
+	                                sp=e0000040c30af760 bsp=e0000040c30a1450
+	 [<a000000100017990>] dump_stack+0x30/0x60
+	                                sp=e0000040c30af930 bsp=e0000040c30a1438
+	 [<a0000001000a96e0>] warn_slowpath+0x140/0x1a0
+	                                sp=e0000040c30af930 bsp=e0000040c30a13c8
+	 [<a0000001003682a0>] __debug_object_init+0x420/0x840
+	                                sp=e0000040c30afa60 bsp=e0000040c30a1370
+	 [<a000000100368790>] debug_object_init+0x50/0x80
+	                                sp=e0000040c30afa70 bsp=e0000040c30a1348
+	 [<a0000001000c3430>] init_timer+0x30/0x60
+	                                sp=e0000040c30afa70 bsp=e0000040c30a1328
+	 [<a000000201a4aa30>] mpt_config+0x390/0x6a0 [mptbase]
+	                                sp=e0000040c30afa70 bsp=e0000040c30a12c8
+	 [<a000000201a4cfb0>] mpt_do_ioc_recovery+0xef0/0x2ee0 [mptbase]
+	                                sp=e0000040c30afaa0 bsp=e0000040c30a11f0
+	 [<a000000201a52230>] mpt_attach+0x890/0x1f40 [mptbase]
+	                                sp=e0000040c30afd70 bsp=e0000040c30a1178
+	 [<a000000201b92650>] mptspi_probe+0x30/0x7e0 [mptspi]
+	                                sp=e0000040c30afd80 bsp=e0000040c30a1128
+	 [<a00000010037a770>] local_pci_probe+0x70/0xa0
+	                                sp=e0000040c30afd80 bsp=e0000040c30a1108
+	 [<a00000010037b110>] pci_device_probe+0x310/0x360
+	                                sp=e0000040c30afd80 bsp=e0000040c30a10d0
+	 [<a00000010046d370>] driver_probe_device+0x190/0x3a0
+	                                sp=e0000040c30afde0 bsp=e0000040c30a1088
+	 [<a00000010046d660>] __driver_attach+0xe0/0x140
+	                                sp=e0000040c30afde0 bsp=e0000040c30a1050
+	 [<a00000010046b900>] bus_for_each_dev+0xc0/0x140
+	                                sp=e0000040c30afde0 bsp=e0000040c30a1018
+	 [<a00000010046cf80>] driver_attach+0x40/0x60
+	                                sp=e0000040c30afdf0 bsp=e0000040c30a0ff0
+	 [<a00000010046c930>] bus_add_driver+0x370/0x4a0
+	                                sp=e0000040c30afdf0 bsp=e0000040c30a0fa8
+	 [<a00000010046dad0>] driver_register+0xd0/0x340
+	                                sp=e0000040c30afdf0 bsp=e0000040c30a0f60
+	 [<a00000010037b640>] __pci_register_driver+0xa0/0x120
+	                                sp=e0000040c30afdf0 bsp=e0000040c30a0f28
+	 [<a000000201bd01b0>] mptspi_init+0x1b0/0x300 [mptspi]
+	                                sp=e0000040c30afdf0 bsp=e0000040c30a0ef8
+	 [<a00000010000a920>] do_one_initcall+0x60/0x360
+	                                sp=e0000040c30afdf0 bsp=e0000040c30a0eb8
+	 [<a000000100107460>] sys_init_module+0x140/0x3c0
+	                                sp=e0000040c30afe30 bsp=e0000040c30a0e48
+	 [<a00000010000c6c0>] ia64_ret_from_syscall+0x0/0x20
+	                                sp=e0000040c30afe30 bsp=e0000040c30a0e48
+	 [<a000000000010720>] __kernel_syscall_via_break+0x0/0x20
+	                                sp=e0000040c30b0000 bsp=e0000040c30a0e48
+	---[ end trace aef9c69889c77119 ]---
+
+
+Signed-off-by: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
+---
+ drivers/message/fusion/mptbase.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: b/drivers/message/fusion/mptbase.c
+===================================================================
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -5902,7 +5902,7 @@ mpt_config(MPT_ADAPTER *ioc, CONFIGPARMS
+ 
+ 	/* Initalize the timer
+ 	 */
+-	init_timer(&pCfg->timer);
++	init_timer_on_stack(&pCfg->timer);
+ 	pCfg->timer.data = (unsigned long) ioc;
+ 	pCfg->timer.function = mpt_timer_expired;
+ 	pCfg->wait_done = 0;
