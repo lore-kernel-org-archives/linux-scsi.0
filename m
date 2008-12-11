@@ -1,157 +1,105 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [Announce]: Target_Core_Mod/ConfigFS and LIO-Target v3.0 work
-Date: Thu, 11 Dec 2008 11:58:33 -0800
-Message-ID: <1229025513.4153.542.camel@haakon2.linux-iscsi.org>
-References: <1228965271.4153.510.camel@haakon2.linux-iscsi.org>
-	 <e2e108260812111124j79793adcie106ac2da4f801f3@mail.gmail.com>
+Subject: Re: [PATCH][RFC 5/23]: SCST /proc interface
+Date: Thu, 11 Dec 2008 12:23:07 -0800
+Message-ID: <1229026987.4153.555.camel@haakon2.linux-iscsi.org>
+References: <494009D7.4020602@vlnb.net>  <49400C81.3010801@vlnb.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp128.sbc.mail.sp1.yahoo.com ([69.147.65.187]:27361 "HELO
-	smtp128.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756227AbYLKT6h (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Dec 2008 14:58:37 -0500
-In-Reply-To: <e2e108260812111124j79793adcie106ac2da4f801f3@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757378AbYLKUX1@vger.kernel.org>
+In-Reply-To: <49400C81.3010801@vlnb.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Boaz Harrosh <bharrosh@panasas.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, Joel Becker <joel.becker@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@gmail.com>
-Cc: linux-iscsi-target-dev@googlegroups.com, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@hansenpartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Jens Axboe <jens.axboe@oracle.com>
 
-On Thu, 2008-12-11 at 20:24 +0100, Bart Van Assche wrote:
-> On Thu, Dec 11, 2008 at 4:14 AM, Nicholas A. Bellinger
-> <nab@linux-iscsi.org> wrote:
-> > Things are moving quickly for Target_Core_Mod/ConfigFS and LIO-Target
-> > v3.0 development, and I invite folks to have a look at the code.  To
-> > dive into the rest of the v3.0 code via git-web, check out:
-> >
-> > http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=tree;f=drivers/lio-core
+On Wed, 2008-12-10 at 21:37 +0300, Vladislav Bolkhovitin wrote:
+> This patch contains SCST the /proc interface.
 > 
-> I didn't have a look at the LIO code, but I ran it through checkpatch.
-> The result summary is as follows:
+> A description of this interface can be found in the patch with the
+> SCST core documentation.
 > 
+> Since a procfs-based configuration interface is unacceptable for new 
+> kernel modules, in the next review iteration SCST's configuration 
+> interface will be replaced by a sysfs-based configuration interface. 
+> This patch is not intended to be included in the Linux kernel, but is 
+> posted here, because as of today this configuration interface is 
+> necessary when using SCST.
+> 
+> Unfortunately, configfs is not (yet) suited for configuring SCST. This 
+> is, because configfs is user space driven, so kernel can't create 
+> subdirectories on it, and all files on configfs are limited to 4K in 
+> size. It makes impossible for kernel to show, e.g., a list of connected 
+> initiators. Hence, with configfs it is necessary to have one more 
+> interface to show such data, e.g. sysfs-based. 
 
-Hi Bart,
+Btw, please stop spreading FUD about ConfigFS.  ConfigFS works great for
+Target_Core_Mod and LIO-Target v3.0, and is what I have found as the
+*BEST* foundation for generic target mod moving forward.  This is not
+based on a hypothetical discussion or on a long term TODO list, this has
+been determined from actually writing the code, which is located at:
 
-Thanks for the note, but checkpatch output on the entire tree (not just
-the patchs I posted) does not really help the discussion.  Obviously
-this is on my list before submission for Target_Core_Mod/ConfigFS for
-v2.6.29.  However, what would be nice if you actually sent a kernel
-patch for these issues.
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=blob;f=drivers/lio-core/target_core_configfs.c
+
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=blob;f=drivers/lio-core/iscsi_target_configfs.c
+
+So please, just because you don't want to acknowledge ConfigFS in your
+own work, do not act like there is not already thounsands of lines of
+ConfigFS code up and running for the generic target mode and LIO-Target.
 
 --nab
 
-> $ cat lio-checkpatch-output.txt | grep -E '^WARNING|^ERROR' | sort |
-> uniq -c | sort -rn
->    2419 ERROR: return is not a function, parentheses are not required
->    2303 WARNING: line over 80 characters
->    1950 ERROR: trailing whitespace
->    1801 WARNING: space prohibited between function name and open parenthesis '('
->     758 ERROR: code indent should use tabs where possible
->     698 ERROR: do not use assignment in if condition
->     407 WARNING: labels should not be indented
->     386 ERROR: spaces required around that ':' (ctx:VxW)
->     312 ERROR: do not use C99 // comments
->     309 WARNING: externs should be avoided in .c files
->     205 WARNING: printk() should include KERN_ facility level
->     103 WARNING: do not add new typedefs
->      62 ERROR: space required before that '*' (ctx:OxV)
->      58 WARNING: consider using a completion
->      55 WARNING: unnecessary cast may hide bugs, see
-> http://c-faq.com/malloc/mallocnocast.html
->      48 WARNING: consider using strict_strtoul in preference to
-> simple_strtoul
->      41 ERROR: spaces required around that ':' (ctx:VxV)
->      38 WARNING: EXPORT_SYMBOL(foo); should immediately follow its
-> function/variable
->      32 ERROR: Macros with multiple statements should be enclosed in a
-> do - while loop
->      28 ERROR: else should follow close brace '}'
->      27 WARNING: kfree(NULL) is safe this check is probably not
-> required
->      23 WARNING: braces {} are not necessary for any arm of this
-> statement
->      18 ERROR: open brace '{' following struct go on the same line
->      16 ERROR: spaces required around that '?' (ctx:VxW)
->      15 ERROR: space required after that ',' (ctx:VxV)
->      11 ERROR: switch and case should be at the same indent
->       8 WARNING: mutexes are preferred for single holder semaphores
->       8 WARNING: __func__ should be used instead of gcc specific
-> __FUNCTION__
->       8 WARNING: braces {} are not necessary for single statement
-> blocks
->       6 ERROR: spaces required around that '?' (ctx:VxE)
->       6 ERROR: space required before the open parenthesis '('
->       5 WARNING: suspect code indent for conditional statements (15,
-> 23)
->       5 ERROR: Macros with complex values should be enclosed in
-> parenthesis
->       5 ERROR: Don't use kernel_thread(): see
-> Documentation/feature-removal-schedule.txt
->       5 ERROR: do not initialise externals to 0 or NULL
->       4 WARNING: suspect code indent for conditional statements (2, 4)
->       4 ERROR: spaces required around that ':' (ctx:VxE)
->       4 ERROR: space required after that ';' (ctx:VxV)
->       3 WARNING: suspect code indent for conditional statements (8,
-> 17)
->       3 WARNING: suspect code indent for conditional statements (7,
-> 15)
->       3 WARNING: suspect code indent for conditional statements (24,
-> 33)
->       3 WARNING: suspect code indent for conditional statements (0, 0)
->       3 ERROR: trailing statements should be on next line
->       3 ERROR: that open brace { should be on the previous line
->       3 ERROR: spaces required around that '>=' (ctx:WxV)
->       3 ERROR: spaces required around that '&&' (ctx:VxV)
->       3 ERROR: spaces required around that '=' (ctx:VxV)
->       3 ERROR: do not initialise statics to 0 or NULL
->       2 WARNING: Use #include <linux/types.h> instead of <asm/types.h>
->       2 WARNING: suspect code indent for conditional statements (8, 0)
->       2 WARNING: suspect code indent for conditional statements (16,
-> 25)
->       2 WARNING: consider using strict_strtol in preference to
-> simple_strtol
->       2 ERROR: need consistent spacing around '*' (ctx:WxV)
->       1 WARNING: Use #include <linux/byteorder.h> instead of
-> <asm/byteorder.h>
->       1 WARNING: trailing semicolon indicates no statements, indent
-> implies otherwise
->       1 WARNING: suspect code indent for conditional statements (9,
-> 13)
->       1 WARNING: suspect code indent for conditional statements (8,
-> 15)
->       1 WARNING: suspect code indent for conditional statements (6,
-> 15)
->       1 WARNING: suspect code indent for conditional statements (4, 6)
->       1 WARNING: suspect code indent for conditional statements (33,
-> 41)
->       1 WARNING: suspect code indent for conditional statements (32,
-> 41)
->       1 WARNING: suspect code indent for conditional statements (16,
-> 23)
->       1 WARNING: suspect code indent for conditional statements (16,
-> 16)
->       1 WARNING: suspect code indent for conditional statements (0, 4)
->       1 WARNING: consider using strict_strtoull in preference to
-> simple_strtoull
->       1 ERROR: spaces required around that ':' (ctx:WxV)
->       1 ERROR: spaces required around that '=' (ctx:WxV)
->       1 ERROR: spaces required around that '<' (ctx:VxV)
->       1 ERROR: spaces required around that '==' (ctx:VxE)
->       1 ERROR: spaces prohibited around that '->' (ctx:VxW)
->       1 ERROR: space required before that '!' (ctx:VxE)
->       1 ERROR: space prohibited after that '!' (ctx:BxW)
->       1 ERROR: space prohibited after that '-' (ctx:BxW)
->       1 ERROR: open brace '{' following union go on the same line
->       1 ERROR: Missing Signed-off-by: line(s)
->       1 ERROR: "(foo*)" should be "(foo *)"
->       1 ERROR: "foo * bar" should be "foo *bar"
+> It would lead to 2 
+> interfaces in two different places for configuring SCSI targets: 
+> configfs and sysfs based. Definitely, it is better to have only one, 
+> sysfs-based interface, than 2 interfaces. From other side, sysfs in what 
+> SCST needs provides basically the same possibilities as configfs. And 
+> it's widely used in the kernel to configure various its parameters. See, 
+> for instance, bonding devices or IO schedulers.
 > 
-> Bart.
+> The proposed /sys interface would be very similar to the current /proc 
+> layout intact, except cases, where output >PAGE_SIZE is needed. For such 
+> cases each entry, i.e. line, in such files would be presented as a 
+> subdirectory with name the first element in that line and each other 
+> element in it would be presented as a separate file (attribute). For 
+> instance, /proc/scsi_tgt/sessions, which lists connected sessions, would 
+> be converted to:
+> 
+> /sys/scsi_tgt/
+>     /sys/scsi_tgt/sessions/
+>       /sys/scsi_tgt/sessions/session1_name/
+>         /sys/scsi_tgt/sessions/session1_name/target_name
+>         /sys/scsi_tgt/sessions/session1_name/initiator_name
+>         /sys/scsi_tgt/sessions/session1_name/acl -> ../../acls/aclX
+>         /sys/scsi_tgt/sessions/session1_name/commands
+>     /sys/scsi_tgt/sessions/session2_name/
+>         /sys/scsi_tgt/sessions/session2_name/target_name
+>         /sys/scsi_tgt/sessions/session2_name/initiator_name
+>         /sys/scsi_tgt/sessions/session2_name/acl -> ../../acls/aclY
+>         /sys/scsi_tgt/sessions/session2_name/commands
+> .
+> .
+> .
+> 
+> Addition of new, e.g. vdisk devices, would be done via echo'ing commands 
+> to, in this example, /sys/scsi_tgt/vdisk/mgmt file similarly as it's 
+> currently done with /proc/scsi_tgt/vdisk/vdisk (same commands, actually).
+> 
+> Any comments and suggestions will be greatly appreciated.
+> 
+> Signed-off-by: Vladislav Bolkhovitin <vst@vlnb.net>
+> ---
+>   drivers/scst/scst_proc.c | 2196 
+> ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>   1 file changed, 2196 insertions(+)
+> 
+> The patch is too big to be submitted inline. You can find it in 
+> http://scst.sourceforge.net/patches/scst_proc.diff
+> 
+> 
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-
