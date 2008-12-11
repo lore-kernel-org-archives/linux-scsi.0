@@ -1,62 +1,80 @@
-From: Sam Ravnborg <sam@ravnborg.org>
-Subject: Re: [PATCH][RFC 2/23]: SCST core
-Date: Thu, 11 Dec 2008 22:09:17 +0100
-Message-ID: <20081211210917.GB27010@uranus.ravnborg.org>
-References: <494009D7.4020602@vlnb.net> <49400ACD.3070502@vlnb.net> <20081210191213.GA15273@uranus.ravnborg.org> <49414DBE.6070801@vlnb.net>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: 2.6.27 looping on SCSI errors for bad sectors
+Date: Thu, 11 Dec 2008 17:02:04 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0812111615560.15474-100000@iolanthe.rowland.org>
+References: <494179E3.30802@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756988AbYLKVIR@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <49414DBE.6070801@vlnb.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Boaz Harrosh <bharrosh@panasas.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:37800 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757417AbYLKWCH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Dec 2008 17:02:07 -0500
+In-Reply-To: <494179E3.30802@gentoo.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Daniel Drake <dsd@gentoo.org>
+Cc: linux-scsi@vger.kernel.org
 
-> 
-> >>  drivers/scst/scst_lib.c      | 3689 
-> >>  +++++++++++++++++++++++++++++++++++++
-> >>  drivers/scst/scst_main.c     | 1919 +++++++++++++++++++
-> >>  drivers/scst/scst_module.c   |   69
-> >>  drivers/scst/scst_priv.h     |  513 +++++
-> >>  drivers/scst/scst_targ.c     | 5458 
-> >>  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >>  8 files changed, 12435 insertions(+)
-> >
-> >There was a lot af TRACE_ENTRY() / TRACE_EXIT() noise.
-> >We should have proper tools for that by now (I hope).
-> 
-> Sorry, I don't see such tools with, for instance, a possibility to be 
-> compiled out in non-debug builds.
-> 
-> From one side, I can agree, those TRACE_ENTRY()/TRACE_EXIT() statements 
-> *may* look like a noise (I personally don't notice them), but, from 
-> other side, in past times they have proved how usable they are. If an 
-> SCST user has a problem, I simply ask him to make a debug build, then 
-> enable entry_exit and some other logging levels, then reproduce the 
-> problem and send me the logs. Then in most cases I can see what's wrong 
-> and provide a fix without additional actions and questions.
+On Thu, 11 Dec 2008, Daniel Drake wrote:
 
-I had ftrace in mind but it has not hit mainline yet.
-But will do before this patchset does.
-
+> Hi Alan,
 > 
-> >We often ask for exported symbols to be documented - so one has
-> >a slight idea of their purpose.
+> I'm aware of your work at http://bugzilla.kernel.org/show_bug.cgi?id=11843
 > 
-> They are documented, near their prototypes in the public header files, 
-> particularly, scst.h. It was done so, because it was supposed that one, 
-> writing a target driver or dev handler will have on hands the header 
-> files, not source code.
+> I agree with fixing the unusual_devs file for USB devices that report 
+> the wrong capacity, but this SCSI "looping on error" problem reaches 
+> further than that. Gentoo has a bug report at 
+> https://bugs.gentoo.org/show_bug.cgi?id=248698 where there is a "real" 
+> bad sector in the middle of a disk, and this bug is affecting recovery 
+> of said disk.
 > 
-> Should we move those comments from the functions prototypes to the 
-> functions definitions?
-If there will be multiple implmentations of the same prototype
-we generally recommend to stick the comment in a .H file.
-But otherwise keep it close to the source it describe with the
-minimal hope that it gets updated.
+> On the kernel bugzilla you posted some patches that would improve the 
+> behaviour of 2.6.27 here. Are those patches candidates for 2.6.27.x, or 
+> do you know if it's being fixed another way, or is it a lost cause?
+> I understand that 2.6.28 has been fixed through a major rework in that area.
 
-Oh - and we do not distribute a stripped down headers only
-version of the kernel. Users will see full kernel source.
+It's a complicated story.
 
-	Sam
+For other readers, here's a summary of the Gentoo bug report.  It has
+two parts: One is that 2.6.26 doesn't report a bad block using an
+"unknown" controller; the other is that 2.6.27 loops indefinitely when
+reading the bad block using the "unknown" controller.  The key aspect
+of this controller is that when asked to read 8 sectors (4096 bytes) of
+which at least one is bad, it returns 1026 bytes of data with a residue
+of 3070, Check Condition status, and no sense (SK = ASC = ASCQ = 0).
+
+The fact that the number of "good" bytes isn't a multiple of the sector
+size is suspicious in itself, but let that pass.  The real problem has
+to do with the lack of sense data.  When usb-storage sees there's no
+sense, it changes the status to SAM_STAT_GOOD and clears the sense
+buffer.  But since the number of bytes is less than it should be, the
+final result is DID_ERROR with SUGGEST_RETRY.
+
+Now, I don't remember exactly what would happen with 2.6.26 under these 
+conditions.  Perhaps the SCSI layer would retry the command a few times 
+and then give up, but not realize that the read had failed -- meaning 
+that whatever garbage was in the buffer would be returned to the user.  
+
+2.6.27 does retry the read, indefinitely as far as I can tell.  At
+least, if there is a means for giving up eventually, I don't know what
+it is.  My B'' patch provides such a means, but I doubt it will be
+accepted since it would interfere with the operation of some SCSI tape
+devices.
+
+2.6.28 is slightly better in this regard.  You might say it has been
+fixed; it will retry the command until a timeout expires.  However the
+timeout tends to be rather large (30 or 60 seconds multiplied by 6
+iterations, typically).  I don't regard this as particularly useful.
+
+It's fair to say that at present, the SCSI core's retry and timeout 
+policy is pretty messed up.  However I'm not a good person to ask about 
+getting the problem fixed, because I'm not an expert SCSI developer.
+
+In fact, the best thing would be for you to push item 1 from comment
+#19 in the Gentoo bug report upstream.  That would focus the attention
+of the SCSI developers and give them something concrete to work on and
+to test with.  If that's what you do, add me to the CC list.
+
+Alan Stern
+
