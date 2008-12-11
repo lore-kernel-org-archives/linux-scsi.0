@@ -1,80 +1,106 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: 2.6.27 looping on SCSI errors for bad sectors
-Date: Thu, 11 Dec 2008 17:02:04 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0812111615560.15474-100000@iolanthe.rowland.org>
-References: <494179E3.30802@gentoo.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH][RFC 21/23]: iSCSI target driver
+Date: Thu, 11 Dec 2008 14:55:09 -0800
+Message-ID: <1229036109.4153.585.camel@haakon2.linux-iscsi.org>
+References: <494009D7.4020602@vlnb.net>  <49401205.8010207@vlnb.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:37800 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757417AbYLKWCH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Dec 2008 17:02:07 -0500
-In-Reply-To: <494179E3.30802@gentoo.org>
+Received: from smtp115.sbc.mail.sp1.yahoo.com ([69.147.64.88]:35734 "HELO
+	smtp115.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1759100AbYLKWzO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Dec 2008 17:55:14 -0500
+In-Reply-To: <49401205.8010207@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Daniel Drake <dsd@gentoo.org>
-Cc: linux-scsi@vger.kernel.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Boaz Harrosh <bharrosh@panasas.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, netdev@vger.kernel.org, Rafiu Fakunle <rafiu@openfiler.com>
 
-On Thu, 11 Dec 2008, Daniel Drake wrote:
-
-> Hi Alan,
+On Wed, 2008-12-10 at 22:01 +0300, Vladislav Bolkhovitin wrote:
+> This patch contains iSCSI-SCST target driver. This driver is a heavily 
+> modified forked with all respects IET 
+> (http://iscsitarget.sourceforge.net). Modifications were aimed to make a 
+> clearer, more reviewable and maintainable code as well as to fix many 
+> problems and make many improvements. See 
+> http://scst.sourceforge.net/target_iscsi.html for more details.
 > 
-> I'm aware of your work at http://bugzilla.kernel.org/show_bug.cgi?id=11843
+> It has split user/kernel space architecture, where all management, 
+> sessions creation, parameters negotiation, etc. made in user space and 
+> data are transferred in the kernel space. Such architecture for iSCSI 
+> processing was many times acknowledged as the right one. Particularly, 
+> in-kernel iSCSI initiator (open-iscsi) has such architecture.
 > 
-> I agree with fixing the unusual_devs file for USB devices that report 
-> the wrong capacity, but this SCSI "looping on error" problem reaches 
-> further than that. Gentoo has a bug report at 
-> https://bugs.gentoo.org/show_bug.cgi?id=248698 where there is a "real" 
-> bad sector in the middle of a disk, and this bug is affecting recovery 
-> of said disk.
+
+Just as with the Open/iSCSI Initiator, IMHO I believe the split
+architecture design is difficult both to improve, debug and maintain,
+and provides *ZERO* additional benefit in the context of traditional
+iSCSI target mode for doing login and connection/session setup in
+userspace.
+
+Also, I appericate that you spent alot of time porting over IET code to
+your engine, but during our previous discussion you did not seem
+terribly interested in validation against core-iscsi-dv
+(http://linux-iscsi.org/index.php/Core-iscsi-dv) to test RFC-3720
+interopt and stability.  Because the Core-iSCSI Initiator supports every
+possible parameter combination up to ErrorRecoveryLevel=0 defined in
+RFC-3720, the Core-iSCSI-Dv tests can run badblocks (or any too) to
+check data integrity for *EVERY* possible traditional iSCSI key
+combination and functionality for your iSCSI-SCST work, and any type of
+serious iSCSI-SCST production deployments.
+
+Until you can at least do that to prove both the stability and
+completeness of your iSCSI Target stack up to RFC-3720
+ErrorRecoveryLevel=0, I don't think this code makes sense for any type
+of mainline acceptance.  Also, I would appericate if you could stop the
+handwaving about MC/S and ErrorRecoveryLevel=2 as well.  MC/S (multiple
+connection paths for iSCSI/TCP, not necessary with multiple assoication
+LIO-Target SCTP) and ERL=2 (OS independent fabric recovery) is available
+in both RFC-3720 (Traditional iSCSI) and RFC-5045 (iSER for iWARP and
+IB).
+
+Trying to argue against implementing the complete iSCSI RFC
+functionality (like some folks did during the early Open/iSCSI days)
+that customers and users *WANT* now is going to fall of deaf ears.
+Please understand that they are going to be many, many different iSCSi
+Initiators connecting to the upstream iSCSI Target Core infrastructure,
+and trying to rush in an incomplete iSCSI Target $FABRIC_MOD
+implementation benefits anyone.
+
+Regards,
+
+--nab
+
+> Signed-off-by: Vladislav Bolkhovitin <vst@vlnb.net>
+> ---
+>   drivers/scst/iscsi-scst/Kconfig     |   25
+>   drivers/scst/iscsi-scst/Makefile    |    6
+>   drivers/scst/iscsi-scst/config.c    |  597 +++++++
+>   drivers/scst/iscsi-scst/conn.c      |  488 +++++
+>   drivers/scst/iscsi-scst/digest.c    |  221 ++
+>   drivers/scst/iscsi-scst/digest.h    |   31
+>   drivers/scst/iscsi-scst/event.c     |  116 +
+>   drivers/scst/iscsi-scst/iscsi.c     | 3066 ++++++++++++++++++++++++++++++++++++
+>   drivers/scst/iscsi-scst/iscsi.h     |  577 ++++++
+>   drivers/scst/iscsi-scst/iscsi_dbg.h |   73
+>   drivers/scst/iscsi-scst/iscsi_hdr.h |  517 ++++++
+>   drivers/scst/iscsi-scst/nthread.c   | 1522 +++++++++++++++++
+>   drivers/scst/iscsi-scst/param.c     |  263 +++
+>   drivers/scst/iscsi-scst/session.c   |  210 ++
+>   drivers/scst/iscsi-scst/target.c    |  306 +++
+>   include/scst/iscsi_scst.h           |  156 +
+>   include/scst/iscsi_scst_ver.h       |   16
+>   17 files changed, 8190 insertions(+)
 > 
-> On the kernel bugzilla you posted some patches that would improve the 
-> behaviour of 2.6.27 here. Are those patches candidates for 2.6.27.x, or 
-> do you know if it's being fixed another way, or is it a lost cause?
-> I understand that 2.6.28 has been fixed through a major rework in that area.
-
-It's a complicated story.
-
-For other readers, here's a summary of the Gentoo bug report.  It has
-two parts: One is that 2.6.26 doesn't report a bad block using an
-"unknown" controller; the other is that 2.6.27 loops indefinitely when
-reading the bad block using the "unknown" controller.  The key aspect
-of this controller is that when asked to read 8 sectors (4096 bytes) of
-which at least one is bad, it returns 1026 bytes of data with a residue
-of 3070, Check Condition status, and no sense (SK = ASC = ASCQ = 0).
-
-The fact that the number of "good" bytes isn't a multiple of the sector
-size is suspicious in itself, but let that pass.  The real problem has
-to do with the lack of sense data.  When usb-storage sees there's no
-sense, it changes the status to SAM_STAT_GOOD and clears the sense
-buffer.  But since the number of bytes is less than it should be, the
-final result is DID_ERROR with SUGGEST_RETRY.
-
-Now, I don't remember exactly what would happen with 2.6.26 under these 
-conditions.  Perhaps the SCSI layer would retry the command a few times 
-and then give up, but not realize that the read had failed -- meaning 
-that whatever garbage was in the buffer would be returned to the user.  
-
-2.6.27 does retry the read, indefinitely as far as I can tell.  At
-least, if there is a means for giving up eventually, I don't know what
-it is.  My B'' patch provides such a means, but I doubt it will be
-accepted since it would interfere with the operation of some SCSI tape
-devices.
-
-2.6.28 is slightly better in this regard.  You might say it has been
-fixed; it will retry the command until a timeout expires.  However the
-timeout tends to be rather large (30 or 60 seconds multiplied by 6
-iterations, typically).  I don't regard this as particularly useful.
-
-It's fair to say that at present, the SCSI core's retry and timeout 
-policy is pretty messed up.  However I'm not a good person to ask about 
-getting the problem fixed, because I'm not an expert SCSI developer.
-
-In fact, the best thing would be for you to push item 1 from comment
-#19 in the Gentoo bug report upstream.  That would focus the attention
-of the SCSI developers and give them something concrete to work on and
-to test with.  If that's what you do, add me to the CC list.
-
-Alan Stern
+> The patch is too big to be submitted inline. You can find it in 
+> http://scst.sourceforge.net/patches/iscsi-scst.diff
+> 
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
