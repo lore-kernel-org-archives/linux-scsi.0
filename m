@@ -1,7 +1,7 @@
 From: "Chris Leech" <christopher.leech@intel.com>
 Subject: Re: [PATCH 2/3] libfc: A modular Fibre Channel library
-Date: Wed, 10 Dec 2008 16:44:48 -0800
-Message-ID: <41b516cb0812101644y3273e6f8xa96c3f4912ddebdd@mail.gmail.com>
+Date: Wed, 10 Dec 2008 16:49:53 -0800
+Message-ID: <41b516cb0812101649w128cf6a8rd35169f55679ab5b@mail.gmail.com>
 References: <20081209231005.17830.92133.stgit@fritz>
 	 <20081209231016.17830.87180.stgit@fritz>
 	 <20081210000333.GC23556@one.firstfloor.org>
@@ -10,12 +10,12 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.175]:28240 "EHLO
+Received: from wf-out-1314.google.com ([209.85.200.173]:29561 "EHLO
 	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751838AbYLKAot (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Dec 2008 19:44:49 -0500
-Received: by wf-out-1314.google.com with SMTP id 27so447087wfd.4
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2008 16:44:48 -0800 (PST)
+	with ESMTP id S1754849AbYLKAty (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Dec 2008 19:49:54 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so449241wfd.4
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2008 16:49:53 -0800 (PST)
 In-Reply-To: <20081210000333.GC23556@one.firstfloor.org>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
