@@ -1,42 +1,48 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 00/13] st: remove scsi_execute_async usage (the second half)
-Date: Thu, 11 Dec 2008 23:07:37 +0900
-Message-ID: <1229004470-25718-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug 12195] "dd" make kernel panic
+Date: Thu, 11 Dec 2008 09:17:23 -0600
+Message-ID: <1229008643.3266.7.camel@localhost.localdomain>
+References: <20081211090559.1DF1610800C@picon.linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:49527 "EHLO mo10.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756074AbYLKOOJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Dec 2008 09:14:09 -0500
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:58017 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755617AbYLKPRS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Dec 2008 10:17:18 -0500
+In-Reply-To: <20081211090559.1DF1610800C@picon.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai.Makisara@kolumbus.fi
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, jens.axboe@oracle.com
+To: bugme-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-This patchset is the second half of the patchset to remove
-scsi_execute_async in st driver. IOW, this converts st driver to use
-the block layer functions.
+On Thu, 2008-12-11 at 01:05 -0800, bugme-daemon@bugzilla.kernel.org
+wrote:
+> I instrumented kernel. below is some finding.
+> 1) The disk isn't stable. If we run dd in a loop, sometimes the disk doesn't
+> work, so block request will expire to start a scsi error handling;
+> 2) fussion driver has its own periodic (1 sec) checking in
+> mpt_fault_reset_work. If something is wrong, it will do a hardware reset and
+> flush all pending requests;
+> 3) Step 1) and 2) have a race that a request might be flushed in step 2), but
+> step 1) releases the request firstly. Later on, when SOFTIRQ tries to release
+> the scsi_cmnd, kernel panic.
 
-st driver uses scsi_execute_async for two purposes, performing sort
-management SCSI commands internally and data transfer between user and
-kernel space (st_read and st_write). The former was converted and this
-converts the latter.
+OK, so to rule out the block timer problems which we think are fixed,
+could you reproduce on 2.6.28-rc8.
 
-Converting st needs some minor modifications to the block layer
-mapping API. I slightly extended the modifications that I made when
-converting sg driver to use the block layer mapping API. The first and
-second patches are for the block layer. Jens, can I get your ACKs on
-them?
+Also, the routine 
 
-The changes to st driver is not huge. It's just converting st to use
-struct rq_map_data instead of struct scatterlist.
+> [<a000000100391cf0>] scsi_softirq_done+0x50/0x2e0
+>                                 sp=e000000008a97e10 bsp=e000000008a90d70
 
-=
- block/blk-map.c        |   16 ++--
- drivers/scsi/sg.c      |    2 +
- drivers/scsi/st.c      |  282 +++++++++++++++++++++++++-----------------------
- drivers/scsi/st.h      |   14 +--
- fs/bio.c               |   11 ++-
- include/linux/blkdev.h |    2 +
- 6 files changed, 170 insertions(+), 157 deletions(-)
+Is hard to diagnose. Could you ask gdb or addr2line which actual source
+line this is?
+
+Thanks,
+
+James
 
 
