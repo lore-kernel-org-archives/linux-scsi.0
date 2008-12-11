@@ -1,128 +1,71 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 01/13] block: make blk_rq_map_user take a NULL user-space buffer for WRITE
-Date: Thu, 11 Dec 2008 23:07:38 +0900
-Message-ID: <1229004470-25718-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 13/13] st: remove unused frp_sg_current
+Date: Thu, 11 Dec 2008 23:07:50 +0900
+Message-ID: <1229004470-25718-14-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 References: <1229004470-25718-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1229004470-25718-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1229004470-25718-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1229004470-25718-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1229004470-25718-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1229004470-25718-6-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1229004470-25718-7-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1229004470-25718-8-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1229004470-25718-9-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1229004470-25718-10-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1229004470-25718-11-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1229004470-25718-12-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1229004470-25718-13-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:49129 "EHLO mo10.iij4u.or.jp"
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:43902 "EHLO mo11.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756057AbYLKOK7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Dec 2008 09:10:59 -0500
-In-Reply-To: <1229004470-25718-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	id S1756060AbYLKOLA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Dec 2008 09:11:00 -0500
+In-Reply-To: <1229004470-25718-13-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Kai.Makisara@kolumbus.fi
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, Jens Axboe <jens.axboe@oracle.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-The commit 818827669d85b84241696ffef2de485db46b0b5e (block: make
-blk_rq_map_user take a NULL user-space buffer) extended
-blk_rq_map_user to accept a NULL user-space buffer with a READ
-command. It was necessary to convert sg to use the block layer mapping
-API.
-
-This patch extends blk_rq_map_user again for a WRITE command. It is
-necessary to convert st and osst drivers to use the block layer
-apping API.
+frp_sg_current in struct st_buffer is always zero. We don't need it.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Jens Axboe <jens.axboe@oracle.com>
 ---
- block/blk-map.c        |   16 +++++++---------
- drivers/scsi/sg.c      |    1 +
- fs/bio.c               |    2 +-
- include/linux/blkdev.h |    1 +
- 4 files changed, 10 insertions(+), 10 deletions(-)
+ drivers/scsi/st.c |    2 --
+ drivers/scsi/st.h |    1 -
+ 2 files changed, 0 insertions(+), 3 deletions(-)
 
-diff --git a/block/blk-map.c b/block/blk-map.c
-index 0f4b4b8..e1bb727 100644
---- a/block/blk-map.c
-+++ b/block/blk-map.c
-@@ -42,7 +42,7 @@ static int __blk_rq_unmap_user(struct bio *bio)
- 
- static int __blk_rq_map_user(struct request_queue *q, struct request *rq,
- 			     struct rq_map_data *map_data, void __user *ubuf,
--			     unsigned int len, int null_mapped, gfp_t gfp_mask)
-+			     unsigned int len, gfp_t gfp_mask)
- {
- 	unsigned long uaddr;
- 	struct bio *bio, *orig_bio;
-@@ -63,7 +63,7 @@ static int __blk_rq_map_user(struct request_queue *q, struct request *rq,
- 	if (IS_ERR(bio))
- 		return PTR_ERR(bio);
- 
--	if (null_mapped)
-+	if (map_data && map_data->null_mapped)
- 		bio->bi_flags |= (1 << BIO_NULL_MAPPED);
- 
- 	orig_bio = bio;
-@@ -114,17 +114,15 @@ int blk_rq_map_user(struct request_queue *q, struct request *rq,
- {
- 	unsigned long bytes_read = 0;
- 	struct bio *bio = NULL;
--	int ret, null_mapped = 0;
-+	int ret;
- 
- 	if (len > (q->max_hw_sectors << 9))
- 		return -EINVAL;
- 	if (!len)
- 		return -EINVAL;
--	if (!ubuf) {
--		if (!map_data || rq_data_dir(rq) != READ)
--			return -EINVAL;
--		null_mapped = 1;
--	}
-+
-+	if (!ubuf && (!map_data || !map_data->null_mapped))
-+		return -EINVAL;
- 
- 	while (bytes_read != len) {
- 		unsigned long map_len, end, start;
-@@ -143,7 +141,7 @@ int blk_rq_map_user(struct request_queue *q, struct request *rq,
- 			map_len -= PAGE_SIZE;
- 
- 		ret = __blk_rq_map_user(q, rq, map_data, ubuf, map_len,
--					null_mapped, gfp_mask);
-+					gfp_mask);
- 		if (ret < 0)
- 			goto unmap_rq;
- 		if (!bio)
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 5103855..820a228 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1669,6 +1669,7 @@ static int sg_start_req(Sg_request *srp, unsigned char *cmd)
- 		md->pages = req_schp->pages;
- 		md->page_order = req_schp->page_order;
- 		md->nr_entries = req_schp->k_use_sg;
-+		md->null_mapped = hp->dxferp ? 0 : 1;
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index ddfacc8..ffb709c 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -1523,7 +1523,6 @@ static int setup_buffering(struct scsi_tape *STp, const char __user *buf,
+ 		else
+ 			STbp->do_dio = 0;  /* fall back to buffering with any error */
+ 		STbp->sg_segs = STbp->do_dio;
+-		STbp->frp_sg_current = 0;
+ 		DEB(
+ 		     if (STbp->do_dio) {
+ 			STp->nbr_dio++;
+@@ -3842,7 +3841,6 @@ static void normalize_buffer(struct st_buffer * STbuffer)
+ 		STbuffer->buffer_size -= (PAGE_SIZE << order);
  	}
- 
- 	if (iov_count)
-diff --git a/fs/bio.c b/fs/bio.c
-index 77a55bc..25f456b 100644
---- a/fs/bio.c
-+++ b/fs/bio.c
-@@ -698,7 +698,7 @@ struct bio *bio_copy_user_iov(struct request_queue *q,
- 	/*
- 	 * success
- 	 */
--	if (!write_to_vm) {
-+	if (!write_to_vm && (!map_data || !map_data->null_mapped)) {
- 		ret = __bio_copy_iov(bio, bio->bi_io_vec, iov, iov_count, 0, 0);
- 		if (ret)
- 			goto cleanup;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index a135256..39807a9 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -680,6 +680,7 @@ struct rq_map_data {
- 	struct page **pages;
- 	int page_order;
- 	int nr_entries;
-+	int null_mapped;
+ 	STbuffer->frp_segs = 0;
+-	STbuffer->frp_sg_current = 0;
+ 	STbuffer->sg_segs = 0;
+ 	STbuffer->map_data.page_order = 0;
+ 	STbuffer->map_data.offset = 0;
+diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
+index e682f80..544dc6b 100644
+--- a/drivers/scsi/st.h
++++ b/drivers/scsi/st.h
+@@ -52,7 +52,6 @@ struct st_buffer {
+ 	unsigned short use_sg;	/* zero or max number of s/g segments for this adapter */
+ 	unsigned short sg_segs;		/* number of segments in s/g list */
+ 	unsigned short frp_segs;	/* number of buffer segments */
+-	unsigned int frp_sg_current;	/* driver buffer length currently in s/g list */
  };
  
- struct req_iterator {
+ /* The tape mode definition */
 -- 
 1.5.6.5
 
