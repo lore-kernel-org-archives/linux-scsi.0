@@ -1,81 +1,128 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 10/13] st: remove struct scatterlist
-Date: Thu, 11 Dec 2008 23:07:47 +0900
-Message-ID: <1229004470-25718-11-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 01/13] block: make blk_rq_map_user take a NULL user-space buffer for WRITE
+Date: Thu, 11 Dec 2008 23:07:38 +0900
+Message-ID: <1229004470-25718-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 References: <1229004470-25718-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1229004470-25718-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1229004470-25718-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1229004470-25718-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1229004470-25718-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1229004470-25718-6-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1229004470-25718-7-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1229004470-25718-8-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1229004470-25718-9-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1229004470-25718-10-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:49124 "EHLO mo10.iij4u.or.jp"
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:49129 "EHLO mo10.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755970AbYLKOK5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Dec 2008 09:10:57 -0500
-In-Reply-To: <1229004470-25718-10-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	id S1756057AbYLKOK7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Dec 2008 09:10:59 -0500
+In-Reply-To: <1229004470-25718-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Kai.Makisara@kolumbus.fi
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, Jens Axboe <jens.axboe@oracle.com>
 
-This removes the usage of struct scatterlist completely.
+The commit 818827669d85b84241696ffef2de485db46b0b5e (block: make
+blk_rq_map_user take a NULL user-space buffer) extended
+blk_rq_map_user to accept a NULL user-space buffer with a READ
+command. It was necessary to convert sg to use the block layer mapping
+API.
+
+This patch extends blk_rq_map_user again for a WRITE command. It is
+necessary to convert st and osst drivers to use the block layer
+apping API.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Jens Axboe <jens.axboe@oracle.com>
 ---
- drivers/scsi/st.c |    8 ++------
- drivers/scsi/st.h |    1 -
- 2 files changed, 2 insertions(+), 7 deletions(-)
+ block/blk-map.c        |   16 +++++++---------
+ drivers/scsi/sg.c      |    1 +
+ fs/bio.c               |    2 +-
+ include/linux/blkdev.h |    1 +
+ 4 files changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 1547acf..4cd06cc 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -3743,7 +3743,7 @@ static long st_compat_ioctl(struct file *file, unsigned int cmd, unsigned long a
- static struct st_buffer *
-  new_tape_buffer(int from_initialization, int need_dma, int max_sg)
+diff --git a/block/blk-map.c b/block/blk-map.c
+index 0f4b4b8..e1bb727 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -42,7 +42,7 @@ static int __blk_rq_unmap_user(struct bio *bio)
+ 
+ static int __blk_rq_map_user(struct request_queue *q, struct request *rq,
+ 			     struct rq_map_data *map_data, void __user *ubuf,
+-			     unsigned int len, int null_mapped, gfp_t gfp_mask)
++			     unsigned int len, gfp_t gfp_mask)
  {
--	int i, got = 0;
-+	int got = 0;
- 	gfp_t priority;
- 	struct st_buffer *tb;
+ 	unsigned long uaddr;
+ 	struct bio *bio, *orig_bio;
+@@ -63,7 +63,7 @@ static int __blk_rq_map_user(struct request_queue *q, struct request *rq,
+ 	if (IS_ERR(bio))
+ 		return PTR_ERR(bio);
  
-@@ -3752,10 +3752,7 @@ static struct st_buffer *
- 	else
- 		priority = GFP_KERNEL;
+-	if (null_mapped)
++	if (map_data && map_data->null_mapped)
+ 		bio->bi_flags |= (1 << BIO_NULL_MAPPED);
  
--	i = sizeof(struct st_buffer) +
--		(max_sg - 1) * sizeof(struct scatterlist);
--
--	tb = kzalloc(i, priority);
-+	tb = kzalloc(sizeof(struct st_buffer), priority);
- 	if (!tb) {
- 		printk(KERN_NOTICE "st: Can't allocate new tape buffer.\n");
- 		return NULL;
-@@ -3765,7 +3762,6 @@ static struct st_buffer *
+ 	orig_bio = bio;
+@@ -114,17 +114,15 @@ int blk_rq_map_user(struct request_queue *q, struct request *rq,
+ {
+ 	unsigned long bytes_read = 0;
+ 	struct bio *bio = NULL;
+-	int ret, null_mapped = 0;
++	int ret;
  
- 	tb->dma = need_dma;
- 	tb->buffer_size = got;
--	sg_init_table(tb->sg, max_sg);
+ 	if (len > (q->max_hw_sectors << 9))
+ 		return -EINVAL;
+ 	if (!len)
+ 		return -EINVAL;
+-	if (!ubuf) {
+-		if (!map_data || rq_data_dir(rq) != READ)
+-			return -EINVAL;
+-		null_mapped = 1;
+-	}
++
++	if (!ubuf && (!map_data || !map_data->null_mapped))
++		return -EINVAL;
  
- 	tb->reserved_pages = kzalloc(max_sg * sizeof(struct page *), priority);
- 	if (!tb->reserved_pages) {
-diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
-index cc46f18..d297607 100644
---- a/drivers/scsi/st.h
-+++ b/drivers/scsi/st.h
-@@ -54,7 +54,6 @@ struct st_buffer {
- 	unsigned short orig_frp_segs;	/* number of segments allocated at first try */
- 	unsigned short frp_segs;	/* number of buffer segments */
- 	unsigned int frp_sg_current;	/* driver buffer length currently in s/g list */
--	struct scatterlist sg[1];	/* MUST BE last item */
+ 	while (bytes_read != len) {
+ 		unsigned long map_len, end, start;
+@@ -143,7 +141,7 @@ int blk_rq_map_user(struct request_queue *q, struct request *rq,
+ 			map_len -= PAGE_SIZE;
+ 
+ 		ret = __blk_rq_map_user(q, rq, map_data, ubuf, map_len,
+-					null_mapped, gfp_mask);
++					gfp_mask);
+ 		if (ret < 0)
+ 			goto unmap_rq;
+ 		if (!bio)
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 5103855..820a228 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -1669,6 +1669,7 @@ static int sg_start_req(Sg_request *srp, unsigned char *cmd)
+ 		md->pages = req_schp->pages;
+ 		md->page_order = req_schp->page_order;
+ 		md->nr_entries = req_schp->k_use_sg;
++		md->null_mapped = hp->dxferp ? 0 : 1;
+ 	}
+ 
+ 	if (iov_count)
+diff --git a/fs/bio.c b/fs/bio.c
+index 77a55bc..25f456b 100644
+--- a/fs/bio.c
++++ b/fs/bio.c
+@@ -698,7 +698,7 @@ struct bio *bio_copy_user_iov(struct request_queue *q,
+ 	/*
+ 	 * success
+ 	 */
+-	if (!write_to_vm) {
++	if (!write_to_vm && (!map_data || !map_data->null_mapped)) {
+ 		ret = __bio_copy_iov(bio, bio->bi_io_vec, iov, iov_count, 0, 0);
+ 		if (ret)
+ 			goto cleanup;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index a135256..39807a9 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -680,6 +680,7 @@ struct rq_map_data {
+ 	struct page **pages;
+ 	int page_order;
+ 	int nr_entries;
++	int null_mapped;
  };
  
- /* The tape mode definition */
+ struct req_iterator {
 -- 
 1.5.6.5
 
