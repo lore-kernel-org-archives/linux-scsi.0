@@ -1,22 +1,30 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 12195] "dd" make kernel panic
-Date: Thu, 11 Dec 2008 09:17:23 -0600
-Message-ID: <1229008643.3266.7.camel@localhost.localdomain>
-References: <20081211090559.1DF1610800C@picon.linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12195] "dd" make kernel panic
+Date: Thu, 11 Dec 2008 07:17:26 -0800 (PST)
+Message-ID: <20081211151726.EF777108042@picon.linux-foundation.org>
+References: <bug-12195-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:58017 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755617AbYLKPRS (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:58331 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755617AbYLKPSD (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Dec 2008 10:17:18 -0500
-In-Reply-To: <20081211090559.1DF1610800C@picon.linux-foundation.org>
+	Thu, 11 Dec 2008 10:18:03 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBBFHRwm032670
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Dec 2008 07:17:28 -0800
+In-Reply-To: <bug-12195-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugme-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=12195
+
+
+
+
+
+------- Comment #5 from anonymous@kernel-bugs.osdl.org  2008-12-11 07:17 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Thu, 2008-12-11 at 01:05 -0800, bugme-daemon@bugzilla.kernel.org
 wrote:
@@ -46,3 +54,7 @@ Thanks,
 James
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
