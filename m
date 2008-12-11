@@ -1,105 +1,103 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH][RFC 5/23]: SCST /proc interface
-Date: Thu, 11 Dec 2008 12:23:07 -0800
-Message-ID: <1229026987.4153.555.camel@haakon2.linux-iscsi.org>
-References: <494009D7.4020602@vlnb.net>  <49400C81.3010801@vlnb.net>
+From: Raz <raziebe@gmail.com>
+Subject: Re: Intel X25-M MLC SSD benchmarks - How can I be sure i am erased block aligned ?
+Date: Thu, 11 Dec 2008 22:40:41 +0200
+Message-ID: <5d96567b0812111240i60f70974y815a0775006da05f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757378AbYLKUX1@vger.kernel.org>
-In-Reply-To: <49400C81.3010801@vlnb.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Boaz Harrosh <bharrosh@panasas.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, Joel Becker <joel.becker@oracle.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2008-12-10 at 21:37 +0300, Vladislav Bolkhovitin wrote:
-> This patch contains SCST the /proc interface.
-> 
-> A description of this interface can be found in the patch with the
-> SCST core documentation.
-> 
-> Since a procfs-based configuration interface is unacceptable for new 
-> kernel modules, in the next review iteration SCST's configuration 
-> interface will be replaced by a sysfs-based configuration interface. 
-> This patch is not intended to be included in the Linux kernel, but is 
-> posted here, because as of today this configuration interface is 
-> necessary when using SCST.
-> 
-> Unfortunately, configfs is not (yet) suited for configuring SCST. This 
-> is, because configfs is user space driven, so kernel can't create 
-> subdirectories on it, and all files on configfs are limited to 4K in 
-> size. It makes impossible for kernel to show, e.g., a list of connected 
-> initiators. Hence, with configfs it is necessary to have one more 
-> interface to show such data, e.g. sysfs-based. 
+> ________________________________
+> From: Matthew Wilcox [mailto:matthew@wil.cx]
+> Sent: Thu 12/11/2008 5:44 AM
+> To: Raz Ben-Yehuda
+> Cc: linux-ide@vger.kernel.org; linux-scsi@vger.kernel.org
+> Subject: Re: Intel X25-M MLC SSD benchmarks
+>
+> On Thu, Dec 11, 2008 at 12:12:37AM +0200, Raz Ben-Yehuda wrote:
+>> I did not want to dive into details because it does not matter. Whether
+>> noop,deadline, deadline parameters...
+>> As for the controller I used 4 different controllers. Adaptec,AHCI and
+>> Intel as Integrated chips on the 1025W-UR supermicro motherboard, and a
+>> 4-th controller SuperMicro UIO Adaptec aac card.
+>> All gave same results for most dd writes commands.
+>> dd if=/dev/zero of=/dev/sda bs=1M count=1000 oflag=direct , and many
+>> other variants such erase block size ( 128K ) , several erase block size
+>> and so on. Kernel is 2.6.18-8.el5.
+>
+>>>OK, I suspect you aren't giving the drive enough work to do for it to
+>>>perform at its best.  Try doing something like this:
+>
+>>>for i in $(seq 0 9); do \
+>  >>     dd if=/dev/zero of=/dev/sda bs=1M count=1000 oflag=direct \
+>  >>               seek=$(($i * 1000)) & \
+>>>done
+>
+did that. nothing. also, I would like to note that IO flow is quite
+weird.iostats reports 70GB/s in the first few seconds, and then it
+degrades to 20
+ MB/s and less. could it be that I am not erase-block aligment ?
+how does SSD aligments interacts with a controller ?
+ iostats looks like that:Device: tps Blk_read/s Blk_wrtn/s Blk_read Blk_wrt
+ sda 746.46 0.00 191143.43 0 189232
+ sda 546.53 0.00 139912.87 0 141312
+ sda 480.00 0.00 122880.00 0 122880
+ sda 469.00 0.00 120016.00 0 120016
+ sda 347.00 0.00 88880.00 0 88880
+ sda 403.96 0.00 103413.86 0 104448
+ sda 349.00 0.00 89296.00 0 89296
+ sda 424.00 0.00 108544.00 0 108544
+ sda 480.00 0.00 122880.00 0 122880
+ sda 184.00 0.00 47104.00 0 47104
+ sda 467.00 0.00 119600.00 0 119600
+ sda 408.00 0.00 104448.00 0 104448
+ sda 320.00 0.00 81920.00 0 81920
+ sda 357.00 0.00 91344.00 0 91344
+ sda 195.00 0.00 49968.00 0 49968
+ sda 280.00 0.00 71680.00 0 71680
+ sda 475.25 0.00 121663.37 0 122880
+ sda 85.00 0.00 21712.00 0 21712
+ sda 235.00 0.00 60208.00 0 60208
+ sda 216.00 0.00 55296.00 0 55296
+ sda 112.00 0.00 28672.00 0 28672
+ sda 245.00 0.00 62672.00 0 62672
+ sda 72.00 0.00 18432.00 0 18432
+ sda 75.00 0.00 19248.00 0 19248
+ sda 141.00 0.00 36048.00 0 36048
+ sda 11.00 0.00 2864.00 0 2864
+ sda 200.00 0.00 51200.00 0 51200
+ sda 88.00 0.00 22528.00 0 22528
+ sda 160.00 0.00 40960.00 0 40960
+ sda 118.81 0.00 30415.84 0 30720
+ sda 32.00 0.00 8192.00 0 8192
+ sda 128.00 0.00 32768.00 0 32768
+ sda 77.00 0.00 19664.00 0 19664
+ any idea ?
 
-Btw, please stop spreading FUD about ConfigFS.  ConfigFS works great for
-Target_Core_Mod and LIO-Target v3.0, and is what I have found as the
-*BEST* foundation for generic target mod moving forward.  This is not
-based on a hypothetical discussion or on a long term TODO list, this has
-been determined from actually writing the code, which is located at:
+>> I used all on a supermicro 1025W-UR. Disks have a SAS interface, 80GB.
+>> Also, I would like to note, I have 8 disks in array, while each one
+>> perform READS 250 MB/s, together I degrade to 200 MB/s each. As for
+>
+>>>That doesn't surprise me; you're probably hitting a limitation either of
+>>>the array or the cable itself.  A SAS cable can run up to 6Gbps, which
+>>>will be around 600MB/s.  So three drives should be able to saturate your
+>>>SAS cable.  If you're using an x4 link, that goes up to 2400MB/s which
+>>>should be ample for 8 drives ... maybe you're using a 3Gbps cable which
+>>>would limit each drive to 150MB/s.
+I am not surprised as well. SSD is quite new for these controller. I
+am using SAS cable(blue one), and no cx4 can connect to io card
+controller.
+anyway, I have contact supermicro for that, I want to bypass the back
+panel, just to be sure.
 
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=blob;f=drivers/lio-core/target_core_configfs.c
 
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=blob;f=drivers/lio-core/iscsi_target_configfs.c
-
-So please, just because you don't want to acknowledge ConfigFS in your
-own work, do not act like there is not already thounsands of lines of
-ConfigFS code up and running for the generic target mode and LIO-Target.
-
---nab
-
-> It would lead to 2 
-> interfaces in two different places for configuring SCSI targets: 
-> configfs and sysfs based. Definitely, it is better to have only one, 
-> sysfs-based interface, than 2 interfaces. From other side, sysfs in what 
-> SCST needs provides basically the same possibilities as configfs. And 
-> it's widely used in the kernel to configure various its parameters. See, 
-> for instance, bonding devices or IO schedulers.
-> 
-> The proposed /sys interface would be very similar to the current /proc 
-> layout intact, except cases, where output >PAGE_SIZE is needed. For such 
-> cases each entry, i.e. line, in such files would be presented as a 
-> subdirectory with name the first element in that line and each other 
-> element in it would be presented as a separate file (attribute). For 
-> instance, /proc/scsi_tgt/sessions, which lists connected sessions, would 
-> be converted to:
-> 
-> /sys/scsi_tgt/
->     /sys/scsi_tgt/sessions/
->       /sys/scsi_tgt/sessions/session1_name/
->         /sys/scsi_tgt/sessions/session1_name/target_name
->         /sys/scsi_tgt/sessions/session1_name/initiator_name
->         /sys/scsi_tgt/sessions/session1_name/acl -> ../../acls/aclX
->         /sys/scsi_tgt/sessions/session1_name/commands
->     /sys/scsi_tgt/sessions/session2_name/
->         /sys/scsi_tgt/sessions/session2_name/target_name
->         /sys/scsi_tgt/sessions/session2_name/initiator_name
->         /sys/scsi_tgt/sessions/session2_name/acl -> ../../acls/aclY
->         /sys/scsi_tgt/sessions/session2_name/commands
-> .
-> .
-> .
-> 
-> Addition of new, e.g. vdisk devices, would be done via echo'ing commands 
-> to, in this example, /sys/scsi_tgt/vdisk/mgmt file similarly as it's 
-> currently done with /proc/scsi_tgt/vdisk/vdisk (same commands, actually).
-> 
-> Any comments and suggestions will be greatly appreciated.
-> 
-> Signed-off-by: Vladislav Bolkhovitin <vst@vlnb.net>
-> ---
->   drivers/scst/scst_proc.c | 2196 
-> ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->   1 file changed, 2196 insertions(+)
-> 
-> The patch is too big to be submitted inline. You can find it in 
-> http://scst.sourceforge.net/patches/scst_proc.diff
-> 
-> 
-> 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> Matthew Wilcox                          Intel Open Source Technology Centre
+> "Bill, look, we understand that you're interested in selling us this
+> operating system, but compare it to ours.  We can't possibly take such
+> a retrograde step."
+>
