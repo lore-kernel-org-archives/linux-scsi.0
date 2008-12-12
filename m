@@ -1,27 +1,66 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH 2/3] libfc: A modular Fibre Channel library
-Date: Fri, 12 Dec 2008 00:33:26 +0100
-Message-ID: <20081211233326.GD25779@one.firstfloor.org>
-References: <20081209231005.17830.92133.stgit@fritz> <20081209231016.17830.87180.stgit@fritz> <20081210000333.GC23556@one.firstfloor.org> <7C88852EF6F99F4EB538472FCFEBE22204287E4C@orsmsx509.amr.corp.intel.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Intel X25-M MLC SSD benchmarks - How can I be sure i am erased block aligned ?
+Date: Thu, 11 Dec 2008 18:24:51 -0700
+Message-ID: <20081212012451.GG26095@parisc-linux.org>
+References: <5d96567b0812111240i60f70974y815a0775006da05f@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:39669 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755450AbYLKXVn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Dec 2008 18:21:43 -0500
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <7C88852EF6F99F4EB538472FCFEBE22204287E4C@orsmsx509.amr.corp.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <5d96567b0812111240i60f70974y815a0775006da05f@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Raz <raziebe@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Zou, Yi" <yi.zou@intel.com>
-Cc: Andi Kleen <andi@firstfloor.org>, "Love, Robert W" <robert.w.love@intel.com>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jgarzik@redhat.com" <jgarzik@redhat.com>, "davem@davemloft.net" <davem@davemloft.net>, "james.smart@emulex.com" <james.smart@emulex.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "jeykholt@cisco.com" <jeykholt@cisco.com>, "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>
 
-> name. The dev_stats are allocated initially in a for_each_online_cpu)()
-> loop, and after that, corresponding dev_stats is allocated/freed upon
-> CPU_ONLINE/CPU_DEAD event callback fcoe_cpu_callback(), do you think
-> this is also a problem in using NR_CPUS?
+On Thu, Dec 11, 2008 at 10:40:41PM +0200, Raz wrote:
+> > ________________________________
+> > From: Matthew Wilcox [mailto:matthew@wil.cx]
+> > Sent: Thu 12/11/2008 5:44 AM
+> > To: Raz Ben-Yehuda
+> > Cc: linux-ide@vger.kernel.org; linux-scsi@vger.kernel.org
+> > Subject: Re: Intel X25-M MLC SSD benchmarks
+> >
+> > On Thu, Dec 11, 2008 at 12:12:37AM +0200, Raz Ben-Yehuda wrote:
+> >> I did not want to dive into details because it does not matter. Whether
+> >> noop,deadline, deadline parameters...
+> >> As for the controller I used 4 different controllers. Adaptec,AHCI and
+> >> Intel as Integrated chips on the 1025W-UR supermicro motherboard, and a
+> >> 4-th controller SuperMicro UIO Adaptec aac card.
+> >> All gave same results for most dd writes commands.
+> >> dd if=/dev/zero of=/dev/sda bs=1M count=1000 oflag=direct , and many
+> >> other variants such erase block size ( 128K ) , several erase block size
+> >> and so on. Kernel is 2.6.18-8.el5.
+> >
+> >>>OK, I suspect you aren't giving the drive enough work to do for it to
+> >>>perform at its best.  Try doing something like this:
+> >
+> >>>for i in $(seq 0 9); do \
+> >  >>     dd if=/dev/zero of=/dev/sda bs=1M count=1000 oflag=direct \
+> >  >>               seek=$(($i * 1000)) & \
+> >>>done
+> >
+> did that. nothing. also, I would like to note that IO flow is quite
+> weird.iostats reports 70GB/s in the first few seconds, and then it
+> degrades to 20
+>  MB/s and less. could it be that I am not erase-block aligment ?
 
-Yes, it's also a problem. Use num_possible_cpus()
+That doesn't sound likely to me.  Erase block size isn't a huge issue
+with these drives.  I've been trying to replicate your problem, but I'm
+not having any luck; unfortunately I only have access to an X25-E drive
+(not an X25-M) and I'm seeing 175-185MB/s when it's attached to an AHCI
+controller, just with a single dd (I haven't even played with the
+elevator).  I'm trying to get hold of an X25-M drive, but I don't know
+when I'll receive one.
 
--Andi
+> how does SSD aligments interacts with a controller ?
+
+Controllers can generally send down large enough IOs that it isn't a
+problem.  And the Intel SSDs are smart enough that you shouldn't have to
+align to erase block boundaries to make them go fast.
+
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
