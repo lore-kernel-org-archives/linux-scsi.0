@@ -1,47 +1,57 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: 2.6.27 looping on SCSI errors for bad sectors
-Date: Fri, 12 Dec 2008 09:46:40 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0812120945580.2504-100000@iolanthe.rowland.org>
-References: <200812120005.35034.oliver@neukum.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug 12195] "dd" make kernel panic
+Date: Fri, 12 Dec 2008 09:09:37 -0600
+Message-ID: <1229094577.3262.19.camel@localhost.localdomain>
+References: <bug-12195-11613@http.bugzilla.kernel.org/>
+	 <20081212022704.5488C108042@picon.linux-foundation.org>
+	 <20081212102205.GA16034@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:44364 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756031AbYLLOqm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Dec 2008 09:46:42 -0500
-In-Reply-To: <200812120005.35034.oliver@neukum.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:32859 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756708AbYLLPJb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Dec 2008 10:09:31 -0500
+In-Reply-To: <20081212102205.GA16034@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.org>
-Cc: Daniel Drake <dsd@gentoo.org>, linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@linux.vnet.ibm.com>
+Cc: bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, 12 Dec 2008, Oliver Neukum wrote:
+On Fri, 2008-12-12 at 02:22 -0800, Mike Anderson wrote:
+> bugme-daemon@bugzilla.kernel.org <bugme-daemon@bugzilla.kernel.org> wrote:
+> > http://bugzilla.kernel.org/show_bug.cgi?id=12195
+> > 
+> > 
+> > 
+> > 
+> > 
+> > ------- Comment #6 from ming.m.lin@intel.com  2008-12-11 18:27 -------
+> > 2.6.28-rc8 also panic
+> 
+> The blk_mark_rq_complete check should prevent completions from occurring on
+> already timed out requests unless the interaction previous mentioned between
+> mpt_fault_reset_work and the scsi eh thread requeue alows the REQ_ATOM_COMPLETE
+> bit to get cleared prior to the scsi_done being called from
+> mptscsih_flush_running_cmds. This did not look obvious to hit.
+> 
+> mpt_fault_reset_work
+> 	mpt_HardResetHandler
+> 		mpt_signal_reset
+> 			mptsas_ioc_reset 
+> 				mptscsih_flush_running_cmds
+> 		mpt_do_ioc_recovery
 
-> Am Donnerstag, 11. Dezember 2008 23:02:04 schrieb Alan Stern:
-> > 2.6.27 does retry the read, indefinitely as far as I can tell. =A0A=
-t
-> > least, if there is a means for giving up eventually, I don't know w=
-hat
-> > it is. =A0My B'' patch provides such a means, but I doubt it will b=
-e
-> > accepted since it would interfere with the operation of some SCSI t=
-ape
-> > devices.
->=20
-> How so?
+Actually, this isn't quite true.  Particularly in the eh case.  It looks
+like the block timeout isn't stopped until blk_complete_request() which
+is pretty late.  If the timeout fires after scsi_done is called but
+before we complete the request, any timeout goes through the
+BLK_EH_HANDLED path to __blk_complete_request().  This routine
+unconditionally adds to the done routine without checking the mark, so
+there is a window where we can get double dones.
 
-I don't know the details.  See
+James
 
-	http://marc.info/?l=3Dlinux-scsi&m=3D122842458004037&w=3D2
 
-and the other messages in that thread.
-
-Alan Stern
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
