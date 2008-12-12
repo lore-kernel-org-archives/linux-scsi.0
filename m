@@ -1,189 +1,70 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] [Target_Core_Mod/ConfigFS 12/12]: Remove
-	do_configfs_mkdir() and do_configfs_rmdir()
-Date: Fri, 12 Dec 2008 01:37:02 -0800
-Message-ID: <1229074622.4153.664.camel@haakon2.linux-iscsi.org>
+From: "Nicholas A. Bellinger" <nab@kernel.org>
+Subject: Re: [Announce]: Target_Core_Mod/ConfigFS and LIO-Target v3.0 work
+Date: Fri, 12 Dec 2008 01:40:09 -0800
+Message-ID: <1229074809.4153.666.camel@haakon2.linux-iscsi.org>
+References: <1228965271.4153.510.camel@haakon2.linux-iscsi.org>
+	 <e2e108260812111124j79793adcie106ac2da4f801f3@mail.gmail.com>
+	 <1229025513.4153.542.camel@haakon2.linux-iscsi.org>
+	 <e2e108260812112321w2f5b1827xe2593888e44808ae@mail.gmail.com>
+Reply-To: nab@kernel.org
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp122.sbc.mail.sp1.yahoo.com ([69.147.64.95]:20180 "HELO
-	smtp122.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757034AbYLLJhF (ORCPT
+Received: from smtp116.sbc.mail.sp1.yahoo.com ([69.147.64.89]:44203 "HELO
+	smtp116.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753018AbYLLJqw (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Dec 2008 04:37:05 -0500
+	Fri, 12 Dec 2008 04:46:52 -0500
+In-Reply-To: <e2e108260812112321w2f5b1827xe2593888e44808ae@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Joel Becker <joel.becker@oracle.com>
+To: linux-iscsi-target-dev@googlegroups.com
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@hansenpartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Jens Axboe <jens.axboe@oracle.com>
 
->From 79f98e53a0b4906cd5b4bfadf2d65345c3dcf8a5 Mon Sep 17 00:00:00 2001
-From: Nicholas Bellinger <nab@linux-iscsi.org>
-Date: Fri, 12 Dec 2008 01:07:06 -0800
-Subject: [PATCH] [Target_Core_Mod/ConfigFS]: Remove do_configfs_mkdir() and do_configfs_rmdir()
+On Fri, 2008-12-12 at 08:21 +0100, Bart Van Assche wrote:
+> On Thu, Dec 11, 2008 at 8:58 PM, Nicholas A. Bellinger
+> <nab@linux-iscsi.org> wrote:
+> >
+> > On Thu, 2008-12-11 at 20:24 +0100, Bart Van Assche wrote:
+> >> On Thu, Dec 11, 2008 at 4:14 AM, Nicholas A. Bellinger
+> >> <nab@linux-iscsi.org> wrote:
+> >> > Things are moving quickly for Target_Core_Mod/ConfigFS and LIO-Target
+> >> > v3.0 development, and I invite folks to have a look at the code.  To
+> >> > dive into the rest of the v3.0 code via git-web, check out:
+> >> >
+> >> > http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=tree;f=drivers/lio-core
+> >>
+> >> I didn't have a look at the LIO code, but I ran it through checkpatch.
+> >> The result summary is as follows:
+> >>
+> > Thanks for the note, but checkpatch output on the entire tree (not just
+> > the patchs I posted) does not really help the discussion.  Obviously
+> > this is on my list before submission for Target_Core_Mod/ConfigFS for
+> > v2.6.29.  However, what would be nice if you actually sent a kernel
+> > patch for these issues.
+> 
+> I ran checkpatch on the files in drivers/lio-core ONLY. I did this by
+> converting all the files in drivers/lio-core through a script into a
+> patch, and by running checkpatch on the generated patch.
+> 
+> And as you already know I'm not going to work on LIO.
+> 
 
-This patch removes the temporary debug functions used for Target_Core_Mod and
-LIO-Target v3.0 bringup, as required by the ConfigFS maintainer.
+Too bad, because you are missing out on the most advanced ConfigFS
+enabled storage engine on the planet.
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/lio-core/target_core_configfs.c |  122 +------------------------------
- 1 files changed, 4 insertions(+), 118 deletions(-)
+Best regards,
 
-diff --git a/drivers/lio-core/target_core_configfs.c b/drivers/lio-core/target_core_configfs.c
-index 77950c1..0fceeab 100644
---- a/drivers/lio-core/target_core_configfs.c
-+++ b/drivers/lio-core/target_core_configfs.c
-@@ -34,19 +34,11 @@
- #include <linux/syscalls.h>
- #include <linux/configfs.h>
- 
--#include <iscsi_debug.h>
--#include <iscsi_lists.h>
--#include <iscsi_protocol.h>
--#include <iscsi_debug_opcodes.h>
--#include <iscsi_target_core.h>
- #include <target_core_base.h>
--#include <iscsi_target_error.h>
- #include <target_core_device.h>
--#include <iscsi_target_device.h>
- #include <target_core_hba.h>
- #include <target_core_plugin.h>
- #include <target_core_transport.h>
--#include <iscsi_target.h>
- 
- #ifdef SNMP_SUPPORT
- #include <linux/proc_fs.h>
-@@ -325,116 +317,6 @@ extern struct config_item *target_fabric_configfs_find_by_name (
- 	return(fabric);
- }
- 
--static long do_configfs_mkdir (struct config_item *item, const char *path, int mode)
--{
--//	char *s;
--	struct dentry *dentry;
--	struct nameidata nd;
--	int error = 0;	
--#if 0
--	s = __getname();
--	if (IS_ERR(s)) {
--		printk("__getname() failed\n");
--		return(PTR_ERR(s));
--	}
--#endif
--	if ((error = path_lookup(path, LOOKUP_PARENT, &nd))) {
--		printk("path_lookup() failed for %s, error: %d\n", path, error);
--//		putname(s);
--		return(error);
--	}
--
--	dentry = lookup_create(&nd, 1);
--	error = PTR_ERR(dentry);
--	if (IS_ERR(dentry)) {
--		printk("lookup_create() returned error: %d\n", error);
--		goto out;
--	}
--
--	printk("Calling vfs_mkdir() d_inode: %p dentry: %p\n",
--		item->ci_dentry->d_inode, dentry);
--
--	error = vfs_mkdir(item->ci_dentry->d_inode, dentry, mode);
--	
--	dput(dentry);
--out:
--	mutex_unlock(&nd.path.dentry->d_inode->i_mutex);
--	path_put(&nd.path);
--//	putname(s);
--
--	return(error);
--}
--
--#if 1
--
--/*
-- * fs/namei.c:lookup_hash() is not defined as EXPORT_SYMBOL()
-- */
--extern struct dentry *lookup_hash(struct nameidata *);
--
--static long do_configfs_rmdir (struct config_item *item, const char *path)
--{
--	struct dentry *dentry;
--	struct nameidata nd;
--	int error = 0;
--	
--	if ((error = path_lookup(path, LOOKUP_PARENT, &nd))) {
--		printk("path_lookup() failed for %s, error: %d\n", path, error);
--		return(error);
--	}
--
--	/*
--	 * lookup_hash() is not exported from fs/namei.c..
--	 */
--	mutex_lock_nested(&nd.path.dentry->d_inode->i_mutex, I_MUTEX_PARENT);
--	dentry = lookup_hash(&nd);
--	error = PTR_ERR(dentry);
--	if (IS_ERR(dentry)) {
--		printk("lookup_hash() returned error: %d\n", error);
--		goto unlock;
--	}
--
--	printk("Calling vfs_rmdir() d_inode: %p dentry: %p\n",
--		item->ci_dentry->d_inode, dentry);
--
--	error = vfs_rmdir(item->ci_dentry->d_inode, dentry);
--
--	dput(dentry);
--unlock:
--	mutex_unlock(&nd.path.dentry->d_inode->i_mutex);
--	path_put(&nd.path);
--
--	return(error);
--}
--
--#else
--
--static long do_configfs_rmdir (struct config_item *item, const char *path)
--{
--	struct dentry *dentry;
--	int error = 0;
--
--	mutex_lock(&item->ci_dentry->d_inode->i_mutex);	
--	dentry = lookup_one_len(path, item->ci_dentry, strlen(path));
--	error = PTR_ERR(dentry);
--	if (IS_ERR(dentry)) {
--		printk("lookup_one_len() returned error: %d\n", error);
--		goto unlock;
--	}
--
--	printk("Calling vfs_rmdir() d_inode: %p dentry: %p\n",
--		item->ci_dentry->d_inode, dentry);
--	error = vfs_rmdir(item->ci_dentry->d_inode, dentry);
--	printk("vfs_rmdir() returned %d\n", error);
--	
--	dput(dentry);
--unlock:
--	mutex_unlock(&item->ci_dentry->d_inode->i_mutex);
--	return(error);
--}
--
--#endif
--
- /*
-  * Called 2nd from fabric module with returned parameter of
-  * struct target_fabric_configfs * from target_fabric_configfs_init().
-@@ -1112,6 +994,10 @@ extern int target_core_init_configfs (void)
- #endif
- 	int ret;
- 
-+	printk("TARGET_CORE[0]: Loading Generic Kernel Storage Engine: %s on %s/%s"
-+		" on "UTS_RELEASE"\n", TARGET_CORE_VERSION, utsname()->sysname,
-+		utsname()->machine);
-+
- 	subsys = target_core_subsystem[0];	
- 	config_group_init(&subsys->su_group);
- 	mutex_init(&subsys->su_mutex);
--- 
-1.5.4.1
+--nab
 
-
+> Bart.
+> 
+> --~--~---------~--~----~------------~-------~--~----~
+> You received this message because you are subscribed to the Google Groups "Linux-iSCSI.org Target Development" group.
+> To post to this group, send email to linux-iscsi-target-dev@googlegroups.com
+> To unsubscribe from this group, send email to linux-iscsi-target-dev+unsubscribe@googlegroups.com
+> For more options, visit this group at http://groups.google.com/group/linux-iscsi-target-dev?hl=en
+> -~----------~----~----~----~------~----~------~--~---
+> 
 
