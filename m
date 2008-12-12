@@ -1,33 +1,25 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12195] "dd" make kernel panic
-Date: Fri, 12 Dec 2008 11:28:52 -0800 (PST)
-Message-ID: <20081212192852.2F535108047@picon.linux-foundation.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug 12195] "dd" make kernel panic
+Date: Fri, 12 Dec 2008 13:28:29 -0600
+Message-ID: <1229110109.3262.87.camel@localhost.localdomain>
 References: <bug-12195-11613@http.bugzilla.kernel.org/>
+	 <20081212022704.5488C108042@picon.linux-foundation.org>
+	 <20081212102205.GA16034@linux.vnet.ibm.com>
+	 <1229094577.3262.19.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:48742 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751649AbYLLT3b convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Dec 2008 14:29:31 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBCJTAqF026003
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Dec 2008 11:29:11 -0800
-In-Reply-To: <bug-12195-11613@http.bugzilla.kernel.org/>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:56773 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751036AbYLLT2X (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Dec 2008 14:28:23 -0500
+In-Reply-To: <1229094577.3262.19.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=12195
-
-
-
-
-
-------- Comment #9 from anonymous@kernel-bugs.osdl.org  2008-12-12 11:28 -------
-Reply-To: James.Bottomley@HansenPartnership.com
+To: Mike Anderson <andmike@linux.vnet.ibm.com>
+Cc: bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
 On Fri, 2008-12-12 at 09:09 -0600, James Bottomley wrote:
 > On Fri, 2008-12-12 at 02:22 -0800, Mike Anderson wrote:
@@ -82,20 +74,15 @@ diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
 index 111f9e9..f2f51e0 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -653,8 +653,8 @@ static void scsi_requeue_command(struct request_queue *q,
-struct scsi_cmnd *cmd)
-        struct request *req = cmd->request;
-        unsigned long flags;
+@@ -653,8 +653,8 @@ static void scsi_requeue_command(struct request_queue *q, struct scsi_cmnd *cmd)
+ 	struct request *req = cmd->request;
+ 	unsigned long flags;
+ 
+-	scsi_unprep_request(req);
+ 	spin_lock_irqsave(q->queue_lock, flags);
++	scsi_unprep_request(req);
+ 	blk_requeue_request(q, req);
+ 	spin_unlock_irqrestore(q->queue_lock, flags);
+ 
 
--       scsi_unprep_request(req);
-        spin_lock_irqsave(q->queue_lock, flags);
-+       scsi_unprep_request(req);
-        blk_requeue_request(q, req);
-        spin_unlock_irqrestore(q->queue_lock, flags);
 
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
