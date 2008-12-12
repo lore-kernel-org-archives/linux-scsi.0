@@ -1,86 +1,95 @@
 From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [PATCH][RFC 23/23]: Support for zero-copy TCP transmit of user
- space data
-Date: Fri, 12 Dec 2008 22:25:44 +0300
-Message-ID: <4942BAB8.4050007@vlnb.net>
-References: <494009D7.4020602@vlnb.net> <494012C4.7090304@vlnb.net>	 <20081210214500.GA24212@ioremap.net>  <4941590F.3070705@vlnb.net> <1229022734.3266.67.camel@localhost.localdomain>
+Subject: Re: [PATCH][RFC 2/23]: SCST core
+Date: Fri, 12 Dec 2008 22:24:53 +0300
+Message-ID: <4942BA85.3070408@vlnb.net>
+References: <494009D7.4020602@vlnb.net> <49400ACD.3070502@vlnb.net> <20081210191213.GA15273@uranus.ravnborg.org> <49414DBE.6070801@vlnb.net> <20081211210917.GB27010@uranus.ravnborg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=KOI8-R; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753905AbYLLT1X@vger.kernel.org>
-In-Reply-To: <1229022734.3266.67.camel@localhost.localdomain>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752493AbYLLTYz@vger.kernel.org>
+In-Reply-To: <20081211210917.GB27010@uranus.ravnborg.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Evgeniy Polyakov <zbr@ioremap.net>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Boaz Harrosh <bharrosh@panasas.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, netdev@vger.kernel.org
+To: Sam Ravnborg <sam@ravnborg.org>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Boaz Harrosh <bharrosh@panasas.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Steven Rostedt <srostedt@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> On Thu, 2008-12-11 at 21:16 +0300, Vladislav Bolkhovitin wrote:
->> Hi Evgeniy,
+Sam Ravnborg wrote:
+>>>>  drivers/scst/scst_lib.c      | 3689 
+>>>>  +++++++++++++++++++++++++++++++++++++
+>>>>  drivers/scst/scst_main.c     | 1919 +++++++++++++++++++
+>>>>  drivers/scst/scst_module.c   |   69
+>>>>  drivers/scst/scst_priv.h     |  513 +++++
+>>>>  drivers/scst/scst_targ.c     | 5458 
+>>>>  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>>>  8 files changed, 12435 insertions(+)
+>>> There was a lot af TRACE_ENTRY() / TRACE_EXIT() noise.
+>>> We should have proper tools for that by now (I hope).
+>> Sorry, I don't see such tools with, for instance, a possibility to be 
+>> compiled out in non-debug builds.
 >>
->> Evgeniy Polyakov wrote:
->>> Hi Vladislav.
->>>
->>> On Wed, Dec 10, 2008 at 10:04:36PM +0300, Vladislav Bolkhovitin (vst@vlnb.net) wrote:
->>>> In the chosen approach new optional field void *net_priv was added to 
->>>> struct page. It is enclosed by
->>> There is a huge no-no in networking land on increasing skb.
->>> Reason is simple every skb will carry potentially unneded data as long
->>> as given option is enabled, and most of the time it will.
->>> To break this barrier one has to have (I wanted to write ego, but then
->>> decided to replace it with mojo) so huge reason to do this, that it is
->>> almost impossible to have.
->>>
->>> Something tells me that increasing page structure with 8 bytes because
->>> of zero-copy iscsi transfer is not that great idea, since basically every
->>> user out there will have it enabled in the distro config and will waste
->>> noticeble amount of ram.
->> The waste will be only 0.2% of RAM or 2MB per 1GB. Not much. Perhaps, 
->> not noticeable for an average user of distro kernels at all. Embedded 
->> people, who count each byte, almost always don't need iSCSI, so won't 
->> have any problems to disable 
->> TCP_ZERO_COPY_TRANSFER_COMPLETION_NOTIFICATION option.
+>> From one side, I can agree, those TRACE_ENTRY()/TRACE_EXIT() statements 
+>> *may* look like a noise (I personally don't notice them), but, from 
+>> other side, in past times they have proved how usable they are. If an 
+>> SCST user has a problem, I simply ask him to make a debug build, then 
+>> enable entry_exit and some other logging levels, then reproduce the 
+>> problem and send me the logs. Then in most cases I can see what's wrong 
+>> and provide a fix without additional actions and questions.
 > 
-> Actually, there are several other considerations:
-> 
->      1. struct page is a lowmem structure, so increasing its size
->         becomes problematic on x86 PAE systems.
->      2. The current 64 bit struct page seems to be exactly pushing a
->         cacheline boundary.  Increasing it so it spills over will have a
->         performance impact
+> I had ftrace in mind but it has not hit mainline yet.
+> But will do before this patchset does.
 
-This is why I suggest to have 
-CONFIG_TCP_ZERO_COPY_TRANSFER_COMPLETION_NOTIFICATION disabled in 
-general kernels. ISCSI-SCST will still work with almost no performance 
-loss for in-kernel backend and people would better recompile kernel, 
-then patch it, then recompile.
+Unfortunately, ftrace at the moment can't fully replace 
+TRACE_ENTRY()/TRACE_EXIT() statements, because it lacks:
 
-> It's the performance problems that will be most critical, I suspect, so
-> you'll need mm people buy in for doing this.
+1. Doing trace in only some modules or source files. Noise from tracing 
+of the whole kernel is not needed if we investigate problem in only one 
+module (SCST in this case).
 
-I'll ask in linux-mm, thanks for the suggestion.
+2. Ability to inject own messages in the output stream. It's needed to 
+have synchronized stream of output messages about both functions tracing 
+and what those functions doing. For instance:
 
-> One thing that leaps immediately to mind is that you could isolate this
-> to the net layer by putting it in skb_frag_struct.  However, such a move
-> would require a proper API for this in net ...
+entry in func1()
+adding cmd C to list L
+exit from func1()
 
-To have net_priv analog in skb was the first idea I was tried. But I 
-quickly gave up, because it would required that all the pages in each 
-skb_frag_struct be from the same originator, i.e. with the same 
-net_priv. It is unpractical to change all the operations with skb's to 
-forbid merging them, if they have different net_priv. There are too many 
-such places in very not obvious code pieces.
+Otherwise there would be 2 traces:
 
-> right now it looks like
-> you're using the struct page addition to carry this information from
-> SCSI to net, which is a bit of a layering violation.
+entry in func1()
+exit from func1()
 
-I don't think there is any layering violation here. Just lower layer 
-notifies upper layer that transmission of a page has finished. It's done 
-a bit not straightforward, but still basically the same as, for 
-instance, on_free_cmd() callbacks which SCST core uses to notify target 
-drivers and dev handlers that the corresponding command is about to be 
-freed, so they can free associated with it data as well.
+and
+
+adding cmd C to list L
+
+which almost impossible to merge to analyze.
+
+(Steven Rostedt added on CC)
+
+>>> We often ask for exported symbols to be documented - so one has
+>>> a slight idea of their purpose.
+>> They are documented, near their prototypes in the public header files, 
+>> particularly, scst.h. It was done so, because it was supposed that one, 
+>> writing a target driver or dev handler will have on hands the header 
+>> files, not source code.
+>>
+>> Should we move those comments from the functions prototypes to the 
+>> functions definitions?
+> If there will be multiple implmentations of the same prototype
+> we generally recommend to stick the comment in a .H file.
+> But otherwise keep it close to the source it describe with the
+> minimal hope that it gets updated.
+
+OK, we will move descriptions of functions from prototypes to definitions.
+
+> Oh - and we do not distribute a stripped down headers only
+> version of the kernel. Users will see full kernel source.
+
+Those headers are not stripped down. Better analogy is with C++ private 
+and public class interfaces. Public SCST headers have public symbols for 
+external modules (target drivers mainly), but private headers are for 
+internal SCST use only. They are needed to better draw a boundary 
+between public and internal private interfaces.
 
 Thanks,
 Vlad
