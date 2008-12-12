@@ -1,36 +1,38 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Intel X25-M MLC SSD benchmarks
-Date: Fri, 12 Dec 2008 08:20:29 -0700
-Message-ID: <20081212152029.GL26095@parisc-linux.org>
-References: <20081210213937.GC25548@parisc-linux.org> <83CA05F64804AF43B8F733C4ABDFAA51022D04D7@mail1.bitband.com> <311601c90812111927t54ed6a54oac3154dba30f737d@mail.gmail.com> <311601c90812112055i7ec955d6kf4fc13279817cdb0@mail.gmail.com> <e2e108260812112315q5ed1d265q86cf22b1dd59c69d@mail.gmail.com> <311601c90812120625o4e000646u98aebc8ab3556a33@mail.gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [Bug 12188] Corsair Flash Voyager USB Stick not working
+Date: Fri, 12 Dec 2008 10:30:26 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0812120949440.2504-100000@iolanthe.rowland.org>
+References: <20081212073814.0223410800C@picon.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:43538 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756767AbYLLPUq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Dec 2008 10:20:46 -0500
-Content-Disposition: inline
-In-Reply-To: <311601c90812120625o4e000646u98aebc8ab3556a33@mail.gmail.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:34636 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756824AbYLLPa2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Dec 2008 10:30:28 -0500
+In-Reply-To: <20081212073814.0223410800C@picon.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Eric D. Mudama" <edmudama@gmail.com>
-Cc: Bart Van Assche <bart.vanassche@gmail.com>, Raz Ben-Yehuda <razb@bitband.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: bugme-daemon@bugzilla.kernel.org, SCSI development list <linux-scsi@vger.kernel.org>
+Cc: paul@purecodes.org
 
-On Fri, Dec 12, 2008 at 07:25:18AM -0700, Eric D. Mudama wrote:
-> Oops, I guess I assumed that by writing a few gigabytes of data it
-> wouldn't matter that much.  I'll run the test again in a bit once I'm
-> off this solaris machine.
+On Thu, 11 Dec 2008 bugme-daemon@bugzilla.kernel.org wrote:
 
-You need to rescale for 2008; people often have 4GB or more RAM in their
-machines ... hell, I have one machine here from 2002 with 14GB in it
-(I don't power it up very often because it's too noisy).  The test was
-only writing 1GB of data, which would fit in the page cache of my laptop,
-never mind the kind of machine that's likely to have an 8-way array
-attached to it.
+> http://bugzilla.kernel.org/show_bug.cgi?id=12188
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+> ------- Comment #4 from paul@purecodes.org  2008-12-11 23:38 -------
+> Isn't there a way to fix it so that the Corsair Flash Voyager owners don't have
+> to reboot the machine or rebuild the kernel of a machine where they want to use
+> the memory stick?
+> Would be a pity. And would be great if it was possible to fix it.
+
+Would anybody object if the default value for scsi_inq_timeout was 
+increased?  There is at least one USB device for which the current 5 
+seconds is known to be too small.
+
+Windows XP uses 20 seconds (for USB mass-storage devices, anyway -- I 
+don't know about other bus types).  Is there any reason not to make 20 
+the default?
+
+Alan Stern
+
