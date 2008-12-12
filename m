@@ -1,70 +1,36 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12195] "dd" make kernel panic
-Date: Fri, 12 Dec 2008 07:09:40 -0800 (PST)
-Message-ID: <20081212150940.16503108047@picon.linux-foundation.org>
-References: <bug-12195-11613@http.bugzilla.kernel.org/>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Intel X25-M MLC SSD benchmarks
+Date: Fri, 12 Dec 2008 08:20:29 -0700
+Message-ID: <20081212152029.GL26095@parisc-linux.org>
+References: <20081210213937.GC25548@parisc-linux.org> <83CA05F64804AF43B8F733C4ABDFAA51022D04D7@mail1.bitband.com> <311601c90812111927t54ed6a54oac3154dba30f737d@mail.gmail.com> <311601c90812112055i7ec955d6kf4fc13279817cdb0@mail.gmail.com> <e2e108260812112315q5ed1d265q86cf22b1dd59c69d@mail.gmail.com> <311601c90812120625o4e000646u98aebc8ab3556a33@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:34151 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753306AbYLLPKM convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Dec 2008 10:10:12 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBCF9fD1010884
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Dec 2008 07:09:42 -0800
-In-Reply-To: <bug-12195-11613@http.bugzilla.kernel.org/>
+Received: from palinux.external.hp.com ([192.25.206.14]:43538 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756767AbYLLPUq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Dec 2008 10:20:46 -0500
+Content-Disposition: inline
+In-Reply-To: <311601c90812120625o4e000646u98aebc8ab3556a33@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Eric D. Mudama" <edmudama@gmail.com>
+Cc: Bart Van Assche <bart.vanassche@gmail.com>, Raz Ben-Yehuda <razb@bitband.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12195
+On Fri, Dec 12, 2008 at 07:25:18AM -0700, Eric D. Mudama wrote:
+> Oops, I guess I assumed that by writing a few gigabytes of data it
+> wouldn't matter that much.  I'll run the test again in a bit once I'm
+> off this solaris machine.
 
-
-
-
-
-------- Comment #8 from anonymous@kernel-bugs.osdl.org  2008-12-12 07:09 -------
-Reply-To: James.Bottomley@HansenPartnership.com
-
-On Fri, 2008-12-12 at 02:22 -0800, Mike Anderson wrote:
-> bugme-daemon@bugzilla.kernel.org <bugme-daemon@bugzilla.kernel.org> wrote:
-> > http://bugzilla.kernel.org/show_bug.cgi?id=12195
-> > 
-> > 
-> > 
-> > 
-> > 
-> > ------- Comment #6 from ming.m.lin@intel.com  2008-12-11 18:27 -------
-> > 2.6.28-rc8 also panic
-> 
-> The blk_mark_rq_complete check should prevent completions from occurring on
-> already timed out requests unless the interaction previous mentioned between
-> mpt_fault_reset_work and the scsi eh thread requeue alows the REQ_ATOM_COMPLETE
-> bit to get cleared prior to the scsi_done being called from
-> mptscsih_flush_running_cmds. This did not look obvious to hit.
-> 
-> mpt_fault_reset_work
-> 	mpt_HardResetHandler
-> 		mpt_signal_reset
-> 			mptsas_ioc_reset 
-> 				mptscsih_flush_running_cmds
-> 		mpt_do_ioc_recovery
-
-Actually, this isn't quite true.  Particularly in the eh case.  It looks
-like the block timeout isn't stopped until blk_complete_request() which
-is pretty late.  If the timeout fires after scsi_done is called but
-before we complete the request, any timeout goes through the
-BLK_EH_HANDLED path to __blk_complete_request().  This routine
-unconditionally adds to the done routine without checking the mark, so
-there is a window where we can get double dones.
-
-James
-
+You need to rescale for 2008; people often have 4GB or more RAM in their
+machines ... hell, I have one machine here from 2002 with 14GB in it
+(I don't power it up very often because it's too noisy).  The test was
+only writing 1GB of data, which would fit in the page cache of my laptop,
+never mind the kind of machine that's likely to have an 8-way array
+attached to it.
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
