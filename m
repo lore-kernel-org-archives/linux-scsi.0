@@ -1,66 +1,72 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Intel X25-M MLC SSD benchmarks - How can I be sure i am erased block aligned ?
-Date: Thu, 11 Dec 2008 18:24:51 -0700
-Message-ID: <20081212012451.GG26095@parisc-linux.org>
-References: <5d96567b0812111240i60f70974y815a0775006da05f@mail.gmail.com>
+From: Vasu Dev <vasu.dev@linux.intel.com>
+Subject: Re: [PATCH 2/3] libfc: A modular Fibre Channel library
+Date: Thu, 11 Dec 2008 17:55:58 -0800
+Message-ID: <4941C4AE.2000403@linux.intel.com>
+References: <20081209231005.17830.92133.stgit@fritz> <20081209231016.17830.87180.stgit@fritz> <20081210000333.GC23556@one.firstfloor.org> <49400D94.5050301@linux.intel.com> <20081210194252.GC25779@one.firstfloor.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5d96567b0812111240i60f70974y815a0775006da05f@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Raz <raziebe@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga07.intel.com ([143.182.124.22]:15427 "EHLO
+	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756786AbYLLB4A (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Dec 2008 20:56:00 -0500
+In-Reply-To: <20081210194252.GC25779@one.firstfloor.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andi Kleen <andi@firstfloor.org>
+Cc: Robert Love <robert.w.love@intel.com>, james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, jgarzik@redhat.com, davem@davemloft.net, james.smart@emulex.com, michaelc@cs.wisc.edu, jeykholt@cisco.com, jeffrey.t.kirsher@intel.com
 
-On Thu, Dec 11, 2008 at 10:40:41PM +0200, Raz wrote:
-> > ________________________________
-> > From: Matthew Wilcox [mailto:matthew@wil.cx]
-> > Sent: Thu 12/11/2008 5:44 AM
-> > To: Raz Ben-Yehuda
-> > Cc: linux-ide@vger.kernel.org; linux-scsi@vger.kernel.org
-> > Subject: Re: Intel X25-M MLC SSD benchmarks
-> >
-> > On Thu, Dec 11, 2008 at 12:12:37AM +0200, Raz Ben-Yehuda wrote:
-> >> I did not want to dive into details because it does not matter. Whether
-> >> noop,deadline, deadline parameters...
-> >> As for the controller I used 4 different controllers. Adaptec,AHCI and
-> >> Intel as Integrated chips on the 1025W-UR supermicro motherboard, and a
-> >> 4-th controller SuperMicro UIO Adaptec aac card.
-> >> All gave same results for most dd writes commands.
-> >> dd if=/dev/zero of=/dev/sda bs=1M count=1000 oflag=direct , and many
-> >> other variants such erase block size ( 128K ) , several erase block size
-> >> and so on. Kernel is 2.6.18-8.el5.
-> >
-> >>>OK, I suspect you aren't giving the drive enough work to do for it to
-> >>>perform at its best.  Try doing something like this:
-> >
-> >>>for i in $(seq 0 9); do \
-> >  >>     dd if=/dev/zero of=/dev/sda bs=1M count=1000 oflag=direct \
-> >  >>               seek=$(($i * 1000)) & \
-> >>>done
-> >
-> did that. nothing. also, I would like to note that IO flow is quite
-> weird.iostats reports 70GB/s in the first few seconds, and then it
-> degrades to 20
->  MB/s and less. could it be that I am not erase-block aligment ?
+Andi Kleen wrote:
+> On Wed, Dec 10, 2008 at 10:42:28AM -0800, Vasu Dev wrote:
+>   
+>> It had load balancing issue but now it is fixed, related latest 
+>> submitted code with its updated comment is:-
+>>
+>> 	/*
+>> 	 * The incoming frame exchange id(oxid) is ANDed with num of online
+>> 	 * cpu bits to get cpu_idx and then this cpu_idx is used for 
+>> 	 selecting
+>> 	 * a per cpu kernel thread from fcoe_percpu. In case the cpu is
+>> 	 * offline or no kernel thread for derived cpu_idx then cpu_idx is
+>> 	 * initialize to first online cpu index.
+>> 	 */
+>> 	cpu_idx = oxid & (num_online_cpus() - 1);
+>>     
+>
+> First note that num_online_cpus() is not guaranteed to be a power of two,
+> - 1 is not guaranteed to give a suitable mask. So you might actually lose 
+> random bits.
 
-That doesn't sound likely to me.  Erase block size isn't a huge issue
-with these drives.  I've been trying to replicate your problem, but I'm
-not having any luck; unfortunately I only have access to an X25-E drive
-(not an X25-M) and I'm seeing 175-185MB/s when it's attached to an AHCI
-controller, just with a single dd (I haven't even played with the
-elevator).  I'm trying to get hold of an X25-M drive, but I don't know
-when I'll receive one.
+Correct, this will work best for only power of 2 online cpus and that 
+would be the most common typical use case. I agree it won't load balance 
+better in non power of 2 cpus case.
 
-> how does SSD aligments interacts with a controller ?
+>  Also your load balancing scheme is unusual to say at least. 
+> e.g. when you're just talking to a single frame exchange you would always 
+> transfer data between CPUs instead of keeping it all on the CPU that 
+> processes the interrupt.  
+>   
+> Normally the rule of thumb is to use local
+> data as much as possible. Or when you distribute like this at least
+> stay in the same socket. 
+>   
 
-Controllers can generally send down large enough IOs that it isn't a
-problem.  And the Intel SSDs are smart enough that you shouldn't have to
-align to erase block boundaries to make them go fast.
+We cannot control what cpu to get interrupted for a FC frame in a 
+typical generic NIC, so we may end up receiving mostly all FC frames on 
+a single same cpu though system might have several other cpus available. 
+In this scenario if frame are passed up to same cpu as suggested above 
+then that won't do any load balancing, therefore some sort of load 
+balancing is required based on some FC frame attributes here.
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+As I said in my last response that "performance tuning is yet to be 
+done" but you bring up some good related points now of cross socket 
+frame migration and balancing on non power of 2 cpus system. These 
+should be considered during pending performance tuning but for now I can 
+add additional check to select cpu within same socket but not sure how 
+to do that, any kernel call for this ? This might cause more locking 
+contentions on libfc structs so really we have to experiment these thing 
+during performance tuning. Thanks Andi for these hints on performance 
+consideration.
+
+Vasu
