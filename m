@@ -1,24 +1,33 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 12195] "dd" make kernel panic
-Date: Fri, 12 Dec 2008 09:09:37 -0600
-Message-ID: <1229094577.3262.19.camel@localhost.localdomain>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12195] "dd" make kernel panic
+Date: Fri, 12 Dec 2008 07:09:40 -0800 (PST)
+Message-ID: <20081212150940.16503108047@picon.linux-foundation.org>
 References: <bug-12195-11613@http.bugzilla.kernel.org/>
-	 <20081212022704.5488C108042@picon.linux-foundation.org>
-	 <20081212102205.GA16034@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:32859 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756708AbYLLPJb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Dec 2008 10:09:31 -0500
-In-Reply-To: <20081212102205.GA16034@linux.vnet.ibm.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:34151 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753306AbYLLPKM convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Dec 2008 10:10:12 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBCF9fD1010884
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Dec 2008 07:09:42 -0800
+In-Reply-To: <bug-12195-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@linux.vnet.ibm.com>
-Cc: bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=12195
+
+
+
+
+
+------- Comment #8 from anonymous@kernel-bugs.osdl.org  2008-12-12 07:09 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Fri, 2008-12-12 at 02:22 -0800, Mike Anderson wrote:
 > bugme-daemon@bugzilla.kernel.org <bugme-daemon@bugzilla.kernel.org> wrote:
@@ -55,3 +64,7 @@ there is a window where we can get double dones.
 James
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
