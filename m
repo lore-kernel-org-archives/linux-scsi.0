@@ -1,89 +1,123 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] [Target_Core_Mod 6/12]: Updates for target_core_hba.c
-Date: Fri, 12 Dec 2008 01:32:44 -0800
-Message-ID: <1229074364.4153.648.camel@haakon2.linux-iscsi.org>
+Subject: [PATCH] [Target_Core_Mod 7/12]: Update generic REPORT_LUN code
+Date: Fri, 12 Dec 2008 01:33:39 -0800
+Message-ID: <1229074419.4153.651.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758959AbYLLJdB@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp122.sbc.mail.sp1.yahoo.com ([69.147.64.95]:49086 "HELO
+	smtp122.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756945AbYLLJdm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Dec 2008 04:33:42 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
-List-Id: linux-scsi@vger.kernel.org
 
->From c5c8768f89ab4d419bff6f49edb59e7346a7cec7 Mon Sep 17 00:00:00 2001
+>From 566bf52116461c4639bacd7a109fcdd07849c251 Mon Sep 17 00:00:00 2001
 From: Nicholas Bellinger <nab@linux-iscsi.org>
-Date: Fri, 12 Dec 2008 00:53:17 -0800
-Subject: [PATCH] [Target_Core_Mod]: Updates for target_core_hba.c
+Date: Fri, 12 Dec 2008 00:54:23 -0800
+Subject: [PATCH] [Target_Core_Mod]: Update generic REPORT_LUN code
 
-This patch makes Core HBA code use TRANSPORT_MAX_GLOBAL_HBAS and
-se_check_devices_access().
+This patch converts target_core_reportluns.c to use the updated target_core_base.h
+variable prefixes.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/lio-core/target_core_hba.c |   16 ++++++++--------
- 1 files changed, 8 insertions(+), 8 deletions(-)
+ drivers/lio-core/target_core_reportluns.c |   30 ++++++++++++++--------------
+ 1 files changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/lio-core/target_core_hba.c b/drivers/lio-core/target_core_hba.c
-index 1f99d3e..d2515aa 100644
---- a/drivers/lio-core/target_core_hba.c
-+++ b/drivers/lio-core/target_core_hba.c
-@@ -72,9 +72,9 @@ extern se_hba_t *core_get_hba_from_id (u32 hba_id, int addhba)
+diff --git a/drivers/lio-core/target_core_reportluns.c b/drivers/lio-core/target_core_reportluns.c
+index 64e0bea..57401e4 100644
+--- a/drivers/lio-core/target_core_reportluns.c
++++ b/drivers/lio-core/target_core_reportluns.c
+@@ -131,15 +131,15 @@ static int rl_allocate_fake_lun (se_cmd_t *cmd, u32 lun)
  {
- 	se_hba_t *hba;
+ 	se_lun_t *lun_p;
  	
--	if (hba_id > (ISCSI_MAX_GLOBAL_HBAS-1)) {
--		TRACE_ERROR("iSCSI HBA_ID: %u exceeds ISCSI_MAX_GLOBAL_HBAS-1: %u\n",
--			hba_id, ISCSI_MAX_GLOBAL_HBAS-1);
-+	if (hba_id > (TRANSPORT_MAX_GLOBAL_HBAS-1)) {
-+		TRACE_ERROR("iSCSI HBA_ID: %u exceeds TRANSPORT_MAX_GLOBAL_HBAS-1: %u\n",
-+			hba_id, TRANSPORT_MAX_GLOBAL_HBAS-1);
- 		return(NULL);
+-	if (!(cmd->iscsi_lun = (se_lun_t *)
++	if (!(cmd->se_lun = (se_lun_t *)
+ 			kzalloc(sizeof(se_lun_t), GFP_KERNEL))) {
+ 		TRACE_ERROR("Unable to allocate se_lun_t\n");
+ 		return(-1);
  	}
+-	ISCSI_LUN(cmd)->iscsi_lun = lun;
++	ISCSI_LUN(cmd)->unpacked_lun = lun;
+ 	lun_p = ISCSI_LUN(cmd);
+ 	
+-	if (!(lun_p->iscsi_dev = (se_device_t *)
++	if (!(lun_p->se_dev = (se_device_t *)
+ 			kzalloc(sizeof(se_device_t), GFP_KERNEL))) {
+ 		TRACE_ERROR("Unable to allocate se_device_t\n");
+ 		kfree(ISCSI_LUN(cmd));
+@@ -196,7 +196,7 @@ extern int se_allocate_rl_cmd (
+ 	init_MUTEX_LOCKED(&task->task_stop_sem);
+ 	task->task_no = 0;
+ 	task->task_se_cmd = cmd;
+-	task->iscsi_dev = ISCSI_DEV(cmd);
++	task->se_dev = ISCSI_DEV(cmd);
+ 	task->transport_req = (void *) rl_cmd;
  
-@@ -94,7 +94,7 @@ extern se_hba_t *core_get_next_free_hba (void)
- 	u32 i;
- 
- 	spin_lock(&se_global->hba_lock);     
--	for (i = 0; i < ISCSI_MAX_GLOBAL_HBAS; i++) {
-+	for (i = 0; i < TRANSPORT_MAX_GLOBAL_HBAS; i++) {
- 		hba = &se_global->hba_list[i];
- 		if (hba->hba_status != HBA_STATUS_FREE)
+         spin_lock_irqsave(&T_TASK(cmd)->t_state_lock, flags);
+@@ -213,10 +213,10 @@ failure:
+ 	if (ISCSI_LUN(cmd)) {
+ 		if (ISCSI_DEV(cmd)) {
+ 			kfree(ISCSI_DEV(cmd));
+-			cmd->iscsi_lun->iscsi_dev = NULL;
++			cmd->se_lun->se_dev = NULL;
+ 		}
+ 		kfree(ISCSI_LUN(cmd));
+-		cmd->iscsi_lun = NULL;
++		cmd->se_lun = NULL;
+ 	}
+ 	if (T_TASK(cmd)) {
+ 		kfree(cmd->t_task);
+@@ -245,7 +245,7 @@ extern int iscsi_build_report_luns_response (
+ 	u32 cdb_offset = 0, lun_count = 0, offset = 8;
+ 	u64 i, lun;
+ 	se_dev_entry_t *deve;
+-	se_lun_t *iscsi_lun;
++	se_lun_t *se_lun;
+ 	se_session_t *sess = SE_SESS(se_cmd);
+ 	se_task_t *task;
+ 	rl_cmd_t *rl_cmd;
+@@ -258,9 +258,9 @@ extern int iscsi_build_report_luns_response (
+ 	spin_lock_bh(&SE_NODE_ACL(sess)->device_list_lock);
+ 	for (i = 0; i < ISCSI_MAX_LUNS_PER_TPG; i++) {
+ 		deve = &SE_NODE_ACL(sess)->device_list[i];
+-		if (!(deve->lun_flags & ISCSI_LUNFLAGS_INITIATOR_ACCESS))
++		if (!(deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS))
  			continue;
-@@ -182,7 +182,7 @@ extern int se_core_del_hba (
- 	 * Do not allow the se_hba_t to be released if references exist to
- 	 * from se_device_t->se_lun_t.
+-		iscsi_lun = deve->iscsi_lun;
++		se_lun = deve->se_lun;
+ 
+ 		/*
+ 		 * We determine the correct LUN LIST LENGTH even once we
+@@ -319,14 +319,14 @@ extern void rl_free_task (se_task_t *task)
+ 	/*
+ 	 * Free the pseudo device.
  	 */
--	if (iscsi_check_devices_access(hba) < 0) {
-+	if (se_check_devices_access(hba) < 0) {
- 		TRACE_ERROR("CORE_HBA[%u] - **ERROR** - Unable to release HBA"
- 			" with active LUNs\n", hba->hba_id);
- 		return(-EINVAL);
-@@ -232,14 +232,14 @@ extern void iscsi_disable_all_hbas (void)
- 	se_hba_t *hba;
- 
- 	spin_lock(&se_global->hba_lock);
--	for (i = 0; i < ISCSI_MAX_GLOBAL_HBAS; i++) {
-+	for (i = 0; i < TRANSPORT_MAX_GLOBAL_HBAS; i++) {
- 		hba = &se_global->hba_list[i];
- 
- 		if (!(hba->hba_status & HBA_STATUS_ACTIVE))
- 			continue;
- 
- 		spin_unlock(&se_global->hba_lock);
--		iscsi_disable_devices_for_hba(hba);
-+		se_disable_devices_for_hba(hba);
- 		spin_lock(&se_global->hba_lock);
+-	if (task->iscsi_dev) {
+-		kfree(task->iscsi_dev);
+-		task->iscsi_dev = NULL;
++	if (task->se_dev) {
++		kfree(task->se_dev);
++		task->se_dev = NULL;
  	}
- 	spin_unlock(&se_global->hba_lock);
-@@ -259,7 +259,7 @@ extern void iscsi_hba_del_all_hbas (void)
- 	se_hba_t *hba;
  
- 	spin_lock(&se_global->hba_lock);
--	for (i = 0; i < ISCSI_MAX_GLOBAL_HBAS; i++) {
-+	for (i = 0; i < TRANSPORT_MAX_GLOBAL_HBAS; i++) {
- 		hba = &se_global->hba_list[i];
+-	if (se_cmd->iscsi_lun) {
+-		kfree(se_cmd->iscsi_lun);
+-		se_cmd->iscsi_lun = NULL;
++	if (se_cmd->se_lun) {
++		kfree(se_cmd->se_lun);
++		se_cmd->se_lun = NULL;
+ 	}
  	
- 		if (!(hba->hba_status & HBA_STATUS_ACTIVE))
+ 	if (rl_cmd->rl_buf) {
 -- 
 1.5.4.1
+
+
+
