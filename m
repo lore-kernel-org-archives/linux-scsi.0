@@ -1,218 +1,246 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] [Target_Core_Mod 8/12]: Update SE Object code for
-	target_core_base.h
-Date: Fri, 12 Dec 2008 01:34:08 -0800
-Message-ID: <1229074448.4153.653.camel@haakon2.linux-iscsi.org>
+Subject: [PATCH] [Target_Core_Mod 9/12]: Update PSCSI, IBLOCK, FILEIO and
+	RAMDISK subsystem plugins
+Date: Fri, 12 Dec 2008 01:34:50 -0800
+Message-ID: <1229074490.4153.656.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp119.sbc.mail.sp1.yahoo.com ([69.147.64.92]:21268 "HELO
-	smtp119.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756566AbYLLJeL (ORCPT
+Received: from smtp122.sbc.mail.sp1.yahoo.com ([69.147.64.95]:20035 "HELO
+	smtp122.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757731AbYLLJez (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Dec 2008 04:34:11 -0500
+	Fri, 12 Dec 2008 04:34:55 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
->From 990b366a3257954b7e3ee6a7d35dc24bf5f09a6d Mon Sep 17 00:00:00 2001
+>From f6a4a22459ed17fd26ea58ae9c76a99c07a08b62 Mon Sep 17 00:00:00 2001
 From: Nicholas Bellinger <nab@linux-iscsi.org>
-Date: Fri, 12 Dec 2008 00:56:59 -0800
-Subject: [PATCH] [Target_Core_Mod]: Update SE Object code for target_core_base.h
+Date: Fri, 12 Dec 2008 00:59:43 -0800
+Subject: [PATCH] [Target_Core_Mod]: Update PSCSI, IBLOCK, FILEIO and RAMDISK subsystem plugins
 
-This patch updates core SE device object functionality for Target_Core_Mod
-se_device_t operations.
+This patch updates Target_Core_Mod subsytem plugins to use the updated target_core_base.h
+data structures.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/lio-core/target_core_seobj.c |   59 +++++++++++++++------------------
- drivers/lio-core/target_core_seobj.h |    8 ++--
- 2 files changed, 31 insertions(+), 36 deletions(-)
+ drivers/lio-core/target_core_file.c   |   10 +++++-----
+ drivers/lio-core/target_core_iblock.c |   12 ++++++------
+ drivers/lio-core/target_core_pscsi.c  |   17 ++++++++---------
+ drivers/lio-core/target_core_rd.c     |   10 +++++-----
+ 4 files changed, 24 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/lio-core/target_core_seobj.c b/drivers/lio-core/target_core_seobj.c
-index d455fa1..eff0b0e 100644
---- a/drivers/lio-core/target_core_seobj.c
-+++ b/drivers/lio-core/target_core_seobj.c
-@@ -178,11 +178,11 @@ extern void dev_put_obj (void *p)
+diff --git a/drivers/lio-core/target_core_file.c b/drivers/lio-core/target_core_file.c
+index 2eaf8b4..1a1034f 100644
+--- a/drivers/lio-core/target_core_file.c
++++ b/drivers/lio-core/target_core_file.c
+@@ -418,7 +418,7 @@ extern void fd_get_evpd_prod (unsigned char *buf, u32 size, se_device_t *dev)
+ extern void fd_get_evpd_sn (unsigned char *buf, u32 size, se_device_t *dev)
  {
- 	se_device_t *dev  = (se_device_t *)p;
+ 	fd_dev_t *fdev = (fd_dev_t *) dev->dev_ptr;
+-	se_hba_t *hba = dev->iscsi_hba;
++	se_hba_t *hba = dev->se_hba;
  
--	core_put_hba(dev->iscsi_hba);
-+	core_put_hba(dev->se_hba);
+ 	snprintf(buf, size, "%u_%u", hba->hba_id, fdev->fd_dev_id);	
  	return;
- }
- 
--extern int dev_obj_export (void *p, iscsi_portal_group_t *tpg, se_lun_t *lun)
-+extern int dev_obj_export (void *p, se_portal_group_t *tpg, se_lun_t *lun)
- {
- 	se_device_t *dev  = (se_device_t *)p;
- 	se_port_t *sep;
-@@ -194,9 +194,9 @@ extern int dev_obj_export (void *p, iscsi_portal_group_t *tpg, se_lun_t *lun)
- 	memset(sep, 0, sizeof(se_port_t));
- 	INIT_LIST_HEAD(&sep->sep_list);
- 
--	lun->iscsi_dev = dev;
-+	lun->se_dev = dev;
- 	if (DEV_OBJ_API(dev)->activate(p) < 0) {
--		lun->iscsi_dev = NULL;
-+		lun->se_dev = NULL;
- 		kfree(sep);
- 		return(-1);
- 	}
-@@ -220,7 +220,7 @@ extern int dev_obj_export (void *p, iscsi_portal_group_t *tpg, se_lun_t *lun)
- 	return(0);
- }
- 
--extern void dev_obj_unexport (void *p, iscsi_portal_group_t *tpg, se_lun_t *lun)
-+extern void dev_obj_unexport (void *p, se_portal_group_t *tpg, se_lun_t *lun)
- {
- 	se_device_t *dev  = (se_device_t *)p;
- 	se_port_t *sep = lun->lun_sep;
-@@ -244,7 +244,7 @@ extern void dev_obj_unexport (void *p, iscsi_portal_group_t *tpg, se_lun_t *lun)
- 	kfree(sep);
- 
- 	DEV_OBJ_API(dev)->deactivate(p);
--	lun->iscsi_dev = NULL;
-+	lun->se_dev = NULL;
+@@ -433,8 +433,8 @@ extern int fd_emulate_inquiry (se_task_t *task)
+ 	unsigned char prod[64], se_location[128];
+ 	unsigned char *sub_sn = NULL;
+ 	se_cmd_t *cmd = TASK_CMD(task);
+-	fd_dev_t *fdev = (fd_dev_t *) task->iscsi_dev->dev_ptr;
+-	se_hba_t *hba = task->iscsi_dev->iscsi_hba;
++	fd_dev_t *fdev = (fd_dev_t *) task->se_dev->dev_ptr;
++	se_hba_t *hba = task->se_dev->se_hba;
  	
+ 	memset(prod, 0, 64);
+ 	memset(se_location, 0, 128);
+@@ -461,7 +461,7 @@ extern int fd_emulate_inquiry (se_task_t *task)
+  */
+ static int fd_emulate_read_cap (se_task_t *task)
+ {
+-	fd_dev_t *fd_dev = (fd_dev_t *) task->iscsi_dev->dev_ptr;
++	fd_dev_t *fd_dev = (fd_dev_t *) task->se_dev->dev_ptr;
+ 	u32 blocks = (fd_dev->fd_dev_size / FD_BLOCKSIZE);
+ 	
+ 	if ((fd_dev->fd_dev_size / FD_BLOCKSIZE) >= 0x00000000ffffffff)
+@@ -472,7 +472,7 @@ static int fd_emulate_read_cap (se_task_t *task)
+ 
+ static int fd_emulate_read_cap16 (se_task_t *task)
+ {
+-	fd_dev_t *fd_dev = (fd_dev_t *) task->iscsi_dev->dev_ptr;
++	fd_dev_t *fd_dev = (fd_dev_t *) task->se_dev->dev_ptr;
+ 	unsigned long long blocks_long = (fd_dev->fd_dev_size / FD_BLOCKSIZE);
+ 	
+ 	return(transport_generic_emulate_readcapacity_16(TASK_CMD(task), blocks_long, FD_BLOCKSIZE));
+diff --git a/drivers/lio-core/target_core_iblock.c b/drivers/lio-core/target_core_iblock.c
+index 9f38756..0db23b6 100644
+--- a/drivers/lio-core/target_core_iblock.c
++++ b/drivers/lio-core/target_core_iblock.c
+@@ -352,8 +352,8 @@ static int iblock_emulate_inquiry (se_task_t *task)
+ {
+ 	unsigned char prod[64], se_location[128];
+ 	se_cmd_t *cmd = TASK_CMD(task);
+-	iblock_dev_t *ibd = (iblock_dev_t *) task->iscsi_dev->dev_ptr;
+-	se_hba_t *hba = task->iscsi_dev->iscsi_hba;
++	iblock_dev_t *ibd = (iblock_dev_t *) task->se_dev->dev_ptr;
++	se_hba_t *hba = task->se_dev->se_hba;
+ 	unsigned char *sub_sn = NULL;
+ 
+ 	memset(prod, 0, 64);
+@@ -377,7 +377,7 @@ static int iblock_emulate_inquiry (se_task_t *task)
+ 
+ static int iblock_emulate_read_cap (se_task_t *task)
+ {
+-	iblock_dev_t *ibd = (iblock_dev_t *) task->iscsi_dev->dev_ptr;
++	iblock_dev_t *ibd = (iblock_dev_t *) task->se_dev->dev_ptr;
+ 	struct block_device *bd = ibd->ibd_bd;
+ 	u32 blocks = (get_capacity(bd->bd_disk) - 1);
+ 
+@@ -389,7 +389,7 @@ static int iblock_emulate_read_cap (se_task_t *task)
+ 
+ static int iblock_emulate_read_cap16 (se_task_t *task)
+ {
+-	iblock_dev_t *ibd = (iblock_dev_t *) task->iscsi_dev->dev_ptr;
++	iblock_dev_t *ibd = (iblock_dev_t *) task->se_dev->dev_ptr;
+ 	struct block_device *bd = ibd->ibd_bd;
+ 	unsigned long long blocks_long = (get_capacity(bd->bd_disk) - 1);
+ 
+@@ -713,7 +713,7 @@ extern void iblock_map_task_non_SG (se_task_t *task)
+ static void iblock_bio_destructor (struct bio *bio)
+ {
+ 	se_task_t *task = (se_task_t *)bio->bi_private;
+-	iblock_dev_t *ib_dev = (iblock_dev_t *) task->iscsi_dev->dev_ptr;
++	iblock_dev_t *ib_dev = (iblock_dev_t *) task->se_dev->dev_ptr;
+ 
+ 	bio_free(bio, ib_dev->ibd_bio_set);
+ }
+@@ -752,7 +752,7 @@ static struct bio *iblock_get_bio (se_task_t *task,
+ 
+ extern int iblock_map_task_SG (se_task_t *task)
+ {
+-	iblock_dev_t *ib_dev = (iblock_dev_t *) task->iscsi_dev->dev_ptr;
++	iblock_dev_t *ib_dev = (iblock_dev_t *) task->se_dev->dev_ptr;
+ 	iblock_req_t *ib_req = (iblock_req_t *) task->transport_req;
+ 	struct bio *bio = NULL, *hbio = NULL, *tbio = NULL;
+ 	struct scatterlist *sg = task->task_sg;
+diff --git a/drivers/lio-core/target_core_pscsi.c b/drivers/lio-core/target_core_pscsi.c
+index 43fa6e3..e8a2c95 100644
+--- a/drivers/lio-core/target_core_pscsi.c
++++ b/drivers/lio-core/target_core_pscsi.c
+@@ -603,7 +603,7 @@ extern void pscsi_free_device (void *p)
+  */
+ extern int pscsi_transport_complete (se_task_t *task)
+ {
+-	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) task->iscsi_dev->dev_ptr;
++	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) task->se_dev->dev_ptr;
+ 	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
+ 	void *pscsi_buf;
+ 	int result;
+@@ -618,8 +618,7 @@ extern int pscsi_transport_complete (se_task_t *task)
+ 		u32 len = 0;
+ 		unsigned char *dst = (unsigned char *)pscsi_buf, *iqn = NULL;
+ 		unsigned char buf[EVPD_BUF_LEN];
+-//#warning FIXME v2.8: se_obj_api usage
+-		se_hba_t *hba = task->iscsi_dev->iscsi_hba;
++		se_hba_t *hba = task->se_dev->se_hba;
+ 
+ 		/*
+ 		 * The Initiator port did not request EVPD information.
+@@ -696,10 +695,10 @@ extern int pscsi_transport_complete (se_task_t *task)
+ 	 */
+ 	if (((cdb[0] == MODE_SENSE) || (cdb[0] == MODE_SENSE_10)) &&
+ 	     (status_byte(result) << 1) == SAM_STAT_GOOD) {
+-		if (!TASK_CMD(task)->iscsi_deve)
++		if (!TASK_CMD(task)->se_deve)
+ 			goto after_mode_sense;
+ 
+-		if (TASK_CMD(task)->iscsi_deve->lun_flags & ISCSI_LUNFLAGS_READ_ONLY) {
++		if (TASK_CMD(task)->se_deve->lun_flags & TRANSPORT_LUNFLAGS_READ_ONLY) {
+ 			unsigned char *buf = (unsigned char *)pscsi_buf;
+ 
+ 			if (cdb[0] == MODE_SENSE_10) {
+@@ -785,7 +784,7 @@ extern void pscsi_get_evpd_sn (unsigned char *buf, u32 size, se_device_t *dev)
+ {
+ 	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) dev->dev_ptr;
+ 	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
+-	se_hba_t *hba = dev->iscsi_hba;
++	se_hba_t *hba = dev->se_hba;
+ 
+ 	snprintf(buf, size, "%u_%u_%u_%u", hba->hba_id, sd->channel, sd->id, sd->lun);
  	return;
- }
-@@ -420,7 +420,7 @@ extern void *dev_obj_get_transport_req (void *p, se_task_t *task)
+@@ -794,7 +793,7 @@ extern void pscsi_get_evpd_sn (unsigned char *buf, u32 size, se_device_t *dev)
+ static int pscsi_blk_get_request (se_task_t *task)
  {
- 	se_device_t *dev  = (se_device_t *)p;
+ 	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
+-	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) task->iscsi_dev->dev_ptr;
++	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) task->se_dev->dev_ptr;
  
--	task->iscsi_dev = dev;
-+	task->se_dev = dev;
- 	
- 	return(dev->transport->allocate_request(task, dev));
- }
-@@ -461,8 +461,8 @@ extern int dev_obj_check_online (void *p)
- 	int ret;
- 
- 	spin_lock(&dev->dev_status_lock);
--	ret = ((dev->dev_status & ISCSI_DEVICE_ACTIVATED) ||
--	       (dev->dev_status & ISCSI_DEVICE_DEACTIVATED)) ? 0 : 1;
-+	ret = ((dev->dev_status & TRANSPORT_DEVICE_ACTIVATED) ||
-+	       (dev->dev_status & TRANSPORT_DEVICE_DEACTIVATED)) ? 0 : 1;
- 	spin_unlock(&dev->dev_status_lock);
- 
- 	return(ret);
-@@ -474,7 +474,7 @@ extern int dev_obj_check_shutdown (void *p)
- 	int ret;
- 
- 	spin_lock(&dev->dev_status_lock);
--	ret = (dev->dev_status & ISCSI_DEVICE_SHUTDOWN);
-+	ret = (dev->dev_status & TRANSPORT_DEVICE_SHUTDOWN);
- 	spin_unlock(&dev->dev_status_lock);
- 
- 	return(ret);
-@@ -500,15 +500,15 @@ extern void dev_obj_signal_shutdown (void *p)
- 	se_device_t *dev  = (se_device_t *)p;
- 
- 	spin_lock(&dev->dev_status_lock);
--	if ((dev->dev_status & ISCSI_DEVICE_ACTIVATED) ||
--	    (dev->dev_status & ISCSI_DEVICE_DEACTIVATED) ||
--	    (dev->dev_status & ISCSI_DEVICE_OFFLINE_ACTIVATED) ||
--	    (dev->dev_status & ISCSI_DEVICE_OFFLINE_DEACTIVATED)) {
--		dev->dev_status |= ISCSI_DEVICE_SHUTDOWN;
--		dev->dev_status &= ~ISCSI_DEVICE_ACTIVATED;
--		dev->dev_status &= ~ISCSI_DEVICE_DEACTIVATED;
--		dev->dev_status &= ~ISCSI_DEVICE_OFFLINE_ACTIVATED;
--		dev->dev_status &= ~ISCSI_DEVICE_OFFLINE_DEACTIVATED;
-+	if ((dev->dev_status & TRANSPORT_DEVICE_ACTIVATED) ||
-+	    (dev->dev_status & TRANSPORT_DEVICE_DEACTIVATED) ||
-+	    (dev->dev_status & TRANSPORT_DEVICE_OFFLINE_ACTIVATED) ||
-+	    (dev->dev_status & TRANSPORT_DEVICE_OFFLINE_DEACTIVATED)) {
-+		dev->dev_status |= TRANSPORT_DEVICE_SHUTDOWN;
-+		dev->dev_status &= ~TRANSPORT_DEVICE_ACTIVATED;
-+		dev->dev_status &= ~TRANSPORT_DEVICE_DEACTIVATED;
-+		dev->dev_status &= ~TRANSPORT_DEVICE_OFFLINE_ACTIVATED;
-+		dev->dev_status &= ~TRANSPORT_DEVICE_OFFLINE_DEACTIVATED;
- 
- 		up(&dev->dev_queue_obj->thread_sem);
- 	}
-@@ -522,9 +522,9 @@ extern void dev_obj_clear_shutdown (void *p)
- 	se_device_t *dev  = (se_device_t *)p;
- 
- 	spin_lock(&dev->dev_status_lock);
--	if (dev->dev_status & ISCSI_DEVICE_SHUTDOWN) {
--		dev->dev_status &= ~ISCSI_DEVICE_SHUTDOWN;
--		dev->dev_status |= ISCSI_DEVICE_DEACTIVATED;
-+	if (dev->dev_status & TRANSPORT_DEVICE_SHUTDOWN) {
-+		dev->dev_status &= ~TRANSPORT_DEVICE_SHUTDOWN;
-+		dev->dev_status |= TRANSPORT_DEVICE_DEACTIVATED;
- 	}
- 	spin_unlock(&dev->dev_status_lock);
- 
-@@ -673,19 +673,14 @@ extern int dev_obj_task_failure_complete (void *p, se_cmd_t *cmd)
- 	return(transport_failure_tasks_generic(cmd));
- }
- 
--extern int dev_add_obj_to_lun (iscsi_portal_group_t *tpg, se_lun_t *lun)
-+extern int dev_add_obj_to_lun (se_portal_group_t *tpg, se_lun_t *lun)
+ 	pt->pscsi_req = blk_get_request(pdv->pdv_sd->request_queue,
+ 			(pt->pscsi_direction == DMA_TO_DEVICE), GFP_KERNEL);
+@@ -835,7 +834,7 @@ static int pscsi_blk_get_request (se_task_t *task)
+ extern int pscsi_do_task (se_task_t *task)
  {
- 	return(0);
- }
- 
--extern int dev_del_obj_from_lun (iscsi_portal_group_t *tpg, se_lun_t *lun)
-+extern int dev_del_obj_from_lun (se_portal_group_t *tpg, se_lun_t *lun)
- {
--	struct target_core_fabric_ops *iscsi_tf = target_core_get_iscsi_ops();
--	
--	if (!(iscsi_tf))
--		BUG();
--
--	return(iscsi_tf->dev_del_lun(tpg, lun->iscsi_lun));
-+	return(core_dev_del_lun(tpg, lun->unpacked_lun));
- }
- 
- extern se_obj_lun_type_t *dev_get_next_obj_api (void *p, void **next_p)
-@@ -708,7 +703,7 @@ extern int dev_release_obj_lock (void *p)
- }
- 
- #define DEV_OBJ_PLUGIN {						\
--	se_obj_type:		ISCSI_LUN_TYPE_DEVICE,			\
-+	se_obj_type:		TRANSPORT_LUN_TYPE_DEVICE,		\
- 	get_obj_info:		dev_obj_get_obj_info,			\
- 	get_plugin_info:	dev_obj_get_plugin_info,		\
- 	get_obj:		dev_obj_get_obj,			\
-@@ -816,7 +811,7 @@ extern int se_obj_load_plugins (void)
+ 	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
+-	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) task->iscsi_dev->dev_ptr;
++	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) task->se_dev->dev_ptr;
+ 	struct gendisk *gd = NULL;
+ 	/*
+ 	 * Grab pointer to struct gendisk for TYPE_DISK and TYPE_ROM
+@@ -1195,7 +1194,7 @@ extern int pscsi_map_task_non_SG (se_task_t *task)
+ 	se_cmd_t *cmd = TASK_CMD(task);
+ 	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
+ 	unsigned char *buf = (unsigned char *) T_TASK(cmd)->t_task_buf;
+-	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) task->iscsi_dev->dev_ptr;
++	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) task->se_dev->dev_ptr;
  	int ret = 0;
+ 
+ 	pt->pscsi_buf = (void *)buf;
+diff --git a/drivers/lio-core/target_core_rd.c b/drivers/lio-core/target_core_rd.c
+index d735569..9b6d859 100644
+--- a/drivers/lio-core/target_core_rd.c
++++ b/drivers/lio-core/target_core_rd.c
+@@ -405,7 +405,7 @@ extern void rd_get_evpd_prod (unsigned char *buf, u32 size, se_device_t *dev)
+ extern void rd_get_evpd_sn (unsigned char *buf, u32 size, se_device_t *dev)
+ {
+ 	rd_dev_t *rd_dev = (rd_dev_t *) dev->dev_ptr;
+-	se_hba_t *hba = dev->iscsi_hba;
++	se_hba_t *hba = dev->se_hba;
+ 
+ 	snprintf(buf, size, "%u_%u", hba->hba_id, rd_dev->rd_dev_id);
+ 	return;
+@@ -418,9 +418,9 @@ extern void rd_get_evpd_sn (unsigned char *buf, u32 size, se_device_t *dev)
+ static int rd_emulate_inquiry (se_task_t *task)
+ {
+ 	unsigned char prod[64], se_location[128];
+-	rd_dev_t *rd_dev = (rd_dev_t *) task->iscsi_dev->dev_ptr;
++	rd_dev_t *rd_dev = (rd_dev_t *) task->se_dev->dev_ptr;
+ 	se_cmd_t *cmd = TASK_CMD(task);
+-	se_hba_t *hba = task->iscsi_dev->iscsi_hba;
++	se_hba_t *hba = task->se_dev->se_hba;
  	
- 	dev_obj_template.obj_plugin = plugin_register((void *)&dev_obj_template,
--			ISCSI_LUN_TYPE_DEVICE, "dev", PLUGIN_TYPE_OBJ,
-+			TRANSPORT_LUN_TYPE_DEVICE, "dev", PLUGIN_TYPE_OBJ,
- 			dev_obj_template.get_plugin_info, &ret);
- 	if (ret) {
- 		TRACE_ERROR("plugin_register() failures\n");
-diff --git a/drivers/lio-core/target_core_seobj.h b/drivers/lio-core/target_core_seobj.h
-index f925fea..0de9826 100644
---- a/drivers/lio-core/target_core_seobj.h
-+++ b/drivers/lio-core/target_core_seobj.h
-@@ -53,8 +53,8 @@ typedef struct se_obj_lun_type_s {
- 	void (*access_obj)(void *);
- 	void (*deaccess_obj)(void *);
- 	void (*put_obj)(void *);
--	int (*export_obj)(void *, struct iscsi_portal_group_s *, struct se_lun_s *);
--	void (*unexport_obj)(void *, struct iscsi_portal_group_s *, struct se_lun_s *);
-+	int (*export_obj)(void *, struct se_portal_group_s *, struct se_lun_s *);
-+	void (*unexport_obj)(void *, struct se_portal_group_s *, struct se_lun_s *);
- 	int (*transport_setup_cmd)(void *, struct se_cmd_s *);
- 	int (*active_tasks)(void *);
- 	int (*add_tasks)(void *, struct se_cmd_s *);
-@@ -102,8 +102,8 @@ typedef struct se_obj_lun_type_s {
- 	void (*get_evpd_sn)(void *, unsigned char *, u32);
- 	int (*get_task_timeout)(void *);
- 	int (*task_failure_complete)(void *, struct se_cmd_s *);
--	int (*add_obj_to_lun)(struct iscsi_portal_group_s *, struct se_lun_s *);
--	int (*del_obj_from_lun)(struct iscsi_portal_group_s *, struct se_lun_s *);
-+	int (*add_obj_to_lun)(struct se_portal_group_s *, struct se_lun_s *);
-+	int (*del_obj_from_lun)(struct se_portal_group_s *, struct se_lun_s *);
- 	struct se_obj_lun_type_s *(*get_next_obj_api)(void *, void **);
- 	int (*obtain_obj_lock)(void *);
- 	int (*release_obj_lock)(void *);
+ 	memset(prod, 0, 64);
+ 	memset(se_location, 0, 128);
+@@ -439,7 +439,7 @@ static int rd_emulate_inquiry (se_task_t *task)
+  */
+ static int rd_emulate_read_cap (se_task_t *task)
+ {
+-	rd_dev_t *rd_dev = (rd_dev_t *) task->iscsi_dev->dev_ptr;
++	rd_dev_t *rd_dev = (rd_dev_t *) task->se_dev->dev_ptr;
+ 	u32 blocks = ((rd_dev->rd_page_count * PAGE_SIZE) / RD_BLOCKSIZE) - 1;
+ 
+ 	if ((((rd_dev->rd_page_count * PAGE_SIZE) / RD_BLOCKSIZE) - 1) > 0x00000000ffffffff)
+@@ -450,7 +450,7 @@ static int rd_emulate_read_cap (se_task_t *task)
+ 
+ static int rd_emulate_read_cap16 (se_task_t *task)
+ {
+-	rd_dev_t *rd_dev = (rd_dev_t *) task->iscsi_dev->dev_ptr;
++	rd_dev_t *rd_dev = (rd_dev_t *) task->se_dev->dev_ptr;
+ 	unsigned long long blocks_long = ((rd_dev->rd_page_count * PAGE_SIZE) / RD_BLOCKSIZE) - 1;	
+ 
+ 	return(transport_generic_emulate_readcapacity_16(TASK_CMD(task), blocks_long, RD_BLOCKSIZE));
 -- 
 1.5.4.1
 
