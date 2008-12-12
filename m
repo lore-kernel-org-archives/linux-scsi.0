@@ -1,95 +1,101 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [PATCH][RFC 2/23]: SCST core
-Date: Fri, 12 Dec 2008 22:24:53 +0300
-Message-ID: <4942BA85.3070408@vlnb.net>
-References: <494009D7.4020602@vlnb.net> <49400ACD.3070502@vlnb.net> <20081210191213.GA15273@uranus.ravnborg.org> <49414DBE.6070801@vlnb.net> <20081211210917.GB27010@uranus.ravnborg.org>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12195] "dd" make kernel panic
+Date: Fri, 12 Dec 2008 11:28:52 -0800 (PST)
+Message-ID: <20081212192852.2F535108047@picon.linux-foundation.org>
+References: <bug-12195-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752493AbYLLTYz@vger.kernel.org>
-In-Reply-To: <20081211210917.GB27010@uranus.ravnborg.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sam Ravnborg <sam@ravnborg.org>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Boaz Harrosh <bharrosh@panasas.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Steven Rostedt <srostedt@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:48742 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751649AbYLLT3b convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Dec 2008 14:29:31 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBCJTAqF026003
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Dec 2008 11:29:11 -0800
+In-Reply-To: <bug-12195-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Sam Ravnborg wrote:
->>>>  drivers/scst/scst_lib.c      | 3689 
->>>>  +++++++++++++++++++++++++++++++++++++
->>>>  drivers/scst/scst_main.c     | 1919 +++++++++++++++++++
->>>>  drivers/scst/scst_module.c   |   69
->>>>  drivers/scst/scst_priv.h     |  513 +++++
->>>>  drivers/scst/scst_targ.c     | 5458 
->>>>  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->>>>  8 files changed, 12435 insertions(+)
->>> There was a lot af TRACE_ENTRY() / TRACE_EXIT() noise.
->>> We should have proper tools for that by now (I hope).
->> Sorry, I don't see such tools with, for instance, a possibility to be 
->> compiled out in non-debug builds.
->>
->> From one side, I can agree, those TRACE_ENTRY()/TRACE_EXIT() statements 
->> *may* look like a noise (I personally don't notice them), but, from 
->> other side, in past times they have proved how usable they are. If an 
->> SCST user has a problem, I simply ask him to make a debug build, then 
->> enable entry_exit and some other logging levels, then reproduce the 
->> problem and send me the logs. Then in most cases I can see what's wrong 
->> and provide a fix without additional actions and questions.
+http://bugzilla.kernel.org/show_bug.cgi?id=12195
+
+
+
+
+
+------- Comment #9 from anonymous@kernel-bugs.osdl.org  2008-12-12 11:28 -------
+Reply-To: James.Bottomley@HansenPartnership.com
+
+On Fri, 2008-12-12 at 09:09 -0600, James Bottomley wrote:
+> On Fri, 2008-12-12 at 02:22 -0800, Mike Anderson wrote:
+> > bugme-daemon@bugzilla.kernel.org <bugme-daemon@bugzilla.kernel.org> wrote:
+> > > http://bugzilla.kernel.org/show_bug.cgi?id=12195
+> > > 
+> > > 
+> > > 
+> > > 
+> > > 
+> > > ------- Comment #6 from ming.m.lin@intel.com  2008-12-11 18:27 -------
+> > > 2.6.28-rc8 also panic
+> > 
+> > The blk_mark_rq_complete check should prevent completions from occurring on
+> > already timed out requests unless the interaction previous mentioned between
+> > mpt_fault_reset_work and the scsi eh thread requeue alows the REQ_ATOM_COMPLETE
+> > bit to get cleared prior to the scsi_done being called from
+> > mptscsih_flush_running_cmds. This did not look obvious to hit.
+> > 
+> > mpt_fault_reset_work
+> > 	mpt_HardResetHandler
+> > 		mpt_signal_reset
+> > 			mptsas_ioc_reset 
+> > 				mptscsih_flush_running_cmds
+> > 		mpt_do_ioc_recovery
 > 
-> I had ftrace in mind but it has not hit mainline yet.
-> But will do before this patchset does.
+> Actually, this isn't quite true.  Particularly in the eh case.  It looks
+> like the block timeout isn't stopped until blk_complete_request() which
+> is pretty late.  If the timeout fires after scsi_done is called but
+> before we complete the request, any timeout goes through the
+> BLK_EH_HANDLED path to __blk_complete_request().  This routine
+> unconditionally adds to the done routine without checking the mark, so
+> there is a window where we can get double dones.
 
-Unfortunately, ftrace at the moment can't fully replace 
-TRACE_ENTRY()/TRACE_EXIT() statements, because it lacks:
+Actually, I take that back ... the patch to plug the unprep race was
+send over the list but never applied because the timer changes seemed to
+fix the problem.
 
-1. Doing trace in only some modules or source files. Noise from tracing 
-of the whole kernel is not needed if we investigate problem in only one 
-module (SCST in this case).
+So, we still have a small window where unprep can NULL out rq->special
+while an asynchronous mpt reset is flushing the commands via scsi_done.
 
-2. Ability to inject own messages in the output stream. It's needed to 
-have synchronized stream of output messages about both functions tracing 
-and what those functions doing. For instance:
-
-entry in func1()
-adding cmd C to list L
-exit from func1()
-
-Otherwise there would be 2 traces:
-
-entry in func1()
-exit from func1()
-
-and
-
-adding cmd C to list L
-
-which almost impossible to merge to analyze.
-
-(Steven Rostedt added on CC)
-
->>> We often ask for exported symbols to be documented - so one has
->>> a slight idea of their purpose.
->> They are documented, near their prototypes in the public header files, 
->> particularly, scst.h. It was done so, because it was supposed that one, 
->> writing a target driver or dev handler will have on hands the header 
->> files, not source code.
->>
->> Should we move those comments from the functions prototypes to the 
->> functions definitions?
-> If there will be multiple implmentations of the same prototype
-> we generally recommend to stick the comment in a .H file.
-> But otherwise keep it close to the source it describe with the
-> minimal hope that it gets updated.
-
-OK, we will move descriptions of functions from prototypes to definitions.
-
-> Oh - and we do not distribute a stripped down headers only
-> version of the kernel. Users will see full kernel source.
-
-Those headers are not stripped down. Better analogy is with C++ private 
-and public class interfaces. Public SCST headers have public symbols for 
-external modules (target drivers mainly), but private headers are for 
-internal SCST use only. They are needed to better draw a boundary 
-between public and internal private interfaces.
+Could you see if it goes away (or at least lessens in frequency) with
+this patch?
 
 Thanks,
-Vlad
+
+James
+
+---
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 111f9e9..f2f51e0 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -653,8 +653,8 @@ static void scsi_requeue_command(struct request_queue *q,
+struct scsi_cmnd *cmd)
+        struct request *req = cmd->request;
+        unsigned long flags;
+
+-       scsi_unprep_request(req);
+        spin_lock_irqsave(q->queue_lock, flags);
++       scsi_unprep_request(req);
+        blk_requeue_request(q, req);
+        spin_unlock_irqrestore(q->queue_lock, flags);
+
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
