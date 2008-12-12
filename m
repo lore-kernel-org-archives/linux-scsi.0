@@ -1,107 +1,82 @@
 From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [PATCH][RFC 13/23]: Export of alloc_io_context() function
-Date: Fri, 12 Dec 2008 22:16:04 +0300
-Message-ID: <4942B874.3070107@vlnb.net>
-References: <494009D7.4020602@vlnb.net> <49400F2F.4050603@vlnb.net> <20081211133424.GU23742@kernel.dk> <4941592E.8070303@vlnb.net> <20081211184100.GX23742@kernel.dk> <4941636A.3050303@vlnb.net> <20081211190627.GA23742@kernel.dk>
+Subject: Re: [PATCH][RFC 5/23]: SCST /proc interface
+Date: Fri, 12 Dec 2008 22:23:16 +0300
+Message-ID: <4942BA24.8070105@vlnb.net>
+References: <494009D7.4020602@vlnb.net>  <49400C81.3010801@vlnb.net> <1229026987.4153.555.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=KOI8-R; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.188]:59602 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750847AbYLLTRA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Dec 2008 14:17:00 -0500
-In-Reply-To: <20081211190627.GA23742@kernel.dk>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751625AbYLLTYD@vger.kernel.org>
+In-Reply-To: <1229026987.4153.555.camel@haakon2.linux-iscsi.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Boaz Harrosh <bharrosh@panasas.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, Joel Becker <joel.becker@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Boaz Harrosh <bharrosh@panasas.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-Jens Axboe wrote:
-> On Thu, Dec 11 2008, Vladislav Bolkhovitin wrote:
->> Jens Axboe wrote:
->>> On Thu, Dec 11 2008, Vladislav Bolkhovitin wrote:
->>>> Jens Axboe wrote:
->>>>> On Wed, Dec 10 2008, Vladislav Bolkhovitin wrote:
->>>>>> This patch exports alloc_io_context() function. For performance reasons 
->>>>>> SCST queues commands using a pool of IO threads. It is considerably 
->>>>>> better for performance (>30% increase on sequential reads) if threads 
->>>>>> in a pool have the same IO context. Since SCST can be built as a 
->>>>>> module, it needs alloc_io_context() function exported.
->>>>>>
->>>>>> Signed-off-by: Vladislav Bolkhovitin <vst@vlnb.net>
->>>>>> ---
->>>>>> block/blk-ioc.c |    1 +
->>>>>> 1 file changed, 1 insertion(+)
->>>>>>
->>>>>> diff -upkr linux-2.6.27.2/block/blk-ioc.c linux-2.6.27.2/block/blk-ioc.c
->>>>>> --- linux-2.6.27.2/block/blk-ioc.c	2008-10-10 02:13:53.000000000 +0400
->>>>>> +++ linux-2.6.27.2/block/blk-ioc.c	2008-11-25 21:27:01.000000000 +0300
->>>>>> @@ -105,6 +105,7 @@ struct io_context *alloc_io_context(gfp_
->>>>>>
->>>>>> 	return ret;
->>>>>> }
->>>>>> +EXPORT_SYMBOL(alloc_io_context);
->>>>> Why is this needed, can't you just use CLONE_IO?
->>>> There are two reasons for that:
->>>>
->>>> 1. kthread interface doesn't support passing CLONE_IO flag.
->>> Then you fix that instead of working around it! :-)
->> It doesn't worth the effort, because of (2) below.
+Nicholas A. Bellinger wrote:
+> On Wed, 2008-12-10 at 21:37 +0300, Vladislav Bolkhovitin wrote:
+>> This patch contains SCST the /proc interface.
 >>
->>>> 2. Each (virtual) device has own pool of threads, which serves it. 
->>>> Threads in each such pools should have a common IO context, but 
->>>> different pools should have different IO contexts. So, it would be 
->>>> necessary to implement two levels start of IO threads in each pool. At 
->>>> first, one thread would be started. Then it would call get_io_context() 
->>>> to gain io_context. Then it would create the remaining threads with 
->>>> CLONE_IO flag. Definitely, it's a lot more complicated than a simple 
->>>> call of alloc_io_context() and assignment of the returned context to 
->>>> each just created thread in a loop before they were ran.
->>> Just start the first thread without CLONE_IO, and subsequent threads
->>> fork off that with CLONE_IO set? 
->> Yes, that would be the two stages threads creation. A *LOT* more 
->> complicated, than with the direct io_context assignment using 
->> alloc_io_context().
+>> A description of this interface can be found in the patch with the
+>> SCST core documentation.
 >>
->>> I think we need to make sure that we
->>> allocate an IO context for the 'parent' if it doesn't have one already
->>> and CLONE_IO is set, but that is something that can easily be rectified.
->> Sorry, I don't feel I understood you here..
+>> Since a procfs-based configuration interface is unacceptable for new 
+>> kernel modules, in the next review iteration SCST's configuration 
+>> interface will be replaced by a sysfs-based configuration interface. 
+>> This patch is not intended to be included in the Linux kernel, but is 
+>> posted here, because as of today this configuration interface is 
+>> necessary when using SCST.
+>>
+>> Unfortunately, configfs is not (yet) suited for configuring SCST. This 
+>> is, because configfs is user space driven, so kernel can't create 
+>> subdirectories on it, and all files on configfs are limited to 4K in 
+>> size. It makes impossible for kernel to show, e.g., a list of connected 
+>> initiators. Hence, with configfs it is necessary to have one more 
+>> interface to show such data, e.g. sysfs-based. 
 > 
-> Sure I understand that it's then a two-stage rocket for the first
-> context you fork off. I don't see how you qualify that as a *LOT* more
-> complicated...
-
-It would be a split of logic, which can be handled in one place to be 
-handled in two places. Hence, harder to implement, understand and 
-maintain. It's always something to avoid.
-
-Actually, there is another, simpler method to achieve the same what 
-alloc_io_context() does, without exporting it:
-
-struct io_context *ioc, *t;
-*t = current->io_context;
-current->io_context = NULL;
-ioc = get_io_context(GFP_KERNEL, -1);
-current->io_context = t;
-
-But, I believe, you won't like such dirty hacking even more ;-)
-
->>> It may seem more complex, but if you use this approach you are pretty
->>> much free to worry about any changes in the future there.
->> Worrying about future changes is regular in Linux kernel, where there is 
->> no stable API ;-)
+> Btw, please stop spreading FUD about ConfigFS.  ConfigFS works great for
+> Target_Core_Mod and LIO-Target v3.0, and is what I have found as the
+> *BEST* foundation for generic target mod moving forward.  This is not
+> based on a hypothetical discussion or on a long term TODO list, this has
+> been determined from actually writing the code, which is located at:
 > 
-> Sure, but if your stuff gets merged then *I* have to fiddle with your
-> stuff as well when making changes. If you plan to keep your stuff out of
-> the kernel and maintain it there, fine, but I think you probably don't.
+> http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=blob;f=drivers/lio-core/target_core_configfs.c
 > 
-> It's not a HUGE deal for this case, since you basically just want to use
-> alloc_io_context() and ioc_task_link(). So we can make the export and be
-> done with it.
+> http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=blob;f=drivers/lio-core/iscsi_target_configfs.c
+> 
+> So please, just because you don't want to acknowledge ConfigFS in your
+> own work, do not act like there is not already thounsands of lines of
+> ConfigFS code up and running for the generic target mode and LIO-Target.
 
-Thanks!
+Nicholas,
 
+You have an *exceptional* ability don't see what you don't want to see. 
+It has already happened with Persistent Reservations over pass-through 
+backend (see the end of http://lkml.org/lkml/2008/7/10/328 and 
+subsequent messages in this thread) and now this is happening with 
+configfs. I already 2 times described you why configfs isn't appropriate 
+for a SCSI target (the first time in 
+http://lkml.org/lkml/2008/10/21/259), but you keep refusing to see it. 
+In short:
 
+1. Kernel can't create subdirectories in configfs
 
+2. Sysfs doesn't allow files >4K
+
+3. What you have been doing to live with the above limitations is 
+implementing "access allowed only for explicitly specified initiators 
+and forbidden for all others" security approach. This approach is 
+unacceptable on practice. The majority of people simply define available 
+devices for a target and don't bother with listing initiators, which 
+allowed to connect to it. But you forces them to do that and keep doing 
+again and again for each related network change.
+
+In contrast, sysfs allows kernel to create subdirectories. It will allow 
+to workaround the 4K limitation by a simple subdirectories hierarchy. 
+So, both security approaches ("access allowed only for explicitly 
+specified initiators and forbidden for all others" and "access forbidden 
+only for explicitly specified initiators and allowed for all others") 
+can be seamlessly implemented on sysfs as it is currently done on procfs 
+in SCST.
+
+Vlad
