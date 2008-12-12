@@ -1,44 +1,41 @@
-From: "Raz Ben-Yehuda" <razb@bitband.com>
-Subject: RE: Intel X25-M MLC SSD benchmarks
-Date: Fri, 12 Dec 2008 14:21:48 +0200
-Message-ID: <83CA05F64804AF43B8F733C4ABDFAA51022D04DB@mail1.bitband.com>
-References: <311601c90812111927t54ed6a54oac3154dba30f737d@mail.gmail.com>
+From: "Eric D. Mudama" <edmudama@gmail.com>
+Subject: Re: Intel X25-M MLC SSD benchmarks
+Date: Fri, 12 Dec 2008 07:25:18 -0700
+Message-ID: <311601c90812120625o4e000646u98aebc8ab3556a33@mail.gmail.com>
+References: <20081210213937.GC25548@parisc-linux.org>
+	 <83CA05F64804AF43B8F733C4ABDFAA51022D04D7@mail1.bitband.com>
+	 <311601c90812111927t54ed6a54oac3154dba30f737d@mail.gmail.com>
+	 <311601c90812112055i7ec955d6kf4fc13279817cdb0@mail.gmail.com>
+	 <e2e108260812112315q5ed1d265q86cf22b1dd59c69d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <311601c90812111927t54ed6a54oac3154dba30f737d@mail.gmail.com>
+In-Reply-To: <e2e108260812112315q5ed1d265q86cf22b1dd59c69d@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
-To: "Eric D. Mudama" <edmudama@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@gmail.com>
+Cc: Raz Ben-Yehuda <razb@bitband.com>, Matthew Wilcox <matthew@wil.cx>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+On Fri, Dec 12, 2008 at 12:15 AM, Bart Van Assche
+<bart.vanassche@gmail.com> wrote:
+>
+> On Fri, Dec 12, 2008 at 5:55 AM, Eric D. Mudama <edmudama@gmail.com> wrote:
+> > On 12/11/08, Eric D. Mudama <edmudama@gmail.com> wrote:
+> >> Out of curiosity, is write cache enabled or disabled on these devices?
+> >
+> > Oops, I just noticed the oflag=direct, that can have a huge
+> > performance difference depending on the block size.
+> >
+> > What numbers are you getting without oflag=direct?
+>
+> IMHO repeating the measurements without oflag=direct does not make
+> sense: measurements with oflag=direct tell something about the
+> performance of the SSD and the software layers on top of it. Without
+> oflag=direct writes are buffered by Linux and data is written
+> asynchronously to the SSD.
 
-
------Original Message-----
-From: Eric D. Mudama [mailto:edmudama@gmail.com] 
-Sent: Friday, December 12, 2008 5:28 AM
-To: Raz Ben-Yehuda
-Cc: Matthew Wilcox; linux-ide@vger.kernel.org;
-linux-scsi@vger.kernel.org
-Subject: Re: Intel X25-M MLC SSD benchmarks
-
-On 12/10/08, Raz Ben-Yehuda <razb@bitband.com> wrote:
-> All gave same results for most dd writes commands.
-> dd if=/dev/zero of=/dev/sda bs=1M count=1000 oflag=direct , and many
-> other variants such erase block size ( 128K ) , several erase block
-size
-> and so on. Kernel is 2.6.18-8.el5.
-> I used all on a supermicro 1025W-UR. Disks have a SAS interface, 80GB.
-> Also, I would like to note, I have 8 disks in array, while each one
-> perform READS 250 MB/s, together I degrade to 200 MB/s each. As for
-> writes I always reach 20 MB/s at best, from a single disk or 20x8 in
-> array.
-
->>Out of curiosity, is write cache enabled or disabled on these devices?
-Does not matter. In both cases same low numbers. Write cache depends on
-the controller defaults ( Adpaptec AHCI, Intel provides different
-default).
-
+Oops, I guess I assumed that by writing a few gigabytes of data it
+wouldn't matter that much.  I'll run the test again in a bit once I'm
+off this solaris machine.
