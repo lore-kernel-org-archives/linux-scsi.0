@@ -1,39 +1,36 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 0/3] remove scsi_req_map_sg
-Date: Sun, 14 Dec 2008 01:23:44 +0900
-Message-ID: <1229185427-4130-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12195] "dd" make kernel panic
+Date: Sat, 13 Dec 2008 09:58:19 -0800 (PST)
+Message-ID: <20081213175819.98480108047@picon.linux-foundation.org>
+References: <bug-12195-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:41070 "EHLO mo10.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750819AbYLMQ20 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 13 Dec 2008 11:28:26 -0500
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:52058 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751001AbYLMR6f (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 13 Dec 2008 12:58:35 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBDHwXW4018573
+	for <linux-scsi@vger.kernel.org>; Sat, 13 Dec 2008 09:58:34 -0800
+In-Reply-To: <bug-12195-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com
-Cc: linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, Kai.Makisara@kolumbus.fi, osst@riede.org
+To: linux-scsi@vger.kernel.org
 
-This patchset removes scsi_req_map_sg. IOW, this patchset removes
-'SCSI-ml does something wrong' comment in the block layer :)
-
-/*
- * Temporary export, until SCSI gets fixed up.
- */
-extern int blk_rq_append_bio(struct request_queue *q, struct request *rq,
-                            struct bio *bio);
-
-This patchset also removes scsi_execute_async and struct
-scsi_io_context() and unexport bio_add_pc_page().
-
-
-This is against scsi-misc and depends on two patchsets:
-
-'removing scsi_execute_async in st' the second half patchset:
-
-http://marc.info/?l=linux-scsi&m=122900494917385&w=2
-
-'removing scsi_execute_async in osst' the patchset:
-
-http://marc.info/?l=linux-scsi&m=122918478521903&w=2
+http://bugzilla.kernel.org/show_bug.cgi?id=12195
 
 
 
+
+
+------- Comment #10 from rjw@sisk.pl  2008-12-13 09:58 -------
+Handled-By : James Bottomley <James.Bottomley@HansenPartnership.com>
+Notify-Also : Michael Anderson <andmike@linux.vnet.ibm.com>
+Notify-Also : Lin Ming <ming.m.lin@intel.com>
+Notify-Also : Yanmin Zhang <yanmin_zhang@linux.intel.com>
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
