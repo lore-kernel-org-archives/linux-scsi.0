@@ -1,86 +1,87 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
 Subject: Re: [Announce]: Target_Core_Mod/ConfigFS and LIO-Target v3.0 work
-Date: Sat, 13 Dec 2008 09:24:56 -0600
-Message-ID: <1229181896.3258.27.camel@localhost.localdomain>
-References: <1228965271.4153.510.camel@haakon2.linux-iscsi.org>
-	 <e2e108260812111124j79793adcie106ac2da4f801f3@mail.gmail.com>
-	 <1229025513.4153.542.camel@haakon2.linux-iscsi.org>
-	 <e2e108260812112321w2f5b1827xe2593888e44808ae@mail.gmail.com>
-	 <1229074809.4153.666.camel@haakon2.linux-iscsi.org>
-	 <54939.1229149205@turing-police.cc.vt.edu>
-	 <e2e108260812130141o3d21bbbdob9e7c9f95d309a74@mail.gmail.com>
-	 <1229162907.4153.857.camel@haakon2.linux-iscsi.org>
-	 <e2e108260812130223q13fd98d8gc1e55881a92b939@mail.gmail.com>
-	 <1229167118.4153.930.camel@haakon2.linux-iscsi.org>
-	 <e2e108260812130356y1fe60713xf844a35c775e161d@mail.gmail.com>
+Date: Sat, 13 Dec 2008 18:35:06 +0300
+Message-ID: <4943D62A.4060900@vlnb.net>
+References: <1228965271.4153.510.camel@haakon2.linux-iscsi.org>	 <e2e108260812111124j79793adcie106ac2da4f801f3@mail.gmail.com>	 <1229025513.4153.542.camel@haakon2.linux-iscsi.org>	 <e2e108260812112321w2f5b1827xe2593888e44808ae@mail.gmail.com>	 <1229074809.4153.666.camel@haakon2.linux-iscsi.org>	 <54939.1229149205@turing-police.cc.vt.edu>	 <e2e108260812130141o3d21bbbdob9e7c9f95d309a74@mail.gmail.com>	 <1229162907.4153.857.camel@haakon2.linux-iscsi.org>	 <e2e108260812130223q13fd98d8gc1e55881a92b939@mail.gmail.com> <1229167118.4153.930.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=KOI8-R; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:43520 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750975AbYLMPY5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 13 Dec 2008 10:24:57 -0500
-In-Reply-To: <e2e108260812130356y1fe60713xf844a35c775e161d@mail.gmail.com>
+Received: from moutng.kundenserver.de ([212.227.126.188]:53531 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750975AbYLMPey (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 13 Dec 2008 10:34:54 -0500
+In-Reply-To: <1229167118.4153.930.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@gmail.com>
-Cc: linux-iscsi-target-dev@googlegroups.com, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Jens Axboe <jens.axboe@oracle.com>, Vladislav Bolkhovitin <vst@vlnb.net>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-iscsi-target-dev@googlegroups.com, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, scst-devel <scst-devel@lists.sourceforge.net>, Bart Van Assche <bart.vanassche@gmail.com>
 
-On Sat, 2008-12-13 at 12:56 +0100, Bart Van Assche wrote:
-> On Sat, Dec 13, 2008 at 12:18 PM, Nicholas A. Bellinger
-> <nab@linux-iscsi.org> wrote:
-> > Of course I fix bugs when people report them.
+
+
+Nicholas A. Bellinger wrote:
+> On Sat, 2008-12-13 at 11:23 +0100, Bart Van Assche wrote:
+>> On Sat, Dec 13, 2008 at 11:08 AM, Nicholas A. Bellinger <nab@kernel.org> wrote:
+>>>> See also:
+>>>> * February 1, 2008, LIO kernel panic during configuration,
+>>>> http://groups.google.com/group/linux-iscsi-target-dev/browse_thread/thread/74c8b37f24b84e59/d94c07626bd20521?lnk=gst&q=kernel+panic#d94c07626bd20521.
+>>>> * February 8, 2008, kernel crash triggered by LIO,
+>>>> http://groups.google.com/group/linux-iscsi-target-dev/browse_thread/thread/30835aede1028188/5708e16a23367fb4?lnk=gst&q=kernel+crash#5708e16a23367fb4.
+>>>> * February 13, 2008, LIO target kernel code triggers memory
+>>>> corruption, http://groups.google.com/group/linux-iscsi-target-dev/browse_thread/thread/ddc1bf7666372972/2150a09f9ed3d1cd?lnk=gst&q=ipoib#2150a09f9ed3d1cd.
+>>>> * February 18, 2008, LIO target makes entire system hang,
+>>>> http://groups.google.com/group/linux-iscsi-target-dev/browse_thread/thread/6a76f9efd9409fc5/55bd8840b6a5f757?lnk=gst&q=lio+target+hangs#55bd8840b6a5f757.
+>>>>
+>>> I have no idea why why you keep bringing up a minor BUG (completely
+>>> unrelated to Target_Core_Mod/ConfigFS and LIO-Target v3.0 btw) that was
+>>> fixed 10 months ago..?  Perhaps if you spent half the time looking at
+>>> actual lio-core-2.6.git code that you do bringing up minor closed bugs
+>>> from months ago [ ... ]
+>> I won't comment on the fact that you consider a kernel crash or a
+>> system hang as a minor bug.
+>>
 > 
-> Things have changed then since the beginning of this year. As anyone
-> can see in the threads I referred to, you have done your best to deny
-> that the crashes and system hangs were caused by LIO, although I had
-> posted exact instructions on how to reproduce the bugs. Regarding
-> kernel integration and subsystem maintainership: one of the important
-> tasks of a maintainer is to verify whether reported bugs are
-> reproducible, and if so, to resolve them. I'm happy none of the
-> current kernel maintainers has the habitude of denying bug reports
-> that are 100% reproducible and which contain exact instructions about
-> how to reproduce the bug.
+> The problem is that you like to handwave on the technical issues, just
+> like you are doing here.  :-)  Of course I fix bugs when people report
+> them, but when people like yourself yell and scream and handwave, it
+> makes me not want to fix it as quickly if someone wrote a nice and
+> thoughful email and said 'thank you'.
+> 
+> Anyways, I am not going to debate the development process with you, and
+> as folks on the LIO-devel list can tell you, I am very quick to produce
+> patches when a issue is located.  
+> 
+>> I reported four bugs instead of one. Only two of these have been
+>> reported to be fixed.
+>>
+> 
+> Considering you said earlier that you have not actually looked at any
+> recently LIO code, how could you know these bugs are fixed..?   Back
+> here in the land of reality, these *TWO* bugs where fixed in back Feb.
+> One was related to iSCSI discovery, and one related to v2.6.24 kernel
+> breakage and struct scatterlist->page_link, so what..?  Do you honestly
+> think handwaving about bugs from 10 months ago will get you anywhere
+> here..?  If you are so certain these bugs still exist or have any effect
+> on my upstream work, then please, go ahead and prove it.  No..? I did
+> not think so.
+> 
+> What does any of this have to do with lio-core-2.6.git,
+> Target_Core_Mod/ConfigFS and LIO-Target v3.0 btw..?  Are you actually
+> going to write a thoughtful or relivent comment on the v3.0 design
+> and/or code, because that would be nice out of your for once.  Otherwise
+> I am going to ignore you again, just the like conversation where you
+> said:
+> 
+> "Zero-copy means that data is copied as few times as possible".
+> 
+> when I was attempting to explain the finer pointers of
+> Target_Core_Mod/ConfigFS design to you and Vlad.  Remember that one..?
+> 
+> http://groups.google.com/group/linux-iscsi-target-dev/browse_thread/thread/8cff61671cd2de6b/37ade00e607dd8c8
 
-OK, All of you on this thread, why don't you take time out to step back
-and think about the effects this descent into trench warfare is having
-on your observers.
+You know, that thread was finished when you refused to name which real 
+life tasks you are going to solve with your super advanced features. 
+I.e. answer, why are they needed at all?
 
-     1. You're both saying the other side isn't production ready ...
-        it's not a stretch for the rest of us to take this at face
-        value ... about both of you.
-     2. This ideological opposition to features the other side
-        implements tells me that if it came to a choice, by going with
-        either one of you I'd get an incomplete feature set.
-     3. Making obvious partisans of your user base also tells me that if
-        I had to make a choice, whatever it was I'd piss off a large
-        number of people who'd be very vocal about it.
-
-Since we have a working target solution in the kernel already (STGT),
-why on earth would I be stupid enough to want to even consider either of
-you, coming as you do with the above mentioned baggage?
-
-So stop fighting ... you're not going to backstab your way to inclusion.
-
-The only identified failing of STGT (and it's theoretical, not
-demonstrated, although I can agree the theory looks correct) is that the
-user space packet processing may cause performance problems on high
-speed networks.  We know from practical tests that these networks have
-to be above 1Gbit because the results were identical for STGT and SCST
-on a 1G network, so it's infiniband or 10Gbit ethernet.
-
-So, what it comes down to is that if we had a kernel side protocol
-accelerator for STGT, the project would no longer suffer from this
-theoretical failing.  *Both* of you have such a thing embedded in your
-respective submissions (all 74k LOC of them) so can't you just enhance
-STGT with whichever one is better ... actually, if you'd both bury the
-hatchet and work on the enhancement together taking the best of each
-project, we'd have something that worked much better and a unified user
-base and neither side would be able to claim sole credit ... just a
-thought.
-
-James
-
+Vlad
 
