@@ -1,52 +1,47 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [Bug 12222] New: kernel BUG at drivers/pci/intel-iommu.c:1373!
-Date: Mon, 15 Dec 2008 03:21:07 +0900
-Message-ID: <20081215032141K.fujita.tomonori@lab.ntt.co.jp>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12222] kernel BUG at drivers/pci/intel-iommu.c:1373!
+Date: Sun, 14 Dec 2008 13:21:58 -0800 (PST)
+Message-ID: <20081214212158.27D9F10800E@picon.linux-foundation.org>
 References: <bug-12222-11613@http.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:45727 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754663AbYLNSVn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Dec 2008 13:21:43 -0500
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:38864 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751556AbYLNVWA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 14 Dec 2008 16:22:00 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBELLwcV017789
+	for <linux-scsi@vger.kernel.org>; Sun, 14 Dec 2008 13:21:59 -0800
 In-Reply-To: <bug-12222-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugme-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dwmw2@infradead.org
+To: linux-scsi@vger.kernel.org
 
-On Sun, 14 Dec 2008 09:35:38 -0800 (PST)
-bugme-daemon@bugzilla.kernel.org wrote:
+http://bugzilla.kernel.org/show_bug.cgi?id=12222
 
-> http://bugzilla.kernel.org/show_bug.cgi?id=12222
-> 
->            Summary: kernel BUG at drivers/pci/intel-iommu.c:1373!
->            Product: IO/Storage
->            Version: 2.5
->      KernelVersion: 2.6.26-gentoo-r4
->           Platform: All
->         OS/Version: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: SCSI
->         AssignedTo: linux-scsi@vger.kernel.org
->         ReportedBy: john.blbec@centrum.cz
->                 CC: anil.s.keshavamurthy@intel.com
-> 
-> 
-> Latest working kernel version: unknown
 
-Probably, this is a VT-d bug. I saw the same bug report before:
+john.blbec@centrum.cz changed:
 
-http://lkml.org/lkml/2008/9/8/138
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |john.blbec@centrum.cz
 
-it's worth trying the latest kernel but I guess that the problem still
-exists.
 
-As Mark suggested, it's also worth trying 'intel_iommu=strict' kernel
-boot option, I think. If it doesn't work, you can use a workaround to
-disable VT-d with 'intel_iommu=off' kernel boot option.
+
+
+------- Comment #3 from john.blbec@centrum.cz  2008-12-14 13:21 -------
+thanks for the answer :o)
+
+results:
+
+1) intel_iommu=strict ... it does not solve the issue
+2) intel_iommu=off ...... yes, it is a workaround, bonnie++ finished correctly
+
+well, I have two  questions. what performance impact should I expect and is
+there any odds the bug will be fixed in the next linux kernel version?
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
