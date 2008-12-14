@@ -1,35 +1,72 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12222] kernel BUG at drivers/pci/intel-iommu.c:1373!
-Date: Sun, 14 Dec 2008 09:59:49 -0800 (PST)
-Message-ID: <20081214175949.7891310800E@picon.linux-foundation.org>
-References: <bug-12222-11613@http.bugzilla.kernel.org/>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] block: fix bio_add_page misuse with rq_map_data
+Date: Mon, 15 Dec 2008 03:05:32 +0900
+Message-ID: <20081215030526G.fujita.tomonori@lab.ntt.co.jp>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:53434 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750950AbYLNSAV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Dec 2008 13:00:21 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBEHxnSU009281
-	for <linux-scsi@vger.kernel.org>; Sun, 14 Dec 2008 09:59:50 -0800
-In-Reply-To: <bug-12222-11613@http.bugzilla.kernel.org/>
+Received: from sh.osrg.net ([192.16.179.4]:48152 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750797AbYLNSFj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 14 Dec 2008 13:05:39 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: jens.axboe@oracle.com
+Cc: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12222
+This fixes bio_add_page misuse in bio_copy_user_iov with rq_map_data,
+which only sg uses now.
 
+rq_map_data carries page frames for bio_add_pc_page. bio_copy_user_iov
+uses bio_add_pc_page with a larger size than PAGE_SIZE. it's clearly
+wrong, though it works if a request doesn't go to the bounce path, I
+think.
 
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ fs/bio.c |   19 +++++++++++--------
+ 1 files changed, 11 insertions(+), 8 deletions(-)
 
-
-
-------- Comment #1 from john.blbec@centrum.cz  2008-12-14 09:59 -------
-a photo of bug is taken in console so nvidia module has been removed even one
-is in my cat /proc/modules. all tests has been run without nvidia module, of
-course...
-
-
+diff --git a/fs/bio.c b/fs/bio.c
+index 77a55bc..0ebf768 100644
+--- a/fs/bio.c
++++ b/fs/bio.c
+@@ -662,23 +662,26 @@ struct bio *bio_copy_user_iov(struct request_queue *q,
+ 
+ 	ret = 0;
+ 	i = 0;
++	if (map_data)
++		nr_pages = 1 << map_data->page_order;
+ 	while (len) {
+-		unsigned int bytes;
+-
+-		if (map_data)
+-			bytes = 1U << (PAGE_SHIFT + map_data->page_order);
+-		else
+-			bytes = PAGE_SIZE;
++		unsigned int bytes = PAGE_SIZE;
+ 
+ 		if (bytes > len)
+ 			bytes = len;
+ 
+ 		if (map_data) {
+-			if (i == map_data->nr_entries) {
++			if (i == map_data->nr_entries * nr_pages) {
+ 				ret = -ENOMEM;
+ 				break;
+ 			}
+-			page = map_data->pages[i++];
++
++			if (i && (i % nr_pages))
++				page++;
++			else
++				page = map_data->pages[i / nr_pages];
++
++			i++;
+ 		} else
+ 			page = alloc_page(q->bounce_gfp | gfp_mask);
+ 		if (!page) {
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+1.5.5.GIT
+
