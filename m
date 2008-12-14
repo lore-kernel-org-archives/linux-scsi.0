@@ -1,21 +1,21 @@
 From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12222] New: kernel BUG at drivers/pci/intel-iommu.c:1373!
-Date: Sun, 14 Dec 2008 09:35:38 -0800 (PST)
-Message-ID: <bug-12222-11613@http.bugzilla.kernel.org/>
+Subject: [Bug 12223] New: kernel BUG at drivers/pci/intel-iommu.c:1373!
+Date: Sun, 14 Dec 2008 09:53:14 -0800 (PST)
+Message-ID: <bug-12223-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:34798 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:42888 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753611AbYLNRfl (ORCPT
+	by vger.kernel.org with ESMTP id S1750916AbYLNRxq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Dec 2008 12:35:41 -0500
+	Sun, 14 Dec 2008 12:53:46 -0500
 Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBEHZc5S008186
-	for <linux-scsi@vger.kernel.org>; Sun, 14 Dec 2008 09:35:39 -0800
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBEHrE94008927
+	for <linux-scsi@vger.kernel.org>; Sun, 14 Dec 2008 09:53:15 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12222
+http://bugzilla.kernel.org/show_bug.cgi?id=12223
 
            Summary: kernel BUG at drivers/pci/intel-iommu.c:1373!
            Product: IO/Storage
