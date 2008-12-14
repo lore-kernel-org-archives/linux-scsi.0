@@ -1,157 +1,68 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [Announce]: Target_Core_Mod/ConfigFS and LIO-Target v3.0 work
-Date: Sat, 13 Dec 2008 14:50:06 -0800
-Message-ID: <1229208606.4153.1069.camel@haakon2.linux-iscsi.org>
-References: <1228965271.4153.510.camel@haakon2.linux-iscsi.org>
-	 <e2e108260812111124j79793adcie106ac2da4f801f3@mail.gmail.com>
-	 <1229025513.4153.542.camel@haakon2.linux-iscsi.org>
-	 <e2e108260812112321w2f5b1827xe2593888e44808ae@mail.gmail.com>
-	 <1229074809.4153.666.camel@haakon2.linux-iscsi.org>
-	 <54939.1229149205@turing-police.cc.vt.edu>
-	 <e2e108260812130141o3d21bbbdob9e7c9f95d309a74@mail.gmail.com>
-	 <1229162907.4153.857.camel@haakon2.linux-iscsi.org>
-	 <e2e108260812130223q13fd98d8gc1e55881a92b939@mail.gmail.com>
-	 <1229167118.4153.930.camel@haakon2.linux-iscsi.org>
-	 <e2e108260812130356y1fe60713xf844a35c775e161d@mail.gmail.com>
-	 <1229181896.3258.27.camel@localhost.localdomain>
+From: "=?ISO-8859-1?Q?Fr=E9d=E9ric_Weisbecker?=" <fweisbec@gmail.com>
+Subject: Re: [PATCH][RFC 2/23]: SCST core
+Date: Sun, 14 Dec 2008 01:35:18 +0100
+Message-ID: <c62985530812131635k362fc8d2q3c65e8284141f491@mail.gmail.com>
+References: <494009D7.4020602@vlnb.net> <49400ACD.3070502@vlnb.net>
+	 <20081210191213.GA15273@uranus.ravnborg.org>
+	 <49414DBE.6070801@vlnb.net>
+	 <20081211210917.GB27010@uranus.ravnborg.org>
+	 <4942BA85.3070408@vlnb.net>
+	 <1229118607.24995.18.camel@localhost.localdomain>
+	 <4943CAAB.4050008@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp120.sbc.mail.sp1.yahoo.com ([69.147.64.93]:40443 "HELO
-	smtp120.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752025AbYLMWuJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 13 Dec 2008 17:50:09 -0500
-In-Reply-To: <1229181896.3258.27.camel@localhost.localdomain>
+Received: from qw-out-2122.google.com ([74.125.92.26]:3056 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751879AbYLNAfT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 13 Dec 2008 19:35:19 -0500
+In-Reply-To: <4943CAAB.4050008@vlnb.net>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-iscsi-target-dev@googlegroups.com, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: Steven Rostedt <srostedt@redhat.com>, Sam Ravnborg <sam@ravnborg.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Boaz Harrosh <bharrosh@panasas.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Ingo Molnar <mingo@elte.hu>
 
-On Sat, 2008-12-13 at 09:24 -0600, James Bottomley wrote:
-> On Sat, 2008-12-13 at 12:56 +0100, Bart Van Assche wrote:
-> > On Sat, Dec 13, 2008 at 12:18 PM, Nicholas A. Bellinger
-> > <nab@linux-iscsi.org> wrote:
-> > > Of course I fix bugs when people report them.
+2008/12/13 Vladislav Bolkhovitin <vst@vlnb.net>:
+> Also (maybe I simply miss something) looks like ftrace doesn't trace exit
+> from functions, only entrance to them. Is it true? Is it possibly to log
+> exit from functions as well?
 
-Hi James,
 
-> OK, All of you on this thread, why don't you take time out to step back
-> and think about the effects this descent into trench warfare is having
-> on your observers.
-> 
+That's true with 2.6.28, the function tracer traces on function entries only.
+But there is an add-on on ftrace which let one to trace on entry and
+on return, the function
+graph tracer. This tracer uses this facility to output a graph of
+function calls and measure
+the time elapsed during each function call.
+You can also register two custom handlers to do some things you need
+on entry and on return.
 
-Yes, I think this reflects very poorly on both of us.  I would like to
-apologize for my part in thread, and would like to start making forward
-progress again.  (eg: more patch bombs :-)
 
->      1. You're both saying the other side isn't production ready ...
->         it's not a stretch for the rest of us to take this at face
->         value ... about both of you.
+> All the above functionality is almost what we need. The only thing left,
+> which I forgot to mention, is possibility to log also functions return value
+> on exit. This is what TRACE_EXIT_RES() in SCST does. Is it possible to add
+> those?
 
-So, as some of these larger LIO-Target customers come online in 2009
-(including a 500 TB -> 1 PB installation), folks will be able to hear
-for themselves how Linux-iSCSI.org code is being used for production.
 
-Also, there will be full-time engineering resources put on
-Target_Core_Mod/ConfigFS and LIO_Target v3.0 code in 2009, as we
-continue to work towards code submission.
+I want to add that on the function graph tracer. That can be done
+pretty easily. The only
+problem comes with the type of the return value. Would this tracer be
+supposed to always
+return a 64 bits value regardless of the real typ of the value? There
+would be some pointless bytes
+on most return values. I don't know how to proceed for this problem.
 
->      2. This ideological opposition to features the other side
->         implements tells me that if it came to a choice, by going with
->         either one of you I'd get an incomplete feature set.
-
-Well, I have no ideological opposition to SCST, just technical concerns
-that never get to be addressed.  Which is fine with me, as the pieces I
-need for LIO-iSER for generic struct page zero-copy mapping using a
-single codepath to Linux storage subsystem that can be shared across
-$FABRIC_MODs are already in place for Target_Core_Mod/ConfigFS.  Its
-simply a matter of hooking them (the $FABRIC_MODs) up now.
-
-On the other side however, the SCST guys are completely opposed to any
-usage of ConfigFS, which is a shame because it really does rock for this
-type of usage: lots of groups, attributes, and $STORAGE_OBJECTS
-representing Target Ports across multiple $FABRIC_MODs using ConfigFS
-symlinks.  Having written a bunch of ConfigFS code that has been up and
-running for a few months (most of which was done at LPC), and yet still
-some people make noise on their precieved limitiations of ConfigFS.,
-without actually ever looking at the code in question.  This obviously
-is a bit of a let down.
-
-The good news however is that there are folks in the kernel community
-who have given me positive feedback about the use of ConfigFS for target
-mode (and the actual code), and related to me that they believe ConfigFS
-is the right choice moving forward. (A big thanks to people :-)
-
->      3. Making obvious partisans of your user base also tells me that if
->         I had to make a choice, whatever it was I'd piss off a large
->         number of people who'd be very vocal about it.
-> 
-
-Honestly, I think our respective userbases just want the best upstream
-kernel code possible, which is the only thing I am interested in.  
-
-> Since we have a working target solution in the kernel already (STGT),
-> why on earth would I be stupid enough to want to even consider either of
-> you, coming as you do with the above mentioned baggage?
+> And one more question. Is it possible to redirect ftrace tracing to serial
+> console or any other console (netconsole?)? It can be helpful to investigate
+> hard lockups in IRQ or with IRQs disabled.
 >
-> So stop fighting ... you're not going to backstab your way to inclusion.
-> 
+> Thanks!
+> Vlad
+>
 
-Definately not.
-
-> The only identified failing of STGT (and it's theoretical, not
-> demonstrated, although I can agree the theory looks correct) is that the
-> user space packet processing may cause performance problems on high
-> speed networks.  We know from practical tests that these networks have
-> to be above 1Gbit because the results were identical for STGT and SCST
-> on a 1G network, so it's infiniband or 10Gbit ethernet.
-> 
-
-As I mentioned during our discussion @ LPC, I am still interested in
-including support for STGT and userspace fabric modules in
-Target_Core_Mod/ConfigFS using existing STGT code.
-
-So, I am currently at the point where I am bringing LIO-Target v3.0
-online using a generic target API on top of Target_Core_Mod/ConfigFS.
-At this point, I am creating my own 'template' of function pointers that
-generic target code calls into $FABRIC_MOD.  However, I have been
-considering using an existing 'template', and I am leaning to use the
-existing the STGT template (moved up to kernel space).  I think that
-using an existing 'template' would help $FABRIC_MODs maintainers port
-over their code.  Same goes for STGT's struct iscsi_transport for the
-LIO-iSER bits..
-
-> So, what it comes down to is that if we had a kernel side protocol
-> accelerator for STGT, the project would no longer suffer from this
-> theoretical failing.  *Both* of you have such a thing embedded in your
-> respective submissions (all 74k LOC of them) so can't you just enhance
-> STGT with whichever one is better ..
-
-Ok, in terms of LOC, I am looking at ~22k LOC for
-Target_Core_Mod/Configfs (which will be submitted first), and ~18K LOC
-for LIO-Target v3.0 (submitted later)
-
-> . actually, if you'd both bury the
-> hatchet and work on the enhancement together taking the best of each
-> project, we'd have something that worked much better and a unified user
-> base and neither side would be able to claim sole credit ... just a
-> thought.
-> 
-
-I really do apperciate your thoughtful comments, but as long as ConfigFS
-is being used, I do not believe the SCST folks have any interest in
-working with me, which is OK.  On the bit about claiming sole credit, I
-very much understand that it 'takes a village' for something as complex
-as what we are discussing here, and I am very much willing to share
-credit where credit is due.  I am 100% commited for the long haul to the
-best generic kernel target infrastructure and $FABRIC_MODs, and am very
-much looking forward to working with people who share this same passion
-to produce the best possible code.
-
-Many thanks for your most valuable of time,
-
---nab
-
-
+I would find it useful too. I thought about something like using
+early_printk or something like
+that...I don't know. That would be good to redirect the output to the
+tty device of the user choice.
