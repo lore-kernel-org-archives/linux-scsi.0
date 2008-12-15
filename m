@@ -1,22 +1,30 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 12195] "dd" make kernel panic
-Date: Mon, 15 Dec 2008 14:13:27 -0600
-Message-ID: <1229372007.3293.84.camel@localhost.localdomain>
-References: <20081215103958.4801D108042@picon.linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12195] "dd" make kernel panic
+Date: Mon, 15 Dec 2008 12:13:54 -0800 (PST)
+Message-ID: <20081215201354.C7FE3108047@picon.linux-foundation.org>
+References: <bug-12195-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:35641 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752700AbYLOUNS (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:39349 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752974AbYLOUOw (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Dec 2008 15:13:18 -0500
-In-Reply-To: <20081215103958.4801D108042@picon.linux-foundation.org>
+	Mon, 15 Dec 2008 15:14:52 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBFKEN6B024584
+	for <linux-scsi@vger.kernel.org>; Mon, 15 Dec 2008 12:14:24 -0800
+In-Reply-To: <bug-12195-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugme-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org, "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=12195
+
+
+
+
+
+------- Comment #13 from anonymous@kernel-bugs.osdl.org  2008-12-15 12:13 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Mon, 2008-12-15 at 02:39 -0800, bugme-daemon@bugzilla.kernel.org
 wrote:
@@ -90,19 +98,24 @@ James
 
 ---
 
-diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+diff --git a/drivers/message/fusion/mptscsih.c
+b/drivers/message/fusion/mptscsih.c
 index d62fd4f..ee09041 100644
 --- a/drivers/message/fusion/mptscsih.c
 +++ b/drivers/message/fusion/mptscsih.c
 @@ -2008,6 +2008,9 @@ mptscsih_host_reset(struct scsi_cmnd *SCpnt)
- 		return FAILED;
- 	}
- 
-+	/* make sure we have no outstanding commands at this stage */
-+	mptscsih_flush_running_cmds(hd);
+                return FAILED;
+        }
+
++       /* make sure we have no outstanding commands at this stage */
++       mptscsih_flush_running_cmds(hd);
 +
- 	ioc = hd->ioc;
- 	printk(MYIOC_s_INFO_FMT "attempting host reset! (sc=%p)\n",
- 	    ioc->name, SCpnt);
+        ioc = hd->ioc;
+        printk(MYIOC_s_INFO_FMT "attempting host reset! (sc=%p)\n",
+            ioc->name, SCpnt);
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
