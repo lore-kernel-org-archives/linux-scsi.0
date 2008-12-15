@@ -1,164 +1,80 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12195] "dd" make kernel panic
-Date: Mon, 15 Dec 2008 02:39:58 -0800 (PST)
-Message-ID: <20081215103958.4801D108042@picon.linux-foundation.org>
-References: <bug-12195-11613@http.bugzilla.kernel.org/>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:40736 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752791AbYLOKkB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Dec 2008 05:40:01 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBFAdwDL017231
-	for <linux-scsi@vger.kernel.org>; Mon, 15 Dec 2008 02:39:59 -0800
-In-Reply-To: <bug-12195-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Raz <raziebe@gmail.com>
+Subject: Re: Intel X25-M MLC SSD benchmarks - How can I be sure i am erased block aligned ?
+Date: Mon, 15 Dec 2008 14:59:38 +0200
+Message-ID: <5d96567b0812150459i1aacfa76y1525b28e01891dc4@mail.gmail.com>
+References: <5d96567b0812111240i60f70974y815a0775006da05f@mail.gmail.com>
+	 <20081212012451.GG26095@parisc-linux.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20081212012451.GG26095@parisc-linux.org>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12195
-
-
+http://www.tomshardware.com/reviews/Intel-x25-m-SSD,2012-8.html
+they say that write IO fluctuates.
 
 
 
-------- Comment #12 from ming.m.lin@intel.com  2008-12-15 02:39 -------
-(In reply to comment #7)
-> If you have time for another re-create it would be good to set some scsi
-> logging.
-> sysctl -w dev.scsi.logging_level=4100 # mlcomplete 1 and error 4
-> echo "1" > /proc/sys/kernel/sysrq # If needed
-> echo 9 > /proc/sysrq-trigger # Raise console log level
-> 
-
-mptscsih: ioc0: attempting task abort! (sc=e000000037a36980)
-sd 0:0:1:0: [sdb] CDB: cdb[0]=0x28: 28 00 01 3b 4e a0 00 01 00 00
-mptbase: ioc0: WARNING - IOC is in FAULT state (000eh)!!!
-mptbase: ioc0: WARNING - Issuing HardReset from mpt_fault_reset_work!!
-mptbase: ioc0: Initiating recovery
-mptbase: ioc0: WARNING - IOC is in FAULT state!!!
-mptbase: ioc0: WARNING -            FAULT code = 000eh
-mptscsih: ioc0: Issue of TaskMgmt failed!
-mptscsih: ioc0: task abort: FAILED (sc=e000000037a36980)
-mptscsih: ioc0: attempting task abort! (sc=e000000037a35f80)
-sd 0:0:1:0: [sdb] CDB: cdb[0]=0x28: 28 00 01 3b 4f a0 00 01 00 00
-mptscsih: ioc0: task abort: FAILED (sc=e000000037a35f80)
-mptscsih: ioc0: attempting target reset! (sc=e000000037a36980)
-sd 0:0:1:0: [sdb] CDB: cdb[0]=0x28: 28 00 01 3b 4e a0 00 01 00 00
-mptscsih: ioc0: target reset: FAILED (sc=e000000037a36980)
-mptscsih: ioc0: attempting bus reset! (sc=e000000037a36980)
-sd 0:0:1:0: [sdb] CDB: cdb[0]=0x28: 28 00 01 3b 4e a0 00 01 00 00
-mptscsih: ioc0: bus reset: FAILED (sc=e000000037a36980)
-mptscsih: ioc0: attempting host reset! (sc=e000000037a36980)
-mptscsih: ioc0: host reset: SUCCESS (sc=e000000037a36980)
-sd 0:0:1:0: Device offlined - not ready after error recovery
-sd 0:0:1:0: Device offlined - not ready after error recovery
-sd 0:0:1:0: [sdb] Result: hostbyte=0x00 driverbyte=0x06
-end_request: I/O error, dev sdb, sector 20663968
-Buffer I/O error on device sdb, logical block 5165992
-Buffer I/O error on device sdb, logical block 5165993
-Buffer I/O error on device sdb, logical block 5165994
-Buffer I/O error on device sdb, logical block 5165995
-Buffer I/O error on device sdb, logical block 5165996
-Buffer I/O error on device sdb, logical block 5165997
-Buffer I/O error on device sdb, logical block 5165998
-Buffer I/O error on device sdb, logical block 5165999
-Buffer I/O error on device sdb, logical block 5166000
-Buffer I/O error on device sdb, logical block 5166001
-sd 0:0:1:0: rejecting I/O to offline device
-sd 0:0:1:0: [sdb] Result: hostbyte=0x00 driverbyte=0x06
-end_request: I/O error, dev sdb, sector 20664224
-mptbase: ioc0: ERROR - Doorbell ACK timeout (count=4999), IntStatus=80000000!
-sd 0:0:1:0: mptscsih: ioc0: completing cmds: fw_channel 0, fw_id 1,
-sc=e000000037a36980, mf = e0000000406847e0, idx=55
-sd 0:0:1:0: mptscsih: ioc0: completing cmds: fw_channel 0, fw_id 1,
-sc=e000000037a35f80, mf = e0000000406883e0, idx=f5
-Unable to handle kernel NULL pointer dereference (address 0000000000000044)
-mpt_poll_0[378]: Oops 8813272891392 [1]
-Modules linked in:
-
-Pid: 378, CPU 1, comm:           mpt_poll_0
-psr : 0000101008026018 ifs : 8000000000000289 ip  : [<a0000001003988b0>]    Not
-tainted (2.6.28-rc8-mlin)
-ip is at scsi_softirq_done+0x50/0x2e0
-unat: 0000000000000000 pfs : 0000000000000184 rsc : 0000000000000003
-rnat: 5555555555555555 bsps: 5555555555555555 pr  : 000002a1491599a5
-ldrs: 0000000000000000 ccv : 0000000000000000 fpsr: 0009804c8a70033f
-csd : 0000000000000000 ssd : 0000000000000000
-b0  : a000000100245310 b6  : a000000100398860 b7  : a000000100011ec0
-f6  : 1003e0000000000000000 f7  : 1003e0000000000200802
-f8  : 1003e0000000080000000 f9  : 1003e00000000000001d3
-f10 : 1003e392baaf0b5995995 f11 : 1003e0000000000000030
-r1  : a000000100a2c6c0 r2  : e000000001105ec8 r3  : e000000035e2d688
-r8  : e000000035e2d680 r9  : ffffffffffff5ec8 r10 : 0000000000000018
-r11 : 0000000000000044 r12 : e0000000405c7830 r13 : e0000000405c0000
-r14 : e0000000405c7850 r15 : e0000000405c7858 r16 : 0000000000000020
-r17 : 0000000000000030 r18 : e000000035e2d7c0 r19 : e000000035e2d750
-r20 : 0000000000000001 r21 : a000000100398860 r22 : e000000040599ac0
-r23 : e000000040599a18 r24 : e000000035e2d6b0 r25 : e0000000405c7850
-r26 : e0000000405c7850 r27 : e000000035e2d688 r28 : e0000000405c7858
-r29 : a000000100011ec0 r30 : 0000000000000000 r31 : e000000008a78000
-
-Call Trace:
- [<a000000100012870>] show_stack+0x50/0xa0
-                                sp=e0000000405c7400 bsp=e0000000405c1368
- [<a000000100013150>] show_regs+0x830/0x860
-                                sp=e0000000405c75d0 bsp=e0000000405c1320
- [<a000000100022a60>] die+0x1c0/0x2c0
-                                sp=e0000000405c75d0 bsp=e0000000405c12d8
- [<a000000100042350>] ia64_do_page_fault+0x830/0x960
-                                sp=e0000000405c75d0 bsp=e0000000405c1278
- [<a00000010000ba20>] ia64_native_leave_kernel+0x0/0x270
-                                sp=e0000000405c7660 bsp=e0000000405c1278
- [<a0000001003988b0>] scsi_softirq_done+0x50/0x2e0
-                                sp=e0000000405c7830 bsp=e0000000405c1230
- [<a000000100245310>] blk_done_softirq+0x170/0x1c0
-                                sp=e0000000405c7840 bsp=e0000000405c1218
- [<a00000010006f3d0>] __do_softirq+0x110/0x2e0
-                                sp=e0000000405c7850 bsp=e0000000405c1180
- [<a00000010006f610>] do_softirq+0x70/0xc0
-                                sp=e0000000405c7850 bsp=e0000000405c1120
- [<a00000010006fa50>] irq_exit+0x70/0xa0
-                                sp=e0000000405c7850 bsp=e0000000405c1108
- [<a000000100011c70>] ia64_handle_irq+0x350/0x380
-                                sp=e0000000405c7850 bsp=e0000000405c10d0
- [<a00000010000ba20>] ia64_native_leave_kernel+0x0/0x270
-                                sp=e0000000405c7850 bsp=e0000000405c10d0
- [<a0000001000662e0>] vprintk+0x660/0x6a0
-                                sp=e0000000405c7a20 bsp=e0000000405c1000
- [<a0000001000663a0>] printk+0x80/0xc0
-                                sp=e0000000405c7a90 bsp=e0000000405c0f98
- [<a0000001003d4c50>] mptscsih_ioc_reset+0x250/0x420
-                                sp=e0000000405c7ad0 bsp=e0000000405c0f30
- [<a0000001003d9c50>] mptspi_ioc_reset+0x30/0xa0
-                                sp=e0000000405c7ae0 bsp=e0000000405c0f08
- [<a0000001003c1d30>] mpt_signal_reset+0x150/0x180
-                                sp=e0000000405c7ae0 bsp=e0000000405c0ed8
- [<a0000001003c53c0>] KickStart+0x680/0x1000
-                                sp=e0000000405c7ae0 bsp=e0000000405c0e70
- [<a0000001003c5f50>] MakeIocReady+0x210/0x500
-                                sp=e0000000405c7ae0 bsp=e0000000405c0e18
- [<a0000001003c86f0>] mpt_do_ioc_recovery+0x150/0x2840
-                                sp=e0000000405c7ae0 bsp=e0000000405c0d48
- [<a0000001003caf80>] mpt_HardResetHandler+0x1a0/0x2a0
-                                sp=e0000000405c7dd0 bsp=e0000000405c0d00
- [<a0000001003cb190>] mpt_fault_reset_work+0x110/0x260
-                                sp=e0000000405c7dd0 bsp=e0000000405c0cc0
- [<a00000010008a310>] run_workqueue+0x1f0/0x340
-                                sp=e0000000405c7dd0 bsp=e0000000405c0c80
- [<a00000010008a5a0>] worker_thread+0x140/0x180
-                                sp=e0000000405c7dd0 bsp=e0000000405c0c58
- [<a000000100092aa0>] kthread+0xa0/0x120
-                                sp=e0000000405c7e30 bsp=e0000000405c0c28
- [<a000000100014430>] kernel_thread_helper+0x30/0x60
-                                sp=e0000000405c7e30 bsp=e0000000405c0c00
- [<a00000010000a0c0>] start_kernel_thread+0x20/0x40
-                                sp=e0000000405c7e30 bsp=e0000000405c0c00
-Kernel panic - not syncing: Aiee, killing interrupt handler!
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+On 12/12/08, Matthew Wilcox <matthew@wil.cx> wrote:
+> On Thu, Dec 11, 2008 at 10:40:41PM +0200, Raz wrote:
+>  > > ________________________________
+>  > > From: Matthew Wilcox [mailto:matthew@wil.cx]
+>  > > Sent: Thu 12/11/2008 5:44 AM
+>  > > To: Raz Ben-Yehuda
+>  > > Cc: linux-ide@vger.kernel.org; linux-scsi@vger.kernel.org
+>  > > Subject: Re: Intel X25-M MLC SSD benchmarks
+>  > >
+>  > > On Thu, Dec 11, 2008 at 12:12:37AM +0200, Raz Ben-Yehuda wrote:
+>  > >> I did not want to dive into details because it does not matter. Whether
+>  > >> noop,deadline, deadline parameters...
+>  > >> As for the controller I used 4 different controllers. Adaptec,AHCI and
+>  > >> Intel as Integrated chips on the 1025W-UR supermicro motherboard, and a
+>  > >> 4-th controller SuperMicro UIO Adaptec aac card.
+>  > >> All gave same results for most dd writes commands.
+>  > >> dd if=/dev/zero of=/dev/sda bs=1M count=1000 oflag=direct , and many
+>  > >> other variants such erase block size ( 128K ) , several erase block size
+>  > >> and so on. Kernel is 2.6.18-8.el5.
+>  > >
+>  > >>>OK, I suspect you aren't giving the drive enough work to do for it to
+>  > >>>perform at its best.  Try doing something like this:
+>  > >
+>  > >>>for i in $(seq 0 9); do \
+>  > >  >>     dd if=/dev/zero of=/dev/sda bs=1M count=1000 oflag=direct \
+>  > >  >>               seek=$(($i * 1000)) & \
+>  > >>>done
+>  > >
+>  > did that. nothing. also, I would like to note that IO flow is quite
+>  > weird.iostats reports 70GB/s in the first few seconds, and then it
+>  > degrades to 20
+>  >  MB/s and less. could it be that I am not erase-block aligment ?
+>
+>
+> That doesn't sound likely to me.  Erase block size isn't a huge issue
+>  with these drives.  I've been trying to replicate your problem, but I'm
+>  not having any luck; unfortunately I only have access to an X25-E drive
+>  (not an X25-M) and I'm seeing 175-185MB/s when it's attached to an AHCI
+>  controller, just with a single dd (I haven't even played with the
+>  elevator).  I'm trying to get hold of an X25-M drive, but I don't know
+>  when I'll receive one.
+>
+>
+>  > how does SSD aligments interacts with a controller ?
+>
+>
+> Controllers can generally send down large enough IOs that it isn't a
+>  problem.  And the Intel SSDs are smart enough that you shouldn't have to
+>  align to erase block boundaries to make them go fast.
+>
+>
+>  --
+>
+> Matthew Wilcox                          Intel Open Source Technology Centre
+>  "Bill, look, we understand that you're interested in selling us this
+>  operating system, but compare it to ours.  We can't possibly take such
+>  a retrograde step."
+>
