@@ -1,64 +1,152 @@
 From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] sd: tell the user when a disk's capacity is adjusted
-Date: Mon, 15 Dec 2008 10:32:59 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0812151031290.2525-100000@iolanthe.rowland.org>
+Subject: [PATCH ver. 3] SCSI: remove scsi_end_request()
+Date: Mon, 15 Dec 2008 10:35:05 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0812151033340.2525-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:38487 "HELO
+Received: from iolanthe.rowland.org ([192.131.102.54]:60080 "HELO
 	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754381AbYLOPdA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Dec 2008 10:33:00 -0500
+	with SMTP id S1751011AbYLOPfF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Dec 2008 10:35:05 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-This patch (as1188) combines the tests for decrementing a drive's
-reported capacity and expands the comment.  It also adds an
-informational message to the system log, informing the user when the
-reported value has been changed.
+This patch (as1144c) removes scsi_end_request().  The routine had only
+one caller, so it is moved inline and simplified.
+
+In addition, if no forward progress has been made then the patch
+decrements a request's retry counter before unpreparing and requeuing
+it, to avoid infinite retry loops.
 
 Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
 
 ---
 
-Index: usb-2.6/drivers/scsi/sd.c
+This version has been rebased to incorporate James's changes to my 
+earlier patch.
+
+
+
+Index: usb-2.6/drivers/scsi/scsi_lib.c
 ===================================================================
---- usb-2.6.orig/drivers/scsi/sd.c
-+++ usb-2.6/drivers/scsi/sd.c
-@@ -1384,18 +1384,22 @@ repeat:
- 		sd_read_protection_type(sdkp, buffer);
- 	}	
+--- usb-2.6.orig/drivers/scsi/scsi_lib.c
++++ usb-2.6/drivers/scsi/scsi_lib.c
+@@ -679,69 +679,6 @@ void scsi_run_host_queues(struct Scsi_Ho
+ 		scsi_run_queue(sdev->request_queue);
+ }
  
--	/* Some devices return the total number of sectors, not the
--	 * highest sector number.  Make the necessary adjustment. */
--	if (sdp->fix_capacity) {
-+	/* Some devices are known to return the total number of blocks,
-+	 * not the highest block number.  Some devices have versions
-+	 * which do this and others which do not.  Some devices we might
-+	 * suspect of doing this but we don't know for certain.
-+	 *
-+	 * If we know the reported capacity is wrong, decrement it.  If
-+	 * we can only guess, then assume the number of blocks is even
-+	 * (usually true but not always) and err on the side of lowering
-+	 * the capacity.
-+	 */
-+	if (sdp->fix_capacity ||
-+	    (sdp->guess_capacity && (sdkp->capacity & 0x01))) {
-+		sd_printk(KERN_INFO, sdkp, "Adjusting the sector count "
-+				"from its reported value: %llu\n",
-+				(unsigned long long) sdkp->capacity);
- 		--sdkp->capacity;
+-/*
+- * Function:    scsi_end_request()
+- *
+- * Purpose:     Post-processing of completed commands (usually invoked at end
+- *		of upper level post-processing and scsi_io_completion).
+- *
+- * Arguments:   cmd	 - command that is complete.
+- *              error    - 0 if I/O indicates success, < 0 for I/O error.
+- *              bytes    - number of bytes of completed I/O
+- *		requeue  - indicates whether we should requeue leftovers.
+- *
+- * Lock status: Assumed that lock is not held upon entry.
+- *
+- * Returns:     cmd if requeue required, NULL otherwise.
+- *
+- * Notes:       This is called for block device requests in order to
+- *              mark some number of sectors as complete.
+- * 
+- *		We are guaranteeing that the request queue will be goosed
+- *		at some point during this call.
+- * Notes:	If cmd was requeued, upon return it will be a stale pointer.
+- */
+-static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int error,
+-					  int bytes, int requeue)
+-{
+-	struct request_queue *q = cmd->device->request_queue;
+-	struct request *req = cmd->request;
 -
--	/* Some devices have version which report the correct sizes
--	 * and others which do not. We guess size according to a heuristic
--	 * and err on the side of lowering the capacity. */
--	} else {
--		if (sdp->guess_capacity)
--			if (sdkp->capacity & 0x01) /* odd sizes are odd */
--				--sdkp->capacity;
- 	}
+-	/*
+-	 * If there are blocks left over at the end, set up the command
+-	 * to queue the remainder of them.
+-	 */
+-	if (blk_end_request(req, error, bytes)) {
+-		int leftover = (req->hard_nr_sectors << 9);
+-
+-		if (blk_pc_request(req))
+-			leftover = req->data_len;
+-
+-		/* kill remainder if no retrys */
+-		if (error && scsi_noretry_cmd(cmd))
+-			blk_end_request(req, error, leftover);
+-		else {
+-			if (requeue) {
+-				/*
+-				 * Bleah.  Leftovers again.  Stick the
+-				 * leftovers in the front of the
+-				 * queue, and goose the queue again.
+-				 */
+-				scsi_requeue_command(q, cmd);
+-				cmd = NULL;
+-			}
+-			return cmd;
+-		}
+-	}
+-
+-	/*
+-	 * This will goose the queue request function at the end, so we don't
+-	 * need to worry about launching another command.
+-	 */
+-	scsi_next_command(cmd);
+-	return NULL;
+-}
+-
+ static inline unsigned int scsi_sgtable_index(unsigned short nents)
+ {
+ 	unsigned int index;
+@@ -897,7 +834,6 @@ static void scsi_end_bidi_request(struct
+ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ {
+ 	int result = cmd->result;
+-	int this_count;
+ 	struct request_queue *q = cmd->device->request_queue;
+ 	struct request *req = cmd->request;
+ 	int error = 0;
+@@ -949,16 +885,28 @@ void scsi_io_completion(struct scsi_cmnd
+ 	SCSI_LOG_HLCOMPLETE(1, printk("%ld sectors total, "
+ 				      "%d bytes done.\n",
+ 				      req->nr_sectors, good_bytes));
+-
+-	/* A number of bytes were successfully read.  If there
+-	 * are leftovers and there is some kind of error
+-	 * (result != 0), retry the rest.
+-	 */
+-	if (scsi_end_request(cmd, error, good_bytes, result == 0) == NULL)
++	if (blk_end_request(req, error, good_bytes) == 0) {
++		/* This request is completely finished; start the next one */
++		scsi_next_command(cmd);
+ 		return;
+-	this_count = blk_rq_bytes(req);
++	}
  
- got_data:
+-	if (host_byte(result) == DID_RESET) {
++	/* The request isn't finished yet.  Figure out what to do next. */
++	if (result == 0) {
++		/* No error, so carry out the remainder of the request.
++		 * Failure to make forward progress counts against the
++		 * the number of retries.
++		 */
++		if (good_bytes > 0 || --req->retries >= 0)
++			action = ACTION_REPREP;
++		else {
++			action = ACTION_FAIL;
++			description = "Retries exhausted";
++		}
++	} else if (error && scsi_noretry_cmd(cmd)) {
++		/* Retrys are disallowed, so kill the remainder. */
++		action = ACTION_FAIL;
++	} else if (host_byte(result) == DID_RESET) {
+ 		/* Third party bus reset or reset for error recovery
+ 		 * reasons.  Just retry the command and see what
+ 		 * happens.
 
