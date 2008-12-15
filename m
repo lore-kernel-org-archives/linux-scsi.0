@@ -1,152 +1,67 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH ver. 3] SCSI: remove scsi_end_request()
-Date: Mon, 15 Dec 2008 10:35:05 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0812151033340.2525-100000@iolanthe.rowland.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] Fix uninitialized variable error in scsi_io_completion
+Date: Mon, 15 Dec 2008 17:46:03 +0200
+Message-ID: <49467BBB.4070002@panasas.com>
+References: <Pine.LNX.4.44L0.0812151026100.2525-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:60080 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751011AbYLOPfF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Dec 2008 10:35:05 -0500
+Received: from gw-ca.panasas.com ([66.104.249.162]:27272 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751154AbYLOPqK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Dec 2008 10:46:10 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0812151026100.2525-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-This patch (as1144c) removes scsi_end_request().  The routine had only
-one caller, so it is moved inline and simplified.
+Alan Stern wrote:
+> This patch (as1191) adds a missing "default" case in
+> scsi_io_completion(), thereby fixing an "uninitialized variable"
+> error.  It also adds a missing newline to a log entry.
+> 
+> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+> 
+> ---
+> 
+> James, I'm shocked!  :-)   Didn't you ever try to compile your changes 
+> to this routine?
+> 
+> Alan Stern
+> 
+> 
+> 
+> Index: usb-2.6/drivers/scsi/scsi_lib.c
+> ===================================================================
+> --- usb-2.6.orig/drivers/scsi/scsi_lib.c
+> +++ usb-2.6/drivers/scsi/scsi_lib.c
+> @@ -1024,6 +1024,10 @@ void scsi_io_completion(struct scsi_cmnd
+>  				case 0x09: /* self test in progress */
+>  					action = ACTION_DELAYED_RETRY;
+>  					break;
+> +				default:
+> +					description = "Device not ready";
+> +					action = ACTION_FAIL;
+> +					break;
+>  				}
+>  			} else {
+>  				description = "Device not ready";
+> @@ -1049,7 +1053,7 @@ void scsi_io_completion(struct scsi_cmnd
+>  		/* Give up and fail the remainder of the request */
+>  		if (!(req->cmd_flags & REQ_QUIET)) {
+>  			if (description)
+> -				scmd_printk(KERN_INFO, cmd, "%s",
+> +				scmd_printk(KERN_INFO, cmd, "%s\n",
+>  					    description);
+>  			scsi_print_result(cmd);
+>  			if (driver_byte(result) & DRIVER_SENSE)
+> 
+> --
 
-In addition, if no forward progress has been made then the patch
-decrements a request's retry counter before unpreparing and requeuing
-it, to avoid infinite retry loops.
+Good catch, I saw the warning but failed to see the missing case.
+I attributed it to my brain dead gcc version.
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-
----
-
-This version has been rebased to incorporate James's changes to my 
-earlier patch.
-
-
-
-Index: usb-2.6/drivers/scsi/scsi_lib.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_lib.c
-+++ usb-2.6/drivers/scsi/scsi_lib.c
-@@ -679,69 +679,6 @@ void scsi_run_host_queues(struct Scsi_Ho
- 		scsi_run_queue(sdev->request_queue);
- }
+Boaz
  
--/*
-- * Function:    scsi_end_request()
-- *
-- * Purpose:     Post-processing of completed commands (usually invoked at end
-- *		of upper level post-processing and scsi_io_completion).
-- *
-- * Arguments:   cmd	 - command that is complete.
-- *              error    - 0 if I/O indicates success, < 0 for I/O error.
-- *              bytes    - number of bytes of completed I/O
-- *		requeue  - indicates whether we should requeue leftovers.
-- *
-- * Lock status: Assumed that lock is not held upon entry.
-- *
-- * Returns:     cmd if requeue required, NULL otherwise.
-- *
-- * Notes:       This is called for block device requests in order to
-- *              mark some number of sectors as complete.
-- * 
-- *		We are guaranteeing that the request queue will be goosed
-- *		at some point during this call.
-- * Notes:	If cmd was requeued, upon return it will be a stale pointer.
-- */
--static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int error,
--					  int bytes, int requeue)
--{
--	struct request_queue *q = cmd->device->request_queue;
--	struct request *req = cmd->request;
--
--	/*
--	 * If there are blocks left over at the end, set up the command
--	 * to queue the remainder of them.
--	 */
--	if (blk_end_request(req, error, bytes)) {
--		int leftover = (req->hard_nr_sectors << 9);
--
--		if (blk_pc_request(req))
--			leftover = req->data_len;
--
--		/* kill remainder if no retrys */
--		if (error && scsi_noretry_cmd(cmd))
--			blk_end_request(req, error, leftover);
--		else {
--			if (requeue) {
--				/*
--				 * Bleah.  Leftovers again.  Stick the
--				 * leftovers in the front of the
--				 * queue, and goose the queue again.
--				 */
--				scsi_requeue_command(q, cmd);
--				cmd = NULL;
--			}
--			return cmd;
--		}
--	}
--
--	/*
--	 * This will goose the queue request function at the end, so we don't
--	 * need to worry about launching another command.
--	 */
--	scsi_next_command(cmd);
--	return NULL;
--}
--
- static inline unsigned int scsi_sgtable_index(unsigned short nents)
- {
- 	unsigned int index;
-@@ -897,7 +834,6 @@ static void scsi_end_bidi_request(struct
- void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- {
- 	int result = cmd->result;
--	int this_count;
- 	struct request_queue *q = cmd->device->request_queue;
- 	struct request *req = cmd->request;
- 	int error = 0;
-@@ -949,16 +885,28 @@ void scsi_io_completion(struct scsi_cmnd
- 	SCSI_LOG_HLCOMPLETE(1, printk("%ld sectors total, "
- 				      "%d bytes done.\n",
- 				      req->nr_sectors, good_bytes));
--
--	/* A number of bytes were successfully read.  If there
--	 * are leftovers and there is some kind of error
--	 * (result != 0), retry the rest.
--	 */
--	if (scsi_end_request(cmd, error, good_bytes, result == 0) == NULL)
-+	if (blk_end_request(req, error, good_bytes) == 0) {
-+		/* This request is completely finished; start the next one */
-+		scsi_next_command(cmd);
- 		return;
--	this_count = blk_rq_bytes(req);
-+	}
- 
--	if (host_byte(result) == DID_RESET) {
-+	/* The request isn't finished yet.  Figure out what to do next. */
-+	if (result == 0) {
-+		/* No error, so carry out the remainder of the request.
-+		 * Failure to make forward progress counts against the
-+		 * the number of retries.
-+		 */
-+		if (good_bytes > 0 || --req->retries >= 0)
-+			action = ACTION_REPREP;
-+		else {
-+			action = ACTION_FAIL;
-+			description = "Retries exhausted";
-+		}
-+	} else if (error && scsi_noretry_cmd(cmd)) {
-+		/* Retrys are disallowed, so kill the remainder. */
-+		action = ACTION_FAIL;
-+	} else if (host_byte(result) == DID_RESET) {
- 		/* Third party bus reset or reset for error recovery
- 		 * reasons.  Just retry the command and see what
- 		 * happens.
-
