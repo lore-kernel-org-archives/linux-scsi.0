@@ -1,56 +1,64 @@
 From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] Fix uninitialized variable error in scsi_io_completion
-Date: Mon, 15 Dec 2008 10:31:28 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0812151026100.2525-100000@iolanthe.rowland.org>
+Subject: [PATCH] sd: tell the user when a disk's capacity is adjusted
+Date: Mon, 15 Dec 2008 10:32:59 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0812151031290.2525-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:38483 "HELO
+Received: from iolanthe.rowland.org ([192.131.102.54]:38487 "HELO
 	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751395AbYLOPb3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Dec 2008 10:31:29 -0500
+	with SMTP id S1754381AbYLOPdA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Dec 2008 10:33:00 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-This patch (as1191) adds a missing "default" case in
-scsi_io_completion(), thereby fixing an "uninitialized variable"
-error.  It also adds a missing newline to a log entry.
+This patch (as1188) combines the tests for decrementing a drive's
+reported capacity and expands the comment.  It also adds an
+informational message to the system log, informing the user when the
+reported value has been changed.
 
 Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
 
 ---
 
-James, I'm shocked!  :-)   Didn't you ever try to compile your changes 
-to this routine?
-
-Alan Stern
-
-
-
-Index: usb-2.6/drivers/scsi/scsi_lib.c
+Index: usb-2.6/drivers/scsi/sd.c
 ===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_lib.c
-+++ usb-2.6/drivers/scsi/scsi_lib.c
-@@ -1024,6 +1024,10 @@ void scsi_io_completion(struct scsi_cmnd
- 				case 0x09: /* self test in progress */
- 					action = ACTION_DELAYED_RETRY;
- 					break;
-+				default:
-+					description = "Device not ready";
-+					action = ACTION_FAIL;
-+					break;
- 				}
- 			} else {
- 				description = "Device not ready";
-@@ -1049,7 +1053,7 @@ void scsi_io_completion(struct scsi_cmnd
- 		/* Give up and fail the remainder of the request */
- 		if (!(req->cmd_flags & REQ_QUIET)) {
- 			if (description)
--				scmd_printk(KERN_INFO, cmd, "%s",
-+				scmd_printk(KERN_INFO, cmd, "%s\n",
- 					    description);
- 			scsi_print_result(cmd);
- 			if (driver_byte(result) & DRIVER_SENSE)
+--- usb-2.6.orig/drivers/scsi/sd.c
++++ usb-2.6/drivers/scsi/sd.c
+@@ -1384,18 +1384,22 @@ repeat:
+ 		sd_read_protection_type(sdkp, buffer);
+ 	}	
+ 
+-	/* Some devices return the total number of sectors, not the
+-	 * highest sector number.  Make the necessary adjustment. */
+-	if (sdp->fix_capacity) {
++	/* Some devices are known to return the total number of blocks,
++	 * not the highest block number.  Some devices have versions
++	 * which do this and others which do not.  Some devices we might
++	 * suspect of doing this but we don't know for certain.
++	 *
++	 * If we know the reported capacity is wrong, decrement it.  If
++	 * we can only guess, then assume the number of blocks is even
++	 * (usually true but not always) and err on the side of lowering
++	 * the capacity.
++	 */
++	if (sdp->fix_capacity ||
++	    (sdp->guess_capacity && (sdkp->capacity & 0x01))) {
++		sd_printk(KERN_INFO, sdkp, "Adjusting the sector count "
++				"from its reported value: %llu\n",
++				(unsigned long long) sdkp->capacity);
+ 		--sdkp->capacity;
+-
+-	/* Some devices have version which report the correct sizes
+-	 * and others which do not. We guess size according to a heuristic
+-	 * and err on the side of lowering the capacity. */
+-	} else {
+-		if (sdp->guess_capacity)
+-			if (sdkp->capacity & 0x01) /* odd sizes are odd */
+-				--sdkp->capacity;
+ 	}
+ 
+ got_data:
 
