@@ -1,80 +1,49 @@
-From: Raz <raziebe@gmail.com>
-Subject: Re: Intel X25-M MLC SSD benchmarks - How can I be sure i am erased block aligned ?
-Date: Mon, 15 Dec 2008 14:59:38 +0200
-Message-ID: <5d96567b0812150459i1aacfa76y1525b28e01891dc4@mail.gmail.com>
-References: <5d96567b0812111240i60f70974y815a0775006da05f@mail.gmail.com>
-	 <20081212012451.GG26095@parisc-linux.org>
+From: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik-X3B1VOXEql0@public.gmane.org>
+Subject: Re: [PATCH v2 0/2 2.6.29] cxgb3i -- open-iscsi initiator acceleration
+Date: Mon, 15 Dec 2008 16:05:45 +0200
+Message-ID: <20081215140545.GQ15052@edu.joroinen.fi>
+References: <200812092215.mB9MFMZt015198@localhost.localdomain>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20081212012451.GG26095@parisc-linux.org>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <grbounce-FC1hwAUAAAA0O9VQcsxVj1UPjHD9r3x_=glio-open-iscsi=m.gmane.org-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <200812092215.mB9MFMZt015198-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Post: <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://googlegroups.com/group/open-iscsi/subscribe>,
+	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-http://www.tomshardware.com/reviews/Intel-x25-m-SSD,2012-8.html
-they say that write IO fluctuates.
 
+On Tue, Dec 09, 2008 at 02:15:22PM -0800, Karen Xie wrote:
+> 
+> [PATCH v2 0/2 2.6.29] cxgb3i -- open-iscsi initiator acceleration 
+> 
+> From: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+> 
+> Here is the updated patchset for adding cxgb3i iscsi initiator.
+> 
+> The updated version incorporates the comments from Mike and Boaz:
+> - remove the cxgb3 sysfs entry for the private iscsi ip address, it can be
+>   accessed from iscsi.
+> - in cxgb3i.txt, added error message logged for not setting MaxRecvDataSegmentLength properly.
+> - renamed cxgb3i Makefile to Kbuild
+> - removed "select ISCSI_TCP" in Kconfig
+> - consistent handling of AHS: on tx, reserve rooms for AHS; on rx, assume we could receive AHS.
+> - add support of bi-directional commands for ddp setup,
+> 
+> The cxgb3i driver, especially the part handles the offloaded iscsi tcp connection mangement, has gone through the netdev review (http://marc.info/?l=linux-netdev&m=121944339211552, http://marc.info/?l=linux-netdev&m=121989660016124).
+> 
+> The cxgb3i driver provides iscsi acceleration (PDU offload and payload data direct placement) to the open-iscsi initiator. It accesses the hardware through the cxgb3 module.
+> 
 
+Hello!
 
-On 12/12/08, Matthew Wilcox <matthew@wil.cx> wrote:
-> On Thu, Dec 11, 2008 at 10:40:41PM +0200, Raz wrote:
->  > > ________________________________
->  > > From: Matthew Wilcox [mailto:matthew@wil.cx]
->  > > Sent: Thu 12/11/2008 5:44 AM
->  > > To: Raz Ben-Yehuda
->  > > Cc: linux-ide@vger.kernel.org; linux-scsi@vger.kernel.org
->  > > Subject: Re: Intel X25-M MLC SSD benchmarks
->  > >
->  > > On Thu, Dec 11, 2008 at 12:12:37AM +0200, Raz Ben-Yehuda wrote:
->  > >> I did not want to dive into details because it does not matter. Whether
->  > >> noop,deadline, deadline parameters...
->  > >> As for the controller I used 4 different controllers. Adaptec,AHCI and
->  > >> Intel as Integrated chips on the 1025W-UR supermicro motherboard, and a
->  > >> 4-th controller SuperMicro UIO Adaptec aac card.
->  > >> All gave same results for most dd writes commands.
->  > >> dd if=/dev/zero of=/dev/sda bs=1M count=1000 oflag=direct , and many
->  > >> other variants such erase block size ( 128K ) , several erase block size
->  > >> and so on. Kernel is 2.6.18-8.el5.
->  > >
->  > >>>OK, I suspect you aren't giving the drive enough work to do for it to
->  > >>>perform at its best.  Try doing something like this:
->  > >
->  > >>>for i in $(seq 0 9); do \
->  > >  >>     dd if=/dev/zero of=/dev/sda bs=1M count=1000 oflag=direct \
->  > >  >>               seek=$(($i * 1000)) & \
->  > >>>done
->  > >
->  > did that. nothing. also, I would like to note that IO flow is quite
->  > weird.iostats reports 70GB/s in the first few seconds, and then it
->  > degrades to 20
->  >  MB/s and less. could it be that I am not erase-block aligment ?
->
->
-> That doesn't sound likely to me.  Erase block size isn't a huge issue
->  with these drives.  I've been trying to replicate your problem, but I'm
->  not having any luck; unfortunately I only have access to an X25-E drive
->  (not an X25-M) and I'm seeing 175-185MB/s when it's attached to an AHCI
->  controller, just with a single dd (I haven't even played with the
->  elevator).  I'm trying to get hold of an X25-M drive, but I don't know
->  when I'll receive one.
->
->
->  > how does SSD aligments interacts with a controller ?
->
->
-> Controllers can generally send down large enough IOs that it isn't a
->  problem.  And the Intel SSDs are smart enough that you shouldn't have to
->  align to erase block boundaries to make them go fast.
->
->
->  --
->
-> Matthew Wilcox                          Intel Open Source Technology Centre
->  "Bill, look, we understand that you're interested in selling us this
->  operating system, but compare it to ours.  We can't possibly take such
->  a retrograde step."
->
+Do you guys have performance comparison/numbers for normal open-iscsi over tcp vs. cxgb3i accelerated?
+
+Would be nice to see throughput/iops/cpu-usage statistics..
+
+-- Pasi
