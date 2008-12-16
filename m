@@ -1,81 +1,64 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] SCSI: handle HARDWARE_ERROR sense correctly
-Date: Tue, 16 Dec 2008 15:49:43 -0600
-Message-ID: <1229464183.3193.44.camel@localhost.localdomain>
-References: <Pine.LNX.4.44L0.0812161429270.6238-100000@iolanthe.rowland.org>
+Subject: [PATCH] block: move SCSI timeout check into block
+Date: Tue, 16 Dec 2008 17:00:44 -0500
+Message-ID: <1229464844.3193.49.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:49053 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:49074 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752289AbYLPXU3 (ORCPT
+	by vger.kernel.org with ESMTP id S1754242AbYLPXV3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Dec 2008 18:20:29 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0812161429270.6238-100000@iolanthe.rowland.org>
+	Tue, 16 Dec 2008 18:21:29 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Mike Anderson <andmike@linux.vnet.ibm.com>, Boaz Harrosh <bharrosh@panasas.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Jens Axboe <Jens.Axboe@oracle.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 2008-12-16 at 14:56 -0500, Alan Stern wrote:
-> On Tue, 16 Dec 2008, James Bottomley wrote:
-> 
-> > It would be nice ... unfortunately, errors tend to migrate around the
-> > categories because of empirical results, so such a document could never
-> > be definitive.
-> > 
-> > As a rule of thumb:  errors which produced an action in the device which
-> > errors but is retryable count down the retries (things like parity/crc
-> > errors on the bus).  Things which would produce no benefit retrying
-> > (like Medium errors) get failed immediately and things which indicate
-> > transient resource issues either in the device (QUEUE_FULL) or the host
-> > (DID_REQUEUE) get retried upto the timeout limit with a suitable backoff
-> > (mostly we refuse to issue more commands until one returns).
-> 
-> It would be wonderful if Mike or someone else would implement this
-> scheme.  The necessary changes shouldn't be very extensive.
-> 
-> (And I still think the wait_for logic in scsi_softirq_done() is wrong; 
-> rq->timeout shouldn't be multiplied by cmd->allowed.)
+We can eliminate the SCSI command timed out check entirely if the block
+layer does this for us.  The way to do this in block is to check how
+long the request has been outstanding if a requeue is requested and
+ending it if we've gone over retries * timeout.
 
-It's the logical retry timeout ... if a command fails and times out it
-gets retried, if it continues to time out, retries*timeout is the max
-before it fails.
-
-> > > So the whole idea of the retry_hwerr flag is bogus; hardware errors
-> > > should always be retried.  Or perhaps only the name is bogus, since
-> > > the
-> > > flag really indicates that the command should be tried over and over
-> > > again without pause until it succeeds or the request times out
-> > > (whereas
-> > > normally hardware errors should be retried only a few times).
-> > 
-> > It doesn't actually; the MLQUEUE return blocks the device from further
-> > issue until a command returns (or, if empty issue queue, until I/O
-> > pressure causes a block unplug 3 times).
-> 
-> Okay, I misunderstood how that works.  Still, the code bypasses the 
-> normal retry pathways, leaving it vulnerable to these sorts of 
-> problems. 
-
-It does?  How?  decide_disposition() goes straigh into the expiry check.
-
->  So why put the retry_hwerr test in check_sense()?  Why not 
-> put it in scsi_io_completion() instead, so that retries can be limited 
-> appropriately?
-
-because check_sense goes into decide disposition which gets the timeout
-test applied on MLQUEUE return.
-
-> BTW, what happens if the issue queue is empty and there is no I/O
-> pressure?  Then the command wouldn't be retried at all, it would just
-> time out.  That doesn't seem like what you want.
-
-I/O pressure is proportional to the size of the request queue.  By
-definition, a requeue means at least 1 outstnading request and thus some
-pressure.
+This will also eliminate many cases in SCSI where we evade the command
+timeout for various reasons (like initial success converted to requeue)
 
 James
+
+---
+
+diff --git a/block/blk-core.c b/block/blk-core.c
+index c36aa98..d32af31 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -926,6 +926,8 @@ EXPORT_SYMBOL(blk_start_queueing);
+  */
+ void blk_requeue_request(struct request_queue *q, struct request *rq)
+ {
++	unsigned long wait_for = (rq->retries + 1) * rq->timeout;
++
+ 	blk_delete_timer(rq);
+ 	blk_clear_rq_complete(rq);
+ 	blk_add_trace_rq(q, rq, BLK_TA_REQUEUE);
+@@ -933,7 +935,17 @@ void blk_requeue_request(struct request_queue *q, struct request *rq)
+ 	if (blk_rq_tagged(rq))
+ 		blk_queue_end_tag(q, rq);
+ 
+-	elv_requeue_request(q, rq);
++	if (time_before(rq->start_time + wait_for, jiffies)) {
++		int bytes = (rq->hard_nr_sectors << 9);
++
++		printk(KERN_ERR "%s: timing out command, waited %lus\n",
++		       rq->rq_disk ? rq->rq_disk->disk_name : "?",
++		       wait_for/HZ);
++		if (blk_pc_request(rq))
++			bytes = rq->data_len;
++		blk_end_request(rq, -EIO, bytes);
++	} else
++		elv_requeue_request(q, rq);
+ }
+ EXPORT_SYMBOL(blk_requeue_request);
+ 
 
 
