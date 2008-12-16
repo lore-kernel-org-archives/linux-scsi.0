@@ -1,138 +1,222 @@
 From: Aaro Koskinen <Aaro.Koskinen@nokia.com>
-Subject: Re: [PATCH] sym53c8xx_2: Keep transfer negotiations valid (2.6.27.5)
-Date: Tue, 16 Dec 2008 19:15:42 +0200
-Message-ID: <1229447742-17995-1-git-send-email-Aaro.Koskinen@nokia.com>
-References: <Pine.LNX.4.64.0811191436450.15796@fi-hi32-dhcp068123.emea.nsn-net.net>
+Subject: Re: [PATCH] sym53c8xx_2: slave_alloc/destroy safety (2.6.27.5)
+Date: Tue, 16 Dec 2008 19:14:24 +0200
+Message-ID: <1229447664-17975-1-git-send-email-Aaro.Koskinen@nokia.com>
+References: <1229361230.3293.45.camel@localhost.localdomain>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:50591 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750853AbYLPRQ1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Dec 2008 12:16:27 -0500
-In-Reply-To: <Pine.LNX.4.64.0811191436450.15796@fi-hi32-dhcp068123.emea.nsn-net.net>
+Received: from smtp.nokia.com ([192.100.122.233]:52150 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750730AbYLPRQZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Dec 2008 12:16:25 -0500
+In-Reply-To: <1229361230.3293.45.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: matthew@wil.cx
+Cc: matthew@wil.cx, James.Bottomley@HansenPartnership.com
 
-(Resent with proper formatting.)
+(Updated based on Mike Christie's comments.)
 
-Change the sym53c8xx_2 driver negotiation logic so that the driver will
-tolerate better device removals. Negotiation message(s) will be sent
-with every INQUIRY and REQUEST SENSE command, and whenever there is a
-change in goals or when the device reports check condition.
+Make the sym53c8xx_2 driver slave_alloc/destroy less unsafe. References
+to the destroyed LCB are cleared from the target structure (instead of
+leaving a dangling pointer), and when the last LCB for the target is
+destroyed the reference to the upper layer target data is cleared. The
+host lock is used to prevent a race with the interrupt handler. Also
+user commands are prevented for targets with all LCBs destroyed.
 
 Signed-off-by: Aaro Koskinen <Aaro.Koskinen@nokia.com>
 ---
- drivers/scsi/sym53c8xx_2/sym_hipd.c |   32 +++++++++++++-------------------
- drivers/scsi/sym53c8xx_2/sym_hipd.h |    1 +
- 2 files changed, 14 insertions(+), 19 deletions(-)
+ drivers/scsi/sym53c8xx_2/sym_glue.c |   62 ++++++++++++++++++++++++++++-------
+ drivers/scsi/sym53c8xx_2/sym_hipd.c |   38 +++++++++++++++++++++
+ drivers/scsi/sym53c8xx_2/sym_hipd.h |    2 +
+ 3 files changed, 90 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
-index 98df165..2f25b89 100644
---- a/drivers/scsi/sym53c8xx_2/sym_hipd.c
-+++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c
-@@ -1413,7 +1413,7 @@ static void sym_check_goals(struct sym_hcb *np, struct scsi_target *starget,
+diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+index d39107b..c518585 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -737,11 +737,14 @@ static int sym53c8xx_slave_alloc(struct scsi_device *sdev)
+ 	struct sym_hcb *np = sym_get_hcb(sdev->host);
+ 	struct sym_tcb *tp = &np->target[sdev->id];
+ 	struct sym_lcb *lp;
++	unsigned long flags;
++	int error;
+ 
+ 	if (sdev->id >= SYM_CONF_MAX_TARGET || sdev->lun >= SYM_CONF_MAX_LUN)
+ 		return -ENXIO;
+ 
+-	tp->starget = sdev->sdev_target;
++	spin_lock_irqsave(np->s.host->host_lock, flags);
++
+ 	/*
+ 	 * Fail the device init if the device is flagged NOSCAN at BOOT in
+ 	 * the NVRAM.  This may speed up boot and maintain coherency with
+@@ -755,24 +758,35 @@ static int sym53c8xx_slave_alloc(struct scsi_device *sdev)
+ 		tp->usrflags &= ~SYM_SCAN_BOOT_DISABLED;
+ 		starget_printk(KERN_INFO, tp->starget,
+ 				"Scan at boot disabled in NVRAM\n");
+-		return -ENXIO;
++		error = -ENXIO;
++		goto out;
+ 	}
+ 
+ 	if (tp->usrflags & SYM_SCAN_LUNS_DISABLED) {
+-		if (sdev->lun != 0)
+-			return -ENXIO;
++		if (sdev->lun != 0) {
++			error = -ENXIO;
++			goto out;
++		}
+ 		starget_printk(KERN_INFO, tp->starget,
+ 				"Multiple LUNs disabled in NVRAM\n");
+ 	}
+ 
+ 	lp = sym_alloc_lcb(np, sdev->id, sdev->lun);
+-	if (!lp)
+-		return -ENOMEM;
++	if (!lp) {
++		error = -ENOMEM;
++		goto out;
++	}
++	if (tp->nlcb == 1)
++		tp->starget = sdev->sdev_target;
+ 
+ 	spi_min_period(tp->starget) = tp->usr_period;
+ 	spi_max_width(tp->starget) = tp->usr_width;
+ 
+-	return 0;
++	error = 0;
++out:
++	spin_unlock_irqrestore(np->s.host->host_lock, flags);
++
++	return error;
  }
  
  /*
-- *  Prepare the next negotiation message if needed.
-+ *  Prepare the next negotiation message.
-  *
-  *  Fill in the part of message buffer that contains the 
-  *  negotiation and the nego_status field of the CCB.
-@@ -1433,24 +1433,14 @@ static int sym_prepare_nego(struct sym_hcb *np, struct sym_ccb *cp, u_char *msgp
- 	 * Many devices implement PPR in a buggy way, so only use it if we
- 	 * really want to.
- 	 */
--	if (goal->offset &&
--	    (goal->iu || goal->dt || goal->qas || (goal->period < 0xa))) {
-+	if (goal->renego == NS_PPR || (goal->offset &&
-+	    (goal->iu || goal->dt || goal->qas || (goal->period < 0xa)))) {
- 		nego = NS_PPR;
--	} else if (spi_width(starget) != goal->width) {
--		nego = NS_WIDE;
--	} else if (spi_period(starget) != goal->period ||
--		   spi_offset(starget) != goal->offset) {
--		nego = NS_SYNC;
- 	} else {
--		goal->check_nego = 0;
--		nego = 0;
-+		nego = NS_WIDE; /* SYNC will follow WIDE if needed. */
- 	}
+@@ -819,12 +833,34 @@ static int sym53c8xx_slave_configure(struct scsi_device *sdev)
+ static void sym53c8xx_slave_destroy(struct scsi_device *sdev)
+ {
+ 	struct sym_hcb *np = sym_get_hcb(sdev->host);
+-	struct sym_lcb *lp = sym_lp(&np->target[sdev->id], sdev->lun);
++	struct sym_tcb *tp = &np->target[sdev->id];
++	struct sym_lcb *lp = sym_lp(tp, sdev->lun);
++	unsigned long flags;
++
++	spin_lock_irqsave(np->s.host->host_lock, flags);
++
++	if (lp->busy_itlq || lp->busy_itl) {
++		/*
++		 * This really shouldn't happen, but we can't return an error
++		 * so let's try to stop all on-going I/O.
++		 */
++		starget_printk(KERN_WARNING, tp->starget,
++			       "Removing busy LCB (%d)\n", sdev->lun);
++		sym_reset_scsi_bus(np, 1);
++	}
  
- 	switch (nego) {
--	case NS_SYNC:
--		msglen += spi_populate_sync_msg(msgptr + msglen, goal->period,
--				goal->offset);
--		break;
- 	case NS_WIDE:
- 		msglen += spi_populate_width_msg(msgptr + msglen, goal->width);
- 		break;
-@@ -1469,7 +1459,6 @@ static int sym_prepare_nego(struct sym_hcb *np, struct sym_ccb *cp, u_char *msgp
- 		tp->nego_cp = cp; /* Keep track a nego will be performed */
- 		if (DEBUG_FLAGS & DEBUG_NEGO) {
- 			sym_print_nego_msg(np, cp->target, 
--					  nego == NS_SYNC ? "sync msgout" :
- 					  nego == NS_WIDE ? "wide msgout" :
- 					  "ppr msgout", msgptr);
- 		}
-@@ -2049,11 +2038,9 @@ static void sym_setwide(struct sym_hcb *np, int target, u_char wide)
- 	struct sym_tcb *tp = &np->target[target];
- 	struct scsi_target *starget = tp->starget;
- 
--	if (spi_width(starget) == wide)
--		return;
--
- 	sym_settrans(np, target, 0, 0, 0, wide, 0, 0);
- 
-+	tp->tgoal.renego = NS_WIDE;
- 	tp->tgoal.width = wide;
- 	spi_offset(starget) = 0;
- 	spi_period(starget) = 0;
-@@ -2080,6 +2067,7 @@ sym_setsync(struct sym_hcb *np, int target,
- 
- 	sym_settrans(np, target, 0, ofs, per, wide, div, fak);
- 
-+	tp->tgoal.renego = NS_WIDE; /* SYNC will follow WIDE. */
- 	spi_period(starget) = per;
- 	spi_offset(starget) = ofs;
- 	spi_iu(starget) = spi_dt(starget) = spi_qas(starget) = 0;
-@@ -2106,6 +2094,7 @@ sym_setpprot(struct sym_hcb *np, int target, u_char opts, u_char ofs,
- 
- 	sym_settrans(np, target, opts, ofs, per, wide, div, fak);
- 
-+	tp->tgoal.renego = NS_PPR;
- 	spi_width(starget) = tp->tgoal.width = wide;
- 	spi_period(starget) = tp->tgoal.period = per;
- 	spi_offset(starget) = tp->tgoal.offset = ofs;
-@@ -5135,9 +5124,14 @@ int sym_queue_scsiio(struct sym_hcb *np, struct scsi_cmnd *cmd, struct sym_ccb *
- 	/*
- 	 *  Build a negotiation message if needed.
- 	 *  (nego_status is filled by sym_prepare_nego())
-+	 *
-+	 *  Always negotiate on INQUIRY and REQUEST SENSE.
-+	 *
- 	 */
- 	cp->nego_status = 0;
--	if (tp->tgoal.check_nego && !tp->nego_cp && lp) {
-+	if ((tp->tgoal.check_nego ||
-+	     cmd->cmnd[0] == INQUIRY || cmd->cmnd[0] == REQUEST_SENSE) &&
-+	    !tp->nego_cp && lp) {
- 		msglen += sym_prepare_nego(np, cp, msgptr + msglen);
- 	}
- 
-diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.h b/drivers/scsi/sym53c8xx_2/sym_hipd.h
-index ad07880..233a3d0 100644
---- a/drivers/scsi/sym53c8xx_2/sym_hipd.h
-+++ b/drivers/scsi/sym53c8xx_2/sym_hipd.h
-@@ -354,6 +354,7 @@ struct sym_trans {
- 	unsigned int dt:1;
- 	unsigned int qas:1;
- 	unsigned int check_nego:1;
-+	unsigned int renego:2;
- };
+-	if (lp->itlq_tbl)
+-		sym_mfree_dma(lp->itlq_tbl, SYM_CONF_MAX_TASK * 4, "ITLQ_TBL");
+-	kfree(lp->cb_tags);
+-	sym_mfree_dma(lp, sizeof(*lp), "LCB");
++	if (sym_free_lcb(np, sdev->id, sdev->lun) == 0) {
++		/*
++		 * It was the last unit for this target.
++		 */
++		tp->head.sval        = 0;
++		tp->head.wval        = np->rv_scntl3;
++		tp->head.uval        = 0;
++		tp->tgoal.check_nego = 1;
++		tp->starget	     = NULL;
++	}
++
++	spin_unlock_irqrestore(np->s.host->host_lock, flags);
+ }
  
  /*
+@@ -890,6 +926,8 @@ static void sym_exec_user_command (struct sym_hcb *np, struct sym_usrcmd *uc)
+ 			if (!((uc->target >> t) & 1))
+ 				continue;
+ 			tp = &np->target[t];
++			if (!tp->nlcb)
++				continue;
+ 
+ 			switch (uc->cmd) {
+ 
+diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+index 98df165..bbe0b5c 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_hipd.c
++++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+@@ -4973,6 +4973,7 @@ struct sym_lcb *sym_alloc_lcb (struct sym_hcb *np, u_char tn, u_char ln)
+ 		tp->lun0p = lp;
+ 		tp->head.lun0_sa = cpu_to_scr(vtobus(lp));
+ 	}
++	tp->nlcb++;
+ 
+ 	/*
+ 	 *  Let the itl task point to error handling.
+@@ -5050,6 +5051,43 @@ fail:
+ }
+ 
+ /*
++ *  Lun control block deallocation. Returns the number of valid remaing LCBs
++ *  for the target.
++ */
++int sym_free_lcb(struct sym_hcb *np, u_char tn, u_char ln)
++{
++	struct sym_tcb *tp = &np->target[tn];
++	struct sym_lcb *lp = sym_lp(tp, ln);
++
++	tp->nlcb--;
++
++	if (ln) {
++		if (!tp->nlcb) {
++			kfree(tp->lunmp);
++			sym_mfree_dma(tp->luntbl, 256, "LUNTBL");
++			tp->lunmp = NULL;
++			tp->luntbl = NULL;
++			tp->head.luntbl_sa = cpu_to_scr(vtobus(np->badluntbl));
++		} else {
++			tp->luntbl[ln] = cpu_to_scr(vtobus(&np->badlun_sa));
++			tp->lunmp[ln] = NULL;
++		}
++	} else {
++		tp->lun0p = NULL;
++		tp->head.lun0_sa = cpu_to_scr(vtobus(&np->badlun_sa));
++	}
++
++	if (lp->itlq_tbl) {
++		sym_mfree_dma(lp->itlq_tbl, SYM_CONF_MAX_TASK*4, "ITLQ_TBL");
++		kfree(lp->cb_tags);
++	}
++
++	sym_mfree_dma(lp, sizeof(*lp), "LCB");
++
++	return tp->nlcb;
++}
++
++/*
+  *  Queue a SCSI IO to the controller.
+  */
+ int sym_queue_scsiio(struct sym_hcb *np, struct scsi_cmnd *cmd, struct sym_ccb *cp)
+diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.h b/drivers/scsi/sym53c8xx_2/sym_hipd.h
+index ad07880..2ec25e1 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_hipd.h
++++ b/drivers/scsi/sym53c8xx_2/sym_hipd.h
+@@ -400,6 +400,7 @@ struct sym_tcb {
+ 	 *  An array of bus addresses is used on reselection.
+ 	 */
+ 	u32	*luntbl;	/* LCBs bus address table	*/
++	int	nlcb;		/* Number of valid LCBs (including LUN #0) */
+ 
+ 	/*
+ 	 *  LUN table used by the C code.
+@@ -1061,6 +1062,7 @@ int sym_clear_tasks(struct sym_hcb *np, int cam_status, int target, int lun, int
+ struct sym_ccb *sym_get_ccb(struct sym_hcb *np, struct scsi_cmnd *cmd, u_char tag_order);
+ void sym_free_ccb(struct sym_hcb *np, struct sym_ccb *cp);
+ struct sym_lcb *sym_alloc_lcb(struct sym_hcb *np, u_char tn, u_char ln);
++int sym_free_lcb(struct sym_hcb *np, u_char tn, u_char ln);
+ int sym_queue_scsiio(struct sym_hcb *np, struct scsi_cmnd *csio, struct sym_ccb *cp);
+ int sym_abort_scsiio(struct sym_hcb *np, struct scsi_cmnd *ccb, int timed_out);
+ int sym_reset_scsi_target(struct sym_hcb *np, int target);
 -- 
 1.5.4.3
 
