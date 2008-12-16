@@ -1,37 +1,50 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [Patch 0/5] lpfc : Correct kdoc syntax errors
-Date: Tue, 16 Dec 2008 08:14:36 -0800
-Message-ID: <4947D3EC.208@oracle.com>
-References: <1229443278.4621.14.camel@ogier>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Aaro Koskinen <Aaro.Koskinen@nokia.com>
+Subject: Re: [PATCH] sym53c8xx_2: lun to_clear flag not re-initialized (2.6.27.5)
+Date: Tue, 16 Dec 2008 18:19:54 +0200
+Message-ID: <1229444394-3172-1-git-send-email-Aaro.Koskinen@nokia.com>
+References: <49468964.605@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet14.oracle.com ([141.146.126.236]:17573 "EHLO
-	acsinet14.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751334AbYLPQQE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Dec 2008 11:16:04 -0500
-Received: from acsinet11.oracle.com (acsinet11.oracle.com [141.146.126.233])
-	by acsinet14.oracle.com (Switch-3.3.1/Switch-3.3.1) with ESMTP id mBGGImdG011475
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Tue, 16 Dec 2008 16:18:49 GMT
-In-Reply-To: <1229443278.4621.14.camel@ogier>
+Received: from smtp.nokia.com ([192.100.122.233]:47159 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754758AbYLPQX2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Dec 2008 11:23:28 -0500
+In-Reply-To: <49468964.605@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@emulex.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: matthew@wil.cx, michaelc@cs.wisc.edu
 
-James Smart wrote:
-> The next 5 patches fix the kdoc syntax errors that Randy Dunlap recently
-> pointed out.
-> 
-> The patches have been separate by file(s) to keep them appropriately sized.
-> 
-> The patches were cut against scsi-misc-2.6, and on top of the lpfc printk
-> typecast patch just sent.
+(Resent with proper formatting)
 
-Thanks, James.
+Fix for the sym53c8xx_2 driver to initialize lun's to_clear flag after
+a bus reset (a failed clear can trigger a bus reset and it should not
+be attemped again after that).
 
-Acked-by: Randy Dunlap <randy.dunlap@oracle.com> # patches 1-5
+Signed-off-by: Aaro Koskinen <Aaro.Koskinen@nokia.com>
+---
+ drivers/scsi/sym53c8xx_2/sym_hipd.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+index 98df165..b126a7a 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_hipd.c
++++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+@@ -1897,6 +1897,15 @@ void sym_start_up(struct Scsi_Host *shost, int reason)
+ 		tp->head.sval = 0;
+ 		tp->head.wval = np->rv_scntl3;
+ 		tp->head.uval = 0;
++		if (tp->lun0p)
++			tp->lun0p->to_clear = 0;
++		if (tp->lunmp) {
++			int ln;
++
++			for (ln = 1; ln < SYM_CONF_MAX_LUN; ln++)
++				if (tp->lunmp[ln])
++					tp->lunmp[ln]->to_clear = 0;
++		}
+ 	}
+ 
+ 	/*
+-- 
+1.5.4.3
 
