@@ -1,114 +1,216 @@
-From: "Karen Xie" <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
-Subject: RE: [PATCH v2 0/2 2.6.29] cxgb3i -- open-iscsi initiator acceleration
-Date: Mon, 15 Dec 2008 17:52:54 -0800
-Message-ID: <8A71B368A89016469F72CD08050AD33403FF300F@maui.asicdesigners.com>
-References: <200812092215.mB9MFMZt015198@localhost.localdomain> <20081215140545.GQ15052@edu.joroinen.fi>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-Return-path: <grbounce-FC1hwAUAAAA0O9VQcsxVj1UPjHD9r3x_=glio-open-iscsi=m.gmane.org-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Content-class: urn:content-classes:message
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Post: <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://googlegroups.com/group/open-iscsi/subscribe>,
-	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: =?iso-8859-1?Q?Pasi_K=E4rkk=E4inen?= <pasik-X3B1VOXEql0@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12195] "dd" make kernel panic
+Date: Mon, 15 Dec 2008 21:12:05 -0800 (PST)
+Message-ID: <20081216051205.A6485108042@picon.linux-foundation.org>
+References: <bug-12195-11613@http.bugzilla.kernel.org/>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:52482 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750721AbYLPFMK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Dec 2008 00:12:10 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBG5C5J5023058
+	for <linux-scsi@vger.kernel.org>; Mon, 15 Dec 2008 21:12:06 -0800
+In-Reply-To: <bug-12195-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=12195
 
 
-Hi, Pasi,
-
-Here are some throughput numbers we see with disktest, one tcp connection (=
-iscsi session).
-
-The setup are between a pair of chelsio 10G adapters. The target is Chelsio=
-'s ramdisk target with data discarded (similiar to IET's NULLIO mode). The =
-Chelsio target is used because of the digest offload and payload ddp.=20
-
-The ethernet frame is standard 1500 bytes.
-
-The numbers are about 3 months old, but you get the idea :) For cxgb3i driv=
-er, since the digest is offloaded the performance is very similar in the di=
-gest off case, so only the numbers for digest on are shown.
-
-We will re-run the tests and get the cpu stats too, will keep you posted.
 
 
-Test         cxgb3i         iscsi-tcp         iscsi-tcp
-             digest on      digest on         digest off
-             (MB/sec)       (MB/sec)          (MB/sec)
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D
 
-512-read     36.85           34.13            36.69
-1k-read      71.91           58.52            66.81
-2k-read      137.24          97.75            128.46
-4k-read      280.61         137.98            214.04
-8k-read      531.34         201.87            325.09
-16k-read     953.67         226.49            429.32
-64k-read     1099.57        248.57            626.30
-128k-read    1102.65        256.04            613.94
-256k-read    1105.28        262.28            642.73
-=20
-512-write    39.54           34.18             38.36
-1k-write     79.52           56.51             75.06
-2k-write     158.03          84.12            140.85
-4k-write     314.56         126.33            282.72
-8k-write     559.83         155.49            528.24
-16k-write    968.84         168.50            676.38
-64k-write    1099.31        182.82            978.82
-128k-write   1074.62        182.55            974.18
-256k-write   1063.85        185.67            972.88
+------- Comment #14 from ming.m.lin@intel.com  2008-12-15 21:12 -------
+(In reply to comment #13)
+> 
+> diff --git a/drivers/message/fusion/mptscsih.c
+> b/drivers/message/fusion/mptscsih.c
+> index d62fd4f..ee09041 100644
+> --- a/drivers/message/fusion/mptscsih.c
+> +++ b/drivers/message/fusion/mptscsih.c
+> @@ -2008,6 +2008,9 @@ mptscsih_host_reset(struct scsi_cmnd *SCpnt)
+>                 return FAILED;
+>         }
+> 
+> +       /* make sure we have no outstanding commands at this stage */
+> +       mptscsih_flush_running_cmds(hd);
+> +
+>         ioc = hd->ioc;
+>         printk(MYIOC_s_INFO_FMT "attempting host reset! (sc=%p)\n",
+>             ioc->name, SCpnt);
+> 
+
+It seems that this patch fixes the bug.
+I have been running "dd" for 4 hours and no panic.
+dmesg attached. 
+Thanks
+------------------------------------------------------
+
+end_request: I/O error, dev sdb, sector 34572800                                
+Buffer I/O error on device sdb, logical block 8643200
+Buffer I/O error on device sdb, logical block 8643201
+Buffer I/O error on device sdb, logical block 8643202
+Buffer I/O error on device sdb, logical block 8643203
+Buffer I/O error on device sdb, logical block 8643204
+Buffer I/O error on device sdb, logical block 8643205
+Buffer I/O error on device sdb, logical block 8643206
+Buffer I/O error on device sdb, logical block 8643207
+Buffer I/O error on device sdb, logical block 8643208
+Buffer I/O error on device sdb, logical block 8643209
+Info fld=0x4044
+end_request: I/O error, dev sdb, sector 34572544
+__ratelimit: 54 callbacks suppressed
+Buffer I/O error on device sdb, logical block 8643136
+Buffer I/O error on device sdb, logical block 8643137
+Buffer I/O error on device sdb, logical block 8643138
+Buffer I/O error on device sdb, logical block 8643139
+Buffer I/O error on device sdb, logical block 8643140
+Buffer I/O error on device sdb, logical block 8643141
+Buffer I/O error on device sdb, logical block 8643142
+Buffer I/O error on device sdb, logical block 8643143
+Buffer I/O error on device sdb, logical block 8643144
+Buffer I/O error on device sdb, logical block 8643145
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+mptbase: ioc0: WARNING - IOC is in FAULT state (000eh)!!!
+mptbase: ioc0: WARNING - Issuing HardReset from mpt_fault_reset_work!!
+mptbase: ioc0: WARNING - IOC is in FAULT state!!!
+mptbase: ioc0: WARNING -            FAULT code = 000eh
+sd 0:0:1:0: rejecting I/O to offline device
+__ratelimit: 54 callbacks suppressed
+Buffer I/O error on device sdb, logical block 5081200
+Buffer I/O error on device sdb, logical block 5081201
+Buffer I/O error on device sdb, logical block 5081202
+Buffer I/O error on device sdb, logical block 5081203
+Buffer I/O error on device sdb, logical block 5081204
+Buffer I/O error on device sdb, logical block 5081205
+Buffer I/O error on device sdb, logical block 5081206
+Buffer I/O error on device sdb, logical block 5081207
+Buffer I/O error on device sdb, logical block 5081208
+Buffer I/O error on device sdb, logical block 5081209
+sd 0:0:1:0: rejecting I/O to offline device
+sd 0:0:1:0: rejecting I/O to offline device
+sd 0:0:1:0: rejecting I/O to offline device
+mptbase: ioc0: ERROR - Doorbell ACK timeout (count=4999), IntStatus=80000000!
+mptbase: ioc0: WARNING - mpt_fault_reset_work: HardReset: success
+mptbase: ioc0: WARNING - IOC is in FAULT state (000eh)!!!
+mptbase: ioc0: WARNING - Issuing HardReset from mpt_fault_reset_work!!
+mptbase: ioc0: WARNING - IOC is in FAULT state!!!
+mptbase: ioc0: WARNING -            FAULT code = 000eh
+sd 0:0:1:0: rejecting I/O to offline device
+__ratelimit: 126 callbacks suppressed
+Buffer I/O error on device sdb, logical block 5642800
+Buffer I/O error on device sdb, logical block 5642801
+Buffer I/O error on device sdb, logical block 5642802
+Buffer I/O error on device sdb, logical block 5642803
+Buffer I/O error on device sdb, logical block 5642804
+Buffer I/O error on device sdb, logical block 5642805
+Buffer I/O error on device sdb, logical block 5642806
+Buffer I/O error on device sdb, logical block 5642807
+Buffer I/O error on device sdb, logical block 5642808
+Buffer I/O error on device sdb, logical block 5642809
+sd 0:0:1:0: rejecting I/O to offline device
+sd 0:0:1:0: rejecting I/O to offline device
+mptbase: ioc0: ERROR - Doorbell ACK timeout (count=4999), IntStatus=80000000!
+mptbase: ioc0: WARNING - mpt_fault_reset_work: HardReset: success
+mptbase: ioc0: WARNING - IOC is in FAULT state (000eh)!!!
+mptbase: ioc0: WARNING - Issuing HardReset from mpt_fault_reset_work!!
+mptbase: ioc0: WARNING - IOC is in FAULT state!!!
+mptbase: ioc0: WARNING -            FAULT code = 000eh
+sd 0:0:1:0: rejecting I/O to offline device
+__ratelimit: 126 callbacks suppressed
+Buffer I/O error on device sdb, logical block 6333104
+Buffer I/O error on device sdb, logical block 6333105
+Buffer I/O error on device sdb, logical block 6333106
+Buffer I/O error on device sdb, logical block 6333107
+Buffer I/O error on device sdb, logical block 6333108
+Buffer I/O error on device sdb, logical block 6333109
+Buffer I/O error on device sdb, logical block 6333110
+Buffer I/O error on device sdb, logical block 6333111
+Buffer I/O error on device sdb, logical block 6333112
+Buffer I/O error on device sdb, logical block 6333113
+sd 0:0:1:0: rejecting I/O to offline device
+sd 0:0:1:0: rejecting I/O to offline device
+sd 0:0:1:0: rejecting I/O to offline device
+mptbase: ioc0: ERROR - Doorbell ACK timeout (count=4999), IntStatus=80000000!
+mptbase: ioc0: WARNING - mpt_fault_reset_work: HardReset: success
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+mptbase: ioc0: WARNING - IOC is in FAULT state (000eh)!!!
+mptbase: ioc0: WARNING - Issuing HardReset from mpt_fault_reset_work!!
+mptbase: ioc0: WARNING - IOC is in FAULT state!!!
+mptbase: ioc0: WARNING -            FAULT code = 000eh
+sd 0:0:1:0: rejecting I/O to offline device
+__ratelimit: 126 callbacks suppressed
+Buffer I/O error on device sdb, logical block 7920944
+Buffer I/O error on device sdb, logical block 7920945
+Buffer I/O error on device sdb, logical block 7920946
+Buffer I/O error on device sdb, logical block 7920947
+Buffer I/O error on device sdb, logical block 7920948
+Buffer I/O error on device sdb, logical block 7920949
+Buffer I/O error on device sdb, logical block 7920950
+Buffer I/O error on device sdb, logical block 7920951
+Buffer I/O error on device sdb, logical block 7920952
+Buffer I/O error on device sdb, logical block 7920953
+sd 0:0:1:0: rejecting I/O to offline device
+mptbase: ioc0: ERROR - Doorbell ACK timeout (count=4999), IntStatus=80000000!
+mptbase: ioc0: WARNING - mpt_fault_reset_work: HardReset: success
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+mptbase: ioc0: WARNING - IOC is in FAULT state (000eh)!!!
+mptbase: ioc0: WARNING - Issuing HardReset from mpt_fault_reset_work!!
+mptbase: ioc0: WARNING - IOC is in FAULT state!!!
+mptbase: ioc0: WARNING -            FAULT code = 000eh
+sd 0:0:1:0: rejecting I/O to offline device
+__ratelimit: 126 callbacks suppressed
+Buffer I/O error on device sdb, logical block 6794608
+Buffer I/O error on device sdb, logical block 6794609
+Buffer I/O error on device sdb, logical block 6794610
+Buffer I/O error on device sdb, logical block 6794611
+Buffer I/O error on device sdb, logical block 6794612
+Buffer I/O error on device sdb, logical block 6794613
+Buffer I/O error on device sdb, logical block 6794614
+Buffer I/O error on device sdb, logical block 6794615
+Buffer I/O error on device sdb, logical block 6794616
+Buffer I/O error on device sdb, logical block 6794617
+sd 0:0:1:0: rejecting I/O to offline device
+sd 0:0:1:0: rejecting I/O to offline device
+sd 0:0:1:0: rejecting I/O to offline device
+mptbase: ioc0: ERROR - Doorbell ACK timeout (count=4999), IntStatus=80000000!
+mptbase: ioc0: WARNING - mpt_fault_reset_work: HardReset: success
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+mptbase: ioc0: WARNING - IOC is in FAULT state (000eh)!!!
+mptbase: ioc0: WARNING - Issuing HardReset from mpt_fault_reset_work!!
+mptbase: ioc0: WARNING - IOC is in FAULT state!!!
+mptbase: ioc0: WARNING -            FAULT code = 000eh
+sd 0:0:1:0: rejecting I/O to offline device
+__ratelimit: 126 callbacks suppressed
+Buffer I/O error on device sdb, logical block 8816496
+Buffer I/O error on device sdb, logical block 8816497
+Buffer I/O error on device sdb, logical block 8816498
+Buffer I/O error on device sdb, logical block 8816499
+Buffer I/O error on device sdb, logical block 8816500
+Buffer I/O error on device sdb, logical block 8816501
+Buffer I/O error on device sdb, logical block 8816502
+Buffer I/O error on device sdb, logical block 8816503
+Buffer I/O error on device sdb, logical block 8816504
+Buffer I/O error on device sdb, logical block 8816505
+sd 0:0:1:0: rejecting I/O to offline device
+sd 0:0:1:0: rejecting I/O to offline device
+sd 0:0:1:0: rejecting I/O to offline device
+mptbase: ioc0: ERROR - Doorbell ACK timeout (count=4999), IntStatus=80000000!
+mptbase: ioc0: WARNING - mpt_fault_reset_work: HardReset: success
 
 
------Original Message-----
-From: Pasi K=E4rkk=E4inen [mailto:pasik-X3B1VOXEql0@public.gmane.org]=20
-Sent: Monday, December 15, 2008 6:06 AM
-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org; James.Bottomley@Hanse=
-nPartnership.com; Karen Xie
-Subject: Re: [PATCH v2 0/2 2.6.29] cxgb3i -- open-iscsi initiator accelerat=
-ion
-
-On Tue, Dec 09, 2008 at 02:15:22PM -0800, Karen Xie wrote:
->=20
-> [PATCH v2 0/2 2.6.29] cxgb3i -- open-iscsi initiator acceleration=20
->=20
-> From: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
->=20
-> Here is the updated patchset for adding cxgb3i iscsi initiator.
->=20
-> The updated version incorporates the comments from Mike and Boaz:
-> - remove the cxgb3 sysfs entry for the private iscsi ip address, it can b=
-e
->   accessed from iscsi.
-> - in cxgb3i.txt, added error message logged for not setting MaxRecvDataSe=
-gmentLength properly.
-> - renamed cxgb3i Makefile to Kbuild
-> - removed "select ISCSI_TCP" in Kconfig
-> - consistent handling of AHS: on tx, reserve rooms for AHS; on rx, assume=
- we could receive AHS.
-> - add support of bi-directional commands for ddp setup,
->=20
-> The cxgb3i driver, especially the part handles the offloaded iscsi tcp co=
-nnection mangement, has gone through the netdev review (http://marc.info/?l=
-=3Dlinux-netdev&m=3D121944339211552, http://marc.info/?l=3Dlinux-netdev&m=
-=3D121989660016124).
->=20
-> The cxgb3i driver provides iscsi acceleration (PDU offload and payload da=
-ta direct placement) to the open-iscsi initiator. It accesses the hardware =
-through the cxgb3 module.
->=20
-
-Hello!
-
-Do you guys have performance comparison/numbers for normal open-iscsi over =
-tcp vs. cxgb3i accelerated?
-
-Would be nice to see throughput/iops/cpu-usage statistics..
-
--- Pasi
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
