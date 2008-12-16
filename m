@@ -1,131 +1,138 @@
-From: "Shi, Harris" <Harris.Shi@lsi.com>
-Subject: RE: question on block-layer timeout change
-Date: Tue, 16 Dec 2008 09:55:27 -0700
-Message-ID: <3568BBCB98C00041A9E622952FD5F24EA13B99A3@cosmail03.lsi.com>
-References: <3568BBCB98C00041A9E622952FD5F24EA11C9F3A@cosmail03.lsi.com>
- <20081112072919.GB12192@linux.vnet.ibm.com>
- <3568BBCB98C00041A9E622952FD5F24EA1226673@cosmail03.lsi.com>
- <20081114171823.GA16575@us.ibm.com>
- <3568BBCB98C00041A9E622952FD5F24EA135D754@cosmail03.lsi.com>
- <4940F367.506@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Aaro Koskinen <Aaro.Koskinen@nokia.com>
+Subject: Re: [PATCH] sym53c8xx_2: Keep transfer negotiations valid (2.6.27.5)
+Date: Tue, 16 Dec 2008 19:15:42 +0200
+Message-ID: <1229447742-17995-1-git-send-email-Aaro.Koskinen@nokia.com>
+References: <Pine.LNX.4.64.0811191436450.15796@fi-hi32-dhcp068123.emea.nsn-net.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og102.obsmtp.com ([64.18.2.157]:47465 "EHLO
-	exprod7og102.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754839AbYLPQzp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Dec 2008 11:55:45 -0500
-In-Reply-To: <4940F367.506@suse.de>
-Content-Language: en-US
+Received: from smtp.nokia.com ([192.100.122.230]:50591 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750853AbYLPRQ1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Dec 2008 12:16:27 -0500
+In-Reply-To: <Pine.LNX.4.64.0811191436450.15796@fi-hi32-dhcp068123.emea.nsn-net.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "malahal@us.ibm.com" <malahal@us.ibm.com>, Mike Anderson <andmike@linux.vnet.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: matthew@wil.cx
 
-Hannes,=20
+(Resent with proper formatting.)
 
-Just let you know that the same panic is still there in SLES11RC1. Phil=
-ip should be able to help us to report it in Novell Bugzilla.=20
+Change the sym53c8xx_2 driver negotiation logic so that the driver will
+tolerate better device removals. Negotiation message(s) will be sent
+with every INQUIRY and REQUEST SENSE command, and whenever there is a
+change in goals or when the device reports check condition.
 
-Thanks.
-Harris
+Signed-off-by: Aaro Koskinen <Aaro.Koskinen@nokia.com>
+---
+ drivers/scsi/sym53c8xx_2/sym_hipd.c |   32 +++++++++++++-------------------
+ drivers/scsi/sym53c8xx_2/sym_hipd.h |    1 +
+ 2 files changed, 14 insertions(+), 19 deletions(-)
 
------Original Message-----
-=46rom: Hannes Reinecke [mailto:hare@suse.de]=20
-Sent: Thursday, December 11, 2008 5:03 AM
-To: Shi, Harris
-Cc: malahal@us.ibm.com; Mike Anderson; SCSI development list
-Subject: Re: question on block-layer timeout change
+diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+index 98df165..2f25b89 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_hipd.c
++++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+@@ -1413,7 +1413,7 @@ static void sym_check_goals(struct sym_hcb *np, struct scsi_target *starget,
+ }
+ 
+ /*
+- *  Prepare the next negotiation message if needed.
++ *  Prepare the next negotiation message.
+  *
+  *  Fill in the part of message buffer that contains the 
+  *  negotiation and the nego_status field of the CCB.
+@@ -1433,24 +1433,14 @@ static int sym_prepare_nego(struct sym_hcb *np, struct sym_ccb *cp, u_char *msgp
+ 	 * Many devices implement PPR in a buggy way, so only use it if we
+ 	 * really want to.
+ 	 */
+-	if (goal->offset &&
+-	    (goal->iu || goal->dt || goal->qas || (goal->period < 0xa))) {
++	if (goal->renego == NS_PPR || (goal->offset &&
++	    (goal->iu || goal->dt || goal->qas || (goal->period < 0xa)))) {
+ 		nego = NS_PPR;
+-	} else if (spi_width(starget) != goal->width) {
+-		nego = NS_WIDE;
+-	} else if (spi_period(starget) != goal->period ||
+-		   spi_offset(starget) != goal->offset) {
+-		nego = NS_SYNC;
+ 	} else {
+-		goal->check_nego = 0;
+-		nego = 0;
++		nego = NS_WIDE; /* SYNC will follow WIDE if needed. */
+ 	}
+ 
+ 	switch (nego) {
+-	case NS_SYNC:
+-		msglen += spi_populate_sync_msg(msgptr + msglen, goal->period,
+-				goal->offset);
+-		break;
+ 	case NS_WIDE:
+ 		msglen += spi_populate_width_msg(msgptr + msglen, goal->width);
+ 		break;
+@@ -1469,7 +1459,6 @@ static int sym_prepare_nego(struct sym_hcb *np, struct sym_ccb *cp, u_char *msgp
+ 		tp->nego_cp = cp; /* Keep track a nego will be performed */
+ 		if (DEBUG_FLAGS & DEBUG_NEGO) {
+ 			sym_print_nego_msg(np, cp->target, 
+-					  nego == NS_SYNC ? "sync msgout" :
+ 					  nego == NS_WIDE ? "wide msgout" :
+ 					  "ppr msgout", msgptr);
+ 		}
+@@ -2049,11 +2038,9 @@ static void sym_setwide(struct sym_hcb *np, int target, u_char wide)
+ 	struct sym_tcb *tp = &np->target[target];
+ 	struct scsi_target *starget = tp->starget;
+ 
+-	if (spi_width(starget) == wide)
+-		return;
+-
+ 	sym_settrans(np, target, 0, 0, 0, wide, 0, 0);
+ 
++	tp->tgoal.renego = NS_WIDE;
+ 	tp->tgoal.width = wide;
+ 	spi_offset(starget) = 0;
+ 	spi_period(starget) = 0;
+@@ -2080,6 +2067,7 @@ sym_setsync(struct sym_hcb *np, int target,
+ 
+ 	sym_settrans(np, target, 0, ofs, per, wide, div, fak);
+ 
++	tp->tgoal.renego = NS_WIDE; /* SYNC will follow WIDE. */
+ 	spi_period(starget) = per;
+ 	spi_offset(starget) = ofs;
+ 	spi_iu(starget) = spi_dt(starget) = spi_qas(starget) = 0;
+@@ -2106,6 +2094,7 @@ sym_setpprot(struct sym_hcb *np, int target, u_char opts, u_char ofs,
+ 
+ 	sym_settrans(np, target, opts, ofs, per, wide, div, fak);
+ 
++	tp->tgoal.renego = NS_PPR;
+ 	spi_width(starget) = tp->tgoal.width = wide;
+ 	spi_period(starget) = tp->tgoal.period = per;
+ 	spi_offset(starget) = tp->tgoal.offset = ofs;
+@@ -5135,9 +5124,14 @@ int sym_queue_scsiio(struct sym_hcb *np, struct scsi_cmnd *cmd, struct sym_ccb *
+ 	/*
+ 	 *  Build a negotiation message if needed.
+ 	 *  (nego_status is filled by sym_prepare_nego())
++	 *
++	 *  Always negotiate on INQUIRY and REQUEST SENSE.
++	 *
+ 	 */
+ 	cp->nego_status = 0;
+-	if (tp->tgoal.check_nego && !tp->nego_cp && lp) {
++	if ((tp->tgoal.check_nego ||
++	     cmd->cmnd[0] == INQUIRY || cmd->cmnd[0] == REQUEST_SENSE) &&
++	    !tp->nego_cp && lp) {
+ 		msglen += sym_prepare_nego(np, cp, msgptr + msglen);
+ 	}
+ 
+diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.h b/drivers/scsi/sym53c8xx_2/sym_hipd.h
+index ad07880..233a3d0 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_hipd.h
++++ b/drivers/scsi/sym53c8xx_2/sym_hipd.h
+@@ -354,6 +354,7 @@ struct sym_trans {
+ 	unsigned int dt:1;
+ 	unsigned int qas:1;
+ 	unsigned int check_nego:1;
++	unsigned int renego:2;
+ };
+ 
+ /*
+-- 
+1.5.4.3
 
-Hi Harris,
-
-Shi, Harris wrote:
-> Mike,
->
-> Your suggestion on MPP driver is working pretty good on FC config in =
-term of failover and failback. However, recently when we switched over =
-to iscsi config on SLES11beta6 (2.6.27.7-4-default, SLES11 kernel did n=
-ot sync up with current upstream one, all of timeout management patch h=
-as been pulled in), we were consistently hit by the following panic whe=
-n we tried to do failover via controller sysReboot or placed offline. I=
-s it something related to the recent timeout management patch introduce=
-d into the kernel?
->
-> BUG: unable to handle kernel NULL pointer dereference at 000000000000=
-00ba
-> IP: [<ffffffff80222047>] __ticket_spin_lock+0x5/0x1b
-> PGD 196cf6067 PUD 196c4f067 PMD 0
-> Oops: 0002 [1] SMP
-> last sysfs file: /sys/devices/system/cpu/cpu3/cache/index1/shared_cpu=
-_map
-> CPU 2
-> Modules linked in: radeon drm crc32c libcrc32c ib_iser rdma_cm ib_cm =
-iw_cm ib_sa ib_mad ib_core d
-> Supported: Yes, External
-> Pid: 0, comm: swapper Tainted: G          2.6.27.7-4-default #1
-> RIP: 0010:[<ffffffff80222047>]  [<ffffffff80222047>] __ticket_spin_lo=
-ck+0x5/0x1b
-> RSP: 0018:ffff88019f187e20  EFLAGS: 00010086
-> RAX: 0000000000010000 RBX: 0000000000000002 RCX: ffff88019d8c3218
-> RDX: ffff88019cd3d000 RSI: 0000000000002007 RDI: 00000000000000ba
-> RBP: ffff880194940918 R08: ffff880194940c78 R09: 0000000000000000
-> R10: ffffffff80a65b80 R11: ffffffff8021c6ed R12: 0000000000000000
-> R13: ffff880194940b50 R14: ffff88019f187ed0 R15: ffff880194940c90
-> FS:  0000000000000000(0000) GS:ffff88019f157ec0(0000) knlGS:000000000=
-0000000
-> CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-> CR2: 00000000000000ba CR3: 0000000196cc7000 CR4: 00000000000006e0
-> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-> Process swapper (pid: 0, threadinfo ffff88019f180000, task ffff88019f=
-17e280)
-> Stack:  ffffffff804aabe2 ffffffffa0321734 0000000000000000 ffff88018f=
-c97c80
->  ffff880194940918 ffffffffa0004f35 ffff88019d8c30d8 ffffffff8034b954
->  ffff88019d8c30d8 ffffffff8034ba23 0000000000000282 0000000000000100
-> Call Trace:
->  [<ffffffff804aabe2>] _spin_lock+0x13/0x15
->  [<ffffffffa0321734>] iscsi_eh_cmd_timed_out+0x27/0xc0 [libiscsi]
->  [<ffffffffa0004f35>] scsi_times_out+0x46/0x72 [scsi_mod]
->  [<ffffffff8034b954>] blk_rq_timed_out+0xe/0x4a
->  [<ffffffff8034ba23>] blk_rq_timed_out_timer+0x93/0x116
->  [<ffffffff8024a5f5>] run_timer_softirq+0x19a/0x228
->  [<ffffffff8024696d>] __do_softirq+0x84/0x115
->  [<ffffffff8020ddac>] call_softirq+0x1c/0x28
->  [<ffffffff8020f177>] do_softirq+0x3c/0x81
->  [<ffffffff80246684>] irq_exit+0x3f/0x83
->  [<ffffffff8021cf73>] smp_apic_timer_interrupt+0x95/0xae
->  [<ffffffff8020d523>] apic_timer_interrupt+0x83/0x90
->  [<ffffffff802134f4>] mwait_idle+0x3c/0x46
->  [<ffffffff8020b3b5>] cpu_idle+0xa9/0xf1
->
->
-> Code: ff 00 00 c1 ea 10 39 c2 0f 95 c0 0f b6 c0 c3 8b 17 89 d0 c1 f8 =
-10 29 d0 25 ff ff 00 00 ff
-> RIP  [<ffffffff80222047>] __ticket_spin_lock+0x5/0x1b
->  RSP <ffff88019f187e20>
-> ---------------------------------------------------------------------=
--------
->
-> Your comment is very much appreciated.
->
-Please try the latest SLES11 Beta/RC kernel. This bug is due to an inco=
-mplete patchset from
-mainline and should be resolved now.
-
-If not please do open a Novell bugzilla for it.
-
-Cheers,
-
-Hannes
---
-Dr. Hannes Reinecke                   zSeries & Storage
-hare@suse.de                          +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
