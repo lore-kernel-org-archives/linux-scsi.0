@@ -1,71 +1,78 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] SCSI: handle HARDWARE_ERROR sense correctly
-Date: Tue, 16 Dec 2008 10:27:48 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0812161007210.2396-100000@iolanthe.rowland.org>
-References: <20081204233942.GA4950@linux.vnet.ibm.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH 9/11] drivers/scsi: Move a dereference below a NULL test
+Date: Tue, 16 Dec 2008 10:32:24 -0500
+Message-ID: <4947CA08.4000606@emulex.com>
+References: <Pine.LNX.4.64.0812161614500.20444@pc-004.diku.dk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:57398 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753613AbYLPP1t (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Dec 2008 10:27:49 -0500
-In-Reply-To: <20081204233942.GA4950@linux.vnet.ibm.com>
+Received: from emulex.emulex.com ([138.239.112.1]:60698 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755119AbYLPPbH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Dec 2008 10:31:07 -0500
+In-Reply-To: <Pine.LNX.4.64.0812161614500.20444@pc-004.diku.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@linux.vnet.ibm.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Julia Lawall <julia@diku.dk>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 
-On Thu, 4 Dec 2008, Mike Anderson wrote:
+ACK
 
-> Previously I had submitted some patches on scsi mid retry with a short text
-> on current retry policy (this cover mid retry policy vs
-> scsi_io_completion, which should be unified).
+-- james s
+
+Julia Lawall wrote:
+> From: Julia Lawall <julia@diku.dk>
 > 
-> http://marc.info/?l=linux-scsi&m=122210133628085&w=2
+> In each case, if the NULL test is necessary, then the dereference should be
+> moved below the NULL test.
 > 
-> I will try to refresh my patches with a updated policy document and also
-> align that with the changes to scsi_io_completion posted prior to
-> re-submit.
-
-Your policy discussion needs to be expanded.  And it needs to apply to 
-scsi_io_completion() as well as scsi_decide_disposition().
-
-As I see it, the set of possible retry actions is as follows:
-
-     1: Don't retry at all.  This is appropriate for certain kinds
-	of errors (such as LBA out of range); you know that they will
-	never succeed no matter how many times you try them.
-
-     2: Keep on retrying until the request times out.  This is
-	appropriate in only a few circumstances (like the tape arrays
-	James mentioned earlier).
-
-     3: Retry a few times, generally with a short delay between 
-	attempts, and then give up.  I favor a total of 3 attempts
-	but the current code tends to use 6 -- okay, fine.
-
-What's needed is a clear classification of errors into these three 
-cases; that's what your policy document tries to do.  However the 
-implementation of case (3) in particular needs to be fixed, since the 
-code does not limit the number of retries correctly.
-
-
-By the way, there seems to be some confusion over how to handle
-HARDWARE ERROR (SK = 4).  The spec says "nonrecoverable".  This does
-not mean non-retryable!
-
-"Nonrecoverable" means that the hardware was unable to recover from the 
-error.  But it still might be a transient error, and it might go away 
-if the command was tried again.  In fact, the spec specifically 
-mentions "parity error" as a possible cause; certainly a parity error 
-might go away the next time the command is issued.
-
-So the whole idea of the retry_hwerr flag is bogus; hardware errors
-should always be retried.  Or perhaps only the name is bogus, since the
-flag really indicates that the command should be tried over and over
-again without pause until it succeeds or the request times out (whereas
-normally hardware errors should be retried only a few times).
-
-Alan Stern
-
+> The semantic patch that makes this change is as follows:
+> (http://www.emn.fr/x-info/coccinelle/)
+> 
+> // <smpl>
+> @@
+> type T;
+> expression E;
+> identifier i,fld;
+> statement S;
+> @@
+> 
+> - T i = E->fld;
+> + T i;
+>   ... when != E
+>       when != i
+>   if (E == NULL) S
+> + i = E->fld;
+> // </smpl>
+> 
+> Signed-off-by: Julia Lawall <julia@diku.dk>
+> 
+> ---
+>  drivers/scsi/lpfc/lpfc_init.c       |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index 909be33..9a01cf0 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -1736,12 +1736,13 @@ lpfc_block_mgmt_io(struct lpfc_hba * phba)
+>  int
+>  lpfc_online(struct lpfc_hba *phba)
+>  {
+> -       struct lpfc_vport *vport = phba->pport;
+> +       struct lpfc_vport *vport;
+>         struct lpfc_vport **vports;
+>         int i;
+> 
+>         if (!phba)
+>                 return 0;
+> +       vport = phba->pport;
+> 
+>         if (!(vport->fc_flag & FC_OFFLINE_MODE))
+>                 return 0;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
