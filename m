@@ -1,80 +1,61 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] block: move SCSI timeout check into block
-Date: Wed, 17 Dec 2008 09:06:13 +0100
-Message-ID: <20081217080613.GC32491@kernel.dk>
-References: <1229464844.3193.49.camel@localhost.localdomain>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 00/13] st: remove scsi_execute_async usage (the second
+ half)
+Date: Wed, 17 Dec 2008 20:20:33 +0900
+Message-ID: <20081217202122D.fujita.tomonori@lab.ntt.co.jp>
+References: <alpine.LNX.2.00.0812152138090.6315@kai.makisara.local>
+	<20081217025655O.fujita.tomonori@lab.ntt.co.jp>
+	<alpine.LNX.2.00.0812162222110.6348@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:8781 "EHLO kernel.dk"
+Received: from sh.osrg.net ([192.16.179.4]:32783 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751745AbYLQIGm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Dec 2008 03:06:42 -0500
-Content-Disposition: inline
-In-Reply-To: <1229464844.3193.49.camel@localhost.localdomain>
+	id S1750970AbYLQLUv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Dec 2008 06:20:51 -0500
+In-Reply-To: <alpine.LNX.2.00.0812162222110.6348@kai.makisara.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Kai.Makisara@kolumbus.fi
+Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, jens.axboe@oracle.com
 
-On Tue, Dec 16 2008, James Bottomley wrote:
-> We can eliminate the SCSI command timed out check entirely if the block
-> layer does this for us.  The way to do this in block is to check how
-> long the request has been outstanding if a requeue is requested and
-> ending it if we've gone over retries * timeout.
+On Tue, 16 Dec 2008 22:35:07 +0200 (EET)
+Kai Makisara <Kai.Makisara@kolumbus.fi> wrote:
+
+> > Can you replace the first and second patches in the patchset with the
+> > following patch (that is, scsi-misc and this patch + #3-13 patches in
+> > the patchset)?
+> > 
 > 
-> This will also eliminate many cases in SCSI where we evade the command
-> timeout for various reasons (like initial success converted to requeue)
-> 
-> James
-> 
-> ---
-> 
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index c36aa98..d32af31 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -926,6 +926,8 @@ EXPORT_SYMBOL(blk_start_queueing);
->   */
->  void blk_requeue_request(struct request_queue *q, struct request *rq)
->  {
-> +	unsigned long wait_for = (rq->retries + 1) * rq->timeout;
-> +
->  	blk_delete_timer(rq);
->  	blk_clear_rq_complete(rq);
->  	blk_add_trace_rq(q, rq, BLK_TA_REQUEUE);
-> @@ -933,7 +935,17 @@ void blk_requeue_request(struct request_queue *q, struct request *rq)
->  	if (blk_rq_tagged(rq))
->  		blk_queue_end_tag(q, rq);
->  
-> -	elv_requeue_request(q, rq);
-> +	if (time_before(rq->start_time + wait_for, jiffies)) {
+> I did this and have done both the basic tests and tests with big block 
+> sizes. No problems and data corruption seen so far.
 
-I prefer time_after(), reads better.
+Thanks for testing!
 
-> +		int bytes = (rq->hard_nr_sectors << 9);
-> +
-> +		printk(KERN_ERR "%s: timing out command, waited %lus\n",
-> +		       rq->rq_disk ? rq->rq_disk->disk_name : "?",
-> +		       wait_for/HZ);
-> +		if (blk_pc_request(rq))
-> +			bytes = rq->data_len;
-> +		blk_end_request(rq, -EIO, bytes);
 
-You can just do
+> However, one thing 
+> puzzles me: today trying block size above 6144 kB returns EBUSY whereas 
+> yesterday I could use 16000 kB (although with data corruption but this 
+> should be fixed by your new patch that increments the offset between 
+> bios)?
 
-                blk_end_request(rq, -EIO, blk_rq_bytes(rq));
+Can you check where the error happened?
 
-and get rid of the 'bytes' variable and type check.
+If the error happened in ll_back_merge_fn via blk_rq_append_bio
+(EINVAL), it might be due to the following fix (which I put in the
+patch) :
 
-> +	} else
-> +		elv_requeue_request(q, rq);
->  }
->  EXPORT_SYMBOL(blk_requeue_request);
+http://marc.info/?l=linux-scsi&m=122927795113939&w=2
 
-But I agree with the patch. Will you rediff, or shall I just apply with
-the suggest changes?
+This patch should do the right thing but this leads to more
+segments. But if your scsi host enables use_clustering, the error
+should not happen there.
 
--- 
-Jens Axboe
 
+BTW, st driver in 2.6.27 can handle 16000 kB?
+
+
+> I will do some more tests tomorrow but your code looks really good.
+
+Thanks a lot!
