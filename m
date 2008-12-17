@@ -1,54 +1,80 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: question on block-layer timeout change
-Date: Wed, 17 Dec 2008 08:33:27 +0100
-Message-ID: <4948AB47.6090505@suse.de>
-References: <3568BBCB98C00041A9E622952FD5F24EA11C9F3A@cosmail03.lsi.com> <20081112072919.GB12192@linux.vnet.ibm.com> <3568BBCB98C00041A9E622952FD5F24EA1226673@cosmail03.lsi.com> <20081114171823.GA16575@us.ibm.com> <3568BBCB98C00041A9E622952FD5F24EA135D754@cosmail03.lsi.com> <4940F367.506@suse.de> <3568BBCB98C00041A9E622952FD5F24EA13B99A3@cosmail03.lsi.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] block: move SCSI timeout check into block
+Date: Wed, 17 Dec 2008 09:06:13 +0100
+Message-ID: <20081217080613.GC32491@kernel.dk>
+References: <1229464844.3193.49.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:42030 "EHLO mx2.suse.de"
+Received: from brick.kernel.dk ([93.163.65.50]:8781 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752608AbYLQHd3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Dec 2008 02:33:29 -0500
-In-Reply-To: <3568BBCB98C00041A9E622952FD5F24EA13B99A3@cosmail03.lsi.com>
+	id S1751745AbYLQIGm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Dec 2008 03:06:42 -0500
+Content-Disposition: inline
+In-Reply-To: <1229464844.3193.49.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Shi, Harris" <Harris.Shi@lsi.com>
-Cc: "malahal@us.ibm.com" <malahal@us.ibm.com>, Mike Anderson <andmike@linux.vnet.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi Harris,
+On Tue, Dec 16 2008, James Bottomley wrote:
+> We can eliminate the SCSI command timed out check entirely if the block
+> layer does this for us.  The way to do this in block is to check how
+> long the request has been outstanding if a requeue is requested and
+> ending it if we've gone over retries * timeout.
+> 
+> This will also eliminate many cases in SCSI where we evade the command
+> timeout for various reasons (like initial success converted to requeue)
+> 
+> James
+> 
+> ---
+> 
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index c36aa98..d32af31 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -926,6 +926,8 @@ EXPORT_SYMBOL(blk_start_queueing);
+>   */
+>  void blk_requeue_request(struct request_queue *q, struct request *rq)
+>  {
+> +	unsigned long wait_for = (rq->retries + 1) * rq->timeout;
+> +
+>  	blk_delete_timer(rq);
+>  	blk_clear_rq_complete(rq);
+>  	blk_add_trace_rq(q, rq, BLK_TA_REQUEUE);
+> @@ -933,7 +935,17 @@ void blk_requeue_request(struct request_queue *q, struct request *rq)
+>  	if (blk_rq_tagged(rq))
+>  		blk_queue_end_tag(q, rq);
+>  
+> -	elv_requeue_request(q, rq);
+> +	if (time_before(rq->start_time + wait_for, jiffies)) {
 
-Shi, Harris wrote:
-> Hannes,=20
->=20
-> Just let you know that the same panic is still there in SLES11RC1. Ph=
-ilip should
-> be able to help us to report it in Novell Bugzilla.=20
->
-Ah. It might be related to the wrong scsi_device_online() check (cf my =
-patch
-'Check for deleted device in scsi_device_online()' earlier on this list=
-).
-Problem is that the error handler just checks with scsi_device_online()=
- if
-a command can be sent down the wire.
-And so for a failed/deleted devices the error handler just barfs at ran=
-dom
-places.
-Can you check if this patch resolves the issue?
+I prefer time_after(), reads better.
 
-Cheers,
+> +		int bytes = (rq->hard_nr_sectors << 9);
+> +
+> +		printk(KERN_ERR "%s: timing out command, waited %lus\n",
+> +		       rq->rq_disk ? rq->rq_disk->disk_name : "?",
+> +		       wait_for/HZ);
+> +		if (blk_pc_request(rq))
+> +			bytes = rq->data_len;
+> +		blk_end_request(rq, -EIO, bytes);
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+You can just do
+
+                blk_end_request(rq, -EIO, blk_rq_bytes(rq));
+
+and get rid of the 'bytes' variable and type check.
+
+> +	} else
+> +		elv_requeue_request(q, rq);
+>  }
+>  EXPORT_SYMBOL(blk_requeue_request);
+
+But I agree with the patch. Will you rediff, or shall I just apply with
+the suggest changes?
+
+-- 
+Jens Axboe
+
