@@ -1,113 +1,178 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [PATCH 00/13] st: remove scsi_execute_async usage (the second
- half)
-Date: Wed, 17 Dec 2008 22:56:47 +0200 (EET)
-Message-ID: <alpine.LNX.2.00.0812172137350.6290@kai.makisara.local>
-References: <alpine.LNX.2.00.0812152138090.6315@kai.makisara.local> <20081217025655O.fujita.tomonori@lab.ntt.co.jp> <alpine.LNX.2.00.0812162222110.6348@kai.makisara.local> <20081217202122D.fujita.tomonori@lab.ntt.co.jp>
+From: "Shi, Harris" <Harris.Shi@lsi.com>
+Subject: RE: question on block-layer timeout change
+Date: Wed, 17 Dec 2008 15:38:04 -0700
+Message-ID: <3568BBCB98C00041A9E622952FD5F24EA13B9EB0@cosmail03.lsi.com>
+References: <3568BBCB98C00041A9E622952FD5F24EA11C9F3A@cosmail03.lsi.com>
+ <20081112072919.GB12192@linux.vnet.ibm.com>
+ <3568BBCB98C00041A9E622952FD5F24EA1226673@cosmail03.lsi.com>
+ <20081114171823.GA16575@us.ibm.com>
+ <3568BBCB98C00041A9E622952FD5F24EA135D754@cosmail03.lsi.com>
+ <4940F367.506@suse.de>
+ <3568BBCB98C00041A9E622952FD5F24EA13B99A3@cosmail03.lsi.com>
+ <4948AB47.6090505@suse.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/mixed;
+	boundary="_002_3568BBCB98C00041A9E622952FD5F24EA13B9EB0cosmail03lsicom_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:50436 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751357AbYLQU44 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Dec 2008 15:56:56 -0500
-In-Reply-To: <20081217202122D.fujita.tomonori@lab.ntt.co.jp>
+Received: from exprod7og108.obsmtp.com ([64.18.2.169]:51511 "EHLO
+	exprod7og108.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751542AbYLQWi2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Dec 2008 17:38:28 -0500
+In-Reply-To: <4948AB47.6090505@suse.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, jens.axboe@oracle.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: "malahal@us.ibm.com" <malahal@us.ibm.com>, Mike Anderson <andmike@linux.vnet.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Wed, 17 Dec 2008, FUJITA Tomonori wrote:
+--_002_3568BBCB98C00041A9E622952FD5F24EA13B9EB0cosmail03lsicom_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-...
-> > However, one thing 
-> > puzzles me: today trying block size above 6144 kB returns EBUSY whereas 
-> > yesterday I could use 16000 kB (although with data corruption but this 
-> > should be fixed by your new patch that increments the offset between 
-> > bios)?
-> 
-> Can you check where the error happened?
-> 
-> If the error happened in ll_back_merge_fn via blk_rq_append_bio
-> (EINVAL), it might be due to the following fix (which I put in the
-> patch) :
-> 
-> http://marc.info/?l=linux-scsi&m=122927795113939&w=2
-> 
-> This patch should do the right thing but this leads to more
-> segments. But if your scsi host enables use_clustering, the error
-> should not happen there.
-> 
-> 
-> BTW, st driver in 2.6.27 can handle 16000 kB?
-> 
-I tested 2.6.27.7 and it also maxed out at 6144 kB. The previous version 
-where I successfully tested this was 2.6.15. I remembered that I had to 
-tune some parameters to enable very large transfers. These are summarized 
-in http://marc.info/?l=linux-scsi&m=114147793010513&w=2
+Hannes,=20
 
-My SCSI HBA is sym53c1010. The driver limits number of s/g segments to 96. 
-Multiplying 64 kB * 96 = 6144 kB. This explains the limit.
+I rebuilt a kernel with your patch on a 2.6.28-rc8 kernel and hit the same =
+panic as before. The attached trace is for your reference.=20
 
-Next I added call
-blk_queue_max_segment_size(sdev->request_queue, 256 * 1024);
-to sym53c8xx_slave_configure(). Now I can read and write 16000 kB records.
+Thanks.
+Harris
 
-> 
-> > I will do some more tests tomorrow but your code looks really good.
-> 
-I have done more tests and found only one minor problem. You patch fixes 
-the order in page frames. If one writes first smallish blocks (e.g., 
-label) and then large blocks, allocation may not reach the goal because 
-the order is too small.
 
-The patch at the end fixes this by retrying allocation from the beginning 
-if the order is too small. The patch also fixes two very old bugs. The 
-maximum order should have been 6. It enables maximum block size allowed by 
-WRITE(6) with 64 segments. The patch also makes enlarge_buffer() return 
-error if the maximum order together with maximum number of s/g segments.
+-----Original Message-----
+From: Hannes Reinecke [mailto:hare@suse.de]=20
+Sent: Wednesday, December 17, 2008 1:33 AM
+To: Shi, Harris
+Cc: malahal@us.ibm.com; Mike Anderson; SCSI development list
+Subject: Re: question on block-layer timeout change
 
-The patch applies on top of my previous patch removing 
-st_scsi_kern_execute(). Feel free to include these changes into one of 
-your own patches if you wish.
+Hi Harris,
 
-After these changes I am willing to ack your patch set.
+Shi, Harris wrote:
+> Hannes,=20
+>=20
+> Just let you know that the same panic is still there in SLES11RC1. Philip=
+ should
+> be able to help us to report it in Novell Bugzilla.=20
+>
+Ah. It might be related to the wrong scsi_device_online() check (cf my patc=
+h
+'Check for deleted device in scsi_device_online()' earlier on this list).
+Problem is that the error handler just checks with scsi_device_online() if
+a command can be sent down the wire.
+And so for a failed/deleted devices the error handler just barfs at random
+places.
+Can you check if this patch resolves the issue?
 
-Thanks,
-Kai
+Cheers,
 
-------------------------------------------------------------------------
-Make enlarge_buffer() retry allocation if the previously chosen page order 
-was too small. Really limit the page order to 6. Return error if the 
-maximum order is not large enough for the request.
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
 
-Signed-off-by: Kai Makisara <Kai.Makisara@kolumbus.fi>
+--_002_3568BBCB98C00041A9E622952FD5F24EA13B9EB0cosmail03lsicom_
+Content-Type: text/plain; name="panic_on_iscsi_array_with_failover.txt"
+Content-Description: panic_on_iscsi_array_with_failover.txt
+Content-Disposition: attachment;
+	filename="panic_on_iscsi_array_with_failover.txt"; size=5282;
+	creation-date="Wed, 17 Dec 2008 15:08:16 GMT";
+	modification-date="Wed, 17 Dec 2008 15:12:38 GMT"
+Content-Transfer-Encoding: base64
 
---- linux-t5/drivers/scsi/st.c.org	2008-12-17 22:06:25.000000000 +0200
-+++ linux-t5/drivers/scsi/st.c	2008-12-17 22:34:55.000000000 +0200
-@@ -3690,6 +3690,8 @@ static struct st_buffer *new_tape_buffer
- 
- 
- /* Try to allocate enough space in the tape buffer */
-+#define ST_MAX_ORDER 6
-+
- static int enlarge_buffer(struct st_buffer * STbuffer, int new_size, int need_dma)
- {
- 	int segs, nbr, max_segs, b_size, order, got;
-@@ -3718,9 +3720,15 @@ static int enlarge_buffer(struct st_buff
- 		b_size = PAGE_SIZE << order;
- 	} else {
- 		for (b_size = PAGE_SIZE, order=0;
--		     order <= 6 && b_size < new_size; order++, b_size *= 2)
-+		     order < ST_MAX_ORDER && b_size < new_size; order++, b_size *= 2)
- 			;  /* empty */
- 	}
-+	if (max_segs * (PAGE_SIZE << order) < new_size) {
-+		if (order == ST_MAX_ORDER)
-+			return 0;
-+		normalize_buffer(STbuffer);
-+		return enlarge_buffer(STbuffer, new_size, need_dma);
-+	}
- 
- 	for (segs = STbuffer->frp_segs, got = STbuffer->buffer_size;
- 	     segs < max_segs && got < new_size;) {
+SW5mb3JtYXRpb24gZnJvbSAvdmFyL2xvZy9tZXNzYWdlczoNCj09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09DQpEZWMgMTcgMTU6NTg6MTQgdGltb24ga2VybmVsOiBzZCA2OjA6MDoy
+OiBbc2RkXSBTZW5zZSBLZXkgOiBSZWNvdmVyZWQgRXJyb3IgW2N1cnJlbnRdDQpEZWMgMTcgMTU6
+NTg6MTQgdGltb24ga2VybmVsOiBzZCA2OjA6MDoyOiBbc2RkXSA8PHZlbmRvcj4+IEFTQz0weDk1
+IEFTQ1E9MHgxQVNDPTB4OTUgQVNDUT0weDENCkRlYyAxNyAxNTo1ODoyNSB0aW1vbiBrZXJuZWw6
+ICBjb25uZWN0aW9uMjowOiBwaW5nIHRpbWVvdXQgb2YgMTUgc2VjcyBleHBpcmVkLCBsYXN0IHJ4
+IDE5MjM3LCBsYXN0IHBpbmcgMjA0ODcsIG5vdyAyNDIzNw0KRGVjIDE3IDE1OjU4OjI1IHRpbW9u
+IGtlcm5lbDogIGNvbm5lY3Rpb24yOjA6IGRldGVjdGVkIGNvbm4gZXJyb3IgKDEwMTEpDQpEZWMg
+MTcgMTU6NTg6MjYgdGltb24gaXNjc2lkOiBLZXJuZWwgcmVwb3J0ZWQgaVNDU0kgY29ubmVjdGlv
+biAyOjAgZXJyb3IgKDEwMTEpIHN0YXRlICgzKQ0KDQoNCg0KSW5mb3JtYXRpb24gZnJvbSBTZXJp
+YWwgb3V0cHV0Og0KPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQ0KT29wczogMDAwMiBb
+IzFdIFNNUA0KbGFzdCBzeXNmcyBmaWxlOiAvc3lzL2RldmljZXMvc3lzdGVtL2NwdS9jcHUzL2Nh
+Y2hlL2luZGV4MS9zaGFyZWRfY3B1X21hcA0KTW9kdWxlcyBsaW5rZWQgaW46IHJhZGVvbiBkcm0g
+YWdwZ2FydCBjcmMzMmMgbGliY3JjMzJjIGliX2lzZXIgcmRtYV9jbSBpYl9jbSBuZnMgaXdfY20g
+bG9ja2QgaWJfc2EgaWJfbWFkIG5mc19hY2wgaWJfY29yZSBpNg0KSVA6IFs8YzAxMWEyNzQ+XSBf
+X3RpY2tldF9zcGluX2xvY2srMHg4LzB4MTkNCipwZHB0ID0gMDAwMDAwMDAzMTlmZTAwMSAqcGRl
+ID0gMDAwMDAwMDAwMDAwMDAwMA0KQlVHOiB1bmFibGUgdG8gaGFuZGxlIGtlcm5lbCBOVUxMIHBv
+aW50ZXIgZGVyZWZlcmVuY2UgYXQgMDAwMDAwODYNCklQOiBbPGMwMTFhMjc0Pl0gX190aWNrZXRf
+c3Bpbl9sb2NrKzB4OC8weDE5DQoqcGRwdCA9IDAwMDAwMDAwMDA1NDYwMDEgKnBkZSA9IDAwMDAw
+MDAwMDAwMDAwMDANCiBpcHY2IGFmX3BhY2tldCBtaWNyb2NvZGUgZnVzZSBsb29wIGRtX21vZCBt
+cHRjdGwgZTEwMDAgaVRDT193ZHQgc3JfbW9kIHZpZGVvIGlUQ09fdmVuZG9yX3N1cHBvcnQgZTc1
+MnhfZWRhYyBvdXRwdXQgc2hwY2hwIF0NCg0KUGlkOiAwLCBjb21tOiBzd2FwcGVyIE5vdCB0YWlu
+dGVkICgyLjYuMjgtcmM4LXRlc3QtMS1wYWUgIzEpIFBvd2VyRWRnZSAyODUwDQpFSVA6IDAwNjA6
+WzxjMDExYTI3ND5dIEVGTEFHUzogMDAwMTAwODYgQ1BVOiAzDQpFSVAgaXMgYXQgX190aWNrZXRf
+c3Bpbl9sb2NrKzB4OC8weDE5DQpFQVg6IDAwMDAwMDg2IEVCWDogZjEwZjYzODAgRUNYOiBmMjBi
+NTQwMCBFRFg6IDAwMDAwMTAwDQpFU0k6IGYxODIyM2IwIEVESTogMDAwMDAwMDAgRUJQOiBmMzhh
+NWU3OCBFU1A6IGYzOGE1ZTc4DQogRFM6IDAwN2IgRVM6IDAwN2IgRlM6IDAwZDggR1M6IDAwMDAg
+U1M6IDAwNjgNClByb2Nlc3Mgc3dhcHBlciAocGlkOiAwLCB0aT1mMzhhNDAwMCB0YXNrPWYzOGEy
+ZmQwIHRhc2sudGk9ZjM4YTQwMDApDQpTdGFjazoNCiBmMzhhNWU4MCBjMDMyOGUwZiBmMzhhNWU5
+OCBmOTI5ODM4OSAwMDAwMDAwMiBmMTBmNjM4MCBmMTgyMjNiMCAwMDAwMDAwMA0KIGYzOGE1ZWE0
+IGY3ZTEzMzk2IGYxMWI5MzAwIGYzOGE1ZWIwIGMwMjEyNTM5IGYxMWI5MzAwIGYzOGE1ZWQ0IGMw
+MjEyNWYyDQogZjE4MjI1YjggMDAwMDAyODIgZjM4OWMwMDAgZjE4MjI0ZjQgMDAwMDAxMDAgZjM4
+OWMwMDAgYzAyMTI1NzMgZjM4YTVmMDgNCkNhbGwgVHJhY2U6DQogWzxjMDMyOGUwZj5dID8gX3Nw
+aW5fbG9jaysweDE1LzB4MTgNCiBbPGY5Mjk4Mzg5Pl0gPyBpc2NzaV9laF9jbWRfdGltZWRfb3V0
+KzB4MjQvMHhiMCBbbGliaXNjc2ldDQogWzxmN2UxMzM5Nj5dID8gc2NzaV90aW1lc19vdXQrMHgz
+NS8weDYxIFtzY3NpX21vZF0NCiBbPGMwMjEyNTM5Pl0gPyBibGtfcnFfdGltZWRfb3V0KzB4Yy8w
+eDQ2DQogWzxjMDIxMjVmMj5dID8gYmxrX3JxX3RpbWVkX291dF90aW1lcisweDdmLzB4ZjYNCiBb
+PGMwMjEyNTczPl0gPyBibGtfcnFfdGltZWRfb3V0X3RpbWVyKzB4MC8weGY2DQogWzxjMDEzNzQ0
+Yz5dID8gcnVuX3RpbWVyX3NvZnRpcnErMHgxNTQvMHgxYzcNCiBbPGMwMTMzYWIwPl0gPyBfX2Rv
+X3NvZnRpcnErMHg4ZC8weDEzMw0KIFs8YzAxMzNiOWU+XSA/IGRvX3NvZnRpcnErMHg0OC8weDU3
+DQogWzxjMDEzM2NhZD5dID8gaXJxX2V4aXQrMHgzOC8weDZkDQogWzxjMDExMmU4ZD5dID8gc21w
+X2FwaWNfdGltZXJfaW50ZXJydXB0KzB4NzEvMHg3Zg0KIFs8YzAxMDVmNzg+XSA/IGFwaWNfdGlt
+ZXJfaW50ZXJydXB0KzB4MjgvMHgzMA0KIFs8YzAxMGE3NWQ+XSA/IG13YWl0X2lkbGUrMHgzMi8w
+eDQwDQogWzxjMDEwM2MzNj5dID8gY3B1X2lkbGUrMHg3NC8weDhlDQogWzxjMDMyNDQwNz5dID8g
+c3RhcnRfc2Vjb25kYXJ5KzB4MjY5LzB4MjZlDQpDb2RlOiBmZSBmZiBmZiA1YiBlYiAxMyA1NiAw
+ZiBiNyBkMiBmZiA3NSAwOCA4OSBkOSAwZiBiNiBjMCBlOCA0NCBmZSBmZiBmZiA1YSA1OSA4ZCA2
+NSBmOCA1YiA1ZSA1ZCBjMyA5MCA5MCA5MCA1NSBiYSAwMCAwMQ0KRUlQOiBbPGMwMTFhMjc0Pl0g
+X190aWNrZXRfc3Bpbl9sb2NrKzB4OC8weDE5IFNTOkVTUCAwMDY4OmYzOGE1ZTc4DQpPb3BzOiAw
+MDAyIFsjMl0gPDA+S2VybmVsIHBhbmljIC0gbm90IHN5bmNpbmc6IEZhdGFsIGV4Y2VwdGlvbiBp
+biBpbnRlcnJ1cHQNCi0tLS0tLS0tLS0tLVsgY3V0IGhlcmUgXS0tLS0tLS0tLS0tLQ0KV0FSTklO
+RzogYXQga2VybmVsL3NtcC5jOjMzMyBzbXBfY2FsbF9mdW5jdGlvbl9tYXNrKzB4MjcvMHgxYjYo
+KQ0KTW9kdWxlcyBsaW5rZWQgaW46IHJhZGVvbiBkcm0gYWdwZ2FydCBjcmMzMmMgbGliY3JjMzJj
+IGliX2lzZXIgcmRtYV9jbSBpYl9jbSBuZnMgaXdfY20gbG9ja2QgaWJfc2EgaWJfbWFkIG5mc19h
+Y2wgaWJfY29yZSBpXQ0KUGlkOiAwLCBjb21tOiBzd2FwcGVyIFRhaW50ZWQ6IEcgICAgICBEICAg
+IDIuNi4yOC1yYzgtdGVzdC0xLXBhZSAjMQ0KQ2FsbCBUcmFjZToNCiBbPGMwMzI2YTk1Pl0gPyBw
+cmludGsrMHhmLzB4MTINCiBbPGMwMTJmMTczPl0gd2Fybl9vbl9zbG93cGF0aCsweDQxLzB4NjMN
+CiBbPGMwMjIwN2ZjPl0gPyBfX2NvbnN0X3VkZWxheSsweDJjLzB4MmUNCiBbPGMwMjIwN2ZjPl0g
+PyBfX2NvbnN0X3VkZWxheSsweDJjLzB4MmUNCiBbPGMwMjhhZmMxPl0gPyB3YWl0X2Zvcl94bWl0
+cisweDM3LzB4N2QNCiBbPGMwMjhhZmMxPl0gPyB3YWl0X2Zvcl94bWl0cisweDM3LzB4N2QNCiBb
+PGMwMTRkMzI2Pl0gc21wX2NhbGxfZnVuY3Rpb25fbWFzaysweDI3LzB4MWI2DQogWzxjMDExYTM0
+Nj5dID8gZGVmYXVsdF9zcGluX2xvY2tfZmxhZ3MrMHgxNS8weDFiDQogWzxjMDExYTM0Nj5dID8g
+ZGVmYXVsdF9zcGluX2xvY2tfZmxhZ3MrMHgxNS8weDFiDQogWzxjMDE0M2IzND5dID8gZG93bl90
+cnlsb2NrKzB4MjAvMHgyOQ0KIFs8YzAxMmY0ZWE+XSA/IHRyeV9hY3F1aXJlX2NvbnNvbGVfc2Vt
+KzB4ZC8weDJlDQogWzxjMDE1NzA0MD5dID8gY3Jhc2hfa2V4ZWMrMHg5Zi8weGE3DQogWzxjMDE0
+ZDRkMz5dIHNtcF9jYWxsX2Z1bmN0aW9uKzB4MWUvMHgyNQ0KIFs8YzAxMTE5ODA+XSA/IHN0b3Bf
+dGhpc19jcHUrMHgwLzB4NTENCiBbPGMwMTExOTU2Pl0gbmF0aXZlX3NtcF9zZW5kX3N0b3ArMHgx
+Yi8weDQ1DQogWzxjMDMyNjllZj5dIHBhbmljKzB4NDgvMHhkZg0KIFs8YzAzMjlhMWI+XSBvb3Bz
+X2VuZCsweDhmLzB4YTMNCiBbPGMwMTA3NGM3Pl0gZGllKzB4NWQvMHg2NQ0KIFs8YzAzMmI0MjI+
+XSBkb19wYWdlX2ZhdWx0KzB4OWVmLzB4YWYzDQogWzxjMDEyNGI4YT5dID8gZW5xdWV1ZV90YXNr
+X2ZhaXIrMHgxZi8weDU5DQogWzxjMDEyMTIwZT5dID8gcmVzY2hlZF90YXNrKzB4MzAvMHg3NA0K
+IFs8YzAxMjhhOWM+XSA/IHRyeV90b193YWtlX3VwKzB4MjE2LzB4MjIxDQogWzxjMDEyOGFiMj5d
+ID8gZGVmYXVsdF93YWtlX2Z1bmN0aW9uKzB4Yi8weGQNCiBbPGMwMTQwM2YyPl0gPyBhdXRvcmVt
+b3ZlX3dha2VfZnVuY3Rpb24rMHhmLzB4MzMNCiBbPGMwMTQwNDRjPl0gPyB3YWtlX2JpdF9mdW5j
+dGlvbisweDM2LzB4NDMNCiBbPGMwMTIwYjU0Pl0gPyBfX3dha2VfdXBfY29tbW9uKzB4MzUvMHg1
+Yg0KIFs8YzAxNmU0ZGM+XSA/IG1lbXBvb2xfZnJlZV9zbGFiKzB4ZS8weDEwDQogWzxjMDEyNGI2
+Mz5dID8gZW5xdWV1ZV9lbnRpdHkrMHgyOTcvMHgyOWYNCiBbPGMwMTI0YjhhPl0gPyBlbnF1ZXVl
+X3Rhc2tfZmFpcisweDFmLzB4NTkNCiBbPGMwMTIwNTdlPl0gPyBlbnF1ZXVlX3Rhc2srMHg0Yy8w
+eDU4DQogWzxjMDEyMTIwZT5dID8gcmVzY2hlZF90YXNrKzB4MzAvMHg3NA0KIFs8YzAzMmFhMzM+
+XSA/IGRvX3BhZ2VfZmF1bHQrMHgwLzB4YWYzDQogWzxjMDMyOTEzMj5dIGVycm9yX2NvZGUrMHg3
+Mi8weDgwDQogWzxjMDE0MDA3Yj5dID8ga3RocmVhZGQrMHhhOC8weDE1Ng0KIFs8YzAxMWEyNzQ+
+XSA/IF9fdGlja2V0X3NwaW5fbG9jaysweDgvMHgxOQ0KIFs8YzAzMjhlMGY+XSBfc3Bpbl9sb2Nr
+KzB4MTUvMHgxOA0KIFs8ZjkyOTgzODk+XSBpc2NzaV9laF9jbWRfdGltZWRfb3V0KzB4MjQvMHhi
+MCBbbGliaXNjc2ldDQogWzxmN2UxMzM5Nj5dIHNjc2lfdGltZXNfb3V0KzB4MzUvMHg2MSBbc2Nz
+aV9tb2RdDQogWzxjMDIxMjUzOT5dIGJsa19ycV90aW1lZF9vdXQrMHhjLzB4NDYNCiBbPGMwMjEy
+NWYyPl0gYmxrX3JxX3RpbWVkX291dF90aW1lcisweDdmLzB4ZjYNCiBbPGMwMjEyNTczPl0gPyBi
+bGtfcnFfdGltZWRfb3V0X3RpbWVyKzB4MC8weGY2DQogWzxjMDEzNzQ0Yz5dIHJ1bl90aW1lcl9z
+b2Z0aXJxKzB4MTU0LzB4MWM3DQogWzxjMDEzM2FiMD5dIF9fZG9fc29mdGlycSsweDhkLzB4MTMz
+DQogWzxjMDEzM2I5ZT5dIGRvX3NvZnRpcnErMHg0OC8weDU3DQogWzxjMDEzM2NhZD5dIGlycV9l
+eGl0KzB4MzgvMHg2ZA0KIFs8YzAxMTJlOGQ+XSBzbXBfYXBpY190aW1lcl9pbnRlcnJ1cHQrMHg3
+MS8weDdmDQogWzxjMDEwNWY3OD5dIGFwaWNfdGltZXJfaW50ZXJydXB0KzB4MjgvMHgzMA0KIFs8
+YzAxMGE3NWQ+XSA/IG13YWl0X2lkbGUrMHgzMi8weDQwDQogWzxjMDEwM2MzNj5dIGNwdV9pZGxl
+KzB4NzQvMHg4ZQ0KIFs8YzAzMjQ0MDc+XSBzdGFydF9zZWNvbmRhcnkrMHgyNjkvMHgyNmUNCi0t
+LVsgZW5kIHRyYWNlIGQ5M2IxZTU4NGM0MTQ2NTkgXS0tLQ0KDQo=
+
+--_002_3568BBCB98C00041A9E622952FD5F24EA13B9EB0cosmail03lsicom_--
