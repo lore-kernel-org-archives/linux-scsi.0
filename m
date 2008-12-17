@@ -1,103 +1,54 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH] scsi_lib: don't decrement busy counters when inserting commands
-Date: Tue, 16 Dec 2008 23:55:43 -0600
-Message-ID: <1229493343215-git-send-email-michaelc@cs.wisc.edu>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: question on block-layer timeout change
+Date: Wed, 17 Dec 2008 08:33:27 +0100
+Message-ID: <4948AB47.6090505@suse.de>
+References: <3568BBCB98C00041A9E622952FD5F24EA11C9F3A@cosmail03.lsi.com> <20081112072919.GB12192@linux.vnet.ibm.com> <3568BBCB98C00041A9E622952FD5F24EA1226673@cosmail03.lsi.com> <20081114171823.GA16575@us.ibm.com> <3568BBCB98C00041A9E622952FD5F24EA135D754@cosmail03.lsi.com> <4940F367.506@suse.de> <3568BBCB98C00041A9E622952FD5F24EA13B99A3@cosmail03.lsi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:33118 "EHLO mx2.redhat.com"
+Received: from ns2.suse.de ([195.135.220.15]:42030 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751209AbYLQFzt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Dec 2008 00:55:49 -0500
+	id S1752608AbYLQHd3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Dec 2008 02:33:29 -0500
+In-Reply-To: <3568BBCB98C00041A9E622952FD5F24EA13B99A3@cosmail03.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+To: "Shi, Harris" <Harris.Shi@lsi.com>
+Cc: "malahal@us.ibm.com" <malahal@us.ibm.com>, Mike Anderson <andmike@linux.vnet.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+Hi Harris,
 
-This patch fixes a regression in scsi-misc introduced with:
-312efe5efcdb02d604ea37a41d965f32ca276d6a
-[SCSI] simplify scsi_io_completion().
+Shi, Harris wrote:
+> Hannes,=20
+>=20
+> Just let you know that the same panic is still there in SLES11RC1. Ph=
+ilip should
+> be able to help us to report it in Novell Bugzilla.=20
+>
+Ah. It might be related to the wrong scsi_device_online() check (cf my =
+patch
+'Check for deleted device in scsi_device_online()' earlier on this list=
+).
+Problem is that the error handler just checks with scsi_device_online()=
+ if
+a command can be sent down the wire.
+And so for a failed/deleted devices the error handler just barfs at ran=
+dom
+places.
+Can you check if this patch resolves the issue?
 
-The problem is that in previous kernels scsi_io_completion would call
-scsi_requeue_command, but now it can call scsi_queue_insert for
-something like a UNIT_ATTENTION (for netapp targets we get
-UNIT_ATTENTION when restarting a iscsi session). And scsi_queue_insert
-will call scsi_device_unbusy, but in the scsi_io_completion code path
-scsi_finish_command has already called this so we now end up
-with invalid host, target and device busy values.
+Cheers,
 
-Patch was made over scsi-misc.
-
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/scsi_lib.c |   16 +++++++++-------
- include/scsi/scsi.h     |    9 +++++++++
- 2 files changed, 18 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 111f9e9..a47fcac 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -139,6 +139,7 @@ int scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
- 		host->host_blocked = host->max_host_blocked;
- 		break;
- 	case SCSI_MLQUEUE_DEVICE_BUSY:
-+	case SCSI_IO_COMPL_DEV_BUSY:
- 		device->device_blocked = device->max_device_blocked;
- 		break;
- 	case SCSI_MLQUEUE_TARGET_BUSY:
-@@ -146,11 +147,12 @@ int scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
- 		break;
- 	}
- 
--	/*
--	 * Decrement the counters, since these commands are no longer
--	 * active on the host/device.
--	 */
--	scsi_device_unbusy(device);
-+	if (!SCSI_IO_COMPL_RET(reason))
-+		/*
-+		 * Decrement the counters, since these commands are no longer
-+		 * active on the host/device.
-+		 */
-+		scsi_device_unbusy(device);
- 
- 	/*
- 	 * Requeue this command.  It will go before all other commands
-@@ -1071,11 +1073,11 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 		break;
- 	case ACTION_RETRY:
- 		/* Retry the same command immediately */
--		scsi_queue_insert(cmd, SCSI_MLQUEUE_EH_RETRY);
-+		scsi_queue_insert(cmd, SCSI_IO_COMPL_EH_RETRY);
- 		break;
- 	case ACTION_DELAYED_RETRY:
- 		/* Retry the same command after a delay */
--		scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
-+		scsi_queue_insert(cmd, SCSI_IO_COMPL_DEV_BUSY);
- 		break;
- 	}
- }
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index a109165..e9cc4fc 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -434,6 +434,15 @@ static inline int scsi_is_wlun(unsigned int lun)
- #define SCSI_MLQUEUE_TARGET_BUSY 0x1058
- 
- /*
-+ * Midlevel io completeion path return values
-+ */
-+#define SCSI_IO_COMPL_EH_RETRY	 0x1059
-+#define SCSI_IO_COMPL_DEV_BUSY	 0x1060
-+
-+#define SCSI_IO_COMPL_RET(_ret) \
-+	(_ret == SCSI_IO_COMPL_EH_RETRY || _ret == SCSI_IO_COMPL_DEV_BUSY)
-+
-+/*
-  *  Use these to separate status msg and our bytes
-  *
-  *  These are set by:
--- 
-1.6.0.4
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
