@@ -1,79 +1,83 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: READ CAPACITY 16
-Date: Thu, 18 Dec 2008 11:05:54 +0200
-Message-ID: <494A1272.8040008@panasas.com>
-References: <20081217164210.GC19967@parisc-linux.org> <da824cf30812170950p393be2fq729e98e93edef5dc@mail.gmail.com> <20081217180640.GE19967@parisc-linux.org>
+From: Mike Anderson <andmike@linux.vnet.ibm.com>
+Subject: Re: question on block-layer timeout change
+Date: Thu, 18 Dec 2008 01:23:39 -0800
+Message-ID: <20081218092339.GB812@linux.vnet.ibm.com>
+References: <3568BBCB98C00041A9E622952FD5F24EA11C9F3A@cosmail03.lsi.com> <20081112072919.GB12192@linux.vnet.ibm.com> <3568BBCB98C00041A9E622952FD5F24EA1226673@cosmail03.lsi.com> <20081114171823.GA16575@us.ibm.com> <3568BBCB98C00041A9E622952FD5F24EA135D754@cosmail03.lsi.com> <4940F367.506@suse.de> <3568BBCB98C00041A9E622952FD5F24EA13B99A3@cosmail03.lsi.com> <4948AB47.6090505@suse.de> <3568BBCB98C00041A9E622952FD5F24EA13B9EB0@cosmail03.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:4190 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751438AbYLRJF6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Dec 2008 04:05:58 -0500
-In-Reply-To: <20081217180640.GE19967@parisc-linux.org>
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:44058 "EHLO e2.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751506AbYLRJXm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Dec 2008 04:23:42 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e2.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id mBI9MoR6008971
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Dec 2008 04:22:50 -0500
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id mBI9NfYl194278
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Dec 2008 04:23:41 -0500
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id mBI9NesL018924
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Dec 2008 04:23:41 -0500
+Content-Disposition: inline
+In-Reply-To: <3568BBCB98C00041A9E622952FD5F24EA13B9EB0@cosmail03.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Grant Grundler <grundler@google.com>, linux-scsi@vger.kernel.org
+To: "Shi, Harris" <Harris.Shi@lsi.com>
+Cc: Hannes Reinecke <hare@suse.de>, "malahal@us.ibm.com" <malahal@us.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
 
-Matthew Wilcox wrote:
-> On Wed, Dec 17, 2008 at 09:50:52AM -0800, Grant Grundler wrote:
->>> Algorithm A (a perfect world):
->>>
->>>
->>> Algorithm B:
->>>
->>> Issue RC10
->>> Issue RC16
->>>  -> If it succeeds, use its results in preference to those from RC10
->>>  -> If it fails, carry on with the results from RC10
->>>  -> If it times out, reset the device, carry on with the results from RC10
->> I fail to see an effective difference between Algo A and B.
+Shi, Harris <Harris.Shi@lsi.com> wrote:
+> Information from /var/log/messages:
+> ===================================
+> Dec 17 15:58:14 timon kernel: sd 6:0:0:2: [sdd] Sense Key : Recovered Error [current]
+> Dec 17 15:58:14 timon kernel: sd 6:0:0:2: [sdd] <<vendor>> ASC=0x95 ASCQ=0x1ASC=0x95 ASCQ=0x1
+> Dec 17 15:58:25 timon kernel:  connection2:0: ping timeout of 15 secs expired, last rx 19237, last ping 20487, now 24237
+> Dec 17 15:58:25 timon kernel:  connection2:0: detected conn error (1011)
+> Dec 17 15:58:26 timon iscsid: Kernel reported iSCSI connection 2:0 error (1011) state (3)
 > 
-> Whether to issue an RC10 before issuing an RC16 or not.  It matches what
-> we currently do better (we currently issue an RC10 and then issue an
-> RC16 if RC10 reports we have 0xffffffff LBAs).
 > 
-
-Sorry to barge in but I think this is the most practical solution and the one
-to go to T10 with.
-
-If a (new) device supports RC16 it should return LBAs==0xffffffff for RC10 even
-if it's capacity is smaller, to indicate an RC16 request.
-If LBAs!=0xffffffff and !SCSI_3 then do not risk RC16 unless a white list
-or load parameter.
-
-Since you are going to T10 with this the white list should be, as you said
-in other mail, zero length.
-
->> The question really is one you already asked:
->>> ...The question is what to do about devices that either
->>> hang or take a long time to respond to an RC16 command.
->> A few ideas:
->> 1) maintain a blacklist
 > 
-> Which is obviously what we're trying to avoid doing.
+> Information from Serial output:
+> ===============================
+> Oops: 0002 [#1] SMP
+> last sysfs file: /sys/devices/system/cpu/cpu3/cache/index1/shared_cpu_map
+> Modules linked in: radeon drm agpgart crc32c libcrc32c ib_iser rdma_cm ib_cm nfs iw_cm lockd ib_sa ib_mad nfs_acl ib_core i6
+> IP: [<c011a274>] __ticket_spin_lock+0x8/0x19
+> *pdpt = 00000000319fe001 *pde = 0000000000000000
+> BUG: unable to handle kernel NULL pointer dereference at 00000086
+> IP: [<c011a274>] __ticket_spin_lock+0x8/0x19
+> *pdpt = 0000000000546001 *pde = 0000000000000000
+>  ipv6 af_packet microcode fuse loop dm_mod mptctl e1000 iTCO_wdt sr_mod video iTCO_vendor_support e752x_edac output shpchp ]
 > 
+> Pid: 0, comm: swapper Not tainted (2.6.28-rc8-test-1-pae #1) PowerEdge 2850
+> EIP: 0060:[<c011a274>] EFLAGS: 00010086 CPU: 3
+> EIP is at __ticket_spin_lock+0x8/0x19
+> EAX: 00000086 EBX: f10f6380 ECX: f20b5400 EDX: 00000100
+> ESI: f18223b0 EDI: 00000000 EBP: f38a5e78 ESP: f38a5e78
+>  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
+> Process swapper (pid: 0, ti=f38a4000 task=f38a2fd0 task.ti=f38a4000)
+> Stack:
+>  f38a5e80 c0328e0f f38a5e98 f9298389 00000002 f10f6380 f18223b0 00000000
+>  f38a5ea4 f7e13396 f11b9300 f38a5eb0 c0212539 f11b9300 f38a5ed4 c02125f2
+>  f18225b8 00000282 f389c000 f18224f4 00000100 f389c000 c0212573 f38a5f08
+> Call Trace:
+>  [<c0328e0f>] ? _spin_lock+0x15/0x18
+>  [<f9298389>] ? iscsi_eh_cmd_timed_out+0x24/0xb0 [libiscsi]
+>  [<f7e13396>] ? scsi_times_out+0x35/0x61 [scsi_mod]
+>  [<c0212539>] ? blk_rq_timed_out+0xc/0x46
 
-If you are going to T10 with this a white list should be much shorter
+I could not match my listing exactly with this output, but it appears that
+the session is NULL when we call into iscsi_eh_cmd_timed_out. An addr2line
+would help verify the iscsi_eh_cmd_timed_out line.
 
->> 2) anything in RC10 or IDENTIFY that would clue us about RC16 functionality?
->>     If so, then something like B or C would make sense.
-> 
-> RC10 only returns number of LBAs and how many bytes per LBA.  I don't
-> see anything in the INQUIRY data (other than the protection bit, which
-> we already use to know that RC16 is supported).  We could maybe key off
-> scsi_level > SCSI_2 like scsi_device_protection() does.  This would work
-> for ATA SSDs because libata reports SCSI ANSI revision 05, but it won't
-> work for USB devices because they get mangled down to SCSI_2, no matter
-> what they support.
-> 
-<snip>
+I added Mike C to the email cc for possible comments on the error messages
+displayed above and if that would lead to cleanup of structures referenced
+in iscsi_eh_cmd_timed_out.
 
-This is certainly a bug in the standard, draft as you say. It must be fixed in
-a backward compatible way. Practical matters aside, the standard can not stay
-as it is.
+Question on the system setup. Are you using mpp in this kernel as I did not
+see it in the module list?
 
-Thanks
-Boaz
+-andmike
+--
+Michael Anderson
+andmike@linux.vnet.ibm.com
