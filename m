@@ -1,85 +1,79 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH] scsi_lib: don't decrement busy counters when inserting
-	commands
-Date: Thu, 18 Dec 2008 01:03:41 -0800
-Message-ID: <20081218090341.GA1765@plap4-2.local>
-References: <1229493343215-git-send-email-michaelc@cs.wisc.edu>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: READ CAPACITY 16
+Date: Thu, 18 Dec 2008 11:05:54 +0200
+Message-ID: <494A1272.8040008@panasas.com>
+References: <20081217164210.GC19967@parisc-linux.org> <da824cf30812170950p393be2fq729e98e93edef5dc@mail.gmail.com> <20081217180640.GE19967@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:12042 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751384AbYLRJDo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Dec 2008 04:03:44 -0500
-Content-Disposition: inline
-In-Reply-To: <1229493343215-git-send-email-michaelc@cs.wisc.edu>
+Received: from gw-ca.panasas.com ([66.104.249.162]:4190 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751438AbYLRJF6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Dec 2008 04:05:58 -0500
+In-Reply-To: <20081217180640.GE19967@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Grant Grundler <grundler@google.com>, linux-scsi@vger.kernel.org
 
-On Tue, 16 Dec 2008, michaelc@cs.wisc.edu wrote:
-
-> This patch fixes a regression in scsi-misc introduced with:
-> 312efe5efcdb02d604ea37a41d965f32ca276d6a
-> [SCSI] simplify scsi_io_completion().
+Matthew Wilcox wrote:
+> On Wed, Dec 17, 2008 at 09:50:52AM -0800, Grant Grundler wrote:
+>>> Algorithm A (a perfect world):
+>>>
+>>>
+>>> Algorithm B:
+>>>
+>>> Issue RC10
+>>> Issue RC16
+>>>  -> If it succeeds, use its results in preference to those from RC10
+>>>  -> If it fails, carry on with the results from RC10
+>>>  -> If it times out, reset the device, carry on with the results from RC10
+>> I fail to see an effective difference between Algo A and B.
 > 
-> The problem is that in previous kernels scsi_io_completion would call
-> scsi_requeue_command, but now it can call scsi_queue_insert for
-> something like a UNIT_ATTENTION (for netapp targets we get
-> UNIT_ATTENTION when restarting a iscsi session). And scsi_queue_insert
-> will call scsi_device_unbusy, but in the scsi_io_completion code path
-> scsi_finish_command has already called this so we now end up
-> with invalid host, target and device busy values.
+> Whether to issue an RC10 before issuing an RC16 or not.  It matches what
+> we currently do better (we currently issue an RC10 and then issue an
+> RC16 if RC10 reports we have 0xffffffff LBAs).
+> 
 
-Thanks for finding this, as we've run into this problem ourselves.
-After applying your fix, at least I/O appears to continue...  But
-there's still some residual problems left over with the changes from
-scsi_requeue_command() -> scsi_queue_insert() in
-312efe5efcdb02d604ea37a41d965f32ca276d6a that are causing commands
-returned by the LLD with a DID_RESET status to be reissued with
-cleared cmd->sdb data which in our tests are manifesting in firmware
-detected overruns.  Here's a snippet of a READ_10 scsi_cmnd upon
-completion by the storage:
+Sorry to barge in but I think this is the most practical solution and the one
+to go to T10 with.
 
-	[  107.083085] scsi(4:0:0): OVERRUN status detected 0x7-0x400
-	[  107.087081] CDB: 0x28 0x0 0x0 0x0 0x28 0x0
-	[  107.087081] CDB: 0x0 0x4 0x0 0x0 0x0 0x0
-	[  107.087081] PID=0x82d req=0x0 xtra=0x80000 -- returning DID_ERROR status!
-	[  107.087081] cmd: serial=82d scsi_bufflen=0 retries=0 allowed=5 sc_data_direction=2
-	[  107.087081] cmd->sdb: length=0 resid=0
-	[  107.087081] cmd->sdb.table: sgl=0000000000000000 nents=0 orig_nents=0
-	[  107.087081] req: cmd_flags=83c60 hard_nr_sections=0x400 nr_sectors=0x400 data_len=0x80000
+If a (new) device supports RC16 it should return LBAs==0xffffffff for RC10 even
+if it's capacity is smaller, to indicate an RC16 request.
+If LBAs!=0xffffffff and !SCSI_3 then do not risk RC16 unless a white list
+or load parameter.
 
-the CDB in question contains a valid transfer-length of 400h blocks,
-but the scsi_bufflen() of the scsi_cmnd is set to 0.
+Since you are going to T10 with this the white list should be, as you said
+in other mail, zero length.
 
-With the new 'simplify' code, what appears to be happening is the
-scsi_cmnd->sdb structure is never being re-populated within
-scsi_io_completion() after the scsi_release_buffers() call as
-scsi_queue_insert() simply reissues the request with the previously
-allocated scsi_cmnd and the request's REQ_DONTPREP bit set...
+>> The question really is one you already asked:
+>>> ...The question is what to do about devices that either
+>>> hang or take a long time to respond to an RC16 command.
+>> A few ideas:
+>> 1) maintain a blacklist
+> 
+> Which is obviously what we're trying to avoid doing.
+> 
 
-The original 'pre-simplified' code, as Mike C. notes, would call
-scsi_requeue_command() which tore-down the request's scsi_cmnd prior
-to retry.
+If you are going to T10 with this a white list should be much shorter
 
-I've tried this small patch:
+>> 2) anything in RC10 or IDENTIFY that would clue us about RC16 functionality?
+>>     If so, then something like B or C would make sense.
+> 
+> RC10 only returns number of LBAs and how many bytes per LBA.  I don't
+> see anything in the INQUIRY data (other than the protection bit, which
+> we already use to know that RC16 is supported).  We could maybe key off
+> scsi_level > SCSI_2 like scsi_device_protection() does.  This would work
+> for ATA SSDs because libata reports SCSI ANSI revision 05, but it won't
+> work for USB devices because they get mangled down to SCSI_2, no matter
+> what they support.
+> 
+<snip>
 
-	--- a/drivers/scsi/scsi_lib.c
-	+++ b/drivers/scsi/scsi_lib.c
-	@@ -970,7 +973,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
-			 * reasons.  Just retry the command and see what
-			 * happens.
-			 */
-	-		action = ACTION_RETRY;
-	+		action = ACTION_REPREP;
-		} else if (sense_valid && !sense_deferred) {
-			switch (sshdr.sense_key) {
-			case UNIT_ATTENTION:
+This is certainly a bug in the standard, draft as you say. It must be fixed in
+a backward compatible way. Practical matters aside, the standard can not stay
+as it is.
 
-but, it doesn't appear to solve the problem either.  Additionally,
-it's not going to cover any other cases which ultimately result in
-scsi_queue_insert() being used for retries...
-
-Any thoughts on how to handle this???
+Thanks
+Boaz
