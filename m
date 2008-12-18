@@ -1,7 +1,7 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 09/16] st: remove buf_to_sg
-Date: Thu, 18 Dec 2008 14:49:44 +0900
-Message-ID: <1229579391-28753-10-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 12/16] st: simplify new_tape_buffer
+Date: Thu, 18 Dec 2008 14:49:47 +0900
+Message-ID: <1229579391-28753-13-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 References: <1229579391-28753-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1229579391-28753-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1229579391-28753-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
@@ -11,78 +11,88 @@ References: <1229579391-28753-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1229579391-28753-7-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1229579391-28753-8-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1229579391-28753-9-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1229579391-28753-10-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1229579391-28753-11-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1229579391-28753-12-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:46372 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:46383 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751633AbYLRGIt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Dec 2008 01:08:49 -0500
-In-Reply-To: <1229579391-28753-9-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	id S1751494AbYLRGIw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Dec 2008 01:08:52 -0500
+In-Reply-To: <1229579391-28753-12-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Kai.Makisara@kolumbus.fi
 Cc: James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.c, linux-scsi@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-This removes unused buf_to_sg() that the non-dio path used.
+- remove the from_initialization argument, which is always 1. We
+always need to use GFP_ATOMIC.
+
+- 'got' valuable is initialized to zero and doesn't change. We don't
+need it.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- drivers/scsi/st.c |   29 -----------------------------
- 1 files changed, 0 insertions(+), 29 deletions(-)
+ drivers/scsi/st.c |   21 ++++++---------------
+ 1 files changed, 6 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index fec5568..ce1fd3a 100644
+index f934016..22ddca8 100644
 --- a/drivers/scsi/st.c
 +++ b/drivers/scsi/st.c
-@@ -189,7 +189,6 @@ static void normalize_buffer(struct st_buffer *);
- static int append_to_buffer(const char __user *, struct st_buffer *, int);
- static int from_buffer(struct st_buffer *, char __user *, int);
- static void move_buffer_data(struct st_buffer *, int);
--static void buf_to_sg(struct st_buffer *, unsigned int);
+@@ -182,7 +182,6 @@ static struct scsi_tape **scsi_tapes = NULL;
  
- static int sgl_map_user_pages(struct st_buffer *, const unsigned int,
- 			      unsigned long, size_t, int);
-@@ -554,8 +553,6 @@ st_do_scsi(struct st_request * SRpnt, struct scsi_tape * STp, unsigned char *cmd
- 		mdata->nr_entries = STp->buffer->sg_segs;
- 		mdata->pages = STp->buffer->mapped_pages;
- 	} else {
--		buf_to_sg(STp->buffer, bytes);
--
- 		mdata->nr_entries =
- 			DIV_ROUND_UP(bytes, PAGE_SIZE << mdata->page_order);
- 		STp->buffer->map_data.pages = STp->buffer->reserved_pages;
-@@ -3964,32 +3961,6 @@ static void move_buffer_data(struct st_buffer * st_bp, int offset)
- 	}
- }
+ static int modes_defined;
  
--
--/* Fill the s/g list up to the length required for this transfer */
--static void buf_to_sg(struct st_buffer *STbp, unsigned int length)
--{
--	int i;
--	unsigned int count;
--	struct scatterlist *sg;
--	struct st_buf_fragment *frp;
--
--	if (length == STbp->frp_sg_current)
--		return;   /* work already done */
--
--	sg = &(STbp->sg[0]);
--	frp = STbp->frp;
--	for (i=count=0; count < length; i++) {
--		if (length - count > frp[i].length)
--			sg_set_page(&sg[i], frp[i].page, frp[i].length, 0);
--		else
--			sg_set_page(&sg[i], frp[i].page, length - count, 0);
--		count += sg[i].length;
--	}
--	STbp->sg_segs = i;
--	STbp->frp_sg_current = length;
--}
--
--
- /* Validate the options from command line or module parameters */
- static void validate_options(void)
+-static struct st_buffer *new_tape_buffer(int, int, int);
+ static int enlarge_buffer(struct st_buffer *, int, int);
+ static void clear_buffer(struct st_buffer *);
+ static void normalize_buffer(struct st_buffer *);
+@@ -3741,30 +3740,22 @@ static long st_compat_ioctl(struct file *file, unsigned int cmd, unsigned long a
+ 
+ /* Try to allocate a new tape buffer. Calling function must not hold
+    dev_arr_lock. */
+-static struct st_buffer *
+- new_tape_buffer(int from_initialization, int need_dma, int max_sg)
++static struct st_buffer *new_tape_buffer(int need_dma, int max_sg)
  {
+-	int got = 0;
+-	gfp_t priority;
+ 	struct st_buffer *tb;
+ 
+-	if (from_initialization)
+-		priority = GFP_ATOMIC;
+-	else
+-		priority = GFP_KERNEL;
+-
+-	tb = kzalloc(sizeof(struct st_buffer), priority);
++	tb = kzalloc(sizeof(struct st_buffer), GFP_ATOMIC);
+ 	if (!tb) {
+ 		printk(KERN_NOTICE "st: Can't allocate new tape buffer.\n");
+ 		return NULL;
+ 	}
+ 	tb->frp_segs = tb->orig_frp_segs = 0;
+ 	tb->use_sg = max_sg;
+-
+ 	tb->dma = need_dma;
+-	tb->buffer_size = got;
++	tb->buffer_size = 0;
+ 
+-	tb->reserved_pages = kzalloc(max_sg * sizeof(struct page *), priority);
++	tb->reserved_pages = kzalloc(max_sg * sizeof(struct page *),
++				     GFP_ATOMIC);
+ 	if (!tb->reserved_pages) {
+ 		kfree(tb);
+ 		return NULL;
+@@ -4059,7 +4050,7 @@ static int st_probe(struct device *dev)
+ 		SDp->request_queue->max_phys_segments);
+ 	if (st_max_sg_segs < i)
+ 		i = st_max_sg_segs;
+-	buffer = new_tape_buffer(1, (SDp->host)->unchecked_isa_dma, i);
++	buffer = new_tape_buffer((SDp->host)->unchecked_isa_dma, i);
+ 	if (buffer == NULL) {
+ 		printk(KERN_ERR
+ 		       "st: Can't allocate new tape buffer. Device not attached.\n");
 -- 
 1.5.6.5
 
