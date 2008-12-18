@@ -1,64 +1,88 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12163] mptsas driver cannot discover some hotplugged SATA/SAS disks
-Date: Wed, 17 Dec 2008 20:31:24 -0800 (PST)
-Message-ID: <20081218043124.3F698108041@picon.linux-foundation.org>
-References: <bug-12163-11613@http.bugzilla.kernel.org/>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 07/16] st: convert non-dio path to use st_scsi_execute
+Date: Thu, 18 Dec 2008 14:49:42 +0900
+Message-ID: <1229579391-28753-8-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+References: <1229579391-28753-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1229579391-28753-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1229579391-28753-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1229579391-28753-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1229579391-28753-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1229579391-28753-6-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1229579391-28753-7-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:42630 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751298AbYLREb5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Dec 2008 23:31:57 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBI4VOYI025784
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Dec 2008 20:31:25 -0800
-In-Reply-To: <bug-12163-11613@http.bugzilla.kernel.org/>
+Received: from sh.osrg.net ([192.16.179.4]:46363 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751466AbYLRGIs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Dec 2008 01:08:48 -0500
+In-Reply-To: <1229579391-28753-7-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Kai.Makisara@kolumbus.fi
+Cc: James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.c, linux-scsi@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12163
+This patch converts the non-dio path (fragment buffer path) to use
+st_scsi_execute. IOW, it removes scsi_execute_async in the non-dio
+path.
 
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/st.c |   27 +++++++++++++++++++++------
+ 1 files changed, 21 insertions(+), 6 deletions(-)
 
-crquan@gmail.com changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |crquan@gmail.com
-
-
-
-
-------- Comment #5 from crquan@gmail.com  2008-12-17 20:31 -------
-This driver worked well in general situation,
-
-1. use mptsas vendor driver 4.00.43 and this patch to let it work on 2.6.26.2;
-2. all disks can be recognized when staticly booting or after hotplugged;
-
-But today we found another severe hotplug problem:
-
-Steps to reproduce:
-1. use mdadm to create a soft RAID, e.g. create a md1 with level 5 on
-sdm,sdn,sdo;
-2. if plug the disks in a soft RAID, the disks(sdm,sdn,sdo) cannot be
-recognized after inserted;
-3. if these disks inserted into other slots, they can be recognized by mptsas;
-4. if other disks inserted into these slots where (sdm,sdn,sdo) occupied, they
-cannot be recognized, too.
-5. At the same time, other disks not in the soft RAID still support hotplug
-well;
-
-To sum in one word, the slot which has been occupied by a disk in soft RAID
-cannot support hotplug anymore (before rebooting).
-
-I suspect this is a generic scsi-level problem, sometimes it reports
-scsi_target alloc failed with -EEXIST;
-
-
-Reproducible: always
-
-
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 084a967..390689d 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -537,6 +537,8 @@ st_do_scsi(struct st_request * SRpnt, struct scsi_tape * STp, unsigned char *cmd
+ 	   int bytes, int direction, int timeout, int retries, int do_wait)
+ {
+ 	struct completion *waiting;
++	struct rq_map_data *mdata = &STp->buffer->map_data;
++	int ret;
+ 
+ 	/* if async, make sure there's no command outstanding */
+ 	if (!do_wait && ((STp->buffer)->last_SRpnt)) {
+@@ -564,21 +566,34 @@ st_do_scsi(struct st_request * SRpnt, struct scsi_tape * STp, unsigned char *cmd
+ 	init_completion(waiting);
+ 	SRpnt->waiting = waiting;
+ 
+-	if (!STp->buffer->do_dio)
++	if (!STp->buffer->do_dio) {
+ 		buf_to_sg(STp->buffer, bytes);
+ 
++		mdata->nr_entries =
++			DIV_ROUND_UP(bytes, PAGE_SIZE << mdata->page_order);
++		STp->buffer->map_data.pages = STp->buffer->reserved_pages;
++		STp->buffer->map_data.offset = 0;
++	}
++
+ 	memcpy(SRpnt->cmd, cmd, sizeof(SRpnt->cmd));
+ 	STp->buffer->cmdstat.have_sense = 0;
+ 	STp->buffer->syscall_result = 0;
+ 
+-	if (scsi_execute_async(STp->device, cmd, COMMAND_SIZE(cmd[0]), direction,
+-			&((STp->buffer)->sg[0]), bytes, (STp->buffer)->sg_segs,
+-			       timeout, retries, SRpnt, st_sleep_done, GFP_KERNEL)) {
++	if (STp->buffer->do_dio)
++		ret = scsi_execute_async(STp->device, cmd, COMMAND_SIZE(cmd[0]),
++					 direction, &((STp->buffer)->sg[0]),
++					 bytes, (STp->buffer)->sg_segs, timeout,
++					 retries, SRpnt, st_sleep_done,
++					 GFP_KERNEL);
++	else
++		ret = st_scsi_execute(SRpnt, cmd, direction, NULL, bytes,
++				      timeout, retries);
++
++	if (ret) {
+ 		/* could not allocate the buffer or request was too large */
+ 		(STp->buffer)->syscall_result = (-EBUSY);
+ 		(STp->buffer)->last_SRpnt = NULL;
+-	}
+-	else if (do_wait) {
++	} else if (do_wait) {
+ 		wait_for_completion(waiting);
+ 		SRpnt->waiting = NULL;
+ 		(STp->buffer)->syscall_result = st_chk_result(STp, SRpnt);
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+1.5.6.5
+
