@@ -1,114 +1,93 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 06/16] st: add st_scsi_execute helper function
-Date: Thu, 18 Dec 2008 14:49:41 +0900
-Message-ID: <1229579391-28753-7-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 05/16] st: add struct rq_map_data support
+Date: Thu, 18 Dec 2008 14:49:40 +0900
+Message-ID: <1229579391-28753-6-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 References: <1229579391-28753-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1229579391-28753-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1229579391-28753-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1229579391-28753-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1229579391-28753-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1229579391-28753-6-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:46371 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:46364 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751612AbYLRGIt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Dec 2008 01:08:49 -0500
-In-Reply-To: <1229579391-28753-6-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	id S1751494AbYLRGIs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Dec 2008 01:08:48 -0500
+In-Reply-To: <1229579391-28753-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Kai.Makisara@kolumbus.fi
 Cc: James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.c, linux-scsi@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-st_scsi_execute is a helper function to perform SCSI commands
-involving data transfer between user and kernel space (st_read and
-st_write).
+This adds struct rq_map_data and the array of pointers to store
+fragment buffers to struct st_buffer.
 
-It's the future plan to combine this with st_scsi_kern_execute helper
-function.
+This patch doesn't remove st_buf_fragment but the latter patch does.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- drivers/scsi/st.c |   54 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/st.h |    1 +
- 2 files changed, 55 insertions(+), 0 deletions(-)
+ drivers/scsi/st.c |   11 +++++++++++
+ drivers/scsi/st.h |    2 ++
+ 2 files changed, 13 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 9d9e4b9..084a967 100644
+index 3984cd8..9d9e4b9 100644
 --- a/drivers/scsi/st.c
 +++ b/drivers/scsi/st.c
-@@ -475,6 +475,60 @@ static void st_release_request(struct st_request *streq)
- 	kfree(streq);
- }
+@@ -3723,6 +3723,12 @@ static struct st_buffer *
+ 	tb->buffer_size = got;
+ 	sg_init_table(tb->sg, max_sg);
  
-+static void st_scsi_execute_end(struct request *req, int uptodate)
-+{
-+	struct st_request *SRpnt = req->end_io_data;
-+	struct scsi_tape *STp = SRpnt->stp;
-+
-+	STp->buffer->cmdstat.midlevel_result = SRpnt->result = req->errors;
-+	STp->buffer->cmdstat.residual = req->data_len;
-+
-+	if (SRpnt->waiting)
-+		complete(SRpnt->waiting);
-+
-+	blk_rq_unmap_user(SRpnt->bio);
-+	__blk_put_request(req->q, req);
-+}
-+
-+static int st_scsi_execute(struct st_request *SRpnt, const unsigned char *cmd,
-+			   int data_direction, void *buffer, unsigned bufflen,
-+			   int timeout, int retries)
-+{
-+	struct request *req;
-+	struct rq_map_data *mdata = &SRpnt->stp->buffer->map_data;
-+	int err = 0;
-+	int write = (data_direction == DMA_TO_DEVICE);
-+
-+	req = blk_get_request(SRpnt->stp->device->request_queue, write,
-+			      GFP_KERNEL);
-+	if (!req)
-+		return DRIVER_ERROR << 24;
-+
-+	req->cmd_type = REQ_TYPE_BLOCK_PC;
-+	req->cmd_flags |= REQ_QUIET;
-+
-+	mdata->null_mapped = 1;
-+
-+	err = blk_rq_map_user(req->q, req, mdata, NULL, bufflen, GFP_KERNEL);
-+	if (err) {
-+		blk_put_request(req);
-+		return DRIVER_ERROR << 24;
++	tb->reserved_pages = kzalloc(max_sg * sizeof(struct page *), priority);
++	if (!tb->reserved_pages) {
++		kfree(tb);
++		return NULL;
 +	}
 +
-+	SRpnt->bio = req->bio;
-+	req->cmd_len = COMMAND_SIZE(cmd[0]);
-+	memset(req->cmd, 0, BLK_MAX_CDB);
-+	memcpy(req->cmd, cmd, req->cmd_len);
-+	req->sense = SRpnt->sense;
-+	req->sense_len = 0;
-+	req->timeout = timeout;
-+	req->retries = retries;
-+	req->end_io_data = SRpnt;
-+
-+	blk_execute_rq_nowait(req->q, NULL, req, 1, st_scsi_execute_end);
-+	return 0;
-+}
-+
- /* Do the scsi command. Waits until command performed if do_wait is true.
-    Otherwise write_behind_check() is used to check that the command
-    has finished. */
+ 	return tb;
+ }
+ 
+@@ -3771,9 +3777,11 @@ static int enlarge_buffer(struct st_buffer * STbuffer, int new_size, int need_dm
+ 		STbuffer->buffer_size = got;
+ 		if (STbuffer->cleared)
+ 			memset(page_address(STbuffer->frp[segs].page), 0, b_size);
++		STbuffer->reserved_pages[segs] = STbuffer->frp[segs].page;
+ 		segs++;
+ 	}
+ 	STbuffer->b_data = page_address(STbuffer->frp[0].page);
++	STbuffer->map_data.page_order = order;
+ 
+ 	return 1;
+ }
+@@ -3803,6 +3811,8 @@ static void normalize_buffer(struct st_buffer * STbuffer)
+ 	STbuffer->frp_segs = STbuffer->orig_frp_segs;
+ 	STbuffer->frp_sg_current = 0;
+ 	STbuffer->sg_segs = 0;
++	STbuffer->map_data.page_order = 0;
++	STbuffer->map_data.offset = 0;
+ }
+ 
+ 
+@@ -4282,6 +4292,7 @@ static void scsi_tape_release(struct kref *kref)
+ 	if (tpnt->buffer) {
+ 		tpnt->buffer->orig_frp_segs = 0;
+ 		normalize_buffer(tpnt->buffer);
++		kfree(tpnt->buffer->reserved_pages);
+ 		kfree(tpnt->buffer);
+ 	}
+ 
 diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
-index 74748ab..77302fa 100644
+index b92712f..74748ab 100644
 --- a/drivers/scsi/st.h
 +++ b/drivers/scsi/st.h
-@@ -29,6 +29,7 @@ struct st_request {
- 	int result;
- 	struct scsi_tape *stp;
- 	struct completion *waiting;
-+	struct bio *bio;
- };
- 
- /* The tape buffer descriptor. */
+@@ -44,6 +44,8 @@ struct st_buffer {
+ 	int syscall_result;
+ 	struct st_request *last_SRpnt;
+ 	struct st_cmdstatus cmdstat;
++	struct page **reserved_pages;
++	struct rq_map_data map_data;
+ 	unsigned char *b_data;
+ 	unsigned short use_sg;	/* zero or max number of s/g segments for this adapter */
+ 	unsigned short sg_segs;		/* number of segments in s/g list */
 -- 
 1.5.6.5
 
