@@ -1,84 +1,82 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 1/1] ibmvfc: Improve async event handling
-Date: Thu, 18 Dec 2008 09:26:51 -0600
-Message-ID: <200812181628.mBIGS3CQ013344@d01av04.pok.ibm.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: Creating a subdirectory under fc_host statistics using fc_function_template
+Date: Thu, 18 Dec 2008 12:22:38 -0500
+Message-ID: <494A86DE.7020908@emulex.com>
+References: <ddedcbc75baf.493faa75@usc.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:57388 "EHLO e4.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751281AbYLRP2C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Dec 2008 10:28:02 -0500
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e4.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id mBIFRDtr005791
-	for <linux-scsi@vger.kernel.org>; Thu, 18 Dec 2008 10:27:13 -0500
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id mBIFS1HF135368
-	for <linux-scsi@vger.kernel.org>; Thu, 18 Dec 2008 10:28:01 -0500
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id mBIGS9Ug013945
-	for <linux-scsi@vger.kernel.org>; Thu, 18 Dec 2008 11:28:10 -0500
+Received: from emulex.emulex.com ([138.239.112.1]:39831 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751838AbYLRRVR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Dec 2008 12:21:17 -0500
+In-Reply-To: <ddedcbc75baf.493faa75@usc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
+To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
+Cc: Krishna Gudipati <gudipati@usc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Smart, James" <James.Smart@Emulex.Com>
+
+James,
+
+What Krishna describes, is a need to add driver-specific attributes (and 
+optionally a directory of attributes) to a class-level object. I 
+attempted patches of a similar form when I was originally doing the 
+fc_rports, which were rejected.
+
+I believe the position is that we do not allow driver-specific things on 
+the class objects, and drivers are limited in scope to only adding 
+individual attributes to the scsi_host via the attribute list in the 
+scsi_host_template.
+
+I'd like to re-propose the patches to add driver-specific data to the FC 
+class objects. Do you believe there's a change in heart to accepting 
+this functionality before I start the work to create them ?
+
+For example, I know that Emulex would have liked to add driver-specific 
+state data to the rports.  And Krishna's proposal is another request.
+
+-- james
 
 
-While doing various error injection testing, such as cable
-pulls and target moves, some issues were observed in handling
-these events. This patch improves the way these events are handled
-by increasing the delay waiting for the fabric to settle and also
-changes the behavior of Link Up to break the CRQ to ensure everything
-gets cleaned up properly on the VIOS.
-
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
-
- drivers/scsi/ibmvscsi/ibmvfc.c |   10 ++++++----
- drivers/scsi/ibmvscsi/ibmvfc.h |    2 +-
- 2 files changed, 7 insertions(+), 5 deletions(-)
-
-diff -puN drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_improve_sync_events drivers/scsi/ibmvscsi/ibmvfc.c
---- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_improve_sync_events	2008-12-17 16:31:23.000000000 -0600
-+++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.c	2008-12-17 16:31:24.000000000 -0600
-@@ -2156,15 +2156,17 @@ static void ibmvfc_handle_async(struct i
- 	case IBMVFC_AE_LINK_UP:
- 	case IBMVFC_AE_RESUME:
- 		vhost->events_to_log |= IBMVFC_AE_LINKUP;
--		ibmvfc_init_host(vhost, 1);
-+		vhost->delay_init = 1;
-+		__ibmvfc_reset_host(vhost);
- 		break;
- 	case IBMVFC_AE_SCN_FABRIC:
-+	case IBMVFC_AE_SCN_DOMAIN:
- 		vhost->events_to_log |= IBMVFC_AE_RSCN;
--		ibmvfc_init_host(vhost, 1);
-+		vhost->delay_init = 1;
-+		__ibmvfc_reset_host(vhost);
- 		break;
- 	case IBMVFC_AE_SCN_NPORT:
- 	case IBMVFC_AE_SCN_GROUP:
--	case IBMVFC_AE_SCN_DOMAIN:
- 		vhost->events_to_log |= IBMVFC_AE_RSCN;
- 	case IBMVFC_AE_ELS_LOGO:
- 	case IBMVFC_AE_ELS_PRLO:
-@@ -3619,7 +3621,7 @@ static void ibmvfc_do_work(struct ibmvfc
- 		if (vhost->delay_init) {
- 			vhost->delay_init = 0;
- 			spin_unlock_irqrestore(vhost->host->host_lock, flags);
--			ssleep(5);
-+			ssleep(15);
- 			return;
- 		} else
- 			vhost->job_step(vhost);
-diff -puN drivers/scsi/ibmvscsi/ibmvfc.h~ibmvfc_improve_sync_events drivers/scsi/ibmvscsi/ibmvfc.h
---- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.h~ibmvfc_improve_sync_events	2008-12-17 16:31:24.000000000 -0600
-+++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.h	2008-12-17 16:31:24.000000000 -0600
-@@ -33,7 +33,7 @@
- #define IBMVFC_DRIVER_DATE		"(November 14, 2008)"
- 
- #define IBMVFC_DEFAULT_TIMEOUT	15
--#define IBMVFC_INIT_TIMEOUT		30
-+#define IBMVFC_INIT_TIMEOUT		120
- #define IBMVFC_MAX_REQUESTS_DEFAULT	100
- 
- #define IBMVFC_DEBUG			0
-_
+Krishna Gudipati wrote:
+> Hello Everyone,
+> 
+> I have a small question on how to create a sub-directory to store my driver specific data under fc_host statistics.
+> 
+> Currently i am using the fc_function_template's  .get_fc_host_stats to export all my fc_host statistics.
+> 
+> But now i need a way to create a directory under the /sys/class/fc_host/statistics
+> 
+> lets say /sys/class/fc_host/statistics/hba/ns_stats to store all the specific information regarding name_server or
+> this type of information for different stats we want to collect. Basically we are thinking of having a hierarchy
+> under the fc_host/statistics folder so that we can display our driver specific information in a much cleaner fashion.
+> 
+> I researched looking at the current "struct fc_function_template" under scsi_transport_fc.c but did not find a way where i can specify
+> that i need to create a folder under this statistics folder. I am not aware as of now if this feature of creating a hierarchy of directories for fc_host stats is in development.
+> 
+> But we think that having our driver specific information under a subdirectory would make things look nicer.
+> 
+> Can any of you linux guru's help me understand if this feature is currently in development?
+> or
+> is there any good way to tweak in and create a new subdirectory under the fc_host stats using the current fc_function_template?
+> 
+> If this feature is not currently present or in dev can we add some code to the scsi_transport_fc.c to support this feature?
+> 
+> Because we have a lot of driver specific information and we don't want to dump everything under the stats which can make things look a little messy. So we are planning to have a hierarchy so that we can sort out these properly.
+> 
+> Any help in this regard is really appreciated.
+> 
+> thanks in advance,
+> 
+> 
+> with regards,
+> 
+> KRISHNA CHAITANYA GUDIPATI
+> MS CS(COMPUTER NETWORKS)
+> UNIVERSITY OF SOUTHERN CALIFORNIA
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
