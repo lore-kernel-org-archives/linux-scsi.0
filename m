@@ -1,7 +1,7 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 14/16] st: remove unused frp_sg_current
-Date: Thu, 18 Dec 2008 14:49:49 +0900
-Message-ID: <1229579391-28753-15-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 11/16] st: remove struct scatterlist
+Date: Thu, 18 Dec 2008 14:49:46 +0900
+Message-ID: <1229579391-28753-12-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 References: <1229579391-28753-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1229579391-28753-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1229579391-28753-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
@@ -13,57 +13,67 @@ References: <1229579391-28753-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1229579391-28753-9-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1229579391-28753-10-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1229579391-28753-11-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1229579391-28753-12-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1229579391-28753-13-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1229579391-28753-14-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:46385 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:46381 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751906AbYLRGIw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Dec 2008 01:08:52 -0500
-In-Reply-To: <1229579391-28753-14-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	id S1751402AbYLRGIu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Dec 2008 01:08:50 -0500
+In-Reply-To: <1229579391-28753-11-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Kai.Makisara@kolumbus.fi
 Cc: James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.c, linux-scsi@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-frp_sg_current in struct st_buffer is always zero. We don't need it.
+This removes the usage of struct scatterlist completely.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- drivers/scsi/st.c |    2 --
+ drivers/scsi/st.c |    8 ++------
  drivers/scsi/st.h |    1 -
- 2 files changed, 0 insertions(+), 3 deletions(-)
+ 2 files changed, 2 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 50dbe14..fe4c202 100644
+index 1cfd217..f934016 100644
 --- a/drivers/scsi/st.c
 +++ b/drivers/scsi/st.c
-@@ -1524,7 +1524,6 @@ static int setup_buffering(struct scsi_tape *STp, const char __user *buf,
- 		else
- 			STbp->do_dio = 0;  /* fall back to buffering with any error */
- 		STbp->sg_segs = STbp->do_dio;
--		STbp->frp_sg_current = 0;
- 		DEB(
- 		     if (STbp->do_dio) {
- 			STp->nbr_dio++;
-@@ -3844,7 +3843,6 @@ static void normalize_buffer(struct st_buffer * STbuffer)
- 		STbuffer->buffer_size -= (PAGE_SIZE << order);
- 	}
- 	STbuffer->frp_segs = 0;
--	STbuffer->frp_sg_current = 0;
- 	STbuffer->sg_segs = 0;
- 	STbuffer->map_data.page_order = 0;
- 	STbuffer->map_data.offset = 0;
+@@ -3744,7 +3744,7 @@ static long st_compat_ioctl(struct file *file, unsigned int cmd, unsigned long a
+ static struct st_buffer *
+  new_tape_buffer(int from_initialization, int need_dma, int max_sg)
+ {
+-	int i, got = 0;
++	int got = 0;
+ 	gfp_t priority;
+ 	struct st_buffer *tb;
+ 
+@@ -3753,10 +3753,7 @@ static struct st_buffer *
+ 	else
+ 		priority = GFP_KERNEL;
+ 
+-	i = sizeof(struct st_buffer) +
+-		(max_sg - 1) * sizeof(struct scatterlist);
+-
+-	tb = kzalloc(i, priority);
++	tb = kzalloc(sizeof(struct st_buffer), priority);
+ 	if (!tb) {
+ 		printk(KERN_NOTICE "st: Can't allocate new tape buffer.\n");
+ 		return NULL;
+@@ -3766,7 +3763,6 @@ static struct st_buffer *
+ 
+ 	tb->dma = need_dma;
+ 	tb->buffer_size = got;
+-	sg_init_table(tb->sg, max_sg);
+ 
+ 	tb->reserved_pages = kzalloc(max_sg * sizeof(struct page *), priority);
+ 	if (!tb->reserved_pages) {
 diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
-index e682f80..544dc6b 100644
+index cc46f18..d297607 100644
 --- a/drivers/scsi/st.h
 +++ b/drivers/scsi/st.h
-@@ -52,7 +52,6 @@ struct st_buffer {
- 	unsigned short use_sg;	/* zero or max number of s/g segments for this adapter */
- 	unsigned short sg_segs;		/* number of segments in s/g list */
+@@ -54,7 +54,6 @@ struct st_buffer {
+ 	unsigned short orig_frp_segs;	/* number of segments allocated at first try */
  	unsigned short frp_segs;	/* number of buffer segments */
--	unsigned int frp_sg_current;	/* driver buffer length currently in s/g list */
+ 	unsigned int frp_sg_current;	/* driver buffer length currently in s/g list */
+-	struct scatterlist sg[1];	/* MUST BE last item */
  };
  
  /* The tape mode definition */
