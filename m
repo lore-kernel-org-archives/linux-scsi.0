@@ -1,79 +1,46 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 01/16] block: fix bio_add_page misuse with rq_map_data
-Date: Thu, 18 Dec 2008 14:49:36 +0900
-Message-ID: <1229579391-28753-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-References: <1229579391-28753-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH v2 00/16] st: remove scsi_execute_async usage (the second half)
+Date: Thu, 18 Dec 2008 14:49:35 +0900
+Message-ID: <1229579391-28753-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:46394 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:46405 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751612AbYLRGIx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Dec 2008 01:08:53 -0500
-In-Reply-To: <1229579391-28753-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	id S1751494AbYLRGI6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Dec 2008 01:08:58 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Kai.Makisara@kolumbus.fi
-Cc: James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.c, linux-scsi@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>
+Cc: James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.c, linux-scsi@vger.kernel.org, jens.axboe@oracle.com
 
-This fixes bio_add_page misuse in bio_copy_user_iov with rq_map_data,
-which only sg uses now.
+This patchset is the second version of the second half patchset to
+remove scsi_execute_async in st driver (IOW, this converts st driver
+to use the block layer functions).
 
-rq_map_data carries page frames for bio_add_pc_page. bio_copy_user_iov
-uses bio_add_pc_page with a larger size than PAGE_SIZE. It's clearly
-wrong.
+http://marc.info/?l=linux-scsi&m=122900494917385&w=2
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Jens Axboe <jens.axboe@oracle.com>
----
- fs/bio.c |   26 ++++++++++++++------------
- 1 files changed, 14 insertions(+), 12 deletions(-)
+I've not changed the st patches much since the first version. No
+change to the #4-14 st patches except for cleanups to silence
+checkpatch.sh. The new #15-16 patches for st came from Kai, who
+greatly helped me out with this patchset.
 
-diff --git a/fs/bio.c b/fs/bio.c
-index 77a55bc..5fd6e98 100644
---- a/fs/bio.c
-+++ b/fs/bio.c
-@@ -662,28 +662,30 @@ struct bio *bio_copy_user_iov(struct request_queue *q,
- 
- 	ret = 0;
- 	i = 0;
-+	if (map_data)
-+		nr_pages = 1 << map_data->page_order;
- 	while (len) {
--		unsigned int bytes;
--
--		if (map_data)
--			bytes = 1U << (PAGE_SHIFT + map_data->page_order);
--		else
--			bytes = PAGE_SIZE;
-+		unsigned int bytes = PAGE_SIZE;
- 
- 		if (bytes > len)
- 			bytes = len;
- 
- 		if (map_data) {
--			if (i == map_data->nr_entries) {
-+			if (i == map_data->nr_entries * nr_pages) {
- 				ret = -ENOMEM;
- 				break;
- 			}
--			page = map_data->pages[i++];
--		} else
-+
-+			page = map_data->pages[i / nr_pages];
-+			page += (i % nr_pages);
-+
-+			i++;
-+		} else {
- 			page = alloc_page(q->bounce_gfp | gfp_mask);
--		if (!page) {
--			ret = -ENOMEM;
--			break;
-+			if (!page) {
-+				ret = -ENOMEM;
-+				break;
-+			}
- 		}
- 
- 		if (bio_add_pc_page(q, bio, page, bytes, 0) < bytes)
--- 
-1.5.6.5
+The #1-3 patches are for the block layer.
+
+The first patch is a slightly modified version of the following fix (I
+modified it for the later changes):
+
+http://marc.info/?l=linux-scsi&m=122927795113939&w=2
+
+The second patch is a patch to fix the partial mappings with
+rq_map_data struct. Kai found this problem (which leads to data
+corruption).
+
+The first and second patches fix the bugs which affect sg.
+
+The third patch is the first patch in the previous patchset. It's a
+necessary change to the block layer to support st/osst. I slightly
+modified it due to the first and second patches.
+
+This is against scsi-misc.
+
+
 
