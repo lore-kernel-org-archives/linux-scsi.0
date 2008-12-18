@@ -1,99 +1,275 @@
-From: "Shi, Harris" <Harris.Shi@lsi.com>
-Subject: RE: question on block-layer timeout change
-Date: Thu, 18 Dec 2008 15:37:22 -0700
-Message-ID: <3568BBCB98C00041A9E622952FD5F24EA13BA20B@cosmail03.lsi.com>
-References: <3568BBCB98C00041A9E622952FD5F24EA11C9F3A@cosmail03.lsi.com>
- <20081112072919.GB12192@linux.vnet.ibm.com>
- <3568BBCB98C00041A9E622952FD5F24EA1226673@cosmail03.lsi.com>
- <20081114171823.GA16575@us.ibm.com>
- <3568BBCB98C00041A9E622952FD5F24EA135D754@cosmail03.lsi.com>
- <4940F367.506@suse.de>
- <3568BBCB98C00041A9E622952FD5F24EA13B99A3@cosmail03.lsi.com>
- <4948AB47.6090505@suse.de>
- <3568BBCB98C00041A9E622952FD5F24EA13B9EB0@cosmail03.lsi.com>
- <20081218092339.GB812@linux.vnet.ibm.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: [RFC] read_capacity rewrite
+Date: Thu, 18 Dec 2008 15:52:15 -0700
+Message-ID: <20081218225215.GM19967@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og110.obsmtp.com ([64.18.2.173]:36907 "EHLO
-	exprod7og110.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752552AbYLRWhl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Dec 2008 17:37:41 -0500
-In-Reply-To: <20081218092339.GB812@linux.vnet.ibm.com>
-Content-Language: en-US
+Received: from palinux.external.hp.com ([192.25.206.14]:49167 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752385AbYLRWwc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Dec 2008 17:52:32 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@linux.vnet.ibm.com>
-Cc: Hannes Reinecke <hare@suse.de>, "malahal@us.ibm.com" <malahal@us.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
+To: linux-scsi@vger.kernel.org
 
-Mike, 
 
-Yes. We do have MPP loaded in SLES11RC1. The mpp modules were cut off by the serial windows. It was actually there. 
+I found the existing sd_read_capacity() rather tortuous to follow
+(backwards gotos?  Just Say No!) so I've rewritten it.  It factors out
+the READ CAPACITY 10 and READ CAPACITY 16 paths into their own functions
+and then invokes them as needed from sd_read_capacity().
 
-The NULL session was causing the problem after controller was place offline. Actually it only took bit more than 15s after controller offline to hit the panic.
+I also added the new algorithm for choosing between RC16 and RC10 based
+on scsi_level and request 16 bytes using RC16 instead of 13.
 
-Thanks.
-Harris
------Original Message-----
-From: Mike Anderson [mailto:andmike@linux.vnet.ibm.com] 
-Sent: Thursday, December 18, 2008 3:24 AM
-To: Shi, Harris
-Cc: Hannes Reinecke; malahal@us.ibm.com; SCSI development list; Mike Christie
-Subject: Re: question on block-layer timeout change
+I've only compiled this code, not actually booted it, so this is just
+for comments.
 
-Shi, Harris <Harris.Shi@lsi.com> wrote:
-> Information from /var/log/messages:
-> ===================================
-> Dec 17 15:58:14 timon kernel: sd 6:0:0:2: [sdd] Sense Key : Recovered Error [current]
-> Dec 17 15:58:14 timon kernel: sd 6:0:0:2: [sdd] <<vendor>> ASC=0x95 ASCQ=0x1ASC=0x95 ASCQ=0x1
-> Dec 17 15:58:25 timon kernel:  connection2:0: ping timeout of 15 secs expired, last rx 19237, last ping 20487, now 24237
-> Dec 17 15:58:25 timon kernel:  connection2:0: detected conn error (1011)
-> Dec 17 15:58:26 timon iscsid: Kernel reported iSCSI connection 2:0 error (1011) state (3)
-> 
-> 
-> 
-> Information from Serial output:
-> ===============================
-> Oops: 0002 [#1] SMP
-> last sysfs file: /sys/devices/system/cpu/cpu3/cache/index1/shared_cpu_map
-> Modules linked in: radeon drm agpgart crc32c libcrc32c ib_iser rdma_cm ib_cm nfs iw_cm lockd ib_sa ib_mad nfs_acl ib_core i6
-> IP: [<c011a274>] __ticket_spin_lock+0x8/0x19
-> *pdpt = 00000000319fe001 *pde = 0000000000000000
-> BUG: unable to handle kernel NULL pointer dereference at 00000086
-> IP: [<c011a274>] __ticket_spin_lock+0x8/0x19
-> *pdpt = 0000000000546001 *pde = 0000000000000000
->  ipv6 af_packet microcode fuse loop dm_mod mptctl e1000 iTCO_wdt sr_mod video iTCO_vendor_support e752x_edac output shpchp ]
-> 
-> Pid: 0, comm: swapper Not tainted (2.6.28-rc8-test-1-pae #1) PowerEdge 2850
-> EIP: 0060:[<c011a274>] EFLAGS: 00010086 CPU: 3
-> EIP is at __ticket_spin_lock+0x8/0x19
-> EAX: 00000086 EBX: f10f6380 ECX: f20b5400 EDX: 00000100
-> ESI: f18223b0 EDI: 00000000 EBP: f38a5e78 ESP: f38a5e78
->  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
-> Process swapper (pid: 0, ti=f38a4000 task=f38a2fd0 task.ti=f38a4000)
-> Stack:
->  f38a5e80 c0328e0f f38a5e98 f9298389 00000002 f10f6380 f18223b0 00000000
->  f38a5ea4 f7e13396 f11b9300 f38a5eb0 c0212539 f11b9300 f38a5ed4 c02125f2
->  f18225b8 00000282 f389c000 f18224f4 00000100 f389c000 c0212573 f38a5f08
-> Call Trace:
->  [<c0328e0f>] ? _spin_lock+0x15/0x18
->  [<f9298389>] ? iscsi_eh_cmd_timed_out+0x24/0xb0 [libiscsi]
->  [<f7e13396>] ? scsi_times_out+0x35/0x61 [scsi_mod]
->  [<c0212539>] ? blk_rq_timed_out+0xc/0x46
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 5081b39..fcb81e3 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1275,41 +1275,91 @@ disable:
+ }
+ 
+ /*
+- * read disk capacity
++ * READ CAPACITY 16 currently only defines the first 16 bytes of result, but
++ * could return more information in the future.
+  */
+-static void
+-sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer)
++#define RC16_LEN 16
++#if RC16_LEN > SD_BUF_SIZE
++#error RC16_LEN must be less than SD_BUF_SIZE
++#endif
++
++static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
++						unsigned char *buffer)
+ {
+ 	unsigned char cmd[16];
+-	int the_result, retries;
+-	int sector_size = 0;
+-	/* Force READ CAPACITY(16) when PROTECT=1 */
+-	int longrc = scsi_device_protection(sdkp->device) ? 1 : 0;
+ 	struct scsi_sense_hdr sshdr;
++	int the_result;
+ 	int sense_valid = 0;
+-	struct scsi_device *sdp = sdkp->device;
++	int retries = 3;
++	unsigned long long lba;
++	unsigned sector_size;
+ 
+-repeat:
+-	retries = 3;
+ 	do {
+-		if (longrc) {
+-			memset((void *) cmd, 0, 16);
+-			cmd[0] = SERVICE_ACTION_IN;
+-			cmd[1] = SAI_READ_CAPACITY_16;
+-			cmd[13] = 13;
+-			memset((void *) buffer, 0, 13);
+-		} else {
+-			cmd[0] = READ_CAPACITY;
+-			memset((void *) &cmd[1], 0, 9);
+-			memset((void *) buffer, 0, 8);
+-		}
+-		
++		memset(cmd, 0, 16);
++		cmd[0] = SERVICE_ACTION_IN;
++		cmd[1] = SAI_READ_CAPACITY_16;
++		cmd[13] = RC16_LEN;
++		memset(buffer, 0, RC16_LEN);
++
+ 		the_result = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE,
+-					      buffer, longrc ? 13 : 8, &sshdr,
++					      buffer, RC16_LEN, &sshdr,
+ 					      SD_TIMEOUT, SD_MAX_RETRIES);
+ 
+ 		if (media_not_present(sdkp, &sshdr))
+-			return;
++			return -ENODEV;
++
++		if (the_result)
++			sense_valid = scsi_sense_valid(&sshdr);
++		retries--;
++
++	} while (the_result && retries);
++
++	if (the_result) {
++		/* READ CAPACITY(16) has been failed */
++		sd_printk(KERN_NOTICE, sdkp, "READ CAPACITY(16) failed\n");
++		sd_print_result(sdkp, the_result);
++	}
++
++	sector_size =   (buffer[8] << 24) | (buffer[9] << 16) |
++			(buffer[10] << 8) | buffer[11];
++
++	lba =  (((u64)buffer[0] << 56) | ((u64)buffer[1] << 48) |
++		((u64)buffer[2] << 40) | ((u64)buffer[3] << 32) |
++		((u64)buffer[4] << 24) | ((u64)buffer[5] << 16) |
++		((u64)buffer[6] << 8 ) | (u64)buffer[7]);
++
++	sd_read_protection_type(sdkp, buffer);
++
++	if ((sizeof(sdkp->capacity) == 4) && (lba >= 0xffffffffULL)) {
++		sdkp->capacity = 0;
++		return -EOVERFLOW;
++	}
++
++	sdkp->capacity = lba + 1;
++	return sector_size;
++}
++
++static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
++						unsigned char *buffer)
++{
++	unsigned char cmd[16];
++	struct scsi_sense_hdr sshdr;
++	int the_result;
++	int sense_valid = 0;
++	int retries = 3;
++	unsigned sector_size;
++
++	do {
++		cmd[0] = READ_CAPACITY;
++		memset(&cmd[1], 0, 9);
++		memset(buffer, 0, 8);
++
++		the_result = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE,
++					      buffer, 8, &sshdr,
++					      SD_TIMEOUT, SD_MAX_RETRIES);
++
++		if (media_not_present(sdkp, &sshdr))
++			return -ENODEV;
+ 
+ 		if (the_result)
+ 			sense_valid = scsi_sense_valid(&sshdr);
+@@ -1317,7 +1367,7 @@ repeat:
+ 
+ 	} while (the_result && retries);
+ 
+-	if (the_result && !longrc) {
++	if (the_result) {
+ 		sd_printk(KERN_NOTICE, sdkp, "READ CAPACITY failed\n");
+ 		sd_print_result(sdkp, the_result);
+ 		if (driver_byte(the_result) & DRIVER_SENSE)
+@@ -1336,53 +1386,67 @@ repeat:
+ 		/* sdkp->media_present = 0; -- not always correct */
+ 		sdkp->capacity = 0; /* unknown mapped to zero - as usual */
+ 
+-		return;
+-	} else if (the_result && longrc) {
+-		/* READ CAPACITY(16) has been failed */
+-		sd_printk(KERN_NOTICE, sdkp, "READ CAPACITY(16) failed\n");
+-		sd_print_result(sdkp, the_result);
+-		sd_printk(KERN_NOTICE, sdkp, "Use 0xffffffff as device size\n");
++		return -EINVAL;
++	}
+ 
+-		sdkp->capacity = 1 + (sector_t) 0xffffffff;		
+-		goto got_data;
+-	}	
+-	
+-	if (!longrc) {
+-		sector_size = (buffer[4] << 24) |
+-			(buffer[5] << 16) | (buffer[6] << 8) | buffer[7];
+-		if (buffer[0] == 0xff && buffer[1] == 0xff &&
+-		    buffer[2] == 0xff && buffer[3] == 0xff) {
+-			if(sizeof(sdkp->capacity) > 4) {
+-				sd_printk(KERN_NOTICE, sdkp, "Very big device. "
+-					  "Trying to use READ CAPACITY(16).\n");
+-				longrc = 1;
+-				goto repeat;
+-			}
+-			sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use "
+-				  "a kernel compiled with support for large "
+-				  "block devices.\n");
+-			sdkp->capacity = 0;
++	sector_size = (buffer[4] << 24) |
++		(buffer[5] << 16) | (buffer[6] << 8) | buffer[7];
++	if (buffer[0] == 0xff && buffer[1] == 0xff &&
++	    buffer[2] == 0xff && buffer[3] == 0xff) {
++		if (sizeof(sdkp->capacity) > 4)
++			goto out;
++		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
++			  "kernel compiled with support for large block "
++			  "devices.\n");
++		sdkp->capacity = 0;
++		return -EOVERFLOW;
++	}
++ out:
++	sdkp->capacity = 1 + (((sector_t)buffer[0] << 24) |
++		(buffer[1] << 16) | (buffer[2] << 8) | buffer[3]);
++	return sector_size;
++}
++
++/*
++ * read disk capacity
++ */
++static void
++sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer)
++{
++	int sector_size;
++	struct scsi_device *sdp = sdkp->device;
++
++	if (sdp->scsi_level > SCSI_2) {
++		sector_size = read_capacity_16(sdkp, sdp, buffer);
++		if (sector_size == -EOVERFLOW)
+ 			goto got_data;
+-		}
+-		sdkp->capacity = 1 + (((sector_t)buffer[0] << 24) |
+-			(buffer[1] << 16) |
+-			(buffer[2] << 8) |
+-			buffer[3]);			
++		if (sector_size == -ENODEV)
++			return;
++		if (sector_size < 0)
++			sector_size = read_capacity_10(sdkp, sdp, buffer);
++		if (sector_size < 0)
++			return;
+ 	} else {
+-		sdkp->capacity = 1 + (((u64)buffer[0] << 56) |
+-			((u64)buffer[1] << 48) |
+-			((u64)buffer[2] << 40) |
+-			((u64)buffer[3] << 32) |
+-			((sector_t)buffer[4] << 24) |
+-			((sector_t)buffer[5] << 16) |
+-			((sector_t)buffer[6] << 8)  |
+-			(sector_t)buffer[7]);
+-			
+-		sector_size = (buffer[8] << 24) |
+-			(buffer[9] << 16) | (buffer[10] << 8) | buffer[11];
+-
+-		sd_read_protection_type(sdkp, buffer);
+-	}	
++		sector_size = read_capacity_10(sdkp, sdp, buffer);
++		if (sector_size == -EOVERFLOW)
++			goto got_data;
++		if (sector_size < 0)
++			return;
++		if ((sizeof(sdkp->capacity) > 4) &&
++		    (sdkp->capacity > 0xffffffffULL)) {
++			int old_sector_size = sector_size;
++			sd_printk(KERN_NOTICE, sdkp, "Very big device. "
++				  "Trying to use READ CAPACITY(16).\n");
++			sector_size = read_capacity_16(sdkp, sdp, buffer);
++			if (sector_size < 0) {
++				sd_printk(KERN_NOTICE, sdkp,
++					"Using 0xffffffff as device size\n");
++				sdkp->capacity = 1 + (sector_t) 0xffffffff;
++				sector_size = old_sector_size;
++				goto got_data;
++			}
++		}
++	}
+ 
+ 	/* Some devices return the total number of sectors, not the
+ 	 * highest sector number.  Make the necessary adjustment. */
 
-I could not match my listing exactly with this output, but it appears that
-the session is NULL when we call into iscsi_eh_cmd_timed_out. An addr2line
-would help verify the iscsi_eh_cmd_timed_out line.
-
-I added Mike C to the email cc for possible comments on the error messages
-displayed above and if that would lead to cleanup of structures referenced
-in iscsi_eh_cmd_timed_out.
-
-Question on the system setup. Are you using mpp in this kernel as I did not
-see it in the module list?
-
--andmike
---
-Michael Anderson
-andmike@linux.vnet.ibm.com
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
