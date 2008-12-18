@@ -1,38 +1,65 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Disabling scatter gather
-Date: Thu, 18 Dec 2008 07:35:09 -0700
-Message-ID: <20081218143508.GJ19967@parisc-linux.org>
-References: <5fdb3af3-6283-4ca4-856f-9028ed52f789@d36g2000prf.googlegroups.com> <1aa5e34d0812180627r56625723k840f5b8080335644@mail.gmail.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: READ CAPACITY 16
+Date: Thu, 18 Dec 2008 16:38:28 +0200
+Message-ID: <494A6064.70601@panasas.com>
+References: <20081217164210.GC19967@parisc-linux.org> <da824cf30812170950p393be2fq729e98e93edef5dc@mail.gmail.com> <20081217180640.GE19967@parisc-linux.org> <494A1272.8040008@panasas.com> <20081218140851.GI19967@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:33175 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751790AbYLROfK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Dec 2008 09:35:10 -0500
-Content-Disposition: inline
-In-Reply-To: <1aa5e34d0812180627r56625723k840f5b8080335644@mail.gmail.com>
+Received: from gw-ca.panasas.com ([66.104.249.162]:9601 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752422AbYLROif (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Dec 2008 09:38:35 -0500
+In-Reply-To: <20081218140851.GI19967@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: tarrot termite <tarrottermite@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Grant Grundler <grundler@google.com>, linux-scsi@vger.kernel.org
 
-On Thu, Dec 18, 2008 at 07:57:25PM +0530, tarrot termite wrote:
-> Hi,
-> I am trying to disable scatter gather for my fake SCSI HBA driver but
-> somehow I still get use_sg set in my scsi commands.
+Matthew Wilcox wrote:
+> On Thu, Dec 18, 2008 at 11:05:54AM +0200, Boaz Harrosh wrote:
+>> Matthew Wilcox wrote:
+>>>>> Algorithm B:
+>>>>>
+>>>>> Issue RC10
+>>>>> Issue RC16
+>>>>>  -> If it succeeds, use its results in preference to those from RC10
+>>>>>  -> If it fails, carry on with the results from RC10
+>>>>>  -> If it times out, reset the device, carry on with the results from RC10
+>>>> I fail to see an effective difference between Algo A and B.
+>>> Whether to issue an RC10 before issuing an RC16 or not.  It matches what
+>>> we currently do better (we currently issue an RC10 and then issue an
+>>> RC16 if RC10 reports we have 0xffffffff LBAs).
+>>>
+>> Sorry to barge in but I think this is the most practical solution and the one
+>> to go to T10 with.
+>>
+>> If a (new) device supports RC16 it should return LBAs==0xffffffff for RC10 even
+>> if it's capacity is smaller, to indicate an RC16 request.
 > 
-> I have set sg_tablesize to SG_NONE in host template. I remember it
-> used to work well in 2.4. Has this part change under 2.6.18?
+> That breaks compatibility with older software that doesn't know that
+> RC16 exists.
+> 
+>> If LBAs!=0xffffffff and !SCSI_3 then do not risk RC16 unless a white list
+>> or load parameter.
+>>
+>> Since you are going to T10 with this the white list should be, as you said
+>> in other mail, zero length.
+> 
+> I don't need to go to T10 for anything except Algorithm D.
+> 
 
-Yes, you now have to use scatter-gather.
+OK Then I say D, go to T10, while white list the (0) devices that currently
+report !SCSI_3 but do support UNMAP. These are only USB right?
 
-As far as fake SCSI HBA drivers go, there's one in-tree called
-scsi_debug, or there's scsi_ram that I wrote and you can find here:
-http://marc.info/?l=linux-scsi&m=120331663227540&w=2
+Your tested devices report SCSI_3? Do all devices that are scsi_level > SCSI_2
+suppose to support RC16?
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+My point is make the standard, which is still a draft, crystal clear
+in a backward compatible way. All new, supporting, devices can be easily
+identified, and the very few devices that do support the new fixture but
+were released prior to the finalization of the draft be white-listed.
+And in any event don't let the standard be broken like that.
+
+Boaz
