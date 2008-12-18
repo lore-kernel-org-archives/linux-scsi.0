@@ -1,7 +1,7 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 10/16] st: kill struct st_buff_fragment
-Date: Thu, 18 Dec 2008 14:49:45 +0900
-Message-ID: <1229579391-28753-11-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 09/16] st: remove buf_to_sg
+Date: Thu, 18 Dec 2008 14:49:44 +0900
+Message-ID: <1229579391-28753-10-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 References: <1229579391-28753-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1229579391-28753-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1229579391-28753-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
@@ -11,236 +11,78 @@ References: <1229579391-28753-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1229579391-28753-7-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1229579391-28753-8-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1229579391-28753-9-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1229579391-28753-10-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:46379 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:46372 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751810AbYLRGIu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Dec 2008 01:08:50 -0500
-In-Reply-To: <1229579391-28753-10-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	id S1751633AbYLRGIt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Dec 2008 01:08:49 -0500
+In-Reply-To: <1229579391-28753-9-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Kai.Makisara@kolumbus.fi
 Cc: James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.c, linux-scsi@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-This removes struct st_buff_fragment and use reserved_pages array to
-store fragment buffer.
+This removes unused buf_to_sg() that the non-dio path used.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- drivers/scsi/st.c |   78 +++++++++++++++++++++++++++++-----------------------
- drivers/scsi/st.h |    7 -----
- 2 files changed, 43 insertions(+), 42 deletions(-)
+ drivers/scsi/st.c |   29 -----------------------------
+ 1 files changed, 0 insertions(+), 29 deletions(-)
 
 diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index ce1fd3a..1cfd217 100644
+index fec5568..ce1fd3a 100644
 --- a/drivers/scsi/st.c
 +++ b/drivers/scsi/st.c
-@@ -3753,8 +3753,9 @@ static struct st_buffer *
- 	else
- 		priority = GFP_KERNEL;
+@@ -189,7 +189,6 @@ static void normalize_buffer(struct st_buffer *);
+ static int append_to_buffer(const char __user *, struct st_buffer *, int);
+ static int from_buffer(struct st_buffer *, char __user *, int);
+ static void move_buffer_data(struct st_buffer *, int);
+-static void buf_to_sg(struct st_buffer *, unsigned int);
  
--	i = sizeof(struct st_buffer) + (max_sg - 1) * sizeof(struct scatterlist) +
--		max_sg * sizeof(struct st_buf_fragment);
-+	i = sizeof(struct st_buffer) +
-+		(max_sg - 1) * sizeof(struct scatterlist);
-+
- 	tb = kzalloc(i, priority);
- 	if (!tb) {
- 		printk(KERN_NOTICE "st: Can't allocate new tape buffer.\n");
-@@ -3762,7 +3763,6 @@ static struct st_buffer *
- 	}
- 	tb->frp_segs = tb->orig_frp_segs = 0;
- 	tb->use_sg = max_sg;
--	tb->frp = (struct st_buf_fragment *)(&(tb->sg[0]) + max_sg);
- 
- 	tb->dma = need_dma;
- 	tb->buffer_size = got;
-@@ -3799,9 +3799,12 @@ static int enlarge_buffer(struct st_buffer * STbuffer, int new_size, int need_dm
- 	if (need_dma)
- 		priority |= GFP_DMA;
- 
-+	if (STbuffer->cleared)
-+		priority |= __GFP_ZERO;
-+
- 	if (STbuffer->frp_segs) {
--		b_size = STbuffer->frp[0].length;
--		order = get_order(b_size);
-+		order = STbuffer->map_data.page_order;
-+		b_size = PAGE_SIZE << order;
+ static int sgl_map_user_pages(struct st_buffer *, const unsigned int,
+ 			      unsigned long, size_t, int);
+@@ -554,8 +553,6 @@ st_do_scsi(struct st_request * SRpnt, struct scsi_tape * STp, unsigned char *cmd
+ 		mdata->nr_entries = STp->buffer->sg_segs;
+ 		mdata->pages = STp->buffer->mapped_pages;
  	} else {
- 		for (b_size = PAGE_SIZE, order = 0;
- 		     order <= 6 && b_size < new_size; order++, b_size *= 2)
-@@ -3810,22 +3813,22 @@ static int enlarge_buffer(struct st_buffer * STbuffer, int new_size, int need_dm
- 
- 	for (segs = STbuffer->frp_segs, got = STbuffer->buffer_size;
- 	     segs < max_segs && got < new_size;) {
--		STbuffer->frp[segs].page = alloc_pages(priority, order);
--		if (STbuffer->frp[segs].page == NULL) {
-+		struct page *page;
-+
-+		page = alloc_pages(priority, order);
-+		if (!page) {
- 			DEB(STbuffer->buffer_size = got);
- 			normalize_buffer(STbuffer);
- 			return 0;
- 		}
--		STbuffer->frp[segs].length = b_size;
-+
- 		STbuffer->frp_segs += 1;
- 		got += b_size;
- 		STbuffer->buffer_size = got;
--		if (STbuffer->cleared)
--			memset(page_address(STbuffer->frp[segs].page), 0, b_size);
--		STbuffer->reserved_pages[segs] = STbuffer->frp[segs].page;
-+		STbuffer->reserved_pages[segs] = page;
- 		segs++;
+-		buf_to_sg(STp->buffer, bytes);
+-
+ 		mdata->nr_entries =
+ 			DIV_ROUND_UP(bytes, PAGE_SIZE << mdata->page_order);
+ 		STp->buffer->map_data.pages = STp->buffer->reserved_pages;
+@@ -3964,32 +3961,6 @@ static void move_buffer_data(struct st_buffer * st_bp, int offset)
  	}
--	STbuffer->b_data = page_address(STbuffer->frp[0].page);
-+	STbuffer->b_data = page_address(STbuffer->reserved_pages[0]);
- 	STbuffer->map_data.page_order = order;
- 
- 	return 1;
-@@ -3838,7 +3841,8 @@ static void clear_buffer(struct st_buffer * st_bp)
- 	int i;
- 
- 	for (i=0; i < st_bp->frp_segs; i++)
--		memset(page_address(st_bp->frp[i].page), 0, st_bp->frp[i].length);
-+		memset(page_address(st_bp->reserved_pages[i]), 0,
-+		       PAGE_SIZE << st_bp->map_data.page_order);
- 	st_bp->cleared = 1;
  }
  
-@@ -3846,12 +3850,11 @@ static void clear_buffer(struct st_buffer * st_bp)
- /* Release the extra buffer */
- static void normalize_buffer(struct st_buffer * STbuffer)
- {
--	int i, order;
-+	int i, order = STbuffer->map_data.page_order;
- 
- 	for (i = STbuffer->orig_frp_segs; i < STbuffer->frp_segs; i++) {
--		order = get_order(STbuffer->frp[i].length);
--		__free_pages(STbuffer->frp[i].page, order);
--		STbuffer->buffer_size -= STbuffer->frp[i].length;
-+		__free_pages(STbuffer->reserved_pages[i], order);
-+		STbuffer->buffer_size -= (PAGE_SIZE << order);
- 	}
- 	STbuffer->frp_segs = STbuffer->orig_frp_segs;
- 	STbuffer->frp_sg_current = 0;
-@@ -3866,18 +3869,19 @@ static void normalize_buffer(struct st_buffer * STbuffer)
- static int append_to_buffer(const char __user *ubp, struct st_buffer * st_bp, int do_count)
- {
- 	int i, cnt, res, offset;
-+	int length = PAGE_SIZE << st_bp->map_data.page_order;
- 
- 	for (i = 0, offset = st_bp->buffer_bytes;
--	     i < st_bp->frp_segs && offset >= st_bp->frp[i].length; i++)
--		offset -= st_bp->frp[i].length;
-+	     i < st_bp->frp_segs && offset >= length; i++)
-+		offset -= length;
- 	if (i == st_bp->frp_segs) {	/* Should never happen */
- 		printk(KERN_WARNING "st: append_to_buffer offset overflow.\n");
- 		return (-EIO);
- 	}
- 	for (; i < st_bp->frp_segs && do_count > 0; i++) {
--		cnt = st_bp->frp[i].length - offset < do_count ?
--		    st_bp->frp[i].length - offset : do_count;
--		res = copy_from_user(page_address(st_bp->frp[i].page) + offset, ubp, cnt);
-+		struct page *page = st_bp->reserved_pages[i];
-+		cnt = length - offset < do_count ? length - offset : do_count;
-+		res = copy_from_user(page_address(page) + offset, ubp, cnt);
- 		if (res)
- 			return (-EFAULT);
- 		do_count -= cnt;
-@@ -3897,18 +3901,19 @@ static int append_to_buffer(const char __user *ubp, struct st_buffer * st_bp, in
- static int from_buffer(struct st_buffer * st_bp, char __user *ubp, int do_count)
- {
- 	int i, cnt, res, offset;
-+	int length = PAGE_SIZE << st_bp->map_data.page_order;
- 
- 	for (i = 0, offset = st_bp->read_pointer;
--	     i < st_bp->frp_segs && offset >= st_bp->frp[i].length; i++)
--		offset -= st_bp->frp[i].length;
-+	     i < st_bp->frp_segs && offset >= length; i++)
-+		offset -= length;
- 	if (i == st_bp->frp_segs) {	/* Should never happen */
- 		printk(KERN_WARNING "st: from_buffer offset overflow.\n");
- 		return (-EIO);
- 	}
- 	for (; i < st_bp->frp_segs && do_count > 0; i++) {
--		cnt = st_bp->frp[i].length - offset < do_count ?
--		    st_bp->frp[i].length - offset : do_count;
--		res = copy_to_user(ubp, page_address(st_bp->frp[i].page) + offset, cnt);
-+		struct page *page = st_bp->reserved_pages[i];
-+		cnt = length - offset < do_count ? length - offset : do_count;
-+		res = copy_to_user(ubp, page_address(page) + offset, cnt);
- 		if (res)
- 			return (-EFAULT);
- 		do_count -= cnt;
-@@ -3929,6 +3934,7 @@ static void move_buffer_data(struct st_buffer * st_bp, int offset)
- {
- 	int src_seg, dst_seg, src_offset = 0, dst_offset;
- 	int count, total;
-+	int length = PAGE_SIZE << st_bp->map_data.page_order;
- 
- 	if (offset == 0)
- 		return;
-@@ -3936,24 +3942,26 @@ static void move_buffer_data(struct st_buffer * st_bp, int offset)
- 	total=st_bp->buffer_bytes - offset;
- 	for (src_seg=0; src_seg < st_bp->frp_segs; src_seg++) {
- 		src_offset = offset;
--		if (src_offset < st_bp->frp[src_seg].length)
-+		if (src_offset < length)
- 			break;
--		offset -= st_bp->frp[src_seg].length;
-+		offset -= length;
- 	}
- 
- 	st_bp->buffer_bytes = st_bp->read_pointer = total;
- 	for (dst_seg=dst_offset=0; total > 0; ) {
--		count = min(st_bp->frp[dst_seg].length - dst_offset,
--			    st_bp->frp[src_seg].length - src_offset);
--		memmove(page_address(st_bp->frp[dst_seg].page) + dst_offset,
--			page_address(st_bp->frp[src_seg].page) + src_offset, count);
-+		struct page *dpage = st_bp->reserved_pages[dst_seg];
-+		struct page *spage = st_bp->reserved_pages[src_seg];
-+
-+		count = min(length - dst_offset, length - src_offset);
-+		memmove(page_address(dpage) + dst_offset,
-+			page_address(spage) + src_offset, count);
- 		src_offset += count;
--		if (src_offset >= st_bp->frp[src_seg].length) {
-+		if (src_offset >= length) {
- 			src_seg++;
- 			src_offset = 0;
- 		}
- 		dst_offset += count;
--		if (dst_offset >= st_bp->frp[dst_seg].length) {
-+		if (dst_offset >= length) {
- 			dst_seg++;
- 			dst_offset = 0;
- 		}
-diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
-index d80926f..cc46f18 100644
---- a/drivers/scsi/st.h
-+++ b/drivers/scsi/st.h
-@@ -54,16 +54,9 @@ struct st_buffer {
- 	unsigned short orig_frp_segs;	/* number of segments allocated at first try */
- 	unsigned short frp_segs;	/* number of buffer segments */
- 	unsigned int frp_sg_current;	/* driver buffer length currently in s/g list */
--	struct st_buf_fragment *frp;	/* the allocated buffer fragment list */
- 	struct scatterlist sg[1];	/* MUST BE last item */
- };
- 
--/* The tape buffer fragment descriptor */
--struct st_buf_fragment {
--	struct page *page;
--	unsigned int length;
--};
 -
- /* The tape mode definition */
- struct st_modedef {
- 	unsigned char defined;
+-/* Fill the s/g list up to the length required for this transfer */
+-static void buf_to_sg(struct st_buffer *STbp, unsigned int length)
+-{
+-	int i;
+-	unsigned int count;
+-	struct scatterlist *sg;
+-	struct st_buf_fragment *frp;
+-
+-	if (length == STbp->frp_sg_current)
+-		return;   /* work already done */
+-
+-	sg = &(STbp->sg[0]);
+-	frp = STbp->frp;
+-	for (i=count=0; count < length; i++) {
+-		if (length - count > frp[i].length)
+-			sg_set_page(&sg[i], frp[i].page, frp[i].length, 0);
+-		else
+-			sg_set_page(&sg[i], frp[i].page, length - count, 0);
+-		count += sg[i].length;
+-	}
+-	STbp->sg_segs = i;
+-	STbp->frp_sg_current = length;
+-}
+-
+-
+ /* Validate the options from command line or module parameters */
+ static void validate_options(void)
+ {
 -- 
 1.5.6.5
 
