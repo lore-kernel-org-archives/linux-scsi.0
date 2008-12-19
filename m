@@ -1,71 +1,59 @@
-From: Evgeniy Polyakov <zbr@ioremap.net>
-Subject: Re: [PATCH][RFC 23/23]: Support for zero-copy TCP transmit of user space data
-Date: Sat, 20 Dec 2008 01:33:15 +0300
-Message-ID: <20081219223314.GA2736@ioremap.net>
-References: <494009D7.4020602@vlnb.net> <494012C4.7090304@vlnb.net> <494C0255.8010208@goop.org> <20081219220452.GB704@ioremap.net> <494C1E5E.7070809@goop.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] [Target_Core_Mod 0/6] More update for generic
+	functionality in v3.0
+Date: Fri, 19 Dec 2008 15:24:33 -0800
+Message-ID: <1229729073.4560.82.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kandzendo.ru ([195.178.208.66]:49136 "EHLO tservice.net.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753839AbYLSWdR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Dec 2008 17:33:17 -0500
-Content-Disposition: inline
-In-Reply-To: <494C1E5E.7070809@goop.org>
+Received: from smtp115.sbc.mail.sp1.yahoo.com ([69.147.64.88]:37351 "HELO
+	smtp115.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754498AbYLSXZE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Dec 2008 18:25:04 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Fitzhardinge <jeremy@goop.org>
-Cc: Vladislav Bolkhovitin <vst@vlnb.net>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Boaz Harrosh <bharrosh@panasas.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, netdev@vger.kernel.org, Rusty Russell <rusty@rustcorp.com.au>, Herbert Xu <herbert@gondor.apana.org.au>, David Miller <davem@davemloft.net>
+To: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, Dec 19, 2008 at 02:21:18PM -0800, Jeremy Fitzhardinge (jeremy@goop.org) wrote:
-> >There maybe a problem though, if iscsi will run over xen network, but in
-> >this case xen may copy the data, or iscsi may do that after determining
-> >that underlying network device does not allow shared info destructor
-> >(vis device/route flag for example).
-> >  
-> 
-> Xen only needs the callback in the case of traffic originating in 
-> another Xen domain.  If iscsi is involved, it will be running in the 
-> other domain, and so all its callbacks and so on will happen there.  
-> There's no conflict.
+Greetings all,
 
-That's good news.
+This patch set for Target_Core_Mod continues the process of making iSCSI
+and LIO-Target specific code into generic code that is intended to be
+used used across multiple $FABRIC_MODs.  This patch also includes using
+kmem_cache() for se_cmd_t and se_session_t data structures, and updates
+to transport_[register,deregister]_session().
 
-> >>Wouldn't you only need to do the lookup on the last put?
-> >>
-> >>An external lookup table might well for for us, if the net_put_page() 
-> >>change is acceptable to the network folk.
-> >>    
-> >
-> >That sounds like the best solution for this problem.
-> >  
-> 
-> An external lookup would just need to change put_page -> net_put_page, I 
-> think.
+Also included is a change to the Target_Core_Mod/PSCSI subsystem plugin
+for v2.6.28 that involves setting struct bio->bi_bdev w/o
+bio_add_pc_page() now that scsi_execute_async() have been removed for
+v2.6.28-FINAL.
 
-It is not needed I think, having skb shared info destructor has access
-to the all pages in that skb.
+They are made against against lio-core-2.6.git/master and tested on
+v2.6.28-rc7.  The lio-core-2.6.git tree can be found at:
 
-> >David, will you accept shared info destructor?
-> >  
-> 
-> I'm not very familiar with the network stack, but am I right in assuming 
-> that the shared_info destructor would be called when the network stack 
-> has finished with all the pages it refers to?  And those pages could be 
-> the combination of pages separately submitted in different skbs?
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=summary
 
-Shared info is freed when there are no skbs referring to the shared info
-in question. Skb holds all pages in shared info in the fraglist array,
-so when it is about to be freed, it means that network stack does not
-use it (particulary it will putpage every page in fraglist). Usually
-there are two skbs in the network stack per packet in TCP (allocated at
-once though via fastclone mechanims): one is provided to the device
-(and will be freed there) and another one is placed into retransmit
-queue, where it will be located and freed when ack has been received.
+--nab
 
-There may be another layers which may clone skb, but its shared info
-structure (shared between the clones) will only be freed when all users
-freed appropriate cloned skbs.
+ drivers/lio-core/target_core_base.h       |   32 +++--
+ drivers/lio-core/target_core_device.c     |   44 +++++-
+ drivers/lio-core/target_core_device.h     |    1 +
+ drivers/lio-core/target_core_fabric_ops.h |    6 +-
+ drivers/lio-core/target_core_pscsi.c      |   36 ++++-
+ drivers/lio-core/target_core_pscsi.h      |    1 +
+ drivers/lio-core/target_core_tpg.c        |   20 ++-
+ drivers/lio-core/target_core_tpg.h        |    4 +-
+ drivers/lio-core/target_core_transport.c  |  247 +++++++++++++++--------------
+ drivers/lio-core/target_core_transport.h  |    6 +-
+ 10 files changed, 249 insertions(+), 148 deletions(-)
 
--- 
-	Evgeniy Polyakov
+[PATCH] [Target_Core_Mod 1/6] Updates for core data structures
+[PATCH] [Target_Core_Mod 2/6]: Update struct target_core_fabric_ops
+[PATCH] [Target_Core_Mod 3/6]: Updates for transport_[register,deregister]_session() logic
+[PATCH] [Target_Core_Mod 4/6]: Updates for generic portal group functionality
+[PATCH] [Target_Core_Mod 5/6]: Updates for generic device core
+[PATCH] [Target_Core_Mod/PSCSI 6/6]: Grab temporary pointer to struct block_device for BIO for v2.6.28
+
+
