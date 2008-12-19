@@ -1,275 +1,101 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: [RFC] read_capacity rewrite
-Date: Thu, 18 Dec 2008 15:52:15 -0700
-Message-ID: <20081218225215.GM19967@parisc-linux.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12163] mptsas driver cannot discover some hotplugged SATA/SAS disks
+Date: Fri, 19 Dec 2008 01:53:12 -0800 (PST)
+Message-ID: <20081219095312.2886011D107@picon.linux-foundation.org>
+References: <bug-12163-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:49167 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752385AbYLRWwc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Dec 2008 17:52:32 -0500
-Content-Disposition: inline
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:50233 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751506AbYLSJxO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Dec 2008 04:53:14 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBJ9rCag004062
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Dec 2008 01:53:13 -0800
+In-Reply-To: <bug-12163-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
+http://bugzilla.kernel.org/show_bug.cgi?id=12163
 
-I found the existing sd_read_capacity() rather tortuous to follow
-(backwards gotos?  Just Say No!) so I've rewritten it.  It factors out
-the READ CAPACITY 10 and READ CAPACITY 16 paths into their own functions
-and then invokes them as needed from sd_read_capacity().
 
-I also added the new algorithm for choosing between RC16 and RC10 based
-on scsi_level and request 16 bytes using RC16 instead of 13.
 
-I've only compiled this code, not actually booted it, so this is just
-for comments.
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 5081b39..fcb81e3 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1275,41 +1275,91 @@ disable:
- }
- 
- /*
-- * read disk capacity
-+ * READ CAPACITY 16 currently only defines the first 16 bytes of result, but
-+ * could return more information in the future.
-  */
--static void
--sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer)
-+#define RC16_LEN 16
-+#if RC16_LEN > SD_BUF_SIZE
-+#error RC16_LEN must be less than SD_BUF_SIZE
-+#endif
-+
-+static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
-+						unsigned char *buffer)
- {
- 	unsigned char cmd[16];
--	int the_result, retries;
--	int sector_size = 0;
--	/* Force READ CAPACITY(16) when PROTECT=1 */
--	int longrc = scsi_device_protection(sdkp->device) ? 1 : 0;
- 	struct scsi_sense_hdr sshdr;
-+	int the_result;
- 	int sense_valid = 0;
--	struct scsi_device *sdp = sdkp->device;
-+	int retries = 3;
-+	unsigned long long lba;
-+	unsigned sector_size;
- 
--repeat:
--	retries = 3;
- 	do {
--		if (longrc) {
--			memset((void *) cmd, 0, 16);
--			cmd[0] = SERVICE_ACTION_IN;
--			cmd[1] = SAI_READ_CAPACITY_16;
--			cmd[13] = 13;
--			memset((void *) buffer, 0, 13);
--		} else {
--			cmd[0] = READ_CAPACITY;
--			memset((void *) &cmd[1], 0, 9);
--			memset((void *) buffer, 0, 8);
--		}
--		
-+		memset(cmd, 0, 16);
-+		cmd[0] = SERVICE_ACTION_IN;
-+		cmd[1] = SAI_READ_CAPACITY_16;
-+		cmd[13] = RC16_LEN;
-+		memset(buffer, 0, RC16_LEN);
-+
- 		the_result = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE,
--					      buffer, longrc ? 13 : 8, &sshdr,
-+					      buffer, RC16_LEN, &sshdr,
- 					      SD_TIMEOUT, SD_MAX_RETRIES);
- 
- 		if (media_not_present(sdkp, &sshdr))
--			return;
-+			return -ENODEV;
-+
-+		if (the_result)
-+			sense_valid = scsi_sense_valid(&sshdr);
-+		retries--;
-+
-+	} while (the_result && retries);
-+
-+	if (the_result) {
-+		/* READ CAPACITY(16) has been failed */
-+		sd_printk(KERN_NOTICE, sdkp, "READ CAPACITY(16) failed\n");
-+		sd_print_result(sdkp, the_result);
-+	}
-+
-+	sector_size =   (buffer[8] << 24) | (buffer[9] << 16) |
-+			(buffer[10] << 8) | buffer[11];
-+
-+	lba =  (((u64)buffer[0] << 56) | ((u64)buffer[1] << 48) |
-+		((u64)buffer[2] << 40) | ((u64)buffer[3] << 32) |
-+		((u64)buffer[4] << 24) | ((u64)buffer[5] << 16) |
-+		((u64)buffer[6] << 8 ) | (u64)buffer[7]);
-+
-+	sd_read_protection_type(sdkp, buffer);
-+
-+	if ((sizeof(sdkp->capacity) == 4) && (lba >= 0xffffffffULL)) {
-+		sdkp->capacity = 0;
-+		return -EOVERFLOW;
-+	}
-+
-+	sdkp->capacity = lba + 1;
-+	return sector_size;
-+}
-+
-+static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
-+						unsigned char *buffer)
-+{
-+	unsigned char cmd[16];
-+	struct scsi_sense_hdr sshdr;
-+	int the_result;
-+	int sense_valid = 0;
-+	int retries = 3;
-+	unsigned sector_size;
-+
-+	do {
-+		cmd[0] = READ_CAPACITY;
-+		memset(&cmd[1], 0, 9);
-+		memset(buffer, 0, 8);
-+
-+		the_result = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE,
-+					      buffer, 8, &sshdr,
-+					      SD_TIMEOUT, SD_MAX_RETRIES);
-+
-+		if (media_not_present(sdkp, &sshdr))
-+			return -ENODEV;
- 
- 		if (the_result)
- 			sense_valid = scsi_sense_valid(&sshdr);
-@@ -1317,7 +1367,7 @@ repeat:
- 
- 	} while (the_result && retries);
- 
--	if (the_result && !longrc) {
-+	if (the_result) {
- 		sd_printk(KERN_NOTICE, sdkp, "READ CAPACITY failed\n");
- 		sd_print_result(sdkp, the_result);
- 		if (driver_byte(the_result) & DRIVER_SENSE)
-@@ -1336,53 +1386,67 @@ repeat:
- 		/* sdkp->media_present = 0; -- not always correct */
- 		sdkp->capacity = 0; /* unknown mapped to zero - as usual */
- 
--		return;
--	} else if (the_result && longrc) {
--		/* READ CAPACITY(16) has been failed */
--		sd_printk(KERN_NOTICE, sdkp, "READ CAPACITY(16) failed\n");
--		sd_print_result(sdkp, the_result);
--		sd_printk(KERN_NOTICE, sdkp, "Use 0xffffffff as device size\n");
-+		return -EINVAL;
-+	}
- 
--		sdkp->capacity = 1 + (sector_t) 0xffffffff;		
--		goto got_data;
--	}	
--	
--	if (!longrc) {
--		sector_size = (buffer[4] << 24) |
--			(buffer[5] << 16) | (buffer[6] << 8) | buffer[7];
--		if (buffer[0] == 0xff && buffer[1] == 0xff &&
--		    buffer[2] == 0xff && buffer[3] == 0xff) {
--			if(sizeof(sdkp->capacity) > 4) {
--				sd_printk(KERN_NOTICE, sdkp, "Very big device. "
--					  "Trying to use READ CAPACITY(16).\n");
--				longrc = 1;
--				goto repeat;
--			}
--			sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use "
--				  "a kernel compiled with support for large "
--				  "block devices.\n");
--			sdkp->capacity = 0;
-+	sector_size = (buffer[4] << 24) |
-+		(buffer[5] << 16) | (buffer[6] << 8) | buffer[7];
-+	if (buffer[0] == 0xff && buffer[1] == 0xff &&
-+	    buffer[2] == 0xff && buffer[3] == 0xff) {
-+		if (sizeof(sdkp->capacity) > 4)
-+			goto out;
-+		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
-+			  "kernel compiled with support for large block "
-+			  "devices.\n");
-+		sdkp->capacity = 0;
-+		return -EOVERFLOW;
-+	}
-+ out:
-+	sdkp->capacity = 1 + (((sector_t)buffer[0] << 24) |
-+		(buffer[1] << 16) | (buffer[2] << 8) | buffer[3]);
-+	return sector_size;
-+}
-+
-+/*
-+ * read disk capacity
-+ */
-+static void
-+sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer)
-+{
-+	int sector_size;
-+	struct scsi_device *sdp = sdkp->device;
-+
-+	if (sdp->scsi_level > SCSI_2) {
-+		sector_size = read_capacity_16(sdkp, sdp, buffer);
-+		if (sector_size == -EOVERFLOW)
- 			goto got_data;
--		}
--		sdkp->capacity = 1 + (((sector_t)buffer[0] << 24) |
--			(buffer[1] << 16) |
--			(buffer[2] << 8) |
--			buffer[3]);			
-+		if (sector_size == -ENODEV)
-+			return;
-+		if (sector_size < 0)
-+			sector_size = read_capacity_10(sdkp, sdp, buffer);
-+		if (sector_size < 0)
-+			return;
- 	} else {
--		sdkp->capacity = 1 + (((u64)buffer[0] << 56) |
--			((u64)buffer[1] << 48) |
--			((u64)buffer[2] << 40) |
--			((u64)buffer[3] << 32) |
--			((sector_t)buffer[4] << 24) |
--			((sector_t)buffer[5] << 16) |
--			((sector_t)buffer[6] << 8)  |
--			(sector_t)buffer[7]);
--			
--		sector_size = (buffer[8] << 24) |
--			(buffer[9] << 16) | (buffer[10] << 8) | buffer[11];
--
--		sd_read_protection_type(sdkp, buffer);
--	}	
-+		sector_size = read_capacity_10(sdkp, sdp, buffer);
-+		if (sector_size == -EOVERFLOW)
-+			goto got_data;
-+		if (sector_size < 0)
-+			return;
-+		if ((sizeof(sdkp->capacity) > 4) &&
-+		    (sdkp->capacity > 0xffffffffULL)) {
-+			int old_sector_size = sector_size;
-+			sd_printk(KERN_NOTICE, sdkp, "Very big device. "
-+				  "Trying to use READ CAPACITY(16).\n");
-+			sector_size = read_capacity_16(sdkp, sdp, buffer);
-+			if (sector_size < 0) {
-+				sd_printk(KERN_NOTICE, sdkp,
-+					"Using 0xffffffff as device size\n");
-+				sdkp->capacity = 1 + (sector_t) 0xffffffff;
-+				sector_size = old_sector_size;
-+				goto got_data;
-+			}
-+		}
-+	}
- 
- 	/* Some devices return the total number of sectors, not the
- 	 * highest sector number.  Make the necessary adjustment. */
+
+------- Comment #6 from crquan@gmail.com  2008-12-19 01:53 -------
+On another type of machine, the driver 4.00.43 with rhel 5.2 x86_64 will cause
+to a kernel panic.
+
+Steps to reproduce:
+1. Install rhel5.2 x86_64, then mptlinux-4.00.43.00-1-rhel5.x86_64.rpm from lsi
+website;
+2. normal spare disks support hotplug well;
+3. if create a filesystem and mount it, or create lvm, or create soft RAID on
+any of the disks, it doesn't support hotplug;
+4. if try to plug the disk in a mounted filesystem, or lvm, or soft RAID, the
+kernel will panic,
+
+the message as:
+
+gektop@tux ~/sforge/linux-2.6 $ netcat -u -l -p 5140
+
+Unable to handle kernel NULL pointer dereference at 0000000000000000 RIP: 
+ [<ffffffff800649dd>] _spin_lock+0x0/0xa
+PGD 0 
+Oops: 0002 [1] SMP 
+last sysfs file: /module/ehci_hcd/sections/.text
+CPU 1 
+Modules linked in: netconsole(U) autofs4(U) hidp(U) l2cap(U) bluetooth(U)
+sunrpc(U) mptctl(U) loop(U) dm_multipath(U) video(U) sbs(U) backlight(U)
+i2c_ec(U) button(U) battery(U) asus_acpi(U) acpi_memhotplug(U) ac(U)
+parport_pc(U) lp(U) parport(U) floppy(U) sg(U) i2c_i801(U) serio_raw(U)
+i5000_edac(U) i2c_core(U) pcspkr(U) edac_mc(U) e1000e(U) shpchp(U)
+dm_snapshot(U) dm_zero(U) dm_mirror(U) dm_mod(U) ata_piix(U) libata(U) mptfc(U)
+scsi_transport_fc(U) mptspi(U) scsi_transport_spi(U) mptsas(U) mptscsih(U)
+mptbase(U) scsi_transport_sas(U) sd_mod(U) scsi_mod(U) ext3(U) jbd(U)
+uhci_hcd(U) ohci_hcd(U) ehci_hcd(U)
+Pid: 455, comm: mpt/0 Tainted: G      2.6.18-u1219 #1
+RIP: 0010:[<ffffffff800649dd>]  [<ffffffff800649dd>] _spin_lock+0x0/0xa
+RSP: 0018:ffff81007effbc78  EFLAGS: 00010282
+RAX: ffff81007ee95000 RBX: ffff81007a887828 RCX: ffff81007e8ed860
+RDX: ffff8100796b0000 RSI: ffff81007a887800 RDI: 0000000000000000
+RBP: ffff81007a887800 R08: 00000000ffffffff R09: ffff81007e8ed860
+R10: ffff81007e8ed860 R11: ffff81007e8ed860 R12: 0000000000000000
+R13: ffff81007ee65c38 R14: ffff81007a887a80 R15: ffffffff880fd792
+FS:  0000000000000000(0000) GS:ffff81007ff0b7c0(0000) knlGS:0000000000000000
+CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+CR2: 0000000000000000 CR3: 0000000079867000 CR4: 00000000000006e0
+Process mpt/0 (pid: 455, threadinfo ffff81007effa000, task ffff81007fb36080)
+Stack:  ffffffff80266193 ffff81007ee95748 ffff81007a887800 ffff81007a8877e0
+ ffffffff801ad7d4 ffff810078413700 ffff81007a887800 ffff81007a887a98
+ ffff81007a8877e0 ffff81007a8877e0 ffffffff880b4e4e ffff81007eea8000
+Call Trace:
+ [<ffffffff80266193>] klist_del+0x15/0x2a
+ [<ffffffff801ad7d4>] device_del+0x22/0x17f
+ [<ffffffff880b4e4e>] :scsi_transport_sas:sas_port_delete+0xdf/0xf7
+ [<ffffffff880fd87d>] :mptsas:mptsas_firmware_event_work+0xeb/0xcc3
+ [<ffffffff80062efb>] thread_return+0x0/0xdf
+ [<ffffffff8008a60e>] __activate_task+0x27/0x39
+ [<ffffffff880fd792>] :mptsas:mptsas_firmware_event_work+0x0/0xcc3
+ [<ffffffff8004cea9>] run_workqueue+0x94/0xe4
+ [<ffffffff800497be>] worker_thread+0x0/0x122
+ [<ffffffff8009dbca>] keventd_create_kthread+0x0/0xc4
+ [<ffffffff800498ae>] worker_thread+0xf0/0x122
+ [<ffffffff8008ac03>] default_wake_function+0x0/0xe
+ [<ffffffff8009dbca>] keventd_create_kthread+0x0/0xc4
+ [<ffffffff8009dbca>] keventd_create_kthread+0x0/0xc4
+ [<ffffffff8003253d>] kthread+0xfe/0x132
+ [<ffffffff8005dfb1>] child_rip+0xa/0x11
+ [<ffffffff8009dbca>] keventd_create_kthread+0x0/0xc4
+ [<ffffffff8003243f>] kthread+0x0/0x132
+ [<ffffffff8005dfa7>] child_rip+0x0/0x11
+
+
+Code: read(net): Connection refused
+
 
 -- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
