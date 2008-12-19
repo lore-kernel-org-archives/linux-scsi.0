@@ -1,38 +1,46 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: "Jaswinder Singh" <jaswinderlinux@gmail.com>
 Subject: Re: Firmware patches for SCSI
-Date: Fri, 19 Dec 2008 15:29:03 -0500
-Message-ID: <1229718543.18778.4.camel@localhost.localdomain>
+Date: Sat, 20 Dec 2008 02:11:04 +0530
+Message-ID: <3f9a31f40812191241q40dafdb0lfd2f4487f2870e2@mail.gmail.com>
 References: <3f9a31f40812191153n636888f4i549409453266d58c@mail.gmail.com>
+	 <1229718543.18778.4.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <3f9a31f40812191153n636888f4i549409453266d58c@mail.gmail.com>
+In-Reply-To: <1229718543.18778.4.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-next-owner@vger.kernel.org
-To: Jaswinder Singh <jaswinderlinux@gmail.com>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
 Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, sfr@canb.auug.org.au, linux-next@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, 2008-12-20 at 01:23 +0530, Jaswinder Singh wrote:
-> Hello all,
-> 
-> These SCSI's firmware patches are floating in linux-next from long time :
-> 
-> 1. qla1280: use request_firmware
-> http://git.kernel.org/?p=linux/kernel/git/sfr/linux-next.git;a=commit;h=7c84df1aec1bbb4e43ac9e2ba65b137042279a8d
-> 2. advansys: use request_firmware
-> http://git.kernel.org/?p=linux/kernel/git/sfr/linux-next.git;a=commit;h=baca2b168d3b7340eac87414c046f7d49de4bf71
-> 3. qlogicpti: use request_firmware
-> http://git.kernel.org/?p=linux/kernel/git/sfr/linux-next.git;a=commit;h=2c68b5b6db13786a425accc8576217b120f885f2
-> 
-> Should I need to resend these patches to merge main-stream.
+Hello James,
 
-Um ... depends how they got into linux-next.  The head commit just says
+On Sat, Dec 20, 2008 at 1:59 AM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+>
+> Um ... depends how they got into linux-next.  The head commit just says
+>
 
-Merge commit 'firmware/master'
+They got into linux-next via David Woodhouse. :
+http://git.infradead.org/users/dwmw2/firmware-2.6.git
 
-Which isn't very descriptive of where it came from.  It looks like
-either a tree that linux-next shouldn't pull (or one the owner forgot to
-push to linus).
+> Merge commit 'firmware/master'
+>
+> Which isn't very descriptive of where it came from.  It looks like
+> either a tree that linux-next shouldn't pull (or one the owner forgot to
+> push to linus).
+>
 
-James
+Earlier due to Firmware issues firmware patches are going directly
+though David Woodhouse.
+
+Now firmware issues are solved so David wants that the _driver_
+patches should be sent directly to the appropriate maintainers / mailing lists.
+
+So I am curious that should I resend these patches based on which git tree.
+
+Thank you,
+
+Jaswinder Singh.
