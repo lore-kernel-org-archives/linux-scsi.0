@@ -1,40 +1,43 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 01/11] zfcp: Fix message line break
-Date: Fri, 19 Dec 2008 16:56:52 +0100
-Message-ID: <20081219155750.239877000@de.ibm.com>
-References: <20081219155651.010878000@de.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate5.de.ibm.com ([195.212.29.154]:52506 "EHLO
-	mtagate5.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751971AbYLSQAJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Dec 2008 11:00:09 -0500
-Content-Disposition: inline; filename=709-zfcp-linebreak.diff
-Sender: linux-scsi-owner@vger.kernel.org
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [RFC]: Support for zero-copy TCP transmit of user space data
+Date: Fri, 19 Dec 2008 20:37:09 +0300
+Message-ID: <494BDBC5.7050701@vlnb.net>
+References: <494009D7.4020602@vlnb.net> <494012C4.7090304@vlnb.net> <20081210214500.GA24212@ioremap.net> <4941590F.3070705@vlnb.net> <1229022734.3266.67.camel@localhost.localdomain> <4942BAB8.4050007@vlnb.net> <1229110673.3262.94.camel@localhost.localdomain> <49469ADB.6010709@vlnb.net> <20081215231801.GA27168@infradead.org> <4947FA1C.2090509@vlnb.net> <494A97DD.7080503@vlnb.net> <494A99EF.6070400@flurg.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <494A99EF.6070400@flurg.com>
+Sender: owner-linux-mm@kvack.org
+To: "David M. Lloyd" <dmlloyd@flurg.com>
+Cc: linux-mm@kvack.org, Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, netdev@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Christof Schmitt <christof.schmitt@de.ibm.com>, Felix Beck <felix@linux.vnet.ibm.com>
 
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
+David M. Lloyd, on 12/18/2008 09:43 PM wrote:
+> On 12/18/2008 12:35 PM, Vladislav Bolkhovitin wrote:
+>> An iSCSI target driver iSCSI-SCST was a part of the patchset 
+>> (http://lkml.org/lkml/2008/12/10/293). For it a nice optimization to 
+>> have TCP zero-copy transmit of user space data was implemented. Patch, 
+>> implementing this optimization was also sent in the patchset, see 
+>> http://lkml.org/lkml/2008/12/10/296.
+> 
+> I'm probably ignorant of about 90% of the context here, but isn't this the 
+> sort of problem that was supposed to have been solved by vmsplice(2)?
 
-Move the closing parenthesis before the line break.
+No, vmsplice can't help here. ISCSI-SCST is a kernel space driver. But, 
+even if it was a user space driver, vmsplice wouldn't change anything 
+much. It doesn't have a possibility for a user to know, when 
+transmission of the data finished. So, it is intended to be used as: 
+vmsplice() buffer -> munmap() the buffer -> mmap() new buffer -> 
+vmsplice() it. But on the mmap() stage kernel has to zero all the newly 
+mapped pages and zeroing memory isn't much faster, than copying it. 
+Hence, there would be no considerable performance increase.
 
-Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
-Acked-by: Felix Beck <felix@linux.vnet.ibm.com>
----
+Thanks,
+Vlad
 
- drivers/s390/scsi/zfcp_fsf.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- a/drivers/s390/scsi/zfcp_fsf.c	2008-12-19 14:38:14.000000000 +0100
-+++ b/drivers/s390/scsi/zfcp_fsf.c	2008-12-19 14:38:21.000000000 +0100
-@@ -1904,7 +1904,7 @@ static void zfcp_fsf_open_unit_handler(s
- 				dev_err(&adapter->ccw_device->dev,
- 					"Shared read-write access not "
- 					"supported (unit 0x%016Lx, port "
--					"0x%016Lx\n)",
-+					"0x%016Lx)\n",
- 					(unsigned long long)unit->fcp_lun,
- 					(unsigned long long)unit->port->wwpn);
- 				zfcp_erp_unit_failed(unit, 36, req);
-
--- 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
