@@ -1,122 +1,128 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] [LIO-Target 7/14]: Make ErrorRecoveryLevel=0 code use
-	generic se_portal_group_t locks
-Date: Fri, 19 Dec 2008 15:34:01 -0800
-Message-ID: <1229729641.4560.114.camel@haakon2.linux-iscsi.org>
+Subject: [PATCH] [LIO-Target 8/14]: Make ErrorRecoveryLevel=1 code use
+	iscsi_tpg_get_node_attrib()
+Date: Fri, 19 Dec 2008 15:34:36 -0800
+Message-ID: <1229729676.4560.116.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756556AbYLSXep@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp116.sbc.mail.sp1.yahoo.com ([69.147.64.89]:24013 "HELO
+	smtp116.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755817AbYLSXfN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Dec 2008 18:35:13 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>
 Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
-List-Id: linux-scsi@vger.kernel.org
 
->From 74fad9414f9738af836f44a44fa6c858c078cc16 Mon Sep 17 00:00:00 2001
+>From 1aecef1154d178049c63ff2b63f69591a90b35ac Mon Sep 17 00:00:00 2001
 From: Nicholas Bellinger <nab@linux-iscsi.org>
-Date: Fri, 19 Dec 2008 14:18:34 -0800
-Subject: [PATCH] [LIO-Target]: Make ErrorRecoveryLevel=0 code use generic se_portal_group_t locks
+Date: Fri, 19 Dec 2008 14:22:26 -0800
+Subject: [PATCH] [LIO-Target]: Make ErrorRecoveryLevel=1 code use iscsi_tpg_get_node_attrib()
 
-This patch makes ERL=0 code use se_portal_group_t->session_lock.
-
-Also, iscsi_fall_back_to_erl0() has been changed to accept iscsi_session_t
-as a parameter.
+This patch gets rid of iscsi_node_acl_t usage in ERL=1 code and locates
+iscsi_node_attrib_t for DATAOUT timer settings via iscsi_tpg_get_node_attrib().
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/lio-core/iscsi_target_erl0.c |   22 ++++++++++++----------
- drivers/lio-core/iscsi_target_erl0.h |    2 +-
- 2 files changed, 13 insertions(+), 11 deletions(-)
+ drivers/lio-core/iscsi_target_erl1.c |   26 +++++++++++++-------------
+ 1 files changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/lio-core/iscsi_target_erl0.c b/drivers/lio-core/iscsi_target_erl0.c
-index ad2d393..4bd5c19 100644
---- a/drivers/lio-core/iscsi_target_erl0.c
-+++ b/drivers/lio-core/iscsi_target_erl0.c
-@@ -835,15 +835,16 @@ static void iscsi_handle_time2retain_timeout (unsigned long data)
- {
- 	iscsi_session_t *sess = (iscsi_session_t *) data;
- 	iscsi_portal_group_t *tpg = ISCSI_TPG_S(sess);
-+	se_portal_group_t *se_tpg = tpg->tpg_se_tpg;
- 	
--	spin_lock_bh(&tpg->session_lock);
-+	spin_lock_bh(&se_tpg->session_lock);
- 	if (sess->time2retain_timer_flags & T2R_TF_STOP) {
--		spin_unlock_bh(&tpg->session_lock);
-+		spin_unlock_bh(&se_tpg->session_lock);
- 		return;
- 	}
- 	if (atomic_read(&sess->session_reinstatement)) {
- 		TRACE_ERROR("Exiting Time2Retain handler because session_reinstatement=1\n");
--		spin_unlock_bh(&tpg->session_lock);
-+		spin_unlock_bh(&se_tpg->session_lock);
- 		return;
- 	}
- 	sess->time2retain_timer_flags |= T2R_TF_EXPIRED;
-@@ -866,7 +867,7 @@ static void iscsi_handle_time2retain_timeout (unsigned long data)
- 	}
- #endif /* SNMP_SUPPORT */
+diff --git a/drivers/lio-core/iscsi_target_erl1.c b/drivers/lio-core/iscsi_target_erl1.c
+index 718b9e7..c95ece0 100644
+--- a/drivers/lio-core/iscsi_target_erl1.c
++++ b/drivers/lio-core/iscsi_target_erl1.c
+@@ -46,11 +46,13 @@
+ #include <iscsi_crc.h>
+ #include <iscsi_debug.h>
+ #include <iscsi_lists.h>
+-#include <iscsi_target_core.h>
++
+ #include <target_core_base.h>
++#include <target_core_transport.h>
++#include <iscsi_target_core.h>
+ #include <iscsi_target_datain_values.h>
+ #include <iscsi_target_device.h>
+-#include <target_core_transport.h>
++#include <iscsi_target_tpg.h>
+ #include <iscsi_target_util.h>
+ #include <iscsi_target_erl0.h>
+ #include <iscsi_target_erl1.h>
+@@ -1277,7 +1279,7 @@ static void iscsi_handle_dataout_timeout (
+ 	iscsi_cmd_t *cmd = (iscsi_cmd_t *) data;
+ 	iscsi_conn_t *conn = conn = CONN(cmd);
+ 	iscsi_session_t *sess = NULL;
+-	iscsi_node_acl_t *acl = NULL;
++	iscsi_node_attrib_t *na;
  
--	spin_unlock_bh(&tpg->session_lock);
-+	spin_unlock_bh(&se_tpg->session_lock);
- 	iscsi_close_session(sess);
- 	
- 	return;
-@@ -909,11 +910,12 @@ extern void iscsi_start_time2retain_handler (iscsi_session_t *sess)
- 
- /*	iscsi_stop_time2retain_timer():
-  *
-- *	Called with spin_lock_bh(&iscsi_portal_group_t->session_lock) held
-+ *	Called with spin_lock_bh(&se_portal_group_t->session_lock) held
-  */
- extern int iscsi_stop_time2retain_timer (iscsi_session_t *sess)
- {
- 	iscsi_portal_group_t *tpg = ISCSI_TPG_S(sess);
-+	se_portal_group_t *se_tpg = tpg->tpg_se_tpg;
- 	
- 	if (sess->time2retain_timer_flags & T2R_TF_EXPIRED)
- 		return(-1);
-@@ -922,11 +924,11 @@ extern int iscsi_stop_time2retain_timer (iscsi_session_t *sess)
- 		return(0);
- 	
- 	sess->time2retain_timer_flags |= T2R_TF_STOP;
--	spin_unlock_bh(&tpg->session_lock);
-+	spin_unlock_bh(&se_tpg->session_lock);
- 
- 	del_timer_sync(&sess->time2retain_timer);
- 
--	spin_lock_bh(&tpg->session_lock);
-+	spin_lock_bh(&se_tpg->session_lock);
- 	sess->time2retain_timer_flags &= ~T2R_TF_RUNNING;
- 	TRACE(TRACE_TIMER, "Stopped Time2Retain Timer for SID: %u\n", sess->sid);
- 
-@@ -1006,12 +1008,12 @@ extern void iscsi_cause_connection_reinstatement (iscsi_conn_t *conn, int sleep)
-  *
-  *
-  */
--extern void iscsi_fall_back_to_erl0 (iscsi_conn_t *conn)
-+extern void iscsi_fall_back_to_erl0 (iscsi_session_t *sess)
- {
- 	TRACE(TRACE_ERL0, "Falling back to ErrorRecoveryLevel=0 for SID:"
--			" %u\n", SESS(conn)->sid);
-+			" %u\n", sess->sid);
+ 	iscsi_inc_conn_usage_count(conn);
  		
--	atomic_set(&SESS(conn)->session_fall_back_to_erl0, 1); 
-+	atomic_set(&sess->session_fall_back_to_erl0, 1); 
+@@ -1289,7 +1291,7 @@ static void iscsi_handle_dataout_timeout (
+ 	}
+ 	cmd->dataout_timer_flags &= ~DATAOUT_TF_RUNNING;
+ 	sess = SESS(conn);
+-	acl = sess->node_acl;
++	na = iscsi_tpg_get_node_attrib(sess);
+ 	
+ 	if (!SESS_OPS(sess)->ErrorRecoveryLevel) {
+ 		TRACE(TRACE_ERL0, "Unable to recover from DataOut timeout while"
+@@ -1297,12 +1299,10 @@ static void iscsi_handle_dataout_timeout (
+ 		goto failure;
+ 	}
+ 	
+-	if (++cmd->dataout_timeout_retries ==
+-	    ISCSI_NODE_ATTRIB(acl)->dataout_timeout_retries) {
++	if (++cmd->dataout_timeout_retries == na->dataout_timeout_retries) {
+ 		TRACE(TRACE_TIMER, "Command ITT: 0x%08x exceeded max retries for"
+ 		" DataOUT timeout %u, closing iSCSI connection.\n",
+-			cmd->init_task_tag,
+-			ISCSI_NODE_ATTRIB(acl)->dataout_timeout_retries);
++			cmd->init_task_tag, na->dataout_timeout_retries);
+ 		goto failure;
+ 	}
  
- 	return;
- }
-diff --git a/drivers/lio-core/iscsi_target_erl0.h b/drivers/lio-core/iscsi_target_erl0.h
-index ffcf45b..d4fcd24 100644
---- a/drivers/lio-core/iscsi_target_erl0.h
-+++ b/drivers/lio-core/iscsi_target_erl0.h
-@@ -37,7 +37,7 @@ extern void iscsi_start_time2retain_handler (iscsi_session_t *);
- extern int iscsi_stop_time2retain_timer (iscsi_session_t *);
- extern void iscsi_connection_reinstatement_rcfr (iscsi_conn_t *);
- extern void iscsi_cause_connection_reinstatement (iscsi_conn_t *, int);
--extern void iscsi_fall_back_to_erl0 (iscsi_conn_t *);
-+extern void iscsi_fall_back_to_erl0 (iscsi_session_t *);
- extern void iscsi_take_action_for_connection_exit (iscsi_conn_t *);
- extern int iscsi_recover_from_unknown_opcode (iscsi_conn_t *);
+@@ -1363,7 +1363,7 @@ extern void iscsi_mod_dataout_timer (iscsi_cmd_t *cmd)
+ {               
+ 	iscsi_conn_t *conn = CONN(cmd);
+ 	iscsi_session_t *sess = SESS(conn);
+-	iscsi_node_acl_t *acl = sess->node_acl;
++	iscsi_node_attrib_t *na = na = iscsi_tpg_get_node_attrib(sess);	
+ 	
+ 	spin_lock_bh(&cmd->dataout_timeout_lock);
+ 	if (!(cmd->dataout_timer_flags & DATAOUT_TF_RUNNING)) {
+@@ -1371,7 +1371,7 @@ extern void iscsi_mod_dataout_timer (iscsi_cmd_t *cmd)
+ 		return;
+ 	}
+ 		                        
+-	MOD_TIMER(&cmd->dataout_timer, ISCSI_NODE_ATTRIB(acl)->dataout_timeout);
++	MOD_TIMER(&cmd->dataout_timer, na->dataout_timeout);
+ 	TRACE(TRACE_TIMER, "Updated DataOUT timer for ITT: 0x%08x",
+ 			cmd->init_task_tag);
+ 	spin_unlock_bh(&cmd->dataout_timeout_lock);
+@@ -1388,7 +1388,7 @@ extern void iscsi_start_dataout_timer (
+ 	iscsi_conn_t *conn)
+ {
+ 	iscsi_session_t *sess = SESS(conn);
+-	iscsi_node_acl_t *acl = sess->node_acl;
++	iscsi_node_attrib_t *na = na = iscsi_tpg_get_node_attrib(sess); 
+ 	
+ 	if (cmd->dataout_timer_flags & DATAOUT_TF_RUNNING)
+ 		return;
+@@ -1397,8 +1397,8 @@ extern void iscsi_start_dataout_timer (
+ 		" CID: %hu.\n", cmd->init_task_tag, conn->cid);
  
+ 	init_timer(&cmd->dataout_timer);
+-	SETUP_TIMER(cmd->dataout_timer, ISCSI_NODE_ATTRIB(acl)->dataout_timeout,
+-		cmd, iscsi_handle_dataout_timeout);
++	SETUP_TIMER(cmd->dataout_timer, na->dataout_timeout, cmd,
++			iscsi_handle_dataout_timeout);
+ 	cmd->dataout_timer_flags &= ~DATAOUT_TF_STOP;
+ 	cmd->dataout_timer_flags |= DATAOUT_TF_RUNNING;
+ 	add_timer(&cmd->dataout_timer);
 -- 
 1.5.4.1
+
+
+
