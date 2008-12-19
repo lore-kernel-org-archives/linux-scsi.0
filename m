@@ -1,101 +1,43 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12163] mptsas driver cannot discover some hotplugged SATA/SAS disks
-Date: Fri, 19 Dec 2008 01:53:12 -0800 (PST)
-Message-ID: <20081219095312.2886011D107@picon.linux-foundation.org>
-References: <bug-12163-11613@http.bugzilla.kernel.org/>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:50233 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751506AbYLSJxO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Dec 2008 04:53:14 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBJ9rCag004062
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Dec 2008 01:53:13 -0800
-In-Reply-To: <bug-12163-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: [RFC]: Support for zero-copy TCP transmit of user space data
+Date: Fri, 19 Dec 2008 12:27:23 +0100
+Message-ID: <87zlisz9pg.fsf@basil.nowhere.org>
+References: <494009D7.4020602@vlnb.net> <494012C4.7090304@vlnb.net>
+	<20081210214500.GA24212@ioremap.net> <4941590F.3070705@vlnb.net>
+	<1229022734.3266.67.camel@localhost.localdomain>
+	<4942BAB8.4050007@vlnb.net>
+	<1229110673.3262.94.camel@localhost.localdomain>
+	<49469ADB.6010709@vlnb.net> <20081215231801.GA27168@infradead.org>
+	<4947FA1C.2090509@vlnb.net> <494A97DD.7080503@vlnb.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <494A97DD.7080503@vlnb.net> (Vladislav Bolkhovitin's message of "Thu, 18 Dec 2008 21:35:09 +0300")
+Sender: owner-linux-mm@kvack.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: linux-mm@kvack.org, Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, netdev@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12163
+Vladislav Bolkhovitin <vst@vlnb.net> writes:
+>
+>  - Although usage of struct page to keep network related pointer might
+> look as a layering violation, it isn't. I wrote in
+> http://lkml.org/lkml/2008/12/15/190 why.
 
+Sorry but extending struct page for this is really a bad idea because
+of the extreme memory overhead even when it's not used (which is a 
+problem on distribution kernels) Find some other way to store this
+information.  Even for patches with more general value it was not
+acceptable.
 
-
-
-
-------- Comment #6 from crquan@gmail.com  2008-12-19 01:53 -------
-On another type of machine, the driver 4.00.43 with rhel 5.2 x86_64 will cause
-to a kernel panic.
-
-Steps to reproduce:
-1. Install rhel5.2 x86_64, then mptlinux-4.00.43.00-1-rhel5.x86_64.rpm from lsi
-website;
-2. normal spare disks support hotplug well;
-3. if create a filesystem and mount it, or create lvm, or create soft RAID on
-any of the disks, it doesn't support hotplug;
-4. if try to plug the disk in a mounted filesystem, or lvm, or soft RAID, the
-kernel will panic,
-
-the message as:
-
-gektop@tux ~/sforge/linux-2.6 $ netcat -u -l -p 5140
-
-Unable to handle kernel NULL pointer dereference at 0000000000000000 RIP: 
- [<ffffffff800649dd>] _spin_lock+0x0/0xa
-PGD 0 
-Oops: 0002 [1] SMP 
-last sysfs file: /module/ehci_hcd/sections/.text
-CPU 1 
-Modules linked in: netconsole(U) autofs4(U) hidp(U) l2cap(U) bluetooth(U)
-sunrpc(U) mptctl(U) loop(U) dm_multipath(U) video(U) sbs(U) backlight(U)
-i2c_ec(U) button(U) battery(U) asus_acpi(U) acpi_memhotplug(U) ac(U)
-parport_pc(U) lp(U) parport(U) floppy(U) sg(U) i2c_i801(U) serio_raw(U)
-i5000_edac(U) i2c_core(U) pcspkr(U) edac_mc(U) e1000e(U) shpchp(U)
-dm_snapshot(U) dm_zero(U) dm_mirror(U) dm_mod(U) ata_piix(U) libata(U) mptfc(U)
-scsi_transport_fc(U) mptspi(U) scsi_transport_spi(U) mptsas(U) mptscsih(U)
-mptbase(U) scsi_transport_sas(U) sd_mod(U) scsi_mod(U) ext3(U) jbd(U)
-uhci_hcd(U) ohci_hcd(U) ehci_hcd(U)
-Pid: 455, comm: mpt/0 Tainted: G      2.6.18-u1219 #1
-RIP: 0010:[<ffffffff800649dd>]  [<ffffffff800649dd>] _spin_lock+0x0/0xa
-RSP: 0018:ffff81007effbc78  EFLAGS: 00010282
-RAX: ffff81007ee95000 RBX: ffff81007a887828 RCX: ffff81007e8ed860
-RDX: ffff8100796b0000 RSI: ffff81007a887800 RDI: 0000000000000000
-RBP: ffff81007a887800 R08: 00000000ffffffff R09: ffff81007e8ed860
-R10: ffff81007e8ed860 R11: ffff81007e8ed860 R12: 0000000000000000
-R13: ffff81007ee65c38 R14: ffff81007a887a80 R15: ffffffff880fd792
-FS:  0000000000000000(0000) GS:ffff81007ff0b7c0(0000) knlGS:0000000000000000
-CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-CR2: 0000000000000000 CR3: 0000000079867000 CR4: 00000000000006e0
-Process mpt/0 (pid: 455, threadinfo ffff81007effa000, task ffff81007fb36080)
-Stack:  ffffffff80266193 ffff81007ee95748 ffff81007a887800 ffff81007a8877e0
- ffffffff801ad7d4 ffff810078413700 ffff81007a887800 ffff81007a887a98
- ffff81007a8877e0 ffff81007a8877e0 ffffffff880b4e4e ffff81007eea8000
-Call Trace:
- [<ffffffff80266193>] klist_del+0x15/0x2a
- [<ffffffff801ad7d4>] device_del+0x22/0x17f
- [<ffffffff880b4e4e>] :scsi_transport_sas:sas_port_delete+0xdf/0xf7
- [<ffffffff880fd87d>] :mptsas:mptsas_firmware_event_work+0xeb/0xcc3
- [<ffffffff80062efb>] thread_return+0x0/0xdf
- [<ffffffff8008a60e>] __activate_task+0x27/0x39
- [<ffffffff880fd792>] :mptsas:mptsas_firmware_event_work+0x0/0xcc3
- [<ffffffff8004cea9>] run_workqueue+0x94/0xe4
- [<ffffffff800497be>] worker_thread+0x0/0x122
- [<ffffffff8009dbca>] keventd_create_kthread+0x0/0xc4
- [<ffffffff800498ae>] worker_thread+0xf0/0x122
- [<ffffffff8008ac03>] default_wake_function+0x0/0xe
- [<ffffffff8009dbca>] keventd_create_kthread+0x0/0xc4
- [<ffffffff8009dbca>] keventd_create_kthread+0x0/0xc4
- [<ffffffff8003253d>] kthread+0xfe/0x132
- [<ffffffff8005dfb1>] child_rip+0xa/0x11
- [<ffffffff8009dbca>] keventd_create_kthread+0x0/0xc4
- [<ffffffff8003243f>] kthread+0x0/0x132
- [<ffffffff8005dfa7>] child_rip+0x0/0x11
-
-
-Code: read(net): Connection refused
+-Andi
 
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+ak@linux.intel.com
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
