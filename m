@@ -1,153 +1,76 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] [Target_Core_Mod/PSCSI 6/6]: Grab temporary pointer to
-	struct block_device for BIO for v2.6.28
-Date: Fri, 19 Dec 2008 15:28:18 -0800
-Message-ID: <1229729298.4560.95.camel@haakon2.linux-iscsi.org>
+Subject: [PATCH] [LIO-Target 0/14] Make logic generic for v3.0
+Date: Fri, 19 Dec 2008 15:29:50 -0800
+Message-ID: <1229729390.4560.100.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp119.sbc.mail.sp1.yahoo.com ([69.147.64.92]:43761 "HELO
-	smtp119.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752598AbYLSX2s (ORCPT
+Received: from smtp115.sbc.mail.sp1.yahoo.com ([69.147.64.88]:39338 "HELO
+	smtp115.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752228AbYLSXaT (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Dec 2008 18:28:48 -0500
+	Fri, 19 Dec 2008 18:30:19 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
->From 77873e8378d6ef8fdb1c6edb9cb8be478680f5d0 Mon Sep 17 00:00:00 2001
-From: Nicholas Bellinger <nab@linux-iscsi.org>
-Date: Fri, 19 Dec 2008 13:35:23 -0800
-Subject: [PATCH] [Target_Core_Mod/PSCSI]: Grab temporary pointer to struct block_device for BIO for v2.6.28
+Greetings all,
 
-Inside of pscsi_create_virtdevice_from_fd(), we set pscsi_dev_virt_t->pdv_bd from
-struct block_device in pscsi_create_virtdevice_from_fd().  This is required because
-we need to set struct bio->bi_bdev for usage with fs/bio.c:bio_add_page().
+This patch set for the Linux-iSCSI.org Target (LIO-Target) continues to
+take functionality from iscsi_target_mod, and make it generic in
+Target_Core_Mod/ConfigFS v3.0 so that said logic can be used across
+multiple $FABRIC_MODs.  This includes moving se_device_t and
+se_portal_group_t specific functionality used LIO-Target/ConfigFS from
+iscsi_target_device.c and iscsi_target_tpg.c to target_core_device.c and
+target_core_tpg.c respectively.
 
-This logic for sending struct scatterlist with struct request into
-struct scsi_device->request_queue will be changing post v2.6.28, but this is
-currently required to get TYPE_DISK working w/o scsi_execute_async() or bio_add_pc_page().
+There is still some debug code enabled in this patch as the rest of the
+LIO-Target functionality is brought online for Target_Core_Mod/ConfigFS
+v3.0.  This debug code will be removed as development and testing
+contintues for v3.0.
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/lio-core/target_core_pscsi.c |   37 ++++++++++++++++++++++++++++++---
- drivers/lio-core/target_core_pscsi.h |    1 +
- 2 files changed, 34 insertions(+), 4 deletions(-)
+They are made against against lio-core-2.6.git/master and tested on
+v2.6.28-rc7.  The lio-core-2.6.git tree can be found at:
 
-diff --git a/drivers/lio-core/target_core_pscsi.c b/drivers/lio-core/target_core_pscsi.c
-index d417b1e..bcc0f72 100644
---- a/drivers/lio-core/target_core_pscsi.c
-+++ b/drivers/lio-core/target_core_pscsi.c
-@@ -583,6 +583,9 @@ extern void pscsi_free_device (void *p)
- 	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) p;
- 	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
- 
-+	if (pdv->pdv_bd)
-+		pdv->pdv_bd = NULL;
-+
- 	if (sd) {
- 		if ((sd->type == TYPE_DISK) || (sd->type == TYPE_ROM)) 
- 			scsi_device_put(sd);
-@@ -1041,6 +1044,11 @@ extern se_device_t *pscsi_create_virtdevice_from_fd (
- 			return(ERR_PTR(-EINVAL));
- 		}
- 		/*
-+		 * Keep track of the struct block_device for now, as we need it for
-+		 * 
-+		 */
-+		pdv->pdv_bd = bd;
-+		/*
- 		 * pscsi_create_type_[disk,rom]() will release host_lock..
- 		 */
- 		spin_lock_irq(sh->host_lock);
-@@ -1074,6 +1082,12 @@ extern se_device_t *pscsi_create_virtdevice_from_fd (
- 		return(ERR_PTR(-ENODEV));
- 	}
- 
-+	/*
-+	 * Clear pdv->pdv_bd on exception.
-+	 */
-+	if (!(dev))
-+		pdv->pdv_bd = NULL;
-+
- 	iput(inode);
- 	fput(filp);
- 	return(dev);
-@@ -1160,7 +1174,7 @@ static void pscsi_bi_endio (struct bio *bio, int error)
- 	bio_put(bio);
- }
- 
--static inline struct bio *pscsi_get_bio (int sg_num)
-+static inline struct bio *pscsi_get_bio (pscsi_dev_virt_t *pdv, int sg_num)
- {
- 	struct bio *bio;
- 
-@@ -1169,11 +1183,22 @@ static inline struct bio *pscsi_get_bio (int sg_num)
- 		return(NULL);
- 	}
- 	bio->bi_end_io = pscsi_bi_endio;
-+
-+	/*
-+	 * While using fs/bio.c:bio_add_page() in pscsi_map_task_SG(), each
-+	 * struct bio->bi_bdev needs to be set in order for bdev_get_queue()
-+	 * to locate struct request_queue in bio_add_page().
-+	 */
-+	if (!(bio->bi_bdev = pdv->pdv_bd)) {
-+		printk(KERN_ERR "PSCSI: Unable to locate struct block_device for BIO\n");
-+		bio_put(bio);
-+		return(NULL);
-+	}
- 	
- 	return(bio);
- }
- 
--#if 1
-+#if 0
- #define DEBUG_PSCSI(x...) printk(x)
- #else
- #define DEBUG_PSCSI(x...)
-@@ -1186,6 +1211,7 @@ static inline struct bio *pscsi_get_bio (int sg_num)
- extern int pscsi_map_task_SG (se_task_t *task)
- {
-         pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
-+	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) task->se_dev->dev_ptr;
- 	struct bio *bio = NULL, *hbio = NULL, *tbio = NULL;
- 	struct page *page;
- 	struct request *rq = pt->pscsi_req;
-@@ -1226,12 +1252,15 @@ extern int pscsi_map_task_SG (se_task_t *task)
- 				nr_vecs = min_t(int, BIO_MAX_PAGES, nr_pages);
- 				nr_pages -= nr_vecs;
- 
--				if (!(bio = pscsi_get_bio(nr_vecs)))
-+				if (!(bio = pscsi_get_bio(pdv, nr_vecs)))
- 					goto fail;	
- 
- 				DEBUG_PSCSI("PSCSI: Allocated bio: %p, nr_vecs: %d\n",
- 					bio, nr_vecs);
--				tbio = tbio->bi_next = bio;
-+				if (!tbio)
-+					tbio = bio;
-+				else
-+					tbio = tbio->bi_next = bio;
- 			}
- 
- 			DEBUG_PSCSI("PSCSI: Calling bio_add_page() i: %d bio: %p"
-diff --git a/drivers/lio-core/target_core_pscsi.h b/drivers/lio-core/target_core_pscsi.h
-index 929fbb9..8883bf6 100644
---- a/drivers/lio-core/target_core_pscsi.h
-+++ b/drivers/lio-core/target_core_pscsi.h
-@@ -115,6 +115,7 @@ typedef struct pscsi_dev_virt_s {
- 	int	pdv_channel_id;
- 	int	pdv_target_id;
- 	int	pdv_lun_id;
-+	struct block_device *pdv_bd; /* Temporary for v2.6.28 */
- 	struct scsi_device *pdv_sd;
- 	struct se_hba_s *pdv_se_hba;
- } pscsi_dev_virt_t;
--- 
-1.5.4.1
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=summary
 
+--nab
+
+ drivers/lio-core/iscsi_auth_kernel.h     |   15 +-
+ drivers/lio-core/iscsi_target.c          |  128 +++---
+ drivers/lio-core/iscsi_target.h          |    3 +-
+ drivers/lio-core/iscsi_target_configfs.c |  157 ++++---
+ drivers/lio-core/iscsi_target_core.h     |   91 +---
+ drivers/lio-core/iscsi_target_device.c   |  486 +-----------------
+ drivers/lio-core/iscsi_target_device.h   |   15 +-
+ drivers/lio-core/iscsi_target_erl0.c     |   22 +-
+ drivers/lio-core/iscsi_target_erl0.h     |    2 +-
+ drivers/lio-core/iscsi_target_erl1.c     |   26 +-
+ drivers/lio-core/iscsi_target_erl2.c     |   21 +-
+ drivers/lio-core/iscsi_target_login.c    |   90 ++--
+ drivers/lio-core/iscsi_target_mib.c      |  114 +++--
+ drivers/lio-core/iscsi_target_nego.c     |   19 +-
+ drivers/lio-core/iscsi_target_tmr.c      |    8 +-
+ drivers/lio-core/iscsi_target_tpg.c      |  809 ++++++------------------------
+ drivers/lio-core/iscsi_target_tpg.h      |   25 +-
+ drivers/lio-core/iscsi_target_util.c     |  227 ++-------
+ drivers/lio-core/iscsi_target_util.h     |    5 -
+
+[PATCH] [LIO-Target 1/14]: Update core data structures and defines
+[PATCH] [LIO-Target 2/14]: Make iscsi_handle_authentication() use se_node_acl_t
+[PATCH] [LIO-Target 3/14]: Remove what has now become generic code from iscsi_target_device.c
+[PATCH] [LIO-Target 4/14]: Updates for iSCSI Target Portal Group logic with generic portal group code
+[PATCH] [LIO-Target 5/14]: Make iscsi_target_util.c use generic target_core_mod code
+[PATCH] [LIO-Target 6/14]: Make iSCSI TMR code use iscsi_tpg_get_node_attrib()
+[PATCH] [LIO-Target 7/14]: Make ErrorRecoveryLevel=0 code use generic se_portal_group_t locks
+[PATCH] [LIO-Target 8/14]: Make ErrorRecoveryLevel=1 code use iscsi_tpg_get_node_attrib()
+[PATCH] [LIO-Target 9/14]: Updated ErrorRecoveryLevel=2 code to use SE_CMD(iscsi_cmd_t)
+[PATCH] [LIO-Target 10/14]: Update iscsi_target_login.c for generic target_core_mod logic
+[PATCH] [LIO-Target 11/14]: Update iscsi_target_nego.c for se_node_acl_t
+[PATCH] [LIO-Target 12/14]: Updates for iscsi_target.c for generic target_core_mod v3.0
+[PATCH] [LIO-Target/MIB 13/14]: Convert logic to use generic target_core_mod v3.0 code
+[PATCH] [LIO-Target/ConfigFS 14/14]: Convert to use generic target_core_mod v3.0 logic
 
 
