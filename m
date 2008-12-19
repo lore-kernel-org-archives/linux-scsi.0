@@ -1,93 +1,33 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [RFC]: Support for zero-copy TCP transmit of user space data
-Date: Fri, 19 Dec 2008 20:27:36 +0100
-Message-ID: <20081219192736.GQ32491@kernel.dk>
-References: <4942BAB8.4050007@vlnb.net> <1229110673.3262.94.camel@localhost.localdomain> <49469ADB.6010709@vlnb.net> <20081215231801.GA27168@infradead.org> <4947FA1C.2090509@vlnb.net> <494A97DD.7080503@vlnb.net> <494A99EF.6070400@flurg.com> <494BDBC5.7050701@vlnb.net> <20081219190701.GP32491@kernel.dk> <494BF361.1090003@vlnb.net>
+From: "Jaswinder Singh" <jaswinderlinux@gmail.com>
+Subject: Firmware patches for SCSI
+Date: Sat, 20 Dec 2008 01:23:20 +0530
+Message-ID: <3f9a31f40812191153n636888f4i549409453266d58c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from wf-out-1314.google.com ([209.85.200.174]:62732 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751863AbYLSTxV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Dec 2008 14:53:21 -0500
 Content-Disposition: inline
-In-Reply-To: <494BF361.1090003@vlnb.net>
-Sender: owner-linux-mm@kvack.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: "David M. Lloyd" <dmlloyd@flurg.com>, linux-mm@kvack.org, Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, netdev@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, sfr@canb.auug.org.au, linux-next@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
 
-On Fri, Dec 19 2008, Vladislav Bolkhovitin wrote:
-> Jens Axboe, on 12/19/2008 10:07 PM wrote:
-> >On Fri, Dec 19 2008, Vladislav Bolkhovitin wrote:
-> >>David M. Lloyd, on 12/18/2008 09:43 PM wrote:
-> >>>On 12/18/2008 12:35 PM, Vladislav Bolkhovitin wrote:
-> >>>>An iSCSI target driver iSCSI-SCST was a part of the patchset 
-> >>>>(http://lkml.org/lkml/2008/12/10/293). For it a nice optimization to 
-> >>>>have TCP zero-copy transmit of user space data was implemented. Patch, 
-> >>>>implementing this optimization was also sent in the patchset, see 
-> >>>>http://lkml.org/lkml/2008/12/10/296.
-> >>>I'm probably ignorant of about 90% of the context here, but isn't this 
-> >>>the sort of problem that was supposed to have been solved by vmsplice(2)?
-> >>No, vmsplice can't help here. ISCSI-SCST is a kernel space driver. But, 
-> >>even if it was a user space driver, vmsplice wouldn't change anything 
-> >>much. It doesn't have a possibility for a user to know, when 
-> >>transmission of the data finished. So, it is intended to be used as: 
-> >>vmsplice() buffer -> munmap() the buffer -> mmap() new buffer -> 
-> >>vmsplice() it. But on the mmap() stage kernel has to zero all the newly 
-> >>mapped pages and zeroing memory isn't much faster, than copying it. 
-> >>Hence, there would be no considerable performance increase.
-> >
-> >vmsplice() isn't the right choice, but splice() very well could be. You
-> >could easily use splice internally as well. The vmsplice() part sort-of
-> >applies in the sense that you want to fill pages into a pipe, which is
-> >essentially what vmsplice() does. You'd need some helper to do that.
-> 
-> Sorry, Jens, but splice() works only if there is a file handle on the 
-> another side, so user space doesn't see data buffers. But SCST needs to 
-> serve a wider usage cases, like reading data with decompression from a 
-> virtual tape, where decompression is done in user space. For those only 
-> complete zero-copy network send, which I implemented, can give the best 
-> performance.
+Hello all,
 
-__splice_from_pipe() takes a pipe, a descriptor and an actor. There's
-absolutely ZERO reason you could not reuse most of that for this
-implementation. The big bonus here is that getting the put correct from
-networking would even make splice() better for everyone. Win for Linux,
-win for you since it'll make it MUCH easier for you to get this stuff
-in. Looking at your original patch and I almost think it's a flame bait
-to induce discussion (nothing wrong with that, that approach works quite
-well and has been used before). There's no way in HELL that it'd ever be
-a merge candidate. And I suspect you know that, at least I hope you do
-or you are farther away from going forward with this than you think.
+These SCSI's firmware patches are floating in linux-next from long time :
 
-So don't look at splice() the system call, look at the infrastructure
-and check if that could be useful for your case. To me it looks
-absolutely like it could, if you goal is just zero-copy transmit. The
-only missing piece is dropping the reference and signalling page
-consumption at the right point, which is when the data is safe to be
-reused. That very bit is missing, but that should be all as far as I can
-tell.
+1. qla1280: use request_firmware
+http://git.kernel.org/?p=linux/kernel/git/sfr/linux-next.git;a=commit;h=7c84df1aec1bbb4e43ac9e2ba65b137042279a8d
+2. advansys: use request_firmware
+http://git.kernel.org/?p=linux/kernel/git/sfr/linux-next.git;a=commit;h=baca2b168d3b7340eac87414c046f7d49de4bf71
+3. qlogicpti: use request_firmware
+http://git.kernel.org/?p=linux/kernel/git/sfr/linux-next.git;a=commit;h=2c68b5b6db13786a425accc8576217b120f885f2
 
-> >And
-> >the ack-on-xmit-done bits is something that splice-to-socket needs
-> >anyway, so I think it'd be quite a suitable choice for this.
-> 
-> So, are you writing that splice() could also benefit from the zero-copy 
-> transmit feature, like I implemented?
+Should I need to resend these patches to merge main-stream.
 
-I like how you want to reinvent everything, perhaps you should spend a
-little more time looking into various other approaches? splice() already
-does zero-copy network transmit, there are no copies going on. Ideally,
-you'd have zero copies moving data into your pipe, but migrade/move
-isn't quite there yet. But that doesn't apply to your case at all.
+Thank you,
 
-What is missing, as I wrote, is the 'release on ack' and not on pipe
-buffer release. This is similar to the get_page/put_page stuff you did
-in your patch, but don't go claiming that zero-copy transmit is a
-Vladislav original - the ->sendpage() does no copies.
-
--- 
-Jens Axboe
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Jaswinder Singh.
