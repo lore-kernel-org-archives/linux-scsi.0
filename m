@@ -1,54 +1,49 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Firmware patches for SCSI
-Date: Fri, 19 Dec 2008 15:53:51 -0500
-Message-ID: <1229720031.18778.8.camel@localhost.localdomain>
-References: <3f9a31f40812191153n636888f4i549409453266d58c@mail.gmail.com>
-	 <1229718543.18778.4.camel@localhost.localdomain>
-	 <3f9a31f40812191241q40dafdb0lfd2f4487f2870e2@mail.gmail.com>
+From: Evgeniy Polyakov <zbr@ioremap.net>
+Subject: Re: [RFC]: Support for zero-copy TCP transmit of user space data
+Date: Sat, 20 Dec 2008 00:58:17 +0300
+Message-ID: <20081219215817.GA704@ioremap.net>
+References: <1229110673.3262.94.camel@localhost.localdomain> <49469ADB.6010709@vlnb.net> <20081215231801.GA27168@infradead.org> <4947FA1C.2090509@vlnb.net> <494A97DD.7080503@vlnb.net> <494A99EF.6070400@flurg.com> <494BDBC5.7050701@vlnb.net> <20081219190701.GP32491@kernel.dk> <494BF361.1090003@vlnb.net> <20081219192736.GQ32491@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <3f9a31f40812191241q40dafdb0lfd2f4487f2870e2@mail.gmail.com>
-Sender: linux-next-owner@vger.kernel.org
-To: Jaswinder Singh <jaswinderlinux@gmail.com>
-Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, sfr@canb.auug.org.au, linux-next@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20081219192736.GQ32491@kernel.dk>
+Sender: owner-linux-mm@kvack.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, "David M. Lloyd" <dmlloyd@flurg.com>, linux-mm@kvack.org, Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, netdev@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, 2008-12-20 at 02:11 +0530, Jaswinder Singh wrote:
-> Hello James,
-> 
-> On Sat, Dec 20, 2008 at 1:59 AM, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
-> >
-> > Um ... depends how they got into linux-next.  The head commit just says
-> >
-> 
-> They got into linux-next via David Woodhouse. :
-> http://git.infradead.org/users/dwmw2/firmware-2.6.git
-> 
-> > Merge commit 'firmware/master'
-> >
-> > Which isn't very descriptive of where it came from.  It looks like
-> > either a tree that linux-next shouldn't pull (or one the owner forgot to
-> > push to linus).
-> >
-> 
-> Earlier due to Firmware issues firmware patches are going directly
-> though David Woodhouse.
-> 
-> Now firmware issues are solved so David wants that the _driver_
-> patches should be sent directly to the appropriate maintainers / mailing lists.
+On Fri, Dec 19, 2008 at 08:27:36PM +0100, Jens Axboe (jens.axboe@oracle.com) wrote:
+> What is missing, as I wrote, is the 'release on ack' and not on pipe
+> buffer release. This is similar to the get_page/put_page stuff you did
+> in your patch, but don't go claiming that zero-copy transmit is a
+> Vladislav original - the ->sendpage() does no copies.
 
-OK, then whatever tree contains them needs to eject them or be dropped
-from linux-next.
+Just my small rant: it does, when underlying device does not support
+hardware tx checksumming and scatter/gather, which is likely exception
+than a rule for the modern NICs.
 
-> So I am curious that should I resend these patches based on which git tree.
+As of having notifications of the received ack (or from user's point of
+view notification of the freeing of the buffer), I have following idea
+in mind: extend skb ahsred info by copy of the frag array and additional
+destructor field, which will be invoked when not only skb but also all
+its clones are freed (that's when shared info is freed), so that user
+could save some per-page context in fraglist and work with it when data
+is not used anymore.
 
-Yes please.  For me it would be against scsi-misc ... for the other
-drivers it would be their development tree.  The simplest thing to do is
-probably to rebase them all on top of linux-next (which contains all of
-our trees) and then send them to the individual subsystem maintainer
-lists.
+Extending page or skb structure is a no-go for sure, and actually even
+shared info is not rubber, but there we can at least add something...
 
-James
+If only destructor field is allowed (similar patch was not rejected),
+scsi can save its pages in the tree (indexed by the page pointer) and
+traverse it when destructor is invoked selecting pages found in the
+freed skb.
+
+-- 
+	Evgeniy Polyakov
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
