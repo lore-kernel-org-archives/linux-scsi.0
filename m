@@ -1,364 +1,329 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] [LIO-Target 12/14]: Updates for iscsi_target.c for generic
-	target_core_mod v3.0
-Date: Fri, 19 Dec 2008 15:37:06 -0800
-Message-ID: <1229729826.4560.124.camel@haakon2.linux-iscsi.org>
+Subject: [PATCH] [LIO-Target/MIB 13/14]: Convert logic to use generic
+	target_core_mod v3.0 code
+Date: Fri, 19 Dec 2008 15:37:37 -0800
+Message-ID: <1229729857.4560.126.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp120.sbc.mail.sp1.yahoo.com ([69.147.64.93]:32496 "HELO
-	smtp120.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751891AbYLSXhg (ORCPT
+Received: from smtp125.sbc.mail.sp1.yahoo.com ([69.147.65.184]:27467 "HELO
+	smtp125.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753605AbYLSXiG (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Dec 2008 18:37:36 -0500
+	Fri, 19 Dec 2008 18:38:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>
 Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
->From e021cdd91d39687fdd2ba5fbe5f7fed495f35961 Mon Sep 17 00:00:00 2001
+>From c15b0b2bb53e5f7e4d7fd659014b86a263d21237 Mon Sep 17 00:00:00 2001
 From: Nicholas Bellinger <nab@linux-iscsi.org>
-Date: Fri, 19 Dec 2008 14:38:38 -0800
-Subject: [PATCH] [LIO-Target]: Updates for iscsi_target.c for generic target_core_mod v3.0
+Date: Fri, 19 Dec 2008 14:43:56 -0800
+Subject: [PATCH] [LIO-Target/MIB]: Convert logic to use generic target_core_mod v3.0 code
 
-This patch adds struct kmem_cache *lio_cmd_cache and struct kmem_cache *lio_sess_cache
-for iscsi_cmd_t and iscsi_session_t respectively.
-
-It adds iscsi_get_fabric_name(), which is used in struct target_core_fabric_ops.
-
-Also, added a check for SE_CMD(iscsi_cmd_t) in iscsi_target_tx_thread():ISTATE_REMOVE
-to determine if the iscsi_cmd_t has an assoicated se_cmd_t that needs to be freed
-by target_core_mod logic.
-
-Updated iscsi_close_session() to use transport_deregister_session_configfs() and
-transport_deregister_session(), and got rid of some logic that has now been
-made generic to target_core_mod v3.0.
-
-Made iscsi_stop_session() return 'void', and made iscsi_release_sessions_for_tpg()
-use se_portal_group_t->tpg_sess_list with struct list_head.
+Convert the iSCSI MIBs code to use se_node_acl_t and se_portal_group_t->tpg_sess_list,
+in a number of different MIBs.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/lio-core/iscsi_target.c |  128 ++++++++++++++++++++-------------------
- drivers/lio-core/iscsi_target.h |    3 +-
- 2 files changed, 68 insertions(+), 63 deletions(-)
+ drivers/lio-core/iscsi_target_mib.c |  114 ++++++++++++++++++++---------------
+ 1 files changed, 65 insertions(+), 49 deletions(-)
 
-diff --git a/drivers/lio-core/iscsi_target.c b/drivers/lio-core/iscsi_target.c
-index e393cd1..d234fe0 100644
---- a/drivers/lio-core/iscsi_target.c
-+++ b/drivers/lio-core/iscsi_target.c
-@@ -94,7 +94,8 @@
+diff --git a/drivers/lio-core/iscsi_target_mib.c b/drivers/lio-core/iscsi_target_mib.c
+index 1896889..8b600e3 100644
+--- a/drivers/lio-core/iscsi_target_mib.c
++++ b/drivers/lio-core/iscsi_target_mib.c
+@@ -864,7 +864,7 @@ int do_tgt_auth_check(void *p)
+ {
+ 	iscsi_portal_group_t *tpg = (iscsi_portal_group_t *)p;
  
- iscsi_global_t *iscsi_global = NULL;
- 
--extern struct miscdevice iscsi_dev;
-+struct kmem_cache *lio_cmd_cache = NULL;
-+struct kmem_cache *lio_sess_cache = NULL;
- 
- extern int se_allocate_rl_cmd (se_cmd_t *, unsigned char *, u64);
- extern int iscsi_build_report_luns_response (iscsi_cmd_t *);
-@@ -444,7 +445,6 @@ extern int core_access_np (iscsi_np_t *np, iscsi_portal_group_t *tpg)
- 
- 	spin_lock_bh(&np->np_thread_lock);
- 	np->np_login_tpg = tpg;
--	printk("Set np->np_login_tpg to %p\n", tpg);
- 	spin_unlock_bh(&np->np_thread_lock);
- 
- 	return(0);
-@@ -456,7 +456,6 @@ extern int core_deaccess_np (iscsi_np_t *np, iscsi_portal_group_t *tpg)
- 
- 	spin_lock_bh(&np->np_thread_lock);
- 	np->np_login_tpg = NULL;	
--	printk("Cleared np->np_login_tpg\n");
- 	spin_unlock_bh(&np->np_thread_lock);
- 
- 	up(&tpg->np_login_sem);
-@@ -1104,6 +1103,20 @@ static int iscsi_target_detect(void)
- 	plugin_register_class(PLUGIN_TYPE_FRONTEND, "FRONTEND", MAX_PLUGINS);
- 	frontend_load_plugins();
- 
-+	if (!(lio_cmd_cache = kmem_cache_create("lio_cmd_cache",
-+			sizeof(iscsi_cmd_t), __alignof__(iscsi_cmd_t),
-+			0, NULL))) {
-+		printk(KERN_ERR "Unable to kmem_cache_create() for lio_cmd_cache\n");
-+		goto out;
-+	}
-+
-+	if (!(lio_sess_cache = kmem_cache_create("lio_sess_cache",
-+			sizeof(iscsi_session_t), __alignof__(iscsi_session_t),
-+			0, NULL))) {
-+		printk(KERN_ERR "Unable to kmem_cache_create() for lio_sess_cache\n");
-+		goto out;
-+	}
-+
- 	if (core_load_discovery_tpg() < 0)
- 		goto out;
- 
-@@ -1113,6 +1126,10 @@ static int iscsi_target_detect(void)
- out:
- 	plugin_deregister_class(PLUGIN_TYPE_FRONTEND);
- 	core_release_discovery_tpg();
-+	if (lio_cmd_cache)
-+		kmem_cache_destroy(lio_cmd_cache);
-+	if (lio_sess_cache)
-+		kmem_cache_destroy(lio_sess_cache);
- 	iscsi_deallocate_thread_sets(TARGET);
- 	iscsi_target_deregister_configfs();
- #ifdef CONFIG_PROC_FS
-@@ -1163,6 +1180,8 @@ extern void iscsi_target_release_phase2 (void)
- 	iscsi_remove_all_tpgs();
- 	core_release_nps();
- 	iscsi_hba_del_all_hbas();
-+	kmem_cache_destroy(lio_cmd_cache);
-+	kmem_cache_destroy(lio_sess_cache);
- 	core_release_discovery_tpg();
- 	core_release_tiqns();
- 	plugin_deregister_class(PLUGIN_TYPE_FRONTEND);
-@@ -1249,6 +1268,11 @@ extern void frontend_load_plugins (void)
- 	return;
+-	return(tpg->num_node_acls);
++	return(SE_TPG(tpg)->num_node_acls);
  }
  
-+extern char *iscsi_get_fabric_name (void)
-+{
-+	return("iSCSI");
-+}
-+
- extern iscsi_cmd_t *iscsi_get_cmd (se_cmd_t *se_cmd)
+ static void *tgt_auth_seq_start(struct seq_file *seq, loff_t *pos)
+@@ -886,7 +886,7 @@ static int tgt_auth_seq_show(struct seq_file *seq, void *v)
  {
-         return((iscsi_cmd_t *)se_cmd->se_fabric_cmd_ptr);
-@@ -2364,8 +2388,6 @@ static inline int iscsi_handle_task_mgt_cmd (
- 
- 	cmd->iscsi_opcode		= ISCSI_INIT_TASK_MGMT_CMND;
- 	cmd->i_state			= ISTATE_SEND_TASKMGTRSP;
--// Already set in transport_generic_handle_tmr()
--//	cmd->t_state			= TRANSPORT_PROCESS_TMR;
- 	cmd->immediate_cmd		= ((hdr->opcode & I_BIT) ? 1:0);
- #warning FIXME: iscsi_handle_task_mgt_cmd() broken for iscsi_lun
- //	cmd->iscsi_lun			= lun;
-@@ -4257,8 +4279,14 @@ get_immediate:
- 				spin_lock_bh(&conn->cmd_lock);
- 				iscsi_remove_cmd_from_conn_list(cmd, conn);
- 				spin_unlock_bh(&conn->cmd_lock);
--
--				transport_generic_free_cmd(SE_CMD(cmd), 1, 1, 0);
-+				/*
-+				 * Determine if a se_cmd_t is assoicated with
-+				 * this iscsi_cmd_t.
-+				 */
-+				if (!(SE_CMD(cmd)))
-+					iscsi_release_cmd_to_pool(cmd);
-+				else
-+					transport_generic_free_cmd(SE_CMD(cmd), 1, 1, 0);
- 				goto get_immediate;
- 			case ISTATE_SEND_NOPIN_WANT_RESPONSE:
- 				spin_unlock_bh(&cmd->istate_lock);
-@@ -4365,7 +4393,7 @@ check_rsp_state:
- 					break;
- 				ret = iscsi_tmr_post_handler(cmd, conn);
- 				if (ret != 0)
--					iscsi_fall_back_to_erl0(conn);
-+					iscsi_fall_back_to_erl0(SESS(conn));
- 				break;
- 			case ISTATE_SEND_TEXTRSP:
- 				spin_unlock_bh(&cmd->istate_lock);
-@@ -4700,7 +4728,8 @@ static void iscsi_release_commands_from_conn (iscsi_conn_t *conn)
- 	while (cmd) {
- 		cmd_next = cmd->i_next;
- 
--		if (!(cmd->cmd_flags & ICF_SE_LUN_CMD)) {
-+		if (!(SE_CMD(cmd)) ||
-+		    !(SE_CMD(cmd)->se_cmd_flags & SCF_SE_LUN_CMD)) {
- 			/*
- 			 * CLOSESESSION and CLOSECONNECTION with a matching
- 			 * logout_cid will be freed in iscsi_logout_post_handler().
-@@ -4981,8 +5010,8 @@ extern int iscsi_close_connection (
- extern int iscsi_close_session (
- 	iscsi_session_t *sess)
- {
+ 	iscsi_portal_group_t *tpg;
+ 	table_iter_t *iterp = (table_iter_t *)seq->private;
 -	iscsi_node_acl_t *acl;
- 	iscsi_portal_group_t *tpg = ISCSI_TPG_S(sess);
-+	se_portal_group_t *se_tpg = tpg->tpg_se_tpg;
- 	
- 	if (atomic_read(&sess->nconn)) {
- 		TRACE_ERROR("%d connection(s) still exist for iSCSI session"
-@@ -4991,22 +5020,20 @@ extern int iscsi_close_session (
- 		BUG();
- 	}
- 	
--	spin_lock_bh(&tpg->session_lock);
-+	spin_lock_bh(&se_tpg->session_lock);
- 	atomic_set(&sess->session_logout, 1);
- 	atomic_set(&sess->session_reinstatement, 1);
- 	iscsi_stop_time2retain_timer(sess);
--	spin_unlock_bh(&tpg->session_lock);
-+	spin_unlock_bh(&se_tpg->session_lock);
++	se_node_acl_t *acl;
+ 	iscsi_tiqn_t *tiqn;
  
- 	/*
--	 * Clear the iscsi_node_acl->nacl_sess pointer now as a iscsi_np
--	 * context can be setting in iscsi_post_login_handler()  again
--	 * after out iscsi_stop_session() below.
-+	 * transport_deregister_session_configfs() will clear the
-+	 * se_node_acl_t->nacl_sess pointer now as a iscsi_np process context
-+	 * can be setting it again with __transport_register_session() in
-+	 * iscsi_post_login_handler() again after the iscsi_stop_session()
-+	 * completes in iscsi_np context.
- 	 */
--	if ((acl = sess->node_acl)) {
--		spin_lock(&acl->nacl_sess_lock);
--		acl->nacl_sess = NULL;
--		spin_unlock(&acl->nacl_sess_lock);
--	}
-+        transport_deregister_session_configfs(sess->se_sess);
+ 	if (v == SEQ_START_TOKEN)
+@@ -896,13 +896,13 @@ static int tgt_auth_seq_show(struct seq_file *seq, void *v)
+ 	if (!(tpg = iscsi_get_tpg_from_tpgt(tiqn, iterp->ti_offset, 0)))
+ 		return(0);
  
- 	/*
- 	 * If any other processes are accessing this session pointer we must wait until
-@@ -5023,38 +5050,15 @@ extern int iscsi_close_session (
- 			return(0);
- 		}
- 	}
--	
--	iscsi_remove_session_from_list(sess);
-+
-+	transport_deregister_session(sess->se_sess);
- 
- 	if (SESS_OPS(sess)->ErrorRecoveryLevel == 2)
- 		iscsi_free_connection_recovery_entires(sess);
- 
--	/*
--	 * Determine if we need to do extra work for this initiator
--	 * nodes iscsi_node_acl_t if it had been previously dynamically
--	 * generated.
--	 */
 -	spin_lock_bh(&tpg->acl_node_lock);
--	if (acl) {
--		if (acl->nodeacl_flags & NAF_DYNAMIC_NODE_ACL) {
--			if (!(ISCSI_TPG_ATTRIB(tpg)->cache_dynamic_acls)) {
--				REMOVE_ENTRY_FROM_LIST(acl, tpg->acl_node_head,
--						tpg->acl_node_tail);
--				tpg->num_node_acls--;
--				spin_unlock_bh(&tpg->acl_node_lock);
--				iscsi_free_device_list_for_node(acl, tpg);
--				kfree(acl);
--				spin_lock_bh(&tpg->acl_node_lock);
--			}
--		}
--		sess->node_acl = NULL;
--	}
+-	for (acl = tpg->acl_node_head; acl; acl = acl->next) {
++	spin_lock_bh(&SE_TPG(tpg)->acl_node_lock);
++	for (acl = SE_TPG(tpg)->acl_node_head; acl; acl = acl->next) {
+ 		seq_printf(seq,"%u %u %u %s\n",
+ 			   tiqn->tiqn_index, ISCSI_NODE_INDEX, acl->acl_index, 
+ 			   acl->initiatorname[0] ? acl->initiatorname : NONE);
+ 	}
 -	spin_unlock_bh(&tpg->acl_node_lock);
--
- 	iscsi_free_all_ooo_cmdsns(sess);
--	iscsi_release_all_cmds_in_pool(sess);
++	spin_unlock_bh(&SE_TPG(tpg)->acl_node_lock);
+ 
+ 	/* Release the semaphore */
+ 	iscsi_put_tpg(tpg);
+@@ -962,6 +962,7 @@ static int sess_attr_seq_show(struct seq_file *seq, void *v)
+ 	iscsi_session_t *sess;
+ 	iscsi_sess_ops_t *sops;
+ 	iscsi_tiqn_t *tiqn;
++	se_session_t *se_sess;
+ 	table_iter_t *iterp = (table_iter_t *)seq->private;
+ 
+ 	if (v == SEQ_START_TOKEN)
+@@ -974,8 +975,9 @@ static int sess_attr_seq_show(struct seq_file *seq, void *v)
+ 	if (!(tpg = iscsi_get_tpg_from_tpgt(tiqn, iterp->ti_offset, 0)))
+ 		return(0);
  
 -	spin_lock_bh(&tpg->session_lock);
-+	spin_lock_bh(&se_tpg->session_lock);
- 	TRACE(TRACE_STATE, "Moving to TARG_SESS_STATE_FREE.\n");
- 	sess->session_state = TARG_SESS_STATE_FREE;
- 	PYXPRINT("Released iSCSI session from node: %s\n",
-@@ -5067,9 +5071,9 @@ extern int iscsi_close_session (
- 		kfree(sess->sess_ops);
- 		sess->sess_ops = NULL;
+-	for (sess = tpg->session_head; sess; sess = sess->next) {
++	spin_lock_bh(&SE_TPG(tpg)->session_lock);
++	list_for_each_entry(se_sess, &SE_TPG(tpg)->tpg_sess_list, sess_list) {
++		sess = (iscsi_session_t *)se_sess->fabric_sess_ptr;
+ 		sops = sess->sess_ops;
+ 
+ 		seq_printf(seq, "%u %u %u %s %s %s %u ", 
+@@ -1005,7 +1007,7 @@ static int sess_attr_seq_show(struct seq_file *seq, void *v)
+ 		seq_printf(seq, "tgt_alias: %s\n", sops->TargetAlias[0]?
+ 			   sops->TargetAlias:NONE); 
  	}
 -	spin_unlock_bh(&tpg->session_lock);
-+	spin_unlock_bh(&se_tpg->session_lock);
- 	
--	kfree(sess);
-+	kmem_cache_free(lio_sess_cache, sess);
- 	sess = NULL;
++	spin_unlock_bh(&SE_TPG(tpg)->session_lock);
  
- 	return(0);
-@@ -5307,7 +5311,7 @@ extern int iscsi_free_session (iscsi_session_t *sess)
-  *
-  *
-  */
--extern int iscsi_stop_session (iscsi_session_t *sess, int session_sleep, int connection_sleep)
-+extern void iscsi_stop_session (iscsi_session_t *sess, int session_sleep, int connection_sleep)
- {
- 	u16 conn_count = atomic_read(&sess->nconn);
- 	iscsi_conn_t *conn, *conn_next = NULL;
-@@ -5357,7 +5361,7 @@ extern int iscsi_stop_session (iscsi_session_t *sess, int session_sleep, int con
- 		spin_unlock_bh(&sess->conn_lock);
+ 	/* Release the semaphore */
+ 	iscsi_put_tpg(tpg);
+@@ -1056,6 +1058,7 @@ static int sess_stats_seq_show(struct seq_file *seq, void *v)
+ 	iscsi_portal_group_t *tpg;
+ 	iscsi_session_t *sess;
+ 	iscsi_tiqn_t *tiqn;
++	se_session_t *se_sess;
+ 	table_iter_t *iterp = (table_iter_t *)seq->private;
  
- 	TRACE_LEAVE
--	return(0);
-+	return;
- }	
- 
- /*	iscsi_release_sessions_for_tpg():
-@@ -5366,40 +5370,40 @@ extern int iscsi_stop_session (iscsi_session_t *sess, int session_sleep, int con
-  */
- extern int iscsi_release_sessions_for_tpg (iscsi_portal_group_t *tpg, int force)
- {
-+	iscsi_session_t *sess;
-+	se_portal_group_t *se_tpg = tpg->tpg_se_tpg;
-+	se_session_t *se_sess, *se_sess_tmp;
- 	int session_count = 0;
--	iscsi_session_t *sess = NULL, *sess_next = NULL;
- 
- 	TRACE_ENTER
+ 	if (v == SEQ_START_TOKEN)
+@@ -1066,8 +1069,10 @@ static int sess_stats_seq_show(struct seq_file *seq, void *v)
+ 	if (!(tpg = iscsi_get_tpg_from_tpgt(tiqn, iterp->ti_offset, 0)))
+ 		return(0);
  
 -	spin_lock_bh(&tpg->session_lock);
-+	spin_lock_bh(&se_tpg->session_lock);
- 	if (tpg->nsessions && !force) {
--		spin_unlock_bh(&tpg->session_lock);
-+		spin_unlock_bh(&se_tpg->session_lock);
- 		return(-1);
- 	}
- 	
--	sess = tpg->session_head;
--	while (sess) {
--		sess_next = sess->next;
--		
-+	list_for_each_entry_safe(se_sess, se_sess_tmp, &se_tpg->tpg_sess_list,
-+			sess_list) {
-+		sess = (iscsi_session_t *)se_sess->fabric_sess_ptr;		
+-	for (sess = tpg->session_head; sess; sess = sess->next) {
++	spin_lock_bh(&SE_TPG(tpg)->session_lock);
++	list_for_each_entry(se_sess, &SE_TPG(tpg)->tpg_sess_list, sess_list) {
++		sess = (iscsi_session_t *)se_sess->fabric_sess_ptr;
 +
-                 spin_lock(&sess->conn_lock);
-                 if (atomic_read(&sess->session_fall_back_to_erl0) ||
-                     atomic_read(&sess->session_logout) ||
-                     (sess->time2retain_timer_flags & T2R_TF_EXPIRED)) {
- 			spin_unlock(&sess->conn_lock);
--			sess = sess_next;
+ 		spin_lock_bh(&sess->session_stats_lock);
+ 		seq_printf(seq, "%u %u %u %u %u %llu %llu\n",
+ 			tiqn->tiqn_index,
+@@ -1078,7 +1083,7 @@ static int sess_stats_seq_show(struct seq_file *seq, void *v)
+ 			(unsigned long long)sess->rx_data_octets);
+ 		spin_unlock_bh(&sess->session_stats_lock);
+ 	}
+-	spin_unlock_bh(&tpg->session_lock);
++	spin_unlock_bh(&SE_TPG(tpg)->session_lock);
+ 
+ 	iscsi_put_tpg(tpg);
+ 
+@@ -1128,6 +1133,7 @@ static int sess_conn_err_stats_seq_show(struct seq_file *seq, void *v)
+ 	iscsi_portal_group_t *tpg;
+ 	iscsi_session_t *sess;
+ 	iscsi_tiqn_t *tiqn;
++	se_session_t *se_sess;
+ 	table_iter_t *iterp = (table_iter_t *)seq->private;
+ 
+ 	if (v == SEQ_START_TOKEN)
+@@ -1137,8 +1143,10 @@ static int sess_conn_err_stats_seq_show(struct seq_file *seq, void *v)
+ 	if (!(tpg = iscsi_get_tpg_from_tpgt(tiqn, iterp->ti_offset, 0)))
+ 		return(0);
+ 
+-	spin_lock_bh(&tpg->session_lock);
+-	for (sess = tpg->session_head; sess; sess = sess->next) {
++	spin_lock_bh(&SE_TPG(tpg)->session_lock);
++	list_for_each_entry(se_sess, &SE_TPG(tpg)->tpg_sess_list, sess_list) {
++		sess = (iscsi_session_t *)se_sess->fabric_sess_ptr;
++
+ 		spin_lock_bh(&sess->session_stats_lock);
+ 		seq_printf(seq, "%u %u %u %u %u\n", 
+ 			   tiqn->tiqn_index,
+@@ -1148,7 +1156,7 @@ static int sess_conn_err_stats_seq_show(struct seq_file *seq, void *v)
+ 			   sess->conn_timeout_errors);
+ 		spin_unlock_bh(&sess->session_stats_lock);
+ 	}
+-	spin_unlock_bh(&tpg->session_lock);
++	spin_unlock_bh(&SE_TPG(tpg)->session_lock);
+ 
+ 	/* Release the semaphore */
+ 	iscsi_put_tpg(tpg);
+@@ -1202,6 +1210,7 @@ static int conn_attr_seq_show(struct seq_file *seq, void *v)
+ 	iscsi_tiqn_t *tiqn;
+ 	iscsi_conn_t *conn;
+ 	iscsi_conn_ops_t *conn_ops;
++	se_session_t *se_sess;
+ 	table_iter_t *iterp = (table_iter_t *)seq->private;
+ 	char state_str[16]; 
+ 	char proto_str[16]; 
+@@ -1216,8 +1225,9 @@ static int conn_attr_seq_show(struct seq_file *seq, void *v)
+ 	if (!(tpg = iscsi_get_tpg_from_tpgt(tiqn, iterp->ti_offset, 0)))
+ 		return(0);
+ 
+-	spin_lock_bh(&tpg->session_lock);
+-	for (sess = tpg->session_head; sess; sess = sess->next) {
++	spin_lock_bh(&SE_TPG(tpg)->session_lock);
++	list_for_each_entry(se_sess, &SE_TPG(tpg)->tpg_sess_list, sess_list) {
++		sess = (iscsi_session_t *)se_sess->fabric_sess_ptr;
+ 
+ 		spin_lock(&sess->conn_lock);
+ 		for (conn = sess->conn_head; conn; conn = conn->next) {
+@@ -1272,7 +1282,7 @@ static int conn_attr_seq_show(struct seq_file *seq, void *v)
+ 		}
+ 		spin_unlock(&sess->conn_lock);
+ 	}
+-	spin_unlock_bh(&tpg->session_lock);
++	spin_unlock_bh(&SE_TPG(tpg)->session_lock);
+ 
+ 	iscsi_put_tpg(tpg);
+ 
+@@ -1325,9 +1335,9 @@ extern int lio_scsi_auth_intr_seq_show(struct seq_file *seq, void *v)
+ {
+ 	iscsi_portal_group_t *tpg;
+ 	table_iter_t *iterp = (table_iter_t *)seq->private;
+-	iscsi_node_acl_t *acl;
+ 	se_dev_entry_t *deve;
+ 	se_lun_t *lun;
++	se_node_acl_t *se_nacl;
+ 	iscsi_tiqn_t *tiqn;
+ 	int j; 
+ 
+@@ -1336,28 +1346,28 @@ extern int lio_scsi_auth_intr_seq_show(struct seq_file *seq, void *v)
+ 	if (!(tpg = iscsi_get_tpg_from_tpgt(tiqn, iterp->ti_offset, 0)))
+ 		return(0);
+ 
+-	spin_lock_bh(&tpg->acl_node_lock);
+-	for (acl = tpg->acl_node_head; acl; acl = acl->next) {
+-		spin_lock_bh(&acl->device_list_lock);
+-		for (j = 0; j < ISCSI_MAX_LUNS_PER_TPG; j++) {
+-			deve = &acl->device_list[j];
+-			if (!(deve->lun_flags & ISCSI_LUNFLAGS_INITIATOR_ACCESS) ||
+-			     (!deve->iscsi_lun))
++	spin_lock_bh(&SE_TPG(tpg)->acl_node_lock);
++	for (se_nacl = SE_TPG(tpg)->acl_node_head; se_nacl; se_nacl = se_nacl->next) {
++		spin_lock_bh(&se_nacl->device_list_lock);
++		for (j = 0; j < TRANSPORT_MAX_LUNS_PER_TPG; j++) {
++			deve = &se_nacl->device_list[j];
++			if (!(deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS) ||
++			     (!deve->se_lun))
+ 				continue;
+ 
+-			lun = deve->iscsi_lun;
+-			if ((lun->lun_type != ISCSI_LUN_TYPE_DEVICE) ||
+-			    (!lun->iscsi_dev))
++			lun = deve->se_lun;
++			if ((lun->lun_type != TRANSPORT_LUN_TYPE_DEVICE) ||
++			    (!lun->se_dev))
+ 				continue;
+ 
+ 			seq_printf(seq,"%u %u %u %u %u %s %u %u %u %u %u %u %u %s\n",
+ 				tiqn->tiqn_index, /* scsiInstIndex */
+-				lun->iscsi_dev->dev_index, /* scsiDeviceIndex */
++				lun->se_dev->dev_index, /* scsiDeviceIndex */
+ 				tpg->tpgt, /* scsiAuthIntrTgtPortIndex */
+-				acl->acl_index, /* scsiAuthIntrIndex */
++				se_nacl->acl_index, /* scsiAuthIntrIndex */
+ 				1, /* scsiAuthIntrDevOrPort */
+-				acl->initiatorname[0] ?
+-					acl->initiatorname:NONE, /* scsiAuthIntrName */
++				se_nacl->initiatorname[0] ?
++					se_nacl->initiatorname:NONE, /* scsiAuthIntrName */
+ 				0, /* FIXME: scsiAuthIntrLunMapIndex */
+ 				deve->attach_count,  /* scsiAuthIntrAttachedTimes */
+ 				deve->total_cmds, /* scsiAuthIntrOutCommands */
+@@ -1367,9 +1377,9 @@ extern int lio_scsi_auth_intr_seq_show(struct seq_file *seq, void *v)
+ 				(u32)(((u32)deve->creation_time - INITIAL_JIFFIES)*100/HZ), /* scsiAuthIntrLastCreation */
+ 				"Ready"); /* FIXME: scsiAuthIntrRowStatus */
+ 		}
+-		spin_unlock_bh(&acl->device_list_lock);
++		spin_unlock_bh(&se_nacl->device_list_lock);
+ 	}
+-	spin_unlock_bh(&tpg->acl_node_lock);
++	spin_unlock_bh(&SE_TPG(tpg)->acl_node_lock);
+ 
+ 	/* Release the semaphore */
+ 	iscsi_put_tpg(tpg);
+@@ -1407,6 +1417,8 @@ extern int lio_scsi_att_intr_port_seq_show(struct seq_file *seq, void *v)
+ 	table_iter_t *iterp = (table_iter_t *)seq->private;
+ 	se_dev_entry_t *deve;
+ 	se_lun_t *lun;
++	se_node_acl_t *se_nacl;
++	se_session_t *se_sess;
+ 	iscsi_tiqn_t *tiqn;
+ 	int j;
+ 
+@@ -1415,42 +1427,46 @@ extern int lio_scsi_att_intr_port_seq_show(struct seq_file *seq, void *v)
+ 	if (!(tpg = iscsi_get_tpg_from_tpgt(tiqn, iterp->ti_offset, 0)))
+ 		return(0);
+ 
+-	spin_lock_bh(&tpg->session_lock);
+-	for (sess = tpg->session_head; sess; sess = sess->next) {
++	spin_lock_bh(&SE_TPG(tpg)->session_lock);
++	list_for_each_entry(se_sess, &SE_TPG(tpg)->tpg_sess_list, sess_list) {
++		sess = (iscsi_session_t *)se_sess->fabric_sess_ptr;
+ 		sops = sess->sess_ops;
++
+ 		if ((sess->session_state != TARG_SESS_STATE_LOGGED_IN) ||
+-		    (!sess->node_acl) || (!sess->node_acl->device_list)) {
++		    (!se_sess->se_node_acl) ||
++		    (!se_sess->se_node_acl->device_list)) {
  			continue;
  		}
- 		atomic_set(&sess->session_reinstatement, 1);
- 		spin_unlock(&sess->conn_lock);
--		spin_unlock_bh(&tpg->session_lock);
-+		spin_unlock_bh(&se_tpg->session_lock);
++		se_nacl = se_sess->se_node_acl;
  
- 		iscsi_free_session(sess);
--		spin_lock_bh(&tpg->session_lock);
-+		spin_lock_bh(&se_tpg->session_lock);
- 		
- 		session_count++;
--		sess = sess_next;
+-		spin_lock_bh(&sess->node_acl->device_list_lock);
+-		for (j = 0; j < ISCSI_MAX_LUNS_PER_TPG; j++) {
+-			deve = &sess->node_acl->device_list[j];
+-			if (!(deve->lun_flags & ISCSI_LUNFLAGS_INITIATOR_ACCESS)
+-			    || (!deve->iscsi_lun))
++		spin_lock_bh(&se_nacl->device_list_lock);
++		for (j = 0; j < TRANSPORT_MAX_LUNS_PER_TPG; j++) {
++			deve = &se_nacl->device_list[j];
++			if (!(deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS)
++			    || (!deve->se_lun))
+ 				continue;
+ 
+-			lun = deve->iscsi_lun;
+-			if ((lun->lun_type != ISCSI_LUN_TYPE_DEVICE) ||
+-			    (!lun->iscsi_dev))
++			lun = deve->se_lun;
++			if ((lun->lun_type != TRANSPORT_LUN_TYPE_DEVICE) ||
++			    (!lun->se_dev))
+ 				continue;
+ 
+ 			seq_printf(seq,"%u %u %u %u %u "
+ 				   "%s+i+%02X%02X%02X%02X%02X%02X\n",
+ 				   tiqn->tiqn_index, /* scsiInstIndex */
+-				   lun->iscsi_dev->dev_index, /* scsiDeviceIndex */
++				   lun->se_dev->dev_index, /* scsiDeviceIndex */
+ 				   tpg->tpgt, /* scsiPortIndex */
+ 				   sess->session_index,  /* scsiAttIntrPortIndex */
+-				   sess->node_acl->acl_index, /* scsiAttIntrPortAuthIntrIdx */
++				   se_nacl->acl_index, /* scsiAttIntrPortAuthIntrIdx */
+ 				   sops->InitiatorName[0]?
+ 					  sops->InitiatorName:NONE, /* scsiAttIntrPortName */
+ 				   sess->isid[0], sess->isid[1], sess->isid[2],
+ 				   sess->isid[3], sess->isid[4], sess->isid[5]);
+ 			   					/* scsiAttIntrPortIdentifier */
+ 		}
+-		spin_unlock_bh(&sess->node_acl->device_list_lock);
++		spin_unlock_bh(&se_nacl->device_list_lock);
  	}
 -	spin_unlock_bh(&tpg->session_lock);
-+	spin_unlock_bh(&se_tpg->session_lock);
++	spin_unlock_bh(&SE_TPG(tpg)->session_lock);
  
- 	TRACE(TRACE_ISCSI, "Released %d iSCSI Session(s) from Target Portal"
- 			" Group: %hu\n", session_count, tpg->tpgt);
-diff --git a/drivers/lio-core/iscsi_target.h b/drivers/lio-core/iscsi_target.h
-index c84a93f..91b3cb5 100644
---- a/drivers/lio-core/iscsi_target.h
-+++ b/drivers/lio-core/iscsi_target.h
-@@ -46,6 +46,7 @@ extern int __core_del_np_ex (iscsi_np_t *, iscsi_np_ex_t *);
- extern struct iscsi_np_s *core_add_np (iscsi_np_addr_t *, int, int *);
- extern int core_reset_np_thread (struct iscsi_np_s *, struct iscsi_tpg_np_s *, struct iscsi_portal_group_s *, int);
- extern int core_del_np (iscsi_np_t *);
-+extern char *iscsi_get_fabric_name (void);
- extern iscsi_cmd_t *iscsi_get_cmd (struct se_cmd_s *);
- extern u32 iscsi_get_task_tag (struct se_cmd_s *);
- extern int iscsi_get_cmd_state (struct se_cmd_s *);
-@@ -64,7 +65,7 @@ extern int iscsi_close_connection (iscsi_conn_t *);
- extern int iscsi_close_session (iscsi_session_t *);
- extern void iscsi_fail_session (iscsi_session_t *);
- extern int iscsi_free_session (iscsi_session_t *);
--extern int iscsi_stop_session (iscsi_session_t *, int, int);
-+extern void iscsi_stop_session (iscsi_session_t *, int, int);
- extern int iscsi_release_sessions_for_tpg (iscsi_portal_group_t *, int);
- 
- #endif   /*** ISCSI_TARGET_H ***/
+ 	/* Release the semaphore */
+ 	iscsi_put_tpg(tpg);
 -- 
 1.5.4.1
 
