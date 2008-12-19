@@ -1,67 +1,88 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 02/11] zfcp: register with SCSI layer on ccw registration
-Date: Fri, 19 Dec 2008 16:56:53 +0100
-Message-ID: <20081219155751.078812000@de.ibm.com>
+Subject: [patch 03/11] zfcp: Simplify SBAL allocation to fix sparse warnings
+Date: Fri, 19 Dec 2008 16:56:54 +0100
+Message-ID: <20081219155751.867385000@de.ibm.com>
 References: <20081219155651.010878000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate4.de.ibm.com ([195.212.29.153]:61125 "EHLO
-	mtagate4.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750973AbYLSP5y (ORCPT
+Received: from mtagate8.de.ibm.com ([195.212.29.157]:56279 "EHLO
+	mtagate8.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750978AbYLSP5y (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Dec 2008 10:57:54 -0500
-Content-Disposition: inline; filename=707-zfcp-scsi-reg.diff
+Content-Disposition: inline; filename=sparse.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Swen Schillig <swen@vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Christof Schmitt <christof.schmitt@de.ibm.com>, Felix Beck <felix@linux.vnet.ibm.com>
 
-From: Swen Schillig <swen@vnet.ibm.com>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-Synchronize the registration and de-registration with the SCSI layer
-at CCW registration, de-registration. Before we registered with the
-SCSI layer on adapter activation. This way the reg and de-reg process
-is in balance.
+When waiting for a request claim the SBAL before waiting. This way,
+locking before each check of the free counter is not required and
+sparse does not emit warnings for the complicated locking scheme.
 
-Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
+Acked-by: Felix Beck <felix@linux.vnet.ibm.com>
 ---
+ drivers/s390/scsi/zfcp_fsf.c |   34 +++++++++++++++++-----------------
+ 1 file changed, 17 insertions(+), 17 deletions(-)
 
- drivers/s390/scsi/zfcp_aux.c |    3 ++-
- drivers/s390/scsi/zfcp_ccw.c |    6 ------
- 2 files changed, 2 insertions(+), 7 deletions(-)
-
---- a/drivers/s390/scsi/zfcp_aux.c	2008-12-19 14:38:13.000000000 +0100
-+++ b/drivers/s390/scsi/zfcp_aux.c	2008-12-19 14:38:26.000000000 +0100
-@@ -516,7 +516,8 @@ int zfcp_adapter_enqueue(struct ccw_devi
+--- a/drivers/s390/scsi/zfcp_fsf.c	2008-12-19 14:38:21.000000000 +0100
++++ b/drivers/s390/scsi/zfcp_fsf.c	2008-12-19 14:38:28.000000000 +0100
+@@ -641,38 +641,38 @@ static void zfcp_fsf_exchange_port_data_
+ 	}
+ }
  
- 	zfcp_fc_nameserver_init(adapter);
- 
--	return 0;
-+	if (!zfcp_adapter_scsi_register(adapter))
-+		return 0;
- 
- sysfs_failed:
- 	zfcp_adapter_debug_unregister(adapter);
---- a/drivers/s390/scsi/zfcp_ccw.c	2008-12-19 14:38:13.000000000 +0100
-+++ b/drivers/s390/scsi/zfcp_ccw.c	2008-12-19 14:38:26.000000000 +0100
-@@ -103,10 +103,6 @@ static int zfcp_ccw_set_online(struct cc
- 	if (retval)
- 		goto out;
- 
--	retval = zfcp_adapter_scsi_register(adapter);
--	if (retval)
--		goto out_scsi_register;
+-static int zfcp_fsf_sbal_check(struct zfcp_adapter *adapter)
++static int zfcp_fsf_sbal_available(struct zfcp_adapter *adapter)
+ {
+-	struct zfcp_qdio_queue *req_q = &adapter->req_q;
 -
- 	/* initialize request counter */
- 	BUG_ON(!zfcp_reqlist_isempty(adapter));
- 	adapter->req_no = 0;
-@@ -120,8 +116,6 @@ static int zfcp_ccw_set_online(struct cc
- 	flush_work(&adapter->scan_work);
+-	spin_lock_bh(&adapter->req_q_lock);
+-	if (atomic_read(&req_q->count))
++	if (atomic_read(&adapter->req_q.count) > 0)
+ 		return 1;
+-	spin_unlock_bh(&adapter->req_q_lock);
++	atomic_inc(&adapter->qdio_outb_full);
  	return 0;
+ }
  
-- out_scsi_register:
--	zfcp_erp_thread_kill(adapter);
-  out:
- 	up(&zfcp_data.config_sema);
- 	return retval;
+-static int zfcp_fsf_sbal_available(struct zfcp_adapter *adapter)
+-{
+-	unsigned int count = atomic_read(&adapter->req_q.count);
+-	if (!count)
+-		atomic_inc(&adapter->qdio_outb_full);
+-	return count > 0;
+-}
+-
+ static int zfcp_fsf_req_sbal_get(struct zfcp_adapter *adapter)
++	__releases(&adapter->req_q_lock)
++	__acquires(&adapter->req_q_lock)
+ {
++	struct zfcp_qdio_queue *req_q = &adapter->req_q;
+ 	long ret;
+ 
++	if (atomic_read(&req_q->count) <= -REQUEST_LIST_SIZE)
++		return -EIO;
++	if (atomic_read(&req_q->count) > 0)
++		return 0;
++
++	atomic_dec(&req_q->count);
+ 	spin_unlock_bh(&adapter->req_q_lock);
+ 	ret = wait_event_interruptible_timeout(adapter->request_wq,
+-					zfcp_fsf_sbal_check(adapter), 5 * HZ);
++					atomic_read(&req_q->count) >= 0,
++					5 * HZ);
++	spin_lock_bh(&adapter->req_q_lock);
++	atomic_inc(&req_q->count);
++
+ 	if (ret > 0)
+ 		return 0;
+ 	if (!ret)
+ 		atomic_inc(&adapter->qdio_outb_full);
+-
+-	spin_lock_bh(&adapter->req_q_lock);
+ 	return -EIO;
+ }
+ 
 
 -- 
