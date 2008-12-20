@@ -1,79 +1,86 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 1/8] [Target_Core_Mod]: Add EXPORT_SYMBOL() to
-	transport_release_cmd_to_pool()
-Date: Sat, 20 Dec 2008 14:59:46 -0800
-Message-ID: <1229813986.4560.193.camel@haakon2.linux-iscsi.org>
+Subject: [PATCH 3/8] [Target_Core_Mod/LIO-Target]: Rename and update usage
+	of transport_allocate_session()
+Date: Sat, 20 Dec 2008 15:01:08 -0800
+Message-ID: <1229814068.4560.198.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp126.sbc.mail.sp1.yahoo.com ([69.147.65.185]:45029 "HELO
-	smtp126.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752284AbYLTXAR (ORCPT
+Received: from smtp118.sbc.mail.sp1.yahoo.com ([69.147.64.91]:28426 "HELO
+	smtp118.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754265AbYLTXBh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 20 Dec 2008 18:00:17 -0500
+	Sat, 20 Dec 2008 18:01:37 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>
 Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
->From e55f26fb1dfd4e549208297d66735bcd80a4ffac Mon Sep 17 00:00:00 2001
+>From 24da24b223b3002c897d727d04ee5f8a16a64eab Mon Sep 17 00:00:00 2001
 From: Nicholas Bellinger <nab@linux-iscsi.org>
-Date: Sat, 20 Dec 2008 02:00:16 -0800
-Subject: [PATCH 1/8] [Target_Core_Mod]: Add EXPORT_SYMBOL() to transport_release_cmd_to_pool()
+Date: Sat, 20 Dec 2008 02:23:21 -0800
+Subject: [PATCH 3/8] [Target_Core_Mod/LIO-Target]: Rename and update usage of transport_allocate_session()
 
-This patch exports transport_release_cmd_to_pool() for transport core, which
-is intended to be used by $FABRIC_MODs for release se_cmd_t, along with the
-already exported transport_generic_free_cmd().
+Rename transport_allocate_session() to transport_init_session() to keep in line
+with existing init/free register/deregister usage in Target_Core_Mod and
+LIO-Target/ConfigFS code.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/lio-core/target_core_transport.c |    5 +++--
- drivers/lio-core/target_core_transport.h |    1 +
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/lio-core/iscsi_target_login.c    |    2 +-
+ drivers/lio-core/target_core_transport.c |    4 ++--
+ drivers/lio-core/target_core_transport.h |    2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/lio-core/iscsi_target_login.c b/drivers/lio-core/iscsi_target_login.c
+index a28a314..40d9b65 100644
+--- a/drivers/lio-core/iscsi_target_login.c
++++ b/drivers/lio-core/iscsi_target_login.c
+@@ -253,7 +253,7 @@ static int iscsi_login_zero_tsih_s1 (
+ 		return(-1);
+ 	}
+ 
+-	if (!(sess->se_sess = transport_allocate_session())) {
++	if (!(sess->se_sess = transport_init_session())) {
+ 		iscsi_tx_login_rsp(conn, STAT_CLASS_TARGET, STAT_DETAIL_OUT_OF_RESOURCE);
+ 		return(-1);
+ 	}
 diff --git a/drivers/lio-core/target_core_transport.c b/drivers/lio-core/target_core_transport.c
-index 9866584..ed042eb 100644
+index ed042eb..31a96ec 100644
 --- a/drivers/lio-core/target_core_transport.c
 +++ b/drivers/lio-core/target_core_transport.c
-@@ -214,7 +214,6 @@ struct kmem_cache *se_sess_cache = NULL;
- 
- EXPORT_SYMBOL(se_global);
- extern int iscsi_release_sessions_for_tpg (iscsi_portal_group_t *, int);
--static void transport_release_cmd_to_pool (se_cmd_t *);
- static int transport_generic_write_pending (se_cmd_t *);
- static int transport_processing_thread (void *);
- 
-@@ -5930,7 +5929,7 @@ static int transport_generic_write_pending (se_cmd_t *cmd)
-  *
-  *
-  */
--static void transport_release_cmd_to_pool (se_cmd_t *cmd)
-+extern void transport_release_cmd_to_pool (se_cmd_t *cmd)
- {
- 	if (cmd->se_cmd_flags & SCF_CMD_PASSTHROUGH) 
- 		kfree(cmd->se_lun);
-@@ -5943,6 +5942,8 @@ static void transport_release_cmd_to_pool (se_cmd_t *cmd)
+@@ -574,7 +574,7 @@ extern void transport_check_dev_params_delim (char *ptr, char **cur)
  	return;
  }
  
-+EXPORT_SYMBOL(transport_release_cmd_to_pool);
-+
- /*	transport_generic_free_cmd():
-  *
-  *	Called from processing frontend to release storage engine resources
+-extern se_session_t *transport_allocate_session (void)
++extern se_session_t *transport_init_session (void)
+ {
+ 	se_session_t *se_sess;
+ 
+@@ -587,7 +587,7 @@ extern se_session_t *transport_allocate_session (void)
+ 	return(se_sess);
+ }
+ 
+-EXPORT_SYMBOL(transport_allocate_session);
++EXPORT_SYMBOL(transport_init_session);
+ 
+ /*
+  * Called with spin_lock_bh(&se_portal_group_t->session_lock called.
 diff --git a/drivers/lio-core/target_core_transport.h b/drivers/lio-core/target_core_transport.h
-index dce7bd6..9c989bd 100644
+index 9c989bd..a6a68af 100644
 --- a/drivers/lio-core/target_core_transport.h
 +++ b/drivers/lio-core/target_core_transport.h
-@@ -182,6 +182,7 @@ extern int iscsi_send_check_condition_and_sense (se_cmd_t *, __u8, int);
- extern int core_tpg_persistent_reservation_check (se_cmd_t *);
- extern int core_tpg_persistent_reservation_release (se_cmd_t *);
- extern int core_tpg_persistent_reservation_reserve (se_cmd_t *);
-+extern void transport_release_cmd_to_pool (se_cmd_t *);
- extern void transport_generic_free_cmd (se_cmd_t *, int, int, int);
- extern void transport_generic_wait_for_cmds (se_cmd_t *, int);
- extern int transport_generic_do_transform (struct se_cmd_s *, struct se_transform_info_s *);
+@@ -110,7 +110,7 @@ extern void transport_init_queue_obj (struct se_queue_obj_s *);
+ extern void transport_load_plugins (void);
+ extern struct se_plugin_s *transport_core_get_plugin_by_name (const char *name);
+ extern void transport_check_dev_params_delim (char *, char **);
+-extern struct se_session_s *transport_allocate_session (void);
++extern struct se_session_s *transport_init_session (void);
+ extern void __transport_register_session (struct se_portal_group_s *, struct se_node_acl_s *, struct se_session_s *, void *);
+ extern void transport_register_session (struct se_portal_group_s *, struct se_node_acl_s *, struct se_session_s *, void *);
+ extern void transport_deregister_session_configfs (struct se_session_s *);
 -- 
 1.5.4.1
 
