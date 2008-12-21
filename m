@@ -1,40 +1,40 @@
-From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
-Subject: Re: [Bug #12099] Nokia 5310 storage-mode
-Date: Sun, 21 Dec 2008 20:56:40 +0100
-Message-ID: <200812212056.40950.rjw@sisk.pl>
-References: <Pine.LNX.4.44L0.0812202200010.513-100000@netrider.rowland.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: Suggested patch for testing last sector of USB devices
+Date: Sun, 21 Dec 2008 21:24:35 +0100
+Message-ID: <494EA603.7080105@s5r6.in-berlin.de>
+References: <Pine.LNX.4.44L0.0812192009210.16918-100000@netrider.rowland.org> <494E8531.3000205@s5r6.in-berlin.de> <200812211925.27140.oliver@neukum.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.0812202200010.513-100000-pYrvlCTfrz9XsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Content-Disposition: inline
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Robson Roberto Souza Peixoto <robsonpeixoto-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:56445 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751113AbYLUUfR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Dec 2008 15:35:17 -0500
+In-Reply-To: <200812211925.27140.oliver@neukum.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Oliver Neukum <oliver@neukum.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
 
-On Sunday, 21 of December 2008, Alan Stern wrote:
-> On Sat, 20 Dec 2008, Rafael J. Wysocki wrote:
+Oliver Neukum wrote:
+> Am Sonntag, 21. Dezember 2008 19:04:33 schrieb Stefan Richter:
+>> Alan Stern wrote:
+>>> --- usb-2.6.orig/include/scsi/scsi_device.h
+>>> +++ usb-2.6/include/scsi/scsi_device.h
+>>> @@ -142,6 +142,7 @@ struct scsi_device {
+>>>       unsigned select_no_atn:1;
+>>>       unsigned fix_capacity:1;        /* READ_CAPACITY is too high by 1 */
+>>>       unsigned guess_capacity:1;      /* READ_CAPACITY might be too high by 1 */
+>>> +     unsigned check_capacity:1;      /* Verify READ_CAPACITY result */
+>> Maybe add "ignored if no USB_STORAGE support is built" to the comment
+>> since it is a no-op otherwise:
 > 
-> > This message has been generated automatically as a part of a report
-> > of regressions introduced between 2.6.26 and 2.6.27.
-> > 
-> > The following bug entry is on the current list of known regressions
-> > introduced between 2.6.26 and 2.6.27.  Please verify if it still should
-> > be listed and let me know (either way).
-> > 
-> > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12099
-> > Subject		: Nokia 5310 storage-mode
-> > Submitter	: Robson Roberto Souza Peixoto <robsonpeixoto-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> > Date		: 2008-11-25 01:07 (26 days old)
-> > Handled-By	: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-> > Patch		: http://marc.info/?l=linux-kernel&m=122762731503933&w=4
-> 
-> This has been fixed by commit a4b188095912eee83d065f000dfe06f25919750b.
+> Are there really no firewire devices with the same problem?
 
-Thanks for the update and for closing the bug.
-
-Rafael
+So far only Apple iPods with FireWire + USB combo interface have become
+known to feature this bug.
+-- 
+Stefan Richter
+-=====-==--- ==-- =-=-=
+http://arcgraph.de/sr/
