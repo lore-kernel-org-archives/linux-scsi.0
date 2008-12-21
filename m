@@ -1,46 +1,40 @@
-From: Oliver Neukum <oliver@neukum.org>
-Subject: Re: Suggested patch for testing last sector of USB devices
-Date: Sun, 21 Dec 2008 19:25:25 +0100
-Message-ID: <200812211925.27140.oliver@neukum.org>
-References: <Pine.LNX.4.44L0.0812192009210.16918-100000@netrider.rowland.org> <494E8531.3000205@s5r6.in-berlin.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12195] "dd" make kernel panic
+Date: Sun, 21 Dec 2008 11:52:19 -0800 (PST)
+Message-ID: <20081221195219.6A1C3108042@picon.linux-foundation.org>
+References: <bug-12195-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out003.kontent.com ([81.88.40.217]:38088 "EHLO
-	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750744AbYLUTaP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Dec 2008 14:30:15 -0500
-In-Reply-To: <494E8531.3000205@s5r6.in-berlin.de>
-Content-Disposition: inline
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:39722 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751633AbYLUTxV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 21 Dec 2008 14:53:21 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBLJqmpu019917
+	for <linux-scsi@vger.kernel.org>; Sun, 21 Dec 2008 11:52:49 -0800
+In-Reply-To: <bug-12195-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
+To: linux-scsi@vger.kernel.org
 
-Am Sonntag, 21. Dezember 2008 19:04:33 schrieb Stefan Richter:
-> Alan Stern wrote:
-> > --- usb-2.6.orig/include/scsi/scsi_device.h
-> > +++ usb-2.6/include/scsi/scsi_device.h
-> > @@ -142,6 +142,7 @@ struct scsi_device {
-> > =A0=A0=A0=A0=A0=A0unsigned select_no_atn:1;
-> > =A0=A0=A0=A0=A0=A0unsigned fix_capacity:1;=A0=A0=A0=A0=A0=A0=A0=A0/=
-* READ_CAPACITY is too high by 1 */
-> > =A0=A0=A0=A0=A0=A0unsigned guess_capacity:1;=A0=A0=A0=A0=A0=A0/* RE=
-AD_CAPACITY might be too high by 1 */
-> > +=A0=A0=A0=A0=A0unsigned check_capacity:1;=A0=A0=A0=A0=A0=A0/* Veri=
-fy READ_CAPACITY result */
->=20
-> Maybe add "ignored if no USB_STORAGE support is built" to the comment
-> since it is a no-op otherwise:
+http://bugzilla.kernel.org/show_bug.cgi?id=12195
 
-Are there really no firewire devices with the same problem?
 
-	Regards
-		Oliver
+rjw@sisk.pl changed:
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |CLOSED
+         Resolution|                            |CODE_FIX
+
+
+
+
+------- Comment #15 from rjw@sisk.pl  2008-12-21 11:52 -------
+Fixed by commit a6da74cb077e88a604e5b2a6663b44c221f0ae75 .
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
