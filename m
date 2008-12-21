@@ -1,57 +1,58 @@
-From: Arthur Marsh <arthur.marsh@internode.on.net>
-Subject: BUG: bad: [58e2a02eb18393e76a469580fedf7caec190eb5e] [SCSI] eata:
- convert to use the data buffer accessors
-Date: Mon, 22 Dec 2008 02:38:16 +1030
-Message-ID: <494E69F0.3060300@internode.on.net>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: Suggested patch for testing last sector of USB devices
+Date: Sun, 21 Dec 2008 19:04:33 +0100
+Message-ID: <494E8531.3000205@s5r6.in-berlin.de>
+References: <Pine.LNX.4.44L0.0812192009210.16918-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:55816 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752457AbYLUQPH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 21 Dec 2008 11:15:07 -0500
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1LEQxL-0004Mw-3E
-	for linux-scsi@vger.kernel.org; Sun, 21 Dec 2008 16:15:03 +0000
-Received: from ppp121-45-91-187.lns10.adl6.internode.on.net ([121.45.91.187])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Sun, 21 Dec 2008 16:15:03 +0000
-Received: from arthur.marsh by ppp121-45-91-187.lns10.adl6.internode.on.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Sun, 21 Dec 2008 16:15:03 +0000
+Received: from einhorn.in-berlin.de ([192.109.42.8]:53410 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750900AbYLUSFT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Dec 2008 13:05:19 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0812192009210.16918-100000@netrider.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: ballabio_dario@emc.com
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
 
-I've recently installed Debian on a PII-266 machine with DPT2044W SCSI 
-controller.
+Alan Stern wrote:
+> --- usb-2.6.orig/include/scsi/scsi_device.h
+> +++ usb-2.6/include/scsi/scsi_device.h
+> @@ -142,6 +142,7 @@ struct scsi_device {
+>  	unsigned select_no_atn:1;
+>  	unsigned fix_capacity:1;	/* READ_CAPACITY is too high by 1 */
+>  	unsigned guess_capacity:1;	/* READ_CAPACITY might be too high by 1 */
+> +	unsigned check_capacity:1;	/* Verify READ_CAPACITY result */
 
-Kernels 2.6.18-2.6.22 work fine, and kernels 2.6.23-2.6.27 lock up after 
-loading the eata module using modprobe, with the error:
+Maybe add "ignored if no USB_STORAGE support is built" to the comment
+since it is a no-op otherwise:
 
-modprobe exited with preempt_count 1
+> --- usb-2.6.orig/drivers/scsi/sd.c
+> +++ usb-2.6/drivers/scsi/sd.c
+> @@ -1275,6 +1275,88 @@ disable:
+>  	sdkp->capacity = 0;
+>  }
+>  
+> +#if defined(CONFIG_USB_STORAGE) || defined(CONFIG_USB_STORAGE_MODULE)
+> +/*
+> + * Test disk capacity by trying to read the last sector
+> + */
+> +static int sd_read_last_sector(struct scsi_disk *sdkp, unsigned char *buffer,
+> +		int sector_size)
+> +{
+...
+> +#else
+> +static inline int sd_read_last_sector(struct scsi_disk *sdkp,
+> +		unsigned char *buffer, int sector_size)
+> +{
+> +	return 0;
+> +}
+> +
+> +#endif /* defined(CONFIG_USB_STORAGE) || ... */
 
-I've run a git bisection and have a few more passes to go, but suspect 
-the commit in the subject line,
-
-[58e2a02eb18393e76a469580fedf7caec190eb5e] [SCSI] eata: convert to use 
-the data buffer accessors
-
-to be the patch which triggers the problem.
-
-I'm not a C programmer, let alone a kernel programmer, but can build and 
-check any suggested patches.
-
-Is anyone successfully using the eata module since the data buffer 
-accessors patch?
-
-Is anyone able to examine the code to see if anything was done wrong in 
-the data buffer accessors patch?
-
-Regards,
-
-Arthur.
-
+-- 
+Stefan Richter
+-=====-==--- ==-- =-=-=
+http://arcgraph.de/sr/
