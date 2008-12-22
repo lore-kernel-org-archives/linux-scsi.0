@@ -1,42 +1,84 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Suggested patch for testing last sector of USB devices
-Date: Sun, 21 Dec 2008 19:51:49 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0812211947430.30767-100000@netrider.rowland.org>
-References: <494E8531.3000205@s5r6.in-berlin.de>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: BUG: bad: [58e2a02eb18393e76a469580fedf7caec190eb5e] [SCSI]
+ eata: convert to use the data buffer accessors
+Date: Mon, 22 Dec 2008 11:09:17 +0900
+Message-ID: <20081222110935D.fujita.tomonori@lab.ntt.co.jp>
+References: <494E69F0.3060300@internode.on.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:1879 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751273AbYLVAvv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Dec 2008 19:51:51 -0500
-In-Reply-To: <494E8531.3000205@s5r6.in-berlin.de>
+Received: from sh.osrg.net ([192.16.179.4]:55886 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751908AbYLVCJ1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 21 Dec 2008 21:09:27 -0500
+In-Reply-To: <494E69F0.3060300@internode.on.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
+To: arthur.marsh@internode.on.net
+Cc: linux-scsi@vger.kernel.org, ballabio_dario@emc.com
 
-On Sun, 21 Dec 2008, Stefan Richter wrote:
+On Mon, 22 Dec 2008 02:38:16 +1030
+Arthur Marsh <arthur.marsh@internode.on.net> wrote:
 
-> Alan Stern wrote:
-> > --- usb-2.6.orig/include/scsi/scsi_device.h
-> > +++ usb-2.6/include/scsi/scsi_device.h
-> > @@ -142,6 +142,7 @@ struct scsi_device {
-> >  	unsigned select_no_atn:1;
-> >  	unsigned fix_capacity:1;	/* READ_CAPACITY is too high by 1 */
-> >  	unsigned guess_capacity:1;	/* READ_CAPACITY might be too high by 1 */
-> > +	unsigned check_capacity:1;	/* Verify READ_CAPACITY result */
+> I've recently installed Debian on a PII-266 machine with DPT2044W SCSI 
+> controller.
 > 
-> Maybe add "ignored if no USB_STORAGE support is built" to the comment
-> since it is a no-op otherwise:
+> Kernels 2.6.18-2.6.22 work fine, and kernels 2.6.23-2.6.27 lock up after 
+> loading the eata module using modprobe, with the error:
+> 
+> modprobe exited with preempt_count 1
+> 
+> I've run a git bisection and have a few more passes to go, but suspect 
+> the commit in the subject line,
+> 
+> [58e2a02eb18393e76a469580fedf7caec190eb5e] [SCSI] eata: convert to use 
+> the data buffer accessors
+> 
+> to be the patch which triggers the problem.
+> 
+> I'm not a C programmer, let alone a kernel programmer, but can build and 
+> check any suggested patches.
+> 
+> Is anyone successfully using the eata module since the data buffer 
+> accessors patch?
+> 
+> Is anyone able to examine the code to see if anything was done wrong in 
+> the data buffer accessors patch?
 
-Yes.  As it happens I wrote this comment before writing the rest of the
-patch, and the "#if" protection around the code was an afterthought.  
-In practice, if other transports can make use of this test then the
-"#if" can be removed.
+Sorry about the problem. Can you try this patch?
 
-Since only one or two firewire/ieee1394 devices have the FIX_CAPACITY 
-quirk, it didn't look like you'd be very interested in using the test.
 
-Alan Stern
-
+diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
+index a73a6bb..976cdd5 100644
+--- a/drivers/scsi/eata.c
++++ b/drivers/scsi/eata.c
+@@ -1626,8 +1626,15 @@ static void map_dma(unsigned int i, struct hostdata *ha)
+ 
+ 	cpp->sense_len = SCSI_SENSE_BUFFERSIZE;
+ 
+-	count = scsi_dma_map(SCpnt);
+-	BUG_ON(count < 0);
++	if (!scsi_sg_count(SCpnt)) {
++		cpp->data_len = 0;
++		return;
++	}
++
++	count = pci_map_sg(ha->pdev, scsi_sglist(SCpnt), scsi_sg_count(SCpnt),
++			   pci_dir);
++	BUG_ON(!count);
++
+ 	scsi_for_each_sg(SCpnt, sg, count, k) {
+ 		cpp->sglist[k].address = H2DEV(sg_dma_address(sg));
+ 		cpp->sglist[k].num_bytes = H2DEV(sg_dma_len(sg));
+@@ -1655,7 +1662,9 @@ static void unmap_dma(unsigned int i, struct hostdata *ha)
+ 		pci_unmap_single(ha->pdev, DEV2H(cpp->sense_addr),
+ 				 DEV2H(cpp->sense_len), PCI_DMA_FROMDEVICE);
+ 
+-	scsi_dma_unmap(SCpnt);
++	if (scsi_sg_count(SCpnt))
++		pci_unmap_sg(ha->pdev, scsi_sglist(SCpnt), scsi_sg_count(SCpnt),
++			     pci_dir);
+ 
+ 	if (!DEV2H(cpp->data_len))
+ 		pci_dir = PCI_DMA_BIDIRECTIONAL;
