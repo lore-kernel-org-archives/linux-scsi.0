@@ -1,44 +1,103 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: sd: Refactor sd_read_capacity()
-Date: Tue, 23 Dec 2008 09:59:00 -0700
-Message-ID: <20081223165900.GC19967@parisc-linux.org>
-References: <20081223164509.GA19967@parisc-linux.org>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [RFC]: Support for zero-copy TCP transmit of user space data
+Date: Tue, 23 Dec 2008 22:11:24 +0300
+Message-ID: <495137DC.8050204@vlnb.net>
+References: <4942BAB8.4050007@vlnb.net> <1229110673.3262.94.camel@localhost.localdomain> <49469ADB.6010709@vlnb.net> <20081215231801.GA27168@infradead.org> <4947FA1C.2090509@vlnb.net> <494A97DD.7080503@vlnb.net> <494A99EF.6070400@flurg.com> <494BDBC5.7050701@vlnb.net> <20081219190701.GP32491@kernel.dk> <494BF361.1090003@vlnb.net> <20081219192736.GQ32491@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:35771 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750986AbYLWQ7Q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Dec 2008 11:59:16 -0500
-Content-Disposition: inline
-In-Reply-To: <20081223164509.GA19967@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20081219192736.GQ32491@kernel.dk>
+Sender: owner-linux-mm@kvack.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: "David M. Lloyd" <dmlloyd@flurg.com>, linux-mm@kvack.org, Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, netdev@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-On Tue, Dec 23, 2008 at 09:45:10AM -0700, Matthew Wilcox wrote:
-> The sd_read_capacity() function was about 180 lines long and
-> included a backwards goto and a tricky state variable.  Splitting out
-> read_capacity_10() and read_capacity_16() (about 50 lines each) reduces
-> sd_read_capacity to about 100 lines and gets rid of the backwards goto
-> and the state variable.  I've tried to avoid any behaviour change with
-> this patch.
+Jens Axboe, on 12/19/2008 10:27 PM wrote:
+>>>>>> An iSCSI target driver iSCSI-SCST was a part of the patchset 
+>>>>>> (http://lkml.org/lkml/2008/12/10/293). For it a nice optimization to 
+>>>>>> have TCP zero-copy transmit of user space data was implemented. Patch, 
+>>>>>> implementing this optimization was also sent in the patchset, see 
+>>>>>> http://lkml.org/lkml/2008/12/10/296.
+>>>>> I'm probably ignorant of about 90% of the context here, but isn't this 
+>>>>> the sort of problem that was supposed to have been solved by vmsplice(2)?
+>>>> No, vmsplice can't help here. ISCSI-SCST is a kernel space driver. But, 
+>>>> even if it was a user space driver, vmsplice wouldn't change anything 
+>>>> much. It doesn't have a possibility for a user to know, when 
+>>>> transmission of the data finished. So, it is intended to be used as: 
+>>>> vmsplice() buffer -> munmap() the buffer -> mmap() new buffer -> 
+>>>> vmsplice() it. But on the mmap() stage kernel has to zero all the newly 
+>>>> mapped pages and zeroing memory isn't much faster, than copying it. 
+>>>> Hence, there would be no considerable performance increase.
+>>> vmsplice() isn't the right choice, but splice() very well could be. You
+>>> could easily use splice internally as well. The vmsplice() part sort-of
+>>> applies in the sense that you want to fill pages into a pipe, which is
+>>> essentially what vmsplice() does. You'd need some helper to do that.
+>> Sorry, Jens, but splice() works only if there is a file handle on the 
+>> another side, so user space doesn't see data buffers. But SCST needs to 
+>> serve a wider usage cases, like reading data with decompression from a 
+>> virtual tape, where decompression is done in user space. For those only 
+>> complete zero-copy network send, which I implemented, can give the best 
+>> performance.
+> 
+> __splice_from_pipe() takes a pipe, a descriptor and an actor. There's
+> absolutely ZERO reason you could not reuse most of that for this
+> implementation. The big bonus here is that getting the put correct from
+> networking would even make splice() better for everyone. Win for Linux,
+> win for you since it'll make it MUCH easier for you to get this stuff
+> in. Looking at your original patch and I almost think it's a flame bait
+> to induce discussion (nothing wrong with that, that approach works quite
+> well and has been used before). There's no way in HELL that it'd ever be
+> a merge candidate. And I suspect you know that, at least I hope you do
+> or you are farther away from going forward with this than you think.
+> 
+> So don't look at splice() the system call, look at the infrastructure
+> and check if that could be useful for your case. To me it looks
+> absolutely like it could, if you goal is just zero-copy transmit.
 
-I should have probably said what testing I've done (with both patches
-applied, not just this one).
+I looked at the splice code again to make sure I don't miss anything. 
+__splice_from_pipe() leads to pipe_to_sendpage(), which leads to 
+sock_sendpage, then to sock->sendpage(). Sorry, but I don't see any 
+point why to go over all the complicated splice infrastructure instead 
+of directly call sock->sendpage(), as I do.
 
-I've tried numerous <= SCSI-2 devices -- USB keys, older SCSI drives ...
-even newer SCSI drives still seem to claim SCSI-2 compliance.  Almost
-all my equipment claims ANSI rev 2.
+> The
+> only missing piece is dropping the reference and signalling page
+> consumption at the right point, which is when the data is safe to be
+> reused. That very bit is missing, but that should be all as far as I can
+> tell.
 
-I've tried a few libata devices (which claim ANSI rev 5).  I've tried a
-WD My Book (attached via firewire) which claims ANSI rev 4.  I've also
-tried an HP fibre channel array which claims ANSI rev 3.
+This is exactly what I implemented in the patch we are discussing.
 
-I can't claim to have exercised all the error paths here.  
+>>> And
+>>> the ack-on-xmit-done bits is something that splice-to-socket needs
+>>> anyway, so I think it'd be quite a suitable choice for this.
+>> So, are you writing that splice() could also benefit from the zero-copy 
+>> transmit feature, like I implemented?
+> 
+> I like how you want to reinvent everything, perhaps you should spend a
+> little more time looking into various other approaches? splice() already
+> does zero-copy network transmit, there are no copies going on. Ideally,
+> you'd have zero copies moving data into your pipe, but migrade/move
+> isn't quite there yet. But that doesn't apply to your case at all.
+> 
+> What is missing, as I wrote, is the 'release on ack' and not on pipe
+> buffer release. This is similar to the get_page/put_page stuff you did
+> in your patch, but don't go claiming that zero-copy transmit is a
+> Vladislav original - the ->sendpage() does no copies.
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Jens, I have never claimed I reinvented ->sendpage(). Quite opposite, I 
+use it. I only extended it by a missing feature. Although, seems, since 
+you were misleaded, I should apologize for not too good description of 
+the patch.
+
+Thanks,
+Vlad
+
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
