@@ -1,40 +1,39 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12207] block reads/writes > 122880 bytes to USB tape drive gives EBUSY
-Date: Tue, 23 Dec 2008 06:54:47 -0800 (PST)
-Message-ID: <20081223145447.17618108040@picon.linux-foundation.org>
-References: <bug-12207-11613@http.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug 12207] block reads/writes > 122880 bytes to USB tape
+	drive gives EBUSY
+Date: Tue, 23 Dec 2008 08:55:24 -0600
+Message-ID: <1230044124.3461.1.camel@localhost.localdomain>
+References: <20081223135938.30266108042@picon.linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:52904 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751115AbYLWOzR (ORCPT
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:33451 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751183AbYLWOz2 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Dec 2008 09:55:17 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBNEslMi017000
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Dec 2008 06:54:48 -0800
-In-Reply-To: <bug-12207-11613@http.bugzilla.kernel.org/>
+	Tue, 23 Dec 2008 09:55:28 -0500
+In-Reply-To: <20081223135938.30266108042@picon.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: bugme-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12207
+> ------- Comment #6 from stern@rowland.harvard.edu  2008-12-23 05:59 -------
+> You can change the max_sectors setting through sysfs.  However the last time I
+> looked, the block layer limited max_sectors to 512 KB or something on that
+> order, so you can't get too much improvement.
+> 
+> Why is a limit of 120 KB unreasonably small?  All it means is that you have to
+> use more system calls to transfer the same amount of data.  Is anything wrong
+> with that?
+
+Tapes need large block sizes.
+
+We can accommodate both:  Just check for TYPE_TAPE in the
+slave_configure() and bump the limit back up.  Any USB tape that doesn't
+do large block transfers will be truly broken.
+
+James
 
 
-
-
-
-------- Comment #10 from philipm@sybase.com  2008-12-23 06:54 -------
-Even if this is true, it does not work out of the box.  Is it the intent to
-make it harder (non-obvious and complicated) to do things that people want to
-do and are trivial on all other OSes?  Remember, this used to work
-trivially...it's a regression.
-
-If the only excuse for the limit is that some devices don't like large
-transfers, I don't buy it.  Those devices should be the exception, not the
-rule.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
