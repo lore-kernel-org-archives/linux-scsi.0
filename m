@@ -1,34 +1,44 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12207] block reads/writes > 122880 bytes to USB tape drive gives EBUSY
-Date: Tue, 23 Dec 2008 06:46:09 -0800 (PST)
-Message-ID: <20081223144609.1EF74108043@picon.linux-foundation.org>
-References: <bug-12207-11613@http.bugzilla.kernel.org/>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [Bug 12207] block reads/writes > 122880 bytes to USB tape drive
+ gives EBUSY
+Date: Tue, 23 Dec 2008 16:47:31 +0200
+Message-ID: <4950FA03.9080106@panasas.com>
+References: <20081223135938.30266108042@picon.linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:40592 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751106AbYLWOqj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Dec 2008 09:46:39 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBNEk9Gp016366
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Dec 2008 06:46:10 -0800
-In-Reply-To: <bug-12207-11613@http.bugzilla.kernel.org/>
+Received: from ey-out-2122.google.com ([74.125.78.27]:32032 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751113AbYLWOrj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Dec 2008 09:47:39 -0500
+Received: by ey-out-2122.google.com with SMTP id 22so273877eye.37
+        for <linux-scsi@vger.kernel.org>; Tue, 23 Dec 2008 06:47:36 -0800 (PST)
+In-Reply-To: <20081223135938.30266108042@picon.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: bugme-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12207
+bugme-daemon@bugzilla.kernel.org wrote:
+> http://bugzilla.kernel.org/show_bug.cgi?id=12207
+> 
+> 
+> 
+> 
+> 
+> ------- Comment #6 from stern@rowland.harvard.edu  2008-12-23 05:59 -------
+> You can change the max_sectors setting through sysfs.  However the last time I
+> looked, the block layer limited max_sectors to 512 KB or something on that
+> order, so you can't get too much improvement.
+> 
+> Why is a limit of 120 KB unreasonably small?  All it means is that you have to
+> use more system calls to transfer the same amount of data.  Is anything wrong
+> with that?
+> 
+> 
 
+This is not true BIOs can be chained and also SGs can be chained.
+You should be able to configure a very large transfer
 
-
-
-
-------- Comment #8 from alan@lxorguk.ukuu.org.uk  2008-12-23 06:46 -------
-Also note - the tape drives don't go via the block layer so aren't subjected to
-the block limits.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Boaz
