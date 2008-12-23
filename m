@@ -1,103 +1,90 @@
 From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [RFC]: Support for zero-copy TCP transmit of user space data
-Date: Tue, 23 Dec 2008 22:11:24 +0300
-Message-ID: <495137DC.8050204@vlnb.net>
-References: <4942BAB8.4050007@vlnb.net> <1229110673.3262.94.camel@localhost.localdomain> <49469ADB.6010709@vlnb.net> <20081215231801.GA27168@infradead.org> <4947FA1C.2090509@vlnb.net> <494A97DD.7080503@vlnb.net> <494A99EF.6070400@flurg.com> <494BDBC5.7050701@vlnb.net> <20081219190701.GP32491@kernel.dk> <494BF361.1090003@vlnb.net> <20081219192736.GQ32491@kernel.dk>
+Subject: Re: [PATCH][RFC 2/23]: SCST core
+Date: Tue, 23 Dec 2008 22:11:48 +0300
+Message-ID: <495137F4.9010404@vlnb.net>
+References: <494009D7.4020602@vlnb.net> <49400ACD.3070502@vlnb.net>	 <20081210191213.GA15273@uranus.ravnborg.org>	 <49414DBE.6070801@vlnb.net>	 <20081211210917.GB27010@uranus.ravnborg.org>	 <4942BA85.3070408@vlnb.net>	 <1229118607.24995.18.camel@localhost.localdomain>	 <4943CAAB.4050008@vlnb.net>	 <c62985530812131635k362fc8d2q3c65e8284141f491@mail.gmail.com>	 <494A37E9.5000009@vlnb.net> <c62985530812200506u647fc135wcc818bc57d06cb04@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20081219192736.GQ32491@kernel.dk>
-Sender: owner-linux-mm@kvack.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: "David M. Lloyd" <dmlloyd@flurg.com>, linux-mm@kvack.org, Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, netdev@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.187]:52460 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751022AbYLWTMX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Dec 2008 14:12:23 -0500
+In-Reply-To: <c62985530812200506u647fc135wcc818bc57d06cb04@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: =?ISO-8859-1?Q?Fr=E9d=E9ric_Weisbecker?= <fweisbec@gmail.com>
+Cc: Steven Rostedt <srostedt@redhat.com>, Sam Ravnborg <sam@ravnborg.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Boaz Harrosh <bharrosh@panasas.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Ingo Molnar <mingo@elte.hu>
 
-Jens Axboe, on 12/19/2008 10:27 PM wrote:
->>>>>> An iSCSI target driver iSCSI-SCST was a part of the patchset 
->>>>>> (http://lkml.org/lkml/2008/12/10/293). For it a nice optimization to 
->>>>>> have TCP zero-copy transmit of user space data was implemented. Patch, 
->>>>>> implementing this optimization was also sent in the patchset, see 
->>>>>> http://lkml.org/lkml/2008/12/10/296.
->>>>> I'm probably ignorant of about 90% of the context here, but isn't this 
->>>>> the sort of problem that was supposed to have been solved by vmsplice(2)?
->>>> No, vmsplice can't help here. ISCSI-SCST is a kernel space driver. But, 
->>>> even if it was a user space driver, vmsplice wouldn't change anything 
->>>> much. It doesn't have a possibility for a user to know, when 
->>>> transmission of the data finished. So, it is intended to be used as: 
->>>> vmsplice() buffer -> munmap() the buffer -> mmap() new buffer -> 
->>>> vmsplice() it. But on the mmap() stage kernel has to zero all the newly 
->>>> mapped pages and zeroing memory isn't much faster, than copying it. 
->>>> Hence, there would be no considerable performance increase.
->>> vmsplice() isn't the right choice, but splice() very well could be. You
->>> could easily use splice internally as well. The vmsplice() part sort-of
->>> applies in the sense that you want to fill pages into a pipe, which is
->>> essentially what vmsplice() does. You'd need some helper to do that.
->> Sorry, Jens, but splice() works only if there is a file handle on the 
->> another side, so user space doesn't see data buffers. But SCST needs to 
->> serve a wider usage cases, like reading data with decompression from a 
->> virtual tape, where decompression is done in user space. For those only 
->> complete zero-copy network send, which I implemented, can give the best 
->> performance.
-> 
-> __splice_from_pipe() takes a pipe, a descriptor and an actor. There's
-> absolutely ZERO reason you could not reuse most of that for this
-> implementation. The big bonus here is that getting the put correct from
-> networking would even make splice() better for everyone. Win for Linux,
-> win for you since it'll make it MUCH easier for you to get this stuff
-> in. Looking at your original patch and I almost think it's a flame bait
-> to induce discussion (nothing wrong with that, that approach works quite
-> well and has been used before). There's no way in HELL that it'd ever be
-> a merge candidate. And I suspect you know that, at least I hope you do
-> or you are farther away from going forward with this than you think.
-> 
-> So don't look at splice() the system call, look at the infrastructure
-> and check if that could be useful for your case. To me it looks
-> absolutely like it could, if you goal is just zero-copy transmit.
+Hi Fr=E9d=E9ric,
 
-I looked at the splice code again to make sure I don't miss anything. 
-__splice_from_pipe() leads to pipe_to_sendpage(), which leads to 
-sock_sendpage, then to sock->sendpage(). Sorry, but I don't see any 
-point why to go over all the complicated splice infrastructure instead 
-of directly call sock->sendpage(), as I do.
+=46r=E9d=E9ric Weisbecker, on 12/20/2008 04:06 PM wrote:
+> Hi Vladislav,
+>=20
+> 2008/12/18 Vladislav Bolkhovitin <vst@vlnb.net>:
+>> Fr=E9d=E9ric Weisbecker, on 12/14/2008 03:35 AM wrote:
+>>> 2008/12/13 Vladislav Bolkhovitin <vst@vlnb.net>:
+>>>> Also (maybe I simply miss something) looks like ftrace doesn't tra=
+ce exit
+>>>> from functions, only entrance to them. Is it true? Is it possibly =
+to log
+>>>> exit from functions as well?
+>>> That's true with 2.6.28, the function tracer traces on function ent=
+ries
+>>> only.
+>>> But there is an add-on on ftrace which let one to trace on entry an=
+d
+>>> on return, the function
+>>> graph tracer. This tracer uses this facility to output a graph of
+>>> function calls and measure
+>>> the time elapsed during each function call.
+>>> You can also register two custom handlers to do some things you nee=
+d
+>>> on entry and on return.
+>> Word "graph" is quite confusing. We don't need any graphs, we need a=
+ plain
+>> execution path tracing as in the attached example (this is what's cu=
+rrently
+>> done).
+>=20
+> The word graph is actually here to explain here that we not only trac=
+e
+> each function call
+> but we can actually retrieve all of the call path of a function and
+> then draw it as if it was
+> C code:
+>=20
+>  0) ! 108.528 us  |            }
+>  0)               |            irq_exit() {
+>  0)               |              do_softirq() {
+>  0)               |                __do_softirq() {
+>  0)   0.895 us    |                  __local_bh_disable();
+>  0)               |                  run_timer_softirq() {
+>  0)   0.827 us    |                    hrtimer_run_pending();
+>  0)   1.226 us    |                    _spin_lock_irq();
+>  0)               |                    _spin_unlock_irq() {
+>  0)   6.550 us    |                  }
+>  0)   0.924 us    |                  _local_bh_enable();
+>  0) + 12.129 us   |                }
+>  0) + 13.911 us   |              }
+>  0)   0.707 us    |              idle_cpu();
+>  0) + 17.009 us   |            }
+>  0) ! 137.419 us  |          }
+>  0)   <=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D |
+>  0)   1.045 us    |          }
+>  0) ! 148.908 us  |        }
+>  0) ! 151.022 us  |      }
+>  0) ! 153.022 us  |    }
+>  0)   0.963 us    |    journal_mark_dirty();
+>  0)   0.925 us    |    __brelse();
 
-> The
-> only missing piece is dropping the reference and signalling page
-> consumption at the right point, which is when the data is safe to be
-> reused. That very bit is missing, but that should be all as far as I can
-> tell.
-
-This is exactly what I implemented in the patch we are discussing.
-
->>> And
->>> the ack-on-xmit-done bits is something that splice-to-socket needs
->>> anyway, so I think it'd be quite a suitable choice for this.
->> So, are you writing that splice() could also benefit from the zero-copy 
->> transmit feature, like I implemented?
-> 
-> I like how you want to reinvent everything, perhaps you should spend a
-> little more time looking into various other approaches? splice() already
-> does zero-copy network transmit, there are no copies going on. Ideally,
-> you'd have zero copies moving data into your pipe, but migrade/move
-> isn't quite there yet. But that doesn't apply to your case at all.
-> 
-> What is missing, as I wrote, is the 'release on ack' and not on pipe
-> buffer release. This is similar to the get_page/put_page stuff you did
-> in your patch, but don't go claiming that zero-copy transmit is a
-> Vladislav original - the ->sendpage() does no copies.
-
-Jens, I have never claimed I reinvented ->sendpage(). Quite opposite, I 
-use it. I only extended it by a missing feature. Although, seems, since 
-you were misleaded, I should apologize for not too good description of 
-the patch.
-
-Thanks,
-Vlad
-
-
+Unfortunately, it lacks very useful "TASK-PID, CPU#, TIMESTAMP" header=20
+fields..
 
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
