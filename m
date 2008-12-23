@@ -1,24 +1,30 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [Bug 12207] block reads/writes > 122880 bytes to USB tape drive
- gives EBUSY
-Date: Tue, 23 Dec 2008 16:47:31 +0200
-Message-ID: <4950FA03.9080106@panasas.com>
-References: <20081223135938.30266108042@picon.linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12207] block reads/writes > 122880 bytes to USB tape drive gives EBUSY
+Date: Tue, 23 Dec 2008 06:48:13 -0800 (PST)
+Message-ID: <20081223144813.B4400108047@picon.linux-foundation.org>
+References: <bug-12207-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:32032 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751113AbYLWOrj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Dec 2008 09:47:39 -0500
-Received: by ey-out-2122.google.com with SMTP id 22so273877eye.37
-        for <linux-scsi@vger.kernel.org>; Tue, 23 Dec 2008 06:47:36 -0800 (PST)
-In-Reply-To: <20081223135938.30266108042@picon.linux-foundation.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:60583 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751159AbYLWOso (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Dec 2008 09:48:44 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBNEmDuv016539
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Dec 2008 06:48:14 -0800
+In-Reply-To: <bug-12207-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugme-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=12207
+
+
+
+
+
+------- Comment #9 from anonymous@kernel-bugs.osdl.org  2008-12-23 06:48 -------
+Reply-To: bharrosh@panasas.com
 
 bugme-daemon@bugzilla.kernel.org wrote:
 > http://bugzilla.kernel.org/show_bug.cgi?id=12207
@@ -42,3 +48,9 @@ This is not true BIOs can be chained and also SGs can be chained.
 You should be able to configure a very large transfer
 
 Boaz
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
