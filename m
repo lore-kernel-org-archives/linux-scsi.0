@@ -1,72 +1,48 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] eata: fix the data buffer accessors conversion regression
-Date: Tue, 23 Dec 2008 04:01:35 +0900
-Message-ID: <20081223034945V.fujita.tomonori@lab.ntt.co.jp>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12207] block reads/writes > 122880 bytes to USB tape drive gives EBUSY
+Date: Mon, 22 Dec 2008 23:30:49 -0800 (PST)
+Message-ID: <20081223073049.D4AB3108040@picon.linux-foundation.org>
+References: <bug-12207-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:52743 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751590AbYLVTBq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Dec 2008 14:01:46 -0500
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:60380 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752001AbYLWHbU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Dec 2008 02:31:20 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id mBN7UnwW026092
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Dec 2008 23:30:50 -0800
+In-Reply-To: <bug-12207-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, arthur.marsh@internode.on.net
+To: linux-scsi@vger.kernel.org
 
-This fixes the regression introduced by the commit
-58e2a02eb18393e76a469580fedf7caec190eb5e (eata: convert to use the
-data buffer accessors), reported:
+http://bugzilla.kernel.org/show_bug.cgi?id=12207
 
-http://marc.info/?t=122987621300006&r=1&w=2
 
-- fix DMA_NONE handling in map_dma()
+kai.makisara@kolumbus.fi changed:
 
-- this driver can't use scsi_dma_map since host->shost_gendev.parent
-is not set properly (it uses scsi_register).
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |kai.makisara@kolumbus.fi
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Reported-by: Arthur Marsh <arthur.marsh@internode.on.net>
-Tested-by: Arthur Marsh <arthur.marsh@internode.on.net>
-Cc: stable@kernel.org
----
- drivers/scsi/eata.c |   15 ++++++++++++---
- 1 files changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
-index a73a6bb..976cdd5 100644
---- a/drivers/scsi/eata.c
-+++ b/drivers/scsi/eata.c
-@@ -1626,8 +1626,15 @@ static void map_dma(unsigned int i, struct hostdata *ha)
- 
- 	cpp->sense_len = SCSI_SENSE_BUFFERSIZE;
- 
--	count = scsi_dma_map(SCpnt);
--	BUG_ON(count < 0);
-+	if (!scsi_sg_count(SCpnt)) {
-+		cpp->data_len = 0;
-+		return;
-+	}
-+
-+	count = pci_map_sg(ha->pdev, scsi_sglist(SCpnt), scsi_sg_count(SCpnt),
-+			   pci_dir);
-+	BUG_ON(!count);
-+
- 	scsi_for_each_sg(SCpnt, sg, count, k) {
- 		cpp->sglist[k].address = H2DEV(sg_dma_address(sg));
- 		cpp->sglist[k].num_bytes = H2DEV(sg_dma_len(sg));
-@@ -1655,7 +1662,9 @@ static void unmap_dma(unsigned int i, struct hostdata *ha)
- 		pci_unmap_single(ha->pdev, DEV2H(cpp->sense_addr),
- 				 DEV2H(cpp->sense_len), PCI_DMA_FROMDEVICE);
- 
--	scsi_dma_unmap(SCpnt);
-+	if (scsi_sg_count(SCpnt))
-+		pci_unmap_sg(ha->pdev, scsi_sglist(SCpnt), scsi_sg_count(SCpnt),
-+			     pci_dir);
- 
- 	if (!DEV2H(cpp->data_len))
- 		pci_dir = PCI_DMA_BIDIRECTIONAL;
+
+
+------- Comment #3 from kai.makisara@kolumbus.fi  2008-12-22 23:30 -------
+I have been testing large blocks with 2.6.27.7 and I was able to reach 6 MB
+without any tricks. The difference between your system and mine is that my tape
+is connected with SCSI and yours is with USB.
+
+Looking at linux/drivers/usb/storage/scsiglue,c I find the following:
+
+        /* limit the total size of a transfer to 120 KB */
+        .max_sectors =                  240,
+
+Maybe the USB experts can tell what is the reason for this.
+
+
 -- 
-1.5.5.GIT
-
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
