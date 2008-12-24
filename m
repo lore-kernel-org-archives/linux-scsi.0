@@ -1,90 +1,62 @@
-From: Ludovico Cavedon <ludovico.cavedon-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: USB HD: No Sense / Info fld=0x0 and read corruption
-Date: Wed, 24 Dec 2008 14:39:08 +0100
-Message-ID: <49523B7C.5010600@gmail.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [PATCH][RFC 23/23]: Support for zero-copy TCP transmit of user
+ space data
+Date: Wed, 24 Dec 2008 17:37:51 +0300
+Message-ID: <4952493F.10508@vlnb.net>
+References: <494C1E5E.7070809@goop.org> <20081219223314.GA2736@ioremap.net> <494C50BB.5030809@goop.org> <20081220020250.GA15064@gondor.apana.org.au> <494C8D57.7040808@goop.org> <20081220065105.GA16936@gondor.apana.org.au> <494CA226.9000200@goop.org> <20081220081045.GA17439@gondor.apana.org.au> <20081220103209.GA23632@ioremap.net> <49513909.1050100@vlnb.net> <20081223213817.GB16883@ioremap.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.187]:60132 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751816AbYLXOlf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Dec 2008 09:41:35 -0500
+In-Reply-To: <20081223213817.GB16883@ioremap.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Evgeniy Polyakov <zbr@ioremap.net>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>, Jeremy Fitzhardinge <jeremy@goop.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Boaz Harrosh <bharrosh@panasas.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, netdev@vger.kernel.org, Rusty Russell <rusty@rustcorp.com.au>, David Miller <davem@davemloft.net>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>
 
-Hi,
-I have a problem with a USB hard drive.
+Evgeniy Polyakov, on 12/24/2008 12:38 AM wrote:
+> On Tue, Dec 23, 2008 at 10:16:25PM +0300, Vladislav Bolkhovitin (vst@vlnb.net) wrote:
+>> Actually, there's another way, which seems to be a lot simpler. Alexey 
+>> Kuznetsov privately suggested it to me.
+>>
+>> In skb_shared_info new pointer transaction_token would be added, which 
+>> would point on:
+>>
+>> struct sk_transaction_token
+>> {
+>> 	atomic_t			io_count;
+>> 	struct sk_transaction_token	*next;
+>> 	unsigned long			token;
+>> 	unsigned long			private;
+>> 	void				(*finish_callback)(struct 
+>> 	sk_transaction_token *);
+>> };
+>>
+>> When skb is translated, transaction_token inherited. If 2 skb are merged 
+>> (the same places where I put net_get_page's in my patch), the *older* 
+>> token is inherited. This is the main point of this idea.
+>>
+>> Before starting new asynchronous send a client would open a new token. 
+>> Everything sent then would receive that token. Finish_callback() would 
+>> be called and the corresponding token freed, when io_count == 0 *AND* 
+>> all previous tokens closed.
+>>
+>> This idea seems to be simpler, than even what Rusty implemented. Correct 
+>> me, if I wrong. But, unfortunately, in the near future I will have no 
+>> time to develop it.. :-(
+> 
+> Yes, it is simpler and cleaner, but it requires additional allocation.
+> This is additional (and quite noticeble) overhead.
 
-The problem starts to happen after some random time of operation; the
-time may range from 1 minute up to one hour...
+Not necessary requires. For instance, in iscsi-scst sk_transaction_token 
+can (and should) be part of iSCSI cmd structure, so no additional 
+allocations would be needed.
 
-The first symptom are these messages in the kernel log.
----------------
-sd 5:0:0:0: [sdb] Sense Key : No Sense [current]
-Info fld=0x0
-5:0:0:0: [sdb] Add. Sense: No additional sense information
----------------
-The may appear only once or multiple times.
-
-Sometime they are not associated with other errors, sometimes I start to
-see filesystem corrpution:
----------------
-attempt to access beyond end of device
-sdb8: rw=0, want=15514452856, limit=207045657
----------------
-
-If I unmount the device and replug it, I am able to read the same data
-without any problem.
-I suspect that some read corruption is happening. However I have *never*
-seen I/O error reported!
-
-Here is the usbmon log:
-http://pastebin.com/f4e1afeb1
-
-There are some successful read operation, than the read operation
-31 = 55534243 8f150000 00100100 80000a28 0022ebd0 a8000088 00000000 000000
-
-whose command completion status ends with "01". The subsequent REQUEST
-SENSE, however is empty.
-
-What may be happening here?
-My situation looks different from
-http://thread.gmane.org/gmane.linux.kernel/747753
--there is an additional "Info fld=0x0" line in the log
--there log messages are not always looping
--it is happening also with 2.6.28-rc8 (which should have the patch, right?)
-
-I am not able to understand if this is HD problem or a kernel problem. I
-am able to replicate it:
--2.6.28-rc8 vanilla kernel
--2.6.27 ubuntu (intrepid) kernel
--2.6.25 ubuntu (hardy) kernel
--on two different computers
--with different USB cables (so it not a cable problem)
-
-However, I have never got errors reported by Windows (dual boot on the
-same machine).
-
-The HD driver is a Wester Didital 320GB (WD3200):
-T:  Bus=07 Lev=01 Prnt=01 Port=00 Cnt=01 Dev#=  5 Spd=480 MxCh= 0
-D:  Ver= 2.00 Cls=00(>ifc ) Sub=00 Prot=00 MxPS=64 #Cfgs=  1
-P:  Vendor=1058 ProdID=0704 Rev= 1.05
-S:  Manufacturer=Western Digital
-S:  Product=External HDD
-S:  SerialNumber=5758453730384E5036333734
-C:* #Ifs= 1 Cfg#= 1 Atr=c0 MxPwr=  2mA
-I:* If#= 0 Alt= 0 #EPs= 2 Cls=08(stor.) Sub=06 Prot=50 Driver=usb-storage
-E:  Ad=81(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
-E:  Ad=02(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
-
-The USB controller is
-00:1a.7 USB Controller [0c03]: Intel Corporation 82801H (ICH8 Family)
-USB2 EHCI Controller #2 [8086:283a] (rev 03)
+Thanks,
+Vlad
 
 
-Please tell me if I can provide other useful information.
-
-Thank you,
-Ludovico Cavedon
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
