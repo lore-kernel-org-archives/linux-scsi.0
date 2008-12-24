@@ -1,36 +1,73 @@
-From: Evgeniy Polyakov <zbr@ioremap.net>
-Subject: Re: [PATCH][RFC 23/23]: Support for zero-copy TCP transmit of user space data
-Date: Wed, 24 Dec 2008 21:08:41 +0300
-Message-ID: <20081224180841.GA615@ioremap.net>
-References: <494C8D57.7040808@goop.org> <20081220065105.GA16936@gondor.apana.org.au> <494CA226.9000200@goop.org> <20081220081045.GA17439@gondor.apana.org.au> <20081220103209.GA23632@ioremap.net> <49513909.1050100@vlnb.net> <20081223213817.GB16883@ioremap.net> <4952493F.10508@vlnb.net> <20081224144422.GA25089@ioremap.net> <49527590.7090909@vlnb.net>
+From: Ludovico Cavedon <ludovico.cavedon-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: USB HD: No Sense / Info fld=0x0 and read corruption
+Date: Wed, 24 Dec 2008 21:09:03 +0100
+Message-ID: <495296DF.4090900@gmail.com>
+References: <Pine.LNX.4.44L0.0812241253300.27059-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kandzendo.ru ([195.178.208.66]:48645 "EHLO tservice.net.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750952AbYLXSIo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Dec 2008 13:08:44 -0500
-Content-Disposition: inline
-In-Reply-To: <49527590.7090909@vlnb.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.44L0.0812241253300.27059-100000-pYrvlCTfrz9XsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>, Jeremy Fitzhardinge <jeremy@goop.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Boaz Harrosh <bharrosh@panasas.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, netdev@vger.kernel.org, Rusty Russell <rusty@rustcorp.com.au>, David Miller <davem@davemloft.net>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>
 
-On Wed, Dec 24, 2008 at 08:46:56PM +0300, Vladislav Bolkhovitin (vst@vlnb.net) wrote:
-> I think in most cases there would be possibility to embed 
-> sk_transaction_token to some higher level structure. E.g. Xen apparently 
-> should have something to track packets passed through host/guest 
-> boundary. From other side, kmem cache is too well polished to have much 
-> overhead. I doubt, you would even notice it in this application. In most 
-> cases allocation of such small object in it using SLUB is just about the 
-> same as a list_del() under disabled IRQs.
+Alan Stern wrote:
+> On Wed, 24 Dec 2008, Ludovico Cavedon wrote:
+>> -it is happening also with 2.6.28-rc8 (which should have the patch, right?)
+> 
+> What patch?  Do you mean the patch at the end of that email thread?  It 
+> affects only Argosy USB drives, not your Western Digital.
 
-I definitely would not rely on that, especially at cache reclaim time.
-But it of course depends on the workload and maybe appropriate for the
-cases in question. The best solution I think is to combine tag and
-separate destructur, so that those who do not want to allocate a token
-could still get notification via destructor callback.
+I thought also patches
+http://marc.info/?l=linux-scsi&m=122443015406309&w=2
+were included, but later I realized I was wrong.
+I have patched my kernel with them, and now I/O errors get reported!
 
--- 
-	Evgeniy Polyakov
+>> I am not able to understand if this is HD problem or a kernel problem. I
+> 
+> Partly both.  The HD (or more likely, its USB interface) is responsible 
+> for sending those unnecessary empty sense records.  The kernel is 
+> responsible for not reporting an I/O error (assuming an error actually 
+> did take place).
+
+I think I found out what is happening on the HD side. The SMART self
+test fails with a read error. The SMART log reports uncorrectable read
+errors. However Reallocated_Event_Count is 0. Searching on the web,
+looks like that these sectors have bad ECC, so the cause a read error,
+however they are not bad sectors. Is this correct?
+
+My question is: how can this happen? and not just one sector, but at
+least a dozen!
+Bad HD? (it's new! 93 hrs of activity so far!)
+
+>> am able to replicate it:
+>> -2.6.28-rc8 vanilla kernel
+>> -2.6.27 ubuntu (intrepid) kernel
+> 
+> 2.6.27 doesn't go into an endless loop?  This may indicate that 
+> eventually the drive stops sending the Check Condition status.
+
+You are right. Most of the read attempts succeed after a a while.
+However I found one sector that is causing an endless loop on 2.6.27 and
+unpatched 2.6.28-rc8
+
+> It would help to see the dmesg log for when one of these errors occurs.
+
+There are no additional messages. However here it is:
+http://pastebin.com/mcfd54a3
+
+> It would also help to know what happens under Windows.  Do the same 
+> "empty sense" errors occur?  If they do, how does Windows handle them?
+
+I can try to use usb snoopy to log usb traffic under windows.
+Do you know how I can ask Windows "read sector X"?
+
+Thank you for your help,
+Merry Christmas!
+Ludovico
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
