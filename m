@@ -1,67 +1,72 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH v2 00/16] st: remove scsi_execute_async usage (the
- second half)
-Date: Fri, 26 Dec 2008 11:36:29 +0900
-Message-ID: <20081226113607L.fujita.tomonori@lab.ntt.co.jp>
-References: <1229579391-28753-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	<20081225235112T.fujita.tomonori@lab.ntt.co.jp>
-	<alpine.LNX.2.00.0812252236420.24561@kai.makisara.local>
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH 3/7] drivers/message/fusion: Move a dereference below a NULL
+ test
+Date: Fri, 26 Dec 2008 08:27:48 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0812260827250.25450@ask.diku.dk>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:60562 "EHLO sh.osrg.net"
+Received: from mgw1.diku.dk ([130.225.96.91]:55461 "EHLO mgw1.diku.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752194AbYLZCkq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Dec 2008 21:40:46 -0500
-In-Reply-To: <alpine.LNX.2.00.0812252236420.24561@kai.makisara.local>
+	id S1752805AbYLZH1v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Dec 2008 02:27:51 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai.Makisara@kolumbus.fi, jens.axboe@oracle.com
-Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+To: Eric.Moore@lsi.com, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Thu, 25 Dec 2008 23:17:51 +0200 (EET)
-Kai Makisara <Kai.Makisara@kolumbus.fi> wrote:
+From: Julia Lawall <julia@diku.dk>
 
-> On Thu, 25 Dec 2008, FUJITA Tomonori wrote:
-> 
-> > On Thu, 18 Dec 2008 14:49:35 +0900
-> > FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-> > 
-> > > This patchset is the second version of the second half patchset to
-> > > remove scsi_execute_async in st driver (IOW, this converts st driver
-> > > to use the block layer functions).
-> > > 
-> > > http://marc.info/?l=linux-scsi&m=122900494917385&w=2
-> > > 
-> > > I've not changed the st patches much since the first version. No
-> > > change to the #4-14 st patches except for cleanups to silence
-> > > checkpatch.sh. The new #15-16 patches for st came from Kai, who
-> > > greatly helped me out with this patchset.
-> > 
-> > Kai, can I get your ACK on these patches?
-> > 
-> Yes. I tested the patches and did not see any problems.
+If the NULL test is necessary, then the dereference should be moved below
+the NULL test.
 
-Thanks a lot!
+The semantic patch that makes this change is as follows:
+(http://www.emn.fr/x-info/coccinelle/).
 
+// <smpl>
+@disable is_null@
+identifier f;
+expression E;
+identifier fld;
+statement S;
+@@
 
-Jens, merging the following patches for block via James' tree is ok?
++ if (E == NULL) S
+  f(...,E->fld,...);
+- if (E == NULL) S
 
+@@
+identifier f;
+expression E;
+identifier fld;
+statement S;
+@@
 
-> The #1-3 patches are for the block layer.
-> 
-> The first patch is a slightly modified version of the following fix (I
-> modified it for the later changes):
-> 
-> http://marc.info/?l=linux-scsi&m=122927795113939&w=2
-> 
-> The second patch is a patch to fix the partial mappings with
-> rq_map_data struct. Kai found this problem (which leads to data
-> corruption).
-> 
-> The first and second patches fix the bugs which affect sg.
-> 
-> The third patch is the first patch in the previous patchset. It's a
-> necessary change to the block layer to support st/osst. I slightly
-> modified it due to the first and second patches.
++ if (!E) S
+  f(...,E->fld,...);
+- if (!E) S
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+ drivers/message/fusion/mptctl.c     |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
+index b89f476..c638171 100644
+--- a/drivers/message/fusion/mptctl.c
++++ b/drivers/message/fusion/mptctl.c
+@@ -308,10 +308,11 @@ static void mptctl_timeout_expired (MPT_IOCTL *ioctl)
+ {
+ 	int rc = 1;
+ 
+-	dctlprintk(ioctl->ioc, printk(MYIOC_s_DEBUG_FMT ": Timeout Expired! Host %d\n",
+-				ioctl->ioc->name, ioctl->ioc->id));
+ 	if (ioctl == NULL)
+ 		return;
++	dctlprintk(ioctl->ioc,
++		   printk(MYIOC_s_DEBUG_FMT ": Timeout Expired! Host %d\n",
++		   ioctl->ioc->name, ioctl->ioc->id));
+ 
+ 	ioctl->wait_done = 0;
+ 	if (ioctl->reset & MPTCTL_RESET_OK)
