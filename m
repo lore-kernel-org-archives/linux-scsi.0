@@ -1,67 +1,53 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 4/7] drivers/scsi: Move a dereference below a NULL test
-Date: Fri, 26 Dec 2008 08:28:10 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0812260827490.25450@ask.diku.dk>
+From: Ludovico Cavedon <ludovico.cavedon-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: USB HD: No Sense / Info fld=0x0 and read corruption
+Date: Fri, 26 Dec 2008 11:38:06 +0100
+Message-ID: <4954B40E.80403@gmail.com>
+References: <Pine.LNX.4.44L0.0812241756020.917-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753755AbYLZH2e@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: mike@i-Connect.Net, linux-eata@i-connect.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.44L0.0812241756020.917-100000-pYrvlCTfrz9XsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Julia Lawall <julia@diku.dk>
+Alan Stern wrote:
+> On Wed, 24 Dec 2008, Ludovico Cavedon wrote:
+>> My question is: how can this happen? and not just one sector, but at
+>> least a dozen!
+>> Bad HD? (it's new! 93 hrs of activity so far!)
+> 
+> Maybe you can exchange it...
 
-If the NULL test is necessary, then the dereference should be moved below
-the NULL test.
+Definitely!
 
-The semantic patch that makes this change is as follows:
-(http://www.emn.fr/x-info/coccinelle/).
+>>> It would also help to know what happens under Windows.  Do the same 
+>>> "empty sense" errors occur?  If they do, how does Windows handle them?
+>> I can try to use usb snoopy to log usb traffic under windows.
+>> Do you know how I can ask Windows "read sector X"?
+> 
+> I wish I knew!  Perhaps Microsoft's KnowledgeBase site can tell you 
+> how.
 
-// <smpl>
-@disable is_null@
-identifier f;
-expression E;
-identifier fld;
-statement S;
-@@
+I found a free tool to read a raw sector of a partition (NT Disk
+Viewer). Unfortunately USB Snoopy kept stopping capturing packets after
+a few seconds, so I was not able to see what was happening.
+Anyway, I goi a read error ofter a while the program seemed frozen. So I
+guess Windows is handling them retrying to read the sector and finally
+giving up.
 
-+ if (E == NULL) S
-  f(...,E->fld,...);
-- if (E == NULL) S
+A question:
+If I rewrite these sectors I can fix these errors (at least
+temporarily). I also noticed that when the "check condition" bit is set
+some data is also tranferred. Is there get these partial data (e.g. with
+dd)?
 
-@@
-identifier f;
-expression E;
-identifier fld;
-statement S;
-@@
+Thanks,
+Ludovico
 
-+ if (!E) S
-  f(...,E->fld,...);
-- if (!E) S
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
- drivers/scsi/eata_pio.c             |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/eata_pio.c b/drivers/scsi/eata_pio.c
-index 952505c..7fec87d 100644
---- a/drivers/scsi/eata_pio.c
-+++ b/drivers/scsi/eata_pio.c
-@@ -500,10 +500,11 @@ static int eata_pio_host_reset(struct scsi_cmnd *cmd)
- 
- 		sp = HD(cmd)->ccb[x].cmd;
- 		HD(cmd)->ccb[x].status = RESET;
--		printk(KERN_WARNING "eata_pio_reset: slot %d in reset, pid %ld.\n", x, sp->serial_number);
--
- 		if (sp == NULL)
- 			panic("eata_pio_reset: slot %d, sp==NULL.\n", x);
-+		printk(KERN_WARNING
-+			"eata_pio_reset: slot %d in reset, pid %ld.\n",
-+			x, sp->serial_number);
- 	}
- 
- 	/* hard reset the HBA  */
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
