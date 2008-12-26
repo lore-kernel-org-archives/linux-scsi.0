@@ -1,18 +1,13 @@
 From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 3/7] drivers/message/fusion: Move a dereference below a NULL
- test
-Date: Fri, 26 Dec 2008 08:27:48 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0812260827250.25450@ask.diku.dk>
+Subject: [PATCH 4/7] drivers/scsi: Move a dereference below a NULL test
+Date: Fri, 26 Dec 2008 08:28:10 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0812260827490.25450@ask.diku.dk>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mgw1.diku.dk ([130.225.96.91]:55461 "EHLO mgw1.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752805AbYLZH1v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Dec 2008 02:27:51 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753755AbYLZH2e@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: mike@i-Connect.Net, linux-eata@i-connect.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eric.Moore@lsi.com, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
 From: Julia Lawall <julia@diku.dk>
 
@@ -49,24 +44,24 @@ statement S;
 Signed-off-by: Julia Lawall <julia@diku.dk>
 
 ---
- drivers/message/fusion/mptctl.c     |    5 +++--
+ drivers/scsi/eata_pio.c             |    5 +++--
  1 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
-index b89f476..c638171 100644
---- a/drivers/message/fusion/mptctl.c
-+++ b/drivers/message/fusion/mptctl.c
-@@ -308,10 +308,11 @@ static void mptctl_timeout_expired (MPT_IOCTL *ioctl)
- {
- 	int rc = 1;
+diff --git a/drivers/scsi/eata_pio.c b/drivers/scsi/eata_pio.c
+index 952505c..7fec87d 100644
+--- a/drivers/scsi/eata_pio.c
++++ b/drivers/scsi/eata_pio.c
+@@ -500,10 +500,11 @@ static int eata_pio_host_reset(struct scsi_cmnd *cmd)
  
--	dctlprintk(ioctl->ioc, printk(MYIOC_s_DEBUG_FMT ": Timeout Expired! Host %d\n",
--				ioctl->ioc->name, ioctl->ioc->id));
- 	if (ioctl == NULL)
- 		return;
-+	dctlprintk(ioctl->ioc,
-+		   printk(MYIOC_s_DEBUG_FMT ": Timeout Expired! Host %d\n",
-+		   ioctl->ioc->name, ioctl->ioc->id));
+ 		sp = HD(cmd)->ccb[x].cmd;
+ 		HD(cmd)->ccb[x].status = RESET;
+-		printk(KERN_WARNING "eata_pio_reset: slot %d in reset, pid %ld.\n", x, sp->serial_number);
+-
+ 		if (sp == NULL)
+ 			panic("eata_pio_reset: slot %d, sp==NULL.\n", x);
++		printk(KERN_WARNING
++			"eata_pio_reset: slot %d in reset, pid %ld.\n",
++			x, sp->serial_number);
+ 	}
  
- 	ioctl->wait_done = 0;
- 	if (ioctl->reset & MPTCTL_RESET_OK)
+ 	/* hard reset the HBA  */
