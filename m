@@ -1,51 +1,91 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [ANNOUNCE] lsscsi-0.22 released
-Date: Fri, 26 Dec 2008 22:29:36 -0500
-Message-ID: <4955A120.3060703@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: [PATCH][RFC 2/23]: SCST core
+Date: Sat, 27 Dec 2008 12:20:55 +0100
+Message-ID: <20081227112055.GB18819@elte.hu>
+References: <20081210191213.GA15273@uranus.ravnborg.org> <49414DBE.6070801@vlnb.net> <20081211210917.GB27010@uranus.ravnborg.org> <4942BA85.3070408@vlnb.net> <1229118607.24995.18.camel@localhost.localdomain> <4943CAAB.4050008@vlnb.net> <c62985530812131635k362fc8d2q3c65e8284141f491@mail.gmail.com> <494A37E9.5000009@vlnb.net> <c62985530812200506u647fc135wcc818bc57d06cb04@mail.gmail.com> <495137F4.9010404@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:44857 "EHLO
-	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752278AbYL0D3v (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Dec 2008 22:29:51 -0500
+Received: from mx3.mail.elte.hu ([157.181.1.138]:37806 "EHLO mx3.mail.elte.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753325AbYL0LVi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 27 Dec 2008 06:21:38 -0500
+Content-Disposition: inline
+In-Reply-To: <495137F4.9010404@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, Matt Taggart <taggart@debian.org>
-
-lsscsi is a utility that uses sysfs in linux 2.6 series kernels
-to list information about SCSI devices and SCSI hosts. Both a
-compact format which is one line per device and a "classic"
-format (like the output of 'cat /proc/scsi/scsi') are supported.
-
-Version 0.22 is available at
-http://sg.danny.cz/scsi/lsscsi.html
-More information can be found on that page including examples
-and a Download section for tarballs, rpm and deb packages.
-
-ChangeLog:
-Version 0.22 2008/12/26 [svn: r71]
-   - add protection information (see CREDITS file)
-   - add USB transport type with USB device name
-   - add ATA and SATA transport types (crude: by driver name)
-Version 0.21 2008/7/10 [svn: r64]
-   ....
-
-Example of some new features:
-$ lsscsi
-[0:0:0:0]    disk    ATA      FUJITSU MHY2160B 0000  /dev/sda
-[3:0:0:0]    cd/dvd  MATSHITA DVD/CDRW UJDA775 CB03  /dev/scd0
-[5:0:0:0]    disk    USB 2.0  SD/MMC Reader          /dev/sdb
-[6:0:0:0]    disk    JetFlash TS2GJFVxx        8.01  /dev/sdc
-
-$ lsscsi -t
-[0:0:0:0]    disk    sata:                           /dev/sda
-[3:0:0:0]    cd/dvd  ata:                            /dev/scd0
-[5:0:0:0]    disk    usb: 7-1:1.0                    /dev/sdb
-[6:0:0:0]    disk    usb: 7-2.4:1.0                  /dev/sdc
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: =?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>, Steven Rostedt <srostedt@redhat.com>, Sam Ravnborg <sam@ravnborg.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Boaz Harrosh <bharrosh@panasas.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
 
-Doug Gilbert
+* Vladislav Bolkhovitin <vst@vlnb.net> wrote:
+
+>> The word graph is actually here to explain here that we not only trace 
+>> each function call but we can actually retrieve all of the call path of 
+>> a function and then draw it as if it was C code:
+>>
+>>  0) ! 108.528 us  |            }
+>>  0)               |            irq_exit() {
+>>  0)               |              do_softirq() {
+>>  0)               |                __do_softirq() {
+>>  0)   0.895 us    |                  __local_bh_disable();
+>>  0)               |                  run_timer_softirq() {
+>>  0)   0.827 us    |                    hrtimer_run_pending();
+>>  0)   1.226 us    |                    _spin_lock_irq();
+>>  0)               |                    _spin_unlock_irq() {
+>>  0)   6.550 us    |                  }
+>>  0)   0.924 us    |                  _local_bh_enable();
+>>  0) + 12.129 us   |                }
+>>  0) + 13.911 us   |              }
+>>  0)   0.707 us    |              idle_cpu();
+>>  0) + 17.009 us   |            }
+>>  0) ! 137.419 us  |          }
+>>  0)   <========== |
+>>  0)   1.045 us    |          }
+>>  0) ! 148.908 us  |        }
+>>  0) ! 151.022 us  |      }
+>>  0) ! 153.022 us  |    }
+>>  0)   0.963 us    |    journal_mark_dirty();
+>>  0)   0.925 us    |    __brelse();
+>
+> Unfortunately, it lacks very useful "TASK-PID, CPU#, TIMESTAMP" header 
+> fields..
+
+those obscure readability in the typical usecases, but you can get them 
+anytime via using this existing trace_options runtime switch:
+
+  echo funcgraph-proc > /debug/tracing/trace_options 
+
+resulting in traces like this:
+
+# CPU TASK/PID     OVERHEAD/DURATION            FUNCTION CALLS
+# |   |      |              |                   |   |   |   |
+ ------------------------------------------
+  0) distccd-28400  =>   cc1-30212
+ ------------------------------------------
+
+  0)   cc1-30212    |   0.270 us    |    }
+  0)   cc1-30212    |               |    __do_fault() {
+  0)   cc1-30212    |               |      filemap_fault() {
+  0)   cc1-30212    |               |        find_lock_page() {
+  0)   cc1-30212    |   0.453 us    |          find_get_page();
+  0)   cc1-30212    |   0.997 us    |        }
+  0)   cc1-30212    |               |        PageUptodate() {
+  0)   cc1-30212    |   0.266 us    |          constant_test_bit();
+  0)   cc1-30212    |   0.799 us    |        }
+  0)   cc1-30212    |   0.379 us    |        mark_page_accessed();
+  0)   cc1-30212    |   3.275 us    |      }
+  0)   cc1-30212    |   0.276 us    |      _spin_lock();
+  0)   cc1-30212    |   0.389 us    |      page_add_file_rmap();
+  0)   cc1-30212    |               |      unlock_page() {
+  0)   cc1-30212    |   0.266 us    |        page_waitqueue();
+  0)   cc1-30212    |   0.381 us    |        __wake_up_bit();
+  0)   cc1-30212    |   1.442 us    |      }
+  0)   cc1-30212    |   6.897 us    |    }
+  0)   cc1-30212    |+ 11.663 us    |  }
+  0)   cc1-30212    |               |  up_read() {
+  0)   cc1-30212    |   0.280 us    |    _spin_lock_irqsave();
+
+Thanks,
+
+	Ingo
