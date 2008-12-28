@@ -1,91 +1,75 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: Re: [PATCH][RFC 2/23]: SCST core
-Date: Sat, 27 Dec 2008 12:20:55 +0100
-Message-ID: <20081227112055.GB18819@elte.hu>
-References: <20081210191213.GA15273@uranus.ravnborg.org> <49414DBE.6070801@vlnb.net> <20081211210917.GB27010@uranus.ravnborg.org> <4942BA85.3070408@vlnb.net> <1229118607.24995.18.camel@localhost.localdomain> <4943CAAB.4050008@vlnb.net> <c62985530812131635k362fc8d2q3c65e8284141f491@mail.gmail.com> <494A37E9.5000009@vlnb.net> <c62985530812200506u647fc135wcc818bc57d06cb04@mail.gmail.com> <495137F4.9010404@vlnb.net>
+From: Maurice Volaski <mvolaski@aecom.yu.edu>
+Subject: [Q] What causes an LSI card to experience a "phase change 2-7
+ 16@f9c95f60 resid=10"?
+Date: Sat, 27 Dec 2008 23:53:06 -0500
+Message-ID: <a06240407c57cb2865071@[129.98.90.227]>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii" ; format="flowed"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx3.mail.elte.hu ([157.181.1.138]:37806 "EHLO mx3.mail.elte.hu"
+Received: from mx1.aecom.yu.edu ([129.98.1.51]:60647 "EHLO mx1.aecom.yu.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753325AbYL0LVi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 27 Dec 2008 06:21:38 -0500
-Content-Disposition: inline
-In-Reply-To: <495137F4.9010404@vlnb.net>
+	id S1750835AbYL1FRD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 28 Dec 2008 00:17:03 -0500
+Received: from draco.aecom.yu.edu (draco.aecom.yu.edu [129.98.1.160])
+	by mx1.aecom.yu.edu (Postfix) with ESMTP id 496D79F0039
+	for <linux-scsi@vger.kernel.org>; Sat, 27 Dec 2008 23:54:45 -0500 (EST)
+Received: from smtp2.aecom.yu.edu (smtp2.aecom.yu.edu [129.98.1.62])
+	by draco.aecom.yu.edu (Symantec Mail Security) with ESMTP id D54F5718002
+	for <linux-scsi@vger.kernel.org>; Sat, 27 Dec 2008 23:54:44 -0500 (EST)
+Received: from [129.98.90.227] (usseinstein.aecom.yu.edu [129.98.90.227])
+	by smtp2.aecom.yu.edu (Postfix) with ESMTP id A560EB66F
+	for <linux-scsi@vger.kernel.org>; Sat, 27 Dec 2008 23:54:44 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: =?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>, Steven Rostedt <srostedt@redhat.com>, Sam Ravnborg <sam@ravnborg.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Boaz Harrosh <bharrosh@panasas.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+To: linux-scsi@vger.kernel.org
+
+I attached a hardware RAID with 3.5 TB partitions to a 64-bit Linux 
+box (kernel 2.6.27) with a 53c1010 LSI HBA using the sym53c8xx 
+driver, and at startup it complains with various messages:
 
 
-* Vladislav Bolkhovitin <vst@vlnb.net> wrote:
+>Dec 19 17:25:58 [kernel] [   11.512044] sd 4:0:0:5: Attached scsi 
+>generic sg6 type 0
+>Dec 19 17:25:58 [kernel] [   11.512594] sd 4:0:0:6: [sdh] Very big 
+>device. Trying to use READ CAPACITY(16).
+>Dec 19 17:25:58 [kernel] [   11.512673] sd 4:0:0:6: phase change 2-7 
+>16@f9c95f60 resid=10.
+>Dec 19 17:25:58 [kernel] [   11.516166] sd 4:0:0:6: [sdh] 6840264704 
+>512-byte hardware sectors (3502216 MB)
+>Dec 19 17:25:58 [kernel] [   11.516419] sd 4:0:0:6: [sdh] Write Protect is off
+>Dec 19 17:25:58 [kernel] [   11.517326] sd 4:0:0:6: [sdh] Write 
+>cache: enabled, read cache: enabled, doesn't support DPO or FUA
+>Dec 19 17:25:58 [kernel] [   11.517758] sd 4:0:0:6: [sdh] Very big 
+>device. Trying to use READ CAPACITY(16).
+>Dec 19 17:25:58 [kernel] [   11.517838] sd 4:0:0:6: phase change 2-7 
+>16@f9d0df60 resid=10.
+>Dec 19 17:25:58 [kernel] [   11.517982] sd 4:0:0:6: [sdh] 6840264704 
+>512-byte hardware sectors (3502216 MB)
+>Dec 19 17:25:58 [kernel] [   11.518177] sd 4:0:0:6: [sdh] Write Protect is off
+>Dec 19 17:25:58 [kernel] [   11.518560] sd 4:0:0:6: [sdh] Write 
+>cache: enabled, read cache: enabled, doesn't support DPO or FUA
+>Dec 19 17:25:58 [kernel] [   11.518564]  sdh: unknown partition table
+>Dec 19 17:25:58 [kernel] [   11.519212] sd 4:0:0:6: [sdh] Attached SCSI disk
+>Dec 19 17:25:58 [kernel] [   11.519357] sd 4:0:0:6: Attached scsi 
+>generic sg7 type 0
+>Dec 19 17:25:58 [kernel] [   11.520553] sd 4:0:0:1: extraneous data discarded.
+>Dec 19 17:25:58 [kernel] [   11.520560] sd 4:0:0:1: COMMAND FAILED (87 0 1).
+>Dec 19 17:25:58 [kernel] [   11.520851] sd 4:0:0:1: extraneous data discarded.
+>Dec 19 17:25:58 [kernel] [   11.520855] sd 4:0:0:1: COMMAND FAILED (87 0 1).
+>Dec 19 17:25:58 [kernel] [   11.561838] sd 4:0:0:1: phase change 2-7 
+>16@f9c95f60 resid=10.
+>Dec 19 17:25:58 [kernel] [   11.562130] end_request: I/O error, dev 
+>sdc, sector 6833978240
+>Dec 19 17:25:58 [kernel] [   11.562135] Buffer I/O error on device 
+>sdc, logical block 854247280
 
->> The word graph is actually here to explain here that we not only trace 
->> each function call but we can actually retrieve all of the call path of 
->> a function and then draw it as if it was C code:
->>
->>  0) ! 108.528 us  |            }
->>  0)               |            irq_exit() {
->>  0)               |              do_softirq() {
->>  0)               |                __do_softirq() {
->>  0)   0.895 us    |                  __local_bh_disable();
->>  0)               |                  run_timer_softirq() {
->>  0)   0.827 us    |                    hrtimer_run_pending();
->>  0)   1.226 us    |                    _spin_lock_irq();
->>  0)               |                    _spin_unlock_irq() {
->>  0)   6.550 us    |                  }
->>  0)   0.924 us    |                  _local_bh_enable();
->>  0) + 12.129 us   |                }
->>  0) + 13.911 us   |              }
->>  0)   0.707 us    |              idle_cpu();
->>  0) + 17.009 us   |            }
->>  0) ! 137.419 us  |          }
->>  0)   <========== |
->>  0)   1.045 us    |          }
->>  0) ! 148.908 us  |        }
->>  0) ! 151.022 us  |      }
->>  0) ! 153.022 us  |    }
->>  0)   0.963 us    |    journal_mark_dirty();
->>  0)   0.925 us    |    __brelse();
->
-> Unfortunately, it lacks very useful "TASK-PID, CPU#, TIMESTAMP" header 
-> fields..
+This same hardware RAID runs with no problem on a very similar system 
+running a 53c1030 LSI HBA and the mptspi driver.
 
-those obscure readability in the typical usecases, but you can get them 
-anytime via using this existing trace_options runtime switch:
+Is there some limitation in the older 53c1010 that is tripping it up 
+on this hardware, a capacity limitation, perhaps?
+-- 
 
-  echo funcgraph-proc > /debug/tracing/trace_options 
-
-resulting in traces like this:
-
-# CPU TASK/PID     OVERHEAD/DURATION            FUNCTION CALLS
-# |   |      |              |                   |   |   |   |
- ------------------------------------------
-  0) distccd-28400  =>   cc1-30212
- ------------------------------------------
-
-  0)   cc1-30212    |   0.270 us    |    }
-  0)   cc1-30212    |               |    __do_fault() {
-  0)   cc1-30212    |               |      filemap_fault() {
-  0)   cc1-30212    |               |        find_lock_page() {
-  0)   cc1-30212    |   0.453 us    |          find_get_page();
-  0)   cc1-30212    |   0.997 us    |        }
-  0)   cc1-30212    |               |        PageUptodate() {
-  0)   cc1-30212    |   0.266 us    |          constant_test_bit();
-  0)   cc1-30212    |   0.799 us    |        }
-  0)   cc1-30212    |   0.379 us    |        mark_page_accessed();
-  0)   cc1-30212    |   3.275 us    |      }
-  0)   cc1-30212    |   0.276 us    |      _spin_lock();
-  0)   cc1-30212    |   0.389 us    |      page_add_file_rmap();
-  0)   cc1-30212    |               |      unlock_page() {
-  0)   cc1-30212    |   0.266 us    |        page_waitqueue();
-  0)   cc1-30212    |   0.381 us    |        __wake_up_bit();
-  0)   cc1-30212    |   1.442 us    |      }
-  0)   cc1-30212    |   6.897 us    |    }
-  0)   cc1-30212    |+ 11.663 us    |  }
-  0)   cc1-30212    |               |  up_read() {
-  0)   cc1-30212    |   0.280 us    |    _spin_lock_irqsave();
-
-Thanks,
-
-	Ingo
+Maurice Volaski, mvolaski@aecom.yu.edu
+Computing Support, Rose F. Kennedy Center
+Albert Einstein College of Medicine of Yeshiva University
