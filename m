@@ -1,61 +1,67 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: linux-next: Tree for December 29 (fcoe)
-Date: Mon, 29 Dec 2008 14:21:45 -0800
-Message-ID: <49594D79.30806@oracle.com>
-References: <20081230031621.60acd90b.sfr@canb.auug.org.au>	 <20081229123115.9a255fa8.randy.dunlap@oracle.com>	 <1230586520.3302.61.camel@localhost.localdomain> <1230587141.3302.64.camel@localhost.localdomain>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [Announce] smp_utils-0.94 available
+Date: Mon, 29 Dec 2008 18:43:55 -0500
+Message-ID: <495960BB.1040103@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet12.oracle.com ([148.87.113.124]:55003 "EHLO
-	rgminet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753421AbYL2WWB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Dec 2008 17:22:01 -0500
-In-Reply-To: <1230587141.3302.64.camel@localhost.localdomain>
+Received: from smtp.infotech.no ([82.134.31.41]:34660 "EHLO
+	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751987AbYL2XoD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Dec 2008 18:44:03 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by elrond2.infotech.no (Postfix) with ESMTP id 4F1B21BF24
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Dec 2008 00:44:00 +0100 (CET)
+Received: from elrond2.infotech.no ([127.0.0.1])
+	by localhost (elrond2.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id HoOp-A217mKt for <linux-scsi@vger.kernel.org>;
+	Tue, 30 Dec 2008 00:43:58 +0100 (CET)
+Received: from [192.168.48.87] (ip-72.61.99.216.dsl-cust.ca.inter.net [216.99.61.72])
+	by elrond2.infotech.no (Postfix) with ESMTP id E2AAA1BF23
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Dec 2008 00:43:57 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, scsi <linux-scsi@vger.kernel.org>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: SCSI development list <linux-scsi@vger.kernel.org>
 
-James Bottomley wrote:
-> 
-> Actually, I deduce the problem is owner->name and your build has
-> CONFIG_MODULE=n ... the definition of struct module is enclosed in a
-> #ifdef CONFIG_MODULE.
-> 
-> This should fix it.
-> 
-> James
+smp_utils is a package of command line utilities for invoking
+SMP functions to monitor and manage SAS expanders. SMP is the
+Serial Attached SCSI (SAS) Management Protocol. A SAS Host
+Bus Adapter (HBA) includes a SMP initiator (along with SSP and
+STP initiators). A SAS expander contains a SMP target. Many
+SAS HBAs have a SMP pass through interface that can be used to
+send SMP requests and receive the responses. This package
+should work with the linux kernel (lk) 2.6 series, the lk 2.4
+series, and builds on FreeBSD.
 
-Ack.  Thanks.
+Three interfaces are available: "sgv4", "mptctl" and "smp_portal".
+The "sgv4" interface uses the bsg driver. It requires lk 2.6.24
+or later.
 
-> ---
-> 
-> diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
-> index 1cb549c..fec38f6 100644
-> --- a/drivers/scsi/fcoe/libfcoe.c
-> +++ b/drivers/scsi/fcoe/libfcoe.c
-> @@ -992,7 +992,7 @@ static int fcoe_ethdrv_get(const struct net_device *netdev)
->  	owner = fcoe_netdev_to_module_owner(netdev);
->  	if (owner) {
->  		printk(KERN_DEBUG "foce:hold driver module %s for %s\n",
-> -		       owner->name, netdev->name);
-> +		       module_name(owner), netdev->name);
->  		return  try_module_get(owner);
->  	}
->  	return -ENODEV;
-> @@ -1012,7 +1012,7 @@ static int fcoe_ethdrv_put(const struct net_device *netdev)
->  	owner = fcoe_netdev_to_module_owner(netdev);
->  	if (owner) {
->  		printk(KERN_DEBUG "foce:release driver module %s for %s\n",
-> -		       owner->name, netdev->name);
-> +		       module_name(owner), netdev->name);
->  		module_put(owner);
->  		return 0;
->  	}
-> 
-> 
+SAS-2 ratification is approaching and this smp_utils version
+syncs various important commands with what should be the last
+SAS-2 draft (revision 15):
+     http://www.t10.org/cgi-bin/ac.pl?t=f&f=sas2r15.pdf
+This package implements 14 of the 27 SMP functions defined in
+sas2r15. Support for zoning functions is weak.
 
+For an overview and examples of smp_utils see:
+http://sg.danny.cz/sg/smp_utils.html
+A tarball, rpm and deb can be found in table 2.
 
--- 
-~Randy
+Changelog for smp_utils-0.94 [20081229] [svn:r40]
+   - smp_discover: sync to sas2r15
+   - smp_discover_list: sync to sas2r15
+   - smp_rep_general: sync to sas2r15
+   - smp_rep_exp_route_tbl: sync to sas2r15
+   - smp_lib: sync to sas2r15
+   - sgv4: more detail in error messages
+   - sgv4: drop scsi.h include, gives problems with lk 2.6.27
+   - mpt: allow either /dev/mptctl or /dev/mpt2ctl [10;220-221]
+     - warn if target SAS address is 0x00000000 when -v given
+
+Changelog for smp_utils-0.93 [20080106] [svn:r7]
+...
+
+Doug Gilbert
