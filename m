@@ -1,19 +1,21 @@
 From: Tony Battersby <tonyb@cybernetics.com>
 Subject: Re: [PATCH] sym53c8xx_2: slave_alloc/destroy safety (2.6.27.5)
-Date: Mon, 29 Dec 2008 15:20:28 -0500
-Message-ID: <4959310C.1010406@cybernetics.com>
+Date: Mon, 29 Dec 2008 15:27:12 -0500
+Message-ID: <495932A0.5040306@cybernetics.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host64.cybernetics.com ([98.174.209.230]:1029 "EHLO
+Received: from host64.cybernetics.com ([98.174.209.230]:1364 "EHLO
 	mail.cybernetics.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752267AbYL2UU3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Dec 2008 15:20:29 -0500
+	with ESMTP id S1751978AbYL2U1O (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Dec 2008 15:27:14 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: aaro.koskinen@nsn.com
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
+To: Aaro.Koskinen@nokia.com
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+
+(resend - trying a different email address)
 
 This patch can cause a NULL-pointer dereference and kernel oops.  In
 sym53c8xx_slave_alloc(), there are starget_printk()s that use
@@ -107,4 +109,5 @@ EIP: [<c0243e13>] dev_driver_string+0x3/0x30 SS:ESP 0068:ce4f19e0
 
 Tony Battersby
 Cybernetics
+
 
