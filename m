@@ -1,64 +1,58 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [PATCH -next v2] cxgb3i: use same dependencies & selects as
- CHELSIO_T3
-Date: Mon, 29 Dec 2008 13:23:12 -0800
-Message-ID: <20081229132312.10934479.randy.dunlap@oracle.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: linux-next: Tree for December 29 (fcoe)
+Date: Mon, 29 Dec 2008 15:35:20 -0600
+Message-ID: <1230586520.3302.61.camel@localhost.localdomain>
 References: <20081230031621.60acd90b.sfr@canb.auug.org.au>
-	<20081229130110.67d5271a.randy.dunlap@oracle.com>
+	 <20081229123115.9a255fa8.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20081229130110.67d5271a.randy.dunlap@oracle.com>
-Sender: linux-next-owner@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, kxie@chelsio.com, akpm <akpm@linux-foundation.org>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, jejb <James.Bottomley@hansenpartnership.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:60153 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753851AbYL2VfY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Dec 2008 16:35:24 -0500
+In-Reply-To: <20081229123115.9a255fa8.randy.dunlap@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, scsi <linux-scsi@vger.kernel.org>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+On Mon, 2008-12-29 at 12:31 -0800, Randy Dunlap wrote:
+> On Tue, 30 Dec 2008 03:16:21 +1100 Stephen Rothwell wrote:
+> 
+> > Hi all,
+> > 
+> > Changes since 20081219:
+> > 
+> > Undropped tree:
+> > 	scci
+> > 	mtd
+> > 
+> > Dropped trees (temporarily):
+> > 	nfs (akpm request due to 2.6.30 features)
+> > 	kvm (build problem)
+> > 	rr (build poblem)
+> > 	semaphore-removal (due to unfixed conflicts against Linus' tree)
+> > 	cpu_alloc (build problem)
+> > 	audit (difficult conflicts)
+> > 
+> > Linus' tree had three build failures requiring patches and one requiring
+> > a revert.
+> 
+> 
+> linux-next-20081229/drivers/scsi/fcoe/libfcoe.c:995: error: dereferencing pointer to incomplete type
+> linux-next-20081229/drivers/scsi/fcoe/libfcoe.c:1015: error: dereferencing pointer to incomplete type
+> 
+> (on netdev->name ?)
 
-Make the CXGB iSCSI driver (that selects the CXGB net driver) have the same
-dependencies as the net driver, since kconfig doesn't do that automatically.
-Also make it select INET_LRO & FW_LOADER like the net driver does.
+This looks a bit odd.  libfcoe.h #includes linux/netdevice.h which
+defines the structure ... I can't see how netdev could have an
+incomplete type.  Could you make libfcoe.i and see what's happening?
 
-drivers/net/cxgb3/cxgb3_main.c:269: error: implicit declaration of function 'pci_disable_msix'
-drivers/net/cxgb3/cxgb3_main.c:272: error: implicit declaration of function 'pci_disable_msi'
-drivers/net/cxgb3/cxgb3_main.c:2778: error: array type has incomplete element type
-drivers/net/cxgb3/cxgb3_main.c:2781: warning: type defaults to 'int' in declaration of 'type name'
-drivers/net/cxgb3/cxgb3_main.c:2781: warning: type defaults to 'int' in declaration of 'type name'
-drivers/net/cxgb3/cxgb3_main.c:2781: error: size of array 'type name' is negative
-drivers/net/cxgb3/cxgb3_main.c:2784: error: implicit declaration of function 'pci_enable_msix'
-drivers/net/cxgb3/cxgb3_main.c:2784: warning: type defaults to 'int' in declaration of 'type name'
-drivers/net/cxgb3/cxgb3_main.c:2784: warning: type defaults to 'int' in declaration of 'type name'
-drivers/net/cxgb3/cxgb3_main.c:2784: error: size of array 'type name' is negative
-drivers/net/cxgb3/cxgb3_main.c:2786: warning: type defaults to 'int' in declaration of 'type name'
-drivers/net/cxgb3/cxgb3_main.c:2786: warning: type defaults to 'int' in declaration of 'type name'
-drivers/net/cxgb3/cxgb3_main.c:2786: error: size of array 'type name' is negative
-drivers/net/cxgb3/cxgb3_main.c:2778: warning: unused variable 'entries'
-drivers/net/cxgb3/cxgb3_main.c:3011: error: implicit declaration of function 'pci_enable_msi'
+Thanks,
 
-and from a different build:
+James
 
-ERROR: "lro_vlan_hwaccel_receive_frags" [drivers/net/cxgb3/cxgb3.ko] undefined!
-ERROR: "lro_receive_frags" [drivers/net/cxgb3/cxgb3.ko] undefined!
-ERROR: "lro_receive_skb" [drivers/net/cxgb3/cxgb3.ko] undefined!
-ERROR: "lro_vlan_hwaccel_receive_skb" [drivers/net/cxgb3/cxgb3.ko] undefined!
-ERROR: "lro_flush_all" [drivers/net/cxgb3/cxgb3.ko] undefined!
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- drivers/scsi/cxgb3i/Kconfig |    3 +++
- 1 file changed, 3 insertions(+)
-
---- linux-next-20081229.orig/drivers/scsi/cxgb3i/Kconfig
-+++ linux-next-20081229/drivers/scsi/cxgb3i/Kconfig
-@@ -1,6 +1,9 @@
- config SCSI_CXGB3_ISCSI
- 	tristate "Chelsio S3xx iSCSI support"
-+	depends on PCI && INET
- 	select CHELSIO_T3
- 	select SCSI_ISCSI_ATTRS
-+	select INET_LRO
-+	select FW_LOADER
- 	---help---
- 	This driver supports iSCSI offload for the Chelsio S3 series devices.
