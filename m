@@ -1,67 +1,73 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [Announce] smp_utils-0.94 available
-Date: Mon, 29 Dec 2008 18:43:55 -0500
-Message-ID: <495960BB.1040103@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: "Roland" <devzero@web.de>
+Subject: PATCH: mvsas: increase port type detection delay to suit Seagate's 15k6 drive ST3450856SS 0003
+Date: Tue, 30 Dec 2008 02:08:24 +0100
+Message-ID: <00cd01c96a1b$240d6a50$6602a8c0@bui.materna.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:34660 "EHLO
-	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751987AbYL2XoD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Dec 2008 18:44:03 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by elrond2.infotech.no (Postfix) with ESMTP id 4F1B21BF24
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Dec 2008 00:44:00 +0100 (CET)
-Received: from elrond2.infotech.no ([127.0.0.1])
-	by localhost (elrond2.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id HoOp-A217mKt for <linux-scsi@vger.kernel.org>;
-	Tue, 30 Dec 2008 00:43:58 +0100 (CET)
-Received: from [192.168.48.87] (ip-72.61.99.216.dsl-cust.ca.inter.net [216.99.61.72])
-	by elrond2.infotech.no (Postfix) with ESMTP id E2AAA1BF23
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Dec 2008 00:43:57 +0100 (CET)
+Received: from fmmailgate01.web.de ([217.72.192.221]:36111 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752839AbYL3BIo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Dec 2008 20:08:44 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: kewei@marvell.com, rnissl@gmx.de
 
-smp_utils is a package of command line utilities for invoking
-SMP functions to monitor and manage SAS expanders. SMP is the
-Serial Attached SCSI (SAS) Management Protocol. A SAS Host
-Bus Adapter (HBA) includes a SMP initiator (along with SSP and
-STP initiators). A SAS expander contains a SMP target. Many
-SAS HBAs have a SMP pass through interface that can be used to
-send SMP requests and receive the responses. This package
-should work with the linux kernel (lk) 2.6 series, the lk 2.4
-series, and builds on FreeBSD.
+as this driver is relatively new, is it already stable enough for production 
+use ?
 
-Three interfaces are available: "sgv4", "mptctl" and "smp_portal".
-The "sgv4" interface uses the bsg driver. It requires lk 2.6.24
-or later.
+i thought about buying a mobo with marvell sas controller.
 
-SAS-2 ratification is approaching and this smp_utils version
-syncs various important commands with what should be the last
-SAS-2 draft (revision 15):
-     http://www.t10.org/cgi-bin/ac.pl?t=f&f=sas2r15.pdf
-This package implements 14 of the 27 SMP functions defined in
-sas2r15. Support for zoning functions is weak.
+is it planned to merge this patch, as it is fixing a problem or must this 
+problems being workarounded in userspace ?
 
-For an overview and examples of smp_utils see:
-http://sg.danny.cz/sg/smp_utils.html
-A tarball, rpm and deb can be found in table 2.
+here`s some more with that problem:
 
-Changelog for smp_utils-0.94 [20081229] [svn:r40]
-   - smp_discover: sync to sas2r15
-   - smp_discover_list: sync to sas2r15
-   - smp_rep_general: sync to sas2r15
-   - smp_rep_exp_route_tbl: sync to sas2r15
-   - smp_lib: sync to sas2r15
-   - sgv4: more detail in error messages
-   - sgv4: drop scsi.h include, gives problems with lk 2.6.27
-   - mpt: allow either /dev/mptctl or /dev/mpt2ctl [10;220-221]
-     - warn if target SAS address is 0x00000000 when -v given
+https://bugzilla.redhat.com/show_bug.cgi?id=474482
+http://forumubuntusoftware.info/viewtopic.php?f=46&t=2454
 
-Changelog for smp_utils-0.93 [20080106] [svn:r7]
-...
+regards
+roland
 
-Doug Gilbert
+
+List:       linux-scsi
+Subject:    PATCH: mvsas: increase port type detection delay to suit 
+Seagate's 15k6 drive ST3450856SS 0003
+From:       Reinhard Nissl <rnissl () gmx ! de>
+Date:       2008-12-10 23:31:03
+Message-ID: 49405137.9000902 () gmx ! de
+[Download message RAW]
+
+I increased the delay step by step until loading of mvsas
+reliably detected the drive 200 times in sequence. A much better
+approach would be to monitor the hardware for some flag which
+indicates that port detection has finished, but I do not have any
+hardware documentation.
+
+BTW: patch is against
+git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-2.6.27.y.git
+
+Signed-off-by: Reinhard Nissl <rnissl@gmx.de>
+
+
+["mvsas.diff" (text/x-patch)]
+
+diff --git a/drivers/scsi/mvsas.c b/drivers/scsi/mvsas.c
+index 1dd70d7..23e5a87 100644
+--- a/drivers/scsi/mvsas.c
++++ b/drivers/scsi/mvsas.c
+@@ -2959,7 +2959,7 @@ static int __devinit mvs_hw_init(struct mvs_info *mvi)
+
+  /* enable auto port detection */
+  mw32(GBL_PORT_TYPE, MODE_AUTO_DET_EN);
+- msleep(100);
++ msleep(1100);
+  /* init and reset phys */
+  for (i = 0; i < mvi->chip->n_phy; i++) {
+   u32 lo = be32_to_cpu(*(u32 *)&mvi->sas_addr[4]); 
+
