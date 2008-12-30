@@ -1,105 +1,71 @@
 From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH 1/1] cxgb3i - remove use of skb->sp
-Date: Tue, 30 Dec 2008 08:41:25 -0800
-Message-ID: <495A4F35.2080603@oracle.com>
-References: <200812300543.mBU5hPcb020725@localhost.localdomain>
+Subject: Re: [PATCH] fcoe: fix incorrect use of struct module
+Date: Tue, 30 Dec 2008 08:42:46 -0800
+Message-ID: <495A4F86.30603@oracle.com>
+References: <1230652112.3296.5.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet11.oracle.com ([148.87.113.123]:35882 "EHLO
+Received: from rcsinet11.oracle.com ([148.87.113.123]:36525 "EHLO
 	rgminet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751222AbYL3Qlk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Dec 2008 11:41:40 -0500
-In-Reply-To: <200812300543.mBU5hPcb020725@localhost.localdomain>
+	with ESMTP id S1751538AbYL3Qmy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Dec 2008 11:42:54 -0500
+In-Reply-To: <1230652112.3296.5.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Karen Xie <kxie@chelsio.com>
-Cc: James.Bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-next@vger.kernel.org, sfr@canb.auug.org.au
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: "Love, Robert W" <robert.w.love@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Karen Xie wrote:
-> [PATCH 1/1] cxgb3i - remove use of skb->sp
+James Bottomley wrote:
+> This structure may not be defined if CONFIG_MODULE=n, so never deref
+> it.  Change uses of module->name to module_name(module) and corrects
+> some dyslexic printks and docbook comments.
 > 
-> From: Karen Xie <kxie@chelsio.com>
-> 
-> The cxgb3i was using skb->sp pointer for some internal book-keeping which is not related to the secure path. Changed it to use skb->cb[] instead.
-> 
-> Signed-off-by: Karen Xie <kxie@chelsio.com>
+> Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
+> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Acked-by: Randy Dunlap <randy.dunlap@oracle.com>
-
+Ack again.
 
 > ---
+>  drivers/scsi/fcoe/libfcoe.c |   10 +++++-----
+>  1 files changed, 5 insertions(+), 5 deletions(-)
 > 
->  drivers/scsi/cxgb3i/cxgb3i_offload.c |    8 ++++----
->  drivers/scsi/cxgb3i/cxgb3i_offload.h |    6 +++---
->  2 files changed, 7 insertions(+), 7 deletions(-)
-> 
-> 
-> diff --git a/drivers/scsi/cxgb3i/cxgb3i_offload.c b/drivers/scsi/cxgb3i/cxgb3i_offload.c
-> index 5f16081..a865f1f 100644
-> --- a/drivers/scsi/cxgb3i/cxgb3i_offload.c
-> +++ b/drivers/scsi/cxgb3i/cxgb3i_offload.c
-> @@ -496,7 +496,7 @@ static inline void reset_wr_list(struct s3_conn *c3cn)
->  static inline void enqueue_wr(struct s3_conn *c3cn,
->  			      struct sk_buff *skb)
->  {
-> -	skb->sp = NULL;
-> +	skb_wr_data(skb) = NULL;
+> diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
+> index 1cb549c..e419f48 100644
+> --- a/drivers/scsi/fcoe/libfcoe.c
+> +++ b/drivers/scsi/fcoe/libfcoe.c
+> @@ -166,7 +166,7 @@ static int fcoe_cpu_callback(struct notifier_block *nfb, unsigned long action,
+>  #endif /* CONFIG_HOTPLUG_CPU */
 >  
->  	/*
->  	 * We want to take an extra reference since both us and the driver
-> @@ -509,7 +509,7 @@ static inline void enqueue_wr(struct s3_conn *c3cn,
->  	if (!c3cn->wr_pending_head)
->  		c3cn->wr_pending_head = skb;
->  	else
-> -		c3cn->wr_pending_tail->sp = (void *)skb;
-> +		skb_wr_data(skb) = skb;
->  	c3cn->wr_pending_tail = skb;
->  }
+>  /**
+> - * foce_rcv - this is the fcoe receive function called by NET_RX_SOFTIRQ
+> + * fcoe_rcv - this is the fcoe receive function called by NET_RX_SOFTIRQ
+>   * @skb: the receive skb
+>   * @dev: associated net device
+>   * @ptype: context
+> @@ -991,8 +991,8 @@ static int fcoe_ethdrv_get(const struct net_device *netdev)
 >  
-> @@ -529,8 +529,8 @@ static inline struct sk_buff *dequeue_wr(struct s3_conn *c3cn)
->  
->  	if (likely(skb)) {
->  		/* Don't bother clearing the tail */
-> -		c3cn->wr_pending_head = (struct sk_buff *)skb->sp;
-> -		skb->sp = NULL;
-> +		c3cn->wr_pending_head = skb_wr_data(skb);
-> +		skb_wr_data(skb) = NULL;
+>  	owner = fcoe_netdev_to_module_owner(netdev);
+>  	if (owner) {
+> -		printk(KERN_DEBUG "foce:hold driver module %s for %s\n",
+> -		       owner->name, netdev->name);
+> +		printk(KERN_DEBUG "fcoe:hold driver module %s for %s\n",
+> +		       module_name(owner), netdev->name);
+>  		return  try_module_get(owner);
 >  	}
->  	return skb;
->  }
-> diff --git a/drivers/scsi/cxgb3i/cxgb3i_offload.h b/drivers/scsi/cxgb3i/cxgb3i_offload.h
-> index 5b93d62..d231569 100644
-> --- a/drivers/scsi/cxgb3i/cxgb3i_offload.h
-> +++ b/drivers/scsi/cxgb3i/cxgb3i_offload.h
-> @@ -180,7 +180,7 @@ void cxgb3i_c3cn_release(struct s3_conn *);
->   * @seq:	tcp sequence number
->   * @ddigest:	pdu data digest
->   * @pdulen:	recovered pdu length
-> - * @ulp_data:	scratch area for ULP
-> + * @wr_data:	scratch area for tx wr
->   */
->  struct cxgb3_skb_cb {
->  	__u8 flags;
-> @@ -188,7 +188,7 @@ struct cxgb3_skb_cb {
->  	__u32 seq;
->  	__u32 ddigest;
->  	__u32 pdulen;
-> -	__u8 ulp_data[16];
-> +	struct sk_buff *wr_data;
->  };
+>  	return -ENODEV;
+> @@ -1011,8 +1011,8 @@ static int fcoe_ethdrv_put(const struct net_device *netdev)
 >  
->  #define CXGB3_SKB_CB(skb)	((struct cxgb3_skb_cb *)&((skb)->cb[0]))
-> @@ -196,7 +196,7 @@ struct cxgb3_skb_cb {
->  #define skb_ulp_mode(skb)	(CXGB3_SKB_CB(skb)->ulp_mode)
->  #define skb_ulp_ddigest(skb)	(CXGB3_SKB_CB(skb)->ddigest)
->  #define skb_ulp_pdulen(skb)	(CXGB3_SKB_CB(skb)->pdulen)
-> -#define skb_ulp_data(skb)	(CXGB3_SKB_CB(skb)->ulp_data)
-> +#define skb_wr_data(skb)	(CXGB3_SKB_CB(skb)->wr_data)
->  
->  enum c3cb_flags {
->  	C3CB_FLAG_NEED_HDR = 1 << 0,	/* packet needs a TX_DATA_WR header */
+>  	owner = fcoe_netdev_to_module_owner(netdev);
+>  	if (owner) {
+> -		printk(KERN_DEBUG "foce:release driver module %s for %s\n",
+> -		       owner->name, netdev->name);
+> +		printk(KERN_DEBUG "fcoe:release driver module %s for %s\n",
+> +		       module_name(owner), netdev->name);
+>  		module_put(owner);
+>  		return 0;
+>  	}
 
 
 -- 
