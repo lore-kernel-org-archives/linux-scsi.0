@@ -1,62 +1,106 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: linux-next: scsi tree build failure
-Date: Tue, 30 Dec 2008 10:30:31 -0600
-Message-ID: <1230654631.3296.13.camel@localhost.localdomain>
-References: <20081231031639.dc19a03c.sfr@canb.auug.org.au>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [PATCH 1/1] cxgb3i - remove use of skb->sp
+Date: Tue, 30 Dec 2008 08:41:25 -0800
+Message-ID: <495A4F35.2080603@oracle.com>
+References: <200812300543.mBU5hPcb020725@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20081231031639.dc19a03c.sfr@canb.auug.org.au>
-Sender: linux-next-owner@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: linux-next@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, Jaswinder Singh <jaswinder@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rcsinet11.oracle.com ([148.87.113.123]:35882 "EHLO
+	rgminet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751222AbYL3Qlk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Dec 2008 11:41:40 -0500
+In-Reply-To: <200812300543.mBU5hPcb020725@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Karen Xie <kxie@chelsio.com>
+Cc: James.Bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-next@vger.kernel.org, sfr@canb.auug.org.au
 
-On Wed, 2008-12-31 at 03:16 +1100, Stephen Rothwell wrote:
-> Hi James,
+Karen Xie wrote:
+> [PATCH 1/1] cxgb3i - remove use of skb->sp
 > 
-> Today's linux-next build (sparc defconfig) failed like this:
+> From: Karen Xie <kxie@chelsio.com>
 > 
-> drivers/scsi/qlogicpti.c: In function 'qlogicpti_load_firmware':
-> drivers/scsi/qlogicpti.c:480: error: 'struct qlogicpti' has no member named 'sdev'
+> The cxgb3i was using skb->sp pointer for some internal book-keeping which is not related to the secure path. Changed it to use skb->cb[] instead.
 > 
-> An interaction between commit 68175399c8b5ee90960e78c1bb8e3353e71fbf33
-> ("[SCSI] qlogicpti: use request_firmware") from the scsi tree and commit
-> 5dc2536bb8d8adb5fdfbe76cd6fdcdf9de3f40f8 ("qlogicpti: Convert to pure OF
-> driver") which is in Linus' tree.
+> Signed-off-by: Karen Xie <kxie@chelsio.com>
+
+Acked-by: Randy Dunlap <randy.dunlap@oracle.com>
+
+
+> ---
 > 
-> The version of the firmware commit that has been in the firmware tree
-> since Nov 19 has this conflict corrected.
+>  drivers/scsi/cxgb3i/cxgb3i_offload.c |    8 ++++----
+>  drivers/scsi/cxgb3i/cxgb3i_offload.h |    6 +++---
+>  2 files changed, 7 insertions(+), 7 deletions(-)
 > 
-> I have left it for today (as it is getting way to late).  Please fix it
-> up for tomorrow.
+> 
+> diff --git a/drivers/scsi/cxgb3i/cxgb3i_offload.c b/drivers/scsi/cxgb3i/cxgb3i_offload.c
+> index 5f16081..a865f1f 100644
+> --- a/drivers/scsi/cxgb3i/cxgb3i_offload.c
+> +++ b/drivers/scsi/cxgb3i/cxgb3i_offload.c
+> @@ -496,7 +496,7 @@ static inline void reset_wr_list(struct s3_conn *c3cn)
+>  static inline void enqueue_wr(struct s3_conn *c3cn,
+>  			      struct sk_buff *skb)
+>  {
+> -	skb->sp = NULL;
+> +	skb_wr_data(skb) = NULL;
+>  
+>  	/*
+>  	 * We want to take an extra reference since both us and the driver
+> @@ -509,7 +509,7 @@ static inline void enqueue_wr(struct s3_conn *c3cn,
+>  	if (!c3cn->wr_pending_head)
+>  		c3cn->wr_pending_head = skb;
+>  	else
+> -		c3cn->wr_pending_tail->sp = (void *)skb;
+> +		skb_wr_data(skb) = skb;
+>  	c3cn->wr_pending_tail = skb;
+>  }
+>  
+> @@ -529,8 +529,8 @@ static inline struct sk_buff *dequeue_wr(struct s3_conn *c3cn)
+>  
+>  	if (likely(skb)) {
+>  		/* Don't bother clearing the tail */
+> -		c3cn->wr_pending_head = (struct sk_buff *)skb->sp;
+> -		skb->sp = NULL;
+> +		c3cn->wr_pending_head = skb_wr_data(skb);
+> +		skb_wr_data(skb) = NULL;
+>  	}
+>  	return skb;
+>  }
+> diff --git a/drivers/scsi/cxgb3i/cxgb3i_offload.h b/drivers/scsi/cxgb3i/cxgb3i_offload.h
+> index 5b93d62..d231569 100644
+> --- a/drivers/scsi/cxgb3i/cxgb3i_offload.h
+> +++ b/drivers/scsi/cxgb3i/cxgb3i_offload.h
+> @@ -180,7 +180,7 @@ void cxgb3i_c3cn_release(struct s3_conn *);
+>   * @seq:	tcp sequence number
+>   * @ddigest:	pdu data digest
+>   * @pdulen:	recovered pdu length
+> - * @ulp_data:	scratch area for ULP
+> + * @wr_data:	scratch area for tx wr
+>   */
+>  struct cxgb3_skb_cb {
+>  	__u8 flags;
+> @@ -188,7 +188,7 @@ struct cxgb3_skb_cb {
+>  	__u32 seq;
+>  	__u32 ddigest;
+>  	__u32 pdulen;
+> -	__u8 ulp_data[16];
+> +	struct sk_buff *wr_data;
+>  };
+>  
+>  #define CXGB3_SKB_CB(skb)	((struct cxgb3_skb_cb *)&((skb)->cb[0]))
+> @@ -196,7 +196,7 @@ struct cxgb3_skb_cb {
+>  #define skb_ulp_mode(skb)	(CXGB3_SKB_CB(skb)->ulp_mode)
+>  #define skb_ulp_ddigest(skb)	(CXGB3_SKB_CB(skb)->ddigest)
+>  #define skb_ulp_pdulen(skb)	(CXGB3_SKB_CB(skb)->pdulen)
+> -#define skb_ulp_data(skb)	(CXGB3_SKB_CB(skb)->ulp_data)
+> +#define skb_wr_data(skb)	(CXGB3_SKB_CB(skb)->wr_data)
+>  
+>  enum c3cb_flags {
+>  	C3CB_FLAG_NEED_HDR = 1 << 0,	/* packet needs a TX_DATA_WR header */
 
-I'm slightly annoyed this hasn't been building.  I accepted it into the
-SCSI tree because I was under the impression it had been well tested in
-linux-next.
 
-I can't actually build this driver, but I think this is the fix, if
-someone can verify, I'll fold it into the patch.
-
-Looking at the firmware patches, they all seem to have a kconfig
-deficiency in that the modified drivers should now be selecting
-FW_LOADER ... it this the case?
-
-James
-
----
-
-diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
-index e17a4d2..a342426 100644
---- a/drivers/scsi/qlogicpti.c
-+++ b/drivers/scsi/qlogicpti.c
-@@ -477,7 +477,7 @@ static int __devinit qlogicpti_load_firmware(struct qlogicpti *qpti)
- 	unsigned long flags;
- 	int i, timeout;
- 
--	err = request_firmware(&fw, FIRMWARE_1000, &qpti->sdev->ofdev.dev);
-+	err = request_firmware(&fw, FIRMWARE_1000, &qpti->op->dev);
- 	if (err) {
- 		printk(KERN_ERR "Failed to load image \"%s\" err %d\n",
- 		       FIRMWARE_1000, err);
+-- 
+~Randy
