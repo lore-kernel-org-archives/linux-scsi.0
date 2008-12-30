@@ -1,48 +1,59 @@
-From: Steven Rostedt <srostedt@redhat.com>
-Subject: Re: [PATCH][RFC 2/23]: SCST core
-Date: Tue, 30 Dec 2008 16:35:39 -0500
-Message-ID: <1230672939.24770.0.camel@localhost.localdomain>
-References: <20081211210917.GB27010@uranus.ravnborg.org>
-	 <4942BA85.3070408@vlnb.net>
-	 <1229118607.24995.18.camel@localhost.localdomain>
-	 <4943CAAB.4050008@vlnb.net>
-	 <c62985530812131635k362fc8d2q3c65e8284141f491@mail.gmail.com>
-	 <494A37E9.5000009@vlnb.net>
-	 <c62985530812200506u647fc135wcc818bc57d06cb04@mail.gmail.com>
-	 <495137F4.9010404@vlnb.net> <20081227112055.GB18819@elte.hu>
-	 <495A56A8.1030208@vlnb.net>  <20081230210303.GB6151@nowhere>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] Fix sg_io_hdr.info corruption.
+Date: Tue, 30 Dec 2008 15:46:03 -0800
+Message-ID: <20081230154603.4fd60167.akpm@linux-foundation.org>
+References: <20081228144946.30288.67559.stgit@zaytsev.su>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:55523 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753633AbYL3Vla (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Dec 2008 16:41:30 -0500
-In-Reply-To: <20081230210303.GB6151@nowhere>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:52014 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752243AbYL3XqR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Dec 2008 18:46:17 -0500
+In-Reply-To: <20081228144946.30288.67559.stgit@zaytsev.su>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Frederic Weisbecker <fweisbec@gmail.com>
-Cc: Vladislav Bolkhovitin <vst@vlnb.net>, Ingo Molnar <mingo@elte.hu>, Sam Ravnborg <sam@ravnborg.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Boaz Harrosh <bharrosh@panasas.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Bart Van Assche <bart.vanassche@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+To: Alexey Zaytsev <alexey.zaytsev@gmail.com>
+Cc: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>
 
+On Sun, 28 Dec 2008 17:50:35 +0300
+Alexey Zaytsev <alexey.zaytsev@gmail.com> wrote:
 
-On Tue, 2008-12-30 at 22:03 +0100, Frederic Weisbecker wrote:
-
+> sizeof(unsigned (short)) is actually sizeof(function), == 1.
+> Spotted by sparse.
 > 
-> > 2. If possible, make the view more compact, i.e. with less spaces on  
-> > each line. Our tracing lines can be quite long.
-> >
-> > Thanks,
-> > Vlad
-> >
+> Signed-off-by: Alexey Zaytsev <alexey.zaytsev@gmail.com>
+> ---
+>  fs/compat_ioctl.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 > 
-> I'm not sure... The spaces are mostly here to keep fixed width columns, 
-> in case we have huge durations, or long cmdlines...
-> 
+> diff --git a/fs/compat_ioctl.c b/fs/compat_ioctl.c
+> index 5235c67..7c2d617 100644
+> --- a/fs/compat_ioctl.c
+> +++ b/fs/compat_ioctl.c
+> @@ -784,7 +784,7 @@ static int sg_ioctl_trans(unsigned int fd, unsigned int cmd, unsigned long arg)
+>  
+>  	if (copy_in_user(&sgio->status, &sgio32->status,
+>  			 (4 * sizeof(unsigned char)) +
+> -			 (2 * sizeof(unsigned (short))) +
+> +			 (2 * sizeof(unsigned short)) +
+>  			 (3 * sizeof(int))))
+>  		return -EFAULT;
 
-I agree. The spaces can easily be chopped with any one of many shell
-scripts.
+gack.
 
--- Steve
+akpm:/home/akpm> cat t.c
+main()
+{
+	        printf("%d\n", sizeof(unsigned (short)));
+	        printf("%d\n", sizeof(unsigned short));
+}
+akpm:/home/akpm> ./a.out
+1
+2
 
 
+the code has been like this for years and years.  Why hasn't anyone
+noticed?  
