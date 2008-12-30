@@ -1,161 +1,237 @@
-From: Karen Xie <kxie@chelsio.com>
-Subject: RE: linux-next: Tree for December 29 (cxgb3i)
-Date: Mon, 29 Dec 2008 22:00:47 -0800
-Message-ID: <20081230060047.GA20917@qatest2a.asicdesigners.com>
-Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="fUYQa+Pmc3FrFX/N"
-Return-path: <linux-next-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-next-owner@vger.kernel.org
-To: randy.dunlap@oracle.com, James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-next@vger.kernel.org, sfr@canb.auug.org.au, kxie@chelsio.com
+From: Aaro Koskinen <Aaro.Koskinen@nokia.com>
+Subject: Re: [PATCH] sym53c8xx_2: slave_alloc/destroy safety (2.6.27.5)
+Date: Tue, 30 Dec 2008 12:10:43 +0200
+Message-ID: <1230631843-16470-1-git-send-email-Aaro.Koskinen@nokia.com>
+References: <49593940.9060102@cybernetics.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.nokia.com ([192.100.105.134]:33599 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751479AbYL3KLI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Dec 2008 05:11:08 -0500
+In-Reply-To: <49593940.9060102@cybernetics.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: tonyb@cybernetics.com
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
 
+Thanks. The updated patch is below.
 
---fUYQa+Pmc3FrFX/N
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+...
 
+Make the sym53c8xx_2 driver slave_alloc/destroy less unsafe. References
+to the destroyed LCB are cleared from the target structure (instead of
+leaving a dangling pointer), and when the last LCB for the target is
+destroyed the reference to the upper layer target data is cleared. The
+host lock is used to prevent a race with the interrupt handler. Also
+user commands are prevented for targets with all LCBs destroyed.
 
-Hi, Randy & James,
-
-The cxgb3i driver was using the skb->sp for some internal stuff. I have just submitted a patch to remove the usage of it since it is not really related to the secure path.
-
-The patch is submitted to the list (http://marc.info/?l=linux-scsi&m=123061555414193&w=2) and is also attached here.
-
-Sorry for the late response, I am traveling this week.
-
-Thanks,
-Karen
-
------Original Message-----
-From: Randy Dunlap [mailto:randy.dunlap@oracle.com]
-Sent: Mon 12/29/2008 2:10 PM
-To: James Bottomley
-Cc: Stephen Rothwell; scsi; linux-next@vger.kernel.org; LKML; Karen Xie
-Subject: Re: linux-next: Tree for December 29 (cxgb3i)
- 
-James Bottomley wrote:
-> On Mon, 2008-12-29 at 12:35 -0800, Randy Dunlap wrote:
->> On Tue, 30 Dec 2008 03:16:21 +1100 Stephen Rothwell wrote:
->>
->>> Hi all,
->>>
->>> Changes since 20081219:
->>>
->>> Undropped tree:
->>> 	scci
->>> 	mtd
->>>
->>> Dropped trees (temporarily):
->>> 	nfs (akpm request due to 2.6.30 features)
->>> 	kvm (build problem)
->>> 	rr (build poblem)
->>> 	semaphore-removal (due to unfixed conflicts against Linus' tree)
->>> 	cpu_alloc (build problem)
->>> 	audit (difficult conflicts)
->>>
->>> Linus' tree had three build failures requiring patches and one requiring
->>> a revert.
->>
->> linux-next-20081229/drivers/scsi/cxgb3i/cxgb3i_offload.c:499: error: 'struct sk_buff' has no member named 'sp'
->> linux-next-20081229/drivers/scsi/cxgb3i/cxgb3i_offload.c:512: error: 'struct sk_buff' has no member named 'sp'
->> linux-next-20081229/drivers/scsi/cxgb3i/cxgb3i_offload.c:532: error: 'struct sk_buff' has no member named 'sp'
->> linux-next-20081229/drivers/scsi/cxgb3i/cxgb3i_offload.c:533: error: 'struct sk_buff' has no member named 'sp'
-> 
-> In the config 20 questions, my guess for this is CONFIG_XFRM=n
-
-That's correct.  config file is now attached.
-
-> I'm not at all sure why this driver is playing with the secure path ...
-> I suspect the use needs to be enclosed in #ifdef CONFIG_XFRM pairs, but
-> I'd like the maintainers to verify.
-
--- 
-andy
-
-
---fUYQa+Pmc3FrFX/N
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="122908-cxgb3i-no-wr-sp.patch"
-
-[PATCH 1/1] cxgb3i - remove use of skb->sp
-
-From: Karen Xie <kxie@chelsio.com>
-
-The cxgb3i was using skb->sp pointer for some internal book-keeping which is not related to the secure path. Changed it to use skb->cb[] instead.
-
-Signed-off-by: Karen Xie <kxie@chelsio.com>
+Signed-off-by: Aaro Koskinen <Aaro.Koskinen@nokia.com>
 ---
+ drivers/scsi/sym53c8xx_2/sym_glue.c |   66 +++++++++++++++++++++++++++-------
+ drivers/scsi/sym53c8xx_2/sym_hipd.c |   40 ++++++++++++++++++++-
+ drivers/scsi/sym53c8xx_2/sym_hipd.h |    2 +
+ 3 files changed, 93 insertions(+), 15 deletions(-)
 
- drivers/scsi/cxgb3i/cxgb3i_offload.c |    8 ++++----
- drivers/scsi/cxgb3i/cxgb3i_offload.h |    6 +++---
- 2 files changed, 7 insertions(+), 7 deletions(-)
-
-
-diff --git a/drivers/scsi/cxgb3i/cxgb3i_offload.c b/drivers/scsi/cxgb3i/cxgb3i_offload.c
-index 5f16081..a865f1f 100644
---- a/drivers/scsi/cxgb3i/cxgb3i_offload.c
-+++ b/drivers/scsi/cxgb3i/cxgb3i_offload.c
-@@ -496,7 +496,7 @@ static inline void reset_wr_list(struct s3_conn *c3cn)
- static inline void enqueue_wr(struct s3_conn *c3cn,
- 			      struct sk_buff *skb)
+diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+index d39107b..073e5b6 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -737,11 +737,14 @@ static int sym53c8xx_slave_alloc(struct scsi_device *sdev)
+ 	struct sym_hcb *np = sym_get_hcb(sdev->host);
+ 	struct sym_tcb *tp = &np->target[sdev->id];
+ 	struct sym_lcb *lp;
++	unsigned long flags;
++	int error;
+ 
+ 	if (sdev->id >= SYM_CONF_MAX_TARGET || sdev->lun >= SYM_CONF_MAX_LUN)
+ 		return -ENXIO;
+ 
+-	tp->starget = sdev->sdev_target;
++	spin_lock_irqsave(np->s.host->host_lock, flags);
++
+ 	/*
+ 	 * Fail the device init if the device is flagged NOSCAN at BOOT in
+ 	 * the NVRAM.  This may speed up boot and maintain coherency with
+@@ -753,26 +756,37 @@ static int sym53c8xx_slave_alloc(struct scsi_device *sdev)
+ 
+ 	if (tp->usrflags & SYM_SCAN_BOOT_DISABLED) {
+ 		tp->usrflags &= ~SYM_SCAN_BOOT_DISABLED;
+-		starget_printk(KERN_INFO, tp->starget,
++		starget_printk(KERN_INFO, sdev->sdev_target,
+ 				"Scan at boot disabled in NVRAM\n");
+-		return -ENXIO;
++		error = -ENXIO;
++		goto out;
+ 	}
+ 
+ 	if (tp->usrflags & SYM_SCAN_LUNS_DISABLED) {
+-		if (sdev->lun != 0)
+-			return -ENXIO;
+-		starget_printk(KERN_INFO, tp->starget,
++		if (sdev->lun != 0) {
++			error = -ENXIO;
++			goto out;
++		}
++		starget_printk(KERN_INFO, sdev->sdev_target,
+ 				"Multiple LUNs disabled in NVRAM\n");
+ 	}
+ 
+ 	lp = sym_alloc_lcb(np, sdev->id, sdev->lun);
+-	if (!lp)
+-		return -ENOMEM;
++	if (!lp) {
++		error = -ENOMEM;
++		goto out;
++	}
++	if (tp->nlcb == 1)
++		tp->starget = sdev->sdev_target;
+ 
+ 	spi_min_period(tp->starget) = tp->usr_period;
+ 	spi_max_width(tp->starget) = tp->usr_width;
+ 
+-	return 0;
++	error = 0;
++out:
++	spin_unlock_irqrestore(np->s.host->host_lock, flags);
++
++	return error;
+ }
+ 
+ /*
+@@ -819,12 +833,34 @@ static int sym53c8xx_slave_configure(struct scsi_device *sdev)
+ static void sym53c8xx_slave_destroy(struct scsi_device *sdev)
  {
--	skb->sp = NULL;
-+	skb_wr_data(skb) = NULL;
+ 	struct sym_hcb *np = sym_get_hcb(sdev->host);
+-	struct sym_lcb *lp = sym_lp(&np->target[sdev->id], sdev->lun);
++	struct sym_tcb *tp = &np->target[sdev->id];
++	struct sym_lcb *lp = sym_lp(tp, sdev->lun);
++	unsigned long flags;
++
++	spin_lock_irqsave(np->s.host->host_lock, flags);
++
++	if (lp->busy_itlq || lp->busy_itl) {
++		/*
++		 * This really shouldn't happen, but we can't return an error
++		 * so let's try to stop all on-going I/O.
++		 */
++		starget_printk(KERN_WARNING, tp->starget,
++			       "Removing busy LCB (%d)\n", sdev->lun);
++		sym_reset_scsi_bus(np, 1);
++	}
+ 
+-	if (lp->itlq_tbl)
+-		sym_mfree_dma(lp->itlq_tbl, SYM_CONF_MAX_TASK * 4, "ITLQ_TBL");
+-	kfree(lp->cb_tags);
+-	sym_mfree_dma(lp, sizeof(*lp), "LCB");
++	if (sym_free_lcb(np, sdev->id, sdev->lun) == 0) {
++		/*
++		 * It was the last unit for this target.
++		 */
++		tp->head.sval        = 0;
++		tp->head.wval        = np->rv_scntl3;
++		tp->head.uval        = 0;
++		tp->tgoal.check_nego = 1;
++		tp->starget	     = NULL;
++	}
++
++	spin_unlock_irqrestore(np->s.host->host_lock, flags);
+ }
+ 
+ /*
+@@ -890,6 +926,8 @@ static void sym_exec_user_command (struct sym_hcb *np, struct sym_usrcmd *uc)
+ 			if (!((uc->target >> t) & 1))
+ 				continue;
+ 			tp = &np->target[t];
++			if (!tp->nlcb)
++				continue;
+ 
+ 			switch (uc->cmd) {
+ 
+diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+index 98df165..a38ed04 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_hipd.c
++++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+@@ -4953,7 +4953,7 @@ struct sym_lcb *sym_alloc_lcb (struct sym_hcb *np, u_char tn, u_char ln)
+ 	 */
+ 	if (ln && !tp->lunmp) {
+ 		tp->lunmp = kcalloc(SYM_CONF_MAX_LUN, sizeof(struct sym_lcb *),
+-				GFP_KERNEL);
++				GFP_ATOMIC);
+ 		if (!tp->lunmp)
+ 			goto fail;
+ 	}
+@@ -4973,6 +4973,7 @@ struct sym_lcb *sym_alloc_lcb (struct sym_hcb *np, u_char tn, u_char ln)
+ 		tp->lun0p = lp;
+ 		tp->head.lun0_sa = cpu_to_scr(vtobus(lp));
+ 	}
++	tp->nlcb++;
  
  	/*
- 	 * We want to take an extra reference since both us and the driver
-@@ -509,7 +509,7 @@ static inline void enqueue_wr(struct s3_conn *c3cn,
- 	if (!c3cn->wr_pending_head)
- 		c3cn->wr_pending_head = skb;
- 	else
--		c3cn->wr_pending_tail->sp = (void *)skb;
-+		skb_wr_data(skb) = skb;
- 	c3cn->wr_pending_tail = skb;
+ 	 *  Let the itl task point to error handling.
+@@ -5050,6 +5051,43 @@ fail:
  }
  
-@@ -529,8 +529,8 @@ static inline struct sk_buff *dequeue_wr(struct s3_conn *c3cn)
- 
- 	if (likely(skb)) {
- 		/* Don't bother clearing the tail */
--		c3cn->wr_pending_head = (struct sk_buff *)skb->sp;
--		skb->sp = NULL;
-+		c3cn->wr_pending_head = skb_wr_data(skb);
-+		skb_wr_data(skb) = NULL;
- 	}
- 	return skb;
- }
-diff --git a/drivers/scsi/cxgb3i/cxgb3i_offload.h b/drivers/scsi/cxgb3i/cxgb3i_offload.h
-index 5b93d62..d231569 100644
---- a/drivers/scsi/cxgb3i/cxgb3i_offload.h
-+++ b/drivers/scsi/cxgb3i/cxgb3i_offload.h
-@@ -180,7 +180,7 @@ void cxgb3i_c3cn_release(struct s3_conn *);
-  * @seq:	tcp sequence number
-  * @ddigest:	pdu data digest
-  * @pdulen:	recovered pdu length
-- * @ulp_data:	scratch area for ULP
-+ * @wr_data:	scratch area for tx wr
+ /*
++ *  Lun control block deallocation. Returns the number of valid remaing LCBs
++ *  for the target.
++ */
++int sym_free_lcb(struct sym_hcb *np, u_char tn, u_char ln)
++{
++	struct sym_tcb *tp = &np->target[tn];
++	struct sym_lcb *lp = sym_lp(tp, ln);
++
++	tp->nlcb--;
++
++	if (ln) {
++		if (!tp->nlcb) {
++			kfree(tp->lunmp);
++			sym_mfree_dma(tp->luntbl, 256, "LUNTBL");
++			tp->lunmp = NULL;
++			tp->luntbl = NULL;
++			tp->head.luntbl_sa = cpu_to_scr(vtobus(np->badluntbl));
++		} else {
++			tp->luntbl[ln] = cpu_to_scr(vtobus(&np->badlun_sa));
++			tp->lunmp[ln] = NULL;
++		}
++	} else {
++		tp->lun0p = NULL;
++		tp->head.lun0_sa = cpu_to_scr(vtobus(&np->badlun_sa));
++	}
++
++	if (lp->itlq_tbl) {
++		sym_mfree_dma(lp->itlq_tbl, SYM_CONF_MAX_TASK*4, "ITLQ_TBL");
++		kfree(lp->cb_tags);
++	}
++
++	sym_mfree_dma(lp, sizeof(*lp), "LCB");
++
++	return tp->nlcb;
++}
++
++/*
+  *  Queue a SCSI IO to the controller.
   */
- struct cxgb3_skb_cb {
- 	__u8 flags;
-@@ -188,7 +188,7 @@ struct cxgb3_skb_cb {
- 	__u32 seq;
- 	__u32 ddigest;
- 	__u32 pdulen;
--	__u8 ulp_data[16];
-+	struct sk_buff *wr_data;
- };
+ int sym_queue_scsiio(struct sym_hcb *np, struct scsi_cmnd *cmd, struct sym_ccb *cp)
+diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.h b/drivers/scsi/sym53c8xx_2/sym_hipd.h
+index ad07880..2ec25e1 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_hipd.h
++++ b/drivers/scsi/sym53c8xx_2/sym_hipd.h
+@@ -400,6 +400,7 @@ struct sym_tcb {
+ 	 *  An array of bus addresses is used on reselection.
+ 	 */
+ 	u32	*luntbl;	/* LCBs bus address table	*/
++	int	nlcb;		/* Number of valid LCBs (including LUN #0) */
  
- #define CXGB3_SKB_CB(skb)	((struct cxgb3_skb_cb *)&((skb)->cb[0]))
-@@ -196,7 +196,7 @@ struct cxgb3_skb_cb {
- #define skb_ulp_mode(skb)	(CXGB3_SKB_CB(skb)->ulp_mode)
- #define skb_ulp_ddigest(skb)	(CXGB3_SKB_CB(skb)->ddigest)
- #define skb_ulp_pdulen(skb)	(CXGB3_SKB_CB(skb)->pdulen)
--#define skb_ulp_data(skb)	(CXGB3_SKB_CB(skb)->ulp_data)
-+#define skb_wr_data(skb)	(CXGB3_SKB_CB(skb)->wr_data)
- 
- enum c3cb_flags {
- 	C3CB_FLAG_NEED_HDR = 1 << 0,	/* packet needs a TX_DATA_WR header */
+ 	/*
+ 	 *  LUN table used by the C code.
+@@ -1061,6 +1062,7 @@ int sym_clear_tasks(struct sym_hcb *np, int cam_status, int target, int lun, int
+ struct sym_ccb *sym_get_ccb(struct sym_hcb *np, struct scsi_cmnd *cmd, u_char tag_order);
+ void sym_free_ccb(struct sym_hcb *np, struct sym_ccb *cp);
+ struct sym_lcb *sym_alloc_lcb(struct sym_hcb *np, u_char tn, u_char ln);
++int sym_free_lcb(struct sym_hcb *np, u_char tn, u_char ln);
+ int sym_queue_scsiio(struct sym_hcb *np, struct scsi_cmnd *csio, struct sym_ccb *cp);
+ int sym_abort_scsiio(struct sym_hcb *np, struct scsi_cmnd *ccb, int timed_out);
+ int sym_reset_scsi_target(struct sym_hcb *np, int target);
+-- 
+1.5.4.3
 
---fUYQa+Pmc3FrFX/N--
