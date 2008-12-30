@@ -1,103 +1,68 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: linux-next: Tree for December 29 (fcoe/libfc)
-Date: Tue, 30 Dec 2008 09:44:29 -0600
-Message-ID: <1230651870.3296.2.camel@localhost.localdomain>
-References: <20081230031621.60acd90b.sfr@canb.auug.org.au>
-	 <20081229195358.6a239657.randy.dunlap@oracle.com>
+Subject: [PATCH] fcoe: fix incorrect use of struct module
+Date: Tue, 30 Dec 2008 09:48:32 -0600
+Message-ID: <1230652112.3296.5.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:39058 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:58671 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750990AbYL3Poe (ORCPT
+	by vger.kernel.org with ESMTP id S1751076AbYL3Psf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Dec 2008 10:44:34 -0500
-In-Reply-To: <20081229195358.6a239657.randy.dunlap@oracle.com>
+	Tue, 30 Dec 2008 10:48:35 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, scsi <linux-scsi@vger.kernel.org>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Robert Love <robert.w.love@intel.com>
+To: "Love, Robert W" <robert.w.love@intel.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Randy Dunlap <randy.dunlap@oracle.com>
 
-On Mon, 2008-12-29 at 19:53 -0800, Randy Dunlap wrote:
-> On Tue, 30 Dec 2008 03:16:21 +1100 Stephen Rothwell wrote:
-> 
-> > Hi all,
-> > 
-> > Changes since 20081219:
-> > 
-> > Undropped tree:
-> > 	scci
-> > 	mtd
-> > 
-> > Dropped trees (temporarily):
-> > 	nfs (akpm request due to 2.6.30 features)
-> > 	kvm (build problem)
-> > 	rr (build poblem)
-> > 	semaphore-removal (due to unfixed conflicts against Linus' tree)
-> > 	cpu_alloc (build problem)
-> > 	audit (difficult conflicts)
-> > 
-> > Linus' tree had three build failures requiring patches and one requiring
-> > a revert.
-> 
-> 
-> >From drivers/scsi/Kconfig:
-> 
-> config LIBFC
-> 	tristate "LibFC module"
-> 	depends on SCSI && SCSI_FC_ATTRS
-> 	---help---
-> 	  Fibre Channel library module
-> 
-> config FCOE
-> 	tristate "FCoE module"
-> 	depends on SCSI
-> 	select LIBFC
-> 	---help---
-> 	  Fibre Channel over Ethernet module
-> 
-> 
-> Aside from being very skimpy help messages, nothing there requires
-> SCSI_FC_ATTRS to be enabled for FCOE, so when FCOE is enabled,
-> LIBFC is selected, and then bang:
-> 
-> ERROR: "scsi_is_fc_rport" [drivers/scsi/libfc/libfc.ko] undefined!
-> ERROR: "fc_remote_port_delete" [drivers/scsi/libfc/libfc.ko] undefined!
-> ERROR: "fc_remote_port_add" [drivers/scsi/libfc/libfc.ko] undefined!
-> ERROR: "fc_release_transport" [drivers/scsi/fcoe/fcoe.ko] undefined!
-> ERROR: "fc_remove_host" [drivers/scsi/fcoe/fcoe.ko] undefined!
-> ERROR: "fc_attach_transport" [drivers/scsi/fcoe/fcoe.ko] undefined!
+This structure may not be defined if CONFIG_MODULE=n, so never deref
+it.  Change uses of module->name to module_name(module) and corrects
+some dyslexic printks and docbook comments.
 
-I checked the select of an option that selects, it seems to work nicely,
-so I think this is the fix.  The custom has been to select the
-attributes rather than depend on them anyway.  There's also no need to
-depend on SCSI since the whole thing is enclosed in an if SCSI_LOWLEVEL
-&& SCSI.
-
-James
-
+Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
+Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 ---
+ drivers/scsi/fcoe/libfcoe.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
+index 1cb549c..e419f48 100644
+--- a/drivers/scsi/fcoe/libfcoe.c
++++ b/drivers/scsi/fcoe/libfcoe.c
+@@ -166,7 +166,7 @@ static int fcoe_cpu_callback(struct notifier_block *nfb, unsigned long action,
+ #endif /* CONFIG_HOTPLUG_CPU */
+ 
+ /**
+- * foce_rcv - this is the fcoe receive function called by NET_RX_SOFTIRQ
++ * fcoe_rcv - this is the fcoe receive function called by NET_RX_SOFTIRQ
+  * @skb: the receive skb
+  * @dev: associated net device
+  * @ptype: context
+@@ -991,8 +991,8 @@ static int fcoe_ethdrv_get(const struct net_device *netdev)
+ 
+ 	owner = fcoe_netdev_to_module_owner(netdev);
+ 	if (owner) {
+-		printk(KERN_DEBUG "foce:hold driver module %s for %s\n",
+-		       owner->name, netdev->name);
++		printk(KERN_DEBUG "fcoe:hold driver module %s for %s\n",
++		       module_name(owner), netdev->name);
+ 		return  try_module_get(owner);
+ 	}
+ 	return -ENODEV;
+@@ -1011,8 +1011,8 @@ static int fcoe_ethdrv_put(const struct net_device *netdev)
+ 
+ 	owner = fcoe_netdev_to_module_owner(netdev);
+ 	if (owner) {
+-		printk(KERN_DEBUG "foce:release driver module %s for %s\n",
+-		       owner->name, netdev->name);
++		printk(KERN_DEBUG "fcoe:release driver module %s for %s\n",
++		       module_name(owner), netdev->name);
+ 		module_put(owner);
+ 		return 0;
+ 	}
+-- 
+1.5.6.6
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 0e5e084..9f4cc8e 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -607,13 +607,12 @@ config SCSI_FLASHPOINT
- 
- config LIBFC
- 	tristate "LibFC module"
--	depends on SCSI && SCSI_FC_ATTRS
-+	select SCSI_FC_ATTRS
- 	---help---
- 	  Fibre Channel library module
- 
- config FCOE
- 	tristate "FCoE module"
--	depends on SCSI
- 	select LIBFC
- 	---help---
- 	  Fibre Channel over Ethernet module
 
 
