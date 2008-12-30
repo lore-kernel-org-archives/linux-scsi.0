@@ -1,16 +1,83 @@
 From: Karen Xie <kxie@chelsio.com>
-Subject: [PATCH 1/1] cxgb3i - remove use of skb->sp
-Date: Mon, 29 Dec 2008 21:43:25 -0800
-Message-ID: <200812300543.mBU5hPcb020725@localhost.localdomain>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.22.49.110]:22697 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750722AbYL3FjM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Dec 2008 00:39:12 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: RE: linux-next: Tree for December 29 (cxgb3i)
+Date: Mon, 29 Dec 2008 22:00:47 -0800
+Message-ID: <20081230060047.GA20917@qatest2a.asicdesigners.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary="fUYQa+Pmc3FrFX/N"
+Return-path: <linux-next-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-next-owner@vger.kernel.org
 To: randy.dunlap@oracle.com, James.Bottomley@HansenPartnership.com
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-next@vger.kernel.org, sfr@canb.auug.org.au, kxie@chelsio.com
+List-Id: linux-scsi@vger.kernel.org
+
+
+--fUYQa+Pmc3FrFX/N
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+
+Hi, Randy & James,
+
+The cxgb3i driver was using the skb->sp for some internal stuff. I have just submitted a patch to remove the usage of it since it is not really related to the secure path.
+
+The patch is submitted to the list (http://marc.info/?l=linux-scsi&m=123061555414193&w=2) and is also attached here.
+
+Sorry for the late response, I am traveling this week.
+
+Thanks,
+Karen
+
+-----Original Message-----
+From: Randy Dunlap [mailto:randy.dunlap@oracle.com]
+Sent: Mon 12/29/2008 2:10 PM
+To: James Bottomley
+Cc: Stephen Rothwell; scsi; linux-next@vger.kernel.org; LKML; Karen Xie
+Subject: Re: linux-next: Tree for December 29 (cxgb3i)
+ 
+James Bottomley wrote:
+> On Mon, 2008-12-29 at 12:35 -0800, Randy Dunlap wrote:
+>> On Tue, 30 Dec 2008 03:16:21 +1100 Stephen Rothwell wrote:
+>>
+>>> Hi all,
+>>>
+>>> Changes since 20081219:
+>>>
+>>> Undropped tree:
+>>> 	scci
+>>> 	mtd
+>>>
+>>> Dropped trees (temporarily):
+>>> 	nfs (akpm request due to 2.6.30 features)
+>>> 	kvm (build problem)
+>>> 	rr (build poblem)
+>>> 	semaphore-removal (due to unfixed conflicts against Linus' tree)
+>>> 	cpu_alloc (build problem)
+>>> 	audit (difficult conflicts)
+>>>
+>>> Linus' tree had three build failures requiring patches and one requiring
+>>> a revert.
+>>
+>> linux-next-20081229/drivers/scsi/cxgb3i/cxgb3i_offload.c:499: error: 'struct sk_buff' has no member named 'sp'
+>> linux-next-20081229/drivers/scsi/cxgb3i/cxgb3i_offload.c:512: error: 'struct sk_buff' has no member named 'sp'
+>> linux-next-20081229/drivers/scsi/cxgb3i/cxgb3i_offload.c:532: error: 'struct sk_buff' has no member named 'sp'
+>> linux-next-20081229/drivers/scsi/cxgb3i/cxgb3i_offload.c:533: error: 'struct sk_buff' has no member named 'sp'
+> 
+> In the config 20 questions, my guess for this is CONFIG_XFRM=n
+
+That's correct.  config file is now attached.
+
+> I'm not at all sure why this driver is playing with the secure path ...
+> I suspect the use needs to be enclosed in #ifdef CONFIG_XFRM pairs, but
+> I'd like the maintainers to verify.
+
+-- 
+andy
+
+
+--fUYQa+Pmc3FrFX/N
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="122908-cxgb3i-no-wr-sp.patch"
 
 [PATCH 1/1] cxgb3i - remove use of skb->sp
 
@@ -90,3 +157,5 @@ index 5b93d62..d231569 100644
  
  enum c3cb_flags {
  	C3CB_FLAG_NEED_HDR = 1 << 0,	/* packet needs a TX_DATA_WR header */
+
+--fUYQa+Pmc3FrFX/N--
