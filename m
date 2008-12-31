@@ -1,135 +1,113 @@
-From: "Roland" <devzero@web.de>
-Subject: [PATCH, resend] mpt fusion: Improve fusion mpt drivers description
-Date: Wed, 31 Dec 2008 20:18:03 +0100
-Message-ID: <0a2501c96b7c$9cea7e60$0201a8c0@bui.materna.com>
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+Subject: Re: S3 with pata_via fails to resume, ide_via82Cxxx works
+Date: Wed, 31 Dec 2008 20:15:35 +0100
+Message-ID: <20081231201535.4d86c159@neptune.home>
+References: <20081230185037.7ec94e94@neptune.home>
+	<20081230215953.235ce1b4@neptune.home>
+	<200812311919.14579.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:38143 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750862AbYLaTTB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Dec 2008 14:19:01 -0500
+Received: from ppp-110-52.adsl.restena.lu ([158.64.110.52]:42929 "EHLO
+	bonbons.gotdns.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751882AbYLaTZi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Dec 2008 14:25:38 -0500
+In-Reply-To: <200812311919.14579.bzolnier@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsi.com>, DL-MPTFusionLinux@lsi.com
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Since end-users may have difficulties finding the right configuration option
-for some popular LSI controllers, this patch tries to improve Kconfig
-appropriately.
+Thanks for the patch, it fixes the oops for me too.
 
-Also see http://marc.info/?l=linux-kernel&m=120967940402791&w=2
+Unfortunately the re-discovery of the drive causes at least XFS to
+error and shutdown its mounts :(
 
-This attached patch is against current git.
+Is it possible to block any access to the devices on the scanned port
+until the scan has completed? Otherwise this renders rescanning
+on port with mounted (e.g. /) partition to suicide...
 
-It was already sent some months ago and acked by Eric on linux-scsi, but it
-never got merged for no apparent reason.
+I also wonder why it took so long and there is that complaint about
+lost interrupt + failure. Was there some operation in progress that
+got "killed" by the scan?
 
-Please merge or explicitly reject.
-
-
-Signed-off-by: Roland Kletzing <devzero@web.de>
+Bruno
 
 
---- drivers/message/fusion/Kconfig.orig 2008-12-31 19:25:29.425447576 +0100
-+++ drivers/message/fusion/Kconfig      2008-12-31 19:30:41.538999104 +0100
-@@ -1,18 +1,20 @@
 
- menuconfig FUSION
--       bool "Fusion MPT device support"
-+       bool "LSI Fusion MPT device support"
-        depends on PCI
-        ---help---
--       Say Y here to get to see options for Fusion Message
-+       Say Y here to get to see options for LSI Fusion Message
-        Passing Technology (MPT) drivers.
--       This option alone does not add any kernel code.
-+       This option alone does not add any kernel code, but enables
-+       selection of ScsiHost drivers for parallel SCSI, Fiber Channel
-+       and SAS host adapters.
+Dec 31 19:58:26 venus [   83.716209] Probing IDE interface ide0...
+Dec 31 19:58:27 venus [   84.030107] hda: FUJITSU MHY2250BH, ATA DISK d=
+rive
+Dec 31 19:58:27 venus [   84.390048] hda: host max PIO5 wanted PIO255(a=
+uto-tune) selected PIO4
+Dec 31 19:58:27 venus [   84.390205] hda: UDMA/100 mode selected
+Dec 31 19:58:39 venus [   96.640225] I/O error in filesystem ("hda3") m=
+eta-data dev hda3 block 0x202f14       ("xlog_iodone") error 5 buf coun=
+t 1024
+Dec 31 19:58:39 venus [   96.640274] xfs_force_shutdown(hda3,0x2) calle=
+d from line 1062 of file /usr/src/linux-2.6.28/fs/xfs/xfs_log.c.  Retur=
+n address =3D 0xc021418a
+Dec 31 19:58:39 venus [   96.640331] Filesystem "hda3": Log I/O Error D=
+etected.  Shutting down filesystem: hda3
+Dec 31 19:58:39 venus [   96.640359] Please umount the filesystem, and =
+rectify the problem(s)
+Dec 31 18:58:46 venus [  103.710105] hda: dma_timer_expiry: DMA status =
+(0x20)
+Dec 31 18:58:46 venus [  103.710128] hda: lost interrupt
+Dec 31 18:58:46 venus [  103.710148] hda: ide_dma_intr: bad DMA status =
+(0x30)
+Dec 31 18:58:46 venus [  103.710168] hda: dma_intr: status=3D0x50 { Dri=
+veReady SeekComplete }
+Dec 31 18:58:46 venus [  103.710192] ide: failed opcode was: unknown
+Dec 31 18:58:47 venus [  104.063206] hda: max request size: 512KiB
+Dec 31 18:58:47 venus [  104.063230] hda: 488397168 sectors (250059 MB)=
+ w/8192KiB Cache, CHS=3D30401/255/63
+Dec 31 18:58:47 venus [  104.063450] hda: cache flushes supported
+Dec 31 18:59:09 venus [  126.640091] Filesystem "hda3": xfs_log_force: =
+error 5 returned.
+Dec 31 18:59:39 venus [  156.640109] Filesystem "hda3": xfs_log_force: =
+error 5 returned.
+Dec 31 19:00:09 venus [  186.640093] Filesystem "hda3": xfs_log_force: =
+error 5 returned.
 
-        If you say N, all options in this submenu will be skipped and 
-disabled.
 
- if FUSION
 
- config FUSION_SPI
--       tristate "Fusion MPT ScsiHost drivers for SPI"
-+       tristate "LSI Fusion MPT ScsiHost drivers for SPI"
-        depends on PCI && SCSI
-        select SCSI_SPI_ATTRS
-        ---help---
-@@ -27,7 +29,7 @@
-          ATTO UL4D
-
- config FUSION_FC
--       tristate "Fusion MPT ScsiHost drivers for FC"
-+       tristate "LSI Fusion MPT ScsiHost drivers for FC"
-        depends on PCI && SCSI
-        select SCSI_FC_ATTRS
-        ---help---
-@@ -46,7 +48,7 @@
-          Brocade FC 410/420
-
- config FUSION_SAS
--       tristate "Fusion MPT ScsiHost drivers for SAS"
-+       tristate "LSI Fusion MPT ScsiHost drivers for SAS"
-        depends on PCI && SCSI
-        select SCSI_SAS_ATTRS
-        ---help---
-@@ -72,10 +74,10 @@
-          on a per controller instance.
-
- config FUSION_CTL
--       tristate "Fusion MPT misc device (ioctl) driver"
-+       tristate "LSI Fusion MPT misc device (ioctl) driver"
-        depends on FUSION_SPI || FUSION_FC || FUSION_SAS
-        ---help---
--         The Fusion MPT misc device driver provides specialized control
-+         The LSI Fusion MPT misc device driver provides specialized control
-          of MPT adapters via system ioctl calls.  Use of ioctl calls to
-          the MPT driver requires that you create and use a misc device
-          node ala:
-@@ -83,7 +85,7 @@
-
-          One use of this ioctl interface is to perform an upgrade (reflash)
-          of the MPT adapter firmware.  Refer to readme file(s) distributed
--         with the Fusion MPT linux driver for additional details.
-+         with the LSI Fusion MPT linux driver for additional details.
-
-          If enabled by saying M to this, a driver named: mptctl
-          will be compiled.
-@@ -91,11 +93,11 @@
-          If unsure whether you really want or need this, say N.
-
- config FUSION_LAN
--       tristate "Fusion MPT LAN driver"
-+       tristate "LSI Fusion MPT LAN driver"
-        depends on FUSION_FC && NET_FC
-        ---help---
-          This module supports LAN IP traffic over Fibre Channel port(s)
--         on Fusion MPT compatible hardware (LSIFC9xx chips).
-+         on LSI Fusion MPT compatible hardware (LSIFC9xx chips).
-          The physical interface used is defined in RFC 2625.
-          Please refer to that document for details.
-
-@@ -108,10 +110,10 @@
-          If unsure whether you really want or need this, say N.
-
- config FUSION_LOGGING
--       bool "Fusion MPT logging facility"
-+       bool "LSI Fusion MPT logging facility"
-        ---help---
-          This turns on a logging facility that can be used to debug a 
-number
--         of Fusion MPT related problems.
-+         of LSI Fusion MPT related problems.
-
-          The debug level can be programmed on the fly via SysFS (hex 
-values)
- 
-
+On Wed, 31 December 2008 Bartlomiej Zolnierkiewicz wrote:
+> Thanks for the report, the following patch fixes the OOPS for me:
+>=20
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] ide: fix ide_port_scan() to do ACPI setup after
+> initializing request queues
+>=20
+> This makes ide_port_scan()'s behavior match ide_host_register()'s
+> one and fixes OOPS in elv_may_queue() during port re-scan.
+>=20
+> Reported-by: Bruno Pr=C3=A9mont <bonbons@linux-vserver.org>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+>  drivers/ide/ide-probe.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> Index: b/drivers/ide/ide-probe.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- a/drivers/ide/ide-probe.c
+> +++ b/drivers/ide/ide-probe.c
+> @@ -1694,8 +1694,8 @@ void ide_port_scan(ide_hwif_t *hwif)
+>  	hwif->present =3D 1;
+> =20
+>  	ide_port_tune_devices(hwif);
+> -	ide_acpi_port_init_devices(hwif);
+>  	ide_port_setup_devices(hwif);
+> +	ide_acpi_port_init_devices(hwif);
+>  	hwif_register_devices(hwif);
+>  	ide_proc_port_register_devices(hwif);
+>  }
+>=20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
