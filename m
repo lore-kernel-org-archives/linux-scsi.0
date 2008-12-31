@@ -1,100 +1,46 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 7/9] exofs: mkexofs
-Date: Wed, 31 Dec 2008 15:57:32 +0000
-Message-ID: <1230739053.3408.74.camel@localhost.localdomain>
-References: <4947BFAA.4030208@panasas.com>	<4947CA5C.50104@panasas.com>
-	 <20081229121423.efde9d06.akpm@linux-foundation.org>
-	 <495B8D90.1090004@panasas.com>
+Subject: Re: PATCH: mvsas: increase port type detection delay to suit
+	Seagate's 15k6 drive ST3450856SS 0003
+Date: Wed, 31 Dec 2008 10:14:15 -0600
+Message-ID: <1230740055.3408.88.camel@localhost.localdomain>
+References: <00cd01c96a1b$240d6a50$6602a8c0@bui.materna.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:46346 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:54431 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755495AbYLaP5j (ORCPT
+	by vger.kernel.org with ESMTP id S1755838AbYLaQOS (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Dec 2008 10:57:39 -0500
-In-Reply-To: <495B8D90.1090004@panasas.com>
+	Wed, 31 Dec 2008 11:14:18 -0500
+In-Reply-To: <00cd01c96a1b$240d6a50$6602a8c0@bui.materna.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, avishay@gmail.com, jeff@garzik.org, viro@ZenIV.linux.org.uk, linux-fsdevel@vger.kernel.org, osd-dev@open-osd.org, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: Roland <devzero@web.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, kewei@marvell.com, rnissl@gmx.de
 
-On Wed, 2008-12-31 at 17:19 +0200, Boaz Harrosh wrote:
-> Andrew Morton wrote:
-> > On Tue, 16 Dec 2008 17:33:48 +0200
-> > Boaz Harrosh <bharrosh@panasas.com> wrote:
-> > 
-> >> We need a mechanism to prepare the file system (mkfs).
-> >> I chose to implement that by means of a couple of
-> >> mount-options. Because there is no user-mode API for committing
-> >> OSD commands. And also, all this stuff is highly internal to
-> >> the file system itself.
-> >>
-> >> - Added two mount options mkfs=0/1,format=capacity_in_meg, so mkfs/format
-> >>   can be executed by kernel code just before mount. An mkexofs utility
-> >>   can now be implemented by means of a script that mounts and unmount the
-> >>   file system with proper options.
-> > 
-> > Doing mkfs in-kernel is unusual.  I don't think the above description
-> > sufficiently helps the uninitiated understand why mkfs cannot be done
-> > in userspace as usual.  Please flesh it out a bit.
+On Tue, 2008-12-30 at 02:08 +0100, Roland wrote:
+> as this driver is relatively new, is it already stable enough for production 
+> use ?
+
+It passes my testing, including some nicely error prone expander
+configurations ... however, I assume you'll put it through its
+qualification paces.
+
+> i thought about buying a mobo with marvell sas controller.
 > 
-> There are a few main reasons.
-> - There is no user-mode API for initiating OSD commands. Such a subsystem
->   would be hundredfold bigger then the mkfs code submitted. I think it would be
->   hard and stupid to maintain a complex user-mode API just for creating
->   a couple of objects and writing a couple of on disk structures.
+> is it planned to merge this patch, as it is fixing a problem or must this 
+> problems being workarounded in userspace ?
 
-This is really a reflection of the whole problem with the OSD paradigm.
+Ideally, I'd like marvell to comment on this since just increasing the
+timer looks like it's hiding some type of race in the driver ...
+however, since it's been around for nearly a month now with no response
+and it looks relatively harmless, I'll put it in.
 
-In theory, a filesystem on OSD is a thin layer of metadata mapping
-objects to files.  Get this right and the storage will manage things,
-like security and access and attributes (there's even a natural mapping
-to the VFS concept of extended attributes).  Plus, the storage has
-enough information to manage persistence, backups and replication.
-
-The real problem is that no-one has actually managed to come up with a
-useful VFS<->OSD mapping layer (even by extending or altering the VFS).
-Every filesystem that currently uses OSD has a separate direct OSD
-speaking interface (i.e. it slices out the block layer to do this and
-talks directly to the storage).
-
-I suppose this could be taken to show that such a layer is impossibly
-complex, as you assert, but its lack is reflected in strange looking
-design decisions like in-kernel mkfs.  It would also mean that there
-would be very little layered code sharing between ODS based filesystems.
-
-> - I intend to refactor the code further to make use of more super.c services,
->   so to make this addition even smaller. Also future direction of raid over
->   multiple objects will make even more kernel infrastructure needed which
->   will need even more user-mode code duplication.
-> - I anticipate problems that are not yet addressed in this body of work
->   but will be in the future, mainly that a single OSD-target (lun) can
->   be shared by lots of FSs, and a single FS can span many OSD-targets.
->   Some central management is much easier to do in Kernel.
+> here`s some more with that problem:
 > 
-> > 
-> > What are the dependencies for this filesystem code?  I assume that it
-> > depends on various block- and scsi-level patches?  Which ones, and
-> > what is their status, and is this code even compileable without them?
-> > 
-> 
-> This OSD-based file system is dependent on the open-osd initiator library
-> code that I've submitted for inclusion for 2.6.29. It has been sitting
-> in linux-next for a while now, and has not been receiving any comments
-> for the last two updated patchsets I've sent to scsi-misc/lkml. However
-> it has not yet been submitted into Jame's scsi-misc git tree, and James
-> is the ultimate maintainer that should submit this work. I hope it will
-> still be submitted into 2.6.29, as this code is totally self sufficient
-> and does not endangers or changes any other Kernel subsystems.
-> (All the needed ground work was already submitted to Linus since 2.6.26)
-> So why should it not?
-
-I don't like it mainly because it's not truly a useful general framework
-for others to build on.  However, as argued above, there might not
-actually be such a useful framework, so as long as the only two
-consumers (you and Lustre) want an interface like this, I'll put it in.
+> https://bugzilla.redhat.com/show_bug.cgi?id=474482
+> http://forumubuntusoftware.info/viewtopic.php?f=46&t=2454
 
 James
 
