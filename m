@@ -1,319 +1,88 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] sd: Try READ CAPACITY 16 first for all SCSI-3 devices
-Date: Wed, 31 Dec 2008 06:51:43 -0700
-Message-ID: <20081231135142.GF2002@parisc-linux.org>
-References: <20081223164703.GB19967@parisc-linux.org> <yq1sko4y7e4.fsf@sermon.lab.mkp.net> <20081231135014.GE2002@parisc-linux.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 7/9] exofs: mkexofs
+Date: Wed, 31 Dec 2008 17:19:44 +0200
+Message-ID: <495B8D90.1090004@panasas.com>
+References: <4947BFAA.4030208@panasas.com>	<4947CA5C.50104@panasas.com> <20081229121423.efde9d06.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:52591 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755395AbYLaNvn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Dec 2008 08:51:43 -0500
-Content-Disposition: inline
-In-Reply-To: <20081231135014.GE2002@parisc-linux.org>
+Received: from gw-ca.panasas.com ([66.104.249.162]:22827 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755382AbYLaPTw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Dec 2008 10:19:52 -0500
+In-Reply-To: <20081229121423.efde9d06.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: avishay@gmail.com, jeff@garzik.org, viro@ZenIV.linux.org.uk, linux-fsdevel@vger.kernel.org, osd-dev@open-osd.org, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Dec 31, 2008 at 06:50:15AM -0700, Matthew Wilcox wrote:
-> 2005), so I'm OK with this change.  I'll send updated patches (the first
-> patch now needs an extra NULL argument to scsi_execute_request).
+Andrew Morton wrote:
+> On Tue, 16 Dec 2008 17:33:48 +0200
+> Boaz Harrosh <bharrosh@panasas.com> wrote:
+> 
+>> We need a mechanism to prepare the file system (mkfs).
+>> I chose to implement that by means of a couple of
+>> mount-options. Because there is no user-mode API for committing
+>> OSD commands. And also, all this stuff is highly internal to
+>> the file system itself.
+>>
+>> - Added two mount options mkfs=0/1,format=capacity_in_meg, so mkfs/format
+>>   can be executed by kernel code just before mount. An mkexofs utility
+>>   can now be implemented by means of a script that mounts and unmount the
+>>   file system with proper options.
+> 
+> Doing mkfs in-kernel is unusual.  I don't think the above description
+> sufficiently helps the uninitiated understand why mkfs cannot be done
+> in userspace as usual.  Please flesh it out a bit.
 
-commit 039f215a451eaa0cb04ae75e7506f178759e24e3
-Author: Matthew Wilcox <matthew@wil.cx>
-Date:   Wed Dec 31 07:30:12 2008 -0500
+There are a few main reasons.
+- There is no user-mode API for initiating OSD commands. Such a subsystem
+  would be hundredfold bigger then the mkfs code submitted. I think it would be
+  hard and stupid to maintain a complex user-mode API just for creating
+  a couple of objects and writing a couple of on disk structures.
+- I intend to refactor the code further to make use of more super.c services,
+  so to make this addition even smaller. Also future direction of raid over
+  multiple objects will make even more kernel infrastructure needed which
+  will need even more user-mode code duplication.
+- I anticipate problems that are not yet addressed in this body of work
+  but will be in the future, mainly that a single OSD-target (lun) can
+  be shared by lots of FSs, and a single FS can span many OSD-targets.
+  Some central management is much easier to do in Kernel.
 
-    sd: Refactor sd_read_capacity()
-    
-    The sd_read_capacity() function was about 180 lines long and
-    included a backwards goto and a tricky state variable.  Splitting out
-    read_capacity_10() and read_capacity_16() (about 50 lines each) reduces
-    sd_read_capacity to about 100 lines and gets rid of the backwards goto
-    and the state variable.  I've tried to avoid any behaviour change with
-    this patch.
-    
-    Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+> 
+> What are the dependencies for this filesystem code?  I assume that it
+> depends on various block- and scsi-level patches?  Which ones, and
+> what is their status, and is this code even compileable without them?
+> 
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 62b28d5..06bb638 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1275,42 +1275,61 @@ disable:
- 	sdkp->capacity = 0;
- }
- 
--/*
-- * read disk capacity
-- */
--static void
--sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer)
-+static void read_capacity_error(struct scsi_disk *sdkp, struct scsi_device *sdp,
-+			struct scsi_sense_hdr *sshdr, int sense_valid,
-+			int the_result)
-+{
-+	sd_print_result(sdkp, the_result);
-+	if (driver_byte(the_result) & DRIVER_SENSE)
-+		sd_print_sense_hdr(sdkp, sshdr);
-+	else
-+		sd_printk(KERN_NOTICE, sdkp, "Sense not available.\n");
-+
-+	/*
-+	 * Set dirty bit for removable devices if not ready -
-+	 * sometimes drives will not report this properly.
-+	 */
-+	if (sdp->removable &&
-+	    sense_valid && sshdr->sense_key == NOT_READY)
-+		sdp->changed = 1;
-+
-+	/*
-+	 * We used to set media_present to 0 here to indicate no media
-+	 * in the drive, but some drives fail read capacity even with
-+	 * media present, so we can't do that.
-+	 */
-+	sdkp->capacity = 0; /* unknown mapped to zero - as usual */
-+}
-+
-+#define RC16_LEN 13
-+#if RC16_LEN > SD_BUF_SIZE
-+#error RC16_LEN must not be more than SD_BUF_SIZE
-+#endif
-+
-+static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
-+						unsigned char *buffer)
- {
- 	unsigned char cmd[16];
--	int the_result, retries;
--	int sector_size = 0;
--	/* Force READ CAPACITY(16) when PROTECT=1 */
--	int longrc = scsi_device_protection(sdkp->device) ? 1 : 0;
- 	struct scsi_sense_hdr sshdr;
- 	int sense_valid = 0;
--	struct scsi_device *sdp = sdkp->device;
-+	int the_result;
-+	int retries = 3;
-+	unsigned long long lba;
-+	unsigned sector_size;
- 
--repeat:
--	retries = 3;
- 	do {
--		if (longrc) {
--			memset((void *) cmd, 0, 16);
--			cmd[0] = SERVICE_ACTION_IN;
--			cmd[1] = SAI_READ_CAPACITY_16;
--			cmd[13] = 13;
--			memset((void *) buffer, 0, 13);
--		} else {
--			cmd[0] = READ_CAPACITY;
--			memset((void *) &cmd[1], 0, 9);
--			memset((void *) buffer, 0, 8);
--		}
--		
-+		memset(cmd, 0, 16);
-+		cmd[0] = SERVICE_ACTION_IN;
-+		cmd[1] = SAI_READ_CAPACITY_16;
-+		cmd[13] = RC16_LEN;
-+		memset(buffer, 0, RC16_LEN);
-+
- 		the_result = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE,
--					      buffer, longrc ? 13 : 8, &sshdr,
--					      SD_TIMEOUT, SD_MAX_RETRIES, NULL);
-+					buffer, RC16_LEN, &sshdr,
-+					SD_TIMEOUT, SD_MAX_RETRIES, NULL);
- 
- 		if (media_not_present(sdkp, &sshdr))
--			return;
-+			return -ENODEV;
- 
- 		if (the_result)
- 			sense_valid = scsi_sense_valid(&sshdr);
-@@ -1318,72 +1337,122 @@ repeat:
- 
- 	} while (the_result && retries);
- 
--	if (the_result && !longrc) {
-+	if (the_result) {
-+		sd_printk(KERN_NOTICE, sdkp, "READ CAPACITY(16) failed\n");
-+		read_capacity_error(sdkp, sdp, &sshdr, sense_valid, the_result);
-+		return -EINVAL;
-+	}
-+
-+	sector_size =	(buffer[8] << 24) | (buffer[9] << 16) |
-+			(buffer[10] << 8) | buffer[11];
-+	lba =  (((u64)buffer[0] << 56) | ((u64)buffer[1] << 48) |
-+		((u64)buffer[2] << 40) | ((u64)buffer[3] << 32) |
-+		((u64)buffer[4] << 24) | ((u64)buffer[5] << 16) |
-+		((u64)buffer[6] << 8) | (u64)buffer[7]);
-+
-+	sd_read_protection_type(sdkp, buffer);
-+
-+	if ((sizeof(sdkp->capacity) == 4) && (lba >= 0xffffffffULL)) {
-+		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
-+			"kernel compiled with support for large block "
-+			"devices.\n");
-+		sdkp->capacity = 0;
-+		return -EOVERFLOW;
-+	}
-+
-+	sdkp->capacity = lba + 1;
-+	return sector_size;
-+}
-+
-+static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
-+						unsigned char *buffer)
-+{
-+	unsigned char cmd[16];
-+	struct scsi_sense_hdr sshdr;
-+	int sense_valid = 0;
-+	int the_result;
-+	int retries = 3;
-+	sector_t lba;
-+	unsigned sector_size;
-+
-+	do {
-+		cmd[0] = READ_CAPACITY;
-+		memset(&cmd[1], 0, 9);
-+		memset(buffer, 0, 8);
-+
-+		the_result = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE,
-+					buffer, 8, &sshdr,
-+					SD_TIMEOUT, SD_MAX_RETRIES, NULL);
-+
-+		if (media_not_present(sdkp, &sshdr))
-+			return -ENODEV;
-+
-+		if (the_result)
-+			sense_valid = scsi_sense_valid(&sshdr);
-+		retries--;
-+
-+	} while (the_result && retries);
-+
-+	if (the_result) {
- 		sd_printk(KERN_NOTICE, sdkp, "READ CAPACITY failed\n");
--		sd_print_result(sdkp, the_result);
--		if (driver_byte(the_result) & DRIVER_SENSE)
--			sd_print_sense_hdr(sdkp, &sshdr);
--		else
--			sd_printk(KERN_NOTICE, sdkp, "Sense not available.\n");
-+		read_capacity_error(sdkp, sdp, &sshdr, sense_valid, the_result);
-+		return -EINVAL;
-+	}
- 
--		/* Set dirty bit for removable devices if not ready -
--		 * sometimes drives will not report this properly. */
--		if (sdp->removable &&
--		    sense_valid && sshdr.sense_key == NOT_READY)
--			sdp->changed = 1;
-+	sector_size =	(buffer[4] << 24) | (buffer[5] << 16) |
-+			(buffer[6] << 8) | buffer[7];
-+	lba =	(buffer[0] << 24) | (buffer[1] << 16) |
-+		(buffer[2] << 8) | buffer[3];
- 
--		/* Either no media are present but the drive didn't tell us,
--		   or they are present but the read capacity command fails */
--		/* sdkp->media_present = 0; -- not always correct */
--		sdkp->capacity = 0; /* unknown mapped to zero - as usual */
-+	if ((sizeof(sdkp->capacity) == 4) && (lba == 0xffffffff)) {
-+		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
-+			"kernel compiled with support for large block "
-+			"devices.\n");
-+		sdkp->capacity = 0;
-+		return -EOVERFLOW;
-+	}
- 
--		return;
--	} else if (the_result && longrc) {
--		/* READ CAPACITY(16) has been failed */
--		sd_printk(KERN_NOTICE, sdkp, "READ CAPACITY(16) failed\n");
--		sd_print_result(sdkp, the_result);
--		sd_printk(KERN_NOTICE, sdkp, "Use 0xffffffff as device size\n");
-+	sdkp->capacity = lba + 1;
-+	return sector_size;
-+}
- 
--		sdkp->capacity = 1 + (sector_t) 0xffffffff;		
--		goto got_data;
--	}	
--	
--	if (!longrc) {
--		sector_size = (buffer[4] << 24) |
--			(buffer[5] << 16) | (buffer[6] << 8) | buffer[7];
--		if (buffer[0] == 0xff && buffer[1] == 0xff &&
--		    buffer[2] == 0xff && buffer[3] == 0xff) {
--			if(sizeof(sdkp->capacity) > 4) {
--				sd_printk(KERN_NOTICE, sdkp, "Very big device. "
--					  "Trying to use READ CAPACITY(16).\n");
--				longrc = 1;
--				goto repeat;
--			}
--			sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use "
--				  "a kernel compiled with support for large "
--				  "block devices.\n");
--			sdkp->capacity = 0;
-+/*
-+ * read disk capacity
-+ */
-+static void
-+sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer)
-+{
-+	int sector_size;
-+	struct scsi_device *sdp = sdkp->device;
-+
-+	/* Force READ CAPACITY(16) when PROTECT=1 */
-+	if (scsi_device_protection(sdp)) {
-+		sector_size = read_capacity_16(sdkp, sdp, buffer);
-+		if (sector_size == -EOVERFLOW)
- 			goto got_data;
--		}
--		sdkp->capacity = 1 + (((sector_t)buffer[0] << 24) |
--			(buffer[1] << 16) |
--			(buffer[2] << 8) |
--			buffer[3]);			
-+		if (sector_size < 0)
-+			return;
- 	} else {
--		sdkp->capacity = 1 + (((u64)buffer[0] << 56) |
--			((u64)buffer[1] << 48) |
--			((u64)buffer[2] << 40) |
--			((u64)buffer[3] << 32) |
--			((sector_t)buffer[4] << 24) |
--			((sector_t)buffer[5] << 16) |
--			((sector_t)buffer[6] << 8)  |
--			(sector_t)buffer[7]);
--			
--		sector_size = (buffer[8] << 24) |
--			(buffer[9] << 16) | (buffer[10] << 8) | buffer[11];
--
--		sd_read_protection_type(sdkp, buffer);
--	}	
-+		sector_size = read_capacity_10(sdkp, sdp, buffer);
-+		if (sector_size == -EOVERFLOW)
-+			goto got_data;
-+		if (sector_size < 0)
-+			return;
-+		if ((sizeof(sdkp->capacity) > 4) &&
-+		    (sdkp->capacity > 0xffffffffULL)) {
-+			int old_sector_size = sector_size;
-+			sd_printk(KERN_NOTICE, sdkp, "Very big device. "
-+					"Trying to use READ CAPACITY(16).\n");
-+			sector_size = read_capacity_16(sdkp, sdp, buffer);
-+			if (sector_size < 0) {
-+				sd_printk(KERN_NOTICE, sdkp,
-+					"Using 0xffffffff as device size\n");
-+				sdkp->capacity = 1 + (sector_t) 0xffffffff;
-+				sector_size = old_sector_size;
-+				goto got_data;
-+			}
-+		}
-+	}
- 
- 	/* Some devices return the total number of sectors, not the
- 	 * highest sector number.  Make the necessary adjustment. */
+This OSD-based file system is dependent on the open-osd initiator library
+code that I've submitted for inclusion for 2.6.29. It has been sitting
+in linux-next for a while now, and has not been receiving any comments
+for the last two updated patchsets I've sent to scsi-misc/lkml. However
+it has not yet been submitted into Jame's scsi-misc git tree, and James
+is the ultimate maintainer that should submit this work. I hope it will
+still be submitted into 2.6.29, as this code is totally self sufficient
+and does not endangers or changes any other Kernel subsystems.
+(All the needed ground work was already submitted to Linus since 2.6.26)
+So why should it not?
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Once the open-osd initiator library is accepted this file system
+could be accepted. I was hoping as a 2.6.30 time frame. (One Kernel
+after the open-osd library)
+
+> Thanks.
+
+Thank you dear Andrew for your most valuable input.
+
+I will constify all the const needed code. will fix the global name space
+litter, will inline the macros and lower case the inlines. Will remove
+the typedefs.
+
+I will reply to individual patches, I have a couple of questions. But
+all your comments are right and I will take care of them.
+
+When, if, all is fixed, through which tree/maintainer can exofs be submitted?
+
+Thanks
+Boaz
