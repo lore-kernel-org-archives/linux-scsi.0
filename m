@@ -1,43 +1,55 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] sg: fix races during device removal
-Date: Wed, 31 Dec 2008 04:46:37 -0500
-Message-ID: <20081231094637.GA2138@infradead.org>
-References: <495A40D4.5030901@cybernetics.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] sd: Try READ CAPACITY 16 first for all SCSI-3 devices
+Date: Wed, 31 Dec 2008 05:18:59 -0500
+Message-ID: <yq1sko4y7e4.fsf@sermon.lab.mkp.net>
+References: <20081223164703.GB19967@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46969 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753043AbYLaJql (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Dec 2008 04:46:41 -0500
-Content-Disposition: inline
-In-Reply-To: <495A40D4.5030901@cybernetics.com>
+Received: from rcsinet14.oracle.com ([148.87.113.126]:60864 "EHLO
+	rgminet14.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753458AbYLaKUP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Dec 2008 05:20:15 -0500
+Received: from rgminet11.oracle.com (rcsinet11.oracle.com [148.87.113.123])
+	by rgminet14.oracle.com (Switch-3.3.1/Switch-3.3.1) with ESMTP id mBVAMBTM012544
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Wed, 31 Dec 2008 10:22:12 GMT
+In-Reply-To: <20081223164703.GB19967@parisc-linux.org> (Matthew Wilcox's message of "Tue\, 23 Dec 2008 09\:47\:03 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>
-Cc: Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Dec 30, 2008 at 10:40:04AM -0500, Tony Battersby wrote:
->  	sdp = sg_get_dev(dev);
->  	if ((!sdp) || (!sdp->device)) {
-> +		sg_put_dev(sdp);
->  		unlock_kernel();
->  		return -ENXIO;
->  	}
->  	if (sdp->detached) {
-> +		sg_put_dev(sdp);
->  		unlock_kernel();
->  		return -ENODEV;
->  	}
+>>>>> "Matthew" == Matthew Wilcox <matthew@wil.cx> writes:
 
-It would be useful if you converted this to the standard goto-based
-unwinding with a few labels at the end of the function:
+Matthew> Of course, it's entirely legitimate for devices to not
+Matthew> implement READ CAPACITY 16, so this patch also includes a
+Matthew> fallback to READ CAPACITY 10 for SCSI-3 devices.
 
+I've been running with this on my DIF drives for a few days and
+everything looked fine.
 
- out_put:
-	sg_put_dev(sdp);
- out_unlock:
-	unlock_kernel();
- out:
-	return error;
+Tonight I tried an all-spindles-in-the-lab test.  I have several drives
+that report SCSI_3 but don't implement READ CAPACITY(16).  All of them
+correctly send sense error back.  That's the good news.
+
+The bad news is that I have one particular drive model that after a
+failed READ CAPACITY(16) command responds correctly to READ
+CAPACITY(10).  And *then* the drive firmware commits suicide.
+
+FWIW, this is 2Gbps/10Krpm FC kit.  So not USB/FireWire and not exactly
+90s gear either.
+
+*sigh*
+
+At least for DIF I have an innocuous INQUIRY field to key off of.  Long
+term I think we should check the Block Limits thin provisioning bits.
+
+For now may I suggest a much more conservative approach:
+
+-       if (sdp->scsi_level > SCSI_2) {
++       if (scsi_device_protection(sdp) || sdp->scsi_level > SCSI_SPC_2) {
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
 
