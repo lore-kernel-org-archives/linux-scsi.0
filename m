@@ -1,55 +1,74 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] sd: Try READ CAPACITY 16 first for all SCSI-3 devices
-Date: Wed, 31 Dec 2008 05:18:59 -0500
-Message-ID: <yq1sko4y7e4.fsf@sermon.lab.mkp.net>
-References: <20081223164703.GB19967@parisc-linux.org>
+From: Alexey Zaytsev <alexey.zaytsev@gmail.com>
+Subject: (unknown)
+Date: Wed, 31 Dec 2008 13:51:43 +0300
+Message-ID: <20081231104125.3800.97290.stgit@xl0.local>
+References: <20081231180759X.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet14.oracle.com ([148.87.113.126]:60864 "EHLO
-	rgminet14.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753458AbYLaKUP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Dec 2008 05:20:15 -0500
-Received: from rgminet11.oracle.com (rcsinet11.oracle.com [148.87.113.123])
-	by rgminet14.oracle.com (Switch-3.3.1/Switch-3.3.1) with ESMTP id mBVAMBTM012544
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Wed, 31 Dec 2008 10:22:12 GMT
-In-Reply-To: <20081223164703.GB19967@parisc-linux.org> (Matthew Wilcox's message of "Tue\, 23 Dec 2008 09\:47\:03 -0700")
+Received: from ug-out-1314.google.com ([66.249.92.175]:22645 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751452AbYLaKmw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Dec 2008 05:42:52 -0500
+In-Reply-To: <20081231180759X.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: James.Bottomley@hansenpartnership.com, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, jens.axboe@oracle.com
 
->>>>> "Matthew" == Matthew Wilcox <matthew@wil.cx> writes:
+On Wed, Dec 31, 2008 at 12:08, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+> On Tue, 30 Dec 2008 15:46:03 -0800
+> Andrew Morton <akpm@linux-foundation.org> wrote:
+[...]
+>> the code has been like this for years and years.  Why hasn't anyone
+>> noticed?
+>
+> The members from 'status' in struct sg_io_hdr to the last are used to
+> transfer information from kernel to user space. The values that user
+> space sets are just ignored.
+>
 
-Matthew> Of course, it's entirely legitimate for devices to not
-Matthew> implement READ CAPACITY 16, so this patch also includes a
-Matthew> fallback to READ CAPACITY 10 for SCSI-3 devices.
+Then probably there is no need to copy those fields, right?
+There should be no data leak from the kernel, as sgio is
+allocated on the userspace stack, and the appropriate ioctl
+handler should set/zero all those fields anyway, as it expects
+them to come directly from the user (did not check).
+So, at worst the user will get it's own garbage insted of the
+values he left in the fields that the kernel was supposed to
+set.
 
-I've been running with this on my DIF drives for a few days and
-everything looked fine.
+If so, please could drop my previous patch and take this one.
 
-Tonight I tried an all-spindles-in-the-lab test.  I have several drives
-that report SCSI_3 but don't implement READ CAPACITY(16).  All of them
-correctly send sense error back.  That's the good news.
+From: Alexey Zaytsev <alexey.zaytsev@gmail.com>
+Subject: [PATCH] Don't perform unneeded copy.
 
-The bad news is that I have one particular drive model that after a
-failed READ CAPACITY(16) command responds correctly to READ
-CAPACITY(10).  And *then* the drive firmware commits suicide.
+FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> says:
 
-FWIW, this is 2Gbps/10Krpm FC kit.  So not USB/FireWire and not exactly
-90s gear either.
+The members from 'status' in struct sg_io_hdr to the last are used to
+transfer information from kernel to user space. The values that user
+space sets are just ignored.
 
-*sigh*
+Signed-off-by: Alexey Zaytsev <alexey.zaytsev@gmail.com>
+---
+ fs/compat_ioctl.c |    6 ------
+ 1 files changed, 0 insertions(+), 6 deletions(-)
 
-At least for DIF I have an innocuous INQUIRY field to key off of.  Long
-term I think we should check the Block Limits thin provisioning bits.
-
-For now may I suggest a much more conservative approach:
-
--       if (sdp->scsi_level > SCSI_2) {
-+       if (scsi_device_protection(sdp) || sdp->scsi_level > SCSI_SPC_2) {
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+diff --git a/fs/compat_ioctl.c b/fs/compat_ioctl.c
+index 5235c67..23b1f5a 100644
+--- a/fs/compat_ioctl.c
++++ b/fs/compat_ioctl.c
+@@ -782,12 +782,6 @@ static int sg_ioctl_trans(unsigned int fd, unsigned int cmd, unsigned long arg)
+ 	if (put_user(compat_ptr(data), &sgio->usr_ptr))
+ 		return -EFAULT;
+ 
+-	if (copy_in_user(&sgio->status, &sgio32->status,
+-			 (4 * sizeof(unsigned char)) +
+-			 (2 * sizeof(unsigned (short))) +
+-			 (3 * sizeof(int))))
+-		return -EFAULT;
+-
+ 	err = sys_ioctl(fd, cmd, (unsigned long) sgio);
+ 
+ 	if (err >= 0) {
 
