@@ -1,113 +1,92 @@
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-Subject: Re: S3 with pata_via fails to resume, ide_via82Cxxx works
-Date: Wed, 31 Dec 2008 20:15:35 +0100
-Message-ID: <20081231201535.4d86c159@neptune.home>
-References: <20081230185037.7ec94e94@neptune.home>
-	<20081230215953.235ce1b4@neptune.home>
-	<200812311919.14579.bzolnier@gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 7/9] exofs: mkexofs
+Date: Wed, 31 Dec 2008 11:25:15 -0800
+Message-ID: <20081231112515.2d790d1c.akpm@linux-foundation.org>
+References: <4947BFAA.4030208@panasas.com>
+	<4947CA5C.50104@panasas.com>
+	<20081229121423.efde9d06.akpm@linux-foundation.org>
+	<495B8D90.1090004@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ppp-110-52.adsl.restena.lu ([158.64.110.52]:42929 "EHLO
-	bonbons.gotdns.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751882AbYLaTZi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Dec 2008 14:25:38 -0500
-In-Reply-To: <200812311919.14579.bzolnier@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <495B8D90.1090004@panasas.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, avishay@gmail.com, jeff@garzik.org, viro@ZenIV.linux.org.uk, linux-fsdevel@vger.kernel.org, osd-dev@open-osd.org, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Thanks for the patch, it fixes the oops for me too.
+On Wed, 31 Dec 2008 17:19:44 +0200 Boaz Harrosh <bharrosh@panasas.com> wrote:
 
-Unfortunately the re-discovery of the drive causes at least XFS to
-error and shutdown its mounts :(
+> Andrew Morton wrote:
+> > On Tue, 16 Dec 2008 17:33:48 +0200
+> > Boaz Harrosh <bharrosh@panasas.com> wrote:
+> > 
+> >> We need a mechanism to prepare the file system (mkfs).
+> >> I chose to implement that by means of a couple of
+> >> mount-options. Because there is no user-mode API for committing
+> >> OSD commands. And also, all this stuff is highly internal to
+> >> the file system itself.
+> >>
+> >> - Added two mount options mkfs=0/1,format=capacity_in_meg, so mkfs/format
+> >>   can be executed by kernel code just before mount. An mkexofs utility
+> >>   can now be implemented by means of a script that mounts and unmount the
+> >>   file system with proper options.
+> > 
+> > Doing mkfs in-kernel is unusual.  I don't think the above description
+> > sufficiently helps the uninitiated understand why mkfs cannot be done
+> > in userspace as usual.  Please flesh it out a bit.
+> 
+> There are a few main reasons.
+> - There is no user-mode API for initiating OSD commands. Such a subsystem
+>   would be hundredfold bigger then the mkfs code submitted. I think it would be
+>   hard and stupid to maintain a complex user-mode API just for creating
+>   a couple of objects and writing a couple of on disk structures.
+> - I intend to refactor the code further to make use of more super.c services,
+>   so to make this addition even smaller. Also future direction of raid over
+>   multiple objects will make even more kernel infrastructure needed which
+>   will need even more user-mode code duplication.
+> - I anticipate problems that are not yet addressed in this body of work
+>   but will be in the future, mainly that a single OSD-target (lun) can
+>   be shared by lots of FSs, and a single FS can span many OSD-targets.
+>   Some central management is much easier to do in Kernel.
 
-Is it possible to block any access to the devices on the scanned port
-until the scan has completed? Otherwise this renders rescanning
-on port with mounted (e.g. /) partition to suicide...
+OK.  Please add the above info to the changelog for that patch.
 
-I also wonder why it took so long and there is that complaint about
-lost interrupt + failure. Was there some operation in progress that
-got "killed" by the scan?
+> > 
+> > What are the dependencies for this filesystem code?  I assume that it
+> > depends on various block- and scsi-level patches?  Which ones, and
+> > what is their status, and is this code even compileable without them?
+> > 
+> 
+> This OSD-based file system is dependent on the open-osd initiator library
+> code that I've submitted for inclusion for 2.6.29. It has been sitting
+> in linux-next for a while now, and has not been receiving any comments
+> for the last two updated patchsets I've sent to scsi-misc/lkml. However
+> it has not yet been submitted into Jame's scsi-misc git tree, and James
+> is the ultimate maintainer that should submit this work. I hope it will
+> still be submitted into 2.6.29, as this code is totally self sufficient
+> and does not endangers or changes any other Kernel subsystems.
+> (All the needed ground work was already submitted to Linus since 2.6.26)
+> So why should it not?
+> 
+> Once the open-osd initiator library is accepted this file system
+> could be accepted. I was hoping as a 2.6.30 time frame. (One Kernel
+> after the open-osd library)
+> 
+> > Thanks.
+> 
+> Thank you dear Andrew for your most valuable input.
+> 
+> I will constify all the const needed code. will fix the global name space
+> litter, will inline the macros and lower case the inlines. Will remove
+> the typedefs.
+> 
+> I will reply to individual patches, I have a couple of questions. But
+> all your comments are right and I will take care of them.
+> 
+> When, if, all is fixed, through which tree/maintainer can exofs be submitted?
 
-Bruno
+I can merge them.  Or you can run a git tree of your own, add it to
+linux-next and ask Linus to pull it at the appropriate time.
 
-
-
-Dec 31 19:58:26 venus [   83.716209] Probing IDE interface ide0...
-Dec 31 19:58:27 venus [   84.030107] hda: FUJITSU MHY2250BH, ATA DISK d=
-rive
-Dec 31 19:58:27 venus [   84.390048] hda: host max PIO5 wanted PIO255(a=
-uto-tune) selected PIO4
-Dec 31 19:58:27 venus [   84.390205] hda: UDMA/100 mode selected
-Dec 31 19:58:39 venus [   96.640225] I/O error in filesystem ("hda3") m=
-eta-data dev hda3 block 0x202f14       ("xlog_iodone") error 5 buf coun=
-t 1024
-Dec 31 19:58:39 venus [   96.640274] xfs_force_shutdown(hda3,0x2) calle=
-d from line 1062 of file /usr/src/linux-2.6.28/fs/xfs/xfs_log.c.  Retur=
-n address =3D 0xc021418a
-Dec 31 19:58:39 venus [   96.640331] Filesystem "hda3": Log I/O Error D=
-etected.  Shutting down filesystem: hda3
-Dec 31 19:58:39 venus [   96.640359] Please umount the filesystem, and =
-rectify the problem(s)
-Dec 31 18:58:46 venus [  103.710105] hda: dma_timer_expiry: DMA status =
-(0x20)
-Dec 31 18:58:46 venus [  103.710128] hda: lost interrupt
-Dec 31 18:58:46 venus [  103.710148] hda: ide_dma_intr: bad DMA status =
-(0x30)
-Dec 31 18:58:46 venus [  103.710168] hda: dma_intr: status=3D0x50 { Dri=
-veReady SeekComplete }
-Dec 31 18:58:46 venus [  103.710192] ide: failed opcode was: unknown
-Dec 31 18:58:47 venus [  104.063206] hda: max request size: 512KiB
-Dec 31 18:58:47 venus [  104.063230] hda: 488397168 sectors (250059 MB)=
- w/8192KiB Cache, CHS=3D30401/255/63
-Dec 31 18:58:47 venus [  104.063450] hda: cache flushes supported
-Dec 31 18:59:09 venus [  126.640091] Filesystem "hda3": xfs_log_force: =
-error 5 returned.
-Dec 31 18:59:39 venus [  156.640109] Filesystem "hda3": xfs_log_force: =
-error 5 returned.
-Dec 31 19:00:09 venus [  186.640093] Filesystem "hda3": xfs_log_force: =
-error 5 returned.
-
-
-
-On Wed, 31 December 2008 Bartlomiej Zolnierkiewicz wrote:
-> Thanks for the report, the following patch fixes the OOPS for me:
->=20
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] ide: fix ide_port_scan() to do ACPI setup after
-> initializing request queues
->=20
-> This makes ide_port_scan()'s behavior match ide_host_register()'s
-> one and fixes OOPS in elv_may_queue() during port re-scan.
->=20
-> Reported-by: Bruno Pr=C3=A9mont <bonbons@linux-vserver.org>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  drivers/ide/ide-probe.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> Index: b/drivers/ide/ide-probe.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- a/drivers/ide/ide-probe.c
-> +++ b/drivers/ide/ide-probe.c
-> @@ -1694,8 +1694,8 @@ void ide_port_scan(ide_hwif_t *hwif)
->  	hwif->present =3D 1;
-> =20
->  	ide_port_tune_devices(hwif);
-> -	ide_acpi_port_init_devices(hwif);
->  	ide_port_setup_devices(hwif);
-> +	ide_acpi_port_init_devices(hwif);
->  	hwif_register_devices(hwif);
->  	ide_proc_port_register_devices(hwif);
->  }
->=20
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
