@@ -1,47 +1,55 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 7/9] exofs: mkexofs
-Date: Thu, 01 Jan 2009 15:33:06 +0200
-Message-ID: <495CC612.30800@panasas.com>
-References: <4947BFAA.4030208@panasas.com>	<4947CA5C.50104@panasas.com>	<20081229121423.efde9d06.akpm@linux-foundation.org>	<495B8D90.1090004@panasas.com> <20081231112515.2d790d1c.akpm@linux-foundation.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] scsi: Add VPD helper
+Date: Thu, 1 Jan 2009 06:38:18 -0700
+Message-ID: <20090101133818.GM2002@parisc-linux.org>
+References: <1230747167-31677-1-git-send-email-matthew@wil.cx> <495C8AA5.9010008@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:11678 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755974AbZAANdP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jan 2009 08:33:15 -0500
-In-Reply-To: <20081231112515.2d790d1c.akpm@linux-foundation.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:56828 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756028AbZAANiU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jan 2009 08:38:20 -0500
+Content-Disposition: inline
+In-Reply-To: <495C8AA5.9010008@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: avishay@gmail.com, jeff@garzik.org, viro@ZenIV.linux.org.uk, linux-fsdevel@vger.kernel.org, osd-dev@open-osd.org, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>
 
-Andrew Morton wrote:
->>> Boaz Harrosh <bharrosh@panasas.com> wrote:
->> When, if, all is fixed, through which tree/maintainer can exofs be submitted?
+On Thu, Jan 01, 2009 at 11:19:33AM +0200, Boaz Harrosh wrote:
+> +	buffer[1] = -1;
+> see below
+> > +	/*
+> > +	 * I'm not convinced we need to try quite this hard to get VPD, but
+> > +	 * all the existing users tried this hard.
+> > +	 */
+> > +	result = scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buffer,
+> > +				  len + 4, NULL, 30 * HZ, 3, NULL);
+> > +	if (result)
+> > +		return result;
+> > +
+> > +	/* Sanity check that we got the page back that we asked for */
+> > +	if (buffer[1] != page)
+> > +		return -EIO;
 > 
-> I can merge them.  Or you can run a git tree of your own, add it to
-> linux-next and ask Linus to pull it at the appropriate time.
-> 
+> Maybe it's just me but, if you are going to if() on a buffer byte, then you need
+> to make sure its initial value. Or at least document the need for a -1 at
+> buffer[1]
 
-Hi James
+buffer[] is an array of unsigned char, so -1 is 255.  We could be asking
+for page 0xff, so your initialisation doesn't help reject bogus data.
 
-Andrew suggested that maybe I should push exofs file system directly to
-Linus as it is pretty orthogonal to any other work. Sitting in linux-next
-will quickly expose any advancements in VFS and will force me to keep
-the tree uptodate.
+Your concern here, presumably, is that the device might transfer less than
+two bytes, and not return an error.  I think this is quite unlikely --
+and in any case, such a misbehaving device is really no different from a
+device which transfers complete garbage.
 
-If that is so, and is accepted by Linus, would you rather that also the
-open-osd initiator library will be submitted through the same tree?
-The conflicts with scsi are very very narrow. The only real dependency
-is the ULD being a SCSI ULD. I will routinely ask your ACK on any scsi 
-or ULD related patches. Which are very few. This way it will be easier
-to manage the dependencies between the OSD work, the OSD pNFS-Objects
-trees at pNFS project, and the pNFSD+EXOFS export. One less dependency.
+I suppose we could pass a 'resid' to scsi_execute_req and check that at
+least four bytes was transferred.
 
-[I already have such a public tree at git.open-osd.org for a while now]
-
-Thanks
-Boaz
- 
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
