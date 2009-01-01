@@ -1,165 +1,120 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] scsi: Add VPD helper
-Date: Thu, 01 Jan 2009 11:19:33 +0200
-Message-ID: <495C8AA5.9010008@panasas.com>
-References: <1230747167-31677-1-git-send-email-matthew@wil.cx>
+From: Benny Halevy <bhalevy@panasas.com>
+Subject: Re: [osd-dev] [PATCH 7/9] exofs: mkexofs
+Date: Thu, 01 Jan 2009 11:22:45 +0200
+Message-ID: <495C8B65.4010202@panasas.com>
+References: <4947BFAA.4030208@panasas.com>	<4947CA5C.50104@panasas.com>	<20081229121423.efde9d06.akpm@linux-foundation.org>	<495B8D90.1090004@panasas.com> <1230739053.3408.74.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:5207 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752315AbZAAJTi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jan 2009 04:19:38 -0500
-In-Reply-To: <1230747167-31677-1-git-send-email-matthew@wil.cx>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <1230739053.3408.74.camel@localhost.localdomain>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: open-osd development <osd-dev@open-osd.org>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi <linux-scsi@vger.kernel.org>, jeff@garzik.org, linux-kernel@vger.kernel.org, avishay@gmail.com, viro@ZenIV.linux.org.uk, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>
 
-Matthew Wilcox wrote:
-> Based on prior work by Martin Petersen and James Bottomley, this patch
-> adds a generic helper for retrieving VPD pages from SCSI devices.
+On Dec. 31, 2008, 17:57 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> On Wed, 2008-12-31 at 17:19 +0200, Boaz Harrosh wrote:
+>> Andrew Morton wrote:
+>>> On Tue, 16 Dec 2008 17:33:48 +0200
+>>> Boaz Harrosh <bharrosh@panasas.com> wrote:
+>>>
+>>>> We need a mechanism to prepare the file system (mkfs).
+>>>> I chose to implement that by means of a couple of
+>>>> mount-options. Because there is no user-mode API for committing
+>>>> OSD commands. And also, all this stuff is highly internal to
+>>>> the file system itself.
+>>>>
+>>>> - Added two mount options mkfs=0/1,format=capacity_in_meg, so mkfs/format
+>>>>   can be executed by kernel code just before mount. An mkexofs utility
+>>>>   can now be implemented by means of a script that mounts and unmount the
+>>>>   file system with proper options.
+>>> Doing mkfs in-kernel is unusual.  I don't think the above description
+>>> sufficiently helps the uninitiated understand why mkfs cannot be done
+>>> in userspace as usual.  Please flesh it out a bit.
+>> There are a few main reasons.
+>> - There is no user-mode API for initiating OSD commands. Such a subsystem
+>>   would be hundredfold bigger then the mkfs code submitted. I think it would be
+>>   hard and stupid to maintain a complex user-mode API just for creating
+>>   a couple of objects and writing a couple of on disk structures.
 > 
-> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
-> ---
->  drivers/scsi/scsi.c        |  104 ++++++++++++++++++++++++++++++++++++++++++++
->  include/scsi/scsi_device.h |    1 +
->  2 files changed, 105 insertions(+), 0 deletions(-)
+> This is really a reflection of the whole problem with the OSD paradigm.
 > 
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index f8b79d4..46b7942 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -971,6 +971,110 @@ int scsi_track_queue_full(struct scsi_device *sdev, int depth)
->  EXPORT_SYMBOL(scsi_track_queue_full);
->  
->  /**
-> + * scsi_vpd_inquiry - Request a device provide us with a VPD page
-> + * @sdev: The device to ask
-> + * @buffer: Where to put the result
-> + * @page: Which Vital Product Data to return
-> + * @len: The length of the buffer
-> + *
-> + * This is an internal helper function.  You probably want to use
-> + * scsi_get_vpd_page instead.
-> + *
-> + * Returns 0 on success or a negative error number.
-> + */
-> +static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
-> +							u8 page, unsigned len)
-> +{
-> +	int result;
-> +	unsigned char cmd[16];
-> +
-> +	cmd[0] = INQUIRY;
-> +	cmd[1] = 1;		/* EVPD */
-> +	cmd[2] = page;
-> +	cmd[3] = len >> 8;
-> +	cmd[4] = len & 0xff;
-> +	cmd[5] = 0;		/* Control byte */
-> +
-+	buffer[1] = -1;
-see below
-> +	/*
-> +	 * I'm not convinced we need to try quite this hard to get VPD, but
-> +	 * all the existing users tried this hard.
-> +	 */
-> +	result = scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buffer,
-> +				  len + 4, NULL, 30 * HZ, 3, NULL);
-> +	if (result)
-> +		return result;
-> +
-> +	/* Sanity check that we got the page back that we asked for */
-> +	if (buffer[1] != page)
-> +		return -EIO;
+> In theory, a filesystem on OSD is a thin layer of metadata mapping
+> objects to files.  Get this right and the storage will manage things,
+> like security and access and attributes (there's even a natural mapping
+> to the VFS concept of extended attributes).  Plus, the storage has
+> enough information to manage persistence, backups and replication.
+> 
+> The real problem is that no-one has actually managed to come up with a
+> useful VFS<->OSD mapping layer (even by extending or altering the VFS).
+> Every filesystem that currently uses OSD has a separate direct OSD
+> speaking interface (i.e. it slices out the block layer to do this and
+> talks directly to the storage).
+> 
+> I suppose this could be taken to show that such a layer is impossibly
+> complex, as you assert, but its lack is reflected in strange looking
+> design decisions like in-kernel mkfs.  It would also mean that there
+> would be very little layered code sharing between ODS based filesystems.
 
-Maybe it's just me but, if you are going to if() on a buffer byte, then you need
-to make sure its initial value. Or at least document the need for a -1 at
-buffer[1]
+I think that we may need to gain some more experience to extract the
+commonalities of such file systems.  Currently we came up with the
+lowest possible denominator the osd initiator library that deals
+with command formatting and execution, including attrs, sense status,
+and security.
 
-> +
-> +	return 0;
-> +}
-> +
-> +/**
-> + * scsi_get_vpd_page - Get Vital Product Data from a SCSI device
-> + * @sdev: The device to ask
-> + * @page: Which Vital Product Data to return
-> + *
-> + * SCSI devices may optionally supply Vital Product Data.  Each 'page'
-> + * of VPD is defined in the appropriate SCSI document (eg SPC, SBC).
-> + * If the device supports this VPD page, this routine returns a pointer
-> + * to a buffer containing the data from that page.  The caller is
-> + * responsible for calling kfree() on this pointer when it is no longer
-> + * needed.  If we cannot retrieve the VPD page this routine returns %NULL.
-> + */
-> +unsigned char *scsi_get_vpd_page(struct scsi_device *sdev, u8 page)
-> +{
-> +	int i, result;
-> +	unsigned int len;
-> +	unsigned char *buf = kmalloc(259, GFP_KERNEL);
-> +
-> +	if (!buf)
-> +		return NULL;
-> +
-> +	/* Ask for all the pages supported by this device */ 
-> +	result = scsi_vpd_inquiry(sdev, buf, 0, 255);
-> +	if (result)
-> +		goto fail;
-> +
-> +	/* If the user actually wanted this page, we can skip the rest */
-> +	if (page == 0)
-> +		return buf;
-> +
-> +	for (i = 0; i < buf[3]; i++)
-> +		if (buf[i + 4] == page)
-> +			goto found;
-> +	/* The device claims it doesn't support the requested page */
-> +	goto fail;
-> +
-> + found:
-> +	result = scsi_vpd_inquiry(sdev, buf, page, 255);
-> +	if (result)
-> +		goto fail;
-> +
-> +	/*
-> +	 * Some pages are longer than 255 bytes.  The actual length of
-> +	 * the page is returned in the header.
-> +	 */
-> +	len = (buf[2] << 8) | buf[3];
-> +	if (len <= 255)
-> +		return buf;
-> +
-> +	kfree(buf);
-> +	buf = kmalloc(len + 4, GFP_KERNEL);
-> +	result = scsi_vpd_inquiry(sdev, buf, page, len);
-> +	if (result)
-> +		goto fail;
-> +
-> +	return buf;
-> +
-> + fail:
-> +	kfree(buf);
-> +	return NULL;
-> +}
-> +EXPORT_SYMBOL_GPL(scsi_get_vpd_page);
-> +
-> +/**
->   * scsi_device_get  -  get an additional reference to a scsi_device
->   * @sdev:	device to get a reference to
->   *
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index 01a4c58..9576690 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -340,6 +340,7 @@ extern int scsi_mode_select(struct scsi_device *sdev, int pf, int sp,
->  			    struct scsi_sense_hdr *);
->  extern int scsi_test_unit_ready(struct scsi_device *sdev, int timeout,
->  				int retries, struct scsi_sense_hdr *sshdr);
-> +extern unsigned char *scsi_get_vpd_page(struct scsi_device *, u8 page);
->  extern int scsi_device_set_state(struct scsi_device *sdev,
->  				 enum scsi_device_state state);
->  extern struct scsi_event *sdev_evt_alloc(enum scsi_device_event evt_type,
+To provide a higher level abstraction that would help with "administrative"
+tasks like mkfs and the like we already tossed an idea in the past -
+a file system that will represent the contents of an OSD in a namespace,
+for example: partition_id / object_id / {data, attrs / ..., ctl / ...}.
+Such a file system could provide a generic mapping which one could
+use to easily develop management applications for the OSD.  That said,
+it's out of the scope of exofs which focuses mostly on the filesystem
+data and metadata paths.
 
-Boaz
+> 
+>> - I intend to refactor the code further to make use of more super.c services,
+>>   so to make this addition even smaller. Also future direction of raid over
+>>   multiple objects will make even more kernel infrastructure needed which
+>>   will need even more user-mode code duplication.
+>> - I anticipate problems that are not yet addressed in this body of work
+>>   but will be in the future, mainly that a single OSD-target (lun) can
+>>   be shared by lots of FSs, and a single FS can span many OSD-targets.
+>>   Some central management is much easier to do in Kernel.
+>>
+>>> What are the dependencies for this filesystem code?  I assume that it
+>>> depends on various block- and scsi-level patches?  Which ones, and
+>>> what is their status, and is this code even compileable without them?
+>>>
+>> This OSD-based file system is dependent on the open-osd initiator library
+>> code that I've submitted for inclusion for 2.6.29. It has been sitting
+>> in linux-next for a while now, and has not been receiving any comments
+>> for the last two updated patchsets I've sent to scsi-misc/lkml. However
+>> it has not yet been submitted into Jame's scsi-misc git tree, and James
+>> is the ultimate maintainer that should submit this work. I hope it will
+>> still be submitted into 2.6.29, as this code is totally self sufficient
+>> and does not endangers or changes any other Kernel subsystems.
+>> (All the needed ground work was already submitted to Linus since 2.6.26)
+>> So why should it not?
+> 
+> I don't like it mainly because it's not truly a useful general framework
+> for others to build on.  However, as argued above, there might not
+> actually be such a useful framework, so as long as the only two
+> consumers (you and Lustre) want an interface like this, I'll put it in.
+
+Not to mention pnfs over objects which is coming up around the corner.
+The pnfs-obj layout driver will use the osd initiator library as well
+for distributed data I/O access (while the metadata server, to be based
+on exofs accesses the OSD for metadata and security ops too)
+
+Benny
+
+> 
+> James
+> 
+> 
+> _______________________________________________
+> osd-dev mailing list
+> osd-dev@open-osd.org
+> http://mailman.open-osd.org/mailman/listinfo/osd-dev
+
