@@ -1,88 +1,47 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] Fix sg_io_hdr.info corruption.
-Date: Thu, 01 Jan 2009 09:54:00 -0500
-Message-ID: <495CD908.6050700@interlog.com>
-References: <20081231180759X.fujita.tomonori@lab.ntt.co.jp> <20090101110133.14065.98145.stgit@zaytsev.su>
-Reply-To: dgilbert@interlog.com
+From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
+Subject: Re: [osd-dev] [PATCH 7/9] exofs: mkexofs
+Date: Thu, 1 Jan 2009 19:12:23 +0100
+Message-ID: <20090101181223.GA29913@logfs.org>
+References: <4947BFAA.4030208@panasas.com> <4947CA5C.50104@panasas.com> <20081229121423.efde9d06.akpm@linux-foundation.org> <495B8D90.1090004@panasas.com> <1230739053.3408.74.camel@localhost.localdomain> <495C8B65.4010202@panasas.com> <495C92C8.5040702@garzik.org> <495CD1C4.1030605@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:33807 "EHLO
-	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756009AbZAAOyK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jan 2009 09:54:10 -0500
-In-Reply-To: <20090101110133.14065.98145.stgit@zaytsev.su>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <495CD1C4.1030605@panasas.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Benny Halevy <bhalevy@panasas.com>
+Cc: Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, open-osd development <osd-dev@open-osd.org>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, avishay@gmail.com, viro@ZenIV.linux.org.uk, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Alexey Zaytsev <alexey.zaytsev@gmail.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James.Bottomley@hansenpartnership.com, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, jens.axboe@oracle.com
 
-Alexey Zaytsev wrote:
-> [resending in case you missed the one I sent with broken headers]
-> 
-> On Wed, Dec 31, 2008 at 12:08, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
->> On Tue, 30 Dec 2008 15:46:03 -0800
->> Andrew Morton <akpm@linux-foundation.org> wrote:
-> [...]
->>> the code has been like this for years and years.  Why hasn't anyone
->>> noticed?
->> The members from 'status' in struct sg_io_hdr to the last are used to
->> transfer information from kernel to user space. The values that user
->> space sets are just ignored.
->>
-> 
-> Then probably there is no need to copy those fields, right?
+On Thu, 1 January 2009 16:23:00 +0200, Benny Halevy wrote:
+>=20
+> Personally, I'm not sure if maintaining that intimate knowledge in a
+> user space program is an ideal model with respect to keeping both
+> in sync, avoiding code duplication, and dealing with upgrade issues
+> (e.g. upgrading the kernel and not the user space utils)
 
-Correct.
+None of those problems actually matter, because you will have them
+anyway.  If your filesystem is any good, someone will reimplement it fo=
+r
+Windows, Grub, UBoot, Solaris or some other system.  And even if it
+isn't any good, you still need to stay compatible with your own
+implementation from last year.
 
-Doug Gilbert
+Ok, maybe code duplication is a valid concern.  But that will hardly
+outweigh the arguments in favor of a userland mkfs.  The only exception
+I am aware of is jffs2, where a newly erased flash happens to be a vali=
+d
+(empty) filesystem.  And even there you can view flash_eraseall as a
+trivial mkfs program. ;)
 
-> There should be no data leak from the kernel, as sgio is
-> allocated on the userspace stack, and the appropriate ioctl
-> handler should set/zero all those fields anyway, as it expects
-> them to come directly from the user (did not check).
-> So, in the worst case the user gets his own garbage insted of
-> the values he left in the fields that the kernel was supposed
-> to set.
-> 
-> If so, please drop my previous patch and take this one.
-> 
-> From: Alexey Zaytsev <alexey.zaytsev@gmail.com>
-> Subject: [PATCH] Don't perform unneeded copy.
-> 
-> FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> says:
-> 
-> The members from 'status' in struct sg_io_hdr to the last are used to
-> transfer information from kernel to user space. The values that user
-> space sets are just ignored.
-> 
-> Signed-off-by: Alexey Zaytsev <alexey.zaytsev@gmail.com>
-> ---
->  fs/compat_ioctl.c |    6 ------
->  1 files changed, 0 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/compat_ioctl.c b/fs/compat_ioctl.c
-> index 5235c67..23b1f5a 100644
-> --- a/fs/compat_ioctl.c
-> +++ b/fs/compat_ioctl.c
-> @@ -782,12 +782,6 @@ static int sg_ioctl_trans(unsigned int fd, unsigned int cmd, unsigned long arg)
->  	if (put_user(compat_ptr(data), &sgio->usr_ptr))
->  		return -EFAULT;
->  
-> -	if (copy_in_user(&sgio->status, &sgio32->status,
-> -			 (4 * sizeof(unsigned char)) +
-> -			 (2 * sizeof(unsigned (short))) +
-> -			 (3 * sizeof(int))))
-> -		return -EFAULT;
-> -
->  	err = sys_ioctl(fd, cmd, (unsigned long) sgio);
->  
->  	if (err >= 0) {
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+J=C3=B6rn
 
+--=20
+It's just what we asked for, but not what we want!
+-- anonymous
+--
+To unsubscribe from this list: send the line "unsubscribe linux-fsdevel=
+" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
