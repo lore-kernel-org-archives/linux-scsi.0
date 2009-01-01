@@ -1,100 +1,76 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [osd-dev] [PATCH 7/9] exofs: mkexofs
-Date: Thu, 01 Jan 2009 04:54:16 -0500
-Message-ID: <495C92C8.5040702@garzik.org>
-References: <4947BFAA.4030208@panasas.com>	<4947CA5C.50104@panasas.com>	<20081229121423.efde9d06.akpm@linux-foundation.org>	<495B8D90.1090004@panasas.com> <1230739053.3408.74.camel@localhost.localdomain> <495C8B65.4010202@panasas.com>
+From: Alexey Zaytsev <alexey.zaytsev@gmail.com>
+Subject: Re: [PATCH] Fix sg_io_hdr.info corruption.
+Date: Thu, 01 Jan 2009 14:08:00 +0300
+Message-ID: <20090101110133.14065.98145.stgit@zaytsev.su>
+References: <20081231180759X.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:59505 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755618AbZAAJyb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Jan 2009 04:54:31 -0500
-In-Reply-To: <495C8B65.4010202@panasas.com>
+Received: from ug-out-1314.google.com ([66.249.92.174]:61309 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754406AbZAAK7D (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jan 2009 05:59:03 -0500
+In-Reply-To: <20081231180759X.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Benny Halevy <bhalevy@panasas.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, open-osd development <osd-dev@open-osd.org>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, avishay@gmail.com, viro@ZenIV.linux.org.uk, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: James.Bottomley@hansenpartnership.com, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, jens.axboe@oracle.com
 
-Benny Halevy wrote:
-> On Dec. 31, 2008, 17:57 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
->> On Wed, 2008-12-31 at 17:19 +0200, Boaz Harrosh wrote:
->>> Andrew Morton wrote:
->>>> On Tue, 16 Dec 2008 17:33:48 +0200
->>>> Boaz Harrosh <bharrosh@panasas.com> wrote:
->>>>
->>>>> We need a mechanism to prepare the file system (mkfs).
->>>>> I chose to implement that by means of a couple of
->>>>> mount-options. Because there is no user-mode API for committing
->>>>> OSD commands. And also, all this stuff is highly internal to
->>>>> the file system itself.
->>>>>
->>>>> - Added two mount options mkfs=0/1,format=capacity_in_meg, so mkfs/format
->>>>>   can be executed by kernel code just before mount. An mkexofs utility
->>>>>   can now be implemented by means of a script that mounts and unmount the
->>>>>   file system with proper options.
->>>> Doing mkfs in-kernel is unusual.  I don't think the above description
->>>> sufficiently helps the uninitiated understand why mkfs cannot be done
->>>> in userspace as usual.  Please flesh it out a bit.
->>> There are a few main reasons.
->>> - There is no user-mode API for initiating OSD commands. Such a subsystem
->>>   would be hundredfold bigger then the mkfs code submitted. I think it would be
->>>   hard and stupid to maintain a complex user-mode API just for creating
->>>   a couple of objects and writing a couple of on disk structures.
->> This is really a reflection of the whole problem with the OSD paradigm.
->>
->> In theory, a filesystem on OSD is a thin layer of metadata mapping
->> objects to files.  Get this right and the storage will manage things,
->> like security and access and attributes (there's even a natural mapping
->> to the VFS concept of extended attributes).  Plus, the storage has
->> enough information to manage persistence, backups and replication.
->>
->> The real problem is that no-one has actually managed to come up with a
->> useful VFS<->OSD mapping layer (even by extending or altering the VFS).
->> Every filesystem that currently uses OSD has a separate direct OSD
->> speaking interface (i.e. it slices out the block layer to do this and
->> talks directly to the storage).
->>
->> I suppose this could be taken to show that such a layer is impossibly
->> complex, as you assert, but its lack is reflected in strange looking
->> design decisions like in-kernel mkfs.  It would also mean that there
->> would be very little layered code sharing between ODS based filesystems.
-> 
-> I think that we may need to gain some more experience to extract the
-> commonalities of such file systems.  Currently we came up with the
-> lowest possible denominator the osd initiator library that deals
-> with command formatting and execution, including attrs, sense status,
-> and security.
+[resending in case you missed the one I sent with broken headers]
 
-Not putting words in James' mouth, but I definitely agree that the 
-in-kernel mkfs raises a red flag or two.  mkfs.ext3 for block-based 
-filesystems has direct and intimate knowledge of ext3 filesystem 
-structure, and it writes that information from userland directly to the 
-block(s) necessary.
+On Wed, Dec 31, 2008 at 12:08, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+> On Tue, 30 Dec 2008 15:46:03 -0800
+> Andrew Morton <akpm@linux-foundation.org> wrote:
+[...]
+>> the code has been like this for years and years.  Why hasn't anyone
+>> noticed?
+>
+> The members from 'status' in struct sg_io_hdr to the last are used to
+> transfer information from kernel to user space. The values that user
+> space sets are just ignored.
+>
 
-Similarly, mkfs for an object-based filesystem should be issuing SCSI 
-commands to the OSD device from userland, AFAICS.
+Then probably there is no need to copy those fields, right?
+There should be no data leak from the kernel, as sgio is
+allocated on the userspace stack, and the appropriate ioctl
+handler should set/zero all those fields anyway, as it expects
+them to come directly from the user (did not check).
+So, in the worst case the user gets his own garbage insted of
+the values he left in the fields that the kernel was supposed
+to set.
 
+If so, please drop my previous patch and take this one.
 
-> To provide a higher level abstraction that would help with "administrative"
-> tasks like mkfs and the like we already tossed an idea in the past -
-> a file system that will represent the contents of an OSD in a namespace,
-> for example: partition_id / object_id / {data, attrs / ..., ctl / ...}.
-> Such a file system could provide a generic mapping which one could
-> use to easily develop management applications for the OSD.  That said,
-> it's out of the scope of exofs which focuses mostly on the filesystem
-> data and metadata paths.
+From: Alexey Zaytsev <alexey.zaytsev@gmail.com>
+Subject: [PATCH] Don't perform unneeded copy.
 
-That's far too complex for what is necessary.  Just issue SCSI commands 
-from userland.  We don't need an abstract interface specifically for 
-low-level details.  The VFS is that abstract interface; anything else 
-should be low-level and purpose-built.
+FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> says:
 
-	Jeff
+The members from 'status' in struct sg_io_hdr to the last are used to
+transfer information from kernel to user space. The values that user
+space sets are just ignored.
 
+Signed-off-by: Alexey Zaytsev <alexey.zaytsev@gmail.com>
+---
+ fs/compat_ioctl.c |    6 ------
+ 1 files changed, 0 insertions(+), 6 deletions(-)
 
-
-
-
+diff --git a/fs/compat_ioctl.c b/fs/compat_ioctl.c
+index 5235c67..23b1f5a 100644
+--- a/fs/compat_ioctl.c
++++ b/fs/compat_ioctl.c
+@@ -782,12 +782,6 @@ static int sg_ioctl_trans(unsigned int fd, unsigned int cmd, unsigned long arg)
+ 	if (put_user(compat_ptr(data), &sgio->usr_ptr))
+ 		return -EFAULT;
+ 
+-	if (copy_in_user(&sgio->status, &sgio32->status,
+-			 (4 * sizeof(unsigned char)) +
+-			 (2 * sizeof(unsigned (short))) +
+-			 (3 * sizeof(int))))
+-		return -EFAULT;
+-
+ 	err = sys_ioctl(fd, cmd, (unsigned long) sgio);
+ 
+ 	if (err >= 0) {
 
