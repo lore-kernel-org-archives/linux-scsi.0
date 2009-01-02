@@ -1,57 +1,84 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 7/9] exofs: mkexofs
-Date: Fri, 02 Jan 2009 16:46:26 -0600
-Message-ID: <1230936386.3304.22.camel@localhost.localdomain>
-References: <4947BFAA.4030208@panasas.com>	<4947CA5C.50104@panasas.com>
-	 <20081229121423.efde9d06.akpm@linux-foundation.org>
-	 <495B8D90.1090004@panasas.com>
-	 <20081231112515.2d790d1c.akpm@linux-foundation.org>
-	 <495CC612.30800@panasas.com>
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+Subject: Re: S3 with pata_via fails to resume, ide_via82Cxxx works
+Date: Fri, 2 Jan 2009 23:50:34 +0100
+Message-ID: <20090102235034.5660b85a@neptune.home>
+References: <20081230185037.7ec94e94@neptune.home>
+	<20081231201535.4d86c159@neptune.home>
+	<20081231232412.173c87a7@neptune.home>
+	<200901022213.53606.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <495CC612.30800@panasas.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, avishay@gmail.com, jeff@garzik.org, viro@ZenIV.linux.org.uk, linux-fsdevel@vger.kernel.org, osd-dev@open-osd.org, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ppp-110-61.adsl.restena.lu ([158.64.110.61]:35044 "EHLO
+	bonbons.gotdns.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757436AbZABW4g convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jan 2009 17:56:36 -0500
+In-Reply-To: <200901022213.53606.bzolnier@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-On Thu, 2009-01-01 at 15:33 +0200, Boaz Harrosh wrote:
-> Andrew Morton wrote:
-> >>> Boaz Harrosh <bharrosh@panasas.com> wrote:
-> >> When, if, all is fixed, through which tree/maintainer can exofs be submitted?
-> > 
-> > I can merge them.  Or you can run a git tree of your own, add it to
-> > linux-next and ask Linus to pull it at the appropriate time.
-> > 
-> 
-> Hi James
-> 
-> Andrew suggested that maybe I should push exofs file system directly to
-> Linus as it is pretty orthogonal to any other work. Sitting in linux-next
-> will quickly expose any advancements in VFS and will force me to keep
-> the tree uptodate.
-> 
-> If that is so, and is accepted by Linus, would you rather that also the
-> open-osd initiator library will be submitted through the same tree?
-> The conflicts with scsi are very very narrow. The only real dependency
-> is the ULD being a SCSI ULD. I will routinely ask your ACK on any scsi 
-> or ULD related patches. Which are very few. This way it will be easier
-> to manage the dependencies between the OSD work, the OSD pNFS-Objects
-> trees at pNFS project, and the pNFSD+EXOFS export. One less dependency.
-> 
-> [I already have such a public tree at git.open-osd.org for a while now]
+On Fri, 02 January 2009 Bartlomiej Zolnierkiewicz wrote:
+-snip-
+> >=20
+> > I guess the binfmt-0000 is cause by XFS reading at wrong location
+> > on disc and kernel seeing random data as bin format signature.
+> >=20
+> >=20
+> > On reboot no more bootloader.
+> > hexdump with rescue system showed XFS magic in very first sector of
+> > the disc, (rescuing the GPT worked - I assume parted used copy at
+> > end of disc) though the first partition also got corrupted.
+> >=20
+> > This looks like the scan is pretty dangerous in case anything has a
+> > reference to a disc/partition on the scanned channel :(
 
-Since it's sitting in SCSI, at least the libosd piece belongs over the
-SCSI mailing list, so I think it makes sense to continue updating it via
-the SCSI tree.
+That's fine with me - eventually it would even be worth adding a
+printk() as reminder on code path for "scan" and "delete_devices"
+triggered when there exists an active user of the bus/device being
+probed.
 
-What's the status of the major number request from LANANA.  That's patch
-number one, and I haven't heard that they've confirmed the selection of
-260 yet; or is LANANA now dead and it's who gets the major into the tree
-first?
+This way there is at least a notice in case something goes wrong (and
+when the locking is fixed a reminder to adjust the documentation)
 
-James
-
-
+> I'm really sorry to hear it but "delete_devices" / "scan" interfaces
+> are currently not ready for use on actively used devices (there are
+> still some locking issues with the core code that need to be
+> addressed before this can be allowed).
+>=20
+> Even though HOWTO only mentions use for replacing devices (not
+> rescaning) I admit that it should be more clear about the above:
+>=20
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] ide: update warm-plug HOWTO
+>=20
+> Reported-by: Bruno Pr=C3=A9mont <bonbons@linux-vserver.org>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+>  Documentation/ide/warm-plug-howto.txt |    5 +++++
+>  1 file changed, 5 insertions(+)
+>=20
+> Index: b/Documentation/ide/warm-plug-howto.txt
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- a/Documentation/ide/warm-plug-howto.txt
+> +++ b/Documentation/ide/warm-plug-howto.txt
+> @@ -11,3 +11,8 @@ unplug old device(s) and plug new device
+>  # echo -n "1" > /sys/class/ide_port/idex/scan
+> =20
+>  done
+> +
+> +NOTE: please make sure that partitions are unmounted and that there
+> are +no other active references to devices before doing
+> "delete_devices" step, +also do not attempt "scan" step on devices
+> currently in use -- otherwise +results may be unpredictable and lead
+> to data loss if you're unlucky
+>=20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
