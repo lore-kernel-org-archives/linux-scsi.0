@@ -1,84 +1,52 @@
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-Subject: Re: S3 with pata_via fails to resume, ide_via82Cxxx works
-Date: Fri, 2 Jan 2009 23:50:34 +0100
-Message-ID: <20090102235034.5660b85a@neptune.home>
-References: <20081230185037.7ec94e94@neptune.home>
-	<20081231201535.4d86c159@neptune.home>
-	<20081231232412.173c87a7@neptune.home>
-	<200901022213.53606.bzolnier@gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] scsi_lib: don't decrement busy counters when inserting
+ commands
+Date: Fri, 2 Jan 2009 22:39:00 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0901022235300.9777-100000@netrider.rowland.org>
+References: <1230914541.3304.9.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ppp-110-61.adsl.restena.lu ([158.64.110.61]:35044 "EHLO
-	bonbons.gotdns.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757436AbZABW4g convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jan 2009 17:56:36 -0500
-In-Reply-To: <200901022213.53606.bzolnier@gmail.com>
+Received: from netrider.rowland.org ([192.131.102.5]:2756 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758798AbZACDjE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jan 2009 22:39:04 -0500
+In-Reply-To: <1230914541.3304.9.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 
-On Fri, 02 January 2009 Bartlomiej Zolnierkiewicz wrote:
--snip-
-> >=20
-> > I guess the binfmt-0000 is cause by XFS reading at wrong location
-> > on disc and kernel seeing random data as bin format signature.
-> >=20
-> >=20
-> > On reboot no more bootloader.
-> > hexdump with rescue system showed XFS magic in very first sector of
-> > the disc, (rescuing the GPT worked - I assume parted used copy at
-> > end of disc) though the first partition also got corrupted.
-> >=20
-> > This looks like the scan is pretty dangerous in case anything has a
-> > reference to a disc/partition on the scanned channel :(
+On Fri, 2 Jan 2009, James Bottomley wrote:
 
-That's fine with me - eventually it would even be worth adding a
-printk() as reminder on code path for "scan" and "delete_devices"
-triggered when there exists an active user of the bus/device being
-probed.
+> On Tue, 2008-12-16 at 23:55 -0600, michaelc@cs.wisc.edu wrote:
+> > From: Mike Christie <michaelc@cs.wisc.edu>
+> > 
+> > This patch fixes a regression in scsi-misc introduced with:
+> > 312efe5efcdb02d604ea37a41d965f32ca276d6a
+> > [SCSI] simplify scsi_io_completion().
+> > 
+> > The problem is that in previous kernels scsi_io_completion would call
+> > scsi_requeue_command, but now it can call scsi_queue_insert for
+> > something like a UNIT_ATTENTION (for netapp targets we get
+> > UNIT_ATTENTION when restarting a iscsi session). And scsi_queue_insert
+> > will call scsi_device_unbusy, but in the scsi_io_completion code path
+> > scsi_finish_command has already called this so we now end up
+> > with invalid host, target and device busy values.
+> > 
+> > Patch was made over scsi-misc.
+> 
+> This is a bad bug, but not quite the way I'd like to fix it.  Whether
+> the queue should be unbusied or not is really separate from the block
+> action, so it should have its own flag (plus it's not really a flag many
+> people should be using).  Since, really, the wrong use is confined to
+> the defining file, how about this:
 
-This way there is at least a notice in case something goes wrong (and
-when the locking is fixed a reminder to adjust the documentation)
+Seems entirely reasonable.  This points out the potential for trouble
+when a non-expert (like me!) tries to modify a complicated subsystem.  
+Still, many eyeballs and all that...
 
-> I'm really sorry to hear it but "delete_devices" / "scan" interfaces
-> are currently not ready for use on actively used devices (there are
-> still some locking issues with the core code that need to be
-> addressed before this can be allowed).
->=20
-> Even though HOWTO only mentions use for replacing devices (not
-> rescaning) I admit that it should be more clear about the above:
->=20
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] ide: update warm-plug HOWTO
->=20
-> Reported-by: Bruno Pr=C3=A9mont <bonbons@linux-vserver.org>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  Documentation/ide/warm-plug-howto.txt |    5 +++++
->  1 file changed, 5 insertions(+)
->=20
-> Index: b/Documentation/ide/warm-plug-howto.txt
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- a/Documentation/ide/warm-plug-howto.txt
-> +++ b/Documentation/ide/warm-plug-howto.txt
-> @@ -11,3 +11,8 @@ unplug old device(s) and plug new device
->  # echo -n "1" > /sys/class/ide_port/idex/scan
-> =20
->  done
-> +
-> +NOTE: please make sure that partitions are unmounted and that there
-> are +no other active references to devices before doing
-> "delete_devices" step, +also do not attempt "scan" step on devices
-> currently in use -- otherwise +results may be unpredictable and lead
-> to data loss if you're unlucky
->=20
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks to both of you,
+
+Alan Stern
+
