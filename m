@@ -1,46 +1,34 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] scsi_lib: don't decrement busy counters when inserting
- commands
-Date: Sun, 04 Jan 2009 14:53:28 -0600
-Message-ID: <496121C8.4040205@cs.wisc.edu>
-References: <1229493343215-git-send-email-michaelc@cs.wisc.edu> <1230914541.3304.9.camel@localhost.localdomain>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 0/4] Fastboot revisited: Asynchronous function calls
+Date: Sun, 4 Jan 2009 21:44:38 +0000
+Message-ID: <20090104214438.196ff4ff@lxorguk.ukuu.org.uk>
+References: <20090104092430.7ffd2c41@infradead.org>
+	<alpine.LFD.2.00.0901041009060.3179@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:47867 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751383AbZADUxt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 4 Jan 2009 15:53:49 -0500
-In-Reply-To: <1230914541.3304.9.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <alpine.LFD.2.00.0901041009060.3179@localhost.localdomain>
+Sender: linux-ide-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Arjan van de Ven <arjan@infradead.org>, linux-kernel@vger.kernel.org, mingo@elte.hu, fweisbec@gmail.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, akpm@linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
 
-James Bottomley wrote:
-> On Tue, 2008-12-16 at 23:55 -0600, michaelc@cs.wisc.edu wrote:
->> From: Mike Christie <michaelc@cs.wisc.edu>
->>
->> This patch fixes a regression in scsi-misc introduced with:
->> 312efe5efcdb02d604ea37a41d965f32ca276d6a
->> [SCSI] simplify scsi_io_completion().
->>
->> The problem is that in previous kernels scsi_io_completion would call
->> scsi_requeue_command, but now it can call scsi_queue_insert for
->> something like a UNIT_ATTENTION (for netapp targets we get
->> UNIT_ATTENTION when restarting a iscsi session). And scsi_queue_insert
->> will call scsi_device_unbusy, but in the scsi_io_completion code path
->> scsi_finish_command has already called this so we now end up
->> with invalid host, target and device busy values.
->>
->> Patch was made over scsi-misc.
+> I _think_ it's the irq auto-probing, but that's just a guess. The 8250 
+> driver does some historical crud, like
 > 
-> This is a bad bug, but not quite the way I'd like to fix it.  Whether
-> the queue should be unbusied or not is really separate from the block
-> action, so it should have its own flag (plus it's not really a flag many
-> people should be using).  Since, really, the wrong use is confined to
-> the defining file, how about this:
+> 	probe_irq_off(probe_irq_on());
 > 
+> to get rid of any pending irq's, but that should be entirely pointless 
+> these days. I bet that line basically goes back to pre-history, before we 
+> made the auto-probing much stabler.
 
-Patch fixed my problem here. Thanks.
+For non ISA boxes we shouldn't be - but this old code. The IRQ for the
+built in ports is defined by convention, in the BIOS PnP tables or with
+ACPI in the ACPI tables. So we shouldn't even be autoprobing the IRQ.
+
+We *do* have to wait one transmission timeout or so to detect buggy uarts
+but in theory that could be moved down into the open path.
+
+Alan
+
