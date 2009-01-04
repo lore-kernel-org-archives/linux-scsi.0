@@ -1,7 +1,7 @@
 From: Arjan van de Ven <arjan@infradead.org>
-Subject: [PATCH 3/4] fastboot: make the libata port scan asynchronous
-Date: Sun, 4 Jan 2009 09:30:26 -0800
-Message-ID: <20090104093026.34d016eb@infradead.org>
+Subject: [PATCH 4/4] fastboot: make ACPI bus drivers probe asynchronous
+Date: Sun, 4 Jan 2009 09:31:03 -0800
+Message-ID: <20090104093103.46167d23@infradead.org>
 References: <20090104092430.7ffd2c41@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -14,137 +14,71 @@ Cc: Arjan van de Ven <arjan@infradead.org>, torvalds@linux-foundation.org, mingo
 List-Id: linux-scsi@vger.kernel.org
 
 
->From 2eb80a6c7b7c33a9053cfd286169d5163027f0cd Mon Sep 17 00:00:00 2001
+>From 20af3efd07b775a27a997e3df1039e20ea18f62b Mon Sep 17 00:00:00 2001
 From: Arjan van de Ven <arjan@linux.intel.com>
 Date: Sun, 4 Jan 2009 05:32:28 -0800
-Subject: [PATCH] fastboot: make the libata port scan asynchronous
+Subject: [PATCH] fastboot: make ACPI bus drivers probe asynchronous
 
-This patch makes the libata port scanning asynchronous (per device).
-There is a synchronization point before doing the actual disk scan
-so that device ordering is not affected.
+the various ACPI bus drivers have non-overlapping devices and can
+each be run asynchronous. Some of the ACPI drivers (especially the
+battery one, but others as well) can take quite a long time to probe.
 
 Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
 ---
- drivers/ata/libata-core.c |   84 ++++++++++++++++++++++++--------------------
- 1 files changed, 46 insertions(+), 38 deletions(-)
+ drivers/acpi/scan.c |   23 ++++++++++++++++-------
+ 1 files changed, 16 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index fecca42..fe2c208 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -56,6 +56,7 @@
- #include <linux/workqueue.h>
- #include <linux/scatterlist.h>
- #include <linux/io.h>
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index 39b7233..a9e542d 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -8,6 +8,7 @@
+ #include <linux/acpi.h>
+ #include <linux/signal.h>
+ #include <linux/kthread.h>
 +#include <linux/async.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_host.h>
-@@ -5909,6 +5910,48 @@ void ata_host_init(struct ata_host *host, struct device *dev,
- 	host->ops = ops;
+ 
+ #include <acpi/acpi_drivers.h>
+ #include <acpi/acinterp.h>	/* for acpi_ex_eisa_id_to_string() */
+@@ -578,6 +579,19 @@ static int acpi_start_single_object(struct acpi_device *device)
+ 	return result;
  }
  
-+
-+void async_port_probe(void *data, async_cookie_t cookie)
++static void acpi_bus_register_async(void *data, async_cookie_t cookie)
 +{
-+	int rc;
-+	struct ata_port *ap = data;
-+	/* probe */
-+	if (ap->ops->error_handler) {
-+		struct ata_eh_info *ehi = &ap->link.eh_info;
-+		unsigned long flags;
++	int ret;
++	struct acpi_driver *driver = data;
++	driver->drv.name = driver->name;
++	driver->drv.bus = &acpi_bus_type;
++	driver->drv.owner = driver->owner;
 +
-+		ata_port_probe(ap);
++	async_synchronize_cookie(cookie);
 +
-+		/* kick EH for boot probing */
-+		spin_lock_irqsave(ap->lock, flags);
-+
-+		ehi->probe_mask |= ATA_ALL_DEVICES;
-+		ehi->action |= ATA_EH_RESET | ATA_EH_LPM;
-+		ehi->flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
-+
-+		ap->pflags &= ~ATA_PFLAG_INITIALIZING;
-+		ap->pflags |= ATA_PFLAG_LOADING;
-+		ata_port_schedule_eh(ap);
-+
-+		spin_unlock_irqrestore(ap->lock, flags);
-+
-+		/* wait for EH to finish */
-+		ata_port_wait_eh(ap);
-+	} else {
-+		DPRINTK("ata%u: bus probe begin\n", ap->print_id);
-+		rc = ata_bus_probe(ap);
-+		DPRINTK("ata%u: bus probe end\n", ap->print_id);
-+
-+		if (rc) {
-+			/* FIXME: do something useful here?
-+			 * Current libata behavior will
-+			 * tear down everything when
-+			 * the module is removed
-+			 * or the h/w is unplugged.
-+			 */
-+		}
-+	}
++	ret = driver_register(&driver->drv);
++	WARN_ON(ret != 0);
 +}
  /**
-  *	ata_host_register - register initialized ATA host
-  *	@host: ATA host to register
-@@ -5988,45 +6031,9 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
- 	DPRINTK("probe begin\n");
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ata_port *ap = host->ports[i];
--
--		/* probe */
--		if (ap->ops->error_handler) {
--			struct ata_eh_info *ehi = &ap->link.eh_info;
--			unsigned long flags;
--
--			ata_port_probe(ap);
--
--			/* kick EH for boot probing */
--			spin_lock_irqsave(ap->lock, flags);
--
--			ehi->probe_mask |= ATA_ALL_DEVICES;
--			ehi->action |= ATA_EH_RESET | ATA_EH_LPM;
--			ehi->flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
--
--			ap->pflags &= ~ATA_PFLAG_INITIALIZING;
--			ap->pflags |= ATA_PFLAG_LOADING;
--			ata_port_schedule_eh(ap);
--
--			spin_unlock_irqrestore(ap->lock, flags);
--
--			/* wait for EH to finish */
--			ata_port_wait_eh(ap);
--		} else {
--			DPRINTK("ata%u: bus probe begin\n", ap->print_id);
--			rc = ata_bus_probe(ap);
--			DPRINTK("ata%u: bus probe end\n", ap->print_id);
--
--			if (rc) {
--				/* FIXME: do something useful here?
--				 * Current libata behavior will
--				 * tear down everything when
--				 * the module is removed
--				 * or the h/w is unplugged.
--				 */
--			}
--		}
-+		async_schedule(async_port_probe, ap);
- 	}
--
-+	async_synchronize_full();
- 	/* probes are done, now scan each port's disk(s) */
- 	DPRINTK("host probe begin\n");
- 	for (i = 0; i < host->n_ports; i++) {
-@@ -6034,6 +6041,7 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
+  * acpi_bus_register_driver - register a driver with the ACPI bus
+  * @driver: driver being registered
+@@ -588,16 +602,11 @@ static int acpi_start_single_object(struct acpi_device *device)
+  */
+ int acpi_bus_register_driver(struct acpi_driver *driver)
+ {
+-	int ret;
  
- 		ata_scsi_scan_host(ap, 1);
- 	}
-+	DPRINTK("host probe end\n");
- 
- 	return 0;
+ 	if (acpi_disabled)
+ 		return -ENODEV;
+-	driver->drv.name = driver->name;
+-	driver->drv.bus = &acpi_bus_type;
+-	driver->drv.owner = driver->owner;
+-
+-	ret = driver_register(&driver->drv);
+-	return ret;
++	async_schedule(acpi_bus_register_async, driver);
++	return 0;
  }
+ 
+ EXPORT_SYMBOL(acpi_bus_register_driver);
 -- 
 1.6.0.6
 
