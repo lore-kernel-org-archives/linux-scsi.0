@@ -1,67 +1,56 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH 0/4] Fastboot revisited: Asynchronous function calls
-Date: Sun, 4 Jan 2009 11:27:08 -0800 (PST)
-Message-ID: <alpine.LFD.2.00.0901041118390.3179@localhost.localdomain>
-References: <20090104092430.7ffd2c41@infradead.org> <alpine.LFD.2.00.0901041009060.3179@localhost.localdomain>
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: [PATCH 1/4] fastboot: Asynchronous function calls to speed up kernel boot
+Date: Sun, 4 Jan 2009 20:49:46 +0100
+Message-ID: <20090104194946.GB496@one.firstfloor.org>
+References: <20090104092430.7ffd2c41@infradead.org> <20090104092857.5fbf6b2d@infradead.org> <87k59aops9.fsf@basil.nowhere.org> <20090104110932.6563cc6d@infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:36523 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758346AbZADT1T (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Jan 2009 14:27:19 -0500
-In-Reply-To: <alpine.LFD.2.00.0901041009060.3179@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20090104110932.6563cc6d@infradead.org>
+Sender: linux-ide-owner@vger.kernel.org
 To: Arjan van de Ven <arjan@infradead.org>
-Cc: linux-kernel@vger.kernel.org, mingo@elte.hu, fweisbec@gmail.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, akpm@linux-foundation.org
+Cc: Andi Kleen <andi@firstfloor.org>, linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, mingo@elte.hu, fweisbec@gmail.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, akpm@linux-foundation.org
+List-Id: linux-scsi@vger.kernel.org
 
-
-
-On Sun, 4 Jan 2009, Linus Torvalds wrote:
+On Sun, Jan 04, 2009 at 11:09:32AM -0800, Arjan van de Ven wrote:
+> On Sun, 04 Jan 2009 20:05:26 +0100
+> Andi Kleen <andi@firstfloor.org> wrote:
 > 
-> Ok, so why does the serial port init take so long? That's a quarter of a 
-> second for you, which is ridiculous.
+> > Surely the thread should die again boot up? On module load
+> > synchronisity is usually not a problem.
+> 
+> sadly that's not correct in practice based on the fast boot work we've
+> done.
 
-Hmm. I also note that you don't seem to have the IDE probing configured in 
-at all. It's not _that_ uncommon, afaik, and even if you have no devices 
-behind it (or perhaps _especially_ if you have no devices behind it), the 
-IDE probe is actually pretty expensive. Hmm?
+Hmm, but I'm not sure your current code is module safe, in particular 
+against unloading again. You would likely need a barrier at the end
+of module load at least.
 
-Also, I'm looking at the AHCI vs Marvell thing, and the problem seems to 
-be that you do that libata port scan like this:
+> 
+> > 
+> > Personally I think it would be better to make this more generic.
+> > Various subsystems have thread pool implementations now, 
+> 
+> sort of kinda. If a good one appears I'd be happy to build on top of
+> that, assuming it's generic enough.
 
-        for (i = 0; i < host->n_ports; i++) {
-                struct ata_port *ap = host->ports[i];
+I think you can just create a separate barrier primitive which
+will work independently of any special thread managers.
 
-                async_schedule(async_port_probe, ap);
-        }
+> 
+> > and this
+> > is just another variant that except for the sequence stuff
+> > isn't all that much different. So it would be better to have 
+> > a generic worker thread manager that just supports these
+> > barriers too.
+> 
+> ... or maybe think about seeing this system as exactly that thread
+> manager?
 
-	async_synchronize_full();
-        /* probes are done, now scan each port's disk(s) */
-        DPRINTK("host probe begin\n");
-        for (i = 0; i < host->n_ports; i++) {
-                struct ata_port *ap = host->ports[i];
+I'm not sure it's generic enough.
 
-                ata_scsi_scan_host(ap, 1);
-        }
+-Andi
 
-which means that there is a full serialization between each controller.
-
-Wouldn't is be possible to move the "ata_scsi_scan_host(ap, 1);" _into_ 
-the async_port_probe(), and just do a
-
-	async_synchronize_cookie(cookie);
-
-before it? Hmm?
-
-And then not do any async_synchronize_full() at all, until much later. For 
-example, we clearly do need that full synchronization before we try to 
-mount the root filesystem, but we should have that particular 
-synchronization regardless of any SATA issues.
-
-I may be missing something obvious, of course. Maybe a simple cookie 
-synchronization isn't sufficient for some reason (most likely reason: 
-other SCSI drivers that don't do it).
-
-			Linus
+-- 
+ak@linux.intel.com
