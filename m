@@ -1,59 +1,45 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [PATCH 0/4] Fastboot revisited: Asynchronous function calls
-Date: Sun, 4 Jan 2009 10:31:04 -0800
-Message-ID: <20090104103104.6fdda9f2@infradead.org>
-References: <20090104092430.7ffd2c41@infradead.org>
-	<alpine.LFD.2.00.0901041009060.3179@localhost.localdomain>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH 1/4] fastboot: Asynchronous function calls to speed up
+ kernel boot
+Date: Sun, 4 Jan 2009 10:33:34 -0800 (PST)
+Message-ID: <alpine.LFD.2.00.0901041024360.3179@localhost.localdomain>
+References: <20090104092430.7ffd2c41@infradead.org> <20090104092857.5fbf6b2d@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <alpine.LFD.2.00.0901041009060.3179@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, mingo@elte.hu, fweisbec@gmail.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, akpm@linux-foundation.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <20090104092857.5fbf6b2d@infradead.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Ingo Molnar <mingo@elte.hu>, fweisbec@gmail.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, 4 Jan 2009 10:16:57 -0800 (PST)
-Linus Torvalds <torvalds@linux-foundation.org> wrote:
 
-> 
-> 
-> On Sun, 4 Jan 2009, Arjan van de Ven wrote:
-> > 
-> > To see this working, I uploaded a "before" and "after" kernel
-> > bootchart for one of my testboxes at
-> > 
-> > http://www.fenrus.org/linux/before.svg
-> > http://www.fenrus.org/linux/after.svg
-> 
-> Ok, so why does the serial port init take so long? That's a quarter
-> of a second for you, which is ridiculous.
 
-good question; I was about to start looking into that one (but wanted
-to get the patches out first before I did more than 3 to not waste time
-on some dead-end approach if it ends up being that)
+On Sun, 4 Jan 2009, Arjan van de Ven wrote:
+> +
+> +typedef u64 async_cookie_t;
+> +typedef void (async_func_ptr) (void *data, async_cookie_t cookie);
+> +
+> +extern void async_schedule(async_func_ptr *ptr, void *data);
+> +extern void async_synchronize_full(void);
+> +extern void async_synchronize_cookie(async_cookie_t cookie);
 
-> 
-> I _think_ it's the irq auto-probing, but that's just a guess.
+Hmm. The cookie use doesn't seem to make much sense.
 
-I kinda was hoping that in part it was a scaling thing with the number
-of ports (4 in my .config) so that I could do the ports
-asynchronous compared to eachother ;-)
+Why do you pass in the cookie to the async function, but don't return it 
+to the caller? That seems backwards - you'd normally expect that it is the 
+_caller_ that wants the cookie (to synchronise with a specific async 
+call), not the callee. But now the only one who knows the cookie is the 
+wrong entry - just the callee, not the caller.
 
-> The irq auto-probing itself also has a few excessive delays, like
-> waiting for 0.1 s just to wait for spurious interrupts to trigger.
-> Doing the extra unnecessary probe makes that doubly expensive.
-> 
-> Does this patch make any difference to you? I'm not at all sure that
-> it's the irq probing, but if it is, then this should make the serial
-> probe go much faster.
+Yes, yes, I read the explanation in the comments, and it says that the 
+callee should do it to guarantee its own ordering, and your acpi port 
+thing does that in order to apparently start a sequence that is 
+asynchronous only wrt the synchronous code, but not wrt itself. That's a 
+_very_ odd model, but whatever works. But wouldn't it still make sense to 
+let the caller wait for individual events too?
 
-it turned it into a 25 msec deal .. pretty good improvement in my book.
-(now I still might want to try to do this async so that it becomes
-25/4 ... but the pressure i
+IOW, I'd just suggest changing the interface so that "async_schedule()" 
+also returns the cookie. 
 
--- 
-Arjan van de Ven 	Intel Open Source Technology Centre
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
+			Linus
