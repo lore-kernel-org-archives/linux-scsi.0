@@ -1,56 +1,41 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH 1/4] fastboot: Asynchronous function calls to speed up kernel boot
-Date: Sun, 4 Jan 2009 20:49:46 +0100
-Message-ID: <20090104194946.GB496@one.firstfloor.org>
-References: <20090104092430.7ffd2c41@infradead.org> <20090104092857.5fbf6b2d@infradead.org> <87k59aops9.fsf@basil.nowhere.org> <20090104110932.6563cc6d@infradead.org>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: [PATCH 0/4] Fastboot revisited: Asynchronous function calls
+Date: Sun, 04 Jan 2009 13:46:40 -0600
+Message-ID: <49611220.6010400@shaw.ca>
+References: <20090104092430.7ffd2c41@infradead.org>	<alpine.LFD.2.00.0901041009060.3179@localhost.localdomain>	<20090104103104.6fdda9f2@infradead.org>	<alpine.LFD.2.00.0901041038570.3179@localhost.localdomain> <87fxjyopie.fsf@basil.nowhere.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090104110932.6563cc6d@infradead.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Andi Kleen <andi@firstfloor.org>, linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, mingo@elte.hu, fweisbec@gmail.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, akpm@linux-foundation.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:47503 "EHLO
+	idcmail-mo1so.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756460AbZADTqp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Jan 2009 14:46:45 -0500
+In-Reply-To: <87fxjyopie.fsf@basil.nowhere.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andi Kleen <andi@firstfloor.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Arjan van de Ven <arjan@infradead.org>, linux-kernel@vger.kernel.org, mingo@elte.hu, fweisbec@gmail.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, akpm@linux-foundation.org
 
-On Sun, Jan 04, 2009 at 11:09:32AM -0800, Arjan van de Ven wrote:
-> On Sun, 04 Jan 2009 20:05:26 +0100
-> Andi Kleen <andi@firstfloor.org> wrote:
+Andi Kleen wrote:
+> Linus Torvalds <torvalds@linux-foundation.org> writes:
 > 
-> > Surely the thread should die again boot up? On module load
-> > synchronisity is usually not a problem.
+>> That said, I also wonder if we really even need to autoprobe the 
+>> interrupts on any modern hardware. Rather than trying to speed up irq 
+>> probing, maybe we could figure it out some other way..
 > 
-> sadly that's not correct in practice based on the fast boot work we've
-> done.
-
-Hmm, but I'm not sure your current code is module safe, in particular 
-against unloading again. You would likely need a barrier at the end
-of module load at least.
-
+> You'll hate that suggestion, but i8250_pnp should already discover
+> it fine via ACPI on modern systems. ia64 has done it this way 
+> forever. 
 > 
-> > 
-> > Personally I think it would be better to make this more generic.
-> > Various subsystems have thread pool implementations now, 
-> 
-> sort of kinda. If a good one appears I'd be happy to build on top of
-> that, assuming it's generic enough.
+> It probably won't work on really old system, but one could always
+> use DMI year to distingush (not pretty, but works usually)
 
-I think you can just create a separate barrier primitive which
-will work independently of any special thread managers.
+Well, we should be able to tell where we got the port information from, 
+if it's somewhere expected to be reliable like PCI configuration, ISAPnP 
+or PnPACPI, or whether we're just probing magical ports and hoping to 
+find something.
 
-> 
-> > and this
-> > is just another variant that except for the sequence stuff
-> > isn't all that much different. So it would be better to have 
-> > a generic worker thread manager that just supports these
-> > barriers too.
-> 
-> ... or maybe think about seeing this system as exactly that thread
-> manager?
-
-I'm not sure it's generic enough.
-
--Andi
-
--- 
-ak@linux.intel.com
+The only cases on x86 hardware where I would think probing would have to 
+happen would be where the machine was too old to do either ISA Plug & 
+Play or PnPACPI, or if you added in a non-PnP ISA modem or serial card.
