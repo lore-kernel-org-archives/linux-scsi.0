@@ -1,37 +1,46 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 1/4] fastboot: Asynchronous function calls to speed up
- kernel boot
-Date: Sun, 4 Jan 2009 11:52:16 -0800
-Message-ID: <20090104115216.db746414.akpm@linux-foundation.org>
-References: <20090104092430.7ffd2c41@infradead.org>
-	<20090104092857.5fbf6b2d@infradead.org>
-	<87k59aops9.fsf@basil.nowhere.org>
-	<20090104110932.6563cc6d@infradead.org>
-	<20090104194946.GB496@one.firstfloor.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] scsi_lib: don't decrement busy counters when inserting
+ commands
+Date: Sun, 04 Jan 2009 14:53:28 -0600
+Message-ID: <496121C8.4040205@cs.wisc.edu>
+References: <1229493343215-git-send-email-michaelc@cs.wisc.edu> <1230914541.3304.9.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20090104194946.GB496@one.firstfloor.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: Arjan van de Ven <arjan@infradead.org>, linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, mingo@elte.hu, fweisbec@gmail.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:47867 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751383AbZADUxt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 4 Jan 2009 15:53:49 -0500
+In-Reply-To: <1230914541.3304.9.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
 
-On Sun, 4 Jan 2009 20:49:46 +0100 Andi Kleen <andi@firstfloor.org> wrote:
-
-> > 
-> > > and this
-> > > is just another variant that except for the sequence stuff
-> > > isn't all that much different. So it would be better to have 
-> > > a generic worker thread manager that just supports these
-> > > barriers too.
-> > 
-> > ... or maybe think about seeing this system as exactly that thread
-> > manager?
+James Bottomley wrote:
+> On Tue, 2008-12-16 at 23:55 -0600, michaelc@cs.wisc.edu wrote:
+>> From: Mike Christie <michaelc@cs.wisc.edu>
+>>
+>> This patch fixes a regression in scsi-misc introduced with:
+>> 312efe5efcdb02d604ea37a41d965f32ca276d6a
+>> [SCSI] simplify scsi_io_completion().
+>>
+>> The problem is that in previous kernels scsi_io_completion would call
+>> scsi_requeue_command, but now it can call scsi_queue_insert for
+>> something like a UNIT_ATTENTION (for netapp targets we get
+>> UNIT_ATTENTION when restarting a iscsi session). And scsi_queue_insert
+>> will call scsi_device_unbusy, but in the scsi_io_completion code path
+>> scsi_finish_command has already called this so we now end up
+>> with invalid host, target and device busy values.
+>>
+>> Patch was made over scsi-misc.
 > 
-> I'm not sure it's generic enough.
+> This is a bad bug, but not quite the way I'd like to fix it.  Whether
+> the queue should be unbusied or not is really separate from the block
+> action, so it should have its own flag (plus it's not really a flag many
+> people should be using).  Since, really, the wrong use is confined to
+> the defining file, how about this:
+> 
 
-There's appreciable overlap with David Howells's "slow work" thread
-pool thingy. If either of those was generic enough, the other would
-go away.
+Patch fixed my problem here. Thanks.
