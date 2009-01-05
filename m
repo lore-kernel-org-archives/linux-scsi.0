@@ -1,40 +1,79 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 0/4] Fastboot revisited: Asynchronous function calls
-Date: Mon, 5 Jan 2009 16:21:25 +0000
-Message-ID: <20090105162125.093b4adf@lxorguk.ukuu.org.uk>
-References: <20090104092430.7ffd2c41@infradead.org>
-	<alpine.LFD.2.00.0901041009060.3179@localhost.localdomain>
-	<20090104103104.6fdda9f2@infradead.org>
-	<alpine.LFD.2.00.0901041038570.3179@localhost.localdomain>
-	<20090104110559.306186c4@infradead.org>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [PATCH] aha152x_cs: Fix regression that keeps driver from using
+ shared interrupts
+Date: Mon, 5 Jan 2009 09:03:47 -0800
+Message-ID: <20090105090347.1d292c6a.randy.dunlap@oracle.com>
+References: <4932D7B5.4070500@lwfinger.net>
+	<13477999.16371231031572178.komurojun-mbn@nifty.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20090104110559.306186c4@infradead.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, mingo@elte.hu, fweisbec@gmail.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, akpm@linux-foundation.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from acsinet11.oracle.com ([141.146.126.233]:31084 "EHLO
+	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751383AbZAEREQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2009 12:04:16 -0500
+In-Reply-To: <13477999.16371231031572178.komurojun-mbn@nifty.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Komuro <komurojun-mbn@nifty.com>, scsi <linux-scsi@vger.kernel.org>, jejb <James.Bottomley@hansenpartnership.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>, linux-pcmcia@lists.infradead.org, Dominik Brodowski <linux@dominikbrodowski.net>
 
-> Right now I don't think I have time for it (this is going to take time..
-> there's so many weird things with serial ports that it's bound to break
-> stuff in the beginning etc)
+On Sun, 4 Jan 2009 10:12:52 +0900 (JST) Komuro wrote:
 
-I can't duplicate this. Can you check you don't have
+> 
+> No response from Dominik.
+> 
+> It should be sent to linux-scsi?
 
-config SERIAL_8250_DETECT_IRQ
-        bool "Autodetect IRQ on standard ports (unsafe)"
-        depends on SERIAL_8250_EXTENDED
-        help
-          Say Y here if you want the kernel to try to guess which IRQ
-          to use for your serial port.
-
-          This is considered unsafe; it is far better to configure the
-IRQ in a boot script using the setserial command.
-
-          If unsure, say N.
+Yes, I'll cc linux-scsi now...
 
 
-enabled
+> 
+> ----- Original Message -----
+> >Date: Sun, 30 Nov 2008 12:13:09 -0600
+> >From: Larry Finger <Larry.Finger@lwfinger.net>
+> >To: Dominik Brodowski <linux@dominikbrodowski.net>
+> >Subject: [PATCH] aha152x_cs: Fix regression that keeps driver from using shar
+> ed
+> >	interrupts
+> >Cc: linux-pcmcia@lists.infradead.org
+> >
+> >
+> >At some point since 2.6.22, the aha152x_cs driver stopped working and started
+> >erring on load with the following messages:
+> >
+> >kernel: pcmcia: request for exclusive IRQ could not be fulfilled.
+> >kernel: pcmcia: the driver needs updating to supported shared IRQ lines.
+> >
+> >With the following change, the driver works with shared IRQs.
+> >
+> >Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> >Cc: Stable <stable@kernel.org>		[2.6.27], [2.6.26]
+> >---
+> >
+> >
+> >Index: wireless-testing/drivers/scsi/pcmcia/aha152x_stub.c
+> >===================================================================
+> >--- wireless-testing.orig/drivers/scsi/pcmcia/aha152x_stub.c
+> >+++ wireless-testing/drivers/scsi/pcmcia/aha152x_stub.c
+> >@@ -114,7 +114,7 @@ static int aha152x_probe(struct pcmcia_d
+> >     link->io.NumPorts1 = 0x20;
+> >     link->io.Attributes1 = IO_DATA_PATH_WIDTH_AUTO;
+> >     link->io.IOAddrLines = 10;
+> >-    link->irq.Attributes = IRQ_TYPE_EXCLUSIVE;
+> >+    link->irq.Attributes = IRQ_TYPE_DYNAMIC_SHARING;
+> >     link->irq.IRQInfo1 = IRQ_LEVEL_ID;
+> >     link->conf.Attributes = CONF_ENABLE_IRQ;
+> >     link->conf.IntType = INT_MEMORY_AND_IO;
+> >
+> >_______________________________________________
+> >Linux PCMCIA reimplementation list
+> >http://lists.infradead.org/mailman/listinfo/linux-pcmcia
+> 
+> 
+> 
 
+
+---
+~Randy
