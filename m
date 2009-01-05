@@ -1,79 +1,114 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH] aha152x_cs: Fix regression that keeps driver from using
- shared interrupts
-Date: Mon, 5 Jan 2009 09:03:47 -0800
-Message-ID: <20090105090347.1d292c6a.randy.dunlap@oracle.com>
-References: <4932D7B5.4070500@lwfinger.net>
-	<13477999.16371231031572178.komurojun-mbn@nifty.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: [PATCH] fc transport: restore missing dev_loss_tmo callback to LLDD
+Date: Mon, 5 Jan 2009 12:14:18 -0500
+Message-ID: <1231175658.3923.0.camel@ogier>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet11.oracle.com ([141.146.126.233]:31084 "EHLO
-	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751383AbZAEREQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2009 12:04:16 -0500
-In-Reply-To: <13477999.16371231031572178.komurojun-mbn@nifty.com>
+Received: from emulex.emulex.com ([138.239.112.1]:45801 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751398AbZAEROd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2009 12:14:33 -0500
+Received: from xcm.ad.emulex.com (xcm.emulex.com [138.239.112.69])
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id n05HEU5v026486
+	for <linux-scsi@vger.kernel.org>; Mon, 5 Jan 2009 09:14:31 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Komuro <komurojun-mbn@nifty.com>, scsi <linux-scsi@vger.kernel.org>, jejb <James.Bottomley@hansenpartnership.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>, linux-pcmcia@lists.infradead.org, Dominik Brodowski <linux@dominikbrodowski.net>
+To: linux-scsi@vger.kernel.org
 
-On Sun, 4 Jan 2009 10:12:52 +0900 (JST) Komuro wrote:
+When we reworked the transport for the rport lifetimes, in cases where the
+rport was reused as a container for tgt id bindings, we inadvertantly
+removed the callback to the driver indicating that dev_loss_tmo had fired.
 
-> 
-> No response from Dominik.
-> 
-> It should be sent to linux-scsi?
+This patch restores that functionality.
 
-Yes, I'll cc linux-scsi now...
+-- james s
 
 
-> 
-> ----- Original Message -----
-> >Date: Sun, 30 Nov 2008 12:13:09 -0600
-> >From: Larry Finger <Larry.Finger@lwfinger.net>
-> >To: Dominik Brodowski <linux@dominikbrodowski.net>
-> >Subject: [PATCH] aha152x_cs: Fix regression that keeps driver from using shar
-> ed
-> >	interrupts
-> >Cc: linux-pcmcia@lists.infradead.org
-> >
-> >
-> >At some point since 2.6.22, the aha152x_cs driver stopped working and started
-> >erring on load with the following messages:
-> >
-> >kernel: pcmcia: request for exclusive IRQ could not be fulfilled.
-> >kernel: pcmcia: the driver needs updating to supported shared IRQ lines.
-> >
-> >With the following change, the driver works with shared IRQs.
-> >
-> >Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> >Cc: Stable <stable@kernel.org>		[2.6.27], [2.6.26]
-> >---
-> >
-> >
-> >Index: wireless-testing/drivers/scsi/pcmcia/aha152x_stub.c
-> >===================================================================
-> >--- wireless-testing.orig/drivers/scsi/pcmcia/aha152x_stub.c
-> >+++ wireless-testing/drivers/scsi/pcmcia/aha152x_stub.c
-> >@@ -114,7 +114,7 @@ static int aha152x_probe(struct pcmcia_d
-> >     link->io.NumPorts1 = 0x20;
-> >     link->io.Attributes1 = IO_DATA_PATH_WIDTH_AUTO;
-> >     link->io.IOAddrLines = 10;
-> >-    link->irq.Attributes = IRQ_TYPE_EXCLUSIVE;
-> >+    link->irq.Attributes = IRQ_TYPE_DYNAMIC_SHARING;
-> >     link->irq.IRQInfo1 = IRQ_LEVEL_ID;
-> >     link->conf.Attributes = CONF_ENABLE_IRQ;
-> >     link->conf.IntType = INT_MEMORY_AND_IO;
-> >
-> >_______________________________________________
-> >Linux PCMCIA reimplementation list
-> >http://lists.infradead.org/mailman/listinfo/linux-pcmcia
-> 
-> 
-> 
+
+ Signed-off-by: James Smart <james.smart@emulex.com>
+
+ ---
+
+ drivers/scsi/scsi_transport_fc.c |   21 +++++++++++++++++++--
+ include/scsi/scsi_transport_fc.h |    1 +
+ 2 files changed, 20 insertions(+), 2 deletions(-)
 
 
----
-~Randy
+diff -upNr a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+--- a/drivers/scsi/scsi_transport_fc.c	2009-01-05 11:50:40.000000000 -0500
++++ b/drivers/scsi/scsi_transport_fc.c	2009-01-05 12:01:46.000000000 -0500
+@@ -2407,8 +2407,12 @@ fc_rport_final_delete(struct work_struct
+ 	/*
+ 	 * Notify the driver that the rport is now dead. The LLDD will
+ 	 * also guarantee that any communication to the rport is terminated
++	 *
++	 * Avoid this call if we already called it when we preserved the
++	 * rport for the binding.
+ 	 */
+-	if (i->f->dev_loss_tmo_callbk)
++	if (!(rport->flags & FC_RPORT_DEVLOSS_CALLBK_DONE) &&
++	    (i->f->dev_loss_tmo_callbk))
+ 		i->f->dev_loss_tmo_callbk(rport);
+ 
+ 	transport_remove_device(dev);
+@@ -2647,7 +2651,8 @@ fc_remote_port_add(struct Scsi_Host *sho
+ 				spin_lock_irqsave(shost->host_lock, flags);
+ 
+ 				rport->flags &= ~(FC_RPORT_FAST_FAIL_TIMEDOUT |
+-						  FC_RPORT_DEVLOSS_PENDING);
++						  FC_RPORT_DEVLOSS_PENDING |
++						  FC_RPORT_DEVLOSS_CALLBK_DONE);
+ 
+ 				/* if target, initiate a scan */
+ 				if (rport->scsi_target_id != -1) {
+@@ -2944,6 +2949,7 @@ fc_timeout_deleted_rport(struct work_str
+ 	struct fc_rport *rport =
+ 		container_of(work, struct fc_rport, dev_loss_work.work);
+ 	struct Scsi_Host *shost = rport_to_shost(rport);
++	struct fc_internal *i = to_fc_internal(shost->transportt);
+ 	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
+ 	unsigned long flags;
+ 
+@@ -3011,6 +3017,7 @@ fc_timeout_deleted_rport(struct work_str
+ 	rport->roles = FC_PORT_ROLE_UNKNOWN;
+ 	rport->port_state = FC_PORTSTATE_NOTPRESENT;
+ 	rport->flags &= ~FC_RPORT_FAST_FAIL_TIMEDOUT;
++	rport->flags |= FC_RPORT_DEVLOSS_CALLBK_DONE;
+ 
+ 	/*
+ 	 * Pre-emptively kill I/O rather than waiting for the work queue
+@@ -3046,8 +3053,18 @@ fc_timeout_deleted_rport(struct work_str
+ 	 * all attached scsi devices.
+ 	 */
+ 	fc_queue_work(shost, &rport->stgt_delete_work);
++
++	/*
++	 * Notify the driver that the rport is now dead. The LLDD will
++	 * also guarantee that any communication to the rport is terminated
++	 *
++	 * Note: we set the CALLBK_DONE flag above to correspond
++	 */
++	if (i->f->dev_loss_tmo_callbk)
++		i->f->dev_loss_tmo_callbk(rport);
+ }
+ 
++
+ /**
+  * fc_timeout_fail_rport_io - Timeout handler for a fast io failing on a disconnected SCSI target.
+  * @work:	rport to terminate io on.
+diff -upNr a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+--- a/include/scsi/scsi_transport_fc.h	2008-12-04 12:38:38.000000000 -0500
++++ b/include/scsi/scsi_transport_fc.h	2009-01-05 11:55:49.000000000 -0500
+@@ -358,6 +358,7 @@ struct fc_rport {	/* aka fc_starget_attr
+ #define FC_RPORT_DEVLOSS_PENDING	0x01
+ #define FC_RPORT_SCAN_PENDING		0x02
+ #define FC_RPORT_FAST_FAIL_TIMEDOUT	0x04
++#define FC_RPORT_DEVLOSS_CALLBK_DONE	0x08
+ 
+ #define	dev_to_rport(d)				\
+ 	container_of(d, struct fc_rport, dev)
+
+
