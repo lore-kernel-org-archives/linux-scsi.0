@@ -1,50 +1,128 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RFC] IDEMA capacity adjustment
-Date: Mon, 05 Jan 2009 12:46:28 -0500
-Message-ID: <yq1d4f13atn.fsf@sermon.lab.mkp.net>
-References: <yq1mye74hhu.fsf@sermon.lab.mkp.net>
-	<1231171446.3324.21.camel@localhost.localdomain>
+From: Tony Battersby <tonyb@cybernetics.com>
+Subject: [PATCH 0/2] sg: fix races during device removal (v2)
+Date: Mon, 05 Jan 2009 14:07:19 -0500
+Message-ID: <49625A67.3000304@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet13.oracle.com ([148.87.113.125]:25025 "EHLO
-	rgminet13.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752197AbZAERqi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2009 12:46:38 -0500
-In-Reply-To: <1231171446.3324.21.camel@localhost.localdomain> (James Bottomley's message of "Mon\, 05 Jan 2009 10\:04\:06 -0600")
+Received: from host64.cybernetics.com ([98.174.209.230]:1608 "EHLO
+	mail.cybernetics.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751398AbZAETHr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2009 14:07:47 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dgilbert@interlog.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James.Bottomley@HansenPartnership.com
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
->>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
+This is version 2 of my patch, this time using a kref instead of int.
+There are also a lot of other changes since the first version since I
+found even more bugs both through testing and source code analysis.
+I have split the patch up into two parts: the first patch fixes
+races between open, close, device removal, and command completion.
+The second patch fixes some races I spotted in ioctl(SG_IO).
 
-James> We already show the power of 10 size as GiB ... how does the
-James> IDEMA spec actually differ from that?  
+Below are a list of test cases fixed by the patch.
 
-The intent was for the capacity printed to be exactly the same number as
-on the drive label.
+----------
+
+test #1
+
+open /dev/sgX
+send a command that takes a long time (e.g. any tape drive seek
+command)
+before command completes, echo 1 >
+/sys/class/scsi_generic/sgX/device/delete
+
+without patch:
+oops
+
+with patch:
+test program gets ENODEV immediately
+keventd sleeps until the cmd is complete
+this is suboptimal since it starves other users of keventd while
+waiting for the command to complete, but it is better than an oops
+
+----------
+
+test #2
+
+open /dev/sgX
+send a command that takes a long time (e.g. any tape drive seek
+command) without waiting for it to complete
+close fd
+before command completes, echo 1 >
+/sys/class/scsi_generic/sgX/device/delete
+
+without patch:
+oops when the command does complete (sg_rq_end_io() bad pointer deref)
+
+with patch:
+keventd sleeps until the cmd is complete
+this is suboptimal since it starves other users of keventd while
+waiting for the command to complete, but it is better than an oops
+
+----------
+
+test #3
+
+open /dev/sgX
+send a command that takes a long time (e.g. any tape drive seek
+command) without waiting for it to complete
+close fd
+rmmod sg
+
+without patch:
+rmmod succeeds without waiting for the command to complete
+oops when the command does complete (sg_rq_end_io() callback no
+longer exists)
+
+with patch:
+sg module usage count does not drop to 0 until the command completes,
+so cannot rmmod
+
+----------
+
+test #4
+
+open /dev/sgX
+loop: send commands, check results
+unplug SAS cable
+mptsas automatically removes the device and fails active commands
+the test program detects the failed commands and closes its fds at
+the same time
+this results in the following sequence:
+sg_remove() enter
+sg_release() enter
+sg_release() exit
+sg_remove() exit
+
+without patch:
+oops
+
+with patch:
+ok
+
+----------
+
+test #5
+
+open /dev/sgX
+loop: send commands, check results
+unplug SAS cable
+mptsas automatically removes the device and fails active commands
+the test program detects the failed commands, but sleeps for a second
+before closing its fds
+this results in the following sequence:
+sg_remove() enter
+sg_remove() exit
+sg_release() enter
+sg_release() exit
+
+without patch:
+oops
+
+with patch:
+ok
 
 
-James> It's one thing to display the truth in a more positive light (as
-James> in use power of 10 GiB etc.) it's quite another to display
-James> incorrect sizes ... is the IDEMA spec just optimistic but not
-James> unreasonable rounding, or is it actually inflating sizes wrongly?
-
-It's slightly deflating the capacity compared to power of 10.  For new
-drives that adhere to the IDEMA spec it's about 0.02%.  For older drives
-with "proprietary" LBA counts the difference is bigger.
-
-I tested the patch on a few SCSI drives before sending it out.  They
-went from being printed as 73.4 GB to 73GB.
-
-However, I just collected data from a bunch of recent drives and there
-it doesn't make a difference at all thanks to your rounding in
-string_get_size().
-
-So maybe just drop this for now.  The code was initially done for a
-different project.  I applied it to sd.c because I could and it made a
-difference in my initial test case.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
