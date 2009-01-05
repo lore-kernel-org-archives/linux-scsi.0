@@ -1,36 +1,40 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [RFC] IDEMA capacity adjustment
-Date: Mon, 05 Jan 2009 10:04:06 -0600
-Message-ID: <1231171446.3324.21.camel@localhost.localdomain>
-References: <yq1mye74hhu.fsf@sermon.lab.mkp.net>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 0/4] Fastboot revisited: Asynchronous function calls
+Date: Mon, 5 Jan 2009 16:21:25 +0000
+Message-ID: <20090105162125.093b4adf@lxorguk.ukuu.org.uk>
+References: <20090104092430.7ffd2c41@infradead.org>
+	<alpine.LFD.2.00.0901041009060.3179@localhost.localdomain>
+	<20090104103104.6fdda9f2@infradead.org>
+	<alpine.LFD.2.00.0901041038570.3179@localhost.localdomain>
+	<20090104110559.306186c4@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:48052 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754059AbZAEQEM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2009 11:04:12 -0500
-In-Reply-To: <yq1mye74hhu.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20090104110559.306186c4@infradead.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, mingo@elte.hu, fweisbec@gmail.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, akpm@linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Sun, 2009-01-04 at 03:12 -0500, Martin K. Petersen wrote:
-> IDEMA, the International Disk Drive Equipment and Materials Association,
-> publishes a specification that defines how to translate from LBA count
-> to "marketing" gigabytes used to label drives.
-> 
-> This patch updates the size calculations in sd.c so that the base 10
-> size is adjusted according to the IDEMA spec.
+> Right now I don't think I have time for it (this is going to take time..
+> there's so many weird things with serial ports that it's bound to break
+> stuff in the beginning etc)
 
-We already show the power of 10 size as GiB ... how does the IDEMA spec
-actually differ from that?  It's one thing to display the truth in a
-more positive light (as in use power of 10 GiB etc.) it's quite another
-to display incorrect sizes ... is the IDEMA spec just optimistic but not
-unreasonable rounding, or is it actually inflating sizes wrongly?
+I can't duplicate this. Can you check you don't have
 
-James
+config SERIAL_8250_DETECT_IRQ
+        bool "Autodetect IRQ on standard ports (unsafe)"
+        depends on SERIAL_8250_EXTENDED
+        help
+          Say Y here if you want the kernel to try to guess which IRQ
+          to use for your serial port.
 
+          This is considered unsafe; it is far better to configure the
+IRQ in a boot script using the setserial command.
+
+          If unsure, say N.
+
+
+enabled
 
