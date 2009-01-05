@@ -1,43 +1,36 @@
-From: Nigel Cunningham <ncunningham-lkml@crca.org.au>
-Subject: Re: [PATCH 0/4] Fastboot revisited: Asynchronous function calls
-Date: Mon, 05 Jan 2009 22:18:25 +1100
-Message-ID: <1231154305.8179.148.camel@nigel-laptop>
-References: <20090104092430.7ffd2c41@infradead.org>
-	 <1231135294.8179.45.camel@nigel-laptop>
-	 <20090105025300.3afbec23@infradead.org>
-Reply-To: ncunningham-lkml@crca.org.au
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [RFC] IDEMA capacity adjustment
+Date: Mon, 05 Jan 2009 10:04:06 -0600
+Message-ID: <1231171446.3324.21.camel@localhost.localdomain>
+References: <yq1mye74hhu.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20090105025300.3afbec23@infradead.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, mingo@elte.hu, fweisbec@gmail.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, akpm@linux-foundation.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:48052 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754059AbZAEQEM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2009 11:04:12 -0500
+In-Reply-To: <yq1mye74hhu.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hi.
-
-On Mon, 2009-01-05 at 02:53 -0800, Arjan van de Ven wrote:
-> On Mon, 05 Jan 2009 17:01:34 +1100
-> Nigel Cunningham <ncunningham-lkml@crca.org.au> wrote:
+On Sun, 2009-01-04 at 03:12 -0500, Martin K. Petersen wrote:
+> IDEMA, the International Disk Drive Equipment and Materials Association,
+> publishes a specification that defines how to translate from LBA count
+> to "marketing" gigabytes used to label drives.
 > 
-> > Hi Arjan.
-> > 
-> > Great work, and valuable too. I'm just wondering if the header file
-> > name "async.h" is a little too generic? Something like async_init.h
-> > perhaps?
-> > 
-> 
-> while the users I have in mind are during init, the concept and
-> infrastructure of asynchronous function calls is by no means limited to
-> that use case... I hope there are many other uses for this :)
+> This patch updates the size calculations in sd.c so that the base 10
+> size is adjusted according to the IDEMA spec.
 
-Okee doke. How about async_fn or something like that then? It's just
-that there's async I/O and no doubt other async stuff I haven't thought
-of. Still, it's a relatively minor point.
+We already show the power of 10 size as GiB ... how does the IDEMA spec
+actually differ from that?  It's one thing to display the truth in a
+more positive light (as in use power of 10 GiB etc.) it's quite another
+to display incorrect sizes ... is the IDEMA spec just optimistic but not
+unreasonable rounding, or is it actually inflating sizes wrongly?
 
-Night!
+James
 
-Nigel
 
