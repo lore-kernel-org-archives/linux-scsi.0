@@ -1,14 +1,14 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
 Subject: [PATCH 1/5] mpt fusion: Update MPI Headers to version 01.05.19
-Date: Tue, 6 Jan 2009 14:53:28 +0530
-Message-ID: <20090106092328.GB13033@lsi.com>
+Date: Tue, 6 Jan 2009 14:56:31 +0530
+Message-ID: <20090106092618.GC13033@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og103.obsmtp.com ([64.18.2.159]:59032 "EHLO
+Received: from exprod7og103.obsmtp.com ([64.18.2.159]:59049 "EHLO
 	exprod7og103.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750862AbZAFKGT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2009 05:06:19 -0500
+	with ESMTP id S1751271AbZAFKGW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2009 05:06:22 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,6 +18,7 @@ Cc: eric.moore@lsi.com, sathyap@lsi.com, James.Bottomley@HansenPartnership.com
 
 This Patch is submitted to increment the MPI headers used by LSI MPT fusion
 drivers to the latest version 01.05.19.
+Year is changed in CopyRight.
 ---
 
 Signed-off-by: Kashyap Desai <kadesai@lsi.com>
