@@ -1,14 +1,14 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 3/5] mpt fusion: Added Firmware debug support
-Date: Tue, 6 Jan 2009 15:03:37 +0530
-Message-ID: <20090106093332.GE13033@lsi.com>
+Subject: [PATCH 4/5] mpt fusion: Optimized Send Event notification, Using doorbell instead of FIFO
+Date: Tue, 6 Jan 2009 15:05:46 +0530
+Message-ID: <20090106093540.GF13033@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7ob116.obsmtp.com ([64.18.2.218]:43969 "EHLO
-	exprod7og116.obsmtp.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751461AbZAFJxJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2009 04:53:09 -0500
+Received: from exprod7og102.obsmtp.com ([64.18.2.157]:36859 "EHLO
+	exprod7og102.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751020AbZAFJzR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2009 04:55:17 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,103 +16,132 @@ To: linux-scsi@vger.kernel.org
 Cc: eric.moore@lsi.com, sathyap@lsi.com, James.Bottomley@HansenPartnership.com
 
 
-Added support for Firmware debuging
+SendEventNotification was handled through FIFO, now it is using doorbell 
+mechenism to communicate with hardware.
+Added Sleep Flag as an extra argument to support Can-Sleep feature.
 ---
 
 Signed-off-by: Kashyap Desai <kadesai@lsi.com>
 ---
 diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 55d9a7e..ea3aafb 100644
+index ea3aafb..b473236 100644
 --- a/drivers/message/fusion/mptbase.c
 +++ b/drivers/message/fusion/mptbase.c
-@@ -107,6 +107,14 @@ module_param_call(mpt_debug_level, mpt_set_debug_level, param_get_int,
- MODULE_PARM_DESC(mpt_debug_level, " debug level - refer to mptdebug.h \
- 	- (default=0)");
+@@ -192,7 +192,8 @@ static void 	mpt_read_ioc_pg_1(MPT_ADAPTER *ioc);
+ static void 	mpt_read_ioc_pg_4(MPT_ADAPTER *ioc);
+ static void	mpt_timer_expired(unsigned long data);
+ static void	mpt_get_manufacturing_pg_0(MPT_ADAPTER *ioc);
+-static int	SendEventNotification(MPT_ADAPTER *ioc, u8 EvSwitch);
++static int	SendEventNotification(MPT_ADAPTER *ioc, u8 EvSwitch,
++	int sleepFlag);
+ static int	SendEventAck(MPT_ADAPTER *ioc, EventNotificationReply_t *evnp);
+ static int	mpt_host_page_access_control(MPT_ADAPTER *ioc, u8 access_control_value, int sleepFlag);
+ static int	mpt_host_page_alloc(MPT_ADAPTER *ioc, pIOCInit_t ioc_init);
+@@ -208,7 +209,8 @@ static int	procmpt_iocinfo_read(char *buf, char **start, off_t offset,
+ static void	mpt_get_fw_exp_ver(char *buf, MPT_ADAPTER *ioc);
  
-+int mpt_fwfault_debug;
-+EXPORT_SYMBOL(mpt_fwfault_debug);
-+module_param_call(mpt_fwfault_debug, param_set_int, param_get_int,
-+	  &mpt_fwfault_debug, 0600);
-+MODULE_PARM_DESC(mpt_fwfault_debug, "Enable detection of Firmware fault"
-+	" and halt Firmware on fault - (default=0)");
-+
-+
+ //int		mpt_HardResetHandler(MPT_ADAPTER *ioc, int sleepFlag);
+-static int	ProcessEventNotification(MPT_ADAPTER *ioc, EventNotificationReply_t *evReply, int *evHandlers);
++static int	ProcessEventNotification(MPT_ADAPTER *ioc,
++		EventNotificationReply_t *evReply, int *evHandlers);
+ static void	mpt_iocstatus_info(MPT_ADAPTER *ioc, u32 ioc_status, MPT_FRAME_HDR *mf);
+ static void	mpt_fc_log_info(MPT_ADAPTER *ioc, u32 log_info);
+ static void	mpt_spi_log_info(MPT_ADAPTER *ioc, u32 log_info);
+@@ -2269,28 +2271,36 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
+ 		}
+ 	}
  
- #ifdef MFCNT
- static int mfcounter = 0;
-@@ -6337,6 +6345,33 @@ mpt_print_ioc_summary(MPT_ADAPTER *ioc, char *buffer, int *size, int len, int sh
- 	*size = y;
++	/*  Enable MPT base driver management of EventNotification
++	 *  and EventAck handling.
++	 */
++	if ((ret == 0) && (!ioc->facts.EventState)) {
++		dinitprintk(ioc, printk(MYIOC_s_INFO_FMT
++			"SendEventNotification\n",
++		    ioc->name));
++		ret = SendEventNotification(ioc, 1, sleepFlag);	/* 1=Enable */
++	}
++
++	if (ioc->alt_ioc && alt_ioc_ready && !ioc->alt_ioc->facts.EventState)
++		rc = SendEventNotification(ioc->alt_ioc, 1, sleepFlag);
++
+ 	if (ret == 0) {
+ 		/* Enable! (reply interrupt) */
+ 		CHIPREG_WRITE32(&ioc->chip->IntMask, MPI_HIM_DIM);
+ 		ioc->active = 1;
+ 	}
+-
+-	if (reset_alt_ioc_active && ioc->alt_ioc) {
+-		/* (re)Enable alt-IOC! (reply interrupt) */
+-		dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "alt_ioc reply irq re-enabled\n",
+-		    ioc->alt_ioc->name));
+-		CHIPREG_WRITE32(&ioc->alt_ioc->chip->IntMask, MPI_HIM_DIM);
+-		ioc->alt_ioc->active = 1;
++	if (rc == 0) {	/* alt ioc */
++		if (reset_alt_ioc_active && ioc->alt_ioc) {
++			/* (re)Enable alt-IOC! (reply interrupt) */
++			dinitprintk(ioc, printk(MYIOC_s_DEBUG_FMT "alt-ioc
++				reply irq re-enabled\n",
++				ioc->alt_ioc->name));
++			CHIPREG_WRITE32(&ioc->alt_ioc->chip->IntMask,
++			MPI_HIM_DIM);
++			ioc->alt_ioc->active = 1;
++		}
+ 	}
+ 
+-	/*  Enable MPT base driver management of EventNotification
+-	 *  and EventAck handling.
+-	 */
+-	if ((ret == 0) && (!ioc->facts.EventState))
+-		(void) SendEventNotification(ioc, 1);	/* 1=Enable EventNotification */
+-
+-	if (ioc->alt_ioc && alt_ioc_ready && !ioc->alt_ioc->facts.EventState)
+-		(void) SendEventNotification(ioc->alt_ioc, 1);	/* 1=Enable EventNotification */
+ 
+ 	/*	Add additional "reason" check before call to GetLanConfigPages
+ 	 *	(combined with GetIoUnitPage2 call).  This prevents a somewhat
+@@ -5775,30 +5785,28 @@ mpt_get_manufacturing_pg_0(MPT_ADAPTER *ioc)
+  *	SendEventNotification - Send EventNotification (on or off) request to adapter
+  *	@ioc: Pointer to MPT_ADAPTER structure
+  *	@EvSwitch: Event switch flags
++ *	@sleepFlag: Specifies whether the process can sleep
+  */
+ static int
+-SendEventNotification(MPT_ADAPTER *ioc, u8 EvSwitch)
++SendEventNotification(MPT_ADAPTER *ioc, u8 EvSwitch, int sleepFlag)
+ {
+-	EventNotification_t	*evnp;
++	EventNotification_t	evn;
++	MPIDefaultReply_t	reply_buf;
+ 
+-	evnp = (EventNotification_t *) mpt_get_msg_frame(mpt_base_index, ioc);
+-	if (evnp == NULL) {
+-		devtverboseprintk(ioc, printk(MYIOC_s_WARN_FMT "Unable to allocate event request frame!\n",
+-				ioc->name));
+-		return 0;
+-	}
+-	memset(evnp, 0, sizeof(*evnp));
+-
+-	devtverboseprintk(ioc, printk(MYIOC_s_DEBUG_FMT "Sending EventNotification (%d) request %p\n", ioc->name, EvSwitch, evnp));
++	memset(&evn, 0, sizeof(EventNotification_t));
++	memset(&reply_buf, 0, sizeof(MPIDefaultReply_t));
+ 
+-	evnp->Function = MPI_FUNCTION_EVENT_NOTIFICATION;
+-	evnp->ChainOffset = 0;
+-	evnp->MsgFlags = 0;
+-	evnp->Switch = EvSwitch;
++	evn.Function = MPI_FUNCTION_EVENT_NOTIFICATION;
++	evn.Switch = EvSwitch;
++	evn.MsgContext = cpu_to_le32(mpt_base_index << 16);
+ 
+-	mpt_put_msg_frame(mpt_base_index, ioc, (MPT_FRAME_HDR *)evnp);
++	devtverboseprintk(ioc, printk(MYIOC_s_DEBUG_FMT
++	    "Sending EventNotification (%d) request %p\n",
++	    ioc->name, EvSwitch, &evn));
+ 
+-	return 0;
++	return mpt_handshake_req_reply_wait(ioc, sizeof(EventNotification_t),
++	    (u32 *)&evn, sizeof(MPIDefaultReply_t), (u16 *)&reply_buf, 30,
++	    sleepFlag);
  }
  
-+
-+/**
-+ *	mpt_halt_firmware - Halts the firmware if it is operational and panic
-+ *	the kernel
-+ *	@ioc: Pointer to MPT_ADAPTER structure
-+ *
-+ **/
-+void
-+mpt_halt_firmware(MPT_ADAPTER *ioc)
-+{
-+	u32	 ioc_raw_state;
-+
-+	ioc_raw_state = mpt_GetIocState(ioc, 0);
-+
-+	if ((ioc_raw_state & MPI_IOC_STATE_MASK) == MPI_IOC_STATE_FAULT) {
-+		printk(MYIOC_s_ERR_FMT "IOC is in FAULT state (%04xh)!!!\n",
-+			ioc->name, ioc_raw_state & MPI_DOORBELL_DATA_MASK);
-+		panic("%s: IOC Fault (%04xh)!!!\n", ioc->name,
-+			ioc_raw_state & MPI_DOORBELL_DATA_MASK);
-+	} else {
-+		CHIPREG_WRITE32(&ioc->chip->Doorbell, 0xC0FFEE00);
-+		panic("%s: Firmware is halted due to command timeout\n",
-+			ioc->name);
-+	}
-+}
-+EXPORT_SYMBOL(mpt_halt_firmware);
-+
  /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
- /*
-  *	Reset Handling
-@@ -6369,6 +6404,8 @@ mpt_HardResetHandler(MPT_ADAPTER *ioc, int sleepFlag)
- 	printk(MYIOC_s_INFO_FMT "HardResetHandler Entered!\n", ioc->name);
- 	printk("MF count 0x%x !\n", ioc->mfcnt);
- #endif
-+	if (mpt_fwfault_debug)
-+		mpt_halt_firmware(ioc);
- 
- 	/* Reset the adapter. Prevent more than 1 call to
- 	 * mpt_do_ioc_recovery at any instant in time.
-diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
-index dff048c..b3e981d 100644
---- a/drivers/message/fusion/mptbase.h
-+++ b/drivers/message/fusion/mptbase.h
-@@ -922,11 +922,14 @@ extern void	 mpt_free_fw_memory(MPT_ADAPTER *ioc);
- extern int	 mpt_findImVolumes(MPT_ADAPTER *ioc);
- extern int	 mptbase_sas_persist_operation(MPT_ADAPTER *ioc, u8 persist_opcode);
- extern int	 mpt_raid_phys_disk_pg0(MPT_ADAPTER *ioc, u8 phys_disk_num, pRaidPhysDiskPage0_t phys_disk);
-+extern void     mpt_halt_firmware(MPT_ADAPTER *ioc);
-+
- 
- /*
-  *  Public data decl's...
-  */
- extern struct list_head	  ioc_list;
-+extern int mpt_fwfault_debug;
- 
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
- #endif		/* } __KERNEL__ */
-diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
-index ee09041..e62c6bc 100644
---- a/drivers/message/fusion/mptscsih.c
-+++ b/drivers/message/fusion/mptscsih.c
-@@ -1846,6 +1846,9 @@ mptscsih_abort(struct scsi_cmnd * SCpnt)
- 	if (hd->timeouts < -1)
- 		hd->timeouts++;
- 
-+	if (mpt_fwfault_debug)
-+		mpt_halt_firmware(ioc);
-+
- 	/* Most important!  Set TaskMsgContext to SCpnt's MsgContext!
- 	 * (the IO to be ABORT'd)
- 	 *
