@@ -1,104 +1,119 @@
 From: Arjan van de Ven <arjan@infradead.org>
-Subject: [PATCH 5/6] bootchart: improve output
-Date: Mon, 5 Jan 2009 20:13:17 -0800
-Message-ID: <20090105201317.249aeae3@infradead.org>
-References: <20090105200959.04a626ac@infradead.org>
+Subject: [PATCH 0/6] v2: Asynchronous function calls to speed up booting and
+ more
+Date: Mon, 5 Jan 2009 20:15:08 -0800
+Message-ID: <20090105201508.23e98b4b@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:58348 "EHLO
+Received: from casper.infradead.org ([85.118.1.10]:58356 "EHLO
 	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754148AbZAFENg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2009 23:13:36 -0500
-In-Reply-To: <20090105200959.04a626ac@infradead.org>
+	with ESMTP id S1754033AbZAFENo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2009 23:13:44 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, mingo@elte.hu, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
-
->From ec57f2c6755c5439dcb273f9529f0575b6084d02 Mon Sep 17 00:00:00 2001
-From: Arjan van de Ven <arjan@linux.intel.com>
-Date: Sun, 4 Jan 2009 10:59:18 -0800
-Subject: [PATCH] bootchart: improve output based on Dave Jones' feedback
-
-Dave Jones, in his blog, had some feedback about the bootchart script:
-Primarily his complaint was that shorter delays weren't visualized.
-
-The reason for that was that too small delays will have their labels
-mixed up in the graph in an unreadable mess.
-
-This patch has a fix for this; for one, it makes the output wider,
-so more will fit.
-The second part is that smaller delays are now shown with a
-much smaller font for the label; while this isn't per se
-readable at a 1:1 zoom, at least you can zoom in with most SVG
-viewing applications and see what it is you are looking at.
-
-Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
----
- scripts/bootgraph.pl |   16 +++++++++++-----
- 1 files changed, 11 insertions(+), 5 deletions(-)
-
-diff --git a/scripts/bootgraph.pl b/scripts/bootgraph.pl
-index f0af9aa..0a498e3 100644
---- a/scripts/bootgraph.pl
-+++ b/scripts/bootgraph.pl
-@@ -88,7 +88,7 @@ END
- }
- 
- print "<?xml version=\"1.0\" standalone=\"no\"?> \n";
--print "<svg width=\"1000\" height=\"100%\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">\n";
-+print "<svg width=\"2000\" height=\"100%\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">\n";
- 
- my @styles;
- 
-@@ -105,8 +105,9 @@ $styles[9] = "fill:rgb(255,255,128);fill-opacity:0.5;stroke-width:1;stroke:rgb(0
- $styles[10] = "fill:rgb(255,128,255);fill-opacity:0.5;stroke-width:1;stroke:rgb(0,0,0)";
- $styles[11] = "fill:rgb(128,255,255);fill-opacity:0.5;stroke-width:1;stroke:rgb(0,0,0)";
- 
--my $mult = 950.0 / ($maxtime - $firsttime);
--my $threshold = ($maxtime - $firsttime) / 60.0;
-+my $mult = 1950.0 / ($maxtime - $firsttime);
-+my $threshold2 = ($maxtime - $firsttime) / 120.0;
-+my $threshold = $threshold2/10;
- my $stylecounter = 0;
- my %rows;
- my $rowscount = 1;
-@@ -116,7 +117,7 @@ foreach my $key (@initcalls) {
- 	my $duration = $end{$key} - $start{$key};
- 
- 	if ($duration >= $threshold) {
--		my ($s, $s2, $e, $w, $y, $y2, $style);
-+		my ($s, $s2, $s3, $e, $w, $y, $y2, $style);
- 		my $pid = $pids{$key};
- 
- 		if (!defined($rows{$pid})) {
-@@ -125,6 +126,7 @@ foreach my $key (@initcalls) {
- 		}
- 		$s = ($start{$key} - $firsttime) * $mult;
- 		$s2 = $s + 6;
-+		$s3 = $s + 1;
- 		$e = ($end{$key} - $firsttime) * $mult;
- 		$w = $e - $s;
- 
-@@ -138,7 +140,11 @@ foreach my $key (@initcalls) {
- 		};
- 
- 		print "<rect x=\"$s\" width=\"$w\" y=\"$y\" height=\"145\" style=\"$style\"/>\n";
--		print "<text transform=\"translate($s2,$y2) rotate(90)\">$key</text>\n";
-+		if ($duration >= $threshold2) {
-+			print "<text transform=\"translate($s2,$y2) rotate(90)\">$key</text>\n";
-+		} else {
-+			print "<text transform=\"translate($s3,$y2) rotate(90)\" font-size=\"3pt\">$key</text>\n";
-+		}
- 	}
- }
- 
--- 
-1.6.0.6
+To: linux-kernel@vger.kernel.org
+Cc: torvalds@linux-foundation.org, mingo@elte.hu, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 
 
+
+
+
+Hi,
+
+Changes since last version
+* some tweaks to the bootchart script to get better visualization
+* added serialization points in the irq autodetector, module unloading
+  and at rootfs mounting (based on feedback from Linus and Andi)
+* added a second libata patch to scan the partition tables from inside
+  the async code, without global serialization (based on Linus
+  suggestion). This saves a ton of boot time for my box with 2 sata
+  controllers
+
+I talked to David Howells to see if we could share the thread pool code
+(all 35 lines of it), but his requirements are more or less
+incompatible with mine. He needs priorities to be honored, while I need
+to do strict sequencing of events, and this appears to be hardly
+compatible, at least not without adding much more complexity than the
+relatively simple thread code justifies.
+
+parts of the original announcement below; I've updated the two
+bootcharts with the new code; basically my testbox is going from 2.75
+seconds to 1.0 seconds (approximately).. which is not a bad gain at all.
+
+I've also stuck the patches in a git tree; the git info is:
+
+The following changes since commit 238c6d54830c624f34ac9cf123ac04aebfca5013:
+  Linus Torvalds (1):
+        Merge git://git.kernel.org/.../agk/linux-2.6-dm
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/arjan/linux-2.6-async.git master
+
+Arjan van de Ven (6):
+      fastboot: Asynchronous function calls to speed up kernel boot
+      fastboot: make scsi probes asynchronous
+      fastboot: make the libata port scan asynchronous
+      fastboot: make ACPI bus drivers probe asynchronous
+      bootchart: improve output based on Dave Jones' feedback
+      fastboot: Make libata initialization even more async
+
+ drivers/acpi/scan.c       |   23 +++-
+ drivers/ata/libata-core.c |   96 ++++++++-------
+ drivers/scsi/scsi_scan.c  |    3 +
+ drivers/scsi/sd.c         |  109 ++++++++++------
+ include/linux/async.h     |   21 +++
+ init/do_mounts.c          |    2 +
+ init/main.c               |    5 +-
+ kernel/Makefile           |    3 +-
+ kernel/async.c            |  307 +++++++++++++++++++++++++++++++++++++++++++++
+ kernel/irq/autoprobe.c    |    5 +
+ kernel/module.c           |    2 +
+ scripts/bootgraph.pl      |   16 ++-
+ 12 files changed, 491 insertions(+), 101 deletions(-)
+ create mode 100644 include/linux/async.h
+ create mode 100644 kernel/async.c
+
+
+should this go via -tip? is the first patch simple enough for .29 so that the later ones can go via the maintainer trees after that?
+
+
+=====
+
+This patch series introduces asynchronous function calls.
+The goal is still the same (boot faster), the method is entirely
+different.
+
+Asynchronous function calls allow drivers and subsystems to do
+operations asynchronously, while providing a mechanism to serialize
+the asynchronous operations at "externally visible" locations, such as
+device number registrations. 
+
+As such, this approach is NOT a "full parallel kernel init".
+For one, it keeps device numbers stable. For another, it's very much
+opt-in for any code using this.
+
+Rather, it is more comparable to an out-of-order cpu, where computations
+are done asynchronously, but are retired in program order.
+
+This series first introduces the infrastructure in patch 1,
+and then adds users of this infrastructure (scsi in patch2, libata in
+patch 3 and acpi in patch 4).
+
+To see this working, I uploaded a "before" and "after" kernel bootchart
+for one of my testboxes at
+
+http://www.kernel.org/pub/linux/kernel/people/arjan/async/before.svg
+http://www.kernel.org/pub/linux/kernel/people/arjan/async/after.svg
+
+[minor note; the "after" one also has Alan's suggestion to tweak the
+serial config option]
+
+As you can see with inkscape (or gimp or any other svg viewer), there
+is still some room for doing more things in parallel, but the 3 example
+usage patches are a big win already.
 
 
 -- 
