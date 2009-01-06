@@ -1,33 +1,111 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 07/18] osd_ktests: Add basic OSD tests
-Date: Tue, 06 Jan 2009 19:04:33 +0200
-Message-ID: <49638F21.6080000@panasas.com>
-References: <49637117.50108@panasas.com>	<20090107001206N.fujita.tomonori@lab.ntt.co.jp>	<49637D70.1060709@panasas.com> <20090107015837W.fujita.tomonori@lab.ntt.co.jp>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [PATCH 17/18] osd: Kconfig file for in-tree builds
+Date: Tue, 06 Jan 2009 09:40:29 -0800
+Message-ID: <4963978D.8060001@oracle.com>
+References: <49636507.8060808@panasas.com> <1231252344-24792-1-git-send-email-bharrosh@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:21712 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750907AbZAFREi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2009 12:04:38 -0500
-In-Reply-To: <20090107015837W.fujita.tomonori@lab.ntt.co.jp>
+Received: from acsinet11.oracle.com ([141.146.126.233]:48774 "EHLO
+	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752188AbZAFRl3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2009 12:41:29 -0500
+In-Reply-To: <1231252344-24792-1-git-send-email-bharrosh@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, osd-dev@open-osd.org, akpm@linux-foundation.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd ml <osd-dev@open-osd.org>, Andrew Morton <akpm@linux-foundation.org>
 
-FUJITA Tomonori wrote:
+Boaz Harrosh wrote:
+> Kconfig file for the drivers/scsi/osd subdirectory.
+> Adds the following config items:
+> 	config SCSI_OSD_INITIATOR
+> 	config SCSI_OSD_ULD
+> 	config SCSI_OSD_DPRINT_SENSE
+> 	config SCSI_OSD_DEBUG
 > 
-> IMHO, it's better to have only useful debugging stuff in mainline for
-> many people like scsi_debug.
+> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> Reviewed-by: Benny Halevy <bhalevy@panasas.com>
+> ---
+>  drivers/scsi/osd/Kconfig |   53 ++++++++++++++++++++++++++++++++++++++++++++++
+>  1 files changed, 53 insertions(+), 0 deletions(-)
+>  create mode 100644 drivers/scsi/osd/Kconfig
+> 
+> diff --git a/drivers/scsi/osd/Kconfig b/drivers/scsi/osd/Kconfig
+> new file mode 100644
+> index 0000000..861b5ce
+> --- /dev/null
+> +++ b/drivers/scsi/osd/Kconfig
+> @@ -0,0 +1,53 @@
+> +#
+> +# Kernel configuration file for the OSD scsi protocol
+> +#
+> +# Copyright (C) 2008 Panasas Inc.  All rights reserved.
+> +#
+> +# Authors:
+> +#   Boaz Harrosh <bharrosh@panasas.com>
+> +#   Benny Halevy <bhalevy@panasas.com>
+> +#
+> +# This program is free software; you can redistribute it and/or modify
+> +# it under the terms of the GNU General Public version 2 License as
+> +# published by the Free Software Foundation
+> +#
+> +# FIXME: SCSI_OSD_INITIATOR should select CONFIG (HMAC) SHA1 somehow.
+> +#        How is it done properly?
 
-Believe me, for any one who is using OSD this stuff is a must
-just as scsi_debug.
+Probably similar to how net/sctp/Kconfig does it:
 
-Since everybody will run OSD in 10 years then this is very useful,
-right? ;)
+	select CRYPTO
+	select CRYPTO_HMAC
+	select CRYPTO_SHA1
 
-Anyway it is removed.
+> +#
+> +
+> +config SCSI_OSD_INITIATOR
+> +	tristate "OSD-Initiator library"
+> +	depends on SCSI
+> +	help
+> +		Enable the OSD-Initiator library (libosd.ko).
+> +		NOTE: You must also select CRYPTO_SHA1 + CRYPTO_HMAC and their
+> +		dependencies
 
-Boaz
+All of the kconfig help text indentation is incorrect.  :(
+It should all be tab + 2 spaces.
+
+> +
+> +config SCSI_OSD_ULD
+> +	tristate "OSD Upper Level driver"
+> +	depends on SCSI_OSD_INITIATOR
+> +	help
+> +		Build a SCSI upper layer driver that exports /dev/osdX devices
+> +		to user-mode for testing and controlling OSD devices. It is also
+> +		needed by exofs, for mounting an OSD based file system.
+
+		                                 OSD-based
+
+> +
+> +config SCSI_OSD_DPRINT_SENSE
+> +    int "(0-2) When sense is returned, DEBUG print all sense descriptors"
+> +    default 1
+> +    depends on SCSI_OSD_INITIATOR
+> +    help
+> +        When a CHECK_CONDITION status is returned from a target, and a
+> +        sense-buffer is retrieved, turning this on will dump a full
+> +        sense-decoding message. Setting to 2 will also print recoverable
+> +        errors that might be regularly returned for some filesystem
+> +        operations.
+> +
+> +config SCSI_OSD_DEBUG
+> +	bool "Compile All OSD modules with lots of DEBUG prints"
+> +	default n
+> +	depends on SCSI_OSD_INITIATOR
+> +	help
+> +		OSD Code is populated with lots of OSD_DEBUG(..) printouts to
+> +		dmesg. Enable this if you found a bug and you want to help us
+> +		track the problem (see also MAINTAINERS). Setting this will also
+> +		force SCSI_OSD_DPRINT_SENSE=2.
+
+
+-- 
+~Randy
