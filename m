@@ -1,78 +1,61 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 18/18] scsi: Add osd library to build system
-Date: Tue,  6 Jan 2009 16:34:08 +0200
-Message-ID: <1231252448-32731-1-git-send-email-bharrosh@panasas.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 07/18] osd_ktests: Add basic OSD tests
+Date: Tue, 6 Jan 2009 23:42:46 +0900
+Message-ID: <20090106234303H.fujita.tomonori@lab.ntt.co.jp>
 References: <49636507.8060808@panasas.com>
+	<1231251436-9777-1-git-send-email-bharrosh@panasas.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:24791 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751881AbZAFOeL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2009 09:34:11 -0500
-In-Reply-To: <49636507.8060808@panasas.com>
+Received: from sh.osrg.net ([192.16.179.4]:43506 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751695AbZAFOnI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Jan 2009 09:43:08 -0500
+In-Reply-To: <1231251436-9777-1-git-send-email-bharrosh@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd ml <osd-dev@open-osd.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
+To: bharrosh@panasas.com
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, osd-dev@open-osd.org, akpm@linux-foundation.org
 
-OSD in kernel source code is assumed to be at:
-drivers/scsi/osd/ with its own Makefile and Kconfig
+On Tue,  6 Jan 2009 16:17:16 +0200
+Boaz Harrosh <bharrosh@panasas.com> wrote:
 
-Add includes to them from drivers/scsi Makefile and Kconfig
-Add OSD to MAINTAINERS file
+> Currently testing what is implemented in the osd_initiator library.
+> That is - format, create/remove partition, create/remove object,
+> read and write to objects.
+> 
+> This test passes against the IBM-OSD-SIM OSDv1 target.
+> 
+> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> Reviewed-by: Benny Halevy <bhalevy@panasas.com>
+> ---
+>  drivers/scsi/osd/Kbuild       |    2 +-
+>  drivers/scsi/osd/osd_ktests.c |  331 +++++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/osd/osd_ktests.h |    4 +
+>  drivers/scsi/osd/osd_uld.c    |    2 +-
+>  4 files changed, 337 insertions(+), 2 deletions(-)
+>  create mode 100644 drivers/scsi/osd/osd_ktests.c
+> 
+> diff --git a/drivers/scsi/osd/Kbuild b/drivers/scsi/osd/Kbuild
+> index 4730cdc..6fb823f 100644
+> --- a/drivers/scsi/osd/Kbuild
+> +++ b/drivers/scsi/osd/Kbuild
+> @@ -35,5 +35,5 @@ libosd-y := osd_initiator.o
+>  obj-$(CONFIG_SCSI_OSD_INITIATOR) += libosd.o
+>  
+>  # osd.ko - SCSI ULD and char-device
+> -osd-y := osd_uld.o
+> +osd-y := osd_uld.o osd_ktests.o
+>  obj-$(CONFIG_SCSI_OSD_ULD) += osd.o
+> diff --git a/drivers/scsi/osd/osd_ktests.c b/drivers/scsi/osd/osd_ktests.c
+> new file mode 100644
+> index 0000000..fba4934
+> --- /dev/null
+> +++ b/drivers/scsi/osd/osd_ktests.c
+> @@ -0,0 +1,331 @@
+> +/*
+> + * osd_ktests.c - An osd_initiator library in-kernel test suite
+> + *              called by the osd_uld module
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-Reviewed-by: Benny Halevy <bhalevy@panasas.com>
----
- MAINTAINERS           |   10 ++++++++++
- drivers/scsi/Kconfig  |    2 ++
- drivers/scsi/Makefile |    2 ++
- 3 files changed, 14 insertions(+), 0 deletions(-)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index ceb32ee..3dcc11c 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -3241,6 +3241,16 @@ L:	orinoco-devel@lists.sourceforge.net
- W:	http://www.nongnu.org/orinoco/
- S:	Maintained
- 
-+OSD LIBRARY
-+P:	Boaz Harrosh
-+M:	bharrosh@panasas.com
-+P:	Benny Halevy
-+M:	bhalevy@panasas.com
-+L:	osd-dev@open-osd.org
-+W:	http://open-osd.org
-+T:	git://git.open-osd.org/open-osd.git
-+S:	Maintained
-+
- P54 WIRELESS DRIVER
- P:	Michael Wu
- M:	flamingice@sourmilk.net
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 152d4aa..7cadcf8 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -1802,4 +1802,6 @@ source "drivers/scsi/pcmcia/Kconfig"
- 
- source "drivers/scsi/device_handler/Kconfig"
- 
-+source "drivers/scsi/osd/Kconfig"
-+
- endmenu
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index 1410697..ec2be4e 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -138,6 +138,8 @@ obj-$(CONFIG_CHR_DEV_SG)	+= sg.o
- obj-$(CONFIG_CHR_DEV_SCH)	+= ch.o
- obj-$(CONFIG_SCSI_ENCLOSURE)	+= ses.o
- 
-+obj-$(CONFIG_SCSI_OSD_INITIATOR) += osd/
-+
- # This goes last, so that "real" scsi devices probe earlier
- obj-$(CONFIG_SCSI_DEBUG)	+= scsi_debug.o
- 
--- 
-1.6.0.1
-
+Why do we need in-kernel test suite?
