@@ -1,63 +1,46 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH] scsi_lib: don't decrement busy counters when inserting
-	commands
-Date: Mon, 5 Jan 2009 15:28:25 -0800
-Message-ID: <20090105232825.GA12820@plap4-2.local>
-References: <1229493343215-git-send-email-michaelc@cs.wisc.edu> <1230914541.3304.9.camel@localhost.localdomain>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH mm/next] libfc: uses/select CRC32
+Date: Mon, 05 Jan 2009 16:05:35 -0800
+Message-ID: <4962A04F.5020404@oracle.com>
+References: <200901052050.n05Kox9j012519@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:49644 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751340AbZAEX21 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2009 18:28:27 -0500
-Content-Disposition: inline
-In-Reply-To: <1230914541.3304.9.camel@localhost.localdomain>
+Received: from rcsinet12.oracle.com ([148.87.113.124]:46838 "EHLO
+	rgminet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751536AbZAFAF7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2009 19:05:59 -0500
+In-Reply-To: <200901052050.n05Kox9j012519@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
+To: linux-kernel@vger.kernel.org
+Cc: akpm <akpm@linux-foundation.org>, jejb <James.Bottomley@steeleye.com>, scsi <linux-scsi@vger.kernel.org>
 
-On Fri, 02 Jan 2009, James Bottomley wrote:
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-> On Tue, 2008-12-16 at 23:55 -0600, michaelc@cs.wisc.edu wrote:
-> > From: Mike Christie <michaelc@cs.wisc.edu>
-> > 
-> > This patch fixes a regression in scsi-misc introduced with:
-> > 312efe5efcdb02d604ea37a41d965f32ca276d6a
-> > [SCSI] simplify scsi_io_completion().
-> > 
-> > The problem is that in previous kernels scsi_io_completion would call
-> > scsi_requeue_command, but now it can call scsi_queue_insert for
-> > something like a UNIT_ATTENTION (for netapp targets we get
-> > UNIT_ATTENTION when restarting a iscsi session). And scsi_queue_insert
-> > will call scsi_device_unbusy, but in the scsi_io_completion code path
-> > scsi_finish_command has already called this so we now end up
-> > with invalid host, target and device busy values.
-> > 
-> > Patch was made over scsi-misc.
-> 
-> This is a bad bug, but not quite the way I'd like to fix it.  Whether
-> the queue should be unbusied or not is really separate from the block
-> action, so it should have its own flag (plus it's not really a flag many
-> people should be using).  Since, really, the wrong use is confined to
-> the defining file, how about this:
+libfc uses crc32 functions, so cause it to be built
+via select:
 
-Hmm, with this patch I'm still running into the problems I described
-here:
+drivers/built-in.o: In function `fc_frame_crc_check':
+(.text+0x75dae): undefined reference to `crc32_le'
+drivers/built-in.o: In function `fc_fcp_recv':
+fc_fcp.c:(.text+0x7b919): undefined reference to `crc32_le'
+fc_fcp.c:(.text+0x7b9d5): undefined reference to `crc32_le'
+fc_fcp.c:(.text+0x7ba54): undefined reference to `crc32_le'
 
-http://article.gmane.org/gmane.linux.scsi/47029
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ drivers/scsi/Kconfig |    1 +
+ 1 file changed, 1 insertion(+)
 
-basically, I/Os returned with a DID_RESET status are being requeued in
-an incomplete state:
-
-	[ 2362.068342] scsi(5:0:13): OVERRUN status detected 0x7-0x400
-	[ 2362.068345] CDB: 0x2a 0x0 0x0 0x0 0xe 0x70
-	[ 2362.068347] PID=0x81eeb req=0x0 xtra=0x1c00 -- returning DID_ERROR status!
-	[ 2362.068411] scsi(5:0:13): OVERRUN status detected 0x7-0x400
-	[ 2362.068413] CDB: 0x2a 0x0 0x0 0x0 0xe 0x70
-	[ 2362.068415] PID=0x81eec req=0x0 xtra=0x1c00 -- returning DID_ERROR status!
-
-:(
-
-Thoughts?
+--- mmotm-2009-0105-1250.orig/drivers/scsi/Kconfig
++++ mmotm-2009-0105-1250/drivers/scsi/Kconfig
+@@ -609,6 +609,7 @@ config SCSI_FLASHPOINT
+ config LIBFC
+ 	tristate "LibFC module"
+ 	select SCSI_FC_ATTRS
++	select CRC32
+ 	---help---
+ 	  Fibre Channel library module
+ 
