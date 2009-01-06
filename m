@@ -1,14 +1,14 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 2/5] mpt fusion: Added msi enable disable for FC,SPI and SAS
-Date: Tue, 6 Jan 2009 15:02:23 +0530
-Message-ID: <20090106093141.GD13033@lsi.com>
+Subject: [PATCH 3/5] mpt fusion: Added Firmware debug support
+Date: Tue, 6 Jan 2009 15:03:37 +0530
+Message-ID: <20090106093332.GE13033@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og113.obsmtp.com ([64.18.2.179]:36077 "EHLO
-	exprod7og113.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751347AbZAFJv5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2009 04:51:57 -0500
+Received: from exprod7ob116.obsmtp.com ([64.18.2.218]:43969 "EHLO
+	exprod7og116.obsmtp.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751461AbZAFJxJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2009 04:53:09 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,85 +16,103 @@ To: linux-scsi@vger.kernel.org
 Cc: eric.moore@lsi.com, sathyap@lsi.com, James.Bottomley@HansenPartnership.com
 
 
-Added support for MSI enable/disable for different buses FC,SPI,SAS instead
-of having single MSI enable/disable feature.
+Added support for Firmware debuging
 ---
 
 Signed-off-by: Kashyap Desai <kadesai@lsi.com>
 ---
 diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index c4e8b9a..55d9a7e 100644
+index 55d9a7e..ea3aafb 100644
 --- a/drivers/message/fusion/mptbase.c
 +++ b/drivers/message/fusion/mptbase.c
-@@ -79,9 +79,22 @@ MODULE_VERSION(my_VERSION);
- /*
-  *  cmd line parameters
-  */
--static int mpt_msi_enable = -1;
--module_param(mpt_msi_enable, int, 0);
--MODULE_PARM_DESC(mpt_msi_enable, " MSI Support Enable (default=0)");
-+
-+static int mpt_msi_enable_spi;
-+module_param(mpt_msi_enable_spi, int, 0);
-+MODULE_PARM_DESC(mpt_msi_enable_spi, " Enable MSI Support for SPI \
-+		controllers (default=0)");
-+
-+static int mpt_msi_enable_fc;
-+module_param(mpt_msi_enable_fc, int, 0);
-+MODULE_PARM_DESC(mpt_msi_enable_fc, " Enable MSI Support for FC \
-+		controllers (default=0)");
-+
-+static int mpt_msi_enable_sas;
-+module_param(mpt_msi_enable_sas, int, 0);
-+MODULE_PARM_DESC(mpt_msi_enable_sas, " Enable MSI Support for SAS \
-+		controllers (default=0)");
-+
+@@ -107,6 +107,14 @@ module_param_call(mpt_debug_level, mpt_set_debug_level, param_get_int,
+ MODULE_PARM_DESC(mpt_debug_level, " debug level - refer to mptdebug.h \
+ 	- (default=0)");
  
- static int mpt_channel_mapping;
- module_param(mpt_channel_mapping, int, 0);
-@@ -91,7 +104,9 @@ static int mpt_debug_level;
- static int mpt_set_debug_level(const char *val, struct kernel_param *kp);
- module_param_call(mpt_debug_level, mpt_set_debug_level, param_get_int,
- 		  &mpt_debug_level, 0600);
--MODULE_PARM_DESC(mpt_debug_level, " debug level - refer to mptdebug.h - (default=0)");
-+MODULE_PARM_DESC(mpt_debug_level, " debug level - refer to mptdebug.h \
-+	- (default=0)");
++int mpt_fwfault_debug;
++EXPORT_SYMBOL(mpt_fwfault_debug);
++module_param_call(mpt_fwfault_debug, param_set_int, param_get_int,
++	  &mpt_fwfault_debug, 0600);
++MODULE_PARM_DESC(mpt_fwfault_debug, "Enable detection of Firmware fault"
++	" and halt Firmware on fault - (default=0)");
++
 +
  
  #ifdef MFCNT
  static int mfcounter = 0;
-@@ -1751,16 +1766,25 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ioc->bus_type = SAS;
- 	}
+@@ -6337,6 +6345,33 @@ mpt_print_ioc_summary(MPT_ADAPTER *ioc, char *buffer, int *size, int len, int sh
+ 	*size = y;
+ }
  
--	if (mpt_msi_enable == -1) {
--		/* Enable on SAS, disable on FC and SPI */
--		if (ioc->bus_type == SAS)
--			ioc->msi_enable = 1;
--		else
--			ioc->msi_enable = 0;
--	} else
--		/* follow flag: 0 - disable; 1 - enable */
--		ioc->msi_enable = mpt_msi_enable;
- 
-+	switch (ioc->bus_type) {
 +
-+	case SAS:
-+		ioc->msi_enable = mpt_msi_enable_sas;
-+		break;
++/**
++ *	mpt_halt_firmware - Halts the firmware if it is operational and panic
++ *	the kernel
++ *	@ioc: Pointer to MPT_ADAPTER structure
++ *
++ **/
++void
++mpt_halt_firmware(MPT_ADAPTER *ioc)
++{
++	u32	 ioc_raw_state;
 +
-+	case SPI:
-+		ioc->msi_enable = mpt_msi_enable_spi;
-+		break;
++	ioc_raw_state = mpt_GetIocState(ioc, 0);
 +
-+	case FC:
-+		ioc->msi_enable = mpt_msi_enable_fc;
-+		break;
-+
-+	default:
-+		ioc->msi_enable = 0;
-+		break;
++	if ((ioc_raw_state & MPI_IOC_STATE_MASK) == MPI_IOC_STATE_FAULT) {
++		printk(MYIOC_s_ERR_FMT "IOC is in FAULT state (%04xh)!!!\n",
++			ioc->name, ioc_raw_state & MPI_DOORBELL_DATA_MASK);
++		panic("%s: IOC Fault (%04xh)!!!\n", ioc->name,
++			ioc_raw_state & MPI_DOORBELL_DATA_MASK);
++	} else {
++		CHIPREG_WRITE32(&ioc->chip->Doorbell, 0xC0FFEE00);
++		panic("%s: Firmware is halted due to command timeout\n",
++			ioc->name);
 +	}
- 	if (ioc->errata_flag_1064)
- 		pci_disable_io_access(pdev);
++}
++EXPORT_SYMBOL(mpt_halt_firmware);
++
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+ /*
+  *	Reset Handling
+@@ -6369,6 +6404,8 @@ mpt_HardResetHandler(MPT_ADAPTER *ioc, int sleepFlag)
+ 	printk(MYIOC_s_INFO_FMT "HardResetHandler Entered!\n", ioc->name);
+ 	printk("MF count 0x%x !\n", ioc->mfcnt);
+ #endif
++	if (mpt_fwfault_debug)
++		mpt_halt_firmware(ioc);
  
+ 	/* Reset the adapter. Prevent more than 1 call to
+ 	 * mpt_do_ioc_recovery at any instant in time.
+diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
+index dff048c..b3e981d 100644
+--- a/drivers/message/fusion/mptbase.h
++++ b/drivers/message/fusion/mptbase.h
+@@ -922,11 +922,14 @@ extern void	 mpt_free_fw_memory(MPT_ADAPTER *ioc);
+ extern int	 mpt_findImVolumes(MPT_ADAPTER *ioc);
+ extern int	 mptbase_sas_persist_operation(MPT_ADAPTER *ioc, u8 persist_opcode);
+ extern int	 mpt_raid_phys_disk_pg0(MPT_ADAPTER *ioc, u8 phys_disk_num, pRaidPhysDiskPage0_t phys_disk);
++extern void     mpt_halt_firmware(MPT_ADAPTER *ioc);
++
+ 
+ /*
+  *  Public data decl's...
+  */
+ extern struct list_head	  ioc_list;
++extern int mpt_fwfault_debug;
+ 
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+ #endif		/* } __KERNEL__ */
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+index ee09041..e62c6bc 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -1846,6 +1846,9 @@ mptscsih_abort(struct scsi_cmnd * SCpnt)
+ 	if (hd->timeouts < -1)
+ 		hd->timeouts++;
+ 
++	if (mpt_fwfault_debug)
++		mpt_halt_firmware(ioc);
++
+ 	/* Most important!  Set TaskMsgContext to SCpnt's MsgContext!
+ 	 * (the IO to be ABORT'd)
+ 	 *
