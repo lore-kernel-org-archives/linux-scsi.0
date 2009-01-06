@@ -1,14 +1,14 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
 Subject: [PATCH 1/5] mpt fusion: Update MPI Headers to version 01.05.19
-Date: Tue, 6 Jan 2009 15:11:36 +0530
-Message-ID: <20090106094128.GH13033@lsi.com>
+Date: Tue, 6 Jan 2009 14:53:28 +0530
+Message-ID: <20090106092328.GB13033@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og111.obsmtp.com ([64.18.2.175]:51798 "EHLO
-	exprod7og111.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751475AbZAFKBI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2009 05:01:08 -0500
+Received: from exprod7og103.obsmtp.com ([64.18.2.159]:59032 "EHLO
+	exprod7og103.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750862AbZAFKGT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2009 05:06:19 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
