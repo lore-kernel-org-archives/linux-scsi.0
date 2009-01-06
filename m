@@ -1,61 +1,58 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 07/18] osd_ktests: Add basic OSD tests
-Date: Tue, 06 Jan 2009 17:49:04 +0200
-Message-ID: <49637D70.1060709@panasas.com>
-References: <1231251436-9777-1-git-send-email-bharrosh@panasas.com>	<20090106234303H.fujita.tomonori@lab.ntt.co.jp>	<49637117.50108@panasas.com> <20090107001206N.fujita.tomonori@lab.ntt.co.jp>
+From: Tony Battersby <tonyb@cybernetics.com>
+Subject: Re: [PATCH] sym53c8xx_2: slave_alloc/destroy safety (2.6.27.5)
+Date: Tue, 06 Jan 2009 11:26:07 -0500
+Message-ID: <4963861F.5090404@cybernetics.com>
+References: <49593940.9060102@cybernetics.com>	 <1230631843-16470-1-git-send-email-Aaro.Koskinen@nokia.com> <1230664572.18627.2.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:22439 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750873AbZAFPtI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2009 10:49:08 -0500
-In-Reply-To: <20090107001206N.fujita.tomonori@lab.ntt.co.jp>
+Received: from host64.cybernetics.com ([98.174.209.230]:3576 "EHLO
+	mail.cybernetics.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750846AbZAFQ0K (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2009 11:26:10 -0500
+In-Reply-To: <1230664572.18627.2.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, osd-dev@open-osd.org, akpm@linux-foundation.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Aaro Koskinen <Aaro.Koskinen@nokia.com>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-FUJITA Tomonori wrote:
-> On Tue, 06 Jan 2009 16:56:23 +0200
-> Boaz Harrosh <bharrosh@panasas.com> wrote:
-> 
->> FUJITA Tomonori wrote:
->>> On Tue,  6 Jan 2009 16:17:16 +0200
->>> Why do we need in-kernel test suite?
->> It must be in kernel, because it tests the in-kernel library.
->> However it could be in it's own Module, which makes it more
->> complicated, but doable.
-> 
-> Why do we need the code to tests the in-kernel library?
-> 
-> I expect that you guys have tested the osd in-kernel library heavily
-> and will. I don't think people want to do the same. Then why do we
-> need to have the test suite in mainline?
-> 
+James Bottomley wrote:
+> On Tue, 2008-12-30 at 12:10 +0200, Aaro Koskinen wrote:
+>   
+>> Thanks. The updated patch is below.
+>>     
+>
+> Tony,
+>
+> Since we're lacking an active maintainer on this one and you seem
+> interested, could you run these patches through your tests to make sure
+> they're reasonably OK and then respond with an ack?
+>
+> Thanks,
+>
+> James
+>
+>
+>
+>   
+This patch survived an overnight testing of "modprobe sym53c8xx;
+modprobe -r sym53c8xx" in a loop, using a SCSI cable of marginal quality
+that sometimes fails DV, with a mix of single-lun and multi-lun devices
+of various SCSI revision levels, with many kernel debug options
+enabled.  The only kernel warning message I see is the pre-existing and
+already-reported problem about dma_free_coherent() being called with
+interrupts disabled during rmmod, but that is not caused by this patch.
 
-one - There are things that can regress. Lots of stuff in current
-kernel are only used by OSD, like bidi and varlen. all the way down
-to LLDs. So this should be a regression test for future kernels.
+>From the description of this patch, I assume that it is a cleanup
+instead of a fix for an actual problem.  Correspondingly, I don't have a
+specific testcase that is improved by this patch.  I also have not
+analyzed the source to see what the patch is trying to do.  However, the
+current form of the patch passes testing as described above.
 
-two - To test compatibility, some thing is broken, the test can help
-pinpoint the problems. So it's a debugging tool.
+I will reply to the other patches in separate messages later.
 
-Sure, the lib itself is heavily tested but this is to test the
-round trip.
+Tested-by: Tony Battersby <tonyb@cybernetics.com>
 
-> 
->> Please note that the submitted tests are the bare minimum and
->> will be enhanced in the future. Perhaps later when the test grow
->> I will put them in their own module.
-> 
-> If you can have it as a module, it's very easy for you guys to keep it
-> out-of-mainline.
+Tony
 
-I have it out-of-mainline for a long time ;). I can do that. I thought that
-I should provide a minimal test, so developers can check if they broke
-something. If no one wants it I'll remove it.
-
-Thanks
-Boaz
