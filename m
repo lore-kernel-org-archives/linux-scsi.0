@@ -1,124 +1,121 @@
-From: "Shi, Harris" <Harris.Shi@lsi.com>
-Subject: RE: question on block-layer timeout change
-Date: Tue, 6 Jan 2009 23:37:53 -0700
-Message-ID: <3568BBCB98C00041A9E622952FD5F24EA14A0697@cosmail03.lsi.com>
-References: <3568BBCB98C00041A9E622952FD5F24EA11C9F3A@cosmail03.lsi.com>
- <20081112072919.GB12192@linux.vnet.ibm.com>
- <3568BBCB98C00041A9E622952FD5F24EA1226673@cosmail03.lsi.com>
- <20081114171823.GA16575@us.ibm.com>
- <3568BBCB98C00041A9E622952FD5F24EA135D754@cosmail03.lsi.com>
- <4940F367.506@suse.de>
- <3568BBCB98C00041A9E622952FD5F24EA13B99A3@cosmail03.lsi.com>
- <4948AB47.6090505@suse.de>
- <3568BBCB98C00041A9E622952FD5F24EA13B9EB0@cosmail03.lsi.com>
- <20081218092339.GB812@linux.vnet.ibm.com> <4960EDE0.70007@cs.wisc.edu>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 17/18] osd: Kconfig file for in-tree builds
+Date: Wed, 07 Jan 2009 10:48:42 +0200
+Message-ID: <49646C6A.3020304@panasas.com>
+References: <49636507.8060808@panasas.com> <1231252344-24792-1-git-send-email-bharrosh@panasas.com> <4963978D.8060001@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og106.obsmtp.com ([64.18.2.165]:60140 "EHLO
-	exprod7og106.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752749AbZAGGiN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2009 01:38:13 -0500
-In-Reply-To: <4960EDE0.70007@cs.wisc.edu>
-Content-Language: en-US
+Received: from gw-ca.panasas.com ([66.104.249.162]:18633 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751856AbZAGIsr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2009 03:48:47 -0500
+In-Reply-To: <4963978D.8060001@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, Mike Anderson <andmike@linux.vnet.ibm.com>
-Cc: Hannes Reinecke <hare@suse.de>, "malahal@us.ibm.com" <malahal@us.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd ml <osd-dev@open-osd.org>, Andrew Morton <akpm@linux-foundation.org>
 
-What we did is to sysReboot one controller while I/O is up and running, we expected to have controller failover and did not explicitly run iscsiadm to logout the session in this case. Yes. We got the oop after conn error message. If controller reboot resulted in session gone, that might explain we had a kernel panic. However, MPP has been running on iscsi array for quite a while on SLES10/REHL distribution, it's the first time we got hit by this kernel panic. That's why we had a some concerns on iscsi stack. 
-
------Original Message-----
-From: Mike Christie [mailto:michaelc@cs.wisc.edu] 
-Sent: Sunday, January 04, 2009 11:12 AM
-To: Mike Anderson
-Cc: Shi, Harris; Hannes Reinecke; malahal@us.ibm.com; SCSI development list
-Subject: Re: question on block-layer timeout change
-
-Mike Anderson wrote:
-> Shi, Harris <Harris.Shi@lsi.com> wrote:
->> Information from /var/log/messages:
->> ===================================
->> Dec 17 15:58:14 timon kernel: sd 6:0:0:2: [sdd] Sense Key : Recovered Error [current]
->> Dec 17 15:58:14 timon kernel: sd 6:0:0:2: [sdd] <<vendor>> ASC=0x95 ASCQ=0x1ASC=0x95 ASCQ=0x1
->> Dec 17 15:58:25 timon kernel:  connection2:0: ping timeout of 15 secs expired, last rx 19237, last ping 20487, now 24237
->> Dec 17 15:58:25 timon kernel:  connection2:0: detected conn error (1011)
->> Dec 17 15:58:26 timon iscsid: Kernel reported iSCSI connection 2:0 error (1011) state (3)
+Randy Dunlap wrote:
+> Boaz Harrosh wrote:
+>> Kconfig file for the drivers/scsi/osd subdirectory.
+>> Adds the following config items:
+>> 	config SCSI_OSD_INITIATOR
+>> 	config SCSI_OSD_ULD
+>> 	config SCSI_OSD_DPRINT_SENSE
+>> 	config SCSI_OSD_DEBUG
 >>
+>> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+>> Reviewed-by: Benny Halevy <bhalevy@panasas.com>
+>> ---
+>>  drivers/scsi/osd/Kconfig |   53 ++++++++++++++++++++++++++++++++++++++++++++++
+>>  1 files changed, 53 insertions(+), 0 deletions(-)
+>>  create mode 100644 drivers/scsi/osd/Kconfig
 >>
->>
->> Information from Serial output:
->> ===============================
->> Oops: 0002 [#1] SMP
->> last sysfs file: /sys/devices/system/cpu/cpu3/cache/index1/shared_cpu_map
->> Modules linked in: radeon drm agpgart crc32c libcrc32c ib_iser rdma_cm ib_cm nfs iw_cm lockd ib_sa ib_mad nfs_acl ib_core i6
->> IP: [<c011a274>] __ticket_spin_lock+0x8/0x19
->> *pdpt = 00000000319fe001 *pde = 0000000000000000
->> BUG: unable to handle kernel NULL pointer dereference at 00000086
->> IP: [<c011a274>] __ticket_spin_lock+0x8/0x19
->> *pdpt = 0000000000546001 *pde = 0000000000000000
->>  ipv6 af_packet microcode fuse loop dm_mod mptctl e1000 iTCO_wdt sr_mod video iTCO_vendor_support e752x_edac output shpchp ]
->>
->> Pid: 0, comm: swapper Not tainted (2.6.28-rc8-test-1-pae #1) PowerEdge 2850
->> EIP: 0060:[<c011a274>] EFLAGS: 00010086 CPU: 3
->> EIP is at __ticket_spin_lock+0x8/0x19
->> EAX: 00000086 EBX: f10f6380 ECX: f20b5400 EDX: 00000100
->> ESI: f18223b0 EDI: 00000000 EBP: f38a5e78 ESP: f38a5e78
->>  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
->> Process swapper (pid: 0, ti=f38a4000 task=f38a2fd0 task.ti=f38a4000)
->> Stack:
->>  f38a5e80 c0328e0f f38a5e98 f9298389 00000002 f10f6380 f18223b0 00000000
->>  f38a5ea4 f7e13396 f11b9300 f38a5eb0 c0212539 f11b9300 f38a5ed4 c02125f2
->>  f18225b8 00000282 f389c000 f18224f4 00000100 f389c000 c0212573 f38a5f08
->> Call Trace:
->>  [<c0328e0f>] ? _spin_lock+0x15/0x18
->>  [<f9298389>] ? iscsi_eh_cmd_timed_out+0x24/0xb0 [libiscsi]
->>  [<f7e13396>] ? scsi_times_out+0x35/0x61 [scsi_mod]
->>  [<c0212539>] ? blk_rq_timed_out+0xc/0x46
+>> diff --git a/drivers/scsi/osd/Kconfig b/drivers/scsi/osd/Kconfig
+>> new file mode 100644
+>> index 0000000..861b5ce
+>> --- /dev/null
+>> +++ b/drivers/scsi/osd/Kconfig
+>> @@ -0,0 +1,53 @@
+>> +#
+>> +# Kernel configuration file for the OSD scsi protocol
+>> +#
+>> +# Copyright (C) 2008 Panasas Inc.  All rights reserved.
+>> +#
+>> +# Authors:
+>> +#   Boaz Harrosh <bharrosh@panasas.com>
+>> +#   Benny Halevy <bhalevy@panasas.com>
+>> +#
+>> +# This program is free software; you can redistribute it and/or modify
+>> +# it under the terms of the GNU General Public version 2 License as
+>> +# published by the Free Software Foundation
+>> +#
+>> +# FIXME: SCSI_OSD_INITIATOR should select CONFIG (HMAC) SHA1 somehow.
+>> +#        How is it done properly?
 > 
-> I could not match my listing exactly with this output, but it appears that
-> the session is NULL when we call into iscsi_eh_cmd_timed_out. An addr2line
-> would help verify the iscsi_eh_cmd_timed_out line.
+> Probably similar to how net/sctp/Kconfig does it:
 > 
-> I added Mike C to the email cc for possible comments on the error messages
-> displayed above and if that would lead to cleanup of structures referenced
-> in iscsi_eh_cmd_timed_out.
+> 	select CRYPTO
+> 	select CRYPTO_HMAC
+> 	select CRYPTO_SHA1
 > 
 
-Sorry for the late reply. I have been on vacation.
+It is not yet relevant, I have not submitted the security code.
+But thanks, that looks doable. I have a question?
+When you do select, you must manually select the fixture you need plus
+all it's dependencies and their dependencies recursively, parents first?
 
-The iscsi error message just indicates that the initiator tried to send 
-a iscsi ping and it did not get a response, so the initiator dropped the 
-session. The error was reported as a generic connection error (1011) and 
-when the error was fired the initiator was in the logged in / full 
-feature phase (this basically means normal old use and nothing special).
+>> +#
+>> +
+>> +config SCSI_OSD_INITIATOR
+>> +	tristate "OSD-Initiator library"
+>> +	depends on SCSI
+>> +	help
+>> +		Enable the OSD-Initiator library (libosd.ko).
+>> +		NOTE: You must also select CRYPTO_SHA1 + CRYPTO_HMAC and their
+>> +		dependencies
+> 
+> All of the kconfig help text indentation is incorrect.  :(
+> It should all be tab + 2 spaces.
+> 
+>> +
+>> +config SCSI_OSD_ULD
+>> +	tristate "OSD Upper Level driver"
+>> +	depends on SCSI_OSD_INITIATOR
+>> +	help
+>> +		Build a SCSI upper layer driver that exports /dev/osdX devices
+>> +		to user-mode for testing and controlling OSD devices. It is also
+>> +		needed by exofs, for mounting an OSD based file system.
+> 
+> 		                                 OSD-based
+> 
+>> +
+>> +config SCSI_OSD_DPRINT_SENSE
+>> +    int "(0-2) When sense is returned, DEBUG print all sense descriptors"
+>> +    default 1
+>> +    depends on SCSI_OSD_INITIATOR
+>> +    help
+>> +        When a CHECK_CONDITION status is returned from a target, and a
+>> +        sense-buffer is retrieved, turning this on will dump a full
+>> +        sense-decoding message. Setting to 2 will also print recoverable
+>> +        errors that might be regularly returned for some filesystem
+>> +        operations.
+>> +
+>> +config SCSI_OSD_DEBUG
+>> +	bool "Compile All OSD modules with lots of DEBUG prints"
+>> +	default n
+>> +	depends on SCSI_OSD_INITIATOR
+>> +	help
+>> +		OSD Code is populated with lots of OSD_DEBUG(..) printouts to
+>> +		dmesg. Enable this if you found a bug and you want to help us
+>> +		track the problem (see also MAINTAINERS). Setting this will also
+>> +		force SCSI_OSD_DPRINT_SENSE=2.
+> 
+> 
 
-Due to the sles use and MPP driver, I am not sure what exactly is 
-running, but for this code path the iscsi driver does this:
+Thanks Randy, my first Kconfig, sorry. Should have read Documentation.
+I'll post a ver2 as reply to original patch.
 
-         cls_session = starget_to_session(scsi_target(scmd->device));
-         session = cls_session->dd_data;
-
-to get the session in iscsi_eh_cmd_timed_out (we do this in all kernels 
-do that has not changed).
-
-The session pointers are only changed when a session is destroyed, and 
-that only happens if you do a logout of the session (iscsiadm -m .... 
--u), and at that time when the session is destroyed we should have 
-flushed all IO.
-
-Are you guys doing a logout of the session with iscsiadm at this time?
-
-Does MPP clone commands and is it doing something with the command's 
-pointers to the device?
-
-Another possibilty is that commands are not getting cleaned up 
-correctly. When you see this "connection2:0: detected conn error 
-(1011)", the driver is going to kill all outstadnding commands and and 
-call scsi_done on them to requeue them with the scsi layer, so we should 
-be getting any commands timed out after you see that message (maybe only 
-in some race case where the session's commands are getting flushed at 
-the exact same time the scsi eh was firing). There was no time stamp on 
-the oops output but I doubt this happened. Did the oops happen after the 
-conn error message though?
+Boaz
