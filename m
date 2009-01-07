@@ -1,31 +1,34 @@
-From: Grant Grundler <grundler@google.com>
-Subject: Re: [PATCH 3/5] mpt fusion: Added Firmware debug support
-Date: Wed, 7 Jan 2009 12:04:23 -0800
-Message-ID: <da824cf30901071204k2317df5er5f80b7a882e370a5@mail.gmail.com>
-References: <20090106093332.GE13033@lsi.com>
-	 <da824cf30901061153s714aa74dhdceb7ac50f25e4e7@mail.gmail.com>
-	 <0D1E8821739E724A86F4D16902CE275C13FF96712C@inbmail01.lsi.com>
+From: "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+Subject: RE: [PATCH 3/5] mpt fusion: Added Firmware debug support
+Date: Thu, 8 Jan 2009 01:50:50 +0530
+Message-ID: <B73941C4DE6A3D4EA1AE128E9565E24423925BE450@inbmail01.lsi.com>
+References: <da824cf30901071204k2317df5er5f80b7a882e370a5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.45.13]:61414 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751678AbZAGUE4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2009 15:04:56 -0500
-Received: from spaceape7.eur.corp.google.com (spaceape7.eur.corp.google.com [172.28.16.141])
-	by smtp-out.google.com with ESMTP id n07K4skm010674
-	for <linux-scsi@vger.kernel.org>; Wed, 7 Jan 2009 12:04:54 -0800
-Received: from bwz4 (bwz4.prod.google.com [10.188.26.4])
-	by spaceape7.eur.corp.google.com with ESMTP id n07K2EKQ027504
-	for <linux-scsi@vger.kernel.org>; Wed, 7 Jan 2009 12:04:51 -0800
-Received: by bwz4 with SMTP id 4so23785744bwz.1
-        for <linux-scsi@vger.kernel.org>; Wed, 07 Jan 2009 12:04:51 -0800 (PST)
-In-Reply-To: <0D1E8821739E724A86F4D16902CE275C13FF96712C@inbmail01.lsi.com>
+Received: from chip3og58.obsmtp.com ([64.18.14.181]:48501 "EHLO
+	chip3og58.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751524AbZAGUpc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2009 15:45:32 -0500
+In-Reply-To: <da824cf30901071204k2317df5er5f80b7a882e370a5@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>
+To: Grant Grundler <grundler@google.com>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>
+
+Grant,
+I see it is disabled by default. And it can be enabled by passing a module parameter. Do you see anywhere the patch sets the flag to enable?
+Thanks
+Sathya
+
+-----Original Message-----
+From: Grant Grundler [mailto:grundler@google.com]
+Sent: Thursday, January 08, 2009 1:34 AM
+To: Desai, Kashyap
+Cc: linux-scsi@vger.kernel.org; Moore, Eric; Prakash, Sathya; James.Bottomley@hansenpartnership.com
+Subject: Re: [PATCH 3/5] mpt fusion: Added Firmware debug support
 
 On Tue, Jan 6, 2009 at 10:03 PM, Desai, Kashyap <Kashyap.Desai@lsi.com> wrote:
 > Grant,
@@ -37,7 +40,9 @@ On Tue, Jan 6, 2009 at 10:03 PM, Desai, Kashyap <Kashyap.Desai@lsi.com> wrote:
 developement flags should be disabled by default, not enabled.
 
 > Reason doing Fault.
-> If we don't panic the system, we will get huge IO errors if any IO stress is running  and error message will flood the syslog.(specially this things happens in Overnight stress test)
+> If we don't panic the system, we will get huge IO errors if any IO
+> stress is running  and error message will flood the syslog.(specially
+> this things happens in Overnight stress test)
 
 It makes sense to have the flag but not to enable it by default.
 
@@ -54,7 +59,8 @@ grant
 > From: Grant Grundler [mailto:grundler@google.com]
 > Sent: Wednesday, January 07, 2009 1:23 AM
 > To: Desai, Kashyap
-> Cc: linux-scsi@vger.kernel.org; Moore, Eric; Prakash, Sathya; James.Bottomley@hansenpartnership.com
+> Cc: linux-scsi@vger.kernel.org; Moore, Eric; Prakash, Sathya;
+> James.Bottomley@hansenpartnership.com
 > Subject: Re: [PATCH 3/5] mpt fusion: Added Firmware debug support
 >
 > On Tue, Jan 6, 2009 at 1:33 AM, Kashyap, Desai <kashyap.desai@lsi.com> wrote:
@@ -64,12 +70,13 @@ grant
 >>
 >> Signed-off-by: Kashyap Desai <kadesai@lsi.com>
 >> ---
->> diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+>> diff --git a/drivers/message/fusion/mptbase.c
+>> b/drivers/message/fusion/mptbase.c
 >> index 55d9a7e..ea3aafb 100644
 >> --- a/drivers/message/fusion/mptbase.c
 >> +++ b/drivers/message/fusion/mptbase.c
->> @@ -107,6 +107,14 @@ module_param_call(mpt_debug_level, mpt_set_debug_level, param_get_int,
->>  MODULE_PARM_DESC(mpt_debug_level, " debug level - refer to mptdebug.h \
+>> @@ -107,6 +107,14 @@ module_param_call(mpt_debug_level,
+>> mpt_set_debug_level, param_get_int,  MODULE_PARM_DESC(mpt_debug_level, " debug level - refer to mptdebug.h \
 >>        - (default=0)");
 >>
 >> +int mpt_fwfault_debug;
@@ -125,19 +132,21 @@ grant
 >> +}
 >> +EXPORT_SYMBOL(mpt_halt_firmware);
 >> +
->>  /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+>>
+>> /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+>> -=-=-=-=*/
 >>  /*
 >>  *     Reset Handling
 >> @@ -6369,6 +6404,8 @@ mpt_HardResetHandler(MPT_ADAPTER *ioc, int sleepFlag)
 >>        printk(MYIOC_s_INFO_FMT "HardResetHandler Entered!\n", ioc->name);
->>        printk("MF count 0x%x !\n", ioc->mfcnt);
->>  #endif
+>>        printk("MF count 0x%x !\n", ioc->mfcnt);  #endif
 >> +       if (mpt_fwfault_debug)
 >> +               mpt_halt_firmware(ioc);
 >>
 >>        /* Reset the adapter. Prevent more than 1 call to
 >>         * mpt_do_ioc_recovery at any instant in time.
->> diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
+>> diff --git a/drivers/message/fusion/mptbase.h
+>> b/drivers/message/fusion/mptbase.h
 >> index dff048c..b3e981d 100644
 >> --- a/drivers/message/fusion/mptbase.h
 >> +++ b/drivers/message/fusion/mptbase.h
@@ -156,7 +165,8 @@ grant
 >>
 >>  /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
 >>  #endif         /* } __KERNEL__ */
->> diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+>> diff --git a/drivers/message/fusion/mptscsih.c
+>> b/drivers/message/fusion/mptscsih.c
 >> index ee09041..e62c6bc 100644
 >> --- a/drivers/message/fusion/mptscsih.c
 >> +++ b/drivers/message/fusion/mptscsih.c
@@ -171,8 +181,8 @@ grant
 >>         * (the IO to be ABORT'd)
 >>         *
 >> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+>> in the body of a message to majordomo@vger.kernel.org More majordomo
+>> info at  http://vger.kernel.org/majordomo-info.html
 >>
 >
