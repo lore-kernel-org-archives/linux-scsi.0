@@ -1,37 +1,34 @@
-From: Aaro Koskinen <aaro.koskinen@nokia.com>
-Subject: Re: [PATCH] sym53c8xx_2: slave_alloc/destroy safety (2.6.27.5)
-Date: Wed, 07 Jan 2009 12:57:39 +0200
-Message-ID: <49648AA3.5070401@nokia.com>
-References: <49593940.9060102@cybernetics.com>	 <1230631843-16470-1-git-send-email-Aaro.Koskinen@nokia.com> <1230664572.18627.2.camel@localhost.localdomain> <4963861F.5090404@cybernetics.com>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [PATCH 0/6] v2: Asynchronous function calls to speed up booting
+ and more
+Date: Wed, 7 Jan 2009 05:21:25 -0800
+Message-ID: <20090107052125.276307d0@infradead.org>
+References: <20090105201508.23e98b4b@infradead.org>
+	<48f7fe350901061919l55006cd6v842e3f7a40e4cd0c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:36305 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752210AbZAGK6m (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2009 05:58:42 -0500
-In-Reply-To: <4963861F.5090404@cybernetics.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <48f7fe350901061919l55006cd6v842e3f7a40e4cd0c@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Ryan Hope <rmh3093@gmail.com>
+Cc: linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, mingo@elte.hu, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ext Tony Battersby <tonyb@cybernetics.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-Hello,
+On Tue, 6 Jan 2009 22:19:33 -0500
+"Ryan Hope" <rmh3093@gmail.com> wrote:
 
-ext Tony Battersby wrote:
-> From the description of this patch, I assume that it is a cleanup
-> instead of a fix for an actual problem.  Correspondingly, I don't have a
-> specific testcase that is improved by this patch.  I also have not
-> analyzed the source to see what the patch is trying to do.  However, the
-> current form of the patch passes testing as described above.
+> i can't boot with these patches... the kernel panic was something
+> along the line of:
+> 
+> ata_piix: device unavailable because of BAR 0 collisions
+> 
 
-You can try to do the following test with and without the patch:
+interesting
+can you send me the "lspci" output of a normal boot?
 
-echo "scsi remove-single-device some_valid_address_with_a_target > 
-/proc/scsi/scsi"
 
-Then do e.g. "resetdev" or "cleardev" to that target through the drivers 
-/proc interface.
-
-A.
+-- 
+Arjan van de Ven 	Intel Open Source Technology Centre
+For development, discussion and tips for power savings, 
+visit http://www.lesswatts.org
