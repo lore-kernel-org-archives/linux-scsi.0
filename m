@@ -1,27 +1,47 @@
 From: Bernd Schubert <bs@q-leap.de>
-Subject: [PATCH 0/2 (resend) ] fusion reset
-Date: Wed, 7 Jan 2009 18:58:47 +0100
-Message-ID: <200901071858.48672.bs@q-leap.de>
+Subject: [PATCH 2/2 (resend) ] reset flag documentation
+Date: Wed, 7 Jan 2009 19:05:30 +0100
+Message-ID: <200901071905.32280.bs@q-leap.de>
+References: <200901071858.48672.bs@q-leap.de>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.q-leap.de ([88.79.172.217]:44667 "EHLO mail.q-leap.de"
+Received: from ns2.q-leap.de ([88.79.172.217]:34421 "EHLO mail.q-leap.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752983AbZAGR6u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Jan 2009 12:58:50 -0500
+	id S1753030AbZAGSFe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Jan 2009 13:05:34 -0500
+In-Reply-To: <200901071858.48672.bs@q-leap.de>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Sathya Prakash <Sathya.Prakash@lsi.com>, Eric Moore <Eric.Moore@lsi.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>
 
-Hello,
+Add documentation of a fusion MPT reset flag.
 
-here are two patches for the mpt fusion reset handling. Still missing from the 
-series is a patch to prevent DV deadlocks, since my present approach still 
-sometimes leaves the deadlock.
+Signed-off-by: Bernd Schubert <bs@q-leap.de>
+
+Index: linux-2.6/drivers/message/fusion/mptbase.h
+===================================================================
+--- linux-2.6.orig/drivers/message/fusion/mptbase.h
++++ linux-2.6/drivers/message/fusion/mptbase.h
+@@ -735,8 +735,9 @@ typedef struct _MPT_ADAPTER
+ typedef int (*MPT_CALLBACK)(MPT_ADAPTER *ioc, MPT_FRAME_HDR *req, 
+MPT_FRAME_HDR *reply);
+ typedef int (*MPT_EVHANDLER)(MPT_ADAPTER *ioc, EventNotificationReply_t 
+*evReply);
+ typedef int (*MPT_RESETHANDLER)(MPT_ADAPTER *ioc, int reset_phase);
+-/* reset_phase defs */
+-#define MPT_IOC_PRE_RESET		0
++
++/* reset_phase defs, see e.g. mptscsih_ioc_reset() about flag usage */
++#define MPT_IOC_PRE_RESET		0	/* clear pending requests */
+ #define MPT_IOC_POST_RESET		1
+ #define MPT_IOC_SETUP_RESET		2
+ 
+
 
 
 -- 
