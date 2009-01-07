@@ -1,19 +1,18 @@
 From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: [PATCH 2/5] mpt fusion: Added msi enable disable for FC,SPI and
- SAS
-Date: Wed, 7 Jan 2009 11:30:27 +0530
-Message-ID: <0D1E8821739E724A86F4D16902CE275C13FF96712A@inbmail01.lsi.com>
-References: <20090106093141.GD13033@lsi.com>
- <da824cf30901061000k249f06abi3f3e6419840590ba@mail.gmail.com>
+Subject: RE: [PATCH 3/5] mpt fusion: Added Firmware debug support
+Date: Wed, 7 Jan 2009 11:33:46 +0530
+Message-ID: <0D1E8821739E724A86F4D16902CE275C13FF96712C@inbmail01.lsi.com>
+References: <20090106093332.GE13033@lsi.com>
+ <da824cf30901061153s714aa74dhdceb7ac50f25e4e7@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og110.obsmtp.com ([64.18.2.173]:58132 "EHLO
-	exprod7og110.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751311AbZAGGAs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2009 01:00:48 -0500
-In-Reply-To: <da824cf30901061000k249f06abi3f3e6419840590ba@mail.gmail.com>
+Received: from exprod7og109.obsmtp.com ([64.18.2.171]:38295 "EHLO
+	exprod7og109.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751369AbZAGGEC convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2009 01:04:02 -0500
+In-Reply-To: <da824cf30901061153s714aa74dhdceb7ac50f25e4e7@mail.gmail.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -22,125 +21,138 @@ Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Er
 
 Grant,
 
-I will resubmit this patch as per your suggestion.
-Default value will be 1 for mpt_msi_enable_sas and for others it will 0.
+I do agree with you, but we have reasons doing things this way.
 
-We have tested so far using the following values
+1. This is only for development purpose. Normally when Firmware fault occurs driver will reset firmware so that further communication with firmware can resume. In this condition we were not able to track root cause of fault. In debug environment mpt_fwfault_debug will be set. In this case Driver will not reset firmware rather it will panic the system.
 
-mpt_msi_enable_sas = 1
-mpt_msi_enable_fc  = 0
-mpt_msi_enable_spi = 0
+Reason doing Fault.
+If we don't panic the system, we will get huge IO errors if any IO stress is running  and error message will flood the syslog.(specially this things happens in Overnight stress test)
 
-I will resubmit updated patch with above default values.
+Thoughts?
 
 Thanks
 Kashyap Desai
 
-
 -----Original Message-----
 From: Grant Grundler [mailto:grundler@google.com]
-Sent: Tuesday, January 06, 2009 11:30 PM
+Sent: Wednesday, January 07, 2009 1:23 AM
 To: Desai, Kashyap
 Cc: linux-scsi@vger.kernel.org; Moore, Eric; Prakash, Sathya; James.Bottomley@hansenpartnership.com
-Subject: Re: [PATCH 2/5] mpt fusion: Added msi enable disable for FC,SPI and SAS
+Subject: Re: [PATCH 3/5] mpt fusion: Added Firmware debug support
 
-On Tue, Jan 6, 2009 at 1:32 AM, Kashyap, Desai <kashyap.desai@lsi.com> wrote:
+On Tue, Jan 6, 2009 at 1:33 AM, Kashyap, Desai <kashyap.desai@lsi.com> wrote:
 >
-> Added support for MSI enable/disable for different buses FC,SPI,SAS instead
-> of having single MSI enable/disable feature.
+> Added support for Firmware debuging
 > ---
 >
 > Signed-off-by: Kashyap Desai <kadesai@lsi.com>
 > ---
 > diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-> index c4e8b9a..55d9a7e 100644
+> index 55d9a7e..ea3aafb 100644
 > --- a/drivers/message/fusion/mptbase.c
 > +++ b/drivers/message/fusion/mptbase.c
-> @@ -79,9 +79,22 @@ MODULE_VERSION(my_VERSION);
->  /*
->  *  cmd line parameters
->  */
-> -static int mpt_msi_enable = -1;
-> -module_param(mpt_msi_enable, int, 0);
-> -MODULE_PARM_DESC(mpt_msi_enable, " MSI Support Enable (default=0)");
-> +
-> +static int mpt_msi_enable_spi;
-> +module_param(mpt_msi_enable_spi, int, 0);
-> +MODULE_PARM_DESC(mpt_msi_enable_spi, " Enable MSI Support for SPI \
-> +               controllers (default=0)");
-
-Hi,
-This patch looks fine to me.
-
-But, is there a reason the msi enable flags are 0 (disabled) by default?
-
-I was expecting these to be enabled unless MPT firmware has
-some known bugs. If the chipset is known buggy, a global flag will
-disable MSI for all devices anyway.
-
-thanks,
-grant
-
-> +
-> +static int mpt_msi_enable_fc;
-> +module_param(mpt_msi_enable_fc, int, 0);
-> +MODULE_PARM_DESC(mpt_msi_enable_fc, " Enable MSI Support for FC \
-> +               controllers (default=0)");
-> +
-> +static int mpt_msi_enable_sas;
-> +module_param(mpt_msi_enable_sas, int, 0);
-> +MODULE_PARM_DESC(mpt_msi_enable_sas, " Enable MSI Support for SAS \
-> +               controllers (default=0)");
-> +
+> @@ -107,6 +107,14 @@ module_param_call(mpt_debug_level, mpt_set_debug_level, param_get_int,
+>  MODULE_PARM_DESC(mpt_debug_level, " debug level - refer to mptdebug.h \
+>        - (default=0)");
 >
->  static int mpt_channel_mapping;
->  module_param(mpt_channel_mapping, int, 0);
-> @@ -91,7 +104,9 @@ static int mpt_debug_level;
->  static int mpt_set_debug_level(const char *val, struct kernel_param *kp);
->  module_param_call(mpt_debug_level, mpt_set_debug_level, param_get_int,
->                  &mpt_debug_level, 0600);
-> -MODULE_PARM_DESC(mpt_debug_level, " debug level - refer to mptdebug.h - (default=0)");
-> +MODULE_PARM_DESC(mpt_debug_level, " debug level - refer to mptdebug.h \
-> +       - (default=0)");
+> +int mpt_fwfault_debug;
+> +EXPORT_SYMBOL(mpt_fwfault_debug);
+> +module_param_call(mpt_fwfault_debug, param_set_int, param_get_int,
+> +         &mpt_fwfault_debug, 0600);
+> +MODULE_PARM_DESC(mpt_fwfault_debug, "Enable detection of Firmware fault"
+> +       " and halt Firmware on fault - (default=0)");
+> +
 > +
 >
 >  #ifdef MFCNT
 >  static int mfcounter = 0;
-> @@ -1751,16 +1766,25 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
->                ioc->bus_type = SAS;
->        }
+> @@ -6337,6 +6345,33 @@ mpt_print_ioc_summary(MPT_ADAPTER *ioc, char *buffer, int *size, int len, int sh
+>        *size = y;
+>  }
 >
-> -       if (mpt_msi_enable == -1) {
-> -               /* Enable on SAS, disable on FC and SPI */
-> -               if (ioc->bus_type == SAS)
-> -                       ioc->msi_enable = 1;
-> -               else
-> -                       ioc->msi_enable = 0;
-> -       } else
-> -               /* follow flag: 0 - disable; 1 - enable */
-> -               ioc->msi_enable = mpt_msi_enable;
->
-> +       switch (ioc->bus_type) {
 > +
-> +       case SAS:
-> +               ioc->msi_enable = mpt_msi_enable_sas;
-> +               break;
+> +/**
+> + *     mpt_halt_firmware - Halts the firmware if it is operational and panic
+> + *     the kernel
+> + *     @ioc: Pointer to MPT_ADAPTER structure
+> + *
+> + **/
+> +void
+> +mpt_halt_firmware(MPT_ADAPTER *ioc)
+> +{
+> +       u32      ioc_raw_state;
 > +
-> +       case SPI:
-> +               ioc->msi_enable = mpt_msi_enable_spi;
-> +               break;
+> +       ioc_raw_state = mpt_GetIocState(ioc, 0);
 > +
-> +       case FC:
-> +               ioc->msi_enable = mpt_msi_enable_fc;
-> +               break;
-> +
-> +       default:
-> +               ioc->msi_enable = 0;
-> +               break;
+> +       if ((ioc_raw_state & MPI_IOC_STATE_MASK) == MPI_IOC_STATE_FAULT) {
+> +               printk(MYIOC_s_ERR_FMT "IOC is in FAULT state (%04xh)!!!\n",
+> +                       ioc->name, ioc_raw_state & MPI_DOORBELL_DATA_MASK);
+> +               panic("%s: IOC Fault (%04xh)!!!\n", ioc->name,
+> +                       ioc_raw_state & MPI_DOORBELL_DATA_MASK);
+
+Wouldn't it be better to NOT panic the machine?
+One can still prod things "manually" (read config and MMIO space
+registers) for further debugging.
+
+I'm thinking it would make more sense to call the variable
+"mpt_fwfault_panic" and use it to decide if the machine should panic
+or not. Thoughts?
+
+grant
+
+> +       } else {
+> +               CHIPREG_WRITE32(&ioc->chip->Doorbell, 0xC0FFEE00);
+> +               panic("%s: Firmware is halted due to command timeout\n",
+> +                       ioc->name);
 > +       }
->        if (ioc->errata_flag_1064)
->                pci_disable_io_access(pdev);
+> +}
+> +EXPORT_SYMBOL(mpt_halt_firmware);
+> +
+>  /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+>  /*
+>  *     Reset Handling
+> @@ -6369,6 +6404,8 @@ mpt_HardResetHandler(MPT_ADAPTER *ioc, int sleepFlag)
+>        printk(MYIOC_s_INFO_FMT "HardResetHandler Entered!\n", ioc->name);
+>        printk("MF count 0x%x !\n", ioc->mfcnt);
+>  #endif
+> +       if (mpt_fwfault_debug)
+> +               mpt_halt_firmware(ioc);
 >
+>        /* Reset the adapter. Prevent more than 1 call to
+>         * mpt_do_ioc_recovery at any instant in time.
+> diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
+> index dff048c..b3e981d 100644
+> --- a/drivers/message/fusion/mptbase.h
+> +++ b/drivers/message/fusion/mptbase.h
+> @@ -922,11 +922,14 @@ extern void        mpt_free_fw_memory(MPT_ADAPTER *ioc);
+>  extern int      mpt_findImVolumes(MPT_ADAPTER *ioc);
+>  extern int      mptbase_sas_persist_operation(MPT_ADAPTER *ioc, u8 persist_opcode);
+>  extern int      mpt_raid_phys_disk_pg0(MPT_ADAPTER *ioc, u8 phys_disk_num, pRaidPhysDiskPage0_t phys_disk);
+> +extern void     mpt_halt_firmware(MPT_ADAPTER *ioc);
+> +
+>
+>  /*
+>  *  Public data decl's...
+>  */
+>  extern struct list_head          ioc_list;
+> +extern int mpt_fwfault_debug;
+>
+>  /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+>  #endif         /* } __KERNEL__ */
+> diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+> index ee09041..e62c6bc 100644
+> --- a/drivers/message/fusion/mptscsih.c
+> +++ b/drivers/message/fusion/mptscsih.c
+> @@ -1846,6 +1846,9 @@ mptscsih_abort(struct scsi_cmnd * SCpnt)
+>        if (hd->timeouts < -1)
+>                hd->timeouts++;
+>
+> +       if (mpt_fwfault_debug)
+> +               mpt_halt_firmware(ioc);
+> +
+>        /* Most important!  Set TaskMsgContext to SCpnt's MsgContext!
+>         * (the IO to be ABORT'd)
+>         *
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
