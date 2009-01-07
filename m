@@ -1,75 +1,113 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH 17/18] osd: Kconfig file for in-tree builds
-Date: Wed, 07 Jan 2009 09:10:51 -0800
-Message-ID: <4964E21B.6010403@oracle.com>
-References: <49636507.8060808@panasas.com> <1231252344-24792-1-git-send-email-bharrosh@panasas.com> <4963978D.8060001@oracle.com> <49646C6A.3020304@panasas.com>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [PATCH 4/6] fastboot: make ACPI bus drivers probe asynchronous
+Date: Wed, 7 Jan 2009 09:25:55 -0800
+Message-ID: <20090107092555.6e89e9c7@infradead.org>
+References: <20090105200959.04a626ac@infradead.org>
+	<20090105201239.0784606e@infradead.org>
+	<20090107141256.GA22902@ywang-moblin2.bj.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet12.oracle.com ([148.87.113.124]:59643 "EHLO
-	rgminet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751687AbZAGRLZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2009 12:11:25 -0500
-In-Reply-To: <49646C6A.3020304@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <20090107141256.GA22902@ywang-moblin2.bj.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Yong Wang <yong.y.wang@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, mingo@elte.hu, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd ml <osd-dev@open-osd.org>, Andrew Morton <akpm@linux-foundation.org>
 
-Boaz Harrosh wrote:
-> Randy Dunlap wrote:
->> Boaz Harrosh wrote:
->>> Kconfig file for the drivers/scsi/osd subdirectory.
->>> Adds the following config items:
->>> 	config SCSI_OSD_INITIATOR
->>> 	config SCSI_OSD_ULD
->>> 	config SCSI_OSD_DPRINT_SENSE
->>> 	config SCSI_OSD_DEBUG
->>>
->>> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
->>> Reviewed-by: Benny Halevy <bhalevy@panasas.com>
->>> ---
->>>  drivers/scsi/osd/Kconfig |   53 ++++++++++++++++++++++++++++++++++++++++++++++
->>>  1 files changed, 53 insertions(+), 0 deletions(-)
->>>  create mode 100644 drivers/scsi/osd/Kconfig
->>>
->>> diff --git a/drivers/scsi/osd/Kconfig b/drivers/scsi/osd/Kconfig
->>> new file mode 100644
->>> index 0000000..861b5ce
->>> --- /dev/null
->>> +++ b/drivers/scsi/osd/Kconfig
->>> @@ -0,0 +1,53 @@
->>> +#
->>> +# Kernel configuration file for the OSD scsi protocol
->>> +#
->>> +# Copyright (C) 2008 Panasas Inc.  All rights reserved.
->>> +#
->>> +# Authors:
->>> +#   Boaz Harrosh <bharrosh@panasas.com>
->>> +#   Benny Halevy <bhalevy@panasas.com>
->>> +#
->>> +# This program is free software; you can redistribute it and/or modify
->>> +# it under the terms of the GNU General Public version 2 License as
->>> +# published by the Free Software Foundation
->>> +#
->>> +# FIXME: SCSI_OSD_INITIATOR should select CONFIG (HMAC) SHA1 somehow.
->>> +#        How is it done properly?
->> Probably similar to how net/sctp/Kconfig does it:
->>
->> 	select CRYPTO
->> 	select CRYPTO_HMAC
->> 	select CRYPTO_SHA1
->>
+On Wed, 7 Jan 2009 22:12:56 +0800
+Yong Wang <yong.y.wang@linux.intel.com> wrote:
+
+> On Mon, Jan 05, 2009 at 08:12:39PM -0800, Arjan van de Ven wrote:
+> > 
+> > >From 34c47dd38f49e29eb7cd7fa2078efc6b8b258bb9 Mon Sep 17 00:00:00
+> > >2001
+> > From: Arjan van de Ven <arjan@linux.intel.com>
+> > Date: Sun, 4 Jan 2009 05:32:28 -0800
+> > Subject: [PATCH] fastboot: make ACPI bus drivers probe asynchronous
+> > 
+> > the various ACPI bus drivers have non-overlapping devices and can
+> > each be run asynchronous. Some of the ACPI drivers (especially the
+> > battery one, but others as well) can take quite a long time to
+> > probe.
+> > 
+> > Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
+> > ---
+> >  drivers/acpi/scan.c |   23 ++++++++++++++++-------
+> >  1 files changed, 16 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> > index 39b7233..a9e542d 100644
+> > --- a/drivers/acpi/scan.c
+> > +++ b/drivers/acpi/scan.c
+> > @@ -8,6 +8,7 @@
+> >  #include <linux/acpi.h>
+> >  #include <linux/signal.h>
+> >  #include <linux/kthread.h>
+> > +#include <linux/async.h>
+> >  
+> >  #include <acpi/acpi_drivers.h>
+> >  #include <acpi/acinterp.h>	/* for
+> > acpi_ex_eisa_id_to_string() */ @@ -578,6 +579,19 @@ static int
+> > acpi_start_single_object(struct acpi_device *device) return result;
+> >  }
+> >  
+> > +static void acpi_bus_register_async(void *data, async_cookie_t
+> > cookie) +{
+> > +	int ret;
+> > +	struct acpi_driver *driver = data;
+> > +	driver->drv.name = driver->name;
+> > +	driver->drv.bus = &acpi_bus_type;
+> > +	driver->drv.owner = driver->owner;
+> > +
+> > +	async_synchronize_cookie(cookie);
+> > +
+> > +	ret = driver_register(&driver->drv);
+> > +	WARN_ON(ret != 0);
+> > +}
+> >  /**
+> >   * acpi_bus_register_driver - register a driver with the ACPI bus
+> >   * @driver: driver being registered
+> > @@ -588,16 +602,11 @@ static int acpi_start_single_object(struct
+> > acpi_device *device) */
+> >  int acpi_bus_register_driver(struct acpi_driver *driver)
+> >  {
+> > -	int ret;
+> >  
+> >  	if (acpi_disabled)
+> >  		return -ENODEV;
+> > -	driver->drv.name = driver->name;
+> > -	driver->drv.bus = &acpi_bus_type;
+> > -	driver->drv.owner = driver->owner;
+> > -
+> > -	ret = driver_register(&driver->drv);
+> > -	return ret;
+> > +	async_schedule(acpi_bus_register_async, driver);
+> > +	return 0;
+> >  }
+> >  
+> >  EXPORT_SYMBOL(acpi_bus_register_driver);
 > 
-> It is not yet relevant, I have not submitted the security code.
-> But thanks, that looks doable. I have a question?
-> When you do select, you must manually select the fixture you need plus
-> all it's dependencies and their dependencies recursively, parents first?
+> For ACPI battery, button and thermal drivers whose init funtion
+> immediately ends right after calling acpi_bus_register_driver, it
+> might be OK. But for other drivers whose init function has more work
+> to do and depends on acpi_bus_register_driver having *really* done
+> its job, it is certainly not OK. In the latter case, the 'return 0'
+> in acpi_bus_register_driver is effectively cheating those drivers
+> that acpi_bus_register_driver has already done its job which is
+> unfortunately not the case. Example drivers include eeepc_laptop and
+> asus_laptop. At least I am seeing a kernel oops on eeepc because of
+> that.
 
-'select' does not follow any dependency chains, so you need to
-select all of them yourself.  I don't know that "parents first"
-is required.
+ok I've dropped the ACPI part for now; I'll work with you and Len to
+see how we can solve the ACPI side, but for now it seems to have too
+many issues
+
+> 
+> -Yong
+
 
 -- 
-~Randy
+Arjan van de Ven 	Intel Open Source Technology Centre
+For development, discussion and tips for power savings, 
+visit http://www.lesswatts.org
