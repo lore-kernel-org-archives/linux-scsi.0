@@ -1,377 +1,148 @@
-From: "linux linux" <linux.tina@gmail.com>
-Subject: Re: need fusion driver guide
-Date: Wed, 7 Jan 2009 10:54:08 +0530
-Message-ID: <e7b7bf130901062124r18d93598jabcd5628f3cdca41@mail.gmail.com>
-References: <20090106214538.GA18370@uranus.ravnborg.org>
-	 <1231278625.10475.28.camel@localhost.localdomain>
-	 <e7b7bf130901062002ke59c0dkd7ca0ed73352066f@mail.gmail.com>
-	 <1231302074.19352.12.camel@localhost.localdomain>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: [PATCH 2/5] mpt fusion: Added msi enable disable for FC,SPI and
+ SAS
+Date: Wed, 7 Jan 2009 11:30:27 +0530
+Message-ID: <0D1E8821739E724A86F4D16902CE275C13FF96712A@inbmail01.lsi.com>
+References: <20090106093141.GD13033@lsi.com>
+ <da824cf30901061000k249f06abi3f3e6419840590ba@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_187868_13983802.1231305848231"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f31.google.com ([209.85.219.31]:50349 "EHLO
-	mail-ew0-f31.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751073AbZAGFYL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2009 00:24:11 -0500
-In-Reply-To: <1231302074.19352.12.camel@localhost.localdomain>
+Received: from exprod7og110.obsmtp.com ([64.18.2.173]:58132 "EHLO
+	exprod7og110.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751311AbZAGGAs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2009 01:00:48 -0500
+In-Reply-To: <da824cf30901061000k249f06abi3f3e6419840590ba@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Sam Ravnborg <sam@ravnborg.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Grant Grundler <grundler@google.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>
 
-------=_Part_187868_13983802.1231305848231
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Grant,
 
-Hi James,.
-Now it should be received by all...
-Many many thanks for the help.
+I will resubmit this patch as per your suggestion.
+Default value will be 1 for mpt_msi_enable_sas and for others it will 0.
 
-I am sending the kernel log.
+We have tested so far using the following values
+
+mpt_msi_enable_sas = 1
+mpt_msi_enable_fc  = 0
+mpt_msi_enable_spi = 0
+
+I will resubmit updated patch with above default values.
+
+Thanks
+Kashyap Desai
 
 
-On Wed, Jan 7, 2009 at 9:51 AM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
+-----Original Message-----
+From: Grant Grundler [mailto:grundler@google.com]
+Sent: Tuesday, January 06, 2009 11:30 PM
+To: Desai, Kashyap
+Cc: linux-scsi@vger.kernel.org; Moore, Eric; Prakash, Sathya; James.Bottomley@hansenpartnership.com
+Subject: Re: [PATCH 2/5] mpt fusion: Added msi enable disable for FC,SPI and SAS
+
+On Tue, Jan 6, 2009 at 1:32 AM, Kashyap, Desai <kashyap.desai@lsi.com> wrote:
 >
-> You still need to turn off html email attachments, otherwise your
-> messages won't be accepted by the mailing lists.  It will be an option
-> like recipient wants text/plain only or something.
+> Added support for MSI enable/disable for different buses FC,SPI,SAS instead
+> of having single MSI enable/disable feature.
+> ---
 >
-> On Wed, 2009-01-07 at 09:32 +0530, linux linux wrote:
-> > Hi,
-> >
-> > Sam many thanks for ur help.
-> >
-> > Hi James,
-> >
-> > I am getting some error on for fusion device driver.
-> > The error message look like this
-> >
-> >
-> >        2F240F4C226078: 19/12/2008 EST 04:42:45, mptscsih: ioc1: >>
-> > Attempting task abort! (sc=e40df080)
-> >        2F240F6E8C2E00: 19/12/2008 EST 04:42:45, mptbase: ioc1:
-> > IOCStatus(0x0048): SCSI Task Terminated
-> >        2F240F6E905A98: 19/12/2008 EST 04:42:45, mptscsih: ioc1: >>
-> > Attempting task abort! (sc=f7e23680)
-> >
-> > 2F24117BDA2438: 19/12/2008 EST 04:42:50, mptscsih: ioc1: >>
-> > Attempting bus reset! (sc=e40df080)
-> >
-> > After then the server has been rebooted.
-> >
-> > I can see the code is written inside /drivers/message/fussion/
-> > mptscsih.c
-> > The responsible function is
-> > mptscsih_host_reset()
-> > i am very new in SCSI fusion device driver. read some help guide from
-> > google but still i do not understand when the mptscsih_host_reset() is
-> > called by kernel. I normal situation i am not able to see this message
-> > in kernel log.
-> > Can any one help me to understand when these type of kernel message
-> > are comming, is it foe SCSI hardware problem ?
-> > when mptscsih_host_reset() will be executed?
->
-> It looks like a standard error handling escalation sequence.  Why is
-> very hard to tell without the entire kernel log.  Why there wasn't a
-> recovery is also not clear.
->
+> Signed-off-by: Kashyap Desai <kadesai@lsi.com>
+> ---
+> diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+> index c4e8b9a..55d9a7e 100644
+> --- a/drivers/message/fusion/mptbase.c
+> +++ b/drivers/message/fusion/mptbase.c
+> @@ -79,9 +79,22 @@ MODULE_VERSION(my_VERSION);
+>  /*
+>  *  cmd line parameters
+>  */
+> -static int mpt_msi_enable = -1;
+> -module_param(mpt_msi_enable, int, 0);
+> -MODULE_PARM_DESC(mpt_msi_enable, " MSI Support Enable (default=0)");
+> +
+> +static int mpt_msi_enable_spi;
+> +module_param(mpt_msi_enable_spi, int, 0);
+> +MODULE_PARM_DESC(mpt_msi_enable_spi, " Enable MSI Support for SPI \
+> +               controllers (default=0)");
 
-Pls let me know when this kind of error handler is happened?
-is it for SCSI hard ware failure?
+Hi,
+This patch looks fine to me.
 
-> > Only one time i show this message in my kernel log, is there any way
-> > to reproduce this message manually?
-> >
-> > where i get much info regarding this issue and SCSI fusion kernel
-> > driver except kernel code itself?
-> >
-> > I am writting this after reading help doc from
-> > http://www.lsi.com/insight_center/tech_trends/advanced_architectures/fusionmpt/index.html
-> >
-> > But still i am very few knowledge to solve it.
-> >
-> > waiting for your help.
->
-> There's not much else I can do.  If you post the entire kernel log, the
-> fusion people hang out on this list and might see something that
-> indicates what the problem is.
->
-> James
->
->
+But, is there a reason the msi enable flags are 0 (disabled) by default?
 
-------=_Part_187868_13983802.1231305848231
-Content-Type: text/plain; name=kernel-log.txt
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_fpnjoj6o0
-Content-Disposition: attachment; filename=kernel-log.txt
+I was expecting these to be enabled unless MPT firmware has
+some known bugs. If the chipset is known buggy, a global flag will
+disable MSI for all devices anyway.
 
-MkYyMDhGMEZFNjhENDg6IDE5LzEyLzIwMDggRVNUIDA0OjEwOjM0LCBzeXNtdGMoMjQyNTMpIHVu
-YWJsZSB0byBkZWxpdmVyDQpldmVudCAiTVRDLjAwMTQwMDE2IiB0byBod0ludlN5c3RlbUludk0o
-MjI1NzcpLCByeCBxdWV1ZSBmdWxsDQoyRjIwOTFBREYwRDI0NDogMTkvMTIvMjAwOCBFU1QgMDQ6
-MTA6NDAsIHByaW50azogNzM3IG1lc3NhZ2VzIHN1cHByZXNzZWQuDQoyRjIwOTFBRTAxNTMzQzog
-MTkvMTIvMjAwOCBFU1QgMDQ6MTA6NDAsIHN5c210YygyNDI1MykgdW5hYmxlIHRvIGRlbGl2ZXIN
-CmV2ZW50ICJNVEMuMDAxNDAwMTciIHRvIGh3SW52U3lzdGVtSW52TSgyMjU3NyksIHJ4IHF1ZXVl
-IGZ1bGwNCjJGMjA5M0U0MjczN0I0OiAxOS8xMi8yMDA4IEVTVCAwNDoxMDo0NCwgcHJpbnRrOiA2
-MCBtZXNzYWdlcyBzdXBwcmVzc2VkLg0KMkYyMDkzRTQ0MTQwMzQ6IDE5LzEyLzIwMDggRVNUIDA0
-OjEwOjQ0LCBzeXNtdGMoMjQyNTMpIHVuYWJsZSB0byBkZWxpdmVyDQpldmVudCAiTVRDLjAwMTQw
-MDE3IiB0byBod0ludlN5c3RlbUludk0oMjI1NzcpLCByeCBxdWV1ZSBmdWxsDQoyRjIwOTYyNEI2
-QzRCMDogMTkvMTIvMjAwOCBFU1QgMDQ6MTA6NDksIHByaW50azogNzggbWVzc2FnZXMgc3VwcHJl
-c3NlZC4NCjJGMjA5NjI0QkJFRkMwOiAxOS8xMi8yMDA4IEVTVCAwNDoxMDo0OSwgc3lzbXRjKDI0
-MjUzKSB1bmFibGUgdG8gZGVsaXZlcg0KZXZlbnQgIk1UQy4wMDE0MDAxNyIgdG8gaHdJbnZTeXN0
-ZW1JbnZNKDIyNTc3KSwgcnggcXVldWUgZnVsbA0KMkYyMDk4NUI5REZGREM6IDE5LzEyLzIwMDgg
-RVNUIDA0OjEwOjU0LCBwcmludGs6IDgyIG1lc3NhZ2VzIHN1cHByZXNzZWQuDQoyRjIwOTg1QkEz
-MUQ2NDogMTkvMTIvMjAwOCBFU1QgMDQ6MTA6NTQsIHN5c210YygyNDI1MykgdW5hYmxlIHRvIGRl
-bGl2ZXINCmV2ZW50ICJNVEMuMDAxNDAwMTYiIHRvIGh3SW52U3lzdGVtSW52TSgyMjU3NyksIHJ4
-IHF1ZXVlIGZ1bGwNCjJGMjA5QkQwNjk4ODE0OiAxOS8xMi8yMDA4IEVTVCAwNDoxMTowMSwgcHJp
-bnRrOiAyOTkgbWVzc2FnZXMgc3VwcHJlc3NlZC4NCjJGMjA5QkQwNzRFNUEwOiAxOS8xMi8yMDA4
-IEVTVCAwNDoxMTowMSwgc3lzbXRjKDI0MjUzKSB1bmFibGUgdG8gZGVsaXZlcg0KZXZlbnQgIk1U
-Qy4wMDE0MDAxNyIgdG8gaHdJbnZTeXN0ZW1JbnZNKDIyNTc3KSwgcnggcXVldWUgZnVsbA0KMkYy
-MDlEMjRDNEZGNDg6IDE5LzEyLzIwMDggRVNUIDA0OjExOjA0LCBwcmludGs6IDUyIG1lc3NhZ2Vz
-IHN1cHByZXNzZWQuDQoyRjIwOUQyNENDNjVFQzogMTkvMTIvMjAwOCBFU1QgMDQ6MTE6MDQsIHN5
-c210YygyNDI1MykgdW5hYmxlIHRvIGRlbGl2ZXINCmV2ZW50ICJNVEMuMDAxNDAwMTciIHRvIGh3
-SW52U3lzdGVtSW52TSgyMjU3NyksIHJ4IHF1ZXVlIGZ1bGwNCjJGMjA5RjRERUIzOUMwOiAxOS8x
-Mi8yMDA4IEVTVCAwNDoxMTowOSwgcHJpbnRrOiA3OCBtZXNzYWdlcyBzdXBwcmVzc2VkLg0KMkYy
-MDlGNERGNkRGQjQ6IDE5LzEyLzIwMDggRVNUIDA0OjExOjA5LCBzeXNtdGMoMjQyNTMpIHVuYWJs
-ZSB0byBkZWxpdmVyDQpldmVudCAiTVRDLjAwMTQwMDE3IiB0byBod0ludlN5c3RlbUludk0oMjI1
-NzcpLCByeCBxdWV1ZSBmdWxsDQoyRjIwQTFBNEVCN0RBMjogMTkvMTIvMjAwOCBFU1QgMDQ6MTE6
-MTQsIHByaW50azogNjIgbWVzc2FnZXMgc3VwcHJlc3NlZC4NCjJGMjBBMUE1MDMxQ0JFOiAxOS8x
-Mi8yMDA4IEVTVCAwNDoxMToxNCwgc3lzbXRjKDI0MjUzKSB1bmFibGUgdG8gZGVsaXZlcg0KZXZl
-bnQgIk1UQy4wMDE0MDAxNyIgdG8gaHdJbnZTeXN0ZW1JbnZNKDIyNTc3KSwgcnggcXVldWUgZnVs
-bA0KMkYyMTBCRjhERTA2NTg6IDE5LzEyLzIwMDggRVNUIDA0OjE1OjAzLCBtb3VudGluZyBGUyB0
-eXBlIG5mcyBvbg0KL2V4cG9ydF9tb25pdG9yL3RmdHBib290X3JldHJ5DQoyRjIxMEJGOEU3NjlB
-QzogMTkvMTIvMjAwOCBFU1QgMDQ6MTU6MDMsIG5mcyB3YXJuaW5nOiBtb3VudCB2ZXJzaW9uIG9s
-ZGVyDQp0aGFuIGtlcm5lbA0KMkYyMTBDM0U3RjQxMDI6IDE5LzEyLzIwMDggRVNUIDA0OjE1OjA0
-LCB1bm1vdW50aW5nDQovZXhwb3J0X21vbml0b3IvdGZ0cGJvb3RfcmV0cnkNCjJGMjEyQjkwMEM2
-OEY0OiAxOS8xMi8yMDA4IEVTVCAwNDoxNjoxMSwgcHJvY21vbl9Gb3JjZVByb2Nlc3NSZXN0YXJ0
-Og0KcHJvY21vbi5jKDUwNSk6IFBST0NNT04gcnVubmluZyBpbml0X3Byb2dyYW0gL2V0Yy9pbml0
-LmQvc3lzY29uZmlnc3B5ZA0KcmVzdGFydCAmDQoNCjJGMjEyQjlFOUMwODE4OiAxOS8xMi8yMDA4
-IEVTVCAwNDoxNjoxMSwgdGVsaW5pdCBjYWxsZWQgYnkgcGlkIDI1MjcyLA0KY21kbGluZSAvc2Jp
-bi90ZWxpbml0cQ0KMkYyMTJCQTBGNzNBRTI6IDE5LzEyLzIwMDggRVNUIDA0OjE2OjExLCAyNTI3
-MiAoL3NiaW4vdGVsaW5pdCBxICkgY2FsbGVkIGJ5DQoyRjIxMkJBMzkxRDA2RTogMTkvMTIvMjAw
-OCBFU1QgMDQ6MTY6MTEsIDI1MjM4ICgvYmluL3NoDQovZXRjL2luaXQuZC9zeXNjb25maWdzcHlk
-IHJlc3RhcnQgKSBjYWxsZWQgYnkNCjJGMjEyQkEzQTEwQzMyOiAxOS8xMi8yMDA4IEVTVCAwNDox
-NjoxMSwgMSAoaW5pdCkNCjJGMjEyQkJCMUJGOUUwOiAxOS8xMi8yMDA4IEVTVCAwNDoxNjoxMSwg
-dGVsaW5pdCBjYWxsZWQgYnkgcGlkIDI1MzIyLA0KY21kbGluZSAvc2Jpbi90ZWxpbml0cQ0KMkYy
-MTJCQkNGMDhEQUM6IDE5LzEyLzIwMDggRVNUIDA0OjE2OjExLCAyNTMyMiAoL3NiaW4vdGVsaW5p
-dCBxICkgY2FsbGVkIGJ5DQoyRjIxMkJCRURFNTBBNDogMTkvMTIvMjAwOCBFU1QgMDQ6MTY6MTEs
-IDI1MjM4ICgvYmluL3NoDQovZXRjL2luaXQuZC9zeXNjb25maWdzcHlkIHJlc3RhcnQgKSBjYWxs
-ZWQgYnkNCjJGMjEyQkJFRUFBOUU0OiAxOS8xMi8yMDA4IEVTVCAwNDoxNjoxMSwgMSAoaW5pdCkN
-CjJGMjE5NzE3RDc3RDMyOiAxOS8xMi8yMDA4IEVTVCAwNDoyMDowMywgbW91bnRpbmcgRlMgdHlw
-ZSBuZnMgb24NCi9leHBvcnRfbW9uaXRvci90ZnRwYm9vdF9yZXRyeQ0KMkYyMTk3MTdFMTY1NjI6
-IDE5LzEyLzIwMDggRVNUIDA0OjIwOjAzLCBuZnMgd2FybmluZzogbW91bnQgdmVyc2lvbiBvbGRl
-cg0KdGhhbiBrZXJuZWwNCjJGMjE5NzQ5MzAwMTdFOiAxOS8xMi8yMDA4IEVTVCAwNDoyMDowMywg
-dW5tb3VudGluZw0KL2V4cG9ydF9tb25pdG9yL3RmdHBib290X3JldHJ5DQoyRjIxQTdCRTZERjEx
-NjogMTkvMTIvMjAwOCBFU1QgMDQ6MjA6MzksIHByaW50azogMjcgbWVzc2FnZXMgc3VwcHJlc3Nl
-ZC4NCjJGMjFBN0JFNzFENjFBOiAxOS8xMi8yMDA4IEVTVCAwNDoyMDozOSwgc3lzbXRjKDI0MjUz
-KSB1bmFibGUgdG8gZGVsaXZlcg0KZXZlbnQgIk1UQy4wMDE0MDAxNiIgdG8gaHdJbnZTeXN0ZW1J
-bnZNKDIyNTc3KSwgcnggcXVldWUgZnVsbA0KMkYyMUE3QkU5MzEzRUE6IDE5LzEyLzIwMDggRVNU
-IDA0OjIwOjM5LCBzeXNtdGMoMjQyNTMpIHVuYWJsZSB0byBkZWxpdmVyDQpldmVudCAiTVRDLjAw
-MTQwMDE2IiB0byBod0ludlN5c3RlbUludk0oMjI1NzcpLCByeCBxdWV1ZSBmdWxsDQoyRjIxQTdC
-RUE3RTA5NjogMTkvMTIvMjAwOCBFU1QgMDQ6MjA6MzksIHN5c210YygyNDI1MykgdW5hYmxlIHRv
-IGRlbGl2ZXINCmV2ZW50ICJNVEMuMDAxNDAwMTYiIHRvIGh3SW52U3lzdGVtSW52TSgyMjU3Nyks
-IHJ4IHF1ZXVlIGZ1bGwNCjJGMjFBN0JFQzVDRUZBOiAxOS8xMi8yMDA4IEVTVCAwNDoyMDozOSwg
-c3lzbXRjKDI0MjUzKSB1bmFibGUgdG8gZGVsaXZlcg0KZXZlbnQgIk1UQy4wMDE0MDAxNiIgdG8g
-aHdJbnZTeXN0ZW1JbnZNKDIyNTc3KSwgcnggcXVldWUgZnVsbA0KMkYyMUE3QkVEMzg1MkE6IDE5
-LzEyLzIwMDggRVNUIDA0OjIwOjM5LCBzeXNtdGMoMjQyNTMpIHVuYWJsZSB0byBkZWxpdmVyDQpl
-dmVudCAiTVRDLjAwMTQwMDE2IiB0byBod0ludlN5c3RlbUludk0oMjI1NzcpLCByeCBxdWV1ZSBm
-dWxsDQoyRjIxQTdCRUYzNjRBMjogMTkvMTIvMjAwOCBFU1QgMDQ6MjA6MzksIHN5c210YygyNDI1
-MykgdW5hYmxlIHRvIGRlbGl2ZXINCmV2ZW50ICJNVEMuMDAxNDAwMTYiIHRvIGh3SW52U3lzdGVt
-SW52TSgyMjU3NyksIHJ4IHF1ZXVlIGZ1bGwNCjJGMjFBN0JGMDFDNkFBOiAxOS8xMi8yMDA4IEVT
-VCAwNDoyMDozOSwgc3lzbXRjKDI0MjUzKSB1bmFibGUgdG8gZGVsaXZlcg0KZXZlbnQgIk1UQy4w
-MDE0MDAxNiIgdG8gaHdJbnZTeXN0ZW1JbnZNKDIyNTc3KSwgcnggcXVldWUgZnVsbA0KMkYyMUE3
-QkYxRjY5RkE6IDE5LzEyLzIwMDggRVNUIDA0OjIwOjM5LCBzeXNtdGMoMjQyNTMpIHVuYWJsZSB0
-byBkZWxpdmVyDQpldmVudCAiTVRDLjAwMTQwMDE2IiB0byBod0ludlN5c3RlbUludk0oMjI1Nzcp
-LCByeCBxdWV1ZSBmdWxsDQoyRjIxQTdCRjMyM0IyRTogMTkvMTIvMjAwOCBFU1QgMDQ6MjA6Mzks
-IHN5c210YygyNDI1MykgdW5hYmxlIHRvIGRlbGl2ZXINCmV2ZW50ICJNVEMuMDAxNDAwMTYiIHRv
-IGh3SW52U3lzdGVtSW52TSgyMjU3NyksIHJ4IHF1ZXVlIGZ1bGwNCjJGMjFBN0JGNEYyODZBOiAx
-OS8xMi8yMDA4IEVTVCAwNDoyMDozOSwgc3lzbXRjKDI0MjUzKSB1bmFibGUgdG8gZGVsaXZlcg0K
-ZXZlbnQgIk1UQy4wMDE0MDAxNiIgdG8gaHdJbnZTeXN0ZW1JbnZNKDIyNTc3KSwgcnggcXVldWUg
-ZnVsbA0KMkYyMUFBMjY2ODNDMzQ6IDE5LzEyLzIwMDggRVNUIDA0OjIwOjQ0LCBwcmludGs6IDcx
-NyBtZXNzYWdlcyBzdXBwcmVzc2VkLg0KMkYyMUFBMjY2REUyRUM6IDE5LzEyLzIwMDggRVNUIDA0
-OjIwOjQ0LCBzeXNtdGMoMjQyNTMpIHVuYWJsZSB0byBkZWxpdmVyDQpldmVudCAiTVRDLjAwMTQw
-MDE3IiB0byBod0ludlN5c3RlbUludk0oMjI1NzcpLCByeCBxdWV1ZSBmdWxsDQoyRjIxQUNDRUQ1
-Q0ZGNDogMTkvMTIvMjAwOCBFU1QgMDQ6MjA6NTAsIHByaW50azogNTggbWVzc2FnZXMgc3VwcHJl
-c3NlZC4NCjJGMjFBQ0NFREIwNUE0OiAxOS8xMi8yMDA4IEVTVCAwNDoyMDo1MCwgc3lzbXRjKDI0
-MjUzKSB1bmFibGUgdG8gZGVsaXZlcg0KZXZlbnQgIk1UQy4wMDE0MDAxNyIgdG8gaHdJbnZTeXN0
-ZW1JbnZNKDIyNTc3KSwgcnggcXVldWUgZnVsbA0KMkYyMjI2RTY2NTFFMEM6IDE5LzEyLzIwMDgg
-RVNUIDA0OjI1OjEzLCBtb3VudGluZyBGUyB0eXBlIG5mcyBvbg0KL2V4cG9ydF9tb25pdG9yL3Rm
-dHBib290X3JldHJ5DQoyRjIyMjZFNjZFNjE3MDogMTkvMTIvMjAwOCBFU1QgMDQ6MjU6MTMsIG5m
-cyB3YXJuaW5nOiBtb3VudCB2ZXJzaW9uIG9sZGVyDQp0aGFuIGtlcm5lbA0KMkYyMjI3MTdDMUFF
-REE6IDE5LzEyLzIwMDggRVNUIDA0OjI1OjEzLCB1bm1vdW50aW5nDQovZXhwb3J0X21vbml0b3Iv
-dGZ0cGJvb3RfcmV0cnkNCjJGMjJBREI1MDY1RURBOiAxOS8xMi8yMDA4IEVTVCAwNDozMDowMywg
-bW91bnRpbmcgRlMgdHlwZSBuZnMgb24NCi9leHBvcnRfbW9uaXRvci90ZnRwYm9vdF9yZXRyeQ0K
-MkYyMkFEQjUwRDhBQjY6IDE5LzEyLzIwMDggRVNUIDA0OjMwOjAzLCBuZnMgd2FybmluZzogbW91
-bnQgdmVyc2lvbiBvbGRlcg0KdGhhbiBrZXJuZWwNCjJGMjJBREU5N0MwQkU4OiAxOS8xMi8yMDA4
-IEVTVCAwNDozMDowNCwgdW5tb3VudGluZw0KL2V4cG9ydF9tb25pdG9yL3RmdHBib290X3JldHJ5
-DQoyRjIyQzA1MUQ0RDI0MDogMTkvMTIvMjAwOCBFU1QgMDQ6MzA6NDMsIHByaW50azogNjIgbWVz
-c2FnZXMgc3VwcHJlc3NlZC4NCjJGMjJDMDUxREM3MjkwOiAxOS8xMi8yMDA4IEVTVCAwNDozMDo0
-Mywgc3lzbXRjKDI0MjUzKSB1bmFibGUgdG8gZGVsaXZlcg0KZXZlbnQgIk1UQy4wMDE0MDAxNiIg
-dG8gaHdJbnZTeXN0ZW1JbnZNKDIyNTc3KSwgcnggcXVldWUgZnVsbA0KMkYyMkMwNTIwNDU1MzA6
-IDE5LzEyLzIwMDggRVNUIDA0OjMwOjQzLCBzeXNtdGMoMjQyNTMpIHVuYWJsZSB0byBkZWxpdmVy
-DQpldmVudCAiTVRDLjAwMTQwMDE2IiB0byBod0ludlN5c3RlbUludk0oMjI1NzcpLCByeCBxdWV1
-ZSBmdWxsDQoyRjIyQzA1MjE2NTk4NDogMTkvMTIvMjAwOCBFU1QgMDQ6MzA6NDMsIHN5c210Yygy
-NDI1MykgdW5hYmxlIHRvIGRlbGl2ZXINCmV2ZW50ICJNVEMuMDAxNDAwMTYiIHRvIGh3SW52U3lz
-dGVtSW52TSgyMjU3NyksIHJ4IHF1ZXVlIGZ1bGwNCjJGMjJDMDUyM0Q0MEFDOiAxOS8xMi8yMDA4
-IEVTVCAwNDozMDo0Mywgc3lzbXRjKDI0MjUzKSB1bmFibGUgdG8gZGVsaXZlcg0KZXZlbnQgIk1U
-Qy4wMDE0MDAxNiIgdG8gaHdJbnZTeXN0ZW1JbnZNKDIyNTc3KSwgcnggcXVldWUgZnVsbA0KMkYy
-MkMwNTI1MEFFMDQ6IDE5LzEyLzIwMDggRVNUIDA0OjMwOjQzLCBzeXNtdGMoMjQyNTMpIHVuYWJs
-ZSB0byBkZWxpdmVyDQpldmVudCAiTVRDLjAwMTQwMDE2IiB0byBod0ludlN5c3RlbUludk0oMjI1
-NzcpLCByeCBxdWV1ZSBmdWxsDQoyRjIyQzA1Mjc3MUYxODogMTkvMTIvMjAwOCBFU1QgMDQ6MzA6
-NDMsIHN5c210YygyNDI1MykgdW5hYmxlIHRvIGRlbGl2ZXINCmV2ZW50ICJNVEMuMDAxNDAwMTYi
-IHRvIGh3SW52U3lzdGVtSW52TSgyMjU3NyksIHJ4IHF1ZXVlIGZ1bGwNCjJGMjJDMDUyODg5NkFD
-OiAxOS8xMi8yMDA4IEVTVCAwNDozMDo0Mywgc3lzbXRjKDI0MjUzKSB1bmFibGUgdG8gZGVsaXZl
-cg0KZXZlbnQgIk1UQy4wMDE0MDAxNiIgdG8gaHdJbnZTeXN0ZW1JbnZNKDIyNTc3KSwgcnggcXVl
-dWUgZnVsbA0KMkYyMkMwNTJBREE2OEM6IDE5LzEyLzIwMDggRVNUIDA0OjMwOjQzLCBzeXNtdGMo
-MjQyNTMpIHVuYWJsZSB0byBkZWxpdmVyDQpldmVudCAiTVRDLjAwMTQwMDE2IiB0byBod0ludlN5
-c3RlbUludk0oMjI1NzcpLCByeCBxdWV1ZSBmdWxsDQoyRjIyQzA1MkMwODM2NDogMTkvMTIvMjAw
-OCBFU1QgMDQ6MzA6NDMsIHN5c210YygyNDI1MykgdW5hYmxlIHRvIGRlbGl2ZXINCmV2ZW50ICJN
-VEMuMDAxNDAwMTYiIHRvIGh3SW52U3lzdGVtSW52TSgyMjU3NyksIHJ4IHF1ZXVlIGZ1bGwNCjJG
-MjJDMDUyRTVFM0U0OiAxOS8xMi8yMDA4IEVTVCAwNDozMDo0Mywgc3lzbXRjKDI0MjUzKSB1bmFi
-bGUgdG8gZGVsaXZlcg0KZXZlbnQgIk1UQy4wMDE0MDAxNiIgdG8gaHdJbnZTeXN0ZW1JbnZNKDIy
-NTc3KSwgcnggcXVldWUgZnVsbA0KMkYyMkM0NkZCREQxMzg6IDE5LzEyLzIwMDggRVNUIDA0OjMw
-OjUyLCBwcmludGs6IDcxMiBtZXNzYWdlcyBzdXBwcmVzc2VkLg0KMkYyMkM0NkZDMkQ4MzQ6IDE5
-LzEyLzIwMDggRVNUIDA0OjMwOjUyLCBzeXNtdGMoMjQyNTMpIHVuYWJsZSB0byBkZWxpdmVyDQpl
-dmVudCAiTVRDLjAwMTQwMDE3IiB0byBod0ludlN5c3RlbUludk0oMjI1NzcpLCByeCBxdWV1ZSBm
-dWxsDQoyRjIyQzUxMjFENzJCODogMTkvMTIvMjAwOCBFU1QgMDQ6MzA6NTMsIHByaW50azogNSBt
-ZXNzYWdlcyBzdXBwcmVzc2VkLg0KMkYyMkM1MTIyM0Q5MTg6IDE5LzEyLzIwMDggRVNUIDA0OjMw
-OjUzLCBzeXNtdGMoMjQyNTMpIHVuYWJsZSB0byBkZWxpdmVyDQpldmVudCAiTVRDLjAwMTQwMDE3
-IiB0byBod0ludlN5c3RlbUludk0oMjI1NzcpLCByeCBxdWV1ZSBmdWxsDQoyRjIyQzc4MzJDMTgx
-MDogMTkvMTIvMjAwOCBFU1QgMDQ6MzA6NTksIHByaW50azogMTMyIG1lc3NhZ2VzIHN1cHByZXNz
-ZWQuDQoyRjIyQzc4MzMyNzM3NDogMTkvMTIvMjAwOCBFU1QgMDQ6MzA6NTksIHN5c210YygyNDI1
-MykgdW5hYmxlIHRvIGRlbGl2ZXINCmV2ZW50ICJNVEMuMDAxNDAwMTciIHRvIGh3SW52U3lzdGVt
-SW52TSgyMjU3NyksIHJ4IHF1ZXVlIGZ1bGwNCjJGMjJDOUE5NDg5RDc0OiAxOS8xMi8yMDA4IEVT
-VCAwNDozMTowMywgcHJpbnRrOiA5OCBtZXNzYWdlcyBzdXBwcmVzc2VkLg0KMkYyMkM5QTk1MERE
-RDQ6IDE5LzEyLzIwMDggRVNUIDA0OjMxOjAzLCBzeXNtdGMoMjQyNTMpIHVuYWJsZSB0byBkZWxp
-dmVyDQpldmVudCAiTVRDLjAwMTQwMDE3IiB0byBod0ludlN5c3RlbUludk0oMjI1NzcpLCByeCBx
-dWV1ZSBmdWxsDQoyRjIyQ0Y4QzM3MDMzNDogMTkvMTIvMjAwOCBFU1QgMDQ6MzE6MTYsIHByaW50
-azogMzQ0IG1lc3NhZ2VzIHN1cHByZXNzZWQuDQoyRjIyQ0Y4QzQwN0RFQzogMTkvMTIvMjAwOCBF
-U1QgMDQ6MzE6MTYsIHN5c210YygyNDI1MykgdW5hYmxlIHRvIGRlbGl2ZXINCmV2ZW50ICJNVEMu
-MDAxNDAwMTciIHRvIGh3SW52U3lzdGVtSW52TSgyMjU3NyksIHJ4IHF1ZXVlIGZ1bGwNCjJGMjJD
-RjhDNkIyQTE0OiAxOS8xMi8yMDA4IEVTVCAwNDozMToxNiwgc3lzbXRjKDI0MjUzKSB1bmFibGUg
-dG8gZGVsaXZlcg0KZXZlbnQgIk1UQy4wMDE0MDAxNyIgdG8gaHdJbnZTeXN0ZW1JbnZNKDIyNTc3
-KSwgcnggcXVldWUgZnVsbA0KMkYyMkQwOUM0NDY1RTQ6IDE5LzEyLzIwMDggRVNUIDA0OjMxOjE4
-LCBwcmludGs6IDMzIG1lc3NhZ2VzIHN1cHByZXNzZWQuDQoyRjIyRDA5QzVFQ0UyMDogMTkvMTIv
-MjAwOCBFU1QgMDQ6MzE6MTgsIHN5c210YygyNDI1MykgdW5hYmxlIHRvIGRlbGl2ZXINCmV2ZW50
-ICJNVEMuMDAxNDAwMTciIHRvIGh3SW52U3lzdGVtSW52TSgyMjU3NyksIHJ4IHF1ZXVlIGZ1bGwN
-CjJGMjJEMkYyQjc1RjJDOiAxOS8xMi8yMDA4IEVTVCAwNDozMToyMywgcHJpbnRrOiAxMzQgbWVz
-c2FnZXMgc3VwcHJlc3NlZC4NCjJGMjJEMkYyQzE0NkQ4OiAxOS8xMi8yMDA4IEVTVCAwNDozMToy
-Mywgc3lzbXRjKDI0MjUzKSB1bmFibGUgdG8gZGVsaXZlcg0KZXZlbnQgIk1UQy4wMDE0MDAxNyIg
-dG8gaHdJbnZTeXN0ZW1JbnZNKDIyNTc3KSwgcnggcXVldWUgZnVsbA0KMkYyMkQ1MzZBMTQ4QTQ6
-IDE5LzEyLzIwMDggRVNUIDA0OjMxOjI4LCBwcmludGs6IDkwIG1lc3NhZ2VzIHN1cHByZXNzZWQu
-DQoyRjIyRDUzNkE3RDk5ODogMTkvMTIvMjAwOCBFU1QgMDQ6MzE6MjgsIHN5c210YygyNDI1Mykg
-dW5hYmxlIHRvIGRlbGl2ZXINCmV2ZW50ICJNVEMuMDAxNDAwMTciIHRvIGh3SW52U3lzdGVtSW52
-TSgyMjU3NyksIHJ4IHF1ZXVlIGZ1bGwNCjJGMjMzOTE2NjhCNkNBOiAxOS8xMi8yMDA4IEVTVCAw
-NDozNTowMywgbW91bnRpbmcgRlMgdHlwZSBuZnMgb24NCi9leHBvcnRfbW9uaXRvci90ZnRwYm9v
-dF9yZXRyeQ0KMkYyMzM5MTY3MUNFNTY6IDE5LzEyLzIwMDggRVNUIDA0OjM1OjAzLCBuZnMgd2Fy
-bmluZzogbW91bnQgdmVyc2lvbiBvbGRlcg0KdGhhbiBrZXJuZWwNCjJGMjMzOTNDRDhGRUU2OiAx
-OS8xMi8yMDA4IEVTVCAwNDozNTowNCwgdW5tb3VudGluZw0KL2V4cG9ydF9tb25pdG9yL3RmdHBi
-b290X3JldHJ5DQoyRjIzQzNGQzk0MEVFODogMTkvMTIvMjAwOCBFU1QgMDQ6NDA6MDMsIG1vdW50
-aW5nIEZTIHR5cGUgbmZzIG9uDQovZXhwb3J0X21vbml0b3IvdGZ0cGJvb3RfcmV0cnkNCjJGMjND
-M0ZDOUEwNkM4OiAxOS8xMi8yMDA4IEVTVCAwNDo0MDowMywgbmZzIHdhcm5pbmc6IG1vdW50IHZl
-cnNpb24gb2xkZXINCnRoYW4ga2VybmVsDQoyRjIzQzQyRDlDRTVGODogMTkvMTIvMjAwOCBFU1Qg
-MDQ6NDA6MDMsIHVubW91bnRpbmcNCi9leHBvcnRfbW9uaXRvci90ZnRwYm9vdF9yZXRyeQ0KMkYy
-M0Q5NTJENDNDQjA6IDE5LzEyLzIwMDggRVNUIDA0OjQwOjQ5LCBwcmludGs6IDE2IG1lc3NhZ2Vz
-IHN1cHByZXNzZWQuDQoyRjIzRDk1MkRBOEIzMDogMTkvMTIvMjAwOCBFU1QgMDQ6NDA6NDksIHN5
-c210YygyNDI1MykgdW5hYmxlIHRvIGRlbGl2ZXINCmV2ZW50ICJNVEMuMDAxNDAwMTYiIHRvIGh3
-SW52U3lzdGVtSW52TSgyMjU3NyksIHJ4IHF1ZXVlIGZ1bGwNCjJGMjNEOTUyRkMwOERDOiAxOS8x
-Mi8yMDA4IEVTVCAwNDo0MDo0OSwgc3lzbXRjKDI0MjUzKSB1bmFibGUgdG8gZGVsaXZlcg0KZXZl
-bnQgIk1UQy4wMDE0MDAxNiIgdG8gaHdJbnZTeXN0ZW1JbnZNKDIyNTc3KSwgcnggcXVldWUgZnVs
-bA0KMkYyM0Q5NTMwRTAzQzA6IDE5LzEyLzIwMDggRVNUIDA0OjQwOjQ5LCBzeXNtdGMoMjQyNTMp
-IHVuYWJsZSB0byBkZWxpdmVyDQpldmVudCAiTVRDLjAwMTQwMDE2IiB0byBod0ludlN5c3RlbUlu
-dk0oMjI1NzcpLCByeCBxdWV1ZSBmdWxsDQoyRjIzRDk1MzJCRERDODogMTkvMTIvMjAwOCBFU1Qg
-MDQ6NDA6NDksIHN5c210YygyNDI1MykgdW5hYmxlIHRvIGRlbGl2ZXINCmV2ZW50ICJNVEMuMDAx
-NDAwMTYiIHRvIGh3SW52U3lzdGVtSW52TSgyMjU3NyksIHJ4IHF1ZXVlIGZ1bGwNCjJGMjNEOTUz
-M0FBNTM0OiAxOS8xMi8yMDA4IEVTVCAwNDo0MDo0OSwgc3lzbXRjKDI0MjUzKSB1bmFibGUgdG8g
-ZGVsaXZlcg0KZXZlbnQgIk1UQy4wMDE0MDAxNiIgdG8gaHdJbnZTeXN0ZW1JbnZNKDIyNTc3KSwg
-cnggcXVldWUgZnVsbA0KMkYyM0Q5NTM1NzYwREM6IDE5LzEyLzIwMDggRVNUIDA0OjQwOjQ5LCBz
-eXNtdGMoMjQyNTMpIHVuYWJsZSB0byBkZWxpdmVyDQpldmVudCAiTVRDLjAwMTQwMDE2IiB0byBo
-d0ludlN5c3RlbUludk0oMjI1NzcpLCByeCBxdWV1ZSBmdWxsDQoyRjIzRDk1MzY4QUNCQzogMTkv
-MTIvMjAwOCBFU1QgMDQ6NDA6NDksIHN5c210YygyNDI1MykgdW5hYmxlIHRvIGRlbGl2ZXINCmV2
-ZW50ICJNVEMuMDAxNDAwMTYiIHRvIGh3SW52U3lzdGVtSW52TSgyMjU3NyksIHJ4IHF1ZXVlIGZ1
-bGwNCjJGMjNEOTUzODZGQjlDOiAxOS8xMi8yMDA4IEVTVCAwNDo0MDo0OSwgc3lzbXRjKDI0MjUz
-KSB1bmFibGUgdG8gZGVsaXZlcg0KZXZlbnQgIk1UQy4wMDE0MDAxNiIgdG8gaHdJbnZTeXN0ZW1J
-bnZNKDIyNTc3KSwgcnggcXVldWUgZnVsbA0KMkYyM0Q5NTM5NThFQTQ6IDE5LzEyLzIwMDggRVNU
-IDA0OjQwOjQ5LCBzeXNtdGMoMjQyNTMpIHVuYWJsZSB0byBkZWxpdmVyDQpldmVudCAiTVRDLjAw
-MTQwMDE2IiB0byBod0ludlN5c3RlbUludk0oMjI1NzcpLCByeCBxdWV1ZSBmdWxsDQoyRjIzRDk1
-M0IzMUI5NDogMTkvMTIvMjAwOCBFU1QgMDQ6NDA6NDksIHN5c210YygyNDI1MykgdW5hYmxlIHRv
-IGRlbGl2ZXINCmV2ZW50ICJNVEMuMDAxNDAwMTYiIHRvIGh3SW52U3lzdGVtSW52TSgyMjU3Nyks
-IHJ4IHF1ZXVlIGZ1bGwNCjJGMjNEQ0VBQkY5QTlDOiAxOS8xMi8yMDA4IEVTVCAwNDo0MDo1Niwg
-cHJpbnRrOiA3MTAgbWVzc2FnZXMgc3VwcHJlc3NlZC4NCjJGMjNEQ0VBQzUwMzZDOiAxOS8xMi8y
-MDA4IEVTVCAwNDo0MDo1Niwgc3lzbXRjKDI0MjUzKSB1bmFibGUgdG8gZGVsaXZlcg0KZXZlbnQg
-Ik1UQy4wMDE0MDAxNyIgdG8gaHdJbnZTeXN0ZW1JbnZNKDIyNTc3KSwgcnggcXVldWUgZnVsbA0K
-MkYyM0RFMjg4OTE4RTA6IDE5LzEyLzIwMDggRVNUIDA0OjQwOjU5LCBwcmludGs6IDM3IG1lc3Nh
-Z2VzIHN1cHByZXNzZWQuDQoyRjIzREUyODhGOTI2QzogMTkvMTIvMjAwOCBFU1QgMDQ6NDA6NTks
-IHN5c210YygyNDI1MykgdW5hYmxlIHRvIGRlbGl2ZXINCmV2ZW50ICJNVEMuMDAxNDAwMTciIHRv
-IGh3SW52U3lzdGVtSW52TSgyMjU3NyksIHJ4IHF1ZXVlIGZ1bGwNCjJGMjNFMDYxMzc1REQ0OiAx
-OS8xMi8yMDA4IEVTVCAwNDo0MTowNCwgcHJpbnRrOiA3MiBtZXNzYWdlcyBzdXBwcmVzc2VkLg0K
-MkYyM0UwNjEzRTgxNzg6IDE5LzEyLzIwMDggRVNUIDA0OjQxOjA0LCBzeXNtdGMoMjQyNTMpIHVu
-YWJsZSB0byBkZWxpdmVyDQpldmVudCAiTVRDLjAwMTQwMDE3IiB0byBod0ludlN5c3RlbUludk0o
-MjI1NzcpLCByeCBxdWV1ZSBmdWxsDQoyRjIzRTREQjExRDc0NDogMTkvMTIvMjAwOCBFU1QgMDQ6
-NDE6MTMsIHByaW50azogMzM4IG1lc3NhZ2VzIHN1cHByZXNzZWQuDQoyRjIzRTREQjE2RUFBODog
-MTkvMTIvMjAwOCBFU1QgMDQ6NDE6MTMsIHN5c210YygyNDI1MykgdW5hYmxlIHRvIGRlbGl2ZXIN
-CmV2ZW50ICJNVEMuMDAxNDAwMTciIHRvIGh3SW52U3lzdGVtSW52TSgyMjU3NyksIHJ4IHF1ZXVl
-IGZ1bGwNCjJGMjNFNTFBMzQ0ODI4OiAxOS8xMi8yMDA4IEVTVCAwNDo0MToxNCwgcHJpbnRrOiA0
-IG1lc3NhZ2VzIHN1cHByZXNzZWQuDQoyRjIzRTUxQTQwODFBODogMTkvMTIvMjAwOCBFU1QgMDQ6
-NDE6MTQsIHN5c210YygyNDI1MykgdW5hYmxlIHRvIGRlbGl2ZXINCmV2ZW50ICJNVEMuMDAxNDAw
-MTciIHRvIGh3SW52U3lzdGVtSW52TSgyMjU3NyksIHJ4IHF1ZXVlIGZ1bGwNCjJGMjNFNzQwMTQ1
-QjAwOiAxOS8xMi8yMDA4IEVTVCAwNDo0MToxOSwgcHJpbnRrOiAxMDQgbWVzc2FnZXMgc3VwcHJl
-c3NlZC4NCjJGMjNFNzQwMUJDQkE4OiAxOS8xMi8yMDA4IEVTVCAwNDo0MToxOSwgc3lzbXRjKDI0
-MjUzKSB1bmFibGUgdG8gZGVsaXZlcg0KZXZlbnQgIk1UQy4wMDE0MDAxNyIgdG8gaHdJbnZTeXN0
-ZW1JbnZNKDIyNTc3KSwgcnggcXVldWUgZnVsbA0KMkYyM0U5QUM0ODQ2ODA6IDE5LzEyLzIwMDgg
-RVNUIDA0OjQxOjI0LCBwcmludGs6IDIwMiBtZXNzYWdlcyBzdXBwcmVzc2VkLg0KMkYyM0U5QUM2
-MjkyNzA6IDE5LzEyLzIwMDggRVNUIDA0OjQxOjI0LCBzeXNtdGMoMjQyNTMpIHVuYWJsZSB0byBk
-ZWxpdmVyDQpldmVudCAiTVRDLjAwMTQwMDE3IiB0byBod0ludlN5c3RlbUludk0oMjI1NzcpLCBy
-eCBxdWV1ZSBmdWxsDQoyRjIzRUJGMDQ0QzY0QTogMTkvMTIvMjAwOCBFU1QgMDQ6NDE6MjksIHBy
-aW50azogNjggbWVzc2FnZXMgc3VwcHJlc3NlZC4NCjJGMjNFQkYwNTQ3NDRFOiAxOS8xMi8yMDA4
-IEVTVCAwNDo0MToyOSwgc3lzbXRjKDI0MjUzKSB1bmFibGUgdG8gZGVsaXZlcg0KZXZlbnQgIk1U
-Qy4wMDE0MDAxNyIgdG8gaHdJbnZTeXN0ZW1JbnZNKDIyNTc3KSwgcnggcXVldWUgZnVsbA0KMkYy
-NDBGNEMyMjYwNzg6IDE5LzEyLzIwMDggRVNUIDA0OjQyOjQ1LCBtcHRzY3NpaDogaW9jMTogPj4g
-QXR0ZW1wdGluZyB0YXNrDQphYm9ydCEgKHNjPWU0MGRmMDgwKQ0KMkYyNDBGNkU4QzJFMDA6IDE5
-LzEyLzIwMDggRVNUIDA0OjQyOjQ1LCBtcHRiYXNlOiBpb2MxOiBJT0NTdGF0dXMoMHgwMDQ4KToN
-ClNDU0kgVGFzayBUZXJtaW5hdGVkDQoyRjI0MEY2RTkwNUE5ODogMTkvMTIvMjAwOCBFU1QgMDQ6
-NDI6NDUsIG1wdHNjc2loOiBpb2MxOiA+PiBBdHRlbXB0aW5nIHRhc2sNCmFib3J0ISAoc2M9Zjdl
-MjM2ODApDQoyRjI0MTA1QzM2RTc0QzogMTkvMTIvMjAwOCBFU1QgMDQ6NDI6NDcsIG1wdGJhc2U6
-IEluaXRpYXRpbmcgaW9jMSByZWNvdmVyeQ0KMkYyNDExN0JEQTI0Mzg6IDE5LzEyLzIwMDggRVNU
-IDA0OjQyOjUwLCBtcHRzY3NpaDogaW9jMTogPj4gQXR0ZW1wdGluZyBidXMNCnJlc2V0ISAoc2M9
-ZTQwZGYwODApDQoyRjI0MTI0MEQzQjhEODogMTkvMTIvMjAwOCBFU1QgMDQ6NDI6NTEsIG5mczog
-c2VydmVyIGJhc2UtdW5pdDEgbm90DQpyZXNwb25kaW5nLCBzdGlsbCB0cnlpbmcNCjJGMjQxM0Uz
-QTg5NEY4OiAxOS8xMi8yMDA4IEVTVCAwNDo0Mjo1NSwgcHJpbnRrOiAxMSBtZXNzYWdlcyBzdXBw
-cmVzc2VkLg0KMkYyNDEzRTNBQzQyQUM6IDE5LzEyLzIwMDggRVNUIDA0OjQyOjU1LCBzeXNtdGMo
-MjQyNTMpIHVuYWJsZSB0byBkZWxpdmVyDQpldmVudCAiTVRDLjAwMTQwMDE2IiB0byBod0ludlN5
-c3RlbUludk0oMjI1NzcpLCByeCBxdWV1ZSBmdWxsDQoyRjI0MTNFM0I4OTc1NDogMTkvMTIvMjAw
-OCBFU1QgMDQ6NDI6NTUsIHN5c210YygyNDI1MykgdW5hYmxlIHRvIGRlbGl2ZXINCmV2ZW50ICJN
-VEMuMDAxNDAwMTYiIHRvIGh3SW52U3lzdGVtSW52TSgyMjU3NyksIHJ4IHF1ZXVlIGZ1bGwNCjJG
-MjQxM0UzREMxMjYwOiAxOS8xMi8yMDA4IEVTVCAwNDo0Mjo1NSwgc3lzbXRjKDI0MjUzKSB1bmFi
-bGUgdG8gZGVsaXZlcg0KZXZlbnQgIk1UQy4wMDE0MDAxNiIgdG8gaHdJbnZTeXN0ZW1JbnZNKDIy
-NTc3KSwgcnggcXVldWUgZnVsbA0KMkYyNDEzRTNFNkQzOEM6IDE5LzEyLzIwMDggRVNUIDA0OjQy
-OjU1LCBzeXNtdGMoMjQyNTMpIHVuYWJsZSB0byBkZWxpdmVyDQpldmVudCAiTVRDLjAwMTQwMDE2
-IiB0byBod0ludlN5c3RlbUludk0oMjI1NzcpLCByeCBxdWV1ZSBmdWxsDQoyRjI0MTNGMDJGNTIx
-MDogMTkvMTIvMjAwOCBFU1QgMDQ6NDI6NTUsIHN5c210YygyNDI1MykgdW5hYmxlIHRvIGRlbGl2
-ZXINCmV2ZW50ICJNVEMuMDAxNDAwMTYiIHRvIGh3SW52U3lzdGVtSW52TSgyMjU3NyksIHJ4IHF1
-ZXVlIGZ1bGwNCjJGMjQxM0YwM0EwRjY4OiAxOS8xMi8yMDA4IEVTVCAwNDo0Mjo1NSwgc3lzbXRj
-KDI0MjUzKSB1bmFibGUgdG8gZGVsaXZlcg0KZXZlbnQgIk1UQy4wMDE0MDAxNiIgdG8gaHdJbnZT
-eXN0ZW1JbnZNKDIyNTc3KSwgcnggcXVldWUgZnVsbA0KMkYyNDEzRjA2QjQxOEM6IDE5LzEyLzIw
-MDggRVNUIDA0OjQyOjU1LCBzeXNtdGMoMjQyNTMpIHVuYWJsZSB0byBkZWxpdmVyDQpldmVudCAi
-TVRDLjAwMTQwMDE2IiB0byBod0ludlN5c3RlbUludk0oMjI1NzcpLCByeCBxdWV1ZSBmdWxsDQoy
-RjI0MTNGMDc2RTlCMDogMTkvMTIvMjAwOCBFU1QgMDQ6NDI6NTUsIHN5c210YygyNDI1MykgdW5h
-YmxlIHRvIGRlbGl2ZXINCmV2ZW50ICJNVEMuMDAxNDAwMTYiIHRvIGh3SW52U3lzdGVtSW52TSgy
-MjU3NyksIHJ4IHF1ZXVlIGZ1bGwNCjJGMjQxNDBDRkRFNDIwOiAxOS8xMi8yMDA4IEVTVCAwNDo0
-Mjo1NSwgc3lzbXRjKDI0MjUzKSB1bmFibGUgdG8gZGVsaXZlcg0KZXZlbnQgIk1UQy4wMDE0MDAx
-NiIgdG8gaHdJbnZTeXN0ZW1JbnZNKDIyNTc3KSwgcnggcXVldWUgZnVsbA0KMkYyNDE0MEQwOEVE
-ODA6IDE5LzEyLzIwMDggRVNUIDA0OjQyOjU1LCBzeXNtdGMoMjQyNTMpIHVuYWJsZSB0byBkZWxp
-dmVyDQpldmVudCAiTVRDLjAwMTQwMDE2IiB0byBod0ludlN5c3RlbUludk0oMjI1NzcpLCByeCBx
-dWV1ZSBmdWxsDQoyRjI0MTY2QTJDREEyODogMTkvMTIvMjAwOCBFU1QgMDQ6NDM6MDAsIHByaW50
-azogNjcgbWVzc2FnZXMgc3VwcHJlc3NlZC4NCjJGMjQxNjZBMzBBOUIwOiAxOS8xMi8yMDA4IEVT
-VCAwNDo0MzowMCwgc3lzbXRjKDI0MjUzKSB1bmFibGUgdG8gZGVsaXZlcg0KZXZlbnQgIk1UQy4w
-MDE0MDAxNiIgdG8gaHdJbnZTeXN0ZW1JbnZNKDIyNTc3KSwgcnggcXVldWUgZnVsbA0KMkYyNDE4
-ODg0QkY4NTg6IDE5LzEyLzIwMDggRVNUIDA0OjQzOjA1LCBwcmludGs6IDcyIG1lc3NhZ2VzIHN1
-cHByZXNzZWQuDQoyRjI0MTg4ODRGQjU0ODogMTkvMTIvMjAwOCBFU1QgMDQ6NDM6MDUsIHN5c210
-YygyNDI1MykgdW5hYmxlIHRvIGRlbGl2ZXINCmV2ZW50ICJNVEMuMDAxNDAwMTYiIHRvIGh3SW52
-U3lzdGVtSW52TSgyMjU3NyksIHJ4IHF1ZXVlIGZ1bGwNCjJGMjQyOEIwNkM2OTY0OiAxOS8xMi8y
-MDA4IEVTVCAwNDo0Mzo0MCwgbXB0c2NzaWg6IGlvYzE6ID4+IEF0dGVtcHRpbmcgaG9zdA0KcmVz
-ZXQhIChzYz1lNDBkZjA4MCkNCg==
-------=_Part_187868_13983802.1231305848231--
+thanks,
+grant
+
+> +
+> +static int mpt_msi_enable_fc;
+> +module_param(mpt_msi_enable_fc, int, 0);
+> +MODULE_PARM_DESC(mpt_msi_enable_fc, " Enable MSI Support for FC \
+> +               controllers (default=0)");
+> +
+> +static int mpt_msi_enable_sas;
+> +module_param(mpt_msi_enable_sas, int, 0);
+> +MODULE_PARM_DESC(mpt_msi_enable_sas, " Enable MSI Support for SAS \
+> +               controllers (default=0)");
+> +
+>
+>  static int mpt_channel_mapping;
+>  module_param(mpt_channel_mapping, int, 0);
+> @@ -91,7 +104,9 @@ static int mpt_debug_level;
+>  static int mpt_set_debug_level(const char *val, struct kernel_param *kp);
+>  module_param_call(mpt_debug_level, mpt_set_debug_level, param_get_int,
+>                  &mpt_debug_level, 0600);
+> -MODULE_PARM_DESC(mpt_debug_level, " debug level - refer to mptdebug.h - (default=0)");
+> +MODULE_PARM_DESC(mpt_debug_level, " debug level - refer to mptdebug.h \
+> +       - (default=0)");
+> +
+>
+>  #ifdef MFCNT
+>  static int mfcounter = 0;
+> @@ -1751,16 +1766,25 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+>                ioc->bus_type = SAS;
+>        }
+>
+> -       if (mpt_msi_enable == -1) {
+> -               /* Enable on SAS, disable on FC and SPI */
+> -               if (ioc->bus_type == SAS)
+> -                       ioc->msi_enable = 1;
+> -               else
+> -                       ioc->msi_enable = 0;
+> -       } else
+> -               /* follow flag: 0 - disable; 1 - enable */
+> -               ioc->msi_enable = mpt_msi_enable;
+>
+> +       switch (ioc->bus_type) {
+> +
+> +       case SAS:
+> +               ioc->msi_enable = mpt_msi_enable_sas;
+> +               break;
+> +
+> +       case SPI:
+> +               ioc->msi_enable = mpt_msi_enable_spi;
+> +               break;
+> +
+> +       case FC:
+> +               ioc->msi_enable = mpt_msi_enable_fc;
+> +               break;
+> +
+> +       default:
+> +               ioc->msi_enable = 0;
+> +               break;
+> +       }
+>        if (ioc->errata_flag_1064)
+>                pci_disable_io_access(pdev);
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
