@@ -1,41 +1,37 @@
-From: "Bert Wesarg" <bert.wesarg@googlemail.com>
-Subject: Re: [PATCH 3/6] fastboot: make the libata port scan asynchronous
-Date: Wed, 7 Jan 2009 10:12:52 +0100
-Message-ID: <36ca99e90901070112q6ecbb6ev5b8eafb58361674d@mail.gmail.com>
-References: <20090105200959.04a626ac@infradead.org>
-	 <20090105201204.2c0bf9af@infradead.org>
+From: Aaro Koskinen <aaro.koskinen@nokia.com>
+Subject: Re: [PATCH] sym53c8xx_2: slave_alloc/destroy safety (2.6.27.5)
+Date: Wed, 07 Jan 2009 12:57:39 +0200
+Message-ID: <49648AA3.5070401@nokia.com>
+References: <49593940.9060102@cybernetics.com>	 <1230631843-16470-1-git-send-email-Aaro.Koskinen@nokia.com> <1230664572.18627.2.camel@localhost.localdomain> <4963861F.5090404@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20090105201204.2c0bf9af@infradead.org>
-Content-Disposition: inline
-Sender: linux-acpi-owner@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, mingo@elte.hu, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.nokia.com ([192.100.122.233]:36305 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752210AbZAGK6m (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2009 05:58:42 -0500
+In-Reply-To: <4963861F.5090404@cybernetics.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: ext Tony Battersby <tonyb@cybernetics.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-Hi,
+Hello,
 
-On Tue, Jan 6, 2009 at 05:12, Arjan van de Ven <arjan@infradead.org> wrote:
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index fecca42..fe2c208 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -56,6 +56,7 @@
->  #include <linux/workqueue.h>
->  #include <linux/scatterlist.h>
->  #include <linux/io.h>
-> +#include <linux/async.h>
->  #include <scsi/scsi.h>
->  #include <scsi/scsi_cmnd.h>
->  #include <scsi/scsi_host.h>
-> @@ -5909,6 +5910,48 @@ void ata_host_init(struct ata_host *host, struct device *dev,
->        host->ops = ops;
->  }
->
-> +
-> +void async_port_probe(void *data, async_cookie_t cookie)
-static?
+ext Tony Battersby wrote:
+> From the description of this patch, I assume that it is a cleanup
+> instead of a fix for an actual problem.  Correspondingly, I don't have a
+> specific testcase that is improved by this patch.  I also have not
+> analyzed the source to see what the patch is trying to do.  However, the
+> current form of the patch passes testing as described above.
 
-Bert
+You can try to do the following test with and without the patch:
+
+echo "scsi remove-single-device some_valid_address_with_a_target > 
+/proc/scsi/scsi"
+
+Then do e.g. "resetdev" or "cleardev" to that target through the drivers 
+/proc interface.
+
+A.
