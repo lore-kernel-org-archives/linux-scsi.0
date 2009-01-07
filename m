@@ -1,38 +1,29 @@
-From: "Ryan Hope" <rmh3093@gmail.com>
-Subject: Re: [PATCH 0/6] v2: Asynchronous function calls to speed up booting and more
-Date: Wed, 7 Jan 2009 12:44:03 -0500
-Message-ID: <48f7fe350901070944y558366f0j9a23b12a993c4355@mail.gmail.com>
-References: <20090105201508.23e98b4b@infradead.org>
-	 <48f7fe350901061919l55006cd6v842e3f7a40e4cd0c@mail.gmail.com>
-	 <20090107070810.675799a5@infradead.org>
+From: Bernd Schubert <bs@q-leap.de>
+Subject: [PATCH 0/2 (resend) ] fusion reset
+Date: Wed, 7 Jan 2009 18:58:47 +0100
+Message-ID: <200901071858.48672.bs@q-leap.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20090107070810.675799a5@infradead.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ns2.q-leap.de ([88.79.172.217]:44667 "EHLO mail.q-leap.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752983AbZAGR6u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Jan 2009 12:58:50 -0500
 Content-Disposition: inline
-Sender: linux-acpi-owner@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, mingo@elte.hu, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Sathya Prakash <Sathya.Prakash@lsi.com>, Eric Moore <Eric.Moore@lsi.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>
 
-yes it boots with out the acpi patch
+Hello,
 
-On 1/7/09, Arjan van de Ven <arjan@infradead.org> wrote:
-> On Tue, 6 Jan 2009 22:19:33 -0500
-> "Ryan Hope" <rmh3093@gmail.com> wrote:
->
->> i can't boot with these patches... the kernel panic was something
->> along the line of:
->>
->> ata_piix: device unavailable because of BAR 0 collisions
->
-> ok as a hunch.. could you try this but without the ACPI part of the
-> patch?
->
->
-> --
-> Arjan van de Ven 	Intel Open Source Technology Centre
-> For development, discussion and tips for power savings,
-> visit http://www.lesswatts.org
->
+here are two patches for the mpt fusion reset handling. Still missing from the 
+series is a patch to prevent DV deadlocks, since my present approach still 
+sometimes leaves the deadlock.
+
+
+-- 
+Bernd Schubert
+Q-Leap Networks GmbH
