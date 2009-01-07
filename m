@@ -1,97 +1,46 @@
-From: Yong Wang <yong.y.wang@linux.intel.com>
-Subject: Re: [PATCH 4/6] fastboot: make ACPI bus drivers probe asynchronous
-Date: Wed, 7 Jan 2009 22:12:56 +0800
-Message-ID: <20090107141256.GA22902@ywang-moblin2.bj.intel.com>
-References: <20090105200959.04a626ac@infradead.org> <20090105201239.0784606e@infradead.org>
+From: Tony Battersby <tonyb@cybernetics.com>
+Subject: Re: [PATCH] sym53c8xx_2: slave_alloc/destroy safety (2.6.27.5)
+Date: Wed, 07 Jan 2009 09:52:31 -0500
+Message-ID: <4964C1AF.3020103@cybernetics.com>
+References: <49593940.9060102@cybernetics.com>	 <1230631843-16470-1-git-send-email-Aaro.Koskinen@nokia.com> <1230664572.18627.2.camel@localhost.localdomain> <4963861F.5090404@cybernetics.com> <49648AA3.5070401@nokia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga07.intel.com ([143.182.124.22]:53016 "EHLO
-	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751627AbZAGOWg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2009 09:22:36 -0500
-Content-Disposition: inline
-In-Reply-To: <20090105201239.0784606e@infradead.org>
+Received: from host64.cybernetics.com ([98.174.209.230]:3796 "EHLO
+	mail.cybernetics.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752205AbZAGOwd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2009 09:52:33 -0500
+In-Reply-To: <49648AA3.5070401@nokia.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, mingo@elte.hu, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+To: Aaro Koskinen <aaro.koskinen@nokia.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-On Mon, Jan 05, 2009 at 08:12:39PM -0800, Arjan van de Ven wrote:
-> 
-> >From 34c47dd38f49e29eb7cd7fa2078efc6b8b258bb9 Mon Sep 17 00:00:00 2001
-> From: Arjan van de Ven <arjan@linux.intel.com>
-> Date: Sun, 4 Jan 2009 05:32:28 -0800
-> Subject: [PATCH] fastboot: make ACPI bus drivers probe asynchronous
-> 
-> the various ACPI bus drivers have non-overlapping devices and can
-> each be run asynchronous. Some of the ACPI drivers (especially the
-> battery one, but others as well) can take quite a long time to probe.
-> 
-> Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
-> ---
->  drivers/acpi/scan.c |   23 ++++++++++++++++-------
->  1 files changed, 16 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> index 39b7233..a9e542d 100644
-> --- a/drivers/acpi/scan.c
-> +++ b/drivers/acpi/scan.c
-> @@ -8,6 +8,7 @@
->  #include <linux/acpi.h>
->  #include <linux/signal.h>
->  #include <linux/kthread.h>
-> +#include <linux/async.h>
->  
->  #include <acpi/acpi_drivers.h>
->  #include <acpi/acinterp.h>	/* for acpi_ex_eisa_id_to_string() */
-> @@ -578,6 +579,19 @@ static int acpi_start_single_object(struct acpi_device *device)
->  	return result;
->  }
->  
-> +static void acpi_bus_register_async(void *data, async_cookie_t cookie)
-> +{
-> +	int ret;
-> +	struct acpi_driver *driver = data;
-> +	driver->drv.name = driver->name;
-> +	driver->drv.bus = &acpi_bus_type;
-> +	driver->drv.owner = driver->owner;
-> +
-> +	async_synchronize_cookie(cookie);
-> +
-> +	ret = driver_register(&driver->drv);
-> +	WARN_ON(ret != 0);
-> +}
->  /**
->   * acpi_bus_register_driver - register a driver with the ACPI bus
->   * @driver: driver being registered
-> @@ -588,16 +602,11 @@ static int acpi_start_single_object(struct acpi_device *device)
->   */
->  int acpi_bus_register_driver(struct acpi_driver *driver)
->  {
-> -	int ret;
->  
->  	if (acpi_disabled)
->  		return -ENODEV;
-> -	driver->drv.name = driver->name;
-> -	driver->drv.bus = &acpi_bus_type;
-> -	driver->drv.owner = driver->owner;
-> -
-> -	ret = driver_register(&driver->drv);
-> -	return ret;
-> +	async_schedule(acpi_bus_register_async, driver);
-> +	return 0;
->  }
->  
->  EXPORT_SYMBOL(acpi_bus_register_driver);
+Aaro Koskinen wrote:
+> Hello,
+>
+> ext Tony Battersby wrote:
+>   
+>> From the description of this patch, I assume that it is a cleanup
+>> instead of a fix for an actual problem.  Correspondingly, I don't have a
+>> specific testcase that is improved by this patch.  I also have not
+>> analyzed the source to see what the patch is trying to do.  However, the
+>> current form of the patch passes testing as described above.
+>>     
+>
+> You can try to do the following test with and without the patch:
+>
+> echo "scsi remove-single-device some_valid_address_with_a_target > 
+> /proc/scsi/scsi"
+>
+> Then do e.g. "resetdev" or "cleardev" to that target through the drivers 
+> /proc interface.
+>
+> A.
+>
+>   
+OK, I just tested that and verified that your patch fixes it.  Thanks!
 
-For ACPI battery, button and thermal drivers whose init funtion immediately ends
-right after calling acpi_bus_register_driver, it might be OK. But for other drivers
-whose init function has more work to do and depends on acpi_bus_register_driver
-having *really* done its job, it is certainly not OK. In the latter case, the
-'return 0' in acpi_bus_register_driver is effectively cheating those drivers that
-acpi_bus_register_driver has already done its job which is unfortunately not
-the case. Example drivers include eeepc_laptop and asus_laptop. At least I am
-seeing a kernel oops on eeepc because of that.
+Tony
 
--Yong
