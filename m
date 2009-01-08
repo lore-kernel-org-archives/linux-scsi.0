@@ -1,220 +1,100 @@
-From: Grant Grundler <grundler@google.com>
-Subject: Re: [PATCH 3/5] mpt fusion: Added Firmware debug support
-Date: Wed, 7 Jan 2009 13:01:34 -0800
-Message-ID: <da824cf30901071301i4ac121afvf17b49068f23a76f@mail.gmail.com>
-References: <da824cf30901071204k2317df5er5f80b7a882e370a5@mail.gmail.com>
-	 <B73941C4DE6A3D4EA1AE128E9565E24423925BE450@inbmail01.lsi.com>
+From: "Kashyap, Desai" <kashyap.desai@lsi.com>
+Subject: [PATCH2/5] mpt fusion: Added msi enable disable for FC,SPI,SAS [Resendig updated patch]
+Date: Thu, 8 Jan 2009 14:27:16 +0530
+Message-ID: <20090108085716.GA4116@lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.45.13]:7413 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759181AbZAGVBk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2009 16:01:40 -0500
-Received: from wpaz17.hot.corp.google.com (wpaz17.hot.corp.google.com [172.24.198.81])
-	by smtp-out.google.com with ESMTP id n07L1bHr005395
-	for <linux-scsi@vger.kernel.org>; Wed, 7 Jan 2009 13:01:39 -0800
-Received: from bwz14 (bwz14.prod.google.com [10.188.26.14])
-	by wpaz17.hot.corp.google.com with ESMTP id n07KwiCr000733
-	for <linux-scsi@vger.kernel.org>; Wed, 7 Jan 2009 13:01:34 -0800
-Received: by bwz14 with SMTP id 14so26307738bwz.13
-        for <linux-scsi@vger.kernel.org>; Wed, 07 Jan 2009 13:01:34 -0800 (PST)
-In-Reply-To: <B73941C4DE6A3D4EA1AE128E9565E24423925BE450@inbmail01.lsi.com>
+Received: from exprod7og102.obsmtp.com ([64.18.2.157]:60371 "EHLO
+	exprod7og102.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751491AbZAHJRD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jan 2009 04:17:03 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Prakash, Sathya" <Sathya.Prakash@lsi.com>
-Cc: "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>
+To: linux-scsi@vger.kernel.org
+Cc: eric.moore@lsi.com, sathya.prakash@lsi.com, James.Bottomley@HansenPartnership.com
 
-On Wed, Jan 7, 2009 at 12:20 PM, Prakash, Sathya <Sathya.Prakash@lsi.com> wrote:
-> Grant,
-> I see it is disabled by default.
 
-Sorry, I expressed myself poorly in the last email.
-The message is disabled by default too.
+Added support for MSI enable/disable for different buses FC,SPI,SAS instead
+of having single MSI enable/disable feature.
+---
 
-The message is appropriate without a flag; the panic needs
-a flag and which should be disable by default. That make more sense?
-
-Anyway, it's ultimately up to you guys how this should work.
-I'm just trying to provide feedback based on the type of bug
-reports I can do something with. If the driver reports nothing,
-users will report vague, occasional poor performance (or very
-high latency) instead of specific dmesg output pointing to a
-known problem (firmware hangs/resets) that might already be
-fixed in newer firmware revs.
-
-> And it can be enabled by passing a module parameter. Do you see anywhere the patch sets the flag to enable?
-
-This is correct. The submitted patch has the flag disabled.
-
-thanks,
-grant
-
-> Thanks
-> Sathya
->
-> -----Original Message-----
-> From: Grant Grundler [mailto:grundler@google.com]
-> Sent: Thursday, January 08, 2009 1:34 AM
-> To: Desai, Kashyap
-> Cc: linux-scsi@vger.kernel.org; Moore, Eric; Prakash, Sathya; James.Bottomley@hansenpartnership.com
-> Subject: Re: [PATCH 3/5] mpt fusion: Added Firmware debug support
->
-> On Tue, Jan 6, 2009 at 10:03 PM, Desai, Kashyap <Kashyap.Desai@lsi.com> wrote:
->> Grant,
->>
->> I do agree with you, but we have reasons doing things this way.
->>
->> 1. This is only for development purpose. Normally when Firmware fault occurs driver will reset firmware so that further communication with firmware can resume. In this condition we were not able to track root cause of fault. In debug environment mpt_fwfault_debug will be set. In this case Driver will not reset firmware rather it will panic the system.
->
-> developement flags should be disabled by default, not enabled.
->
->> Reason doing Fault.
->> If we don't panic the system, we will get huge IO errors if any IO
->> stress is running  and error message will flood the syslog.(specially
->> this things happens in Overnight stress test)
->
-> It makes sense to have the flag but not to enable it by default.
->
-> hth,
-> grant
->
->>
->> Thoughts?
->>
->> Thanks
->> Kashyap Desai
->>
->> -----Original Message-----
->> From: Grant Grundler [mailto:grundler@google.com]
->> Sent: Wednesday, January 07, 2009 1:23 AM
->> To: Desai, Kashyap
->> Cc: linux-scsi@vger.kernel.org; Moore, Eric; Prakash, Sathya;
->> James.Bottomley@hansenpartnership.com
->> Subject: Re: [PATCH 3/5] mpt fusion: Added Firmware debug support
->>
->> On Tue, Jan 6, 2009 at 1:33 AM, Kashyap, Desai <kashyap.desai@lsi.com> wrote:
->>>
->>> Added support for Firmware debuging
->>> ---
->>>
->>> Signed-off-by: Kashyap Desai <kadesai@lsi.com>
->>> ---
->>> diff --git a/drivers/message/fusion/mptbase.c
->>> b/drivers/message/fusion/mptbase.c
->>> index 55d9a7e..ea3aafb 100644
->>> --- a/drivers/message/fusion/mptbase.c
->>> +++ b/drivers/message/fusion/mptbase.c
->>> @@ -107,6 +107,14 @@ module_param_call(mpt_debug_level,
->>> mpt_set_debug_level, param_get_int,  MODULE_PARM_DESC(mpt_debug_level, " debug level - refer to mptdebug.h \
->>>        - (default=0)");
->>>
->>> +int mpt_fwfault_debug;
->>> +EXPORT_SYMBOL(mpt_fwfault_debug);
->>> +module_param_call(mpt_fwfault_debug, param_set_int, param_get_int,
->>> +         &mpt_fwfault_debug, 0600);
->>> +MODULE_PARM_DESC(mpt_fwfault_debug, "Enable detection of Firmware fault"
->>> +       " and halt Firmware on fault - (default=0)");
->>> +
->>> +
->>>
->>>  #ifdef MFCNT
->>>  static int mfcounter = 0;
->>> @@ -6337,6 +6345,33 @@ mpt_print_ioc_summary(MPT_ADAPTER *ioc, char *buffer, int *size, int len, int sh
->>>        *size = y;
->>>  }
->>>
->>> +
->>> +/**
->>> + *     mpt_halt_firmware - Halts the firmware if it is operational and panic
->>> + *     the kernel
->>> + *     @ioc: Pointer to MPT_ADAPTER structure
->>> + *
->>> + **/
->>> +void
->>> +mpt_halt_firmware(MPT_ADAPTER *ioc)
->>> +{
->>> +       u32      ioc_raw_state;
->>> +
->>> +       ioc_raw_state = mpt_GetIocState(ioc, 0);
->>> +
->>> +       if ((ioc_raw_state & MPI_IOC_STATE_MASK) == MPI_IOC_STATE_FAULT) {
->>> +               printk(MYIOC_s_ERR_FMT "IOC is in FAULT state (%04xh)!!!\n",
->>> +                       ioc->name, ioc_raw_state & MPI_DOORBELL_DATA_MASK);
->>> +               panic("%s: IOC Fault (%04xh)!!!\n", ioc->name,
->>> +                       ioc_raw_state & MPI_DOORBELL_DATA_MASK);
->>
->> Wouldn't it be better to NOT panic the machine?
->> One can still prod things "manually" (read config and MMIO space
->> registers) for further debugging.
->>
->> I'm thinking it would make more sense to call the variable
->> "mpt_fwfault_panic" and use it to decide if the machine should panic
->> or not. Thoughts?
->>
->> grant
->>
->>> +       } else {
->>> +               CHIPREG_WRITE32(&ioc->chip->Doorbell, 0xC0FFEE00);
->>> +               panic("%s: Firmware is halted due to command timeout\n",
->>> +                       ioc->name);
->>> +       }
->>> +}
->>> +EXPORT_SYMBOL(mpt_halt_firmware);
->>> +
->>>
->>> /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
->>> -=-=-=-=*/
->>>  /*
->>>  *     Reset Handling
->>> @@ -6369,6 +6404,8 @@ mpt_HardResetHandler(MPT_ADAPTER *ioc, int sleepFlag)
->>>        printk(MYIOC_s_INFO_FMT "HardResetHandler Entered!\n", ioc->name);
->>>        printk("MF count 0x%x !\n", ioc->mfcnt);  #endif
->>> +       if (mpt_fwfault_debug)
->>> +               mpt_halt_firmware(ioc);
->>>
->>>        /* Reset the adapter. Prevent more than 1 call to
->>>         * mpt_do_ioc_recovery at any instant in time.
->>> diff --git a/drivers/message/fusion/mptbase.h
->>> b/drivers/message/fusion/mptbase.h
->>> index dff048c..b3e981d 100644
->>> --- a/drivers/message/fusion/mptbase.h
->>> +++ b/drivers/message/fusion/mptbase.h
->>> @@ -922,11 +922,14 @@ extern void        mpt_free_fw_memory(MPT_ADAPTER *ioc);
->>>  extern int      mpt_findImVolumes(MPT_ADAPTER *ioc);
->>>  extern int      mptbase_sas_persist_operation(MPT_ADAPTER *ioc, u8 persist_opcode);
->>>  extern int      mpt_raid_phys_disk_pg0(MPT_ADAPTER *ioc, u8 phys_disk_num, pRaidPhysDiskPage0_t phys_disk);
->>> +extern void     mpt_halt_firmware(MPT_ADAPTER *ioc);
->>> +
->>>
->>>  /*
->>>  *  Public data decl's...
->>>  */
->>>  extern struct list_head          ioc_list;
->>> +extern int mpt_fwfault_debug;
->>>
->>>  /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
->>>  #endif         /* } __KERNEL__ */
->>> diff --git a/drivers/message/fusion/mptscsih.c
->>> b/drivers/message/fusion/mptscsih.c
->>> index ee09041..e62c6bc 100644
->>> --- a/drivers/message/fusion/mptscsih.c
->>> +++ b/drivers/message/fusion/mptscsih.c
->>> @@ -1846,6 +1846,9 @@ mptscsih_abort(struct scsi_cmnd * SCpnt)
->>>        if (hd->timeouts < -1)
->>>                hd->timeouts++;
->>>
->>> +       if (mpt_fwfault_debug)
->>> +               mpt_halt_firmware(ioc);
->>> +
->>>        /* Most important!  Set TaskMsgContext to SCpnt's MsgContext!
->>>         * (the IO to be ABORT'd)
->>>         *
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
->>> in the body of a message to majordomo@vger.kernel.org More majordomo
->>> info at  http://vger.kernel.org/majordomo-info.html
->>>
->>
->
+Signed-off-by: Kashyap Desai <kadesai@lsi.com>
+---
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index c4e8b9a..55d9a7e 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -79,9 +79,22 @@ MODULE_VERSION(my_VERSION);
+ /*
+  *  cmd line parameters
+  */
+-static int mpt_msi_enable = -1;
+-module_param(mpt_msi_enable, int, 0);
+-MODULE_PARM_DESC(mpt_msi_enable, " MSI Support Enable (default=0)");
++
++static int mpt_msi_enable_spi;
++module_param(mpt_msi_enable_spi, int, 0);
++MODULE_PARM_DESC(mpt_msi_enable_spi, " Enable MSI Support for SPI \
++		controllers (default=0)");
++
++static int mpt_msi_enable_fc;
++module_param(mpt_msi_enable_fc, int, 0);
++MODULE_PARM_DESC(mpt_msi_enable_fc, " Enable MSI Support for FC \
++		controllers (default=0)");
++
++static int mpt_msi_enable_sas;
++module_param(mpt_msi_enable_sas, int, 1);
++MODULE_PARM_DESC(mpt_msi_enable_sas, " Enable MSI Support for SAS \
++		controllers (default=1)");
++
+ 
+ static int mpt_channel_mapping;
+ module_param(mpt_channel_mapping, int, 0);
+@@ -91,7 +104,9 @@ static int mpt_debug_level;
+ static int mpt_set_debug_level(const char *val, struct kernel_param *kp);
+ module_param_call(mpt_debug_level, mpt_set_debug_level, param_get_int,
+ 		  &mpt_debug_level, 0600);
+-MODULE_PARM_DESC(mpt_debug_level, " debug level - refer to mptdebug.h - (default=0)");
++MODULE_PARM_DESC(mpt_debug_level, " debug level - refer to mptdebug.h \
++	- (default=0)");
++
+ 
+ #ifdef MFCNT
+ static int mfcounter = 0;
+@@ -1751,16 +1766,25 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		ioc->bus_type = SAS;
+ 	}
+ 
+-	if (mpt_msi_enable == -1) {
+-		/* Enable on SAS, disable on FC and SPI */
+-		if (ioc->bus_type == SAS)
+-			ioc->msi_enable = 1;
+-		else
+-			ioc->msi_enable = 0;
+-	} else
+-		/* follow flag: 0 - disable; 1 - enable */
+-		ioc->msi_enable = mpt_msi_enable;
+ 
++	switch (ioc->bus_type) {
++
++	case SAS:
++		ioc->msi_enable = mpt_msi_enable_sas;
++		break;
++
++	case SPI:
++		ioc->msi_enable = mpt_msi_enable_spi;
++		break;
++
++	case FC:
++		ioc->msi_enable = mpt_msi_enable_fc;
++		break;
++
++	default:
++		ioc->msi_enable = 0;
++		break;
++	}
+ 	if (ioc->errata_flag_1064)
+ 		pci_disable_io_access(pdev);
+ 
