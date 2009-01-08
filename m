@@ -1,58 +1,104 @@
 From: Tony Battersby <tonyb@cybernetics.com>
-Subject: [PATCH 6/7] sym53c8xx: use a queue depth of 1 for untagged devices
-Date: Thu, 08 Jan 2009 12:58:04 -0500
-Message-ID: <49663EAC.3090300@cybernetics.com>
+Subject: [PATCH 7/7] sym53c8xx: don't flood syslog with negotiation messages
+Date: Thu, 08 Jan 2009 12:59:08 -0500
+Message-ID: <49663EEC.1090100@cybernetics.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host64.cybernetics.com ([98.174.209.230]:1432 "EHLO
+Received: from host64.cybernetics.com ([98.174.209.230]:3962 "EHLO
 	mail.cybernetics.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754471AbZAHR6H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jan 2009 12:58:07 -0500
+	with ESMTP id S1754037AbZAHR7J (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jan 2009 12:59:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-sym53c8xx uses a command queue depth of 2 for untagged devices,
-without good reason.  This _mostly_ seems to work ok, but it has
-caused me some subtle problems.  For example, I have an application
-where one thread sends write commands to a tape drive, and another
-thread sends log sense polling commands.  With a queue depth of
-2, the polling commands end up being starved for long periods of
-time while multiple write commands are serviced (this may also be
-related to the fact the the sg driver queues commands in LIFO order).
-This problem is fixed by changing the queue depth to 1 for untagged
-devices.  I have tested this change extensively with many different
-tape drives, medium changers, and disk drives (disk drives of course
-use tagged commands and are therefore unaffected by this patch).
+sym53c8xx prints a negotiation message after every check condition.
+This can add up to a lot of messages for removable-medium devices
+(CD-ROM, tape drives, etc.) that are being polled, since they return
+check condition when no medium is present.  This patch suppresses the
+negotiation message if it would be the same as the last one printed.
 
 Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
 ---
---- linux-2.6.28/drivers/scsi/sym53c8xx_2/sym_glue.c.orig	2009-01-08 10:53:39.000000000 -0500
-+++ linux-2.6.28/drivers/scsi/sym53c8xx_2/sym_glue.c	2009-01-08 11:03:40.000000000 -0500
-@@ -792,9 +792,9 @@ static int sym53c8xx_slave_configure(str
+
+previously posted here:
+http://marc.info/?l=linux-scsi&m=119446914818689&w=4
+
+diff -urpN linux-2.6.28-a/drivers/scsi/sym53c8xx_2/sym_hipd.c linux-2.6.28-b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+--- linux-2.6.28-a/drivers/scsi/sym53c8xx_2/sym_hipd.c	2008-12-24 18:26:37.000000000 -0500
++++ linux-2.6.28-b/drivers/scsi/sym53c8xx_2/sym_hipd.c	2009-01-08 11:18:25.000000000 -0500
+@@ -2040,6 +2040,29 @@ static void sym_settrans(struct sym_hcb 
+ 	}
+ }
  
++static void sym_announce_transfer_rate(struct sym_tcb *tp)
++{
++	struct scsi_target *starget = tp->starget;
++
++	if (tp->tprint.period != spi_period(starget) ||
++	    tp->tprint.offset != spi_offset(starget) ||
++	    tp->tprint.width != spi_width(starget) ||
++	    tp->tprint.iu != spi_iu(starget) ||
++	    tp->tprint.dt != spi_dt(starget) ||
++	    tp->tprint.qas != spi_qas(starget) ||
++	    !tp->tprint.check_nego) {
++		tp->tprint.period = spi_period(starget);
++		tp->tprint.offset = spi_offset(starget);
++		tp->tprint.width = spi_width(starget);
++		tp->tprint.iu = spi_iu(starget);
++		tp->tprint.dt = spi_dt(starget);
++		tp->tprint.qas = spi_qas(starget);
++		tp->tprint.check_nego = 1;
++
++		spi_display_xfer_agreement(starget);
++	}
++}
++
+ /*
+  *  We received a WDTR.
+  *  Let everything be aware of the changes.
+@@ -2063,7 +2086,7 @@ static void sym_setwide(struct sym_hcb *
+ 	spi_qas(starget) = 0;
+ 
+ 	if (sym_verbose >= 3)
+-		spi_display_xfer_agreement(starget);
++		sym_announce_transfer_rate(tp);
+ }
+ 
+ /*
+@@ -2090,7 +2113,7 @@ sym_setsync(struct sym_hcb *np, int targ
+ 		tp->tgoal.check_nego = 0;
+ 	}
+ 
+-	spi_display_xfer_agreement(starget);
++	sym_announce_transfer_rate(tp);
+ }
+ 
+ /*
+@@ -2114,7 +2137,7 @@ sym_setpprot(struct sym_hcb *np, int tar
+ 	spi_qas(starget) = tp->tgoal.qas = !!(opts & PPR_OPT_QAS);
+ 	tp->tgoal.check_nego = 0;
+ 
+-	spi_display_xfer_agreement(starget);
++	sym_announce_transfer_rate(tp);
+ }
+ 
+ /*
+diff -urpN linux-2.6.28-a/drivers/scsi/sym53c8xx_2/sym_hipd.h linux-2.6.28-b/drivers/scsi/sym53c8xx_2/sym_hipd.h
+--- linux-2.6.28-a/drivers/scsi/sym53c8xx_2/sym_hipd.h	2008-12-24 18:26:37.000000000 -0500
++++ linux-2.6.28-b/drivers/scsi/sym53c8xx_2/sym_hipd.h	2009-01-08 11:18:25.000000000 -0500
+@@ -419,6 +419,9 @@ struct sym_tcb {
+ 	/* Transfer goal */
+ 	struct sym_trans tgoal;
+ 
++	/* Last printed transfer speed */
++	struct sym_trans tprint;
++
  	/*
- 	 *  Select queue depth from driver setup.
--	 *  Donnot use more than configured by user.
--	 *  Use at least 2.
--	 *  Donnot use more than our maximum.
-+	 *  Do not use more than configured by user.
-+	 *  Use at least 1.
-+	 *  Do not use more than our maximum.
- 	 */
- 	reqtags = sym_driver_setup.max_tag;
- 	if (reqtags > tp->usrtags)
-@@ -803,7 +803,7 @@ static int sym53c8xx_slave_configure(str
- 		reqtags = 0;
- 	if (reqtags > SYM_CONF_MAX_TAG)
- 		reqtags = SYM_CONF_MAX_TAG;
--	depth_to_use = reqtags ? reqtags : 2;
-+	depth_to_use = reqtags ? reqtags : 1;
- 	scsi_adjust_queue_depth(sdev,
- 				sdev->tagged_supported ? MSG_SIMPLE_TAG : 0,
- 				depth_to_use);
+ 	 * Keep track of the CCB used for the negotiation in order
+ 	 * to ensure that only 1 negotiation is queued at a time.
 
 
