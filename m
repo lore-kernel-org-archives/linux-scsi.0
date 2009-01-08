@@ -1,48 +1,59 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] Check for deleted device in scsi_device_online()
-Date: Thu, 08 Jan 2009 10:27:36 -0600
-Message-ID: <1231432056.3237.25.camel@localhost.localdomain>
-References: <20081216153352.27D4318C75E@pentland.suse.de>
+From: Tony Battersby <tonyb@cybernetics.com>
+Subject: [PATCH 0/7] sym53c8xx fixes
+Date: Thu, 08 Jan 2009 12:51:28 -0500
+Message-ID: <49663D20.8000504@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:48721 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754184AbZAHQ1l (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jan 2009 11:27:41 -0500
-In-Reply-To: <20081216153352.27D4318C75E@pentland.suse.de>
+Received: from host64.cybernetics.com ([98.174.209.230]:1908 "EHLO
+	mail.cybernetics.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752670AbZAHRvc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jan 2009 12:51:32 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-On Tue, 2008-12-16 at 16:33 +0100, Hannes Reinecke wrote:
-> scsi_device_online() is not just a negation of SDEV_OFFLINE,
-> also devices in state SDEV_CANCEL and SDEV_DEL are
-> actually offline.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  include/scsi/scsi_device.h |    4 +++-
->  1 files changed, 3 insertions(+), 1 deletions(-)
-> 
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index e96daf6..63b58d2 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -401,7 +401,9 @@ static inline unsigned int sdev_id(struct scsi_device *sdev)
->   */
->  static inline int scsi_device_online(struct scsi_device *sdev)
->  {
-> -	return sdev->sdev_state != SDEV_OFFLINE;
-> +	return (sdev->sdev_state != SDEV_OFFLINE &&
-> +		sdev->sdev_state != SDEV_CANCEL &&
-> +		sdev->sdev_state != SDEV_DEL);
+James, please consider these patches for inclusion in 2.6.29 or 2.6.30.
 
-SDEV_DEL is OK.  We can't do this for SDEV_CANCEL because that will
-block post removal commands (notably cache flush).
+Patches 1 - 5 fix bugs found when auditing the error paths of sym53c8xx
+during module load and unload.  These 5 patches must be applied in
+the order given, since they touch the same areas of the same file.
+Patches 6 and 7 fix other problems and annoyances, and can be applied
+in any order.
 
-James
+In addition, here are some related patches by other people that I
+would like applied:
+
+The following patch fixes handling of errors that occur after
+scsi_host_alloc() during modprobe sym53c8xx.  I actually came up
+with the same fix myself when auditing sym53c8xx, but a search of
+linux-scsi showed that someone else had already gotten there first.
+[PATCH] SCSI: fix /proc memory leak in the SCSI core
+http://marc.info/?t=122814541000002&r=1&w=4
+
+The following patch was posted a year ago but forgotten.  I have been
+using it for a long time, and it still applies cleanly.
+sym53c8xx ISTAT1 feature never set
+http://marc.info/?t=120076464500006&r=1&w=4
+
+And of course there are the recent patches by Aaro Koskinen:
+
+Tested with my approval (be sure to use the updated version):
+[PATCH] sym53c8xx_2: slave_alloc/destroy safety (2.6.27.5)
+http://marc.info/?t=122710678100001&r=1&w=4
+
+Tested with my approval:
+[PATCH] sym53c8xx_2: lun to_clear flag not re-initialized (2.6.27.5)
+http://marc.info/?t=122710178300003&r=1&w=4
+
+This one however still needs some work (as of this writing):
+[PATCH] sym53c8xx_2: Keep transfer negotiations valid (2.6.27.5)
+http://marc.info/?t=122710118300005&r=1&w=4
+
+Thanks,
+Tony Battersby
+Cybernetics
 
 
