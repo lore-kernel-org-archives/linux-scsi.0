@@ -1,14 +1,14 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH2/5] mpt fusion: Added msi enable disable for FC,SPI,SAS [Resendig updated patch]
-Date: Thu, 8 Jan 2009 14:27:16 +0530
-Message-ID: <20090108085716.GA4116@lsi.com>
+Subject: [PATCH4/5] mpt fusion: Optimized SendEventNotification [Resendig updated patch]
+Date: Thu, 8 Jan 2009 14:29:19 +0530
+Message-ID: <20090108085912.GB4116@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og102.obsmtp.com ([64.18.2.157]:60371 "EHLO
-	exprod7og102.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751491AbZAHJRD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jan 2009 04:17:03 -0500
+Received: from exprod7og108.obsmtp.com ([64.18.2.169]:39092 "EHLO
+	exprod7og108.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751136AbZAHJSy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jan 2009 04:18:54 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,85 +16,132 @@ To: linux-scsi@vger.kernel.org
 Cc: eric.moore@lsi.com, sathya.prakash@lsi.com, James.Bottomley@HansenPartnership.com
 
 
-Added support for MSI enable/disable for different buses FC,SPI,SAS instead
-of having single MSI enable/disable feature.
+SendEventNotification was handled through FIFO, now it is using doorbell 
+mechenism to communicate with hardware.
+Added Sleep Flag as an extra argument to support Can-Sleep feature.
 ---
 
 Signed-off-by: Kashyap Desai <kadesai@lsi.com>
 ---
 diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index c4e8b9a..55d9a7e 100644
+index ea3aafb..b473236 100644
 --- a/drivers/message/fusion/mptbase.c
 +++ b/drivers/message/fusion/mptbase.c
-@@ -79,9 +79,22 @@ MODULE_VERSION(my_VERSION);
- /*
-  *  cmd line parameters
-  */
--static int mpt_msi_enable = -1;
--module_param(mpt_msi_enable, int, 0);
--MODULE_PARM_DESC(mpt_msi_enable, " MSI Support Enable (default=0)");
-+
-+static int mpt_msi_enable_spi;
-+module_param(mpt_msi_enable_spi, int, 0);
-+MODULE_PARM_DESC(mpt_msi_enable_spi, " Enable MSI Support for SPI \
-+		controllers (default=0)");
-+
-+static int mpt_msi_enable_fc;
-+module_param(mpt_msi_enable_fc, int, 0);
-+MODULE_PARM_DESC(mpt_msi_enable_fc, " Enable MSI Support for FC \
-+		controllers (default=0)");
-+
-+static int mpt_msi_enable_sas;
-+module_param(mpt_msi_enable_sas, int, 1);
-+MODULE_PARM_DESC(mpt_msi_enable_sas, " Enable MSI Support for SAS \
-+		controllers (default=1)");
-+
+@@ -192,7 +192,8 @@ static void 	mpt_read_ioc_pg_1(MPT_ADAPTER *ioc);
+ static void 	mpt_read_ioc_pg_4(MPT_ADAPTER *ioc);
+ static void	mpt_timer_expired(unsigned long data);
+ static void	mpt_get_manufacturing_pg_0(MPT_ADAPTER *ioc);
+-static int	SendEventNotification(MPT_ADAPTER *ioc, u8 EvSwitch);
++static int	SendEventNotification(MPT_ADAPTER *ioc, u8 EvSwitch,
++	int sleepFlag);
+ static int	SendEventAck(MPT_ADAPTER *ioc, EventNotificationReply_t *evnp);
+ static int	mpt_host_page_access_control(MPT_ADAPTER *ioc, u8 access_control_value, int sleepFlag);
+ static int	mpt_host_page_alloc(MPT_ADAPTER *ioc, pIOCInit_t ioc_init);
+@@ -208,7 +209,8 @@ static int	procmpt_iocinfo_read(char *buf, char **start, off_t offset,
+ static void	mpt_get_fw_exp_ver(char *buf, MPT_ADAPTER *ioc);
  
- static int mpt_channel_mapping;
- module_param(mpt_channel_mapping, int, 0);
-@@ -91,7 +104,9 @@ static int mpt_debug_level;
- static int mpt_set_debug_level(const char *val, struct kernel_param *kp);
- module_param_call(mpt_debug_level, mpt_set_debug_level, param_get_int,
- 		  &mpt_debug_level, 0600);
--MODULE_PARM_DESC(mpt_debug_level, " debug level - refer to mptdebug.h - (default=0)");
-+MODULE_PARM_DESC(mpt_debug_level, " debug level - refer to mptdebug.h \
-+	- (default=0)");
-+
- 
- #ifdef MFCNT
- static int mfcounter = 0;
-@@ -1751,16 +1766,25 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ioc->bus_type = SAS;
+ //int		mpt_HardResetHandler(MPT_ADAPTER *ioc, int sleepFlag);
+-static int	ProcessEventNotification(MPT_ADAPTER *ioc, EventNotificationReply_t *evReply, int *evHandlers);
++static int	ProcessEventNotification(MPT_ADAPTER *ioc,
++		EventNotificationReply_t *evReply, int *evHandlers);
+ static void	mpt_iocstatus_info(MPT_ADAPTER *ioc, u32 ioc_status, MPT_FRAME_HDR *mf);
+ static void	mpt_fc_log_info(MPT_ADAPTER *ioc, u32 log_info);
+ static void	mpt_spi_log_info(MPT_ADAPTER *ioc, u32 log_info);
+@@ -2269,28 +2271,36 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
+ 		}
  	}
  
--	if (mpt_msi_enable == -1) {
--		/* Enable on SAS, disable on FC and SPI */
--		if (ioc->bus_type == SAS)
--			ioc->msi_enable = 1;
--		else
--			ioc->msi_enable = 0;
--	} else
--		/* follow flag: 0 - disable; 1 - enable */
--		ioc->msi_enable = mpt_msi_enable;
- 
-+	switch (ioc->bus_type) {
-+
-+	case SAS:
-+		ioc->msi_enable = mpt_msi_enable_sas;
-+		break;
-+
-+	case SPI:
-+		ioc->msi_enable = mpt_msi_enable_spi;
-+		break;
-+
-+	case FC:
-+		ioc->msi_enable = mpt_msi_enable_fc;
-+		break;
-+
-+	default:
-+		ioc->msi_enable = 0;
-+		break;
++	/*  Enable MPT base driver management of EventNotification
++	 *  and EventAck handling.
++	 */
++	if ((ret == 0) && (!ioc->facts.EventState)) {
++		dinitprintk(ioc, printk(MYIOC_s_INFO_FMT
++			"SendEventNotification\n",
++		    ioc->name));
++		ret = SendEventNotification(ioc, 1, sleepFlag);	/* 1=Enable */
 +	}
- 	if (ioc->errata_flag_1064)
- 		pci_disable_io_access(pdev);
++
++	if (ioc->alt_ioc && alt_ioc_ready && !ioc->alt_ioc->facts.EventState)
++		rc = SendEventNotification(ioc->alt_ioc, 1, sleepFlag);
++
+ 	if (ret == 0) {
+ 		/* Enable! (reply interrupt) */
+ 		CHIPREG_WRITE32(&ioc->chip->IntMask, MPI_HIM_DIM);
+ 		ioc->active = 1;
+ 	}
+-
+-	if (reset_alt_ioc_active && ioc->alt_ioc) {
+-		/* (re)Enable alt-IOC! (reply interrupt) */
+-		dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "alt_ioc reply irq re-enabled\n",
+-		    ioc->alt_ioc->name));
+-		CHIPREG_WRITE32(&ioc->alt_ioc->chip->IntMask, MPI_HIM_DIM);
+-		ioc->alt_ioc->active = 1;
++	if (rc == 0) {	/* alt ioc */
++		if (reset_alt_ioc_active && ioc->alt_ioc) {
++			/* (re)Enable alt-IOC! (reply interrupt) */
++			dinitprintk(ioc, printk(MYIOC_s_DEBUG_FMT "alt-ioc
++				reply irq re-enabled\n",
++				ioc->alt_ioc->name));
++			CHIPREG_WRITE32(&ioc->alt_ioc->chip->IntMask,
++				MPI_HIM_DIM);
++			ioc->alt_ioc->active = 1;
++		}
+ 	}
  
+-	/*  Enable MPT base driver management of EventNotification
+-	 *  and EventAck handling.
+-	 */
+-	if ((ret == 0) && (!ioc->facts.EventState))
+-		(void) SendEventNotification(ioc, 1);	/* 1=Enable EventNotification */
+-
+-	if (ioc->alt_ioc && alt_ioc_ready && !ioc->alt_ioc->facts.EventState)
+-		(void) SendEventNotification(ioc->alt_ioc, 1);	/* 1=Enable EventNotification */
+ 
+ 	/*	Add additional "reason" check before call to GetLanConfigPages
+ 	 *	(combined with GetIoUnitPage2 call).  This prevents a somewhat
+@@ -5775,30 +5785,28 @@ mpt_get_manufacturing_pg_0(MPT_ADAPTER *ioc)
+  *	SendEventNotification - Send EventNotification (on or off) request to adapter
+  *	@ioc: Pointer to MPT_ADAPTER structure
+  *	@EvSwitch: Event switch flags
++ *	@sleepFlag: Specifies whether the process can sleep
+  */
+ static int
+-SendEventNotification(MPT_ADAPTER *ioc, u8 EvSwitch)
++SendEventNotification(MPT_ADAPTER *ioc, u8 EvSwitch, int sleepFlag)
+ {
+-	EventNotification_t	*evnp;
++	EventNotification_t	evn;
++	MPIDefaultReply_t	reply_buf;
+ 
+-	evnp = (EventNotification_t *) mpt_get_msg_frame(mpt_base_index, ioc);
+-	if (evnp == NULL) {
+-		devtverboseprintk(ioc, printk(MYIOC_s_WARN_FMT "Unable to allocate event request frame!\n",
+-				ioc->name));
+-		return 0;
+-	}
+-	memset(evnp, 0, sizeof(*evnp));
+-
+-	devtverboseprintk(ioc, printk(MYIOC_s_DEBUG_FMT "Sending EventNotification (%d) request %p\n", ioc->name, EvSwitch, evnp));
++	memset(&evn, 0, sizeof(EventNotification_t));
++	memset(&reply_buf, 0, sizeof(MPIDefaultReply_t));
+ 
+-	evnp->Function = MPI_FUNCTION_EVENT_NOTIFICATION;
+-	evnp->ChainOffset = 0;
+-	evnp->MsgFlags = 0;
+-	evnp->Switch = EvSwitch;
++	evn.Function = MPI_FUNCTION_EVENT_NOTIFICATION;
++	evn.Switch = EvSwitch;
++	evn.MsgContext = cpu_to_le32(mpt_base_index << 16);
+ 
+-	mpt_put_msg_frame(mpt_base_index, ioc, (MPT_FRAME_HDR *)evnp);
++	devtverboseprintk(ioc, printk(MYIOC_s_DEBUG_FMT
++	    "Sending EventNotification (%d) request %p\n",
++	    ioc->name, EvSwitch, &evn));
+ 
+-	return 0;
++	return mpt_handshake_req_reply_wait(ioc, sizeof(EventNotification_t),
++	    (u32 *)&evn, sizeof(MPIDefaultReply_t), (u16 *)&reply_buf, 30,
++	    sleepFlag);
+ }
+ 
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
