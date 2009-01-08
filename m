@@ -1,31 +1,42 @@
 From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH 0/2] sg: fix races during device removal (v2)
-Date: Thu, 08 Jan 2009 18:21:57 -0500
-Message-ID: <49668A95.2090805@interlog.com>
-References: <49625A67.3000304@cybernetics.com>
+Subject: Re: [PATCH] scsi_debug DIF/DIX support
+Date: Thu, 08 Jan 2009 18:24:20 -0500
+Message-ID: <49668B24.6070903@interlog.com>
+References: <yq1y6xr4hos.fsf@sermon.lab.mkp.net>
 Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:40524 "EHLO
+Received: from smtp.infotech.no ([82.134.31.41]:40533 "EHLO
 	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751506AbZAHXWE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jan 2009 18:22:04 -0500
-In-Reply-To: <49625A67.3000304@cybernetics.com>
+	with ESMTP id S1752681AbZAHXYY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jan 2009 18:24:24 -0500
+In-Reply-To: <yq1y6xr4hos.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James.Bottomley@HansenPartnership.com, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org
 
-Tony Battersby wrote:
-> This is version 2 of my patch, this time using a kref instead of int.
-> There are also a lot of other changes since the first version since I
-> found even more bugs both through testing and source code analysis.
-> I have split the patch up into two parts: the first patch fixes
-> races between open, close, device removal, and command completion.
-> The second patch fixes some races I spotted in ioctl(SG_IO).
+Martin K. Petersen wrote:
+> This patch adds support for DIX and DIF in scsi_debug.  A separate
+> buffer is allocated for the protection information.
+> 
+>  - The dix parameter indicates whether the controller supports DIX
+>    (protection information DMA)
+> 
+>  - The dif parameter indicates whether the simulated storage device
+>    supports DIF
+> 
+>  - The guard parameter switches between T10 CRC(0) and IP checksum(1)
+> 
+>  - The ato parameter indicates whether the application tag is owned by
+>    the disk(0) or the OS(1)
+> 
+>  - DIF and DIX errors can be triggered using the scsi_debug_opts mask
+> 
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-Okay, lets go with v2.
+Looks good.
 
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
