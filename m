@@ -1,34 +1,47 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 2/6] fastboot: make scsi probes asynchronous
-Date: Fri, 09 Jan 2009 13:17:17 -0500
-Message-ID: <496794AD.6040403@rtr.ca>
-References: <20090105200959.04a626ac@infradead.org> <20090105201118.5bfa1e36@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: akpm@linux-foundation.org
+Subject: [patch 03/11] MPT: remove unused struct -- mpt_proc_entry_t
+Date: Fri, 09 Jan 2009 12:28:04 -0800
+Message-ID: <200901092028.n09KS413024485@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:41372 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751684AbZAISRT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Jan 2009 13:17:19 -0500
-In-Reply-To: <20090105201118.5bfa1e36@infradead.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:40608 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753485AbZAIU2l (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jan 2009 15:28:41 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, mingo@elte.hu, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, adobriyan@gmail.com, Eric.Moore@lsi.com
 
-Arjan van de Ven wrote:
->>From 19617cfb1840abc69cc2fe74433007fc1daa1cb7 Mon Sep 17 00:00:00 2001
-> From: Arjan van de Ven <arjan@linux.intel.com>
-> Date: Sun, 4 Jan 2009 05:32:28 -0800
-> Subject: [PATCH] fastboot: make scsi probes asynchronous
-> 
-> This patch makes part of the scsi probe (which is mostly device spin up and the
-> partition scan) asynchronous. Only the part that runs after getting the device
-> number allocated is asynchronous, ensuring that device numbering remains stable.
-..
+From: Alexey Dobriyan <adobriyan@gmail.com>
 
-Will this burn up the PSUs in loaded server boxes,
-due to all drives spinning-up simultaneously now?
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+Cc: "Moore, Eric Dean" <Eric.Moore@lsi.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
-Just curious.
+ drivers/message/fusion/mptbase.h |   11 -----------
+ 1 file changed, 11 deletions(-)
+
+diff -puN drivers/message/fusion/mptbase.h~mpt-remove-unused-struct-mpt_proc_entry_t drivers/message/fusion/mptbase.h
+--- a/drivers/message/fusion/mptbase.h~mpt-remove-unused-struct-mpt_proc_entry_t
++++ a/drivers/message/fusion/mptbase.h
+@@ -402,17 +402,6 @@ typedef struct _VirtDevice {
+ #define MPT_TARGET_FLAGS_RAID_COMPONENT	0x40
+ #define MPT_TARGET_FLAGS_LED_ON		0x80
+ 
+-/*
+- *	/proc/mpt interface
+- */
+-typedef struct {
+-	const char	*name;
+-	mode_t		 mode;
+-	int		 pad;
+-	read_proc_t	*read_proc;
+-	write_proc_t	*write_proc;
+-} mpt_proc_entry_t;
+-
+ #define MPT_PROC_READ_RETURN(buf,start,offset,request,eof,len) \
+ do { \
+ 	len -= offset;			\
+_
