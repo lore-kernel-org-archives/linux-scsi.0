@@ -1,12 +1,12 @@
 From: akpm@linux-foundation.org
-Subject: [patch 06/11] drivers/scsi/a3000.c: make 2 functions static
+Subject: [patch 05/11] drivers/scsi/a2091.c: make 2 functions static
 Date: Fri, 09 Jan 2009 12:28:06 -0800
-Message-ID: <200901092028.n09KS6AD024513@imap1.linux-foundation.org>
+Message-ID: <200901092028.n09KS6LY024492@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:48354 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:33790 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754349AbZAIU2p (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jan 2009 15:28:45 -0500
+	by vger.kernel.org with ESMTP id S1754577AbZAIU2q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jan 2009 15:28:46 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
@@ -14,56 +14,56 @@ Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@kernel.org
 
 From: Adrian Bunk <bunk@kernel.org>
 
-a3000_{detect,release}() can become static.
+a2091_{detect,release}() can become static.
 
 Signed-off-by: Adrian Bunk <bunk@kernel.org>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/a3000.c |    6 ++++--
- drivers/scsi/a3000.h |    3 ---
+ drivers/scsi/a2091.c |    6 ++++--
+ drivers/scsi/a2091.h |    3 ---
  2 files changed, 4 insertions(+), 5 deletions(-)
 
-diff -puN drivers/scsi/a3000.c~drivers-scsi-a3000c-make-2-functions-static drivers/scsi/a3000.c
---- a/drivers/scsi/a3000.c~drivers-scsi-a3000c-make-2-functions-static
-+++ a/drivers/scsi/a3000.c
-@@ -25,6 +25,8 @@
+diff -puN drivers/scsi/a2091.c~drivers-scsi-a2091c-make-2-functions-static drivers/scsi/a2091.c
+--- a/drivers/scsi/a2091.c~drivers-scsi-a2091c-make-2-functions-static
++++ a/drivers/scsi/a2091.c
+@@ -23,6 +23,8 @@
+ #define DMA(ptr) ((a2091_scsiregs *)((ptr)->base))
+ #define HDATA(ptr) ((struct WD33C93_hostdata *)((ptr)->hostdata))
  
- static struct Scsi_Host *a3000_host = NULL;
- 
-+static int a3000_release(struct Scsi_Host *instance);
++static int a2091_release(struct Scsi_Host *instance);
 +
- static irqreturn_t a3000_intr (int irq, void *dummy)
+ static irqreturn_t a2091_intr (int irq, void *_instance)
  {
- 	unsigned long flags;
-@@ -157,7 +159,7 @@ static void dma_stop(struct Scsi_Host *i
+     unsigned long flags;
+@@ -144,7 +146,7 @@ static void dma_stop(struct Scsi_Host *i
      }
  }
  
--int __init a3000_detect(struct scsi_host_template *tpnt)
-+static int __init a3000_detect(struct scsi_host_template *tpnt)
+-int __init a2091_detect(struct scsi_host_template *tpnt)
++static int __init a2091_detect(struct scsi_host_template *tpnt)
  {
-     wd33c93_regs regs;
- 
-@@ -232,7 +234,7 @@ static struct scsi_host_template driver_
+     static unsigned char called = 0;
+     struct Scsi_Host *instance;
+@@ -233,7 +235,7 @@ static struct scsi_host_template driver_
  
  #include "scsi_module.c"
  
--int a3000_release(struct Scsi_Host *instance)
-+static int a3000_release(struct Scsi_Host *instance)
+-int a2091_release(struct Scsi_Host *instance)
++static int a2091_release(struct Scsi_Host *instance)
  {
-     wd33c93_release();
-     DMA(instance)->CNTR = 0;
-diff -puN drivers/scsi/a3000.h~drivers-scsi-a3000c-make-2-functions-static drivers/scsi/a3000.h
---- a/drivers/scsi/a3000.h~drivers-scsi-a3000c-make-2-functions-static
-+++ a/drivers/scsi/a3000.h
+ #ifdef MODULE
+ 	DMA(instance)->CNTR = 0;
+diff -puN drivers/scsi/a2091.h~drivers-scsi-a2091c-make-2-functions-static drivers/scsi/a2091.h
+--- a/drivers/scsi/a2091.h~drivers-scsi-a2091c-make-2-functions-static
++++ a/drivers/scsi/a2091.h
 @@ -11,9 +11,6 @@
  
  #include <linux/types.h>
  
--int a3000_detect(struct scsi_host_template *);
--int a3000_release(struct Scsi_Host *);
+-int a2091_detect(struct scsi_host_template *);
+-int a2091_release(struct Scsi_Host *);
 -
  #ifndef CMD_PER_LUN
  #define CMD_PER_LUN 2
