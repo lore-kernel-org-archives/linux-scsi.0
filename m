@@ -1,49 +1,44 @@
-From: akpm@linux-foundation.org
-Subject: [patch 11/11] sg_io: don't perform unneeded copy in compat code
-Date: Fri, 09 Jan 2009 12:28:10 -0800
-Message-ID: <200901092028.n09KSBK1024592@imap1.linux-foundation.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [LIO-Target 0/5]: Convert statically sized structures to kmem_cache
+Date: Fri, 09 Jan 2009 12:52:36 -0800
+Message-ID: <1231534356.4560.996.camel@haakon2.linux-iscsi.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:33933 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752875AbZAIUgf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jan 2009 15:36:35 -0500
+Received: from smtp128.sbc.mail.sp1.yahoo.com ([69.147.65.187]:25052 "HELO
+	smtp128.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755997AbZAIUxD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jan 2009 15:53:03 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, alexey.zaytsev@gmail.com, dgilbert@interlog.com, fujita.tomonori@lab.ntt.co.jp
+To: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-From: Alexey Zaytsev <alexey.zaytsev@gmail.com>
+Greeings all,
 
-FUJITA Tomonori says:
+Here are a small series of patches that convert v3.0 LIO-Target data
+structures that are statically sized at compile time to use struct
+kmem_cache infrastructure.  Also, during the kzalloc()/free ->
+kmem_cache_zalloc()/kmem_cache_free() conversion process, two memory
+leaks where observed in different exception patchs, and where fixed.  
 
-The members from 'status' in struct sg_io_hdr to the last are used to
-transfer information from kernel to user space. The values that user
-space sets are just ignored.
+One was related to iscsi_r2t_t not being freed during
+ErrorRecoveryLevel=2 for ISCSI_WRITE, and the other was
+iscsi_datain_req_t for ISCSI_READ not being relased during a
+NON_EXISTENT_LUN exception, immediately followed by an explict iSCSI
+Logout.
 
-Signed-off-by: Alexey Zaytsev <alexey.zaytsev@gmail.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+These patches are against the lio-core-2.6.git tree, and tested on
+v2.6.28.
 
- fs/compat_ioctl.c |    6 ------
- 1 file changed, 6 deletions(-)
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git
 
-diff -puN fs/compat_ioctl.c~sg_io-dont-perform-unneeded-copy-in-compat-code fs/compat_ioctl.c
---- a/fs/compat_ioctl.c~sg_io-dont-perform-unneeded-copy-in-compat-code
-+++ a/fs/compat_ioctl.c
-@@ -782,12 +782,6 @@ static int sg_ioctl_trans(unsigned int f
- 	if (put_user(compat_ptr(data), &sgio->usr_ptr))
- 		return -EFAULT;
- 
--	if (copy_in_user(&sgio->status, &sgio32->status,
--			 (4 * sizeof(unsigned char)) +
--			 (2 * sizeof(unsigned (short))) +
--			 (3 * sizeof(int))))
--		return -EFAULT;
--
- 	err = sys_ioctl(fd, cmd, (unsigned long) sgio);
- 
- 	if (err >= 0) {
-_
+[PATCH 1/5] [LIO-Target]: Convert iscsi_queue_req_t to use struct kmem_cache
+[PATCH 2/5] [LIO-Target]: Convert iscsi_datain_req_t to use struct kmem_cache
+[PATCH 3/5] [LIO-Target]: Convert iscsi_ooo_cmdsn_t to use struct kmem_cache
+[PATCH 4/5] [LIO-Target]: Convert iscsi_r2t_t to use struct kmem_cache
+[PATCH 5/5] [LIO-Target]: Move iscsi_free_all_datain_reqs() to generic location
+
+--nab
+
