@@ -1,71 +1,78 @@
 From: akpm@linux-foundation.org
-Subject: [patch 05/11] drivers/scsi/a2091.c: make 2 functions static
-Date: Fri, 09 Jan 2009 12:28:06 -0800
-Message-ID: <200901092028.n09KS6LY024492@imap1.linux-foundation.org>
+Subject: [patch 08/11] scsi: annotate gdth_rdcap_data, gdth_rdcap16_data endianness
+Date: Fri, 09 Jan 2009 12:28:08 -0800
+Message-ID: <200901092028.n09KS8Dg024545@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:33790 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:47400 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754577AbZAIU2q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jan 2009 15:28:46 -0500
+	by vger.kernel.org with ESMTP id S1754837AbZAIU2r (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jan 2009 15:28:47 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@kernel.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com, bharrosh@panasas.com
 
-From: Adrian Bunk <bunk@kernel.org>
+From: Harvey Harrison <harvey.harrison@gmail.com>
 
-a2091_{detect,release}() can become static.
+It would be easy to get rid of the typedefs too, but I kept this
+minimal.
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+Noticed by sparse:
+drivers/scsi/gdth.c:2395:31: warning: incorrect type in assignment (different base types)
+drivers/scsi/gdth.c:2395:31:    expected unsigned int [unsigned] [assigned] [usertype] last_block_no
+drivers/scsi/gdth.c:2395:31:    got restricted __be32 [usertype] <noident>
+drivers/scsi/gdth.c:2396:27: warning: incorrect type in assignment (different base types)
+drivers/scsi/gdth.c:2396:27:    expected unsigned int [unsigned] [assigned] [usertype] block_length
+drivers/scsi/gdth.c:2396:27:    got restricted __be32 [usertype] <noident>
+drivers/scsi/gdth.c:2406:33: warning: incorrect type in assignment (different base types)
+drivers/scsi/gdth.c:2406:33:    expected unsigned long long [unsigned] [usertype] last_block_no
+drivers/scsi/gdth.c:2406:33:    got restricted __be64 [usertype] <noident>
+drivers/scsi/gdth.c:2407:33: warning: incorrect type in assignment (different base types)
+drivers/scsi/gdth.c:2407:33:    expected unsigned int [unsigned] [usertype] block_length
+drivers/scsi/gdth.c:2407:33:    got restricted __be32 [usertype] <noident>
+
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/a2091.c |    6 ++++--
- drivers/scsi/a2091.h |    3 ---
- 2 files changed, 4 insertions(+), 5 deletions(-)
+ drivers/scsi/gdth.c |    2 +-
+ drivers/scsi/gdth.h |    8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff -puN drivers/scsi/a2091.c~drivers-scsi-a2091c-make-2-functions-static drivers/scsi/a2091.c
---- a/drivers/scsi/a2091.c~drivers-scsi-a2091c-make-2-functions-static
-+++ a/drivers/scsi/a2091.c
-@@ -23,6 +23,8 @@
- #define DMA(ptr) ((a2091_scsiregs *)((ptr)->base))
- #define HDATA(ptr) ((struct WD33C93_hostdata *)((ptr)->hostdata))
+diff -puN drivers/scsi/gdth.c~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness drivers/scsi/gdth.c
+--- a/drivers/scsi/gdth.c~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness
++++ a/drivers/scsi/gdth.c
+@@ -2391,7 +2391,7 @@ static int gdth_internal_cache_cmd(gdth_
+       case READ_CAPACITY:
+         TRACE2(("Read capacity hdrive %d\n",t));
+         if (ha->hdr[t].size > (ulong64)0xffffffff)
+-            rdc.last_block_no = 0xffffffff;
++            rdc.last_block_no = cpu_to_be32(0xffffffff);
+         else
+             rdc.last_block_no = cpu_to_be32(ha->hdr[t].size-1);
+         rdc.block_length  = cpu_to_be32(SECTOR_SIZE);
+diff -puN drivers/scsi/gdth.h~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness drivers/scsi/gdth.h
+--- a/drivers/scsi/gdth.h~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness
++++ a/drivers/scsi/gdth.h
+@@ -968,14 +968,14 @@ typedef struct {
  
-+static int a2091_release(struct Scsi_Host *instance);
-+
- static irqreturn_t a2091_intr (int irq, void *_instance)
- {
-     unsigned long flags;
-@@ -144,7 +146,7 @@ static void dma_stop(struct Scsi_Host *i
-     }
- }
+ /* READ_CAPACITY data format */
+ typedef struct {
+-    ulong32     last_block_no;
+-    ulong32     block_length;
++	__be32 last_block_no;
++	__be32 block_length;
+ } PACKED gdth_rdcap_data;
  
--int __init a2091_detect(struct scsi_host_template *tpnt)
-+static int __init a2091_detect(struct scsi_host_template *tpnt)
- {
-     static unsigned char called = 0;
-     struct Scsi_Host *instance;
-@@ -233,7 +235,7 @@ static struct scsi_host_template driver_
+ /* READ_CAPACITY (16) data format */
+ typedef struct {
+-    ulong64     last_block_no;
+-    ulong32     block_length;
++	__be64 last_block_no;
++	__be32 block_length;
+ } PACKED gdth_rdcap16_data;
  
- #include "scsi_module.c"
- 
--int a2091_release(struct Scsi_Host *instance)
-+static int a2091_release(struct Scsi_Host *instance)
- {
- #ifdef MODULE
- 	DMA(instance)->CNTR = 0;
-diff -puN drivers/scsi/a2091.h~drivers-scsi-a2091c-make-2-functions-static drivers/scsi/a2091.h
---- a/drivers/scsi/a2091.h~drivers-scsi-a2091c-make-2-functions-static
-+++ a/drivers/scsi/a2091.h
-@@ -11,9 +11,6 @@
- 
- #include <linux/types.h>
- 
--int a2091_detect(struct scsi_host_template *);
--int a2091_release(struct Scsi_Host *);
--
- #ifndef CMD_PER_LUN
- #define CMD_PER_LUN 2
- #endif
+ /* REQUEST_SENSE data format */
 _
