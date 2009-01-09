@@ -1,46 +1,71 @@
 From: akpm@linux-foundation.org
-Subject: [patch 01/11] #if 0 ses_match_host()
-Date: Fri, 09 Jan 2009 12:28:02 -0800
-Message-ID: <200901092028.n09KS2c8024475@imap1.linux-foundation.org>
+Subject: [patch 06/11] drivers/scsi/a3000.c: make 2 functions static
+Date: Fri, 09 Jan 2009 12:28:06 -0800
+Message-ID: <200901092028.n09KS6AD024513@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:37798 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:48354 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754558AbZAIU2m (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jan 2009 15:28:42 -0500
+	by vger.kernel.org with ESMTP id S1754349AbZAIU2p (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jan 2009 15:28:45 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@kernel.org, James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@kernel.org
 
 From: Adrian Bunk <bunk@kernel.org>
 
-#if 0 the unused ses_match_host()
+a3000_{detect,release}() can become static.
 
 Signed-off-by: Adrian Bunk <bunk@kernel.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/ses.c |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/a3000.c |    6 ++++--
+ drivers/scsi/a3000.h |    3 ---
+ 2 files changed, 4 insertions(+), 5 deletions(-)
 
-diff -puN drivers/scsi/ses.c~if-0-ses_match_host drivers/scsi/ses.c
---- a/drivers/scsi/ses.c~if-0-ses_match_host
-+++ a/drivers/scsi/ses.c
-@@ -264,6 +264,7 @@ struct ses_host_edev {
- 	struct enclosure_device *edev;
- };
+diff -puN drivers/scsi/a3000.c~drivers-scsi-a3000c-make-2-functions-static drivers/scsi/a3000.c
+--- a/drivers/scsi/a3000.c~drivers-scsi-a3000c-make-2-functions-static
++++ a/drivers/scsi/a3000.c
+@@ -25,6 +25,8 @@
  
-+#if 0
- int ses_match_host(struct enclosure_device *edev, void *data)
+ static struct Scsi_Host *a3000_host = NULL;
+ 
++static int a3000_release(struct Scsi_Host *instance);
++
+ static irqreturn_t a3000_intr (int irq, void *dummy)
  {
- 	struct ses_host_edev *sed = data;
-@@ -280,6 +281,7 @@ int ses_match_host(struct enclosure_devi
- 	sed->edev = edev;
- 	return 1;
+ 	unsigned long flags;
+@@ -157,7 +159,7 @@ static void dma_stop(struct Scsi_Host *i
+     }
  }
-+#endif  /*  0  */
  
- static void ses_process_descriptor(struct enclosure_component *ecomp,
- 				   unsigned char *desc)
+-int __init a3000_detect(struct scsi_host_template *tpnt)
++static int __init a3000_detect(struct scsi_host_template *tpnt)
+ {
+     wd33c93_regs regs;
+ 
+@@ -232,7 +234,7 @@ static struct scsi_host_template driver_
+ 
+ #include "scsi_module.c"
+ 
+-int a3000_release(struct Scsi_Host *instance)
++static int a3000_release(struct Scsi_Host *instance)
+ {
+     wd33c93_release();
+     DMA(instance)->CNTR = 0;
+diff -puN drivers/scsi/a3000.h~drivers-scsi-a3000c-make-2-functions-static drivers/scsi/a3000.h
+--- a/drivers/scsi/a3000.h~drivers-scsi-a3000c-make-2-functions-static
++++ a/drivers/scsi/a3000.h
+@@ -11,9 +11,6 @@
+ 
+ #include <linux/types.h>
+ 
+-int a3000_detect(struct scsi_host_template *);
+-int a3000_release(struct Scsi_Host *);
+-
+ #ifndef CMD_PER_LUN
+ #define CMD_PER_LUN 2
+ #endif
 _
