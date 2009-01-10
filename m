@@ -1,36 +1,42 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: Add VPD helper
-Date: Sat, 10 Jan 2009 12:53:29 -0600
-Message-ID: <1231613610.3642.42.camel@localhost.localdomain>
-References: <1230747167-31677-1-git-send-email-matthew@wil.cx>
+Subject: Re: [PATCH] iscsi_tcp - make padbuf non-static
+Date: Sat, 10 Jan 2009 12:53:46 -0600
+Message-ID: <1231613626.3642.44.camel@localhost.localdomain>
+References: <200901082058.n08Kwuml015512@localhost.localdomain>
+	 <49666ADF.1020703@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:37550 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:37564 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753154AbZAJSxe (ORCPT
+	by vger.kernel.org with ESMTP id S1753163AbZAJSxu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 10 Jan 2009 13:53:34 -0500
-In-Reply-To: <1230747167-31677-1-git-send-email-matthew@wil.cx>
+	Sat, 10 Jan 2009 13:53:50 -0500
+In-Reply-To: <49666ADF.1020703@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Karen Xie <kxie@chelsio.com>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, erezzi.list@gmail.com
 
-On Wed, 2008-12-31 at 13:12 -0500, Matthew Wilcox wrote:
-> Based on prior work by Martin Petersen and James Bottomley, this patch
-> adds a generic helper for retrieving VPD pages from SCSI devices.
+On Thu, 2009-01-08 at 15:06 -0600, Mike Christie wrote:
+> Karen Xie wrote:
+> > [PATCH] iscsi_tcp - make padbuf non-static
+> > 
+> > From: Karen Xie <kxie@chelsio.com>
+> > 
+> > virt_to_page() call should not be used on kernel text and data addresses.
+> > virt_to_page() is used by sg_init_one(). So change padbuf to be allocated within iscsi_segment.
+> > 
+> > Signed-off-by: Karen Xie <kxie@chelsio.com>
 > 
-> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+> 
+> Thanks for finding this.
+> 
+> Acked-by: Mike Christie <michaelc@cs.wisc.edu>
 
-Could you run checkpatch on these before sending, please:
-
-ERROR: trailing whitespace
-#131: FILE: drivers/scsi/scsi.c:1035:
-+^I/* Ask for all the pages supported by this device */ $
-
-I've fixed it up manually this time.
+Could one of you regenerate this against current git head, please, it
+seems to have suffered from the iscsi to libiscsi move.
 
 James
 
