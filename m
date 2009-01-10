@@ -1,30 +1,47 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [patch 10/11] scsi: fix bad use of udelay in atp870u.c
-Date: Sat, 10 Jan 2009 10:50:11 -0500
-Message-ID: <20090110155011.GA22062@infradead.org>
-References: <200901092028.n09KSAeI024551@imap1.linux-foundation.org> <20090109205835.GB5069@deprecation.cyrius.com> <20090109130308.bfde281e.akpm@linux-foundation.org> <1231536107.3235.50.camel@localhost.localdomain>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] qlogicpti: use request_firmware
+Date: Sat, 10 Jan 2009 09:58:17 -0600
+Message-ID: <1231603097.3642.25.camel@localhost.localdomain>
+References: <1231600926.5806.131.camel@macbook.infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54767 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751534AbZAJPuP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Jan 2009 10:50:15 -0500
-Content-Disposition: inline
-In-Reply-To: <1231536107.3235.50.camel@localhost.localdomain>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:58762 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752204AbZAJP6U (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 10 Jan 2009 10:58:20 -0500
+In-Reply-To: <1231600926.5806.131.camel@macbook.infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Martin Michlmayr <tbm@cyrius.com>, linux-scsi@vger.kernel.org
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: torvalds@linux-foundation.org, linux-scsi@vger.kernel.org, jaswinder@infradead.org
 
-On Fri, Jan 09, 2009 at 03:21:47PM -0600, James Bottomley wrote:
-> It's wrong to silence a warning or build break while keeping the effect
-> it was complaining about it's hiding a bug.  Now if the warning is
-> wrong, we can take it out of the ARM build ... but I've got to say it
-> looks right: the udelay in this driver will lock a UP system solid for
-> 2ms.
+On Sat, 2009-01-10 at 15:22 +0000, David Woodhouse wrote:
+> From: Jaswinder Singh <jaswinder@infradead.org>
+> 
+> Firmware blob is little endian
+> 
+> Thanks to Stephen Rothwell for fixing typos
+> 
+> Signed-off-by: Jaswinder Singh <jaswinder@infradead.org>
+> Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>
+> ---
+>  drivers/scsi/qlogicpti.c         |   63 ++-
+>  drivers/scsi/qlogicpti_asm.c     | 1160 --------------------------------------
+>  firmware/Makefile                |    1 +
+>  firmware/WHENCE                  |   10 +
+>  firmware/qlogic/isp1000.bin.ihex | 1158 +++++++++++++++++++++++++++++++++++++
+>  5 files changed, 1210 insertions(+), 1182 deletions(-)
+>  delete mode 100644 drivers/scsi/qlogicpti_asm.c
+>  create mode 100644 firmware/qlogic/isp1000.bin.ihex
 
-mdelay exist for a reason.  Even if this code is really bad adding
-a comment about that and moving on is better than leaving the too large
-udelay there.
+I'm assuming this fixes the open firmware conversion bug?
+
+What about the missing Kconfig piece?  FW_LOADER must be selected
+otherwise you can build a config where the device can't possibly work.
+
+James
+
 
