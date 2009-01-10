@@ -1,156 +1,40 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 5/5] mpt fusion: Added support for MPT discovery
-	completion check
-Date: Sat, 10 Jan 2009 13:10:03 -0600
-Message-ID: <1231614603.3642.51.camel@localhost.localdomain>
-References: <20090106093654.GG13033@lsi.com>
+From: David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH] qlogicpti: use request_firmware
+Date: Sat, 10 Jan 2009 19:19:10 +0000
+Message-ID: <1231615150.5806.137.camel@macbook.infradead.org>
+References: <1231600926.5806.131.camel@macbook.infradead.org>
+	 <1231603097.3642.25.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:57461 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750998AbZAJTKH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 10 Jan 2009 14:10:07 -0500
-In-Reply-To: <20090106093654.GG13033@lsi.com>
+Received: from casper.infradead.org ([85.118.1.10]:55885 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751309AbZAJTTe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Jan 2009 14:19:34 -0500
+In-Reply-To: <1231603097.3642.25.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Cc: linux-scsi@vger.kernel.org, eric.moore@lsi.com, sathyap@lsi.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: torvalds@linux-foundation.org, linux-scsi@vger.kernel.org, jaswinder@infradead.org
 
-On Tue, 2009-01-06 at 15:06 +0530, Kashyap, Desai wrote:
-> Added support for MPT discovery completion check. 
-> Now using mpt_is_discovery_complete we can make sure that there is no
-> more pending MPT discovery command with Firmware.
-> ---
-> 
-> Signed-off-by: Kashyap Desai <kadesai@lsi.com>
+On Sat, 2009-01-10 at 09:58 -0600, James Bottomley wrote:
+> I'm assuming this fixes the open firmware conversion bug?
 
-Is this patch incomplete?  Best I can tell, your new variable,
-sas_discovery_quiesce_io gets checked and set to zero, but nothing ever
-sets it to 1, so it doesn't seem to do anything.
+Which bug was that?
 
-James
+> What about the missing Kconfig piece?  FW_LOADER must be selected
+> otherwise you can build a config where the device can't possibly work.
 
+I thought we'd started off doing that, but then removed it again;
+someone went on a crusade _removing_ 'select FW_LOADER' from drivers
+which use request_firmware().
 
-> diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-> index b473236..d677b56 100644
-> --- a/drivers/message/fusion/mptbase.c
-> +++ b/drivers/message/fusion/mptbase.c
-> @@ -45,7 +45,6 @@
->      Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
->  */
->  /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
-> -
->  #include <linux/kernel.h>
->  #include <linux/module.h>
->  #include <linux/errno.h>
-> @@ -278,6 +277,57 @@ mpt_get_cb_idx(MPT_DRIVER_CLASS dclass)
->  	return 0;
->  }
->  
-> +/*
-> + * mpt_is_discovery_complete - determine if discovery has completed
-> + * @ioc: per adatper instance
-> + *
-> + * Returns 1 when discovery completed, else zero.
-> + */
-> +static int
-> +mpt_is_discovery_complete(MPT_ADAPTER *ioc)
-> +{
-> +	ConfigExtendedPageHeader_t hdr;
-> +	CONFIGPARMS cfg;
-> +	SasIOUnitPage0_t *buffer;
-> +	dma_addr_t dma_handle;
-> +	int rc = 0;
-> +
-> +	memset(&hdr, 0, sizeof(ConfigExtendedPageHeader_t));
-> +	memset(&cfg, 0, sizeof(CONFIGPARMS));
-> +	hdr.PageVersion = MPI_SASIOUNITPAGE0_PAGEVERSION;
-> +	hdr.PageType = MPI_CONFIG_PAGETYPE_EXTENDED;
-> +	hdr.ExtPageType = MPI_CONFIG_EXTPAGETYPE_SAS_IO_UNIT;
-> +	cfg.cfghdr.ehdr = &hdr;
-> +	cfg.action = MPI_CONFIG_ACTION_PAGE_HEADER;
-> +
-> +	if ((mpt_config(ioc, &cfg)))
-> +		goto out;
-> +	if (!hdr.ExtPageLength)
-> +		goto out;
-> +
-> +	buffer = pci_alloc_consistent(ioc->pcidev, hdr.ExtPageLength * 4,
-> +	    &dma_handle);
-> +	if (!buffer)
-> +		goto out;
-> +
-> +	cfg.physAddr = dma_handle;
-> +	cfg.action = MPI_CONFIG_ACTION_PAGE_READ_CURRENT;
-> +
-> +	if ((mpt_config(ioc, &cfg)))
-> +		goto out_free_consistent;
-> +
-> +	if (!(buffer->PhyData[0].PortFlags &
-> +	    MPI_SAS_IOUNIT0_PORT_FLAGS_DISCOVERY_IN_PROGRESS))
-> +		rc = 1;
-> +
-> + out_free_consistent:
-> +	pci_free_consistent(ioc->pcidev, hdr.ExtPageLength * 4,
-> +	    buffer, dma_handle);
-> + out:
-> +	return rc;
-> +}
-> +
-> +
->  /**
->   *	mpt_fault_reset_work - work performed on workq after ioc fault
->   *	@work: input argument, used to derive ioc
-> @@ -286,8 +336,8 @@ mpt_get_cb_idx(MPT_DRIVER_CLASS dclass)
->  static void
->  mpt_fault_reset_work(struct work_struct *work)
->  {
-> -	MPT_ADAPTER	*ioc =
-> -	    container_of(work, MPT_ADAPTER, fault_reset_work.work);
-> +	MPT_ADAPTER     *ioc =
-> +		container_of(work, MPT_ADAPTER, fault_reset_work.work);
->  	u32		 ioc_raw_state;
->  	int		 rc;
->  	unsigned long	 flags;
-> @@ -303,14 +353,21 @@ mpt_fault_reset_work(struct work_struct *work)
->  		       ioc->name, __func__);
->  		rc = mpt_HardResetHandler(ioc, CAN_SLEEP);
->  		printk(MYIOC_s_WARN_FMT "%s: HardReset: %s\n", ioc->name,
-> -		       __func__, (rc == 0) ? "success" : "failed");
-> +			__func__, (rc == 0) ? "success" : "failed");
->  		ioc_raw_state = mpt_GetIocState(ioc, 0);
->  		if ((ioc_raw_state & MPI_IOC_STATE_MASK) == MPI_IOC_STATE_FAULT)
->  			printk(MYIOC_s_WARN_FMT "IOC is in FAULT state after "
-> -			    "reset (%04xh)\n", ioc->name, ioc_raw_state &
-> -			    MPI_DOORBELL_DATA_MASK);
-> +				"reset (%04xh)\n", ioc->name, ioc_raw_state &
-> +				MPI_DOORBELL_DATA_MASK);
-> +	} else if (ioc->bus_type == SAS && ioc->sas_discovery_quiesce_io) {
-> +		if ((mpt_is_discovery_complete(ioc))) {
-> +			devtprintk(ioc, printk(MYIOC_s_DEBUG_FMT "clearing "
-> +			 "discovery_quiesce_io flag\n", ioc->name));
-> +			 ioc->sas_discovery_quiesce_io = 0;
-> +		}
->  	}
->  
-> +
->   out:
->  	/*
->  	 * Take turns polling alternate controller
-> diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
-> index b3e981d..50f8bb6 100644
-> --- a/drivers/message/fusion/mptbase.h
-> +++ b/drivers/message/fusion/mptbase.h
-> @@ -697,6 +697,7 @@ typedef struct _MPT_ADAPTER
->  	struct mutex		 sas_discovery_mutex;
->  	u8			 sas_discovery_runtime;
->  	u8			 sas_discovery_ignore_events;
-> +	u8			 sas_discovery_quiesce_io;
->  	int			 sas_index; /* index refrencing */
->  	MPT_SAS_MGMT		 sas_mgmt;
->  	struct work_struct	 sas_persist_task;
+I think the logic was that you can only turn off FW_LOADER if you define
+CONFIG_EMBEDDED anyway... although I was never quite sure why that
+mattered. We can do it either way; I don't really care.
 
+-- 
+David Woodhouse                            Open Source Technology Centre
+David.Woodhouse@intel.com                              Intel Corporation
 
