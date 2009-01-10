@@ -1,45 +1,53 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH4/5] mpt fusion: Optimized SendEventNotification [Resendig updated patch]
-Date: Sat, 10 Jan 2009 15:16:10 -0700
-Message-ID: <20090110221609.GG6936@parisc-linux.org>
-References: <20090108085912.GB4116@lsi.com> <1231625559.3642.54.camel@localhost.localdomain>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] qlogicpti: use request_firmware
+Date: Sat, 10 Jan 2009 17:30:39 -0600
+Message-ID: <1231630239.3642.56.camel@localhost.localdomain>
+References: <1231600926.5806.131.camel@macbook.infradead.org>
+	 <1231603097.3642.25.camel@localhost.localdomain>
+	 <1231615150.5806.137.camel@macbook.infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:57925 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755889AbZAJWQM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Jan 2009 17:16:12 -0500
-Content-Disposition: inline
-In-Reply-To: <1231625559.3642.54.camel@localhost.localdomain>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:41464 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752189AbZAJXan (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 10 Jan 2009 18:30:43 -0500
+In-Reply-To: <1231615150.5806.137.camel@macbook.infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Kashyap, Desai" <kashyap.desai@lsi.com>, linux-scsi@vger.kernel.org, eric.moore@lsi.com, sathya.prakash@lsi.com
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: torvalds@linux-foundation.org, linux-scsi@vger.kernel.org, jaswinder@infradead.org
 
-On Sat, Jan 10, 2009 at 04:12:39PM -0600, James Bottomley wrote:
-> > +                       dinitprintk(ioc, printk(MYIOC_s_DEBUG_FMT "alt-ioc
-> > +                               reply irq re-enabled\n",
-> > +                               ioc->alt_ioc->name));
+On Sat, 2009-01-10 at 19:19 +0000, David Woodhouse wrote:
+> On Sat, 2009-01-10 at 09:58 -0600, James Bottomley wrote:
+> > I'm assuming this fixes the open firmware conversion bug?
 > 
-> This isn't legal C: you can't split a string constant without a
-> backslash:
+> Which bug was that?
 
-Umm ... I don't think you can even split it with a backslash.  You need
-to use string concatenation like so:
+This one:
 
-			dinitprintk(ioc, printk(MYIOC_s_DEBUG_FMT "alt-ioc "
-				"reply irq re-enabled\n",
-				ioc->alt_ioc->name));
+Subject: 	linux-next: scsi tree build failure
+Date: 	Wed, 31 Dec 2008 03:16:39 +1100 (Tue, 10:16 CST)
 
-Or, since it's 100% more readable and greppable:
 
-			dinitprintk(ioc, printk(MYIOC_s_DEBUG_FMT
-				"alt-ioc reply irq re-enabled\n",
-				ioc->alt_ioc->name));
+Hi James,
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Today's linux-next build (sparc defconfig) failed like this:
+
+drivers/scsi/qlogicpti.c: In function 'qlogicpti_load_firmware':
+drivers/scsi/qlogicpti.c:480: error: 'struct qlogicpti' has no member
+named 'sdev'
+
+An interaction between commit 68175399c8b5ee90960e78c1bb8e3353e71fbf33
+("[SCSI] qlogicpti: use request_firmware") from the scsi tree and commit
+5dc2536bb8d8adb5fdfbe76cd6fdcdf9de3f40f8 ("qlogicpti: Convert to pure OF
+driver") which is in Linus' tree.
+
+The version of the firmware commit that has been in the firmware tree
+since Nov 19 has this conflict corrected.
+
+I have left it for today (as it is getting way to late).  Please fix it
+up for tomorrow.
+
