@@ -1,110 +1,71 @@
-From: Jaswinder Singh Rajput <jaswinder@infradead.org>
-Subject: Re: [PATCH] qlogicpti: use request_firmware
-Date: Sun, 11 Jan 2009 11:49:40 +0530
-Message-ID: <1231654780.3959.22.camel@jaswinder.satnam>
-References: <1231600926.5806.131.camel@macbook.infradead.org>
-	 <1231603097.3642.25.camel@localhost.localdomain>
-	 <1231615150.5806.137.camel@macbook.infradead.org>
-	 <1231630239.3642.56.camel@localhost.localdomain>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] libfc: fix compile warning
+Date: Sun, 11 Jan 2009 17:38:12 +0900
+Message-ID: <20090111173657Z.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:42972 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751057AbZAKGVy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Jan 2009 01:21:54 -0500
-In-Reply-To: <1231630239.3642.56.camel@localhost.localdomain>
+Received: from sh.osrg.net ([192.16.179.4]:41256 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750779AbZAKIiV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 11 Jan 2009 03:38:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: David Woodhouse <dwmw2@infradead.org>, torvalds@linux-foundation.org, linux-scsi@vger.kernel.org, Stephen Rothwell <sfr@canb.auug.org.au>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, robert.w.love@intel.com
 
-On Sat, 2009-01-10 at 17:30 -0600, James Bottomley wrote:
-> On Sat, 2009-01-10 at 19:19 +0000, David Woodhouse wrote:
-> > On Sat, 2009-01-10 at 09:58 -0600, James Bottomley wrote:
-> > > I'm assuming this fixes the open firmware conversion bug?
-> > 
-> > Which bug was that?
-> 
-> This one:
-> 
-> Subject: 	linux-next: scsi tree build failure
-> Date: 	Wed, 31 Dec 2008 03:16:39 +1100 (Tue, 10:16 CST)
-> 
-> 
-> Hi James,
-> 
-> Today's linux-next build (sparc defconfig) failed like this:
-> 
-> drivers/scsi/qlogicpti.c: In function 'qlogicpti_load_firmware':
-> drivers/scsi/qlogicpti.c:480: error: 'struct qlogicpti' has no member
-> named 'sdev'
-> 
-> An interaction between commit 68175399c8b5ee90960e78c1bb8e3353e71fbf33
-> ("[SCSI] qlogicpti: use request_firmware") from the scsi tree and commit
-> 5dc2536bb8d8adb5fdfbe76cd6fdcdf9de3f40f8 ("qlogicpti: Convert to pure OF
-> driver") which is in Linus' tree.
-> 
-> The version of the firmware commit that has been in the firmware tree
-> since Nov 19 has this conflict corrected.
-> 
-> I have left it for today (as it is getting way to late).  Please fix it
-> up for tomorrow.
-> 
+linux-next builds doesn't catch warnings like this?
 
-I am sorry, it was my typo mistake because I was doing manual merge and
-I do not have toolchain to check it but linux-next and David patch was
-correct. Thats why I am thankful to Stephen to fix typos in qlogicpti.
+=
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] libfc: fix compile warning
 
-So I prepared all 3 SCSI firmware patches based on latest scsi-misc-2.6 . Please pull it.
+I got the following warnings on IA64:
 
-The following changes since commit 8efdbd01b6b99c4470c7dd2c40b78d242abbd23a:
-  Martin K. Petersen (1):
-        [SCSI] scsi_debug: DIF/DIX support
+drivers/scsi/libfc/fc_lport.c: In function 'fc_lport_recv_flogi_req':
+drivers/scsi/libfc/fc_lport.c:788: warning: format '%llx' expects type 'long long unsigned int', but argument 3 has type 'u64'
+drivers/scsi/libfc/fc_lport.c:792: warning: format '%llx' expects type 'long long unsigned int', but argument 3 has type 'u64'
+scsi/libfc/fc_rport.c: In function 'fc_rport_recv_plogi_req':
+/home/fujita/git/linux-2.6/drivers/scsi/libfc/fc_rport.c:968: warning: format '%llx' expects type 'long long unsigned int', but argument 4 has type 'u64'
 
-are available in the git repository at:
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/libfc/fc_lport.c |    5 +++--
+ drivers/scsi/libfc/fc_rport.c |    2 +-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/jaswinder/scsi-misc-2.6.git master
-
-Jaswinder Singh Rajput (3):
-      qla1280: use request_firmware
-      advansys: use request_firmware
-      qlogicpti: use request_firmware
-
- drivers/scsi/advansys.c            | 1737 ++---------------------------
- drivers/scsi/ql1040_fw.h           | 2130 ------------------------------------
- drivers/scsi/ql12160_fw.h          | 1811 ------------------------------
- drivers/scsi/ql1280_fw.h           | 2048 ----------------------------------
- drivers/scsi/qla1280.c             |  121 ++-
- drivers/scsi/qla1280.h             |    6 +
- drivers/scsi/qlogicpti.c           |   65 +-
- drivers/scsi/qlogicpti_asm.c       | 1160 --------------------
- firmware/Makefile                  |    5 +
- firmware/WHENCE                    |   37 +
- firmware/advansys/3550.bin.ihex    |  317 ++++++
- firmware/advansys/38C0800.bin.ihex |  336 ++++++
- firmware/advansys/38C1600.bin.ihex |  398 +++++++
- firmware/advansys/mcode.bin.ihex   |  147 +++
- firmware/qlogic/1040.bin.ihex      | 2111 +++++++++++++++++++++++++++++++++++
- firmware/qlogic/12160.bin.ihex     | 1771 ++++++++++++++++++++++++++++++
- firmware/qlogic/1280.bin.ihex      | 2008 +++++++++++++++++++++++++++++++++
- firmware/qlogic/isp1000.bin.ihex   | 1158 ++++++++++++++++++++
- 18 files changed, 8524 insertions(+), 8842 deletions(-)
- delete mode 100644 drivers/scsi/ql1040_fw.h
- delete mode 100644 drivers/scsi/ql12160_fw.h
- delete mode 100644 drivers/scsi/ql1280_fw.h
- delete mode 100644 drivers/scsi/qlogicpti_asm.c
- create mode 100644 firmware/advansys/3550.bin.ihex
- create mode 100644 firmware/advansys/38C0800.bin.ihex
- create mode 100644 firmware/advansys/38C1600.bin.ihex
- create mode 100644 firmware/advansys/mcode.bin.ihex
- create mode 100644 firmware/qlogic/1040.bin.ihex
- create mode 100644 firmware/qlogic/12160.bin.ihex
- create mode 100644 firmware/qlogic/1280.bin.ihex
- create mode 100644 firmware/qlogic/isp1000.bin.ihex
-
-Thanks
---
-JSR
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index 0b9bdb1..be1e9bd 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -786,10 +786,11 @@ static void fc_lport_recv_flogi_req(struct fc_seq *sp_in,
+ 	remote_wwpn = get_unaligned_be64(&flp->fl_wwpn);
+ 	if (remote_wwpn == lport->wwpn) {
+ 		FC_DBG("FLOGI from port with same WWPN %llx "
+-		       "possible configuration error\n", remote_wwpn);
++		       "possible configuration error\n",
++		       (unsigned long long)remote_wwpn);
+ 		goto out;
+ 	}
+-	FC_DBG("FLOGI from port WWPN %llx\n", remote_wwpn);
++	FC_DBG("FLOGI from port WWPN %llx\n", (unsigned long long)remote_wwpn);
+ 
+ 	/*
+ 	 * XXX what is the right thing to do for FIDs?
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index e780d8c..4004313 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -966,7 +966,7 @@ static void fc_rport_recv_plogi_req(struct fc_rport *rport,
+ 	switch (rdata->rp_state) {
+ 	case RPORT_ST_INIT:
+ 		FC_DEBUG_RPORT("incoming PLOGI from %6x wwpn %llx state INIT "
+-			       "- reject\n", sid, wwpn);
++			       "- reject\n", sid, (unsigned long long)wwpn);
+ 		reject = ELS_RJT_UNSUP;
+ 		break;
+ 	case RPORT_ST_PLOGI:
+-- 
+1.6.0.6
 
