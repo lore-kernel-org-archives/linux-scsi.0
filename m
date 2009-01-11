@@ -1,55 +1,41 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
+From: Matthias Heinz <mheinz@cs.uni-frankfurt.de>
 Subject: Re: 2.6.29-rc1: Reported regressions from 2.6.28
-Date: Sun, 11 Jan 2009 20:00:59 +0100
-Message-ID: <200901112001.00394.rjw@sisk.pl>
-References: <XU-8icArWLM.A.UpG.8GfaJB@chimera> <3f9a31f40901110546h4c069b5dx9726a0fbf8caf5a1@mail.gmail.com> <20090111135237.GA20184@elte.hu>
+Date: Sun, 11 Jan 2009 15:39:46 +0100
+Message-ID: <200901111539.48098.mheinz@cs.uni-frankfurt.de>
+References: <XU-8icArWLM.A.UpG.8GfaJB@chimera>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:38104 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751816AbZAKTB3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 11 Jan 2009 14:01:29 -0500
-In-Reply-To: <20090111135237.GA20184@elte.hu>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <XU-8icArWLM.A.UpG.8GfaJB@chimera>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Jaswinder Singh Rajput <jaswinderlinux@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
 
-On Sunday 11 January 2009, Ingo Molnar wrote:
-> 
-> * Jaswinder Singh Rajput <jaswinderlinux@gmail.com> wrote:
-> 
-> > On Sun, Jan 11, 2009 at 4:42 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > >
-> > > Regressions with patches
-> > > ------------------------
-> > >
-> > > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=12428
-> > > Subject         : Build error on latest git
-> > > Submitter       : Petr Titera <P.Titera@century.cz>
-> > > Date            : 2009-01-11 9:49 (1 days old)
-> > > References      : http://marc.info/?l=linux-kernel&m=123166856318712&w=4
-> > > Handled-By      : Petr Titera <P.Titera@century.cz>
-> > > Patch           : http://marc.info/?l=linux-kernel&m=123167509024996&w=4
-> > 
-> > This is a wrong fix, asm/smp.h should only be included when CONFIG_SMP 
-> > is defined.
-> > 
-> > I am still in the process of cleaning non-smp data from asm/smp.h for 
-> > x86
-> > 
-> > Attach patch is the solution for the time being
-> > 
-> > Ingo, can you please put this in urgent queue.
-> 
-> yes, it already is - see below.
+Am Sonntag, 11. Januar 2009 schrieb Rafael J. Wysocki:
+> If you know of any other unresolved regressions from 2.6.28, please l=
+et me
+> know either and I'll add them to the list. =C2=A0Also, please let me =
+know if any
+> of the entries below are invalid.
 
-Link to this patch was added to the bug entry.  Pleaes let me know or close the
-bug when it's merged.
+Unresolved regressions
+----------------------
 
-Thanks,
-Rafael
+Bug-Entry=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0: http://bugzilla.ke=
+rnel.org/show_bug.cgi?id=3D12174
+Subject=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0: No backl=
+ight control on Samsung x360
+
+I think this is a common bug on systems with a broken(?) bios, exposing=
+ wrong=20
+driver names. With 2.6.27 it was at least possible to control the backl=
+ight=20
+over the NVID interface.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
