@@ -1,64 +1,40 @@
-From: Karen Xie <kxie@chelsio.com>
-Subject: [PATCH v2] iscsi_tcp - make padbuf non-static
-Date: Sat, 10 Jan 2009 19:06:07 -0800
-Message-ID: <200901110306.n0B367W7016999@localhost.localdomain>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 0/2] osst: remove scsi_execute_async usage
+Date: Sun, 11 Jan 2009 13:44:13 +0900
+Message-ID: <20090111134402U.fujita.tomonori@lab.ntt.co.jp>
+References: <1229183718-1171-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.22.49.110]:8423 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750918AbZAKDEd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Jan 2009 22:04:33 -0500
+Received: from sh.osrg.net ([192.16.179.4]:33139 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750984AbZAKEoV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 10 Jan 2009 23:44:21 -0500
+In-Reply-To: <1229183718-1171-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
-Cc: michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com, kxie@chelsio.com
+To: osst@riede.org
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-[PATCH v2] iscsi_tcp - make padbuf non-static
+On Sun, 14 Dec 2008 00:55:16 +0900
+FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
 
-From: Karen Xie <kxie@chelsio.com>
+> This patchset removes scsi_execute_async usage in osst driver. IOW,
+> this converts osst driver to use the block layer functions. We are in
+> the process of removing scsi_execute_async and
+> scsi_req_map_sg. scsi_execute_async in sg driver were removed in
+> 2.6.27. The patchset to remove scsi_execute_async in st is available
+> (the first half patchset was already merged into scsi-misc). osst is
+> the last user.
+> 
+> This is against scsi-misc and depends on 'removing scsi_execute_async
+> in st' the second half patchset:
+> 
+> http://marc.info/?l=linux-scsi&m=122900494917385&w=2
 
-Rebased patch on scsi-misc tree head.
-
-virt_to_page() call should not be used on kernel text and data addresses.
-virt_to_page() is used by sg_init_one(). So change padbuf to be allocated within iscsi_segment.
-
-Signed-off-by: Karen Xie <kxie@chelsio.com>
----
-
- drivers/scsi/libiscsi_tcp.c |    3 +--
- include/scsi/libiscsi_tcp.h |    1 +
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Willem, any change to test the patches? They can be cleanly applied to
+2.6.29-rc1.
 
 
-diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
-index a745f91..e7705d3 100644
---- a/drivers/scsi/libiscsi_tcp.c
-+++ b/drivers/scsi/libiscsi_tcp.c
-@@ -177,7 +177,6 @@ int iscsi_tcp_segment_done(struct iscsi_tcp_conn *tcp_conn,
- 			   struct iscsi_segment *segment, int recv,
- 			   unsigned copied)
- {
--	static unsigned char padbuf[ISCSI_PAD_LEN];
- 	struct scatterlist sg;
- 	unsigned int pad;
- 
-@@ -233,7 +232,7 @@ int iscsi_tcp_segment_done(struct iscsi_tcp_conn *tcp_conn,
- 			debug_tcp("consume %d pad bytes\n", pad);
- 			segment->total_size += pad;
- 			segment->size = pad;
--			segment->data = padbuf;
-+			segment->data = segment->padbuf;
- 			return 0;
- 		}
- 	}
-diff --git a/include/scsi/libiscsi_tcp.h b/include/scsi/libiscsi_tcp.h
-index 83e32f6..9e3182e 100644
---- a/include/scsi/libiscsi_tcp.h
-+++ b/include/scsi/libiscsi_tcp.h
-@@ -39,6 +39,7 @@ struct iscsi_segment {
- 	unsigned int		total_copied;
- 
- 	struct hash_desc	*hash;
-+	unsigned char		padbuf[ISCSI_PAD_LEN];
- 	unsigned char		recv_digest[ISCSI_DIGEST_SIZE];
- 	unsigned char		digest[ISCSI_DIGEST_SIZE];
- 	unsigned int		digest_len;
+Thanks,
