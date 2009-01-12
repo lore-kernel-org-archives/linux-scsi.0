@@ -1,57 +1,44 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
+From: "Ulrich Windl" <ulrich.windl-LOEJiUoeGm199bV2EpccEXqWYbMAw+HU@public.gmane.org>
 Subject: Re: [PATCH] iscsi: Kconfig option for debug prints.
-Date: Mon, 12 Jan 2009 17:38:07 +0200
-Message-ID: <496B63DF.6010602@panasas.com>
+Date: Mon, 12 Jan 2009 16:39:32 +0100
+Message-ID: <496B7248.11724.162B0F6@Ulrich.Windl.rkdvmks1.ngate.uni-regensburg.de>
 References: <496B62B8.3030402@panasas.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:10470 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752295AbZALPiL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jan 2009 10:38:11 -0500
-In-Reply-To: <496B62B8.3030402@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7BIT
+Return-path: <grbounce-FC1hwAUAAAA0O9VQcsxVj1UPjHD9r3x_=glio-open-iscsi=m.gmane.org-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-reply-to: <496B62B8.3030402-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+Content-description: Mail message body
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Post: <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://googlegroups.com/group/open-iscsi/subscribe>,
+	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: open-iscsi@googlegroups.com, linux-scsi <linux-scsi@vger.kernel.org>
 
-Boaz Harrosh wrote:
-> 
-> Remove the dark ages /* define debug_print */ in code, to use
-> a Kconfig option. With a system like Kconfig, in code, commented out,
-> configuration options are slavery and hard work.
-> (version control, manual edit ... need I say more)
-> 
-> I've used an "int" config bit-mask so more areas of code can be
-> selected with one Koption, but mainly so that allmodconfig will
-> not turn it on.
-> 
-> bit-1 - will turn on prints for libiscsi.
-> bit-2 - will turn on prints for libiscsi_tcp & iscsi_tcp.
-> 
-> More iscsi drivers should use more bits.
-> 
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> ---
->  drivers/scsi/Kconfig        |   15 +++++++++++++++
->  drivers/scsi/iscsi_tcp.c    |    7 -------
->  drivers/scsi/iscsi_tcp.h    |    6 ++++++
->  drivers/scsi/libiscsi_tcp.c |    7 -------
->  include/scsi/libiscsi.h     |    3 +--
->  5 files changed, 22 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
 
-Mike hi.
+On 12 Jan 2009 at 17:33, Boaz Harrosh wrote:
 
-These are over latest Linus. Sorry I mixed up the branches.
-If they don't apply to your tree any more, I'll rebase.
+> --- a/drivers/scsi/iscsi_tcp.h
+> +++ b/drivers/scsi/iscsi_tcp.h
+> @@ -25,6 +25,12 @@
+>  #include <scsi/libiscsi.h>
+>  #include <scsi/libiscsi_tcp.h>
+>  
+> +#if (CONFIG_ISCSI_DEBUG & 2)
+> +#define debug_tcp(fmt...) printk(KERN_INFO "tcp: " fmt)
+> +#else
+> +#define debug_tcp(fmt...)
+> +#endif
+> +
 
-I'm sending these because for too many times I submit some code
-with iscsi sources edits, because I forget to remove the edits
-for enabling prints. Please consider for inclusion.
+Hi!
 
-Thanks
-Boaz
+Let me say that I feel that "tcp:" should be something like "iSCSI-TCP:", just to 
+point out that it's related to iSCSI.
+
+Regards,
+Ulrich
