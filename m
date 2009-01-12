@@ -1,45 +1,68 @@
-From: Jamie Lokier <jamie@shareable.org>
-Subject: Re: [PATCH 7/9] exofs: mkexofs
-Date: Mon, 12 Jan 2009 22:48:06 +0000
-Message-ID: <20090112224806.GB26430@shareable.org>
-References: <4947BFAA.4030208@panasas.com> <4947CA5C.50104@panasas.com> <20081229121423.efde9d06.akpm@linux-foundation.org> <495B8D90.1090004@panasas.com> <1230739053.3408.74.camel@localhost.localdomain> <4960D3CA.2000202@panasas.com> <1231783926.3256.29.camel@localhost.localdomain>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] [Target_Core_Mod/MIBS]: Add missing SCSI MIBs
+	initialization call during module_init()
+Date: Mon, 12 Jan 2009 15:03:08 -0800
+Message-ID: <1231801388.4560.1169.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1231783926.3256.29.camel@localhost.localdomain>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Matthew Wilcox <matthew@wil.cx>, Benny Halevy <bhalevy@panasas.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Avishay Traeger <avishay@gmail.com>, open-osd development <osd-dev@open-osd.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp120.sbc.mail.sp1.yahoo.com ([69.147.64.93]:43384 "HELO
+	smtp120.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750918AbZALXGN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Jan 2009 18:06:13 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-James Bottomley wrote:
-> Um, your submission path is character.  You pick up block again because
-> SCSI uses it for queues, but it's not really part of your paradigm.
+Greetings all,
 
-> I think your choice of using a character device will turn out to be a
-> design mistake because the migration path of existing filesystems is
-> bound to be a block device with extra features (which they may or may
-> not make use of) but only if there's a way to make ODS relevant to
-> users.
+This patch is made against lio-core-2.6.git/master
+and tested on v2.6.28.  The lio-core-2.6.git tree can be found at:
 
-We mount character devices already when it's appropriate.
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=summary
 
-Look at JFFS, JFFS2, UBIFS and LOGFS.  All of them operate on MTD
-devices, which are character device interfaces to flash storage, using
-the common MTD interface instead of the block layer.
+Thanks,
 
-This is quite correct, because block devices have specific
-characteristics (generic block caching and ability to read/write each
-block independently) which neither flash nor OSDs have.
+--nab
 
-Imho, OSDs are similar to flash in this respected.  There is no
-fixed-size block/sector indexed storage device, therefore a block
-device would be wrong.
+>From 53b6924090a2182433e36cbd106d2f0249e3b8cc Mon Sep 17 00:00:00 2001
+From: Nicholas Bellinger <nab@linux-iscsi.org>
+Date: Mon, 12 Jan 2009 14:56:56 -0800
+Subject: [PATCH] [Target_Core_Mod/MIBS]: Add missing SCSI MIBs initialization call during module_init()
 
-Admittedly lumping everything else under "character" is daft, when you
-can't read and write character streams to the device, but that's unix
-for you.  Character device used to mean serial ports etc. until it
-become "any old crap that's not a block device". :-)
+During the v3.0 splitup of SCSI MIBs and iSCSI MIBs into target_core_mibs.c and
+iscsi_target_mibs.c respectively, a new initialization function for SCSI MIBs was
+added called init_scsi_index_table().  However this function was not added to
+target_core_mod's module_init() function: target_core_init_configfs().
 
--- Jamie
+This patch adds the missing init_scsi_index_table() before init_se_global()
+(which uses SCSI MIB logic) in target_core_init_configfs().
+
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ drivers/lio-core/target_core_configfs.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/lio-core/target_core_configfs.c b/drivers/lio-core/target_core_configfs.c
+index 0fceeab..46a84a7 100644
+--- a/drivers/lio-core/target_core_configfs.c
++++ b/drivers/lio-core/target_core_configfs.c
+@@ -1023,7 +1023,9 @@ extern int target_core_init_configfs (void)
+ 	 */
+ 	INIT_LIST_HEAD(&g_tf_list);
+ 	mutex_init(&g_tf_lock);
+-
++#ifdef SNMP_SUPPORT
++	init_scsi_index_table();
++#endif
+ 	if ((ret = configfs_register_subsystem(subsys)) < 0) {
+ 		printk(KERN_ERR "Error %d while registering subsystem %s\n",
+ 			ret, subsys->su_group.cg_item.ci_namebuf);
+-- 
+1.5.4.1
+
+
+
