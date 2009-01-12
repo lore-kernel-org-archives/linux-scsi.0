@@ -1,131 +1,138 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH] powerpc: cleanup from l64 to ll64 change: drivers/scsi
-Date: Mon, 12 Jan 2009 10:01:49 -0600
-Message-ID: <496B696D.1040906@linux.vnet.ibm.com>
-References: <20090107115900.17c0dbb6.sfr@canb.auug.org.au>
+From: "linux linux" <linux.tina@gmail.com>
+Subject: Re: need fusion driver guide
+Date: Mon, 12 Jan 2009 21:43:18 +0530
+Message-ID: <e7b7bf130901120813x3e7a178cwbd17435d669b0e78@mail.gmail.com>
+References: <20090106214538.GA18370@uranus.ravnborg.org>
+	 <1231278625.10475.28.camel@localhost.localdomain>
+	 <e7b7bf130901062002ke59c0dkd7ca0ed73352066f@mail.gmail.com>
+	 <1231302074.19352.12.camel@localhost.localdomain>
+	 <e7b7bf130901062124r18d93598jabcd5628f3cdca41@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:56450 "EHLO e6.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753486AbZALQC6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jan 2009 11:02:58 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e6.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n0CG36uQ027665
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2009 11:03:06 -0500
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id n0CG2uYa193618
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2009 11:02:56 -0500
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n0CG2pEQ027059
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2009 11:02:55 -0500
-In-Reply-To: <20090107115900.17c0dbb6.sfr@canb.auug.org.au>
+Received: from yx-out-2324.google.com ([74.125.44.29]:40513 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752612AbZALQNW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jan 2009 11:13:22 -0500
+In-Reply-To: <e7b7bf130901062124r18d93598jabcd5628f3cdca41@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, ppc-dev <linuxppc-dev@ozlabs.org>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Sam Ravnborg <sam@ravnborg.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Acked by: Brian King <brking@linux.vnet.ibm.com>
+HI James,
 
-Stephen Rothwell wrote:
-> This is a powerpc specific driver.
-> 
-> Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
-> ---
->  drivers/scsi/ibmvscsi/ibmvfc.c |   14 +++++++-------
->  drivers/scsi/ibmvscsi/ibmvfc.h |    6 +++---
->  2 files changed, 10 insertions(+), 10 deletions(-)
-> 
-> This patch on its own will generate several warnings - it depends on the
-> actual l64 to ll64 patch that is pending in the powerp queue.  It may be
-> easier for someone to just ack this patch so that it can be fed through
-> the powerpc tree.
-> 
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-> index 44f202f..be6cf09 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-> @@ -933,7 +933,7 @@ static void ibmvfc_get_host_speed(struct Scsi_Host *shost)
->  			fc_host_speed(shost) = FC_PORTSPEED_16GBIT;
->  			break;
->  		default:
-> -			ibmvfc_log(vhost, 3, "Unknown port speed: %ld Gbit\n",
-> +			ibmvfc_log(vhost, 3, "Unknown port speed: %lld Gbit\n",
->  				   vhost->login_buf->resp.link_speed / 100);
->  			fc_host_speed(shost) = FC_PORTSPEED_UNKNOWN;
->  			break;
-> @@ -2149,8 +2149,8 @@ static void ibmvfc_handle_async(struct ibmvfc_async_crq *crq,
->  {
->  	const char *desc = ibmvfc_get_ae_desc(crq->event);
-> 
-> -	ibmvfc_log(vhost, 3, "%s event received. scsi_id: %lx, wwpn: %lx,"
-> -		   " node_name: %lx\n", desc, crq->scsi_id, crq->wwpn, crq->node_name);
-> +	ibmvfc_log(vhost, 3, "%s event received. scsi_id: %llx, wwpn: %llx,"
-> +		   " node_name: %llx\n", desc, crq->scsi_id, crq->wwpn, crq->node_name);
-> 
->  	switch (crq->event) {
->  	case IBMVFC_AE_LINK_UP:
-> @@ -2184,7 +2184,7 @@ static void ibmvfc_handle_async(struct ibmvfc_async_crq *crq,
->  		ibmvfc_link_down(vhost, IBMVFC_HALTED);
->  		break;
->  	default:
-> -		dev_err(vhost->dev, "Unknown async event received: %ld\n", crq->event);
-> +		dev_err(vhost->dev, "Unknown async event received: %lld\n", crq->event);
->  		break;
->  	};
->  }
-> @@ -2261,13 +2261,13 @@ static void ibmvfc_handle_crq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost)
->  	 * actually sent
->  	 */
->  	if (unlikely(!ibmvfc_valid_event(&vhost->pool, evt))) {
-> -		dev_err(vhost->dev, "Returned correlation_token 0x%08lx is invalid!\n",
-> +		dev_err(vhost->dev, "Returned correlation_token 0x%08llx is invalid!\n",
->  			crq->ioba);
->  		return;
->  	}
-> 
->  	if (unlikely(atomic_read(&evt->free))) {
-> -		dev_err(vhost->dev, "Received duplicate correlation_token 0x%08lx!\n",
-> +		dev_err(vhost->dev, "Received duplicate correlation_token 0x%08llx!\n",
->  			crq->ioba);
->  		return;
->  	}
-> @@ -3259,7 +3259,7 @@ static int ibmvfc_alloc_target(struct ibmvfc_host *vhost, u64 scsi_id)
-> 
->  	tgt = mempool_alloc(vhost->tgt_pool, GFP_KERNEL);
->  	if (!tgt) {
-> -		dev_err(vhost->dev, "Target allocation failure for scsi id %08lx\n",
-> +		dev_err(vhost->dev, "Target allocation failure for scsi id %08llx\n",
->  			scsi_id);
->  		return -ENOMEM;
->  	}
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
-> index babdf3d..87dafd0 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc.h
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc.h
-> @@ -691,13 +691,13 @@ struct ibmvfc_host {
->  #define DBG_CMD(CMD) do { if (ibmvfc_debug) CMD; } while (0)
-> 
->  #define tgt_dbg(t, fmt, ...)			\
-> -	DBG_CMD(dev_info((t)->vhost->dev, "%lX: " fmt, (t)->scsi_id, ##__VA_ARGS__))
-> +	DBG_CMD(dev_info((t)->vhost->dev, "%llX: " fmt, (t)->scsi_id, ##__VA_ARGS__))
-> 
->  #define tgt_info(t, fmt, ...)		\
-> -	dev_info((t)->vhost->dev, "%lX: " fmt, (t)->scsi_id, ##__VA_ARGS__)
-> +	dev_info((t)->vhost->dev, "%llX: " fmt, (t)->scsi_id, ##__VA_ARGS__)
-> 
->  #define tgt_err(t, fmt, ...)		\
-> -	dev_err((t)->vhost->dev, "%lX: " fmt, (t)->scsi_id, ##__VA_ARGS__)
-> +	dev_err((t)->vhost->dev, "%llX: " fmt, (t)->scsi_id, ##__VA_ARGS__)
-> 
->  #define ibmvfc_dbg(vhost, ...) \
->  	DBG_CMD(dev_info((vhost)->dev, ##__VA_ARGS__))
+I got some idea about fusion driver from this link
+http://bugzilla.kernel.org/show_bug.cgi?id=12195
+
+And i found there is bug in fusion driver (kernel version 2.6.10) from this link
+http://www.nabble.com/MPT-fusion-driver,-better-but-still-buggy-at-errors-handling-under-2.6-td1095505.html
 
 
--- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
+
+On Wed, Jan 7, 2009 at 10:54 AM, linux linux <linux.tina@gmail.com> wrote:
+> Hi James,.
+> Now it should be received by all...
+> Many many thanks for the help.
+>
+> I am sending the kernel log.
+>
+>
+> On Wed, Jan 7, 2009 at 9:51 AM, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+>>
+>> You still need to turn off html email attachments, otherwise your
+>> messages won't be accepted by the mailing lists.  It will be an option
+>> like recipient wants text/plain only or something.
+>>
+>> On Wed, 2009-01-07 at 09:32 +0530, linux linux wrote:
+>> > Hi,
+>> >
+>> > Sam many thanks for ur help.
+>> >
+>> > Hi James,
+>> >
+>> > I am getting some error on for fusion device driver.
+>> > The error message look like this
+>> >
+>> >
+>> >        2F240F4C226078: 19/12/2008 EST 04:42:45, mptscsih: ioc1: >>
+>> > Attempting task abort! (sc=e40df080)
+>> >        2F240F6E8C2E00: 19/12/2008 EST 04:42:45, mptbase: ioc1:
+>> > IOCStatus(0x0048): SCSI Task Terminated
+>> >        2F240F6E905A98: 19/12/2008 EST 04:42:45, mptscsih: ioc1: >>
+>> > Attempting task abort! (sc=f7e23680)
+>> >
+>> > 2F24117BDA2438: 19/12/2008 EST 04:42:50, mptscsih: ioc1: >>
+>> > Attempting bus reset! (sc=e40df080)
+>> >
+>> > After then the server has been rebooted.
+>> >
+>> > I can see the code is written inside /drivers/message/fussion/
+>> > mptscsih.c
+>> > The responsible function is
+>> > mptscsih_host_reset()
+>> > i am very new in SCSI fusion device driver. read some help guide from
+>> > google but still i do not understand when the mptscsih_host_reset() is
+>> > called by kernel. I normal situation i am not able to see this message
+>> > in kernel log.
+>> > Can any one help me to understand when these type of kernel message
+>> > are comming, is it foe SCSI hardware problem ?
+>> > when mptscsih_host_reset() will be executed?
+>>
+>> It looks like a standard error handling escalation sequence.  Why is
+>> very hard to tell without the entire kernel log.  Why there wasn't a
+>> recovery is also not clear.
+>>
+yes its error handler sequence. But as describe into the above
+link(http://www.nabble.com/MPT-fusion-driver,-better-but-still-buggy-at-errors-handling-under-2.6-td1095505.html)
+that
+2.6.xx  xx <= 11, enters an infinit loop attempting to reset the SCSI
+        so the box gets unusable and requires a rough power cycle to recover.
+
+So i think that is  the reason to restart the server(after "Attempting host
+reset! )as a power cycle is required to recover.
+
+when next time server was booting i got  some kernel messages on
+recovery of SCSI. So recovery is done after reboot the server.
+
+Still i do not know how to over come this bug fo infinite loop. If you
+have any suggestion please let me know.
 
 
+
+
+
+
+
+>
+> Pls let me know when this kind of error handler is happened?
+> is it for SCSI hard ware failure?
+>
+>> > Only one time i show this message in my kernel log, is there any way
+>> > to reproduce this message manually?
+>> >
+>> > where i get much info regarding this issue and SCSI fusion kernel
+>> > driver except kernel code itself?
+>> >
+>> > I am writting this after reading help doc from
+>> > http://www.lsi.com/insight_center/tech_trends/advanced_architectures/fusionmpt/index.html
+>> >
+>> > But still i am very few knowledge to solve it.
+>> >
+>> > waiting for your help.
+>>
+>> There's not much else I can do.  If you post the entire kernel log, the
+>> fusion people hang out on this list and might see something that
+>> indicates what the problem is.
+>>
+>> James
+>>
+>>
+>
+
+Thanks
+Tina
+http://teachmeembedded.blogspot.com/
