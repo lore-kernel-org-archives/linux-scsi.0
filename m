@@ -1,92 +1,136 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] Check for deleted device in scsi_device_online()
-Date: Mon, 12 Jan 2009 09:28:55 +0100
-Message-ID: <496AFF47.3010100@suse.de>
-References: <20081216153352.27D4318C75E@pentland.suse.de> <1231432056.3237.25.camel@localhost.localdomain>
+From: Ke Wei <kewei@marvell.com>
+Subject: [PATCH] libsas: User mode app failed to send ioctl commands to SATA
+ drive.
+Date: Mon, 12 Jan 2009 18:28:01 +0800
+Message-ID: <496B1B31.4050606@marvell.com>
+Reply-To: kewei@marvell.com
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------030705000803080804040003"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:38517 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751608AbZALI25 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jan 2009 03:28:57 -0500
-In-Reply-To: <1231432056.3237.25.camel@localhost.localdomain>
+Received: from host2.marvell.com ([65.219.4.2]:38559 "EHLO maili.marvell.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751517AbZALK2G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Jan 2009 05:28:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jeff@garzik.org>, djwong@us.ibm.com, Jason Chu <jasonchu@marvell.com>, Michael
 
-This is a multi-part message in MIME format.
---------------030705000803080804040003
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8bit
+The context of scsi_host's hostdata points to a sas ha structure with libsas
+module, but the libata casts this pointer to a ata_port structure when ioctl
+sends HDIO_GET_IDENTITY.
 
-Hi James,
-
-James Bottomley wrote:
-> On Tue, 2008-12-16 at 16:33 +0100, Hannes Reinecke wrote:
->> scsi_device_online() is not just a negation of SDEV_OFFLINE,
->> also devices in state SDEV_CANCEL and SDEV_DEL are
->> actually offline.
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> ---
->>  include/scsi/scsi_device.h |    4 +++-
->>  1 files changed, 3 insertions(+), 1 deletions(-)
->>
->> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
->> index e96daf6..63b58d2 100644
->> --- a/include/scsi/scsi_device.h
->> +++ b/include/scsi/scsi_device.h
->> @@ -401,7 +401,9 @@ static inline unsigned int sdev_id(struct scsi_device *sdev)
->>   */
->>  static inline int scsi_device_online(struct scsi_device *sdev)
->>  {
->> -	return sdev->sdev_state != SDEV_OFFLINE;
->> +	return (sdev->sdev_state != SDEV_OFFLINE &&
->> +		sdev->sdev_state != SDEV_CANCEL &&
->> +		sdev->sdev_state != SDEV_DEL);
-> 
-> SDEV_DEL is OK.  We can't do this for SDEV_CANCEL because that will
-> block post removal commands (notably cache flush).
-> 
-You are correct as usual. Updated patch attached.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Markus Rex, HRB 16746 (AG Nürnberg)
-
---------------030705000803080804040003
-Content-Type: text/plain;
- name="scsi-check-for-deleted-device-in-scsi_device_online"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="scsi-check-for-deleted-device-in-scsi_device_online"
-
-scsi_device_online() is not just a negation of SDEV_OFFLINE,
-also devices in state SDEV_DEL are actually offline.
-
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index e96daf6..bb80937 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -401,7 +401,8 @@ static inline unsigned int sdev_id(struct scsi_device *sdev)
-  */
- static inline int scsi_device_online(struct scsi_device *sdev)
- {
--	return sdev->sdev_state != SDEV_OFFLINE;
-+	return (sdev->sdev_state != SDEV_OFFLINE &&
-+		sdev->sdev_state != SDEV_DEL);
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 9e92107..e6acc55 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -412,20 +412,9 @@ int ata_std_bios_param(struct scsi_device *sdev, struct
+block_device *bdev,
+ 	return 0;
  }
- static inline int scsi_device_blocked(struct scsi_device *sdev)
- {
 
---------------030705000803080804040003--
+-/**
+- *	ata_get_identity - Handler for HDIO_GET_IDENTITY ioctl
+- *	@sdev: SCSI device to get identify data for
+- *	@arg: User buffer area for identify data
+- *
+- *	LOCKING:
+- *	Defined by the SCSI layer.  We don't really care.
+- *
+- *	RETURNS:
+- *	Zero on success, negative errno on error.
+- */
+-static int ata_get_identity(struct scsi_device *sdev, void __user *arg)
++static int __ata_get_identity(struct scsi_device *sdev,
++			struct ata_port *ap, void __user *arg)
+ {
+-	struct ata_port *ap = ata_shost_to_port(sdev->host);
+ 	struct ata_device *dev = ata_scsi_find_dev(ap, sdev);
+ 	u16 __user *dst = arg;
+ 	char buf[40];
+@@ -452,6 +441,23 @@ static int ata_get_identity(struct scsi_device *sdev, void
+__user *arg)
+ }
+
+ /**
++ *	ata_get_identity - Handler for HDIO_GET_IDENTITY ioctl
++ *	@sdev: SCSI device to get identify data for
++ *	@arg: User buffer area for identify data
++ *
++ *	LOCKING:
++ *	Defined by the SCSI layer.  We don't really care.
++ *
++ *	RETURNS:
++ *	Zero on success, negative errno on error.
++ */
++static int ata_get_identity(struct scsi_device *sdev, void __user *arg)
++{
++	struct ata_port *ap = ata_shost_to_port(sdev->host);
++	return __ata_get_identity(sdev, ap, arg);
++}
++
++/**
+  *	ata_cmd_ioctl - Handler for HDIO_DRIVE_CMD ioctl
+  *	@scsidev: Device to which we are issuing command
+  *	@arg: User provided data for issuing command
+@@ -3714,3 +3720,10 @@ int ata_sas_queuecmd(struct scsi_cmnd *cmd, void
+(*done)(struct scsi_cmnd *),
+ 	return rc;
+ }
+ EXPORT_SYMBOL_GPL(ata_sas_queuecmd);
++
++int ata_sas_get_identity(struct scsi_device *scsidev,
++			struct ata_port *ap, void __user *arg)
++{
++	return __ata_get_identity(scsidev, ap, arg);
++}
++EXPORT_SYMBOL_GPL(ata_sas_get_identity);
+
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c
+b/drivers/scsi/libsas/sas_scsi_host.c
+index 7448387..30c419c 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -46,6 +46,7 @@
+ #include <linux/freezer.h>
+ #include <linux/scatterlist.h>
+ #include <linux/libata.h>
++#include <linux/hdreg.h>
+
+ /* ---------- SCSI Host glue ---------- */
+
+@@ -716,8 +717,13 @@ int sas_ioctl(struct scsi_device *sdev, int cmd, void
+__user *arg)
+ {
+ 	struct domain_device *dev = sdev_to_domain_dev(sdev);
+
+-	if (dev_is_sata(dev))
+-		return ata_scsi_ioctl(sdev, cmd, arg);
++	if (dev_is_sata(dev)) {
++		if (cmd == HDIO_GET_IDENTITY)
++			return ata_sas_get_identity(sdev, dev->sata_dev.ap,
++						arg);
++		else
++			return ata_scsi_ioctl(sdev, cmd, arg);
++	}
+
+ 	return -EINVAL;
+ }
+
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index b6b8a7f..8c1c5e1 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -936,6 +936,8 @@ extern void ata_sas_port_stop(struct ata_port *ap);
+ extern int ata_sas_slave_configure(struct scsi_device *, struct ata_port *);
+ extern int ata_sas_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct
+scsi_cmnd *),
+ 			    struct ata_port *ap);
++extern int ata_sas_get_identity(struct scsi_device *scsidev,
++			struct ata_port *ap, void __user *arg);
+ extern int sata_scr_valid(struct ata_link *link);
+ extern int sata_scr_read(struct ata_link *link, int reg, u32 *val);
+ extern int sata_scr_write(struct ata_link *link, int reg, u32 val);
+
+
+
