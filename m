@@ -1,90 +1,76 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] Make errors printed from scsi_sysfs_add_sdev() mean something.
-Date: Mon, 12 Jan 2009 15:04:26 +0100
-Message-ID: <496B4DEA.9000206@suse.de>
-References: <20081223221859.GA541@rere.qmqm.pl> <496B37C8.3010705@suse.de> <496B4067.1020204@s5r6.in-berlin.de>
+From: "ILLES, Marton" <illes.marton@balabit.hu>
+Subject: SUN Universal Xport no attach blacklist
+Date: Mon, 12 Jan 2009 15:45:52 +0100
+Message-ID: <1231771552.7596.11.camel@octane>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:56931 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752127AbZALOE3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jan 2009 09:04:29 -0500
-In-Reply-To: <496B4067.1020204@s5r6.in-berlin.de>
+Received: from support.balabit.hu ([195.70.41.86]:58591 "EHLO lists.balabit.hu"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752375AbZALOp6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Jan 2009 09:45:58 -0500
+Received: from balabit.hu (unknown [10.80.0.254])
+	by lists.balabit.hu (Postfix) with ESMTP id 1157D39D1EB
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2009 15:45:55 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: =?ISO-8859-2?Q?Micha=B3_Miros=B3aw?= <mirq-linux@rere.qmqm.pl>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hi Stefan,
+Hi,
 
-Stefan Richter wrote:
-> Hannes Reinecke wrote:
->> Micha=B3 Miros=B3aw wrote:
->>> --- a/drivers/scsi/scsi_sysfs.c
->>> +++ b/drivers/scsi/scsi_sysfs.c
->>> @@ -872,12 +872,12 @@ int scsi_sysfs_add_sdev(struct scsi_device *s=
-dev)
->>>  	error =3D device_add(&sdev->sdev_gendev);
->>>  	if (error) {
->>>  		put_device(sdev->sdev_gendev.parent);
->>> -		printk(KERN_INFO "error 1\n");
->>> +		printk(KERN_ERR "sysfs: SCSI device registration failed: %d\n", =
-error);
->> Shouldn't that be sdev_printk()?
->=20
-> It seems it shouldn't.  sdev_printk() wants device name and bus ID of
-> the sdev_gendev.  AFAICS device_add() initializes them, and callers o=
-f
-> device_add() can't be quite sure how far device_add() got before an e=
-rror.
->=20
-Hmm. True.
+I was using a Sun ST2510 device (iSCSI) and a special "block device"
+appeared which is used by SUN Common Array Manager in-band management.
 
-Easiest way would be to remove the printk altogether, as a failure of
-device_add() will print out enough warnings as it stands.
-To be precise you get something like
+However it also appeared as a block device and caused some IO error:
 
-------------[ cut here ]------------
-WARNING: at fs/sysfs/dir.c:463 sysfs_add_one+0x33/0x3a()
-sysfs: duplicate filename '4:0:1:0' can not be created
-=2E..
----[ end trace dac6dbc3f072e760 ]---
+[  716.868000] scsi 15:0:0:31: Direct-Access     SUN      Universal Xport  0735 PQ: 0 ANSI: 5
+[  716.868000] qla4xxx 0000:04:01.1: scsi(15:0:0:31): Enabled tagged queuing, queue depth 32.
+[  716.868000] sd 15:0:0:31: [sdf] 40960 512-byte hardware sectors (21 MB)
+[  716.868000] sd 15:0:0:31: [sdf] Write Protect is off
+[  716.868000] sd 15:0:0:31: [sdf] Mode Sense: 77 00 10 08
+[  716.868000] sd 15:0:0:31: [sdf] Write cache: disabled, read cache: enabled, supports DPO and FUA
+[  716.868000] sd 15:0:0:31: [sdf] 40960 512-byte hardware sectors (21 MB)
+[  716.868000] sd 15:0:0:31: [sdf] Write Protect is off
+[  716.868000] sd 15:0:0:31: [sdf] Mode Sense: 77 00 10 08
+[  716.872000] sd 15:0:0:31: [sdf] Write cache: disabled, read cache: enabled, supports DPO and FUA
+[  716.872000]  sdf: unknown partition table
+[  716.932000] sd 15:0:0:31: [sdf] Attached SCSI disk
+[  716.932000] sd 15:0:0:31: Attached scsi generic sg6 type 0
+[  717.412000] end_request: I/O error, dev sdf, sector 40
+[  717.412000] Buffer I/O error on device sdf, logical block 5
+[  717.412000] Buffer I/O error on device sdf, logical block 6
+[  717.412000] Buffer I/O error on device sdf, logical block 7
+[  717.412000] Buffer I/O error on device sdf, logical block 8
+[  717.412000] Buffer I/O error on device sdf, logical block 9
+[  717.412000] Buffer I/O error on device sdf, logical block 10
+[  717.412000] Buffer I/O error on device sdf, logical block 11
+[  717.412000] Buffer I/O error on device sdf, logical block 12
+[  717.412000] Buffer I/O error on device sdf, logical block 13
+[  717.412000] Buffer I/O error on device sdf, logical block 14
 
-and
+After some googling it appeared that similar issue has been solved for
+SGI/IBM devices in 4869040512082b761de2d7c35975d01044f8bfea, so here is
+the patch for SUN, please apply.
 
-kobject_add_internal failed for 4:0:1:0 with -EEXIST, don't try to regi=
-ster things with the same name in the same directory.
-Pid: 2693, comm: scsi_wq_4 Tainted: G        W 2.6.27.10-20090109 #2
-=2E..
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index 18dd5cc..fb95b86 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -219,6 +219,7 @@ static struct {
+        {"SGI", "TP9100", "*", BLIST_REPORTLUN2},
+        {"SGI", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+        {"IBM", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
++       {"SUN", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+        {"SMSC", "USB 2 HS-CF", NULL, BLIST_SPARSELUN | BLIST_INQUIRY_36},
+        {"SONY", "CD-ROM CDU-8001", NULL, BLIST_BORKEN},
+        {"SONY", "TSL", NULL, BLIST_FORCELUN},          /* DDS3 & DDS4 autoloaders */
 
-so we have enough information already.
+Thanks,
 
->>>  		return error;
->>>  	}
->>>  	error =3D device_add(&sdev->sdev_dev);
->>>  	if (error) {
->>> -		printk(KERN_INFO "error 2\n");
->>> +		printk(KERN_ERR "sysfs: SCSI class device registration failed: %=
-d\n", error);
->> Same here ...
->=20
-> At that point, sdev_printk() should work indeed.
-But it'll spawn a similar error as above, so we
-could remove it here, too.
+Marton
 
-Cheers,
+PS: In case of reply, I am off the list.
+-- 
+Key fingerprint = F78C 25CA 5F88 6FAF EA21 779D 3279 9F9E 1155 670D
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
