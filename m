@@ -1,39 +1,57 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] libsas: User mode app failed to send ioctl commands to
-	SATA drive.
-Date: Mon, 12 Jan 2009 09:33:46 -0600
-Message-ID: <1231774426.3256.2.camel@localhost.localdomain>
-References: <496B1B31.4050606@marvell.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] iscsi: Kconfig option for debug prints.
+Date: Mon, 12 Jan 2009 17:38:07 +0200
+Message-ID: <496B63DF.6010602@panasas.com>
+References: <496B62B8.3030402@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:59518 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752085AbZALPdw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jan 2009 10:33:52 -0500
-In-Reply-To: <496B1B31.4050606@marvell.com>
+Received: from gw-ca.panasas.com ([66.104.249.162]:10470 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752295AbZALPiL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jan 2009 10:38:11 -0500
+In-Reply-To: <496B62B8.3030402@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kewei@marvell.com
-Cc: linux-scsi@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, djwong@us.ibm.com, Jason Chu <jasonchu@marvell.com>, Michael Wang <qswang@marvell.com>, Jacky Feng <jfeng@marvell.com>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: open-iscsi@googlegroups.com, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 2009-01-12 at 18:28 +0800, Ke Wei wrote:
-> The context of scsi_host's hostdata points to a sas ha structure with libsas
-> module, but the libata casts this pointer to a ata_port structure when ioctl
-> sends HDIO_GET_IDENTITY.
+Boaz Harrosh wrote:
+> 
+> Remove the dark ages /* define debug_print */ in code, to use
+> a Kconfig option. With a system like Kconfig, in code, commented out,
+> configuration options are slavery and hard work.
+> (version control, manual edit ... need I say more)
+> 
+> I've used an "int" config bit-mask so more areas of code can be
+> selected with one Koption, but mainly so that allmodconfig will
+> not turn it on.
+> 
+> bit-1 - will turn on prints for libiscsi.
+> bit-2 - will turn on prints for libiscsi_tcp & iscsi_tcp.
+> 
+> More iscsi drivers should use more bits.
+> 
+> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> ---
+>  drivers/scsi/Kconfig        |   15 +++++++++++++++
+>  drivers/scsi/iscsi_tcp.c    |    7 -------
+>  drivers/scsi/iscsi_tcp.h    |    6 ++++++
+>  drivers/scsi/libiscsi_tcp.c |    7 -------
+>  include/scsi/libiscsi.h     |    3 +--
+>  5 files changed, 22 insertions(+), 16 deletions(-)
+> 
+> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
 
-This is a good find thanks.  I think there's a small problem in the way
-the layering is done.
+Mike hi.
 
-I think ata_scsi_ioctl needs to be expanded to pass the port in all the
-time.   That way other implementors don't have to remember to special
-case HDIO_GET_IDENTITY.
+These are over latest Linus. Sorry I mixed up the branches.
+If they don't apply to your tree any more, I'll rebase.
 
-When you redo this, ipr will need altering as well (rather than also
-having the identity exception added).
+I'm sending these because for too many times I submit some code
+with iscsi sources edits, because I forget to remove the edits
+for enabling prints. Please consider for inclusion.
 
-James
-
-
+Thanks
+Boaz
