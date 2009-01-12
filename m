@@ -1,242 +1,131 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] iscsi: Kconfig option for debug prints.
-Date: Mon, 12 Jan 2009 09:59:52 -0600
-Message-ID: <496B68F8.3070103@cs.wisc.edu>
-References: <496B62B8.3030402@panasas.com> <496B63DF.6010602@panasas.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH] powerpc: cleanup from l64 to ll64 change: drivers/scsi
+Date: Mon, 12 Jan 2009 10:01:49 -0600
+Message-ID: <496B696D.1040906@linux.vnet.ibm.com>
+References: <20090107115900.17c0dbb6.sfr@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000300020800050805040302"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:59365 "EHLO sabe.cs.wisc.edu"
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:56450 "EHLO e6.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752539AbZALQAB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jan 2009 11:00:01 -0500
-In-Reply-To: <496B63DF.6010602@panasas.com>
+	id S1753486AbZALQC6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Jan 2009 11:02:58 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e6.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n0CG36uQ027665
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2009 11:03:06 -0500
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id n0CG2uYa193618
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2009 11:02:56 -0500
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n0CG2pEQ027059
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2009 11:02:55 -0500
+In-Reply-To: <20090107115900.17c0dbb6.sfr@canb.auug.org.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: open-iscsi@googlegroups.com
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, ppc-dev <linuxppc-dev@ozlabs.org>, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------000300020800050805040302
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Acked by: Brian King <brking@linux.vnet.ibm.com>
 
-Boaz Harrosh wrote:
-> Boaz Harrosh wrote:
->> Remove the dark ages /* define debug_print */ in code, to use
->> a Kconfig option. With a system like Kconfig, in code, commented out,
->> configuration options are slavery and hard work.
->> (version control, manual edit ... need I say more)
->>
->> I've used an "int" config bit-mask so more areas of code can be
->> selected with one Koption, but mainly so that allmodconfig will
->> not turn it on.
->>
->> bit-1 - will turn on prints for libiscsi.
->> bit-2 - will turn on prints for libiscsi_tcp & iscsi_tcp.
->>
->> More iscsi drivers should use more bits.
->>
->> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
->> ---
->>  drivers/scsi/Kconfig        |   15 +++++++++++++++
->>  drivers/scsi/iscsi_tcp.c    |    7 -------
->>  drivers/scsi/iscsi_tcp.h    |    6 ++++++
->>  drivers/scsi/libiscsi_tcp.c |    7 -------
->>  include/scsi/libiscsi.h     |    3 +--
->>  5 files changed, 22 insertions(+), 16 deletions(-)
->>
->> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+Stephen Rothwell wrote:
+> This is a powerpc specific driver.
 > 
-> Mike hi.
+> Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
+> ---
+>  drivers/scsi/ibmvscsi/ibmvfc.c |   14 +++++++-------
+>  drivers/scsi/ibmvscsi/ibmvfc.h |    6 +++---
+>  2 files changed, 10 insertions(+), 10 deletions(-)
 > 
-> These are over latest Linus. Sorry I mixed up the branches.
-> If they don't apply to your tree any more, I'll rebase.
+> This patch on its own will generate several warnings - it depends on the
+> actual l64 to ll64 patch that is pending in the powerp queue.  It may be
+> easier for someone to just ack this patch so that it can be fed through
+> the powerpc tree.
 > 
-
-It applies ok.
-
-> I'm sending these because for too many times I submit some code
-> with iscsi sources edits, because I forget to remove the edits
-> for enabling prints. Please consider for inclusion.
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+> index 44f202f..be6cf09 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+> @@ -933,7 +933,7 @@ static void ibmvfc_get_host_speed(struct Scsi_Host *shost)
+>  			fc_host_speed(shost) = FC_PORTSPEED_16GBIT;
+>  			break;
+>  		default:
+> -			ibmvfc_log(vhost, 3, "Unknown port speed: %ld Gbit\n",
+> +			ibmvfc_log(vhost, 3, "Unknown port speed: %lld Gbit\n",
+>  				   vhost->login_buf->resp.link_speed / 100);
+>  			fc_host_speed(shost) = FC_PORTSPEED_UNKNOWN;
+>  			break;
+> @@ -2149,8 +2149,8 @@ static void ibmvfc_handle_async(struct ibmvfc_async_crq *crq,
+>  {
+>  	const char *desc = ibmvfc_get_ae_desc(crq->event);
 > 
-
-What about compile time vs load time? Olaf had the attached patch which 
-does it at module load time. It is nicer for users, but I was just 
-worried about maybe there being a perf change with all the new ifs? I 
-was waiting to do some testing to see if there was and change, but did 
-not get around to it. Is that too paranoid (probably other factors like 
-our crappy locking will slow us down more than some ifs for printks right)?
-
---------------000300020800050805040302
-Content-Type: message/rfc822;
- name="[PATCH 04_21 - retry] Make iscsi debugging a module option.eml"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename*0="[PATCH 04_21 - retry] Make iscsi debugging a module option.e";
- filename*1="ml"
-
-Return-Path: <grbounce-FC1hwAUAAAA0O9VQcsxVj1UPjHD9r3x_=michaelc=cs.wisc.edu@googlegroups.com>
-Received: from shale.cs.wisc.edu (shale.cs.wisc.edu [128.105.6.25])
-	by topaz.cs.wisc.edu (8.13.6/8.13.6) with ESMTP id l5MHQO3S014345
-	for <michaelc@topaz.cs.wisc.edu>; Fri, 22 Jun 2007 12:26:24 -0500
-Received: from obsidian.cs.wisc.edu (obsidian.cs.wisc.edu [128.105.6.13])
-	by shale.cs.wisc.edu (8.13.6/8.13.6) with ESMTP id l5MHQO8O015509
-	for <michaelc@cs.wisc.edu>; Fri, 22 Jun 2007 12:26:24 -0500
-Received: from nz-out-0708.google.com (nz-out-0708.google.com [64.233.162.243])
-	by obsidian.cs.wisc.edu (8.13.6/8.13.6) with ESMTP id l5MHQ5Mh028506
-	for <michaelc@cs.wisc.edu>; Fri, 22 Jun 2007 12:26:11 -0500
-Received: by nz-out-0708.google.com with SMTP id v21so400324nzg
-        for <michaelc@cs.wisc.edu>; Fri, 22 Jun 2007 10:26:05 -0700 (PDT)
-Received: by 10.35.20.16 with SMTP id x16mr281718pyi.1182533160818;
-        Fri, 22 Jun 2007 10:26:00 -0700 (PDT)
-Received: by 10.44.241.69 with SMTP id o69gr8435hsh;
-	Fri, 22 Jun 2007 10:25:46 -0700 (PDT)
-X-Sender: okir@lst.de
-X-Apparently-To: open-iscsi@googlegroups.com
-Received: by 10.36.23.14 with SMTP id 14mr593024nzw.1182523326344; Fri, 22 Jun 2007 07:42:06 -0700 (PDT)
-Received: from mail.lst.de (verein.lst.de [213.95.11.210]) by mx.google.com with ESMTP id h71si850566nzf.2007.06.22.07.42.05; Fri, 22 Jun 2007 07:42:06 -0700 (PDT)
-Received-SPF: pass (google.com: best guess record for domain of okir@lst.de designates 213.95.11.210 as permitted sender)
-Received: from verein.lst.de (localhost [127.0.0.1]) by mail.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id l5MEg4o6025592 (version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO) for <open-iscsi@googlegroups.com>; Fri, 22 Jun 2007 16:42:05 +0200
-Received: (from okir@localhost) by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id l5MEg40x025590 for open-iscsi@googlegroups.com; Fri, 22 Jun 2007 16:42:04 +0200
-Date: Fri, 22 Jun 2007 16:42:04 +0200
-Message-Id: <200706221442.l5MEg40x025590@verein.lst.de>
-Subject: [PATCH 04/21 - retry] Make iscsi debugging a module option
-From: Olaf Kirch <olaf.kirch@oracle.com>
-To: open-iscsi@googlegroups.com
-In-reply-to: <submit-20070522.666-okir@lst.de>
-X-Spam-Score: 0.286 () MAILTO_TO_SPAM_ADDR
-X-Scanned-By: MIMEDefang 2.39
-X-Google-Approved: michaelc@cs.wisc.edu via web at 2007-06-22 17:25:41
-Reply-To: open-iscsi@googlegroups.com
-Sender: open-iscsi@googlegroups.com
-Precedence: bulk
-X-Google-Loop: groups
-Mailing-List: list open-iscsi@googlegroups.com;
-	contact open-iscsi-owner@googlegroups.com
-List-Id: <open-iscsi.googlegroups.com>
-List-Post: <mailto:open-iscsi@googlegroups.com>
-List-Help: <mailto:open-iscsi-help@googlegroups.com>
-List-Unsubscribe: <http://googlegroups.com/group/open-iscsi/subscribe>,
-	<mailto:open-iscsi-unsubscribe@googlegroups.com>
-X-CSL-MailScanner-Information: Please contact lab@cs.wisc.edu for more information
-X-CSL-MailScanner: Found to be clean
-
-
-Make iscsi debugging a module option
-
-This patch adds a debug module parameter to both
-libiscsi and iscsi_tcp, allowing to toggle debug
-at runtime via /sys/modules/$name/parameters/debug
-
-Signed-off-by: olaf.kirch@oracle.com
----
- drivers/scsi/Kconfig     |    9 +++++++++
- drivers/scsi/iscsi_tcp.c |   13 +++++++++----
- drivers/scsi/libiscsi.c  |   10 ++++++++++
- include/scsi/libiscsi.h  |   11 +++++++----
- 4 files changed, 35 insertions(+), 8 deletions(-)
-
-Index: iscsi-2.6/drivers/scsi/iscsi_tcp.c
-===================================================================
---- iscsi-2.6.orig/drivers/scsi/iscsi_tcp.c
-+++ iscsi-2.6/drivers/scsi/iscsi_tcp.c
-@@ -48,13 +48,18 @@ MODULE_AUTHOR("Dmitry Yusupov <dmitry_yu
- 	      "Alex Aizman <itn780@yahoo.com>");
- MODULE_DESCRIPTION("iSCSI/TCP data-path");
- MODULE_LICENSE("GPL");
--#undef DEBUG_TCP
- #define DEBUG_ASSERT
- 
--#ifdef DEBUG_TCP
--#define debug_tcp(fmt...) printk(KERN_INFO "tcp: " fmt)
-+#ifdef CONFIG_SCSI_ISCSI_DEBUG
-+static int iscsi_tcp_debug = 0;
-+#define debug_tcp(fmt...) do { \
-+		if (unlikely(iscsi_tcp_debug)) \
-+			printk(KERN_INFO "tcp: " fmt); \
-+	} while (0)
-+
-+module_param_named(debug, iscsi_tcp_debug, int, S_IRUGO | S_IWUSR);
- #else
--#define debug_tcp(fmt...)
-+#define debug_tcp(fmt...) do { } while (0)
- #endif
- 
- #ifndef DEBUG_ASSERT
-Index: iscsi-2.6/drivers/scsi/libiscsi.c
-===================================================================
---- iscsi-2.6.orig/drivers/scsi/libiscsi.c
-+++ iscsi-2.6/drivers/scsi/libiscsi.c
-@@ -37,6 +37,16 @@
- #include <scsi/scsi_transport_iscsi.h>
- #include <scsi/libiscsi.h>
- 
-+/* Debug flag for libiscsi - needs to be
-+ * exported so other iscsi modules can make use
-+ * of the debug_scsi() macro */
-+#ifdef CONFIG_SCSI_ISCSI_DEBUG
-+int libiscsi_debug = 0;
-+EXPORT_SYMBOL_GPL(libiscsi_debug);
-+
-+module_param_named(debug, libiscsi_debug, int, S_IRUGO | S_IWUSR);
-+#endif
-+
- struct iscsi_session *
- class_to_transport_session(struct iscsi_cls_session *cls_session)
- {
-Index: iscsi-2.6/include/scsi/libiscsi.h
-===================================================================
---- iscsi-2.6.orig/include/scsi/libiscsi.h
-+++ iscsi-2.6/include/scsi/libiscsi.h
-@@ -41,11 +41,14 @@ struct iscsi_cls_conn;
- struct iscsi_session;
- struct iscsi_nopin;
- 
--/* #define DEBUG_SCSI */
--#ifdef DEBUG_SCSI
--#define debug_scsi(fmt...) printk(KERN_INFO "iscsi: " fmt)
-+#ifdef CONFIG_SCSI_ISCSI_DEBUG
-+extern int	libiscsi_debug;
-+#define debug_scsi(fmt...) do { \
-+		if (unlikely(libiscsi_debug)) \
-+			printk(KERN_INFO "iscsi: " fmt); \
-+	} while (0)
- #else
--#define debug_scsi(fmt...)
-+#define debug_scsi(fmt...) do { } while (0)
- #endif
- 
- #define ISCSI_DEF_XMIT_CMDS_MAX	128	/* must be power of 2 */
-Index: iscsi-2.6/drivers/scsi/Kconfig
-===================================================================
---- iscsi-2.6.orig/drivers/scsi/Kconfig
-+++ iscsi-2.6/drivers/scsi/Kconfig
-@@ -312,6 +312,15 @@ config ISCSI_TCP
- 
- 	 http://linux-iscsi.sf.net
- 
-+config SCSI_ISCSI_DEBUG
-+	bool "Support iSCSI debugging"
-+	depends on ISCSI_TCP
-+	default n
-+	help
-+	 Say Y here to compile debugging support into libiscsi and
-+	 iscsi_tcp. Debugging will not be enable by default, but
-+	 can be switched on and off via module options.
-+
- config SGIWD93_SCSI
- 	tristate "SGI WD93C93 SCSI Driver"
- 	depends on SGI_IP22 && SCSI
-
---~--~---------~--~----~------------~-------~--~----~
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To post to this group, send email to open-iscsi@googlegroups.com
-To unsubscribe from this group, send email to open-iscsi-unsubscribe@googlegroups.com
-For more options, visit this group at http://groups.google.com/group/open-iscsi
--~----------~----~----~----~------~----~------~--~---
+> -	ibmvfc_log(vhost, 3, "%s event received. scsi_id: %lx, wwpn: %lx,"
+> -		   " node_name: %lx\n", desc, crq->scsi_id, crq->wwpn, crq->node_name);
+> +	ibmvfc_log(vhost, 3, "%s event received. scsi_id: %llx, wwpn: %llx,"
+> +		   " node_name: %llx\n", desc, crq->scsi_id, crq->wwpn, crq->node_name);
+> 
+>  	switch (crq->event) {
+>  	case IBMVFC_AE_LINK_UP:
+> @@ -2184,7 +2184,7 @@ static void ibmvfc_handle_async(struct ibmvfc_async_crq *crq,
+>  		ibmvfc_link_down(vhost, IBMVFC_HALTED);
+>  		break;
+>  	default:
+> -		dev_err(vhost->dev, "Unknown async event received: %ld\n", crq->event);
+> +		dev_err(vhost->dev, "Unknown async event received: %lld\n", crq->event);
+>  		break;
+>  	};
+>  }
+> @@ -2261,13 +2261,13 @@ static void ibmvfc_handle_crq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost)
+>  	 * actually sent
+>  	 */
+>  	if (unlikely(!ibmvfc_valid_event(&vhost->pool, evt))) {
+> -		dev_err(vhost->dev, "Returned correlation_token 0x%08lx is invalid!\n",
+> +		dev_err(vhost->dev, "Returned correlation_token 0x%08llx is invalid!\n",
+>  			crq->ioba);
+>  		return;
+>  	}
+> 
+>  	if (unlikely(atomic_read(&evt->free))) {
+> -		dev_err(vhost->dev, "Received duplicate correlation_token 0x%08lx!\n",
+> +		dev_err(vhost->dev, "Received duplicate correlation_token 0x%08llx!\n",
+>  			crq->ioba);
+>  		return;
+>  	}
+> @@ -3259,7 +3259,7 @@ static int ibmvfc_alloc_target(struct ibmvfc_host *vhost, u64 scsi_id)
+> 
+>  	tgt = mempool_alloc(vhost->tgt_pool, GFP_KERNEL);
+>  	if (!tgt) {
+> -		dev_err(vhost->dev, "Target allocation failure for scsi id %08lx\n",
+> +		dev_err(vhost->dev, "Target allocation failure for scsi id %08llx\n",
+>  			scsi_id);
+>  		return -ENOMEM;
+>  	}
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
+> index babdf3d..87dafd0 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc.h
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc.h
+> @@ -691,13 +691,13 @@ struct ibmvfc_host {
+>  #define DBG_CMD(CMD) do { if (ibmvfc_debug) CMD; } while (0)
+> 
+>  #define tgt_dbg(t, fmt, ...)			\
+> -	DBG_CMD(dev_info((t)->vhost->dev, "%lX: " fmt, (t)->scsi_id, ##__VA_ARGS__))
+> +	DBG_CMD(dev_info((t)->vhost->dev, "%llX: " fmt, (t)->scsi_id, ##__VA_ARGS__))
+> 
+>  #define tgt_info(t, fmt, ...)		\
+> -	dev_info((t)->vhost->dev, "%lX: " fmt, (t)->scsi_id, ##__VA_ARGS__)
+> +	dev_info((t)->vhost->dev, "%llX: " fmt, (t)->scsi_id, ##__VA_ARGS__)
+> 
+>  #define tgt_err(t, fmt, ...)		\
+> -	dev_err((t)->vhost->dev, "%lX: " fmt, (t)->scsi_id, ##__VA_ARGS__)
+> +	dev_err((t)->vhost->dev, "%llX: " fmt, (t)->scsi_id, ##__VA_ARGS__)
+> 
+>  #define ibmvfc_dbg(vhost, ...) \
+>  	DBG_CMD(dev_info((vhost)->dev, ##__VA_ARGS__))
 
 
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
 
---------------000300020800050805040302--
+
