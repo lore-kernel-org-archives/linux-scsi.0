@@ -1,150 +1,125 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 7/9] exofs: mkexofs
-Date: Mon, 12 Jan 2009 15:22:09 -0500
-Message-ID: <496BA671.3070900@garzik.org>
-References: <4947BFAA.4030208@panasas.com>	<4947CA5C.50104@panasas.com>	 <20081229121423.efde9d06.akpm@linux-foundation.org>	 <495B8D90.1090004@panasas.com>	 <1230739053.3408.74.camel@localhost.localdomain>	 <4960D3CA.2000202@panasas.com>	 <1231783926.3256.29.camel@localhost.localdomain>	 <496B989F.7050907@garzik.org> <1231790190.15161.29.camel@localhost.localdomain>
+From: Tony Battersby <tonyb@cybernetics.com>
+Subject: Re: [PATCH 0/2] sg: fix races during device removal (v2)
+Date: Mon, 12 Jan 2009 16:09:25 -0500
+Message-ID: <496BB185.7080008@cybernetics.com>
+References: <49625A67.3000304@cybernetics.com> <20090111022525I.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52611 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756931AbZALUWs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jan 2009 15:22:48 -0500
-In-Reply-To: <1231790190.15161.29.camel@localhost.localdomain>
+Received: from host64.cybernetics.com ([98.174.209.230]:1354 "EHLO
+	mail.cybernetics.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042AbZALVJ1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jan 2009 16:09:27 -0500
+In-Reply-To: <20090111022525I.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Matthew Wilcox <matthew@wil.cx>, Benny Halevy <bhalevy@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Avishay Traeger <avishay@gmail.com>, open-osd development <osd-dev@open-osd.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: dgilbert@interlog.com, James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> On Mon, 2009-01-12 at 14:23 -0500, Jeff Garzik wrote:
->>> It's an indicator of one.  If you buy my premise that OSD cannot be
->>> relevant without compelling user cases, then the lack of a user API can
->>> be viewed as a symptom of this.
->> If having a compelling user case was a prereq for kernel inclusion, well 
->> over half the code would be gone.
-> 
-> I'm not holding this against inclusion ... I'm saying it's a symptom of
-> the generic relevance to user issues problem that OSD has.
-> 
->>> I think your choice of using a character device will turn out to be a
->>> design mistake because the migration path of existing filesystems is
->>> bound to be a block device with extra features (which they may or may
->>> not make use of) but only if there's a way to make ODS relevant to
->>> users.
->> It is fantasy to think we will be migrating ext4 to OSD.  That fantasy 
->> is not a compelling reason to block OSD development.
-> 
-> OK, so your quote managed to miss this bit:
-> 
-> "Right, so I'm reasonably happy to accept libosd for what it is:  an
-> enabler for a few specialised applications. "
-> 
-> I can't see how that can be construed as "blocking OSD development".
-> The word "accept" is conventionally used in Linux parlance to mean "will
-> send upstream".
-
-Yet you continue to expend energy complaining about migrating 
-block-based filesystems to OSD, a complex, overhead-laden undertaking 
-_no one_ has proposed or entertained.
-
-
-
->> To sum,
+FUJITA Tomonori wrote:
+>
+>> test #1
 >>
->> * exofs needs a userspace library, around which the standard filesystem 
->> tools will be built, most notably mkfs, dump, restore, fsck
+>> open /dev/sgX
+>> send a command that takes a long time (e.g. any tape drive seek
+>> command)
+>> before command completes, echo 1 >
+>> /sys/class/scsi_generic/sgX/device/delete
 >>
->> * talk of migrating existing filesystems is wildly premature (and a bit 
->> of a silly argument, since you are also arguing that OSD lacks 
->> compelling use cases)
-> 
-> So criticising lacking compelling use cases while at the same time
-> suggesting how to find them is wrong?
-> 
-> Actually, If the only use case OSD can bring to the table is requiring
-> new filesystems, then there's nothing of general user relevance for it
-> on the horizon ... anywhere.  There's never going to be a compelling
-> reason to move the consumer OSDs in the various development labs to
-> production because nothing would be able to use them on a mass scale.
-
-> If we could derive a benefit from OSD in existing filesystems, then they
-> do have user relevance, and Seagate and the others might just consider
-> releasing the devices.
-
-If Seagate were to release a production OSD device, do you really think 
-they would prefer a block-based filesystem hacked to work with OSDs?  I 
-don't think so.
-
-Existing block filesystems are very much purpose built for sector-based 
-storage as implemented on modern storage devices.  No kernel API can 
-hand-wave that away.
-
-The whole point of OSDs is to move some of the overhead to the storage 
-device, not _add_ to the overhead.
-
-
-> Note that "providing benefit to" does not equate to "rewriting the
-> filesystem for" ... and it shouldn't; the benefit really should be
-> incremental.  And that's the crux of my criticism.  While OSD are
-> separate things that we have to rewrite whole filesystems for, they're
-> never going to set the world on fire.  If they could be used with only
-> incremental effort, they might.  The bridge for the incremental effort
-> will come from a properly designed kernel API.
-
-Well, hey, if you wanna expend energy creating a kernel API that 
-presents a complex OSD as simple block-based storage, go for it.  AFAICS 
-it's just extra overhead and complexity when a new filesystem could do 
-the job much better.
-
-And I seriously doubt Linus or anyone else will want to hack up a 
-block-based filesystem in this manner.  Better to create a silly "for 
-argument's sake" OSD block device, upon which any block-based filesystem 
-can be mounted.  (Note I said block device, _not_ filesystem)
-
-
->> * an in-kernel OSD-based filesystem needs some sort of generic in-kernel 
->> libosd API, so that multiple OSD filesystems do not reinvent the wheel 
->> each time.
+>> without patch:
+>> oops
 >>
->> * OSD was bound to be annoying, because it forces the kernel filesystem 
->> to either (a) talk SCSI or (b) use messages that can be converted to 
->> SCSI OSD commands, like existing drivers convert the block layer's READ 
->> and WRITE to device-specific commands.
-> 
-> OK, so what you're arguing is that unlike block devices where we can
-> produce a useful generic abstraction that is protocol agnostic, for OSD
-> we can't?  As I've said before, I think this might be true, but fear it
-> dooms OSD to being too difficult to use.
+>> with patch:
+>> test program gets ENODEV immediately
+>> keventd sleeps until the cmd is complete
+>> this is suboptimal since it starves other users of keventd while
+>> waiting for the command to complete, but it is better than an oops
+>>     
+>
+> As you said, we can do better. It's not correct to make
+> class_interface's remove_dev hook, sg_remove wait for the completion
+> of all the commands.
+>
+> The main problem is about the lifetime of sg_dev and sg_fd. I think
+> that we can fix it in a simpler and better way.
+>
+> You use kref for sg_dev. We can use kref for sg_fd too. I think that
+> that's all we need to do.
+>
+>   
+Thanks for the review.  Your patch behaves very similarly to my patch
+with the wait_event() removed from sg_remove().  With my patch, it was
+not strictly necessary for sg_remove() to wait until all commands had
+gone through sg_rq_end_io() - the refcounting, locking, and other checks
+in my patch would have taken care of freeing sdp, sfp, and related
+resources at the right time, even if sg_remove() didn't wait.  The
+reason I added the wait is because without it keventd would still sleep
+(outside of sg_remove()) waiting for the command to complete anyway,
+except that when the command did complete, the kernel would spew some
+scary-looking error messages:
 
-No, a generic abstraction is "(b)" in my quoted paragraph.
+mptscsih: ioc1: ERROR - Received a mf that was already freed
+mptscsih: ioc1: ERROR - req_idx=beaf req_idx_MR=beaf mf=ce504b00
+mr=00000000 sc=00000000
 
-But it's certainly easy to create an OSD block device client, that 
-simulates sector-based storage, if you are motivated in that direction.
+So I figured it would be better to wait in sg_remove() and avoid the
+error above, instead of waiting somewhere else for the same amount of
+time and getting an error.  With your patch, I get the above error
+again, and keventd blocks for the same amount of time, so initially it
+did not look like an improvement.  However, since this issue has
+surfaced again, I went ahead and analyzed why keventd is waiting outside
+of sg_remove(), and discovered that it is a bug in mptscsih (*).  When I
+retested with sym53c8xx or open-iscsi, keventd did not block waiting for
+the command to complete.  I will send a patch for mptscsih later.
 
-But that only makes sense if you want the extra overhead (square peg, 
-round hole), which no sane person will want.  Face it, only screwballs 
-want to mount ext4 on an OSD.
+So we can accomplish the same effect with my patch just by removing the
+wait_event() in sg_remove() and the other code associated with it.  Now
+the question is - do we still want to use krefs for the sg_fd?  I had
+considered it when coming up with my patch, but I decided not to add the
+overhead of two extra atomic ops per command.  Atomic ops for opening
+and closing fds are OK, but I didn't want to slow down the command
+processing critical paths.  I haven't measured the overhead, so maybe it
+isn't too bad, but it is something to consider.
 
+Also, I spent a lot of time analyzing locks and potential races with my
+patch, and your patch reverts some of the fixes that I incorporated in
+my patch.  Just to point out one example that I spotted quickly:
+sg_rq_end_io() needs to check srp->orphan and set srp->done = 1 while
+holding sfp->rq_list_lock to avoid races with sg_ioctl(SG_IO) (see my
+[PATCH 2/2] sg: fix races with ioctl(SG_IO)).  But if you really want to
+go with a kref on sg_fd and get/put on every command, let me know and I
+will check and test everything again in detail.  If not, I will resubmit
+my patch with the wait_event and associated code removed.
 
->> * Trying to force OSD to export a block device is pushing a square peg 
->> through a round hole.  Thus, the best (and only) alternative is 
->> character device.  What you really want is a Third Way(tm):  a mmap'able 
->> message device, since you really want to export an API to userspace.
-> 
-> only allowing a character tap raises the effort bar on getting other
-> filesystems to use it, because they're all block based ...
+As a side note, scsi_remove_device() is called from keventd when using
+the /sys interface to delete a device, but may be called from a
+different process when using a different interface to delete a device. 
+So under different circumstances the sleep may block rmmod, iscsi_wq,
+etc., instead of keventd.
 
-That's irrelevant, since no one is calling for block-based filesystems 
-to be converted to use OSD.
+(*) Here is why mptscsih causes keventd to sleep:
 
-And I can only imagine the push-back, should someone actually propose 
-doing so.  Filesystems are very much purpose-built for their storage 
-paradigm.
+scsi_remove_device() -> __scsi_remove_device() -> mptscsih_slave_destroy()
+First, mptscsih_search_running_cmds() calls sc->scsi_done()
+(sg_rq_end_io()) on all outstanding commands.
+Then, mptscsih_synchronize_cache() is called.  It has the following check:
 
-	Jeff
+if (vdevice->vtarget->type != TYPE_DISK || vdevice->vtarget->deleted ||
+    !vdevice->configured_lun)
+    return;
 
+However, this check is buggy.  My test is using a tape drive, so the
+type != TYPE_DISK check should make the function return without doing
+anything.  However, vtarget->type appears not to be set.  Also, you
+might hope that the vtarget->deleted check might make the function
+return, but it does not.  So it ends up sending a synchronize cache disk
+command to a tape drive being deleted, and waits for it to complete. 
+Since the tape drive does not do command queueing, this forces it to
+wait for the tape drive seek command previously sent by my test program
+to finish.  But when the seek command does finish, the message frame was
+already freed by mptscsih_search_running_cmds(), so it gives the error
+message above.
 
-
+Tony
 
