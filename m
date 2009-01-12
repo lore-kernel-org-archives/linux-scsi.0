@@ -1,138 +1,145 @@
-From: "linux linux" <linux.tina@gmail.com>
-Subject: Re: need fusion driver guide
-Date: Mon, 12 Jan 2009 21:43:18 +0530
-Message-ID: <e7b7bf130901120813x3e7a178cwbd17435d669b0e78@mail.gmail.com>
-References: <20090106214538.GA18370@uranus.ravnborg.org>
-	 <1231278625.10475.28.camel@localhost.localdomain>
-	 <e7b7bf130901062002ke59c0dkd7ca0ed73352066f@mail.gmail.com>
-	 <1231302074.19352.12.camel@localhost.localdomain>
-	 <e7b7bf130901062124r18d93598jabcd5628f3cdca41@mail.gmail.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [PATCH] iscsi: Kconfig option for debug prints.
+Date: Mon, 12 Jan 2009 08:58:54 -0800
+Message-ID: <496B76CE.4070000@oracle.com>
+References: <496B62B8.3030402@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:40513 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752612AbZALQNW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jan 2009 11:13:22 -0500
-In-Reply-To: <e7b7bf130901062124r18d93598jabcd5628f3cdca41@mail.gmail.com>
-Content-Disposition: inline
+Received: from rcsinet13.oracle.com ([148.87.113.125]:32747 "EHLO
+	rgminet13.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752645AbZALQ7S (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jan 2009 11:59:18 -0500
+In-Reply-To: <496B62B8.3030402@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Sam Ravnborg <sam@ravnborg.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi@googlegroups.com, linux-scsi <linux-scsi@vger.kernel.org>
 
-HI James,
+Boaz Harrosh wrote:
+> Remove the dark ages /* define debug_print */ in code, to use
+> a Kconfig option. With a system like Kconfig, in code, commented out,
+> configuration options are slavery and hard work.
+> (version control, manual edit ... need I say more)
+> 
+> I've used an "int" config bit-mask so more areas of code can be
+> selected with one Koption, but mainly so that allmodconfig will
+> not turn it on.
+> 
+> bit-1 - will turn on prints for libiscsi.
+> bit-2 - will turn on prints for libiscsi_tcp & iscsi_tcp.
+> 
+> More iscsi drivers should use more bits.
+> 
+> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> ---
+>  drivers/scsi/Kconfig        |   15 +++++++++++++++
+>  drivers/scsi/iscsi_tcp.c    |    7 -------
+>  drivers/scsi/iscsi_tcp.h    |    6 ++++++
+>  drivers/scsi/libiscsi_tcp.c |    7 -------
+>  include/scsi/libiscsi.h     |    3 +--
+>  5 files changed, 22 insertions(+), 16 deletions(-)
+> 
+> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+> index d25d21e..6ef42f6 100644
+> --- a/drivers/scsi/Kconfig
+> +++ b/drivers/scsi/Kconfig
+> @@ -352,6 +352,21 @@ config ISCSI_TCP
+>  
+>  	 http://open-iscsi.org
+>  
+> +config ISCSI_DEBUG
+> +	int "ISCSI debug prints"
+> +	depends on SCSI_ISCSI_ATTRS
+> +	default 0
+> +	help
+> +	  This is a bit-mask that turns some debug printing to Kernel's
+> +	  Messages file. Each bit turns on another area of the code:
+> +	  1 - Turn on prints from iscsi libraries.
+> +	  2 - Turns on prints from iscsi_tcp operations.
 
-I got some idea about fusion driver from this link
-http://bugzilla.kernel.org/show_bug.cgi?id=12195
-
-And i found there is bug in fusion driver (kernel version 2.6.10) from this link
-http://www.nabble.com/MPT-fusion-driver,-better-but-still-buggy-at-errors-handling-under-2.6-td1095505.html
-
-
-
-On Wed, Jan 7, 2009 at 10:54 AM, linux linux <linux.tina@gmail.com> wrote:
-> Hi James,.
-> Now it should be received by all...
-> Many many thanks for the help.
->
-> I am sending the kernel log.
->
->
-> On Wed, Jan 7, 2009 at 9:51 AM, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
->>
->> You still need to turn off html email attachments, otherwise your
->> messages won't be accepted by the mailing lists.  It will be an option
->> like recipient wants text/plain only or something.
->>
->> On Wed, 2009-01-07 at 09:32 +0530, linux linux wrote:
->> > Hi,
->> >
->> > Sam many thanks for ur help.
->> >
->> > Hi James,
->> >
->> > I am getting some error on for fusion device driver.
->> > The error message look like this
->> >
->> >
->> >        2F240F4C226078: 19/12/2008 EST 04:42:45, mptscsih: ioc1: >>
->> > Attempting task abort! (sc=e40df080)
->> >        2F240F6E8C2E00: 19/12/2008 EST 04:42:45, mptbase: ioc1:
->> > IOCStatus(0x0048): SCSI Task Terminated
->> >        2F240F6E905A98: 19/12/2008 EST 04:42:45, mptscsih: ioc1: >>
->> > Attempting task abort! (sc=f7e23680)
->> >
->> > 2F24117BDA2438: 19/12/2008 EST 04:42:50, mptscsih: ioc1: >>
->> > Attempting bus reset! (sc=e40df080)
->> >
->> > After then the server has been rebooted.
->> >
->> > I can see the code is written inside /drivers/message/fussion/
->> > mptscsih.c
->> > The responsible function is
->> > mptscsih_host_reset()
->> > i am very new in SCSI fusion device driver. read some help guide from
->> > google but still i do not understand when the mptscsih_host_reset() is
->> > called by kernel. I normal situation i am not able to see this message
->> > in kernel log.
->> > Can any one help me to understand when these type of kernel message
->> > are comming, is it foe SCSI hardware problem ?
->> > when mptscsih_host_reset() will be executed?
->>
->> It looks like a standard error handling escalation sequence.  Why is
->> very hard to tell without the entire kernel log.  Why there wasn't a
->> recovery is also not clear.
->>
-yes its error handler sequence. But as describe into the above
-link(http://www.nabble.com/MPT-fusion-driver,-better-but-still-buggy-at-errors-handling-under-2.6-td1095505.html)
-that
-2.6.xx  xx <= 11, enters an infinit loop attempting to reset the SCSI
-        so the box gets unusable and requires a rough power cycle to recover.
-
-So i think that is  the reason to restart the server(after "Attempting host
-reset! )as a power cycle is required to recover.
-
-when next time server was booting i got  some kernel messages on
-recovery of SCSI. So recovery is done after reboot the server.
-
-Still i do not know how to over come this bug fo infinite loop. If you
-have any suggestion please let me know.
+Is this bit 1, bit 2, or value 1, value 2?  Not clear to me.
+If it's bit numbers, what about bit 0?
 
 
+> +	  Note to programmers: Use more bits in this bit-mask for other iscsi
+> +	  drivers.
+> +	  If you found a problem with ISCSI, please turn this on to
+> +	  help us debug the problem. Send the Messages file plus problem
+> +	  description to open-iscsi@googlegroups.com mailing-list
+> +
+>  source "drivers/scsi/cxgb3i/Kconfig"
+>  
+>  config SGIWD93_SCSI
+> diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+> index a566aa9..af092a8 100644
+> --- a/drivers/scsi/iscsi_tcp.c
+> +++ b/drivers/scsi/iscsi_tcp.c
+> @@ -48,13 +48,6 @@ MODULE_AUTHOR("Mike Christie <michaelc@cs.wisc.edu>, "
+>  	      "Alex Aizman <itn780@yahoo.com>");
+>  MODULE_DESCRIPTION("iSCSI/TCP data-path");
+>  MODULE_LICENSE("GPL");
+> -#undef DEBUG_TCP
+> -
+> -#ifdef DEBUG_TCP
+> -#define debug_tcp(fmt...) printk(KERN_INFO "tcp: " fmt)
+> -#else
+> -#define debug_tcp(fmt...)
+> -#endif
+>  
+>  static struct scsi_transport_template *iscsi_sw_tcp_scsi_transport;
+>  static struct scsi_host_template iscsi_sw_tcp_sht;
+> diff --git a/drivers/scsi/iscsi_tcp.h b/drivers/scsi/iscsi_tcp.h
+> index ca6b7bc..1341b02 100644
+> --- a/drivers/scsi/iscsi_tcp.h
+> +++ b/drivers/scsi/iscsi_tcp.h
+> @@ -25,6 +25,12 @@
+>  #include <scsi/libiscsi.h>
+>  #include <scsi/libiscsi_tcp.h>
+>  
+> +#if (CONFIG_ISCSI_DEBUG & 2)
+> +#define debug_tcp(fmt...) printk(KERN_INFO "tcp: " fmt)
+> +#else
+> +#define debug_tcp(fmt...)
+> +#endif
+> +
+>  struct socket;
+>  struct iscsi_tcp_conn;
+>  
+> diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
+> index 12354c5..4c9f827 100644
+> --- a/drivers/scsi/libiscsi_tcp.c
+> +++ b/drivers/scsi/libiscsi_tcp.c
+> @@ -49,13 +49,6 @@ MODULE_AUTHOR("Mike Christie <michaelc@cs.wisc.edu>, "
+>  	      "Alex Aizman <itn780@yahoo.com>");
+>  MODULE_DESCRIPTION("iSCSI/TCP data-path");
+>  MODULE_LICENSE("GPL");
+> -#undef DEBUG_TCP
+> -
+> -#ifdef DEBUG_TCP
+> -#define debug_tcp(fmt...) printk(KERN_INFO "tcp: " fmt)
+> -#else
+> -#define debug_tcp(fmt...)
+> -#endif
+>  
+>  static int iscsi_tcp_hdr_recv_done(struct iscsi_tcp_conn *tcp_conn,
+>  				   struct iscsi_segment *segment);
+> diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+> index 7360e19..2421c2a 100644
+> --- a/include/scsi/libiscsi.h
+> +++ b/include/scsi/libiscsi.h
+> @@ -45,8 +45,7 @@ struct iscsi_session;
+>  struct iscsi_nopin;
+>  struct device;
+>  
+> -/* #define DEBUG_SCSI */
+> -#ifdef DEBUG_SCSI
+> +#if (CONFIG_ISCSI_DEBUG & 1)
+>  #define debug_scsi(fmt...) printk(KERN_INFO "iscsi: " fmt)
+>  #else
+>  #define debug_scsi(fmt...)
 
 
-
-
-
->
-> Pls let me know when this kind of error handler is happened?
-> is it for SCSI hard ware failure?
->
->> > Only one time i show this message in my kernel log, is there any way
->> > to reproduce this message manually?
->> >
->> > where i get much info regarding this issue and SCSI fusion kernel
->> > driver except kernel code itself?
->> >
->> > I am writting this after reading help doc from
->> > http://www.lsi.com/insight_center/tech_trends/advanced_architectures/fusionmpt/index.html
->> >
->> > But still i am very few knowledge to solve it.
->> >
->> > waiting for your help.
->>
->> There's not much else I can do.  If you post the entire kernel log, the
->> fusion people hang out on this list and might see something that
->> indicates what the problem is.
->>
->> James
->>
->>
->
-
-Thanks
-Tina
-http://teachmeembedded.blogspot.com/
+-- 
+~Randy
