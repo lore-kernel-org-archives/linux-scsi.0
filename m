@@ -1,57 +1,89 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 7/9] exofs: mkexofs
-Date: Tue, 13 Jan 2009 14:03:28 +0000
-Message-ID: <20090113140328.3aab5a35@lxorguk.ukuu.org.uk>
-References: <4947BFAA.4030208@panasas.com>
-	<4947CA5C.50104@panasas.com>
-	<20081229121423.efde9d06.akpm@linux-foundation.org>
-	<495B8D90.1090004@panasas.com>
-	<1230739053.3408.74.camel@localhost.localdomain>
-	<4960D3CA.2000202@panasas.com>
-	<1231783926.3256.29.camel@localhost.localdomain>
-	<496B989F.7050907@garzik.org>
-	<1231790190.15161.29.camel@localhost.localdomain>
-	<496BA671.3070900@garzik.org>
-	<1231802758.27151.18.camel@localhost.localdomain>
-	<496C9ABE.8060300@garzik.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] Restart scsi_device_lookup_by_target
+Date: Tue, 13 Jan 2009 15:05:41 +0100
+Message-ID: <496C9FB5.60908@suse.de>
+References: <496C9C26.9020106@suse.de> <20090113135856.GE29283@parisc-linux.org> <496C9EF3.2090409@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <496C9ABE.8060300@garzik.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Matthew Wilcox <matthew@wil.cx>, Benny Halevy <bhalevy@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Avishay Traeger <avishay@gmail.com>, open-osd development <osd-dev@open-osd.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:41288 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752112AbZAMOFn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Jan 2009 09:05:43 -0500
+Received: from Relay2.suse.de (mail2.suse.de [195.135.221.8])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx2.suse.de (Postfix) with ESMTP id DFA2948538
+	for <linux-scsi@vger.kernel.org>; Tue, 13 Jan 2009 15:05:41 +0100 (CET)
+In-Reply-To: <496C9EF3.2090409@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-> It seems unlikely drive manufacturers would get excited about a 
-> sub-optimal solution that does not even approach using the full 
-> potential of the product.
+Hi Matthew,
 
-You forgot the more important people
+Hannes Reinecke wrote:
+> Matthew Wilcox wrote:
+>> On Tue, Jan 13, 2009 at 02:50:30PM +0100, Hannes Reinecke wrote:
+>>> @@ -1131,14 +1137,15 @@ EXPORT_SYMBOL(__scsi_device_lookup_by_targe=
+t);
+>>>  struct scsi_device *scsi_device_lookup_by_target(struct scsi_targe=
+t=20
+>>> *starget,
+>>>                           uint lun)
+>>>  {
+>>> -    struct scsi_device *sdev;
+>>> +    struct scsi_device *sdev =3D NULL;
+>>>      struct Scsi_Host *shost =3D dev_to_shost(starget->dev.parent);
+>>>      unsigned long flags;
+>>> =20
+>>>      spin_lock_irqsave(shost->host_lock, flags);
+>>> -    sdev =3D __scsi_device_lookup_by_target(starget, lun);
+>>> + restart:
+>>> +    sdev =3D __scsi_device_lookup_by_target(starget, sdev, lun);
+>>>      if (sdev && scsi_device_get(sdev))
+>>> -        sdev =3D NULL;
+>>> +        goto restart;
+>>>      spin_unlock_irqrestore(shost->host_lock, flags);
+>>> =20
+>>>      return sdev;
+>>
+>> Backwards jumps are generally disapproved of.  How about:
+>>
+>>     spin_lock_irqsave(shost->host_lock, flags);
+>>     for (;;) {
+>>         sdev =3D __scsi_device_lookup_by_target(starget, sdev, lun);
+>>         if (!sdev || !scsi_device_get(sdev))
+>>             break;
+>>     }
+>>     spin_unlock_irqrestore(shost->host_lock, flags);
+>>
+>>
+> I must say I don't really like the for(;;) construct.
+> And it's really confusing as we want to find an sdev, so breaking
+> if it's _not_ found is ... weird.
+>=20
+What about
 
-Mr Customer, would you like your data centre to use a new magic OSD fs or
-the existing one you trust.
+	do {
+		sdev =3D __scsi_device_lookup_by_target(starget, sdev, lun);
+	} while (sdev && scsi_device_get(sdev));
 
-Now in my experience that is a *dumb* question because the answer is
-obvious...
+?
+Should be identical and easier to read ...
 
-> Plus, given the existence of an OSD-specific filesystem (exofs, at the 
-> very least), it seems unlikely that end users who own OSDs would choose 
-> the sub-optimal solution when an OSD-specific filesystem exists.
+Cheers,
 
-Actually until you can show zillions of users stably using them the
-people with the money won't buy them in the first place 8)
-
-> > ready for the consumer market until 2011.  That's not really going to
-> > convince the disk vendors that OSD based devices should be marketed
-> > today.
-> 
-> And you have a similar sales job and lag time, when hacking -- read 
-> destabilizing -- a filesystem to work with OSDs as well as sector-based 
-> devices.
-
-2011 sounds optimistic for major OSD adoption in any space except for
-flash storage where OSD type knowledge means you can do much better jobs
-on erase management.
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
