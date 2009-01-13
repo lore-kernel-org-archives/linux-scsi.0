@@ -1,81 +1,68 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] Restart scsi_device_lookup_by_target
-Date: Tue, 13 Jan 2009 15:17:46 +0100
-Message-ID: <496CA28A.9050600@suse.de>
-References: <496C9C26.9020106@suse.de> <20090113135856.GE29283@parisc-linux.org> <496C9EF3.2090409@suse.de> <20090113141141.GF29283@parisc-linux.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 7/9] exofs: mkexofs
+Date: Tue, 13 Jan 2009 09:17:18 -0500
+Message-ID: <496CA26E.1080708@garzik.org>
+References: <4947BFAA.4030208@panasas.com>	<4947CA5C.50104@panasas.com>	<20081229121423.efde9d06.akpm@linux-foundation.org>	<495B8D90.1090004@panasas.com>	<1230739053.3408.74.camel@localhost.localdomain>	<4960D3CA.2000202@panasas.com>	<1231783926.3256.29.camel@localhost.localdomain>	<496B989F.7050907@garzik.org>	<1231790190.15161.29.camel@localhost.localdomain>	<496BA671.3070900@garzik.org>	<1231802758.27151.18.camel@localhost.localdomain>	<496C9ABE.8060300@garzik.org> <20090113140328.3aab5a35@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.suse.de ([195.135.220.2]:48466 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751747AbZAMORt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Jan 2009 09:17:49 -0500
-In-Reply-To: <20090113141141.GF29283@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20090113140328.3aab5a35@lxorguk.ukuu.org.uk>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Matthew Wilcox <matthew@wil.cx>, Benny Halevy <bhalevy@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Avishay Traeger <avishay@gmail.com>, open-osd development <osd-dev@open-osd.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Hi Matthew,
+Alan Cox wrote:
+>> It seems unlikely drive manufacturers would get excited about a 
+>> sub-optimal solution that does not even approach using the full 
+>> potential of the product.
+> 
+> You forgot the more important people
+> 
+> Mr Customer, would you like your data centre to use a new magic OSD fs or
+> the existing one you trust.
+> 
+> Now in my experience that is a *dumb* question because the answer is
+> obvious...
 
-Matthew Wilcox wrote:
-> On Tue, Jan 13, 2009 at 03:02:27PM +0100, Hannes Reinecke wrote:
->> Matthew Wilcox wrote:
->>> Backwards jumps are generally disapproved of.  How about:
->>>
->>> 	spin_lock_irqsave(shost->host_lock, flags);
->>> 	for (;;) {
->>> 		sdev =3D __scsi_device_lookup_by_target(starget, sdev, lun);
->>> 		if (!sdev || !scsi_device_get(sdev))
->>> 			break;
->>> 	}
->>> 	spin_unlock_irqrestore(shost->host_lock, flags);
->=20
->> I must say I don't really like the for(;;) construct.
->=20
-> I'd be fine with:
->=20
-> 	do {
-> 		sdev =3D __scsi_device_lookup_by_target(starget, sdev, lun);
-> 	} while (sdev && scsi_device_get(sdev));
->=20
-> though I find that slightly less clear than the for (;;) construct.
->=20
-Opinons differ.
-Something for the maintainer to decide. James?
+The choice is between "new magic OSD fs" and "new fs that used to be 
+ext4, before we hacked it up".
 
->> And it's really confusing as we want to find an sdev, so breaking
->> if it's _not_ found is ... weird.
->=20
-> Those are the two conditions when we want to stop trying -- if there'=
-s
-> no device or if the device we've found is bad.  I can definitely see =
-an
-> argument for splitting the two conditions to make that more obvious. =
- I
-> can also see an argument for not returning an sdev in the _DEL state
-> from __scsi_device_lookup_by_target in the first place.
->=20
-Not sure if that would work with esp_scsi.c (the other user of
-__scsi_device_lookup_by_target()).
-And don't have a device to try it with.
+"existing one you trust" is not an option...
 
-But modifying __scsi_device_lookup_by_target() would alter the behaviou=
-r,
-whereas this patch does not.
 
-Cheers,
+>> Plus, given the existence of an OSD-specific filesystem (exofs, at the 
+>> very least), it seems unlikely that end users who own OSDs would choose 
+>> the sub-optimal solution when an OSD-specific filesystem exists.
+> 
+> Actually until you can show zillions of users stably using them the
+> people with the money won't buy them in the first place 8)
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yeah, at this point the discussion devolves into talk of carts, horses, 
+chickens and eggs...   :)
+
+
+>>> ready for the consumer market until 2011.  That's not really going to
+>>> convince the disk vendors that OSD based devices should be marketed
+>>> today.
+>> And you have a similar sales job and lag time, when hacking -- read 
+>> destabilizing -- a filesystem to work with OSDs as well as sector-based 
+>> devices.
+> 
+> 2011 sounds optimistic for major OSD adoption in any space except for
+> flash storage where OSD type knowledge means you can do much better jobs
+> on erase management.
+
+His number, not mine...
+
+At this point OSD is a fun and interesting research project.
+
+Overall, I think Linux should have OSD support so that we are ready for 
+whatever the future brings.  Even if OSD goes nowhere, it will still 
+have more users than many of the existing Linux drivers and architectures :)
+
+	Jeff
+
+
+
