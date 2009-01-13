@@ -1,69 +1,59 @@
-From: Andrew McGill <list2008-x9yJDnhTiMLk1uMJSBkQmQ@public.gmane.org>
-Subject: Re: [PATCH] iscsi: Fix some debug printf types
-Date: Tue, 13 Jan 2009 08:11:29 +0200
-Message-ID: <200901130811.29281.list2008@lunch.za.net>
-References: <496B621A.6000300@panasas.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: 2.6.29-rc1: Reported regressions from 2.6.28
+Date: Tue, 13 Jan 2009 12:23:01 +0100
+Message-ID: <200901131223.02813.rjw@sisk.pl>
+References: <XU-8icArWLM.A.UpG.8GfaJB@chimera> <200901112001.00394.rjw@sisk.pl> <3f9a31f40901121924v86b528er652b27e670c5fe0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <grbounce-FC1hwAUAAAA0O9VQcsxVj1UPjHD9r3x_=glio-open-iscsi=m.gmane.org-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <496B621A.6000300-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Post: <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://googlegroups.com/group/open-iscsi/subscribe>,
-	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Cc: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>, Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <3f9a31f40901121924v86b528er652b27e670c5fe0@mail.gmail.com>
+Content-Disposition: inline
+Sender: linux-acpi-owner@vger.kernel.org
+To: Jaswinder Singh Rajput <jaswinderlinux@gmail.com>
+Cc: Ingo Molnar <mingo@elte.hu>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On Tuesday 13 January 2009, Jaswinder Singh Rajput wrote:
+> Hello Rafael,
+> 
+> On Mon, Jan 12, 2009 at 12:30 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Sunday 11 January 2009, Ingo Molnar wrote:
+> >>
+> >> * Jaswinder Singh Rajput <jaswinderlinux@gmail.com> wrote:
+> >>
+> >> > On Sun, Jan 11, 2009 at 4:42 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >> > >
+> >> > > Regressions with patches
+> >> > > ------------------------
+> >> > >
+> >> > > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=12428
+> >> > > Subject         : Build error on latest git
+> >> > > Submitter       : Petr Titera <P.Titera@century.cz>
+> >> > > Date            : 2009-01-11 9:49 (1 days old)
+> >> > > References      : http://marc.info/?l=linux-kernel&m=123166856318712&w=4
+> >> > > Handled-By      : Petr Titera <P.Titera@century.cz>
+> >> > > Patch           : http://marc.info/?l=linux-kernel&m=123167509024996&w=4
+> >> >
+> >> > This is a wrong fix, asm/smp.h should only be included when CONFIG_SMP
+> >> > is defined.
+> >> >
+> >> > I am still in the process of cleaning non-smp data from asm/smp.h for
+> >> > x86
+> >> >
+> >> > Attach patch is the solution for the time being
+> >> >
+> >> > Ingo, can you please put this in urgent queue.
+> >>
+> >> yes, it already is - see below.
+> >
+> > Link to this patch was added to the bug entry.  Pleaes let me know or close the
+> > bug when it's merged.
+> >
+> 
+> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=4884d8e6a05026ec906355436cea9dc1acb1d09e
 
-My man page for (glibc) printf says that "Z" is specific to libc5, and 
-that "z" is better -- man -P 'less -p" z "' fprintf   Does the underlying 
-printf support "Z" rather than "z"?
+Thanks, the bug has been closed.
 
-QOTD>>
- z 
-  A following integer conversion corresponds to a size_t or ssize_t argument.
-  (Linux libc5 has Z with this meaning. Don't use it.)
-
-&:-)
-
-
-On Monday 12 January 2009 17:30:34 Boaz Harrosh wrote:
-> A couple of prints at lib/iscsi_tcp had the %Z missing from the
-> kprint format string. Just to show that debug_prints are not enabled
-> much.
->
-> Signed-off-by: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-> ---
->  drivers/scsi/iscsi_tcp.c    |    2 +-
->  drivers/scsi/libiscsi_tcp.c |    2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-> index 23808df..a566aa9 100644
-> --- a/drivers/scsi/iscsi_tcp.c
-> +++ b/drivers/scsi/iscsi_tcp.c
-> @@ -415,7 +415,7 @@ iscsi_sw_tcp_send_linear_data_prep(struct iscsi_conn
-> *conn, void *data, struct hash_desc *tx_hash = NULL;
->  	unsigned int hdr_spec_len;
->
-> -	debug_tcp("%s(%p, datalen=%d%s)\n", __func__, tcp_conn, len,
-> +	debug_tcp("%s(%p, datalen=%Zd%s)\n", __func__, tcp_conn, len,
->  		  conn->datadgst_en? ", digest enabled" : "");
->
->  	/* Make sure the datalen matches what the caller
-> diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
-> index a745f91..12354c5 100644
-> --- a/drivers/scsi/libiscsi_tcp.c
-> +++ b/drivers/scsi/libiscsi_tcp.c
-> @@ -356,7 +356,7 @@ iscsi_segment_seek_sg(struct iscsi_segment *segment,
->  	struct scatterlist *sg;
->  	unsigned int i;
->
-> -	debug_scsi("iscsi_segment_seek_sg offset %u size %llu\n",
-> +	debug_scsi("iscsi_segment_seek_sg offset %u size %Zu\n",
->  		  offset, size);
->  	__iscsi_segment_init(segment, size, done, hash);
->  	for_each_sg(sg_list, sg, sg_count, i) {
+Rafael
