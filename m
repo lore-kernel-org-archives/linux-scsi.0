@@ -1,62 +1,57 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [Open/iSCSI] Memory leak in repetitive --login/--logout with
- v2.0-870.1
-Date: Mon, 12 Jan 2009 20:41:13 -0600
-Message-ID: <496BFF49.5030204@cs.wisc.edu>
-References: <1231539756.4560.1028.camel@haakon2.linux-iscsi.org>	 <496AA4D1.9060701@cs.wisc.edu> <1231806432.1274.6.camel@haakon2.linux-iscsi.org> <496BED4A.7030006@cs.wisc.edu>
+From: Jaswinder Singh Rajput <jaswinderlinux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: 2.6.29-rc1: Reported regressions from 2.6.28
+Date: Tue, 13 Jan 2009 08:54:33 +0530
+Message-ID: <3f9a31f40901121924v86b528er652b27e670c5fe0@mail.gmail.com>
+References: <XU-8icArWLM.A.UpG.8GfaJB@chimera>
+	 <3f9a31f40901110546h4c069b5dx9726a0fbf8caf5a1@mail.gmail.com>
+	 <20090111135237.GA20184@elte.hu> <200901112001.00394.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050906010300060306030404"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:59343 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754979AbZAMClX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jan 2009 21:41:23 -0500
-In-Reply-To: <496BED4A.7030006@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <200901112001.00394.rjw-KKrjLPT3xs0@public.gmane.org>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
+Cc: Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Adrian Bunk <bunk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: open-iscsi@googlegroups.com
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
 
-This is a multi-part message in MIME format.
---------------050906010300060306030404
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Hello Rafael,
 
-Mike Christie wrote:
-> Nicholas A. Bellinger wrote:
-> 
->> Ok, I still have my hands full with LIO v3.0 code atm, so I am not sure
->> how soon I could get to this..
+On Mon, Jan 12, 2009 at 12:30 AM, Rafael J. Wysocki <rjw-KKrjLPT3xs0@public.gmane.org> wrote:
+> On Sunday 11 January 2009, Ingo Molnar wrote:
 >>
-> 
-> Don't worry about it. I can replicate it here.
-> 
+>> * Jaswinder Singh Rajput <jaswinderlinux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+>>
+>> > On Sun, Jan 11, 2009 at 4:42 PM, Rafael J. Wysocki <rjw-KKrjLPT3xs0@public.gmane.org> wrote:
+>> > >
+>> > > Regressions with patches
+>> > > ------------------------
+>> > >
+>> > > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=12428
+>> > > Subject         : Build error on latest git
+>> > > Submitter       : Petr Titera <P.Titera-0E4lWjIyFdTrBKCeMvbIDA@public.gmane.org>
+>> > > Date            : 2009-01-11 9:49 (1 days old)
+>> > > References      : http://marc.info/?l=linux-kernel&m=123166856318712&w=4
+>> > > Handled-By      : Petr Titera <P.Titera-0E4lWjIyFdTrBKCeMvbIDA@public.gmane.org>
+>> > > Patch           : http://marc.info/?l=linux-kernel&m=123167509024996&w=4
+>> >
+>> > This is a wrong fix, asm/smp.h should only be included when CONFIG_SMP
+>> > is defined.
+>> >
+>> > I am still in the process of cleaning non-smp data from asm/smp.h for
+>> > x86
+>> >
+>> > Attach patch is the solution for the time being
+>> >
+>> > Ingo, can you please put this in urgent queue.
+>>
+>> yes, it already is - see below.
+>
+> Link to this patch was added to the bug entry.  Pleaes let me know or close the
+> bug when it's merged.
+>
 
-Crazy, I guess it is a leak we always had (at least back to 2.6.22 (did 
-not look firther)), and no one noticed. Here is a patch. I will send it 
-to James with some other patches I had.
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=4884d8e6a05026ec906355436cea9dc1acb1d09e
 
-Thanks for the report.
-
---------------050906010300060306030404
-Content-Type: text/plain;
- name="libiscsi-fix-pool-queue-leak.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="libiscsi-fix-pool-queue-leak.patch"
-
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 7225b6e..257c241 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -1981,6 +1981,7 @@ void iscsi_pool_free(struct iscsi_pool *q)
- 		kfree(q->pool[i]);
- 	if (q->pool)
- 		kfree(q->pool);
-+	kfree(q->queue);
- }
- EXPORT_SYMBOL_GPL(iscsi_pool_free);
- 
-
---------------050906010300060306030404--
+--
+JSR
