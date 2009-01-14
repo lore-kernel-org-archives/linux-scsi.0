@@ -1,72 +1,60 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: support of sg_iovec in bsg's struct sg_io_v4
-Date: Wed, 14 Jan 2009 20:01:07 +0200
-Message-ID: <496E2863.40103@panasas.com>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH] [SCSI] Improve SCSI_LOGGING Kconfig entry
+Date: Wed, 14 Jan 2009 11:14:32 -0800
+Message-ID: <20090114191432.20337.74957.stgit@fritz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:25806 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753084AbZANSBM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2009 13:01:12 -0500
+Received: from mga14.intel.com ([143.182.124.37]:35632 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753394AbZANTOe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Jan 2009 14:14:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
+To: linux-scsi@vger.kernel.org
+Cc: robert.w.love@intel.com
 
-Is below just missing or is there something I do not understand?
+The Kconfig entry for SCSI_LOGGING refers the reader to
+drivers/scsi/scsi.c, but I didn't find any useful information
+there. There is certainly logging code in that file, but the
+logging types and logging levels are described in
+drivers/scsi/scsi_logging.h.
 
-It looks like the conversion from struct sg_io_hdr to struct sg_io_v4 the use
-of sg_iovec was dropped. Even though all the members and code comments
-say it is the same.
+Also, the procfs file referred to in the section is incorrect.
+It should be /proc/sys/dev/scsi/logging_level and not
+/proc/scsi/scsi.
 
-This adds the support in bsg and struct sg_io_v4 exactly in the same way
-it was done in sg with struct sg_io_hdr.
-
-BTW why is the ioctl SG_IO defined exactly the same for sg.c and bsg.c
-even though they have none compatible API/ABI? Is that because we have the
-protection of the first __s32 member that is 'Q' for bsg and 'S' or 0 for
-sg? Is that usually done with ioctl's?
-
-Not-signed-or-tested: Boaz Harrosh <bharrosh@panasas.com>
+Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
-git diff --stat -p block/bsg.c
- block/bsg.c |   18 ++++++++++++++----
- 1 files changed, 14 insertions(+), 4 deletions(-)
 
-diff --git a/block/bsg.c b/block/bsg.c
-index d414bb5..1489458 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -285,8 +285,13 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, fmode_t has_write_perm)
- 		next_rq->cmd_type = rq->cmd_type;
+ drivers/scsi/Kconfig |   13 +++++++------
+ 1 files changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 256c7be..3710ad1 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -224,14 +224,15 @@ config SCSI_LOGGING
+ 	  can enable logging by saying Y to "/proc file system support" and
+ 	  "Sysctl support" below and executing the command
  
- 		dxferp = (void*)(unsigned long)hdr->din_xferp;
--		ret =  blk_rq_map_user(q, next_rq, NULL, dxferp,
--				       hdr->din_xfer_len, GFP_KERNEL);
-+		if (hdr->din_iovec_count)
-+			ret = blk_rq_map_user_iov(q, next_rq, NULL, dxferp,
-+						  hdr->din_iovec_count,
-+						  hdr->din_xfer_len, GFP_KERNEL);
-+		else
-+			ret =  blk_rq_map_user(q, next_rq, NULL, dxferp,
-+					       hdr->din_xfer_len, GFP_KERNEL);
- 		if (ret)
- 			goto out;
- 	}
-@@ -301,8 +306,13 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, fmode_t has_write_perm)
- 		dxfer_len = 0;
+-	  echo "scsi log token [level]" > /proc/scsi/scsi
++	  echo <bitmask> > /proc/sys/dev/scsi/logging_level
  
- 	if (dxfer_len) {
--		ret = blk_rq_map_user(q, rq, NULL, dxferp, dxfer_len,
--				      GFP_KERNEL);
-+		if (hdr->dout_iovec_count)
-+			ret = blk_rq_map_user_iov(q, rq, NULL, dxferp,
-+						  hdr->dout_iovec_count,
-+						  dxfer_len, GFP_KERNEL);
-+		else
-+			ret = blk_rq_map_user(q, rq, NULL, dxferp, dxfer_len,
-+					      GFP_KERNEL);
- 		if (ret)
- 			goto out;
- 	}
+-	  at boot time after the /proc file system has been mounted.
++	  where <bitmask> is a four byte value representing the logging type
++	  and logging level for each type of logging selected.
+ 
+-	  There are a number of things that can be used for 'token' (you can
+-	  find them in the source: <file:drivers/scsi/scsi.c>), and this
+-	  allows you to select the types of information you want, and the
+-	  level allows you to select the level of verbosity.
++	  There are a number of logging types and you can find them in the
++	  source at <file:drivers/scsi/scsi_logging.h>. The logging levels
++	  are also described in that file and they determine the verbosity of
++	  the logging for each logging type.
+ 
+ 	  If you say N here, it may be harder to track down some types of SCSI
+ 	  problems. If you say Y here your kernel will be somewhat larger, but
+
