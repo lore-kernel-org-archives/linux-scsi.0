@@ -1,41 +1,72 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: export bsg.h header to user-mode
-Date: Wed, 14 Jan 2009 18:24:54 +0200
-Message-ID: <496E11D6.20705@panasas.com>
+Subject: support of sg_iovec in bsg's struct sg_io_v4
+Date: Wed, 14 Jan 2009 20:01:07 +0200
+Message-ID: <496E2863.40103@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:9882 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763769AbZANQZD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2009 11:25:03 -0500
-Received: by nf-out-0910.google.com with SMTP id d3so97112nfc.21
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Jan 2009 08:24:59 -0800 (PST)
+Received: from gw-ca.panasas.com ([66.104.249.162]:25806 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753084AbZANSBM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2009 13:01:12 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, open-osd mailing-list <osd-dev@open-osd.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
 
-Hi TOMO.
+Is below just missing or is there something I do not understand?
 
-I'm using bsg.ko to submit SG_IO version-4 commands to scsi devices
-from user-mode application. (version-4 for use of bidi and varlen).
+It looks like the conversion from struct sg_io_hdr to struct sg_io_v4 the use
+of sg_iovec was dropped. Even though all the members and code comments
+say it is the same.
 
-I have not found a bsg.h header in my fedora-10 distribution. Is
-bsg.h exported in kernel-headers-package in latest Kernels? If not
-should we, and how to do it?
+This adds the support in bsg and struct sg_io_v4 exactly in the same way
+it was done in sg with struct sg_io_hdr.
 
-Meanwhile I will manually copy it to /usr/include/linux/bsg.h and see
-if I need to fix any thing so it can be compiled from user-mode.
+BTW why is the ioctl SG_IO defined exactly the same for sg.c and bsg.c
+even though they have none compatible API/ABI? Is that because we have the
+protection of the first __s32 member that is 'Q' for bsg and 'S' or 0 for
+sg? Is that usually done with ioctl's?
 
-Also do you have a small libbsg or something to make it easier for
-use by application? should we maintain such a package?
+Not-signed-or-tested: Boaz Harrosh <bharrosh@panasas.com>
+---
+git diff --stat -p block/bsg.c
+ block/bsg.c |   18 ++++++++++++++----
+ 1 files changed, 14 insertions(+), 4 deletions(-)
 
-Pete from the OSC osd project has his set of headers and library
-which I used now. Should I clean it up and send it? Or should I just 
-keep it as part of the osd project for now? what are the sas and fc
-guys using?
-
-Thanks
-Boaz
+diff --git a/block/bsg.c b/block/bsg.c
+index d414bb5..1489458 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -285,8 +285,13 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, fmode_t has_write_perm)
+ 		next_rq->cmd_type = rq->cmd_type;
+ 
+ 		dxferp = (void*)(unsigned long)hdr->din_xferp;
+-		ret =  blk_rq_map_user(q, next_rq, NULL, dxferp,
+-				       hdr->din_xfer_len, GFP_KERNEL);
++		if (hdr->din_iovec_count)
++			ret = blk_rq_map_user_iov(q, next_rq, NULL, dxferp,
++						  hdr->din_iovec_count,
++						  hdr->din_xfer_len, GFP_KERNEL);
++		else
++			ret =  blk_rq_map_user(q, next_rq, NULL, dxferp,
++					       hdr->din_xfer_len, GFP_KERNEL);
+ 		if (ret)
+ 			goto out;
+ 	}
+@@ -301,8 +306,13 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, fmode_t has_write_perm)
+ 		dxfer_len = 0;
+ 
+ 	if (dxfer_len) {
+-		ret = blk_rq_map_user(q, rq, NULL, dxferp, dxfer_len,
+-				      GFP_KERNEL);
++		if (hdr->dout_iovec_count)
++			ret = blk_rq_map_user_iov(q, rq, NULL, dxferp,
++						  hdr->dout_iovec_count,
++						  dxfer_len, GFP_KERNEL);
++		else
++			ret = blk_rq_map_user(q, rq, NULL, dxferp, dxfer_len,
++					      GFP_KERNEL);
+ 		if (ret)
+ 			goto out;
+ 	}
