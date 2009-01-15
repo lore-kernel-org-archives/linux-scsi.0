@@ -1,102 +1,137 @@
-From: Tony Battersby <tonyb@cybernetics.com>
-Subject: Re: [PATCH 0/2] sg: fix races during device removal (v2)
-Date: Thu, 15 Jan 2009 09:47:23 -0500
-Message-ID: <496F4C7B.2030707@cybernetics.com>
-References: <49625A67.3000304@cybernetics.com> <20090111022525I.fujita.tomonori@lab.ntt.co.jp> <496E4B93.4000507@cybernetics.com> <20090114213917.GB22543@kroah.com> <496E6853.1010005@s5r6.in-berlin.de> <496E6CE1.9040404@cybernetics.com> <496E7993.70307@s5r6.in-berlin.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Aaro Koskinen <Aaro.Koskinen@nokia.com>
+Subject: Re: [PATCH] sym53c8xx_2: Keep transfer negotiations valid (2.6.27.5)
+Date: Thu, 15 Jan 2009 17:13:36 +0200
+Message-ID: <1232032416-21743-1-git-send-email-Aaro.Koskinen@nokia.com>
+References: <4964ABFD.9000807@nokia.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host64.cybernetics.com ([98.174.209.230]:1642 "EHLO
-	mail.cybernetics.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763142AbZAOOr0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Jan 2009 09:47:26 -0500
-In-Reply-To: <496E7993.70307@s5r6.in-berlin.de>
+Received: from smtp.nokia.com ([192.100.122.230]:41969 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753797AbZAOPOO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Jan 2009 10:14:14 -0500
+In-Reply-To: <4964ABFD.9000807@nokia.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Greg KH <greg@kroah.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, dgilbert@interlog.com, James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org
+To: tonyb@cybernetics.com
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
 
-Stefan Richter wrote:
-> Tony Battersby wrote:
->   
->> Stefan Richter wrote:
->>     
->>> If "some other CPU can find a reference to the
->>> object" after the reference count dropped to zero, then the problem is
->>> IMO clear and simple:
->>>
->>> Some site did not increase the refcount when it should.
->>>   
->>>       
->> The original code makes it possible to find the object and get
->> information about it right up until the point that the destructor is
->> called.  However, adding a reference just for this purpose would prevent
->> the object from ever being freed.
->>     
->
-> No, why?
->
-> There is a list or idr with pointers to your objects?  As long as the
-> list contains a pointer to object A, this list needs to own one
-> reference count to A.  Right after A was deregistered from the list, A's
-> reference count is decremented on behalf of the list.
->
-> If some site looks objects up in that list and uses the objects, it
-> increases the refcount of such an object while it accesses the list.
-> When done with the object, it decrements the object's refcount on this
-> site's behalf.
->
-> Eventually, some site will have been the last one to put away a pointer
-> to the object.  Then, and only then, the kref goes down to zero and the
-> destructor is executed.
->
->   
->> Removing the ability to get
->> information about closed fds or deleted devices that still have
->> outstanding commands changes the user-visible behavior,
->>     
->
-> I'm not saying you are to remove such an ability; I'm just saying that
-> as long as any site is ably to get to an object, the refcount of the
-> object can't be zero.  Bring it down to zero _after_ you made the object
-> invisible to others.
->   
+(The patch updated based on testing and comments from Tony Battersby.)
 
-Here is an example the way my patch does it:
+Change the sym53c8xx_2 driver negotiation logic so that the driver will
+tolerate better device removals. Negotiation message(s) will be sent
+with every INQUIRY and REQUEST SENSE command, and whenever there is a
+change in goals or when the device reports check condition.
 
-open fd: kref_init(): refcount = 1
-send command: kref_get(): refcount 1 -> 2
-close fd: kref_put(): refcount 2 -> 1
-/proc access begin: idr_find(); kref_get_not_zero(): refcount 1 -> 2
-/proc access end: kref_put(): refcount 2 -> 1
-command completes: kref_put(): refcount 1 -> 0: idr_remove()
+The patch was made specifically to address the case where you hotswap
+the disk using remove-single-device/add-single-device commands through
+/proc/scsi/scsi. Without the patch the driver keeps using old transfer
+parameters even though the target is reset and reports check condition,
+so the data transfer of the very first INQUIRY will fail.
 
-Here is the alternative:
+Signed-off-by: Aaro Koskinen <Aaro.Koskinen@nokia.com>
+---
+ drivers/scsi/sym53c8xx_2/sym_hipd.c |   35 ++++++++++++++++++++++++++---------
+ drivers/scsi/sym53c8xx_2/sym_hipd.h |    1 +
+ 2 files changed, 27 insertions(+), 9 deletions(-)
 
-open fd: kref_init(): refcount = 1
-send command: kref_get(): refcount 1 -> 2
-close fd: idr_remove(); kref_put(): refcount 2 -> 1
-/proc access begin: idr_find(): *** NOT FOUND ***
-command completes: kref_put(): refcount 1 -> 0
+diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+index 98df165..fe6359d 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_hipd.c
++++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+@@ -1433,13 +1433,12 @@ static int sym_prepare_nego(struct sym_hcb *np, struct sym_ccb *cp, u_char *msgp
+ 	 * Many devices implement PPR in a buggy way, so only use it if we
+ 	 * really want to.
+ 	 */
+-	if (goal->offset &&
+-	    (goal->iu || goal->dt || goal->qas || (goal->period < 0xa))) {
++	if (goal->renego == NS_PPR || (goal->offset &&
++	    (goal->iu || goal->dt || goal->qas || (goal->period < 0xa)))) {
+ 		nego = NS_PPR;
+-	} else if (spi_width(starget) != goal->width) {
++	} else if (goal->renego == NS_WIDE || goal->width) {
+ 		nego = NS_WIDE;
+-	} else if (spi_period(starget) != goal->period ||
+-		   spi_offset(starget) != goal->offset) {
++	} else if (goal->renego == NS_SYNC || goal->offset) {
+ 		nego = NS_SYNC;
+ 	} else {
+ 		goal->check_nego = 0;
+@@ -2049,11 +2048,13 @@ static void sym_setwide(struct sym_hcb *np, int target, u_char wide)
+ 	struct sym_tcb *tp = &np->target[target];
+ 	struct scsi_target *starget = tp->starget;
+ 
+-	if (spi_width(starget) == wide)
+-		return;
+-
+ 	sym_settrans(np, target, 0, 0, 0, wide, 0, 0);
+ 
++	if (wide)
++		tp->tgoal.renego = NS_WIDE;
++	else
++		tp->tgoal.renego = 0;
++	tp->tgoal.check_nego = 0;
+ 	tp->tgoal.width = wide;
+ 	spi_offset(starget) = 0;
+ 	spi_period(starget) = 0;
+@@ -2080,6 +2081,12 @@ sym_setsync(struct sym_hcb *np, int target,
+ 
+ 	sym_settrans(np, target, 0, ofs, per, wide, div, fak);
+ 
++	if (wide)
++		tp->tgoal.renego = NS_WIDE;
++	else if (ofs)
++		tp->tgoal.renego = NS_SYNC;
++	else
++		tp->tgoal.renego = 0;
+ 	spi_period(starget) = per;
+ 	spi_offset(starget) = ofs;
+ 	spi_iu(starget) = spi_dt(starget) = spi_qas(starget) = 0;
+@@ -2106,6 +2113,10 @@ sym_setpprot(struct sym_hcb *np, int target, u_char opts, u_char ofs,
+ 
+ 	sym_settrans(np, target, opts, ofs, per, wide, div, fak);
+ 
++	if (wide || ofs)
++		tp->tgoal.renego = NS_PPR;
++	else
++		tp->tgoal.renego = 0;
+ 	spi_width(starget) = tp->tgoal.width = wide;
+ 	spi_period(starget) = tp->tgoal.period = per;
+ 	spi_offset(starget) = tp->tgoal.offset = ofs;
+@@ -3516,6 +3527,7 @@ static void sym_sir_task_recovery(struct sym_hcb *np, int num)
+ 			spi_dt(starget) = 0;
+ 			spi_qas(starget) = 0;
+ 			tp->tgoal.check_nego = 1;
++			tp->tgoal.renego = 0;
+ 		}
+ 
+ 		/*
+@@ -5135,9 +5147,14 @@ int sym_queue_scsiio(struct sym_hcb *np, struct scsi_cmnd *cmd, struct sym_ccb *
+ 	/*
+ 	 *  Build a negotiation message if needed.
+ 	 *  (nego_status is filled by sym_prepare_nego())
++	 *
++	 *  Always negotiate on INQUIRY and REQUEST SENSE.
++	 *
+ 	 */
+ 	cp->nego_status = 0;
+-	if (tp->tgoal.check_nego && !tp->nego_cp && lp) {
++	if ((tp->tgoal.check_nego ||
++	     cmd->cmnd[0] == INQUIRY || cmd->cmnd[0] == REQUEST_SENSE) &&
++	    !tp->nego_cp && lp) {
+ 		msglen += sym_prepare_nego(np, cp, msgptr + msglen);
+ 	}
+ 
+diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.h b/drivers/scsi/sym53c8xx_2/sym_hipd.h
+index ad07880..233a3d0 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_hipd.h
++++ b/drivers/scsi/sym53c8xx_2/sym_hipd.h
+@@ -354,6 +354,7 @@ struct sym_trans {
+ 	unsigned int dt:1;
+ 	unsigned int qas:1;
+ 	unsigned int check_nego:1;
++	unsigned int renego:2;
+ };
+ 
+ /*
+-- 
+1.5.4.3
 
-The only obvious places to remove the idr are either from the destructor
-(as done by my patch) or from close (which is what you are probably
-thinking).  If you do it from close, /proc no longer gives information
-about fds that have been closed but still have commands pending.  I
-don't see an obvious way to remove the idr from the command completion
-path before kref_put(), since there can be multiple commands
-outstanding, and we want to leave the idr in place until the last
-command completes.
-
-Most users of kref would do the idr_remove() from close(), since the
-object doesn't stay around long enough afterward for it to matter. 
-However, some sg commands can take minutes to complete (or sometimes
-never complete unless the user explicitly takes action to abort them). 
-While there are outstanding commands, the sg module cannot be unloaded,
-and re-opening the sg device and trying to send more commands may hang
-if the old commands need to be aborted first.  It is nice to have some
-way of telling the user why rmmod sg fails and why newly-sent commands
-don't complete.
-
-Tony
