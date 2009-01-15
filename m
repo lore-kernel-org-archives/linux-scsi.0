@@ -1,46 +1,66 @@
-From: Nick Piggin <nickpiggin@yahoo.com.au>
-Subject: Re: Mainline kernel OLTP performance update
-Date: Thu, 15 Jan 2009 18:24:36 +1100
-Message-ID: <200901151824.38658.nickpiggin@yahoo.com.au>
-References: <BC02C49EEB98354DBA7F5DD76F2A9E800317003CB0@azsmsx501.amr.corp.intel.com> <20090115012147.GW29283@parisc-linux.org> <20090114180431.f4a96543.akpm@linux-foundation.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: export bsg.h header to user-mode
+Date: Thu, 15 Jan 2009 17:21:21 +0900
+Message-ID: <20090115172127T.fujita.tomonori@lab.ntt.co.jp>
+References: <496E11D6.20705@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756460AbZAOHZn@vger.kernel.org>
-In-Reply-To: <20090114180431.f4a96543.akpm@linux-foundation.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Matthew Wilcox <matthew@wil.cx>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>, chinang.ma@intel.com, linux-kernel@vger.kernel.org, sharad.c.tripathi@intel.com, arjan@linux.intel.com, andi.kleen@intel.com, suresh.b.siddha@intel.com, harita.chilukuri@intel.com, douglas.w.styner@intel.com, peter.xihong.wang@intel.com, hubert.nueckel@intel.com, chris.mason@oracle.com, srostedt@redhat.com, linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, Anirban Chakraborty <anirban.chakraborty@qlogic.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sh.osrg.net ([192.16.179.4]:52138 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753921AbZAOIVe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Jan 2009 03:21:34 -0500
+In-Reply-To: <496E11D6.20705@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: bharrosh@panasas.com
+Cc: fujita.tomonori@lab.ntt.co.jp, osd-dev@open-osd.org, linux-scsi@vger.kernel.org
 
-On Thursday 15 January 2009 13:04:31 Andrew Morton wrote:
-> On Wed, 14 Jan 2009 18:21:47 -0700 Matthew Wilcox <matthew@wil.cx> wrote:
+On Wed, 14 Jan 2009 18:24:54 +0200
+Boaz Harrosh <bharrosh@panasas.com> wrote:
 
-> > SLUB would have had a huge negative effect if we were using it -- on the
-> > order of 7% iirc.  SLQB is at least performance-neutral with SLAB.
->
-> We really need to unblock that problem somehow.  I assume that
-> enterprise distros are shipping slab?
+> Hi TOMO.
+> 
+> I'm using bsg.ko to submit SG_IO version-4 commands to scsi devices
+> from user-mode application. (version-4 for use of bidi and varlen).
+> 
+> I have not found a bsg.h header in my fedora-10 distribution. Is
+> bsg.h exported in kernel-headers-package in latest Kernels? If not
+> should we, and how to do it?
 
-SLES11 will ship with SLAB, FWIW. As I said in the SLQB thread, this was
-not due to my input. But I think it was probably the right choice to make
-in that situation.
+I think that we need to export struct sg_io_v4, BSG_PROTOCOL_SCSI, and
+BSG_SUB_PROTOCOL_SCSI_*.
 
-The biggest problem with SLAB for SGI I think is alien caches bloating the
-kmem cache footprint to many GB each on their huge systems, but SLAB has a
-parameter to turn off alien caches anyway so I think that is a reasonable
-workaround.
+We don't install any files in include/scsi/* to userspace.
 
-Given the OLTP regression, and also I'd hate to have to deal with even
-more reports of people's order-N allocations failing... basically with the
-regression potential there, I don't think there was a compelling case
-found to use SLUB (ie. where does it actually help?).
+fujita@viola:~/git/linux-2.6$ cat include/Kbuild
+# Top-level Makefile calls into asm-$(ARCH)
+# List only non-arch directories below
 
-I'm going to propose to try to unblock the problem by asking to merge SLQB
-with a plan to end up picking just one general allocator (and SLOB).
+header-y += asm-generic/
+header-y += linux/
+header-y += sound/
+header-y += mtd/
+header-y += rdma/
+header-y += video/
+header-y += drm/
 
-Given that SLAB and SLUB are fairly mature, I wonder what you'd think of
-taking SLQB into -mm and making it the default there for a while, to see
-if anybody reports a problem?
+I guess that SCSI header files for userspace
+(/usr/include/scsi/scsi.h, sg.h, etc) come from glibc (but I'm not
+sure). They are different from those in kernel.
+
+
+> Meanwhile I will manually copy it to /usr/include/linux/bsg.h and see
+> if I need to fix any thing so it can be compiled from user-mode.
+> 
+> Also do you have a small libbsg or something to make it easier for
+> use by application? should we maintain such a package?
+> 
+> Pete from the OSC osd project has his set of headers and library
+> which I used now. Should I clean it up and send it? Or should I just 
+> keep it as part of the osd project for now? what are the sas and fc
+> guys using?
+
+Doug copies bsg.h to his smp_utils. I do the same thing for my own bsg
+programs. We need glibc (or someone) to install bsg.h properly.
