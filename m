@@ -1,123 +1,132 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+From: Tony Battersby <tonyb@cybernetics.com>
 Subject: Re: [PATCH 0/2] sg: fix races during device removal (v2)
-Date: Thu, 15 Jan 2009 21:43:45 +0100
-Message-ID: <496FA001.1000501@s5r6.in-berlin.de>
-References: <49625A67.3000304@cybernetics.com> <20090111022525I.fujita.tomonori@lab.ntt.co.jp> <496E4B93.4000507@cybernetics.com> <20090114213917.GB22543@kroah.com> <496E6853.1010005@s5r6.in-berlin.de> <496E6CE1.9040404@cybernetics.com> <496E7993.70307@s5r6.in-berlin.de> <496F4C7B.2030707@cybernetics.com> <496F62CC.8000007@s5r6.in-berlin.de> <496F7DB6.6090506@cybernetics.com> <496F84AA.9060708@s5r6.in-berlin.de> <496F8C91.9050208@cybernetics.com>
+Date: Thu, 15 Jan 2009 16:43:37 -0500
+Message-ID: <496FAE09.2040207@cybernetics.com>
+References: <49625A67.3000304@cybernetics.com> <20090111022525I.fujita.tomonori@lab.ntt.co.jp> <496E4B93.4000507@cybernetics.com> <20090114213917.GB22543@kroah.com> <496E6853.1010005@s5r6.in-berlin.de> <496E6CE1.9040404@cybernetics.com> <496E7993.70307@s5r6.in-berlin.de> <496F4C7B.2030707@cybernetics.com> <496F62CC.8000007@s5r6.in-berlin.de> <496F7DB6.6090506@cybernetics.com> <496F84AA.9060708@s5r6.in-berlin.de> <496F8C91.9050208@cybernetics.com> <496FA001.1000501@s5r6.in-berlin.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:42292 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933746AbZAOUoJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Jan 2009 15:44:09 -0500
-In-Reply-To: <496F8C91.9050208@cybernetics.com>
+Received: from host64.cybernetics.com ([98.174.209.230]:4207 "EHLO
+	mail.cybernetics.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752924AbZAOVnk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Jan 2009 16:43:40 -0500
+In-Reply-To: <496FA001.1000501@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Cc: Greg KH <greg@kroah.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, dgilbert@interlog.com, James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org
 
-Tony Battersby wrote:
-> It does work because kref_get_not_zero() must be called while holding a
-> lock that prevents the destructor from freeing the memory
-[...]
-> lock data structure
-> find object
-> kref_get_not_zero() returns false
-> forget object
-> unlock data structure
+Stefan Richter wrote:
+> What are locks for?
+>
+> They serialize accesses to data, in order to protect the data from
+> invalid modifications due to concurrent accesses.
+>   
+...
+> What are reference counters for?
+>
+> Well, the name says it.  I'd better ask:  What is reference counting
+> for?  Of course to prevent premature destruction of objects; IOW to
+> implement lifetime rules.
+>
+> Locks don't implement lifetime rules.  They only implement serialization
+> of accesses.
+>
+>   
+...
+> In your case, you want to extend sg_index_lock's purposes to also
+> serialize access to a state variable of the sg device objects.  Nothing
+> wrong with that, as long as you and, later on, readers of your code are
+> aware what is going on.
+>
+>   
 
-I have three comments to that.  1.:
+OK, so your argument now seems to be that the code just might in
+practice work correctly, but in theory it is not philosophically right,
+semantically pure, or politically correct because it uses fundamental
+programming constructs in odd ways that are not the "right" ways taught
+in CS courses that everyone understands and loves.  That is a valid
+viewpoint I suppose, but I tend to be much more pragmatic.  BTW, you
+might want to do a quick grep of the kernel source for all users of
+atomic_inc_not_zero() and make sure they all follow the established CS
+curricula:
 
-What are locks for?
+net/netfilter/nf_conntrack_expect.c:
 
-They serialize accesses to data, in order to protect the data from
-invalid modifications due to concurrent accesses.
-
-The sg_index_lock for example protects the data structures sg_index_idr
-and sdp->headfp from invalid modifications.  (This can be seen quickly
-from the comment at the definition of sg_index_lock or from looking at
-the occurrences of sg_index_lock in the code.)
-
-What are reference counters for?
-
-Well, the name says it.  I'd better ask:  What is reference counting
-for?  Of course to prevent premature destruction of objects; IOW to
-implement lifetime rules.
-
-Locks don't implement lifetime rules.  They only implement serialization
-of accesses.
-
-Now, data structures like sg_index_idr have a possibly confusing
-relevance to lifetimes of other objects:  sg_index_idr contains
-references to those objects.  Whoever has read access to sg_index_idr
-has the ability to copy references.  Due to that, sg_index_lock happens
-to influence /when/ such copies can be made.  If you want you can
-implement some decisions whether to allow such copies inside the lock.
-
-But note:  The lock's influence is incomplete!  Once a copy of a
-reference has it made out of the serialized region, it can be again
-copied at will.
-
-Hence, lock's don't implement lifetime rules.  They only implement
-serialization of data accesses.
-
-In your case, you want to extend sg_index_lock's purposes to also
-serialize access to a state variable of the sg device objects.  Nothing
-wrong with that, as long as you and, later on, readers of your code are
-aware what is going on.
-
-But I suspect you aren't 100% aware what you are doing:  You are
-speaking of "a lock that prevents the destructor from freeing the
-memory".  That's not precise.  If anything, the *state variable*
-prevents the destructor from doing its thing.  The lock only serializes
-accesses to the state variable.
-
-2.:
-
-Your kref_get_not_zero() tries to use private data of struct kref as a
-state variable of the object.  That's wrong because kref is a reference
-counter, not a bitfield to memorize whatever object-specific states that
-could exist.
-
-The kref is the number of existing references.  It's not saying anything
-about an object's state.  Its saying something about the state of users
-of the object:  There are this many users who aren't done yet.
-
-It can't be a good thing to confuse these independent matters.
-
-3.:
-
-There can be only one correct variant of kref_get...():
-
-void kref_get(struct kref *kref)
+struct nf_conntrack_expect *
+nf_ct_expect_find_get(struct net *net, const struct nf_conntrack_tuple *tuple)
 {
-	WARN_ON(!atomic_read(&kref->refcount));
-	atomic_inc(&kref->refcount);
-	smp_mb__after_atomic_inc();
+	struct nf_conntrack_expect *i;
+
+	rcu_read_lock();
+	i = __nf_ct_expect_find(net, tuple);
+	if (i && !atomic_inc_not_zero(&i->use))
+		i = NULL;
+	rcu_read_unlock();
+
+	return i;
 }
 
-WARN_ON says:  Here is a kernel bug!  And the above WARN_ON is straight
-to the point.
+void nf_ct_expect_put(struct nf_conntrack_expect *exp)
+{
+	if (atomic_dec_and_test(&exp->use))
+		call_rcu(&exp->rcu, nf_ct_expect_free_rcu);
+}
 
-Why is it a bug to call kref_get when the reference count is already 0?
-Simple:  If you can kref_get an object, then it's because you got hold
-of a reference which you are now trying to copy.  One reference is more
-than zero references!  If your code works correctly, then there are no
-references lying around anywhere anymore at the moment when the
-reference count becomes 0.
 
-A kref_get_not_zero() however would only be a valid thing to do if we
-say "well, according to our count there are no references anymore, yet
-we have a couple references left somewhere, people still use them
-(notably to call kref_get_not_zero() on them) --- we don't care, because
-our reference count was only a meaningless approximation in the first
-place.  Err, wait, why do we do this refcounting thing anyway?"
+fs/nfs/nfs4state.c:
 
-So, there can't be any legal usage of a kref_get_not_zero().  If
-references are counted correctly, kref_get_not_zero() will never ever
-come across refcount == 0.
--- 
-Stefan Richter
--=====-==--= ---= -====
-http://arcgraph.de/sr/
+static struct nfs4_state *
+__nfs4_find_state_byowner(struct inode *inode, struct nfs4_state_owner *owner)
+{
+	struct nfs_inode *nfsi = NFS_I(inode);
+	struct nfs4_state *state;
+
+	list_for_each_entry(state, &nfsi->open_states, inode_states) {
+		if (state->owner != owner)
+			continue;
+		if (atomic_inc_not_zero(&state->count))
+			return state;
+	}
+	return NULL;
+}
+
+struct nfs4_state *
+nfs4_get_open_state(struct inode *inode, struct nfs4_state_owner *owner)
+{
+	struct nfs4_state *state, *new;
+	struct nfs_inode *nfsi = NFS_I(inode);
+
+	spin_lock(&inode->i_lock);
+	state = __nfs4_find_state_byowner(inode, owner);
+	spin_unlock(&inode->i_lock);
+	...
+}
+
+void nfs4_put_open_state(struct nfs4_state *state)
+{
+	struct inode *inode = state->inode;
+	struct nfs4_state_owner *owner = state->owner;
+
+	if (!atomic_dec_and_lock(&state->count, &owner->so_lock))
+		return;
+	spin_lock(&inode->i_lock);
+	list_del(&state->inode_states);
+	list_del(&state->open_states);
+	spin_unlock(&inode->i_lock);
+	spin_unlock(&owner->so_lock);
+	iput(inode);
+	nfs4_free_open_state(state);
+	nfs4_put_state_owner(owner);
+}
+
+
+... etc.  But I'm sure all those silly network and RCU developers didn't
+understand what they were doing.
+
+I would still like for some other people to weigh in with their opinions
+before I spend more effort on another patch or else push forward with
+kref_get_not_zero().
+
+Tony
