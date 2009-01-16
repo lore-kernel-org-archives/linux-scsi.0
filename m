@@ -1,54 +1,38 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] libsas: User mode app failed to send ioctl commands to
-	SATA drive.
-Date: Fri, 16 Jan 2009 09:21:05 -0500
-Message-ID: <1232115665.3224.8.camel@localhost.localdomain>
-References: <496B1B31.4050606@marvell.com>
-	 <1231774426.3256.2.camel@localhost.localdomain> <49707B7A.90100@garzik.org>
+From: Tony Battersby <tonyb@cybernetics.com>
+Subject: Re: [PATCH] sym53c8xx_2: Keep transfer negotiations valid (2.6.27.5)
+Date: Fri, 16 Jan 2009 09:28:37 -0500
+Message-ID: <49709995.7040502@cybernetics.com>
+References: <4964ABFD.9000807@nokia.com> <1232032416-21743-1-git-send-email-Aaro.Koskinen@nokia.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:45272 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S936088AbZAPOVJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Jan 2009 09:21:09 -0500
-In-Reply-To: <49707B7A.90100@garzik.org>
+Received: from host64.cybernetics.com ([98.174.209.230]:4136 "EHLO
+	mail.cybernetics.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936431AbZAPO2i (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Jan 2009 09:28:38 -0500
+In-Reply-To: <1232032416-21743-1-git-send-email-Aaro.Koskinen@nokia.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: kewei@marvell.com, linux-scsi@vger.kernel.org, djwong@us.ibm.com, Jason Chu <jasonchu@marvell.com>, Michael Wang <qswang@marvell.com>, Jacky Feng <jfeng@marvell.com>
+To: Aaro Koskinen <Aaro.Koskinen@nokia.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
 
-On Fri, 2009-01-16 at 07:20 -0500, Jeff Garzik wrote:
-> James Bottomley wrote:
-> > On Mon, 2009-01-12 at 18:28 +0800, Ke Wei wrote:
-> >> The context of scsi_host's hostdata points to a sas ha structure with libsas
-> >> module, but the libata casts this pointer to a ata_port structure when ioctl
-> >> sends HDIO_GET_IDENTITY.
-> > 
-> > This is a good find thanks.  I think there's a small problem in the way
-> > the layering is done.
-> > 
-> > I think ata_scsi_ioctl needs to be expanded to pass the port in all the
-> > time.   That way other implementors don't have to remember to special
-> > case HDIO_GET_IDENTITY.
-> > 
-> > When you redo this, ipr will need altering as well (rather than also
-> > having the identity exception added).
-> 
-> The attached appears to be what is needed.  We cannot change 
-> ata_scsi_ioctl() because every libata driver uses that function directly 
-> in its SCSI template as the driver's ioctl hook.
-> 
-> Ack, and I'll apply?
+Aaro Koskinen wrote:
+> (The patch updated based on testing and comments from Tony Battersby.)
+>
+> Change the sym53c8xx_2 driver negotiation logic so that the driver will
+> tolerate better device removals. Negotiation message(s) will be sent
+> with every INQUIRY and REQUEST SENSE command, and whenever there is a
+> change in goals or when the device reports check condition.
+>
+> The patch was made specifically to address the case where you hotswap
+> the disk using remove-single-device/add-single-device commands through
+> /proc/scsi/scsi. Without the patch the driver keeps using old transfer
+> parameters even though the target is reset and reports check condition,
+> so the data transfer of the very first INQUIRY will fail.
+>
+>   
+Thanks for your efforts.  I am a bit busy right now, but I'll give it a
+test next week sometime.  Stay tuned.
 
-That's about precisely what I was thinking ... except I'd call the API
-ata_sas_scsi_ioctl() ... since the ata_sas prefix is what we use for all
-the SAS inputs to libata (and __ usually implies hidden or unlocked).
-
-I'll ack either way.
-
-James
-
-
+Tony
