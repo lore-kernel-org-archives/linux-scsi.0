@@ -1,46 +1,41 @@
-From: Nick Piggin <nickpiggin@yahoo.com.au>
+From: Andi Kleen <andi@firstfloor.org>
 Subject: Re: Mainline kernel OLTP performance update
-Date: Fri, 16 Jan 2009 21:21:07 +1100
-Message-ID: <200901162121.09128.nickpiggin@yahoo.com.au>
-References: <BC02C49EEB98354DBA7F5DD76F2A9E800317003CB0@azsmsx501.amr.corp.intel.com> <20090115135236.GB29283@parisc-linux.org> <84144f020901160216q17f1b558q955d5b8fb7c528c0@mail.gmail.com>
+Date: Fri, 16 Jan 2009 11:20:32 +0100
+Message-ID: <87sknjeemn.fsf@basil.nowhere.org>
+References: <BC02C49EEB98354DBA7F5DD76F2A9E800317003CB0@azsmsx501.amr.corp.intel.com>
+	<200901161503.13730.nickpiggin@yahoo.com.au>
+	<20090115201210.ca1a9542.akpm@linux-foundation.org>
+	<200901161746.25205.nickpiggin@yahoo.com.au>
+	<20090116065546.GJ31013@parisc-linux.org>
+	<1232092430.11429.52.camel@ymzhang>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp109.mail.mud.yahoo.com ([209.191.85.219]:49088 "HELO
-	smtp109.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S932126AbZAPKVb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Jan 2009 05:21:31 -0500
-In-Reply-To: <84144f020901160216q17f1b558q955d5b8fb7c528c0@mail.gmail.com>
-Content-Disposition: inline
+Received: from one.firstfloor.org ([213.235.205.2]:54047 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760440AbZAPKVP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Jan 2009 05:21:15 -0500
+In-Reply-To: <1232092430.11429.52.camel@ymzhang> (Yanmin Zhang's message of "Fri, 16 Jan 2009 15:53:50 +0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Pekka Enberg <penberg@cs.helsinki.fi>
-Cc: Matthew Wilcox <matthew@wil.cx>, Andrew Morton <akpm@linux-foundation.org>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>, chinang.ma@intel.com, linux-kernel@vger.kernel.org, sharad.c.tripathi@intel.com, arjan@linux.intel.com, andi.kleen@intel.com, suresh.b.siddha@intel.com, harita.chilukuri@intel.com, douglas.w.styner@intel.com, peter.xihong.wang@intel.com, hubert.nueckel@intel.com, chris.mason@oracle.com, srostedt@redhat.com, linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, Anirban Chakraborty <anirban.chakraborty@qlogic.com>, Christoph Lameter <cl@linux-foundation.org>
+To: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Nick Piggin <nickpiggin@yahoo.com.au>, Andrew Morton <akpm@linux-foundation.org>, netdev@vger.kernel.org, sfr@canb.auug.org.au, matthew.r.wilcox@intel.com, chinang.ma@intel.com, linux-kernel@vger.kernel.org, sharad.c.tripathi@intel.com, arjan@linux.intel.com, suresh.b.siddha@intel.com, harita.chilukuri@intel.com, douglas.w.styner@intel.com, peter.xihong.wang@intel.com, hubert.nueckel@intel.com, chris.mason@oracle.com, srostedt@redhat.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, anirban.chakraborty@qlogic.com
 
-On Friday 16 January 2009 21:16:31 Pekka Enberg wrote:
-> On Thu, Jan 15, 2009 at 11:46:09AM +0200, Pekka Enberg wrote:
-> >> It would also be nice if someone could do the performance analysis on
-> >> the SLUB bug. I ran sysbench in oltp mode here and the results look
-> >> like this:
-> >>
-> >>   [ number of transactions per second from 10 runs. ]
-> >>
-> >>                    min      max      avg      sd
-> >>   2.6.29-rc1-slab  833.77   852.32   845.10   4.72
-> >>   2.6.29-rc1-slub  823.61   851.94   836.74   8.57
+"Zhang, Yanmin" <yanmin_zhang@linux.intel.com> writes:
 
-> I had lockdep enabled in my config so I ran the tests again with
-> x86-64 defconfig and I'm back to square one:
->
->   [ number of transactions per second from 10 runs, bigger is better ]
->
->                    min      max      avg      sd
->   2.6.29-rc1-slab  802.02   805.37   803.93   0.97
->   2.6.29-rc1-slub  807.78   811.20   809.86   1.05
 
-Hm, I wonder why it is going slower with lockdep disabled?
-Did something else change?
+> I think that's because SLQB
+> doesn't pass through big object allocation to page allocator.
+> netperf UDP-U-1k has less improvement with SLQB.
 
+That sounds like just the page allocator needs to be improved.
+That would help everyone. We talked a bit about this earlier,
+some of the heuristics for hot/cold pages are quite outdated
+and have been tuned for obsolete machines and also its fast path
+is quite long. Unfortunately no code currently.
+
+-Andi
+
+
+-- 
+ak@linux.intel.com -- Speaking for myself only.
