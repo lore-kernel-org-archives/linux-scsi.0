@@ -1,70 +1,44 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH 0/2] sg: fix races during device removal (v2)
-Date: Fri, 16 Jan 2009 00:24:51 +0100
-Message-ID: <496FC5C3.1010401@s5r6.in-berlin.de>
-References: <49625A67.3000304@cybernetics.com> <20090111022525I.fujita.tomonori@lab.ntt.co.jp> <496E4B93.4000507@cybernetics.com> <20090114213917.GB22543@kroah.com> <496E6853.1010005@s5r6.in-berlin.de> <496E6CE1.9040404@cybernetics.com> <496E7993.70307@s5r6.in-berlin.de> <496F4C7B.2030707@cybernetics.com> <496F62CC.8000007@s5r6.in-berlin.de> <496F7DB6.6090506@cybernetics.com> <496F84AA.9060708@s5r6.in-berlin.de> <496F8C91.9050208@cybernetics.com> <496FA001.1000501@s5r6.in-berlin.de> <496FAE09.2040207@cybernetics.com> <496FB168.6080407@s5r6.in-berlin.de> <496FB744.90501@cybernetics.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: Mainline kernel OLTP performance update
+Date: Thu, 15 Jan 2009 16:27:35 -0800
+Message-ID: <20090115162735.99277cc9.akpm@linux-foundation.org>
+References: <BC02C49EEB98354DBA7F5DD76F2A9E800317003CB0@azsmsx501.amr.corp.intel.com>
+	<20090115012147.GW29283@parisc-linux.org>
+	<20090114180431.f4a96543.akpm@linux-foundation.org>
+	<200901151824.38658.nickpiggin@yahoo.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:45861 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755258AbZAOXZ1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Jan 2009 18:25:27 -0500
-In-Reply-To: <496FB744.90501@cybernetics.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:33529 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752525AbZAPA3w (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Jan 2009 19:29:52 -0500
+In-Reply-To: <200901151824.38658.nickpiggin@yahoo.com.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>
-Cc: Greg KH <greg@kroah.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, dgilbert@interlog.com, James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org
+To: Nick Piggin <nickpiggin@yahoo.com.au>
+Cc: matthew@wil.cx, matthew.r.wilcox@intel.com, chinang.ma@intel.com, linux-kernel@vger.kernel.org, sharad.c.tripathi@intel.com, arjan@linux.intel.com, andi.kleen@intel.com, suresh.b.siddha@intel.com, harita.chilukuri@intel.com, douglas.w.styner@intel.com, peter.xihong.wang@intel.com, hubert.nueckel@intel.com, chris.mason@oracle.com, srostedt@redhat.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, anirban.chakraborty@qlogic.com
 
-Tony Battersby wrote:
-> Stefan Richter wrote:
->> I wrote that there is a bug if you have a reference while the reference
->> count is zero.
->>   
-> Being pragmatic, I call that a _philosophical_ objection rather than a
-> bug because the code does actually work in practice as far as I can
-> tell.  But you can call it a bug if you like.  If you want me to give in
-> and call it a bug, then you will have to come up with an actual case
-> where the code fails to do the right thing - memory use after free,
-> double free, memory leak, oops, etc.
+On Thu, 15 Jan 2009 18:24:36 +1100
+Nick Piggin <nickpiggin@yahoo.com.au> wrote:
 
-I understood that you want to fix bugs which are caused by lack of
-reference counting.
+> Given that SLAB and SLUB are fairly mature, I wonder what you'd think of
+> taking SLQB into -mm and making it the default there for a while, to see
+> if anybody reports a problem?
 
-You fix it by /reference count estimation/.
-(Yet you could also fix it by /reference counting/.)
+Nobody would test it in interesting ways.
 
-Actual reference counting would have the benefit that it works not only
-right after your fix, but it will continue to work when people proceed
-to modify sg, provided they follow the sound, proven, straight-forward,
-familiar rules of reference counting:
-  - r++ when a copy of a reference is made.
-  - r-- when a reference is given up.
-Sure, it will also continue to work if those who modify sg follow the
-ad-hoc rules of your special reference count estimation, which are:
-  - ...
-  - ...
-  - ...
+We'd get more testing in linux-next, but still not enough, and not of
+the right type.
 
-I recommend to stick to the semantics of "refcount == 0 means there is
-no reference anymore" because it's simple and robust.  This is
-pragmatism.  I recommend it over "refcount == 0 means that there are,
-hmm, still some references somewhere, but believe me, you can ignore
-those" because that's not very pragmatic in code which is supposed to be
-maintainable and to not crash people's machines.
+It would be better to just make the desision, merge it and forge ahead.
 
-In the subsystems which I maintain, I made the experience that reference
-counting is easier to get right and keep right than some locking tricks
-around reference stores or whatever other lifetime assumptions.
+Me, I'd be 100% behind the idea if it had a credible prospect of a net
+reduction in the number of slab allocator implementations.
 
-Anyway.  Fix sg in whatever way you prefer; you are doing the work, your
-opinion counts.  Mine doesn't, as I don't contribute the code.
+I guess the naming convention will limit us to 26 of them.  Fortunate
+indeed that the kernel isn't written in cyrillic!
 
-(I spoke up nevertheless because the idea came up in this thread to
-change lib/kref in a way which is only useful to buggy refcounting.
-This worried me..)
--- 
-Stefan Richter
--=====-==--= ---= -====
-http://arcgraph.de/sr/
+
