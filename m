@@ -1,47 +1,62 @@
-From: Hisashi Hifumi <hifumi.hisashi@oss.ntt.co.jp>
-Subject: [PATCH] qla2xxx: double free bug in qla2x00_probe_one
-Date: Fri, 16 Jan 2009 12:13:54 +0900
-Message-ID: <6.0.0.20.2.20090116115911.06b02170@172.19.0.2>
+From: Nick Piggin <nickpiggin@yahoo.com.au>
+Subject: Re: Mainline kernel OLTP performance update
+Date: Fri, 16 Jan 2009 15:03:12 +1100
+Message-ID: <200901161503.13730.nickpiggin@yahoo.com.au>
+References: <BC02C49EEB98354DBA7F5DD76F2A9E800317003CB0@azsmsx501.amr.corp.intel.com> <200901151824.38658.nickpiggin@yahoo.com.au> <20090115162735.99277cc9.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from serv2.oss.ntt.co.jp ([222.151.198.100]:38885 "EHLO
-	serv2.oss.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754959AbZAPDii (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Jan 2009 22:38:38 -0500
+Received: from smtp108.mail.mud.yahoo.com ([209.191.85.218]:25933 "HELO
+	smtp108.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754282AbZAPEDl convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Jan 2009 23:03:41 -0500
+In-Reply-To: <20090115162735.99277cc9.akpm@linux-foundation.org>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: matthew@wil.cx, matthew.r.wilcox@intel.com, chinang.ma@intel.com, linux-kernel@vger.kernel.org, sharad.c.tripathi@intel.com, arjan@linux.intel.com, andi.kleen@intel.com, suresh.b.siddha@intel.com, harita.chilukuri@intel.com, douglas.w.styner@intel.com, peter.xihong.wang@intel.com, hubert.nueckel@intel.com, chris.mason@oracle.com, srostedt@redhat.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, anirban.chakraborty@qlogic.com
 
-Hi.
+On Friday 16 January 2009 11:27:35 Andrew Morton wrote:
+> On Thu, 15 Jan 2009 18:24:36 +1100
+>
+> Nick Piggin <nickpiggin@yahoo.com.au> wrote:
+> > Given that SLAB and SLUB are fairly mature, I wonder what you'd think of
+> > taking SLQB into -mm and making it the default there for a while, to see
+> > if anybody reports a problem?
+>
+> Nobody would test it in interesting ways.
+>
+> We'd get more testing in linux-next, but still not enough, and not of
+> the right type.
 
-I got double free bug at qla2x00_probe_one's error path and
-kernel was panicked.
-qla2x00_probe_one's probe_failed path is as follows:
+It would be better than nothing, for SLQB, I guess.
 
- 	qla2x00_free_que(ha, req, rsp);
- 	qla2x00_free_device(base_vha);
- 
-qla2x00_free_device calls qla2x00_free_que through qla2x00_free_queues.
-qla2x00_free_device frees the same pointer of req and rsp that is already 
-freed by qla2x00_free_que.
 
-Following patch fixes this problem.
-Thanks.
+> It would be better to just make the desision, merge it and forge ahead.
+>
+> Me, I'd be 100% behind the idea if it had a credible prospect of a net
+> reduction in the number of slab allocator implementations.
 
-Signed-off-by: Hisashi Hifumi <hifumi.hisashi@oss.ntt.co.jp>
+>From the data we have so far, I think SLQB is a "credible prospect" to
+replace SLUB and SLAB. But then again, apparently SLUB was a credible
+prospect to replace SLAB when it was merged.
 
-diff -Nrup linux-2.6.29-rc1.org/drivers/scsi/qla2xxx/qla_os.c linux-2.6.29-rc1.qla2x/drivers/scsi/qla2xxx/qla_os.c
---- linux-2.6.29-rc1.org/drivers/scsi/qla2xxx/qla_os.c	2009-01-15 15:37:31.000000000 +0900
-+++ linux-2.6.29-rc1.qla2x/drivers/scsi/qla2xxx/qla_os.c	2009-01-16 11:52:47.000000000 +0900
-@@ -1999,6 +1999,8 @@ qla2x00_probe_one(struct pci_dev *pdev, 
- 
- probe_failed:
- 	qla2x00_free_que(ha, req, rsp);
-+	ha->rsp_q_map[0] = NULL;
-+	ha->req_q_map[0] = NULL;
- 	qla2x00_free_device(base_vha);
- 
- 	scsi_host_put(base_vha->host);
+Unfortunately I can't honestly say that some serious regression will not
+be discovered in SLQB that cannot be fixed. I guess that's never stopped
+us merging other rewrites before, though.
+
+I would like to see SLQB merged in mainline, made default, and wait for
+some number releases. Then we take what we know, and try to make an
+informed decision about the best one to take. I guess that is problematic
+in that the rest of the kernel is moving underneath us. Do you have
+another idea?
+
+
+> I guess the naming convention will limit us to 26 of them.  Fortunate
+> indeed that the kernel isn't written in cyrillic!
+
+I could have called it SL4B. 4 would be somehow fitting...
 
