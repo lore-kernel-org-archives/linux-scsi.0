@@ -1,48 +1,108 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [GIT PATCH] firs round of SCSI bug fixes for 2.6.29-rc1
-Date: Fri, 16 Jan 2009 11:09:31 -0800 (PST)
-Message-ID: <20090116.110931.166270342.davem@davemloft.net>
-References: <1232117771.3224.21.camel@localhost.localdomain>
-	<20090116090928.e43c986e.akpm@linux-foundation.org>
-	<1232131733.3224.46.camel@localhost.localdomain>
+From: Steven Rostedt <srostedt@redhat.com>
+Subject: Re: Mainline kernel OLTP performance update
+Date: Fri, 16 Jan 2009 14:09:19 -0500
+Message-ID: <1232132959.21980.103.camel@localhost.localdomain>
+References: <BC02C49EEB98354DBA7F5DD76F2A9E800317003CB0@azsmsx501.amr.corp.intel.com>
+	 <CAC4B8726E86A142B27A9E9A2F2F12479D3E945F@rrsmsx505.amr.corp.intel.com>
+	 <20090114163557.11e097f2.akpm@linux-foundation.org>
+	 <20090115012147.GW29283@parisc-linux.org>
+	 <20090114180431.f4a96543.akpm@linux-foundation.org>
+	 <1232028766.5966.10.camel@localhost.localdomain>
+	 <20090115094442.b6394544.akpm@linux-foundation.org>
+	 <20090115180052.GG29283@parisc-linux.org>
+	 <1232043287.21980.65.camel@localhost.localdomain>
+	 <496F8421.3070703@novell.com>
+	 <CAC4B8726E86A142B27A9E9A2F2F12479D4403CE@rrsmsx505.amr.corp.intel.com>
+	 <BC02C49EEB98354DBA7F5DD76F2A9E8003175EB45B@azsmsx501.amr.corp.intel.com>
+	 <4970CE79.1080002@novell.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:33460
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1756035AbZAPTJ3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Jan 2009 14:09:29 -0500
-In-Reply-To: <1232131733.3224.46.camel@localhost.localdomain>
+Received: from mx2.redhat.com ([66.187.237.31]:43653 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1763486AbZAPTKB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Jan 2009 14:10:01 -0500
+In-Reply-To: <4970CE79.1080002@novell.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Gregory Haskins <ghaskins@novell.com>
+Cc: "Ma, Chinang" <chinang.ma@intel.com>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>, Matthew Wilcox <matthew@wil.cx>, Andrew Morton <akpm@linux-foundation.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Tripathi, Sharad C" <sharad.c.tripathi@intel.com>, "arjan@linux.intel.com" <arjan@linux.intel.com>, "Kleen, Andi" <andi.kleen@intel.com>, "Siddha, Suresh B" <suresh.b.siddha@intel.com>, "Chilukuri, Harita" <harita.chilukuri@intel.com>, "Styner, Douglas W" <douglas.w.styner@intel.com>, "Wang, Peter Xihong" <peter.xihong.wang@intel.com>, "Nueckel, Hubert" <hubert.nueckel@intel.com>, "chris.mason@oracle.com" <chris.mason@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Anirban Chakraborty <anirban.chakraborty@qlogic.com>
 
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Date: Fri, 16 Jan 2009 13:48:53 -0500
 
-> On Fri, 2009-01-16 at 09:09 -0800, Andrew Morton wrote:
-> > Doing a panic() after we've already detected an error is plain nasty. 
-> > Is there no way in which we can allow the kernel to continue?
+On Fri, 2009-01-16 at 13:14 -0500, Gregory Haskins wrote:
+> Ma, Chinang wrote:
+> > Gregory. 
+> > I will test the resched-ipi instrumentation patch with our OLTP if you can post the patch and some instructions.
+> > Thanks,
+> > -Chinang
+> >   
 > 
-> There's a long thread discussing this very point on linux-scsi.  The
-> short version is "no, it's only used for debugging firmware and if
-> you've corrupted your firmware to this point you need the machine
-> halting".
+> Hi Chinang,
+>   Please find a patch attached which applies to linus.git as of today. 
+> You will also want to enable CONFIG_FUNCTION_TRACER as well as the trace
+> components.  Here is my system:
+> 
 
-Long thread or not, taking out one's entire system because one
-device hits a fail state is always wrong.
+I don't see why CONFIG_FUNCTION_TRACER is needed.
 
-If I have other block devices which are working, all I want
-is for this specific controller and it's block devices to
-fail.
+> ghaskins@dev:~/sandbox/git/linux-2.6-rt> grep TRACE .config
+> CONFIG_STACKTRACE_SUPPORT=y
+> CONFIG_TRACEPOINTS=y
+> CONFIG_HAVE_ARCH_TRACEHOOK=y
+> CONFIG_BLK_DEV_IO_TRACE=y
+> # CONFIG_TREE_RCU_TRACE is not set
+> # CONFIG_PREEMPT_RCU_TRACE is not set
+> CONFIG_X86_PTRACE_BTS=y
+> # CONFIG_ACPI_DEBUG_FUNC_TRACE is not set
+> CONFIG_NETFILTER_XT_TARGET_TRACE=m
+> CONFIG_SOUND_TRACEINIT=y
+> CONFIG_TRACE_IRQFLAGS_SUPPORT=y
+> CONFIG_TRACE_IRQFLAGS=y
+> CONFIG_STACKTRACE=y
+> # CONFIG_BACKTRACE_SELF_TEST is not set
+> CONFIG_USER_STACKTRACE_SUPPORT=y
+> CONFIG_NOP_TRACER=y
+> CONFIG_HAVE_FUNCTION_TRACER=y
+> CONFIG_HAVE_FUNCTION_GRAPH_TRACER=y
+> CONFIG_HAVE_FUNCTION_TRACE_MCOUNT_TEST=y
+> CONFIG_HAVE_DYNAMIC_FTRACE=y
+> CONFIG_HAVE_FTRACE_MCOUNT_RECORD=y
+> CONFIG_HAVE_HW_BRANCH_TRACER=y
+> CONFIG_TRACER_MAX_TRACE=y
+> CONFIG_FUNCTION_TRACER=y
+> CONFIG_FUNCTION_GRAPH_TRACER=y
+> CONFIG_IRQSOFF_TRACER=y
+> CONFIG_SYSPROF_TRACER=y
+> CONFIG_SCHED_TRACER=y
 
-This way I can get the failure log message and actually do something
-with that data without rebooting.
+This CONFIG_SCHED_TRACER should be enough.
 
-Or I guess digital cameras and serial/net consoles are the only
-sanctioned way to record kernel failure log messages of this kind?
+-- Steve
 
-Give me a break. :)
+> CONFIG_CONTEXT_SWITCH_TRACER=y
+> # CONFIG_BOOT_TRACER is not set
+> # CONFIG_TRACE_BRANCH_PROFILING is not set
+> CONFIG_POWER_TRACER=y
+> CONFIG_STACK_TRACER=y
+> CONFIG_HW_BRANCH_TRACER=y
+> CONFIG_DYNAMIC_FTRACE=y
+> CONFIG_FTRACE_MCOUNT_RECORD=y
+> # CONFIG_FTRACE_STARTUP_TEST is not set
+> # CONFIG_MMIOTRACE is not set
+> # CONFIG_KVM_TRACE is not set
+> 
+> 
+> Then on your booted system, do:
+> 
+> echo sched_switch > /sys/kernel/debug/tracing/current_tracer
+> echo 1 > /sys/kernel/debug/tracing/tracing_enabled
+> $run_oltp && echo 0 > /sys/kernel/debug/tracing/tracing_enabled
+> 
+> (where $run_oltp is your suite)
+> 
+> Then, email the contents of /sys/kernel/debug/tracing/trace to me
+> 
+> -Greg
+> 
+
