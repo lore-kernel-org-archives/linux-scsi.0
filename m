@@ -1,59 +1,39 @@
-From: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>
-Subject: Re: Mainline kernel OLTP performance update
-Date: Fri, 16 Jan 2009 15:53:50 +0800
-Message-ID: <1232092430.11429.52.camel@ymzhang>
-References: <BC02C49EEB98354DBA7F5DD76F2A9E800317003CB0@azsmsx501.amr.corp.intel.com>
-	 <200901161503.13730.nickpiggin@yahoo.com.au>
-	 <20090115201210.ca1a9542.akpm@linux-foundation.org>
-	 <200901161746.25205.nickpiggin@yahoo.com.au>
-	 <20090116065546.GJ31013@parisc-linux.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH 0/2] sg: fix races during device removal (v2)
+Date: Fri, 16 Jan 2009 09:09:25 +0100
+Message-ID: <497040B5.30601@s5r6.in-berlin.de>
+References: <49625A67.3000304@cybernetics.com> <20090111022525I.fujita.tomonori@lab.ntt.co.jp> <496E4B93.4000507@cybernetics.com> <20090114213917.GB22543@kroah.com> <496E6853.1010005@s5r6.in-berlin.de> <496E6CE1.9040404@cybernetics.com> <496E7993.70307@s5r6.in-berlin.de> <496F4C7B.2030707@cybernetics.com> <496F62CC.8000007@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga10.intel.com ([192.55.52.92]:21492 "EHLO
-	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757140AbZAPHx4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Jan 2009 02:53:56 -0500
-In-Reply-To: <20090116065546.GJ31013@parisc-linux.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:53333 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754799AbZAPIJw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Jan 2009 03:09:52 -0500
+In-Reply-To: <496F62CC.8000007@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Nick Piggin <nickpiggin@yahoo.com.au>, Andrew Morton <akpm@linux-foundation.org>, netdev@vger.kernel.org, sfr@canb.auug.org.au, matthew.r.wilcox@intel.com, chinang.ma@intel.com, linux-kernel@vger.kernel.org, sharad.c.tripathi@intel.com, arjan@linux.intel.com, andi.kleen@intel.com, suresh.b.siddha@intel.com, harita.chilukuri@intel.com, douglas.w.styner@intel.com, peter.xihong.wang@intel.com, hubert.nueckel@intel.com, chris.mason@oracle.com, srostedt@redhat.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, anirban.chakraborty@qlogic.com
+To: Tony Battersby <tonyb@cybernetics.com>
+Cc: Greg KH <greg@kroah.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, dgilbert@interlog.com, James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org
 
-On Thu, 2009-01-15 at 23:55 -0700, Matthew Wilcox wrote:
-> On Fri, Jan 16, 2009 at 05:46:23PM +1100, Nick Piggin wrote:
-> > Intel's OLTP shows SLQB is "neutral" to SLAB. That is, literally within
-> > their measurement confidence interval. If it comes down to it, I think we
-> > could get them to do more runs to narrow that down, but we're talking a
-> > couple of tenths of a percent already.
-> 
-> I think I can speak with some measure of confidence for at least the
-> OLTP-testing part of my company when I say that I have no objection to
-> Nick's planned merge scheme.
-> 
-> I believe the kernel benchmark group have also done some testing with
-> SLQB and have generally positive things to say about it (Yanmin added to
-> the gargantuan cc).
-We did run lots of benchmarks with SLQB. Comparing with SLUB, one highlighting of
-SLQB is with netperf UDP-U-4k. On my x86-64 machines, if I start 1 client and 1 server
-process and bind them to different physical cpus, the result of SLQB is about 20% better
-than SLUB's. If I start CPU_NUM clients and the same number of servers without binding,
-the results of SLQB is about 100% better than SLUB's. I think that's because SLQB
-doesn't pass through big object allocation to page allocator.
-netperf UDP-U-1k has less improvement with SLQB.
+I wrote:
+> One number is
+>   - the number of unfinished transactions (request->response)
+> of an sg device. [...] The other number is
+>   - the number of contexts which peek and poke at the device
+> representation's memory. [...]
+> And we need one more thing to finally get all pieces together:  A state
+> flag which says "device still open? yes/no".  This flag is necessary to
+> decide when to take the device representation out of the idr:
 
-The results of other benchmarks have variations. They are good on some machines,
-but bad on other machines. However, the variation is small. For example, hackbench's result
-with SLQB is about 1 second than with SLUB on 8-core stoakley. After we worked with
-Nick to do small code changing, SLQB's result is a little better than SLUB's
-with hackbench on stoakley.
+You probably don't need an explicit counter of pending transactions.
+This number is implicit in the number of list members in struct
+sg_fd.headrp.
 
-We consider other variations as fluctuation.
-
-All the testing use default SLUB and SLQB configuration.
-
-> 
-> Did slabtop get fixed to work with SLQB?
-> 
-
+So you only need the reference counter and the open-or-closed flag
+(which would be different from struct sg_fd.closed).
+-- 
+Stefan Richter
+-=====-==--= ---= =----
+http://arcgraph.de/sr/
