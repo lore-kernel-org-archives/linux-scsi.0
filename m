@@ -1,86 +1,157 @@
-From: Nick Piggin <nickpiggin@yahoo.com.au>
-Subject: Re: Mainline kernel OLTP performance update
-Date: Fri, 16 Jan 2009 18:25:14 +1100
-Message-ID: <200901161825.15617.nickpiggin@yahoo.com.au>
-References: <BC02C49EEB98354DBA7F5DD76F2A9E800317003CB0@azsmsx501.amr.corp.intel.com> <200901161746.25205.nickpiggin@yahoo.com.au> <20090115230043.57caae5d.akpm@linux-foundation.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 0/2] [Target_Core_Mod]: Add EVPD information to ConfigFS
+Date: Thu, 15 Jan 2009 23:51:45 -0800
+Message-ID: <1232092305.1274.171.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20090115230043.57caae5d.akpm@linux-foundation.org>
-Content-Disposition: inline
-Sender: netdev-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: netdev@vger.kernel.org, sfr@canb.auug.org.au, matthew@wil.cx, matthew.r.wilcox@intel.com, chinang.ma@intel.com, linux-kernel@vger.kernel.org, sharad.c.tripathi@intel.com, arjan@linux.intel.com, andi.kleen@intel.com, suresh.b.siddha@intel.com, harita.chilukuri@intel.com, douglas.w.styner@intel.com, peter.xihong.wang@intel.com, hubert.nueckel@intel.com, chris.mason@oracle.com, srostedt@redhat.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, anirban.chakraborty@qlogic.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp121.sbc.mail.sp1.yahoo.com ([69.147.64.94]:45741 "HELO
+	smtp121.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755958AbZAPHwK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Jan 2009 02:52:10 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux-fsdevel <linux-fsdevel@vger.kernel.org>, Joel Becker <joel.becker@oracle.com>, "H. Peter Anvin" <hpa@zytor.com>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Christoph Hellwig <hch@lst.de>
 
-On Friday 16 January 2009 18:00:43 Andrew Morton wrote:
-> On Fri, 16 Jan 2009 17:46:23 +1100 Nick Piggin <nickpiggin@yahoo.com.au> 
-wrote:
-> > On Friday 16 January 2009 15:12:10 Andrew Morton wrote:
-> > > On Fri, 16 Jan 2009 15:03:12 +1100 Nick Piggin
-> > > <nickpiggin@yahoo.com.au>
-> >
-> > wrote:
-> > > > I would like to see SLQB merged in mainline, made default, and wait
-> > > > for some number releases. Then we take what we know, and try to make
-> > > > an informed decision about the best one to take. I guess that is
-> > > > problematic in that the rest of the kernel is moving underneath us.
-> > > > Do you have another idea?
-> > >
-> > > Nope.  If it doesn't work out, we can remove it again I guess.
-> >
-> > OK, I have these numbers to show I'm not completely off my rocker to
-> > suggest we merge SLQB :) Given these results, how about I ask to merge
-> > SLQB as default in linux-next, then if nothing catastrophic happens,
-> > merge it upstream in the next merge window, then a couple of releases
-> > after that, given some time to test and tweak SLQB, then we plan to bite
-> > the bullet and emerge with just one main slab allocator (plus SLOB).
->
-> That's a plan.
->
-> > SLQB tends to be the winner here.
->
-> Can you think of anything with which it will be the loser?
+Greetings all,
 
-Well, that fio test showed it was behind SLAB. I just discovered that
-yesterday during running these tests, so I'll take a look at that. The
-Intel performance guys I think have one or two cases where it is slower.
-They don't seem to be too serious, and tend to be specific to some
-machines (eg. the same test with a different CPU architecture turns out
-to be faster). So I'll be looking into these things, but I haven't seen
-anything too serious yet. I'm mostly interested in macro benchmarks and
-more real world workloads.
+This patch adds T10/SCSI WWN / Extended Vital Production Desciptor pages
+(EVPD) information into Target_Core_Mod/ConfigFS.  These ConfigFS
+attributs are defined as READ-WRITE, but currently only implement
+READ-ONLY and return -ENOSYS (this will be changing soon).
 
-At a higher level, SLAB has some interesting features. It basically has
-"crossbars" of queues, that basically provide queues for allocating and
-freeing to and from different CPUs and nodes. This is what bloats up
-the kmem_cache data structures to tens or hundreds of gigabytes each
-on SGI size systems. But it is also has good properties. On smaller
-multiprocessor and NUMA systems, it might be the case that SLAB does
-better in workloads that involve objects being allocated on one CPU and
-freed on another. I haven't actually observed problems here, but I don't
-have a lot of good tests.
+This patch adds the following INQUIRY EVPD=1 protocol information to
+ConfigFS:
 
-SLAB is also fundamentally different from SLUB and SLQB in that it uses
-arrays to store pointers to objects in its queues, rather than having
-a linked list using pointers embedded in the objects. This might in some
-cases make it easier to prefetch objects in parallel with finding the
-object itself. I haven't actually been able to attribute a particular
-regression to this interesting difference, but it might turn up as an
-issue.
+*) Protocol Identifier
+*) Association
+*) Identifier Type
+*) Identifier Binary, ASCII, and UTF-8 encoding
 
-These are two big differences between SLAB and SLQB.
+This patch is made against lio-core-2.6.git/master
+and tested on v2.6.28.  The lio-core-2.6.git tree can be found at:
 
-The linked lists of objects were used in favour of arrays again because of
-the memory overhead, and to have a better ability to tune the size of the
-queues, and reduced overhead in copying around arrays of pointers (SLQB can
-just copy the head of one the list to the tail of another in order to move
-objects around), and eliminated the need to have additional metadata beyond
-the struct page for each slab.
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=summary
 
-The crossbars of queues were removed because of the bloating and memory
-overhead issues. The fact that we now have linked lists helps a little bit
-with this, because moving lists of objects around gets a bit easier.
+Here is what the layout looks like with some Parallel SCSI (pscsi_1/sdb)
+and Serial SCSI (pscsi_2/sdc and pscsi_2/sdd):
+
+/sys/kernel/config
+`-- target
+    |-- core
+    |   |-- pscsi_1
+    |   |   |-- hba_info
+    |   |   `-- sdb
+    |   |       |-- attrib
+    |   |       |   |-- hw_max_sectors
+    |   |       |   |-- hw_queue_depth
+    |   |       |   |-- max_sectors
+    |   |       |   |-- queue_depth
+    |   |       |   |-- status_thread
+    |   |       |   |-- status_thread_tur
+    |   |       |   `-- task_timeout
+    |   |       |-- control
+    |   |       |-- enable
+    |   |       |-- fd
+    |   |       |-- info
+    |   |       `-- wwn
+    |   |           |-- evpd_assoc_logical_unit
+    |   |           |-- evpd_assoc_scsi_target_device
+    |   |           |-- evpd_assoc_target_port
+    |   |           |-- evpd_protocol_identifier
+    |   |           `-- evpd_unit_serial
+    |   |-- pscsi_2
+    |   |   |-- hba_info
+    |   |   |-- sdc
+    |   |   |   |-- attrib
+    |   |   |   |   |-- hw_max_sectors
+    |   |   |   |   |-- hw_queue_depth
+    |   |   |   |   |-- max_sectors
+    |   |   |   |   |-- queue_depth
+    |   |   |   |   |-- status_thread
+    |   |   |   |   |-- status_thread_tur
+    |   |   |   |   `-- task_timeout
+    |   |   |   |-- control
+    |   |   |   |-- enable
+    |   |   |   |-- fd
+    |   |   |   |-- info
+    |   |   |   `-- wwn
+    |   |   |       |-- evpd_assoc_logical_unit
+    |   |   |       |-- evpd_assoc_scsi_target_device
+    |   |   |       |-- evpd_assoc_target_port
+    |   |   |       |-- evpd_protocol_identifier
+    |   |   |       `-- evpd_unit_serial
+    |   |   `-- sdd
+    |   |       |-- attrib
+    |   |       |   |-- hw_max_sectors
+    |   |       |   |-- hw_queue_depth
+    |   |       |   |-- max_sectors
+    |   |       |   |-- queue_depth
+    |   |       |   |-- status_thread
+    |   |       |   |-- status_thread_tur
+    |   |       |   `-- task_timeout
+    |   |       |-- control
+    |   |       |-- enable
+    |   |       |-- fd
+    |   |       |-- info
+    |   |       `-- wwn
+    |   |           |-- evpd_assoc_logical_unit
+    |   |           |-- evpd_assoc_scsi_target_device
+    |   |           |-- evpd_assoc_target_port
+    |   |           |-- evpd_protocol_identifier
+    |   |           `-- evpd_unit_serial
+
+<SNIP>
+
+>From the Parallel SCSI device at pscsi_1/sdb:
+
+target-core:/sys/kernel/config/target/core/pscsi_1/sdb/wwn# cat *
+T10 EVPD Identifier Association: addressed logical unit
+T10 EVPD Identifier Type: EUI-64 based
+T10 EVPD Binary Device Identifier: 20010b9fe9f4b0200
+T10 EVPD Identifier Association: addressed logical unit
+T10 EVPD Identifier Type: T10 Vendor ID based
+T10 EVPD ASCII Device Identifier: MAXTOR  C40464HK    
+T10 EVPD Unit Serial Number:: C40464HK
+
+>From the Serial SCSI device at pscsi_2/sdd:
+
+target-core:/sys/kernel/config/target/core/pscsi_2/sdd/wwn# cat *
+T10 EVPD Identifier Association: addressed logical unit
+T10 EVPD Identifier Type: NAA
+T10 EVPD Binary Device Identifier: 350010b90000292df
+T10 EVPD Identifier Association: SCSI target device
+T10 EVPD Identifier Type: SCSI name string
+T10 EVPD UTF-8 Device Identifier: naa.50010B90000292DC
+T10 EVPD Identifier Association: target port
+T10 EVPD Identifier Type: NAA
+T10 EVPD Binary Device Identifier: 350010b90000292de
+T10 EVPD Identifier Association: target port
+T10 EVPD Identifier Type: Relative target port identifier
+T10 EVPD Binary Device Identifier: 400000002
+T10 EVPD Protocol Identifier: SAS Serial SCSI Protocol
+T10 EVPD Protocol Identifier: SAS Serial SCSI Protocol
+T10 EVPD Unit Serial Number:: E20HY72K
+
+Comments..?
+
+--nab
+
+[PATCH 1/2] [Target_Core_Mod]: Move 10_wwn_t to se_subsystem_dev_t->t10_wwn
+[PATCH 2/2] [Target_Core_Mod/ConfigFS]: Add T10 EVPD / WWN storage object attributes
+
+ drivers/lio-core/target_core_base.h      |    6 +-
+ drivers/lio-core/target_core_configfs.c  |  212 +++++++++++++++++++++++++++++-
+ drivers/lio-core/target_core_device.c    |    8 +-
+ drivers/lio-core/target_core_mib.c       |   30 ++--
+ drivers/lio-core/target_core_seobj.c     |    2 +-
+ drivers/lio-core/target_core_transport.c |   19 ++-
+ drivers/lio-core/target_core_transport.h |    4 +
+ 7 files changed, 251 insertions(+), 30 deletions(-)
+
+
+
 
