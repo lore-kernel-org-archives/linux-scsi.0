@@ -1,41 +1,52 @@
-From: Grant Grundler <grundler@google.com>
+From: Andrew Morton <akpm@linux-foundation.org>
 Subject: Re: [GIT PATCH] firs round of SCSI bug fixes for 2.6.29-rc1
-Date: Fri, 16 Jan 2009 11:02:12 -0800
-Message-ID: <da824cf30901161102r67b9c31euc12fc95fb8330a07@mail.gmail.com>
+Date: Fri, 16 Jan 2009 11:07:08 -0800
+Message-ID: <20090116110708.75c5828d.akpm@linux-foundation.org>
 References: <1232117771.3224.21.camel@localhost.localdomain>
-	 <20090116090928.e43c986e.akpm@linux-foundation.org>
+	<20090116090928.e43c986e.akpm@linux-foundation.org>
+	<1232131733.3224.46.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.33.17]:50157 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756172AbZAPTCS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Jan 2009 14:02:18 -0500
-In-Reply-To: <20090116090928.e43c986e.akpm@linux-foundation.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:55797 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754106AbZAPTHm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Jan 2009 14:07:42 -0500
+In-Reply-To: <1232131733.3224.46.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: torvalds@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Jan 16, 2009 at 9:09 AM, Andrew Morton
-<akpm@linux-foundation.org> wrote:
-...
->> +             CHIPREG_WRITE32(&ioc->chip->Doorbell, 0xC0FFEE00);
->> +             panic("%s: Firmware is halted due to command timeout\n",
->> +                     ioc->name);
->> +     }
->> +}
->> +EXPORT_SYMBOL(mpt_halt_firmware);
->
-> Doing a panic() after we've already detected an error is plain nasty.
-> Is there no way in which we can allow the kernel to continue?
+On Fri, 16 Jan 2009 13:48:53 -0500
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-Basically what James said. It's not long though: only 6 emails.
-I started that thread thinking the same thing you did:
-    http://marc.info/?t=123123569200003&r=1&w=2
+> > > +++ b/drivers/scsi/qla2xxx/qla_init.c
+> > > @@ -1258,35 +1258,48 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
+> > >  {
+> > >  	int	rval;
+> > >  	unsigned long flags = 0;
+> > > -	int cnt;
+> > > +	int cnt, que;
+> > >  	struct qla_hw_data *ha = vha->hw;
+> > > -	struct req_que *req = ha->req_q_map[0];
+> > > -	struct rsp_que *rsp = ha->rsp_q_map[0];
+> > > +	struct req_que *req;
+> > > +	struct rsp_que *rsp;
+> > > +	struct scsi_qla_host *vp;
+> > >  	struct mid_init_cb_24xx *mid_init_cb =
+> > >  	    (struct mid_init_cb_24xx *) ha->init_cb;
+> > 
+> > This cast worries me.  It's a cast between two complex data structures
+> > which appear to have nothing to do with each other.
+> 
+> Actually, it's a C++ type construct.  ha->init_cb is of type init_cb_t,
+> mid_init_cb actually contains this (via a second indirection) as the
+> first element, so what it's doing is dynamically casting out based on
+> the board type.
 
-TBH, I still wouldn't implement it the way LSI maintainers did.
-I'm happy they are the maintainers and it's their call.
+Ah, OK, I got lost amongst the typedefs and pointers.
 
-grant
+This code could/should use container_of() for this operation?
