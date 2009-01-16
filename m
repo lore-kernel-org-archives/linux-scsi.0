@@ -1,43 +1,236 @@
-From: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
-Subject: Re: [PATCH] qla2xxx: double free bug in qla2x00_probe_one
-Date: Fri, 16 Jan 2009 09:04:35 -0800
-Message-ID: <FD89D7AB-1431-4F6E-9830-EC2F04EFB07C@qlogic.com>
-References: <6.0.0.20.2.20090116115911.06b02170@172.19.0.2>
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Content-Type: text/plain; charset="US-ASCII"; format=flowed; delsp=yes
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [GIT PATCH] firs round of SCSI bug fixes for 2.6.29-rc1
+Date: Fri, 16 Jan 2009 09:09:28 -0800
+Message-ID: <20090116090928.e43c986e.akpm@linux-foundation.org>
+References: <1232117771.3224.21.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:1139 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934829AbZAPREh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Jan 2009 12:04:37 -0500
-In-Reply-To: <6.0.0.20.2.20090116115911.06b02170@172.19.0.2>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S935949AbZAPRJv@vger.kernel.org>
+In-Reply-To: <1232117771.3224.21.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hisashi Hifumi <hifumi.hisashi@oss.ntt.co.jp>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+On Fri, 16 Jan 2009 09:56:11 -0500 James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-On Jan 15, 2009, at 7:13 PM, Hisashi Hifumi wrote:
-
-> Hi.
+> This is acutally four bug fixes and part of a fusion update which was a
+> bit late processing through the merge window, but which should be
+> perfectly acceptable for -rc1.
+> 
+> ...
 >
-> I got double free bug at qla2x00_probe_one's error path and
-> kernel was panicked.
-> qla2x00_probe_one's probe_failed path is as follows:
->
-> 	qla2x00_free_que(ha, req, rsp);
-> 	qla2x00_free_device(base_vha);
->
-> qla2x00_free_device calls qla2x00_free_que through  
-> qla2x00_free_queues.
-> qla2x00_free_device frees the same pointer of req and rsp that is  
-> already
-> freed by qla2x00_free_que.
+> Full diff below.
 
-This has been taken care of in the ISP restart bug fix patch. Please  
-find it here:
-http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git;a=commit;h=29bdccbee69c199910b2b39377e66ee5c33f241c
-Thanks,
-Anirban
+I like full diffs.
+ 
+> --- a/drivers/message/fusion/mptbase.c
+> +++ b/drivers/message/fusion/mptbase.c
+> @@ -79,9 +79,22 @@ MODULE_VERSION(my_VERSION);
+>  /*
+>   *  cmd line parameters
+>   */
+> -static int mpt_msi_enable = -1;
+> -module_param(mpt_msi_enable, int, 0);
+> -MODULE_PARM_DESC(mpt_msi_enable, " MSI Support Enable (default=0)");
+> +
+> +static int mpt_msi_enable_spi;
+> +module_param(mpt_msi_enable_spi, int, 0);
+> +MODULE_PARM_DESC(mpt_msi_enable_spi, " Enable MSI Support for SPI \
+> +		controllers (default=0)");
+> +
+> +static int mpt_msi_enable_fc;
+> +module_param(mpt_msi_enable_fc, int, 0);
+> +MODULE_PARM_DESC(mpt_msi_enable_fc, " Enable MSI Support for FC \
+> +		controllers (default=0)");
+> +
+> +static int mpt_msi_enable_sas;
+> +module_param(mpt_msi_enable_sas, int, 1);
+> +MODULE_PARM_DESC(mpt_msi_enable_sas, " Enable MSI Support for SAS \
+> +		controllers (default=1)");
+> +
+> 
+> ...
 
+Those MODULE_PARM_DESC strings are going to come out funny-looking,
+with extra tabs and stuff.
+
+> +MODULE_PARM_DESC(mpt_debug_level, " debug level - refer to mptdebug.h \
+> +	- (default=0)");
+> +
+> +int mpt_fwfault_debug;
+> +EXPORT_SYMBOL(mpt_fwfault_debug);
+> +module_param_call(mpt_fwfault_debug, param_set_int, param_get_int,
+> +	  &mpt_fwfault_debug, 0600);
+> +MODULE_PARM_DESC(mpt_fwfault_debug, "Enable detection of Firmware fault"
+> +	" and halt Firmware on fault - (default=0)");
+
+That one got it right.
+
+>  
+>  #ifdef MFCNT
+>  static int mfcounter = 0;
+> @@ -1751,16 +1774,25 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+>  		ioc->bus_type = SAS;
+>  	}
+>  
+> -	if (mpt_msi_enable == -1) {
+> -		/* Enable on SAS, disable on FC and SPI */
+> -		if (ioc->bus_type == SAS)
+> -			ioc->msi_enable = 1;
+> -		else
+> -			ioc->msi_enable = 0;
+> -	} else
+> -		/* follow flag: 0 - disable; 1 - enable */
+> -		ioc->msi_enable = mpt_msi_enable;
+>  
+> +	switch (ioc->bus_type) {
+> +
+> +	case SAS:
+> +		ioc->msi_enable = mpt_msi_enable_sas;
+> +		break;
+> +
+> +	case SPI:
+> +		ioc->msi_enable = mpt_msi_enable_spi;
+> +		break;
+> +
+> +	case FC:
+> +		ioc->msi_enable = mpt_msi_enable_fc;
+> +		break;
+> +
+> +	default:
+> +		ioc->msi_enable = 0;
+> +		break;
+> +	}
+>  	if (ioc->errata_flag_1064)
+>  		pci_disable_io_access(pdev);
+>  
+> @@ -6313,6 +6345,33 @@ mpt_print_ioc_summary(MPT_ADAPTER *ioc, char *buffer, int *size, int len, int sh
+>  	*size = y;
+>  }
+>  
+> +
+> +/**
+> + *	mpt_halt_firmware - Halts the firmware if it is operational and panic
+> + *	the kernel
+> + *	@ioc: Pointer to MPT_ADAPTER structure
+> + *
+> + **/
+> +void
+> +mpt_halt_firmware(MPT_ADAPTER *ioc)
+> +{
+> +	u32	 ioc_raw_state;
+> +
+> +	ioc_raw_state = mpt_GetIocState(ioc, 0);
+> +
+> +	if ((ioc_raw_state & MPI_IOC_STATE_MASK) == MPI_IOC_STATE_FAULT) {
+> +		printk(MYIOC_s_ERR_FMT "IOC is in FAULT state (%04xh)!!!\n",
+> +			ioc->name, ioc_raw_state & MPI_DOORBELL_DATA_MASK);
+> +		panic("%s: IOC Fault (%04xh)!!!\n", ioc->name,
+> +			ioc_raw_state & MPI_DOORBELL_DATA_MASK);
+> +	} else {
+> +		CHIPREG_WRITE32(&ioc->chip->Doorbell, 0xC0FFEE00);
+> +		panic("%s: Firmware is halted due to command timeout\n",
+> +			ioc->name);
+> +	}
+> +}
+> +EXPORT_SYMBOL(mpt_halt_firmware);
+
+Doing a panic() after we've already detected an error is plain nasty. 
+Is there no way in which we can allow the kernel to continue?
+
+
+>  /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+>  /*
+>   *	Reset Handling
+> @@ -6345,6 +6404,8 @@ mpt_HardResetHandler(MPT_ADAPTER *ioc, int sleepFlag)
+>  	printk(MYIOC_s_INFO_FMT "HardResetHandler Entered!\n", ioc->name);
+>  	printk("MF count 0x%x !\n", ioc->mfcnt);
+>  #endif
+> +	if (mpt_fwfault_debug)
+> +		mpt_halt_firmware(ioc);
+>  
+>  	/* Reset the adapter. Prevent more than 1 call to
+>  	 * mpt_do_ioc_recovery at any instant in time.
+> diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
+> index dff048c..b3e981d 100644
+> --- a/drivers/message/fusion/mptbase.h
+> +++ b/drivers/message/fusion/mptbase.h
+> @@ -922,11 +922,14 @@ extern void	 mpt_free_fw_memory(MPT_ADAPTER *ioc);
+>  extern int	 mpt_findImVolumes(MPT_ADAPTER *ioc);
+>  extern int	 mptbase_sas_persist_operation(MPT_ADAPTER *ioc, u8 persist_opcode);
+>  extern int	 mpt_raid_phys_disk_pg0(MPT_ADAPTER *ioc, u8 phys_disk_num, pRaidPhysDiskPage0_t phys_disk);
+> +extern void     mpt_halt_firmware(MPT_ADAPTER *ioc);
+> +
+>  
+>  /*
+>   *  Public data decl's...
+>   */
+>  extern struct list_head	  ioc_list;
+> +extern int mpt_fwfault_debug;
+>  
+>  /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+>  #endif		/* } __KERNEL__ */
+> diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+> index ee09041..e62c6bc 100644
+> --- a/drivers/message/fusion/mptscsih.c
+> +++ b/drivers/message/fusion/mptscsih.c
+> @@ -1846,6 +1846,9 @@ mptscsih_abort(struct scsi_cmnd * SCpnt)
+>  	if (hd->timeouts < -1)
+>  		hd->timeouts++;
+>  
+> +	if (mpt_fwfault_debug)
+> +		mpt_halt_firmware(ioc);
+
+So one single global flag affects all controllers in the system?
+
+I guess that's OK if it's just a debug/diag thing.
+
+>  	/* Most important!  Set TaskMsgContext to SCpnt's MsgContext!
+>  	 * (the IO to be ABORT'd)
+>  	 *
+> diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
+> index a745f91..e7705d3 100644
+> --- a/drivers/scsi/libiscsi_tcp.c
+> +++ b/drivers/scsi/libiscsi_tcp.c
+> @@ -177,7 +177,6 @@ int iscsi_tcp_segment_done(struct iscsi_tcp_conn *tcp_conn,
+>  			   struct iscsi_segment *segment, int recv,
+>  			   unsigned copied)
+>  {
+> -	static unsigned char padbuf[ISCSI_PAD_LEN];
+>  	struct scatterlist sg;
+>  	unsigned int pad;
+>  
+> @@ -233,7 +232,7 @@ int iscsi_tcp_segment_done(struct iscsi_tcp_conn *tcp_conn,
+>  			debug_tcp("consume %d pad bytes\n", pad);
+>  			segment->total_size += pad;
+>  			segment->size = pad;
+> -			segment->data = padbuf;
+> +			segment->data = segment->padbuf;
+>  			return 0;
+>  		}
+>  	}
+> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+> index 2d4f32b..9ad4d09 100644
+> --- a/drivers/scsi/qla2xxx/qla_init.c
+> +++ b/drivers/scsi/qla2xxx/qla_init.c
+> @@ -1258,35 +1258,48 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
+>  {
+>  	int	rval;
+>  	unsigned long flags = 0;
+> -	int cnt;
+> +	int cnt, que;
+>  	struct qla_hw_data *ha = vha->hw;
+> -	struct req_que *req = ha->req_q_map[0];
+> -	struct rsp_que *rsp = ha->rsp_q_map[0];
+> +	struct req_que *req;
+> +	struct rsp_que *rsp;
+> +	struct scsi_qla_host *vp;
+>  	struct mid_init_cb_24xx *mid_init_cb =
+>  	    (struct mid_init_cb_24xx *) ha->init_cb;
+
+This cast worries me.  It's a cast between two complex data structures
+which appear to have nothing to do with each other.
+
+Oh well.  It _is_ a scsi driver :(
