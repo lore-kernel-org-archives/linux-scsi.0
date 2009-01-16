@@ -1,236 +1,65 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [GIT PATCH] firs round of SCSI bug fixes for 2.6.29-rc1
-Date: Fri, 16 Jan 2009 09:09:28 -0800
-Message-ID: <20090116090928.e43c986e.akpm@linux-foundation.org>
-References: <1232117771.3224.21.camel@localhost.localdomain>
+From: Rick Jones <rick.jones2@hp.com>
+Subject: Re: Mainline kernel OLTP performance update
+Date: Fri, 16 Jan 2009 10:11:02 -0800
+Message-ID: <4970CDB6.6040705@hp.com>
+References: <BC02C49EEB98354DBA7F5DD76F2A9E800317003CB0@azsmsx501.amr.corp.intel.com>	<200901161503.13730.nickpiggin@yahoo.com.au>	<20090115201210.ca1a9542.akpm@linux-foundation.org> <200901161746.25205.nickpiggin@yahoo.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S935949AbZAPRJv@vger.kernel.org>
-In-Reply-To: <1232117771.3224.21.camel@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <200901161746.25205.nickpiggin@yahoo.com.au>
+Sender: netdev-owner@vger.kernel.org
+To: Nick Piggin <nickpiggin@yahoo.com.au>
+Cc: Andrew Morton <akpm@linux-foundation.org>, netdev@vger.kernel.org, sfr@canb.auug.org.au, matthew@wil.cx, matthew.r.wilcox@intel.com, chinang.ma@intel.com, linux-kernel@vger.kernel.org, sharad.c.tripathi@intel.com, arjan@linux.intel.com, andi.kleen@intel.com, suresh.b.siddha@intel.com, harita.chilukuri@intel.com, douglas.w.styner@intel.com, peter.xihong.wang@intel.com, hubert.nueckel@intel.com, chris.mason@oracle.com, srostedt@redhat.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, anirban.chakraborty@qlogic.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 16 Jan 2009 09:56:11 -0500 James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+Nick Piggin wrote:
+> OK, I have these numbers to show I'm not completely off my rocker to suggest
+> we merge SLQB :) Given these results, how about I ask to merge SLQB as default
+> in linux-next, then if nothing catastrophic happens, merge it upstream in the
+> next merge window, then a couple of releases after that, given some time to
+> test and tweak SLQB, then we plan to bite the bullet and emerge with just one
+> main slab allocator (plus SLOB).
+> 
+> 
+> System is a 2socket, 4 core AMD. 
 
-> This is acutally four bug fixes and part of a fusion update which was a
-> bit late processing through the merge window, but which should be
-> perfectly acceptable for -rc1.
+Not exactly a large system :)  Barely NUMA even with just two sockets.
+
+> All debug and stats options turned off for
+> all the allocators; default parameters (ie. SLUB using higher order pages,
+> and the others tend to be using order-0). SLQB is the version I recently
+> posted, with some of the prefetching removed according to Pekka's review
+> (probably a good idea to only add things like that in if/when they prove to
+> be an improvement).
 > 
 > ...
->
-> Full diff below.
-
-I like full diffs.
- 
-> --- a/drivers/message/fusion/mptbase.c
-> +++ b/drivers/message/fusion/mptbase.c
-> @@ -79,9 +79,22 @@ MODULE_VERSION(my_VERSION);
->  /*
->   *  cmd line parameters
->   */
-> -static int mpt_msi_enable = -1;
-> -module_param(mpt_msi_enable, int, 0);
-> -MODULE_PARM_DESC(mpt_msi_enable, " MSI Support Enable (default=0)");
-> +
-> +static int mpt_msi_enable_spi;
-> +module_param(mpt_msi_enable_spi, int, 0);
-> +MODULE_PARM_DESC(mpt_msi_enable_spi, " Enable MSI Support for SPI \
-> +		controllers (default=0)");
-> +
-> +static int mpt_msi_enable_fc;
-> +module_param(mpt_msi_enable_fc, int, 0);
-> +MODULE_PARM_DESC(mpt_msi_enable_fc, " Enable MSI Support for FC \
-> +		controllers (default=0)");
-> +
-> +static int mpt_msi_enable_sas;
-> +module_param(mpt_msi_enable_sas, int, 1);
-> +MODULE_PARM_DESC(mpt_msi_enable_sas, " Enable MSI Support for SAS \
-> +		controllers (default=1)");
-> +
+ >
+> Netperf UDP unidirectional send test (10 runs, higher better):
 > 
-> ...
+> Server and client bound to same CPU
+> SLAB AVG=60.111 STD=1.59382
+> SLQB AVG=60.167 STD=0.685347
+> SLUB AVG=58.277 STD=0.788328
+> 
+> Server and client bound to same socket, different CPUs
+> SLAB AVG=85.938 STD=0.875794
+> SLQB AVG=93.662 STD=2.07434
+> SLUB AVG=81.983 STD=0.864362
+> 
+> Server and client bound to different sockets
+> SLAB AVG=78.801 STD=1.44118
+> SLQB AVG=78.269 STD=1.10457
+> SLUB AVG=71.334 STD=1.16809
+ > ...
+> I haven't done any non-local network tests. Networking is the one of the
+> subsystems most heavily dependent on slab performance, so if anybody
+> cares to run their favourite tests, that would be really helpful.
 
-Those MODULE_PARM_DESC strings are going to come out funny-looking,
-with extra tabs and stuff.
+I'm guessing, but then are these Mbit/s figures? Would that be the sending 
+throughput or the receiving throughput?
 
-> +MODULE_PARM_DESC(mpt_debug_level, " debug level - refer to mptdebug.h \
-> +	- (default=0)");
-> +
-> +int mpt_fwfault_debug;
-> +EXPORT_SYMBOL(mpt_fwfault_debug);
-> +module_param_call(mpt_fwfault_debug, param_set_int, param_get_int,
-> +	  &mpt_fwfault_debug, 0600);
-> +MODULE_PARM_DESC(mpt_fwfault_debug, "Enable detection of Firmware fault"
-> +	" and halt Firmware on fault - (default=0)");
+I love to see netperf used, but why UDP and loopback?  Also, how about the 
+service demands?
 
-That one got it right.
-
->  
->  #ifdef MFCNT
->  static int mfcounter = 0;
-> @@ -1751,16 +1774,25 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
->  		ioc->bus_type = SAS;
->  	}
->  
-> -	if (mpt_msi_enable == -1) {
-> -		/* Enable on SAS, disable on FC and SPI */
-> -		if (ioc->bus_type == SAS)
-> -			ioc->msi_enable = 1;
-> -		else
-> -			ioc->msi_enable = 0;
-> -	} else
-> -		/* follow flag: 0 - disable; 1 - enable */
-> -		ioc->msi_enable = mpt_msi_enable;
->  
-> +	switch (ioc->bus_type) {
-> +
-> +	case SAS:
-> +		ioc->msi_enable = mpt_msi_enable_sas;
-> +		break;
-> +
-> +	case SPI:
-> +		ioc->msi_enable = mpt_msi_enable_spi;
-> +		break;
-> +
-> +	case FC:
-> +		ioc->msi_enable = mpt_msi_enable_fc;
-> +		break;
-> +
-> +	default:
-> +		ioc->msi_enable = 0;
-> +		break;
-> +	}
->  	if (ioc->errata_flag_1064)
->  		pci_disable_io_access(pdev);
->  
-> @@ -6313,6 +6345,33 @@ mpt_print_ioc_summary(MPT_ADAPTER *ioc, char *buffer, int *size, int len, int sh
->  	*size = y;
->  }
->  
-> +
-> +/**
-> + *	mpt_halt_firmware - Halts the firmware if it is operational and panic
-> + *	the kernel
-> + *	@ioc: Pointer to MPT_ADAPTER structure
-> + *
-> + **/
-> +void
-> +mpt_halt_firmware(MPT_ADAPTER *ioc)
-> +{
-> +	u32	 ioc_raw_state;
-> +
-> +	ioc_raw_state = mpt_GetIocState(ioc, 0);
-> +
-> +	if ((ioc_raw_state & MPI_IOC_STATE_MASK) == MPI_IOC_STATE_FAULT) {
-> +		printk(MYIOC_s_ERR_FMT "IOC is in FAULT state (%04xh)!!!\n",
-> +			ioc->name, ioc_raw_state & MPI_DOORBELL_DATA_MASK);
-> +		panic("%s: IOC Fault (%04xh)!!!\n", ioc->name,
-> +			ioc_raw_state & MPI_DOORBELL_DATA_MASK);
-> +	} else {
-> +		CHIPREG_WRITE32(&ioc->chip->Doorbell, 0xC0FFEE00);
-> +		panic("%s: Firmware is halted due to command timeout\n",
-> +			ioc->name);
-> +	}
-> +}
-> +EXPORT_SYMBOL(mpt_halt_firmware);
-
-Doing a panic() after we've already detected an error is plain nasty. 
-Is there no way in which we can allow the kernel to continue?
-
-
->  /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
->  /*
->   *	Reset Handling
-> @@ -6345,6 +6404,8 @@ mpt_HardResetHandler(MPT_ADAPTER *ioc, int sleepFlag)
->  	printk(MYIOC_s_INFO_FMT "HardResetHandler Entered!\n", ioc->name);
->  	printk("MF count 0x%x !\n", ioc->mfcnt);
->  #endif
-> +	if (mpt_fwfault_debug)
-> +		mpt_halt_firmware(ioc);
->  
->  	/* Reset the adapter. Prevent more than 1 call to
->  	 * mpt_do_ioc_recovery at any instant in time.
-> diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
-> index dff048c..b3e981d 100644
-> --- a/drivers/message/fusion/mptbase.h
-> +++ b/drivers/message/fusion/mptbase.h
-> @@ -922,11 +922,14 @@ extern void	 mpt_free_fw_memory(MPT_ADAPTER *ioc);
->  extern int	 mpt_findImVolumes(MPT_ADAPTER *ioc);
->  extern int	 mptbase_sas_persist_operation(MPT_ADAPTER *ioc, u8 persist_opcode);
->  extern int	 mpt_raid_phys_disk_pg0(MPT_ADAPTER *ioc, u8 phys_disk_num, pRaidPhysDiskPage0_t phys_disk);
-> +extern void     mpt_halt_firmware(MPT_ADAPTER *ioc);
-> +
->  
->  /*
->   *  Public data decl's...
->   */
->  extern struct list_head	  ioc_list;
-> +extern int mpt_fwfault_debug;
->  
->  /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
->  #endif		/* } __KERNEL__ */
-> diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
-> index ee09041..e62c6bc 100644
-> --- a/drivers/message/fusion/mptscsih.c
-> +++ b/drivers/message/fusion/mptscsih.c
-> @@ -1846,6 +1846,9 @@ mptscsih_abort(struct scsi_cmnd * SCpnt)
->  	if (hd->timeouts < -1)
->  		hd->timeouts++;
->  
-> +	if (mpt_fwfault_debug)
-> +		mpt_halt_firmware(ioc);
-
-So one single global flag affects all controllers in the system?
-
-I guess that's OK if it's just a debug/diag thing.
-
->  	/* Most important!  Set TaskMsgContext to SCpnt's MsgContext!
->  	 * (the IO to be ABORT'd)
->  	 *
-> diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
-> index a745f91..e7705d3 100644
-> --- a/drivers/scsi/libiscsi_tcp.c
-> +++ b/drivers/scsi/libiscsi_tcp.c
-> @@ -177,7 +177,6 @@ int iscsi_tcp_segment_done(struct iscsi_tcp_conn *tcp_conn,
->  			   struct iscsi_segment *segment, int recv,
->  			   unsigned copied)
->  {
-> -	static unsigned char padbuf[ISCSI_PAD_LEN];
->  	struct scatterlist sg;
->  	unsigned int pad;
->  
-> @@ -233,7 +232,7 @@ int iscsi_tcp_segment_done(struct iscsi_tcp_conn *tcp_conn,
->  			debug_tcp("consume %d pad bytes\n", pad);
->  			segment->total_size += pad;
->  			segment->size = pad;
-> -			segment->data = padbuf;
-> +			segment->data = segment->padbuf;
->  			return 0;
->  		}
->  	}
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-> index 2d4f32b..9ad4d09 100644
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -1258,35 +1258,48 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
->  {
->  	int	rval;
->  	unsigned long flags = 0;
-> -	int cnt;
-> +	int cnt, que;
->  	struct qla_hw_data *ha = vha->hw;
-> -	struct req_que *req = ha->req_q_map[0];
-> -	struct rsp_que *rsp = ha->rsp_q_map[0];
-> +	struct req_que *req;
-> +	struct rsp_que *rsp;
-> +	struct scsi_qla_host *vp;
->  	struct mid_init_cb_24xx *mid_init_cb =
->  	    (struct mid_init_cb_24xx *) ha->init_cb;
-
-This cast worries me.  It's a cast between two complex data structures
-which appear to have nothing to do with each other.
-
-Oh well.  It _is_ a scsi driver :(
+rick jones
