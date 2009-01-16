@@ -1,52 +1,48 @@
-From: Andrew Morton <akpm@linux-foundation.org>
+From: David Miller <davem@davemloft.net>
 Subject: Re: [GIT PATCH] firs round of SCSI bug fixes for 2.6.29-rc1
-Date: Fri, 16 Jan 2009 11:07:08 -0800
-Message-ID: <20090116110708.75c5828d.akpm@linux-foundation.org>
+Date: Fri, 16 Jan 2009 11:09:31 -0800 (PST)
+Message-ID: <20090116.110931.166270342.davem@davemloft.net>
 References: <1232117771.3224.21.camel@localhost.localdomain>
 	<20090116090928.e43c986e.akpm@linux-foundation.org>
 	<1232131733.3224.46.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:55797 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754106AbZAPTHm (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:33460
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1756035AbZAPTJ3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Jan 2009 14:07:42 -0500
+	Fri, 16 Jan 2009 14:09:29 -0500
 In-Reply-To: <1232131733.3224.46.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: torvalds@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, 16 Jan 2009 13:48:53 -0500
-James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Date: Fri, 16 Jan 2009 13:48:53 -0500
 
-> > > +++ b/drivers/scsi/qla2xxx/qla_init.c
-> > > @@ -1258,35 +1258,48 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
-> > >  {
-> > >  	int	rval;
-> > >  	unsigned long flags = 0;
-> > > -	int cnt;
-> > > +	int cnt, que;
-> > >  	struct qla_hw_data *ha = vha->hw;
-> > > -	struct req_que *req = ha->req_q_map[0];
-> > > -	struct rsp_que *rsp = ha->rsp_q_map[0];
-> > > +	struct req_que *req;
-> > > +	struct rsp_que *rsp;
-> > > +	struct scsi_qla_host *vp;
-> > >  	struct mid_init_cb_24xx *mid_init_cb =
-> > >  	    (struct mid_init_cb_24xx *) ha->init_cb;
-> > 
-> > This cast worries me.  It's a cast between two complex data structures
-> > which appear to have nothing to do with each other.
+> On Fri, 2009-01-16 at 09:09 -0800, Andrew Morton wrote:
+> > Doing a panic() after we've already detected an error is plain nasty. 
+> > Is there no way in which we can allow the kernel to continue?
 > 
-> Actually, it's a C++ type construct.  ha->init_cb is of type init_cb_t,
-> mid_init_cb actually contains this (via a second indirection) as the
-> first element, so what it's doing is dynamically casting out based on
-> the board type.
+> There's a long thread discussing this very point on linux-scsi.  The
+> short version is "no, it's only used for debugging firmware and if
+> you've corrupted your firmware to this point you need the machine
+> halting".
 
-Ah, OK, I got lost amongst the typedefs and pointers.
+Long thread or not, taking out one's entire system because one
+device hits a fail state is always wrong.
 
-This code could/should use container_of() for this operation?
+If I have other block devices which are working, all I want
+is for this specific controller and it's block devices to
+fail.
+
+This way I can get the failure log message and actually do something
+with that data without rebooting.
+
+Or I guess digital cameras and serial/net consoles are the only
+sanctioned way to record kernel failure log messages of this kind?
+
+Give me a break. :)
