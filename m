@@ -1,30 +1,55 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [GIT PATCH] firs round of SCSI bug fixes for 2.6.29-rc1
-Date: Sat, 17 Jan 2009 14:17:23 -0700
-Message-ID: <20090117211723.GB30719@parisc-linux.org>
-References: <1232117771.3224.21.camel@localhost.localdomain>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH resend] include/linux: Add bsg.h to the Kernel exported headers
+Date: Sun, 18 Jan 2009 10:23:25 +0200
+Message-ID: <4972E6FD.8070405@panasas.com>
+References: <496EFA69.3050007@panasas.com> <20090115202155G.fujita.tomonori@lab.ntt.co.jp> <496F26DF.9050303@panasas.com> <20090115212942R.fujita.tomonori@lab.ntt.co.jp> <20090115164824.e637b8c6.akpm@linux-foundation.org> <20090116065003.GU30821@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:39100 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758044AbZAQVRa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 17 Jan 2009 16:17:30 -0500
-Content-Disposition: inline
-In-Reply-To: <1232117771.3224.21.camel@localhost.localdomain>
+Received: from gw-ca.panasas.com ([66.104.249.162]:22970 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756867AbZARIXc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Jan 2009 03:23:32 -0500
+In-Reply-To: <20090116065003.GU30821@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, dougg@torque.net, stable@kernel.org
 
-On Fri, Jan 16, 2009 at 09:56:11AM -0500, James Bottomley wrote:
->       mpt fusion: Add separate msi enable disable for FC,SPI,SAS
 
-I thought we rejected this one as being completely bogus?  I certainly
-don't remember seeing even an excuse for it after I challenged it.
+bsg.h in current form is perfectly suitable for user-mode
+consumption. It is needed together with scsi/sg.h for applications
+that want to interface with the bsg driver.
 
+Currently the few projects that use it would copy it over into
+the projects. But that is not acceptable for projects that need
+to provide source and devel packages for distros.
+
+This should also be submitted to stable 2.6.28 and 2.6.27 since bsg had
+a stable API since these Kernels and distro users will need the header
+for these kernels a swell
+
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+Ack-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+CC: stable@kernel.org
+---
+ include/linux/Kbuild |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/include/linux/Kbuild b/include/linux/Kbuild
+index 12e9a29..2124c06 100644
+--- a/include/linux/Kbuild
++++ b/include/linux/Kbuild
+@@ -41,6 +41,7 @@ header-y += baycom.h
+ header-y += bfs_fs.h
+ header-y += blkpg.h
+ header-y += bpqether.h
++header-y += bsg.h
+ header-y += can.h
+ header-y += cdk.h
+ header-y += chio.h
 -- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+1.6.0.1
+
+
