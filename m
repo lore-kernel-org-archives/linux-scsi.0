@@ -1,90 +1,94 @@
 From: Nick Piggin <nickpiggin@yahoo.com.au>
 Subject: Re: Mainline kernel OLTP performance update
-Date: Mon, 19 Jan 2009 18:13:06 +1100
-Message-ID: <200901191813.07960.nickpiggin@yahoo.com.au>
-References: <BC02C49EEB98354DBA7F5DD76F2A9E800317003CB0@azsmsx501.amr.corp.intel.com> <200901162142.51306.nickpiggin@yahoo.com.au> <84144f020901160255i530755bboc07750a61240d4bf@mail.gmail.com>
+Date: Mon, 19 Jan 2009 18:43:31 +1100
+Message-ID: <200901191843.33490.nickpiggin@yahoo.com.au>
+References: <BC02C49EEB98354DBA7F5DD76F2A9E800317003CB0@azsmsx501.amr.corp.intel.com> <200901161746.25205.nickpiggin@yahoo.com.au> <4970CDB6.6040705@hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp115.mail.mud.yahoo.com ([209.191.84.164]:29025 "HELO
-	smtp115.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750882AbZASHNa (ORCPT
+Received: from smtp112.mail.mud.yahoo.com ([209.191.84.65]:33622 "HELO
+	smtp112.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751479AbZASHn4 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Jan 2009 02:13:30 -0500
-In-Reply-To: <84144f020901160255i530755bboc07750a61240d4bf@mail.gmail.com>
+	Mon, 19 Jan 2009 02:43:56 -0500
+In-Reply-To: <4970CDB6.6040705@hp.com>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Pekka Enberg <penberg@cs.helsinki.fi>
-Cc: Matthew Wilcox <matthew@wil.cx>, Andrew Morton <akpm@linux-foundation.org>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>, chinang.ma@intel.com, linux-kernel@vger.kernel.org, sharad.c.tripathi@intel.com, arjan@linux.intel.com, andi.kleen@intel.com, suresh.b.siddha@intel.com, harita.chilukuri@intel.com, douglas.w.styner@intel.com, peter.xihong.wang@intel.com, hubert.nueckel@intel.com, chris.mason@oracle.com, srostedt@redhat.com, linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, Anirban Chakraborty <anirban.chakraborty@qlogic.com>, Christoph Lameter <cl@linux-foundation.org>
+To: Rick Jones <rick.jones2@hp.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, netdev@vger.kernel.org, sfr@canb.auug.org.au, matthew@wil.cx, matthew.r.wilcox@intel.com, chinang.ma@intel.com, linux-kernel@vger.kernel.org, sharad.c.tripathi@intel.com, arjan@linux.intel.com, andi.kleen@intel.com, suresh.b.siddha@intel.com, harita.chilukuri@intel.com, douglas.w.styner@intel.com, peter.xihong.wang@intel.com, hubert.nueckel@intel.com, chris.mason@oracle.com, srostedt@redhat.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, anirban.chakraborty@qlogic.com
 
-On Friday 16 January 2009 21:55:30 Pekka Enberg wrote:
-> Hi Nick,
->
-> On Fri, Jan 16, 2009 at 12:42 PM, Nick Piggin <nickpiggin@yahoo.com.au> 
-wrote:
-> >> I don't have the exact config for the previous tests but it's was just
-> >> my laptop regular config whereas the new tests are x86-64 defconfig.
-> >> So I think I'm just hitting some of the other OLTP regressions here,
-> >> aren't I? There's some scheduler related options such as
-> >> CONFIG_GROUP_SCHED and CONFIG_FAIR_GROUP_SCHED enabled in defconfig
-> >> that I didn't have in the original tests. I can try without them if
-> >> you want but I'm not sure it's relevant for SLAB vs SLUB tests.
+On Saturday 17 January 2009 05:11:02 Rick Jones wrote:
+> Nick Piggin wrote:
+> > OK, I have these numbers to show I'm not completely off my rocker to
+> > suggest we merge SLQB :) Given these results, how about I ask to merge
+> > SLQB as default in linux-next, then if nothing catastrophic happens,
+> > merge it upstream in the next merge window, then a couple of releases
+> > after that, given some time to test and tweak SLQB, then we plan to bite
+> > the bullet and emerge with just one main slab allocator (plus SLOB).
 > >
-> > Oh no that's fine. It just looked like you repeated the test but
-> > with lockdep disabled (and no other changes).
+> >
+> > System is a 2socket, 4 core AMD.
 >
-> Right. In any case, I am still unable to reproduce the OLTP issue and
-> I've seen SLUB beat SLAB on my machine in most of the benchmarks
-> you've posted.
+> Not exactly a large system :)  Barely NUMA even with just two sockets.
 
-SLUB was distinctly slower on the tbench, netperf, and hackbench
-tests that I ran. These were faster with SLUB on your machine?
-What kind of system is it?
+You're right ;)
 
+But at least it is exercising the NUMA paths in the allocator, and
+represents a pretty common size of system...
 
-> So I have very mixed feelings about SLQB. It's very
-> nice that it works for OLTP but we still don't have much insight (i.e.
-> numbers) on why it's better.
-
-According to estimates in this thread, I think Matthew said SLUB would
-be around 6% slower? SLQB is within measurement error of SLAB.
-
-Fair point about personally reproducing the OLTP problem yourself. But
-the fact is that we will get problem reports that cannot be reproduced.
-That does not make them less relevant. I can't reproduce the OLTP
-benchmark myself. And I'm fully expecting to get problem reports for
-SLQB against insanely sized SGI systems, which I will take very seriously
-and try to fix them.
+I can run some tests on bigger systems at SUSE, but it is not always
+easy to set up "real" meaningful workloads on them or configure
+significant IO for them.
 
 
-> I'm also bit worried if SLQB has gotten
-> enough attention from the NUMA and HPC folks that brought us SLUB.
+> > Netperf UDP unidirectional send test (10 runs, higher better):
+> >
+> > Server and client bound to same CPU
+> > SLAB AVG=60.111 STD=1.59382
+> > SLQB AVG=60.167 STD=0.685347
+> > SLUB AVG=58.277 STD=0.788328
+> >
+> > Server and client bound to same socket, different CPUs
+> > SLAB AVG=85.938 STD=0.875794
+> > SLQB AVG=93.662 STD=2.07434
+> > SLUB AVG=81.983 STD=0.864362
+> >
+> > Server and client bound to different sockets
+> > SLAB AVG=78.801 STD=1.44118
+> > SLQB AVG=78.269 STD=1.10457
+> > SLUB AVG=71.334 STD=1.16809
+> >
+>  > ...
+> >
+> > I haven't done any non-local network tests. Networking is the one of the
+> > subsystems most heavily dependent on slab performance, so if anybody
+> > cares to run their favourite tests, that would be really helpful.
+>
+> I'm guessing, but then are these Mbit/s figures? Would that be the sending
+> throughput or the receiving throughput?
 
-It hasn't, but that's the problem we're hoping to solve by getting it
-merged. People can give it more attention, and we can try to fix any
-problems. SLUB has been default for quite a while now and not able to
-solve all problems it has had reported against it. So I hope SLQB will
-be able to unblock this situation.
+Yes, Mbit/s. They were... hmm, sending throughput I think, but each pair
+of numbers seemed to be identical IIRC?
 
 
-> The good news is that SLQB can replace SLAB so either way, we're not
-> going to end up with four allocators. Whether it can replace SLUB
-> remains to be seen.
+> I love to see netperf used, but why UDP and loopback?
 
-Well I think being able to simply replace SLAB is not ideal. The plan
-I'm hoping is to have four allocators for a few releases, and then
-go back to having two. That is going to mean some groups might not
-have their ideal allocator merged... but I think it is crazy to settle
-with more than one main compile-time allocator for the long term.
+No really good reason. I guess I was hoping to keep other variables as
+small as possible. But I guess a real remote test would be a lot more
+realistic as a networking test. Hmm, but I could probably set up a test
+over a simple GbE link here.  I'll try that.
 
-I don't know what the next redhat enterprise release is going to do,
-but if they go with SLAB, then I think that means no SGI systems would
-run in production with SLUB anyway, so what would be the purpose of
-having a special "HPC/huge system" allocator? Or... what other reasons
-should users select SLUB vs SLAB? (in terms of core allocator behaviour,
-versus extras that can be ported from one to the other) If we can't even
-make up our own minds, then will others be able to?
+
+> Also, how about the
+> service demands?
+
+Well, over loopback and using CPU binding, I was hoping it wouldn't
+change much... but I see netperf does some measurements for you. I
+will consider those in future too.
+
+BTW. is it possible to do parallel netperf tests?
+
 
