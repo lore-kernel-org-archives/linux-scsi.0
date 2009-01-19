@@ -1,43 +1,58 @@
-From: Nick Piggin <nickpiggin@yahoo.com.au>
-Subject: Re: Mainline kernel OLTP performance update
-Date: Mon, 19 Jan 2009 19:57:56 +1100
-Message-ID: <200901191957.57703.nickpiggin@yahoo.com.au>
-References: <BC02C49EEB98354DBA7F5DD76F2A9E800317003CB0@azsmsx501.amr.corp.intel.com> <200901191942.48548.nickpiggin@yahoo.com.au> <84144f020901190047v1f7f6710l5d4af50b57be3a7e@mail.gmail.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH resend] include/linux: Add bsg.h to the Kernel exported headers
+Date: Mon, 19 Jan 2009 10:37:48 +0100
+Message-ID: <20090119093746.GF30821@kernel.dk>
+References: <496EFA69.3050007@panasas.com> <20090115202155G.fujita.tomonori@lab.ntt.co.jp> <496F26DF.9050303@panasas.com> <20090115212942R.fujita.tomonori@lab.ntt.co.jp> <20090115164824.e637b8c6.akpm@linux-foundation.org> <20090116065003.GU30821@kernel.dk> <4972E6FD.8070405@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp112.mail.mud.yahoo.com ([209.191.84.65]:35071 "HELO
-	smtp112.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754556AbZASI61 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Jan 2009 03:58:27 -0500
-In-Reply-To: <84144f020901190047v1f7f6710l5d4af50b57be3a7e@mail.gmail.com>
+Received: from brick.kernel.dk ([93.163.65.50]:18238 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755511AbZASJjQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Jan 2009 04:39:16 -0500
 Content-Disposition: inline
+In-Reply-To: <4972E6FD.8070405@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Pekka Enberg <penberg@cs.helsinki.fi>
-Cc: Matthew Wilcox <matthew@wil.cx>, Andrew Morton <akpm@linux-foundation.org>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>, chinang.ma@intel.com, linux-kernel@vger.kernel.org, sharad.c.tripathi@intel.com, arjan@linux.intel.com, andi.kleen@intel.com, suresh.b.siddha@intel.com, harita.chilukuri@intel.com, douglas.w.styner@intel.com, peter.xihong.wang@intel.com, hubert.nueckel@intel.com, chris.mason@oracle.com, srostedt@redhat.com, linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, Anirban Chakraborty <anirban.chakraborty@qlogic.com>, Christoph Lameter <cl@linux-foundation.org>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, dougg@torque.net, stable@kernel.org
 
-On Monday 19 January 2009 19:47:24 Pekka Enberg wrote:
-> On Mon, Jan 19, 2009 at 10:42 AM, Nick Piggin <nickpiggin@yahoo.com.au> 
-wrote:
-> > Anyway, nobody has disagreed with my proposal to merge SLQB, so in the
-> > worst case I don't think it will cause too much harm, and in the best
-> > case it might turn out to make the best tradeoffs and who knows, it
-> > might actually not be catastrophic for HPC ;)
->
-> Yeah. If Andrew/Linus doesn't want to merge SLQB to 2.6.29, we can
+On Sun, Jan 18 2009, Boaz Harrosh wrote:
+> 
+> bsg.h in current form is perfectly suitable for user-mode
+> consumption. It is needed together with scsi/sg.h for applications
+> that want to interface with the bsg driver.
+> 
+> Currently the few projects that use it would copy it over into
+> the projects. But that is not acceptable for projects that need
+> to provide source and devel packages for distros.
+> 
+> This should also be submitted to stable 2.6.28 and 2.6.27 since bsg had
+> a stable API since these Kernels and distro users will need the header
+> for these kernels a swell
+> 
+> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> Ack-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> CC: stable@kernel.org
+> ---
+>  include/linux/Kbuild |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/include/linux/Kbuild b/include/linux/Kbuild
+> index 12e9a29..2124c06 100644
+> --- a/include/linux/Kbuild
+> +++ b/include/linux/Kbuild
+> @@ -41,6 +41,7 @@ header-y += baycom.h
+>  header-y += bfs_fs.h
+>  header-y += blkpg.h
+>  header-y += bpqether.h
+> +header-y += bsg.h
+>  header-y += can.h
+>  header-y += cdk.h
+>  header-y += chio.h
 
-I would prefer not. Apart from not practicing what I preach about
-merging, if it has stupid bugs on some systems or obvious performance
-problems, it will not be a good start ;)
+Applied
 
-> stick it in linux-next through slab.git if you want.
-
-That would be appreciated. It's not quite ready yet...
-
-Thanks.
-Nick
+-- 
+Jens Axboe
 
