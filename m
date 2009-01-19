@@ -1,94 +1,104 @@
-From: Nick Piggin <nickpiggin@yahoo.com.au>
-Subject: Re: Mainline kernel OLTP performance update
-Date: Mon, 19 Jan 2009 18:43:31 +1100
-Message-ID: <200901191843.33490.nickpiggin@yahoo.com.au>
-References: <BC02C49EEB98354DBA7F5DD76F2A9E800317003CB0@azsmsx501.amr.corp.intel.com> <200901161746.25205.nickpiggin@yahoo.com.au> <4970CDB6.6040705@hp.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+From: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
+Subject: Re: [PATCH] qla2xxx: Fix memory leak in error path
+Date: Sun, 18 Jan 2009 23:52:58 -0800
+Message-ID: <76159D48-D446-4EF4-91DE-BDD1ECC95182@qlogic.com>
+References: <alpine.OSX.1.00.0901182136340.94282@ac-mac.local> <6.0.0.20.2.20090119153604.06f467e8@172.19.0.2>
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Content-Type: text/plain; charset="US-ASCII"; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp112.mail.mud.yahoo.com ([209.191.84.65]:33622 "HELO
-	smtp112.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751479AbZASHn4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Jan 2009 02:43:56 -0500
-In-Reply-To: <4970CDB6.6040705@hp.com>
-Content-Disposition: inline
+Received: from avexch1.qlogic.com ([198.70.193.115]:24816 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752927AbZASHw7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Jan 2009 02:52:59 -0500
+In-Reply-To: <6.0.0.20.2.20090119153604.06f467e8@172.19.0.2>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rick Jones <rick.jones2@hp.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, netdev@vger.kernel.org, sfr@canb.auug.org.au, matthew@wil.cx, matthew.r.wilcox@intel.com, chinang.ma@intel.com, linux-kernel@vger.kernel.org, sharad.c.tripathi@intel.com, arjan@linux.intel.com, andi.kleen@intel.com, suresh.b.siddha@intel.com, harita.chilukuri@intel.com, douglas.w.styner@intel.com, peter.xihong.wang@intel.com, hubert.nueckel@intel.com, chris.mason@oracle.com, srostedt@redhat.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, anirban.chakraborty@qlogic.com
+To: Hisashi Hifumi <hifumi.hisashi@oss.ntt.co.jp>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Saturday 17 January 2009 05:11:02 Rick Jones wrote:
-> Nick Piggin wrote:
-> > OK, I have these numbers to show I'm not completely off my rocker to
-> > suggest we merge SLQB :) Given these results, how about I ask to merge
-> > SLQB as default in linux-next, then if nothing catastrophic happens,
-> > merge it upstream in the next merge window, then a couple of releases
-> > after that, given some time to test and tweak SLQB, then we plan to bite
-> > the bullet and emerge with just one main slab allocator (plus SLOB).
-> >
-> >
-> > System is a 2socket, 4 core AMD.
+
+On Jan 18, 2009, at 11:05 PM, Hisashi Hifumi wrote:
+
 >
-> Not exactly a large system :)  Barely NUMA even with just two sockets.
-
-You're right ;)
-
-But at least it is exercising the NUMA paths in the allocator, and
-represents a pretty common size of system...
-
-I can run some tests on bigger systems at SUSE, but it is not always
-easy to set up "real" meaningful workloads on them or configure
-significant IO for them.
-
-
-> > Netperf UDP unidirectional send test (10 runs, higher better):
-> >
-> > Server and client bound to same CPU
-> > SLAB AVG=60.111 STD=1.59382
-> > SLQB AVG=60.167 STD=0.685347
-> > SLUB AVG=58.277 STD=0.788328
-> >
-> > Server and client bound to same socket, different CPUs
-> > SLAB AVG=85.938 STD=0.875794
-> > SLQB AVG=93.662 STD=2.07434
-> > SLUB AVG=81.983 STD=0.864362
-> >
-> > Server and client bound to different sockets
-> > SLAB AVG=78.801 STD=1.44118
-> > SLQB AVG=78.269 STD=1.10457
-> > SLUB AVG=71.334 STD=1.16809
-> >
->  > ...
-> >
-> > I haven't done any non-local network tests. Networking is the one of the
-> > subsystems most heavily dependent on slab performance, so if anybody
-> > cares to run their favourite tests, that would be really helpful.
+> At 15:16 09/01/19, Anirban Chakraborty wrote:
+>> The following patch fixes memory leak in the error path of scsi  
+>> host allocation
+>> failure.
+>> Please review and apply.
+>>
+>> Thanks,
+>> Anirban
+>>
+>> Signed-off-by: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
+>>
+>> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/ 
+>> qla_os.c
+>> index df6e6a2..2cf1491 100644
+>> --- a/drivers/scsi/qla2xxx/qla_os.c
+>> +++ b/drivers/scsi/qla2xxx/qla_os.c
+>> @@ -1888,6 +1888,8 @@ qla2x00_probe_one(struct pci_dev *pdev, const  
+>> struct
+>> pci_device_id *id)
+>> 		    "[ERROR] Failed to allocate memory for scsi_host\n");
+>>
+>> 		ret = -ENOMEM;
+>> +		qla2x00_mem_free(ha);
+>> +		qla2x00_free_queues(ha);
+>> 		goto probe_hw_failed;
+>> 	}
+>>
 >
-> I'm guessing, but then are these Mbit/s figures? Would that be the sending
-> throughput or the receiving throughput?
-
-Yes, Mbit/s. They were... hmm, sending throughput I think, but each pair
-of numbers seemed to be identical IIRC?
-
-
-> I love to see netperf used, but why UDP and loopback?
-
-No really good reason. I guess I was hoping to keep other variables as
-small as possible. But I guess a real remote test would be a lot more
-realistic as a networking test. Hmm, but I could probably set up a test
-over a simple GbE link here.  I'll try that.
-
-
-> Also, how about the
-> service demands?
-
-Well, over loopback and using CPU binding, I was hoping it wouldn't
-change much... but I see netperf does some measurements for you. I
-will consider those in future too.
-
-BTW. is it possible to do parallel netperf tests?
-
+> This patch is not sufficient, because req and rsp are not freed and
+> at this point ha->req_q_map and ha->rsp_q_map are not allocated yet,
+> so qla2x00_free_queues is not needed.
+>
+> Following is my patch.
+> Comments?
+>
+> Signed-off-by: Hisashi Hifumi <hifumi.hisashi@oss.ntt.co.jp>
+>
+> diff -Nrup linux-2.6.29-rc2.org/drivers/scsi/qla2xxx/qla_os.c  
+> linux-2.6.29-rc2.qla2x/drivers/scsi/qla2xxx/qla_os.c
+> --- linux-2.6.29-rc2.org/drivers/scsi/qla2xxx/qla_os.c	2009-01-19  
+> 11:46:19.000000000 +0900
+> +++ linux-2.6.29-rc2.qla2x/drivers/scsi/qla2xxx/qla_os.c	2009-01-19  
+> 16:00:42.000000000 +0900
+> @@ -1888,6 +1888,8 @@ qla2x00_probe_one(struct pci_dev *pdev,
+> 		    "[ERROR] Failed to allocate memory for scsi_host\n");
+>
+> 		ret = -ENOMEM;
+> +		qla2x00_mem_free(ha);
+> +		qla2x00_free_que(ha, req, rsp);
+> 		goto probe_hw_failed;
+> 	}
+>
+> @@ -1916,14 +1918,18 @@ qla2x00_probe_one(struct pci_dev *pdev,
+>
+> 	/* Set up the irqs */
+> 	ret = qla2x00_request_irqs(ha, rsp);
+> -	if (ret)
+> +	if (ret) {
+> +		qla2x00_free_que(ha, req, rsp);
+> 		goto probe_failed;
+> +	}
+>
+> 	/* Alloc arrays of request and response ring ptrs */
+> 	if (!qla2x00_alloc_queues(ha)) {
+> 		qla_printk(KERN_WARNING, ha,
+> 		"[ERROR] Failed to allocate memory for queue"
+> 		" pointers\n");
+> +
+> +		qla2x00_free_que(ha, req, rsp);
+> 		goto probe_failed;
+> 	}
+> 	ha->rsp_q_map[0] = rsp;
+>
+>
+There is a hole here. We need to set to ha->max_queues = 0 after  
+calling qla2x00_free_que as otherwise the call to qla2x00_free_device-- 
+ >qla2x00_free_queues will try to access ha->req-q_map and ha- 
+ >rsp_q_map arrays which was not allocated at that point of time, as  
+you mentioned. I will resend the combined patch.
+-Anirban
 
