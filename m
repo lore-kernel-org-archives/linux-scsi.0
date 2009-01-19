@@ -1,68 +1,84 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12481] New: mt takes two minutes to determine that the tape drive is empty
-Date: Sun, 18 Jan 2009 18:37:25 -0800 (PST)
-Message-ID: <bug-12481-11613@http.bugzilla.kernel.org/>
+From: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
+Subject: Re: [PATCH] qla2xxx: double free bug in qla2x00_probe_one
+Date: Sun, 18 Jan 2009 19:14:44 -0800
+Message-ID: <92E2034C-E8A2-4689-B33B-42B4348FE472@qlogic.com>
+References: <6.0.0.20.2.20090116115911.06b02170@172.19.0.2> <A80C85DE-E35D-46A3-AA9F-2D790CAED442@qlogic.com> <6.0.0.20.2.20090119094611.06ce0720@172.19.0.2> <1232328133.3247.66.camel@localhost.localdomain> <6.0.0.20.2.20090119103110.06f34868@172.19.0.2>
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Content-Type: text/plain; charset="US-ASCII"; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:44725 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756908AbZASCh5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 18 Jan 2009 21:37:57 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n0J2bPXJ022184
-	for <linux-scsi@vger.kernel.org>; Sun, 18 Jan 2009 18:37:26 -0800
+Received: from avexch1.qlogic.com ([198.70.193.115]:7571 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757184AbZASDOp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Jan 2009 22:14:45 -0500
+In-Reply-To: <6.0.0.20.2.20090119103110.06f34868@172.19.0.2>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=12481
-
-           Summary: mt takes two minutes to determine that the tape drive is
-                    empty
-           Product: SCSI Drivers
-           Version: 2.5
-     KernelVersion: 2.6.28
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: Other
-        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
-        ReportedBy: kmshanah@ucwb.org.au
+To: Hisashi Hifumi <hifumi.hisashi@oss.ntt.co.jp>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
 
-Latest working kernel version:
-- This definitely used to work fine (no long delays) when we first installed
-the tape drive, which was back in July 2007. As we usually keep up to date with
-the latest kernels, I assume we were using 2.6.21 at the time but I don't have
-any logs to prove it. At the time the kernel was also 32-bit, though I hope
-that won't be an important difference.
+On Jan 18, 2009, at 5:50 PM, Hisashi Hifumi wrote:
 
-Earliest failing kernel version:
-- Unfortunately, I also have no idea when exactly it broke. It is definitely
-broken on at least 2.6.27 and 2.6.28.
+>
+> At 10:22 09/01/19, James Bottomley wrote:
+>> On Mon, 2009-01-19 at 09:59 +0900, Hisashi Hifumi wrote:
+>>> At 01:56 09/01/17, Anirban Chakraborty wrote:
+>>>
+>>>> On Jan 15, 2009, at 7:13 PM, Hisashi Hifumi wrote:
+>>>>
+>>>>> Hi.
+>>>>>
+>>>>> I got double free bug at qla2x00_probe_one's error path and
+>>>>> kernel was panicked.
+>>>>> qla2x00_probe_one's probe_failed path is as follows:
+>>>>>
+>>>>> qla2x00_free_que(ha, req, rsp);
+>>>>> qla2x00_free_device(base_vha);
+>>>>>
+>>>>> qla2x00_free_device calls qla2x00_free_que through  
+>>>>> qla2x00_free_queues.
+>>>>> qla2x00_free_device frees the same pointer of req and rsp that  
+>>>>> is already
+>>>>> freed by qla2x00_free_que.
+>>>>>
+>>>>> Following patch fixes this problem.
+>>>>> Thanks.
+>>>> This has been fixed as a part of the ISP restart bug fix.
+>> <http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git;a=commit;h=29bdccbee69c199910b2b39377e66ee5c33f241c 
+>> >http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git;a=commit;h=29bdccbee69c199910b2b39377e66ee5c33f241c
+>>>> Thanks,
+>>>> Anirban
+>>>
+>>> Your patch is as follows:
+>>>
+>>> probe_failed:
+>>> -       qla2x00_free_que(ha, req, rsp);
+>>>        qla2x00_free_device(base_vha);
+>>>
+>>>
+>>> I think just removing qla2x00_free_que here is wrong, because when
+>> qla2x00_request_irqs or
+>>> qla2x00_alloc_queues fails, no one frees rsp and req.
+>>
+>> Aren't these freed by
+>>
+>> qla2x00_free_device()
+>> qla2x00_free_queues()
+>> qla2x00_free_que()
+>>
+>> along that path?
+>>
+>> James
+>
+> Only qla2x00_free_que frees rsp and req above path, but just  
+> qla2x00_free_device
+> without qla2x00_free_que is ok after ha->rsp_q_map[0] and ha- 
+> >req_q_map[0] definition
+> , such as failure of qla2x00_initialize_adapter , kthread_create or  
+> scsi_add_host.
+You are right. The resources are not freed if call to  
+qla2x00_create_host fails. I will send the patch in subsequent mail.
+Thanks a lot for pointing this out.
 
-Distribution: Debian Lenny (x86_64)
-Hardware Environment: Xeon X3350, 8GB RAM, LSI53C1020A, HP LTO-3
-Software Environment: mt (GNU cpio 2.9)
-Problem Description:
-mt is taking two minutes to return the status information for our tape drive
-when the drive is empty. It used to be almost immediate. I'm also fairly sure
-it used to give a different message as well, something with "OFFLINE" in it,
-rather than "rmtopen failed".
-
-Steps to reproduce:
-# time mt --file=/dev/nst0 status
-mt: /dev/nst0: rmtopen failed: No medium found
-
-real    2m0.709s
-user    0m0.003s
-sys     0m0.000s
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+-Anirban
