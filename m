@@ -1,42 +1,57 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH resend] include/linux: Add bsg.h to the Kernel exported
- headers
-Date: Mon, 19 Jan 2009 05:38:27 +0900
-Message-ID: <20090119053818L.fujita.tomonori@lab.ntt.co.jp>
-References: <20090115164824.e637b8c6.akpm@linux-foundation.org>
-	<20090116065003.GU30821@kernel.dk>
-	<4972E6FD.8070405@panasas.com>
+From: Hisashi Hifumi <hifumi.hisashi@oss.ntt.co.jp>
+Subject: Re: [PATCH] qla2xxx: double free bug in qla2x00_probe_one
+Date: Mon, 19 Jan 2009 09:59:46 +0900
+Message-ID: <6.0.0.20.2.20090119094611.06ce0720@172.19.0.2>
+References: <6.0.0.20.2.20090116115911.06b02170@172.19.0.2>
+ <A80C85DE-E35D-46A3-AA9F-2D790CAED442@qlogic.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mfo11.iij4u.or.jp ([210.138.174.81]:45100 "EHLO
-	mfo11.iij4u.or.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754244AbZARUp7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Jan 2009 15:45:59 -0500
-In-Reply-To: <4972E6FD.8070405@panasas.com>
+Received: from serv2.oss.ntt.co.jp ([222.151.198.100]:38300 "EHLO
+	serv2.oss.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753063AbZASBCg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Jan 2009 20:02:36 -0500
+In-Reply-To: <A80C85DE-E35D-46A3-AA9F-2D790CAED442@qlogic.com>
+References: <6.0.0.20.2.20090116115911.06b02170@172.19.0.2>
+ <A80C85DE-E35D-46A3-AA9F-2D790CAED442@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com, jens.axboe@oracle.com
-Cc: akpm@linux-foundation.org, fujita.tomonori@lab.ntt.co.jp, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, dougg@torque.net, stable@kernel.org
+To: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Sun, 18 Jan 2009 10:23:25 +0200
-Boaz Harrosh <bharrosh@panasas.com> wrote:
 
-> 
-> bsg.h in current form is perfectly suitable for user-mode
-> consumption. It is needed together with scsi/sg.h for applications
-> that want to interface with the bsg driver.
-> 
-> Currently the few projects that use it would copy it over into
-> the projects. But that is not acceptable for projects that need
-> to provide source and devel packages for distros.
-> 
-> This should also be submitted to stable 2.6.28 and 2.6.27 since bsg had
-> a stable API since these Kernels and distro users will need the header
-> for these kernels a swell
-> 
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> Ack-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+At 01:56 09/01/17, Anirban Chakraborty wrote:
 
-Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+>On Jan 15, 2009, at 7:13 PM, Hisashi Hifumi wrote:
+>
+>>Hi.
+>>
+>>I got double free bug at qla2x00_probe_one's error path and
+>>kernel was panicked.
+>>qla2x00_probe_one's probe_failed path is as follows:
+>>
+>>qla2x00_free_que(ha, req, rsp);
+>>qla2x00_free_device(base_vha);
+>>
+>>qla2x00_free_device calls qla2x00_free_que through qla2x00_free_queues.
+>>qla2x00_free_device frees the same pointer of req and rsp that is already 
+>>freed by qla2x00_free_que.
+>>
+>>Following patch fixes this problem.
+>>Thanks.
+>This has been fixed as a part of the ISP restart bug fix. <http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git;a=commit;h=29bdccbee69c199910b2b39377e66ee5c33f241c>http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git;a=commit;h=29bdccbee69c199910b2b39377e66ee5c33f241c
+>Thanks,
+>Anirban
+
+Your patch is as follows:
+
+ probe_failed:
+-       qla2x00_free_que(ha, req, rsp);
+        qla2x00_free_device(base_vha);
+
+
+I think just removing qla2x00_free_que here is wrong, because when qla2x00_request_irqs or
+qla2x00_alloc_queues fails, no one frees rsp and req.
+
+
