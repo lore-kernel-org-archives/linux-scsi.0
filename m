@@ -1,81 +1,56 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [Q] In sg_io_v4 what to use as flag for "queue at_head"
-Date: Mon, 19 Jan 2009 13:18:47 +0200
-Message-ID: <49746197.200@panasas.com>
+From: Tony Battersby <tonyb@cybernetics.com>
+Subject: Re: [PATCH 0/2] sg: fix races during device removal (v2)
+Date: Mon, 19 Jan 2009 10:02:57 -0500
+Message-ID: <49749621.9030601@cybernetics.com>
+References: <49625A67.3000304@cybernetics.com>	<20090111022525I.fujita.tomonori@lab.ntt.co.jp>	<496E4B93.4000507@cybernetics.com> <20090119155509Y.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:27219 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751245AbZASLSx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Jan 2009 06:18:53 -0500
-Received: by ug-out-1314.google.com with SMTP id 39so187454ugf.37
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Jan 2009 03:18:51 -0800 (PST)
+Received: from host64.cybernetics.com ([98.174.209.230]:4383 "EHLO
+	mail.cybernetics.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751919AbZASPC7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Jan 2009 10:02:59 -0500
+In-Reply-To: <20090119155509Y.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: dgilbert@interlog.com, James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, greg@kroah.com
 
-Douglas Gilbert <dougg@torque.net> wrote ...
-> struct sg_io_v4 {
-> 	__s32 guard;		/* [i] 'Q' to differentiate from v3 */
-> 	__u32 protocol;		/* [i] 0 -> SCSI , .... */
-> 	__u32 subprotocol;	/* [i] 0 -> SCSI command, 1 -> SCSI task
-> 				   management function, .... */
-> 
-> 	__u32 request_len;	/* [i] in bytes */
-> 	__u64 request;		/* [i], [*i] {SCSI: cdb} */
-> 	__u64 request_tag;	/* [i] {SCSI: task tag (only if flagged)} */
-> 	__u32 request_attr;	/* [i] {SCSI: task attribute} */
-> 	__u32 request_priority;	/* [i] {SCSI: task priority} */
-> 	__u32 request_extra;	/* [i] {spare, for padding} */
-> 	__u32 max_response_len;	/* [i] in bytes */
-> 	__u64 response;		/* [i], [*o] {SCSI: (auto)sense data} */
-> 
->         /* "dout_": data out (to device); "din_": data in (from device) */
-> 	__u32 dout_iovec_count;	/* [i] 0 -> "flat" dout transfer else
-> 				   dout_xfer points to array of iovec */
-> 	__u32 dout_xfer_len;	/* [i] bytes to be transferred to device */
-> 	__u32 din_iovec_count;	/* [i] 0 -> "flat" din transfer */
-> 	__u32 din_xfer_len;	/* [i] bytes to be transferred from device */
-> 	__u64 dout_xferp;	/* [i], [*i] */
-> 	__u64 din_xferp;	/* [i], [*o] */
-> 
-> 	__u32 timeout;		/* [i] units: millisecond */
-> 	__u32 flags;		/* [i] bit mask */
-> 	__u64 usr_ptr;		/* [i->o] unused internally */
-> 	__u32 spare_in;		/* [i] */
->       ...
+FUJITA Tomonori wrote:
+>> Besides holding the lock during kref_put(), I also considered two
+>> other simple ways to avoid this race:
+>> 1) Do idr_remove() from sg_remove().
+>> 2) Return NULL in sg_get_dev() if sdp->detached.
+>>
+>> However, both of these options would have changed the behavior of
+>> the /proc/scsi/sg/* functions that show information for devices that
+>> are in the process of being detached.  I wanted to fix bugs without
+>> changing other behavior, so I chose to call kref_put() under lock in
+>> my previous patches.
+>>     
+>
+> How about doing 2) and accessing to /proc/scsi/sg/* with
+> sg_index_lock (don't use sg_get_device for it).
+>
+>   
+That's an excellent idea.  If it works, I can forget this whole
+atomic_inc_not_zero() business and the pain that goes with it.
+> What /proc/scsi/sg/* doing is abnormal from the perspective of the ref
+> counting (accessing to something that is going away).
+>
+> >From the perspective of the ref counting, the best way is calling
+> idr_remove in from sg_remove but as you said, it's not nice to change
+> the behavior.
+>
+>   
+Exactly.
+> If we don't use sg_get_device for /proc/scsi/sg/*, then we use
+> sg_get_device for only sg_open So we can do 2) without changing the
+> behavior.
+>
+>   
+I will try to implement it this way today.  Thanks for your input.
 
-Currently because of a twisted accident sg and bsg queue their async
-request with the "at_head" flag set when calling blk_execute_rq_nowait.
-
-Since sg_io_v4 is new and as plenty of possible choices, what would be
-the best place to put the "at_head" flag?
-
-Douglas ?
-What was your intention with the above:
- 	__u32 request_priority;	/* [i] {SCSI: task priority} */
-
-[And while at it, what was:
- 	__u32 request_attr;	/* [i] {SCSI: task attribute} */
-]
-
-Should I define (bsg.h):
-enum {
-	BSG_AT_HEAD = 0, /* compatible with old code */
-	BSG_AT_TAIL,
-}
-And put it in request_priority
-
-or define:
-#define SG_FLAG_AT_TAIL 0x10  /* See sg.h for more/other flags (sg.h flags are ignored by bsg) */
-
-And OR that into the old flags member that is otherwise
-unused by current bsg code
-
-Thanks
-Boaz
-
+Tony
 
