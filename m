@@ -1,89 +1,90 @@
-From: Hisashi Hifumi <hifumi.hisashi@oss.ntt.co.jp>
-Subject: Re: [PATCH] qla2xxx: Fix memory leak in error path
-Date: Mon, 19 Jan 2009 16:05:58 +0900
-Message-ID: <6.0.0.20.2.20090119153604.06f467e8@172.19.0.2>
-References: <alpine.OSX.1.00.0901182136340.94282@ac-mac.local>
+From: Nick Piggin <nickpiggin@yahoo.com.au>
+Subject: Re: Mainline kernel OLTP performance update
+Date: Mon, 19 Jan 2009 18:13:06 +1100
+Message-ID: <200901191813.07960.nickpiggin@yahoo.com.au>
+References: <BC02C49EEB98354DBA7F5DD76F2A9E800317003CB0@azsmsx501.amr.corp.intel.com> <200901162142.51306.nickpiggin@yahoo.com.au> <84144f020901160255i530755bboc07750a61240d4bf@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from serv2.oss.ntt.co.jp ([222.151.198.100]:50843 "EHLO
-	serv2.oss.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750894AbZASHIp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Jan 2009 02:08:45 -0500
-In-Reply-To: <alpine.OSX.1.00.0901182136340.94282@ac-mac.local>
-References: <alpine.OSX.1.00.0901182136340.94282@ac-mac.local>
+Received: from smtp115.mail.mud.yahoo.com ([209.191.84.164]:29025 "HELO
+	smtp115.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750882AbZASHNa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Jan 2009 02:13:30 -0500
+In-Reply-To: <84144f020901160255i530755bboc07750a61240d4bf@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anirban Chakraborty <anirban.chakraborty@qlogic.com>, James.Bottomley@HansenPartnership.com
-Cc: andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
+To: Pekka Enberg <penberg@cs.helsinki.fi>
+Cc: Matthew Wilcox <matthew@wil.cx>, Andrew Morton <akpm@linux-foundation.org>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>, chinang.ma@intel.com, linux-kernel@vger.kernel.org, sharad.c.tripathi@intel.com, arjan@linux.intel.com, andi.kleen@intel.com, suresh.b.siddha@intel.com, harita.chilukuri@intel.com, douglas.w.styner@intel.com, peter.xihong.wang@intel.com, hubert.nueckel@intel.com, chris.mason@oracle.com, srostedt@redhat.com, linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, Anirban Chakraborty <anirban.chakraborty@qlogic.com>, Christoph Lameter <cl@linux-foundation.org>
 
-
-At 15:16 09/01/19, Anirban Chakraborty wrote:
->The following patch fixes memory leak in the error path of scsi host allocation 
->failure.
->Please review and apply.
+On Friday 16 January 2009 21:55:30 Pekka Enberg wrote:
+> Hi Nick,
 >
->Thanks,
->Anirban
+> On Fri, Jan 16, 2009 at 12:42 PM, Nick Piggin <nickpiggin@yahoo.com.au> 
+wrote:
+> >> I don't have the exact config for the previous tests but it's was just
+> >> my laptop regular config whereas the new tests are x86-64 defconfig.
+> >> So I think I'm just hitting some of the other OLTP regressions here,
+> >> aren't I? There's some scheduler related options such as
+> >> CONFIG_GROUP_SCHED and CONFIG_FAIR_GROUP_SCHED enabled in defconfig
+> >> that I didn't have in the original tests. I can try without them if
+> >> you want but I'm not sure it's relevant for SLAB vs SLUB tests.
+> >
+> > Oh no that's fine. It just looked like you repeated the test but
+> > with lockdep disabled (and no other changes).
 >
->Signed-off-by: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
->
->diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
->index df6e6a2..2cf1491 100644
->--- a/drivers/scsi/qla2xxx/qla_os.c
->+++ b/drivers/scsi/qla2xxx/qla_os.c
->@@ -1888,6 +1888,8 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct 
->pci_device_id *id)
-> 		    "[ERROR] Failed to allocate memory for scsi_host\n");
-> 
-> 		ret = -ENOMEM;
->+		qla2x00_mem_free(ha);
->+		qla2x00_free_queues(ha);
-> 		goto probe_hw_failed;
-> 	}
-> 
+> Right. In any case, I am still unable to reproduce the OLTP issue and
+> I've seen SLUB beat SLAB on my machine in most of the benchmarks
+> you've posted.
 
-This patch is not sufficient, because req and rsp are not freed and
-at this point ha->req_q_map and ha->rsp_q_map are not allocated yet,
-so qla2x00_free_queues is not needed.
+SLUB was distinctly slower on the tbench, netperf, and hackbench
+tests that I ran. These were faster with SLUB on your machine?
+What kind of system is it?
 
-Following is my patch.
-Comments?
 
-Signed-off-by: Hisashi Hifumi <hifumi.hisashi@oss.ntt.co.jp>
+> So I have very mixed feelings about SLQB. It's very
+> nice that it works for OLTP but we still don't have much insight (i.e.
+> numbers) on why it's better.
 
-diff -Nrup linux-2.6.29-rc2.org/drivers/scsi/qla2xxx/qla_os.c linux-2.6.29-rc2.qla2x/drivers/scsi/qla2xxx/qla_os.c
---- linux-2.6.29-rc2.org/drivers/scsi/qla2xxx/qla_os.c	2009-01-19 11:46:19.000000000 +0900
-+++ linux-2.6.29-rc2.qla2x/drivers/scsi/qla2xxx/qla_os.c	2009-01-19 16:00:42.000000000 +0900
-@@ -1888,6 +1888,8 @@ qla2x00_probe_one(struct pci_dev *pdev, 
- 		    "[ERROR] Failed to allocate memory for scsi_host\n");
- 
- 		ret = -ENOMEM;
-+		qla2x00_mem_free(ha);
-+		qla2x00_free_que(ha, req, rsp);
- 		goto probe_hw_failed;
- 	}
- 
-@@ -1916,14 +1918,18 @@ qla2x00_probe_one(struct pci_dev *pdev, 
- 
- 	/* Set up the irqs */
- 	ret = qla2x00_request_irqs(ha, rsp);
--	if (ret)
-+	if (ret) {
-+		qla2x00_free_que(ha, req, rsp);
- 		goto probe_failed;
-+	}
- 
- 	/* Alloc arrays of request and response ring ptrs */
- 	if (!qla2x00_alloc_queues(ha)) {
- 		qla_printk(KERN_WARNING, ha,
- 		"[ERROR] Failed to allocate memory for queue"
- 		" pointers\n");
-+
-+		qla2x00_free_que(ha, req, rsp);
- 		goto probe_failed;
- 	}
- 	ha->rsp_q_map[0] = rsp;
+According to estimates in this thread, I think Matthew said SLUB would
+be around 6% slower? SLQB is within measurement error of SLAB.
 
+Fair point about personally reproducing the OLTP problem yourself. But
+the fact is that we will get problem reports that cannot be reproduced.
+That does not make them less relevant. I can't reproduce the OLTP
+benchmark myself. And I'm fully expecting to get problem reports for
+SLQB against insanely sized SGI systems, which I will take very seriously
+and try to fix them.
+
+
+> I'm also bit worried if SLQB has gotten
+> enough attention from the NUMA and HPC folks that brought us SLUB.
+
+It hasn't, but that's the problem we're hoping to solve by getting it
+merged. People can give it more attention, and we can try to fix any
+problems. SLUB has been default for quite a while now and not able to
+solve all problems it has had reported against it. So I hope SLQB will
+be able to unblock this situation.
+
+
+> The good news is that SLQB can replace SLAB so either way, we're not
+> going to end up with four allocators. Whether it can replace SLUB
+> remains to be seen.
+
+Well I think being able to simply replace SLAB is not ideal. The plan
+I'm hoping is to have four allocators for a few releases, and then
+go back to having two. That is going to mean some groups might not
+have their ideal allocator merged... but I think it is crazy to settle
+with more than one main compile-time allocator for the long term.
+
+I don't know what the next redhat enterprise release is going to do,
+but if they go with SLAB, then I think that means no SGI systems would
+run in production with SLUB anyway, so what would be the purpose of
+having a special "HPC/huge system" allocator? Or... what other reasons
+should users select SLUB vs SLAB? (in terms of core allocator behaviour,
+versus extras that can be ported from one to the other) If we can't even
+make up our own minds, then will others be able to?
 
