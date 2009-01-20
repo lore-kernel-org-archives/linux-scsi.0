@@ -1,326 +1,806 @@
-From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
-Subject: 2.6.29-rc2-git1: Reported regressions 2.6.27 -> 2.6.28
-Date: Mon, 19 Jan 2009 22:41:39 +0100 (CET)
-Message-ID: <KTnguC9mFUC.A.VNB.TJRdJB@chimera>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 1/2] sg: fix races during device removal (v4)
+Date: Tue, 20 Jan 2009 10:06:33 +0900
+Message-ID: <20090120100451Q.fujita.tomonori@lab.ntt.co.jp>
+References: <496E4B93.4000507@cybernetics.com>
+	<20090119155509Y.fujita.tomonori@lab.ntt.co.jp>
+	<497506AF.6040109@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:54397 "EHLO mo11.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752525AbZATBHH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Jan 2009 20:07:07 -0500
+In-Reply-To: <497506AF.6040109@cybernetics.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-This message contains a list of some regressions introduced between 2.6=
-=2E27 and
-2.6.28, for which there are no fixes in the mainline I know of.  If any=
- of them
-have been fixed already, please let me know.
-
-If you know of any other unresolved regressions introduced between 2.6.=
-27
-and 2.6.28, please let me know either and I'll add them to the list.
-Also, please let me know if any of the entries below are invalid.
-
-Each entry from the list will be sent additionally in an automatic repl=
-y to
-this message with CCs to the people involved in reporting and handling =
-the
-issue.
-
-
-Listed regressions statistics:
-
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2009-01-20      144       30          27
-  2009-01-11      139       33          30
-  2008-12-21      120       19          17
-  2008-12-13      111       14          13
-  2008-12-07      106       20          17
-  2008-12-04      106       29          21
-  2008-11-22       93       25          15
-  2008-11-16       89       32          18
-  2008-11-09       73       40          27
-  2008-11-02       55       41          29
-  2008-10-25       26       25          20
-
-
-Unresolved regressions
-----------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12500
-Subject		: r8169: NETDEV WATCHDOG: eth0 (r8169): transmit timed out
-Submitter	: Justin Piszcz <jpiszcz-BP4nVm5VUdNhbmWW9KSYcQ@public.gmane.org>
-Date		: 2009-01-13 21:19 (7 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D123188160811322&w=3D=
-4
-Handled-By	: Francois Romieu <romieu-W8zweXLXuWQS+FvcfC7Uqw@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12483
-Subject		: Reference to inexistent struct dmi_device_id breaks the buil=
-d
-Submitter	: Jean Delvare <khali-PUYAD+kWke1g9hUCZPvPmw@public.gmane.org>
-Date		: 2009-01-19 01:29 (1 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12465
-Subject		: KVM guests stalling on 2.6.28 (bisected)
-Submitter	: Kevin Shanahan <kmshanah-biM/RbsGxha6c6uEtOJ/EA@public.gmane.org>
-Date		: 2009-01-17 03:37 (3 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12426
-Subject		: TMDC Joystick no longer works in kernel 2.6.28
-Submitter	: Andrew S. Johnson <andy-9eXmkf4BiQ2aMJb+Lgu22Q@public.gmane.org>
-Date		: 2009-01-10 21:53 (10 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D123162486415366&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12421
-Subject		: GPF on 2.6.28 &amp; 2.6.28-rc9-git3 =C2=A0 =C2=A0e1000e / e1=
-000 issues
-Submitter	: Doug Bazarnic <doug-nOyj/A09A+/k1uMJSBkQmQ@public.gmane.org>
-Date		: 2009-01-09 21:26 (11 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D123153653120204&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12411
-Subject		: 2.6.28: BUG in r8169
-Submitter	: Andrey Vul <andrey.vul-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2008-12-31 18:37 (20 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D123074869611409&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12409
-Subject		: NULL pointer dereference at get_stats()
-Submitter	: Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>
-Date		: 2008-12-30 12:53 (21 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D123064167008695&w=3D=
-4
-Handled-By	: Frederik Deweerdt <frederik.deweerdt-kjvbsxwSFqI@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12408
-Subject		: Funny problem with 2.6.28: Kernel stalls
-Submitter	: Michael Roth <mroth-+8Z3Oe2AQjqzQB+pC5nmwQ@public.gmane.org>
-Date		: 2008-12-25 15:14 (26 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D123021931714282&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12407
-Subject		: Kernel 2.6.28 regression: Hang after hibernate
-Submitter	: Frank Groeneveld <frankgroeneveld-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2008-12-28 20:34 (23 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D123049651906081&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12405
-Subject		: oops in __bounce_end_io_read under kvm
-Submitter	: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Date		: 2008-12-26 17:36 (25 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D123031303400676&w=3D=
-4
-Handled-By	: Jens Axboe <jens.axboe-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12404
-Subject		: Oops in 2.6.28-rc9 and -rc8 -- mtrr issues / e1000e
-Submitter	: Kernel <kernel-nOyj/A09A+/k1uMJSBkQmQ@public.gmane.org>
-Date		: 2008-12-22 9:37 (29 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122993873320150&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12403
-Subject		: TTY problem on linux-2.6.28-rc7
-Submitter	: sasa sasa <sasak.1983-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2008-12-22 4:23 (29 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122991914600390&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12401
-Subject		: 2.6.28 regression: xbacklight broken on ThinkPad X61s
-Submitter	: Tino Keitel <tino.keitel-Mmb7MZpHnFY@public.gmane.org>
-Date		: 2009-01-05 8:39 (15 days old)
-=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
-s/linux-2.6.git;a=3Dcommit;h=3D22c13f9d8179f4c9caecfcb60a95214562b9addc
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D123114479110314&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12395
-Subject		: 2.6.28-rc9: oprofile regression
-Submitter	: Tim Blechmann <tim-xpEK/MU0Hawdnm+yROfE0A@public.gmane.org>
-Date		: 2008-12-21 14:23 (30 days old)
-=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
-s/linux-2.6.git;a=3Dcommit;h=3Db99170288421c79f0c2efa8b33e26e65f4bb7fb8
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122986946614791&w=3D=
-4
-Handled-By	: Andi Kleen <ak-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12393
-Subject		: debugging in dosemu causes lots of 'scheduling while atomic'
-Submitter	: Michal Suchanek <hramrach-aRb0bU7PRFPrBKCeMvbIDA@public.gmane.org>
-Date		: 2009-01-09 07:28 (11 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12391
-Subject		: Processor does not go below C2 state until usb.autosuspend i=
-s enabled
-Submitter	: Gergely Imreh <imrehg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2009-01-09 02:35 (11 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12337
-Subject		: ~100 extra wakeups reported by powertop
-Submitter	: Alberto Gonzalez <luis6674-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
-Date		: 2008-12-31 12:25 (20 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12265
-Subject		: FPU emulation broken in 2.6.28-rc8 ?
-Submitter	: Rogier Wolff <R.E.Wolff-bu/CaDbLbdHGjfRZg6uqBA@public.gmane.org>
-Date		: 2008-12-17 8:56 (34 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122950463030747&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12264
-Subject		: i915: switching from kwin in opengl mode to a VT then back t=
-o x11, x11 freezes
-Submitter	: Caleb Cushing <xenoterracide-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2008-12-16 11:40 (35 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122942777030666&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12263
-Subject		: Sata soft reset filling log
-Submitter	: Justin Madru <bevicm-QP1aEjBt37AFQeE35raUng@public.gmane.org>
-Date		: 2008-12-13 2:07 (38 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122913412608533&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12224
-Subject		: journal activity on inactive partition causes inactive hardd=
-rive spinup
-Submitter	: C Sights <csights-97jfqw80gc6171pxa8y+qA@public.gmane.org>
-Date		: 2008-12-14 11:39 (37 days old)
-=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
-s/linux-2.6.git;a=3Dcommit;h=3Dc87591b719737b4e91eb1a9fa8fd55a4ff1886d6
-Handled-By	: Eric Sandeen <sandeen-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12209
-Subject		: oldish top core dumps (in its meminfo() function)
-Submitter	: Andreas Mohr <andi-5+Cda9B46AM@public.gmane.org>
-Date		: 2008-12-12 18:49 (39 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122910784006472&w=3D=
-4
-		  http://marc.info/?l=3Dlinux-kernel&m=3D122907511319288&w=3D4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12208
-Subject		: uml is very slow on 2.6.28 host
-Submitter	: Miklos Szeredi <miklos-sUDqSbJrdHQHWmgEVkV9KA@public.gmane.org>
-Date		: 2008-12-12 9:35 (39 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122907463518593&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12160
-Subject		: networking oops after resume from s2ram (2.6.28-rc6)
-Submitter	: Marcin Slusarz <marcin.slusarz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2008-11-28 21:15 (53 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122790701615723&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12159
-Subject		: 2.6.28-rc6-git1 -- No sound produced from Intel HDA ALSA dri=
-ver
-Submitter	: Miles Lane <miles.lane-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2008-11-27 20:33 (54 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122781805620212&w=3D=
-4
-Handled-By	: Takashi Iwai <tiwai-l3A5Bk7waGM@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12061
-Subject		: snd_hda_intel: power_save: sound cracks on powerdown
-Submitter	: Jens Weibler <bugzilla-kernel-6hJTtV8wudIr9FUcG+3rRQ@public.gmane.org>
-Date		: 2008-11-18 12:07 (63 days old)
-Handled-By	: Takashi Iwai <tiwai-l3A5Bk7waGM@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D11849
-Subject		: default IRQ affinity change in v2.6.27 (breaking several SMP=
- PPC based systems)
-Submitter	: Kumar Gala <galak-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>
-Date		: 2008-10-24 12:45 (88 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D122485245924125&w=3D=
-4
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12406
-Subject		: 2.6.28 thinks that my PS/2 mouse is a touchpad
-Submitter	: Alexander E. Patrakov <patrakov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2008-12-27 9:06 (24 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D123036893817280&w=3D=
-4
-Handled-By	: Arjan Opmeer <arjan-OssVvNj1wBysTnJN9+BGXg@public.gmane.org>
-Patch		: http://marc.info/?l=3Dlinux-kernel&m=3D123092147703236&w=3D4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12396
-Subject		: hwinfo problem since 2.6.28
-Submitter	: Beschorner Daniel <Daniel.Beschorner-cdG02ZADnvLQT0dZR+AlfA@public.gmane.org>
-Date		: 2009-01-06 8:53 (14 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D123123277800835&w=3D=
-4
-Handled-By	: Suresh Siddha <suresh.b.siddha-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Patch		: http://marc.info/?l=3Dlinux-kernel&m=3D123154005127497&w=3D4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D12260
-Subject		: Regression due to commit 2b80848e3818fb1c (p54usb: support L=
-M87 firmwares)
-Submitter	: Larry Finger <Larry.Finger-tQ5ms3gMjBLk1uMJSBkQmQ@public.gmane.org>
-Date		: 2008-12-20 10:45 (31 days old)
-=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
-s/linux-2.6.git;a=3Dcommit;h=3D2b80848e3818fb1c8ccddc105b065a86c68afa9d
-Patch		: http://bugzilla.kernel.org/show_bug.cgi?id=3D12260
-
-
-=46or details, please visit the bug entries and follow the links given =
-in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regres=
-sions.
-There also is a Bugzilla entry used for tracking the regressions introd=
-uced
-between 2.6.27 and 2.6.28, unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=3D11808
-
-Please let me know if there are any Bugzilla entries that should be add=
-ed to
-the list in there.
-
-Thanks,
-Rafael
+To: tonyb@cybernetics.com
+Cc: James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.co.jp, dgilbert@interlog.com, hch@infradead.org, linux-scsi@vger.kernel.org
+
+On Mon, 19 Jan 2009 18:03:11 -0500
+Tony Battersby <tonyb@cybernetics.com> wrote:
+
+> sg has the following problems related to device removal:
+> 
+> * opening a sg fd races with removing a device
+> * closing a sg fd races with removing a device
+> * /proc/scsi/sg/* access races with removing a device
+> * command completion races with removing a device
+> * command completion races with closing a sg fd
+> * can rmmod sg with active commands
+> 
+> These problems can cause kernel oopses, memory-use-after-free, or
+> double-free errors.  This patch fixes these problems by using krefs
+> to manage the lifetime of sg_device and sg_fd.
+> 
+> Each command submitted to the midlevel holds a reference to sg_fd
+> until the completion callback.  This ensures that sg_fd doesn't go
+> away if the fd is closed with commands still outstanding.
+> 
+> sg_fd gets the reference of sg_device (with scsi_device) and also
+> makes sure that the sg module doesn't go away.
+> 
+> /proc/scsi/sg/* functions don't play nicely with krefs because they
+> give information about sg_fds which have been closed but not yet
+> freed due to still having outstanding commands and sg_devices which
+> have been removed but not yet freed due to still being referenced
+> by one or more sg_fds.  To deal with this safely without removing
+> functionality, /proc functions now access sg_device and sg_fd while
+> holding a lock instead of using kref_get()/kref_put().
+> 
+> Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
+> ---
+> 
+> This version implements Fujita's suggestion to use locking instead
+> of kref_get() for the /proc functions.
+> 
+> This version does not use any controversial extensions to the kref API.
+> 
+> To avoid changing the behavior of the /proc functions, it is still
+> possible to find a sg_fd or a sg_device with a refcount of 0,
+> since the last remaining references are removed from the kref_put()
+> release functions.  However, no one should be doing a kref_get()
+> under these circumstances, so it shouldn't cause a problem.  I added
+> some comments warning about this non-standard behavior to reduce the
+> risk of tripping up someone in the future.
+> 
+> The original sg_open() would return -ENXIO if idr_find() returned
+> NULL but -ENODEV if sdp->detached.  It would be inconvenient to
+> keep this behavior without inlining sg_get_dev() into sg_open().
+> Since sg_open() was the only remaining caller anyway, I went ahead
+> and inlined it and removed sg_get_dev(), thereby enabling sg_open()
+> to return the same error codes as before.
+
+I think that it would be nice to use sg_get_dev and
+sg_put_dev. How about something like this:
+
+/* should be called with sg_index_lock held */
+struct sg_device *sg_lookup_dev(int index)
+{
+	return idr_find(&sg_index_idr, dev);
+}
+
+struct sg_device *sg_get_dev(int index)
+{
+	struct sg_device *sdp;
+	unsigned long flags;
+
+ 	read_lock_irqsave(&sg_index_lock, flags);
+	sdp = sg_lookup_dev(index);
+	if (!sdp || !sdp->device)
+		sdp = ERR_PTR(-ENXIO);
+	else if (sdp->detached)
+		sdp = ERR_PTR(-ENODEV);
+	else
+		kref_get(&sdp->d_ref);
+ 	write_unlock_irqrestore(&sg_index_lock, flags);
+
+	return sdp;
+}
+
+static void sg_put_dev(struct sg_device *sdp)
+{
+	kref_put(&sdp->d_ref, sg_device_release);
+}
+
+The /proc functions use sg_lookup_dev.
+
+
+> This version still passes all the tests listed previously.  However,
+> mptscsih.c still needs some fixes; I will submit a patch for that
+> later.
+> 
+>  sg.c |  386 ++++++++++++++++++++++++++++++++-----------------------------------
+>  1 file changed, 186 insertions(+), 200 deletions(-)
+> 
+> --- linux-2.6.29-rc2/drivers/scsi/sg.c.orig	2009-01-19 16:19:01.000000000 -0500
+> +++ linux-2.6.29-rc2/drivers/scsi/sg.c	2009-01-19 16:26:21.000000000 -0500
+> @@ -101,6 +101,7 @@ static int scatter_elem_sz_prev = SG_SCA
+>  #define SG_SECTOR_MSK (SG_SECTOR_SZ - 1)
+>  
+>  static int sg_add(struct device *, struct class_interface *);
+> +static void sg_device_destroy(struct kref *kref);
+>  static void sg_remove(struct device *, struct class_interface *);
+>  
+>  static DEFINE_IDR(sg_index_idr);
+> @@ -158,6 +159,12 @@ typedef struct sg_fd {		/* holds the sta
+>  	char next_cmd_len;	/* 0 -> automatic (def), >0 -> use on next write() */
+>  	char keep_orphan;	/* 0 -> drop orphan (def), 1 -> keep for read() */
+>  	char mmap_called;	/* 0 -> mmap() never called on this fd */
+> +	/* CAUTION!  sfp is unlinked from sdp->headfp AFTER the refcount drops
+> +	   to 0.  When scanning sdp->headfp, it is not safe to call
+> +	   kref_get(&sfp->f_ref) if sfp->closed because the refcount may
+> +	   already be 0. */
+> +	struct kref f_ref;
+> +	struct execute_work ew;
+
+Documentation/CodingStyle says:
+
+The preferred style for long (multi-line) comments is:
+
+	/*
+	 * This is the preferred style for multi-line
+	 * comments in the Linux kernel source code.
+	 * Please use it consistently.
+	 *
+	 * Description:  A column of asterisks on the left side,
+	 * with beginning and ending almost-blank lines.
+	 */
+
+But I think that we are fine without the comment.
+
+
+>  } Sg_fd;
+>  
+>  typedef struct sg_device { /* holds the state of each scsi generic device */
+> @@ -171,6 +178,22 @@ typedef struct sg_device { /* holds the 
+>  	char sgdebug;		/* 0->off, 1->sense, 9->dump dev, 10-> all devs */
+>  	struct gendisk *disk;
+>  	struct cdev * cdev;	/* char_dev [sysfs: /sys/cdev/major/sg<n>] */
+> +	/* CAUTION!  idr_remove() is called AFTER the refcount drops to 0.
+> +	   When using idr_find(), it is not safe to call kref_get(&sdp->d_ref)
+> +	   if sdp->detached because the refcount may already be 0.
+> +
+> +	   In order to get a reference safely using idr_find():
+> +	   1) lock sg_index_lock (either read or write lock)
+> +	   2) call idr_find()
+> +	   3) if sdp->detached, pretend that idr_find() returned NULL, and do
+> +	      not call kref_get()
+> +	   4) if !sdp->detached, then kref_get(&sdp->d_ref)
+> +	   5) unlock sg_index_lock
+> +
+> +	   Alternately, you can use idr_find() to access the device even if
+> +	   sdp->detached if you do not drop sg_index_lock, in which case you
+> +	   should NOT call kref_get(&sdp->d_ref). */
+> +	struct kref d_ref;
+
+Ditto.
+
+
+>  } Sg_device;
+>  
+>  static int sg_fasync(int fd, struct file *filp, int mode);
+> @@ -194,13 +217,11 @@ static void sg_build_reserve(Sg_fd * sfp
+>  static void sg_link_reserve(Sg_fd * sfp, Sg_request * srp, int size);
+>  static void sg_unlink_reserve(Sg_fd * sfp, Sg_request * srp);
+>  static Sg_fd *sg_add_sfp(Sg_device * sdp, int dev);
+> -static int sg_remove_sfp(Sg_device * sdp, Sg_fd * sfp);
+> -static void __sg_remove_sfp(Sg_device * sdp, Sg_fd * sfp);
+> +static void sg_remove_sfp(struct kref *);
+>  static Sg_request *sg_get_rq_mark(Sg_fd * sfp, int pack_id);
+>  static Sg_request *sg_add_request(Sg_fd * sfp);
+>  static int sg_remove_request(Sg_fd * sfp, Sg_request * srp);
+>  static int sg_res_in_use(Sg_fd * sfp);
+> -static Sg_device *sg_get_dev(int dev);
+>  #ifdef CONFIG_SCSI_PROC_FS
+>  static int sg_last_dev(void);
+>  #endif
+> @@ -236,23 +257,30 @@ sg_open(struct inode *inode, struct file
+>  	lock_kernel();
+>  	nonseekable_open(inode, filp);
+>  	SCSI_LOG_TIMEOUT(3, printk("sg_open: dev=%d, flags=0x%x\n", dev, flags));
+> -	sdp = sg_get_dev(dev);
+> -	if ((!sdp) || (!sdp->device)) {
+> -		unlock_kernel();
+> -		return -ENXIO;
+> -	}
+> -	if (sdp->detached) {
+> -		unlock_kernel();
+> -		return -ENODEV;
+> +
+> +	retval = -ENXIO;
+> +	read_lock_irq(&sg_index_lock);
+> +	sdp = idr_find(&sg_index_idr, dev);
+> +	if (sdp) {
+> +		/* See comments about using idr_find() and d_ref.  If
+> +		   sdp->detached, then the refcount may already be 0, in which
+> +		   case it would be a bug to do kref_get(). */
+> +		if (!sdp->detached)
+> +			kref_get(&sdp->d_ref);
+> +		else {
+> +			sdp = NULL;
+> +			retval = -ENODEV;
+> +		}
+>  	}
+> +	read_unlock_irq(&sg_index_lock);
+> +	if ((!sdp) || (!sdp->device))
+> +		goto sg_put;
+
+With the above sg_get_dev, we can do:
+
+	sdp = sg_get_dev(dev);
+	if (IS_ERR(sdp)) {
+		unlock_kernel();
+		return PTR_ERR(sdp);
+	}
+	
+
+
+>  	/* This driver's module count bumped by fops_get in <linux/fs.h> */
+>  	/* Prevent the device driver from vanishing while we sleep */
+>  	retval = scsi_device_get(sdp->device);
+> -	if (retval) {
+> -		unlock_kernel();
+> -		return retval;
+> -	}
+> +	if (retval)
+> +		goto sg_put;
+>  
+>  	if (!((flags & O_NONBLOCK) ||
+>  	      scsi_block_when_processing_errors(sdp->device))) {
+> @@ -303,16 +331,20 @@ sg_open(struct inode *inode, struct file
+>  	if ((sfp = sg_add_sfp(sdp, dev)))
+>  		filp->private_data = sfp;
+>  	else {
+> -		if (flags & O_EXCL)
+> +		if (flags & O_EXCL) {
+>  			sdp->exclude = 0;	/* undo if error */
+> +			wake_up_interruptible(&sdp->o_excl_wait);
+> +		}
+>  		retval = -ENOMEM;
+>  		goto error_out;
+>  	}
+> -	unlock_kernel();
+> -	return 0;
+> -
+> -      error_out:
+> -	scsi_device_put(sdp->device);
+> +	retval = 0;
+> +error_out:
+> +	if (retval)
+> +		scsi_device_put(sdp->device);
+> +sg_put:
+> +	if (sdp)
+> +		kref_put(&sdp->d_ref, sg_device_destroy);
+>  	unlock_kernel();
+>  	return retval;
+>  }
+> @@ -327,13 +359,14 @@ sg_release(struct inode *inode, struct f
+>  	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
+>  		return -ENXIO;
+>  	SCSI_LOG_TIMEOUT(3, printk("sg_release: %s\n", sdp->disk->disk_name));
+> -	if (0 == sg_remove_sfp(sdp, sfp)) {	/* Returns 1 when sdp gone */
+> -		if (!sdp->detached) {
+> -			scsi_device_put(sdp->device);
+> -		}
+> -		sdp->exclude = 0;
+> -		wake_up_interruptible(&sdp->o_excl_wait);
+> -	}
+> +
+> +	sfp->closed = 1;
+> +
+> +	sdp->exclude = 0;
+> +	wake_up_interruptible(&sdp->o_excl_wait);
+> +
+> +	kref_put(&sfp->f_ref, sg_remove_sfp);
+> +
+>  	return 0;
+>  }
+>  
+> @@ -755,6 +788,7 @@ sg_common_write(Sg_fd * sfp, Sg_request 
+>  	hp->duration = jiffies_to_msecs(jiffies);
+>  
+>  	srp->rq->timeout = timeout;
+> +	kref_get(&sfp->f_ref); /* sg_rq_end_io() does kref_put(). */
+>  	blk_execute_rq_nowait(sdp->device->request_queue, sdp->disk,
+>  			      srp->rq, 1, sg_rq_end_io);
+>  	return 0;
+> @@ -1247,25 +1281,28 @@ sg_mmap(struct file *filp, struct vm_are
+>  static void sg_rq_end_io(struct request *rq, int uptodate)
+>  {
+>  	struct sg_request *srp = rq->end_io_data;
+> -	Sg_device *sdp = NULL;
+> +	Sg_device *sdp;
+>  	Sg_fd *sfp;
+>  	unsigned long iflags;
+>  	unsigned int ms;
+>  	char *sense;
+> -	int result, resid;
+> +	int result, resid, done = 1;
+>  
+> -	if (NULL == srp) {
+> -		printk(KERN_ERR "sg_cmd_done: NULL request\n");
+> +	if (unlikely(NULL == srp)) { /* shouldn't happen */
+> +		printk(KERN_ERR "sg_rq_end_io: NULL request\n");
+>  		return;
+>  	}
+
+I think that we can simply remove the above code. As you wrote, if it
+happens, we do something completely wrong.
+
+
+> +
+>  	sfp = srp->parentfp;
+> -	if (sfp)
+> -		sdp = sfp->parentdp;
+> -	if ((NULL == sdp) || sdp->detached) {
+> -		printk(KERN_INFO "sg_cmd_done: device detached\n");
+> +	if (unlikely(NULL == sfp)) { /* shouldn't happen */
+> +		printk(KERN_ERR "sg_rq_end_io: NULL sg_fd\n");
+>  		return;
+>  	}
+
+Ditto.
+
+
+> +	sdp = sfp->parentdp;
+> +	if (unlikely(sdp->detached))
+> +		printk(KERN_INFO "sg_rq_end_io: device detached\n");
+> +
+>  	sense = rq->sense;
+>  	result = rq->errors;
+>  	resid = rq->data_len;
+> @@ -1303,33 +1340,25 @@ static void sg_rq_end_io(struct request 
+>  	}
+>  	/* Rely on write phase to clean out srp status values, so no "else" */
+>  
+> -	if (sfp->closed) {	/* whoops this fd already released, cleanup */
+> -		SCSI_LOG_TIMEOUT(1, printk("sg_cmd_done: already closed, freeing ...\n"));
+> -		sg_finish_rem_req(srp);
+> -		srp = NULL;
+> -		if (NULL == sfp->headrp) {
+> -			SCSI_LOG_TIMEOUT(1, printk("sg_cmd_done: already closed, final cleanup\n"));
+> -			if (0 == sg_remove_sfp(sdp, sfp)) {	/* device still present */
+> -				scsi_device_put(sdp->device);
+> -			}
+> -			sfp = NULL;
+> -		}
+> -	} else if (srp && srp->orphan) {
+> +	write_lock_irqsave(&sfp->rq_list_lock, iflags);
+> +	if (unlikely(srp->orphan)) {
+>  		if (sfp->keep_orphan)
+>  			srp->sg_io_owned = 0;
+> -		else {
+> -			sg_finish_rem_req(srp);
+> -			srp = NULL;
+> -		}
+> +		else
+> +			done = 0;
+>  	}
+> -	if (sfp && srp) {
+> -		/* Now wake up any sg_read() that is waiting for this packet. */
+> -		kill_fasync(&sfp->async_qp, SIGPOLL, POLL_IN);
+> -		write_lock_irqsave(&sfp->rq_list_lock, iflags);
+> -		srp->done = 1;
+> +	srp->done = done;
+> +	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+> +
+> +	if (likely(done)) {
+> +		/* Now wake up any sg_read() that is waiting for this
+> +		   packet. */
+>  		wake_up_interruptible(&sfp->read_wait);
+> -		write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+> -	}
+> +		kill_fasync(&sfp->async_qp, SIGPOLL, POLL_IN);
+> +	} else
+> +		sg_finish_rem_req(srp); /* call with srp->done == 0 */
+> +
+> +	kref_put(&sfp->f_ref, sg_remove_sfp);
+>  }
+>  
+>  static struct file_operations sg_fops = {
+> @@ -1391,6 +1420,7 @@ static Sg_device *sg_alloc(struct gendis
+>  	init_waitqueue_head(&sdp->o_excl_wait);
+>  	sdp->sg_tablesize = min(q->max_hw_segments, q->max_phys_segments);
+>  	sdp->index = k;
+> +	kref_init(&sdp->d_ref);
+>  
+>  	error = 0;
+>   out:
+> @@ -1488,49 +1518,45 @@ out:
+>  	return error;
+>  }
+>  
+> -static void
+> -sg_remove(struct device *cl_dev, struct class_interface *cl_intf)
+> +static void sg_device_destroy(struct kref *kref)
+> +{
+> +	struct sg_device *sdp = container_of(kref, struct sg_device, d_ref);
+> +	unsigned long flags;
+> +
+> +	/* CAUTION!  Note that the device can still be found via idr_find()
+> +	   even though the refcount is 0.  Therefore, do idr_remove() BEFORE
+> +	   any other cleanup. */
+> +
+> +	write_lock_irqsave(&sg_index_lock, flags);
+> +	idr_remove(&sg_index_idr, sdp->index);
+> +	write_unlock_irqrestore(&sg_index_lock, flags);
+> +
+> +	SCSI_LOG_TIMEOUT(3,
+> +		printk("sg_device_destroy: %s\n",
+> +			sdp->disk->disk_name));
+> +
+> +	put_disk(sdp->disk);
+> +	kfree(sdp);
+> +}
+> +
+> +static void sg_remove(struct device *cl_dev, struct class_interface *cl_intf)
+>  {
+>  	struct scsi_device *scsidp = to_scsi_device(cl_dev->parent);
+>  	Sg_device *sdp = dev_get_drvdata(cl_dev);
+>  	unsigned long iflags;
+>  	Sg_fd *sfp;
+> -	Sg_fd *tsfp;
+> -	Sg_request *srp;
+> -	Sg_request *tsrp;
+> -	int delay;
+>  
+> -	if (!sdp)
+> +	if (!sdp || sdp->detached)
+>  		return;
+>  
+> -	delay = 0;
+> +	SCSI_LOG_TIMEOUT(3, printk("sg_remove: %s\n", sdp->disk->disk_name));
+> +
+> +	/* Need a write lock to set sdp->detached. */
+>  	write_lock_irqsave(&sg_index_lock, iflags);
+> -	if (sdp->headfp) {
+> -		sdp->detached = 1;
+> -		for (sfp = sdp->headfp; sfp; sfp = tsfp) {
+> -			tsfp = sfp->nextfp;
+> -			for (srp = sfp->headrp; srp; srp = tsrp) {
+> -				tsrp = srp->nextrp;
+> -				if (sfp->closed || (0 == sg_srp_done(srp, sfp)))
+> -					sg_finish_rem_req(srp);
+> -			}
+> -			if (sfp->closed) {
+> -				scsi_device_put(sdp->device);
+> -				__sg_remove_sfp(sdp, sfp);
+> -			} else {
+> -				delay = 1;
+> -				wake_up_interruptible(&sfp->read_wait);
+> -				kill_fasync(&sfp->async_qp, SIGPOLL,
+> -					    POLL_HUP);
+> -			}
+> -		}
+> -		SCSI_LOG_TIMEOUT(3, printk("sg_remove: dev=%d, dirty\n", sdp->index));
+> -		if (NULL == sdp->headfp) {
+> -			idr_remove(&sg_index_idr, sdp->index);
+> -		}
+> -	} else {	/* nothing active, simple case */
+> -		SCSI_LOG_TIMEOUT(3, printk("sg_remove: dev=%d\n", sdp->index));
+> -		idr_remove(&sg_index_idr, sdp->index);
+> +	sdp->detached = 1;
+> +	for (sfp = sdp->headfp; sfp; sfp = sfp->nextfp) {
+> +		wake_up_interruptible(&sfp->read_wait);
+> +		kill_fasync(&sfp->async_qp, SIGPOLL, POLL_HUP);
+>  	}
+>  	write_unlock_irqrestore(&sg_index_lock, iflags);
+>  
+> @@ -1538,13 +1564,8 @@ sg_remove(struct device *cl_dev, struct 
+>  	device_destroy(sg_sysfs_class, MKDEV(SCSI_GENERIC_MAJOR, sdp->index));
+>  	cdev_del(sdp->cdev);
+>  	sdp->cdev = NULL;
+> -	put_disk(sdp->disk);
+> -	sdp->disk = NULL;
+> -	if (NULL == sdp->headfp)
+> -		kfree(sdp);
+>  
+> -	if (delay)
+> -		msleep(10);	/* dirty detach so delay device destruction */
+> +	kref_put(&sdp->d_ref, sg_device_destroy);
+>  }
+>  
+>  module_param_named(scatter_elem_sz, scatter_elem_sz, int, S_IRUGO | S_IWUSR);
+> @@ -1941,22 +1962,6 @@ sg_get_rq_mark(Sg_fd * sfp, int pack_id)
+>  	return resp;
+>  }
+>  
+> -#ifdef CONFIG_SCSI_PROC_FS
+> -static Sg_request *
+> -sg_get_nth_request(Sg_fd * sfp, int nth)
+> -{
+> -	Sg_request *resp;
+> -	unsigned long iflags;
+> -	int k;
+> -
+> -	read_lock_irqsave(&sfp->rq_list_lock, iflags);
+> -	for (k = 0, resp = sfp->headrp; resp && (k < nth);
+> -	     ++k, resp = resp->nextrp) ;
+> -	read_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+> -	return resp;
+> -}
+> -#endif
+> -
+>  /* always adds to end of list */
+>  static Sg_request *
+>  sg_add_request(Sg_fd * sfp)
+> @@ -2032,22 +2037,6 @@ sg_remove_request(Sg_fd * sfp, Sg_reques
+>  	return res;
+>  }
+>  
+> -#ifdef CONFIG_SCSI_PROC_FS
+> -static Sg_fd *
+> -sg_get_nth_sfp(Sg_device * sdp, int nth)
+> -{
+> -	Sg_fd *resp;
+> -	unsigned long iflags;
+> -	int k;
+> -
+> -	read_lock_irqsave(&sg_index_lock, iflags);
+> -	for (k = 0, resp = sdp->headfp; resp && (k < nth);
+> -	     ++k, resp = resp->nextfp) ;
+> -	read_unlock_irqrestore(&sg_index_lock, iflags);
+> -	return resp;
+> -}
+> -#endif
+> -
+>  static Sg_fd *
+>  sg_add_sfp(Sg_device * sdp, int dev)
+>  {
+> @@ -2062,6 +2051,7 @@ sg_add_sfp(Sg_device * sdp, int dev)
+>  	init_waitqueue_head(&sfp->read_wait);
+>  	rwlock_init(&sfp->rq_list_lock);
+>  
+> +	kref_init(&sfp->f_ref);
+>  	sfp->timeout = SG_DEFAULT_TIMEOUT;
+>  	sfp->timeout_user = SG_DEFAULT_TIMEOUT_USER;
+>  	sfp->force_packid = SG_DEF_FORCE_PACK_ID;
+> @@ -2089,15 +2079,53 @@ sg_add_sfp(Sg_device * sdp, int dev)
+>  	sg_build_reserve(sfp, bufflen);
+>  	SCSI_LOG_TIMEOUT(3, printk("sg_add_sfp:   bufflen=%d, k_use_sg=%d\n",
+>  			   sfp->reserve.bufflen, sfp->reserve.k_use_sg));
+> +
+> +	kref_get(&sdp->d_ref);
+> +	__module_get(THIS_MODULE);
+>  	return sfp;
+>  }
+>  
+> -static void
+> -__sg_remove_sfp(Sg_device * sdp, Sg_fd * sfp)
+> +static void sg_remove_sfp_usercontext(struct work_struct *work)
+> +{
+> +	struct sg_fd *sfp = container_of(work, struct sg_fd, ew.work);
+> +	struct sg_device *sdp = sfp->parentdp;
+> +
+> +	/* Cleanup any responses which were never read(). */
+> +	while (sfp->headrp)
+> +		sg_finish_rem_req(sfp->headrp);
+> +
+> +	if (sfp->reserve.bufflen > 0) {
+> +		SCSI_LOG_TIMEOUT(6,
+> +			printk("sg_remove_sfp:    bufflen=%d, k_use_sg=%d\n",
+> +				(int) sfp->reserve.bufflen,
+> +				(int) sfp->reserve.k_use_sg));
+> +		sg_remove_scat(&sfp->reserve);
+> +	}
+> +
+> +	SCSI_LOG_TIMEOUT(6,
+> +		printk("sg_remove_sfp: %s, sfp=0x%p\n",
+> +			sdp->disk->disk_name,
+> +			sfp));
+> +	kfree(sfp);
+> +
+> +	scsi_device_put(sdp->device);
+> +	kref_put(&sdp->d_ref, sg_device_destroy);
+> +	module_put(THIS_MODULE);
+> +}
+> +
+> +static void sg_remove_sfp(struct kref *kref)
+>  {
+> +	struct sg_fd *sfp = container_of(kref, struct sg_fd, f_ref);
+> +	struct sg_device *sdp = sfp->parentdp;
+>  	Sg_fd *fp;
+>  	Sg_fd *prev_fp;
+> +	unsigned long iflags;
+> +
+> +	/* CAUTION!  Note that sfp can still be found by walking sdp->headfp
+> +	   even though the refcount is now 0.  Therefore, unlink sfp from
+> +	   sdp->headfp BEFORE doing any other cleanup. */
+>  
+> +	write_lock_irqsave(&sg_index_lock, iflags);
+>  	prev_fp = sdp->headfp;
+>  	if (sfp == prev_fp)
+>  		sdp->headfp = prev_fp->nextfp;
+> @@ -2110,54 +2138,10 @@ __sg_remove_sfp(Sg_device * sdp, Sg_fd *
+>  			prev_fp = fp;
+>  		}
+>  	}
+> -	if (sfp->reserve.bufflen > 0) {
+> -		SCSI_LOG_TIMEOUT(6, 
+> -			printk("__sg_remove_sfp:    bufflen=%d, k_use_sg=%d\n",
+> -			(int) sfp->reserve.bufflen, (int) sfp->reserve.k_use_sg));
+> -		sg_remove_scat(&sfp->reserve);
+> -	}
+> -	sfp->parentdp = NULL;
+> -	SCSI_LOG_TIMEOUT(6, printk("__sg_remove_sfp:    sfp=0x%p\n", sfp));
+> -	kfree(sfp);
+> -}
+> -
+> -/* Returns 0 in normal case, 1 when detached and sdp object removed */
+> -static int
+> -sg_remove_sfp(Sg_device * sdp, Sg_fd * sfp)
+> -{
+> -	Sg_request *srp;
+> -	Sg_request *tsrp;
+> -	int dirty = 0;
+> -	int res = 0;
+> -
+> -	for (srp = sfp->headrp; srp; srp = tsrp) {
+> -		tsrp = srp->nextrp;
+> -		if (sg_srp_done(srp, sfp))
+> -			sg_finish_rem_req(srp);
+> -		else
+> -			++dirty;
+> -	}
+> -	if (0 == dirty) {
+> -		unsigned long iflags;
+> +	write_unlock_irqrestore(&sg_index_lock, iflags);
+> +	wake_up_interruptible(&sdp->o_excl_wait);
+>  
+> -		write_lock_irqsave(&sg_index_lock, iflags);
+> -		__sg_remove_sfp(sdp, sfp);
+> -		if (sdp->detached && (NULL == sdp->headfp)) {
+> -			idr_remove(&sg_index_idr, sdp->index);
+> -			kfree(sdp);
+> -			res = 1;
+> -		}
+> -		write_unlock_irqrestore(&sg_index_lock, iflags);
+> -	} else {
+> -		/* MOD_INC's to inhibit unloading sg and associated adapter driver */
+> -		/* only bump the access_count if we actually succeeded in
+> -		 * throwing another counter on the host module */
+> -		scsi_device_get(sdp->device);	/* XXX: retval ignored? */	
+> -		sfp->closed = 1;	/* flag dirty state on this fd */
+> -		SCSI_LOG_TIMEOUT(1, printk("sg_remove_sfp: worrisome, %d writes pending\n",
+> -				  dirty));
+> -	}
+> -	return res;
+> +	execute_in_process_context(sg_remove_sfp_usercontext, &sfp->ew);
+>  }
+>  
+>  static int
+> @@ -2199,19 +2183,6 @@ sg_last_dev(void)
+>  }
+>  #endif
+>  
+> -static Sg_device *
+> -sg_get_dev(int dev)
+> -{
+> -	Sg_device *sdp;
+> -	unsigned long iflags;
+> -
+> -	read_lock_irqsave(&sg_index_lock, iflags);
+> -	sdp = idr_find(&sg_index_idr, dev);
+> -	read_unlock_irqrestore(&sg_index_lock, iflags);
+> -
+> -	return sdp;
+> -}
+> -
+>  #ifdef CONFIG_SCSI_PROC_FS
+>  
+>  static struct proc_dir_entry *sg_proc_sgp = NULL;
+> @@ -2468,8 +2439,10 @@ static int sg_proc_seq_show_dev(struct s
+>  	struct sg_proc_deviter * it = (struct sg_proc_deviter *) v;
+>  	Sg_device *sdp;
+>  	struct scsi_device *scsidp;
+> +	unsigned long iflags;
+>  
+> -	sdp = it ? sg_get_dev(it->index) : NULL;
+> +	read_lock_irqsave(&sg_index_lock, iflags);
+> +	sdp = it ? idr_find(&sg_index_idr, it->index) : NULL;
+>  	if (sdp && (scsidp = sdp->device) && (!sdp->detached))
+>  		seq_printf(s, "%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
+>  			      scsidp->host->host_no, scsidp->channel,
+> @@ -2480,6 +2453,7 @@ static int sg_proc_seq_show_dev(struct s
+>  			      (int) scsi_device_online(scsidp));
+>  	else
+>  		seq_printf(s, "-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\n");
+> +	read_unlock_irqrestore(&sg_index_lock, iflags);
+>  	return 0;
+>  }
+>  
+> @@ -2493,13 +2467,16 @@ static int sg_proc_seq_show_devstrs(stru
+>  	struct sg_proc_deviter * it = (struct sg_proc_deviter *) v;
+>  	Sg_device *sdp;
+>  	struct scsi_device *scsidp;
+> +	unsigned long iflags;
+>  
+> -	sdp = it ? sg_get_dev(it->index) : NULL;
+> +	read_lock_irqsave(&sg_index_lock, iflags);
+> +	sdp = it ? idr_find(&sg_index_idr, it->index) : NULL;
+>  	if (sdp && (scsidp = sdp->device) && (!sdp->detached))
+>  		seq_printf(s, "%8.8s\t%16.16s\t%4.4s\n",
+>  			   scsidp->vendor, scsidp->model, scsidp->rev);
+>  	else
+>  		seq_printf(s, "<no active device>\n");
+> +	read_unlock_irqrestore(&sg_index_lock, iflags);
+>  	return 0;
+>  }
+>  
+> @@ -2512,7 +2489,8 @@ static void sg_proc_debug_helper(struct 
+>  	const char * cp;
+>  	unsigned int ms;
+>  
+> -	for (k = 0; (fp = sg_get_nth_sfp(sdp, k)); ++k) {
+> +	for (k = 0, fp = sdp->headfp; fp != NULL; ++k, fp = fp->nextfp) {
+> +		read_lock(&fp->rq_list_lock); /* irqs already disabled */
+>  		seq_printf(s, "   FD(%d): timeout=%dms bufflen=%d "
+>  			   "(res)sgat=%d low_dma=%d\n", k + 1,
+>  			   jiffies_to_msecs(fp->timeout),
+> @@ -2522,7 +2500,9 @@ static void sg_proc_debug_helper(struct 
+>  		seq_printf(s, "   cmd_q=%d f_packid=%d k_orphan=%d closed=%d\n",
+>  			   (int) fp->cmd_q, (int) fp->force_packid,
+>  			   (int) fp->keep_orphan, (int) fp->closed);
+> -		for (m = 0; (srp = sg_get_nth_request(fp, m)); ++m) {
+> +		for (m = 0, srp = fp->headrp;
+> +				srp != NULL;
+> +				++m, srp = srp->nextrp) {
+>  			hp = &srp->header;
+>  			new_interface = (hp->interface_id == '\0') ? 0 : 1;
+>  			if (srp->res_used) {
+> @@ -2559,6 +2539,7 @@ static void sg_proc_debug_helper(struct 
+>  		}
+>  		if (0 == m)
+>  			seq_printf(s, "     No requests active\n");
+> +		read_unlock(&fp->rq_list_lock);
+>  	}
+>  }
+>  
+> @@ -2571,23 +2552,26 @@ static int sg_proc_seq_show_debug(struct
+>  {
+>  	struct sg_proc_deviter * it = (struct sg_proc_deviter *) v;
+>  	Sg_device *sdp;
+> +	unsigned long iflags;
+>  
+>  	if (it && (0 == it->index)) {
+>  		seq_printf(s, "max_active_device=%d(origin 1)\n",
+>  			   (int)it->max);
+>  		seq_printf(s, " def_reserved_size=%d\n", sg_big_buff);
+>  	}
+> -	sdp = it ? sg_get_dev(it->index) : NULL;
+> +
+> +	read_lock_irqsave(&sg_index_lock, iflags);
+> +	sdp = it ? idr_find(&sg_index_idr, it->index) : NULL;
+>  	if (sdp) {
+>  		struct scsi_device *scsidp = sdp->device;
+>  
+>  		if (NULL == scsidp) {
+>  			seq_printf(s, "device %d detached ??\n", 
+>  				   (int)it->index);
+> -			return 0;
+> +			goto out;
+>  		}
+>  
+> -		if (sg_get_nth_sfp(sdp, 0)) {
+> +		if (sdp->headfp) {
+>  			seq_printf(s, " >>> device=%s ",
+>  				sdp->disk->disk_name);
+>  			if (sdp->detached)
+> @@ -2604,6 +2588,8 @@ static int sg_proc_seq_show_debug(struct
+>  		}
+>  		sg_proc_debug_helper(s, sdp);
+>  	}
+> +out:
+> +	read_unlock_irqrestore(&sg_index_lock, iflags);
+>  	return 0;
+>  }
+>  
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
