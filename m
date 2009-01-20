@@ -1,16 +1,16 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH] bsg: Error print if device is not bidi capable when refusing
- a bidi command
-Date: Tue, 20 Jan 2009 16:13:20 +0200
-Message-ID: <4975DC00.2090005@panasas.com>
+Subject: Subject: [PATCH] bsg: Error print if device is not bidi capable when
+ refusing a bidi command
+Date: Tue, 20 Jan 2009 16:13:00 +0200
+Message-ID: <4975DBEC.4000700@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:31235 "EHLO
+Received: from gw-ca.panasas.com ([66.104.249.162]:8933 "EHLO
 	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1761041AbZATONX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Jan 2009 09:13:23 -0500
+	with ESMTP id S1756773AbZATONF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Jan 2009 09:13:05 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>
