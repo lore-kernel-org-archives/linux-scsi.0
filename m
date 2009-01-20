@@ -1,57 +1,42 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH ver2 printk_ratelimit] bsg: Error print if device is not bidi capable when refusing a bidi command
-Date: Tue, 20 Jan 2009 15:46:08 +0100
-Message-ID: <20090120144608.GQ30821@kernel.dk>
-References: <4975DC00.2090005@panasas.com> <20090120141517.GM30821@kernel.dk> <4975E1EE.5070101@panasas.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] iscsi tcp: bidi capable
+Date: Tue, 20 Jan 2009 16:48:03 +0200
+Message-ID: <4975E423.2020506@panasas.com>
+References: <4975D96A.6020407@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:26701 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755303AbZATOrj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jan 2009 09:47:39 -0500
-Content-Disposition: inline
-In-Reply-To: <4975E1EE.5070101@panasas.com>
+Received: from gw-ca.panasas.com ([66.104.249.162]:26185 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755246AbZATOsJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Jan 2009 09:48:09 -0500
+In-Reply-To: <4975D96A.6020407@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
+To: Pete Wyckoff <pw@padd.com>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>, open-iscsi@googlegroups.com
 
-On Tue, Jan 20 2009, Boaz Harrosh wrote:
+Boaz Harrosh wrote:
+> From: Pete Wyckoff <pw@padd.com>
 > 
-> If a bidi command was issued to a request_queue not mark as
-> QUEUE_FLAG_BIDI. Issue an error report. This is a misconfiguration
-> an administrator would like to know about, which is otherwise
-> hard to detect.
+> Mark iscsi_tcp as being capable of bidirectional transfers.  The
+> bsg interface checks this bit before attempting any bidirectional
+> commands.
 > 
+> Signed-off-by: Pete Wyckoff <pw@padd.com>
 > Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 > ---
->  block/bsg.c |    5 +++++
->  1 files changed, 5 insertions(+), 0 deletions(-)
-> 
-> diff --git a/block/bsg.c b/block/bsg.c
-> index 44a2a0f..1da14fe 100644
-> --- a/block/bsg.c
-> +++ b/block/bsg.c
-> @@ -270,6 +270,11 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, fmode_t has_write_perm,
->  
->  	if (rw == WRITE && hdr->din_xfer_len) {
->  		if (!test_bit(QUEUE_FLAG_BIDI, &q->queue_flags)) {
-> +			if (printk_ratelimit()) {
-> +				printk(KERN_ERR
-> +					"bsg: Attempt to send a bidi command "
-> +					"to a none bidi device\n");
-> +			}
->  			ret = -EOPNOTSUPP;
->  			goto out;
->  		}
-> -- 
-> 1.6.0.1
+<snip>
 
-Thanks, that works. But why isn't the -EOPNOTSUPP error return (which the
-app can see and print info about) enough? Do we really need to put this
-in the kernel log?
+Mike hi, whatever happened with this patch?
 
--- 
-Jens Axboe
+It is over scsi-misc but I think it should be good for iscsi tree. (Sorry)
+Since open-osd is apparently only going into next Kernel, sigh.
+Then this is fine for the next Kernel as well.
 
+(I was advertising BIDI kernels since 2.6.26, well I guess not
+ from bsg+iscsi)
+
+Thanks
+Boaz
