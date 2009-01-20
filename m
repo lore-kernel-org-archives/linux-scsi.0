@@ -1,109 +1,44 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH] bsg: Fix sense buffer bug in SG_IO
-Date: Tue, 20 Jan 2009 15:06:23 +0200
-Message-ID: <4975CC4F.40006@panasas.com>
+Subject: [PATCH] bsg: Remove bogus check against request_queue->max_sectors
+Date: Tue, 20 Jan 2009 15:08:22 +0200
+Message-ID: <4975CCC6.7000009@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:4167 "EHLO
+Received: from gw-ca.panasas.com ([66.104.249.162]:32401 "EHLO
 	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754189AbZATNGa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Jan 2009 08:06:30 -0500
+	with ESMTP id S1754516AbZATNI1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Jan 2009 08:08:27 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
 
 
-When submitting requests via SG_IO, which does a sync io, a
-bsg_command is not allocated, so an in-Kernel sense_buffer was not
-set. However when calling blk_execute_rq() with no sense buffer
-one is provided from the stack. Now bsg at blk_complete_sgv4_hdr_rq()
-would check if rq->sense_len and a sense was requested by sg_io_v4
-the rq->sense was copy_user() back, but by now it is already mangled
-stack memory.
-
-I have fixed that by forcing a sense_buffer when calling bsg_map_hdr().
-The bsg_command->sense is provided in the write/read path like before,
-and on-the-stack buffer is provided when doing SG_IO.
-
-I have also fixed a dprintk message to print rq->errors in hex because
-of the scsi bit-field use of this member. For other block devices it
-does not matter anyway.
+bsg submits REQ_TYPE_BLOCK_PC so the right check is max_hw_sectors.
+But I've removed this check because right after, bsg proceeds with
+calling blk_rq_map_user() which does all the right checks.
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 ---
- block/bsg.c |   17 ++++++++++-------
- 1 files changed, 10 insertions(+), 7 deletions(-)
+ block/bsg.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
 diff --git a/block/bsg.c b/block/bsg.c
-index d414bb5..0ce8806 100644
+index 0ce8806..44a2a0f 100644
 --- a/block/bsg.c
 +++ b/block/bsg.c
-@@ -244,7 +244,8 @@ bsg_validate_sgv4_hdr(struct request_queue *q, struct sg_io_v4 *hdr, int *rw)
-  * map sg_io_v4 to a request.
-  */
- static struct request *
--bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, fmode_t has_write_perm)
-+bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, fmode_t has_write_perm,
-+	    u8 *sense)
- {
- 	struct request_queue *q = bd->queue;
- 	struct request *rq, *next_rq = NULL;
-@@ -306,6 +307,10 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, fmode_t has_write_perm)
- 		if (ret)
- 			goto out;
- 	}
-+
-+	rq->sense = sense;
-+	rq->sense_len = 0;
-+
- 	return rq;
- out:
- 	if (rq->cmd != rq->__cmd)
-@@ -348,9 +353,6 @@ static void bsg_rq_end_io(struct request *rq, int uptodate)
- static void bsg_add_command(struct bsg_device *bd, struct request_queue *q,
- 			    struct bsg_command *bc, struct request *rq)
- {
--	rq->sense = bc->sense;
--	rq->sense_len = 0;
--
- 	/*
- 	 * add bc command to busy queue and submit rq for io
- 	 */
-@@ -419,7 +421,7 @@ static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
- {
- 	int ret = 0;
+@@ -218,9 +218,6 @@ bsg_validate_sgv4_hdr(struct request_queue *q, struct sg_io_v4 *hdr, int *rw)
  
--	dprintk("rq %p bio %p %u\n", rq, bio, rq->errors);
-+	dprintk("rq %p bio %p 0x%x\n", rq, bio, rq->errors);
- 	/*
- 	 * fill in all the output members
- 	 */
-@@ -635,7 +637,7 @@ static int __bsg_write(struct bsg_device *bd, const char __user *buf,
- 		/*
- 		 * get a request, fill in the blanks, and add to request queue
- 		 */
--		rq = bsg_map_hdr(bd, &bc->hdr, has_write_perm);
-+		rq = bsg_map_hdr(bd, &bc->hdr, has_write_perm, bc->sense);
- 		if (IS_ERR(rq)) {
- 			ret = PTR_ERR(rq);
- 			rq = NULL;
-@@ -922,11 +924,12 @@ static long bsg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
- 		struct request *rq;
- 		struct bio *bio, *bidi_bio = NULL;
- 		struct sg_io_v4 hdr;
-+		u8 sense[SCSI_SENSE_BUFFERSIZE];
+ 	if (hdr->guard != 'Q')
+ 		return -EINVAL;
+-	if (hdr->dout_xfer_len > (q->max_sectors << 9) ||
+-	    hdr->din_xfer_len > (q->max_sectors << 9))
+-		return -EIO;
  
- 		if (copy_from_user(&hdr, uarg, sizeof(hdr)))
- 			return -EFAULT;
- 
--		rq = bsg_map_hdr(bd, &hdr, file->f_mode & FMODE_WRITE);
-+		rq = bsg_map_hdr(bd, &hdr, file->f_mode & FMODE_WRITE, sense);
- 		if (IS_ERR(rq))
- 			return PTR_ERR(rq);
- 
+ 	switch (hdr->protocol) {
+ 	case BSG_PROTOCOL_SCSI:
 -- 
 1.6.0.1
 
