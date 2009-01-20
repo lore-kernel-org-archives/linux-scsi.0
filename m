@@ -1,138 +1,49 @@
-From: Tony Battersby <tonyb@cybernetics.com>
-Subject: [PATCH 2/2] sg: fix races with ioctl(SG_IO) (v2)
-Date: Tue, 20 Jan 2009 17:00:09 -0500
-Message-ID: <49764969.5090708@cybernetics.com>
-References: <496E4B93.4000507@cybernetics.com>	<20090119155509Y.fujita.tomonori@lab.ntt.co.jp>	<497506AF.6040109@cybernetics.com> <20090120100451Q.fujita.tomonori@lab.ntt.co.jp>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: swiotlb default size (64 MB) too small?
+Date: Wed, 21 Jan 2009 07:44:02 +0900
+Message-ID: <20090121074339N.fujita.tomonori@lab.ntt.co.jp>
+References: <49762FC8.7000208@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host64.cybernetics.com ([98.174.209.230]:3594 "EHLO
-	mail.cybernetics.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752661AbZATWAL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Jan 2009 17:00:11 -0500
-In-Reply-To: <20090120100451Q.fujita.tomonori@lab.ntt.co.jp>
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:35934 "EHLO mo11.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755517AbZATWoa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Jan 2009 17:44:30 -0500
+In-Reply-To: <49762FC8.7000208@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, dgilbert@interlog.com, hch@infradead.org, linux-scsi@vger.kernel.org
+To: stefanr@s5r6.in-berlin.de
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-sg_io_owned needs to be set before the command is sent to the midlevel;
-otherwise, a quickly-completing command may cause a different CPU
-to see "srp->done == 1 && !srp->sg_io_owned", which would lead to
-incorrect behavior.
+On Tue, 20 Jan 2009 21:10:48 +0100
+Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
 
-Check srp->done and set srp->orphan while holding rq_list_lock to
-prevent races with sg_rq_end_io().
+> somebody reported frequent "Out of SW-IOMMU space" failures when copying
+> between a FireWire and a USB disk.  swiotlb=512M on the kernel command
+> line fixes it for him. https://bugzilla.redhat.com/show_bug.cgi?id=478567
+> 
+> Should the default be raised?
 
-There is no need to check sfp->closed from read/write/ioctl/poll/etc.
-since the kernel guarantees that this won't happen.
+I don't think so. Reserving large memory like 512MB for swiotlb? It
+means that you waste 512MB if you use decent HBAs (having no dma mask
+limit) or fast storage, or when there is few I/O activity.
 
-The usefulness of sg_srp_done() was questionable before; now it is
-definitely not needed.
+The bug reporter said that copying stooped but it should not
+happen. It doesn't happen with SCSI (copying can continue a bit
+slowly). dma mapping errors are transient so SCSI retries.
 
-Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
----
+I guess that it would be better to remove the misleading error
+message. Sane IOMMUs don't do that.
 
-Compared to the previous version of this patch, this version removes
-sg_srp_done() and the unnecessary check for sfp->closed.
+If the bug report is true, then the FireWire stack or the driver (or
+both) has problems. Make sure that FireWire can work even with dma
+mapping failures. My dma mapping debug patchset might be useful:
 
- sg.c |   39 ++++++++++++++-------------------------
- 1 file changed, 14 insertions(+), 25 deletions(-)
+git://git.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-misc.git dmafault
 
---- linux-2.6.29-rc2/drivers/scsi/sg.c.orig	2009-01-20 16:32:28.000000000 -0500
-+++ linux-2.6.29-rc2/drivers/scsi/sg.c	2009-01-20 16:34:37.000000000 -0500
-@@ -189,7 +189,7 @@ static ssize_t sg_new_read(Sg_fd * sfp, 
- 			   Sg_request * srp);
- static ssize_t sg_new_write(Sg_fd *sfp, struct file *file,
- 			const char __user *buf, size_t count, int blocking,
--			int read_only, Sg_request **o_srp);
-+			int read_only, int sg_io_owned, Sg_request **o_srp);
- static int sg_common_write(Sg_fd * sfp, Sg_request * srp,
- 			   unsigned char *cmnd, int timeout, int blocking);
- static int sg_read_oxfer(Sg_request * srp, char __user *outp, int num_read_xfer);
-@@ -561,7 +561,8 @@ sg_write(struct file *filp, const char _
- 		return -EFAULT;
- 	blocking = !(filp->f_flags & O_NONBLOCK);
- 	if (old_hdr.reply_len < 0)
--		return sg_new_write(sfp, filp, buf, count, blocking, 0, NULL);
-+		return sg_new_write(sfp, filp, buf, count,
-+				    blocking, 0, 0, NULL);
- 	if (count < (SZ_SG_HEADER + 6))
- 		return -EIO;	/* The minimum scsi command length is 6 bytes. */
- 
-@@ -642,7 +643,7 @@ sg_write(struct file *filp, const char _
- 
- static ssize_t
- sg_new_write(Sg_fd *sfp, struct file *file, const char __user *buf,
--		 size_t count, int blocking, int read_only,
-+		 size_t count, int blocking, int read_only, int sg_io_owned,
- 		 Sg_request **o_srp)
- {
- 	int k;
-@@ -662,6 +663,7 @@ sg_new_write(Sg_fd *sfp, struct file *fi
- 		SCSI_LOG_TIMEOUT(1, printk("sg_new_write: queue full\n"));
- 		return -EDOM;
- 	}
-+	srp->sg_io_owned = sg_io_owned;
- 	hp = &srp->header;
- 	if (__copy_from_user(hp, buf, SZ_SG_IO_HDR)) {
- 		sg_remove_request(sfp, srp);
-@@ -766,18 +768,6 @@ sg_common_write(Sg_fd * sfp, Sg_request 
- }
- 
- static int
--sg_srp_done(Sg_request *srp, Sg_fd *sfp)
--{
--	unsigned long iflags;
--	int done;
--
--	read_lock_irqsave(&sfp->rq_list_lock, iflags);
--	done = srp->done;
--	read_unlock_irqrestore(&sfp->rq_list_lock, iflags);
--	return done;
--}
--
--static int
- sg_ioctl(struct inode *inode, struct file *filp,
- 	 unsigned int cmd_in, unsigned long arg)
- {
-@@ -809,27 +799,26 @@ sg_ioctl(struct inode *inode, struct fil
- 				return -EFAULT;
- 			result =
- 			    sg_new_write(sfp, filp, p, SZ_SG_IO_HDR,
--					 blocking, read_only, &srp);
-+					 blocking, read_only, 1, &srp);
- 			if (result < 0)
- 				return result;
--			srp->sg_io_owned = 1;
- 			while (1) {
- 				result = 0;	/* following macro to beat race condition */
- 				__wait_event_interruptible(sfp->read_wait,
--					(sdp->detached || sfp->closed || sg_srp_done(srp, sfp)),
--							   result);
-+					(srp->done || sdp->detached),
-+					result);
- 				if (sdp->detached)
- 					return -ENODEV;
--				if (sfp->closed)
--					return 0;	/* request packet dropped already */
--				if (0 == result)
-+				write_lock_irq(&sfp->rq_list_lock);
-+				if (srp->done) {
-+					srp->done = 2;
-+					write_unlock_irq(&sfp->rq_list_lock);
- 					break;
-+				}
- 				srp->orphan = 1;
-+				write_unlock_irq(&sfp->rq_list_lock);
- 				return result;	/* -ERESTARTSYS because signal hit process */
- 			}
--			write_lock_irqsave(&sfp->rq_list_lock, iflags);
--			srp->done = 2;
--			write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
- 			result = sg_new_read(sfp, p, SZ_SG_IO_HDR, srp);
- 			return (result < 0) ? result : 0;
- 		}
+You can inject dma mapping failures per device:
 
-
+vine:/debug/pci/0000:00:1d.1# ls
+interval  probability  space  task-filter  times  verbose
