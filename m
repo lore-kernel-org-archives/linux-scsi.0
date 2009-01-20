@@ -1,88 +1,109 @@
-From: Gregory Haskins <ghaskins@novell.com>
-Subject: Re: Mainline kernel OLTP performance update
-Date: Tue, 20 Jan 2009 07:45:33 -0500
-Message-ID: <4975C76D.9020208@novell.com>
-References: <BC02C49EEB98354DBA7F5DD76F2A9E800317003CB0@azsmsx501.amr.corp.intel.com>	 <CAC4B8726E86A142B27A9E9A2F2F12479D3E945F@rrsmsx505.amr.corp.intel.com>	 <20090114163557.11e097f2.akpm@linux-foundation.org>	 <20090115012147.GW29283@parisc-linux.org>	 <20090114180431.f4a96543.akpm@linux-foundation.org>	 <1232028766.5966.10.camel@localhost.localdomain>	 <20090115094442.b6394544.akpm@linux-foundation.org>	 <20090115180052.GG29283@parisc-linux.org> <1232043287.21980.65.camel@localhost.localdomain> <496F8421.3070703@novell.com> <CAC4B8726E86A142B27A9E9A2F2F12479D4403CE@rrsmsx505.amr.corp.intel.com> <BC02C49EEB98354DBA7F5DD76F2A9E8003175EB45B@azsmsx501.amr.corp.intel.com> <4970CE79.1080002@novell.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH] bsg: Fix sense buffer bug in SG_IO
+Date: Tue, 20 Jan 2009 15:06:23 +0200
+Message-ID: <4975CC4F.40006@panasas.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig1D8037201D5825D038EA98D2"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:44724 "EHLO
-	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752190AbZATMmj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Jan 2009 07:42:39 -0500
-In-Reply-To: <4970CE79.1080002@novell.com>
+Received: from gw-ca.panasas.com ([66.104.249.162]:4167 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754189AbZATNGa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Jan 2009 08:06:30 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ma, Chinang" <chinang.ma@intel.com>
-Cc: "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>, Steven Rostedt <srostedt@redhat.com>, Matthew Wilcox <matthew@wil.cx>, Andrew Morton <akpm@linux-foundation.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Tripathi, Sharad C" <sharad.c.tripathi@intel.com>, "arjan@linux.intel.com" <arjan@linux.intel.com>, "Kleen, Andi" <andi.kleen@intel.com>, "Siddha, Suresh B" <suresh.b.siddha@intel.com>, "Chilukuri, Harita" <harita.chilukuri@intel.com>, "Styner, Douglas W" <douglas.w.styner@intel.com>, "Wang, Peter Xihong" <peter.xihong.wang@intel.com>, "Nueckel, Hubert" <hubert.nueckel@intel.com>, "chris.mason@oracle.com" <chris.mason@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Anirban Chakraborty <anirban.chakraborty@qlogic.com>
-
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig1D8037201D5825D038EA98D2
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-Gregory Haskins wrote:
->
-> Then, email the contents of /sys/kernel/debug/tracing/trace to me
->
->
->  =20
-
-[ Chinang has performed the trace as requested, but replied with a
-reduced CC to avoid spamming people with a large file.  This is
-restoring the original list]
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
 
 
-Ma, Chinang wrote:
-> Hi Gregory,
-> Trace in attachment. I trim down the distribution list. As the attachme=
-nt is quite big.
->
-> Thanks,
-> -Chinang
->  =20
-Hi Chinang,
+When submitting requests via SG_IO, which does a sync io, a
+bsg_command is not allocated, so an in-Kernel sense_buffer was not
+set. However when calling blk_execute_rq() with no sense buffer
+one is provided from the stack. Now bsg at blk_complete_sgv4_hdr_rq()
+would check if rq->sense_len and a sense was requested by sg_io_v4
+the rq->sense was copy_user() back, but by now it is already mangled
+stack memory.
 
-  Thank you very much for taking the time to do this.  I have analyzed
-the trace: I do not see any smoking gun w.r.t. the theory that we are
-over IPI'ing the system.  There were holes in the data due to trace
-limitations that rendered some of the data inconclusive.  However, the
-places where we did not run into trace limitations looked like
-everything was functioning as designed.
+I have fixed that by forcing a sense_buffer when calling bsg_map_hdr().
+The bsg_command->sense is provided in the write/read path like before,
+and on-the-stack buffer is provided when doing SG_IO.
 
-That being said, I do see that you have a ton of prio 48(ish) threads
-that are over-straining the RT push logic.  The interesting thing here
-is I recently pushed some patches to tip that have potential to help you
-here.  Could you try your test using the sched/rt branch from -tip?=20
-Here is a clone link, for your convenience:
+I have also fixed a dprintk message to print rq->errors in hex because
+of the scsi bit-field use of this member. For other block devices it
+does not matter anyway.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/x86/linux-2.6-tip.git sched=
-/rt
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ block/bsg.c |   17 ++++++++++-------
+ 1 files changed, 10 insertions(+), 7 deletions(-)
 
-For this run, do _not_ use the trace patch/config.  I just want to see
-if you observe performance improvements with OLTP configured for RT prio
-when compared to historic rt-push/pull based kernels (including HEAD on
-linus.git, as tested in the last run)
+diff --git a/block/bsg.c b/block/bsg.c
+index d414bb5..0ce8806 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -244,7 +244,8 @@ bsg_validate_sgv4_hdr(struct request_queue *q, struct sg_io_v4 *hdr, int *rw)
+  * map sg_io_v4 to a request.
+  */
+ static struct request *
+-bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, fmode_t has_write_perm)
++bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, fmode_t has_write_perm,
++	    u8 *sense)
+ {
+ 	struct request_queue *q = bd->queue;
+ 	struct request *rq, *next_rq = NULL;
+@@ -306,6 +307,10 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, fmode_t has_write_perm)
+ 		if (ret)
+ 			goto out;
+ 	}
++
++	rq->sense = sense;
++	rq->sense_len = 0;
++
+ 	return rq;
+ out:
+ 	if (rq->cmd != rq->__cmd)
+@@ -348,9 +353,6 @@ static void bsg_rq_end_io(struct request *rq, int uptodate)
+ static void bsg_add_command(struct bsg_device *bd, struct request_queue *q,
+ 			    struct bsg_command *bc, struct request *rq)
+ {
+-	rq->sense = bc->sense;
+-	rq->sense_len = 0;
+-
+ 	/*
+ 	 * add bc command to busy queue and submit rq for io
+ 	 */
+@@ -419,7 +421,7 @@ static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
+ {
+ 	int ret = 0;
+ 
+-	dprintk("rq %p bio %p %u\n", rq, bio, rq->errors);
++	dprintk("rq %p bio %p 0x%x\n", rq, bio, rq->errors);
+ 	/*
+ 	 * fill in all the output members
+ 	 */
+@@ -635,7 +637,7 @@ static int __bsg_write(struct bsg_device *bd, const char __user *buf,
+ 		/*
+ 		 * get a request, fill in the blanks, and add to request queue
+ 		 */
+-		rq = bsg_map_hdr(bd, &bc->hdr, has_write_perm);
++		rq = bsg_map_hdr(bd, &bc->hdr, has_write_perm, bc->sense);
+ 		if (IS_ERR(rq)) {
+ 			ret = PTR_ERR(rq);
+ 			rq = NULL;
+@@ -922,11 +924,12 @@ static long bsg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ 		struct request *rq;
+ 		struct bio *bio, *bidi_bio = NULL;
+ 		struct sg_io_v4 hdr;
++		u8 sense[SCSI_SENSE_BUFFERSIZE];
+ 
+ 		if (copy_from_user(&hdr, uarg, sizeof(hdr)))
+ 			return -EFAULT;
+ 
+-		rq = bsg_map_hdr(bd, &hdr, file->f_mode & FMODE_WRITE);
++		rq = bsg_map_hdr(bd, &hdr, file->f_mode & FMODE_WRITE, sense);
+ 		if (IS_ERR(rq))
+ 			return PTR_ERR(rq);
+ 
+-- 
+1.6.0.1
 
-Thanks!
--Greg
-
-
-
---------------enig1D8037201D5825D038EA98D2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-Comment: Using GnuPG with SUSE - http://enigmail.mozdev.org
-
-iEYEARECAAYFAkl1x20ACgkQlOSOBdgZUxl9DgCeMOkzM1OfIV5ALA2L9PvO05Gz
-G9AAn3CuAYh1/BNgv/fYwgwNa/O4nOEt
-=I2KJ
------END PGP SIGNATURE-----
-
---------------enig1D8037201D5825D038EA98D2--
