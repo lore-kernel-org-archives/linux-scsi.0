@@ -1,49 +1,51 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: swiotlb default size (64 MB) too small?
-Date: Wed, 21 Jan 2009 07:44:02 +0900
-Message-ID: <20090121074339N.fujita.tomonori@lab.ntt.co.jp>
-References: <49762FC8.7000208@s5r6.in-berlin.de>
+Subject: Re: [PATCH] bsg: Remove bogus check against
+ request_queue->max_sectors
+Date: Wed, 21 Jan 2009 08:10:21 +0900
+Message-ID: <20090121080334N.fujita.tomonori@lab.ntt.co.jp>
+References: <4975CCC6.7000009@panasas.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:35934 "EHLO mo11.iij4u.or.jp"
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:37732 "EHLO mo11.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755517AbZATWoa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jan 2009 17:44:30 -0500
-In-Reply-To: <49762FC8.7000208@s5r6.in-berlin.de>
+	id S1756581AbZATXKm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Jan 2009 18:10:42 -0500
+In-Reply-To: <4975CCC6.7000009@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: stefanr@s5r6.in-berlin.de
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: bharrosh@panasas.com
+Cc: fujita.tomonori@lab.ntt.co.jp, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, osd-dev@open-osd.org
 
-On Tue, 20 Jan 2009 21:10:48 +0100
-Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+On Tue, 20 Jan 2009 15:08:22 +0200
+Boaz Harrosh <bharrosh@panasas.com> wrote:
 
-> somebody reported frequent "Out of SW-IOMMU space" failures when copying
-> between a FireWire and a USB disk.  swiotlb=512M on the kernel command
-> line fixes it for him. https://bugzilla.redhat.com/show_bug.cgi?id=478567
 > 
-> Should the default be raised?
+> bsg submits REQ_TYPE_BLOCK_PC so the right check is max_hw_sectors.
+> But I've removed this check because right after, bsg proceeds with
+> calling blk_rq_map_user() which does all the right checks.
+> 
+> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> ---
+>  block/bsg.c |    3 ---
+>  1 files changed, 0 insertions(+), 3 deletions(-)
+> 
+> diff --git a/block/bsg.c b/block/bsg.c
+> index 0ce8806..44a2a0f 100644
+> --- a/block/bsg.c
+> +++ b/block/bsg.c
+> @@ -218,9 +218,6 @@ bsg_validate_sgv4_hdr(struct request_queue *q, struct sg_io_v4 *hdr, int *rw)
+>  
+>  	if (hdr->guard != 'Q')
+>  		return -EINVAL;
+> -	if (hdr->dout_xfer_len > (q->max_sectors << 9) ||
+> -	    hdr->din_xfer_len > (q->max_sectors << 9))
+> -		return -EIO;
+>  
+>  	switch (hdr->protocol) {
+>  	case BSG_PROTOCOL_SCSI:
 
-I don't think so. Reserving large memory like 512MB for swiotlb? It
-means that you waste 512MB if you use decent HBAs (having no dma mask
-limit) or fast storage, or when there is few I/O activity.
+Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-The bug reporter said that copying stooped but it should not
-happen. It doesn't happen with SCSI (copying can continue a bit
-slowly). dma mapping errors are transient so SCSI retries.
-
-I guess that it would be better to remove the misleading error
-message. Sane IOMMUs don't do that.
-
-If the bug report is true, then the FireWire stack or the driver (or
-both) has problems. Make sure that FireWire can work even with dma
-mapping failures. My dma mapping debug patchset might be useful:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-misc.git dmafault
-
-You can inject dma mapping failures per device:
-
-vine:/debug/pci/0000:00:1d.1# ls
-interval  probability  space  task-filter  times  verbose
+Thanks,
