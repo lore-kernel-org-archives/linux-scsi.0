@@ -1,44 +1,64 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 7/9] exofs: mkexofs
-Date: Wed, 21 Jan 2009 20:44:45 +0200
-Message-ID: <49776D1D.6000206@panasas.com>
-References: <4947BFAA.4030208@panasas.com>	<4947CA5C.50104@panasas.com>	<20081229121423.efde9d06.akpm@linux-foundation.org>	<495B8D90.1090004@panasas.com>	<1230739053.3408.74.camel@localhost.localdomain>	<4960D3CA.2000202@panasas.com>	<1231783926.3256.29.camel@localhost.localdomain>	<496B989F.7050907@garzik.org>	<1231790190.15161.29.camel@localhost.localdomain>	<496BA671.3070900@garzik.org>	<1231802758.27151.18.camel@localhost.localdomain>	<496C9ABE.8060300@garzik.org>	<20090113140328.3aab5a35@lxorguk.ukuu.org.uk>	<496CA26E.1080708@garzik.org> <20090113161450.2fdd1d5d@lxorguk.ukuu.org.uk> <496CCD9F.2000401@panasas.com> <497765E6.4030108@garzik.org>
+From: Tony Battersby <tonyb@cybernetics.com>
+Subject: Re: [PATCH 1/2] sg: fix races during device removal (v5)
+Date: Wed, 21 Jan 2009 14:23:10 -0500
+Message-ID: <4977761E.3050705@cybernetics.com>
+References: <496E4B93.4000507@cybernetics.com>	<20090119155509Y.fujita.tomonori@lab.ntt.co.jp>	<497506AF.6040109@cybernetics.com> <20090120100451Q.fujita.tomonori@lab.ntt.co.jp> <49764920.30307@cybernetics.com> <497768B3.3050506@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <497765E6.4030108@garzik.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Wilcox <matthew@wil.cx>, Benny Halevy <bhalevy@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Avishay Traeger <avishay@gmail.com>, open-osd development <osd-dev@open-osd.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from host64.cybernetics.com ([98.174.209.230]:2675 "EHLO
+	mail.cybernetics.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750836AbZAUTXM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jan 2009 14:23:12 -0500
+In-Reply-To: <497768B3.3050506@s5r6.in-berlin.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: James.Bottomley@HansenPartnership.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, dgilbert@interlog.com, hch@infradead.org, linux-scsi@vger.kernel.org
 
-Jeff Garzik wrote:
-> BTW, where can the latest libosd be found?
-> 
-> I'll want to use that for osdblk (export a single OSD object as a Linux 
-> block device).
-> 
-> 	Jeff
-> 
+Stefan Richter wrote:
+> Tony Battersby wrote:
+>   
+>> I think BUG_ON is
+>> the best way to go for this instead of printk/return because bugs
+>> will be noticed and fixed instead of possibly going unnoticed.
+>>     
+> ...
+>   
+>>  static void sg_rq_end_io(struct request *rq, int uptodate)
+>>  {
+>>     
+> ...
+>   
+>> +	int result, resid, done = 1;
+>> +
+>> +	BUG_ON(srp->done != 0);
+>>     
+>
+> AFAIU this is typically called in atomic context.  If so, WARN_ON is
+> preferred.
+>
+>   
 
-You are most welcome thank you.
+Good point.  I think the following would be the best way then:
 
-The in kernel patches are at:
-  git-clone git://git.open-osd.org/linux-open-osd.git linux-next
-or on the web at:
-  http://git.open-osd.org/gitweb.cgi?p=linux-open-osd.git;a=shortlog;h=refs/heads/linux-next
+	if (WARN_ON(srp->done != 0))
+		return;
 
-But you might find the out-of-tree project more complete:
-  git-clone git://git.open-osd.org/open-osd.git
-or on the web at:
-  http://git.open-osd.org/gitweb.cgi?p=open-osd.git;a=shortlog;h=refs/heads/exofs
 
-To setup an osd-target and all that, this is also hosted on open-osd.org
-Please start reading at http://open-osd.org and the links from that page.
-(Been first, you get to debug my documentation)
+> ...
+>   
+>> +	BUG_ON(sfp == NULL);
+>> +
+>> +	sdp = sfp->parentdp;
+>>     
+>
+> This would bring up a NULL pointer dereference dump anyway.
+>   
 
-I'm patiently awaiting patches ;)
+Yes, and that would have the same problem as BUG_ON by killing the
+machine.  So I think WARN_ON()/return works best for this too.
 
-sincerely yours
-Boaz
+Tony
+
