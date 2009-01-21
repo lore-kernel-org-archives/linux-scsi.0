@@ -1,292 +1,67 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: [Open-FCoE PATCH 6/6] libfc: rport retry on LS_RJT from certain ELS
-Date: Wed, 21 Jan 2009 12:45:11 -0800
-Message-ID: <20090121204511.2468.98972.stgit@fritz>
-References: <20090121204444.2468.66245.stgit@fritz>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: need help to merge (small) virtual scsi driver upstream.
+Date: Thu, 22 Jan 2009 08:09:12 +0900
+Message-ID: <20090122080807S.fujita.tomonori@lab.ntt.co.jp>
+References: <4974CED2.9000900@hw0.org>
+	<20090121151113X.fujita.tomonori@lab.ntt.co.jp>
+	<4976D280.5000506@hw0.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:13734 "EHLO mga01.intel.com"
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:33699 "EHLO mo10.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752450AbZAUUpM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Jan 2009 15:45:12 -0500
-In-Reply-To: <20090121204444.2468.66245.stgit@fritz>
+	id S1751503AbZAUXJ1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Jan 2009 18:09:27 -0500
+In-Reply-To: <4976D280.5000506@hw0.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.bottomley@hansenpartnership.com
-Cc: linux-scsi@vger.kernel.org
+To: henrik@hw0.org
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org
 
-From: Chris Leech <christopher.leech@intel.com>
+On Wed, 21 Jan 2009 08:45:04 +0100
+Henrik Stokseth <henrik@hw0.org> wrote:
 
-This allows any rport ELS to retry on LS_RJT.
+> FUJITA Tomonori wrote:
+> >
+> >
+> > From a quick look at the patch, your driver links requests to a list
+> > and then the user-space daemon reads the requests via the special
+> > character device file and sends the response back to kernel space.
+> >
+> > If I correctly understand what you want, there are some possible
+> > alternatives, I guess.
+> >
+> > Note that I'm not sure 2) and 3) is acceptable to the SCSI maintainer.
+> >
+> >
+> > 1) use iSCSI initiator and target on the same machine
+> >
+> > First, set up iSCSI target software supporting CD/DVD. For example,
+> > you can use tgt (http://stgt.berlios.de), user-space program.
+> >
+> > Then you set up the iSCSI initiator to connect the target. Basically,
+> > the iSCSI initiator works like a virtual hba as you like. The iSCSI
+> > initiator and target communicate via tcp while your software
+> > communicates via the special character device.
+> >
+> > If you go with this setup, all you need are already in mainline.
+> >   
+> 
+> It would be desirable for us to rely upon an interface already present
+> in the mainstream kernel for practical reasons.
+> 
+> Pardon the dumb question but is it possible to talk to the TGT framework
+> without using iSCSI?
+>
+> SCST has a nice user-space interface but I couldn't tell whether STGT
+> had something similar (as documentation is pretty much non-existent).
 
-The rport error handling would only retry on resource allocation failures
-and exchange timeouts.  I have a target that will occasionally reject PLOGI
-when we do a quick LOGO/PLOGI.  When a critical ELS was rejected, libfc would
-fail silently leaving the rport in a dead state.
+tgt has such but I don't think that anyone needs to use tgt's
+interface between user and kernel space so there is no documentation
+(it's better to have such though). tgt user-space daemon supports sbc,
+ssc, smc, mmc, and osd emulation. Why do you need to invent your own
+user-space tgt daemon?
 
-The retry count and delay are managed by fc_rport_error_retry.  If the retry
-count is exceeded fc_rport_error will be called.  When retrying is not the
-correct course of action, fc_rport_error can be called directly.
 
-Signed-off-by: Chris Leech <christopher.leech@intel.com>
-Signed-off-by: Robert Love <robert.w.love@intel.com>
----
-
- drivers/scsi/libfc/fc_exch.c  |    2 -
- drivers/scsi/libfc/fc_rport.c |  111 ++++++++++++++++++++++++-----------------
- include/scsi/fc/fc_fs.h       |    5 ++
- 3 files changed, 69 insertions(+), 49 deletions(-)
-
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index dd269e5..8c40189 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -32,8 +32,6 @@
- #include <scsi/libfc.h>
- #include <scsi/fc_encode.h>
- 
--#define	  FC_DEF_R_A_TOV      (10 * 1000) /* resource allocation timeout */
--
- /*
-  * fc_exch_debug can be set in debugger or at compile time to get more logs.
-  */
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 7175759..600a8ff 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -81,6 +81,7 @@ static void fc_rport_recv_logo_req(struct fc_rport *,
- 				   struct fc_seq *, struct fc_frame *);
- static void fc_rport_timeout(struct work_struct *);
- static void fc_rport_error(struct fc_rport *, struct fc_frame *);
-+static void fc_rport_error_retry(struct fc_rport *, struct fc_frame *);
- static void fc_rport_work(struct work_struct *);
- 
- static const char *fc_rport_state_names[] = {
-@@ -410,58 +411,74 @@ static void fc_rport_timeout(struct work_struct *work)
- }
- 
- /**
-- * fc_rport_error - Handler for any errors
-+ * fc_rport_error - Error handler, called once retries have been exhausted
-  * @rport: The fc_rport object
-  * @fp: The frame pointer
-  *
-- * If the error was caused by a resource allocation failure
-- * then wait for half a second and retry, otherwise retry
-- * immediately.
-- *
-  * Locking Note: The rport lock is expected to be held before
-  * calling this routine
-  */
- static void fc_rport_error(struct fc_rport *rport, struct fc_frame *fp)
- {
- 	struct fc_rport_libfc_priv *rdata = rport->dd_data;
--	unsigned long delay = 0;
- 
- 	FC_DEBUG_RPORT("Error %ld in state %s, retries %d\n",
- 		       PTR_ERR(fp), fc_rport_state(rport), rdata->retries);
- 
--	if (!fp || PTR_ERR(fp) == -FC_EX_TIMEOUT) {
--		/*
--		 * Memory allocation failure, or the exchange timed out.
--		 *  Retry after delay
--		 */
--		if (rdata->retries < rdata->local_port->max_retry_count) {
--			rdata->retries++;
--			if (!fp)
--				delay = msecs_to_jiffies(500);
--			get_device(&rport->dev);
--			schedule_delayed_work(&rdata->retry_work, delay);
--		} else {
--			switch (rdata->rp_state) {
--			case RPORT_ST_PLOGI:
--			case RPORT_ST_PRLI:
--			case RPORT_ST_LOGO:
--				rdata->event = RPORT_EV_FAILED;
--				queue_work(rport_event_queue,
--					   &rdata->event_work);
--				break;
--			case RPORT_ST_RTV:
--				fc_rport_enter_ready(rport);
--				break;
--			case RPORT_ST_NONE:
--			case RPORT_ST_READY:
--			case RPORT_ST_INIT:
--				break;
--			}
--		}
-+	switch (rdata->rp_state) {
-+	case RPORT_ST_PLOGI:
-+	case RPORT_ST_PRLI:
-+	case RPORT_ST_LOGO:
-+		rdata->event = RPORT_EV_FAILED;
-+		queue_work(rport_event_queue,
-+			   &rdata->event_work);
-+		break;
-+	case RPORT_ST_RTV:
-+		fc_rport_enter_ready(rport);
-+		break;
-+	case RPORT_ST_NONE:
-+	case RPORT_ST_READY:
-+	case RPORT_ST_INIT:
-+		break;
- 	}
- }
- 
- /**
-+ * fc_rport_error_retry - Error handler when retries are desired
-+ * @rport: The fc_rport object
-+ * @fp: The frame pointer
-+ *
-+ * If the error was an exchange timeout retry immediately,
-+ * otherwise wait for E_D_TOV.
-+ *
-+ * Locking Note: The rport lock is expected to be held before
-+ * calling this routine
-+ */
-+static void fc_rport_error_retry(struct fc_rport *rport, struct fc_frame *fp)
-+{
-+	struct fc_rport_libfc_priv *rdata = rport->dd_data;
-+	unsigned long delay = FC_DEF_E_D_TOV;
-+
-+	/* make sure this isn't an FC_EX_CLOSED error, never retry those */
-+	if (PTR_ERR(fp) == -FC_EX_CLOSED)
-+		return fc_rport_error(rport, fp);
-+
-+	if (rdata->retries < rdata->local_port->max_retry_count) {
-+		FC_DEBUG_RPORT("Error %ld in state %s, retrying\n",
-+			       PTR_ERR(fp), fc_rport_state(rport));
-+		rdata->retries++;
-+		/* no additional delay on exchange timeouts */
-+		if (PTR_ERR(fp) == -FC_EX_TIMEOUT)
-+			delay = 0;
-+		get_device(&rport->dev);
-+		schedule_delayed_work(&rdata->retry_work, delay);
-+		return;
-+	}
-+
-+	return fc_rport_error(rport, fp);
-+}
-+
-+/**
-  * fc_rport_plogi_recv_resp - Handle incoming ELS PLOGI response
-  * @sp: current sequence in the PLOGI exchange
-  * @fp: response frame
-@@ -495,7 +512,7 @@ static void fc_rport_plogi_resp(struct fc_seq *sp, struct fc_frame *fp,
- 	}
- 
- 	if (IS_ERR(fp)) {
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 		goto err;
- 	}
- 
-@@ -527,7 +544,7 @@ static void fc_rport_plogi_resp(struct fc_seq *sp, struct fc_frame *fp,
- 		else
- 			fc_rport_enter_prli(rport);
- 	} else
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 
- out:
- 	fc_frame_free(fp);
-@@ -557,14 +574,14 @@ static void fc_rport_enter_plogi(struct fc_rport *rport)
- 	rport->maxframe_size = FC_MIN_MAX_PAYLOAD;
- 	fp = fc_frame_alloc(lport, sizeof(struct fc_els_flogi));
- 	if (!fp) {
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 		return;
- 	}
- 	rdata->e_d_tov = lport->e_d_tov;
- 
- 	if (!lport->tt.elsct_send(lport, rport, fp, ELS_PLOGI,
- 				  fc_rport_plogi_resp, rport, lport->e_d_tov))
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 	else
- 		get_device(&rport->dev);
- }
-@@ -604,7 +621,7 @@ static void fc_rport_prli_resp(struct fc_seq *sp, struct fc_frame *fp,
- 	}
- 
- 	if (IS_ERR(fp)) {
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 		goto err;
- 	}
- 
-@@ -662,7 +679,7 @@ static void fc_rport_logo_resp(struct fc_seq *sp, struct fc_frame *fp,
- 		       rport->port_id);
- 
- 	if (IS_ERR(fp)) {
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 		goto err;
- 	}
- 
-@@ -712,13 +729,13 @@ static void fc_rport_enter_prli(struct fc_rport *rport)
- 
- 	fp = fc_frame_alloc(lport, sizeof(*pp));
- 	if (!fp) {
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 		return;
- 	}
- 
- 	if (!lport->tt.elsct_send(lport, rport, fp, ELS_PRLI,
- 				  fc_rport_prli_resp, rport, lport->e_d_tov))
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 	else
- 		get_device(&rport->dev);
- }
-@@ -809,13 +826,13 @@ static void fc_rport_enter_rtv(struct fc_rport *rport)
- 
- 	fp = fc_frame_alloc(lport, sizeof(struct fc_els_rtv));
- 	if (!fp) {
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 		return;
- 	}
- 
- 	if (!lport->tt.elsct_send(lport, rport, fp, ELS_RTV,
- 				     fc_rport_rtv_resp, rport, lport->e_d_tov))
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 	else
- 		get_device(&rport->dev);
- }
-@@ -840,13 +857,13 @@ static void fc_rport_enter_logo(struct fc_rport *rport)
- 
- 	fp = fc_frame_alloc(lport, sizeof(struct fc_els_logo));
- 	if (!fp) {
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 		return;
- 	}
- 
- 	if (!lport->tt.elsct_send(lport, rport, fp, ELS_LOGO,
- 				  fc_rport_logo_resp, rport, lport->e_d_tov))
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 	else
- 		get_device(&rport->dev);
- }
-diff --git a/include/scsi/fc/fc_fs.h b/include/scsi/fc/fc_fs.h
-index 3e4801d..1b7af3a 100644
---- a/include/scsi/fc/fc_fs.h
-+++ b/include/scsi/fc/fc_fs.h
-@@ -337,4 +337,9 @@ enum fc_pf_rjt_reason {
- 	FC_RJT_VENDOR =		0xff,	/* vendor specific reject */
- };
- 
-+/* default timeout values */
-+
-+#define FC_DEF_E_D_TOV	2000UL
-+#define FC_DEF_R_A_TOV	10000UL
-+
- #endif /* _FC_FS_H_ */
-
+Why you can't simply use iSCSI? It should work for you.
