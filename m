@@ -1,54 +1,29 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH ver2 printk_ratelimit] bsg: Error print if device is
- not bidi capable when refusing a bidi command
-Date: Wed, 21 Jan 2009 08:10:26 +0900
-Message-ID: <20090121080839D.fujita.tomonori@lab.ntt.co.jp>
-References: <4975DC00.2090005@panasas.com>
-	<20090120141517.GM30821@kernel.dk>
-	<4975E1EE.5070101@panasas.com>
+From: Anil kumar <anils_r@yahoo.com>
+Subject: scsi command timeout_per_command and scsi device timeout
+Date: Tue, 20 Jan 2009 17:07:09 -0800 (PST)
+Message-ID: <521553.39263.qm@web32404.mail.mud.yahoo.com>
+Reply-To: anils_r@yahoo.com
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:37738 "EHLO mo11.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753057AbZATXKq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jan 2009 18:10:46 -0500
-In-Reply-To: <4975E1EE.5070101@panasas.com>
+Received: from web32404.mail.mud.yahoo.com ([68.142.207.197]:42805 "HELO
+	web32404.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757431AbZAUBNv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Jan 2009 20:13:51 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, osd-dev@open-osd.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, 20 Jan 2009 16:38:38 +0200
-Boaz Harrosh <bharrosh@panasas.com> wrote:
+Hi,
 
-> 
-> If a bidi command was issued to a request_queue not mark as
-> QUEUE_FLAG_BIDI. Issue an error report. This is a misconfiguration
-> an administrator would like to know about, which is otherwise
-> hard to detect.
-> 
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> ---
->  block/bsg.c |    5 +++++
->  1 files changed, 5 insertions(+), 0 deletions(-)
-> 
-> diff --git a/block/bsg.c b/block/bsg.c
-> index 44a2a0f..1da14fe 100644
-> --- a/block/bsg.c
-> +++ b/block/bsg.c
-> @@ -270,6 +270,11 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, fmode_t has_write_perm,
->  
->  	if (rw == WRITE && hdr->din_xfer_len) {
->  		if (!test_bit(QUEUE_FLAG_BIDI, &q->queue_flags)) {
-> +			if (printk_ratelimit()) {
-> +				printk(KERN_ERR
-> +					"bsg: Attempt to send a bidi command "
-> +					"to a none bidi device\n");
-> +			}
->  			ret = -EOPNOTSUPP;
->  			goto out;
+What is the relation between scsi_cmd->timeout_per_command and scsi_device->timeout?
+I set a timeout value for scsi_device->timeout in slave_configure, but I don't see this value being taken by scsi_cmd->timeout_per_command.
 
-I don't think that we need this patch. Returning -EOPNOTSUPP should be
-enough.
+If they are not related, then how can I set command timeout for all commands to my driver to avoid command timeouts.
+
+with regards,
+  Anil
+
+
+      
