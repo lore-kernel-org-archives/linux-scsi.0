@@ -1,44 +1,47 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH 1/2] sg: fix races during device removal (v5)
-Date: Wed, 21 Jan 2009 19:25:55 +0100
-Message-ID: <497768B3.3050506@s5r6.in-berlin.de>
-References: <496E4B93.4000507@cybernetics.com>	<20090119155509Y.fujita.tomonori@lab.ntt.co.jp>	<497506AF.6040109@cybernetics.com> <20090120100451Q.fujita.tomonori@lab.ntt.co.jp> <49764920.30307@cybernetics.com>
+From: Tony Battersby <tonyb@cybernetics.com>
+Subject: Re: [PATCH] sym53c8xx_2: Keep transfer negotiations valid (2.6.27.5)
+Date: Wed, 21 Jan 2009 13:27:01 -0500
+Message-ID: <497768F5.9030806@cybernetics.com>
+References: <4964ABFD.9000807@nokia.com> <1232032416-21743-1-git-send-email-Aaro.Koskinen@nokia.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:44953 "EHLO
-	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753527AbZAUSZ7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jan 2009 13:25:59 -0500
-In-Reply-To: <49764920.30307@cybernetics.com>
+Received: from host64.cybernetics.com ([98.174.209.230]:3841 "EHLO
+	mail.cybernetics.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753571AbZAUS1E (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jan 2009 13:27:04 -0500
+In-Reply-To: <1232032416-21743-1-git-send-email-Aaro.Koskinen@nokia.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>
-Cc: James.Bottomley@HansenPartnership.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, dgilbert@interlog.com, hch@infradead.org, linux-scsi@vger.kernel.org
+To: Aaro Koskinen <Aaro.Koskinen@nokia.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
 
-Tony Battersby wrote:
-> I think BUG_ON is
-> the best way to go for this instead of printk/return because bugs
-> will be noticed and fixed instead of possibly going unnoticed.
-...
->  static void sg_rq_end_io(struct request *rq, int uptodate)
->  {
-...
-> +	int result, resid, done = 1;
-> +
-> +	BUG_ON(srp->done != 0);
+Aaro Koskinen wrote:
+> (The patch updated based on testing and comments from Tony Battersby.)
+>
+> Change the sym53c8xx_2 driver negotiation logic so that the driver will
+> tolerate better device removals. Negotiation message(s) will be sent
+> with every INQUIRY and REQUEST SENSE command, and whenever there is a
+> change in goals or when the device reports check condition.
+>
+> The patch was made specifically to address the case where you hotswap
+> the disk using remove-single-device/add-single-device commands through
+> /proc/scsi/scsi. Without the patch the driver keeps using old transfer
+> parameters even though the target is reset and reports check condition,
+> so the data transfer of the very first INQUIRY will fail.
+>
+> Signed-off-by: Aaro Koskinen <Aaro.Koskinen@nokia.com>
+> ---
+>  drivers/scsi/sym53c8xx_2/sym_hipd.c |   35 ++++++++++++++++++++++++++---------
+>  drivers/scsi/sym53c8xx_2/sym_hipd.h |    1 +
+>  2 files changed, 27 insertions(+), 9 deletions(-)
+>
+>   
 
-AFAIU this is typically called in atomic context.  If so, WARN_ON is
-preferred.
+Looks good.
 
-...
-> +	BUG_ON(sfp == NULL);
-> +
-> +	sdp = sfp->parentdp;
+James, please add this to the list of pending sym53c8xx patches.
 
-This would bring up a NULL pointer dereference dump anyway.
--- 
-Stefan Richter
--=====-==--= ---= =-=-=
-http://arcgraph.de/sr/
+Tested-by: Tony Battersby <tonyb@cybernetics.com>
+
