@@ -1,52 +1,64 @@
-From: Seokmann Ju <seokmann.ju@qlogic.com>
-Subject: Re: qla2xxx 0000:03:0c.0: Firmware image unavailable
-Date: Wed, 21 Jan 2009 16:26:03 -0800
-Message-ID: <39FF78AD-75CB-4495-99C7-C4FAFB23999D@qlogic.com>
-References: <1225944321.14830.1109.camel@chandra-ubuntu>    <E463DF2B2E584B4A82673F53D62C2EF45CEAB48E@cosmail01.lsi.com>
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Content-Type: text/plain; charset="US-ASCII"; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:12087 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753120AbZAVA0F (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jan 2009 19:26:05 -0500
-In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF45CEAB48E@cosmail01.lsi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Christoph Lameter <cl@linux-foundation.org>
+Subject: Re: Mainline kernel OLTP performance update
+Date: Wed, 21 Jan 2009 18:58:10 -0500 (EST)
+Message-ID: <alpine.DEB.1.10.0901211852060.18367@qirst.com>
+References: <BC02C49EEB98354DBA7F5DD76F2A9E800317003CB0@azsmsx501.amr.corp.intel.com>  <200901161503.13730.nickpiggin@yahoo.com.au>  <20090115201210.ca1a9542.akpm@linux-foundation.org>  <200901161746.25205.nickpiggin@yahoo.com.au>  <20090116065546.GJ31013@parisc-linux.org>
+  <1232092430.11429.52.camel@ymzhang>  <87sknjeemn.fsf@basil.nowhere.org> <1232428583.11429.83.camel@ymzhang>
+Mime-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY="-716562517-983847473-1232582290=:18367"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753728AbZAVAbw@vger.kernel.org>
+In-Reply-To: <1232428583.11429.83.camel@ymzhang>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>
+Cc: Andi Kleen <andi@firstfloor.org>, Pekka Enberg <penberg@cs.helsinki.fi>, Matthew Wilcox <matthew@wil.cx>, Nick Piggin <nickpiggin@yahoo.com.au>, Andrew Morton <akpm@linux-foundation.org>, netdev@vger.kernel.org, sfr@canb.auug.org.au, matthew.r.wilcox@intel.com, chinang.ma@intel.com, linux-kernel@vger.kernel.org, sharad.c.tripathi@intel.com, arjan@linux.intel.com, suresh.b.siddha@intel.com, harita.chilukuri@intel.com, douglas.w.styner@intel.com, peter.xihong.wang@intel.com, hubert.nueckel@intel.com, chris.mason@oracle.com, srostedt@redhat.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, anirban.chakraborty@qlogic.com
 List-Id: linux-scsi@vger.kernel.org
-To: "Moger, Babu" <Babu.Moger@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
 
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-On Jan 21, 2009, at 4:00 PM, Moger, Babu wrote:
+---716562517-983847473-1232582290=:18367
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-> Hi All,
-> Have you guys seen this following error?
->
-> Jan 21 16:30:44 txmpp2 kernel: qla2xxx 0000:03:0c.0: Firmware image  
-> unavailable.
-> Jan 21 16:30:44 txmpp2 kernel: qla2xxx 0000:03:0c.0: Firmware images  
-> can be retrieved from: ftp://ftp.qlogic.com/outgoing/linux/firmware/.
->
-> After this error, qlogic driver fails to detect the LUNs attached.
->
-> I am running 2.6.29-rc2 kernel on x86_64 machine.
->
-> I tried couple of things without any success. I downloaded all the  
-> qlogic firmwares available and kept it in /lib/firmware. Tried  
-> rebuilding the kernel. Did not help. Thanks in advance.
-Could you double check that those firmware binaries under /lib/ 
-firmware have correct naming convention as defined in qla_os.c:  
-FW_FILE_ISP2XXX?
+On Tue, 20 Jan 2009, Zhang, Yanmin wrote:
 
->
->
->
-> Thanks
-> Babu Moger
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux- 
-> scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> kmem_cache =EF=BB=BFskbuff_head_cache's object size is just 256, so it sh=
+ares the kmem_cache
+> with =EF=BB=BF:0000256. Their order is 1 which means every slab consists =
+of 2 physical pages.
 
+That order can be changed. Try specifying slub_max_order=3D0 on the kernel
+command line to force an order 0 alloc.
+
+The queues of the page allocator are of limited use due to their overhead.
+Order-1 allocations can actually be 5% faster than order-0. order-0 makes
+sense if pages are pushed rapidly to the page allocator and are then
+reissues elsewhere. If there is a linear consumption then the page
+allocator queues are just overhead.
+
+> Page allocator has an array at zone_pcp(zone, cpu)->pcp to keep a page bu=
+ffer for page order 0.
+> But here =EF=BB=BFskbuff_head_cache's order is 1, so UDP-U-4k couldn't be=
+nefit from the page buffer.
+
+That usually does not matter because of partial list avoiding page
+allocator actions.
+
+> SLQB has no such issue, because:
+> 1) SLQB has a percpu freelist. Free objects are put to the list firstly a=
+nd can be picked up
+> later on quickly without lock. A batch parameter to control the free obje=
+ct recollection is mostly
+> 1024.
+> 2) SLQB slab order mostly is 0, so although sometimes it calls alloc_page=
+s/free_pages, it can
+> benefit from =EF=BB=BFzone_pcp(zone, cpu)->pcp page buffer.
+>
+> So SLUB need resolve such issues that one process allocates a batch of ob=
+jects and another process
+> frees them batchly.
+
+SLUB has a percpu freelist but its bounded by the basic allocation unit.
+You can increase that by modifying the allocation order. Writing a 3 or 5
+into the order value in /sys/kernel/slab/xxx/order would do the trick.
+---716562517-983847473-1232582290=:18367--
