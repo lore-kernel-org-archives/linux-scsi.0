@@ -1,67 +1,45 @@
-From: Henrik Stokseth <henrik@hw0.org>
-Subject: Re: need help to merge (small) virtual scsi driver upstream.
-Date: Wed, 21 Jan 2009 08:45:04 +0100
-Message-ID: <4976D280.5000506@hw0.org>
-References: <4974CED2.9000900@hw0.org> <20090121151113X.fujita.tomonori@lab.ntt.co.jp>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH ver2 printk_ratelimit] bsg: Error print if device is not bidi capable when refusing a bidi command
+Date: Wed, 21 Jan 2009 08:53:11 +0100
+Message-ID: <20090121075310.GV30821@kernel.dk>
+References: <4975DC00.2090005@panasas.com> <20090120141517.GM30821@kernel.dk> <4975E1EE.5070101@panasas.com> <20090120144608.GQ30821@kernel.dk> <4975E748.6040705@panasas.com> <4975EE69.1020404@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:6744 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751659AbZAUHpI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jan 2009 02:45:08 -0500
-Received: by nf-out-0910.google.com with SMTP id d3so538466nfc.21
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Jan 2009 23:45:06 -0800 (PST)
-In-Reply-To: <20090121151113X.fujita.tomonori@lab.ntt.co.jp>
+Received: from brick.kernel.dk ([93.163.65.50]:11350 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750879AbZAUHyo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Jan 2009 02:54:44 -0500
+Content-Disposition: inline
+In-Reply-To: <4975EE69.1020404@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Linux SCSI ML <linux-scsi@vger.kernel.org>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
 
-=46UJITA Tomonori wrote:
->
->
-> From a quick look at the patch, your driver links requests to a list
-> and then the user-space daemon reads the requests via the special
-> character device file and sends the response back to kernel space.
->
-> If I correctly understand what you want, there are some possible
-> alternatives, I guess.
->
-> Note that I'm not sure 2) and 3) is acceptable to the SCSI maintainer=
-=2E
->
->
-> 1) use iSCSI initiator and target on the same machine
->
-> First, set up iSCSI target software supporting CD/DVD. For example,
-> you can use tgt (http://stgt.berlios.de), user-space program.
->
-> Then you set up the iSCSI initiator to connect the target. Basically,
-> the iSCSI initiator works like a virtual hba as you like. The iSCSI
-> initiator and target communicate via tcp while your software
-> communicates via the special character device.
->
-> If you go with this setup, all you need are already in mainline.
->  =20
+On Tue, Jan 20 2009, Boaz Harrosh wrote:
+> Boaz Harrosh wrote:
+> > Jens Axboe wrote:
+> >> Thanks, that works. But why isn't the -EOPNOTSUPP error return (which the
+> >> app can see and print info about) enough? Do we really need to put this
+> >> in the kernel log?
+> >>
+> > 
+> > 
+> > But let me check I had problems with the return value.
+> 
+> OK I found my problem, blush:
+> 
+> -		ret = ioctl(fd, SG_IO, &sg);
+> +		ret = ioctl(fd, SG_IO, &sg) ? -errno : 0;
+> 
+> So if I do a print to stderr in the lowest-most library will
+> that be visible enough to an Admin. I have utils like
+> osd_format, mkfs.exofs, a FUSE filesystem ...
+> OK I can always redirect stderr to the dmsg log
 
-It would be desirable for us to rely upon an interface already present
-in the mainstream kernel for practical reasons.
+Goodie, that saves us that printk() :-)
 
-Pardon the dumb question but is it possible to talk to the TGT framewor=
-k
-without using iSCSI?
-SCST has a nice user-space interface but I couldn't tell whether STGT
-had something similar (as documentation is pretty much non-existent).
+-- 
+Jens Axboe
 
-=E3=81=82=E3=82=8A=E3=81=8C=E3=81=A8=E3=81=86=E3=80=82
-
-
-Sincerely,
-Henrik Stokseth.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
