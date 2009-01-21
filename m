@@ -1,75 +1,67 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+From: Henrik Stokseth <henrik@hw0.org>
 Subject: Re: need help to merge (small) virtual scsi driver upstream.
-Date: Wed, 21 Jan 2009 15:12:09 +0900
-Message-ID: <20090121151113X.fujita.tomonori@lab.ntt.co.jp>
-References: <4974CED2.9000900@hw0.org>
+Date: Wed, 21 Jan 2009 08:45:04 +0100
+Message-ID: <4976D280.5000506@hw0.org>
+References: <4974CED2.9000900@hw0.org> <20090121151113X.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:50814 "EHLO mo11.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750879AbZAUGMV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Jan 2009 01:12:21 -0500
-In-Reply-To: <4974CED2.9000900@hw0.org>
+Received: from nf-out-0910.google.com ([64.233.182.186]:6744 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751659AbZAUHpI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jan 2009 02:45:08 -0500
+Received: by nf-out-0910.google.com with SMTP id d3so538466nfc.21
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Jan 2009 23:45:06 -0800 (PST)
+In-Reply-To: <20090121151113X.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: henrik@hw0.org
-Cc: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Linux SCSI ML <linux-scsi@vger.kernel.org>
 
-On Mon, 19 Jan 2009 20:04:50 +0100
-Henrik Stokseth <henrik@hw0.org> wrote:
+=46UJITA Tomonori wrote:
+>
+>
+> From a quick look at the patch, your driver links requests to a list
+> and then the user-space daemon reads the requests via the special
+> character device file and sends the response back to kernel space.
+>
+> If I correctly understand what you want, there are some possible
+> alternatives, I guess.
+>
+> Note that I'm not sure 2) and 3) is acceptable to the SCSI maintainer=
+=2E
+>
+>
+> 1) use iSCSI initiator and target on the same machine
+>
+> First, set up iSCSI target software supporting CD/DVD. For example,
+> you can use tgt (http://stgt.berlios.de), user-space program.
+>
+> Then you set up the iSCSI initiator to connect the target. Basically,
+> the iSCSI initiator works like a virtual hba as you like. The iSCSI
+> initiator and target communicate via tcp while your software
+> communicates via the special character device.
+>
+> If you go with this setup, all you need are already in mainline.
+>  =20
 
-> Hi! I'm one of the developers on the CDEmu project.
-> 
-> We want to get a driver merged into vanilla linux kernel. CDEmu is a
-> software suite that allows people to take a CD/DVD-image and mount it on
-> the system in the form of a virtual disc. Major parts of this software
-> is based on user-space components, but we have a kernel module that's
-> responsible for acting like a SCSI HBA. Mainly all
-> this HBA does is to send requests to a userspace daemon for processing
-> and then fetch the result and send it back to the SCSI subsystem.
-> 
-> The project's homepage is here: http://cdemu.sourceforge.net
-> 
-> I went over the code to make sure it follows the coding style that's
-> used. Is there anything else I need to do? I'm a programmer but
-> kernel code is something that I seldom touch.
+It would be desirable for us to rely upon an interface already present
+in the mainstream kernel for practical reasons.
 
->From a quick look at the patch, your driver links requests to a list
-and then the user-space daemon reads the requests via the special
-character device file and sends the response back to kernel space.
+Pardon the dumb question but is it possible to talk to the TGT framewor=
+k
+without using iSCSI?
+SCST has a nice user-space interface but I couldn't tell whether STGT
+had something similar (as documentation is pretty much non-existent).
 
-If I correctly understand what you want, there are some possible
-alternatives, I guess.
-
-Note that I'm not sure 2) and 3) is acceptable to the SCSI maintainer.
-
-
-1) use iSCSI initiator and target on the same machine
-
-First, set up iSCSI target software supporting CD/DVD. For example,
-you can use tgt (http://stgt.berlios.de), user-space program.
-
-Then you set up the iSCSI initiator to connect the target. Basically,
-the iSCSI initiator works like a virtual hba as you like. The iSCSI
-initiator and target communicate via tcp while your software
-communicates via the special character device.
-
-If you go with this setup, all you need are already in mainline.
+=E3=81=82=E3=82=8A=E3=81=8C=E3=81=A8=E3=81=86=E3=80=82
 
 
-2) extend SCSI_TGT
+Sincerely,
+Henrik Stokseth.
 
-CONFIG_SCSI_TGT and CONFIG_SCSI_IBMVSCSIS do the similar thing as you
-do, creating a virtual hba, sending requests to userspace, and getting
-the responses. CONFIG_SCSI_IBMVSCSIS is designed for IBM POWER
-architectures. But you can implement a new driver working with
-CONFIG_SCSI_TGT. CONFIG_SCSI_TGT also uses tgt so CD/DVD support is
-ready.
-
-
-3) extend scsi_debug.c
-
-drivers/scsi/scsi_debug.c provides a virtual hba and virtual disk. You
-could extend it to support CD/DVD.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
