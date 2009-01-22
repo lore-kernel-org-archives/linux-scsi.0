@@ -1,59 +1,69 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] bsg: Add support for submitting requests at tail of queue
-Date: Thu, 22 Jan 2009 10:57:35 +0200
-Message-ID: <497834FF.6020302@panasas.com>
-References: <4976F067.8000501@panasas.com> <20090122082314G.fujita.tomonori@lab.ntt.co.jp>
+From: Pekka Enberg <penberg@cs.helsinki.fi>
+Subject: Re: Mainline kernel OLTP performance update
+Date: Thu, 22 Jan 2009 11:15:07 +0200
+Message-ID: <1232615707.14549.6.camel@penberg-laptop>
+References: <BC02C49EEB98354DBA7F5DD76F2A9E800317003CB0@azsmsx501.amr.corp.intel.com>
+	 <200901161503.13730.nickpiggin@yahoo.com.au>
+	 <20090115201210.ca1a9542.akpm@linux-foundation.org>
+	 <200901161746.25205.nickpiggin@yahoo.com.au>
+	 <20090116065546.GJ31013@parisc-linux.org>
+	 <1232092430.11429.52.camel@ymzhang>  <87sknjeemn.fsf@basil.nowhere.org>
+	 <1232428583.11429.83.camel@ymzhang>
+	 <alpine.DEB.1.10.0901211852060.18367@qirst.com>
+	 <1232613395.11429.122.camel@ymzhang>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:28520 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752017AbZAVI5k (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jan 2009 03:57:40 -0500
-In-Reply-To: <20090122082314G.fujita.tomonori@lab.ntt.co.jp>
+Received: from courier.cs.helsinki.fi ([128.214.9.1]:35726 "EHLO
+	mail.cs.helsinki.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756540AbZAVJPK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jan 2009 04:15:10 -0500
+In-Reply-To: <1232613395.11429.122.camel@ymzhang>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: jens.axboe@oracle.com, dougg@torque.net, linux-scsi@vger.kernel.org, osd-dev@open-osd.org
+To: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>
+Cc: Christoph Lameter <cl@linux-foundation.org>, Andi Kleen <andi@firstfloor.org>, Matthew Wilcox <matthew@wil.cx>, Nick Piggin <nickpiggin@yahoo.com.au>, Andrew Morton <akpm@linux-foundation.org>, netdev@vger.kernel.org, sfr@canb.auug.org.au, matthew.r.wilcox@intel.com, chinang.ma@intel.com, linux-kernel@vger.kernel.org, sharad.c.tripathi@intel.com, arjan@linux.intel.com, suresh.b.siddha@intel.com, harita.chilukuri@intel.com, douglas.w.styner@intel.com, peter.xihong.wang@intel.com, hubert.nueckel@intel.com, chris.mason@oracle.com, srostedt@redhat.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, anirban.chakraborty@qlogic.com
 
-FUJITA Tomonori wrote:
-> On Wed, 21 Jan 2009 11:52:39 +0200
-> Boaz Harrosh <bharrosh@panasas.com> wrote:
-> 
->> Currently inherited from sg.c bsg will submit asynchronous request
->> at the head-of-the-queue, (using "at_head" set in the call to
->> blk_execute_rq_nowait()). This is bad in situation where we want
->> to keep the queues full but need the requests to execute in order.
-> 
-> As I wrote, I think that blk_execute_rq_nowait inserts a request and
-> plugs a queue. So how can you keep the queue full? On the completion
-> of blk_execute_rq_nowait, the queue is empty.
+On Thu, 2009-01-22 at 16:36 +0800, Zhang, Yanmin wrote:
+> On Wed, 2009-01-21 at 18:58 -0500, Christoph Lameter wrote:
+> > On Tue, 20 Jan 2009, Zhang, Yanmin wrote:
+> >=20
+> > > kmem_cache =EF=BB=BFskbuff_head_cache's object size is just 256, =
+so it shares the kmem_cache
+> > > with =EF=BB=BF:0000256. Their order is 1 which means every slab c=
+onsists of 2 physical pages.
+> >=20
+> > That order can be changed. Try specifying slub_max_order=3D0 on the=
+ kernel
+> > command line to force an order 0 alloc.
+> I tried =EF=BB=BFslub_max_order=3D0 and there is no improvement on th=
+is UDP-U-4k issue.
+> Both get_page_from_freelist and __free_pages_ok's cpu time are still =
+very high.
+>=20
+> I checked my instrumentation in kernel and found it's caused by large=
+ object allocation/free
+> whose size is more than PAGE_SIZE. Here its order is 1.
+>=20
+> The right free callchain is __kfree_skb =3D> skb_release_all =3D> skb=
+_release_data.
+>=20
+> So this case isn't the issue that batch of allocation/free might eras=
+e partial page
+> functionality.
 
-If it's so then why does the "at_head" matters why does it exist?
-Let me say it this way, if it does not matter then could we just
-reverse it? you just said it does not matter, lets reverse it
-to be 0 and not 1.
+So is this the kfree(skb->head) in skb_release_data() or the put_page()
+calls in the same function in a loop?
 
-I don't understand what you are saying. bsg::write can accept an
-array of commands lets say I have this sequence in the array:
+If it's the former, with big enough size passed to __alloc_skb(), the
+networking code might be taking a hit from the SLUB page allocator
+pass-through.
 
-command1:command2:command3
+		Pekka
 
-And for the sake of the argument lets say the hosts queue is full,
-has can_queue commands waiting response. Let say from other clients.
-
-if I use at_head==0, the target will surly see this sequence:
-command1:command2:command3
-
-But if I use at_head==1, the way I read the code, the target will see"
-command3:command2:command1 and some times
-command1:command3:command2 or command2:command1:command3
-It all depends on the random completions of the other commands
-in flight.
-
-This is the way I read the code, If I read it wrong, please explain
-what will be the actual behavior and what is the effect of at_head?
-
-Thanks
-Boaz
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
