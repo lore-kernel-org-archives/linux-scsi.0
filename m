@@ -1,48 +1,112 @@
-From: Dave Holland <dh3@sanger.ac.uk>
-Subject: Re: RE: qla2xxx 0000:03:0c.0: Firmware image unavailable
-Date: Thu, 22 Jan 2009 16:46:17 +0000
-Message-ID: <20090122164616.GF19147@sanger.ac.uk>
-References: <E463DF2B2E584B4A82673F53D62C2EF45CEAB550@cosmail01.lsi.com>
-	<D4B83214B57CAC4499F1114D069E451A01A7D6FA@bunker.inside.abhaisystems.com>
-	<E463DF2B2E584B4A82673F53D62C2EF45CEAB586@cosmail01.lsi.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF45CEAB586@cosmail01.lsi.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: device-mapper development <dm-devel@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+From: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
+Subject: Re: [PATCH 2/2] qla2xxx: Code changes for qla data structure refactoring
+Date: Thu, 22 Jan 2009 09:11:21 -0800
+Message-ID: <3CE58734-9F21-4AF2-8E45-81A540C64BC7@qlogic.com>
+References: <alpine.OSX.1.00.0811061031030.605@ac-mac.local> <20090122105016.GA100061@sgi.com> <20090122161338.GA30580@plap4-2.local>
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Content-Type: text/plain; charset="US-ASCII"; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from avexch1.qlogic.com ([198.70.193.115]:41235 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753045AbZAVRLW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jan 2009 12:11:22 -0500
+In-Reply-To: <20090122161338.GA30580@plap4-2.local>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-On Thu, Jan 22, 2009 at 08:20:48AM -0700, Moger, Babu wrote:
-> You are right. Looks like qlogic driver loads even before udev hotplug
-> is functional.  Driver loads successfully when I re-load the driver
-> after the system in up.  Is there any solution or work-around for this
-> problem?
-
-So the problem only happens at boot time? Are you using an initrd, and
-if so, have you got the firmware images in the initrd image?
-(mkinitramfs, update-initramfs, etc)
-
-Dave
--- 
-** Dave Holland ** Systems Support -- Infrastructure Management **
-** 01223 496923 ** The Sanger Institute, Hinxton, Cambridge, UK **
-"Your bumper is my crumple zone."
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Jeremy Higdon <jeremy@sgi.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "James.Smart@emulex.com" <James.Smart@emulex.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux Driver <Linux-Driver@qlogic.com>, "mdr@sgi.com" <mdr@sgi.com>
 
 
--- 
- The Wellcome Trust Sanger Institute is operated by Genome Research 
- Limited, a charity registered in England with number 1021457 and a 
- company registered in England with number 2742969, whose registered 
- office is 215 Euston Road, London, NW1 2BE. 
+On Jan 22, 2009, at 8:13 AM, Andrew Vasquez wrote:
+
+> On Thu, 22 Jan 2009, Jeremy Higdon wrote:
+>
+>> On Thu, Nov 06, 2008 at 10:40:51AM -0800, Anirban Chakraborty wrote:
+>>> Following changes have been made:
+>>> 1. Outstanding commands are based on a request queue,  
+>>> scsi_qla_host does not
+>>> maintain it anymore.
+>>> 2. start_scsi is accessed via isp_ops struct instead of direct  
+>>> invocation.
+>>> 3. Interrupt registrations are done using response queue instead  
+>>> of device id.
+>>>
+>>> Thanks,
+>>> Anirban
+>>>
+>>> Signed-off-by: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
+>>
+>> Hello Anirban,
+>>
+>> We found a problem in this patch.
+>> The problem is that in the function qla2x00_probe_one() in qla_os.c,
+>> you should be calling qla2x00_config_dma_addressing() before calling
+>> qla2x00_mem_alloc(), so that the DMA mask can be set properly.
+>>
+>> Now I notice that qla2x00_config_dma_addressing() uses the virtual
+>> SCSI host, while qla2x00_mem_alloc() uses the physical host adapter
+>> structure.  I don't see why qla2x00_config_dma_addressing() couldn't
+>> be rewritten to use the physical host adapter structure.  But if not,
+>> then it may need to be split into two parts -- one to set the
+>> consistent dma mask and another to set the streaming dma mask.
+>
+> Jeremy,
+>
+> Thanks for finding this.  I'll add the following patch into my
+> patch-queue if their's no major objections...
+>
+> --
+> av
+>
+> ---
+>
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/ 
+> qla_os.c
+> index f344b68..703d8a8 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -65,8 +65,6 @@ MODULE_PARM_DESC(ql2xextended_error_logging,
+>
+> static void qla2x00_free_device(scsi_qla_host_t *);
+>
+> -static void qla2x00_config_dma_addressing(scsi_qla_host_t *ha);
+> -
+> int ql2xfdmienable=1;
+> module_param(ql2xfdmienable, int, S_IRUGO|S_IRUSR);
+> MODULE_PARM_DESC(ql2xfdmienable,
+> @@ -1242,9 +1240,8 @@ qla2x00_change_queue_type(struct scsi_device  
+> *sdev, int tag_type)
+>  * supported addressing method.
+>  */
+> static void
+> -qla2x00_config_dma_addressing(scsi_qla_host_t *vha)
+> +qla2x00_config_dma_addressing(struct qla_hw_data *ha)
+> {
+> -	struct qla_hw_data *ha = vha->hw;
+> 	/* Assume a 32bit DMA mask. */
+> 	ha->flags.enable_64bit_addressing = 0;
+>
+> @@ -1870,6 +1867,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const  
+> struct pci_device_id *id)
+>
+> 	set_bit(0, (unsigned long *) ha->vp_idx_map);
+>
+> +	qla2x00_config_dma_addressing(ha);
+> 	ret = qla2x00_mem_alloc(ha, req_length, rsp_length, &req, &rsp);
+> 	if (!ret) {
+> 		qla_printk(KERN_WARNING, ha,
+> @@ -1896,8 +1894,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const  
+> struct pci_device_id *id)
+>
+> 	pci_set_drvdata(pdev, base_vha);
+>
+> -	qla2x00_config_dma_addressing(base_vha);
+> -
+> 	host = base_vha->host;
+> 	base_vha->req_ques[0] = req->id;
+> 	host->can_queue = req->length + 128;
+
+The patch looks good to me. Thanks Jeremy for pointing it out.
+-Anirban
+
