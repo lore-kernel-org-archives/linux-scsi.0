@@ -1,122 +1,96 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 0/4] [Target_Core_Mod]: Add SPC-3 reserverations
-	infrastructure
-Date: Thu, 22 Jan 2009 00:21:41 -0800
-Message-ID: <1232612501.1274.526.camel@haakon2.linux-iscsi.org>
+Subject: [PATCH 1/4] [Linux/SCSI] Add support for SPC-4 CDBs referenced in
+	Persisent Reservations Allowed/Confict Table
+Date: Thu, 22 Jan 2009 00:23:02 -0800
+Message-ID: <1232612582.1274.529.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp117.sbc.mail.sp1.yahoo.com ([69.147.64.90]:48489 "HELO
-	smtp117.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750802AbZAVIWH (ORCPT
+Received: from smtp116.sbc.mail.sp1.yahoo.com ([69.147.64.89]:26259 "HELO
+	smtp116.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750802AbZAVIX0 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Jan 2009 03:22:07 -0500
+	Thu, 22 Jan 2009 03:23:26 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Wilcox <willy@debian.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Greetings all,
-
-This series of patches adds SCSI reservation infrastructure to
-Target_Core_Mod/ConfigFS for current legacy SPC-2 reservations, as well
-as WIP code for adding SPC-3 compliant persistent reservations to
-Target_Core_Mod.
-
-This patch is made against lio-core-2.6.git/master
-and tested on v2.6.28.  The lio-core-2.6.git tree can be found at:
-
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=summary
-
-Comments apperciated.
-
---nab
-
+>From c177bb7ba55227d809d85aca3a9d4281e554f718 Mon Sep 17 00:00:00 2001
+From: Nicholas Bellinger <nab@linux-iscsi.org>
+Date: Wed, 21 Jan 2009 22:13:00 -0800
 Subject: [PATCH 1/4] [Linux/SCSI] Add support for SPC-4 CDBs referenced in Persisent Reservations Allowed/Confict Table
-Subject: [PATCH 2/4] [Target_Core_Mod]: Update core code for new reservations infrastructure
-Subject: [PATCH 3/4] [Target_Core_Mod] Add generic >= SPC-3 and legacy SPC-2 infrastructure
-Subject: [PATCH 4/4] [Target_Core_Mod/ConfigFS] Add target/core/$HBA/$STORAGE_OBJECT/pr for T10 reservations
 
- drivers/lio-core/Makefile                |    1 -
- drivers/lio-core/target_core_base.h      |   36 +--
- drivers/lio-core/target_core_configfs.c  |  137 +---------
- drivers/lio-core/target_core_device.c    |    1 -
- drivers/lio-core/target_core_pr.c        |  427 ------------------------------
- drivers/lio-core/target_core_pr.h        |   25 --
- drivers/lio-core/target_core_tpg.c       |    4 +
- drivers/lio-core/target_core_transport.c |  315 ++++++++++++----------
- drivers/lio-core/target_core_transport.h |    4 +-
- include/scsi/scsi.h                      |   22 --
- 10 files changed, 186 insertions(+), 786 deletions(-)
+This path adds support for a handful of SPC-4 CDBs, and fills out the MI_* and MO_* prefixed
+service action codes for MAINTENANCE_IN and MAINTENANCE_OUT operations.
 
-On target_core_mod module load and /sys/kernel/config/target/core configuration with
-Target_Core_Mod/IBLOCK, Target_Core_Mod/pSCSI, and Target_Core_Mod/RAMDISK_MCP $STORAGE_OBJECTS:
+This information is from spc4r17 and Table D.4 for MI_ and MO_ prefixed defs.
 
-TARGET_CORE[0]: Loading Generic Kernel Storage Engine: v3.0.0 on Linux/i686 on 2.6.28
-TARGET_CORE[0]: Initialized ConfigFS Fabric Infrastructure: v1.0.0 on Linux/i686 on 2.6.28
-SE_PC[1] - Registered Plugin Class: TRANSPORT
-PLUGIN_TRANSPORT[1] - pscsi registered
-PLUGIN_TRANSPORT[4] - iblock registered
-PLUGIN_TRANSPORT[5] - rd_dr registered
-PLUGIN_TRANSPORT[6] - rd_mcp registered
-PLUGIN_TRANSPORT[7] - fileio registered
-SE_PC[2] - Registered Plugin Class: OBJ
-PLUGIN_OBJ[1] - dev registered
-Target_Core_ConfigFS: Located se_plugin: cfa41090 plugin_name: iblock hba_type: 4 plugin_dep_id: 0
-CORE_HBA[0] - Linux-iSCSI.org iBlock HBA Driver v3.0 on Generic Target Core Stack v3.0.0
-CORE_HBA[0] - Attached iBlock HBA: 0 to Generic Target Core TCQ Depth: 512
-CORE_HBA[0] - Attached HBA to Generic Target Core
-IBLOCK: Allocated ib_dev for lvm_test0
-Target_Core_ConfigFS: Allocated se_subsystem_dev_t: cfa40000 se_dev_su_ptr: c8c74400
-IBLOCK: Claiming struct block_device: cf63cf00
-IBLOCK: Created bio_set() for major/minor: 254:2
-iblock: Using SPC2_RESERVATIONS emulation
-CORE_iBLOCK[0] - Activating Device with TCQ: 0 at Major: 254 Minor 2
-  Vendor: LIO-ORG   Model: IBLOCK            Revision: v3.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-T10 EVPD Unit Serial Number: 1234567890:0_254_2
-T10 EVPD Page Length: 37
-T10 EVPD Identifer Length: 33
-T10 EVPD Identifier Association: addressed logical unit
-T10 EVPD Identifier Type: T10 Vendor ID based
-T10 EVPD ASCII Device Identifier: LIO-ORG IBLOCK:1234567890:0_254_2
-Target_Core_ConfigFS: Registered iblock se_dev->se_dev_ptr: c7f95800 from fd
-Target_Core_ConfigFS: Located se_plugin: cfa41024 plugin_name: pscsi hba_type: 1 plugin_dep_id: 0
-CORE_HBA[1] - Linux-iSCSI.org Parallel SCSI HBA Driver v3.0 on Generic Target Core Stack v3.0.0
-CORE_HBA[1] - MPT SPI Host
-CORE_HBA[1] - Attached Parallel SCSI HBA to Generic Target Core with TCQ Depth: 127 MaxSectors: 8192
-CORE_HBA[1] - Attached HBA to Generic Target Core
-PSCSI: Allocated pdv: cd047160 for sdd
-Target_Core_ConfigFS: Allocated se_subsystem_dev_t: cfa43800 se_dev_su_ptr: cd047160
-PSCSI: Claiming cf2d8000 Major:Minor - 8:48
-pscsi: Using SPC_PASSTHROUGH, no reservation emulation
-CORE_PSCSI[0] - Activating Device with TCQ: 32 at Parallel SCSI Location (Channel/Target/LUN) 0/3/0
-  Vendor: VMware,   Model: VMware Virtual S  Revision: 1.0 
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-PSCSI Status Byte exception at task: ca63d000 CDB: 0x12 Result: 0x08000002
-CORE_PSCSI[0] - Added TYPE_DISK for 0:3:0
-Target_Core_ConfigFS: Registered pscsi se_dev->se_dev_ptr: c8f92000 from fd
-Target_Core_ConfigFS: Located se_plugin: cfa410d8 plugin_name: rd_mcp hba_type: 6 plugin_dep_id: 0
-CORE_HBA[2] - Linux-iSCSI.org Ramdisk HBA Driver v3.0 on Generic Target Core Stack v3.0.0
-CORE_HBA[2] - Attached Ramdisk HBA: 0 to Generic Target Core TCQ Depth: 256 MaxSectors: 1024
-CORE_HBA[2] - Attached HBA to Generic Target Core
-Target_Core_ConfigFS: Allocated se_subsystem_dev_t: c85bf800 se_dev_su_ptr: c8fe5880
-RAMDISK: Referencing Page Count: 16384
-CORE_RD[0] - Built Ramdisk Device ID: 0 space of 16384 pages in 6 tables
-rd_mcp: Using SPC2_RESERVATIONS emulation
-CORE_RD[0] - Activating Device with TCQ: 0 at Ramdisk Device ID: 0
-  Vendor: LIO-ORG   Model: RAMDISK-MCP       Revision: v3.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-T10 EVPD Unit Serial Number: 1234567890:2_0
-T10 EVPD Page Length: 38
-T10 EVPD Identifer Length: 34
-T10 EVPD Identifier Association: addressed logical unit
-T10 EVPD Identifier Type: T10 Vendor ID based
-T10 EVPD ASCII Device Identifier: LIO-ORG RAMDISK-MCP:1234567890:2_0
-CORE_RD[0] - Added LIO MEMCPY Ramdisk Device ID: 0 of 16384 pages in 6 tables, 67108864 total bytes
-Target_Core_ConfigFS: Registered se_dev->se_dev_ptr: c8f93400
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ include/scsi/scsi.h |   22 ++++++++++++++++++++++
+ 1 files changed, 22 insertions(+), 0 deletions(-)
 
-<SNIP>
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index a109165..93af6ce 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -104,30 +104,52 @@
+ #define PERSISTENT_RESERVE_IN 0x5e
+ #define PERSISTENT_RESERVE_OUT 0x5f
+ #define VARIABLE_LENGTH_CMD   0x7f
++#define RECEIVE_CREDENTIAL    0x7f // spc4r17 section 6.9 Table 204
+ #define REPORT_LUNS           0xa0
++#define SECURITY_PROTOCOL_IN  0xa2
+ #define MAINTENANCE_IN        0xa3
+ #define MAINTENANCE_OUT       0xa4
+ #define MOVE_MEDIUM           0xa5
+ #define EXCHANGE_MEDIUM       0xa6
+ #define READ_12               0xa8
+ #define WRITE_12              0xaa
++#define READ_MEDIA_SERIAL_NUMBER 0xab
+ #define WRITE_VERIFY_12       0xae
+ #define SEARCH_HIGH_12        0xb0
+ #define SEARCH_EQUAL_12       0xb1
+ #define SEARCH_LOW_12         0xb2
++#define SECURITY_PROTOCOL_OUT 0xb5
+ #define READ_ELEMENT_STATUS   0xb8
+ #define SEND_VOLUME_TAG       0xb6
+ #define WRITE_LONG_2          0xea
++#define EXTENDED_COPY         0x83
++#define RECEIVE_COPY_RESULTS  0x84
++#define ACCESS_CONTROL_IN     0x86
++#define ACCESS_CONTROL_OUT    0x87
+ #define READ_16               0x88
+ #define WRITE_16              0x8a
++#define READ_ATTRIBUTE        0x8c
++#define WRITE_ATTRIBUTE	      0x8d
+ #define VERIFY_16	      0x8f
+ #define SERVICE_ACTION_IN     0x9e
+ /* values for service action in */
+ #define	SAI_READ_CAPACITY_16  0x10
+ /* values for maintenance in */
++#define MI_REPORT_IDENTIFYING_INFORMATION 0x05
+ #define MI_REPORT_TARGET_PGS  0x0a
++#define MI_REPORT_ALIASES     0x0b
++#define MI_REPORT_SUPPORTED_OPERATION_CODES 0x0c
++#define MI_REPORT_SUPPORTED_TASK_MANAGEMENT_FUNCTIONS 0x0d
++#define MI_REPORT_PRIORITY   0x0e
++#define MI_REPORT_TIMESTAMP  0x0f
++#define MI_MANAGEMENT_PROTOCOL_IN 0x10
+ /* values for maintenance out */
++#define MO_SET_IDENTIFYING_INFORMATION 0x06
+ #define MO_SET_TARGET_PGS     0x0a
++#define MO_CHANGE_ALIASES     0x0b
++#define MO_SET_PRIORITY       0x0e
++#define MO_SET_TIMESTAMP      0x0f
++#define MO_MANAGEMENT_PROTOCOL_OUT 0x10
+ 
+ /* Values for T10/04-262r7 */
+ #define	ATA_16		      0x85	/* 16-byte pass-thru */
+-- 
+1.5.4.1
+
 
 
