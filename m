@@ -1,51 +1,49 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 00/12] qla2xxx: fixes for 2.6.29-rcX [8.03.00-k2].
-Date: Thu, 22 Jan 2009 09:45:27 -0800
-Message-ID: <1232646339-32503-1-git-send-email-andrew.vasquez@qlogic.com>
+From: Robert Jennings <rcj@linux.vnet.ibm.com>
+Subject: [PATCH] ibmvscsi: Correct DMA mapping leak
+Date: Thu, 22 Jan 2009 13:40:09 -0600
+Message-ID: <20090122194009.GB14767@austin.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:46489 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758265AbZAVRpn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jan 2009 12:45:43 -0500
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:60930 "EHLO e6.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755108AbZAVTkL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Jan 2009 14:40:11 -0500
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e6.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n0MJeTum022532
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Jan 2009 14:40:29 -0500
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id n0MJeA37192372
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Jan 2009 14:40:10 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n0MJe9ek019956
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Jan 2009 14:40:09 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Seokmann Ju <seokmann.ju@qlogic.com>
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com, Brian King <brking@linux.vnet.ibm.com>
 
-Here's another round of fixes for 2.6.29.
+The ibmvscsi client driver is not unmapping the SCSI command after
+encountering a DMA mapping error while trying to map an indirect
+scattergather list for the event pool.  This leads to a leak of DMA
+entitlement that could result in the device failing future DMA operations
+in a CMO environment.
 
+Signed-off-by: Robert Jennings <rcj@linux.vnet.ibm.com>
+---
+ drivers/scsi/ibmvscsi/ibmvscsi.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-Andrew Vasquez (8):
-  qla2xxx: Simplify sector-mask calculation in preparation for larger
-    flash parts.
-  qla2xxx: Ensure RISC-interrupt-enabled consistency for
-    IS_NOPOLLING_TYPE() ISPs.
-  qla2xxx: Always serialize mailbox command execution.
-  qla2xxx: Modify firmware-load order precedence for ISP81XX parts.
-  qla2xxx: Correct endianness issue during flash manipulation.
-  qla2xxx: Correct regression in EH abort handling.
-  qla2xxx: Correct regression in DMA-mask setting prior to allocations.
-  qla2xxx: Update version number to 8.03.00-k2.
-
-Anirban Chakraborty (1):
-  qla2xxx: Fix memory leak in error path
-
-Joe Carnuccio (1):
-  qla2xxx: Correct descriptions in flash manipulation routines.
-
-Lalit Chandivade (1):
-  qla2xxx: Correct MSI-X vector allocation for single queue mode.
-
-Seokmann Ju (1):
-  qla2xxx: Add checks for a valid fcport in
-    dev-loss-tmo/terminate_rport_io callbacks.
-
- drivers/scsi/qla2xxx/qla_attr.c    |    6 ++++
- drivers/scsi/qla2xxx/qla_gbl.h     |    1 +
- drivers/scsi/qla2xxx/qla_init.c    |   53 +++++++++++++++++++++++++++++++----
- drivers/scsi/qla2xxx/qla_isr.c     |    5 +++
- drivers/scsi/qla2xxx/qla_mbx.c     |   16 ++++-------
- drivers/scsi/qla2xxx/qla_os.c      |   22 ++++++++-------
- drivers/scsi/qla2xxx/qla_sup.c     |   23 ++++++---------
- drivers/scsi/qla2xxx/qla_version.h |    2 +-
- 8 files changed, 87 insertions(+), 41 deletions(-)
+Index: b/drivers/scsi/ibmvscsi/ibmvscsi.c
+===================================================================
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -432,6 +432,7 @@ static int map_sg_data(struct scsi_cmnd 
+ 				sdev_printk(KERN_ERR, cmd->device,
+ 				            "Can't allocate memory "
+ 				            "for indirect table\n");
++			scsi_dma_unmap(cmd);
+ 			return 0;
+ 		}
+ 	}
