@@ -1,115 +1,99 @@
-From: "Moger, Babu" <Babu.Moger@lsi.com>
-Subject: RE: qla2xxx 0000:03:0c.0: Firmware image unavailable
-Date: Thu, 22 Jan 2009 08:20:48 -0700
-Message-ID: <E463DF2B2E584B4A82673F53D62C2EF45CEAB586@cosmail01.lsi.com>
-References: <E463DF2B2E584B4A82673F53D62C2EF45CEAB550@cosmail01.lsi.com>
- <D4B83214B57CAC4499F1114D069E451A01A7D6FA@bunker.inside.abhaisystems.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [PATCH 2/2] qla2xxx: Code changes for qla data structure
+	refactoring
+Date: Thu, 22 Jan 2009 08:13:38 -0800
+Message-ID: <20090122161338.GA30580@plap4-2.local>
+References: <alpine.OSX.1.00.0811061031030.605@ac-mac.local> <20090122105016.GA100061@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og112.obsmtp.com ([64.18.2.177]:53825 "EHLO
-	exprod7og112.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752631AbZAVPUy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jan 2009 10:20:54 -0500
-In-Reply-To: <D4B83214B57CAC4499F1114D069E451A01A7D6FA@bunker.inside.abhaisystems.com>
-Content-Language: en-US
+Received: from avexch1.qlogic.com ([198.70.193.115]:31364 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753548AbZAVQNk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jan 2009 11:13:40 -0500
+Content-Disposition: inline
+In-Reply-To: <20090122105016.GA100061@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sudhakar Pannerselvam <sudhakarp@inmage.net>, Seokmann Ju <seokmann.ju@qlogic.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: Anirban Chakraborty <anirban.chakraborty@qlogic.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "James.Smart@emulex.com" <James.Smart@emulex.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux Driver <Linux-Driver@qlogic.com>, "mdr@sgi.com" <mdr@sgi.com>
 
+On Thu, 22 Jan 2009, Jeremy Higdon wrote:
 
-You are right. Looks like qlogic driver loads even before udev hotplug is functional.  Driver loads successfully when I re-load the driver after the system in up.  Is there any solution or work-around for this problem?
-
-Thanks
-Babu Moger 
-
------Original Message-----
-From: Sudhakar Pannerselvam [mailto:sudhakarp@inmage.net] 
-Sent: Thursday, January 22, 2009 8:40 AM
-To: Moger, Babu; Seokmann Ju
-Cc: linux-scsi@vger.kernel.org; device-mapper development
-Subject: RE: qla2xxx 0000:03:0c.0: Firmware image unavailable
-
-Firmware is loaded through udev hotplug interface i.e using
-request_firmware(). Can you verify if udev hotplug is functional in your
-setup.
-
-To reproduce this in my local setup, I have kill'ed udevd daemon and
-loaded qlogic module which failed with firmware unavailable message. 
-
-Regards,
-Sudhakar
-
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org 
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Moger, Babu
-> Sent: Thursday, January 22, 2009 7:44 PM
-> To: Seokmann Ju
-> Cc: linux-scsi@vger.kernel.org; device-mapper development
-> Subject: RE: qla2xxx 0000:03:0c.0: Firmware image unavailable
-> 
-> Yes, the naming conventions look good. Here is the output of ls
-> 
-> -rw-r--r-- 1 root root  76802 Jan 21 16:41 ql2100_fw.bin
-> -rw-r--r-- 1 root root  84566 Jan 21 16:41 ql2200_fw.bin
-> -rw-r--r-- 1 root root 125088 Jan 21 16:41 ql2300_fw.bin
-> -rw-r--r-- 1 root root 135896 Jan 21 16:41 ql2322_fw.bin
-> -rw-r--r-- 1 root root 228056 Jan 21 16:41 ql2400_fw.bin
-> -rw-r--r-- 1 root root 239052 Jan 21 16:41 ql2400_fw.bin_mid
-> -rw-r--r-- 1 root root 200064 Jan 21 16:41 ql2500_fw.bin
-> -rw-r--r-- 1 root root 219924 Jan 21 16:41 ql2500_fw.bin_mid
-> 
-> Thanks
-> Babu Moger 
-> 
-> -----Original Message-----
-> From: Seokmann Ju [mailto:seokmann.ju@qlogic.com]
-> Sent: Wednesday, January 21, 2009 6:26 PM
-> To: Moger, Babu
-> Cc: linux-scsi@vger.kernel.org; device-mapper development
-> Subject: Re: qla2xxx 0000:03:0c.0: Firmware image unavailable
-> 
-> 
-> On Jan 21, 2009, at 4:00 PM, Moger, Babu wrote:
-> 
-> > Hi All,
-> > Have you guys seen this following error?
+> On Thu, Nov 06, 2008 at 10:40:51AM -0800, Anirban Chakraborty wrote:
+> > Following changes have been made:
+> > 1. Outstanding commands are based on a request queue, scsi_qla_host does not 
+> > maintain it anymore.
+> > 2. start_scsi is accessed via isp_ops struct instead of direct invocation. 
+> > 3. Interrupt registrations are done using response queue instead of device id.
 > >
-> > Jan 21 16:30:44 txmpp2 kernel: qla2xxx 0000:03:0c.0: 
-> Firmware image  
-> > unavailable.
-> > Jan 21 16:30:44 txmpp2 kernel: qla2xxx 0000:03:0c.0: 
-> Firmware images  
-> > can be retrieved from: 
-> ftp://ftp.qlogic.com/outgoing/linux/firmware/.
-> >
-> > After this error, qlogic driver fails to detect the LUNs attached.
-> >
-> > I am running 2.6.29-rc2 kernel on x86_64 machine.
-> >
-> > I tried couple of things without any success. I downloaded all the  
-> > qlogic firmwares available and kept it in /lib/firmware. Tried  
-> > rebuilding the kernel. Did not help. Thanks in advance.
-> Could you double check that those firmware binaries under /lib/ 
-> firmware have correct naming convention as defined in qla_os.c:  
-> FW_FILE_ISP2XXX?
+> > Thanks,
+> > Anirban
+> > 
+> > Signed-off-by: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
 > 
-> >
-> >
-> >
-> > Thanks
-> > Babu Moger
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux- 
-> > scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Hello Anirban,
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> We found a problem in this patch.
+> The problem is that in the function qla2x00_probe_one() in qla_os.c,
+> you should be calling qla2x00_config_dma_addressing() before calling
+> qla2x00_mem_alloc(), so that the DMA mask can be set properly.
 > 
+> Now I notice that qla2x00_config_dma_addressing() uses the virtual
+> SCSI host, while qla2x00_mem_alloc() uses the physical host adapter
+> structure.  I don't see why qla2x00_config_dma_addressing() couldn't
+> be rewritten to use the physical host adapter structure.  But if not,
+> then it may need to be split into two parts -- one to set the
+> consistent dma mask and another to set the streaming dma mask.
+
+Jeremy,
+
+Thanks for finding this.  I'll add the following patch into my
+patch-queue if their's no major objections...
+
+--
+av
+
+---
+
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index f344b68..703d8a8 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -65,8 +65,6 @@ MODULE_PARM_DESC(ql2xextended_error_logging,
+ 
+ static void qla2x00_free_device(scsi_qla_host_t *);
+ 
+-static void qla2x00_config_dma_addressing(scsi_qla_host_t *ha);
+-
+ int ql2xfdmienable=1;
+ module_param(ql2xfdmienable, int, S_IRUGO|S_IRUSR);
+ MODULE_PARM_DESC(ql2xfdmienable,
+@@ -1242,9 +1240,8 @@ qla2x00_change_queue_type(struct scsi_device *sdev, int tag_type)
+  * supported addressing method.
+  */
+ static void
+-qla2x00_config_dma_addressing(scsi_qla_host_t *vha)
++qla2x00_config_dma_addressing(struct qla_hw_data *ha)
+ {
+-	struct qla_hw_data *ha = vha->hw;
+ 	/* Assume a 32bit DMA mask. */
+ 	ha->flags.enable_64bit_addressing = 0;
+ 
+@@ -1870,6 +1867,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ 	set_bit(0, (unsigned long *) ha->vp_idx_map);
+ 
++	qla2x00_config_dma_addressing(ha);
+ 	ret = qla2x00_mem_alloc(ha, req_length, rsp_length, &req, &rsp);
+ 	if (!ret) {
+ 		qla_printk(KERN_WARNING, ha,
+@@ -1896,8 +1894,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ 	pci_set_drvdata(pdev, base_vha);
+ 
+-	qla2x00_config_dma_addressing(base_vha);
+-
+ 	host = base_vha->host;
+ 	base_vha->req_ques[0] = req->id;
+ 	host->can_queue = req->length + 128;
