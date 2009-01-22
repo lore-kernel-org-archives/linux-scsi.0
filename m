@@ -1,842 +1,527 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 2/4] [Target_Core_Mod]: Update core code for new
-	reservations infrastructure
-Date: Thu, 22 Jan 2009 00:23:38 -0800
-Message-ID: <1232612618.1274.531.camel@haakon2.linux-iscsi.org>
+Subject: [PATCH 3/4] [Target_Core_Mod] Add generic >= SPC-3 and legacy
+	SPC-2 infrastructure
+Date: Thu, 22 Jan 2009 00:24:46 -0800
+Message-ID: <1232612686.1274.534.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp120.sbc.mail.sp1.yahoo.com ([69.147.64.93]:23446 "HELO
-	smtp120.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750802AbZAVIYE (ORCPT
+Received: from smtp115.sbc.mail.sp1.yahoo.com ([69.147.64.88]:46013 "HELO
+	smtp115.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750788AbZAVIZN (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Jan 2009 03:24:04 -0500
+	Thu, 22 Jan 2009 03:25:13 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>
 Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
->From b0eee0162e2b3bbd0a39d8470980e7923e721775 Mon Sep 17 00:00:00 2001
+>From ed2ddd0dac75734bb48c9429ec7d6c75d1d1d93a Mon Sep 17 00:00:00 2001
 From: Nicholas Bellinger <nab@linux-iscsi.org>
-Date: Wed, 21 Jan 2009 22:16:10 -0800
-Subject: [PATCH 2/4] [Target_Core_Mod]: Update core code for new reservations infrastructure
+Date: Wed, 21 Jan 2009 22:20:20 -0800
+Subject: [PATCH 3/4] [Target_Core_Mod] Add generic >= SPC-3 and legacy SPC-2 infrastructure
 
-This patch adds t10_reservations_index_t:
+This patch adds target_core_pr.[c,h] and core_setup_reservations() for an
+associated se_device_t / se_subsystem_dev_t and se_cmd_t via $FABRIC_MOD
+and Target_Core_Mod/Passthrough ops.
 
-typedef enum {
-       SPC_PASSTHROUGH,
-       SPC2_RESERVATIONS,
-       SPC3_PERSISTENT_RESERVATIONS
-} t10_reservations_index_t;
+It currently forces Target_Core_Mod/PSCSI to SPC_PASSTHROUGH (no emulation) and
+SPC2_RESERVATIONS based on se_subsystem_api_t->get_device_rev() return values
+using linux/include/scsi/scsi.h:SCSI_[1,2,3] defines.
 
-and t10_reservation_template_t:
+The logic for core_scsi3_pr_seq_non_holder() is based on spc4r17 for
+controlling access of CDB execution for SCSI Initiator Ports not holding
+the SPC-3 compliant reservation.
 
-typedef struct t10_reservation_template_s {
-       t10_reservations_index_t res_type;
-       int (*t10_reservation_check)(struct se_cmd_s *);
-       int (*t10_reserve)(struct se_cmd_s *);
-       int (*t10_release)(struct se_cmd_s *);
-       int (*t10_seq_non_holder)(struct se_cmd_s *, unsigned char *);
-       int (*t10_pr_register)(struct se_cmd_s *);
-       int (*t10_pr_clear)(struct se_cmd_s *);
-} ____cacheline_aligned t10_reservation_template_t;
-
-and adds se_dev_attrib->emulate_reservations (to be used with
-Target_Core_Mod/ConfigFS).  It adds the support to target_core_transport.c
-for using generic target_core_pr.c code for both SPC-2 Reservations (up and
-running) and >= SPC-3 Persistent Reservations (WIP) with target_core_mod, and
-removes the legacy code functions from target_core_transport.c
-
-This patch also adds support for a number of SPC-4 defined CDBs in
-target_core_transport.c:transport_generic_cmd_sequencer()
-
-It also adds transport_passthrough_get_fabric_name() to SE_PASSTHROUGH_OPS.
+This code is a WIP for >= SPC-3 Persistent Rervations across
+Target_Core_Mod/ConfigFS
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/lio-core/target_core_base.h      |   35 +++-
- drivers/lio-core/target_core_device.c    |    1 +
- drivers/lio-core/target_core_tpg.c       |    4 -
- drivers/lio-core/target_core_transport.c |  315 ++++++++++++++----------------
- drivers/lio-core/target_core_transport.h |    4 +-
- 5 files changed, 177 insertions(+), 182 deletions(-)
+ drivers/lio-core/Makefile         |    1 +
+ drivers/lio-core/target_core_pr.c |  427 +++++++++++++++++++++++++++++++++++++
+ drivers/lio-core/target_core_pr.h |   25 +++
+ 3 files changed, 453 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/lio-core/target_core_pr.c
+ create mode 100644 drivers/lio-core/target_core_pr.h
 
-diff --git a/drivers/lio-core/target_core_base.h b/drivers/lio-core/target_core_base.h
-index 086067a..8902128 100644
---- a/drivers/lio-core/target_core_base.h
-+++ b/drivers/lio-core/target_core_base.h
-@@ -255,6 +255,24 @@ typedef struct t10_wwn_s {
- 	struct list_head t10_evpd_list;
- } ____cacheline_aligned t10_wwn_t;
- 
-+typedef enum {
-+	SPC_PASSTHROUGH,
-+	SPC2_RESERVATIONS,
-+	SPC3_PERSISTENT_RESERVATIONS
-+} t10_reservations_index_t;
+diff --git a/drivers/lio-core/Makefile b/drivers/lio-core/Makefile
+index 7605add..98a5ef3 100644
+--- a/drivers/lio-core/Makefile
++++ b/drivers/lio-core/Makefile
+@@ -33,6 +33,7 @@ target_core_mod-objs			:=	target_core_configfs.o \
+ 						target_core_device.o \
+ 						target_core_hba.o \
+ 						target_core_plugin.o \
++						target_core_pr.o \
+ 						target_core_scdb.o \
+ 						target_core_seobj.o \
+ 						target_core_tpg.o \
+diff --git a/drivers/lio-core/target_core_pr.c b/drivers/lio-core/target_core_pr.c
+new file mode 100644
+index 0000000..a81ceaf
+--- /dev/null
++++ b/drivers/lio-core/target_core_pr.c
+@@ -0,0 +1,427 @@
++/*********************************************************************************
++ * Filename:  target_core_pr.c
++ *
++ * This file contains SPC-3 compliant persistent reservations and
++ * legacy SPC-2 reservations.
++ *
++ * Copyright (c) 2009 Rising Tide, Inc.
++ * Copyright (c) 2009 Linux-iSCSI.org
++ *
++ * Nicholas A. Bellinger <nab@kernel.org>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ *
++ *********************************************************************************/
 +
-+struct se_cmd_s;
++#define TARGET_CORE_PR_C
 +
-+typedef struct t10_reservation_template_s {
-+	t10_reservations_index_t res_type;
-+	int (*t10_reservation_check)(struct se_cmd_s *);
-+	int (*t10_reserve)(struct se_cmd_s *);
-+	int (*t10_release)(struct se_cmd_s *);
-+	int (*t10_seq_non_holder)(struct se_cmd_s *, unsigned char *);
-+	int (*t10_pr_register)(struct se_cmd_s *);
-+	int (*t10_pr_clear)(struct se_cmd_s *);
-+} ____cacheline_aligned t10_reservation_template_t;
++#include <linux/version.h>
++#include <linux/slab.h>
++#include <linux/spinlock.h>
++#include <scsi/scsi.h>
++#include <scsi/scsi_cmnd.h>
 +
- typedef struct se_queue_req_s {
-         int                     state;
-         void                    *queue_se_obj_ptr;
-@@ -520,6 +538,7 @@ typedef struct se_dev_entry_s {
- typedef struct se_dev_attrib_s {
-         int             status_thread;
-         int             status_thread_tur;
-+	int		emulate_reservations;
- 	u32		hw_max_sectors;
-         u32             max_sectors;
- 	u32		hw_queue_depth;
-@@ -534,11 +553,14 @@ typedef struct se_subsystem_dev_s {
-         struct se_device_s *se_dev_ptr;
-         se_dev_attrib_t se_dev_attrib;
- 	t10_wwn_t	t10_wwn;	/* T10 Inquiry and EVPD WWN Information */
-+	t10_reservation_template_t t10_reservation;	/* T10 SPC-2 + SPC-3 Reservations */
-         spinlock_t      se_dev_lock;
-         void            *se_dev_su_ptr;
-         struct config_group se_dev_group;
- } ____cacheline_aligned se_subsystem_dev_t;
- 
-+#define T10_RES(su_dev)		(&(su_dev)->t10_reservation)
-+
- typedef struct se_device_s {
- 	__u8			type;		/* Type of disk transport used for device */
- 	__u8			thread_active;	/* Set to 1 if thread is NOT sleeping on thread_sem */
-@@ -572,10 +594,12 @@ typedef struct se_device_s {
- 	se_queue_obj_t		*dev_status_queue_obj;
- 	spinlock_t		execute_task_lock;
- 	spinlock_t		state_task_lock;
-+	spinlock_t		dev_reservation_lock;
- 	spinlock_t		dev_state_lock;
- 	spinlock_t		dev_status_lock;
- 	spinlock_t		dev_status_thr_lock;
- 	spinlock_t		se_port_lock;
-+	struct se_node_acl_s	*dev_reserved_node_acl;
- 	struct list_head	dev_sep_list;
- 	struct timer_list		dev_status_timer;
- 	struct task_struct		*process_thread; /* Pointer to descriptor for processing thread */
-@@ -595,7 +619,8 @@ typedef struct se_device_s {
- 	struct se_device_s	*prev;
- }  ____cacheline_aligned se_device_t;
- 
--#define ISCSI_DEV(cmd)		((se_device_t *)(cmd)->se_lun->se_dev)
-+#define SE_DEV(cmd)		((se_device_t *)(cmd)->se_lun->se_dev)
-+#define ISCSI_DEV(cmd)		SE_DEV(cmd)
- #define DEV_ATTRIB(dev)		(&(dev)->se_sub_dev->se_dev_attrib)
- #define DEV_T10_WWN(dev)	(&(dev)->se_sub_dev->t10_wwn)
- #define DEV_OBJ_API(dev)	((struct se_obj_lun_type_s *)(dev)->dev_obj_api)
-@@ -637,24 +662,20 @@ typedef struct se_lun_s {
- 	u32			unpacked_lun;
- 	spinlock_t		lun_acl_lock;
- 	spinlock_t		lun_cmd_lock;
--	spinlock_t		lun_reservation_lock;
- 	spinlock_t		lun_sep_lock;
- 	se_cmd_t		*lun_cmd_head;
- 	se_cmd_t		*lun_cmd_tail;
- 	se_lun_acl_t		*lun_acl_head;
- 	se_lun_acl_t		*lun_acl_tail;
--	struct se_node_acl_s	*lun_reserved_node_acl;
- 	se_device_t		*se_dev;
- 	void			*lun_type_ptr;
- 	struct config_group	lun_group;
- 	struct se_obj_lun_type_s *lun_obj_api;
- 	struct se_port_s	*lun_sep;
--	int (*persistent_reservation_check)(se_cmd_t *);
--	int (*persistent_reservation_release)(se_cmd_t *);
--	int (*persistent_reservation_reserve)(se_cmd_t *);
- } ____cacheline_aligned se_lun_t;
- 
--#define ISCSI_LUN(c)            ((se_lun_t *)(c)->se_lun)
-+#define SE_LUN(c)		((se_lun_t *)(c)->se_lun)
-+#define ISCSI_LUN(c)		SE_LUN(c)
- #define LUN_OBJ_API(lun)	((struct se_obj_lun_type_s *)(lun)->lun_obj_api)
- 
- typedef struct se_port_s {
-diff --git a/drivers/lio-core/target_core_device.c b/drivers/lio-core/target_core_device.c
-index 16e7766..49d25b9 100644
---- a/drivers/lio-core/target_core_device.c
-+++ b/drivers/lio-core/target_core_device.c
-@@ -725,6 +725,7 @@ extern void se_dev_set_default_attribs (se_device_t *dev)
- {
- 	DEV_ATTRIB(dev)->status_thread = DA_STATUS_THREAD;
- 	DEV_ATTRIB(dev)->status_thread_tur = DA_STATUS_THREAD_TUR;
-+	DEV_ATTRIB(dev)->emulate_reservations = DA_EMULATE_RESERVATIONS;
- 	/*
- 	 * max_sectors is based on subsystem plugin dependent requirements.
- 	 */
-diff --git a/drivers/lio-core/target_core_tpg.c b/drivers/lio-core/target_core_tpg.c
-index 9986321..4fd05ae 100644
---- a/drivers/lio-core/target_core_tpg.c
-+++ b/drivers/lio-core/target_core_tpg.c
-@@ -672,13 +672,9 @@ extern se_portal_group_t *core_tpg_register (
- 		lun = &se_tpg->tpg_lun_list[i];
- 		lun->unpacked_lun = i;
- 		lun->lun_type_ptr = NULL;
--		lun->persistent_reservation_check = &core_tpg_persistent_reservation_check;
--		lun->persistent_reservation_release = &core_tpg_persistent_reservation_release;
--		lun->persistent_reservation_reserve = &core_tpg_persistent_reservation_reserve;
- 		lun->lun_status = TRANSPORT_LUN_STATUS_FREE;
- 		spin_lock_init(&lun->lun_acl_lock);
- 		spin_lock_init(&lun->lun_cmd_lock);
--		spin_lock_init(&lun->lun_reservation_lock);
- 		spin_lock_init(&lun->lun_sep_lock);
- 	}
- 
-diff --git a/drivers/lio-core/target_core_transport.c b/drivers/lio-core/target_core_transport.c
-index 4cccf85..1cc0a59 100644
---- a/drivers/lio-core/target_core_transport.c
-+++ b/drivers/lio-core/target_core_transport.c
-@@ -55,20 +55,14 @@
- #include <target_core_base.h>
- #include <iscsi_target_error.h>
- #include <target_core_device.h>
--#include <iscsi_target_device.h>
--#include <iscsi_target_erl0.h>
--#include <iscsi_target_erl1.h>
- #include <target_core_hba.h>
- #include <target_core_scdb.h>
--#include <iscsi_target_tpg.h>
--#include <iscsi_target_util.h>
++#include <target_core_base.h>
++#include <target_core_device.h>
++#include <target_core_hba.h>
++#include <target_core_transport.h>
 +#include <target_core_pr.h>
- #include <target_core_transport.h>
--
- #include <target_core_plugin.h>
- #include <target_core_seobj.h>
- #include <target_core_seobj_plugins.h>
- #include <target_core_transport_plugin.h>
--
- #include <target_core_fabric_ops.h>
- #include <target_core_configfs.h>
- 
-@@ -214,10 +208,14 @@ struct kmem_cache *se_task_cache = NULL;
- struct kmem_cache *se_sess_cache = NULL;
- 
- EXPORT_SYMBOL(se_global);
--extern int iscsi_release_sessions_for_tpg (iscsi_portal_group_t *, int);
- static int transport_generic_write_pending (se_cmd_t *);
- static int transport_processing_thread (void *);
- 
-+static char *transport_passthrough_get_fabric_name (void)
++#include <target_core_transport_plugin.h>
++#include <target_core_fabric_ops.h>
++#include <target_core_configfs.h>
++
++#undef TARGET_CORE_PR_C
++
++extern int core_scsi2_reservation_seq_non_holder (
++	se_cmd_t *cmd,
++	unsigned char *cdb)
 +{
-+	return("PT");
++	switch (cdb[0]) {
++	case INQUIRY:
++	case RELEASE:
++	case RELEASE_10:
++		return(0);
++	default:
++		return(1);
++	}
++
++	return(1);
 +}
 +
- static u32 transport_passthrough_get_task_tag (se_cmd_t *cmd)
- {
- 	return(0);
-@@ -235,6 +233,7 @@ static void transport_passthrough_release_cmd_direct (se_cmd_t *cmd)
- 
- #define SE_PASSTHROUGH_OPS {						\
- 	release_cmd_direct:	transport_passthrough_release_cmd_direct, \
-+	get_fabric_name:	transport_passthrough_get_fabric_name,	\
- 	get_task_tag:		transport_passthrough_get_task_tag,	\
- 	get_cmd_state:		transport_passthrough_get_cmd_state,	\
- };
-@@ -2053,6 +2052,7 @@ extern se_device_t *transport_add_device_to_core_hba (
- 	init_MUTEX_LOCKED(&dev->dev_queue_obj->thread_sem);
- 	spin_lock_init(&dev->execute_task_lock);
- 	spin_lock_init(&dev->state_task_lock);
-+	spin_lock_init(&dev->dev_reservation_lock);
- 	spin_lock_init(&dev->dev_status_lock);
- 	spin_lock_init(&dev->dev_status_thr_lock);
- 	spin_lock_init(&dev->se_port_lock);
-@@ -2083,7 +2083,13 @@ extern se_device_t *transport_add_device_to_core_hba (
- 	 */
- 	if (!(dev->dev_obj_api = se_obj_get_api(TRANSPORT_LUN_TYPE_DEVICE)))
- 		goto out;
--	
++extern int core_scsi2_reservation_check (se_cmd_t *cmd)
++{
++	se_device_t *dev = cmd->se_dev;
++	se_session_t *sess = cmd->se_sess;
++        int ret;
++
++	if (!(sess))
++		return(0);
++
++        spin_lock(&dev->dev_reservation_lock);
++        if (!dev->dev_reserved_node_acl || !sess) {
++                spin_unlock(&dev->dev_reservation_lock);
++                return(0);
++        }
++        ret = (dev->dev_reserved_node_acl != sess->se_node_acl) ? -1 : 0;
++        spin_unlock(&dev->dev_reservation_lock);
++
++        return(ret);
++}
++
++EXPORT_SYMBOL(core_scsi2_reservation_check);
++
++extern int core_scsi2_reservation_release (se_cmd_t *cmd)
++{
++	se_device_t *dev = cmd->se_dev;
++	se_session_t *sess = cmd->se_sess;
++	se_portal_group_t *tpg = sess->se_tpg;
++
++	if (!(sess) || !(tpg))
++		return(0);
++
++        spin_lock(&dev->dev_reservation_lock);
++        if (!dev->dev_reserved_node_acl || !sess) {
++                spin_unlock(&dev->dev_reservation_lock);
++                return(0);
++        }
++
++        if (dev->dev_reserved_node_acl != sess->se_node_acl) {
++                spin_unlock(&dev->dev_reservation_lock);
++                return(0);
++        }
++        dev->dev_reserved_node_acl = NULL;
++        printk("SCSI-2 Released reservation for %s LUN: %u -> MAPPED LUN:"
++		" %u for %s\n", TPG_TFO(tpg)->get_fabric_name(),
++		SE_LUN(cmd)->unpacked_lun, cmd->se_deve->mapped_lun,
++		sess->se_node_acl->initiatorname);
++        spin_unlock(&dev->dev_reservation_lock);
++
++        return(0);
++}
++
++EXPORT_SYMBOL(core_scsi2_reservation_release);
++
++extern int core_scsi2_reservation_reserve (se_cmd_t *cmd)
++{
++	se_device_t *dev = cmd->se_dev;
++	se_session_t *sess = cmd->se_sess;
++	se_portal_group_t *tpg = sess->se_tpg;
++
++	if ((T_TASK(cmd)->t_task_cdb[1] & 0x01) &&
++	    (T_TASK(cmd)->t_task_cdb[1] & 0x02)) {
++		printk(KERN_ERR "LongIO and Obselete Bits set, returning"
++				" ILLEGAL_REQUEST\n");
++		return(-1);
++	}
++
 +	/*
-+	 * Setup the Reservations infrastructure for se_device_t
++	 * This is currently the case for target_core_mod passthrough se_cmd_t ops
 +	 */
-+	core_setup_reservations(dev);
++	if (!(sess) || !(tpg))
++		return(0);
++
++	spin_lock(&dev->dev_reservation_lock);
++	if (dev->dev_reserved_node_acl &&
++	   (dev->dev_reserved_node_acl != sess->se_node_acl)) {
++		printk(KERN_ERR "SCSI-2 RESERVATION CONFLIFT for %s fabric\n",
++			TPG_TFO(tpg)->get_fabric_name());
++		printk(KERN_ERR "Original reserver LUN: %u %s\n",
++			SE_LUN(cmd)->unpacked_lun,
++			dev->dev_reserved_node_acl->initiatorname);
++		printk(KERN_ERR "Current attempt - LUN: %u -> MAPPED LUN: %u"
++			" from %s \n", SE_LUN(cmd)->unpacked_lun,
++			cmd->se_deve->mapped_lun,
++			sess->se_node_acl->initiatorname);
++		spin_unlock(&dev->dev_reservation_lock);
++		return(1);
++        }
++
++	dev->dev_reserved_node_acl = sess->se_node_acl;
++	printk("SCSI-2 Reserved %s LUN: %u -> MAPPED LUN: %u for %s\n",
++		TPG_TFO(tpg)->get_fabric_name(),
++		SE_LUN(cmd)->unpacked_lun, cmd->se_deve->mapped_lun,
++		sess->se_node_acl->initiatorname);
++	spin_unlock(&dev->dev_reservation_lock);
++
++        return(0);
++}
++
++EXPORT_SYMBOL(core_scsi2_reservation_reserve);
++
++/*
++ * Begin SPC-3/SPC-4 Persistent Reservations emulation support
++ */
++static int core_scsi3_pr_seq_non_holder (
++	se_cmd_t *cmd,
++	unsigned char *cdb)
++{
++	int registered_nexus = 0; // FIXME: Table 46
++	int we = 0; // Write Exclusive
++	int legacy = 0; // Act like a legacy device and return RESERVATION CONFLICT on some CDBs
 +	/*
-+	 * Startup the se_device_t processing thread
-+	 */	
- 	transport_generic_activate_device(dev);
- 
- 	/*
-@@ -4303,9 +4309,9 @@ extern int transport_get_sense_data (se_cmd_t *cmd)
- }
- 
- /*
-- * Generic function pointers for the iSCSI Transport.
-+ * Generic function pointers for target_core_mod/ConfigFS
-  */
--#define SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd)					\
-+#define SET_GENERIC_TRANSPORT_FUNCTIONS(cmd)						\
- 	cmd->transport_allocate_iovecs = &transport_generic_allocate_iovecs;		\
- 	cmd->transport_get_task = &transport_generic_get_task;				\
- 	cmd->transport_map_buffers_to_tasks = &transport_generic_map_buffers_to_tasks;	\
-@@ -4315,7 +4321,7 @@ extern int transport_get_sense_data (se_cmd_t *cmd)
-  *
-  *	Generic Command Sequencer that should work for most DAS transport drivers.
-  *
-- *	Called from transport_generic_allocate_tasks() in the iSCSI RX Thread.
-+ *	Called from transport_generic_allocate_tasks() in the $FABRIC_MOD RX Thread.
-  * 
-  *	FIXME: Need to support other SCSI OPCODES where as well.
-  */
-@@ -4323,39 +4329,27 @@ static int transport_generic_cmd_sequencer (
- 	se_cmd_t *cmd,
- 	unsigned char *cdb)
- {
-+	se_device_t *dev = SE_DEV(cmd);
-+	se_subsystem_dev_t *su_dev = dev->se_sub_dev;
- 	int ret = 0, sector_ret = 0;
- 	u32 sectors = 0, size = 0;
- 
--	if (ISCSI_LUN(cmd)->persistent_reservation_check(cmd) != 0) {
--		switch (cdb[0]) {
--		case INQUIRY:
--	                SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
--	                size = cdb[4];
--	                CMD_ORIG_OBJ_API(cmd)->get_mem_buf(cmd->se_orig_obj_ptr, cmd);
--			transport_get_maps(cmd);
--	                ret = 2;
--	                break;
--		case RELEASE:
--		case RELEASE_10:
--			SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
--			cmd->transport_allocate_resources = &transport_generic_allocate_none;
--			transport_get_maps(cmd);
--
--			ISCSI_LUN(cmd)->persistent_reservation_release(cmd);
--			ret = 3;
--			break;
--		default:
-+	if (T10_RES(su_dev)->t10_reservation_check(cmd) != 0) {
-+		if (T10_RES(su_dev)->t10_seq_non_holder(cmd, cdb) != 0) {
- 			cmd->transport_wait_for_tasks = &transport_nop_wait_for_tasks;
- 			transport_get_maps(cmd);
--			return(5);
-+			return(5); // RESERVATION CONFLIT
- 		}
--			
--		goto check_size;
-+		/*
-+		 * This means the CDB is allowed for the SCSI Initiator port
-+		 * when said port is *NOT* holding the legacy SPC-2 or
-+		 * SPC-3 Persistent Reservation.
-+		 */
- 	}
- 
- 	switch (cdb[0]) {
- 	case READ_6:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		sectors = transport_get_sectors_6(cdb, cmd, &sector_ret);
- 		if (sector_ret)
- 			return(4);
-@@ -4366,7 +4360,7 @@ static int transport_generic_cmd_sequencer (
- 		cmd->transport_get_lba = &transport_lba_21;
- 		break; 
- 	case READ_10:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		sectors = transport_get_sectors_10(cdb, cmd, &sector_ret);
- 		if (sector_ret)
- 			return(4);
-@@ -4377,7 +4371,7 @@ static int transport_generic_cmd_sequencer (
- 		cmd->transport_get_lba = &transport_lba_32;
- 		break;
- 	case READ_12:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		sectors = transport_get_sectors_12(cdb, cmd, &sector_ret);
- 		if (sector_ret)
- 			return(4);
-@@ -4388,7 +4382,7 @@ static int transport_generic_cmd_sequencer (
- 		cmd->transport_get_lba = &transport_lba_32;
- 		break;
- 	case READ_16:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		sectors = transport_get_sectors_16(cdb, cmd, &sector_ret);
- 		if (sector_ret)
- 			return(4);
-@@ -4399,7 +4393,7 @@ static int transport_generic_cmd_sequencer (
- 		cmd->transport_get_long_lba = &transport_lba_64;
- 		break;
- 	case WRITE_6:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		sectors = transport_get_sectors_6(cdb, cmd, &sector_ret);
- 		if (sector_ret)
- 			return(4);
-@@ -4410,7 +4404,7 @@ static int transport_generic_cmd_sequencer (
- 		cmd->transport_get_lba = &transport_lba_21;
- 		break;
- 	case WRITE_10:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		sectors = transport_get_sectors_10(cdb, cmd, &sector_ret);
- 		if (sector_ret)
- 			return(4);
-@@ -4421,7 +4415,7 @@ static int transport_generic_cmd_sequencer (
- 		cmd->transport_get_lba = &transport_lba_32;
- 		break;
- 	case WRITE_12:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		sectors = transport_get_sectors_12(cdb, cmd, &sector_ret);
- 		if (sector_ret)
- 			return(4);
-@@ -4432,7 +4426,7 @@ static int transport_generic_cmd_sequencer (
- 		cmd->transport_get_lba = &transport_lba_32;
- 		break;
- 	case WRITE_16:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		sectors = transport_get_sectors_16(cdb, cmd, &sector_ret);
- 		if (sector_ret)
- 			return(4);
-@@ -4442,29 +4436,35 @@ static int transport_generic_cmd_sequencer (
- 		cmd->transport_split_cdb = &split_cdb_XX_16;
- 		cmd->transport_get_long_lba = &transport_lba_64;
- 		break;
--	case SEND_KEY:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
--		size = (cdb[8] << 8) + cdb[9];
-+	case 0xa3:
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
-+		if (TRANSPORT(dev)->get_device_type(dev) == TYPE_RAID) {
-+			// MAINTENANCE_IN from SCC-2
-+			size = (cdb[6] << 24) | (cdb[7] << 16) | (cdb[8] << 8) | cdb[9];
-+		} else {
-+			// SEND_KEY from multi media commands
-+			size = (cdb[8] << 8) + cdb[9];
-+		}
- 		CMD_ORIG_OBJ_API(cmd)->get_mem_SG(cmd->se_orig_obj_ptr, cmd);
- 		transport_get_maps(cmd);
- 		ret = 1;
- 		break;
- 	case MODE_SELECT:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		size = cdb[4];
- 		CMD_ORIG_OBJ_API(cmd)->get_mem_SG(cmd->se_orig_obj_ptr, cmd);
- 		transport_get_maps(cmd);
- 		ret = 1;
- 		break;
- 	case MODE_SELECT_10:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		size = (cdb[7] << 8) + cdb[8];
- 		CMD_ORIG_OBJ_API(cmd)->get_mem_SG(cmd->se_orig_obj_ptr, cmd);
- 		transport_get_maps(cmd);
- 		ret = 1;
- 		break;
- 	case MODE_SENSE:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		size = cdb[4]; 
- 		CMD_ORIG_OBJ_API(cmd)->get_mem_buf(cmd->se_orig_obj_ptr, cmd);
- 		transport_get_maps(cmd);
-@@ -4473,15 +4473,16 @@ static int transport_generic_cmd_sequencer (
- 	case MODE_SENSE_10:
- 	case READ_BUFFER_CAPACITY:
- 	case SEND_OPC_INFORMATION:
-+	case LOG_SELECT:
- 	case LOG_SENSE:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		size = (cdb[7] << 8) + cdb[8];
- 		CMD_ORIG_OBJ_API(cmd)->get_mem_buf(cmd->se_orig_obj_ptr, cmd);
- 		transport_get_maps(cmd);
- 		ret = 2;
- 		break;
- 	case READ_BLOCK_LIMITS:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		size = READ_BLOCK_LEN;
- 		CMD_ORIG_OBJ_API(cmd)->get_mem_buf(cmd->se_orig_obj_ptr, cmd);
- 		transport_get_maps(cmd);
-@@ -4490,67 +4491,112 @@ static int transport_generic_cmd_sequencer (
- 	case GET_CONFIGURATION:
- 	case READ_DISK_INFORMATION:
- 	case READ_TRACK_RZONE_INFO:
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
-+		size = (cdb[7] << 8) + cdb[8];
-+		CMD_ORIG_OBJ_API(cmd)->get_mem_SG(cmd->se_orig_obj_ptr, cmd);
-+		transport_get_maps(cmd);
-+		ret = 1;
-+		break;
- 	case PERSISTENT_RESERVE_IN:
- 	case PERSISTENT_RESERVE_OUT:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
-+		cmd->transport_emulate_cdb =
-+			(T10_RES(su_dev)->res_type == SPC3_PERSISTENT_RESERVATIONS) ?
-+			&core_scsi3_emulate_pr : NULL;
- 		size = (cdb[7] << 8) + cdb[8];
- 		CMD_ORIG_OBJ_API(cmd)->get_mem_SG(cmd->se_orig_obj_ptr, cmd);
- 		transport_get_maps(cmd);
- 		ret = 1;
- 		break;
- 	case READ_DVD_STRUCTURE:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		size = (cdb[8] << 8) + cdb[9];
- 		CMD_ORIG_OBJ_API(cmd)->get_mem_SG(cmd->se_orig_obj_ptr, cmd);
- 		transport_get_maps(cmd);
- 		ret = 1;
- 		break;
- 	case READ_POSITION:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		size = READ_POSITION_LEN;
- 		CMD_ORIG_OBJ_API(cmd)->get_mem_buf(cmd->se_orig_obj_ptr, cmd);
- 		transport_get_maps(cmd);
- 		ret = 2;
- 		break;
--	case REPORT_KEY:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
--		size = (cdb[8] << 8) + cdb[9];
-+	case 0xa4:
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
-+		if (TRANSPORT(dev)->get_device_type(dev) == TYPE_RAID) {
-+			// MAINTENANCE_OUT from SCC-2
-+			size = (cdb[6] << 24) | (cdb[7] << 16) | (cdb[8] << 8) | cdb[9];
-+		} else  {
-+			// REPORT_KEY from multi media commands
-+			size = (cdb[8] << 8) + cdb[9];
-+		}
- 		CMD_ORIG_OBJ_API(cmd)->get_mem_SG(cmd->se_orig_obj_ptr, cmd);
- 		transport_get_maps(cmd);
- 		ret = 1;
- 		break;
- 	case INQUIRY:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		size = cdb[4];
- 		CMD_ORIG_OBJ_API(cmd)->get_mem_buf(cmd->se_orig_obj_ptr, cmd);
- 		transport_get_maps(cmd);
- 		ret = 2;
- 		break;
- 	case READ_BUFFER:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		size = (cdb[6] << 16) + (cdb[7] << 8) + cdb[8];
- 		CMD_ORIG_OBJ_API(cmd)->get_mem_buf(cmd->se_orig_obj_ptr, cmd);
- 		transport_get_maps(cmd);
- 		ret = 2;
- 		break;
- 	case READ_CAPACITY:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		size = READ_CAP_LEN;
- 		CMD_ORIG_OBJ_API(cmd)->get_mem_buf(cmd->se_orig_obj_ptr, cmd);
- 		transport_get_maps(cmd);
- 		ret = 2;
- 		break;
-+	case READ_MEDIA_SERIAL_NUMBER:
++	 * Referenced from spc4r17 table 45 for *NON* PR holder access
++	 */
++	switch (cdb[0]) {
 +	case SECURITY_PROTOCOL_IN:
-+	case SECURITY_PROTOCOL_OUT:
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
-+		size = (cdb[6] << 24) | (cdb[7] << 16) | (cdb[8] << 8) | cdb[9];
-+		CMD_ORIG_OBJ_API(cmd)->get_mem_buf(cmd->se_orig_obj_ptr, cmd);
-+		transport_get_maps(cmd);
-+		ret = 2;
-+		break;
- 	case SERVICE_ACTION_IN:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
++		return((we) ? 0 : 1);
++	case MODE_SENSE:
++	case MODE_SENSE_10:
++	case READ_ATTRIBUTE:
++	case READ_BUFFER:
++	case RECEIVE_DIAGNOSTIC:
++		if (legacy)
++			return(1);
++		return((we) ? 0 : 1); // Allowed Write Exclusive
++	case PERSISTENT_RESERVE_OUT:
++		/*
++		 * This follows PERSISTENT_RESERVE_OUT service actions that are allows
++		 * in the presence of various reservations.  See spc4r17, table 46
++		 */
++		switch (cdb[1] & 0x1f) {
++		case PRO_CLEAR:
++		case PRO_PREEMPT:
++		case PRO_PREEMPT_AND_ABORT:
++			return((registered_nexus) ? 0 : 1);
++		case PRO_REGISTER:
++		case PRO_REGISTER_AND_IGNORE_EXISTING_KEY:
++			return(0);
++		case PRO_REGISTER_AND_MOVE:
++		case PRO_RESERVE:
++			return(1);
++		case PRO_RELEASE:
++			return((registered_nexus) ? 0 : 1);
++		default:
++			printk(KERN_ERR "Unknown PERSISTENT_RESERVE_OUT service"
++				" action: 0x%02x\n", cdb[1] & 0x1f);
++			return(-1);
++		}
++//FIXME PR + legacy RELEASE + RESERVE
++	case RELEASE:
++	case RELEASE_10:
++		return(1); // Conflict
++	case RESERVE:
++	case RESERVE_10:
++		return(1); // Conflict
++	case TEST_UNIT_READY:
++		return((legacy) ? 1 : 0); // Conflict for legacy
++	case MAINTENANCE_IN:
++		switch (cdb[1] & 0x1f) {
++		case MI_MANAGEMENT_PROTOCOL_IN:	
++			return((we) ? 0 : 1); // Allowed Write Exclusive
++		case MI_REPORT_SUPPORTED_OPERATION_CODES:
++		case MI_REPORT_SUPPORTED_TASK_MANAGEMENT_FUNCTIONS:
++			if (legacy)
++				return(1);
++			return((we) ? 0 : 1); // Allowed Write Exclusive
++		case MI_REPORT_ALIASES:
++		case MI_REPORT_IDENTIFYING_INFORMATION:
++		case MI_REPORT_PRIORITY:
++		case MI_REPORT_TARGET_PGS:
++		case MI_REPORT_TIMESTAMP:
++			return(0); // Allowed
++		default:
++			printk(KERN_ERR "Unknown MI Service Action: 0x%02x\n",
++				(cdb[1] & 0x1f));
++			return(-1);
++		}
 +	case ACCESS_CONTROL_IN:
 +	case ACCESS_CONTROL_OUT:
-+	case EXTENDED_COPY:
-+	case READ_ATTRIBUTE:
-+	case RECEIVE_COPY_RESULTS:
-+	case WRITE_ATTRIBUTE:
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		size = (cdb[10] << 24) | (cdb[11] << 16) | (cdb[12] << 8) | cdb[13];
- 		CMD_ORIG_OBJ_API(cmd)->get_mem_buf(cmd->se_orig_obj_ptr, cmd);
- 		transport_get_maps(cmd);
- 		ret = 2;
- 		break;
-+	case RECEIVE_CREDENTIAL:
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
-+		size = (cdb[10] << 8) | cdb[11];
-+		CMD_ORIG_OBJ_API(cmd)->get_mem_buf(cmd->se_orig_obj_ptr, cmd);
-+		transport_get_maps(cmd);
-+		ret = 2;
-+		break;
-+	case RECEIVE_DIAGNOSTIC:
-+	case SEND_DIAGNOSTIC:
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
-+		size = (cdb[3] << 8) | cdb[4];
-+		CMD_ORIG_OBJ_API(cmd)->get_mem_buf(cmd->se_orig_obj_ptr, cmd);
-+		transport_get_maps(cmd);
-+		ret = 2;
-+		break;
- //#warning FIXME: Figure out correct READ_CD blocksize.
- #if 0
- 	case READ_CD:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		sectors = (cdb[6] << 16) + (cdb[7] << 8) + cdb[8];
- 		size = (2336 * sectors);
- 		CMD_ORIG_OBJ_API(cmd)->get_mem_buf(cmd->se_orig_obj_ptr, cmd);
-@@ -4559,28 +4605,28 @@ static int transport_generic_cmd_sequencer (
- 		break;
- #endif
- 	case READ_TOC:  
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		size = cdb[8];
- 		CMD_ORIG_OBJ_API(cmd)->get_mem_buf(cmd->se_orig_obj_ptr, cmd);
- 		transport_get_maps(cmd);
- 		ret = 2;
- 		break;
- 	case REQUEST_SENSE:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		size = cdb[4];
- 		CMD_ORIG_OBJ_API(cmd)->get_mem_buf(cmd->se_orig_obj_ptr, cmd);
- 		transport_get_maps(cmd);
- 		ret = 2;
- 		break;
- 	case READ_ELEMENT_STATUS:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		size = 65536 * cdb[7] + 256 * cdb[8] + cdb[9];
- 		CMD_ORIG_OBJ_API(cmd)->get_mem_buf(cmd->se_orig_obj_ptr, cmd);
- 		transport_get_maps(cmd);
- 		ret = 2;
- 		break;
- 	case WRITE_BUFFER:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		size = (cdb[6] << 16) + (cdb[7] << 8) + cdb[8];
- 		CMD_ORIG_OBJ_API(cmd)->get_mem_buf(cmd->se_orig_obj_ptr, cmd);
- 		transport_get_maps(cmd);
-@@ -4588,22 +4634,43 @@ static int transport_generic_cmd_sequencer (
- 		break;
- 	case RESERVE:
- 	case RESERVE_10:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		/*
-+		 * The SPC-2 RESERVE does not contain a size in the SCSI CDB.
-+		 * Assume the passthrough or $FABRIC_MOD will tell us about it.
-+		 */
-+		if (cdb[0] == RESERVE_10)
-+			size = (cdb[7] << 8) | cdb[8];	
-+		else
-+			size = cmd->data_length;
++	case INQUIRY:
++	case LOG_SENSE:
++	case READ_MEDIA_SERIAL_NUMBER:
++	case REPORT_LUNS:
++	case REQUEST_SENSE:
++		return(0); // Allowed CDBs
++	default:
++		return(1); // Conflift by default
++        }
 +
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		cmd->transport_allocate_resources = &transport_generic_allocate_none;
- 		transport_get_maps(cmd);
- 		
--		if ((ret = ISCSI_LUN(cmd)->persistent_reservation_reserve(cmd)))
--			return(ret);
--		
-+		if ((ret = T10_RES(su_dev)->t10_reserve(cmd)) != 0) {
-+			if (ret > 0)
-+				return(5); // RESERVATION_CONFILIT
-+			else
-+				return(7); // ILLEGAL_REQUEST
-+		}	
- 		ret = 3;
- 		break;
- 	case RELEASE:
- 	case RELEASE_10:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		/*
-+		 * The SPC-2 RELEASE does not contain a size in the SCSI CDB.
-+		 * Assume the passthrough or $FABRIC_MOD will tell us about it.
-+		*/
-+		if (cdb[0] == RELEASE_10)
-+			size = (cdb[7] << 8) | cdb[8];
-+		else
-+			size = cmd->data_length;
++	return(1);
++}
 +
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		cmd->transport_allocate_resources = &transport_generic_allocate_none;
- 		transport_get_maps(cmd);
- 		
--		ISCSI_LUN(cmd)->persistent_reservation_release(cmd);
-+		T10_RES(su_dev)->t10_release(cmd);
- 		ret = 3;
- 		break;
- 	case ALLOW_MEDIUM_REMOVAL:
-@@ -4621,13 +4688,13 @@ static int transport_generic_cmd_sequencer (
- 	case VERIFY:
- 	case WRITE_FILEMARKS:
- 	case MOVE_MEDIUM:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		cmd->transport_allocate_resources = &transport_generic_allocate_none;
- 		transport_get_maps(cmd);
- 		ret = 3;
- 		break;
- 	case REPORT_LUNS:
--		SET_GENERIC_PYX_TRANSPORT_FUNCTIONS(cmd);
-+		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
- 		cmd->transport_emulate_cdb = &transport_core_report_lun_response;
- 		size = (cdb[6] << 24) | (cdb[7] << 16) | (cdb[8] << 8) | cdb[9];
- 		CMD_ORIG_OBJ_API(cmd)->get_mem_buf(cmd->se_orig_obj_ptr, cmd);
-@@ -4635,18 +4702,19 @@ static int transport_generic_cmd_sequencer (
- 		ret = 2;
- 		break;
- 	default:
--		TRACE_ERROR("Unsupported SCSI Opcode 0x%02x, sending"
--			" CHECK_CONDITION.\n", cdb[0]);
-+		TRACE_ERROR("TARGET_CORE[%s]: Unsupported SCSI Opcode 0x%02x,"
-+			" sending CHECK_CONDITION.\n",
-+			CMD_TFO(cmd)->get_fabric_name(), cdb[0]);
- 		cmd->transport_wait_for_tasks = &transport_nop_wait_for_tasks;
- 		transport_get_maps(cmd);
- 		return(4);
- 	}
- 
--check_size:
- 	if (size != cmd->data_length) {
--		TRACE_ERROR("iSCSI Expected Transfer Length: %u does not"
--		" match SCSI CDB Length: %u for SAM Opcode: 0x%02x\n",
--			cmd->data_length, size, cdb[0]);
-+		TRACE_ERROR("TARGET_CORE[%s]: Expected Transfer Length: %u"
-+			" does not match SCSI CDB Length: %u for SAM Opcode:"
-+			" 0x%02x\n", CMD_TFO(cmd)->get_fabric_name(),
-+				cmd->data_length, size, cdb[0]);
- 
- 		cmd->cmd_spdtl = size;
- 
-@@ -4896,9 +4964,6 @@ extern se_cmd_t *transport_allocate_passthrough (
- 		}
- 	}
- 
--	ISCSI_LUN(cmd)->persistent_reservation_check = &core_tpg_persistent_reservation_check;
--	ISCSI_LUN(cmd)->persistent_reservation_release = &core_tpg_persistent_reservation_release;
--	ISCSI_LUN(cmd)->persistent_reservation_reserve = &core_tpg_persistent_reservation_reserve;
- 	cmd->data_length = length;
- 	cmd->data_direction = data_direction;
- 	cmd->se_cmd_flags |= SCF_CMD_PASSTHROUGH;
-@@ -6599,92 +6664,6 @@ after_reason:
- 
- EXPORT_SYMBOL(iscsi_send_check_condition_and_sense);
- 
--extern int core_tpg_persistent_reservation_check (se_cmd_t *cmd)
--{
--	se_lun_t *lun = cmd->se_lun;
--	se_session_t *sess = cmd->se_sess;
--        int ret;
--
--        spin_lock(&lun->lun_reservation_lock);
--        if (!lun->lun_reserved_node_acl || !sess) {
--                spin_unlock(&lun->lun_reservation_lock);
--                return(0);
--        }
--        ret = (lun->lun_reserved_node_acl != sess->se_node_acl) ? -1 : 0;
--        spin_unlock(&lun->lun_reservation_lock);
--
--        return(ret);
--}
--
--EXPORT_SYMBOL(core_tpg_persistent_reservation_check);
--
--extern int core_tpg_persistent_reservation_release (se_cmd_t *cmd)
--{
--	se_lun_t *lun = cmd->se_lun;
--	se_session_t *sess = cmd->se_sess;
--	se_portal_group_t *tpg = sess->se_tpg;
--
--        spin_lock(&lun->lun_reservation_lock);
--        if (!lun->lun_reserved_node_acl || !sess) {
--                spin_unlock(&lun->lun_reservation_lock);
--                return(0);
--        }
--
--        if (lun->lun_reserved_node_acl != sess->se_node_acl) {
--                spin_unlock(&lun->lun_reservation_lock);
--                return(0);
--        }
--        lun->lun_reserved_node_acl = NULL;
--        PYXPRINT("Released %s TPG LUN: %u -> MAPPED LUN: %u for %s\n",
--		TPG_TFO(tpg)->get_fabric_name(),
--		ISCSI_LUN(cmd)->unpacked_lun, cmd->se_deve->mapped_lun,
--		sess->se_node_acl->initiatorname);
--        spin_unlock(&lun->lun_reservation_lock);
--
--        return(0);
--}
--
--EXPORT_SYMBOL(core_tpg_persistent_reservation_release);
--
--extern int core_tpg_persistent_reservation_reserve (se_cmd_t *cmd)
--{
--	se_lun_t *lun = cmd->se_lun;
--	se_session_t *sess = cmd->se_sess;
--	se_portal_group_t *tpg = sess->se_tpg;
--
--        if ((T_TASK(cmd)->t_task_cdb[1] & 0x01) && (T_TASK(cmd)->t_task_cdb[1] & 0x02)) {
--                TRACE_ERROR("LongIO and Obselete Bits set, returning ILLEGAL_REQUEST\n");
--                return(7);
--        }
--
--	if (!(sess))
--		return(5);
--
--        spin_lock(&lun->lun_reservation_lock);
--        if (lun->lun_reserved_node_acl && (lun->lun_reserved_node_acl != sess->se_node_acl)) {
--                TRACE_ERROR("RESERVATION CONFLIFT for %s fabric\n",
--				TPG_TFO(tpg)->get_fabric_name());
--                TRACE_ERROR("Original reserver TPG LUN: %u %s\n", lun->unpacked_lun,
--                                lun->lun_reserved_node_acl->initiatorname);
--                TRACE_ERROR("Current attempt - TPG LUN: %u -> MAPPED LUN: %u from %s \n",
--                                lun->unpacked_lun, cmd->se_deve->mapped_lun,
--                                sess->se_node_acl->initiatorname);
--                spin_unlock(&lun->lun_reservation_lock);
--                return(5);
--        }
--
--        lun->lun_reserved_node_acl = sess->se_node_acl;
--        PYXPRINT("Reserved %s TPG LUN: %u -> MAPPED LUN: %u for %s\n",
--		TPG_TFO(tpg)->get_fabric_name(),
--		ISCSI_LUN(cmd)->unpacked_lun, cmd->se_deve->mapped_lun,
--		sess->se_node_acl->initiatorname);
--        spin_unlock(&lun->lun_reservation_lock);
--
--        return(0);
--}
--
--EXPORT_SYMBOL(core_tpg_persistent_reservation_reserve);
--
- /*	transport_generic_lun_reset():
-  *
-  *
-diff --git a/drivers/lio-core/target_core_transport.h b/drivers/lio-core/target_core_transport.h
-index 3aea1e6..5087280 100644
---- a/drivers/lio-core/target_core_transport.h
-+++ b/drivers/lio-core/target_core_transport.h
-@@ -88,6 +88,7 @@
- #define DA_TASK_TIMEOUT_MAX			600 /* 10 Minutes, see transport_get_default_task_timeout()  */
- #define DA_STATUS_THREAD			0 /* Disabled by default */
- #define DA_STATUS_THREAD_TUR			0 /* Disabled by default */
-+#define DA_EMULATE_RESERVATIONS			0 /* No Emulation for PSCSI by default */
- #define DA_STATUS_MAX_SECTORS_MIN		16
- #define DA_STATUS_MAX_SECTORS_MAX		8192
- 
-@@ -184,9 +185,6 @@ extern int transport_generic_remove (se_cmd_t *, int, int);
- extern int transport_lun_wait_for_tasks (se_cmd_t *, se_lun_t *);
- extern void transport_clear_lun_from_sessions (se_lun_t *);
- extern int iscsi_send_check_condition_and_sense (se_cmd_t *, __u8, int);
--extern int core_tpg_persistent_reservation_check (se_cmd_t *);
--extern int core_tpg_persistent_reservation_release (se_cmd_t *);
--extern int core_tpg_persistent_reservation_reserve (se_cmd_t *);
- extern void transport_release_cmd_to_pool (se_cmd_t *);
- extern void transport_generic_free_cmd (se_cmd_t *, int, int, int);
- extern void transport_generic_wait_for_cmds (se_cmd_t *, int);
++static int core_scsi3_pr_reservation_check (se_cmd_t *cmd)
++{
++	return(0);
++}
++
++static int core_scsi3_legacy_reserve (se_cmd_t *cmd)
++{
++	return(0);
++}
++
++static int core_scsi3_legacy_release (se_cmd_t *cmd)
++{
++	return(0);
++}
++
++static int core_scsi3_emulate_pro_register (se_cmd_t *cmd)
++{
++	return(0);
++}
++
++static int core_scsi3_emulate_pro_reserve (se_cmd_t *cmd)
++{
++	return(0);
++}
++
++static int core_scsi3_emulate_pro_release (se_cmd_t *cmd)
++{
++	return(0);
++}
++
++static int core_scsi3_emulate_pro_clear (se_cmd_t *cmd)
++{
++	return(0);
++}
++
++static int core_scsi3_emulate_pr_out (se_cmd_t *cmd, unsigned char *cdb)
++{
++	switch (cdb[1] & 0x1f) {
++	case PRO_REGISTER:
++		return(core_scsi3_emulate_pro_register(cmd));
++	case PRO_RESERVE:
++		return(core_scsi3_emulate_pro_reserve(cmd));
++	case PRO_RELEASE:
++		return(core_scsi3_emulate_pro_release(cmd));
++	case PRO_CLEAR:
++		return(core_scsi3_emulate_pro_clear(cmd));
++	case PRO_PREEMPT:
++	case PRO_PREEMPT_AND_ABORT:
++	case PRO_REGISTER_AND_IGNORE_EXISTING_KEY:
++	case PRO_REGISTER_AND_MOVE:
++		printk(KERN_ERR "Unsupported PERSISTENT_RESERVE_OUT service"
++			" action: 0x%02x\n", cdb[1] & 0x1f);
++		return(-1);
++	default:
++		printk(KERN_ERR "Unknown PERSISTENT_RESERVE_OUT service"
++			" action: 0x%02x\n", cdb[1] & 0x1f);
++		return(-1);
++	}
++
++}
++
++static int core_scsi3_pri_read_keys (se_cmd_t *cmd)
++{
++	return(0);
++}
++
++static int core_scsi3_pri_read_reservation (se_cmd_t *cmd)
++{
++	return(0);
++}
++
++static int core_scsi3_pri_report_capabilities (se_cmd_t *cmd)
++{
++	return(0);
++}
++
++static int core_scsi3_pri_read_full_status (se_cmd_t *cmd)
++{
++	return(0);
++}
++
++static int core_scsi3_emulate_pr_in (se_cmd_t *cmd, unsigned char *cdb)
++{
++	switch (cdb[1] & 0x1f) {
++	case PRI_READ_KEYS:
++		return(core_scsi3_pri_read_keys(cmd));
++	case PRI_READ_RESERVATION:
++		return(core_scsi3_pri_read_reservation(cmd));
++	case PRI_REPORT_CAPABILITIES:
++		return(core_scsi3_pri_report_capabilities(cmd));
++	case PRI_READ_FULL_STATUS:
++		return(core_scsi3_pri_read_full_status(cmd));
++	default:
++		printk(KERN_ERR "Unknown PERSISTENT_RESERVE_IN service"
++			" action: 0x%02x\n", cdb[1] & 0x1f);
++		return(-1);
++	}
++
++}
++
++extern int core_scsi3_emulate_pr (se_cmd_t *cmd)
++{
++	unsigned char *cdb = &T_TASK(cmd)->t_task_cdb[0];
++
++	return((cdb[0] == PERSISTENT_RESERVE_OUT) ?
++	       core_scsi3_emulate_pr_out(cmd, cdb) :
++	       core_scsi3_emulate_pr_in(cmd, cdb));
++}
++
++static int core_pt_reservation_check (se_cmd_t *cmd)
++{
++	return(0);
++}
++
++static int core_pt_reserve (se_cmd_t *cmd)
++{
++	return(0);
++}
++
++static int core_pt_release (se_cmd_t *cmd)
++{
++	return(0);
++}
++
++static int core_pt_seq_non_holder (se_cmd_t *cmd, unsigned char *cdb)
++{
++	return(0);
++}
++
++extern int core_setup_reservations (se_device_t *dev)
++{
++	se_subsystem_dev_t *su_dev = dev->se_sub_dev;
++	t10_reservation_template_t *rest = &su_dev->t10_reservation;
++	/*
++	 * If this device is from Target_Core_Mod/pSCSI, use the reservations
++	 * of the Underlying SCSI hardware.  In Linux/SCSI terms, this can
++	 * cause a problem because libata and some SATA RAID HBAs appear
++	 * under Linux/SCSI, but to emulate reservations themselves.
++	 */ 
++	if ((TRANSPORT(dev)->transport_type == TRANSPORT_PLUGIN_PHBA_PDEV) &&
++	    !(DEV_ATTRIB(dev)->emulate_reservations)) {
++		rest->res_type = SPC_PASSTHROUGH;
++		rest->t10_reservation_check = &core_pt_reservation_check;
++		rest->t10_reserve = &core_pt_reserve;
++		rest->t10_release = &core_pt_release;
++		rest->t10_seq_non_holder = &core_pt_seq_non_holder;
++		printk("%s: Using SPC_PASSTHROUGH, no reservation emulation\n",
++			TRANSPORT(dev)->name);
++		return(0);
++	}
++	/*
++	 * If SPC-3 or above is reported by real or emulated se_device_t,
++	 * use emulated Persistent Reservations.
++	 */
++	if (TRANSPORT(dev)->get_device_rev(dev) >= SCSI_3) {
++		rest->res_type = SPC3_PERSISTENT_RESERVATIONS;
++		rest->t10_reservation_check = &core_scsi3_pr_reservation_check;
++		rest->t10_reserve = &core_scsi3_legacy_reserve;
++		rest->t10_release = &core_scsi3_legacy_release;
++		rest->t10_seq_non_holder = &core_scsi3_pr_seq_non_holder;
++		printk("%s: Using SPC3_PERSISTENT_RESERVATIONS emulation\n",
++			TRANSPORT(dev)->name);
++	} else {
++		rest->res_type = SPC2_RESERVATIONS;
++		rest->t10_reservation_check = &core_scsi2_reservation_check;
++		rest->t10_reserve = &core_scsi2_reservation_reserve;
++		rest->t10_release = &core_scsi2_reservation_release;
++		rest->t10_seq_non_holder = &core_scsi2_reservation_seq_non_holder;
++		printk("%s: Using SPC2_RESERVATIONS emulation\n",
++			TRANSPORT(dev)->name);
++	}
++
++	return(0);
++}
+diff --git a/drivers/lio-core/target_core_pr.h b/drivers/lio-core/target_core_pr.h
+new file mode 100644
+index 0000000..d32bbdd
+--- /dev/null
++++ b/drivers/lio-core/target_core_pr.h
+@@ -0,0 +1,25 @@
++/*
++ * PERSISTENT_RESERVE_OUT service action codes
++ *
++ * spc4r17 section 6.14.2 Table 171
++ */
++#define PRO_REGISTER				0x00
++#define PRO_RESERVE				0x01
++#define PRO_RELEASE				0x02
++#define PRO_CLEAR				0x03
++#define PRO_PREEMPT				0x04
++#define PRO_PREEMPT_AND_ABORT			0x05
++#define PRO_REGISTER_AND_IGNORE_EXISTING_KEY	0x06
++#define PRO_REGISTER_AND_MOVE			0x07
++/*
++ * PERSISTENT_RESERVE_IN service action codes
++ *
++ * spc4r17 section 6.13.1 Table 159
++ */
++#define PRI_READ_KEYS				0x00
++#define PRI_READ_RESERVATION			0x01
++#define PRI_REPORT_CAPABILITIES			0x02
++#define PRI_READ_FULL_STATUS			0x03
++
++extern int core_scsi3_emulate_pr (struct se_cmd_s *);
++extern int core_setup_reservations (struct se_device_s *);
 -- 
 1.5.4.1
 
