@@ -1,112 +1,41 @@
-From: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
-Subject: Re: [PATCH 2/2] qla2xxx: Code changes for qla data structure refactoring
-Date: Thu, 22 Jan 2009 09:11:21 -0800
-Message-ID: <3CE58734-9F21-4AF2-8E45-81A540C64BC7@qlogic.com>
-References: <alpine.OSX.1.00.0811061031030.605@ac-mac.local> <20090122105016.GA100061@sgi.com> <20090122161338.GA30580@plap4-2.local>
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Content-Type: text/plain; charset="US-ASCII"; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH 08/12] qla2xxx: Correct regression in EH abort handling.
+Date: Thu, 22 Jan 2009 09:45:35 -0800
+Message-ID: <1232646339-32503-9-git-send-email-andrew.vasquez@qlogic.com>
+References: <1232646339-32503-1-git-send-email-andrew.vasquez@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:41235 "EHLO
+Received: from avexch1.qlogic.com ([198.70.193.115]:46489 "EHLO
 	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753045AbZAVRLW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jan 2009 12:11:22 -0500
-In-Reply-To: <20090122161338.GA30580@plap4-2.local>
+	with ESMTP id S1758474AbZAVRpq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jan 2009 12:45:46 -0500
+In-Reply-To: <1232646339-32503-1-git-send-email-andrew.vasquez@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Jeremy Higdon <jeremy@sgi.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "James.Smart@emulex.com" <James.Smart@emulex.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux Driver <Linux-Driver@qlogic.com>, "mdr@sgi.com" <mdr@sgi.com>
+To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Seokmann Ju <seokmann.ju@qlogic.com>
 
+Commit 73208dfd7ab19f379d73e8a0fbf30f92c203e5e8 (qla2xxx: add
+support for multi-queue adapter) inadvertently backed-out the fix
+in 5bff55db3dc4d659f46b4d2fce2f61c1964c2762 (qla2xxx: Return a
+FAILED status when abort mailbox-command fails.).
 
-On Jan 22, 2009, at 8:13 AM, Andrew Vasquez wrote:
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_os.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-> On Thu, 22 Jan 2009, Jeremy Higdon wrote:
->
->> On Thu, Nov 06, 2008 at 10:40:51AM -0800, Anirban Chakraborty wrote:
->>> Following changes have been made:
->>> 1. Outstanding commands are based on a request queue,  
->>> scsi_qla_host does not
->>> maintain it anymore.
->>> 2. start_scsi is accessed via isp_ops struct instead of direct  
->>> invocation.
->>> 3. Interrupt registrations are done using response queue instead  
->>> of device id.
->>>
->>> Thanks,
->>> Anirban
->>>
->>> Signed-off-by: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
->>
->> Hello Anirban,
->>
->> We found a problem in this patch.
->> The problem is that in the function qla2x00_probe_one() in qla_os.c,
->> you should be calling qla2x00_config_dma_addressing() before calling
->> qla2x00_mem_alloc(), so that the DMA mask can be set properly.
->>
->> Now I notice that qla2x00_config_dma_addressing() uses the virtual
->> SCSI host, while qla2x00_mem_alloc() uses the physical host adapter
->> structure.  I don't see why qla2x00_config_dma_addressing() couldn't
->> be rewritten to use the physical host adapter structure.  But if not,
->> then it may need to be split into two parts -- one to set the
->> consistent dma mask and another to set the streaming dma mask.
->
-> Jeremy,
->
-> Thanks for finding this.  I'll add the following patch into my
-> patch-queue if their's no major objections...
->
-> --
-> av
->
-> ---
->
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/ 
-> qla_os.c
-> index f344b68..703d8a8 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -65,8 +65,6 @@ MODULE_PARM_DESC(ql2xextended_error_logging,
->
-> static void qla2x00_free_device(scsi_qla_host_t *);
->
-> -static void qla2x00_config_dma_addressing(scsi_qla_host_t *ha);
-> -
-> int ql2xfdmienable=1;
-> module_param(ql2xfdmienable, int, S_IRUGO|S_IRUSR);
-> MODULE_PARM_DESC(ql2xfdmienable,
-> @@ -1242,9 +1240,8 @@ qla2x00_change_queue_type(struct scsi_device  
-> *sdev, int tag_type)
->  * supported addressing method.
->  */
-> static void
-> -qla2x00_config_dma_addressing(scsi_qla_host_t *vha)
-> +qla2x00_config_dma_addressing(struct qla_hw_data *ha)
-> {
-> -	struct qla_hw_data *ha = vha->hw;
-> 	/* Assume a 32bit DMA mask. */
-> 	ha->flags.enable_64bit_addressing = 0;
->
-> @@ -1870,6 +1867,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const  
-> struct pci_device_id *id)
->
-> 	set_bit(0, (unsigned long *) ha->vp_idx_map);
->
-> +	qla2x00_config_dma_addressing(ha);
-> 	ret = qla2x00_mem_alloc(ha, req_length, rsp_length, &req, &rsp);
-> 	if (!ret) {
-> 		qla_printk(KERN_WARNING, ha,
-> @@ -1896,8 +1894,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const  
-> struct pci_device_id *id)
->
-> 	pci_set_drvdata(pdev, base_vha);
->
-> -	qla2x00_config_dma_addressing(base_vha);
-> -
-> 	host = base_vha->host;
-> 	base_vha->req_ques[0] = req->id;
-> 	host->can_queue = req->length + 128;
-
-The patch looks good to me. Thanks Jeremy for pointing it out.
--Anirban
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index cbf377f..f344b68 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -800,6 +800,7 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+ 		if (ha->isp_ops->abort_command(vha, sp, req)) {
+ 			DEBUG2(printk("%s(%ld): abort_command "
+ 			"mbx failed.\n", __func__, vha->host_no));
++			ret = FAILED;
+ 		} else {
+ 			DEBUG3(printk("%s(%ld): abort_command "
+ 			"mbx success.\n", __func__, vha->host_no));
+-- 
+1.6.1.48.ge9b8
 
