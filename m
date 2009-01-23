@@ -1,114 +1,99 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: [PATCH 2/2] qla2xxx: Code changes for qla data structure refactoring
-Date: Fri, 23 Jan 2009 11:47:45 -0600
-Message-ID: <497A02C1.5000109@sgi.com>
-References: <alpine.OSX.1.00.0811061031030.605@ac-mac.local> <20090122105016.GA100061@sgi.com> <20090122161338.GA30580@plap4-2.local> <3CE58734-9F21-4AF2-8E45-81A540C64BC7@qlogic.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/2] ipr: add MSI support
+Date: Fri, 23 Jan 2009 12:39:19 -0600
+Message-ID: <497A0ED7.3000009@linux.vnet.ibm.com>
+References: <20090123165823.748742817@linux.vnet.ibm.com> <4979FBAF.9050008@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay3.sgi.com ([192.48.171.31]:54276 "EHLO relay.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754977AbZAWRrs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Jan 2009 12:47:48 -0500
-In-Reply-To: <3CE58734-9F21-4AF2-8E45-81A540C64BC7@qlogic.com>
+Received: from e36.co.us.ibm.com ([32.97.110.154]:41670 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753730AbZAWSkd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jan 2009 13:40:33 -0500
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e36.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n0NIdUPU014997
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Jan 2009 11:39:30 -0700
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id n0NIeW8c197300
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Jan 2009 11:40:32 -0700
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n0NIeW5F025490
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Jan 2009 11:40:32 -0700
+In-Reply-To: <4979FBAF.9050008@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Jeremy Higdon <jeremy@sgi.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "James.Smart@emulex.com" <James.Smart@emulex.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux Driver <Linux-Driver@qlogic.com>
+To: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-Anirban Chakraborty wrote:
-> On Jan 22, 2009, at 8:13 AM, Andrew Vasquez wrote:
-> 
->> On Thu, 22 Jan 2009, Jeremy Higdon wrote:
->>
->>> On Thu, Nov 06, 2008 at 10:40:51AM -0800, Anirban Chakraborty wrote:
->>>> Following changes have been made:
->>>> 1. Outstanding commands are based on a request queue,  
->>>> scsi_qla_host does not
->>>> maintain it anymore.
->>>> 2. start_scsi is accessed via isp_ops struct instead of direct  
->>>> invocation.
->>>> 3. Interrupt registrations are done using response queue instead  
->>>> of device id.
->>>>
->>>> Thanks,
->>>> Anirban
->>>>
->>>> Signed-off-by: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
->>> Hello Anirban,
->>>
->>> We found a problem in this patch.
->>> The problem is that in the function qla2x00_probe_one() in qla_os.c,
->>> you should be calling qla2x00_config_dma_addressing() before calling
->>> qla2x00_mem_alloc(), so that the DMA mask can be set properly.
->>>
->>> Now I notice that qla2x00_config_dma_addressing() uses the virtual
->>> SCSI host, while qla2x00_mem_alloc() uses the physical host adapter
->>> structure.  I don't see why qla2x00_config_dma_addressing() couldn't
->>> be rewritten to use the physical host adapter structure.  But if not,
->>> then it may need to be split into two parts -- one to set the
->>> consistent dma mask and another to set the streaming dma mask.
->> Jeremy,
->>
->> Thanks for finding this.  I'll add the following patch into my
->> patch-queue if their's no major objections...
->>
->> --
->> av
->>
->> ---
->>
->> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/ 
->> qla_os.c
->> index f344b68..703d8a8 100644
->> --- a/drivers/scsi/qla2xxx/qla_os.c
->> +++ b/drivers/scsi/qla2xxx/qla_os.c
->> @@ -65,8 +65,6 @@ MODULE_PARM_DESC(ql2xextended_error_logging,
->>
->> static void qla2x00_free_device(scsi_qla_host_t *);
->>
->> -static void qla2x00_config_dma_addressing(scsi_qla_host_t *ha);
->> -
->> int ql2xfdmienable=1;
->> module_param(ql2xfdmienable, int, S_IRUGO|S_IRUSR);
->> MODULE_PARM_DESC(ql2xfdmienable,
->> @@ -1242,9 +1240,8 @@ qla2x00_change_queue_type(struct scsi_device  
->> *sdev, int tag_type)
->>  * supported addressing method.
->>  */
->> static void
->> -qla2x00_config_dma_addressing(scsi_qla_host_t *vha)
->> +qla2x00_config_dma_addressing(struct qla_hw_data *ha)
->> {
->> -	struct qla_hw_data *ha = vha->hw;
->> 	/* Assume a 32bit DMA mask. */
->> 	ha->flags.enable_64bit_addressing = 0;
->>
->> @@ -1870,6 +1867,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const  
->> struct pci_device_id *id)
->>
->> 	set_bit(0, (unsigned long *) ha->vp_idx_map);
->>
->> +	qla2x00_config_dma_addressing(ha);
->> 	ret = qla2x00_mem_alloc(ha, req_length, rsp_length, &req, &rsp);
->> 	if (!ret) {
->> 		qla_printk(KERN_WARNING, ha,
->> @@ -1896,8 +1894,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const  
->> struct pci_device_id *id)
->>
->> 	pci_set_drvdata(pdev, base_vha);
->>
->> -	qla2x00_config_dma_addressing(base_vha);
->> -
->> 	host = base_vha->host;
->> 	base_vha->req_ques[0] = req->id;
->> 	host->can_queue = req->length + 128;
-> 
-> The patch looks good to me. Thanks Jeremy for pointing it out.
-> -Anirban
-> 
-I tested this patch on a system which exhibited the problem.  The
-patch has addressed the issue.
+Acked by: Brian King <brking@linux.vnet.ibm.com>
 
-Mike
+Wayne Boyer wrote:
+> Enable MSI if available/supported.
+> 
+> Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+> ---
+>  drivers/scsi/ipr.c |    7 +++++++
+>  drivers/scsi/ipr.h |    4 ++--
+>  2 files changed, 9 insertions(+), 2 deletions(-)
+> 
+> Index: linux-2.6/drivers/scsi/ipr.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/scsi/ipr.c	2009-01-21 10:19:59.000000000 -0800
+> +++ linux-2.6/drivers/scsi/ipr.c	2009-01-22 15:50:59.000000000 -0800
+> @@ -7147,6 +7147,7 @@
+> 
+>  	ENTER;
+>  	free_irq(pdev->irq, ioa_cfg);
+> +	pci_disable_msi(pdev);
+>  	iounmap(ioa_cfg->hdw_dma_regs);
+>  	pci_release_regions(pdev);
+>  	ipr_free_mem(ioa_cfg);
+> @@ -7432,6 +7433,11 @@
+>  		goto out;
+>  	}
+> 
+> +	if (!(rc = pci_enable_msi(pdev)))
+> +		dev_info(&pdev->dev, "MSI enabled\n");
+> +	else if (ipr_debug)
+> +		dev_info(&pdev->dev, "Cannot enable MSI\n");
+> +
+>  	dev_info(&pdev->dev, "Found IOA with IRQ: %d\n", pdev->irq);
+> 
+>  	host = scsi_host_alloc(&driver_template, sizeof(*ioa_cfg));
+> @@ -7574,6 +7580,7 @@
+>  out_scsi_host_put:
+>  	scsi_host_put(host);
+>  out_disable:
+> +	pci_disable_msi(pdev);
+>  	pci_disable_device(pdev);
+>  	goto out;
+>  }
+> Index: linux-2.6/drivers/scsi/ipr.h
+> ===================================================================
+> --- linux-2.6.orig/drivers/scsi/ipr.h	2009-01-21 10:19:57.000000000 -0800
+> +++ linux-2.6/drivers/scsi/ipr.h	2009-01-21 15:23:02.000000000 -0800
+> @@ -37,8 +37,8 @@
+>  /*
+>   * Literals
+>   */
+> -#define IPR_DRIVER_VERSION "2.4.1"
+> -#define IPR_DRIVER_DATE "(April 24, 2007)"
+> +#define IPR_DRIVER_VERSION "2.4.2"
+> +#define IPR_DRIVER_DATE "(January 21, 2009)"
+> 
+>  /*
+>   * IPR_MAX_CMD_PER_LUN: This defines the maximum number of outstanding
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
+
+
