@@ -1,81 +1,100 @@
-From: Pekka Enberg <penberg@cs.helsinki.fi>
+From: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>
 Subject: Re: Mainline kernel OLTP performance update
-Date: Fri, 23 Jan 2009 10:40:09 +0200
-Message-ID: <1232700009.6094.19.camel@penberg-laptop>
+Date: Fri, 23 Jan 2009 17:02:28 +0800
+Message-ID: <1232701348.11429.170.camel@ymzhang>
 References: <BC02C49EEB98354DBA7F5DD76F2A9E800317003CB0@azsmsx501.amr.corp.intel.com>
-	 <200901161503.13730.nickpiggin@yahoo.com.au>
-	 <20090115201210.ca1a9542.akpm@linux-foundation.org>
-	 <200901161746.25205.nickpiggin@yahoo.com.au>
-	 <20090116065546.GJ31013@parisc-linux.org>
-	 <1232092430.11429.52.camel@ymzhang>  <87sknjeemn.fsf@basil.nowhere.org>
-	 <1232428583.11429.83.camel@ymzhang>
-	 <alpine.DEB.1.10.0901211852060.18367@qirst.com>
-	 <1232613395.11429.122.camel@ymzhang>
-	 <1232615707.14549.6.camel@penberg-laptop>
-	 <1232616517.11429.129.camel@ymzhang>
 	 <1232617672.14549.25.camel@penberg-laptop>
-	 <1232679773.11429.155.camel@ymzhang>  <4979692B.3050703@cs.helsinki.fi>
-	 <1232697998.6094.17.camel@penberg-laptop>
-	 <1232699401.11429.163.camel@ymzhang>
+	 <1232679773.11429.155.camel@ymzhang>
+	 <200901231933.10101.nickpiggin@yahoo.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="=-iJ7pR5ZGKvuT2d2vXHGE"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from courier.cs.helsinki.fi ([128.214.9.1]:36494 "EHLO
-	mail.cs.helsinki.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752819AbZAWIkM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jan 2009 03:40:12 -0500
-In-Reply-To: <1232699401.11429.163.camel@ymzhang>
+Received: from mga06.intel.com ([134.134.136.21]:21100 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753883AbZAWJCj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jan 2009 04:02:39 -0500
+In-Reply-To: <200901231933.10101.nickpiggin@yahoo.com.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>
-Cc: Christoph Lameter <cl@linux-foundation.org>, Andi Kleen <andi@firstfloor.org>, Matthew Wilcox <matthew@wil.cx>, Nick Piggin <nickpiggin@yahoo.com.au>, Andrew Morton <akpm@linux-foundation.org>, netdev@vger.kernel.org, sfr@canb.auug.org.au, matthew.r.wilcox@intel.com, chinang.ma@intel.com, linux-kernel@vger.kernel.org, sharad.c.tripathi@intel.com, arjan@linux.intel.com, suresh.b.siddha@intel.com, harita.chilukuri@intel.com, douglas.w.styner@intel.com, peter.xihong.wang@intel.com, hubert.nueckel@intel.com, chris.mason@oracle.com, srostedt@redhat.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, anirban.chakraborty@qlogic.com, mingo@elte.hu
+To: Nick Piggin <nickpiggin@yahoo.com.au>
+Cc: Pekka Enberg <penberg@cs.helsinki.fi>, Christoph Lameter <cl@linux-foundation.org>, Andi Kleen <andi@firstfloor.org>, Matthew Wilcox <matthew@wil.cx>, Andrew Morton <akpm@linux-foundation.org>, netdev@vger.kernel.org, sfr@canb.auug.org.au, matthew.r.wilcox@intel.com, chinang.ma@intel.com, linux-kernel@vger.kernel.org, sharad.c.tripathi@intel.com, arjan@linux.intel.com, suresh.b.siddha@intel.com, harita.chilukuri@intel.com, douglas.w.styner@intel.com, peter.xihong.wang@intel.com, hubert.nueckel@intel.com, chris.mason@oracle.com, srostedt@redhat.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, anirban.chakraborty@qlogic.com
 
-On Fri, 2009-01-23 at 16:30 +0800, Zhang, Yanmin wrote:
-> > I assume binding the client and the server to different physical CPUs
-> > also  means that the SKB is always allocated on CPU 1 and freed on CPU
-> > 2? If so, we will be taking the __slab_free() slow path all the time on
-> > kfree() which will cause cache effects, no doubt.
-> > 
-> > But there's another potential performance hit we're taking because the
-> > object size of the cache is so big. As allocations from CPU 1 keep
-> > coming in, we need to allocate new pages and unfreeze the per-cpu page.
-> > That in turn causes __slab_free() to be more eager to discard the slab
-> > (see the PageSlubFrozen check there).
-> > 
-> > So before going for cache profiling, I'd really like to see an oprofile
-> > report. I suspect we're still going to see much more page allocator
-> > activity
-> Theoretically, it should, but oprofile doesn't show that.
+
+--=-iJ7pR5ZGKvuT2d2vXHGE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+
+On Fri, 2009-01-23 at 19:33 +1100, Nick Piggin wrote:
+> On Friday 23 January 2009 14:02:53 Zhang, Yanmin wrote:
 > 
-> > there than with SLAB or SLQB which is why we're still behaving
-> > so badly here.
+> > 1) If I start CPU_NUM clients and servers, SLUB's result is about 2% better
+> > than SLQB's;
 > 
-> oprofile output with 2.6.29-rc2-slubrevertlarge:
-> CPU: Core 2, speed 2666.71 MHz (estimated)
-> Counted CPU_CLK_UNHALTED events (Clock cycles when not halted) with a unit mask of 0x00 (Unhalted core cycles) count 100000
-> samples  %        app name                 symbol name
-> 132779   32.9951  vmlinux                  copy_user_generic_string
-> 25334     6.2954  vmlinux                  schedule
-> 21032     5.2264  vmlinux                  tg_shares_up
-> 17175     4.2679  vmlinux                  __skb_recv_datagram
-> 9091      2.2591  vmlinux                  sock_def_readable
-> 8934      2.2201  vmlinux                  mwait_idle
-> 8796      2.1858  vmlinux                  try_to_wake_up
-> 6940      1.7246  vmlinux                  __slab_free
+> I'll have to look into this too. Could be evidence of the possible
+> TLB improvement from using bigger pages and/or page-specific freelist,
+> I suppose.
 > 
-> #slaninfo -AD
-> Name                   Objects    Alloc     Free   %Fast
-> :0000256                  1643  5215544  5214027  94   0 
-> kmalloc-8192                28  5189576  5189560   0   0 
-                                                    ^^^^^^
+> Do you have a scripted used to start netperf in that configuration?
+See the attachment.
 
-This looks bit funny. Hmm.
+Steps to run testing:
+1) compile netperf;
+2) Change PROG_DIR to path/to/netperf/src;
+3) ./start_netperf_udp_v4.sh 8 #Assume your machine has 8 logical cpus.
 
-> :0000168                  2631   141466   138976  92  28 
-> :0004096                  1452    88697    87269  99  96 
-> :0000192                  3402    63050    59732  89  11 
-> :0000064                  6265    46611    40721  98  82 
-> :0000128                  1895    30429    28654  93  32 
 
+--=-iJ7pR5ZGKvuT2d2vXHGE
+Content-Disposition: attachment; filename=start_netperf_udp_v4.sh
+Content-Type: application/x-shellscript; name=start_netperf_udp_v4.sh
+Content-Transfer-Encoding: 7bit
+
+#!/bin/sh
+
+PROG_DIR=/home/ymzhang/test/netperf/src
+date=`date +%H%M%N`
+#PROG_DIR=/root/netperf/netperf/src
+client_num=$1
+pin_cpu=$2
+
+start_port_server=12384
+start_port_client=15888
+
+killall netserver
+${PROG_DIR}/netserver
+sleep 2
+
+if [ ! -d result ]; then
+	mkdir result
+fi
+
+all_result_files=""
+for i in `seq 1 ${client_num}`; do
+	if [ "${pin_cpu}" == "pin" ]; then
+		pin_param="-T ${i} ${i}"
+	fi
+	result_file=result/netperf_${start_port_client}.${date}
+	#./netperf -t UDP_STREAM -l 60 -H 127.0.0.1 -- -P 15895 12391 -s 32768 -S 32768 -m 4096
+	#./netperf -t UDP_STREAM -l 60 -H 127.0.0.1 -i 50 3 -I 99 5 -- -P 12384 12888 -s 32768 -S 32768 -m 4096
+	#${PROG_DIR}/netperf -p ${port_num} -t TCP_RR -l 60 -H 127.0.0.1 ${pin_param} -- -r 1,1 >${result_file} &
+	${PROG_DIR}/netperf -t UDP_STREAM -l 60 -H 127.0.0.1 ${pin_param} -- -P ${start_port_client} ${start_port_server} -s 32768 -S 32768 -m 4096 >${result_file}  &
+	sub_pid="${sub_pid} `echo $!`"
+	port_num=$((${port_num}+1))
+	all_result_files="${all_result_files} ${result_file}"
+	start_port_server=$((${start_port_server}+1))
+	start_port_client=$((${start_port_client}+1))
+done;
+
+wait ${sub_pid}
+killall netserver
+
+result="0"
+for i in `echo ${all_result_files}`; do
+	sub_result=`awk '/Throughput/ {getline; getline; getline; print " "$6}' ${i}`
+	result=`echo "${result}+${sub_result}"|bc`
+done;
+
+echo $result
+
+
+--=-iJ7pR5ZGKvuT2d2vXHGE--
 
