@@ -1,52 +1,114 @@
-From: Wayne Boyer <wayneb@linux.vnet.ibm.com>
-Subject: [PATCH 2/2] ipr: add message to error table
-Date: Fri, 23 Jan 2009 09:17:37 -0800
-Message-ID: <4979FBB1.8050103@linux.vnet.ibm.com>
-References: <20090123165823.748742817@linux.vnet.ibm.com>
+From: Michael Reed <mdr@sgi.com>
+Subject: Re: [PATCH 2/2] qla2xxx: Code changes for qla data structure refactoring
+Date: Fri, 23 Jan 2009 11:47:45 -0600
+Message-ID: <497A02C1.5000109@sgi.com>
+References: <alpine.OSX.1.00.0811061031030.605@ac-mac.local> <20090122105016.GA100061@sgi.com> <20090122161338.GA30580@plap4-2.local> <3CE58734-9F21-4AF2-8E45-81A540C64BC7@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:39161 "EHLO e1.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752951AbZAWRRj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Jan 2009 12:17:39 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e1.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n0NHG6Db031186
-	for <linux-scsi@vger.kernel.org>; Fri, 23 Jan 2009 12:16:06 -0500
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id n0NHHcFm168316
-	for <linux-scsi@vger.kernel.org>; Fri, 23 Jan 2009 12:17:38 -0500
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n0NHHclP007295
-	for <linux-scsi@vger.kernel.org>; Fri, 23 Jan 2009 12:17:38 -0500
-Received: from jwb.beaverton.ibm.com (wboyer.beaverton.ibm.com [9.47.17.47])
-	by d01av01.pok.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id n0NHHbSS007285
-	for <linux-scsi@vger.kernel.org>; Fri, 23 Jan 2009 12:17:37 -0500
-In-Reply-To: <20090123165823.748742817@linux.vnet.ibm.com>
+Received: from relay3.sgi.com ([192.48.171.31]:54276 "EHLO relay.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754977AbZAWRrs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 Jan 2009 12:47:48 -0500
+In-Reply-To: <3CE58734-9F21-4AF2-8E45-81A540C64BC7@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Jeremy Higdon <jeremy@sgi.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "James.Smart@emulex.com" <James.Smart@emulex.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux Driver <Linux-Driver@qlogic.com>
 
-Adds a message to the error table for an error that wasn't previously handled.
+Anirban Chakraborty wrote:
+> On Jan 22, 2009, at 8:13 AM, Andrew Vasquez wrote:
+> 
+>> On Thu, 22 Jan 2009, Jeremy Higdon wrote:
+>>
+>>> On Thu, Nov 06, 2008 at 10:40:51AM -0800, Anirban Chakraborty wrote:
+>>>> Following changes have been made:
+>>>> 1. Outstanding commands are based on a request queue,  
+>>>> scsi_qla_host does not
+>>>> maintain it anymore.
+>>>> 2. start_scsi is accessed via isp_ops struct instead of direct  
+>>>> invocation.
+>>>> 3. Interrupt registrations are done using response queue instead  
+>>>> of device id.
+>>>>
+>>>> Thanks,
+>>>> Anirban
+>>>>
+>>>> Signed-off-by: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
+>>> Hello Anirban,
+>>>
+>>> We found a problem in this patch.
+>>> The problem is that in the function qla2x00_probe_one() in qla_os.c,
+>>> you should be calling qla2x00_config_dma_addressing() before calling
+>>> qla2x00_mem_alloc(), so that the DMA mask can be set properly.
+>>>
+>>> Now I notice that qla2x00_config_dma_addressing() uses the virtual
+>>> SCSI host, while qla2x00_mem_alloc() uses the physical host adapter
+>>> structure.  I don't see why qla2x00_config_dma_addressing() couldn't
+>>> be rewritten to use the physical host adapter structure.  But if not,
+>>> then it may need to be split into two parts -- one to set the
+>>> consistent dma mask and another to set the streaming dma mask.
+>> Jeremy,
+>>
+>> Thanks for finding this.  I'll add the following patch into my
+>> patch-queue if their's no major objections...
+>>
+>> --
+>> av
+>>
+>> ---
+>>
+>> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/ 
+>> qla_os.c
+>> index f344b68..703d8a8 100644
+>> --- a/drivers/scsi/qla2xxx/qla_os.c
+>> +++ b/drivers/scsi/qla2xxx/qla_os.c
+>> @@ -65,8 +65,6 @@ MODULE_PARM_DESC(ql2xextended_error_logging,
+>>
+>> static void qla2x00_free_device(scsi_qla_host_t *);
+>>
+>> -static void qla2x00_config_dma_addressing(scsi_qla_host_t *ha);
+>> -
+>> int ql2xfdmienable=1;
+>> module_param(ql2xfdmienable, int, S_IRUGO|S_IRUSR);
+>> MODULE_PARM_DESC(ql2xfdmienable,
+>> @@ -1242,9 +1240,8 @@ qla2x00_change_queue_type(struct scsi_device  
+>> *sdev, int tag_type)
+>>  * supported addressing method.
+>>  */
+>> static void
+>> -qla2x00_config_dma_addressing(scsi_qla_host_t *vha)
+>> +qla2x00_config_dma_addressing(struct qla_hw_data *ha)
+>> {
+>> -	struct qla_hw_data *ha = vha->hw;
+>> 	/* Assume a 32bit DMA mask. */
+>> 	ha->flags.enable_64bit_addressing = 0;
+>>
+>> @@ -1870,6 +1867,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const  
+>> struct pci_device_id *id)
+>>
+>> 	set_bit(0, (unsigned long *) ha->vp_idx_map);
+>>
+>> +	qla2x00_config_dma_addressing(ha);
+>> 	ret = qla2x00_mem_alloc(ha, req_length, rsp_length, &req, &rsp);
+>> 	if (!ret) {
+>> 		qla_printk(KERN_WARNING, ha,
+>> @@ -1896,8 +1894,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const  
+>> struct pci_device_id *id)
+>>
+>> 	pci_set_drvdata(pdev, base_vha);
+>>
+>> -	qla2x00_config_dma_addressing(base_vha);
+>> -
+>> 	host = base_vha->host;
+>> 	base_vha->req_ques[0] = req->id;
+>> 	host->can_queue = req->length + 128;
+> 
+> The patch looks good to me. Thanks Jeremy for pointing it out.
+> -Anirban
+> 
+I tested this patch on a system which exhibited the problem.  The
+patch has addressed the issue.
 
-Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
----
-
- drivers/scsi/ipr.c |    2 ++
- 1 file changed, 2 insertions(+)
-
-Index: linux-2.6/drivers/scsi/ipr.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/ipr.c	2009-01-22 15:50:59.000000000 -0800
-+++ linux-2.6/drivers/scsi/ipr.c	2009-01-23 08:55:23.000000000 -0800
-@@ -354,6 +354,8 @@
- 	"9076: Configuration error, missing remote IOA"},
- 	{0x06679100, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"4050: Enclosure does not support a required multipath function"},
-+	{0x06690000, 0, IPR_DEFAULT_LOG_LEVEL,
-+	"4070: Logically bad written to device"},
- 	{0x06690200, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9041: Array protection temporarily suspended"},
- 	{0x06698200, 0, IPR_DEFAULT_LOG_LEVEL,
-
+Mike
