@@ -1,101 +1,83 @@
-From: "Sudhakar Pannerselvam" <sudhakarp@inmage.net>
-Subject: RE: [dm-devel] RE: qla2xxx 0000:03:0c.0: Firmware image unavailable
-Date: Thu, 22 Jan 2009 22:22:48 -0800
-Message-ID: <D4B83214B57CAC4499F1114D069E451A01A7D765@bunker.inside.abhaisystems.com>
-References: <E463DF2B2E584B4A82673F53D62C2EF45CEAB8A3@cosmail01.lsi.com>
+From: Pekka Enberg <penberg@cs.helsinki.fi>
+Subject: Re: Mainline kernel OLTP performance update
+Date: Fri, 23 Jan 2009 08:52:27 +0200
+Message-ID: <4979692B.3050703@cs.helsinki.fi>
+References: <BC02C49EEB98354DBA7F5DD76F2A9E800317003CB0@azsmsx501.amr.corp.intel.com>	 <200901161503.13730.nickpiggin@yahoo.com.au>	 <20090115201210.ca1a9542.akpm@linux-foundation.org>	 <200901161746.25205.nickpiggin@yahoo.com.au>	 <20090116065546.GJ31013@parisc-linux.org>	 <1232092430.11429.52.camel@ymzhang>  <87sknjeemn.fsf@basil.nowhere.org>	 <1232428583.11429.83.camel@ymzhang>	 <alpine.DEB.1.10.0901211852060.18367@qirst.com>	 <1232613395.11429.122.camel@ymzhang>	 <1232615707.14549.6.camel@penberg-laptop>	 <1232616517.11429.129.camel@ymzhang>	 <1232617672.14549.25.camel@penberg-laptop> <1232679773.11429.155.camel@ymzhang>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 64-60-250-125.static-ip.telepacific.net ([64.60.250.125]:33548
-	"EHLO bunker.inside.abhaisystems.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1763177AbZAWGWu convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Jan 2009 01:22:50 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF45CEAB8A3@cosmail01.lsi.com>
+Received: from courier.cs.helsinki.fi ([128.214.9.1]:37331 "EHLO
+	mail.cs.helsinki.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751967AbZAWG4l (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jan 2009 01:56:41 -0500
+In-Reply-To: <1232679773.11429.155.camel@ymzhang>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moger, Babu" <Babu.Moger@lsi.com>, device-mapper development <dm-devel@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>
+Cc: Christoph Lameter <cl@linux-foundation.org>, Andi Kleen <andi@firstfloor.org>, Matthew Wilcox <matthew@wil.cx>, Nick Piggin <nickpiggin@yahoo.com.au>, Andrew Morton <akpm@linux-foundation.org>, netdev@vger.kernel.org, sfr@canb.auug.org.au, matthew.r.wilcox@intel.com, chinang.ma@intel.com, linux-kernel@vger.kernel.org, sharad.c.tripathi@intel.com, arjan@linux.intel.com, suresh.b.siddha@intel.com, harita.chilukuri@intel.com, douglas.w.styner@intel.com, peter.xihong.wang@intel.com, hubert.nueckel@intel.com, chris.mason@oracle.com, srostedt@redhat.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, anirban.chakraborty@qlogic.com, mingo@elte.hu
 
-As James mentioned earlier, this is a distribution issue. I had seen
-this issue with redhat. If you observe redhat distro qlogic drivers,
-they compile firmware files along with the driver and hence they
-wouldn't observe this issue when they load through initrd as there is no
-firmware loading procedure through hotplug interface, whereas if you
-compile qlogic driver by hand without inbuilt firmware files and using
-distro's like redhat, you would encounter this issue. This has to be
-addressed in nash hotplug code. 
+Zhang, Yanmin wrote:
+>>>> If it's the former, with big enough size passed to __alloc_skb(), =
+the
+>>>> networking code might be taking a hit from the SLUB page allocator
+>>>> pass-through.
+>> Do we know what kind of size is being passed to __alloc_skb() in thi=
+s
+>> case?
+> In function __alloc_skb, original parameter size=3D4155,
+> SKB_DATA_ALIGN(size)=3D4224, sizeof(struct skb_shared_info)=3D472, so
+> __kmalloc_track_caller's parameter size=3D4696.
 
-One workaround that I could think of, as I mentioned above this is an
-issue with nash which is active only when you load qlogic through initrd
-mechanism. Check if you really need to compile your qlogic driver as
-part of initrd image and recreate initrd image without qlogic module.
-Later you could load the qlogic module(again using hotplug mechanism)
-when kernel comes alive.
+OK, so all allocations go straight to the page allocator.
 
-Regards
-Sudhakar
+>=20
+>>  Maybe we want to do something like this.
+>>
+>> SLUB: revert page allocator pass-through
+> This patch amost fixes the netperf UDP-U-4k issue.
+>=20
+> #slabinfo -AD
+> Name                   Objects    Alloc     Free   %Fast
+> :0000256                  1658 70350463 70348946  99  99=20
+> kmalloc-8192                31 70322309 70322293  99  99=20
+> :0000168                  2592   143154   140684  93  28=20
+> :0004096                  1456    91072    89644  99  96=20
+> :0000192                  3402    63838    60491  89  11=20
+> :0000064                  6177    49635    43743  98  77=20
+>=20
+> So =EF=BB=BFkmalloc-8192 appears. Without the patch, =EF=BB=BFkmalloc=
+-8192 hides.
+> =EF=BB=BFkmalloc-8192's default order on my 8-core stoakley is 2.
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org 
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Moger, Babu
-> Sent: Friday, January 23, 2009 5:46 AM
-> To: device-mapper development
-> Cc: linux-scsi@vger.kernel.org
-> Subject: RE: [dm-devel] RE: qla2xxx 0000:03:0c.0: Firmware 
-> image unavailable
-> 
-> 
-> Yes, firmware images are in the initrd. I have verified that. 
-> 
-> Thanks
-> Babu Moger 
-> 
-> -----Original Message-----
-> From: dm-devel-bounces@redhat.com 
-> [mailto:dm-devel-bounces@redhat.com] On Behalf Of Dave Holland
-> Sent: Thursday, January 22, 2009 10:46 AM
-> To: device-mapper development
-> Cc: linux-scsi@vger.kernel.org
-> Subject: Re: [dm-devel] RE: qla2xxx 0000:03:0c.0: Firmware 
-> image unavailable
-> 
-> On Thu, Jan 22, 2009 at 08:20:48AM -0700, Moger, Babu wrote:
-> > You are right. Looks like qlogic driver loads even before 
-> udev hotplug 
-> > is functional.  Driver loads successfully when I re-load the driver 
-> > after the system in up.  Is there any solution or 
-> work-around for this 
-> > problem?
-> 
-> So the problem only happens at boot time? Are you using an 
-> initrd, and if so, have you got the firmware images in the 
-> initrd image?
-> (mkinitramfs, update-initramfs, etc)
-> 
-> Dave
-> --
-> ** Dave Holland ** Systems Support -- Infrastructure Management **
-> ** 01223 496923 ** The Sanger Institute, Hinxton, Cambridge, 
-> UK ** "Your bumper is my crumple zone."
-> 
-> 
-> -- 
->  The Wellcome Trust Sanger Institute is operated by Genome Research 
->  Limited, a charity registered in England with number 1021457 and a 
->  company registered in England with number 2742969, whose registered 
->  office is 215 Euston Road, London, NW1 2BE. 
-> 
-> --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://www.redhat.com/mailman/listinfo/dm-devel
-> --
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Christoph, should we merge my patch as-is or do you have an alternative=
+=20
+fix in mind? We could, of course, increase kmalloc() caches one level u=
+p=20
+to 8192 or higher.
+
+>=20
+> 1) If I start CPU_NUM clients and servers, SLUB's result is about 2% =
+better than SLQB's;
+> 2) If I start 1 clinet and 1 server, and bind them to different physi=
+cal cpu, SLQB's result
+> is about 10% better than SLUB's.
+>=20
+> I don't know why there is still 10% difference with item 2). Maybe ca=
+chemiss causes it?
+
+Maybe we can use the perfstat and/or kerneltop utilities of the new per=
+f=20
+counters patch to diagnose this:
+
+http://lkml.org/lkml/2009/1/21/273
+
+And do oprofile, of course. Thanks!
+
+		Pekka
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
