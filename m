@@ -1,78 +1,88 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 16/16] scsi: Add osd library to build system
-Date: Sun, 25 Jan 2009 17:24:14 +0200
-Message-ID: <1232897054-19933-1-git-send-email-bharrosh@panasas.com>
-References: <497C7B33.4080105@panasas.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/4] [Linux/SCSI] Add support for SPC-4 CDBs referenced
+	in Persisent Reservations Allowed/Confict Table
+Date: Sun, 25 Jan 2009 15:06:53 -0600
+Message-ID: <1232917613.4586.11.camel@localhost.localdomain>
+References: <1232612582.1274.529.camel@haakon2.linux-iscsi.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:27729 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755154AbZAYPYS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Jan 2009 10:24:18 -0500
-In-Reply-To: <497C7B33.4080105@panasas.com>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:51888 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751324AbZAYVG5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 25 Jan 2009 16:06:57 -0500
+In-Reply-To: <1232612582.1274.529.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd ml <osd-dev@open-osd.org>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Matthew Wilcox <willy@debian.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-OSD in kernel source code is assumed to be at:
-drivers/scsi/osd/ with its own Makefile and Kconfig
+On Thu, 2009-01-22 at 00:23 -0800, Nicholas A. Bellinger wrote:
+> >From c177bb7ba55227d809d85aca3a9d4281e554f718 Mon Sep 17 00:00:00 2001
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+> Date: Wed, 21 Jan 2009 22:13:00 -0800
+> Subject: [PATCH 1/4] [Linux/SCSI] Add support for SPC-4 CDBs referenced in Persisent Reservations Allowed/Confict Table
+> 
+> This path adds support for a handful of SPC-4 CDBs, and fills out the MI_* and MO_* prefixed
+> service action codes for MAINTENANCE_IN and MAINTENANCE_OUT operations.
+> 
+> This information is from spc4r17 and Table D.4 for MI_ and MO_ prefixed defs.
+> 
+> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 
-Add includes to them from drivers/scsi Makefile and Kconfig
-Add OSD to MAINTAINERS file
+These additions look reasonable, there are just a few semantic problems:
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-Reviewed-by: Benny Halevy <bhalevy@panasas.com>
----
- MAINTAINERS           |   10 ++++++++++
- drivers/scsi/Kconfig  |    2 ++
- drivers/scsi/Makefile |    2 ++
- 3 files changed, 14 insertions(+), 0 deletions(-)
+>  include/scsi/scsi.h |   22 ++++++++++++++++++++++
+>  1 files changed, 22 insertions(+), 0 deletions(-)
+> 
+> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+> index a109165..93af6ce 100644
+> --- a/include/scsi/scsi.h
+> +++ b/include/scsi/scsi.h
+> @@ -104,30 +104,52 @@
+>  #define PERSISTENT_RESERVE_IN 0x5e
+>  #define PERSISTENT_RESERVE_OUT 0x5f
+>  #define VARIABLE_LENGTH_CMD   0x7f
+> +#define RECEIVE_CREDENTIAL    0x7f // spc4r17 section 6.9 Table 204
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 6f65a26..3d05091 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -3260,6 +3260,16 @@ L:	orinoco-devel@lists.sourceforge.net
- W:	http://www.nongnu.org/orinoco/
- S:	Maintained
- 
-+OSD LIBRARY
-+P:	Boaz Harrosh
-+M:	bharrosh@panasas.com
-+P:	Benny Halevy
-+M:	bhalevy@panasas.com
-+L:	osd-dev@open-osd.org
-+W:	http://open-osd.org
-+T:	git://git.open-osd.org/open-osd.git
-+S:	Maintained
-+
- P54 WIRELESS DRIVER
- P:	Michael Wu
- M:	flamingice@sourmilk.net
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 601c2a8..e420ad0 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -1806,4 +1806,6 @@ source "drivers/scsi/pcmcia/Kconfig"
- 
- source "drivers/scsi/device_handler/Kconfig"
- 
-+source "drivers/scsi/osd/Kconfig"
-+
- endmenu
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index 7461eb0..05558b1 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -137,6 +137,8 @@ obj-$(CONFIG_CHR_DEV_SG)	+= sg.o
- obj-$(CONFIG_CHR_DEV_SCH)	+= ch.o
- obj-$(CONFIG_SCSI_ENCLOSURE)	+= ses.o
- 
-+obj-$(CONFIG_SCSI_OSD_INITIATOR) += osd/
-+
- # This goes last, so that "real" scsi devices probe earlier
- obj-$(CONFIG_SCSI_DEBUG)	+= scsi_debug.o
- 
--- 
-1.6.0.1
+Actually 0x7f isn't receive credentials, that's VARIABLE_LENGTH_CMD
+(definition above) with a Service Action of 0x1800 ... it needs to be
+done something like READ CAPACITY(16) is
+
+>  #define REPORT_LUNS           0xa0
+> +#define SECURITY_PROTOCOL_IN  0xa2
+>  #define MAINTENANCE_IN        0xa3
+>  #define MAINTENANCE_OUT       0xa4
+>  #define MOVE_MEDIUM           0xa5
+>  #define EXCHANGE_MEDIUM       0xa6
+>  #define READ_12               0xa8
+>  #define WRITE_12              0xaa
+> +#define READ_MEDIA_SERIAL_NUMBER 0xab
+>  #define WRITE_VERIFY_12       0xae
+>  #define SEARCH_HIGH_12        0xb0
+>  #define SEARCH_EQUAL_12       0xb1
+>  #define SEARCH_LOW_12         0xb2
+> +#define SECURITY_PROTOCOL_OUT 0xb5
+>  #define READ_ELEMENT_STATUS   0xb8
+>  #define SEND_VOLUME_TAG       0xb6
+>  #define WRITE_LONG_2          0xea
+> +#define EXTENDED_COPY         0x83
+> +#define RECEIVE_COPY_RESULTS  0x84
+> +#define ACCESS_CONTROL_IN     0x86
+> +#define ACCESS_CONTROL_OUT    0x87
+>  #define READ_16               0x88
+>  #define WRITE_16              0x8a
+> +#define READ_ATTRIBUTE        0x8c
+> +#define WRITE_ATTRIBUTE	      0x8d
+>  #define VERIFY_16	      0x8f
+>  #define SERVICE_ACTION_IN     0x9e
+>  /* values for service action in */
+>  #define	SAI_READ_CAPACITY_16  0x10
+
+Here ^^^^^
+
+James
+
 
