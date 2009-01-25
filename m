@@ -1,109 +1,67 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH version 3] bsg: Add support for submitting requests at tail
- of queue
-Date: Sun, 25 Jan 2009 12:07:30 +0200
-Message-ID: <497C39E2.8060900@panasas.com>
-References: <4976F067.8000501@panasas.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 1/2] sg: fix races during device removal (v6)
+Date: Sun, 25 Jan 2009 21:46:21 +0900
+Message-ID: <20090125214113Z.fujita.tomonori@lab.ntt.co.jp>
+References: <20090120100451Q.fujita.tomonori@lab.ntt.co.jp>
+	<49764920.30307@cybernetics.com>
+	<49777B6E.1040805@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:32490 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751899AbZAYKHe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Jan 2009 05:07:34 -0500
-In-Reply-To: <4976F067.8000501@panasas.com>
+Received: from sh.osrg.net ([192.16.179.4]:46940 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753999AbZAYMqr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 25 Jan 2009 07:46:47 -0500
+In-Reply-To: <49777B6E.1040805@cybernetics.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>
-Cc: Douglas Gilbert <dougg@torque.net>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: tonyb@cybernetics.com
+Cc: James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.co.jp, dgilbert@interlog.com, hch@infradead.org, linux-scsi@vger.kernel.org
 
+On Wed, 21 Jan 2009 14:45:50 -0500
+Tony Battersby <tonyb@cybernetics.com> wrote:
 
-Currently inherited from sg.c bsg will submit asynchronous request
-at the head-of-the-queue, (using "at_head" set in the call to
-blk_execute_rq_nowait()). This is bad in situation where the queues
-are full, requests will execute out of order, and can cause
-starvation of the first submitted requests.
+> sg has the following problems related to device removal:
+> 
+> * opening a sg fd races with removing a device
+> * closing a sg fd races with removing a device
+> * /proc/scsi/sg/* access races with removing a device
+> * command completion races with removing a device
+> * command completion races with closing a sg fd
+> * can rmmod sg with active commands
+> 
+> These problems can cause kernel oopses, memory-use-after-free, or
+> double-free errors.  This patch fixes these problems by using krefs
+> to manage the lifetime of sg_device and sg_fd.
+> 
+> Each command submitted to the midlevel holds a reference to sg_fd
+> until the completion callback.  This ensures that sg_fd doesn't go
+> away if the fd is closed with commands still outstanding.
+> 
+> sg_fd gets the reference of sg_device (with scsi_device) and also
+> makes sure that the sg module doesn't go away.
+> 
+> /proc/scsi/sg/* functions don't play nicely with krefs because they
+> give information about sg_fds which have been closed but not yet
+> freed due to still having outstanding commands and sg_devices which
+> have been removed but not yet freed due to still being referenced
+> by one or more sg_fds.  To deal with this safely without removing
+> functionality, /proc functions now access sg_device and sg_fd while
+> holding a lock instead of using kref_get()/kref_put().
+> 
+> Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
+> ---
+> 
+> This version changes BUG_ON() to WARN_ON()/return as suggested by
+> Stefan Richter.
+> 
+> The second patch "[PATCH 2/2] sg: fix races with ioctl(SG_IO) (v2)"
+> is still the same as before, so I am not resending it.
+> 
+>  sg.c |  418 ++++++++++++++++++++++++++++++++-----------------------------------
+>  1 file changed, 201 insertions(+), 217 deletions(-)
 
-The sg_io_v4->flags member is used and a bit is allocated to denote the
-Q_AT_TAIL. Zero is to queue at_head as before, to be compatible with old
-code at the write/read path. SG_IO code path behavior was changed so to
-be the same as write/read behavior. SG_IO was very rarely used and breaking
-compatibility with it is OK at this stage.
+Looks good to me,
 
-sg_io_hdr at sg.h also has a flags member and uses 3 bits from the first
-nibble and one bit from the last nibble. Even though none of these bits
-are supported by bsg, The second nibble is allocated for use by bsg. Just
-in case.
-
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-CC: Douglas Gilbert <dgilbert@interlog.com>
----
- block/bsg.c         |    9 +++++++--
- include/linux/bsg.h |    8 ++++++++
- 2 files changed, 15 insertions(+), 2 deletions(-)
-
-diff --git a/block/bsg.c b/block/bsg.c
-index 44a2a0f..206060e 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -350,6 +350,8 @@ static void bsg_rq_end_io(struct request *rq, int uptodate)
- static void bsg_add_command(struct bsg_device *bd, struct request_queue *q,
- 			    struct bsg_command *bc, struct request *rq)
- {
-+	int at_head = (0 == (bc->hdr.flags & BSG_FLAG_Q_AT_TAIL));
-+
- 	/*
- 	 * add bc command to busy queue and submit rq for io
- 	 */
-@@ -365,7 +367,7 @@ static void bsg_add_command(struct bsg_device *bd, struct request_queue *q,
- 	dprintk("%s: queueing rq %p, bc %p\n", bd->name, rq, bc);
- 
- 	rq->end_io_data = bc;
--	blk_execute_rq_nowait(q, NULL, rq, 1, bsg_rq_end_io);
-+	blk_execute_rq_nowait(q, NULL, rq, at_head, bsg_rq_end_io);
- }
- 
- static struct bsg_command *bsg_next_done_cmd(struct bsg_device *bd)
-@@ -921,6 +923,7 @@ static long bsg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
- 		struct request *rq;
- 		struct bio *bio, *bidi_bio = NULL;
- 		struct sg_io_v4 hdr;
-+		int at_head;
- 		u8 sense[SCSI_SENSE_BUFFERSIZE];
- 
- 		if (copy_from_user(&hdr, uarg, sizeof(hdr)))
-@@ -933,7 +936,9 @@ static long bsg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
- 		bio = rq->bio;
- 		if (rq->next_rq)
- 			bidi_bio = rq->next_rq->bio;
--		blk_execute_rq(bd->queue, NULL, rq, 0);
-+
-+		at_head = (0 == (hdr.flags & BSG_FLAG_Q_AT_TAIL));
-+		blk_execute_rq(bd->queue, NULL, rq, at_head);
- 		ret = blk_complete_sgv4_hdr_rq(rq, &hdr, bio, bidi_bio);
- 
- 		if (copy_to_user(uarg, &hdr, sizeof(hdr)))
-diff --git a/include/linux/bsg.h b/include/linux/bsg.h
-index cf0303a..3f0c64a 100644
---- a/include/linux/bsg.h
-+++ b/include/linux/bsg.h
-@@ -7,6 +7,14 @@
- #define BSG_SUB_PROTOCOL_SCSI_TMF	1
- #define BSG_SUB_PROTOCOL_SCSI_TRANSPORT	2
- 
-+/*
-+ * For flags member below
-+ * sg.h sg_io_hdr also has bits defined for it's flags member. However
-+ * none of these bits are implemented/used by bsg. The bits below are
-+ * allocated to not conflict with sg.h ones anyway.
-+ */
-+#define BSG_FLAG_Q_AT_TAIL 0x10 /* default, == 0 at this bit, is Q_AT_HEAD */
-+
- struct sg_io_v4 {
- 	__s32 guard;		/* [i] 'Q' to differentiate from v3 */
- 	__u32 protocol;		/* [i] 0 -> SCSI , .... */
--- 
-1.6.0.1
-
-
+Thanks!
