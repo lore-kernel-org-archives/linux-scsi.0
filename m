@@ -1,46 +1,76 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/5] stex: Fix for potential invalid response
-Date: Mon, 26 Jan 2009 19:16:55 +0000
-Message-ID: <1232997415.3248.50.camel@localhost.localdomain>
-References: <85ABFDC4641C4847BA6088F2982EFD8F01DC8300@nonamew.ptu.promise.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: cache flush timeouts by blk_queue_ordered()
+Date: Mon, 26 Jan 2009 11:55:40 -0800
+Message-ID: <20090126115540.694ea262.akpm@linux-foundation.org>
+References: <20081120181919.GA3818@lanczos.q-leap.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:56191 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751779AbZAZTQ5 (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:46967 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752981AbZAZT4V (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jan 2009 14:16:57 -0500
-In-Reply-To: <85ABFDC4641C4847BA6088F2982EFD8F01DC8300@nonamew.ptu.promise.com>
+	Mon, 26 Jan 2009 14:56:21 -0500
+In-Reply-To: <20081120181919.GA3818@lanczos.q-leap.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ed Lin - PTU <ed.lin@promise.com>
-Cc: linux-scsi@vger.kernel.org, Promise_Linux <Promise_Linux@promise.com>
+To: Bernd Schubert <bs@q-leap.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-On Mon, 2009-01-26 at 02:40 -0800, Ed Lin - PTU wrote:
-> The interrupt routine is good for normal cases. However, if the firmware
-> is abnormal and returns an invalid response, the driver may reuse a
-> ccb structure which has already been handled. This may cause problem.
-> Fix this by setting the req member to NULL. Next time we know the
-> response is invalid and handle accordingly if req is NULL.
+On Thu, 20 Nov 2008 19:19:19 +0100
+Bernd Schubert <bs@q-leap.de> wrote:
+
+> Hello,
 > 
-> Signed-off-by: Ed Lin <ed.lin@promise.com>
-> ---
+> with some FC hardware-raid units we have the problem that the 
+> SYNCHRONIZE_CACHE command reproducibly fails. 
 > 
-> diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-> index a3a18ad..6129db4 100644
-> --- a/drivers/scsi/stex.c
-> +++ b/drivers/scsi/stex.c
-> @@ -746,6 +746,7 @@ static void stex_mu_intr(struct st_hba *hba, u32
-> doorbell)
+> [658715.827428] sd 6:0:2:2: last recovery: 4311805647, now: 4459793681
+> [658715.833980] sd 6:0:2:2: [sdk] Result: hostbyte=DID_OK driverbyte=DRIVER_OK,SUGGEST_OK
+> [658715.842288] sd 6:0:2:2: [sdk] CDB: Synchronize Cache(10): 35 00 00 00 00 00 00 00 00 00
+> [658715.850954] sd 6:0:2:2: Activating scsi error recovery (1)
+> [658715.856793] sd 6:0:2:2: trying to abort command
+> [658715.861820] qla2xxx 0000:07:02.0: scsi(6:2:2): Abort command issued -- 1 36e2df2 2002.
+> [658746.004124] sd 6:0:2:2: last recovery: 4459793692, now: 4459801236
+> [658746.010686] sd 6:0:2:2: [sdk] Result: hostbyte=DID_OK driverbyte=DRIVER_OK,SUGGEST_OK
+> [658746.019004] sd 6:0:2:2: [sdk] CDB: Synchronize Cache(10): 35 00 00 00 00 00 00 00 00 00
+> [658746.027680] sd 6:0:2:2: Activating scsi error recovery (2)
+> [658746.033526] sd 6:0:2:2: trying to abort command
+> [658746.038543] qla2xxx 0000:07:02.0: scsi(6:2:2): Abort command issued -- 1 36e2df4 2002.
 
-The patches generally look fine.  Unfortunately your email tool has
-broken the line ends of most of them (like the above) which makes it
-almost impossible to apply them.  Could you resend with this fixed up?
+Does this result in a dead machine, or does the system still struggle
+along somehow?
 
-Thanks,
+> My guess is that these units flush their cache when this command is send
+> even though they have a battery backup unit and flushing 2GB cache may
+> take some time... Since I can only reproduce it on systems in production
+> I can't do any experiments, but I guess the default timeout of 30s is not
+> sufficient.
+> 
+> Problem is now that this timeout cannot be adjusted by the sysfs scsi device 
+> timeout, since sd_prepare_flush() doesn't have the required device 
+> structure. The reason for that is blk_queue_ordered(). It neither
+> gets a timeout argument, nor any pointer to the device.
+> 
+> I already tried to use container_of() in sd_prepare_flush, but somehow
+> that doesn't seem work if the structure member is a pointer.
+> 
+> The next solution that comes into my my mind is to add the timeout argument
+> to blk_queue_ordered() and subsequentely to modifiy all callers.
+> Would such a patch be accepted? Or is there any better solution?
+> 
+> Any help is appreciated.
 
-James
+Is this problem still open?
 
+> 
+> Thanks,
+> Bernd
+> 
+> PS: (I'm also discussing the cache flush issue with one of our 
+> hardware vendors, but fixing their firmware might take ages). 
 
+Making the timeout tunable sounds like a suitable (if minimal)
+approach.  It appears to presently be a qlogic-specific thing? 
+Command_Entry.time_out?
