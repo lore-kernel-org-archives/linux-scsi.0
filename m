@@ -1,134 +1,38 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: [PATCH][SCST]: Minor cleanup in scst_user module with aim to have
- more robust code
-Date: Mon, 26 Jan 2009 21:19:21 +0300
-Message-ID: <497DFEA9.20605@vlnb.net>
+From: Rick Jones <rick.jones2@hp.com>
+Subject: Re: care and feeding of netperf (Re: Mainline kernel OLTP	performance
+ update)
+Date: Mon, 26 Jan 2009 10:26:15 -0800
+Message-ID: <497E0047.5080307@hp.com>
+References: <BC02C49EEB98354DBA7F5DD76F2A9E800317003CB0@azsmsx501.amr.corp.intel.com>	<1232617672.14549.25.camel@penberg-laptop>	<1232679773.11429.155.camel@ymzhang>	<200901231933.10101.nickpiggin@yahoo.com.au>	<1232701348.11429.170.camel@ymzhang>  <497A0F27.3030801@hp.com> <1232766180.11429.202.camel@ymzhang>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:56082 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752000AbZAZSTP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jan 2009 13:19:15 -0500
+Received: from g5t0009.atlanta.hp.com ([15.192.0.46]:43525 "EHLO
+	g5t0009.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751977AbZAZS00 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jan 2009 13:26:26 -0500
+In-Reply-To: <1232766180.11429.202.camel@ymzhang>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net
+To: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>
+Cc: Nick Piggin <nickpiggin@yahoo.com.au>, Pekka Enberg <penberg@cs.helsinki.fi>, Christoph Lameter <cl@linux-foundation.org>, Andi Kleen <andi@firstfloor.org>, Matthew Wilcox <matthew@wil.cx>, Andrew Morton <akpm@linux-foundation.org>, netdev@vger.kernel.org, sfr@canb.auug.org.au, matthew.r.wilcox@intel.com, chinang.ma@intel.com, linux-kernel@vger.kernel.org, sharad.c.tripathi@intel.com, arjan@linux.intel.com, suresh.b.siddha@intel.com, harita.chilukuri@intel.com, douglas.w.styner@intel.com, peter.xihong.wang@intel.com, hubert.nueckel@intel.com, chris.mason@oracle.com, srostedt@redhat.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, anirban.chakraborty@qlogic.com
 
-This patch does a minor cleanup with aim to have more robust code
+>>To get quick profiles, that form of aggregate netperf is OK - just the one 
+>>iteration with background processes using a moderatly long run time.  However, 
+>>for result reporting, it is best to (ab)use the confidence intervals 
+>>functionality to try to avoid skew errors.
+> 
+> Yes. My formal testing uses -i 50. I just wanted a quick testing. If I need
+> finer-tuning or investigation, I would turn on more options.
 
-Signed-off-by: Vladislav Bolkhovitin <vst@vlnb.net>
+Netperf will silently clip that to 30 as that is all the built-in tables know.
 
- scst_user.c |   34 +++++++++++++++++++++++-----------
- 1 file changed, 23 insertions(+), 11 deletions(-)
+> Thanks again. I learned a lot.
 
-Index: scst/src/dev_handlers/scst_user.c
-===================================================================
---- scst/src/dev_handlers/scst_user.c	(revision 641)
-+++ scst/src/dev_handlers/scst_user.c	(working copy)
-@@ -57,8 +57,6 @@
- #define DEV_USER_CMD_HASH_ORDER		6
- #define DEV_USER_ATTACH_TIMEOUT		(5*HZ)
- 
--#define DEV_USER_HEADER_LEN	offsetof(struct scst_user_get_cmd, preply)
--
- struct scst_user_dev {
- 	struct rw_semaphore dev_rwsem;
- 
-@@ -412,7 +410,9 @@ static void dev_user_on_cached_mem_free(
- 	TRACE_MEM("Preparing ON_CACHED_MEM_FREE (ucmd %p, h %d, ubuff %lx)",
- 		ucmd, ucmd->h, ucmd->ubuff);
- 
--	ucmd->user_cmd_payload_len = sizeof(ucmd->user_cmd.on_cached_mem_free);
-+	ucmd->user_cmd_payload_len =
-+		offsetof(struct scst_user_get_cmd, on_cached_mem_free) +
-+		sizeof(ucmd->user_cmd.on_cached_mem_free);
- 	ucmd->user_cmd.cmd_h = ucmd->h;
- 	ucmd->user_cmd.subcode = SCST_USER_ON_CACHED_MEM_FREE;
- 	ucmd->user_cmd.on_cached_mem_free.pbuf = ucmd->ubuff;
-@@ -630,7 +630,9 @@ static int dev_user_alloc_space(struct s
- 		goto out;
- 	}
- 
--	ucmd->user_cmd_payload_len = sizeof(ucmd->user_cmd.alloc_cmd);
-+	ucmd->user_cmd_payload_len =
-+		offsetof(struct scst_user_get_cmd, alloc_cmd) +
-+		sizeof(ucmd->user_cmd.alloc_cmd);
- 	ucmd->user_cmd.cmd_h = ucmd->h;
- 	ucmd->user_cmd.subcode = SCST_USER_ALLOC_MEM;
- 	ucmd->user_cmd.alloc_cmd.sess_h = (unsigned long)cmd->tgt_dev;
-@@ -751,7 +753,9 @@ static int dev_user_parse(struct scst_cm
- 	case SCST_USER_PARSE_CALL:
- 		TRACE_DBG("Preparing PARSE for user space (ucmd=%p, h=%d, "
- 			"bufflen %d)", ucmd, ucmd->h, cmd->bufflen);
--		ucmd->user_cmd_payload_len = sizeof(ucmd->user_cmd.parse_cmd);
-+		ucmd->user_cmd_payload_len =
-+			offsetof(struct scst_user_get_cmd, parse_cmd) +
-+			sizeof(ucmd->user_cmd.parse_cmd);
- 		ucmd->user_cmd.cmd_h = ucmd->h;
- 		ucmd->user_cmd.subcode = SCST_USER_PARSE;
- 		ucmd->user_cmd.parse_cmd.sess_h = (unsigned long)cmd->tgt_dev;
-@@ -863,7 +867,9 @@ static int dev_user_exec(struct scst_cmd
- 	if (cmd->data_direction == SCST_DATA_WRITE)
- 		dev_user_flush_dcache(ucmd);
- 
--	ucmd->user_cmd_payload_len = sizeof(ucmd->user_cmd.exec_cmd);
-+	ucmd->user_cmd_payload_len =
-+		offsetof(struct scst_user_get_cmd, exec_cmd) +
-+		sizeof(ucmd->user_cmd.exec_cmd);
- 	ucmd->user_cmd.cmd_h = ucmd->h;
- 	ucmd->user_cmd.subcode = SCST_USER_EXEC;
- 	ucmd->user_cmd.exec_cmd.sess_h = (unsigned long)cmd->tgt_dev;
-@@ -932,7 +938,9 @@ static void dev_user_on_free_cmd(struct 
- 		goto out_reply;
- 	}
- 
--	ucmd->user_cmd_payload_len = sizeof(ucmd->user_cmd.on_free_cmd);
-+	ucmd->user_cmd_payload_len =
-+		offsetof(struct scst_user_get_cmd, on_free_cmd) +
-+		sizeof(ucmd->user_cmd.on_free_cmd);
- 	ucmd->user_cmd.cmd_h = ucmd->h;
- 	ucmd->user_cmd.subcode = SCST_USER_ON_FREE_CMD;
- 	ucmd->user_cmd.on_free_cmd.pbuf = ucmd->ubuff;
-@@ -1730,12 +1739,15 @@ static int dev_user_reply_get_cmd(struct
- 
- 		EXTRACHECKS_BUG_ON(ucmd->user_cmd_payload_len == 0);
- 
--		len = DEV_USER_HEADER_LEN + ucmd->user_cmd_payload_len;
-+		len = ucmd->user_cmd_payload_len;
- 		TRACE_DBG("ucmd %p (user_cmd %p), payload_len %d (len %d)",
- 			ucmd, &ucmd->user_cmd, ucmd->user_cmd_payload_len, len);
- 		TRACE_BUFFER("UCMD", &ucmd->user_cmd, len);
-@@ -2168,7 +2180,9 @@ static int dev_user_task_mgmt_fn(struct 
- 	/* We can't afford missing TM command due to memory shortage */
- 	ucmd = dev_user_alloc_ucmd(dev, GFP_KERNEL|__GFP_NOFAIL);
- 
--	ucmd->user_cmd_payload_len = sizeof(ucmd->user_cmd.tm_cmd);
-+	ucmd->user_cmd_payload_len =
-+		offsetof(struct scst_user_get_cmd, tm_cmd) +
-+		sizeof(ucmd->user_cmd.tm_cmd);
- 	ucmd->user_cmd.cmd_h = ucmd->h;
- 	ucmd->user_cmd.subcode = SCST_USER_TASK_MGMT;
- 	ucmd->user_cmd.tm_cmd.sess_h = (unsigned long)tgt_dev;
-@@ -2303,7 +2317,8 @@ static int dev_user_attach_tgt(struct sc
- 
- 	ucmd->cmpl = &cmpl;
- 
--	ucmd->user_cmd_payload_len = sizeof(ucmd->user_cmd.sess);
-+	ucmd->user_cmd_payload_len = offsetof(struct scst_user_get_cmd, sess) +
-+		sizeof(ucmd->user_cmd.sess);
- 	ucmd->user_cmd.cmd_h = ucmd->h;
- 	ucmd->user_cmd.subcode = SCST_USER_ATTACH_SESS;
- 	ucmd->user_cmd.sess.sess_h = (unsigned long)tgt_dev;
-@@ -2380,7 +2395,8 @@ static void dev_user_detach_tgt(struct s
- 	TRACE_MGMT_DBG("Preparing DETACH_SESS %p (h %d, sess_h %llx)", ucmd,
- 		ucmd->h, ucmd->user_cmd.sess.sess_h);
- 
--	ucmd->user_cmd_payload_len = sizeof(ucmd->user_cmd.sess);
-+	ucmd->user_cmd_payload_len = offsetof(struct scst_user_get_cmd, sess) +
-+		sizeof(ucmd->user_cmd.sess);
- 	ucmd->user_cmd.cmd_h = ucmd->h;
- 	ucmd->user_cmd.subcode = SCST_USER_DETACH_SESS;
- 	ucmd->user_cmd.sess.sess_h = (unsigned long)tgt_dev;
+Feel free to wander over to netperf-talk over at netperf.org if you want to talk 
+some more about the care and feeding of netperf.
 
+happy benchmarking,
+
+rick jones
