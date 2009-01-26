@@ -1,43 +1,39 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: cache flush timeouts by blk_queue_ordered()
-Date: Mon, 26 Jan 2009 14:57:16 -0800
-Message-ID: <20090126145716.cf7767aa.akpm@linux-foundation.org>
-References: <20081120181919.GA3818@lanczos.q-leap.de>
-	<20090126115540.694ea262.akpm@linux-foundation.org>
-	<20090126223942.GA12463@lanczos.q-leap.de>
+From: Ed Lin <ed.lin@promise.com>
+Subject: [PATCH 1/5][resend] stex: Fix for potential invalid response
+Date: Mon, 26 Jan 2009 15:33:17 -0800
+Message-ID: <f60baa940901261533q1f15d39jed5c4a9da9234ead@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:46224 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752417AbZAZW54 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jan 2009 17:57:56 -0500
-In-Reply-To: <20090126223942.GA12463@lanczos.q-leap.de>
+Received: from rn-out-0910.google.com ([64.233.170.186]:20366 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752417AbZAZXdT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jan 2009 18:33:19 -0500
+Received: by rn-out-0910.google.com with SMTP id k40so1963241rnd.17
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Jan 2009 15:33:18 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bernd Schubert <bs@q-leap.de>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jens.axboe@oracle.com
+To: "James.Bottomley" <James.Bottomley@hansenpartnership.com>
+Cc: promise_linux <promise_linux@promise.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 26 Jan 2009 23:39:42 +0100
-Bernd Schubert <bs@q-leap.de> wrote:
+The interrupt routine is good for normal cases. However, if the firmware
+is abnormal and returns an invalid response, the driver may reuse a
+ccb structure which has already been handled. This may cause problem.
+Fix this by setting the req member to NULL. Next time we know the
+response is invalid and handle accordingly if req is NULL.
 
-> Andrew, thanks a lot! I'm really always impressed how you manage to find time
-> to grep through all the threads, even those nobody cared to look at for months.
-> 
+Signed-off-by: Ed Lin <ed.lin@promise.com>
+---
 
-Only a very small subset, alas.
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index a3a18ad..6129db4 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -746,6 +746,7 @@ static void stex_mu_intr(struct st_hba *hba, u32 doorbell)
+ 				stex_copy_data(ccb, resp, size);
+ 		}
 
-
-> I posted a patch, but never got a comment on it.
-> 
-> https://kerneltrap.org/mailarchive/linux-scsi/2008/11/26/4242484
-
-Three weeks ago: it's been forgotten about.
-
-I suggest that you redo the patch series and resend the uncontroversial
-bits.  Feel free to copy me on them and I'll put them into my
-auto-resend queue.  That eventually causes something to happen.
-
-
++		ccb->req = NULL;
+ 		ccb->srb_status = resp->srb_status;
+ 		ccb->scsi_status = resp->scsi_status;
