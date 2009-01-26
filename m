@@ -1,47 +1,55 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Spamming linux-kernel and linux-scsi by out-of-tree patches
-	(LIO)
-Date: Mon, 26 Jan 2009 09:37:14 -0600
-Message-ID: <1232984234.3248.18.camel@localhost.localdomain>
-References: <497DB7D0.8000302@vlnb.net>
+From: "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>
+Subject: [PATCH]scsi_dh_rdac: Retry for Quiescence in Progress in
+ rdac device handler
+Date: Mon, 26 Jan 2009 21:29:37 +0530
+Message-ID: <0D1E8821739E724A86F4D16902CE275C13FF9AFFD6@inbmail01.lsi.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:42616 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751546AbZAZPhR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jan 2009 10:37:17 -0500
-In-Reply-To: <497DB7D0.8000302@vlnb.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Language: en-US
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, 2009-01-26 at 16:17 +0300, Vladislav Bolkhovitin wrote:
-> Nicholas,
-> 
-> Could you stop spamming linux-kernel and linux-scsi mailing lists by 
-> patches for your out-of-tree LIO project, please?
-> 
-> Those mailing lists are intended for patches for in-kernel components 
-> only, not for all out-of-tree projects, finding their ways into the 
-> mainline. I don't see any reason why your project should be an 
-> exception. Think, what a mess the kernel mailing lists would get, if all 
-> out-of-tree projects started sending their patches to them?
+During device discovery read capacity fails with 0x068b02 and sets the de=
+vice size to 0. As a reason any I/O submitted to this path gets killed at=
+ sd_prep_fn with BLKPREP_KILL. This patch is to retry for 0x068b02. Pleas=
+e apply.
 
-Actually, out of tree projects trying to make their way upstream are
-welcome to use the various linux- mailing lists to solicit feedback and
-review.  This method was, for instance, how FCoE made it in.
+From: Vijay Chauhan<vijay.chauhan@lsi.com>
 
-> My personal practical concerns about your patches that they trigger my 
-> e-mail filters, so I have to spend on them much more time than I would want.
+This patch adds retry for Quiescence in Progress in rdac device handler.
 
-I've found that spamassassin does a good job of marking patches as non
-spam.  Also, if you're using zmailer, vger seems to have some type of
-patch recognition system built in which might be worth co-opting.
+Signed-off-by: Vijay Chauhan <vijay.chauhan@lsi.com>
 
-James
-
-
+---
+--- linux-2.6.29-rc2/drivers/scsi/device_handler/scsi_dh_rdac.c.orig    2=
+009-01-26 20:46:05.000000000 +0530
++++ linux-2.6.29-rc2/drivers/scsi/device_handler/scsi_dh_rdac.c 2009-01-2=
+6 20:47:34.000000000 +0530
+@@ -579,6 +579,11 @@ static int rdac_check_sense(struct scsi_
+                         * Power On, Reset, or Bus Device Reset, just ret=
+ry.
+                         */
+                        return ADD_TO_MLQUEUE;
++               if (sense_hdr->asc =3D=3D 0x8b && sense_hdr->ascq =3D=3D =
+0x02)
++                       /*
++                        * Quiescence in progress , just retry.
++                        */
++                       return ADD_TO_MLQUEUE;
+                break;
+        }
+        /* success just means we do not care what scsi-ml does */
+--
