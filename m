@@ -1,230 +1,104 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 7/7] [Target_Core_Mod/ConfigFS]: Add res_pr_all_tgt_pts,
-	res_pr_generation and res_pr_registered_i_pts
-Date: Mon, 26 Jan 2009 01:11:43 -0800
-Message-ID: <1232961103.24642.135.camel@haakon2.linux-iscsi.org>
+Subject: Re: [PATCH 1/4] [Linux/SCSI] Add support for SPC-4 CDBs referenced
+	in Persisent Reservations Allowed/Confict Table
+Date: Mon, 26 Jan 2009 01:13:09 -0800
+Message-ID: <1232961189.24642.138.camel@haakon2.linux-iscsi.org>
+References: <1232612582.1274.529.camel@haakon2.linux-iscsi.org>
+	 <1232917613.4586.11.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp118.sbc.mail.sp1.yahoo.com ([69.147.64.91]:28223 "HELO
-	smtp118.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750978AbZAZJMI (ORCPT
+Received: from smtp127.sbc.mail.sp1.yahoo.com ([69.147.65.186]:37750 "HELO
+	smtp127.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750919AbZAZJNc (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jan 2009 04:12:08 -0500
+	Mon, 26 Jan 2009 04:13:32 -0500
+In-Reply-To: <1232917613.4586.11.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Douglas Gilbert <dgilbert@interlog.com>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Ming Zhang <blackmagic02881@gmail.com>, "Ross S. W. Walker" <rswwalker@gmail.com>, Arne Redlich <agr@powerkom-dd.de>, Rafiu Fakunle <rafiu@openfiler.com>, Linus Torvalds <torvalds@linux-foundation.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Matthew Wilcox <willy@debian.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
->From 45345eb366caa5f823cc3177e36fc80a356e0ab8 Mon Sep 17 00:00:00 2001
-From: Nicholas Bellinger <nab@linux-iscsi.org>
-Date: Mon, 26 Jan 2009 00:49:29 -0800
-Subject: [PATCH 7/7] [Target_Core_Mod/ConfigFS]: Add res_pr_all_tgt_pts, res_pr_generation and res_pr_registered_i_pts
+On Sun, 2009-01-25 at 15:06 -0600, James Bottomley wrote:
+> On Thu, 2009-01-22 at 00:23 -0800, Nicholas A. Bellinger wrote:
+> > >From c177bb7ba55227d809d85aca3a9d4281e554f718 Mon Sep 17 00:00:00 2001
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > Date: Wed, 21 Jan 2009 22:13:00 -0800
+> > Subject: [PATCH 1/4] [Linux/SCSI] Add support for SPC-4 CDBs referenced in Persisent Reservations Allowed/Confict Table
+> > 
+> > This path adds support for a handful of SPC-4 CDBs, and fills out the MI_* and MO_* prefixed
+> > service action codes for MAINTENANCE_IN and MAINTENANCE_OUT operations.
+> > 
+> > This information is from spc4r17 and Table D.4 for MI_ and MO_ prefixed defs.
+> > 
+> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> 
+> These additions look reasonable, there are just a few semantic problems:
+> 
+> >  include/scsi/scsi.h |   22 ++++++++++++++++++++++
+> >  1 files changed, 22 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+> > index a109165..93af6ce 100644
+> > --- a/include/scsi/scsi.h
+> > +++ b/include/scsi/scsi.h
+> > @@ -104,30 +104,52 @@
+> >  #define PERSISTENT_RESERVE_IN 0x5e
+> >  #define PERSISTENT_RESERVE_OUT 0x5f
+> >  #define VARIABLE_LENGTH_CMD   0x7f
+> > +#define RECEIVE_CREDENTIAL    0x7f // spc4r17 section 6.9 Table 204
+> 
+> Actually 0x7f isn't receive credentials, that's VARIABLE_LENGTH_CMD
+> (definition above) with a Service Action of 0x1800 ... it needs to be
+> done something like READ CAPACITY(16) is
+> 
 
-This patch adds support for the following Target_Core_Mod/ConfigFS attributes on a *PER*
-/sys/kernel/config/target/core/$HBA/$STORAGE_OBJECT basis:
+Ugh, this is what I thought..  I will fix and repost with complete
+SAI_* defines..
 
-|-- pscsi_0
-|   |-- hba_info
-|   `-- sdd
-|       |-- attrib
-|       |   |-- hw_max_sectors
-|       |   |-- hw_queue_depth
-|       |   |-- max_sectors
-|       |   |-- queue_depth
-|       |   |-- status_thread
-|       |   |-- status_thread_tur
-|       |   `-- task_timeout
-<SNIP>
-|       |-- pr
-|       |   |-- res_holder
-|       |   |-- res_pr_all_tgt_pts
-|       |   |-- res_pr_generation
-|       |   |-- res_pr_registered_i_pts
-|       |   `-- res_type
-|       `-- wwn
-|           |-- evpd_assoc_logical_unit
-|           |-- evpd_assoc_scsi_target_device
-|           |-- evpd_assoc_target_port
-|           |-- evpd_protocol_identifier
-|           `-- evpd_unit_serial
+Many thanks for your most valuable of time,
 
-This patch also renames PR ConfigFS attribute res_active -> res_holder to better
-reflect language in >= SPC-3 NCITS T10 Standards Documents.
+--nab
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/lio-core/target_core_configfs.c |  107 +++++++++++++++++++++++++++++--
- 1 files changed, 102 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/lio-core/target_core_configfs.c b/drivers/lio-core/target_core_configfs.c
-index 1788fbb..1a3f754 100644
---- a/drivers/lio-core/target_core_configfs.c
-+++ b/drivers/lio-core/target_core_configfs.c
-@@ -779,7 +779,7 @@ static struct target_core_dev_pr_attribute target_core_dev_pr_##_name =		\
- 	target_core_dev_pr_show_attr_##_name);					\
- 
- /*
-- * res_active
-+ * res_holder
-  */
- static ssize_t target_core_dev_pr_show_spc3_res (
- 	struct se_device_s *dev,
-@@ -811,12 +811,15 @@ static ssize_t target_core_dev_pr_show_spc2_res (
- 	return(*len);
- }
- 
--static ssize_t target_core_dev_pr_show_attr_res_active (
-+static ssize_t target_core_dev_pr_show_attr_res_holder (
- 	struct se_subsystem_dev_s *su_dev,
- 	char *page)
- {
- 	ssize_t len = 0;
- 
-+	if (!(su_dev->se_dev_ptr))
-+		return(-ENODEV);
-+
- 	switch (T10_RES(su_dev)->res_type) {
- 	case SPC3_PERSISTENT_RESERVATIONS:
- 		target_core_dev_pr_show_spc3_res(su_dev->se_dev_ptr,
-@@ -827,7 +830,7 @@ static ssize_t target_core_dev_pr_show_attr_res_active (
- 				page, &len);
- 		break;
- 	case SPC_PASSTHROUGH:
--		len += sprintf(page+len, "None\n");
-+		len += sprintf(page+len, "Passthrough\n");
- 		break;
- 	default:
- 		len += sprintf(page+len, "Unknown\n");
-@@ -837,7 +840,93 @@ static ssize_t target_core_dev_pr_show_attr_res_active (
- 	return(len);
- }
- 
--SE_DEV_PR_ATTR_RO(res_active);
-+SE_DEV_PR_ATTR_RO(res_holder);
-+
-+/*
-+ * res_pr_all_tgt_pts
-+ */
-+static ssize_t target_core_dev_pr_show_attr_res_pr_all_tgt_pts (
-+	struct se_subsystem_dev_s *su_dev,
-+	char *page)
-+{
-+	ssize_t len = 0;
-+
-+	if (!(su_dev->se_dev_ptr))
-+		return(-ENODEV);
-+
-+	if (T10_RES(su_dev)->res_type != SPC3_PERSISTENT_RESERVATIONS) {
-+		return(sprintf(page, "res_pr_generation only valid for"
-+			" SPC3_PERSISTENT_RESERVATIONS\n"));
-+	}
-+
-+	len = sprintf(page, "Not Implemented yet\n");
-+	return(len);
-+}
-+
-+SE_DEV_PR_ATTR_RO(res_pr_all_tgt_pts);
-+
-+/*
-+ * res_pr_generation
-+ */
-+static ssize_t target_core_dev_pr_show_attr_res_pr_generation (
-+	struct se_subsystem_dev_s *su_dev,
-+	char *page)
-+{
-+	if (!(su_dev->se_dev_ptr))
-+		return(-ENODEV);
-+
-+	if (T10_RES(su_dev)->res_type != SPC3_PERSISTENT_RESERVATIONS) {
-+		return(sprintf(page, "res_pr_generation only valid for"
-+			" SPC3_PERSISTENT_RESERVATIONS\n"));
-+	}
-+
-+	return(sprintf(page, "0x%08x\n", T10_RES(su_dev)->pr_generation));
-+}
-+
-+SE_DEV_PR_ATTR_RO(res_pr_generation);
-+
-+/*
-+ * res_pr_registered_i_pts
-+ */
-+static ssize_t target_core_dev_pr_show_attr_res_pr_registered_i_pts (
-+	struct se_subsystem_dev_s *su_dev,
-+	char *page)
-+{
-+	struct target_core_fabric_ops *tfo;
-+	t10_pr_registration_t *pr_reg;
-+	unsigned char buf[384];
-+	ssize_t len = 0;
-+
-+	if (!(su_dev->se_dev_ptr))
-+		return(-ENODEV);
-+
-+	if (T10_RES(su_dev)->res_type != SPC3_PERSISTENT_RESERVATIONS) {
-+		len = sprintf(page, "res_pr_registered_i_pts only valid for"
-+			" SPC3_PERSISTENT_RESERVATIONS\n");
-+		return(len);
-+	}
-+	spin_lock(&T10_RES(su_dev)->registration_lock);
-+	list_for_each_entry(pr_reg, &T10_RES(su_dev)->registration_list,
-+			pr_reg_list) {
-+
-+		memset(buf, 0, 384);
-+		tfo = pr_reg->pr_reg_nacl->se_tpg->se_tpg_tfo;
-+		sprintf(buf, "%s Node: %s Key: 0x%016Lx PRgen: 0x%08x\n",
-+			tfo->get_fabric_name(),
-+			pr_reg->pr_reg_nacl->initiatorname,
-+			pr_reg->pr_res_key, pr_reg->pr_res_generation);
-+
-+		if ((len + strlen(buf) > PAGE_SIZE))
-+			break;
-+
-+		len += sprintf(page+len, "%s", buf);	
-+	}
-+	spin_unlock(&T10_RES(su_dev)->registration_lock);
-+
-+	return(len);
-+}
-+
-+SE_DEV_PR_ATTR_RO(res_pr_registered_i_pts);
- 
- /*
-  * res_type
-@@ -847,6 +936,9 @@ static ssize_t target_core_dev_pr_show_attr_res_type (
- 	char *page)
- {
- 	ssize_t len = 0;
-+
-+	if (!(su_dev->se_dev_ptr))
-+		return(-ENODEV);
- 	
- 	switch (T10_RES(su_dev)->res_type) {
- 	case SPC3_PERSISTENT_RESERVATIONS:
-@@ -871,7 +963,10 @@ SE_DEV_PR_ATTR_RO(res_type);
- CONFIGFS_EATTR_OPS(target_core_dev_pr, se_subsystem_dev_s, se_dev_pr_group);
- 
- static struct configfs_attribute *target_core_dev_pr_attrs[] = {
--	&target_core_dev_pr_res_active.attr,
-+	&target_core_dev_pr_res_holder.attr,
-+	&target_core_dev_pr_res_pr_all_tgt_pts.attr,
-+	&target_core_dev_pr_res_pr_generation.attr,
-+	&target_core_dev_pr_res_pr_registered_i_pts.attr,
- 	&target_core_dev_pr_res_type.attr,
- 	NULL,
- };
-@@ -1128,6 +1223,8 @@ static struct config_group *target_core_call_createdev (
- 	}
- 	INIT_LIST_HEAD(&se_dev->t10_wwn.t10_evpd_list);
- 	spin_lock_init(&se_dev->t10_wwn.t10_evpd_lock);
-+	INIT_LIST_HEAD(&se_dev->t10_reservation.registration_list);
-+	spin_lock_init(&se_dev->t10_reservation.registration_lock);
- 	spin_lock_init(&se_dev->se_dev_lock);
- 
- 	se_dev->t10_wwn.t10_sub_dev = se_dev;
--- 
-1.5.4.1
-
-
+> >  #define REPORT_LUNS           0xa0
+> > +#define SECURITY_PROTOCOL_IN  0xa2
+> >  #define MAINTENANCE_IN        0xa3
+> >  #define MAINTENANCE_OUT       0xa4
+> >  #define MOVE_MEDIUM           0xa5
+> >  #define EXCHANGE_MEDIUM       0xa6
+> >  #define READ_12               0xa8
+> >  #define WRITE_12              0xaa
+> > +#define READ_MEDIA_SERIAL_NUMBER 0xab
+> >  #define WRITE_VERIFY_12       0xae
+> >  #define SEARCH_HIGH_12        0xb0
+> >  #define SEARCH_EQUAL_12       0xb1
+> >  #define SEARCH_LOW_12         0xb2
+> > +#define SECURITY_PROTOCOL_OUT 0xb5
+> >  #define READ_ELEMENT_STATUS   0xb8
+> >  #define SEND_VOLUME_TAG       0xb6
+> >  #define WRITE_LONG_2          0xea
+> > +#define EXTENDED_COPY         0x83
+> > +#define RECEIVE_COPY_RESULTS  0x84
+> > +#define ACCESS_CONTROL_IN     0x86
+> > +#define ACCESS_CONTROL_OUT    0x87
+> >  #define READ_16               0x88
+> >  #define WRITE_16              0x8a
+> > +#define READ_ATTRIBUTE        0x8c
+> > +#define WRITE_ATTRIBUTE	      0x8d
+> >  #define VERIFY_16	      0x8f
+> >  #define SERVICE_ACTION_IN     0x9e
+> >  /* values for service action in */
+> >  #define	SAI_READ_CAPACITY_16  0x10
+> 
+> Here ^^^^^
+> 
+> James
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
