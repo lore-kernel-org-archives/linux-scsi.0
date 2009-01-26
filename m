@@ -1,30 +1,22 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12544] megaraid kernel oops during smartd poll
-Date: Mon, 26 Jan 2009 13:16:05 -0800 (PST)
-Message-ID: <20090126211605.46B2210800F@picon.linux-foundation.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bug 12544] New: megaraid kernel oops during smartd poll
+Date: Mon, 26 Jan 2009 13:15:59 -0800
+Message-ID: <20090126131559.0a59ef1b.akpm@linux-foundation.org>
 References: <bug-12544-11613@http.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:54345 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:45504 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751632AbZAZVQH (ORCPT
+	by vger.kernel.org with ESMTP id S1751558AbZAZVQE (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jan 2009 16:16:07 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n0QLG5Jf015633
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Jan 2009 13:16:06 -0800
+	Mon, 26 Jan 2009 16:16:04 -0500
 In-Reply-To: <bug-12544-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=12544
-
-
-
-
-
-------- Comment #1 from anonymous@kernel-bugs.osdl.org  2009-01-26 13:16 -------
-Reply-To: akpm@linux-foundation.org
+To: bugme-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org, dimetrios@gmail.com
 
 On Mon, 26 Jan 2009 12:54:29 -0800 (PST)
 bugme-daemon@bugzilla.kernel.org wrote:
@@ -40,7 +32,3 @@ Seems that this bug (or a very similar one) was also present in
 isn't a regression.
 
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
