@@ -1,47 +1,51 @@
 From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: [PATCH][SCST]: Update of text in SCST README about barriers usage
-Date: Mon, 26 Jan 2009 21:19:18 +0300
-Message-ID: <497DFEA6.1080108@vlnb.net>
+Subject: [PATCH][SCST]: Fix for minor scst_user race
+Date: Mon, 26 Jan 2009 21:19:16 +0300
+Message-ID: <497DFEA4.4040101@vlnb.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.177]:59762 "EHLO
+Received: from moutng.kundenserver.de ([212.227.126.177]:52025 "EHLO
 	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751613AbZAZSTM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jan 2009 13:19:12 -0500
+	with ESMTP id S1752847AbZAZSTV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jan 2009 13:19:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net
 
-This patch updates text in SCST README about barriers usage
+This patch fixed race in scst_user module, which can lead to usage of already freed
+command. A misbehaving user space handler can make ucmd to get dead immediately
+after the lock is released and we should catch it.
 
 Signed-off-by: Vladislav Bolkhovitin <vst@vlnb.net>
 
- README |   11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ scst_user.c |    8 ++++++--
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-Index: scst/README
+Index: scst/src/dev_handlers/scst_user.c
 ===================================================================
---- scst/README	(revision 641)
-+++ scst/README	(working copy)
-@@ -607,12 +607,11 @@ IMPORTANT: By default for performance re
- 	   On Linux initiators for EXT3 and ReiserFS file systems the
- 	   barrier protection could be turned on using "barrier=1" and
- 	   "barrier=flush" mount options correspondingly. Note, that
--	   usually it turned off by default and the status of barriers
--	   usage isn't reported anywhere in the system logs as well as
--	   there is no way to know it on the mounted file system (at
--	   least no known one). Windows and, AFAIK, other UNIX'es don't
--	   need any special explicit options and do necessary barrier
--	   actions on write-back caching devices by default. Also note
-+	   usually it's turned off by default (see http://lwn.net/Articles/283161).
-+	   You can check if it's turn on or off by looking in /proc/mounts.
-+	   Windows and, AFAIK, other UNIX'es don't need any special
-+	   explicit options and do necessary barrier actions on
-+	   write-back caching devices by default. Also note
- 	   that on some real-life workloads write through caching might
- 	   perform better, than write back one with the barrier
- 	   protection turned on.
+--- scst/src/dev_handlers/scst_user.c	(revision 641)
++++ scst/src/dev_handlers/scst_user.c	(working copy)
+@@ -1721,6 +1729,7 @@ static int dev_user_reply_get_cmd(struct
+ 	kmem_cache_free(user_get_cmd_cachep, cmd);
+ 
+ 	spin_lock_irq(&dev->cmd_lists.cmd_list_lock);
++again:
+ 	res = dev_user_get_next_cmd(dev, &ucmd);
+ 	if (res == 0) {
+ 		int len;
+@@ -1730,12 +1739,15 @@ static int dev_user_reply_get_cmd(struct
+ 		 * copy of dead data to the user space, which can lead to a
+ 		 * leak of sensitive information.
+ 		 */
+-		ucmd_get(ucmd);
++		if (unlikely(ucmd_get_check(ucmd))) {
++			/* Oops, this ucmd is already being destroyed. Retry. */
++			goto again;
++		}
+ 		spin_unlock_irq(&dev->cmd_lists.cmd_list_lock);
+ 
+ 		EXTRACHECKS_BUG_ON(ucmd->user_cmd_payload_len == 0);
 
