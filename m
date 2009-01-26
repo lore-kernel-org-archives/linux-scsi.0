@@ -1,35 +1,39 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: Spamming linux-kernel and linux-scsi by out-of-tree patches (LIO)
-Date: Mon, 26 Jan 2009 19:44:48 +0300
-Message-ID: <497DE880.1060301@vlnb.net>
-References: <497DB7D0.8000302@vlnb.net>	<1232984234.3248.18.camel@localhost.localdomain>	<497DDFF8.8070707@vlnb.net> <20090126081905.7c112170@infradead.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: Spamming linux-kernel and linux-scsi by out-of-tree patches
+	(LIO)
+Date: Mon, 26 Jan 2009 09:15:24 -0800
+Message-ID: <1232990124.24642.156.camel@haakon2.linux-iscsi.org>
+References: <497DB7D0.8000302@vlnb.net>
+	 <1232984234.3248.18.camel@localhost.localdomain>
+	 <497DDFF8.8070707@vlnb.net>  <20090126081905.7c112170@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:57884 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751531AbZAZQor (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jan 2009 11:44:47 -0500
+Received: from smtp122.sbc.mail.sp1.yahoo.com ([69.147.64.95]:24365 "HELO
+	smtp122.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750775AbZAZRPs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Jan 2009 12:15:48 -0500
 In-Reply-To: <20090126081905.7c112170@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Arjan van de Ven <arjan@infradead.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Arjan van de Ven, on 01/26/2009 07:19 PM wrote:
+On Mon, 2009-01-26 at 08:19 -0800, Arjan van de Ven wrote:
 > On Mon, 26 Jan 2009 19:08:24 +0300
 > Vladislav Bolkhovitin <vst@vlnb.net> wrote:
 > 
->> I wouldn't object if Nicholas des the same and send in linux-scsi
->> and linux-kernel a complete patchset, which we will review and
->> discuss. But he sends *intermediate* patches and this looks for me
->> like a violation of fundamental rules/intention of Linux kernel
->> mailing lists, hence I complain.
->>
->> So, should I understand your words that you agree if I also start 
->> sending intermediate patches for SCST to linux-scsi/linux-kernel?
->>
+> > I wouldn't object if Nicholas des the same and send in linux-scsi
+> > and linux-kernel a complete patchset, which we will review and
+> > discuss. But he sends *intermediate* patches and this looks for me
+> > like a violation of fundamental rules/intention of Linux kernel
+> > mailing lists, hence I complain.
+> > 
+> > So, should I understand your words that you agree if I also start 
+> > sending intermediate patches for SCST to linux-scsi/linux-kernel?
+> > 
 > 
 > 
 > <looking in as an outsider>
@@ -39,21 +43,35 @@ Arjan van de Ven, on 01/26/2009 07:19 PM wrote:
 > early. Really. Transparency and early review/feedaback is by far
 > more important than ignoring a few more patches in an area you
 > don't careabout.
+> 
 
-Sure. All projects (including LIO) have own mailing list(s) for such 
-review/feedback, but at the moment LIO and Linux kernel are completely 
-separated projects.
+For those wanting to know more about "Release Early, Release Often":
 
-Anyway, I could just misunderstand the intention and policy of Linux 
-kernel mailing lists. I apologize, if so.
+http://www.catb.org/~esr/writings/cathedral-bazaar/cathedral-bazaar/ar01s04.html
 
-> Your second paragraph makes me wonder if your email is more political
-> than technical in nature. But either way, you should feel encouraged
-> to release early, release often.
+<SNIP>
 
-There's not much politic in it. Simply what Nicholas Bellinger does 
-violated my understanding of what allowed in Linux kernel mailing lists, 
-so I wondered, if what allowed for Nicholas Bellinger allowed for me as 
-well.
+Linus's open development policy was the very opposite of
+cathedral-building. Linux's Internet archives were burgeoning, multiple
+distributions were being floated. And all of this was driven by an
+unheard-of frequency of core system releases.
 
-Vlad
+Linus was treating his users as co-developers in the most effective
+possible way:
+
+        7. Release early. Release often. And listen to your customers.
+        
+
+Linus's innovation wasn't so much in doing quick-turnaround releases
+incorporating lots of user feedback (something like this had been
+Unix-world tradition for a long time), but in scaling it up to a level
+of intensity that matched the complexity of what he was developing. In
+those early times (around 1991) it wasn't unknown for him to release a
+new kernel more than once a day! Because he cultivated his base of
+co-developers and leveraged the Internet for collaboration harder than
+anyone else, this worked.
+
+<SNIP>
+
+--nab
+
