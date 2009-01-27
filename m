@@ -1,12 +1,12 @@
 From: Jing Huang <huangj@brocade.com>
-Subject: [PATCH 4/5] bfa: Brocade BFA FC SCSI driver submission
-Date: Tue, 27 Jan 2009 10:55:24 -0800
-Message-ID: <200901271855.n0RItOUA026905@swe37.brocade.com>
+Subject: [PATCH 5/5] bfa: Brocade BFA FC SCSI driver submission
+Date: Tue, 27 Jan 2009 10:55:58 -0800
+Message-ID: <200901271855.n0RItwOP026944@swe37.brocade.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx40.brocade.com ([144.49.195.4]:42834 "EHLO mx40.brocade.com"
+Received: from mx30.brocade.com ([144.49.194.4]:60661 "EHLO mx30.brocade.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756897AbZA0S6l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jan 2009 13:58:41 -0500
+	id S1757194AbZA0S7Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Jan 2009 13:59:16 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
@@ -14,80 +14,27 @@ Cc: kgudipat@brocade.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.o
 
 From: Jing Huang <huangj@brocade.com>
 
-This patch contains Makefile and Kconfig file for scsi and bfa. It is created
-using 2.6.29-rc2 kernel.
+This patch contains updated MAINTAINERS file. It is created using
+2.6.29-rc2 kernel.
 
 Signed-off-by: Jing Huang <huangj@brocade.com>
 ---
- drivers/scsi/Kconfig      |    6 ++++++
- drivers/scsi/Makefile     |    1 +
- drivers/scsi/bfa/Kconfig  |    6 ++++++
- drivers/scsi/bfa/Makefile |   25 +++++++++++++++++++++++++
- 4 files changed, 38 insertions(+)
+ MAINTAINERS |    6 ++++++
+ 1 files changed, 6 insertions(+)
 
-diff -urpN orig/drivers/scsi/bfa/Kconfig patch/drivers/scsi/bfa/Kconfig
---- orig/drivers/scsi/bfa/Kconfig	1969-12-31 16:00:00.000000000 -0800
-+++ patch/drivers/scsi/bfa/Kconfig	2009-01-26 17:28:26.000000000 -0800
-@@ -0,0 +1,6 @@
-+config SCSI_BFA_FC
-+	tristate "Brocade BFA Fibre Channel Support"
-+	depends on PCI && SCSI
-+	---help---
-+	Select M for building module
-+
-diff -urpN orig/drivers/scsi/bfa/Makefile patch/drivers/scsi/bfa/Makefile
---- orig/drivers/scsi/bfa/Makefile	1969-12-31 16:00:00.000000000 -0800
-+++ patch/drivers/scsi/bfa/Makefile	2009-01-26 17:28:26.000000000 -0800
-@@ -0,0 +1,25 @@
-+#
-+# Copyright (c) 2005-2008 Brocade Communications Systems, Inc.
-+# All rights reserved
-+# www.brocade.com
-+# 
-+# Linux driver for Brocade Fibre Channel Host Bus Adapter.
-+#
-+# This program is free software; you can redistribute it and/or modify it
-+# under the terms of the GNU General Public License (GPL) Version 2 as
-+# published by the Free Software Foundation
-+#
-+# This program is distributed in the hope that it will be useful, but
-+# WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+# General Public License for more details.
-+#
-+obj-$(CONFIG_SCSI_BFA_FC) := bfa.o
-+
-+bfa-objs := bfad.o bfad_intr.o bfad_os.o bfad_im.o bfad_attr.o	\
-+	bfad_fwimg.o bfa_fcs.o bfa_core.o bfa_ioc.o bfa_iocfc.o bfa_hw_cb.o	\
-+	bfa_hw_ct.o bfa_fcxp.o bfa_intr.o bfa_timer.o bfa_rport.o bfa_port.o	\
-+	bfa_uf.o bfa_sgpg.o bfa_module.o bfa_ioim.o bfa_itnim.o bfa_fcpim.o	\
-+	bfa_tskim.o bfa_log.o bfa_log_module.o bfa_csdebug.o bfa_sm.o plog.o
-+
-+EXTRA_CFLAGS += -I$(obj) -I$(obj)/include
-diff -urpN orig/drivers/scsi/Kconfig patch/drivers/scsi/Kconfig
---- orig/drivers/scsi/Kconfig	2009-01-26 17:28:26.000000000 -0800
-+++ patch/drivers/scsi/Kconfig	2009-01-26 17:28:21.000000000 -0800
-@@ -1797,6 +1797,12 @@ config SCSI_SRP
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called libsrp.
+diff -urpN orig/MAINTAINERS patch/MAINTAINERS
+--- orig/MAINTAINERS	2009-01-26 17:28:27.000000000 -0800
++++ patch/MAINTAINERS	2009-01-26 17:28:27.000000000 -0800
+@@ -1009,6 +1009,12 @@ M:	mchan@broadcom.com
+ L:	netdev@vger.kernel.org
+ S:	Supported
  
-+config SCSI_BFA_FC
-+	tristate "Brocade BFA Fibre Channel Support"
-+	depends on PCI && SCSI
-+	---help---
-+	  To compile this driver as a module, choose M here. The module will be called bfa
++BROCADE BFA FC SCSI DRIVER
++P:     Jing Huang
++M:     huangj@brocade.com
++L:     linux-scsi@vger.kernel.org
++S:     Supported
 +
- endif # SCSI_LOWLEVEL
- 
- source "drivers/scsi/pcmcia/Kconfig"
-diff -urpN orig/drivers/scsi/Makefile patch/drivers/scsi/Makefile
---- orig/drivers/scsi/Makefile	2009-01-26 17:28:26.000000000 -0800
-+++ patch/drivers/scsi/Makefile	2009-01-26 17:28:21.000000000 -0800
-@@ -84,6 +84,7 @@ obj-$(CONFIG_SCSI_QLOGIC_1280)	+= qla128
- obj-$(CONFIG_SCSI_QLA_FC)	+= qla2xxx/
- obj-$(CONFIG_SCSI_QLA_ISCSI)	+= qla4xxx/
- obj-$(CONFIG_SCSI_LPFC)		+= lpfc/
-+obj-$(CONFIG_SCSI_BFA_FC)	+= bfa/
- obj-$(CONFIG_SCSI_PAS16)	+= pas16.o
- obj-$(CONFIG_SCSI_T128)		+= t128.o
- obj-$(CONFIG_SCSI_DMX3191D)	+= dmx3191d.o
+ BSG (block layer generic sg v4 driver)
+ P:	FUJITA Tomonori
+ M:	fujita.tomonori@lab.ntt.co.jp
