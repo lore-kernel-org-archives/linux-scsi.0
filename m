@@ -1,48 +1,49 @@
-From: "ed.lin" <ed.lin@promise.com>
-Subject: [PATCH 5/5][resend 2] stex: Version update
-Date: Tue, 27 Jan 2009 06:36:19 +0800
-Message-ID: <200901270636.19163.ed.lin@promise.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12544] megaraid kernel oops during smartd poll
+Date: Mon, 26 Jan 2009 22:49:33 -0800 (PST)
+Message-ID: <20090127064933.CC533108040@picon.linux-foundation.org>
+References: <bug-12544-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gateway.promise.com ([67.111.72.2]:19128 "EHLO
-	localhost.localdomain" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751557AbZA0GgM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jan 2009 01:36:12 -0500
-Content-Disposition: inline
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41714 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750940AbZA0Gtg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Jan 2009 01:49:36 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n0R6nYB2016866
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Jan 2009 22:49:35 -0800
+In-Reply-To: <bug-12544-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@hansenpartnership.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Update version to 4.6.0000.1
+http://bugzilla.kernel.org/show_bug.cgi?id=12544
 
-Signed-off-by: Ed Lin <ed.lin@promise.com>
----
 
-diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-index c1a79c3..47b614e 100644
---- a/drivers/scsi/stex.c
-+++ b/drivers/scsi/stex.c
-@@ -1,7 +1,7 @@
- /*
-  * SuperTrak EX Series Storage Controller driver for Linux
-  *
-- * Copyright (C) 2005, 2006 Promise Technology Inc.
-+ * Copyright (C) 2005-2009 Promise Technology Inc.
-  *
-  * This program is free software; you can redistribute it and/or
-  * modify it under the terms of the GNU General Public License
-@@ -36,8 +36,8 @@
- #include <scsi/scsi_eh.h>
- 
- #define DRV_NAME "stex"
--#define ST_DRIVER_VERSION "3.6.0000.1"
--#define ST_VER_MAJOR   3
-+#define ST_DRIVER_VERSION "4.6.0000.1"
-+#define ST_VER_MAJOR   4
- #define ST_VER_MINOR   6
- #define ST_OEM    0
- #define ST_BUILD_VER   1
+
+
+
+------- Comment #2 from dimetrios@gmail.com  2009-01-26 22:49 -------
+> 
+> On Mon, 26 Jan 2009 12:54:29 -0800 (PST)
+> bugme-daemon@bugzilla.kernel.org wrote:
+
+> googling for `megaraid_queue_command oops' elicits a long and sorry tale.
+>
+
+It's sad :(
+
+> Seems that this bug (or a very similar one) was also present in
+> 2.6.9-42.0.2.ELsmp (http://lkml.org/lkml/2007/3/8/467) so perhaps it
+> isn't a regression.
+> 
+
+For two years this machine worked under RHEL4
+2.6.9-42.0.8.EL.smp/2.6.9-55.EL.smp as MySQL server (uptime 80 days and more).
+And there were no problems.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
