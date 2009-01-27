@@ -1,69 +1,31 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: swiotlb default size (64 MB) too small?
-Date: Tue, 27 Jan 2009 18:36:47 +0900
-Message-ID: <20090127183723W.fujita.tomonori@lab.ntt.co.jp>
-References: <20090121074339N.fujita.tomonori@lab.ntt.co.jp>
-	<4976D52F.5090109@s5r6.in-berlin.de>
-	<20090127165508L.fujita.tomonori@lab.ntt.co.jp>
+From: Olaf Hering <olh@suse.de>
+Subject: scsi_host_template.proc_name for ibmvscsic
+Date: Tue, 27 Jan 2009 15:11:07 +0100
+Message-ID: <20090127141107.GA15401@suse.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:41327 "EHLO sh.osrg.net"
+Received: from mail.suse.de ([195.135.220.2]:35205 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751124AbZA0JhI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jan 2009 04:37:08 -0500
-In-Reply-To: <20090127165508L.fujita.tomonori@lab.ntt.co.jp>
+	id S1751423AbZA0OLJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Jan 2009 09:11:09 -0500
+Received: from Relay2.suse.de (mail2.suse.de [195.135.221.8])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx1.suse.de (Postfix) with ESMTP id 1738444BC4
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Jan 2009 15:11:08 +0100 (CET)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: stefanr@s5r6.in-berlin.de
-Cc: fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-
-On Tue, 27 Jan 2009 16:54:30 +0900
-FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-
-> > *) The report does not sound like there was a DMA mappig leak caused by
-> > copying between usb-storage and firewire-sbp2.  Else he would have hit
-> > the problem again even with increased swiotlb default size.
-> 
-> Maybe the reporter doesn't copy enough to hit the deadlock.
-
-Hmm, we don't have leak here?
-
-=
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] fw-sbp2: fix dma mapping leak on the failure path
-
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/firewire/fw-sbp2.c |   12 +++++++++++-
- 1 files changed, 11 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/firewire/fw-sbp2.c b/drivers/firewire/fw-sbp2.c
-index e88d506..d40910d 100644
---- a/drivers/firewire/fw-sbp2.c
-+++ b/drivers/firewire/fw-sbp2.c
-@@ -1491,8 +1491,18 @@ static int sbp2_scsi_queuecommand(struct scsi_cmnd *cmd, scsi_done_fn_t done)
- 	orb->base.request_bus =
- 		dma_map_single(device->card->device, &orb->request,
- 			       sizeof(orb->request), DMA_TO_DEVICE);
--	if (dma_mapping_error(device->card->device, orb->base.request_bus))
-+	if (dma_mapping_error(device->card->device, orb->base.request_bus)) {
-+		if (scsi_sg_count(cmd)) {
-+			dma_unmap_sg(device->card->device, scsi_sglist(cmd),
-+				     scsi_sg_count(cmd),
-+				     cmd->sc_data_direction);
-+			dma_unmap_single(device->card->device,
-+					 orb->page_table_bus,
-+					 sizeof(orb->page_table),
-+					 DMA_TO_DEVICE);
-+		}
- 		goto out;
-+	}
- 
- 	sbp2_send_orb(&orb->base, lu, lu->tgt->node_id, generation,
- 		      lu->command_block_agent_address + SBP2_ORB_POINTER);
--- 
-1.6.0.6
+To: linux-scsi@vger.kernel.org
 
 
+/sys/class/scsi_host/host0/proc_name should map to the drivers module
+name according to Documentation/scsi/scsi_mid_low_api.txt
+
+But this is not the case for drivers/scsi/ibmvscsi/ibmvscsi.c,
+drivers/scsi/a100u2w.c, drivers/scsi/a2091.c and others.
+
+Is it safe to fix at least ibmvscsi.c to have ibmvscsic as ->proc_name?
+
+Olaf
