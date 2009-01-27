@@ -1,49 +1,73 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12544] megaraid kernel oops during smartd poll
-Date: Mon, 26 Jan 2009 22:49:33 -0800 (PST)
-Message-ID: <20090127064933.CC533108040@picon.linux-foundation.org>
-References: <bug-12544-11613@http.bugzilla.kernel.org/>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: swiotlb default size (64 MB) too small?
+Date: Tue, 27 Jan 2009 16:54:30 +0900
+Message-ID: <20090127165508L.fujita.tomonori@lab.ntt.co.jp>
+References: <49762FC8.7000208@s5r6.in-berlin.de>
+	<20090121074339N.fujita.tomonori@lab.ntt.co.jp>
+	<4976D52F.5090109@s5r6.in-berlin.de>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:41714 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750940AbZA0Gtg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jan 2009 01:49:36 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n0R6nYB2016866
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Jan 2009 22:49:35 -0800
-In-Reply-To: <bug-12544-11613@http.bugzilla.kernel.org/>
+Received: from sh.osrg.net ([192.16.179.4]:49678 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753313AbZA0Hyt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Jan 2009 02:54:49 -0500
+In-Reply-To: <4976D52F.5090109@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: stefanr@s5r6.in-berlin.de
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12544
+On Wed, 21 Jan 2009 08:56:31 +0100
+Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
 
-
-
-
-
-------- Comment #2 from dimetrios@gmail.com  2009-01-26 22:49 -------
+> FUJITA Tomonori wrote:
+> > The bug reporter said that copying stooped but it should not
+> > happen. It doesn't happen with SCSI (copying can continue a bit
+> > slowly). dma mapping errors are transient so SCSI retries.
+> ...
+> > If the bug report is true, then the FireWire stack or the driver (or
+> > both) has problems. Make sure that FireWire can work even with dma
+> > mapping failures.
 > 
-> On Mon, 26 Jan 2009 12:54:29 -0800 (PST)
-> bugme-daemon@bugzilla.kernel.org wrote:
+> sbp2_scsi_queuecommand returns SCSI_MLQUEUE_HOST_BUSY if DMA mapping
+> failed.  Isn't this what should happen?
 
-> googling for `megaraid_queue_command oops' elicits a long and sorry tale.
->
+Returning SCSI_MLQUEUE_HOST_BUSY is the right thing and such problem
+should not happen.
 
-It's sad :(
 
-> Seems that this bug (or a very similar one) was also present in
-> 2.6.9-42.0.2.ELsmp (http://lkml.org/lkml/2007/3/8/467) so perhaps it
-> isn't a regression.
+> However, both usb-storage and firewire-sbp2 currently have a queudepth
+> of only 1; if there are no DMA resources to map just this one SCSI
+> request, how should the system be able to recover?
+
+Handling one outstanding command is must. If you can't, the system
+can deadlock in OOM.
+
+If you put the deadlock issue aside, the above host->can_queue issue
+is irrelevant. Even if you set host->can_queue to 1, scsi-ml sends one
+command to the LLD again and again until it succeeds, I think. As long
+as the LLD can send a command occasionally, the system works.
+
+
+> It can wait, but it
+> can't lower the part of the workload which is related to this particular
+> copying operation (which, as  the reporter wrote, ultimately stopped). I
+> suppose there is something else* on the reporter's system which tied up
+> too much swiotlb resources the whole time; and then just waiting a bit
+
+Tying swiotlb resource the whole time is unlikely. Everyone uses it
+temporarily.
+
+
+> until the next queucommand won't get things going.
 > 
+> *) The report does not sound like there was a DMA mappig leak caused by
+> copying between usb-storage and firewire-sbp2.  Else he would have hit
+> the problem again even with increased swiotlb default size.
 
-For two years this machine worked under RHEL4
-2.6.9-42.0.8.EL.smp/2.6.9-55.EL.smp as MySQL server (uptime 80 days and more).
-And there were no problems.
+Maybe the reporter doesn't copy enough to hit the deadlock.
 
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+If you need 512MB swiotlb buffer, surely it's something wrong. The
+kernel should work smoothly with much less (even if it works slowly).
