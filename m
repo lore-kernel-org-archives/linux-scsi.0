@@ -1,60 +1,50 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 1/4] [Linux/SCSI]: Change RECEIVE_CREDENTIAL to
-	VLC_SA_RECEIVE_CREDENTIAL
-Date: Tue, 27 Jan 2009 14:02:29 -0800
-Message-ID: <1233093749.6442.97.camel@haakon2.linux-iscsi.org>
+Subject: [PATCH 0/4] [Target_Core_Mod]: Updates for TYPE_ROM and
+	VARIABLE_LENGTH_CMD
+Date: Tue, 27 Jan 2009 14:06:46 -0800
+Message-ID: <1233094006.6442.101.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp123.sbc.mail.sp1.yahoo.com ([69.147.64.96]:47442 "HELO
-	smtp123.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751304AbZA0WDi (ORCPT
+Received: from smtp120.sbc.mail.sp1.yahoo.com ([69.147.64.93]:48558 "HELO
+	smtp120.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751957AbZA0WHz (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jan 2009 17:03:38 -0500
+	Tue, 27 Jan 2009 17:07:55 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>
 Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
->From 9147996b858bc44d8253929fe0cb4acfa9795986 Mon Sep 17 00:00:00 2001
-From: Nicholas Bellinger <nab@linux-iscsi.org>
-Date: Tue, 27 Jan 2009 13:29:49 -0800
-Subject: [PATCH 1/4] [Linux/SCSI]: Change RECEIVE_CREDENTIAL to VLC_SA_RECEIVE_CREDENTIAL
+Greetings all,
 
-This patch adds the VARIABLE_LENGTH_CMD Service Action code:
-VLC_SA_RECEIVE_CREDENTIAL and removes the incorrect CDB byte[0]
-opcode define RECEIVE_CREDENTIAL.
+This series updates adds the VLC_SA_RECEIVE_CREDENTIAL define per James's feedback,
+and converts target_core_mod to use include/linux/cdrom.h:GPCMD_* prefixed MMC Opcode
+defines for TYPE_ROM.
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- include/scsi/scsi.h |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+This patch is made against lio-core-2.6.git/master
+and tested on v2.6.29-rc2 x86 32-bit HVM.  The lio-core-2.6.git tree can be
+found at:
 
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 93af6ce..aabd3d1 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -104,7 +104,6 @@
- #define PERSISTENT_RESERVE_IN 0x5e
- #define PERSISTENT_RESERVE_OUT 0x5f
- #define VARIABLE_LENGTH_CMD   0x7f
--#define RECEIVE_CREDENTIAL    0x7f // spc4r17 section 6.9 Table 204
- #define REPORT_LUNS           0xa0
- #define SECURITY_PROTOCOL_IN  0xa2
- #define MAINTENANCE_IN        0xa3
-@@ -134,6 +133,9 @@
- #define SERVICE_ACTION_IN     0x9e
- /* values for service action in */
- #define	SAI_READ_CAPACITY_16  0x10
-+/* values for VARIABLE_LENGTH_CMD service action codes
-+ * see spc4r17 Section D.3.5, table D.7 and D.8 */
-+#define VLC_SA_RECEIVE_CREDENTIAL 0x1800
- /* values for maintenance in */
- #define MI_REPORT_IDENTIFYING_INFORMATION 0x05
- #define MI_REPORT_TARGET_PGS  0x0a
--- 
-1.5.4.1
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=summary
 
+[PATCH 1/4] [Linux/SCSI]: Change RECEIVE_CREDENTIAL to VLC_SA_RECEIVE_CREDENTIAL
+[PATCH 2/4] [Target_Core_Mod]: Change RECEIVE_CREDENTIAL -> VARIABLE_LENGTH_CMD
+[PATCH 3/4] [Target_Core_Mod]: Remove LOAD_UNLOAD_MEDIUM usage from IBLOCK/FILEIO/RAMDISK
+[PATCH 4/4] [Target_Core_Mod]: Convert TYPE_ROM support to use include/linux/cdrom.h GPCMD_* defines
 
+>From /pub/scm/linux/kernel/git/nab/lio-core-2.6
+ * branch            master     -> FETCH_HEAD
+Updating e384da7..a4bcd2c
+Fast forward
+ drivers/lio-core/target_core_base.h      |   59 ------------------------------
+ drivers/lio-core/target_core_file.c      |    1 -
+ drivers/lio-core/target_core_iblock.c    |    1 -
+ drivers/lio-core/target_core_rd.c        |    1 -
+ drivers/lio-core/target_core_transport.c |   31 +++++++++-------
+ include/scsi/scsi.h                      |    4 ++-
+ 6 files changed, 20 insertions(+), 77 deletions(-)
+
+--nab
 
