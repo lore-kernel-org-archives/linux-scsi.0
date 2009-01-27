@@ -1,44 +1,69 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: Mainline kernel OLTP performance update
-Date: Tue, 27 Jan 2009 09:28:14 +0100
-Message-ID: <20090127082814.GN30821@kernel.dk>
-References: <CAC4B8726E86A142B27A9E9A2F2F12479D3E945F@rrsmsx505.amr.corp.intel.com> <20090114163557.11e097f2.akpm@linux-foundation.org> <20090115012147.GW29283@parisc-linux.org> <20090114180431.f4a96543.akpm@linux-foundation.org> <874p01fg3a.fsf@basil.nowhere.org> <20090115024740.GX29283@parisc-linux.org> <20090120132703.GJ30821@kernel.dk> <588992150B702C48B3312184F1B810AD03A497632C@azsmsx501.amr.corp.intel.com> <20090122112955.GH30821@kernel.dk> <588992150B702C48B3312184F1B810AD03A4F59632@azsmsx501.amr.corp.intel.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: swiotlb default size (64 MB) too small?
+Date: Tue, 27 Jan 2009 18:36:47 +0900
+Message-ID: <20090127183723W.fujita.tomonori@lab.ntt.co.jp>
+References: <20090121074339N.fujita.tomonori@lab.ntt.co.jp>
+	<4976D52F.5090109@s5r6.in-berlin.de>
+	<20090127165508L.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:16105 "EHLO kernel.dk"
+Received: from sh.osrg.net ([192.16.179.4]:41327 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750899AbZA0I36 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jan 2009 03:29:58 -0500
-Content-Disposition: inline
-In-Reply-To: <588992150B702C48B3312184F1B810AD03A4F59632@azsmsx501.amr.corp.intel.com>
+	id S1751124AbZA0JhI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Jan 2009 04:37:08 -0500
+In-Reply-To: <20090127165508L.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Chilukuri, Harita" <harita.chilukuri@intel.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Andi Kleen <andi@firstfloor.org>, Andrew Morton <akpm@linux-foundation.org>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>, "Ma, Chinang" <chinang.ma@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Tripathi, Sharad C" <sharad.c.tripathi@intel.com>, "arjan@linux.intel.com" <arjan@linux.intel.com>, "Siddha, Suresh B" <suresh.b.siddha@intel.com>, "Styner, Douglas W" <douglas.w.styner@intel.com>, "Wang, Peter Xihong" <peter.xihong.wang@intel.com>, "Nueckel, Hubert" <hubert.nueckel@intel.com>, "chris.mason@oracle.com" <chris.mason@oracle.com>, "srostedt@redhat.com" <srostedt@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Anirban Chakraborty <anirban.chakraborty@qlogic.com>
+To: stefanr@s5r6.in-berlin.de
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, Jan 26 2009, Chilukuri, Harita wrote:
-> Jens, we did test the patch that disables the whole stats. We get 0.5% gain with this patch on 2.6.29-rc2 comparing to 2.6.29-rc2-disbale_part_stats
+On Tue, 27 Jan 2009 16:54:30 +0900
+FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+
+> > *) The report does not sound like there was a DMA mappig leak caused by
+> > copying between usb-storage and firewire-sbp2.  Else he would have hit
+> > the problem again even with increased swiotlb default size.
 > 
-> Below is the description of the result:
-> 
-> Linux OLTP Performance summary
-> Kernel#                               Speedup(x) Intr/s  CtxSw/s  us%    sys%    idle% iowait%
-> 2.6.29-rc2-disbale_partition_stats     1.000    30413   42582    74      25      0       0
-> 2.6.29-rc2-disable_all                 1.005    30401   42656    74      25      0       0
-> 
-> Server configurations:
-> Intel Xeon Quad-core 2.0GHz  2 cpus/8 cores/8 threads
-> 64GB memory, 3 qle2462 FC HBA, 450 spindles (30 logical units)
+> Maybe the reporter doesn't copy enough to hit the deadlock.
 
-OK, so about the same, which means the lookup is likely the expensive
-bit. I have merged this patch:
+Hmm, we don't have leak here?
 
-http://git.kernel.dk/?p=linux-2.6-block.git;a=commit;h=e5b74b703da41fab060adc335a0b98fa5a5ea61d
+=
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] fw-sbp2: fix dma mapping leak on the failure path
 
-which exposes an 'iostats' toggle that allows users to disable disk
-statistics completely.
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/firewire/fw-sbp2.c |   12 +++++++++++-
+ 1 files changed, 11 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/firewire/fw-sbp2.c b/drivers/firewire/fw-sbp2.c
+index e88d506..d40910d 100644
+--- a/drivers/firewire/fw-sbp2.c
++++ b/drivers/firewire/fw-sbp2.c
+@@ -1491,8 +1491,18 @@ static int sbp2_scsi_queuecommand(struct scsi_cmnd *cmd, scsi_done_fn_t done)
+ 	orb->base.request_bus =
+ 		dma_map_single(device->card->device, &orb->request,
+ 			       sizeof(orb->request), DMA_TO_DEVICE);
+-	if (dma_mapping_error(device->card->device, orb->base.request_bus))
++	if (dma_mapping_error(device->card->device, orb->base.request_bus)) {
++		if (scsi_sg_count(cmd)) {
++			dma_unmap_sg(device->card->device, scsi_sglist(cmd),
++				     scsi_sg_count(cmd),
++				     cmd->sc_data_direction);
++			dma_unmap_single(device->card->device,
++					 orb->page_table_bus,
++					 sizeof(orb->page_table),
++					 DMA_TO_DEVICE);
++		}
+ 		goto out;
++	}
+ 
+ 	sbp2_send_orb(&orb->base, lu, lu->tgt->node_id, generation,
+ 		      lu->command_block_agent_address + SBP2_ORB_POINTER);
 -- 
-Jens Axboe
+1.6.0.6
+
 
