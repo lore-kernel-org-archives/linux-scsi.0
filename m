@@ -1,67 +1,42 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 1/4] [Linux/SCSI]: Change RECEIVE_CREDENTIAL to
-	VLC_SA_RECEIVE_CREDENTIAL
-Date: Tue, 27 Jan 2009 14:10:36 -0800
-Message-ID: <1233094236.6442.110.camel@haakon2.linux-iscsi.org>
-References: <1233093749.6442.97.camel@haakon2.linux-iscsi.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/5] bfa: Brocade BFA FC SCSI driver submission
+Date: Tue, 27 Jan 2009 17:16:18 -0500
+Message-ID: <20090127221618.GA26480@infradead.org>
+References: <200901271854.n0RIs73a026759@swe37.brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp118.sbc.mail.sp1.yahoo.com ([69.147.64.91]:41381 "HELO
-	smtp118.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752728AbZA0WLp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jan 2009 17:11:45 -0500
-In-Reply-To: <1233093749.6442.97.camel@haakon2.linux-iscsi.org>
+Received: from bombadil.infradead.org ([18.85.46.34]:50576 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751857AbZA0WQW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jan 2009 17:16:22 -0500
+Content-Disposition: inline
+In-Reply-To: <200901271854.n0RIs73a026759@swe37.brocade.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Jing Huang <huangj@brocade.com>
+Cc: James.Bottomley@HansenPartnership.com, kgudipat@brocade.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rvadivel@brocade.com, vravindr@brocade.com
 
-Hi James,
+On Tue, Jan 27, 2009 at 10:54:07AM -0800, Jing Huang wrote:
+> +/**
+> + * Generic HAL callback element.
+> + */
+> +struct bfa_cb_qe_s {
+> +	struct bfa_q_s         qe;
+> +	bfa_cb_cbfn_t  cbfn;
+> +	bfa_boolean_t   once;
+> +	u32		rsvd;
+> +	void           *cbarg;
+> +};
+> +
+> +#define bfa_cb_queue(__bfa, __hcb_qe, __cbfn, __cbarg) do {		\
+> +	(__hcb_qe)->cbfn  = (__cbfn);					\
+> +	(__hcb_qe)->cbarg = (__cbarg);					\
+> +	bfa_q_enq(&(__bfa)->comp_q, (__hcb_qe));			\
+> +} while (0)
 
-Let me know if you need a fresh respin of this patch..  According to
-spc4r17 section D.3.5, VLC_SA_RECEIVE_CREDENTIAL is the only
-VARIABLE_LENGTH_CMD defined Service ACtion..
+Please stop here, weird HALs and own list management routines are not
+things we put into the tree.  (except for gregs junk subdirectory..)
 
---nab
-
-On Tue, 2009-01-27 at 14:02 -0800, Nicholas A. Bellinger wrote:
-> >From 9147996b858bc44d8253929fe0cb4acfa9795986 Mon Sep 17 00:00:00 2001
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
-> Date: Tue, 27 Jan 2009 13:29:49 -0800
-> Subject: [PATCH 1/4] [Linux/SCSI]: Change RECEIVE_CREDENTIAL to VLC_SA_RECEIVE_CREDENTIAL
-> 
-> This patch adds the VARIABLE_LENGTH_CMD Service Action code:
-> VLC_SA_RECEIVE_CREDENTIAL and removes the incorrect CDB byte[0]
-> opcode define RECEIVE_CREDENTIAL.
-> 
-> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> ---
->  include/scsi/scsi.h |    4 +++-
->  1 files changed, 3 insertions(+), 1 deletions(-)
-> 
-> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-> index 93af6ce..aabd3d1 100644
-> --- a/include/scsi/scsi.h
-> +++ b/include/scsi/scsi.h
-> @@ -104,7 +104,6 @@
->  #define PERSISTENT_RESERVE_IN 0x5e
->  #define PERSISTENT_RESERVE_OUT 0x5f
->  #define VARIABLE_LENGTH_CMD   0x7f
-> -#define RECEIVE_CREDENTIAL    0x7f // spc4r17 section 6.9 Table 204
->  #define REPORT_LUNS           0xa0
->  #define SECURITY_PROTOCOL_IN  0xa2
->  #define MAINTENANCE_IN        0xa3
-> @@ -134,6 +133,9 @@
->  #define SERVICE_ACTION_IN     0x9e
->  /* values for service action in */
->  #define	SAI_READ_CAPACITY_16  0x10
-> +/* values for VARIABLE_LENGTH_CMD service action codes
-> + * see spc4r17 Section D.3.5, table D.7 and D.8 */
-> +#define VLC_SA_RECEIVE_CREDENTIAL 0x1800
->  /* values for maintenance in */
->  #define MI_REPORT_IDENTIFYING_INFORMATION 0x05
->  #define MI_REPORT_TARGET_PGS  0x0a
+Please rewrite this into a proper Linux driver.
 
