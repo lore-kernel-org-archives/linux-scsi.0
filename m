@@ -1,50 +1,56 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/5][resend 2] stex: Fix for potential invalid request
-Date: Tue, 27 Jan 2009 09:11:27 -0600
-Message-ID: <1233069087.3231.19.camel@localhost.localdomain>
-References: <200901270636.04129.ed.lin@promise.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: [PATCH] scsi_scan.c : add missing interim SDEV_DEL state if
+	slave_alloc fails
+Date: Tue, 27 Jan 2009 10:39:58 -0500
+Message-ID: <1233070798.22506.5.camel@ogier>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:57224 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751497AbZA0PL3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jan 2009 10:11:29 -0500
-In-Reply-To: <200901270636.04129.ed.lin@promise.com>
+Received: from emulex.emulex.com ([138.239.112.1]:46288 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752028AbZA0PkG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jan 2009 10:40:06 -0500
+Received: from xcm.ad.emulex.com (xcm.emulex.com [138.239.112.69])
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id n0RFe5hm022939
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Jan 2009 07:40:05 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "ed.lin" <ed.lin@promise.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, 2009-01-27 at 06:36 +0800, ed.lin wrote:
-> The interrupt routine is good for normal cases. However, if the firmware is 
-> abnormal and returns an invalid response, the driver may reuse a ccb 
-> structure that has already been handled. This may cause problem. Fix this by 
-> setting the req member to NULL. Next time we know the response is invalid and 
-> handle accordingly if req is NULL.
-> 
-> Signed-off-by: Ed Lin <ed.lin@promise.com>
-> ---
-> 
-> diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-> index a3a18ad..6129db4 100644
-> --- a/drivers/scsi/stex.c
-> +++ b/drivers/scsi/stex.c
-> @@ -746,6 +746,7 @@ static void stex_mu_intr(struct st_hba *hba, u32 doorbell)
->      stex_copy_data(ccb, resp, size);
->    }
->  
-> +  ccb->req = NULL;
-^^^^^^^^
 
-I'm afraid all the tabs have been converted to single spaces in this
-one.
+We were running i/o and performing a bunch of hba resets in a loop.
+This forces a lot of target removes and rescans. Since the resets
+are occuring during scan it's causing the scan i/o to timeout or fail,
+invoking error recovery, etc.  We end up getting a nasty crash
+in scsi_scan.c due to references to old sdevs that had some
+lingering references that kept them around.
 
-Just mime attach the patches ... we can play the tune the email client
-game later.
+Fix by setting device state to SDEV_DEL if the LLD's slave_alloc
+fails. This will fail reference taking in subsequent teardown/scan paths.
 
-James
+-- james s
+
+
+ Signed-off-by: James Smart <james.smart@emulex.com>
+
+ ---
+
+ scsi_scan.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+
+diff -upNr a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+--- a/drivers/scsi/scsi_scan.c	2009-01-27 09:44:31.000000000 -0500
++++ b/drivers/scsi/scsi_scan.c	2009-01-27 10:12:04.000000000 -0500
+@@ -310,6 +310,7 @@ static struct scsi_device *scsi_alloc_sd
+ 			 */
+ 			if (ret == -ENXIO)
+ 				display_failure_msg = 0;
++			scsi_device_set_state(sdev, SDEV_DEL);
+ 			goto out_device_destroy;
+ 		}
+ 	}
 
 
