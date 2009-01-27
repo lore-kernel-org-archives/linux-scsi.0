@@ -1,152 +1,93 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: swiotlb default size (64 MB) too small?
-Date: Tue, 27 Jan 2009 18:03:40 +0100 (CET)
-Message-ID: <tkrat.9e61b4a2f7087aca@s5r6.in-berlin.de>
-References: <20090121074339N.fujita.tomonori@lab.ntt.co.jp>
-	<4976D52F.5090109@s5r6.in-berlin.de>
-	<20090127165508L.fujita.tomonori@lab.ntt.co.jp>
-	<20090127183723W.fujita.tomonori@lab.ntt.co.jp>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <20090127183723W.fujita.tomonori@lab.ntt.co.jp>
-Content-Disposition: INLINE
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux1394-devel@lists.sourceforge.net
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Jing Huang <huangj@brocade.com>
+Subject: [PATCH 4/5] bfa: Brocade BFA FC SCSI driver submission
+Date: Tue, 27 Jan 2009 10:55:24 -0800
+Message-ID: <200901271855.n0RItOUA026905@swe37.brocade.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx40.brocade.com ([144.49.195.4]:42834 "EHLO mx40.brocade.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756897AbZA0S6l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Jan 2009 13:58:41 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: kgudipat@brocade.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rvadivel@brocade.com, vravindr@brocade.com
 
-On 27 Jan, FUJITA Tomonori wrote at LSML and LKML:
-[I wrote]
->> > *) The report does not sound like there was a DMA mappig leak caused by
->> > copying between usb-storage and firewire-sbp2.  Else he would have hit
->> > the problem again even with increased swiotlb default size.
+From: Jing Huang <huangj@brocade.com>
 
-> Hmm, we don't have leak here?
-> 
-> =
-> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Subject: [PATCH] fw-sbp2: fix dma mapping leak on the failure path
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> ---
->  drivers/firewire/fw-sbp2.c |   12 +++++++++++-
->  1 files changed, 11 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/firewire/fw-sbp2.c b/drivers/firewire/fw-sbp2.c
-> index e88d506..d40910d 100644
-> --- a/drivers/firewire/fw-sbp2.c
-> +++ b/drivers/firewire/fw-sbp2.c
-> @@ -1491,8 +1491,18 @@ static int sbp2_scsi_queuecommand(struct scsi_cmnd *cmd, scsi_done_fn_t done)
->  	orb->base.request_bus =
->  		dma_map_single(device->card->device, &orb->request,
->  			       sizeof(orb->request), DMA_TO_DEVICE);
-> -	if (dma_mapping_error(device->card->device, orb->base.request_bus))
-> +	if (dma_mapping_error(device->card->device, orb->base.request_bus)) {
-> +		if (scsi_sg_count(cmd)) {
-> +			dma_unmap_sg(device->card->device, scsi_sglist(cmd),
-> +				     scsi_sg_count(cmd),
-> +				     cmd->sc_data_direction);
-> +			dma_unmap_single(device->card->device,
-> +					 orb->page_table_bus,
-> +					 sizeof(orb->page_table),
-> +					 DMA_TO_DEVICE);
-> +		}
->  		goto out;
-> +	}
->  
->  	sbp2_send_orb(&orb->base, lu, lu->tgt->node_id, generation,
->  		      lu->command_block_agent_address + SBP2_ORB_POINTER);
+This patch contains Makefile and Kconfig file for scsi and bfa. It is created
+using 2.6.29-rc2 kernel.
 
-Yes, we do have a leak there.  Thanks a lot for checking the code.
-
-There is one thing missing in the fix:  Even with scsi_sg_count(cmd) !=
-0, there is sometimes no orb->page_table to unmap.  It's when the
-scatterlist was mapped into a single physical segment.
-
-
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: firewire: sbp2: fix DMA mapping leak on the failure path
-
-Reported-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-who also provided a first version of the fix.
-
-Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Signed-off-by: Jing Huang <huangj@brocade.com>
 ---
- drivers/firewire/fw-sbp2.c |   27 +++++++++++++++++----------
- 1 file changed, 17 insertions(+), 10 deletions(-)
+ drivers/scsi/Kconfig      |    6 ++++++
+ drivers/scsi/Makefile     |    1 +
+ drivers/scsi/bfa/Kconfig  |    6 ++++++
+ drivers/scsi/bfa/Makefile |   25 +++++++++++++++++++++++++
+ 4 files changed, 38 insertions(+)
 
-Index: linux/drivers/firewire/fw-sbp2.c
-===================================================================
---- linux.orig/drivers/firewire/fw-sbp2.c
-+++ linux/drivers/firewire/fw-sbp2.c
-@@ -1323,6 +1323,19 @@ static unsigned int sbp2_status_to_sense
- 	}
- }
- 
-+static void sbp2_unmap_scatterlist(struct device *card_device,
-+				   struct sbp2_command_orb *orb)
-+{
-+	if (scsi_sg_count(orb->cmd))
-+		dma_unmap_sg(card_device, scsi_sglist(orb->cmd),
-+			     scsi_sg_count(orb->cmd),
-+			     orb->cmd->sc_data_direction);
+diff -urpN orig/drivers/scsi/bfa/Kconfig patch/drivers/scsi/bfa/Kconfig
+--- orig/drivers/scsi/bfa/Kconfig	1969-12-31 16:00:00.000000000 -0800
++++ patch/drivers/scsi/bfa/Kconfig	2009-01-26 17:28:26.000000000 -0800
+@@ -0,0 +1,6 @@
++config SCSI_BFA_FC
++	tristate "Brocade BFA Fibre Channel Support"
++	depends on PCI && SCSI
++	---help---
++	Select M for building module
 +
-+	if (orb->page_table_bus)
-+		dma_unmap_single(card_device, orb->page_table_bus,
-+				 sizeof(orb->page_table), DMA_TO_DEVICE);
-+}
+diff -urpN orig/drivers/scsi/bfa/Makefile patch/drivers/scsi/bfa/Makefile
+--- orig/drivers/scsi/bfa/Makefile	1969-12-31 16:00:00.000000000 -0800
++++ patch/drivers/scsi/bfa/Makefile	2009-01-26 17:28:26.000000000 -0800
+@@ -0,0 +1,25 @@
++#
++# Copyright (c) 2005-2008 Brocade Communications Systems, Inc.
++# All rights reserved
++# www.brocade.com
++# 
++# Linux driver for Brocade Fibre Channel Host Bus Adapter.
++#
++# This program is free software; you can redistribute it and/or modify it
++# under the terms of the GNU General Public License (GPL) Version 2 as
++# published by the Free Software Foundation
++#
++# This program is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++# General Public License for more details.
++#
++obj-$(CONFIG_SCSI_BFA_FC) := bfa.o
 +
- static void complete_command_orb(struct sbp2_orb *base_orb,
- 				 struct sbp2_status *status)
- {
-@@ -1364,15 +1377,7 @@ static void complete_command_orb(struct 
++bfa-objs := bfad.o bfad_intr.o bfad_os.o bfad_im.o bfad_attr.o	\
++	bfad_fwimg.o bfa_fcs.o bfa_core.o bfa_ioc.o bfa_iocfc.o bfa_hw_cb.o	\
++	bfa_hw_ct.o bfa_fcxp.o bfa_intr.o bfa_timer.o bfa_rport.o bfa_port.o	\
++	bfa_uf.o bfa_sgpg.o bfa_module.o bfa_ioim.o bfa_itnim.o bfa_fcpim.o	\
++	bfa_tskim.o bfa_log.o bfa_log_module.o bfa_csdebug.o bfa_sm.o plog.o
++
++EXTRA_CFLAGS += -I$(obj) -I$(obj)/include
+diff -urpN orig/drivers/scsi/Kconfig patch/drivers/scsi/Kconfig
+--- orig/drivers/scsi/Kconfig	2009-01-26 17:28:26.000000000 -0800
++++ patch/drivers/scsi/Kconfig	2009-01-26 17:28:21.000000000 -0800
+@@ -1797,6 +1797,12 @@ config SCSI_SRP
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called libsrp.
  
- 	dma_unmap_single(device->card->device, orb->base.request_bus,
- 			 sizeof(orb->request), DMA_TO_DEVICE);
--
--	if (scsi_sg_count(orb->cmd) > 0)
--		dma_unmap_sg(device->card->device, scsi_sglist(orb->cmd),
--			     scsi_sg_count(orb->cmd),
--			     orb->cmd->sc_data_direction);
--
--	if (orb->page_table_bus != 0)
--		dma_unmap_single(device->card->device, orb->page_table_bus,
--				 sizeof(orb->page_table), DMA_TO_DEVICE);
-+	sbp2_unmap_scatterlist(device->card->device, orb);
++config SCSI_BFA_FC
++	tristate "Brocade BFA Fibre Channel Support"
++	depends on PCI && SCSI
++	---help---
++	  To compile this driver as a module, choose M here. The module will be called bfa
++
+ endif # SCSI_LOWLEVEL
  
- 	orb->cmd->result = result;
- 	orb->done(orb->cmd);
-@@ -1493,8 +1498,10 @@ static int sbp2_scsi_queuecommand(struct
- 	orb->base.request_bus =
- 		dma_map_single(device->card->device, &orb->request,
- 			       sizeof(orb->request), DMA_TO_DEVICE);
--	if (dma_mapping_error(device->card->device, orb->base.request_bus))
-+	if (dma_mapping_error(device->card->device, orb->base.request_bus)) {
-+		sbp2_unmap_scatterlist(device->card->device, orb);
- 		goto out;
-+	}
- 
- 	sbp2_send_orb(&orb->base, lu, lu->tgt->node_id, generation,
- 		      lu->command_block_agent_address + SBP2_ORB_POINTER);
-
-
--- 
-Stefan Richter
--=====-==--= ---= ==-==
-http://arcgraph.de/sr/
-
-
-------------------------------------------------------------------------------
-This SF.net email is sponsored by:
-SourcForge Community
-SourceForge wants to tell your story.
-http://p.sf.net/sfu/sf-spreadtheword
+ source "drivers/scsi/pcmcia/Kconfig"
+diff -urpN orig/drivers/scsi/Makefile patch/drivers/scsi/Makefile
+--- orig/drivers/scsi/Makefile	2009-01-26 17:28:26.000000000 -0800
++++ patch/drivers/scsi/Makefile	2009-01-26 17:28:21.000000000 -0800
+@@ -84,6 +84,7 @@ obj-$(CONFIG_SCSI_QLOGIC_1280)	+= qla128
+ obj-$(CONFIG_SCSI_QLA_FC)	+= qla2xxx/
+ obj-$(CONFIG_SCSI_QLA_ISCSI)	+= qla4xxx/
+ obj-$(CONFIG_SCSI_LPFC)		+= lpfc/
++obj-$(CONFIG_SCSI_BFA_FC)	+= bfa/
+ obj-$(CONFIG_SCSI_PAS16)	+= pas16.o
+ obj-$(CONFIG_SCSI_T128)		+= t128.o
+ obj-$(CONFIG_SCSI_DMX3191D)	+= dmx3191d.o
