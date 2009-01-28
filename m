@@ -1,80 +1,97 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 1/2] sg: fix races during device removal (v6)
-Date: Wed, 28 Jan 2009 10:51:09 +0900
-Message-ID: <20090128105144C.fujita.tomonori@lab.ntt.co.jp>
-References: <49764920.30307@cybernetics.com>
-	<49777B6E.1040805@cybernetics.com>
-	<497DC140.3070207@interlog.com>
+From: Dirk Hohndel <hohndel-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: strange USB storage failure with 2.6.29-rc2
+Date: Tue, 27 Jan 2009 20:06:07 -0800
+Message-ID: <20090127200607.369a1693@infradead.org>
+References: <20090127122641.1564fc46@infradead.org>
+	<Pine.LNX.4.44L0.0901271548370.2286-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:55357 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751947AbZA1Bvc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jan 2009 20:51:32 -0500
-In-Reply-To: <497DC140.3070207@interlog.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.44L0.0901271548370.2286-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: tonyb@cybernetics.com, James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.co.jp, hch@infradead.org, linux-scsi@vger.kernel.org
 
-On Mon, 26 Jan 2009 08:57:20 -0500
-Douglas Gilbert <dgilbert@interlog.com> wrote:
 
-> Tony Battersby wrote:
-> > sg has the following problems related to device removal:
-> > 
-> > * opening a sg fd races with removing a device
-> > * closing a sg fd races with removing a device
-> > * /proc/scsi/sg/* access races with removing a device
-> > * command completion races with removing a device
-> > * command completion races with closing a sg fd
-> > * can rmmod sg with active commands
-> > 
-> > These problems can cause kernel oopses, memory-use-after-free, or
-> > double-free errors.  This patch fixes these problems by using krefs
-> > to manage the lifetime of sg_device and sg_fd.
-> > 
-> > Each command submitted to the midlevel holds a reference to sg_fd
-> > until the completion callback.  This ensures that sg_fd doesn't go
-> > away if the fd is closed with commands still outstanding.
-> > 
-> > sg_fd gets the reference of sg_device (with scsi_device) and also
-> > makes sure that the sg module doesn't go away.
-> > 
-> > /proc/scsi/sg/* functions don't play nicely with krefs because they
-> > give information about sg_fds which have been closed but not yet
-> > freed due to still having outstanding commands and sg_devices which
-> > have been removed but not yet freed due to still being referenced
-> > by one or more sg_fds.  To deal with this safely without removing
-> > functionality, /proc functions now access sg_device and sg_fd while
-> > holding a lock instead of using kref_get()/kref_put().
-> > 
-> > Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
-> > ---
-> > 
-> > This version changes BUG_ON() to WARN_ON()/return as suggested by
-> > Stefan Richter.
-> > 
-> > The second patch "[PATCH 2/2] sg: fix races with ioctl(SG_IO) (v2)"
-> > is still the same as before, so I am not resending it.
-> > 
-> >  sg.c |  418 ++++++++++++++++++++++++++++++++-----------------------------------
-> >  1 file changed, 201 insertions(+), 217 deletions(-)
-> > 
-> > --- linux-2.6.29-rc2/drivers/scsi/sg.c.orig	2009-01-21 14:34:05.000000000 -0500
-> > +++ linux-2.6.29-rc2/drivers/scsi/sg.c	2009-01-21 14:36:00.000000000 -0500
+Copied to linux-scsi, so a bit context for folks there...
+
+On a 64bit 2.6.29-rc2 system (and a few earlier kernels that I have
+tried) I can no longer use USB sticks. When I connect one it gets
+correctly identified, but then when I try to access it I get "Medium
+not present" error.
+
+Turning on debugging in the USB storage subsystem indicates that we are
+sending START_STOP to the device which really confuses it...
+
+On Tue, 27 Jan 2009 15:56:11 -0500 (EST)
+Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org> wrote:
+
+> On Tue, 27 Jan 2009, Dirk Hohndel wrote:
 > 
-> Tony,
-> We seem to have consensus on this version (v6 20090121).
+> > Here you go:
 > 
-> Thanks for you work.
+> >From the middle of the log (after the partition table has been read):
 > 
-> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+> > [   32.056855] usb-storage: queuecommand called
+> > [   32.056886] usb-storage: *** thread awakened.
+> > [   32.056888] usb-storage: Command START_STOP (6 bytes)
+> > [   32.056889] usb-storage:  1b 00 00 00 02 00
+> > [   32.056894] usb-storage: Bulk Command S 0x43425355 T 0x24 L 0 F 0 Trg 0 LUN 0 CL 6
+> > [   32.056896] usb-storage: usb_stor_bulk_transfer_buf: xfer 31 bytes
+> > [   32.057328] usb-storage: Status code 0; transferred 31/31
+> > [   32.057329] usb-storage: -- transfer complete
+> > [   32.057330] usb-storage: Bulk command transfer result=0
+> > [   32.057332] usb-storage: Attempting to get CSW...
+> > [   32.057333] usb-storage: usb_stor_bulk_transfer_buf: xfer 13 bytes
+> > [   32.057430] usb-storage: Status code 0; transferred 13/13
+> > [   32.057432] usb-storage: -- transfer complete
+> > [   32.057433] usb-storage: Bulk status result = 0
+> > [   32.057435] usb-storage: Bulk Status S 0x53425355 T 0x24 R 0 Stat 0x0
+> > [   32.057437] usb-storage: scsi cmd done, result=0x0
+> > [   32.057440] usb-storage: *** thread sleeping.
+> 
+> This command is basically an Eject.  Even though the device doesn't 
+> have removable media, it apparently gets very confused when it receives 
+> this command.
 
-Can we also get your ACK on:
+Doing some googling around that seems to imply that this is not unusual
+for USB devices...
 
-[PATCH 2/2] sg: fix races with ioctl(SG_IO) (v2)
+> So the real question is: Who is responsible for sending that Eject 
+> command?  It certainly isn't usb-storage or any other part of the USB 
+> stack.  Maybe something in the SCSI disk driver or maybe a user 
+> program.
 
-http://marc.info/?l=linux-scsi&m=123248892909435&w=2
+That's one valid question... maybe someone on the linux-scsi list can
+sched some light onto this? Are there SCSI specific debugging options I
+should turn on?
+
+The other one is "why isn't the USB stack filtering that command when
+it comes down from SCSI?"
+
+Way back when in 2002 Matt Dharm suggested doing just that and Greg
+applied it:
+
+http://osdir.com/ml/usb.devel/2002-08/msg00357.html
+http://osdir.com/ml/usb.devel/2002-08/msg00447.html
+
+A few months later this code was removed again as we allegedly don't
+need it anymore:
+
+http://www.mail-archive.com/linux-usb-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org/msg09331.html
+
+Maybe we need to bring such code back?
+
+/D
+
+
+
+-- 
+Dirk Hohndel
+Intel Open Source Technology Center
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
