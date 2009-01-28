@@ -1,76 +1,85 @@
-From: "Jing Huang" <huangj@Brocade.COM>
-Subject: RE: [PATCH 2/5] bfa: Brocade BFA FC SCSI driver submission
-Date: Wed, 28 Jan 2009 10:02:43 -0800
-Message-ID: <4C94DE2070B172459E4F1EE14BD2364E02753674@HQ-EXCH-5.corp.brocade.com>
-References: <200901271854.n0RIs73a026759@swe37.brocade.com> <20090127221618.GA26480@infradead.org> <4C94DE2070B172459E4F1EE14BD2364E027534DA@HQ-EXCH-5.corp.brocade.com> <1233164662.3236.93.camel@localhost.localdomain>
+From: Dirk Hohndel <hohndel@infradead.org>
+Subject: Re: strange USB storage failure with 2.6.29-rc2
+Date: Wed, 28 Jan 2009 11:59:58 -0800
+Message-ID: <20090128115958.77d59368@infradead.org>
+References: <20090128091406.316a80fc@infradead.org>
+	<Pine.LNX.4.44L0.0901281233250.3134-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx40.brocade.com ([144.49.195.4]:27635 "EHLO mx40.brocade.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750954AbZA1SC6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jan 2009 13:02:58 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <1233164662.3236.93.camel@localhost.localdomain>
+Received: from bombadil.infradead.org ([18.85.46.34]:47259 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751512AbZA1UAI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jan 2009 15:00:08 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0901281233250.3134-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Krishna Gudipati <kgudipat@Brocade.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Ramkumar Vadivelu <rvadivel@Brocade.COM>, Vinodh Ravindran <vravindr@Brocade.COM>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>, linux-usb@vger.kernel.org, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org
 
-James Bottomley Wrote:
-> > > > + * Generic HAL callback element.
-> > > > + */
-> > > > +struct bfa_cb_qe_s {
-> > > > +	struct bfa_q_s         qe;
-> > > > +	bfa_cb_cbfn_t  cbfn;
-> > > > +	bfa_boolean_t   once;
-> > > > +	u32		rsvd;
-> > > > +	void           *cbarg;
-> > > > +};
-> > > > +
-> > > > +#define bfa_cb_queue(__bfa, __hcb_qe, __cbfn, __cbarg) do {
-> > \
-> > > > +	(__hcb_qe)->cbfn  = (__cbfn);
-> > \
-> > > > +	(__hcb_qe)->cbarg = (__cbarg);
-> > \
-> > > > +	bfa_q_enq(&(__bfa)->comp_q, (__hcb_qe));
-> > \
-> > > > +} while (0)
-> > >
-> > > Please stop here, weird HALs and own list management routines are
-not
-> > > things we put into the tree.  (except for gregs junk
-subdirectory..)
-> > >
-> > > Please rewrite this into a proper Linux driver.
-> >
-> >
-> > Thanks Christoph for the code review,
-> >
-> > I will clean up all the HAL references and also replace our own list
-> > management code with standard linux implementation.
-> 
-> This might take a while.  I can offer to put this driver in the
-staging
-> tree while you work on it if that would be helpful?
-> 
-> The way the staging tree works is that drivers are held in a separate
-> area (drivers/staging) in the linux kernel while they're being worked
-> on.  The driver can be installed by users while it's in the staging
-tree
-> (so made use of) but it will taint the kernel with a warning that it's
-> not of linux kernel quality yet.  Once we get an acceptable driver in
-> drivers/staging, I'll move it across to drivers/scsi and remove the
-> taint.
-> 
-> James
-> 
-> 
+On Wed, 28 Jan 2009 12:47:45 -0500 (EST)
+Alan Stern <stern@rowland.harvard.edu> wrote:
 
-This is definitely helpful, thanks James!
+> On Wed, 28 Jan 2009, Dirk Hohndel wrote:
+> 
+> > > > The other one is "why isn't the USB stack filtering that command when
+> > > > it comes down from SCSI?"
+> > > 
+> > > The USB stack doesn't do any filtering.  The SCSI stack is supposed to 
+> > > know what commands should and should not be sent.
+> > > 
+> > > Furthermore, it seems quite likely this command was sent by userspace, 
+> > > not by the SCSI stack -- in which case the program is supposed to know 
+> > > what commands it shouldn't send.
+> > 
+> > Not sure I agree with that logic. If the USB stack KNOWS that
+> > non-removable devices get upset by this command, then it would be
+> > appropriate for it to filter those out - to protect from bugs as much
+> > as to protect from denial of service attacks.
+> 
+> Part of the problem is that many devices claim to have removable media 
+> when in fact they don't.  And going back to your first email message, I 
+> see that your device is one of them:
+> 
+> > Jan 22 13:49:53 dhohndel-mobl4 kernel: [   46.329437] sd 4:0:0:0: [sdb] Attached SCSI \
+> >                 removable disk
+>                   ^^^^^^^^^
+> 
+> In any case, usb-storage is just a transport.  It sends commands from
+> higher up (the SCSI stack) to a USB device.  It filters the commands as
+> little as possible.  In other words, don't blame the messenger for
+> delivering a bad message.
 
-Jing
+I had missed that part that the stick claimed to be a removable device
+(it is, in a sense, but then it shouldn't balk at being ejected).
 
+> > > > Maybe we need to bring such code back?
+> > > 
+> > > Definitely not!  The correct approach to is to find the program
+> > > responsible for sending that command and fix it.
+> > 
+> > That's definitely something we should do (and I will continue to hunt
+> > this down), but my logic above still applies. I think this should have
+> > a WARN_ON around it, but should still be filtered.
+> 
+> Nope.  How would people feel when they triggered your WARN_ON every 
+> time they ejected a disc from their USB CD-ROM drive?
+
+I agree - see above.
+ 
+> > > Or you could guess that the offending command is sent by a
+> > > system/desktop utility, such as hal or udev.  Have you added or changed
+> > > any software in that area recently?
+> > 
+> > As I mentioned, I tried this in runlevel 3 - no desktop running.
+> 
+> Both hal and udev would still be running in level 3.
+
+I'll poke at this some more.
+
+/D
+
+-- 
+Dirk Hohndel
+Intel Open Source Technology Center
