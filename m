@@ -1,29 +1,44 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: Pete Zaitcev <zaitcev-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Subject: Re: strange USB storage failure with 2.6.29-rc2
-Date: Wed, 28 Jan 2009 16:23:37 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0901281622210.2231-100000@iolanthe.rowland.org>
-References: <20090128120129.68d04cd6@infradead.org>
+Date: Wed, 28 Jan 2009 14:27:29 -0700
+Message-ID: <20090128142729.6e047785.zaitcev@redhat.com>
+References: <20090127122641.1564fc46@infradead.org>
+	<Pine.LNX.4.44L0.0901271548370.2286-100000@iolanthe.rowland.org>
+	<20090127200607.369a1693@infradead.org>
+	<20090128141035.3a26ea60.zaitcev@redhat.com>
+	<20090128132228.3f1e2f8a@infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:49012 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755478AbZA1VXi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jan 2009 16:23:38 -0500
-In-Reply-To: <20090128120129.68d04cd6@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20090128132228.3f1e2f8a-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Dirk Hohndel <hohndel-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, zaitcev-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dirk Hohndel <hohndel@infradead.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, linux-usb@vger.kernel.org, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org
 
-On Wed, 28 Jan 2009, Dirk Hohndel wrote:
+On Wed, 28 Jan 2009 13:22:28 -0800, Dirk Hohndel <hohndel-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
 
-> Any recommendations how to best approach debugging this? Attaching
-> strace to some processes before inserting the usb stick?
+> > > On a 64bit 2.6.29-rc2 system (and a few earlier kernels that I have
+> > > tried) I can no longer use USB sticks.
+> > 
+> > So how do you know that you "no longer" can use USB sticks if you
+> > did not find a kernel where it worked? It's either one or the other.
 
-No really good recommendations.  The guilty party is often hal, so you 
-can try turning off the haldaemon service before plugging in your 
-stick.
+> I know that I had it working when I installed F10. It doesn't work
+> right now, but there have been lots of updates to F10 since.
 
-Alan Stern
+Thanks, that's useful. I guess my idea about ->allow_restart cannot
+be relevant then, that code existed for a long time.
 
+> http://kerneltrap.org/mailarchive/linux-usb/2009/1/27/4830624
+
+Got it, thanks.
+
+I also have stock F10 boxes here to test.
+
+-- Pete
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
