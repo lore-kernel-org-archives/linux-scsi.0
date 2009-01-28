@@ -1,81 +1,75 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: RE: [PATCH 2/5] bfa: Brocade BFA FC SCSI driver submission
-Date: Wed, 28 Jan 2009 17:44:22 +0000
-Message-ID: <1233164662.3236.93.camel@localhost.localdomain>
-References: <200901271854.n0RIs73a026759@swe37.brocade.com>
-	 <20090127221618.GA26480@infradead.org>
-	 <4C94DE2070B172459E4F1EE14BD2364E027534DA@HQ-EXCH-5.corp.brocade.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: strange USB storage failure with 2.6.29-rc2
+Date: Wed, 28 Jan 2009 12:47:45 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0901281233250.3134-100000@iolanthe.rowland.org>
+References: <20090128091406.316a80fc@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:56311 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751942AbZA1RoX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Jan 2009 12:44:23 -0500
-In-Reply-To: <4C94DE2070B172459E4F1EE14BD2364E027534DA@HQ-EXCH-5.corp.brocade.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:36964 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751113AbZA1Rrr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jan 2009 12:47:47 -0500
+In-Reply-To: <20090128091406.316a80fc@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jing Huang <huangj@Brocade.COM>
-Cc: Christoph Hellwig <hch@infradead.org>, Krishna Gudipati <kgudipat@Brocade.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Ramkumar Vadivelu <rvadivel@Brocade.COM>, Vinodh Ravindran <vravindr@Brocade.COM>
+To: Dirk Hohndel <hohndel@infradead.org>
+Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>, linux-usb@vger.kernel.org, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org
 
-On Tue, 2009-01-27 at 15:07 -0800, Jing Huang wrote:
-> 
-> > -----Original Message-----
-> > From: Christoph Hellwig [mailto:hch@infradead.org]
-> > Sent: Tuesday, January 27, 2009 2:16 PM
-> > To: Jing Huang
-> > Cc: James.Bottomley@HansenPartnership.com; Krishna Gudipati; linux-
-> > kernel@vger.kernel.org; linux-scsi@vger.kernel.org; Ramkumar Vadivelu;
-> > Vinodh Ravindran
-> > Subject: Re: [PATCH 2/5] bfa: Brocade BFA FC SCSI driver submission
+On Wed, 28 Jan 2009, Dirk Hohndel wrote:
+
+> > > The other one is "why isn't the USB stack filtering that command when
+> > > it comes down from SCSI?"
 > > 
-> > On Tue, Jan 27, 2009 at 10:54:07AM -0800, Jing Huang wrote:
-> > > +/**
-> > > + * Generic HAL callback element.
-> > > + */
-> > > +struct bfa_cb_qe_s {
-> > > +	struct bfa_q_s         qe;
-> > > +	bfa_cb_cbfn_t  cbfn;
-> > > +	bfa_boolean_t   once;
-> > > +	u32		rsvd;
-> > > +	void           *cbarg;
-> > > +};
-> > > +
-> > > +#define bfa_cb_queue(__bfa, __hcb_qe, __cbfn, __cbarg) do {
-> \
-> > > +	(__hcb_qe)->cbfn  = (__cbfn);
-> \
-> > > +	(__hcb_qe)->cbarg = (__cbarg);
-> \
-> > > +	bfa_q_enq(&(__bfa)->comp_q, (__hcb_qe));
-> \
-> > > +} while (0)
+> > The USB stack doesn't do any filtering.  The SCSI stack is supposed to 
+> > know what commands should and should not be sent.
 > > 
-> > Please stop here, weird HALs and own list management routines are not
-> > things we put into the tree.  (except for gregs junk subdirectory..)
+> > Furthermore, it seems quite likely this command was sent by userspace, 
+> > not by the SCSI stack -- in which case the program is supposed to know 
+> > what commands it shouldn't send.
+> 
+> Not sure I agree with that logic. If the USB stack KNOWS that
+> non-removable devices get upset by this command, then it would be
+> appropriate for it to filter those out - to protect from bugs as much
+> as to protect from denial of service attacks.
+
+Part of the problem is that many devices claim to have removable media 
+when in fact they don't.  And going back to your first email message, I 
+see that your device is one of them:
+
+> Jan 22 13:49:53 dhohndel-mobl4 kernel: [   46.329437] sd 4:0:0:0: [sdb] Attached SCSI \
+>                 removable disk
+                  ^^^^^^^^^
+
+In any case, usb-storage is just a transport.  It sends commands from
+higher up (the SCSI stack) to a USB device.  It filters the commands as
+little as possible.  In other words, don't blame the messenger for
+delivering a bad message.
+
+> > > Maybe we need to bring such code back?
 > > 
-> > Please rewrite this into a proper Linux driver.
+> > Definitely not!  The correct approach to is to find the program
+> > responsible for sending that command and fix it.
 > 
+> That's definitely something we should do (and I will continue to hunt
+> this down), but my logic above still applies. I think this should have
+> a WARN_ON around it, but should still be filtered.
+
+Nope.  How would people feel when they triggered your WARN_ON every 
+time they ejected a disc from their USB CD-ROM drive?
+
+> > Or you could guess that the offending command is sent by a
+> > system/desktop utility, such as hal or udev.  Have you added or changed
+> > any software in that area recently?
 > 
-> Thanks Christoph for the code review,
-> 
-> I will clean up all the HAL references and also replace our own list
-> management code with standard linux implementation.
+> As I mentioned, I tried this in runlevel 3 - no desktop running.
 
-This might take a while.  I can offer to put this driver in the staging
-tree while you work on it if that would be helpful?
+Both hal and udev would still be running in level 3.
 
-The way the staging tree works is that drivers are held in a separate
-area (drivers/staging) in the linux kernel while they're being worked
-on.  The driver can be installed by users while it's in the staging tree
-(so made use of) but it will taint the kernel with a warning that it's
-not of linux kernel quality yet.  Once we get an acceptable driver in
-drivers/staging, I'll move it across to drivers/scsi and remove the
-taint.
+> And
+> this is on an (as far as I can remember) unmodified F10 64bit... so I'm
+> surprised that I appear to be the only one reporting this; which of
+> course makes me challenge my own "unmodified" statement :-)
 
-James
-
-
+Alan Stern
 
