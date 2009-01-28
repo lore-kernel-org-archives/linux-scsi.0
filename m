@@ -1,85 +1,81 @@
-From: Dirk Hohndel <hohndel@infradead.org>
-Subject: Re: strange USB storage failure with 2.6.29-rc2
-Date: Wed, 28 Jan 2009 09:14:06 -0800
-Message-ID: <20090128091406.316a80fc@infradead.org>
-References: <20090127200607.369a1693@infradead.org>
-	<Pine.LNX.4.44L0.0901281141300.3134-100000@iolanthe.rowland.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: RE: [PATCH 2/5] bfa: Brocade BFA FC SCSI driver submission
+Date: Wed, 28 Jan 2009 17:44:22 +0000
+Message-ID: <1233164662.3236.93.camel@localhost.localdomain>
+References: <200901271854.n0RIs73a026759@swe37.brocade.com>
+	 <20090127221618.GA26480@infradead.org>
+	 <4C94DE2070B172459E4F1EE14BD2364E027534DA@HQ-EXCH-5.corp.brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:58500 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751038AbZA1ROP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jan 2009 12:14:15 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0901281141300.3134-100000@iolanthe.rowland.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:56311 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751942AbZA1RoX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Jan 2009 12:44:23 -0500
+In-Reply-To: <4C94DE2070B172459E4F1EE14BD2364E027534DA@HQ-EXCH-5.corp.brocade.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>, linux-usb@vger.kernel.org, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org
+To: Jing Huang <huangj@Brocade.COM>
+Cc: Christoph Hellwig <hch@infradead.org>, Krishna Gudipati <kgudipat@Brocade.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Ramkumar Vadivelu <rvadivel@Brocade.COM>, Vinodh Ravindran <vravindr@Brocade.COM>
 
-On Wed, 28 Jan 2009 11:54:39 -0500 (EST)
-Alan Stern <stern@rowland.harvard.edu> wrote:
-
-> > > So the real question is: Who is responsible for sending that Eject 
-> > > command?  It certainly isn't usb-storage or any other part of the USB 
-> > > stack.  Maybe something in the SCSI disk driver or maybe a user 
-> > > program.
+On Tue, 2009-01-27 at 15:07 -0800, Jing Huang wrote:
+> 
+> > -----Original Message-----
+> > From: Christoph Hellwig [mailto:hch@infradead.org]
+> > Sent: Tuesday, January 27, 2009 2:16 PM
+> > To: Jing Huang
+> > Cc: James.Bottomley@HansenPartnership.com; Krishna Gudipati; linux-
+> > kernel@vger.kernel.org; linux-scsi@vger.kernel.org; Ramkumar Vadivelu;
+> > Vinodh Ravindran
+> > Subject: Re: [PATCH 2/5] bfa: Brocade BFA FC SCSI driver submission
 > > 
-> > That's one valid question... maybe someone on the linux-scsi list can
-> > sched some light onto this? Are there SCSI specific debugging options I
-> > should turn on?
+> > On Tue, Jan 27, 2009 at 10:54:07AM -0800, Jing Huang wrote:
+> > > +/**
+> > > + * Generic HAL callback element.
+> > > + */
+> > > +struct bfa_cb_qe_s {
+> > > +	struct bfa_q_s         qe;
+> > > +	bfa_cb_cbfn_t  cbfn;
+> > > +	bfa_boolean_t   once;
+> > > +	u32		rsvd;
+> > > +	void           *cbarg;
+> > > +};
+> > > +
+> > > +#define bfa_cb_queue(__bfa, __hcb_qe, __cbfn, __cbarg) do {
+> \
+> > > +	(__hcb_qe)->cbfn  = (__cbfn);
+> \
+> > > +	(__hcb_qe)->cbarg = (__cbarg);
+> \
+> > > +	bfa_q_enq(&(__bfa)->comp_q, (__hcb_qe));
+> \
+> > > +} while (0)
+> > 
+> > Please stop here, weird HALs and own list management routines are not
+> > things we put into the tree.  (except for gregs junk subdirectory..)
+> > 
+> > Please rewrite this into a proper Linux driver.
 > 
-> I don't see anything in the sd driver that could have done it.  And I 
-> don't know where else in the kernel it would have come from -- which is 
-> not to say that I'm familiar with every part of the kernel!
-
-I did some greping and couldn't find anything suspicious, either.
-
-> > The other one is "why isn't the USB stack filtering that command when
-> > it comes down from SCSI?"
 > 
-> The USB stack doesn't do any filtering.  The SCSI stack is supposed to 
-> know what commands should and should not be sent.
+> Thanks Christoph for the code review,
 > 
-> Furthermore, it seems quite likely this command was sent by userspace, 
-> not by the SCSI stack -- in which case the program is supposed to know 
-> what commands it shouldn't send.
+> I will clean up all the HAL references and also replace our own list
+> management code with standard linux implementation.
 
-Not sure I agree with that logic. If the USB stack KNOWS that
-non-removable devices get upset by this command, then it would be
-appropriate for it to filter those out - to protect from bugs as much
-as to protect from denial of service attacks.
+This might take a while.  I can offer to put this driver in the staging
+tree while you work on it if that would be helpful?
 
-> > Maybe we need to bring such code back?
-> 
-> Definitely not!  The correct approach to is to find the program
-> responsible for sending that command and fix it.
+The way the staging tree works is that drivers are held in a separate
+area (drivers/staging) in the linux kernel while they're being worked
+on.  The driver can be installed by users while it's in the staging tree
+(so made use of) but it will taint the kernel with a warning that it's
+not of linux kernel quality yet.  Once we get an acceptable driver in
+drivers/staging, I'll move it across to drivers/scsi and remove the
+taint.
 
-That's definitely something we should do (and I will continue to hunt
-this down), but my logic above still applies. I think this should have
-a WARN_ON around it, but should still be filtered.
- 
-> Unfortunately, I don't know any easy way to identify programs as they 
-> send SCSI commands.  I suppose you could add some debugging statements 
-> in block/scsi_ioctl.c and drivers/scsi/sg.c to monitor all those 
-> commands as they come in from userspace.  There are several different 
-> pathways for this, and the command could come from any of them.
+James
 
-That's why I copied the scsi list, hoping that they have some tools /
-ideas how to do this.
- 
-> Or you could guess that the offending command is sent by a
-> system/desktop utility, such as hal or udev.  Have you added or changed
-> any software in that area recently?
 
-As I mentioned, I tried this in runlevel 3 - no desktop running. And
-this is on an (as far as I can remember) unmodified F10 64bit... so I'm
-surprised that I appear to be the only one reporting this; which of
-course makes me challenge my own "unmodified" statement :-)
 
-/D
-
--- 
-Dirk Hohndel
-Intel Open Source Technology Center
