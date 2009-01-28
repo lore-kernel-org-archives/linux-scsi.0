@@ -1,31 +1,27 @@
 From: Dirk Hohndel <hohndel@infradead.org>
 Subject: Re: strange USB storage failure with 2.6.29-rc2
-Date: Wed, 28 Jan 2009 11:59:58 -0800
-Message-ID: <20090128115958.77d59368@infradead.org>
-References: <20090128091406.316a80fc@infradead.org>
-	<Pine.LNX.4.44L0.0901281233250.3134-100000@iolanthe.rowland.org>
+Date: Wed, 28 Jan 2009 12:01:29 -0800
+Message-ID: <20090128120129.68d04cd6@infradead.org>
+References: <20090127200607.369a1693@infradead.org>
+	<Pine.LNX.4.44L0.0901281141300.3134-100000@iolanthe.rowland.org>
+	<20090128091406.316a80fc@infradead.org>
+	<1233165551.3236.99.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:47259 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:47347 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751512AbZA1UAI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jan 2009 15:00:08 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0901281233250.3134-100000@iolanthe.rowland.org>
+	with ESMTP id S1751507AbZA1UBh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jan 2009 15:01:37 -0500
+In-Reply-To: <1233165551.3236.99.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>, linux-usb@vger.kernel.org, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, linux-usb@vger.kernel.org, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org
 
-On Wed, 28 Jan 2009 12:47:45 -0500 (EST)
-Alan Stern <stern@rowland.harvard.edu> wrote:
-
-> On Wed, 28 Jan 2009, Dirk Hohndel wrote:
-> 
-> > > > The other one is "why isn't the USB stack filtering that command when
-> > > > it comes down from SCSI?"
-> > > 
+On Wed, 28 Jan 2009 17:59:11 +0000
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 > > > The USB stack doesn't do any filtering.  The SCSI stack is supposed to 
 > > > know what commands should and should not be sent.
 > > > 
@@ -38,45 +34,24 @@ Alan Stern <stern@rowland.harvard.edu> wrote:
 > > appropriate for it to filter those out - to protect from bugs as much
 > > as to protect from denial of service attacks.
 > 
-> Part of the problem is that many devices claim to have removable media 
-> when in fact they don't.  And going back to your first email message, I 
-> see that your device is one of them:
-> 
-> > Jan 22 13:49:53 dhohndel-mobl4 kernel: [   46.329437] sd 4:0:0:0: [sdb] Attached SCSI \
-> >                 removable disk
->                   ^^^^^^^^^
-> 
-> In any case, usb-storage is just a transport.  It sends commands from
-> higher up (the SCSI stack) to a USB device.  It filters the commands as
-> little as possible.  In other words, don't blame the messenger for
-> delivering a bad message.
+> Well, I really don't think we want to get into vetting SCSI commands
+> over SG_IO ... that would just trip us up on the enterprise (and
+> probably never work anyway).
 
-I had missed that part that the stick claimed to be a removable device
-(it is, in a sense, but then it shouldn't balk at being ejected).
+Yeah, I understand now and agree with you and Alan on that one...
 
-> > > > Maybe we need to bring such code back?
-> > > 
-> > > Definitely not!  The correct approach to is to find the program
-> > > responsible for sending that command and fix it.
-> > 
-> > That's definitely something we should do (and I will continue to hunt
-> > this down), but my logic above still applies. I think this should have
-> > a WARN_ON around it, but should still be filtered.
+> The problem is that hal wants to send its own SCSI commands over SG_IO.
+> We've spent years trying to persuade it to put the crackpipe down and
+> back away from the window ledge on this (because SCSI in the kernel
+> knows better how to handle problem devices).  We have been having some
+> limited success recently ... we keep enhancing what sysfs provides
+> (safely) so that hal doesn't have to poke in with SG_IO unsafely.
 > 
-> Nope.  How would people feel when they triggered your WARN_ON every 
-> time they ejected a disc from their USB CD-ROM drive?
+> If you can find out what the actual reason hal or whatever is doing
+> this, we can have another go at them.
 
-I agree - see above.
- 
-> > > Or you could guess that the offending command is sent by a
-> > > system/desktop utility, such as hal or udev.  Have you added or changed
-> > > any software in that area recently?
-> > 
-> > As I mentioned, I tried this in runlevel 3 - no desktop running.
-> 
-> Both hal and udev would still be running in level 3.
-
-I'll poke at this some more.
+Any recommendations how to best approach debugging this? Attaching
+strace to some processes before inserting the usb stick?
 
 /D
 
