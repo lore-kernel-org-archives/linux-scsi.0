@@ -1,33 +1,38 @@
-From: Pete Zaitcev <zaitcev@redhat.com>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
 Subject: Re: strange USB storage failure with 2.6.29-rc2
-Date: Wed, 28 Jan 2009 14:13:29 -0700
-Message-ID: <20090128141329.f427232b.zaitcev@redhat.com>
-References: <20090127200607.369a1693@infradead.org>
-	<Pine.LNX.4.44L0.0901281141300.3134-100000@iolanthe.rowland.org>
-	<20090128091406.316a80fc@infradead.org>
-	<1233165551.3236.99.camel@localhost.localdomain>
-	<20090128120129.68d04cd6@infradead.org>
+Date: Wed, 28 Jan 2009 16:21:53 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0901281620130.2231-100000@iolanthe.rowland.org>
+References: <20090128141035.3a26ea60.zaitcev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:59738 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759203AbZA1VP2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Jan 2009 16:15:28 -0500
-In-Reply-To: <20090128120129.68d04cd6@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20090128141035.3a26ea60.zaitcev-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Pete Zaitcev <zaitcev-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Dirk Hohndel <hohndel-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dirk Hohndel <hohndel@infradead.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, linux-usb@vger.kernel.org, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org
 
-On Wed, 28 Jan 2009 12:01:29 -0800, Dirk Hohndel <hohndel@infradead.org> wrote:
+On Wed, 28 Jan 2009, Pete Zaitcev wrote:
 
-> Any recommendations how to best approach debugging this? Attaching
-> strace to some processes before inserting the usb stick?
+> > > >From the middle of the log (after the partition table has been read):
+> > > 
+> > > > [   32.056855] usb-storage: queuecommand called
+> > > > [   32.056886] usb-storage: *** thread awakened.
+> > > > [   32.056888] usb-storage: Command START_STOP (6 bytes)
+> 
+> Middle huh. I _really_ wish people stopped editing their logs. How
+> am I supposed to determine if this was sent immediately after open
+> (e.g. your HAL is screwing with you), or it happened after a time
+> of inactivity?
 
-I would try add some dump_stack() to ->queuecommand, to see if this
-is SG_IO or other source. Finding who sends the commands is the key.
-Another trick is to printk the completion handlers (w/ lookup_symbol).
+Don't blame this on Dirk; he was just quoting something I had sent, in 
+which I extracted part of his log.  The entire log is earlier in this 
+thread.  The timestamp shows that the START-STOP UNIT command was sent 
+less than 0.5 seconds after usb-storage first probed the device.
 
--- Pete
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
