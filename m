@@ -1,50 +1,33 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] bsg: Fix sense buffer bug in SG_IO
-Date: Thu, 29 Jan 2009 13:36:20 +0200
-Message-ID: <498194B4.6040202@panasas.com>
-References: <4975CC4F.40006@panasas.com> <20090120130941.GI30821@kernel.dk>
+Subject: Re: [PATCH 1/4] [Linux/SCSI]: Change RECEIVE_CREDENTIAL to	VLC_SA_RECEIVE_CREDENTIAL
+Date: Thu, 29 Jan 2009 13:46:50 +0200
+Message-ID: <4981972A.2090801@panasas.com>
+References: <1233093749.6442.97.camel@haakon2.linux-iscsi.org> <1233094236.6442.110.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:6392 "EHLO
+Received: from gw-ca.panasas.com ([66.104.249.162]:4358 "EHLO
 	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752937AbZA2LgW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jan 2009 06:36:22 -0500
-In-Reply-To: <20090120130941.GI30821@kernel.dk>
+	with ESMTP id S1751988AbZA2Lqu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jan 2009 06:46:50 -0500
+In-Reply-To: <1233094236.6442.110.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Jens Axboe wrote:
-> On Tue, Jan 20 2009, Boaz Harrosh wrote:
->> When submitting requests via SG_IO, which does a sync io, a
->> bsg_command is not allocated, so an in-Kernel sense_buffer was not
->> set. However when calling blk_execute_rq() with no sense buffer
->> one is provided from the stack. Now bsg at blk_complete_sgv4_hdr_rq()
->> would check if rq->sense_len and a sense was requested by sg_io_v4
->> the rq->sense was copy_user() back, but by now it is already mangled
->> stack memory.
->>
->> I have fixed that by forcing a sense_buffer when calling bsg_map_hdr().
->> The bsg_command->sense is provided in the write/read path like before,
->> and on-the-stack buffer is provided when doing SG_IO.
->>
->> I have also fixed a dprintk message to print rq->errors in hex because
->> of the scsi bit-field use of this member. For other block devices it
->> does not matter anyway.
->>
->> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+Nicholas A. Bellinger wrote:
+> Hi James,
 > 
-> Acked-by: Jens Axboe <jens.axboe@oracle.com>
+> Let me know if you need a fresh respin of this patch..  According to
+> spc4r17 section D.3.5, VLC_SA_RECEIVE_CREDENTIAL is the only
+> VARIABLE_LENGTH_CMD defined Service ACtion..
 > 
+> --nab
 
-Jens hi.
+Not accurate. See file include/scsi/osd_protocol.h in the scsi-misc
+git-tree master branch. The complete OSD command set is VARIABLE_LENGTH_CMD
+based. There must be others as well
 
-Do we need to push this for 2.6.29-rcx. As this is a theoretical
-security problem, copying and returning to user-mode a mangled
-Kernel stack? Also we might need to push this to stable?
-
-Thanks
 Boaz
