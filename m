@@ -1,50 +1,43 @@
-From: Dirk Hohndel <hohndel-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: strange USB storage failure with 2.6.29-rc2
-Date: Wed, 28 Jan 2009 14:39:44 -0800
-Message-ID: <20090128143944.62665eb8@infradead.org>
-References: <20090128120129.68d04cd6@infradead.org>
-	<Pine.LNX.4.44L0.0901281622210.2231-100000@iolanthe.rowland.org>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: Re: [RFC PATCH 0/4] dm-mpath: dynamic load balancers
+Date: Thu, 29 Jan 2009 16:16:33 +0900
+Message-ID: <498157D1.2010105@ct.jp.nec.com>
+References: <20080912.105038.102581623.k-ueda@ct.jp.nec.com>
+	<20090128153704.GA23158@agk.fab.redhat.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.0901281622210.2231-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20090128153704.GA23158@agk.fab.redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Alasdair Kergon <agk@redhat.com>
+Cc: dm-devel@redhat.com, stefan.bader@canonical.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 28 Jan 2009 16:23:37 -0500 (EST)
-Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org> wrote:
+Hi Alasdair,
 
-> On Wed, 28 Jan 2009, Dirk Hohndel wrote:
-> 
-> > Any recommendations how to best approach debugging this? Attaching
-> > strace to some processes before inserting the usb stick?
-> 
-> No really good recommendations.  The guilty party is often hal, so you 
-> can try turning off the haldaemon service before plugging in your 
-> stick.
+On 01/29/2009 12:37 AM +0900, Alasdair G Kergon wrote:
+> On Fri, Sep 12, 2008 at 10:50:38AM -0400, Kiyoshi Ueda wrote:
+>> The following patches add the following 2 dynamic load balancers
+>> to request-based dm-multipath:
+>>   o queue-length oriented dynamic load balancer, dm-queue-length.
+>>   o service-time oriented dynamic load balancer, dm-service-time.
+>  
+> Could we have separate Kconfig options to select them?
 
-I ran with that and figured it out. I rebooted into runlevel 3 and
-stopped one daemon after another. udev was the culprit. As part of the
-installation of a 3G modem a broken udev script had been installed
-(unbeknownst to me). That issued an eject on anything that identified
-itself as being removable (it was supposed to only do that for the
-specific device but a syntax error in it made it eject any removable
-device).
+Sure.
+I posted the new one rebased on top of 2.6.29-rc2:
+  https://www.redhat.com/archives/dm-devel/2009-January/msg00183.html
+  https://www.redhat.com/archives/dm-devel/2009-January/msg00186.html
 
-So not a kernel issue at all.
-
-Thanks for all the help tracking this down.
-
-/D
-
-
--- 
-Dirk Hohndel
-Intel Open Source Technology Center
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Kiyoshi Ueda
