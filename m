@@ -1,43 +1,49 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [Patch] sg: fix device number in blktrace data
-Date: Fri, 30 Jan 2009 11:24:32 -0500
-Message-ID: <498329C0.5010704@interlog.com>
-References: <1233326783.929.6.camel@kitka.ibm.com>
-Reply-To: dgilbert@interlog.com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: The Linux Storage and Filesystem Summit Call for Proposals
+Date: Fri, 30 Jan 2009 10:40:30 -0600
+Message-ID: <1233333630.3248.17.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:45877 "EHLO
-	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752138AbZA3QYk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Jan 2009 11:24:40 -0500
-In-Reply-To: <1233326783.929.6.camel@kitka.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Peschke <mpeschke@linux.vnet.ibm.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-scsi@vger.kernel.org
 
-Martin Peschke wrote:
-> Hi,
-> 
-> we have run into an issue with blktrace being started for sg devices.
-> Please apply.
-> 
-> Thanks,
-> Martin
-> 
-> 
-> 
-> From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
-> 
-> The device number denoting a generic SCSI devices (sg) in a blktrace
-> trace is broken; major and minor are always 0. It looks like
-> sdp->device->sdev_gendev.devt is not initialized properly.
-> The fix below uses other data to make up a valid device number,
-> similar to the way an sg device number is generated for sysfs output.
-> 
-> Reported-by: Stefan Raspl <raspl@linux.vnet.ibm.com>
-> Signed-off-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+An update on the previously sent save the date email.  The website is
+now accepting proposals.
 
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+---
+
+This year's storage and filesystem workshop is being held in San
+Francisco on April 6th and 7th.  It's being held on the Monday and
+Tuesday immediately preceeding the Linux Foundation Collaboration
+Summit, in the same hotel.
+
+You can find all the details on the workshop's web site:
+
+  http://events.linuxfoundation.org/events/lsf-workshop
+
+The workshop focuses on collaboration and discussion.  There will be no
+referred papers and few presentations with slides will be accepted.
+
+To attend we ask that you use the CFP interface on the web site to
+submit a short proposal for a topic to discuss during the workshop.  The
+program committee will send invitations to the workshop based on these
+proposals.  The CFP and FAQ tabs on the web site describe this in more
+detail.
+
+For reference, there are writeups of previous workshops available
+online:
+
+http://lwn.net/Articles/226351/
+http://www.usenix.org/publications/login/2008-06/openpdfs/lsf08reports.pdf
+
+This year we'll be adding time to the schedule specifically for hands-on
+development with your colleagues.
+
+Please let me know if there are any questions about the workshop.
+
+James
+
+
