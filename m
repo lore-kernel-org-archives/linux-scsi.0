@@ -1,52 +1,44 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 3/3] scsi dh alua: handle report luns data changed in check sense callout
-Date: Fri, 30 Jan 2009 17:00:11 -0600
-Message-ID: <12333564123194-git-send-email-michaelc@cs.wisc.edu>
-References: <12333564114078-git-send-email-michaelc@cs.wisc.edu>
- <12333564124151-git-send-email-michaelc@cs.wisc.edu>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH 2/5] bfa: Brocade BFA FC SCSI driver submission
+Date: Fri, 30 Jan 2009 19:32:38 -0800
+Message-ID: <20090131033238.GC2947@kroah.com>
+References: <200901271854.n0RIs73a026759@swe37.brocade.com> <20090127221618.GA26480@infradead.org> <4C94DE2070B172459E4F1EE14BD2364E027534DA@HQ-EXCH-5.corp.brocade.com> <1233164662.3236.93.camel@localhost.localdomain> <4C94DE2070B172459E4F1EE14BD2364E02753674@HQ-EXCH-5.corp.brocade.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:53960 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753209AbZA3XAQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Jan 2009 18:00:16 -0500
-In-Reply-To: <12333564124151-git-send-email-michaelc@cs.wisc.edu>
+Received: from kroah.org ([198.145.64.141]:47795 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750779AbZAaDfI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Jan 2009 22:35:08 -0500
+Content-Disposition: inline
+In-Reply-To: <4C94DE2070B172459E4F1EE14BD2364E02753674@HQ-EXCH-5.corp.brocade.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Ilgu Hong <ilgu.hong@promise.com>, Mike Christie <michaelc@cs.wisc.edu>
+To: Jing Huang <huangj@Brocade.COM>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@infradead.org>, Krishna Gudipati <kgudipat@Brocade.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Ramkumar Vadivelu <rvadivel@Brocade.COM>, Vinodh Ravindran <vravindr@Brocade.COM>
 
-From: Ilgu Hong <ilgu.hong@promise.com>
+On Wed, Jan 28, 2009 at 10:02:43AM -0800, Jing Huang wrote:
+> > This might take a while.  I can offer to put this driver in the staging
+> > tree while you work on it if that would be helpful?
+> > 
+> > The way the staging tree works is that drivers are held in a separate
+> > area (drivers/staging) in the linux kernel while they're being worked
+> > on.  The driver can be installed by users while it's in the staging tree
+> > (so made use of) but it will taint the kernel with a warning that it's
+> > not of linux kernel quality yet.  Once we get an acceptable driver in
+> > drivers/staging, I'll move it across to drivers/scsi and remove the
+> > taint.
+> > 
+> > James
+> > 
+> > 
+> 
+> This is definitely helpful, thanks James!
 
-When we switch controllers the Intel Multi-Flex reports
-REPORTED_LUNS_DATA_HAS_CHANGED. This patch just has us
-retry the command.
+Does this mean someone will send me a patch to add this to the
+drivers/staging/ tree?  Or should I just grab these patches and use them
+to add them to the tree myself (preserving author attributes of course)?
 
-Signed-off-by: Ilgu Hong <ilgu.hong@promise.com>
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/device_handler/scsi_dh_alua.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+thanks,
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 31e1df5..dba154c 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -461,6 +461,15 @@ static int alua_check_sense(struct scsi_device *sdev,
- 			 */
- 			return ADD_TO_MLQUEUE;
- 		}
-+		if (sense_hdr->asc == 0x3f && sense_hdr->ascq == 0x0e) {
-+			/*
-+			 * REPORTED_LUNS_DATA_HAS_CHANGED is reported
-+			 * when switching controllers on targets like
-+			 * Intel Multi-Flex. We can just retry.
-+			 */
-+			return ADD_TO_MLQUEUE;
-+		}
-+
- 		break;
- 	}
- 
--- 
-1.6.0.6
-
+greg k-h
