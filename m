@@ -1,118 +1,63 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/3] dmraid: add alt_size to dev_info
-Date: Sun, 01 Feb 2009 12:00:36 +0900
-Message-ID: <49851054.10605@kernel.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCHSET] block,scsi,libata: implement alt_size
+Date: Sat, 31 Jan 2009 22:20:39 -0500
+Message-ID: <49851507.5040905@garzik.org>
 References: <1233456951-992-1-git-send-email-tj@kernel.org>
-	<49851012.8070904@kernel.org>
-Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <49851012.8070904@kernel.org>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, Mauelshagen@redhat.c
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1233456951-992-1-git-send-email-tj@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, Mauelshagen@RedHat.com, dm-devel@RedHat.com
 List-Id: linux-scsi@vger.kernel.org
 
-Add alt_size to dev_info and set it during device scanning if
-available.
+Tejun Heo wrote:
+> Hello,
+> 
+> This patchset implements alt_size, which is a size hint to the users
+> of a block device.  It's primarily to communicate the BIOS (HPA) size
+> on ATA devices to userland, so that dmraid can consider it when trying
+> to figure out BIOS raid layout.  This is critical as dmraid can be
+> tricked into assemblying the wrong raid when fed with the unlocked
+> size and if the disk content is right (or, rather, wrong) and good
+> number of distros are shipping with ignore_hpa=1 as default.
+> 
+> This patch contains the following three patches.
+> 
+>   0001-block-add-alt_size.patch
+>   0002-scsi-add-scsi_device-alt_capacity.patch
+>   0003-libata-export-HPA-size-as-alt_size.patch
+> 
+> Without the above three patches, I get the following on my nv RAID-0
+> if HPA unlocking is turned on.
+> 
+>   # ~/work/dmraid/tools/dmraid -a y
+>   RAID set "nvidia_djgdjigi" was activated
+>   # mount /dev/dm-0 /mnt/tmp
+>   mount: wrong fs type, bad option, bad superblock on /dev/dm-0,
+> 	 missing codepage or helper program, or other error
+> 	 In some cases useful info is found in syslog - try
+> 	 dmesg | tail  or so
+> 
+> With the above three patches and modified dmraid,
+> 
+>   ck804:~/os/work/build # ~/work/dmraid/tools/dmraid -a y -v -v -v
+>   ...
+>   NOTICE: /dev/sdb: using BIOS sectors 234439535
+>   RAID set "nvidia_djgdjigi" was activated
+>   ...
+>   ck804:~/os/work/build # mount /dev/dm-0 /mnt/tmp
+>   ck804:~/os/work/build # umount /dev/dm-0
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- include/dmraid/metadata.h |    1 +
- lib/device/scan.c         |   51 ++++++++++++++++++++++++++++++++------------
- 2 files changed, 38 insertions(+), 14 deletions(-)
+But the net result is that you are telling dmraid that it is OK to 
+proceed, even though part of the disk it wants is really missing.  That 
+seems unwise, because are you not basically proceeding with a known 
+corrupt dataset at that point?
 
-diff --git a/include/dmraid/metadata.h b/include/dmraid/metadata.h
-index 91bd221..538043e 100644
---- a/include/dmraid/metadata.h
-+++ b/include/dmraid/metadata.h
-@@ -120,6 +120,7 @@ struct dev_info {
- 	char *path;		/* Actual device node path. */
- 	char *serial;		/* ATA/SCSI serial number. */
- 	uint64_t sectors;	/* Device size. */
-+	uint64_t alt_sectors;	/* Alternative device size. (BIOS size) */
- };
- 
- /* Metadata areas and size stored on a RAID device. */
-diff --git a/lib/device/scan.c b/lib/device/scan.c
-index e9618c2..3befb08 100644
---- a/lib/device/scan.c
-+++ b/lib/device/scan.c
-@@ -233,29 +233,52 @@ sysfs_get_size(struct lib_context *lc, struct dev_info *di,
- {
- 	int ret = 0;
- 	char buf[22], *sysfs_file;
--	const char *sysfs_size = "size";
-+	const char *sysfs_size = "size", *sysfs_alt_size = "alt_size";
- 	FILE *f;
- 
- 	if (!(sysfs_file = dbg_malloc(strlen(path) + strlen(name) +
--				      strlen(sysfs_size) + 3)))
-+				      max(strlen(sysfs_size),
-+					  strlen(sysfs_alt_size)) + 3)))
- 		return log_alloc_err(lc, __func__);
- 
-+	/* read size */
- 	sprintf(sysfs_file, "%s/%s/%s", path, name, sysfs_size);
--	if ((f = fopen(sysfs_file, "r"))) {
--		/* Use fread+sscanf for klibc compatibility. */
--		if (fread(buf, sizeof(char), sizeof buf - 1, f) &&
--		    (ret = sscanf(buf, "%" PRIu64, &di->sectors)) != 1) {
--			ret = 0;
--			log_err(lc, "reading disk size for %s from sysfs",
--				di->path);
--		}
--
--		fclose(f);
--	} else
-+	if (!(f = fopen(sysfs_file, "r"))) {
- 		log_err(lc, "opening %s", sysfs_file);
-+		goto out;
-+	}
- 
--	dbg_free(sysfs_file);
-+	/* Use fread+sscanf for klibc compatibility. */
-+	if (!fread(buf, sizeof(char), sizeof buf - 1, f) ||
-+	    sscanf(buf, "%" PRIu64, &di->sectors) != 1) {
-+		log_err(lc, "reading disk size for %s from sysfs",
-+			di->path);
-+		goto out;
-+	}
-+	fclose(f);
-+
-+	/* read alt_size, missing alt_size isn't an error */
-+	sprintf(sysfs_file, "%s/%s/%s", path, name, sysfs_alt_size);
-+	if (!(f = fopen(sysfs_file, "r"))) {
-+		if (errno == ENOENT)
-+			ret = 1;
-+		else
-+			log_err(lc, "opening %s", sysfs_file);
-+		goto out;
-+	}
-+
-+	if (!fread(buf, sizeof(char), sizeof buf - 1, f) ||
-+	    sscanf(buf, "%" PRIu64, &di->alt_sectors) != 1) {
-+		log_err(lc, "reading disk alt size for %s from sysfs",
-+			di->path);
-+		goto out;
-+	}
-+	ret = 1;
- 
-+out:
-+	if (f)
-+		fclose(f);
-+	dbg_free(sysfs_file);
- 	return ret;
- }
- 
--- 
-1.6.0.2
+	Jeff
+
+
+
+
