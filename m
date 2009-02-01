@@ -1,44 +1,53 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH 2/5] bfa: Brocade BFA FC SCSI driver submission
-Date: Fri, 30 Jan 2009 19:32:38 -0800
-Message-ID: <20090131033238.GC2947@kroah.com>
-References: <200901271854.n0RIs73a026759@swe37.brocade.com> <20090127221618.GA26480@infradead.org> <4C94DE2070B172459E4F1EE14BD2364E027534DA@HQ-EXCH-5.corp.brocade.com> <1233164662.3236.93.camel@localhost.localdomain> <4C94DE2070B172459E4F1EE14BD2364E02753674@HQ-EXCH-5.corp.brocade.com>
+From: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>
+Subject: Re: Mainline kernel OLTP performance update
+Date: Sun, 01 Feb 2009 10:52:56 +0800
+Message-ID: <1233456777.2604.2.camel@ymzhang>
+References: <BC02C49EEB98354DBA7F5DD76F2A9E800317003CB0@azsmsx501.amr.corp.intel.com>
+	 <200901161503.13730.nickpiggin@yahoo.com.au>
+	 <20090115201210.ca1a9542.akpm@linux-foundation.org>
+	 <200901161746.25205.nickpiggin@yahoo.com.au>
+	 <20090116065546.GJ31013@parisc-linux.org>
+	 <1232092430.11429.52.camel@ymzhang>  <87sknjeemn.fsf@basil.nowhere.org>
+	 <1232428583.11429.83.camel@ymzhang>
+	 <alpine.DEB.1.10.0901211852060.18367@qirst.com>
+	 <1232613395.11429.122.camel@ymzhang>
+	 <1232615707.14549.6.camel@penberg-laptop>
+	 <1232616517.11429.129.camel@ymzhang>
+	 <1232617672.14549.25.camel@penberg-laptop>
+	 <1232679773.11429.155.camel@ymzhang>  <4979692B.3050703@cs.helsinki.fi>
+	 <1232697998.6094.17.camel@penberg-laptop>
+	 <1232699401.11429.163.camel@ymzhang>
+	 <1232703989.6094.29.camel@penberg-laptop>
+	 <alpine.DEB.1.10.0901231020030.21692@qirst.com>
+	 <1232765728.11429.193.camel@ymzhang>
+	 <alpine.DEB.1.10.0901261235270.1908@qirst.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:47795 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750779AbZAaDfI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Jan 2009 22:35:08 -0500
-Content-Disposition: inline
-In-Reply-To: <4C94DE2070B172459E4F1EE14BD2364E02753674@HQ-EXCH-5.corp.brocade.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.10.0901261235270.1908@qirst.com>
+Sender: netdev-owner@vger.kernel.org
+To: Christoph Lameter <cl@linux-foundation.org>
+Cc: Pekka Enberg <penberg@cs.helsinki.fi>, Andi Kleen <andi@firstfloor.org>, Matthew Wilcox <matthew@wil.cx>, Nick Piggin <nickpiggin@yahoo.com.au>, Andrew Morton <akpm@linux-foundation.org>, netdev@vger.kernel.org, Stephen Rothwell <sfr@canb.auug.org.au>, matthew.r.wilcox@intel.com, chinang.ma@intel.com, linux-kernel@vger.kernel.org, sharad.c.tripathi@intel.com, arjan@linux.intel.com, suresh.b.siddha@intel.com, harita.chilukuri@intel.com, douglas.w.styner@intel.com, peter.xihong.wang@intel.com, hubert.nueckel@intel.com, chris.mason@oracle.com, srostedt@redhat.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, anirban.chakraborty@qlogic.com, Ingo Molnar <mingo@elte.hu>
 List-Id: linux-scsi@vger.kernel.org
-To: Jing Huang <huangj@Brocade.COM>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@infradead.org>, Krishna Gudipati <kgudipat@Brocade.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Ramkumar Vadivelu <rvadivel@Brocade.COM>, Vinodh Ravindran <vravindr@Brocade.COM>
 
-On Wed, Jan 28, 2009 at 10:02:43AM -0800, Jing Huang wrote:
-> > This might take a while.  I can offer to put this driver in the staging
-> > tree while you work on it if that would be helpful?
-> > 
-> > The way the staging tree works is that drivers are held in a separate
-> > area (drivers/staging) in the linux kernel while they're being worked
-> > on.  The driver can be installed by users while it's in the staging tree
-> > (so made use of) but it will taint the kernel with a warning that it's
-> > not of linux kernel quality yet.  Once we get an acceptable driver in
-> > drivers/staging, I'll move it across to drivers/scsi and remove the
-> > taint.
-> > 
-> > James
-> > 
-> > 
-> 
-> This is definitely helpful, thanks James!
+On Mon, 2009-01-26 at 12:36 -0500, Christoph Lameter wrote:
+> On Sat, 24 Jan 2009, Zhang, Yanmin wrote:
+>=20
+> > But when trying to increased it to 4, I got:
+> > [root@lkp-st02-x8664 slab]# echo "3">kmalloc-8192/order
+> > [root@lkp-st02-x8664 slab]# echo "4">kmalloc-8192/order
+> > -bash: echo: write error: Invalid argument
+>=20
+> This is because 4 is more than the maximum allowed order. You can
+> reconfigure that by setting
+>=20
+> slub_max_order=3D5
+>=20
+> or so on boot.
+With =EF=BB=BFslub_max_order=3D5, the default order of=EF=BB=BF kmalloc=
+-8192 becomes
+5. I tested it with netperf UDP-U-4k and the result difference from
+SLAB/SLQB is less than 1% which is really fluctuation.
 
-Does this mean someone will send me a patch to add this to the
-drivers/staging/ tree?  Or should I just grab these patches and use them
-to add them to the tree myself (preserving author attributes of course)?
 
-thanks,
-
-greg k-h
