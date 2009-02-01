@@ -1,53 +1,77 @@
-From: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>
-Subject: Re: Mainline kernel OLTP performance update
-Date: Sun, 01 Feb 2009 10:52:56 +0800
-Message-ID: <1233456777.2604.2.camel@ymzhang>
-References: <BC02C49EEB98354DBA7F5DD76F2A9E800317003CB0@azsmsx501.amr.corp.intel.com>
-	 <200901161503.13730.nickpiggin@yahoo.com.au>
-	 <20090115201210.ca1a9542.akpm@linux-foundation.org>
-	 <200901161746.25205.nickpiggin@yahoo.com.au>
-	 <20090116065546.GJ31013@parisc-linux.org>
-	 <1232092430.11429.52.camel@ymzhang>  <87sknjeemn.fsf@basil.nowhere.org>
-	 <1232428583.11429.83.camel@ymzhang>
-	 <alpine.DEB.1.10.0901211852060.18367@qirst.com>
-	 <1232613395.11429.122.camel@ymzhang>
-	 <1232615707.14549.6.camel@penberg-laptop>
-	 <1232616517.11429.129.camel@ymzhang>
-	 <1232617672.14549.25.camel@penberg-laptop>
-	 <1232679773.11429.155.camel@ymzhang>  <4979692B.3050703@cs.helsinki.fi>
-	 <1232697998.6094.17.camel@penberg-laptop>
-	 <1232699401.11429.163.camel@ymzhang>
-	 <1232703989.6094.29.camel@penberg-laptop>
-	 <alpine.DEB.1.10.0901231020030.21692@qirst.com>
-	 <1232765728.11429.193.camel@ymzhang>
-	 <alpine.DEB.1.10.0901261235270.1908@qirst.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0901261235270.1908@qirst.com>
-Sender: netdev-owner@vger.kernel.org
-To: Christoph Lameter <cl@linux-foundation.org>
-Cc: Pekka Enberg <penberg@cs.helsinki.fi>, Andi Kleen <andi@firstfloor.org>, Matthew Wilcox <matthew@wil.cx>, Nick Piggin <nickpiggin@yahoo.com.au>, Andrew Morton <akpm@linux-foundation.org>, netdev@vger.kernel.org, Stephen Rothwell <sfr@canb.auug.org.au>, matthew.r.wilcox@intel.com, chinang.ma@intel.com, linux-kernel@vger.kernel.org, sharad.c.tripathi@intel.com, arjan@linux.intel.com, suresh.b.siddha@intel.com, harita.chilukuri@intel.com, douglas.w.styner@intel.com, peter.xihong.wang@intel.com, hubert.nueckel@intel.com, chris.mason@oracle.com, srostedt@redhat.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, anirban.chakraborty@qlogic.com, Ingo Molnar <mingo@elte.hu>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCHSET] block,scsi,libata: implement alt_size
+Date: Sun,  1 Feb 2009 11:55:48 +0900
+Message-ID: <1233456951-992-1-git-send-email-tj@kernel.org>
+Reply-To: device-mapper development <dm-devel@redhat.com>
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, Mauelshagen@redhat.c
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2009-01-26 at 12:36 -0500, Christoph Lameter wrote:
-> On Sat, 24 Jan 2009, Zhang, Yanmin wrote:
->=20
-> > But when trying to increased it to 4, I got:
-> > [root@lkp-st02-x8664 slab]# echo "3">kmalloc-8192/order
-> > [root@lkp-st02-x8664 slab]# echo "4">kmalloc-8192/order
-> > -bash: echo: write error: Invalid argument
->=20
-> This is because 4 is more than the maximum allowed order. You can
-> reconfigure that by setting
->=20
-> slub_max_order=3D5
->=20
-> or so on boot.
-With =EF=BB=BFslub_max_order=3D5, the default order of=EF=BB=BF kmalloc=
--8192 becomes
-5. I tested it with netperf UDP-U-4k and the result difference from
-SLAB/SLQB is less than 1% which is really fluctuation.
 
+Hello,
 
+This patchset implements alt_size, which is a size hint to the users
+of a block device.  It's primarily to communicate the BIOS (HPA) size
+on ATA devices to userland, so that dmraid can consider it when trying
+to figure out BIOS raid layout.  This is critical as dmraid can be
+tricked into assemblying the wrong raid when fed with the unlocked
+size and if the disk content is right (or, rather, wrong) and good
+number of distros are shipping with ignore_hpa=1 as default.
+
+This patch contains the following three patches.
+
+  0001-block-add-alt_size.patch
+  0002-scsi-add-scsi_device-alt_capacity.patch
+  0003-libata-export-HPA-size-as-alt_size.patch
+
+Without the above three patches, I get the following on my nv RAID-0
+if HPA unlocking is turned on.
+
+  # ~/work/dmraid/tools/dmraid -a y
+  RAID set "nvidia_djgdjigi" was activated
+  # mount /dev/dm-0 /mnt/tmp
+  mount: wrong fs type, bad option, bad superblock on /dev/dm-0,
+	 missing codepage or helper program, or other error
+	 In some cases useful info is found in syslog - try
+	 dmesg | tail  or so
+
+With the above three patches and modified dmraid,
+
+  ck804:~/os/work/build # ~/work/dmraid/tools/dmraid -a y -v -v -v
+  ...
+  NOTICE: /dev/sdb: using BIOS sectors 234439535
+  RAID set "nvidia_djgdjigi" was activated
+  ...
+  ck804:~/os/work/build # mount /dev/dm-0 /mnt/tmp
+  ck804:~/os/work/build # umount /dev/dm-0
+
+Any ideas on through which tree this should be pushed?  I'll post
+dmraid patches as a reply to this thread for reference.
+
+Thanks.
+
+This patchset is against the current linus#master[1] and contains the
+following changes.
+
+ block/genhd.c              |   26 ++++++++++++++++++++++++++
+ drivers/ata/libata-core.c  |    2 ++
+ drivers/ata/libata-scsi.c  |    2 ++
+ drivers/scsi/sd.c          |    1 +
+ include/linux/genhd.h      |   13 ++++++++++++-
+ include/linux/libata.h     |    1 +
+ include/scsi/scsi_device.h |    1 +
+ 7 files changed, 45 insertions(+), 1 deletion(-)
+
+--
+tejun
+
+[1] 45c82b5a770be66845687a7d027c8b52946d59af
