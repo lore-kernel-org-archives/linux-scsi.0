@@ -1,92 +1,52 @@
-From: Mario Limonciello <mario_limonciello@dell.com>
-Subject: Re: [PATCH] libata: change drive ready wait after hard reset to 5s
-Date: Mon, 02 Feb 2009 11:17:45 -0600
-Message-ID: <49872AB9.1010807@dell.com>
-References: <1233456951-992-1-git-send-email-tj@kernel.org> <1233456951-992-4-git-send-email-tj@kernel.org> <DFEF91B22ED07447AB6AA4B237F913F9021859A8@ausx3mpc125.aus.amer.dell.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [GIT PULL] block bits
+Date: Mon, 02 Feb 2009 19:31:31 +0200
+Message-ID: <49872DF3.3060401@panasas.com>
+References: <20090202131502.GH30821@kernel.dk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig4287E325EF1638B221A646D9"
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <DFEF91B22ED07447AB6AA4B237F913F9021859A8@ausx3mpc125.aus.amer.dell.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Hayes, Stuart" <Stuart_Hayes@dell.com>
-Cc: jeff@garzik.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nf-out-0910.google.com ([64.233.182.185]:17509 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752551AbZBBRbj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Feb 2009 12:31:39 -0500
+In-Reply-To: <20090202131502.GH30821@kernel.dk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig4287E325EF1638B221A646D9
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Jens Axboe wrote:
+> Hi Linus,
+> 
+> One critical bit in here, which fixes a reported oops from the iostat
+> patch. The others are either trivial/minor or documentation. Please
+> pull.
+> 
+>   git://git.kernel.dk/linux-2.6-block.git for-linus
+> 
+> Alberto Bertogli (2):
+>       Fix misleading comment in bio.h
+>       bio.h: If they MUST be inlined, then use __always_inline
+> 
+> Jens Axboe (3):
+>       block: fix oops in blk_queue_io_stat()
+>       block: fix inconsistent parenthesisation of QUEUE_FLAG_DEFAULT
+>       block: add text file detailing queue/ sysfs files
+> 
 
-I believe this is the reference that Stuart refers to in the ATA-6 spec:
+Hi Jens.
 
-http://www.t10.org/t13/project/d1410r3a-ATA-ATAPI-6.pdf
+The bsg sense handling bug fix, is I think, a security breach in that
+Kernel copies dangling Kernel stack back to user-mode. It might even
+need a stable release.
 
-Here's the snippet, (p327):
+At the time I was thinking that since bsg is marked EXPERIMENTAL in
+Kconfig then it must not be included in distro's Kernels by default,
+but Benny noted that it is included in Fedora since FC8 or FC9.
 
-"
-Transition D0HR1:D0HR1: When the sample indicates that DASP- is negated
-and            less than 450 ms have
-elapsed since the negation of RESET-, then the device shall make a
-transition to the   D0HR1: Sample_DASP-
-state. When the sample indicates that DASP- is negated and greater than
-450 ms          but less than 5 s have
-elapsed since the negation of RESET-, then the device may make a
-transition to the     D0HR1: Sample_DASP-
-state.
-Transition D0HR1:D0HR3: When the sample indicates that DASP- is negated
-and 5 s have elapsed since the
-negation of RESET-, then the device shall clear bit 7 in the Error
-register and make a transition to the D0HR3:
-Set_status state. When the sample indicates that DASP- is negated and
-greater than 450 ms but less than 5 s
-have elapsed since the negation of RESET-, then the device may clear bit
-7 in the Error register and make a
-transition to the D0HR3: Set_status state.
-"
+The patch I sent still applies I think?
 
-Hayes, Stuart wrote:
-> This fixes problems during resume with drives that take longer than 1s
-> to be ready.  The ATA-6 spec appears to allow 5 seconds for a drive to
-> be ready.
->
-> On one affected system, this patch changes "PM: resume devices took..."=
-
-> message from 17 seconds to 4 seconds, and gets rid of a lot of ugly
-> timeout/error messages.
->
-> Without this patch, the libata code moves on after 1s, tries to send a
-> soft reset (which the drive doesn't see because it isn't ready) which
-> also times out, then an IDENTIFY command is sent to the drive which
-> times out, and finally the error handler will try to send another hard
-> reset which will finally get things working.
->
-> Sorry to send as an attachment, but my mail server will wrap text.
->
->
-> Signed-off-by: Stuart Hayes <stuart_hayes@dell.com>
->
->  =20
-
---=20
-Mario Limonciello
-*Dell | Linux Engineering*
-mario_limonciello@dell.com
-
-
---------------enig4287E325EF1638B221A646D9
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iEYEARECAAYFAkmHKrkACgkQ2CrZjkA73Ys11ACeM9ibnvpj5ZZVyYhE7oHNqikJ
-4h4An0zmAdshbCGkcyEjZi9wvGNNkleR
-=8xrR
------END PGP SIGNATURE-----
-
---------------enig4287E325EF1638B221A646D9--
+Thanks
+Boaz
