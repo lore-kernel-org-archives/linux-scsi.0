@@ -1,65 +1,61 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: SMART Status Query
-Date: Tue, 03 Feb 2009 17:04:49 +0100
-Message-ID: <49886B21.8080801@s5r6.in-berlin.de>
-References: <1233643011.8067.21.camel@localhost.localdomain>	 <4987FB23.7040600@s5r6.in-berlin.de> <1233670976.2065.1.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: bstroesser@fujitsu-siemens.com
+Subject: megaraid_mbox: fix Oops on SG_IO
+Date: Tue, 3 Feb 2009 13:01:47 -0500
+Message-ID: <7es13a$1h0o1i@dgate20u.abg.fsc.net>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:33725 "EHLO
-	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751652AbZBCQEz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2009 11:04:55 -0500
-In-Reply-To: <1233670976.2065.1.camel@localhost.localdomain>
+Received: from dgate20.fujitsu-siemens.com ([80.70.172.51]:2247 "EHLO
+	dgate20.fujitsu-siemens.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751786AbZBCSBr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2009 13:01:47 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sean Bruno <sean.bruno@dsl-only.net>
-Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: bstroesser@fujitsu-siemens.com
 
-Sean Bruno wrote:
-> On Tue, 2009-02-03 at 09:06 +0100, Stefan Richter wrote:
->> Sean Bruno wrote:
->> > I tried "smartctl -a /dev/sdd" and was presented with:
->> > [sean@home-desk ~]$ sudo smartctl -a /dev/sdc
->> > smartctl version 5.38 [x86_64-redhat-linux-gnu] Copyright (C) 2002-8
->> > Bruce Allen
->> > Home page is http://smartmontools.sourceforge.net/
->> > 
->> > Device: ST380811 AS               Version: 3.AA
->> > Serial number:             5PS13NWB
->> > Device type: disk
->> > Local Time is: Mon Feb  2 22:36:07 2009 PST
->> > Device does not support SMART
->> > 
->> > Error Counter logging not supported
->> > Device does not support Self Test logging
->> 
->> AFAIK SMART requires "ATA pass-through", i.e. the tunneling of ATA
->> commands through SCSI.
->> 
->> The FireWire drivers happily send any command to the target which the
->> Linux kernel or an application emits.  The missing piece here is ATA
->> pass-through support in the firmware of the FireWire-to-SATA bridge chip
->> of the drive enclosure.
->> 
->> I have not yet heard of FireWire-to-SATA bridges which do support ATA
->> pass-through.
-> 
-> That makes sense, unfortunate, but not unexpected.
-> 
-> Can you tell me how my system is getting the Seagate drive information
-> then?  I've looked over the data available to me on the Firewire bus,
-> and don't see where it's being pulled from.
+VGhpcyBwYXRjaCBmaXhlcyBhbiBPb3BzIGluIG1lZ2FyYWlkX21ib3ggdGhhdCBoYXBwZW5z
+IHdoZW4KYSBNT0RFX1NFTlNFIGNvbW1hbmQgZm9yIGEgbG9naWNhbCBkcml2ZSBpcyBzdGFy
+dGVkIHZpYQppb2N0bChTR19JTykuCgpUaGUgcHJvYmxlbSBvbmx5IG9jY3VyZXMsIGlmIHRo
+ZSBidWZmZXIgc3BlY2lmaWVkIGJ5IHRoZSB1c2VyCnRvIHJlY2VpdmUgdGhlIG1vZGUgZGF0
+YSByZXNpZGVzIGluIGhpZ2htZW0gYW5kIGlmIHRoZSBidWZmZXIKaXMgYWxpZ25lZCBmb3Ig
+ZGlyZWN0IGRtYSAobm8gYm91bmNlIGJ1ZmZlciBuZWNlc3NhcnkpLgptZWdhcmFpZF9tYm94
+IGVtdWxhdGVzIHRoZSBNT0RFX1NFTlNFIGNvbW1hbmQgYW5kIHdyaXRlcyB0aGUKZGF0YSB1
+c2luZyBtZW1zZXQoKSBkaXJlY3RseSBpbnRvIHVzZXIgYnVmZmVyLiBJZiB0aGUgYnVmZmVy
+CmlzIGF0IGEgY3VycmVudGx5IHVubWFwcGVkIGhpZ2htZW0gcGFnZSwgdGhpcyBsZWFkcyB0
+byBhbgpPb3BzLgoKVGhlIHNlY29uZCBodW5rIG9mIHRoZSBwYXRjaCBpcyB1bnRlc3RlZCEg
+QUZBSUNTLCBpdCBzaG91bGQKZml4IHRoZSBzYW1lIHByb2JsZW0gYXQgYW5vdGhlciBwbGFj
+ZS4gSSdtIG5vdCBzaHVyZSwgYnV0Cm1heWJlIG90aGVyIExMRHMgbXVzdCBiZSBmaXhlZCBz
+aW1pbGFybHksIGFzIHRoZXkgYWxzbyBzZWVtCnRvIGNhbGwgc2dfdmlydCgpIHdpdGhvdXQg
+ZG9pbmcga21hcCBiZWZvcmUuCgpQbGVhc2UgQ0MgbWUsIEknbSBub3Qgb24gdGhlIGxpc3Qu
+CgoKU2lnbmVkLW9mZi1ieTogQm9kbyBTdHJvZXNzZXIgPGJzdHJvZXNzZXJAZnVqaXRzdS1z
+aWVtZW5zLmNvbT4KCi0tLQotLS0gbGludXgtMi42LjI3LjctOS9kcml2ZXJzL3Njc2kvbWVn
+YXJhaWQvbWVnYXJhaWRfbWJveC5jLm9yaWcJMjAwOC0xMC0xMCAwMDoxMzo1My4wMDAwMDAw
+MDAgKzAyMDAKKysrIGxpbnV4LTIuNi4yNy43LTkvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21l
+Z2FyYWlkX21ib3guYwkyMDA5LTAyLTAzIDE1OjAxOjU2LjAwMDAwMDAwMCArMDEwMApAQCAt
+MTU4MCwxMyArMTU4MCwyMCBAQCBtZWdhcmFpZF9tYm94X2J1aWxkX2NtZChhZGFwdGVyX3Qg
+KmFkYXB0CiAJCWNhc2UgTU9ERV9TRU5TRToKIAkJewogCQkJc3RydWN0IHNjYXR0ZXJsaXN0
+CSpzZ2w7Ci0JCQljYWRkcl90CQkJdmFkZHI7CisJCQlzdHJ1Y3QgcGFnZQkJKnBnOworCQkJ
+dW5zaWduZWQgY2hhcgkJKnZhZGRyOworCQkJdW5zaWduZWQgbG9uZwkJZmxhZ3M7CiAKIAkJ
+CXNnbCA9IHNjc2lfc2dsaXN0KHNjcCk7Ci0JCQlpZiAoc2dfcGFnZShzZ2wpKSB7Ci0JCQkJ
+dmFkZHIgPSAoY2FkZHJfdCkgc2dfdmlydCgmc2dsWzBdKTsKKwkJCXBnID0gc2dfcGFnZShz
+Z2wpOworCQkJaWYgKHBnKSB7CisJCQkJbG9jYWxfaXJxX3NhdmUoZmxhZ3MpOworCQkJCXZh
+ZGRyID0ga21hcF9hdG9taWMocGcsIEtNX0JJT19TUkNfSVJRKSArIHNnbC0+b2Zmc2V0Owog
+CiAJCQkJbWVtc2V0KHZhZGRyLCAwLCBzY3AtPmNtbmRbNF0pOworCisJCQkJa3VubWFwX2F0
+b21pYyh2YWRkciwgS01fQklPX1NSQ19JUlEpOworCQkJCWxvY2FsX2lycV9yZXN0b3JlKGZs
+YWdzKTsKIAkJCX0KIAkJCWVsc2UgewogCQkJCWNvbl9sb2coQ0xfQU5OLCAoS0VSTl9XQVJO
+SU5HCkBAIC0yMzI0LDkgKzIzMzEsMjAgQEAgbWVnYXJhaWRfbWJveF9kcGModW5zaWduZWQg
+bG9uZyBkZXZwKQogCQlpZiAoc2NwLT5jbW5kWzBdID09IElOUVVJUlkgJiYgc3RhdHVzID09
+IDAgJiYgaXNsb2dpY2FsID09IDAKIAkJCQkmJiBJU19SQUlEX0NIKHJhaWRfZGV2LCBzY2It
+PmRldl9jaGFubmVsKSkgewogCisJCQlzdHJ1Y3QgcGFnZQkJKnBnOworCQkJdW5zaWduZWQg
+Y2hhcgkJKnZhZGRyOworCQkJdW5zaWduZWQgbG9uZwkJZmxhZ3M7CisKIAkJCXNnbCA9IHNj
+c2lfc2dsaXN0KHNjcCk7Ci0JCQlpZiAoc2dfcGFnZShzZ2wpKSB7Ci0JCQkJYyA9ICoodW5z
+aWduZWQgY2hhciAqKSBzZ192aXJ0KCZzZ2xbMF0pOworCQkJcGcgPSBzZ19wYWdlKHNnbCk7
+CisJCQlpZiAocGcpIHsKKwkJCQlsb2NhbF9pcnFfc2F2ZShmbGFncyk7CisJCQkJdmFkZHIg
+PSBrbWFwX2F0b21pYyhwZywgS01fQklPX1NSQ19JUlEpICsgc2dsLT5vZmZzZXQ7CisKKwkJ
+CQljID0gKnZhZGRyOworCisJCQkJa3VubWFwX2F0b21pYyh2YWRkciwgS01fQklPX1NSQ19J
+UlEpOworCQkJCWxvY2FsX2lycV9yZXN0b3JlKGZsYWdzKTsKIAkJCX0gZWxzZSB7CiAJCQkJ
+Y29uX2xvZyhDTF9BTk4sIChLRVJOX1dBUk5JTkcKIAkJCQkJCSAibWVnYXJhaWQgbWFpbGJv
+eDogaW52YWxpZCBzZzolZFxuIiwK
 
-According to a quick look at the smartmontools source, these data come
-from the SCSI INQUIRY command.
 
-FireWire firmwares insert all sorts of data into their INQUIRY
-responses.  Sometimes the response is hardcoded by the firmware author,
-sometimes it is built from data which were transparently obtained from
-the attached SATA disk --- like with your Seagate disk.
--- 
-Stefan Richter
--=====-==--= --=- ---==
-http://arcgraph.de/sr/
