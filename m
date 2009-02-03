@@ -1,61 +1,40 @@
-From: bstroesser@fujitsu-siemens.com
-Subject: megaraid_mbox: fix Oops on SG_IO
-Date: Tue, 3 Feb 2009 13:01:47 -0500
-Message-ID: <7es13a$1h0o1i@dgate20u.abg.fsc.net>
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: [PATCH mm/next] libfc: uses/select CRC32
+Date: Tue, 3 Feb 2009 19:21:10 +0100
+Message-ID: <20090203182110.GA24821@elte.hu>
+References: <200901052050.n05Kox9j012519@imap1.linux-foundation.org> <4962A04F.5020404@oracle.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dgate20.fujitsu-siemens.com ([80.70.172.51]:2247 "EHLO
-	dgate20.fujitsu-siemens.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751786AbZBCSBr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2009 13:01:47 -0500
+Received: from mx3.mail.elte.hu ([157.181.1.138]:46841 "EHLO mx3.mail.elte.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751158AbZBCSV3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Feb 2009 13:21:29 -0500
+Content-Disposition: inline
+In-Reply-To: <4962A04F.5020404@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: bstroesser@fujitsu-siemens.com
-
-VGhpcyBwYXRjaCBmaXhlcyBhbiBPb3BzIGluIG1lZ2FyYWlkX21ib3ggdGhhdCBoYXBwZW5z
-IHdoZW4KYSBNT0RFX1NFTlNFIGNvbW1hbmQgZm9yIGEgbG9naWNhbCBkcml2ZSBpcyBzdGFy
-dGVkIHZpYQppb2N0bChTR19JTykuCgpUaGUgcHJvYmxlbSBvbmx5IG9jY3VyZXMsIGlmIHRo
-ZSBidWZmZXIgc3BlY2lmaWVkIGJ5IHRoZSB1c2VyCnRvIHJlY2VpdmUgdGhlIG1vZGUgZGF0
-YSByZXNpZGVzIGluIGhpZ2htZW0gYW5kIGlmIHRoZSBidWZmZXIKaXMgYWxpZ25lZCBmb3Ig
-ZGlyZWN0IGRtYSAobm8gYm91bmNlIGJ1ZmZlciBuZWNlc3NhcnkpLgptZWdhcmFpZF9tYm94
-IGVtdWxhdGVzIHRoZSBNT0RFX1NFTlNFIGNvbW1hbmQgYW5kIHdyaXRlcyB0aGUKZGF0YSB1
-c2luZyBtZW1zZXQoKSBkaXJlY3RseSBpbnRvIHVzZXIgYnVmZmVyLiBJZiB0aGUgYnVmZmVy
-CmlzIGF0IGEgY3VycmVudGx5IHVubWFwcGVkIGhpZ2htZW0gcGFnZSwgdGhpcyBsZWFkcyB0
-byBhbgpPb3BzLgoKVGhlIHNlY29uZCBodW5rIG9mIHRoZSBwYXRjaCBpcyB1bnRlc3RlZCEg
-QUZBSUNTLCBpdCBzaG91bGQKZml4IHRoZSBzYW1lIHByb2JsZW0gYXQgYW5vdGhlciBwbGFj
-ZS4gSSdtIG5vdCBzaHVyZSwgYnV0Cm1heWJlIG90aGVyIExMRHMgbXVzdCBiZSBmaXhlZCBz
-aW1pbGFybHksIGFzIHRoZXkgYWxzbyBzZWVtCnRvIGNhbGwgc2dfdmlydCgpIHdpdGhvdXQg
-ZG9pbmcga21hcCBiZWZvcmUuCgpQbGVhc2UgQ0MgbWUsIEknbSBub3Qgb24gdGhlIGxpc3Qu
-CgoKU2lnbmVkLW9mZi1ieTogQm9kbyBTdHJvZXNzZXIgPGJzdHJvZXNzZXJAZnVqaXRzdS1z
-aWVtZW5zLmNvbT4KCi0tLQotLS0gbGludXgtMi42LjI3LjctOS9kcml2ZXJzL3Njc2kvbWVn
-YXJhaWQvbWVnYXJhaWRfbWJveC5jLm9yaWcJMjAwOC0xMC0xMCAwMDoxMzo1My4wMDAwMDAw
-MDAgKzAyMDAKKysrIGxpbnV4LTIuNi4yNy43LTkvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21l
-Z2FyYWlkX21ib3guYwkyMDA5LTAyLTAzIDE1OjAxOjU2LjAwMDAwMDAwMCArMDEwMApAQCAt
-MTU4MCwxMyArMTU4MCwyMCBAQCBtZWdhcmFpZF9tYm94X2J1aWxkX2NtZChhZGFwdGVyX3Qg
-KmFkYXB0CiAJCWNhc2UgTU9ERV9TRU5TRToKIAkJewogCQkJc3RydWN0IHNjYXR0ZXJsaXN0
-CSpzZ2w7Ci0JCQljYWRkcl90CQkJdmFkZHI7CisJCQlzdHJ1Y3QgcGFnZQkJKnBnOworCQkJ
-dW5zaWduZWQgY2hhcgkJKnZhZGRyOworCQkJdW5zaWduZWQgbG9uZwkJZmxhZ3M7CiAKIAkJ
-CXNnbCA9IHNjc2lfc2dsaXN0KHNjcCk7Ci0JCQlpZiAoc2dfcGFnZShzZ2wpKSB7Ci0JCQkJ
-dmFkZHIgPSAoY2FkZHJfdCkgc2dfdmlydCgmc2dsWzBdKTsKKwkJCXBnID0gc2dfcGFnZShz
-Z2wpOworCQkJaWYgKHBnKSB7CisJCQkJbG9jYWxfaXJxX3NhdmUoZmxhZ3MpOworCQkJCXZh
-ZGRyID0ga21hcF9hdG9taWMocGcsIEtNX0JJT19TUkNfSVJRKSArIHNnbC0+b2Zmc2V0Owog
-CiAJCQkJbWVtc2V0KHZhZGRyLCAwLCBzY3AtPmNtbmRbNF0pOworCisJCQkJa3VubWFwX2F0
-b21pYyh2YWRkciwgS01fQklPX1NSQ19JUlEpOworCQkJCWxvY2FsX2lycV9yZXN0b3JlKGZs
-YWdzKTsKIAkJCX0KIAkJCWVsc2UgewogCQkJCWNvbl9sb2coQ0xfQU5OLCAoS0VSTl9XQVJO
-SU5HCkBAIC0yMzI0LDkgKzIzMzEsMjAgQEAgbWVnYXJhaWRfbWJveF9kcGModW5zaWduZWQg
-bG9uZyBkZXZwKQogCQlpZiAoc2NwLT5jbW5kWzBdID09IElOUVVJUlkgJiYgc3RhdHVzID09
-IDAgJiYgaXNsb2dpY2FsID09IDAKIAkJCQkmJiBJU19SQUlEX0NIKHJhaWRfZGV2LCBzY2It
-PmRldl9jaGFubmVsKSkgewogCisJCQlzdHJ1Y3QgcGFnZQkJKnBnOworCQkJdW5zaWduZWQg
-Y2hhcgkJKnZhZGRyOworCQkJdW5zaWduZWQgbG9uZwkJZmxhZ3M7CisKIAkJCXNnbCA9IHNj
-c2lfc2dsaXN0KHNjcCk7Ci0JCQlpZiAoc2dfcGFnZShzZ2wpKSB7Ci0JCQkJYyA9ICoodW5z
-aWduZWQgY2hhciAqKSBzZ192aXJ0KCZzZ2xbMF0pOworCQkJcGcgPSBzZ19wYWdlKHNnbCk7
-CisJCQlpZiAocGcpIHsKKwkJCQlsb2NhbF9pcnFfc2F2ZShmbGFncyk7CisJCQkJdmFkZHIg
-PSBrbWFwX2F0b21pYyhwZywgS01fQklPX1NSQ19JUlEpICsgc2dsLT5vZmZzZXQ7CisKKwkJ
-CQljID0gKnZhZGRyOworCisJCQkJa3VubWFwX2F0b21pYyh2YWRkciwgS01fQklPX1NSQ19J
-UlEpOworCQkJCWxvY2FsX2lycV9yZXN0b3JlKGZsYWdzKTsKIAkJCX0gZWxzZSB7CiAJCQkJ
-Y29uX2xvZyhDTF9BTk4sIChLRVJOX1dBUk5JTkcKIAkJCQkJCSAibWVnYXJhaWQgbWFpbGJv
-eDogaW52YWxpZCBzZzolZFxuIiwK
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: linux-kernel@vger.kernel.org, akpm <akpm@linux-foundation.org>, jejb <James.Bottomley@steeleye.com>, scsi <linux-scsi@vger.kernel.org>
 
 
+* Randy Dunlap <randy.dunlap@oracle.com> wrote:
+
+> From: Randy Dunlap <randy.dunlap@oracle.com>
+> 
+> libfc uses crc32 functions, so cause it to be built
+> via select:
+> 
+> drivers/built-in.o: In function `fc_frame_crc_check':
+> (.text+0x75dae): undefined reference to `crc32_le'
+> drivers/built-in.o: In function `fc_fcp_recv':
+> fc_fcp.c:(.text+0x7b919): undefined reference to `crc32_le'
+> fc_fcp.c:(.text+0x7b9d5): undefined reference to `crc32_le'
+> fc_fcp.c:(.text+0x7ba54): undefined reference to `crc32_le'
+> 
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+
+Hm, is there a reason why this fix has not gone upstream? I'm still 
+stumbling across it in build tests with a latest -git base.
+
+	Ingo
