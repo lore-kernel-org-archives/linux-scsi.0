@@ -1,61 +1,52 @@
-From: Grant Grundler <grundler@google.com>
-Subject: Re: iscsi_add_session() warning
-Date: Wed, 4 Feb 2009 09:56:40 -0800
-Message-ID: <da824cf30902040956r68ce45a7j84ec2ea18c696687@mail.gmail.com>
-References: <20090203160900.38506c47.akpm@linux-foundation.org>
-	 <20090204001238.GG19327@bombadil.infradead.org>
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH] drivers/scsi: Correct use of ! and &
+Date: Wed, 4 Feb 2009 22:17:29 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0902042215500.3091@ask.diku.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.33.17]:2421 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752728AbZBDR4q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Feb 2009 12:56:46 -0500
-Received: from zps19.corp.google.com (zps19.corp.google.com [172.25.146.19])
-	by smtp-out.google.com with ESMTP id n14Hui5b006525
-	for <linux-scsi@vger.kernel.org>; Wed, 4 Feb 2009 17:56:44 GMT
-Received: from an-out-0708.google.com (andd11.prod.google.com [10.100.30.11])
-	by zps19.corp.google.com with ESMTP id n14HuepL005446
-	for <linux-scsi@vger.kernel.org>; Wed, 4 Feb 2009 09:56:41 -0800
-Received: by an-out-0708.google.com with SMTP id d11so1087694and.32
-        for <linux-scsi@vger.kernel.org>; Wed, 04 Feb 2009 09:56:40 -0800 (PST)
-In-Reply-To: <20090204001238.GG19327@bombadil.infradead.org>
+Received: from mgw2.diku.dk ([130.225.96.92]:44751 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752565AbZBDVRc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Feb 2009 16:17:32 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kyle McMartin <kyle@infradead.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Tue, Feb 3, 2009 at 4:12 PM, Kyle McMartin <kyle@infradead.org> wrote:
-> On Tue, Feb 03, 2009 at 04:09:00PM -0800, Andrew Morton wrote:
->> :     if (id == ISCSI_MAX_TARGET) {
->> :             for (id = 0; id < ISCSI_MAX_TARGET; id++) {
->> :                     err = device_for_each_child(&shost->shost_gendev, &id,
->
-> Possibly GCC just can't figure out that id was reinitialized, so it
-> thinks that the for loop won't be executed?
+From: Julia Lawall <julia@diku.dk>
 
-Would restructuring the code slightly be ok?
+!ep->esb_stat is either 1 or 0, and the rightmost bit of ESB_ST_COMPLETE is
+always 0, making the result of !ep->esb_stat & ESB_ST_COMPLETE always 0.
+Thus parentheses around the argument to ! seem needed.
 
-  if (target_id ==  ISCSI_MAX_TARGET) {
-     unsigned int id = 0;
-...
-     session->target_id = id;
-  } else {
-     session->target_id = target_id;
-  }
-...
+The semantic patch that makes this change is as follows:
+(http://www.emn.fr/x-info/coccinelle/)
 
-ie. reduce the scope of "id" . Not quite a concise as existing code
-but just as readable.
+// <smpl>
+@@ expression E; constant C; @@
+(
+  !E & !C
+|
+- !E & C
++ !(E & C)
+)
+// </smpl>
 
-hth,
-grant
+Signed-off-by: Julia Lawall <julia@diku.dk>
 
-> Just a guess...
->        Kyle
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+---
+ drivers/scsi/libfc/fc_exch.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff -u -p a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+--- a/drivers/scsi/libfc/fc_exch.c
++++ b/drivers/scsi/libfc/fc_exch.c
+@@ -283,7 +283,7 @@ static void fc_exch_release(struct fc_ex
+ 			ep->destructor(&ep->seq, ep->arg);
+ 		if (ep->lp->tt.exch_put)
+ 			ep->lp->tt.exch_put(ep->lp, mp, ep->xid);
+-		WARN_ON(!ep->esb_stat & ESB_ST_COMPLETE);
++		WARN_ON(!(ep->esb_stat & ESB_ST_COMPLETE));
+ 		mempool_free(ep, mp->ep_pool);
+ 	}
+ }
