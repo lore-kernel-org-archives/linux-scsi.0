@@ -1,70 +1,48 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] [Target_Core_Mod]: Make RELATIVE TARGET PORT IDENTIFER
-	assignment always non zero
-Date: Tue, 03 Feb 2009 19:05:26 -0800
-Message-ID: <1233716726.12375.144.camel@haakon2.linux-iscsi.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: iscsi_add_session() warning
+Date: Wed, 04 Feb 2009 01:40:11 -0600
+Message-ID: <4989465B.9060109@cs.wisc.edu>
+References: <20090203160900.38506c47.akpm@linux-foundation.org>	<20090204001238.GG19327@bombadil.infradead.org> <20090203162224.7c80d962.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp118.sbc.mail.sp1.yahoo.com ([69.147.64.91]:27553 "HELO
-	smtp118.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751880AbZBDDGd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2009 22:06:33 -0500
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:54687 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751278AbZBDHkl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Feb 2009 02:40:41 -0500
+In-Reply-To: <20090203162224.7c80d962.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Douglas Gilbert <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Kyle McMartin <kyle@infradead.org>, linux-scsi@vger.kernel.org
 
-Greetings all,
+Andrew Morton wrote:
+> On Tue, 3 Feb 2009 19:12:38 -0500
+> Kyle McMartin <kyle@infradead.org> wrote:
+> 
+>> On Tue, Feb 03, 2009 at 04:09:00PM -0800, Andrew Morton wrote:
+>>> : 	if (id == ISCSI_MAX_TARGET) {
+>>> : 		for (id = 0; id < ISCSI_MAX_TARGET; id++) {
+>>> : 			err = device_for_each_child(&shost->shost_gendev, &id,
+>> Possibly GCC just can't figure out that id was reinitialized, so it
+>> thinks that the for loop won't be executed?
+>>
+> 
+> Could be.  But that isn't the point...
+> 
+> The point, dear Kyle, is that I misread the code :(
+> 
+> In fact on that codepath the function _will_ return the most recent
+> return value from device_for_each_child(iscsi_get_next_target_id), and
+> that value will be non-zero (-EEXIST).  So it looks non-buggy, albeit
+> rather obscure.
+> 
+> But did we intend to return -EEXIST in the "Too many iscsi targets" case?
 
-This patch makes RELATIVE TARGET PORT IDENTIFER assignment always a non zero value.
-This SCSI device unique 16-bit counter is allocated each time a new port is created,
-and is unique within a SCSI device.
+I did not. The callers just check for non zero so it will work. It would 
+be best to change it to something meaningful.
 
-Using a zero value is defined as Reserved in spc4r17 section 7.7.3.8.
-
-This patch is made against lio-core-2.6.git/master
-and tested on v2.6.29-rc2 x86 32-bit HVM.  The lio-core-2.6.git tree can be
-found at:
-
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=summary
-
-
-Signed-off-by: Nicholas A. Bellinger
----
- drivers/lio-core/target_core_device.c |   16 +++++++++++++++-
- 1 files changed, 15 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/lio-core/target_core_device.c b/drivers/lio-core/target_core_device.c
-index ced583a..9f1503c 100644
---- a/drivers/lio-core/target_core_device.c
-+++ b/drivers/lio-core/target_core_device.c
-@@ -508,7 +508,21 @@ extern se_port_t *core_alloc_port (se_device_t *dev)
- 		return(NULL);
- 	}
- again:
--	port->sep_rtpi = dev->dev_rpti_counter++;
-+	/*
-+	 * Allocate the next RELATIVE TARGET PORT IDENTIFER for this se_device_t.
-+	 * Here is the table from spc4r17 section 7.7.3.8.
-+	 * 
-+	 *    Table 473 -- RELATIVE TARGET PORT IDENTIFIER field
-+	 *
-+	 * Code      Description
-+	 * 0h        Reserved
-+	 * 1h        Relative port 1, historically known as port A
-+	 * 2h        Relative port 2, historically known as port B
-+	 * 3h to FFFFh    Relative port 3 through 65 535
-+	 */
-+	if (!(port->sep_rtpi = dev->dev_rpti_counter++))
-+		goto again;
-+
- 	list_for_each_entry(port_tmp, &dev->dev_sep_list, sep_list) {
- 		/*
- 		 * Make sure RELATIVE TARGET PORT IDENTIFER is unique
--- 
-1.5.4.1
-
-
-
+When there are no ids for some object left, what is the stadard Exxxx 
+value to return? Would ENOSPC make sense? Here ENOSPC would mean no 
+space in id space left instead of space on a device?
