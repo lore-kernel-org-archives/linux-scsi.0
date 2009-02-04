@@ -1,85 +1,29 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: iscsi_add_session() warning
-Date: Tue, 3 Feb 2009 16:09:00 -0800
-Message-ID: <20090203160900.38506c47.akpm@linux-foundation.org>
+From: Kyle McMartin <kyle@infradead.org>
+Subject: Re: iscsi_add_session() warning
+Date: Tue, 3 Feb 2009 19:12:38 -0500
+Message-ID: <20090204001238.GG19327@bombadil.infradead.org>
+References: <20090203160900.38506c47.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:49899 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751374AbZBDAJP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2009 19:09:15 -0500
+Received: from bombadil.infradead.org ([18.85.46.34]:48910 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751328AbZBDAMp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2009 19:12:45 -0500
+Content-Disposition: inline
+In-Reply-To: <20090203160900.38506c47.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org
 
+On Tue, Feb 03, 2009 at 04:09:00PM -0800, Andrew Morton wrote:
+> : 	if (id == ISCSI_MAX_TARGET) {
+> : 		for (id = 0; id < ISCSI_MAX_TARGET; id++) {
+> : 			err = device_for_each_child(&shost->shost_gendev, &id,
 
-Looking at this:
+Possibly GCC just can't figure out that id was reinitialized, so it
+thinks that the for loop won't be executed?
 
-drivers/scsi/scsi_transport_iscsi.c: In function 'iscsi_add_session':
-drivers/scsi/scsi_transport_iscsi.c:703: warning: 'err' may be used uninitialized in this function
-
-the compiler is wrong - `err' will always have been initialised to
-_something_.
-
-But to what?
-
-: int iscsi_add_session(struct iscsi_cls_session *session, unsigned int target_id)
-: {
-: 	struct Scsi_Host *shost = iscsi_session_to_shost(session);
-: 	struct iscsi_cls_host *ihost;
-: 	unsigned long flags;
-: 	unsigned int id = target_id;
-: 	int err;
-: 
-: 	ihost = shost->shost_data;
-: 	session->sid = atomic_add_return(1, &iscsi_session_nr);
-: 
-: 	if (id == ISCSI_MAX_TARGET) {
-: 		for (id = 0; id < ISCSI_MAX_TARGET; id++) {
-: 			err = device_for_each_child(&shost->shost_gendev, &id,
-: 						    iscsi_get_next_target_id);
-: 			if (!err)
-: 				break;
-: 		}
-: 
-: 		if (id == ISCSI_MAX_TARGET) {
-: 			iscsi_cls_session_printk(KERN_ERR, session,
-: 						 "Too many iscsi targets. Max "
-: 						 "number of targets is %d.\n",
-: 						 ISCSI_MAX_TARGET - 1);
-
-At this point, err is probably zero.  Or it might be the return value
-from the most recent call to
-device_for_each_child(iscsi_get_next_target_id).
-
-Should we not assign some error code to `err' here?
-
-: 			goto release_host;
-: 		}
-: 	}
-: 	session->target_id = id;
-: 
-: 	dev_set_name(&session->dev, "session%u", session->sid);
-: 	err = device_add(&session->dev);
-: 	if (err) {
-: 		iscsi_cls_session_printk(KERN_ERR, session,
-: 					 "could not register session's dev\n");
-: 		goto release_host;
-: 	}
-: 	transport_register_device(&session->dev);
-: 
-: 	spin_lock_irqsave(&sesslock, flags);
-: 	list_add(&session->sess_list, &sesslist);
-: 	spin_unlock_irqrestore(&sesslock, flags);
-: 
-: 	iscsi_session_event(session, ISCSI_KEVENT_CREATE_SESSION);
-: 	return 0;
-: 
-: release_host:
-: 	scsi_host_put(shost);
-: 	return err;
-: }
-
+Just a guess...
+	Kyle
