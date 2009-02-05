@@ -1,18 +1,19 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/3] scsi dh alua: add intel Multi-Flex device
-Date: Thu, 05 Feb 2009 14:56:57 +0100
-Message-ID: <498AF029.8070805@suse.de>
-References: <12333564114078-git-send-email-michaelc@cs.wisc.edu> <12333564124151-git-send-email-michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 3/3] scsi dh alua: handle report luns data changed in
+ check sense callout
+Date: Thu, 05 Feb 2009 14:59:32 +0100
+Message-ID: <498AF0C4.7070701@suse.de>
+References: <12333564114078-git-send-email-michaelc@cs.wisc.edu> <12333564124151-git-send-email-michaelc@cs.wisc.edu> <12333564123194-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.suse.de ([195.135.220.2]:39050 "EHLO mx1.suse.de"
+Received: from ns2.suse.de ([195.135.220.15]:41205 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751065AbZBEN47 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Feb 2009 08:56:59 -0500
-In-Reply-To: <12333564124151-git-send-email-michaelc@cs.wisc.edu>
+	id S1754067AbZBEN7d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Feb 2009 08:59:33 -0500
+In-Reply-To: <12333564123194-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: michaelc@cs.wisc.edu
@@ -23,30 +24,40 @@ Hi Mike,
 michaelc@cs.wisc.edu wrote:
 > From: Ilgu Hong <ilgu.hong@promise.com>
 >=20
-> This adds the Intel Multi-Flex device to scsi_dh_alua's
-> scsi_dh_devlist, so the module attaches to these devs.
+> When we switch controllers the Intel Multi-Flex reports
+> REPORTED_LUNS_DATA_HAS_CHANGED. This patch just has us
+> retry the command.
 >=20
 > Signed-off-by: Ilgu Hong <ilgu.hong@promise.com>
 > Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 > ---
->  drivers/scsi/device_handler/scsi_dh_alua.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
+>  drivers/scsi/device_handler/scsi_dh_alua.c |    9 +++++++++
+>  1 files changed, 9 insertions(+), 0 deletions(-)
 >=20
 > diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scs=
 i/device_handler/scsi_dh_alua.c
-> index 5096b0b..31e1df5 100644
+> index 31e1df5..dba154c 100644
 > --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 > +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-> @@ -691,6 +691,7 @@ static const struct scsi_dh_devlist alua_dev_list=
-[] =3D {
->  	{"IBM", "2107900" },
->  	{"IBM", "2145" },
->  	{"Pillar", "Axiom" },
-> +	{"Intel", "Multi-Flex"},
->  	{NULL, NULL}
->  };
+> @@ -461,6 +461,15 @@ static int alua_check_sense(struct scsi_device *=
+sdev,
+>  			 */
+>  			return ADD_TO_MLQUEUE;
+>  		}
+> +		if (sense_hdr->asc =3D=3D 0x3f && sense_hdr->ascq =3D=3D 0x0e) {
+> +			/*
+> +			 * REPORTED_LUNS_DATA_HAS_CHANGED is reported
+> +			 * when switching controllers on targets like
+> +			 * Intel Multi-Flex. We can just retry.
+> +			 */
+> +			return ADD_TO_MLQUEUE;
+> +		}
+> +
+>  		break;
+>  	}
 > =20
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Hmm. We could as well always retry for Unit Attention; it's meant to be
+a temporary condition anyway so no harm in retrying.
 
 Cheers,
 
