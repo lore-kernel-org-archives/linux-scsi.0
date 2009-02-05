@@ -1,37 +1,33 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12207] block reads/writes > 122880 bytes to USB tape drive gives EBUSY
-Date: Thu,  5 Feb 2009 13:12:10 -0800 (PST)
-Message-ID: <20090205211210.B13FB108043@picon.linux-foundation.org>
-References: <bug-12207-11613@http.bugzilla.kernel.org/>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 2.6.29 1/1] cxgb3i - more transmit work-request checks
+Date: Thu, 05 Feb 2009 15:43:24 -0600
+Message-ID: <498B5D7C.6070500@cs.wisc.edu>
+References: <200902032340.n13Neh7e029867@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:52111 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752034AbZBEVMN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Feb 2009 16:12:13 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n15LCAeQ014810
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Feb 2009 13:12:11 -0800
-In-Reply-To: <bug-12207-11613@http.bugzilla.kernel.org/>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:33341 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751341AbZBEVnf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Feb 2009 16:43:35 -0500
+In-Reply-To: <200902032340.n13Neh7e029867@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Karen Xie <kxie@chelsio.com>
+Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12207
+Karen Xie wrote:
+> [PATCH 2.6.29 1/1] cxgb3i - more transmit work-request checks
+> 
+> From: Karen Xie <kxie@chelsio.com>
+> 
+> - added more checkings for transmit work-request.
+> - reserve one work-request for credit return.
+> - stop queueing up the outgoing pdus if transmit window is full.
+> - split the skb cb into tx and rx portion
+> 
 
-
-
-
-
-------- Comment #19 from stern@rowland.harvard.edu  2009-02-05 13:12 -------
-Created an attachment (id=20126)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=20126&action=view)
-Increase max_sectors for tape drives
-
-Phil, are you still there?  This is the patch in the form I intend to submit. 
-Does it fix your problem?
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+What kernel was this made against? I think the patch might include some 
+changes that already went upstream. You might want to rebase the patch 
+against scsi-rc-fixes.
