@@ -1,50 +1,48 @@
-From: "Karen Xie" <kxie@chelsio.com>
-Subject: RE: [PATCH 2.6.29 1/1] cxgb3i - more transmit work-request checks
-Date: Thu, 5 Feb 2009 14:41:42 -0800
-Message-ID: <8A71B368A89016469F72CD08050AD334045A4C95@maui.asicdesigners.com>
-References: <200902032340.n13Neh7e029867@localhost.localdomain> <498B5D7C.6070500@cs.wisc.edu>
+From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Subject: Re: [PATCH] iscsi tcp: bidi capable
+Date: Thu, 05 Feb 2009 16:45:32 -0600
+Message-ID: <498B6C0C.1070008@cs.wisc.edu>
+References: <4975D96A.6020407@panasas.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.22.49.110]:26125 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752115AbZBEWlR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Feb 2009 17:41:17 -0500
-Content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <grbounce-FC1hwAUAAAA0O9VQcsxVj1UPjHD9r3x_=glio-open-iscsi=m.gmane.org-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <4975D96A.6020407-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Post: <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://googlegroups.com/group/open-iscsi/subscribe>,
+	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Cc: Pete Wyckoff <pw-VNBDo6LsbKA@public.gmane.org>, FUJITA Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open-osd mailing-list <osd-dev-yNzVSZO3znNg9hUCZPvPmw@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-Thanks, Mike,
 
-I will re-submit the patch against scsi-rc-fixes. This one was based on
-scsi-misc-2.6/linux-2.6-iscsi.
-
-Karen 
-
------Original Message-----
-From: Mike Christie [mailto:michaelc@cs.wisc.edu] 
-Sent: Thursday, February 05, 2009 1:43 PM
-To: Karen Xie
-Cc: open-iscsi@googlegroups.com; linux-scsi@vger.kernel.org;
-James.Bottomley@HansenPartnership.com
-Subject: Re: [PATCH 2.6.29 1/1] cxgb3i - more transmit work-request
-checks
-
-Karen Xie wrote:
-> [PATCH 2.6.29 1/1] cxgb3i - more transmit work-request checks
+Boaz Harrosh wrote:
+> From: Pete Wyckoff <pw-VNBDo6LsbKA@public.gmane.org>
 > 
-> From: Karen Xie <kxie@chelsio.com>
+> Mark iscsi_tcp as being capable of bidirectional transfers.  The
+> bsg interface checks this bit before attempting any bidirectional
+> commands.
 > 
-> - added more checkings for transmit work-request.
-> - reserve one work-request for credit return.
-> - stop queueing up the outgoing pdus if transmit window is full.
-> - split the skb cb into tx and rx portion
+> Signed-off-by: Pete Wyckoff <pw-VNBDo6LsbKA@public.gmane.org>
+> Signed-off-by: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+> ---
+>  drivers/scsi/iscsi_tcp.c |    7 +++++++
+>  1 files changed, 7 insertions(+), 0 deletions(-)
 > 
+> diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+> index af092a8..9e2d4fb 100644
+> --- a/drivers/scsi/iscsi_tcp.c
+> +++ b/drivers/scsi/iscsi_tcp.c
+> @@ -806,6 +806,12 @@ static void iscsi_sw_tcp_session_destroy(struct iscsi_cls_session *cls_session)
+>  	iscsi_host_free(shost);
+>  }
+>  
+> +static int iscsi_tcp_slave_alloc(struct scsi_device *sdev)
+> +{
 
-What kernel was this made against? I think the patch might include some 
-changes that already went upstream. You might want to rebase the patch 
-against scsi-rc-fixes.
+I merged this for 2.6.30 with a small change where this is renamed 
+iscsi_sw_tcp_slave_alloc to fit the naming of functions in that file.
+
+Thanks.
