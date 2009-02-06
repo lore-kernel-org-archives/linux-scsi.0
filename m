@@ -1,63 +1,65 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 02/17] fcoe: exch mgr is freed while lport still retrying
-	sequences
-Date: Fri, 06 Feb 2009 10:55:59 -0800
-Message-ID: <20090206185559.26188.41553.stgit@fritz>
-References: <20090206185548.26188.51580.stgit@fritz>
+Subject: [PATCH 00/17] Open-FCoE Updates
+Date: Fri, 06 Feb 2009 10:55:49 -0800
+Message-ID: <20090206185548.26188.51580.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:6871 "EHLO mga02.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:24027 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751368AbZBFS4A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Feb 2009 13:56:00 -0500
-In-Reply-To: <20090206185548.26188.51580.stgit@fritz>
+	id S1750945AbZBFSzt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Feb 2009 13:55:49 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org
-Cc: Steve Ma <steve.ma@intel.com>, Robert Love <robert.w.love@intel.com>
 
-From: Steve Ma <steve.ma@intel.com>
+The following series implements bug fixes, adds a module param for runtime debug logging and cleans up some coding style issues. The top patch is a patch that was posted to linux-scsi on 01/04, but doesn't seem to have made it in yet.
 
-When a sequence cannot be delivered to the target, the local
-port will schedule retries, While this process is in progress,
-if we destroy the FCoE interface, the fcoe_sw_destroy routine is
-entered, and the fc_exch_mgr_free(lp->emp) is called.  Thus
-if fc_exch_alloc() is called when retrying the sequence,
-the mempool_alloc() will fail to allocate the exchange because
-the mempool of the exchange manager has already been released.
-This patch is to cancel any pending retry work of the local
-port before we start to destroy the interface.
+This patch set is based on Linus' tree + the Open-FCoE patches submitted to linux-scsi on 01/21.
 
-Also, when resetting the local port, we should also stop the
-scheduled pending retries.
-
-Signed-off-by: Steve Ma <steve.ma@intel.com>
-Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_lport.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Robert Love (14):
+      fcoe: Correct fcoe_transports initialization vs. registration
+      fcoe: Use setup_timer() and mod_timer()
+      libfc, fcoe: Remove unnecessary cast by removing inline wrapper
+      libfc, fcoe: Cleanup function formatting and minor typos
+      libfc, fcoe: Fix kerneldoc comments
+      libfc: Cleanup libfc_function_template comments
+      libfc: Logging review changes
+      libfc: runtime debugging with debug_logging module parameter
+      fcoe: Logging review changes
+      fcoe: runtime debugging with debug_logging module parameter
+      libfc: check for err when recv and state is incorrect
+      libfc: rename rp to rdata in fc_disc_new_target()
+      libfc: correct RPORT_TO_PRIV usage
+      libfc: Don't violate transport template for rogue port creation
 
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index a6ab692..a60b919 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -617,6 +617,7 @@ int fc_fabric_logoff(struct fc_lport *lport)
- {
- 	lport->tt.disc_stop_final(lport);
- 	mutex_lock(&lport->lp_mutex);
-+	cancel_delayed_work_sync(&lport->retry_work);
- 	fc_lport_enter_logo(lport);
- 	mutex_unlock(&lport->lp_mutex);
- 	return 0;
-@@ -938,6 +939,7 @@ static void fc_lport_enter_reset(struct fc_lport *lport)
- 		       fc_host_port_id(lport->host), fc_lport_state(lport));
- 
- 	fc_lport_state_enter(lport, LPORT_ST_RESET);
-+	cancel_delayed_work_sync(&lport->retry_work);
- 
- 	if (lport->dns_rp)
- 		lport->tt.rport_logoff(lport->dns_rp);
+Roel Kluin (1):
+      [SCSI] fcoe: fix kfree(skb)
 
+Steve Ma (1):
+      fcoe: exch mgr is freed while lport still retrying sequences
+
+Vasu Dev (1):
+      libfc: fixed a read IO data integrity issue when a IO data frame lost
+
+
+ drivers/scsi/fcoe/fc_transport_fcoe.c |  174 ++++++++++-----------
+ drivers/scsi/fcoe/fcoe.h              |   31 ++++
+ drivers/scsi/fcoe/fcoe_sw.c           |   70 ++++----
+ drivers/scsi/fcoe/libfcoe.c           |  267 ++++++++++++++++----------------
+ drivers/scsi/libfc/fc_disc.c          |  154 +++++++++---------
+ drivers/scsi/libfc/fc_exch.c          |   62 +++----
+ drivers/scsi/libfc/fc_fcp.c           |  139 ++++++++---------
+ drivers/scsi/libfc/fc_lport.c         |  278 ++++++++++++++++-----------------
+ drivers/scsi/libfc/fc_rport.c         |  197 +++++++++++------------
+ include/scsi/fc_encode.h              |    2 
+ include/scsi/libfc.h                  |  167 +++++++++++++-------
+ include/scsi/libfcoe.h                |    8 -
+ 12 files changed, 793 insertions(+), 756 deletions(-)
+ create mode 100644 drivers/scsi/fcoe/fcoe.h
+
+-- 
+//Rob
