@@ -1,560 +1,142 @@
-From: "Prakash, Sathya" <Sathya.Prakash@lsi.com>
-Subject: RE: [PATCH v3 sent again] introduce soft reset handler
-Date: Fri, 6 Feb 2009 12:34:24 +0530
-Message-ID: <B73941C4DE6A3D4EA1AE128E9565E24423A0C8B613@inbmail01.lsi.com>
-References: <200902060046.14606.bs@q-leap.de>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: cciss: WARNING/BUG in do_cciss_intr (it's back)
+Date: Fri, 6 Feb 2009 08:44:28 +0100
+Message-ID: <20090206074427.GR30821@kernel.dk>
+References: <4989D435.7010003@oracle.com> <0F5B06BAB751E047AB5C87D1F77A778859F9EAD9D5@GVW0547EXC.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og109.obsmtp.com ([64.18.2.171]:47238 "EHLO
-	exprod7og109.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752051AbZBFHE5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Feb 2009 02:04:57 -0500
-In-Reply-To: <200902060046.14606.bs@q-leap.de>
-Content-Language: en-US
+Received: from brick.kernel.dk ([93.163.65.50]:13912 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752530AbZBFHqb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Feb 2009 02:46:31 -0500
+Content-Disposition: inline
+In-Reply-To: <0F5B06BAB751E047AB5C87D1F77A778859F9EAD9D5@GVW0547EXC.americas.hpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bernd Schubert <bs@q-leap.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, Andrew Morton <akpm@linux-foundation.org>
+To: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>, ISS StorageDev <iss_storagedev@hp.com>, scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Bernd,
-I think, there are certain other areas which needs fix up.  For example you have added the ioc_reset_in_progress flag in the MPT_ADAPTER and used it  instead of diagPending. But the diagPending is not removed from MPT_ADAPTER structure and hence there is possibility for that variable getting refered in other places whereas it is not getting set in the HardResetHandler
-So remove the variable from MPT_ADAPTER and solve the compile errors by replacing the diagPending with ioc_reset_in_progress. You can refer LSI code you have.
-Thanks
-Sathya
+On Thu, Feb 05 2009, Miller, Mike (OS Dev) wrote:
+>  
+> 
+> > -----Original Message-----
+> > From: Randy Dunlap [mailto:randy.dunlap@oracle.com] 
+> > Sent: Wednesday, February 04, 2009 11:45 AM
+> > To: Miller, Mike (OS Dev); ISS StorageDev; scsi; Linux Kernel 
+> > Mailing List
+> > Subject: cciss: WARNING/BUG in do_cciss_intr (it's back)
+> > 
+> > Hi Mike,
+> > 
+> > Was there any debugging code added to try to help with this problem?
+> > or is that the WARNING before the BUG?
+> > 
+> 
+> Randy,
+> I think this is a different bug than the one you reported previously.
+> Please open a new bugzilla.
 
+I think it's the same one. The first warning that now triggers is:
 
------Original Message-----
-From: Bernd Schubert [mailto:bs@q-leap.de]
-Sent: Friday, February 06, 2009 5:16 AM
-To: Prakash, Sathya
-Cc: Bernd Schubert; linux-scsi@vger.kernel.org; Desai, Kashyap; Moore, Eric; James.Bottomley@hansenpartnership.com; DL-MPT Fusion Linux; Andrew Morton
-Subject: [PATCH v3 sent again] introduce soft reset handler
+WARNING: at drivers/block/cciss.c:225 
 
-Sathya, any chance you can ACK this patch before 2.6.30?
+which is
 
-Thanks,
-Bernd
+        if (WARN_ON(hlist_unhashed(&c->list)))
 
+removeQ(), this is where we would have crashed before due to trying to
+remove a command from a list it didn't belong to. And then we crash
+right after in the interrupt handler. So I'm pretty sure this is 100%
+the same bug.
 
-Hello Sathya,
-
-thanks for your patch review! Below is the updated version with DiagPending replaced by ioc_reset_in_progress.
-
-On dual port 53C1030 based HBAs such as the LSI22320R, the hard reset handler will cause DID_SOFT_ERROR for innocent devices on the second port.
-Introduce a mpt_SoftResetHandler() which doesn't cause this issue and slightly improve mpt_HardResetHandler(). Replace DiagPending by ioc_reset_in_progress to check for running resets.
-This is mostly a backport of the fusion-4.x driver available from LSI.
-
-Signed-off-by: Bernd Schubert <bs@q-leap.de>
-
- drivers/message/fusion/mptbase.c  |  211 ++++++++++++++++++++++++----
- drivers/message/fusion/mptbase.h  |   11 +
- drivers/message/fusion/mptctl.c   |    7
- drivers/message/fusion/mptsas.c   |    4
- drivers/message/fusion/mptbase.c  |  218
-++++++++++++++++++++++++++++++++------
- drivers/message/fusion/mptbase.h  |   11 +
- drivers/message/fusion/mptctl.c   |    8 -
- drivers/message/fusion/mptsas.c   |    4
- drivers/message/fusion/mptscsih.c |   39 +++---
- 5 files changed, 226 insertions(+), 54 deletions(-)
-
-Index: linux-2.6/drivers/message/fusion/mptbase.c
-===================================================================
---- linux-2.6.orig/drivers/message/fusion/mptbase.c
-+++ linux-2.6/drivers/message/fusion/mptbase.c
-@@ -5945,7 +5945,7 @@ mpt_timer_expired(unsigned long data)
-        dcprintk(ioc, printk(MYIOC_s_DEBUG_FMT "mpt_timer_expired! \n", ioc->name));
-
-        /* Perform a FW reload */
--       if (mpt_HardResetHandler(ioc, NO_SLEEP) < 0)
-+       if (mpt_SoftHardResetHandler(ioc, NO_SLEEP) < 0)
-                printk(MYIOC_s_WARN_FMT "Firmware Reload FAILED!\n", ioc->name);
-
-        /* No more processing.
-@@ -6319,6 +6319,134 @@ mpt_print_ioc_summary(MPT_ADAPTER *ioc,
- /*
-  *     Reset Handling
-  */
-+
-+/**
-+ *     mpt_SoftResetHandler - Issues a less expensive reset
-+ *     @ioc: Pointer to MPT_ADAPTER structure
-+ *     @sleepFlag: Indicates if sleep or schedule must be called.
-+
-+ *
-+ *     Returns 0 for SUCCESS or -1 if FAILED.
-+ *
-+ *     Message Unit Reset - instructs the IOC to reset the Reply Post and
-+ *     Free FIFO's. All the Message Frames on Reply Free FIFO are discarded.
-+ *     All posted buffers are freed, and event notification is turned off.
-+ *     IOC doesnt reply to any outstanding request. This will transfer IOC
-+ *     to READY state.
-+ **/
-+static int
-+mpt_SoftResetHandler(MPT_ADAPTER *ioc, int sleepFlag) {
-+       int              rc;
-+       int              ii;
-+       u8               cb_idx;
-+       unsigned long    flags;
-+       u32              ioc_state;
-+       unsigned long    time_count;
-+
-+       dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT "SoftResetHandler Entered!\n",
-+                             ioc->name));
-+
-+       ioc_state = mpt_GetIocState(ioc, 0) & MPI_IOC_STATE_MASK;
-+       if (ioc_state == MPI_IOC_STATE_FAULT ||
-+           ioc_state == MPI_IOC_STATE_RESET) {
-+               dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT
-+                   "skipping, either in FAULT or RESET state!\n", ioc->name));
-+               return -1;
-+       }
-+
-+       spin_lock_irqsave(&ioc->diagLock, flags);
-+       if (ioc->ioc_reset_in_progress) {
-+               spin_unlock_irqrestore(&ioc->diagLock, flags);
-+               return -1;
-+       }
-+       ioc->ioc_reset_in_progress = 1;
-+       spin_unlock_irqrestore(&ioc->diagLock, flags);
-+
-+       rc = -1;
-+
-+       for (cb_idx = MPT_MAX_PROTOCOL_DRIVERS-1; cb_idx; cb_idx--) {
-+               if (MptResetHandlers[cb_idx])
-+                       mpt_signal_reset(cb_idx, ioc, MPT_IOC_SETUP_RESET);
-+       }
-+
-+       /* Disable reply interrupts (also blocks FreeQ) */
-+       CHIPREG_WRITE32(&ioc->chip->IntMask, 0xFFFFFFFF);
-+       ioc->active = 0;
-+       time_count = jiffies;
-+       rc = SendIocReset(ioc, MPI_FUNCTION_IOC_MESSAGE_UNIT_RESET, sleepFlag);
-+       if (rc != 0)
-+               goto out;
-+
-+       /* MPT_IOC_PRE_RESET clears pending requests, but MUR
-+        * (MPI_FUNCTION_IOC_MESSAGE_UNIT_RESET) tries to find a DMA request and
-+        * will fault the fw if no request is found. So we need to do
-+        * MPT_IOC_PRE_RESET after MUR */
-+       for (cb_idx = MPT_MAX_PROTOCOL_DRIVERS-1; cb_idx; cb_idx--) {
-+               if (MptResetHandlers[cb_idx])
-+                       mpt_signal_reset(cb_idx, ioc, MPT_IOC_PRE_RESET);
-+       }
-+
-+       ioc_state = mpt_GetIocState(ioc, 0) & MPI_IOC_STATE_MASK;
-+       if (ioc_state != MPI_IOC_STATE_READY)
-+               goto out;
-+
-+       for (ii = 0; ii < 5; ii++) {
-+               /* Get IOC facts! Allow 5 retries */
-+               rc = GetIocFacts(ioc, sleepFlag, MPT_HOSTEVENT_IOC_RECOVER);
-+               if (rc == 0)
-+                       break;
-+               if (sleepFlag == CAN_SLEEP)
-+                       msleep(100);
-+               else
-+                       mdelay(100);
-+       }
-+       if (ii == 5)
-+               goto out;
-+
-+       rc = PrimeIocFifos(ioc);
-+       if (rc != 0)
-+               goto out;
-+
-+       rc = SendIocInit(ioc, sleepFlag);
-+       if (rc != 0)
-+               goto out;
-+
-+       rc = SendEventNotification(ioc, 1);
-+       if (rc != 0)
-+               goto out;
-+
-+       if (ioc->hard_resets < -1)
-+               ioc->hard_resets++;
-+
-+       /*
-+        * At this point, we know soft reset succeeded.
-+        */
-+
-+       ioc->active = 1;
-+       CHIPREG_WRITE32(&ioc->chip->IntMask, MPI_HIM_DIM);
-+
-+ out:
-+       spin_lock_irqsave(&ioc->diagLock, flags);
-+       ioc->ioc_reset_in_progress = 0;
-+       ioc->taskmgmt_quiesce_io = 0;
-+       ioc->taskmgmt_in_progress = 0;
-+       spin_unlock_irqrestore(&ioc->diagLock, flags);
-+
-+       if (ioc->active) {      /* otherwise, hard reset coming */
-+               for (cb_idx = MPT_MAX_PROTOCOL_DRIVERS-1; cb_idx; cb_idx--) {
-+                       if (MptResetHandlers[cb_idx])
-+                               mpt_signal_reset(cb_idx, ioc, MPT_IOC_POST_RESET);
-+               }
-+       }
-+
-+       printk(MYIOC_s_INFO_FMT "SoftResetHandler: completed (%d seconds): %s\n",
-+           ioc->name, jiffies_to_msecs(jiffies - time_count)/1000,
-+           ((rc == 0) ? "SUCCESS" : "FAILED"));
-+
-+       return rc;
-+}
-+
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
- /**
-  *     mpt_HardResetHandler - Generic reset handler
-@@ -6340,9 +6468,10 @@ int
- mpt_HardResetHandler(MPT_ADAPTER *ioc, int sleepFlag)  {
-        int              rc;
-+       u8               cb_idx;
-        unsigned long    flags;
-+       unsigned long    time_count;
-
--       dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT "HardResetHandler Entered!\n",
-ioc->name));
- #ifdef MFCNT
-        printk(MYIOC_s_INFO_FMT "HardResetHandler Entered!\n", ioc->name);
-        printk("MF count 0x%x !\n", ioc->mfcnt); @@ -6352,12 +6481,14 @@ mpt_HardResetHandler(MPT_ADAPTER *ioc, i
-         * mpt_do_ioc_recovery at any instant in time.
-         */
-        spin_lock_irqsave(&ioc->diagLock, flags);
--       if ((ioc->diagPending) || (ioc->alt_ioc && ioc->alt_ioc->diagPending)){
-+       if (ioc->ioc_reset_in_progress
-+       || (ioc->alt_ioc && ioc->alt_ioc->ioc_reset_in_progress)) {
-                spin_unlock_irqrestore(&ioc->diagLock, flags);
-                return 0;
--       } else {
--               ioc->diagPending = 1;
-        }
-+       ioc->ioc_reset_in_progress = 1;
-+       if (ioc->alt_ioc)
-+               ioc->alt_ioc->ioc_reset_in_progress = 1;
-        spin_unlock_irqrestore(&ioc->diagLock, flags);
-
-        /* FIXME: If do_ioc_recovery fails, repeat....
-@@ -6368,42 +6499,70 @@ mpt_HardResetHandler(MPT_ADAPTER *ioc, i
-         * Prevents timeouts occurring during a diagnostic reset...very bad.
-         * For all other protocol drivers, this is a no-op.
-         */
--       {
--               u8       cb_idx;
--               int      r = 0;
--
--               for (cb_idx = MPT_MAX_PROTOCOL_DRIVERS-1; cb_idx; cb_idx--) {
--                       if (MptResetHandlers[cb_idx]) {
--                               dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT "Calling IOC reset_setup handler
-#%d\n",
--                                               ioc->name, cb_idx));
--                               r += mpt_signal_reset(cb_idx, ioc, MPT_IOC_SETUP_RESET);
--                               if (ioc->alt_ioc) {
--                                       dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT "Calling alt-%s setup reset
-handler #%d\n",
--                                                       ioc->name, ioc->alt_ioc->name, cb_idx));
--                                       r += mpt_signal_reset(cb_idx, ioc->alt_ioc, MPT_IOC_SETUP_RESET);
--                               }
--                       }
-+       for (cb_idx = MPT_MAX_PROTOCOL_DRIVERS-1; cb_idx; cb_idx--) {
-+               if (MptResetHandlers[cb_idx]) {
-+                       mpt_signal_reset(cb_idx, ioc, MPT_IOC_SETUP_RESET);
-+                       if (ioc->alt_ioc)
-+                               mpt_signal_reset(cb_idx, ioc->alt_ioc, MPT_IOC_SETUP_RESET);
-                }
-        }
-
--       if ((rc = mpt_do_ioc_recovery(ioc, MPT_HOSTEVENT_IOC_RECOVER, sleepFlag)) !=
-0) {
--               printk(MYIOC_s_WARN_FMT "Cannot recover rc = %d!\n", ioc->name, rc);
-+       time_count = jiffies;
-+       rc = mpt_do_ioc_recovery(ioc, MPT_HOSTEVENT_IOC_RECOVER, sleepFlag);
-+       if (rc != 0) {
-+               printk(KERN_WARNING MYNAM ": WARNING - (%d) Cannot recover %s\n",
-+                       rc, ioc->name);
-+       } else {
-+               if (ioc->hard_resets < -1)
-+                       ioc->hard_resets++;
-        }
--       ioc->reload_fw = 0;
--       if (ioc->alt_ioc)
--               ioc->alt_ioc->reload_fw = 0;
-
-        spin_lock_irqsave(&ioc->diagLock, flags);
--       ioc->diagPending = 0;
--       if (ioc->alt_ioc)
--               ioc->alt_ioc->diagPending = 0;
-+       ioc->ioc_reset_in_progress = 0;
-+       ioc->taskmgmt_quiesce_io = 0;
-+       ioc->taskmgmt_in_progress = 0;
-+       if (ioc->alt_ioc) {
-+               ioc->alt_ioc->ioc_reset_in_progress = 0;
-+               ioc->alt_ioc->taskmgmt_quiesce_io   = 0;
-+               ioc->alt_ioc->taskmgmt_in_progress  = 0;
-+       }
-        spin_unlock_irqrestore(&ioc->diagLock, flags);
-
--       dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT "HardResetHandler rc = %d!\n",
-ioc->name, rc));
-+       for (cb_idx = MPT_MAX_PROTOCOL_DRIVERS-1; cb_idx; cb_idx--) {
-+               if (MptResetHandlers[cb_idx]) {
-+                       mpt_signal_reset(cb_idx, ioc, MPT_IOC_POST_RESET);
-+                       if (ioc->alt_ioc)
-+                               mpt_signal_reset(cb_idx, ioc->alt_ioc, MPT_IOC_POST_RESET);
-+               }
-+       }
-
-+       dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT "HardResetHandler: completed
-+(%d
-seconds): %s\n",
-+           ioc->name, jiffies_to_msecs(jiffies - time_count)/1000,
-+           ((rc == 0) ? "SUCCESS" : "FAILED")));
-        return rc;
- }
-
-+/**
-+ *     mpt_SoftHardResetHandler - Generic reset handler
-+ *     @ioc: Pointer to MPT_ADAPTER structure
-+ *     @sleepFlag: Indicates if sleep or schedule must be called.
-+ *
-+ *     First try to do a soft reset and if this fails, call the
-+ *     hard-reset-handler
-+ */
-+int
-+mpt_SoftHardResetHandler(MPT_ADAPTER *ioc, int sleepFlag) {
-+       int rc;
-+
-+       rc = mpt_SoftResetHandler(ioc, sleepFlag);
-+       if (rc)
-+               rc = mpt_HardResetHandler(ioc, sleepFlag);
-+
-+       return rc;
-+}
-+
-+
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
- static void
- EventDescriptionStr(u8 event, u32 evData0, char *evStr) @@ -7561,6 +7720,7 @@ EXPORT_SYMBOL(mpt_verify_adapter);
- EXPORT_SYMBOL(mpt_GetIocState);
- EXPORT_SYMBOL(mpt_print_ioc_summary);
- EXPORT_SYMBOL(mpt_HardResetHandler);
-+EXPORT_SYMBOL(mpt_SoftHardResetHandler);
- EXPORT_SYMBOL(mpt_config);
- EXPORT_SYMBOL(mpt_findImVolumes);
- EXPORT_SYMBOL(mpt_alloc_fw_memory);
-Index: linux-2.6/drivers/message/fusion/mptbase.h
-===================================================================
---- linux-2.6.orig/drivers/message/fusion/mptbase.h
-+++ linux-2.6/drivers/message/fusion/mptbase.h
-@@ -701,6 +701,9 @@ typedef struct _MPT_ADAPTER
-        MPT_SAS_MGMT             sas_mgmt;
-        struct work_struct       sas_persist_task;
-
-+       int                      taskmgmt_in_progress;
-+       u8                       taskmgmt_quiesce_io;
-+
-        struct work_struct       fc_setup_reset_work;
-        struct list_head         fc_rports;
-        struct work_struct       fc_lsc_work;
-@@ -709,6 +712,11 @@ typedef struct _MPT_ADAPTER
-        struct work_struct       fc_rescan_work;
-        char                     fc_rescan_work_q_name[20];
-        struct workqueue_struct *fc_rescan_work_q;
-+
-+       unsigned long            hard_resets;   /* driver forced bus resets count */
-+       unsigned long            soft_resets;   /* fw/external bus resets count */
-+       u8                       ioc_reset_in_progress;
-+
-        struct scsi_cmnd        **ScsiLookup;
-        spinlock_t                scsi_lookup_lock;
-
-@@ -844,8 +852,6 @@ typedef struct _MPT_SCSI_HOST {
-        MPT_FRAME_HDR            *cmdPtr;               /* Ptr to nonOS request */
-        struct scsi_cmnd         *abortSCpnt;
-        MPT_LOCAL_REPLY           localReply;           /* internal cmd reply struct */
--       unsigned long             hard_resets;          /* driver forced bus resets count */
--       unsigned long             soft_resets;          /* fw/external bus resets count */
-        unsigned long             timeouts;             /* cmd timeouts */
-        ushort                    sel_timeout[MPT_MAX_FC_DEVICES];
-        char                      *info_kbuf;
-@@ -916,6 +922,7 @@ extern int   mpt_verify_adapter(int iocid
- extern u32      mpt_GetIocState(MPT_ADAPTER *ioc, int cooked);
- extern void     mpt_print_ioc_summary(MPT_ADAPTER *ioc, char *buf, int *size,
-int len, int showlan);
- extern int      mpt_HardResetHandler(MPT_ADAPTER *ioc, int sleepFlag);
-+extern int      mpt_SoftHardResetHandler(MPT_ADAPTER *ioc, int sleepFlag);
- extern int      mpt_config(MPT_ADAPTER *ioc, CONFIGPARMS *cfg);
- extern int      mpt_alloc_fw_memory(MPT_ADAPTER *ioc, int size);
- extern void     mpt_free_fw_memory(MPT_ADAPTER *ioc);
-Index: linux-2.6/drivers/message/fusion/mptscsih.c
-===================================================================
---- linux-2.6.orig/drivers/message/fusion/mptscsih.c
-+++ linux-2.6/drivers/message/fusion/mptscsih.c
-@@ -1605,7 +1605,7 @@ mptscsih_TMHandler(MPT_SCSI_HOST *hd, u8
-                        "TM Handler for type=%x: IOC Not operational (0x%x)!\n",
-                        ioc->name, type, ioc_raw_state);
-                printk(MYIOC_s_WARN_FMT " Issuing HardReset!!\n", ioc->name);
--               if (mpt_HardResetHandler(ioc, CAN_SLEEP) < 0)
-+               if (mpt_SoftHardResetHandler(ioc, CAN_SLEEP) < 0)
-                        printk(MYIOC_s_WARN_FMT "TMHandler: HardReset "
-                            "FAILED!!\n", ioc->name);
-                return FAILED;
-@@ -1621,8 +1621,8 @@ mptscsih_TMHandler(MPT_SCSI_HOST *hd, u8
-
-        /* Isse the Task Mgmt request.
-         */
--       if (hd->hard_resets < -1)
--               hd->hard_resets++;
-+       if (ioc->hard_resets < -1)
-+               ioc->hard_resets++;
-
-        rc = mptscsih_IssueTaskMgmt(hd, type, channel, id, lun,
-            ctx2abort, timeout);
-@@ -1724,7 +1724,7 @@ mptscsih_IssueTaskMgmt(MPT_SCSI_HOST *hd
-                        ioc, mf));
-                dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT "Calling HardReset! \n",
-                         ioc->name));
--               retval = mpt_HardResetHandler(ioc, CAN_SLEEP);
-+               retval = mpt_SoftHardResetHandler(ioc, CAN_SLEEP);
-                dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT "rc=%d \n",
-                         ioc->name, retval));
-                goto fail_out;
-@@ -1998,11 +1998,12 @@ int
- mptscsih_host_reset(struct scsi_cmnd *SCpnt)  {
-        MPT_SCSI_HOST *  hd;
--       int              retval;
-+       int              retval, status;
-        MPT_ADAPTER     *ioc;
-
-        /*  If we can't locate the host to reset, then we failed. */
--       if ((hd = shost_priv(SCpnt->device->host)) == NULL){
-+       hd = shost_priv(SCpnt->device->host);
-+       if (hd == NULL) {
-                printk(KERN_ERR MYNAM ": host reset: "
-                    "Can't locate host! (sc=%p)\n", SCpnt);
-                return FAILED;
-@@ -2015,21 +2016,23 @@ mptscsih_host_reset(struct scsi_cmnd *SC
-        /*  If our attempts to reset the host failed, then return a failed
-         *  status.  The host will be taken off line by the SCSI mid-layer.
-         */
--       if (mpt_HardResetHandler(ioc, CAN_SLEEP) < 0) {
--               retval = FAILED;
--       } else {
-+       retval = mpt_SoftHardResetHandler(ioc, CAN_SLEEP);
-+
-+       if (retval < 0)
-+               status = FAILED;
-+       else {
-                /*  Make sure TM pending is cleared and TM state is set to
-                 *  NONE.
-                 */
--               retval = 0;
-+               status = SUCCESS;
-                hd->tmPending = 0;
-                hd->tmState = TM_STATE_NONE;
-        }
-
-        printk(MYIOC_s_INFO_FMT "host reset: %s (sc=%p)\n",
--           ioc->name, ((retval == 0) ? "SUCCESS" : "FAILED" ), SCpnt);
-+           ioc->name, ((status == SUCCESS) ? "SUCCESS" : "FAILED"), SCpnt);
-
--       return retval;
-+       return status;
- }
-
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
-@@ -2218,7 +2221,7 @@ mptscsih_taskmgmt_complete(MPT_ADAPTER *
-                 */
-                if (iocstatus == MPI_IOCSTATUS_SCSI_TASK_MGMT_FAILED ||
-                    hd->cmdPtr)
--                       if (mpt_HardResetHandler(ioc, NO_SLEEP) < 0)
-+                       if (mpt_SoftHardResetHandler(ioc, NO_SLEEP) < 0)
-                                printk(MYIOC_s_WARN_FMT " Firmware Reload FAILED!!\n", ioc->name);
-                break;
-
-@@ -2740,8 +2743,8 @@ mptscsih_event_process(MPT_ADAPTER *ioc,
-                break;
-        case MPI_EVENT_IOC_BUS_RESET:                   /* 04 */
-        case MPI_EVENT_EXT_BUS_RESET:                   /* 05 */
--               if (hd && (ioc->bus_type == SPI) && (hd->soft_resets < -1))
--                       hd->soft_resets++;
-+               if (hd && (ioc->bus_type == SPI) && (ioc->soft_resets < -1))
-+                       ioc->soft_resets++;
-                break;
-        case MPI_EVENT_LOGOUT:                          /* 09 */
-                /* FIXME! */
-@@ -2979,9 +2982,9 @@ mptscsih_timer_expired(unsigned long dat
-                         */
-                } else {
-                        /* Perform a FW reload */
--                       if (mpt_HardResetHandler(ioc, NO_SLEEP) < 0) {
--                               printk(MYIOC_s_WARN_FMT "Firmware Reload FAILED!\n", ioc->name);
--                       }
-+                       if (mpt_SoftHardResetHandler(ioc, NO_SLEEP) < 0)
-+                               printk(MYIOC_s_WARN_FMT "Firmware Reload FAILED!\n",
-+                                      ioc->name);
-                }
-        } else {
-                /* This should NEVER happen */
-Index: linux-2.6/drivers/message/fusion/mptctl.c
-===================================================================
---- linux-2.6.orig/drivers/message/fusion/mptctl.c
-+++ linux-2.6/drivers/message/fusion/mptctl.c
-@@ -323,7 +323,7 @@ static void mptctl_timeout_expired (MPT_
-                 */
-                dctlprintk(ioctl->ioc, printk(MYIOC_s_DEBUG_FMT "Calling HardReset! \n",
-                         ioctl->ioc->name));
--               mpt_HardResetHandler(ioctl->ioc, CAN_SLEEP);
-+               mpt_SoftHardResetHandler(ioctl->ioc, CAN_SLEEP);
-        }
-        return;
-
-@@ -678,6 +678,8 @@ static int mptctl_do_reset(unsigned long
-        dctlprintk(iocp, printk(MYIOC_s_DEBUG_FMT "mptctl_do_reset called.\n",
-            iocp->name));
-
-+       /* We can't use the soft reset handler here, since only the hard
-+        * reset handler can clear possible fw faults */
-        if (mpt_HardResetHandler(iocp, CAN_SLEEP) != 0) {
-                printk (MYIOC_s_ERR_FMT "%s@%d::mptctl_do_reset - reset failed.\n",
-                        iocp->name, __FILE__, __LINE__);
-@@ -2465,8 +2467,8 @@ mptctl_hp_hostinfo(unsigned long arg, un
-                MPT_SCSI_HOST *hd =  shost_priv(ioc->sh);
-
-                if (hd && (cim_rev == 1)) {
--                       karg.hard_resets = hd->hard_resets;
--                       karg.soft_resets = hd->soft_resets;
-+                       karg.hard_resets = ioc->hard_resets;
-+                       karg.soft_resets = ioc->soft_resets;
-                        karg.timeouts = hd->timeouts;
-                }
-        }
-Index: linux-2.6/drivers/message/fusion/mptsas.c
-===================================================================
---- linux-2.6.orig/drivers/message/fusion/mptsas.c
-+++ linux-2.6/drivers/message/fusion/mptsas.c
-@@ -1167,7 +1167,7 @@ static int mptsas_phy_reset(struct sas_p
-        if (!timeleft) {
-                /* On timeout reset the board */
-                mpt_free_msg_frame(ioc, mf);
--               mpt_HardResetHandler(ioc, CAN_SLEEP);
-+               mpt_SoftHardResetHandler(ioc, CAN_SLEEP);
-                error = -ETIMEDOUT;
-                goto out_unlock;
-        }
-@@ -1345,7 +1345,7 @@ static int mptsas_smp_handler(struct Scs
-        if (!timeleft) {
-                printk(MYIOC_s_ERR_FMT "%s: smp timeout!\n", ioc->name, __func__);
-                /* On timeout reset the board */
--               mpt_HardResetHandler(ioc, CAN_SLEEP);
-+               mpt_SoftHardResetHandler(ioc, CAN_SLEEP);
-                ret = -ETIMEDOUT;
-                goto unmap;
-        }
+Randy, is this still using kexec? Perhaps cciss needs a better
+kick-in-the-pants reset on driver load to clear EVERYTHING, there's
+clearly something very bad happening there.
 
 
+> 
+> Thanks,
+> -- mikem
+> 
+> > 
+> > Booting 2.6.29-rc3-git6 oopsed with:
+> > 
+> > calling  cciss_init+0x0/0x2e [cciss] @ 733 HP CISS Driver (v 3.6.20)
+> > ACPI: PCI Interrupt Link [LNKA] enabled at IRQ 54 cciss 
+> > 0000:42:08.0: PCI INT A -> Link[LNKA] -> GSI 54 (level, high) 
+> > -> IRQ 54 cciss 0000:42:08.0: irq 56 for MSI/MSI-X IRQ 
+> > 56/cciss0: IRQF_DISABLED is not guaranteed on shared IRQs
+> > cciss0: <0x3238> at PCI 0000:42:08.0 IRQ 56 using DAC 
+> > ------------[ cut here ]------------
+> > WARNING: at drivers/block/cciss.c:225 
+> > do_cciss_intr+0x58f/0x99a [cciss]() Hardware name: ProLiant 
+> > BL685c G1 Modules linked in: cciss(+) ehci_hcd ohci_hcd uhci_hcd
+> > Pid: 0, comm: swapper Not tainted 2.6.29-rc3-git6 #1 Call Trace:
+> >  <IRQ>  [<ffffffff8023a741>] warn_slowpath+0xd3/0xf2  
+> > [<ffffffff80243a44>] ? __mod_timer+0xc1/0xd3  
+> > [<ffffffff8041469f>] ? smi_timeout+0xd9/0xe5  
+> > [<ffffffff8024f86a>] ? ktime_get_ts+0x49/0x4e  
+> > [<ffffffff804145c6>] ? smi_timeout+0x0/0xe5  
+> > [<ffffffffa0024c4b>] do_cciss_intr+0x58f/0x99a [cciss]  
+> > [<ffffffff8026ed21>] handle_IRQ_event+0x27/0x57  
+> > [<ffffffff8027057d>] handle_edge_irq+0xde/0x11f  
+> > [<ffffffff8020e302>] do_IRQ+0xdc/0x152  [<ffffffff8020ca13>] 
+> > ret_from_intr+0x0/0xa  <EOI> <4>---[ end trace a8b437cd48391e28 ]---
+> > BUG: unable to handle kernel NULL pointer dereference at 
+> > 00000000000000f4
+> > IP: [<ffffffffa0024c93>] do_cciss_intr+0x5d7/0x99a [cciss] PGD 0
+> > Oops: 0002 [#1] SMP
+> > last sysfs file: /sys/block/ram15/dev
+> > CPU 2
+> > Modules linked in: cciss(+) ehci_hcd ohci_hcd uhci_hcd
+> > Pid: 0, comm: swapper Tainted: G        W  2.6.29-rc3-git6 #1
+> > RIP: 0010:[<ffffffffa0024c93>]  [<ffffffffa0024c93>] 
+> > do_cciss_intr+0x5d7/0x99a [cciss]
+> > RSP: 0018:ffff88027f12fef0  EFLAGS: 00010046
+> > RAX: 0000000000000000 RBX: ffff88007f840270 RCX: 0000000000013888
+> > RDX: 0000000000008080 RSI: 0000000000000046 RDI: 0000000000000009
+> > RBP: ffff88027f12ff20 R08: 000000447f12fa70 R09: ffff88017e540700
+> > R10: 0000000000000000 R11: 0000000000000000 R12: ffff88007f8404b0
+> > R13: ffff88027e1a0000 R14: 0000000000000000 R15: 0000000000000086
+> > FS:  0000000000680850(0000) GS:ffff88017f121380(0000) 
+> > knlGS:0000000000000000
+> > CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+> > CR2: 00000000000000f4 CR3: 0000000000201000 CR4: 00000000000006e0
+> > DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> > DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 
+> > 0000000000000400 Process swapper (pid: 0, threadinfo 
+> > ffff88017f164000, task ffff88017fa5d4c0)
+> > Stack:
+> >  0000000000000001 ffff88027f126280 0000000000000000 0000000000000000
+> >  0000000000000038 0000000000000000 ffff88027f12ff50 
+> > ffffffff8026ed21  ffffffff8076e000 0000000000000038 
+> > ffff88027f126280 ffffffff8076e054 Call Trace:
+> >  <IRQ> <0> [<ffffffff8026ed21>] handle_IRQ_event+0x27/0x57  
+> > [<ffffffff8027057d>] handle_edge_irq+0xde/0x11f  
+> > [<ffffffff8020e302>] do_IRQ+0xdc/0x152  [<ffffffff8020ca13>] 
+> > ret_from_intr+0x0/0xa  <EOI> <0>Code: 50 08 48 c7 83 40 02 00 
+> > 00 00 00 00 00 49 c7 44 24 08 00 00 00 00 8b 83 34 02 00 00 
+> > 85 c0 0f 85 49 03 00 00 4c 8b b3 50 02 00 00 <41> c7 86 f4 00 
+> > 00 00 00 00 00 00 4c 8b 83 28 02 00 00 66 41 8b RIP  
+> > [<ffffffffa0024c93>] do_cciss_intr+0x5d7/0x99a [cciss]  RSP 
+> > <ffff88027f12fef0>
+> > CR2: 00000000000000f4
+> > ---[ end trace a8b437cd48391e29 ]---
+> > Kernel panic - not syncing: Fatal exception in interrupt
+> > 
+> > 
+> > 
+> > This is on an HP ProLiant BL685c G1, 4-proc system with
+> > 8 GB of RAM.  (same as previous reports)
+> > 
+> > 
+> > Rebooting worked successfully.
+> > 
+> > Thanks,
+> > --
+> > ~Randy
+> > 
+-- 
+Jens Axboe
 
---
-Bernd Schubert
-Q-Leap Networks GmbH
