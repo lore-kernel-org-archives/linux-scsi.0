@@ -1,296 +1,153 @@
 From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH v3 sent again] introduce soft reset handler
-Date: Fri, 6 Feb 2009 12:45:22 -0800
-Message-ID: <20090206124522.63f906c3.akpm@linux-foundation.org>
-References: <200902060046.14606.bs@q-leap.de>
+Subject: Re: linux 2.6.29-rc3 kernel failure with mptsas
+Date: Fri, 6 Feb 2009 15:50:38 -0800
+Message-ID: <20090206155038.67847521.akpm@linux-foundation.org>
+References: <B4ED8DE8E195E84A872496A085BC07822F11@exchange01.corp.win-professional.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:54304 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:33637 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750952AbZBFUqO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Feb 2009 15:46:14 -0500
-In-Reply-To: <200902060046.14606.bs@q-leap.de>
+	by vger.kernel.org with ESMTP id S1751944AbZBFXvN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Feb 2009 18:51:13 -0500
+In-Reply-To: <B4ED8DE8E195E84A872496A085BC07822F11@exchange01.corp.win-professional.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: Sathya.Prakash@lsi.com, bs@q-leap.de, linux-scsi@vger.kernel.org, Kashyap.Desai@lsi.com, Eric.Moore@lsi.com, James.Bottomley@hansenpartnership.com, DL-MPTFusionLinux@lsi.com
+To: "Morten P.D. Stevens" <mstevens@win-professional.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, 6 Feb 2009 00:46:12 +0100
-Bernd Schubert <bs@q-leap.de> wrote:
+On Thu, 5 Feb 2009 23:29:10 +0100
+"Morten P.D. Stevens" <mstevens@win-professional.com> wrote:
 
-> Sathya, any chance you can ACK this patch before 2.6.30?
+> Hi,
 > 
-> Thanks,
-> Bernd
+> I get a kernel failure with linux 2.6.29-rc3 on my Dell T7400
+> Workstation.
+> 
+> failure message:
+> 
+> WARNING: at lib/debugobjects.c:253 __debug_object_init+0x2a8/0x353()
+> (Tainted: G        W )
+> Hardware name: Precision WorkStation T7400  
+> Modules linked in: ata_generic pata_acpi mptsas(+) mptscsih mptbase
+> scsi_transport_sas
+> Pid: 35, comm: work_on_cpu/0 Tainted: G        W
+> 2.6.29-0.66.rc3.fc11.x86_64 #1
+> Call Trace:
+> [<ffffffff8104a5c1>] warn_slowpath+0xb9/0xfe
+> [<ffffffff813806d9>] ? printk+0x3c/0x43
+> [<ffffffff8119b5fb>] __debug_object_init+0x2a8/0x353
+> [<ffffffff8106d74a>] ? trace_hardirqs_on+0xd/0xf
+> [<ffffffff8119b6d3>] debug_object_init+0x14/0x19
+> [<ffffffff8105461f>] init_timer+0x18/0x5b
+> [<ffffffffa001122d>] mpt_config+0x1e4/0x305 [mptbase]
+> [<ffffffffa001017a>] ? pci_free_consistent+0x75/0x81 [mptbase]
+> [<ffffffffa0012f25>] mpt_do_ioc_recovery+0x142a/0x15e8 [mptbase]
+> [<ffffffff81046c95>] ? finish_task_switch+0x5f/0xf6
+> [<ffffffff81046c36>] ? finish_task_switch+0x0/0xf6
+> [<ffffffffa00132a5>] ? mpt_timer_expired+0x0/0x60 [mptbase]
+> [<ffffffff8101414a>] ? dump_trace+0x269/0x27b
+> [<ffffffff8101c12b>] ? save_stack_trace+0x2a/0x48
+> [<ffffffff8106c546>] ? save_trace+0x3f/0x95
+> [<ffffffff8106d137>] ? mark_lock+0x22/0x3ad
+> [<ffffffff8106d137>] ? mark_lock+0x22/0x3ad
+> [<ffffffff8106d529>] ? mark_held_locks+0x67/0x83
+> [<ffffffff81383395>] ? _spin_unlock_irqrestore+0x47/0x57
+> [<ffffffff8106d719>] ? trace_hardirqs_on_caller+0x12f/0x153
+> [<ffffffff8106d74a>] ? trace_hardirqs_on+0xd/0xf
+> [<ffffffff81194602>] ? __up_read+0x7c/0x85
+> [<ffffffff810624ad>] ? up_read+0x26/0x2a
+> [<ffffffffa001480f>] mpt_attach+0xa1b/0xb80 [mptbase]
+> [<ffffffffa002f70a>] mptsas_probe+0x1a/0x487 [mptsas]
+> [<ffffffff811a491f>] local_pci_probe+0x12/0x16
+> [<ffffffff8105b0d7>] do_work_for_cpu+0x13/0x1b
+> [<ffffffff8105b268>] run_workqueue+0x103/0x20a
+> [<ffffffff8105b216>] ? run_workqueue+0xb1/0x20a
+> [<ffffffff8106d719>] ? trace_hardirqs_on_caller+0x12f/0x153
+> [<ffffffff8105b0c4>] ? do_work_for_cpu+0x0/0x1b
+> [<ffffffff8105b44f>] worker_thread+0xe0/0xf1
+> [<ffffffff8105f090>] ? autoremove_wake_function+0x0/0x38
+> [<ffffffff8105b36f>] ? worker_thread+0x0/0xf1
+> [<ffffffff8105ed18>] kthread+0x49/0x76
+> [<ffffffff8101262a>] child_rip+0xa/0x20
+> [<ffffffff81011f3e>] ? restore_args+0x0/0x30
+> [<ffffffff8105ecaa>] ? kthreadd+0x176/0x19b
+> [<ffffffff8105eccf>] ? kthread+0x0/0x76
+> [<ffffffff81012620>] ? child_rip+0x0/0x20
+> ---[ end trace af29b8e50456f967 ]---
 > 
 > 
-> Hello Sathya,
-> 
-> thanks for your patch review! Below is the updated version with DiagPending 
-> replaced by ioc_reset_in_progress.
-> 
-> On dual port 53C1030 based HBAs such as the LSI22320R, the hard reset handler
-> will cause DID_SOFT_ERROR for innocent devices on the second port.
-> Introduce a mpt_SoftResetHandler() which doesn't cause this issue and 
-> slightly improve mpt_HardResetHandler(). Replace DiagPending by 
-> ioc_reset_in_progress to check for running resets.
-> This is mostly a backport of the fusion-4.x driver available from LSI.
-> 
+> Kernel failure message 2:
+> ODEBUG: object is on stack, but not annotated
 
-The patch is rather wordwrapped.
+This should fix it:
 
-The patch (and the file which it patches) is stuffed full of
-excessively long lines, which makes the wordwrapping more common.
+From: "Eric Paris" <eparis@parisplace.org>
 
-After fixing the wordwrapping, the patch doesn't apply against current
-mainline.
+ODEBUG: object is on stack, but not annotated
+------------[ cut here ]------------
+WARNING: at lib/debugobjects.c:253 __debug_object_init+0x1f3/0x276()
+Hardware name: VMware Virtual Platform
+Modules linked in: mptspi(+) mptscsih mptbase scsi_transport_spi ext3 jbd mbcache
+Pid: 540, comm: insmod Not tainted 2.6.28-mm1 #2
+Call Trace:
+ [<c042c51c>] warn_slowpath+0x74/0x8a
+ [<c0469600>] ? start_critical_timing+0x96/0xb7
+ [<c060c8ea>] ? _spin_unlock_irqrestore+0x2f/0x3c
+ [<c0446fad>] ? trace_hardirqs_off_caller+0x18/0xaf
+ [<c044704f>] ? trace_hardirqs_off+0xb/0xd
+ [<c060c8ea>] ? _spin_unlock_irqrestore+0x2f/0x3c
+ [<c042cb84>] ? release_console_sem+0x1a5/0x1ad
+ [<c05013e6>] __debug_object_init+0x1f3/0x276
+ [<c0501494>] debug_object_init+0x13/0x17
+ [<c0433c56>] init_timer+0x10/0x1a
+ [<e08e5b54>] mpt_config+0x1c1/0x2b7 [mptbase]
+ [<e08e3b82>] ? kmalloc+0x8/0xa [mptbase]
+ [<e08e3b82>] ? kmalloc+0x8/0xa [mptbase]
+ [<e08e6fa2>] mpt_do_ioc_recovery+0x950/0x1212 [mptbase]
+ [<c04496c2>] ? __lock_acquire+0xa69/0xacc
+ [<c060c8f1>] ? _spin_unlock_irqrestore+0x36/0x3c
+ [<c060c3af>] ? _spin_unlock_irq+0x22/0x26
+ [<c04f2d8b>] ? string+0x2b/0x76
+ [<c04f310e>] ? vsnprintf+0x338/0x7b3
+ [<c04496c2>] ? __lock_acquire+0xa69/0xacc
+ [<c060c8ea>] ? _spin_unlock_irqrestore+0x2f/0x3c
+ [<c04496c2>] ? __lock_acquire+0xa69/0xacc
+ [<c044897d>] ? debug_check_no_locks_freed+0xeb/0x105
+ [<c060c8f1>] ? _spin_unlock_irqrestore+0x36/0x3c
+ [<c04488bc>] ? debug_check_no_locks_freed+0x2a/0x105
+ [<c0446b8c>] ? lock_release_holdtime+0x43/0x48
+ [<c043f742>] ? up_read+0x16/0x29
+ [<c05076f8>] ? pci_get_slot+0x66/0x72
+ [<e08e89ca>] mpt_attach+0x881/0x9b1 [mptbase]
+ [<e091c8e5>] mptspi_probe+0x11/0x354 [mptspi]
 
+Noticing that every caller of mpt_config has its CONFIGPARMS struct
+declared on the stack and thus the &pCfg->timer is always on the stack I
+changed init_timer() to init_timer_on_stack() and it seems to have shut
+up.....
 
-> 
-> Index: linux-2.6/drivers/message/fusion/mptbase.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/message/fusion/mptbase.c
-> +++ linux-2.6/drivers/message/fusion/mptbase.c
-> @@ -5945,7 +5945,7 @@ mpt_timer_expired(unsigned long data)
->  	dcprintk(ioc, printk(MYIOC_s_DEBUG_FMT "mpt_timer_expired! \n", ioc->name));
->  
->  	/* Perform a FW reload */
-> -	if (mpt_HardResetHandler(ioc, NO_SLEEP) < 0)
-> +	if (mpt_SoftHardResetHandler(ioc, NO_SLEEP) < 0)
->  		printk(MYIOC_s_WARN_FMT "Firmware Reload FAILED!\n", ioc->name);
->  
->  	/* No more processing.
-> @@ -6319,6 +6319,134 @@ mpt_print_ioc_summary(MPT_ADAPTER *ioc, 
->  /*
->   *	Reset Handling
->   */
-> +
-> +/**
-> + *	mpt_SoftResetHandler - Issues a less expensive reset
-> + *	@ioc: Pointer to MPT_ADAPTER structure
-> + *	@sleepFlag: Indicates if sleep or schedule must be called.
-> +
-> + *
-> + *	Returns 0 for SUCCESS or -1 if FAILED.
-> + *
-> + *	Message Unit Reset - instructs the IOC to reset the Reply Post and
-> + *	Free FIFO's. All the Message Frames on Reply Free FIFO are discarded.
-> + *	All posted buffers are freed, and event notification is turned off.
-> + *	IOC doesnt reply to any outstanding request. This will transfer IOC
-> + *	to READY state.
-> + **/
-> +static int
-> +mpt_SoftResetHandler(MPT_ADAPTER *ioc, int sleepFlag)
+Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
-`sleepFlag' is a poorly chosen identifier.  It's hard to tell whether
-sleepFlag=true means "you can sleep" or "you can't sleep".  A better
-name would be "can_sleep".
+ drivers/message/fusion/mptbase.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Or, better, make it a gfp_t, use GFP_ATOMIC/GFP_KERNEL test __GFP_WAIT.
-This has the advantage that everyone knows what it means, so new and
-duplicative mechanisms don't have to be learned.
+diff -puN drivers/message/fusion/mptbase.c~scsi-mpt-suppress-debugobjects-warning drivers/message/fusion/mptbase.c
+--- a/drivers/message/fusion/mptbase.c~scsi-mpt-suppress-debugobjects-warning
++++ a/drivers/message/fusion/mptbase.c
+@@ -5934,7 +5934,7 @@ mpt_config(MPT_ADAPTER *ioc, CONFIGPARMS
+ 
+ 	/* Initalize the timer
+ 	 */
+-	init_timer(&pCfg->timer);
++	init_timer_on_stack(&pCfg->timer);
+ 	pCfg->timer.data = (unsigned long) ioc;
+ 	pCfg->timer.function = mpt_timer_expired;
+ 	pCfg->wait_done = 0;
+_
 
-> +{
-> +	int		 rc;
-> +	int		 ii;
-> +	u8		 cb_idx;
-> +	unsigned long	 flags;
-> +	u32		 ioc_state;
-> +	unsigned long	 time_count;
-> +
-> +	dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT "SoftResetHandler Entered!\n",
-> +			      ioc->name));
-> +
-> +	ioc_state = mpt_GetIocState(ioc, 0) & MPI_IOC_STATE_MASK;
-> +	if (ioc_state == MPI_IOC_STATE_FAULT ||
-> +	    ioc_state == MPI_IOC_STATE_RESET) {
-> +		dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT
-> +		    "skipping, either in FAULT or RESET state!\n", ioc->name));
-> +		return -1;
-> +	}
-> +
-> +	spin_lock_irqsave(&ioc->diagLock, flags);
-> +	if (ioc->ioc_reset_in_progress) {
-> +		spin_unlock_irqrestore(&ioc->diagLock, flags);
-> +		return -1;
-> +	}
-> +	ioc->ioc_reset_in_progress = 1;
-> +	spin_unlock_irqrestore(&ioc->diagLock, flags);
-
-Why not make ioc_reset_in_progress an unsigned long and use bitops? 
-All the above can be replaced with
-
-	if (test_and_set_bit(0, &ioc->flags))
-		return -1;
-
-> +	rc = -1;
-> +
-> +	for (cb_idx = MPT_MAX_PROTOCOL_DRIVERS-1; cb_idx; cb_idx--) {
-> +		if (MptResetHandlers[cb_idx])
-> +			mpt_signal_reset(cb_idx, ioc, MPT_IOC_SETUP_RESET);
-> +	}
-> +
-> +	/* Disable reply interrupts (also blocks FreeQ) */
-> +	CHIPREG_WRITE32(&ioc->chip->IntMask, 0xFFFFFFFF);
-> +	ioc->active = 0;
-> +	time_count = jiffies;
-> +	rc = SendIocReset(ioc, MPI_FUNCTION_IOC_MESSAGE_UNIT_RESET, sleepFlag);
-> +	if (rc != 0)
-> +		goto out;
-> +
-> +	/* MPT_IOC_PRE_RESET clears pending requests, but MUR
-> +	 * (MPI_FUNCTION_IOC_MESSAGE_UNIT_RESET) tries to find a DMA request and
-> +	 * will fault the fw if no request is found. So we need to do
-> +	 * MPT_IOC_PRE_RESET after MUR */
-> +	for (cb_idx = MPT_MAX_PROTOCOL_DRIVERS-1; cb_idx; cb_idx--) {
-> +		if (MptResetHandlers[cb_idx])
-> +			mpt_signal_reset(cb_idx, ioc, MPT_IOC_PRE_RESET);
-> +	}
-> +
-> +	ioc_state = mpt_GetIocState(ioc, 0) & MPI_IOC_STATE_MASK;
-> +	if (ioc_state != MPI_IOC_STATE_READY)
-> +		goto out;
-> +
-> +	for (ii = 0; ii < 5; ii++) {
-> +		/* Get IOC facts! Allow 5 retries */
-> +		rc = GetIocFacts(ioc, sleepFlag, MPT_HOSTEVENT_IOC_RECOVER);
-> +		if (rc == 0)
-> +			break;
-> +		if (sleepFlag == CAN_SLEEP)
-> +			msleep(100);
-> +		else
-> +			mdelay(100);
-> +	}
-> +	if (ii == 5)
-> +		goto out;
-> +
-> +	rc = PrimeIocFifos(ioc);
-> +	if (rc != 0)
-> +		goto out;
-> +
-> +	rc = SendIocInit(ioc, sleepFlag);
-> +	if (rc != 0)
-> +		goto out;
-> +
-> +	rc = SendEventNotification(ioc, 1);
-> +	if (rc != 0)
-> +		goto out;
-> +
-> +	if (ioc->hard_resets < -1)
-> +		ioc->hard_resets++;
-> +
-> +	/*
-> +	 * At this point, we know soft reset succeeded.
-> +	 */
-> +
-> +	ioc->active = 1;
-
-Do we need lcoking coverage for ->active?
-
-> +	CHIPREG_WRITE32(&ioc->chip->IntMask, MPI_HIM_DIM);
-> +
-> + out:
-> +	spin_lock_irqsave(&ioc->diagLock, flags);
-> +	ioc->ioc_reset_in_progress = 0;
-> +	ioc->taskmgmt_quiesce_io = 0;
-> +	ioc->taskmgmt_in_progress = 0;
-> +	spin_unlock_irqrestore(&ioc->diagLock, flags);
-> +
-> +	if (ioc->active) {	/* otherwise, hard reset coming */
-> +		for (cb_idx = MPT_MAX_PROTOCOL_DRIVERS-1; cb_idx; cb_idx--) {
-> +			if (MptResetHandlers[cb_idx])
-> +				mpt_signal_reset(cb_idx, ioc, MPT_IOC_POST_RESET);
-> +		}
-> +	}
-> +
-> +	printk(MYIOC_s_INFO_FMT "SoftResetHandler: completed (%d seconds): %s\n",
-> +	    ioc->name, jiffies_to_msecs(jiffies - time_count)/1000,
-
-Using MSEC_PER_SEC would clarify the intent.
-
-> +	    ((rc == 0) ? "SUCCESS" : "FAILED"));
-> +
-> +	return rc;
-> +}
-> +
->
-> ...
->
-> @@ -6368,42 +6499,70 @@ mpt_HardResetHandler(MPT_ADAPTER *ioc, i
->  	 * Prevents timeouts occurring during a diagnostic reset...very bad.
->  	 * For all other protocol drivers, this is a no-op.
->  	 */
-> -	{
-> -		u8	 cb_idx;
-> -		int	 r = 0;
-> -
-> -		for (cb_idx = MPT_MAX_PROTOCOL_DRIVERS-1; cb_idx; cb_idx--) {
-> -			if (MptResetHandlers[cb_idx]) {
-> -				dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT "Calling IOC reset_setup handler 
-> #%d\n",
-> -						ioc->name, cb_idx));
-> -				r += mpt_signal_reset(cb_idx, ioc, MPT_IOC_SETUP_RESET);
-> -				if (ioc->alt_ioc) {
-> -					dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT "Calling alt-%s setup reset 
-> handler #%d\n",
-> -							ioc->name, ioc->alt_ioc->name, cb_idx));
-> -					r += mpt_signal_reset(cb_idx, ioc->alt_ioc, MPT_IOC_SETUP_RESET);
-> -				}
-> -			}
-> +	for (cb_idx = MPT_MAX_PROTOCOL_DRIVERS-1; cb_idx; cb_idx--) {
-
-This loop omits the zeroeth element.  Was that intended?
-
-> +		if (MptResetHandlers[cb_idx]) {
-> +			mpt_signal_reset(cb_idx, ioc, MPT_IOC_SETUP_RESET);
-> +			if (ioc->alt_ioc)
-> +				mpt_signal_reset(cb_idx, ioc->alt_ioc, MPT_IOC_SETUP_RESET);
->  		}
->  	}
->  
->
-> ...
->
-> --- linux-2.6.orig/drivers/message/fusion/mptscsih.c
-> +++ linux-2.6/drivers/message/fusion/mptscsih.c
-> @@ -1605,7 +1605,7 @@ mptscsih_TMHandler(MPT_SCSI_HOST *hd, u8
->  			"TM Handler for type=%x: IOC Not operational (0x%x)!\n",
->  			ioc->name, type, ioc_raw_state);
->  		printk(MYIOC_s_WARN_FMT " Issuing HardReset!!\n", ioc->name);
-> -		if (mpt_HardResetHandler(ioc, CAN_SLEEP) < 0)
-> +		if (mpt_SoftHardResetHandler(ioc, CAN_SLEEP) < 0)
->  			printk(MYIOC_s_WARN_FMT "TMHandler: HardReset "
->  			    "FAILED!!\n", ioc->name);
->  		return FAILED;
-> @@ -1621,8 +1621,8 @@ mptscsih_TMHandler(MPT_SCSI_HOST *hd, u8
->  
->  	/* Isse the Task Mgmt request.
-
-someone had a typo
-
->  	 */
-> -	if (hd->hard_resets < -1)
-> -		hd->hard_resets++;
-> +	if (ioc->hard_resets < -1)
-
-what strange code.
-
-> +		ioc->hard_resets++;
-
-Does this non-atomic increment have locking coverage?
-
->  	rc = mptscsih_IssueTaskMgmt(hd, type, channel, id, lun,
->  	    ctx2abort, timeout);
-> @@ -1724,7 +1724,7 @@ mptscsih_IssueTaskMgmt(MPT_SCSI_HOST *hd
->  			ioc, mf));
->  		dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT "Calling HardReset! \n",
->  			 ioc->name));
-> -		retval = mpt_HardResetHandler(ioc, CAN_SLEEP);
-> +		retval = mpt_SoftHardResetHandler(ioc, CAN_SLEEP);
->  		dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT "rc=%d \n",
->  			 ioc->name, retval));
->  		goto fail_out;
->
-> ...
->
