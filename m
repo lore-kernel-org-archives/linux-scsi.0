@@ -1,206 +1,182 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 09/17] libfc: runtime debugging with debug_logging module
-	parameter
-Date: Fri, 06 Feb 2009 10:56:37 -0800
-Message-ID: <20090206185637.26188.95309.stgit@fritz>
+Subject: [PATCH 13/17] libfc, fcoe: Cleanup function formatting and minor typos
+Date: Fri, 06 Feb 2009 10:56:59 -0800
+Message-ID: <20090206185658.26188.86332.stgit@fritz>
 References: <20090206185548.26188.51580.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:15666 "EHLO mga03.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:14023 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756718AbZBFS4i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Feb 2009 13:56:38 -0500
+	id S1750832AbZBFS47 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Feb 2009 13:56:59 -0500
 In-Reply-To: <20090206185548.26188.51580.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org
 Cc: Robert Love <robert.w.love@intel.com>
 
-This patch adds the /sys/module/libfc/parameters/debug_logging
-file to sysfs as a module parameter. It accepts an integer
-bitmask for logging. Currently it supports:
+1) There were a few functions with a strange layout, i.e. all
+   arguments on the second line, when not necessary.
 
-LSB x = lport debugging
-    x = disc debugging
-    x = rport debugging
-    x = fcp debugging
-    x = EM debugging
+   Where ever possible I moved the return value to the same line
+   as the function name. However, when the line was too long
+   to have a single argument on the same line I moved the
+   return value to above line. For example:
 
-the other bits are not used at this time.
+   <short return> <function name>(<arg 1>, <arg2>)
+
+   and
+
+   <very long return value>
+   <function name>(<arg1>,
+		   <arg2>)
+
+2) Removed one extra whitespace line
+
+3) Fixed two typos
 
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_disc.c  |   15 +++------------
- drivers/scsi/libfc/fc_exch.c  |   11 -----------
- drivers/scsi/libfc/fc_fcp.c   |   10 +++-------
- drivers/scsi/libfc/fc_lport.c |    8 --------
- drivers/scsi/libfc/fc_rport.c |    8 --------
- include/scsi/libfc.h          |   37 +++++++++++++++++++++++++++++++++++++
- 6 files changed, 43 insertions(+), 46 deletions(-)
+ drivers/scsi/fcoe/fc_transport_fcoe.c |   11 ++++++-----
+ drivers/scsi/fcoe/libfcoe.c           |   15 +++++++--------
+ drivers/scsi/libfc/fc_exch.c          |   10 +++++-----
+ drivers/scsi/libfc/fc_rport.c         |    4 ++--
+ 4 files changed, 20 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
-index cfbce89..05189f6 100644
---- a/drivers/scsi/libfc/fc_disc.c
-+++ b/drivers/scsi/libfc/fc_disc.c
-@@ -45,14 +45,6 @@
- 
- #define	FC_DISC_DELAY		3
- 
--static int fc_disc_debug;
--
--#define FC_DEBUG_DISC(fmt...)			\
--	do {					\
--		if (fc_disc_debug)		\
--			FC_DBG(fmt);		\
--	} while (0)
--
- static void fc_disc_gpn_ft_req(struct fc_disc *);
- static void fc_disc_gpn_ft_resp(struct fc_seq *, struct fc_frame *, void *);
- static int fc_disc_new_target(struct fc_disc *, struct fc_rport *,
-@@ -487,10 +479,9 @@ static void fc_disc_error(struct fc_disc *disc, struct fc_frame *fp)
+diff --git a/drivers/scsi/fcoe/fc_transport_fcoe.c b/drivers/scsi/fcoe/fc_transport_fcoe.c
+index f48c0b0..c9f75b4 100644
+--- a/drivers/scsi/fcoe/fc_transport_fcoe.c
++++ b/drivers/scsi/fcoe/fc_transport_fcoe.c
+@@ -64,8 +64,9 @@ struct pci_dev *fcoe_transport_pcidev(const struct net_device *netdev)
+  *
+  * Returns: 0 for success
+  */
+-static struct fcoe_transport_internal *fcoe_transport_device_lookup(
+-	struct fcoe_transport *t, struct net_device *netdev)
++static struct fcoe_transport_internal *
++fcoe_transport_device_lookup(struct fcoe_transport *t,
++			     struct net_device *netdev)
  {
- 	struct fc_lport *lport = disc->lport;
- 	unsigned long delay = 0;
--	if (fc_disc_debug)
--		FC_DBG("Error %ld, retries %d/%d\n",
--		       PTR_ERR(fp), disc->retry_count,
--		       FC_DISC_RETRY_LIMIT);
-+	FC_DEBUG_DISC("Error %ld, retries %d/%d\n",
-+		      PTR_ERR(fp), disc->retry_count,
-+		      FC_DISC_RETRY_LIMIT);
+ 	struct fcoe_transport_internal *ti;
  
- 	if (!fp || PTR_ERR(fp) == -FC_EX_TIMEOUT) {
- 		/*
+@@ -182,7 +183,7 @@ static void fcoe_transport_device_remove_all(struct fcoe_transport *t)
+  * Returns: true for match up
+  */
+ static bool fcoe_transport_match(struct fcoe_transport *t,
+-				struct net_device *netdev)
++				 struct net_device *netdev)
+ {
+ 	/* match transport by vendor and device id */
+ 	struct pci_dev *pci;
+@@ -214,8 +215,8 @@ static bool fcoe_transport_match(struct fcoe_transport *t,
+  *
+  * TODO: return default sw transport if no other transport is found
+  */
+-static struct fcoe_transport *fcoe_transport_lookup(
+-	struct net_device *netdev)
++static struct fcoe_transport *
++fcoe_transport_lookup(struct net_device *netdev)
+ {
+ 	struct fcoe_transport *t;
+ 
+diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
+index 60677a8..e76e4f6 100644
+--- a/drivers/scsi/fcoe/libfcoe.c
++++ b/drivers/scsi/fcoe/libfcoe.c
+@@ -951,8 +951,8 @@ static struct net_device *fcoe_if_to_netdev(const char *buffer)
+  *
+  * Returns: ptr to the struct module, NULL for failure
+  */
+-static struct module *fcoe_netdev_to_module_owner(
+-	const struct net_device *netdev)
++static struct module *
++fcoe_netdev_to_module_owner(const struct net_device *netdev)
+ {
+ 	struct device *dev;
+ 
+@@ -1207,8 +1207,8 @@ EXPORT_SYMBOL_GPL(fcoe_clean_pending_queue);
+  * Returns: ptr to Scsi_Host
+  * TODO: to libfc?
+  */
+-static inline struct Scsi_Host *libfc_host_alloc(
+-	struct scsi_host_template *sht, int priv_size)
++static inline struct Scsi_Host *
++libfc_host_alloc(struct scsi_host_template *sht, int priv_size)
+ {
+ 	return scsi_host_alloc(sht, sizeof(struct fc_lport) + priv_size);
+ }
+@@ -1287,8 +1287,8 @@ EXPORT_SYMBOL_GPL(fcoe_wwn_from_mac);
+  *
+  * Returns: NULL or the located fcoe_softc
+  */
+-static struct fcoe_softc *fcoe_hostlist_lookup_softc(
+-	const struct net_device *dev)
++static struct fcoe_softc *
++fcoe_hostlist_lookup_softc(const struct net_device *dev)
+ {
+ 	struct fcoe_softc *fc;
+ 
+@@ -1428,7 +1428,6 @@ static int __init fcoe_init(void)
+ 			} else {
+ 				fcoe_percpu[cpu] = NULL;
+ 				kfree(p);
+-
+ 			}
+ 		}
+ 	}
+@@ -1478,7 +1477,7 @@ static void __exit fcoe_exit(void)
+ 	 */
+ 	del_timer_sync(&fcoe_timer);
+ 
+-	/* releases the assocaited fcoe transport for each lport */
++	/* releases the associated fcoe transport for each lport */
+ 	list_for_each_entry_safe(fc, tmp, &fcoe_hostlist, list)
+ 		fcoe_transport_release(fc->real_dev);
+ 
 diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 8c40189..ce608d7 100644
+index b0d3ec7..4026959 100644
 --- a/drivers/scsi/libfc/fc_exch.c
 +++ b/drivers/scsi/libfc/fc_exch.c
-@@ -32,17 +32,6 @@
- #include <scsi/libfc.h>
- #include <scsi/fc_encode.h>
- 
--/*
-- * fc_exch_debug can be set in debugger or at compile time to get more logs.
-- */
--static int fc_exch_debug;
--
--#define FC_DEBUG_EXCH(fmt...)			\
--	do {					\
--		if (fc_exch_debug)		\
--			FC_DBG(fmt);		\
--	} while (0)
--
- static struct kmem_cache *fc_em_cachep;	/* cache for exchanges */
- 
- /*
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index ecc7261..3f93930 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -43,13 +43,9 @@ MODULE_AUTHOR("Open-FCoE.org");
- MODULE_DESCRIPTION("libfc");
- MODULE_LICENSE("GPL");
- 
--static int fc_fcp_debug;
--
--#define FC_DEBUG_FCP(fmt...)			\
--	do {					\
--		if (fc_fcp_debug)		\
--			FC_DBG(fmt);		\
--	} while (0)
-+unsigned int debug_logging;
-+module_param(debug_logging, int, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(debug_logging, "a bit mask of logging levels");
- 
- static struct kmem_cache *scsi_pkt_cachep;
- 
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index 7dd433c..f777723 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -101,14 +101,6 @@
- 
- #define	DNS_DELAY	      3 /* Discovery delay after RSCN (in seconds)*/
- 
--static int fc_lport_debug;
--
--#define FC_DEBUG_LPORT(fmt...)			\
--	do {					\
--		if (fc_lport_debug)		\
--			FC_DBG(fmt);		\
--	} while (0)
--
- static void fc_lport_error(struct fc_lport *, struct fc_frame *);
- 
- static void fc_lport_enter_reset(struct fc_lport *);
+@@ -664,8 +664,8 @@ static struct fc_exch *fc_exch_resp(struct fc_exch_mgr *mp, struct fc_frame *fp)
+  * If fc_pf_rjt_reason is FC_RJT_NONE then this function will have a hold
+  * on the ep that should be released by the caller.
+  */
+-static enum fc_pf_rjt_reason
+-fc_seq_lookup_recip(struct fc_exch_mgr *mp, struct fc_frame *fp)
++static enum fc_pf_rjt_reason fc_seq_lookup_recip(struct fc_exch_mgr *mp,
++						 struct fc_frame *fp)
+ {
+ 	struct fc_frame_header *fh = fc_frame_header_get(fp);
+ 	struct fc_exch *ep = NULL;
+@@ -983,9 +983,9 @@ static void fc_seq_send_ack(struct fc_seq *sp, const struct fc_frame *rx_fp)
+  * Send BLS Reject.
+  * This is for rejecting BA_ABTS only.
+  */
+-static void
+-fc_exch_send_ba_rjt(struct fc_frame *rx_fp, enum fc_ba_rjt_reason reason,
+-		    enum fc_ba_rjt_explan explan)
++static void fc_exch_send_ba_rjt(struct fc_frame *rx_fp,
++				enum fc_ba_rjt_reason reason,
++				enum fc_ba_rjt_explan explan)
+ {
+ 	struct fc_frame *fp;
+ 	struct fc_frame_header *rx_fh;
 diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 4f23a9b..05330c0 100644
+index b008f49..a6d3406 100644
 --- a/drivers/scsi/libfc/fc_rport.c
 +++ b/drivers/scsi/libfc/fc_rport.c
-@@ -55,14 +55,6 @@
- #include <scsi/libfc.h>
- #include <scsi/fc_encode.h>
- 
--static int fc_rport_debug;
--
--#define FC_DEBUG_RPORT(fmt...)			\
--	do {					\
--		if (fc_rport_debug)		\
--			FC_DBG(fmt);		\
--	} while (0)
--
- struct workqueue_struct *rport_event_queue;
- 
- static void fc_rport_enter_plogi(struct fc_rport *);
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index 37df48e..01f68f6 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -45,6 +45,43 @@
- #define FC_DBG(fmt, args...)
- #endif
- 
-+#define FC_LPORT_LOGGING 0x01
-+#define FC_DISC_LOGGING  0x02
-+#define FC_RPORT_LOGGING 0x04
-+#define FC_FCP_LOGGING   0x08
-+#define FC_EXCH_LOGGING  0x10
-+
-+extern unsigned int debug_logging;
-+
-+#define FC_CHECK_LOGGING(LEVEL, CMD)				\
-+do {								\
-+	if (unlikely(debug_logging & LEVEL))			\
-+		do {						\
-+			CMD;					\
-+		} while (0);					\
-+} while (0)
-+
-+#define FC_DEBUG_LPORT(fmt, args...)					\
-+	FC_CHECK_LOGGING(FC_LPORT_LOGGING,				\
-+			 printk(KERN_INFO "%s " fmt, __func__, ##args);)
-+
-+#define FC_DEBUG_DISC(fmt, args...)					\
-+	FC_CHECK_LOGGING(FC_DISC_LOGGING,				\
-+			 printk(KERN_INFO "%s " fmt, __func__, ##args);)
-+
-+#define FC_DEBUG_RPORT(fmt, args...)					\
-+	FC_CHECK_LOGGING(FC_RPORT_LOGGING,				\
-+			 printk(KERN_INFO "%s " fmt, __func__, ##args);)
-+
-+#define FC_DEBUG_FCP(fmt, args...)					\
-+	FC_CHECK_LOGGING(FC_FCP_LOGGING,				\
-+			 printk(KERN_INFO "%s " fmt, __func__, ##args);)
-+
-+#define FC_DEBUG_EXCH(fmt, args...)					\
-+	FC_CHECK_LOGGING(FC_EXCH_LOGGING,				\
-+			 printk(KERN_INFO "%s " fmt, __func__, ##args);)
-+
-+
- /*
-  * libfc error codes
+@@ -171,8 +171,8 @@ EXPORT_SYMBOL(fc_set_rport_loss_tmo);
+  * @flp: FLOGI payload structure
+  * @maxval: upper limit, may be less than what is in the service parameters
   */
+-static unsigned int
+-fc_plogi_get_maxframe(struct fc_els_flogi *flp, unsigned int maxval)
++static unsigned int fc_plogi_get_maxframe(struct fc_els_flogi *flp,
++					  unsigned int maxval)
+ {
+ 	unsigned int mfs;
+ 
 
