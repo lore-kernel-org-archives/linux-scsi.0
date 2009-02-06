@@ -1,35 +1,106 @@
 From: Bernd Schubert <bs@q-leap.de>
-Subject: [PATCH 0/5 v2] scsi error handler improvements
-Date: Fri, 6 Feb 2009 01:00:14 +0100
-Message-ID: <200902060100.15104.bs@q-leap.de>
+Subject: [PATCH 2/5] allow activation of eh on DID_NO_CONNECT
+Date: Fri, 6 Feb 2009 01:00:23 +0100
+Message-ID: <200902060100.23971.bs@q-leap.de>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.q-leap.de ([88.79.172.217]:33364 "EHLO mail.q-leap.de"
+Received: from ns2.q-leap.de ([88.79.172.217]:33400 "EHLO mail.q-leap.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753857AbZBFAAR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Feb 2009 19:00:17 -0500
+	id S1753895AbZBFAAk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Feb 2009 19:00:40 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Bottomley <James.Bottomley@hansenpartnership.com>
 
-Hello,
+Introduce a sysfs attribute to allow to activate the error handler for
+these devices in case of DID_NO_CONNECT. This is useful for our parallel
+scsi devices.
 
-over the last year we had an endless number of issues with hard raid units 
-from various vendors. Due this we also have been running into problems with 
-the scsi error handler. 
+Signed-off-by: Bernd Schubert: <bs@q-leap.de>
 
-This is just as before, but without the first two patches ("print eh 
-activation" and "Allow requeuement on DID_SOFT_ERROR").
+---
+ drivers/scsi/scsi_error.c  |    2 ++
+ drivers/scsi/scsi_sysfs.c  |   28 ++++++++++++++++++++++++++++
+ include/scsi/scsi_device.h |    1 +
+ 3 files changed, 31 insertions(+)
+
+Index: linux-2.6/include/scsi/scsi_device.h
+===================================================================
+--- linux-2.6.orig/include/scsi/scsi_device.h
++++ linux-2.6/include/scsi/scsi_device.h
+@@ -145,6 +145,7 @@ struct scsi_device {
+ 	unsigned retry_hwerror:1;	/* Retry HARDWARE_ERROR */
+ 	unsigned last_sector_bug:1;	/* do not use multisector accesses on
+ 					   SD_LAST_BUGGY_SECTORS */
++	unsigned eh_did_no_connect:1;	/* eh on DID_NO_CONNECT */
+ 
+ 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
+ 	struct list_head event_list;	/* asserted events */
+Index: linux-2.6/drivers/scsi/scsi_error.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/scsi_error.c
++++ linux-2.6/drivers/scsi/scsi_error.c
+@@ -1359,6 +1359,8 @@ int scsi_decide_disposition(struct scsi_
+ 		 */
+ 		break;
+ 	case DID_NO_CONNECT:
++		if (scmd->device->eh_did_no_connect)
++			return FAILED;
+ 	case DID_BAD_TARGET:
+ 	case DID_ABORT:
+ 		/*
+Index: linux-2.6/drivers/scsi/scsi_sysfs.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/scsi_sysfs.c
++++ linux-2.6/drivers/scsi/scsi_sysfs.c
+@@ -565,6 +565,33 @@ sdev_rd_attr (rev, "%.4s\n");
+  * TODO: can we make these symlinks to the block layer ones?
+  */
+ static ssize_t
++sdev_show_eh_dnc(struct device *dev, struct device_attribute *attr, char 
+*buf)
++{
++	struct scsi_device *sdev;
++	sdev = to_scsi_device(dev);
++	return snprintf(buf, 20, "%d\n", sdev->eh_did_no_connect);
++}
++
++static ssize_t
++sdev_store_eh_dnc(struct device *dev, struct device_attribute *attr,
++		  const char *buf, size_t count)
++{
++	struct scsi_device *sdev;
++	int eh_dnc;
++	sdev = to_scsi_device(dev);
++	sscanf(buf, "%d\n", &eh_dnc);
++
++	if (eh_dnc != 0 && eh_dnc != 1)
++		return -EINVAL;
++
++	sdev->eh_did_no_connect = eh_dnc;
++	return count;
++}
++static DEVICE_ATTR(eh_did_no_connect, S_IRUGO | S_IWUSR,
++		   sdev_show_eh_dnc, sdev_store_eh_dnc);
++
++
++static ssize_t
+ sdev_show_timeout (struct device *dev, struct device_attribute *attr, char 
+*buf)
+ {
+ 	struct scsi_device *sdev;
+@@ -755,6 +782,7 @@ static struct attribute *scsi_sdev_attrs
+ 	&dev_attr_ioerr_cnt.attr,
+ 	&dev_attr_modalias.attr,
+ 	REF_EVT(media_change),
++	&dev_attr_eh_did_no_connect,
+ 	NULL
+ };
+ 
 
 
-Thanks,
-Bernd
-
--- 
-Bernd Schubert
-Q-Leap Networks GmbH
