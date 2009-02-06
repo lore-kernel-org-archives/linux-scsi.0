@@ -1,120 +1,47 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 1/1] ibmvfc: Fix dropped interrupts
-Date: Thu, 05 Feb 2009 19:51:01 -0600
-Message-ID: <200902060152.n161qcpM024701@d03av04.boulder.ibm.com>
+From: Wei Yongjun <yjwei@cn.fujitsu.com>
+Subject: scsi: used kmem_cache_zalloc instead of kmem_cache_alloc/memset
+Date: Fri, 06 Feb 2009 11:04:53 +0800
+Message-ID: <498BA8D5.2000606@cn.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=GB2312
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e37.co.us.ibm.com ([32.97.110.158]:52950 "EHLO
-	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752751AbZBFBwl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Feb 2009 20:52:41 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e37.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n161qNtl023947
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Feb 2009 18:52:23 -0700
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id n161qe35225036
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Feb 2009 18:52:40 -0700
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n161qdhC024794
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Feb 2009 18:52:40 -0700
+Received: from cn.fujitsu.com ([222.73.24.84]:52636 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751507AbZBFDE7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Feb 2009 22:04:59 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>
 
+Used kmem_cache_zalloc instead of kmem_cache_alloc/memset.
 
-This patch fixes a problem of possible dropped interrupts. Currently, the ibmvfc
-driver has a race condition where after ibmvfc_interrupt gets run, the platform
-code clears the interrupt. This can result in lost interrupts and, in worst case
-scenarios, result in command timeouts. Fix this by implementing a tasklet
-similar to what the ibmvscsi driver does so that interrupt processing is no longer
-done in the actual interrupt handler, which eliminates the race.
-
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+Signed-off-by: Wei Yongjun <yjwei@cn.fujitsu.com>
 ---
+ drivers/scsi/scsi.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
- drivers/scsi/ibmvscsi/ibmvfc.c |   25 +++++++++++++++++++++++--
- drivers/scsi/ibmvscsi/ibmvfc.h |    1 +
- 2 files changed, 24 insertions(+), 2 deletions(-)
-
-diff -puN drivers/scsi/ibmvscsi/ibmvfc.h~ibmvfc_tasklet drivers/scsi/ibmvscsi/ibmvfc.h
---- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.h~ibmvfc_tasklet	2009-02-05 11:06:05.000000000 -0600
-+++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.h	2009-02-05 11:07:03.000000000 -0600
-@@ -684,6 +684,7 @@ struct ibmvfc_host {
- 	char partition_name[97];
- 	void (*job_step) (struct ibmvfc_host *);
- 	struct task_struct *work_thread;
-+	struct tasklet_struct tasklet;
- 	wait_queue_head_t init_wait_q;
- 	wait_queue_head_t work_wait_q;
- };
-diff -puN drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_tasklet drivers/scsi/ibmvscsi/ibmvfc.c
---- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_tasklet	2009-02-05 11:06:10.000000000 -0600
-+++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.c	2009-02-05 11:23:12.000000000 -0600
-@@ -640,6 +640,7 @@ static void ibmvfc_release_crq_queue(str
- 
- 	ibmvfc_dbg(vhost, "Releasing CRQ\n");
- 	free_irq(vdev->irq, vhost);
-+	tasklet_kill(&vhost->tasklet);
- 	do {
- 		rc = plpar_hcall_norets(H_FREE_CRQ, vdev->unit_address);
- 	} while (rc == H_BUSY || H_IS_LONG_BUSY(rc));
-@@ -2699,6 +2700,25 @@ static struct ibmvfc_crq *ibmvfc_next_cr
- static irqreturn_t ibmvfc_interrupt(int irq, void *dev_instance)
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index cbcd3f6..fbe6672 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -169,12 +169,10 @@ scsi_pool_alloc_command(struct scsi_host_cmd_pool *pool, gfp_t gfp_mask)
  {
- 	struct ibmvfc_host *vhost = (struct ibmvfc_host *)dev_instance;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(vhost->host->host_lock, flags);
-+	vio_disable_interrupts(to_vio_dev(vhost->dev));
-+	tasklet_schedule(&vhost->tasklet);
-+	spin_unlock_irqrestore(vhost->host->host_lock, flags);
-+	return IRQ_HANDLED;
-+}
-+
-+/**
-+ * ibmvfc_tasklet - Interrupt handler tasklet
-+ * @data:		ibmvfc host struct
-+ *
-+ * Returns:
-+ *	Nothing
-+ **/
-+static void ibmvfc_tasklet(void *data)
-+{
-+	struct ibmvfc_host *vhost = data;
- 	struct vio_dev *vdev = to_vio_dev(vhost->dev);
- 	struct ibmvfc_crq *crq;
- 	struct ibmvfc_async_crq *async;
-@@ -2706,7 +2726,6 @@ static irqreturn_t ibmvfc_interrupt(int 
- 	int done = 0;
+ 	struct scsi_cmnd *cmd;
  
- 	spin_lock_irqsave(vhost->host->host_lock, flags);
--	vio_disable_interrupts(to_vio_dev(vhost->dev));
- 	while (!done) {
- 		/* Pull all the valid messages off the CRQ */
- 		while ((crq = ibmvfc_next_crq(vhost)) != NULL) {
-@@ -2734,7 +2753,6 @@ static irqreturn_t ibmvfc_interrupt(int 
- 	}
+-	cmd = kmem_cache_alloc(pool->cmd_slab, gfp_mask | pool->gfp_mask);
++	cmd = kmem_cache_zalloc(pool->cmd_slab, gfp_mask | pool->gfp_mask);
+ 	if (!cmd)
+ 		return NULL;
  
- 	spin_unlock_irqrestore(vhost->host->host_lock, flags);
--	return IRQ_HANDLED;
- }
- 
- /**
-@@ -3859,6 +3877,8 @@ static int ibmvfc_init_crq(struct ibmvfc
- 
- 	retrc = 0;
- 
-+	tasklet_init(&vhost->tasklet, (void *)ibmvfc_tasklet, (unsigned long)vhost);
-+
- 	if ((rc = request_irq(vdev->irq, ibmvfc_interrupt, 0, IBMVFC_NAME, vhost))) {
- 		dev_err(dev, "Couldn't register irq 0x%x. rc=%d\n", vdev->irq, rc);
- 		goto req_irq_failed;
-@@ -3874,6 +3894,7 @@ static int ibmvfc_init_crq(struct ibmvfc
- 	return retrc;
- 
- req_irq_failed:
-+	tasklet_kill(&vhost->tasklet);
- 	do {
- 		rc = plpar_hcall_norets(H_FREE_CRQ, vdev->unit_address);
- 	} while (rc == H_BUSY || H_IS_LONG_BUSY(rc));
-_
+-	memset(cmd, 0, sizeof(*cmd));
+-
+ 	cmd->sense_buffer = kmem_cache_alloc(pool->sense_slab,
+ 					     gfp_mask | pool->gfp_mask);
+ 	if (!cmd->sense_buffer) {
+-- 
+1.5.3.8
+
+
+
