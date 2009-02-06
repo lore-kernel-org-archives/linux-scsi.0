@@ -1,142 +1,205 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: cciss: WARNING/BUG in do_cciss_intr (it's back)
-Date: Fri, 6 Feb 2009 08:44:28 +0100
-Message-ID: <20090206074427.GR30821@kernel.dk>
-References: <4989D435.7010003@oracle.com> <0F5B06BAB751E047AB5C87D1F77A778859F9EAD9D5@GVW0547EXC.americas.hpqcorp.net>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 0/6] [Target_Core_Mod/ALUA]: Add Logical Unit and Target
+	Port Group infrastructure
+Date: Thu, 05 Feb 2009 23:55:22 -0800
+Message-ID: <1233906922.12375.353.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:13912 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752530AbZBFHqb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Feb 2009 02:46:31 -0500
-Content-Disposition: inline
-In-Reply-To: <0F5B06BAB751E047AB5C87D1F77A778859F9EAD9D5@GVW0547EXC.americas.hpqcorp.net>
+Received: from smtp127.sbc.mail.sp1.yahoo.com ([69.147.65.186]:31568 "HELO
+	smtp127.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752622AbZBFH43 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Feb 2009 02:56:29 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, ISS StorageDev <iss_storagedev@hp.com>, scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Douglas Gilbert <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, "Ross S. W. Walker" <rswwalker@gmail.com>, Arne Redlich <agr@powerkom-dd.de>, Rafiu Fakunle <rafiu@openfiler.com>
 
-On Thu, Feb 05 2009, Miller, Mike (OS Dev) wrote:
->  
-> 
-> > -----Original Message-----
-> > From: Randy Dunlap [mailto:randy.dunlap@oracle.com] 
-> > Sent: Wednesday, February 04, 2009 11:45 AM
-> > To: Miller, Mike (OS Dev); ISS StorageDev; scsi; Linux Kernel 
-> > Mailing List
-> > Subject: cciss: WARNING/BUG in do_cciss_intr (it's back)
-> > 
-> > Hi Mike,
-> > 
-> > Was there any debugging code added to try to help with this problem?
-> > or is that the WARNING before the BUG?
-> > 
-> 
-> Randy,
-> I think this is a different bug than the one you reported previously.
-> Please open a new bugzilla.
+Greetings all,
 
-I think it's the same one. The first warning that now triggers is:
+The princible functionality for SPC-3 compliant ALUA Logical Unit and Target Port
+groups is now up and running with Target_Core_Mod/ConfigFS and LIO-Target/ConfigFS.
+So far, you can create, change, associate ConfigFS objects and release ALUA Logical
+Unit and Target Port group abstractions through /sys/kernel/config/target/core/alua.
 
-WARNING: at drivers/block/cciss.c:225 
+Changing of alua_access_state via ConfigFS is not supported just yet, but the transition
+between Active/Optimized and Active/Non-Optimized should be easy enough.
 
-which is
+This patch is made against lio-core-2.6.git/master
+and tested on v2.6.29-rc2 x86 32-bit HVM.  The lio-core-2.6.git tree can be
+found at:
 
-        if (WARN_ON(hlist_unhashed(&c->list)))
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=summary
 
-removeQ(), this is where we would have crashed before due to trying to
-remove a command from a list it didn't belong to. And then we crash
-right after in the interrupt handler. So I'm pretty sure this is 100%
-the same bug.
+Here is what it looks like in action so far:
 
-Randy, is this still using kexec? Perhaps cciss needs a better
-kick-in-the-pants reset on driver load to clear EVERYTHING, there's
-clearly something very bad happening there.
+*) Target ConfigFS side:
 
+# Create a ALUA Logical Unit Group
+target:/sys/kernel/config/target/core# mkdir -p alua/lu_gps/lio_lun_group
+# Create two ALUA Target Port Groups
+target:/sys/kernel/config/target/core# mkdir -p alua/tg_pt_gps/lio_west_group
+target:/sys/kernel/config/target/core# mkdir -p alua/tg_pt_gps/lio_east_group
+target:/sys/kernel/config/target/core# tree alua/
+alua/
+|-- lu_gps
+|   |-- default_lu_gp
+|   |   |-- alua_access_state
+|   |   |-- lu_gp_id
+|   |   `-- members
+|   `-- lio_lun_group
+|       |-- alua_access_state
+|       |-- lu_gp_id
+|       `-- members
+`-- tg_pt_gps
+    |-- default_tg_pt_gp
+    |   |-- alua_access_state
+    |   |-- members
+    |   `-- tg_pt_gp_id
+    |-- lio_east_group
+    |   |-- alua_access_state
+    |   |-- members
+    |   `-- tg_pt_gp_id
+    `-- lio_west_group
+        |-- alua_access_state
+        |-- members
+        `-- tg_pt_gp_id
 
-> 
-> Thanks,
-> -- mikem
-> 
-> > 
-> > Booting 2.6.29-rc3-git6 oopsed with:
-> > 
-> > calling  cciss_init+0x0/0x2e [cciss] @ 733 HP CISS Driver (v 3.6.20)
-> > ACPI: PCI Interrupt Link [LNKA] enabled at IRQ 54 cciss 
-> > 0000:42:08.0: PCI INT A -> Link[LNKA] -> GSI 54 (level, high) 
-> > -> IRQ 54 cciss 0000:42:08.0: irq 56 for MSI/MSI-X IRQ 
-> > 56/cciss0: IRQF_DISABLED is not guaranteed on shared IRQs
-> > cciss0: <0x3238> at PCI 0000:42:08.0 IRQ 56 using DAC 
-> > ------------[ cut here ]------------
-> > WARNING: at drivers/block/cciss.c:225 
-> > do_cciss_intr+0x58f/0x99a [cciss]() Hardware name: ProLiant 
-> > BL685c G1 Modules linked in: cciss(+) ehci_hcd ohci_hcd uhci_hcd
-> > Pid: 0, comm: swapper Not tainted 2.6.29-rc3-git6 #1 Call Trace:
-> >  <IRQ>  [<ffffffff8023a741>] warn_slowpath+0xd3/0xf2  
-> > [<ffffffff80243a44>] ? __mod_timer+0xc1/0xd3  
-> > [<ffffffff8041469f>] ? smi_timeout+0xd9/0xe5  
-> > [<ffffffff8024f86a>] ? ktime_get_ts+0x49/0x4e  
-> > [<ffffffff804145c6>] ? smi_timeout+0x0/0xe5  
-> > [<ffffffffa0024c4b>] do_cciss_intr+0x58f/0x99a [cciss]  
-> > [<ffffffff8026ed21>] handle_IRQ_event+0x27/0x57  
-> > [<ffffffff8027057d>] handle_edge_irq+0xde/0x11f  
-> > [<ffffffff8020e302>] do_IRQ+0xdc/0x152  [<ffffffff8020ca13>] 
-> > ret_from_intr+0x0/0xa  <EOI> <4>---[ end trace a8b437cd48391e28 ]---
-> > BUG: unable to handle kernel NULL pointer dereference at 
-> > 00000000000000f4
-> > IP: [<ffffffffa0024c93>] do_cciss_intr+0x5d7/0x99a [cciss] PGD 0
-> > Oops: 0002 [#1] SMP
-> > last sysfs file: /sys/block/ram15/dev
-> > CPU 2
-> > Modules linked in: cciss(+) ehci_hcd ohci_hcd uhci_hcd
-> > Pid: 0, comm: swapper Tainted: G        W  2.6.29-rc3-git6 #1
-> > RIP: 0010:[<ffffffffa0024c93>]  [<ffffffffa0024c93>] 
-> > do_cciss_intr+0x5d7/0x99a [cciss]
-> > RSP: 0018:ffff88027f12fef0  EFLAGS: 00010046
-> > RAX: 0000000000000000 RBX: ffff88007f840270 RCX: 0000000000013888
-> > RDX: 0000000000008080 RSI: 0000000000000046 RDI: 0000000000000009
-> > RBP: ffff88027f12ff20 R08: 000000447f12fa70 R09: ffff88017e540700
-> > R10: 0000000000000000 R11: 0000000000000000 R12: ffff88007f8404b0
-> > R13: ffff88027e1a0000 R14: 0000000000000000 R15: 0000000000000086
-> > FS:  0000000000680850(0000) GS:ffff88017f121380(0000) 
-> > knlGS:0000000000000000
-> > CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-> > CR2: 00000000000000f4 CR3: 0000000000201000 CR4: 00000000000006e0
-> > DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> > DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 
-> > 0000000000000400 Process swapper (pid: 0, threadinfo 
-> > ffff88017f164000, task ffff88017fa5d4c0)
-> > Stack:
-> >  0000000000000001 ffff88027f126280 0000000000000000 0000000000000000
-> >  0000000000000038 0000000000000000 ffff88027f12ff50 
-> > ffffffff8026ed21  ffffffff8076e000 0000000000000038 
-> > ffff88027f126280 ffffffff8076e054 Call Trace:
-> >  <IRQ> <0> [<ffffffff8026ed21>] handle_IRQ_event+0x27/0x57  
-> > [<ffffffff8027057d>] handle_edge_irq+0xde/0x11f  
-> > [<ffffffff8020e302>] do_IRQ+0xdc/0x152  [<ffffffff8020ca13>] 
-> > ret_from_intr+0x0/0xa  <EOI> <0>Code: 50 08 48 c7 83 40 02 00 
-> > 00 00 00 00 00 49 c7 44 24 08 00 00 00 00 8b 83 34 02 00 00 
-> > 85 c0 0f 85 49 03 00 00 4c 8b b3 50 02 00 00 <41> c7 86 f4 00 
-> > 00 00 00 00 00 00 4c 8b 83 28 02 00 00 66 41 8b RIP  
-> > [<ffffffffa0024c93>] do_cciss_intr+0x5d7/0x99a [cciss]  RSP 
-> > <ffff88027f12fef0>
-> > CR2: 00000000000000f4
-> > ---[ end trace a8b437cd48391e29 ]---
-> > Kernel panic - not syncing: Fatal exception in interrupt
-> > 
-> > 
-> > 
-> > This is on an HP ProLiant BL685c G1, 4-proc system with
-> > 8 GB of RAM.  (same as previous reports)
-> > 
-> > 
-> > Rebooting worked successfully.
-> > 
-> > Thanks,
-> > --
-> > ~Randy
-> > 
--- 
-Jens Axboe
+7 directories, 15 files
+
+# Create an ALUA Logical Unit Group assocation for iblock_0/lvm_test0 to lio_lun_group
+target:/sys/kernel/config/target/core# echo lio_lun_group > iblock_0/lvm_test0/alua_lu_gp 
+
+# Create an Target Port Group assocation for lio_west_group
+target:/sys/kernel/config/target/iscsi/$TARGETNAME/$TPGT/lun/lun_0# echo lio_west_group > alua_tg_pt_gp 
+
+# Create an Target Port Group assocation for lio_east_group
+target:/sys/kernel/config/target/iscsi/$ANOTHER_TARGETNAME/$TPGT/lun/lun_0# echo lio_east_group > alua_tg_pt_gp 
+
+*) From target side dmesg:
+
+Target_Core_ConfigFS: Allocated ALUA Logical Unit Group: core/alua/lu_gps/lio_lun_group, ID: 1
+Target_Core_ConfigFS: Allocated ALUA Target Port Group: core/alua/tg_pt_gps/lio_west_group, ID: 1
+Target_Core_ConfigFS: Allocated ALUA Target Port Group: core/alua/tg_pt_gps/lio_east_group, ID: 2
+Target_Core_ConfigFS: Moving iblock_0/lvm_test0 to ALUA LU Group: core/alua/lu_gps/lio_lun_group, ID: 1
+Target_Core_ConfigFS: Moving iqn.2003-01.org.linux-iscsi.target.i686:sn.cff3eedbd2fd/tpgt_1/lun_0 to ALUA Target Port Group: core/alua/tg_pt_gps/lio_east_group, ID: 2
+Target_Core_ConfigFS: Moving iqn.2003-01.org.linux-iscsi.target.i686:sn.e475ed6fcdd0/tpgt_1/lun_0 to ALUA Target Port Group: core/alua/tg_pt_gps/lio_west_group, ID: 1
+
+*) From the iSCSI Initiator side connected to LIO-Target v3.0 iSCSI Target Ports using sg3_utils:
+
+# First LIO-Target iSCSI Target port:
+initiator# sg_inq -v -l 16384 -p 0x83 /dev/sde
+VPD INQUIRY: Device Identification page
+    inquiry cdb: 12 01 83 00 fc 00 
+  Designation descriptor number 1, descriptor length: 58
+    id_type: T10 vendor identification,  code_set: ASCII
+    associated with the addressed logical unit
+      vendor id: LIO-ORG
+      vendor specific: IBLOCK:eEaqKo-gYF8-vnDA-jJhf-Xqzy-pjGF-G6Y50v
+  Designation descriptor number 2, descriptor length: 8
+    transport: Internet SCSI (iSCSI)
+    id_type: Relative target port,  code_set: Binary
+    associated with the target port
+      Relative target port: 0x1
+  Designation descriptor number 3, descriptor length: 8
+    transport: Internet SCSI (iSCSI)
+    id_type: Target port group,  code_set: Binary
+    associated with the target port
+      Target port group: 0x1
+  Designation descriptor number 4, descriptor length: 8
+    id_type: Logical unit group,  code_set: Binary
+    associated with the addressed logical unit
+      Logical unit group: 0x1
+  Designation descriptor number 5, descriptor length: 72
+    transport: Internet SCSI (iSCSI)
+    id_type: SCSI name string,  code_set: UTF-8
+    associated with the target port
+      SCSI name string:
+      iqn.2003-01.org.linux-iscsi.target.i686:sn.e475ed6fcdd0,t,0x0001
+
+# Second LIO-Target iSCSI Target Port
+initiator# sg_inq -v -l 16384 -p 0x83 /dev/sdf
+VPD INQUIRY: Device Identification page
+    inquiry cdb: 12 01 83 00 fc 00 
+  Designation descriptor number 1, descriptor length: 58
+    id_type: T10 vendor identification,  code_set: ASCII
+    associated with the addressed logical unit
+      vendor id: LIO-ORG
+      vendor specific: IBLOCK:eEaqKo-gYF8-vnDA-jJhf-Xqzy-pjGF-G6Y50v
+  Designation descriptor number 2, descriptor length: 8
+    transport: Internet SCSI (iSCSI)
+    id_type: Relative target port,  code_set: Binary
+    associated with the target port
+      Relative target port: 0x2
+  Designation descriptor number 3, descriptor length: 8
+    transport: Internet SCSI (iSCSI)
+    id_type: Target port group,  code_set: Binary
+    associated with the target port
+      Target port group: 0x2
+  Designation descriptor number 4, descriptor length: 8
+    id_type: Logical unit group,  code_set: Binary
+    associated with the addressed logical unit
+      Logical unit group: 0x1
+  Designation descriptor number 5, descriptor length: 72
+    transport: Internet SCSI (iSCSI)
+    id_type: SCSI name string,  code_set: UTF-8
+    associated with the target port
+      SCSI name string:
+      iqn.2003-01.org.linux-iscsi.target.i686:sn.cff3eedbd2fd,t,0x0001
+
+# REPORT_TARGET_PORT_GROUPS response data:
+initiator# sg_rtpg -v /dev/sde
+    report target port groups cdb: a3 0a 00 00 00 00 00 00 04 00 00 00 
+Report list length = 36
+Report target port groups:
+  target port group id : 0x0 , Pref=0
+    target port group asymmetric access state : 0x00
+    T_SUP : 0, O_SUP : 0, U_SUP : 0, S_SUP : 0, AN_SUP : 1, AO_SUP : 1
+    status code : 0x02
+    vendor unique status : 0x00
+    target port count : 00
+  target port group id : 0x1 , Pref=0
+    target port group asymmetric access state : 0x00
+    T_SUP : 0, O_SUP : 0, U_SUP : 0, S_SUP : 0, AN_SUP : 1, AO_SUP : 1
+    status code : 0x02
+    vendor unique status : 0x00
+    target port count : 01
+    Relative target port ids:
+      0x01
+  target port group id : 0x2 , Pref=0
+    target port group asymmetric access state : 0x00
+    T_SUP : 0, O_SUP : 0, U_SUP : 0, S_SUP : 0, AN_SUP : 1, AO_SUP : 1
+    status code : 0x02
+    vendor unique status : 0x00
+    target port count : 01
+    Relative target port ids:
+      0x02
+
+Comments folks..?
+
+--nab
+
+[PATCH 1/6] [Target_Core_Mod/ALUA]: Add support for SPC-3 Target Port and Logical Unit Groups
+[PATCH 2/6] [Target_Core_Mod/ALUA]: Add setup for target_core_device.c code
+[PATCH 3/6] [Target_Core_Mod]: Update FILEIO and RAMDISK subsystem plugins to SPC-3 revision identifer
+[PATCH 4/6] [Target_Core_Mod/ALUA]: Add ALUA struct kmem_caches and update EVPD 0x83 information
+[PATCH 5/6] [Target_Core_Mod/ConfigFS]: Add ALUA infrastructure
+[PATCH 6/6] [LIO-Target/ConfigFS]: Add ALUA wrapper functions to Target_Core_Mod/ALUA code
+
+>From /pub/scm/linux/kernel/git/nab/lio-core-2.6
+ * branch            master     -> FETCH_HEAD
+Updating 3466517..07c4589
+Fast forward
+ drivers/lio-core/iscsi_target_configfs.c |   42 +--
+ drivers/lio-core/target_core_alua.c      |  496 +++++++++++++++++++++++----
+ drivers/lio-core/target_core_alua.h      |   14 +
+ drivers/lio-core/target_core_base.h      |   42 +++
+ drivers/lio-core/target_core_configfs.c  |  564 +++++++++++++++++++++++++++++-
+ drivers/lio-core/target_core_device.c    |   16 +
+ drivers/lio-core/target_core_file.c      |    2 +-
+ drivers/lio-core/target_core_rd.c        |    2 +-
+ drivers/lio-core/target_core_transport.c |   56 +++-
+ 9 files changed, 1113 insertions(+), 121 deletions(-)
+
 
