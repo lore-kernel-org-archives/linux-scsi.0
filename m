@@ -1,47 +1,58 @@
-From: "David Woodhouse" <dwmw2@infradead.org>
-Subject: Re: TRIM vs UNMAP vs WRITE SAME and thin devices
-Date: Sat, 7 Feb 2009 23:36:07 -0000 (UTC)
-Message-ID: <6e1133942a9f20e058e117a24fad9199.squirrel@baythorne.infradead.org>
-References: <20090123041558.GC24652@parisc-linux.org>
-    <4979AF62.7070409@redhat.com>
-    <1232721777.4430.7.camel@macbook.infradead.org>
-    <498DA052.6090605@redhat.com>
-    <20090207224722.GA31509@parisc-linux.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] iscsi tcp: bidi capable
+Date: Sun, 08 Feb 2009 12:00:20 +0200
+Message-ID: <498EAD34.6040200@panasas.com>
+References: <4975D96A.6020407@panasas.com> <498B6C0C.1070008@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain;charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from baythorne.infradead.org ([90.155.92.195]:45004 "EHLO
-	baythorne.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750743AbZBHAcb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Feb 2009 19:32:31 -0500
-In-Reply-To: <20090207224722.GA31509@parisc-linux.org>
+Received: from ug-out-1314.google.com ([66.249.92.173]:2934 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752931AbZBHKA2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Feb 2009 05:00:28 -0500
+Received: by ug-out-1314.google.com with SMTP id 39so74848ugf.37
+        for <linux-scsi@vger.kernel.org>; Sun, 08 Feb 2009 02:00:25 -0800 (PST)
+In-Reply-To: <498B6C0C.1070008@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Ric Wheeler <rwheeler@redhat.com>, David Woodhouse <dwmw2@infradead.org>, James Bottomley <james.bottomley@hansenpartnership.com>, "Martin K. Petersen" <mkp@mkp.net>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: open-iscsi@googlegroups.com
+Cc: Pete Wyckoff <pw@padd.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
 
-> On Sat, Feb 07, 2009 at 09:53:06AM -0500, Ric Wheeler wrote:
->> I have been poked at by some vendors about the status of our support for
->> the virtually/thinly provisioned luns since they are getting close to
->> being able to test with real devices.
+Mike Christie wrote:
+> Boaz Harrosh wrote:
+>> From: Pete Wyckoff <pw@padd.com>
 >>
->> My quick summary is that we most of the work so far has been done
->> without any real hardware to play with - in 2.6.29-rc3, I don't see any
->> low level ATA or SCSI bits that turn requests tagged with REQ_DISCARD
->> into the specific ATA or SCSI commands. Did I miss something & if not,
->> do we have plans to push anything upstream soonish?
->
-> Bearing in mind that I'm now three weeks behind on email, you might want
-> to look at
-> http://git.kernel.org/?p=linux/kernel/git/willy/ssd.git;a=shortlog;h=trim-20081231
-> which has at least one known bug (fixed by Dave Woodhouse and Ben
-> Herrenschmidt).  I'll be able to give a more coherent answer in a few
-> days.  Or maybe Dave will beat me to it ;-)
+>> Mark iscsi_tcp as being capable of bidirectional transfers.  The
+>> bsg interface checks this bit before attempting any bidirectional
+>> commands.
+>>
+>> Signed-off-by: Pete Wyckoff <pw@padd.com>
+>> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+>> ---
+>>  drivers/scsi/iscsi_tcp.c |    7 +++++++
+>>  1 files changed, 7 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+>> index af092a8..9e2d4fb 100644
+>> --- a/drivers/scsi/iscsi_tcp.c
+>> +++ b/drivers/scsi/iscsi_tcp.c
+>> @@ -806,6 +806,12 @@ static void iscsi_sw_tcp_session_destroy(struct iscsi_cls_session *cls_session)
+>>  	iscsi_host_free(shost);
+>>  }
+>>  
+>> +static int iscsi_tcp_slave_alloc(struct scsi_device *sdev)
+>> +{
+> 
+> I merged this for 2.6.30 with a small change where this is renamed 
+> iscsi_sw_tcp_slave_alloc to fit the naming of functions in that file.
+> 
 
-Ben's suggestion was that the IDE core wouldn't be sending the payload of
-the command because it looks at the R/W bit... which is clear (read) in
-our discard requests ATM. Making them appear to be writes is simple enough
-though. I gave an updated test kernel to the Sandisk folks but haven't got
-results back from them yet.
+Sure, thanks, sorry. It's Pete's patch and I failed to adapt it to
+latest changes.
 
+> Thanks.
+> 
+
+Thanks
+Boaz
