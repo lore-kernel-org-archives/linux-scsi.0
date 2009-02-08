@@ -1,69 +1,40 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH] libosd: Fix NULL dereference BUG when target is none OSD
- conformant
-Date: Sun, 08 Feb 2009 16:03:35 +0200
-Message-ID: <498EE637.3030800@panasas.com>
+Subject: Re: [PATCH] libosd: Fix NULL dereference BUG when target is none
+ OSD conformant
+Date: Sun, 08 Feb 2009 16:09:13 +0200
+Message-ID: <498EE789.2010507@panasas.com>
+References: <498EE637.3030800@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:9579 "EHLO
+Received: from gw-ca.panasas.com ([66.104.249.162]:32846 "EHLO
 	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752117AbZBHODk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Feb 2009 09:03:40 -0500
+	with ESMTP id S1752843AbZBHOJR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Feb 2009 09:09:17 -0500
+In-Reply-To: <498EE637.3030800@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Fuerst Lars <lars.fuerst@thomson.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
 
+Boaz Harrosh wrote:
+> Very old OSC's Target had a BUG in the Get/Set attributes where
+> it was looking in the wrong places for attribute lists length.
+> If used with the open-osd initiator, the initiator would dereference
+> a NULL pointer when retrieving system_information attributes.
+> 
+> Checks are added if retrieval of each attributes was successful
+> before accessing them.
+> 
+> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> ---
 
-Very old OSC's Target had a BUG in the Get/Set attributes where
-it was looking in the wrong places for attribute lists length.
-If used with the open-osd initiator, the initiator would dereference
-a NULL pointer when retrieving system_information attributes.
+Lars I will need your Tested-by: ... here
+I did not manage to run with your version of the target. It might crash
+farther on now.
 
-Checks are added if retrieval of each attributes was successful
-before accessing them.
+(Or if you can identify where on git://git.open-osd.org/osc-osd is the
+point that best matches your version and I can test it here)
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/scsi/osd/osd_initiator.c |   11 +++++++----
- 1 files changed, 7 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
-index eeaec3e..1696130 100644
---- a/drivers/scsi/osd/osd_initiator.c
-+++ b/drivers/scsi/osd/osd_initiator.c
-@@ -131,7 +131,7 @@ static int _osd_print_system_info(struct osd_dev *od, void *caps)
- 
- 	pFirst = get_attrs[a++].val_ptr;
- 	OSD_INFO("PRODUCT_REVISION_LEVEL [%u]\n",
--		get_unaligned_be32(pFirst));
-+		pFirst ? get_unaligned_be32(pFirst) : ~0U);
- 
- 	pFirst = get_attrs[a++].val_ptr;
- 	OSD_INFO("PRODUCT_SERIAL_NUMBER  [%s]\n",
-@@ -143,15 +143,18 @@ static int _osd_print_system_info(struct osd_dev *od, void *caps)
- 
- 	pFirst = get_attrs[a++].val_ptr;
- 	OSD_INFO("TOTAL_CAPACITY         [0x%llx]\n",
--		_LLU(get_unaligned_be64(pFirst)));
-+		pFirst ? _LLU(get_unaligned_be64(pFirst)) : ~0ULL);
- 
- 	pFirst = get_attrs[a++].val_ptr;
- 	OSD_INFO("USED_CAPACITY          [0x%llx]\n",
--		_LLU(get_unaligned_be64(pFirst)));
-+		pFirst ? _LLU(get_unaligned_be64(pFirst)) : ~0ULL);
- 
- 	pFirst = get_attrs[a++].val_ptr;
- 	OSD_INFO("NUMBER_OF_PARTITIONS   [%llu]\n",
--		_LLU(get_unaligned_be64(pFirst)));
-+		pFirst ? _LLU(get_unaligned_be64(pFirst)) : ~0ULL);
-+
-+	if (a >= nelem)
-+		goto out;
- 
- 	/* FIXME: Where are the time utilities */
- 	pFirst = get_attrs[a++].val_ptr;
--- 
-1.6.0.1
-
+Thanks in advance
+Boaz
