@@ -1,37 +1,59 @@
-From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
-Subject: Re: 2.6.29-rc4: Reported regressions from 2.6.28
-Date: Sun, 8 Feb 2009 23:04:52 +0100
-Message-ID: <200902082304.53585.rjw@sisk.pl>
-References: <AIghyjFgMFP.A.uZD._10jJB@chimera> <alpine.LFD.2.00.0902081354150.3048@localhost.localdomain>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: TRIM vs UNMAP vs WRITE SAME and thin devices
+Date: Sun, 08 Feb 2009 18:58:22 -0500
+Message-ID: <498F719E.6090709@redhat.com>
+References: <20090123041558.GC24652@parisc-linux.org> <4979AF62.7070409@redhat.com> <1232721777.4430.7.camel@macbook.infradead.org> <498DA052.6090605@redhat.com> <1234019372.4658.9.camel@localhost.localdomain> <20090207225025.GB31509@parisc-linux.org> <498F0C9D.3070601@redhat.com> <20090208205049.GG31509@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <alpine.LFD.2.00.0902081354150.3048-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
-Content-Disposition: inline
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Adrian Bunk <bunk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20090208205049.GG31509@parisc-linux.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, David Woodhouse <dwmw2@infradead.org>, "Martin K. Petersen" <mkp@mkp.net>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sunday 08 February 2009, Linus Torvalds wrote:
-> 
-> On Sun, 8 Feb 2009, Rafael J. Wysocki wrote:
-> > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12669
-> > Subject		: 2.6.28.4 regression: mmap fails if mlockall used
-> > Submitter	: Sami Farin <safari-kernel-nmB1AuG+Lnw9NyIDpsMsJw@public.gmane.org>
-> > Date		: 2009-02-08 10:52 (1 days old)
-> > References	: http://marc.info/?l=linux-kernel&m=123409037423068&w=4
-> 
-> Oh, Hugh just sent a patch, and it's now commit 
-> d5b562330ec766292a3ac54ae5e0673610bd5b3d. Sadly this just missed -rc4 by 
-> something like 20 minutes..
+Matthew Wilcox wrote:
+> On Sun, Feb 08, 2009 at 11:47:25AM -0500, Ric Wheeler wrote:
+>   
+>> Matthew Wilcox wrote:
+>>     
+>>> I thought we had agreed on a plan which satisfied the SSD and insane
+>>> array vendors.  That is that we would do no tracking of allocation units
+>>> in the filesystem, but instead extend each trim out to cover the maximum
+>>> possible size.  I've confirmed with Intel's SSD people that this would
+>>> cause them no harm at all (trimming already trimmed sectors won't even
+>>> cause a slowdown).  Whether the filesystem people have taken note of
+>>> this, I have no idea.
+>>>       
+>> That should be helpful for the array people, but for some of them with 
+>> really large delete chuck sizes, they will still miss a lot since their 
+>> size is larger than the average file size :-)  I guess that we could do 
+>> something to resync - Ted mentioned some ideas for ext4.
+>>     
+>
+> I'm not sure I communicated the plan effectively.
+>
+> Let's consider deleting a 4k file.
+>
+> The DISCARD that the filesystem sends down does not just cover the 4k
+> of data.  It covers all adjacent free space to that 4k of data, so it
+> might end up sending a DISCARD of several megabytes or even gigabytes,
+> assuming there's that much contiguous free space.
+>
+> Now, filesystems which fragment their free space will not do well on
+> thin provisioned devices, but then they won't do well on any devices --
+> keeping your free space compacted is an essential part of any filesystem's
+> job, even on SSDs.
+>
+>   
+Thanks - that does sound like it will in fact help clean up.  I suppose 
+the worst case would be deleting lots of non-contiguous small files from 
+a full file system (say every other 4KB or something obscure like that). 
 
-Yes, I saw the Hugh's message right after sending the report.
+I will see what the vendors I know have come up with, I think that this 
+should give them something interesting to play with....
 
-Bug closed.
+Ric
 
-Thanks,
-Rafael
+
