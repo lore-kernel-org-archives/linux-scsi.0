@@ -1,99 +1,192 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: TRIM vs UNMAP vs WRITE SAME and thin devices
-Date: Sun, 08 Feb 2009 19:01:23 -0500
-Message-ID: <498F7253.1070002@redhat.com>
-References: <20090123041558.GC24652@parisc-linux.org> <4979AF62.7070409@redhat.com> <1232721777.4430.7.camel@macbook.infradead.org> <498DA052.6090605@redhat.com> <87f94c370902081206v71106c5fp9a7ef0400301a1ab@mail.gmail.com> <20090208204434.GF31509@parisc-linux.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [patch] powerpc/ps3: Use hard coded values for LV1 device type
+Date: Sun, 08 Feb 2009 21:59:48 -0600
+Message-ID: <1234151988.8776.4.camel@localhost.localdomain>
+References: <498C6C49.1010200@in.ibm.com>  <498CF52E.4040903@am.sony.com>
+	 <1234092590.10240.4.camel@localhost>  <1234138267.31963.77.camel@pasglop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:48747 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751623AbZBIABg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 8 Feb 2009 19:01:36 -0500
-In-Reply-To: <20090208204434.GF31509@parisc-linux.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:59265 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754378AbZBID7w (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Feb 2009 22:59:52 -0500
+In-Reply-To: <1234138267.31963.77.camel@pasglop>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Greg Freemyer <greg.freemyer@gmail.com>, David Woodhouse <dwmw2@infradead.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <mkp@mkp.net>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: michael@ellerman.id.au, Geoff Levand <geoffrey.levand@am.sony.com>, Mel Gorman <mel@csn.ul.ie>, linuxppc-dev@ozlabs.org, Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>, Jens Axboe <jens.axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Matthew Wilcox wrote:
-> On Sun, Feb 08, 2009 at 03:06:44PM -0500, Greg Freemyer wrote:
->   
->> I found a list of T10 activities just since just Dec. 1, 2008 and it
->> is a bit overwhelming.  (ie. 08-356r4 is but one of many recent
->> reports)
->>
->> http://www.t10.org/new_a.htm
->>
->> For those of us that don't live and breath the SCSI spec, is there an
->> overview site describing what is going on.
->>     
->
-> I've been working off 08-149r7.pdf.  I'm sure that's been superseded by
-> now.  
->
->   
->> 08-356r4 	SBC-3: WRITE SAME unmap bit 	David L. Black 	PDF (56608)	2008/12/10
->>     
->
-> Probably interesting.  Haven't read it myself.
->   
+On Mon, 2009-02-09 at 11:11 +1100, Benjamin Herrenschmidt wrote:
+> On Sun, 2009-02-08 at 22:29 +1100, Michael Ellerman wrote:
+> > On Fri, 2009-02-06 at 18:42 -0800, Geoff Levand wrote:
+> > > Change the PS3 platform code to use hard coded numbers for its
+> > > LV1 device types.
+> > > 
+> > > The PS3 platform code was incorrectly using some scsi block
+> > > constants for the device type returned from the LV1 hypervisor.
+> > > 
+> > > Fixes build errors like these when CONFIG_BLOCK=n:
+> > > 
+> > >   In file included from include/scsi/scsi.h:12,
+> > >                    from arch/powerpc/platforms/ps3/platform.h:25,
+> > >                    from arch/powerpc/platforms/ps3/setup.c:36:
+> > >   include/scsi/scsi_cmnd.h:27:25: warning: "BLK_MAX_CDB" is not defined
+> > >   include/scsi/scsi_cmnd.h:28:3: error: #error MAX_COMMAND_SIZE can not be bigger than BLK_MAX_CDB
+> 
+> Adding Jens and James on CC since I think a proper fix lies in blkdev.h
+> or scsi*.h
 
-This is only a four page proposal - basically, we would use the write 
-same command with a special unmap bit set to tell the target that it may 
-(at its option) unmap the blocks. If not, it would in fact have to set 
-the data to the indicated pattern in the command which I presume would 
-be all zeros in the normal case.
->   
->> 08-356r5 	SBC-3 Thin Provisioning Commands 	Fred Knight, David L.
->> Black 	PDF (387549)	2009/01/15
->>     
->
-> Fred Knight seems to be the main coordinator of this effort, so yes.
->   
+And cc'd linux-scsi
 
-Fred and David Black both have been quite active.
->   
->> 08-149r7 	SBC - Thin Provisioning 	Frederick Knight 	PDF (281001)	2008/12/08
->>     
->
-> That's the one I'm working from.
->
->   
->> 08-149r8 	SBC - Thin Provisioning 	Frederick Knight 	PDF (281387)	2009/01/09
->>     
->
-> A newer version ... thought so.
->
->   
->> 09-011r1 	SBC-3 Thin Provisioning Threshold Notification 	Frederick
->> Knight 	PDF (32757)	2009/01/09
->>     
->
-> Clearly related.
->
->   
->> 08-149r9 	SBC - Thin Provisioning 	Frederick Knight 	PDF (353888)	2009/01/15
->>     
->
-> Even newer version of what I've been working from.
->
->   
->> 09-012r0 	Minutes: CAP - Thin Provisioning 12/4 con-call 	Frederick
->> Knight 	PDF (38063)	2008/12/08
->>     
->
-> Probably tedious.
->
->   
->> 08-396r3 	SPC-4: Reporting support for all DIF types 	George Penokie
->> 	PDF (85358)	2009/01/14
->>     
->
-> Unrelated, I would think.
->
-> I'd go with 08-149r9 to get a good overview.
->
->   
+> So basically, the whole of blkdev.h is inside a big ifdef
+> CONFIG_BLOCK... which means that scsi_cmnd.h can't build which in turn
+> makes scsi.h fail.
+
+Well, look at it from our point of view; it's impossible to build SCSI
+without block, so a little interdependence is easy to get.
+
+> The PS3 platform code wants to use some of the standard SCSI types from
+> there though, as they are part of the hypervisor ABI. (And in fact it
+> can be argued that non-block devices using SCSI do exist, such as
+> scanners, no ?)
+> 
+> Any reason other than pre-historical to have blkdev.h shielded like
+> that ?
+
+Actually, I think the fix lies in scsi.h ... we can make that into a
+nicely independent protocol header file.  Your current woes come because
+it pulls in scsi_cmnd.h ... perhaps just getting rid of this will fix
+it.
+
+Can the rest of linux-scsi verify that the fix below doesn't break
+something else?
+
+I found one cockup: block/cmd-filter.c is apparently not including
+linuc/blkdev.h directly but via scsi/scsi.h ... I fixed this up.
+
+> Cheers,
+> Ben.
+> 
+> > > Signed-off-by: Geoff Levand <geoffrey.levand@am.sony.com>
+> > > ---
+> > > Ben,
+> > > 
+> > > Please send upstream for 2.6.29.
+> > > 
+> > > -Geoff
+> > > 
+> > >  arch/powerpc/platforms/ps3/platform.h |    8 +++-----
+> > >  1 file changed, 3 insertions(+), 5 deletions(-)
+> > > 
+> > > --- a/arch/powerpc/platforms/ps3/platform.h
+> > > +++ b/arch/powerpc/platforms/ps3/platform.h
+> > > @@ -22,8 +22,6 @@
+> > >  #define _PS3_PLATFORM_H
+> > >  
+> > >  #include <linux/rtc.h>
+> > > -#include <scsi/scsi.h>
+> > > -
+> > >  #include <asm/ps3.h>
+> > >  
+> > >  /* htab */
+> > > @@ -83,12 +81,12 @@ enum ps3_bus_type {
+> > >  };
+> > >  
+> > >  enum ps3_dev_type {
+> > > -	PS3_DEV_TYPE_STOR_DISK = TYPE_DISK,	/* 0 */
+> > > +	PS3_DEV_TYPE_STOR_DISK = 0, /* TYPE_DISK */
+> > >  	PS3_DEV_TYPE_SB_GELIC = 3,
+> > >  	PS3_DEV_TYPE_SB_USB = 4,
+> > > -	PS3_DEV_TYPE_STOR_ROM = TYPE_ROM,	/* 5 */
+> > > +	PS3_DEV_TYPE_STOR_ROM = 5, /* TYPE_ROM */
+> > >  	PS3_DEV_TYPE_SB_GPIO = 6,
+> > > -	PS3_DEV_TYPE_STOR_FLASH = TYPE_RBC,	/* 14 */
+> > > +	PS3_DEV_TYPE_STOR_FLASH = 14, /* TYPE_RBC */
+> > 
+> > This looks like you're just papering over the bug, by hardcoding the
+> > same values that are in the scsi header. Or are they really independent,
+> > in which case I'd say the comments are confusing.
+> > 
+> > cheers
+
+James
+
+---
+
+diff --git a/block/cmd-filter.c b/block/cmd-filter.c
+index 504b275..572bbc2 100644
+--- a/block/cmd-filter.c
++++ b/block/cmd-filter.c
+@@ -22,6 +22,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/capability.h>
+ #include <linux/bitops.h>
++#include <linux/blkdev.h>
+ 
+ #include <scsi/scsi.h>
+ #include <linux/cdrom.h>
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 80d7f60..084478e 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -9,7 +9,8 @@
+ #define _SCSI_SCSI_H
+ 
+ #include <linux/types.h>
+-#include <scsi/scsi_cmnd.h>
++
++struct scsi_cmnd;
+ 
+ /*
+  * The maximum number of SG segments that we will put inside a
+@@ -439,22 +440,6 @@ static inline int scsi_is_wlun(unsigned int lun)
+ #define host_byte(result)   (((result) >> 16) & 0xff)
+ #define driver_byte(result) (((result) >> 24) & 0xff)
+ 
+-static inline void set_msg_byte(struct scsi_cmnd *cmd, char status)
+-{
+-	cmd->result |= status << 8;
+-}
+-
+-static inline void set_host_byte(struct scsi_cmnd *cmd, char status)
+-{
+-	cmd->result |= status << 16;
+-}
+-
+-static inline void set_driver_byte(struct scsi_cmnd *cmd, char status)
+-{
+-	cmd->result |= status << 24;
+-}
+-
+-
+ #define sense_class(sense)  (((sense) >> 4) & 0x7)
+ #define sense_error(sense)  ((sense) & 0xf)
+ #define sense_valid(sense)  ((sense) & 0x80);
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 855bf95..43b50d3 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -291,4 +291,19 @@ static inline struct scsi_data_buffer *scsi_prot(struct scsi_cmnd *cmd)
+ #define scsi_for_each_prot_sg(cmd, sg, nseg, __i)		\
+ 	for_each_sg(scsi_prot_sglist(cmd), sg, nseg, __i)
+ 
++static inline void set_msg_byte(struct scsi_cmnd *cmd, char status)
++{
++	cmd->result |= status << 8;
++}
++
++static inline void set_host_byte(struct scsi_cmnd *cmd, char status)
++{
++	cmd->result |= status << 16;
++}
++
++static inline void set_driver_byte(struct scsi_cmnd *cmd, char status)
++{
++	cmd->result |= status << 24;
++}
++
+ #endif /* _SCSI_SCSI_CMND_H */
+
 
