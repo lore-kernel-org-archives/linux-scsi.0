@@ -1,85 +1,67 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH 1/6] drivers/scsi: introduce missing kfree
-Date: Mon, 9 Feb 2009 16:39:28 -0500
-Message-ID: <4990A290.3030406@emulex.com>
-References: <Pine.LNX.4.64.0902082242290.25891@ask.diku.dk>
+From: <Stuart_Hayes@Dell.com>
+Subject: [PATCH] libata: change drive ready wait after hard reset to 5s
+Date: Mon, 9 Feb 2009 15:48:45 -0600
+Message-ID: <DFEF91B22ED07447AB6AA4B237F913F902185A2B@ausx3mpc125.aus.amer.dell.com>
+References: <1233456951-992-1-git-send-email-tj@kernel.org> <1233456951-992-4-git-send-email-tj@kernel.org> <DFEF91B22ED07447AB6AA4B237F913F9021859A8@ausx3mpc125.aus.amer.dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:51257 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754914AbZBIVjn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Feb 2009 16:39:43 -0500
-In-Reply-To: <Pine.LNX.4.64.0902082242290.25891@ask.diku.dk>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C98B00.2EABEB8E"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+In-Reply-To: <DFEF91B22ED07447AB6AA4B237F913F9021859A8@ausx3mpc125.aus.amer.dell.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: jeff@garzik.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Mario_Limonciello@Dell.com
 List-Id: linux-scsi@vger.kernel.org
-To: Julia Lawall <julia@diku.dk>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 
-Acked-by: James Smart <james.smart@emulex.com>
+This is a multi-part message in MIME format.
 
--- james s
+------_=_NextPart_001_01C98B00.2EABEB8E
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
 
-Julia Lawall wrote:
-> From: Julia Lawall <julia@diku.dk>
-> 
-> Error handling code following a kmalloc should free the allocated data.
-> 
-> The semantic match that finds the problem is as follows:
-> (http://www.emn.fr/x-info/coccinelle/)
-> 
-> // <smpl>
-> @r exists@
-> local idexpression x;
-> statement S;
-> expression E;
-> identifier f,l;
-> position p1,p2;
-> expression *ptr != NULL;
-> @@
-> 
-> (
-> if ((x@p1 = \(kmalloc\|kzalloc\|kcalloc\)(...)) == NULL) S
-> |
-> x@p1 = \(kmalloc\|kzalloc\|kcalloc\)(...);
-> ...
-> if (x == NULL) S
-> )
-> <... when != x
->      when != if (...) { <+...x...+> }
-> x->f = E
-> ...>
-> (
->  return \(0\|<+...x...+>\|ptr\);
-> |
->  return@p2 ...;
-> )
-> 
-> @script:python@
-> p1 << r.p1;
-> p2 << r.p2;
-> @@
-> 
-> print "* file: %s kmalloc %s return %s" % (p1[0].file,p1[0].line,p2[0].line)
-> // </smpl>
-> 
-> Signed-off-by: Julia Lawall <julia@diku.dk>
-> ---
->  drivers/scsi/lpfc/lpfc_els.c        |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-> index a8f30bd..a730248 100644
-> --- a/drivers/scsi/lpfc/lpfc_els.c
-> +++ b/drivers/scsi/lpfc/lpfc_els.c
-> @@ -5258,6 +5258,7 @@ lpfc_send_els_event(struct lpfc_vport *vport,
->                         sizeof(struct lpfc_name));
->                 break;
->         default:
-> +               kfree(els_data);
->                 return;
->         }
->         memcpy(els_data->wwpn, &ndlp->nlp_portname, sizeof(struct lpfc_name));
-> 
+I'm re-sending this patch... I didn't get a response last time I sent
+this in a week ago.  (Is there something wrong with it?)  Thanks!  ...
+Stuart
+
+
+
+This fixes problems during resume with drives that take longer than 1s
+to be ready.  The ATA-6 spec appears to allow 5 seconds for a drive to
+be ready.
+
+On one affected system, this patch changes "PM: resume devices took..."
+message from 17 seconds to 4 seconds, and gets rid of a lot of ugly
+timeout/error messages.
+
+Without this patch, the libata code moves on after 1s, tries to send a
+soft reset (which the drive doesn't see because it isn't ready) which
+also times out, then an IDENTIFY command is sent to the drive which
+times out, and finally the error handler will try to send another hard
+reset which will finally get things working.
+
+Sorry to send as an attachment, but my mail server will wrap text.
+
+
+Signed-off-by: Stuart Hayes <stuart_hayes@dell.com>
+
+
+------_=_NextPart_001_01C98B00.2EABEB8E
+Content-Type: application/octet-stream;
+	name="sata_wait5s_on_resume.patch"
+Content-Transfer-Encoding: base64
+Content-Description: sata_wait5s_on_resume.patch
+Content-Disposition: attachment;
+	filename="sata_wait5s_on_resume.patch"
+
+LS0tIGxpbnV4LTIuNi4yOC4yL2luY2x1ZGUvbGludXgvbGliYXRhLmgub3JpZwkyMDA5LTAxLTI0
+IDE4OjQyOjA3LjAwMDAwMDAwMCAtMDYwMAorKysgbGludXgtMi42LjI4LjIvaW5jbHVkZS9saW51
+eC9saWJhdGEuaAkyMDA5LTAyLTAyIDEwOjM2OjMwLjAwMDAwMDAwMCAtMDYwMApAQCAtMjcxLDcg
+KzI3MSw3IEBAIGVudW0gewogCSAqIGFkdmlzZWQgdG8gd2FpdCBvbmx5IGZvciB0aGUgZm9sbG93
+aW5nIGR1cmF0aW9uIGJlZm9yZQogCSAqIGRvaW5nIFNSU1QuCiAJICovCi0JQVRBX1RNT1VUX1BN
+UF9TUlNUX1dBSVQJPSAxMDAwLAorCUFUQV9UTU9VVF9QTVBfU1JTVF9XQUlUCT0gNTAwMCwKIAog
+CS8qIEFUQSBidXMgc3RhdGVzICovCiAJQlVTX1VOS05PV04JCT0gMCwK
+
+------_=_NextPart_001_01C98B00.2EABEB8E--
