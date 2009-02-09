@@ -1,192 +1,51 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [patch] powerpc/ps3: Use hard coded values for LV1 device type
-Date: Sun, 08 Feb 2009 21:59:48 -0600
-Message-ID: <1234151988.8776.4.camel@localhost.localdomain>
-References: <498C6C49.1010200@in.ibm.com>  <498CF52E.4040903@am.sony.com>
-	 <1234092590.10240.4.camel@localhost>  <1234138267.31963.77.camel@pasglop>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH 0/6] qla2xxx: fixes for 2.6.29-rcX [8.03.00-k3].
+Date: Sun,  8 Feb 2009 20:50:10 -0800
+Message-ID: <1234155016-6215-1-git-send-email-andrew.vasquez@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:59265 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754378AbZBID7w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Feb 2009 22:59:52 -0500
-In-Reply-To: <1234138267.31963.77.camel@pasglop>
+Received: from avexch1.qlogic.com ([198.70.193.115]:7132 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753887AbZBIEuV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Feb 2009 23:50:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: michael@ellerman.id.au, Geoff Levand <geoffrey.levand@am.sony.com>, Mel Gorman <mel@csn.ul.ie>, linuxppc-dev@ozlabs.org, Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>, Jens Axboe <jens.axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Seokmann Ju <seokmann.ju@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, 2009-02-09 at 11:11 +1100, Benjamin Herrenschmidt wrote:
-> On Sun, 2009-02-08 at 22:29 +1100, Michael Ellerman wrote:
-> > On Fri, 2009-02-06 at 18:42 -0800, Geoff Levand wrote:
-> > > Change the PS3 platform code to use hard coded numbers for its
-> > > LV1 device types.
-> > > 
-> > > The PS3 platform code was incorrectly using some scsi block
-> > > constants for the device type returned from the LV1 hypervisor.
-> > > 
-> > > Fixes build errors like these when CONFIG_BLOCK=n:
-> > > 
-> > >   In file included from include/scsi/scsi.h:12,
-> > >                    from arch/powerpc/platforms/ps3/platform.h:25,
-> > >                    from arch/powerpc/platforms/ps3/setup.c:36:
-> > >   include/scsi/scsi_cmnd.h:27:25: warning: "BLK_MAX_CDB" is not defined
-> > >   include/scsi/scsi_cmnd.h:28:3: error: #error MAX_COMMAND_SIZE can not be bigger than BLK_MAX_CDB
-> 
-> Adding Jens and James on CC since I think a proper fix lies in blkdev.h
-> or scsi*.h
+James,
 
-And cc'd linux-scsi
+Another round of fixes for 2.6.29-rc4.
 
-> So basically, the whole of blkdev.h is inside a big ifdef
-> CONFIG_BLOCK... which means that scsi_cmnd.h can't build which in turn
-> makes scsi.h fail.
+The first two commits are larger than I'd normally like, but they do
+address some performance regressions in 8gb (and above) ISPs, as well
+as help to work nicely with IDC (inter-driver-communication) in
+QLogic's 10gb NIC driver, (qlge).
 
-Well, look at it from our point of view; it's impossible to build SCSI
-without block, so a little interdependence is easy to get.
+Here's the commits:
 
-> The PS3 platform code wants to use some of the standard SCSI types from
-> there though, as they are part of the hypervisor ABI. (And in fact it
-> can be argued that non-block devices using SCSI do exist, such as
-> scanners, no ?)
-> 
-> Any reason other than pre-historical to have blkdev.h shielded like
-> that ?
+* Remove interrupt request bit check in the response processing path
+  in multiq mode.
+* Properly acknowledge IDC notification messages.
+* Correct slab-error overwrite during vport creation and deletion.
+* Mask out 'reserved' bits while processing FLT regions.
+* Correct Kernel Panic with Qlogic 2472 Card.
+* Update version number to 8.03.00-k3.
 
-Actually, I think the fix lies in scsi.h ... we can make that into a
-nicely independent protocol header file.  Your current woes come because
-it pulls in scsi_cmnd.h ... perhaps just getting rid of this will fix
-it.
-
-Can the rest of linux-scsi verify that the fix below doesn't break
-something else?
-
-I found one cockup: block/cmd-filter.c is apparently not including
-linuc/blkdev.h directly but via scsi/scsi.h ... I fixed this up.
-
-> Cheers,
-> Ben.
-> 
-> > > Signed-off-by: Geoff Levand <geoffrey.levand@am.sony.com>
-> > > ---
-> > > Ben,
-> > > 
-> > > Please send upstream for 2.6.29.
-> > > 
-> > > -Geoff
-> > > 
-> > >  arch/powerpc/platforms/ps3/platform.h |    8 +++-----
-> > >  1 file changed, 3 insertions(+), 5 deletions(-)
-> > > 
-> > > --- a/arch/powerpc/platforms/ps3/platform.h
-> > > +++ b/arch/powerpc/platforms/ps3/platform.h
-> > > @@ -22,8 +22,6 @@
-> > >  #define _PS3_PLATFORM_H
-> > >  
-> > >  #include <linux/rtc.h>
-> > > -#include <scsi/scsi.h>
-> > > -
-> > >  #include <asm/ps3.h>
-> > >  
-> > >  /* htab */
-> > > @@ -83,12 +81,12 @@ enum ps3_bus_type {
-> > >  };
-> > >  
-> > >  enum ps3_dev_type {
-> > > -	PS3_DEV_TYPE_STOR_DISK = TYPE_DISK,	/* 0 */
-> > > +	PS3_DEV_TYPE_STOR_DISK = 0, /* TYPE_DISK */
-> > >  	PS3_DEV_TYPE_SB_GELIC = 3,
-> > >  	PS3_DEV_TYPE_SB_USB = 4,
-> > > -	PS3_DEV_TYPE_STOR_ROM = TYPE_ROM,	/* 5 */
-> > > +	PS3_DEV_TYPE_STOR_ROM = 5, /* TYPE_ROM */
-> > >  	PS3_DEV_TYPE_SB_GPIO = 6,
-> > > -	PS3_DEV_TYPE_STOR_FLASH = TYPE_RBC,	/* 14 */
-> > > +	PS3_DEV_TYPE_STOR_FLASH = 14, /* TYPE_RBC */
-> > 
-> > This looks like you're just papering over the bug, by hardcoding the
-> > same values that are in the scsi header. Or are they really independent,
-> > in which case I'd say the comments are confusing.
-> > 
-> > cheers
-
-James
+Thanks, AV
 
 ---
 
-diff --git a/block/cmd-filter.c b/block/cmd-filter.c
-index 504b275..572bbc2 100644
---- a/block/cmd-filter.c
-+++ b/block/cmd-filter.c
-@@ -22,6 +22,7 @@
- #include <linux/spinlock.h>
- #include <linux/capability.h>
- #include <linux/bitops.h>
-+#include <linux/blkdev.h>
- 
- #include <scsi/scsi.h>
- #include <linux/cdrom.h>
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 80d7f60..084478e 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -9,7 +9,8 @@
- #define _SCSI_SCSI_H
- 
- #include <linux/types.h>
--#include <scsi/scsi_cmnd.h>
-+
-+struct scsi_cmnd;
- 
- /*
-  * The maximum number of SG segments that we will put inside a
-@@ -439,22 +440,6 @@ static inline int scsi_is_wlun(unsigned int lun)
- #define host_byte(result)   (((result) >> 16) & 0xff)
- #define driver_byte(result) (((result) >> 24) & 0xff)
- 
--static inline void set_msg_byte(struct scsi_cmnd *cmd, char status)
--{
--	cmd->result |= status << 8;
--}
--
--static inline void set_host_byte(struct scsi_cmnd *cmd, char status)
--{
--	cmd->result |= status << 16;
--}
--
--static inline void set_driver_byte(struct scsi_cmnd *cmd, char status)
--{
--	cmd->result |= status << 24;
--}
--
--
- #define sense_class(sense)  (((sense) >> 4) & 0x7)
- #define sense_error(sense)  ((sense) & 0xf)
- #define sense_valid(sense)  ((sense) & 0x80);
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 855bf95..43b50d3 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -291,4 +291,19 @@ static inline struct scsi_data_buffer *scsi_prot(struct scsi_cmnd *cmd)
- #define scsi_for_each_prot_sg(cmd, sg, nseg, __i)		\
- 	for_each_sg(scsi_prot_sglist(cmd), sg, nseg, __i)
- 
-+static inline void set_msg_byte(struct scsi_cmnd *cmd, char status)
-+{
-+	cmd->result |= status << 8;
-+}
-+
-+static inline void set_host_byte(struct scsi_cmnd *cmd, char status)
-+{
-+	cmd->result |= status << 16;
-+}
-+
-+static inline void set_driver_byte(struct scsi_cmnd *cmd, char status)
-+{
-+	cmd->result |= status << 24;
-+}
-+
- #endif /* _SCSI_SCSI_CMND_H */
-
+ drivers/scsi/qla2xxx/qla_attr.c    |   13 ++++----
+ drivers/scsi/qla2xxx/qla_def.h     |    5 +++
+ drivers/scsi/qla2xxx/qla_devtbl.h  |    2 +-
+ drivers/scsi/qla2xxx/qla_fw.h      |    2 +
+ drivers/scsi/qla2xxx/qla_gbl.h     |    9 +++--
+ drivers/scsi/qla2xxx/qla_init.c    |    7 ++--
+ drivers/scsi/qla2xxx/qla_isr.c     |   58 +++++++++++++++++++++--------------
+ drivers/scsi/qla2xxx/qla_mbx.c     |   40 ++++++++++++++++++++-----
+ drivers/scsi/qla2xxx/qla_mid.c     |   12 ++++----
+ drivers/scsi/qla2xxx/qla_os.c      |   16 ++++++++++
+ drivers/scsi/qla2xxx/qla_sup.c     |    2 +-
+ drivers/scsi/qla2xxx/qla_version.h |    2 +-
+ 12 files changed, 113 insertions(+), 55 deletions(-)
 
