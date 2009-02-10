@@ -1,67 +1,97 @@
-From: <Stuart_Hayes@Dell.com>
-Subject: [PATCH] libata: change drive ready wait after hard reset to 5s
-Date: Mon, 9 Feb 2009 15:48:45 -0600
-Message-ID: <DFEF91B22ED07447AB6AA4B237F913F902185A2B@ausx3mpc125.aus.amer.dell.com>
-References: <1233456951-992-1-git-send-email-tj@kernel.org> <1233456951-992-4-git-send-email-tj@kernel.org> <DFEF91B22ED07447AB6AA4B237F913F9021859A8@ausx3mpc125.aus.amer.dell.com>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C98B00.2EABEB8E"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <DFEF91B22ED07447AB6AA4B237F913F9021859A8@ausx3mpc125.aus.amer.dell.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: jeff@garzik.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Mario_Limonciello@Dell.com
+From: Karen Xie <kxie@chelsio.com>
+Subject: [PATCH 1/5 2.6.29-rc] cxgb3i -- added per-task data to track transmit progress
+Date: Mon, 9 Feb 2009 18:10:11 -0800
+Message-ID: <200902100210.n1A2ABVa019807@localhost.localdomain>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stargate.chelsio.com ([12.22.49.110]:8528 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751682AbZBJCI5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Feb 2009 21:08:57 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
+Cc: michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com, kxie@chelsio.com
 
-This is a multi-part message in MIME format.
+[PATCH 1/5 2.6.29-rc] cxgb3i -- added per-task data to track transmit progress
 
-------_=_NextPart_001_01C98B00.2EABEB8E
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+From: Karen Xie <kxie@chelsio.com>
 
+added per-task struct cxgb3i_task_data to track the data transmiting progress and the state of the pdus to be transmitted.
 
-I'm re-sending this patch... I didn't get a response last time I sent
-this in a week ago.  (Is there something wrong with it?)  Thanks!  ...
-Stuart
+Signed-off-by: Karen Xie <kxie@chelsio.com>
+---
 
-
-
-This fixes problems during resume with drives that take longer than 1s
-to be ready.  The ATA-6 spec appears to allow 5 seconds for a drive to
-be ready.
-
-On one affected system, this patch changes "PM: resume devices took..."
-message from 17 seconds to 4 seconds, and gets rid of a lot of ugly
-timeout/error messages.
-
-Without this patch, the libata code moves on after 1s, tries to send a
-soft reset (which the drive doesn't see because it isn't ready) which
-also times out, then an IDENTIFY command is sent to the drive which
-times out, and finally the error handler will try to send another hard
-reset which will finally get things working.
-
-Sorry to send as an attachment, but my mail server will wrap text.
+ drivers/scsi/cxgb3i/cxgb3i.h       |   28 ++++++++++++++++++++++++++++
+ drivers/scsi/cxgb3i/cxgb3i_iscsi.c |    5 +++--
+ 2 files changed, 31 insertions(+), 2 deletions(-)
 
 
-Signed-off-by: Stuart Hayes <stuart_hayes@dell.com>
-
-
-------_=_NextPart_001_01C98B00.2EABEB8E
-Content-Type: application/octet-stream;
-	name="sata_wait5s_on_resume.patch"
-Content-Transfer-Encoding: base64
-Content-Description: sata_wait5s_on_resume.patch
-Content-Disposition: attachment;
-	filename="sata_wait5s_on_resume.patch"
-
-LS0tIGxpbnV4LTIuNi4yOC4yL2luY2x1ZGUvbGludXgvbGliYXRhLmgub3JpZwkyMDA5LTAxLTI0
-IDE4OjQyOjA3LjAwMDAwMDAwMCAtMDYwMAorKysgbGludXgtMi42LjI4LjIvaW5jbHVkZS9saW51
-eC9saWJhdGEuaAkyMDA5LTAyLTAyIDEwOjM2OjMwLjAwMDAwMDAwMCAtMDYwMApAQCAtMjcxLDcg
-KzI3MSw3IEBAIGVudW0gewogCSAqIGFkdmlzZWQgdG8gd2FpdCBvbmx5IGZvciB0aGUgZm9sbG93
-aW5nIGR1cmF0aW9uIGJlZm9yZQogCSAqIGRvaW5nIFNSU1QuCiAJICovCi0JQVRBX1RNT1VUX1BN
-UF9TUlNUX1dBSVQJPSAxMDAwLAorCUFUQV9UTU9VVF9QTVBfU1JTVF9XQUlUCT0gNTAwMCwKIAog
-CS8qIEFUQSBidXMgc3RhdGVzICovCiAJQlVTX1VOS05PV04JCT0gMCwK
-
-------_=_NextPart_001_01C98B00.2EABEB8E--
+diff --git a/drivers/scsi/cxgb3i/cxgb3i.h b/drivers/scsi/cxgb3i/cxgb3i.h
+index fde6e4c..ba45c1d 100644
+--- a/drivers/scsi/cxgb3i/cxgb3i.h
++++ b/drivers/scsi/cxgb3i/cxgb3i.h
+@@ -20,6 +20,7 @@
+ #include <linux/list.h>
+ #include <linux/netdevice.h>
+ #include <linux/scatterlist.h>
++#include <linux/skbuff.h>
+ #include <scsi/libiscsi_tcp.h>
+ 
+ /* from cxgb3 LLD */
+@@ -113,6 +114,33 @@ struct cxgb3i_endpoint {
+ 	struct cxgb3i_conn *cconn;
+ };
+ 
++/**
++ * struct cxgb3i_task_data - private iscsi task data
++ *
++ * @nr_pages:	# tx pages
++ * @nr_frags:	# of coalesced page frags (from scsi sgl)
++ * @frags:	coalesced page frags (from scsi sgl)
++ * @pages:	tx pages
++ * @skb:	tx pdu skb
++ * @offset:	data offset for the next pdu
++ * @count:	max. possible pdu payload
++ * @sgoffset:	offset to the first sg entry for a given offset
++ */
++#define MAX_PDU_FULL_PAGES \
++	((ULP2_MAX_PDU_PAYLOAD + PAGE_SIZE - 1) >> PAGE_SHIFT)
++#define MAX_PDU_FRAGS	((ULP2_MAX_PDU_PAYLOAD + 512 - 1) / 512)
++
++struct cxgb3i_task_data {
++	unsigned short nr_pages;
++	unsigned short nr_frags;
++	skb_frag_t frags[MAX_PDU_FRAGS];
++	struct page *pages[MAX_PDU_FULL_PAGES];
++	struct sk_buff *skb;
++	unsigned int offset;
++	unsigned int count;
++	unsigned int sgoffset;
++};
++
+ int cxgb3i_iscsi_init(void);
+ void cxgb3i_iscsi_cleanup(void);
+ 
+diff --git a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
+index d83464b..f0434b7 100644
+--- a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
++++ b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
+@@ -364,7 +364,8 @@ cxgb3i_session_create(struct iscsi_endpoint *ep, u16 cmds_max, u16 qdepth,
+ 
+ 	cls_session = iscsi_session_setup(&cxgb3i_iscsi_transport, shost,
+ 					  cmds_max,
+-					  sizeof(struct iscsi_tcp_task),
++					  sizeof(struct iscsi_tcp_task) +
++					  sizeof(struct cxgb3i_task_data),
+ 					  initial_cmdsn, ISCSI_MAX_TARGET);
+ 	if (!cls_session)
+ 		return NULL;
+@@ -844,7 +845,7 @@ static struct scsi_host_template cxgb3i_host_template = {
+ 	.proc_name		= "cxgb3i",
+ 	.queuecommand		= iscsi_queuecommand,
+ 	.change_queue_depth	= iscsi_change_queue_depth,
+-	.can_queue		= 128 * (ISCSI_DEF_XMIT_CMDS_MAX - 1),
++	.can_queue		= CXGB3I_SCSI_QDEPTH_DFLT - 1,
+ 	.sg_tablesize		= SG_ALL,
+ 	.max_sectors		= 0xFFFF,
+ 	.cmd_per_lun		= ISCSI_DEF_CMD_PER_LUN,
