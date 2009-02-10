@@ -1,29 +1,56 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 3/5 2.6.29-rc] cxgb3i -- tx pdu need to observe skb's
- MAX_SKB_FRAGS
-Date: Tue, 10 Feb 2009 12:29:18 -0600
-Message-ID: <4991C77E.7020709@cs.wisc.edu>
-References: <200902100210.n1A2ALEc019820@localhost.localdomain> <49910F84.7090707@cs.wisc.edu> <8A71B368A89016469F72CD08050AD3340465809D@maui.asicdesigners.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH]scsi_dh_rdac: Retry for Quiescence in Progress in rdac
+	device handler
+Date: Tue, 10 Feb 2009 20:44:50 +0000
+Message-ID: <1234298690.3268.58.camel@localhost.localdomain>
+References: <0D1E8821739E724A86F4D16902CE275C13FF9AFFD6@inbmail01.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:47451 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753429AbZBJS32 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Feb 2009 13:29:28 -0500
-In-Reply-To: <8A71B368A89016469F72CD08050AD3340465809D@maui.asicdesigners.com>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:55105 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755229AbZBJUox (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Feb 2009 15:44:53 -0500
+In-Reply-To: <0D1E8821739E724A86F4D16902CE275C13FF9AFFD6@inbmail01.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Karen Xie <kxie@chelsio.com>
-Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
+To: "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "sekharan@us.ibm.com" <sekharan@us.ibm.com>
 
-Karen Xie wrote:
-> [Karen] Yes, there is no need in checking for matching offset. I will go
-> ahead and try to merge the pdu_alloc() and pdu_init(), will send the
-> patch out later today for you to review.
+On Mon, 2009-01-26 at 21:29 +0530, Chauhan, Vijay wrote:
+> During device discovery read capacity fails with 0x068b02 and sets the device size to 0. As a reason any I/O submitted to this path gets killed at sd_prep_fn with BLKPREP_KILL. This patch is to retry for 0x068b02. Please apply.
 > 
+> From: Vijay Chauhan<vijay.chauhan@lsi.com>
+> 
+> This patch adds retry for Quiescence in Progress in rdac device handler.
+> 
+> Signed-off-by: Vijay Chauhan <vijay.chauhan@lsi.com>
+> 
+> ---
+> --- linux-2.6.29-rc2/drivers/scsi/device_handler/scsi_dh_rdac.c.orig    2009-01-26 20:46:05.000000000 +0530
+> +++ linux-2.6.29-rc2/drivers/scsi/device_handler/scsi_dh_rdac.c 2009-01-26 20:47:34.000000000 +0530
+> @@ -579,6 +579,11 @@ static int rdac_check_sense(struct scsi_
+>                          * Power On, Reset, or Bus Device Reset, just retry.
+>                          */
+>                         return ADD_TO_MLQUEUE;
+> +               if (sense_hdr->asc == 0x8b && sense_hdr->ascq == 0x02)
+> +                       /*
+> +                        * Quiescence in progress , just retry.
+> +                        */
+> +                       return ADD_TO_MLQUEUE;
+>                 break;
+>         }
+>         /* success just means we do not care what scsi-ml does */
 
-Let me know if you need help with the libiscsi changes. I do not think 
-it is simple change, or at least it gets a little messy due to trying to 
-avoid a memcpy of the header.
+This patch has all the tabs converted to spaces.  Please see 
+
+Documentation/SubmittingPatches
+Documentation/email-clients.txt
+
+for preventing this in future.
+
+James
+
+
