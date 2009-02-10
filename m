@@ -1,56 +1,49 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH]scsi_dh_rdac: Retry for Quiescence in Progress in rdac
-	device handler
-Date: Tue, 10 Feb 2009 20:44:50 +0000
-Message-ID: <1234298690.3268.58.camel@localhost.localdomain>
-References: <0D1E8821739E724A86F4D16902CE275C13FF9AFFD6@inbmail01.lsi.com>
+From: Geoff Levand <geoffrey.levand@am.sony.com>
+Subject: Re: [patch] powerpc/ps3: Use hard coded values for LV1 device type
+Date: Tue, 10 Feb 2009 14:46:19 -0800
+Message-ID: <499203BB.5010902@am.sony.com>
+References: <498C6C49.1010200@in.ibm.com>  <498CF52E.4040903@am.sony.com>	 <1234092590.10240.4.camel@localhost>  <1234138267.31963.77.camel@pasglop> <1234151988.8776.4.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:55105 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755229AbZBJUox (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Feb 2009 15:44:53 -0500
-In-Reply-To: <0D1E8821739E724A86F4D16902CE275C13FF9AFFD6@inbmail01.lsi.com>
+Received: from outbound-sin.frontbridge.com ([207.46.51.80]:42486 "EHLO
+	SG2EHSOBE002.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755405AbZBJWrM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Feb 2009 17:47:12 -0500
+In-Reply-To: <1234151988.8776.4.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "sekharan@us.ibm.com" <sekharan@us.ibm.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, michael@ellerman.id.au, Mel Gorman <mel@csn.ul.ie>, linuxppc-dev@ozlabs.org, Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>, Jens Axboe <jens.axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 2009-01-26 at 21:29 +0530, Chauhan, Vijay wrote:
-> During device discovery read capacity fails with 0x068b02 and sets the device size to 0. As a reason any I/O submitted to this path gets killed at sd_prep_fn with BLKPREP_KILL. This patch is to retry for 0x068b02. Please apply.
+James Bottomley wrote:
+> On Mon, 2009-02-09 at 11:11 +1100, Benjamin Herrenschmidt wrote:
+>> The PS3 platform code wants to use some of the standard SCSI types from
+>> there though, as they are part of the hypervisor ABI. (And in fact it
+>> can be argued that non-block devices using SCSI do exist, such as
+>> scanners, no ?)
+>> 
+>> Any reason other than pre-historical to have blkdev.h shielded like
+>> that ?
 > 
-> From: Vijay Chauhan<vijay.chauhan@lsi.com>
+> Actually, I think the fix lies in scsi.h ... we can make that into a
+> nicely independent protocol header file.  Your current woes come because
+> it pulls in scsi_cmnd.h ... perhaps just getting rid of this will fix
+> it.
 > 
-> This patch adds retry for Quiescence in Progress in rdac device handler.
+> Can the rest of linux-scsi verify that the fix below doesn't break
+> something else?
 > 
-> Signed-off-by: Vijay Chauhan <vijay.chauhan@lsi.com>
-> 
-> ---
-> --- linux-2.6.29-rc2/drivers/scsi/device_handler/scsi_dh_rdac.c.orig    2009-01-26 20:46:05.000000000 +0530
-> +++ linux-2.6.29-rc2/drivers/scsi/device_handler/scsi_dh_rdac.c 2009-01-26 20:47:34.000000000 +0530
-> @@ -579,6 +579,11 @@ static int rdac_check_sense(struct scsi_
->                          * Power On, Reset, or Bus Device Reset, just retry.
->                          */
->                         return ADD_TO_MLQUEUE;
-> +               if (sense_hdr->asc == 0x8b && sense_hdr->ascq == 0x02)
-> +                       /*
-> +                        * Quiescence in progress , just retry.
-> +                        */
-> +                       return ADD_TO_MLQUEUE;
->                 break;
->         }
->         /* success just means we do not care what scsi-ml does */
+> I found one cockup: block/cmd-filter.c is apparently not including
+> linuc/blkdev.h directly but via scsi/scsi.h ... I fixed this up.
+...
+> diff --git a/block/cmd-filter.c b/block/cmd-filter.c
+> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
 
-This patch has all the tabs converted to spaces.  Please see 
+I tested this scsi header fix on PS3 and it fixes the BLK_MAX_CDB
+not defined build error when CONFIG_BLOCK=n.
 
-Documentation/SubmittingPatches
-Documentation/email-clients.txt
-
-for preventing this in future.
-
-James
+Acked-by: Geoff Levand <geoffrey.levand@am.sony.com>
 
 
