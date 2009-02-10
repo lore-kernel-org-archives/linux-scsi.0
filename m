@@ -1,74 +1,29 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 2/3] block: unexport blk_rq_append_bio
-Date: Tue, 10 Feb 2009 18:19:33 +0000
-Message-ID: <1234289973.3268.37.camel@localhost.localdomain>
-References: <1229185427-4130-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	 <1229185427-4130-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	 <1229185427-4130-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	 <1234287784.3268.31.camel@localhost.localdomain>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 3/5 2.6.29-rc] cxgb3i -- tx pdu need to observe skb's
+ MAX_SKB_FRAGS
+Date: Tue, 10 Feb 2009 12:29:18 -0600
+Message-ID: <4991C77E.7020709@cs.wisc.edu>
+References: <200902100210.n1A2ALEc019820@localhost.localdomain> <49910F84.7090707@cs.wisc.edu> <8A71B368A89016469F72CD08050AD3340465809D@maui.asicdesigners.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:60224 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754455AbZBJSTf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Feb 2009 13:19:35 -0500
-In-Reply-To: <1234287784.3268.31.camel@localhost.localdomain>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:47451 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753429AbZBJS32 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Feb 2009 13:29:28 -0500
+In-Reply-To: <8A71B368A89016469F72CD08050AD3340465809D@maui.asicdesigners.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: jens.axboe@oracle.com, linux-scsi@vger.kernel.org, Boaz Harrosh <bharrosh@panasas.com>
+To: Karen Xie <kxie@chelsio.com>
+Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-On Tue, 2009-02-10 at 17:43 +0000, James Bottomley wrote:
-> There's a current barrier to this: osd_initiator has also become a
-> consumer of blk_rq_append_bio().
+Karen Xie wrote:
+> [Karen] Yes, there is no need in checking for matching offset. I will go
+> ahead and try to merge the pdu_alloc() and pdu_init(), will send the
+> patch out later today for you to review.
 > 
-> It seems to be emulating block internals, so I think the fix is twofold:
-> 
->      1. adjust blk_rq_map_kern to call blk_rq_append_bio() instead of
->         blk_rq_prep_bio() (with an extra failure path).
->      2. make osd_initiator simply call it for additions.
-> 
-> I can code up a patch to see if it works.
 
-So this is the patch to allow blk_rq_map_kern to append to requests,
-which is what I think is needed.
-
-Unfortunately unwinding osd_initator's bio dependence and putting it
-back on data buffers looks to be a bit of a longer chore.
-
-James
-
----
-
-diff --git a/block/blk-map.c b/block/blk-map.c
-index 25d15ff..1a1e26d 100644
---- a/block/blk-map.c
-+++ b/block/blk-map.c
-@@ -289,6 +289,7 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
- 	int reading = rq_data_dir(rq) == READ;
- 	int do_copy = 0;
- 	struct bio *bio;
-+	int ret;
- 
- 	if (len > (q->max_hw_sectors << 9))
- 		return -EINVAL;
-@@ -310,7 +311,13 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
- 	if (do_copy)
- 		rq->cmd_flags |= REQ_COPY_USER;
- 
--	blk_rq_bio_prep(q, rq, bio);
-+	ret = blk_rq_append_bio(q, rq, bio);
-+	if (unlikely(ret)) {
-+		/* request is too big */
-+		bio_put(bio);
-+		return ret;
-+	}
-+		
- 	blk_queue_bounce(q, &rq->bio);
- 	rq->buffer = rq->data = NULL;
- 	return 0;
-
-
+Let me know if you need help with the libiscsi changes. I do not think 
+it is simple change, or at least it gets a little messy due to trying to 
+avoid a memcpy of the header.
