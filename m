@@ -1,41 +1,68 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [GIT PATCH] firs round of SCSI bug fixes for 2.6.29-rc1
-Date: Wed, 11 Feb 2009 07:42:19 -0500
-Message-ID: <1234356139.3295.6.camel@localhost.localdomain>
-References: <1232117771.3224.21.camel@localhost.localdomain>
-	 <20090117211723.GB30719@parisc-linux.org>
-	 <20090211040806.GQ31509@parisc-linux.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 2/3] block: unexport blk_rq_append_bio
+Date: Wed, 11 Feb 2009 23:32:41 +0900
+Message-ID: <20090211233206H.fujita.tomonori@lab.ntt.co.jp>
+References: <1234289973.3268.37.camel@localhost.localdomain>
+	<49928993.70002@panasas.com>
+	<49929749.5020109@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:35464 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752763AbZBKMmW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Feb 2009 07:42:22 -0500
-In-Reply-To: <20090211040806.GQ31509@parisc-linux.org>
+Received: from sh.osrg.net ([192.16.179.4]:53278 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750730AbZBKOdB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Feb 2009 09:33:01 -0500
+In-Reply-To: <49929749.5020109@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: bharrosh@panasas.com
+Cc: James.Bottomley@HansenPartnership.com, fujita.tomonori@lab.ntt.co.jp, jens.axboe@oracle.com, linux-scsi@vger.kernel.org
 
-On Tue, 2009-02-10 at 21:08 -0700, Matthew Wilcox wrote:
-> On Sat, Jan 17, 2009 at 02:17:23PM -0700, Matthew Wilcox wrote:
-> > On Fri, Jan 16, 2009 at 09:56:11AM -0500, James Bottomley wrote:
-> > >       mpt fusion: Add separate msi enable disable for FC,SPI,SAS
-> > 
-> > I thought we rejected this one as being completely bogus?  I certainly
-> > don't remember seeing even an excuse for it after I challenged it.
+On Wed, 11 Feb 2009 11:15:53 +0200
+Boaz Harrosh <bharrosh@panasas.com> wrote:
+
+> I spoke too soon. There is one more place that uses blk_rq_append_bio, that is
+> the place that adds the read/write bio that is received in osd_req_write/read.
+> The reason I receive a bio at these is because mainly I need a way to
+> accept struct page* arrays, as well as kernel & user pointers. A bio is a nice
+
+The API using an array of pointers to page can handle everything. So
+why do the users of ULD (some rare file systems, I guess), osd
+initiator, need to build bios and pass them?
+
+
+> general carrier for any type of memory. Given a bio at hand there are no ways
+> left to prepare a request from it save the FS generic_make_request() route.
 > 
-> ... no response?
+> I was thinking of using struct sg_iovec* at one stage but they look very
+> scary when used with page*, and mapping a page to a pointer but not doing
+> cache sync and all that jazz. A bio is a very nice carrier of a scatter-gather
+> list of memory. It has all the API for any needs. blk_rq_append_bio() was the last
+> way to associate a bio with a request. (except for privileged block-filesystems)
 
->From whom?  It's no less bogus than what they were doing previously.  I
-happen to think the whole idea of drivers chosing msi/not msi by
-parameters is bogus ... we just don't have a good platform way of
-sorting it out at the moment.  In that absence, the driver maintainer
-gets to fix up.
-
-James
+We need to remove the usage of blk_rq_append_bio() in scsi.
 
 
+> So the first thing we have to decide is what API we need at read/write
+> today there is:
+
+You are talking about the API for osd file systems (or something
+related with osd), right? If so, I think that you can do whatever you
+want to do now. You can make a mistake since it's in-kernel API.
+
+
+> void osd_req_read(struct osd_request *or,
+> 	const struct osd_obj_id *, struct bio *data_in, u64 offset);
+> 
+> in exofs I use these two:
+> 
+> int osd_req_read_kern(struct osd_request *or,
+> 	const struct osd_obj_id *obj, u64 offset, void *buff, u64 len);
+> int osd_req_read_pages(struct osd_request *or,
+> 	const struct osd_obj_id *, u64 offset, u64 length,
+> 	struct page **pages, int page_count);
+> 
+
+As I wrote above, if you have an interface handling 'struct page
+**pages', then there should be ok.
