@@ -1,33 +1,54 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [GIT PATCH] firs round of SCSI bug fixes for 2.6.29-rc1
-Date: Tue, 10 Feb 2009 21:08:06 -0700
-Message-ID: <20090211040806.GQ31509@parisc-linux.org>
-References: <1232117771.3224.21.camel@localhost.localdomain> <20090117211723.GB30719@parisc-linux.org>
+From: "Sachin P. Sant" <sachinp@in.ibm.com>
+Subject: Re: [patch] powerpc/ps3: Use hard coded values for LV1 device type
+Date: Wed, 11 Feb 2009 10:58:34 +0530
+Message-ID: <49926202.3010405@in.ibm.com>
+References: <498C6C49.1010200@in.ibm.com>  <498CF52E.4040903@am.sony.com> <1234092590.10240.4.camel@localhost> <1234138267.31963.77.camel@pasglop> <1234151988.8776.4.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:38553 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753321AbZBKEIX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Feb 2009 23:08:23 -0500
-Content-Disposition: inline
-In-Reply-To: <20090117211723.GB30719@parisc-linux.org>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:52689 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754498AbZBKF2l (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Feb 2009 00:28:41 -0500
+Received: from d23relay02.au.ibm.com (d23relay02.au.ibm.com [202.81.31.244])
+	by e23smtp02.au.ibm.com (8.13.1/8.13.1) with ESMTP id n1B5RUu0004003
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Feb 2009 16:27:30 +1100
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay02.au.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id n1B5St6G1191946
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Feb 2009 16:28:56 +1100
+Received: from d23av04.au.ibm.com (loopback [127.0.0.1])
+	by d23av04.au.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n1B5SaTr023072
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Feb 2009 16:28:37 +1100
+In-Reply-To: <1234151988.8776.4.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-scsi <linux-scsi@vger.kernel.org>, Mel Gorman <mel@csn.ul.ie>, Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>, linuxppc-dev@ozlabs.org, Jens Axboe <jens.axboe@oracle.com>
 
-On Sat, Jan 17, 2009 at 02:17:23PM -0700, Matthew Wilcox wrote:
-> On Fri, Jan 16, 2009 at 09:56:11AM -0500, James Bottomley wrote:
-> >       mpt fusion: Add separate msi enable disable for FC,SPI,SAS
-> 
-> I thought we rejected this one as being completely bogus?  I certainly
-> don't remember seeing even an excuse for it after I challenged it.
+James Bottomley wrote:
+> Actually, I think the fix lies in scsi.h ... we can make that into a
+> nicely independent protocol header file.  Your current woes come because
+> it pulls in scsi_cmnd.h ... perhaps just getting rid of this will fix
+> it.
+>
+> Can the rest of linux-scsi verify that the fix below doesn't break
+> something else?
+>
+> I found one cockup: block/cmd-filter.c is apparently not including
+> linuc/blkdev.h directly but via scsi/scsi.h ... I fixed this up.
+>   
+Tested the patch and it fixes the issue.
 
-... no response?
+Thanks
+-Sachin
 
 -- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+
+---------------------------------
+Sachin Sant
+IBM Linux Technology Center
+India Systems and Technology Labs
+Bangalore, India
+---------------------------------
+
