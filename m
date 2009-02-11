@@ -1,105 +1,111 @@
-From: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-Subject: [PATCH -stable resend] fix USB_STORAGE_CYPRESS_ATACB
-Date: Wed, 11 Feb 2009 09:54:31 +0200
-Message-ID: <49928437.6020807@panasas.com>
-References: <495913A6.9070007@free.fr> <20081229192431.GZ1469@one-eyed-alien.net> <495A475D.7060608@panasas.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 2/3] block: unexport blk_rq_append_bio
+Date: Wed, 11 Feb 2009 10:17:23 +0200
+Message-ID: <49928993.70002@panasas.com>
+References: <1229185427-4130-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>	 <1229185427-4130-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>	 <1229185427-4130-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>	 <1234287784.3268.31.camel@localhost.localdomain> <1234289973.3268.37.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <495A475D.7060608-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Matthew Dharm <mdharm-kernel-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, matthieu castet <castet.matthieu-GANU6spQydw@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, stable-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gw-ca.panasas.com ([66.104.249.162]:2830 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753467AbZBKIR2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Feb 2009 03:17:28 -0500
+In-Reply-To: <1234289973.3268.37.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, jens.axboe@oracle.com, linux-scsi@vger.kernel.org
 
-James hi.
+James Bottomley wrote:
+> On Tue, 2009-02-10 at 17:43 +0000, James Bottomley wrote:
+>> There's a current barrier to this: osd_initiator has also become a
+>> consumer of blk_rq_append_bio().
+>>
+>> It seems to be emulating block internals, so I think the fix is twofold:
+>>
+>>      1. adjust blk_rq_map_kern to call blk_rq_append_bio() instead of
+>>         blk_rq_prep_bio() (with an extra failure path).
+>>      2. make osd_initiator simply call it for additions.
+>>
+>> I can code up a patch to see if it works.
+> 
+> So this is the patch to allow blk_rq_map_kern to append to requests,
+> which is what I think is needed.
+> 
+> Unfortunately unwinding osd_initator's bio dependence and putting it
+> back on data buffers looks to be a bit of a longer chore.
+> 
+> James
+> 
+> ---
+> 
+> diff --git a/block/blk-map.c b/block/blk-map.c
+> index 25d15ff..1a1e26d 100644
+> --- a/block/blk-map.c
+> +++ b/block/blk-map.c
+> @@ -289,6 +289,7 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
+>  	int reading = rq_data_dir(rq) == READ;
+>  	int do_copy = 0;
+>  	struct bio *bio;
+> +	int ret;
+>  
+>  	if (len > (q->max_hw_sectors << 9))
+>  		return -EINVAL;
+> @@ -310,7 +311,13 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
+>  	if (do_copy)
+>  		rq->cmd_flags |= REQ_COPY_USER;
+>  
+> -	blk_rq_bio_prep(q, rq, bio);
+> +	ret = blk_rq_append_bio(q, rq, bio);
+> +	if (unlikely(ret)) {
+> +		/* request is too big */
+> +		bio_put(bio);
+> +		return ret;
+> +	}
+> +		
+>  	blk_queue_bounce(q, &rq->bio);
+>  	rq->buffer = rq->data = NULL;
+>  	return 0;
+> 
+> 
 
-I'm resending a forgotten patch. See here:
-http://lkml.indiana.edu/hypermail/linux/kernel/0812.3/01127.html
+This works, with your patch and below code
+I'm passing my tests. I would say it is pretty safe too,
+since blk_rq_bio_prep would leak the bio if it was called
+twice on same request, before.
 
-I'll need Matthew Dharm ACK or who ever maintains cypress_atacb
+Thanks, I'll send a proper patch after some more testing.
 
 ---
-=46rom: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-Subject: [PATCH] fix USB_STORAGE_CYPRESS_ATACB
+git diff --stat -p
+ drivers/scsi/osd/osd_initiator.c |   12 +++---------
+ 1 files changed, 3 insertions(+), 9 deletions(-)
 
-commit 64a87b24: [SCSI] Let scsi_cmnd->cmnd use request->cmd buffer
-changed the scsi_eh_prep_cmnd logic by making it clear
-the ->cmnd buffer. But the sat to cypress atacb translation supposed
-the ->cmnd buffer wasn't modified.
+diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
+index 1696130..9cfdce4 100644
+--- a/drivers/scsi/osd/osd_initiator.c
++++ b/drivers/scsi/osd/osd_initiator.c
+@@ -824,18 +824,12 @@ EXPORT_SYMBOL(osd_req_add_set_attr_list);
+ static int _append_map_kern(struct request *req,
+ 	void *buff, unsigned len, gfp_t flags)
+ {
+-	struct bio *bio;
+ 	int ret;
+ 
+-	bio = bio_map_kern(req->q, buff, len, flags);
+-	if (IS_ERR(bio)) {
+-		OSD_ERR("Failed bio_map_kern(%p, %d) => %ld\n", buff, len,
+-			PTR_ERR(bio));
+-		return PTR_ERR(bio);
+-	}
+-	ret = blk_rq_append_bio(req->q, req, bio);
++	ret = blk_rq_map_kern(req->q, req, buff, len, flags);
+ 	if (ret) {
+-		OSD_ERR("Failed blk_rq_append_bio(%p) => %d\n", bio, ret);
++		OSD_DEBUG("Failed blk_rq_map_kern(%p, %u) => %d\n",
++			buff, len, ret);
+ 		bio_put(bio);
+ 	}
+ 	return ret;
 
-This patch makes it set the ->cmnd buffer after scsi_eh_prep_cmnd call.
-The problem and a fix was reported by Matthieu CASTET <castet.matthieu@=
-free.fr>
-
-It also removes all the hackery fiddling of scsi_cmnd and scsi_eh_save =
-by
-requesting from scsi_eh_prep_cmnd to prepare a read into ->sense_buffer=
-,
-which is much more suitable a buffer for HW transfers, then after the c=
-ommand
-execution the regs read is copied into regs buffer before actual prepar=
-ation
-of sense_buffer.
-
-Also fix an alien comment character to my utf-8 editor.
-
-Signed-off-by: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-Signed-off-by: Matthieu CASTET <castet.matthieu-GANU6spQydw@public.gmane.org>
-CC: stable-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
----
- drivers/usb/storage/cypress_atacb.c |   15 +++++++--------
- 1 files changed, 7 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/usb/storage/cypress_atacb.c b/drivers/usb/storage/=
-cypress_atacb.c
-index 898e67d..9466a99 100644
---- a/drivers/usb/storage/cypress_atacb.c
-+++ b/drivers/usb/storage/cypress_atacb.c
-@@ -133,19 +133,18 @@ void cypress_atacb_passthrough(struct scsi_cmnd *=
-srb, struct us_data *us)
-=20
- 		/* build the command for
- 		 * reading the ATA registers */
--		scsi_eh_prep_cmnd(srb, &ses, NULL, 0, 0);
--		srb->sdb.length =3D sizeof(regs);
--		sg_init_one(&ses.sense_sgl, regs, srb->sdb.length);
--		srb->sdb.table.sgl =3D &ses.sense_sgl;
--		srb->sc_data_direction =3D DMA_FROM_DEVICE;
--		srb->sdb.table.nents =3D 1;
-+		scsi_eh_prep_cmnd(srb, &ses, NULL, 0, sizeof(regs));
-+
- 		/* we use the same command as before, but we set
- 		 * the read taskfile bit, for not executing atacb command,
- 		 * but reading register selected in srb->cmnd[4]
- 		 */
-+		srb->cmd_len =3D 16;
-+		srb->cmnd =3D ses.cmnd;
- 		srb->cmnd[2] =3D 1;
-=20
- 		usb_stor_transparent_scsi_command(srb, us);
-+		memcpy(regs, srb->sense_buffer, sizeof(regs));
- 		tmp_result =3D srb->result;
- 		scsi_eh_restore_cmnd(srb, &ses);
- 		/* we fail to get registers, report invalid command */
-@@ -162,8 +161,8 @@ void cypress_atacb_passthrough(struct scsi_cmnd *sr=
-b, struct us_data *us)
-=20
- 		/* XXX we should generate sk, asc, ascq from status and error
- 		 * regs
--		 * (see 11.1 Error translation =EF=BF=BD ATA device error to SCSI er=
-ror map)
--		 * and ata_to_sense_error from libata.
-+		 * (see 11.1 Error translation ATA device error to SCSI error
-+		 *  map, and ata_to_sense_error from libata.)
- 		 */
-=20
- 		/* Sense data is current and format is descriptor. */
---=20
-1.6.0.1
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
