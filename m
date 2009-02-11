@@ -1,72 +1,47 @@
 From: akpm@linux-foundation.org
-Subject: [patch 05/11] drivers/scsi/a2091.c: make 2 functions static
-Date: Wed, 11 Feb 2009 13:29:33 -0800
-Message-ID: <200902112129.n1BLTY3w002372@imap1.linux-foundation.org>
+Subject: [patch 01/11] #if 0 ses_match_host()
+Date: Wed, 11 Feb 2009 13:29:30 -0800
+Message-ID: <200902112129.n1BLTUwN002222@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:59653 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:50615 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758562AbZBKVuu (ORCPT
+	by vger.kernel.org with ESMTP id S1753099AbZBKVxW (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Feb 2009 16:50:50 -0500
+	Wed, 11 Feb 2009 16:53:22 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@kernel.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@kernel.org, James.Bottomley@steeleye.com
 
 From: Adrian Bunk <bunk@kernel.org>
 
-a2091_{detect,release}() can become static.
+#if 0 the unused ses_match_host()
 
 Signed-off-by: Adrian Bunk <bunk@kernel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/a2091.c |    6 ++++--
- drivers/scsi/a2091.h |    3 ---
- 2 files changed, 4 insertions(+), 5 deletions(-)
+ drivers/scsi/ses.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff -puN drivers/scsi/a2091.c~drivers-scsi-a2091c-make-2-functions-static drivers/scsi/a2091.c
---- a/drivers/scsi/a2091.c~drivers-scsi-a2091c-make-2-functions-static
-+++ a/drivers/scsi/a2091.c
-@@ -23,6 +23,8 @@
- #define DMA(ptr) ((a2091_scsiregs *)((ptr)->base))
- #define HDATA(ptr) ((struct WD33C93_hostdata *)((ptr)->hostdata))
+diff -puN drivers/scsi/ses.c~if-0-ses_match_host drivers/scsi/ses.c
+--- a/drivers/scsi/ses.c~if-0-ses_match_host
++++ a/drivers/scsi/ses.c
+@@ -264,6 +264,7 @@ struct ses_host_edev {
+ 	struct enclosure_device *edev;
+ };
  
-+static int a2091_release(struct Scsi_Host *instance);
-+
- static irqreturn_t a2091_intr (int irq, void *_instance)
++#if 0
+ int ses_match_host(struct enclosure_device *edev, void *data)
  {
-     unsigned long flags;
-@@ -144,7 +146,7 @@ static void dma_stop(struct Scsi_Host *i
-     }
+ 	struct ses_host_edev *sed = data;
+@@ -280,6 +281,7 @@ int ses_match_host(struct enclosure_devi
+ 	sed->edev = edev;
+ 	return 1;
  }
++#endif  /*  0  */
  
--int __init a2091_detect(struct scsi_host_template *tpnt)
-+static int __init a2091_detect(struct scsi_host_template *tpnt)
- {
-     static unsigned char called = 0;
-     struct Scsi_Host *instance;
-@@ -233,7 +235,7 @@ static struct scsi_host_template driver_
- 
- #include "scsi_module.c"
- 
--int a2091_release(struct Scsi_Host *instance)
-+static int a2091_release(struct Scsi_Host *instance)
- {
- #ifdef MODULE
- 	DMA(instance)->CNTR = 0;
-diff -puN drivers/scsi/a2091.h~drivers-scsi-a2091c-make-2-functions-static drivers/scsi/a2091.h
---- a/drivers/scsi/a2091.h~drivers-scsi-a2091c-make-2-functions-static
-+++ a/drivers/scsi/a2091.h
-@@ -11,9 +11,6 @@
- 
- #include <linux/types.h>
- 
--int a2091_detect(struct scsi_host_template *);
--int a2091_release(struct Scsi_Host *);
--
- #ifndef CMD_PER_LUN
- #define CMD_PER_LUN 2
- #endif
+ static void ses_process_descriptor(struct enclosure_component *ecomp,
+ 				   unsigned char *desc)
 _
