@@ -1,72 +1,56 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [RFC] FC pass thru - Rev V
-Date: Wed, 11 Feb 2009 18:55:00 +0200
-Message-ID: <499302E4.9010309@panasas.com>
-References: <1227043498.4949.21.camel@ogier>	<1234365225.24194.3.camel@ogier>	<4992F98B.1060401@panasas.com> <20090212013215L.fujita.tomonori@lab.ntt.co.jp>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [stable] [PATCH -stable 2.6.28.x] sg: avoid
+	blk_put_request/blk_rq_unmap_user in interrupt
+Date: Wed, 11 Feb 2009 09:15:18 -0800
+Message-ID: <20090211171518.GA16279@kroah.com>
+References: <20090211145014C.fujita.tomonori@lab.ntt.co.jp> <20090211060558.GB31483@kroah.com> <1234365896.3295.20.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:3742 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756535AbZBKQzJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Feb 2009 11:55:09 -0500
-In-Reply-To: <20090212013215L.fujita.tomonori@lab.ntt.co.jp>
+Received: from kroah.org ([198.145.64.141]:44504 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756536AbZBKRRK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Feb 2009 12:17:10 -0500
+Content-Disposition: inline
+In-Reply-To: <1234365896.3295.20.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Smart@Emulex.Com, linux-scsi@vger.kernel.org, seokmann.ju@qlogic.com, andrew.vasquez@qlogic.com, sven@linux.vnet.ibm.com, futjita.tomonori@lab.ntt.co.jp
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, stable@kernel.org, rjw@sisk.pl, hias@horus.com, linux-scsi@vger.kernel.org, dgilbert@interlog.com
 
-FUJITA Tomonori wrote:
-> On Wed, 11 Feb 2009 18:15:07 +0200
-> Boaz Harrosh <bharrosh@panasas.com> wrote:
+On Wed, Feb 11, 2009 at 10:24:56AM -0500, James Bottomley wrote:
+> On Tue, 2009-02-10 at 22:05 -0800, Greg KH wrote:
+> > On Wed, Feb 11, 2009 at 02:50:18PM +0900, FUJITA Tomonori wrote:
+> > > This patch is against 2.6.28.x, fixes a regression from 2.6.27.
+> > > 
+> > > This is the modified version of the following patch that is planed to
+> > > merged into 2.6.30-rc1 in scsi-misc tree:
+> > > 
+> > > http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=b35fe25ae156830f85a305afaba837b084458e7a
+> > > 
+> > > scsi-misc tree has other patches to fix sg oops so the above patch
+> > > can't be cleanly applied to 2.6.28.x. These patches are too large for
+> > > 2.6.28.x (needs more testings) so sg in 2.6.28.x still has the oops
+> > > bugs for now even with this patch. I expect that these patches will go
+> > > into stable trees too after 2.6.30-rc1 (that is, after more people
+> > > test them).
+> > 
+> > What about 2.6.29?  If it still has this problem as well, why not get
+> > this patch into that tree now?  Then it can go into the -stable trees.
+> > As it is, I can't take a patch in the .28.y or .27.y trees that is not
+> > in Linus's tree.
+> > 
+> > confused,
 > 
->> James Smart wrote:
->>> Trying to kick-start this again...  
->>> I've updated the prior RFC with the comments from Seokmann,
->>> SvenFujita, and Boaz. I would still like review on the
->>> blk_xxx completion calls in the std and error paths.
->>>
->>> It currently expects that blk_end_request() has been updated
->>> by Fujita's patch to incorporate blk_end_bidi_request()
->>> functionality :
->>> http://marc.info/?l-linux-scsi&m=122785157116659&w=2
->>>
->> I did not accept this patch and it did not go in right?
-> 
-> I think that Jens has not merged mine or yours. I don't care about
-> either but I still think that it's better to kill
-> blk_end_bidi_request(). It's really confusing API.
-> 
-> 
->> I still don't like it, it's a performance regression.
-> 
-> Hmm, I've not seen the figures. Please show the figures if you insist
-> a performance regression.
-> 
+> Sorry my fault ... this is a risky change, so we're going to incubate in
+> misc first, then place in the merge window, then backport to stable.  If
+> nothing turns up in linux-next, I could move across to rc-fixes and send
+> upstream earlier ...  I was just wary of the depth of testing in
+> linux-next.
 
-Come on man. this discussion all over again. You do a loop to find
-information that was in a CPU register 10 cycles before. That is
-plain bad programing, and just a cover up of bad API.
+Ok, please let stable@kernel.org know when it goes into Linus's tree and
+what needs to be added to the older kernel trees.
 
-In my book it is: Someone got lazy.
+thanks,
 
-> It's about a bidi request. We already have tons of loops, memory
-> allocations, etc in the path. Do you think that adding one more loop
-> leads to a notable performance regression?
-> 
-> Well, if you say that it's hacky then I would agree. But your patch
-> using ~0 is hacky too.
-
-It is an hack if used by an outside user, because it assumes knowledge
-of block-internals. It is much less of an hack if done by block-internals
-which knows for sure that this has no side effects.
-
-But I agree that this is not clean. The clean solution is to add an extra
-parameter to blk_end_request() and change all callers.
-
-Or even cleaner is to add a new request->residual member and leave
-request->data_len be in peace. Then change the few users that care
-about residual, and one caller that sets it. I'll prepare a patch.
-
-Boaz
+greg k-h
