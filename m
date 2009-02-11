@@ -1,54 +1,114 @@
-From: "Sachin P. Sant" <sachinp@in.ibm.com>
-Subject: Re: [patch] powerpc/ps3: Use hard coded values for LV1 device type
-Date: Wed, 11 Feb 2009 10:58:34 +0530
-Message-ID: <49926202.3010405@in.ibm.com>
-References: <498C6C49.1010200@in.ibm.com>  <498CF52E.4040903@am.sony.com> <1234092590.10240.4.camel@localhost> <1234138267.31963.77.camel@pasglop> <1234151988.8776.4.camel@localhost.localdomain>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH -stable 2.6.28.x] sg: avoid
+ blk_put_request/blk_rq_unmap_user in interrupt
+Date: Wed, 11 Feb 2009 14:50:18 +0900
+Message-ID: <20090211145014C.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:52689 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754498AbZBKF2l (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Feb 2009 00:28:41 -0500
-Received: from d23relay02.au.ibm.com (d23relay02.au.ibm.com [202.81.31.244])
-	by e23smtp02.au.ibm.com (8.13.1/8.13.1) with ESMTP id n1B5RUu0004003
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Feb 2009 16:27:30 +1100
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay02.au.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id n1B5St6G1191946
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Feb 2009 16:28:56 +1100
-Received: from d23av04.au.ibm.com (loopback [127.0.0.1])
-	by d23av04.au.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n1B5SaTr023072
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Feb 2009 16:28:37 +1100
-In-Reply-To: <1234151988.8776.4.camel@localhost.localdomain>
+Received: from sh.osrg.net ([192.16.179.4]:43087 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750725AbZBKFvQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Feb 2009 00:51:16 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-scsi <linux-scsi@vger.kernel.org>, Mel Gorman <mel@csn.ul.ie>, Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>, linuxppc-dev@ozlabs.org, Jens Axboe <jens.axboe@oracle.com>
+To: stable@kernel.org
+Cc: hias@horus.com, rjw@sisk.pl, James.Bottomley@HansenPartnership.com, dgilbert@interlog.com, linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> Actually, I think the fix lies in scsi.h ... we can make that into a
-> nicely independent protocol header file.  Your current woes come because
-> it pulls in scsi_cmnd.h ... perhaps just getting rid of this will fix
-> it.
->
-> Can the rest of linux-scsi verify that the fix below doesn't break
-> something else?
->
-> I found one cockup: block/cmd-filter.c is apparently not including
-> linuc/blkdev.h directly but via scsi/scsi.h ... I fixed this up.
->   
-Tested the patch and it fixes the issue.
+This patch is against 2.6.28.x, fixes a regression from 2.6.27.
 
-Thanks
--Sachin
+This is the modified version of the following patch that is planed to
+merged into 2.6.30-rc1 in scsi-misc tree:
 
+http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=b35fe25ae156830f85a305afaba837b084458e7a
+
+scsi-misc tree has other patches to fix sg oops so the above patch
+can't be cleanly applied to 2.6.28.x. These patches are too large for
+2.6.28.x (needs more testings) so sg in 2.6.28.x still has the oops
+bugs for now even with this patch. I expect that these patches will go
+into stable trees too after 2.6.30-rc1 (that is, after more people
+test them).
+
+=
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH -stable 2.6.28.x] sg: avoid blk_put_request/blk_rq_unmap_user in interrupt
+
+This fixes the following oops:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=12612
+
+You can reproduce this bug by interrupting a program before a sg
+response completes. This leads to the special sg state (the orphan
+state), then sg calls blk_put_request in interrupt (rq->end_io).
+
+The above bug report shows the recursive lock problem because sg calls
+blk_put_request in interrupt. We could call __blk_put_request here
+instead however we also need to handle blk_rq_unmap_user here, which
+can't be called in interrupt too.
+
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/sg.c |   27 ++++++++++++++++++---------
+ 1 files changed, 18 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 5103855..66be131 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -137,6 +137,7 @@ typedef struct sg_request {	/* SG_MAX_QUEUE requests outstanding per file */
+ 	volatile char done;	/* 0->before bh, 1->before read, 2->read */
+ 	struct request *rq;
+ 	struct bio *bio;
++	struct execute_work ew;
+ } Sg_request;
+ 
+ typedef struct sg_fd {		/* holds the state of a file descriptor */
+@@ -1240,6 +1241,20 @@ sg_mmap(struct file *filp, struct vm_area_struct *vma)
+ 	return 0;
+ }
+ 
++static void sg_rq_end_io_usercontext(struct work_struct *work)
++{
++	struct sg_request *srp = container_of(work, struct sg_request, ew.work);
++	struct sg_fd *sfp = srp->parentfp;
++	struct sg_device *sdp = sfp->parentdp;
++
++	sg_finish_rem_req(srp);
++	if (sfp->closed && !sfp->headrp) {
++		SCSI_LOG_TIMEOUT(1, printk("sg_cmd_done: already closed, final cleanup\n"));
++		if (!sg_remove_sfp(sdp, sfp))
++			scsi_device_put(sdp->device);
++	}
++}
++
+ /*
+  * This function is a "bottom half" handler that is called by the mid
+  * level when a command is completed (or has failed).
+@@ -1305,20 +1320,14 @@ static void sg_rq_end_io(struct request *rq, int uptodate)
+ 
+ 	if (sfp->closed) {	/* whoops this fd already released, cleanup */
+ 		SCSI_LOG_TIMEOUT(1, printk("sg_cmd_done: already closed, freeing ...\n"));
+-		sg_finish_rem_req(srp);
++		execute_in_process_context(sg_rq_end_io_usercontext, &srp->ew);
+ 		srp = NULL;
+-		if (NULL == sfp->headrp) {
+-			SCSI_LOG_TIMEOUT(1, printk("sg_cmd_done: already closed, final cleanup\n"));
+-			if (0 == sg_remove_sfp(sdp, sfp)) {	/* device still present */
+-				scsi_device_put(sdp->device);
+-			}
+-			sfp = NULL;
+-		}
+ 	} else if (srp && srp->orphan) {
+ 		if (sfp->keep_orphan)
+ 			srp->sg_io_owned = 0;
+ 		else {
+-			sg_finish_rem_req(srp);
++			execute_in_process_context(sg_rq_end_io_usercontext,
++						   &srp->ew);
+ 			srp = NULL;
+ 		}
+ 	}
 -- 
-
----------------------------------
-Sachin Sant
-IBM Linux Technology Center
-India Systems and Technology Labs
-Bangalore, India
----------------------------------
+1.6.0.6
 
