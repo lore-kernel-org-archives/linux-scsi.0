@@ -1,61 +1,40 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] [RFC] block: Don't let blk_put_request leak BIOs
-Date: Thu, 12 Feb 2009 15:56:46 +0200
-Message-ID: <49942A9E.8090405@panasas.com>
-References: <4993DCCA.8080508@panasas.com>	<20090212174124S.fujita.tomonori@lab.ntt.co.jp>	<4993E85A.20805@panasas.com> <20090212184208X.fujita.tomonori@lab.ntt.co.jp> <499413DB.2020208@panasas.com> <499428E1.1000009@panasas.com>
+From: Eyal Shani <Eyal.Shani@sandisk.com>
+Subject: RE: TRIM vs UNMAP vs WRITE SAME and thin devices
+Date: Thu, 12 Feb 2009 15:51:01 +0200
+Message-ID: <22BDA4D9BA18634DB0CFBB2E5A1563446F98BAE155@KFAEXMIPV1.sdcorp.global.sandisk.com>
+References: <20090123041558.GC24652@parisc-linux.org>
+	 <4979AF62.7070409@redhat.com>
+	 <1232721777.4430.7.camel@macbook.infradead.org>
+	 <498DA052.6090605@redhat.com>
+ <1234019372.4658.9.camel@localhost.localdomain> <498DB350.8000905@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:32807 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751339AbZBLN4t (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Feb 2009 08:56:49 -0500
-In-Reply-To: <499428E1.1000009@panasas.com>
+Received: from exprod8og116.obsmtp.com ([64.18.3.32]:49023 "EHLO
+	exprod8og116.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751339AbZBLOD3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Feb 2009 09:03:29 -0500
+In-Reply-To: <498DB350.8000905@redhat.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+To: Ric Wheeler <rwheeler@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: David Woodhouse <dwmw2@infradead.org>, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <matthew@wil.cx>, Jeff Garzik <jeff@garzik.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Eyal Shani <Eyal.Shani@sandisk.com>
 
-Boaz Harrosh wrote:
-> Boaz Harrosh wrote:
->> If a block ULD had allocated a request and mapped some memory into it,
->> using one of blk_rq_map_xxx routines, but then for some reason failed to
->> execute the request through one of the blk_execute_request routines.
->> Then the associated BIO would leak, unless ULD resorts to low-level loops
->> intimate of block internals.
->>
->> [RFC]
->>   This code will also catch situations where LLD failed to complete
->>   the request before aborting it. Such situations are a BUG. Should we
->>   use WARN_ON_ONCE() in that case. The situation above is possible and
->>   can happen normally in memory pressure situations so maybe we should
->>   devise a bit-flag that ULD denotes that the request was aborted and
->>   only WARN_ON if flag was not set.
->>
->>   I'm sending this before any-tests so people can comment on possible
->>   pitfalls.
->>
->> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
->> ---
-> 
-> I've booted a Linux PC with lots of sata disks, connected an iscsi
-> target, ran OSD tests. It looks like it's working which means
-> request->bio is set to NULL after it is used in the regular path.
-> 
-> This needs to sit in Linux next and be tested for a long while.
-> 
-> Jens I'll be waiting for your comment and will send a proper
-> patch for the block bits. We will have to time this with James
-> to see when the OSD bits can be submitted after that, then TOMO's
-> patch for un-exporting blk_req_append_bio can be merged. Or maybe
-> it can all go in one patch through scsi?
-> 
-> Thanks
-> Boaz
+Adding my 5 cents.
 
-Spock to soon this patch is shit, I'll look into it
+T13 added Trim to the latest ATA8 proposal.
+http://www.t13.org/Documents/UploadedDocuments/docs2009/d2015r1-ATAATAPI_Command_Set_-_2_ACS-2.pdf
 
-Sorry for the noise
+This is after the changes put into the definition, with 'Deterministic Read after Trim'.
+This is not STANDARDIZED, but pretty much excepted by all sides.
 
-Boaz
+I was hoping that would settle the differences between T10/T13 on this - little did I know...
+
+We are working with David W. on his implementation for Trim feature, and hope to get to the bottom of debug process soon.
+Hope to update soon...
+
+
+Regards,
+Eyal Shani.
