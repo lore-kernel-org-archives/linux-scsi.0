@@ -1,126 +1,49 @@
-From: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>
-Subject: Re: Mainline kernel OLTP performance update
-Date: Thu, 12 Feb 2009 13:47:40 +0800
-Message-ID: <1234417660.2604.391.camel@ymzhang>
-References: <BC02C49EEB98354DBA7F5DD76F2A9E800317003CB0@azsmsx501.amr.corp.intel.com>
-	 <1232616517.11429.129.camel@ymzhang>
-	 <1232617672.14549.25.camel@penberg-laptop>
-	 <1232679773.11429.155.camel@ymzhang> <4979692B.3050703@cs.helsinki.fi>
-	 <1232697998.6094.17.camel@penberg-laptop>
-	 <1232699401.11429.163.camel@ymzhang>
-	 <1232703989.6094.29.camel@penberg-laptop>
-	 <alpine.DEB.1.10.0901231020030.21692@qirst.com>
-	 <1232765728.11429.193.camel@ymzhang>
-	 <84144f020901232336v71687223y2fb21ee081c7517f@mail.gmail.com>
-	 <1234416153.2604.387.camel@ymzhang>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] [Target_Core_Mod/ALUA]: Add group membership structure
+	logic
+Date: Wed, 11 Feb 2009 22:33:36 -0800
+Message-ID: <1234420416.12375.512.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:10411 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750705AbZBLFr7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Feb 2009 00:47:59 -0500
-In-Reply-To: <1234416153.2604.387.camel@ymzhang>
+Received: from smtp128.sbc.mail.sp1.yahoo.com ([69.147.65.187]:32634 "HELO
+	smtp128.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751336AbZBLGiS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Feb 2009 01:38:18 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Pekka Enberg <penberg@cs.helsinki.fi>
-Cc: Christoph Lameter <cl@linux-foundation.org>, Andi Kleen <andi@firstfloor.org>, Matthew Wilcox <matthew@wil.cx>, Nick Piggin <nickpiggin@yahoo.com.au>, Andrew Morton <akpm@linux-foundation.org>, netdev@vger.kernel.org, Stephen Rothwell <sfr@canb.auug.org.au>, matthew.r.wilcox@intel.com, chinang.ma@intel.com, linux-kernel@vger.kernel.org, sharad.c.tripathi@intel.com, arjan@linux.intel.com, suresh.b.siddha@intel.com, harita.chilukuri@intel.com, douglas.w.styner@intel.com, peter.xihong.wang@intel.com, hubert.nueckel@intel.com, chris.mason@oracle.com, srostedt@redhat.com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, anirban.chakraborty@qlogic.com, Ingo Molnar <mingo@elte.hu>
+To: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Douglas Gilbert <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Christoph Hellwig <hch@lst.de>, Ming Zhang <blackmagic02881@gmail.com>, "Ross S. W. Walker" <rswwalker@gmail.com>, Arne Redlich <agr@powerkom-dd.de>
 
-On Thu, 2009-02-12 at 13:22 +0800, Zhang, Yanmin wrote:
-> On Sat, 2009-01-24 at 09:36 +0200, Pekka Enberg wrote:
-> > On Fri, 2009-01-23 at 10:22 -0500, Christoph Lameter wrote:
-> > >> No there is another way. Increase the allocator order to 3 for t=
-he
-> > >> kmalloc-8192 slab then multiple 8k blocks can be allocated from =
-one of the
-> > >> larger chunks of data gotten from the page allocator. That will =
-allow slub
-> > >> to do fast allocs.
-> >=20
-> > On Sat, Jan 24, 2009 at 4:55 AM, Zhang, Yanmin
-> > <yanmin_zhang@linux.intel.com> wrote:
-> > > After I change kmalloc-8192/order to 3, the result(pinned netperf=
- UDP-U-4k)
-> > > difference between SLUB and SLQB becomes 1% which can be consider=
-ed as fluctuation.
-> >=20
-> > Great. We should fix calculate_order() to be order 3 for kmalloc-81=
-92.
-> > Are you interested in doing that?
-> Pekka,
->=20
-> Sorry for the late update.
-> The default order of =EF=BB=BFkmalloc-8192 on 2*4 stoakley is really =
-an issue of calculate_order.
-Oh, previous patch has a compiling warning. Pls. use below patch.
+Greetings all,
 
-=46rom: =EF=BB=BFZhang Yanmin <yanmin.zhang@linux.intel.com>
+This patch series adds proper ALUA Logical Unit Group and Target Port Group membership
+association to Target_Core_Mod/ConfigFS in a manner that can handle concurrent shutdown from
+core/$HBA/$DEV/ <-> core/alua/lu_gps/$MY_LUN_GROUP and core/alua/tg_pt_gps/$MY_TG_PT_GROUP <->
+$FABRIC_MOD/target_port/lun/$LUN/alua_tg_pt_gp.
 
-=EF=BB=BFThe default order of =EF=BB=BFkmalloc-8192 on 2*4 stoakley is =
-an issue of calculate_order.
+This infrastructure is used as explict and implict ALUA group operations continue to come
+online for Target_Core_Mod/ConfigFS v3.0.  This patch is made against lio-core-2.6.git/master
+and tested on v2.6.29-rc2 x86 32-bit HVM.  The lio-core-2.6.git tree can be found at:
 
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=summary
 
-slab_size       order           name
--------------------------------------------------
-4096            3               sgpool-128
-8192            2               kmalloc-8192
-16384           3               kmalloc-16384
+[PATCH 1/2] [Target_Core_Mod/ALUA]: Add t10_alua_lu_gp_member_t usage for Logical Unit Groups
+[PATCH 2/2] [Target_Core_Mod/ALUA]: Add t10_alua_tg_pt_gp_member_t usage for Target Port Groups
 
-=EF=BB=BFkmalloc-8192's default order is smaller than =EF=BB=BFsgpool-1=
-28's.
+>From /pub/scm/linux/kernel/git/nab/lio-core-2.6
+ * branch            master     -> FETCH_HEAD
+Updating 07c4589..b4a9bf6
+Fast forward
+ drivers/lio-core/target_core_alua.c      |  478 +++++++++++++++++++++---------
+ drivers/lio-core/target_core_alua.h      |   21 +-
+ drivers/lio-core/target_core_base.h      |   36 ++-
+ drivers/lio-core/target_core_configfs.c  |  106 +++++---
+ drivers/lio-core/target_core_device.c    |   19 +-
+ drivers/lio-core/target_core_transport.c |   57 +++-
+ 6 files changed, 497 insertions(+), 220 deletions(-)
 
-On 4*4 tigerton machine, a similiar issue appears on another kmem_cache=
-=2E
+--nab
 
-=46unction =EF=BB=BFcalculate_order uses 'min_objects /=3D 2;' to shrin=
-k. Plus size calculation/checking
-in slab_order, sometimes above issue appear.
-
-Below patch against 2.6.29-rc2 fixes it.
-
-I checked the default orders of all kmem_cache and they don't become sm=
-aller than before. So
-the patch wouldn't hurt performance.
-
-=EF=BB=BFSigned-off-by Zhang Yanmin <yanmin.zhang@linux.intel.com>
-
----
-
---- linux-2.6.29-rc2/mm/slub.c	2009-02-11 00:49:48.000000000 -0500
-+++ linux-2.6.29-rc2_slubcalc_order/mm/slub.c	2009-02-12 00:47:52.00000=
-0000 -0500
-@@ -1844,6 +1844,7 @@ static inline int calculate_order(int si
- 	int order;
- 	int min_objects;
- 	int fraction;
-+	int max_objects;
-=20
- 	/*
- 	 * Attempt to find best configuration for a slab. This
-@@ -1856,6 +1857,9 @@ static inline int calculate_order(int si
- 	min_objects =3D slub_min_objects;
- 	if (!min_objects)
- 		min_objects =3D 4 * (fls(nr_cpu_ids) + 1);
-+	max_objects =3D (PAGE_SIZE << slub_max_order)/size;
-+	min_objects =3D min(min_objects, max_objects);
-+
- 	while (min_objects > 1) {
- 		fraction =3D 16;
- 		while (fraction >=3D 4) {
-@@ -1865,7 +1869,7 @@ static inline int calculate_order(int si
- 				return order;
- 			fraction /=3D 2;
- 		}
--		min_objects /=3D 2;
-+		min_objects --;
- 	}
-=20
- 	/*
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
