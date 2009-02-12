@@ -1,40 +1,71 @@
-From: Eyal Shani <Eyal.Shani@sandisk.com>
-Subject: RE: TRIM vs UNMAP vs WRITE SAME and thin devices
-Date: Thu, 12 Feb 2009 15:51:01 +0200
-Message-ID: <22BDA4D9BA18634DB0CFBB2E5A1563446F98BAE155@KFAEXMIPV1.sdcorp.global.sandisk.com>
-References: <20090123041558.GC24652@parisc-linux.org>
-	 <4979AF62.7070409@redhat.com>
-	 <1232721777.4430.7.camel@macbook.infradead.org>
-	 <498DA052.6090605@redhat.com>
- <1234019372.4658.9.camel@localhost.localdomain> <498DB350.8000905@redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: The Linux Storage and Filesystem Summit Call for Proposals
+Date: Thu, 12 Feb 2009 08:43:34 -0600
+Message-ID: <1234449814.3295.74.camel@localhost.localdomain>
+References: <1233333630.3248.17.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod8og116.obsmtp.com ([64.18.3.32]:49023 "EHLO
-	exprod8og116.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751339AbZBLOD3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Feb 2009 09:03:29 -0500
-In-Reply-To: <498DB350.8000905@redhat.com>
-Content-Language: en-US
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:58993 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756744AbZBLOng (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Feb 2009 09:43:36 -0500
+In-Reply-To: <1233333630.3248.17.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ric Wheeler <rwheeler@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: David Woodhouse <dwmw2@infradead.org>, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <matthew@wil.cx>, Jeff Garzik <jeff@garzik.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Eyal Shani <Eyal.Shani@sandisk.com>
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: linux-ide <linux-ide@vger.kernel.org>
 
-Adding my 5 cents.
+On Fri, 2009-01-30 at 10:40 -0600, James Bottomley wrote:
+> An update on the previously sent save the date email.  The website is
+> now accepting proposals.
 
-T13 added Trim to the latest ATA8 proposal.
-http://www.t13.org/Documents/UploadedDocuments/docs2009/d2015r1-ATAATAPI_Command_Set_-_2_ACS-2.pdf
+And just an update at the request of several people:  The deadline for
+proposals is 1 March 2009 with all invitees being informed by 7 March.
+However, given the pressures of travel and time, the committee reserves
+the right to approve early, so, given we only have 25 spaces available
+in each track, get your proposals in early.
 
-This is after the changes put into the definition, with 'Deterministic Read after Trim'.
-This is not STANDARDIZED, but pretty much excepted by all sides.
+James
 
-I was hoping that would settle the differences between T10/T13 on this - little did I know...
+> ---
+> 
+> This year's storage and filesystem workshop is being held in San
+> Francisco on April 6th and 7th.  It's being held on the Monday and
+> Tuesday immediately preceeding the Linux Foundation Collaboration
+> Summit, in the same hotel.
+> 
+> You can find all the details on the workshop's web site:
+> 
+>   http://events.linuxfoundation.org/events/lsf-workshop
+> 
+> The workshop focuses on collaboration and discussion.  There will be no
+> referred papers and few presentations with slides will be accepted.
+> 
+> To attend we ask that you use the CFP interface on the web site to
+> submit a short proposal for a topic to discuss during the workshop.  The
+> program committee will send invitations to the workshop based on these
+> proposals.  The CFP and FAQ tabs on the web site describe this in more
+> detail.
+> 
+> For reference, there are writeups of previous workshops available
+> online:
+> 
+> http://lwn.net/Articles/226351/
+> http://www.usenix.org/publications/login/2008-06/openpdfs/lsf08reports.pdf
+> 
+> This year we'll be adding time to the schedule specifically for hands-on
+> development with your colleagues.
+> 
+> Please let me know if there are any questions about the workshop.
+> 
+> James
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-We are working with David W. on his implementation for Trim feature, and hope to get to the bottom of debug process soon.
-Hope to update soon...
-
-
-Regards,
-Eyal Shani.
