@@ -1,119 +1,96 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH] [RFC] block: Don't let blk_put_request leak BIOs
-Date: Thu, 12 Feb 2009 14:19:39 +0200
-Message-ID: <499413DB.2020208@panasas.com>
-References: <4993DCCA.8080508@panasas.com>	<20090212174124S.fujita.tomonori@lab.ntt.co.jp>	<4993E85A.20805@panasas.com> <20090212184208X.fujita.tomonori@lab.ntt.co.jp>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: Deadlock during multipath failover
+Date: Thu, 12 Feb 2009 14:25:33 +0100
+Message-ID: <4994234D.1000404@suse.de>
+References: <20090212094022.GA4973@schmichrtp.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:3993 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751089AbZBLMTr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Feb 2009 07:19:47 -0500
-In-Reply-To: <20090212184208X.fujita.tomonori@lab.ntt.co.jp>
+Received: from mail.suse.de ([195.135.220.2]:53123 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757681AbZBLNZg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Feb 2009 08:25:36 -0500
+In-Reply-To: <20090212094022.GA4973@schmichrtp.de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, jens.axboe@oracle.com
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+To: Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
+Hi Christof,
 
-If a block ULD had allocated a request and mapped some memory into it,
-using one of blk_rq_map_xxx routines, but then for some reason failed to
-execute the request through one of the blk_execute_request routines.
-Then the associated BIO would leak, unless ULD resorts to low-level loops
-intimate of block internals.
+Christof Schmitt wrote:
+> During failover tests on a current distribution kernel, we found this
+> problem. From reading the code, the upstream kernel has the same
+> problem:
+>=20
+> During multipath failover tests with SCSI on System z, the kernel
+> deadlocks in this situation:
+>=20
+>>  STACK:
+>>  0 blk_add_timer+206 [0x2981ea]
+>>  1 blk_rq_timed_out+132 [0x2982a8]
+>>  2 blk_abort_request+114 [0x29833e]
+>>  3 blk_abort_queue+92 [0x2983a8]
+>>  4 deactivate_path+74 [0x3e00009625a]
+>>  5 run_workqueue+236 [0x149e04]
+>>  6 worker_thread+294 [0x149fce]
+>>  7 kthread+110 [0x14f436]
+>>  8 kernel_thread_starter+6 [0x10941a]
+>=20
+> blk_abort_queue takes the queue_lock with spinlock_irqsave and walks
+> the timer_list with list_for_each_entry_safe. Since a path to a SCSI
+> device just failed, the rport state is FC_PORTSTATE_BLOCKED. This
+> rport state triggers blk_add_timer that calls list_add_tail to move
+> the request to the end of timer_list. Thus, the
+> list_for_each_entry_safe never reaches the end of the timer_list, it
+> continously moves the requests to the end of the list.
+>=20
+Hmm. That would be fixes by using list_splice() here:
 
-[RFC]
-  This code will also catch situations where LLD failed to complete
-  the request before aborting it. Such situations are a BUG. Should we
-  use WARN_ON_ONCE() in that case. The situation above is possible and
-  can happen normally in memory pressure situations so maybe we should
-  devise a bit-flag that ULD denotes that the request was aborted and
-  only WARN_ON if flag was not set.
-
-  I'm sending this before any-tests so people can comment on possible
-  pitfalls.
-
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- block/blk-core.c                 |   16 ++++++++++++++++
- drivers/scsi/osd/osd_initiator.c |   17 +----------------
- 2 files changed, 17 insertions(+), 16 deletions(-)
-
-diff --git a/block/blk-core.c b/block/blk-core.c
-index a824e49..eac96c2 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1055,6 +1055,21 @@ void part_round_stats(int cpu, struct hd_struct *part)
- EXPORT_SYMBOL_GPL(part_round_stats);
- 
- /*
-+ * If one of the blk_rq_map_xxx() was called but the request was not
-+ * executed by the block layer, then we must release BIOs. Otherwise they
-+ * will leak.
-+ */
-+static void _abort_unexecuted_bios(struct request *req)
-+{
-+	struct bio *bio;
-+
-+	while ((bio = req->bio) != NULL) {
-+		req->bio = bio->bi_next;
-+		bio_endio(bio, 0);
-+	}
-+}
-+
-+/*
-  * queue lock must be held
-  */
- void __blk_put_request(struct request_queue *q, struct request *req)
-@@ -1066,6 +1081,7 @@ void __blk_put_request(struct request_queue *q, struct request *req)
- 
- 	elv_completed_request(q, req);
- 
-+	_abort_unexecuted_bios(req);
- 	/*
- 	 * Request may not have originated from ll_rw_blk. if not,
- 	 * it didn't come out of our reserved rq pools
-diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
-index 0bbbf27..8b1cf72 100644
---- a/drivers/scsi/osd/osd_initiator.c
-+++ b/drivers/scsi/osd/osd_initiator.c
-@@ -335,20 +335,6 @@ struct osd_request *osd_start_request(struct osd_dev *dev, gfp_t gfp)
- }
- EXPORT_SYMBOL(osd_start_request);
- 
--/*
-- * If osd_finalize_request() was called but the request was not executed through
-- * the block layer, then we must release BIOs.
-- */
--static void _abort_unexecuted_bios(struct request *rq)
--{
--	struct bio *bio;
--
--	while ((bio = rq->bio) != NULL) {
--		rq->bio = bio->bi_next;
--		bio_endio(bio, 0);
--	}
--}
--
- static void _osd_free_seg(struct osd_request *or __unused,
- 	struct _osd_req_data_segment *seg)
+diff --git a/block/blk-timeout.c b/block/blk-timeout.c
+index a095353..67bcc3f 100644
+--- a/block/blk-timeout.c
++++ b/block/blk-timeout.c
+@@ -209,12 +209,15 @@ void blk_abort_queue(struct request_queue *q)
  {
-@@ -370,11 +356,10 @@ void osd_end_request(struct osd_request *or)
- 
- 	if (rq) {
- 		if (rq->next_rq) {
--			_abort_unexecuted_bios(rq->next_rq);
- 			blk_put_request(rq->next_rq);
-+			rq->next_rq = NULL;
- 		}
- 
--		_abort_unexecuted_bios(rq);
- 		blk_put_request(rq);
- 	}
- 	_osd_request_free(or);
--- 
-1.6.0.1
+        unsigned long flags;
+        struct request *rq, *tmp;
++       LIST_HEAD(list);
+=20
+        spin_lock_irqsave(q->queue_lock, flags);
+=20
+        elv_abort_queue(q);
+=20
+-       list_for_each_entry_safe(rq, tmp, &q->timeout_list, timeout_lis=
+t)
++       list_splice_init(&q->timeout_list, &list);
++
++       list_for_each_entry_safe(rq, tmp, &list, timeout_list)
+                blk_abort_request(rq);
+=20
+        spin_unlock_irqrestore(q->queue_lock, flags);
 
+> The rport state FC_PORTSTATE_BLOCKED would end, when the function
+> fc_timeout_deleted_rport would run to remove the rport. But this
+> function was schedules from queue_delayed_work. The timer already
+> expired, but the timer function does not run, because the timer
+> interrupt is disabled from the spinlock_irqsave call.
+>=20
+=2E. but this shouldn't happen anymore when using splice, as
+the timer will be called _after_ the irqrestore above.
 
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
