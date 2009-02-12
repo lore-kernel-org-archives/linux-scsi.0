@@ -1,82 +1,119 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [RFD] blk_rq_map_pages new API
-Date: Thu, 12 Feb 2009 13:34:06 +0200
-Message-ID: <4994092E.7030009@panasas.com>
-References: <4993DD9A.6070701@panasas.com>	<4993E98D.8020001@panasas.com>	<20090212185038F.fujita.tomonori@lab.ntt.co.jp> <20090212192019C.fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] [RFC] block: Don't let blk_put_request leak BIOs
+Date: Thu, 12 Feb 2009 14:19:39 +0200
+Message-ID: <499413DB.2020208@panasas.com>
+References: <4993DCCA.8080508@panasas.com>	<20090212174124S.fujita.tomonori@lab.ntt.co.jp>	<4993E85A.20805@panasas.com> <20090212184208X.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:31593 "EHLO
+Received: from gw-ca.panasas.com ([66.104.249.162]:3993 "EHLO
 	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751306AbZBLLeL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Feb 2009 06:34:11 -0500
-In-Reply-To: <20090212192019C.fujita.tomonori@lab.ntt.co.jp>
+	with ESMTP id S1751089AbZBLMTr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Feb 2009 07:19:47 -0500
+In-Reply-To: <20090212184208X.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, jens.axboe@oracle.com
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 
-FUJITA Tomonori wrote:
-> On Thu, 12 Feb 2009 18:50:33 +0900
-> FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-> 
->> On Thu, 12 Feb 2009 11:19:09 +0200
->> Boaz Harrosh <bharrosh@panasas.com> wrote:
->>
->>> Boaz Harrosh wrote:
->>>> /**
->>>>  * blk_rq_map_pages - Receives an array of pages and appends them to a request structure 
->>>>  *
->>>>  * @rq:  The request to map
->>>>  * @pages_info: A structure that specifies the array of pages, offset and more that need to be
->>>>  *              map to the request. the @pages_info->null_mapped is assumed to be 1 and is ignored.
->>>>  * @length: Total bytes to map. Array of pages can be larger, stop mapping after @length bytes mapped.
->>>>  * @max_pages: When allocating the internal bio use @max_pages as an hint that says the amount of anticipated
->>>>  *             pages that will be mapped. This member is optional and can be zero.
->>>>  * 
->>>>  * blk_rq_map_pages can be called multiple times so the user does not need to allocate a contiguous array
->>>>  * of struct page pointers but can call this routine multiple times. In that case max_pages can be set
->>>>  * so no bio re-allocation occurs.
->>>>  * There is no unmap function for this mapping, the request is completed in the regular way.
->>>>  */
->>>>
->>>> int blk_rq_map_pages(struct request rq, struct *rq_map_data pages_info, unsigned length, unsigned max_pages);
->>>>
->>>>
->>>> Implementation comments:
->>>> - Then when this member is available many places that call blk_rq_map_user() rq_map_data and null_mapped set,
->>>>   and buff == NULL, can be converted to this member.
->>>>
->>>> - Internal block implementation is refactored to not duplicate any code with blk_rq_map_user().
->>>>
->>>> Thanks for any comments
->>>> Boaz
->>>>
->>>> --
->>> FUJITA Tomonori wrote:
->>>> Please send a patch to implement the proposal.
->>>>
->>> Is the above API accepted by you? Is it accepted by Jens?
->>> Should I also attempt first comment above.
->>>
->>> If its OK I will implement it ASAP.
->> Sorry, I'm not sure until I see the actual code. You always find
->> tricky things when you actually write the code.
->>
->> The patch should be small. It's not difficult at all to write a patch
->> to see how it works.
-> 
-> BTW, the idea is fine by me:
-> 
-> I have some page frames and want to build a request out of them.
-> 
-> That's what st and osst want. If OSD ULD wants it, adding a new API
-> for it sounds a good idea to me. Then we can remove some features of
-> blk_rq_map_user that I added for st and osst.
 
-Right, I agree with you totally. I'm on it, I'll try an RFC see how it
-goes, and we can decide from there.
+If a block ULD had allocated a request and mapped some memory into it,
+using one of blk_rq_map_xxx routines, but then for some reason failed to
+execute the request through one of the blk_execute_request routines.
+Then the associated BIO would leak, unless ULD resorts to low-level loops
+intimate of block internals.
 
-Thanks TOMO
-Boaz
+[RFC]
+  This code will also catch situations where LLD failed to complete
+  the request before aborting it. Such situations are a BUG. Should we
+  use WARN_ON_ONCE() in that case. The situation above is possible and
+  can happen normally in memory pressure situations so maybe we should
+  devise a bit-flag that ULD denotes that the request was aborted and
+  only WARN_ON if flag was not set.
+
+  I'm sending this before any-tests so people can comment on possible
+  pitfalls.
+
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ block/blk-core.c                 |   16 ++++++++++++++++
+ drivers/scsi/osd/osd_initiator.c |   17 +----------------
+ 2 files changed, 17 insertions(+), 16 deletions(-)
+
+diff --git a/block/blk-core.c b/block/blk-core.c
+index a824e49..eac96c2 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1055,6 +1055,21 @@ void part_round_stats(int cpu, struct hd_struct *part)
+ EXPORT_SYMBOL_GPL(part_round_stats);
+ 
+ /*
++ * If one of the blk_rq_map_xxx() was called but the request was not
++ * executed by the block layer, then we must release BIOs. Otherwise they
++ * will leak.
++ */
++static void _abort_unexecuted_bios(struct request *req)
++{
++	struct bio *bio;
++
++	while ((bio = req->bio) != NULL) {
++		req->bio = bio->bi_next;
++		bio_endio(bio, 0);
++	}
++}
++
++/*
+  * queue lock must be held
+  */
+ void __blk_put_request(struct request_queue *q, struct request *req)
+@@ -1066,6 +1081,7 @@ void __blk_put_request(struct request_queue *q, struct request *req)
+ 
+ 	elv_completed_request(q, req);
+ 
++	_abort_unexecuted_bios(req);
+ 	/*
+ 	 * Request may not have originated from ll_rw_blk. if not,
+ 	 * it didn't come out of our reserved rq pools
+diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
+index 0bbbf27..8b1cf72 100644
+--- a/drivers/scsi/osd/osd_initiator.c
++++ b/drivers/scsi/osd/osd_initiator.c
+@@ -335,20 +335,6 @@ struct osd_request *osd_start_request(struct osd_dev *dev, gfp_t gfp)
+ }
+ EXPORT_SYMBOL(osd_start_request);
+ 
+-/*
+- * If osd_finalize_request() was called but the request was not executed through
+- * the block layer, then we must release BIOs.
+- */
+-static void _abort_unexecuted_bios(struct request *rq)
+-{
+-	struct bio *bio;
+-
+-	while ((bio = rq->bio) != NULL) {
+-		rq->bio = bio->bi_next;
+-		bio_endio(bio, 0);
+-	}
+-}
+-
+ static void _osd_free_seg(struct osd_request *or __unused,
+ 	struct _osd_req_data_segment *seg)
+ {
+@@ -370,11 +356,10 @@ void osd_end_request(struct osd_request *or)
+ 
+ 	if (rq) {
+ 		if (rq->next_rq) {
+-			_abort_unexecuted_bios(rq->next_rq);
+ 			blk_put_request(rq->next_rq);
++			rq->next_rq = NULL;
+ 		}
+ 
+-		_abort_unexecuted_bios(rq);
+ 		blk_put_request(rq);
+ 	}
+ 	_osd_request_free(or);
+-- 
+1.6.0.1
+
+
