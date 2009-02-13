@@ -1,31 +1,29 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Joe Eykholt <jeykholt@cisco.com>
 Subject: Re: next Feb 13 drivers/scsi/aha1542.ko build break
-Date: Fri, 13 Feb 2009 12:52:44 -0600
-Message-ID: <1234551164.3252.20.camel@localhost.localdomain>
-References: <20090213175526.d0590862.sfr@canb.auug.org.au>
-	 <49955D00.2020707@in.ibm.com>  <4995BA4B.9050209@oracle.com>
+Date: Fri, 13 Feb 2009 11:13:50 -0800
+Message-ID: <4995C66E.1000800@cisco.com>
+References: <20090213175526.d0590862.sfr@canb.auug.org.au> <49955D00.2020707@in.ibm.com> <4995BA4B.9050209@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:57663 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751271AbZBMSwt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Feb 2009 13:52:49 -0500
+Received: from sj-iport-6.cisco.com ([171.71.176.117]:49973 "EHLO
+	sj-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751068AbZBMTN4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Feb 2009 14:13:56 -0500
 In-Reply-To: <4995BA4B.9050209@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: "Sachin P. Sant" <sachinp@in.ibm.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, jgsf@goop.org
+Cc: "Sachin P. Sant" <sachinp@in.ibm.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, 2009-02-13 at 10:22 -0800, Randy Dunlap wrote:
+Randy Dunlap wrote:
 > Sachin P. Sant wrote:
-> > Feb 13 next x86 allmodconfig build breaks with
-> > 
-> > ERROR: "__udivdi3" [drivers/scsi/aha1542.ko] undefined!
-> > 
-> > .config attached.
+>> Feb 13 next x86 allmodconfig build breaks with
+>>
+>> ERROR: "__udivdi3" [drivers/scsi/aha1542.ko] undefined!
+>>
+>> .config attached.
 > 
 > 
 > I'm seeing that also.  I think that it's this line in aha1542.c:
@@ -36,43 +34,20 @@ On Fri, 2009-02-13 at 10:22 -0800, Randy Dunlap wrote:
 > 
 > This may need a patch to use one of the div() macros (?).
 
-It shouldn't ... the two inputs should be longs and the sizeof should be
-dividing by a constant size_t.  __udivdi3 is used for 64 bit division on
-a 32 bit platform, so where's it getting the idea that something in the
-division is 64 bit?
+In the above case, this problem might not occur if sizeof(struct ccb) happened to
+be a power of 2, since the compiler generates a shift in that case.
+Then later someone could increase the size of the struct and introduce this problem.
 
-The culprit looks to be
+The kernel infrastructure should fix that without requiring the driver to change.
+Drivers ought to be allowed to divide.
 
-commit 976e8f677e42757e5586ea04a9ac8bb8ddaa037e
-Author: Jeremy Fitzhardinge <jeremy@goop.org>
-Date:   Fri Feb 6 13:29:44 2009 -0800
+I've also seen this in another driver that divided a u64 by a constant.
+I noticed that linux/math64.h provides div_u64(), but it seems awkward to call
+that when the compiler generates a call to __udivdi3 (apparently).
 
-    x86: asm/io.h: unify virt_to_phys/phys_to_virt
+Can't we just provide __udivdi3, since gcc generates that call?
+Otherwise, problems like this will continue to crop up.
 
-Because it changed the return of virt_to_phys from long to phys_addr_t
-which is unsigned long long on a PAE platform, which this is.
-
-So, I could suggest a fix below since isa addresses may never be above
-32 bits, but I think this issue has more ramifications for the other
-legacy users of virt_to_phys.
-
-James
-
----
-
-diff --git a/arch/x86/include/asm/io.h b/arch/x86/include/asm/io.h
-index e5a2ab4..4f8e820 100644
---- a/arch/x86/include/asm/io.h
-+++ b/arch/x86/include/asm/io.h
-@@ -125,7 +125,7 @@ static inline void *phys_to_virt(phys_addr_t address)
- /*
-  * ISA I/O bus memory addresses are 1:1 with the physical address.
-  */
--#define isa_virt_to_bus virt_to_phys
-+#define isa_virt_to_bus (unsigned long)virt_to_phys
- #define isa_page_to_bus page_to_phys
- #define isa_bus_to_virt phys_to_virt
- 
-
+	Joe
 
 
