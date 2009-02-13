@@ -1,80 +1,98 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: Re: 2.6.29-rc3: BUG: NMI Watchdog detected LOCKUP
-Date: Fri, 13 Feb 2009 09:31:06 +0100
-Message-ID: <20090213083106.GD4606@elte.hu>
-References: <19f34abd0902080221w662635f0h51875a125b156535@mail.gmail.com> <20090212161908.2cc2045c.akpm@linux-foundation.org>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: Re: Deadlock during multipath failover
+Date: Fri, 13 Feb 2009 11:50:43 +0100
+Message-ID: <20090213105043.GA9888@schmichrtp.de.ibm.com>
+References: <20090212094022.GA4973@schmichrtp.de.ibm.com> <4994234D.1000404@suse.de> <20090212204450.GA3556@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.mail.elte.hu ([157.181.151.9]:50665 "EHLO mx2.mail.elte.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750774AbZBMIbY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Feb 2009 03:31:24 -0500
+Received: from mtagate6.de.ibm.com ([195.212.29.155]:56705 "EHLO
+	mtagate6.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751089AbZBMKwI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Feb 2009 05:52:08 -0500
 Content-Disposition: inline
-In-Reply-To: <20090212161908.2cc2045c.akpm@linux-foundation.org>
+In-Reply-To: <20090212204450.GA3556@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Vegard Nossum <vegard.nossum@gmail.com>, linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@linux.vnet.ibm.com>
+Cc: Hannes Reinecke <hare@suse.de>, Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-
-* Andrew Morton <akpm@linux-foundation.org> wrote:
-
-> > [ 3344.972984] Call Trace:
-> > [ 3344.972984]  [<ffffffff8118d26a>] __make_request+0x3e/0x412
-> > [ 3344.972984]  [<ffffffff8118bf77>] generic_make_request+0x279/0x2c3
-> > [ 3344.972984]  [<ffffffff8119f189>] ? radix_tree_tag_set+0x6b/0xce
-> > [ 3344.972984]  [<ffffffff8118c087>] submit_bio+0xc6/0xcf
-> > [ 3344.972984]  [<ffffffff8107feb8>] ? unlock_page+0x22/0x26
-> > [ 3344.972984]  [<ffffffff8109ebd4>] swap_writepage+0xa2/0xac
-> > [ 3344.972984]  [<ffffffff8108a076>] shrink_page_list+0x3a7/0x67b
-> > [ 3344.972984]  [<ffffffff810376f1>] ? finish_task_switch+0x68/0x88
-> > [ 3344.972984]  [<ffffffff8101b822>] ? __cpus_empty+0x9/0xb
-> > [ 3344.972984]  [<ffffffff8101ba27>] ? flush_tlb_page+0x66/0x83
-> > [ 3344.972984]  [<ffffffff814908b3>] ? thread_return+0x3d/0xc6
-> > [ 3344.972984]  [<ffffffff8108a98d>] shrink_list+0x29d/0x59f
-> > [ 3344.972984]  [<ffffffff81086c4f>] ? get_dirty_limits+0x22/0x24a
-> > [ 3344.972984]  [<ffffffff8108af10>] shrink_zone+0x281/0x32b
-> > [ 3344.972984]  [<ffffffff8119ff8e>] ? __up_read+0x92/0x9c
-> > [ 3344.972984]  [<ffffffff8108b100>] ? shrink_slab+0x146/0x158
-> > [ 3344.972984]  [<ffffffff8108c022>] try_to_free_pages+0x23d/0x38f
-> > [ 3344.972984]  [<ffffffff81089185>] ? isolate_pages_global+0x0/0x219
-> > [ 3344.972984]  [<ffffffff81085cc9>] __alloc_pages_internal+0x292/0x43d
-> > [ 3344.972984]  [<ffffffff810a6963>] alloc_pages_current+0xb9/0xc2
-> > [ 3344.972984]  [<ffffffff810aa658>] alloc_slab_page+0x19/0x69
-> > [ 3344.972984]  [<ffffffff810aa6f1>] new_slab+0x49/0x1cc
-> > [ 3344.972984]  [<ffffffff8119f8b1>] ? rb_insert_color+0xbd/0xe6
-> > [ 3344.972984]  [<ffffffff810aaad3>] __slab_alloc+0x1f3/0x36c
-> > [ 3344.972984]  [<ffffffff81389fe8>] ? __alloc_skb+0x42/0x130
-> > [ 3344.972984]  [<ffffffff81389fe8>] ? __alloc_skb+0x42/0x130
-> > [ 3344.972984]  [<ffffffff810aaf7c>] kmem_cache_alloc_node+0x69/0xa2
-> > [ 3344.972984]  [<ffffffff81389fe8>] __alloc_skb+0x42/0x130
-> > [ 3344.972984]  [<ffffffff81385bd3>] sock_alloc_send_skb+0xa1/0x200
-> > [ 3344.972984]  [<ffffffff8116700a>] ? security_socket_getpeersec_dgram+0x11/0x3
-> > [ 3344.972984]  [<ffffffff81409250>] unix_stream_sendmsg+0x138/0x2b5
-> > [ 3344.972984]  [<ffffffff8138276b>] __sock_sendmsg+0x59/0x62
-> > [ 3344.972984]  [<ffffffff8138285c>] sock_aio_write+0xe8/0xf8
-> > [ 3344.972984]  [<ffffffff810af9a2>] do_sync_write+0xe7/0x12d
-> > [ 3344.972984]  [<ffffffff8104d980>] ? autoremove_wake_function+0x0/0x38
-> > [ 3344.972984]  [<ffffffff8116d9da>] ? selinux_file_permission+0xbd/0xc6
-> > [ 3344.972984]  [<ffffffff811669d0>] ? security_file_permission+0x11/0x13
-> > [ 3344.972984]  [<ffffffff810b029a>] vfs_write+0xbe/0x105
-> > [ 3344.972984]  [<ffffffff810b03a5>] sys_write+0x47/0x6f
-> > [ 3344.972984]  [<ffffffff8102bba8>] sysenter_dispatch+0x7/0x27
-> > [ 3344.972984] Code: 01 00 00 f0 66 0f c1 17 38 f2 74 06 f3 90 8a 17 eb f6 c9 c
-> > [ 3344.972984] BUG: NMI Watchdog detected LOCKUP<4>---[ end trace 820f38a7b2441-
-> > [ 3344.972984]  on CPU0, ip ffffffff81491f6c, registers:
+On Thu, Feb 12, 2009 at 12:44:50PM -0800, Mike Anderson wrote:
+> Hannes Reinecke <hare@suse.de> wrote:
+> > Hi Christof,
+> >
+> > Christof Schmitt wrote:
+> >> During failover tests on a current distribution kernel, we found this
+> >> problem. From reading the code, the upstream kernel has the same
+> >> problem:
+> >>
+> >> During multipath failover tests with SCSI on System z, the kernel
+> >> deadlocks in this situation:
+> >>
+> >>>  STACK:
+> >>>  0 blk_add_timer+206 [0x2981ea]
+> >>>  1 blk_rq_timed_out+132 [0x2982a8]
+> >>>  2 blk_abort_request+114 [0x29833e]
+> >>>  3 blk_abort_queue+92 [0x2983a8]
+> >>>  4 deactivate_path+74 [0x3e00009625a]
+> >>>  5 run_workqueue+236 [0x149e04]
+> >>>  6 worker_thread+294 [0x149fce]
+> >>>  7 kthread+110 [0x14f436]
+> >>>  8 kernel_thread_starter+6 [0x10941a]
+> >>
+> >> blk_abort_queue takes the queue_lock with spinlock_irqsave and walks
+> >> the timer_list with list_for_each_entry_safe. Since a path to a SCSI
+> >> device just failed, the rport state is FC_PORTSTATE_BLOCKED. This
+> >> rport state triggers blk_add_timer that calls list_add_tail to move
+> >> the request to the end of timer_list. Thus, the
+> >> list_for_each_entry_safe never reaches the end of the timer_list, it
+> >> continously moves the requests to the end of the list.
+> >>
+> > Hmm. That would be fixes by using list_splice() here:
+> >
+> > diff --git a/block/blk-timeout.c b/block/blk-timeout.c
+> > index a095353..67bcc3f 100644
+> > --- a/block/blk-timeout.c
+> > +++ b/block/blk-timeout.c
+> > @@ -209,12 +209,15 @@ void blk_abort_queue(struct request_queue *q)
+> > {
+> >        unsigned long flags;
+> >        struct request *rq, *tmp;
+> > +       LIST_HEAD(list);
+> >
+> >        spin_lock_irqsave(q->queue_lock, flags);
+> >
+> >        elv_abort_queue(q);
+> >
+> > -       list_for_each_entry_safe(rq, tmp, &q->timeout_list, timeout_list)
+> > +       list_splice_init(&q->timeout_list, &list);
+> > +
+> > +       list_for_each_entry_safe(rq, tmp, &list, timeout_list)
+> >                blk_abort_request(rq);
+> >
+> >        spin_unlock_irqrestore(q->queue_lock, flags);
+> >
+> >> The rport state FC_PORTSTATE_BLOCKED would end, when the function
+> >> fc_timeout_deleted_rport would run to remove the rport. But this
+> >> function was schedules from queue_delayed_work. The timer already
+> >> expired, but the timer function does not run, because the timer
+> >> interrupt is disabled from the spinlock_irqsave call.
+> >>
+> > .. but this shouldn't happen anymore when using splice, as
+> > the timer will be called _after_ the irqrestore above.
 > 
-> And then the block layer died.  Looks like it was trying to take the
-> queue lock.  Probably against the recently-offlined device.
+> If this patch does not address the deadlock another option to look into
+> would be to run some testing without blk_abort_request (just using
+> elv_abort_queue) and not try to abort in flight IOs at this time. 
 > 
-> I'd say that either someone forgot to release the lock on an error
-> path.  Or the structure was freed, but the kernel still tries to use it.
+> We observed reduced IO delays during storage failover testing (target
+> responsive but timing out IOs) with this code, but I do not have good
+> breakdown data on the number of IOs handled by elv_abort_queue vs
+> blk_abort_request vs IO delay (It is also config dependent).
 
-Should run with CONFIG_PROVE_LOCKING=y for more precise forensics about
-precisely who did that and when.
+The patch fixes the observed deadlock. While the rport is BLOCKED,
+blk_abort_request only resets the timer for each request, so i would
+guess there is no big difference in calling blk_abort_request or not,
+at least in this scenario.
 
-Or if this was with lockdep enabled already, some other modes of failure
-should be considered too. (such as memory corruption)
-
-	Ingo
+Christof Schmitt
