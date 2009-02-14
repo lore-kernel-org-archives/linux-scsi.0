@@ -1,91 +1,47 @@
-From: Karen Xie <kxie@chelsio.com>
-Subject: [PATCH v2 2/6 2.6.29-rc] cxgb3i - added per-task data to track transmit progress
-Date: Fri, 13 Feb 2009 21:38:49 -0800
-Message-ID: <200902140538.n1E5cnWQ014331@localhost.localdomain>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.22.49.110]:5203 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751307AbZBNFgu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Feb 2009 00:36:50 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+Subject: [PATCH v2 0/6 2.6.29-rc] cxgb3i -- bug fixes for 2.6.29-rcX
+Date: Fri, 13 Feb 2009 21:38:39 -0800
+Message-ID: <200902140538.n1E5cdOa014319@localhost.localdomain>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+Return-path: <grbounce-FC1hwAUAAAA0O9VQcsxVj1UPjHD9r3x_=glio-open-iscsi=m.gmane.org-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Post: <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://googlegroups.com/group/open-iscsi/subscribe>,
+	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
-Cc: michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com, kxie@chelsio.com
-
-[PATCH v2 2/6 2.6.29-rc] cxgb3i - added per-task data to track transmit progress
-
-From: Karen Xie <kxie@chelsio.com>
-
-added per-task struct cxgb3i_task_data to track the data transmiting
-progress and the state of the pdus to be transmitted.
-
-Signed-off-by: Karen Xie <kxie@chelsio.com>
----
-
- drivers/scsi/cxgb3i/cxgb3i.h       |   21 +++++++++++++++++++++
- drivers/scsi/cxgb3i/cxgb3i_iscsi.c |    5 +++--
- 2 files changed, 24 insertions(+), 2 deletions(-)
 
 
-diff --git a/drivers/scsi/cxgb3i/cxgb3i.h b/drivers/scsi/cxgb3i/cxgb3i.h
-index fde6e4c..a7cf550 100644
---- a/drivers/scsi/cxgb3i/cxgb3i.h
-+++ b/drivers/scsi/cxgb3i/cxgb3i.h
-@@ -20,6 +20,7 @@
- #include <linux/list.h>
- #include <linux/netdevice.h>
- #include <linux/scatterlist.h>
-+#include <linux/skbuff.h>
- #include <scsi/libiscsi_tcp.h>
- 
- /* from cxgb3 LLD */
-@@ -113,6 +114,26 @@ struct cxgb3i_endpoint {
- 	struct cxgb3i_conn *cconn;
- };
- 
-+/**
-+ * struct cxgb3i_task_data - private iscsi task data
-+ *
-+ * @nr_frags:	# of coalesced page frags (from scsi sgl)
-+ * @frags:	coalesced page frags (from scsi sgl)
-+ * @skb:	tx pdu skb
-+ * @offset:	data offset for the next pdu
-+ * @count:	max. possible pdu payload
-+ * @sgoffset:	offset to the first sg entry for a given offset
-+ */
-+#define MAX_PDU_FRAGS	((ULP2_MAX_PDU_PAYLOAD + 512 - 1) / 512)
-+struct cxgb3i_task_data {
-+	unsigned short nr_frags;
-+	skb_frag_t frags[MAX_PDU_FRAGS];
-+	struct sk_buff *skb;
-+	unsigned int offset;
-+	unsigned int count;
-+	unsigned int sgoffset;
-+};
-+
- int cxgb3i_iscsi_init(void);
- void cxgb3i_iscsi_cleanup(void);
- 
-diff --git a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
-index d83464b..f0434b7 100644
---- a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
-+++ b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
-@@ -364,7 +364,8 @@ cxgb3i_session_create(struct iscsi_endpoint *ep, u16 cmds_max, u16 qdepth,
- 
- 	cls_session = iscsi_session_setup(&cxgb3i_iscsi_transport, shost,
- 					  cmds_max,
--					  sizeof(struct iscsi_tcp_task),
-+					  sizeof(struct iscsi_tcp_task) +
-+					  sizeof(struct cxgb3i_task_data),
- 					  initial_cmdsn, ISCSI_MAX_TARGET);
- 	if (!cls_session)
- 		return NULL;
-@@ -844,7 +845,7 @@ static struct scsi_host_template cxgb3i_host_template = {
- 	.proc_name		= "cxgb3i",
- 	.queuecommand		= iscsi_queuecommand,
- 	.change_queue_depth	= iscsi_change_queue_depth,
--	.can_queue		= 128 * (ISCSI_DEF_XMIT_CMDS_MAX - 1),
-+	.can_queue		= CXGB3I_SCSI_QDEPTH_DFLT - 1,
- 	.sg_tablesize		= SG_ALL,
- 	.max_sectors		= 0xFFFF,
- 	.cmd_per_lun		= ISCSI_DEF_CMD_PER_LUN,
+[PATCH v2 0/6 2.6.29-rc] cxgb3i -- bug fixes for 2.6.29-rcX=20
+
+From: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+
+Hi, Mike,
+
+Could you review the following patches?
+
+I've clamped down the max. outgoing pdu payload based on how much data can =
+be fitted into a skb (either in the headroom or the frag_list), and removed=
+ the extra memory allocation in alloc_pdu(). The scanning of the scsi scatt=
+er-gather list is moved from alloc_pdu() to init_pdu().
+
+The patches are based on scsi-rc-fixes-2.6 git.
+
+The changes include:
+
+- fixed tx work-request credit list.
+- Added per-task data to track the state of the pdus to be transmitted.
+- fixed a bug in tx pdu construction where we could over-run the skb's frag=
+ment list.
+- Added missing include file in cxgb3i_ddp.h.
+- fixed spelling error in the documentation.
+- Update version number to 1.0.1.
+
+
+Thanks.
+Karen
