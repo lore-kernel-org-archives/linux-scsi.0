@@ -1,44 +1,55 @@
-From: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
-Subject: [PATCH v2 6/6 2.6.29-rc] cxgb3i -- update the driver version to 1.0.1
-Date: Fri, 13 Feb 2009 21:39:09 -0800
-Message-ID: <200902140539.n1E5d9WI014359@localhost.localdomain>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Return-path: <grbounce-FC1hwAUAAAA0O9VQcsxVj1UPjHD9r3x_=glio-open-iscsi=m.gmane.org-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Post: <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://googlegroups.com/group/open-iscsi/subscribe>,
-	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12662] linux 2.6.29-rc3 kernel failure with mptsas
+Date: Sat, 14 Feb 2009 14:04:09 -0800 (PST)
+Message-ID: <20090214220409.E71F411D10B@picon.linux-foundation.org>
+References: <bug-12662-11613@http.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:46149 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752001AbZBNWEM convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 14 Feb 2009 17:04:12 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n1EM4AKL010937
+	for <linux-scsi@vger.kernel.org>; Sat, 14 Feb 2009 14:04:11 -0800
+In-Reply-To: <bug-12662-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=3D12662
 
 
-[PATCH v2 6/6 2.6.29-rc] cxgb3i - update the driver version to 1.0.1
-
-From: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
-
-Bump the driver version up to 1.0.1.
-
-Signed-off-by: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
----
-
- drivers/scsi/cxgb3i/cxgb3i_init.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
 
 
-diff --git a/drivers/scsi/cxgb3i/cxgb3i_init.c b/drivers/scsi/cxgb3i/cxgb3i_init.c
-index 091ecb4..1ce9f24 100644
---- a/drivers/scsi/cxgb3i/cxgb3i_init.c
-+++ b/drivers/scsi/cxgb3i/cxgb3i_init.c
-@@ -12,8 +12,8 @@
- #include "cxgb3i.h"
- 
- #define DRV_MODULE_NAME         "cxgb3i"
--#define DRV_MODULE_VERSION	"1.0.0"
--#define DRV_MODULE_RELDATE	"Jun. 1, 2008"
-+#define DRV_MODULE_VERSION	"1.0.1"
-+#define DRV_MODULE_RELDATE	"Jan. 2009"
- 
- static char version[] =
- 	"Chelsio S3xx iSCSI Driver " DRV_MODULE_NAME
+
+------- Comment #1 from rjw@sisk.pl  2009-02-14 14:04 -------
+On Saturday 14 February 2009, Morten P.D. Stevens wrote:
+> Update:
+>=20
+> today i installed linux 2.6.29-rc5 and there a no problems?
+>=20
+> no errors or kernel failures in dmesg.
+>=20
+> linux 2.6.29-rc5 works fine but something is strange:
+>=20
+> > -	init_timer(&pCfg->timer);
+> > +	init_timer_on_stack(&pCfg->timer);
+>=20
+> this wasn't changed?
+>=20
+> Anyway it=B4s working fine with 2.6.29-rc5, now.
+
+
+--=20
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Demail
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
