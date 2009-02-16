@@ -1,55 +1,27 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 1/8] exofs: Kbuild, Headers and osd utils
-Date: Mon, 16 Feb 2009 18:38:00 +0900
-Message-ID: <20090216183750H.fujita.tomonori@lab.ntt.co.jp>
-References: <499928A3.60507@panasas.com>
-	<20090216180028C.fujita.tomonori@lab.ntt.co.jp>
-	<49992F99.1060404@panasas.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] sg: remove the own list management for struct sg_fd
+Date: Mon, 16 Feb 2009 11:19:08 +0100
+Message-ID: <49993D9C.3020005@interlog.com>
+References: <20090216132630B.fujita.tomonori@lab.ntt.co.jp>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:53314 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754234AbZBPJif (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Feb 2009 04:38:35 -0500
-In-Reply-To: <49992F99.1060404@panasas.com>
+Received: from smtp.infotech.no ([82.134.31.41]:56490 "EHLO
+	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754267AbZBPKTU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Feb 2009 05:19:20 -0500
+In-Reply-To: <20090216132630B.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: fujita.tomonori@lab.ntt.co.jp, avishay@gmail.com, jeff@garzik.org, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, osd-dev@open-osd.org, linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-On Mon, 16 Feb 2009 11:19:21 +0200
-Boaz Harrosh <bharrosh@panasas.com> wrote:
-
-> >> Also looking
-> >> ahead I will have RAID 0, 1, 5, and 6 on objects of different devices. bio
-> >> is the perfect collector for memory information in this situation.
-> > 
-> > You will add such features to exofs, handling multiple devices
-> > internally?
-> > 
+FUJITA Tomonori wrote:
+> This replaces the own list management for struct sg_fd with the
+> standard list_head structure.
 > 
-> Multiple objects on Multiple devices, Yes.
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-I thought that exofs is kinda example (reference) file system.
-
-Nobody has seen your code. Let's discuss when we have the
-code. Over-designing for what we've not seen is not a good idea.
-
-
-> >> exofs is not the first and only file system who is using bios. Proof of
-> >> the matter is that block exports a bio submit routine.
-> > 
-> > Seems that exofs just passes pages and the ULD sends a SCSI command
-> > including these pages. I don't see how exofs needs to handle bio
-> > directly.
-> > 
-> 
-> How do you propose to collect these pages? and keep them without allocating
-> an extra list? without pre-allocating a struct request? and without re-inventing
-> the bio structure?
-
-I don't think that allocating an extra list (or something) to keep
-them hurts performance. We can talk about it when you have the real
-performance results.
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
