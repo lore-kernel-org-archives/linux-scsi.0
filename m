@@ -1,85 +1,129 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: pNFS rant (was Re: [PATCH 1/8] exofs: Kbuild, Headers and osd
-	utils)
-Date: Mon, 16 Feb 2009 09:50:01 -0600
-Message-ID: <1234799401.3237.16.camel@localhost.localdomain>
-References: <1234185129-31858-1-git-send-email-bharrosh@panasas.com>
-	 <20090216131806X.fujita.tomonori@lab.ntt.co.jp>
-	 <499928A3.60507@panasas.com>
-	 <20090216180028C.fujita.tomonori@lab.ntt.co.jp>
-	 <49992F99.1060404@panasas.com> <49993182.3010707@garzik.org>
-	 <49993DAD.40407@panasas.com>  <49994860.9060109@garzik.org>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: Host Channel TargetId LUN enumeration and scope
+Date: Mon, 16 Feb 2009 11:13:03 -0500
+Message-ID: <4999908F.6070007@emulex.com>
+References: <677131e90902160009r7b1b43f3t53b11c032be28b72@mail.gmail.com>	 <677131e90902160011u5613c7fibf29bb16f68a86a7@mail.gmail.com> <677131e90902160015g2e63a29byb020a98bf7369686@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:51358 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750797AbZBPPuI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Feb 2009 10:50:08 -0500
-In-Reply-To: <49994860.9060109@garzik.org>
+Received: from emulex.emulex.com ([138.239.112.1]:34214 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752988AbZBPQNJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Feb 2009 11:13:09 -0500
+In-Reply-To: <677131e90902160015g2e63a29byb020a98bf7369686@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, avishay@gmail.com, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, osd-dev@open-osd.org, linux-kernel@vger.kernel.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org
-
-On Mon, 2009-02-16 at 06:05 -0500, Jeff Garzik wrote:
-> Boaz Harrosh wrote:
-> > No can do. exofs is meant to be a reference implementation of a pNFS-objects
-> > file serving system. Have you read the spec of pNFS-objects layout? they define
-> > RAID 0, 1, 5, and 6. In pNFS the MDS is suppose to be able to write the data
-> > for its clients as NFS, so it needs to have all the infra structure and knowledge
-> > of an Client pNFS-object layout drive.
-> 
-> Yes, I have studied pNFS!  I plan to add v4.1 and pNFS support to my NFS 
-> server, once v4.0 support is working well.
-> 
-> 
-> pNFS The Theory:   is wise and necessary:  permit clients to directly 
-> connect to data storage, rather than copying through the metadata 
-> server(s).  This is what every distributed filesystem is doing these 
-> days -- direct to data server for bulk data read/write.
-> 
-> pNFS The Specification:   is an utter piece of shit.  I can only presume 
-> some shady backroom deal in a smoke-filled room was the reason this saw 
-> the light of day.
-> 
-> 
-> In a sane world, NFS clients would speak... NFS.
-> 
-> In the crazy world of pNFS, NFS clients are now forced to speak NFS, 
-> SCSI, RAID, and any number of proprietary layout types.  When will HTTP 
-> be added to the list?  :)
-
-Heh, it's one of the endearing faults of the storage industry that we
-never learn from our mistakes ... particularly in storage protocols.
-
-Actually, perhaps that's a mischaracterised: we never actually learn
-from our successes.  For example, most popular storage protocols solve
-about 80% of the problem (NFSv2) get something bolted on to take that to
-95% (locking) and rule for decades.  We end up obsessing about the 5%
-and produce something that's like 10x the overhead to solve it.
-Customers, for some unfathomable reason, hate complexity  (I suspect
-principally because it in some measure equals expense) so the 100%
-solution (which actually turns out to be a 95% one because the over
-engineered complexity adds another 5% of different problems that take
-years to find) tends to work its way into a niche and stay there ...
-eventually fading.
-
-If you're really lucky, the niche evolves into something sustainable.
-For example iSCSI: blew its early promise, pulled a bunch of unnecessary
-networking into the protocol and ended up too big to fit in disk
-firmware (thus destroying the ability to have a simple network tap to
-replace storage fabric).  It's been slowly fading until Virtualisation
-came along.  Now all the other solutions to getting storage into virtual
-machines are so horrible and arcane that iSCSI looks like a winner (if
-the alternative is Frankenstein's monster, Grendel's mother suddenly
-looks more attractive as a partner).
-
-So, trust the customer ... if it's so horrible it shouldn't have seen
-the light of day, the chances are that no-one will buy it anyway.
-
-James
+To: Dheeraj Sangamkar <dheerajrs@gmail.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
 
+
+Dheeraj Sangamkar wrote:
+> Hi,
+> I am exploring the 2.6.27 linux scsi mid layer and I have a few
+> questions. I have code access and can browse reasonably, so you can
+> refer to functions and files.
+> I would like to know how each of the Host Channel TargetId and LUN are
+> enumerated and assigned to each SCSI device.
+
+TargetId is completely logical (up to driver or transport, not 
+consistent boot-to-boot, attachment-to-attachment) - excepting on older 
+Parallel SCSI adapters.
+
+Lun is whatever the device gives us - but of course, it's munged within 
+the midlayer from the SAM 64 bit range into a compressed 32bit range. 
+So, the LUN as exported out of the midlayer into the os, etc is also 
+somewhat arbitrary, though in general, it will be consistent.  But then 
+again, the device names associated with that H:C:T:L is again completely 
+arbitrary unless things like udev are used.
+
+> In case, the scsi device is on a storage array, can the TargetId and
+> LUN values change for a LUN?
+
+TargetId - on most everything other than Parallel-scsi - yes it can chang.
+
+LUN - even on some storage arrays, the storage entity addressed by LUN 
+value Y can change. Some arrays vary the LUN value for the storage 
+entity based on the input port they are being accessed by.
+
+> Specifically, during path failures to an FC array, is it possible to
+> get a different value of TargetId and LUN id for a SCSI device when it
+> reappears when the paths recover?
+
+Absolutely - Especially via 2 separate adapters/paths. There's no such 
+thing as believing 2 adapters will derive the same TgtID (usually 
+won't), nor that the lun number has to match (usually will).
+
+> Some code reading has led me to believe that the each remote port is
+> being viewed as a separate (Target) ID. Why is this so? Dont we
+> recognize multiported target SCSI devices?
+
+Sure - but the transport only deals with the explicit transport 
+endpoint-to-endpoint connection (e.g. a path, I_T nexus, N_Port_ID to 
+N_Port_ID). It's up to other layers (DM) to associate the set of 
+connections/paths for things that are multi-ported.
+
+> I have also seen that during remote port time out(possibly due to path
+> failures or fabric problems), the remote port related data is not
+> discarded. When the remote port is detected by the LLDD,
+> scsi_transport_fc compares it with the list of ports it has and
+> re-assigns the same state/structure to the newly discovered port. Why
+> was this required? Is it to prevent target ID changes across loss of
+> connectivity to the (fibre channel) target device?
+
+It was to provide some compatibility for older utilities, that got used 
+to the parallel-scsi persistence property of once a target id was seen, 
+it could use the same H:C:T:L tuple to talk to it later, even if it went 
+away for a while. It's not a guarantee, but mostly works.
+
+> If HBAs are hotpluggable/hot swappable, will the 'host' part of the
+> [H,C,I,L] tuple change for a new identical HBA plugged into the same
+> slot?
+
+Yes.  And if PCI probe order changes, or new adapter inserted prior to 
+next boot, can also change it.  Persistence of H:C:T:L is never 
+guaranteed boot-to-boot, or across driver unload/load - and is only 
+somewhat given even while the driver stays loaded and attached (it 
+becomes a property of the driver and/or transport).
+
+> How are LUN Ids enumerated? Does the order in which the response
+> REPORT_LUN command gives LUNs, determine the LUN ID assignment for a
+> SCSI disk discovered on a remote target on an array connected via FC?
+
+See the midlayer scan functions - there's sequential look ups or 
+ReportLuns use that all depends on scsi-levels reported, and device 
+overrides.
+
+Order of response in ReportLuns doesn't really change things relative to 
+H:C:T:L, but it may change the device name assignment seen within the 
+filesystem.
+
+> Can this order of LUN presentation change and is valid?
+
+I don't think there's any requirement in SAM that says its invalid.
+
+> If REPORT LUNs is not supported and the scsi_transport_fc has to scan
+> all possible LU ids, the order is fixed(1 - 2^16). Is this why the LUN
+> id does not change for a particular LUN being presented to a host
+> across rescans/path-failure-recovery cycles?
+
+No - it's simply a "better" property that based on the storage not 
+changing lun to storage entity relationships, and the lun number munging 
+into the same value each time (by properties of the LUN value and the 
+algorithm), and coupled with same discovery order giving same arbitrary 
+device name assignment - things appear consistent.
+
+PS: and please don't make me scan 2^16 (or more) singularly. Support 
+SCSI-3 and ReportLUN's.
+
+-- james s
+
+> Thanks in advance,
+> Dheeraj
+> --
+> Simplicity of character is the natural result of profound thought.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
