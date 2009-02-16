@@ -1,62 +1,71 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
 Subject: Re: [PATCH 1/8] exofs: Kbuild, Headers and osd utils
-Date: Mon, 16 Feb 2009 12:19:25 +0200
-Message-ID: <49993DAD.40407@panasas.com>
-References: <1234185129-31858-1-git-send-email-bharrosh@panasas.com>	<20090216131806X.fujita.tomonori@lab.ntt.co.jp>	<499928A3.60507@panasas.com> <20090216180028C.fujita.tomonori@lab.ntt.co.jp> <49992F99.1060404@panasas.com> <49993182.3010707@garzik.org>
+Date: Mon, 16 Feb 2009 12:29:06 +0200
+Message-ID: <49993FF2.9050200@panasas.com>
+References: <499928A3.60507@panasas.com>	<20090216180028C.fujita.tomonori@lab.ntt.co.jp>	<49992F99.1060404@panasas.com> <20090216183750H.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:7718 "EHLO
+Received: from gw-ca.panasas.com ([66.104.249.162]:10504 "EHLO
 	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754359AbZBPKTb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Feb 2009 05:19:31 -0500
-In-Reply-To: <49993182.3010707@garzik.org>
+	with ESMTP id S1750849AbZBPK3M (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Feb 2009 05:29:12 -0500
+In-Reply-To: <20090216183750H.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, avishay@gmail.com, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, osd-dev@open-osd.org, linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: avishay@gmail.com, jeff@garzik.org, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, osd-dev@open-osd.org, linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, linux-scsi@vger.kernel.org
 
-Jeff Garzik wrote:
-> Boaz Harrosh wrote:
->> FUJITA Tomonori wrote:
->>> Boaz Harrosh <bharrosh@panasas.com> wrote:
+FUJITA Tomonori wrote:
+> On Mon, 16 Feb 2009 11:19:21 +0200
+> Boaz Harrosh <bharrosh@panasas.com> wrote:
+> 
 >>>> Also looking
 >>>> ahead I will have RAID 0, 1, 5, and 6 on objects of different devices. bio
 >>>> is the perfect collector for memory information in this situation.
-> 
 >>> You will add such features to exofs, handling multiple devices
 >>> internally?
-> 
+>>>
 >> Multiple objects on Multiple devices, Yes.
 > 
-> That sort of feature does not belong in exofs, but somewhat separate. 
-> Ideally we should be able to share "MD for OSD" with other OSD 
-> filesystems, and the "osdblk" device that I will produce once libosd 
-> hits upstream.
+> I thought that exofs is kinda example (reference) file system.
+> 
+> Nobody has seen your code. Let's discuss when we have the
+> code. Over-designing for what we've not seen is not a good idea.
 > 
 
-No can do. exofs is meant to be a reference implementation of a pNFS-objects
-file serving system. Have you read the spec of pNFS-objects layout? they define
-RAID 0, 1, 5, and 6. In pNFS the MDS is suppose to be able to write the data
-for its clients as NFS, so it needs to have all the infra structure and knowledge
-of an Client pNFS-object layout drive.
+Thanks for the insults, and high credit ;)
 
-But don't worry, the plans are that layout-drive and exofs will reuse all the
-same library code that does all that. There will not be a single line of duplicate
-code.
+Yes it's "kinda example (reference) file system" of a pNFS-objects
+file system. What can I do life is tough.
 
-In fact one of the things I wanted to talk about in LSF is a generic, BIO based
-(or some thing else), RAID engine, That could be used by all RAIDers in Kernel,
-DM, MD, btrfs, exofs pNFS-objects, TUX3, ZFS and so on. And I don't mean just the
-low level memory-pointers XOR functions, but the more higher level of memory
-splitters/collectors, abstract-device lists, and RAID description structures.
-(Because RAIDs can be stacked like 10, 50, and all kind of crazy things)
+> 
+>>>> exofs is not the first and only file system who is using bios. Proof of
+>>>> the matter is that block exports a bio submit routine.
+>>> Seems that exofs just passes pages and the ULD sends a SCSI command
+>>> including these pages. I don't see how exofs needs to handle bio
+>>> directly.
+>>>
+>> How do you propose to collect these pages? and keep them without allocating
+>> an extra list? without pre-allocating a struct request? and without re-inventing
+>> the bio structure?
+> 
+> I don't think that allocating an extra list (or something) to keep
+> them hurts performance. We can talk about it when you have the real
+> performance results.
 
-> 	Jeff
-> 
-> 
-> 
-> 
+So you are the one that starts to invent the wheel here. I thought I was
+the one that does that, only you only called me by names, because you never showed
+me where.
+
+But please only answer one question for me: Please don't write back if you do not
+answer this question:
+
+Why do other filesystems allow to use bios? are they going to stop? Who is going
+to remove that?
+
+And as I said, I am going to remove it for now, please be patient. You have never
+herd from me that I refuse to do it, did you?
 
 Boaz
