@@ -1,140 +1,124 @@
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: BUG - MODE SENSE residue miscount in g_file_storage bulk-only transport ?
-Date: Mon, 16 Feb 2009 12:33:26 +0100
-Message-ID: <200902161233.27173.stf_xl@wp.pl>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: pNFS rant (was Re: [PATCH 1/8] exofs: Kbuild, Headers and osd
+ utils)
+Date: Mon, 16 Feb 2009 14:45:42 +0200
+Message-ID: <49995FF6.1050502@panasas.com>
+References: <1234185129-31858-1-git-send-email-bharrosh@panasas.com>	<20090216131806X.fujita.tomonori@lab.ntt.co.jp>	<499928A3.60507@panasas.com> <20090216180028C.fujita.tomonori@lab.ntt.co.jp> <49992F99.1060404@panasas.com> <49993182.3010707@garzik.org> <49993DAD.40407@panasas.com> <49994860.9060109@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.wp.pl ([212.77.101.5]:41336 "EHLO mx1.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752432AbZBPLdl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Feb 2009 06:33:41 -0500
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <49994860.9060109@garzik.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, avishay@gmail.com, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, osd-dev@open-osd.org, linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-usb@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
 
-Hello.
+Jeff Garzik wrote:
+> Boaz Harrosh wrote:
+>> No can do. exofs is meant to be a reference implementation of a pNFS-objects
+>> file serving system. Have you read the spec of pNFS-objects layout? they define
+>> RAID 0, 1, 5, and 6. In pNFS the MDS is suppose to be able to write the data
+>> for its clients as NFS, so it needs to have all the infra structure and knowledge
+>> of an Client pNFS-object layout drive.
+> 
+> Yes, I have studied pNFS!  I plan to add v4.1 and pNFS support to my NFS 
+> server, once v4.0 support is working well.
+> 
+> 
+> pNFS The Theory:   is wise and necessary:  permit clients to directly 
+> connect to data storage, rather than copying through the metadata 
+> server(s).  This is what every distributed filesystem is doing these 
+> days -- direct to data server for bulk data read/write.
+> 
+> pNFS The Specification:   is an utter piece of shit.  I can only presume 
+> some shady backroom deal in a smoke-filled room was the reason this saw 
+> the light of day.
+> 
+> 
+> In a sane world, NFS clients would speak... NFS.
+> 
+> In the crazy world of pNFS, NFS clients are now forced to speak NFS, 
+> SCSI, RAID, and any number of proprietary layout types.  When will HTTP 
+> be added to the list?  :)
+> 
+> But anything beyond the NFS protocol for talking client <-> data servers 
+> is code bloat complexity madness for an NFS client that wishes to be 
+> compatible with "most of the NFS 4.1 world".
+> 
+> An ideal NFS client for pNFS should be asked to do these two things, and 
+> nothing more:
+> 
+> 1) send metadata transactions to one or more metadata servers, using 
+> well-known NFS protocol
+> 
+> 2) send data to one or more data servers, using well-known NFS protocol 
+> subset designed for storage (v4.1, section 13.6)
+> 
+> But no.
+> 
+> pNFS has forced a huge complexity on the NFS client, by permitting an 
+> unbounded number of network protocols.  A "layout plugin" layer is 
+> required.  SCSI and OSD support are REQUIRED for any reasonably 
+> compatible setup going forward.
+> 
+> But even more than the technical complexity, this is the first time in 
+> NFS history that NFS has required a protocol besides... NFS.
+> 
+> pNFS means that a useful. compatible NFS client must know all these 
+> storage protocols, in addition to NFS.
+> 
+> Furthermore, enabling proprietary layout types means that it is easy for 
+> a "compatible" v4.1 client to be denied parallel access to data 
+> available to other "compatible" v4.1 clients:
+> 
+> 	Client A: Linux, fully open source
+> 
+> 	Client B: Linux, with closed source module for
+> 		  layout type SuperWhizBang storage
+> 
+> 	Both Client A and Client B can claim to be NFS v4.1 and pNFS
+> 	compatible,
+> 	yet Client A must read data through the metadata
+> 	server because it lacks the SuperWhizBang storage plugin.
+> 
+> pNFS means a never-ending arms race for the best storage layout, where 
+> NFS clients are inevitably compatibly with a __random subset__ of total 
+> available layout types.  pNFS will be a continuing train wreck of 
+> fly-by-night storage companies, and their pet layout types & storage 
+> protocols.
+> 
+> It is a support nightmare, an admin nightmare, a firewall nightmare, a 
+> client implementor's nightmare, but a storage vendor's wet dream.
+> 
+> NFS was never beautiful, but at least until v4.0 it was well known and 
+> widely cross-compatible.  And only required one network protocol: NFS.
+> 
+> 	Jeff
+> 
 
-I'm trying to use g_file_storage gadget on my embedded Atmel board and have
-some troubles. It take _very_ long time to discovery device due to USB interface
-resets which happen because of residue miscouting for MODE_SENSE command.
-Below are debugging mesages in configuration where USB host is connected to USB
-device on the same machine (USB cable loop).
+I hear you. I'm paying close attention and noting down all of above
+hazardous signals. However, please allow me my own on-look on the matter.
+Perhaps one day soon, (Probably not in LSF, no travel budget approval yet),
+we will meet and we can talk about it more closely, and maybe I could
+convince you of other aspects as well.
 
-Whats happen? 
-- SCSI host driver set MODE SENSE command length to 192
-- device return 16 bytes of mode pages and set internal residue to 176, 
-- host does not check residue and try to get command status
-- device halt bulk in endpoint
-- host reset device 
-This sequence is repeated few times (SD_MAX_RETRIES times probably).
+But pragmatically speaking. All the above has nothing that I can do about it.
+My job is to show an OO reference implementation of pNFS-objects, a public
+and signed protocol. I admit that pNFS-objects is a Panasas's pet, which is
+my boss and the inventor of pNFS. I hope to remove it from your above
+SuperWhizBang category, please. Actually my job is so it will not be. I want
+an open standard implementation from day one, so there will be no questions. I
+understand that you argue about the do or die of the OSD protocol under pNFS.
+For me it is just that much more challenge of swimming up stream, as a Salmon.
+Everyone is doing "Files" I get to do "Objects". I hope when finally the code
+will arrive, soon, and it gets to be used, it's merits, performance, security,
+and ease-of-use will win users over, big time.
+(Lets compare notes, what is the minimal NFS DS implementation you can imagine?
+ What would you say an OSD's target is? not counting all the extras an OSD gives
+ you, like no proprietary back-channel protocol between MDS-to-DS inside the cluster.)
 
-I'm trying to fix the issue and currently wrote a workaround which looks
-works quite well, but I did not test it for other transports than BBB:
+But I do hear you, really, you have very valid points that must be taken into consideration.
 
-diff --git a/drivers/usb/gadget/file_storage.c b/drivers/usb/gadget/file_storage.c
-index b10fa31..0a77ba8 100644
---- a/drivers/usb/gadget/file_storage.c
-+++ b/drivers/usb/gadget/file_storage.c
-@@ -2269,6 +2269,7 @@ static int do_mode_sense(struct fsg_dev *fsg, struct fsg_buffhd *bh)
- 		buf0[0] = len - 1;
- 	else
- 		put_be16(buf0, len - 2);
-+	fsg->residue = fsg->usb_amount_left = len;
- 	return len;
- }
- 
-Maybe this is not only problem with MODE SENSE command but with all commands
-that have allocation length field and file_storage gadget driver BBB transport
-return less data.
-
-Problem also happens in older kernels, I tried 2.6.27 and 2.6.24 - they have this issue. 
-Please let me know if have more info or any other help to fix.
-
-Cheers
-Stanislaw Gruszka
-
-[  111.320000] usb-storage: Command TEST_UNIT_READY (6 bytes)
-[  111.320000] usb-storage:  00 00 00 00 00 00
-[  111.320000] usb-storage: Bulk Command S 0x43425355 T 0x33 L 0 F 0 Trg 0 LUN 0 CL 6
-[  111.320000] usb-storage: usb_stor_bulk_transfer_buf: xfer 31 bytes
-[  111.330000] SCSI CDB: 00 00 00 00 00 00
-[  111.330000] g_file_storage gadget: SCSI command: TEST UNIT READY;  Dc=6, Dn=0;  Hc=6, Hn=0
-[  111.330000] usb-storage: Status code 0; transferred 31/31
-[  111.330000] usb-storage: -- transfer complete
-[  111.330000] usb-storage: Bulk command transfer result=0
-[  111.330000] usb-storage: Attempting to get CSW...
-[  111.330000] usb-storage: usb_stor_bulk_transfer_buf: xfer 13 bytes
-[  111.330000] usb-storage: Status code 0; transferred 13/13
-[  111.330000] usb-storage: -- transfer complete
-[  111.330000] usb-storage: Bulk status result = 0
-[  111.330000] usb-storage: Bulk Status S 0x53425355 T 0x33 R 0 Stat 0x0
-[  111.330000] usb-storage: scsi cmd done, result=0x0
-[  111.330000] usb-storage: *** thread sleeping.
-[  111.330000] usb-storage: queuecommand called
-[  111.330000] usb-storage: *** thread awakened.
-[  111.330000] usb-storage: Command MODE_SENSE (6 bytes)
-[  111.330000] usb-storage:  1a 00 3f 00 c0 00
-[  111.330000] usb-storage: Bulk Command S 0x43425355 T 0x34 L 192 F 128 Trg 0 LUN 0 CL 6
-[  111.330000] usb-storage: usb_stor_bulk_transfer_buf: xfer 31 bytes
-[  111.330000] SCSI CDB: 1a 00 3f 00 c0 00
-[  111.330000] g_file_storage gadget: SCSI command: MODE SENSE(6);  Dc=6, Di=192;  Hc=6, Hi=192
-[  111.330000] g_file_storage gadget: bulk-in set halt
-[  111.330000] g_file_storage gadget: delayed bulk-in endpoint halt
-[  111.330000] usb-storage: Status code 0; transferred 31/31
-[  111.330000] usb-storage: -- transfer complete
-[  111.330000] usb-storage: Bulk command transfer result=0
-[  111.330000] usb-storage: usb_stor_bulk_transfer_sglist: xfer 192 bytes, 1 entries
-[  111.330000] at91_ohci at91_ohci: urb c3bfaec0 path 1 ep1in 93120000 cc 9 --> status -121
-[  111.330000] usb-storage: Status code -121; transferred 16/192
-[  111.330000] usb-storage: -- short read transfer
-[  111.330000] usb-storage: Bulk data transfer result 0x1
-[  111.330000] usb-storage: Attempting to get CSW...
-[  111.330000] usb-storage: usb_stor_bulk_transfer_buf: xfer 13 bytes
-[  111.440000] at91_ohci at91_ohci: urb c3aef2a0 path 1 ep1in 40160000 cc 4 --> status -32
-[  111.440000] usb-storage: Status code -32; transferred 0/13
-[  111.440000] usb-storage: clearing endpoint halt for pipe 0xc0008280
-[  111.440000] usb-storage: usb_stor_control_msg: rq=01 rqtype=02 value=0000 index=81 len=0
-[  111.440000] usb-storage: usb_stor_clear_halt: result = 0
-[  111.440000] usb-storage: Attempting to get CSW (2nd try)...
-[  111.440000] usb-storage: usb_stor_bulk_transfer_buf: xfer 13 bytes
-[  142.000000] usb-storage: command_abort called
-[  142.000000] usb-storage: usb_stor_stop_transport called
-[  142.000000] usb-storage: -- cancelling URB
-[  142.000000] usb-storage: Status code -104; transferred 0/13
-[  142.000000] usb-storage: -- transfer cancelled
-[  142.000000] usb-storage: Bulk status result = 4
-[  142.000000] usb-storage: -- command was aborted
-[  142.000000] usb-storage: storage_pre_reset
-[  142.010000] g_file_storage gadget: bulk_out_complete --> -108, 0/31
-[  142.010000] g_file_storage gadget: disconnect or port reset
-[  142.010000] g_file_storage gadget: reset config
-[  142.010000] g_file_storage gadget: reset interface
-[  142.010000] hub 1-0:1.0: state 7 ports 2 chg 0000 evt 0002
-[  142.080000] at91_ohci at91_ohci: GetStatus roothub.portstatus [0] = 0x00100103 PRSC PPS PES CCS
-[  142.140000] usb 1-1: reset full speed USB device using at91_ohci and address 2
-[  142.140000] g_file_storage gadget: get device descriptor
-[  142.150000] g_file_storage gadget: disconnect or port reset
-[  142.220000] at91_ohci at91_ohci: GetStatus roothub.portstatus [0] = 0x00100103 PRSC PPS PES CCS
-[  142.250000] hub 1-0:1.0: state 7 ports 2 chg 0000 evt 0002
-[  142.310000] g_file_storage gadget: get device descriptor
-[  142.310000] g_file_storage gadget: get configuration descriptor
-[  142.310000] g_file_storage gadget: get string descriptor
-[  142.310000] g_file_storage gadget: set configuration
-[  142.310000] g_file_storage gadget: set interface 0
-[  142.310000] g_file_storage gadget: full speed config #1
-[  142.310000] g_file_storage gadget: bulk_out_complete --> -104, 0/31
-[  142.310000] g_file_storage gadget: reset interface
-[  142.310000] g_file_storage gadget: set interface 0
-[  142.310000] usb-storage: storage_post_reset
-[  142.310000] usb-storage: usb_reset_device returns 0
-[  142.310000] usb-storage: scsi command aborted
-[  142.310000] usb-storage: *** thread sleeping.
-[  142.310000] usb-storage: queuecommand called
-[  142.310000] usb-storage: *** thread awakened.
-[  142.310000] usb-storage: Command TEST_UNIT_READY (6 bytes)
-...  repeat few times
+Thanks
+Boaz
