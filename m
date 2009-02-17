@@ -1,29 +1,34 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH v2 4/6 2.6.29-rc] cxgb3i - added missing include in cxgb3i_ddp.h
-Date: Tue, 17 Feb 2009 15:16:45 -0600
-Message-ID: <499B293D.6060807@cs.wisc.edu>
-References: <200902140538.n1E5cxfn014345@localhost.localdomain>
+From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Subject: Re: [PATCH v2 2/6 2.6.29-rc] cxgb3i - added per-task data to track transmit progress
+Date: Tue, 17 Feb 2009 15:17:16 -0600
+Message-ID: <499B295C.8030306@cs.wisc.edu>
+References: <200902140538.n1E5cnWQ014331@localhost.localdomain>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:53821 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751844AbZBQVQ4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Feb 2009 16:16:56 -0500
-In-Reply-To: <200902140538.n1E5cxfn014345@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <grbounce-FC1hwAUAAAA0O9VQcsxVj1UPjHD9r3x_=glio-open-iscsi=m.gmane.org-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <200902140538.n1E5cnWQ014331-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Post: <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://googlegroups.com/group/open-iscsi/subscribe>,
+	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+Cc: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Karen Xie <kxie@chelsio.com>
-Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
+
 
 Karen Xie wrote:
-> [PATCH v2 4/6 2.6.29-rc] cxgb3i - added missing include in cxgb3i_ddp.h
+> [PATCH v2 2/6 2.6.29-rc] cxgb3i - added per-task data to track transmit progress
 > 
-> From: Karen Xie <kxie@chelsio.com>
+> From: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
 > 
-> Added missing include file in cxgb3i_ddp.h.
+> added per-task struct cxgb3i_task_data to track the data transmiting
+> progress and the state of the pdus to be transmitted.
 > 
-> Signed-off-by: Karen Xie <kxie@chelsio.com>
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+
+
+> Signed-off-by: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+
+Reviewed-by: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
