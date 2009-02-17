@@ -1,132 +1,41 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12733] mpt fusion driver crashes with LSI22320SE installed and BIOS ACPI turned off
-Date: Tue, 17 Feb 2009 15:16:58 -0800 (PST)
-Message-ID: <20090217231658.91F4C108043@picon.linux-foundation.org>
-References: <bug-12733-11613@http.bugzilla.kernel.org/>
+From: Yinghai Lu <yinghai@kernel.org>
+Subject: Re: mpt fusion broken sometime since 2.6.24
+Date: Tue, 17 Feb 2009 15:20:28 -0800
+Message-ID: <86802c440902171520r4eb9c94ev416a54c540cf60c1@mail.gmail.com>
+References: <alpine.DEB.1.10.0902171419000.26625@asgard.lang.hm>
+	 <alpine.DEB.1.10.0902171343280.26625@asgard.lang.hm>
+	 <20090217230050.GG16841@parisc-linux.org>
+	 <alpine.DEB.1.10.0902171506500.26625@asgard.lang.hm>
+	 <20090217231101.GH16841@parisc-linux.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:58783 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753501AbZBQXR3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Feb 2009 18:17:29 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n1HNGwnR026716
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Feb 2009 15:17:00 -0800
-In-Reply-To: <bug-12733-11613@http.bugzilla.kernel.org/>
+Received: from rv-out-0506.google.com ([209.85.198.234]:54779 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752678AbZBQXU3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Feb 2009 18:20:29 -0500
+In-Reply-To: <20090217231101.GH16841@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>, Andrew Morton <akpm@linux-foundation.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: david@lang.hm, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12733
+On Tue, Feb 17, 2009 at 3:11 PM, Matthew Wilcox <matthew@wil.cx> wrote:
+> On Tue, Feb 17, 2009 at 03:07:26PM -0800, david@lang.hm wrote:
+>> >mptbase.mpt_msi_enable_sas=0
+>>
+>> is that disabling SAS for this system? if so, that's the wrong thing to do
+>> (the drives are SAS)
+>
+> no, it's disabling msi for sas controllers.
+>
+> nb, I said this patch (e382968ba618e016ff7922dff9a6140c2f9108c8) was
+> the wrong way to go about getting MSI working.
 
+yes. that patch really does disable the mptsas with MSI.
 
+http://lkml.org/lkml/2009/2/6/375
+it should get into 2.6.29...
 
-
-
-------- Comment #1 from anonymous@kernel-bugs.osdl.org  2009-02-17 15:16 -------
-Reply-To: James.Bottomley@HansenPartnership.com
-
-On Tue, 2009-02-17 at 15:04 -0800, bugme-daemon@bugzilla.kernel.org
-wrote:
-> http://bugzilla.kernel.org/show_bug.cgi?id=12733
-> 
->            Summary: mpt fusion driver crashes with LSI22320SE installed and
->                     BIOS ACPI turned off
->            Product: SCSI Drivers
->            Version: 2.5
->      KernelVersion: 2.6.27.5-117
->           Platform: All
->         OS/Version: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: high
->           Priority: P1
->          Component: Other
->         AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
->         ReportedBy: mvolaski@aecom.yu.edu
-> 
-> 
-> On a system with a Supermicro X7DWN+ with ACPI turned off, and an LSI22320SE
-> card installed, the mptdriver will crash. (The problem appears to affect other
-> boards as well).
-
-The first question is can this board operate without ACPI?  It's used to
-get the interrupt routings and your log below indicates that the driver
-isn't receiving the card interrupt.
-
-> Here is the relevant log:
-> 
-> Oct  5 21:19:54 localhost kernel: Fusion MPT SPI Host driver 3.04.07
-> Oct  5 21:19:54 localhost kernel: mptbase: ioc0: Initiating bringup
-> Oct  5 21:19:54 localhost kernel: [drm] Initialized radeon 1.29.0 20080528 on
-> minor 0
-> Oct  5 21:19:54 localhost kernel: ioc0: LSI53C1030 C0:
-> Capabilities={Initiator,Target}
-> Oct  5 21:19:54 localhost kernel: scsi2 : ioc0: LSI53C1030 C0, FwRev=01033400h,
-> Ports=1, MaxQ=255, IRQ=52
-> Oct  5 21:19:54 localhost kernel: mptbase: ioc1: Initiating bringup
-> Oct  5 21:19:54 localhost kernel: ioc1: LSI53C1030 C0:
-> Capabilities={Initiator,Target}
-> Oct  5 21:19:54 localhost kernel: scsi3 : ioc1: LSI53C1030 C0, FwRev=01033400h,
-> Ports=1, MaxQ=255, IRQ=52
-
-Is 52 the right interrupt number?
-
-> Oct  5 21:19:54 localhost kernel: device-mapper: multipath: version 1.0.5
-> loaded
-> Oct  5 21:19:54 localhost kernel: EXT3 FS on dm-0, internal journal
-> Oct  5 21:19:54 localhost kernel: mptscsih: ioc1: attempting task abort!
-> (sc=f5aca500)
-> Oct  5 21:19:54 localhost kernel: scsi 3:0:4:0: CDB: Inquiry: 12 00 00 00 24 00
-> Oct  5 21:19:54 localhost kernel: mptbase: ioc1: Initiating recovery
-> Oct  5 21:19:54 localhost kernel: scsi 3:0:4:0: mptscsih: ioc1: completing
-> cmds: fw_channel 0, fw_id 4, sc=f5aca500, mf = f48e3160, idx=19
-> Oct  5 21:19:54 localhost kernel: mptscsih: ioc1: Issue of TaskMgmt failed!
-> Oct  5 21:19:54 localhost kernel: mptscsih: ioc1: task abort: FAILED
-> (sc=f5aca500)
-> Oct  5 21:19:54 localhost kernel: mptscsih: ioc1: attempting target reset!
-> (sc=f5aca500)
-> Oct  5 21:19:54 localhost kernel: scsi 3:0:4:0: CDB: Inquiry: 12 00 00 00 24 00
-> Oct  5 21:19:54 localhost kernel: mptbase: ioc1: Initiating recovery
-> Oct  5 21:19:54 localhost kernel: mptscsih: ioc1: Issue of TaskMgmt failed!
-> Oct  5 21:19:54 localhost kernel: mptscsih: ioc1: target reset: FAILED
-> (sc=f5aca500)
-> Oct  5 21:19:54 localhost kernel: mptscsih: ioc1: attempting bus reset!
-> (sc=f5aca500)
-> Oct  5 21:19:54 localhost kernel: scsi 3:0:4:0: CDB: Inquiry: 12 00 00 00 24 00
-> Oct  5 21:19:54 localhost kernel: scsi target3:0:4: mptspi: ioc1: mpt_config
-> failed
-> Oct  5 21:19:54 localhost kernel: scsi target3:0:4: FAST-5 WIDE SCSI 3.4 MB/s
-> ST QAS RDSTRM WRFLOW (572 ns, offset 133)
-> Oct  5 21:19:54 localhost kernel: mptbase: ioc1: Initiating recovery
-> 
-> and
-> 
-> Oct  5 21:19:54 localhost kernel: mptscsih: ioc1: Issue of TaskMgmt failed!
-> Oct  5 21:19:54 localhost kernel: mptscsih: ioc1: bus reset: FAILED
-> (sc=f5aca500)
-> Oct  5 21:19:54 localhost kernel: mptscsih: ioc1: attempting host reset!
-> (sc=f5aca500)
-> Oct  5 21:19:54 localhost kernel: mptbase: ioc1: Initiating recovery
-> Oct  5 21:19:54 localhost kernel: scsi target3:0:4: mptspi: ioc1: mpt_config
-> failed
-> Oct  5 21:19:54 localhost kernel: scsi target3:0:4: mptspi: ioc1: mpt_config
-> failed
-> Oct  5 21:19:54 localhost kernel: scsi target3:0:4: FAST-5 WIDE SCSI 3.4 MB/s
-> ST QAS RDSTRM WRFLOW (572 ns, offset 133)
-> Oct  5 21:19:54 localhost kernel: scsi target3:0:4: mptspi: ioc1: mpt_config
-> failed
-> Oct  5 21:19:54 localhost kernel: scsi target3:0:4: mptspi: ioc1: mpt_config
-> failed
-> Oct  5 21:19:54 localhost kernel: scsi target3:0:4: FAST-5 WIDE SCSI 3.4 MB/s
-> ST QAS RDSTRM WRFLOW (572 ns, offset 133)
-> Oct  5 21:19:54 localhost kernel: scsi target3:0:4: mptspi: ioc1: mpt_config
-> failed
-
-James
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+YH
