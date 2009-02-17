@@ -1,91 +1,987 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: [PATCH 9/9] scsi: megaraid_sas - Update the Version and ChangeLog
-Date: Tue, 17 Feb 2009 10:50:22 -0700
-Message-ID: <4B6A08C587958942AA3002690DD4F8C33A07FC71@cosmail02.lsi.com>
-References: <4B6A08C587958942AA3002690DD4F8C33A07FC5B@cosmail02.lsi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12727] New: AIC79xx problem on Adaptec 29320A-P controller
+Date: Tue, 17 Feb 2009 10:09:40 -0800 (PST)
+Message-ID: <bug-12727-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og102.obsmtp.com ([64.18.2.157]:55471 "EHLO
-	exprod7og102.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751886AbZBQRup convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Feb 2009 12:50:45 -0500
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C33A07FC5B@cosmail02.lsi.com>
-Content-Language: en-US
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41858 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752061AbZBQSKN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Feb 2009 13:10:13 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n1HI9fp2026151
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Feb 2009 10:09:42 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>li
-Cc: "Austria, Winston" <Winston.Austria@lsi.com>
+To: linux-scsi@vger.kernel.org
 
-Update the Version and ChangeLog
+http://bugzilla.kernel.org/show_bug.cgi?id=12727
 
-Signed-off-by Bo Yang<bo.yang@lsi.com>
+           Summary: AIC79xx problem on Adaptec 29320A-P controller
+           Product: SCSI Drivers
+           Version: 2.5
+     KernelVersion: 2.6.25.20-0.1-default
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Other
+        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
+        ReportedBy: j@jensen-net.org
 
----
-Documentation/scsi/ChangeLog.megaraid_sas |   25 +++++++++++++++++++++++++
- drivers/scsi/megaraid/megaraid_sas.c      |    2 +-
- drivers/scsi/megaraid/megaraid_sas.h      |    6 +++---
- 3 files changed, 29 insertions(+), 4 deletions(-)
 
-diff -rupN linux-2.6.28_orig/Documentation/scsi/ChangeLog.megaraid_sas linux-2.6.28_new/Documentation/scsi/ChangeLog.megaraid_sas
---- linux-2.6.28_orig/Documentation/scsi/ChangeLog.megaraid_sas 2009-02-12 17:30:44.000000000 -0500
-+++ linux-2.6.28_new/Documentation/scsi/ChangeLog.megaraid_sas  2009-02-12 15:24:58.000000000 -0500
-@@ -1,4 +1,29 @@
+Latest working kernel version: N/A
+Earliest failing kernel version: 2.6.25.20-0.1-default
+Distribution: OpenSUSE 11.0
+Hardware Environment: Supermicro server
+Software Environment: 
+Problem Description:
+When there is a pause in writing to the tape after that the error occurs.
 
-+1 Release Date    : Tues. Feb. 10, 2009 10:12:45 PST 2009 -
-+                        (emaild-id:megaraidlinux@lsi.com)
-+                        Bo Yang
-+
-+2 Current Version : 00.00.04.03
-+3 Older Version   : 00.00.04.01
-+
-+1.     Add the Tape drive fix to the driver: If the command is for the tape device, set the
-+       pthru timeout to the os layer timeout value.
-+
-+2.     Add Poll_wait mechanism to Gen-2 Linux driv.
-+               In the aen handler, driver needs to wakeup poll handler similar to the way it raises SIGIO.
-+               Driver needs to reregister for AEN with the FW when it receives AEN. This will ensure AEN
-+               continuity and avoid depending upon storelib to continue events.
-+
-+3.     Add new controller 0x73(new SAS2)  support to the driver.
-+
-+4.     Add memory support required by 0x73 controller.
-+
-+5.     Report the unconfigured PD (system PD) to OS.
-+
-+6.     Add the IEEE SGL support to the driver
-+
-+7.     Reasign the Application cmds to 0x73 controller
-+
- 1 Release Date    : Thur.July. 24 11:41:51 PST 2008 -
-                        (emaild-id:megaraidlinux@lsi.com)
-                        Sumant Patro
-diff -rupN linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c
---- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c      2009-02-12 17:30:45.000000000 -0500
-+++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c       2009-02-12 17:31:58.000000000 -0500
-@@ -10,7 +10,7 @@
-  *        2 of the License, or (at your option) any later version.
-  *
-  * FILE                : megaraid_sas.c
-- * Version     : v00.00.04.01-rc1
-+ * Version     : v00.00.04.03-rc1
-  *
-  * Authors:
-  *     (email-id : megaraidlinux@lsi.com)
-diff -rupN linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.h linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.h
---- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.h      2009-02-12 17:30:47.000000000 -0500
-+++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.h       2009-02-12 17:32:44.000000000 -0500
-@@ -18,9 +18,9 @@
- /*
-  * MegaRAID SAS Driver meta data
-  */
--#define MEGASAS_VERSION                                "00.00.04.01"
--#define MEGASAS_RELDATE                                "July 24, 2008"
--#define MEGASAS_EXT_VERSION                    "Thu July 24 11:41:51 PST 2008"
-+#define MEGASAS_VERSION                                "00.00.04.03-rc1"
-+#define MEGASAS_RELDATE                                "Feb. 10, 2009"
-+#define MEGASAS_EXT_VERSION                    "Tues Feb. 10 11:41:51 PST 2009"
+Steps to reproduce: tar some data to tape.
 
- /*
-  * Device IDs
+Hardware information and error is below:
+Linux version 2.6.25.20-0.1-default (geeko@buildhost) (gcc version 4.3.1
+20080507 (prerelease) [gcc-4_3-branch revision 135036] (SUSE Linux) ) #1 SMP
+2008-12-12 20:30:38 +0100
+scsi0 : Adaptec AIC79XX PCI-X SCSI HBA DRIVER, Rev 3.0
+        <Adaptec 29320A Ultra320 SCSI adapter>
+        aic7901: Ultra320 Wide Channel A, SCSI Id=7, PCI-X 101-133Mhz, 512 SCBs
+ target0:0:3: asynchronous
+scsi 0:0:3:0: Sequential-Access IBM      ULTRIUM-TD3      7AP5 PQ: 0 ANSI: 3
+ target0:0:3: Beginning Domain Validation
+ target0:0:3: wide asynchronous
+ target0:0:3: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 127)
+ target0:0:3: Ending Domain Validation
+scsi 0:0:3:1: Medium Changer    EXABYTE  MAGNUM 224       C270 PQ: 0 ANSI: 4
+
+osst :I: Tape driver with OnStream support version 0.99.4
+osst :I: $Id: osst.c,v 1.73 2005/01/01 21:13:34 wriede Exp $
+st: Version 20080221, fixed bufsize 32768, s/g segs 256
+st 0:0:3:0: Attached scsi tape st0
+st 0:0:3:0: st0: try direct i/o: yes (alignment 4 B)
+st0: Block limits 1 - 16777215 bytes.
+
+scsi0: PCI error Interrupt
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State at program address 0x7f Mode 0x22
+Card was paused
+INTSTAT[0x10]:(PCIINT) SELOID[0x3] SELID[0x0] HS_MAILBOX[0x0] 
+INTCTL[0x80]:(SWTMINTMASK) SEQINTSTAT[0x0] SAVED_MODE[0x11] 
+DFFSTAT[0x19]:(CURRFIFO_1|FIFO0FREE) SCSISIGI[0xc6]:(P_STATUS|REQI|BSYI) 
+SCSIPHASE[0x20]:(STATUS_PHASE) SCSIBUS[0x0] LASTPHASE[0x20]:(P_DATAOUT_DT) 
+SCSISEQ0[0x0] SCSISEQ1[0x12]:(ENAUTOATNP|ENRSELI) 
+SEQCTL0[0x0] SEQINTCTL[0x0] SEQ_FLAGS[0x20]:(DPHASE) 
+SEQ_FLAGS2[0x0] QFREEZE_COUNT[0x1] KERNEL_QFREEZE_COUNT[0x1] 
+MK_MESSAGE_SCB[0xff00] MK_MESSAGE_SCSIID[0xff] 
+SSTAT0[0x2]:(SPIORDY) SSTAT1[0x19]:(REQINIT|BUSFREE|PHASEMIS) 
+SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0xc0]:(HIPERR|HIZERO) 
+SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO) 
+LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0] LQOSTAT0[0x0] 
+LQOSTAT1[0x0] LQOSTAT2[0x0] 
+
+SCB Count = 4 CMDS_PENDING = 1 LASTSCB 0xffff CURRSCB 0x2 NEXTSCB 0x0
+qinstart = 20614 qinfifonext = 20614
+QINFIFO:
+WAITING_TID_QUEUES:
+Pending list:
+  2 FIFO_USE[0x0] SCB_CONTROL[0x0] SCB_SCSIID[0x37] 
+Total 1
+Kernel Free SCB list: 3 1 0 
+Sequencer Complete DMA-inprog list: 
+Sequencer Complete list: 
+Sequencer DMA-Up and Complete list: 
+Sequencer On QFreeze and Complete list: 
+
+
+scsi0: FIFO0 Free, LONGJMP == 0x80ff, SCB 0x0
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0x0] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL) 
+SG_CACHE_SHADOW[0x2]:(LAST_SEG) SG_STATE[0x0] DFFSXFRCTL[0x0] 
+SOFFCNT[0x0] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) SHADDR = 0x00, SHCNT = 0x0 
+HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+
+scsi0: FIFO1 Active, LONGJMP == 0x8063, SCB 0x2
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0xc]:(DIRECTION|HDMAEN) 
+DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL)
+SG_CACHE_SHADOW[0xb]:(LAST_SEG_DONE|LAST_SEG) 
+SG_STATE[0x0] DFFSXFRCTL[0x0] SOFFCNT[0x0] MDFFSTAT[0x14]:(DLZERO|LASTSDONE) 
+SHADDR = 0x18eb4b800, SHCNT = 0x0 HADDR = 0x18eb4b800, HCNT = 0x0 
+CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+LQIN: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+0x0 0x0 
+scsi0: LQISTATE = 0x0, LQOSTATE = 0x0, OPTIONMODE = 0x52
+scsi0: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x0
+scsi0: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
+SIMODE0[0xc]:(ENOVERRUN|ENIOERR) 
+CCSCBCTL[0x4]:(CCSCBDIR) 
+scsi0: REG0 == 0x2, SINDEX = 0x180, DINDEX = 0x108
+scsi0: SCBPTR == 0xff02, SCB_NEXT == 0xff00, SCB_NEXT2 == 0x0
+CDB 2 1 0 0 0 0
+STACK: 0x20c 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+scsi0: Split completion read data parity error in DFF1
+scsi0: Address or Write Phase Parity Error Detected in DFF1.
+scsi0: PCI error Interrupt
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State at program address 0x33 Mode 0x11
+Card was paused
+INTSTAT[0x10]:(PCIINT) SELOID[0x3] SELID[0x0] HS_MAILBOX[0x0] 
+INTCTL[0x80]:(SWTMINTMASK) SEQINTSTAT[0x0] SAVED_MODE[0x11] 
+DFFSTAT[0x19]:(CURRFIFO_1|FIFO0FREE) SCSISIGI[0xc6]:(P_STATUS|REQI|BSYI) 
+SCSIPHASE[0x20]:(STATUS_PHASE) SCSIBUS[0x0] LASTPHASE[0x20]:(P_DATAOUT_DT) 
+SCSISEQ0[0x0] SCSISEQ1[0x12]:(ENAUTOATNP|ENRSELI) 
+SEQCTL0[0x0] SEQINTCTL[0x0] SEQ_FLAGS[0x20]:(DPHASE) 
+SEQ_FLAGS2[0x0] QFREEZE_COUNT[0x1] KERNEL_QFREEZE_COUNT[0x1] 
+MK_MESSAGE_SCB[0xff00] MK_MESSAGE_SCSIID[0xff] 
+SSTAT0[0x2]:(SPIORDY) SSTAT1[0x19]:(REQINIT|BUSFREE|PHASEMIS) 
+SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0xc0]:(HIPERR|HIZERO) 
+SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO) 
+LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0] LQOSTAT0[0x0] 
+LQOSTAT1[0x0] LQOSTAT2[0x0] 
+
+SCB Count = 4 CMDS_PENDING = 1 LASTSCB 0xffff CURRSCB 0x2 NEXTSCB 0x0
+qinstart = 20906 qinfifonext = 20906
+QINFIFO:
+WAITING_TID_QUEUES:
+Pending list:
+  2 FIFO_USE[0x0] SCB_CONTROL[0x0] SCB_SCSIID[0x37] 
+Total 1
+Kernel Free SCB list: 3 1 0 
+Sequencer Complete DMA-inprog list: 
+Sequencer Complete list: 
+Sequencer DMA-Up and Complete list: 
+Sequencer On QFreeze and Complete list: 
+
+
+scsi0: FIFO0 Free, LONGJMP == 0x80ff, SCB 0x0
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0x0] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL) 
+SG_CACHE_SHADOW[0x2]:(LAST_SEG) SG_STATE[0x0] DFFSXFRCTL[0x0] 
+SOFFCNT[0x0] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) SHADDR = 0x00, SHCNT = 0x0 
+HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+
+scsi0: FIFO1 Active, LONGJMP == 0x8063, SCB 0x2
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0xc]:(DIRECTION|HDMAEN) 
+DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL)
+SG_CACHE_SHADOW[0xb]:(LAST_SEG_DONE|LAST_SEG) 
+SG_STATE[0x0] DFFSXFRCTL[0x0] SOFFCNT[0x0] MDFFSTAT[0x14]:(DLZERO|LASTSDONE) 
+SHADDR = 0x18eb4b800, SHCNT = 0x0 HADDR = 0x18eb4b800, HCNT = 0x0 
+CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+LQIN: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+0x0 0x0 
+scsi0: LQISTATE = 0x0, LQOSTATE = 0x0, OPTIONMODE = 0x52
+scsi0: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x0
+scsi0: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
+SIMODE0[0xc]:(ENOVERRUN|ENIOERR) 
+CCSCBCTL[0x4]:(CCSCBDIR) 
+scsi0: REG0 == 0x2, SINDEX = 0x180, DINDEX = 0x108
+scsi0: SCBPTR == 0x2, SCB_NEXT == 0xff80, SCB_NEXT2 == 0xff80
+CDB a 0 0 81 8 28
+STACK: 0x20c 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+scsi0: Split completion read data parity error in DFF1
+scsi0: Address or Write Phase Parity Error Detected in DFF1.
+scsi0: PCI error Interrupt
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State at program address 0x20a Mode 0x11
+Card was paused
+INTSTAT[0x10]:(PCIINT) SELOID[0x3] SELID[0x0] HS_MAILBOX[0x0] 
+INTCTL[0x80]:(SWTMINTMASK) SEQINTSTAT[0x0] SAVED_MODE[0x11] 
+DFFSTAT[0x19]:(CURRFIFO_1|FIFO0FREE) SCSISIGI[0xc6]:(P_STATUS|REQI|BSYI) 
+SCSIPHASE[0x20]:(STATUS_PHASE) SCSIBUS[0x0] LASTPHASE[0x20]:(P_DATAOUT_DT) 
+SCSISEQ0[0x0] SCSISEQ1[0x12]:(ENAUTOATNP|ENRSELI) 
+SEQCTL0[0x0] SEQINTCTL[0x0] SEQ_FLAGS[0x20]:(DPHASE) 
+SEQ_FLAGS2[0x0] QFREEZE_COUNT[0x1] KERNEL_QFREEZE_COUNT[0x1] 
+MK_MESSAGE_SCB[0xff00] MK_MESSAGE_SCSIID[0xff] 
+SSTAT0[0x2]:(SPIORDY) SSTAT1[0x19]:(REQINIT|BUSFREE|PHASEMIS) 
+SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0xc0]:(HIPERR|HIZERO) 
+SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO) 
+LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0] LQOSTAT0[0x0] 
+LQOSTAT1[0x0] LQOSTAT2[0x0] 
+
+SCB Count = 4 CMDS_PENDING = 1 LASTSCB 0xffff CURRSCB 0x2 NEXTSCB 0x0
+qinstart = 21586 qinfifonext = 21586
+QINFIFO:
+WAITING_TID_QUEUES:
+Pending list:
+  2 FIFO_USE[0x0] SCB_CONTROL[0x0] SCB_SCSIID[0x37] 
+Total 1
+Kernel Free SCB list: 3 1 0 
+Sequencer Complete DMA-inprog list: 
+Sequencer Complete list: 
+Sequencer DMA-Up and Complete list: 
+Sequencer On QFreeze and Complete list: 
+
+
+scsi0: FIFO0 Free, LONGJMP == 0x80ff, SCB 0x0
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0x0] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL) 
+SG_CACHE_SHADOW[0x2]:(LAST_SEG) SG_STATE[0x0] DFFSXFRCTL[0x0] 
+SOFFCNT[0x0] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) SHADDR = 0x00, SHCNT = 0x0 
+HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+
+scsi0: FIFO1 Active, LONGJMP == 0x8063, SCB 0x2
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0xc]:(DIRECTION|HDMAEN) 
+DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL)
+SG_CACHE_SHADOW[0xb]:(LAST_SEG_DONE|LAST_SEG) 
+SG_STATE[0x0] DFFSXFRCTL[0x0] SOFFCNT[0x0] MDFFSTAT[0x14]:(DLZERO|LASTSDONE) 
+SHADDR = 0x18eb4b800, SHCNT = 0x0 HADDR = 0x18eb4b800, HCNT = 0x0 
+CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+LQIN: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+0x0 0x0 
+scsi0: LQISTATE = 0x0, LQOSTATE = 0x0, OPTIONMODE = 0x52
+scsi0: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x0
+scsi0: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
+SIMODE0[0xc]:(ENOVERRUN|ENIOERR) 
+CCSCBCTL[0x4]:(CCSCBDIR) 
+scsi0: REG0 == 0x2, SINDEX = 0x180, DINDEX = 0x108
+scsi0: SCBPTR == 0x2, SCB_NEXT == 0xff80, SCB_NEXT2 == 0xff80
+CDB a 0 0 81 8 28
+STACK: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+scsi0: Split completion read data parity error in DFF1
+scsi0: Address or Write Phase Parity Error Detected in DFF1.
+scsi0: PCI error Interrupt
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State at program address 0x33 Mode 0x11
+Card was paused
+INTSTAT[0x10]:(PCIINT) SELOID[0x3] SELID[0x0] HS_MAILBOX[0x0] 
+INTCTL[0x80]:(SWTMINTMASK) SEQINTSTAT[0x0] SAVED_MODE[0x11] 
+DFFSTAT[0x19]:(CURRFIFO_1|FIFO0FREE) SCSISIGI[0xc6]:(P_STATUS|REQI|BSYI) 
+SCSIPHASE[0x20]:(STATUS_PHASE) SCSIBUS[0x0] LASTPHASE[0x20]:(P_DATAOUT_DT) 
+SCSISEQ0[0x0] SCSISEQ1[0x12]:(ENAUTOATNP|ENRSELI) 
+SEQCTL0[0x0] SEQINTCTL[0x0] SEQ_FLAGS[0x20]:(DPHASE) 
+SEQ_FLAGS2[0x0] QFREEZE_COUNT[0x1] KERNEL_QFREEZE_COUNT[0x1] 
+MK_MESSAGE_SCB[0xff00] MK_MESSAGE_SCSIID[0xff] 
+SSTAT0[0x2]:(SPIORDY) SSTAT1[0x19]:(REQINIT|BUSFREE|PHASEMIS) 
+SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0xc0]:(HIPERR|HIZERO) 
+SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO) 
+LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0] LQOSTAT0[0x0] 
+LQOSTAT1[0x0] LQOSTAT2[0x0] 
+
+SCB Count = 4 CMDS_PENDING = 1 LASTSCB 0xffff CURRSCB 0x2 NEXTSCB 0x0
+qinstart = 39723 qinfifonext = 39723
+QINFIFO:
+WAITING_TID_QUEUES:
+Pending list:
+  2 FIFO_USE[0x0] SCB_CONTROL[0x0] SCB_SCSIID[0x37] 
+Total 1
+Kernel Free SCB list: 3 1 0 
+Sequencer Complete DMA-inprog list: 
+Sequencer Complete list: 
+Sequencer DMA-Up and Complete list: 
+Sequencer On QFreeze and Complete list: 
+
+
+scsi0: FIFO0 Free, LONGJMP == 0x80ff, SCB 0x0
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0x0] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL) 
+SG_CACHE_SHADOW[0x2]:(LAST_SEG) SG_STATE[0x0] DFFSXFRCTL[0x0] 
+SOFFCNT[0x0] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) SHADDR = 0x00, SHCNT = 0x0 
+HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+
+scsi0: FIFO1 Active, LONGJMP == 0x8063, SCB 0x2
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0xc]:(DIRECTION|HDMAEN) 
+DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL)
+SG_CACHE_SHADOW[0xb]:(LAST_SEG_DONE|LAST_SEG) 
+SG_STATE[0x0] DFFSXFRCTL[0x0] SOFFCNT[0x0] MDFFSTAT[0x14]:(DLZERO|LASTSDONE) 
+SHADDR = 0x18eb4b800, SHCNT = 0x0 HADDR = 0x18eb4b800, HCNT = 0x0 
+CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+LQIN: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+0x0 0x0 
+scsi0: LQISTATE = 0x0, LQOSTATE = 0x0, OPTIONMODE = 0x52
+scsi0: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x0
+scsi0: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
+SIMODE0[0xc]:(ENOVERRUN|ENIOERR) 
+CCSCBCTL[0x4]:(CCSCBDIR) 
+scsi0: REG0 == 0x2, SINDEX = 0x180, DINDEX = 0x108
+scsi0: SCBPTR == 0x2, SCB_NEXT == 0xffc0, SCB_NEXT2 == 0xff80
+CDB a 0 0 81 8 28
+STACK: 0x20c 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+scsi0: Split completion read data parity error in DFF1
+scsi0: Address or Write Phase Parity Error Detected in DFF1.
+scsi0: PCI error Interrupt
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State at program address 0x33 Mode 0x11
+Card was paused
+INTSTAT[0x10]:(PCIINT) SELOID[0x3] SELID[0x0] HS_MAILBOX[0x0] 
+INTCTL[0x80]:(SWTMINTMASK) SEQINTSTAT[0x0] SAVED_MODE[0x11] 
+DFFSTAT[0x19]:(CURRFIFO_1|FIFO0FREE) SCSISIGI[0x25]:(P_DATAOUT_DT|ACKI|BSYI) 
+SCSIPHASE[0x0] SCSIBUS[0x74] LASTPHASE[0x20]:(P_DATAOUT_DT) 
+SCSISEQ0[0x0] SCSISEQ1[0x12]:(ENAUTOATNP|ENRSELI) 
+SEQCTL0[0x0] SEQINTCTL[0x0] SEQ_FLAGS[0x20]:(DPHASE) 
+SEQ_FLAGS2[0x0] QFREEZE_COUNT[0x1] KERNEL_QFREEZE_COUNT[0x1] 
+MK_MESSAGE_SCB[0xff00] MK_MESSAGE_SCSIID[0xff] 
+SSTAT0[0x2]:(SPIORDY) SSTAT1[0x19]:(REQINIT|BUSFREE|PHASEMIS) 
+SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0xc0]:(HIPERR|HIZERO) 
+SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO) 
+LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0] LQOSTAT0[0x0] 
+LQOSTAT1[0x0] LQOSTAT2[0x0] 
+
+SCB Count = 4 CMDS_PENDING = 1 LASTSCB 0xffff CURRSCB 0x2 NEXTSCB 0x0
+qinstart = 39944 qinfifonext = 39944
+QINFIFO:
+WAITING_TID_QUEUES:
+Pending list:
+  2 FIFO_USE[0x0] SCB_CONTROL[0x0] SCB_SCSIID[0x37] 
+Total 1
+Kernel Free SCB list: 3 1 0 
+Sequencer Complete DMA-inprog list: 
+Sequencer Complete list: 
+Sequencer DMA-Up and Complete list: 
+Sequencer On QFreeze and Complete list: 
+
+
+scsi0: FIFO0 Free, LONGJMP == 0x80ff, SCB 0x0
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0x0] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL) 
+SG_CACHE_SHADOW[0x2]:(LAST_SEG) SG_STATE[0x0] DFFSXFRCTL[0x0] 
+SOFFCNT[0x0] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) SHADDR = 0x00, SHCNT = 0x0 
+HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+
+scsi0: FIFO1 Active, LONGJMP == 0x8063, SCB 0x2
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0xc]:(DIRECTION|HDMAEN) 
+DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL)
+SG_CACHE_SHADOW[0xb]:(LAST_SEG_DONE|LAST_SEG) 
+SG_STATE[0x0] DFFSXFRCTL[0x0] SOFFCNT[0x0] MDFFSTAT[0x14]:(DLZERO|LASTSDONE) 
+SHADDR = 0x18eb4b800, SHCNT = 0x0 HADDR = 0x18eb4b800, HCNT = 0x0 
+CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+LQIN: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+0x0 0x0 
+scsi0: LQISTATE = 0x0, LQOSTATE = 0x0, OPTIONMODE = 0x52
+scsi0: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x0
+scsi0: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
+SIMODE0[0xc]:(ENOVERRUN|ENIOERR) 
+CCSCBCTL[0x4]:(CCSCBDIR) 
+scsi0: REG0 == 0x2, SINDEX = 0x180, DINDEX = 0x108
+scsi0: SCBPTR == 0x2, SCB_NEXT == 0xff80, SCB_NEXT2 == 0xff80
+CDB a 0 0 81 8 28
+STACK: 0x20c 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+scsi0: Split completion read data parity error in DFF1
+scsi0: Address or Write Phase Parity Error Detected in DFF1.
+scsi0: PCI error Interrupt
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State at program address 0x2e Mode 0x0
+Card was paused
+INTSTAT[0x10]:(PCIINT) SELOID[0x3] SELID[0x0] HS_MAILBOX[0x0] 
+INTCTL[0x80]:(SWTMINTMASK) SEQINTSTAT[0x0] SAVED_MODE[0x11] 
+DFFSTAT[0x19]:(CURRFIFO_1|FIFO0FREE) SCSISIGI[0xc6]:(P_STATUS|REQI|BSYI) 
+SCSIPHASE[0x20]:(STATUS_PHASE) SCSIBUS[0x0] LASTPHASE[0x20]:(P_DATAOUT_DT) 
+SCSISEQ0[0x0] SCSISEQ1[0x12]:(ENAUTOATNP|ENRSELI) 
+SEQCTL0[0x0] SEQINTCTL[0x0] SEQ_FLAGS[0x20]:(DPHASE) 
+SEQ_FLAGS2[0x0] QFREEZE_COUNT[0x1] KERNEL_QFREEZE_COUNT[0x1] 
+MK_MESSAGE_SCB[0xff00] MK_MESSAGE_SCSIID[0xff] 
+SSTAT0[0x2]:(SPIORDY) SSTAT1[0x19]:(REQINIT|BUSFREE|PHASEMIS) 
+SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0xc0]:(HIPERR|HIZERO) 
+SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO) 
+LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0] LQOSTAT0[0x0] 
+LQOSTAT1[0x0] LQOSTAT2[0x0] 
+
+SCB Count = 4 CMDS_PENDING = 1 LASTSCB 0xffff CURRSCB 0x2 NEXTSCB 0x0
+qinstart = 40103 qinfifonext = 40103
+QINFIFO:
+WAITING_TID_QUEUES:
+Pending list:
+  2 FIFO_USE[0x0] SCB_CONTROL[0x0] SCB_SCSIID[0x37] 
+Total 1
+Kernel Free SCB list: 3 1 0 
+Sequencer Complete DMA-inprog list: 
+Sequencer Complete list: 
+Sequencer DMA-Up and Complete list: 
+Sequencer On QFreeze and Complete list: 
+
+
+scsi0: FIFO0 Free, LONGJMP == 0x80ff, SCB 0x0
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0x0] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL) 
+SG_CACHE_SHADOW[0x2]:(LAST_SEG) SG_STATE[0x0] DFFSXFRCTL[0x0] 
+SOFFCNT[0x0] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) SHADDR = 0x00, SHCNT = 0x0 
+HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+
+scsi0: FIFO1 Active, LONGJMP == 0x8063, SCB 0x2
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0xc]:(DIRECTION|HDMAEN) 
+DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL)
+SG_CACHE_SHADOW[0xb]:(LAST_SEG_DONE|LAST_SEG) 
+SG_STATE[0x0] DFFSXFRCTL[0x0] SOFFCNT[0x0] MDFFSTAT[0x14]:(DLZERO|LASTSDONE) 
+SHADDR = 0x18eb4b800, SHCNT = 0x0 HADDR = 0x18eb4b800, HCNT = 0x0 
+CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+LQIN: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+0x0 0x0 
+scsi0: LQISTATE = 0x0, LQOSTATE = 0x0, OPTIONMODE = 0x52
+scsi0: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x0
+scsi0: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
+SIMODE0[0xc]:(ENOVERRUN|ENIOERR) 
+CCSCBCTL[0x4]:(CCSCBDIR) 
+scsi0: REG0 == 0x111c, SINDEX = 0x180, DINDEX = 0x108
+scsi0: SCBPTR == 0x0, SCB_NEXT == 0xff00, SCB_NEXT2 == 0x0
+CDB 0 0 0 0 0 0
+STACK: 0x20b 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+scsi0: Split completion read data parity error in DFF1
+scsi0: Address or Write Phase Parity Error Detected in DFF1.
+scsi0: PCI error Interrupt
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State at program address 0x34 Mode 0x22
+Card was paused
+INTSTAT[0x10]:(PCIINT) SELOID[0x3] SELID[0x0] HS_MAILBOX[0x0] 
+INTCTL[0x80]:(SWTMINTMASK) SEQINTSTAT[0x0] SAVED_MODE[0x11] 
+DFFSTAT[0x19]:(CURRFIFO_1|FIFO0FREE) SCSISIGI[0xc6]:(P_STATUS|REQI|BSYI) 
+SCSIPHASE[0x20]:(STATUS_PHASE) SCSIBUS[0x0] LASTPHASE[0x20]:(P_DATAOUT_DT) 
+SCSISEQ0[0x0] SCSISEQ1[0x12]:(ENAUTOATNP|ENRSELI) 
+SEQCTL0[0x0] SEQINTCTL[0x0] SEQ_FLAGS[0x20]:(DPHASE) 
+SEQ_FLAGS2[0x0] QFREEZE_COUNT[0x1] KERNEL_QFREEZE_COUNT[0x1] 
+MK_MESSAGE_SCB[0xff00] MK_MESSAGE_SCSIID[0xff] 
+SSTAT0[0x2]:(SPIORDY) SSTAT1[0x19]:(REQINIT|BUSFREE|PHASEMIS) 
+SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0xc0]:(HIPERR|HIZERO) 
+SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO) 
+LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0] LQOSTAT0[0x0] 
+LQOSTAT1[0x0] LQOSTAT2[0x0] 
+
+SCB Count = 4 CMDS_PENDING = 1 LASTSCB 0xffff CURRSCB 0x2 NEXTSCB 0x0
+qinstart = 57319 qinfifonext = 57319
+QINFIFO:
+WAITING_TID_QUEUES:
+Pending list:
+  2 FIFO_USE[0x0] SCB_CONTROL[0x0] SCB_SCSIID[0x37] 
+Total 1
+Kernel Free SCB list: 3 1 0 
+Sequencer Complete DMA-inprog list: 
+Sequencer Complete list: 
+Sequencer DMA-Up and Complete list: 
+Sequencer On QFreeze and Complete list: 
+
+
+scsi0: FIFO0 Free, LONGJMP == 0x80ff, SCB 0x0
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0x0] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL) 
+SG_CACHE_SHADOW[0x2]:(LAST_SEG) SG_STATE[0x0] DFFSXFRCTL[0x0] 
+SOFFCNT[0x0] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) SHADDR = 0x00, SHCNT = 0x0 
+HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+
+scsi0: FIFO1 Active, LONGJMP == 0x8063, SCB 0x2
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0xc]:(DIRECTION|HDMAEN) 
+DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL)
+SG_CACHE_SHADOW[0xb]:(LAST_SEG_DONE|LAST_SEG) 
+SG_STATE[0x0] DFFSXFRCTL[0x0] SOFFCNT[0x0] MDFFSTAT[0x14]:(DLZERO|LASTSDONE) 
+SHADDR = 0x18eb4b800, SHCNT = 0x0 HADDR = 0x18eb4b800, HCNT = 0x0 
+CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+LQIN: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+0x0 0x0 
+scsi0: LQISTATE = 0x0, LQOSTATE = 0x0, OPTIONMODE = 0x52
+scsi0: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x0
+scsi0: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
+SIMODE0[0xc]:(ENOVERRUN|ENIOERR) 
+CCSCBCTL[0x4]:(CCSCBDIR) 
+scsi0: REG0 == 0x2, SINDEX = 0x180, DINDEX = 0x108
+scsi0: SCBPTR == 0xff02, SCB_NEXT == 0xff00, SCB_NEXT2 == 0x0
+CDB 2 1 0 0 0 0
+STACK: 0x20c 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+scsi0: Split completion read data parity error in DFF1
+scsi0: Address or Write Phase Parity Error Detected in DFF1.
+scsi0: PCI error Interrupt
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State at program address 0x30 Mode 0x0
+Card was paused
+INTSTAT[0x10]:(PCIINT) SELOID[0x3] SELID[0x0] HS_MAILBOX[0x0] 
+INTCTL[0x80]:(SWTMINTMASK) SEQINTSTAT[0x0] SAVED_MODE[0x11] 
+DFFSTAT[0x19]:(CURRFIFO_1|FIFO0FREE) SCSISIGI[0xc6]:(P_STATUS|REQI|BSYI) 
+SCSIPHASE[0x20]:(STATUS_PHASE) SCSIBUS[0x0] LASTPHASE[0x20]:(P_DATAOUT_DT) 
+SCSISEQ0[0x0] SCSISEQ1[0x12]:(ENAUTOATNP|ENRSELI) 
+SEQCTL0[0x0] SEQINTCTL[0x0] SEQ_FLAGS[0x20]:(DPHASE) 
+SEQ_FLAGS2[0x0] QFREEZE_COUNT[0x1] KERNEL_QFREEZE_COUNT[0x1] 
+MK_MESSAGE_SCB[0xff00] MK_MESSAGE_SCSIID[0xff] 
+SSTAT0[0x2]:(SPIORDY) SSTAT1[0x19]:(REQINIT|BUSFREE|PHASEMIS) 
+SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0xc0]:(HIPERR|HIZERO) 
+SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO) 
+LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0] LQOSTAT0[0x0] 
+LQOSTAT1[0x0] LQOSTAT2[0x0] 
+
+SCB Count = 4 CMDS_PENDING = 1 LASTSCB 0xffff CURRSCB 0x2 NEXTSCB 0x0
+qinstart = 57673 qinfifonext = 57673
+QINFIFO:
+WAITING_TID_QUEUES:
+Pending list:
+  2 FIFO_USE[0x0] SCB_CONTROL[0x0] SCB_SCSIID[0x37] 
+Total 1
+Kernel Free SCB list: 3 1 0 
+Sequencer Complete DMA-inprog list: 
+Sequencer Complete list: 
+Sequencer DMA-Up and Complete list: 
+Sequencer On QFreeze and Complete list: 
+
+
+scsi0: FIFO0 Free, LONGJMP == 0x80ff, SCB 0x0
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0x0] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL) 
+SG_CACHE_SHADOW[0x2]:(LAST_SEG) SG_STATE[0x0] DFFSXFRCTL[0x0] 
+SOFFCNT[0x0] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) SHADDR = 0x00, SHCNT = 0x0 
+HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+
+scsi0: FIFO1 Active, LONGJMP == 0x8063, SCB 0x2
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0xc]:(DIRECTION|HDMAEN) 
+DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL)
+SG_CACHE_SHADOW[0xb]:(LAST_SEG_DONE|LAST_SEG) 
+SG_STATE[0x0] DFFSXFRCTL[0x0] SOFFCNT[0x0] MDFFSTAT[0x14]:(DLZERO|LASTSDONE) 
+SHADDR = 0x18eb4b800, SHCNT = 0x0 HADDR = 0x18eb4b800, HCNT = 0x0 
+CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+LQIN: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+0x0 0x0 
+scsi0: LQISTATE = 0x0, LQOSTATE = 0x0, OPTIONMODE = 0x52
+scsi0: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x0
+scsi0: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
+SIMODE0[0xc]:(ENOVERRUN|ENIOERR) 
+CCSCBCTL[0x4]:(CCSCBDIR) 
+scsi0: REG0 == 0x111c, SINDEX = 0x180, DINDEX = 0x108
+scsi0: SCBPTR == 0x0, SCB_NEXT == 0xff00, SCB_NEXT2 == 0x0
+CDB 0 0 0 0 0 0
+STACK: 0x20b 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+scsi0: Split completion read data parity error in DFF1
+scsi0: Address or Write Phase Parity Error Detected in DFF1.
+scsi0: PCI error Interrupt
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State at program address 0x20b Mode 0x11
+Card was paused
+INTSTAT[0x10]:(PCIINT) SELOID[0x3] SELID[0x0] HS_MAILBOX[0x0] 
+INTCTL[0x80]:(SWTMINTMASK) SEQINTSTAT[0x0] SAVED_MODE[0x11] 
+DFFSTAT[0x19]:(CURRFIFO_1|FIFO0FREE) SCSISIGI[0xc6]:(P_STATUS|REQI|BSYI) 
+SCSIPHASE[0x20]:(STATUS_PHASE) SCSIBUS[0x0] LASTPHASE[0x20]:(P_DATAOUT_DT) 
+SCSISEQ0[0x0] SCSISEQ1[0x12]:(ENAUTOATNP|ENRSELI) 
+SEQCTL0[0x0] SEQINTCTL[0x0] SEQ_FLAGS[0x20]:(DPHASE) 
+SEQ_FLAGS2[0x0] QFREEZE_COUNT[0x1] KERNEL_QFREEZE_COUNT[0x1] 
+MK_MESSAGE_SCB[0xff00] MK_MESSAGE_SCSIID[0xff] 
+SSTAT0[0x2]:(SPIORDY) SSTAT1[0x19]:(REQINIT|BUSFREE|PHASEMIS) 
+SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0xc0]:(HIPERR|HIZERO) 
+SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO) 
+LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0] LQOSTAT0[0x0] 
+LQOSTAT1[0x0] LQOSTAT2[0x0] 
+
+SCB Count = 4 CMDS_PENDING = 1 LASTSCB 0xffff CURRSCB 0x2 NEXTSCB 0x0
+qinstart = 58746 qinfifonext = 58746
+QINFIFO:
+WAITING_TID_QUEUES:
+Pending list:
+  2 FIFO_USE[0x0] SCB_CONTROL[0x0] SCB_SCSIID[0x37] 
+Total 1
+Kernel Free SCB list: 3 1 0 
+Sequencer Complete DMA-inprog list: 
+Sequencer Complete list: 
+Sequencer DMA-Up and Complete list: 
+Sequencer On QFreeze and Complete list: 
+
+
+scsi0: FIFO0 Free, LONGJMP == 0x80ff, SCB 0x0
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0x0] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL) 
+SG_CACHE_SHADOW[0x2]:(LAST_SEG) SG_STATE[0x0] DFFSXFRCTL[0x0] 
+SOFFCNT[0x0] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) SHADDR = 0x00, SHCNT = 0x0 
+HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+
+scsi0: FIFO1 Active, LONGJMP == 0x8063, SCB 0x2
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0xc]:(DIRECTION|HDMAEN) 
+DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL)
+SG_CACHE_SHADOW[0xb]:(LAST_SEG_DONE|LAST_SEG) 
+SG_STATE[0x0] DFFSXFRCTL[0x0] SOFFCNT[0x0] MDFFSTAT[0x14]:(DLZERO|LASTSDONE) 
+SHADDR = 0x18eb4b800, SHCNT = 0x0 HADDR = 0x18eb4b800, HCNT = 0x0 
+CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+LQIN: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+0x0 0x0 
+scsi0: LQISTATE = 0x0, LQOSTATE = 0x0, OPTIONMODE = 0x52
+scsi0: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x0
+scsi0: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
+SIMODE0[0xc]:(ENOVERRUN|ENIOERR) 
+CCSCBCTL[0x4]:(CCSCBDIR) 
+scsi0: REG0 == 0x2, SINDEX = 0x180, DINDEX = 0x108
+scsi0: SCBPTR == 0x2, SCB_NEXT == 0xff80, SCB_NEXT2 == 0xff80
+CDB a 0 0 81 8 28
+STACK: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+scsi0: Split completion read data parity error in DFF1
+scsi0: Address or Write Phase Parity Error Detected in DFF1.
+scsi0: PCI error Interrupt
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State at program address 0x7f Mode 0x22
+Card was paused
+INTSTAT[0x10]:(PCIINT) SELOID[0x3] SELID[0x0] HS_MAILBOX[0x0] 
+INTCTL[0x80]:(SWTMINTMASK) SEQINTSTAT[0x0] SAVED_MODE[0x11] 
+DFFSTAT[0x19]:(CURRFIFO_1|FIFO0FREE) SCSISIGI[0xc6]:(P_STATUS|REQI|BSYI) 
+SCSIPHASE[0x20]:(STATUS_PHASE) SCSIBUS[0x0] LASTPHASE[0x20]:(P_DATAOUT_DT) 
+SCSISEQ0[0x0] SCSISEQ1[0x12]:(ENAUTOATNP|ENRSELI) 
+SEQCTL0[0x0] SEQINTCTL[0x0] SEQ_FLAGS[0x20]:(DPHASE) 
+SEQ_FLAGS2[0x0] QFREEZE_COUNT[0x1] KERNEL_QFREEZE_COUNT[0x1] 
+MK_MESSAGE_SCB[0xff00] MK_MESSAGE_SCSIID[0xff] 
+SSTAT0[0x2]:(SPIORDY) SSTAT1[0x19]:(REQINIT|BUSFREE|PHASEMIS) 
+SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0xc0]:(HIPERR|HIZERO) 
+SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO) 
+LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0] LQOSTAT0[0x0] 
+LQOSTAT1[0x0] LQOSTAT2[0x0] 
+
+SCB Count = 4 CMDS_PENDING = 1 LASTSCB 0xffff CURRSCB 0x2 NEXTSCB 0x0
+qinstart = 61030 qinfifonext = 61030
+QINFIFO:
+WAITING_TID_QUEUES:
+Pending list:
+  2 FIFO_USE[0x0] SCB_CONTROL[0x0] SCB_SCSIID[0x37] 
+Total 1
+Kernel Free SCB list: 3 1 0 
+Sequencer Complete DMA-inprog list: 
+Sequencer Complete list: 
+Sequencer DMA-Up and Complete list: 
+Sequencer On QFreeze and Complete list: 
+
+
+scsi0: FIFO0 Free, LONGJMP == 0x80ff, SCB 0x0
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0x0] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL) 
+SG_CACHE_SHADOW[0x2]:(LAST_SEG) SG_STATE[0x0] DFFSXFRCTL[0x0] 
+SOFFCNT[0x0] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) SHADDR = 0x00, SHCNT = 0x0 
+HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+
+scsi0: FIFO1 Active, LONGJMP == 0x8063, SCB 0x2
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0xc]:(DIRECTION|HDMAEN) 
+DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL)
+SG_CACHE_SHADOW[0xb]:(LAST_SEG_DONE|LAST_SEG) 
+SG_STATE[0x0] DFFSXFRCTL[0x0] SOFFCNT[0x0] MDFFSTAT[0x14]:(DLZERO|LASTSDONE) 
+SHADDR = 0x18eb4b800, SHCNT = 0x0 HADDR = 0x18eb4b800, HCNT = 0x0 
+CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+LQIN: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+0x0 0x0 
+scsi0: LQISTATE = 0x0, LQOSTATE = 0x0, OPTIONMODE = 0x52
+scsi0: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x0
+scsi0: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
+SIMODE0[0xc]:(ENOVERRUN|ENIOERR) 
+CCSCBCTL[0x4]:(CCSCBDIR) 
+scsi0: REG0 == 0x2, SINDEX = 0x180, DINDEX = 0x108
+scsi0: SCBPTR == 0xff02, SCB_NEXT == 0xff00, SCB_NEXT2 == 0x0
+CDB 2 1 0 0 0 0
+STACK: 0x20c 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+scsi0: Split completion read data parity error in DFF1
+scsi0: Address or Write Phase Parity Error Detected in DFF1.
+scsi0: PCI error Interrupt
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State at program address 0x20d Mode 0x33
+Card was paused
+INTSTAT[0x10]:(PCIINT) SELOID[0x3] SELID[0x0] HS_MAILBOX[0x0] 
+INTCTL[0x80]:(SWTMINTMASK) SEQINTSTAT[0x0] SAVED_MODE[0x11] 
+DFFSTAT[0x19]:(CURRFIFO_1|FIFO0FREE) SCSISIGI[0xc6]:(P_STATUS|REQI|BSYI) 
+SCSIPHASE[0x20]:(STATUS_PHASE) SCSIBUS[0x0] LASTPHASE[0x20]:(P_DATAOUT_DT) 
+SCSISEQ0[0x0] SCSISEQ1[0x12]:(ENAUTOATNP|ENRSELI) 
+SEQCTL0[0x0] SEQINTCTL[0x0] SEQ_FLAGS[0x20]:(DPHASE) 
+SEQ_FLAGS2[0x0] QFREEZE_COUNT[0x1] KERNEL_QFREEZE_COUNT[0x1] 
+MK_MESSAGE_SCB[0xff00] MK_MESSAGE_SCSIID[0xff] 
+SSTAT0[0x2]:(SPIORDY) SSTAT1[0x19]:(REQINIT|BUSFREE|PHASEMIS) 
+SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0xc0]:(HIPERR|HIZERO) 
+SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO) 
+LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0] LQOSTAT0[0x0] 
+LQOSTAT1[0x0] LQOSTAT2[0x0] 
+
+SCB Count = 4 CMDS_PENDING = 1 LASTSCB 0xffff CURRSCB 0x2 NEXTSCB 0x0
+qinstart = 62093 qinfifonext = 62093
+QINFIFO:
+WAITING_TID_QUEUES:
+Pending list:
+  2 FIFO_USE[0x0] SCB_CONTROL[0x0] SCB_SCSIID[0x37] 
+Total 1
+Kernel Free SCB list: 3 1 0 
+Sequencer Complete DMA-inprog list: 
+Sequencer Complete list: 
+Sequencer DMA-Up and Complete list: 
+Sequencer On QFreeze and Complete list: 
+
+
+scsi0: FIFO0 Free, LONGJMP == 0x80ff, SCB 0x0
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0x0] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL) 
+SG_CACHE_SHADOW[0x2]:(LAST_SEG) SG_STATE[0x0] DFFSXFRCTL[0x0] 
+SOFFCNT[0x0] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) SHADDR = 0x00, SHCNT = 0x0 
+HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+
+scsi0: FIFO1 Active, LONGJMP == 0x8063, SCB 0x2
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0xc]:(DIRECTION|HDMAEN) 
+DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL)
+SG_CACHE_SHADOW[0xb]:(LAST_SEG_DONE|LAST_SEG) 
+SG_STATE[0x0] DFFSXFRCTL[0x0] SOFFCNT[0x0] MDFFSTAT[0x14]:(DLZERO|LASTSDONE) 
+SHADDR = 0x18eb4b800, SHCNT = 0x0 HADDR = 0x18eb4b800, HCNT = 0x0 
+CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+LQIN: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+0x0 0x0 
+scsi0: LQISTATE = 0x0, LQOSTATE = 0x0, OPTIONMODE = 0x52
+scsi0: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x0
+scsi0: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
+SIMODE0[0xc]:(ENOVERRUN|ENIOERR) 
+CCSCBCTL[0x4]:(CCSCBDIR) 
+scsi0: REG0 == 0x2, SINDEX = 0x180, DINDEX = 0x108
+scsi0: SCBPTR == 0x2, SCB_NEXT == 0xffc0, SCB_NEXT2 == 0xff80
+CDB a 0 0 81 8 28
+STACK: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+scsi0: Split completion read data parity error in DFF1
+scsi0: Address or Write Phase Parity Error Detected in DFF1.
+scsi0: PCI error Interrupt
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State at program address 0x20a Mode 0x11
+Card was paused
+INTSTAT[0x10]:(PCIINT) SELOID[0x3] SELID[0x0] HS_MAILBOX[0x0] 
+INTCTL[0x80]:(SWTMINTMASK) SEQINTSTAT[0x0] SAVED_MODE[0x11] 
+DFFSTAT[0x19]:(CURRFIFO_1|FIFO0FREE) SCSISIGI[0xc6]:(P_STATUS|REQI|BSYI) 
+SCSIPHASE[0x20]:(STATUS_PHASE) SCSIBUS[0x0] LASTPHASE[0x20]:(P_DATAOUT_DT) 
+SCSISEQ0[0x0] SCSISEQ1[0x12]:(ENAUTOATNP|ENRSELI) 
+SEQCTL0[0x0] SEQINTCTL[0x0] SEQ_FLAGS[0x20]:(DPHASE) 
+SEQ_FLAGS2[0x0] QFREEZE_COUNT[0x1] KERNEL_QFREEZE_COUNT[0x1] 
+MK_MESSAGE_SCB[0xff00] MK_MESSAGE_SCSIID[0xff] 
+SSTAT0[0x2]:(SPIORDY) SSTAT1[0x19]:(REQINIT|BUSFREE|PHASEMIS) 
+SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0xc0]:(HIPERR|HIZERO) 
+SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO) 
+LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0] LQOSTAT0[0x0] 
+LQOSTAT1[0x0] LQOSTAT2[0x0] 
+
+SCB Count = 4 CMDS_PENDING = 1 LASTSCB 0xffff CURRSCB 0x2 NEXTSCB 0x0
+qinstart = 24670 qinfifonext = 24670
+QINFIFO:
+WAITING_TID_QUEUES:
+Pending list:
+  2 FIFO_USE[0x0] SCB_CONTROL[0x0] SCB_SCSIID[0x37] 
+Total 1
+Kernel Free SCB list: 3 1 0 
+Sequencer Complete DMA-inprog list: 
+Sequencer Complete list: 
+Sequencer DMA-Up and Complete list: 
+Sequencer On QFreeze and Complete list: 
+
+
+scsi0: FIFO0 Free, LONGJMP == 0x80ff, SCB 0x0
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0x0] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL) 
+SG_CACHE_SHADOW[0x2]:(LAST_SEG) SG_STATE[0x0] DFFSXFRCTL[0x0] 
+SOFFCNT[0x0] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) SHADDR = 0x00, SHCNT = 0x0 
+HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+
+scsi0: FIFO1 Active, LONGJMP == 0x8063, SCB 0x2
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0xc]:(DIRECTION|HDMAEN) 
+DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL)
+SG_CACHE_SHADOW[0xb]:(LAST_SEG_DONE|LAST_SEG) 
+SG_STATE[0x0] DFFSXFRCTL[0x0] SOFFCNT[0x0] MDFFSTAT[0x14]:(DLZERO|LASTSDONE) 
+SHADDR = 0x18eb4b800, SHCNT = 0x0 HADDR = 0x18eb4b800, HCNT = 0x0 
+CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+LQIN: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+0x0 0x0 
+scsi0: LQISTATE = 0x0, LQOSTATE = 0x0, OPTIONMODE = 0x52
+scsi0: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x0
+scsi0: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
+SIMODE0[0xc]:(ENOVERRUN|ENIOERR) 
+CCSCBCTL[0x4]:(CCSCBDIR) 
+scsi0: REG0 == 0x2, SINDEX = 0x180, DINDEX = 0x108
+scsi0: SCBPTR == 0x2, SCB_NEXT == 0xff80, SCB_NEXT2 == 0xff80
+CDB a 0 0 81 8 28
+STACK: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+scsi0: Split completion read data parity error in DFF1
+scsi0: Address or Write Phase Parity Error Detected in DFF1.
+scsi0: PCI error Interrupt
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State at program address 0x7c Mode 0x22
+Card was paused
+INTSTAT[0x10]:(PCIINT) SELOID[0x3] SELID[0x0] HS_MAILBOX[0x0] 
+INTCTL[0x80]:(SWTMINTMASK) SEQINTSTAT[0x0] SAVED_MODE[0x11] 
+DFFSTAT[0x19]:(CURRFIFO_1|FIFO0FREE) SCSISIGI[0xc6]:(P_STATUS|REQI|BSYI) 
+SCSIPHASE[0x20]:(STATUS_PHASE) SCSIBUS[0x0] LASTPHASE[0x20]:(P_DATAOUT_DT) 
+SCSISEQ0[0x0] SCSISEQ1[0x12]:(ENAUTOATNP|ENRSELI) 
+SEQCTL0[0x0] SEQINTCTL[0x0] SEQ_FLAGS[0x20]:(DPHASE) 
+SEQ_FLAGS2[0x0] QFREEZE_COUNT[0x1] KERNEL_QFREEZE_COUNT[0x1] 
+MK_MESSAGE_SCB[0xff00] MK_MESSAGE_SCSIID[0xff] 
+SSTAT0[0x2]:(SPIORDY) SSTAT1[0x19]:(REQINIT|BUSFREE|PHASEMIS) 
+SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0xc0]:(HIPERR|HIZERO) 
+SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO) 
+LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0] LQOSTAT0[0x0] 
+LQOSTAT1[0x0] LQOSTAT2[0x0] 
+
+SCB Count = 4 CMDS_PENDING = 1 LASTSCB 0xffff CURRSCB 0x2 NEXTSCB 0x0
+qinstart = 25496 qinfifonext = 25496
+QINFIFO:
+WAITING_TID_QUEUES:
+Pending list:
+  2 FIFO_USE[0x0] SCB_CONTROL[0x0] SCB_SCSIID[0x37] 
+Total 1
+Kernel Free SCB list: 3 1 0 
+Sequencer Complete DMA-inprog list: 
+Sequencer Complete list: 
+Sequencer DMA-Up and Complete list: 
+Sequencer On QFreeze and Complete list: 
+
+
+scsi0: FIFO0 Free, LONGJMP == 0x80ff, SCB 0x0
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0x0] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL) 
+SG_CACHE_SHADOW[0x2]:(LAST_SEG) SG_STATE[0x0] DFFSXFRCTL[0x0] 
+SOFFCNT[0x0] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) SHADDR = 0x00, SHCNT = 0x0 
+HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+
+scsi0: FIFO1 Active, LONGJMP == 0x8063, SCB 0x2
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0xc]:(DIRECTION|HDMAEN) 
+DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL)
+SG_CACHE_SHADOW[0xb]:(LAST_SEG_DONE|LAST_SEG) 
+SG_STATE[0x0] DFFSXFRCTL[0x0] SOFFCNT[0x0] MDFFSTAT[0x14]:(DLZERO|LASTSDONE) 
+SHADDR = 0x18eb4b800, SHCNT = 0x0 HADDR = 0x18eb4b800, HCNT = 0x0 
+CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+LQIN: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+0x0 0x0 
+scsi0: LQISTATE = 0x0, LQOSTATE = 0x0, OPTIONMODE = 0x52
+scsi0: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x0
+scsi0: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
+SIMODE0[0xc]:(ENOVERRUN|ENIOERR) 
+CCSCBCTL[0x4]:(CCSCBDIR) 
+scsi0: REG0 == 0x2, SINDEX = 0x180, DINDEX = 0x108
+scsi0: SCBPTR == 0xff02, SCB_NEXT == 0xff00, SCB_NEXT2 == 0x0
+CDB 2 1 0 0 0 0
+STACK: 0x20c 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+scsi0: Split completion read data parity error in DFF1
+scsi0: Address or Write Phase Parity Error Detected in DFF1.
+scsi0: PCI error Interrupt
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State at program address 0x7c Mode 0x22
+Card was paused
+INTSTAT[0x10]:(PCIINT) SELOID[0x3] SELID[0x0] HS_MAILBOX[0x0] 
+INTCTL[0x80]:(SWTMINTMASK) SEQINTSTAT[0x0] SAVED_MODE[0x11] 
+DFFSTAT[0x19]:(CURRFIFO_1|FIFO0FREE) SCSISIGI[0xc6]:(P_STATUS|REQI|BSYI) 
+SCSIPHASE[0x20]:(STATUS_PHASE) SCSIBUS[0x0] LASTPHASE[0x20]:(P_DATAOUT_DT) 
+SCSISEQ0[0x0] SCSISEQ1[0x12]:(ENAUTOATNP|ENRSELI) 
+SEQCTL0[0x0] SEQINTCTL[0x0] SEQ_FLAGS[0x20]:(DPHASE) 
+SEQ_FLAGS2[0x0] QFREEZE_COUNT[0x1] KERNEL_QFREEZE_COUNT[0x1] 
+MK_MESSAGE_SCB[0xff00] MK_MESSAGE_SCSIID[0xff] 
+SSTAT0[0x2]:(SPIORDY) SSTAT1[0x19]:(REQINIT|BUSFREE|PHASEMIS) 
+SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0xc0]:(HIPERR|HIZERO) 
+SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO) 
+LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0] LQOSTAT0[0x0] 
+LQOSTAT1[0x0] LQOSTAT2[0x0] 
+
+SCB Count = 4 CMDS_PENDING = 1 LASTSCB 0xffff CURRSCB 0x2 NEXTSCB 0x0
+qinstart = 26162 qinfifonext = 26162
+QINFIFO:
+WAITING_TID_QUEUES:
+Pending list:
+  2 FIFO_USE[0x0] SCB_CONTROL[0x0] SCB_SCSIID[0x37] 
+Total 1
+Kernel Free SCB list: 3 1 0 
+Sequencer Complete DMA-inprog list: 
+Sequencer Complete list: 
+Sequencer DMA-Up and Complete list: 
+Sequencer On QFreeze and Complete list: 
+
+
+scsi0: FIFO0 Free, LONGJMP == 0x80ff, SCB 0x0
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0x0] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL) 
+SG_CACHE_SHADOW[0x2]:(LAST_SEG) SG_STATE[0x0] DFFSXFRCTL[0x0] 
+SOFFCNT[0x0] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) SHADDR = 0x00, SHCNT = 0x0 
+HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+
+scsi0: FIFO1 Active, LONGJMP == 0x8063, SCB 0x2
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0xc]:(DIRECTION|HDMAEN) 
+DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL)
+SG_CACHE_SHADOW[0xb]:(LAST_SEG_DONE|LAST_SEG) 
+SG_STATE[0x0] DFFSXFRCTL[0x0] SOFFCNT[0x0] MDFFSTAT[0x14]:(DLZERO|LASTSDONE) 
+SHADDR = 0x18eb4b800, SHCNT = 0x0 HADDR = 0x18eb4b800, HCNT = 0x0 
+CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+LQIN: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+0x0 0x0 
+scsi0: LQISTATE = 0x0, LQOSTATE = 0x0, OPTIONMODE = 0x52
+scsi0: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x0
+scsi0: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
+SIMODE0[0xc]:(ENOVERRUN|ENIOERR) 
+CCSCBCTL[0x4]:(CCSCBDIR) 
+scsi0: REG0 == 0x2, SINDEX = 0x180, DINDEX = 0x108
+scsi0: SCBPTR == 0xff02, SCB_NEXT == 0xff00, SCB_NEXT2 == 0x0
+CDB 2 1 0 0 0 0
+STACK: 0x20c 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+scsi0: Split completion read data parity error in DFF1
+scsi0: Address or Write Phase Parity Error Detected in DFF1.
+scsi0: PCI error Interrupt
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State at program address 0x34 Mode 0x22
+Card was paused
+INTSTAT[0x10]:(PCIINT) SELOID[0x3] SELID[0x0] HS_MAILBOX[0x0] 
+INTCTL[0x80]:(SWTMINTMASK) SEQINTSTAT[0x0] SAVED_MODE[0x11] 
+DFFSTAT[0x19]:(CURRFIFO_1|FIFO0FREE) SCSISIGI[0xc6]:(P_STATUS|REQI|BSYI) 
+SCSIPHASE[0x20]:(STATUS_PHASE) SCSIBUS[0x0] LASTPHASE[0x20]:(P_DATAOUT_DT) 
+SCSISEQ0[0x0] SCSISEQ1[0x12]:(ENAUTOATNP|ENRSELI) 
+SEQCTL0[0x0] SEQINTCTL[0x0] SEQ_FLAGS[0x20]:(DPHASE) 
+SEQ_FLAGS2[0x0] QFREEZE_COUNT[0x1] KERNEL_QFREEZE_COUNT[0x1] 
+MK_MESSAGE_SCB[0xff00] MK_MESSAGE_SCSIID[0xff] 
+SSTAT0[0x2]:(SPIORDY) SSTAT1[0x19]:(REQINIT|BUSFREE|PHASEMIS) 
+SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0xc0]:(HIPERR|HIZERO) 
+SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO) 
+LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0] LQOSTAT0[0x0] 
+LQOSTAT1[0x0] LQOSTAT2[0x0] 
+
+SCB Count = 4 CMDS_PENDING = 1 LASTSCB 0xffff CURRSCB 0x2 NEXTSCB 0x0
+qinstart = 26663 qinfifonext = 26663
+QINFIFO:
+WAITING_TID_QUEUES:
+Pending list:
+  2 FIFO_USE[0x0] SCB_CONTROL[0x0] SCB_SCSIID[0x37] 
+Total 1
+Kernel Free SCB list: 3 1 0 
+Sequencer Complete DMA-inprog list: 
+Sequencer Complete list: 
+Sequencer DMA-Up and Complete list: 
+Sequencer On QFreeze and Complete list: 
+
+
+scsi0: FIFO0 Free, LONGJMP == 0x80ff, SCB 0x0
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0x0] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL) 
+SG_CACHE_SHADOW[0x2]:(LAST_SEG) SG_STATE[0x0] DFFSXFRCTL[0x0] 
+SOFFCNT[0x0] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) SHADDR = 0x00, SHCNT = 0x0 
+HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+
+scsi0: FIFO1 Active, LONGJMP == 0x8063, SCB 0x2
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
+SEQINTSRC[0x0] DFCNTRL[0xc]:(DIRECTION|HDMAEN) 
+DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL)
+SG_CACHE_SHADOW[0xb]:(LAST_SEG_DONE|LAST_SEG) 
+SG_STATE[0x0] DFFSXFRCTL[0x0] SOFFCNT[0x0] MDFFSTAT[0x14]:(DLZERO|LASTSDONE) 
+SHADDR = 0x18eb4b800, SHCNT = 0x0 HADDR = 0x18eb4b800, HCNT = 0x0 
+CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+LQIN: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+0x0 0x0 
+scsi0: LQISTATE = 0x0, LQOSTATE = 0x0, OPTIONMODE = 0x52
+scsi0: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x0
+scsi0: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
+SIMODE0[0xc]:(ENOVERRUN|ENIOERR) 
+CCSCBCTL[0x4]:(CCSCBDIR) 
+scsi0: REG0 == 0x2, SINDEX = 0x180, DINDEX = 0x108
+scsi0: SCBPTR == 0xff02, SCB_NEXT == 0xff00, SCB_NEXT2 == 0x0
+CDB 2 1 0 0 0 0
+STACK: 0x20c 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+scsi0: Split completion read data parity error in DFF1
+scsi0: Address or Write Phase Parity Error Detected in DFF1.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
