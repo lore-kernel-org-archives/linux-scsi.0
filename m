@@ -1,33 +1,49 @@
-From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Subject: Re: [PATCH v2 3/6 2.6.29-rc] cxgb3i - Outgoing pdus need to observe skb's MAX_SKB_FRAGS
-Date: Tue, 17 Feb 2009 15:19:53 -0600
-Message-ID: <499B29F9.1050803@cs.wisc.edu>
-References: <200902140538.n1E5csvZ014339@localhost.localdomain>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: david@lang.hm
+Subject: Re: mpt fusion broken sometime since 2.6.24
+Date: Tue, 17 Feb 2009 13:44:55 -0800 (PST)
+Message-ID: <alpine.DEB.1.10.0902171343280.26625@asgard.lang.hm>
+References: <alpine.DEB.1.10.0902171419000.26625@asgard.lang.hm>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <grbounce-FC1hwAUAAAA0O9VQcsxVj1UPjHD9r3x_=glio-open-iscsi=m.gmane.org-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <200902140538.n1E5csvZ014339-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Post: <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://googlegroups.com/group/open-iscsi/subscribe>,
-	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
-Cc: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.lang.hm ([64.81.33.126]:59782 "EHLO bifrost.lang.hm"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751118AbZBQVpE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Feb 2009 16:45:04 -0500
+In-Reply-To: <alpine.DEB.1.10.0902171419000.26625@asgard.lang.hm>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-kernel <linux-kernel@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com
 
+I got a picture of the failed boot at 
+http://linux.lang.hm/linux/IMG00052.jpg
 
-Karen Xie wrote:
-> [PATCH v2 3/6 2.6.29-rc] cxgb3i - Outgoing pdus need to observe skb's MAX_SKB_FRAGS
+David Lang
+
+On Tue, 17 Feb 2009, david@lang.hm wrote:
+
+> Date: Tue, 17 Feb 2009 14:24:27 -0800 (PST)
+> From: david@lang.hm
+> To: linux-kernel <linux-kernel@vger.kernel.org>
+> Cc: linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com
+> Subject: mpt fusion broken sometime since 2.6.24
 > 
-> From: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
-> 
-> Need to make sure the outgoing pdu can fit into a single skb.
-> When calulating the max. outgoing pdu payload size, take into consideration of
-> - data can be held in the skb's fragment list, assume 512 bytes per fragment, and
-> - data can be held in the headroom.
->  
-> Signed-off-by: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
-
-Reviewed-by: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+> I have some systems with the MPT fusion raid cards in them and SAS drives, 
+> they work find on the 2.6.24 'etch and a half' debian kernel, but when I try 
+> and install a 2.6.28 kernel there are numerous timeouts during boot and the 
+> raid array is not recognised.
+>
+> I tried a 2.6.27 kernel I have laying around and got the same results with 
+> it.
+>
+> is this a known problem with a work-around? or am I just lucky enough to be 
+> the only one hitting this?
+>
+> David Lang
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
