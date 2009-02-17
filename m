@@ -1,37 +1,66 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: 2.6.29-rc5: Reported regressions from 2.6.28
-Date: Mon, 16 Feb 2009 22:11:29 +0100
-Message-ID: <200902162211.30830.rjw@sisk.pl>
-References: <20090216072910.GA4763@ff.dom.local>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 1/8] exofs: Kbuild, Headers and osd utils
+Date: Tue, 17 Feb 2009 09:20:55 +0900
+Message-ID: <20090217092042C.fujita.tomonori@lab.ntt.co.jp>
+References: <49992F99.1060404@panasas.com>
+	<20090216183750H.fujita.tomonori@lab.ntt.co.jp>
+	<49993FF2.9050200@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20090216072910.GA4763@ff.dom.local>
-Content-Disposition: inline
-Sender: netdev-owner@vger.kernel.org
-To: Jarek Poplawski <jarkao2@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <49993FF2.9050200@panasas.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: bharrosh@panasas.com
+Cc: fujita.tomonori@lab.ntt.co.jp, avishay@gmail.com, jeff@garzik.org, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, osd-dev@open-osd.org, linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Monday 16 February 2009, Jarek Poplawski wrote:
-> On 14-02-2009 21:35, Rafael J. Wysocki wrote:
-> > This message contains a list of some regressions from 2.6.28, for which there
-> > are no fixes in the mainline I know of.  If any of them have been fixed already,
-> > please let me know.
-> ...
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12615
-> > Subject		: boot hangs while bringing up gianfar ethernet
-> > Submitter	: Ira Snyder <iws@ovro.caltech.edu>
-> > Date		: 2009-01-29 19:41 (17 days old)
-> > References	: http://marc.info/?l=linux-kernel&m=123325817201665&w=4
+On Mon, 16 Feb 2009 12:29:06 +0200
+Boaz Harrosh <bharrosh@panasas.com> wrote:
+
+> >>>> exofs is not the first and only file system who is using bios. Proof of
+> >>>> the matter is that block exports a bio submit routine.
+> >>> Seems that exofs just passes pages and the ULD sends a SCSI command
+> >>> including these pages. I don't see how exofs needs to handle bio
+> >>> directly.
+> >>>
+> >> How do you propose to collect these pages? and keep them without allocating
+> >> an extra list? without pre-allocating a struct request? and without re-inventing
+> >> the bio structure?
+> > 
+> > I don't think that allocating an extra list (or something) to keep
+> > them hurts performance. We can talk about it when you have the real
+> > performance results.
 > 
-> Fixed by:
-> commit	8707bdd48ab705a459ac1b12014075a139d1d4f9
-> gianfar: Fix boot hangs while bringing up gianfar ethernet
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=8707bdd48ab705a459ac1b12014075a139d1d4f9
+> So you are the one that starts to invent the wheel here. I thought I was
+> the one that does that, only you only called me by names, because you never showed
+> me where.
+> 
+> But please only answer one question for me: Please don't write back if you do not
+> answer this question:
+> 
+> Why do other filesystems allow to use bios? are they going to stop? Who is going
+> to remove that?
 
-Thanks, closed.
+Can you stop the argument, "exofs is similar to the existing
+traditional file systems hence it should be treated equally". It's
+simply untrue. Does anyone except for panasas people insist the same
+argument?
 
-Rafael
+We are talking about the design of exofs, which also affects the
+design of OSD ULD (including the library) living in SCSI
+mid-layer. It's something completely different from existing
+traditional file systems that work nicely on the top of the block
+layer.
+
+As discussed in another thread, now OSD ULD reinvents the bio handling
+infrastructure because of the design of exofs. But OSD ULD can use the
+block layer helper functions to avoid the re-invention if we change
+the exofs design to take pages instead of bios. For now, it works
+perfectly for exofs. In the future, we might change it but we don't
+know until you submit patches (or the performance results) that show
+taking pages doesn't work for exofs nicely.
+
+I guess that we need to evolve the block layer to support OSD stuff
+cleanly than we've discussed recently. But again we can do when we
+definitely need to do.
