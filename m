@@ -1,111 +1,262 @@
 From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: [PATCH 3/9] scsi: megaraid_sas - Add poll wait support to megaraid
- sas driver - II
-Date: Tue, 17 Feb 2009 08:36:18 -0700
-Message-ID: <4B6A08C587958942AA3002690DD4F8C33A07FB58@cosmail02.lsi.com>
-References: <4B6A08C587958942AA3002690DD4F8C33A07FB3B@cosmail02.lsi.com>
+Subject: [PATCH 4/9] scsi: megaraid_sas - Add new controller 0x73(new SAS2)
+  support to the driver
+Date: Tue, 17 Feb 2009 08:51:35 -0700
+Message-ID: <4B6A08C587958942AA3002690DD4F8C33A07FB75@cosmail02.lsi.com>
+References: <4B6A08C587958942AA3002690DD4F8C33A07FB58@cosmail02.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og111.obsmtp.com ([64.18.2.175]:50170 "EHLO
-	exprod7og111.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751492AbZBQPgi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Feb 2009 10:36:38 -0500
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C33A07FB3B@cosmail02.lsi.com>
+Received: from exprod7og101.obsmtp.com ([64.18.2.155]:53522 "EHLO
+	exprod7og101.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751306AbZBQPvw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Feb 2009 10:51:52 -0500
+In-Reply-To: <4B6A08C587958942AA3002690DD4F8C33A07FB58@cosmail02.lsi.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Yang, Bo" <Bo.Yang@lsi.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>li
 Cc: "Austria, Winston" <Winston.Austria@lsi.com>
 
-Add poll wait support to megaraid sas driver - II, Add Poll_wait mechanism to Gen-2 Linux driver.  Avoid the depending upon storelib to continue events.
+Add new controller 0x73(new SAS2) support to the MegaRAID SAS driver.
 
 Signed-off-by Bo Yang<bo.yang@lsi.com>
 
 ---
-drivers/scsi/megaraid/megaraid_sas.c |   25 +++++++++++++++++++++++++
- drivers/scsi/megaraid/megaraid_sas.h |    1 +
- 2 files changed, 26 insertions(+)
+drivers/scsi/megaraid/megaraid_sas.c |  145 +++++++++++++++++++++++++++++++++--
+ drivers/scsi/megaraid/megaraid_sas.h |    5 +
+ 2 files changed, 144 insertions(+), 6 deletions(-)
 
 diff -rupN linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c
---- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c      2009-02-12 15:44:26.000000000 -0500
-+++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c       2009-02-12 15:47:21.000000000 -0500
-@@ -95,6 +95,8 @@ static DECLARE_WAIT_QUEUE_HEAD (megasas_
- extern void
- poll_wait(struct file *filp, wait_queue_head_t *q, poll_table *token);
+--- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c      2009-02-12 15:52:27.000000000 -0500
++++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c       2009-02-12 15:54:41.000000000 -0500
+@@ -76,6 +76,10 @@ static struct pci_device_id megasas_pci_
+        /* gen2*/
+        {PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_SAS0079GEN2)},
+        /* gen2*/
++       {PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_SAS0073SKINNY)},
++       /* skinny*/
++       {PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_SAS0071SKINNY)},
++       /* skinny*/
+        {PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_VERDE_ZCR)},
+        /* xscale IOP, vega */
+        {PCI_DEVICE(PCI_VENDOR_ID_DELL, PCI_DEVICE_ID_DELL_PERC5)},
+@@ -336,6 +340,100 @@ static struct megasas_instance_template
+ };
 
-+static u32 support_poll_for_event;
-+
- static u32 megasas_dbg_lvl;
-
- static void
-@@ -3427,6 +3429,15 @@ static DRIVER_ATTR(release_date, S_IRUGO
-                   NULL);
-
- static ssize_t
-+megasas_sysfs_show_support_poll_for_event(struct device_driver *dd, char *buf)
+ /**
++ * megasas_enable_intr_skinny -        Enables interrupts
++ * @regs:                      MFI register set
++ */
++static inline void
++megasas_enable_intr_skinny(struct megasas_register_set __iomem *regs)
 +{
-+       return sprintf(buf, "%u\n", support_poll_for_event);
++       writel(0xFFFFFFFF, &(regs)->outbound_intr_mask);
++
++       /* write ~0x00000005 (4 & 1) to the intr mask*/
++       writel(~MFI_SKINNY_ENABLE_INTERRUPT_MASK, &(regs)->outbound_intr_mask);
++
++       /* Dummy readl to force pci flush */
++       readl(&regs->outbound_intr_mask);
 +}
 +
-+static DRIVER_ATTR(support_poll_for_event, S_IRUGO,
-+                       megasas_sysfs_show_support_poll_for_event, NULL);
++/**
++ * megasas_disable_intr_skinny -       Disables interrupt
++ * @regs:                      MFI register set
++ */
++static inline void
++megasas_disable_intr_skinny(struct megasas_register_set __iomem *regs)
++{
++       u32 mask = 0xFFFFFFFF;
++       writel(mask, &regs->outbound_intr_mask);
++       /* Dummy readl to force pci flush */
++       readl(&regs->outbound_intr_mask);
++}
 +
-+static ssize_t
- megasas_sysfs_show_dbg_lvl(struct device_driver *dd, char *buf)
- {
-        return sprintf(buf, "%u\n", megasas_dbg_lvl);
-@@ -3610,6 +3621,8 @@ static int __init megasas_init(void)
-        printk(KERN_INFO "megasas: %s %s\n", MEGASAS_VERSION,
-               MEGASAS_EXT_VERSION);
++/**
++ * megasas_read_fw_status_reg_skinny - returns the current FW status value
++ * @regs:                      MFI register set
++ */
++static u32
++megasas_read_fw_status_reg_skinny(struct megasas_register_set __iomem *regs)
++{
++       return readl(&(regs)->outbound_scratch_pad);
++}
++
++/**
++ * megasas_clear_interrupt_skinny -    Check & clear interrupt
++ * @regs:                              MFI register set
++ */
++static int
++megasas_clear_intr_skinny(struct megasas_register_set __iomem *regs)
++{
++       u32 status;
++       /*
++        * Check if it is our interrupt
++        */
++       status = readl(&regs->outbound_intr_status);
++
++       if (!(status & MFI_SKINNY_ENABLE_INTERRUPT_MASK)) {
++               return 1;
++       }
++
++       /*
++        * Clear the interrupt by writing back the same value
++        */
++       writel(status, &regs->outbound_intr_status);
++
++       /*
++       * dummy read to flush PCI
++       */
++       readl(&regs->outbound_intr_status);
++
++       return 0;
++}
++
++/**
++ * megasas_fire_cmd_skinny -   Sends command to the FW
++ * @frame_phys_addr :          Physical address of cmd
++ * @frame_count :              Number of frames for the command
++ * @regs :                     MFI register set
++ */
++static inline void
++megasas_fire_cmd_skinny(dma_addr_t frame_phys_addr, u32 frame_count,
++                       struct megasas_register_set __iomem *regs)
++{
++       writel(0, &(regs)->inbound_high_queue_port);
++       writel((frame_phys_addr | (frame_count<<1))|1,
++                       &(regs)->inbound_low_queue_port);
++       /*msleep(5);*/
++}
++
++static struct megasas_instance_template megasas_instance_template_skinny = {
++
++       .fire_cmd = megasas_fire_cmd_skinny,
++       .enable_intr = megasas_enable_intr_skinny,
++       .disable_intr = megasas_disable_intr_skinny,
++       .clear_intr = megasas_clear_intr_skinny,
++       .read_fw_status_reg = megasas_read_fw_status_reg_skinny,
++};
++
++/**
+ *      The following functions are defined for gen2 (deviceid : 0x78 0x79)
+ *      controllers
+ */
+@@ -1322,7 +1420,6 @@ megasas_service_aen(struct megasas_insta
+        else
+                cmd->abort_aen = 0;
 
-+       support_poll_for_event = 1;
-+
-        memset(&megasas_mgmt_info, 0, sizeof(megasas_mgmt_info));
+-       instance->aen_cmd = NULL;
+        megasas_return_cmd(instance, cmd);
+ }
 
-        /*
-@@ -3642,6 +3655,12 @@ static int __init megasas_init(void)
-                                  &driver_attr_release_date);
-        if (rval)
-                goto err_dcf_rel_date;
+@@ -1589,16 +1686,34 @@ megasas_transition_to_ready(struct megas
+                        /*
+                         * Set the CLR bit in inbound doorbell
+                         */
+-                       writel(MFI_INIT_CLEAR_HANDSHAKE|MFI_INIT_HOTPLUG,
+-                               &instance->reg_set->inbound_doorbell);
++                       if ((instance->pdev->device == \
++                               PCI_DEVICE_ID_LSI_SAS0073SKINNY) ||
++                               (instance->pdev->device ==
++                               PCI_DEVICE_ID_LSI_SAS0071SKINNY)) {
 +
-+       rval = driver_create_file(&megasas_pci_driver.driver,
-+                               &driver_attr_support_poll_for_event);
-+       if (rval)
-+               goto err_dcf_support_poll_for_event;
-+
-        rval = driver_create_file(&megasas_pci_driver.driver,
-                                  &driver_attr_dbg_lvl);
-        if (rval)
-@@ -3659,6 +3678,10 @@ err_dcf_poll_mode_io:
- err_dcf_dbg_lvl:
-        driver_remove_file(&megasas_pci_driver.driver,
-                           &driver_attr_release_date);
-+err_dcf_support_poll_for_event:
-+       driver_remove_file(&megasas_pci_driver.driver,
-+                       &driver_attr_support_poll_for_event);
-+
- err_dcf_rel_date:
-        driver_remove_file(&megasas_pci_driver.driver, &driver_attr_version);
- err_dcf_attr_ver:
-@@ -3678,6 +3701,8 @@ static void __exit megasas_exit(void)
-        driver_remove_file(&megasas_pci_driver.driver,
-                           &driver_attr_dbg_lvl);
-        driver_remove_file(&megasas_pci_driver.driver,
-+                       &driver_attr_support_poll_for_event);
-+       driver_remove_file(&megasas_pci_driver.driver,
-                           &driver_attr_release_date);
-        driver_remove_file(&megasas_pci_driver.driver, &driver_attr_version);
++                               writel(
++                                 MFI_INIT_CLEAR_HANDSHAKE|MFI_INIT_HOTPLUG,
++                                 &instance->reg_set->outbound_scratch_pad);
++                       } else {
++                               writel(
++                                   MFI_INIT_CLEAR_HANDSHAKE|MFI_INIT_HOTPLUG,
++                                       &instance->reg_set->inbound_doorbell);
++                       }
+
+                        max_wait = 2;
+                        cur_state = MFI_STATE_WAIT_HANDSHAKE;
+                        break;
+
+                case MFI_STATE_BOOT_MESSAGE_PENDING:
+-                       writel(MFI_INIT_HOTPLUG,
+-                               &instance->reg_set->inbound_doorbell);
++                       if ((instance->pdev->device ==
++                               PCI_DEVICE_ID_LSI_SAS0073SKINNY) ||
++                       (instance->pdev->device ==
++                               PCI_DEVICE_ID_LSI_SAS0071SKINNY)) {
++                               writel(MFI_INIT_HOTPLUG,
++                               &instance->reg_set->outbound_scratch_pad);
++                       } else
++                               writel(MFI_INIT_HOTPLUG,
++                                       &instance->reg_set->inbound_doorbell);
+
+                        max_wait = 10;
+                        cur_state = MFI_STATE_BOOT_MESSAGE_PENDING;
+@@ -1609,7 +1724,15 @@ megasas_transition_to_ready(struct megas
+                         * Bring it to READY state; assuming max wait 10 secs
+                         */
+                        instance->instancet->disable_intr(instance->reg_set);
+-                       writel(MFI_RESET_FLAGS, &instance->reg_set->inbound_doorbell);
++                       if ((instance->pdev->device ==
++                               PCI_DEVICE_ID_LSI_SAS0073SKINNY) ||
++                               (instance->pdev->device ==
++                               PCI_DEVICE_ID_LSI_SAS0071SKINNY)) {
++                               writel(MFI_RESET_FLAGS,
++                               &instance->reg_set->outbound_scratch_pad);
++                       } else
++                               writel(MFI_RESET_FLAGS,
++                               &instance->reg_set->inbound_doorbell);
+
+                        max_wait = 60;
+                        cur_state = MFI_STATE_OPERATIONAL;
+@@ -2114,6 +2237,8 @@ static int megasas_init_mfi(struct megas
+         * Map the message registers
+         */
+        if ((instance->pdev->device == PCI_DEVICE_ID_LSI_SAS1078GEN2) ||
++               (instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0071SKINNY) ||
++               (instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0073SKINNY) ||
+                (instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0079GEN2)) {
+                instance->base_addr = pci_resource_start(instance->pdev, 1);
+        } else {
+@@ -2144,6 +2269,10 @@ static int megasas_init_mfi(struct megas
+                case PCI_DEVICE_ID_LSI_SAS0079GEN2:
+                        instance->instancet = &megasas_instance_template_gen2;
+                        break;
++               case PCI_DEVICE_ID_LSI_SAS0073SKINNY:
++               case PCI_DEVICE_ID_LSI_SAS0071SKINNY:
++                       instance->instancet = &megasas_instance_template_skinny;
++                       break;
+                case PCI_DEVICE_ID_LSI_SAS1064R:
+                case PCI_DEVICE_ID_DELL_PERC5:
+                default:
+@@ -2413,6 +2542,10 @@ megasas_register_aen(struct megasas_inst
+                                       "previous AEN command\n");
+                                return ret_val;
+                        }
++                       /**
++                       * set the AEN to NULL after abort AEN
++                       **/
++                       instance->aen_cmd = NULL;
+                }
+        }
 
 diff -rupN linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.h linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.h
---- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.h      2009-02-12 15:44:27.000000000 -0500
+--- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.h      2009-02-12 15:52:28.000000000 -0500
 +++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.h       2009-02-12 15:24:58.000000000 -0500
-@@ -1135,6 +1135,7 @@ struct megasas_instance {
-        struct tasklet_struct isr_tasklet;
+@@ -30,6 +30,8 @@
+ #define        PCI_DEVICE_ID_LSI_VERDE_ZCR             0x0413
+ #define        PCI_DEVICE_ID_LSI_SAS1078GEN2           0x0078
+ #define        PCI_DEVICE_ID_LSI_SAS0079GEN2           0x0079
++#define        PCI_DEVICE_ID_LSI_SAS0073SKINNY         0x0073
++#define        PCI_DEVICE_ID_LSI_SAS0071SKINNY         0x0071
 
-        u8 flag;
-+       u8 unload;
-        unsigned long last_time;
+ /*
+  * =====================================
+@@ -594,6 +596,9 @@ struct megasas_ctrl_info {
+ #define MFI_REPLY_1078_MESSAGE_INTERRUPT       0x80000000
+ #define MFI_REPLY_GEN2_MESSAGE_INTERRUPT       0x00000001
+ #define MFI_GEN2_ENABLE_INTERRUPT_MASK         (0x00000001 | 0x00000004)
++#define MFI_REPLY_SKINNY_MESSAGE_INTERRUPT     0x40000000
++#define MFI_SKINNY_ENABLE_INTERRUPT_MASK       (0x00000001 | 0x00000008)
++
 
-        struct timer_list io_completion_timer;
+ /*
+ * register set for both 1068 and 1078 controllers
