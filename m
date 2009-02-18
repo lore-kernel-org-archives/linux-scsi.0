@@ -1,76 +1,49 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] pci: enable MSI on 8132
-Date: Wed, 18 Feb 2009 11:15:10 -0800
-Message-ID: <20090218111510.b720aacb.akpm@linux-foundation.org>
-References: <499B46B2.5040601@kernel.org>
-	<alpine.DEB.1.10.0902171537260.26625@asgard.lang.hm>
-	<499B6BF7.9090300@kernel.org>
-	<alpine.DEB.1.10.0902171803040.26625@asgard.lang.hm>
-	<499B724A.2040408@kernel.org>
-	<alpine.DEB.1.10.0902171832560.26625@asgard.lang.hm>
-	<alpine.DEB.1.10.0902171839420.26625@asgard.lang.hm>
-	<499B774C.5010705@kernel.org>
-	<alpine.DEB.1.10.0902171917420.26625@asgard.lang.hm>
-	<499B9129.50104@kernel.org>
-	<20090218122137.GJ16841@parisc-linux.org>
-	<alpine.DEB.1.10.0902180426420.25606@asgard.lang.hm>
-	<20090218100448.7f7c5b86.akpm@linux-foundation.org>
-	<1234982285.3225.42.camel@localhost.localdomain>
+From: Mike Anderson <andmike@linux.vnet.ibm.com>
+Subject: Re: scsi: aic7xxx hang since v2.6.28-rc1 ...
+Date: Wed, 18 Feb 2009 11:16:43 -0800
+Message-ID: <20090218191643.GA16347@linux.vnet.ibm.com>
+References: <20090215115823.GB19464@elte.hu> <Pine.LNX.4.44L0.0902171507370.18399-100000@iolanthe.rowland.org> <20090218155817.GC23989@elte.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756249AbZBRTQo@vger.kernel.org>
-In-Reply-To: <1234982285.3225.42.camel@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: david@lang.hm, matthew@wil.cx, yinghai@kernel.org, jbarnes@virtuousgeek.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e36.co.us.ibm.com ([32.97.110.154]:51426 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751881AbZBRTRC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Feb 2009 14:17:02 -0500
+Content-Disposition: inline
+In-Reply-To: <20090218155817.GC23989@elte.hu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Alan Stern <stern@rowland.harvard.edu>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org
 
-On Wed, 18 Feb 2009 18:38:04 +0000
-James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-
-> On Wed, 2009-02-18 at 10:04 -0800, Andrew Morton wrote:
-> > On Wed, 18 Feb 2009 04:27:28 -0800 (PST) david@lang.hm wrote:
-> > 
-> > > On Wed, 18 Feb 2009, Matthew Wilcox wrote:
-> > > 
-> > > > On Tue, Feb 17, 2009 at 08:40:09PM -0800, Yinghai Lu wrote:
-> > > >>
-> > > >> Impact: workaround BIOS that doesn't enable that bit
-> > > >>
-> > > >> David reported that LSI sas doesn't work with MSI.
-> > > >> it turns out that BIOS doesn't enable HT MSI
-> > > >> 8132 does support HT MSI.
-> > > >> add quirk to enable it
-> > > >>
-> > > >> Reported-by: David Lang <david@lang.hm>
-> > > >> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> > > >
-> > > > Reviewed-by: Matthew Wilcox <willy@linux.intel.com>
-> > > >
-> > > > Jesse, I think this should go into Linus' tree sooner rather than later.
-> > > 
-> > > please forward to -stable as well. this is a regression since the card 
-> > > works with older kernels.
-> > > 
-> > 
-> > Which kernel version introduced the regression?
+Ingo Molnar <mingo@elte.hu> wrote:
 > 
-> Technically, it's not a regression.  The MSI problem has always been
-> there, it was just exposed when the SAS card switched to using MSI by
-> default.  It's fixed by the bridge quirk  ... of course it's unclear how
-> many more bridges with problems there are.
+> * Alan Stern <stern@rowland.harvard.edu> wrote:
 > 
-> > Do we not need mpt-fix-enable-lsi-sas-to-use-msi-as-default.patch as
-> > well, to fix this regression?
+> > I have no idea if this will make any difference for the 
+> > problem you're seeing, but it has been submitted and it's 
+> > worth trying out.  If the problem still occurs, I'll write a 
+> > diagnostic patch to add log messages giving the destiny of 
+> > each request in scsi_io_completion().
 > 
-> No ... it's a separate issue.  MSI was enabled for fusion SAS in 2.6.26;
-> the problem msi patch which the above corrects actually has the effect
-> of disabling MSI for fusion and went into 2.6.29-rc2, which isn't a
-> kernel that's been tested here.
+> OK, i've undone the reverts and have applied your fix - it will 
+> take a few hours to see whether the hang still occurs.
+> 
 
-<scratches head>
+I know already started your testing, but..
 
-So it should be the case that _either_ of
-mpt-fix-enable-lsi-sas-to-use-msi-as-default.patch and
-pci-enable-msi-on-8132.patch would fix David's machine?
+I find it informative to set my scsi logging to the value below to display
+non-zero IO status on commands. The overhead impact is low for good
+completions.
+
+sysctl -w dev.scsi.logging_level=4100
+
+Note: This does not provide the exact policy that scsi_io_completion will
+take on the IO, but it provides the input to scsi_io_completion which
+should help.
+
+-andmike
+--
+Michael Anderson
+andmike@linux.vnet.ibm.com
