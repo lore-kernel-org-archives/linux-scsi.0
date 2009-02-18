@@ -1,70 +1,28 @@
-From: Seokmann Ju <seokmann.ju@qlogic.com>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: [PATCH] qla2x: fix printk format warnings
-Date: Wed, 18 Feb 2009 13:16:38 -0800
-Message-ID: <8A93391C-57A3-41F6-9294-7B96DE8A2F1A@qlogic.com>
+Date: Wed, 18 Feb 2009 14:22:50 -0700
+Message-ID: <20090218212249.GL16841@parisc-linux.org>
 References: <20090218131120.d1beb9f7.randy.dunlap@oracle.com>
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Content-Type: text/plain; charset="US-ASCII"; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:35027 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757282AbZBRVQm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Feb 2009 16:16:42 -0500
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ia64-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <20090218131120.d1beb9f7.randy.dunlap@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ia64-owner@vger.kernel.org
 To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: scsi <linux-scsi@vger.kernel.org>, akpm <akpm@linux-foundation.org>, jejb <James.Bottomley@HansenPartnership.com>, Linux Driver <Linux-Driver@qlogic.com>
+Cc: scsi <linux-scsi@vger.kernel.org>, akpm <akpm@linux-foundation.org>, jejb <James.Bottomley@HansenPartnership.com>, linux-driver@qlogic.com, linux-ia64@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
+On Wed, Feb 18, 2009 at 01:11:20PM -0800, Randy Dunlap wrote:
+> drivers/scsi/qla2xxx/qla_sup.c:915: warning: long long unsigned int format, u64 arg (arg 5)
 
-On Feb 18, 2009, at 1:11 PM, Randy Dunlap wrote:
+I thought we were going to fix all these by making u64 an unsigned long
+long on all 64-bit architectures?  I know benh is working on it for
+powerpc, and I sent a patch to do it for ia64.  Don't think Tony's
+merged it yet ...
 
-> From: Randy Dunlap <randy.dunlap@oracle.com>
->
-> Fix qla2xxx printk format warnings:
-Thanks for the patch.
-
->
->
-> drivers/scsi/qla2xxx/qla_sup.c:915: warning: long long unsigned int  
-> format, u64 arg (arg 5)
-> drivers/scsi/qla2xxx/qla_sup.c:915: warning: long long unsigned int  
-> format, u64 arg (arg 6)
-> drivers/scsi/qla2xxx/qla_sup.c:923: warning: long long unsigned int  
-> format, u64 arg (arg 5)
-> drivers/scsi/qla2xxx/qla_sup.c:923: warning: long long unsigned int  
-> format, u64 arg (arg 6)
->
-> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-Acked-by: Seokmann Ju <seokmann.ju@qlogic.com>
-
->
-> ---
-> drivers/scsi/qla2xxx/qla_sup.c |    7 +++++--
-> 1 file changed, 5 insertions(+), 2 deletions(-)
->
-> --- lnx2629-rc5-docsrc.orig/drivers/scsi/qla2xxx/qla_sup.c
-> +++ lnx2629-rc5-docsrc/drivers/scsi/qla2xxx/qla_sup.c
-> @@ -914,7 +914,9 @@ qla2xxx_flash_npiv_conf(scsi_qla_host_t
->
-> 		DEBUG2(qla_printk(KERN_DEBUG, ha, "NPIV[%02x]: wwpn=%llx "
-> 			"wwnn=%llx vf_id=0x%x Q_qos=0x%x F_qos=0x%x.\n", cnt,
-> -			vid.port_name, vid.node_name, le16_to_cpu(entry->vf_id),
-> +			(unsigned long long)vid.port_name,
-> +			(unsigned long long)vid.node_name,
-> +			le16_to_cpu(entry->vf_id),
-> 			entry->q_qos, entry->f_qos));
->
-> 		if (i < QLA_PRECONFIG_VPORTS) {
-> @@ -923,7 +925,8 @@ qla2xxx_flash_npiv_conf(scsi_qla_host_t
-> 				qla_printk(KERN_INFO, ha,
-> 				"NPIV-Config: Failed to create vport [%02x]: "
-> 				"wwpn=%llx wwnn=%llx.\n", cnt,
-> -				vid.port_name, vid.node_name);
-> +				(unsigned long long)vid.port_name,
-> +				(unsigned long long)vid.node_name);
-> 		}
-> 	}
-> done:
-
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
