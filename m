@@ -1,65 +1,71 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12733] mpt fusion driver crashes with LSI22320SE installed and BIOS ACPI turned off
-Date: Wed, 18 Feb 2009 07:32:09 -0800 (PST)
-Message-ID: <20090218153209.1B117108045@picon.linux-foundation.org>
-References: <bug-12733-11613@http.bugzilla.kernel.org/>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH (resend)]: SCSI: fix /proc memory leak in the SCSI core
+Date: Wed, 18 Feb 2009 10:52:06 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0902181048210.3186-100000@iolanthe.rowland.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:41629 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752745AbZBRPcj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Feb 2009 10:32:39 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n1IFW9o4027336
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Feb 2009 07:32:10 -0800
-In-Reply-To: <bug-12733-11613@http.bugzilla.kernel.org/>
+Received: from iolanthe.rowland.org ([192.131.102.54]:41816 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750740AbZBRPwI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Feb 2009 10:52:08 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12733
+The SCSI core calls scsi_proc_hostdir_add() from within
+scsi_host_alloc(), but the corresponding scsi_proc_hostdir_rm()
+routine is called from within scsi_remove_host().  As a result, if a
+host is allocated and then deallocated without ever being registered,
+the host's directory in /proc is leaked.
 
+This patch (as1181) fixes this bug in the SCSI core by moving
+scsi_proc_hostdir_add() into scsi_host_add().
 
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
 
+---
 
+Note: This is a repost of a bug-fix patch that was first submitted on 
+December 1.
 
-------- Comment #3 from anonymous@kernel-bugs.osdl.org  2009-02-18 07:32 -------
-Reply-To: James.Bottomley@HansenPartnership.com
-
-On Tue, 2009-02-17 at 15:40 -0800, bugme-daemon@bugzilla.kernel.org
-wrote:
-> http://bugzilla.kernel.org/show_bug.cgi?id=12733
-> 
-> 
-> 
-> 
-> 
-> ------- Comment #2 from mvolaski@aecom.yu.edu  2009-02-17 15:40 -------
-> With an LSI 8704ELP and LSI SAS3081E-R present and ACPI off, the board works
-> fine. Only the presence of an LSI 22320 causes a crash. 
-> 
-> I don't know about the interrupt number. When I receive the cards back, I can
-> can try to find out.
-> 
-> Our vendor has tested at least one other manufacturer's board with the LSI
-> 22320 and it, too, shows the same crashing behavior when ACPI is turned off.
-
-But the point is that I don't think this is a MPT bug ... it's using the
-IRQ line the platform code assigns to it.  If that IRQ line is wrong,
-you get the symptoms you're displaying (misrouted IRQ).
-
-I'm not even sure this is a bug:  some modern motherboards simply can't
-be configured without ACPI because there's no way to get the IRQ routing
-information otherwise.
-
-If your motherboard isn't one of these, then it could be a failure of
-the non-ACPI IRQ routing platform code.  None of this can be diagnosed
-from the snippet of the log you posted.
-
-James
+After looking through the documentation and code for the SCSI legacy 
+API, I can't find anything incompatible with this change.  However I 
+don't have any hardware with a legacy driver so I can't actually make 
+the test.
 
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Index: usb-2.6/drivers/scsi/hosts.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/hosts.c
++++ usb-2.6/drivers/scsi/hosts.c
+@@ -206,9 +206,10 @@ int scsi_add_host(struct Scsi_Host *shos
+ 	if (error)
+ 		goto fail;
+ 
++	scsi_proc_hostdir_add(shost->hostt);
++
+ 	if (!shost->shost_gendev.parent)
+ 		shost->shost_gendev.parent = dev ? dev : &platform_bus;
+-
+ 	error = device_add(&shost->shost_gendev);
+ 	if (error)
+ 		goto out;
+@@ -259,6 +260,7 @@ int scsi_add_host(struct Scsi_Host *shos
+  out_del_gendev:
+ 	device_del(&shost->shost_gendev);
+  out:
++	scsi_proc_hostdir_rm(shost->hostt);
+ 	scsi_destroy_command_freelist(shost);
+  fail:
+ 	return error;
+@@ -407,7 +409,6 @@ struct Scsi_Host *scsi_host_alloc(struct
+ 		goto fail_kfree;
+ 	}
+ 
+-	scsi_proc_hostdir_add(shost->hostt);
+ 	return shost;
+ 
+  fail_kfree:
+
