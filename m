@@ -1,49 +1,40 @@
-From: Yinghai Lu <yinghai@kernel.org>
-Subject: Re: mpt fusion broken sometime since 2.6.24
-Date: Tue, 17 Feb 2009 21:10:52 -0800
-Message-ID: <499B985C.1090100@kernel.org>
-References: <alpine.DEB.1.10.0902171419000.26625@asgard.lang.hm>  <alpine.DEB.1.10.0902171343280.26625@asgard.lang.hm>  <20090217230050.GG16841@parisc-linux.org>  <alpine.DEB.1.10.0902171506500.26625@asgard.lang.hm> <86802c440902171511s1abcc0eao560df4b8fcea0e7c@mail.gmail.com> <alpine.DEB.1.10.0902171514120.26625@asgard.lang.hm> <499B46B2.5040601@kernel.org> <alpine.DEB.1.10.0902171537260.26625@asgard.lang.hm> <499B6BF7.9090300@kernel.org> <alpine.DEB.1.10.0902171803040.26625@asgard.lang.hm> <499B724A.2040408@kernel.org> <alpine.DEB.1.10.0902171832560.26625@asgard.lang.hm> <alpine.DEB.1.10.0902171839420.26625@asgard.lang.hm> <499B774C.5010705@kernel.org> <alpine.DEB.1.10.0902171917420.26625@asgard.lang.hm> <499B807B.2050509@kernel.org> <alpine.DEB.1.10.0902171935110.26625@asgard.lang.hm> <
- 499B84CE.7090707@kernel.org> <alpine.DEB.1.10.0902172013230.26625@asgard.lang.hm> <499B976B.6010605@kernel.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] pci: enable MSI on 8132
+Date: Wed, 18 Feb 2009 05:21:37 -0700
+Message-ID: <20090218122137.GJ16841@parisc-linux.org>
+References: <499B46B2.5040601@kernel.org> <alpine.DEB.1.10.0902171537260.26625@asgard.lang.hm> <499B6BF7.9090300@kernel.org> <alpine.DEB.1.10.0902171803040.26625@asgard.lang.hm> <499B724A.2040408@kernel.org> <alpine.DEB.1.10.0902171832560.26625@asgard.lang.hm> <alpine.DEB.1.10.0902171839420.26625@asgard.lang.hm> <499B774C.5010705@kernel.org> <alpine.DEB.1.10.0902171917420.26625@asgard.lang.hm> <499B9129.50104@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754756AbZBRFMK@vger.kernel.org>
-In-Reply-To: <499B976B.6010605@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: david@lang.hm
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:60726 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752004AbZBRMVz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Feb 2009 07:21:55 -0500
+Content-Disposition: inline
+In-Reply-To: <499B9129.50104@kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, Andrew Morton <akpm@linux-foundation.org>, david@lang.hm, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com, linux-pci@vger.kernel.org
 
-Yinghai Lu wrote:
-> david@lang.hm wrote:
->> On Tue, 17 Feb 2009, Yinghai Lu wrote:
->>
->>> please try two patches at the same time on 2.6.29-rc5.
->>> don't apply other patch.
->> I did a git checkout -f HEAD then applied these two patches and the
->> result works.
->>
-> but should have
+On Tue, Feb 17, 2009 at 08:40:09PM -0800, Yinghai Lu wrote:
 > 
-> pci 0000:80:10.0: Enabling HT MSI Mapping
-> pci 0000:80:11.0: Enabling HT MSI Mapping
+> Impact: workaround BIOS that doesn't enable that bit
 > 
-> because previous patch have
-> pci 0000:80:10.0: Found disabled HT MSI Mapping
-> pci 0000:80:10.0: MSI quirk detected; subordinate MSI disabled
-> pci 0000:80:11.0: Found disabled HT MSI Mapping
-> pci 0000:80:11.0: MSI quirk detected; subordinate MSI disabled
+> David reported that LSI sas doesn't work with MSI.
+> it turns out that BIOS doesn't enable HT MSI
+> 8132 does support HT MSI.
+> add quirk to enable it
 > 
+> Reported-by: David Lang <david@lang.hm>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-ok i saw that...
+Reviewed-by: Matthew Wilcox <willy@linux.intel.com>
 
-pci 0000:80:10.0: Enabling HT MSI Mapping
-pci 0000:80:10.1: reg 10 64bit mmio: [0xfebfe000-0xfebfefff]
-pci 0000:80:11.0: Enabling HT MSI Mapping
-pci 0000:80:11.1: reg 10 64bit mmio: [0xfebff000-0xfebfffff]
+Jesse, I think this should go into Linus' tree sooner rather than later.
 
-it appears early.
-
-that patch enabling MSI does work...
-
-YH
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
