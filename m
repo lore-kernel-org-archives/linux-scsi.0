@@ -1,70 +1,32 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH (resend)] sd: tell the user when a disk's capacity is adjusted
-Date: Wed, 18 Feb 2009 10:54:44 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0902181052070.3186-100000@iolanthe.rowland.org>
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: scsi: aic7xxx hang since v2.6.28-rc1 ...
+Date: Wed, 18 Feb 2009 16:58:17 +0100
+Message-ID: <20090218155817.GC23989@elte.hu>
+References: <20090215115823.GB19464@elte.hu> <Pine.LNX.4.44L0.0902171507370.18399-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:41819 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755166AbZBRPyp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Feb 2009 10:54:45 -0500
+Received: from mx2.mail.elte.hu ([157.181.151.9]:58125 "EHLO mx2.mail.elte.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754693AbZBRP6n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Feb 2009 10:58:43 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0902171507370.18399-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, SCSI development list <linux-scsi@vger.kernel.org>
-
-This patch (as1188) combines the tests for decrementing a drive's
-reported capacity and expands the comment.  It also adds an
-informational message to the system log, informing the user when the
-reported value has been changed.
-
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-
----
-
-Note: This is a resend of a patch that was first submitted on December
-15.  I would like this change to appear in 2.6.30 because I have
-another patch waiting that depends on it.
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org
 
 
+* Alan Stern <stern@rowland.harvard.edu> wrote:
 
-Index: usb-2.6/drivers/scsi/sd.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/sd.c
-+++ usb-2.6/drivers/scsi/sd.c
-@@ -1384,18 +1384,22 @@ repeat:
- 		sd_read_protection_type(sdkp, buffer);
- 	}	
- 
--	/* Some devices return the total number of sectors, not the
--	 * highest sector number.  Make the necessary adjustment. */
--	if (sdp->fix_capacity) {
-+	/* Some devices are known to return the total number of blocks,
-+	 * not the highest block number.  Some devices have versions
-+	 * which do this and others which do not.  Some devices we might
-+	 * suspect of doing this but we don't know for certain.
-+	 *
-+	 * If we know the reported capacity is wrong, decrement it.  If
-+	 * we can only guess, then assume the number of blocks is even
-+	 * (usually true but not always) and err on the side of lowering
-+	 * the capacity.
-+	 */
-+	if (sdp->fix_capacity ||
-+	    (sdp->guess_capacity && (sdkp->capacity & 0x01))) {
-+		sd_printk(KERN_INFO, sdkp, "Adjusting the sector count "
-+				"from its reported value: %llu\n",
-+				(unsigned long long) sdkp->capacity);
- 		--sdkp->capacity;
--
--	/* Some devices have version which report the correct sizes
--	 * and others which do not. We guess size according to a heuristic
--	 * and err on the side of lowering the capacity. */
--	} else {
--		if (sdp->guess_capacity)
--			if (sdkp->capacity & 0x01) /* odd sizes are odd */
--				--sdkp->capacity;
- 	}
- 
- got_data:
+> I have no idea if this will make any difference for the 
+> problem you're seeing, but it has been submitted and it's 
+> worth trying out.  If the problem still occurs, I'll write a 
+> diagnostic patch to add log messages giving the destiny of 
+> each request in scsi_io_completion().
 
+OK, i've undone the reverts and have applied your fix - it will 
+take a few hours to see whether the hang still occurs.
+
+	Ingo
