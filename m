@@ -1,23 +1,30 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 12733] mpt fusion driver crashes with LSI22320SE
-	installed and BIOS ACPI turned off
-Date: Wed, 18 Feb 2009 15:31:30 +0000
-Message-ID: <1234971090.3225.11.camel@localhost.localdomain>
-References: <20090217234024.35389108040@picon.linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12733] mpt fusion driver crashes with LSI22320SE installed and BIOS ACPI turned off
+Date: Wed, 18 Feb 2009 07:32:09 -0800 (PST)
+Message-ID: <20090218153209.1B117108045@picon.linux-foundation.org>
+References: <bug-12733-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:36583 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752608AbZBRPbd (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41629 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752745AbZBRPcj (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Feb 2009 10:31:33 -0500
-In-Reply-To: <20090217234024.35389108040@picon.linux-foundation.org>
+	Wed, 18 Feb 2009 10:32:39 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n1IFW9o4027336
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Feb 2009 07:32:10 -0800
+In-Reply-To: <bug-12733-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugme-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=12733
+
+
+
+
+
+------- Comment #3 from anonymous@kernel-bugs.osdl.org  2009-02-18 07:32 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Tue, 2009-02-17 at 15:40 -0800, bugme-daemon@bugzilla.kernel.org
 wrote:
@@ -52,3 +59,7 @@ from the snippet of the log you posted.
 James
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
