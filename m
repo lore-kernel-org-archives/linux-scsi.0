@@ -1,55 +1,54 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12730] USB memory stick moved to different device on error / may be due to problem with high concurrent load on two USB devices
-Date: Wed, 18 Feb 2009 07:19:34 -0800 (PST)
-Message-ID: <20090218151934.A904C10803F@picon.linux-foundation.org>
-References: <bug-12730-11613@http.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug 12733] mpt fusion driver crashes with LSI22320SE
+	installed and BIOS ACPI turned off
+Date: Wed, 18 Feb 2009 15:31:30 +0000
+Message-ID: <1234971090.3225.11.camel@localhost.localdomain>
+References: <20090217234024.35389108040@picon.linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:56314 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752848AbZBRPTx (ORCPT
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:36583 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752608AbZBRPbd (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Feb 2009 10:19:53 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n1IFJYmv025861
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Feb 2009 07:19:36 -0800
-In-Reply-To: <bug-12730-11613@http.bugzilla.kernel.org/>
+	Wed, 18 Feb 2009 10:31:33 -0500
+In-Reply-To: <20090217234024.35389108040@picon.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: bugme-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12730
+On Tue, 2009-02-17 at 15:40 -0800, bugme-daemon@bugzilla.kernel.org
+wrote:
+> http://bugzilla.kernel.org/show_bug.cgi?id=12733
+> 
+> 
+> 
+> 
+> 
+> ------- Comment #2 from mvolaski@aecom.yu.edu  2009-02-17 15:40 -------
+> With an LSI 8704ELP and LSI SAS3081E-R present and ACPI off, the board works
+> fine. Only the presence of an LSI 22320 causes a crash. 
+> 
+> I don't know about the interrupt number. When I receive the cards back, I can
+> can try to find out.
+> 
+> Our vendor has tested at least one other manufacturer's board with the LSI
+> 22320 and it, too, shows the same crashing behavior when ACPI is turned off.
+
+But the point is that I don't think this is a MPT bug ... it's using the
+IRQ line the platform code assigns to it.  If that IRQ line is wrong,
+you get the symptoms you're displaying (misrouted IRQ).
+
+I'm not even sure this is a bug:  some modern motherboards simply can't
+be configured without ACPI because there's no way to get the IRQ routing
+information otherwise.
+
+If your motherboard isn't one of these, then it could be a failure of
+the non-ACPI IRQ routing platform code.  None of this can be diagnosed
+from the snippet of the log you posted.
+
+James
 
 
-stern@rowland.harvard.edu changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |stern@rowland.harvard.edu
-
-
-
-
-------- Comment #2 from stern@rowland.harvard.edu  2009-02-18 07:19 -------
-Unfortunately, a lot of EHCI hardware seems to have trouble carrying out
-transfers over different ports concurrently.
-
-Your log doesn't contain enough information to tell just what happened.  If you
-want more information, you can build a kernel with CONFIG_USB_DEBUG enabled. 
-There may or may not have been an actual USB disconnect.  (Such an electronic
-disconnect is indeed indistinguishable from a physical unplug.)
-
-The log shows that the 1-2 drive got into an error state requiring a reset;
-quite possibly the reset failed.  This leaves the kernel no choice but to carry
-out a "logical" disconnect.  While it's not exactly the same as a physical
-disconnect, it is treated the same way and so it is indistinguishable as far as
-most of the kernel is concerned.
-
-It's impossible to tell whether the error state was caused by the drive or by
-the EHCI controller.  To find out for certain, you'd have to use a USB bus
-analyzer.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
