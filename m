@@ -1,32 +1,73 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH] qla2x: fix printk format warnings
-Date: Wed, 18 Feb 2009 13:35:02 -0800
-Message-ID: <499C7F06.8020407@oracle.com>
-References: <20090218131120.d1beb9f7.randy.dunlap@oracle.com>	<20090218212249.GL16841@parisc-linux.org> <20090218133033.df24dfd3.akpm@linux-foundation.org>
+From: "Love, Robert W" <robert.w.love@intel.com>
+Subject: RE: [PATCH] libfc: fix printk format warnings
+Date: Wed, 18 Feb 2009 14:59:34 -0700
+Message-ID: <273D38FBE7C6FE46A1689FCD014A0B8B30714198@azsmsx505.amr.corp.intel.com>
+References: <20090218131238.10050b14.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ia64-owner@vger.kernel.org>
-In-Reply-To: <20090218133033.df24dfd3.akpm@linux-foundation.org>
-Sender: linux-ia64-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Matthew Wilcox <matthew@wil.cx>, randy.dunlap@oracle.com, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-driver@qlogic.com, linux-ia64@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:20015 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753122AbZBRWAI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Feb 2009 17:00:08 -0500
+In-Reply-To: <20090218131238.10050b14.randy.dunlap@oracle.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>, scsi <linux-scsi@vger.kernel.org>
+Cc: akpm <akpm@linux-foundation.org>, jejb <James.Bottomley@HansenPartnership.com>
 
-Andrew Morton wrote:
-> On Wed, 18 Feb 2009 14:22:50 -0700
-> Matthew Wilcox <matthew@wil.cx> wrote:
+Randy Dunlap wrote:
+> From: Randy Dunlap <randy.dunlap@oracle.com>
 > 
->> On Wed, Feb 18, 2009 at 01:11:20PM -0800, Randy Dunlap wrote:
->>> drivers/scsi/qla2xxx/qla_sup.c:915: warning: long long unsigned int format, u64 arg (arg 5)
->> I thought we were going to fix all these by making u64 an unsigned long
->> long on all 64-bit architectures?  I know benh is working on it for
->> powerpc, and I sent a patch to do it for ia64.  Don't think Tony's
->> merged it yet ...
+> Fix libfc printk format warnings:
 > 
-> Yes, we should do this.  But momentum seems to have faded again.
+> drivers/scsi/libfc/fc_lport.c:788: warning: long long unsigned int
+> format, u64 arg (arg 3) drivers/scsi/libfc/fc_lport.c:792: warning:
+> long long unsigned int format, u64 arg (arg 3)
+> drivers/scsi/libfc/fc_rport.c:968: warning: long long unsigned int
+> format, u64 arg (arg 4)  
+> 
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+Acked-by: Robert Love <robert.w.love@intel.com>
 
-OK.  I can help with that then.
+This patch will conflict with the updates I've sent and some
+that I plan to send since we've done an overhaul of our debugging
+statements. If there's anything I can do to help with this, let
+me know.
 
--- 
-~Randy
+> ---
+>  drivers/scsi/libfc/fc_lport.c |    5 +++--
+>  drivers/scsi/libfc/fc_rport.c |    2 +-
+>  2 files changed, 4 insertions(+), 3 deletions(-)
+> 
+> --- lnx2629-rc5-docsrc.orig/drivers/scsi/libfc/fc_lport.c
+> +++ lnx2629-rc5-docsrc/drivers/scsi/libfc/fc_lport.c
+> @@ -786,10 +786,11 @@ static void fc_lport_recv_flogi_req(stru
+>  	remote_wwpn = get_unaligned_be64(&flp->fl_wwpn);
+>  	if (remote_wwpn == lport->wwpn) {
+>  		FC_DBG("FLOGI from port with same WWPN %llx "
+> -		       "possible configuration error\n", remote_wwpn);
+> +		       "possible configuration error\n",
+> +		       (unsigned long long)remote_wwpn);
+>  		goto out;
+>  	}
+> -	FC_DBG("FLOGI from port WWPN %llx\n", remote_wwpn);
+> +	FC_DBG("FLOGI from port WWPN %llx\n", (unsigned long
+> long)remote_wwpn); 
+> 
+>  	/*
+>  	 * XXX what is the right thing to do for FIDs?
+> --- lnx2629-rc5-docsrc.orig/drivers/scsi/libfc/fc_rport.c
+> +++ lnx2629-rc5-docsrc/drivers/scsi/libfc/fc_rport.c
+> @@ -966,7 +966,7 @@ static void fc_rport_recv_plogi_req(stru
+>  	switch (rdata->rp_state) {
+>  	case RPORT_ST_INIT:
+>  		FC_DEBUG_RPORT("incoming PLOGI from %6x wwpn %llx state INIT "
+> -			       "- reject\n", sid, wwpn);
+> +			       "- reject\n", sid, (unsigned long long)wwpn);
+>  		reject = ELS_RJT_UNSUP;
+>  		break;
+>  	case RPORT_ST_PLOGI:
+
