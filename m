@@ -1,17 +1,17 @@
 From: david@lang.hm
 Subject: Re: mpt fusion broken sometime since 2.6.24
-Date: Tue, 17 Feb 2009 18:32:01 -0800 (PST)
-Message-ID: <alpine.DEB.1.10.0902171831450.26625@asgard.lang.hm>
+Date: Tue, 17 Feb 2009 18:34:21 -0800 (PST)
+Message-ID: <alpine.DEB.1.10.0902171832560.26625@asgard.lang.hm>
 References: <alpine.DEB.1.10.0902171419000.26625@asgard.lang.hm>  <alpine.DEB.1.10.0902171343280.26625@asgard.lang.hm>  <20090217230050.GG16841@parisc-linux.org>  <alpine.DEB.1.10.0902171506500.26625@asgard.lang.hm> <86802c440902171511s1abcc0eao560df4b8fcea0e7c@mail.gmail.com>
- <alpine.DEB.1.10.0902171514120.26625@asgard.lang.hm> <499B46B2.5040601@kernel.org> <alpine.DEB.1.10.0902171537260.26625@asgard.lang.hm> <499B6BF7.9090300@kernel.org> <alpine.DEB.1.10.0902171803040.26625@asgard.lang.hm> <499B6EEB.9040704@kernel.org>
+ <alpine.DEB.1.10.0902171514120.26625@asgard.lang.hm> <499B46B2.5040601@kernel.org> <alpine.DEB.1.10.0902171537260.26625@asgard.lang.hm> <499B6BF7.9090300@kernel.org> <alpine.DEB.1.10.0902171803040.26625@asgard.lang.hm> <499B724A.2040408@kernel.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.lang.hm ([64.81.33.126]:59973 "EHLO bifrost.lang.hm"
+Received: from mail.lang.hm ([64.81.33.126]:59985 "EHLO bifrost.lang.hm"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751170AbZBRCcK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Feb 2009 21:32:10 -0500
-In-Reply-To: <499B6EEB.9040704@kernel.org>
+	id S1751170AbZBRCe0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Feb 2009 21:34:26 -0500
+In-Reply-To: <499B724A.2040408@kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Yinghai Lu <yinghai@kernel.org>
@@ -64,15 +64,49 @@ On Tue, 17 Feb 2009, Yinghai Lu wrote:
 >>>
 >>> so your lsi 1068 is under 8132... need to double check if that chip
 >>> really support MSI.
->>
->> anything I can do in the 2.6.24 kernel? or the 2.8.28.6 kernel?
->>
-> for 2.6.24, it disable msi by default.
->
-> for 2.6.28 please have
-> mptbase.mpt_msi_enable=0
-> in your boot command line.
+<SNIP>
 
-this does let it boot.
+I don't understand the section I snipped from the message above
+
+> do you have chance to try current tip/master
+> http://people.redhat.com/mingo/tip.git/readme.txt
+> or 2.6.29-rcX
+> plus following patch?
+
+I will see about trying this.
+
+> or can you check if there is update fw for your LSI card?
+
+this is more work, I'll look into that as well.
 
 David Lang
+
+> [PATCH] mpt: fix enable lsi sas to use msi as default
+>
+> Impact: fix bug
+>
+> the third param in module_param(,,) is perm instead of default value.
+> we still need to assign default at first.
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>
+> ---
+> drivers/message/fusion/mptbase.c |    4 ++--
+> 1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> Index: linux-2.6/drivers/message/fusion/mptbase.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/message/fusion/mptbase.c
+> +++ linux-2.6/drivers/message/fusion/mptbase.c
+> @@ -90,8 +90,8 @@ module_param(mpt_msi_enable_fc, int, 0);
+> MODULE_PARM_DESC(mpt_msi_enable_fc, " Enable MSI Support for FC \
+> 		controllers (default=0)");
+>
+> -static int mpt_msi_enable_sas;
+> -module_param(mpt_msi_enable_sas, int, 1);
+> +static int mpt_msi_enable_sas = 1;
+> +module_param(mpt_msi_enable_sas, int, 0);
+> MODULE_PARM_DESC(mpt_msi_enable_sas, " Enable MSI Support for SAS \
+> 		controllers (default=1)");
+>
+>
