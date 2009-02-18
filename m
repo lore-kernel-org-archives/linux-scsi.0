@@ -1,40 +1,61 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12733] mpt fusion driver crashes with LSI22320SE installed and BIOS ACPI turned off
-Date: Tue, 17 Feb 2009 15:40:24 -0800 (PST)
-Message-ID: <20090217234024.35389108040@picon.linux-foundation.org>
-References: <bug-12733-11613@http.bugzilla.kernel.org/>
+From: Yinghai Lu <yinghai@kernel.org>
+Subject: Re: mpt fusion broken sometime since 2.6.24
+Date: Tue, 17 Feb 2009 18:01:27 -0800
+Message-ID: <499B6BF7.9090300@kernel.org>
+References: <alpine.DEB.1.10.0902171419000.26625@asgard.lang.hm>  <alpine.DEB.1.10.0902171343280.26625@asgard.lang.hm>  <20090217230050.GG16841@parisc-linux.org>  <alpine.DEB.1.10.0902171506500.26625@asgard.lang.hm> <86802c440902171511s1abcc0eao560df4b8fcea0e7c@mail.gmail.com> <alpine.DEB.1.10.0902171514120.26625@asgard.lang.hm> <499B46B2.5040601@kernel.org> <alpine.DEB.1.10.0902171537260.26625@asgard.lang.hm>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:55302 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751024AbZBQXk4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Feb 2009 18:40:56 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n1HNeO2w028559
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Feb 2009 15:40:25 -0800
-In-Reply-To: <bug-12733-11613@http.bugzilla.kernel.org/>
+Received: from hera.kernel.org ([140.211.167.34]:50621 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751454AbZBRCCM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Feb 2009 21:02:12 -0500
+In-Reply-To: <alpine.DEB.1.10.0902171537260.26625@asgard.lang.hm>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: david@lang.hm
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12733
+david@lang.hm wrote:
+> On Tue, 17 Feb 2009, Yinghai Lu wrote:
+> 
+>> david@lang.hm wrote:
+>>> On Tue, 17 Feb 2009, Yinghai Lu wrote:
+>>>
+>>>> Subject: Re: mpt fusion broken sometime since 2.6.24
+>>>>
+>>>> On Tue, Feb 17, 2009 at 3:07 PM,  <david@lang.hm> wrote:
+>>>>> On Tue, 17 Feb 2009, Matthew Wilcox wrote:
+>>>>>
+>>>>>> On Tue, Feb 17, 2009 at 01:44:55PM -0800, david@lang.hm wrote:
+>>>>>>>
+>>>>>>> I got a picture of the failed boot at
+>>>>>>> http://linux.lang.hm/linux/IMG00052.jpg
+>>>>>>
+>>>>>> The PCI-MSI line is probably indicative.  Can you try booting with:
+>>>>>>
+>>>>>> mptbase.mpt_msi_enable_sas=0
+>>>>>>
+>>>>>> and also send us an lspci -v so we can update the blacklist?
+>>>>>
+>>>>> is that disabling SAS for this system? if so, that's the wrong thing
+>>>>> to do
+>>>>> (the drives are SAS)
+>>>>>
+>>>> it only disable MSI with that mptsas.
+>>>> and mptsas will use ioapic routing.
+>>>>
+>>>> can you post whole bootlog?
+>>>
+>>> unfortunantly it's booting from CD and the only drives in the system are
+>>> the ones that are not being accessed.
+>>
+>> i mean with kernel before 2.6.24..
+> 
+> Ok, attached.
+> 
 
+so your lsi 1068 is under 8132... need to double check if that chip really support MSI.
 
-
-
-
-------- Comment #2 from mvolaski@aecom.yu.edu  2009-02-17 15:40 -------
-With an LSI 8704ELP and LSI SAS3081E-R present and ACPI off, the board works
-fine. Only the presence of an LSI 22320 causes a crash. 
-
-I don't know about the interrupt number. When I receive the cards back, I can
-can try to find out.
-
-Our vendor has tested at least one other manufacturer's board with the LSI
-22320 and it, too, shows the same crashing behavior when ACPI is turned off.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+YH
