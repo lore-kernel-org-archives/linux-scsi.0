@@ -1,291 +1,104 @@
 From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 2/9] scsi: megaraid_sas - Add poll wait support to
- megaraid sas driver - I
-Date: Wed, 18 Feb 2009 16:21:13 -0800
-Message-ID: <20090218162113.0333c6ed.akpm@linux-foundation.org>
-References: <4B6A08C587958942AA3002690DD4F8C33A07FB03@cosmail02.lsi.com>
-	<4B6A08C587958942AA3002690DD4F8C33A07FB3B@cosmail02.lsi.com>
+Subject: Re: [PATCH 5/9] scsi: megaraid_sas - Add memory support required by
+ 0x73 controller
+Date: Wed, 18 Feb 2009 16:30:02 -0800
+Message-ID: <20090218163002.5d1be3ce.akpm@linux-foundation.org>
+References: <4B6A08C587958942AA3002690DD4F8C33A07FB75@cosmail02.lsi.com>
+	<4B6A08C587958942AA3002690DD4F8C33A07FBD2@cosmail02.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:34241 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:43529 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751211AbZBSAVu (ORCPT
+	by vger.kernel.org with ESMTP id S1754623AbZBSAaI (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Feb 2009 19:21:50 -0500
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C33A07FB3B@cosmail02.lsi.com>
+	Wed, 18 Feb 2009 19:30:08 -0500
+In-Reply-To: <4B6A08C587958942AA3002690DD4F8C33A07FBD2@cosmail02.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 Cc: Bo.Yang@lsi.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Winston.Austria@lsi.com
 
-On Tue, 17 Feb 2009 08:25:07 -0700
+On Tue, 17 Feb 2009 08:37:00 -0800
 "Yang, Bo" <Bo.Yang@lsi.com> wrote:
 
-> Add Poll_wait mechanism to Gen-2 MegaRAID SAS Linux driver.  In the aen handler, driver needs to wakeup poll handler similar to the way it raises SIGIO.  Driver needs to reregister for AEN with the FW when it receives AEN.
-
-Please try to keep the text to less than 80 columns.
-
-
-> Signed-off-by Bo Yang<bo.yang@lsi.com>
-
-"Signed-off-by:"
-
-> ---
-> drivers/scsi/megaraid/megaraid_sas.c |  133 ++++++++++++++++++++++++++++++++++-
->  drivers/scsi/megaraid/megaraid_sas.h |   15 +++
->  2 files changed, 147 insertions(+), 1 deletion(-)
-
-Please use scripts/checkpatch.pl?  This patch adds a tremendous number
-of coding-style errors.  checkpatch detects other problems too.
-
-> diff -rupN linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c
-> --- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c      2009-02-12 15:36:36.000000000 -0500
-> +++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c       2009-02-12 15:39:26.000000000 -0500
-> @@ -40,6 +40,7 @@
->  #include <linux/compat.h>
->  #include <linux/blkdev.h>
->  #include <linux/mutex.h>
-> +#include <linux/poll.h>
+> Add memory support required by 0x73 controller
 > 
->  #include <scsi/scsi.h>
->  #include <scsi/scsi_cmnd.h>
-> @@ -89,6 +90,11 @@ static struct megasas_mgmt_info megasas_
->  static struct fasync_struct *megasas_async_queue;
->  static DEFINE_MUTEX(megasas_async_queue_mutex);
+> ...
 > 
-> +static int megasas_poll_wait_aen;
-> +static DECLARE_WAIT_QUEUE_HEAD (megasas_poll_wait);
-
-Like the undesirable space here.
-
-> +extern void
-> +poll_wait(struct file *filp, wait_queue_head_t *q, poll_table *token);
-
-And that.
-
-What on earth are we doing declaring a core VFS function from within a
-scsi driver's .c file?
-
-There is a definition of poll_wait() in include/linux/poll.h.
-
->  static u32 megasas_dbg_lvl;
-> 
->  static void
-> @@ -1277,6 +1283,8 @@ megasas_bios_param(struct scsi_device *s
->         return 0;
->  }
-> 
-> +static void megasas_aen_polling(void *arg);
-> +
->  /**
->   * megasas_service_aen -       Processes an event notification
->   * @instance:                  Adapter soft state
-> @@ -1295,8 +1303,20 @@ megasas_service_aen(struct megasas_insta
->         /*
->          * Don't signal app if it is just an aborted previously registered aen
->          */
-> -       if (!cmd->abort_aen)
-> +       if ((!cmd->abort_aen) && (instance->unload == 0)) {
-> +               struct megasas_aen_event *ev;
-> +               ev = kzalloc(sizeof(*ev), GFP_ATOMIC);
-> +               if (!ev) {
-> +                       printk(KERN_ERR "%s: out of memory\n", __FUNCTION__);
-> +               } else {
-> +                       ev->instance = instance;
-> +                       INIT_WORK(&ev->hotplug_work, megasas_aen_polling);
-> +                       schedule_delayed_work(&ev->hotplug_work, 0);
-
-I see a schedule_delayed_work(), but no cancel_delayed_work().
-
-By what means does the driver ensure that there is no pending work
-after device close, device suspend, module removal, etc?
-
-> +               }
-> +               megasas_poll_wait_aen = 1;
-> +               wake_up(&megasas_poll_wait);
->                 kill_fasync(&megasas_async_queue, SIGIO, POLL_IN);
-> +       }
->         else
->                 cmd->abort_aen = 0;
-> 
-> @@ -2621,6 +2641,7 @@ megasas_probe_one(struct pci_dev *pdev,
-> 
->         megasas_dbg_lvl = 0;
->         instance->flag = 0;
-> +       instance->unload = 0;
->         instance->last_time = 0;
-> 
->         /*
-> @@ -2924,6 +2945,7 @@ static void __devexit megasas_detach_one
->         struct megasas_instance *instance;
-> 
->         instance = pci_get_drvdata(pdev);
-> +       instance->unload = 1;
->         host = instance->host;
-> 
->         if (poll_mode_io)
-> @@ -3027,6 +3049,21 @@ static int megasas_mgmt_fasync(int fd, s
->  }
-> 
->  /**
-> + * megasas_mgmt_poll -  char node "poll" entry point
-> + * */
-> +static unsigned int megasas_mgmt_poll(struct file *file, poll_table *wait)
+> +static int
+> +megasas_skinny_mem_alloc(struct megasas_instance *instance)
 > +{
-> +       unsigned int mask = 0;
-> +       poll_wait(file, &megasas_poll_wait, wait);
+> +       u8              i = 0, mem_alloc_done = 0;
+> +       u32             *virt, ind, num_bk = 0;
+> +       dma_addr_t      paddr;
+> +       u32              mem_alloc_size = MEGASAS_SKINNY_SZ_MEM_BK * 256;
+> +       u32             *mem_tb = instance->skinny_mm_tb;
 > +
+> +       instance->skinny_mm_tb = pci_alloc_consistent(instance->pdev,
+> +                                MEGASAS_SKINNY_MAX_NUM_MEM_BK*sizeof(u32),
+> +                                &instance->skinny_mm_tb_h);
+> +
+> +       memset(instance->skinny_mm_tb, 0,
+> +               MEGASAS_SKINNY_MAX_NUM_MEM_BK * sizeof(u32));
 
-The blank line would typically go after end-of-locals and before
-start-of-code.
+This will crash the kernel if pci_alloc_consistent() failed.
 
-> +       if (megasas_poll_wait_aen) {
-> +               mask |=   (POLLIN | POLLRDNORM);
-> +               megasas_poll_wait_aen = 0;
+> +       instance->skinny_mm_alloc_ind = 0;
+> +
+> +       while (!mem_alloc_done) {
+> +
+> +                       virt = pci_alloc_consistent(instance->pdev,
+> +                                                        mem_alloc_size,
+> +                                                        &paddr);
+
+This code would be less of a mess if this block wasn't using 16-column
+indenting.
+
+Also, the entire patch appears to be using spacespacespacespace for
+indenting.  Kernel code should use hard tabs.
+
+
+> +                       if (virt) {
+> +                               num_bk = (mem_alloc_size/
+> +                                               MEGASAS_SKINNY_SZ_MEM_BK);
+> +
+> +                               for (ind = 0; ind < num_bk; ind++) {
+> +                                       if (instance->skinny_mm_alloc_ind <
+> +                                               MEGASAS_SKINNY_MAX_NUM_MEM_BK) {
+> +                                               *mem_tb = (u32)(paddr+
+> +                                               (MEGASAS_SKINNY_SZ_MEM_BK*ind));
+> +                                               mem_tb++;
+> +                                               instance->skinny_mm_alloc_ind++;
+
+geeze that is hard to read.
+
+> +                                       } else {
+> +                                               mem_alloc_done = 1;
+> +                                       }
+> +                               }
+> +
+> +                               instance->skinny_mm_bk[i].vir   = virt;
+> +                               instance->skinny_mm_bk[i].paddr = paddr;
+> +                               instance->skinny_mm_bk[i].sz = mem_alloc_size;
+> +                       } else {
+> +                               if (mem_alloc_size > MEGASAS_SKINNY_SZ_MEM_BK)
+> +                                       mem_alloc_size = mem_alloc_size / 2;
+> +                       }
 > +       }
-> +       return mask;
+
+The problem with this sort of decreasing-allocation-size loop is that
+the earlier, large-sized allocations will generate large stack traces
+from within the page allocator if they fail.
+
+Normally we would just suppress those expected-to-happen failures with
+__GFP_NOWARN.  But thanks to pci_alloc_consistent() interface
+deficiencies, this cannot be done here.
+
+> +       if (instance->skinny_mm_alloc_ind == 0)
+> +               return -1;
+> +
+> +       return 0;
 > +}
 > +
-> +/**
->   * megasas_mgmt_fw_ioctl -     Issues management ioctls to FW
->   * @instance:                  Adapter soft state
->   * @argp:                      User's ioctl packet
-> @@ -3348,6 +3385,7 @@ static const struct file_operations mega
->         .open = megasas_mgmt_open,
->         .fasync = megasas_mgmt_fasync,
->         .unlocked_ioctl = megasas_mgmt_ioctl,
-> +       .poll = megasas_mgmt_poll,
->  #ifdef CONFIG_COMPAT
->         .compat_ioctl = megasas_mgmt_compat_ioctl,
->  #endif
-> @@ -3462,6 +3500,99 @@ out:
->         return retval;
->  }
-> 
-> +
-> +static void
-> +megasas_aen_polling(struct work_struct *work)
-> +{
-> +       struct megasas_aen_event *ev =
-> +               container_of(work, struct megasas_aen_event, hotplug_work);
-
-Rather than playing 80-column party tricks, it's much more natural to do:
-
-	struct megasas_aen_event *ev;
-
-	...
-	ev = container_of(work, struct megasas_aen_event, hotplug_work);
-
-
-> +       struct megasas_instance *instance = ev->instance;
-> +       struct megasas_evt_log_info eli;
-> +       union megasas_evt_class_locale class_locale;
-> +       int doscan = 0;
-> +       u32 seq_num;
-> +       int error;
-> +
-> +       if (!instance) {
-> +               printk(KERN_ERR "%s: invalid instance!\n", __FUNCTION__);
-> +               kfree(ev);
-> +               return;
-> +       }
-> +
-> +       if (instance->evt_detail) {
-> +               printk(KERN_INFO "%s[%d]: event code 0x%04x\n", __FUNCTION__,
-> +                       instance->host->host_no, instance->evt_detail->code);
-> +
-> +               switch (instance->evt_detail->code) {
-> +
-> +               case MR_EVT_LD_CREATED:
-> +               case MR_EVT_PD_INSERTED:
-> +               case MR_EVT_LD_DELETED:
-> +               case MR_EVT_LD_OFFLINE:
-> +               case MR_EVT_CFG_CLEARED:
-> +               case MR_EVT_PD_REMOVED:
-> +               case MR_EVT_FOREIGN_CFG_IMPORTED:
-> +               case MR_EVT_LD_STATE_CHANGE:
-> +                       doscan = 1;
-> +                       break;
-> +               default:
-> +                       doscan = 0;
-> +                       break;
-> +               }
-> +       } else {
-> +               printk(KERN_ERR "%s[%d]: invalid evt_detail!\n",
-> +                       __FUNCTION__, instance->host->host_no);
-> +               kfree(ev);
-> +               return;
-> +       }
-> +
-> +       if (doscan) {
-> +               printk(KERN_INFO "%s[%d]: scanning ...\n",
-> +                       __FUNCTION__, instance->host->host_no);
-> +               scsi_scan_host(instance->host);
-> +               msleep(1000);
-
-This leaves a keventd thread unavailable for use by the rest of the
-kernel for an entire second.  It's a shared resource, and this is quite
-rude.
-
-It would be better to schedule another work one second hence.  And to
-remember to cancel it on the close/shutdown/suspend/rmmod/etc path, of
-course..
-
-> +       }
-> +
-> +       kfree(ev);
-> +       /**
-> +       * Get the latest sequence number from FW
-> +       **/
-
-The /** token is used to introduce kerneldoc comments.  This is not a
-kerneldoc comment and there is no point in avoiding standard coding
-style here.
-
-
-For single-line comments:
-
-	/* Get the latest sequence number from FW */
-
-For multi-line comments:
-
-	/*
-	 * Get the latest sequence number from FW
-	 * blah blah
-	 */
-
-
-> +       memset(&eli, 0, sizeof(eli));
-> +
-> +       if (megasas_get_seq_num(instance, &eli)) {
-> +               printk(KERN_ERR "%s[%d]: failed to get seq_num\n",
-> +                       __FUNCTION__, instance->host->host_no);
-> +               return;
-> +       }
-> +
-> +       seq_num = instance->evt_detail->seq_num + 1;
-> +
-> +       /**
-> +       * Register AEN with FW for latest sequence number plus 1
-> +       **/
-> +
-> +       class_locale.members.reserved = 0;
-> +       class_locale.members.locale = MR_EVT_LOCALE_ALL;
-> +       class_locale.members.class = MR_EVT_CLASS_DEBUG;
-> +
-> +       down(&instance->aen_mutex);
-> +
-> +       error = megasas_register_aen(instance, seq_num,
-> +                               class_locale.word);
-> +
-> +       up(&instance->aen_mutex);
-
-wot? 
-
-aen_mutex has type `struct mutex'.  down() and up() are used against
-`struct semaphore'.
-
-This code should have emitted compile warnings, and crashed at runtime.
-
 
