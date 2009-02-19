@@ -1,47 +1,45 @@
-From: "A. Zimmer" <andrew.zimmer@comcast.net>
-Subject: DVD-RAM Mounts Read-Only and Can't Format
-Date: Thu, 19 Feb 2009 13:49:55 -0500
-Message-ID: <20090219134955.f0578e4c.andrew.zimmer@comcast.net>
+From: Harvey Harrison <harvey.harrison@gmail.com>
+Subject: [PATCH] scsi: libfc add missing braces to in WARN_ON
+Date: Thu, 19 Feb 2009 11:35:52 -0800
+Message-ID: <1235072152.4377.4.camel@brick>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from qmta01.emeryville.ca.mail.comcast.net ([76.96.30.16]:38418 "EHLO
-	QMTA01.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753220AbZBSSt7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Feb 2009 13:49:59 -0500
+Received: from wf-out-1314.google.com ([209.85.200.175]:25365 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753200AbZBSTfy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Feb 2009 14:35:54 -0500
+Received: by wf-out-1314.google.com with SMTP id 28so674971wfa.4
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Feb 2009 11:35:53 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Using the latest kernels, I've been having problems with DVD-RAM
-disks being recognized as read-only disks.  When mounting, here
-is what happens:
+Noticed by sparse:
+drivers/scsi/libfc/fc_exch.c:286:3: warning: dubious: !x & y
 
-# mount -t udf -o rw,noatime /dev/scd0 /cd
-mount: block device /dev/scd0 is write-protected, mounting read-only
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ drivers/scsi/libfc/fc_exch.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-When attempting to format, here is what happens:
+diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+index 66db08a..e3ee657 100644
+--- a/drivers/scsi/libfc/fc_exch.c
++++ b/drivers/scsi/libfc/fc_exch.c
+@@ -283,7 +283,7 @@ static void fc_exch_release(struct fc_exch *ep)
+ 			ep->destructor(&ep->seq, ep->arg);
+ 		if (ep->lp->tt.exch_put)
+ 			ep->lp->tt.exch_put(ep->lp, mp, ep->xid);
+-		WARN_ON(!ep->esb_stat & ESB_ST_COMPLETE);
++		WARN_ON(!(ep->esb_stat & ESB_ST_COMPLETE));
+ 		mempool_free(ep, mp->ep_pool);
+ 	}
+ }
+-- 
+1.6.2.rc1.175.g96b8a
 
-# mke2fs -v -b 2048 -t ext2 -F /dev/scd0
-/dev/scd0: Read-only file system while setting up superblock
 
-Nothing untoward appears in the kernal log:
-
-kernel: cdrom: sr0: mrw address space DMA selected
-kernel: cdrom open: mrw_status 'not mrw'
-
-After a search I discover that these problems were supposedly
-fixed a long time ago by patching cdrom.c, but apparently the problem
-still persists for some CD/DVD drives.
-
-The relevant kernels are at least 2.6.24 and above.  I currently
-use 2.6.28.
-
-The DVD drives are Sanyo SH-S203 (SATA) and Plextor PX-750A (IDE).
-
-Please CC to me because I am not subscribed to the list.
-
-Andrew Zimmer
 
