@@ -1,104 +1,148 @@
 From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 5/9] scsi: megaraid_sas - Add memory support required by
- 0x73 controller
-Date: Wed, 18 Feb 2009 16:30:02 -0800
-Message-ID: <20090218163002.5d1be3ce.akpm@linux-foundation.org>
-References: <4B6A08C587958942AA3002690DD4F8C33A07FB75@cosmail02.lsi.com>
-	<4B6A08C587958942AA3002690DD4F8C33A07FBD2@cosmail02.lsi.com>
+Subject: Re: [PATCH 8/9] scsi: megaraid_sas - Add the IEEE SGL support to
+ the driver
+Date: Wed, 18 Feb 2009 16:38:35 -0800
+Message-ID: <20090218163835.bb10c640.akpm@linux-foundation.org>
+References: <4B6A08C587958942AA3002690DD4F8C33A07FC48@cosmail02.lsi.com>
+	<4B6A08C587958942AA3002690DD4F8C33A07FC5B@cosmail02.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:43529 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:40977 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754623AbZBSAaI (ORCPT
+	by vger.kernel.org with ESMTP id S1751191AbZBSAil (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Feb 2009 19:30:08 -0500
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C33A07FBD2@cosmail02.lsi.com>
+	Wed, 18 Feb 2009 19:38:41 -0500
+In-Reply-To: <4B6A08C587958942AA3002690DD4F8C33A07FC5B@cosmail02.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 Cc: Bo.Yang@lsi.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Winston.Austria@lsi.com
 
-On Tue, 17 Feb 2009 08:37:00 -0800
+On Tue, 17 Feb 2009 10:31:10 -0700
 "Yang, Bo" <Bo.Yang@lsi.com> wrote:
 
-> Add memory support required by 0x73 controller
+> Add the IEEE SGL support to MegaRAID SAS driver
 > 
-> ...
+> Signed-off-by Bo Yang<bo.yang@lsi.com>
 > 
+> ---
+> drivers/scsi/megaraid/megaraid_sas.c |  125 ++++++++++++++++++++++++++---------
+>  drivers/scsi/megaraid/megaraid_sas.h |   13 +++
+>  2 files changed, 107 insertions(+), 31 deletions(-)
+> 
+> diff -rupN linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c
+> --- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c      2009-02-12 16:36:41.000000000 -0500
+> +++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c       2009-02-12 17:24:26.000000000 -0500
+> @@ -698,6 +698,35 @@ megasas_make_sgl64(struct megasas_instan
+>         return sge_count;
+>  }
+> 
+> +/**
+> + * megasas_make_sgl64 -        Prepares 64-bit SGL
+> + * @instance:          Adapter soft state
+> + * @scp:               SCSI command from the mid-layer
+> + * @mfi_sgl:           SGL to be filled in
+> + *
+> + * If successful, this function returns the number of SG elements. Otherwise,
+> + * it returnes -1.
+> + */
 > +static int
-> +megasas_skinny_mem_alloc(struct megasas_instance *instance)
+> +megasas_make_sgl_skinny(struct megasas_instance *instance,
+> +               struct scsi_cmnd *scp, union megasas_sgl *mfi_sgl)
 > +{
-> +       u8              i = 0, mem_alloc_done = 0;
-> +       u32             *virt, ind, num_bk = 0;
-> +       dma_addr_t      paddr;
-> +       u32              mem_alloc_size = MEGASAS_SKINNY_SZ_MEM_BK * 256;
-> +       u32             *mem_tb = instance->skinny_mm_tb;
+> +       int i;
+> +       int sge_count;
+> +       struct scatterlist *os_sgl;
 > +
-> +       instance->skinny_mm_tb = pci_alloc_consistent(instance->pdev,
-> +                                MEGASAS_SKINNY_MAX_NUM_MEM_BK*sizeof(u32),
-> +                                &instance->skinny_mm_tb_h);
-> +
-> +       memset(instance->skinny_mm_tb, 0,
-> +               MEGASAS_SKINNY_MAX_NUM_MEM_BK * sizeof(u32));
+> +       sge_count = scsi_dma_map(scp);
+> +       BUG_ON(sge_count < 0);
 
-This will crash the kernel if pci_alloc_consistent() failed.
+Crashing the kernel if scsi_dma_map() fails seems inappropriate?
 
-> +       instance->skinny_mm_alloc_ind = 0;
-> +
-> +       while (!mem_alloc_done) {
-> +
-> +                       virt = pci_alloc_consistent(instance->pdev,
-> +                                                        mem_alloc_size,
-> +                                                        &paddr);
-
-This code would be less of a mess if this block wasn't using 16-column
-indenting.
-
-Also, the entire patch appears to be using spacespacespacespace for
-indenting.  Kernel code should use hard tabs.
-
-
-> +                       if (virt) {
-> +                               num_bk = (mem_alloc_size/
-> +                                               MEGASAS_SKINNY_SZ_MEM_BK);
-> +
-> +                               for (ind = 0; ind < num_bk; ind++) {
-> +                                       if (instance->skinny_mm_alloc_ind <
-> +                                               MEGASAS_SKINNY_MAX_NUM_MEM_BK) {
-> +                                               *mem_tb = (u32)(paddr+
-> +                                               (MEGASAS_SKINNY_SZ_MEM_BK*ind));
-> +                                               mem_tb++;
-> +                                               instance->skinny_mm_alloc_ind++;
-
-geeze that is hard to read.
-
-> +                                       } else {
-> +                                               mem_alloc_done = 1;
-> +                                       }
-> +                               }
-> +
-> +                               instance->skinny_mm_bk[i].vir   = virt;
-> +                               instance->skinny_mm_bk[i].paddr = paddr;
-> +                               instance->skinny_mm_bk[i].sz = mem_alloc_size;
-> +                       } else {
-> +                               if (mem_alloc_size > MEGASAS_SKINNY_SZ_MEM_BK)
-> +                                       mem_alloc_size = mem_alloc_size / 2;
-> +                       }
+> +       if (sge_count) {
+> +               scsi_for_each_sg(scp, os_sgl, sge_count, i) {
+> +                 mfi_sgl->sge_skinny[i].length = sg_dma_len(os_sgl);
+> +                 mfi_sgl->sge_skinny[i].phys_addr = sg_dma_address(os_sgl);
+> +               }
+> +       }
+> +       return sge_count;
+> +}
+>
+> ...
+>
+> +       if (instance->flag_ieee == 1) {
+> +               flags = MFI_FRAME_IEEE;
 > +       }
 
-The problem with this sort of decreasing-allocation-size loop is that
-the earlier, large-sized allocations will generate large stack traces
-from within the page allocator if they fail.
+We typically omit the unneeded brakes in this situation.  But there are
+a huge number of places in this driver which ignored that convention.
 
-Normally we would just suppress those expected-to-happen failures with
-__GFP_NOWARN.  But thanks to pci_alloc_consistent() interface
-deficiencies, this cannot be done here.
+>         /*
+>          * The RAID firmware may require extended timeouts.
+> @@ -1405,7 +1476,7 @@ megasas_bios_param(struct scsi_device *s
+>         return 0;
+>  }
+> 
+> -static void megasas_aen_polling(void *arg);
+> +static void megasas_aen_polling(struct work_struct *work);
+> 
+>  /**
+>   * megasas_service_aen -       Processes an event notification
+> @@ -1433,7 +1504,8 @@ megasas_service_aen(struct megasas_insta
+>                 } else {
+>                         ev->instance = instance;
+>                         INIT_WORK(&ev->hotplug_work, megasas_aen_polling);
+> -                       schedule_delayed_work(&ev->hotplug_work, 0);
+> +                       schedule_delayed_work(
+> +                               (struct delayed_work *)&ev->hotplug_work, 0);
 
-> +       if (instance->skinny_mm_alloc_ind == 0)
-> +               return -1;
+Why was this cast added?  It looks either unneeded or wrong.
+
+> @@ -4043,12 +4108,12 @@ megasas_aen_polling(struct work_struct *
+>         class_locale.members.locale = MR_EVT_LOCALE_ALL;
+>         class_locale.members.class = MR_EVT_CLASS_DEBUG;
+> 
+> -       down(&instance->aen_mutex);
+> +       mutex_lock(&instance->aen_mutex);
+> 
+>         error = megasas_register_aen(instance, seq_num,
+>                                 class_locale.word);
+> 
+> -       up(&instance->aen_mutex);
+> +       mutex_unlock(&instance->aen_mutex);
+
+OK, so this fixes a bug which was added in an earlier patch.
+
+Please just fix the original patch so that we don't introduce bisection
+holes.
+
+>         if (error)
+>                 printk(KERN_ERR "%s[%d]: register aen failed error %x\n",
+> diff -rupN linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.h linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.h
+> --- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.h      2009-02-12 16:36:42.000000000 -0500
+> +++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.h       2009-02-12 16:53:50.000000000 -0500
+> @@ -96,6 +96,7 @@
+>  #define MFI_FRAME_DIR_WRITE                    0x0008
+>  #define MFI_FRAME_DIR_READ                     0x0010
+>  #define MFI_FRAME_DIR_BOTH                     0x0018
+> +#define MFI_FRAME_IEEE                         0x0020
+> 
+>  /*
+>   * Definition for cmd_status
+> @@ -752,10 +753,19 @@ struct megasas_sge64 {
+> 
+>  } __attribute__ ((packed));
+> 
+> +struct megasas_sge_skinny {
 > +
-> +       return 0;
-> +}
+> +       u64 phys_addr;
+> +       u32 length;
+> +       u32 flag;
 > +
+> +} __attribute__ ((packed));
+
+Please use __packed throughout the driver.  (might be a problem if this
+header is supposed to be shared with userspace?)
+
 
