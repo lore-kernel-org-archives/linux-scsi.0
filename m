@@ -1,97 +1,60 @@
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: Re: Bad module reference counter
-Date: Fri, 20 Feb 2009 11:45:02 +0100
-Message-ID: <200902201145.02308.stf_xl@wp.pl>
-References: <200902111032.59225.stf_xl@wp.pl> <200902191348.44508.stf_xl@wp.pl> <200902191749.52740.bzolnier@gmail.com>
+From: "Rengarajan, Narayanan (STSD)" <narayanan.rengarajan@hp.com>
+Subject: [PATCH 1/1] : Spinning up disk is observed on standby paths until
+ timeout, resulting in longer path restoration time.
+Date: Fri, 20 Feb 2009 11:14:59 +0000
+Message-ID: <DB8E544DD4B3D346A36F2698103530AE292A9BDC54@GVW1105EXC.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.wp.pl ([212.77.101.5]:38948 "EHLO mx1.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754905AbZBTKpV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Feb 2009 05:45:21 -0500
-In-Reply-To: <200902191749.52740.bzolnier@gmail.com>
-Content-Disposition: inline
+Received: from g5t0007.atlanta.hp.com ([15.192.0.44]:34951 "EHLO
+	g5t0007.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751281AbZBTLQT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Feb 2009 06:16:19 -0500
+Received: from G3W0631.americas.hpqcorp.net (g3w0631.americas.hpqcorp.net [16.233.59.15])
+	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
+	(No client certificate requested)
+	by g5t0007.atlanta.hp.com (Postfix) with ESMTPS id 97E4D146D7
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Feb 2009 11:16:18 +0000 (UTC)
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Thursday 19 February 2009 17:49:52 Bartlomiej Zolnierkiewicz napisa=C5=82=
-(a):
-> > > Seems like ide_device_put() needs the same module_refcount() chec=
-k that
-> > > is present in scsi_device_put() so removal of device driver won't=
- trigger
-> > > a spurious module_put() on a host driver?
-> >=20
-> > I little surprise about scsi code (linux-scsi ML CC). Is comment in=
-side
-> > scsi_device_put() function correct? Why scsi_device_get() not check
-> > try_module_get() return value? And most importand: there is referen=
-ce
-> > counter check before put, so it can be 0, but data does it protect =
-is in
-> > use ?
 
-Any comments?
+Hi,
 
-> Uh... we will need some more intrusive changes to the reference count=
-ing
-> to fix it -- like to replace idkp->kref by idkp->dev and make drive->=
-gendev
-> a parent of it (so only after the final put on ->dev ->gendev can go =
-away).
->=20
-> [ IOW we need to have some changes similar to those done in sd.c by:
-> 	commit 6bdaa1f17dd32ec62345c7b57842f53e6278a2fa
->   and later by:
-> 	commit ee959b00c335d7780136c5abda37809191fe52c3 ]
->=20
-> > There is no oops with my workaround, when I just remove ide_disk_pu=
-t() from
->
-> I suppose that after ide_disk_put() removal ide_disk_release() is sim=
-ply
-> never called... ;)
->=20
-> > ide_gd_remove(). It's strange why there is lack of symmetrical _put=
-/_get calls,
-> > ide_gd_probe() has no call to ide_disk_get().=20
->=20
-> We have kref_init() in ide_disk_probe(), so there is no need for it
-> and we also don't want to hold an extra reference on host driver...
+  Spinning up disk is observed on standby paths until timeout, resulting in longer path restoration time in 2.6.27 kernel.
 
-Looks that using ->dev insted of ->kref will do the work. But perhaps l=
-ess
-intrusive fix, like check kref in ide_disk_put() would be better soluti=
-on.
-I tested below patch and everythings is fine.
+ Steps to reproduce:
+ 1. present a standby lun to the host
+ 2. do a discovery from the host (scan the scsi bus)
+ 3. Spinning of disks is  observed in  /var/log/messages
 
-diff --git a/drivers/ide/ide-gd.c b/drivers/ide/ide-gd.c
-index 7857b20..598f21b 100644
---- a/drivers/ide/ide-gd.c
-+++ b/drivers/ide/ide-gd.c
-@@ -48,8 +48,8 @@ static void ide_disk_put(struct ide_disk_obj *idkp)
- 	ide_drive_t *drive =3D idkp->drive;
-=20
- 	mutex_lock(&ide_disk_ref_mutex);
--	kref_put(&idkp->kref, ide_disk_release);
--	ide_device_put(drive);
-+	if (!kref_put(&idkp->kref, ide_disk_release))
-+		ide_device_put(drive);
- 	mutex_unlock(&ide_disk_ref_mutex);
- }
-=20
-If this patch is ok and dropping kref to dev is not planed currently, m=
-aybe
-I'll send "official" patch with ide-gd fix and for other devices types.
+Whenever a device goes offline and comes back, the new sd device takes longer
+time to get created. This is because of the spinning up of disk in
+sd_spinup_disk fuction as the standby paths would return device not ready with
+0x04/0x0b asc/ascq.
 
-Regards
-Stanislaw Gruszka
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Recommended patch :
+
+  diff -pNaur /usr/src/linux/drivers/scsi/sd.c sd.c
+--- /usr/src/linux/drivers/scsi/sd.c    2009-02-09 22:24:56.000000000 +0530
++++ sd.c        2009-02-19 16:39:16.000000000 +0530
+@@ -1181,8 +1181,8 @@ sd_spinup_disk(struct scsi_disk *sdkp)
+                 */
+                if (sense_valid &&
+                    sshdr.sense_key == NOT_READY &&
+-                   sshdr.asc == 4 && sshdr.ascq == 3) {
+-                       break;          /* manual intervention required */
++                   sshdr.asc == 4 && (sshdr.ascq == 3 || sshdr.ascq == 0x0b ||
+sshdr.ascq == 0x0c) ) {
++                       break;  /* manual intervention required || Standby ||
+Unavailable */
+
+                /*
+                 * Issue command to spin up drive when not ready
+
+
+Thanks,
+Narayanan
