@@ -1,94 +1,121 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 0/7] [Target_Core_Mod]: Add support for 4k physical/virtual
-	sector/block size devices
-Date: Thu, 19 Feb 2009 23:58:43 -0800
-Message-ID: <1235116723.12375.1031.camel@haakon2.linux-iscsi.org>
+Subject: [PATCH 1/7] [Target_Core_Mod]: Add hw_block_size and block_size
+	device attributes
+Date: Fri, 20 Feb 2009 00:00:06 -0800
+Message-ID: <1235116806.12375.1034.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755276AbZBTIAJ@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp128.sbc.mail.sp1.yahoo.com ([69.147.65.187]:21885 "HELO
+	smtp128.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753040AbZBTIBM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Feb 2009 03:01:12 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 Cc: Douglas Gilbert <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Matthew Wilcox <matthew@wil.cx>, Alan Stern <stern@rowland.harvard.edu>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Andrew Morton <akpm@linux-foundation.org>
-List-Id: linux-scsi@vger.kernel.org
 
-Greetings all,
+>From 3961522f53880310d7e6e1cd45f79b800109b3f3 Mon Sep 17 00:00:00 2001
+From: Nicholas Bellinger <nab@linux-iscsi.org>
+Date: Thu, 19 Feb 2009 19:27:31 -0800
+Subject: [PATCH 1/7] [Target_Core_Mod]: Add hw_block_size and block_size device attributes
 
-This patch series adds support for 4k, 2k, 1k (eg: all non 512 byte) sector/block
-size usage in Target_Core_Mod subsystem plugins.  None 512-byte sector/block size
-emulation has been added for virtual objects provided by IBLOCK, FILEIO and RAMDISK
-subsystem plugins. 4k sector support SHOULD be working with pSCSI (passthrough to
-Linux/SCSI and struct scsi_device) as well, but has not been tested on real 4k sector
-capable SAS or SATA SSD hardware just yet.   If anyone would like to test their
-4k capable drives against the current code, please let me know your interest!
+This patch adds structure members hw_block_size and block_size to
+se_dev_attrib_t, adds their default setting using se_subsystem_api_t->get_blocksize()
+in se_dev_set_default_attribs(), and adds se_dev_set_block_size for usage with
+Target_Core_Mod/ConfigFS.
 
-Here is things look like so far:
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ drivers/lio-core/target_core_base.h   |    2 +
+ drivers/lio-core/target_core_device.c |   37 +++++++++++++++++++++++++++++++++
+ drivers/lio-core/target_core_device.h |    1 +
+ 3 files changed, 40 insertions(+), 0 deletions(-)
 
-*) IBLOCK
+diff --git a/drivers/lio-core/target_core_base.h b/drivers/lio-core/target_core_base.h
+index 58d78bf..32a35de 100644
+--- a/drivers/lio-core/target_core_base.h
++++ b/drivers/lio-core/target_core_base.h
+@@ -569,6 +569,8 @@ typedef struct se_dev_attrib_s {
+         int             status_thread_tur;
+ 	int		emulate_reservations;
+ 	int		emulate_alua;
++	u32		hw_block_size;
++	u32		block_size;
+ 	u32		hw_max_sectors;
+         u32             max_sectors;
+ 	u32		hw_queue_depth;
+diff --git a/drivers/lio-core/target_core_device.c b/drivers/lio-core/target_core_device.c
+index 2822fc9..6385d74 100644
+--- a/drivers/lio-core/target_core_device.c
++++ b/drivers/lio-core/target_core_device.c
+@@ -871,6 +871,11 @@ extern void se_dev_set_default_attribs (se_device_t *dev)
+ 	DEV_ATTRIB(dev)->emulate_reservations = DA_EMULATE_RESERVATIONS;
+ 	DEV_ATTRIB(dev)->emulate_alua = DA_EMULATE_ALUA;
+ 	/*
++	 * block_size is based on subsystem plugin dependent requirements.
++	 */
++	DEV_ATTRIB(dev)->hw_block_size = TRANSPORT(dev)->get_blocksize(dev);
++	DEV_ATTRIB(dev)->block_size = TRANSPORT(dev)->get_blocksize(dev);
++	/*
+ 	 * max_sectors is based on subsystem plugin dependent requirements.
+ 	 */
+ 	DEV_ATTRIB(dev)->hw_max_sectors = TRANSPORT(dev)->get_max_sectors(dev);
+@@ -1058,6 +1063,38 @@ extern int se_dev_set_max_sectors (se_device_t *dev, u32 max_sectors)
+ 	return(0);
+ }
+ 
++extern int se_dev_set_block_size (se_device_t *dev, u32 block_size)
++{
++	if (DEV_OBJ_API(dev)->check_count(&dev->dev_export_obj)) {
++		printk(KERN_ERR "dev[%p]: Unable to change SE Device block_size"
++			" while dev_export_obj: %d count exists\n", dev,
++			DEV_OBJ_API(dev)->check_count(&dev->dev_export_obj));
++		return(-1);
++	}
++
++	if ((block_size != 512) &&
++	    (block_size != 1024) &&
++	    (block_size != 2048) &&
++	    (block_size != 4096)) {
++		printk(KERN_ERR "dev[%p]: Illegal value for block_device: %u"
++			" for SE device, must be 512, 1024, 2048 or 4096\n",
++			dev, block_size);
++		return(-1);
++	}
++
++	if (TRANSPORT(dev)->transport_type == TRANSPORT_PLUGIN_PHBA_PDEV) {
++		printk(KERN_ERR "dev[%p]: Not allowed to change block_size for"
++			" Physical Device, use for Linux/SCSI to change block_size"
++			" for underlying hardware\n", dev);
++		return(-1);
++	}
++
++	DEV_ATTRIB(dev)->block_size = block_size;
++	printk("dev[%p]: SE Device block_size changed to %u\n",
++			dev, block_size);
++	return(0);
++}
++
+ extern se_lun_t *core_dev_add_lun (
+ 	se_portal_group_t *tpg,
+ 	se_hba_t *hba,
+diff --git a/drivers/lio-core/target_core_device.h b/drivers/lio-core/target_core_device.h
+index 0f0af8c..99a3efd 100644
+--- a/drivers/lio-core/target_core_device.h
++++ b/drivers/lio-core/target_core_device.h
+@@ -57,6 +57,7 @@ extern int se_dev_set_status_thread (se_device_t *, int);
+ extern int se_dev_set_status_thread_tur (se_device_t *, int);
+ extern int se_dev_set_queue_depth (se_device_t *, u32);
+ extern int se_dev_set_max_sectors (se_device_t *, u32);
++extern int se_dev_set_block_size (se_device_t *, u32);
+ extern se_lun_t *core_dev_add_lun (se_portal_group_t *, se_hba_t *, se_device_t *, u32, int *);
+ extern int core_dev_del_lun (se_portal_group_t *, u32);
+ extern se_lun_t *core_get_lun_from_tpg (se_portal_group_t *, u32);
+-- 
+1.5.4.1
 
-echo 4096 > /sys/kernel/config/target/core/iblock_0/lvm_test0/attrib/block_size
-cat /sys/kernel/config/target/core/iblock_0/lvm_test0/attrib/*block_size
-4096
-512
 
-[ 4539.311153] scsi 8:0:0:0: Direct-Access     LIO-ORG  IBLOCK           v3.0 PQ: 0 ANSI: 5
-[ 4539.421510] sd 8:0:0:0: [sdg] 128000 4096-byte hardware sectors (524 MB)
-[ 4539.533309] sd 8:0:0:0: [sdg] Write Protect is off
-[ 4539.533316] sd 8:0:0:0: [sdg] Mode Sense: 2f 00 00 00
 
-*) FILEIO
-
-echo 4096 > /sys/kernel/config/target/core/fileio_0/fileio/attrib/block_size
-cat /sys/kernel/config/target/core/fileio_0/fileio/attrib/*block_size
-4096
-512
-
-[ 4539.975546] scsi 8:0:0:3: Direct-Access     LIO-ORG  FILEIO           v3.0 PQ: 0 ANSI: 5
-[ 4539.978280] sd 8:0:0:3: [sdj] 32768 4096-byte hardware sectors (134 MB)
-[ 4539.984753] sd 8:0:0:3: [sdj] Write Protect is off
-[ 4539.984760] sd 8:0:0:3: [sdj] Mode Sense: 2f 00 00 00
-
-*) RAMDISK
-
-echo 4096 > /sys/kernel/config/target/core/rd_mcp_0/ramdisk/attrib/block_size
-cat /sys/kernel/config/target/core/rd_mcp_0/ramdisk/attrib/*block_size
-4096
-512
-
-[ 4539.655242] scsi 8:0:0:2: Direct-Access     LIO-ORG  RAMDISK-MCP      v3.0 PQ: 0 ANSI: 5
-[ 4539.752674] sd 8:0:0:2: [sdi] 32768 4096-byte hardware sectors (134 MB)
-[ 4539.757628] sd 8:0:0:2: [sdi] Write Protect is off
-[ 4539.757633] sd 8:0:0:2: [sdi] Mode Sense: 2f 00 00 00
-
-This patch series was tested using badblocks -vswf against IBLOCK, FILEIO and RAMDISK storage
-objects connected to an Open/iSCSI initiator.  This patch is made against lio-core-2.6.git/master
-and tested on v2.6.29-rc5 x86 32-bit HVM.  The lio-core-2.6.git tree can be found at:
-
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=summary
-
-[PATCH 1/7] [Target_Core_Mod]: Add hw_block_size and block_size device attributes
-[PATCH 2/7] [Target_Core_Mod]: Update core logic to use DEV_ATTRIB(dev)->block_size
-[PATCH 3/7] [Target_Core_Mod]: Add div64.o to Makefile for target_core_mod
-[PATCH 4/7] [Target_Core_Mod/IBLOCK]: Add 4k sector/block size emulation support
-[PATCH 5/7] [Target_Core_Mod/FILEIO]: Add 4k sector/block size emulation support
-[PATCH 6/7] [Target_Core_Mod/RAMDISK]: Add 4k sector/block size emulation support
-[PATCH 7/7] [Target_Core_Mod/ConfigFS]: Add hw_block_size and block_size configfs attributes
-
- drivers/lio-core/Makefile                |    1 +
- drivers/lio-core/iscsi_target_configfs.c |    6 ++
- drivers/lio-core/target_core_base.h      |    2 +
- drivers/lio-core/target_core_configfs.c  |    8 +++
- drivers/lio-core/target_core_device.c    |   37 +++++++++++
- drivers/lio-core/target_core_device.h    |    1 +
- drivers/lio-core/target_core_file.c      |   58 +++++++++--------
- drivers/lio-core/target_core_iblock.c    |  101 ++++++++++++++++++++++++++++--
- drivers/lio-core/target_core_iblock.h    |    1 -
- drivers/lio-core/target_core_rd.c        |   31 ++++++---
- drivers/lio-core/target_core_seobj.c     |   12 +++-
- drivers/lio-core/target_core_transport.c |   48 +++++++++------
- drivers/lio-core/target_core_transport.h |    4 +-
- 13 files changed, 241 insertions(+), 69 deletions(-)
-
-Comments..?
-
---nab
