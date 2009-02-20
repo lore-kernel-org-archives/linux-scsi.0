@@ -1,119 +1,203 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 1/7] [Target_Core_Mod]: Add hw_block_size and block_size
-	device attributes
-Date: Fri, 20 Feb 2009 00:00:06 -0800
-Message-ID: <1235116806.12375.1034.camel@haakon2.linux-iscsi.org>
+Subject: [PATCH 2/7] [Target_Core_Mod]: Update core logic to use
+	DEV_ATTRIB(dev)->block_size
+Date: Fri, 20 Feb 2009 00:01:06 -0800
+Message-ID: <1235116866.12375.1036.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp128.sbc.mail.sp1.yahoo.com ([69.147.65.187]:21885 "HELO
-	smtp128.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753040AbZBTIBM (ORCPT
+Received: from smtp126.sbc.mail.sp1.yahoo.com ([69.147.65.185]:33040 "HELO
+	smtp126.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753298AbZBTICM (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Feb 2009 03:01:12 -0500
+	Fri, 20 Feb 2009 03:02:12 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 Cc: Douglas Gilbert <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Matthew Wilcox <matthew@wil.cx>, Alan Stern <stern@rowland.harvard.edu>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Andrew Morton <akpm@linux-foundation.org>
 
->From 3961522f53880310d7e6e1cd45f79b800109b3f3 Mon Sep 17 00:00:00 2001
+>From f613324c94fd43569c8b7e90bda34b1465afd592 Mon Sep 17 00:00:00 2001
 From: Nicholas Bellinger <nab@linux-iscsi.org>
-Date: Thu, 19 Feb 2009 19:27:31 -0800
-Subject: [PATCH 1/7] [Target_Core_Mod]: Add hw_block_size and block_size device attributes
+Date: Thu, 19 Feb 2009 19:32:48 -0800
+Subject: [PATCH 2/7] [Target_Core_Mod]: Update core logic to use DEV_ATTRIB(dev)->block_size
 
-This patch adds structure members hw_block_size and block_size to
-se_dev_attrib_t, adds their default setting using se_subsystem_api_t->get_blocksize()
-in se_dev_set_default_attribs(), and adds se_dev_set_block_size for usage with
-Target_Core_Mod/ConfigFS.
+This patch updates dev_obj_blocksize(), dev_obj_get_cdb_size() in
+target_core_seobj.c, and transport_generic_emulate_readcapacity() and
+transport_generic_emulate_readcapacity_16() to use DEV_ATTRIB(dev)->block_size
+for 4k sector/block size support.
+
+This patch also adds a conditional to check for OVERFLOW/UNDERFLOW of LBA related
+(READ_* and WRITE *) ops that causes a CHECK_CONDITION+INVALID_CDB_FIELD to be sent
+when the OVERFLOW/UNDERFLOW is detected for *ONLY* SCF_SCSI_DATA_SG_IO_CDB type
+ops with non 512-byte sectore/block sized devices.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/lio-core/target_core_base.h   |    2 +
- drivers/lio-core/target_core_device.c |   37 +++++++++++++++++++++++++++++++++
- drivers/lio-core/target_core_device.h |    1 +
- 3 files changed, 40 insertions(+), 0 deletions(-)
+ drivers/lio-core/target_core_seobj.c     |   12 +++++--
+ drivers/lio-core/target_core_transport.c |   48 ++++++++++++++++++------------
+ drivers/lio-core/target_core_transport.h |    4 +-
+ 3 files changed, 40 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/lio-core/target_core_base.h b/drivers/lio-core/target_core_base.h
-index 58d78bf..32a35de 100644
---- a/drivers/lio-core/target_core_base.h
-+++ b/drivers/lio-core/target_core_base.h
-@@ -569,6 +569,8 @@ typedef struct se_dev_attrib_s {
-         int             status_thread_tur;
- 	int		emulate_reservations;
- 	int		emulate_alua;
-+	u32		hw_block_size;
-+	u32		block_size;
- 	u32		hw_max_sectors;
-         u32             max_sectors;
- 	u32		hw_queue_depth;
-diff --git a/drivers/lio-core/target_core_device.c b/drivers/lio-core/target_core_device.c
-index 2822fc9..6385d74 100644
---- a/drivers/lio-core/target_core_device.c
-+++ b/drivers/lio-core/target_core_device.c
-@@ -871,6 +871,11 @@ extern void se_dev_set_default_attribs (se_device_t *dev)
- 	DEV_ATTRIB(dev)->emulate_reservations = DA_EMULATE_RESERVATIONS;
- 	DEV_ATTRIB(dev)->emulate_alua = DA_EMULATE_ALUA;
- 	/*
-+	 * block_size is based on subsystem plugin dependent requirements.
-+	 */
-+	DEV_ATTRIB(dev)->hw_block_size = TRANSPORT(dev)->get_blocksize(dev);
-+	DEV_ATTRIB(dev)->block_size = TRANSPORT(dev)->get_blocksize(dev);
-+	/*
- 	 * max_sectors is based on subsystem plugin dependent requirements.
- 	 */
- 	DEV_ATTRIB(dev)->hw_max_sectors = TRANSPORT(dev)->get_max_sectors(dev);
-@@ -1058,6 +1063,38 @@ extern int se_dev_set_max_sectors (se_device_t *dev, u32 max_sectors)
+diff --git a/drivers/lio-core/target_core_seobj.c b/drivers/lio-core/target_core_seobj.c
+index 643659c..7a2e9ed 100644
+--- a/drivers/lio-core/target_core_seobj.c
++++ b/drivers/lio-core/target_core_seobj.c
+@@ -273,7 +273,7 @@ extern int dev_obj_blocksize (void *p)
+ {
+ 	se_device_t *dev  = (se_device_t *)p;
+ 
+-	return(TRANSPORT(dev)->get_blocksize(dev));
++	return(DEV_ATTRIB(dev)->block_size);
+ }
+ 
+ extern int dev_obj_max_sectors (void *p)
+@@ -551,13 +551,19 @@ extern u32 dev_obj_get_cdb_size (
+ 
+ 	if (TRANSPORT(dev)->get_device_type(dev) == TYPE_TAPE) {
+ 		if (cdb[1] & 1) { /* sectors */
+-			return(TRANSPORT(dev)->get_blocksize(dev) * sectors);
++			return(DEV_ATTRIB(dev)->block_size * sectors);
+ 		} else /* bytes */
+ 			return(sectors);
+ 	}
+ 	
+ 	/* sectors */
+-	return(TRANSPORT(dev)->get_blocksize(dev) * sectors);
++#if 0
++	printk("Returning block_size: %u, sectors: %u == %u for %s object\n",
++			DEV_ATTRIB(dev)->block_size, sectors, 
++			DEV_ATTRIB(dev)->block_size * sectors,
++			TRANSPORT(dev)->name);
++#endif
++	return(DEV_ATTRIB(dev)->block_size * sectors);
+ }
+ 
+ extern void dev_obj_generate_cdb (void *p, unsigned long long lba, u32 *sectors, unsigned char *cdb, int rw)
+diff --git a/drivers/lio-core/target_core_transport.c b/drivers/lio-core/target_core_transport.c
+index 8c6195e..4fae205 100644
+--- a/drivers/lio-core/target_core_transport.c
++++ b/drivers/lio-core/target_core_transport.c
+@@ -1473,7 +1473,7 @@ extern void transport_dump_dev_state (
+ 		atomic_read(&dev->execute_tasks), atomic_read(&dev->depth_left),
+ 		dev->queue_depth);
+ 	*bl += sprintf(b+*bl, "  SectorSize: %u  MaxSectors: %u\n",
+-		TRANSPORT(dev)->get_blocksize(dev), DEV_ATTRIB(dev)->max_sectors);
++		DEV_ATTRIB(dev)->block_size, DEV_ATTRIB(dev)->max_sectors);
+ 	*bl += sprintf(b+*bl, "        ");
+ 
+ 	return;	
+@@ -4386,28 +4386,28 @@ set_len:
+ 
+ extern int transport_generic_emulate_readcapacity (
+ 	se_cmd_t *cmd, 
+-	u32 blocks,
+-	u32 blocksize)
++	u32 blocks)
+ {
++	se_device_t *dev = SE_DEV(cmd);
+ 	unsigned char *buf = (unsigned char *) T_TASK(cmd)->t_task_buf;
+ 
+ 	buf[0] = (blocks >> 24) & 0xff;
+ 	buf[1] = (blocks >> 16) & 0xff;
+ 	buf[2] = (blocks >> 8) & 0xff;
+ 	buf[3] = blocks & 0xff;
+-	buf[4] = (blocksize >> 24) & 0xff;
+-	buf[5] = (blocksize >> 16) & 0xff;
+-	buf[6] = (blocksize >> 8) & 0xff;
+-	buf[7] = blocksize & 0xff;
++	buf[4] = (DEV_ATTRIB(dev)->block_size >> 24) & 0xff;
++	buf[5] = (DEV_ATTRIB(dev)->block_size >> 16) & 0xff;
++	buf[6] = (DEV_ATTRIB(dev)->block_size >> 8) & 0xff;
++	buf[7] = DEV_ATTRIB(dev)->block_size & 0xff;
+ 		
  	return(0);
  }
  
-+extern int se_dev_set_block_size (se_device_t *dev, u32 block_size)
-+{
-+	if (DEV_OBJ_API(dev)->check_count(&dev->dev_export_obj)) {
-+		printk(KERN_ERR "dev[%p]: Unable to change SE Device block_size"
-+			" while dev_export_obj: %d count exists\n", dev,
-+			DEV_OBJ_API(dev)->check_count(&dev->dev_export_obj));
-+		return(-1);
-+	}
-+
-+	if ((block_size != 512) &&
-+	    (block_size != 1024) &&
-+	    (block_size != 2048) &&
-+	    (block_size != 4096)) {
-+		printk(KERN_ERR "dev[%p]: Illegal value for block_device: %u"
-+			" for SE device, must be 512, 1024, 2048 or 4096\n",
-+			dev, block_size);
-+		return(-1);
-+	}
-+
-+	if (TRANSPORT(dev)->transport_type == TRANSPORT_PLUGIN_PHBA_PDEV) {
-+		printk(KERN_ERR "dev[%p]: Not allowed to change block_size for"
-+			" Physical Device, use for Linux/SCSI to change block_size"
-+			" for underlying hardware\n", dev);
-+		return(-1);
-+	}
-+
-+	DEV_ATTRIB(dev)->block_size = block_size;
-+	printk("dev[%p]: SE Device block_size changed to %u\n",
-+			dev, block_size);
-+	return(0);
-+}
-+
- extern se_lun_t *core_dev_add_lun (
- 	se_portal_group_t *tpg,
- 	se_hba_t *hba,
-diff --git a/drivers/lio-core/target_core_device.h b/drivers/lio-core/target_core_device.h
-index 0f0af8c..99a3efd 100644
---- a/drivers/lio-core/target_core_device.h
-+++ b/drivers/lio-core/target_core_device.h
-@@ -57,6 +57,7 @@ extern int se_dev_set_status_thread (se_device_t *, int);
- extern int se_dev_set_status_thread_tur (se_device_t *, int);
- extern int se_dev_set_queue_depth (se_device_t *, u32);
- extern int se_dev_set_max_sectors (se_device_t *, u32);
-+extern int se_dev_set_block_size (se_device_t *, u32);
- extern se_lun_t *core_dev_add_lun (se_portal_group_t *, se_hba_t *, se_device_t *, u32, int *);
- extern int core_dev_del_lun (se_portal_group_t *, u32);
- extern se_lun_t *core_get_lun_from_tpg (se_portal_group_t *, u32);
+ extern int transport_generic_emulate_readcapacity_16 (
+ 	se_cmd_t *cmd,
+-	unsigned long long blocks,
+-	u32 blocksize)
++	unsigned long long blocks)
+ {
++	se_device_t *dev = SE_DEV(cmd);
+ 	unsigned char *buf = (unsigned char *) T_TASK(cmd)->t_task_buf;
+ 
+ 	buf[0] = (blocks >> 56) & 0xff;
+@@ -4418,10 +4418,10 @@ extern int transport_generic_emulate_readcapacity_16 (
+ 	buf[5] = (blocks >> 16) & 0xff;
+ 	buf[6] = (blocks >> 8) & 0xff;
+ 	buf[7] = blocks & 0xff;
+-	buf[8] = (blocksize >> 24) & 0xff;
+-	buf[9] = (blocksize >> 16) & 0xff;
+-	buf[10] = (blocksize >> 8) & 0xff;
+-	buf[11] = blocksize & 0xff;
++	buf[8] = (DEV_ATTRIB(dev)->block_size >> 24) & 0xff;
++	buf[9] = (DEV_ATTRIB(dev)->block_size >> 16) & 0xff;
++	buf[10] = (DEV_ATTRIB(dev)->block_size >> 8) & 0xff;
++	buf[11] = DEV_ATTRIB(dev)->block_size & 0xff;
+ 
+ 	return(0);
+ }
+@@ -5024,8 +5024,8 @@ static int transport_generic_cmd_sequencer (
+ 		ret = 2;
+ 		break;
+ 	default:
+-		TRACE_ERROR("TARGET_CORE[%s]: Unsupported SCSI Opcode 0x%02x,"
+-			" sending CHECK_CONDITION.\n",
++		printk(KERN_WARNING "TARGET_CORE[%s]: Unsupported SCSI Opcode"
++			" 0x%02x, sending CHECK_CONDITION.\n",
+ 			CMD_TFO(cmd)->get_fabric_name(), cdb[0]);
+ 		cmd->transport_wait_for_tasks = &transport_nop_wait_for_tasks;
+ 		transport_get_maps(cmd);
+@@ -5033,18 +5033,28 @@ static int transport_generic_cmd_sequencer (
+ 	}
+ 
+ 	if (size != cmd->data_length) {
+-		TRACE_ERROR("TARGET_CORE[%s]: Expected Transfer Length: %u"
+-			" does not match SCSI CDB Length: %u for SAM Opcode:"
++		printk(KERN_WARNING "TARGET_CORE[%s]: Expected Transfer Length:"
++			" %u does not match SCSI CDB Length: %u for SAM Opcode:"
+ 			" 0x%02x\n", CMD_TFO(cmd)->get_fabric_name(),
+ 				cmd->data_length, size, cdb[0]);
+ 
+ 		cmd->cmd_spdtl = size;
+ 
+ 		if (cmd->data_direction == SE_DIRECTION_WRITE) {
+-			TRACE_ERROR("Rejecting underflow/overflow WRITE data\n");
++			printk(KERN_ERR "Rejecting underflow/overflow WRITE data\n");
+ 			return(6);
+ 		}
+-
++		/*
++		 * Reject READ_* or WRITE_* with overflow/underflow for
++		 * type SCF_SCSI_DATA_SG_IO_CDB.
++		 */
++		if (!(ret) && (DEV_ATTRIB(dev)->block_size != 512))  {
++			printk(KERN_ERR "Failing OVERFLOW/UNDERFLOW for LBA op"
++				" CDB on non 512-byte sector setup subsystem"
++				" plugin: %s\n", TRANSPORT(dev)->name);
++			return(6); // Returns CHECK_CONDITION + INVALID_CDB_FIELD
++		}
++			
+ 		if (size > cmd->data_length) {
+ 			cmd->se_cmd_flags |= SCF_OVERFLOW_BIT;
+ 			cmd->residual_count = (size - cmd->data_length);
+diff --git a/drivers/lio-core/target_core_transport.h b/drivers/lio-core/target_core_transport.h
+index 330c478..2a0c420 100644
+--- a/drivers/lio-core/target_core_transport.h
++++ b/drivers/lio-core/target_core_transport.h
+@@ -173,8 +173,8 @@ extern void transport_stop_task_timer (struct se_task_s *);
+ extern void transport_stop_all_task_timers (struct se_cmd_s *);
+ extern int transport_execute_tasks (struct se_cmd_s *);
+ extern int transport_generic_emulate_inquiry (struct se_cmd_s *, unsigned char, unsigned char *, unsigned char *, unsigned char *);
+-extern int transport_generic_emulate_readcapacity (struct se_cmd_s *, u32, u32);
+-extern int transport_generic_emulate_readcapacity_16 (struct se_cmd_s *, unsigned long long, u32);
++extern int transport_generic_emulate_readcapacity (struct se_cmd_s *, u32);
++extern int transport_generic_emulate_readcapacity_16 (struct se_cmd_s *, unsigned long long);
+ extern int transport_generic_emulate_modesense (struct se_cmd_s *, unsigned char *, unsigned char *, int, int);
+ extern int transport_get_sense_data (struct se_cmd_s *);
+ extern void transport_memcpy_read_contig (struct se_cmd_s *, unsigned char *);
 -- 
 1.5.4.1
 
