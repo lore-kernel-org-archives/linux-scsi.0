@@ -1,54 +1,42 @@
-From: "Zou, Yi" <yi.zou@intel.com>
-Subject: RE: [PATCH 6/7] fcoe: remove ETH_P_FCOE from fc_fcoe.h
-Date: Thu, 19 Feb 2009 13:49:24 -0800
-Message-ID: <7C88852EF6F99F4EB538472FCFEBE2222427B862@orsmsx509.amr.corp.intel.com>
-References: <20090219194734.22270.8445.stgit@zychengdu.jf.intel.com>
-	<20090219195022.22270.8543.stgit.yi.zou@intel.com>
- <20090219132517.08bb6f51@extreme>
+From: Sitsofe Wheeler <sitsofe@yahoo.com>
+Subject: Re: [SCSI][REGRESSION][BISECTED] Disk errors loop forever in 2.6.29
+Date: Thu, 19 Feb 2009 16:54:29 -0800 (PST)
+Message-ID: <852441.94339.qm@web110616.mail.gq1.yahoo.com>
+References: <56979.43325.qm@web110612.mail.gq1.yahoo.com> <1235080134.12500.45.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:39149 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757580AbZBSVtb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Feb 2009 16:49:31 -0500
-In-Reply-To: <20090219132517.08bb6f51@extreme>
-Content-Language: en-US
+Received: from web110616.mail.gq1.yahoo.com ([67.195.13.207]:40712 "HELO
+	web110616.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754039AbZBTAyb convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Feb 2009 19:54:31 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stephen Hemminger <shemminger@vyatta.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, rjw@sisk.pl, Ingo Molnar <mingo@elte.hu>, linux-scsi@vger.kernel.org
 
->On Thu, 19 Feb 2009 12:50:23 -0700
->Yi Zou <yi.zou@intel.com> wrote:
->
->> No need to have ETH_P_FCOE in fc_fcoe.h as it is now defined in
->if_ether.h
->>
->> Signed-off-by: Yi Zou <yi.zou@intel.com>
->> ---
->>
->>  include/scsi/fc/fc_fcoe.h |    7 -------
->>  1 files changed, 0 insertions(+), 7 deletions(-)
->>
->> diff --git a/include/scsi/fc/fc_fcoe.h b/include/scsi/fc/fc_fcoe.h
->> index f271d9c..ccb3dbe 100644
->> --- a/include/scsi/fc/fc_fcoe.h
->> +++ b/include/scsi/fc/fc_fcoe.h
->> @@ -25,13 +25,6 @@
->>   */
->>
->>  /*
->> - * The FCoE ethertype eventually goes in net/if_ether.h.
->> - */
->> -#ifndef ETH_P_FCOE
->> -#define     ETH_P_FCOE      0x8906          /* FCOE ether type */
->> -#endif
->> -
->>
->Just do the move from fc_fcoe.h to if_ether.h in one patch.
-Good point, I'll fix that.
+> From: James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Thanks.
-yi
+> 
+> Your specific behaviour change seems to be a bug in the way the rewrite
+> is handling ABORTED_COMMAND.  Could you try the patch below (with or
+> without the block patch, it shouldn't matter) and see if it gets you
+> back to 2.6.28 behaviour?
+
+Yup that patch makes things timeout quickly just like 2.6.28. The whole 
+"it didn't used to cache failures" piece in the previous email seems to
+have been a fabrication inside my own head - I checked and 2.6.28 caches
+the failure until the cache is dropped too.
+
+It might be worth turning your original patch into some sort of warning
+stack trace trigger so that people understand it's just there for 
+unwedging and isn't expected behaviour (it is useful for breaking out of
+near lockups though).
+
+Tested-by: Sitsofe Wheeler <sitsofe@yahoo.com>
+
+
+
+      
