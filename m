@@ -1,61 +1,75 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [GIT PATCH] SCSI fixes for 2.6.29-rc5
-Date: Fri, 20 Feb 2009 15:53:09 -0800
-Message-ID: <20090220155309.d73b403c.akpm@linux-foundation.org>
-References: <1235170927.9025.42.camel@localhost.localdomain>
-	<20090220152305.8a2e384f.akpm@linux-foundation.org>
-	<1235173256.9025.47.camel@localhost.localdomain>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH] sd: revive sd_index_lock
+Date: Sat, 21 Feb 2009 11:04:45 +0900
+Message-ID: <499F613D.7030603@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:32921 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754179AbZBTXxN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Feb 2009 18:53:13 -0500
-In-Reply-To: <1235173256.9025.47.camel@localhost.localdomain>
+Received: from hera.kernel.org ([140.211.167.34]:48051 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752379AbZBUCEd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Feb 2009 21:04:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: torvalds@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, stable@kernel.org
 
-On Fri, 20 Feb 2009 23:40:56 +0000
-James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+Commit f27bac2761cab5a2e212dea602d22457a9aa6943 which converted sd to
+use ida instead of idr incorrectly removed sd_index_lock around id
+allocation and free.  idr/ida do have internal locks but they protect
+their free object lists not the allocation itself.  The caller is
+responsible for that.  This missing synchronization led to the same id
+being assigned to multiple devices leading to oops.
 
-> On Fri, 2009-02-20 at 15:23 -0800, Andrew Morton wrote:
-> > On Fri, 20 Feb 2009 17:02:07 -0600
-> > James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
->
-> ...
->
-> > Did the mpt-fusion MSI problems get sorted out?  I think so...
-> 
-> Yes, but in the PCI tree.
+Revive sd_index_lock.
 
-OK, fingers crossed for Jesse.
+Reported and tracked down by Stuart Hayes of Dell.
 
-> > I believe that "scsi: mpt: suppress debugobjects warning" is 2.6.29
-> > material.  Sent 11 Feb, no response.
-> 
-> This is http://bugzilla.kernel.org/show_bug.cgi?id=12662 which is
-> reported fixed with no code changes.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: James Bottomley <jbottomley@novell.com>
+---
+ drivers/scsi/sd.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-I think the followup is bogus.  
-
-drivers/message/fusion/mptbase.c:GetLanConfigPages() calls mpt_config()
-against an on-stack CONFIGPARMS, which embeds an on-stack timer_list.
-
-So we should still use init_timer_on_stack().  Hopefully that won't
-explode if mpt_config() is called with a CONFIGPARMS which _isn't_ on
-the stack.
-
-argh, I'll ping Thomas again.
-
-> > Also I believe that "hptiop: add new PCI device ID" should be in 2.6.29
-> > (and earlier), below.  I can send this on if you like.
-> 
-> I have this marked for inclusion, I'm just sending out the fixes that
-> have been incubating in next prior to reconstructing a new fixes tree.
-
-ok, thanks.
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index d57566b..55310db 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -107,6 +107,7 @@ static void scsi_disk_release(struct device *cdev);
+ static void sd_print_sense_hdr(struct scsi_disk *, struct scsi_sense_hdr *);
+ static void sd_print_result(struct scsi_disk *, int);
+ 
++static DEFINE_SPINLOCK(sd_index_lock);
+ static DEFINE_IDA(sd_index_ida);
+ 
+ /* This semaphore is used to mediate the 0->1 reference get in the
+@@ -1914,7 +1915,9 @@ static int sd_probe(struct device *dev)
+ 		if (!ida_pre_get(&sd_index_ida, GFP_KERNEL))
+ 			goto out_put;
+ 
++		spin_lock(&sd_index_lock);
+ 		error = ida_get_new(&sd_index_ida, &index);
++		spin_unlock(&sd_index_lock);
+ 	} while (error == -EAGAIN);
+ 
+ 	if (error)
+@@ -1936,7 +1939,9 @@ static int sd_probe(struct device *dev)
+ 	return 0;
+ 
+  out_free_index:
++	spin_lock(&sd_index_lock);
+ 	ida_remove(&sd_index_ida, index);
++	spin_unlock(&sd_index_lock);
+  out_put:
+ 	put_disk(gd);
+  out_free:
+@@ -1986,7 +1991,9 @@ static void scsi_disk_release(struct device *dev)
+ 	struct scsi_disk *sdkp = to_scsi_disk(dev);
+ 	struct gendisk *disk = sdkp->disk;
+ 	
++	spin_lock(&sd_index_lock);
+ 	ida_remove(&sd_index_ida, sdkp->index);
++	spin_unlock(&sd_index_lock);
+ 
+ 	disk->private_data = NULL;
+ 	put_disk(disk);
