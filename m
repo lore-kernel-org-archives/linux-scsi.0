@@ -1,55 +1,62 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
-Subject: Re: [PATCH] pci: enable MSI on 8132
-Date: Sun, 22 Feb 2009 04:54:54 -0800
-Message-ID: <m1iqn2ein5.fsf@fess.ebiederm.org>
-References: <alpine.DEB.1.10.0902171419000.26625@asgard.lang.hm>
-	<499FD623.1010105@kernel.org> <49A04F1E.7020006@gmail.com>
-	<200902221308.55053.prakash@punnoor.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] MTP FUSION: resending patch to disable MSI interrupt
+	by defualt.
+Date: Sun, 22 Feb 2009 08:48:18 -0600
+Message-ID: <1235314098.4531.7.camel@localhost.localdomain>
+References: <20090222104911.GA6142@lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out02.mta.xmission.com ([166.70.13.232]:52491 "EHLO
-	out02.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751110AbZBVMyl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Feb 2009 07:54:41 -0500
-In-Reply-To: <200902221308.55053.prakash@punnoor.de> (Prakash Punnoor's message of "Sun\, 22 Feb 2009 13\:08\:54 +0100")
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:34180 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755875AbZBVOsV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 22 Feb 2009 09:48:21 -0500
+In-Reply-To: <20090222104911.GA6142@lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Prakash Punnoor <prakash@punnoor.de>
-Cc: Robert Hancock <hancockrwd@gmail.com>, Yinghai Lu <yinghai@kernel.org>, Jesse Barnes <jbarnes@virtuousgeek.org>, Andrew Morton <akpm@linux-foundation.org>, david@lang.hm, Matthew Wilcox <matthew@wil.cx>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com, linux-pci@vger.kernel.org
+To: "Kashyap, Desai" <kashyap.desai@lsi.com>
+Cc: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
+
+On Sun, 2009-02-22 at 16:19 +0530, Kashyap, Desai wrote:
+> This Patch is submitted to with reference to MSI issue with some of LSI
+> controller. Disabling it by default when module is loaded. 
+
+Point of order here: this is *not* a resend of a previous patch.  This
+is a bug fix of a previously sent patch (With a change in intended
+behaviour).
+
+> Signed-off-by: Kashyap Desai <kadesai@lsi.com>
+> ---
+> diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+> index 96ac883..ea3aafb 100644
+> --- a/drivers/message/fusion/mptbase.c
+> +++ b/drivers/message/fusion/mptbase.c
+> @@ -91,9 +91,9 @@ MODULE_PARM_DESC(mpt_msi_enable_fc, " Enable MSI Support for FC \
+>  		controllers (default=0)");
+>  
+>  static int mpt_msi_enable_sas;
+> -module_param(mpt_msi_enable_sas, int, 1);
+> +module_param(mpt_msi_enable_sas, int, 0);
+
+This is the actual bug fix, which isn't mentioned anywhere in the change
+log
+
+>  MODULE_PARM_DESC(mpt_msi_enable_sas, " Enable MSI Support for SAS \
+> -		controllers (default=1)");
+> +		controllers (default=0)");
+
+This entire patch is also functionally identical to the second patch in
+this email from Yinghai Lu:
+
+http://marc.info/?l=linux-scsi&m=123498532419609
+
+Open Source is a co-operative effort: The only thing you get at the end
+of the day is kudos for finding (and possibly fixing) a bug, so since
+Yinghai Lu did all the heavy lifting in this regard, I'll take this as
+an ack of his patch.
+
+James
 
 
-Prakesh could you try this patch instead?
-
-I think the problem is simply that the MCP55 ht mapping capability
-requires an address to be programed into it and it wasn't in your
-case.
-
-It should not hurt to enable one msi ht mapping capability too many.
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index baad093..f7a0370 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2017,10 +2017,19 @@ static void __devinit ht_enable_msi_mapping(struct pci_dev *dev)
- 	while (pos && ttl--) {
- 		u8 flags;
- 
--		if (pci_read_config_byte(dev, pos + HT_MSI_FLAGS,
--					 &flags) == 0) {
-+		if (pci_read_config_byte(dev, pos + HT_MSI_FLAGS, &flags))
-+			return;
-+
-+		if (!(flags & HT_MSI_FLAGS_ENABLE)) {
- 			dev_info(&dev->dev, "Enabling HT MSI Mapping\n");
- 
-+			if (!(flags & HT_MSI_FLAGS_FIXED)) {
-+				pci_write_config_dword(dev, pos + HT_MSI_ADDR_LO,
-+					(HT_MSI_FIXED_ADDR & HT_MSI_FIXED_ADDR));
-+				pci_write_config_dword(dev, pos + HT_MSI_ADDR_HI,
-+					(HT_MSI_FIXED_ADDR >> 32));
-+			}
-+
- 			pci_write_config_byte(dev, pos + HT_MSI_FLAGS,
- 					      flags | HT_MSI_FLAGS_ENABLE);
- 		}
