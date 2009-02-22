@@ -1,60 +1,76 @@
-From: Prakash Punnoor <prakash@punnoor.de>
-Subject: Re: [PATCH] pci: enable MSI on 8132
-Date: Sun, 22 Feb 2009 16:17:20 +0100
-Message-ID: <200902221617.21621.prakash@punnoor.de>
-References: <alpine.DEB.1.10.0902171419000.26625@asgard.lang.hm> <200902221308.55053.prakash@punnoor.de> <m1iqn2ein5.fsf@fess.ebiederm.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH (resend)]: SCSI: fix /proc memory leak in the SCSI core
+Date: Sun, 22 Feb 2009 11:40:36 -0600
+Message-ID: <1235324436.4531.54.camel@localhost.localdomain>
+References: <Pine.LNX.4.44L0.0902181048210.3186-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <m1iqn2ein5.fsf@fess.ebiederm.org>
-Content-Disposition: inline
-Sender: linux-pci-owner@vger.kernel.org
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, Yinghai Lu <yinghai@kernel.org>, Jesse Barnes <jbarnes@virtuousgeek.org>, Andrew Morton <akpm@linux-foundation.org>, david@lang.hm, Matthew Wilcox <matthew@wil.cx>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com, linux-pci@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:40249 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752862AbZBVRkk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 22 Feb 2009 12:40:40 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0902181048210.3186-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Andrew Morton <akpm@linux-foundation.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Sonntag 22 Februar 2009 13:54:54 Eric W. Biederman wrote:
-> Prakesh could you try this patch instead?
->
-> I think the problem is simply that the MCP55 ht mapping capability
-> requires an address to be programed into it and it wasn't in your
-> case.
->
-> It should not hurt to enable one msi ht mapping capability too many.
+On Wed, 2009-02-18 at 10:52 -0500, Alan Stern wrote:
+> The SCSI core calls scsi_proc_hostdir_add() from within
+> scsi_host_alloc(), but the corresponding scsi_proc_hostdir_rm()
+> routine is called from within scsi_remove_host().  As a result, if a
+> host is allocated and then deallocated without ever being registered,
+> the host's directory in /proc is leaked.
+> 
+> This patch (as1181) fixes this bug in the SCSI core by moving
+> scsi_proc_hostdir_add() into scsi_host_add().
+> 
+> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+> 
+> ---
+> 
+> Note: This is a repost of a bug-fix patch that was first submitted on 
+> December 1.
+> 
+> After looking through the documentation and code for the SCSI legacy 
+> API, I can't find anything incompatible with this change.  However I 
+> don't have any hardware with a legacy driver so I can't actually make 
+> the test.
 
-I tried it, but unfortunately doesn't help. I run into the same issue.
+OK, but resending a patch you expressed reservations about putting in
+without testing doesn't really help me.  I need a way to get comfortable
+with its safety.
 
->
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index baad093..f7a0370 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2017,10 +2017,19 @@ static void __devinit ht_enable_msi_mapping(struct
-> pci_dev *dev) while (pos && ttl--) {
->  		u8 flags;
->
-> -		if (pci_read_config_byte(dev, pos + HT_MSI_FLAGS,
-> -					 &flags) == 0) {
-> +		if (pci_read_config_byte(dev, pos + HT_MSI_FLAGS, &flags))
-> +			return;
-> +
-> +		if (!(flags & HT_MSI_FLAGS_ENABLE)) {
->  			dev_info(&dev->dev, "Enabling HT MSI Mapping\n");
->
-> +			if (!(flags & HT_MSI_FLAGS_FIXED)) {
-> +				pci_write_config_dword(dev, pos + HT_MSI_ADDR_LO,
-> +					(HT_MSI_FIXED_ADDR & HT_MSI_FIXED_ADDR));
-> +				pci_write_config_dword(dev, pos + HT_MSI_ADDR_HI,
-> +					(HT_MSI_FIXED_ADDR >> 32));
-> +			}
-> +
->  			pci_write_config_byte(dev, pos + HT_MSI_FLAGS,
->  					      flags | HT_MSI_FLAGS_ENABLE);
->  		}
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+So, what about this alternative fix instead: if the removal were moved
+to scsi_host_put(), that would address all the problems and have the
+advantage that everyone will test it ...
+
+James
+
+---
+
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index aa670a1..f4240a8 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -176,7 +176,6 @@ void scsi_remove_host(struct Scsi_Host *shost)
+ 	transport_unregister_device(&shost->shost_gendev);
+ 	device_unregister(&shost->shost_dev);
+ 	device_del(&shost->shost_gendev);
+-	scsi_proc_hostdir_rm(shost->hostt);
+ }
+ EXPORT_SYMBOL(scsi_remove_host);
+ 
+@@ -493,6 +492,7 @@ EXPORT_SYMBOL(scsi_host_get);
+  **/
+ void scsi_host_put(struct Scsi_Host *shost)
+ {
++	scsi_proc_hostdir_rm(shost->hostt);
+ 	put_device(&shost->shost_gendev);
+ }
+ EXPORT_SYMBOL(scsi_host_put);
+
+
