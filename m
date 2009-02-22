@@ -1,51 +1,37 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: BUG - MODE SENSE residue miscount in g_file_storage bulk-only
- transport ?
-Date: Sat, 21 Feb 2009 15:55:53 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0902211552510.10689-100000@netrider.rowland.org>
-References: <200902211211.39386.david-b@pacbell.net>
+From: Erik Ekman <erik@kryo.se>
+Subject: [PATCH -tip] libfc: add crc32 dependency
+Date: Sun, 22 Feb 2009 02:02:39 +0100
+Message-ID: <20090222020239.59ee6b23.erik@kryo.se>
+References: <20090222015606.629487d8.erik@kryo.se>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:1778 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750889AbZBUUz4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Feb 2009 15:55:56 -0500
-In-Reply-To: <200902211211.39386.david-b@pacbell.net>
+Received: from fg-out-1718.google.com ([72.14.220.158]:47084 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754714AbZBVBCo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Feb 2009 20:02:44 -0500
+Received: by fg-out-1718.google.com with SMTP id 16so2290600fgg.17
+        for <linux-scsi@vger.kernel.org>; Sat, 21 Feb 2009 17:02:42 -0800 (PST)
+In-Reply-To: <20090222015606.629487d8.erik@kryo.se>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Brownell <david-b@pacbell.net>
-Cc: Stanislaw Gruszka <stf_xl@wp.pl>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org
 
-On Sat, 21 Feb 2009, David Brownell wrote:
+drivers/scsi/libfc/fc_fcp.c needs CRC32 to build.
 
-> On Monday 16 February 2009, Stanislaw Gruszka wrote:
-> >=20
-> > > The problem is in the Atmel hardware; it's not capable of halting=
- a
-> > > bulk endpoint correctly. =A0You need to invoke g_file_storage wit=
-h the
-> > > "stall=3Dno" parameter.
-> >=20
-> > I see, it works now, thanks very much.
->=20
-> Should the driver maybe
->=20
-> 	if (gadget_is_at91(g))
-> 		disable stalls;
->=20
-> then?
-
-Perhaps it should.  I have not tried to keep track of which peripheral
-drivers are incapable of halting bulk endpoints correctly.  There's
-already a similar test for gadget_is_sh(); maybe others should be added
-too.
-
-Alan Stern
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Erik Ekman <erik@kryo.se>
+---
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 256c7be..bdfa6f2 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -608,6 +608,7 @@ config SCSI_FLASHPOINT
+ config LIBFC
+ 	tristate "LibFC module"
+ 	select SCSI_FC_ATTRS
++	select CRC32
+ 	---help---
+ 	  Fibre Channel library module
+ 
