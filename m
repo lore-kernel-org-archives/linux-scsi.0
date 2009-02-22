@@ -1,41 +1,78 @@
-From: Grant Grundler <grundler@parisc-linux.org>
-Subject: Re: [PATCH] pci: enable MSI on 8132
-Date: Sat, 21 Feb 2009 20:42:19 -0700
-Message-ID: <20090222034219.GH2567@colo.lackof.org>
-References: <499B724A.2040408@kernel.org> <alpine.DEB.1.10.0902171832560.26625@asgard.lang.hm> <alpine.DEB.1.10.0902171839420.26625@asgard.lang.hm> <499B774C.5010705@kernel.org> <alpine.DEB.1.10.0902171917420.26625@asgard.lang.hm> <499B9129.50104@kernel.org> <499CD466.1060900@gmail.com> <m1fxi82pq0.fsf@fess.ebiederm.org> <86802c440902210031j698403cev2147e72a61e17194@mail.gmail.com> <m1r61sf9oo.fsf@fess.ebiederm.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [GIT PATCH] SCSI fixes for 2.6.29-rc5
+Date: Sun, 22 Feb 2009 11:18:24 +0200
+Message-ID: <49A11860.3000406@panasas.com>
+References: <1235170927.9025.42.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from colo.lackof.org ([198.49.126.79]:42529 "EHLO colo.lackof.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752106AbZBVDme (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 21 Feb 2009 22:42:34 -0500
-Content-Disposition: inline
-In-Reply-To: <m1r61sf9oo.fsf@fess.ebiederm.org>
+Received: from gw-ca.panasas.com ([66.104.249.162]:11919 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751969AbZBVJSo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Feb 2009 04:18:44 -0500
+In-Reply-To: <1235170927.9025.42.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, Robert Hancock <hancockrwd@gmail.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, Andrew Morton <akpm@linux-foundation.org>, david@lang.hm, Matthew Wilcox <matthew@wil.cx>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com, linux-pci@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Sat, Feb 21, 2009 at 12:58:31AM -0800, Eric W. Biederman wrote:
-...
-> The difference is that there is a magic address on x86 that all MSI
-> cycles are sent to.  I think it is 0xfffe0000.
+James Bottomley wrote:
+> This is a bunch of assorted bug fixes (with several in the qlogic
+> drivers).
+> 
+> The patch is available at
+> 
+> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+> 
+> The short changelog is:
+> 
+> Andrew Vasquez (3):
+>       qla2xxx: Update version number to 8.03.00-k3.
+>       qla2xxx: Mask out 'reserved' bits while processing FLT regions.
+>       qla2xxx: Properly acknowledge IDC notification messages.
+> 
+> Anirban Chakraborty (2):
+>       qla2xxx: Correct slab-error overwrite during vport creation and deletion.
+>       qla2xxx: Remove interrupt request bit check in the response processing pat
+> 
+> Brian King (3):
+>       ibmvfc: Increase cancel timeout
+>       ibmvfc: Fix rport relogin
+>       ibmvfc: Fix command timeout errors
+> 
+> James Smart (1):
+>       scsi_scan: add missing interim SDEV_DEL state if slave_alloc fails
+> 
+> Julia Lawall (1):
+>       lpfc: introduce missing kfree
+> 
+> Martin Peschke (1):
+>       sg: fix device number in blktrace data
+> 
+> Mike Christie (1):
+>       libiscsi: Fix scsi command timeout oops in iscsi_eh_timed_out
+> 
+> Robert Jennings (1):
+>       ibmvscsi: Correct DMA mapping leak
+> 
+> Shyam_Iyer@Dell.com (1):
+>       qla2xxx: fix Kernel Panic with Qlogic 2472 Card.
+> 
+> 
+> And the diffstat
+> 
+<snip>
 
-arch/x86/include/asm/msidef.h:#define MSI_ADDR_BASE_LO          0xfee00000
+James Hello.
 
-Intel spells out the details in:
-    http://www.intel.com/products/processor/manuals/index.htm
+Please, you must include a BUG fix patch I sent to the osd_uld, that was found
+by users, with use of old osd-targets. (It was sitting in next for a while now)
+It's an obvious BUG, no point of sending it the @stable way later.
 
-"Volume 3A: System Programming Guide, Part 1"
-See chapter "9.4 LOCAL APIC"
+http://www.spinics.net/lists/linux-scsi/msg33243.html
 
->  In an msi to HT
-> mapping capability it is necessary to program in the address to listen
-> for msi packets.  That is very much an arch dependent thing.
+Do you need that I resend it?
 
-Indeed. parisc and (AFAIK) alpha have the same ability but use completely
-different address ranges depending on the chipset as well.
-
-thanks,
-grant
+Thanks in advance
+Boaz
