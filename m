@@ -1,37 +1,41 @@
-From: Erik Ekman <erik@kryo.se>
-Subject: [PATCH -tip] libfc: add crc32 dependency
-Date: Sun, 22 Feb 2009 02:02:39 +0100
-Message-ID: <20090222020239.59ee6b23.erik@kryo.se>
-References: <20090222015606.629487d8.erik@kryo.se>
+From: Grant Grundler <grundler@parisc-linux.org>
+Subject: Re: [PATCH] pci: enable MSI on 8132
+Date: Sat, 21 Feb 2009 20:42:19 -0700
+Message-ID: <20090222034219.GH2567@colo.lackof.org>
+References: <499B724A.2040408@kernel.org> <alpine.DEB.1.10.0902171832560.26625@asgard.lang.hm> <alpine.DEB.1.10.0902171839420.26625@asgard.lang.hm> <499B774C.5010705@kernel.org> <alpine.DEB.1.10.0902171917420.26625@asgard.lang.hm> <499B9129.50104@kernel.org> <499CD466.1060900@gmail.com> <m1fxi82pq0.fsf@fess.ebiederm.org> <86802c440902210031j698403cev2147e72a61e17194@mail.gmail.com> <m1r61sf9oo.fsf@fess.ebiederm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:47084 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754714AbZBVBCo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Feb 2009 20:02:44 -0500
-Received: by fg-out-1718.google.com with SMTP id 16so2290600fgg.17
-        for <linux-scsi@vger.kernel.org>; Sat, 21 Feb 2009 17:02:42 -0800 (PST)
-In-Reply-To: <20090222015606.629487d8.erik@kryo.se>
+Received: from colo.lackof.org ([198.49.126.79]:42529 "EHLO colo.lackof.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752106AbZBVDme (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 21 Feb 2009 22:42:34 -0500
+Content-Disposition: inline
+In-Reply-To: <m1r61sf9oo.fsf@fess.ebiederm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Robert Hancock <hancockrwd@gmail.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, Andrew Morton <akpm@linux-foundation.org>, david@lang.hm, Matthew Wilcox <matthew@wil.cx>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com, linux-pci@vger.kernel.org
 
-drivers/scsi/libfc/fc_fcp.c needs CRC32 to build.
+On Sat, Feb 21, 2009 at 12:58:31AM -0800, Eric W. Biederman wrote:
+...
+> The difference is that there is a magic address on x86 that all MSI
+> cycles are sent to.  I think it is 0xfffe0000.
 
-Signed-off-by: Erik Ekman <erik@kryo.se>
----
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 256c7be..bdfa6f2 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -608,6 +608,7 @@ config SCSI_FLASHPOINT
- config LIBFC
- 	tristate "LibFC module"
- 	select SCSI_FC_ATTRS
-+	select CRC32
- 	---help---
- 	  Fibre Channel library module
- 
+arch/x86/include/asm/msidef.h:#define MSI_ADDR_BASE_LO          0xfee00000
+
+Intel spells out the details in:
+    http://www.intel.com/products/processor/manuals/index.htm
+
+"Volume 3A: System Programming Guide, Part 1"
+See chapter "9.4 LOCAL APIC"
+
+>  In an msi to HT
+> mapping capability it is necessary to program in the address to listen
+> for msi packets.  That is very much an arch dependent thing.
+
+Indeed. parisc and (AFAIK) alpha have the same ability but use completely
+different address ranges depending on the chipset as well.
+
+thanks,
+grant
