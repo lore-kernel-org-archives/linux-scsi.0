@@ -1,18 +1,21 @@
-From: "Chris Herrera" <convergentbwi28@souken.co.jp>
-Subject: 100% pure enhancers
-Date: Mon, 23 Feb 2009 01:52:41 +0500
-Message-ID: <20090223015241.7000706@souken.co.jp>
+From: Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH] pci: enable MSI on 8132
+Date: Sun, 22 Feb 2009 13:45:52 -0800
+Message-ID: <49A1C790.1030303@kernel.org>
+References: <alpine.DEB.1.10.0902171419000.26625@asgard.lang.hm> <200902221308.55053.prakash@punnoor.de> <m1iqn2ein5.fsf@fess.ebiederm.org> <200902221617.21621.prakash@punnoor.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [94.180.56.35] ([94.180.56.35]:3259 "HELO wergvan"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1751576AbZBVVTC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 22 Feb 2009 16:19:02 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <200902221617.21621.prakash@punnoor.de>
+Sender: linux-pci-owner@vger.kernel.org
+To: Prakash Punnoor <prakash@punnoor.de>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Robert Hancock <hancockrwd@gmail.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, Andrew Morton <akpm@linux-foundation.org>, david@lang.hm, Matthew Wilcox <matthew@wil.cx>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-She'll never be disappointed http://qqz.knowingdynamic.com/
+your system have one HT chain c51->mcp51
 
+BIOS enabled HT-MSI on c51, and hda ...
+it seems pci quirks should not be used enable HT MSI on mcp51 again...
+
+YH
