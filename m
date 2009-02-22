@@ -1,151 +1,39 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [GIT PATCH] SCSI fixes for 2.6.29-rc5
-Date: Sun, 22 Feb 2009 11:25:56 +0200
-Message-ID: <49A11A24.9080709@panasas.com>
-References: <1235170927.9025.42.camel@localhost.localdomain> <49A11860.3000406@panasas.com>
+From: "Kashyap, Desai" <kashyap.desai@lsi.com>
+Subject: [PATCH] MTP FUSION: resending patch to disable MSI interrupt by defualt.
+Date: Sun, 22 Feb 2009 16:19:18 +0530
+Message-ID: <20090222104911.GA6142@lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([66.104.249.162]:17480 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750973AbZBVJ1b (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Feb 2009 04:27:31 -0500
-In-Reply-To: <49A11860.3000406@panasas.com>
+Received: from exprod7og111.obsmtp.com ([64.18.2.175]:38769 "EHLO
+	exprod7og111.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753361AbZBVLLK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Feb 2009 06:11:10 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-Boaz Harrosh wrote:
-Boaz Harrosh wrote:
-> James Bottomley wrote:
->> This is a bunch of assorted bug fixes (with several in the qlogic
->> drivers).
->>
->> The patch is available at
->>
->> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
->>
->> The short changelog is:
->>
->> Andrew Vasquez (3):
->>       qla2xxx: Update version number to 8.03.00-k3.
->>       qla2xxx: Mask out 'reserved' bits while processing FLT regions.
->>       qla2xxx: Properly acknowledge IDC notification messages.
->>
->> Anirban Chakraborty (2):
->>       qla2xxx: Correct slab-error overwrite during vport creation and deletion.
->>       qla2xxx: Remove interrupt request bit check in the response processing pat
->>
->> Brian King (3):
->>       ibmvfc: Increase cancel timeout
->>       ibmvfc: Fix rport relogin
->>       ibmvfc: Fix command timeout errors
->>
->> James Smart (1):
->>       scsi_scan: add missing interim SDEV_DEL state if slave_alloc fails
->>
->> Julia Lawall (1):
->>       lpfc: introduce missing kfree
->>
->> Martin Peschke (1):
->>       sg: fix device number in blktrace data
->>
->> Mike Christie (1):
->>       libiscsi: Fix scsi command timeout oops in iscsi_eh_timed_out
->>
->> Robert Jennings (1):
->>       ibmvscsi: Correct DMA mapping leak
->>
->> Shyam_Iyer@Dell.com (1):
->>       qla2xxx: fix Kernel Panic with Qlogic 2472 Card.
->>
->>
->> And the diffstat
->>
-> <snip>
-> 
-> James Hello.
-> 
-> Please, you must include a BUG fix patch I sent to the osd_uld, that was found
-> by users, with use of old osd-targets. (It was sitting in next for a while now)
-> It's an obvious BUG, no point of sending it the @stable way later.
-> 
-> http://www.spinics.net/lists/linux-scsi/msg33243.html
-> 
-> Do you need that I resend it?
-> 
-> Thanks in advance
-> Boaz
-> 
+This Patch is submitted to with reference to MSI issue with some of LSI
+controller. Disabling it by default when module is loaded. 
+---
 
-> James Bottomley wrote:
->> This is a bunch of assorted bug fixes (with several in the qlogic
->> drivers).
->>
->> The patch is available at
->>
->> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
->>
->> The short changelog is:
->>
->> Andrew Vasquez (3):
->>       qla2xxx: Update version number to 8.03.00-k3.
->>       qla2xxx: Mask out 'reserved' bits while processing FLT regions.
->>       qla2xxx: Properly acknowledge IDC notification messages.
->>
->> Anirban Chakraborty (2):
->>       qla2xxx: Correct slab-error overwrite during vport creation and deletion.
->>       qla2xxx: Remove interrupt request bit check in the response processing pat
->>
->> Brian King (3):
->>       ibmvfc: Increase cancel timeout
->>       ibmvfc: Fix rport relogin
->>       ibmvfc: Fix command timeout errors
->>
->> James Smart (1):
->>       scsi_scan: add missing interim SDEV_DEL state if slave_alloc fails
->>
->> Julia Lawall (1):
->>       lpfc: introduce missing kfree
->>
->> Martin Peschke (1):
->>       sg: fix device number in blktrace data
->>
->> Mike Christie (1):
->>       libiscsi: Fix scsi command timeout oops in iscsi_eh_timed_out
->>
->> Robert Jennings (1):
->>       ibmvscsi: Correct DMA mapping leak
->>
->> Shyam_Iyer@Dell.com (1):
->>       qla2xxx: fix Kernel Panic with Qlogic 2472 Card.
->>
->>
->> And the diffstat
->>
-> <snip>
-> 
-> James Hello.
-> 
-> Please, you must include a BUG fix patch I sent to the osd_uld, that was found
-> by users, with use of old osd-targets. (It was sitting in next for a while now)
-> It's an obvious BUG, no point of sending it the @stable way later.
-> 
-> http://www.spinics.net/lists/linux-scsi/msg33243.html
-> 
-> Do you need that I resend it?
-> 
-> Thanks in advance
-> Boaz
-> 
-
-Please, completely ignore. Need my morning coffee. Don't know what happened
-to me, I did not smoke anything Friday night.
-
-Sorry for the noise
-Boaz
-
-
+Signed-off-by: Kashyap Desai <kadesai@lsi.com>
+---
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 96ac883..ea3aafb 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -91,9 +91,9 @@ MODULE_PARM_DESC(mpt_msi_enable_fc, " Enable MSI Support for FC \
+ 		controllers (default=0)");
  
+ static int mpt_msi_enable_sas;
+-module_param(mpt_msi_enable_sas, int, 1);
++module_param(mpt_msi_enable_sas, int, 0);
+ MODULE_PARM_DESC(mpt_msi_enable_sas, " Enable MSI Support for SAS \
+-		controllers (default=1)");
++		controllers (default=0)");
+ 
+ 
+ static int mpt_channel_mapping;
