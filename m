@@ -1,48 +1,60 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH -tip] libfc: add crc32 dependency
-Date: Sun, 22 Feb 2009 08:55:05 -0600
-Message-ID: <1235314505.4531.11.camel@localhost.localdomain>
-References: <20090222015606.629487d8.erik@kryo.se>
-	 <20090222020239.59ee6b23.erik@kryo.se>
+From: Prakash Punnoor <prakash@punnoor.de>
+Subject: Re: [PATCH] pci: enable MSI on 8132
+Date: Sun, 22 Feb 2009 16:17:20 +0100
+Message-ID: <200902221617.21621.prakash@punnoor.de>
+References: <alpine.DEB.1.10.0902171419000.26625@asgard.lang.hm> <200902221308.55053.prakash@punnoor.de> <m1iqn2ein5.fsf@fess.ebiederm.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:57730 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753172AbZBVOzI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 22 Feb 2009 09:55:08 -0500
-In-Reply-To: <20090222020239.59ee6b23.erik@kryo.se>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <m1iqn2ein5.fsf@fess.ebiederm.org>
+Content-Disposition: inline
+Sender: linux-pci-owner@vger.kernel.org
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, Yinghai Lu <yinghai@kernel.org>, Jesse Barnes <jbarnes@virtuousgeek.org>, Andrew Morton <akpm@linux-foundation.org>, david@lang.hm, Matthew Wilcox <matthew@wil.cx>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Erik Ekman <erik@kryo.se>
-Cc: linux-scsi@vger.kernel.org
 
-On Sun, 2009-02-22 at 02:02 +0100, Erik Ekman wrote:
-> drivers/scsi/libfc/fc_fcp.c needs CRC32 to build.
-> 
-> Signed-off-by: Erik Ekman <erik@kryo.se>
-> ---
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> index 256c7be..bdfa6f2 100644
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -608,6 +608,7 @@ config SCSI_FLASHPOINT
->  config LIBFC
->  	tristate "LibFC module"
->  	select SCSI_FC_ATTRS
-> +	select CRC32
->  	---help---
+On Sonntag 22 Februar 2009 13:54:54 Eric W. Biederman wrote:
+> Prakesh could you try this patch instead?
+>
+> I think the problem is simply that the MCP55 ht mapping capability
+> requires an address to be programed into it and it wasn't in your
+> case.
+>
+> It should not hurt to enable one msi ht mapping capability too many.
 
-Already got this, here:
+I tried it, but unfortunately doesn't help. I run into the same issue.
 
-http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=bd21ed64ec1950f32706a54ecdbe93901fbc03a9
-
-However, I think scis-misc is coming up on a point where it needs
-rebasing, so I'll move it across to rc-fixes, since it's a minor fix but
-it keeps coming up in the randconfig testing.
-
-James
-
-
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index baad093..f7a0370 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -2017,10 +2017,19 @@ static void __devinit ht_enable_msi_mapping(struct
+> pci_dev *dev) while (pos && ttl--) {
+>  		u8 flags;
+>
+> -		if (pci_read_config_byte(dev, pos + HT_MSI_FLAGS,
+> -					 &flags) == 0) {
+> +		if (pci_read_config_byte(dev, pos + HT_MSI_FLAGS, &flags))
+> +			return;
+> +
+> +		if (!(flags & HT_MSI_FLAGS_ENABLE)) {
+>  			dev_info(&dev->dev, "Enabling HT MSI Mapping\n");
+>
+> +			if (!(flags & HT_MSI_FLAGS_FIXED)) {
+> +				pci_write_config_dword(dev, pos + HT_MSI_ADDR_LO,
+> +					(HT_MSI_FIXED_ADDR & HT_MSI_FIXED_ADDR));
+> +				pci_write_config_dword(dev, pos + HT_MSI_ADDR_HI,
+> +					(HT_MSI_FIXED_ADDR >> 32));
+> +			}
+> +
+>  			pci_write_config_byte(dev, pos + HT_MSI_FLAGS,
+>  					      flags | HT_MSI_FLAGS_ENABLE);
+>  		}
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
