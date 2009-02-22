@@ -1,39 +1,19 @@
-From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH] MTP FUSION: resending patch to disable MSI interrupt by defualt.
-Date: Sun, 22 Feb 2009 16:19:18 +0530
-Message-ID: <20090222104911.GA6142@lsi.com>
+From: "Gil Mullins" <r.bate@xchanging.com>
+Subject: Male enhancing products review.
+Date: Sun, 22 Feb 2009 13:31:40 +0200
+Message-ID: <20090222133140.3000403@xchanging.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og111.obsmtp.com ([64.18.2.175]:38769 "EHLO
-	exprod7og111.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753361AbZBVLLK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Feb 2009 06:11:10 -0500
-Content-Disposition: inline
+Received: from fundatia-progress.adea.arad.astral.ro ([85.186.70.62]:64933
+	"HELO fundatia-progress.adea.arad.astral.ro" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753682AbZBVLfz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 22 Feb 2009 06:35:55 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-This Patch is submitted to with reference to MSI issue with some of LSI
-controller. Disabling it by default when module is loaded. 
----
+Boost your male powr in a matter of minutes http://oriqp.blueglorious.com/
 
-Signed-off-by: Kashyap Desai <kadesai@lsi.com>
----
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 96ac883..ea3aafb 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -91,9 +91,9 @@ MODULE_PARM_DESC(mpt_msi_enable_fc, " Enable MSI Support for FC \
- 		controllers (default=0)");
- 
- static int mpt_msi_enable_sas;
--module_param(mpt_msi_enable_sas, int, 1);
-+module_param(mpt_msi_enable_sas, int, 0);
- MODULE_PARM_DESC(mpt_msi_enable_sas, " Enable MSI Support for SAS \
--		controllers (default=1)");
-+		controllers (default=0)");
- 
- 
- static int mpt_channel_mapping;
