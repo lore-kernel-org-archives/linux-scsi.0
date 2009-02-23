@@ -1,181 +1,68 @@
-From: Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH] pci: enable MSI on 8132
-Date: Sun, 22 Feb 2009 22:18:34 -0800
-Message-ID: <49A23FBA.2020004@kernel.org>
-References: <alpine.DEB.1.10.0902171419000.26625@asgard.lang.hm> <200902221308.55053.prakash@punnoor.de> <m1iqn2ein5.fsf@fess.ebiederm.org> <200902221617.21621.prakash@punnoor.de>
+From: "Rengarajan, Narayanan (STSD)" <narayanan.rengarajan@hp.com>
+Subject: RE: [PATCH 1/1] : Spinning up disk is observed on standby paths
+ until timeout, resulting in longer path restoration time.
+Date: Mon, 23 Feb 2009 11:48:53 +0000
+Message-ID: <DB8E544DD4B3D346A36F2698103530AE292ABB05C1@GVW1105EXC.americas.hpqcorp.net>
+References: <DB8E544DD4B3D346A36F2698103530AE292A9BDC54@GVW1105EXC.americas.hpqcorp.net>
+ <1235144182.3349.5.camel@localhost.localdomain>
+ <20090220155221.GU16841@parisc-linux.org>
+ <1235145795.9025.4.camel@localhost.localdomain>
+ <20090220161334.GV16841@parisc-linux.org>
+ <1235147048.9025.9.camel@localhost.localdomain>
+ <20090220170431.GW16841@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:37080 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751188AbZBWGTQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Feb 2009 01:19:16 -0500
-In-Reply-To: <200902221617.21621.prakash@punnoor.de>
+Received: from g5t0008.atlanta.hp.com ([15.192.0.45]:35854 "EHLO
+	g5t0008.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753679AbZBWLtk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Feb 2009 06:49:40 -0500
+In-Reply-To: <20090220170431.GW16841@parisc-linux.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Prakash Punnoor <prakash@punnoor.de>
-Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Robert Hancock <hancockrwd@gmail.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, Andrew Morton <akpm@linux-foundation.org>, david@lang.hm, Matthew Wilcox <matthew@wil.cx>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com, linux-pci@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-please try, you may need Eric's patch too.
+If this patch is valid , when can we expect this on mainstream kernel . I can help testing this patch when included in the kernel.
 
-[PATCH] pci: don't enable too much HT MSI mapping
+Narayanan
+  
 
-Impact: fix bug
+-----Original Message-----
+From: Matthew Wilcox [mailto:matthew@wil.cx] 
+Sent: Friday, February 20, 2009 10:35 PM
+To: James Bottomley
+Cc: Rengarajan, Narayanan (STSD); linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 1/1] : Spinning up disk is observed on standby paths until timeout, resulting in longer path restoration time.
 
-Prakesh reported that his c51-mcp51 system ondie sound card doesn't work MSI
-but if he hack out the HT-MSI on mcp51, the MSI will work well with sound card.
+On Fri, Feb 20, 2009 at 04:24:08PM +0000, James Bottomley wrote:
+> I think the point is that it's a transition:  Once it comes out of it 
+> we either get access or we don't, so it's worth waiting to see what 
+> happens.
 
-this patch rework the nv_msi_ht_cap_quirk()
-and will only enable ht_msi and try to avoid to enable ht_msi both.
+I agree.  If we knew that it could only be transitioning to inactive, we could skip it.  This state probably only gets returned once in a blue moon anyway.
 
-Reported-by: Prakesh Punnoor <prakash@punnoor.de>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> > I don't know what 'Enable Spinup' is for -- maybe Doug knows?  
+> > Sending a START_STOP to the device might be exactly what they intend for us to do.
+> > Under a 'First, Do No Harm' theory, perhaps we should leave well 
+> > enough alone and just add Standby and Unavailable?
+> 
+> As I said, it's a SAS power management command related condition:  The 
+> drive is limited to consuming a certain level of power and that's not 
+> enough to spin up, so it won't spin up regardless of how many start 
+> unit commands it gets sent until the power management control is 
+> changed to allow it to consume enough power for the spinup.  I think 
+> it's ignorable for now ... it probably means that when power 
+> management is added we need to get the transport classes involved to 
+> send the appropriate sas pm command.
 
----
- drivers/pci/quirks.c |  115 ++++++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 100 insertions(+), 15 deletions(-)
+Looking at SAS2r14, I see that NOTIFY (ENABLE SPINUP) is a primitive, not a command.  If the SAS device is attached through an expander, I don't think we have a way to send that primitive to the device.  We must wait for the expander to send it.  If it's sirectly-connected, the initiator port is supposed to send it.  Presumably this is handled either by firmware on the HBA or by the HBA driver; either way, we don't seem to have a way today to get the HBA to send this primitive.
 
-Index: linux-2.6/drivers/pci/quirks.c
-===================================================================
---- linux-2.6.orig/drivers/pci/quirks.c
-+++ linux-2.6/drivers/pci/quirks.c
-@@ -2050,11 +2050,101 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NV
- 			PCI_DEVICE_ID_NVIDIA_NVENET_15,
- 			nvenet_msi_disable);
- 
--static void __devinit nv_msi_ht_cap_quirk(struct pci_dev *dev)
-+static void __devinit nv_ht_enable_msi_mapping(struct pci_dev *dev)
- {
- 	struct pci_dev *host_bridge;
-+	int pos;
-+	int i, dev_no;
-+	int found = 0;
-+
-+	dev_no = dev->devfn >> 3;
-+	for (i = dev_no; i >= 0; i--) {
-+		host_bridge = pci_get_slot(dev->bus, PCI_DEVFN(i, 0));
-+		if (!host_bridge)
-+			continue;
-+
-+		pos = pci_find_ht_capability(host_bridge, HT_CAPTYPE_SLAVE);
-+		if (pos != 0) {
-+			found = 1;
-+			break;
-+		}
-+		pci_dev_put(host_bridge);
-+	}
-+
-+	if (!found)
-+		return;
-+
-+	/* root did that ! */
-+	if (msi_ht_cap_enabled(host_bridge))
-+		goto out;
-+
-+	ht_enable_msi_mapping(dev);
-+
-+out:
-+	pci_dev_put(host_bridge);
-+}
-+
-+static void __devinit ht_disable_msi_mapping(struct pci_dev *dev)
-+{
- 	int pos, ttl = 48;
- 
-+	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
-+	while (pos && ttl--) {
-+		u8 flags;
-+
-+		if (pci_read_config_byte(dev, pos + HT_MSI_FLAGS,
-+					 &flags) == 0) {
-+			dev_info(&dev->dev, "Enabling HT MSI Mapping\n");
-+
-+			pci_write_config_byte(dev, pos + HT_MSI_FLAGS,
-+					      flags & ~HT_MSI_FLAGS_ENABLE);
-+		}
-+		pos = pci_find_next_ht_capability(dev, pos,
-+						  HT_CAPTYPE_MSI_MAPPING);
-+	}
-+}
-+
-+static int __devinit ht_check_msi_mapping(struct pci_dev *dev)
-+{
-+	int pos, ttl = 48;
-+	int found = 0;
-+
-+	/* check if there is HT MSI cap or enabled on this device */
-+	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
-+	while (pos && ttl--) {
-+		u8 flags;
-+
-+		if (found < 1)
-+			found = 1;
-+		if (pci_read_config_byte(dev, pos + HT_MSI_FLAGS,
-+					 &flags) == 0) {
-+			if (flags & HT_MSI_FLAGS_ENABLE) {
-+				if (found < 2) {
-+					found = 2;
-+					break;
-+				}
-+			}
-+		}
-+		pos = pci_find_next_ht_capability(dev, pos,
-+						  HT_CAPTYPE_MSI_MAPPING);
-+	}
-+
-+	return found;
-+}
-+
-+static void __devinit nv_msi_ht_cap_quirk(struct pci_dev *dev)
-+{
-+	struct pci_dev *host_bridge;
-+	int pos;
-+	int found;
-+
-+	/* check if there is HT MSI cap or enabled on this device */
-+	found = ht_check_msi_mapping(dev);
-+
-+	/* no HT MSI CAP */
-+	if (found == 0)
-+		return;
-+
- 	/*
- 	 * HT MSI mapping should be disabled on devices that are below
- 	 * a non-Hypertransport host bridge. Locate the host bridge...
-@@ -2069,24 +2159,19 @@ static void __devinit nv_msi_ht_cap_quir
- 	pos = pci_find_ht_capability(host_bridge, HT_CAPTYPE_SLAVE);
- 	if (pos != 0) {
- 		/* Host bridge is to HT */
--		ht_enable_msi_mapping(dev);
-+		if (found == 1) {
-+			/* it is not enabled, try to enable it */
-+			nv_ht_enable_msi_mapping(dev);
-+		}
- 		return;
- 	}
- 
--	/* Host bridge is not to HT, disable HT MSI mapping on this device */
--	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
--	while (pos && ttl--) {
--		u8 flags;
-+	/* HT MSI is not enabled */
-+	if (found == 1)
-+		return;
- 
--		if (pci_read_config_byte(dev, pos + HT_MSI_FLAGS,
--					 &flags) == 0) {
--			dev_info(&dev->dev, "Disabling HT MSI mapping");
--			pci_write_config_byte(dev, pos + HT_MSI_FLAGS,
--					      flags & ~HT_MSI_FLAGS_ENABLE);
--		}
--		pos = pci_find_next_ht_capability(dev, pos,
--						  HT_CAPTYPE_MSI_MAPPING);
--	}
-+	/* Host bridge is not to HT, disable HT MSI mapping on this device */
-+	ht_disable_msi_mapping(dev);
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID, nv_msi_ht_cap_quirk);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AL, PCI_ANY_ID, nv_msi_ht_cap_quirk);
+I think our current behaviour is correct for this command, so the patch
+here: http://marc.info/?l=linux-scsi&m=123513805527153&w=2 is correct.
 
-
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this operating system, but compare it to ours.  We can't possibly take such a retrograde step."
