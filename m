@@ -1,48 +1,48 @@
 From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 12759] New: scsi: aic7xxx hang since v2.6.28-rc1 ...
-Date: Mon, 23 Feb 2009 14:50:15 -0800 (PST)
-Message-ID: <bug-12759-11613@http.bugzilla.kernel.org/>
+Subject: [Bug 12762] New: Disk errors loop forever in 2.6.29
+Date: Mon, 23 Feb 2009 15:11:13 -0800 (PST)
+Message-ID: <bug-12762-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:37619 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:42614 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754343AbZBWW6C (ORCPT
+	by vger.kernel.org with ESMTP id S1752218AbZBWXLo (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Feb 2009 17:58:02 -0500
+	Mon, 23 Feb 2009 18:11:44 -0500
 Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n1NMvUan022481
-	for <linux-scsi@vger.kernel.org>; Mon, 23 Feb 2009 14:57:31 -0800
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n1NNBDk0023559
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Feb 2009 15:11:14 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12759
+http://bugzilla.kernel.org/show_bug.cgi?id=12762
 
-           Summary: scsi: aic7xxx hang since v2.6.28-rc1 ...
-           Product: SCSI Drivers
+           Summary: Disk errors loop forever in 2.6.29
+           Product: IO/Storage
            Version: 2.5
-     KernelVersion: 2.6.28-rc1
+     KernelVersion: 2.6.29-rc
           Platform: All
         OS/Version: Linux
               Tree: Mainline
             Status: NEW
           Severity: normal
           Priority: P1
-         Component: Other
-        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
+         Component: SCSI
+        AssignedTo: linux-scsi@vger.kernel.org
         ReportedBy: rjw@sisk.pl
-                CC: stern@rowland.harvard.edu, mingo@elte.hu
-OtherBugsDependingO 11808
+OtherBugsDependingO 12398
              nThis:
         Regression: 1
 
 
-Subject    : scsi: aic7xxx hang since v2.6.28-rc1 ...
-Submitter  : Ingo Molnar <mingo@elte.hu>
-Date       : 2009-02-15 11:44
-References : http://marc.info/?l=linux-kernel&m=123469852817058&w=4
-Handled-By : Alan Stern <stern@rowland.harvard.edu>
+Subject    : [SCSI][REGRESSION][BISECTED] Disk errors loop forever in 2.6.29
+Submitter  : Sitsofe Wheeler <sitsofe@yahoo.com>
+Date       : 2009-02-19 13:53
+References : http://marc.info/?l=linux-kernel&m=123505185407604&w=4
+Handled-By : James Bottomley <James.Bottomley@hansenpartnership.com>
+Patch      : http://marc.info/?l=linux-kernel&m=123508030726900&w=4
 
-This entry is being used for tracking a regression from 2.6.27.  Please don't
+This entry is being used for tracking a regression from 2.6.28.  Please don't
 close it until the problem is fixed in the mainline.
 
 
