@@ -1,84 +1,181 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: [PATCH] MTP FUSION: resending patch to disable MSI interrupt	by
- defualt.
-Date: Mon, 23 Feb 2009 10:13:21 +0530
-Message-ID: <0D1E8821739E724A86F4D16902CE275C140E15ED69@inbmail01.lsi.com>
-References: <20090222104911.GA6142@lsi.com>
- <1235314098.4531.7.camel@localhost.localdomain>
+From: Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH] pci: enable MSI on 8132
+Date: Sun, 22 Feb 2009 22:18:34 -0800
+Message-ID: <49A23FBA.2020004@kernel.org>
+References: <alpine.DEB.1.10.0902171419000.26625@asgard.lang.hm> <200902221308.55053.prakash@punnoor.de> <m1iqn2ein5.fsf@fess.ebiederm.org> <200902221617.21621.prakash@punnoor.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og101.obsmtp.com ([64.18.2.155]:55018 "EHLO
-	exprod7og101.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751577AbZBWEne convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Feb 2009 23:43:34 -0500
-In-Reply-To: <1235314098.4531.7.camel@localhost.localdomain>
-Content-Language: en-US
+Received: from hera.kernel.org ([140.211.167.34]:37080 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751188AbZBWGTQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Feb 2009 01:19:16 -0500
+In-Reply-To: <200902221617.21621.prakash@punnoor.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+To: Prakash Punnoor <prakash@punnoor.de>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Robert Hancock <hancockrwd@gmail.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, Andrew Morton <akpm@linux-foundation.org>, david@lang.hm, Matthew Wilcox <matthew@wil.cx>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com, linux-pci@vger.kernel.org
 
-James,
+please try, you may need Eric's patch too.
 
-Sorry for mail id problem. It is Kashyap.desai@lsi.com I used alias instead of SMTP mail id. I will make sure I use SMTP mail id in future.
+[PATCH] pci: don't enable too much HT MSI mapping
 
-Patch  by Yinghai at http://marc.info/?l=linux-scsi&m=123498532419609
-and which I have sent is similar. It is ACK for Yinghai's patch. 
+Impact: fix bug
 
-Thanks
-Kashyap
+Prakesh reported that his c51-mcp51 system ondie sound card doesn't work MSI
+but if he hack out the HT-MSI on mcp51, the MSI will work well with sound card.
 
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
-Sent: Sunday, February 22, 2009 8:18 PM
-To: Desai, Kashyap
-Cc: linux-scsi@vger.kernel.org; Moore, Eric; Prakash, Sathya
-Subject: Re: [PATCH] MTP FUSION: resending patch to disable MSI interrupt by defualt.
+this patch rework the nv_msi_ht_cap_quirk()
+and will only enable ht_msi and try to avoid to enable ht_msi both.
 
-On Sun, 2009-02-22 at 16:19 +0530, Kashyap, Desai wrote:
-> This Patch is submitted to with reference to MSI issue with some of LSI
-> controller. Disabling it by default when module is loaded. 
+Reported-by: Prakesh Punnoor <prakash@punnoor.de>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-Point of order here: this is *not* a resend of a previous patch.  This
-is a bug fix of a previously sent patch (With a change in intended
-behaviour).
+---
+ drivers/pci/quirks.c |  115 ++++++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 100 insertions(+), 15 deletions(-)
 
-> Signed-off-by: Kashyap Desai <kadesai@lsi.com>
-> ---
-> diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-> index 96ac883..ea3aafb 100644
-> --- a/drivers/message/fusion/mptbase.c
-> +++ b/drivers/message/fusion/mptbase.c
-> @@ -91,9 +91,9 @@ MODULE_PARM_DESC(mpt_msi_enable_fc, " Enable MSI Support for FC \
->  		controllers (default=0)");
->  
->  static int mpt_msi_enable_sas;
-> -module_param(mpt_msi_enable_sas, int, 1);
-> +module_param(mpt_msi_enable_sas, int, 0);
+Index: linux-2.6/drivers/pci/quirks.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/quirks.c
++++ linux-2.6/drivers/pci/quirks.c
+@@ -2050,11 +2050,101 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NV
+ 			PCI_DEVICE_ID_NVIDIA_NVENET_15,
+ 			nvenet_msi_disable);
+ 
+-static void __devinit nv_msi_ht_cap_quirk(struct pci_dev *dev)
++static void __devinit nv_ht_enable_msi_mapping(struct pci_dev *dev)
+ {
+ 	struct pci_dev *host_bridge;
++	int pos;
++	int i, dev_no;
++	int found = 0;
++
++	dev_no = dev->devfn >> 3;
++	for (i = dev_no; i >= 0; i--) {
++		host_bridge = pci_get_slot(dev->bus, PCI_DEVFN(i, 0));
++		if (!host_bridge)
++			continue;
++
++		pos = pci_find_ht_capability(host_bridge, HT_CAPTYPE_SLAVE);
++		if (pos != 0) {
++			found = 1;
++			break;
++		}
++		pci_dev_put(host_bridge);
++	}
++
++	if (!found)
++		return;
++
++	/* root did that ! */
++	if (msi_ht_cap_enabled(host_bridge))
++		goto out;
++
++	ht_enable_msi_mapping(dev);
++
++out:
++	pci_dev_put(host_bridge);
++}
++
++static void __devinit ht_disable_msi_mapping(struct pci_dev *dev)
++{
+ 	int pos, ttl = 48;
+ 
++	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
++	while (pos && ttl--) {
++		u8 flags;
++
++		if (pci_read_config_byte(dev, pos + HT_MSI_FLAGS,
++					 &flags) == 0) {
++			dev_info(&dev->dev, "Enabling HT MSI Mapping\n");
++
++			pci_write_config_byte(dev, pos + HT_MSI_FLAGS,
++					      flags & ~HT_MSI_FLAGS_ENABLE);
++		}
++		pos = pci_find_next_ht_capability(dev, pos,
++						  HT_CAPTYPE_MSI_MAPPING);
++	}
++}
++
++static int __devinit ht_check_msi_mapping(struct pci_dev *dev)
++{
++	int pos, ttl = 48;
++	int found = 0;
++
++	/* check if there is HT MSI cap or enabled on this device */
++	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
++	while (pos && ttl--) {
++		u8 flags;
++
++		if (found < 1)
++			found = 1;
++		if (pci_read_config_byte(dev, pos + HT_MSI_FLAGS,
++					 &flags) == 0) {
++			if (flags & HT_MSI_FLAGS_ENABLE) {
++				if (found < 2) {
++					found = 2;
++					break;
++				}
++			}
++		}
++		pos = pci_find_next_ht_capability(dev, pos,
++						  HT_CAPTYPE_MSI_MAPPING);
++	}
++
++	return found;
++}
++
++static void __devinit nv_msi_ht_cap_quirk(struct pci_dev *dev)
++{
++	struct pci_dev *host_bridge;
++	int pos;
++	int found;
++
++	/* check if there is HT MSI cap or enabled on this device */
++	found = ht_check_msi_mapping(dev);
++
++	/* no HT MSI CAP */
++	if (found == 0)
++		return;
++
+ 	/*
+ 	 * HT MSI mapping should be disabled on devices that are below
+ 	 * a non-Hypertransport host bridge. Locate the host bridge...
+@@ -2069,24 +2159,19 @@ static void __devinit nv_msi_ht_cap_quir
+ 	pos = pci_find_ht_capability(host_bridge, HT_CAPTYPE_SLAVE);
+ 	if (pos != 0) {
+ 		/* Host bridge is to HT */
+-		ht_enable_msi_mapping(dev);
++		if (found == 1) {
++			/* it is not enabled, try to enable it */
++			nv_ht_enable_msi_mapping(dev);
++		}
+ 		return;
+ 	}
+ 
+-	/* Host bridge is not to HT, disable HT MSI mapping on this device */
+-	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
+-	while (pos && ttl--) {
+-		u8 flags;
++	/* HT MSI is not enabled */
++	if (found == 1)
++		return;
+ 
+-		if (pci_read_config_byte(dev, pos + HT_MSI_FLAGS,
+-					 &flags) == 0) {
+-			dev_info(&dev->dev, "Disabling HT MSI mapping");
+-			pci_write_config_byte(dev, pos + HT_MSI_FLAGS,
+-					      flags & ~HT_MSI_FLAGS_ENABLE);
+-		}
+-		pos = pci_find_next_ht_capability(dev, pos,
+-						  HT_CAPTYPE_MSI_MAPPING);
+-	}
++	/* Host bridge is not to HT, disable HT MSI mapping on this device */
++	ht_disable_msi_mapping(dev);
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID, nv_msi_ht_cap_quirk);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AL, PCI_ANY_ID, nv_msi_ht_cap_quirk);
 
-This is the actual bug fix, which isn't mentioned anywhere in the change
-log
 
->  MODULE_PARM_DESC(mpt_msi_enable_sas, " Enable MSI Support for SAS \
-> -		controllers (default=1)");
-> +		controllers (default=0)");
-
-This entire patch is also functionally identical to the second patch in
-this email from Yinghai Lu:
-
-http://marc.info/?l=linux-scsi&m=123498532419609
-
-Open Source is a co-operative effort: The only thing you get at the end
-of the day is kudos for finding (and possibly fixing) a bug, so since
-Yinghai Lu did all the heavy lifting in this regard, I'll take this as
-an ack of his patch.
-
-James
-
-
-
-Internal Virus Database is out of date.
-Checked by AVG - http://www.avg.com 
-Version: 8.0.233 / Virus Database: 270.6.6/1631 - Release Date: 8/24/2008 12:15 PM
