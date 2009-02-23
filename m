@@ -1,38 +1,42 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: RE: [PATCH 1/1] : Spinning up disk is observed on standby paths
-	until timeout, resulting in longer path restoration time.
-Date: Mon, 23 Feb 2009 08:52:28 -0600
-Message-ID: <1235400748.3361.9.camel@localhost.localdomain>
-References: <DB8E544DD4B3D346A36F2698103530AE292A9BDC54@GVW1105EXC.americas.hpqcorp.net>
-	 <1235144182.3349.5.camel@localhost.localdomain>
-	 <20090220155221.GU16841@parisc-linux.org>
-	 <1235145795.9025.4.camel@localhost.localdomain>
-	 <20090220161334.GV16841@parisc-linux.org>
-	 <1235147048.9025.9.camel@localhost.localdomain>
-	 <20090220170431.GW16841@parisc-linux.org>
-	 <DB8E544DD4B3D346A36F2698103530AE292ABB05C1@GVW1105EXC.americas.hpqcorp.net>
+From: Prakash Punnoor <prakash@punnoor.de>
+Subject: Re: [PATCH] pci: enable MSI on 8132
+Date: Mon, 23 Feb 2009 19:21:22 +0100
+Message-ID: <200902231921.22759.prakash@punnoor.de>
+References: <alpine.DEB.1.10.0902171419000.26625@asgard.lang.hm> <200902221617.21621.prakash@punnoor.de> <49A23FBA.2020004@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:35898 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752958AbZBWOwb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Feb 2009 09:52:31 -0500
-In-Reply-To: <DB8E544DD4B3D346A36F2698103530AE292ABB05C1@GVW1105EXC.americas.hpqcorp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <49A23FBA.2020004@kernel.org>
+Content-Disposition: inline
+Sender: linux-pci-owner@vger.kernel.org
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Robert Hancock <hancockrwd@gmail.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, Andrew Morton <akpm@linux-foundation.org>, david@lang.hm, Matthew Wilcox <matthew@wil.cx>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Rengarajan, Narayanan (STSD)" <narayanan.rengarajan@hp.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, 2009-02-23 at 11:48 +0000, Rengarajan, Narayanan (STSD) wrote:
-> If this patch is valid , when can we expect this on mainstream
-> kernel . I can help testing this patch when included in the kernel.
+On Montag 23 Februar 2009 07:18:34 Yinghai Lu wrote:
+> please try, you may need Eric's patch too.
+>
+> [PATCH] pci: don't enable too much HT MSI mapping
+>
+> Impact: fix bug
+>
+> Prakesh reported that his c51-mcp51 system ondie sound card doesn't work
+> MSI but if he hack out the HT-MSI on mcp51, the MSI will work well with
+> sound card.
+>
+> this patch rework the nv_msi_ht_cap_quirk()
+> and will only enable ht_msi and try to avoid to enable ht_msi both.
+>
+> Reported-by: Prakesh Punnoor <prakash@punnoor.de>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-If you could test it and report that it works, probably fairly
-immediately.
+Hi, I can confirm that the patch works nicely with 2.6.29-rc6. (BTW, my name 
+is written with two 'a's...)
 
-James
+Cheers,
 
+Prakash
 
+[snipped patch]
