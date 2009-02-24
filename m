@@ -1,7 +1,7 @@
 From: "Gerald Nowitzky" <Nowitzky@igne.de>
-Subject: Re: QLA2xxx on Dell M600
-Date: Tue, 24 Feb 2009 11:37:13 +0100
-Message-ID: <167a01c9966b$daf18c20$0a00a8c0@ALDI2>
+Subject: QLA2xxx on Dell M600
+Date: Tue, 24 Feb 2009 12:00:10 +0100
+Message-ID: <169201c9966f$0fea9d60$0a00a8c0@ALDI2>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	format=flowed;
@@ -9,113 +9,13 @@ Content-Type: text/plain;
 	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail3.igne.de ([82.135.108.119]:45722 "EHLO mail3.igne.de"
+Received: from mail3.igne.de ([82.135.108.119]:50141 "EHLO mail3.igne.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752241AbZBXKhJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Feb 2009 05:37:09 -0500
+	id S1751412AbZBXLAB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Feb 2009 06:00:01 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-driver@qlogic.com, linux-scsi@vger.kernel.org
-
-Here is the excerpt for the ql's from my lspci -vvv
-
-09:00.0 Fibre Channel: QLogic Corp. ISP2432-based 4Gb Fibre Channel to PCI 
-Express HBA (rev 03)
-        Subsystem: QLogic Corp. Device 015b
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ 
-Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 18
-        Region 0: I/O ports at d800 [size=256]
-        Region 1: Memory at de3f8000 (64-bit, non-prefetchable) [size=16K]
-        Expansion ROM at de300000 [disabled] [size=256K]
-        Capabilities: [44] Power Management version 2
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA 
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [4c] Express (v1) Endpoint, MSI 00
-                DevCap: MaxPayload 1024 bytes, PhantFunc 0, Latency L0s 
-<4us, L1 <1us
-                        ExtTag- AttnBtn+ AttnInd+ PwrInd+ RBE- FLReset-
-                DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ 
-Unsupported+
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-                        MaxPayload 256 bytes, MaxReadReq 2048 bytes
-                DevSta: CorrErr- UncorrErr+ FatalErr- UnsuppReq+ AuxPwr- 
-TransPend-
-                LnkCap: Port #0, Speed 2.5GT/s, Width x4, ASPM L0s, Latency 
-L0 <4us, L1 unlimited
-                        ClockPM- Suprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- 
-CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk+ 
-DLActive- BWMgmt- ABWMgmt-
-        Capabilities: [64] Message Signalled Interrupts: Mask- 64bit+ 
-Queue=0/4 Enable-
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [74] Vital Product Data <?>
-        Capabilities: [7c] MSI-X: Enable- Mask- TabSize=16
-                Vector table: BAR=1 offset=00002000
-                PBA: BAR=1 offset=00003000
-        Capabilities: [100] Advanced Error Reporting <?>
-        Capabilities: [138] Power Budgeting <?>
-        Kernel driver in use: qla2xxx
-        Kernel modules: qla2xxx
-
-09:00.1 Fibre Channel: QLogic Corp. ISP2432-based 4Gb Fibre Channel to PCI 
-Express HBA (rev 03)
-        Subsystem: QLogic Corp. Device 015b
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
-Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 64 bytes
-        Interrupt: pin B routed to IRQ 6
-        Region 0: I/O ports at dc00 [size=256]
-        Region 1: Memory at de3fc000 (64-bit, non-prefetchable) [size=16K]
-        Expansion ROM at de500000 [disabled] [size=256K]
-        Capabilities: [44] Power Management version 2
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA 
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [4c] Express (v1) Endpoint, MSI 00
-                DevCap: MaxPayload 1024 bytes, PhantFunc 0, Latency L0s 
-<4us, L1 <1us
-                        ExtTag- AttnBtn+ AttnInd+ PwrInd+ RBE- FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal+ 
-Unsupported-
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-                        MaxPayload 256 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr+ FatalErr- UnsuppReq+ AuxPwr- 
-TransPend-
-                LnkCap: Port #0, Speed 2.5GT/s, Width x4, ASPM L0s, Latency 
-L0 <4us, L1 unlimited
-                        ClockPM- Suprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- 
-CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk+ 
-DLActive- BWMgmt- ABWMgmt-
-        Capabilities: [64] Message Signalled Interrupts: Mask- 64bit+ 
-Queue=0/4 Enable-
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [74] Vital Product Data <?>
-        Capabilities: [7c] MSI-X: Enable- Mask- TabSize=16
-                Vector table: BAR=1 offset=00002000
-                PBA: BAR=1 offset=00003000
-        Capabilities: [100] Advanced Error Reporting <?>
-        Capabilities: [138] Power Budgeting <?>
-        Kernel modules: qla2xxx
-
-
------ Original Message ----- 
-From: Gerald Nowitzky
-To: linux-driver@qlogic.com ; linux-scsi@vger.kernel.org
-Sent: Tuesday, February 24, 2009 11:30 AM
-Subject: QLA2xxx on Dell M600
 
 
 Hello!
