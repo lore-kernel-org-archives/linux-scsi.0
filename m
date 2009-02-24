@@ -1,96 +1,69 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/5] mvsas : redesign the mvsas driver architecture.
-Date: Tue, 24 Feb 2009 17:15:18 +0000
-Message-ID: <1235495718.3204.37.camel@localhost.localdomain>
-References: <49A3C100.8040005@marvell.com>
+From: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+Subject: [PATCH 1/1 (resend) ] ipr: Expose debug and fastfail parameters
+Date: Tue, 24 Feb 2009 11:36:00 -0800
+Message-ID: <49A44C20.1000702@linux.vnet.ibm.com>
+References: <20090130162631.970634030@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:59533 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756867AbZBXRPX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Feb 2009 12:15:23 -0500
-In-Reply-To: <49A3C100.8040005@marvell.com>
+Received: from e9.ny.us.ibm.com ([32.97.182.139]:59068 "EHLO e9.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759111AbZBXTgE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Feb 2009 14:36:04 -0500
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e9.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n1OJS62s019778
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Feb 2009 14:28:06 -0500
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n1OJa1VB183700
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Feb 2009 14:36:01 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n1OJa1X7019994
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Feb 2009 14:36:01 -0500
+In-Reply-To: <20090130162631.970634030@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kewei@marvell.com
-Cc: linux-scsi@vger.kernel.org, jeff@garzik.org, qzhao@marvell.com, qswang@marvell.com, jfeng@marvell.com, Jason Chu <jasonchu@marvell.com>
+To: linux-scsi@vger.kernel.org, Brian King <bjking1@us.ibm.com>
 
-On Tue, 2009-02-24 at 17:42 +0800, Ke Wei wrote:
-> We redesign the mvsas driver architecture. Then the driver can support
-> Marvell's
-> 64 bit PCIE-X SAS/SATA 3Gb/s mv64xx chip and 6Gb/s mv94xx chip based
-> host
-> adapters. I created a directory for the driver in scsi folder and
-> delete the
-> original simple driver.
-> 
-> modify Kconfig entry for the mvsas driver, and change the driver path.
-> 
-> Signed-off-by: Ke Wei <kewei@marvell.com>
-> ---
->  drivers/scsi/Kconfig  |   10 +-
->  drivers/scsi/Makefile |    2 +-
->  drivers/scsi/mvsas.c  | 3222
-> -------------------------------------------------
->  3 files changed, 2 insertions(+), 3232 deletions(-)
-> 
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> index 256c7be..b64882b 100644
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -1029,15 +1029,7 @@ config SCSI_IZIP_SLOW_CTR
-> 
->           Generally, saying N is fine.
-> 
-> -config SCSI_MVSAS
-> -       tristate "Marvell 88SE6440 SAS/SATA support"
-> -       depends on PCI && SCSI
-> -       select SCSI_SAS_LIBSAS
-> -       help
-> -         This driver supports Marvell SAS/SATA PCI devices.
-> -
-> -         To compiler this driver as a module, choose M here: the
-> module
-> -         will be called mvsas.
-> +source "drivers/scsi/mvsas/Kconfig"
-> 
->  config SCSI_NCR53C406A
->         tristate "NCR53c406a SCSI support"
-> diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-> index 7461eb0..f5bbd99 100644
-> --- a/drivers/scsi/Makefile
-> +++ b/drivers/scsi/Makefile
-> @@ -123,7 +123,7 @@ obj-$(CONFIG_SCSI_IBMVSCSIS)        += ibmvscsi/
->  obj-$(CONFIG_SCSI_IBMVFC)      += ibmvscsi/
->  obj-$(CONFIG_SCSI_HPTIOP)      += hptiop.o
->  obj-$(CONFIG_SCSI_STEX)                += stex.o
-> -obj-$(CONFIG_SCSI_MVSAS)       += mvsas.o
-> +obj-$(CONFIG_SCSI_MVSAS)       += mvsas/
->  obj-$(CONFIG_PS3_ROM)          += ps3rom.o
->  obj-$(CONFIG_SCSI_CXGB3_ISCSI) += libiscsi.o libiscsi_tcp.o cxgb3i/
+Resending this patch that was originally sent on 1/30.
 
-Um, this isn't at all the way to split things up because it isn't
-bisectable.  This patch removes the driver entirely But adds a
-non-existent build directory, so we're left with one bisection point
-where the driver is gone.  Your second patch adds back a Kconfig and
-Makefile to the directory only, so we're left with a second point where
-the build would break because you've added a Makefile but no actual
-source files.
+Brian, the driver version number was bumped with the MSI changes.  So,
+there's no need to bump it here.
 
-What I'd like to see in future is one patch transforming the driver to
-the new layout (preferably with no functional changes) and then a series
-on top of that adding the new functionality.
+Wayne
 
-I can apply this by combining all five patches into a single one,
-restoring bisectability, but if that's the only option and you can't do
-a transformation followed by additions, could we at least see a list of
-all the new stuff you've added?
+---
 
-Thanks,
+Expose the debug and fastfail parameters to /sys/module/ipr/parameters such
+that they can be enabled/disabled at run time.
 
-James
+Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+---
+ drivers/scsi/ipr.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+Index: linux-2.6/drivers/scsi/ipr.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/ipr.c	2009-01-30 08:14:51.000000000 -0800
++++ linux-2.6/drivers/scsi/ipr.c	2009-01-30 08:14:41.000000000 -0800
+@@ -152,13 +152,13 @@
+ MODULE_PARM_DESC(log_level, "Set to 0 - 4 for increasing verbosity of device driver");
+ module_param_named(testmode, ipr_testmode, int, 0);
+ MODULE_PARM_DESC(testmode, "DANGEROUS!!! Allows unsupported configurations");
+-module_param_named(fastfail, ipr_fastfail, int, 0);
++module_param_named(fastfail, ipr_fastfail, int, S_IRUGO | S_IWUSR);
+ MODULE_PARM_DESC(fastfail, "Reduce timeouts and retries");
+ module_param_named(transop_timeout, ipr_transop_timeout, int, 0);
+ MODULE_PARM_DESC(transop_timeout, "Time in seconds to wait for adapter to come operational (default: 300)");
+ module_param_named(enable_cache, ipr_enable_cache, int, 0);
+ MODULE_PARM_DESC(enable_cache, "Enable adapter's non-volatile write cache (default: 1)");
+-module_param_named(debug, ipr_debug, int, 0);
++module_param_named(debug, ipr_debug, int, S_IRUGO | S_IWUSR);
+ MODULE_PARM_DESC(debug, "Enable device driver debugging logging. Set to 1 to enable. (default: 0)");
+ module_param_named(dual_ioa_raid, ipr_dual_ioa_raid, int, 0);
+ MODULE_PARM_DESC(dual_ioa_raid, "Enable dual adapter RAID support. Set to 1 to enable. (default: 1)");
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
