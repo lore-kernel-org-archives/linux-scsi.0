@@ -1,65 +1,77 @@
-From: Wei Yongjun <yjwei@cn.fujitsu.com>
-Subject: [PATCH] cxgb3i: remove some pointless conditionals before kfree_skb()
-Date: Wed, 25 Feb 2009 18:25:03 +0800
-Message-ID: <49A51C7F.3050903@cn.fujitsu.com>
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: Re: Bad module reference counter
+Date: Wed, 25 Feb 2009 12:00:42 +0100
+Message-ID: <200902251200.42517.stf_xl@wp.pl>
+References: <200902111032.59225.stf_xl@wp.pl> <200902201145.02308.stf_xl@wp.pl> <200902232336.35371.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=GB2312
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:49573 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1754041AbZBYKZg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Feb 2009 05:25:36 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <200902232336.35371.bzolnier@gmail.com>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Wei Yongjun <yjwei@cn.fujitsu.com>
-Cc: linux-scsi@vger.kernel.org
 
-Remove some pointless conditionals before kfree_skb().
+Monday 23 February 2009 23:36:35 Bartlomiej Zolnierkiewicz napisa=C5=82=
+(a):
+> > Looks that using ->dev insted of ->kref will do the work. But perha=
+ps less
+> > intrusive fix, like check kref in ide_disk_put() would be better so=
+lution.
+> > I tested below patch and everythings is fine.
+> >=20
+> > diff --git a/drivers/ide/ide-gd.c b/drivers/ide/ide-gd.c
+> > index 7857b20..598f21b 100644
+> > --- a/drivers/ide/ide-gd.c
+> > +++ b/drivers/ide/ide-gd.c
+> > @@ -48,8 +48,8 @@ static void ide_disk_put(struct ide_disk_obj *idk=
+p)
+> >  	ide_drive_t *drive =3D idkp->drive;
+> > =20
+> >  	mutex_lock(&ide_disk_ref_mutex);
+> > -	kref_put(&idkp->kref, ide_disk_release);
+> > -	ide_device_put(drive);
+> > +	if (!kref_put(&idkp->kref, ide_disk_release))
+> > +		ide_device_put(drive);
+>=20
+> I worry that this just masks the problem as according to your previou=
+s
+> mail drive still can be already gone before ->flush in ide_gd_remove(=
+).
 
-Signed-off-by: Wei Yongjun <yjwei@cn.fujitsu.com>
----
- drivers/scsi/cxgb3i/cxgb3i_offload.c |    9 +++------
- drivers/scsi/cxgb3i/cxgb3i_pdu.c     |    3 +--
- 2 files changed, 4 insertions(+), 8 deletions(-)
+I checked my patch against all mentioned problems, but it doesn't matte=
+r now.
+=20
+> >  	mutex_unlock(&ide_disk_ref_mutex);
+> >  }
+> > =20
+> > If this patch is ok and dropping kref to dev is not planed currentl=
+y, maybe
+> > I'll send "official" patch with ide-gd fix and for other devices ty=
+pes.
+>=20
+> Lets fix it fully.  The below patch together with previous ide_device=
+_put()
+> fix and drive_release_dev() one (from another mail) should make all p=
+roblems
+> go away...
+>=20
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] ide: fix refcounting in device drivers
+>=20
+> During host driver module removal del_gendisk() results in a final
+> put on drive->gendev and freeing the drive by drive_release_dev().
+>=20
+> Convert device drivers from using struct kref to use struct device
+> so device driver's object holds reference on ->gendev and prevents
+> drive from prematurely going away.
+>=20
+> Also fix ->remove methods to not erroneously drop reference on a
+> host driver by using only put_device() instead of ide*_put().
+>=20
+> Reported-by: Stanislaw Gruszka <stf_xl@wp.pl>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-diff --git a/drivers/scsi/cxgb3i/cxgb3i_offload.c b/drivers/scsi/cxgb3i/cxgb3i_offload.c
-index a865f1f..8b3754a 100644
---- a/drivers/scsi/cxgb3i/cxgb3i_offload.c
-+++ b/drivers/scsi/cxgb3i/cxgb3i_offload.c
-@@ -1208,12 +1208,9 @@ static int do_wr_ack(struct t3cdev *cdev, struct sk_buff *skb, void *ctx)
-  */
- static void c3cn_free_cpl_skbs(struct s3_conn *c3cn)
- {
--	if (c3cn->cpl_close)
--		kfree_skb(c3cn->cpl_close);
--	if (c3cn->cpl_abort_req)
--		kfree_skb(c3cn->cpl_abort_req);
--	if (c3cn->cpl_abort_rpl)
--		kfree_skb(c3cn->cpl_abort_rpl);
-+	kfree_skb(c3cn->cpl_close);
-+	kfree_skb(c3cn->cpl_abort_req);
-+	kfree_skb(c3cn->cpl_abort_rpl);
- }
- 
- static int c3cn_alloc_cpl_skbs(struct s3_conn *c3cn)
-diff --git a/drivers/scsi/cxgb3i/cxgb3i_pdu.c b/drivers/scsi/cxgb3i/cxgb3i_pdu.c
-index ce7ce8c..a0d4f43 100644
---- a/drivers/scsi/cxgb3i/cxgb3i_pdu.c
-+++ b/drivers/scsi/cxgb3i/cxgb3i_pdu.c
-@@ -149,8 +149,7 @@ void cxgb3i_conn_cleanup_task(struct iscsi_task *task)
- 	struct iscsi_tcp_task *tcp_task = task->dd_data;
- 
- 	/* never reached the xmit task callout */
--	if (tcp_task->dd_data)
--		kfree_skb(tcp_task->dd_data);
-+	kfree_skb(tcp_task->dd_data);
- 	tcp_task->dd_data = NULL;
- 
- 	/* MNC - Do we need a check in case this is called but
--- 
-1.5.3.8
-
-
-
-
+Tested-by: Stanislaw Gruszka <stf_xl@wp.pl>
