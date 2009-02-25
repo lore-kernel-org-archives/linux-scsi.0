@@ -1,43 +1,42 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] sd: Try READ CAPACITY 16 first for all SCSI-3 devices
-Date: Wed, 25 Feb 2009 14:43:29 -0800
-Message-ID: <1235601810.19035.5.camel@localhost.localdomain>
-References: <20081223164703.GB19967@parisc-linux.org>
-	 <yq1sko4y7e4.fsf@sermon.lab.mkp.net>
-	 <20081231135014.GE2002@parisc-linux.org>
-	 <20081231135142.GF2002@parisc-linux.org>
-	 <20090223215137.GA13649@parisc-linux.org>
-	 <1235600621.19035.3.camel@localhost.localdomain>
-	 <20090225223110.GY16891@parisc-linux.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: 2.6.29-rc6: Reported regressions from 2.6.28
+Date: Thu, 26 Feb 2009 00:12:17 +0100
+Message-ID: <200902260012.19083.rjw@sisk.pl>
+References: <GVhknozYwrL.A.hiC.rozoJB@chimera> <20090224071550.GA10436@elte.hu>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:38119 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755475AbZBYWnf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Feb 2009 17:43:35 -0500
-In-Reply-To: <20090225223110.GY16891@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20090224071550.GA10436@elte.hu>
+Content-Disposition: inline
+Sender: netdev-owner@vger.kernel.org
+To: Ingo Molnar <mingo@elte.hu>
+Cc: "Adam J. Richter" <adam@yggdrasil.com>, "H. Peter Anvin" <hpa@zytor.com>, Thomas Gleixner <tglx@linutronix.de>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2009-02-25 at 15:31 -0700, Matthew Wilcox wrote:
-> On Wed, Feb 25, 2009 at 02:23:41PM -0800, James Bottomley wrote:
-> > On Mon, 2009-02-23 at 14:51 -0700, Matthew Wilcox wrote:
-> > > Any reason this patch hasn't been merged into scsi-misc yet?
-> > 
-> > There was a problem with it I drew your attention to here:
-> > 
-> > http://marc.info/?l=linux-scsi&m=123308499405071
+On Tuesday 24 February 2009, Ingo Molnar wrote:
 > 
-> This was the updated version, sent on Dec 31, not the version you
-> commented on on Dec 23.
+> (note, the standalone mail of this bug entry did not make it out 
+> for some reason.)
 
-Oh, sorry, missed the update.
+Hm, strange.  I certainly received it from one of the lists.
 
-James
+> * Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12760
+> > Subject		: 2.6.29-rc5 hanging at boot when CONFIG_LOCK_STAT=y
+> > Submitter	: Adam J. Richter <adam@yggdrasil.com>
+> > Date		: 2009-02-16 6:50 (8 days old)
+> > References	: http://marc.info/?l=linux-kernel&m=123476768023893&w=4
+> > Handled-By	: Ingo Molnar <mingo@elte.hu>
+> 
+> Here we came to the conclusion that this is some LILO bug with a 
+> too large BSS section - that's one thing that CONFIG_LOCK_STAT 
+> causes. Under Grub the same kernel image boots fine. So unless 
+> Adam has new data that contradicts this i think we can close 
+> this bug.
 
+Thanks, closed.
 
+Rafael
