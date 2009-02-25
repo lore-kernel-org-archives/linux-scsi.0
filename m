@@ -1,77 +1,60 @@
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: Re: Bad module reference counter
-Date: Wed, 25 Feb 2009 12:00:42 +0100
-Message-ID: <200902251200.42517.stf_xl@wp.pl>
-References: <200902111032.59225.stf_xl@wp.pl> <200902201145.02308.stf_xl@wp.pl> <200902232336.35371.bzolnier@gmail.com>
+From: Roel Kluin <roel.kluin@gmail.com>
+Subject: [PATCH] scsi/pcmcia/nsp_cs: time_out reaches -1
+Date: Wed, 25 Feb 2009 14:34:06 +0100
+Message-ID: <49A548CE.1040803@gmail.com>
+References: <499948C3.2000500@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <200902232336.35371.bzolnier@gmail.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from qw-out-2122.google.com ([74.125.92.25]:10548 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752321AbZBYNeJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Feb 2009 08:34:09 -0500
+Received: by qw-out-2122.google.com with SMTP id 5so35188qwi.37
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2009 05:34:06 -0800 (PST)
+In-Reply-To: <499948C3.2000500@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: yokota@netlab.is.tsukuba.ac.jp, James.Bottomley@HansenPartnership.com
+Cc: linux-pcmcia@lists.infradead.org, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-Monday 23 February 2009 23:36:35 Bartlomiej Zolnierkiewicz napisa=C5=82=
-(a):
-> > Looks that using ->dev insted of ->kref will do the work. But perha=
-ps less
-> > intrusive fix, like check kref in ide_disk_put() would be better so=
-lution.
-> > I tested below patch and everythings is fine.
-> >=20
-> > diff --git a/drivers/ide/ide-gd.c b/drivers/ide/ide-gd.c
-> > index 7857b20..598f21b 100644
-> > --- a/drivers/ide/ide-gd.c
-> > +++ b/drivers/ide/ide-gd.c
-> > @@ -48,8 +48,8 @@ static void ide_disk_put(struct ide_disk_obj *idk=
-p)
-> >  	ide_drive_t *drive =3D idkp->drive;
-> > =20
-> >  	mutex_lock(&ide_disk_ref_mutex);
-> > -	kref_put(&idkp->kref, ide_disk_release);
-> > -	ide_device_put(drive);
-> > +	if (!kref_put(&idkp->kref, ide_disk_release))
-> > +		ide_device_put(drive);
->=20
-> I worry that this just masks the problem as according to your previou=
-s
-> mail drive still can be already gone before ->flush in ide_gd_remove(=
-).
+I sent the first in a previous patch, but didn't notice the other issues
+below initially. (should I make a delta patch? and how do you do that?)
+--------------------------->8-------------8<------------------------------
+With a postfix decrement timeouts will reach -1 rather than 0, so the
+errors do not appear.
 
-I checked my patch against all mentioned problems, but it doesn't matte=
-r now.
-=20
-> >  	mutex_unlock(&ide_disk_ref_mutex);
-> >  }
-> > =20
-> > If this patch is ok and dropping kref to dev is not planed currentl=
-y, maybe
-> > I'll send "official" patch with ide-gd fix and for other devices ty=
-pes.
->=20
-> Lets fix it fully.  The below patch together with previous ide_device=
-_put()
-> fix and drive_release_dev() one (from another mail) should make all p=
-roblems
-> go away...
->=20
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] ide: fix refcounting in device drivers
->=20
-> During host driver module removal del_gendisk() results in a final
-> put on drive->gendev and freeing the drive by drive_release_dev().
->=20
-> Convert device drivers from using struct kref to use struct device
-> so device driver's object holds reference on ->gendev and prevents
-> drive from prematurely going away.
->=20
-> Also fix ->remove methods to not erroneously drop reference on a
-> host driver by using only put_device() instead of ide*_put().
->=20
-> Reported-by: Stanislaw Gruszka <stf_xl@wp.pl>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-Tested-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
+index 11a61ea..70b60ad 100644
+--- a/drivers/scsi/pcmcia/nsp_cs.c
++++ b/drivers/scsi/pcmcia/nsp_cs.c
+@@ -530,7 +530,7 @@ static int nsp_negate_signal(struct scsi_cmnd *SCpnt, unsigned char mask,
+ 		if (reg == 0xff) {
+ 			break;
+ 		}
+-	} while ((time_out-- != 0) && (reg & mask) != 0);
++	} while ((--time_out != 0) && (reg & mask) != 0);
+ 
+ 	if (time_out == 0) {
+ 		nsp_msg(KERN_DEBUG, " %s signal off timeut", str);
+@@ -801,7 +801,7 @@ static void nsp_pio_read(struct scsi_cmnd *SCpnt)
+ 
+ 	data->FifoCount = ocount;
+ 
+-	if (time_out == 0) {
++	if (time_out < 0) {
+ 		nsp_msg(KERN_DEBUG, "pio read timeout resid=%d this_residual=%d buffers_residual=%d",
+ 			scsi_get_resid(SCpnt), SCpnt->SCp.this_residual,
+ 			SCpnt->SCp.buffers_residual);
+@@ -897,7 +897,7 @@ static void nsp_pio_write(struct scsi_cmnd *SCpnt)
+ 
+ 	data->FifoCount = ocount;
+ 
+-	if (time_out == 0) {
++	if (time_out < 0) {
+ 		nsp_msg(KERN_DEBUG, "pio write timeout resid=0x%x",
+ 		                                        scsi_get_resid(SCpnt));
+ 	}
