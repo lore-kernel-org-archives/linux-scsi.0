@@ -1,42 +1,44 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: 2.6.29-rc6: Reported regressions from 2.6.28
-Date: Thu, 26 Feb 2009 00:12:17 +0100
-Message-ID: <200902260012.19083.rjw@sisk.pl>
-References: <GVhknozYwrL.A.hiC.rozoJB@chimera> <20090224071550.GA10436@elte.hu>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 00/17] Open-FCoE Updates
+Date: Wed, 25 Feb 2009 20:49:33 -0600
+Message-ID: <49A6033D.8040600@cs.wisc.edu>
+References: <20090206185548.26188.51580.stgit@fritz>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20090224071550.GA10436@elte.hu>
-Content-Disposition: inline
-Sender: netdev-owner@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: "Adam J. Richter" <adam@yggdrasil.com>, "H. Peter Anvin" <hpa@zytor.com>, Thomas Gleixner <tglx@linutronix.de>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:50927 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751994AbZBZCto (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Feb 2009 21:49:44 -0500
+In-Reply-To: <20090206185548.26188.51580.stgit@fritz>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Robert Love <robert.w.love@intel.com>
+Cc: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org
 
-On Tuesday 24 February 2009, Ingo Molnar wrote:
+Robert Love wrote:
+> The following series implements bug fixes, adds a module param for runtime debug logging and cleans up some coding style issues. The top patch is a patch that was posted to linux-scsi on 01/04, but doesn't seem to have made it in yet.
 > 
-> (note, the standalone mail of this bug entry did not make it out 
-> for some reason.)
-
-Hm, strange.  I certainly received it from one of the lists.
-
-> * Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> This patch set is based on Linus' tree + the Open-FCoE patches submitted to linux-scsi on 01/21.
 > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12760
-> > Subject		: 2.6.29-rc5 hanging at boot when CONFIG_LOCK_STAT=y
-> > Submitter	: Adam J. Richter <adam@yggdrasil.com>
-> > Date		: 2009-02-16 6:50 (8 days old)
-> > References	: http://marc.info/?l=linux-kernel&m=123476768023893&w=4
-> > Handled-By	: Ingo Molnar <mingo@elte.hu>
+
+Were these patches and that other patchset for 2.6.29-rc? This one had 
+some non bug fixes. I was not sure if you can do that in a rc. I was not 
+sure if because it is a new driver you get a exception since there can 
+be no regressions.
+
+The first bunch of patches from 1/21 look ok.
+
+The patches below looked ok too. I was not sure about the underrun 
+handling in this one though:
+
+> Vasu Dev (1):
+>       libfc: fixed a read IO data integrity issue when a IO data frame lost
 > 
-> Here we came to the conclusion that this is some LILO bug with a 
-> too large BSS section - that's one thing that CONFIG_LOCK_STAT 
-> causes. Under Grub the same kernel image boots fine. So unless 
-> Adam has new data that contradicts this i think we can close 
-> this bug.
 
-Thanks, closed.
+I always mess underrun handling up.
 
-Rafael
+Other patches looked ok.
+
+Reviewed-by: Mike Christie <micaelc@cs.wisc.edu>
