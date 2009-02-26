@@ -1,52 +1,52 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 00/17] Open-FCoE Updates
-Date: Thu, 26 Feb 2009 19:05:05 +0000
-Message-ID: <1235675105.19035.65.camel@localhost.localdomain>
-References: <20090206185548.26188.51580.stgit@fritz>
-	 <49A6033D.8040600@cs.wisc.edu>  <1235672974.4219.8.camel@fritz>
+From: Zach Brown <zach.brown@oracle.com>
+Subject: [CFP, 2 days left] 2009 Linux Storage and Filesystem Workshop
+Date: Thu, 26 Feb 2009 11:44:14 -0800
+Message-ID: <49A6F10E.6010100@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:42003 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752112AbZBZTFM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Feb 2009 14:05:12 -0500
-In-Reply-To: <1235672974.4219.8.camel@fritz>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nfs@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Robert Love <robert.w.love@intel.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, 2009-02-26 at 10:29 -0800, Robert Love wrote:
-> On Wed, 2009-02-25 at 18:49 -0800, Mike Christie wrote:
-> > Robert Love wrote:
-> > > The following series implements bug fixes, adds a module param for runtime debug logging and cleans up some coding style issues. The top patch is a patch that was posted to linux-scsi on 01/04, but doesn't seem to have made it in yet.
-> > > 
-> > > This patch set is based on Linus' tree + the Open-FCoE patches submitted to linux-scsi on 01/21.
-> > > 
-> > 
-> > Were these patches and that other patchset for 2.6.29-rc? This one had 
-> > some non bug fixes. I was not sure if you can do that in a rc. I was not 
-> > sure if because it is a new driver you get a exception since there can 
-> > be no regressions.
-> > 
-> They were intended for the RC phase, should I have been more explicit?
-> I'm not sure what the policy is exactly, I've heard that the RC phase is
-> only for regressions, but I'm not sure how that applies to new drivers.
-> We have nothing to regress from and I'd prefer getting these fixes in so
-> that FCoE in 2.6.29 is as stable as can be.
+This is a reminder that this weekend marks the deadline for accepting
+proposals for the upcoming Linux storage and filesystem workshop.  If
+you want to come contribute to Linux storage then we want to hear from you!
 
-OK, so how it works is firstly you have to tell me it's for rc fixes ...
-I can sometimes get this from the subject (if it contains words like bug
-fix).   Secondly, I need enhancements and fixes separated so they can be
-separately applied to the different trees (if you have an entanglement,
-I can rebase the misc tree to pick up the needed rc-fixes dependencies).
+The initial call for proposals follows.
 
-So if you separate the patches (or just tell me what's a bug fix ... and
-they apply individually) I can put them in the rc-fixes tree.
+----
 
-James
+Hello storage and filesystem friends,
 
+This year's storage and filesystem workshop is being held in San
+Francisco on April 6th and 7th.  It's being held on the Monday and
+Tuesday immediately preceding the Linux Foundation Collaboration
+Summit, in the same hotel.
 
+You can find all the details on the workshop's web site:
+
+  http://events.linuxfoundation.org/events/lsf-workshop
+
+The workshop focuses on collaboration and discussion.  There will be no
+refereed papers and few presentations with slides will be accepted.
+
+To attend we ask that you use the CFP interface on the web site to
+submit a short proposal for a topic to discuss during the workshop.  The
+program committee will send invitations to the workshop based on these
+proposals.  The CFP and FAQ tabs on the web site describe this in more
+detail.
+
+For reference, there are writeups of previous workshops available
+online:
+
+http://lwn.net/Articles/226351/
+http://www.usenix.org/publications/login/2008-06/openpdfs/lsf08reports.pdf
+
+This year we'll be adding time to the schedule specifically for hands-on
+development with your colleagues.
+
+Please let me know if there are any questions about the workshop.
+
+- z
