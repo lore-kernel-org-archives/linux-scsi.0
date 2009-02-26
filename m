@@ -1,48 +1,144 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: RFC: Transport identifier
-Date: Thu, 26 Feb 2009 10:53:48 +0100
-Message-ID: <49A666AC.9030202@interlog.com>
-References: <yq1iqmxg6o4.fsf@sermon.lab.mkp.net>
-Reply-To: dgilbert@interlog.com
+From: "Rengarajan, Narayanan (STSD)" <narayanan.rengarajan@hp.com>
+Subject: RE: PATCH 1/1] : Spinning up disk is observed on standby paths
+ until timeout, resulting in longer path restoration time.
+Date: Thu, 26 Feb 2009 13:43:30 +0000
+Message-ID: <DB8E544DD4B3D346A36F2698103530AE292AC24FA0@GVW1105EXC.americas.hpqcorp.net>
+References: <DB8E544DD4B3D346A36F2698103530AE292A9BDC7D@GVW1105EXC.americas.hpqcorp.net>
+ <20090220135347.GS16841@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:39373 "EHLO
-	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751744AbZBZJxz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Feb 2009 04:53:55 -0500
-In-Reply-To: <yq1iqmxg6o4.fsf@sermon.lab.mkp.net>
+Received: from g5t0009.atlanta.hp.com ([15.192.0.46]:46386 "EHLO
+	g5t0009.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751708AbZBZNoK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Feb 2009 08:44:10 -0500
+In-Reply-To: <20090220135347.GS16841@parisc-linux.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+
+ I ve verified the patch by Matthew Wilcox under 2.6.29-rc6
+
+ without patch:
+ 
+  #tail -f /var/log/messages
+  
+Feb 26 17:23:44 xyz kernel: sd 13:0:2:1: [sdca] Spinning up disk.......................................................................................................not responding...
+Feb 26 17:23:44 xyz kernel: sd 13:0:2:1: [sdca] 10485760 512-byte hardware sectors: (5.36 GB/5.00 GiB)
+Feb 26 17:23:44 xyz kernel: sd 13:0:2:1: [sdca] Write Protect is off
+Feb 26 17:23:44 xyz kernel: sd 13:0:2:1: [sdca] Mode Sense: af 00 00 08
+Feb 26 17:23:44 xyz kernel: sd 13:0:2:1: [sdca] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+Feb 26 17:25:24 xyz kernel: sd 13:0:2:1: [sdca] Spinning up disk.......................................................................................................not responding...
+
+ With patch:
+
+# tail -f /var/log/messages
+
+Feb 26 18:13:47 xyz kernel: sd 12:0:0:2: [sdcc] 6291456 512-byte hardware sectors: (3.22 GB/3.00 GiB)
+Feb 26 18:13:47 xyz kernel: sd 12:0:0:2: [sdcc] Write Protect is off
+Feb 26 18:13:47 xyz kernel: sd 12:0:0:2: [sdcc] Mode Sense: af 00 00 08
+Feb 26 18:13:47 xyz kernel: sd 12:0:0:2: [sdcc] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+Feb 26 18:13:47 xyz kernel: sd 12:0:0:2: [sdcc] 6291456 512-byte hardware sectors: (3.22 GB/3.00 GiB)
+
+
+ Test Signed-off-by : narayanan.rengarajan@hp.com
+
+-----Original Message-----
+From: Matthew Wilcox [mailto:matthew@wil.cx] 
+Sent: Friday, February 20, 2009 7:24 PM
+To: Rengarajan, Narayanan (STSD)
 Cc: linux-scsi@vger.kernel.org
+Subject: Re: PATCH 1/1] : Spinning up disk is observed on standby paths until timeout, resulting in longer path restoration time.
 
-Martin K. Petersen wrote:
-> There are a few cases where it would be useful to know which transport
-> is associated with a scsi_device.  For instance when determining whether
-> to send a READ CAPACITY(16) to a device or not:
+On Fri, Feb 20, 2009 at 12:03:58PM +0000, Rengarajan, Narayanan (STSD) wrote:
+>   Spinning up disk is observed on standby paths until timeout, resulting in longer path restoration time in 2.6.27 kernel.
 > 
->     static int sd_try_rc16_first(struct scsi_device *sdp)
->     {
-> 	if (scsi_device_transport(sdp) == SCSI_TRANSPORT_USB)
-> 	   return 0; /* Run screaming for the hills */
->     [...]
+>  Steps to reproduce:
+>  1. present a standby lun to the host
+>  2. do a discovery from the host (scan the scsi bus)  3. Spinning of 
+> disks is  observed in  /var/log/messages
 > 
-> This patch implements support for a transport identifier in the
-> scsi_host.  The id defaults to SPI and it is explicitly overridden in
-> the host templates for FC, SAS, USB, etc. drivers.
+> Whenever a device goes offline and comes back, the new sd device takes longer time to get created. This is because of the spinning up of disk in sd_spinup_disk fuction as the standby paths would return device not ready with 0x04/0x0b asc/ascq.
+
+I think your analysis is correct.
+
+It's probably better for you to not use Outlook to send email here; it's failed at line wrapping and it's mangled your patch quite badly.  See Documentation/email-clients.txt for more details.
+
+> Recommended patch :
 > 
-> It also looks like the availability of this transport id could improve
-> the sysfs parsing in lsscsi.
+>   diff -pNaur /usr/src/linux/drivers/scsi/sd.c sd.c
+> --- /usr/src/linux/drivers/scsi/sd.c    2009-02-09 22:24:56.000000000 +0530
+> +++ sd.c        2009-02-19 16:39:16.000000000 +0530
+> @@ -1181,8 +1181,8 @@ sd_spinup_disk(struct scsi_disk *sdkp)
+>                  */
+>                 if (sense_valid &&
+>                     sshdr.sense_key == NOT_READY &&
+> -                   sshdr.asc == 4 && sshdr.ascq == 3) {
+> -                       break;          /* manual intervention required */
+> +                   sshdr.asc == 4 && (sshdr.ascq == 3 || sshdr.ascq 
+> + == 0x0b ||
+> sshdr.ascq == 0x0c) ) {
+> +                       break;  /* manual intervention required || 
+> + Standby ||
+> Unavailable */
+> 
+>  signed off : narayanan.rengarajan@hp.com
 
-lsscsi could do with some help detecting the transport.
-It uses an untidy set of heuristics now that can easily
-be tripped up by sysfs changes.
+I don't like the patch though.  Apart from being badly mangled, it makes the if condition rather unbalanced and hard to read.  I think the patch would be better.
 
-It may be helpful to differentiate between a "near end"
-transport (i.e. between the initiator and the target) and
-the transport (and possibly different command set) that
-the logical unit (LU) reports.
+Even this patch, I wonder about.  I've looked at the ASC/ASCQ tables for 'NOT_READY', and really only ASC 4, ASCQ 2 seems to require the START_STOP command to be sent.  Should we invert the sense of these tests so we only send START_STOP in cases where it's known to do some good?
 
-Doug Gilbert
+---
+
+Don't try to spin up drives that are connected to an inactive port
+
+We currently try to spin up drives connected to standby and unavailable ports.  This will never succeed and wastes a lot of time.  Fail quickly if the sense data reports the port is in standby or unavailable state.
+
+Reported-by: Narayanan Rengarajan <narayanan.rengarajan@hp.com>
+Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c index d57566b..289cd46 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1166,23 +1166,19 @@ sd_spinup_disk(struct scsi_disk *sdkp)
+ 		/*
+ 		 * The device does not want the automatic start to be issued.
+ 		 */
+-		if (sdkp->device->no_start_on_add) {
++		if (sdkp->device->no_start_on_add)
+ 			break;
+-		}
+-
+-		/*
+-		 * If manual intervention is required, or this is an
+-		 * absent USB storage device, a spinup is meaningless.
+-		 */
+-		if (sense_valid &&
+-		    sshdr.sense_key == NOT_READY &&
+-		    sshdr.asc == 4 && sshdr.ascq == 3) {
+-			break;		/* manual intervention required */
+ 
+-		/*
+-		 * Issue command to spin up drive when not ready
+-		 */
+-		} else if (sense_valid && sshdr.sense_key == NOT_READY) {
++		if (sense_valid && sshdr.sense_key == NOT_READY) {
++			if (sshdr.asc == 4 && sshdr.ascq == 3)
++				break;	/* manual intervention required */
++			if (sshdr.asc == 4 && sshdr.ascq == 0xb)
++				break;	/* standby */
++			if (sshdr.asc == 4 && sshdr.ascq == 0xc)
++				break;	/* unavailable */
++			/*
++			 * Issue command to spin up drive when not ready
++			 */
+ 			if (!spintime) {
+ 				sd_printk(KERN_NOTICE, sdkp, "Spinning up disk...");
+ 				cmd[0] = START_STOP;
+
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this operating system, but compare it to ours.  We can't possibly take such a retrograde step."
