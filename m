@@ -1,291 +1,60 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 06/24] libfc: rport retry on LS_RJT from certain ELS
-Date: Fri, 27 Feb 2009 10:55:02 -0800
-Message-ID: <20090227185502.25509.67814.stgit@fritz>
+Subject: [PATCH 07/24] libfc: fixed a read IO data integrity issue when a IO
+	data frame lost
+Date: Fri, 27 Feb 2009 10:55:07 -0800
+Message-ID: <20090227185507.25509.87242.stgit@fritz>
 References: <20090227185430.25509.34309.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32865 "EHLO mga02.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:35029 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756474AbZB0SzE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Feb 2009 13:55:04 -0500
+	id S1754888AbZB0SzJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Feb 2009 13:55:09 -0500
 In-Reply-To: <20090227185430.25509.34309.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org
 
-From: Chris Leech <christopher.leech@intel.com>
+From: Vasu Dev <vasu.dev@intel.com>
 
-This allows any rport ELS to retry on LS_RJT.
+The fc_fcp_complete_locked detected data underrun in this case and set
+the FC_DATA_UNDRUN but that was ignored by fc_io_compl for all cases
+including read underrun.
 
-The rport error handling would only retry on resource allocation failures
-and exchange timeouts.  I have a target that will occasionally reject PLOGI
-when we do a quick LOGO/PLOGI.  When a critical ELS was rejected, libfc would
-fail silently leaving the rport in a dead state.
+Added code to not to ignore FC_DATA_UNDRUN for read IO and instead
+suggested scsi-ml to retry cmd to  recover from lost data frame.
 
-The retry count and delay are managed by fc_rport_error_retry.  If the retry
-count is exceeded fc_rport_error will be called.  When retrying is not the
-correct course of action, fc_rport_error can be called directly.
+Not sure if it is okay to ignore FC_DATA_UNDRUN for other case, so let
+code as is for other cases but removed or-ing with zero valued fsp->cdb_status
+for those cases.
 
-Signed-off-by: Chris Leech <christopher.leech@intel.com>
+Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_exch.c  |    2 -
- drivers/scsi/libfc/fc_rport.c |  111 ++++++++++++++++++++++++-----------------
- include/scsi/fc/fc_fs.h       |    5 ++
- 3 files changed, 69 insertions(+), 49 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index dd269e5..8c40189 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -32,8 +32,6 @@
- #include <scsi/libfc.h>
- #include <scsi/fc_encode.h>
- 
--#define	  FC_DEF_R_A_TOV      (10 * 1000) /* resource allocation timeout */
--
- /*
-  * fc_exch_debug can be set in debugger or at compile time to get more logs.
-  */
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 7175759..600a8ff 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -81,6 +81,7 @@ static void fc_rport_recv_logo_req(struct fc_rport *,
- 				   struct fc_seq *, struct fc_frame *);
- static void fc_rport_timeout(struct work_struct *);
- static void fc_rport_error(struct fc_rport *, struct fc_frame *);
-+static void fc_rport_error_retry(struct fc_rport *, struct fc_frame *);
- static void fc_rport_work(struct work_struct *);
- 
- static const char *fc_rport_state_names[] = {
-@@ -410,58 +411,74 @@ static void fc_rport_timeout(struct work_struct *work)
- }
- 
- /**
-- * fc_rport_error - Handler for any errors
-+ * fc_rport_error - Error handler, called once retries have been exhausted
-  * @rport: The fc_rport object
-  * @fp: The frame pointer
-  *
-- * If the error was caused by a resource allocation failure
-- * then wait for half a second and retry, otherwise retry
-- * immediately.
-- *
-  * Locking Note: The rport lock is expected to be held before
-  * calling this routine
-  */
- static void fc_rport_error(struct fc_rport *rport, struct fc_frame *fp)
- {
- 	struct fc_rport_libfc_priv *rdata = rport->dd_data;
--	unsigned long delay = 0;
- 
- 	FC_DEBUG_RPORT("Error %ld in state %s, retries %d\n",
- 		       PTR_ERR(fp), fc_rport_state(rport), rdata->retries);
- 
--	if (!fp || PTR_ERR(fp) == -FC_EX_TIMEOUT) {
--		/*
--		 * Memory allocation failure, or the exchange timed out.
--		 *  Retry after delay
--		 */
--		if (rdata->retries < rdata->local_port->max_retry_count) {
--			rdata->retries++;
--			if (!fp)
--				delay = msecs_to_jiffies(500);
--			get_device(&rport->dev);
--			schedule_delayed_work(&rdata->retry_work, delay);
--		} else {
--			switch (rdata->rp_state) {
--			case RPORT_ST_PLOGI:
--			case RPORT_ST_PRLI:
--			case RPORT_ST_LOGO:
--				rdata->event = RPORT_EV_FAILED;
--				queue_work(rport_event_queue,
--					   &rdata->event_work);
--				break;
--			case RPORT_ST_RTV:
--				fc_rport_enter_ready(rport);
--				break;
--			case RPORT_ST_NONE:
--			case RPORT_ST_READY:
--			case RPORT_ST_INIT:
--				break;
--			}
--		}
-+	switch (rdata->rp_state) {
-+	case RPORT_ST_PLOGI:
-+	case RPORT_ST_PRLI:
-+	case RPORT_ST_LOGO:
-+		rdata->event = RPORT_EV_FAILED;
-+		queue_work(rport_event_queue,
-+			   &rdata->event_work);
-+		break;
-+	case RPORT_ST_RTV:
-+		fc_rport_enter_ready(rport);
-+		break;
-+	case RPORT_ST_NONE:
-+	case RPORT_ST_READY:
-+	case RPORT_ST_INIT:
-+		break;
- 	}
- }
- 
- /**
-+ * fc_rport_error_retry - Error handler when retries are desired
-+ * @rport: The fc_rport object
-+ * @fp: The frame pointer
-+ *
-+ * If the error was an exchange timeout retry immediately,
-+ * otherwise wait for E_D_TOV.
-+ *
-+ * Locking Note: The rport lock is expected to be held before
-+ * calling this routine
-+ */
-+static void fc_rport_error_retry(struct fc_rport *rport, struct fc_frame *fp)
-+{
-+	struct fc_rport_libfc_priv *rdata = rport->dd_data;
-+	unsigned long delay = FC_DEF_E_D_TOV;
-+
-+	/* make sure this isn't an FC_EX_CLOSED error, never retry those */
-+	if (PTR_ERR(fp) == -FC_EX_CLOSED)
-+		return fc_rport_error(rport, fp);
-+
-+	if (rdata->retries < rdata->local_port->max_retry_count) {
-+		FC_DEBUG_RPORT("Error %ld in state %s, retrying\n",
-+			       PTR_ERR(fp), fc_rport_state(rport));
-+		rdata->retries++;
-+		/* no additional delay on exchange timeouts */
-+		if (PTR_ERR(fp) == -FC_EX_TIMEOUT)
-+			delay = 0;
-+		get_device(&rport->dev);
-+		schedule_delayed_work(&rdata->retry_work, delay);
-+		return;
-+	}
-+
-+	return fc_rport_error(rport, fp);
-+}
-+
-+/**
-  * fc_rport_plogi_recv_resp - Handle incoming ELS PLOGI response
-  * @sp: current sequence in the PLOGI exchange
-  * @fp: response frame
-@@ -495,7 +512,7 @@ static void fc_rport_plogi_resp(struct fc_seq *sp, struct fc_frame *fp,
- 	}
- 
- 	if (IS_ERR(fp)) {
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 		goto err;
- 	}
- 
-@@ -527,7 +544,7 @@ static void fc_rport_plogi_resp(struct fc_seq *sp, struct fc_frame *fp,
- 		else
- 			fc_rport_enter_prli(rport);
- 	} else
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 
- out:
- 	fc_frame_free(fp);
-@@ -557,14 +574,14 @@ static void fc_rport_enter_plogi(struct fc_rport *rport)
- 	rport->maxframe_size = FC_MIN_MAX_PAYLOAD;
- 	fp = fc_frame_alloc(lport, sizeof(struct fc_els_flogi));
- 	if (!fp) {
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 		return;
- 	}
- 	rdata->e_d_tov = lport->e_d_tov;
- 
- 	if (!lport->tt.elsct_send(lport, rport, fp, ELS_PLOGI,
- 				  fc_rport_plogi_resp, rport, lport->e_d_tov))
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 	else
- 		get_device(&rport->dev);
- }
-@@ -604,7 +621,7 @@ static void fc_rport_prli_resp(struct fc_seq *sp, struct fc_frame *fp,
- 	}
- 
- 	if (IS_ERR(fp)) {
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 		goto err;
- 	}
- 
-@@ -662,7 +679,7 @@ static void fc_rport_logo_resp(struct fc_seq *sp, struct fc_frame *fp,
- 		       rport->port_id);
- 
- 	if (IS_ERR(fp)) {
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 		goto err;
- 	}
- 
-@@ -712,13 +729,13 @@ static void fc_rport_enter_prli(struct fc_rport *rport)
- 
- 	fp = fc_frame_alloc(lport, sizeof(*pp));
- 	if (!fp) {
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 		return;
- 	}
- 
- 	if (!lport->tt.elsct_send(lport, rport, fp, ELS_PRLI,
- 				  fc_rport_prli_resp, rport, lport->e_d_tov))
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 	else
- 		get_device(&rport->dev);
- }
-@@ -809,13 +826,13 @@ static void fc_rport_enter_rtv(struct fc_rport *rport)
- 
- 	fp = fc_frame_alloc(lport, sizeof(struct fc_els_rtv));
- 	if (!fp) {
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 		return;
- 	}
- 
- 	if (!lport->tt.elsct_send(lport, rport, fp, ELS_RTV,
- 				     fc_rport_rtv_resp, rport, lport->e_d_tov))
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 	else
- 		get_device(&rport->dev);
- }
-@@ -840,13 +857,13 @@ static void fc_rport_enter_logo(struct fc_rport *rport)
- 
- 	fp = fc_frame_alloc(lport, sizeof(struct fc_els_logo));
- 	if (!fp) {
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 		return;
- 	}
- 
- 	if (!lport->tt.elsct_send(lport, rport, fp, ELS_LOGO,
- 				  fc_rport_logo_resp, rport, lport->e_d_tov))
--		fc_rport_error(rport, fp);
-+		fc_rport_error_retry(rport, fp);
- 	else
- 		get_device(&rport->dev);
- }
-diff --git a/include/scsi/fc/fc_fs.h b/include/scsi/fc/fc_fs.h
-index 3e4801d..1b7af3a 100644
---- a/include/scsi/fc/fc_fs.h
-+++ b/include/scsi/fc/fc_fs.h
-@@ -337,4 +337,9 @@ enum fc_pf_rjt_reason {
- 	FC_RJT_VENDOR =		0xff,	/* vendor specific reject */
- };
- 
-+/* default timeout values */
-+
-+#define FC_DEF_E_D_TOV	2000UL
-+#define FC_DEF_R_A_TOV	10000UL
-+
- #endif /* _FC_FS_H_ */
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index f440aac..ecc7261 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -1810,12 +1810,12 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
+ 		sc_cmd->result = DID_ERROR << 16;
+ 		break;
+ 	case FC_DATA_UNDRUN:
+-		if (fsp->cdb_status == 0) {
++		if ((fsp->cdb_status == 0) && !(fsp->req_flags & FC_SRB_READ)) {
+ 			/*
+ 			 * scsi status is good but transport level
+-			 * underrun. for read it should be an error??
++			 * underrun.
+ 			 */
+-			sc_cmd->result = (DID_OK << 16) | fsp->cdb_status;
++			sc_cmd->result = DID_OK << 16;
+ 		} else {
+ 			/*
+ 			 * scsi got underrun, this is an error
 
