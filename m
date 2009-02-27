@@ -1,133 +1,234 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 16/24] libfc,
-	fcoe: Remove unnecessary cast by removing inline wrapper
-Date: Fri, 27 Feb 2009 10:55:55 -0800
-Message-ID: <20090227185555.25509.84962.stgit@fritz>
+Subject: [PATCH 12/24] libfc: check for err when recv and state is incorrect
+Date: Fri, 27 Feb 2009 10:55:34 -0800
+Message-ID: <20090227185534.25509.75622.stgit@fritz>
 References: <20090227185430.25509.34309.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:55205 "EHLO mga02.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:65398 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756687AbZB0Sz5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Feb 2009 13:55:57 -0500
+	id S1756586AbZB0Szx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Feb 2009 13:55:53 -0500
 In-Reply-To: <20090227185430.25509.34309.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org
 
-Comment from "Andrew Morton <akpm@linux-foundation.org>"
+If we've just created an interface and the an rport is
+logging in we may have a request on the wire (say PRLI).
+If we destroy the interface, we'll go through each rport
+on the disc->rports list and set each rport's state to NONE.
+Then the lport will reset the EM. The EM reset will send a
+CLOSED event to the prli_resp() handler which will notice
+that the state != PRLI. In this case it frees the frame
+pointer, decrements the refcount and unlocks the rport.
 
-> +{
-> +     return (struct fcoe_softc *)lport_priv(lp);
+The problem is that there isn't a frame in this case. It's
+just a pointer with an embedded error code. The free causes
+an Oops.
 
-unneeded/undesirable cast of void*.  There are probably zillions of
-instances of this - there always are.
-
-This whole inline function was unnecessary. The FCoE layer knows
-that it's data structure is stored in the lport private data, it
-can just access it from lport_priv().
+This patch moves the error checking to be before the state
+checking.
 
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/fcoe_sw.c |    2 +-
- drivers/scsi/fcoe/libfcoe.c |   12 ++++++------
- include/scsi/libfcoe.h      |    8 +-------
- 3 files changed, 8 insertions(+), 14 deletions(-)
+ drivers/scsi/libfc/fc_lport.c |   50 +++++++++++++++++++++--------------------
+ drivers/scsi/libfc/fc_rport.c |   30 ++++++++++++-------------
+ 2 files changed, 40 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe_sw.c b/drivers/scsi/fcoe/fcoe_sw.c
-index 007d1fb..f667dce 100644
---- a/drivers/scsi/fcoe/fcoe_sw.c
-+++ b/drivers/scsi/fcoe/fcoe_sw.c
-@@ -297,7 +297,7 @@ static int fcoe_sw_destroy(struct net_device *netdev)
- 	if (!lp)
- 		return -ENODEV;
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index 07335ae..c00de22 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -1031,17 +1031,17 @@ static void fc_lport_rft_id_resp(struct fc_seq *sp, struct fc_frame *fp,
  
--	fc = fcoe_softc(lp);
-+	fc = lport_priv(lp);
+ 	FC_DEBUG_LPORT("Received a RFT_ID response\n");
  
- 	/* Logout of the fabric */
- 	fc_fabric_logoff(lp);
-diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
-index d006d65..02f044a 100644
---- a/drivers/scsi/fcoe/libfcoe.c
-+++ b/drivers/scsi/fcoe/libfcoe.c
-@@ -387,7 +387,7 @@ int fcoe_xmit(struct fc_lport *lp, struct fc_frame *fp)
++	if (IS_ERR(fp)) {
++		fc_lport_error(lport, fp);
++		goto err;
++	}
++
+ 	if (lport->state != LPORT_ST_RFT_ID) {
+ 		FC_DBG("Received a RFT_ID response, but in state %s\n",
+ 		       fc_lport_state(lport));
+ 		goto out;
+ 	}
  
- 	WARN_ON((fr_len(fp) % sizeof(u32)) != 0);
- 
--	fc = fcoe_softc(lp);
-+	fc = lport_priv(lp);
- 	/*
- 	 * if it is a flogi then we need to learn gw-addr
- 	 * and my own fcid
-@@ -768,7 +768,7 @@ static int fcoe_check_wait_queue(struct fc_lport *lp)
- 	struct sk_buff *skb;
- 	struct fcoe_softc *fc;
- 
--	fc = fcoe_softc(lp);
-+	fc = lport_priv(lp);
- 	spin_lock_bh(&fc->fcoe_pending_queue.lock);
- 
- 	/*
-@@ -805,7 +805,7 @@ static void fcoe_insert_wait_queue_head(struct fc_lport *lp,
- {
- 	struct fcoe_softc *fc;
- 
--	fc = fcoe_softc(lp);
-+	fc = lport_priv(lp);
- 	spin_lock_bh(&fc->fcoe_pending_queue.lock);
- 	__skb_queue_head(&fc->fcoe_pending_queue, skb);
- 	spin_unlock_bh(&fc->fcoe_pending_queue.lock);
-@@ -823,7 +823,7 @@ static void fcoe_insert_wait_queue(struct fc_lport *lp,
- {
- 	struct fcoe_softc *fc;
- 
--	fc = fcoe_softc(lp);
-+	fc = lport_priv(lp);
- 	spin_lock_bh(&fc->fcoe_pending_queue.lock);
- 	__skb_queue_tail(&fc->fcoe_pending_queue, skb);
- 	spin_unlock_bh(&fc->fcoe_pending_queue.lock);
-@@ -1113,7 +1113,7 @@ MODULE_PARM_DESC(destroy, "Destroy fcoe port");
-  */
- int fcoe_link_ok(struct fc_lport *lp)
- {
--	struct fcoe_softc *fc = fcoe_softc(lp);
-+	struct fcoe_softc *fc = lport_priv(lp);
- 	struct net_device *dev = fc->real_dev;
- 	struct ethtool_cmd ecmd = { ETHTOOL_GSET };
- 	int rc = 0;
-@@ -1329,7 +1329,7 @@ int fcoe_hostlist_add(const struct fc_lport *lp)
- 
- 	fc = fcoe_hostlist_lookup_softc(fcoe_netdev(lp));
- 	if (!fc) {
--		fc = fcoe_softc(lp);
-+		fc = lport_priv(lp);
- 		write_lock_bh(&fcoe_hostlist_lock);
- 		list_add_tail(&fc->list, &fcoe_hostlist);
- 		write_unlock_bh(&fcoe_hostlist_lock);
-diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
-index 89fdbb9..f43d383 100644
---- a/include/scsi/libfcoe.h
-+++ b/include/scsi/libfcoe.h
-@@ -58,16 +58,10 @@ struct fcoe_softc {
- 	u8 address_mode;
- };
- 
--static inline struct fcoe_softc *fcoe_softc(
--	const struct fc_lport *lp)
--{
--	return (struct fcoe_softc *)lport_priv(lp);
--}
+-	if (IS_ERR(fp)) {
+-		fc_lport_error(lport, fp);
+-		goto err;
+-	}
 -
- static inline struct net_device *fcoe_netdev(
- 	const struct fc_lport *lp)
- {
--	return fcoe_softc(lp)->real_dev;
-+	return ((struct fcoe_softc *)lport_priv(lp))->real_dev;
- }
+ 	fh = fc_frame_header_get(fp);
+ 	ct = fc_frame_payload_get(fp, sizeof(*ct));
  
- static inline struct fcoe_hdr *skb_fcoe_header(const struct sk_buff *skb)
+@@ -1083,17 +1083,17 @@ static void fc_lport_rpn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 
+ 	FC_DEBUG_LPORT("Received a RPN_ID response\n");
+ 
++	if (IS_ERR(fp)) {
++		fc_lport_error(lport, fp);
++		goto err;
++	}
++
+ 	if (lport->state != LPORT_ST_RPN_ID) {
+ 		FC_DBG("Received a RPN_ID response, but in state %s\n",
+ 		       fc_lport_state(lport));
+ 		goto out;
+ 	}
+ 
+-	if (IS_ERR(fp)) {
+-		fc_lport_error(lport, fp);
+-		goto err;
+-	}
+-
+ 	fh = fc_frame_header_get(fp);
+ 	ct = fc_frame_payload_get(fp, sizeof(*ct));
+ 	if (fh && ct && fh->fh_type == FC_TYPE_CT &&
+@@ -1133,17 +1133,17 @@ static void fc_lport_scr_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 
+ 	FC_DEBUG_LPORT("Received a SCR response\n");
+ 
++	if (IS_ERR(fp)) {
++		fc_lport_error(lport, fp);
++		goto err;
++	}
++
+ 	if (lport->state != LPORT_ST_SCR) {
+ 		FC_DBG("Received a SCR response, but in state %s\n",
+ 		       fc_lport_state(lport));
+ 		goto out;
+ 	}
+ 
+-	if (IS_ERR(fp)) {
+-		fc_lport_error(lport, fp);
+-		goto err;
+-	}
+-
+ 	op = fc_frame_payload_op(fp);
+ 	if (op == ELS_LS_ACC)
+ 		fc_lport_enter_ready(lport);
+@@ -1359,17 +1359,17 @@ static void fc_lport_logo_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 
+ 	FC_DEBUG_LPORT("Received a LOGO response\n");
+ 
++	if (IS_ERR(fp)) {
++		fc_lport_error(lport, fp);
++		goto err;
++	}
++
+ 	if (lport->state != LPORT_ST_LOGO) {
+ 		FC_DBG("Received a LOGO response, but in state %s\n",
+ 		       fc_lport_state(lport));
+ 		goto out;
+ 	}
+ 
+-	if (IS_ERR(fp)) {
+-		fc_lport_error(lport, fp);
+-		goto err;
+-	}
+-
+ 	op = fc_frame_payload_op(fp);
+ 	if (op == ELS_LS_ACC)
+ 		fc_lport_enter_reset(lport);
+@@ -1443,17 +1443,17 @@ static void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 
+ 	FC_DEBUG_LPORT("Received a FLOGI response\n");
+ 
++	if (IS_ERR(fp)) {
++		fc_lport_error(lport, fp);
++		goto err;
++	}
++
+ 	if (lport->state != LPORT_ST_FLOGI) {
+ 		FC_DBG("Received a FLOGI response, but in state %s\n",
+ 		       fc_lport_state(lport));
+ 		goto out;
+ 	}
+ 
+-	if (IS_ERR(fp)) {
+-		fc_lport_error(lport, fp);
+-		goto err;
+-	}
+-
+ 	fh = fc_frame_header_get(fp);
+ 	did = ntoh24(fh->fh_d_id);
+ 	if (fc_frame_payload_op(fp) == ELS_LS_ACC && did != 0) {
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index 81b3ca1..4f23a9b 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -505,17 +505,17 @@ static void fc_rport_plogi_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 	FC_DEBUG_RPORT("Received a PLOGI response from port (%6x)\n",
+ 		       rport->port_id);
+ 
++	if (IS_ERR(fp)) {
++		fc_rport_error_retry(rport, fp);
++		goto err;
++	}
++
+ 	if (rdata->rp_state != RPORT_ST_PLOGI) {
+ 		FC_DBG("Received a PLOGI response, but in state %s\n",
+ 		       fc_rport_state(rport));
+ 		goto out;
+ 	}
+ 
+-	if (IS_ERR(fp)) {
+-		fc_rport_error_retry(rport, fp);
+-		goto err;
+-	}
+-
+ 	op = fc_frame_payload_op(fp);
+ 	if (op == ELS_LS_ACC &&
+ 	    (plp = fc_frame_payload_get(fp, sizeof(*plp))) != NULL) {
+@@ -614,17 +614,17 @@ static void fc_rport_prli_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 	FC_DEBUG_RPORT("Received a PRLI response from port (%6x)\n",
+ 		       rport->port_id);
+ 
++	if (IS_ERR(fp)) {
++		fc_rport_error_retry(rport, fp);
++		goto err;
++	}
++
+ 	if (rdata->rp_state != RPORT_ST_PRLI) {
+ 		FC_DBG("Received a PRLI response, but in state %s\n",
+ 		       fc_rport_state(rport));
+ 		goto out;
+ 	}
+ 
+-	if (IS_ERR(fp)) {
+-		fc_rport_error_retry(rport, fp);
+-		goto err;
+-	}
+-
+ 	op = fc_frame_payload_op(fp);
+ 	if (op == ELS_LS_ACC) {
+ 		pp = fc_frame_payload_get(fp, sizeof(*pp));
+@@ -764,17 +764,17 @@ static void fc_rport_rtv_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 	FC_DEBUG_RPORT("Received a RTV response from port (%6x)\n",
+ 		       rport->port_id);
+ 
++	if (IS_ERR(fp)) {
++		fc_rport_error(rport, fp);
++		goto err;
++	}
++
+ 	if (rdata->rp_state != RPORT_ST_RTV) {
+ 		FC_DBG("Received a RTV response, but in state %s\n",
+ 		       fc_rport_state(rport));
+ 		goto out;
+ 	}
+ 
+-	if (IS_ERR(fp)) {
+-		fc_rport_error(rport, fp);
+-		goto err;
+-	}
+-
+ 	op = fc_frame_payload_op(fp);
+ 	if (op == ELS_LS_ACC) {
+ 		struct fc_els_rtv_acc *rtv;
 
