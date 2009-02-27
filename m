@@ -1,52 +1,51 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] Use list_splice for blk_abort_queue
-Date: Fri, 27 Feb 2009 13:04:59 +0100
-Message-ID: <49A7D6EB.5050905@suse.de>
-References: <20090227113706.3005518C786@pentland.suse.de> <20090227114057.GC6602@kernel.dk> <49A7D32B.4020100@suse.de> <20090227115627.GD6602@kernel.dk>
+From: Tony Battersby <tonyb@cybernetics.com>
+Subject: sym53c8xx patches for scsi-misc
+Date: Fri, 27 Feb 2009 10:22:06 -0500
+Message-ID: <49A8051E.4050600@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:49978 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753336AbZB0MFC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Feb 2009 07:05:02 -0500
-In-Reply-To: <20090227115627.GD6602@kernel.dk>
+Received: from host64.cybernetics.com ([98.174.209.230]:4035 "EHLO
+	mail.cybernetics.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755596AbZB0PWJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Feb 2009 10:22:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-Jens Axboe wrote:
-> On Fri, Feb 27 2009, Hannes Reinecke wrote:
->> Hi Jens,
->>
->> Jens Axboe wrote:
-[ .. ]
->>> Hannes, this fix has been in mainline for about 10 days.
->>>
->> Ah, sorry. Missed that one.
->> I'm just about to catch up with unread mails, and you said something
->> about 'the original author should resend the patch'.
->> Which I did.
->=20
-> Yep, I did say that. But after a few days I figured you were probably
-> away or something, so I hacked up a changelog myself and put it in
-> there. It was already tested good and it makes sense.
->=20
-Yes, indeed 'something'. Thanks.
+James,
 
-Cheers,
+I posted a number of sym53c8xx patches back in early January that seem
+to have been forgotten.  Would you please add these to scsi-misc?  Let
+me know if you would prefer if I resend them instead of just posting
+links to the archives.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+http://marc.info/?l=linux-scsi&r=9&b=200901&w=4
+[PATCH 0/7] sym53c8xx fixes
+[PATCH 1/7] sym53c8xx: fix shost use-after-free and memory leak
+[PATCH 2/7] sym53c8xx: fix NULL deref on error path
+[PATCH 3/7] sym53c8xx: fix bogus free_irq() on error path
+[PATCH 4/7] sym53c8xx: unmap pci memory after probe errors
+[PATCH 5/7] sym53c8xx: handle pci_iomap() failures
+[PATCH 6/7] sym53c8xx: use a queue depth of 1 for untagged devices
+[PATCH 7/7] sym53c8xx: don't flood syslog with negotiation messages
+
+The following patch was posted a year ago but forgotten.  I have been
+using it for a long time, and it still applies cleanly.
+sym53c8xx ISTAT1 feature never set
+http://marc.info/?t=120076464500006&r=1&w=4
+http://www.mail-archive.com/linux-scsi@vger.kernel.org/msg13352.html
+
+Tested with my approval (be sure to use the updated version):
+[PATCH] sym53c8xx_2: slave_alloc/destroy safety (2.6.27.5)
+http://marc.info/?l=linux-scsi&m=123063187829449&w=4
+
+Tested with my approval:
+[PATCH] sym53c8xx_2: lun to_clear flag not re-initialized (2.6.27.5)
+http://marc.info/?t=122710178300003&r=1&w=4
+
+Thanks,
+Tony Battersby
+
