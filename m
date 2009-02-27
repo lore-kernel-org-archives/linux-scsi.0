@@ -1,42 +1,40 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 24/24] fcoe: Change fcoe receive thread nice value from 19
-	(lowest priority) to -20
-Date: Fri, 27 Feb 2009 10:56:38 -0800
-Message-ID: <20090227185637.25509.59258.stgit@fritz>
-References: <20090227185430.25509.34309.stgit@fritz>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH (resend)]: SCSI: fix /proc memory leak in the SCSI core
+Date: Fri, 27 Feb 2009 16:50:47 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0902271610450.4121-100000@iolanthe.rowland.org>
+References: <49A8021E.1050503@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:13744 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757152AbZB0S4v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Feb 2009 13:56:51 -0500
-In-Reply-To: <20090227185430.25509.34309.stgit@fritz>
+Received: from iolanthe.rowland.org ([192.131.102.54]:49369 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1760810AbZB0Vuw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Feb 2009 16:50:52 -0500
+In-Reply-To: <49A8021E.1050503@cybernetics.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org
+To: Tony Battersby <tonyb@cybernetics.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-This change makes the fcoe Rx threads have the same nice value
-as lpfc and qla2xxx Rx threads.
+On Fri, 27 Feb 2009, Tony Battersby wrote:
 
-Signed-off-by: Robert Love <robert.w.love@intel.com>
----
+> I tested Alan's original patch with sym53c8xx back in January:
+> 
+> http://marc.info/?l=linux-scsi&m=123143710010939&w=4
+> 
+> Tested-by: Tony Battersby <tonyb@cybernetics.com>
 
- drivers/scsi/fcoe/libfcoe.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Thanks for the support.  I must have missed your post when it appeared
+last month.
 
-diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
-index 0e0b494..5548bf3 100644
---- a/drivers/scsi/fcoe/libfcoe.c
-+++ b/drivers/scsi/fcoe/libfcoe.c
-@@ -531,7 +531,7 @@ int fcoe_percpu_receive_thread(void *arg)
- 	struct fcoe_softc *fc;
- 	struct fcoe_hdr *hp;
- 
--	set_user_nice(current, 19);
-+	set_user_nice(current, -20);
- 
- 	while (!kthread_should_stop()) {
- 
+In fact, I don't care which approach gets accepted: James's or my own.  
+His has the advantage of being somewhat shorter and not changing the
+order of events during host creation.
+
+On the other hand, James, your suggested patch is definitely wrong,
+for a trivial reason.  You moved the scsi_proc_hostdir_rm() call into
+scsi_host_put() instead of scsi_host_dev_release(), where it belongs.
+I'll post a corrected version shortly.
+
+Alan Stern
 
