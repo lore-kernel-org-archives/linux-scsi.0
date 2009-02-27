@@ -1,38 +1,44 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [osd-dev] [PATCH 1/8] exofs: Kbuild, Headers and osd utils
-Date: Fri, 27 Feb 2009 17:09:23 +0900
-Message-ID: <20090227170931Z.fujita.tomonori@lab.ntt.co.jp>
-References: <49993FF2.9050200@panasas.com>
-	<20090217092042C.fujita.tomonori@lab.ntt.co.jp>
-	<499A70E7.4000405@panasas.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757810AbZB0IKu@vger.kernel.org>
-In-Reply-To: <499A70E7.4000405@panasas.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, jeff@garzik.org, linux-kernel@vger.kernel.org, avishay@gmail.com, osd-dev@open-osd.org, jens.axboe@oracle.com, linux-fsdevel@vger.kernel.org, akpm@linux-foundation.org
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11646] QLA2xxx: Kernel deadlock on high load somewhere after 2.6.20
+Date: Fri, 27 Feb 2009 01:50:30 -0800 (PST)
+Message-ID: <20090227095030.5DDB8108041@picon.linux-foundation.org>
+References: <bug-11646-11613@http.bugzilla.kernel.org/>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:45334 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754376AbZB0JvE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Feb 2009 04:51:04 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n1R9oUE5016407
+	for <linux-scsi@vger.kernel.org>; Fri, 27 Feb 2009 01:50:31 -0800
+In-Reply-To: <bug-11646-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, 17 Feb 2009 10:10:15 +0200
-Boaz Harrosh <bharrosh@panasas.com> wrote:
-
-> FUJITA Tomonori wrote:
-> > 
-> > Can you stop the argument, "exofs is similar to the existing
-> > traditional file systems hence it should be treated equally". It's
-> > simply untrue. Does anyone except for panasas people insist the same
-> > argument?
-> > 
-> 
-> No I will not, it is true. exofs is just a regular old filesystem
-> nothing different.
-
-After reading this, I gave up discussing this issue with you but I
-still wait for your fixes that you promised:
-
-http://marc.info/?l=linux-scsi&m=123445759718253&w=2
+http://bugzilla.kernel.org/show_bug.cgi?id=11646
 
 
-Thanks,
+
+
+
+------- Comment #19 from grin@grin.hu  2009-02-27 01:50 -------
+Created an attachment (id=20377)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=20377&action=view)
+syslog when starting up multipath
+
+Maybe this contains some info, because the debug values don't say anything to
+me. To prevent things from crashing we actualy keep one path down by switching
+off one (qlogic fibre) switch. This way we only have occasional crashes (but
+since I cannot conjure external console, I'm stuck at that point). 
+
+Someone switched on accidentally the switch, activating the multipath. I'm
+attaching what happens. (It goes on and on further, end position of the log is
+arbitrary.)
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
