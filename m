@@ -1,54 +1,38 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: RFC: Transport identifier
-Date: Sat, 28 Feb 2009 10:54:02 -0500
-Message-ID: <yq11vtieew5.fsf@sermon.lab.mkp.net>
-References: <yq1iqmxg6o4.fsf@sermon.lab.mkp.net>
-	<1235663301.19035.44.camel@localhost.localdomain>
-	<yq1prh5ey7b.fsf@sermon.lab.mkp.net>
-	<49A94FEB.6050400@s5r6.in-berlin.de>
-	<20090228150633.GQ16891@parisc-linux.org>
-	<49A95616.3070502@s5r6.in-berlin.de>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 1/1] : Spinning up disk is observed on standby paths until timeout, resulting in longer path restoration time.
+Date: Sat, 28 Feb 2009 14:26:25 -0700
+Message-ID: <20090228212625.GR16891@parisc-linux.org>
+References: <DB8E544DD4B3D346A36F2698103530AE292A9BDC54@GVW1105EXC.americas.hpqcorp.net> <1235144182.3349.5.camel@localhost.localdomain> <20090220155221.GU16841@parisc-linux.org> <1235145795.9025.4.camel@localhost.localdomain> <20090220161334.GV16841@parisc-linux.org> <1235147048.9025.9.camel@localhost.localdomain> <20090220170431.GW16841@parisc-linux.org> <DB8E544DD4B3D346A36F2698103530AE292ABB05C1@GVW1105EXC.americas.hpqcorp.net> <1235400748.3361.9.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet11.oracle.com ([148.87.113.123]:45480 "EHLO
-	rgminet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751880AbZB1PyU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Feb 2009 10:54:20 -0500
-In-Reply-To: <49A95616.3070502@s5r6.in-berlin.de> (Stefan Richter's message of "Sat\, 28 Feb 2009 16\:19\:50 +0100")
+Received: from palinux.external.hp.com ([192.25.206.14]:55782 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753934AbZB1V0m (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Feb 2009 16:26:42 -0500
+Content-Disposition: inline
+In-Reply-To: <1235400748.3361.9.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Matthew Wilcox <matthew@wil.cx>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "Rengarajan, Narayanan (STSD)" <narayanan.rengarajan@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
->>>>> "Stefan" == Stefan Richter <stefanr@s5r6.in-berlin.de> writes:
+On Mon, Feb 23, 2009 at 08:52:28AM -0600, James Bottomley wrote:
+> On Mon, 2009-02-23 at 11:48 +0000, Rengarajan, Narayanan (STSD) wrote:
+> > If this patch is valid , when can we expect this on mainstream
+> > kernel . I can help testing this patch when included in the kernel.
+> 
+> If you could test it and report that it works, probably fairly
+> immediately.
 
-Stefan> So, while it may be prudent to deduct "it's USB" -> "don't try
-Stefan> READ CAPACITY 16", why not keep implementing this in way #2?
-
-I predict our scanning will involve much more heuristics than it does
-now.  In relatively near future we will have to start using a less
-conservative approach to sending commands because 4KB drives and drives
-with odd alignment require us to use READ CAPACITY(16).
-
-The triggers at the device level which would help (protocol mode pages,
-version descriptors) are generally not filled out.  Not even in brand
-new enterprise drives.
-
-For DIF I had the luxury of being able to trigger off the PROTECT bit in
-INQUIRY.  And even that broke because some USB devices returned random
-garbage causing DIF to be enabled by accident.
-
-The other problem we are facing is that right now the reported version
-kinda-sorta works but that may not continue to be the case.  There are
-several drive vendors that deliberately return a much older version than
-the command set actually supported by the drive.  This is to work around
-problems in legacy proprietary operating systems.
-
-Originally my plan was to key off of the presence of the block limits
-VPD page and submit RC16 if that was present.  But the VPD is mostly
-aimed at RAID vendors and I'm told that drive vendors are not going to
-bother filling it out.
+Narayanan reported that the patch I sent worked, but it wasn't in the push
+to Linus you just sent.  I'm not quite sure whether 'fairly immediately'
+meant 'for 2.6.29' or 'for 2.6.30', so I don't know whether this was an
+oversight or an intentional omission.  In case it was the former, I'm
+alerting you to it ;-)
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
