@@ -1,99 +1,81 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH]scsi_dh_rdac: Retry mode select for NO_SENSE, ABORTED_COMMAND,
- UNIT_ATTENTION, NOT_READY(02/04/01)
-Date: Mon, 02 Mar 2009 16:44:07 +0100
-Message-ID: <49ABFEC7.7080509@suse.de>
-References: <0D1E8821739E724A86F4D16902CE275C140E25C334@inbmail01.lsi.com>
+From: Grant Grundler <grundler@google.com>
+Subject: Re: [PATCH] hpsa: SCSI driver for HP Smart Array controllers
+Date: Mon, 2 Mar 2009 09:19:16 -0800
+Message-ID: <da824cf30903020919q2d3496e6sb5a253b0acba681a@mail.gmail.com>
+References: <20090227230927.GA21377@roadking.ldev.net>
+	 <20090302153246A.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:48052 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752509AbZCBPoL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Mar 2009 10:44:11 -0500
-In-Reply-To: <0D1E8821739E724A86F4D16902CE275C140E25C334@inbmail01.lsi.com>
+Received: from smtp-out.google.com ([216.239.33.17]:49565 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754767AbZCBRTX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Mar 2009 12:19:23 -0500
+In-Reply-To: <20090302153246A.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "sekharan@us.ibm.com" <sekharan@us.ibm.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: mike.miller@hp.com, jens.axboe@oracle.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, coldwell@redhat.com, hare@novell.com, iss_storagedev@hp.com, iss.sbteam@hp.com
 
-Hi Vijay,
+On Sun, Mar 1, 2009 at 10:32 PM, FUJITA Tomonori
+<fujita.tomonori@lab.ntt.co.jp> wrote:
+=2E..
+>> +/*
+>> + * For operations that cannot sleep, a command block is allocated a=
+t init,
+>> + * and managed by cmd_alloc() and cmd_free() using a simple bitmap =
+to track
+>> + * which ones are free or in use. =C2=A0Lock must be held when call=
+ing this.
+>> + * cmd_free() is the complement.
+>> + */
+>> +static struct CommandList_struct *cmd_alloc(struct ctlr_info *h)
+>> +{
+>> + =C2=A0 =C2=A0 struct CommandList_struct *c;
+>> + =C2=A0 =C2=A0 int i;
+>> + =C2=A0 =C2=A0 union u64bit temp64;
+>> + =C2=A0 =C2=A0 dma_addr_t cmd_dma_handle, err_dma_handle;
+>> +
+>> + =C2=A0 =C2=A0 do {
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 i =3D find_first_zero_bi=
+t(h->cmd_pool_bits, h->nr_cmds);
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (i =3D=3D h->nr_cmds)
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 return NULL;
+>> + =C2=A0 =C2=A0 } while (test_and_set_bit
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0(i & (BITS_PER_LON=
+G - 1),
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 h->cmd_pool_bits =
++ (i / BITS_PER_LONG)) !=3D 0);
+>
+> Using bitmap to manage free commands looks too complicated a bit to
+> me. Can we just use lists for command management?
 
-Chauhan, Vijay wrote:
-> This patch is to add retry for mode select if mode select command is =
-returned with sense key NO_SENSE,=20
-> ABORTED_COMMAND, UNIT_ATTENTION or NOT_READY(02/04/01). This patch re=
-organise the sense from=20
-> if-else to switch-case format in scsi_dh_rdac.c for better maintainab=
-ility.
->=20
-> Signed-off-by: Vijay Chauhan <vijay.chauhan@lsi.com>
-> ---
->=20
-> --- linux-2.6.29-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	=
-2009-02-24 12:08:43.000000000 +0530
-> +++ linux-2.6.29-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-=
-02-28 18:18:41.000000000 +0530
-> @@ -449,28 +449,40 @@ static int mode_select_handle_sense(stru
->  				    unsigned char *sensebuf)
->  {
->  	struct scsi_sense_hdr sense_hdr;
-> -	int sense, err =3D SCSI_DH_IO, ret;
-> +	int err =3D SCSI_DH_IO, ret;
-> =20
->  	ret =3D scsi_normalize_sense(sensebuf, SCSI_SENSE_BUFFERSIZE, &sens=
-e_hdr);
->  	if (!ret)
->  		goto done;
-> =20
->  	err =3D SCSI_DH_OK;
-> -	sense =3D (sense_hdr.sense_key << 16) | (sense_hdr.asc << 8) |
-> -			sense_hdr.ascq;
-> -	/* If it is retryable failure, submit the c9 inquiry again */
-> -	if (sense =3D=3D 0x59136 || sense =3D=3D 0x68b02 || sense =3D=3D 0x=
-b8b02 ||
-> -			    sense =3D=3D 0x62900) {
-> -		/* 0x59136    - Command lock contention
-> -		 * 0x[6b]8b02 - Quiesense in progress or achieved
-> -		 * 0x62900    - Power On, Reset, or Bus Device Reset
-> -		 */
-> +
-> +	switch (sense_hdr.sense_key) {
-> +	case NO_SENSE:
-> +	case ABORTED_COMMAND:
-> +	case UNIT_ATTENTION:
-> +		err =3D SCSI_DH_RETRY;
-> +		break;
-> +	case NOT_READY:
-> +		if (sense_hdr.asc =3D=3D 0x04 && sense_hdr.ascq =3D=3D 0x01)
-> +			/* LUN Not Ready and is in the Process
-> +			 * of becoming ready
-> +			 */
-> +		err =3D SCSI_DH_RETRY;
-Missing indentation.
+Bit maps are generally more efficient than lists since we touch less da=
+ta.
+=46or both search and moving elements from free<->busy lists. This prob=
+ably
+won't matter if we are talking less than 10K IOPS. And willy demonstrat=
+ed
+other layers have pretty high overhead (block, libata and SCSI midlayer=
+)
+at high transaction rates.
 
-What about the other 'in progress' ASC/ASQ codes (ie 04/04 - 04/09) ?
-Can they safely be ignored as the array will not issue them?
+If nr_cmds can be greater than 8*BITS_PER_LONG or so, it would
+be more efficient to save the allocation offset and start the next sear=
+ch
+from that location. But I can't tell from the code since nr_cmds is
+coming from the controller:
 
-> +		break;
-> +	case ILLEGAL_REQUEST:
-> +		if (sense_hdr.asc =3D=3D 0x91 && sense_hdr.ascq =3D=3D 0x36)
-> +			/*
-> +			 * Command Lock contention
-> +			 */
->  		err =3D SCSI_DH_RETRY;
-Again, missing indentation.
++       /* Query controller for max supported commands: */
++       c->max_commands =3D readl(&(c->cfgtable->CmdsOutMax));
+=2E..
++       c->nr_cmds =3D c->max_commands - 4;
 
-Cheers,
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+hth,
+grant
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
