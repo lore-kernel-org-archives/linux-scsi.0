@@ -1,30 +1,43 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] hpsa: SCSI driver for HP Smart Array controllers
-Date: Mon, 02 Mar 2009 14:37:19 -0600
-Message-ID: <49AC437F.7020001@cs.wisc.edu>
-References: <20090227230927.GA21377@roadking.ldev.net> <20090302153246A.fujita.tomonori@lab.ntt.co.jp> <da824cf30903020919q2d3496e6sb5a253b0acba681a@mail.gmail.com> <49AC237A.7060005@cs.wisc.edu> <20090302183649.GB11787@kernel.dk> <49AC4293.4030902@cs.wisc.edu>
+From: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] Set manage_start_stop for some USB storage devices by
+	default
+Date: Mon, 2 Mar 2009 13:31:12 -0800
+Message-ID: <20090302213112.GA30677@kroah.com>
+References: <20090302195238.GM3741@vespa.holoscopio.com> <Pine.LNX.4.44L0.0903021452570.12723-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:36808 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751915AbZCBUiP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Mar 2009 15:38:15 -0500
-In-Reply-To: <49AC4293.4030902@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0903021452570.12723-100000-pYrvlCTfrz9XsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: Thadeu Lima de Souza Cascardo <cascardo-DmMZpsCg3uxeGPcbtGPokg@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Grant Grundler <grundler@google.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, mike.miller@hp.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, hare@novell.com, iss_storagedev@hp.com, iss.sbteam@hp.com
 
-Mike Christie wrote:
-> iscsi also needs the unique tag and then it needs the 
-> blk_map_queue_find_tag functionality too. iscsi needs the lookup and tag 
-> for host/transport level commands that do not have a scsi 
-> command/request. The tag value has to be unique accross the 
-> host/transport
+On Mon, Mar 02, 2009 at 02:57:03PM -0500, Alan Stern wrote:
+> On Mon, 2 Mar 2009, Thadeu Lima de Souza Cascardo wrote:
+> > > Also, this patch won't apply to the current development tree, because
+> > > there have been several changes to usb-storage's recently.  In
+> > > particular there is new code allowing quirk flags to be set by a module
+> > > parameter, and your new flag (if it is accepted) should be added to
+> > > this mechanism.
+> > 
+> > Also expected. But I didn't know about the new changes in the quirk
+> > flags code. Which tree should I refer to regarding usb-storage or USB,
+> > besides next and rc trees?
+> 
+> http://www.kernel.org/pub/linux/kernel/people/gregkh/gregkh-2.6/
+> 
+> I tend to use the gregkh-all-*.patch files.  However, I think 
+> everything in there also goes into -next.
 
-I mean that the tag needs to be unique for scsi/block commands and 
-transport commands for each host. So a scsi command and a transport 
-command cannot both have tag X.
+Yes, it all is in the linux-next releases, you can use those if it's
+easier than using my trees.
 
+thanks,
+
+greg k-h
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
