@@ -1,129 +1,100 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 10/18] [PATCH] zfcp: prevent adapter close on initial adapter open
-Date: Mon, 02 Mar 2009 13:09:03 +0100
-Message-ID: <20090302121003.382436000@de.ibm.com>
+Subject: [patch 12/18] [PATCH] zfcp: Remove PCI flag
+Date: Mon, 02 Mar 2009 13:09:05 +0100
+Message-ID: <20090302121003.642226000@de.ibm.com>
 References: <20090302120853.279447000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate7.de.ibm.com ([195.212.29.156]:49655 "EHLO
-	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758713AbZCBMKH (ORCPT
+Received: from mtagate3.de.ibm.com ([195.212.29.152]:34911 "EHLO
+	mtagate3.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758755AbZCBMKH (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Mar 2009 07:10:07 -0500
-Content-Disposition: inline; filename=709-zfcp-adapter-close.diff
+Content-Disposition: inline; filename=q.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Swen Schillig <swen@vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
 
-From: Swen Schillig <swen@vnet.ibm.com>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-An adapter close was always performed whether it was required,
-(e.g. in an error scenario) or not (e.g. initial open).
-This patch is changing the process in only doing an 
-adapter close when it is required.
+The usage of the PCI flag to trigger interrupts is optional. Even
+without setting the flag, qdio still receives interrupts to continue
+working on the queue.  Remove the PCI flag from zfcp, it is not
+necessary.
 
-Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
+Acked-by: Swen Schillig <swen@vnet.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
----
-
- drivers/s390/scsi/zfcp_erp.c |   69 +++++++++++++++++++++----------------------
- 1 file changed, 34 insertions(+), 35 deletions(-)
-
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_erp.c linux-2.6-patched/drivers/s390/scsi/zfcp_erp.c
---- linux-2.6/drivers/s390/scsi/zfcp_erp.c	2009-03-01 16:41:30.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_erp.c	2009-03-01 16:41:33.000000000 +0100
-@@ -705,32 +705,10 @@ static int zfcp_erp_adapter_strategy_ope
- 	return ZFCP_ERP_SUCCEEDED;
+--- a/drivers/s390/scsi/zfcp_qdio.c	2009-03-02 09:47:50.000000000 +0100
++++ b/drivers/s390/scsi/zfcp_qdio.c	2009-03-02 09:47:50.000000000 +0100
+@@ -11,9 +11,6 @@
+ 
+ #include "zfcp_ext.h"
+ 
+-/* FIXME(tune): free space should be one max. SBAL chain plus what? */
+-#define ZFCP_QDIO_PCI_INTERVAL	(QDIO_MAX_BUFFERS_PER_Q \
+-				- (FSF_MAX_SBALS_PER_REQ + 4))
+ #define QBUFF_PER_PAGE		(PAGE_SIZE / sizeof(struct qdio_buffer))
+ 
+ static int zfcp_qdio_buffers_enqueue(struct qdio_buffer **sbal)
+@@ -364,23 +361,12 @@ int zfcp_qdio_send(struct zfcp_fsf_req *
+ 	struct zfcp_qdio_queue *req_q = &adapter->req_q;
+ 	int first = fsf_req->sbal_first;
+ 	int count = fsf_req->sbal_number;
+-	int retval, pci, pci_batch;
+-	struct qdio_buffer_element *sbale;
+-
+-	/* acknowledgements for transferred buffers */
+-	pci_batch = adapter->req_q_pci_batch + count;
+-	if (unlikely(pci_batch >= ZFCP_QDIO_PCI_INTERVAL)) {
+-		pci_batch %= ZFCP_QDIO_PCI_INTERVAL;
+-		pci = first + count - (pci_batch + 1);
+-		pci %= QDIO_MAX_BUFFERS_PER_Q;
+-		sbale = zfcp_qdio_sbale(req_q, pci, 0);
+-		sbale->flags |= SBAL_FLAGS0_PCI;
+-	}
++	int retval;
++	unsigned int qdio_flags = QDIO_FLAG_SYNC_OUTPUT;
+ 
+ 	zfcp_qdio_account(adapter);
+ 
+-	retval = do_QDIO(adapter->ccw_device, QDIO_FLAG_SYNC_OUTPUT, 0, first,
+-			 count);
++	retval = do_QDIO(adapter->ccw_device, qdio_flags, 0, first, count);
+ 	if (unlikely(retval)) {
+ 		zfcp_qdio_zero_sbals(req_q->sbal, first, count);
+ 		return retval;
+@@ -390,7 +376,6 @@ int zfcp_qdio_send(struct zfcp_fsf_req *
+ 	atomic_sub(count, &req_q->count);
+ 	req_q->first += count;
+ 	req_q->first %= QDIO_MAX_BUFFERS_PER_Q;
+-	adapter->req_q_pci_batch = pci_batch;
+ 	return 0;
  }
  
--static int zfcp_erp_adapter_strategy_generic(struct zfcp_erp_action *act,
--					     int close)
-+static void zfcp_erp_adapter_strategy_close(struct zfcp_erp_action *act)
- {
--	int retval = ZFCP_ERP_SUCCEEDED;
- 	struct zfcp_adapter *adapter = act->adapter;
- 
--	if (close)
--		goto close_only;
--
--	retval = zfcp_erp_adapter_strategy_open_qdio(act);
--	if (retval != ZFCP_ERP_SUCCEEDED)
--		goto failed_qdio;
--
--	retval = zfcp_erp_adapter_strategy_open_fsf(act);
--	if (retval != ZFCP_ERP_SUCCEEDED)
--		goto failed_openfcp;
--
--	atomic_set_mask(ZFCP_STATUS_COMMON_OPEN, &act->adapter->status);
--
--	return ZFCP_ERP_SUCCEEDED;
--
-- close_only:
--	atomic_clear_mask(ZFCP_STATUS_COMMON_OPEN,
--			  &act->adapter->status);
--
-- failed_openfcp:
- 	/* close queues to ensure that buffers are not accessed by adapter */
- 	zfcp_qdio_close(adapter);
- 	zfcp_fsf_req_dismiss_all(adapter);
-@@ -738,27 +716,48 @@ static int zfcp_erp_adapter_strategy_gen
- 	/* all ports and units are closed */
- 	zfcp_erp_modify_adapter_status(adapter, 24, NULL,
- 				       ZFCP_STATUS_COMMON_OPEN, ZFCP_CLEAR);
-- failed_qdio:
-+
- 	atomic_clear_mask(ZFCP_STATUS_ADAPTER_XCONFIG_OK |
--			  ZFCP_STATUS_ADAPTER_LINK_UNPLUGGED,
--			  &act->adapter->status);
--	return retval;
-+			  ZFCP_STATUS_ADAPTER_LINK_UNPLUGGED, &adapter->status);
+@@ -461,7 +446,6 @@ void zfcp_qdio_close(struct zfcp_adapter
+ 	}
+ 	req_q->first = 0;
+ 	atomic_set(&req_q->count, 0);
+-	adapter->req_q_pci_batch = 0;
+ 	adapter->resp_q.first = 0;
+ 	atomic_set(&adapter->resp_q.count, 0);
  }
+@@ -499,7 +483,6 @@ int zfcp_qdio_open(struct zfcp_adapter *
+ 	/* set index of first avalable SBALS / number of available SBALS */
+ 	adapter->req_q.first = 0;
+ 	atomic_set(&adapter->req_q.count, QDIO_MAX_BUFFERS_PER_Q);
+-	adapter->req_q_pci_batch = 0;
  
--static int zfcp_erp_adapter_strategy(struct zfcp_erp_action *act)
-+static int zfcp_erp_adapter_strategy_open(struct zfcp_erp_action *act)
- {
--	int retval;
-+	struct zfcp_adapter *adapter = act->adapter;
+ 	return 0;
  
--	zfcp_erp_adapter_strategy_generic(act, 1); /* close */
--	if (act->status & ZFCP_STATUS_ERP_CLOSE_ONLY)
--		return ZFCP_ERP_EXIT;
-+	if (zfcp_erp_adapter_strategy_open_qdio(act)) {
-+		atomic_clear_mask(ZFCP_STATUS_ADAPTER_XCONFIG_OK |
-+				  ZFCP_STATUS_ADAPTER_LINK_UNPLUGGED,
-+				  &adapter->status);
-+		return ZFCP_ERP_FAILED;
-+	}
- 
--	retval = zfcp_erp_adapter_strategy_generic(act, 0); /* open */
-+	if (zfcp_erp_adapter_strategy_open_fsf(act)) {
-+		zfcp_erp_adapter_strategy_close(act);
-+		return ZFCP_ERP_FAILED;
-+	}
- 
--	if (retval == ZFCP_ERP_FAILED)
-+	atomic_set_mask(ZFCP_STATUS_COMMON_OPEN, &adapter->status);
-+
-+	return ZFCP_ERP_SUCCEEDED;
-+}
-+
-+static int zfcp_erp_adapter_strategy(struct zfcp_erp_action *act)
-+{
-+	struct zfcp_adapter *adapter = act->adapter;
-+
-+	if (atomic_read(&adapter->status) & ZFCP_STATUS_COMMON_OPEN) {
-+		zfcp_erp_adapter_strategy_close(act);
-+		if (act->status & ZFCP_STATUS_ERP_CLOSE_ONLY)
-+			return ZFCP_ERP_EXIT;
-+	}
-+
-+	if (zfcp_erp_adapter_strategy_open(act)) {
- 		ssleep(8);
-+		return ZFCP_ERP_FAILED;
-+	}
- 
--	return retval;
-+	return ZFCP_ERP_SUCCEEDED;
- }
- 
- static int zfcp_erp_port_forced_strategy_close(struct zfcp_erp_action *act)
+--- a/drivers/s390/scsi/zfcp_def.h	2009-03-02 09:47:50.000000000 +0100
++++ b/drivers/s390/scsi/zfcp_def.h	2009-03-02 09:55:14.000000000 +0100
+@@ -443,8 +443,6 @@ struct zfcp_adapter {
+ 	spinlock_t		req_list_lock;	   /* request list lock */
+ 	struct zfcp_qdio_queue	req_q;		   /* request queue */
+ 	spinlock_t		req_q_lock;	   /* for operations on queue */
+-	int			req_q_pci_batch;   /* SBALs since PCI indication
+-						      was last set */
+ 	ktime_t			req_q_time; /* time of last fill level change */
+ 	u64			req_q_util; /* for accounting */
+ 	spinlock_t		qdio_stat_lock;
 
