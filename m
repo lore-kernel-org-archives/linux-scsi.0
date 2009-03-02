@@ -1,14 +1,14 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 04/18] [PATCH] zfcp: Simplify latency lock handling
-Date: Mon, 02 Mar 2009 13:08:57 +0100
-Message-ID: <20090302121002.549246000@de.ibm.com>
+Subject: [patch 06/18] [PATCH] zfcp: Wait for free SBALs when possible
+Date: Mon, 02 Mar 2009 13:08:59 +0100
+Message-ID: <20090302121002.809633000@de.ibm.com>
 References: <20090302120853.279447000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate5.de.ibm.com ([195.212.29.154]:63513 "EHLO
-	mtagate5.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754130AbZCBMKt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Mar 2009 07:10:49 -0500
-Content-Disposition: inline; filename=703-zfcp-lat-lock.diff
+Received: from mtagate7.de.ibm.com ([195.212.29.156]:49634 "EHLO
+	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758709AbZCBMKG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Mar 2009 07:10:06 -0500
+Content-Disposition: inline; filename=705-zfcp-wait-sbal.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
@@ -16,65 +16,83 @@ Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.c
 
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-The lock only needs to protect the softirq context called from qdio
-against the userspace context called from sysfs. spin_lock and
-spin_lock_bh is enough.
+For calls from zfcp erp, scsi_eh and sysfs switch the calls issuing 
+FSF requests to zfcp_fsf_req_sbal_get to wait for free SBALs.
 
 Acked-by: Swen Schillig <swen@vnet.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 ---
 
- drivers/s390/scsi/zfcp_fsf.c   |    5 ++---
- drivers/s390/scsi/zfcp_sysfs.c |    5 ++---
- 2 files changed, 4 insertions(+), 6 deletions(-)
+ drivers/s390/scsi/zfcp_fsf.c |   18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_fsf.c linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c
---- linux-2.6/drivers/s390/scsi/zfcp_fsf.c	2009-03-01 16:41:30.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c	2009-03-01 16:41:30.000000000 +0100
-@@ -2069,7 +2069,6 @@ static void zfcp_fsf_req_latency(struct 
- 	struct fsf_qual_latency_info *lat_inf;
- 	struct latency_cont *lat;
- 	struct zfcp_unit *unit = req->unit;
--	unsigned long flags;
+--- a/drivers/s390/scsi/zfcp_fsf.c	2009-03-02 12:42:25.000000000 +0100
++++ b/drivers/s390/scsi/zfcp_fsf.c	2009-03-02 12:42:26.000000000 +0100
+@@ -929,8 +929,8 @@ struct zfcp_fsf_req *zfcp_fsf_abort_fcp_
+ 	struct qdio_buffer_element *sbale;
+ 	struct zfcp_fsf_req *req = NULL;
  
- 	lat_inf = &req->qtcb->prefix.prot_status_qual.latency_info;
- 
-@@ -2087,11 +2086,11 @@ static void zfcp_fsf_req_latency(struct 
- 		return;
- 	}
- 
--	spin_lock_irqsave(&unit->latencies.lock, flags);
-+	spin_lock(&unit->latencies.lock);
- 	zfcp_fsf_update_lat(&lat->channel, lat_inf->channel_lat);
- 	zfcp_fsf_update_lat(&lat->fabric, lat_inf->fabric_lat);
- 	lat->counter++;
--	spin_unlock_irqrestore(&unit->latencies.lock, flags);
-+	spin_unlock(&unit->latencies.lock);
+-	spin_lock(&adapter->req_q_lock);
+-	if (!zfcp_fsf_sbal_available(adapter))
++	spin_lock_bh(&adapter->req_q_lock);
++	if (zfcp_fsf_req_sbal_get(adapter))
+ 		goto out;
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_ABORT_FCP_CMND,
+ 				  req_flags, adapter->pool.fsf_req_abort);
+@@ -961,7 +961,7 @@ out_error_free:
+ 	zfcp_fsf_req_free(req);
+ 	req = NULL;
+ out:
+-	spin_unlock(&adapter->req_q_lock);
++	spin_unlock_bh(&adapter->req_q_lock);
+ 	return req;
  }
  
- #ifdef CONFIG_BLK_DEV_IO_TRACE
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_sysfs.c linux-2.6-patched/drivers/s390/scsi/zfcp_sysfs.c
---- linux-2.6/drivers/s390/scsi/zfcp_sysfs.c	2009-03-01 16:41:30.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_sysfs.c	2009-03-01 16:41:30.000000000 +0100
-@@ -318,10 +318,9 @@ zfcp_sysfs_unit_##_name##_latency_show(s
- 	struct zfcp_unit *unit = sdev->hostdata;			\
- 	struct zfcp_latencies *lat = &unit->latencies;			\
- 	struct zfcp_adapter *adapter = unit->port->adapter;		\
--	unsigned long flags;						\
- 	unsigned long long fsum, fmin, fmax, csum, cmin, cmax, cc;	\
- 									\
--	spin_lock_irqsave(&lat->lock, flags);				\
-+	spin_lock_bh(&lat->lock);					\
- 	fsum = lat->_name.fabric.sum * adapter->timer_ticks;		\
- 	fmin = lat->_name.fabric.min * adapter->timer_ticks;		\
- 	fmax = lat->_name.fabric.max * adapter->timer_ticks;		\
-@@ -329,7 +328,7 @@ zfcp_sysfs_unit_##_name##_latency_show(s
- 	cmin = lat->_name.channel.min * adapter->timer_ticks;		\
- 	cmax = lat->_name.channel.max * adapter->timer_ticks;		\
- 	cc  = lat->_name.counter;					\
--	spin_unlock_irqrestore(&lat->lock, flags);			\
-+	spin_unlock_bh(&lat->lock);					\
- 									\
- 	do_div(fsum, 1000);						\
- 	do_div(fmin, 1000);						\
+@@ -1225,7 +1225,7 @@ int zfcp_fsf_exchange_config_data(struct
+ 	int retval = -EIO;
+ 
+ 	spin_lock_bh(&adapter->req_q_lock);
+-	if (!zfcp_fsf_sbal_available(adapter))
++	if (zfcp_fsf_req_sbal_get(adapter))
+ 		goto out;
+ 	req = zfcp_fsf_req_create(adapter,
+ 				  FSF_QTCB_EXCHANGE_CONFIG_DATA,
+@@ -1321,7 +1321,7 @@ int zfcp_fsf_exchange_port_data(struct z
+ 		return -EOPNOTSUPP;
+ 
+ 	spin_lock_bh(&adapter->req_q_lock);
+-	if (!zfcp_fsf_sbal_available(adapter))
++	if (zfcp_fsf_req_sbal_get(adapter))
+ 		goto out;
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_EXCHANGE_PORT_DATA,
+ 				  ZFCP_REQ_AUTO_CLEANUP,
+@@ -1367,7 +1367,7 @@ int zfcp_fsf_exchange_port_data_sync(str
+ 		return -EOPNOTSUPP;
+ 
+ 	spin_lock_bh(&adapter->req_q_lock);
+-	if (!zfcp_fsf_sbal_available(adapter))
++	if (zfcp_fsf_req_sbal_get(adapter))
+ 		goto out;
+ 
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_EXCHANGE_PORT_DATA, 0,
+@@ -2453,8 +2453,8 @@ struct zfcp_fsf_req *zfcp_fsf_send_fcp_c
+ 		       ZFCP_STATUS_COMMON_UNBLOCKED)))
+ 		return NULL;
+ 
+-	spin_lock(&adapter->req_q_lock);
+-	if (!zfcp_fsf_sbal_available(adapter))
++	spin_lock_bh(&adapter->req_q_lock);
++	if (zfcp_fsf_req_sbal_get(adapter))
+ 		goto out;
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_FCP_CMND, req_flags,
+ 				  adapter->pool.fsf_req_scsi);
+@@ -2488,7 +2488,7 @@ struct zfcp_fsf_req *zfcp_fsf_send_fcp_c
+ 	zfcp_fsf_req_free(req);
+ 	req = NULL;
+ out:
+-	spin_unlock(&adapter->req_q_lock);
++	spin_unlock_bh(&adapter->req_q_lock);
+ 	return req;
+ }
+ 
 
