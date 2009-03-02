@@ -1,174 +1,118 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 01/18] [PATCH] zfcp: Remove some port flags
-Date: Mon, 02 Mar 2009 13:08:54 +0100
-Message-ID: <20090302121002.146445000@de.ibm.com>
+Subject: [patch 03/18] [Patch] zfcp: add measurement data for average qdio queue utilisation
+Date: Mon, 02 Mar 2009 13:08:56 +0100
+Message-ID: <20090302121002.420177000@de.ibm.com>
 References: <20090302120853.279447000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate5.de.ibm.com ([195.212.29.154]:63508 "EHLO
-	mtagate5.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754103AbZCBMKt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Mar 2009 07:10:49 -0500
-Content-Disposition: inline; filename=700-zfcp-port-flags.diff
+Received: from mtagate1.de.ibm.com ([195.212.17.161]:51345 "EHLO
+	mtagate1.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758679AbZCBMKG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Mar 2009 07:10:06 -0500
+Content-Disposition: inline; filename=702-zfcp-queue-lock.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Swen Schillig <swen@vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Martin Peschke <mpeschke@linux.vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
 
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
+From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
 
-PORT_PHYS_CLOSING is only set and cleared, but not actually used
-for status checking.
+Provide measurement data for the utilisation of the QDIO outbound queue.
+The additional value allows to calculate an average queue utilisation
+by looking at the deltas per time unit. Needed for capacity planning.
+It is up to user space to handle wrap-arounds of the 64 bit value.
 
-PORT_INVALID_WWPN is set when the GID_PN request does not return
-a d_id for a remote port, e.g. when a remote port has been
-unplugged. For this case, the d_id is zero. In the erp we can
-check the d_id and use the normal escalation procedure that gives
-up after three retries and remove the special case.
+The new counter neatly complements the existing counter for queue full
+conditions. That is why, both statistics counter have been integrated.
 
-PORT_NO_WWPN is unused: Each port in the remote port list has a
-valid wwpn. The WKA ports are now tracked outside the port
-list. Remove the PORT_NO_WWPN flag, since this is no longer set
-for any port.
-
-Acked-by: Swen Schillig <swen@vnet.ibm.com>
+Signed-off-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 ---
 
- drivers/s390/scsi/zfcp_aux.c |   13 ++++++-------
- drivers/s390/scsi/zfcp_def.h |    3 ---
- drivers/s390/scsi/zfcp_erp.c |   16 ++--------------
- drivers/s390/scsi/zfcp_fc.c  |    5 ++---
- drivers/s390/scsi/zfcp_fsf.c |    6 +-----
- 5 files changed, 11 insertions(+), 32 deletions(-)
+ drivers/s390/scsi/zfcp_aux.c   |    1 +
+ drivers/s390/scsi/zfcp_def.h   |    3 +++
+ drivers/s390/scsi/zfcp_qdio.c  |   20 ++++++++++++++++++++
+ drivers/s390/scsi/zfcp_sysfs.c |    3 ++-
+ 4 files changed, 26 insertions(+), 1 deletion(-)
 
 diff -urpN linux-2.6/drivers/s390/scsi/zfcp_aux.c linux-2.6-patched/drivers/s390/scsi/zfcp_aux.c
---- linux-2.6/drivers/s390/scsi/zfcp_aux.c	2009-03-01 16:41:01.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_aux.c	2009-03-01 16:41:29.000000000 +0100
-@@ -249,8 +249,8 @@ struct zfcp_port *zfcp_get_port_by_wwpn(
- 	struct zfcp_port *port;
+--- linux-2.6/drivers/s390/scsi/zfcp_aux.c	2009-03-01 16:41:30.000000000 +0100
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_aux.c	2009-03-01 16:41:30.000000000 +0100
+@@ -501,6 +501,7 @@ int zfcp_adapter_enqueue(struct ccw_devi
+ 	spin_lock_init(&adapter->scsi_dbf_lock);
+ 	spin_lock_init(&adapter->rec_dbf_lock);
+ 	spin_lock_init(&adapter->req_q_lock);
++	spin_lock_init(&adapter->qdio_stat_lock);
  
- 	list_for_each_entry(port, &adapter->port_list_head, list)
--		if ((port->wwpn == wwpn) && !(atomic_read(&port->status) &
--		      (ZFCP_STATUS_PORT_NO_WWPN | ZFCP_STATUS_COMMON_REMOVE)))
-+		if ((port->wwpn == wwpn) &&
-+		    !(atomic_read(&port->status) & ZFCP_STATUS_COMMON_REMOVE))
- 			return port;
- 	return NULL;
- }
-@@ -620,11 +620,10 @@ struct zfcp_port *zfcp_port_enqueue(stru
- 	dev_set_drvdata(&port->sysfs_device, port);
- 
- 	read_lock_irq(&zfcp_data.config_lock);
--	if (!(status & ZFCP_STATUS_PORT_NO_WWPN))
--		if (zfcp_get_port_by_wwpn(adapter, wwpn)) {
--			read_unlock_irq(&zfcp_data.config_lock);
--			goto err_out_free;
--		}
-+	if (zfcp_get_port_by_wwpn(adapter, wwpn)) {
-+		read_unlock_irq(&zfcp_data.config_lock);
-+		goto err_out_free;
-+	}
- 	read_unlock_irq(&zfcp_data.config_lock);
- 
- 	if (device_register(&port->sysfs_device))
+ 	rwlock_init(&adapter->erp_lock);
+ 	rwlock_init(&adapter->abort_lock);
 diff -urpN linux-2.6/drivers/s390/scsi/zfcp_def.h linux-2.6-patched/drivers/s390/scsi/zfcp_def.h
---- linux-2.6/drivers/s390/scsi/zfcp_def.h	2009-03-01 16:41:01.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_def.h	2009-03-01 16:41:29.000000000 +0100
-@@ -243,9 +243,6 @@ struct zfcp_ls_adisc {
- 
- /* remote port status */
- #define ZFCP_STATUS_PORT_PHYS_OPEN		0x00000001
--#define ZFCP_STATUS_PORT_PHYS_CLOSING		0x00000004
--#define ZFCP_STATUS_PORT_NO_WWPN		0x00000008
--#define ZFCP_STATUS_PORT_INVALID_WWPN		0x00000020
- 
- /* well known address (WKA) port status*/
- enum zfcp_wka_status {
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_erp.c linux-2.6-patched/drivers/s390/scsi/zfcp_erp.c
---- linux-2.6/drivers/s390/scsi/zfcp_erp.c	2009-03-01 16:41:01.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_erp.c	2009-03-01 16:41:29.000000000 +0100
-@@ -777,10 +777,7 @@ static int zfcp_erp_port_forced_strategy
- 
- static void zfcp_erp_port_strategy_clearstati(struct zfcp_port *port)
- {
--	atomic_clear_mask(ZFCP_STATUS_COMMON_ACCESS_DENIED |
--			  ZFCP_STATUS_PORT_PHYS_CLOSING |
--			  ZFCP_STATUS_PORT_INVALID_WWPN,
--			  &port->status);
-+	atomic_clear_mask(ZFCP_STATUS_COMMON_ACCESS_DENIED, &port->status);
- }
- 
- static int zfcp_erp_port_forced_strategy(struct zfcp_erp_action *erp_action)
-@@ -875,13 +872,8 @@ static int zfcp_erp_port_strategy_open_c
- 			return ZFCP_ERP_CONTINUES;
- 		}
- 	case ZFCP_ERP_STEP_NAMESERVER_LOOKUP:
--		if (!port->d_id) {
--			if (p_status & (ZFCP_STATUS_PORT_INVALID_WWPN)) {
--				zfcp_erp_port_failed(port, 26, NULL);
--				return ZFCP_ERP_EXIT;
--			}
-+		if (!port->d_id)
- 			return ZFCP_ERP_FAILED;
--		}
- 		return zfcp_erp_port_strategy_open_port(act);
- 
- 	case ZFCP_ERP_STEP_PORT_OPENING:
-@@ -1269,10 +1261,6 @@ static void zfcp_erp_action_cleanup(stru
- 
- 	case ZFCP_ERP_ACTION_REOPEN_PORT_FORCED:
- 	case ZFCP_ERP_ACTION_REOPEN_PORT:
--		if (atomic_read(&port->status) & ZFCP_STATUS_PORT_NO_WWPN) {
--			zfcp_port_put(port);
--			return;
--		}
- 		if ((result == ZFCP_ERP_SUCCEEDED) && !port->rport)
- 			zfcp_erp_rport_register(port);
- 		if ((result != ZFCP_ERP_SUCCEEDED) && port->rport) {
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_fc.c linux-2.6-patched/drivers/s390/scsi/zfcp_fc.c
---- linux-2.6/drivers/s390/scsi/zfcp_fc.c	2009-03-01 16:41:01.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_fc.c	2009-03-01 16:41:29.000000000 +0100
-@@ -259,10 +259,9 @@ static void zfcp_fc_ns_gid_pn_eval(unsig
- 
- 	if (ct->status)
- 		return;
--	if (ct_iu_resp->header.cmd_rsp_code != ZFCP_CT_ACCEPT) {
--		atomic_set_mask(ZFCP_STATUS_PORT_INVALID_WWPN, &port->status);
-+	if (ct_iu_resp->header.cmd_rsp_code != ZFCP_CT_ACCEPT)
- 		return;
--	}
-+
- 	/* paranoia */
- 	if (ct_iu_req->wwpn != port->wwpn)
- 		return;
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_fsf.c linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c
---- linux-2.6/drivers/s390/scsi/zfcp_fsf.c	2009-03-01 16:41:01.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c	2009-03-01 16:41:29.000000000 +0100
-@@ -1712,7 +1712,7 @@ static void zfcp_fsf_close_physical_port
- 	struct zfcp_unit *unit;
- 
- 	if (req->status & ZFCP_STATUS_FSFREQ_ERROR)
--		goto skip_fsfstatus;
-+		return;
- 
- 	switch (header->fsf_status) {
- 	case FSF_PORT_HANDLE_NOT_VALID:
-@@ -1752,8 +1752,6 @@ static void zfcp_fsf_close_physical_port
- 					  &unit->status);
- 		break;
+--- linux-2.6/drivers/s390/scsi/zfcp_def.h	2009-03-01 16:41:30.000000000 +0100
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_def.h	2009-03-01 16:41:30.000000000 +0100
+@@ -445,6 +445,9 @@ struct zfcp_adapter {
+ 	spinlock_t		req_q_lock;	   /* for operations on queue */
+ 	int			req_q_pci_batch;   /* SBALs since PCI indication
+ 						      was last set */
++	ktime_t			req_q_time; /* time of last fill level change */
++	u64			req_q_util; /* for accounting */
++	spinlock_t		qdio_stat_lock;
+ 	u32			fsf_req_seq_no;	   /* FSF cmnd seq number */
+ 	wait_queue_head_t	request_wq;	   /* can be used to wait for
+ 						      more avaliable SBALs */
+diff -urpN linux-2.6/drivers/s390/scsi/zfcp_qdio.c linux-2.6-patched/drivers/s390/scsi/zfcp_qdio.c
+--- linux-2.6/drivers/s390/scsi/zfcp_qdio.c	2009-03-01 16:41:01.000000000 +0100
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_qdio.c	2009-03-01 16:41:30.000000000 +0100
+@@ -77,6 +77,23 @@ static void zfcp_qdio_zero_sbals(struct 
  	}
--skip_fsfstatus:
--	atomic_clear_mask(ZFCP_STATUS_PORT_PHYS_CLOSING, &port->status);
  }
  
- /**
-@@ -1789,8 +1787,6 @@ int zfcp_fsf_close_physical_port(struct 
- 	req->erp_action = erp_action;
- 	req->handler = zfcp_fsf_close_physical_port_handler;
- 	erp_action->fsf_req = req;
--	atomic_set_mask(ZFCP_STATUS_PORT_PHYS_CLOSING,
--			&erp_action->port->status);
++/* this needs to be called prior to updating the queue fill level */
++static void zfcp_qdio_account(struct zfcp_adapter *adapter)
++{
++	ktime_t now;
++	s64 span;
++	int free, used;
++
++	spin_lock(&adapter->qdio_stat_lock);
++	now = ktime_get();
++	span = ktime_us_delta(now, adapter->req_q_time);
++	free = max(0, atomic_read(&adapter->req_q.count));
++	used = QDIO_MAX_BUFFERS_PER_Q - free;
++	adapter->req_q_util += used * span;
++	adapter->req_q_time = now;
++	spin_unlock(&adapter->qdio_stat_lock);
++}
++
+ static void zfcp_qdio_int_req(struct ccw_device *cdev, unsigned int qdio_err,
+ 			      int queue_no, int first, int count,
+ 			      unsigned long parm)
+@@ -93,6 +110,7 @@ static void zfcp_qdio_int_req(struct ccw
+ 	/* cleanup all SBALs being program-owned now */
+ 	zfcp_qdio_zero_sbals(queue->sbal, first, count);
  
- 	zfcp_fsf_start_erp_timer(req);
- 	retval = zfcp_fsf_req_send(req);
++	zfcp_qdio_account(adapter);
+ 	atomic_add(count, &queue->count);
+ 	wake_up(&adapter->request_wq);
+ }
+@@ -359,6 +377,8 @@ int zfcp_qdio_send(struct zfcp_fsf_req *
+ 		sbale->flags |= SBAL_FLAGS0_PCI;
+ 	}
+ 
++	zfcp_qdio_account(adapter);
++
+ 	retval = do_QDIO(adapter->ccw_device, QDIO_FLAG_SYNC_OUTPUT, 0, first,
+ 			 count);
+ 	if (unlikely(retval)) {
+diff -urpN linux-2.6/drivers/s390/scsi/zfcp_sysfs.c linux-2.6-patched/drivers/s390/scsi/zfcp_sysfs.c
+--- linux-2.6/drivers/s390/scsi/zfcp_sysfs.c	2009-03-01 16:41:01.000000000 +0100
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_sysfs.c	2009-03-01 16:41:30.000000000 +0100
+@@ -487,7 +487,8 @@ static ssize_t zfcp_sysfs_adapter_q_full
+ 	struct zfcp_adapter *adapter =
+ 		(struct zfcp_adapter *) scsi_host->hostdata[0];
+ 
+-	return sprintf(buf, "%d\n", atomic_read(&adapter->qdio_outb_full));
++	return sprintf(buf, "%d %llu\n", atomic_read(&adapter->qdio_outb_full),
++		       (unsigned long long)adapter->req_q_util);
+ }
+ static DEVICE_ATTR(queue_full, S_IRUGO, zfcp_sysfs_adapter_q_full_show, NULL);
+ 
 
