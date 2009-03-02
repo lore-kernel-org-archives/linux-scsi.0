@@ -1,43 +1,59 @@
-From: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] Set manage_start_stop for some USB storage devices by
-	default
-Date: Mon, 2 Mar 2009 13:31:12 -0800
-Message-ID: <20090302213112.GA30677@kroah.com>
-References: <20090302195238.GM3741@vespa.holoscopio.com> <Pine.LNX.4.44L0.0903021452570.12723-100000@netrider.rowland.org>
+From: "Love, Robert W" <robert.w.love@intel.com>
+Subject: RE: [PATCH 00/17] Open-FCoE Updates
+Date: Mon, 2 Mar 2009 15:24:35 -0700
+Message-ID: <273D38FBE7C6FE46A1689FCD014A0B8B30895E41@azsmsx505.amr.corp.intel.com>
+References: <20090206185548.26188.51580.stgit@fritz>
+	 <49A6033D.8040600@cs.wisc.edu>  <1235672974.4219.8.camel@fritz>
+ <1235675105.19035.65.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0903021452570.12723-100000-pYrvlCTfrz9XsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: Thadeu Lima de Souza Cascardo <cascardo-DmMZpsCg3uxeGPcbtGPokg@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga14.intel.com ([143.182.124.37]:27473 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751085AbZCBWYt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Mar 2009 17:24:49 -0500
+In-Reply-To: <1235675105.19035.65.camel@localhost.localdomain>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, Mar 02, 2009 at 02:57:03PM -0500, Alan Stern wrote:
-> On Mon, 2 Mar 2009, Thadeu Lima de Souza Cascardo wrote:
-> > > Also, this patch won't apply to the current development tree, because
-> > > there have been several changes to usb-storage's recently.  In
-> > > particular there is new code allowing quirk flags to be set by a module
-> > > parameter, and your new flag (if it is accepted) should be added to
-> > > this mechanism.
-> > 
-> > Also expected. But I didn't know about the new changes in the quirk
-> > flags code. Which tree should I refer to regarding usb-storage or USB,
-> > besides next and rc trees?
+James Bottomley wrote:
+> On Thu, 2009-02-26 at 10:29 -0800, Robert Love wrote:
+>> On Wed, 2009-02-25 at 18:49 -0800, Mike Christie wrote:
+>>> Robert Love wrote:
+>>>> The following series implements bug fixes, adds a module param for
+>>>> runtime debug logging and cleans up some coding style issues. The
+>>>> top patch is a patch that was posted to linux-scsi on 01/04, but
+>>>> doesn't seem to have made it in yet.   
+>>>> 
+>>>> This patch set is based on Linus' tree + the Open-FCoE patches
+>>>> submitted to linux-scsi on 01/21. 
+>>>> 
+>>> 
+>>> Were these patches and that other patchset for 2.6.29-rc? This one
+>>> had some non bug fixes. I was not sure if you can do that in a rc.
+>>> I was not sure if because it is a new driver you get a exception
+>>> since there can be no regressions. 
+>>> 
+>> They were intended for the RC phase, should I have been more
+>> explicit? I'm not sure what the policy is exactly, I've heard that
+>> the RC phase is only for regressions, but I'm not sure how that
+>> applies to new drivers. We have nothing to regress from and I'd
+>> prefer getting these fixes in so that FCoE in 2.6.29 is as stable as
+>> can be. 
 > 
-> http://www.kernel.org/pub/linux/kernel/people/gregkh/gregkh-2.6/
+> OK, so how it works is firstly you have to tell me it's for rc fixes
+> ... I can sometimes get this from the subject (if it contains words
+> like bug fix).   Secondly, I need enhancements and fixes separated so
+> they can be separately applied to the different trees (if you have an
+> entanglement, I can rebase the misc tree to pick up the needed
+> rc-fixes dependencies). 
 > 
-> I tend to use the gregkh-all-*.patch files.  However, I think 
-> everything in there also goes into -next.
-
-Yes, it all is in the linux-next releases, you can use those if it's
-easier than using my trees.
-
-thanks,
-
-greg k-h
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> So if you separate the patches (or just tell me what's a bug fix ...
+> and they apply individually) I can put them in the rc-fixes tree.
+> 
+Thanks for the clarification. Will the fixes I resent on Friday make
+it into 2.6.29?
