@@ -1,118 +1,90 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 03/18] [Patch] zfcp: add measurement data for average qdio queue utilisation
-Date: Mon, 02 Mar 2009 13:08:56 +0100
-Message-ID: <20090302121002.420177000@de.ibm.com>
+Subject: [patch 02/18] [PATCH] zfcp: Remove UNIT_REGISTERED status flag
+Date: Mon, 02 Mar 2009 13:08:55 +0100
+Message-ID: <20090302121002.289821000@de.ibm.com>
 References: <20090302120853.279447000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate1.de.ibm.com ([195.212.17.161]:51345 "EHLO
-	mtagate1.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758679AbZCBMKG (ORCPT
+Received: from mtagate7.de.ibm.com ([195.212.29.156]:49626 "EHLO
+	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758678AbZCBMKG (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Mar 2009 07:10:06 -0500
-Content-Disposition: inline; filename=702-zfcp-queue-lock.diff
+Content-Disposition: inline; filename=701-zfcp-unit-registered.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Martin Peschke <mpeschke@linux.vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Swen Schillig <swen@vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
 
-From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-Provide measurement data for the utilisation of the QDIO outbound queue.
-The additional value allows to calculate an average queue utilisation
-by looking at the deltas per time unit. Needed for capacity planning.
-It is up to user space to handle wrap-arounds of the 64 bit value.
+Use the device pointer in zfcp_unit for tracking if we have a
+registered SCSI device. With this approach, the flag
+ZFCP_STATUS_UNIT_REGISTERED is only redundant and can be removed.
 
-The new counter neatly complements the existing counter for queue full
-conditions. That is why, both statistics counter have been integrated.
-
-Signed-off-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+Acked-by: Swen Schillig <swen@vnet.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 ---
 
- drivers/s390/scsi/zfcp_aux.c   |    1 +
- drivers/s390/scsi/zfcp_def.h   |    3 +++
- drivers/s390/scsi/zfcp_qdio.c  |   20 ++++++++++++++++++++
- drivers/s390/scsi/zfcp_sysfs.c |    3 ++-
- 4 files changed, 26 insertions(+), 1 deletion(-)
+ drivers/s390/scsi/zfcp_ccw.c  |    3 +--
+ drivers/s390/scsi/zfcp_def.h  |    1 -
+ drivers/s390/scsi/zfcp_erp.c  |    2 --
+ drivers/s390/scsi/zfcp_scsi.c |    4 +---
+ 4 files changed, 2 insertions(+), 8 deletions(-)
 
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_aux.c linux-2.6-patched/drivers/s390/scsi/zfcp_aux.c
---- linux-2.6/drivers/s390/scsi/zfcp_aux.c	2009-03-01 16:41:30.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_aux.c	2009-03-01 16:41:30.000000000 +0100
-@@ -501,6 +501,7 @@ int zfcp_adapter_enqueue(struct ccw_devi
- 	spin_lock_init(&adapter->scsi_dbf_lock);
- 	spin_lock_init(&adapter->rec_dbf_lock);
- 	spin_lock_init(&adapter->req_q_lock);
-+	spin_lock_init(&adapter->qdio_stat_lock);
+diff -urpN linux-2.6/drivers/s390/scsi/zfcp_ccw.c linux-2.6-patched/drivers/s390/scsi/zfcp_ccw.c
+--- linux-2.6/drivers/s390/scsi/zfcp_ccw.c	2009-03-01 16:41:01.000000000 +0100
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_ccw.c	2009-03-01 16:41:30.000000000 +0100
+@@ -72,8 +72,7 @@ static void zfcp_ccw_remove(struct ccw_d
  
- 	rwlock_init(&adapter->erp_lock);
- 	rwlock_init(&adapter->abort_lock);
+ 	list_for_each_entry_safe(port, p, &port_remove_lh, list) {
+ 		list_for_each_entry_safe(unit, u, &unit_remove_lh, list) {
+-			if (atomic_read(&unit->status) &
+-			    ZFCP_STATUS_UNIT_REGISTERED)
++			if (unit->device)
+ 				scsi_remove_device(unit->device);
+ 			zfcp_unit_dequeue(unit);
+ 		}
 diff -urpN linux-2.6/drivers/s390/scsi/zfcp_def.h linux-2.6-patched/drivers/s390/scsi/zfcp_def.h
 --- linux-2.6/drivers/s390/scsi/zfcp_def.h	2009-03-01 16:41:30.000000000 +0100
 +++ linux-2.6-patched/drivers/s390/scsi/zfcp_def.h	2009-03-01 16:41:30.000000000 +0100
-@@ -445,6 +445,9 @@ struct zfcp_adapter {
- 	spinlock_t		req_q_lock;	   /* for operations on queue */
- 	int			req_q_pci_batch;   /* SBALs since PCI indication
- 						      was last set */
-+	ktime_t			req_q_time; /* time of last fill level change */
-+	u64			req_q_util; /* for accounting */
-+	spinlock_t		qdio_stat_lock;
- 	u32			fsf_req_seq_no;	   /* FSF cmnd seq number */
- 	wait_queue_head_t	request_wq;	   /* can be used to wait for
- 						      more avaliable SBALs */
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_qdio.c linux-2.6-patched/drivers/s390/scsi/zfcp_qdio.c
---- linux-2.6/drivers/s390/scsi/zfcp_qdio.c	2009-03-01 16:41:01.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_qdio.c	2009-03-01 16:41:30.000000000 +0100
-@@ -77,6 +77,23 @@ static void zfcp_qdio_zero_sbals(struct 
- 	}
- }
+@@ -255,7 +255,6 @@ enum zfcp_wka_status {
+ /* logical unit status */
+ #define ZFCP_STATUS_UNIT_SHARED			0x00000004
+ #define ZFCP_STATUS_UNIT_READONLY		0x00000008
+-#define ZFCP_STATUS_UNIT_REGISTERED		0x00000010
+ #define ZFCP_STATUS_UNIT_SCSI_WORK_PENDING	0x00000020
  
-+/* this needs to be called prior to updating the queue fill level */
-+static void zfcp_qdio_account(struct zfcp_adapter *adapter)
-+{
-+	ktime_t now;
-+	s64 span;
-+	int free, used;
-+
-+	spin_lock(&adapter->qdio_stat_lock);
-+	now = ktime_get();
-+	span = ktime_us_delta(now, adapter->req_q_time);
-+	free = max(0, atomic_read(&adapter->req_q.count));
-+	used = QDIO_MAX_BUFFERS_PER_Q - free;
-+	adapter->req_q_util += used * span;
-+	adapter->req_q_time = now;
-+	spin_unlock(&adapter->qdio_stat_lock);
-+}
-+
- static void zfcp_qdio_int_req(struct ccw_device *cdev, unsigned int qdio_err,
- 			      int queue_no, int first, int count,
- 			      unsigned long parm)
-@@ -93,6 +110,7 @@ static void zfcp_qdio_int_req(struct ccw
- 	/* cleanup all SBALs being program-owned now */
- 	zfcp_qdio_zero_sbals(queue->sbal, first, count);
+ /* FSF request status (this does not have a common part) */
+diff -urpN linux-2.6/drivers/s390/scsi/zfcp_erp.c linux-2.6-patched/drivers/s390/scsi/zfcp_erp.c
+--- linux-2.6/drivers/s390/scsi/zfcp_erp.c	2009-03-01 16:41:30.000000000 +0100
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_erp.c	2009-03-01 16:41:30.000000000 +0100
+@@ -1250,8 +1250,6 @@ static void zfcp_erp_action_cleanup(stru
+ 	case ZFCP_ERP_ACTION_REOPEN_UNIT:
+ 		if ((result == ZFCP_ERP_SUCCEEDED) &&
+ 		    !unit->device && port->rport) {
+-			atomic_set_mask(ZFCP_STATUS_UNIT_REGISTERED,
+-					&unit->status);
+ 			if (!(atomic_read(&unit->status) &
+ 			      ZFCP_STATUS_UNIT_SCSI_WORK_PENDING))
+ 				zfcp_erp_schedule_work(unit);
+diff -urpN linux-2.6/drivers/s390/scsi/zfcp_scsi.c linux-2.6-patched/drivers/s390/scsi/zfcp_scsi.c
+--- linux-2.6/drivers/s390/scsi/zfcp_scsi.c	2009-03-01 16:41:01.000000000 +0100
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_scsi.c	2009-03-01 16:41:30.000000000 +0100
+@@ -27,7 +27,6 @@ char *zfcp_get_fcp_sns_info_ptr(struct f
+ static void zfcp_scsi_slave_destroy(struct scsi_device *sdpnt)
+ {
+ 	struct zfcp_unit *unit = (struct zfcp_unit *) sdpnt->hostdata;
+-	atomic_clear_mask(ZFCP_STATUS_UNIT_REGISTERED, &unit->status);
+ 	unit->device = NULL;
+ 	zfcp_erp_unit_failed(unit, 12, NULL);
+ 	zfcp_unit_put(unit);
+@@ -133,8 +132,7 @@ static int zfcp_scsi_slave_alloc(struct 
  
-+	zfcp_qdio_account(adapter);
- 	atomic_add(count, &queue->count);
- 	wake_up(&adapter->request_wq);
- }
-@@ -359,6 +377,8 @@ int zfcp_qdio_send(struct zfcp_fsf_req *
- 		sbale->flags |= SBAL_FLAGS0_PCI;
- 	}
- 
-+	zfcp_qdio_account(adapter);
-+
- 	retval = do_QDIO(adapter->ccw_device, QDIO_FLAG_SYNC_OUTPUT, 0, first,
- 			 count);
- 	if (unlikely(retval)) {
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_sysfs.c linux-2.6-patched/drivers/s390/scsi/zfcp_sysfs.c
---- linux-2.6/drivers/s390/scsi/zfcp_sysfs.c	2009-03-01 16:41:01.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_sysfs.c	2009-03-01 16:41:30.000000000 +0100
-@@ -487,7 +487,8 @@ static ssize_t zfcp_sysfs_adapter_q_full
- 	struct zfcp_adapter *adapter =
- 		(struct zfcp_adapter *) scsi_host->hostdata[0];
- 
--	return sprintf(buf, "%d\n", atomic_read(&adapter->qdio_outb_full));
-+	return sprintf(buf, "%d %llu\n", atomic_read(&adapter->qdio_outb_full),
-+		       (unsigned long long)adapter->req_q_util);
- }
- static DEVICE_ATTR(queue_full, S_IRUGO, zfcp_sysfs_adapter_q_full_show, NULL);
- 
+ 	read_lock_irqsave(&zfcp_data.config_lock, flags);
+ 	unit = zfcp_unit_lookup(adapter, sdp->channel, sdp->id, sdp->lun);
+-	if (unit &&
+-	    (atomic_read(&unit->status) & ZFCP_STATUS_UNIT_REGISTERED)) {
++	if (unit) {
+ 		sdp->hostdata = unit;
+ 		unit->device = sdp;
+ 		zfcp_unit_get(unit);
 
