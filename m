@@ -1,91 +1,232 @@
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: [BUG] 2.6.29-rc6-2450cf in scsi_lib.c (was: Large amount of
- scsi-sgpool)objects
-Date: Tue, 3 Mar 2009 23:07:14 +0100 (CET)
-Message-ID: <alpine.LFD.2.00.0903032247170.29264@localhost.localdomain>
-References: <alpine.LSU.2.00.0903030220050.2438@fbirervta.pbzchgretzou.qr>  <49ACF8FE.2020904@panasas.com>  <1236093718.3263.3.camel@localhost.localdomain>  <alpine.LSU.2.00.0903031703270.855@fbirervta.pbzchgretzou.qr> <1236097526.3263.17.camel@localhost.localdomain>
- <alpine.LFD.2.00.0903031818230.29264@localhost.localdomain>
+From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
+Subject: 2.6.29-rc6-git7: Reported regressions 2.6.27 -> 2.6.28
+Date: Tue,  3 Mar 2009 20:34:54 +0100 (CET)
+Message-ID: <r4SCKuuJK0F.A.UrB.QdarJB@chimera>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.tglx.de ([62.245.132.106]:56586 "EHLO www.tglx.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756871AbZCCWHd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Mar 2009 17:07:33 -0500
-In-Reply-To: <alpine.LFD.2.00.0903031818230.29264@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Stable Kernel Team <stable-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jan Engelhardt <jengelh@medozas.de>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Tue, 3 Mar 2009, Thomas Gleixner wrote:
-> My bad. I was playing with that to get rid of the aic7xxx wreckage on
-> one of my test boxen and forgot to remove it.
+[NOTE: I'm going to close the unresolved bugs in this list where the submitter
+ has not been responding.]
 
-While the one below is definitey not my fault. It's on Linus latest:
+This message contains a list of some regressions introduced between 2.6.27 and
+2.6.28, for which there are no fixes in the mainline I know of.  If any of them
+have been fixed already, please let me know.
 
- commit 2450cf51a1bdba7037e91b1bcc494b01c58aaf66
+If you know of any other unresolved regressions introduced between 2.6.27
+and 2.6.28, please let me know either and I'll add them to the list.
+Also, please let me know if any of the entries below are invalid.
 
-While compiling a kernel I triggerred the BUG below. Not so nice as it
-took a whole filesystem with it. fsck took more than 20 min to recover
-the leftovers :(
+Each entry from the list will be sent additionally in an automatic reply to
+this message with CCs to the people involved in reporting and handling the
+issue.
+
+
+Listed regressions statistics:
+
+  Date          Total  Pending  Unresolved
+  ----------------------------------------
+  2009-03-03      153       21          16
+  2009-02-24      154       27          23
+  2009-02-15      152       30          26
+  2009-02-04      149       33          30
+  2009-01-20      144       30          27
+  2009-01-11      139       33          30
+  2008-12-21      120       19          17
+  2008-12-13      111       14          13
+  2008-12-07      106       20          17
+  2008-12-04      106       29          21
+  2008-11-22       93       25          15
+  2008-11-16       89       32          18
+  2008-11-09       73       40          27
+  2008-11-02       55       41          29
+  2008-10-25       26       25          20
+
+
+Unresolved regressions
+----------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12759
+Subject		: scsi: aic7xxx hang since v2.6.28-rc1 ...
+Submitter	: Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>
+Date		: 2009-02-15 11:44 (17 days old)
+References	: http://marc.info/?l=linux-kernel&m=123469852817058&w=4
+Handled-By	: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12690
+Subject		: DPMS (LCD powersave, poweroff) don't work
+Submitter	: Antonin Kolisek <akolisek-T3ps84XAcx36AaHJ4hbVU+3CNBr840j2@public.gmane.org>
+Date		: 2009-02-11 09:40 (21 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12645
+Subject		: DMI low-memory-protect quirk causes resume hang on Samsung NC10
+Submitter	: Patrick Walton <pcwalton-764C0pRuGfqVc3sceRu5cw@public.gmane.org>
+Date		: 2009-02-06 18:35 (26 days old)
+First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=0af40a4b1050c050e62eb1dc30b82d5ab22bf221
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12634
+Subject		: video distortion and lockup with i830 video chip and 2.6.28.3
+Submitter	: Bob Raitz <pappy_mcfae-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
+Date		: 2009-02-04 21:10 (28 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12619
+Subject		: Regression 2.6.28 and last - boot failed
+Submitter	: jan sonnek <ha2nny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-02-01 19:59 (31 days old)
+References	: http://marc.info/?l=linux-kernel&m=123351836213969&w=4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12500
+Subject		: r8169: NETDEV WATCHDOG: eth0 (r8169): transmit timed out
+Submitter	: Justin Piszcz <jpiszcz-BP4nVm5VUdNhbmWW9KSYcQ@public.gmane.org>
+Date		: 2009-01-13 21:19 (50 days old)
+References	: http://marc.info/?l=linux-kernel&m=123188160811322&w=4
+Handled-By	: Francois Romieu <romieu-W8zweXLXuWQS+FvcfC7Uqw@public.gmane.org>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12465
+Subject		: KVM guests stalling on 2.6.28 (bisected)
+Submitter	: Kevin Shanahan <kmshanah-biM/RbsGxha6c6uEtOJ/EA@public.gmane.org>
+Date		: 2009-01-17 03:37 (46 days old)
+Handled-By	: Avi Kivity <avi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12421
+Subject		: GPF on 2.6.28 and 2.6.28-rc9-git3, e1000e and e1000 issues
+Submitter	: Doug Bazarnic <doug-nOyj/A09A+/k1uMJSBkQmQ@public.gmane.org>
+Date		: 2009-01-09 21:26 (54 days old)
+References	: http://marc.info/?l=linux-kernel&m=123153653120204&w=4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12411
+Subject		: 2.6.28: BUG in r8169
+Submitter	: Andrey Vul <andrey.vul-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2008-12-31 18:37 (63 days old)
+References	: http://marc.info/?l=linux-kernel&m=123074869611409&w=4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12408
+Subject		: Funny problem with 2.6.28: Kernel stalls
+Submitter	: Michael Roth <mroth-+8Z3Oe2AQjqzQB+pC5nmwQ@public.gmane.org>
+Date		: 2008-12-25 15:14 (69 days old)
+References	: http://marc.info/?l=linux-kernel&m=123021931714282&w=4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12405
+Subject		: oops in __bounce_end_io_read under kvm
+Submitter	: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Date		: 2008-12-26 17:36 (68 days old)
+References	: http://marc.info/?l=linux-kernel&m=123031303400676&w=4
+Handled-By	: Jens Axboe <jens.axboe-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12404
+Subject		: Oops in 2.6.28-rc9 and -rc8 -- mtrr issues / e1000e
+Submitter	: Kernel <kernel-nOyj/A09A+/k1uMJSBkQmQ@public.gmane.org>
+Date		: 2008-12-22 9:37 (72 days old)
+References	: http://marc.info/?l=linux-kernel&m=122993873320150&w=4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12337
+Subject		: ~100 extra wakeups reported by powertop
+Submitter	: Alberto Gonzalez <luis6674-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
+Date		: 2008-12-31 12:25 (63 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12209
+Subject		: oldish top core dumps (in its meminfo() function)
+Submitter	: Andreas Mohr <andi-5+Cda9B46AM@public.gmane.org>
+Date		: 2008-12-12 18:49 (82 days old)
+References	: http://marc.info/?l=linux-kernel&m=122910784006472&w=4
+		  http://marc.info/?l=linux-kernel&m=122907511319288&w=4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12208
+Subject		: uml is very slow on 2.6.28 host
+Submitter	: Miklos Szeredi <miklos-sUDqSbJrdHQHWmgEVkV9KA@public.gmane.org>
+Date		: 2008-12-12 9:35 (82 days old)
+References	: http://marc.info/?l=linux-kernel&m=122907463518593&w=4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12061
+Subject		: snd_hda_intel: power_save: sound cracks on powerdown
+Submitter	: Jens Weibler <bugzilla-kernel-6hJTtV8wudIr9FUcG+3rRQ@public.gmane.org>
+Date		: 2008-11-18 12:07 (106 days old)
+Handled-By	: Takashi Iwai <tiwai-l3A5Bk7waGM@public.gmane.org>
+
+
+Regressions with patches
+------------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12798
+Subject		: No wake up after suspend.
+Submitter	: Michal Graczyk <zazulas-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-03-01 15:30 (3 days old)
+Handled-By	: Zhang Rui <rui.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Patch		: http://bugzilla.kernel.org/attachment.cgi?id=20402&action=view
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12614
+Subject		: WOL with forcedeth broken since f55c21fd9a92a444e55ad1ca4e4732d56661bf2e
+Submitter	: Philipp Matthias Hahn <pmhahn-u4khhh1J0LzF41mA0N3lWw@public.gmane.org>
+Date		: 2009-01-29 6:31 (34 days old)
+References	: http://marc.info/?l=linux-kernel&m=123321232825316&w=4
+Handled-By	: Yinghai Lu <yinghai-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+		  Tobias Diedrich <ranma+kernel-YxUgxmcw2FPQD6PfKP4TzA@public.gmane.org>
+Patch		: http://marc.info/?l=linux-kernel&m=123330459229248&w=4
+		  http://marc.info/?l=linux-kernel&m=123411195117835&w=4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12612
+Subject		: hard lockup when interrupting cdda2wav
+Submitter	: Matthias Reichl <hias-vtPv7MOkFPkAvxtiuMwx3w@public.gmane.org>
+Date		: 2009-01-28 16:41 (35 days old)
+References	: http://marc.info/?l=linux-kernel&m=123316111415677&w=4
+Handled-By	: FUJITA Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>
+Patch		: http://marc.info/?l=linux-scsi&m=123371501613019&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12406
+Subject		: 2.6.28 thinks that my PS/2 mouse is a touchpad
+Submitter	: Alexander E. Patrakov <patrakov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2008-12-27 9:06 (67 days old)
+References	: http://marc.info/?l=linux-kernel&m=123036893817280&w=4
+Handled-By	: Arjan Opmeer <arjan-OssVvNj1wBysTnJN9+BGXg@public.gmane.org>
+Patch		: http://marc.info/?l=linux-kernel&m=123092147703236&w=4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12395
+Subject		: 2.6.28-rc9: oprofile regression
+Submitter	: Tim Blechmann <tim-xpEK/MU0Hawdnm+yROfE0A@public.gmane.org>
+Date		: 2008-12-21 14:23 (73 days old)
+First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=b99170288421c79f0c2efa8b33e26e65f4bb7fb8
+References	: http://marc.info/?l=linux-kernel&m=122986946614791&w=4
+Handled-By	: Andi Kleen <ak-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+		  Tim Blechmann <tim-xpEK/MU0Hawdnm+yROfE0A@public.gmane.org>
+Patch		: http://marc.info/?l=linux-kernel&m=123506131927371&w=4
+
+
+For details, please visit the bug entries and follow the links given in
+references.
+
+As you can see, there is a Bugzilla entry for each of the listed regressions.
+There also is a Bugzilla entry used for tracking the regressions introduced
+between 2.6.27 and 2.6.28, unresolved as well as resolved, at:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=11808
+
+Please let me know if there are any Bugzilla entries that should be added to
+the list in there.
 
 Thanks,
-
-	tglx
-
-
-------------[ cut here ]------------
-kernel BUG at /home/tglx/work/kernel/git/linux-2.6/drivers/scsi/scsi_lib.c:1141!
-invalid opcode: 0000 [#1] SMP 
-last sysfs file: /sys/devices/pci0000:00/0000:00:1c.5/0000:03:00.0/irq
-CPU 0 
-Modules linked in: ext2 ipt_MASQUERADE iptable_nat nf_nat bridge stp autofs4 coretemp lm85 hwmon_vid hwmon nfs lockd nfs_acl auth_rpcgss fuse sunrpc 8139too mii ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filter ip_tables ip6t_REJECT ip6t_ipv6header xt_tcpudp nf_conntrack_ipv6 xt_state nf_conntrack ip6table_filter ip6_tables x_tables ipv6 dm_mirror dm_region_hash dm_log dm_multipath dm_mod raid0 kvm_intel kvm uinput snd_hda_codec_idt snd_hda_intel snd_hda_codec snd_hwdep snd_seq_dummy snd_seq_oss snd_seq_midi_event snd_seq snd_seq_device snd_pcm_oss snd_mixer_oss snd_pcm snd_timer snd ppdev i2c_i801 firewire_ohci soundcore parport_pc i82975x_edac e1000e firewire_core snd_page_alloc i2c_core iTCO_wdt sr_mod edac_core parport sg floppy crc_itu_t iTCO_vendor_support pcspkr serio_raw c
- drom ata_piix sata_sil ahci libata sd_mod scsi_mod raid456 async_xor async_memcpy async_tx xor raid1 ext3 jbd mbcache uhci_hcd ohci_hcd ehci_hcd [last unloaded: freq_table]
-Pid: 16556, comm: cc1 Not tainted 2.6.29-rc6 #155         
-RIP: 0010:[<ffffffffa00ad30b>]  [<ffffffffa00ad30b>] scsi_init_sgtable+0x51/0x9f [scsi_mod]
-RSP: 0000:ffffffff8163cb40  EFLAGS: 00010002
-RAX: 000000000000002d RBX: ffff88004b7a3590 RCX: 00000000ffffffff
-RDX: 000000000000000b RSI: ffff880034b4d0a0 RDI: 0000000000002000
-RBP: ffffffff8163cb50 R08: ffff880001017b50 R09: ffffffff8163cb90
-R10: ffff88007d281000 R11: 0000000000000000 R12: ffff88003b323c58
-R13: 00000000082b73a7 R14: ffffffff8163cc48 R15: 00000000000003f0
-FS:  00007fe47f3ea6f0(0000) GS:ffffffff81645080(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007fe47a37f000 CR3: 00000000443a8000 CR4: 00000000000026e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-Process cc1 (pid: 16556, threadinfo ffff88001c332000, task ffff880008398000)
-Stack:
- ffff88003b323c00 ffff88007d281000 ffffffff8163cb70 ffffffffa00ad550
- ffff88004b7a3590 ffff88007d281000 ffffffff8163cba0 ffffffffa00ad6b1
- ffff88007d1f1410 ffff88007d1f0000 ffff88004b7a3590 ffff88007d281000
-Call Trace:
- <IRQ> <0> [<ffffffffa00ad550>] scsi_init_io+0x1f/0xc9 [scsi_mod]
- [<ffffffffa00ad6b1>] scsi_setup_fs_cmnd+0xb7/0xbf [scsi_mod]
- [<ffffffffa00d5175>] sd_prep_fn+0x65/0x81c [sd_mod]
- [<ffffffffa00a768c>] ? scsi_done+0x0/0x12 [scsi_mod]
- [<ffffffffa00a768c>] ? scsi_done+0x0/0x12 [scsi_mod]
- [<ffffffff8114345e>] elv_next_request+0xd7/0x19e
- [<ffffffffa00acc45>] scsi_request_fn+0x90/0x4cf [scsi_mod]
- [<ffffffff81144e86>] blk_invoke_request_fn+0x75/0x14a
- [<ffffffff8114547a>] __blk_run_queue+0x25/0x29
- [<ffffffff8114549f>] blk_run_queue+0x21/0x35
- [<ffffffffa00ac4f3>] scsi_run_queue+0x2e3/0x37d [scsi_mod]
- [<ffffffffa00ad2aa>] scsi_next_command+0x36/0x46 [scsi_mod]
- [<ffffffffa00addd7>] scsi_io_completion+0x3df/0x423 [scsi_mod]
- [<ffffffffa00df3ad>] ? __ata_qc_complete+0xc0/0xc9 [libata]
- [<ffffffffa00e1011>] ? ata_qc_complete+0x1ea/0x1f3 [libata]
- [<ffffffffa00a7683>] scsi_finish_command+0xe9/0xf2 [scsi_mod]
- [<ffffffffa00adf45>] scsi_softirq_done+0x11a/0x123 [scsi_mod]
- [<ffffffff81149275>] blk_done_softirq+0x69/0x79
- [<ffffffff810412b7>] __do_softirq+0x83/0x144
- [<ffffffff8100d23c>] call_softirq+0x1c/0x28
- [<ffffffff8100e17c>] do_softirq+0x34/0x76
- [<ffffffff81040fd1>] irq_exit+0x3f/0x79
- [<ffffffff8100e43f>] do_IRQ+0x130/0x155
- [<ffffffff8100cb13>] ret_from_intr+0x0/0xa
- <EOI> <0>Code: 80 00 00 00 4c 89 e7 e8 0a 0d 0b e1 85 c0 74 45 48 c7 c2 59 d3 0a a0 be 80 00 00 00 4c 89 e7 e8 78 09 0b e1 b8 02 00 00 00 eb 25 <0f> 0b eb fe 41 89 44 24 08 83 7b 4c 02 75 08 8b 83 18 01 00 00 
-RIP  [<ffffffffa00ad30b>] scsi_init_sgtable+0x51/0x9f [scsi_mod]
- RSP <ffffffff8163cb40>
----[ end trace 1b0175d9b3d81293 ]---
+Rafael
