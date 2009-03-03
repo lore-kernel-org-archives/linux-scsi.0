@@ -1,84 +1,51 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] hpsa: SCSI driver for HP Smart Array controllers
-Date: Tue, 03 Mar 2009 10:49:15 -0600
-Message-ID: <49AD5F8B.8060602@cs.wisc.edu>
-References: <20090302145650.GW15340@beardog.cca.cpqcorp.net>
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: Large amount of scsi-sgpool objects
+Date: Tue, 3 Mar 2009 18:19:16 +0100 (CET)
+Message-ID: <alpine.LFD.2.00.0903031818230.29264@localhost.localdomain>
+References: <alpine.LSU.2.00.0903030220050.2438@fbirervta.pbzchgretzou.qr>  <49ACF8FE.2020904@panasas.com>  <1236093718.3263.3.camel@localhost.localdomain>  <alpine.LSU.2.00.0903031703270.855@fbirervta.pbzchgretzou.qr>
+ <1236097526.3263.17.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:35098 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753263AbZCCQxO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Mar 2009 11:53:14 -0500
-In-Reply-To: <20090302145650.GW15340@beardog.cca.cpqcorp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-rt-users-owner@vger.kernel.org>
+In-Reply-To: <1236097526.3263.17.camel@localhost.localdomain>
+Sender: linux-rt-users-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jan Engelhardt <jengelh@medozas.de>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-rt-users@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scameron@beardog.cca.cpqcorp.net
-Cc: linux-kernel@vger.kernel.org, mike.miller@hp.com, jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, coldwell@redhat.com, hare@novell.com, iss_storagedev@hp.com
 
-scameron@beardog.cca.cpqcorp.net wrote:
-> [...]
->>> +/*
->>> + * For operations that cannot sleep, a command block is allocated at init,
->>> + * and managed by cmd_alloc() and cmd_free() using a simple bitmap to track
->>> + * which ones are free or in use.  Lock must be held when calling this.
->>> + * cmd_free() is the complement.
->>> + */
->>> +static struct CommandList_struct *cmd_alloc(struct ctlr_info *h)
->>> +{
->>> +     struct CommandList_struct *c;
->>> +     int i;
->>> +     union u64bit temp64;
->>> +     dma_addr_t cmd_dma_handle, err_dma_handle;
->>> +
->>> +     do {
->>> +             i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
->>> +             if (i == h->nr_cmds)
->>> +                     return NULL;
->>> +     } while (test_and_set_bit
->>> +              (i & (BITS_PER_LONG - 1),
->>> +               h->cmd_pool_bits + (i / BITS_PER_LONG)) != 0);
->> Using bitmap to manage free commands looks too complicated a bit to
->> me. Can we just use lists for command management?
+On Tue, 3 Mar 2009, James Bottomley wrote:
+
+> On Tue, 2009-03-03 at 17:08 +0100, Jan Engelhardt wrote:
+> > On Tuesday 2009-03-03 16:21, James Bottomley wrote:
+> > >> > $ slabtop
+> > >> >   OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME                   
+> > >> > 818616 818616 100%    0.16K  34109       24    136436K sgpool-8
+> > >> > 253692 253692 100%    0.62K  42282        6    169128K sgpool-32
+> > >> >  52017  52016  99%    2.50K  17339        3    138712K sgpool-128
+> > >> >  26220  26219  99%    0.31K   2185       12      8740K sgpool-16
+> > >> >   8927   8574  96%    0.03K     79      113       316K size-32
+> > >> 
+> > >> Looks like a leak, by failing to call scsi_release_buffers()
+> > >> somehow. (Which was changed recently)
+> > >
+> > >Firstly, I have to say I don't see this in the mainline tree, so could
+> > >you try that with your setup just to verify (git head at 2.6.29-rc6).
+> > 
+> > Yes, looking at the rt patch (in broken-out it's in origin.diff),
+> > it seems a bit obvious - the scsi_release_buffers is not called anymore:
 > 
-> Hmm, this doesn't seem all that complicated to me, and this code snippet
-> has been pretty stable for about 10 years. it's nearly identical to what's in
-> cpqarray in the 2.2.13 kernel from 1999:
+> OK, this is a bad patch, so just revert it.  It was posted to linux-scsi
+> initially in this form before the author posted a new one with the
+> missing release buffers added.  It looks like the first incarnation got
+> pulled into the -rt tree for some reasons.
 > 
->                 do {
->                         i = find_first_zero_bit(h->cmd_pool_bits, NR_CMDS);
->                         if (i == NR_CMDS)
->                                 return NULL;
->                 } while(test_and_set_bit(i%32, h->cmd_pool_bits+(i/32)) != 0)
-> 
-> It's fast, works well, and has needed very little maintenance over the 
-> years.  Without knowing what you have in mind specifically, I don't see a
-> big need to change this.
-> 
+> So the real question is why does the -rt tree even have patches not in
+> the vanilla SCSI tree?  This type of cockup clearly demonstrates why
+> it's a bad idea.
 
-Other drivers have had to convert to and modify the host tagging to get 
-merged. They too had stable and fast code, and we complained and fought 
-against changing it :) I have had to convert or help convert libfc and 
-qla4xxx and I will now convert iscsi, so I feel your pain :)
+My bad. I was playing with that to get rid of the aic7xxx wreckage on
+one of my test boxen and forgot to remove it.
 
-To create the map call scsi_init_shared_tag_map after you allocate the 
-scsi host and before you add it. Then in slave_alloc set the 
-sdev->tag_supported  = 1 and call scsi_activate_tcq. Then replace your 
-bitmap with:
+Thanks,
 
-for scsi commands:
-
-c = h->cmd_pool + scsi_cmnd->request->tag
-
-And for the reset path I was thinking you could use my patch in the 
-other mail and do
-
-tag = blk_map_start_tag(scsi_host->bqt, NULL, 0);
-if (tag < 0)
-	goto fail;
-c = h->cmd_pool + tag;
-c->cmdindex = tag;
-
-In the completion path you need to do a blk_map_end_tag(scsi_host->bqt, 
-c->cmdindex);. The scsi/block layer will free the tag for scsi commadns.
+	tglx
