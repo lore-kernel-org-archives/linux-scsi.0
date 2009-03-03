@@ -1,113 +1,58 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: Re: Large amount of scsi-sgpool objects
-Date: Tue, 3 Mar 2009 22:44:54 +0100
-Message-ID: <20090303214454.GA8288@elte.hu>
-References: <alpine.LSU.2.00.0903030220050.2438@fbirervta.pbzchgretzou.qr> <49ACF8FE.2020904@panasas.com> <1236093718.3263.3.camel@localhost.localdomain> <alpine.LSU.2.00.0903031703270.855@fbirervta.pbzchgretzou.qr> <1236097526.3263.17.camel@localhost.localdomain> <20090303192212.GA20705@elte.hu> <1236115544.15993.22.camel@localhost.localdomain>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 1/11] mpt2sas: mpt2sas_base sources
+Date: Tue, 3 Mar 2009 14:49:05 -0700
+Message-ID: <20090303214905.GA1539@parisc-linux.org>
+References: <da824cf30902241600g121d2acfw937020a750a79a57@mail.gmail.com> <660360F4F2570145BD872F298951B17A7673CB09@cosmail03.lsi.com> <20090225211224.GW16891@parisc-linux.org> <1236115756.15993.23.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx3.mail.elte.hu ([157.181.1.138]:59303 "EHLO mx3.mail.elte.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754473AbZCCVpE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Mar 2009 16:45:04 -0500
+Received: from palinux.external.hp.com ([192.25.206.14]:58140 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754658AbZCCVtX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Mar 2009 16:49:23 -0500
 Content-Disposition: inline
-In-Reply-To: <1236115544.15993.22.camel@localhost.localdomain>
+In-Reply-To: <1236115756.15993.23.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jan Engelhardt <jengelh@medozas.de>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-rt-users@vger.kernel.org
+Cc: "Moore, Eric" <Eric.Moore@lsi.com>, Grant Grundler <grundler@google.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-
-* James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-
-> On Tue, 2009-03-03 at 20:22 +0100, Ingo Molnar wrote:
-> > * James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> > 
-> > > On Tue, 2009-03-03 at 17:08 +0100, Jan Engelhardt wrote:
-> > > > On Tuesday 2009-03-03 16:21, James Bottomley wrote:
-> > > > >> > $ slabtop
-> > > > >> >   OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME                   
-> > > > >> > 818616 818616 100%    0.16K  34109       24    136436K sgpool-8
-> > > > >> > 253692 253692 100%    0.62K  42282        6    169128K sgpool-32
-> > > > >> >  52017  52016  99%    2.50K  17339        3    138712K sgpool-128
-> > > > >> >  26220  26219  99%    0.31K   2185       12      8740K sgpool-16
-> > > > >> >   8927   8574  96%    0.03K     79      113       316K size-32
-> > > > >> 
-> > > > >> Looks like a leak, by failing to call scsi_release_buffers()
-> > > > >> somehow. (Which was changed recently)
-> > > > >
-> > > > >Firstly, I have to say I don't see this in the mainline tree, so could
-> > > > >you try that with your setup just to verify (git head at 2.6.29-rc6).
+On Tue, Mar 03, 2009 at 03:29:16PM -0600, James Bottomley wrote:
+> On Wed, 2009-02-25 at 14:12 -0700, Matthew Wilcox wrote:
+> > On Wed, Feb 25, 2009 at 01:27:00PM -0700, Moore, Eric wrote:
+> > > > > +static void
+> > > > > +_base_mask_interrupts(struct MPT2SAS_ADAPTER *ioc)
+> > > > > +{
+> > > > > + ? ? ? u32 him_register;
+> > > > > +
+> > > > > + ? ? ? ioc->mask_interrupts = 1;
+> > > > > + ? ? ? him_register = readl(&ioc->chip->HostInterruptMask);
+> > > > > + ? ? ? him_register |= MPI2_HIM_DIM + MPI2_HIM_RIM + 
+> > > > MPI2_HIM_RESET_IRQ_MASK;
+> > > > > + ? ? ? writel(him_register, &ioc->chip->HostInterruptMask);
 > > > > 
-> > > > Yes, looking at the rt patch (in broken-out it's in origin.diff),
-> > > > it seems a bit obvious - the scsi_release_buffers is not called anymore:
+> > > > This is a posted write. Does it need to be flushed?
+> > > > ie do other parts of the driver require this take effect immediately
+> > > > or will they tolerate some late arriving interrupt?
 > > > 
-> > > OK, this is a bad patch, so just revert it.  It was posted to 
-> > > linux-scsi initially in this form before the author posted a 
-> > > new one with the missing release buffers added.  It looks like 
-> > > the first incarnation got pulled into the -rt tree for some 
-> > > reasons.
+> > > What are you suggesting?   Calling wmb()?
 > > 
-> > Uhm. I applied a test-patch from Alan Stern, to possibly fix an 
-> > SCSI lockup with aic7xxx that _I_ reported to you and then to 
-> > the scsi-list.
-> > 
-> > You were Cc:-ed to that test patch and to my bugreport as well, 
-> > all the way. Do you claim that you dont remember it?
+> > PCI writes can be posted, so the him_register writel() may not complete
+> > for a few thousand cycles.  wmb() isn't going to solve the problem.  A
+> > readl() from the device would, as would your current solution of
+> > ignoring subsequent interrupts.
 > 
-> ?  If I've just quoted the patch above why would I not remember it now.
-> I've just said it's the cause of the problems in the -rt tree.
-> 
-> > The saga is still documented in tip:out-of-tree (which is a 
-> > special branch with out-of-tree hotfixes):
-> > 
-> >  7e4cbd1: fix "scsi: aic7xxx hang since v2.6.28-rc1"
-> >  e027abc: scsi: temporarily undo scsi reverts
-> >  813104e: Revert "[SCSI] simplify scsi_io_completion()"
-> >  84db545: Revert "[SCSI] Fix uninitialized variable error in scsi_io_completion"
-> >  0eb6038: Revert "[SCSI] Fix error handling for DIF/DIX"
-> >  3cd94dd: Revert "[SCSI] scsi_lib: don't decrement busy counters when inserting commands"
-> >  c27aed5: Revert "[SCSI] scsi_lib: fix DID_RESET status problems"
-> > 
-> > I wasnt Cc:-ed on the updated patch AFAICS, so i didnt pick it 
-> > up.
-> 
-> Actually, you were cc'd, you probably just missed it.
+> This seems to be the most serious issue with the current patch set.  If
+> you repost with that fixed, I can put it into scsi-misc and we can
+> address the other issues later.
 
-Correct, see my earlier reply to Alan Stern for the details of 
-why it got missed.
+I'm confused.  There's no issue with the code that Eric posted.  Grant
+asked if he needs to readl() in order to flush the posted write, but the
+answer is no, because if a spurious interrupt comes in, the interrupt
+handler will ignore it.  So I don't see what Eric needs to fix.
 
-> > > So the real question is why does the -rt tree even have 
-> > > patches not in the vanilla SCSI tree?  This type of cockup 
-> > > clearly demonstrates why it's a bad idea.
-> > 
-> > Believe me, i have better things to do than to track down your 
-> > regressions. I applied a fix/test patch sent to me by SCSI 
-> > folks.
-> 
-> Look, I've no problem with you collecting random patches.  I 
-> have a problem when you start pushing random SCSI patches into 
-> other trees. [...]
-
-Both -tip and -rt are generic trees and there's a connection 
-between them that the maintainers of both are one and the same 
-set of people.
-
-So i'm not sure on what grounds you purport to be able to 
-prevent fixes from flowing from -tip into -rt and vice versa.
-
-You have no monopoly on the propagation and testing of SCSI 
-fixes. We picked up a v1 patch from the SCSI list and did not 
-add nor remove anything from it.
-
-Yes, v1 was buggy and I missed the v2 patch because it had the 
-same subject line and no easily visible differentiator that it 
-was a v2 patch.
-
-In fact you should be happy that people are helping you out 
-fixing your bugs. I never even thought of flaming anyone for 
-having picked up a v1 scheduler fix and getting burned by it 
-while a v2 existed. I find it unexplainable and irrational that 
-you feel the need to do so for SCSI fixes.
-
-	Ingo
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
