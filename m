@@ -1,62 +1,113 @@
-From: Reinhard Nissl <rnissl@gmx.de>
-Subject: Re: [PATCH 5/5] mvsas : redesign the mvsas driver architecture.
-Date: Tue, 03 Mar 2009 22:34:34 +0100
-Message-ID: <49ADA26A.6020402@gmx.de>
-References: <49A3C11B.3020107@marvell.com>
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: Large amount of scsi-sgpool objects
+Date: Tue, 3 Mar 2009 22:44:54 +0100
+Message-ID: <20090303214454.GA8288@elte.hu>
+References: <alpine.LSU.2.00.0903030220050.2438@fbirervta.pbzchgretzou.qr> <49ACF8FE.2020904@panasas.com> <1236093718.3263.3.camel@localhost.localdomain> <alpine.LSU.2.00.0903031703270.855@fbirervta.pbzchgretzou.qr> <1236097526.3263.17.camel@localhost.localdomain> <20090303192212.GA20705@elte.hu> <1236115544.15993.22.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:59200 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752357AbZCCVes (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Mar 2009 16:34:48 -0500
-In-Reply-To: <49A3C11B.3020107@marvell.com>
+Received: from mx3.mail.elte.hu ([157.181.1.138]:59303 "EHLO mx3.mail.elte.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754473AbZCCVpE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Mar 2009 16:45:04 -0500
+Content-Disposition: inline
+In-Reply-To: <1236115544.15993.22.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kewei@marvell.com
-Cc: linux-scsi@vger.kernel.org, jeff@garzik.org, james.bottomley@hansenpartnership.com, qzhao@marvell.com, qswang@marvell.com, jfeng@marvell.com, jasonchu@marvell.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jan Engelhardt <jengelh@medozas.de>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-rt-users@vger.kernel.org
 
-Hi,
 
-Ke Wei schrieb:
+* James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-> +		mvs_64xx_detect_porttype(mvi, i);
-> +	}
-> +	if (mvi->flags & MVF_FLAG_SOC) {
-> +		/* set select registers */
-> +		writel(0x0E008000, regs + 0x000);
-> +		writel(0x59000008, regs + 0x004);
-> +		writel(0x20, regs + 0x008);
-> +		writel(0x20, regs + 0x00c);
-> +		writel(0x20, regs + 0x010);
-> +		writel(0x20, regs + 0x014);
-> +		writel(0x20, regs + 0x018);
-> +		writel(0x20, regs + 0x01c);
-> +	}
-> +	for (i = 0; i < mvi->chip->n_phy; i++) {
-> +		/* clear phy int status */
-> +		tmp = mvs_read_port_irq_stat(mvi, i);
-> +		tmp &= ~PHYEV_SIG_FIS;
-> +		mvs_write_port_irq_stat(mvi, i, tmp);
-> +
-> +		/* set phy int mask */
-> +		tmp = PHYEV_RDY_CH | PHYEV_BROAD_CH | PHYEV_UNASSOC_FIS |
-> +			PHYEV_ID_DONE | PHYEV_DCDR_ERR | PHYEV_CRC_ERR |
-> +			PHYEV_DEC_ERR;
-> +		mvs_write_port_irq_mask(mvi, i, tmp);
-> +
-> +		msleep(100);
-> +		mvs_update_phyinfo(mvi, i, 1);
+> On Tue, 2009-03-03 at 20:22 +0100, Ingo Molnar wrote:
+> > * James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> > 
+> > > On Tue, 2009-03-03 at 17:08 +0100, Jan Engelhardt wrote:
+> > > > On Tuesday 2009-03-03 16:21, James Bottomley wrote:
+> > > > >> > $ slabtop
+> > > > >> >   OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME                   
+> > > > >> > 818616 818616 100%    0.16K  34109       24    136436K sgpool-8
+> > > > >> > 253692 253692 100%    0.62K  42282        6    169128K sgpool-32
+> > > > >> >  52017  52016  99%    2.50K  17339        3    138712K sgpool-128
+> > > > >> >  26220  26219  99%    0.31K   2185       12      8740K sgpool-16
+> > > > >> >   8927   8574  96%    0.03K     79      113       316K size-32
+> > > > >> 
+> > > > >> Looks like a leak, by failing to call scsi_release_buffers()
+> > > > >> somehow. (Which was changed recently)
+> > > > >
+> > > > >Firstly, I have to say I don't see this in the mainline tree, so could
+> > > > >you try that with your setup just to verify (git head at 2.6.29-rc6).
+> > > > 
+> > > > Yes, looking at the rt patch (in broken-out it's in origin.diff),
+> > > > it seems a bit obvious - the scsi_release_buffers is not called anymore:
+> > > 
+> > > OK, this is a bad patch, so just revert it.  It was posted to 
+> > > linux-scsi initially in this form before the author posted a 
+> > > new one with the missing release buffers added.  It looks like 
+> > > the first incarnation got pulled into the -rt tree for some 
+> > > reasons.
+> > 
+> > Uhm. I applied a test-patch from Alan Stern, to possibly fix an 
+> > SCSI lockup with aic7xxx that _I_ reported to you and then to 
+> > the scsi-list.
+> > 
+> > You were Cc:-ed to that test patch and to my bugreport as well, 
+> > all the way. Do you claim that you dont remember it?
+> 
+> ?  If I've just quoted the patch above why would I not remember it now.
+> I've just said it's the cause of the problems in the -rt tree.
+> 
+> > The saga is still documented in tip:out-of-tree (which is a 
+> > special branch with out-of-tree hotfixes):
+> > 
+> >  7e4cbd1: fix "scsi: aic7xxx hang since v2.6.28-rc1"
+> >  e027abc: scsi: temporarily undo scsi reverts
+> >  813104e: Revert "[SCSI] simplify scsi_io_completion()"
+> >  84db545: Revert "[SCSI] Fix uninitialized variable error in scsi_io_completion"
+> >  0eb6038: Revert "[SCSI] Fix error handling for DIF/DIX"
+> >  3cd94dd: Revert "[SCSI] scsi_lib: don't decrement busy counters when inserting commands"
+> >  c27aed5: Revert "[SCSI] scsi_lib: fix DID_RESET status problems"
+> > 
+> > I wasnt Cc:-ed on the updated patch AFAICS, so i didnt pick it 
+> > up.
+> 
+> Actually, you were cc'd, you probably just missed it.
 
-I assume that this code doesn't work with my Seagate 10k6 drive
-ST3450856SS 0003. Looks like it still just waits for 100 ms which
-seems to be not sufficient for this drive (see the thread on this
-list regarding this drive).
+Correct, see my earlier reply to Alan Stern for the details of 
+why it got missed.
 
-Is there no way to determine that port detection has finished?
+> > > So the real question is why does the -rt tree even have 
+> > > patches not in the vanilla SCSI tree?  This type of cockup 
+> > > clearly demonstrates why it's a bad idea.
+> > 
+> > Believe me, i have better things to do than to track down your 
+> > regressions. I applied a fix/test patch sent to me by SCSI 
+> > folks.
+> 
+> Look, I've no problem with you collecting random patches.  I 
+> have a problem when you start pushing random SCSI patches into 
+> other trees. [...]
 
-Bye.
--- 
-Dipl.-Inform. (FH) Reinhard Nissl
-mailto:rnissl@gmx.de
+Both -tip and -rt are generic trees and there's a connection 
+between them that the maintainers of both are one and the same 
+set of people.
+
+So i'm not sure on what grounds you purport to be able to 
+prevent fixes from flowing from -tip into -rt and vice versa.
+
+You have no monopoly on the propagation and testing of SCSI 
+fixes. We picked up a v1 patch from the SCSI list and did not 
+add nor remove anything from it.
+
+Yes, v1 was buggy and I missed the v2 patch because it had the 
+same subject line and no easily visible differentiator that it 
+was a v2 patch.
+
+In fact you should be happy that people are helping you out 
+fixing your bugs. I never even thought of flaming anyone for 
+having picked up a v1 scheduler fix and getting burned by it 
+while a v2 existed. I find it unexplainable and irrational that 
+you feel the need to do so for SCSI fixes.
+
+	Ingo
