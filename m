@@ -1,142 +1,119 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH] hpsa: SCSI driver for HP Smart Array controllers
-Date: Tue, 3 Mar 2009 15:35:26 +0900
-Message-ID: <20090303153402A.fujita.tomonori@lab.ntt.co.jp>
-References: <20090302145650.GW15340@beardog.cca.cpqcorp.net>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: Large amount of scsi-sgpool objects
+Date: Tue, 03 Mar 2009 11:31:42 +0200
+Message-ID: <49ACF8FE.2020904@panasas.com>
+References: <alpine.LSU.2.00.0903030220050.2438@fbirervta.pbzchgretzou.qr>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:47835 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752108AbZCCGkI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Mar 2009 01:40:08 -0500
-In-Reply-To: <20090302145650.GW15340@beardog.cca.cpqcorp.net>
+Received: from mail-ew0-f177.google.com ([209.85.219.177]:57053 "EHLO
+	mail-ew0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750800AbZCCJcP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Mar 2009 04:32:15 -0500
+In-Reply-To: <alpine.LSU.2.00.0903030220050.2438@fbirervta.pbzchgretzou.qr>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scameron@beardog.cca.cpqcorp.net
-Cc: linux-kernel@vger.kernel.org, mike.miller@hp.com, jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, coldwell@redhat.com, hare@novell.com, iss_storagedev@hp.com
+To: Jan Engelhardt <jengelh@medozas.de>
+Cc: linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Mon, 2 Mar 2009 08:56:50 -0600
-scameron@beardog.cca.cpqcorp.net wrote:
-
-> [...]
-> > > +     .this_id                = -1,
-> > > +     .sg_tablesize           = MAXSGENTRIES,
-> > 
-> > MAXSGENTRIES (32) is the limitation of hardware? If not, it might be
-> > better to enlarge this for better performance?
+Jan Engelhardt wrote:
+> Hi,
 > 
-> Yes, definitely, though this value varies from controller to controller,
-> so this is just a default value that needs to be overridden, probably
-> in hpsa_scsi_detect().
-
-I see. If we override this in hpsa_scsi_detect(), we need a trick for
-SG in CommandList_struct, I guess.
-
-
-> [...]
-> > > +     .cmd_per_lun            = 512,
-> > > +     .use_clustering         = DISABLE_CLUSTERING,
-> > 
-> > Why can we use ENABLE_CLUSTERING here? We would get the better
-> > performance with ENABLE_CLUSTERING.
 > 
-> Yes, we should do that.  BTW, the comments in include/linux/scsi_host.h
-> don't do a very good job of describing exactly what use_clustering is for,
-> they say:
->         /*
->          * True if this host adapter can make good use of clustering.
->          * I originally thought that if the tablesize was large that it
->          * was a waste of CPU cycles to prepare a cluster list, but
->          * it works out that the Buslogic is faster if you use a smaller
->          * number of segments (i.e. use clustering).  I guess it is
->          * inefficient.
->          */
+> I am noticing that there are a lot of objects active after a few tens 
+> minutes of running xfs_fsr.
 > 
-> It never actually tells you what is meant by "clustering"
-
-Yeah, looks like it needs a fix.
-
-
-> > > +     use_sg = scsi_dma_map(cmd);
-> > >  +     if (!use_sg)
-> > > +             goto sglist_finished;
-> > 
-> > We need to handle dma mapping failure here; scsi_dma_map could fail.
+> $ slabtop
+>   OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME                   
+> 818616 818616 100%    0.16K  34109       24    136436K sgpool-8
+> 253692 253692 100%    0.62K  42282        6    169128K sgpool-32
+>  52017  52016  99%    2.50K  17339        3    138712K sgpool-128
+>  26220  26219  99%    0.31K   2185       12      8740K sgpool-16
+>   8927   8574  96%    0.03K     79      113       316K size-32
 > 
-> Grepping around a bit in drivers scsi I see some drivers do this:
+
+Looks like a leak, by failing to call scsi_release_buffers()
+somehow. (Which was changed recently)
+
+> $ uname -a
+> Linux yaguchi 2.6.29-rc6-rt #1 SMP PREEMPT RT 2009-02-19 23:12:33 
+> +0100 i686 athlon i386 GNU/Linux
 > 
-> 	SCpnt->result = DID_ERROR << 16;
-> 	
-> 	then call the scsi done function,
+
+Did you have a chance to try exact same thing with vanilla 2.6.29-rc6?
+
+try a bisect -- drivers/scsi/scsi_lib.c there should not be more then
+a couple of patches
+
+> What could be the problem that there are so many objects around and not 
+> freed? 
+
+Only one reason, failing to call scsi_release_buffers()
+
+There should not be more then .can_queue sg-pool objects in flight
+per disk. Which is rarely more then 255
+
+This makes the system pretty much unusable after a while as it 
+> runs towards a low-memory condition.
 > 
-> some drivers call BUG_ON() when scsi_dma_map() returns -1,
-> and some do nothing.
-
-These drivers are bad. Well, in ancient times dma_map_sg never failed
-on X86. So BUG_ON or ignoring is acceptable for drivers for ancient
-systems.
-
-But nowadays dma_map_sg can fail (e.g. with Intel VT-D IOMMU).
-
-
-> I'm guessing setting result = DID_ERROR << 16 and calling
-> the done function is the way to go, right? 
-
-Not. It's a temporary error, kinda out-of-memory. So we want to retry.
-returning SCSI_MLQUEUE_HOST_BUSY is appropriate here.
-
-
-> > We really need this? Creating something under /proc is not good. Using
-> > /sys/class/scsi_host/ is the proper way. If we remove the overlap
-> > between hpsa and cciss, we can do the proper way, I think.
+> $ free
+>              total       used       free     shared    buffers     cached
+> Mem:        766592     758688       7904          0          0     137184
+> -/+ buffers/cache:     621504     145088
+> Swap:       795136         32     795104
 > 
-> We can take it out.  We figured we'd take it out when
-> someone complained, which we figured would probably
-> happen pretty much immediately.
-
-I see, please drop this. This is an issue that we need to take care
-about before mainline merging.
-
-
-> > > + * For operations that cannot sleep, a command block is allocated at init,
-> > > + * and managed by cmd_alloc() and cmd_free() using a simple bitmap to track
-> > > + * which ones are free or in use.  Lock must be held when calling this.
-> > > + * cmd_free() is the complement.
-> > > + */
-> > > +static struct CommandList_struct *cmd_alloc(struct ctlr_info *h)
-> > > +{
-> > > +     struct CommandList_struct *c;
-> > > +     int i;
-> > > +     union u64bit temp64;
-> > > +     dma_addr_t cmd_dma_handle, err_dma_handle;
-> > > +
-> > > +     do {
-> > > +             i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
-> > > +             if (i == h->nr_cmds)
-> > > +                     return NULL;
-> > > +     } while (test_and_set_bit
-> > > +              (i & (BITS_PER_LONG - 1),
-> > > +               h->cmd_pool_bits + (i / BITS_PER_LONG)) != 0);
-> > 
-> > Using bitmap to manage free commands looks too complicated a bit to
-> > me. Can we just use lists for command management?
 > 
-> Hmm, this doesn't seem all that complicated to me, and this code snippet
-> has been pretty stable for about 10 years. it's nearly identical to what's in
-> cpqarray in the 2.2.13 kernel from 1999:
+> $ cat /proc/meminfo 
+> MemTotal:         766592 kB
+> MemFree:           79388 kB
+> Buffers:               0 kB
+> Cached:            62120 kB
+> SwapCached:         1428 kB
+> Active:            74472 kB
+> Inactive:         113524 kB
+> Active(anon):      58228 kB
+> Inactive(anon):    69124 kB
+> Active(file):      16244 kB
+> Inactive(file):    44400 kB
+> Unevictable:           0 kB
+> Mlocked:               0 kB
+> HighTotal:             0 kB
+> HighFree:              0 kB
+> LowTotal:         766592 kB
+> LowFree:           79388 kB
+> SwapTotal:        795136 kB
+> SwapFree:         792404 kB
+> Dirty:                 0 kB
+> Writeback:             0 kB
+> AnonPages:        124440 kB
+> Mapped:            13672 kB
+> Slab:             478576 kB
+> SReclaimable:       5316 kB
+> SUnreclaim:       473260 kB
+> PageTables:         1220 kB
+> NFS_Unstable:          0 kB
+> Bounce:                0 kB
+> WritebackTmp:          0 kB
+> CommitLimit:     1178432 kB
+> Committed_AS:   4294655912 kB
+> VmallocTotal:     245816 kB
+> VmallocUsed:       27404 kB
+> VmallocChunk:     197108 kB
+> HugePages_Total:       0
+> HugePages_Free:        0
+> HugePages_Rsvd:        0
+> HugePages_Surp:        0
+> Hugepagesize:       4096 kB
+> DirectMap4k:      696256 kB
+> DirectMap4M:       90112 kB
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 > 
->                 do {
->                         i = find_first_zero_bit(h->cmd_pool_bits, NR_CMDS);
->                         if (i == NR_CMDS)
->                                 return NULL;
->                 } while(test_and_set_bit(i%32, h->cmd_pool_bits+(i/32)) != 0)
-> 
-> It's fast, works well, and has needed very little maintenance over the 
-> years.  Without knowing what you have in mind specifically, I don't see a
-> big need to change this.
 
-I see. Seems that some drivers want something similar. I might come
-back later on with a patch to replace this with library
-functions.
+Please try some more tests, could it be a race that gets exposed in -rt?
+
+Boaz
