@@ -1,147 +1,77 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Getting TRIM working
-Date: Tue, 3 Mar 2009 12:07:00 -0700
-Message-ID: <20090303190700.GD20511@parisc-linux.org>
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: Large amount of scsi-sgpool objects
+Date: Tue, 3 Mar 2009 20:22:12 +0100
+Message-ID: <20090303192212.GA20705@elte.hu>
+References: <alpine.LSU.2.00.0903030220050.2438@fbirervta.pbzchgretzou.qr> <49ACF8FE.2020904@panasas.com> <1236093718.3263.3.camel@localhost.localdomain> <alpine.LSU.2.00.0903031703270.855@fbirervta.pbzchgretzou.qr> <1236097526.3263.17.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:51658 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753325AbZCCTHC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Mar 2009 14:07:02 -0500
+Received: from mx3.mail.elte.hu ([157.181.1.138]:34016 "EHLO mx3.mail.elte.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756505AbZCCTW1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Mar 2009 14:22:27 -0500
 Content-Disposition: inline
+In-Reply-To: <1236097526.3263.17.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jan Engelhardt <jengelh@medozas.de>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-rt-users@vger.kernel.org
 
 
-I'm having trouble getting Linux to spit out an appropriate TRIM
-command, and I've hit a bit of a wall, so I thought I'd appeal for help.
+* James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-The symptom is that we send out only 24 bytes and then stop rather than
-sending out a full 512 byte "sector".
+> On Tue, 2009-03-03 at 17:08 +0100, Jan Engelhardt wrote:
+> > On Tuesday 2009-03-03 16:21, James Bottomley wrote:
+> > >> > $ slabtop
+> > >> >   OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME                   
+> > >> > 818616 818616 100%    0.16K  34109       24    136436K sgpool-8
+> > >> > 253692 253692 100%    0.62K  42282        6    169128K sgpool-32
+> > >> >  52017  52016  99%    2.50K  17339        3    138712K sgpool-128
+> > >> >  26220  26219  99%    0.31K   2185       12      8740K sgpool-16
+> > >> >   8927   8574  96%    0.03K     79      113       316K size-32
+> > >> 
+> > >> Looks like a leak, by failing to call scsi_release_buffers()
+> > >> somehow. (Which was changed recently)
+> > >
+> > >Firstly, I have to say I don't see this in the mainline tree, so could
+> > >you try that with your setup just to verify (git head at 2.6.29-rc6).
+> > 
+> > Yes, looking at the rt patch (in broken-out it's in origin.diff),
+> > it seems a bit obvious - the scsi_release_buffers is not called anymore:
+> 
+> OK, this is a bad patch, so just revert it.  It was posted to 
+> linux-scsi initially in this form before the author posted a 
+> new one with the missing release buffers added.  It looks like 
+> the first incarnation got pulled into the -rt tree for some 
+> reasons.
 
-Here's what goes on, as far as I understand it.
+Uhm. I applied a test-patch from Alan Stern, to possibly fix an 
+SCSI lockup with aic7xxx that _I_ reported to you and then to 
+the scsi-list.
 
-We call 'blkdiscard /dev/sda 0 1' which is supposed to TRIM just LBA 0.
+You were Cc:-ed to that test patch and to my bugreport as well, 
+all the way. Do you claim that you dont remember it?
 
-We create a bio in blk_ioctl_discard() which sets bi_size to 512 (1 << 9).
-This is necessary to let the elevators know how many bytes we're going
-to discard, so it can do merging correctly.
+The saga is still documented in tip:out-of-tree (which is a 
+special branch with out-of-tree hotfixes):
 
-Then, in sd_discard_fn(), we do this:
+ 7e4cbd1: fix "scsi: aic7xxx hang since v2.6.28-rc1"
+ e027abc: scsi: temporarily undo scsi reverts
+ 813104e: Revert "[SCSI] simplify scsi_io_completion()"
+ 84db545: Revert "[SCSI] Fix uninitialized variable error in scsi_io_completion"
+ 0eb6038: Revert "[SCSI] Fix error handling for DIF/DIX"
+ 3cd94dd: Revert "[SCSI] scsi_lib: don't decrement busy counters when inserting commands"
+ c27aed5: Revert "[SCSI] scsi_lib: fix DID_RESET status problems"
 
-        bio->bi_size = 0;
-        if (bio_add_pc_page(q, bio, page, 24, 0) < 24) {
-                __free_page(page);
-                return -ENOMEM;
-        }
+I wasnt Cc:-ed on the updated patch AFAICS, so i didnt pick it 
+up.
 
-This is where the 24 comes from -- it's the length of the data transmitted
-to the drive for an unmap of a single range.
+> So the real question is why does the -rt tree even have 
+> patches not in the vanilla SCSI tree?  This type of cockup 
+> clearly demonstrates why it's a bad idea.
 
-Now in ata_scsi_unmap_xlat() we need to turn this SCSI UNMAP command
-into an ATA TRIM command.  So I do this:
+Believe me, i have better things to do than to track down your 
+regressions. I applied a fix/test patch sent to me by SCSI 
+folks.
 
-        size = ALIGN(i * 8, 512);
-        memset(buffer + i * 8, 0, size - i * 8);
-        old_size = bio_iovec(bio)->bv_len;
-printk("before: bi_size %d, data_len %d, bv_len %d\n", bio->bi_size,
-                req->data_len, old_size);
-        if (size > old_size) {
-                bio_add_pc_page(req->q, bio, bio_page(bio),
-                                        size - old_size, old_size);
-                req->data_len = size;
-        }
-printk("after: bi_size %d, data_len %d, bv_len %d\n", bio->bi_size,
-                req->data_len, bio_iovec(bio)->bv_len);
-
-Now req->data_len, bio->bi_size and bio_iovec(bio)->bv_len are all 512.
-Yet the AHCI driver still spits out 24 bytes and then stops (which hangs
-the drive).  What am I missing?
-
-The current git tree can be found at
-http://git.kernel.org/?p=linux/kernel/git/willy/ssd.git;a=shortlog;h=trim-20090212
-
-I tried a few things yesterday with access to the ATA bus analyser,
-and the results of that are not found in the git tree.  This patch on
-top of that git tree makes things better (before yesterday, I didn't
-know about bv_len, for example):
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 591d7a1..dea97e6 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1714,9 +1714,10 @@ nothing_to_do:
- static unsigned int ata_scsi_unmap_xlat(struct ata_queued_cmd *qc)
- {
- 	struct request *req = qc->scsicmd->request;
--	char *buffer = bio_data(req->bio);
-+	struct bio *bio = req->bio;
-+	char *buffer = bio_data(bio);
- 	struct ata_taskfile *tf = &qc->tf;
--	unsigned size, i = 0;
-+	unsigned old_size, size, i = 0;
- 
- 	/*
- 	 * Ignore what SCSI has written to the buffer.  Will make it easier
-@@ -1727,6 +1728,16 @@ static unsigned int ata_scsi_unmap_xlat(struct ata_queued_cmd *qc)
- 					req->sector, req->nr_sectors);
- 	size = ALIGN(i * 8, 512);
- 	memset(buffer + i * 8, 0, size - i * 8);
-+	old_size = bio_iovec(bio)->bv_len;
-+printk("before: bi_size %d, data_len %d, bv_len %d\n", bio->bi_size,
-+		req->data_len, old_size);
-+	if (size > old_size) {
-+		bio_add_pc_page(req->q, bio, bio_page(bio),
-+					size - old_size, old_size);
-+		req->data_len = size;
-+	}
-+printk("after: bi_size %d, data_len %d, bv_len %d\n", bio->bi_size,
-+		req->data_len, bio_iovec(bio)->bv_len);
- 
- 	qc->flags |= ATA_QCFLAG_IO;
- 	qc->nbytes = size;
-@@ -1741,8 +1752,6 @@ static unsigned int ata_scsi_unmap_xlat(struct ata_queued_cmd *qc)
- 			ATA_TFLAG_LBA48 | ATA_TFLAG_LBA;
- 	tf->device = ATA_LBA;
- 
--	req->bio->bi_size = req->data_len = size;
--
- 	return 0;
- }
- 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index d7539d5..2d5fbd1 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -375,11 +375,22 @@ static int sd_discard_fn(struct request_queue *q, struct request *rq,
- 	struct page *page = alloc_page(GFP_KERNEL);
- 	if (!page)
- 		return -ENOMEM;
-+
-+	/*
-+	 * Earlier, we set bi_size to the number of bytes to be discarded so
-+	 * that the elevators understood what was going on.  The bi_size
-+	 * has been copied to req->data_len so we don't need to be
-+	 * concerned with that any more.  Zero it out so it accurately
-+	 * reflects the length of the data we're now sending to the drive.
-+	 */
-+	bio->bi_size = 0;
- 	if (bio_add_pc_page(q, bio, page, 24, 0) < 24) {
- 		__free_page(page);
- 		return -ENOMEM;
- 	}
- 
-+printk("bio->bi_size = %d\n", bio->bi_size);
-+
- 	unmap = bio_data(bio);
- 	memset(unmap, 0, 12);
- 	put_unaligned_be64(bio->bi_sector, unmap + 12);
-
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+	Ingo
