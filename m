@@ -1,59 +1,88 @@
-From: "Love, Robert W" <robert.w.love@intel.com>
-Subject: RE: [PATCH 00/17] Open-FCoE Updates
-Date: Mon, 2 Mar 2009 15:24:35 -0700
-Message-ID: <273D38FBE7C6FE46A1689FCD014A0B8B30895E41@azsmsx505.amr.corp.intel.com>
-References: <20090206185548.26188.51580.stgit@fritz>
-	 <49A6033D.8040600@cs.wisc.edu>  <1235672974.4219.8.camel@fritz>
- <1235675105.19035.65.camel@localhost.localdomain>
+From: Jan Engelhardt <jengelh@medozas.de>
+Subject: Large amount of scsi-sgpool objects
+Date: Tue, 3 Mar 2009 02:28:51 +0100 (CET)
+Message-ID: <alpine.LSU.2.00.0903030220050.2438@fbirervta.pbzchgretzou.qr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:27473 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751085AbZCBWYt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Mar 2009 17:24:49 -0500
-In-Reply-To: <1235675105.19035.65.camel@localhost.localdomain>
-Content-Language: en-US
+Received: from sovereign.computergmbh.de ([85.214.69.204]:54104 "EHLO
+	sovereign.computergmbh.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750810AbZCCB2y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Mar 2009 20:28:54 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-James Bottomley wrote:
-> On Thu, 2009-02-26 at 10:29 -0800, Robert Love wrote:
->> On Wed, 2009-02-25 at 18:49 -0800, Mike Christie wrote:
->>> Robert Love wrote:
->>>> The following series implements bug fixes, adds a module param for
->>>> runtime debug logging and cleans up some coding style issues. The
->>>> top patch is a patch that was posted to linux-scsi on 01/04, but
->>>> doesn't seem to have made it in yet.   
->>>> 
->>>> This patch set is based on Linus' tree + the Open-FCoE patches
->>>> submitted to linux-scsi on 01/21. 
->>>> 
->>> 
->>> Were these patches and that other patchset for 2.6.29-rc? This one
->>> had some non bug fixes. I was not sure if you can do that in a rc.
->>> I was not sure if because it is a new driver you get a exception
->>> since there can be no regressions. 
->>> 
->> They were intended for the RC phase, should I have been more
->> explicit? I'm not sure what the policy is exactly, I've heard that
->> the RC phase is only for regressions, but I'm not sure how that
->> applies to new drivers. We have nothing to regress from and I'd
->> prefer getting these fixes in so that FCoE in 2.6.29 is as stable as
->> can be. 
-> 
-> OK, so how it works is firstly you have to tell me it's for rc fixes
-> ... I can sometimes get this from the subject (if it contains words
-> like bug fix).   Secondly, I need enhancements and fixes separated so
-> they can be separately applied to the different trees (if you have an
-> entanglement, I can rebase the misc tree to pick up the needed
-> rc-fixes dependencies). 
-> 
-> So if you separate the patches (or just tell me what's a bug fix ...
-> and they apply individually) I can put them in the rc-fixes tree.
-> 
-Thanks for the clarification. Will the fixes I resent on Friday make
-it into 2.6.29?
+Hi,
+
+
+I am noticing that there are a lot of objects active after a few tens 
+minutes of running xfs_fsr.
+
+$ slabtop
+  OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME                   
+818616 818616 100%    0.16K  34109       24    136436K sgpool-8
+253692 253692 100%    0.62K  42282        6    169128K sgpool-32
+ 52017  52016  99%    2.50K  17339        3    138712K sgpool-128
+ 26220  26219  99%    0.31K   2185       12      8740K sgpool-16
+  8927   8574  96%    0.03K     79      113       316K size-32
+
+$ uname -a
+Linux yaguchi 2.6.29-rc6-rt #1 SMP PREEMPT RT 2009-02-19 23:12:33 
++0100 i686 athlon i386 GNU/Linux
+
+What could be the problem that there are so many objects around and not 
+freed? This makes the system pretty much unusable after a while as it 
+runs towards a low-memory condition.
+
+$ free
+             total       used       free     shared    buffers     cached
+Mem:        766592     758688       7904          0          0     137184
+-/+ buffers/cache:     621504     145088
+Swap:       795136         32     795104
+
+
+$ cat /proc/meminfo 
+MemTotal:         766592 kB
+MemFree:           79388 kB
+Buffers:               0 kB
+Cached:            62120 kB
+SwapCached:         1428 kB
+Active:            74472 kB
+Inactive:         113524 kB
+Active(anon):      58228 kB
+Inactive(anon):    69124 kB
+Active(file):      16244 kB
+Inactive(file):    44400 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+HighTotal:             0 kB
+HighFree:              0 kB
+LowTotal:         766592 kB
+LowFree:           79388 kB
+SwapTotal:        795136 kB
+SwapFree:         792404 kB
+Dirty:                 0 kB
+Writeback:             0 kB
+AnonPages:        124440 kB
+Mapped:            13672 kB
+Slab:             478576 kB
+SReclaimable:       5316 kB
+SUnreclaim:       473260 kB
+PageTables:         1220 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:     1178432 kB
+Committed_AS:   4294655912 kB
+VmallocTotal:     245816 kB
+VmallocUsed:       27404 kB
+VmallocChunk:     197108 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       4096 kB
+DirectMap4k:      696256 kB
+DirectMap4M:       90112 kB
