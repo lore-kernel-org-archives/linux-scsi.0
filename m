@@ -1,71 +1,58 @@
 From: akpm@linux-foundation.org
-Subject: [patch 05/15] drivers/scsi/a3000.c: make 2 functions static
-Date: Wed, 04 Mar 2009 12:06:08 -0800
-Message-ID: <200903042006.n24K68sS029266@imap1.linux-foundation.org>
+Subject: [patch 03/15] scsi: use the common hex_asc array rather than a private one
+Date: Wed, 04 Mar 2009 12:06:07 -0800
+Message-ID: <200903042006.n24K670b029260@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:56557 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:53442 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753020AbZCDUX4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2009 15:23:56 -0500
+	by vger.kernel.org with ESMTP id S1756117AbZCDUXS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2009 15:23:18 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@kernel.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com
 
-From: Adrian Bunk <bunk@kernel.org>
+From: Harvey Harrison <harvey.harrison@gmail.com>
 
-a3000_{detect,release}() can become static.
+Also use the hi/lo helpers.
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/a3000.c |    6 ++++--
- drivers/scsi/a3000.h |    3 ---
- 2 files changed, 4 insertions(+), 5 deletions(-)
+ drivers/scsi/ibmmca.c    |    3 +--
+ drivers/scsi/ultrastor.c |    4 ++--
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-diff -puN drivers/scsi/a3000.c~drivers-scsi-a3000c-make-2-functions-static drivers/scsi/a3000.c
---- a/drivers/scsi/a3000.c~drivers-scsi-a3000c-make-2-functions-static
-+++ a/drivers/scsi/a3000.c
-@@ -25,6 +25,8 @@
- 
- static struct Scsi_Host *a3000_host = NULL;
- 
-+static int a3000_release(struct Scsi_Host *instance);
-+
- static irqreturn_t a3000_intr (int irq, void *dummy)
+diff -puN drivers/scsi/ibmmca.c~scsi-use-the-common-hex_asc-array-rather-than-a-private-one drivers/scsi/ibmmca.c
+--- a/drivers/scsi/ibmmca.c~scsi-use-the-common-hex_asc-array-rather-than-a-private-one
++++ a/drivers/scsi/ibmmca.c
+@@ -1002,12 +1002,11 @@ static char *ti_p(int dev)
+ /* interpreter for logical device numbers (ldn) */
+ static char *ti_l(int val)
  {
- 	unsigned long flags;
-@@ -157,7 +159,7 @@ static void dma_stop(struct Scsi_Host *i
-     }
- }
+-	const char hex[16] = "0123456789abcdef";
+ 	static char answer[2];
  
--int __init a3000_detect(struct scsi_host_template *tpnt)
-+static int __init a3000_detect(struct scsi_host_template *tpnt)
- {
-     wd33c93_regs regs;
- 
-@@ -232,7 +234,7 @@ static struct scsi_host_template driver_
- 
- #include "scsi_module.c"
- 
--int a3000_release(struct Scsi_Host *instance)
-+static int a3000_release(struct Scsi_Host *instance)
- {
-     wd33c93_release();
-     DMA(instance)->CNTR = 0;
-diff -puN drivers/scsi/a3000.h~drivers-scsi-a3000c-make-2-functions-static drivers/scsi/a3000.h
---- a/drivers/scsi/a3000.h~drivers-scsi-a3000c-make-2-functions-static
-+++ a/drivers/scsi/a3000.h
-@@ -11,9 +11,6 @@
- 
- #include <linux/types.h>
- 
--int a3000_detect(struct scsi_host_template *);
--int a3000_release(struct Scsi_Host *);
--
- #ifndef CMD_PER_LUN
- #define CMD_PER_LUN 2
- #endif
+ 	answer[1] = (char) (0x0);
+ 	if (val <= MAX_LOG_DEV)
+-		answer[0] = hex[val];
++		answer[0] = hex_asc[val];
+ 	else
+ 		answer[0] = '-';
+ 	return (char *) &answer;
+diff -puN drivers/scsi/ultrastor.c~scsi-use-the-common-hex_asc-array-rather-than-a-private-one drivers/scsi/ultrastor.c
+--- a/drivers/scsi/ultrastor.c~scsi-use-the-common-hex_asc-array-rather-than-a-private-one
++++ a/drivers/scsi/ultrastor.c
+@@ -876,8 +876,8 @@ static int ultrastor_abort(struct scsi_c
+ 	for (i = 0; i < 16; i++)
+ 	  {
+ 	    unsigned char p = inb(port0 + i);
+-	    out[28 + i * 3] = "0123456789abcdef"[p >> 4];
+-	    out[29 + i * 3] = "0123456789abcdef"[p & 15];
++	    out[28 + i * 3] = hex_asc_hi(p);
++	    out[29 + i * 3] = hex_asc_lo(p);
+ 	    out[30 + i * 3] = ' ';
+ 	  }
+ 	out[28 + i * 3] = '\n';
 _
