@@ -1,78 +1,55 @@
 From: akpm@linux-foundation.org
-Subject: [patch 07/15] scsi: annotate gdth_rdcap_data, gdth_rdcap16_data endianness
-Date: Wed, 04 Mar 2009 12:06:10 -0800
-Message-ID: <200903042006.n24K6Bot029278@imap1.linux-foundation.org>
+Subject: [patch for 2.6.29? 1/2] drivers/scsi: correct use of ! and &
+Date: Wed, 04 Mar 2009 12:12:16 -0800
+Message-ID: <200903042012.n24KCHDT029998@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:44122 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:46734 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755261AbZCDU0V (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2009 15:26:21 -0500
+	by vger.kernel.org with ESMTP id S1756015AbZCDU0L (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2009 15:26:11 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com, bharrosh@panasas.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk, robert.w.love@intel.com
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
+From: Julia Lawall <julia@diku.dk>
 
-It would be easy to get rid of the typedefs too, but I kept this
-minimal.
+!ep->esb_stat is either 1 or 0, and the rightmost bit of ESB_ST_COMPLETE is
+always 0, making the result of !ep->esb_stat & ESB_ST_COMPLETE always 0.
+Thus parentheses around the argument to ! seem needed.
 
-Noticed by sparse:
-drivers/scsi/gdth.c:2395:31: warning: incorrect type in assignment (different base types)
-drivers/scsi/gdth.c:2395:31:    expected unsigned int [unsigned] [assigned] [usertype] last_block_no
-drivers/scsi/gdth.c:2395:31:    got restricted __be32 [usertype] <noident>
-drivers/scsi/gdth.c:2396:27: warning: incorrect type in assignment (different base types)
-drivers/scsi/gdth.c:2396:27:    expected unsigned int [unsigned] [assigned] [usertype] block_length
-drivers/scsi/gdth.c:2396:27:    got restricted __be32 [usertype] <noident>
-drivers/scsi/gdth.c:2406:33: warning: incorrect type in assignment (different base types)
-drivers/scsi/gdth.c:2406:33:    expected unsigned long long [unsigned] [usertype] last_block_no
-drivers/scsi/gdth.c:2406:33:    got restricted __be64 [usertype] <noident>
-drivers/scsi/gdth.c:2407:33: warning: incorrect type in assignment (different base types)
-drivers/scsi/gdth.c:2407:33:    expected unsigned int [unsigned] [usertype] block_length
-drivers/scsi/gdth.c:2407:33:    got restricted __be32 [usertype] <noident>
+The semantic patch that makes this change is as follows:
+(http://www.emn.fr/x-info/coccinelle/)
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>
+// <smpl>
+@@ expression E; constant C; @@
+(
+  !E & !C
+|
+- !E & C
++ !(E & C)
+)
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+Cc: Robert Love <robert.w.love@intel.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/gdth.c |    2 +-
- drivers/scsi/gdth.h |    8 ++++----
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/libfc/fc_exch.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/gdth.c~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness drivers/scsi/gdth.c
---- a/drivers/scsi/gdth.c~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness
-+++ a/drivers/scsi/gdth.c
-@@ -2391,7 +2391,7 @@ static int gdth_internal_cache_cmd(gdth_
-       case READ_CAPACITY:
-         TRACE2(("Read capacity hdrive %d\n",t));
-         if (ha->hdr[t].size > (ulong64)0xffffffff)
--            rdc.last_block_no = 0xffffffff;
-+            rdc.last_block_no = cpu_to_be32(0xffffffff);
-         else
-             rdc.last_block_no = cpu_to_be32(ha->hdr[t].size-1);
-         rdc.block_length  = cpu_to_be32(SECTOR_SIZE);
-diff -puN drivers/scsi/gdth.h~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness drivers/scsi/gdth.h
---- a/drivers/scsi/gdth.h~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness
-+++ a/drivers/scsi/gdth.h
-@@ -968,14 +968,14 @@ typedef struct {
- 
- /* READ_CAPACITY data format */
- typedef struct {
--    ulong32     last_block_no;
--    ulong32     block_length;
-+	__be32 last_block_no;
-+	__be32 block_length;
- } PACKED gdth_rdcap_data;
- 
- /* READ_CAPACITY (16) data format */
- typedef struct {
--    ulong64     last_block_no;
--    ulong32     block_length;
-+	__be64 last_block_no;
-+	__be32 block_length;
- } PACKED gdth_rdcap16_data;
- 
- /* REQUEST_SENSE data format */
+diff -puN drivers/scsi/libfc/fc_exch.c~drivers-scsi-correct-use-of-and drivers/scsi/libfc/fc_exch.c
+--- a/drivers/scsi/libfc/fc_exch.c~drivers-scsi-correct-use-of-and
++++ a/drivers/scsi/libfc/fc_exch.c
+@@ -283,7 +283,7 @@ static void fc_exch_release(struct fc_ex
+ 			ep->destructor(&ep->seq, ep->arg);
+ 		if (ep->lp->tt.exch_put)
+ 			ep->lp->tt.exch_put(ep->lp, mp, ep->xid);
+-		WARN_ON(!ep->esb_stat & ESB_ST_COMPLETE);
++		WARN_ON(!(ep->esb_stat & ESB_ST_COMPLETE));
+ 		mempool_free(ep, mp->ep_pool);
+ 	}
+ }
 _
