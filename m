@@ -1,44 +1,36 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: Large amount of scsi-sgpool objects
-Date: Wed, 4 Mar 2009 11:11:14 -0800
-Message-ID: <20090304111114.aed7b225.akpm@linux-foundation.org>
-References: <20090303192212.GA20705@elte.hu>
-	<1236115544.15993.22.camel@localhost.localdomain>
-	<20090303214454.GA8288@elte.hu>
-	<1236119990.24019.35.camel@localhost.localdomain>
-	<20090303230323.GA21644@elte.hu>
-	<49ADBE29.4040706@s5r6.in-berlin.de>
-	<20090303234834.GA13389@elte.hu>
-	<49AE221D.9010909@s5r6.in-berlin.de>
-	<1236150752.6049.19.camel@marge.simson.net>
-	<49AE32B5.9040603@s5r6.in-berlin.de>
-	<20090304112455.GB14593@elte.hu>
+From: Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: 2.6.29-rc6-git7: Reported regressions from 2.6.28
+Date: Wed, 4 Mar 2009 20:14:21 +0100
+Message-ID: <8db1092f0903041114o767d0079s4c1626dae5335d70@mail.gmail.com>
+References: <KiHv0irKPzE.A.l3.hUarJB@chimera>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rt-users-owner@vger.kernel.org>
-In-Reply-To: <20090304112455.GB14593@elte.hu>
-Sender: linux-rt-users-owner@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: stefanr@s5r6.in-berlin.de, efault@gmx.de, James.Bottomley@HansenPartnership.com, jengelh@medozas.de, bharrosh@panasas.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rt-users@vger.kernel.org, tglx@linutronix.de
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <KiHv0irKPzE.A.l3.hUarJB@chimera>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
+Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Adrian Bunk <bunk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 4 Mar 2009 12:24:55 +0100
-Ingo Molnar <mingo@elte.hu> wrote:
+2009/3/3 Rafael J. Wysocki <rjw-KKrjLPT3xs0@public.gmane.org>:
 
-> FYI, we still have not tracked down the SCSI bug. Latest 
-> tip:master is able to boot and work on the affected systems, 
-> while the upstream kernel does not even boot because the fix (or 
-> the revert, should the fix be deemed unwanted) is stuck in the 
-> SCSI tree.
+>
+> Bug-Entry =C2=A0 =C2=A0 =C2=A0 : http://bugzilla.kernel.org/show_bug.=
+cgi?id=3D12764
+> Subject =C2=A0 =C2=A0 =C2=A0 =C2=A0 : Can not ioremap virtual address=
+ for G33 hw status page
+> Submitter =C2=A0 =C2=A0 =C2=A0 : Maciej Rutecki <maciej.rutecki@gmail=
+=2Ecom>
+> Date =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0: 2009-02-23 14:46 (9 d=
+ays old)
+> First-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
+s/linux-2.6.git;a=3Dcommit;h=3D6fb88588555a18792a27f483887fe1f2af5f9c9b
+> References =C2=A0 =C2=A0 =C2=A0: http://marc.info/?l=3Dlinux-kernel&m=
+=3D123540053219505&w=3D4
 
-<wakes up>
+Problem seems by solved in 2.6.29-rc7
 
-There are fixes in the scsi tree?
-
-Does the scsi tree fix all the regressions which you guys are seeing?
-
-I must say that it seems to be awfully late in the cycle to have this
-amount of breakage remaining in mainline when we know exactly which
-patches need to be reverted to unbreak things.
-
+--=20
+Maciej Rutecki
+http://www.maciek.unixy.pl
