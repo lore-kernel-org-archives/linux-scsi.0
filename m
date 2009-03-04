@@ -1,71 +1,40 @@
 From: akpm@linux-foundation.org
-Subject: [patch 04/15] drivers/scsi/a2091.c: make 2 functions static
-Date: Wed, 04 Mar 2009 12:06:07 -0800
-Message-ID: <200903042006.n24K68lA029263@imap1.linux-foundation.org>
+Subject: [patch 11/15] scsi: ncr53c8xx: div reaches -1
+Date: Wed, 04 Mar 2009 12:06:14 -0800
+Message-ID: <200903042006.n24K6E64029290@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:55212 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:35566 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756000AbZCDUYS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2009 15:24:18 -0500
+	by vger.kernel.org with ESMTP id S1755169AbZCDUZG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2009 15:25:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@kernel.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, matthew@wil.cx
 
-From: Adrian Bunk <bunk@kernel.org>
+From: Roel Kluin <roel.kluin@gmail.com>
 
-a2091_{detect,release}() can become static.
+With while(--div >= 0) { ... } div reaches -1.
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+Cc: Matthew Wilcox <matthew@wil.cx>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/a2091.c |    6 ++++--
- drivers/scsi/a2091.h |    3 ---
- 2 files changed, 4 insertions(+), 5 deletions(-)
+ drivers/scsi/ncr53c8xx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/a2091.c~drivers-scsi-a2091c-make-2-functions-static drivers/scsi/a2091.c
---- a/drivers/scsi/a2091.c~drivers-scsi-a2091c-make-2-functions-static
-+++ a/drivers/scsi/a2091.c
-@@ -23,6 +23,8 @@
- #define DMA(ptr) ((a2091_scsiregs *)((ptr)->base))
- #define HDATA(ptr) ((struct WD33C93_hostdata *)((ptr)->hostdata))
+diff -puN drivers/scsi/ncr53c8xx.c~scsi-ncr53c8xx-div-reaches-1 drivers/scsi/ncr53c8xx.c
+--- a/drivers/scsi/ncr53c8xx.c~scsi-ncr53c8xx-div-reaches-1
++++ a/drivers/scsi/ncr53c8xx.c
+@@ -5444,7 +5444,7 @@ static void ncr_getsync(struct ncb *np, 
+ 	**	input speed faster than the period.
+ 	*/
+ 	kpc = per * clk;
+-	while (--div >= 0)
++	while (--div > 0)
+ 		if (kpc >= (div_10M[div] << 2)) break;
  
-+static int a2091_release(struct Scsi_Host *instance);
-+
- static irqreturn_t a2091_intr (int irq, void *_instance)
- {
-     unsigned long flags;
-@@ -144,7 +146,7 @@ static void dma_stop(struct Scsi_Host *i
-     }
- }
- 
--int __init a2091_detect(struct scsi_host_template *tpnt)
-+static int __init a2091_detect(struct scsi_host_template *tpnt)
- {
-     static unsigned char called = 0;
-     struct Scsi_Host *instance;
-@@ -233,7 +235,7 @@ static struct scsi_host_template driver_
- 
- #include "scsi_module.c"
- 
--int a2091_release(struct Scsi_Host *instance)
-+static int a2091_release(struct Scsi_Host *instance)
- {
- #ifdef MODULE
- 	DMA(instance)->CNTR = 0;
-diff -puN drivers/scsi/a2091.h~drivers-scsi-a2091c-make-2-functions-static drivers/scsi/a2091.h
---- a/drivers/scsi/a2091.h~drivers-scsi-a2091c-make-2-functions-static
-+++ a/drivers/scsi/a2091.h
-@@ -11,9 +11,6 @@
- 
- #include <linux/types.h>
- 
--int a2091_detect(struct scsi_host_template *);
--int a2091_release(struct Scsi_Host *);
--
- #ifndef CMD_PER_LUN
- #define CMD_PER_LUN 2
- #endif
+ 	/*
 _
