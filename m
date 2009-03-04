@@ -1,25 +1,34 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Large amount of scsi-sgpool objects
-Date: Wed, 04 Mar 2009 13:02:01 +0100
-Message-ID: <49AE6DB9.3080403@s5r6.in-berlin.de>
-References: <1236119990.24019.35.camel@localhost.localdomain> <20090303230323.GA21644@elte.hu> <49ADBE29.4040706@s5r6.in-berlin.de> <20090303234834.GA13389@elte.hu> <49AE221D.9010909@s5r6.in-berlin.de> <1236150752.6049.19.camel@marge.simson.net> <49AE32B5.9040603@s5r6.in-berlin.de> <alpine.LFD.2.00.0903041004300.29264@localhost.localdomain> <20090304111235.GA14593@elte.hu> <49AE65EE.5020605@s5r6.in-berlin.de> <20090304114730.GA6736@elte.hu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rt-users-owner@vger.kernel.org>
-In-Reply-To: <20090304114730.GA6736@elte.hu>
-Sender: linux-rt-users-owner@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Mike Galbraith <efault@gmx.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jan Engelhardt <jengelh@medozas.de>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-rt-users@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11646] QLA2xxx: Kernel deadlock on high load somewhere after 2.6.20
+Date: Wed,  4 Mar 2009 08:14:05 -0800 (PST)
+Message-ID: <20090304161405.C988A11D10A@picon.linux-foundation.org>
+References: <bug-11646-11613@http.bugzilla.kernel.org/>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:38521 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753038AbZCDQOl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2009 11:14:41 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n24GE6Gw021904
+	for <linux-scsi@vger.kernel.org>; Wed, 4 Mar 2009 08:14:07 -0800
+In-Reply-To: <bug-11646-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Ingo Molnar wrote:
-> Oh, so you use -tip?
+http://bugzilla.kernel.org/show_bug.cgi?id=11646
 
-As I wrote I work with people who use -rt.
-That's the extent to which I personally "use" -tip and it's the sole
-reason why I comment here.
+
+
+
+
+------- Comment #24 from daniel@economicmodeling.com  2009-03-04 08:14 -------
+I do not use multipathd, and the qlogic timeouts still crash my system. I
+believe Seokman Ju's multipathd errors are caused by the qlogic driver. Notice
+how the timestamps for the qlogic events are before the multipath errors.
+
+
 -- 
-Stefan Richter
--=====-==--= --== --=--
-http://arcgraph.de/sr/
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
