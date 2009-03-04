@@ -1,65 +1,71 @@
 From: akpm@linux-foundation.org
-Subject: [patch 12/15] scsi: fix /proc memory leak in the SCSI core
-Date: Wed, 04 Mar 2009 12:06:15 -0800
-Message-ID: <200903042006.n24K6FOo029295@imap1.linux-foundation.org>
+Subject: [patch 05/15] drivers/scsi/a3000.c: make 2 functions static
+Date: Wed, 04 Mar 2009 12:06:08 -0800
+Message-ID: <200903042006.n24K68sS029266@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:39387 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:56557 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754384AbZCDUXn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2009 15:23:43 -0500
+	by vger.kernel.org with ESMTP id S1753020AbZCDUX4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2009 15:23:56 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, stern@rowland.harvard.edu
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@kernel.org
 
-From: Alan Stern <stern@rowland.harvard.edu>
+From: Adrian Bunk <bunk@kernel.org>
 
-The SCSI core calls scsi_proc_hostdir_add() from within scsi_host_alloc(),
-but the corresponding scsi_proc_hostdir_rm() routine is called from within
-scsi_remove_host().  As a result, if a host is allocated and then
-deallocated without ever being registered, the host's directory in /proc
-is leaked.
+a3000_{detect,release}() can become static.
 
-This patch (as1181) fixes this bug in the SCSI core by moving
-scsi_proc_hostdir_add() into scsi_host_add().
-
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/hosts.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/a3000.c |    6 ++++--
+ drivers/scsi/a3000.h |    3 ---
+ 2 files changed, 4 insertions(+), 5 deletions(-)
 
-diff -puN drivers/scsi/hosts.c~scsi-fix-proc-memory-leak-in-the-scsi-core drivers/scsi/hosts.c
---- a/drivers/scsi/hosts.c~scsi-fix-proc-memory-leak-in-the-scsi-core
-+++ a/drivers/scsi/hosts.c
-@@ -206,9 +206,10 @@ int scsi_add_host(struct Scsi_Host *shos
- 	if (error)
- 		goto fail;
+diff -puN drivers/scsi/a3000.c~drivers-scsi-a3000c-make-2-functions-static drivers/scsi/a3000.c
+--- a/drivers/scsi/a3000.c~drivers-scsi-a3000c-make-2-functions-static
++++ a/drivers/scsi/a3000.c
+@@ -25,6 +25,8 @@
  
-+	scsi_proc_hostdir_add(shost->hostt);
+ static struct Scsi_Host *a3000_host = NULL;
+ 
++static int a3000_release(struct Scsi_Host *instance);
 +
- 	if (!shost->shost_gendev.parent)
- 		shost->shost_gendev.parent = dev ? dev : &platform_bus;
+ static irqreturn_t a3000_intr (int irq, void *dummy)
+ {
+ 	unsigned long flags;
+@@ -157,7 +159,7 @@ static void dma_stop(struct Scsi_Host *i
+     }
+ }
+ 
+-int __init a3000_detect(struct scsi_host_template *tpnt)
++static int __init a3000_detect(struct scsi_host_template *tpnt)
+ {
+     wd33c93_regs regs;
+ 
+@@ -232,7 +234,7 @@ static struct scsi_host_template driver_
+ 
+ #include "scsi_module.c"
+ 
+-int a3000_release(struct Scsi_Host *instance)
++static int a3000_release(struct Scsi_Host *instance)
+ {
+     wd33c93_release();
+     DMA(instance)->CNTR = 0;
+diff -puN drivers/scsi/a3000.h~drivers-scsi-a3000c-make-2-functions-static drivers/scsi/a3000.h
+--- a/drivers/scsi/a3000.h~drivers-scsi-a3000c-make-2-functions-static
++++ a/drivers/scsi/a3000.h
+@@ -11,9 +11,6 @@
+ 
+ #include <linux/types.h>
+ 
+-int a3000_detect(struct scsi_host_template *);
+-int a3000_release(struct Scsi_Host *);
 -
- 	error = device_add(&shost->shost_gendev);
- 	if (error)
- 		goto out;
-@@ -259,6 +260,7 @@ int scsi_add_host(struct Scsi_Host *shos
-  out_del_gendev:
- 	device_del(&shost->shost_gendev);
-  out:
-+	scsi_proc_hostdir_rm(shost->hostt);
- 	scsi_destroy_command_freelist(shost);
-  fail:
- 	return error;
-@@ -407,7 +409,6 @@ struct Scsi_Host *scsi_host_alloc(struct
- 		goto fail_kfree;
- 	}
- 
--	scsi_proc_hostdir_add(shost->hostt);
- 	return shost;
- 
-  fail_kfree:
+ #ifndef CMD_PER_LUN
+ #define CMD_PER_LUN 2
+ #endif
 _
