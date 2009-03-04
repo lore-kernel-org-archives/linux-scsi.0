@@ -1,34 +1,57 @@
-From: Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>
-Subject: Re: 2.6.29-rc6-git7: Reported regressions from 2.6.28
-Date: Wed, 4 Mar 2009 02:06:45 +0100
-Message-ID: <20090304010645.GA28883@elte.hu>
-References: <KiHv0irKPzE.A.l3.hUarJB@chimera> <1236128626.32297.254.camel@rzhang-dt>
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [BUG] 2.6.29-rc6-2450cf in scsi_lib.c (was: Large amount of
+ scsi-sgpool)objects
+Date: Wed, 4 Mar 2009 03:01:56 +0100 (CET)
+Message-ID: <alpine.LFD.2.00.0903040249460.29264@localhost.localdomain>
+References: <alpine.LSU.2.00.0903030220050.2438@fbirervta.pbzchgretzou.qr>  <49ACF8FE.2020904@panasas.com>  <1236093718.3263.3.camel@localhost.localdomain>  <alpine.LSU.2.00.0903031703270.855@fbirervta.pbzchgretzou.qr>  <1236097526.3263.17.camel@localhost.localdomain>
+  <alpine.LFD.2.00.0903031818230.29264@localhost.localdomain>  <alpine.LFD.2.00.0903032247170.29264@localhost.localdomain> <1236119195.24019.24.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1236128626.32297.254.camel@rzhang-dt>
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Zhang Rui <rui.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Adrian Bunk <bunk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1236119195.24019.24.camel@localhost.localdomain>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jan Engelhardt <jengelh@medozas.de>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On Tue, 3 Mar 2009, James Bottomley wrote:
 
-* Zhang Rui <rui.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> wrote:
-
-> On Wed, 2009-03-04 at 03:22 +0800, Rafael J. Wysocki wrote:
+> On Tue, 2009-03-03 at 23:07 +0100, Thomas Gleixner wrote:
+> > On Tue, 3 Mar 2009, Thomas Gleixner wrote:
+> > > My bad. I was playing with that to get rid of the aic7xxx wreckage on
+> > > one of my test boxen and forgot to remove it.
 > > 
-> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=12501
-> > Subject         : build bug in eeepc-laptop.c
-> > Submitter       : Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>
-> > Date            : 2009-01-14 17:25 (49 days old)
-> > References      : http://lkml.org/lkml/2009/1/14/315
+> > While the one below is definitey not my fault. It's on Linus latest:
 > > 
-> the problem has already been fixed by
-> 3a5093ee6728c8cbe9c039e685fc1fca8f965048
+> >  commit 2450cf51a1bdba7037e91b1bcc494b01c58aaf66
+> > 
+> > While compiling a kernel I triggerred the BUG below. Not so nice as it
+> > took a whole filesystem with it. fsck took more than 20 min to recover
+> > the leftovers :(
+> > 
+> > Thanks,
+> > 
+> > 	tglx
+> > 
+> > 
+> > ------------[ cut here ]------------
+> > kernel BUG at /home/tglx/work/kernel/git/linux-2.6/drivers/scsi/scsi_lib.c:1141!
+> 
+> This is BUG_ON(count > sdb->table.nents);
+> 
+> It looks like the sg list got split and grew in size ... I suspect this
+> might be libata related, so cc'ing the ide list.  I suspect either the
+> block layer initially parametrised this wrongly (tomo bug) or a sg list
+> got split then requeued (something in libata?).
 
-yes - please consider it fixed.
+FYI, after I've lost a full day of work including the results of four
+"iozone -a -g 4G" runs I tried to reproduce the problem on that
+machine - the leftovers of the filesystem are pretty useless anyway.
+
+It took about 2hrs to trigger the bug again. Same back trace.
+
+Anything I can do what might help to decode the problem ?
 
 Thanks,
 
-	Ingo
+	tglx
