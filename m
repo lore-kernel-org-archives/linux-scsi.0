@@ -1,44 +1,58 @@
 From: akpm@linux-foundation.org
-Subject: [patch 10/15] scsi: use kmem_cache_zalloc instead of kmem_cache_alloc/memset
-Date: Wed, 04 Mar 2009 12:06:13 -0800
-Message-ID: <200903042006.n24K6Djm029287@imap1.linux-foundation.org>
+Subject: [patch 15/15] scsi/pcmcia/nsp_cs: time_out reaches -1
+Date: Wed, 04 Mar 2009 12:06:18 -0800
+Message-ID: <200903042006.n24K6IwD029308@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:35162 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:49520 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752682AbZCDUWp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2009 15:22:45 -0500
+	by vger.kernel.org with ESMTP id S1755328AbZCDUXL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2009 15:23:11 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, yjwei@cn.fujitsu.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com
 
-From: Wei Yongjun <yjwei@cn.fujitsu.com>
+From: Roel Kluin <roel.kluin@gmail.com>
 
-Used kmem_cache_zalloc instead of kmem_cache_alloc/memset.
+With a postfix decrement timeouts will reach -1 rather than 0, so the
+errors do not appear.
 
-Signed-off-by: Wei Yongjun <yjwei@cn.fujitsu.com>
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/scsi.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/scsi/pcmcia/nsp_cs.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/scsi.c~scsi-used-kmem_cache_zalloc-instead-of-kmem_cache_alloc-memset drivers/scsi/scsi.c
---- a/drivers/scsi/scsi.c~scsi-used-kmem_cache_zalloc-instead-of-kmem_cache_alloc-memset
-+++ a/drivers/scsi/scsi.c
-@@ -169,12 +169,10 @@ scsi_pool_alloc_command(struct scsi_host
- {
- 	struct scsi_cmnd *cmd;
+diff -puN drivers/scsi/pcmcia/nsp_cs.c~scsi-pcmcia-nsp_cs-time_out-reaches-1 drivers/scsi/pcmcia/nsp_cs.c
+--- a/drivers/scsi/pcmcia/nsp_cs.c~scsi-pcmcia-nsp_cs-time_out-reaches-1
++++ a/drivers/scsi/pcmcia/nsp_cs.c
+@@ -530,7 +530,7 @@ static int nsp_negate_signal(struct scsi
+ 		if (reg == 0xff) {
+ 			break;
+ 		}
+-	} while ((time_out-- != 0) && (reg & mask) != 0);
++	} while ((--time_out != 0) && (reg & mask) != 0);
  
--	cmd = kmem_cache_alloc(pool->cmd_slab, gfp_mask | pool->gfp_mask);
-+	cmd = kmem_cache_zalloc(pool->cmd_slab, gfp_mask | pool->gfp_mask);
- 	if (!cmd)
- 		return NULL;
+ 	if (time_out == 0) {
+ 		nsp_msg(KERN_DEBUG, " %s signal off timeut", str);
+@@ -801,7 +801,7 @@ static void nsp_pio_read(struct scsi_cmn
  
--	memset(cmd, 0, sizeof(*cmd));
--
- 	cmd->sense_buffer = kmem_cache_alloc(pool->sense_slab,
- 					     gfp_mask | pool->gfp_mask);
- 	if (!cmd->sense_buffer) {
+ 	data->FifoCount = ocount;
+ 
+-	if (time_out == 0) {
++	if (time_out < 0) {
+ 		nsp_msg(KERN_DEBUG, "pio read timeout resid=%d this_residual=%d buffers_residual=%d",
+ 			scsi_get_resid(SCpnt), SCpnt->SCp.this_residual,
+ 			SCpnt->SCp.buffers_residual);
+@@ -897,7 +897,7 @@ static void nsp_pio_write(struct scsi_cm
+ 
+ 	data->FifoCount = ocount;
+ 
+-	if (time_out == 0) {
++	if (time_out < 0) {
+ 		nsp_msg(KERN_DEBUG, "pio write timeout resid=0x%x",
+ 		                                        scsi_get_resid(SCpnt));
+ 	}
 _
