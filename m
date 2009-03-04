@@ -1,274 +1,98 @@
-From: Vasu Dev <vasu.dev@intel.com>
-Subject: [PATCH 1/5] fcoe: Add a header file defining the FIP protocol for
-	FCoE.
-Date: Wed, 04 Mar 2009 10:53:41 -0800
-Message-ID: <20090304185341.22010.84310.stgit@vi2.jf.intel.com>
-References: <20090304185025.22010.45242.stgit@vi2.jf.intel.com>
+From: Eric Moore <eric.moore@lsi.com>
+Subject: [PATCH 8/11] mpt2sas v00.100.11.11 : Kconfig
+Date: Tue, 3 Mar 2009 22:13:05 -0700
+Message-ID: <20090304051303.GJ4194@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:8590 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755414AbZCDSxo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Mar 2009 13:53:44 -0500
-In-Reply-To: <20090304185025.22010.45242.stgit@vi2.jf.intel.com>
+Received: from exprod7og103.obsmtp.com ([64.18.2.159]:55668 "EHLO
+	exprod7og103.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754879AbZCDSx2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2009 13:53:28 -0500
+Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
+	by mail0.lsil.com (8.12.11/8.12.11) with ESMTP id n24IrOMs006046
+	for <linux-scsi@vger.kernel.org>; Wed, 4 Mar 2009 10:53:24 -0800 (PST)
+Received: from localhost (emoore-test1.co.lsil.com [172.21.46.33])
+	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id n24IrS3d015248
+	for <linux-scsi@vger.kernel.org>; Wed, 4 Mar 2009 10:53:28 -0800
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-From: Joe Eykholt <jeykholt@cisco.com>
+Kconfig
 
-Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
-Signed-off-by: Vasu Dev <vasu.dev@intel.com>
+mpt2sas Kernel configuration file.
+
+Signed-off-by: Eric Moore <eric.moore@lsi.com>
 ---
 
- include/scsi/fc/fc_fip.h |  237 ++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 237 insertions(+), 0 deletions(-)
- create mode 100644 include/scsi/fc/fc_fip.h
-
-
-diff --git a/include/scsi/fc/fc_fip.h b/include/scsi/fc/fc_fip.h
-new file mode 100644
-index 0000000..dabf5a7
---- /dev/null
-+++ b/include/scsi/fc/fc_fip.h
-@@ -0,0 +1,237 @@
-+/*
-+ * Copyright 2008 Cisco Systems, Inc.  All rights reserved.
-+ *
-+ * This program is free software; you may redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; version 2 of the License.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
-+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-+ * SOFTWARE.
-+ */
-+#ifndef _FC_FIP_H_
-+#define _FC_FIP_H_
+--- a/drivers/scsi/mpt2sas/Kconfig	1969-12-31 17:00:00.000000000 -0700
++++ b/drivers/scsi/mpt2sas/Kconfig	2009-03-03 10:29:13.000000000 -0700
+@@ -0,0 +1,66 @@
++#
++# Kernel configuration file for the MPT2SAS
++#
++# This code is based on drivers/scsi/mpt2sas/Kconfig
++# Copyright (C) 2007-2008  LSI Corporation
++#  (mailto:DL-MPTFusionLinux@lsi.com)
 +
-+/*
-+ * This version is based on:
-+ * http://www.t11.org/ftp/t11/pub/fc/bb-5/08-543v1.pdf
-+ */
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License
++# as published by the Free Software Foundation; either version 2
++# of the License, or (at your option) any later version.
 +
-+/*
-+ * The FIP ethertype eventually goes in net/if_ether.h.
-+ */
-+#ifndef ETH_P_FIP
-+#define ETH_P_FIP	0x8914	/* FIP Ethertype */
-+#endif
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
 +
-+#define FIP_DEF_PRI	128	/* default selection priority */
-+#define FIP_DEF_FC_MAP	0x0efc00 /* default FCoE MAP (MAC OUI) value */
-+#define FIP_DEF_FKA	8000	/* default FCF keep-alive/advert period (mS) */
-+#define FIP_VN_KA_PERIOD 90000	/* required VN_port keep-alive period (mS) */
-+#define FIP_FCF_FUZZ	100	/* random time added by FCF (mS) */
++# NO WARRANTY
++# THE PROGRAM IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR
++# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT
++# LIMITATION, ANY WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT,
++# MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Each Recipient is
++# solely responsible for determining the appropriateness of using and
++# distributing the Program and assumes all risks associated with its
++# exercise of rights under this Agreement, including but not limited to
++# the risks and costs of program errors, damage to or loss of data,
++# programs or equipment, and unavailability or interruption of operations.
 +
-+/*
-+ * Multicast MAC addresses.  T11-adopted.
-+ */
-+#define FIP_ALL_FCOE_MACS	((u8[6]) { 1, 0x10, 0x18, 1, 0, 0 })
-+#define FIP_ALL_ENODE_MACS	((u8[6]) { 1, 0x10, 0x18, 1, 0, 1 })
-+#define FIP_ALL_FCF_MACS	((u8[6]) { 1, 0x10, 0x18, 1, 0, 2 })
++# DISCLAIMER OF LIABILITY
++# NEITHER RECIPIENT NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY
++# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++# DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED AND
++# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
++# TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
++# USE OR DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS GRANTED
++# HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES
 +
-+#define FIP_VER		1		/* version for fip_header */
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write to the Free Software
++# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
++# USA.
 +
-+struct fip_header {
-+	__u8	fip_ver;		/* upper 4 bits are the version */
-+	__u8	fip_resv1;		/* reserved */
-+	__be16	fip_op;			/* operation code */
-+	__u8	fip_resv2;		/* reserved */
-+	__u8	fip_subcode;		/* lower 4 bits are sub-code */
-+	__be16	fip_dl_len;		/* length of descriptors in words */
-+	__be16	fip_flags;		/* header flags */
-+} __attribute__((packed));
++config SCSI_MPT2SAS
++	tristate "LSI MPT Fusion SAS 2.0 Device Driver"
++	depends on PCI && SCSI
++	select SCSI_SAS_ATTRS
++	---help---
++	This driver supports PCI-Express SAS 6Gb/s Host Adapters.
 +
-+#define FIP_VER_SHIFT	4
-+#define FIP_VER_ENCAPS(v) ((v) << FIP_VER_SHIFT)
-+#define FIP_VER_DECAPS(v) ((v) >> FIP_VER_SHIFT)
-+#define FIP_BPW		4		/* bytes per word for lengths */
++config SCSI_MPT2SAS_MAX_SGE
++	int "LSI MPT Fusion Max number of SG Entries (16 - 128)"
++	depends on PCI && SCSI && SCSI_MPT2SAS
++	default "128"
++	range 16 128
++	---help---
++	This option allows you to specify the maximum number of scatter-
++	gather entries per I/O. The driver default is 128, which matches
++	SAFE_PHYS_SEGMENTS.  However, it may decreased down to 16.
++	Decreasing this parameter will reduce memory requirements
++	on a per controller instance.
 +
-+/*
-+ * fip_op.
-+ */
-+enum fip_opcode {
-+	FIP_OP_DISC =	1,		/* discovery, advertisement, etc. */
-+	FIP_OP_LS =	2,		/* Link Service request or reply */
-+	FIP_OP_CTRL =	3,		/* Keep Alive / Link Reset */
-+	FIP_OP_VLAN =	4,		/* VLAN discovery */
-+	FIP_OP_VENDOR_MIN = 0xfff8,	/* min vendor-specific opcode */
-+	FIP_OP_VENDOR_MAX = 0xfffe,	/* max vendor-specific opcode */
-+};
-+
-+/*
-+ * Subcodes for FIP_OP_DISC.
-+ */
-+enum fip_disc_subcode {
-+	FIP_SC_SOL =	1,		/* solicitation */
-+	FIP_SC_ADV =	2,		/* advertisement */
-+};
-+
-+/*
-+ * Subcodes for FIP_OP_LS.
-+ */
-+enum fip_trans_subcode {
-+	FIP_SC_REQ =	1,		/* request */
-+	FIP_SC_REP =	2,		/* reply */
-+};
-+
-+/*
-+ * Subcodes for FIP_OP_RESET.
-+ */
-+enum fip_reset_subcode {
-+	FIP_SC_KEEP_ALIVE = 1,		/* keep-alive from VN_Port */
-+	FIP_SC_CLR_VLINK = 2,		/* clear virtual link from VF_Port */
-+};
-+
-+/*
-+ * Subcodes for FIP_OP_VLAN.
-+ */
-+enum fip_vlan_subcode {
-+	FIP_SC_VL_REQ =	1,		/* request */
-+	FIP_SC_VL_REP =	2,		/* reply */
-+};
-+
-+/*
-+ * flags in header fip_flags.
-+ */
-+enum fip_flag {
-+	FIP_FL_FPMA =	0x8000,		/* supports FPMA fabric-provided MACs */
-+	FIP_FL_SPMA =	0x4000,		/* supports SPMA server-provided MACs */
-+	FIP_FL_AVAIL =	0x0004,		/* available for FLOGI/ELP */
-+	FIP_FL_SOL =	0x0002,		/* this is a solicited message */
-+	FIP_FL_FPORT =	0x0001,		/* sent from an F port */
-+};
-+
-+/*
-+ * Common descriptor header format.
-+ */
-+struct fip_desc {
-+	__u8	fip_dtype;		/* type - see below */
-+	__u8	fip_dlen;		/* length - in 32-bit words */
-+};
-+
-+enum fip_desc_type {
-+	FIP_DT_PRI =	1,		/* priority for forwarder selection */
-+	FIP_DT_MAC =	2,		/* MAC address */
-+	FIP_DT_MAP_OUI = 3,		/* FC-MAP OUI */
-+	FIP_DT_NAME =	4,		/* switch name or node name */
-+	FIP_DT_FAB =	5,		/* fabric descriptor */
-+	FIP_DT_FCOE_SIZE = 6,		/* max FCoE frame size */
-+	FIP_DT_FLOGI =	7,		/* FLOGI request or response */
-+	FIP_DT_FDISC =	8,		/* FDISC request or response */
-+	FIP_DT_LOGO =	9,		/* LOGO request or response */
-+	FIP_DT_ELP =	10,		/* ELP request or response */
-+	FIP_DT_VN_ID =	11,		/* VN_Node Identifier */
-+	FIP_DT_FKA =	12,		/* advertisement keep-alive period */
-+	FIP_DT_VENDOR =	13,		/* vendor ID */
-+	FIP_DT_VLAN =	14,		/* vlan number */
-+	FIP_DT_LIMIT,			/* max defined desc_type + 1 */
-+	FIP_DT_VENDOR_BASE = 128,	/* first vendor-specific desc_type */
-+};
-+
-+/*
-+ * FIP_DT_PRI - priority descriptor.
-+ */
-+struct fip_pri_desc {
-+	struct fip_desc fd_desc;
-+	__u8		fd_resvd;
-+	__u8		fd_pri;		/* FCF priority:  higher is better */
-+} __attribute__((packed));
-+
-+/*
-+ * FIP_DT_MAC - MAC address descriptor.
-+ */
-+struct fip_mac_desc {
-+	struct fip_desc fd_desc;
-+	__u8		fd_mac[ETH_ALEN];
-+} __attribute__((packed));
-+
-+/*
-+ * FIP_DT_MAP - descriptor.
-+ */
-+struct fip_map_desc {
-+	struct fip_desc fd_desc;
-+	__u8		fd_resvd[3];
-+	__u8		fd_map[3];
-+} __attribute__((packed));
-+
-+/*
-+ * FIP_DT_NAME descriptor.
-+ */
-+struct fip_wwn_desc {
-+	struct fip_desc fd_desc;
-+	__u8		fd_resvd[2];
-+	__be32		fd_wwn[2];	/* 64-bit value, only 32-bit aligned */
-+} __attribute__((packed));
-+
-+/*
-+ * FIP_DT_FAB descriptor.
-+ */
-+struct fip_fab_desc {
-+	struct fip_desc fd_desc;
-+	__be16		fd_vfid;	/* virtual fabric ID */
-+	__u8		fd_resvd;
-+	__u8		fd_map[3];	/* FC-MAP value */
-+	__be32		fd_wwn[2];	/* fabric name */
-+} __attribute__((packed));
-+
-+/*
-+ * FIP_DT_FCOE_SIZE descriptor.
-+ */
-+struct fip_size_desc {
-+	struct fip_desc fd_desc;
-+	__be16		fd_size;
-+} __attribute__((packed));
-+
-+/*
-+ * Descriptor that encapsulates an ELS or ILS frame.
-+ * The encapsulated frame immediately follows this header, without
-+ * SOF, EOF, or CRC.
-+ */
-+struct fip_encaps {
-+	struct fip_desc fd_desc;
-+	__u8		fd_resvd[2];
-+} __attribute__((packed));
-+
-+/*
-+ * FIP_DT_VN_ID - VN_Node Identifier descriptor.
-+ */
-+struct fip_vn_desc {
-+	struct fip_desc fd_desc;
-+	__u8		fd_mac[ETH_ALEN];
-+	__u8		fd_resvd;
-+	__u8		fd_fc_id[3];
-+	__be32		fd_wwpn[2];
-+} __attribute__((packed));
-+
-+/*
-+ * FIP_DT_FKA - Advertisement keep-alive period.
-+ */
-+struct fip_fka_desc {
-+	struct fip_desc fd_desc;
-+	__u8		fd_resvd[2];
-+	__be32		fd_fka_period;	/* adv./keep-alive period in mS */
-+} __attribute__((packed));
-+
-+/*
-+ * FIP_DT_VENDOR descriptor.
-+ */
-+struct fip_vendor_desc {
-+	struct fip_desc fd_desc;
-+	__u8		fd_resvd[2];
-+	__u8		fd_vendor_id[8];
-+} __attribute__((packed));
-+
-+#endif /* _FC_FIP_H_ */
-
++config SCSI_MPT2SAS_LOGGING
++	bool "LSI MPT Fusion logging facility"
++	depends on PCI && SCSI && SCSI_MPT2SAS
++	---help---
++	This turns on a logging facility.
