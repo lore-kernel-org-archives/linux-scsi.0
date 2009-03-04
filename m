@@ -1,55 +1,77 @@
 From: akpm@linux-foundation.org
-Subject: [patch for 2.6.29? 1/2] drivers/scsi: correct use of ! and &
-Date: Wed, 04 Mar 2009 12:12:16 -0800
-Message-ID: <200903042012.n24KCHDT029998@imap1.linux-foundation.org>
+Subject: [patch 06/15] scsi: gdth.c use unaligned access helpers
+Date: Wed, 04 Mar 2009 12:06:09 -0800
+Message-ID: <200903042006.n24K69LN029275@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:46734 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41792 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756015AbZCDU0L (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2009 15:26:11 -0500
+	by vger.kernel.org with ESMTP id S1756161AbZCDU0U (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2009 15:26:20 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk, robert.w.love@intel.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com, bharrosh@panasas.com
 
-From: Julia Lawall <julia@diku.dk>
+From: Harvey Harrison <harvey.harrison@gmail.com>
 
-!ep->esb_stat is either 1 or 0, and the rightmost bit of ESB_ST_COMPLETE is
-always 0, making the result of !ep->esb_stat & ESB_ST_COMPLETE always 0.
-Thus parentheses around the argument to ! seem needed.
+Remove two now unnecessary local vars.
 
-The semantic patch that makes this change is as follows:
-(http://www.emn.fr/x-info/coccinelle/)
-
-// <smpl>
-@@ expression E; constant C; @@
-(
-  !E & !C
-|
-- !E & C
-+ !(E & C)
-)
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-Cc: Robert Love <robert.w.love@intel.com>
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/libfc/fc_exch.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/gdth.c |   23 ++++++++++-------------
+ 1 file changed, 10 insertions(+), 13 deletions(-)
 
-diff -puN drivers/scsi/libfc/fc_exch.c~drivers-scsi-correct-use-of-and drivers/scsi/libfc/fc_exch.c
---- a/drivers/scsi/libfc/fc_exch.c~drivers-scsi-correct-use-of-and
-+++ a/drivers/scsi/libfc/fc_exch.c
-@@ -283,7 +283,7 @@ static void fc_exch_release(struct fc_ex
- 			ep->destructor(&ep->seq, ep->arg);
- 		if (ep->lp->tt.exch_put)
- 			ep->lp->tt.exch_put(ep->lp, mp, ep->xid);
--		WARN_ON(!ep->esb_stat & ESB_ST_COMPLETE);
-+		WARN_ON(!(ep->esb_stat & ESB_ST_COMPLETE));
- 		mempool_free(ep, mp->ep_pool);
- 	}
- }
+diff -puN drivers/scsi/gdth.c~scsi-gdthc-use-unaligned-access-helpers drivers/scsi/gdth.c
+--- a/drivers/scsi/gdth.c~scsi-gdthc-use-unaligned-access-helpers
++++ a/drivers/scsi/gdth.c
+@@ -131,6 +131,7 @@
+ #include <asm/system.h>
+ #include <asm/io.h>
+ #include <asm/uaccess.h>
++#include <asm/unaligned.h>
+ #include <linux/spinlock.h>
+ #include <linux/blkdev.h>
+ #include <linux/scatterlist.h>
+@@ -2429,8 +2430,8 @@ static int gdth_fill_cache_cmd(gdth_ha_s
+ {
+     register gdth_cmd_str *cmdp;
+     struct gdth_cmndinfo *cmndinfo = gdth_cmnd_priv(scp);
+-    ulong32 cnt, blockcnt;
+-    ulong64 no, blockno;
++    ulong32 blockcnt;
++    ulong64 blockno;
+     int i, cmd_index, read_write, sgcnt, mode64;
+ 
+     cmdp = ha->pccb;
+@@ -2498,19 +2499,15 @@ static int gdth_fill_cache_cmd(gdth_ha_s
+ 
+     if (read_write) {
+         if (scp->cmd_len == 16) {
+-            memcpy(&no, &scp->cmnd[2], sizeof(ulong64));
+-            blockno = be64_to_cpu(no);
+-            memcpy(&cnt, &scp->cmnd[10], sizeof(ulong32));
+-            blockcnt = be32_to_cpu(cnt);
++		blockno = get_unaligned_be64(&scp->cmnd[2]);
++		blockcnt = get_unaligned_be32(&scp->cmnd[10]);
+         } else if (scp->cmd_len == 10) {
+-            memcpy(&no, &scp->cmnd[2], sizeof(ulong32));
+-            blockno = be32_to_cpu(no);
+-            memcpy(&cnt, &scp->cmnd[7], sizeof(ushort));
+-            blockcnt = be16_to_cpu(cnt);
++		blockno = get_unaligned_be32(&scp->cmnd[2]);
++		blockcnt = get_unaligned_be16(&scp->cmnd[7]);
+         } else {
+-            memcpy(&no, &scp->cmnd[0], sizeof(ulong32));
+-            blockno = be32_to_cpu(no) & 0x001fffffUL;
+-            blockcnt= scp->cmnd[4]==0 ? 0x100 : scp->cmnd[4];
++		blockno = get_unaligned_be32(&scp->cmnd[2]);
++		blockno &= 0x001fffffUL;
++		blockcnt = scp->cmnd[4] == 0 ? 0x100 : scp->cmnd[4];
+         }
+         if (mode64) {
+             cmdp->u.cache64.BlockNo = blockno;
 _
