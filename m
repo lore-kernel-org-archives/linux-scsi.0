@@ -1,57 +1,67 @@
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [BUG] 2.6.29-rc6-2450cf in scsi_lib.c (was: Large amount of
- scsi-sgpool)objects
-Date: Wed, 4 Mar 2009 03:01:56 +0100 (CET)
-Message-ID: <alpine.LFD.2.00.0903040249460.29264@localhost.localdomain>
-References: <alpine.LSU.2.00.0903030220050.2438@fbirervta.pbzchgretzou.qr>  <49ACF8FE.2020904@panasas.com>  <1236093718.3263.3.camel@localhost.localdomain>  <alpine.LSU.2.00.0903031703270.855@fbirervta.pbzchgretzou.qr>  <1236097526.3263.17.camel@localhost.localdomain>
-  <alpine.LFD.2.00.0903031818230.29264@localhost.localdomain>  <alpine.LFD.2.00.0903032247170.29264@localhost.localdomain> <1236119195.24019.24.camel@localhost.localdomain>
+From: Rob Evers <revers@redhat.com>
+Subject: Re: [PATCH 1/11] mpt2sas: mpt2sas_base sources
+Date: Tue, 03 Mar 2009 22:22:42 -0500
+Message-ID: <49ADF402.4050504@redhat.com>
+References: <660360F4F2570145BD872F298951B17A7689E415@cosmail03.lsi.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1236119195.24019.24.camel@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jan Engelhardt <jengelh@medozas.de>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.redhat.com ([66.187.237.31]:43399 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751524AbZCDDYi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Mar 2009 22:24:38 -0500
+In-Reply-To: <660360F4F2570145BD872F298951B17A7689E415@cosmail03.lsi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Moore, Eric" <Eric.Moore@lsi.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Wilcox <matthew@wil.cx>, Grant Grundler <grundler@google.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, 3 Mar 2009, James Bottomley wrote:
+Moore, Eric wrote:
+> On Tuesday, March 03, 2009 2:29 PM, James Bottomley wrote: 
+>   
+>> On Wed, 2009-02-25 at 14:12 -0700, Matthew Wilcox wrote:
+>>     
+>>> On Wed, Feb 25, 2009 at 01:27:00PM -0700, Moore, Eric wrote:
+>>>       
+>>>> What are you suggesting?   Calling wmb()?
+>>>>         
+>>> PCI writes can be posted, so the him_register writel() may 
+>>>       
+>> not complete
+>>     
+>>> for a few thousand cycles.  wmb() isn't going to solve the 
+>>>       
+>> problem.  A
+>>     
+>>> readl() from the device would, as would your current solution of
+>>> ignoring subsequent interrupts.
+>>>       
+>> This seems to be the most serious issue with the current 
+>> patch set.  If
+>> you repost with that fixed, I can put it into scsi-misc and we can
+>> address the other issues later.
+>>
+>>     
+>
+> I will repost the patch set tommorrow with the following changes
+>
+> (1) Add readl following writel from the function that disables interrupts
+>   
+Is a memory barrier required after the writel and before the readl to ensure that 
+the writel executes before the readl on processors other than x86_64 and ia32?
 
-> On Tue, 2009-03-03 at 23:07 +0100, Thomas Gleixner wrote:
-> > On Tue, 3 Mar 2009, Thomas Gleixner wrote:
-> > > My bad. I was playing with that to get rid of the aic7xxx wreckage on
-> > > one of my test boxen and forgot to remove it.
-> > 
-> > While the one below is definitey not my fault. It's on Linus latest:
-> > 
-> >  commit 2450cf51a1bdba7037e91b1bcc494b01c58aaf66
-> > 
-> > While compiling a kernel I triggerred the BUG below. Not so nice as it
-> > took a whole filesystem with it. fsck took more than 20 min to recover
-> > the leftovers :(
-> > 
-> > Thanks,
-> > 
-> > 	tglx
-> > 
-> > 
-> > ------------[ cut here ]------------
-> > kernel BUG at /home/tglx/work/kernel/git/linux-2.6/drivers/scsi/scsi_lib.c:1141!
-> 
-> This is BUG_ON(count > sdb->table.nents);
-> 
-> It looks like the sg list got split and grew in size ... I suspect this
-> might be libata related, so cc'ing the ide list.  I suspect either the
-> block layer initially parametrised this wrongly (tomo bug) or a sg list
-> got split then requeued (something in libata?).
+> (2) Replace 0xFFFFFFFFFFFFFFFFULL with ~0ULL
+>
+> (3) when calling pci_enable_msix, only pass one msix entry (instead of 15).  
+>
+> (4) remove the "current HW implementation uses..... " comment in the sources
+>
+> (5) merge in a bug fix for SIGIO/POLLIN notifcation reported by the storlib team.
+>
+> Eric Moore--
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>   
 
-FYI, after I've lost a full day of work including the results of four
-"iozone -a -g 4G" runs I tried to reproduce the problem on that
-machine - the leftovers of the filesystem are pretty useless anyway.
-
-It took about 2hrs to trigger the bug again. Same back trace.
-
-Anything I can do what might help to decode the problem ?
-
-Thanks,
-
-	tglx
