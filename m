@@ -1,77 +1,57 @@
 From: akpm@linux-foundation.org
-Subject: [patch 06/15] scsi: gdth.c use unaligned access helpers
-Date: Wed, 04 Mar 2009 12:06:09 -0800
-Message-ID: <200903042006.n24K69LN029275@imap1.linux-foundation.org>
+Subject: [patch 14/15] qla2x: fix printk format warnings
+Date: Wed, 04 Mar 2009 12:06:17 -0800
+Message-ID: <200903042006.n24K6H1O029304@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:41792 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41255 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756161AbZCDU0U (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2009 15:26:20 -0500
+	by vger.kernel.org with ESMTP id S1756308AbZCDU0W (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2009 15:26:22 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com, bharrosh@panasas.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, randy.dunlap@oracle.com, seokmann.ju@qlogic.com
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Remove two now unnecessary local vars.
+Fix qla2xxx printk format warnings:
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>
+drivers/scsi/qla2xxx/qla_sup.c:915: warning: long long unsigned int format, u64 arg (arg 5)
+drivers/scsi/qla2xxx/qla_sup.c:915: warning: long long unsigned int format, u64 arg (arg 6)
+drivers/scsi/qla2xxx/qla_sup.c:923: warning: long long unsigned int format, u64 arg (arg 5)
+drivers/scsi/qla2xxx/qla_sup.c:923: warning: long long unsigned int format, u64 arg (arg 6)
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+Acked-by: Seokmann Ju <seokmann.ju@qlogic.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/gdth.c |   23 ++++++++++-------------
- 1 file changed, 10 insertions(+), 13 deletions(-)
+ drivers/scsi/qla2xxx/qla_sup.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/gdth.c~scsi-gdthc-use-unaligned-access-helpers drivers/scsi/gdth.c
---- a/drivers/scsi/gdth.c~scsi-gdthc-use-unaligned-access-helpers
-+++ a/drivers/scsi/gdth.c
-@@ -131,6 +131,7 @@
- #include <asm/system.h>
- #include <asm/io.h>
- #include <asm/uaccess.h>
-+#include <asm/unaligned.h>
- #include <linux/spinlock.h>
- #include <linux/blkdev.h>
- #include <linux/scatterlist.h>
-@@ -2429,8 +2430,8 @@ static int gdth_fill_cache_cmd(gdth_ha_s
- {
-     register gdth_cmd_str *cmdp;
-     struct gdth_cmndinfo *cmndinfo = gdth_cmnd_priv(scp);
--    ulong32 cnt, blockcnt;
--    ulong64 no, blockno;
-+    ulong32 blockcnt;
-+    ulong64 blockno;
-     int i, cmd_index, read_write, sgcnt, mode64;
+diff -puN drivers/scsi/qla2xxx/qla_sup.c~qla2x-fix-printk-format-warnings drivers/scsi/qla2xxx/qla_sup.c
+--- a/drivers/scsi/qla2xxx/qla_sup.c~qla2x-fix-printk-format-warnings
++++ a/drivers/scsi/qla2xxx/qla_sup.c
+@@ -914,7 +914,9 @@ qla2xxx_flash_npiv_conf(scsi_qla_host_t 
  
-     cmdp = ha->pccb;
-@@ -2498,19 +2499,15 @@ static int gdth_fill_cache_cmd(gdth_ha_s
+ 		DEBUG2(qla_printk(KERN_DEBUG, ha, "NPIV[%02x]: wwpn=%llx "
+ 			"wwnn=%llx vf_id=0x%x Q_qos=0x%x F_qos=0x%x.\n", cnt,
+-			vid.port_name, vid.node_name, le16_to_cpu(entry->vf_id),
++			(unsigned long long)vid.port_name,
++			(unsigned long long)vid.node_name,
++			le16_to_cpu(entry->vf_id),
+ 			entry->q_qos, entry->f_qos));
  
-     if (read_write) {
-         if (scp->cmd_len == 16) {
--            memcpy(&no, &scp->cmnd[2], sizeof(ulong64));
--            blockno = be64_to_cpu(no);
--            memcpy(&cnt, &scp->cmnd[10], sizeof(ulong32));
--            blockcnt = be32_to_cpu(cnt);
-+		blockno = get_unaligned_be64(&scp->cmnd[2]);
-+		blockcnt = get_unaligned_be32(&scp->cmnd[10]);
-         } else if (scp->cmd_len == 10) {
--            memcpy(&no, &scp->cmnd[2], sizeof(ulong32));
--            blockno = be32_to_cpu(no);
--            memcpy(&cnt, &scp->cmnd[7], sizeof(ushort));
--            blockcnt = be16_to_cpu(cnt);
-+		blockno = get_unaligned_be32(&scp->cmnd[2]);
-+		blockcnt = get_unaligned_be16(&scp->cmnd[7]);
-         } else {
--            memcpy(&no, &scp->cmnd[0], sizeof(ulong32));
--            blockno = be32_to_cpu(no) & 0x001fffffUL;
--            blockcnt= scp->cmnd[4]==0 ? 0x100 : scp->cmnd[4];
-+		blockno = get_unaligned_be32(&scp->cmnd[2]);
-+		blockno &= 0x001fffffUL;
-+		blockcnt = scp->cmnd[4] == 0 ? 0x100 : scp->cmnd[4];
-         }
-         if (mode64) {
-             cmdp->u.cache64.BlockNo = blockno;
+ 		if (i < QLA_PRECONFIG_VPORTS) {
+@@ -923,7 +925,8 @@ qla2xxx_flash_npiv_conf(scsi_qla_host_t 
+ 				qla_printk(KERN_INFO, ha,
+ 				"NPIV-Config: Failed to create vport [%02x]: "
+ 				"wwpn=%llx wwnn=%llx.\n", cnt,
+-				vid.port_name, vid.node_name);
++				(unsigned long long)vid.port_name,
++				(unsigned long long)vid.node_name);
+ 		}
+ 	}
+ done:
 _
