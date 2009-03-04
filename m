@@ -1,40 +1,40 @@
 From: Eric Moore <eric.moore@lsi.com>
-Subject: [PATCH 1/11] mpt2sas v00.100.11.11 : mpt2sas_base sources
-Date: Tue, 3 Mar 2009 22:08:03 -0700
-Message-ID: <20090304050759.GB4194@lsil.com>
+Subject: [PATCH 2/11] mpt2sas v00.100.11.11 : mpt2sas_config sources
+Date: Tue, 3 Mar 2009 22:09:13 -0700
+Message-ID: <20090304050910.GD4194@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og106.obsmtp.com ([64.18.2.165]:39724 "EHLO
-	exprod7og106.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755102AbZCDSs0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2009 13:48:26 -0500
+Received: from exprod7og112.obsmtp.com ([64.18.2.177]:44759 "EHLO
+	exprod7og112.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754571AbZCDStf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2009 13:49:35 -0500
 Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
-	by mail0.lsil.com (8.12.11/8.12.11) with ESMTP id n24ImMhC005415
-	for <linux-scsi@vger.kernel.org>; Wed, 4 Mar 2009 10:48:22 -0800 (PST)
+	by mail0.lsil.com (8.12.11/8.12.11) with ESMTP id n24InWcU005471
+	for <linux-scsi@vger.kernel.org>; Wed, 4 Mar 2009 10:49:32 -0800 (PST)
 Received: from localhost (emoore-test1.co.lsil.com [172.21.46.33])
-	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id n24ImPAb013698
-	for <linux-scsi@vger.kernel.org>; Wed, 4 Mar 2009 10:48:26 -0800
+	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id n24InZtX013929
+	for <linux-scsi@vger.kernel.org>; Wed, 4 Mar 2009 10:49:36 -0800
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-mpt2sas_base
+mptsas_ctl
 
-Common API layer interface to MPT (Message Passing Technology) firmware.
+Storage Management Module.
 
 Signed-off-by: Eric Moore <eric.moore@lsi.com>
 ---
 
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c	1969-12-31 17:00:00.000000000 -0700
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c	2009-03-03 10:30:58.000000000 -0700
-@@ -0,0 +1,3390 @@
+--- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c	1969-12-31 17:00:00.000000000 -0700
++++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c	2009-03-03 10:33:13.000000000 -0700
+@@ -0,0 +1,2502 @@
 +/*
-+ * This is the Fusion MPT base driver providing common API layer interface
-+ * for access to MPT (Message Passing Technology) firmware.
++ * Management Module Support for MPT (Message Passing Technology) based
++ * controllers
 + *
-+ * This code is based on drivers/scsi/mpt2sas/mpt2_base.c
++ * This code is based on drivers/scsi/mpt2sas/mpt2_ctl.c
 + * Copyright (C) 2007-2008  LSI Corporation
 + *  (mailto:DL-MPTFusionLinux@lsi.com)
 + *
@@ -82,3205 +82,323 @@ Signed-off-by: Eric Moore <eric.moore@lsi.com>
 +#include <linux/slab.h>
 +#include <linux/types.h>
 +#include <linux/pci.h>
-+#include <linux/kdev_t.h>
-+#include <linux/blkdev.h>
 +#include <linux/delay.h>
-+#include <linux/interrupt.h>
-+#include <linux/dma-mapping.h>
-+#include <linux/sort.h>
++#include <linux/smp_lock.h>
++#include <linux/compat.h>
++#include <linux/poll.h>
++
 +#include <linux/io.h>
++#include <linux/uaccess.h>
 +
 +#include "mpt2sas_base.h"
++#include "mpt2sas_ctl.h"
 +
-+static MPT_CALLBACK	mpt_callbacks[MPT_MAX_CALLBACKS];
-+
-+#define FAULT_POLLING_INTERVAL 1000 /* in milliseconds */
-+#define MPT2SAS_MAX_REQUEST_QUEUE 500 /* maximum controller queue depth */
-+
-+static int max_queue_depth = -1;
-+module_param(max_queue_depth, int, 0);
-+MODULE_PARM_DESC(max_queue_depth, " max controller queue depth ");
-+
-+static int max_sgl_entries = -1;
-+module_param(max_sgl_entries, int, 0);
-+MODULE_PARM_DESC(max_sgl_entries, " max sg entries ");
-+
-+static int msix_disable = -1;
-+module_param(msix_disable, int, 0);
-+MODULE_PARM_DESC(msix_disable, " disable msix routed interrupts (default=0)");
++static struct fasync_struct *async_queue;
++static DECLARE_WAIT_QUEUE_HEAD(ctl_poll_wait);
 +
 +/**
-+ * _base_fault_reset_work - workq handling ioc fault conditions
-+ * @work: input argument, used to derive ioc
-+ * Context: sleep.
++ * enum block_state - blocking state
++ * @NON_BLOCKING: non blocking
++ * @BLOCKING: blocking
 + *
-+ * Return nothing.
++ * These states are for ioctls that need to wait for a response
++ * from firmware, so they probably require sleep.
 + */
-+static void
-+_base_fault_reset_work(struct work_struct *work)
-+{
-+	struct MPT2SAS_ADAPTER *ioc =
-+	    container_of(work, struct MPT2SAS_ADAPTER, fault_reset_work.work);
-+	unsigned long	 flags;
-+	u32 doorbell;
-+	int rc;
-+
-+	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
-+	if (ioc->ioc_reset_in_progress)
-+		goto rearm_timer;
-+	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
-+
-+	doorbell = base_get_iocstate(ioc, 0);
-+	if ((doorbell & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_FAULT) {
-+		rc = base_hard_reset_handler(ioc, CAN_SLEEP, FORCE_BIG_HAMMER);
-+		printk(MPT2SAS_WARN_FMT "%s: hard reset: %s\n", ioc->name,
-+		    __func__, (rc == 0) ? "success" : "failed");
-+		doorbell = base_get_iocstate(ioc, 0);
-+		if ((doorbell & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_FAULT)
-+			base_fault_info(ioc, doorbell &
-+			    MPI2_DOORBELL_DATA_MASK);
-+	}
-+
-+	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
-+ rearm_timer:
-+	if (ioc->fault_reset_work_q)
-+		queue_delayed_work(ioc->fault_reset_work_q,
-+		    &ioc->fault_reset_work,
-+		    msecs_to_jiffies(FAULT_POLLING_INTERVAL));
-+	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
-+}
++enum block_state {
++	NON_BLOCKING,
++	BLOCKING,
++};
 +
 +#ifdef CONFIG_SCSI_MPT2SAS_LOGGING
 +/**
-+ * _base_sas_ioc_info - verbose translation of the ioc status
-+ * @ioc: pointer to scsi command object
-+ * @mpi_reply: reply mf payload returned from firmware
-+ * @request_hdr: request mf
++ * _ctl_display_some_debug - debug routine
++ * @ioc: per adapter object
++ * @smid: system request message index
++ * @calling_function_name: string pass from calling function
++ * @mpi_reply: reply message frame
++ * Context: none.
 + *
-+ * Return nothing.
++ * Function for displaying debug info helpfull when debugging issues
++ * in this module.
 + */
 +static void
-+_base_sas_ioc_info(struct MPT2SAS_ADAPTER *ioc, MPI2DefaultReply_t *mpi_reply,
-+     MPI2RequestHeader_t *request_hdr)
++_ctl_display_some_debug(struct MPT2SAS_ADAPTER *ioc, u16 smid,
++    char *calling_function_name, MPI2DefaultReply_t *mpi_reply)
 +{
-+	u16 ioc_status = le16_to_cpu(mpi_reply->IOCStatus) &
-+	    MPI2_IOCSTATUS_MASK;
++	Mpi2ConfigRequest_t *mpi_request;
 +	char *desc = NULL;
-+	u16 frame_sz;
-+	char *func_str = NULL;
 +
-+	/* SCSI_IO, RAID_PASS are handled from _scsih_scsi_ioc_info */
-+	if (request_hdr->Function == MPI2_FUNCTION_SCSI_IO_REQUEST ||
-+	    request_hdr->Function == MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH ||
-+	    request_hdr->Function == MPI2_FUNCTION_EVENT_NOTIFICATION)
++	if (!(ioc->logging_level & MPT_DEBUG_IOCTL))
 +		return;
 +
-+	switch (ioc_status) {
++	mpi_request = base_get_msg_frame(ioc, smid);
++	switch (mpi_request->Function) {
++	case MPI2_FUNCTION_SCSI_IO_REQUEST:
++	{
++		Mpi2SCSIIORequest_t *scsi_request =
++		    (Mpi2SCSIIORequest_t *)mpi_request;
 +
-+/****************************************************************************
-+*  Common IOCStatus values for all replies
-+****************************************************************************/
++		snprintf(ioc->tmp_string, MPT_STRING_LENGTH,
++		    "scsi_io, cmd(0x%02x), cdb_len(%d)",
++		    scsi_request->CDB.CDB32[0],
++		    le16_to_cpu(scsi_request->IoFlags) & 0xF);
++		desc = ioc->tmp_string;
++		break;
++	}
++	case MPI2_FUNCTION_SCSI_TASK_MGMT:
++		desc = "task_mgmt";
++		break;
++	case MPI2_FUNCTION_IOC_INIT:
++		desc = "ioc_init";
++		break;
++	case MPI2_FUNCTION_IOC_FACTS:
++		desc = "ioc_facts";
++		break;
++	case MPI2_FUNCTION_CONFIG:
++	{
++		Mpi2ConfigRequest_t *config_request =
++		    (Mpi2ConfigRequest_t *)mpi_request;
 +
-+	case MPI2_IOCSTATUS_INVALID_FUNCTION:
-+		desc = "invalid function";
++		snprintf(ioc->tmp_string, MPT_STRING_LENGTH,
++		    "config, type(0x%02x), ext_type(0x%02x), number(%d)",
++		    (config_request->Header.PageType &
++		     MPI2_CONFIG_PAGETYPE_MASK), config_request->ExtPageType,
++		    config_request->Header.PageNumber);
++		desc = ioc->tmp_string;
 +		break;
-+	case MPI2_IOCSTATUS_BUSY:
-+		desc = "busy";
++	}
++	case MPI2_FUNCTION_PORT_FACTS:
++		desc = "port_facts";
 +		break;
-+	case MPI2_IOCSTATUS_INVALID_SGL:
-+		desc = "invalid sgl";
++	case MPI2_FUNCTION_PORT_ENABLE:
++		desc = "port_enable";
 +		break;
-+	case MPI2_IOCSTATUS_INTERNAL_ERROR:
-+		desc = "internal error";
++	case MPI2_FUNCTION_EVENT_NOTIFICATION:
++		desc = "event_notification";
 +		break;
-+	case MPI2_IOCSTATUS_INVALID_VPID:
-+		desc = "invalid vpid";
++	case MPI2_FUNCTION_FW_DOWNLOAD:
++		desc = "fw_download";
 +		break;
-+	case MPI2_IOCSTATUS_INSUFFICIENT_RESOURCES:
-+		desc = "insufficient resources";
++	case MPI2_FUNCTION_FW_UPLOAD:
++		desc = "fw_upload";
 +		break;
-+	case MPI2_IOCSTATUS_INVALID_FIELD:
-+		desc = "invalid field";
++	case MPI2_FUNCTION_RAID_ACTION:
++		desc = "raid_action";
 +		break;
-+	case MPI2_IOCSTATUS_INVALID_STATE:
-+		desc = "invalid state";
-+		break;
-+	case MPI2_IOCSTATUS_OP_STATE_NOT_SUPPORTED:
-+		desc = "op state not supported";
-+		break;
++	case MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH:
++	{
++		Mpi2SCSIIORequest_t *scsi_request =
++		    (Mpi2SCSIIORequest_t *)mpi_request;
 +
-+/****************************************************************************
-+*  Config IOCStatus values
-+****************************************************************************/
-+
-+	case MPI2_IOCSTATUS_CONFIG_INVALID_ACTION:
-+		desc = "config invalid action";
++		snprintf(ioc->tmp_string, MPT_STRING_LENGTH,
++		    "raid_pass, cmd(0x%02x), cdb_len(%d)",
++		    scsi_request->CDB.CDB32[0],
++		    le16_to_cpu(scsi_request->IoFlags) & 0xF);
++		desc = ioc->tmp_string;
 +		break;
-+	case MPI2_IOCSTATUS_CONFIG_INVALID_TYPE:
-+		desc = "config invalid type";
++	}
++	case MPI2_FUNCTION_SAS_IO_UNIT_CONTROL:
++		desc = "sas_iounit_cntl";
 +		break;
-+	case MPI2_IOCSTATUS_CONFIG_INVALID_PAGE:
-+		desc = "config invalid page";
++	case MPI2_FUNCTION_SATA_PASSTHROUGH:
++		desc = "sata_pass";
 +		break;
-+	case MPI2_IOCSTATUS_CONFIG_INVALID_DATA:
-+		desc = "config invalid data";
++	case MPI2_FUNCTION_DIAG_BUFFER_POST:
++		desc = "diag_buffer_post";
 +		break;
-+	case MPI2_IOCSTATUS_CONFIG_NO_DEFAULTS:
-+		desc = "config no defaults";
++	case MPI2_FUNCTION_DIAG_RELEASE:
++		desc = "diag_release";
 +		break;
-+	case MPI2_IOCSTATUS_CONFIG_CANT_COMMIT:
-+		desc = "config cant commit";
-+		break;
-+
-+/****************************************************************************
-+*  SCSI IO Reply
-+****************************************************************************/
-+
-+	case MPI2_IOCSTATUS_SCSI_RECOVERED_ERROR:
-+	case MPI2_IOCSTATUS_SCSI_INVALID_DEVHANDLE:
-+	case MPI2_IOCSTATUS_SCSI_DEVICE_NOT_THERE:
-+	case MPI2_IOCSTATUS_SCSI_DATA_OVERRUN:
-+	case MPI2_IOCSTATUS_SCSI_DATA_UNDERRUN:
-+	case MPI2_IOCSTATUS_SCSI_IO_DATA_ERROR:
-+	case MPI2_IOCSTATUS_SCSI_PROTOCOL_ERROR:
-+	case MPI2_IOCSTATUS_SCSI_TASK_TERMINATED:
-+	case MPI2_IOCSTATUS_SCSI_RESIDUAL_MISMATCH:
-+	case MPI2_IOCSTATUS_SCSI_TASK_MGMT_FAILED:
-+	case MPI2_IOCSTATUS_SCSI_IOC_TERMINATED:
-+	case MPI2_IOCSTATUS_SCSI_EXT_TERMINATED:
-+		break;
-+
-+/****************************************************************************
-+*  For use by SCSI Initiator and SCSI Target end-to-end data protection
-+****************************************************************************/
-+
-+	case MPI2_IOCSTATUS_EEDP_GUARD_ERROR:
-+		desc = "eedp guard error";
-+		break;
-+	case MPI2_IOCSTATUS_EEDP_REF_TAG_ERROR:
-+		desc = "eedp ref tag error";
-+		break;
-+	case MPI2_IOCSTATUS_EEDP_APP_TAG_ERROR:
-+		desc = "eedp app tag error";
-+		break;
-+
-+/****************************************************************************
-+*  SCSI Target values
-+****************************************************************************/
-+
-+	case MPI2_IOCSTATUS_TARGET_INVALID_IO_INDEX:
-+		desc = "target invalid io index";
-+		break;
-+	case MPI2_IOCSTATUS_TARGET_ABORTED:
-+		desc = "target aborted";
-+		break;
-+	case MPI2_IOCSTATUS_TARGET_NO_CONN_RETRYABLE:
-+		desc = "target no conn retryable";
-+		break;
-+	case MPI2_IOCSTATUS_TARGET_NO_CONNECTION:
-+		desc = "target no connection";
-+		break;
-+	case MPI2_IOCSTATUS_TARGET_XFER_COUNT_MISMATCH:
-+		desc = "target xfer count mismatch";
-+		break;
-+	case MPI2_IOCSTATUS_TARGET_DATA_OFFSET_ERROR:
-+		desc = "target data offset error";
-+		break;
-+	case MPI2_IOCSTATUS_TARGET_TOO_MUCH_WRITE_DATA:
-+		desc = "target too much write data";
-+		break;
-+	case MPI2_IOCSTATUS_TARGET_IU_TOO_SHORT:
-+		desc = "target iu too short";
-+		break;
-+	case MPI2_IOCSTATUS_TARGET_ACK_NAK_TIMEOUT:
-+		desc = "target ack nak timeout";
-+		break;
-+	case MPI2_IOCSTATUS_TARGET_NAK_RECEIVED:
-+		desc = "target nak received";
-+		break;
-+
-+/****************************************************************************
-+*  Serial Attached SCSI values
-+****************************************************************************/
-+
-+	case MPI2_IOCSTATUS_SAS_SMP_REQUEST_FAILED:
-+		desc = "smp request failed";
-+		break;
-+	case MPI2_IOCSTATUS_SAS_SMP_DATA_OVERRUN:
-+		desc = "smp data overrun";
-+		break;
-+
-+/****************************************************************************
-+*  Diagnostic Buffer Post / Diagnostic Release values
-+****************************************************************************/
-+
-+	case MPI2_IOCSTATUS_DIAGNOSTIC_RELEASED:
-+		desc = "diagnostic released";
-+		break;
-+	default:
++	case MPI2_FUNCTION_SMP_PASSTHROUGH:
++		desc = "smp_passthrough";
 +		break;
 +	}
 +
 +	if (!desc)
 +		return;
 +
-+	switch (request_hdr->Function) {
-+	case MPI2_FUNCTION_CONFIG:
-+		frame_sz = sizeof(Mpi2ConfigRequest_t) + ioc->sge_size;
-+		func_str = "config_page";
-+		break;
-+	case MPI2_FUNCTION_SCSI_TASK_MGMT:
-+		frame_sz = sizeof(Mpi2SCSITaskManagementRequest_t);
-+		func_str = "task_mgmt";
-+		break;
-+	case MPI2_FUNCTION_SAS_IO_UNIT_CONTROL:
-+		frame_sz = sizeof(Mpi2SasIoUnitControlRequest_t);
-+		func_str = "sas_iounit_ctl";
-+		break;
-+	case MPI2_FUNCTION_SCSI_ENCLOSURE_PROCESSOR:
-+		frame_sz = sizeof(Mpi2SepRequest_t);
-+		func_str = "enclosure";
-+		break;
-+	case MPI2_FUNCTION_IOC_INIT:
-+		frame_sz = sizeof(Mpi2IOCInitRequest_t);
-+		func_str = "ioc_init";
-+		break;
-+	case MPI2_FUNCTION_PORT_ENABLE:
-+		frame_sz = sizeof(Mpi2PortEnableRequest_t);
-+		func_str = "port_enable";
-+		break;
-+	case MPI2_FUNCTION_SMP_PASSTHROUGH:
-+		frame_sz = sizeof(Mpi2SmpPassthroughRequest_t) + ioc->sge_size;
-+		func_str = "smp_passthru";
-+		break;
-+	default:
-+		frame_sz = 32;
-+		func_str = "unknown";
-+		break;
++	printk(MPT2SAS_DEBUG_FMT "%s: %s, smid(%d)\n",
++	    ioc->name, calling_function_name, desc, smid);
++
++	if (!mpi_reply)
++		return;
++
++	if (mpi_reply->IOCStatus || mpi_reply->IOCLogInfo)
++		printk(MPT2SAS_DEBUG_FMT
++		    "\tiocstatus(0x%04x), loginfo(0x%08x)\n",
++		    ioc->name, le16_to_cpu(mpi_reply->IOCStatus),
++		    le32_to_cpu(mpi_reply->IOCLogInfo));
++
++	if (mpi_request->Function == MPI2_FUNCTION_SCSI_IO_REQUEST ||
++	    mpi_request->Function ==
++	    MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH) {
++		Mpi2SCSIIOReply_t *scsi_reply =
++		    (Mpi2SCSIIOReply_t *)mpi_reply;
++		if (scsi_reply->SCSIState || scsi_reply->SCSIStatus)
++			printk(MPT2SAS_DEBUG_FMT
++			    "\tscsi_state(0x%02x), scsi_status"
++			    "(0x%02x)\n", ioc->name,
++			    scsi_reply->SCSIState,
++			    scsi_reply->SCSIStatus);
 +	}
-+
-+	printk(MPT2SAS_WARN_FMT "ioc_status: %s(0x%04x), request(0x%p),"
-+	    " (%s)\n", ioc->name, desc, ioc_status, request_hdr, func_str);
-+
-+	_debug_dump_mf(request_hdr, frame_sz/4);
 +}
++#endif
 +
 +/**
-+ * _base_display_event_data - verbose translation of firmware asyn events
-+ * @ioc: pointer to scsi command object
-+ * @mpi_reply: reply mf payload returned from firmware
++ * ctl_done - ctl module completion routine
++ * @ioc: per adapter object
++ * @smid: system request message index
++ * @VF_ID: virtual function id
++ * @reply: reply message frame(lower 32bit addr)
++ * Context: none.
++ *
++ * The callback handler when using ioc->ctl_cb_idx.
 + *
 + * Return nothing.
 + */
-+static void
-+_base_display_event_data(struct MPT2SAS_ADAPTER *ioc,
++void
++ctl_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 VF_ID, u32 reply)
++{
++	MPI2DefaultReply_t *mpi_reply;
++
++	if (ioc->ctl_cmds.status == MPT2_CMD_NOT_USED)
++		return;
++	if (ioc->ctl_cmds.smid != smid)
++		return;
++	ioc->ctl_cmds.status |= MPT2_CMD_COMPLETE;
++	mpi_reply =  base_get_reply_virt_addr(ioc, reply);
++	if (mpi_reply) {
++		memcpy(ioc->ctl_cmds.reply, mpi_reply, mpi_reply->MsgLength*4);
++		ioc->ctl_cmds.status |= MPT2_CMD_REPLY_VALID;
++	}
++#ifdef CONFIG_SCSI_MPT2SAS_LOGGING
++	_ctl_display_some_debug(ioc, smid, "ctl_done", mpi_reply);
++#endif
++	ioc->ctl_cmds.status &= ~MPT2_CMD_PENDING;
++	complete(&ioc->ctl_cmds.done);
++}
++
++/**
++ * _ctl_check_event_type - determines when an event needs logging
++ * @ioc: per adapter object
++ * @event: firmware event
++ *
++ * The bitmask in ioc->event_type[] indicates which events should be
++ * be saved in the driver event_log.  This bitmask is set by application.
++ *
++ * Returns 1 when event should be captured, or zero means no match.
++ */
++static int
++_ctl_check_event_type(struct MPT2SAS_ADAPTER *ioc, u16 event)
++{
++	u16 i;
++	u32 desired_event;
++
++	if (event >= 128 || !event || !ioc->event_log)
++		return 0;
++
++	desired_event = (1 << (event % 32));
++	if (!desired_event)
++		desired_event = 1;
++	i = event / 32;
++	return desired_event & ioc->event_type[i];
++}
++
++/**
++ * ctl_add_to_event_log - add event
++ * @ioc: per adapter object
++ * @mpi_reply: reply message frame
++ *
++ * Return nothing.
++ */
++void
++ctl_add_to_event_log(struct MPT2SAS_ADAPTER *ioc,
 +    Mpi2EventNotificationReply_t *mpi_reply)
 +{
-+	char *desc = NULL;
++	struct MPT2_IOCTL_EVENTS *event_log;
 +	u16 event;
++	int i;
++	u32 sz, event_data_sz;
++	u8 send_aen = 0;
 +
-+	if (!(ioc->logging_level & MPT_DEBUG_EVENTS))
++	if (!ioc->event_log)
 +		return;
 +
 +	event = le16_to_cpu(mpi_reply->Event);
 +
-+	switch (event) {
-+	case MPI2_EVENT_LOG_DATA:
-+		desc = "Log Data";
-+		break;
-+	case MPI2_EVENT_STATE_CHANGE:
-+		desc = "Status Change";
-+		break;
-+	case MPI2_EVENT_HARD_RESET_RECEIVED:
-+		desc = "Hard Reset Received";
-+		break;
-+	case MPI2_EVENT_EVENT_CHANGE:
-+		desc = "Event Change";
-+		break;
-+	case MPI2_EVENT_TASK_SET_FULL:
-+		desc = "Task Set Full";
-+		break;
-+	case MPI2_EVENT_SAS_DEVICE_STATUS_CHANGE:
-+		desc = "Device Status Change";
-+		break;
-+	case MPI2_EVENT_IR_OPERATION_STATUS:
-+		desc = "IR Operation Status";
-+		break;
-+	case MPI2_EVENT_SAS_DISCOVERY:
-+		desc =  "Discovery";
-+		break;
-+	case MPI2_EVENT_SAS_BROADCAST_PRIMITIVE:
-+		desc = "SAS Broadcast Primitive";
-+		break;
-+	case MPI2_EVENT_SAS_INIT_DEVICE_STATUS_CHANGE:
-+		desc = "SAS Init Device Status Change";
-+		break;
-+	case MPI2_EVENT_SAS_INIT_TABLE_OVERFLOW:
-+		desc = "SAS Init Table Overflow";
-+		break;
-+	case MPI2_EVENT_SAS_TOPOLOGY_CHANGE_LIST:
-+		desc = "SAS Topology Change List";
-+		break;
-+	case MPI2_EVENT_SAS_ENCL_DEVICE_STATUS_CHANGE:
-+		desc = "SAS Enclosure Device Status Change";
-+		break;
-+	case MPI2_EVENT_IR_VOLUME:
-+		desc = "IR Volume";
-+		break;
-+	case MPI2_EVENT_IR_PHYSICAL_DISK:
-+		desc = "IR Physical Disk";
-+		break;
-+	case MPI2_EVENT_IR_CONFIGURATION_CHANGE_LIST:
-+		desc = "IR Configuration Change List";
-+		break;
-+	case MPI2_EVENT_LOG_ENTRY_ADDED:
-+		desc = "Log Entry Added";
-+		break;
++	if (_ctl_check_event_type(ioc, event)) {
++
++		/* insert entry into circular event_log */
++		i = ioc->event_context % MPT2SAS_CTL_EVENT_LOG_SIZE;
++		event_log = ioc->event_log;
++		event_log[i].event = event;
++		event_log[i].context = ioc->event_context++;
++
++		event_data_sz = le16_to_cpu(mpi_reply->EventDataLength)*4;
++		sz = min_t(u32, event_data_sz, MPT2_EVENT_DATA_SIZE);
++		memset(event_log[i].data, 0, MPT2_EVENT_DATA_SIZE);
++		memcpy(event_log[i].data, mpi_reply->EventData, sz);
++		send_aen = 1;
 +	}
 +
-+	if (!desc)
-+		return;
-+
-+	printk(MPT2SAS_INFO_FMT "%s\n", ioc->name, desc);
++	/* This aen_event_read_flag flag is set until the
++	 * application has read the event log.
++	 * For MPI2_EVENT_LOG_ENTRY_ADDED, we always notify.
++	 */
++	if (event == MPI2_EVENT_LOG_ENTRY_ADDED ||
++	    (send_aen && !ioc->aen_event_read_flag)) {
++		ioc->aen_event_read_flag = 1;
++		wake_up_interruptible(&ctl_poll_wait);
++		if (async_queue)
++			kill_fasync(&async_queue, SIGIO, POLL_IN);
++	}
 +}
-+#endif
 +
 +/**
-+ * _base_sas_log_info - verbose translation of firmware log info
-+ * @ioc: pointer to scsi command object
-+ * @log_info: log info
++ * ctl_event_callback - firmware event handler (called at ISR time)
++ * @ioc: per adapter object
++ * @VF_ID: virtual function id
++ * @reply: reply message frame(lower 32bit addr)
++ * Context: interrupt.
 + *
-+ * Return nothing.
-+ */
-+static void
-+_base_sas_log_info(struct MPT2SAS_ADAPTER *ioc , u32 log_info)
-+{
-+	union loginfo_type {
-+		u32	loginfo;
-+		struct {
-+			u32	subcode:16;
-+			u32	code:8;
-+			u32	originator:4;
-+			u32	bus_type:4;
-+		} dw;
-+	};
-+	union loginfo_type sas_loginfo;
-+	char *originator_str = NULL;
-+
-+	sas_loginfo.loginfo = log_info;
-+	if (sas_loginfo.dw.bus_type != 3 /*SAS*/)
-+		return;
-+
-+	/* eat the loginfos associated with task aborts */
-+	if (ioc->ignore_loginfos && (log_info == 30050000 || log_info ==
-+	    0x31140000 || log_info == 0x31130000))
-+		return;
-+
-+	switch (sas_loginfo.dw.originator) {
-+	case 0:
-+		originator_str = "IOP";
-+		break;
-+	case 1:
-+		originator_str = "PL";
-+		break;
-+	case 2:
-+		originator_str = "IR";
-+		break;
-+	}
-+
-+	printk(MPT2SAS_WARN_FMT "log_info(0x%08x): originator(%s), "
-+	    "code(0x%02x), sub_code(0x%04x)\n", ioc->name, log_info,
-+	     originator_str, sas_loginfo.dw.code,
-+	     sas_loginfo.dw.subcode);
-+}
-+
-+/**
-+ * base_fault_info - verbose translation of firmware FAULT code
-+ * @ioc: pointer to scsi command object
-+ * @fault_code: fault code
++ * This function merely adds a new work task into ioc->firmware_event_thread.
++ * The tasks are worked from _firmware_event_work in user context.
 + *
 + * Return nothing.
 + */
 +void
-+base_fault_info(struct MPT2SAS_ADAPTER *ioc , u16 fault_code)
-+{
-+	printk(MPT2SAS_ERR_FMT "fault_state(0x%04x)!\n",
-+	    ioc->name, fault_code);
-+}
-+
-+/**
-+ * _base_display_reply_info -
-+ * @ioc: pointer to scsi command object
-+ * @smid: system request message index
-+ * @VF_ID: virtual function id
-+ * @reply: reply message frame(lower 32bit addr)
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_base_display_reply_info(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 VF_ID,
-+    u32 reply)
-+{
-+	MPI2DefaultReply_t *mpi_reply;
-+	u16 ioc_status;
-+
-+	mpi_reply =  base_get_reply_virt_addr(ioc, reply);
-+	ioc_status = le16_to_cpu(mpi_reply->IOCStatus);
-+#ifdef CONFIG_SCSI_MPT2SAS_LOGGING
-+	if ((ioc_status & MPI2_IOCSTATUS_MASK) &&
-+	    (ioc->logging_level & MPT_DEBUG_REPLY)) {
-+		_base_sas_ioc_info(ioc , mpi_reply,
-+		    base_get_msg_frame(ioc, smid));
-+	}
-+#endif
-+	if (ioc_status & MPI2_IOCSTATUS_FLAG_LOG_INFO_AVAILABLE)
-+		_base_sas_log_info(ioc, le32_to_cpu(mpi_reply->IOCLogInfo));
-+}
-+
-+/**
-+ * base_done - base internal command completion routine
-+ * @ioc: pointer to scsi command object
-+ * @smid: system request message index
-+ * @VF_ID: virtual function id
-+ * @reply: reply message frame(lower 32bit addr)
-+ *
-+ * Return nothing.
-+ */
-+void
-+base_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 VF_ID, u32 reply)
-+{
-+	MPI2DefaultReply_t *mpi_reply;
-+
-+	mpi_reply =  base_get_reply_virt_addr(ioc, reply);
-+	if (mpi_reply && mpi_reply->Function == MPI2_FUNCTION_EVENT_ACK)
-+		return;
-+
-+	if (ioc->base_cmds.status == MPT2_CMD_NOT_USED)
-+		return;
-+
-+	ioc->base_cmds.status |= MPT2_CMD_COMPLETE;
-+	if (mpi_reply) {
-+		ioc->base_cmds.status |= MPT2_CMD_REPLY_VALID;
-+		memcpy(ioc->base_cmds.reply, mpi_reply, mpi_reply->MsgLength*4);
-+	}
-+	ioc->base_cmds.status &= ~MPT2_CMD_PENDING;
-+	complete(&ioc->base_cmds.done);
-+}
-+
-+/**
-+ * _base_async_event - main callback handler for firmware asyn events
-+ * @ioc: pointer to scsi command object
-+ * @VF_ID: virtual function id
-+ * @reply: reply message frame(lower 32bit addr)
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_base_async_event(struct MPT2SAS_ADAPTER *ioc, u8 VF_ID, u32 reply)
++ctl_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 VF_ID, u32 reply)
 +{
 +	Mpi2EventNotificationReply_t *mpi_reply;
-+	Mpi2EventAckRequest_t *ack_request;
-+	u16 smid;
 +
 +	mpi_reply =  base_get_reply_virt_addr(ioc, reply);
-+	if (!mpi_reply)
-+		return;
-+	if (mpi_reply->Function != MPI2_FUNCTION_EVENT_NOTIFICATION)
-+		return;
-+#ifdef CONFIG_SCSI_MPT2SAS_LOGGING
-+	_base_display_event_data(ioc, mpi_reply);
-+#endif
-+	if (!(mpi_reply->AckRequired & MPI2_EVENT_NOTIFICATION_ACK_REQUIRED))
-+		goto out;
-+	smid = base_get_smid(ioc, ioc->base_cb_idx);
-+	if (!smid) {
-+		printk(MPT2SAS_ERR_FMT "%s: failed obtaining a smid\n",
-+		    ioc->name, __func__);
-+		goto out;
-+	}
-+
-+	ack_request = base_get_msg_frame(ioc, smid);
-+	memset(ack_request, 0, sizeof(Mpi2EventAckRequest_t));
-+	ack_request->Function = MPI2_FUNCTION_EVENT_ACK;
-+	ack_request->Event = mpi_reply->Event;
-+	ack_request->EventContext = mpi_reply->EventContext;
-+	ack_request->VF_ID = VF_ID;
-+	base_put_smid_default(ioc, smid, VF_ID);
-+
-+ out:
-+	scsih_event_callback(ioc, VF_ID, reply); /* scsih callback handler */
-+	ctl_event_callback(ioc, VF_ID, reply); /* ctl callback handler */
++	ctl_add_to_event_log(ioc, mpi_reply);
 +}
 +
 +/**
-+ * _base_mask_interrupts - disable interrupts
-+ * @ioc: pointer to scsi command object
-+ *
-+ * Disabling ResetIRQ, Reply and Doorbell Interrupts
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_base_mask_interrupts(struct MPT2SAS_ADAPTER *ioc)
-+{
-+	u32 him_register;
-+
-+	ioc->mask_interrupts = 1;
-+	him_register = readl(&ioc->chip->HostInterruptMask);
-+	him_register |= MPI2_HIM_DIM + MPI2_HIM_RIM + MPI2_HIM_RESET_IRQ_MASK;
-+	writel(him_register, &ioc->chip->HostInterruptMask);
-+	readl(&ioc->chip->HostInterruptMask);
-+}
-+
-+/**
-+ * _base_unmask_interrupts - enable interrupts
-+ * @ioc: pointer to scsi command object
-+ *
-+ * Enabling only Reply Interrupts
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_base_unmask_interrupts(struct MPT2SAS_ADAPTER *ioc)
-+{
-+	u32 him_register;
-+
-+	writel(0, &ioc->chip->HostInterruptStatus);
-+	him_register = readl(&ioc->chip->HostInterruptMask);
-+	him_register &= ~MPI2_HIM_RIM;
-+	writel(him_register, &ioc->chip->HostInterruptMask);
-+	ioc->mask_interrupts = 0;
-+}
-+
-+/**
-+ * base_interrupt - MPT adapter (IOC) specific interrupt handler.
-+ * @irq: irq number (not used)
-+ * @bus_id: bus identifier cookie == pointer to MPT_ADAPTER structure
-+ * @r: pt_regs pointer (not used)
-+ *
-+ * Return IRQ_HANDLE if processed, else IRQ_NONE.
-+ */
-+static irqreturn_t
-+base_interrupt(int irq, void *bus_id)
-+{
-+	u32 post_index, post_index_next, completed_cmds;
-+	u8 request_desript_type;
-+	u16 smid;
-+	u8 cb_idx;
-+	u32 reply;
-+	u8 VF_ID;
-+	int i;
-+	struct MPT2SAS_ADAPTER *ioc = bus_id;
-+
-+	if (ioc->mask_interrupts)
-+		return IRQ_NONE;
-+
-+	post_index = ioc->reply_post_host_index;
-+	request_desript_type = ioc->reply_post_free[post_index].
-+	    Default.ReplyFlags & MPI2_RPY_DESCRIPT_FLAGS_TYPE_MASK;
-+	if (request_desript_type == MPI2_RPY_DESCRIPT_FLAGS_UNUSED)
-+		return IRQ_NONE;
-+
-+	completed_cmds = 0;
-+	do {
-+		if (ioc->reply_post_free[post_index].Words == ~0ULL)
-+			goto out;
-+		reply = 0;
-+		cb_idx = 0xFF;
-+		smid = le16_to_cpu(ioc->reply_post_free[post_index].
-+		    Default.DescriptorTypeDependent1);
-+		VF_ID = ioc->reply_post_free[post_index].
-+		    Default.VF_ID;
-+		if (request_desript_type ==
-+		    MPI2_RPY_DESCRIPT_FLAGS_ADDRESS_REPLY) {
-+			reply = le32_to_cpu(ioc->reply_post_free[post_index].
-+			    AddressReply.ReplyFrameAddress);
-+		} else if (request_desript_type ==
-+		    MPI2_RPY_DESCRIPT_FLAGS_TARGET_COMMAND_BUFFER)
-+			goto next;
-+		else if (request_desript_type ==
-+		    MPI2_RPY_DESCRIPT_FLAGS_TARGETASSIST_SUCCESS)
-+			goto next;
-+		if (smid)
-+			cb_idx = ioc->scsi_lookup[smid - 1].cb_idx;
-+		if (smid && cb_idx != 0xFF) {
-+			mpt_callbacks[cb_idx](ioc, smid, VF_ID, reply);
-+			if (reply)
-+				_base_display_reply_info(ioc, smid, VF_ID,
-+				    reply);
-+			base_free_smid(ioc, smid);
-+		}
-+		if (!smid)
-+			_base_async_event(ioc, VF_ID, reply);
-+
-+		/* reply free queue handling */
-+		if (reply) {
-+			ioc->reply_free_host_index =
-+			    (ioc->reply_free_host_index ==
-+			    (ioc->reply_free_queue_depth - 1)) ?
-+			    0 : ioc->reply_free_host_index + 1;
-+			ioc->reply_free[ioc->reply_free_host_index] =
-+			    cpu_to_le32(reply);
-+			writel(ioc->reply_free_host_index,
-+			    &ioc->chip->ReplyFreeHostIndex);
-+			wmb();
-+		}
-+
-+ next:
-+		post_index_next = (post_index == (ioc->reply_post_queue_depth -
-+		    1)) ? 0 : post_index + 1;
-+		request_desript_type =
-+		    ioc->reply_post_free[post_index_next].Default.ReplyFlags
-+		    & MPI2_RPY_DESCRIPT_FLAGS_TYPE_MASK;
-+		completed_cmds++;
-+		if (request_desript_type == MPI2_RPY_DESCRIPT_FLAGS_UNUSED)
-+			goto out;
-+		post_index = post_index_next;
-+	} while (1);
-+
-+ out:
-+
-+	if (!completed_cmds)
-+		return IRQ_NONE;
-+
-+	/* reply post descriptor handling */
-+	post_index_next = ioc->reply_post_host_index;
-+	for (i = 0 ; i < completed_cmds; i++) {
-+		post_index = post_index_next;
-+		/* poison the reply post descriptor */
-+		ioc->reply_post_free[post_index_next].Words = ~0ULL;
-+		post_index_next = (post_index ==
-+		    (ioc->reply_post_queue_depth - 1))
-+		    ? 0 : post_index + 1;
-+	}
-+	ioc->reply_post_host_index = post_index_next;
-+	writel(post_index_next, &ioc->chip->ReplyPostHostIndex);
-+	wmb();
-+	return IRQ_HANDLED;
-+}
-+
-+/**
-+ * base_release_callback_handler - clear interupt callback handler
-+ * @cb_idx: callback index
-+ *
-+ * Return nothing.
-+ */
-+void
-+base_release_callback_handler(u8 cb_idx)
-+{
-+	mpt_callbacks[cb_idx] = NULL;
-+}
-+
-+/**
-+ * base_register_callback_handler - obtain index for the interrupt callback handler
-+ * @cb_func: callback function
-+ *
-+ * Returns cb_func.
-+ */
-+u8
-+base_register_callback_handler(MPT_CALLBACK cb_func)
-+{
-+	u8 cb_idx;
-+
-+	for (cb_idx = MPT_MAX_CALLBACKS-1; cb_idx; cb_idx--)
-+		if (mpt_callbacks[cb_idx] == NULL)
-+			break;
-+
-+	mpt_callbacks[cb_idx] = cb_func;
-+	return cb_idx;
-+}
-+
-+/**
-+ * base_initialize_callback_handler - initialize the interrupt callback handler
-+ *
-+ * Return nothing.
-+ */
-+void
-+base_initialize_callback_handler(void)
-+{
-+	u8 cb_idx;
-+
-+	for (cb_idx = 0; cb_idx < MPT_MAX_CALLBACKS; cb_idx++)
-+		base_release_callback_handler(cb_idx);
-+}
-+
-+/**
-+ * base_build_zero_len_sge - build zero length sg entry
++ * _ctl_verify_adapter - validates ioc_number passed from application
 + * @ioc: per adapter object
-+ * @paddr: virtual address for SGE
++ * @iocpp: The ioc pointer is returned in this.
 + *
-+ * Create a zero length scatter gather entry to insure the IOCs hardware has
-+ * something to use if the target device goes brain dead and tries
-+ * to send data even when none is asked for.
-+ *
-+ * Return nothing.
-+ */
-+void
-+base_build_zero_len_sge(struct MPT2SAS_ADAPTER *ioc, void *paddr)
-+{
-+	u32 flags_length = (u32)((MPI2_SGE_FLAGS_LAST_ELEMENT |
-+	    MPI2_SGE_FLAGS_END_OF_BUFFER | MPI2_SGE_FLAGS_END_OF_LIST |
-+	    MPI2_SGE_FLAGS_SIMPLE_ELEMENT) <<
-+	    MPI2_SGE_FLAGS_SHIFT);
-+	ioc->base_add_sg_single(paddr, flags_length, -1);
-+}
-+
-+/**
-+ * base_add_sg_single_32 - Place a simple 32 bit SGE at address pAddr.
-+ * @paddr: virtual address for SGE
-+ * @flags_length: SGE flags and data transfer length
-+ * @dma_addr: Physical address
-+ *
-+ * Return nothing.
-+ */
-+static void
-+base_add_sg_single_32(void *paddr, u32 flags_length, dma_addr_t dma_addr)
-+{
-+	Mpi2SGESimple32_t *sgel = paddr;
-+
-+	flags_length |= (MPI2_SGE_FLAGS_32_BIT_ADDRESSING |
-+	    MPI2_SGE_FLAGS_SYSTEM_ADDRESS) << MPI2_SGE_FLAGS_SHIFT;
-+	sgel->FlagsLength = cpu_to_le32(flags_length);
-+	sgel->Address = cpu_to_le32(dma_addr);
-+}
-+
-+
-+/**
-+ * base_add_sg_single_64 - Place a simple 64 bit SGE at address pAddr.
-+ * @paddr: virtual address for SGE
-+ * @flags_length: SGE flags and data transfer length
-+ * @dma_addr: Physical address
-+ *
-+ * Return nothing.
-+ */
-+static void
-+base_add_sg_single_64(void *paddr, u32 flags_length, dma_addr_t dma_addr)
-+{
-+	Mpi2SGESimple64_t *sgel = paddr;
-+
-+	flags_length |= (MPI2_SGE_FLAGS_64_BIT_ADDRESSING |
-+	    MPI2_SGE_FLAGS_SYSTEM_ADDRESS) << MPI2_SGE_FLAGS_SHIFT;
-+	sgel->FlagsLength = cpu_to_le32(flags_length);
-+	sgel->Address = cpu_to_le64(dma_addr);
-+}
-+
-+#define convert_to_kb(x) ((x) << (PAGE_SHIFT - 10))
-+
-+/**
-+ * _base_config_dma_addressing - set dma addressing
-+ * @ioc: per adapter object
-+ * @pdev: PCI device struct
-+ *
-+ * Returns 0 for success, non-zero for failure.
++ * Return (-1) means error, else ioc_number.
 + */
 +static int
-+_base_config_dma_addressing(struct MPT2SAS_ADAPTER *ioc, struct pci_dev *pdev)
++_ctl_verify_adapter(int ioc_number, struct MPT2SAS_ADAPTER **iocpp)
 +{
-+	struct sysinfo s;
-+	char *desc = NULL;
++	struct MPT2SAS_ADAPTER *ioc;
 +
-+	if (sizeof(dma_addr_t) > 4) {
-+		const uint64_t required_mask =
-+		    dma_get_required_mask(&pdev->dev);
-+		if ((required_mask > DMA_32BIT_MASK) && !pci_set_dma_mask(pdev,
-+		    DMA_64BIT_MASK) && !pci_set_consistent_dma_mask(pdev,
-+		    DMA_64BIT_MASK)) {
-+			ioc->base_add_sg_single = &base_add_sg_single_64;
-+			ioc->sge_size = sizeof(Mpi2SGESimple64_t);
-+			desc = "64";
-+			goto out;
-+		}
++	list_for_each_entry(ioc, &ioc_list, list) {
++		if (ioc->id != ioc_number)
++			continue;
++		*iocpp = ioc;
++		return ioc_number;
 +	}
-+
-+	if (!pci_set_dma_mask(pdev, DMA_32BIT_MASK)
-+	    && !pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK)) {
-+		ioc->base_add_sg_single = &base_add_sg_single_32;
-+		ioc->sge_size = sizeof(Mpi2SGESimple32_t);
-+		desc = "32";
-+	} else
-+		return -ENODEV;
-+
-+ out:
-+	si_meminfo(&s);
-+	printk(MPT2SAS_INFO_FMT "%s BIT PCI BUS DMA ADDRESSING SUPPORTED, "
-+	    "total mem (%ld kB)\n", ioc->name, desc, convert_to_kb(s.totalram));
-+
-+	return 0;
++	*iocpp = NULL;
++	return -1;
 +}
 +
 +/**
-+ * base_save_msix_table - backup msix vector table
-+ * @ioc: per adapter object
-+ *
-+ * This address an errata where diag reset clears out the table
-+ */
-+static void
-+base_save_msix_table(struct MPT2SAS_ADAPTER *ioc)
-+{
-+	int i;
-+
-+	if (!ioc->msix_enable || ioc->msix_table_backup == NULL)
-+		return;
-+
-+	for (i = 0; i < ioc->msix_vector_count; i++)
-+		ioc->msix_table_backup[i] = ioc->msix_table[i];
-+}
-+
-+/**
-+ * base_restore_msix_table - this restores the msix vector table
-+ * @ioc: per adapter object
-+ *
-+ */
-+static void
-+base_restore_msix_table(struct MPT2SAS_ADAPTER *ioc)
-+{
-+	int i;
-+
-+	if (!ioc->msix_enable || ioc->msix_table_backup == NULL)
-+		return;
-+
-+	for (i = 0; i < ioc->msix_vector_count; i++)
-+		ioc->msix_table[i] = ioc->msix_table_backup[i];
-+}
-+
-+/**
-+ * base_check_enable_msix - checks MSIX capabable.
-+ * @ioc: per adapter object
-+ *
-+ * Check to see if card is capable of MSIX, and set number
-+ * of avaliable msix vectors
-+ */
-+static int
-+base_check_enable_msix(struct MPT2SAS_ADAPTER *ioc)
-+{
-+	int base;
-+	u16 message_control;
-+	u32 msix_table_offset;
-+
-+	base = pci_find_capability(ioc->pdev, PCI_CAP_ID_MSIX);
-+	if (!base) {
-+		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT "msix not "
-+		    "supported\n", ioc->name));
-+		return -EINVAL;
-+	}
-+
-+	/* get msix vector count */
-+	pci_read_config_word(ioc->pdev, base + 2, &message_control);
-+	ioc->msix_vector_count = (message_control & 0x3FF) + 1;
-+
-+	/* get msix table  */
-+	pci_read_config_dword(ioc->pdev, base + 4, &msix_table_offset);
-+	msix_table_offset &= 0xFFFFFFF8;
-+	ioc->msix_table = (u32 *)((void *)ioc->chip + msix_table_offset);
-+
-+	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "msix is supported, "
-+	    "vector_count(%d), table_offset(0x%08x), table(%p)\n", ioc->name,
-+	    ioc->msix_vector_count, msix_table_offset, ioc->msix_table));
-+	return 0;
-+}
-+
-+/**
-+ * base_disable_msix - disables msix
-+ * @ioc: per adapter object
-+ *
-+ */
-+static void
-+base_disable_msix(struct MPT2SAS_ADAPTER *ioc)
-+{
-+	if (ioc->msix_enable) {
-+		pci_disable_msix(ioc->pdev);
-+		kfree(ioc->msix_table_backup);
-+		ioc->msix_table_backup = NULL;
-+		ioc->msix_enable = 0;
-+	}
-+}
-+
-+/**
-+ * base_enable_msix - enables msix, failback to io_apic
-+ * @ioc: per adapter object
-+ *
-+ */
-+static int
-+base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
-+{
-+	struct msix_entry entries;
-+	int r;
-+	u8 try_msix = 0;
-+
-+	if (msix_disable == -1 || msix_disable == 0)
-+		try_msix = 1;
-+
-+	if (!try_msix)
-+		goto try_ioapic;
-+
-+	if (base_check_enable_msix(ioc) != 0)
-+		goto try_ioapic;
-+
-+	ioc->msix_table_backup = kcalloc(ioc->msix_vector_count,
-+	    sizeof(u32), GFP_KERNEL);
-+	if (!ioc->msix_table_backup) {
-+		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT "allocation for "
-+		    "msix_table_backup failed!!!\n", ioc->name));
-+		goto try_ioapic;
-+	}
-+
-+	memset(&entries, 0, sizeof(struct msix_entry));
-+	r = pci_enable_msix(ioc->pdev, &entries, 1);
-+	if (r) {
-+		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT "pci_enable_msix "
-+		    "failed (r=%d) !!!\n", ioc->name, r));
-+		goto try_ioapic;
-+	}
-+
-+	r = request_irq(entries.vector, base_interrupt, IRQF_SHARED,
-+	    ioc->name, ioc);
-+	if (r) {
-+		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT "unable to allocate "
-+		    "interrupt %d !!!\n", ioc->name, entries.vector));
-+		pci_disable_msix(ioc->pdev);
-+		goto try_ioapic;
-+	}
-+
-+	ioc->pci_irq = entries.vector;
-+	ioc->msix_enable = 1;
-+	return 0;
-+
-+/* failback to io_apic interrupt routing */
-+ try_ioapic:
-+
-+	r = request_irq(ioc->pdev->irq, base_interrupt, IRQF_SHARED,
-+	    ioc->name, ioc);
-+	if (r) {
-+		printk(MPT2SAS_ERR_FMT "unable to allocate interrupt %d!\n",
-+		    ioc->name, ioc->pdev->irq);
-+		r = -EBUSY;
-+		goto out_fail;
-+	}
-+
-+	ioc->pci_irq = ioc->pdev->irq;
-+	return 0;
-+
-+ out_fail:
-+	return r;
-+}
-+
-+/**
-+ * base_map_resources - map in controller resources (io/irq/memap)
-+ * @ioc: per adapter object
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+int
-+base_map_resources(struct MPT2SAS_ADAPTER *ioc)
-+{
-+	struct pci_dev *pdev = ioc->pdev;
-+	u32 memap_sz;
-+	u32 pio_sz;
-+	int i, r = 0;
-+
-+	dinitprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n",
-+	    ioc->name, __func__));
-+
-+	ioc->bars = pci_select_bars(pdev, IORESOURCE_MEM);
-+	if (pci_enable_device_mem(pdev)) {
-+		printk(MPT2SAS_WARN_FMT "pci_enable_device_mem: "
-+		    "failed\n", ioc->name);
-+		return -ENODEV;
-+	}
-+
-+
-+	if (pci_request_selected_regions(pdev, ioc->bars,
-+	    MPT2SAS_DRIVER_NAME)) {
-+		printk(MPT2SAS_WARN_FMT "pci_request_selected_regions: "
-+		    "failed\n", ioc->name);
-+		r = -ENODEV;
-+		goto out_fail;
-+	}
-+
-+	pci_set_master(pdev);
-+
-+	if (_base_config_dma_addressing(ioc, pdev) != 0) {
-+		printk(MPT2SAS_WARN_FMT "no suitable DMA mask for %s\n",
-+		    ioc->name, pci_name(pdev));
-+		r = -ENODEV;
-+		goto out_fail;
-+	}
-+
-+	for (i = 0, memap_sz = 0, pio_sz = 0 ; i < DEVICE_COUNT_RESOURCE; i++) {
-+		if (pci_resource_flags(pdev, i) & PCI_BASE_ADDRESS_SPACE_IO) {
-+			if (pio_sz)
-+				continue;
-+			ioc->pio_chip = pci_resource_start(pdev, i);
-+			pio_sz = pci_resource_len(pdev, i);
-+		} else {
-+			if (memap_sz)
-+				continue;
-+			ioc->chip_phys = pci_resource_start(pdev, i);
-+			memap_sz = pci_resource_len(pdev, i);
-+			ioc->chip = ioremap(ioc->chip_phys, memap_sz);
-+			if (ioc->chip == NULL) {
-+				printk(MPT2SAS_ERR_FMT "unable to map adapter "
-+				    "memory!\n", ioc->name);
-+				r = -EINVAL;
-+				goto out_fail;
-+			}
-+		}
-+	}
-+
-+	pci_set_drvdata(pdev, ioc->shost);
-+	_base_mask_interrupts(ioc);
-+	r = base_enable_msix(ioc);
-+	if (r)
-+		goto out_fail;
-+
-+	printk(MPT2SAS_INFO_FMT "%s: IRQ %d\n",
-+	    ioc->name,  ((ioc->msix_enable) ? "PCI-MSI-X enabled" :
-+	    "IO-APIC enabled"), ioc->pci_irq);
-+	printk(MPT2SAS_INFO_FMT "iomem(0x%lx), mapped(0x%p), size(%d)\n",
-+	    ioc->name, ioc->chip_phys, ioc->chip, memap_sz);
-+	printk(MPT2SAS_INFO_FMT "ioport(0x%lx), size(%d)\n",
-+	    ioc->name, ioc->pio_chip, pio_sz);
-+
-+	return 0;
-+
-+ out_fail:
-+	if (ioc->chip_phys)
-+		iounmap(ioc->chip);
-+	ioc->chip_phys = 0;
-+	ioc->pci_irq = -1;
-+	pci_release_selected_regions(ioc->pdev, ioc->bars);
-+	pci_disable_device(pdev);
-+	pci_set_drvdata(pdev, NULL);
-+	return r;
-+}
-+
-+/**
-+ * base_get_msg_frame_dma - obtain request mf pointer phys addr
-+ * @ioc: per adapter object
-+ * @smid: system request message index(smid zero is invalid)
-+ *
-+ * Returns phys pointer to message frame.
-+ */
-+dma_addr_t
-+base_get_msg_frame_dma(struct MPT2SAS_ADAPTER *ioc, u16 smid)
-+{
-+	return ioc->request_dma + (smid * ioc->request_sz);
-+}
-+
-+/**
-+ * base_get_msg_frame - obtain request mf pointer
-+ * @ioc: per adapter object
-+ * @smid: system request message index(smid zero is invalid)
-+ *
-+ * Returns virt pointer to message frame.
-+ */
-+void *
-+base_get_msg_frame(struct MPT2SAS_ADAPTER *ioc, u16 smid)
-+{
-+	return (void *)(ioc->request + (smid * ioc->request_sz));
-+}
-+
-+/**
-+ * base_get_sense_buffer - obtain a sense buffer assigned to a mf request
-+ * @ioc: per adapter object
-+ * @smid: system request message index
-+ *
-+ * Returns virt pointer to sense buffer.
-+ */
-+void *
-+base_get_sense_buffer(struct MPT2SAS_ADAPTER *ioc, u16 smid)
-+{
-+	return (void *)(ioc->sense + ((smid - 1) * SCSI_SENSE_BUFFERSIZE));
-+}
-+
-+/**
-+ * base_get_sense_buffer_dma - obtain a sense buffer assigned to a mf request
-+ * @ioc: per adapter object
-+ * @smid: system request message index
-+ *
-+ * Returns phys pointer to sense buffer.
-+ */
-+dma_addr_t
-+base_get_sense_buffer_dma(struct MPT2SAS_ADAPTER *ioc, u16 smid)
-+{
-+	return ioc->sense_dma + ((smid - 1) * SCSI_SENSE_BUFFERSIZE);
-+}
-+
-+/**
-+ * base_get_reply_virt_addr - obtain reply frames virt address
-+ * @ioc: per adapter object
-+ * @phys_addr: lower 32 physical addr of the reply
-+ *
-+ * Converts 32bit lower physical addr into a virt address.
-+ */
-+void *
-+base_get_reply_virt_addr(struct MPT2SAS_ADAPTER *ioc, u32 phys_addr)
-+{
-+	if (!phys_addr)
-+		return NULL;
-+	return ioc->reply + (phys_addr - (u32)ioc->reply_dma);
-+}
-+
-+/**
-+ * base_get_smid - obtain a free smid
-+ * @ioc: per adapter object
-+ * @cb_idx: callback index
-+ *
-+ * Returns smid (zero is invalid)
-+ */
-+u16
-+base_get_smid(struct MPT2SAS_ADAPTER *ioc, u8 cb_idx)
-+{
-+	unsigned long flags;
-+	struct request_tracker *request;
-+	u16 smid;
-+
-+	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
-+	if (list_empty(&ioc->free_list)) {
-+		spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
-+		printk(MPT2SAS_ERR_FMT "%s: smid not available\n",
-+		    ioc->name, __func__);
-+		return 0;
-+	}
-+
-+	request = list_entry(ioc->free_list.next,
-+	    struct request_tracker, tracker_list);
-+	request->cb_idx = cb_idx;
-+	smid = request->smid;
-+	list_del(&request->tracker_list);
-+	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
-+	return smid;
-+}
-+
-+
-+/**
-+ * base_free_smid - put smid back on free_list
-+ * @ioc: per adapter object
-+ * @smid: system request message index
-+ *
-+ * Return nothing.
-+ */
-+void
-+base_free_smid(struct MPT2SAS_ADAPTER *ioc, u16 smid)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
-+	ioc->scsi_lookup[smid - 1].cb_idx = 0xFF;
-+	list_add_tail(&ioc->scsi_lookup[smid - 1].tracker_list,
-+	    &ioc->free_list);
-+	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
-+
-+	/*
-+	 * See _wait_for_commands_to_complete() call with regards to this code.
-+	 */
-+	if (ioc->shost_recovery && ioc->pending_io_count) {
-+		if (ioc->pending_io_count == 1)
-+			wake_up(&ioc->reset_wq);
-+		ioc->pending_io_count--;
-+	}
-+}
-+
-+/**
-+ * _base_writeq - 64 bit write to MMIO
-+ * @ioc: per adapter object
-+ * @b: data payload
-+ * @addr: address in MMIO space
-+ * @writeq_lock: spin lock
-+ *
-+ * Glue for handling an atomic 64 bit word to MMIO. This special handling takes
-+ * care of 32 bit environment where its not quarenteed to send the entire word
-+ * in one transfer.
-+ */
-+#ifndef writeq
-+static inline void _base_writeq(__u64 b, volatile void __iomem *addr,
-+    spinlock_t *writeq_lock)
-+{
-+	unsigned long flags;
-+	__u64 data_out = cpu_to_le64(b);
-+
-+	spin_lock_irqsave(writeq_lock, flags);
-+	writel((u32)(data_out), addr);
-+	writel((u32)(data_out >> 32), (addr + 4));
-+	spin_unlock_irqrestore(writeq_lock, flags);
-+}
-+#else
-+static inline void _base_writeq(__u64 b, volatile void __iomem *addr,
-+    spinlock_t *writeq_lock)
-+{
-+	writeq(cpu_to_le64(b), addr);
-+}
-+#endif
-+
-+/**
-+ * base_put_smid_scsi_io - send SCSI_IO request to firmware
-+ * @ioc: per adapter object
-+ * @smid: system request message index
-+ * @vf_id: virtual function id
-+ * @handle: device handle
-+ *
-+ * Return nothing.
-+ */
-+void
-+base_put_smid_scsi_io(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 vf_id,
-+    u16 handle)
-+{
-+	Mpi2RequestDescriptorUnion_t descriptor;
-+	u64 *request = (u64 *)&descriptor;
-+
-+
-+	descriptor.SCSIIO.RequestFlags = MPI2_REQ_DESCRIPT_FLAGS_SCSI_IO;
-+	descriptor.SCSIIO.VF_ID = vf_id;
-+	descriptor.SCSIIO.SMID = cpu_to_le16(smid);
-+	descriptor.SCSIIO.DevHandle = cpu_to_le16(handle);
-+	descriptor.SCSIIO.LMID = 0;
-+	_base_writeq(*request, &ioc->chip->RequestDescriptorPostLow,
-+	    &ioc->scsi_lookup_lock);
-+}
-+
-+
-+/**
-+ * base_put_smid_hi_priority - send Task Managment request to firmware
-+ * @ioc: per adapter object
-+ * @smid: system request message index
-+ * @vf_id: virtual function id
-+ *
-+ * Return nothing.
-+ */
-+void
-+base_put_smid_hi_priority(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 vf_id)
-+{
-+	Mpi2RequestDescriptorUnion_t descriptor;
-+	u64 *request = (u64 *)&descriptor;
-+
-+	descriptor.HighPriority.RequestFlags =
-+	    MPI2_REQ_DESCRIPT_FLAGS_HIGH_PRIORITY;
-+	descriptor.HighPriority.VF_ID = vf_id;
-+	descriptor.HighPriority.SMID = cpu_to_le16(smid);
-+	descriptor.HighPriority.LMID = 0;
-+	descriptor.HighPriority.Reserved1 = 0;
-+	_base_writeq(*request, &ioc->chip->RequestDescriptorPostLow,
-+	    &ioc->scsi_lookup_lock);
-+}
-+
-+/**
-+ * base_put_smid_default - Default, primarily used for config pages
-+ * @ioc: per adapter object
-+ * @smid: system request message index
-+ * @vf_id: virtual function id
-+ *
-+ * Return nothing.
-+ */
-+void
-+base_put_smid_default(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 vf_id)
-+{
-+	Mpi2RequestDescriptorUnion_t descriptor;
-+	u64 *request = (u64 *)&descriptor;
-+
-+	descriptor.Default.RequestFlags = MPI2_REQ_DESCRIPT_FLAGS_DEFAULT_TYPE;
-+	descriptor.Default.VF_ID = vf_id;
-+	descriptor.Default.SMID = cpu_to_le16(smid);
-+	descriptor.Default.LMID = 0;
-+	descriptor.Default.DescriptorTypeDependent = 0;
-+	_base_writeq(*request, &ioc->chip->RequestDescriptorPostLow,
-+	    &ioc->scsi_lookup_lock);
-+}
-+
-+/**
-+ * base_put_smid_target_assist - send Target Assist/Status to firmware
-+ * @ioc: per adapter object
-+ * @smid: system request message index
-+ * @vf_id: virtual function id
-+ * @io_index: value used to track the IO
-+ *
-+ * Return nothing.
-+ */
-+void
-+base_put_smid_target_assist(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 vf_id,
-+    u16 io_index)
-+{
-+	Mpi2RequestDescriptorUnion_t descriptor;
-+	u64 *request = (u64 *)&descriptor;
-+
-+	descriptor.SCSITarget.RequestFlags =
-+	    MPI2_REQ_DESCRIPT_FLAGS_SCSI_TARGET;
-+	descriptor.SCSITarget.VF_ID = vf_id;
-+	descriptor.SCSITarget.SMID = cpu_to_le16(smid);
-+	descriptor.SCSITarget.LMID = 0;
-+	descriptor.SCSITarget.IoIndex = cpu_to_le16(io_index);
-+	_base_writeq(*request, &ioc->chip->RequestDescriptorPostLow,
-+	    &ioc->scsi_lookup_lock);
-+}
-+
-+/**
-+ * _base_display_ioc_capabilities - Disply IOC's capabilities.
-+ * @ioc: per adapter object
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_base_display_ioc_capabilities(struct MPT2SAS_ADAPTER *ioc)
-+{
-+	int i = 0;
-+	char desc[16];
-+	u8 revision;
-+	u32 iounit_pg1_flags;
-+
-+	pci_read_config_byte(ioc->pdev, PCI_CLASS_REVISION, &revision);
-+	strncpy(desc, ioc->manu_pg0.ChipName, 16);
-+	printk(MPT2SAS_INFO_FMT "%s: FWVersion(%02d.%02d.%02d.%02d), "
-+	   "ChipRevision(0x%02x), BiosVersion(%02d.%02d.%02d.%02d)\n",
-+	    ioc->name, desc,
-+	   (ioc->facts.FWVersion.Word & 0xFF000000) >> 24,
-+	   (ioc->facts.FWVersion.Word & 0x00FF0000) >> 16,
-+	   (ioc->facts.FWVersion.Word & 0x0000FF00) >> 8,
-+	   ioc->facts.FWVersion.Word & 0x000000FF,
-+	   revision,
-+	   (ioc->bios_pg3.BiosVersion & 0xFF000000) >> 24,
-+	   (ioc->bios_pg3.BiosVersion & 0x00FF0000) >> 16,
-+	   (ioc->bios_pg3.BiosVersion & 0x0000FF00) >> 8,
-+	    ioc->bios_pg3.BiosVersion & 0x000000FF);
-+
-+	printk(MPT2SAS_INFO_FMT "Protocol=(", ioc->name);
-+
-+	if (ioc->facts.ProtocolFlags & MPI2_IOCFACTS_PROTOCOL_SCSI_INITIATOR) {
-+		printk("Initiator");
-+		i++;
-+	}
-+
-+	if (ioc->facts.ProtocolFlags & MPI2_IOCFACTS_PROTOCOL_SCSI_TARGET) {
-+		printk("%sTarget", i ? "," : "");
-+		i++;
-+	}
-+
-+	i = 0;
-+	printk("), ");
-+	printk("Capabilities=(");
-+
-+	if (ioc->facts.IOCCapabilities &
-+	    MPI2_IOCFACTS_CAPABILITY_INTEGRATED_RAID) {
-+		printk("Raid");
-+		i++;
-+	}
-+
-+	if (ioc->facts.IOCCapabilities & MPI2_IOCFACTS_CAPABILITY_TLR) {
-+		printk("%sTLR", i ? "," : "");
-+		i++;
-+	}
-+
-+	if (ioc->facts.IOCCapabilities & MPI2_IOCFACTS_CAPABILITY_MULTICAST) {
-+		printk("%sMulticast", i ? "," : "");
-+		i++;
-+	}
-+
-+	if (ioc->facts.IOCCapabilities &
-+	    MPI2_IOCFACTS_CAPABILITY_BIDIRECTIONAL_TARGET) {
-+		printk("%sBIDI Target", i ? "," : "");
-+		i++;
-+	}
-+
-+	if (ioc->facts.IOCCapabilities & MPI2_IOCFACTS_CAPABILITY_EEDP) {
-+		printk("%sEEDP", i ? "," : "");
-+		i++;
-+	}
-+
-+	if (ioc->facts.IOCCapabilities &
-+	    MPI2_IOCFACTS_CAPABILITY_SNAPSHOT_BUFFER) {
-+		printk("%sSnapshot Buffer", i ? "," : "");
-+		i++;
-+	}
-+
-+	if (ioc->facts.IOCCapabilities &
-+	    MPI2_IOCFACTS_CAPABILITY_DIAG_TRACE_BUFFER) {
-+		printk("%sDiag Trace Buffer", i ? "," : "");
-+		i++;
-+	}
-+
-+	if (ioc->facts.IOCCapabilities &
-+	    MPI2_IOCFACTS_CAPABILITY_TASK_SET_FULL_HANDLING) {
-+		printk("%sTask Set Full", i ? "," : "");
-+		i++;
-+	}
-+
-+	iounit_pg1_flags = le32_to_cpu(ioc->iounit_pg1.Flags);
-+	if (!(iounit_pg1_flags & MPI2_IOUNITPAGE1_NATIVE_COMMAND_Q_DISABLE)) {
-+		printk("%sNCQ", i ? "," : "");
-+		i++;
-+	}
-+
-+	printk(")\n");
-+}
-+
-+/**
-+ * _base_static_config_pages - static start of day config pages
-+ * @ioc: per adapter object
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_base_static_config_pages(struct MPT2SAS_ADAPTER *ioc)
-+{
-+	Mpi2ConfigReply_t mpi_reply;
-+	u32 iounit_pg1_flags;
-+
-+	config_get_manufacturing_pg0(ioc, &mpi_reply, &ioc->manu_pg0);
-+	config_get_bios_pg2(ioc, &mpi_reply, &ioc->bios_pg2);
-+	config_get_bios_pg3(ioc, &mpi_reply, &ioc->bios_pg3);
-+	config_get_ioc_pg8(ioc, &mpi_reply, &ioc->ioc_pg8);
-+	config_get_iounit_pg0(ioc, &mpi_reply, &ioc->iounit_pg0);
-+	config_get_iounit_pg1(ioc, &mpi_reply, &ioc->iounit_pg1);
-+	_base_display_ioc_capabilities(ioc);
-+
-+	/*
-+	 * Enable task_set_full handling in iounit_pg1 when the
-+	 * facts capabilities indicate that its supported.
-+	 */
-+	iounit_pg1_flags = le32_to_cpu(ioc->iounit_pg1.Flags);
-+	if ((ioc->facts.IOCCapabilities &
-+	    MPI2_IOCFACTS_CAPABILITY_TASK_SET_FULL_HANDLING))
-+		iounit_pg1_flags &=
-+		    ~MPI2_IOUNITPAGE1_DISABLE_TASK_SET_FULL_HANDLING;
-+	else
-+		iounit_pg1_flags |=
-+		    MPI2_IOUNITPAGE1_DISABLE_TASK_SET_FULL_HANDLING;
-+	ioc->iounit_pg1.Flags = cpu_to_le32(iounit_pg1_flags);
-+	config_set_iounit_pg1(ioc, &mpi_reply, ioc->iounit_pg1);
-+}
-+
-+/**
-+ * _base_release_memory_pools - release memory
-+ * @ioc: per adapter object
-+ *
-+ * Free memory allocated from _base_allocate_memory_pools.
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_base_release_memory_pools(struct MPT2SAS_ADAPTER *ioc)
-+{
-+	dexitprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
-+	    __func__));
-+
-+	if (ioc->request) {
-+		pci_free_consistent(ioc->pdev, ioc->request_dma_sz,
-+		    ioc->request,  ioc->request_dma);
-+		dexitprintk(ioc, printk(MPT2SAS_INFO_FMT "request_pool(0x%p)"
-+		    ": free\n", ioc->name, ioc->request));
-+		ioc->request = NULL;
-+	}
-+
-+	if (ioc->sense) {
-+		pci_pool_free(ioc->sense_dma_pool, ioc->sense, ioc->sense_dma);
-+		if (ioc->sense_dma_pool)
-+			pci_pool_destroy(ioc->sense_dma_pool);
-+		dexitprintk(ioc, printk(MPT2SAS_INFO_FMT "sense_pool(0x%p)"
-+		    ": free\n", ioc->name, ioc->sense));
-+		ioc->sense = NULL;
-+	}
-+
-+	if (ioc->reply) {
-+		pci_pool_free(ioc->reply_dma_pool, ioc->reply, ioc->reply_dma);
-+		if (ioc->reply_dma_pool)
-+			pci_pool_destroy(ioc->reply_dma_pool);
-+		dexitprintk(ioc, printk(MPT2SAS_INFO_FMT "reply_pool(0x%p)"
-+		     ": free\n", ioc->name, ioc->reply));
-+		ioc->reply = NULL;
-+	}
-+
-+	if (ioc->reply_free) {
-+		pci_pool_free(ioc->reply_free_dma_pool, ioc->reply_free,
-+		    ioc->reply_free_dma);
-+		if (ioc->reply_free_dma_pool)
-+			pci_pool_destroy(ioc->reply_free_dma_pool);
-+		dexitprintk(ioc, printk(MPT2SAS_INFO_FMT "reply_free_pool"
-+		    "(0x%p): free\n", ioc->name, ioc->reply_free));
-+		ioc->reply_free = NULL;
-+	}
-+
-+	if (ioc->reply_post_free) {
-+		pci_pool_free(ioc->reply_post_free_dma_pool,
-+		    ioc->reply_post_free, ioc->reply_post_free_dma);
-+		if (ioc->reply_post_free_dma_pool)
-+			pci_pool_destroy(ioc->reply_post_free_dma_pool);
-+		dexitprintk(ioc, printk(MPT2SAS_INFO_FMT
-+		    "reply_post_free_pool(0x%p): free\n", ioc->name,
-+		    ioc->reply_post_free));
-+		ioc->reply_post_free = NULL;
-+	}
-+
-+	if (ioc->config_page) {
-+		dexitprintk(ioc, printk(MPT2SAS_INFO_FMT
-+		    "config_page(0x%p): free\n", ioc->name,
-+		    ioc->config_page));
-+		pci_free_consistent(ioc->pdev, ioc->config_page_sz,
-+		    ioc->config_page, ioc->config_page_dma);
-+	}
-+
-+	kfree(ioc->scsi_lookup);
-+}
-+
-+
-+/**
-+ * _base_allocate_memory_pools - allocate start of day memory pools
-+ * @ioc: per adapter object
-+ * @sleep_flag: CAN_SLEEP or NO_SLEEP
-+ *
-+ * Returns 0 success, anything else error
-+ */
-+static int
-+_base_allocate_memory_pools(struct MPT2SAS_ADAPTER *ioc,  int sleep_flag)
-+{
-+	Mpi2IOCFactsReply_t *facts;
-+	u32 queue_size, queue_diff;
-+	u16 max_sge_elements;
-+	u16 num_of_reply_frames;
-+	u16 chains_needed_per_io;
-+	u32 sz, total_sz;
-+	u16 i;
-+	u32 retry_sz;
-+	u16 max_request_credit;
-+
-+	dinitprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
-+	    __func__));
-+
-+	retry_sz = 0;
-+	facts = &ioc->facts;
-+
-+	/* command line tunables  for max sgl entries */
-+	if (max_sgl_entries != -1) {
-+		ioc->shost->sg_tablesize = (max_sgl_entries <
-+		    MPT2SAS_SG_DEPTH) ? max_sgl_entries :
-+		    MPT2SAS_SG_DEPTH;
-+	} else {
-+		ioc->shost->sg_tablesize = MPT2SAS_SG_DEPTH;
-+	}
-+
-+	/* command line tunables  for max controller queue depth */
-+	if (max_queue_depth != -1) {
-+		max_request_credit = (max_queue_depth < facts->RequestCredit)
-+		    ? max_queue_depth : facts->RequestCredit;
-+	} else {
-+		max_request_credit = (facts->RequestCredit >
-+		    MPT2SAS_MAX_REQUEST_QUEUE) ? MPT2SAS_MAX_REQUEST_QUEUE :
-+		    facts->RequestCredit;
-+	}
-+	ioc->request_depth = max_request_credit;
-+
-+	/* request frame size */
-+	ioc->request_sz = facts->IOCRequestFrameSize * 4;
-+
-+	/* reply frame size */
-+	ioc->reply_sz = facts->ReplyFrameSize * 4;
-+
-+ retry_allocation:
-+	total_sz = 0;
-+	/* calculate number of sg elements left over in the 1st frame */
-+	max_sge_elements = ioc->request_sz - ((sizeof(Mpi2SCSIIORequest_t) -
-+	    sizeof(Mpi2SGEIOUnion_t)) + ioc->sge_size);
-+	ioc->max_sges_in_main_message = max_sge_elements/ioc->sge_size;
-+
-+	/* now do the same for a chain buffer */
-+	max_sge_elements = ioc->request_sz - ioc->sge_size;
-+	ioc->max_sges_in_chain_message = max_sge_elements/ioc->sge_size;
-+
-+	ioc->chain_offset_value_for_main_message =
-+	    ((sizeof(Mpi2SCSIIORequest_t) - sizeof(Mpi2SGEIOUnion_t)) +
-+	     (ioc->max_sges_in_chain_message * ioc->sge_size)) / 4;
-+
-+	/*
-+	 *  MPT2SAS_SG_DEPTH = CONFIG_FUSION_MAX_SGE
-+	 */
-+	chains_needed_per_io = ((ioc->shost->sg_tablesize -
-+	   ioc->max_sges_in_main_message)/ioc->max_sges_in_chain_message)
-+	    + 1;
-+	if (chains_needed_per_io > facts->MaxChainDepth) {
-+		chains_needed_per_io = facts->MaxChainDepth;
-+		ioc->shost->sg_tablesize = min_t(u16,
-+		ioc->max_sges_in_main_message + (ioc->max_sges_in_chain_message
-+		* chains_needed_per_io), ioc->shost->sg_tablesize);
-+	}
-+	ioc->chains_needed_per_io = chains_needed_per_io;
-+
-+	/* reply free queue sizing - taking into account for events */
-+	num_of_reply_frames = ioc->request_depth + 32;
-+
-+	/* number of replies frames can't be a multiple of 16 */
-+	/* decrease number of reply frames by 1 */
-+	if (!(num_of_reply_frames % 16))
-+		num_of_reply_frames--;
-+
-+	/* calculate number of reply free queue entries
-+	 *  (must be multiple of 16)
-+	 */
-+
-+	/* (we know reply_free_queue_depth is not a multiple of 16) */
-+	queue_size = num_of_reply_frames;
-+	queue_size += 16 - (queue_size % 16);
-+	ioc->reply_free_queue_depth = queue_size;
-+
-+	/* reply descriptor post queue sizing */
-+	/* this size should be the number of request frames + number of reply
-+	 * frames
-+	 */
-+
-+	queue_size = ioc->request_depth + num_of_reply_frames + 1;
-+	/* round up to 16 byte boundary */
-+	if (queue_size % 16)
-+		queue_size += 16 - (queue_size % 16);
-+
-+	/* check against IOC maximum reply post queue depth */
-+	if (queue_size > facts->MaxReplyDescriptorPostQueueDepth) {
-+		queue_diff = queue_size -
-+		    facts->MaxReplyDescriptorPostQueueDepth;
-+
-+		/* round queue_diff up to multiple of 16 */
-+		if (queue_diff % 16)
-+			queue_diff += 16 - (queue_diff % 16);
-+
-+		/* adjust request_depth, reply_free_queue_depth,
-+		 * and queue_size
-+		 */
-+		ioc->request_depth -= queue_diff;
-+		ioc->reply_free_queue_depth -= queue_diff;
-+		queue_size -= queue_diff;
-+	}
-+	ioc->reply_post_queue_depth = queue_size;
-+
-+	/* max scsi host queue depth */
-+	ioc->shost->can_queue = ioc->request_depth - INTERNAL_CMDS_COUNT;
-+	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "scsi host queue: depth"
-+	    "(%d)\n", ioc->name, ioc->shost->can_queue));
-+
-+	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "scatter gather: "
-+	    "sge_in_main_msg(%d), sge_per_chain(%d), sge_per_io(%d), "
-+	    "chains_per_io(%d)\n", ioc->name, ioc->max_sges_in_main_message,
-+	    ioc->max_sges_in_chain_message, ioc->shost->sg_tablesize,
-+	    ioc->chains_needed_per_io));
-+
-+	/* contiguous pool for request and chains, 16 byte align, one extra "
-+	 * "frame for smid=0
-+	 */
-+	ioc->chain_depth = ioc->chains_needed_per_io * ioc->request_depth;
-+	sz = ((ioc->request_depth + 1 + ioc->chain_depth) * ioc->request_sz);
-+
-+	ioc->request_dma_sz = sz;
-+	ioc->request = pci_alloc_consistent(ioc->pdev, sz, &ioc->request_dma);
-+	if (!ioc->request) {
-+		printk(MPT2SAS_ERR_FMT "request pool: pci_alloc_consistent "
-+		    "failed: req_depth(%d), chains_per_io(%d), frame_sz(%d), "
-+		    "total(%d kB)\n", ioc->name, ioc->request_depth,
-+		    ioc->chains_needed_per_io, ioc->request_sz, sz/1024);
-+		if (ioc->request_depth < MPT2SAS_SAS_QUEUE_DEPTH)
-+			goto out;
-+		retry_sz += 64;
-+		ioc->request_depth = max_request_credit - retry_sz;
-+		goto retry_allocation;
-+	}
-+
-+	if (retry_sz)
-+		printk(MPT2SAS_ERR_FMT "request pool: pci_alloc_consistent "
-+		    "succeed: req_depth(%d), chains_per_io(%d), frame_sz(%d), "
-+		    "total(%d kb)\n", ioc->name, ioc->request_depth,
-+		    ioc->chains_needed_per_io, ioc->request_sz, sz/1024);
-+
-+	ioc->chain = ioc->request + ((ioc->request_depth + 1) *
-+	    ioc->request_sz);
-+	ioc->chain_dma = ioc->request_dma + ((ioc->request_depth + 1) *
-+	    ioc->request_sz);
-+	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "request pool(0x%p): "
-+	    "depth(%d), frame_size(%d), pool_size(%d kB)\n", ioc->name,
-+	    ioc->request, ioc->request_depth, ioc->request_sz,
-+	    ((ioc->request_depth + 1) * ioc->request_sz)/1024));
-+	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "chain pool(0x%p): depth"
-+	    "(%d), frame_size(%d), pool_size(%d kB)\n", ioc->name, ioc->chain,
-+	    ioc->chain_depth, ioc->request_sz, ((ioc->chain_depth *
-+	    ioc->request_sz))/1024));
-+	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "request pool: dma(0x%llx)\n",
-+	    ioc->name, (unsigned long long) ioc->request_dma));
-+	total_sz += sz;
-+
-+	ioc->scsi_lookup = kcalloc(ioc->request_depth,
-+	    sizeof(struct request_tracker), GFP_KERNEL);
-+	if (!ioc->scsi_lookup) {
-+		printk(MPT2SAS_ERR_FMT "scsi_lookup: kcalloc failed\n",
-+		    ioc->name);
-+		goto out;
-+	}
-+
-+	 /* initialize some bits */
-+	for (i = 0; i < ioc->request_depth; i++)
-+		ioc->scsi_lookup[i].smid = i + 1;
-+
-+	/* sense buffers, 4 byte align */
-+	sz = ioc->request_depth * SCSI_SENSE_BUFFERSIZE;
-+	ioc->sense_dma_pool = pci_pool_create("sense pool", ioc->pdev, sz, 4,
-+	    0);
-+	if (!ioc->sense_dma_pool) {
-+		printk(MPT2SAS_ERR_FMT "sense pool: pci_pool_create failed\n",
-+		    ioc->name);
-+		goto out;
-+	}
-+	ioc->sense = pci_pool_alloc(ioc->sense_dma_pool , GFP_KERNEL,
-+	    &ioc->sense_dma);
-+	if (!ioc->sense) {
-+		printk(MPT2SAS_ERR_FMT "sense pool: pci_pool_alloc failed\n",
-+		    ioc->name);
-+		goto out;
-+	}
-+	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT
-+	    "sense pool(0x%p): depth(%d), element_size(%d), pool_size"
-+	    "(%d kB)\n", ioc->name, ioc->sense, ioc->request_depth,
-+	    SCSI_SENSE_BUFFERSIZE, sz/1024));
-+	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "sense_dma(0x%llx)\n",
-+	    ioc->name, (unsigned long long)ioc->sense_dma));
-+	total_sz += sz;
-+
-+	/* reply pool, 4 byte align */
-+	sz = ioc->reply_free_queue_depth * ioc->reply_sz;
-+	ioc->reply_dma_pool = pci_pool_create("reply pool", ioc->pdev, sz, 4,
-+	    0);
-+	if (!ioc->reply_dma_pool) {
-+		printk(MPT2SAS_ERR_FMT "reply pool: pci_pool_create failed\n",
-+		    ioc->name);
-+		goto out;
-+	}
-+	ioc->reply = pci_pool_alloc(ioc->reply_dma_pool , GFP_KERNEL,
-+	    &ioc->reply_dma);
-+	if (!ioc->reply) {
-+		printk(MPT2SAS_ERR_FMT "reply pool: pci_pool_alloc failed\n",
-+		    ioc->name);
-+		goto out;
-+	}
-+	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "reply pool(0x%p): depth"
-+	    "(%d), frame_size(%d), pool_size(%d kB)\n", ioc->name, ioc->reply,
-+	    ioc->reply_free_queue_depth, ioc->reply_sz, sz/1024));
-+	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "reply_dma(0x%llx)\n",
-+	    ioc->name, (unsigned long long)ioc->reply_dma));
-+	total_sz += sz;
-+
-+	/* reply free queue, 16 byte align */
-+	sz = ioc->reply_free_queue_depth * 4;
-+	ioc->reply_free_dma_pool = pci_pool_create("reply_free pool",
-+	    ioc->pdev, sz, 16, 0);
-+	if (!ioc->reply_free_dma_pool) {
-+		printk(MPT2SAS_ERR_FMT "reply_free pool: pci_pool_create "
-+		    "failed\n", ioc->name);
-+		goto out;
-+	}
-+	ioc->reply_free = pci_pool_alloc(ioc->reply_free_dma_pool , GFP_KERNEL,
-+	    &ioc->reply_free_dma);
-+	if (!ioc->reply_free) {
-+		printk(MPT2SAS_ERR_FMT "reply_free pool: pci_pool_alloc "
-+		    "failed\n", ioc->name);
-+		goto out;
-+	}
-+	memset(ioc->reply_free, 0, sz);
-+	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "reply_free pool(0x%p): "
-+	    "depth(%d), element_size(%d), pool_size(%d kB)\n", ioc->name,
-+	    ioc->reply_free, ioc->reply_free_queue_depth, 4, sz/1024));
-+	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "reply_free_dma"
-+	    "(0x%llx)\n", ioc->name, (unsigned long long)ioc->reply_free_dma));
-+	total_sz += sz;
-+
-+	/* reply post queue, 16 byte align */
-+	sz = ioc->reply_post_queue_depth * sizeof(Mpi2DefaultReplyDescriptor_t);
-+	ioc->reply_post_free_dma_pool = pci_pool_create("reply_post_free pool",
-+	    ioc->pdev, sz, 16, 0);
-+	if (!ioc->reply_post_free_dma_pool) {
-+		printk(MPT2SAS_ERR_FMT "reply_post_free pool: pci_pool_create "
-+		    "failed\n", ioc->name);
-+		goto out;
-+	}
-+	ioc->reply_post_free = pci_pool_alloc(ioc->reply_post_free_dma_pool ,
-+	    GFP_KERNEL, &ioc->reply_post_free_dma);
-+	if (!ioc->reply_post_free) {
-+		printk(MPT2SAS_ERR_FMT "reply_post_free pool: pci_pool_alloc "
-+		    "failed\n", ioc->name);
-+		goto out;
-+	}
-+	memset(ioc->reply_post_free, 0, sz);
-+	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "reply post free pool"
-+	    "(0x%p): depth(%d), element_size(%d), pool_size(%d kB)\n",
-+	    ioc->name, ioc->reply_post_free, ioc->reply_post_queue_depth, 8,
-+	    sz/1024));
-+	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "reply_post_free_dma = "
-+	    "(0x%llx)\n", ioc->name, (unsigned long long)
-+	    ioc->reply_post_free_dma));
-+	total_sz += sz;
-+
-+	ioc->config_page_sz = 512;
-+	ioc->config_page = pci_alloc_consistent(ioc->pdev,
-+	    ioc->config_page_sz, &ioc->config_page_dma);
-+	if (!ioc->config_page) {
-+		printk(MPT2SAS_ERR_FMT "config page: pci_pool_alloc "
-+		    "failed\n", ioc->name);
-+		goto out;
-+	}
-+	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "config page(0x%p): size"
-+	    "(%d)\n", ioc->name, ioc->config_page, ioc->config_page_sz));
-+	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "config_page_dma"
-+	    "(0x%llx)\n", ioc->name, (unsigned long long)ioc->config_page_dma));
-+	total_sz += ioc->config_page_sz;
-+
-+	printk(MPT2SAS_INFO_FMT "Allocated physical memory: size(%d kB)\n",
-+	    ioc->name, total_sz/1024);
-+	printk(MPT2SAS_INFO_FMT "Current Controller Queue Depth(%d), "
-+	    "Max Controller Queue Depth(%d)\n",
-+	    ioc->name, ioc->shost->can_queue, facts->RequestCredit);
-+	printk(MPT2SAS_INFO_FMT "Scatter Gather Elements per IO(%d)\n",
-+	    ioc->name, ioc->shost->sg_tablesize);
-+	return 0;
-+
-+ out:
-+	_base_release_memory_pools(ioc);
-+	return -ENOMEM;
-+}
-+
-+
-+/**
-+ * base_get_iocstate - Get the current state of a MPT adapter.
-+ * @ioc: Pointer to MPT_ADAPTER structure
-+ * @cooked: Request raw or cooked IOC state
-+ *
-+ * Returns all IOC Doorbell register bits if cooked==0, else just the
-+ * Doorbell bits in MPI_IOC_STATE_MASK.
-+ */
-+u32
-+base_get_iocstate(struct MPT2SAS_ADAPTER *ioc, int cooked)
-+{
-+	u32 s, sc;
-+
-+	s = readl(&ioc->chip->Doorbell);
-+	sc = s & MPI2_IOC_STATE_MASK;
-+	return cooked ? sc : s;
-+}
-+
-+/**
-+ * _base_wait_on_iocstate - waiting on a particular ioc state
-+ * @ioc_state: controller state { READY, OPERATIONAL, or RESET }
-+ * @timeout: timeout in second
-+ * @sleep_flag: CAN_SLEEP or NO_SLEEP
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+static int
-+_base_wait_on_iocstate(struct MPT2SAS_ADAPTER *ioc, u32 ioc_state, int timeout,
-+    int sleep_flag)
-+{
-+	u32 count, cntdn;
-+	u32 current_state;
-+
-+	count = 0;
-+	cntdn = (sleep_flag == CAN_SLEEP) ? 1000*timeout : 2000*timeout;
-+	do {
-+		current_state = base_get_iocstate(ioc, 1);
-+		if (current_state == ioc_state)
-+			return 0;
-+		if (count && current_state == MPI2_IOC_STATE_FAULT)
-+			break;
-+		if (sleep_flag == CAN_SLEEP)
-+			msleep(1);
-+		else
-+			udelay(500);
-+		count++;
-+	} while (--cntdn);
-+
-+	return current_state;
-+}
-+
-+/**
-+ * _base_wait_for_doorbell_int - waiting for controller interrupt(generated by
-+ * a write to the doorbell)
-+ * @ioc: per adapter object
-+ * @timeout: timeout in second
-+ * @sleep_flag: CAN_SLEEP or NO_SLEEP
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ *
-+ * Notes: MPI2_HIS_DOORBELL_INTERRUPT - set to one when IOC writes to doorbell.
-+ */
-+static int
-+_base_wait_for_doorbell_int(struct MPT2SAS_ADAPTER *ioc, int timeout,
-+    int sleep_flag)
-+{
-+	u32 cntdn, count;
-+	u32 int_status;
-+
-+	count = 0;
-+	cntdn = (sleep_flag == CAN_SLEEP) ? 1000*timeout : 2000*timeout;
-+	do {
-+		int_status = readl(&ioc->chip->HostInterruptStatus);
-+		if (int_status & MPI2_HIS_DOORBELL_INTERRUPT) {
-+			dhsprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: "
-+			    "successfull count(%d), timeout(%d)\n", ioc->name,
-+			    __func__, count, timeout));
-+			return 0;
-+		}
-+		if (sleep_flag == CAN_SLEEP)
-+			msleep(1);
-+		else
-+			udelay(500);
-+		count++;
-+	} while (--cntdn);
-+
-+	printk(MPT2SAS_ERR_FMT "%s: failed due to timeout count(%d), "
-+	    "int_status(%x)!\n", ioc->name, __func__, count, int_status);
-+	return -EFAULT;
-+}
-+
-+/**
-+ * _base_wait_for_doorbell_ack - waiting for controller to read the doorbell.
-+ * @ioc: per adapter object
-+ * @timeout: timeout in second
-+ * @sleep_flag: CAN_SLEEP or NO_SLEEP
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ *
-+ * Notes: MPI2_HIS_IOP_DOORBELL_STATUS - set to one when host writes to
-+ * doorbell.
-+ */
-+static int
-+_base_wait_for_doorbell_ack(struct MPT2SAS_ADAPTER *ioc, int timeout,
-+    int sleep_flag)
-+{
-+	u32 cntdn, count;
-+	u32 int_status;
-+	u32 doorbell;
-+
-+	count = 0;
-+	cntdn = (sleep_flag == CAN_SLEEP) ? 1000*timeout : 2000*timeout;
-+	do {
-+		int_status = readl(&ioc->chip->HostInterruptStatus);
-+		if (!(int_status & MPI2_HIS_IOP_DOORBELL_STATUS)) {
-+			dhsprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: "
-+			    "successfull count(%d), timeout(%d)\n", ioc->name,
-+			    __func__, count, timeout));
-+			return 0;
-+		} else if (int_status & MPI2_HIS_DOORBELL_INTERRUPT) {
-+			doorbell = readl(&ioc->chip->Doorbell);
-+			if ((doorbell & MPI2_IOC_STATE_MASK) ==
-+			    MPI2_IOC_STATE_FAULT) {
-+				base_fault_info(ioc , doorbell);
-+				return -EFAULT;
-+			}
-+		} else if (int_status == 0xFFFFFFFF)
-+			goto out;
-+
-+		if (sleep_flag == CAN_SLEEP)
-+			msleep(1);
-+		else
-+			udelay(500);
-+		count++;
-+	} while (--cntdn);
-+
-+ out:
-+	printk(MPT2SAS_ERR_FMT "%s: failed due to timeout count(%d), "
-+	    "int_status(%x)!\n", ioc->name, __func__, count, int_status);
-+	return -EFAULT;
-+}
-+
-+#if defined(MUR)
-+/**
-+ * _base_send_ioc_reset - send doorbell reset
-+ * @ioc: per adapter object
-+ * @reset_type: currently only supports: MPI2_FUNCTION_IOC_MESSAGE_UNIT_RESET
-+ * @timeout: timeout in second
-+ * @sleep_flag: CAN_SLEEP or NO_SLEEP
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+static int
-+_base_send_ioc_reset(struct MPT2SAS_ADAPTER *ioc, u8 reset_type, int timeout,
-+    int sleep_flag)
-+{
-+	u32 ioc_state;
-+	int r = 0;
-+
-+	if (reset_type != MPI2_FUNCTION_IOC_MESSAGE_UNIT_RESET) {
-+		printk(MPT2SAS_ERR_FMT "%s: unknown reset_type\n",
-+		    ioc->name, __func__);
-+		return -EFAULT;
-+	}
-+
-+	if (!(ioc->facts.IOCCapabilities &
-+	   MPI2_IOCFACTS_CAPABILITY_EVENT_REPLAY))
-+		return -EFAULT;
-+
-+	printk(MPT2SAS_INFO_FMT "sending message unit reset !!\n", ioc->name);
-+
-+	writel(reset_type << MPI2_DOORBELL_FUNCTION_SHIFT,
-+	    &ioc->chip->Doorbell);
-+	if ((_base_wait_for_doorbell_ack(ioc, 15, sleep_flag))) {
-+		r = -EFAULT;
-+		goto out;
-+	}
-+	ioc_state = _base_wait_on_iocstate(ioc, MPI2_IOC_STATE_READY,
-+	    timeout, sleep_flag);
-+	if (ioc_state) {
-+		printk(MPT2SAS_ERR_FMT "%s: failed going to ready state "
-+		    " (ioc_state=0x%x)\n", ioc->name, __func__, ioc_state);
-+		r = -EFAULT;
-+		goto out;
-+	}
-+ out:
-+	printk(MPT2SAS_INFO_FMT "message unit reset: %s\n",
-+	    ioc->name, ((r == 0) ? "SUCCESS" : "FAILED"));
-+	return r;
-+}
-+#endif
-+
-+/**
-+ * _base_handshake_req_reply_wait - send request thru doorbell interface
-+ * @ioc: per adapter object
-+ * @request_bytes: request length
-+ * @request: pointer having request payload
-+ * @reply_bytes: reply length
-+ * @reply: pointer to reply payload
-+ * @timeout: timeout in second
-+ * @sleep_flag: CAN_SLEEP or NO_SLEEP
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+static int
-+_base_handshake_req_reply_wait(struct MPT2SAS_ADAPTER *ioc, int request_bytes,
-+    u32 *request, int reply_bytes, u16 *reply, int timeout, int sleep_flag)
-+{
-+	MPI2DefaultReply_t *default_reply = (MPI2DefaultReply_t *)reply;
-+	int i;
-+	u8 failed;
-+	u16 dummy;
-+	u32 *mfp;
-+
-+	/* make sure doorbell is not in use */
-+	if ((readl(&ioc->chip->Doorbell) & MPI2_DOORBELL_USED)) {
-+		printk(MPT2SAS_ERR_FMT "doorbell is in use "
-+		    " (line=%d)\n", ioc->name, __LINE__);
-+		return -EFAULT;
-+	}
-+
-+	/* clear pending doorbell interrupts from previous state changes */
-+	if (readl(&ioc->chip->HostInterruptStatus) &
-+	    MPI2_HIS_IOC2SYS_DB_STATUS)
-+		writel(0, &ioc->chip->HostInterruptStatus);
-+
-+	/* send message to ioc */
-+	writel(((MPI2_FUNCTION_HANDSHAKE<<MPI2_DOORBELL_FUNCTION_SHIFT) |
-+	    ((request_bytes/4)<<MPI2_DOORBELL_ADD_DWORDS_SHIFT)),
-+	    &ioc->chip->Doorbell);
-+
-+	if ((_base_wait_for_doorbell_int(ioc, 5, sleep_flag))) {
-+		printk(MPT2SAS_ERR_FMT "doorbell handshake "
-+		   "int failed (line=%d)\n", ioc->name, __LINE__);
-+		return -EFAULT;
-+	}
-+	writel(0, &ioc->chip->HostInterruptStatus);
-+
-+	if ((_base_wait_for_doorbell_ack(ioc, 5, sleep_flag))) {
-+		printk(MPT2SAS_ERR_FMT "doorbell handshake "
-+		    "ack failed (line=%d)\n", ioc->name, __LINE__);
-+		return -EFAULT;
-+	}
-+
-+	/* send message 32-bits at a time */
-+	for (i = 0, failed = 0; i < request_bytes/4 && !failed; i++) {
-+		writel(cpu_to_le32(request[i]), &ioc->chip->Doorbell);
-+		if ((_base_wait_for_doorbell_ack(ioc, 5, sleep_flag)))
-+			failed = 1;
-+	}
-+
-+	if (failed) {
-+		printk(MPT2SAS_ERR_FMT "doorbell handshake "
-+		    "sending request failed (line=%d)\n", ioc->name, __LINE__);
-+		return -EFAULT;
-+	}
-+
-+	/* now wait for the reply */
-+	if ((_base_wait_for_doorbell_int(ioc, timeout, sleep_flag))) {
-+		printk(MPT2SAS_ERR_FMT "doorbell handshake "
-+		   "int failed (line=%d)\n", ioc->name, __LINE__);
-+		return -EFAULT;
-+	}
-+
-+	/* read the first two 16-bits, it gives the total length of the reply */
-+	reply[0] = le16_to_cpu(readl(&ioc->chip->Doorbell)
-+	    & MPI2_DOORBELL_DATA_MASK);
-+	writel(0, &ioc->chip->HostInterruptStatus);
-+	if ((_base_wait_for_doorbell_int(ioc, 5, sleep_flag))) {
-+		printk(MPT2SAS_ERR_FMT "doorbell handshake "
-+		   "int failed (line=%d)\n", ioc->name, __LINE__);
-+		return -EFAULT;
-+	}
-+	reply[1] = le16_to_cpu(readl(&ioc->chip->Doorbell)
-+	    & MPI2_DOORBELL_DATA_MASK);
-+	writel(0, &ioc->chip->HostInterruptStatus);
-+
-+	for (i = 2; i < default_reply->MsgLength * 2; i++)  {
-+		if ((_base_wait_for_doorbell_int(ioc, 5, sleep_flag))) {
-+			printk(MPT2SAS_ERR_FMT "doorbell "
-+			    "handshake int failed (line=%d)\n", ioc->name,
-+			    __LINE__);
-+			return -EFAULT;
-+		}
-+		if (i >=  reply_bytes/2) /* overflow case */
-+			dummy = readl(&ioc->chip->Doorbell);
-+		else
-+			reply[i] = le16_to_cpu(readl(&ioc->chip->Doorbell)
-+			    & MPI2_DOORBELL_DATA_MASK);
-+		writel(0, &ioc->chip->HostInterruptStatus);
-+	}
-+
-+	_base_wait_for_doorbell_int(ioc, 5, sleep_flag);
-+	if ((readl(&ioc->chip->Doorbell) & MPI2_DOORBELL_USED)) {
-+		dhsprintk(ioc, printk(MPT2SAS_INFO_FMT "doorbell is in use "
-+		    " (line=%d)\n", ioc->name, __LINE__));
-+	}
-+
-+	if (ioc->logging_level & MPT_DEBUG_INIT) {
-+		mfp = (u32 *)reply;
-+		printk(KERN_DEBUG "\toffset:data\n");
-+		for (i = 0; i < reply_bytes/4; i++)
-+			printk(KERN_DEBUG "\t[0x%02x]:%08x\n", i*4,
-+			    le32_to_cpu(mfp[i]));
-+	}
-+	return 0;
-+}
-+
-+/**
-+ * base_sas_iounit_control - send sas iounit control to FW
-+ * @ioc: per adapter object
-+ * @mpi_reply: the reply payload from FW
-+ * @mpi_request: the request payload sent to FW
-+ *
-+ * The SAS IO Unit Control Request message allows the host to perform low-level
-+ * operations, such as resets on the PHYs of the IO Unit, also allows the host
-+ * to obtain the IOC assigned device handles for a device if it has other
-+ * identifying information about the device, in addition allows the host to
-+ * remove IOC resources associated with the device.
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+int
-+base_sas_iounit_control(struct MPT2SAS_ADAPTER *ioc, Mpi2SasIoUnitControlReply_t
-+    *mpi_reply, Mpi2SasIoUnitControlRequest_t *mpi_request)
-+{
-+	u16 smid;
-+	u32 ioc_state;
-+	unsigned long timeleft;
-+	u8 issue_reset;
-+	int rc;
-+	void *request;
-+	u16 wait_state_count;
-+
-+	dinitprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
-+	    __func__));
-+
-+	mutex_lock(&ioc->base_cmds.mutex);
-+
-+	if (ioc->base_cmds.status != MPT2_CMD_NOT_USED) {
-+		printk(MPT2SAS_ERR_FMT "%s: base_cmd in use\n",
-+		    ioc->name, __func__);
-+		rc = -EAGAIN;
-+		goto out;
-+	}
-+
-+	wait_state_count = 0;
-+	ioc_state = base_get_iocstate(ioc, 1);
-+	while (ioc_state != MPI2_IOC_STATE_OPERATIONAL) {
-+		if (wait_state_count++ == 10) {
-+			printk(MPT2SAS_ERR_FMT
-+			    "%s: failed due to ioc not operational\n",
-+			    ioc->name, __func__);
-+			rc = -EFAULT;
-+			goto out;
-+		}
-+		ssleep(1);
-+		ioc_state = base_get_iocstate(ioc, 1);
-+		printk(MPT2SAS_INFO_FMT "%s: waiting for "
-+		    "operational state(count=%d)\n", ioc->name,
-+		    __func__, wait_state_count);
-+	}
-+
-+	smid = base_get_smid(ioc, ioc->base_cb_idx);
-+	if (!smid) {
-+		printk(MPT2SAS_ERR_FMT "%s: failed obtaining a smid\n",
-+		    ioc->name, __func__);
-+		rc = -EAGAIN;
-+		goto out;
-+	}
-+
-+	rc = 0;
-+	ioc->base_cmds.status = MPT2_CMD_PENDING;
-+	request = base_get_msg_frame(ioc, smid);
-+	ioc->base_cmds.smid = smid;
-+	memcpy(request, mpi_request, sizeof(Mpi2SasIoUnitControlRequest_t));
-+	if (mpi_request->Operation == MPI2_SAS_OP_PHY_HARD_RESET ||
-+	    mpi_request->Operation == MPI2_SAS_OP_PHY_LINK_RESET)
-+		ioc->ioc_link_reset_in_progress = 1;
-+	base_put_smid_default(ioc, smid, mpi_request->VF_ID);
-+	timeleft = wait_for_completion_timeout(&ioc->base_cmds.done,
-+	    msecs_to_jiffies(10000));
-+	if ((mpi_request->Operation == MPI2_SAS_OP_PHY_HARD_RESET ||
-+	    mpi_request->Operation == MPI2_SAS_OP_PHY_LINK_RESET) &&
-+	    ioc->ioc_link_reset_in_progress)
-+		ioc->ioc_link_reset_in_progress = 0;
-+	if (!(ioc->base_cmds.status & MPT2_CMD_COMPLETE)) {
-+		printk(MPT2SAS_ERR_FMT "%s: timeout\n",
-+		    ioc->name, __func__);
-+		_debug_dump_mf(mpi_request,
-+		    sizeof(Mpi2SasIoUnitControlRequest_t)/4);
-+		if (!(ioc->base_cmds.status & MPT2_CMD_RESET))
-+			issue_reset = 1;
-+		goto issue_host_reset;
-+	}
-+	if (ioc->base_cmds.status & MPT2_CMD_REPLY_VALID)
-+		memcpy(mpi_reply, ioc->base_cmds.reply,
-+		    sizeof(Mpi2SasIoUnitControlReply_t));
-+	else
-+		memset(mpi_reply, 0, sizeof(Mpi2SasIoUnitControlReply_t));
-+	ioc->base_cmds.status = MPT2_CMD_NOT_USED;
-+	goto out;
-+
-+ issue_host_reset:
-+	if (issue_reset)
-+		base_hard_reset_handler(ioc, CAN_SLEEP, FORCE_BIG_HAMMER);
-+	ioc->base_cmds.status = MPT2_CMD_NOT_USED;
-+	rc = -EFAULT;
-+ out:
-+	mutex_unlock(&ioc->base_cmds.mutex);
-+	return rc;
-+}
-+
-+
-+/**
-+ * base_scsi_enclosure_processor - sending request to sep device
-+ * @ioc: per adapter object
-+ * @mpi_reply: the reply payload from FW
-+ * @mpi_request: the request payload sent to FW
-+ *
-+ * The SCSI Enclosure Processor request message causes the IOC to
-+ * communicate with SES devices to control LED status signals.
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+int
-+base_scsi_enclosure_processor(struct MPT2SAS_ADAPTER *ioc, Mpi2SepReply_t
-+    *mpi_reply, Mpi2SepRequest_t *mpi_request)
-+{
-+	u16 smid;
-+	u32 ioc_state;
-+	unsigned long timeleft;
-+	u8 issue_reset;
-+	int rc;
-+	void *request;
-+	u16 wait_state_count;
-+
-+	dinitprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
-+	    __func__));
-+
-+	mutex_lock(&ioc->base_cmds.mutex);
-+
-+	if (ioc->base_cmds.status != MPT2_CMD_NOT_USED) {
-+		printk(MPT2SAS_ERR_FMT "%s: base_cmd in use\n",
-+		    ioc->name, __func__);
-+		rc = -EAGAIN;
-+		goto out;
-+	}
-+
-+	wait_state_count = 0;
-+	ioc_state = base_get_iocstate(ioc, 1);
-+	while (ioc_state != MPI2_IOC_STATE_OPERATIONAL) {
-+		if (wait_state_count++ == 10) {
-+			printk(MPT2SAS_ERR_FMT
-+			    "%s: failed due to ioc not operational\n",
-+			    ioc->name, __func__);
-+			rc = -EFAULT;
-+			goto out;
-+		}
-+		ssleep(1);
-+		ioc_state = base_get_iocstate(ioc, 1);
-+		printk(MPT2SAS_INFO_FMT "%s: waiting for "
-+		    "operational state(count=%d)\n", ioc->name,
-+		    __func__, wait_state_count);
-+	}
-+
-+	smid = base_get_smid(ioc, ioc->base_cb_idx);
-+	if (!smid) {
-+		printk(MPT2SAS_ERR_FMT "%s: failed obtaining a smid\n",
-+		    ioc->name, __func__);
-+		rc = -EAGAIN;
-+		goto out;
-+	}
-+
-+	rc = 0;
-+	ioc->base_cmds.status = MPT2_CMD_PENDING;
-+	request = base_get_msg_frame(ioc, smid);
-+	ioc->base_cmds.smid = smid;
-+	memcpy(request, mpi_request, sizeof(Mpi2SepReply_t));
-+	base_put_smid_default(ioc, smid, mpi_request->VF_ID);
-+	timeleft = wait_for_completion_timeout(&ioc->base_cmds.done,
-+	    msecs_to_jiffies(10000));
-+	if (!(ioc->base_cmds.status & MPT2_CMD_COMPLETE)) {
-+		printk(MPT2SAS_ERR_FMT "%s: timeout\n",
-+		    ioc->name, __func__);
-+		_debug_dump_mf(mpi_request,
-+		    sizeof(Mpi2SepRequest_t)/4);
-+		if (!(ioc->base_cmds.status & MPT2_CMD_RESET))
-+			issue_reset = 1;
-+		goto issue_host_reset;
-+	}
-+	if (ioc->base_cmds.status & MPT2_CMD_REPLY_VALID)
-+		memcpy(mpi_reply, ioc->base_cmds.reply,
-+		    sizeof(Mpi2SepReply_t));
-+	else
-+		memset(mpi_reply, 0, sizeof(Mpi2SepReply_t));
-+	ioc->base_cmds.status = MPT2_CMD_NOT_USED;
-+	goto out;
-+
-+ issue_host_reset:
-+	if (issue_reset)
-+		base_hard_reset_handler(ioc, CAN_SLEEP, FORCE_BIG_HAMMER);
-+	ioc->base_cmds.status = MPT2_CMD_NOT_USED;
-+	rc = -EFAULT;
-+ out:
-+	mutex_unlock(&ioc->base_cmds.mutex);
-+	return rc;
-+}
-+
-+/**
-+ * _base_get_port_facts - obtain port facts reply and save in ioc
-+ * @ioc: per adapter object
-+ * @sleep_flag: CAN_SLEEP or NO_SLEEP
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+static int
-+_base_get_port_facts(struct MPT2SAS_ADAPTER *ioc, int port, int sleep_flag)
-+{
-+	Mpi2PortFactsRequest_t mpi_request;
-+	Mpi2PortFactsReply_t mpi_reply, *pfacts;
-+	int mpi_reply_sz, mpi_request_sz, r;
-+
-+	dinitprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
-+	    __func__));
-+
-+	mpi_reply_sz = sizeof(Mpi2PortFactsReply_t);
-+	mpi_request_sz = sizeof(Mpi2PortFactsRequest_t);
-+	memset(&mpi_request, 0, mpi_request_sz);
-+	mpi_request.Function = MPI2_FUNCTION_PORT_FACTS;
-+	mpi_request.PortNumber = port;
-+	r = _base_handshake_req_reply_wait(ioc, mpi_request_sz,
-+	    (u32 *)&mpi_request, mpi_reply_sz, (u16 *)&mpi_reply, 5, CAN_SLEEP);
-+
-+	if (r != 0) {
-+		printk(MPT2SAS_ERR_FMT "%s: handshake failed (r=%d)\n",
-+		    ioc->name, __func__, r);
-+		return r;
-+	}
-+
-+	pfacts = &ioc->pfacts[port];
-+	memset(pfacts, 0, sizeof(Mpi2PortFactsReply_t));
-+	pfacts->PortNumber = mpi_reply.PortNumber;
-+	pfacts->VP_ID = mpi_reply.VP_ID;
-+	pfacts->VF_ID = mpi_reply.VF_ID;
-+	pfacts->MaxPostedCmdBuffers =
-+	    le16_to_cpu(mpi_reply.MaxPostedCmdBuffers);
-+
-+	return 0;
-+}
-+
-+/**
-+ * _base_get_ioc_facts - obtain ioc facts reply and save in ioc
-+ * @ioc: per adapter object
-+ * @sleep_flag: CAN_SLEEP or NO_SLEEP
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+static int
-+_base_get_ioc_facts(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
-+{
-+	Mpi2IOCFactsRequest_t mpi_request;
-+	Mpi2IOCFactsReply_t mpi_reply, *facts;
-+	int mpi_reply_sz, mpi_request_sz, r;
-+
-+	dinitprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
-+	    __func__));
-+
-+	mpi_reply_sz = sizeof(Mpi2IOCFactsReply_t);
-+	mpi_request_sz = sizeof(Mpi2IOCFactsRequest_t);
-+	memset(&mpi_request, 0, mpi_request_sz);
-+	mpi_request.Function = MPI2_FUNCTION_IOC_FACTS;
-+	r = _base_handshake_req_reply_wait(ioc, mpi_request_sz,
-+	    (u32 *)&mpi_request, mpi_reply_sz, (u16 *)&mpi_reply, 5, CAN_SLEEP);
-+
-+	if (r != 0) {
-+		printk(MPT2SAS_ERR_FMT "%s: handshake failed (r=%d)\n",
-+		    ioc->name, __func__, r);
-+		return r;
-+	}
-+
-+	facts = &ioc->facts;
-+	memset(facts, 0, sizeof(Mpi2IOCFactsReply_t));
-+	facts->MsgVersion = le16_to_cpu(mpi_reply.MsgVersion);
-+	facts->HeaderVersion = le16_to_cpu(mpi_reply.HeaderVersion);
-+	facts->VP_ID = mpi_reply.VP_ID;
-+	facts->VF_ID = mpi_reply.VF_ID;
-+	facts->IOCExceptions = le16_to_cpu(mpi_reply.IOCExceptions);
-+	facts->MaxChainDepth = mpi_reply.MaxChainDepth;
-+	facts->WhoInit = mpi_reply.WhoInit;
-+	facts->NumberOfPorts = mpi_reply.NumberOfPorts;
-+	facts->RequestCredit = le16_to_cpu(mpi_reply.RequestCredit);
-+	facts->MaxReplyDescriptorPostQueueDepth =
-+	    le16_to_cpu(mpi_reply.MaxReplyDescriptorPostQueueDepth);
-+	facts->ProductID = le16_to_cpu(mpi_reply.ProductID);
-+	facts->IOCCapabilities = le32_to_cpu(mpi_reply.IOCCapabilities);
-+	if ((facts->IOCCapabilities & MPI2_IOCFACTS_CAPABILITY_INTEGRATED_RAID))
-+		ioc->ir_firmware = 1;
-+	facts->FWVersion.Word = le32_to_cpu(mpi_reply.FWVersion.Word);
-+	facts->IOCRequestFrameSize =
-+	    le16_to_cpu(mpi_reply.IOCRequestFrameSize);
-+	facts->MaxInitiators = le16_to_cpu(mpi_reply.MaxInitiators);
-+	facts->MaxTargets = le16_to_cpu(mpi_reply.MaxTargets);
-+	ioc->shost->max_id = -1;
-+	facts->MaxSasExpanders = le16_to_cpu(mpi_reply.MaxSasExpanders);
-+	facts->MaxEnclosures = le16_to_cpu(mpi_reply.MaxEnclosures);
-+	facts->ProtocolFlags = le16_to_cpu(mpi_reply.ProtocolFlags);
-+	facts->HighPriorityCredit =
-+	    le16_to_cpu(mpi_reply.HighPriorityCredit);
-+	facts->ReplyFrameSize = mpi_reply.ReplyFrameSize;
-+	facts->MaxDevHandle = le16_to_cpu(mpi_reply.MaxDevHandle);
-+
-+	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "hba queue depth(%d), "
-+	    "max chains per io(%d)\n", ioc->name, facts->RequestCredit,
-+	    facts->MaxChainDepth));
-+	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "request frame size(%d), "
-+	    "reply frame size(%d)\n", ioc->name,
-+	    facts->IOCRequestFrameSize * 4, facts->ReplyFrameSize * 4));
-+	return 0;
-+}
-+
-+/**
-+ * _base_send_ioc_init - send ioc_init to firmware
-+ * @ioc: per adapter object
-+ * @VF_ID: virtual function id
-+ * @sleep_flag: CAN_SLEEP or NO_SLEEP
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+static int
-+_base_send_ioc_init(struct MPT2SAS_ADAPTER *ioc, u8 VF_ID, int sleep_flag)
-+{
-+	Mpi2IOCInitRequest_t mpi_request;
-+	Mpi2IOCInitReply_t mpi_reply;
-+	int r;
-+
-+	dinitprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
-+	    __func__));
-+
-+	memset(&mpi_request, 0, sizeof(Mpi2IOCInitRequest_t));
-+	mpi_request.Function = MPI2_FUNCTION_IOC_INIT;
-+	mpi_request.WhoInit = MPI2_WHOINIT_HOST_DRIVER;
-+	mpi_request.VF_ID = VF_ID;
-+	mpi_request.MsgVersion = cpu_to_le16(MPI2_VERSION);
-+	mpi_request.HeaderVersion = cpu_to_le16(MPI2_HEADER_VERSION);
-+
-+	/* In MPI Revision I (0xA), the SystemReplyFrameSize(offset 0x18) was
-+	 * removed and made reserved.  For those with older firmware will need
-+	 * this fix. It was decided that the Reply and Request frame sizes are
-+	 * the same.
-+	 */
-+	if ((ioc->facts.HeaderVersion >> 8) < 0xA) {
-+		mpi_request.Reserved7 = cpu_to_le16(ioc->reply_sz);
-+/*		mpi_request.SystemReplyFrameSize =
-+ *		 cpu_to_le16(ioc->reply_sz);
-+ */
-+	}
-+
-+	mpi_request.SystemRequestFrameSize = cpu_to_le16(ioc->request_sz/4);
-+	mpi_request.ReplyDescriptorPostQueueDepth =
-+	    cpu_to_le16(ioc->reply_post_queue_depth);
-+	mpi_request.ReplyFreeQueueDepth =
-+	    cpu_to_le16(ioc->reply_free_queue_depth);
-+
-+#if BITS_PER_LONG > 32
-+	mpi_request.SenseBufferAddressHigh =
-+	    cpu_to_le32(ioc->sense_dma >> 32);
-+	mpi_request.SystemReplyAddressHigh =
-+	    cpu_to_le32(ioc->reply_dma >> 32);
-+	mpi_request.SystemRequestFrameBaseAddress =
-+	    cpu_to_le64(ioc->request_dma);
-+	mpi_request.ReplyFreeQueueAddress =
-+	    cpu_to_le64(ioc->reply_free_dma);
-+	mpi_request.ReplyDescriptorPostQueueAddress =
-+	    cpu_to_le64(ioc->reply_post_free_dma);
-+#else
-+	mpi_request.SystemRequestFrameBaseAddress =
-+	    cpu_to_le32(ioc->request_dma);
-+	mpi_request.ReplyFreeQueueAddress =
-+	    cpu_to_le32(ioc->reply_free_dma);
-+	mpi_request.ReplyDescriptorPostQueueAddress =
-+	    cpu_to_le32(ioc->reply_post_free_dma);
-+#endif
-+
-+	if (ioc->logging_level & MPT_DEBUG_INIT) {
-+		u32 *mfp;
-+		int i;
-+
-+		mfp = (u32 *)&mpi_request;
-+		printk(KERN_DEBUG "\toffset:data\n");
-+		for (i = 0; i < sizeof(Mpi2IOCInitRequest_t)/4; i++)
-+			printk(KERN_DEBUG "\t[0x%02x]:%08x\n", i*4,
-+			    le32_to_cpu(mfp[i]));
-+	}
-+
-+	r = _base_handshake_req_reply_wait(ioc,
-+	    sizeof(Mpi2IOCInitRequest_t), (u32 *)&mpi_request,
-+	    sizeof(Mpi2IOCInitReply_t), (u16 *)&mpi_reply, 10,
-+	    sleep_flag);
-+
-+	if (r != 0) {
-+		printk(MPT2SAS_ERR_FMT "%s: handshake failed (r=%d)\n",
-+		    ioc->name, __func__, r);
-+		return r;
-+	}
-+
-+	if (mpi_reply.IOCStatus != MPI2_IOCSTATUS_SUCCESS ||
-+	    mpi_reply.IOCLogInfo) {
-+		printk(MPT2SAS_ERR_FMT "%s: failed\n", ioc->name, __func__);
-+		r = -EIO;
-+	}
-+
-+	return 0;
-+}
-+
-+/**
-+ * _base_send_port_enable - send port_enable(discovery stuff) to firmware
-+ * @ioc: per adapter object
-+ * @VF_ID: virtual function id
-+ * @sleep_flag: CAN_SLEEP or NO_SLEEP
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+static int
-+_base_send_port_enable(struct MPT2SAS_ADAPTER *ioc, u8 VF_ID, int sleep_flag)
-+{
-+	Mpi2PortEnableRequest_t *mpi_request;
-+	u32 ioc_state;
-+	unsigned long timeleft;
-+	int r = 0;
-+	u16 smid;
-+
-+	printk(MPT2SAS_INFO_FMT "sending port enable !!\n", ioc->name);
-+
-+	if (ioc->base_cmds.status & MPT2_CMD_PENDING) {
-+		printk(MPT2SAS_ERR_FMT "%s: internal command already in use\n",
-+		    ioc->name, __func__);
-+		return -EAGAIN;
-+	}
-+
-+	smid = base_get_smid(ioc, ioc->base_cb_idx);
-+	if (!smid) {
-+		printk(MPT2SAS_ERR_FMT "%s: failed obtaining a smid\n",
-+		    ioc->name, __func__);
-+		return -EAGAIN;
-+	}
-+
-+	ioc->base_cmds.status = MPT2_CMD_PENDING;
-+	mpi_request = base_get_msg_frame(ioc, smid);
-+	ioc->base_cmds.smid = smid;
-+	memset(mpi_request, 0, sizeof(Mpi2PortEnableRequest_t));
-+	mpi_request->Function = MPI2_FUNCTION_PORT_ENABLE;
-+	mpi_request->VF_ID = VF_ID;
-+
-+	base_put_smid_default(ioc, smid, VF_ID);
-+	timeleft = wait_for_completion_timeout(&ioc->base_cmds.done,
-+	    300*HZ);
-+	if (!(ioc->base_cmds.status & MPT2_CMD_COMPLETE)) {
-+		printk(MPT2SAS_ERR_FMT "%s: timeout\n",
-+		    ioc->name, __func__);
-+		_debug_dump_mf(mpi_request,
-+		    sizeof(Mpi2PortEnableRequest_t)/4);
-+		if (ioc->base_cmds.status & MPT2_CMD_RESET)
-+			r = -EFAULT;
-+		else
-+			r = -ETIME;
-+		goto out;
-+	} else
-+		dinitprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: complete\n",
-+		    ioc->name, __func__));
-+
-+	ioc_state = _base_wait_on_iocstate(ioc, MPI2_IOC_STATE_OPERATIONAL,
-+	    60, sleep_flag);
-+	if (ioc_state) {
-+		printk(MPT2SAS_ERR_FMT "%s: failed going to operational state "
-+		    " (ioc_state=0x%x)\n", ioc->name, __func__, ioc_state);
-+		r = -EFAULT;
-+	}
-+ out:
-+	ioc->base_cmds.status = MPT2_CMD_NOT_USED;
-+	printk(MPT2SAS_INFO_FMT "port enable: %s\n",
-+	    ioc->name, ((r == 0) ? "SUCCESS" : "FAILED"));
-+	return r;
-+}
-+
-+/**
-+ * _base_unmask_events - turn on notification for this event
-+ * @ioc: per adapter object
-+ * @event: firmware event
-+ *
-+ * The mask is stored in ioc->event_masks.
-+ */
-+static void
-+_base_unmask_events(struct MPT2SAS_ADAPTER *ioc, u16 event)
-+{
-+	u32 desired_event;
-+
-+	if (event >= 128)
-+		return;
-+
-+	desired_event = (1 << (event % 32));
-+
-+	if (event < 32)
-+		ioc->event_masks[0] &= ~desired_event;
-+	else if (event < 64)
-+		ioc->event_masks[1] &= ~desired_event;
-+	else if (event < 96)
-+		ioc->event_masks[2] &= ~desired_event;
-+	else if (event < 128)
-+		ioc->event_masks[3] &= ~desired_event;
-+}
-+
-+/**
-+ * _base_event_notification - send event notification
-+ * @ioc: per adapter object
-+ * @VF_ID: virtual function id
-+ * @sleep_flag: CAN_SLEEP or NO_SLEEP
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+static int
-+_base_event_notification(struct MPT2SAS_ADAPTER *ioc, u8 VF_ID, int sleep_flag)
-+{
-+	Mpi2EventNotificationRequest_t *mpi_request;
-+	unsigned long timeleft;
-+	u16 smid;
-+	int r = 0;
-+	int i;
-+
-+	dinitprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
-+	    __func__));
-+
-+	if (ioc->base_cmds.status & MPT2_CMD_PENDING) {
-+		printk(MPT2SAS_ERR_FMT "%s: internal command already in use\n",
-+		    ioc->name, __func__);
-+		return -EAGAIN;
-+	}
-+
-+	smid = base_get_smid(ioc, ioc->base_cb_idx);
-+	if (!smid) {
-+		printk(MPT2SAS_ERR_FMT "%s: failed obtaining a smid\n",
-+		    ioc->name, __func__);
-+		return -EAGAIN;
-+	}
-+	ioc->base_cmds.status = MPT2_CMD_PENDING;
-+	mpi_request = base_get_msg_frame(ioc, smid);
-+	ioc->base_cmds.smid = smid;
-+	memset(mpi_request, 0, sizeof(Mpi2EventNotificationRequest_t));
-+	mpi_request->Function = MPI2_FUNCTION_EVENT_NOTIFICATION;
-+	mpi_request->VF_ID = VF_ID;
-+	for (i = 0; i < MPI2_EVENT_NOTIFY_EVENTMASK_WORDS; i++)
-+		mpi_request->EventMasks[i] =
-+		    le32_to_cpu(ioc->event_masks[i]);
-+	base_put_smid_default(ioc, smid, VF_ID);
-+	timeleft = wait_for_completion_timeout(&ioc->base_cmds.done, 30*HZ);
-+	if (!(ioc->base_cmds.status & MPT2_CMD_COMPLETE)) {
-+		printk(MPT2SAS_ERR_FMT "%s: timeout\n",
-+		    ioc->name, __func__);
-+		_debug_dump_mf(mpi_request,
-+		    sizeof(Mpi2EventNotificationRequest_t)/4);
-+		if (ioc->base_cmds.status & MPT2_CMD_RESET)
-+			r = -EFAULT;
-+		else
-+			r = -ETIME;
-+	} else
-+		dinitprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: complete\n",
-+		    ioc->name, __func__));
-+	ioc->base_cmds.status = MPT2_CMD_NOT_USED;
-+	return r;
-+}
-+
-+/**
-+ * base_validate_event_type - validating event types
-+ * @ioc: per adapter object
-+ * @event: firmware event
-+ *
-+ * This will turn on firmware event notification when application
-+ * ask for that event. We don't mask events that are already enabled.
-+ */
-+void
-+base_validate_event_type(struct MPT2SAS_ADAPTER *ioc, u32 *event_type)
-+{
-+	int i, j;
-+	u32 event_mask, desired_event;
-+	u8 send_update_to_fw;
-+
-+	for (i = 0, send_update_to_fw = 0; i <
-+	    MPI2_EVENT_NOTIFY_EVENTMASK_WORDS; i++) {
-+		event_mask = ~event_type[i];
-+		desired_event = 1;
-+		for (j = 0; j < 32; j++) {
-+			if (!(event_mask & desired_event) &&
-+			    (ioc->event_masks[i] & desired_event)) {
-+				ioc->event_masks[i] &= ~desired_event;
-+				send_update_to_fw = 1;
-+			}
-+			desired_event = (desired_event << 1);
-+		}
-+	}
-+
-+	if (!send_update_to_fw)
-+		return;
-+
-+	mutex_lock(&ioc->base_cmds.mutex);
-+	_base_event_notification(ioc, 0, CAN_SLEEP);
-+	mutex_unlock(&ioc->base_cmds.mutex);
-+}
-+
-+/**
-+ * _base_diag_reset - the "big hammer" start of day reset
-+ * @ioc: per adapter object
-+ * @sleep_flag: CAN_SLEEP or NO_SLEEP
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+static int
-+_base_diag_reset(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
-+{
-+	u32 host_diagnostic;
-+	u32 ioc_state;
-+	u32 count;
-+	u32 hcb_size;
-+
-+	printk(MPT2SAS_INFO_FMT "sending diag reset !!\n", ioc->name);
-+
-+	base_save_msix_table(ioc);
-+
-+	drsprintk(ioc, printk(MPT2SAS_DEBUG_FMT "clear interrupts\n",
-+	    ioc->name));
-+	writel(0, &ioc->chip->HostInterruptStatus);
-+
-+	count = 0;
-+	do {
-+		/* Write magic sequence to WriteSequence register
-+		 * Loop until in diagnostic mode
-+		 */
-+		drsprintk(ioc, printk(MPT2SAS_DEBUG_FMT "write magic "
-+		    "sequence\n", ioc->name));
-+		writel(MPI2_WRSEQ_FLUSH_KEY_VALUE, &ioc->chip->WriteSequence);
-+		writel(MPI2_WRSEQ_1ST_KEY_VALUE, &ioc->chip->WriteSequence);
-+		writel(MPI2_WRSEQ_2ND_KEY_VALUE, &ioc->chip->WriteSequence);
-+		writel(MPI2_WRSEQ_3RD_KEY_VALUE, &ioc->chip->WriteSequence);
-+		writel(MPI2_WRSEQ_4TH_KEY_VALUE, &ioc->chip->WriteSequence);
-+		writel(MPI2_WRSEQ_5TH_KEY_VALUE, &ioc->chip->WriteSequence);
-+		writel(MPI2_WRSEQ_6TH_KEY_VALUE, &ioc->chip->WriteSequence);
-+
-+		/* wait 100 msec */
-+		if (sleep_flag == CAN_SLEEP)
-+			msleep(100);
-+		else
-+			mdelay(100);
-+
-+		if (count++ > 20)
-+			goto out;
-+
-+		host_diagnostic = readl(&ioc->chip->HostDiagnostic);
-+		drsprintk(ioc, printk(MPT2SAS_DEBUG_FMT "wrote magic "
-+		    "sequence: count(%d), host_diagnostic(0x%08x)\n",
-+		    ioc->name, count, host_diagnostic));
-+
-+	} while ((host_diagnostic & MPI2_DIAG_DIAG_WRITE_ENABLE) == 0);
-+
-+	hcb_size = readl(&ioc->chip->HCBSize);
-+
-+	drsprintk(ioc, printk(MPT2SAS_DEBUG_FMT "diag reset: issued\n",
-+	    ioc->name));
-+	writel(host_diagnostic | MPI2_DIAG_RESET_ADAPTER,
-+	     &ioc->chip->HostDiagnostic);
-+
-+	/* don't access any registers for 50 milliseconds */
-+	msleep(50);
-+
-+	/* 300 second max wait */
-+	for (count = 0; count < 3000000 ; count++) {
-+
-+		host_diagnostic = readl(&ioc->chip->HostDiagnostic);
-+
-+		if (host_diagnostic == 0xFFFFFFFF)
-+			goto out;
-+		if (!(host_diagnostic & MPI2_DIAG_RESET_ADAPTER))
-+			break;
-+
-+		/* wait 100 msec */
-+		if (sleep_flag == CAN_SLEEP)
-+			msleep(1);
-+		else
-+			mdelay(1);
-+	}
-+
-+	if (host_diagnostic & MPI2_DIAG_HCB_MODE) {
-+
-+		drsprintk(ioc, printk(MPT2SAS_DEBUG_FMT "restart the adapter "
-+		    "assuming the HCB Address points to good F/W\n",
-+		    ioc->name));
-+		host_diagnostic &= ~MPI2_DIAG_BOOT_DEVICE_SELECT_MASK;
-+		host_diagnostic |= MPI2_DIAG_BOOT_DEVICE_SELECT_HCDW;
-+		writel(host_diagnostic, &ioc->chip->HostDiagnostic);
-+
-+		drsprintk(ioc, printk(MPT2SAS_DEBUG_FMT
-+		    "re-enable the HCDW\n", ioc->name));
-+		writel(hcb_size | MPI2_HCB_SIZE_HCB_ENABLE,
-+		    &ioc->chip->HCBSize);
-+	}
-+
-+	drsprintk(ioc, printk(MPT2SAS_DEBUG_FMT "restart the adapter\n",
-+	    ioc->name));
-+	writel(host_diagnostic & ~MPI2_DIAG_HOLD_IOC_RESET,
-+	    &ioc->chip->HostDiagnostic);
-+
-+	drsprintk(ioc, printk(MPT2SAS_DEBUG_FMT "disable writes to the "
-+	    "diagnostic register\n", ioc->name));
-+	writel(MPI2_WRSEQ_FLUSH_KEY_VALUE, &ioc->chip->WriteSequence);
-+
-+	drsprintk(ioc, printk(MPT2SAS_DEBUG_FMT "Wait for FW to go to the "
-+	    "READY state\n", ioc->name));
-+	ioc_state = _base_wait_on_iocstate(ioc, MPI2_IOC_STATE_READY, 20,
-+	    sleep_flag);
-+	if (ioc_state) {
-+		printk(MPT2SAS_ERR_FMT "%s: failed going to ready state "
-+		    " (ioc_state=0x%x)\n", ioc->name, __func__, ioc_state);
-+		goto out;
-+	}
-+
-+	base_restore_msix_table(ioc);
-+	printk(MPT2SAS_INFO_FMT "diag reset: SUCCESS\n", ioc->name);
-+	return 0;
-+
-+ out:
-+	printk(MPT2SAS_ERR_FMT "diag reset: FAILED\n", ioc->name);
-+	return -EFAULT;
-+}
-+
-+/**
-+ * _base_make_ioc_ready - put controller in READY state
-+ * @ioc: per adapter object
-+ * @sleep_flag: CAN_SLEEP or NO_SLEEP
-+ * @type: FORCE_BIG_HAMMER or SOFT_RESET
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+static int
-+_base_make_ioc_ready(struct MPT2SAS_ADAPTER *ioc, int sleep_flag,
-+    enum reset_type type)
-+{
-+	u32 ioc_state;
-+
-+	dinitprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
-+	    __func__));
-+
-+	ioc_state = base_get_iocstate(ioc, 0);
-+	dhsprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: ioc_state(0x%08x)\n",
-+	    ioc->name, __func__, ioc_state));
-+
-+	if ((ioc_state & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_READY)
-+		return 0;
-+
-+	if (ioc_state & MPI2_DOORBELL_USED) {
-+		dhsprintk(ioc, printk(MPT2SAS_DEBUG_FMT "unexpected doorbell "
-+		    "active!\n", ioc->name));
-+		goto issue_diag_reset;
-+	}
-+
-+	if ((ioc_state & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_FAULT) {
-+		base_fault_info(ioc, ioc_state & MPI2_DOORBELL_DATA_MASK);
-+		goto issue_diag_reset;
-+	}
-+
-+	if (type == FORCE_BIG_HAMMER)
-+		goto issue_diag_reset;
-+
-+#if defined(MUR)
-+	if ((ioc_state & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_OPERATIONAL)
-+		if (!(_base_send_ioc_reset(ioc,
-+		    MPI2_FUNCTION_IOC_MESSAGE_UNIT_RESET, 15, CAN_SLEEP)))
-+			return 0;
-+#endif
-+
-+ issue_diag_reset:
-+	return _base_diag_reset(ioc, CAN_SLEEP);
-+}
-+
-+/**
-+ * _base_make_ioc_operational - put controller in OPERATIONAL state
-+ * @ioc: per adapter object
-+ * @VF_ID: virtual function id
-+ * @sleep_flag: CAN_SLEEP or NO_SLEEP
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+static int
-+_base_make_ioc_operational(struct MPT2SAS_ADAPTER *ioc, u8 VF_ID,
-+    int sleep_flag)
-+{
-+	int r, i;
-+	unsigned long	flags;
-+	u32 reply_address;
-+
-+	dinitprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
-+	    __func__));
-+
-+	/* initialize the scsi lookup free list */
-+	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
-+	INIT_LIST_HEAD(&ioc->free_list);
-+	for (i = 0; i < ioc->request_depth; i++) {
-+		ioc->scsi_lookup[i].cb_idx = 0xFF;
-+		list_add_tail(&ioc->scsi_lookup[i].tracker_list,
-+		    &ioc->free_list);
-+	}
-+	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
-+
-+	/* initialize Reply Free Queue */
-+	for (i = 0, reply_address = (u32)ioc->reply_dma ;
-+	    i < ioc->reply_free_queue_depth ; i++, reply_address +=
-+	    ioc->reply_sz)
-+		ioc->reply_free[i] = cpu_to_le32(reply_address);
-+
-+	/* initialize Reply Post Free Queue */
-+	for (i = 0; i < ioc->reply_post_queue_depth; i++)
-+		ioc->reply_post_free[i].Words = ~0ULL;
-+
-+	r = _base_send_ioc_init(ioc, VF_ID, sleep_flag);
-+	if (r)
-+		return r;
-+
-+	/* initialize the index's */
-+	ioc->reply_free_host_index = ioc->reply_free_queue_depth - 1;
-+	ioc->reply_post_host_index = 0;
-+	writel(ioc->reply_free_host_index, &ioc->chip->ReplyFreeHostIndex);
-+	writel(0, &ioc->chip->ReplyPostHostIndex);
-+
-+	_base_unmask_interrupts(ioc);
-+	r = _base_event_notification(ioc, VF_ID, sleep_flag);
-+	if (r)
-+		return r;
-+
-+	if (sleep_flag == CAN_SLEEP)
-+		_base_static_config_pages(ioc);
-+
-+	r = _base_send_port_enable(ioc, VF_ID, sleep_flag);
-+	if (r)
-+		return r;
-+
-+	return r;
-+}
-+
-+/**
-+ * base_free_resources - free resources controller resources (io/irq/memap)
-+ * @ioc: per adapter object
-+ *
-+ * Return nothing.
-+ */
-+void
-+base_free_resources(struct MPT2SAS_ADAPTER *ioc)
-+{
-+	struct pci_dev *pdev = ioc->pdev;
-+
-+	dexitprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
-+	    __func__));
-+
-+	_base_mask_interrupts(ioc);
-+	_base_make_ioc_ready(ioc, CAN_SLEEP, SOFT_RESET);
-+	if (ioc->pci_irq) {
-+		synchronize_irq(pdev->irq);
-+		free_irq(ioc->pci_irq, ioc);
-+	}
-+	base_disable_msix(ioc);
-+	if (ioc->chip_phys)
-+		iounmap(ioc->chip);
-+	ioc->pci_irq = -1;
-+	ioc->chip_phys = 0;
-+	pci_release_selected_regions(ioc->pdev, ioc->bars);
-+	pci_disable_device(pdev);
-+	pci_set_drvdata(pdev, NULL);
-+	return;
-+}
-+
-+/**
-+ * base_attach - attach controller instance
-+ * @ioc: per adapter object
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+int
-+base_attach(struct MPT2SAS_ADAPTER *ioc)
-+{
-+	int r, i;
-+	unsigned long	 flags;
-+
-+	dinitprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
-+	    __func__));
-+
-+	r = base_map_resources(ioc);
-+	if (r)
-+		return r;
-+
-+	r = _base_make_ioc_ready(ioc, CAN_SLEEP, SOFT_RESET);
-+	if (r)
-+		goto out_free_resources;
-+
-+	r = _base_get_ioc_facts(ioc, CAN_SLEEP);
-+	if (r)
-+		goto out_free_resources;
-+
-+	r = _base_allocate_memory_pools(ioc, CAN_SLEEP);
-+	if (r)
-+		goto out_free_resources;
-+
-+	init_waitqueue_head(&ioc->reset_wq);
-+
-+	/* base internal command bits */
-+	mutex_init(&ioc->base_cmds.mutex);
-+	init_completion(&ioc->base_cmds.done);
-+	ioc->base_cmds.reply = kzalloc(ioc->reply_sz, GFP_KERNEL);
-+	ioc->base_cmds.status = MPT2_CMD_NOT_USED;
-+
-+	/* transport internal command bits */
-+	ioc->transport_cmds.reply = kzalloc(ioc->reply_sz, GFP_KERNEL);
-+	ioc->transport_cmds.status = MPT2_CMD_NOT_USED;
-+	mutex_init(&ioc->transport_cmds.mutex);
-+	init_completion(&ioc->transport_cmds.done);
-+
-+	/* task management internal command bits */
-+	ioc->tm_cmds.reply = kzalloc(ioc->reply_sz, GFP_KERNEL);
-+	ioc->tm_cmds.status = MPT2_CMD_NOT_USED;
-+	mutex_init(&ioc->tm_cmds.mutex);
-+	init_completion(&ioc->tm_cmds.done);
-+
-+	/* config page internal command bits */
-+	ioc->config_cmds.reply = kzalloc(ioc->reply_sz, GFP_KERNEL);
-+	ioc->config_cmds.status = MPT2_CMD_NOT_USED;
-+	mutex_init(&ioc->config_cmds.mutex);
-+	init_completion(&ioc->config_cmds.done);
-+
-+	/* ctl module internal command bits */
-+	ioc->ctl_cmds.reply = kzalloc(ioc->reply_sz, GFP_KERNEL);
-+	ioc->ctl_cmds.status = MPT2_CMD_NOT_USED;
-+	mutex_init(&ioc->ctl_cmds.mutex);
-+	init_completion(&ioc->ctl_cmds.done);
-+
-+	for (i = 0; i < MPI2_EVENT_NOTIFY_EVENTMASK_WORDS; i++)
-+		ioc->event_masks[i] = -1;
-+
-+	/* here we enable the events we care about */
-+	_base_unmask_events(ioc, MPI2_EVENT_SAS_DISCOVERY);
-+	_base_unmask_events(ioc, MPI2_EVENT_SAS_BROADCAST_PRIMITIVE);
-+	_base_unmask_events(ioc, MPI2_EVENT_SAS_TOPOLOGY_CHANGE_LIST);
-+	_base_unmask_events(ioc, MPI2_EVENT_SAS_DEVICE_STATUS_CHANGE);
-+	_base_unmask_events(ioc, MPI2_EVENT_SAS_ENCL_DEVICE_STATUS_CHANGE);
-+	_base_unmask_events(ioc, MPI2_EVENT_IR_CONFIGURATION_CHANGE_LIST);
-+	_base_unmask_events(ioc, MPI2_EVENT_IR_VOLUME);
-+	_base_unmask_events(ioc, MPI2_EVENT_IR_PHYSICAL_DISK);
-+	_base_unmask_events(ioc, MPI2_EVENT_IR_OPERATION_STATUS);
-+	_base_unmask_events(ioc, MPI2_EVENT_TASK_SET_FULL);
-+	_base_unmask_events(ioc, MPI2_EVENT_LOG_ENTRY_ADDED);
-+
-+	ioc->pfacts = kcalloc(ioc->facts.NumberOfPorts,
-+	    sizeof(Mpi2PortFactsReply_t), GFP_KERNEL);
-+	if (!ioc->pfacts)
-+		goto out_free_resources;
-+
-+	for (i = 0 ; i < ioc->facts.NumberOfPorts; i++) {
-+		r = _base_get_port_facts(ioc, i, CAN_SLEEP);
-+		if (r)
-+			goto out_free_resources;
-+	}
-+	r = _base_make_ioc_operational(ioc, 0, CAN_SLEEP);
-+	if (r)
-+		goto out_free_resources;
-+
-+	/* initialize fault polling */
-+	INIT_DELAYED_WORK(&ioc->fault_reset_work, _base_fault_reset_work);
-+	snprintf(ioc->fault_reset_work_q_name,
-+	    sizeof(ioc->fault_reset_work_q_name), "poll_%d_status", ioc->id);
-+	ioc->fault_reset_work_q =
-+		create_singlethread_workqueue(ioc->fault_reset_work_q_name);
-+	if (!ioc->fault_reset_work_q) {
-+		printk(MPT2SAS_ERR_FMT "%s: failed (line=%d)\n",
-+		    ioc->name, __func__, __LINE__);
-+			goto out_free_resources;
-+	}
-+	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
-+	if (ioc->fault_reset_work_q)
-+		queue_delayed_work(ioc->fault_reset_work_q,
-+		    &ioc->fault_reset_work,
-+		    msecs_to_jiffies(FAULT_POLLING_INTERVAL));
-+	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
-+	return 0;
-+
-+ out_free_resources:
-+
-+	ioc->remove_host = 1;
-+	base_free_resources(ioc);
-+	_base_release_memory_pools(ioc);
-+	kfree(ioc->tm_cmds.reply);
-+	kfree(ioc->transport_cmds.reply);
-+	kfree(ioc->config_cmds.reply);
-+	kfree(ioc->base_cmds.reply);
-+	kfree(ioc->ctl_cmds.reply);
-+	kfree(ioc->pfacts);
-+	ioc->ctl_cmds.reply = NULL;
-+	ioc->base_cmds.reply = NULL;
-+	ioc->tm_cmds.reply = NULL;
-+	ioc->transport_cmds.reply = NULL;
-+	ioc->config_cmds.reply = NULL;
-+	ioc->pfacts = NULL;
-+	return r;
-+}
-+
-+
-+/**
-+ * base_detach - remove controller instance
-+ * @ioc: per adapter object
-+ *
-+ * Return nothing.
-+ */
-+void
-+base_detach(struct MPT2SAS_ADAPTER *ioc)
-+{
-+	unsigned long	 flags;
-+	struct workqueue_struct *wq;
-+
-+	dexitprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
-+	    __func__));
-+
-+	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
-+	wq = ioc->fault_reset_work_q;
-+	ioc->fault_reset_work_q = NULL;
-+	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
-+	if (!cancel_delayed_work(&ioc->fault_reset_work))
-+		flush_workqueue(wq);
-+	destroy_workqueue(wq);
-+
-+	base_free_resources(ioc);
-+	_base_release_memory_pools(ioc);
-+	kfree(ioc->pfacts);
-+	kfree(ioc->ctl_cmds.reply);
-+	kfree(ioc->base_cmds.reply);
-+	kfree(ioc->tm_cmds.reply);
-+	kfree(ioc->transport_cmds.reply);
-+	kfree(ioc->config_cmds.reply);
-+}
-+
-+/**
-+ * _base_reset_handler - reset callback handler (for base)
++ * ctl_reset_handler - reset callback handler (for ctl)
 + * @ioc: per adapter object
 + * @reset_phase: phase
 + *
@@ -3288,11 +406,9 @@ Signed-off-by: Eric Moore <eric.moore@lsi.com>
 + *
 + * The reset phase can be MPT2_IOC_PRE_RESET, MPT2_IOC_AFTER_RESET,
 + * MPT2_IOC_DONE_RESET
-+ *
-+ * Return nothing.
 + */
-+static void
-+_base_reset_handler(struct MPT2SAS_ADAPTER *ioc, int reset_phase)
++void
++ctl_reset_handler(struct MPT2SAS_ADAPTER *ioc, int reset_phase)
 +{
 +	switch (reset_phase) {
 +	case MPT2_IOC_PRE_RESET:
@@ -3302,20 +418,10 @@ Signed-off-by: Eric Moore <eric.moore@lsi.com>
 +	case MPT2_IOC_AFTER_RESET:
 +		dtmprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: "
 +		    "MPT2_IOC_AFTER_RESET\n", ioc->name, __func__));
-+		if (ioc->transport_cmds.status & MPT2_CMD_PENDING) {
-+			ioc->transport_cmds.status |= MPT2_CMD_RESET;
-+			base_free_smid(ioc, ioc->transport_cmds.smid);
-+			complete(&ioc->transport_cmds.done);
-+		}
-+		if (ioc->base_cmds.status & MPT2_CMD_PENDING) {
-+			ioc->base_cmds.status |= MPT2_CMD_RESET;
-+			base_free_smid(ioc, ioc->base_cmds.smid);
-+			complete(&ioc->base_cmds.done);
-+		}
-+		if (ioc->config_cmds.status & MPT2_CMD_PENDING) {
-+			ioc->config_cmds.status |= MPT2_CMD_RESET;
-+			base_free_smid(ioc, ioc->config_cmds.smid);
-+			complete(&ioc->config_cmds.done);
++		if (ioc->ctl_cmds.status & MPT2_CMD_PENDING) {
++			ioc->ctl_cmds.status |= MPT2_CMD_RESET;
++			base_free_smid(ioc, ioc->ctl_cmds.smid);
++			complete(&ioc->ctl_cmds.done);
 +		}
 +		break;
 +	case MPT2_IOC_DONE_RESET:
@@ -3323,111 +429,2117 @@ Signed-off-by: Eric Moore <eric.moore@lsi.com>
 +		    "MPT2_IOC_DONE_RESET\n", ioc->name, __func__));
 +		break;
 +	}
-+	scsih_reset_handler(ioc, reset_phase);
-+	ctl_reset_handler(ioc, reset_phase);
 +}
 +
 +/**
-+ * _wait_for_commands_to_complete - reset controller
-+ * @ioc: Pointer to MPT_ADAPTER structure
-+ * @sleep_flag: CAN_SLEEP or NO_SLEEP
++ * _ctl_fasync -
++ * @fd -
++ * @filep -
++ * @mode -
 + *
-+ * This function waiting(3s) for all pending commands to complete
-+ * prior to putting controller in reset.
++ * Called when application request fasyn callback handler.
 + */
-+static void
-+_wait_for_commands_to_complete(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
++static int
++_ctl_fasync(int fd, struct file *filep, int mode)
 +{
-+	u32 ioc_state;
-+	unsigned long flags;
++	return fasync_helper(fd, filep, mode, &async_queue);
++}
++
++/**
++ * _ctl_release -
++ * @inode -
++ * @filep -
++ *
++ * Called when application releases the fasyn callback handler.
++ */
++static int
++_ctl_release(struct inode *inode, struct file *filep)
++{
++	return fasync_helper(-1, filep, 0, &async_queue);
++}
++
++/**
++ * _ctl_poll -
++ * @file -
++ * @wait -
++ *
++ */
++static unsigned int
++_ctl_poll(struct file *filep, poll_table *wait)
++{
++	struct MPT2SAS_ADAPTER *ioc;
++
++	poll_wait(filep, &ctl_poll_wait, wait);
++
++	list_for_each_entry(ioc, &ioc_list, list) {
++		if (ioc->aen_event_read_flag)
++			return POLLIN | POLLRDNORM;
++	}
++	return 0;
++}
++
++/**
++ * _ctl_do_task_abort - assign an active smid to the abort_task
++ * @ioc: per adapter object
++ * @karg - (struct mpt2_ioctl_command)
++ * @tm_request - pointer to mf from user space
++ *
++ * Returns 0 when an smid if found, else fail.
++ * during failure, the reply frame is filled.
++ */
++static int
++_ctl_do_task_abort(struct MPT2SAS_ADAPTER *ioc, struct mpt2_ioctl_command *karg,
++    Mpi2SCSITaskManagementRequest_t *tm_request)
++{
++	u8 found = 0;
 +	u16 i;
++	u16 handle;
++	struct scsi_cmnd *scmd;
++	struct MPT2SAS_DEVICE *priv_data;
++	unsigned long flags;
++	Mpi2SCSITaskManagementReply_t *tm_reply;
++	u32 sz;
++	u32 lun;
 +
-+	ioc->pending_io_count = 0;
-+	if (sleep_flag != CAN_SLEEP)
-+		return;
++	lun = scsilun_to_int((struct scsi_lun *)tm_request->LUN);
 +
-+	ioc_state = base_get_iocstate(ioc, 0);
-+	if ((ioc_state & MPI2_IOC_STATE_MASK) != MPI2_IOC_STATE_OPERATIONAL)
-+		return;
-+
-+	/* pending command count */
++	handle = le16_to_cpu(tm_request->DevHandle);
 +	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
-+	for (i = 0; i < ioc->request_depth; i++)
-+		if (ioc->scsi_lookup[i].cb_idx != 0xFF)
-+			ioc->pending_io_count++;
++	for (i = ioc->request_depth; i && !found; i--) {
++		scmd = ioc->scsi_lookup[i - 1].scmd;
++		if (scmd == NULL || scmd->device == NULL ||
++		    scmd->device->hostdata == NULL)
++			continue;
++		if (lun != scmd->device->lun)
++			continue;
++		priv_data = scmd->device->hostdata;
++		if (priv_data->sas_target == NULL)
++			continue;
++		if (priv_data->sas_target->handle != handle)
++			continue;
++		tm_request->TaskMID = cpu_to_le16(ioc->scsi_lookup[i - 1].smid);
++		found = 1;
++	}
 +	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
 +
-+	if (!ioc->pending_io_count)
-+		return;
++	if (!found) {
++		dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "ABORT_TASK: "
++		    "DevHandle(0x%04x), lun(%d), no active mid!!\n", ioc->name,
++		    tm_request->DevHandle, lun));
++		tm_reply = ioc->ctl_cmds.reply;
++		tm_reply->DevHandle = tm_request->DevHandle;
++		tm_reply->Function = MPI2_FUNCTION_SCSI_TASK_MGMT;
++		tm_reply->TaskType = MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK;
++		tm_reply->MsgLength = sizeof(Mpi2SCSITaskManagementReply_t)/4;
++		tm_reply->VP_ID = tm_request->VP_ID;
++		tm_reply->VF_ID = tm_request->VF_ID;
++		sz = min_t(u32, karg->max_reply_bytes, ioc->reply_sz);
++		if (copy_to_user(karg->reply_frame_buf_ptr, ioc->ctl_cmds.reply,
++		    sz))
++			printk(KERN_ERR "failure at %s:%d/%s()!\n", __FILE__,
++			    __LINE__, __func__);
++		return 1;
++	}
 +
-+	/* wait for pending commands to complete */
-+	wait_event_timeout(ioc->reset_wq, ioc->pending_io_count == 0, 3 * HZ);
++	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "ABORT_TASK: "
++	    "DevHandle(0x%04x), lun(%d), smid(%d)\n", ioc->name,
++	    tm_request->DevHandle, lun, tm_request->TaskMID));
++	return 0;
 +}
 +
 +/**
-+ * base_hard_reset_handler - reset controller
-+ * @ioc: Pointer to MPT_ADAPTER structure
-+ * @sleep_flag: CAN_SLEEP or NO_SLEEP
-+ * @type: FORCE_BIG_HAMMER or SOFT_RESET
-+ *
-+ * Returns 0 for success, non-zero for failure.
++ * _ctl_do_mpt_command - main handler for MPT2COMMAND opcode
++ * @ioc: per adapter object
++ * @karg - (struct mpt2_ioctl_command)
++ * @mf - pointer to mf in user space
++ * @state - NON_BLOCKING or BLOCKING
 + */
-+int
-+base_hard_reset_handler(struct MPT2SAS_ADAPTER *ioc, int sleep_flag,
-+    enum reset_type type)
++static long
++_ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
++    struct mpt2_ioctl_command karg, void __user *mf, enum block_state state)
 +{
-+	int r, i;
-+	unsigned long flags;
++	MPI2RequestHeader_t *mpi_request;
++	MPI2DefaultReply_t *mpi_reply;
++	u32 ioc_state;
++	u16 ioc_status;
++	u16 smid;
++	unsigned long timeout, timeleft;
++	u8 issue_reset;
++	u32 sz;
++	void *psge;
++	void *priv_sense = NULL;
++	void *data_out = NULL;
++	dma_addr_t data_out_dma;
++	size_t data_out_sz = 0;
++	void *data_in = NULL;
++	dma_addr_t data_in_dma;
++	size_t data_in_sz = 0;
++	u32 sgl_flags;
++	long ret;
++	u16 wait_state_count;
 +
-+	dtmprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: enter\n", ioc->name,
++	issue_reset = 0;
++
++	if (state == NON_BLOCKING && !mutex_trylock(&ioc->ctl_cmds.mutex))
++		return -EAGAIN;
++	else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
++		return -ERESTARTSYS;
++
++	if (ioc->ctl_cmds.status != MPT2_CMD_NOT_USED) {
++		printk(MPT2SAS_ERR_FMT "%s: ctl_cmd in use\n",
++		    ioc->name, __func__);
++		ret = -EAGAIN;
++		goto out;
++	}
++
++	wait_state_count = 0;
++	ioc_state = base_get_iocstate(ioc, 1);
++	while (ioc_state != MPI2_IOC_STATE_OPERATIONAL) {
++		if (wait_state_count++ == 10) {
++			printk(MPT2SAS_ERR_FMT
++			    "%s: failed due to ioc not operational\n",
++			    ioc->name, __func__);
++			ret = -EFAULT;
++			goto out;
++		}
++		ssleep(1);
++		ioc_state = base_get_iocstate(ioc, 1);
++		printk(MPT2SAS_INFO_FMT "%s: waiting for "
++		    "operational state(count=%d)\n", ioc->name,
++		    __func__, wait_state_count);
++	}
++	if (wait_state_count)
++		printk(MPT2SAS_INFO_FMT "%s: ioc is operational\n",
++		    ioc->name, __func__);
++
++	smid = base_get_smid(ioc, ioc->ctl_cb_idx);
++	if (!smid) {
++		printk(MPT2SAS_ERR_FMT "%s: failed obtaining a smid\n",
++		    ioc->name, __func__);
++		ret = -EAGAIN;
++		goto out;
++	}
++
++	ret = 0;
++	ioc->ctl_cmds.status = MPT2_CMD_PENDING;
++	memset(ioc->ctl_cmds.reply, 0, ioc->reply_sz);
++	mpi_request = base_get_msg_frame(ioc, smid);
++	ioc->ctl_cmds.smid = smid;
++	data_out_sz = karg.data_out_size;
++	data_in_sz = karg.data_in_size;
++
++	/* copy in request message frame from user */
++	if (copy_from_user(mpi_request, mf, karg.data_sge_offset*4)) {
++		printk(KERN_ERR "failure at %s:%d/%s()!\n", __FILE__, __LINE__,
++		    __func__);
++		ret = -EFAULT;
++		base_free_smid(ioc, smid);
++		goto out;
++	}
++
++	if (mpi_request->Function == MPI2_FUNCTION_SCSI_IO_REQUEST ||
++	    mpi_request->Function == MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH) {
++		if (!mpi_request->FunctionDependent1 ||
++		    mpi_request->FunctionDependent1 >
++		    cpu_to_le16(ioc->facts.MaxDevHandle)) {
++			ret = -EINVAL;
++			base_free_smid(ioc, smid);
++			goto out;
++		}
++	}
++
++	/* obtain dma-able memory for data transfer */
++	if (data_out_sz) /* WRITE */ {
++		data_out = pci_alloc_consistent(ioc->pdev, data_out_sz,
++		    &data_out_dma);
++		if (!data_out) {
++			printk(KERN_ERR "failure at %s:%d/%s()!\n", __FILE__,
++			    __LINE__, __func__);
++			ret = -ENOMEM;
++			base_free_smid(ioc, smid);
++			goto out;
++		}
++		if (copy_from_user(data_out, karg.data_out_buf_ptr,
++			data_out_sz)) {
++			printk(KERN_ERR "failure at %s:%d/%s()!\n", __FILE__,
++			    __LINE__, __func__);
++			ret =  -EFAULT;
++			base_free_smid(ioc, smid);
++			goto out;
++		}
++	}
++
++	if (data_in_sz) /* READ */ {
++		data_in = pci_alloc_consistent(ioc->pdev, data_in_sz,
++		    &data_in_dma);
++		if (!data_in) {
++			printk(KERN_ERR "failure at %s:%d/%s()!\n", __FILE__,
++			    __LINE__, __func__);
++			ret = -ENOMEM;
++			base_free_smid(ioc, smid);
++			goto out;
++		}
++	}
++
++	/* add scatter gather elements */
++	psge = (void *)mpi_request + (karg.data_sge_offset*4);
++
++	if (!data_out_sz && !data_in_sz) {
++		base_build_zero_len_sge(ioc, psge);
++	} else if (data_out_sz && data_in_sz) {
++		/* WRITE sgel first */
++		sgl_flags = (MPI2_SGE_FLAGS_SIMPLE_ELEMENT |
++		    MPI2_SGE_FLAGS_END_OF_BUFFER | MPI2_SGE_FLAGS_HOST_TO_IOC);
++		sgl_flags = sgl_flags << MPI2_SGE_FLAGS_SHIFT;
++		ioc->base_add_sg_single(psge, sgl_flags |
++		    data_out_sz, data_out_dma);
++
++		/* incr sgel */
++		psge += ioc->sge_size;
++
++		/* READ sgel last */
++		sgl_flags = (MPI2_SGE_FLAGS_SIMPLE_ELEMENT |
++		    MPI2_SGE_FLAGS_LAST_ELEMENT | MPI2_SGE_FLAGS_END_OF_BUFFER |
++		    MPI2_SGE_FLAGS_END_OF_LIST);
++		sgl_flags = sgl_flags << MPI2_SGE_FLAGS_SHIFT;
++		ioc->base_add_sg_single(psge, sgl_flags |
++		    data_in_sz, data_in_dma);
++	} else if (data_out_sz) /* WRITE */ {
++		sgl_flags = (MPI2_SGE_FLAGS_SIMPLE_ELEMENT |
++		    MPI2_SGE_FLAGS_LAST_ELEMENT | MPI2_SGE_FLAGS_END_OF_BUFFER |
++		    MPI2_SGE_FLAGS_END_OF_LIST | MPI2_SGE_FLAGS_HOST_TO_IOC);
++		sgl_flags = sgl_flags << MPI2_SGE_FLAGS_SHIFT;
++		ioc->base_add_sg_single(psge, sgl_flags |
++		    data_out_sz, data_out_dma);
++	} else if (data_in_sz) /* READ */ {
++		sgl_flags = (MPI2_SGE_FLAGS_SIMPLE_ELEMENT |
++		    MPI2_SGE_FLAGS_LAST_ELEMENT | MPI2_SGE_FLAGS_END_OF_BUFFER |
++		    MPI2_SGE_FLAGS_END_OF_LIST);
++		sgl_flags = sgl_flags << MPI2_SGE_FLAGS_SHIFT;
++		ioc->base_add_sg_single(psge, sgl_flags |
++		    data_in_sz, data_in_dma);
++	}
++
++	/* send command to firmware */
++#ifdef CONFIG_SCSI_MPT2SAS_LOGGING
++	_ctl_display_some_debug(ioc, smid, "ctl_request", NULL);
++#endif
++
++	switch (mpi_request->Function) {
++	case MPI2_FUNCTION_SCSI_IO_REQUEST:
++	case MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH:
++	{
++		Mpi2SCSIIORequest_t *scsiio_request =
++		    (Mpi2SCSIIORequest_t *)mpi_request;
++		scsiio_request->SenseBufferLowAddress =
++		    (u32)base_get_sense_buffer_dma(ioc, smid);
++		priv_sense = base_get_sense_buffer(ioc, smid);
++		memset(priv_sense, 0, SCSI_SENSE_BUFFERSIZE);
++		base_put_smid_scsi_io(ioc, smid, 0,
++		    le16_to_cpu(mpi_request->FunctionDependent1));
++		break;
++	}
++	case MPI2_FUNCTION_SCSI_TASK_MGMT:
++	{
++		Mpi2SCSITaskManagementRequest_t *tm_request =
++		    (Mpi2SCSITaskManagementRequest_t *)mpi_request;
++
++		if (tm_request->TaskType ==
++		    MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK) {
++			if (_ctl_do_task_abort(ioc, &karg, tm_request))
++				goto out;
++		}
++
++		mutex_lock(&ioc->tm_cmds.mutex);
++		scsih_set_tm_flag(ioc, le16_to_cpu(tm_request->DevHandle));
++		base_put_smid_hi_priority(ioc, smid, mpi_request->VF_ID);
++		break;
++	}
++	case MPI2_FUNCTION_SMP_PASSTHROUGH:
++	{
++		Mpi2SmpPassthroughRequest_t *smp_request =
++		    (Mpi2SmpPassthroughRequest_t *)mpi_request;
++		u8 *data;
++
++		/* ioc determines which port to use */
++		smp_request->PhysicalPort = 0xFF;
++
++		data = data_out;
++		if (data[1] == 0x91 && (data[10] == 1 || data[10] == 2)) {
++			ioc->ioc_link_reset_in_progress = 1;
++			ioc->ignore_loginfos = 1;
++		}
++		base_put_smid_default(ioc, smid, mpi_request->VF_ID);
++		break;
++	}
++	case MPI2_FUNCTION_SAS_IO_UNIT_CONTROL:
++	{
++		Mpi2SasIoUnitControlRequest_t *sasiounit_request =
++		    (Mpi2SasIoUnitControlRequest_t *)mpi_request;
++
++		if (sasiounit_request->Operation == MPI2_SAS_OP_PHY_HARD_RESET
++		    || sasiounit_request->Operation ==
++		    MPI2_SAS_OP_PHY_LINK_RESET) {
++			ioc->ioc_link_reset_in_progress = 1;
++			ioc->ignore_loginfos = 1;
++		}
++		base_put_smid_default(ioc, smid, mpi_request->VF_ID);
++		break;
++	}
++	default:
++		base_put_smid_default(ioc, smid, mpi_request->VF_ID);
++		break;
++	}
++
++	if (karg.timeout < MPT2_IOCTL_DEFAULT_TIMEOUT)
++		timeout = MPT2_IOCTL_DEFAULT_TIMEOUT;
++	else
++		timeout = karg.timeout;
++	timeleft = wait_for_completion_timeout(&ioc->ctl_cmds.done,
++	    timeout*HZ);
++	if (mpi_request->Function == MPI2_FUNCTION_SCSI_TASK_MGMT) {
++		Mpi2SCSITaskManagementRequest_t *tm_request =
++		    (Mpi2SCSITaskManagementRequest_t *)mpi_request;
++		mutex_unlock(&ioc->tm_cmds.mutex);
++		scsih_clear_tm_flag(ioc, le16_to_cpu(tm_request->DevHandle));
++	} else if ((mpi_request->Function == MPI2_FUNCTION_SMP_PASSTHROUGH ||
++	    mpi_request->Function == MPI2_FUNCTION_SAS_IO_UNIT_CONTROL) &&
++		ioc->ioc_link_reset_in_progress) {
++		ioc->ioc_link_reset_in_progress = 0;
++		ioc->ignore_loginfos = 0;
++	}
++	if (!(ioc->ctl_cmds.status & MPT2_CMD_COMPLETE)) {
++		printk(MPT2SAS_ERR_FMT "%s: timeout\n", ioc->name,
++		    __func__);
++		_debug_dump_mf(mpi_request, karg.data_sge_offset);
++		if (!(ioc->ctl_cmds.status & MPT2_CMD_RESET))
++			issue_reset = 1;
++		goto issue_host_reset;
++	}
++
++	mpi_reply = ioc->ctl_cmds.reply;
++	ioc_status = le16_to_cpu(mpi_reply->IOCStatus) & MPI2_IOCSTATUS_MASK;
++
++	if (mpi_reply->Function == MPI2_FUNCTION_SCSI_TASK_MGMT) {
++		Mpi2SCSITaskManagementReply_t *tm_reply =
++		    (Mpi2SCSITaskManagementReply_t *)mpi_reply;
++
++		dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "TASK_MGMT: "
++		    "IOCStatus(0x%04x), IOCLogInfo(0x%08x), "
++		    "TerminationCount(0x%08x)\n", ioc->name,
++		    tm_reply->IOCStatus, tm_reply->IOCLogInfo,
++		    tm_reply->TerminationCount));
++	}
++
++	/* copy out xdata to user */
++	if (data_in_sz) {
++		if (copy_to_user(karg.data_in_buf_ptr, data_in,
++		    data_in_sz)) {
++			printk(KERN_ERR "failure at %s:%d/%s()!\n", __FILE__,
++			    __LINE__, __func__);
++			ret = -ENODATA;
++			goto out;
++		}
++	}
++
++	/* copy out reply message frame to user */
++	if (karg.max_reply_bytes) {
++		sz = min_t(u32, karg.max_reply_bytes, ioc->reply_sz);
++		if (copy_to_user(karg.reply_frame_buf_ptr, ioc->ctl_cmds.reply,
++		    sz)) {
++			printk(KERN_ERR "failure at %s:%d/%s()!\n", __FILE__,
++			    __LINE__, __func__);
++			ret = -ENODATA;
++			goto out;
++		}
++	}
++
++	/* copy out sense to user */
++	if (karg.max_sense_bytes && (mpi_request->Function ==
++	    MPI2_FUNCTION_SCSI_IO_REQUEST || mpi_request->Function ==
++	    MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH)) {
++		sz = min_t(u32, karg.max_sense_bytes, SCSI_SENSE_BUFFERSIZE);
++		if (copy_to_user(karg.sense_data_ptr, priv_sense, sz)) {
++			printk(KERN_ERR "failure at %s:%d/%s()!\n", __FILE__,
++			    __LINE__, __func__);
++			ret = -ENODATA;
++			goto out;
++		}
++	}
++
++ issue_host_reset:
++	if (issue_reset) {
++		if ((mpi_request->Function == MPI2_FUNCTION_SCSI_IO_REQUEST ||
++		    mpi_request->Function ==
++		    MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH)) {
++			printk(MPT2SAS_INFO_FMT "issue target reset: handle "
++			    "= (0x%04x)\n", ioc->name,
++			    mpi_request->FunctionDependent1);
++			mutex_lock(&ioc->tm_cmds.mutex);
++			scsih_issue_tm(ioc, mpi_request->FunctionDependent1, 0,
++			    MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0, 10);
++			ioc->tm_cmds.status = MPT2_CMD_NOT_USED;
++			mutex_unlock(&ioc->tm_cmds.mutex);
++		} else
++			base_hard_reset_handler(ioc, CAN_SLEEP,
++			    FORCE_BIG_HAMMER);
++	}
++
++ out:
++
++	/* free memory associated with sg buffers */
++	if (data_in)
++		pci_free_consistent(ioc->pdev, data_in_sz, data_in,
++		    data_in_dma);
++
++	if (data_out)
++		pci_free_consistent(ioc->pdev, data_out_sz, data_out,
++		    data_out_dma);
++
++	ioc->ctl_cmds.status = MPT2_CMD_NOT_USED;
++	mutex_unlock(&ioc->ctl_cmds.mutex);
++	return ret;
++}
++
++/**
++ * _ctl_getiocinfo - main handler for MPT2IOCINFO opcode
++ * @arg - user space buffer containing ioctl content
++ */
++static long
++_ctl_getiocinfo(void __user *arg)
++{
++	struct mpt2_ioctl_iocinfo karg;
++	struct MPT2SAS_ADAPTER *ioc;
++	u8 revision;
++
++	if (copy_from_user(&karg, arg, sizeof(karg))) {
++		printk(KERN_ERR "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		return -EFAULT;
++	}
++	if (_ctl_verify_adapter(karg.hdr.ioc_number, &ioc) == -1 || !ioc)
++		return -ENODEV;
++
++	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: enter\n", ioc->name,
 +	    __func__));
 +
-+	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
-+	if (ioc->ioc_reset_in_progress) {
-+		spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
-+		printk(MPT2SAS_ERR_FMT "%s: busy\n",
-+		    ioc->name, __func__);
-+		return -EBUSY;
-+	}
-+	ioc->ioc_reset_in_progress = 1;
-+	ioc->shost_recovery = 1;
-+	if (ioc->shost->shost_state == SHOST_RUNNING) {
-+		/* set back to SHOST_RUNNING in mpt2sas_scsih.c */
-+		scsi_host_set_state(ioc->shost, SHOST_RECOVERY);
-+		printk(MPT2SAS_INFO_FMT "putting controller into "
-+		    "SHOST_RECOVERY\n", ioc->name);
-+	}
-+	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
++	memset(&karg, 0 , sizeof(karg));
++	karg.adapter_type = MPT2_IOCTL_INTERFACE_SAS2;
++	if (ioc->pfacts)
++		karg.port_number = ioc->pfacts[0].PortNumber;
++	pci_read_config_byte(ioc->pdev, PCI_CLASS_REVISION, &revision);
++	karg.hw_rev = revision;
++	karg.pci_id = ioc->pdev->device;
++	karg.subsystem_device = ioc->pdev->subsystem_device;
++	karg.subsystem_vendor = ioc->pdev->subsystem_vendor;
++	karg.pci_information.u.bits.bus = ioc->pdev->bus->number;
++	karg.pci_information.u.bits.device = PCI_SLOT(ioc->pdev->devfn);
++	karg.pci_information.u.bits.function = PCI_FUNC(ioc->pdev->devfn);
++	karg.pci_information.segment_id = pci_domain_nr(ioc->pdev->bus);
++	karg.firmware_version = ioc->facts.FWVersion.Word;
++	strncpy(karg.driver_version, MPT2SAS_DRIVER_VERSION,
++	    MPT2_IOCTL_VERSION_LENGTH);
++	karg.driver_version[MPT2_IOCTL_VERSION_LENGTH - 1] = '\0';
++	karg.bios_version = le32_to_cpu(ioc->bios_pg3.BiosVersion);
 +
-+	_base_reset_handler(ioc, MPT2_IOC_PRE_RESET);
-+	_wait_for_commands_to_complete(ioc, sleep_flag);
-+	_base_mask_interrupts(ioc);
-+	r = _base_make_ioc_ready(ioc, sleep_flag, type);
-+	if (r)
-+		goto out;
-+	_base_reset_handler(ioc, MPT2_IOC_AFTER_RESET);
-+	for (i = 0 ; i < ioc->facts.NumberOfPorts; i++)
-+		r = _base_make_ioc_operational(ioc, ioc->pfacts[i].VF_ID,
-+		    sleep_flag);
-+	if (!r)
-+		_base_reset_handler(ioc, MPT2_IOC_DONE_RESET);
-+ out:
-+	dtmprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: %s\n",
-+	    ioc->name, __func__, ((r == 0) ? "SUCCESS" : "FAILED")));
-+
-+	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
-+	ioc->ioc_reset_in_progress = 0;
-+	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
-+	return r;
++	if (copy_to_user(arg, &karg, sizeof(karg))) {
++		printk(KERN_ERR "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		return -EFAULT;
++	}
++	return 0;
 +}
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h	1969-12-31 17:00:00.000000000 -0700
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h	2009-03-04 03:30:40.000000000 -0700
-@@ -0,0 +1,780 @@
-+/*
-+ * This is the Fusion MPT base driver providing common API layer interface
-+ * for access to MPT (Message Passing Technology) firmware.
++
++/**
++ * _ctl_eventquery - main handler for MPT2EVENTQUERY opcode
++ * @arg - user space buffer containing ioctl content
++ */
++static long
++_ctl_eventquery(void __user *arg)
++{
++	struct mpt2_ioctl_eventquery karg;
++	struct MPT2SAS_ADAPTER *ioc;
++
++	if (copy_from_user(&karg, arg, sizeof(karg))) {
++		printk(KERN_ERR "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		return -EFAULT;
++	}
++	if (_ctl_verify_adapter(karg.hdr.ioc_number, &ioc) == -1 || !ioc)
++		return -ENODEV;
++
++	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: enter\n", ioc->name,
++	    __func__));
++
++	karg.event_entries = MPT2SAS_CTL_EVENT_LOG_SIZE;
++	memcpy(karg.event_types, ioc->event_type,
++	    MPI2_EVENT_NOTIFY_EVENTMASK_WORDS * sizeof(u32));
++
++	if (copy_to_user(arg, &karg, sizeof(karg))) {
++		printk(KERN_ERR "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		return -EFAULT;
++	}
++	return 0;
++}
++
++/**
++ * _ctl_eventenable - main handler for MPT2EVENTENABLE opcode
++ * @arg - user space buffer containing ioctl content
++ */
++static long
++_ctl_eventenable(void __user *arg)
++{
++	struct mpt2_ioctl_eventenable karg;
++	struct MPT2SAS_ADAPTER *ioc;
++
++	if (copy_from_user(&karg, arg, sizeof(karg))) {
++		printk(KERN_ERR "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		return -EFAULT;
++	}
++	if (_ctl_verify_adapter(karg.hdr.ioc_number, &ioc) == -1 || !ioc)
++		return -ENODEV;
++
++	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: enter\n", ioc->name,
++	    __func__));
++
++	if (ioc->event_log)
++		return 0;
++	memcpy(ioc->event_type, karg.event_types,
++	    MPI2_EVENT_NOTIFY_EVENTMASK_WORDS * sizeof(u32));
++	base_validate_event_type(ioc, ioc->event_type);
++
++	/* initialize event_log */
++	ioc->event_context = 0;
++	ioc->aen_event_read_flag = 0;
++	ioc->event_log = kcalloc(MPT2SAS_CTL_EVENT_LOG_SIZE,
++	    sizeof(struct MPT2_IOCTL_EVENTS), GFP_KERNEL);
++	if (!ioc->event_log) {
++		printk(KERN_ERR "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		return -ENOMEM;
++	}
++	return 0;
++}
++
++/**
++ * _ctl_eventreport - main handler for MPT2EVENTREPORT opcode
++ * @arg - user space buffer containing ioctl content
++ */
++static long
++_ctl_eventreport(void __user *arg)
++{
++	struct mpt2_ioctl_eventreport karg;
++	struct MPT2SAS_ADAPTER *ioc;
++	u32 number_bytes, max_events, max;
++	struct mpt2_ioctl_eventreport __user *uarg = arg;
++
++	if (copy_from_user(&karg, arg, sizeof(karg))) {
++		printk(KERN_ERR "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		return -EFAULT;
++	}
++	if (_ctl_verify_adapter(karg.hdr.ioc_number, &ioc) == -1 || !ioc)
++		return -ENODEV;
++
++	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: enter\n", ioc->name,
++	    __func__));
++
++	number_bytes = karg.hdr.max_data_size -
++	    sizeof(struct mpt2_ioctl_header);
++	max_events = number_bytes/sizeof(struct MPT2_IOCTL_EVENTS);
++	max = min_t(u32, MPT2SAS_CTL_EVENT_LOG_SIZE, max_events);
++
++	/* If fewer than 1 event is requested, there must have
++	 * been some type of error.
++	 */
++	if (!max || !ioc->event_log)
++		return -ENODATA;
++
++	number_bytes = max * sizeof(struct MPT2_IOCTL_EVENTS);
++	if (copy_to_user(uarg->event_data, ioc->event_log, number_bytes)) {
++		printk(KERN_ERR "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		return -EFAULT;
++	}
++
++	/* reset flag so SIGIO can restart */
++	ioc->aen_event_read_flag = 0;
++	return 0;
++}
++
++/**
++ * _ctl_do_reset - main handler for MPT2HARDRESET opcode
++ * @arg - user space buffer containing ioctl content
++ */
++static long
++_ctl_do_reset(void __user *arg)
++{
++	struct mpt2_ioctl_diag_reset karg;
++	struct MPT2SAS_ADAPTER *ioc;
++	int retval;
++
++	if (copy_from_user(&karg, arg, sizeof(karg))) {
++		printk(KERN_ERR "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		return -EFAULT;
++	}
++	if (_ctl_verify_adapter(karg.hdr.ioc_number, &ioc) == -1 || !ioc)
++		return -ENODEV;
++
++	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: enter\n", ioc->name,
++	    __func__));
++
++	retval = base_hard_reset_handler(ioc, CAN_SLEEP, FORCE_BIG_HAMMER);
++	printk(MPT2SAS_INFO_FMT "host reset: %s\n",
++	    ioc->name, ((!retval) ? "SUCCESS" : "FAILED"));
++	return 0;
++}
++
++/**
++ * _ctl_btdh_search_sas_device - searching for sas device
++ * @ioc: per adapter object
++ * @btdh: btdh ioctl payload
++ */
++static int
++_ctl_btdh_search_sas_device(struct MPT2SAS_ADAPTER *ioc,
++    struct mpt2_ioctl_btdh_mapping *btdh)
++{
++	struct _sas_device *sas_device;
++	unsigned long flags;
++	int rc = 0;
++
++	if (list_empty(&ioc->sas_device_list))
++		return rc;
++
++	spin_lock_irqsave(&ioc->sas_device_lock, flags);
++	list_for_each_entry(sas_device, &ioc->sas_device_list, list) {
++		if (btdh->bus == 0xFFFFFFFF && btdh->id == 0xFFFFFFFF &&
++		    btdh->handle == sas_device->handle) {
++			btdh->bus = sas_device->channel;
++			btdh->id = sas_device->id;
++			rc = 1;
++			goto out;
++		} else if (btdh->bus == sas_device->channel && btdh->id ==
++		    sas_device->id && btdh->handle == 0xFFFF) {
++			btdh->handle = sas_device->handle;
++			rc = 1;
++			goto out;
++		}
++	}
++ out:
++	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
++	return rc;
++}
++
++/**
++ * _ctl_btdh_search_raid_device - searching for raid device
++ * @ioc: per adapter object
++ * @btdh: btdh ioctl payload
++ */
++static int
++_ctl_btdh_search_raid_device(struct MPT2SAS_ADAPTER *ioc,
++    struct mpt2_ioctl_btdh_mapping *btdh)
++{
++	struct _raid_device *raid_device;
++	unsigned long flags;
++	int rc = 0;
++
++	if (list_empty(&ioc->raid_device_list))
++		return rc;
++
++	spin_lock_irqsave(&ioc->raid_device_lock, flags);
++	list_for_each_entry(raid_device, &ioc->raid_device_list, list) {
++		if (btdh->bus == 0xFFFFFFFF && btdh->id == 0xFFFFFFFF &&
++		    btdh->handle == raid_device->handle) {
++			btdh->bus = raid_device->channel;
++			btdh->id = raid_device->id;
++			rc = 1;
++			goto out;
++		} else if (btdh->bus == raid_device->channel && btdh->id ==
++		    raid_device->id && btdh->handle == 0xFFFF) {
++			btdh->handle = raid_device->handle;
++			rc = 1;
++			goto out;
++		}
++	}
++ out:
++	spin_unlock_irqrestore(&ioc->raid_device_lock, flags);
++	return rc;
++}
++
++/**
++ * _ctl_btdh_mapping - main handler for MPT2BTDHMAPPING opcode
++ * @arg - user space buffer containing ioctl content
++ */
++static long
++_ctl_btdh_mapping(void __user *arg)
++{
++	struct mpt2_ioctl_btdh_mapping karg;
++	struct MPT2SAS_ADAPTER *ioc;
++	int rc;
++
++	if (copy_from_user(&karg, arg, sizeof(karg))) {
++		printk(KERN_ERR "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		return -EFAULT;
++	}
++	if (_ctl_verify_adapter(karg.hdr.ioc_number, &ioc) == -1 || !ioc)
++		return -ENODEV;
++
++	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
++	    __func__));
++
++	rc = _ctl_btdh_search_sas_device(ioc, &karg);
++	if (!rc)
++		_ctl_btdh_search_raid_device(ioc, &karg);
++
++	if (copy_to_user(arg, &karg, sizeof(karg))) {
++		printk(KERN_ERR "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		return -EFAULT;
++	}
++	return 0;
++}
++
++/**
++ * _ctl_diag_capability - return diag buffer capability
++ * @ioc: per adapter object
++ * @buffer_type: specifies either TRACE or SNAPSHOT
 + *
-+ * This code is based on drivers/scsi/mpt2sas/mpt2_base.h
++ * returns 1 when diag buffer support is enabled in firmware
++ */
++static u8
++_ctl_diag_capability(struct MPT2SAS_ADAPTER *ioc, u8 buffer_type)
++{
++	u8 rc = 0;
++
++	switch (buffer_type) {
++	case MPI2_DIAG_BUF_TYPE_TRACE:
++		if (ioc->facts.IOCCapabilities &
++		    MPI2_IOCFACTS_CAPABILITY_DIAG_TRACE_BUFFER)
++			rc = 1;
++		break;
++	case MPI2_DIAG_BUF_TYPE_SNAPSHOT:
++		if (ioc->facts.IOCCapabilities &
++		    MPI2_IOCFACTS_CAPABILITY_SNAPSHOT_BUFFER)
++			rc = 1;
++		break;
++	}
++
++	return rc;
++}
++
++/**
++ * _ctl_diag_register - application register with driver
++ * @arg - user space buffer containing ioctl content
++ * @state - NON_BLOCKING or BLOCKING
++ *
++ * This will allow the driver to setup any required buffers that will be
++ * needed by firmware to communicate with the driver.
++ */
++static long
++_ctl_diag_register(void __user *arg, enum block_state state)
++{
++	struct mpt2_diag_register karg;
++	struct MPT2SAS_ADAPTER *ioc;
++	int rc, i;
++	void *request_data = NULL;
++	dma_addr_t request_data_dma;
++	u32 request_data_sz = 0;
++	Mpi2DiagBufferPostRequest_t *mpi_request;
++	Mpi2DiagBufferPostReply_t *mpi_reply;
++	u8 buffer_type;
++	unsigned long timeleft;
++	u16 smid;
++	u16 ioc_status;
++	u8 issue_reset = 0;
++
++	if (copy_from_user(&karg, arg, sizeof(karg))) {
++		printk(KERN_ERR "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		return -EFAULT;
++	}
++	if (_ctl_verify_adapter(karg.hdr.ioc_number, &ioc) == -1 || !ioc)
++		return -ENODEV;
++
++	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
++	    __func__));
++
++	buffer_type = karg.buffer_type;
++	if (!_ctl_diag_capability(ioc, buffer_type)) {
++		printk(MPT2SAS_ERR_FMT "%s: doesn't have capability for "
++		    "buffer_type(0x%02x)\n", ioc->name, __func__, buffer_type);
++		return -EPERM;
++	}
++
++	if (ioc->diag_buffer_status[buffer_type] &
++	    MPT2_DIAG_BUFFER_IS_REGISTERED) {
++		printk(MPT2SAS_ERR_FMT "%s: already has a registered "
++		    "buffer for buffer_type(0x%02x)\n", ioc->name, __func__,
++		    buffer_type);
++		return -EINVAL;
++	}
++
++	if (karg.requested_buffer_size % 4)  {
++		printk(MPT2SAS_ERR_FMT "%s: the requested_buffer_size "
++		    "is not 4 byte aligned\n", ioc->name, __func__);
++		return -EINVAL;
++	}
++
++	if (state == NON_BLOCKING && !mutex_trylock(&ioc->ctl_cmds.mutex))
++		return -EAGAIN;
++	else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
++		return -ERESTARTSYS;
++
++	if (ioc->ctl_cmds.status != MPT2_CMD_NOT_USED) {
++		printk(MPT2SAS_ERR_FMT "%s: ctl_cmd in use\n",
++		    ioc->name, __func__);
++		rc = -EAGAIN;
++		goto out;
++	}
++
++	smid = base_get_smid(ioc, ioc->ctl_cb_idx);
++	if (!smid) {
++		printk(MPT2SAS_ERR_FMT "%s: failed obtaining a smid\n",
++		    ioc->name, __func__);
++		rc = -EAGAIN;
++		goto out;
++	}
++
++	rc = 0;
++	ioc->ctl_cmds.status = MPT2_CMD_PENDING;
++	memset(ioc->ctl_cmds.reply, 0, ioc->reply_sz);
++	mpi_request = base_get_msg_frame(ioc, smid);
++	ioc->ctl_cmds.smid = smid;
++
++	request_data = ioc->diag_buffer[buffer_type];
++	request_data_sz = karg.requested_buffer_size;
++	ioc->unique_id[buffer_type] = karg.unique_id;
++	ioc->diag_buffer_status[buffer_type] = 0;
++	memcpy(ioc->product_specific[buffer_type], karg.product_specific,
++	    MPT2_PRODUCT_SPECIFIC_DWORDS);
++	ioc->diagnostic_flags[buffer_type] = karg.diagnostic_flags;
++
++	if (request_data) {
++		request_data_dma = ioc->diag_buffer_dma[buffer_type];
++		if (request_data_sz != ioc->diag_buffer_sz[buffer_type]) {
++			pci_free_consistent(ioc->pdev,
++			    ioc->diag_buffer_sz[buffer_type],
++			    request_data, request_data_dma);
++			request_data = NULL;
++		}
++	}
++
++	if (request_data == NULL) {
++		ioc->diag_buffer_sz[buffer_type] = 0;
++		ioc->diag_buffer_dma[buffer_type] = 0;
++		request_data = pci_alloc_consistent(
++			ioc->pdev, request_data_sz, &request_data_dma);
++		if (request_data == NULL) {
++			printk(MPT2SAS_ERR_FMT "%s: failed allocating memory"
++			    " for diag buffers, requested size(%d)\n",
++			    ioc->name, __func__, request_data_sz);
++			base_free_smid(ioc, smid);
++			return -ENOMEM;
++		}
++		ioc->diag_buffer[buffer_type] = request_data;
++		ioc->diag_buffer_sz[buffer_type] = request_data_sz;
++		ioc->diag_buffer_dma[buffer_type] = request_data_dma;
++	}
++
++	mpi_request->Function = MPI2_FUNCTION_DIAG_BUFFER_POST;
++	mpi_request->BufferType = karg.buffer_type;
++	mpi_request->Flags = cpu_to_le32(karg.diagnostic_flags);
++	mpi_request->BufferAddress = cpu_to_le64(request_data_dma);
++	mpi_request->BufferLength = cpu_to_le32(request_data_sz);
++
++	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: diag_buffer(0x%p), "
++	    "dma(0x%llx), sz(%d)\n", ioc->name, __func__, request_data,
++	    (unsigned long long)request_data_dma, mpi_request->BufferLength));
++
++	for (i = 0; i < MPT2_PRODUCT_SPECIFIC_DWORDS; i++)
++		mpi_request->ProductSpecific[i] =
++			cpu_to_le32(ioc->product_specific[buffer_type][i]);
++
++	base_put_smid_default(ioc, smid, mpi_request->VF_ID);
++	timeleft = wait_for_completion_timeout(&ioc->ctl_cmds.done,
++	    MPT2_IOCTL_DEFAULT_TIMEOUT*HZ);
++
++	if (!(ioc->ctl_cmds.status & MPT2_CMD_COMPLETE)) {
++		printk(MPT2SAS_ERR_FMT "%s: timeout\n", ioc->name,
++		    __func__);
++		_debug_dump_mf(mpi_request,
++		    sizeof(Mpi2DiagBufferPostRequest_t)/4);
++		if (!(ioc->ctl_cmds.status & MPT2_CMD_RESET))
++			issue_reset = 1;
++		goto issue_host_reset;
++	}
++
++	/* process the completed Reply Message Frame */
++	if ((ioc->ctl_cmds.status & MPT2_CMD_REPLY_VALID) == 0) {
++		printk(MPT2SAS_ERR_FMT "%s: no reply message\n",
++		    ioc->name, __func__);
++		rc = -EFAULT;
++		goto out;
++	}
++
++	mpi_reply = ioc->ctl_cmds.reply;
++	ioc_status = le16_to_cpu(mpi_reply->IOCStatus) & MPI2_IOCSTATUS_MASK;
++
++	if (ioc_status == MPI2_IOCSTATUS_SUCCESS) {
++		ioc->diag_buffer_status[buffer_type] |=
++			MPT2_DIAG_BUFFER_IS_REGISTERED;
++		dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: success\n",
++		    ioc->name, __func__));
++	} else {
++		printk(MPT2SAS_DEBUG_FMT "%s: ioc_status(0x%04x) "
++		    "log_info(0x%08x)\n", ioc->name, __func__,
++		    ioc_status, mpi_reply->IOCLogInfo);
++		rc = -EFAULT;
++	}
++
++ issue_host_reset:
++	if (issue_reset)
++		base_hard_reset_handler(ioc, CAN_SLEEP, FORCE_BIG_HAMMER);
++
++ out:
++
++	if (rc && request_data)
++		pci_free_consistent(ioc->pdev, request_data_sz,
++		    request_data, request_data_dma);
++
++	ioc->ctl_cmds.status = MPT2_CMD_NOT_USED;
++	mutex_unlock(&ioc->ctl_cmds.mutex);
++	return rc;
++}
++
++/**
++ * _ctl_diag_unregister - application unregister with driver
++ * @arg - user space buffer containing ioctl content
++ *
++ * This will allow the driver to cleanup any memory allocated for diag
++ * messages and to free up any resources.
++ */
++static long
++_ctl_diag_unregister(void __user *arg)
++{
++	struct mpt2_diag_unregister karg;
++	struct MPT2SAS_ADAPTER *ioc;
++	void *request_data;
++	dma_addr_t request_data_dma;
++	u32 request_data_sz;
++	u8 buffer_type;
++
++	if (copy_from_user(&karg, arg, sizeof(karg))) {
++		printk(KERN_ERR "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		return -EFAULT;
++	}
++	if (_ctl_verify_adapter(karg.hdr.ioc_number, &ioc) == -1 || !ioc)
++		return -ENODEV;
++
++	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
++	    __func__));
++
++	buffer_type = karg.unique_id & 0x000000ff;
++	if (!_ctl_diag_capability(ioc, buffer_type)) {
++		printk(MPT2SAS_ERR_FMT "%s: doesn't have capability for "
++		    "buffer_type(0x%02x)\n", ioc->name, __func__, buffer_type);
++		return -EPERM;
++	}
++
++	if ((ioc->diag_buffer_status[buffer_type] &
++	    MPT2_DIAG_BUFFER_IS_REGISTERED) == 0) {
++		printk(MPT2SAS_ERR_FMT "%s: buffer_type(0x%02x) is not "
++		    "registered\n", ioc->name, __func__, buffer_type);
++		return -EINVAL;
++	}
++	if ((ioc->diag_buffer_status[buffer_type] &
++	    MPT2_DIAG_BUFFER_IS_RELEASED) == 0) {
++		printk(MPT2SAS_ERR_FMT "%s: buffer_type(0x%02x) has not been "
++		    "released\n", ioc->name, __func__, buffer_type);
++		return -EINVAL;
++	}
++
++	if (karg.unique_id != ioc->unique_id[buffer_type]) {
++		printk(MPT2SAS_ERR_FMT "%s: unique_id(0x%08x) is not "
++		    "registered\n", ioc->name, __func__, karg.unique_id);
++		return -EINVAL;
++	}
++
++	request_data = ioc->diag_buffer[buffer_type];
++	if (!request_data) {
++		printk(MPT2SAS_ERR_FMT "%s: doesn't have memory allocated for "
++		    "buffer_type(0x%02x)\n", ioc->name, __func__, buffer_type);
++		return -ENOMEM;
++	}
++
++	request_data_sz = ioc->diag_buffer_sz[buffer_type];
++	request_data_dma = ioc->diag_buffer_dma[buffer_type];
++	pci_free_consistent(ioc->pdev, request_data_sz,
++	    request_data, request_data_dma);
++	ioc->diag_buffer[buffer_type] = NULL;
++	ioc->diag_buffer_status[buffer_type] = 0;
++	return 0;
++}
++
++/**
++ * _ctl_diag_query - query relevant info associated with diag buffers
++ * @arg - user space buffer containing ioctl content
++ *
++ * The application will send only buffer_type and unique_id.  Driver will
++ * inspect unique_id first, if valid, fill in all the info.  If unique_id is
++ * 0x00, the driver will return info specified by Buffer Type.
++ */
++static long
++_ctl_diag_query(void __user *arg)
++{
++	struct mpt2_diag_query karg;
++	struct MPT2SAS_ADAPTER *ioc;
++	void *request_data;
++	int i;
++	u8 buffer_type;
++
++	if (copy_from_user(&karg, arg, sizeof(karg))) {
++		printk(KERN_ERR "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		return -EFAULT;
++	}
++	if (_ctl_verify_adapter(karg.hdr.ioc_number, &ioc) == -1 || !ioc)
++		return -ENODEV;
++
++	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
++	    __func__));
++
++	karg.application_flags = 0;
++	buffer_type = karg.buffer_type;
++
++	if (!_ctl_diag_capability(ioc, buffer_type)) {
++		printk(MPT2SAS_ERR_FMT "%s: doesn't have capability for "
++		    "buffer_type(0x%02x)\n", ioc->name, __func__, buffer_type);
++		return -EPERM;
++	}
++
++	if ((ioc->diag_buffer_status[buffer_type] &
++	    MPT2_DIAG_BUFFER_IS_REGISTERED) == 0) {
++		printk(MPT2SAS_ERR_FMT "%s: buffer_type(0x%02x) is not "
++		    "registered\n", ioc->name, __func__, buffer_type);
++		return -EINVAL;
++	}
++
++	if (karg.unique_id & 0xffffff00) {
++		if (karg.unique_id != ioc->unique_id[buffer_type]) {
++			printk(MPT2SAS_ERR_FMT "%s: unique_id(0x%08x) is not "
++			    "registered\n", ioc->name, __func__,
++			    karg.unique_id);
++			return -EINVAL;
++		}
++	}
++
++	request_data = ioc->diag_buffer[buffer_type];
++	if (!request_data) {
++		printk(MPT2SAS_ERR_FMT "%s: doesn't have buffer for "
++		    "buffer_type(0x%02x)\n", ioc->name, __func__, buffer_type);
++		return -ENOMEM;
++	}
++
++	if (ioc->diag_buffer_status[buffer_type] & MPT2_DIAG_BUFFER_IS_RELEASED)
++		karg.application_flags = (MPT2_APP_FLAGS_APP_OWNED |
++		    MPT2_APP_FLAGS_BUFFER_VALID);
++	else
++		karg.application_flags = (MPT2_APP_FLAGS_APP_OWNED |
++		    MPT2_APP_FLAGS_BUFFER_VALID |
++		    MPT2_APP_FLAGS_FW_BUFFER_ACCESS);
++
++	for (i = 0; i < MPT2_PRODUCT_SPECIFIC_DWORDS; i++)
++		karg.product_specific[i] =
++		    ioc->product_specific[buffer_type][i];
++
++	karg.total_buffer_size = ioc->diag_buffer_sz[buffer_type];
++	karg.driver_added_buffer_size = 0;
++	karg.unique_id = ioc->unique_id[buffer_type];
++	karg.diagnostic_flags = ioc->diagnostic_flags[buffer_type];
++
++	if (copy_to_user(arg, &karg, sizeof(struct mpt2_diag_query))) {
++		printk(MPT2SAS_ERR_FMT "%s: unable to write mpt2_diag_query "
++		    "data @ %p\n", ioc->name, __func__, arg);
++		return -EFAULT;
++	}
++	return 0;
++}
++
++/**
++ * _ctl_diag_release - request to send Diag Release Message to firmware
++ * @arg - user space buffer containing ioctl content
++ * @state - NON_BLOCKING or BLOCKING
++ *
++ * This allows ownership of the specified buffer to returned to the driver,
++ * allowing an application to read the buffer without fear that firmware is
++ * overwritting information in the buffer.
++ */
++static long
++_ctl_diag_release(void __user *arg, enum block_state state)
++{
++	struct mpt2_diag_release karg;
++	struct MPT2SAS_ADAPTER *ioc;
++	void *request_data;
++	int rc;
++	Mpi2DiagReleaseRequest_t *mpi_request;
++	Mpi2DiagReleaseReply_t *mpi_reply;
++	u8 buffer_type;
++	unsigned long timeleft;
++	u16 smid;
++	u16 ioc_status;
++	u8 issue_reset = 0;
++
++	if (copy_from_user(&karg, arg, sizeof(karg))) {
++		printk(KERN_ERR "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		return -EFAULT;
++	}
++	if (_ctl_verify_adapter(karg.hdr.ioc_number, &ioc) == -1 || !ioc)
++		return -ENODEV;
++
++	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
++	    __func__));
++
++	buffer_type = karg.unique_id & 0x000000ff;
++	if (!_ctl_diag_capability(ioc, buffer_type)) {
++		printk(MPT2SAS_ERR_FMT "%s: doesn't have capability for "
++		    "buffer_type(0x%02x)\n", ioc->name, __func__, buffer_type);
++		return -EPERM;
++	}
++
++	if ((ioc->diag_buffer_status[buffer_type] &
++	    MPT2_DIAG_BUFFER_IS_REGISTERED) == 0) {
++		printk(MPT2SAS_ERR_FMT "%s: buffer_type(0x%02x) is not "
++		    "registered\n", ioc->name, __func__, buffer_type);
++		return -EINVAL;
++	}
++
++	if (karg.unique_id != ioc->unique_id[buffer_type]) {
++		printk(MPT2SAS_ERR_FMT "%s: unique_id(0x%08x) is not "
++		    "registered\n", ioc->name, __func__, karg.unique_id);
++		return -EINVAL;
++	}
++
++	if (ioc->diag_buffer_status[buffer_type] &
++	    MPT2_DIAG_BUFFER_IS_RELEASED) {
++		printk(MPT2SAS_ERR_FMT "%s: buffer_type(0x%02x) "
++		    "is already released\n", ioc->name, __func__,
++		    buffer_type);
++		return 0;
++	}
++
++	request_data = ioc->diag_buffer[buffer_type];
++
++	if (!request_data) {
++		printk(MPT2SAS_ERR_FMT "%s: doesn't have memory allocated for "
++		    "buffer_type(0x%02x)\n", ioc->name, __func__, buffer_type);
++		return -ENOMEM;
++	}
++
++	if (state == NON_BLOCKING && !mutex_trylock(&ioc->ctl_cmds.mutex))
++		return -EAGAIN;
++	else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
++		return -ERESTARTSYS;
++
++	if (ioc->ctl_cmds.status != MPT2_CMD_NOT_USED) {
++		printk(MPT2SAS_ERR_FMT "%s: ctl_cmd in use\n",
++		    ioc->name, __func__);
++		rc = -EAGAIN;
++		goto out;
++	}
++
++	smid = base_get_smid(ioc, ioc->ctl_cb_idx);
++	if (!smid) {
++		printk(MPT2SAS_ERR_FMT "%s: failed obtaining a smid\n",
++		    ioc->name, __func__);
++		rc = -EAGAIN;
++		goto out;
++	}
++
++	rc = 0;
++	ioc->ctl_cmds.status = MPT2_CMD_PENDING;
++	memset(ioc->ctl_cmds.reply, 0, ioc->reply_sz);
++	mpi_request = base_get_msg_frame(ioc, smid);
++	ioc->ctl_cmds.smid = smid;
++
++	mpi_request->Function = MPI2_FUNCTION_DIAG_RELEASE;
++	mpi_request->BufferType = buffer_type;
++
++	base_put_smid_default(ioc, smid, mpi_request->VF_ID);
++	timeleft = wait_for_completion_timeout(&ioc->ctl_cmds.done,
++	    MPT2_IOCTL_DEFAULT_TIMEOUT*HZ);
++
++	if (!(ioc->ctl_cmds.status & MPT2_CMD_COMPLETE)) {
++		printk(MPT2SAS_ERR_FMT "%s: timeout\n", ioc->name,
++		    __func__);
++		_debug_dump_mf(mpi_request,
++		    sizeof(Mpi2DiagReleaseRequest_t)/4);
++		if (!(ioc->ctl_cmds.status & MPT2_CMD_RESET))
++			issue_reset = 1;
++		goto issue_host_reset;
++	}
++
++	/* process the completed Reply Message Frame */
++	if ((ioc->ctl_cmds.status & MPT2_CMD_REPLY_VALID) == 0) {
++		printk(MPT2SAS_ERR_FMT "%s: no reply message\n",
++		    ioc->name, __func__);
++		rc = -EFAULT;
++		goto out;
++	}
++
++	mpi_reply = ioc->ctl_cmds.reply;
++	ioc_status = le16_to_cpu(mpi_reply->IOCStatus) & MPI2_IOCSTATUS_MASK;
++
++	if (ioc_status == MPI2_IOCSTATUS_SUCCESS) {
++		ioc->diag_buffer_status[buffer_type] |=
++		    MPT2_DIAG_BUFFER_IS_RELEASED;
++		dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: success\n",
++		    ioc->name, __func__));
++	} else {
++		printk(MPT2SAS_DEBUG_FMT "%s: ioc_status(0x%04x) "
++		    "log_info(0x%08x)\n", ioc->name, __func__,
++		    ioc_status, mpi_reply->IOCLogInfo);
++		rc = -EFAULT;
++	}
++
++ issue_host_reset:
++	if (issue_reset)
++		base_hard_reset_handler(ioc, CAN_SLEEP, FORCE_BIG_HAMMER);
++
++ out:
++
++	ioc->ctl_cmds.status = MPT2_CMD_NOT_USED;
++	mutex_unlock(&ioc->ctl_cmds.mutex);
++	return rc;
++}
++
++/**
++ * _ctl_diag_read_buffer - request for copy of the diag buffer
++ * @arg - user space buffer containing ioctl content
++ * @state - NON_BLOCKING or BLOCKING
++ */
++static long
++_ctl_diag_read_buffer(void __user *arg, enum block_state state)
++{
++	struct mpt2_diag_read_buffer karg;
++	struct mpt2_diag_read_buffer __user *uarg = arg;
++	struct MPT2SAS_ADAPTER *ioc;
++	void *request_data, *diag_data;
++	Mpi2DiagBufferPostRequest_t *mpi_request;
++	Mpi2DiagBufferPostReply_t *mpi_reply;
++	int rc, i;
++	u8 buffer_type;
++	unsigned long timeleft;
++	u16 smid;
++	u16 ioc_status;
++	u8 issue_reset = 0;
++
++	if (copy_from_user(&karg, arg, sizeof(karg))) {
++		printk(KERN_ERR "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		return -EFAULT;
++	}
++	if (_ctl_verify_adapter(karg.hdr.ioc_number, &ioc) == -1 || !ioc)
++		return -ENODEV;
++
++	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
++	    __func__));
++
++	buffer_type = karg.unique_id & 0x000000ff;
++	if (!_ctl_diag_capability(ioc, buffer_type)) {
++		printk(MPT2SAS_ERR_FMT "%s: doesn't have capability for "
++		    "buffer_type(0x%02x)\n", ioc->name, __func__, buffer_type);
++		return -EPERM;
++	}
++
++	if (karg.unique_id != ioc->unique_id[buffer_type]) {
++		printk(MPT2SAS_ERR_FMT "%s: unique_id(0x%08x) is not "
++		    "registered\n", ioc->name, __func__, karg.unique_id);
++		return -EINVAL;
++	}
++
++	request_data = ioc->diag_buffer[buffer_type];
++	if (!request_data) {
++		printk(MPT2SAS_ERR_FMT "%s: doesn't have buffer for "
++		    "buffer_type(0x%02x)\n", ioc->name, __func__, buffer_type);
++		return -ENOMEM;
++	}
++
++	if ((karg.starting_offset % 4) || (karg.bytes_to_read % 4)) {
++		printk(MPT2SAS_ERR_FMT "%s: either the starting_offset "
++		    "or bytes_to_read are not 4 byte aligned\n", ioc->name,
++		    __func__);
++		return -EINVAL;
++	}
++
++	diag_data = (void *)(request_data + karg.starting_offset);
++	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: diag_buffer(%p), "
++	    "offset(%d), sz(%d)\n", ioc->name, __func__,
++	    diag_data, karg.starting_offset, karg.bytes_to_read));
++
++	if (copy_to_user((void __user *)uarg->diagnostic_data,
++	    diag_data, karg.bytes_to_read)) {
++		printk(MPT2SAS_ERR_FMT "%s: Unable to write "
++		    "mpt_diag_read_buffer_t data @ %p\n", ioc->name,
++		    __func__, diag_data);
++		return -EFAULT;
++	}
++
++	if ((karg.flags & MPT2_FLAGS_REREGISTER) == 0)
++		return 0;
++
++	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: Reregister "
++		"buffer_type(0x%02x)\n", ioc->name, __func__, buffer_type));
++	if ((ioc->diag_buffer_status[buffer_type] &
++	    MPT2_DIAG_BUFFER_IS_RELEASED) == 0) {
++		dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: "
++		    "buffer_type(0x%02x) is still registered\n", ioc->name,
++		     __func__, buffer_type));
++		return 0;
++	}
++	/* Get a free request frame and save the message context.
++	*/
++	if (state == NON_BLOCKING && !mutex_trylock(&ioc->ctl_cmds.mutex))
++		return -EAGAIN;
++	else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
++		return -ERESTARTSYS;
++
++	if (ioc->ctl_cmds.status != MPT2_CMD_NOT_USED) {
++		printk(MPT2SAS_ERR_FMT "%s: ctl_cmd in use\n",
++		    ioc->name, __func__);
++		rc = -EAGAIN;
++		goto out;
++	}
++
++	smid = base_get_smid(ioc, ioc->ctl_cb_idx);
++	if (!smid) {
++		printk(MPT2SAS_ERR_FMT "%s: failed obtaining a smid\n",
++		    ioc->name, __func__);
++		rc = -EAGAIN;
++		goto out;
++	}
++
++	rc = 0;
++	ioc->ctl_cmds.status = MPT2_CMD_PENDING;
++	memset(ioc->ctl_cmds.reply, 0, ioc->reply_sz);
++	mpi_request = base_get_msg_frame(ioc, smid);
++	ioc->ctl_cmds.smid = smid;
++
++	mpi_request->Function = MPI2_FUNCTION_DIAG_BUFFER_POST;
++	mpi_request->BufferType = buffer_type;
++	mpi_request->BufferLength =
++	    cpu_to_le32(ioc->diag_buffer_sz[buffer_type]);
++	mpi_request->BufferAddress =
++	    cpu_to_le64(ioc->diag_buffer_dma[buffer_type]);
++	for (i = 0; i < MPT2_PRODUCT_SPECIFIC_DWORDS; i++)
++		mpi_request->ProductSpecific[i] =
++			cpu_to_le32(ioc->product_specific[buffer_type][i]);
++
++	base_put_smid_default(ioc, smid, mpi_request->VF_ID);
++	timeleft = wait_for_completion_timeout(&ioc->ctl_cmds.done,
++	    MPT2_IOCTL_DEFAULT_TIMEOUT*HZ);
++
++	if (!(ioc->ctl_cmds.status & MPT2_CMD_COMPLETE)) {
++		printk(MPT2SAS_ERR_FMT "%s: timeout\n", ioc->name,
++		    __func__);
++		_debug_dump_mf(mpi_request,
++		    sizeof(Mpi2DiagBufferPostRequest_t)/4);
++		if (!(ioc->ctl_cmds.status & MPT2_CMD_RESET))
++			issue_reset = 1;
++		goto issue_host_reset;
++	}
++
++	/* process the completed Reply Message Frame */
++	if ((ioc->ctl_cmds.status & MPT2_CMD_REPLY_VALID) == 0) {
++		printk(MPT2SAS_ERR_FMT "%s: no reply message\n",
++		    ioc->name, __func__);
++		rc = -EFAULT;
++		goto out;
++	}
++
++	mpi_reply = ioc->ctl_cmds.reply;
++	ioc_status = le16_to_cpu(mpi_reply->IOCStatus) & MPI2_IOCSTATUS_MASK;
++
++	if (ioc_status == MPI2_IOCSTATUS_SUCCESS) {
++		ioc->diag_buffer_status[buffer_type] |=
++		    MPT2_DIAG_BUFFER_IS_REGISTERED;
++		dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: success\n",
++		    ioc->name, __func__));
++	} else {
++		printk(MPT2SAS_DEBUG_FMT "%s: ioc_status(0x%04x) "
++		    "log_info(0x%08x)\n", ioc->name, __func__,
++		    ioc_status, mpi_reply->IOCLogInfo);
++		rc = -EFAULT;
++	}
++
++ issue_host_reset:
++	if (issue_reset)
++		base_hard_reset_handler(ioc, CAN_SLEEP, FORCE_BIG_HAMMER);
++
++ out:
++
++	ioc->ctl_cmds.status = MPT2_CMD_NOT_USED;
++	mutex_unlock(&ioc->ctl_cmds.mutex);
++	return rc;
++}
++
++/**
++ * _ctl_ioctl_main - main ioctl entry point
++ * @file - (struct file)
++ * @cmd - ioctl opcode
++ * @arg -
++ */
++static long
++_ctl_ioctl_main(struct file *file, unsigned int cmd, void __user *arg)
++{
++	enum block_state state;
++	long ret = -EINVAL;
++	unsigned long flags;
++
++	state = (file->f_flags & O_NONBLOCK) ? NON_BLOCKING :
++	    BLOCKING;
++
++	switch (cmd) {
++	case MPT2IOCINFO:
++		if (_IOC_SIZE(cmd) == sizeof(struct mpt2_ioctl_iocinfo))
++			ret = _ctl_getiocinfo(arg);
++		break;
++	case MPT2COMMAND:
++	{
++		struct mpt2_ioctl_command karg;
++		struct mpt2_ioctl_command __user *uarg;
++		struct MPT2SAS_ADAPTER *ioc;
++
++		if (copy_from_user(&karg, arg, sizeof(karg))) {
++			printk(KERN_ERR "failure at %s:%d/%s()!\n",
++			    __FILE__, __LINE__, __func__);
++			return -EFAULT;
++		}
++
++		if (_ctl_verify_adapter(karg.hdr.ioc_number, &ioc) == -1 ||
++		    !ioc)
++			return -ENODEV;
++
++		spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
++		if (ioc->shost_recovery) {
++			spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock,
++			    flags);
++			return -EAGAIN;
++		}
++		spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
++
++		if (_IOC_SIZE(cmd) == sizeof(struct mpt2_ioctl_command)) {
++			uarg = arg;
++			ret = _ctl_do_mpt_command(ioc, karg, &uarg->mf, state);
++		}
++		break;
++	}
++	case MPT2EVENTQUERY:
++		if (_IOC_SIZE(cmd) == sizeof(struct mpt2_ioctl_eventquery))
++			ret = _ctl_eventquery(arg);
++		break;
++	case MPT2EVENTENABLE:
++		if (_IOC_SIZE(cmd) == sizeof(struct mpt2_ioctl_eventenable))
++			ret = _ctl_eventenable(arg);
++		break;
++	case MPT2EVENTREPORT:
++		ret = _ctl_eventreport(arg);
++		break;
++	case MPT2HARDRESET:
++		if (_IOC_SIZE(cmd) == sizeof(struct mpt2_ioctl_diag_reset))
++			ret = _ctl_do_reset(arg);
++		break;
++	case MPT2BTDHMAPPING:
++		if (_IOC_SIZE(cmd) == sizeof(struct mpt2_ioctl_btdh_mapping))
++			ret = _ctl_btdh_mapping(arg);
++		break;
++	case MPT2DIAGREGISTER:
++		if (_IOC_SIZE(cmd) == sizeof(struct mpt2_diag_register))
++			ret = _ctl_diag_register(arg, state);
++		break;
++	case MPT2DIAGUNREGISTER:
++		if (_IOC_SIZE(cmd) == sizeof(struct mpt2_diag_unregister))
++			ret = _ctl_diag_unregister(arg);
++		break;
++	case MPT2DIAGQUERY:
++		if (_IOC_SIZE(cmd) == sizeof(struct mpt2_diag_query))
++			ret = _ctl_diag_query(arg);
++		break;
++	case MPT2DIAGRELEASE:
++		if (_IOC_SIZE(cmd) == sizeof(struct mpt2_diag_release))
++			ret = _ctl_diag_release(arg, state);
++		break;
++	case MPT2DIAGREADBUFFER:
++		if (_IOC_SIZE(cmd) == sizeof(struct mpt2_diag_read_buffer))
++			ret = _ctl_diag_read_buffer(arg, state);
++		break;
++	default:
++	{
++		struct mpt2_ioctl_command karg;
++		struct MPT2SAS_ADAPTER *ioc;
++
++		if (copy_from_user(&karg, arg, sizeof(karg))) {
++			printk(KERN_ERR "failure at %s:%d/%s()!\n",
++			    __FILE__, __LINE__, __func__);
++			return -EFAULT;
++		}
++
++		if (_ctl_verify_adapter(karg.hdr.ioc_number, &ioc) == -1 ||
++		    !ioc)
++			return -ENODEV;
++
++		dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT
++		    "unsupported ioctl opcode(0x%08x)\n", ioc->name, cmd));
++		break;
++	}
++	}
++	return ret;
++}
++
++/**
++ * _ctl_ioctl - main ioctl entry point (unlocked)
++ * @file - (struct file)
++ * @cmd - ioctl opcode
++ * @arg -
++ */
++static long
++_ctl_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
++{
++	long ret;
++	lock_kernel();
++	ret = _ctl_ioctl_main(file, cmd, (void __user *)arg);
++	unlock_kernel();
++	return ret;
++}
++
++#ifdef CONFIG_COMPAT
++/**
++ * _ctl_compat_mpt_command - convert 32bit pointers to 64bit.
++ * @file - (struct file)
++ * @cmd - ioctl opcode
++ * @arg - (struct mpt2_ioctl_command32)
++ *
++ * MPT2COMMAND32 - Handle 32bit applications running on 64bit os.
++ */
++static long
++_ctl_compat_mpt_command(struct file *file, unsigned cmd, unsigned long arg)
++{
++	struct mpt2_ioctl_command32 karg32;
++	struct mpt2_ioctl_command32 __user *uarg;
++	struct mpt2_ioctl_command karg;
++	struct MPT2SAS_ADAPTER *ioc;
++	enum block_state state;
++	unsigned long flags;
++
++	if (_IOC_SIZE(cmd) != sizeof(struct mpt2_ioctl_command32))
++		return -EINVAL;
++
++	uarg = (struct mpt2_ioctl_command32 __user *) arg;
++
++	if (copy_from_user(&karg32, (char __user *)arg, sizeof(karg32))) {
++		printk(KERN_ERR "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		return -EFAULT;
++	}
++	if (_ctl_verify_adapter(karg32.hdr.ioc_number, &ioc) == -1 || !ioc)
++		return -ENODEV;
++
++	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
++	if (ioc->shost_recovery) {
++		spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock,
++		    flags);
++		return -EAGAIN;
++	}
++	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
++
++	memset(&karg, 0, sizeof(struct mpt2_ioctl_command));
++	karg.hdr.ioc_number = karg32.hdr.ioc_number;
++	karg.hdr.port_number = karg32.hdr.port_number;
++	karg.hdr.max_data_size = karg32.hdr.max_data_size;
++	karg.timeout = karg32.timeout;
++	karg.max_reply_bytes = karg32.max_reply_bytes;
++	karg.data_in_size = karg32.data_in_size;
++	karg.data_out_size = karg32.data_out_size;
++	karg.max_sense_bytes = karg32.max_sense_bytes;
++	karg.data_sge_offset = karg32.data_sge_offset;
++	memcpy(&karg.reply_frame_buf_ptr, &karg32.reply_frame_buf_ptr,
++	    sizeof(uint32_t));
++	memcpy(&karg.data_in_buf_ptr, &karg32.data_in_buf_ptr,
++	    sizeof(uint32_t));
++	memcpy(&karg.data_out_buf_ptr, &karg32.data_out_buf_ptr,
++	    sizeof(uint32_t));
++	memcpy(&karg.sense_data_ptr, &karg32.sense_data_ptr,
++	    sizeof(uint32_t));
++	state = (file->f_flags & O_NONBLOCK) ? NON_BLOCKING : BLOCKING;
++	return _ctl_do_mpt_command(ioc, karg, &uarg->mf, state);
++}
++
++/**
++ * _ctl_ioctl_compat - main ioctl entry point (compat)
++ * @file -
++ * @cmd -
++ * @arg -
++ *
++ * This routine handles 32 bit applications in 64bit os.
++ */
++static long
++_ctl_ioctl_compat(struct file *file, unsigned cmd, unsigned long arg)
++{
++	long ret;
++	lock_kernel();
++	if (cmd == MPT2COMMAND32)
++		ret = _ctl_compat_mpt_command(file, cmd, arg);
++	else
++		ret = _ctl_ioctl_main(file, cmd, (void __user *)arg);
++	unlock_kernel();
++	return ret;
++}
++#endif
++
++/* scsi host attributes */
++
++/**
++ * _ctl_version_fw_show - firmware version
++ * @cdev - pointer to embedded class device
++ * @buf - the buffer returned
++ *
++ * A sysfs 'read-only' shost attribute.
++ */
++static ssize_t
++_ctl_version_fw_show(struct device *cdev, struct device_attribute *attr,
++    char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
++
++	return snprintf(buf, PAGE_SIZE, "%02d.%02d.%02d.%02d\n",
++	    (ioc->facts.FWVersion.Word & 0xFF000000) >> 24,
++	    (ioc->facts.FWVersion.Word & 0x00FF0000) >> 16,
++	    (ioc->facts.FWVersion.Word & 0x0000FF00) >> 8,
++	    ioc->facts.FWVersion.Word & 0x000000FF);
++}
++static DEVICE_ATTR(version_fw, S_IRUGO, _ctl_version_fw_show, NULL);
++
++/**
++ * _ctl_version_bios_show - bios version
++ * @cdev - pointer to embedded class device
++ * @buf - the buffer returned
++ *
++ * A sysfs 'read-only' shost attribute.
++ */
++static ssize_t
++_ctl_version_bios_show(struct device *cdev, struct device_attribute *attr,
++    char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
++
++	u32 version = le32_to_cpu(ioc->bios_pg3.BiosVersion);
++
++	return snprintf(buf, PAGE_SIZE, "%02d.%02d.%02d.%02d\n",
++	    (version & 0xFF000000) >> 24,
++	    (version & 0x00FF0000) >> 16,
++	    (version & 0x0000FF00) >> 8,
++	    version & 0x000000FF);
++}
++static DEVICE_ATTR(version_bios, S_IRUGO, _ctl_version_bios_show, NULL);
++
++/**
++ * _ctl_version_mpi_show - MPI (message passing interface) version
++ * @cdev - pointer to embedded class device
++ * @buf - the buffer returned
++ *
++ * A sysfs 'read-only' shost attribute.
++ */
++static ssize_t
++_ctl_version_mpi_show(struct device *cdev, struct device_attribute *attr,
++    char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
++
++	return snprintf(buf, PAGE_SIZE, "%03x.%02x\n",
++	    ioc->facts.MsgVersion, ioc->facts.HeaderVersion >> 8);
++}
++static DEVICE_ATTR(version_mpi, S_IRUGO, _ctl_version_mpi_show, NULL);
++
++/**
++ * _ctl_version_product_show - product name
++ * @cdev - pointer to embedded class device
++ * @buf - the buffer returned
++ *
++ * A sysfs 'read-only' shost attribute.
++ */
++static ssize_t
++_ctl_version_product_show(struct device *cdev, struct device_attribute *attr,
++    char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
++
++	return snprintf(buf, 16, "%s\n", ioc->manu_pg0.ChipName);
++}
++static DEVICE_ATTR(version_product, S_IRUGO,
++   _ctl_version_product_show, NULL);
++
++/**
++ * _ctl_version_nvdata_persistent_show - ndvata persistent version
++ * @cdev - pointer to embedded class device
++ * @buf - the buffer returned
++ *
++ * A sysfs 'read-only' shost attribute.
++ */
++static ssize_t
++_ctl_version_nvdata_persistent_show(struct device *cdev,
++    struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
++
++	return snprintf(buf, PAGE_SIZE, "%02xh\n",
++	    le16_to_cpu(ioc->iounit_pg0.NvdataVersionPersistent.Word));
++}
++static DEVICE_ATTR(version_nvdata_persistent, S_IRUGO,
++    _ctl_version_nvdata_persistent_show, NULL);
++
++/**
++ * _ctl_version_nvdata_default_show - nvdata default version
++ * @cdev - pointer to embedded class device
++ * @buf - the buffer returned
++ *
++ * A sysfs 'read-only' shost attribute.
++ */
++static ssize_t
++_ctl_version_nvdata_default_show(struct device *cdev,
++    struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
++
++	return snprintf(buf, PAGE_SIZE, "%02xh\n",
++	    le16_to_cpu(ioc->iounit_pg0.NvdataVersionDefault.Word));
++}
++static DEVICE_ATTR(version_nvdata_default, S_IRUGO,
++    _ctl_version_nvdata_default_show, NULL);
++
++/**
++ * _ctl_board_name_show - board name
++ * @cdev - pointer to embedded class device
++ * @buf - the buffer returned
++ *
++ * A sysfs 'read-only' shost attribute.
++ */
++static ssize_t
++_ctl_board_name_show(struct device *cdev, struct device_attribute *attr,
++    char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
++
++	return snprintf(buf, 16, "%s\n", ioc->manu_pg0.BoardName);
++}
++static DEVICE_ATTR(board_name, S_IRUGO, _ctl_board_name_show, NULL);
++
++/**
++ * _ctl_board_assembly_show - board assembly name
++ * @cdev - pointer to embedded class device
++ * @buf - the buffer returned
++ *
++ * A sysfs 'read-only' shost attribute.
++ */
++static ssize_t
++_ctl_board_assembly_show(struct device *cdev, struct device_attribute *attr,
++    char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
++
++	return snprintf(buf, 16, "%s\n", ioc->manu_pg0.BoardAssembly);
++}
++static DEVICE_ATTR(board_assembly, S_IRUGO,
++    _ctl_board_assembly_show, NULL);
++
++/**
++ * _ctl_board_tracer_show - board tracer number
++ * @cdev - pointer to embedded class device
++ * @buf - the buffer returned
++ *
++ * A sysfs 'read-only' shost attribute.
++ */
++static ssize_t
++_ctl_board_tracer_show(struct device *cdev, struct device_attribute *attr,
++    char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
++
++	return snprintf(buf, 16, "%s\n", ioc->manu_pg0.BoardTracerNumber);
++}
++static DEVICE_ATTR(board_tracer, S_IRUGO,
++    _ctl_board_tracer_show, NULL);
++
++/**
++ * _ctl_io_delay_show - io missing delay
++ * @cdev - pointer to embedded class device
++ * @buf - the buffer returned
++ *
++ * This is for firmware implemention for deboucing device
++ * removal events.
++ *
++ * A sysfs 'read-only' shost attribute.
++ */
++static ssize_t
++_ctl_io_delay_show(struct device *cdev, struct device_attribute *attr,
++    char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
++
++	return snprintf(buf, PAGE_SIZE, "%02d\n", ioc->io_missing_delay);
++}
++static DEVICE_ATTR(io_delay, S_IRUGO,
++    _ctl_io_delay_show, NULL);
++
++/**
++ * _ctl_device_delay_show - device missing delay
++ * @cdev - pointer to embedded class device
++ * @buf - the buffer returned
++ *
++ * This is for firmware implemention for deboucing device
++ * removal events.
++ *
++ * A sysfs 'read-only' shost attribute.
++ */
++static ssize_t
++_ctl_device_delay_show(struct device *cdev, struct device_attribute *attr,
++    char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
++
++	return snprintf(buf, PAGE_SIZE, "%02d\n", ioc->device_missing_delay);
++}
++static DEVICE_ATTR(device_delay, S_IRUGO,
++    _ctl_device_delay_show, NULL);
++
++/**
++ * _ctl_fw_queue_depth_show - global credits
++ * @cdev - pointer to embedded class device
++ * @buf - the buffer returned
++ *
++ * This is firmware queue depth limit
++ *
++ * A sysfs 'read-only' shost attribute.
++ */
++static ssize_t
++_ctl_fw_queue_depth_show(struct device *cdev, struct device_attribute *attr,
++    char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
++
++	return snprintf(buf, PAGE_SIZE, "%02d\n", ioc->facts.RequestCredit);
++}
++static DEVICE_ATTR(fw_queue_depth, S_IRUGO,
++    _ctl_fw_queue_depth_show, NULL);
++
++/**
++ * _ctl_sas_address_show - sas address
++ * @cdev - pointer to embedded class device
++ * @buf - the buffer returned
++ *
++ * This is the controller sas address
++ *
++ * A sysfs 'read-only' shost attribute.
++ */
++static ssize_t
++_ctl_host_sas_address_show(struct device *cdev, struct device_attribute *attr,
++    char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
++
++	return snprintf(buf, PAGE_SIZE, "0x%016llx\n",
++	    (unsigned long long)ioc->sas_hba.sas_address);
++}
++static DEVICE_ATTR(host_sas_address, S_IRUGO,
++    _ctl_host_sas_address_show, NULL);
++
++/**
++ * _ctl_logging_level_show - logging level
++ * @cdev - pointer to embedded class device
++ * @buf - the buffer returned
++ *
++ * A sysfs 'read/write' shost attribute.
++ */
++static ssize_t
++_ctl_logging_level_show(struct device *cdev, struct device_attribute *attr,
++    char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
++
++	return snprintf(buf, PAGE_SIZE, "%08xh\n", ioc->logging_level);
++}
++static ssize_t
++_ctl_logging_level_store(struct device *cdev, struct device_attribute *attr,
++    const char *buf, size_t count)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
++	int val = 0;
++
++	if (sscanf(buf, "%x", &val) != 1)
++		return -EINVAL;
++
++	ioc->logging_level = val;
++	printk(MPT2SAS_INFO_FMT "logging_level=%08xh\n", ioc->name,
++	    ioc->logging_level);
++	return strlen(buf);
++}
++static DEVICE_ATTR(logging_level, S_IRUGO | S_IWUSR,
++    _ctl_logging_level_show, _ctl_logging_level_store);
++
++struct device_attribute *mpt2sas_host_attrs[] = {
++	&dev_attr_version_fw,
++	&dev_attr_version_bios,
++	&dev_attr_version_mpi,
++	&dev_attr_version_product,
++	&dev_attr_version_nvdata_persistent,
++	&dev_attr_version_nvdata_default,
++	&dev_attr_board_name,
++	&dev_attr_board_assembly,
++	&dev_attr_board_tracer,
++	&dev_attr_io_delay,
++	&dev_attr_device_delay,
++	&dev_attr_logging_level,
++	&dev_attr_fw_queue_depth,
++	&dev_attr_host_sas_address,
++	NULL,
++};
++
++/* device attributes */
++
++/**
++ * _ctl_device_sas_address_show - sas address
++ * @cdev - pointer to embedded class device
++ * @buf - the buffer returned
++ *
++ * This is the sas address for the target
++ *
++ * A sysfs 'read-only' shost attribute.
++ */
++static ssize_t
++_ctl_device_sas_address_show(struct device *dev, struct device_attribute *attr,
++    char *buf)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	struct MPT2SAS_DEVICE *sas_device_priv_data = sdev->hostdata;
++
++	return snprintf(buf, PAGE_SIZE, "0x%016llx\n",
++	    (unsigned long long)sas_device_priv_data->sas_target->sas_address);
++}
++static DEVICE_ATTR(sas_address, S_IRUGO, _ctl_device_sas_address_show, NULL);
++
++/**
++ * _ctl_device_handle_show - device handle
++ * @cdev - pointer to embedded class device
++ * @buf - the buffer returned
++ *
++ * This is the firmware assigned device handle
++ *
++ * A sysfs 'read-only' shost attribute.
++ */
++static ssize_t
++_ctl_device_handle_show(struct device *dev, struct device_attribute *attr,
++    char *buf)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	struct MPT2SAS_DEVICE *sas_device_priv_data = sdev->hostdata;
++
++	return snprintf(buf, PAGE_SIZE, "0x%04x\n",
++	    sas_device_priv_data->sas_target->handle);
++}
++static DEVICE_ATTR(sas_device_handle, S_IRUGO, _ctl_device_handle_show, NULL);
++
++struct device_attribute *mpt2sas_dev_attrs[] = {
++	&dev_attr_sas_address,
++	&dev_attr_sas_device_handle,
++	NULL,
++};
++
++static const struct file_operations ctl_fops = {
++	.owner = THIS_MODULE,
++	.unlocked_ioctl = _ctl_ioctl,
++	.release = _ctl_release,
++	.poll = _ctl_poll,
++	.fasync = _ctl_fasync,
++#ifdef CONFIG_COMPAT
++	.compat_ioctl = _ctl_ioctl_compat,
++#endif
++};
++
++static struct miscdevice ctl_dev = {
++	.minor  = MPT2SAS_MINOR,
++	.name   = MPT2SAS_DEV_NAME,
++	.fops   = &ctl_fops,
++};
++
++/**
++ * ctl_init - main entry point for ctl.
++ *
++ */
++void
++ctl_init(void)
++{
++	async_queue = NULL;
++	if (misc_register(&ctl_dev) < 0)
++		printk(KERN_ERR "%s can't register misc device [minor=%d]\n",
++		    MPT2SAS_DRIVER_NAME, MPT2SAS_MINOR);
++
++	init_waitqueue_head(&ctl_poll_wait);
++}
++
++/**
++ * ctl_exit - exit point for ctl
++ *
++ */
++void
++ctl_exit(void)
++{
++	struct MPT2SAS_ADAPTER *ioc;
++	int i;
++
++	list_for_each_entry(ioc, &ioc_list, list) {
++
++		/* free memory associated to diag buffers */
++		for (i = 0; i < MPI2_DIAG_BUF_TYPE_COUNT; i++) {
++			if (!ioc->diag_buffer[i])
++				continue;
++			pci_free_consistent(ioc->pdev, ioc->diag_buffer_sz[i],
++			    ioc->diag_buffer[i], ioc->diag_buffer_dma[i]);
++			ioc->diag_buffer[i] = NULL;
++			ioc->diag_buffer_status[i] = 0;
++		}
++
++		kfree(ioc->event_log);
++	}
++	misc_deregister(&ctl_dev);
++}
++
+--- a/drivers/scsi/mpt2sas/mpt2sas_ctl.h	1969-12-31 17:00:00.000000000 -0700
++++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.h	2009-03-03 10:29:13.000000000 -0700
+@@ -0,0 +1,416 @@
++/*
++ * Management Module Support for MPT (Message Passing Technology) based
++ * controllers
++ *
++ * This code is based on drivers/scsi/mpt2sas/mpt2_ctl.h
 + * Copyright (C) 2007-2008  LSI Corporation
 + *  (mailto:DL-MPTFusionLinux@lsi.com)
 + *
@@ -3467,739 +2579,375 @@ Signed-off-by: Eric Moore <eric.moore@lsi.com>
 + * USA.
 + */
 +
-+#ifndef MPT2SAS_BASE_H_INCLUDED
-+#define MPT2SAS_BASE_H_INCLUDED
++#ifndef MPT2SAS_CTL_H_INCLUDED
++#define MPT2SAS_CTL_H_INCLUDED
 +
-+#include "mpi/mpi2_type.h"
-+#include "mpi/mpi2.h"
-+#include "mpi/mpi2_ioc.h"
-+#include "mpi/mpi2_cnfg.h"
-+#include "mpi/mpi2_init.h"
-+#include "mpi/mpi2_raid.h"
-+#include "mpi/mpi2_tool.h"
-+#include "mpi/mpi2_sas.h"
-+
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_host.h>
-+#include <scsi/scsi_tcq.h>
-+#include <scsi/scsi_transport_sas.h>
-+#include <scsi/scsi_dbg.h>
-+
-+#include "mpt2sas_debug.h"
-+
-+/* driver versioning info */
-+#define MPT2SAS_DRIVER_NAME		"mpt2sas"
-+#define MPT2SAS_AUTHOR	"LSI Corporation <DL-MPTFusionLinux@lsi.com>"
-+#define MPT2SAS_DESCRIPTION	"LSI MPT Fusion SAS 2.0 Device Driver"
-+#define MPT2SAS_DRIVER_VERSION		"00.100.11.11"
-+#define MPT2SAS_MAJOR_VERSION		00
-+#define MPT2SAS_MINOR_VERSION		100
-+#define MPT2SAS_BUILD_VERSION		11
-+#define MPT2SAS_RELEASE_VERSION		11
-+
-+/*
-+ * Set MPT2SAS_SG_DEPTH value based on user input.
-+ */
-+#ifdef CONFIG_SCSI_MPT2SAS_MAX_SGE
-+#if     CONFIG_SCSI_MPT2SAS_MAX_SGE  < 16
-+#define MPT2SAS_SG_DEPTH       16
-+#elif CONFIG_SCSI_MPT2SAS_MAX_SGE  > 128
-+#define MPT2SAS_SG_DEPTH       128
-+#else
-+#define MPT2SAS_SG_DEPTH       CONFIG_SCSI_MPT2SAS_MAX_SGE
-+#endif
-+#else
-+#define MPT2SAS_SG_DEPTH       128 /* MAX_HW_SEGMENTS */
++#ifdef __KERNEL__
++#include <linux/miscdevice.h>
 +#endif
 +
-+
-+/*
-+ * Generic Defines
-+ */
-+#define MPT2SAS_SATA_QUEUE_DEPTH	32
-+#define MPT2SAS_SAS_QUEUE_DEPTH		254
-+#define MPT2SAS_RAID_QUEUE_DEPTH	128
-+
-+#define MPT_NAME_LENGTH			32	/* generic length of strings */
-+#define MPT_STRING_LENGTH		64
-+
-+#define	MPT_MAX_CALLBACKS		16
-+
-+#define	 CAN_SLEEP			1
-+#define  NO_SLEEP			0
-+
-+#define INTERNAL_CMDS_COUNT		10	/* reserved cmds */
-+
-+#define MPI2_HIM_MASK			0xFFFFFFFF /* mask every bit*/
-+
-+#define MPT2SAS_INVALID_DEVICE_HANDLE	0xFFFF
-+
-+
-+/*
-+ * reset phases
-+ */
-+#define MPT2_IOC_PRE_RESET		1 /* prior to host reset */
-+#define MPT2_IOC_AFTER_RESET		2 /* just after host reset */
-+#define MPT2_IOC_DONE_RESET		3 /* links re-initialized */
-+
-+/*
-+ * logging format
-+ */
-+#define MPT2SAS_FMT			"%s: "
-+#define MPT2SAS_DEBUG_FMT		KERN_DEBUG MPT2SAS_FMT
-+#define MPT2SAS_INFO_FMT		KERN_INFO MPT2SAS_FMT
-+#define MPT2SAS_NOTE_FMT		KERN_NOTICE MPT2SAS_FMT
-+#define MPT2SAS_WARN_FMT		KERN_WARNING MPT2SAS_FMT
-+#define MPT2SAS_ERR_FMT			KERN_ERR MPT2SAS_FMT
-+
-+/*
-+ * per target private data
-+ */
-+#define MPT_TARGET_FLAGS_RAID_COMPONENT	0x01
-+#define MPT_TARGET_FLAGS_VOLUME		0x02
-+#define MPT_TARGET_FLAGS_DELETED	0x04
++#define MPT2SAS_DEV_NAME	"mpt2ctl"
++#define MPT2_MAGIC_NUMBER	'm'
++#define MPT2_IOCTL_DEFAULT_TIMEOUT (10) /* in seconds */
 +
 +/**
-+ * struct MPT2SAS_TARGET - starget private hostdata
-+ * @starget: starget object
-+ * @sas_address: target sas address
-+ * @handle: device handle
-+ * @num_luns: number luns
-+ * @flags: MPT_TARGET_FLAGS_XXX flags
-+ * @deleted: target flaged for deletion
-+ * @tm_busy: target is busy with TM request.
++ * IOCTL opcodes
 + */
-+struct MPT2SAS_TARGET {
-+	struct scsi_target *starget;
-+	u64	sas_address;
-+	u16	handle;
-+	int	num_luns;
-+	u32	flags;
-+	u8	deleted;
-+	u8	tm_busy;
-+};
++#define MPT2IOCINFO	_IOWR(MPT2_MAGIC_NUMBER, 17, \
++    struct mpt2_ioctl_iocinfo)
++#define MPT2COMMAND	_IOWR(MPT2_MAGIC_NUMBER, 20, \
++    struct mpt2_ioctl_command)
++#ifdef CONFIG_COMPAT
++#define MPT2COMMAND32	_IOWR(MPT2_MAGIC_NUMBER, 20, \
++    struct mpt2_ioctl_command32)
++#endif
++#define MPT2EVENTQUERY	_IOWR(MPT2_MAGIC_NUMBER, 21, \
++    struct mpt2_ioctl_eventquery)
++#define MPT2EVENTENABLE	_IOWR(MPT2_MAGIC_NUMBER, 22, \
++    struct mpt2_ioctl_eventenable)
++#define MPT2EVENTREPORT	_IOWR(MPT2_MAGIC_NUMBER, 23, \
++    struct mpt2_ioctl_eventreport)
++#define MPT2HARDRESET	_IOWR(MPT2_MAGIC_NUMBER, 24, \
++    struct mpt2_ioctl_diag_reset)
++#define MPT2BTDHMAPPING	_IOWR(MPT2_MAGIC_NUMBER, 31, \
++    struct mpt2_ioctl_btdh_mapping)
 +
-+/*
-+ * per device private data
-+ */
-+#define MPT_DEVICE_FLAGS_INIT		0x01
-+#define MPT_DEVICE_TLR_ON		0x02
-+
-+/**
-+ * struct MPT2SAS_DEVICE - sdev private hostdata
-+ * @sas_target: starget private hostdata
-+ * @lun: lun number
-+ * @flags: MPT_DEVICE_XXX flags
-+ * @configured_lun: lun is configured
-+ * @block: device is in SDEV_BLOCK state
-+ * @tlr_snoop_check: flag used in determining whether to disable TLR
-+ */
-+struct MPT2SAS_DEVICE {
-+	struct MPT2SAS_TARGET *sas_target;
-+	unsigned int	lun;
-+	u32	flags;
-+	u8	configured_lun;
-+	u8	block;
-+	u8	tlr_snoop_check;
-+};
-+
-+#define MPT2_CMD_NOT_USED	0x8000	/* free */
-+#define MPT2_CMD_COMPLETE	0x0001	/* completed */
-+#define MPT2_CMD_PENDING	0x0002	/* pending */
-+#define MPT2_CMD_REPLY_VALID	0x0004	/* reply is valid */
-+#define MPT2_CMD_RESET		0x0008	/* host reset dropped the command */
++/* diag buffer support */
++#define MPT2DIAGREGISTER _IOWR(MPT2_MAGIC_NUMBER, 26, \
++    struct mpt2_diag_register)
++#define MPT2DIAGRELEASE	_IOWR(MPT2_MAGIC_NUMBER, 27, \
++    struct mpt2_diag_release)
++#define MPT2DIAGUNREGISTER _IOWR(MPT2_MAGIC_NUMBER, 28, \
++    struct mpt2_diag_unregister)
++#define MPT2DIAGQUERY	_IOWR(MPT2_MAGIC_NUMBER, 29, \
++    struct mpt2_diag_query)
++#define MPT2DIAGREADBUFFER _IOWR(MPT2_MAGIC_NUMBER, 30, \
++    struct mpt2_diag_read_buffer)
 +
 +/**
-+ * struct _internal_cmd - internal commands struct
-+ * @mutex: mutex
-+ * @done: completion
-+ * @reply: reply message pointer
-+ * @status: MPT2_CMD_XXX status
-+ * @smid: system message id
++ * struct mpt2_ioctl_header - main header structure
++ * @ioc_number -  IOC unit number
++ * @port_number - IOC port number
++ * @max_data_size - maximum number bytes to transfer on read
 + */
-+struct _internal_cmd {
-+	struct mutex mutex;
-+	struct completion done;
-+	void 	*reply;
-+	u16	status;
-+	u16	smid;
-+};
-+
-+/*
-+ * SAS Topology Structures
-+ */
-+
-+/**
-+ * struct _sas_device - attached device information
-+ * @list: sas device list
-+ * @starget: starget object
-+ * @sas_address: device sas address
-+ * @device_name: retrieved from the SAS IDENTIFY frame.
-+ * @handle: device handle
-+ * @parent_handle: handle to parent device
-+ * @enclosure_handle: enclosure handle
-+ * @enclosure_logical_id: enclosure logical identifier
-+ * @volume_handle: volume handle (valid when hidden raid member)
-+ * @volume_wwid: volume unique identifier
-+ * @device_info: bitfield provides detailed info about the device
-+ * @id: target id
-+ * @channel: target channel
-+ * @slot: number number
-+ * @hidden_raid_component: set to 1 when this is a raid member
-+ * @responding: used in _scsih_sas_device_mark_responding
-+ */
-+struct _sas_device {
-+	struct list_head list;
-+	struct scsi_target *starget;
-+	u64	sas_address;
-+	u64	device_name;
-+	u16	handle;
-+	u16	parent_handle;
-+	u16	enclosure_handle;
-+	u64	enclosure_logical_id;
-+	u16	volume_handle;
-+	u64	volume_wwid;
-+	u32	device_info;
-+	int	id;
-+	int	channel;
-+	u16	slot;
-+	u8	hidden_raid_component;
-+	u8	responding;
++struct mpt2_ioctl_header {
++	uint32_t ioc_number;
++	uint32_t port_number;
++	uint32_t max_data_size;
 +};
 +
 +/**
-+ * struct _raid_device - raid volume link list
-+ * @list: sas device list
-+ * @starget: starget object
-+ * @sdev: scsi device struct (volumes are single lun)
-+ * @wwid: unique identifier for the volume
-+ * @handle: device handle
-+ * @id: target id
-+ * @channel: target channel
-+ * @volume_type: the raid level
-+ * @device_info: bitfield provides detailed info about the hidden components
-+ * @num_pds: number of hidden raid components
-+ * @responding: used in _scsih_raid_device_mark_responding
++ * struct mpt2_ioctl_diag_reset - diagnostic reset
++ * @hdr - generic header
 + */
-+struct _raid_device {
-+	struct list_head list;
-+	struct scsi_target *starget;
-+	struct scsi_device *sdev;
-+	u64	wwid;
-+	u16	handle;
-+	int	id;
-+	int	channel;
-+	u8	volume_type;
-+	u32	device_info;
-+	u8	num_pds;
-+	u8	responding;
++struct mpt2_ioctl_diag_reset {
++	struct mpt2_ioctl_header hdr;
++};
++
++
++/**
++ * struct mpt2_ioctl_pci_info - pci device info
++ * @device - pci device id
++ * @function - pci function id
++ * @bus - pci bus id
++ * @segment_id - pci segment id
++ */
++struct mpt2_ioctl_pci_info {
++	union {
++		struct {
++			uint32_t device:5;
++			uint32_t function:3;
++			uint32_t bus:24;
++		} bits;
++		uint32_t  word;
++	} u;
++	uint32_t segment_id;
++};
++
++
++#define MPT2_IOCTL_INTERFACE_SCSI	(0x00)
++#define MPT2_IOCTL_INTERFACE_FC		(0x01)
++#define MPT2_IOCTL_INTERFACE_FC_IP	(0x02)
++#define MPT2_IOCTL_INTERFACE_SAS	(0x03)
++#define MPT2_IOCTL_INTERFACE_SAS2	(0x04)
++#define MPT2_IOCTL_VERSION_LENGTH	(32)
++
++/**
++ * struct mpt2_ioctl_iocinfo - generic controller info
++ * @hdr - generic header
++ * @adapter_type - type of adapter (spi, fc, sas)
++ * @port_number - port number
++ * @pci_id - PCI Id
++ * @hw_rev - hardware revision
++ * @sub_system_device - PCI subsystem Device ID
++ * @sub_system_vendor - PCI subsystem Vendor ID
++ * @rsvd0 - reserved
++ * @firmware_version - firmware version
++ * @bios_version - BIOS version
++ * @driver_version - driver version - 32 ASCII characters
++ * @rsvd1 - reserved
++ * @scsi_id - scsi id of adapter 0
++ * @rsvd2 - reserved
++ * @pci_information - pci info (2nd revision)
++ */
++struct mpt2_ioctl_iocinfo {
++	struct mpt2_ioctl_header hdr;
++	uint32_t adapter_type;
++	uint32_t port_number;
++	uint32_t pci_id;
++	uint32_t hw_rev;
++	uint32_t subsystem_device;
++	uint32_t subsystem_vendor;
++	uint32_t rsvd0;
++	uint32_t firmware_version;
++	uint32_t bios_version;
++	uint8_t driver_version[MPT2_IOCTL_VERSION_LENGTH];
++	uint8_t rsvd1;
++	uint8_t scsi_id;
++	uint16_t rsvd2;
++	struct mpt2_ioctl_pci_info pci_information;
++};
++
++
++/* number of event log entries */
++#define MPT2SAS_CTL_EVENT_LOG_SIZE (50)
++
++/**
++ * struct mpt2_ioctl_eventquery - query event count and type
++ * @hdr - generic header
++ * @event_entries - number of events returned by get_event_report
++ * @rsvd - reserved
++ * @event_types - type of events currently being captured
++ */
++struct mpt2_ioctl_eventquery {
++	struct mpt2_ioctl_header hdr;
++	uint16_t event_entries;
++	uint16_t rsvd;
++	uint32_t event_types[MPI2_EVENT_NOTIFY_EVENTMASK_WORDS];
 +};
 +
 +/**
-+ * struct _boot_device - boot device info
-+ * @is_raid: flag to indicate whether this is volume
-+ * @device: holds pointer for either struct _sas_device or
-+ *     struct _raid_device
++ * struct mpt2_ioctl_eventenable - enable/disable event capturing
++ * @hdr - generic header
++ * @event_types - toggle off/on type of events to be captured
 + */
-+struct _boot_device {
-+	u8 is_raid;
-+	void *device;
++struct mpt2_ioctl_eventenable {
++	struct mpt2_ioctl_header hdr;
++	uint32_t event_types[4];
++};
++
++#define MPT2_EVENT_DATA_SIZE (192)
++/**
++ * struct MPT2_IOCTL_EVENTS -
++ * @event - the event that was reported
++ * @context - unique value for each event assigned by driver
++ * @data - event data returned in fw reply message
++ */
++struct MPT2_IOCTL_EVENTS {
++	uint32_t event;
++	uint32_t context;
++	uint8_t data[MPT2_EVENT_DATA_SIZE];
 +};
 +
 +/**
-+ * struct _sas_port - wide/narrow sas port information
-+ * @port_list: list of ports belonging to expander
-+ * @handle: device handle for this port
-+ * @sas_address: sas address of this port
-+ * @num_phys: number of phys belonging to this port
-+ * @remote_identify: attached device identification
-+ * @rphy: sas transport rphy object
-+ * @port: sas transport wide/narrow port object
-+ * @phy_list: _sas_phy list objects belonging to this port
++ * struct mpt2_ioctl_eventreport - returing event log
++ * @hdr - generic header
++ * @event_data - (see struct MPT2_IOCTL_EVENTS)
 + */
-+struct _sas_port {
-+	struct list_head port_list;
-+	u16	handle;
-+	u64	sas_address;
-+	u8	num_phys;
-+	struct sas_identify remote_identify;
-+	struct sas_rphy *rphy;
-+	struct sas_port *port;
-+	struct list_head phy_list;
++struct mpt2_ioctl_eventreport {
++	struct mpt2_ioctl_header hdr;
++	struct MPT2_IOCTL_EVENTS event_data[1];
 +};
 +
 +/**
-+ * struct _sas_phy - phy information
-+ * @port_siblings: list of phys belonging to a port
-+ * @identify: phy identification
-+ * @remote_identify: attached device identification
-+ * @phy: sas transport phy object
-+ * @phy_id: unique phy id
-+ * @handle: device handle for this phy
-+ * @attached_handle: device handle for attached device
++ * struct mpt2_ioctl_command - generic mpt firmware passthru ioclt
++ * @hdr - generic header
++ * @timeout - command timeout in seconds. (if zero then use driver default
++ *  value).
++ * @reply_frame_buf_ptr - reply location
++ * @data_in_buf_ptr - destination for read
++ * @data_out_buf_ptr - data source for write
++ * @sense_data_ptr - sense data location
++ * @max_reply_bytes - maximum number of reply bytes to be sent to app.
++ * @data_in_size - number bytes for data transfer in (read)
++ * @data_out_size - number bytes for data transfer out (write)
++ * @max_sense_bytes - maximum number of bytes for auto sense buffers
++ * @data_sge_offset - offset in words from the start of the request message to
++ * the first SGL
++ * @mf[1];
 + */
-+struct _sas_phy {
-+	struct list_head port_siblings;
-+	struct sas_identify identify;
-+	struct sas_identify remote_identify;
-+	struct sas_phy *phy;
-+	u8	phy_id;
-+	u16	handle;
-+	u16	attached_handle;
++struct mpt2_ioctl_command {
++	struct mpt2_ioctl_header hdr;
++	uint32_t timeout;
++	void __user *reply_frame_buf_ptr;
++	void __user *data_in_buf_ptr;
++	void __user *data_out_buf_ptr;
++	void __user *sense_data_ptr;
++	uint32_t max_reply_bytes;
++	uint32_t data_in_size;
++	uint32_t data_out_size;
++	uint32_t max_sense_bytes;
++	uint32_t data_sge_offset;
++	uint8_t mf[1];
++};
++
++#ifdef CONFIG_COMPAT
++struct mpt2_ioctl_command32 {
++	struct mpt2_ioctl_header hdr;
++	uint32_t timeout;
++	uint32_t reply_frame_buf_ptr;
++	uint32_t data_in_buf_ptr;
++	uint32_t data_out_buf_ptr;
++	uint32_t sense_data_ptr;
++	uint32_t max_reply_bytes;
++	uint32_t data_in_size;
++	uint32_t data_out_size;
++	uint32_t max_sense_bytes;
++	uint32_t data_sge_offset;
++	uint8_t mf[1];
++};
++#endif
++
++/**
++ * struct mpt2_ioctl_btdh_mapping - mapping info
++ * @hdr - generic header
++ * @id - target device identification number
++ * @bus - SCSI bus number that the target device exists on
++ * @handle - device handle for the target device
++ * @rsvd - reserved
++ *
++ * To obtain a bus/id the application sets
++ * handle to valid handle, and bus/id to 0xFFFF.
++ *
++ * To obtain the device handle the application sets
++ * bus/id valid value, and the handle to 0xFFFF.
++ */
++struct mpt2_ioctl_btdh_mapping {
++	struct mpt2_ioctl_header hdr;
++	uint32_t id;
++	uint32_t bus;
++	uint16_t handle;
++	uint16_t rsvd;
++};
++
++
++/* status bits for ioc->diag_buffer_status */
++#define MPT2_DIAG_BUFFER_IS_REGISTERED 	(0x01)
++#define MPT2_DIAG_BUFFER_IS_RELEASED 	(0x02)
++
++/* application flags for mpt2_diag_register, mpt2_diag_query */
++#define MPT2_APP_FLAGS_APP_OWNED	(0x0001)
++#define MPT2_APP_FLAGS_BUFFER_VALID	(0x0002)
++#define MPT2_APP_FLAGS_FW_BUFFER_ACCESS	(0x0004)
++
++/* flags for mpt2_diag_read_buffer */
++#define MPT2_FLAGS_REREGISTER		(0x0001)
++
++#define MPT2_PRODUCT_SPECIFIC_DWORDS 		23
++
++/**
++ * struct mpt2_diag_register - application register with driver
++ * @hdr - generic header
++ * @reserved -
++ * @buffer_type - specifies either TRACE or SNAPSHOT
++ * @application_flags - misc flags
++ * @diagnostic_flags - specifies flags affecting command processing
++ * @product_specific - product specific information
++ * @requested_buffer_size - buffers size in bytes
++ * @unique_id - tag specified by application that is used to signal ownership
++ *  of the buffer.
++ *
++ * This will allow the driver to setup any required buffers that will be
++ * needed by firmware to communicate with the driver.
++ */
++struct mpt2_diag_register {
++	struct mpt2_ioctl_header hdr;
++	uint8_t reserved;
++	uint8_t buffer_type;
++	uint16_t application_flags;
++	uint32_t diagnostic_flags;
++	uint32_t product_specific[MPT2_PRODUCT_SPECIFIC_DWORDS];
++	uint32_t requested_buffer_size;
++	uint32_t unique_id;
 +};
 +
 +/**
-+ * struct _sas_node - sas_host/expander information
-+ * @list: list of expanders
-+ * @parent_dev: parent device class
-+ * @num_phys: number phys belonging to this sas_host/expander
-+ * @sas_address: sas address of this sas_host/expander
-+ * @handle: handle for this sas_host/expander
-+ * @parent_handle: parent handle
-+ * @enclosure_handle: handle for this a member of an enclosure
-+ * @device_info: bitwise defining capabilities of this sas_host/expander
-+ * @responding: used in _scsih_expander_device_mark_responding
-+ * @phy: a list of phys that make up this sas_host/expander
-+ * @sas_port_list: list of ports attached to this sas_host/expander
++ * struct mpt2_diag_unregister - application unregister with driver
++ * @hdr - generic header
++ * @unique_id - tag uniquely identifies the buffer to be unregistered
++ *
++ * This will allow the driver to cleanup any memory allocated for diag
++ * messages and to free up any resources.
 + */
-+struct _sas_node {
-+	struct list_head list;
-+	struct device *parent_dev;
-+	u8	num_phys;
-+	u64	sas_address;
-+	u16	handle;
-+	u16	parent_handle;
-+	u16	enclosure_handle;
-+	u64	enclosure_logical_id;
-+	u8	responding;
-+	struct	_sas_phy *phy;
-+	struct list_head sas_port_list;
++struct mpt2_diag_unregister {
++	struct mpt2_ioctl_header hdr;
++	uint32_t unique_id;
 +};
 +
 +/**
-+ * enum reset_type - reset state
-+ * @FORCE_BIG_HAMMER: issue diagnostic reset
-+ * @SOFT_RESET: issue message_unit_reset, if fails to to big hammer
++ * struct mpt2_diag_query - query relevant info associated with diag buffers
++ * @hdr - generic header
++ * @reserved -
++ * @buffer_type - specifies either TRACE or SNAPSHOT
++ * @application_flags - misc flags
++ * @diagnostic_flags - specifies flags affecting command processing
++ * @product_specific - product specific information
++ * @total_buffer_size - diag buffer size in bytes
++ * @driver_added_buffer_size - size of extra space appended to end of buffer
++ * @unique_id - unique id associated with this buffer.
++ *
++ * The application will send only buffer_type and unique_id.  Driver will
++ * inspect unique_id first, if valid, fill in all the info.  If unique_id is
++ * 0x00, the driver will return info specified by Buffer Type.
 + */
-+enum reset_type {
-+	FORCE_BIG_HAMMER,
-+	SOFT_RESET,
++struct mpt2_diag_query {
++	struct mpt2_ioctl_header hdr;
++	uint8_t reserved;
++	uint8_t buffer_type;
++	uint16_t application_flags;
++	uint32_t diagnostic_flags;
++	uint32_t product_specific[MPT2_PRODUCT_SPECIFIC_DWORDS];
++	uint32_t total_buffer_size;
++	uint32_t driver_added_buffer_size;
++	uint32_t unique_id;
 +};
 +
 +/**
-+ * struct request_tracker - firmware request tracker
-+ * @smid: system message id
-+ * @scmd: scsi request pointer
-+ * @cb_idx: callback index
-+ * @chain_list: list of chains associated to this IO
-+ * @tracker_list: list of free request (ioc->free_list)
++ * struct mpt2_diag_release -  request to send Diag Release Message to firmware
++ * @hdr - generic header
++ * @unique_id - tag uniquely identifies the buffer to be released
++ *
++ * This allows ownership of the specified buffer to returned to the driver,
++ * allowing an application to read the buffer without fear that firmware is
++ * overwritting information in the buffer.
 + */
-+struct request_tracker {
-+	u16	smid;
-+	struct scsi_cmnd *scmd;
-+	u8	cb_idx;
-+	struct list_head tracker_list;
++struct mpt2_diag_release {
++	struct mpt2_ioctl_header hdr;
++	uint32_t unique_id;
 +};
-+
-+typedef void (*MPT_ADD_SGE)(void *paddr, u32 flags_length, dma_addr_t dma_addr);
 +
 +/**
-+ * struct MPT2SAS_ADAPTER - per adapter struct
-+ * @list: ioc_list
-+ * @shost: shost object
-+ * @id: unique adapter id
-+ * @pci_irq: irq number
-+ * @name: generic ioc string
-+ * @tmp_string: tmp string used for logging
-+ * @pdev: pci pdev object
-+ * @chip: memory mapped register space
-+ * @chip_phys: physical addrss prior to mapping
-+ * @pio_chip: I/O mapped register space
-+ * @logging_level: see mpt2sas_debug.h
-+ * @ir_firmware: IR firmware present
-+ * @bars: bitmask of BAR's that must be configured
-+ * @mask_interrupts: ignore interrupt
-+ * @fault_reset_work_q_name: fw fault work queue
-+ * @fault_reset_work_q: ""
-+ * @fault_reset_work: ""
-+ * @firmware_event_name: fw event work queue
-+ * @firmware_event_thread: ""
-+ * @fw_events_off: flag to turn off fw event handling
-+ * @fw_event_lock:
-+ * @fw_event_list: list of fw events
-+ * @aen_event_read_flag: event log was read
-+ * @broadcast_aen_busy: broadcast aen waiting to be serviced
-+ * @ioc_reset_in_progress: host reset in progress
-+ * @ioc_reset_in_progress_lock:
-+ * @ioc_link_reset_in_progress: phy/hard reset in progress
-+ * @ignore_loginfos: ignore loginfos during task managment
-+ * @remove_host: flag for when driver unloads, to avoid sending dev resets
-+ * @wait_for_port_enable_to_complete:
-+ * @msix_enable: flag indicating msix is enabled
-+ * @msix_vector_count: number msix vectors
-+ * @msix_table: virt address to the msix table
-+ * @msix_table_backup: backup msix table
-+ * @scsi_io_cb_idx: shost generated commands
-+ * @tm_cb_idx: task management commands
-+ * @transport_cb_idx: transport internal commands
-+ * @ctl_cb_idx: clt internal commands
-+ * @base_cb_idx: base internal commands
-+ * @config_cb_idx: base internal commands
-+ * @base_cmds:
-+ * @transport_cmds:
-+ * @tm_cmds:
-+ * @ctl_cmds:
-+ * @config_cmds:
-+ * @base_add_sg_single: handler for either 32/64 bit sgl's
-+ * @event_type: bits indicating which events to log
-+ * @event_context: unique id for each logged event
-+ * @event_log: event log pointer
-+ * @event_masks: events that are masked
-+ * @facts: static facts data
-+ * @pfacts: static port facts data
-+ * @manu_pg0: static manufacturing page 0
-+ * @bios_pg2: static bios page 2
-+ * @bios_pg3: static bios page 3
-+ * @ioc_pg8: static ioc page 8
-+ * @iounit_pg0: static iounit page 0
-+ * @iounit_pg1: static iounit page 1
-+ * @sas_hba: sas host object
-+ * @sas_expander_list: expander object list
-+ * @sas_node_lock:
-+ * @sas_device_list: sas device object list
-+ * @sas_device_init_list: sas device object list (used only at init time)
-+ * @sas_device_lock:
-+ * @io_missing_delay: time for IO completed by fw when PDR enabled
-+ * @device_missing_delay: time for device missing by fw when PDR enabled
-+ * @config_page_sz: config page size
-+ * @config_page: reserve memory for config page payload
-+ * @config_page_dma:
-+ * @sge_size: sg element size for either 32/64 bit
-+ * @request_depth: hba request queue depth
-+ * @request_sz: per request frame size
-+ * @request: pool of request frames
-+ * @request_dma:
-+ * @request_dma_sz:
-+ * @scsi_lookup: firmware request tracker list
-+ * @scsi_lookup_lock:
-+ * @free_list: free list of request
-+ * @chain: pool of chains
-+ * @pending_io_count:
-+ * @reset_wq:
-+ * @chain_dma:
-+ * @max_sges_in_main_message: number sg elements in main message
-+ * @max_sges_in_chain_message: number sg elements per chain
-+ * @chains_needed_per_io: max chains per io
-+ * @chain_offset_value_for_main_message: location 1st sg in main
-+ * @chain_depth: total chains allocated
-+ * @sense: pool of sense
-+ * @sense_dma:
-+ * @sense_dma_pool:
-+ * @reply_depth: hba reply queue depth:
-+ * @reply_sz: per reply frame size:
-+ * @reply: pool of replys:
-+ * @reply_dma:
-+ * @reply_dma_pool:
-+ * @reply_free_queue_depth: reply free depth
-+ * @reply_free: pool for reply free queue (32 bit addr)
-+ * @reply_free_dma:
-+ * @reply_free_dma_pool:
-+ * @reply_free_host_index: tail index in pool to insert free replys
-+ * @reply_post_queue_depth: reply post queue depth
-+ * @reply_post_free: pool for reply post (64bit descriptor)
-+ * @reply_post_free_dma:
-+ * @reply_post_free_dma_pool:
-+ * @reply_post_host_index: head index in the pool where FW completes IO
++ * struct mpt2_diag_read_buffer - request for copy of the diag buffer
++ * @hdr - generic header
++ * @status -
++ * @reserved -
++ * @flags - misc flags
++ * @starting_offset - starting offset within drivers buffer where to start
++ *  reading data at into the specified application buffer
++ * @bytes_to_read - number of bytes to copy from the drivers buffer into the
++ *  application buffer starting at starting_offset.
++ * @unique_id - unique id associated with this buffer.
++ * @diagnostic_data - data payload
 + */
-+struct MPT2SAS_ADAPTER {
-+	struct list_head list;
-+	struct Scsi_Host *shost;
-+	u8		id;
-+	u32		pci_irq;
-+	char		name[MPT_NAME_LENGTH];
-+	char		tmp_string[MPT_STRING_LENGTH];
-+	struct pci_dev	*pdev;
-+	Mpi2SystemInterfaceRegs_t __iomem *chip;
-+	unsigned long	chip_phys;
-+	unsigned long	pio_chip;
-+	int		logging_level;
-+	u8		ir_firmware;
-+	int		bars;
-+	u8		mask_interrupts;
-+
-+	/* fw fault handler */
-+	char		fault_reset_work_q_name[20];
-+	struct workqueue_struct *fault_reset_work_q;
-+	struct delayed_work fault_reset_work;
-+
-+	/* fw event handler */
-+	char		firmware_event_name[20];
-+	struct workqueue_struct	*firmware_event_thread;
-+	u8		fw_events_off;
-+	spinlock_t	fw_event_lock;
-+	struct list_head fw_event_list;
-+
-+	 /* misc flags */
-+	int		aen_event_read_flag;
-+	u8		broadcast_aen_busy;
-+	u8		ioc_reset_in_progress;
-+	u8		shost_recovery;
-+	spinlock_t 	ioc_reset_in_progress_lock;
-+	u8		ioc_link_reset_in_progress;
-+	u8		ignore_loginfos;
-+	u8		remove_host;
-+	u8		wait_for_port_enable_to_complete;
-+
-+	u8		msix_enable;
-+	u16		msix_vector_count;
-+	u32		*msix_table;
-+	u32		*msix_table_backup;
-+
-+	/* internal commands, callback index */
-+	u8		scsi_io_cb_idx;
-+	u8		tm_cb_idx;
-+	u8		transport_cb_idx;
-+	u8		ctl_cb_idx;
-+	u8		base_cb_idx;
-+	u8		config_cb_idx;
-+	struct _internal_cmd base_cmds;
-+	struct _internal_cmd transport_cmds;
-+	struct _internal_cmd tm_cmds;
-+	struct _internal_cmd ctl_cmds;
-+	struct _internal_cmd config_cmds;
-+
-+	MPT_ADD_SGE	base_add_sg_single;
-+
-+	/* event log */
-+	u32		event_type[MPI2_EVENT_NOTIFY_EVENTMASK_WORDS];
-+	u32		event_context;
-+	void		*event_log;
-+	u32		event_masks[MPI2_EVENT_NOTIFY_EVENTMASK_WORDS];
-+
-+	/* static config pages */
-+	Mpi2IOCFactsReply_t facts;
-+	Mpi2PortFactsReply_t *pfacts;
-+	Mpi2ManufacturingPage0_t manu_pg0;
-+	Mpi2BiosPage2_t	bios_pg2;
-+	Mpi2BiosPage3_t	bios_pg3;
-+	Mpi2IOCPage8_t ioc_pg8;
-+	Mpi2IOUnitPage0_t iounit_pg0;
-+	Mpi2IOUnitPage1_t iounit_pg1;
-+
-+	struct _boot_device req_boot_device;
-+	struct _boot_device req_alt_boot_device;
-+	struct _boot_device current_boot_device;
-+
-+	/* sas hba, expander, and device list */
-+	struct _sas_node sas_hba;
-+	struct list_head sas_expander_list;
-+	spinlock_t	sas_node_lock;
-+	struct list_head sas_device_list;
-+	struct list_head sas_device_init_list;
-+	spinlock_t	sas_device_lock;
-+	struct list_head raid_device_list;
-+	spinlock_t	raid_device_lock;
-+	u8		io_missing_delay;
-+	u16		device_missing_delay;
-+	int		sas_id;
-+
-+	/* config page */
-+	u16		config_page_sz;
-+	void 		*config_page;
-+	dma_addr_t	config_page_dma;
-+
-+	/* request */
-+	u16		sge_size;
-+	u16 		request_depth;
-+	u16		request_sz;
-+	u8		*request;
-+	dma_addr_t	request_dma;
-+	u32		request_dma_sz;
-+	struct request_tracker *scsi_lookup;
-+	spinlock_t scsi_lookup_lock;
-+	struct list_head free_list;
-+	int		pending_io_count;
-+	wait_queue_head_t reset_wq;
-+
-+	/* chain */
-+	u8		*chain;
-+	dma_addr_t	chain_dma;
-+	u16 		max_sges_in_main_message;
-+	u16		max_sges_in_chain_message;
-+	u16		chains_needed_per_io;
-+	u16		chain_offset_value_for_main_message;
-+	u16		chain_depth;
-+
-+	/* sense */
-+	u8		*sense;
-+	dma_addr_t	sense_dma;
-+	struct dma_pool *sense_dma_pool;
-+
-+	/* reply */
-+	u16		reply_sz;
-+	u8		*reply;
-+	dma_addr_t	reply_dma;
-+	struct dma_pool *reply_dma_pool;
-+
-+	/* reply free queue */
-+	u16 		reply_free_queue_depth;
-+	u32		*reply_free;
-+	dma_addr_t	reply_free_dma;
-+	struct dma_pool *reply_free_dma_pool;
-+	u32		reply_free_host_index;
-+
-+	/* reply post queue */
-+	u16 		reply_post_queue_depth;
-+	Mpi2ReplyDescriptorsUnion_t *reply_post_free;
-+	dma_addr_t	reply_post_free_dma;
-+	struct dma_pool *reply_post_free_dma_pool;
-+	u32		reply_post_host_index;
-+
-+	/* diag buffer support */
-+	u8		*diag_buffer[MPI2_DIAG_BUF_TYPE_COUNT];
-+	u32		diag_buffer_sz[MPI2_DIAG_BUF_TYPE_COUNT];
-+	dma_addr_t	diag_buffer_dma[MPI2_DIAG_BUF_TYPE_COUNT];
-+	u8		diag_buffer_status[MPI2_DIAG_BUF_TYPE_COUNT];
-+	u32		unique_id[MPI2_DIAG_BUF_TYPE_COUNT];
-+	u32		product_specific[MPI2_DIAG_BUF_TYPE_COUNT][23];
-+	u32		diagnostic_flags[MPI2_DIAG_BUF_TYPE_COUNT];
++struct mpt2_diag_read_buffer {
++	struct mpt2_ioctl_header hdr;
++	uint8_t status;
++	uint8_t reserved;
++	uint16_t flags;
++	uint32_t starting_offset;
++	uint32_t bytes_to_read;
++	uint32_t unique_id;
++	uint32_t diagnostic_data[1];
 +};
 +
-+typedef void (*MPT_CALLBACK)(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 VF_ID,
-+    u32 reply);
-+
-+
-+/* base shared API */
-+extern struct list_head ioc_list;
-+
-+int base_attach(struct MPT2SAS_ADAPTER *ioc);
-+void base_detach(struct MPT2SAS_ADAPTER *ioc);
-+int base_map_resources(struct MPT2SAS_ADAPTER *ioc);
-+void base_free_resources(struct MPT2SAS_ADAPTER *ioc);
-+int base_hard_reset_handler(struct MPT2SAS_ADAPTER *ioc, int sleep_flag,
-+    enum reset_type type);
-+
-+void *base_get_msg_frame(struct MPT2SAS_ADAPTER *ioc, u16 smid);
-+void *base_get_sense_buffer(struct MPT2SAS_ADAPTER *ioc, u16 smid);
-+void base_build_zero_len_sge(struct MPT2SAS_ADAPTER *ioc, void *paddr);
-+dma_addr_t base_get_msg_frame_dma(struct MPT2SAS_ADAPTER *ioc, u16 smid);
-+dma_addr_t base_get_sense_buffer_dma(struct MPT2SAS_ADAPTER *ioc, u16 smid);
-+
-+u16 base_get_smid(struct MPT2SAS_ADAPTER *ioc, u8 cb_idx);
-+void base_free_smid(struct MPT2SAS_ADAPTER *ioc, u16 smid);
-+void base_put_smid_scsi_io(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 vf_id,
-+    u16 handle);
-+void base_put_smid_hi_priority(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 vf_id);
-+void base_put_smid_target_assist(struct MPT2SAS_ADAPTER *ioc, u16 smid,
-+    u8 vf_id, u16 io_index);
-+void base_put_smid_default(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 vf_id);
-+void base_initialize_callback_handler(void);
-+u8 base_register_callback_handler(MPT_CALLBACK cb_func);
-+void base_release_callback_handler(u8 cb_idx);
-+
-+void base_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 VF_ID, u32 reply);
-+void *base_get_reply_virt_addr(struct MPT2SAS_ADAPTER *ioc, u32 phys_addr);
-+
-+u32 base_get_iocstate(struct MPT2SAS_ADAPTER *ioc, int cooked);
-+
-+void base_fault_info(struct MPT2SAS_ADAPTER *ioc , u16 fault_code);
-+int base_sas_iounit_control(struct MPT2SAS_ADAPTER *ioc,
-+    Mpi2SasIoUnitControlReply_t *mpi_reply, Mpi2SasIoUnitControlRequest_t
-+    *mpi_request);
-+int base_scsi_enclosure_processor(struct MPT2SAS_ADAPTER *ioc,
-+    Mpi2SepReply_t *mpi_reply, Mpi2SepRequest_t *mpi_request);
-+void scsih_issue_tm(struct MPT2SAS_ADAPTER *ioc, u16 handle, uint lun,
-+    u8 type, u16 smid_task, ulong timeout);
-+void scsih_set_tm_flag(struct MPT2SAS_ADAPTER *ioc, u16 handle);
-+void scsih_clear_tm_flag(struct MPT2SAS_ADAPTER *ioc, u16 handle);
-+
-+struct _sas_node *scsih_expander_find_by_handle(struct MPT2SAS_ADAPTER *ioc,
-+    u16 handle);
-+struct _sas_node *scsih_expander_find_by_sas_address(struct MPT2SAS_ADAPTER
-+    *ioc, u64 sas_address);
-+struct _sas_device *scsih_sas_device_find_by_sas_address(
-+    struct MPT2SAS_ADAPTER *ioc, u64 sas_address);
-+
-+void base_validate_event_type(struct MPT2SAS_ADAPTER *ioc, u32 *event_type);
-+
-+/* scsih shared API */
-+void scsih_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 VF_ID, u32 reply);
-+void scsih_reset_handler(struct MPT2SAS_ADAPTER *ioc, int reset_phase);
-+
-+/* config shared API */
-+void config_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 VF_ID, u32 reply);
-+int config_get_number_hba_phys(struct MPT2SAS_ADAPTER *ioc, u8 *num_phys);
-+int config_get_manufacturing_pg0(struct MPT2SAS_ADAPTER *ioc,
-+    Mpi2ConfigReply_t *mpi_reply, Mpi2ManufacturingPage0_t *config_page);
-+int config_get_bios_pg2(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-+    *mpi_reply, Mpi2BiosPage2_t *config_page);
-+int config_get_bios_pg3(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-+    *mpi_reply, Mpi2BiosPage3_t *config_page);
-+int config_get_iounit_pg0(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-+    *mpi_reply, Mpi2IOUnitPage0_t *config_page);
-+int config_get_sas_device_pg0(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-+    *mpi_reply, Mpi2SasDevicePage0_t *config_page, u32 form, u32 handle);
-+int config_get_sas_device_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-+    *mpi_reply, Mpi2SasDevicePage1_t *config_page, u32 form, u32 handle);
-+int config_get_sas_iounit_pg0(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-+    *mpi_reply, Mpi2SasIOUnitPage0_t *config_page, u16 sz);
-+int config_get_iounit_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-+    *mpi_reply, Mpi2IOUnitPage1_t *config_page);
-+int config_set_iounit_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-+    *mpi_reply, Mpi2IOUnitPage1_t config_page);
-+int config_get_sas_iounit_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-+    *mpi_reply, Mpi2SasIOUnitPage1_t *config_page, u16 sz);
-+int config_get_ioc_pg8(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-+    *mpi_reply, Mpi2IOCPage8_t *config_page);
-+int config_get_expander_pg0(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-+    *mpi_reply, Mpi2ExpanderPage0_t *config_page, u32 form, u32 handle);
-+int config_get_expander_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-+    *mpi_reply, Mpi2ExpanderPage1_t *config_page, u32 phy_number, u16 handle);
-+int config_get_enclosure_pg0(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-+    *mpi_reply, Mpi2SasEnclosurePage0_t *config_page, u32 form, u32 handle);
-+int config_get_phy_pg0(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-+    *mpi_reply, Mpi2SasPhyPage0_t *config_page, u32 phy_number);
-+int config_get_phy_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-+    *mpi_reply, Mpi2SasPhyPage1_t *config_page, u32 phy_number);
-+int config_get_raid_volume_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-+    *mpi_reply, Mpi2RaidVolPage1_t *config_page, u32 form, u32 handle);
-+int config_get_number_pds(struct MPT2SAS_ADAPTER *ioc, u16 handle, u8 *num_pds);
-+int config_get_raid_volume_pg0(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-+    *mpi_reply, Mpi2RaidVolPage0_t *config_page, u32 form, u32 handle, u16 sz);
-+int config_get_phys_disk_pg0(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-+    *mpi_reply, Mpi2RaidPhysDiskPage0_t *config_page, u32 form,
-+    u32 form_specific);
-+int config_get_volume_handle(struct MPT2SAS_ADAPTER *ioc, u16 pd_handle,
-+    u16 *volume_handle);
-+int config_get_volume_wwid(struct MPT2SAS_ADAPTER *ioc, u16 volume_handle,
-+    u64 *wwid);
-+
-+/* ctl shared API */
-+extern struct device_attribute *mpt2sas_host_attrs[];
-+extern struct device_attribute *mpt2sas_dev_attrs[];
-+void ctl_init(void);
-+void ctl_exit(void);
-+void ctl_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 VF_ID, u32 reply);
-+void ctl_reset_handler(struct MPT2SAS_ADAPTER *ioc, int reset_phase);
-+void ctl_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 VF_ID, u32 reply);
-+void ctl_add_to_event_log(struct MPT2SAS_ADAPTER *ioc,
-+    Mpi2EventNotificationReply_t *mpi_reply);
-+
-+/* transport shared API */
-+void transport_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 VF_ID, u32 reply);
-+struct _sas_port *transport_port_add(struct MPT2SAS_ADAPTER *ioc,
-+    u16 handle, u16 parent_handle);
-+void transport_port_remove(struct MPT2SAS_ADAPTER *ioc, u64 sas_address,
-+    u16 parent_handle);
-+int transport_add_host_phy(struct MPT2SAS_ADAPTER *ioc, struct _sas_phy
-+    *mpt2sas_phy, Mpi2SasPhyPage0_t phy_pg0, struct device *parent_dev);
-+int transport_add_expander_phy(struct MPT2SAS_ADAPTER *ioc, struct _sas_phy
-+    *mpt2sas_phy, Mpi2ExpanderPage1_t expander_pg1, struct device *parent_dev);
-+void transport_update_phy_link_change(struct MPT2SAS_ADAPTER *ioc, u16 handle,
-+   u16 attached_handle, u8 phy_number, u8 link_rate);
-+extern struct sas_function_template mpt2sas_transport_functions;
-+extern struct scsi_transport_template *mpt2sas_transport_template;
-+
-+#endif /* MPT2SAS_BASE_H_INCLUDED */
++#endif /* MPT2SAS_CTL_H_INCLUDED */
