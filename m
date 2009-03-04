@@ -1,51 +1,64 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: [PATCH 1/11] mpt2sas: mpt2sas_base sources
-Date: Tue, 3 Mar 2009 16:29:21 -0800
-Message-ID: <660360F4F2570145BD872F298951B17A7689E415@cosmail03.lsi.com>
-References: <1236115756.15993.23.camel@localhost.localdomain>
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: Large amount of scsi-sgpool objects
+Date: Wed, 4 Mar 2009 01:30:25 +0100 (CET)
+Message-ID: <alpine.LFD.2.00.0903040012040.29264@localhost.localdomain>
+References: <alpine.LSU.2.00.0903030220050.2438@fbirervta.pbzchgretzou.qr>  <49ACF8FE.2020904@panasas.com>  <1236093718.3263.3.camel@localhost.localdomain>  <alpine.LSU.2.00.0903031703270.855@fbirervta.pbzchgretzou.qr>  <1236097526.3263.17.camel@localhost.localdomain>
+  <20090303192212.GA20705@elte.hu>  <1236115544.15993.22.camel@localhost.localdomain>  <20090303214454.GA8288@elte.hu> <1236119990.24019.35.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og114.obsmtp.com ([64.18.2.215]:42502 "EHLO
-	exprod7og114.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750958AbZCDA3r convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Mar 2009 19:29:47 -0500
-In-Reply-To: <1236115756.15993.23.camel@localhost.localdomain>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-rt-users-owner@vger.kernel.org>
+In-Reply-To: <1236119990.24019.35.camel@localhost.localdomain>
+Sender: linux-rt-users-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Ingo Molnar <mingo@elte.hu>, Jan Engelhardt <jengelh@medozas.de>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-rt-users@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Wilcox <matthew@wil.cx>
-Cc: Grant Grundler <grundler@google.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tuesday, March 03, 2009 2:29 PM, James Bottomley wrote: 
-> On Wed, 2009-02-25 at 14:12 -0700, Matthew Wilcox wrote:
-> > On Wed, Feb 25, 2009 at 01:27:00PM -0700, Moore, Eric wrote:
-> > > What are you suggesting?   Calling wmb()?
-> > 
-> > PCI writes can be posted, so the him_register writel() may 
-> not complete
-> > for a few thousand cycles.  wmb() isn't going to solve the 
-> problem.  A
-> > readl() from the device would, as would your current solution of
-> > ignoring subsequent interrupts.
+James,
+
+On Tue, 3 Mar 2009, James Bottomley wrote:
+> However, if you base a feature tree off this compromised tree, now
+> you're causing extra work for other maintainers who see problems
+> reported with this tree, and have to take the time to investigate what's
+> going on.
+
+Stop this nonsense. That bug stopped me and Ingo from testing code on
+machines with AIC7xxx controllers for quite a while.
+
+The patch sent by the author of the SCSI commit which caused the
+breakage in the first place (b60af5b: [SCSI] simplify
+scsi_io_completion()) specifically to Ingo in response to Ingo's bug
+report seemed to fix it and it did not explode, so it was left in the
+-rt origin.patch simply because I forgot about it and there was no fix
+in the mainline kernel which would have made it obsolete.
+
+Yes, I should have noticed the memory leak, but ...
+
+> Worse, supposing there is a genuine SCSI bug exposed by the -rt tree
+> (say something timing or interrupt related).  So I ask the reporter to
+> retry with the regular kernel tree and the bug goes away. Now everyone
+> will think "Oh, it's just because of some SCSI crap Ingo put in his
+> tree".  Result: the bug goes undiagnosed until it bites several people
+> in the field, which is an avoidable result.
 > 
-> This seems to be the most serious issue with the current 
-> patch set.  If
-> you repost with that fixed, I can put it into scsi-misc and we can
-> address the other issues later.
-> 
+> The executive summary is that your "it works for me, so I'm putting it
+> in my tree" attitude is damaging our quality process.
 
-I will repost the patch set tommorrow with the following changes
+So according to your executive summary the full failure of test
+machines due to a SCSI bug is not damaging anything. These machines
+are^W have been part of the quality process and stopped working due to
+wreckage induced by your tree in 29-rc1.
 
-(1) Add readl following writel from the function that disables interrupts
+The executive summary is: stop development and testing until SCSI
+comes up with a blessed fix.
 
-(2) Replace 0xFFFFFFFFFFFFFFFFULL with ~0ULL
+You have my full understanding that quality processing defined by SCSI
+has precedence over general testing.
 
-(3) when calling pci_enable_msix, only pass one msix entry (instead of 15).  
+Once I'm done with cleaning up the mess caused by the crash in linus
+tree (w/o any unblessed patches) I'm going to fix the power supply of
+the AIC7xxx system to make sure it is stand by when a blessed solution
+pops up in the unforeseeable future.
 
-(4) remove the "current HW implementation uses..... " comment in the sources
+Thanks,
 
-(5) merge in a bug fix for SIGIO/POLLIN notifcation reported by the storlib team.
-
-Eric Moore
+	tglx
