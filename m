@@ -1,67 +1,78 @@
 From: akpm@linux-foundation.org
-Subject: [patch 13/15] sd: tell the user when a disk's capacity is adjusted
-Date: Wed, 04 Mar 2009 12:06:16 -0800
-Message-ID: <200903042006.n24K6G9m029301@imap1.linux-foundation.org>
+Subject: [patch 07/15] scsi: annotate gdth_rdcap_data, gdth_rdcap16_data endianness
+Date: Wed, 04 Mar 2009 12:06:10 -0800
+Message-ID: <200903042006.n24K6Bot029278@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:53125 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:44122 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756349AbZCDU0W (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2009 15:26:22 -0500
+	by vger.kernel.org with ESMTP id S1755261AbZCDU0V (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2009 15:26:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, stern@rowland.harvard.edu, jens.axboe@oracle.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com, bharrosh@panasas.com
 
-From: Alan Stern <stern@rowland.harvard.edu>
+From: Harvey Harrison <harvey.harrison@gmail.com>
 
-This patch (as1188) combines the tests for decrementing a drive's reported
-capacity and expands the comment.  It also adds an informational message
-to the system log, informing the user when the reported value has been
-changed.
+It would be easy to get rid of the typedefs too, but I kept this
+minimal.
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-Cc: Jens Axboe <jens.axboe@oracle.com>
+Noticed by sparse:
+drivers/scsi/gdth.c:2395:31: warning: incorrect type in assignment (different base types)
+drivers/scsi/gdth.c:2395:31:    expected unsigned int [unsigned] [assigned] [usertype] last_block_no
+drivers/scsi/gdth.c:2395:31:    got restricted __be32 [usertype] <noident>
+drivers/scsi/gdth.c:2396:27: warning: incorrect type in assignment (different base types)
+drivers/scsi/gdth.c:2396:27:    expected unsigned int [unsigned] [assigned] [usertype] block_length
+drivers/scsi/gdth.c:2396:27:    got restricted __be32 [usertype] <noident>
+drivers/scsi/gdth.c:2406:33: warning: incorrect type in assignment (different base types)
+drivers/scsi/gdth.c:2406:33:    expected unsigned long long [unsigned] [usertype] last_block_no
+drivers/scsi/gdth.c:2406:33:    got restricted __be64 [usertype] <noident>
+drivers/scsi/gdth.c:2407:33: warning: incorrect type in assignment (different base types)
+drivers/scsi/gdth.c:2407:33:    expected unsigned int [unsigned] [usertype] block_length
+drivers/scsi/gdth.c:2407:33:    got restricted __be32 [usertype] <noident>
+
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/sd.c |   26 +++++++++++++++-----------
- 1 file changed, 15 insertions(+), 11 deletions(-)
+ drivers/scsi/gdth.c |    2 +-
+ drivers/scsi/gdth.h |    8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff -puN drivers/scsi/sd.c~sd-tell-the-user-when-a-disks-capacity-is-adjusted drivers/scsi/sd.c
---- a/drivers/scsi/sd.c~sd-tell-the-user-when-a-disks-capacity-is-adjusted
-+++ a/drivers/scsi/sd.c
-@@ -1387,18 +1387,22 @@ repeat:
- 		sd_read_protection_type(sdkp, buffer);
- 	}	
+diff -puN drivers/scsi/gdth.c~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness drivers/scsi/gdth.c
+--- a/drivers/scsi/gdth.c~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness
++++ a/drivers/scsi/gdth.c
+@@ -2391,7 +2391,7 @@ static int gdth_internal_cache_cmd(gdth_
+       case READ_CAPACITY:
+         TRACE2(("Read capacity hdrive %d\n",t));
+         if (ha->hdr[t].size > (ulong64)0xffffffff)
+-            rdc.last_block_no = 0xffffffff;
++            rdc.last_block_no = cpu_to_be32(0xffffffff);
+         else
+             rdc.last_block_no = cpu_to_be32(ha->hdr[t].size-1);
+         rdc.block_length  = cpu_to_be32(SECTOR_SIZE);
+diff -puN drivers/scsi/gdth.h~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness drivers/scsi/gdth.h
+--- a/drivers/scsi/gdth.h~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness
++++ a/drivers/scsi/gdth.h
+@@ -968,14 +968,14 @@ typedef struct {
  
--	/* Some devices return the total number of sectors, not the
--	 * highest sector number.  Make the necessary adjustment. */
--	if (sdp->fix_capacity) {
-+	/* Some devices are known to return the total number of blocks,
-+	 * not the highest block number.  Some devices have versions
-+	 * which do this and others which do not.  Some devices we might
-+	 * suspect of doing this but we don't know for certain.
-+	 *
-+	 * If we know the reported capacity is wrong, decrement it.  If
-+	 * we can only guess, then assume the number of blocks is even
-+	 * (usually true but not always) and err on the side of lowering
-+	 * the capacity.
-+	 */
-+	if (sdp->fix_capacity ||
-+	    (sdp->guess_capacity && (sdkp->capacity & 0x01))) {
-+		sd_printk(KERN_INFO, sdkp, "Adjusting the sector count "
-+				"from its reported value: %llu\n",
-+				(unsigned long long) sdkp->capacity);
- 		--sdkp->capacity;
--
--	/* Some devices have version which report the correct sizes
--	 * and others which do not. We guess size according to a heuristic
--	 * and err on the side of lowering the capacity. */
--	} else {
--		if (sdp->guess_capacity)
--			if (sdkp->capacity & 0x01) /* odd sizes are odd */
--				--sdkp->capacity;
- 	}
+ /* READ_CAPACITY data format */
+ typedef struct {
+-    ulong32     last_block_no;
+-    ulong32     block_length;
++	__be32 last_block_no;
++	__be32 block_length;
+ } PACKED gdth_rdcap_data;
  
- got_data:
+ /* READ_CAPACITY (16) data format */
+ typedef struct {
+-    ulong64     last_block_no;
+-    ulong32     block_length;
++	__be64 last_block_no;
++	__be32 block_length;
+ } PACKED gdth_rdcap16_data;
+ 
+ /* REQUEST_SENSE data format */
 _
