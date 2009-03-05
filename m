@@ -1,242 +1,115 @@
-From: Andrew Patterson <andrew.patterson@hp.com>
-Subject: Re: [PATCH] hpsa: SCSI driver for HP Smart Array controllers
-Date: Thu, 05 Mar 2009 16:54:19 +0000
-Message-ID: <1236272059.7050.14.camel@grinch>
-References: <20090302145650.GW15340@beardog.cca.cpqcorp.net>
-	 <20090303153402A.fujita.tomonori@lab.ntt.co.jp>
-	 <20090303162821.GB15340@beardog.cca.cpqcorp.net>
-	 <20090305144843N.fujita.tomonori@lab.ntt.co.jp>
-	 <20090305142114.GG15340@beardog.cca.cpqcorp.net>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: Q: "- PDU header Digest" fetaure
+Date: Thu, 05 Mar 2009 11:42:48 -0600
+Message-ID: <49B00F18.5000607@cs.wisc.edu>
+References: <49A52E04.4844.B205C8A@Ulrich.Windl.rkdvmks1.ngate.uni-regensburg.de> <49A5821B.6070506@cs.wisc.edu> <49AF9897.1070500@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0006.atlanta.hp.com ([15.192.0.43]:33775 "EHLO
-	g5t0006.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752707AbZCEQyZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Mar 2009 11:54:25 -0500
-In-Reply-To: <20090305142114.GG15340@beardog.cca.cpqcorp.net>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:36873 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755517AbZCERm5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Mar 2009 12:42:57 -0500
+In-Reply-To: <49AF9897.1070500@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scameron@beardog.cca.cpqcorp.net
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-kernel@vger.kernel.org, mike.miller@hp.com, jens.axboe@oracle.com, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, coldwell@redhat.com, hare@novell.com, iss_storagedev@hp.com
+To: open-iscsi@googlegroups.com
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, 2009-03-05 at 08:21 -0600, scameron@beardog.cca.cpqcorp.net
-wrote:
-> On Thu, Mar 05, 2009 at 02:48:09PM +0900, FUJITA Tomonori wrote:
-> > On Tue, 3 Mar 2009 10:28:21 -0600
-> > scameron@beardog.cca.cpqcorp.net wrote:
-> > 
-> > > On Tue, Mar 03, 2009 at 03:35:26PM +0900, FUJITA Tomonori wrote:
-> > > > On Mon, 2 Mar 2009 08:56:50 -0600
-> > > > scameron@beardog.cca.cpqcorp.net wrote:
-> > > > 
-> > > > > [...]
-> > > > > > > +     .this_id                = -1,
-> > > > > > > +     .sg_tablesize           = MAXSGENTRIES,
-> > > > > > 
-> > > > > > MAXSGENTRIES (32) is the limitation of hardware? If not, it might be
-> > > > > > better to enlarge this for better performance?
-> > > > > 
-> > > > > Yes, definitely, though this value varies from controller to controller,
-> > > > > so this is just a default value that needs to be overridden, probably
-> > > > > in hpsa_scsi_detect().
-> > > > 
-> > > > I see. If we override this in hpsa_scsi_detect(), we need a trick for
-> > > > SG in CommandList_struct, I guess.
-> > > 
-> > > Yes.  There are some limits to what can be put into CommandList_struct
-> > > directly, but there is also scatter gather chaining, in which we use
-> > > the last element in the CommandList_struct to point to another buffer
-> > > of SG entries.
-> > > 
-> > > If you have a system with a lot of controllers, having a large number of 
-> > > scatter gathers can be a bit of a memory hog, and since this memory is all
-> > > via pci_alloc_consistent, that can be a concern.  It would be nice if
-> > > there was a way for the user to specify differing amounts of scatter
-> > > gathers for different controller instances so for instance the controller
-> > > which he's running his big oracle database, or webserver or whatever on
-> > > gets lots, while the controller he's booted from that's mostly idle
-> > > gets not so many.  I don't know what a good way for a user to identify
-> > > what controller he's talking about in a module parameter would be 
-> > > though.  Maybe by pci domain/bus/device/function?  Maybe something along
-> > > the lines of:
-> > > 
-> > > 	modprobe hpsa dev1=0:0e:00.0 sg1=1000 dev2=0:0b:00.0 sg2=31
-> > > 
-> > > to say that one controller gets 1000 scatter gather elements, but
-> > > another gets only 31.  But PCI busses can change if hardware 
-> > > configuration changes, and this isn't exactly obvious, so seems less
-> > > than ideal.  Any bright ideas on that front?
-> > 
-> > We have /sys/class/scsi_host/host*/sg_tablesize:
-> > 
-> > How about modifying this value on the fly?
-> > 
-> > fujita@clover:/sys/class/scsi_host/host3$ echo 1000 > sg_tablesize
-> > 
+Boaz Harrosh wrote:
+> Hi Mike, list.
 > 
-> We pci_alloc_consistent that space, so... I think that would mean
-> we'd have to do things considerably differently.  I think we'd have
-> to quit allocating commands in big chunks, and instead of indexing
-> into that chunk we'd probably have to have an array of pointers or
-> something.  If we wanted sg_tablesize adjustable down to single
-> command counts, we'd probably have to allocate each command separately
-> and have an array of pointers to those...
+> Mike Christie has pointed out of a serious problem for us which we need
+> the list help of.
 > 
-> e.g. if you did 
+> It started with a question by Ulrich Windl of why data-digests are
+> not supported/recommended by open-iscsi installations and distros.
 > 
-> 	echo 1000 > sg_tablesize
-> 	echo 999 > sg_tablesize
+> [iscsi data-digests is when the complete payload of an iscsi transaction
+>  initiator-target is signed by an HMAC(SHA1) both read/write]
 > 
-> you probably wouldn't want to keep the 1000 commands around,
-> and then allocate 999 additional, then let all the outstanding 
-> commands using the first 1000 block complete, then finally free
-> the first block of 1000, leaving just the 999.  You'd probably want
-> instead to free one of the 1000 to get to 999.
+> Mike Christie wrote:
+>> Ulrich Windl wrote:
+>> Data digests were working but when upstream did the scatterlist changes 
+>> to the kernel it broke data digests. We have not found the cause yet.
+>>
+>> For Red Hat, they do not support them for different reasons depending on 
+>> the version and arch. For example in RHEL5, the big endien crypto digest 
+>> code is busted. It needs a fix from upstream, and I think in general 
+>> there is still some other bugs in the digest code.
+>>
+>>> I see the performance impact, but is there another reason against implementing it? 
+>>> Can I safely activate it on the target, or will it cause problems?
+>>>
+>> Another reason a lot of distros do not support it is because a common 
+>> problem we always hit is that users will write out some data, then start 
+>> modifying it again. But the kernel will normally not do do a sync write 
+>> when you do a write. So once the write() returns, the kernel is still 
+>> sending it through the caches, block, scsi, and iscsi layers. If you are 
+>> writing to the data while the it is working its way through the iscsi 
+>> layers, the iscsi layer could have done the digest calculation, then you 
+>> could modify it and now when the target checks it the digest check will 
+>> fail. And so this happens over and over and you get digest errors all 
+>> over the place and the iscsi layers fire their error handling and retry 
+>> and retry, and in the end they just say forget it and do not support 
+>> data digests.
+>>
 > 
-> Likewise with this:
-> 
-> 	echo 999 > sg_tablesize
-> 	echo 1000 > sg_tablesize
-> 
-> These are somewhat pathological cases, granted.
-> 
-> I'm not sure dynamically modifying the number of SGs a controller
-> can do is something that comes up enough to be worth implementing
-> something so complicated.
-> 
-> If it's settable at init time, that would probably be enough for
-> the vast majority of uses (and more flexible than what we have now)
-> and a lot easier to implement.
-> 
-> > 
-> > Well, this needs more changes (to both the block layer and the scsi
-> > mid layer) but is it nice to change this value dynamically?
-> > 
-> > Anyway, I think that it's better to address this fancy feature later
-> > on (after the mainline inclusion). Let's put hpsa driver into mainline
-> > first.
-> 
-> Agreed, we can think about all that stuff later.
-> 
-> Another fancy feature to think about later which would be nice:
-> 
-> On Smart arrays you can expand logical drives on the fly by
-> adding physical disks, or portions of physical disks into them.
-> Would be nice if there was a non-i/o-interrupting way to notify
-> the scsi layer of this new space (maybe there already is?) so
-> that if there's, say, a filesystem which can also dynamically
-> grow on the fly on that embiggened logical drive, it can take
-> advantage of that extra space.
-> 
-> Right now, the driver will do scsi_remove_device() and then
-> scsi_add_device() if a logical drive changes size, which isn't
-> very nice.
-> 
+> Mike if what you said in the last paragraph is true, about FS modifying the data
+> while the request is in-flight, then it does not explain your statement above
+> about, things getting worse around the scatterlist changes.
 
-The following might help:
+They are two separate issues.
 
-There are several ways to "kick off" a device size change:
+Around the time of the scatterlist changes I will get an oops in the 
+digest calculation code (when we call into the crypto callouts), or in 
+newer kernels the oops went away and now I will get data digest errors. 
+I am still trying to narrow down the commit and line and make sure that 
+the oops is fixed and did not turn into a digest error or if maybe I am 
+hitting a real digest error.
 
-1. For SCSI devices do:
-
-  # echo 1 > /sys/class/scsi_device/<device>/device/rescan
-
-  or
-
-  # blockdev --rereadpt <device file>
-
-2. Other devices (not device mapper)
-
-  # blockdev --rereadpt <device file>
-
-See http://marc.info/?l=linux-kernel&m=122056065131792&w=2
-
-Andrew
-
-> > 
-> > 
-> > > > > Hmm, this doesn't seem all that complicated to me, and this code snippet
-> > > > > has been pretty stable for about 10 years. it's nearly identical to what's in
-> > > > > cpqarray in the 2.2.13 kernel from 1999:
-> > > > > 
-> > > > >                 do {
-> > > > >                         i = find_first_zero_bit(h->cmd_pool_bits, NR_CMDS);
-> > > > >                         if (i == NR_CMDS)
-> > > > >                                 return NULL;
-> > > > >                 } while(test_and_set_bit(i%32, h->cmd_pool_bits+(i/32)) != 0)
-> > > > > 
-> > > > > It's fast, works well, and has needed very little maintenance over the 
-> > > > > years.  Without knowing what you have in mind specifically, I don't see a
-> > > > > big need to change this.
-> > > > 
-> > > > I see. Seems that some drivers want something similar. I might come
-> > > > back later on with a patch to replace this with library
-> > > > functions.
-> > > 
-> > > There was some other discussion about pushing this sort of thing to 
-> > > upper layers, using a tag generated in the scsi layer as a means
-> > > of allocating driver command buffers, since, presumably there's a
-> > > one to one mapping.  (I didn't completely grok it all though.)
-> > 
-> > Oops, I meant that I might come back with a patch to convert hpsa to
-> > use the the block layer tagging, which you and Mike Christie are
-> > talking about (yeah, my first suggestion to use lists was wrong. using
-> > the block layer tagging looks much better).
-> > 
-> > 
-> > By the way, have you guys started to work on the review comments for
-> 
-> We haven't really done much.  It's obvious that there's a lot to do
-> based on the comments, and it's also obvious how to do most of it,
-> and not hard, (e.g. ripping out /proc stuff, etc.), there's just a
-> lot of other non-kernel related work keeping us busy at the moment.
-> 
-> > the next submission? The driver has some minor style issues that have
-> > not been mentioned yet. For example, the comment style in the driver
-> > is not preferred:
-> > 
-> > /* If this device a non-zero lun of a multi-lun device */
-> > /* byte 4 of the 8-byte LUN addr will contain the logical */
-> > /* unit no, zero otherise. */
-> > 
-> > The preferred style is:
-> > 
-> > /*
-> >  * If this device a non-zero lun of a multi-lun device
-> >  * byte 4 of the 8-byte LUN addr will contain the logical
-> >  * unit no, zero otherise.
-> >  */
-> 
-> ok.
-> 
-> > 
-> > Another example, I think that the SCSI-ml preferred style is (not
-> > documented in CodingStyle though):
-> > 
-> > 'if (!ptr)' rather than 'if (ptr == NULL)'
-> > 'if (!value)' rather than 'if (value == 0)'
-> > 'if (ptr)' rather than 'if (ptr != NULL)'
-> > 'if (value)' rather than 'if (value != 0)'
-> 
-> Ok.
-> 
-> > 
-> > 
-> > If you are already addressing the review comments, I just wait for the
-> > next submission, then I'll send such minor patches. If you are not,
-> > I'll send patches to address the review comments (including such minor
-> > patches).
-> 
-> Ok, thanks.
-> 
-> -- steve
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+The second issue is that we normally do zero copy for writes. I do not 
+think it is FS bug or net bug or a bug in the iscsi layer. Maybe more of 
+a bug in what the user expects (who reads the man page for write() to 
+check if the data is committed to disk when write() returns). We 
+discussed this a couple times. For open-iscsi we tried to close the gap, 
+by not doing zero copy writes when data digests are used. And a long 
+long time ago this was discussed for linux-iscsi, and I think that is 
+one of the reasons we added DID_IMM_RETRY to the scsi layer (we can then 
+avoid the 5 retry limit in this case and retry until it is resolved).
 
 
+
+> 
+> The way I see it there can be two fundamental problems:
+> 1. The FS is permitted to (or sinfully) modifies pages of memory while a request to
+>    write these pages is already in-flight. fsdevel guys might want to comment on that?
+>    Mike have you observed these problems with a particular file system?
+>    I can anticipate such a problem arising in a memory-mapped IO, while a page-cache
+>    write-back is in progress. Is that so? is Linux not safe in this regard? If so
+>    how does DM & MD do there raid parity calculations? do they copy the data?
+> 
+> 2. iSCSI releases the request too soon, before the all data was actually used up by the
+>    network stack, and is allowing the FS to continue modifying these pages.
+>    This is a serious problem which means that there can be crashes and data corruption even
+>    if data-digest are not used.
+>    Actually we did move not long ago from copy of network data to been completely copy-less
+>    could that be the point in time things stopped working?
+> 
+> 3. Plain coding bug, but I could not find any.
+> 
+> I know in the passed that data-digests are a grate tool for finding bugs that otherwise can
+> go undetected, it happened to me several times in the passed. All of these cases reviled a flaw
+> in the code, do to rebasing, things changing, plain programmer bugs.
+> 
+> Mike, I'm running here a plain iscsi initiator-target setup and the regression tests, and it
+> runs. What setup and tests did you run to trigger these digest retries, I would like to
+> reproduce this here, and investigate.
+> 
+
+The open-iscsi/test regression script and dat file. Once the section 
+with data digests runs I hit the oops/digest error. I am not sure if I 
+ever hit the second zero copy write issues. I might be hitting that now. 
+Like I said, I have not had time to check if the oops turned into a 
+digest error when it should not or if I am hitting the zero copy issue.
