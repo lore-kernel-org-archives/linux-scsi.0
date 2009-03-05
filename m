@@ -1,84 +1,56 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v2 09/15] NULL noise: drivers/scsi/FlashPoint.c
-Date: Thu, 05 Mar 2009 21:58:53 +0000
-Message-ID: <1236290333.5626.78.camel@localhost.localdomain>
-References: <20090305190954.30062.44759.stgit@f10box.hanneseder.net>
-	 <20090305191602.30062.71301.stgit@f10box.hanneseder.net>
-	 <1236283546.5626.45.camel@localhost.localdomain>
-	 <154e089b0903051215q1216aa53icd41556e2af8b234@mail.gmail.com>
+Subject: Re: [PATCH 00/11] Add support to FCoE offload through net_device
+	(v2)
+Date: Thu, 05 Mar 2009 21:59:20 +0000
+Message-ID: <1236290360.5626.81.camel@localhost.localdomain>
+References: <20090227220034.4987.50755.stgit.yi.zou@intel.com>
+	 <20090303.235725.140764281.davem@davemloft.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:39878 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:39884 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751476AbZCEV66 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Mar 2009 16:58:58 -0500
-In-Reply-To: <154e089b0903051215q1216aa53icd41556e2af8b234@mail.gmail.com>
+	by vger.kernel.org with ESMTP id S1752252AbZCEV70 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Mar 2009 16:59:26 -0500
+In-Reply-To: <20090303.235725.140764281.davem@davemloft.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Eder <hannes@hanneseder.net>
-Cc: trivial@kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: David Miller <davem@davemloft.net>
+Cc: yi.zou@intel.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, 2009-03-05 at 21:15 +0100, Hannes Eder wrote:
-> On Thu, Mar 5, 2009 at 9:05 PM, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
-> > On Thu, 2009-03-05 at 20:16 +0100, Hannes Eder wrote:
-> >> Fix this sparse warnings:
-> >>   drivers/scsi/FlashPoint.c:906:9: warning: Using plain integer as NULL pointer
-> >>   drivers/scsi/FlashPoint.c:907:53: warning: Using plain integer as NULL pointer
-> >>   drivers/scsi/FlashPoint.c:922:1: warning: Using plain integer as NULL pointer
-> >>
-> >> Signed-off-by: Hannes Eder <hannes@hanneseder.net>
-> >> ---
-> >> v2: fix checkpatch.pl issue.
-> >> v2.1: other subject, as suggested by Al Viro
-> >>
-> >>  drivers/scsi/FlashPoint.c |    7 +++----
-> >>  1 files changed, 3 insertions(+), 4 deletions(-)
-> >>
-> >> diff --git a/drivers/scsi/FlashPoint.c b/drivers/scsi/FlashPoint.c
-> >> index b898d38..9eb2e86 100644
-> >> --- a/drivers/scsi/FlashPoint.c
-> >> +++ b/drivers/scsi/FlashPoint.c
-> >> @@ -903,8 +903,8 @@ static void FPT_autoCmdCmplt(unsigned long p_port, unsigned char p_card);
-> >>  static void FPT_autoLoadDefaultMap(unsigned long p_port);
-> >>
-> >>  static struct sccb_mgr_tar_info FPT_sccbMgrTbl[MAX_CARDS][MAX_SCSI_TAR] =
-> >> L-    { {{0}} };
-> >> -static struct sccb_card FPT_BL_Card[MAX_CARDS] = { {0} };
-> >> +    { { {NULL} } };
-> >> +static struct sccb_card FPT_BL_Card[MAX_CARDS] = { {NULL} };
-> >>  static SCCBSCAM_INFO FPT_scamInfo[MAX_SCSI_TAR] = { {{0}} };
-> >>  static struct nvram_info FPT_nvRamInfo[MAX_MB_CARDS] = { {0} };
-> >
-> > This doesn't look right:  {0} as a structure initialiser is a C
-> > convention for zero fill this structure; sparse should recognise this.
-> > Of course, since these structures are static, they should be in BSS
-> > anyway ...
+On Tue, 2009-03-03 at 23:57 -0800, David Miller wrote:
+> From: Yi Zou <yi.zou@intel.com>
+> Date: Fri, 27 Feb 2009 14:06:32 -0800
 > 
-> So a proper fix is just not to initialize the variables.
-
-That works ... and probably also teach sparse to recognise {0}.
-
-> ... and report this issue to the sparse mailing list.
+> > This is set of revised patches for adding offload support of
+> > Fiber Channel over Ethernet (FCoE) offload support through net_device
+> > for the Open-FCoE project maintained at http://www.open-fcoe.org.
+> > 
+> > The original submission can be found at:
+> > http://marc.info/?l=linux-scsi&m=123507707821705&w=2
+> > 
+> > The included patches would add FCoE offload support through the net_device
+> > struct as shown in the series of patches followed here. This is achieved
+> > by adding nedev feature flags for FCoE FC CRC offload and large send offload
+> > through gso. The large receive offload by direct data placement (ddp) is
+> > achieved by the two function pointers to net_device_ops, to setup and release
+> > ddp context, ndo_fcoe_ddp_setup and ndo_fcoe_ddp_done. One data member is
+> > added to net_device strut, namely fcoe_ddp_xid, which inidates the maximum
+> > exchange id allowed by LLD to perform ddp on the read I/O request.
+> > 
+> > As the following patches touch both netdev and libfc/fcoe, and they are
+> > applicable to the current tip at www.open-fcoe.org w/ patches available at:
+> > http://marc.info/?l=linux-scsi&m=123576089125544&w=2 If they look alright,
+> > I will rework them later to be directly applicable to net-next, where the
+> > aforementioned fcoe/libfc fix patches are expected to be in kernel already
+> > through scsi-fixes.
 > 
-> >
-> >> @@ -918,8 +918,7 @@ static unsigned char FPT_scamHAString[] =
-> >>
-> >>  static unsigned short FPT_default_intena = 0;
-> >>
-> >> -static void (*FPT_s_PhaseTbl[8]) (unsigned long, unsigned char) = {
-> >> -0};
-> >> +static void (*FPT_s_PhaseTbl[8]) (unsigned long, unsigned char) = {NULL};
-> >>
-> >>  /*---------------------------------------------------------------------
-> >>   *
-> 
-> Same her, right?
+> I am fine with these changes, they look good.
 
-I had to look that one up, but yes, it appears {0} does zero initialise
-an array as well.
+Did you want to take the four pure net pieces through your tree, and
+I'll run a postmerge tree based on your net tree, or just have me take
+them through the SCSI tree?
 
 James
 
