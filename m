@@ -1,20 +1,19 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 07/14] libiscsi: don't cap queue depth in iscsi modules
-Date: Thu,  5 Mar 2009 14:46:01 -0600
-Message-ID: <12362859754088-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 06/14] iscsi_tcp: replace scsi_debug/tcp_debug logging with iscsi conn logging
+Date: Thu,  5 Mar 2009 14:46:00 -0600
+Message-ID: <12362859742776-git-send-email-michaelc@cs.wisc.edu>
 References: <12362859683749-git-send-email-michaelc@cs.wisc.edu>
  <12362859693831-git-send-email-michaelc@cs.wisc.edu>
  <12362859702687-git-send-email-michaelc@cs.wisc.edu>
  <123628597367-git-send-email-michaelc@cs.wisc.edu>
  <12362859734023-git-send-email-michaelc@cs.wisc.edu>
  <12362859743025-git-send-email-michaelc@cs.wisc.edu>
- <12362859742776-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:52781 "EHLO mx2.redhat.com"
+Received: from mx2.redhat.com ([66.187.237.31]:52799 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754649AbZCEUqT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Mar 2009 15:46:19 -0500
-In-Reply-To: <12362859742776-git-send-email-michaelc@cs.wisc.edu>
+	id S1754964AbZCEUqU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Mar 2009 15:46:20 -0500
+In-Reply-To: <12362859743025-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -22,96 +21,160 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-There is no need to cap the queue depth in the modules. We set
-this in userspace and can do that there. For performance testing
-with ram based targets, this is helpful since we can have very
-high queue depths.
+This makes the logging a compile time option and replaces
+the tcp_debug macro with a iscsi connection one that prints
+out a driver model id prefix.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/infiniband/ulp/iser/iscsi_iser.c |    4 ++--
- drivers/infiniband/ulp/iser/iscsi_iser.h |    2 +-
- drivers/scsi/libiscsi.c                  |    9 +--------
- include/scsi/libiscsi.h                  |    3 +--
- 4 files changed, 5 insertions(+), 13 deletions(-)
+ drivers/scsi/iscsi_tcp.c |   57 +++++++++++++++++++++++++++------------------
+ 1 files changed, 34 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
-index 4338f54..5f79c0a 100644
---- a/drivers/infiniband/ulp/iser/iscsi_iser.c
-+++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
-@@ -404,7 +404,7 @@ iscsi_iser_session_create(struct iscsi_endpoint *ep,
- 	struct Scsi_Host *shost;
- 	struct iser_conn *ib_conn;
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 5a08ca4..9c2e527 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -48,13 +48,6 @@ MODULE_AUTHOR("Mike Christie <michaelc@cs.wisc.edu>, "
+ 	      "Alex Aizman <itn780@yahoo.com>");
+ MODULE_DESCRIPTION("iSCSI/TCP data-path");
+ MODULE_LICENSE("GPL");
+-#undef DEBUG_TCP
+-
+-#ifdef DEBUG_TCP
+-#define debug_tcp(fmt...) printk(KERN_INFO "tcp: " fmt)
+-#else
+-#define debug_tcp(fmt...)
+-#endif
  
--	shost = iscsi_host_alloc(&iscsi_iser_sht, 0, ISCSI_MAX_CMD_PER_LUN);
-+	shost = iscsi_host_alloc(&iscsi_iser_sht, 0, ISER_DEF_CMD_PER_LUN);
- 	if (!shost)
- 		return NULL;
- 	shost->transportt = iscsi_iser_scsi_transport;
-@@ -596,7 +596,7 @@ static struct scsi_host_template iscsi_iser_sht = {
- 	.change_queue_depth	= iscsi_change_queue_depth,
- 	.sg_tablesize           = ISCSI_ISER_SG_TABLESIZE,
- 	.max_sectors		= 1024,
--	.cmd_per_lun            = ISCSI_MAX_CMD_PER_LUN,
-+	.cmd_per_lun            = ISER_DEF_CMD_PER_LUN,
- 	.eh_abort_handler       = iscsi_eh_abort,
- 	.eh_device_reset_handler= iscsi_eh_device_reset,
- 	.eh_target_reset_handler= iscsi_eh_target_reset,
-diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.h b/drivers/infiniband/ulp/iser/iscsi_iser.h
-index 8611195..9d529ca 100644
---- a/drivers/infiniband/ulp/iser/iscsi_iser.h
-+++ b/drivers/infiniband/ulp/iser/iscsi_iser.h
-@@ -93,7 +93,7 @@
+ static struct scsi_transport_template *iscsi_sw_tcp_scsi_transport;
+ static struct scsi_host_template iscsi_sw_tcp_sht;
+@@ -63,6 +56,21 @@ static struct iscsi_transport iscsi_sw_tcp_transport;
+ static unsigned int iscsi_max_lun = 512;
+ module_param_named(max_lun, iscsi_max_lun, uint, S_IRUGO);
  
- 					/* support upto 512KB in one RDMA */
- #define ISCSI_ISER_SG_TABLESIZE         (0x80000 >> SHIFT_4K)
--#define ISCSI_ISER_MAX_LUN		256
-+#define ISER_DEF_CMD_PER_LUN		128
++static int iscsi_sw_tcp_dbg;
++module_param_named(debug_iscsi_tcp, iscsi_sw_tcp_dbg, int,
++		   S_IRUGO | S_IWUSR);
++MODULE_PARM_DESC(debug_iscsi_tcp, "Turn on debugging for iscsi_tcp module "
++		 "Set to 1 to turn on, and zero to turn off. Default is off.");
++
++#define ISCSI_SW_TCP_DBG(_conn, dbg_fmt, arg...)		\
++	do {							\
++		if (iscsi_sw_tcp_dbg)				\
++			iscsi_conn_printk(KERN_INFO, _conn,	\
++					     "%s " dbg_fmt,	\
++					     __func__, ##arg);	\
++	} while (0);
++
++
+ /**
+  * iscsi_sw_tcp_recv - TCP receive in sendfile fashion
+  * @rd_desc: read descriptor
+@@ -77,7 +85,7 @@ static int iscsi_sw_tcp_recv(read_descriptor_t *rd_desc, struct sk_buff *skb,
+ 	unsigned int consumed, total_consumed = 0;
+ 	int status;
  
- /* QP settings */
- /* Maximal bounds on received asynchronous PDUs */
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 701457c..a5168a6 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -1451,8 +1451,6 @@ EXPORT_SYMBOL_GPL(iscsi_queuecommand);
+-	debug_tcp("in %d bytes\n", skb->len - offset);
++	ISCSI_SW_TCP_DBG(conn, "in %d bytes\n", skb->len - offset);
  
- int iscsi_change_queue_depth(struct scsi_device *sdev, int depth)
- {
--	if (depth > ISCSI_MAX_CMD_PER_LUN)
--		depth = ISCSI_MAX_CMD_PER_LUN;
- 	scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), depth);
- 	return sdev->queue_depth;
+ 	do {
+ 		status = 0;
+@@ -86,7 +94,8 @@ static int iscsi_sw_tcp_recv(read_descriptor_t *rd_desc, struct sk_buff *skb,
+ 		total_consumed += consumed;
+ 	} while (consumed != 0 && status != ISCSI_TCP_SKB_DONE);
+ 
+-	debug_tcp("read %d bytes status %d\n", skb->len - offset, status);
++	ISCSI_SW_TCP_DBG(conn, "read %d bytes status %d\n",
++			 skb->len - offset, status);
+ 	return total_consumed;
  }
-@@ -2062,13 +2060,8 @@ struct Scsi_Host *iscsi_host_alloc(struct scsi_host_template *sht,
- 	if (!shost)
- 		return NULL;
  
--	if (qdepth > ISCSI_MAX_CMD_PER_LUN || qdepth < 1) {
--		if (qdepth != 0)
--			printk(KERN_ERR "iscsi: invalid queue depth of %d. "
--			       "Queue depth must be between 1 and %d.\n",
--			       qdepth, ISCSI_MAX_CMD_PER_LUN);
-+	if (qdepth == 0)
- 		qdepth = ISCSI_DEF_CMD_PER_LUN;
--	}
- 	shost->cmd_per_lun = qdepth;
+@@ -131,7 +140,8 @@ static void iscsi_sw_tcp_state_change(struct sock *sk)
+ 	if ((sk->sk_state == TCP_CLOSE_WAIT ||
+ 	     sk->sk_state == TCP_CLOSE) &&
+ 	    !atomic_read(&sk->sk_rmem_alloc)) {
+-		debug_tcp("iscsi_tcp_state_change: TCP_CLOSE|TCP_CLOSE_WAIT\n");
++		ISCSI_SW_TCP_DBG(conn, "iscsi_tcp_state_change: "
++				 "TCP_CLOSE|TCP_CLOSE_WAIT\n");
+ 		iscsi_conn_failure(conn, ISCSI_ERR_CONN_FAILED);
+ 	}
  
- 	ihost = shost_priv(shost);
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index 67542aa..898de4a 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -48,8 +48,7 @@ struct device;
- #define ISCSI_DEF_XMIT_CMDS_MAX	128	/* must be power of 2 */
- #define ISCSI_MGMT_CMDS_MAX	15
+@@ -155,7 +165,7 @@ static void iscsi_sw_tcp_write_space(struct sock *sk)
+ 	struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
  
--#define ISCSI_DEF_CMD_PER_LUN		32
--#define ISCSI_MAX_CMD_PER_LUN		128
-+#define ISCSI_DEF_CMD_PER_LUN	32
+ 	tcp_sw_conn->old_write_space(sk);
+-	debug_tcp("iscsi_write_space: cid %d\n", conn->id);
++	ISCSI_SW_TCP_DBG(conn, "iscsi_write_space\n");
+ 	scsi_queue_work(conn->session->host, &conn->xmitwork);
+ }
  
- /* Task Mgmt states */
- enum {
+@@ -283,7 +293,7 @@ static int iscsi_sw_tcp_xmit(struct iscsi_conn *conn)
+ 		}
+ 	}
+ 
+-	debug_tcp("xmit %d bytes\n", consumed);
++	ISCSI_SW_TCP_DBG(conn, "xmit %d bytes\n", consumed);
+ 
+ 	conn->txdata_octets += consumed;
+ 	return consumed;
+@@ -291,7 +301,7 @@ static int iscsi_sw_tcp_xmit(struct iscsi_conn *conn)
+ error:
+ 	/* Transmit error. We could initiate error recovery
+ 	 * here. */
+-	debug_tcp("Error sending PDU, errno=%d\n", rc);
++	ISCSI_SW_TCP_DBG(conn, "Error sending PDU, errno=%d\n", rc);
+ 	iscsi_conn_failure(conn, rc);
+ 	return -EIO;
+ }
+@@ -334,9 +344,10 @@ static int iscsi_sw_tcp_send_hdr_done(struct iscsi_tcp_conn *tcp_conn,
+ 	struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
+ 
+ 	tcp_sw_conn->out.segment = tcp_sw_conn->out.data_segment;
+-	debug_tcp("Header done. Next segment size %u total_size %u\n",
+-		  tcp_sw_conn->out.segment.size,
+-		  tcp_sw_conn->out.segment.total_size);
++	ISCSI_SW_TCP_DBG(tcp_conn->iscsi_conn,
++			 "Header done. Next segment size %u total_size %u\n",
++			 tcp_sw_conn->out.segment.size,
++			 tcp_sw_conn->out.segment.total_size);
+ 	return 0;
+ }
+ 
+@@ -346,8 +357,8 @@ static void iscsi_sw_tcp_send_hdr_prep(struct iscsi_conn *conn, void *hdr,
+ 	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
+ 	struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
+ 
+-	debug_tcp("%s(%p%s)\n", __func__, tcp_conn,
+-			conn->hdrdgst_en? ", digest enabled" : "");
++	ISCSI_SW_TCP_DBG(conn, "%s\n", conn->hdrdgst_en ?
++			 "digest enabled" : "digest disabled");
+ 
+ 	/* Clear the data segment - needs to be filled in by the
+ 	 * caller using iscsi_tcp_send_data_prep() */
+@@ -389,9 +400,9 @@ iscsi_sw_tcp_send_data_prep(struct iscsi_conn *conn, struct scatterlist *sg,
+ 	struct hash_desc *tx_hash = NULL;
+ 	unsigned int hdr_spec_len;
+ 
+-	debug_tcp("%s(%p, offset=%d, datalen=%d%s)\n", __func__,
+-			tcp_conn, offset, len,
+-			conn->datadgst_en? ", digest enabled" : "");
++	ISCSI_SW_TCP_DBG(conn, "offset=%d, datalen=%d %s\n", offset, len,
++			 conn->datadgst_en ?
++			 "digest enabled" : "digest disabled");
+ 
+ 	/* Make sure the datalen matches what the caller
+ 	   said he would send. */
+@@ -415,8 +426,8 @@ iscsi_sw_tcp_send_linear_data_prep(struct iscsi_conn *conn, void *data,
+ 	struct hash_desc *tx_hash = NULL;
+ 	unsigned int hdr_spec_len;
+ 
+-	debug_tcp("%s(%p, datalen=%d%s)\n", __func__, tcp_conn, len,
+-		  conn->datadgst_en? ", digest enabled" : "");
++	ISCSI_SW_TCP_DBG(conn, "datalen=%zd %s\n", len, conn->datadgst_en ?
++			 "digest enabled" : "digest disabled");
+ 
+ 	/* Make sure the datalen matches what the caller
+ 	   said he would send. */
 -- 
 1.6.0.6
 
