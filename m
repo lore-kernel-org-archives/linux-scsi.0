@@ -1,24 +1,26 @@
-From: Jens Axboe <jens.axboe@oracle.com>
+From: Ingo Molnar <mingo@elte.hu>
 Subject: Re: [BUG] 2.6.29-rc6-2450cf in scsi_lib.c (was: Large amount of
 	scsi-sgpool)objects
-Date: Thu, 5 Mar 2009 11:14:36 +0100
-Message-ID: <20090305101436.GV11787@kernel.dk>
+Date: Thu, 5 Mar 2009 11:15:07 +0100
+Message-ID: <20090305101507.GD29499@elte.hu>
 References: <1236207389.21486.19.camel@localhost.localdomain> <20090305173649M.fujita.tomonori@lab.ntt.co.jp> <20090305173952U.fujita.tomonori@lab.ntt.co.jp> <20090305182958Q.fujita.tomonori@lab.ntt.co.jp> <20090305100901.GU11787@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:45008 "EHLO kernel.dk"
+Received: from mx3.mail.elte.hu ([157.181.1.138]:53167 "EHLO mx3.mail.elte.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753445AbZCEKOj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Mar 2009 05:14:39 -0500
+	id S1750950AbZCEKPa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Mar 2009 05:15:30 -0500
 Content-Disposition: inline
 In-Reply-To: <20090305100901.GU11787@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: tglx@linutronix.de, James.Bottomley@HansenPartnership.com, jengelh@medozas.de, bharrosh@panasas.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, tglx@linutronix.de, James.Bottomley@HansenPartnership.com, jengelh@medozas.de, bharrosh@panasas.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thu, Mar 05 2009, Jens Axboe wrote:
+
+* Jens Axboe <jens.axboe@oracle.com> wrote:
+
 > On Thu, Mar 05 2009, FUJITA Tomonori wrote:
 > > Oops, somehow I forgot to CC Jens...
 > > 
@@ -103,86 +105,14 @@ On Thu, Mar 05 2009, Jens Axboe wrote:
 > > >  }
 > > >  EXPORT_SYMBOL(blk_recount_segments);
 > 
-> Good catch, I merged it with a slight change of layout and clearing
-> seg_size initially, to avoid gcc silly errors.
+> Good catch, I merged it with a slight change of layout and 
+> clearing seg_size initially, to avoid gcc silly errors.
 
-While merging that, I think we can do better than this. Essentially we
-just need to have __blk_recalc_rq_segments() track the back bio as well,
-then we don't have to pass in a pointer for segment sizes.
+thanks Jens for the super-quick action! I have tried the v2 
+patch from Fujita and it's OK in -tip testing so far, on various 
+pieces of x86 hardware with different storage systems - ata, 
+sata, aic7xxx, etc.
 
-Totally untested, comments welcome...
+Tested-by: Ingo Molnar <mingo@elte.hu>
 
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 6be3797..5a244f0 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -39,14 +39,13 @@ void blk_recalc_rq_sectors(struct request *rq, int nsect)
- }
- 
- static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
--					     struct bio *bio,
--					     unsigned int *seg_size_ptr)
-+					     struct bio *bio)
- {
- 	unsigned int phys_size;
- 	struct bio_vec *bv, *bvprv = NULL;
- 	int cluster, i, high, highprv = 1;
- 	unsigned int seg_size, nr_phys_segs;
--	struct bio *fbio;
-+	struct bio *fbio, *bbio;
- 
- 	if (!bio)
- 		return 0;
-@@ -87,41 +86,28 @@ new_segment:
- 			seg_size = bv->bv_len;
- 			highprv = high;
- 		}
-+		bbio = bio;
- 	}
- 
--	if (seg_size_ptr)
--		*seg_size_ptr = seg_size;
-+	if (nr_phys_segs == 1 && seg_size > fbio->bi_seg_front_size)
-+		fbio->bi_seg_front_size = seg_size;
-+	if (seg_size > bbio->bi_seg_back_size)
-+		bbio->bi_seg_back_size = seg_size;
- 
- 	return nr_phys_segs;
- }
- 
- void blk_recalc_rq_segments(struct request *rq)
- {
--	unsigned int seg_size = 0, phys_segs;
--
--	phys_segs = __blk_recalc_rq_segments(rq->q, rq->bio, &seg_size);
--
--	if (phys_segs == 1 && seg_size > rq->bio->bi_seg_front_size)
--		rq->bio->bi_seg_front_size = seg_size;
--	if (seg_size > rq->biotail->bi_seg_back_size)
--		rq->biotail->bi_seg_back_size = seg_size;
--
--	rq->nr_phys_segments = phys_segs;
-+	rq->nr_phys_segments = __blk_recalc_rq_segments(rq->q, rq->bio);
- }
- 
- void blk_recount_segments(struct request_queue *q, struct bio *bio)
- {
- 	struct bio *nxt = bio->bi_next;
--	unsigned int seg_size = 0;
- 
- 	bio->bi_next = NULL;
--	bio->bi_phys_segments = __blk_recalc_rq_segments(q, bio, NULL);
--
--	if (bio->bi_phys_segments == 1 && seg_size > bio->bi_seg_front_size)
--		bio->bi_seg_front_size = seg_size;
--	if (seg_size > bio->bi_seg_back_size)
--		bio->bi_seg_back_size = seg_size;
--
-+	bio->bi_phys_segments = __blk_recalc_rq_segments(q, bio);
- 	bio->bi_next = nxt;
- 	bio->bi_flags |= (1 << BIO_SEG_VALID);
- }
-
--- 
-Jens Axboe
-
+	Ingo
