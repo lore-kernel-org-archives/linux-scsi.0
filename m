@@ -1,19 +1,23 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 06/14] iscsi_tcp: replace scsi_debug/tcp_debug logging with iscsi conn logging
-Date: Thu,  5 Mar 2009 14:46:00 -0600
-Message-ID: <12362859742776-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 10/14] iscsi lib: remove qdepth param from iscsi host allocation
+Date: Thu,  5 Mar 2009 14:46:04 -0600
+Message-ID: <12362859771656-git-send-email-michaelc@cs.wisc.edu>
 References: <12362859683749-git-send-email-michaelc@cs.wisc.edu>
  <12362859693831-git-send-email-michaelc@cs.wisc.edu>
  <12362859702687-git-send-email-michaelc@cs.wisc.edu>
  <123628597367-git-send-email-michaelc@cs.wisc.edu>
  <12362859734023-git-send-email-michaelc@cs.wisc.edu>
  <12362859743025-git-send-email-michaelc@cs.wisc.edu>
+ <12362859742776-git-send-email-michaelc@cs.wisc.edu>
+ <12362859754088-git-send-email-michaelc@cs.wisc.edu>
+ <1236285975607-git-send-email-michaelc@cs.wisc.edu>
+ <12362859763502-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:52799 "EHLO mx2.redhat.com"
+Received: from mx2.redhat.com ([66.187.237.31]:52829 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754964AbZCEUqU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Mar 2009 15:46:20 -0500
-In-Reply-To: <12362859743025-git-send-email-michaelc@cs.wisc.edu>
+	id S1754925AbZCEUqW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Mar 2009 15:46:22 -0500
+In-Reply-To: <12362859763502-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -21,160 +25,131 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-This makes the logging a compile time option and replaces
-the tcp_debug macro with a iscsi connection one that prints
-out a driver model id prefix.
+The qdepth setting was useful when we needed libiscsi to verify
+the setting. Now we just need to make sure if older tools
+passed in zero then we need to set some default.
+
+So this patch just has us use the sht->cmd_per_lun or if
+for LLD does a host per session then we can set it on per
+host basis.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/iscsi_tcp.c |   57 +++++++++++++++++++++++++++------------------
- 1 files changed, 34 insertions(+), 23 deletions(-)
+ drivers/infiniband/ulp/iser/iscsi_iser.c |    2 +-
+ drivers/scsi/cxgb3i/cxgb3i_iscsi.c       |    5 ++---
+ drivers/scsi/iscsi_tcp.c                 |    3 ++-
+ drivers/scsi/libiscsi.c                  |   11 ++++-------
+ include/scsi/libiscsi.h                  |    2 +-
+ 5 files changed, 10 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
+index a50cd53..6c61ed1 100644
+--- a/drivers/infiniband/ulp/iser/iscsi_iser.c
++++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
+@@ -404,7 +404,7 @@ iscsi_iser_session_create(struct iscsi_endpoint *ep,
+ 	struct Scsi_Host *shost;
+ 	struct iser_conn *ib_conn;
+ 
+-	shost = iscsi_host_alloc(&iscsi_iser_sht, 0, ISER_DEF_CMD_PER_LUN, 1);
++	shost = iscsi_host_alloc(&iscsi_iser_sht, 0, 1);
+ 	if (!shost)
+ 		return NULL;
+ 	shost->transportt = iscsi_iser_scsi_transport;
+diff --git a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
+index f6ed9c6..307f55e 100644
+--- a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
++++ b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
+@@ -170,8 +170,7 @@ struct cxgb3i_hba *cxgb3i_hba_host_add(struct cxgb3i_adapter *snic,
+ 	int err;
+ 
+ 	shost = iscsi_host_alloc(&cxgb3i_host_template,
+-				 sizeof(struct cxgb3i_hba),
+-				 CXGB3I_SCSI_QDEPTH_DFLT, 1);
++				 sizeof(struct cxgb3i_hba), 1);
+ 	if (!shost) {
+ 		cxgb3i_log_info("iscsi_host_alloc failed.\n");
+ 		return NULL;
+@@ -843,7 +842,7 @@ static struct scsi_host_template cxgb3i_host_template = {
+ 	.can_queue		= CXGB3I_SCSI_QDEPTH_DFLT - 1,
+ 	.sg_tablesize		= SG_ALL,
+ 	.max_sectors		= 0xFFFF,
+-	.cmd_per_lun		= ISCSI_DEF_CMD_PER_LUN,
++	.cmd_per_lun		= CXGB3I_SCSI_QDEPTH_DFLT,
+ 	.eh_abort_handler	= iscsi_eh_abort,
+ 	.eh_device_reset_handler = iscsi_eh_device_reset,
+ 	.eh_target_reset_handler = iscsi_eh_target_reset,
 diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 5a08ca4..9c2e527 100644
+index 79a706a..ad8676c 100644
 --- a/drivers/scsi/iscsi_tcp.c
 +++ b/drivers/scsi/iscsi_tcp.c
-@@ -48,13 +48,6 @@ MODULE_AUTHOR("Mike Christie <michaelc@cs.wisc.edu>, "
- 	      "Alex Aizman <itn780@yahoo.com>");
- MODULE_DESCRIPTION("iSCSI/TCP data-path");
- MODULE_LICENSE("GPL");
--#undef DEBUG_TCP
+@@ -777,10 +777,11 @@ iscsi_sw_tcp_session_create(struct iscsi_endpoint *ep, uint16_t cmds_max,
+ 		return NULL;
+ 	}
+ 
+-	shost = iscsi_host_alloc(&iscsi_sw_tcp_sht, 0, qdepth, 1);
++	shost = iscsi_host_alloc(&iscsi_sw_tcp_sht, 0, 1);
+ 	if (!shost)
+ 		return NULL;
+ 	shost->transportt = iscsi_sw_tcp_scsi_transport;
++	shost->cmd_per_lun = qdepth;
+ 	shost->max_lun = iscsi_max_lun;
+ 	shost->max_id = 0;
+ 	shost->max_channel = 0;
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index ff89154..d12f979 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -2046,6 +2046,9 @@ int iscsi_host_add(struct Scsi_Host *shost, struct device *pdev)
+ 	if (!shost->can_queue)
+ 		shost->can_queue = ISCSI_DEF_XMIT_CMDS_MAX;
+ 
++	if (!shost->cmd_per_lun)
++		shost->cmd_per_lun = ISCSI_DEF_CMD_PER_LUN;
++
+ 	if (!shost->transportt->eh_timed_out)
+ 		shost->transportt->eh_timed_out = iscsi_eh_cmd_timed_out;
+ 	return scsi_add_host(shost, pdev);
+@@ -2056,15 +2059,13 @@ EXPORT_SYMBOL_GPL(iscsi_host_add);
+  * iscsi_host_alloc - allocate a host and driver data
+  * @sht: scsi host template
+  * @dd_data_size: driver host data size
+- * @qdepth: default device queue depth
+  * @xmit_can_sleep: bool indicating if LLD will queue IO from a work queue
+  *
+  * This should be called by partial offload and software iscsi drivers.
+  * To access the driver specific memory use the iscsi_host_priv() macro.
+  */
+ struct Scsi_Host *iscsi_host_alloc(struct scsi_host_template *sht,
+-				   int dd_data_size, uint16_t qdepth,
+-				   bool xmit_can_sleep)
++				   int dd_data_size, bool xmit_can_sleep)
+ {
+ 	struct Scsi_Host *shost;
+ 	struct iscsi_host *ihost;
+@@ -2072,10 +2073,6 @@ struct Scsi_Host *iscsi_host_alloc(struct scsi_host_template *sht,
+ 	shost = scsi_host_alloc(sht, sizeof(struct iscsi_host) + dd_data_size);
+ 	if (!shost)
+ 		return NULL;
 -
--#ifdef DEBUG_TCP
--#define debug_tcp(fmt...) printk(KERN_INFO "tcp: " fmt)
--#else
--#define debug_tcp(fmt...)
--#endif
+-	if (qdepth == 0)
+-		qdepth = ISCSI_DEF_CMD_PER_LUN;
+-	shost->cmd_per_lun = qdepth;
+ 	ihost = shost_priv(shost);
  
- static struct scsi_transport_template *iscsi_sw_tcp_scsi_transport;
- static struct scsi_host_template iscsi_sw_tcp_sht;
-@@ -63,6 +56,21 @@ static struct iscsi_transport iscsi_sw_tcp_transport;
- static unsigned int iscsi_max_lun = 512;
- module_param_named(max_lun, iscsi_max_lun, uint, S_IRUGO);
- 
-+static int iscsi_sw_tcp_dbg;
-+module_param_named(debug_iscsi_tcp, iscsi_sw_tcp_dbg, int,
-+		   S_IRUGO | S_IWUSR);
-+MODULE_PARM_DESC(debug_iscsi_tcp, "Turn on debugging for iscsi_tcp module "
-+		 "Set to 1 to turn on, and zero to turn off. Default is off.");
-+
-+#define ISCSI_SW_TCP_DBG(_conn, dbg_fmt, arg...)		\
-+	do {							\
-+		if (iscsi_sw_tcp_dbg)				\
-+			iscsi_conn_printk(KERN_INFO, _conn,	\
-+					     "%s " dbg_fmt,	\
-+					     __func__, ##arg);	\
-+	} while (0);
-+
-+
- /**
-  * iscsi_sw_tcp_recv - TCP receive in sendfile fashion
-  * @rd_desc: read descriptor
-@@ -77,7 +85,7 @@ static int iscsi_sw_tcp_recv(read_descriptor_t *rd_desc, struct sk_buff *skb,
- 	unsigned int consumed, total_consumed = 0;
- 	int status;
- 
--	debug_tcp("in %d bytes\n", skb->len - offset);
-+	ISCSI_SW_TCP_DBG(conn, "in %d bytes\n", skb->len - offset);
- 
- 	do {
- 		status = 0;
-@@ -86,7 +94,8 @@ static int iscsi_sw_tcp_recv(read_descriptor_t *rd_desc, struct sk_buff *skb,
- 		total_consumed += consumed;
- 	} while (consumed != 0 && status != ISCSI_TCP_SKB_DONE);
- 
--	debug_tcp("read %d bytes status %d\n", skb->len - offset, status);
-+	ISCSI_SW_TCP_DBG(conn, "read %d bytes status %d\n",
-+			 skb->len - offset, status);
- 	return total_consumed;
- }
- 
-@@ -131,7 +140,8 @@ static void iscsi_sw_tcp_state_change(struct sock *sk)
- 	if ((sk->sk_state == TCP_CLOSE_WAIT ||
- 	     sk->sk_state == TCP_CLOSE) &&
- 	    !atomic_read(&sk->sk_rmem_alloc)) {
--		debug_tcp("iscsi_tcp_state_change: TCP_CLOSE|TCP_CLOSE_WAIT\n");
-+		ISCSI_SW_TCP_DBG(conn, "iscsi_tcp_state_change: "
-+				 "TCP_CLOSE|TCP_CLOSE_WAIT\n");
- 		iscsi_conn_failure(conn, ISCSI_ERR_CONN_FAILED);
- 	}
- 
-@@ -155,7 +165,7 @@ static void iscsi_sw_tcp_write_space(struct sock *sk)
- 	struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
- 
- 	tcp_sw_conn->old_write_space(sk);
--	debug_tcp("iscsi_write_space: cid %d\n", conn->id);
-+	ISCSI_SW_TCP_DBG(conn, "iscsi_write_space\n");
- 	scsi_queue_work(conn->session->host, &conn->xmitwork);
- }
- 
-@@ -283,7 +293,7 @@ static int iscsi_sw_tcp_xmit(struct iscsi_conn *conn)
- 		}
- 	}
- 
--	debug_tcp("xmit %d bytes\n", consumed);
-+	ISCSI_SW_TCP_DBG(conn, "xmit %d bytes\n", consumed);
- 
- 	conn->txdata_octets += consumed;
- 	return consumed;
-@@ -291,7 +301,7 @@ static int iscsi_sw_tcp_xmit(struct iscsi_conn *conn)
- error:
- 	/* Transmit error. We could initiate error recovery
- 	 * here. */
--	debug_tcp("Error sending PDU, errno=%d\n", rc);
-+	ISCSI_SW_TCP_DBG(conn, "Error sending PDU, errno=%d\n", rc);
- 	iscsi_conn_failure(conn, rc);
- 	return -EIO;
- }
-@@ -334,9 +344,10 @@ static int iscsi_sw_tcp_send_hdr_done(struct iscsi_tcp_conn *tcp_conn,
- 	struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
- 
- 	tcp_sw_conn->out.segment = tcp_sw_conn->out.data_segment;
--	debug_tcp("Header done. Next segment size %u total_size %u\n",
--		  tcp_sw_conn->out.segment.size,
--		  tcp_sw_conn->out.segment.total_size);
-+	ISCSI_SW_TCP_DBG(tcp_conn->iscsi_conn,
-+			 "Header done. Next segment size %u total_size %u\n",
-+			 tcp_sw_conn->out.segment.size,
-+			 tcp_sw_conn->out.segment.total_size);
- 	return 0;
- }
- 
-@@ -346,8 +357,8 @@ static void iscsi_sw_tcp_send_hdr_prep(struct iscsi_conn *conn, void *hdr,
- 	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
- 	struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
- 
--	debug_tcp("%s(%p%s)\n", __func__, tcp_conn,
--			conn->hdrdgst_en? ", digest enabled" : "");
-+	ISCSI_SW_TCP_DBG(conn, "%s\n", conn->hdrdgst_en ?
-+			 "digest enabled" : "digest disabled");
- 
- 	/* Clear the data segment - needs to be filled in by the
- 	 * caller using iscsi_tcp_send_data_prep() */
-@@ -389,9 +400,9 @@ iscsi_sw_tcp_send_data_prep(struct iscsi_conn *conn, struct scatterlist *sg,
- 	struct hash_desc *tx_hash = NULL;
- 	unsigned int hdr_spec_len;
- 
--	debug_tcp("%s(%p, offset=%d, datalen=%d%s)\n", __func__,
--			tcp_conn, offset, len,
--			conn->datadgst_en? ", digest enabled" : "");
-+	ISCSI_SW_TCP_DBG(conn, "offset=%d, datalen=%d %s\n", offset, len,
-+			 conn->datadgst_en ?
-+			 "digest enabled" : "digest disabled");
- 
- 	/* Make sure the datalen matches what the caller
- 	   said he would send. */
-@@ -415,8 +426,8 @@ iscsi_sw_tcp_send_linear_data_prep(struct iscsi_conn *conn, void *data,
- 	struct hash_desc *tx_hash = NULL;
- 	unsigned int hdr_spec_len;
- 
--	debug_tcp("%s(%p, datalen=%d%s)\n", __func__, tcp_conn, len,
--		  conn->datadgst_en? ", digest enabled" : "");
-+	ISCSI_SW_TCP_DBG(conn, "datalen=%zd %s\n", len, conn->datadgst_en ?
-+			 "digest enabled" : "digest disabled");
- 
- 	/* Make sure the datalen matches what the caller
- 	   said he would send. */
+ 	if (xmit_can_sleep) {
+diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+index b0b8a69..84eded9 100644
+--- a/include/scsi/libiscsi.h
++++ b/include/scsi/libiscsi.h
+@@ -346,7 +346,7 @@ extern int iscsi_host_get_param(struct Scsi_Host *shost,
+ 				enum iscsi_host_param param, char *buf);
+ extern int iscsi_host_add(struct Scsi_Host *shost, struct device *pdev);
+ extern struct Scsi_Host *iscsi_host_alloc(struct scsi_host_template *sht,
+-					  int dd_data_size, uint16_t qdepth,
++					  int dd_data_size,
+ 					  bool xmit_can_sleep);
+ extern void iscsi_host_remove(struct Scsi_Host *shost);
+ extern void iscsi_host_free(struct Scsi_Host *shost);
 -- 
 1.6.0.6
 
