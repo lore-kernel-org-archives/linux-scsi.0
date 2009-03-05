@@ -1,7 +1,7 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 10/14] iscsi lib: remove qdepth param from iscsi host allocation
-Date: Thu,  5 Mar 2009 14:46:04 -0600
-Message-ID: <12362859771656-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 08/14] iscsi class: fix lock dep warning on logout
+Date: Thu,  5 Mar 2009 14:46:02 -0600
+Message-ID: <1236285975607-git-send-email-michaelc@cs.wisc.edu>
 References: <12362859683749-git-send-email-michaelc@cs.wisc.edu>
  <12362859693831-git-send-email-michaelc@cs.wisc.edu>
  <12362859702687-git-send-email-michaelc@cs.wisc.edu>
@@ -10,14 +10,12 @@ References: <12362859683749-git-send-email-michaelc@cs.wisc.edu>
  <12362859743025-git-send-email-michaelc@cs.wisc.edu>
  <12362859742776-git-send-email-michaelc@cs.wisc.edu>
  <12362859754088-git-send-email-michaelc@cs.wisc.edu>
- <1236285975607-git-send-email-michaelc@cs.wisc.edu>
- <12362859763502-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:52829 "EHLO mx2.redhat.com"
+Received: from mx2.redhat.com ([66.187.237.31]:52808 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754925AbZCEUqW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Mar 2009 15:46:22 -0500
-In-Reply-To: <12362859763502-git-send-email-michaelc@cs.wisc.edu>
+	id S1754901AbZCEUqV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Mar 2009 15:46:21 -0500
+In-Reply-To: <12362859754088-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -25,131 +23,128 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-The qdepth setting was useful when we needed libiscsi to verify
-the setting. Now we just need to make sure if older tools
-passed in zero then we need to set some default.
-
-So this patch just has us use the sht->cmd_per_lun or if
-for LLD does a host per session then we can set it on per
-host basis.
+We never should hit the lock up that is spit out when
+lock dep is on and we logout. But we have been using the
+shost work queue in a odd way. This patch has us use the
+work queue for scanning instead of creating our own,
+and this ends up also killing the lock dep warnings.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/infiniband/ulp/iser/iscsi_iser.c |    2 +-
- drivers/scsi/cxgb3i/cxgb3i_iscsi.c       |    5 ++---
- drivers/scsi/iscsi_tcp.c                 |    3 ++-
- drivers/scsi/libiscsi.c                  |   11 ++++-------
- include/scsi/libiscsi.h                  |    2 +-
- 5 files changed, 10 insertions(+), 13 deletions(-)
+ drivers/scsi/scsi_transport_iscsi.c |   38 +++++-----------------------------
+ include/scsi/scsi_transport_iscsi.h |    2 -
+ 2 files changed, 6 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
-index a50cd53..6c61ed1 100644
---- a/drivers/infiniband/ulp/iser/iscsi_iser.c
-+++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
-@@ -404,7 +404,7 @@ iscsi_iser_session_create(struct iscsi_endpoint *ep,
- 	struct Scsi_Host *shost;
- 	struct iser_conn *ib_conn;
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 75c9297..4f22f9e 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -246,30 +246,13 @@ static int iscsi_setup_host(struct transport_container *tc, struct device *dev,
+ 	memset(ihost, 0, sizeof(*ihost));
+ 	atomic_set(&ihost->nr_scans, 0);
+ 	mutex_init(&ihost->mutex);
+-
+-	snprintf(ihost->scan_workq_name, sizeof(ihost->scan_workq_name),
+-		 "iscsi_scan_%d", shost->host_no);
+-	ihost->scan_workq = create_singlethread_workqueue(
+-						ihost->scan_workq_name);
+-	if (!ihost->scan_workq)
+-		return -ENOMEM;
+-	return 0;
+-}
+-
+-static int iscsi_remove_host(struct transport_container *tc, struct device *dev,
+-			     struct device *cdev)
+-{
+-	struct Scsi_Host *shost = dev_to_shost(dev);
+-	struct iscsi_cls_host *ihost = shost->shost_data;
+-
+-	destroy_workqueue(ihost->scan_workq);
+ 	return 0;
+ }
  
--	shost = iscsi_host_alloc(&iscsi_iser_sht, 0, ISER_DEF_CMD_PER_LUN, 1);
-+	shost = iscsi_host_alloc(&iscsi_iser_sht, 0, 1);
- 	if (!shost)
- 		return NULL;
- 	shost->transportt = iscsi_iser_scsi_transport;
-diff --git a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
-index f6ed9c6..307f55e 100644
---- a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
-+++ b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
-@@ -170,8 +170,7 @@ struct cxgb3i_hba *cxgb3i_hba_host_add(struct cxgb3i_adapter *snic,
+ static DECLARE_TRANSPORT_CLASS(iscsi_host_class,
+ 			       "iscsi_host",
+ 			       iscsi_setup_host,
+-			       iscsi_remove_host,
++			       NULL,
+ 			       NULL);
+ 
+ static DECLARE_TRANSPORT_CLASS(iscsi_session_class,
+@@ -568,7 +551,7 @@ static void __iscsi_unblock_session(struct work_struct *work)
+ 	 * scanning from userspace).
+ 	 */
+ 	if (shost->hostt->scan_finished) {
+-		if (queue_work(ihost->scan_workq, &session->scan_work))
++		if (scsi_queue_work(shost, &session->scan_work))
+ 			atomic_inc(&ihost->nr_scans);
+ 	}
+ }
+@@ -636,14 +619,6 @@ static void __iscsi_unbind_session(struct work_struct *work)
+ 	iscsi_session_event(session, ISCSI_KEVENT_UNBIND_SESSION);
+ }
+ 
+-static int iscsi_unbind_session(struct iscsi_cls_session *session)
+-{
+-	struct Scsi_Host *shost = iscsi_session_to_shost(session);
+-	struct iscsi_cls_host *ihost = shost->shost_data;
+-
+-	return queue_work(ihost->scan_workq, &session->unbind_work);
+-}
+-
+ struct iscsi_cls_session *
+ iscsi_alloc_session(struct Scsi_Host *shost, struct iscsi_transport *transport,
+ 		    int dd_size)
+@@ -796,7 +771,6 @@ static int iscsi_iter_destroy_conn_fn(struct device *dev, void *data)
+ void iscsi_remove_session(struct iscsi_cls_session *session)
+ {
+ 	struct Scsi_Host *shost = iscsi_session_to_shost(session);
+-	struct iscsi_cls_host *ihost = shost->shost_data;
+ 	unsigned long flags;
  	int err;
  
- 	shost = iscsi_host_alloc(&cxgb3i_host_template,
--				 sizeof(struct cxgb3i_hba),
--				 CXGB3I_SCSI_QDEPTH_DFLT, 1);
-+				 sizeof(struct cxgb3i_hba), 1);
- 	if (!shost) {
- 		cxgb3i_log_info("iscsi_host_alloc failed.\n");
- 		return NULL;
-@@ -843,7 +842,7 @@ static struct scsi_host_template cxgb3i_host_template = {
- 	.can_queue		= CXGB3I_SCSI_QDEPTH_DFLT - 1,
- 	.sg_tablesize		= SG_ALL,
- 	.max_sectors		= 0xFFFF,
--	.cmd_per_lun		= ISCSI_DEF_CMD_PER_LUN,
-+	.cmd_per_lun		= CXGB3I_SCSI_QDEPTH_DFLT,
- 	.eh_abort_handler	= iscsi_eh_abort,
- 	.eh_device_reset_handler = iscsi_eh_device_reset,
- 	.eh_target_reset_handler = iscsi_eh_target_reset,
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 79a706a..ad8676c 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -777,10 +777,11 @@ iscsi_sw_tcp_session_create(struct iscsi_endpoint *ep, uint16_t cmds_max,
- 		return NULL;
- 	}
+@@ -821,7 +795,7 @@ void iscsi_remove_session(struct iscsi_cls_session *session)
  
--	shost = iscsi_host_alloc(&iscsi_sw_tcp_sht, 0, qdepth, 1);
-+	shost = iscsi_host_alloc(&iscsi_sw_tcp_sht, 0, 1);
- 	if (!shost)
- 		return NULL;
- 	shost->transportt = iscsi_sw_tcp_scsi_transport;
-+	shost->cmd_per_lun = qdepth;
- 	shost->max_lun = iscsi_max_lun;
- 	shost->max_id = 0;
- 	shost->max_channel = 0;
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index ff89154..d12f979 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -2046,6 +2046,9 @@ int iscsi_host_add(struct Scsi_Host *shost, struct device *pdev)
- 	if (!shost->can_queue)
- 		shost->can_queue = ISCSI_DEF_XMIT_CMDS_MAX;
+ 	scsi_target_unblock(&session->dev);
+ 	/* flush running scans then delete devices */
+-	flush_workqueue(ihost->scan_workq);
++	scsi_flush_work(shost);
+ 	__iscsi_unbind_session(&session->unbind_work);
  
-+	if (!shost->cmd_per_lun)
-+		shost->cmd_per_lun = ISCSI_DEF_CMD_PER_LUN;
-+
- 	if (!shost->transportt->eh_timed_out)
- 		shost->transportt->eh_timed_out = iscsi_eh_cmd_timed_out;
- 	return scsi_add_host(shost, pdev);
-@@ -2056,15 +2059,13 @@ EXPORT_SYMBOL_GPL(iscsi_host_add);
-  * iscsi_host_alloc - allocate a host and driver data
-  * @sht: scsi host template
-  * @dd_data_size: driver host data size
-- * @qdepth: default device queue depth
-  * @xmit_can_sleep: bool indicating if LLD will queue IO from a work queue
-  *
-  * This should be called by partial offload and software iscsi drivers.
-  * To access the driver specific memory use the iscsi_host_priv() macro.
-  */
- struct Scsi_Host *iscsi_host_alloc(struct scsi_host_template *sht,
--				   int dd_data_size, uint16_t qdepth,
--				   bool xmit_can_sleep)
-+				   int dd_data_size, bool xmit_can_sleep)
- {
- 	struct Scsi_Host *shost;
- 	struct iscsi_host *ihost;
-@@ -2072,10 +2073,6 @@ struct Scsi_Host *iscsi_host_alloc(struct scsi_host_template *sht,
- 	shost = scsi_host_alloc(sht, sizeof(struct iscsi_host) + dd_data_size);
- 	if (!shost)
- 		return NULL;
--
--	if (qdepth == 0)
--		qdepth = ISCSI_DEF_CMD_PER_LUN;
--	shost->cmd_per_lun = qdepth;
- 	ihost = shost_priv(shost);
+ 	/* hw iscsi may not have removed all connections from session */
+@@ -1447,7 +1421,8 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh)
+ 	case ISCSI_UEVENT_UNBIND_SESSION:
+ 		session = iscsi_session_lookup(ev->u.d_session.sid);
+ 		if (session)
+-			iscsi_unbind_session(session);
++			scsi_queue_work(iscsi_session_to_shost(session),
++					&session->unbind_work);
+ 		else
+ 			err = -EINVAL;
+ 		break;
+@@ -1809,8 +1784,7 @@ iscsi_register_transport(struct iscsi_transport *tt)
+ 	priv->daemon_pid = -1;
+ 	priv->iscsi_transport = tt;
+ 	priv->t.user_scan = iscsi_user_scan;
+-	if (!(tt->caps & CAP_DATA_PATH_OFFLOAD))
+-		priv->t.create_work_queue = 1;
++	priv->t.create_work_queue = 1;
  
- 	if (xmit_can_sleep) {
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index b0b8a69..84eded9 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -346,7 +346,7 @@ extern int iscsi_host_get_param(struct Scsi_Host *shost,
- 				enum iscsi_host_param param, char *buf);
- extern int iscsi_host_add(struct Scsi_Host *shost, struct device *pdev);
- extern struct Scsi_Host *iscsi_host_alloc(struct scsi_host_template *sht,
--					  int dd_data_size, uint16_t qdepth,
-+					  int dd_data_size,
- 					  bool xmit_can_sleep);
- extern void iscsi_host_remove(struct Scsi_Host *shost);
- extern void iscsi_host_free(struct Scsi_Host *shost);
+ 	priv->dev.class = &iscsi_transport_class;
+ 	dev_set_name(&priv->dev, "%s", tt->name);
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index b50aabe..ac29fbd 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -206,8 +206,6 @@ struct iscsi_cls_session {
+ struct iscsi_cls_host {
+ 	atomic_t nr_scans;
+ 	struct mutex mutex;
+-	struct workqueue_struct *scan_workq;
+-	char scan_workq_name[20];
+ };
+ 
+ extern void iscsi_host_for_each_session(struct Scsi_Host *shost,
 -- 
 1.6.0.6
 
