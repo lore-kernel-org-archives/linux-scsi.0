@@ -1,66 +1,66 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: RE: [PATCH 1/2] resubmit cciss: kernel thread to detect changes on
-	MSA2012
-Date: Fri, 6 Mar 2009 20:00:30 +0000
-Message-ID: <0F5B06BAB751E047AB5C87D1F77A77885CA68ED159@GVW0547EXC.americas.hpqcorp.net>
-References: <20090306181603.GA30801@roadking.ldev.net>
- <1236363867.12019.2.camel@localhost.localdomain>
+From: Grant Grundler <grundler@google.com>
+Subject: Re: [PATCH] hpsa: SCSI driver for HP Smart Array controllers
+Date: Fri, 6 Mar 2009 12:59:48 -0800
+Message-ID: <da824cf30903061259j4a37ab7cneea308c736da469d@mail.gmail.com>
+References: <20090306085529.GP11787@kernel.dk>
+	 <20090306181302X.fujita.tomonori@lab.ntt.co.jp>
+	 <20090306092114.GS11787@kernel.dk>
+	 <20090306182705P.fujita.tomonori@lab.ntt.co.jp>
+	 <20090306093520.GV11787@kernel.dk>
+	 <20090306143856.GT15340@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0009.atlanta.hp.com ([15.192.0.46]:16708 "EHLO
-	g5t0009.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755750AbZCFUBZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Mar 2009 15:01:25 -0500
-In-Reply-To: <1236363867.12019.2.camel@localhost.localdomain>
-Content-Language: en-US
+Received: from smtp-out.google.com ([216.239.33.17]:9464 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751127AbZCFU7y convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Mar 2009 15:59:54 -0500
+In-Reply-To: <20090306143856.GT15340@beardog.cca.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, "coldwell@redhat.com" <coldwell@redhat.com>, "mikem@beardog.cca.cpqcorp.net" <mikem@beardog.cca.cpqcorp.net>
+To: scameron@beardog.cca.cpqcorp.net
+Cc: Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-kernel@vger.kernel.org, mike.miller@hp.com, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, coldwell@redhat.com, hare@novell.com, iss_storagedev@hp.com
 
- 
+On Fri, Mar 6, 2009 at 6:38 AM,  <scameron@beardog.cca.cpqcorp.net> wro=
+te:
+=2E..
+> The command buffers have to be in the first 4GB of memory, as the com=
+mand
+> register is only 32 bits, so they are allocated by pci_alloc_consiste=
+nt.
 
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
-> Sent: Friday, March 06, 2009 12:24 PM
-> To: Miller, Mike (OS Dev)
-> Cc: Andrew Morton; Jens Axboe; LKML; LKML-scsi; 
-> coldwell@redhat.com; mikem@beardog.cca.cpqcorp.net
-> Subject: Re: [PATCH 1/2] resubmit cciss: kernel thread to 
-> detect changes on MSA2012
-> 
-> On Fri, 2009-03-06 at 12:16 -0600, Mike Miller wrote:
-> > Patch 1 of 2
-> > 
-> > This is a resubmission of yesterdays patch to detect 
-> changes on the MSA2012.
-> > I hope I've addressed all concerns. This patch rearranges 
-> some of the 
-> > code so we also have coverage in the sg and the ioctl paths 
-> as well as 
-> > the main data path.
-> > 
-> > The MSA2012 cannot inform the driver of configuration changes since 
-> > all management is out of band. This is a departure from any 
-> storage we 
-> > have supported in the past. We need some way to detect 
-> changes on the 
-> > topology so we implement this kernel thread. In some 
-> instances there's 
-> > nothing we can do from the driver (like LUN failure) so 
-> just print out 
-> > a message. In the case where logical volumes are added or 
-> deleted we 
-> > call rebuild_lun_table to refreash the driver's view of the world.
-> > 
-> > Please consider this for inclusion.
-> 
-> I still don't quite see how the thread stops on module 
-> removal ... there needs to be an explicit kthread_stop() 
-> somewhere in the clean up path.
-> 
-I thought that was probably needed, duh. Is there anything else I should address at the same time?
+Huh?!!
+ISTR the mpt2sas driver is indicating it can handle 64-bit DMA masks fo=
+r
+both streaming and control data. I need to double check to be sure of t=
+hat.
 
--- mikem
+
+> However, the chained SG lists don't have that limitation, so I think =
+they
+> can be kmalloc'ed, and so not chew up and unreasonable amount of the
+> pci_alloc_consistent memory and get a larger number of SGs. =C2=A0 ..=
+=2Eright?
+> Maybe that's the better way to do it.
+
+I thought the driver was tracking this and using the appropriate constr=
+uct
+based on which DMA mask is in effect.
+
+hth,
+grant
+
+> -- steve
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
