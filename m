@@ -1,49 +1,81 @@
-From: peter <pbog@us.ibm.com>
-Subject: Re: [RFC 0/11] mpt2sas v00.100.11.11: 3rd revision
-Date: Fri, 06 Mar 2009 11:11:00 -0800
-Message-ID: <1236366660.10988.6.camel@gnattop>
-Reply-To: pbog@us.ibm.com
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Getting TRIM working
+Date: Fri, 6 Mar 2009 12:16:20 -0700
+Message-ID: <20090306191620.GA25995@parisc-linux.org>
+References: <20090303190700.GD20511@parisc-linux.org> <49AE47DB.4030200@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e7.ny.us.ibm.com ([32.97.182.137]:47458 "EHLO e7.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755717AbZCFTLD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Mar 2009 14:11:03 -0500
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e7.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n26J2NCR018487
-	for <linux-scsi@vger.kernel.org>; Fri, 6 Mar 2009 14:02:23 -0500
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n26JB14M193038
-	for <linux-scsi@vger.kernel.org>; Fri, 6 Mar 2009 14:11:01 -0500
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n26JB04f018965
-	for <linux-scsi@vger.kernel.org>; Fri, 6 Mar 2009 14:11:00 -0500
+Received: from palinux.external.hp.com ([192.25.206.14]:43200 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754516AbZCFTQY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Mar 2009 14:16:24 -0500
+Content-Disposition: inline
+In-Reply-To: <49AE47DB.4030200@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, "Moore, Eric" <Eric.Moore@lsi.com>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
+On Wed, Mar 04, 2009 at 11:20:27AM +0200, Boaz Harrosh wrote:
+> Matthew Wilcox wrote:
+> >         size = ALIGN(i * 8, 512);
+> >         memset(buffer + i * 8, 0, size - i * 8);
+> >         old_size = bio_iovec(bio)->bv_len;
+> > printk("before: bi_size %d, data_len %d, bv_len %d\n", bio->bi_size,
+> >                 req->data_len, old_size);
+> >         if (size > old_size) {
+> >                 bio_add_pc_page(req->q, bio, bio_page(bio),
+> >                                         size - old_size, old_size);
+> >                 req->data_len = size;
+> >         }
+> > printk("after: bi_size %d, data_len %d, bv_len %d\n", bio->bi_size,
+> >                 req->data_len, bio_iovec(bio)->bv_len);
+> > 
+> > Now req->data_len, bio->bi_size and bio_iovec(bio)->bv_len are all 512.
+> > Yet the AHCI driver still spits out 24 bytes and then stops (which hangs
+> > the drive).  What am I missing?
+> 
+> What about the length embedded in the CDB, which is usually derived from
+> scsi_bufflen(), or other places that look at scsi_bufflen() and not at
+> request && it's bios. The later might be bigger then scsi's in split commands
+> but the drivers should only consume scsi_bufflen() bytes.
 
-I tried to apply and compile this set of patches with the scsi-rc-fixes
-git tree and ran into a few problems.
+A fine idea, completely true ... I fixed it like this:
 
-The first issue I think is just an oversight. The Makefile in
-drivers/scsi doesn't get patched so even if the CONFIG_SCSI_MPT2SAS is
-define in the .config file the driver doesn't get built. I needed to add
-this line to the Makefile in drivers/scsi
++       old_size = bio_iovec(bio)->bv_len;
++printk("before: bi_size %d, data_len %d, bv_len %d sdb length %d\n",
++               bio->bi_size, req->data_len, old_size, scmd->sdb.length);
++       if (size > old_size) {
++               bio_add_pc_page(req->q, bio, bio_page(bio),
++                                       size - old_size, old_size);
++       }
++       scmd->sdb.length = req->data_len = size;
++printk("after: bi_size %d, data_len %d, bv_len %d sdb length %d\n",
++               bio->bi_size, req->data_len, bio_iovec(bio)->bv_len,
++               scmd->sdb.length);
 
-obj-$(CONFIG_SCSI_MPT2SAS)      += mpt2sas/
+and it howed sdb.length being 24 before, and 512 after.
 
-The second issue is that the driver doesn't build unless
-CONFIG_SCSI_MPT2SAS_LOGGING is defined. The problem seems to be that
-_debug_dump_mf, from line 163 of mpt2sas_debug.h, is called from a
-number of places that don't rely on CONFIG_SCSI_MPT2SAS_LOGGING. With
-logging enabled the driver builds without any errors or warnings.
+And the damn thing still spit out 24 bytes onto the bus and stopped.
 
-Peter Bogdanovic
-IBM System x enablement
+To prove where the bug is, I lied to SCSI.  I changed this:
 
+-       if (bio_add_pc_page(q, bio, page, 24, 0) < 24) {
++       if (bio_add_pc_page(q, bio, page, 512, 0) < 512) {
 
+and we spat out a 512 byte sector to the disc, which accepted it and
+erased the trimmed sector.  Yay.
 
+So we can go back to looking for a *fifth* place where we store the
+length of the data we're transferring.  I'm not convinced this says good
+things about our storage stack that we have so many places where we
+store the length.  There's more than this of course, because there's
+ATA's qc->nbytes, and tf->nsect+hob_nsect, but I already set those
+correctly.
 
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
