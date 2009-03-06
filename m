@@ -1,47 +1,84 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/11] mpt2sas v00.100.11.11 : mpt2sas_base sources
-Date: Fri, 06 Mar 2009 18:57:03 +0000
-Message-ID: <1236365823.12019.9.camel@localhost.localdomain>
-References: <20090304050759.GB4194@lsil.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] hpsa: SCSI driver for HP Smart Array controllers
+Date: Fri, 6 Mar 2009 20:06:53 +0100
+Message-ID: <20090306190653.GE11787@kernel.dk>
+References: <20090306085529.GP11787@kernel.dk> <20090306181302X.fujita.tomonori@lab.ntt.co.jp> <20090306092114.GS11787@kernel.dk> <20090306182705P.fujita.tomonori@lab.ntt.co.jp> <20090306093520.GV11787@kernel.dk> <20090306143856.GT15340@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:50670 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753579AbZCFS5H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Mar 2009 13:57:07 -0500
-In-Reply-To: <20090304050759.GB4194@lsil.com>
+Received: from brick.kernel.dk ([93.163.65.50]:43959 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752499AbZCFTG4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Mar 2009 14:06:56 -0500
+Content-Disposition: inline
+In-Reply-To: <20090306143856.GT15340@beardog.cca.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eric Moore <eric.moore@lsi.com>
-Cc: linux-scsi@vger.kernel.org
+To: scameron@beardog.cca.cpqcorp.net
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-kernel@vger.kernel.org, mike.miller@hp.com, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, coldwell@redhat.com, hare@novell.com, iss_storagedev@hp.com
 
-On Tue, 2009-03-03 at 22:08 -0700, Eric Moore wrote:
-> +/* base shared API */
-> +extern struct list_head ioc_list;
-> +
-> +int base_attach(struct MPT2SAS_ADAPTER *ioc);
-> +void base_detach(struct MPT2SAS_ADAPTER *ioc);
+On Fri, Mar 06 2009, scameron@beardog.cca.cpqcorp.net wrote:
+> On Fri, Mar 06, 2009 at 10:35:21AM +0100, Jens Axboe wrote:
+> > On Fri, Mar 06 2009, FUJITA Tomonori wrote:
+> > > On Fri, 6 Mar 2009 10:21:14 +0100
+> > > Jens Axboe <jens.axboe@oracle.com> wrote:
+> > > 
+> > > > On Fri, Mar 06 2009, FUJITA Tomonori wrote:
+> > > > > On Fri, 6 Mar 2009 09:55:29 +0100
+> > > > > Jens Axboe <jens.axboe@oracle.com> wrote:
+> > > > > 
+> > > > > > > If it's settable at init time, that would probably be enough for
+> > > > > > > the vast majority of uses (and more flexible than what we have now)
+> > > > > > > and a lot easier to implement.
+> > > > > > 
+> > > > > > Completely agree, don't waste time implementing something that nobody
+> > > > > > will ever touch. The only reason to fiddle with such a setting would be
+> > > > > > to increase it, because ios are too small. And even finding out that the
+> > > > > > segment limit is the one killing you would take some insight and work
+> > > > > > from the user.
+> > > > > > 
+> > > > > > Just make it Big Enough to cover most cases. 32 is definitely small, 256
+> > > > > > entries would get you 1MB ios which I guess is more appropriate.
+> > > > > 
+> > > > > I guess that the dynamic scheme is overdoing but seems that vendors
+> > > > > like some way to configure the sg entry size. The new MPT2SAS driver
+> > > > > has SCSI_MPT2SAS_MAX_SGE kernel config option:
+> > > > > 
+> > > > > http://marc.info/?l=linux-scsi&m=123619290803547&w=2
+> > > > > 
+> > > > > 
+> > > > > The kernel module option for this might be appropriate.
+> > > > 
+> > > > Dunno, still seems pretty pointless to me. The config option there
+> > > > quotes memory consumption as the reason to reduce the number of sg
+> > > > entries, however I think that's pretty silly. Additionally, a kernel
+> > > > config entry just means that customers will be stuck with a fixed value
+> > > > anyway. So I just don't see any merit to doing it that way either.
+> > > 
+> > > Yeah, agreed. the kernel config option is pretty pointless. But I'm
+> > > not sure that reducing memory consumption is completely pointless.
+> > 
+> > Agree, depends on how you do it. If you preallocate all the memory
+> > required for 1024 entries times the queue depth, then it may not be that
+> > small. But you can do it a bit more cleverly than that, and then I don't
+> > think it makes a lot of sense to provide any options for shrinking it.
+> 
+> The reason I mentioned making the number of SGs configurable is because with
+> a lot of controllers in the box (say 8, or ridiculous numbers of controllers
+> are potentially possible on some big ia64 boxes) then the memory available
+> by way of pci_alloc_consistent can be exhausted, and we have seen that happen.
+> 
+> The command buffers have to be in the first 4GB of memory, as the command
+> register is only 32 bits, so they are allocated by pci_alloc_consistent.
+> However, the chained SG lists don't have that limitation, so I think they
+> can be kmalloc'ed, and so not chew up and unreasonable amount of the
+> pci_alloc_consistent memory and get a larger number of SGs.   ...right?
+> Maybe that's the better way to do it.
 
-This is rather generic to be in the global namespace.
+You can use GFP_DMA32 for kmalloc() allocations below 4G. But you could
+just keep the command allocation with pci_alloc_consistent() and
+allocate the sgtables with ordinary kmalloc, as you suggest.
 
-> +/* config shared API */
-> +void config_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 VF_ID, u32
-> reply);
-
-And this.
-
-> +void ctl_init(void);
-> +void ctl_exit(void);
-> +void ctl_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 VF_ID, u32
-> reply);
-
-Ditto this.
-
-Would it not be better to have a mpt2sas_ prefix added to all the
-non-static symbols?
-
-James
-
+-- 
+Jens Axboe
 
