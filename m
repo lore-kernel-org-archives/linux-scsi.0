@@ -1,84 +1,49 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] hpsa: SCSI driver for HP Smart Array controllers
-Date: Fri, 6 Mar 2009 20:06:53 +0100
-Message-ID: <20090306190653.GE11787@kernel.dk>
-References: <20090306085529.GP11787@kernel.dk> <20090306181302X.fujita.tomonori@lab.ntt.co.jp> <20090306092114.GS11787@kernel.dk> <20090306182705P.fujita.tomonori@lab.ntt.co.jp> <20090306093520.GV11787@kernel.dk> <20090306143856.GT15340@beardog.cca.cpqcorp.net>
+From: peter <pbog@us.ibm.com>
+Subject: Re: [RFC 0/11] mpt2sas v00.100.11.11: 3rd revision
+Date: Fri, 06 Mar 2009 11:11:00 -0800
+Message-ID: <1236366660.10988.6.camel@gnattop>
+Reply-To: pbog@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:43959 "EHLO kernel.dk"
+Received: from e7.ny.us.ibm.com ([32.97.182.137]:47458 "EHLO e7.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752499AbZCFTG4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Mar 2009 14:06:56 -0500
-Content-Disposition: inline
-In-Reply-To: <20090306143856.GT15340@beardog.cca.cpqcorp.net>
+	id S1755717AbZCFTLD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Mar 2009 14:11:03 -0500
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e7.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n26J2NCR018487
+	for <linux-scsi@vger.kernel.org>; Fri, 6 Mar 2009 14:02:23 -0500
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n26JB14M193038
+	for <linux-scsi@vger.kernel.org>; Fri, 6 Mar 2009 14:11:01 -0500
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n26JB04f018965
+	for <linux-scsi@vger.kernel.org>; Fri, 6 Mar 2009 14:11:00 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scameron@beardog.cca.cpqcorp.net
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-kernel@vger.kernel.org, mike.miller@hp.com, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, coldwell@redhat.com, hare@novell.com, iss_storagedev@hp.com
+To: linux-scsi@vger.kernel.org, "Moore, Eric" <Eric.Moore@lsi.com>
 
-On Fri, Mar 06 2009, scameron@beardog.cca.cpqcorp.net wrote:
-> On Fri, Mar 06, 2009 at 10:35:21AM +0100, Jens Axboe wrote:
-> > On Fri, Mar 06 2009, FUJITA Tomonori wrote:
-> > > On Fri, 6 Mar 2009 10:21:14 +0100
-> > > Jens Axboe <jens.axboe@oracle.com> wrote:
-> > > 
-> > > > On Fri, Mar 06 2009, FUJITA Tomonori wrote:
-> > > > > On Fri, 6 Mar 2009 09:55:29 +0100
-> > > > > Jens Axboe <jens.axboe@oracle.com> wrote:
-> > > > > 
-> > > > > > > If it's settable at init time, that would probably be enough for
-> > > > > > > the vast majority of uses (and more flexible than what we have now)
-> > > > > > > and a lot easier to implement.
-> > > > > > 
-> > > > > > Completely agree, don't waste time implementing something that nobody
-> > > > > > will ever touch. The only reason to fiddle with such a setting would be
-> > > > > > to increase it, because ios are too small. And even finding out that the
-> > > > > > segment limit is the one killing you would take some insight and work
-> > > > > > from the user.
-> > > > > > 
-> > > > > > Just make it Big Enough to cover most cases. 32 is definitely small, 256
-> > > > > > entries would get you 1MB ios which I guess is more appropriate.
-> > > > > 
-> > > > > I guess that the dynamic scheme is overdoing but seems that vendors
-> > > > > like some way to configure the sg entry size. The new MPT2SAS driver
-> > > > > has SCSI_MPT2SAS_MAX_SGE kernel config option:
-> > > > > 
-> > > > > http://marc.info/?l=linux-scsi&m=123619290803547&w=2
-> > > > > 
-> > > > > 
-> > > > > The kernel module option for this might be appropriate.
-> > > > 
-> > > > Dunno, still seems pretty pointless to me. The config option there
-> > > > quotes memory consumption as the reason to reduce the number of sg
-> > > > entries, however I think that's pretty silly. Additionally, a kernel
-> > > > config entry just means that customers will be stuck with a fixed value
-> > > > anyway. So I just don't see any merit to doing it that way either.
-> > > 
-> > > Yeah, agreed. the kernel config option is pretty pointless. But I'm
-> > > not sure that reducing memory consumption is completely pointless.
-> > 
-> > Agree, depends on how you do it. If you preallocate all the memory
-> > required for 1024 entries times the queue depth, then it may not be that
-> > small. But you can do it a bit more cleverly than that, and then I don't
-> > think it makes a lot of sense to provide any options for shrinking it.
-> 
-> The reason I mentioned making the number of SGs configurable is because with
-> a lot of controllers in the box (say 8, or ridiculous numbers of controllers
-> are potentially possible on some big ia64 boxes) then the memory available
-> by way of pci_alloc_consistent can be exhausted, and we have seen that happen.
-> 
-> The command buffers have to be in the first 4GB of memory, as the command
-> register is only 32 bits, so they are allocated by pci_alloc_consistent.
-> However, the chained SG lists don't have that limitation, so I think they
-> can be kmalloc'ed, and so not chew up and unreasonable amount of the
-> pci_alloc_consistent memory and get a larger number of SGs.   ...right?
-> Maybe that's the better way to do it.
 
-You can use GFP_DMA32 for kmalloc() allocations below 4G. But you could
-just keep the command allocation with pci_alloc_consistent() and
-allocate the sgtables with ordinary kmalloc, as you suggest.
+I tried to apply and compile this set of patches with the scsi-rc-fixes
+git tree and ran into a few problems.
 
--- 
-Jens Axboe
+The first issue I think is just an oversight. The Makefile in
+drivers/scsi doesn't get patched so even if the CONFIG_SCSI_MPT2SAS is
+define in the .config file the driver doesn't get built. I needed to add
+this line to the Makefile in drivers/scsi
+
+obj-$(CONFIG_SCSI_MPT2SAS)      += mpt2sas/
+
+The second issue is that the driver doesn't build unless
+CONFIG_SCSI_MPT2SAS_LOGGING is defined. The problem seems to be that
+_debug_dump_mf, from line 163 of mpt2sas_debug.h, is called from a
+number of places that don't rely on CONFIG_SCSI_MPT2SAS_LOGGING. With
+logging enabled the driver builds without any errors or warnings.
+
+Peter Bogdanovic
+IBM System x enablement
+
+
+
 
