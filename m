@@ -1,75 +1,64 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [RFC] FC pass thru - Rev V
-Date: Sat, 7 Mar 2009 09:44:57 -0500
-Message-ID: <49B28869.6090507@emulex.com>
-References: <1227043498.4949.21.camel@ogier> <1234365225.24194.3.camel@ogier> <968C4C03B4940B48A4A8B1EA417CD6D82D2639A19E@AVEXMB2.qlogic.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: export bsg.h header to user-mode
+Date: Sat, 07 Mar 2009 11:37:57 -0500
+Message-ID: <49B2A2E5.9050802@interlog.com>
+References: <496E11D6.20705@panasas.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:50388 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754060AbZCGOpN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Mar 2009 09:45:13 -0500
-In-Reply-To: <968C4C03B4940B48A4A8B1EA417CD6D82D2639A19E@AVEXMB2.qlogic.org>
+Received: from smtp.infotech.no ([82.134.31.41]:41161 "EHLO
+	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753203AbZCGQiG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Mar 2009 11:38:06 -0500
+In-Reply-To: <496E11D6.20705@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Seokmann Ju <seokmann.ju@qlogic.com>
-Cc: "futjita.tomonori@lab.ntt.co.jp" <futjita.tomonori@lab.ntt.co.jp>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "sven@linux.vnet.ibm.com" <sven@linux.vnet.ibm.com>, "bharrosh@panasas.com" <bharrosh@panasas.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Smart, James" <James.Smart@Emulex.Com>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, open-osd mailing-list <osd-dev@open-osd.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
+Boaz Harrosh wrote:
+> Hi TOMO.
+> 
+> I'm using bsg.ko to submit SG_IO version-4 commands to scsi devices
+> from user-mode application. (version-4 for use of bidi and varlen).
+> 
+> I have not found a bsg.h header in my fedora-10 distribution. Is
+> bsg.h exported in kernel-headers-package in latest Kernels? If not
+> should we, and how to do it?
+> 
+> Meanwhile I will manually copy it to /usr/include/linux/bsg.h and see
+> if I need to fix any thing so it can be compiled from user-mode.
+> 
+> Also do you have a small libbsg or something to make it easier for
+> use by application? should we maintain such a package?
+> 
+> Pete from the OSC osd project has his set of headers and library
+> which I used now. Should I clean it up and send it? Or should I just 
+> keep it as part of the osd project for now? what are the sas and fc
+> guys using?
 
+I have been trying to incorporate bsg support into sg3_utils
+and need to cope with the /usr/include/linux/bsg.h header being
+present or not. It may be present elsewhere (e.g.
+/lib/modules/<kernel_version>/build/include/linux/bsg.h ).
+Either way bsg.h is still a pain in the user space. The reason
+is the kernel's (non standard) "__int" types.
 
-Seokmann Ju wrote:
->> From: James Smart [mailto:James.Smart@Emulex.Com]
->> Sent: Wednesday, February 11, 2009 7:14 AM
->>
->> Trying to kick-start this again...
->> I've updated the prior RFC with the comments from Seokmann,
->> SvenFujita, and Boaz. I would still like review on the
->> blk_xxx completion calls in the std and error paths.
-> <snip>
->> +static int
->> +fc_bsg_map_buffer(struct fc_bsg_buffer *buf, struct request *req)
->> +{
->> +	size_t sz = (sizeof(struct scatterlist) * req->nr_phys_segments);
->> +
->> +	BUG_ON(!req->nr_phys_segments);
->> +
->> +	buf->sg_list = kzalloc(sz, GFP_KERNEL);
->> +	if (!buf->sg_list)
->> +		return -ENOMEM;
->> +	sg_init_table(buf->sg_list, req->nr_phys_segments);
->> +	buf->sg_cnt = blk_rq_map_sg(req->q, req, buf->sg_list);
->> +	buf->payload_len = req->data_len;
->> +	return 0;
->> +}
-> It looks like that there is possibility that the dma buffer with more
-> than one sg element for ELS services - which is not allowed per FC spec.
+An autotools rule like this to see if linux/bsg.h is present:
+    AC_CHECK_HEADERS(linux/bsg.h)
+creates a lot of noise because it claims bsg.h is not well
+formed. The reason is those "__int" types. The solution is to
+add this non obvious rule:
+    AC_CHECK_HEADERS([linux/types.h linux/bsg.h], [], [],
+      [[#ifdef HAVE_LINUX_TYPES_H
+      # include <linux/types.h>
+      #endif
+      ]])
 
-How can the T11 FC spec ever reference anything about sg elements ? They 
-are completely independent.
+So my suggestion is to add '#include <linux/types.h>' to bsg.h
+(or clean up the types).
 
-> I've seen a couple of times from the driver testing.
-> I'm looking for some ways to making sure the ELS services
-> to get single sg for both request/reply_payload.
-> Any comments/suggestion?
-
-For ELS's, the payload should be small - usually <= 256bytes so it fits 
-within default login parameters. It should be 1 buffer, thus 1 sge. 
-(Note: the routine above is for any request, which covers more than just 
-ELS's).
-
-If you're getting multiple sg's, then either the buffer spans some 
-condition that crosses a boundary that blk_rq_map_sg() enforces (like a 
-4G boundary, but I doubt that's it), or - and more likely - your 
-application has a buffer that spans 2 pages which look contiguous to the 
-app, but are actually virtual-memory mapped to 2 independent physical 
-pages (thus the need for 2 sg's).  If your app knows the system page 
-size, and was careful about buffer placement and length within page 
-boundaries, it likely would never encounter this.  But, we would never 
-want to force apps to be this smart, and this would be a good 
-justification for supporting more than 1 sg.
-
--- james s
-
+Doug Gilbert
 
