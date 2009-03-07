@@ -1,90 +1,118 @@
-From: Seokmann Ju <seokmann.ju@qlogic.com>
-Subject: Re: [RFC] FC pass thru - Rev V
-Date: Sat, 7 Mar 2009 12:18:50 -0800
-Message-ID: <3256D4E4-B8C7-434C-AF07-5A7D73D7832D@qlogic.com>
-References: <1227043498.4949.21.camel@ogier> <1234365225.24194.3.camel@ogier> <968C4C03B4940B48A4A8B1EA417CD6D82D2639A19E@AVEXMB2.qlogic.org> <49B28869.6090507@emulex.com>
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Content-Type: text/plain; charset="US-ASCII"; format=flowed; delsp=yes
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/2] resubmit cciss: kernel thread to detect changes on
+	MSA2012
+Date: Sat, 07 Mar 2009 14:36:38 -0600
+Message-ID: <1236458199.3670.29.camel@localhost.localdomain>
+References: <20090306181603.GA30801@roadking.ldev.net>
+	 <1236363867.12019.2.camel@localhost.localdomain>
+	 <20090306232918.GA586@beardog.cca.cpqcorp.net>
+	 <20090306155623.2e817207.akpm@linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:2327 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755372AbZCGUSy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Mar 2009 15:18:54 -0500
-In-Reply-To: <49B28869.6090507@emulex.com>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:33130 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751723AbZCGUgs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Mar 2009 15:36:48 -0500
+In-Reply-To: <20090306155623.2e817207.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: "futjita.tomonori@lab.ntt.co.jp" <futjita.tomonori@lab.ntt.co.jp>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "sven@linux.vnet.ibm.com" <sven@linux.vnet.ibm.com>, "bharrosh@panasas.com" <bharrosh@panasas.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>, mike.miller@hp.com, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, coldwell@redhat.com
+
+On Fri, 2009-03-06 at 15:56 -0800, Andrew Morton wrote:
+> On Fri, 6 Mar 2009 17:29:18 -0600
+> "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net> wrote:
+> 
+> > On Fri, Mar 06, 2009 at 12:24:27PM -0600, James Bottomley wrote:
+> > > On Fri, 2009-03-06 at 12:16 -0600, Mike Miller wrote:
+> > > > Patch 1 of 2
+> > > > 
+> > > > This is a resubmission of yesterdays patch to detect changes on the MSA2012.
+> > > > I hope I've addressed all concerns. This patch rearranges some of the code
+> > > > so we also have coverage in the sg and the ioctl paths as well as the main
+> > > > data path.
+> > > > 
+> > > > The MSA2012 cannot inform the driver of configuration changes since all
+> > > > management is out of band. This is a departure from any storage we have
+> > > > supported in the past. We need some way to detect changes on the topology so
+> > > > we implement this kernel thread. In some instances there's nothing we can do
+> > > > from the driver (like LUN failure) so just print out a message. In the case
+> > > > where logical volumes are added or deleted we call rebuild_lun_table to
+> > > > refreash the driver's view of the world.
+> > > > 
+> > > > Please consider this for inclusion.
+> > > 
+> > > I still don't quite see how the thread stops on module removal ... there
+> > > needs to be an explicit kthread_stop() somewhere in the clean up path.
+> > > 
+> > > James
+> > > 
+> > > 
+> > This time I make a call to kthread_stop in cciss_remove_one. The driver can
+> > be unloaded and the thread gets cleaned up.
+> 
+> Please include a complete (and suitably updated) copy of the changelog
+> with each iteration of a patch.
+> 
+> 
+> > KNOWN BUG: it seems the timeout must expire before kthread_stop actually
+> > stops the thread. This causes the driver to hang and wait during rmmod. I've
+> > played around with several things but haven't found the correct way to
+> > address the problem. Looking at other drivers hasn't been much help. Any
+> > advice is greatly appreciated.
+> 
+> Well, wait_for_completion_timeout() is only going to return when the
+> timeout timed out, or someone ran complete().
+> 
+> > +static int scan_thread(ctlr_info_t *h)
+> > +{
+> > +	int rc;
+> > +	DECLARE_COMPLETION_ONSTACK(wait);
+> > +	h->rescan_wait = &wait;
+> > +
+> > +	while (!kthread_should_stop()) {
+> > +		rc = wait_for_completion_timeout(&wait, 300 * HZ);
+> > +		if (!rc)
+> > +			continue;
+> > +		else
+> > +			rebuild_lun_table(h, 0);
+> > +	}
+> > +	return 0;
+> > +}
+> 
+> So..  we shouldn't need the timeout here at all - just use
+> wait_for_completion().
+> 
+> static int scan_thread(ctlr_info_t *h)
+> {
+> 	DECLARE_COMPLETION_ONSTACK(wait);
+> 
+> 	h->rescan_wait = &wait;
+> 	for ( ; ; ) {
+> 		wait_for_completion(&wait);
+> 		if (kthread_should_stop())
+> 			break;
+> 		rebuild_lun_table(h, 0);
+> 	}
+> 	return 0;
+> }
+> 
+> And on the teardown path, do
+> 
+> 	complete(...);
+> 	kthread_stop(...);
+
+This is racy ... although I think the race would only show in a pre-empt
+kernel:  complete causes the thread to run immediately pre-empting us.
+Now it runs around the loop, through kthread_should_stop() and back to
+wait_for_completion() before we get a chance to run kthread_stop().
+
+The only way to avoid this seems to be to use wait queues and wake up
+(kthread_stop does an automatic wake_up of the process, which is ignored
+by completions).
+
+James
 
 
-On Mar 7, 2009, at 6:44 AM, James Smart wrote:
-
->
->
-> Seokmann Ju wrote:
->>> From: James Smart [mailto:James.Smart@Emulex.Com]
->>> Sent: Wednesday, February 11, 2009 7:14 AM
->>>
->>> Trying to kick-start this again...
->>> I've updated the prior RFC with the comments from Seokmann,
->>> SvenFujita, and Boaz. I would still like review on the
->>> blk_xxx completion calls in the std and error paths.
->> <snip>
->>> +static int
->>> +fc_bsg_map_buffer(struct fc_bsg_buffer *buf, struct request *req)
->>> +{
->>> +	size_t sz = (sizeof(struct scatterlist) * req->nr_phys_segments);
->>> +
->>> +	BUG_ON(!req->nr_phys_segments);
->>> +
->>> +	buf->sg_list = kzalloc(sz, GFP_KERNEL);
->>> +	if (!buf->sg_list)
->>> +		return -ENOMEM;
->>> +	sg_init_table(buf->sg_list, req->nr_phys_segments);
->>> +	buf->sg_cnt = blk_rq_map_sg(req->q, req, buf->sg_list);
->>> +	buf->payload_len = req->data_len;
->>> +	return 0;
->>> +}
->> It looks like that there is possibility that the dma buffer with more
->> than one sg element for ELS services - which is not allowed per FC  
->> spec.
->
-> How can the T11 FC spec ever reference anything about sg elements ?  
-> They
-> are completely independent.
-OK. Thanks for the clarification.
-
->
->
->> I've seen a couple of times from the driver testing.
->> I'm looking for some ways to making sure the ELS services
->> to get single sg for both request/reply_payload.
->> Any comments/suggestion?
->
-> For ELS's, the payload should be small - usually <= 256bytes so it  
-> fits
-> within default login parameters. It should be 1 buffer, thus 1 sge.
-> (Note: the routine above is for any request, which covers more than  
-> just
-> ELS's).
-Yes, understood it.
-
->
->
-> If you're getting multiple sg's, then either the buffer spans some
-> condition that crosses a boundary that blk_rq_map_sg() enforces  
-> (like a
-> 4G boundary, but I doubt that's it), or - and more likely - your
-> application has a buffer that spans 2 pages which look contiguous to  
-> the
-> app, but are actually virtual-memory mapped to 2 independent physical
-> pages (thus the need for 2 sg's).  If your app knows the system page
-> size, and was careful about buffer placement and length within page
-> boundaries, it likely would never encounter this.  But, we would never
-> want to force apps to be this smart, and this would be a good
-> justification for supporting more than 1 sg.
-OK. So the whole point that I brought up is implementation specific.
-Thank you for the comment.
-
-Seokmann
