@@ -1,288 +1,90 @@
-From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
-Subject: Re: [PATCH 1/2] resubmit cciss: kernel thread to detect changes on MSA2012
-Date: Sat, 7 Mar 2009 12:52:56 -0600
-Message-ID: <20090307185256.GB29798@beardog.cca.cpqcorp.net>
-References: <20090306181603.GA30801@roadking.ldev.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Seokmann Ju <seokmann.ju@qlogic.com>
+Subject: Re: [RFC] FC pass thru - Rev V
+Date: Sat, 7 Mar 2009 12:18:50 -0800
+Message-ID: <3256D4E4-B8C7-434C-AF07-5A7D73D7832D@qlogic.com>
+References: <1227043498.4949.21.camel@ogier> <1234365225.24194.3.camel@ogier> <968C4C03B4940B48A4A8B1EA417CD6D82D2639A19E@AVEXMB2.qlogic.org> <49B28869.6090507@emulex.com>
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Content-Type: text/plain; charset="US-ASCII"; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0028.austin.hp.com ([15.216.28.35]:8267 "EHLO
-	g1t0028.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753806AbZCGSw6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Mar 2009 13:52:58 -0500
-Content-Disposition: inline
-In-Reply-To: <20090306181603.GA30801@roadking.ldev.net>
+Received: from avexch1.qlogic.com ([198.70.193.115]:2327 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755372AbZCGUSy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Mar 2009 15:18:54 -0500
+In-Reply-To: <49B28869.6090507@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Miller <mike.miller@hp.com>, mikem@beardog.cca.cpqcorp.net, mikem@roadking.cca.cpqcorp.net
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, coldwell@redhat.com, james.bottomley@hansenpartnership.com
+To: James Smart <James.Smart@Emulex.Com>
+Cc: "futjita.tomonori@lab.ntt.co.jp" <futjita.tomonori@lab.ntt.co.jp>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "sven@linux.vnet.ibm.com" <sven@linux.vnet.ibm.com>, "bharrosh@panasas.com" <bharrosh@panasas.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, Mar 06, 2009 at 12:16:03PM -0600, Miller, Mike (OS Dev)?? wrote:
-Patch 1 of 2
 
-This is yet another go at the patch to detect changes on the MSA2012.
-I hope I've addressed all concerns. This patch rearranges some of the code
-so we also have coverage in the sg and the ioctl paths as well as the main
-data path.
+On Mar 7, 2009, at 6:44 AM, James Smart wrote:
 
-The MSA2012 cannot inform the driver of configuration changes since all
-management is out of band. This is a departure from any storage we have
-supported in the past. We need some way to detect changes on the topology so
-we implement this kernel thread. In some instances there's nothing we can do
-from the driver (like LUN failure) so just print out a message. In the case
-where logical volumes are added or deleted we call rebuild_lun_table to
-refresh the driver's view of the world.
+>
+>
+> Seokmann Ju wrote:
+>>> From: James Smart [mailto:James.Smart@Emulex.Com]
+>>> Sent: Wednesday, February 11, 2009 7:14 AM
+>>>
+>>> Trying to kick-start this again...
+>>> I've updated the prior RFC with the comments from Seokmann,
+>>> SvenFujita, and Boaz. I would still like review on the
+>>> blk_xxx completion calls in the std and error paths.
+>> <snip>
+>>> +static int
+>>> +fc_bsg_map_buffer(struct fc_bsg_buffer *buf, struct request *req)
+>>> +{
+>>> +	size_t sz = (sizeof(struct scatterlist) * req->nr_phys_segments);
+>>> +
+>>> +	BUG_ON(!req->nr_phys_segments);
+>>> +
+>>> +	buf->sg_list = kzalloc(sz, GFP_KERNEL);
+>>> +	if (!buf->sg_list)
+>>> +		return -ENOMEM;
+>>> +	sg_init_table(buf->sg_list, req->nr_phys_segments);
+>>> +	buf->sg_cnt = blk_rq_map_sg(req->q, req, buf->sg_list);
+>>> +	buf->payload_len = req->data_len;
+>>> +	return 0;
+>>> +}
+>> It looks like that there is possibility that the dma buffer with more
+>> than one sg element for ELS services - which is not allowed per FC  
+>> spec.
+>
+> How can the T11 FC spec ever reference anything about sg elements ?  
+> They
+> are completely independent.
+OK. Thanks for the clarification.
 
-Changelog:
-1. Do the completion(hba[i]->rescan_wait) before calling kthread_stop,
-this resolves the issue of waiting for the timeout on rmmod
-2. Added a new function called check_ioctl_unit_attention to cover UA's
-from the ioctl patch
-3. I preserved the wait_for_completion_timeout to avoid call traces
-caused by /proc/sys/kernel/hung_task_timeout_secs expiring
-4. Moved the call to check_for_unit_attention to evaluate_target_status
-since it's already called from complete_command
-5. Add retry_cmd as an argument to evaluate_target_status
-6. Added *rescan_wait to the controller info struct
+>
+>
+>> I've seen a couple of times from the driver testing.
+>> I'm looking for some ways to making sure the ELS services
+>> to get single sg for both request/reply_payload.
+>> Any comments/suggestion?
+>
+> For ELS's, the payload should be small - usually <= 256bytes so it  
+> fits
+> within default login parameters. It should be 1 buffer, thus 1 sge.
+> (Note: the routine above is for any request, which covers more than  
+> just
+> ELS's).
+Yes, understood it.
 
-Please consider this for inclusion.
+>
+>
+> If you're getting multiple sg's, then either the buffer spans some
+> condition that crosses a boundary that blk_rq_map_sg() enforces  
+> (like a
+> 4G boundary, but I doubt that's it), or - and more likely - your
+> application has a buffer that spans 2 pages which look contiguous to  
+> the
+> app, but are actually virtual-memory mapped to 2 independent physical
+> pages (thus the need for 2 sg's).  If your app knows the system page
+> size, and was careful about buffer placement and length within page
+> boundaries, it likely would never encounter this.  But, we would never
+> want to force apps to be this smart, and this would be a good
+> justification for supporting more than 1 sg.
+OK. So the whole point that I brought up is implementation specific.
+Thank you for the comment.
 
-Signed-off-by: Mike Miller <mike.miller@hp.com>
-
-diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index d2cb67b..96e20e1 100644
---- a/drivers/block/cciss.c
-+++ b/drivers/block/cciss.c
-@@ -51,6 +51,7 @@
- #include <scsi/scsi_ioctl.h>
- #include <linux/cdrom.h>
- #include <linux/scatterlist.h>
-+#include <linux/kthread.h>
- 
- #define CCISS_DRIVER_VERSION(maj,min,submin) ((maj<<16)|(min<<8)|(submin))
- #define DRIVER_NAME "HP CISS Driver (v 3.6.20)"
-@@ -186,6 +187,8 @@ static int sendcmd_withirq(__u8 cmd, int ctlr, void *buff, size_t size,
- 			   __u8 page_code, int cmd_type);
- 
- static void fail_all_cmds(unsigned long ctlr);
-+static int scan_thread(ctlr_info_t *h);
-+static int check_for_unit_attention(ctlr_info_t *h, CommandList_struct *c);
- 
- #ifdef CONFIG_PROC_FS
- static void cciss_procinit(int i);
-@@ -735,6 +738,12 @@ static int cciss_getgeo(struct block_device *bdev, struct hd_geometry *geo)
- 	return 0;
- }
- 
-+static void check_ioctl_unit_attention(ctlr_info_t *host, CommandList_struct *c)
-+{
-+	if (c->err_info->CommandStatus == CMD_TARGET_STATUS &&
-+			c->err_info->ScsiStatus != SAM_STAT_CHECK_CONDITION)
-+		(void)check_for_unit_attention(host, c);
-+}
- /*
-  * ioctl
-  */
-@@ -1029,6 +1038,8 @@ static int cciss_ioctl(struct block_device *bdev, fmode_t mode,
- 					 iocommand.buf_size,
- 					 PCI_DMA_BIDIRECTIONAL);
- 
-+			check_ioctl_unit_attention(host, c);
-+
- 			/* Copy the error information out */
- 			iocommand.error_info = *(c->err_info);
- 			if (copy_to_user
-@@ -1180,6 +1191,7 @@ static int cciss_ioctl(struct block_device *bdev, fmode_t mode,
- 					(dma_addr_t) temp64.val, buff_size[i],
- 					PCI_DMA_BIDIRECTIONAL);
- 			}
-+			check_ioctl_unit_attention(host, c);
- 			/* Copy the error information out */
- 			ioc->error_info = *(c->err_info);
- 			if (copy_to_user(argp, ioc, sizeof(*ioc))) {
-@@ -2585,12 +2597,14 @@ static inline unsigned int make_status_bytes(unsigned int scsi_status_byte,
- 		((driver_byte & 0xff) << 24);
- }
- 
--static inline int evaluate_target_status(CommandList_struct *cmd)
-+static inline int evaluate_target_status(ctlr_info_t *h,
-+			CommandList_struct *cmd, int *retry_cmd)
- {
- 	unsigned char sense_key;
- 	unsigned char status_byte, msg_byte, host_byte, driver_byte;
- 	int error_value;
- 
-+	*retry_cmd = 0;
- 	/* If we get in here, it means we got "target status", that is, scsi status */
- 	status_byte = cmd->err_info->ScsiStatus;
- 	driver_byte = DRIVER_OK;
-@@ -2618,6 +2632,11 @@ static inline int evaluate_target_status(CommandList_struct *cmd)
- 	if (((sense_key == 0x0) || (sense_key == 0x1)) && !blk_pc_request(cmd->rq))
- 		error_value = 0;
- 
-+	if (check_for_unit_attention(h, cmd)) {
-+		*retry_cmd = !blk_pc_request(cmd->rq);
-+		return 0;
-+	}
-+
- 	if (!blk_pc_request(cmd->rq)) { /* Not SG_IO or similar? */
- 		if (error_value != 0)
- 			printk(KERN_WARNING "cciss: cmd %p has CHECK CONDITION"
-@@ -2657,7 +2676,7 @@ static inline void complete_command(ctlr_info_t *h, CommandList_struct *cmd,
- 
- 	switch (cmd->err_info->CommandStatus) {
- 	case CMD_TARGET_STATUS:
--		rq->errors = evaluate_target_status(cmd);
-+		rq->errors = evaluate_target_status(h, cmd, &retry_cmd);
- 		break;
- 	case CMD_DATA_UNDERRUN:
- 		if (blk_fs_request(cmd->rq)) {
-@@ -3008,6 +3027,62 @@ static irqreturn_t do_cciss_intr(int irq, void *dev_id)
- 	return IRQ_HANDLED;
- }
- 
-+static int scan_thread(ctlr_info_t *h)
-+{
-+	int rc;
-+	DECLARE_COMPLETION_ONSTACK(wait);
-+	h->rescan_wait = &wait;
-+
-+	while (!kthread_should_stop()) {
-+		rc = wait_for_completion_timeout(&wait, 300 * HZ);
-+		if (!rc)
-+			continue;
-+		else
-+			rebuild_lun_table(h, 0);
-+	}
-+	return 0;
-+}
-+
-+static int check_for_unit_attention(ctlr_info_t *h, CommandList_struct *c)
-+{
-+	if (c->err_info->SenseInfo[2] != UNIT_ATTENTION)
-+		return 0;
-+
-+	switch (c->err_info->SenseInfo[12]) {
-+	case STATE_CHANGED:
-+		printk(KERN_WARNING "cciss%d: a state change "
-+			"detected, command retried\n", h->ctlr);
-+		return 1;
-+	break;
-+	case LUN_FAILED:
-+		printk(KERN_WARNING "cciss%d: LUN failure "
-+			"detected, action required\n", h->ctlr);
-+		return 1;
-+	break;
-+	case REPORT_LUNS_CHANGED:
-+		printk(KERN_WARNING "cciss%d: report LUN data "
-+			"changed\n", h->ctlr);
-+		if (h->rescan_wait)
-+			complete(h->rescan_wait);
-+		return 1;
-+	break;
-+	case POWER_OR_RESET:
-+		printk(KERN_WARNING "cciss%d: a power on "
-+			"or device reset detected\n", h->ctlr);
-+		return 1;
-+	break;
-+	case UNIT_ATTENTION_CLEARED:
-+		printk(KERN_WARNING "cciss%d: unit attention "
-+		    "cleared by another initiator\n", h->ctlr);
-+		return 1;
-+	break;
-+	default:
-+		printk(KERN_WARNING "cciss%d: unknown "
-+			"unit attention detected\n", h->ctlr);
-+				return 1;
-+	}
-+}
-+
- /*
-  *  We cannot read the structure directly, for portability we must use
-  *   the io functions.
-@@ -3600,6 +3675,7 @@ static int __devinit cciss_init_one(struct pci_dev *pdev,
- 	int rc;
- 	int dac, return_code;
- 	InquiryData_struct *inq_buff = NULL;
-+	char cciss_scan[14];
- 
- 	if (reset_devices) {
- 		/* Reset the controller with a PCI power-cycle */
-@@ -3751,6 +3827,12 @@ static int __devinit cciss_init_one(struct pci_dev *pdev,
- 	hba[i]->busy_initializing = 0;
- 
- 	rebuild_lun_table(hba[i], 1);
-+	snprintf(cciss_scan, 14, "cciss_scan%02d", i);
-+	hba[i]->cciss_scan_thread = kthread_run((void *)scan_thread, hba[i],
-+				cciss_scan);
-+	if (IS_ERR(hba[i]->cciss_scan_thread))
-+		return PTR_ERR(hba[i]->cciss_scan_thread);
-+
- 	return 1;
- 
- clean4:
-@@ -3826,6 +3908,7 @@ static void __devexit cciss_remove_one(struct pci_dev *pdev)
- 		printk(KERN_ERR "cciss: Unable to remove device \n");
- 		return;
- 	}
-+
- 	tmp_ptr = pci_get_drvdata(pdev);
- 	i = tmp_ptr->ctlr;
- 	if (hba[i] == NULL) {
-@@ -3834,6 +3917,9 @@ static void __devexit cciss_remove_one(struct pci_dev *pdev)
- 		return;
- 	}
- 
-+	complete(hba[i]->rescan_wait);
-+	kthread_stop(hba[i]->cciss_scan_thread);
-+
- 	remove_proc_entry(hba[i]->devname, proc_cciss);
- 	unregister_blkdev(hba[i]->major, hba[i]->devname);
- 
-diff --git a/drivers/block/cciss.h b/drivers/block/cciss.h
-index 15e2b84..703e080 100644
---- a/drivers/block/cciss.h
-+++ b/drivers/block/cciss.h
-@@ -121,6 +121,8 @@ struct ctlr_info
- 	struct sendcmd_reject_list scsi_rejects;
- #endif
- 	unsigned char alive;
-+	struct completion *rescan_wait;
-+	struct task_struct *cciss_scan_thread;
- };
- 
- /*  Defining the diffent access_menthods */
-diff --git a/drivers/block/cciss_cmd.h b/drivers/block/cciss_cmd.h
-index 24e22de..40b1b92 100644
---- a/drivers/block/cciss_cmd.h
-+++ b/drivers/block/cciss_cmd.h
-@@ -25,6 +25,29 @@
- #define CMD_TIMEOUT             0x000B
- #define CMD_UNABORTABLE		0x000C
- 
-+/* Unit Attentions ASC's as defined for the MSA2012sa */
-+#define POWER_OR_RESET			0x29
-+#define STATE_CHANGED			0x2a
-+#define UNIT_ATTENTION_CLEARED		0x2f
-+#define LUN_FAILED			0x3e
-+#define REPORT_LUNS_CHANGED		0x3f
-+
-+/* Unit Attentions ASCQ's as defined for the MSA2012sa */
-+
-+	/* These ASCQ's defined for ASC = POWER_OR_RESET */
-+#define POWER_ON_RESET			0x00
-+#define POWER_ON_REBOOT			0x01
-+#define SCSI_BUS_RESET			0x02
-+#define MSA_TARGET_RESET		0x03
-+#define CONTROLLER_FAILOVER		0x04
-+#define TRANSCEIVER_SE			0x05
-+#define TRANSCEIVER_LVD			0x06
-+
-+	/* These ASCQ's defined for ASC = STATE_CHANGED */
-+#define RESERVATION_PREEMPTED		0x03
-+#define ASYM_ACCESS_CHANGED		0x06
-+#define LUN_CAPACITY_CHANGED		0x09
-+
- //transfer direction
- #define XFER_NONE               0x00
- #define XFER_WRITE              0x01
+Seokmann
