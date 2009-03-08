@@ -1,76 +1,102 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: export bsg.h header to user-mode
-Date: Sun, 08 Mar 2009 12:05:25 +0200
-Message-ID: <49B39865.3060106@panasas.com>
-References: <496E11D6.20705@panasas.com> <49B2A2E5.9050802@interlog.com>
+Subject: Re: Getting TRIM working
+Date: Sun, 08 Mar 2009 12:28:27 +0200
+Message-ID: <49B39DCB.3040203@panasas.com>
+References: <20090303190700.GD20511@parisc-linux.org> <49AE47DB.4030200@panasas.com> <20090306191620.GA25995@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:22333 "EHLO
+Received: from gw-ca.panasas.com ([209.116.51.66]:23282 "EHLO
 	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751319AbZCHKHa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Mar 2009 06:07:30 -0400
-In-Reply-To: <49B2A2E5.9050802@interlog.com>
+	with ESMTP id S1751793AbZCHK37 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Mar 2009 06:29:59 -0400
+In-Reply-To: <20090306191620.GA25995@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, open-osd mailing-list <osd-dev@open-osd.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-Douglas Gilbert wrote:
-> Boaz Harrosh wrote:
->> Hi TOMO.
->>
->> I'm using bsg.ko to submit SG_IO version-4 commands to scsi devices
->> from user-mode application. (version-4 for use of bidi and varlen).
->>
->> I have not found a bsg.h header in my fedora-10 distribution. Is
->> bsg.h exported in kernel-headers-package in latest Kernels? If not
->> should we, and how to do it?
->>
->> Meanwhile I will manually copy it to /usr/include/linux/bsg.h and see
->> if I need to fix any thing so it can be compiled from user-mode.
->>
->> Also do you have a small libbsg or something to make it easier for
->> use by application? should we maintain such a package?
->>
->> Pete from the OSC osd project has his set of headers and library
->> which I used now. Should I clean it up and send it? Or should I just 
->> keep it as part of the osd project for now? what are the sas and fc
->> guys using?
+Matthew Wilcox wrote:
+> On Wed, Mar 04, 2009 at 11:20:27AM +0200, Boaz Harrosh wrote:
+>> Matthew Wilcox wrote:
+>>>         size = ALIGN(i * 8, 512);
+>>>         memset(buffer + i * 8, 0, size - i * 8);
+>>>         old_size = bio_iovec(bio)->bv_len;
+>>> printk("before: bi_size %d, data_len %d, bv_len %d\n", bio->bi_size,
+>>>                 req->data_len, old_size);
+>>>         if (size > old_size) {
+>>>                 bio_add_pc_page(req->q, bio, bio_page(bio),
+>>>                                         size - old_size, old_size);
+>>>                 req->data_len = size;
+>>>         }
+>>> printk("after: bi_size %d, data_len %d, bv_len %d\n", bio->bi_size,
+>>>                 req->data_len, bio_iovec(bio)->bv_len);
+>>>
+>>> Now req->data_len, bio->bi_size and bio_iovec(bio)->bv_len are all 512.
+>>> Yet the AHCI driver still spits out 24 bytes and then stops (which hangs
+>>> the drive).  What am I missing?
+>> What about the length embedded in the CDB, which is usually derived from
+>> scsi_bufflen(), or other places that look at scsi_bufflen() and not at
+>> request && it's bios. The later might be bigger then scsi's in split commands
+>> but the drivers should only consume scsi_bufflen() bytes.
 > 
-> I have been trying to incorporate bsg support into sg3_utils
-> and need to cope with the /usr/include/linux/bsg.h header being
-> present or not. It may be present elsewhere (e.g.
-> /lib/modules/<kernel_version>/build/include/linux/bsg.h ).
-> Either way bsg.h is still a pain in the user space. The reason
-> is the kernel's (non standard) "__int" types.
+> A fine idea, completely true ... I fixed it like this:
 > 
-> An autotools rule like this to see if linux/bsg.h is present:
->     AC_CHECK_HEADERS(linux/bsg.h)
-> creates a lot of noise because it claims bsg.h is not well
-> formed. The reason is those "__int" types. The solution is to
-> add this non obvious rule:
->     AC_CHECK_HEADERS([linux/types.h linux/bsg.h], [], [],
->       [[#ifdef HAVE_LINUX_TYPES_H
->       # include <linux/types.h>
->       #endif
->       ]])
+> +       old_size = bio_iovec(bio)->bv_len;
+> +printk("before: bi_size %d, data_len %d, bv_len %d sdb length %d\n",
+> +               bio->bi_size, req->data_len, old_size, scmd->sdb.length);
+> +       if (size > old_size) {
+> +               bio_add_pc_page(req->q, bio, bio_page(bio),
+> +                                       size - old_size, old_size);
+> +       }
+> +       scmd->sdb.length = req->data_len = size;
+> +printk("after: bi_size %d, data_len %d, bv_len %d sdb length %d\n",
+> +               bio->bi_size, req->data_len, bio_iovec(bio)->bv_len,
+> +               scmd->sdb.length);
 > 
-> So my suggestion is to add '#include <linux/types.h>' to bsg.h
-> (or clean up the types).
+> and it howed sdb.length being 24 before, and 512 after.
+> 
+> And the damn thing still spit out 24 bytes onto the bus and stopped.
+> 
+> To prove where the bug is, I lied to SCSI.  I changed this:
+> 
+> -       if (bio_add_pc_page(q, bio, page, 24, 0) < 24) {
+> +       if (bio_add_pc_page(q, bio, page, 512, 0) < 512) {
+> 
+> and we spat out a 512 byte sector to the disc, which accepted it and
+> erased the trimmed sector.  Yay.
+> 
+> So we can go back to looking for a *fifth* place where we store the
+> length of the data we're transferring.  I'm not convinced this says good
+> things about our storage stack that we have so many places where we
+> store the length.  There's more than this of course, because there's
+> ATA's qc->nbytes, and tf->nsect+hob_nsect, but I already set those
+> correctly.
 > 
 
-I agree, bsg.h is missing the '#include <linux/types.h>'.
-Do you want to send a patch? I thought 'make check_headers' should warn
-about that.
+That's because you are doing it at the wrong level at the wrong stage.
+1. block-level submits a request
+2. sd/sr or what ever ULD prepares a scsi_cmnd out of request.
+   Request's sizes are only a recommendation. ULD or scsi-ml may
+   prepare a smaller command then request. Once command is prepared
+   request is disregarded, you can bang on it all you want code will
+   not care about it one bit.
+3. LLD executes the scsi-command (Not the block-request)
+4. scsi-ml completes command's bytes, at this stage the request might
+   not be over and, and a reminder is re-prepared so the request can
+   be complete.
 
-> Doug Gilbert
-> 
+The code above scmd->sdb.length = req->data_len = size; is not allowed
+and can cause data leaks.
 
-Have you noticed that we added linux/bsg.h to exported headers
-for 2.6.29 and stable?
+You should ping Tejun, block-layer(1) and ATA-LLD(3) has a way to communicate
+alignments and drain buffers that expose some other possible lenght's to ata.
 
-Thanks
+And to your question the missing length above is probably encoded inside the
+submitted CDB. (scsi_cmnd->cmnd). When you change the length before
+stage (2) it works.
+
+I think you should be using the drain mechanisms built into ata 
+
 Boaz
- 
