@@ -1,60 +1,83 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [RFC] FC pass thru - Rev V
-Date: Sun, 08 Mar 2009 17:46:17 +0200
-Message-ID: <49B3E849.5040801@panasas.com>
-References: <1227043498.4949.21.camel@ogier> <1234365225.24194.3.camel@ogier> <968C4C03B4940B48A4A8B1EA417CD6D82D2639A19E@AVEXMB2.qlogic.org> <49B28869.6090507@emulex.com> <3256D4E4-B8C7-434C-AF07-5A7D73D7832D@qlogic.com> <49B3DD77.3020600@emulex.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Getting TRIM working
+Date: Sun, 8 Mar 2009 10:54:47 -0600
+Message-ID: <20090308165447.GN25995@parisc-linux.org>
+References: <20090303190700.GD20511@parisc-linux.org> <49AE47DB.4030200@panasas.com> <20090306191620.GA25995@parisc-linux.org> <49B39DCB.3040203@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f177.google.com ([209.85.219.177]:39667 "EHLO
-	mail-ew0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752617AbZCHPrF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Mar 2009 11:47:05 -0400
-Received: by ewy25 with SMTP id 25so625487ewy.37
-        for <linux-scsi@vger.kernel.org>; Sun, 08 Mar 2009 08:47:02 -0700 (PDT)
-In-Reply-To: <49B3DD77.3020600@emulex.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <49B39DCB.3040203@panasas.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>, Jeff Garzik <jeff@garzik.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: Seokmann Ju <seokmann.ju@qlogic.com>, "futjita.tomonori@lab.ntt.co.jp" <futjita.tomonori@lab.ntt.co.jp>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "sven@linux.vnet.ibm.com" <sven@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-James Smart wrote:
->>> If you're getting multiple sg's, then either the buffer spans some
->>> condition that crosses a boundary that blk_rq_map_sg() enforces  
->>> (like a
->>> 4G boundary, but I doubt that's it), or - and more likely - your
->>> application has a buffer that spans 2 pages which look contiguous to  
->>> the
->>> app, but are actually virtual-memory mapped to 2 independent physical
->>> pages (thus the need for 2 sg's).  If your app knows the system page
->>> size, and was careful about buffer placement and length within page
->>> boundaries, it likely would never encounter this.  But, we would never
->>> want to force apps to be this smart, and this would be a good
->>> justification for supporting more than 1 sg.
->> OK. So the whole point that I brought up is implementation specific.
->> Thank you for the comment.
+On Sun, Mar 08, 2009 at 12:28:27PM +0200, Boaz Harrosh wrote:
+> That's because you are doing it at the wrong level at the wrong stage.
+> 1. block-level submits a request
+> 2. sd/sr or what ever ULD prepares a scsi_cmnd out of request.
+>    Request's sizes are only a recommendation. ULD or scsi-ml may
+>    prepare a smaller command then request. Once command is prepared
+>    request is disregarded, you can bang on it all you want code will
+>    not care about it one bit.
+
+I may well be changing more than I need to, but it would be foolish of
+me to make the assumption at this point that nothing is looking at the
+request.
+
+> 3. LLD executes the scsi-command (Not the block-request)
+
+This is true, *but* some of the lengths in the block request still end
+up getting used, for example bv_len is used by blk_rq_map_sg() which is
+called by the LLD.
+
+> 4. scsi-ml completes command's bytes, at this stage the request might
+>    not be over and, and a reminder is re-prepared so the request can
+>    be complete.
 > 
-> Yes, but I wouldn't be surprised to see it occur often enough to be a 
-> pain.  What I would recommend is :  if your hardware wants only one 
-> buffer descriptor for ELSs, and there's 2 BGs, that you double-buffer 
-> it. Allocate a local buffer, transfer the users data into the buffer, 
-> and then use the local buffer for the hardware. Same on the receive 
-> path. A pain, yes, but this isn't time critical stuff, and it's much 
-> better than just returning an error to the app based on it's buffer 
-> alignment (which it probably doesn't even realize).
+> The code above scmd->sdb.length = req->data_len = size; is not allowed
+> and can cause data leaks.
+
+Simply not true.  We are *changing the amount of data we wish to
+transfer*.  SCSI would have sent down 24 bytes of data.  ATA needs to
+send down 512 bytes of data.
+
+> You should ping Tejun, block-layer(1) and ATA-LLD(3) has a way to communicate
+> alignments and drain buffers that expose some other possible lenght's to ata.
 > 
+> And to your question the missing length above is probably encoded inside the
+> submitted CDB. (scsi_cmnd->cmnd). When you change the length before
+> stage (2) it works.
 
-Or force a block bounce buffers by setting the queue alignment requirements
-(Can only work for max transfer of PAGE_SIZE/2 )
+No, that's not it.  This works (in sd.c):
 
-> The above works for ELS's (as its small), but I fully expect other 
-> things, like CT requests, to not be small and require multiple buffers. 
-> On those things, I hope the hardware supports multiple sg's as 
-> double-buffering it is ugly.
-> 
+        if (bio_add_pc_page(q, bio, page, 512, 0) < 512) {
+[...]
+        rq->cmd_type = REQ_TYPE_BLOCK_PC;
+	rq->cmd_len = 10;
+	rq->cmd[0] = UNMAP;
+	put_unaligned_be16(24, rq->cmd + 7);
 
-> -- james s
+So the 24 in the cmd gets ignored.
 
+> I think you should be using the drain mechanisms built into ata 
 
-Boaz
+drain seems only applicable to ATAPI, not to ATA.  The comment says:
+
+ *      ATAPI commands which transfer variable length data to host
+ *      might overflow due to application error or hardare bug.  This
+ *      function checks whether overflow should be drained and ignored
+ *      for @request.
+
+This isn't the case with discard/UNMAP/TRIM.  We know exactly how much
+data we want to send.  The problem is that I don't know how to update all
+the required places to change the amount of data being sent.  I don't
+see any other ATA command which needs to do this, so this is breaking
+new ground for libata-scsi.
+
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
