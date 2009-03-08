@@ -1,102 +1,49 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: Getting TRIM working
-Date: Sun, 08 Mar 2009 12:28:27 +0200
-Message-ID: <49B39DCB.3040203@panasas.com>
-References: <20090303190700.GD20511@parisc-linux.org> <49AE47DB.4030200@panasas.com> <20090306191620.GA25995@parisc-linux.org>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [RFC] FC pass thru - Rev V
+Date: Sun, 8 Mar 2009 11:00:07 -0400
+Message-ID: <49B3DD77.3020600@emulex.com>
+References: <1227043498.4949.21.camel@ogier> <1234365225.24194.3.camel@ogier> <968C4C03B4940B48A4A8B1EA417CD6D82D2639A19E@AVEXMB2.qlogic.org> <49B28869.6090507@emulex.com> <3256D4E4-B8C7-434C-AF07-5A7D73D7832D@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:23282 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751793AbZCHK37 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Mar 2009 06:29:59 -0400
-In-Reply-To: <20090306191620.GA25995@parisc-linux.org>
+Received: from emulex.emulex.com ([138.239.112.1]:48044 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752176AbZCHPAU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Mar 2009 11:00:20 -0400
+In-Reply-To: <3256D4E4-B8C7-434C-AF07-5A7D73D7832D@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>
+To: Seokmann Ju <seokmann.ju@qlogic.com>
+Cc: "futjita.tomonori@lab.ntt.co.jp" <futjita.tomonori@lab.ntt.co.jp>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "sven@linux.vnet.ibm.com" <sven@linux.vnet.ibm.com>, "bharrosh@panasas.com" <bharrosh@panasas.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Matthew Wilcox wrote:
-> On Wed, Mar 04, 2009 at 11:20:27AM +0200, Boaz Harrosh wrote:
->> Matthew Wilcox wrote:
->>>         size = ALIGN(i * 8, 512);
->>>         memset(buffer + i * 8, 0, size - i * 8);
->>>         old_size = bio_iovec(bio)->bv_len;
->>> printk("before: bi_size %d, data_len %d, bv_len %d\n", bio->bi_size,
->>>                 req->data_len, old_size);
->>>         if (size > old_size) {
->>>                 bio_add_pc_page(req->q, bio, bio_page(bio),
->>>                                         size - old_size, old_size);
->>>                 req->data_len = size;
->>>         }
->>> printk("after: bi_size %d, data_len %d, bv_len %d\n", bio->bi_size,
->>>                 req->data_len, bio_iovec(bio)->bv_len);
->>>
->>> Now req->data_len, bio->bi_size and bio_iovec(bio)->bv_len are all 512.
->>> Yet the AHCI driver still spits out 24 bytes and then stops (which hangs
->>> the drive).  What am I missing?
->> What about the length embedded in the CDB, which is usually derived from
->> scsi_bufflen(), or other places that look at scsi_bufflen() and not at
->> request && it's bios. The later might be bigger then scsi's in split commands
->> but the drivers should only consume scsi_bufflen() bytes.
-> 
-> A fine idea, completely true ... I fixed it like this:
-> 
-> +       old_size = bio_iovec(bio)->bv_len;
-> +printk("before: bi_size %d, data_len %d, bv_len %d sdb length %d\n",
-> +               bio->bi_size, req->data_len, old_size, scmd->sdb.length);
-> +       if (size > old_size) {
-> +               bio_add_pc_page(req->q, bio, bio_page(bio),
-> +                                       size - old_size, old_size);
-> +       }
-> +       scmd->sdb.length = req->data_len = size;
-> +printk("after: bi_size %d, data_len %d, bv_len %d sdb length %d\n",
-> +               bio->bi_size, req->data_len, bio_iovec(bio)->bv_len,
-> +               scmd->sdb.length);
-> 
-> and it howed sdb.length being 24 before, and 512 after.
-> 
-> And the damn thing still spit out 24 bytes onto the bus and stopped.
-> 
-> To prove where the bug is, I lied to SCSI.  I changed this:
-> 
-> -       if (bio_add_pc_page(q, bio, page, 24, 0) < 24) {
-> +       if (bio_add_pc_page(q, bio, page, 512, 0) < 512) {
-> 
-> and we spat out a 512 byte sector to the disc, which accepted it and
-> erased the trimmed sector.  Yay.
-> 
-> So we can go back to looking for a *fifth* place where we store the
-> length of the data we're transferring.  I'm not convinced this says good
-> things about our storage stack that we have so many places where we
-> store the length.  There's more than this of course, because there's
-> ATA's qc->nbytes, and tf->nsect+hob_nsect, but I already set those
-> correctly.
-> 
+>> If you're getting multiple sg's, then either the buffer spans some
+>> condition that crosses a boundary that blk_rq_map_sg() enforces  
+>> (like a
+>> 4G boundary, but I doubt that's it), or - and more likely - your
+>> application has a buffer that spans 2 pages which look contiguous to  
+>> the
+>> app, but are actually virtual-memory mapped to 2 independent physical
+>> pages (thus the need for 2 sg's).  If your app knows the system page
+>> size, and was careful about buffer placement and length within page
+>> boundaries, it likely would never encounter this.  But, we would never
+>> want to force apps to be this smart, and this would be a good
+>> justification for supporting more than 1 sg.
+> OK. So the whole point that I brought up is implementation specific.
+> Thank you for the comment.
 
-That's because you are doing it at the wrong level at the wrong stage.
-1. block-level submits a request
-2. sd/sr or what ever ULD prepares a scsi_cmnd out of request.
-   Request's sizes are only a recommendation. ULD or scsi-ml may
-   prepare a smaller command then request. Once command is prepared
-   request is disregarded, you can bang on it all you want code will
-   not care about it one bit.
-3. LLD executes the scsi-command (Not the block-request)
-4. scsi-ml completes command's bytes, at this stage the request might
-   not be over and, and a reminder is re-prepared so the request can
-   be complete.
+Yes, but I wouldn't be surprised to see it occur often enough to be a 
+pain.  What I would recommend is :  if your hardware wants only one 
+buffer descriptor for ELSs, and there's 2 BGs, that you double-buffer 
+it. Allocate a local buffer, transfer the users data into the buffer, 
+and then use the local buffer for the hardware. Same on the receive 
+path. A pain, yes, but this isn't time critical stuff, and it's much 
+better than just returning an error to the app based on it's buffer 
+alignment (which it probably doesn't even realize).
 
-The code above scmd->sdb.length = req->data_len = size; is not allowed
-and can cause data leaks.
+The above works for ELS's (as its small), but I fully expect other 
+things, like CT requests, to not be small and require multiple buffers. 
+On those things, I hope the hardware supports multiple sg's as 
+double-buffering it is ugly.
 
-You should ping Tejun, block-layer(1) and ATA-LLD(3) has a way to communicate
-alignments and drain buffers that expose some other possible lenght's to ata.
-
-And to your question the missing length above is probably encoded inside the
-submitted CDB. (scsi_cmnd->cmnd). When you change the length before
-stage (2) it works.
-
-I think you should be using the drain mechanisms built into ata 
-
-Boaz
+-- james s
