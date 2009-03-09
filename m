@@ -1,33 +1,32 @@
-From: ib@wupperonline.de (Ingo Brueckl)
-Subject: [PATCH] unnecessary SCSI module
-Date: Mon, 09 Mar 2009 20:06:00 +0100
-Message-ID: <49b5689f@wupperonline.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755312AbZCIUoV@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12207] block reads/writes > 122880 bytes to USB tape drive gives EBUSY
+Date: Mon,  9 Mar 2009 13:48:18 -0700 (PDT)
+Message-ID: <20090309204818.7E724108047@picon.linux-foundation.org>
+References: <bug-12207-11613@http.bugzilla.kernel.org/>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:58370 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753222AbZCIUsu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Mar 2009 16:48:50 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n29KmIQk001006
+	for <linux-scsi@vger.kernel.org>; Mon, 9 Mar 2009 13:48:19 -0700
+In-Reply-To: <bug-12207-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-When configuring MODULES with the kernel to be able to load external drivers
-coming as modules, but not using anything as module in the kernel itself, one
-would expect to end up in a module-free kernel. Currently, you don't if you
-use SCSI. You'll get one unnecessary module.
+http://bugzilla.kernel.org/show_bug.cgi?id=12207
 
-Please consider the attached patch.
 
-Signed-off-by: Ingo Brueckl <ib@wupperonline.de>
 
---- linux-2.6.28/drivers/scsi/Kconfig.orig	2008-12-25 00:26:37.000000000 +0100
-+++ linux-2.6.28/drivers/scsi/Kconfig	2009-03-06 22:49:40.000000000 +0100
-@@ -259,7 +259,7 @@ config SCSI_SCAN_ASYNC
- config SCSI_WAIT_SCAN
- 	tristate
- 	default m
--	depends on SCSI
-+	depends on SCSI = m || SCSI_SCAN_ASYNC = y
- 	depends on MODULES
 
- menu "SCSI Transports"
+
+------- Comment #21 from stern@rowland.harvard.edu  2009-03-09 13:48 -------
+Still no response.  Should I forget about the patch?
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
