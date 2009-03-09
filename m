@@ -1,93 +1,34 @@
 From: Eric Moore <eric.moore@lsi.com>
-Subject: [PATCH 8/12] mpt2sas v00.100.11.15 : Kconfig
-Date: Mon, 9 Mar 2009 01:25:19 -0600
-Message-ID: <20090309072518.GI18720@lsil.com>
+Subject: [PATCH 9/12] mpt2sas v00.100.11.15 : Makefile
+Date: Mon, 9 Mar 2009 01:26:31 -0600
+Message-ID: <20090309072629.GJ18720@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og114.obsmtp.com ([64.18.2.215]:33004 "EHLO
-	exprod7og114.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751635AbZCIVE4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Mar 2009 17:04:56 -0400
+Received: from exprod7og107.obsmtp.com ([64.18.2.167]:46984 "EHLO
+	exprod7og107.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752143AbZCIVGJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Mar 2009 17:06:09 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com
 
-Kconfig
+Makefile
 
-mpt2sas Kernel configuration file.
+mpt2sas driver Makefile.
 
 Signed-off-by: Eric Moore <eric.moore@lsi.com>
 ---
 
---- a/drivers/scsi/mpt2sas/Kconfig	1969-12-31 17:00:00.000000000 -0700
-+++ b/drivers/scsi/mpt2sas/Kconfig	2009-03-09 14:36:42.000000000 -0600
-@@ -0,0 +1,66 @@
-+#
-+# Kernel configuration file for the MPT2SAS
-+#
-+# This code is based on drivers/scsi/mpt2sas/Kconfig
-+# Copyright (C) 2007-2008  LSI Corporation
-+#  (mailto:DL-MPTFusionLinux@lsi.com)
-+
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License
-+# as published by the Free Software Foundation; either version 2
-+# of the License, or (at your option) any later version.
-+
-+# This program is distributed in the hope that it will be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+
-+# NO WARRANTY
-+# THE PROGRAM IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR
-+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT
-+# LIMITATION, ANY WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT,
-+# MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Each Recipient is
-+# solely responsible for determining the appropriateness of using and
-+# distributing the Program and assumes all risks associated with its
-+# exercise of rights under this Agreement, including but not limited to
-+# the risks and costs of program errors, damage to or loss of data,
-+# programs or equipment, and unavailability or interruption of operations.
-+
-+# DISCLAIMER OF LIABILITY
-+# NEITHER RECIPIENT NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY
-+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-+# DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED AND
-+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
-+# TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-+# USE OR DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS GRANTED
-+# HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES
-+
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write to the Free Software
-+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
-+# USA.
-+
-+config SCSI_MPT2SAS
-+	tristate "LSI MPT Fusion SAS 2.0 Device Driver"
-+	depends on PCI && SCSI
-+	select SCSI_SAS_ATTRS
-+	---help---
-+	This driver supports PCI-Express SAS 6Gb/s Host Adapters.
-+
-+config SCSI_MPT2SAS_MAX_SGE
-+	int "LSI MPT Fusion Max number of SG Entries (16 - 128)"
-+	depends on PCI && SCSI && SCSI_MPT2SAS
-+	default "128"
-+	range 16 128
-+	---help---
-+	This option allows you to specify the maximum number of scatter-
-+	gather entries per I/O. The driver default is 128, which matches
-+	SAFE_PHYS_SEGMENTS.  However, it may decreased down to 16.
-+	Decreasing this parameter will reduce memory requirements
-+	on a per controller instance.
-+
-+config SCSI_MPT2SAS_LOGGING
-+	bool "LSI MPT Fusion logging facility"
-+	depends on PCI && SCSI && SCSI_MPT2SAS
-+	---help---
-+	This turns on a logging facility.
+--- a/drivers/scsi/mpt2sas/Makefile	1969-12-31 17:00:00.000000000 -0700
++++ b/drivers/scsi/mpt2sas/Makefile	2009-03-09 14:36:42.000000000 -0600
+@@ -0,0 +1,7 @@
++# mpt2sas makefile
++obj-$(CONFIG_SCSI_MPT2SAS) += mpt2sas.o
++mpt2sas-y +=  mpt2sas_base.o        \
++		mpt2sas_config.o    \
++		mpt2sas_scsih.o     \
++		mpt2sas_transport.o \
++		mpt2sas_ctl.o
