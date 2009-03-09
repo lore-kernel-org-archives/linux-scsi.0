@@ -1,34 +1,41 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Getting TRIM working
-Date: Sun, 08 Mar 2009 16:32:36 -0500
-Message-ID: <1236547956.4861.17.camel@localhost.localdomain>
-References: <20090303190700.GD20511@parisc-linux.org>
-	 <49AE47DB.4030200@panasas.com> <20090306191620.GA25995@parisc-linux.org>
-	 <49B39DCB.3040203@panasas.com>
-	 <1236547480.4861.12.camel@localhost.localdomain>
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: [PATCH] cpumask: use modern cpumask functions in drivers/scsi/fcoe/libfcoe.c
+Date: Mon, 9 Mar 2009 14:36:11 +1030
+Message-ID: <200903091436.11983.rusty@rustcorp.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1236547480.4861.12.camel@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ozlabs.org ([203.10.76.45]:48022 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751082AbZCIEGR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 Mar 2009 00:06:17 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: devel@open-fcoe.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sun, 2009-03-08 at 16:24 -0500, James Bottomley wrote:
-> The problem in the prepare is you need to set up a command with data.
-> What I'm not quite clear on is why blk_rq_map_kern() on a kmalloc'd
-> buffer can't be used.  You'd end up with a dual bio request (one for the
-> discard, one for the data), but they should tear down correctly using
-> the separate bio teardowns and pass correctly into blk_rq_map_sg() which
-> was the original point.
+Impact: use new API
 
-Actually, found the reason, blk_rq_map_kern will blast the original bio
-from the request.  You could fix this by chaining it back again at the
-beginning.  If that works, we could just wrap it into a block API to
-prevent users from having to muck with bios.
+first_cpu(cpu_online_map) => cpumask_first(cpu_online_mask)
 
-James
+Signed-off-by: Rusty Russell <rusty@rustcorp.com.au>
+Cc: devel@open-fcoe.org
+---
+ drivers/scsi/fcoe/libfcoe.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
+diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
+--- a/drivers/scsi/fcoe/libfcoe.c
++++ b/drivers/scsi/fcoe/libfcoe.c
+@@ -237,7 +237,7 @@ int fcoe_rcv(struct sk_buff *skb, struct
+ 	 */
+ 	cpu_idx = oxid & (num_online_cpus() - 1);
+ 	if (!fcoe_percpu[cpu_idx] || !cpu_online(cpu_idx))
+-		cpu_idx = first_cpu(cpu_online_map);
++		cpu_idx = cpumask_first(cpu_online_mask);
+ #endif
+ 	fps = fcoe_percpu[cpu_idx];
+ 
