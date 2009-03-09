@@ -1,35 +1,49 @@
-From: Eric Moore <eric.moore@lsi.com>
-Subject: [PATCH 12/12] mpt2sas v00.100.11.15 : scsiml Makefile
-Date: Mon, 9 Mar 2009 01:28:18 -0600
-Message-ID: <20090309072817.GM18720@lsil.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] unnecessary SCSI module
+Date: Mon, 09 Mar 2009 21:10:29 +0000
+Message-ID: <1236633029.6029.1.camel@localhost.localdomain>
+References: <49b5689f@wupperonline.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og115.obsmtp.com ([64.18.2.217]:46150 "EHLO
-	exprod7og115.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751759AbZCIVHz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Mar 2009 17:07:55 -0400
-Content-Disposition: inline
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:50818 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752202AbZCIVKe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Mar 2009 17:10:34 -0400
+In-Reply-To: <49b5689f@wupperonline.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com
+To: Ingo Brueckl <ib@wupperonline.de>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-scsiml Makefile
+On Mon, 2009-03-09 at 20:06 +0100, Ingo Brueckl wrote:
+> When configuring MODULES with the kernel to be able to load external drivers
+> coming as modules, but not using anything as module in the kernel itself, one
+> would expect to end up in a module-free kernel. Currently, you don't if you
+> use SCSI. You'll get one unnecessary module.
+> 
+> Please consider the attached patch.
+> 
+> Signed-off-by: Ingo Brueckl <ib@wupperonline.de>
+> 
+> --- linux-2.6.28/drivers/scsi/Kconfig.orig	2008-12-25 00:26:37.000000000 +0100
+> +++ linux-2.6.28/drivers/scsi/Kconfig	2009-03-06 22:49:40.000000000 +0100
+> @@ -259,7 +259,7 @@ config SCSI_SCAN_ASYNC
+>  config SCSI_WAIT_SCAN
+>  	tristate
+>  	default m
+> -	depends on SCSI
+> +	depends on SCSI = m || SCSI_SCAN_ASYNC = y
 
-Adding mptsas to the common scsi ml Makefile.
+This isn't right because SCSI_SCAN_ASYNC only sets the *default*
+behaviour of the kernel.  Even if it's n the user can still boot up with
+async scans by setting the kernel parameter.
 
-Signed-off-by: Eric Moore <eric.moore@lsi.com>
----
+It also keeps coming up regularly:
 
-diff -uaprN a/drivers/scsi/Makefile b/drivers/scsi/Makefile
---- a/drivers/scsi/Makefile	2009-03-07 22:19:57.000000000 -0700
-+++ b/drivers/scsi/Makefile	2009-03-07 22:33:48.000000000 -0700
-@@ -99,6 +99,7 @@ obj-$(CONFIG_SCSI_DC390T)	+= tmscsim.o
- obj-$(CONFIG_MEGARAID_LEGACY)	+= megaraid.o
- obj-$(CONFIG_MEGARAID_NEWGEN)	+= megaraid/
- obj-$(CONFIG_MEGARAID_SAS)	+= megaraid/
-+obj-$(CONFIG_SCSI_MPT2SAS)	+= mpt2sas/
- obj-$(CONFIG_SCSI_ACARD)	+= atp870u.o
- obj-$(CONFIG_SCSI_SUNESP)	+= esp_scsi.o	sun_esp.o
- obj-$(CONFIG_SCSI_GDTH)		+= gdth.o
+http://marc.info/?t=122658550300002
+
+James
+
+
