@@ -1,34 +1,35 @@
 From: Eric Moore <eric.moore@lsi.com>
-Subject: [PATCH 11/12] mpt2sas v00.100.11.15 : miscdevice
-Date: Mon, 9 Mar 2009 01:27:49 -0600
-Message-ID: <20090309072748.GL18720@lsil.com>
+Subject: [PATCH 12/12] mpt2sas v00.100.11.15 : scsiml Makefile
+Date: Mon, 9 Mar 2009 01:28:18 -0600
+Message-ID: <20090309072817.GM18720@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og116.obsmtp.com ([64.18.2.219]:57984 "EHLO
-	exprod7og116.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751481AbZCIVH1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Mar 2009 17:07:27 -0400
+Received: from exprod7og115.obsmtp.com ([64.18.2.217]:46150 "EHLO
+	exprod7og115.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751759AbZCIVHz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Mar 2009 17:07:55 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com
 
-linux/miscdevice.h
+scsiml Makefile
 
-Adding suport for MPT2SAS_MINOR(221)
+Adding mptsas to the common scsi ml Makefile.
 
 Signed-off-by: Eric Moore <eric.moore@lsi.com>
 ---
 
---- a/include/linux/miscdevice.h	2008-11-03 11:38:20.000000000 -0700
-+++ b/include/linux/miscdevice.h	2008-11-03 11:37:20.000000000 -0700
-@@ -25,6 +25,7 @@
- #define MICROCODE_MINOR		184
- #define MWAVE_MINOR	219		/* ACP/Mwave Modem */
- #define MPT_MINOR	220
-+#define MPT2SAS_MINOR	221
- #define MISC_DYNAMIC_MINOR 255
- 
- #define TUN_MINOR	     200
+diff -uaprN a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+--- a/drivers/scsi/Makefile	2009-03-07 22:19:57.000000000 -0700
++++ b/drivers/scsi/Makefile	2009-03-07 22:33:48.000000000 -0700
+@@ -99,6 +99,7 @@ obj-$(CONFIG_SCSI_DC390T)	+= tmscsim.o
+ obj-$(CONFIG_MEGARAID_LEGACY)	+= megaraid.o
+ obj-$(CONFIG_MEGARAID_NEWGEN)	+= megaraid/
+ obj-$(CONFIG_MEGARAID_SAS)	+= megaraid/
++obj-$(CONFIG_SCSI_MPT2SAS)	+= mpt2sas/
+ obj-$(CONFIG_SCSI_ACARD)	+= atp870u.o
+ obj-$(CONFIG_SCSI_SUNESP)	+= esp_scsi.o	sun_esp.o
+ obj-$(CONFIG_SCSI_GDTH)		+= gdth.o
