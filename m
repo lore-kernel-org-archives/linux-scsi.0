@@ -1,65 +1,45 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [PATCH] bsg: add linux/types.h include to bsg.h
-Date: Mon, 09 Mar 2009 10:51:38 -0400
-Message-ID: <49B52CFA.3030007@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Getting TRIM working
+Date: Mon, 9 Mar 2009 09:17:16 -0600
+Message-ID: <20090309151715.GT25995@parisc-linux.org>
+References: <20090303190700.GD20511@parisc-linux.org> <49AE47DB.4030200@panasas.com> <20090306191620.GA25995@parisc-linux.org> <49B39DCB.3040203@panasas.com> <1236547480.4861.12.camel@localhost.localdomain> <1236547956.4861.17.camel@localhost.localdomain> <20090309083614.GP25995@parisc-linux.org> <1236607495.3318.5.camel@localhost.localdomain> <20090309141451.GS25995@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------010805060408040805050604"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:56240 "EHLO
-	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751078AbZCIOvm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Mar 2009 10:51:42 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by elrond2.infotech.no (Postfix) with ESMTP id 738061BF23
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Mar 2009 15:51:40 +0100 (CET)
-Received: from elrond2.infotech.no ([127.0.0.1])
-	by localhost (elrond2.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id yIs0cl02pJYq for <linux-scsi@vger.kernel.org>;
-	Mon,  9 Mar 2009 15:51:40 +0100 (CET)
-Received: from [192.168.48.95] (ip-111.51.99.216.dsl-cust.ca.inter.net [216.99.51.111])
-	by elrond2.infotech.no (Postfix) with ESMTP id B51E01BF22
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Mar 2009 15:51:39 +0100 (CET)
+Received: from palinux.external.hp.com ([192.25.206.14]:51515 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750907AbZCIPRS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Mar 2009 11:17:18 -0400
+Content-Disposition: inline
+In-Reply-To: <20090309141451.GS25995@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>, Jeff Garzik <jeff@garzik.org>, David Woodhouse <dwmw2@infradead.org>
 
-This is a multi-part message in MIME format.
---------------010805060408040805050604
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+On Mon, Mar 09, 2009 at 08:14:51AM -0600, Matthew Wilcox wrote:
+> I added that in an earlier patch:
+> 
+> http://git.kernel.org/?p=linux/kernel/git/willy/ssd.git;a=commitdiff;h=f6ebf54cb8045a0cab19d73e26a07945c29d1394;hp=1223b373ae0283221b46e70955eb825679c5a6cb
 
-Since bsg.h has recently been added to the list of kernel
-headers that should be exported to the user space, this
-attachment makes bsg.h more user space "friendly".
-Specifically autotools dislike headers that don't compile
-freestanding and bsg.h's use of __u32 types (and friends)
-are not standard C (C90 or C99). The inclusion of
-linux/types.h fixes that.
+I've pushed out a new version of the trim patchset:
 
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+http://git.kernel.org/?p=linux/kernel/git/willy/ssd.git;a=shortlog;h=trim-20090309
 
+Now that the ATA bits don't rely on the SCSI bits, I've rearranged the
+SCSI bits to be last (since we seem to be closer to having consensus
+and shipping devices using TRIM than we do UNMAP).
 
+After I've had a chance to do some testing with these patches, I'd like to
+see the first five patches go upstream during the upcoming merge window,
+probably through Jeff's IDE tree.
 
---------------010805060408040805050604
-Content-Type: text/x-patch;
- name="bsg_h_linux_types.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="bsg_h_linux_types.diff"
+I'd also like the sixth and seventh patches to go upstream during that
+merge window, since we also need Read Capacity 16 for 4k sector support,
+but that is a different topic for a different thread.
 
---- linux-2.6.28/include/linux/bsg.h_orig	2008-07-15 18:30:10.000000000 -0400
-+++ linux-2.6.28/include/linux/bsg.h	2009-03-09 10:36:49.000000000 -0400
-@@ -1,6 +1,8 @@
- #ifndef BSG_H
- #define BSG_H
- 
-+#include <linux/types.h>
-+
- #define BSG_PROTOCOL_SCSI		0
- 
- #define BSG_SUB_PROTOCOL_SCSI_CMD	0
-
-
---------------010805060408040805050604--
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
