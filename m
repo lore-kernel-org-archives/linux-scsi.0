@@ -1,28 +1,37 @@
-From: "Jan Beulich" <jbeulich@novell.com>
-Subject: RE: MSI override changes in mptbase
-Date: Tue, 10 Mar 2009 13:41:48 +0000
-Message-ID: <49B67C2C.76E4.0078.0@novell.com>
-References: <49B6559C.76E4.0078.0@novell.com>
- <0D1E8821739E724A86F4D16902CE275C140E25C9F9@inbmail01.lsi.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] unnecessary SCSI module
+Date: Tue, 10 Mar 2009 09:46:30 -0500
+Message-ID: <1236696391.3316.6.camel@localhost.localdomain>
+References: <49b60f4c@wupperonline.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.id2.novell.com ([195.33.99.129]:15588 "EHLO
-	vpn.id2.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752384AbZCJN7e convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Mar 2009 09:59:34 -0400
-In-Reply-To: <0D1E8821739E724A86F4D16902CE275C140E25C9F9@inbmail01.lsi.com>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755856AbZCJOqu@vger.kernel.org>
+In-Reply-To: <49b60f4c@wupperonline.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ingo Brueckl <ib@wupperonline.de>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kashyap Desai <Kashyap.Desai@lsi.com>
-Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "yinghai@kernel.org" <yinghai@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
->>> "Desai, Kashyap" <Kashyap.Desai@lsi.com> 10.03.09 13:12 >>>
->Default behavior for all 3 buses (FC, SPI, and SAS) with respect to MSI is OFF. It is up to user, whether they want to enable/disable >MSI.
+On Tue, 2009-03-10 at 08:00 +0100, Ingo Brueckl wrote:
+> James Bottomley <James.Bottomley@HansenPartnership.com> writes:
+> 
+> >> When configuring MODULES with the kernel to be able to load external
+> >> drivers coming as modules, but not using anything as module in the kernel
+> >> itself, one would expect to end up in a module-free kernel. Currently, you
+> >> don't if you use SCSI. You'll get one unnecessary module.
+> 
+>  > This isn't right because SCSI_SCAN_ASYNC only sets the *default*
+>  > behaviour of the kernel.  Even if it's n the user can still boot up with
+>  > async scans by setting the kernel parameter.
+> 
+> Ok, understood. But has it to be a module then? Why not giving the choice
+> between building it directly into the kernel or as a module?
 
-Why is that change in behavior for SAS needed then?
+If you read through the threads, that question is answered.
 
-Thanks, Jan
+>  > It also keeps coming up regularly:
+> 
+> Well, then something doesn't seem to be ok, does it? ;-)
 
+James
