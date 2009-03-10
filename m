@@ -1,72 +1,105 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH] unnecessary SCSI module
-Date: Tue, 10 Mar 2009 18:24:35 +0100
-Message-ID: <49B6A253.8040004@s5r6.in-berlin.de>
-References: <49b5689f@wupperonline.de> <1236633029.6029.1.camel@localhost.localdomain>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: Re: [PATCH][RESUBMIT] scsi_dh_rdac: Retry mode select for
+	NO_SENSE, ABORTED_COMMAND, UNIT_ATTENTION, NOT_READY(02/04/01)
+Date: Tue, 10 Mar 2009 11:48:44 -0700
+Message-ID: <1236710924.2178.4.camel@chandra-ubuntu>
+References: <0D1E8821739E724A86F4D16902CE275C140E25C59C@inbmail01.lsi.com>
+Reply-To: sekharan@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:57245 "EHLO
-	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751777AbZCJRZv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Mar 2009 13:25:51 -0400
-In-Reply-To: <1236633029.6029.1.camel@localhost.localdomain>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:40446 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751570AbZCJSqQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Mar 2009 14:46:16 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e35.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n2AIfx5Q001160
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Mar 2009 12:41:59 -0600
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n2AIk5sx060860
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Mar 2009 12:46:06 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n2AIk1TL015583
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Mar 2009 12:46:05 -0600
+In-Reply-To: <0D1E8821739E724A86F4D16902CE275C140E25C59C@inbmail01.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Ingo Brueckl <ib@wupperonline.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>
+Cc: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>
 
-James Bottomley wrote:
-> On Mon, 2009-03-09 at 20:06 +0100, Ingo Brueckl wrote:
->> When configuring MODULES with the kernel to be able to load external drivers
->> coming as modules, but not using anything as module in the kernel itself, one
->> would expect to end up in a module-free kernel. Currently, you don't if you
->> use SCSI. You'll get one unnecessary module.
->> 
->> Please consider the attached patch.
->> 
->> Signed-off-by: Ingo Brueckl <ib@wupperonline.de>
->> 
->> --- linux-2.6.28/drivers/scsi/Kconfig.orig	2008-12-25 00:26:37.000000000 +0100
->> +++ linux-2.6.28/drivers/scsi/Kconfig	2009-03-06 22:49:40.000000000 +0100
->> @@ -259,7 +259,7 @@ config SCSI_SCAN_ASYNC
->>  config SCSI_WAIT_SCAN
->>  	tristate
->>  	default m
->> -	depends on SCSI
->> +	depends on SCSI = m || SCSI_SCAN_ASYNC = y
+
+On Wed, 2009-03-04 at 12:17 +0530, Chauhan, Vijay wrote:
+> ---
 > 
-> This isn't right because SCSI_SCAN_ASYNC only sets the *default*
-> behaviour of the kernel.  Even if it's n the user can still boot up with
-> async scans by setting the kernel parameter.
-
-Indeed.  Also, the issue is not with /how/ SCSI_WAIT_SCAN is switched
-on, it is perhaps with /that/ SCSI_WAIT_SCAN is switched on.
-
-SCSI_WAIT_SCAN is a Kconfig variable which does not have a prompt ---
-like a large number of other Kconfig variables.  Like most of these
-other hidden Kconfig variables, SCSI_WAIT_SCAN controls a very compact
-part of kernel functionality.  Its only difference to most if not all of
-these variables is that it is a tristate variable which controls
-building of a .ko.
-
-> It also keeps coming up regularly:
+> This patch is to add retry for  mode select if mode select command is returned with sense NO_SENSE,
+> UNIT_ATTENTION, ABORTED_COMMAND, NOT_READY(02/04/01). This patch reorganise the sense keys from
+> if-else to switch-case format for better maintainability.
 > 
-> http://marc.info/?t=122658550300002
+> Signed-off-by: Vijay Chauhan <vijay.chauhan@lsi.com>
+
+Acked-by: Chandra Seetharaman <sekharan@us.ibm.com>
+
+> ---
 > 
-> James
+> --- linux-2.6.29-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2009-02-14 05:01:30.000000000 +0530
+> +++ linux-2.6.29-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-03-04 11:25:19.000000000 +0530
+> @@ -449,28 +449,40 @@ static int mode_select_handle_sense(stru
+>  				    unsigned char *sensebuf)
+>  {
+>  	struct scsi_sense_hdr sense_hdr;
+> -	int sense, err = SCSI_DH_IO, ret;
+> +	int err = SCSI_DH_IO, ret;
+> 
+>  	ret = scsi_normalize_sense(sensebuf, SCSI_SENSE_BUFFERSIZE, &sense_hdr);
+>  	if (!ret)
+>  		goto done;
+> 
+>  	err = SCSI_DH_OK;
+> -	sense = (sense_hdr.sense_key << 16) | (sense_hdr.asc << 8) |
+> -			sense_hdr.ascq;
+> -	/* If it is retryable failure, submit the c9 inquiry again */
+> -	if (sense == 0x59136 || sense == 0x68b02 || sense == 0xb8b02 ||
+> -			    sense == 0x62900) {
+> -		/* 0x59136    - Command lock contention
+> -		 * 0x[6b]8b02 - Quiesense in progress or achieved
+> -		 * 0x62900    - Power On, Reset, or Bus Device Reset
+> -		 */
+> -		err = SCSI_DH_RETRY;
+> -	}
+> 
+> -	if (sense)
+> +	switch (sense_hdr.sense_key) {
+> +	case NO_SENSE:
+> +	case ABORTED_COMMAND:
+> +	case UNIT_ATTENTION:
+> +		err= SCSI_DH_RETRY;
+> +		break;
+> +	case NOT_READY:
+> +		if (sense_hdr.asc == 0x04 && sense_hdr.ascq == 0x01)
+> +			/* LUN Not Ready and is in the Process of Becoming
+> +			 * Ready
+> +			 */
+> +			err = SCSI_DH_RETRY;
+> +		break;
+> +	case ILLEGAL_REQUEST:
+> +		if (sense_hdr.asc == 0x91 && sense_hdr.ascq == 0x36)
+> +			/*
+> +			 * Command Lock contention
+> +			 */
+> +			err = SCSI_DH_RETRY;
+> +		break;
+> +	default:
+>  		sdev_printk(KERN_INFO, sdev,
+> -			"MODE_SELECT failed with sense 0x%x.\n", sense);
+> +			"MODE_SELECT failed with sense %02x/%02x/%02x.\n",sense_hdr.sense_key,
+> +			 sense_hdr.asc, sense_hdr.ascq );
+> +	}
+> +
+>  done:
+>  	return err;
+>  }--
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-And it will keep coming up because the reasons for these choices
-(default to m instead of n, no prompt) are not at all obvious.  Perhaps
-you should add a comment to drivers/scsi/Kconfig.
-
-Actually while I superficially searched the archive right now I did not
-find the reason for not prompting for this variable, other than "it
-doesn't hurt to build this module".  Could be that there is an
-assumption that people who want the wait scan module in their initrd
-were unable to find a respective Kconfig prompt.
--- 
-Stefan Richter
--=====-==--= --== -=-=-
-http://arcgraph.de/sr/
