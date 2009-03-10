@@ -1,49 +1,57 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] unnecessary SCSI module
-Date: Mon, 09 Mar 2009 21:10:29 +0000
-Message-ID: <1236633029.6029.1.camel@localhost.localdomain>
-References: <49b5689f@wupperonline.de>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Stoyan Gaydarov <stoyboyker@gmail.com>
+Subject: [PATCH 20/25] [scsi] BUG to BUG_ON changes
+Date: Tue, 10 Mar 2009 00:10:45 -0500
+Message-ID: <1236661850-8237-21-git-send-email-stoyboyker@gmail.com>
+References: <1236661850-8237-1-git-send-email-stoyboyker@gmail.com>
+ <1236661850-8237-2-git-send-email-stoyboyker@gmail.com>
+ <1236661850-8237-3-git-send-email-stoyboyker@gmail.com>
+ <1236661850-8237-4-git-send-email-stoyboyker@gmail.com>
+ <1236661850-8237-5-git-send-email-stoyboyker@gmail.com>
+ <1236661850-8237-6-git-send-email-stoyboyker@gmail.com>
+ <1236661850-8237-7-git-send-email-stoyboyker@gmail.com>
+ <1236661850-8237-8-git-send-email-stoyboyker@gmail.com>
+ <1236661850-8237-9-git-send-email-stoyboyker@gmail.com>
+ <1236661850-8237-10-git-send-email-stoyboyker@gmail.com>
+ <1236661850-8237-11-git-send-email-stoyboyker@gmail.com>
+ <1236661850-8237-12-git-send-email-stoyboyker@gmail.com>
+ <1236661850-8237-13-git-send-email-stoyboyker@gmail.com>
+ <1236661850-8237-14-git-send-email-stoyboyker@gmail.com>
+ <1236661850-8237-15-git-send-email-stoyboyker@gmail.com>
+ <1236661850-8237-16-git-send-email-stoyboyker@gmail.com>
+ <1236661850-8237-17-git-send-email-stoyboyker@gmail.com>
+ <1236661850-8237-18-git-send-email-stoyboyker@gmail.com>
+ <1236661850-8237-19-git-send-email-stoyboyker@gmail.com>
+ <1236661850-8237-20-git-send-email-stoyboyker@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:50818 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752202AbZCIVKe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Mar 2009 17:10:34 -0400
-In-Reply-To: <49b5689f@wupperonline.de>
+Received: from an-out-0708.google.com ([209.85.132.245]:28373 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753872AbZCJFMD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Mar 2009 01:12:03 -0400
+In-Reply-To: <1236661850-8237-20-git-send-email-stoyboyker@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ingo Brueckl <ib@wupperonline.de>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Stoyan Gaydarov <stoyboyker@gmail.com>, linux-scsi@vger.kernel.org
 
-On Mon, 2009-03-09 at 20:06 +0100, Ingo Brueckl wrote:
-> When configuring MODULES with the kernel to be able to load external drivers
-> coming as modules, but not using anything as module in the kernel itself, one
-> would expect to end up in a module-free kernel. Currently, you don't if you
-> use SCSI. You'll get one unnecessary module.
-> 
-> Please consider the attached patch.
-> 
-> Signed-off-by: Ingo Brueckl <ib@wupperonline.de>
-> 
-> --- linux-2.6.28/drivers/scsi/Kconfig.orig	2008-12-25 00:26:37.000000000 +0100
-> +++ linux-2.6.28/drivers/scsi/Kconfig	2009-03-06 22:49:40.000000000 +0100
-> @@ -259,7 +259,7 @@ config SCSI_SCAN_ASYNC
->  config SCSI_WAIT_SCAN
->  	tristate
->  	default m
-> -	depends on SCSI
-> +	depends on SCSI = m || SCSI_SCAN_ASYNC = y
+Signed-off-by: Stoyan Gaydarov <stoyboyker@gmail.com>
+---
+ drivers/scsi/lpfc/lpfc_els.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-This isn't right because SCSI_SCAN_ASYNC only sets the *default*
-behaviour of the kernel.  Even if it's n the user can still boot up with
-async scans by setting the kernel parameter.
-
-It also keeps coming up regularly:
-
-http://marc.info/?t=122658550300002
-
-James
-
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index a730248..ccdc1eb 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -6343,8 +6343,7 @@ lpfc_cmpl_fabric_iocb(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ {
+ 	struct ls_rjt stat;
+ 
+-	if ((cmdiocb->iocb_flag & LPFC_IO_FABRIC) != LPFC_IO_FABRIC)
+-		BUG();
++	BUG_ON((cmdiocb->iocb_flag & LPFC_IO_FABRIC) != LPFC_IO_FABRIC);
+ 
+ 	switch (rspiocb->iocb.ulpStatus) {
+ 		case IOSTAT_NPORT_RJT:
+-- 
+1.6.1.3
 
