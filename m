@@ -1,67 +1,89 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: possible scsi driver bugs with atomic_set/atomic_read and missing
- barrier
-Date: Wed, 11 Mar 2009 10:36:55 +0100
-Message-ID: <49B78637.1080102@s5r6.in-berlin.de>
-References: <49B72F38.8090703@cs.wisc.edu> <20090311033927.GB25995@parisc-linux.org>
+From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Subject: Re: [PATCH 1/1] cciss: resubmit kernel scan thread for MSA2012
+Date: Wed, 11 Mar 2009 09:31:22 -0500
+Message-ID: <20090311143122.GA28208@beardog.cca.cpqcorp.net>
+References: <20090310151738.GA18243@beardog.cca.cpqcorp.net> <1236700241.14822.4.camel@localhost.localdomain> <20090310163426.GC18243@beardog.cca.cpqcorp.net> <20090310153933.7a7fc224.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:60062 "EHLO
-	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753858AbZCKJiL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Mar 2009 05:38:11 -0400
-In-Reply-To: <20090311033927.GB25995@parisc-linux.org>
+Received: from g5t0008.atlanta.hp.com ([15.192.0.45]:33405 "EHLO
+	g5t0008.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750979AbZCKObX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Mar 2009 10:31:23 -0400
+Content-Disposition: inline
+In-Reply-To: <20090310153933.7a7fc224.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, coldwell@redhat.com, hare@novell.com
 
-Matthew Wilcox wrote:
-> On Tue, Mar 10, 2009 at 10:25:44PM -0500, Mike Christie wrote:
->> atomic_set(&hba->state, SOME_STATE_VALUE);
->> 
->> in a interrupt or thread or tasklet then in another thread they will do
->> 
->> if (atomic_read(&hba->state) == SOME_STATE_VALUE))
->> 
->> Does this mean that the drivers should be doing a
->> 
->> atomic_set(&hba->state, SOME_STATE_VALUE);
->> smp_mb();
+On Tue, Mar 10, 2009 at 03:39:33PM -0700, Andrew Morton wrote:
 > 
-> Possibly "smp_mb__after_atomic_inc()" might be correct.
+> Confused.
 
-Is this guaranteed to work with anything else than atomic_inc?
+I was too. I copied myself and that's what I saw. Sorry to bother everyone.
 
-Mike,
-it's also important to remember that barriers will be needed at the
-reader place too (/if/ there actually are ordering requirements, that is).
+-- mikem
 
-E.g. in the writer:
-
-	atomic_set(&hba->x, new_x);
-	smp_wmb();
-	hba->y = new_y;
-
-And in the reader:
-
-	y = hba->y;
-	smp_rmb();
-	x = atomic_read(&hba->x);
-
-	do_something(x, y);
-
-You would do this if you have a requirement that a reader needs 'x' to
-always be at least as new as 'y', IOW would work incorrectly if an
-outdated x would be used together with a current y.
-
-This only works though if the reader can safely operate on an outdated
-'y' + a current 'x'.  If neither current x + old y nor old x + current y
-can be safely combined, then you need to wrap their write and read
-accesses into lock- or mutex- protected sections.
--- 
-Stefan Richter
--=====-==--= --== -=-==
-http://arcgraph.de/sr/
+> 
+> > +static int scan_thread(ctlr_info_t *h)
+> > +{
+> > +	int rc;
+> > +	DECLARE_COMPLETION_ONSTACK(wait);
+> > +	h->rescan_wait = &wait;
+> > +
+> > +	while (!kthread_should_stop()) {
+> > +		rc = wait_for_completion_interruptible(&wait);
+> > +		if (!rc)
+> > +			continue;
+> > +		else
+> > +			rebuild_lun_table(h, 0);
+> > +	}
+> > +	return 0;
+> > +}
+> 
+> afacit this thread won't ever do anything,
+> 
+> > +static int check_for_unit_attention(ctlr_info_t *h, CommandList_struct *c)
+> > +{
+> > +	if (c->err_info->SenseInfo[2] != UNIT_ATTENTION)
+> > +		return 0;
+> > +
+> > +	switch (c->err_info->SenseInfo[12]) {
+> > +	case STATE_CHANGED:
+> > +		printk(KERN_WARNING "cciss%d: a state change "
+> > +			"detected, command retried\n", h->ctlr);
+> > +		return 1;
+> > +	break;
+> > +	case LUN_FAILED:
+> > +		printk(KERN_WARNING "cciss%d: LUN failure "
+> > +			"detected, action required\n", h->ctlr);
+> > +		return 1;
+> > +	break;
+> > +	case REPORT_LUNS_CHANGED:
+> > +		printk(KERN_WARNING "cciss%d: report LUN data "
+> > +			"changed\n", h->ctlr);
+> > +		if (h->rescan_wait)
+> > +			complete(h->rescan_wait);
+> 
+> because this will cause the wait_for_completion_interruptible() to return 0.
+> 
+> > +		return 1;
+> > +	break;
+> > +	case POWER_OR_RESET:
+> > +		printk(KERN_WARNING "cciss%d: a power on "
+> > +			"or device reset detected\n", h->ctlr);
+> > +		return 1;
+> > +	break;
+> > +	case UNIT_ATTENTION_CLEARED:
+> > +		printk(KERN_WARNING "cciss%d: unit attention "
+> > +		    "cleared by another initiator\n", h->ctlr);
+> > +		return 1;
+> > +	break;
+> > +	default:
+> > +		printk(KERN_WARNING "cciss%d: unknown "
+> > +			"unit attention detected\n", h->ctlr);
+> > +				return 1;
+> > +	}
+> > +}
+> 
