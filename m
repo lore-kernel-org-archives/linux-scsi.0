@@ -1,59 +1,55 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH][RESUBMIT] scsi_dh_rdac: Retry mode select for
-	NO_SENSE, ABORTED_COMMAND, UNIT_ATTENTION, NOT_READY(02/04/01)
-Date: Wed, 11 Mar 2009 20:48:50 +0000
-Message-ID: <1236804530.3270.92.camel@localhost.localdomain>
-References: <0D1E8821739E724A86F4D16902CE275C140E25C59C@inbmail01.lsi.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+Subject: RE: [Linux kernel LibSAS - Task Collector Mode]RE: [PATCH 1/5]
+	mvsas : redesign the mvsas driver architecture.
+Date: Wed, 11 Mar 2009 20:54:49 +0000
+Message-ID: <1236804889.3270.97.camel@localhost.localdomain>
+References: <49A3C100.8040005@marvell.com>
+	 <1235495718.3204.37.camel@localhost.localdomain>
+	 <37BE93F844A044459933732A80255042065E0A3A@sc-exch03.marvell.com>
+	 <77B579C76B3DE742A499A2EF95859C1FFA61A0@sc-exch03.marvell.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <0D1E8821739E724A86F4D16902CE275C140E25C59C@inbmail01.lsi.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>
-Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:42386 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750752AbZCKUyy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Mar 2009 16:54:54 -0400
+In-Reply-To: <77B579C76B3DE742A499A2EF95859C1FFA61A0@sc-exch03.marvell.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Michael Wang <qswang@marvell.com>
+Cc: jgarzik@pobox.com, linux-scsi@vger.kernel.org, jeff@garzik.org, Andy Yan <ayan@marvell.com>
 
-On Wed, 2009-03-04 at 12:17 +0530, Chauhan, Vijay wrote:
-> Hi Hannes,
-> 
-> Thanks for your comment. I have modified the patch with correct indentation. Resubmitting this patch.
-> For other ASC/ASQ codes (ie 04/04 - 04/09), I am  currently working on it and will be adding it
-> in future if needed.
+On Tue, 2009-03-03 at 16:27 -0800, Michael Wang wrote:
+> Hi James,
+>=20
+> Could you please share your time to care about below issue? Thanks.
+>=20
+> give us some update for the Task Collector Modesupport of Linux
+> kernel=E2=80=99s LibSAS?
 
-checkpatch.pl doesn't like you very much:
+I don't really have any to give.  Task collector mode was something
+Luben implemented but never really made use of, so what's in the kernel
+has never really been tested (or, indeed, implemented).
 
-jejb@mulgrave> ./scripts/checkpatch.pl ~/tmp.mail
-ERROR: spaces required around that '=' (ctx:VxW)
-#135: FILE: drivers/scsi/device_handler/scsi_dh_rdac.c:464:
-+               err= SCSI_DH_RETRY;
-                   ^
+Personally, it's never been clear to me what the advantage of a task
+collector mode over what the kernel currently does inside the block
+layer actually is.
 
-WARNING: line over 80 characters
-#154: FILE: drivers/scsi/device_handler/scsi_dh_rdac.c:482:
-+                       "MODE_SELECT failed with sense %02x/%02x/%02x.\n",sense_hdr.sense_key,
+If you have any thoughts or requirements on this, posting them to the
+list would be helpful since I don't think anyone else has really though=
+t
+about this, either.
 
-ERROR: space required after that ',' (ctx:VxV)
-#154: FILE: drivers/scsi/device_handler/scsi_dh_rdac.c:482:
-+                       "MODE_SELECT failed with sense %02x/%02x/%02x.\n",sense_hdr.sense_key,
-                                                                         ^
-
-ERROR: space prohibited before that close parenthesis ')'
-#155: FILE: drivers/scsi/device_handler/scsi_dh_rdac.c:483:
-+                        sense_hdr.asc, sense_hdr.ascq );
-
-total: 3 errors, 1 warnings, 54 lines checked
-
-I fixed all of this, but could you try running checkpatch.pl before
-submitting, next time.
+A summary of the differences between the new and old mvsas driver would
+be really helpful to me as well, please.
 
 James
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
