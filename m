@@ -1,67 +1,44 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: linux-next: NCR_700_detect warnings
-Date: Tue, 10 Mar 2009 21:07:30 -0700
-Message-ID: <20090311040730.GA29678@kroah.com>
-References: <Pine.LNX.4.64.0903102139150.20676@anakin> <d82e647a0903101859p1cc2adf6s375b389907a31b82@mail.gmail.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: possible scsi driver bugs with atomic_set/atomic_read and missing
+ barrier
+Date: Wed, 11 Mar 2009 09:45:29 +0100
+Message-ID: <49B77A29.70806@s5r6.in-berlin.de>
+References: <49B72F38.8090703@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-next-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <d82e647a0903101859p1cc2adf6s375b389907a31b82@mail.gmail.com>
-Sender: linux-next-owner@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, Greg Kroah-Hartman <gregkh@suse.de>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, David Brownell <dbrownell@users.sourceforge.net>, linux-next@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Linux/m68k <linux-m68k@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:59874 "EHLO
+	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754535AbZCKIqq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Mar 2009 04:46:46 -0400
+In-Reply-To: <49B72F38.8090703@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Matthew Wilcox <matthew@wil.cx>
 
-On Wed, Mar 11, 2009 at 09:59:09AM +0800, Ming Lei wrote:
-> 2009/3/11 Geert Uytterhoeven <geert@linux-m68k.org>:
-> > commit 76afea5b078d36ec080a75c29ff5a3fbc5774fee
-> > Author: Ming Lei <tom.leiming@gmail.com>
-> > Date: =A0 Fri Feb 6 23:40:12 2009 +0800
-> >
-> > =A0 =A0platform driver: fix incorrect use of 'platform_bus_type' wi=
-th 'struct devic
-> >
-> > =A0 =A0This patch fixes the bug reported in
-> > =A0 =A0 =A0 =A0http://bugzilla.kernel.org/show_bug.cgi?id=3D11681.
-> >
-> > =A0 =A0"Lots of device drivers register a 'struct device_driver' wi=
-th
-> > =A0 =A0the '.bus' member set to '&platform_bus_type'. This is wrong=
-,
-> > =A0 =A0since the platform_bus functions expect the 'struct device_d=
-river'
-> > =A0 =A0to be wrapped up in a 'struct platform_driver' which provide=
-s
-> > =A0 =A0some additional callbacks (like suspend_late, resume_early).
-> > =A0 =A0The effect may be that platform_suspend_late() uses bogus da=
-ta
-> > =A0 =A0outside the device_driver struct as a pointer pointer to the
-> > =A0 =A0device driver's suspend_late() function or other hard to
-> > =A0 =A0reproduce failures."(Lothar Wassmann)
-> >
-> > =A0 =A0Signed-off-by: Ming Lei <tom.leiming@gmail.com>
-> > =A0 =A0Acked-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> > =A0 =A0Acked-by: David Brownell <dbrownell@users.sourceforge.net>
-> > =A0 =A0Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-> >
-> > This introduced the following warnings on m68k, as `dev' is now a
-> > `struct platform_device *' instead of a `struct device *':
-> >
-> > | drivers/scsi/a4000t.c:64: warning: passing argument 3 of 'NCR_700=
-_detect' from incompatible pointer type
-> > | drivers/scsi/mvme16x_scsi.c:67: warning: passing argument 3 of 'N=
-CR_700_detect' from incompatible pointer type
-> > | drivers/scsi/bvme6000_scsi.c:61: warning: passing argument 3 of '=
-NCR_700_detect' from incompatible pointer type
-> >
-> > I think the below is missing (untested on real hardware)?
->=20
-> Yes, you are correct. It is really missed.
+Mike Christie wrote:
+...
+> In the Documentation/atomic_ops.txt it says:
+> 
+> 	atomic_read does not guarantee that the runtime
+> 	initialization by any other thread is visible yet, so the user of the
+> 	interface must take care of that with a proper implicit or
+> 	explicit memory barrier.
+> 
+> Does this mean that the drivers should be doing a
+> 
+> atomic_set(&hba->state, SOME_STATE_VALUE);
+> smp_mb();
 
-Great, Geert, care to resend with a signed-off-by: so I can apply this?
+Barriers --- or locks even --- are required if there are dependencies
+between the state variable and other data.
 
-thanks,
-
-greg k-h
+(Use a barrier if you need to ensure ordering of accesses.  Use a lock
+if you need to combine multiple operations into an atomic whole.  Lock/
+unlock also imply barriers.)
+-- 
+Stefan Richter
+-=====-==--= --== -=-==
+http://arcgraph.de/sr/
