@@ -1,47 +1,50 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: MSI override changes in mptbase
-Date: Thu, 12 Mar 2009 20:29:15 +0530
-Message-ID: <0D1E8821739E724A86F4D16902CE275C140E25CBF7@inbmail01.lsi.com>
-References: <49B6559C.76E4.0078.0@novell.com>
- <0D1E8821739E724A86F4D16902CE275C140E25C9F9@inbmail01.lsi.com>
- <49B67C2C.76E4.0078.0@novell.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH] SCSI: increase default timeout for INQUIRY
+Date: Thu, 12 Mar 2009 11:08:51 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0903121106480.3155-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og107.obsmtp.com ([64.18.2.167]:47858 "EHLO
-	exprod7og107.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753155AbZCLPAb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Mar 2009 11:00:31 -0400
-In-Reply-To: <49B67C2C.76E4.0078.0@novell.com>
-Content-Language: en-US
+Received: from iolanthe.rowland.org ([192.131.102.54]:50157 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754571AbZCLPIx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Mar 2009 11:08:53 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jan Beulich <jbeulich@novell.com>
-Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "yinghai@kernel.org" <yinghai@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Paul Wellner Bou <paul@purecodes.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Jan,
+This patch (as1224) changes the default timeout for INQUIRY commands
+from 3 seconds to 20 seconds, which is the value used by Windows for
+USB Mass-Storage devices.  Some of these devices, like the Corsair
+Flash Voyager (see Bugzilla #12188) really do need a long timeout.
 
-Best approach is to enable/disable MSI Interrupt on the fly. We are not supporting that feature currently. Something like setting DMA mask through probe code, we should enable/disable MSI interrupt through init code.
-Eventually, If MSI enable/disable is not on the fly, it will be always better to keep in default disable in module para of driver.
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
 
-- Kashyap
+---
 
------Original Message-----
-From: Jan Beulich [mailto:jbeulich@novell.com] 
-Sent: Tuesday, March 10, 2009 7:12 PM
-To: Desai, Kashyap
-Cc: James.Bottomley@HansenPartnership.com; yinghai@kernel.org; linux-scsi@vger.kernel.org
-Subject: RE: MSI override changes in mptbase
-
->>> "Desai, Kashyap" <Kashyap.Desai@lsi.com> 10.03.09 13:12 >>>
->Default behavior for all 3 buses (FC, SPI, and SAS) with respect to MSI is OFF. It is up to user, whether they want to enable/disable >MSI.
-
-Why is that change in behavior for SAS needed then?
-
-Thanks, Jan
+It's hard to see how this could cause any signficant problems, unless 
+somebody actually depends on INQUIRY timing out.
 
 
-No virus found in this incoming message.
-Checked by AVG - www.avg.com 
-Version: 8.0.233 / Virus Database: 270.11.9/1989 - Release Date: 03/07/09 18:43:00
+
+Index: usb-2.6/drivers/scsi/scsi_scan.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/scsi_scan.c
++++ usb-2.6/drivers/scsi/scsi_scan.c
+@@ -115,12 +115,12 @@ MODULE_PARM_DESC(max_report_luns,
+ 		 "REPORT LUNS maximum number of LUNS received (should be"
+ 		 " between 1 and 16384)");
+ 
+-static unsigned int scsi_inq_timeout = SCSI_TIMEOUT/HZ+3;
++static unsigned int scsi_inq_timeout = SCSI_TIMEOUT/HZ + 18;
+ 
+ module_param_named(inq_timeout, scsi_inq_timeout, uint, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(inq_timeout, 
+ 		 "Timeout (in seconds) waiting for devices to answer INQUIRY."
+-		 " Default is 5. Some non-compliant devices need more.");
++		 " Default is 20. Some devices may need more; most need less.");
+ 
+ /* This lock protects only this list */
+ static DEFINE_SPINLOCK(async_scan_lock);
+
