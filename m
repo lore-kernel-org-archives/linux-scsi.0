@@ -1,80 +1,47 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 1/1] cciss: resubmit kernel scan thread for MSA2012
-Date: Wed, 11 Mar 2009 15:14:36 -0700
-Message-ID: <20090311151436.c9be9ab4.akpm@linux-foundation.org>
-References: <20090310151738.GA18243@beardog.cca.cpqcorp.net>
-	<1236700241.14822.4.camel@localhost.localdomain>
-	<20090310163426.GC18243@beardog.cca.cpqcorp.net>
-	<20090310153933.7a7fc224.akpm@linux-foundation.org>
-	<20090311161733.GF28208@beardog.cca.cpqcorp.net>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: MSI override changes in mptbase
+Date: Thu, 12 Mar 2009 20:29:15 +0530
+Message-ID: <0D1E8821739E724A86F4D16902CE275C140E25CBF7@inbmail01.lsi.com>
+References: <49B6559C.76E4.0078.0@novell.com>
+ <0D1E8821739E724A86F4D16902CE275C140E25C9F9@inbmail01.lsi.com>
+ <49B67C2C.76E4.0078.0@novell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:44131 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752838AbZCKWRn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Mar 2009 18:17:43 -0400
-In-Reply-To: <20090311161733.GF28208@beardog.cca.cpqcorp.net>
+Received: from exprod7og107.obsmtp.com ([64.18.2.167]:47858 "EHLO
+	exprod7og107.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753155AbZCLPAb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Mar 2009 11:00:31 -0400
+In-Reply-To: <49B67C2C.76E4.0078.0@novell.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
-Cc: James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, coldwell@redhat.com, hare@novell.com
+To: Jan Beulich <jbeulich@novell.com>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "yinghai@kernel.org" <yinghai@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wed, 11 Mar 2009 11:17:33 -0500
-"Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net> wrote:
->
+Jan,
 
-We haven't finished with you yet ;)
+Best approach is to enable/disable MSI Interrupt on the fly. We are not supporting that feature currently. Something like setting DMA mask through probe code, we should enable/disable MSI interrupt through init code.
+Eventually, If MSI enable/disable is not on the fly, it will be always better to keep in default disable in module para of driver.
 
-> Changed the logic in the while loop. The thread works, whenever I change my
-> config the next IO to the storage returns the unit attention
-> LUN_DATA_CHANGED. The thread fires off and either adds or removes the
-> logical volume.
-> 
-> Signed-off-by: Mike Miller <mike.miller@hp.com>
+- Kashyap
 
-That's not a suitable changelog for the patch.  Please maintain
-changelogs alongside the patch, update them (if needed) with each
-iteration and resend the full changelog each time.
+-----Original Message-----
+From: Jan Beulich [mailto:jbeulich@novell.com] 
+Sent: Tuesday, March 10, 2009 7:12 PM
+To: Desai, Kashyap
+Cc: James.Bottomley@HansenPartnership.com; yinghai@kernel.org; linux-scsi@vger.kernel.org
+Subject: RE: MSI override changes in mptbase
 
-> +static int scan_thread(ctlr_info_t *h)
-> +{
-> +	int rc;
-> +	DECLARE_COMPLETION_ONSTACK(wait);
-> +	h->rescan_wait = &wait;
-> +
-> +	while (!kthread_should_stop()) {
-> +		rc = wait_for_completion_interruptible(&wait);
-> +		if (!rc)
-> +			rebuild_lun_table(h, 0);
-> +	}
-> +	return 0;
-> +}
+>>> "Desai, Kashyap" <Kashyap.Desai@lsi.com> 10.03.09 13:12 >>>
+>Default behavior for all 3 buses (FC, SPI, and SAS) with respect to MSI is OFF. It is up to user, whether they want to enable/disable >MSI.
 
-This will run rebuild_lun_table() in the case where the thread is being
-asked to terminate.  Seems a bit peculiar, although hopefully harmless.
+Why is that change in behavior for SAS needed then?
 
-> +	snprintf(cciss_scan, 14, "cciss_scan%02d", i);
-> +	hba[i]->cciss_scan_thread = kthread_run((void *)scan_thread, hba[i],
-> +				cciss_scan);
-
-kthread_run() takes printf-style arguments, so this can be
-
-	hba[i]->cciss_scan_thread = kthread_run(scan_thread, hba[i],
-					 "cciss_scan%02d", i);
-
-and cciss_scan[] is removed.
+Thanks, Jan
 
 
-And that void* cast of scan_thread is a bit grubby.  It would be
-better to be more honest to the type system and do
-
-static int scan_thread(void *data)
-{
-	ctlr_info_t *h = data;
-	...
-}
-
-
+No virus found in this incoming message.
+Checked by AVG - www.avg.com 
+Version: 8.0.233 / Virus Database: 270.11.9/1989 - Release Date: 03/07/09 18:43:00
