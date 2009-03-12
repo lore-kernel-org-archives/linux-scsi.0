@@ -1,21 +1,308 @@
 From: Matthew Wilcox <willy@linux.intel.com>
-Subject: Support READ CAPACITY 16 on more drives
-Date: Thu, 12 Mar 2009 14:20:28 -0400
-Message-ID: <1236882030-27964-1-git-send-email-willy@linux.intel.com>
+Subject: [PATCH 1/2] sd: Refactor sd_read_capacity()
+Date: Thu, 12 Mar 2009 14:20:29 -0400
+Message-ID: <1236882030-27964-2-git-send-email-willy@linux.intel.com>
+References: <1236882030-27964-1-git-send-email-willy@linux.intel.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ottawa-hs-206-191-39-47.d-ip.magma.ca ([206.191.39.47]:38382
+Received: from ottawa-hs-206-191-39-47.d-ip.magma.ca ([206.191.39.47]:38383
 	"EHLO gonzo.int.wil.cx" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756469AbZCLSa7 (ORCPT
+	with ESMTP id S1756462AbZCLSa7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Mar 2009 14:30:59 -0400
+In-Reply-To: <1236882030-27964-1-git-send-email-willy@linux.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, Matthew Wilcox <willy@linux.intel.com>
 
-We need to use READ CAPACITY 16 to determine features like 4k physical
-sector size, and support for UNMAP.  This pair of patches let us try it
-on really recent SCSI drives and all LibATA drives (where it's emulated
-by libata so we know they support it).  It will not be tried on USB
-devices, as the USB layer overrides their claims of support for recent
-SCSI versions.
+From: Matthew Wilcox <matthew@wil.cx>
+
+The sd_read_capacity() function was about 180 lines long and
+included a backwards goto and a tricky state variable.  Splitting out
+read_capacity_10() and read_capacity_16() (about 50 lines each) reduces
+sd_read_capacity to about 100 lines and gets rid of the backwards goto
+and the state variable.  I've tried to avoid any behaviour change with
+this patch.
+
+Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+---
+ drivers/scsi/sd.c |  247 ++++++++++++++++++++++++++++++++++-------------------
+ 1 files changed, 158 insertions(+), 89 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 55310db..6cf0c25 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1277,42 +1277,61 @@ disable:
+ 	sdkp->capacity = 0;
+ }
+ 
+-/*
+- * read disk capacity
+- */
+-static void
+-sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer)
++static void read_capacity_error(struct scsi_disk *sdkp, struct scsi_device *sdp,
++			struct scsi_sense_hdr *sshdr, int sense_valid,
++			int the_result)
++{
++	sd_print_result(sdkp, the_result);
++	if (driver_byte(the_result) & DRIVER_SENSE)
++		sd_print_sense_hdr(sdkp, sshdr);
++	else
++		sd_printk(KERN_NOTICE, sdkp, "Sense not available.\n");
++
++	/*
++	 * Set dirty bit for removable devices if not ready -
++	 * sometimes drives will not report this properly.
++	 */
++	if (sdp->removable &&
++	    sense_valid && sshdr->sense_key == NOT_READY)
++		sdp->changed = 1;
++
++	/*
++	 * We used to set media_present to 0 here to indicate no media
++	 * in the drive, but some drives fail read capacity even with
++	 * media present, so we can't do that.
++	 */
++	sdkp->capacity = 0; /* unknown mapped to zero - as usual */
++}
++
++#define RC16_LEN 13
++#if RC16_LEN > SD_BUF_SIZE
++#error RC16_LEN must not be more than SD_BUF_SIZE
++#endif
++
++static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
++						unsigned char *buffer)
+ {
+ 	unsigned char cmd[16];
+-	int the_result, retries;
+-	int sector_size = 0;
+-	/* Force READ CAPACITY(16) when PROTECT=1 */
+-	int longrc = scsi_device_protection(sdkp->device) ? 1 : 0;
+ 	struct scsi_sense_hdr sshdr;
+ 	int sense_valid = 0;
+-	struct scsi_device *sdp = sdkp->device;
++	int the_result;
++	int retries = 3;
++	unsigned long long lba;
++	unsigned sector_size;
+ 
+-repeat:
+-	retries = 3;
+ 	do {
+-		if (longrc) {
+-			memset((void *) cmd, 0, 16);
+-			cmd[0] = SERVICE_ACTION_IN;
+-			cmd[1] = SAI_READ_CAPACITY_16;
+-			cmd[13] = 13;
+-			memset((void *) buffer, 0, 13);
+-		} else {
+-			cmd[0] = READ_CAPACITY;
+-			memset((void *) &cmd[1], 0, 9);
+-			memset((void *) buffer, 0, 8);
+-		}
+-		
++		memset(cmd, 0, 16);
++		cmd[0] = SERVICE_ACTION_IN;
++		cmd[1] = SAI_READ_CAPACITY_16;
++		cmd[13] = RC16_LEN;
++		memset(buffer, 0, RC16_LEN);
++
+ 		the_result = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE,
+-					      buffer, longrc ? 13 : 8, &sshdr,
+-					      SD_TIMEOUT, SD_MAX_RETRIES, NULL);
++					buffer, RC16_LEN, &sshdr,
++					SD_TIMEOUT, SD_MAX_RETRIES, NULL);
+ 
+ 		if (media_not_present(sdkp, &sshdr))
+-			return;
++			return -ENODEV;
+ 
+ 		if (the_result)
+ 			sense_valid = scsi_sense_valid(&sshdr);
+@@ -1320,72 +1339,122 @@ repeat:
+ 
+ 	} while (the_result && retries);
+ 
+-	if (the_result && !longrc) {
++	if (the_result) {
++		sd_printk(KERN_NOTICE, sdkp, "READ CAPACITY(16) failed\n");
++		read_capacity_error(sdkp, sdp, &sshdr, sense_valid, the_result);
++		return -EINVAL;
++	}
++
++	sector_size =	(buffer[8] << 24) | (buffer[9] << 16) |
++			(buffer[10] << 8) | buffer[11];
++	lba =  (((u64)buffer[0] << 56) | ((u64)buffer[1] << 48) |
++		((u64)buffer[2] << 40) | ((u64)buffer[3] << 32) |
++		((u64)buffer[4] << 24) | ((u64)buffer[5] << 16) |
++		((u64)buffer[6] << 8) | (u64)buffer[7]);
++
++	sd_read_protection_type(sdkp, buffer);
++
++	if ((sizeof(sdkp->capacity) == 4) && (lba >= 0xffffffffULL)) {
++		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
++			"kernel compiled with support for large block "
++			"devices.\n");
++		sdkp->capacity = 0;
++		return -EOVERFLOW;
++	}
++
++	sdkp->capacity = lba + 1;
++	return sector_size;
++}
++
++static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
++						unsigned char *buffer)
++{
++	unsigned char cmd[16];
++	struct scsi_sense_hdr sshdr;
++	int sense_valid = 0;
++	int the_result;
++	int retries = 3;
++	sector_t lba;
++	unsigned sector_size;
++
++	do {
++		cmd[0] = READ_CAPACITY;
++		memset(&cmd[1], 0, 9);
++		memset(buffer, 0, 8);
++
++		the_result = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE,
++					buffer, 8, &sshdr,
++					SD_TIMEOUT, SD_MAX_RETRIES, NULL);
++
++		if (media_not_present(sdkp, &sshdr))
++			return -ENODEV;
++
++		if (the_result)
++			sense_valid = scsi_sense_valid(&sshdr);
++		retries--;
++
++	} while (the_result && retries);
++
++	if (the_result) {
+ 		sd_printk(KERN_NOTICE, sdkp, "READ CAPACITY failed\n");
+-		sd_print_result(sdkp, the_result);
+-		if (driver_byte(the_result) & DRIVER_SENSE)
+-			sd_print_sense_hdr(sdkp, &sshdr);
+-		else
+-			sd_printk(KERN_NOTICE, sdkp, "Sense not available.\n");
++		read_capacity_error(sdkp, sdp, &sshdr, sense_valid, the_result);
++		return -EINVAL;
++	}
+ 
+-		/* Set dirty bit for removable devices if not ready -
+-		 * sometimes drives will not report this properly. */
+-		if (sdp->removable &&
+-		    sense_valid && sshdr.sense_key == NOT_READY)
+-			sdp->changed = 1;
++	sector_size =	(buffer[4] << 24) | (buffer[5] << 16) |
++			(buffer[6] << 8) | buffer[7];
++	lba =	(buffer[0] << 24) | (buffer[1] << 16) |
++		(buffer[2] << 8) | buffer[3];
+ 
+-		/* Either no media are present but the drive didn't tell us,
+-		   or they are present but the read capacity command fails */
+-		/* sdkp->media_present = 0; -- not always correct */
+-		sdkp->capacity = 0; /* unknown mapped to zero - as usual */
++	if ((sizeof(sdkp->capacity) == 4) && (lba == 0xffffffff)) {
++		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
++			"kernel compiled with support for large block "
++			"devices.\n");
++		sdkp->capacity = 0;
++		return -EOVERFLOW;
++	}
+ 
+-		return;
+-	} else if (the_result && longrc) {
+-		/* READ CAPACITY(16) has been failed */
+-		sd_printk(KERN_NOTICE, sdkp, "READ CAPACITY(16) failed\n");
+-		sd_print_result(sdkp, the_result);
+-		sd_printk(KERN_NOTICE, sdkp, "Use 0xffffffff as device size\n");
++	sdkp->capacity = lba + 1;
++	return sector_size;
++}
+ 
+-		sdkp->capacity = 1 + (sector_t) 0xffffffff;		
+-		goto got_data;
+-	}	
+-	
+-	if (!longrc) {
+-		sector_size = (buffer[4] << 24) |
+-			(buffer[5] << 16) | (buffer[6] << 8) | buffer[7];
+-		if (buffer[0] == 0xff && buffer[1] == 0xff &&
+-		    buffer[2] == 0xff && buffer[3] == 0xff) {
+-			if(sizeof(sdkp->capacity) > 4) {
+-				sd_printk(KERN_NOTICE, sdkp, "Very big device. "
+-					  "Trying to use READ CAPACITY(16).\n");
+-				longrc = 1;
+-				goto repeat;
+-			}
+-			sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use "
+-				  "a kernel compiled with support for large "
+-				  "block devices.\n");
+-			sdkp->capacity = 0;
++/*
++ * read disk capacity
++ */
++static void
++sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer)
++{
++	int sector_size;
++	struct scsi_device *sdp = sdkp->device;
++
++	/* Force READ CAPACITY(16) when PROTECT=1 */
++	if (scsi_device_protection(sdp)) {
++		sector_size = read_capacity_16(sdkp, sdp, buffer);
++		if (sector_size == -EOVERFLOW)
+ 			goto got_data;
+-		}
+-		sdkp->capacity = 1 + (((sector_t)buffer[0] << 24) |
+-			(buffer[1] << 16) |
+-			(buffer[2] << 8) |
+-			buffer[3]);			
++		if (sector_size < 0)
++			return;
+ 	} else {
+-		sdkp->capacity = 1 + (((u64)buffer[0] << 56) |
+-			((u64)buffer[1] << 48) |
+-			((u64)buffer[2] << 40) |
+-			((u64)buffer[3] << 32) |
+-			((sector_t)buffer[4] << 24) |
+-			((sector_t)buffer[5] << 16) |
+-			((sector_t)buffer[6] << 8)  |
+-			(sector_t)buffer[7]);
+-			
+-		sector_size = (buffer[8] << 24) |
+-			(buffer[9] << 16) | (buffer[10] << 8) | buffer[11];
+-
+-		sd_read_protection_type(sdkp, buffer);
+-	}	
++		sector_size = read_capacity_10(sdkp, sdp, buffer);
++		if (sector_size == -EOVERFLOW)
++			goto got_data;
++		if (sector_size < 0)
++			return;
++		if ((sizeof(sdkp->capacity) > 4) &&
++		    (sdkp->capacity > 0xffffffffULL)) {
++			int old_sector_size = sector_size;
++			sd_printk(KERN_NOTICE, sdkp, "Very big device. "
++					"Trying to use READ CAPACITY(16).\n");
++			sector_size = read_capacity_16(sdkp, sdp, buffer);
++			if (sector_size < 0) {
++				sd_printk(KERN_NOTICE, sdkp,
++					"Using 0xffffffff as device size\n");
++				sdkp->capacity = 1 + (sector_t) 0xffffffff;
++				sector_size = old_sector_size;
++				goto got_data;
++			}
++		}
++	}
+ 
+ 	/* Some devices return the total number of sectors, not the
+ 	 * highest sector number.  Make the necessary adjustment. */
+-- 
+1.6.1.3
 
