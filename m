@@ -1,50 +1,35 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] SCSI: increase default timeout for INQUIRY
-Date: Thu, 12 Mar 2009 11:08:51 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0903121106480.3155-100000@iolanthe.rowland.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] SCSI: increase default timeout for INQUIRY
+Date: Thu, 12 Mar 2009 09:12:06 -0600
+Message-ID: <20090312151206.GC14425@parisc-linux.org>
+References: <Pine.LNX.4.44L0.0903121106480.3155-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:50157 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754571AbZCLPIx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Mar 2009 11:08:53 -0400
+Received: from palinux.external.hp.com ([192.25.206.14]:36374 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754376AbZCLPMY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Mar 2009 11:12:24 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0903121106480.3155-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Paul Wellner Bou <paul@purecodes.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Paul Wellner Bou <paul@purecodes.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-This patch (as1224) changes the default timeout for INQUIRY commands
-from 3 seconds to 20 seconds, which is the value used by Windows for
-USB Mass-Storage devices.  Some of these devices, like the Corsair
-Flash Voyager (see Bugzilla #12188) really do need a long timeout.
+On Thu, Mar 12, 2009 at 11:08:51AM -0400, Alan Stern wrote:
+> It's hard to see how this could cause any signficant problems, unless 
+> somebody actually depends on INQUIRY timing out.
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+Erm, like doing a scan of a bus?  With 15 devices to probe, you've
+increased the time from 15 * 3 = 45 seconds to 15 * 20 = 300 seconds.
+That's not cool ;-(
 
----
+Maybe we could default this in the transport or something so USB can
+override it.
 
-It's hard to see how this could cause any signficant problems, unless 
-somebody actually depends on INQUIRY timing out.
-
-
-
-Index: usb-2.6/drivers/scsi/scsi_scan.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_scan.c
-+++ usb-2.6/drivers/scsi/scsi_scan.c
-@@ -115,12 +115,12 @@ MODULE_PARM_DESC(max_report_luns,
- 		 "REPORT LUNS maximum number of LUNS received (should be"
- 		 " between 1 and 16384)");
- 
--static unsigned int scsi_inq_timeout = SCSI_TIMEOUT/HZ+3;
-+static unsigned int scsi_inq_timeout = SCSI_TIMEOUT/HZ + 18;
- 
- module_param_named(inq_timeout, scsi_inq_timeout, uint, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(inq_timeout, 
- 		 "Timeout (in seconds) waiting for devices to answer INQUIRY."
--		 " Default is 5. Some non-compliant devices need more.");
-+		 " Default is 20. Some devices may need more; most need less.");
- 
- /* This lock protects only this list */
- static DEFINE_SPINLOCK(async_scan_lock);
-
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
