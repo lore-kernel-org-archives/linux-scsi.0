@@ -1,54 +1,68 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] SCSI: increase default timeout for INQUIRY
-Date: Thu, 12 Mar 2009 11:24:41 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0903121120300.3155-100000@iolanthe.rowland.org>
-References: <1236870949.3248.13.camel@localhost.localdomain>
+From: "Michael Wang" <qswang@marvell.com>
+Subject: RE: [Linux kernel LibSAS - Task Collector Mode]RE: [PATCH 1/5]mvsas : redesign the mvsas driver architecture.
+Date: Thu, 12 Mar 2009 08:42:35 -0700
+Message-ID: <77B579C76B3DE742A499A2EF95859C1F0100986C@sc-exch03.marvell.com>
+References: <49A3C100.8040005@marvell.com> <1235495718.3204.37.camel@localhost.localdomain> <37BE93F844A044459933732A80255042065E0A3A@sc-exch03.marvell.com> <77B579C76B3DE742A499A2EF95859C1FFA61A0@sc-exch03.marvell.com> <1236804889.3270.97.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=gb2312
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:34703 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753389AbZCLPYn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Mar 2009 11:24:43 -0400
-In-Reply-To: <1236870949.3248.13.camel@localhost.localdomain>
+Received: from host2.marvell.com ([65.219.4.2]:10810 "EHLO maili.marvell.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754590AbZCLPmj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Mar 2009 11:42:39 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <1236804889.3270.97.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Paul Wellner Bou <paul@purecodes.org>, SCSI development list <linux-scsi@vger.kernel.org>
+Cc: jgarzik@pobox.com, linux-scsi@vger.kernel.org, jeff@garzik.org, Andy Yan <ayan@marvell.com>
 
-On Thu, 12 Mar 2009, James Bottomley wrote:
+Hi James,
+Thanks for your response.
 
-> On Thu, 2009-03-12 at 09:12 -0600, Matthew Wilcox wrote:
-> > On Thu, Mar 12, 2009 at 11:08:51AM -0400, Alan Stern wrote:
-> > > It's hard to see how this could cause any signficant problems, unless 
-> > > somebody actually depends on INQUIRY timing out.
-> > 
-> > Erm, like doing a scan of a bus?  With 15 devices to probe, you've
-> > increased the time from 15 * 3 = 45 seconds to 15 * 20 = 300 seconds.
-> > That's not cool ;-(
-> > 
-> > Maybe we could default this in the transport or something so USB can
-> > override it.
-> 
-> Well, no, this is the overall command timeout.  Each bus (that's
-> scannable) has its own timeout.  For instance, on a parallel bus this is
-> 250ms per device ... don't respond in that time, we return
-> DID_NO_CONNECT.
-> 
-> I think what Alan is saying is that some USB devices will take >5s to
-> respond to an initial inquiry.  Remember that USB isn't actually a
-> scannable bus.  We get told there's a device there and we have to send
-> an INQUIRY to classify it.
+And for mvsas, we're still in development, and try to find a better way=
+ to commit to kernel based on your previously suggestions. FYI
 
-That's right.  There are a few devices which take > 15 seconds to 
-respond to INQUIRY, but once they do respond they go on to work 
-correctly and at a reasonable speed.  Apparently this is some sort of 
-initialization delay.
 
-Obviously this isn't a huge issue, since users can set the module
-parameter for themselves.  But it's a lot easier if they don't have to
--- especially since they won't have to figure out what _needs_ to
-changed (it isn't at all obvious from the pattern of errors).
+Michael Wang
 
-Alan Stern
+-----Original Message-----
+=46rom: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]=20
+Sent: 2009=C4=EA3=D4=C212=C8=D5 4:55
+To: Michael Wang
+Cc: jgarzik@pobox.com; linux-scsi@vger.kernel.org; jeff@garzik.org; And=
+y Yan
+Subject: RE: [Linux kernel LibSAS - Task Collector Mode]RE: [PATCH 1/5]=
+mvsas : redesign the mvsas driver architecture.
 
+On Tue, 2009-03-03 at 16:27 -0800, Michael Wang wrote:
+> Hi James,
+>=20
+> Could you please share your time to care about below issue? Thanks.
+>=20
+> give us some update for the Task Collector Modesupport of Linux=20
+> kernel=A1=AFs LibSAS?
+
+I don't really have any to give.  Task collector mode was something Lub=
+en implemented but never really made use of, so what's in the kernel ha=
+s never really been tested (or, indeed, implemented).
+
+Personally, it's never been clear to me what the advantage of a task co=
+llector mode over what the kernel currently does inside the block layer=
+ actually is.
+
+If you have any thoughts or requirements on this, posting them to the l=
+ist would be helpful since I don't think anyone else has really thought=
+ about this, either.
+
+A summary of the differences between the new and old mvsas driver would=
+ be really helpful to me as well, please.
+
+James
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
