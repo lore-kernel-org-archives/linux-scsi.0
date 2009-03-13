@@ -1,43 +1,63 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [RFC] hpsa: addressing review comments
-Date: Fri, 13 Mar 2009 09:24:56 -0500
-Message-ID: <1236954296.3276.14.camel@localhost.localdomain>
-References: <20090313142054.GB15269@beardog.cca.cpqcorp.net>
+From: Konrad Rzeszutek <konrad@virtualiron.com>
+Subject: Questions about  [SCSI] modify scsi to handle new fail fast flags.
+Date: Fri, 13 Mar 2009 11:37:57 -0400
+Message-ID: <20090313153757.GA11370@mars.virtualiron.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:57165 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750910AbZCMOY7 (ORCPT
+Received: from host-216-57-134-2.customer.veroxity.net ([216.57.134.2]:58944
+	"EHLO mars.virtualiron.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753773AbZCMPim (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Mar 2009 10:24:59 -0400
-In-Reply-To: <20090313142054.GB15269@beardog.cca.cpqcorp.net>
+	Fri, 13 Mar 2009 11:38:42 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
-Cc: LKML-SCSI <linux-scsi@vger.kernel.org>
+To: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org
 
-On Fri, 2009-03-13 at 09:20 -0500, Mike Miller (OS Dev) wrote:
-> sorry, I fat fingered the address first time around...
-> 
-> Date: Fri, 13 Mar 2009 09:18:49 -0500
-> From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
-> To: LKML <linux-kernel@vger.kernel.org>, lkml-scis@beardog.cca.cpqcorp.net
-> Cc: Steve Cameron <scameron@beardog.cca.cpqcorp.net>, tom.lawler@hp.com,
-> 	iss_storagedev@hp.com
-> Subject: [RFC] hpsa: addressing review comments
-> 
-> I have a question about the hpsa driver we recently released. We've received
-> quite a few comments, very positive overall. When we make the changes noted,
-> i.e., rip out /proc, style changes, etc., do we submit patches for that? Or
-> repost the entire driver with the appropriate changelog?
+Hey Mike,
 
-Either is fine with me.  Posting update patches is very useful to people
-who want to see what changes have been made between versions.  When we
-iterate to a final version, then you can repost the whole thing (so it
-can go into the tree as one to avoid bisection problems).
+I was having a problem with one of the SATA controllers at work and traced it
+down to enclosure. But during that time I found out that the error handler
+of bio's issued from SCSI block vs the multipath block driver act differently.
 
-James
+The "scsi_eh_flush_done_q" is the one that controls whether the I/Os should
+be repeated or returned back. Earlier in the days it would check the
+bio->flags to see if the REQ_FAILFAST* attributes were set, but nowadays
+it is more discriminating and depending on the host_byte(scmd->result) figures
+out if needs to check for the REQ_FAILFAST* attribute.
 
+The end result is that the bio's mapped through multipath have the same
+logic as through the SCSI block. Compared to Linux releases in RHEL53, SLES10
+the behaviour is different.
 
+So my question is that OK? From the perspective of dm-mpath it looks as
+if the device driver now does the retry/re-issue and ignores the FAILFAST
+attribute. Instead of allowing dm-mpath to be the ...umm "brain" behind this.
+
+Oh, the git that causes this behavior is this one:
+
+commit 4a27446f3e39b06c28d1c8e31d33a5340826ed5c
+Author: Mike Christie <michaelc@cs.wisc.edu>
+Date:   Tue Aug 19 18:45:31 2008 -0500
+
+    [SCSI] modify scsi to handle new fail fast flags.
+
+    This checks the errors the scsi-ml determined were retryable
+    and returns if we should fast fail it based on the request
+    fail fast flags.
+
+    Without the patch, drivers like lpfc, qla2xxx and fcoe would return
+    DID_ERROR for what it determines is a temporary communication problem.
+    There is no loss of connectivity at that time and the driver thinks
+    that it would be fast to retry at the driver level. SCSI-ml will however
+    sees fast fail on the request and DID_ERROR and will fast fail the io.
+    This will then cause dm-multipath to fail the path and possibley switch
+    target controllers when we should be retrying at the scsi layer.
+
+    We also were fast failing device errors to dm multiapth when
+    unless the scsi_dh modules think otherwis we want to retry at
+    the scsi layer because multipath can only retry the IO like scsi
+    should have done. multipath is a little dumber though because it
+    does not what the error was for and assumes that it should fail
+    the paths.
