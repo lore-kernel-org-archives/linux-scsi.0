@@ -1,16 +1,12 @@
 From: Jing Huang <huangj@brocade.com>
-Subject: [PATCH 0/5] bfa: Brocade BFA FC SCSI driver (bfad)
-Date: Sat, 14 Mar 2009 12:53:56 -0700
-Message-ID: <200903141953.n2EJruPu029022@blc-10-6.brocade.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx30.brocade.com ([144.49.194.4]:51887 "EHLO mx30.brocade.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757989AbZCNUDc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 14 Mar 2009 16:03:32 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH 1/5] bfa: Brocade BFA FC SCSI driver (bfad)
+Date: Sat, 14 Mar 2009 13:03:09 -0700
+Message-ID: <200903142003.n2EK39r4031547@blc-10-6.brocade.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757981AbZCNUDj@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: kgudipat@brocade.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rvadivel@brocade.com, vravindr@brocade.com
+List-Id: linux-scsi@vger.kernel.org
 
 From: Jing Huang <huangj@brocade.com>
 
