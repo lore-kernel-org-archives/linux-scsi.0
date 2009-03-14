@@ -1,55 +1,83 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [RFC] FC pass thru - Rev V
-Date: Sat, 14 Mar 2009 18:16:47 -0400
-Message-ID: <49BC2CCF.2050105@emulex.com>
-References: <1227043498.4949.21.camel@ogier> <1234365225.24194.3.camel@ogier> <3F3E8B49-EB9A-4A6D-ABB0-3F4FC2EF7D1C@qlogic.com> <BAD9A31D-BCDA-46F9-AE12-E310B684498F@qlogic.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 2/2] sd: Try READ CAPACITY 16 first for SBC-2 devices
+Date: Sat, 14 Mar 2009 16:48:44 -0600
+Message-ID: <20090314224843.GE14127@parisc-linux.org>
+References: <1236882030-27964-1-git-send-email-willy@linux.intel.com> <1236882030-27964-3-git-send-email-willy@linux.intel.com> <1237063291.3907.64.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:55414 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751531AbZCNWRD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Mar 2009 18:17:03 -0400
-In-Reply-To: <BAD9A31D-BCDA-46F9-AE12-E310B684498F@qlogic.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:42872 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751570AbZCNWtE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Mar 2009 18:49:04 -0400
+Content-Disposition: inline
+In-Reply-To: <1237063291.3907.64.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Seokmann Ju <seokmann.ju@qlogic.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "sven@linux.vnet.ibm.com Schuetz" <sven@linux.vnet.ibm.com>, "futjita.tomonori@lab.ntt.co.jp" <futjita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Matthew Wilcox <willy@linux.intel.com>, linux-scsi@vger.kernel.org, Martin Petersen <mkp@mkp.net>
 
-Thank you Seokmann. I'm glad the RFC worked well for you.  Your patch is 
-appreciated, it was the portion that needed to be reverted as the 
-collapsed blk_end_request() patch wasn't taken.  To double check - there 
-are no patches required with the RFC now - right ?
+On Sat, Mar 14, 2009 at 03:41:31PM -0500, James Bottomley wrote:
+> We're going to have to do something about the scary error messages on
+> SBC-2 supporting drives, this is what mine say (and this is after mkp's
+> chat reduction):
+> 
+> sd 1:0:1:0: [sdc] READ CAPACITY(16) failed
+> sd 1:0:1:0: [sdc] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+> sd 1:0:1:0: [sdc] Sense Key : Illegal Request [current] 
+> sd 1:0:1:0: [sdc] Add. Sense: Invalid command operation code
+> sd 1:0:1:0: [sdc] 71096640 512-byte hardware sectors: (36.4 GB/33.9 GiB)
 
-I'll repost as a non-RFC, and we'll see where James takes it.
+OK, that's relatively easy to fix.  Simply return early if the drive
+claims not to understand the command, and it'll try rc10 without printing
+the scary messages.  Like this, perhaps (note cunning factoring of code):
 
--- james s
+(compile tested only, and I'll do you a nice changelog and sign-off for
+it if it fixes the problem and you approve of this approach).
 
-Seokmann Ju wrote:
-> On Feb 11, 2009, at 7:43 AM, Seokmann Ju wrote:
->   
-> Here is a change that I've made for transport layer while I'm testing
-> the feature.
-> ---
-> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/
-> scsi_transport_fc.c
-> index 63ab7bc..4bca164 100644
->   
-<snip...>
-> With this change, I'm able to issue several ELS/CT services to the
-> qla2xxx module for those registered to the transport layer and have
-> rport associated with them.
->
-> And, below is the driver changes for just review purpose.
->
-> Do we have time table for this support to make it available in the
-> upstream?
-> I think it would be good to have the feature in 2.6.30 kernel, if
-> possible.
-> I will continue to work on and add rest of helper function in the
-> driver.
->
-> Thank you,
-> Seokmann
->   
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index f8260c0..60b31ea 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1139,6 +1139,14 @@ static int media_not_present(struct scsi_disk *sdkp,
+ 	return 1;
+ }
+ 
++static int invalid_field_in_cdb(struct scsi_sense_hdr *sshdr)
++{
++	if (!scsi_sense_valid(sshdr))
++		return 0;
++	return sshdr->sense_key == ILLEGAL_REQUEST &&
++			sshdr->asc == 0x24 && sshdr->ascq == 0x0;
++}
++
+ /*
+  * spinup disk - called only in sd_revalidate_disk()
+  */
+@@ -1362,6 +1370,8 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 
+ 		if (media_not_present(sdkp, &sshdr))
+ 			return -ENODEV;
++		if (invalid_field_in_cdb(&sshdr))
++			return -EINVAL;
+ 
+ 		if (the_result)
+ 			sense_valid = scsi_sense_valid(&sshdr);
+@@ -1739,10 +1749,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 	}
+ 
+ bad_sense:
+-	if (scsi_sense_valid(&sshdr) &&
+-	    sshdr.sense_key == ILLEGAL_REQUEST &&
+-	    sshdr.asc == 0x24 && sshdr.ascq == 0x0)
+-		/* Invalid field in CDB */
++	if (invalid_field_in_cdb(&sshdr))
+ 		sd_printk(KERN_NOTICE, sdkp, "Cache data unavailable\n");
+ 	else
+ 		sd_printk(KERN_ERR, sdkp, "Asking for cache data failed\n");
+
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
