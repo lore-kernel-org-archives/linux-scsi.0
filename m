@@ -1,58 +1,92 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 2/2] sd: Try READ CAPACITY 16 first for SBC-2 devices
-Date: Sat, 14 Mar 2009 15:41:31 -0500
-Message-ID: <1237063291.3907.64.camel@localhost.localdomain>
-References: <1236882030-27964-1-git-send-email-willy@linux.intel.com>
-	 <1236882030-27964-3-git-send-email-willy@linux.intel.com>
+From: Sam Ravnborg <sam@ravnborg.org>
+Subject: Re: [PATCH 4/5] bfa: Brocade BFA FC SCSI driver (makefile)
+Date: Sat, 14 Mar 2009 22:02:51 +0100
+Message-ID: <20090314210251.GA3353@uranus.ravnborg.org>
+References: <200903141958.n2EJwffd030299@blc-10-6.brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:55696 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752029AbZCNUlf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 14 Mar 2009 16:41:35 -0400
-In-Reply-To: <1236882030-27964-3-git-send-email-willy@linux.intel.com>
+Received: from pfepb.post.tele.dk ([195.41.46.236]:42795 "EHLO
+	pfepb.post.tele.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751242AbZCNVAy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Mar 2009 17:00:54 -0400
+Content-Disposition: inline
+In-Reply-To: <200903141958.n2EJwffd030299@blc-10-6.brocade.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@linux.intel.com>
-Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>
+To: Jing Huang <huangj@brocade.com>
+Cc: James.Bottomley@HansenPartnership.com, kgudipat@brocade.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rvadivel@brocade.com, vravindr@brocade.com
 
-On Thu, 2009-03-12 at 14:20 -0400, Matthew Wilcox wrote:
-> From: Matthew Wilcox <matthew@wil.cx>
+On Sat, Mar 14, 2009 at 12:58:41PM -0700, Jing Huang wrote:
+> From: Jing Huang <huangj@brocade.com>
 > 
-> New features are being added to the READ CAPACITY 16 results, so we
-> want to issue it in preference to READ CAPACITY 10.  Unfortunately, some
-> devices misbehave when they see a READ CAPACITY 16, so we restrict this
-> command to devices which claim conformance to SPC-3 (aka SBC-2), or claim
-> they have features which are only reported in the READ CAPACITY 16 data.
+> This patch contains Makefile and Kconfig file for scsi and bfa. It is created
+> using 2.6.29-rc8 kernel.
 > 
-> The READ CAPACITY 16 command is optional, even for SBC-2 devices, so
-> we fall back to READ CAPACITY 10 if READ CAPACITY 16 fails.
+> Signed-off-by: Jing Huang <huangj@brocade.com>
+> ---
+>  Kconfig      |    9 +++++++++
+>  Makefile     |    1 +
+>  bfa/Makefile |   28 ++++++++++++++++++++++++++++
+>  3 files changed, 38 insertions(+)
+> 
+> diff -urpN orig/drivers/scsi/bfa/Makefile patch/drivers/scsi/bfa/Makefile
+> --- orig/drivers/scsi/bfa/Makefile	1969-12-31 16:00:00.000000000 -0800
+> +++ patch/drivers/scsi/bfa/Makefile	2009-03-14 11:44:59.337712000 -0700
+> @@ -0,0 +1,28 @@
+> +#
+> +# Copyright (c) 2005-2008 Brocade Communications Systems, Inc.
+> +# All rights reserved
+> +# www.brocade.com
+> +# 
+> +# Linux driver for Brocade Fibre Channel Host Bus Adapter.
+> +#
+> +# This program is free software; you can redistribute it and/or modify it
+> +# under the terms of the GNU General Public License (GPL) Version 2 as
+> +# published by the Free Software Foundation
+> +#
+> +# This program is distributed in the hope that it will be useful, but
+> +# WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+> +# General Public License for more details.
+> +#
 
-We're going to have to do something about the scary error messages on
-SBC-2 supporting drives, this is what mine say (and this is after mkp's
-chat reduction):
+No one else needs this boiler plate - please remove it.
 
-sd 1:0:1:0: [sdc] READ CAPACITY(16) failed
-sd 1:0:1:0: [sdc] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-sd 1:0:1:0: [sdc] Sense Key : Illegal Request [current] 
-sd 1:0:1:0: [sdc] Add. Sense: Invalid command operation code
-sd 1:0:1:0: [sdc] 71096640 512-byte hardware sectors: (36.4 GB/33.9 GiB)
-sd 1:0:1:0: [sdc] Write Protect is off
-sd 1:0:1:0: [sdc] Write cache: disabled, read cache: enabled, supports DPO and FUA
-sd 1:0:1:0: [sdc] READ CAPACITY(16) failed
-sd 1:0:1:0: [sdc] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-sd 1:0:1:0: [sdc] Sense Key : Illegal Request [current] 
-sd 1:0:1:0: [sdc] Add. Sense: Invalid command operation code
- sdc: sdc1 sdc2 sdc3
-sd 1:0:1:0: [sdc] Attached SCSI disk
+> +obj-$(CONFIG_SCSI_BFA_FC) := bfa.o
 
-What they're saying is that they don't support READ CAPACITY(16) which
-is perfectly legal for SBC-2 conforming devices which don't support
-protection information ... like almost every modern disk in the field.
+OK
 
-James
+> +
+> +bfa-objs := bfad.o bfad_intr.o bfad_os.o bfad_im.o bfad_attr.o bfad_fwimg.o \
+> +	    bfa_core.o bfa_ioc.o bfa_iocfc.o bfa_fcxp.o bfa_diag.o \
+> +	    bfa_fcdiag.o bfa_lps.o bfa_hw_cb.o bfa_hw_ct.o bfa_drv.o  \
+> +            bfa_intr.o bfa_timer.o bfa_rport.o bfa_port.o bfa_uf.o \
+> +            bfa_sgpg.o  bfa_module.o bfa_ioim.o bfa_itnim.o bfa_fcpim.o \
+> +	    bfa_tskim.o bfa_port.o bfa_vport.o bfa_lport.o bfa_fabric.o   \
+> +            bfa_auth.o  bfa_vfapi.o bfa_log.o bfa_log_module.o bfa_csdebug.o \
+> +            bfa_sm.o plog.o
 
+a) use of -objs is deprecated.
+Please use:
+bfa-y := bfad.o ...
 
+b) As a style thing the following is preferred (by me at least):
+bfa-y := bfad.o bfad_intr.o bfad_os.o bfad_im.o bfad_attr.o bfad_fwimg.o
+
+# core stuff 
+bfa-y += bfa_core.o bfa_ioc.o bfa_iocfc.o bfa_fcxp.o bfa_diag.o
+
+# interrup hander
+bfa-y += bfa_intr.o 
+
+No longer any need for escaping the newline with a backslahs
+And you can add descriptive comments too.
+
+> +EXTRA_CFLAGS += -I$(obj) -I$(obj)/include
+
+Neither of the above is needed.
+If you really need to specify addtional options to gcc use:
+ccflags-y := ...
+
+	Sam
