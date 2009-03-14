@@ -1,81 +1,88 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: libsas error-handling completion issue.
-Date: Sat, 14 Mar 2009 12:19:05 -0500
-Message-ID: <1237051145.3907.43.camel@localhost.localdomain>
-References: <FE3F06125A99254E8D92161AA4569C6F0687BCA0@sc-exch02.marvell.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Jing Huang <huangj@brocade.com>
+Subject: [PATCH 4/5] bfa: Brocade BFA FC SCSI driver (makefile)
+Date: Sat, 14 Mar 2009 12:58:41 -0700
+Message-ID: <200903141958.n2EJwffd030299@blc-10-6.brocade.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:49315 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752645AbZCNRTL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 14 Mar 2009 13:19:11 -0400
-In-Reply-To: <FE3F06125A99254E8D92161AA4569C6F0687BCA0@sc-exch02.marvell.com>
+Received: from mx30.brocade.com ([144.49.194.4]:56444 "EHLO mx30.brocade.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753938AbZCNT7p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 14 Mar 2009 15:59:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ying Chu <jasonchu@marvell.com>
-Cc: linux-scsi@vger.kernel.org, jeff@garzik.org, Tejun Heo <tj@kernel.org>
+To: James.Bottomley@HansenPartnership.com
+Cc: kgudipat@brocade.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rvadivel@brocade.com, vravindr@brocade.com
 
-On Fri, 2009-03-13 at 23:44 -0700, Ying Chu wrote:
-> As sas_eh_finish_cmd() routine is used when a sas task is marked
-> succfully recovered(or the device is marked OFFLINE), then the
-> corresponding task_done will be invoked after SAS_TASK_STATE_ABORTED is
-> unmasked. Whatever sas_scsi_task_done() or sas_ata_task_done() got
-> invoked, it will translate task_status to scsi_cmnd->request, free the
-> sas_task structure and invoke task_done, the problem is, after
-> task_done(), scsi_eh_finish_cmd() will still add the cmd to
-> sas_ha->eh_done_q, and in the coming scsi_eh_flush_done_q(), it will
-> retry the command or invoke scsi_finish_command() to finish the request
-> again.  
+From: Jing Huang <huangj@brocade.com>
 
-OK, so the immediate answer is that the eh_done_q is processed in the
-strategy handler, in this case by sas_eh_handle_sas_errors() which skips
-over any commands without sas tasks in the list.
+This patch contains Makefile and Kconfig file for scsi and bfa. It is created
+using 2.6.29-rc8 kernel.
 
->    Take a timeout SSP request in the race condition for example, if the
-> request is returned prior to lldd_abort_task() and set
-> SAS_TASK_STATE_DONE, the lldd_abort_task() handler will do nothing but
-> return TASK_IS_DONE in sas_scsi_find_task(), later sas_eh_finished_cmd()
-> will get invoked and unset SAS_TASK_STATE_ABORTED mask to let
-> sas_scsi_task_done() in, since it's a good response and the request will
-> be finished succfully.But current strategy will
-> add the scsi_cmnd to sas_ha->eh_done_q after task_done() is performed.
-> Then if possibe, we may scsi_queue_insert(scmd, SCSI_MLQUEUE_EH_RETRY)
-> in scsi_eh_flush_done_q(). I meet the condition and sometime the system
-> hangs.
-> 
->    Did I miss something?
+Signed-off-by: Jing Huang <huangj@brocade.com>
+---
+ Kconfig      |    9 +++++++++
+ Makefile     |    1 +
+ bfa/Makefile |   28 ++++++++++++++++++++++++++++
+ 3 files changed, 38 insertions(+)
 
-I'm not sure, since I didn't quite understand the problem.
-
-So, let me explain how the SAS_TASK_STATE_ABORTED works.  It's actually
-the mediating flag in how completions are handled.  There are two ways
-through ->task_done() depending on the state of this flag.  If this flag
-is set, it means that libsas owns the task and ->task_done() may not
-free it.  Conversely if the timeout fires it checks the flags and if
-SAS_TASK_STATE_DONE is set, it returns BLK_EH_HANDLED because presumably
-the mid-layer will soon see it.
-
-The apparent race between these flags is mediated using the
-task_state_lock.  When looking to test and set these flags, you must be
-holding this lock.
-
-The first case is in sas_scsi_host.c:sas_scsi_timed_out() where it takes
-the lock, checks for done and only sets STATE_ABORTED if STATE_DONE
-wasn't set.
-
-The other, nastily, is in the driver (which is responsible for setting
-STATE_DONE).  I've never liked this bit because it's complex and easy to
-get wrong.  However, if you look at
-aic94xx_task.c:asd_task_tasklet_complete() you see the big chunk of code
-where it takes the lock, sets STATE_DONE, checks STATE_ABORTED and
-doesn't call ->task_done() if this is set.
-
-As far as I can tell, the locking around all of this, while nasty to the
-user, is raceproof as long as the LLD gets it right.
-
-James
-
-
+diff -urpN orig/drivers/scsi/bfa/Makefile patch/drivers/scsi/bfa/Makefile
+--- orig/drivers/scsi/bfa/Makefile	1969-12-31 16:00:00.000000000 -0800
++++ patch/drivers/scsi/bfa/Makefile	2009-03-14 11:44:59.337712000 -0700
+@@ -0,0 +1,28 @@
++#
++# Copyright (c) 2005-2008 Brocade Communications Systems, Inc.
++# All rights reserved
++# www.brocade.com
++# 
++# Linux driver for Brocade Fibre Channel Host Bus Adapter.
++#
++# This program is free software; you can redistribute it and/or modify it
++# under the terms of the GNU General Public License (GPL) Version 2 as
++# published by the Free Software Foundation
++#
++# This program is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++# General Public License for more details.
++#
++obj-$(CONFIG_SCSI_BFA_FC) := bfa.o
++
++bfa-objs := bfad.o bfad_intr.o bfad_os.o bfad_im.o bfad_attr.o bfad_fwimg.o \
++	    bfa_core.o bfa_ioc.o bfa_iocfc.o bfa_fcxp.o bfa_diag.o \
++	    bfa_fcdiag.o bfa_lps.o bfa_hw_cb.o bfa_hw_ct.o bfa_drv.o  \
++            bfa_intr.o bfa_timer.o bfa_rport.o bfa_port.o bfa_uf.o \
++            bfa_sgpg.o  bfa_module.o bfa_ioim.o bfa_itnim.o bfa_fcpim.o \
++	    bfa_tskim.o bfa_port.o bfa_vport.o bfa_lport.o bfa_fabric.o   \
++            bfa_auth.o  bfa_vfapi.o bfa_log.o bfa_log_module.o bfa_csdebug.o \
++            bfa_sm.o plog.o
++
++EXTRA_CFLAGS += -I$(obj) -I$(obj)/include
+diff -urpN orig/drivers/scsi/Kconfig patch/drivers/scsi/Kconfig
+--- orig/drivers/scsi/Kconfig	2009-03-14 11:44:59.381081000 -0700
++++ patch/drivers/scsi/Kconfig	2009-03-14 11:44:53.382314000 -0700
+@@ -1797,6 +1797,15 @@ config SCSI_SRP
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called libsrp.
+ 
++config SCSI_BFA_FC
++	tristate "Brocade BFA Fibre Channel Support"
++	depends on PCI && SCSI
++	help
++	  This bfa driver supports all Brocade PCIe Fibre Channel host adapters.
++
++	  To compile this driver as a module, choose M here. The module will
++	  be called bfa.
++
+ endif # SCSI_LOWLEVEL
+ 
+ source "drivers/scsi/pcmcia/Kconfig"
+diff -urpN orig/drivers/scsi/Makefile patch/drivers/scsi/Makefile
+--- orig/drivers/scsi/Makefile	2009-03-14 11:44:59.393920000 -0700
++++ patch/drivers/scsi/Makefile	2009-03-14 11:44:53.417722000 -0700
+@@ -84,6 +84,7 @@ obj-$(CONFIG_SCSI_QLOGIC_1280)	+= qla128
+ obj-$(CONFIG_SCSI_QLA_FC)	+= qla2xxx/
+ obj-$(CONFIG_SCSI_QLA_ISCSI)	+= qla4xxx/
+ obj-$(CONFIG_SCSI_LPFC)		+= lpfc/
++obj-$(CONFIG_SCSI_BFA_FC)	+= bfa/
+ obj-$(CONFIG_SCSI_PAS16)	+= pas16.o
+ obj-$(CONFIG_SCSI_T128)		+= t128.o
+ obj-$(CONFIG_SCSI_DMX3191D)	+= dmx3191d.o
