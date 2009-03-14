@@ -1,59 +1,40 @@
-From: Sam Ravnborg <sam@ravnborg.org>
-Subject: Re: [PATCH 0/5] bfa: Brocade BFA FC SCSI driver (overview)
-Date: Sat, 14 Mar 2009 22:13:28 +0100
-Message-ID: <20090314211328.GC3353@uranus.ravnborg.org>
-References: <200903141952.n2EJqeHb028773@blc-10-6.brocade.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12759] scsi: aic7xxx hang since v2.6.28-rc1 ...
+Date: Sat, 14 Mar 2009 14:18:20 -0700 (PDT)
+Message-ID: <20090314211820.D47F9108047@picon.linux-foundation.org>
+References: <bug-12759-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pfepa.post.tele.dk ([195.41.46.235]:53478 "EHLO
-	pfepa.post.tele.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751627AbZCNVLb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Mar 2009 17:11:31 -0400
-Content-Disposition: inline
-In-Reply-To: <200903141952.n2EJqeHb028773@blc-10-6.brocade.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:48572 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751553AbZCNVT0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 14 Mar 2009 17:19:26 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n2ELILCN017069
+	for <linux-scsi@vger.kernel.org>; Sat, 14 Mar 2009 14:18:56 -0700
+In-Reply-To: <bug-12759-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jing Huang <huangj@brocade.com>
-Cc: James.Bottomley@HansenPartnership.com, kgudipat@brocade.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rvadivel@brocade.com, vravindr@brocade.com
+To: linux-scsi@vger.kernel.org
 
-On Sat, Mar 14, 2009 at 12:52:40PM -0700, Jing Huang wrote:
-> From: Jing Huang <huangj@brocade.com>
-> 
-> This is the an interim submission of Brocade BFA FC SCSI Driver for code review.
-> We moved FC protocol/port state machine part of the driver to the firmware to
-> make the driver simpler. We also implemented the code review comments received
-> from last submission which includes: 1) replaced bfa specific list management
-> routines by standard linux list implemetation. 2) Other minor fixes such as 
-> namming, kconfig etc.
-> 
-> Please note that this driver is still not fully functioning. We expect to do
-> anoher submssion next week after we complete all the changes. 
-> 
-> It contains a serial of 5 patches generated using 2.6.29-rc8 kernel. Here is
-> a brief description of each patch:
-> 
-> [PATCH 1/5]: Linux driver specific code, things such as module load/unload,
-> PCI probe/release, interrupt handler, and sysfs interface etc. All the files
-> start with "bfad_" prefix.
-> 
-> [PATCH 2/5]: Hardware/FW access code. All files start with "bfa_" prefix.
-> 
-> [PATCH 3/5]: Common header files shared by linux driver specific and
-> hardware/FW access code.
-> 
-> [PATCH 4/5]: Updated Kconfig and Makefile for driver/scsi, and Makefile
-> for bfa driver 
-> 
-> [PATCH 5/5]: Updated MAINTAINER file.
+http://bugzilla.kernel.org/show_bug.cgi?id=12759
 
-Your submission was screwed up somehow?
-You had plenty of [0/5]....
 
-Have you ran this through checkpatch - and what is the result?
-Have you run this through sparse - and what is the result?
+rjw@sisk.pl changed:
 
-If you have done it - please document it.
-If not then please do - fix relevant issues - and document it.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |CLOSED
+         Resolution|                            |CODE_FIX
 
-	Sam
+
+
+
+------- Comment #1 from rjw@sisk.pl  2009-03-14 14:18 -------
+The problem seems to have been fixed, closing.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
