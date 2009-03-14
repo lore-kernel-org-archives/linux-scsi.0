@@ -1,22 +1,30 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 12759] scsi: aic7xxx hang since v2.6.28-rc1 ...
-Date: Sat, 14 Mar 2009 17:51:04 -0500
-Message-ID: <1237071064.3907.76.camel@localhost.localdomain>
-References: <20090314211820.D47F9108047@picon.linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12759] scsi: aic7xxx hang since v2.6.28-rc1 ...
+Date: Sat, 14 Mar 2009 15:52:21 -0700 (PDT)
+Message-ID: <20090314225222.0137C108042@picon.linux-foundation.org>
+References: <bug-12759-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:47707 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751331AbZCNWvI (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:45495 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752551AbZCNWxc (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 14 Mar 2009 18:51:08 -0400
-In-Reply-To: <20090314211820.D47F9108047@picon.linux-foundation.org>
+	Sat, 14 Mar 2009 18:53:32 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n2EMqMTd022578
+	for <linux-scsi@vger.kernel.org>; Sat, 14 Mar 2009 15:52:57 -0700
+In-Reply-To: <bug-12759-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugme-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=12759
+
+
+
+
+
+------- Comment #2 from anonymous@kernel-bugs.osdl.org  2009-03-14 15:52 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Sat, 2009-03-14 at 14:18 -0700, bugme-daemon@bugzilla.kernel.org
 wrote:
@@ -52,3 +60,7 @@ hiding for a very long time).
 James
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
