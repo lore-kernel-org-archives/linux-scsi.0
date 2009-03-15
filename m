@@ -1,54 +1,97 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: RE: libsas error-handling completion issue.
-Date: Sun, 15 Mar 2009 09:14:31 -0500
-Message-ID: <1237126471.4376.10.camel@localhost.localdomain>
-References: <FE3F06125A99254E8D92161AA4569C6F0687BCA0@sc-exch02.marvell.com>
-	 <1237051145.3907.43.camel@localhost.localdomain>
-	 <FE3F06125A99254E8D92161AA4569C6F0687BD47@sc-exch02.marvell.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [RFC] FC pass thru - Rev V
+Date: Sun, 15 Mar 2009 16:03:58 +0200
+Message-ID: <49BD0ACE.8000409@panasas.com>
+References: <1227043498.4949.21.camel@ogier> <1234365225.24194.3.camel@ogier> <3F3E8B49-EB9A-4A6D-ABB0-3F4FC2EF7D1C@qlogic.com> <BAD9A31D-BCDA-46F9-AE12-E310B684498F@qlogic.com> <49BA8E1E.6080809@linux.vnet.ibm.com> <49BCCBC3.7020204@panasas.com> <49BCFF47.2050005@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:44452 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751604AbZCOOOg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 15 Mar 2009 10:14:36 -0400
-In-Reply-To: <FE3F06125A99254E8D92161AA4569C6F0687BD47@sc-exch02.marvell.com>
+Received: from gw-ca.panasas.com ([209.116.51.66]:17013 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751184AbZCOOWn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Mar 2009 10:22:43 -0400
+In-Reply-To: <49BCFF47.2050005@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ying Chu <jasonchu@marvell.com>
-Cc: linux-scsi@vger.kernel.org, jeff@garzik.org, Tejun Heo <tj@kernel.org>
+To: James Smart <James.Smart@Emulex.Com>
+Cc: Sven Schuetz <sven@linux.vnet.ibm.com>, Seokmann Ju <seokmann.ju@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "futjita.tomonori@lab.ntt.co.jp" <futjita.tomonori@lab.ntt.co.jp>, Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-On Sat, 2009-03-14 at 21:02 -0700, Ying Chu wrote:
-> >So, let me explain how the SAS_TASK_STATE_ABORTED works.  It's actually the mediating flag in how completions are handled.  There are two ways through ->task_done() depending on the state of this flag.  If this flag is set, it means
-> > that libsas owns the task and ->task_done() may not free it.  Conversely if the timeout fires it checks the flags and if SAS_TASK_STATE_DONE is set, it returns BLK_EH_HANDLED because presumably the mid-layer will soon see it.
+James Smart wrote:
+> Current patch is the RFC, at :
+> http://marc.info/?l=linux-scsi&m=123436574018579&w=2
 > 
-> What I meant is the corner case where interrupt is fired and the
-> sas_task returned back at the monment but before sas_scsi_find_task()
-> got invoked and set SAS_TASK_STATE_DONE flag. As in
-> asd_task_tasklet_complete() routine, it will check if the
-> STATE_ABORTED is set, if so, it doesn't invoke task_done() routine.
-> Still returned to the strategy handler, sas_scsi_find_task() will try
-> to abort the task and find it has been finished with STATE_DONE set,
-> so it return TASK_IS_DONE and call sas_eh_finish_cmd(), where it unset
-> the TASK_ABORTED flag and call task_done(). Noticed that in
-> sas_eh_finish_cmd(), we call scsi_eh_finish_cmd() which will add the
-> cmd to sas_ha->eh_done(), and in the coming flush_done_q it will be
-> retried or finished again.
+> -- james s
+> 
+> Boaz Harrosh wrote:
+>> My humble opinion is: That none of the patches should go in. It is easy
+>> enough to use the API as it is, and it is more correct then any of the
+>> suggested alternatives.
+>>
+>> Please point me to the latest code-base and I'll fix you a patch that I
+>> think looks very simple and will work well.
+>>
+>> Cheers, have a good day
+>> Boaz
+>>   
 
-I'm still not quite seeing what you think the problem is. Is it that
-task_done() calls scsi_cmnd->scsi_done(), in which case you think
-there's a double completion?  That's fixed in the block layer:
-scsi_done() is blk_complete_request() which does nothing if the request
-has a completion set and the block layer sets the completion when the
-timeout fires.
+My changes below
 
-James
+> +static void
+> +fc_bsg_jobdone(struct fc_bsg_job *job)
+> +{
+> +	struct request *req = job->req;
+> +	struct request *rsp = req->next_rq;
+> +	unsigned long flags;
+> +	unsigned rsp_len;
 
+-	unsigned rsp_len;
++	unsigned rsp_len = 0, req_len = blk_rq_bytes(req);
 
+> +	int err;
+> +
+> +	spin_lock_irqsave(&job->job_lock, flags);
+> +	job->state_flags |= FC_RQST_STATE_DONE;
+> +	job->ref_cnt--;
+> +	spin_unlock_irqrestore(&job->job_lock, flags);
+> +
+> +	err = job->req->errors = job->reply->result;
+> +	if (err < 0)
+> +		/* we're only returning the result field in the reply */
+> +		job->req->sense_len = sizeof(uint32_t);
+> +	else
+> +		job->req->sense_len = job->reply_len;
+> +
+> +	if (rsp) {
+> +		rsp_len = blk_rq_bytes(rsp);
+> +		BUG_ON(job->reply->reply_payload_rcv_len > rsp_len);
+> +		/* set reply (bidi) residual */
+> +		rsp->data_len = (rsp_len - job->reply->reply_payload_rcv_len);
+> +	}
+> +
+> +	/* we assume all request payload was transferred */
 
+-	/* we assume all request payload was transferred */
++	/* we assume all request payload was transferred, residual == 0 */
++	req->data_len = 0;
 
-James
+Note: this is the proper procedure. Otherwise bsg user will receive transfer
+residual of all payload. On the other hand you might have more precise residual
+information here, as received from the scsi transport? (Specially in the error
+case, perhaps in the future).
 
+> +	blk_end_request(req, err, blk_rq_bytes(req));
+
+-	blk_end_request(req, err, blk_rq_bytes(req));
++	blk_end_bidi_request(req, err, req_len, rsp_len);
+
+> +
+> +	fc_destroy_bsgjob(job);
+> +}
+
+This should take care of all possible cases, (bidi or otherwise), and will
+return the proper transfer residual count of 0 to user-mode.
+
+Thanks
+Boaz
 
