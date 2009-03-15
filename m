@@ -1,47 +1,112 @@
-From: Jeff Chua <jeff.chua.linux@gmail.com>
-Subject: Re: 2.6.29-rc8: Reported regressions from 2.6.28
-Date: Sun, 15 Mar 2009 10:58:16 +0800
-Message-ID: <b6a2187b0903141958u9dae0fdk1f44b387108b99e4@mail.gmail.com>
-References: <MiincthRUSI.A.eKC.F4BvJB@chimera>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 2/2] sd: Try READ CAPACITY 16 first for SBC-2 devices
+Date: Sat, 14 Mar 2009 22:30:47 -0500
+Message-ID: <1237087848.3907.87.camel@localhost.localdomain>
+References: <1236882030-27964-1-git-send-email-willy@linux.intel.com>
+	 <1236882030-27964-3-git-send-email-willy@linux.intel.com>
+	 <1237063291.3907.64.camel@localhost.localdomain>
+	 <20090314224843.GE14127@parisc-linux.org>
+	 <1237073695.3907.84.camel@localhost.localdomain>
+	 <49BC69A6.4080106@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:24514 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752588AbZCOC6S convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Mar 2009 22:58:18 -0400
-In-Reply-To: <MiincthRUSI.A.eKC.F4BvJB@chimera>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:58015 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753833AbZCODax (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 14 Mar 2009 23:30:53 -0400
+In-Reply-To: <49BC69A6.4080106@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
+To: dgilbert@interlog.com
+Cc: Matthew Wilcox <matthew@wil.cx>, Matthew Wilcox <willy@linux.intel.com>, linux-scsi@vger.kernel.org, Martin Petersen <mkp@mkp.net>
 
-On Sun, Mar 15, 2009 at 3:01 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> Bug-Entry =A0 =A0 =A0 : http://bugzilla.kernel.org/show_bug.cgi?id=3D=
-12414
-> Subject =A0 =A0 =A0 =A0 : iwl4965 cannot use "ap auto" on latest 2.6.=
-28/29?
-> Submitter =A0 =A0 =A0 : Jeff Chua <jeff.chua.linux@gmail.com>
-> Date =A0 =A0 =A0 =A0 =A0 =A0: 2009-01-05 4:13 (69 days old)
-> References =A0 =A0 =A0: http://marc.info/?l=3Dlinux-kernel&m=3D123112=
-882127823&w=3D4
+On Sat, 2009-03-14 at 22:36 -0400, Douglas Gilbert wrote:
+> James Bottomley wrote:
+> > On Sat, 2009-03-14 at 16:48 -0600, Matthew Wilcox wrote:
+> >> On Sat, Mar 14, 2009 at 03:41:31PM -0500, James Bottomley wrote:
+> >>> We're going to have to do something about the scary error messages on
+> >>> SBC-2 supporting drives, this is what mine say (and this is after mkp's
+> >>> chat reduction):
+> >>>
+> >>> sd 1:0:1:0: [sdc] READ CAPACITY(16) failed
+> >>> sd 1:0:1:0: [sdc] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+> >>> sd 1:0:1:0: [sdc] Sense Key : Illegal Request [current] 
+> >>> sd 1:0:1:0: [sdc] Add. Sense: Invalid command operation code
+> >>> sd 1:0:1:0: [sdc] 71096640 512-byte hardware sectors: (36.4 GB/33.9 GiB)
+> >> OK, that's relatively easy to fix.  Simply return early if the drive
+> >> claims not to understand the command, and it'll try rc10 without printing
+> >> the scary messages.  Like this, perhaps (note cunning factoring of code):
+> >>
+> >> (compile tested only, and I'll do you a nice changelog and sign-off for
+> >> it if it fixes the problem and you approve of this approach).
+> >>
+> >> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> >> index f8260c0..60b31ea 100644
+> >> --- a/drivers/scsi/sd.c
+> >> +++ b/drivers/scsi/sd.c
+> >> @@ -1139,6 +1139,14 @@ static int media_not_present(struct scsi_disk *sdkp,
+> >>  	return 1;
+> >>  }
+> >>  
+> >> +static int invalid_field_in_cdb(struct scsi_sense_hdr *sshdr)
+> >> +{
+> >> +	if (!scsi_sense_valid(sshdr))
+> >> +		return 0;
+> >> +	return sshdr->sense_key == ILLEGAL_REQUEST &&
+> >> +			sshdr->asc == 0x24 && sshdr->ascq == 0x0;
+> >> +
+> > 
+> > Actually, afraid not, you're trapped in the confusing maze of ASC/ASCQ
+> > codes, all sounding alike but meaning slightly different things:
+> > 0x24/0x00 is Invalid Field in CDB.  The problem I'm having is 0x20/00
+> > (Invalid Command Operation Code).
+> > 
+> > This will fix it, though ... I'll just merge it into your patch.
+> 
+> Read Capacity(16) is actually Service Action In(16) with a
+> Service Action field of 10h. My understanding is that if the
+> device server doesn't support Service Action(16) (i.e. the
+> "operation code" is the first byte of the cdb) then 20h/0h is
+> the ASC/ASCQ response. However it if does support Service
+> Action In(16) but not a Read Capacity(16) then 24h/0h is the
+> correct ASC/ASCQ response.
+> 
+> The only example I can see of the latter case is if Read
+> Long(16) is supported and Read Capacity(16) isn't. Then
+> opcode 9eh (Service Action In(16)) is valid.
+> 
+> 
+> I suspect that the folks who implement SCSI disk
+> firmware are also confused. I'm pretty sure that I have
+> seen these two ASC/ASCQ combinations used interchangeably
+> for unsupported commands that have a service action field.
 
-Still not working in linux-2.6.29-rc8. Broken after the commit below.
-There were many changes to wireless after this commit, and simply
-reverting this commit will break compiling.
+Well, better safe than sorry, so this should cover all eventualities?
 
-Jeff.
+James
+
+---
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 19a7b98..ec7f773 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1333,9 +1333,11 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 			sense_valid = scsi_sense_valid(&sshdr);
+ 			if (sense_valid &&
+ 			    sshdr.sense_key == ILLEGAL_REQUEST &&
+-			    sshdr.asc == 0x20 && sshdr.ascq == 0x00)
+-				/* Invalid Command Operation Code,
+-				 * just retry silently with RC10 */
++			    (sshdr.asc == 0x20 || sshdr.asc == 0x24) &&
++			    sshdr.ascq == 0x00)
++				/* Invalid Command Operation Code or
++ 				 * Invalid Field in CDB, just retry
++ 				 * silently with RC10 */
+ 				return -EINVAL;
+ 		}
+ 		retries--;
 
 
-
-commit 41bb73eeac5ff5fb217257ba33b654747b3abf11
-Author: Johannes Berg <johannes@sipsolutions.net>
-Date:   Wed Oct 29 01:09:37 2008 +0100
-
-    mac80211: remove SSID driver code
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
