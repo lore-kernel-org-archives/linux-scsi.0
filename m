@@ -1,121 +1,74 @@
-From: "Ying Chu" <jasonchu@marvell.com>
-Subject: RE: libsas error-handling completion issue.
-Date: Sat, 14 Mar 2009 21:02:02 -0700
-Message-ID: <FE3F06125A99254E8D92161AA4569C6F0687BD47@sc-exch02.marvell.com>
-References: <FE3F06125A99254E8D92161AA4569C6F0687BCA0@sc-exch02.marvell.com> <1237051145.3907.43.camel@localhost.localdomain>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [RFC] FC pass thru - Rev V
+Date: Sun, 15 Mar 2009 11:30:12 +0200
+Message-ID: <49BCCAA4.5060104@panasas.com>
+References: <1227043498.4949.21.camel@ogier> <1234365225.24194.3.camel@ogier> <3F3E8B49-EB9A-4A6D-ABB0-3F4FC2EF7D1C@qlogic.com> <BAD9A31D-BCDA-46F9-AE12-E310B684498F@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=gb2312
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host2.marvell.com ([65.219.4.2]:37016 "EHLO maili.marvell.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751384AbZCOEJ7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Mar 2009 00:09:59 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <1237051145.3907.43.camel@localhost.localdomain>
+Received: from gw-ca.panasas.com ([209.116.51.66]:7372 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752767AbZCOJcM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Mar 2009 05:32:12 -0400
+In-Reply-To: <BAD9A31D-BCDA-46F9-AE12-E310B684498F@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, jeff@garzik.org, Tejun Heo <tj@kernel.org>
+To: Seokmann Ju <seokmann.ju@qlogic.com>
+Cc: James Smart <James.Smart@Emulex.Com>, linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, "sven@linux.vnet.ibm.com Schuetz" <sven@linux.vnet.ibm.com>, futjita.tomonori@lab.ntt.co.jp, Giridhar Malavali <giridhar.malavali@qlogic.com>
 
->So, let me explain how the SAS_TASK_STATE_ABORTED works.  It's actuall=
-y the mediating flag in how completions are handled.  There are two way=
-s through ->task_done() depending on the state of this flag.  If this f=
-lag is set, it means
-> that libsas owns the task and ->task_done() may not free it.  Convers=
-ely if the timeout fires it checks the flags and if SAS_TASK_STATE_DONE=
- is set, it returns BLK_EH_HANDLED because presumably the mid-layer wil=
-l soon see it.
+Seokmann Ju wrote:
+> On Feb 11, 2009, at 7:43 AM, Seokmann Ju wrote:
+> 
+>> On Feb 11, 2009, at 7:13 AM, James Smart wrote:
+>>
+>>> Trying to kick-start this again...
+>>> I've updated the prior RFC with the comments from Seokmann,
+>>> SvenFujita, and Boaz. I would still like review on the
+>>> blk_xxx completion calls in the std and error paths.
+>> I'm looking the driver changes to match it with latest updates in  
+>> the transport layer.
+>> The driver with the changes should be available within a couple of  
+>> weeks.
+> Here is a change that I've made for transport layer while I'm testing  
+> the feature.
+> ---
+> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/ 
+> scsi_transport_fc.c
+> index 63ab7bc..4bca164 100644
+> --- a/drivers/scsi/scsi_transport_fc.c
+> +++ b/drivers/scsi/scsi_transport_fc.c
+> @@ -3435,10 +3435,11 @@ fc_bsg_jobdone(struct fc_bsg_job *job)
+>                  BUG_ON(job->reply->reply_payload_rcv_len > rsp_len);
+>                  /* set reply (bidi) residual */
+>                  rsp->data_len = (rsp_len - job->reply- 
+>  >reply_payload_rcv_len);
 
-What I meant is the corner case where interrupt is fired and the sas_ta=
-sk returned back at the monment but before sas_scsi_find_task() got inv=
-oked and set SAS_TASK_STATE_DONE flag. As in asd_task_tasklet_complete(=
-) routine, it will check if the STATE_ABORTED is set, if so, it doesn't=
- invoke task_done() routine. Still returned to the strategy handler, sa=
-s_scsi_find_task() will try to abort the task and find it has been fini=
-shed with STATE_DONE set, so it return TASK_IS_DONE and call sas_eh_fin=
-ish_cmd(), where it unset the TASK_ABORTED flag and call task_done(). N=
-oticed that in sas_eh_finish_cmd(), we call scsi_eh_finish_cmd() which =
-will add the cmd to sas_ha->eh_done(), and in the coming flush_done_q i=
-t will be retried or finished again.
+This part looks a bit white-space broken.
 
+> -       }
+> +               blk_end_bidi_request(req, err, blk_rq_bytes(req),
+> +                   job->reply->reply_payload_rcv_len);
+> 
+> -       /* we assume all request payload was transferred */
+> -       blk_end_request(req, err, blk_rq_bytes(req));
+> +       } else
+> +               blk_end_request(req, err, blk_rq_bytes(req));
 
------Original Message-----
-=46rom: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]=20
-Sent: 2009=C4=EA3=D4=C215=C8=D5 1:19
-To: Ying Chu
-Cc: linux-scsi@vger.kernel.org; jeff@garzik.org; Tejun Heo
-Subject: Re: libsas error-handling completion issue.
+I still do not like this version for more then one reason. There is
+a more proper simpler way.
 
-On Fri, 2009-03-13 at 23:44 -0700, Ying Chu wrote:
-> As sas_eh_finish_cmd() routine is used when a sas task is marked=20
-> succfully recovered(or the device is marked OFFLINE), then the=20
-> corresponding task_done will be invoked after SAS_TASK_STATE_ABORTED=20
-> is unmasked. Whatever sas_scsi_task_done() or sas_ata_task_done() got=
-=20
-> invoked, it will translate task_status to scsi_cmnd->result, free the=
-=20
-> sas_task structure and invoke task_done, the problem is, after=20
-> task_done(), scsi_eh_finish_cmd() will still add the cmd to=20
-> sas_ha->eh_done_q, and in the coming scsi_eh_flush_done_q(), it will=20
-> retry the command or invoke scsi_finish_command() to finish the=20
-> request again.
+Where is the code-base this is patching? I'll make a proper patch for you.
 
-OK, so the immediate answer is that the eh_done_q is processed in the s=
-trategy handler, in this case by sas_eh_handle_sas_errors() which skips=
- over any commands without sas tasks in the list.
+> 
+>          fc_destroy_bsgjob(job);
+>   }
+> ---
+> 
+> With this change, I'm able to issue several ELS/CT services to the  
+> qla2xxx module for those registered to the transport layer and have  
+> rport associated with them.
+> 
+<snip>
 
->    Take a timeout SSP request in the race condition for example, if=20
-> the request is returned prior to lldd_abort_task() and set=20
-> SAS_TASK_STATE_DONE, the lldd_abort_task() handler will do nothing bu=
-t=20
-> return TASK_IS_DONE in sas_scsi_find_task(), later=20
-> sas_eh_finished_cmd() will get invoked and unset=20
-> SAS_TASK_STATE_ABORTED mask to let
-> sas_scsi_task_done() in, since it's a good response and the request=20
-> will be finished succfully.But current strategy will add the scsi_cmn=
-d=20
-> to sas_ha->eh_done_q after task_done() is performed.
-> Then if possibe, we may scsi_queue_insert(scmd, SCSI_MLQUEUE_EH_RETRY=
-)=20
-> in scsi_eh_flush_done_q(). I meet the condition and sometime the=20
-> system hangs.
->=20
->    Did I miss something?
-
-I'm not sure, since I didn't quite understand the problem.
-
-So, let me explain how the SAS_TASK_STATE_ABORTED works.  It's actually=
- the mediating flag in how completions are handled.  There are two ways=
- through ->task_done() depending on the state of this flag.  If this fl=
-ag is set, it means that libsas owns the task and ->task_done() may not=
- free it.  Conversely if the timeout fires it checks the flags and if S=
-AS_TASK_STATE_DONE is set, it returns BLK_EH_HANDLED because presumably=
- the mid-layer will soon see it.
-
-The apparent race between these flags is mediated using the task_state_=
-lock.  When looking to test and set these flags, you must be holding th=
-is lock.
-
-The first case is in sas_scsi_host.c:sas_scsi_timed_out() where it take=
-s the lock, checks for done and only sets STATE_ABORTED if STATE_DONE w=
-asn't set.
-
-The other, nastily, is in the driver (which is responsible for setting =
-STATE_DONE).  I've never liked this bit because it's complex and easy t=
-o get wrong.  However, if you look at
-aic94xx_task.c:asd_task_tasklet_complete() you see the big chunk of cod=
-e where it takes the lock, sets STATE_DONE, checks STATE_ABORTED and do=
-esn't call ->task_done() if this is set.
-
-As far as I can tell, the locking around all of this, while nasty to th=
-e user, is raceproof as long as the LLD gets it right.
-
-James
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Boaz
