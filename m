@@ -1,16 +1,18 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
 Subject: Re: [RFC] FC pass thru - Rev V
-Date: Sun, 15 Mar 2009 16:03:58 +0200
-Message-ID: <49BD0ACE.8000409@panasas.com>
+Date: Sun, 15 Mar 2009 16:26:17 +0200
+Message-ID: <49BD1009.10708@panasas.com>
 References: <1227043498.4949.21.camel@ogier> <1234365225.24194.3.camel@ogier> <3F3E8B49-EB9A-4A6D-ABB0-3F4FC2EF7D1C@qlogic.com> <BAD9A31D-BCDA-46F9-AE12-E310B684498F@qlogic.com> <49BA8E1E.6080809@linux.vnet.ibm.com> <49BCCBC3.7020204@panasas.com> <49BCFF47.2050005@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:17013 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751184AbZCOOWn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Mar 2009 10:22:43 -0400
+Received: from nf-out-0910.google.com ([64.233.182.184]:5440 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750761AbZCOO1T (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Mar 2009 10:27:19 -0400
+Received: by nf-out-0910.google.com with SMTP id d21so895395nfb.21
+        for <linux-scsi@vger.kernel.org>; Sun, 15 Mar 2009 07:27:15 -0700 (PDT)
 In-Reply-To: <49BCFF47.2050005@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -95,3 +97,4 @@ return the proper transfer residual count of 0 to user-mode.
 Thanks
 Boaz
 
+(Sorry if it's a repost, we had a small email outage)
