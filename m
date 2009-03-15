@@ -1,112 +1,121 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 2/2] sd: Try READ CAPACITY 16 first for SBC-2 devices
-Date: Sat, 14 Mar 2009 22:30:47 -0500
-Message-ID: <1237087848.3907.87.camel@localhost.localdomain>
-References: <1236882030-27964-1-git-send-email-willy@linux.intel.com>
-	 <1236882030-27964-3-git-send-email-willy@linux.intel.com>
-	 <1237063291.3907.64.camel@localhost.localdomain>
-	 <20090314224843.GE14127@parisc-linux.org>
-	 <1237073695.3907.84.camel@localhost.localdomain>
-	 <49BC69A6.4080106@interlog.com>
+From: "Ying Chu" <jasonchu@marvell.com>
+Subject: RE: libsas error-handling completion issue.
+Date: Sat, 14 Mar 2009 21:02:02 -0700
+Message-ID: <FE3F06125A99254E8D92161AA4569C6F0687BD47@sc-exch02.marvell.com>
+References: <FE3F06125A99254E8D92161AA4569C6F0687BCA0@sc-exch02.marvell.com> <1237051145.3907.43.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=gb2312
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:58015 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753833AbZCODax (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 14 Mar 2009 23:30:53 -0400
-In-Reply-To: <49BC69A6.4080106@interlog.com>
+Received: from host2.marvell.com ([65.219.4.2]:37016 "EHLO maili.marvell.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751384AbZCOEJ7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Mar 2009 00:09:59 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <1237051145.3907.43.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: Matthew Wilcox <matthew@wil.cx>, Matthew Wilcox <willy@linux.intel.com>, linux-scsi@vger.kernel.org, Martin Petersen <mkp@mkp.net>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, jeff@garzik.org, Tejun Heo <tj@kernel.org>
 
-On Sat, 2009-03-14 at 22:36 -0400, Douglas Gilbert wrote:
-> James Bottomley wrote:
-> > On Sat, 2009-03-14 at 16:48 -0600, Matthew Wilcox wrote:
-> >> On Sat, Mar 14, 2009 at 03:41:31PM -0500, James Bottomley wrote:
-> >>> We're going to have to do something about the scary error messages on
-> >>> SBC-2 supporting drives, this is what mine say (and this is after mkp's
-> >>> chat reduction):
-> >>>
-> >>> sd 1:0:1:0: [sdc] READ CAPACITY(16) failed
-> >>> sd 1:0:1:0: [sdc] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-> >>> sd 1:0:1:0: [sdc] Sense Key : Illegal Request [current] 
-> >>> sd 1:0:1:0: [sdc] Add. Sense: Invalid command operation code
-> >>> sd 1:0:1:0: [sdc] 71096640 512-byte hardware sectors: (36.4 GB/33.9 GiB)
-> >> OK, that's relatively easy to fix.  Simply return early if the drive
-> >> claims not to understand the command, and it'll try rc10 without printing
-> >> the scary messages.  Like this, perhaps (note cunning factoring of code):
-> >>
-> >> (compile tested only, and I'll do you a nice changelog and sign-off for
-> >> it if it fixes the problem and you approve of this approach).
-> >>
-> >> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> >> index f8260c0..60b31ea 100644
-> >> --- a/drivers/scsi/sd.c
-> >> +++ b/drivers/scsi/sd.c
-> >> @@ -1139,6 +1139,14 @@ static int media_not_present(struct scsi_disk *sdkp,
-> >>  	return 1;
-> >>  }
-> >>  
-> >> +static int invalid_field_in_cdb(struct scsi_sense_hdr *sshdr)
-> >> +{
-> >> +	if (!scsi_sense_valid(sshdr))
-> >> +		return 0;
-> >> +	return sshdr->sense_key == ILLEGAL_REQUEST &&
-> >> +			sshdr->asc == 0x24 && sshdr->ascq == 0x0;
-> >> +
-> > 
-> > Actually, afraid not, you're trapped in the confusing maze of ASC/ASCQ
-> > codes, all sounding alike but meaning slightly different things:
-> > 0x24/0x00 is Invalid Field in CDB.  The problem I'm having is 0x20/00
-> > (Invalid Command Operation Code).
-> > 
-> > This will fix it, though ... I'll just merge it into your patch.
-> 
-> Read Capacity(16) is actually Service Action In(16) with a
-> Service Action field of 10h. My understanding is that if the
-> device server doesn't support Service Action(16) (i.e. the
-> "operation code" is the first byte of the cdb) then 20h/0h is
-> the ASC/ASCQ response. However it if does support Service
-> Action In(16) but not a Read Capacity(16) then 24h/0h is the
-> correct ASC/ASCQ response.
-> 
-> The only example I can see of the latter case is if Read
-> Long(16) is supported and Read Capacity(16) isn't. Then
-> opcode 9eh (Service Action In(16)) is valid.
-> 
-> 
-> I suspect that the folks who implement SCSI disk
-> firmware are also confused. I'm pretty sure that I have
-> seen these two ASC/ASCQ combinations used interchangeably
-> for unsupported commands that have a service action field.
+>So, let me explain how the SAS_TASK_STATE_ABORTED works.  It's actuall=
+y the mediating flag in how completions are handled.  There are two way=
+s through ->task_done() depending on the state of this flag.  If this f=
+lag is set, it means
+> that libsas owns the task and ->task_done() may not free it.  Convers=
+ely if the timeout fires it checks the flags and if SAS_TASK_STATE_DONE=
+ is set, it returns BLK_EH_HANDLED because presumably the mid-layer wil=
+l soon see it.
 
-Well, better safe than sorry, so this should cover all eventualities?
+What I meant is the corner case where interrupt is fired and the sas_ta=
+sk returned back at the monment but before sas_scsi_find_task() got inv=
+oked and set SAS_TASK_STATE_DONE flag. As in asd_task_tasklet_complete(=
+) routine, it will check if the STATE_ABORTED is set, if so, it doesn't=
+ invoke task_done() routine. Still returned to the strategy handler, sa=
+s_scsi_find_task() will try to abort the task and find it has been fini=
+shed with STATE_DONE set, so it return TASK_IS_DONE and call sas_eh_fin=
+ish_cmd(), where it unset the TASK_ABORTED flag and call task_done(). N=
+oticed that in sas_eh_finish_cmd(), we call scsi_eh_finish_cmd() which =
+will add the cmd to sas_ha->eh_done(), and in the coming flush_done_q i=
+t will be retried or finished again.
+
+
+-----Original Message-----
+=46rom: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]=20
+Sent: 2009=C4=EA3=D4=C215=C8=D5 1:19
+To: Ying Chu
+Cc: linux-scsi@vger.kernel.org; jeff@garzik.org; Tejun Heo
+Subject: Re: libsas error-handling completion issue.
+
+On Fri, 2009-03-13 at 23:44 -0700, Ying Chu wrote:
+> As sas_eh_finish_cmd() routine is used when a sas task is marked=20
+> succfully recovered(or the device is marked OFFLINE), then the=20
+> corresponding task_done will be invoked after SAS_TASK_STATE_ABORTED=20
+> is unmasked. Whatever sas_scsi_task_done() or sas_ata_task_done() got=
+=20
+> invoked, it will translate task_status to scsi_cmnd->result, free the=
+=20
+> sas_task structure and invoke task_done, the problem is, after=20
+> task_done(), scsi_eh_finish_cmd() will still add the cmd to=20
+> sas_ha->eh_done_q, and in the coming scsi_eh_flush_done_q(), it will=20
+> retry the command or invoke scsi_finish_command() to finish the=20
+> request again.
+
+OK, so the immediate answer is that the eh_done_q is processed in the s=
+trategy handler, in this case by sas_eh_handle_sas_errors() which skips=
+ over any commands without sas tasks in the list.
+
+>    Take a timeout SSP request in the race condition for example, if=20
+> the request is returned prior to lldd_abort_task() and set=20
+> SAS_TASK_STATE_DONE, the lldd_abort_task() handler will do nothing bu=
+t=20
+> return TASK_IS_DONE in sas_scsi_find_task(), later=20
+> sas_eh_finished_cmd() will get invoked and unset=20
+> SAS_TASK_STATE_ABORTED mask to let
+> sas_scsi_task_done() in, since it's a good response and the request=20
+> will be finished succfully.But current strategy will add the scsi_cmn=
+d=20
+> to sas_ha->eh_done_q after task_done() is performed.
+> Then if possibe, we may scsi_queue_insert(scmd, SCSI_MLQUEUE_EH_RETRY=
+)=20
+> in scsi_eh_flush_done_q(). I meet the condition and sometime the=20
+> system hangs.
+>=20
+>    Did I miss something?
+
+I'm not sure, since I didn't quite understand the problem.
+
+So, let me explain how the SAS_TASK_STATE_ABORTED works.  It's actually=
+ the mediating flag in how completions are handled.  There are two ways=
+ through ->task_done() depending on the state of this flag.  If this fl=
+ag is set, it means that libsas owns the task and ->task_done() may not=
+ free it.  Conversely if the timeout fires it checks the flags and if S=
+AS_TASK_STATE_DONE is set, it returns BLK_EH_HANDLED because presumably=
+ the mid-layer will soon see it.
+
+The apparent race between these flags is mediated using the task_state_=
+lock.  When looking to test and set these flags, you must be holding th=
+is lock.
+
+The first case is in sas_scsi_host.c:sas_scsi_timed_out() where it take=
+s the lock, checks for done and only sets STATE_ABORTED if STATE_DONE w=
+asn't set.
+
+The other, nastily, is in the driver (which is responsible for setting =
+STATE_DONE).  I've never liked this bit because it's complex and easy t=
+o get wrong.  However, if you look at
+aic94xx_task.c:asd_task_tasklet_complete() you see the big chunk of cod=
+e where it takes the lock, sets STATE_DONE, checks STATE_ABORTED and do=
+esn't call ->task_done() if this is set.
+
+As far as I can tell, the locking around all of this, while nasty to th=
+e user, is raceproof as long as the LLD gets it right.
 
 James
 
----
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 19a7b98..ec7f773 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1333,9 +1333,11 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 			sense_valid = scsi_sense_valid(&sshdr);
- 			if (sense_valid &&
- 			    sshdr.sense_key == ILLEGAL_REQUEST &&
--			    sshdr.asc == 0x20 && sshdr.ascq == 0x00)
--				/* Invalid Command Operation Code,
--				 * just retry silently with RC10 */
-+			    (sshdr.asc == 0x20 || sshdr.asc == 0x24) &&
-+			    sshdr.ascq == 0x00)
-+				/* Invalid Command Operation Code or
-+ 				 * Invalid Field in CDB, just retry
-+ 				 * silently with RC10 */
- 				return -EINVAL;
- 		}
- 		retries--;
 
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
