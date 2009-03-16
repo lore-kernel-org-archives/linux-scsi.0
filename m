@@ -1,71 +1,32 @@
-From: "Ying Chu" <jasonchu@marvell.com>
-Subject: [RFC]Redisign Marvell Linux HBA driver Layout.
-Date: Mon, 16 Mar 2009 03:26:03 -0700
-Message-ID: <FE3F06125A99254E8D92161AA4569C6F0687C01C@sc-exch02.marvell.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Seokmann Ju <seokmann.ju@qlogic.com>
+Subject: Re: [RFC] FC pass thru - Rev V
+Date: Mon, 16 Mar 2009 04:36:15 -0700
+Message-ID: <583F8053-957C-42DC-8A7E-851DC82DC5DA@qlogic.com>
+References: <1227043498.4949.21.camel@ogier> <1234365225.24194.3.camel@ogier> <3F3E8B49-EB9A-4A6D-ABB0-3F4FC2EF7D1C@qlogic.com> <BAD9A31D-BCDA-46F9-AE12-E310B684498F@qlogic.com> <49BC2CCF.2050105@emulex.com>
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Content-Type: text/plain; charset="US-ASCII"; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host2.marvell.com ([65.219.4.2]:61534 "EHLO maili.marvell.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752765AbZCPK0I convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Mar 2009 06:26:08 -0400
-Content-class: urn:content-classes:message
+Received: from avexch1.qlogic.com ([198.70.193.115]:57338 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758867AbZCPLgW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Mar 2009 07:36:22 -0400
+In-Reply-To: <49BC2CCF.2050105@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, jeff@garzik.org, Tejun Heo <tj@kernel.org>
-Cc: linux-scsi@vger.kernel.org, Michael Wang <qswang@marvell.com>, Jacky Feng <jfeng@marvell.com>, Andy Yan <ayan@marvell.com>, Ke Wei <kewei@marvell.com>
+To: James Smart <James.Smart@Emulex.Com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "sven@linux.vnet.ibm.com Schuetz" <sven@linux.vnet.ibm.com>, "futjita.tomonori@lab.ntt.co.jp" <futjita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>
 
 
-Hi, James/Jeff,
+On Mar 14, 2009, at 3:16 PM, James Smart wrote:
 
- We Marvell Linux Team redesign Marvell SAS/SATA Linux driver
-architecture which focuses on the following issue:
-1. Layout Change
-	In order to support additional series ASIC, flexible source
-style is mandatory. We redesign the source code layout to facilitate
-more chips involved. With splitting the old mvsas.c into several files
-according to its features, if any new ASIC with similar features added,
-it's no necessary to give any huge changes to the original source code.
-Taking 88SE94xx series chips for example, we only need add a new file
-named mv_94xx.c in the corresponding folder and implement the
-appropriate handler.
+> Thank you Seokmann. I'm glad the RFC worked well for you.  Your  
+> patch is
+> appreciated, it was the portion that needed to be reverted as the
+> collapsed blk_end_request() patch wasn't taken.  To double check -  
+> there
+> are no patches required with the RFC now - right ?
+Yes, for those ELS/CT service handling through rports, it works for me.
 
- 	Following with source codes layout:
-      XXX1 --|---------mv_init.c       /* PCI driver interface */
-             |---------mv_sas.c        /* libsas-glue */
-             |---------mv_sas.h        /* ditto */
-             |---------mv_spi.c        /* R/W SPI for relative
-configuration */
-             |---------mv_spi.h        /* ditto */
-             |---------mv_64xx.c       /* mv64xx */
-             |---------mv_64xx.h       /* ditto */
-             |---------mv_94xx.c       /* mv94xx */
-             |---------mv_94xx.h       /* ditto */
-
-This architecture is designed for those ASIC which has no embedded SOC
-supported. Still in order to support Universal Message Interface ASIC
-such as 88SE8180, we can place additional sub-folders to contain those
-files. Like-wise, other folder can be propagated to support other
-different ASIC design. So we define MTSL folder as the default, and any
-sub-folders are used for different design. The ultimate layout will be: 
-
-      MTSL----|--------------XXX1 (SAS/SATA Host controller)
-              |--------------XXX2 (Universal Message Interface)
-              |--------------...  (If any, others)
-      
-2. New Features and Bug-fixes
-  - SSP TMF supported and related Error Handing enhanced.
-  - Support flash feature with delay 2*HZ when PHY changed.
-  - Support Marvell 94xx series ASIC for 6G SAS/SATA, which has 2
-88SE64xx chips but any different register description.
-  - Support SPI flash for HBA-related configuration info.
-  - Other patch enhanced from kernel side such as increasing PHY type
-detection wait time. (http://lkml.org/lkml/2009/1/15/502)
-
- Any comments will be appreciated.
-
---
-Regards,
-Ying Chu
+Thank you,
+Seokmann
