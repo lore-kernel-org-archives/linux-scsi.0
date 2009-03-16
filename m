@@ -1,17 +1,17 @@
 From: bugme-daemon@bugzilla.kernel.org
 Subject: [Bug 12163] mptsas driver cannot discover some hotplugged SATA/SAS disks
-Date: Mon, 16 Mar 2009 04:47:12 -0700 (PDT)
-Message-ID: <20090316114712.D3D56108041@picon.linux-foundation.org>
+Date: Mon, 16 Mar 2009 04:47:32 -0700 (PDT)
+Message-ID: <20090316114732.415E4108049@picon.linux-foundation.org>
 References: <bug-12163-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:54386 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:59445 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752073AbZCPLrw (ORCPT
+	by vger.kernel.org with ESMTP id S1751088AbZCPLsz (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Mar 2009 07:47:52 -0400
+	Mon, 16 Mar 2009 07:48:55 -0400
 Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n2GBlD01032702
-	for <linux-scsi@vger.kernel.org>; Mon, 16 Mar 2009 04:47:49 -0700
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n2GBlnvh000308
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Mar 2009 04:48:24 -0700
 In-Reply-To: <bug-12163-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -23,10 +23,17 @@ http://bugzilla.kernel.org/show_bug.cgi?id=12163
 
 
 
-------- Comment #9 from be@mpstor.com  2009-03-16 04:47 -------
-Created an attachment (id=20544)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=20544&action=view)
-mptsas.c patch for 2.6.29-rc5, SAS/SATA Hotplug issue.
+------- Comment #10 from be@mpstor.com  2009-03-16 04:47 -------
+This patch works around the issue and allows for the drives to be rediscovered.
+
+This patch works with v3 of the driver included in kernel 2.6.29-rc5, and
+allows to not get in the trouble of getting v4 of the driver to work on 2.6.29
+but rather use the kernel included driver and work around the issue.
+
+This is not a full fix, it is a workaround but it has been tested and seems to
+work fine.
+
+I hope this will be of some kind of help for some people.
 
 
 -- 
