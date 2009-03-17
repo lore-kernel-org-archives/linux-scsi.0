@@ -1,73 +1,75 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: SES firmward download to SAS expander
-Date: Mon, 16 Mar 2009 23:49:07 -0400
-Message-ID: <49BF1DB3.7090705@interlog.com>
-References: <CCC151398C6F2B41AD8ACC06C28A779106775B32@penmsg10.corp.jabil.org>
-Reply-To: dgilbert@interlog.com
+From: "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>
+Subject: RE: [PATCH]scsi_dh_rdac: Retry for NOT_READY check condition
+	(0x02A102, 0x020401, 0x020404 and  0x020407) in rdac_check_sense
+Date: Tue, 17 Mar 2009 18:51:40 +0530
+Message-ID: <0D1E8821739E724A86F4D16902CE275C1410DBBA51@inbmail01.lsi.com>
+References: <1236699991.14822.0.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:52256 "EHLO
-	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751801AbZCQDtS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Mar 2009 23:49:18 -0400
-In-Reply-To: <CCC151398C6F2B41AD8ACC06C28A779106775B32@penmsg10.corp.jabil.org>
+Received: from exprod7og104.obsmtp.com ([64.18.2.161]:52077 "EHLO
+	exprod7og104.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756779AbZCQNWG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Mar 2009 09:22:06 -0400
+In-Reply-To: <1236699991.14822.0.camel@localhost.localdomain>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian May <Adrian_May@Jabil.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "'sekharan@us.ibm.com'" <sekharan@us.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "'dm-devel@redhat.com'" <dm-devel@redhat.com>
 
-Adrian May wrote:
-> Hi all,
+Hi James,
+
+Thanks for your comment. I have updated the patch with your comments.
+ 
+On Tues, 2009-03-10 21:17 +0530, James Bottomley wrote: 
+> > +		if (sense_hdr->asc == 0xA1  && sense_hdr->ascq == 0x02)
+> > +			/* LUN Not Ready - Quiescense in progress
+> > +			 * or has been achieved
+> > +			 * Just retry.
+> > +			 */
+> > +			return ADD_TO_MLQUEUE;
 > 
-> Some folks are asking me to advise about downloading firmware to some
-> SAS expander. They had this conversation with the box:
+> This is fine, being vendor specific, we don't handle it at 
+> the mid-layer
+
+> > +		if (sense_hdr->asc == 0x04  && sense_hdr->ascq == 0x07)
+> > +			/* LUN Not Ready - Storage controller 
+> cannot respond
+> > +			 * immediately to a PRIN or PROUT command.
+> > +			 * Just retry.
+> > +			 */
+> > +			return ADD_TO_MLQUEUE;
 > 
-> #sg_ses -s /dev/sg5
-> ...
-> Download microcode (SES-2) [0xe]
-> ...
-> #sg_ses --control --page=0xe --data=- /dev/sg5 < image.bin
->   PMCSIERA  SXP 36x6Gsec      RevB
-
-Looks like an interesting device: a 36 port 6Gbps SAS
-expander that talks SES (as well as SMP I assume)?
-
->     enclosure services device
-> Setting SES control page 0xe not supported yet
+> For all of these ... along with a few other not ready types, 
+> we already
+> do a delayed retry at the mid-layer (in scsi_io_completion).  Is there
+> some problem that causes this to need to be handled here as well?
 > 
-> What I'm trying to figure out is WHO doesn't support it: the driver or
-> the hardware?
+Yes, I do agree. Submitting patch for 0x02A102 only.
 
-ME, the guy who wrote sg_ses. That utility is 5 years old
-and this is the first time anyone has asked me about
-firmware download capability.
+Thanks,
+Vijay
 
-  Is everything done by the generic linux driver or is there
-> some vendor-specific driver somewhere in the picture?
+---
+This patch adds retry for NOT_READY check condition - Quiescense in progress (02/A1/02)
 
-The SCSI generic driver is there for devices that don't
-already have a "class" driver. To date there has been
-no class driver for SES devices but I think one is
-being added. As for a vendor specific driver you might
-ask PMC Sierra.
+Signed-off-by: Vijay Chauhan<vijay.chauhan@lsi.com>
 
-  And why would this
-> diag page be listed if it doesn't work?
-
-Would it be better if sg_ses said something like
-"not implemented, feel free to send code"?
-
-> Huge thanks in advance for any assistance,
-
-What is the size of the firmware file? If it is
-approaching 1 MB or more then that may be too big
-for a single SCSI command. That would require the
-firmware to be broken up into more digestible blobs.
-
-If you look at ses2r20.pdf section 6.1.18 (and 6.1.19)
-then you might agree with me that firmware download
-is relatively complex.
-
-Doug Gilbert
+---
+--- linux-2.6.29-rc7/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2009-03-10 17:42:27.000000000 +0530
++++ linux-2.6.29-rc7/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-03-17 18:18:07.000000000 +0530
+@@ -562,6 +562,12 @@ static int rdac_check_sense(struct scsi_
+ 			 * Just retry and wait.
+ 			 */
+ 			return ADD_TO_MLQUEUE;
++		if (sense_hdr->asc == 0xA1  && sense_hdr->ascq == 0x02)
++			/* LUN Not Ready - Quiescense in progress
++			 * or has been achieved
++			 * Just retry.
++			 */
++			return ADD_TO_MLQUEUE;
+ 		break;
+ 	case ILLEGAL_REQUEST:
+ 		if (sense_hdr->asc == 0x94 && sense_hdr->ascq == 0x01) {
