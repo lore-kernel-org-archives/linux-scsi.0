@@ -1,76 +1,87 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [RFC][PATCH 5/6] fnic: add descriptor right, buffers, device
- interface
-Date: Tue, 17 Mar 2009 11:41:10 -0500
-Message-ID: <49BFD2A6.9030200@cs.wisc.edu>
-References: <20090228022152.12158.11200.stgit@feynman.nuovasystems.com> <20090228023230.12158.72176.stgit@feynman.nuovasystems.com> <49B97403.4020302@cs.wisc.edu> <9E88C8678BF34240A8C61D4078A3D251A4A39F@xmb-sjc-23e.amer.cisco.com>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH 00/14] Open-FCoE fixes and features for 2.6.30 merge window
+Date: Tue, 17 Mar 2009 11:41:24 -0700
+Message-ID: <20090317184124.22987.65368.stgit@fritz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:45137 "EHLO sabe.cs.wisc.edu"
+Received: from mga03.intel.com ([143.182.124.21]:11482 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756317AbZCQQlq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Mar 2009 12:41:46 -0400
-In-Reply-To: <9E88C8678BF34240A8C61D4078A3D251A4A39F@xmb-sjc-23e.amer.cisco.com>
+	id S1755654AbZCQSl0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Mar 2009 14:41:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Abhijeet Arvind Joglekar (abjoglek)" <abjoglek@cisco.com>
-Cc: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, "Joe Eykholt (jeykholt)" <jeykholt@cisco.com>
+To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-Abhijeet Arvind Joglekar (abjoglek) wrote:
->> -----Original Message-----
->> From: linux-scsi-owner@vger.kernel.org 
->> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Mike Christie
->> Sent: Thursday, March 12, 2009 1:44 PM
->> To: Abhijeet Arvind Joglekar (abjoglek)
->> Cc: james.bottomley@hansenpartnership.com; 
->> linux-scsi@vger.kernel.org; Joe Eykholt (jeykholt)
->> Subject: Re: [RFC][PATCH 5/6] fnic: add descriptor right, 
->> buffers, device interface
->>
->> Abhijeet Joglekar wrote:
->>> diff --git a/drivers/scsi/fnic/vnic_cq.h 
->> b/drivers/scsi/fnic/vnic_cq.h 
->>> new file mode 100644 index 0000000..4ede680
->>> --- /dev/null
->>> +++ b/drivers/scsi/fnic/vnic_cq.h
->>
->>> +
->>> +/*
->>> + * These defines avoid symbol clash between fnic and enic 
->> (Cisco 10G Eth
->>> + * Driver) when both are built with CONFIG options =y
->>> + */
->>> +#define vnic_cq_service fnic_cq_service
->>> +#define vnic_cq_free fnic_cq_free
->>> +#define vnic_cq_alloc fnic_cq_alloc
->>> +#define vnic_cq_init fnic_cq_init
->>> +#define vnic_cq_clean fnic_cq_clean
->>> +
->> Are these functions implementations the same as the net ones? I only 
->> looked at the first one and it looked the same.
-> 
-> Yes, they are the same, it is the low-level queue/buffer code that we
-> wanted to share across enic and fnic. We did consider making a new
-> module out of it, but its not a lot of code, and there was the problem
+The following series implements a few fixes, some preparation work and the implementation
+of FIP.
 
-Normally I would just make it a new module, but I looked it over again 
-and it is less than 100 lines so I am not sure if there is some point we 
-say it is ok to duplicate code. Personally I would not like having to 
-update multiple modules through two different maintainers (netdev and 
-scsi). OTOH, updating the one module then making sure that two 
-maintainers have the right code so their tress can compile can be tricky.
+1) Fix of CPU hotplug handling.
+
+2) Removal of fc_transport_fcoe.[ch]. This code was written so a LLD could load a transport
+   for Ethernet devices that support FCoE offloads. This aproach was discarded in favor of
+   directly providing offload capabilities through netdev. FCoE offload patches have been
+   Ack'd by netdev and are in the scsi-misc tree already. In this set we just clean up the
+   previous and unused FCoE transport method.
+   
+3) fcoe/* reorgainzation. Since both FIP and fnic are targeting the 2.6.30 merge window we
+   wanted to do some cleanup of the fcoe layer. We've better defined each module so that
+   fcoe.ko will only have the netdev related SW implementation (fnic does not use) and
+   libfcoe.ko which will have common FCoE routines available to all FCoE LLDs.
+
+4) FIP implementation. FIP == FCoE Initialization Protocol. This is a new standard way to
+   discover FCoE capable switches. This code becomes the majority of libfcoe.ko. These
+   patches had previously been sent to linux-scsi. This series resends them as they've
+   been slightly modified to better fit into the reorganization. Functionality is the
+   same as previously posted.
+
+This patchset is built on scsi-misc-2.6 and are intended for 2.6.30.
+
+---
+
+Joe Eykholt (2):
+      fcoe, libfcoe: Add support for FIP. FCoE discovery and keep-alive.
+      fcoe: Add a header file defining the FIP protocol for FCoE.
+
+Robert Love (4):
+      fcoe: create/destroy fcoe Rx threads on CPU hotplug events
+      fcoe: Use per-CPU kernel function for dev_stats instead of an array
+      fcoe: Use percpu kernel funcs for struct fcoe_percpu_s
+      fcoe: Initialize all possilbe skb_queue(s) when module is loaded
+
+Vasu Dev (8):
+      fcoe, libfc: fix double fcoe_softc memory alloc
+      fcoe: cleans up libfcoe.h and adds fcoe.h for fcoe module
+      fcoe: moves common FCoE library API functions to libfcoe module
+      fcoe, libfc, scsi: adds libfcoe module
+      fcoe: renames libfcoe.c to fcoe.c as the only fcoe module file
+      fcoe: removes default sw transport code file fcoe_sw.c
+      fcoe: removes fc_transport_fcoe.[ch] code files
+      fcoe: prep work to completely remove fc_transport_fcoe code
 
 
-> of where the common files will reside, and how we share it across the
-> net and scsi subsystems.
-> 
+ drivers/scsi/Kconfig                  |    8 
+ drivers/scsi/Makefile                 |    1 
+ drivers/scsi/fcoe/Makefile            |    8 
+ drivers/scsi/fcoe/fc_transport_fcoe.c |  443 -------
+ drivers/scsi/fcoe/fcoe.c              | 1865 ++++++++++++++++++++++++++++
+ drivers/scsi/fcoe/fcoe.h              |   75 +
+ drivers/scsi/fcoe/fcoe_sw.c           |  561 --------
+ drivers/scsi/fcoe/libfcoe.c           | 2216 +++++++++++++++------------------
+ drivers/scsi/libfc/fc_fcp.c           |   10 
+ drivers/scsi/libfc/fc_lport.c         |   11 
+ include/scsi/fc/fc_fip.h              |  237 ++++
+ include/scsi/fc_transport_fcoe.h      |   54 -
+ include/scsi/libfc.h                  |   45 +
+ include/scsi/libfcoe.h                |  227 ++-
+ 14 files changed, 3396 insertions(+), 2365 deletions(-)
+ delete mode 100644 drivers/scsi/fcoe/fc_transport_fcoe.c
+ create mode 100644 drivers/scsi/fcoe/fcoe.c
+ create mode 100644 drivers/scsi/fcoe/fcoe.h
+ delete mode 100644 drivers/scsi/fcoe/fcoe_sw.c
+ create mode 100644 include/scsi/fc/fc_fip.h
+ delete mode 100644 include/scsi/fc_transport_fcoe.h
 
-I think it can live anywhere. The Kconfig and userspace module deps will 
-make sure it gets built and loaded correctly.
-
-> So, the plan was to re-define them for fnic (since enic is already
-> integrated) and then go with what the kernel community thinks the best
-> way is.
-> 
+-- 
+//Rob
