@@ -1,342 +1,276 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 11/14] fcoe: cleans up libfcoe.h and adds fcoe.h for fcoe
-	module
-Date: Tue, 17 Mar 2009 11:42:24 -0700
-Message-ID: <20090317184224.22987.60607.stgit@fritz>
+Subject: [PATCH 13/14] fcoe: Add a header file defining the FIP protocol for
+	FCoE.
+Date: Tue, 17 Mar 2009 11:42:35 -0700
+Message-ID: <20090317184234.22987.14555.stgit@fritz>
 References: <20090317184124.22987.65368.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:8698 "EHLO mga01.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:42103 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760272AbZCQSm0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Mar 2009 14:42:26 -0400
+	id S1760397AbZCQSmi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Mar 2009 14:42:38 -0400
 In-Reply-To: <20090317184124.22987.65368.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-From: Vasu Dev <vasu.dev@intel.com>
+From: Joe Eykholt <jeykholt@cisco.com>
 
-Removes no where used several inline functions prefixed with skb_*
-and be16_to_cpu.
+Adds include/scsi/fc/fc_fip.h for FIP protocol definitions.
 
-Moves fcoe module specific func prototypes to fcoe.c from libfcoe.h,
-moved only need for build.
-
-Adds fcoe module header file fcoe.h and then moves fcoe module
-specific fcoe_percpu_s and fcoe_softc to fcoe.h from libfcoe.h.
-
-Moves all defines from fcoe.c to fcoe.h since now fcoe module
-has its own header file fcoe.h.
-
+Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
 Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/fcoe.c |   42 +++++++---------
- drivers/scsi/fcoe/fcoe.h |   86 +++++++++++++++++++++++++++++++++
- include/scsi/libfcoe.h   |  120 +---------------------------------------------
- 3 files changed, 105 insertions(+), 143 deletions(-)
- create mode 100644 drivers/scsi/fcoe/fcoe.h
+ include/scsi/fc/fc_fip.h |  237 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 237 insertions(+), 0 deletions(-)
+ create mode 100644 include/scsi/fc/fc_fip.h
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index e9c3d26..c76ff5d 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -19,15 +19,12 @@
- 
- #include <linux/module.h>
- #include <linux/version.h>
--#include <linux/kernel.h>
- #include <linux/spinlock.h>
--#include <linux/skbuff.h>
- #include <linux/netdevice.h>
- #include <linux/etherdevice.h>
- #include <linux/ethtool.h>
- #include <linux/if_ether.h>
- #include <linux/if_vlan.h>
--#include <linux/kthread.h>
- #include <linux/crc32.h>
- #include <linux/cpu.h>
- #include <linux/fs.h>
-@@ -45,28 +42,9 @@
- #include <scsi/fc_frame.h>
- #include <scsi/libfcoe.h>
- 
--static int debug_fcoe;
--
--#define FCOE_MAX_QUEUE_DEPTH  256
--#define FCOE_LOW_QUEUE_DEPTH  32
--
--/* destination address mode */
--#define FCOE_GW_ADDR_MODE	    0x00
--#define FCOE_FCOUI_ADDR_MODE	    0x01
--
--#define FCOE_WORD_TO_BYTE  4
--
--#define FCOE_VERSION	"0.1"
--#define	FCOE_NAME	"fcoe"
--#define	FCOE_VENDOR	"Open-FCoE.org"
--
--#define FCOE_MAX_LUN		255
--#define FCOE_MAX_FCP_TARGET	256
-+#include "fcoe.h"
- 
--#define FCOE_MAX_OUTSTANDING_COMMANDS	1024
--
--#define FCOE_MIN_XID		0x0001	/* the min xid supported by fcoe_sw */
--#define FCOE_MAX_XID		0x07ef	/* the max xid supported by fcoe_sw */
-+static int debug_fcoe;
- 
- MODULE_AUTHOR("Open-FCoE.org");
- MODULE_DESCRIPTION("FCoE");
-@@ -78,8 +56,22 @@ DEFINE_RWLOCK(fcoe_hostlist_lock);
- DEFINE_TIMER(fcoe_timer, NULL, 0, 0);
- DEFINE_PER_CPU(struct fcoe_percpu_s, fcoe_percpu);
- 
--
- /* Function Prototyes */
-+static int fcoe_reset(struct Scsi_Host *shost);
-+static int fcoe_xmit(struct fc_lport *, struct fc_frame *);
-+static int fcoe_rcv(struct sk_buff *, struct net_device *,
-+		    struct packet_type *, struct net_device *);
-+static int fcoe_percpu_receive_thread(void *arg);
-+static void fcoe_clean_pending_queue(struct fc_lport *lp);
-+static void fcoe_percpu_clean(struct fc_lport *lp);
-+static int fcoe_link_ok(struct fc_lport *lp);
-+
-+static struct fc_lport *fcoe_hostlist_lookup(const struct net_device *);
-+static int fcoe_hostlist_add(const struct fc_lport *);
-+static int fcoe_hostlist_remove(const struct fc_lport *);
-+
-+static struct Scsi_Host *fcoe_host_alloc(struct scsi_host_template *, int);
-+
- static int fcoe_check_wait_queue(struct fc_lport *);
- static void fcoe_recv_flogi(struct fcoe_softc *, struct fc_frame *, u8 *);
- static int fcoe_device_notification(struct notifier_block *, ulong, void *);
-diff --git a/drivers/scsi/fcoe/fcoe.h b/drivers/scsi/fcoe/fcoe.h
+diff --git a/include/scsi/fc/fc_fip.h b/include/scsi/fc/fc_fip.h
 new file mode 100644
-index 0000000..4a9611f
+index 0000000..0627a9a
 --- /dev/null
-+++ b/drivers/scsi/fcoe/fcoe.h
-@@ -0,0 +1,86 @@
++++ b/include/scsi/fc/fc_fip.h
+@@ -0,0 +1,237 @@
 +/*
-+ * Copyright(c) 2009 Intel Corporation. All rights reserved.
++ * Copyright 2008 Cisco Systems, Inc.  All rights reserved.
 + *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
++ * This program is free software; you may redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
 + *
-+ * This program is distributed in the hope it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-+ *
-+ * Maintained at www.Open-FCoE.org
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
++ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
++ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
 + */
-+
-+#ifndef _FCOE_H_
-+#define _FCOE_H_
-+
-+#include <linux/skbuff.h>
-+#include <linux/kthread.h>
-+
-+#define FCOE_MAX_QUEUE_DEPTH	256
-+#define FCOE_LOW_QUEUE_DEPTH	32
-+
-+/* destination address mode */
-+#define FCOE_GW_ADDR_MODE	0x00
-+#define FCOE_FCOUI_ADDR_MODE	0x01
-+
-+#define FCOE_WORD_TO_BYTE	4
-+
-+#define FCOE_VERSION	"0.1"
-+#define FCOE_NAME	"fcoe"
-+#define FCOE_VENDOR	"Open-FCoE.org"
-+
-+#define FCOE_MAX_LUN		255
-+#define FCOE_MAX_FCP_TARGET	256
-+
-+#define FCOE_MAX_OUTSTANDING_COMMANDS	1024
-+
-+#define FCOE_MIN_XID		0x0001	/* the min xid supported by fcoe_sw */
-+#define FCOE_MAX_XID		0x07ef	/* the max xid supported by fcoe_sw */
++#ifndef _FC_FIP_H_
++#define _FC_FIP_H_
 +
 +/*
-+ * this percpu struct for fcoe
++ * This version is based on:
++ * http://www.t11.org/ftp/t11/pub/fc/bb-5/08-543v1.pdf
 + */
-+struct fcoe_percpu_s {
-+	struct task_struct *thread;
-+	struct sk_buff_head fcoe_rx_list;
-+	struct page *crc_eof_page;
-+	int crc_eof_offset;
++
++/*
++ * The FIP ethertype eventually goes in net/if_ether.h.
++ */
++#ifndef ETH_P_FIP
++#define ETH_P_FIP	0x8914	/* FIP Ethertype */
++#endif
++
++#define FIP_DEF_PRI	128	/* default selection priority */
++#define FIP_DEF_FC_MAP	0x0efc00 /* default FCoE MAP (MAC OUI) value */
++#define FIP_DEF_FKA	8000	/* default FCF keep-alive/advert period (mS) */
++#define FIP_VN_KA_PERIOD 90000	/* required VN_port keep-alive period (mS) */
++#define FIP_FCF_FUZZ	100	/* random time added by FCF (mS) */
++
++/*
++ * Multicast MAC addresses.  T11-adopted.
++ */
++#define FIP_ALL_FCOE_MACS	((u8[6]) { 1, 0x10, 0x18, 1, 0, 0 })
++#define FIP_ALL_ENODE_MACS	((u8[6]) { 1, 0x10, 0x18, 1, 0, 1 })
++#define FIP_ALL_FCF_MACS	((u8[6]) { 1, 0x10, 0x18, 1, 0, 2 })
++
++#define FIP_VER		1		/* version for fip_header */
++
++struct fip_header {
++	__u8	fip_ver;		/* upper 4 bits are the version */
++	__u8	fip_resv1;		/* reserved */
++	__be16	fip_op;			/* operation code */
++	__u8	fip_resv2;		/* reserved */
++	__u8	fip_subcode;		/* lower 4 bits are sub-code */
++	__be16	fip_dl_len;		/* length of descriptors in words */
++	__be16	fip_flags;		/* header flags */
++} __attribute__((packed));
++
++#define FIP_VER_SHIFT	4
++#define FIP_VER_ENCAPS(v) ((v) << FIP_VER_SHIFT)
++#define FIP_VER_DECAPS(v) ((v) >> FIP_VER_SHIFT)
++#define FIP_BPW		4		/* bytes per word for lengths */
++
++/*
++ * fip_op.
++ */
++enum fip_opcode {
++	FIP_OP_DISC =	1,		/* discovery, advertisement, etc. */
++	FIP_OP_LS =	2,		/* Link Service request or reply */
++	FIP_OP_CTRL =	3,		/* Keep Alive / Link Reset */
++	FIP_OP_VLAN =	4,		/* VLAN discovery */
++	FIP_OP_VENDOR_MIN = 0xfff8,	/* min vendor-specific opcode */
++	FIP_OP_VENDOR_MAX = 0xfffe,	/* max vendor-specific opcode */
 +};
 +
 +/*
-+ * the fcoe sw transport private data
++ * Subcodes for FIP_OP_DISC.
 + */
-+struct fcoe_softc {
-+	struct list_head list;
-+	struct fc_lport *lp;
-+	struct net_device *real_dev;
-+	struct net_device *phys_dev;		/* device with ethtool_ops */
-+	struct packet_type  fcoe_packet_type;
-+	struct sk_buff_head fcoe_pending_queue;
-+	u8	fcoe_pending_queue_active;
-+
-+	u8 dest_addr[ETH_ALEN];
-+	u8 ctl_src_addr[ETH_ALEN];
-+	u8 data_src_addr[ETH_ALEN];
-+	/*
-+	 * fcoe protocol address learning related stuff
-+	 */
-+	u16 flogi_oxid;
-+	u8 flogi_progress;
-+	u8 address_mode;
++enum fip_disc_subcode {
++	FIP_SC_SOL =	1,		/* solicitation */
++	FIP_SC_ADV =	2,		/* advertisement */
 +};
 +
-+static inline struct net_device *fcoe_netdev(
-+	const struct fc_lport *lp)
-+{
-+	return ((struct fcoe_softc *)lport_priv(lp))->real_dev;
-+}
++/*
++ * Subcodes for FIP_OP_LS.
++ */
++enum fip_trans_subcode {
++	FIP_SC_REQ =	1,		/* request */
++	FIP_SC_REP =	2,		/* reply */
++};
 +
-+#endif /* _FCOE_H_ */
-diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
-index e99633c..d07ebe6 100644
---- a/include/scsi/libfcoe.h
-+++ b/include/scsi/libfcoe.h
-@@ -25,124 +25,8 @@
- #include <scsi/fc/fc_fcoe.h>
- #include <scsi/libfc.h>
- 
--/*
-- * this percpu struct for fcoe
-- */
--struct fcoe_percpu_s {
--	struct task_struct *thread;
--	struct sk_buff_head fcoe_rx_list;
--	struct page *crc_eof_page;
--	int crc_eof_offset;
--};
--
--/*
-- * the fcoe sw transport private data
-- */
--struct fcoe_softc {
--	struct list_head list;
--	struct fc_lport *lp;
--	struct net_device *real_dev;
--	struct net_device *phys_dev;		/* device with ethtool_ops */
--	struct packet_type  fcoe_packet_type;
--	struct sk_buff_head fcoe_pending_queue;
--	u8	fcoe_pending_queue_active;
--
--	u8 dest_addr[ETH_ALEN];
--	u8 ctl_src_addr[ETH_ALEN];
--	u8 data_src_addr[ETH_ALEN];
--	/*
--	 * fcoe protocol address learning related stuff
--	 */
--	u16 flogi_oxid;
--	u8 flogi_progress;
--	u8 address_mode;
--};
--
--static inline struct net_device *fcoe_netdev(
--	const struct fc_lport *lp)
--{
--	return ((struct fcoe_softc *)lport_priv(lp))->real_dev;
--}
--
--static inline struct fcoe_hdr *skb_fcoe_header(const struct sk_buff *skb)
--{
--	return (struct fcoe_hdr *)skb_network_header(skb);
--}
--
--static inline int skb_fcoe_offset(const struct sk_buff *skb)
--{
--	return skb_network_offset(skb);
--}
--
--static inline struct fc_frame_header *skb_fc_header(const struct sk_buff *skb)
--{
--	return (struct fc_frame_header *)skb_transport_header(skb);
--}
--
--static inline int skb_fc_offset(const struct sk_buff *skb)
--{
--	return skb_transport_offset(skb);
--}
--
--static inline void skb_reset_fc_header(struct sk_buff *skb)
--{
--	skb_reset_network_header(skb);
--	skb_set_transport_header(skb, skb_network_offset(skb) +
--				 sizeof(struct fcoe_hdr));
--}
--
--static inline bool skb_fc_is_data(const struct sk_buff *skb)
--{
--	return skb_fc_header(skb)->fh_r_ctl == FC_RCTL_DD_SOL_DATA;
--}
--
--static inline bool skb_fc_is_cmd(const struct sk_buff *skb)
--{
--	return skb_fc_header(skb)->fh_r_ctl == FC_RCTL_DD_UNSOL_CMD;
--}
--
--static inline bool skb_fc_has_exthdr(const struct sk_buff *skb)
--{
--	return (skb_fc_header(skb)->fh_r_ctl == FC_RCTL_VFTH) ||
--	    (skb_fc_header(skb)->fh_r_ctl == FC_RCTL_IFRH) ||
--	    (skb_fc_header(skb)->fh_r_ctl == FC_RCTL_ENCH);
--}
--
--static inline bool skb_fc_is_roff(const struct sk_buff *skb)
--{
--	return skb_fc_header(skb)->fh_f_ctl[2] & FC_FC_REL_OFF;
--}
--
--static inline u16 skb_fc_oxid(const struct sk_buff *skb)
--{
--	return be16_to_cpu(skb_fc_header(skb)->fh_ox_id);
--}
--
--static inline u16 skb_fc_rxid(const struct sk_buff *skb)
--{
--	return be16_to_cpu(skb_fc_header(skb)->fh_rx_id);
--}
--
- /* libfcoe funcs */
--int fcoe_reset(struct Scsi_Host *shost);
--u64 fcoe_wwn_from_mac(unsigned char mac[MAX_ADDR_LEN],
--		      unsigned int scheme, unsigned int port);
--
--u32 fcoe_fc_crc(struct fc_frame *fp);
--int fcoe_xmit(struct fc_lport *, struct fc_frame *);
--int fcoe_rcv(struct sk_buff *, struct net_device *,
--	     struct packet_type *, struct net_device *);
--
--int fcoe_percpu_receive_thread(void *arg);
--void fcoe_clean_pending_queue(struct fc_lport *lp);
--void fcoe_percpu_clean(struct fc_lport *lp);
--void fcoe_watchdog(ulong vp);
--int fcoe_link_ok(struct fc_lport *lp);
--
--struct fc_lport *fcoe_hostlist_lookup(const struct net_device *);
--int fcoe_hostlist_add(const struct fc_lport *);
--int fcoe_hostlist_remove(const struct fc_lport *);
--
--struct Scsi_Host *fcoe_host_alloc(struct scsi_host_template *, int);
-+u64 fcoe_wwn_from_mac(unsigned char mac[], unsigned int, unsigned int);
- int fcoe_libfc_config(struct fc_lport *, struct libfc_function_template *);
++/*
++ * Subcodes for FIP_OP_RESET.
++ */
++enum fip_reset_subcode {
++	FIP_SC_KEEP_ALIVE = 1,		/* keep-alive from VN_Port */
++	FIP_SC_CLR_VLINK = 2,		/* clear virtual link from VF_Port */
++};
 +
- #endif /* _LIBFCOE_H */
++/*
++ * Subcodes for FIP_OP_VLAN.
++ */
++enum fip_vlan_subcode {
++	FIP_SC_VL_REQ =	1,		/* request */
++	FIP_SC_VL_REP =	2,		/* reply */
++};
++
++/*
++ * flags in header fip_flags.
++ */
++enum fip_flag {
++	FIP_FL_FPMA =	0x8000,		/* supports FPMA fabric-provided MACs */
++	FIP_FL_SPMA =	0x4000,		/* supports SPMA server-provided MACs */
++	FIP_FL_AVAIL =	0x0004,		/* available for FLOGI/ELP */
++	FIP_FL_SOL =	0x0002,		/* this is a solicited message */
++	FIP_FL_FPORT =	0x0001,		/* sent from an F port */
++};
++
++/*
++ * Common descriptor header format.
++ */
++struct fip_desc {
++	__u8	fip_dtype;		/* type - see below */
++	__u8	fip_dlen;		/* length - in 32-bit words */
++};
++
++enum fip_desc_type {
++	FIP_DT_PRI =	1,		/* priority for forwarder selection */
++	FIP_DT_MAC =	2,		/* MAC address */
++	FIP_DT_MAP_OUI = 3,		/* FC-MAP OUI */
++	FIP_DT_NAME =	4,		/* switch name or node name */
++	FIP_DT_FAB =	5,		/* fabric descriptor */
++	FIP_DT_FCOE_SIZE = 6,		/* max FCoE frame size */
++	FIP_DT_FLOGI =	7,		/* FLOGI request or response */
++	FIP_DT_FDISC =	8,		/* FDISC request or response */
++	FIP_DT_LOGO =	9,		/* LOGO request or response */
++	FIP_DT_ELP =	10,		/* ELP request or response */
++	FIP_DT_VN_ID =	11,		/* VN_Node Identifier */
++	FIP_DT_FKA =	12,		/* advertisement keep-alive period */
++	FIP_DT_VENDOR =	13,		/* vendor ID */
++	FIP_DT_VLAN =	14,		/* vlan number */
++	FIP_DT_LIMIT,			/* max defined desc_type + 1 */
++	FIP_DT_VENDOR_BASE = 128,	/* first vendor-specific desc_type */
++};
++
++/*
++ * FIP_DT_PRI - priority descriptor.
++ */
++struct fip_pri_desc {
++	struct fip_desc fd_desc;
++	__u8		fd_resvd;
++	__u8		fd_pri;		/* FCF priority:  higher is better */
++} __attribute__((packed));
++
++/*
++ * FIP_DT_MAC - MAC address descriptor.
++ */
++struct fip_mac_desc {
++	struct fip_desc fd_desc;
++	__u8		fd_mac[ETH_ALEN];
++} __attribute__((packed));
++
++/*
++ * FIP_DT_MAP - descriptor.
++ */
++struct fip_map_desc {
++	struct fip_desc fd_desc;
++	__u8		fd_resvd[3];
++	__u8		fd_map[3];
++} __attribute__((packed));
++
++/*
++ * FIP_DT_NAME descriptor.
++ */
++struct fip_wwn_desc {
++	struct fip_desc fd_desc;
++	__u8		fd_resvd[2];
++	__be64		fd_wwn;		/* 64-bit WWN, unaligned */
++} __attribute__((packed));
++
++/*
++ * FIP_DT_FAB descriptor.
++ */
++struct fip_fab_desc {
++	struct fip_desc fd_desc;
++	__be16		fd_vfid;	/* virtual fabric ID */
++	__u8		fd_resvd;
++	__u8		fd_map[3];	/* FC-MAP value */
++	__be64		fd_wwn;		/* fabric name, unaligned */
++} __attribute__((packed));
++
++/*
++ * FIP_DT_FCOE_SIZE descriptor.
++ */
++struct fip_size_desc {
++	struct fip_desc fd_desc;
++	__be16		fd_size;
++} __attribute__((packed));
++
++/*
++ * Descriptor that encapsulates an ELS or ILS frame.
++ * The encapsulated frame immediately follows this header, without
++ * SOF, EOF, or CRC.
++ */
++struct fip_encaps {
++	struct fip_desc fd_desc;
++	__u8		fd_resvd[2];
++} __attribute__((packed));
++
++/*
++ * FIP_DT_VN_ID - VN_Node Identifier descriptor.
++ */
++struct fip_vn_desc {
++	struct fip_desc fd_desc;
++	__u8		fd_mac[ETH_ALEN];
++	__u8		fd_resvd;
++	__u8		fd_fc_id[3];
++	__be64		fd_wwpn;	/* port name, unaligned */
++} __attribute__((packed));
++
++/*
++ * FIP_DT_FKA - Advertisement keep-alive period.
++ */
++struct fip_fka_desc {
++	struct fip_desc fd_desc;
++	__u8		fd_resvd[2];
++	__be32		fd_fka_period;	/* adv./keep-alive period in mS */
++} __attribute__((packed));
++
++/*
++ * FIP_DT_VENDOR descriptor.
++ */
++struct fip_vendor_desc {
++	struct fip_desc fd_desc;
++	__u8		fd_resvd[2];
++	__u8		fd_vendor_id[8];
++} __attribute__((packed));
++
++#endif /* _FC_FIP_H_ */
 
