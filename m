@@ -1,50 +1,58 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/3] scsi_dh: Add modalias support for SCSI targets
-Date: Wed, 18 Mar 2009 18:47:31 +0000
-Message-ID: <1237402051.3350.29.camel@localhost.localdomain>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: Re: [PATCH 2/3] scsi_dh: Change scsi device handler
+	modules	to	utilize modalias
+Date: Wed, 18 Mar 2009 11:50:51 -0700
+Message-ID: <1237402251.14147.5.camel@chandra-ubuntu>
 References: <20090318013615.26548.36303.sendpatchset@chandra-ubuntu>
-	 <20090318013621.26548.10529.sendpatchset@chandra-ubuntu>
+	 <20090318013627.26548.27704.sendpatchset@chandra-ubuntu>
+	 <20090318134629.GB19448@mars.virtualiron.com>
+	 <49C1168F.6060900@s5r6.in-berlin.de>
+	 <1237397158.14147.3.camel@chandra-ubuntu>
+	 <49C1344D.30502@s5r6.in-berlin.de>
+Reply-To: sekharan@linux.vnet.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:42316 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750737AbZCRSri (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Mar 2009 14:47:38 -0400
-In-Reply-To: <20090318013621.26548.10529.sendpatchset@chandra-ubuntu>
+Received: from e37.co.us.ibm.com ([32.97.110.158]:39700 "EHLO
+	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752095AbZCRSr4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Mar 2009 14:47:56 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e37.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n2IIlUwJ011398
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Mar 2009 12:47:30 -0600
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n2IIlqb5187794
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Mar 2009 12:47:52 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n2IIlp0A005234
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Mar 2009 12:47:52 -0600
+In-Reply-To: <49C1344D.30502@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org, pjones@redhat.com, michaelc@cs.wisc.edu
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Konrad Rzeszutek <konrad@virtualiron.com>, linux-scsi@vger.kernel.org, pjones@redhat.com, michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com
 
-On Tue, 2009-03-17 at 18:36 -0700, Chandra Seetharaman wrote:
-> From: Peter Jones <pjones@redhat.com>
+yes (all others are off).
+
+ that is the only storage I have in my system 
+On Wed, 2009-03-18 at 18:50 +0100, Stefan Richter wrote:
+> Chandra Seetharaman wrote:
+> > On Wed, 2009-03-18 at 16:43 +0100, Stefan Richter wrote:
+> >> AFAICS you could have kept the check for .vendor != NULL instead of
+> >> .vendor[0] != '\0' and write the terminator thusly:
+> >>
+> >> 	{},
+> >>
+> >> Saves the space for a one byte long string in the object files.  :-)
+> > 
+> > Tried it after your response. Got a panic :(.
+> > 
+> > Did I code your suggestion correctly ?
+> > 
+> > Here is the patch
+> ...
 > 
-> This patch allows the use of modaliases on scsi targets to correctly
-> load scsi device handler modules when the devices are found.
-> 
-> Signed-off-by: Peter Jones <pjones@redhat.com>
-> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-
-I have to say this is a bit icky.
-
-overloading the modalias type like this produces several nasty effects:
-
-     1. You don't actually care about type for any of the scsi_dh
-        handlers, so they all have it as a useless extra field
-     2. TYPE_ANY is a bogus (non SAM) definition ... I suppose it's
-        unlikely ever to clash, but you never know
-     3. scsi_dh handlers would now get loaded on *any* system ...
-        regardless of whether it's using multipathing or not ... that's
-        going to cause problems with other multi path solutions, I bet.
-
-Why not use a separately defined module alias for this ... and then
-program udev to understand it and do the loading only if multipath is
-actually present?  I think we might have to add the INQUIRY strings to
-the uenv for this, but it would be a much more elegant solution.
-
-James
-
+> Was scsi_dh_rdac the only device handler which you built?
+> (All others configured off?)
 
