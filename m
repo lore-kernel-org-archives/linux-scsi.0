@@ -1,66 +1,40 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [PATCH 1/3] scsi_dh: Add modalias support for SCSI targets
-Date: Wed, 18 Mar 2009 12:18:22 -0700
-Message-ID: <1237403902.14147.25.camel@chandra-ubuntu>
-References: <20090318013615.26548.36303.sendpatchset@chandra-ubuntu>
-	 <20090318013621.26548.10529.sendpatchset@chandra-ubuntu>
-	 <ac3eb2510903181130s5dd1b1caje579d765fd338f6f@mail.gmail.com>
-Reply-To: sekharan@linux.vnet.ibm.com
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH 2/3] scsi_dh: Change scsi device handler modules to 	utilize
+ modalias
+Date: Wed, 18 Mar 2009 20:44:05 +0100
+Message-ID: <49C14F05.7060309@s5r6.in-berlin.de>
+References: <20090318013615.26548.36303.sendpatchset@chandra-ubuntu>	 <20090318013627.26548.27704.sendpatchset@chandra-ubuntu>	 <20090318134629.GB19448@mars.virtualiron.com>	 <49C1168F.6060900@s5r6.in-berlin.de>	 <1237397158.14147.3.camel@chandra-ubuntu>	 <49C1344D.30502@s5r6.in-berlin.de> <ac3eb2510903181118h7a28e0a2m88aa62cbf68f0fe8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e39.co.us.ibm.com ([32.97.110.160]:48222 "EHLO
-	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751069AbZCRTPY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Mar 2009 15:15:24 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e39.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n2IJCWg1019900
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Mar 2009 13:12:32 -0600
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n2IJFM7B203704
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Mar 2009 13:15:22 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n2IJFM8j022804
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Mar 2009 13:15:22 -0600
-In-Reply-To: <ac3eb2510903181130s5dd1b1caje579d765fd338f6f@mail.gmail.com>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:46475 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751049AbZCRToP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Mar 2009 15:44:15 -0400
+In-Reply-To: <ac3eb2510903181118h7a28e0a2m88aa62cbf68f0fe8@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Kay Sievers <kay.sievers@vrfy.org>
-Cc: linux-scsi@vger.kernel.org, pjones@redhat.com, michaelc@cs.wisc.edu, James.Bottomley@hansenpartnership.com
+Cc: sekharan@linux.vnet.ibm.com, Konrad Rzeszutek <konrad@virtualiron.com>, linux-scsi@vger.kernel.org, pjones@redhat.com, michaelc@cs.wisc.edu, James.Bottomley@hansenpartnership.com
 
-
-On Wed, 2009-03-18 at 19:30 +0100, Kay Sievers wrote:
-> On Wed, Mar 18, 2009 at 02:36, Chandra Seetharaman <sekharan@us.ibm.com> wrote:
-> > From: Peter Jones <pjones@redhat.com>
-> >
-> > This patch allows the use of modaliases on scsi targets to correctly
-> > load scsi device handler modules when the devices are found.
-> > +++ linux-2.6.28/include/linux/mod_devicetable.h
-> > @@ -454,4 +454,10 @@ struct dmi_system_id {
-> >
-> >  #define DMI_MATCH(a, b)        { a, b }
-> >
-> > +struct scsi_dh_device_id {
-> > +       unsigned char type;
-> > +       char vendor[9];
-> > +       char model[17];
-> > +};
+Kay Sievers wrote:
+> On Wed, Mar 18, 2009 at 18:50, Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+>> Chandra Seetharaman wrote:
+>>> On Wed, 2009-03-18 at 16:43 +0100, Stefan Richter wrote:
+>>>> AFAICS you could have kept the check for .vendor != NULL instead of
+>>>> .vendor[0] != '\0' and write the terminator thusly:
+>>>>
+>>>>      {},
+>>>>
+>>>> Saves the space for a one byte long string in the object files.  :-)
+>>> Tried it after your response. Got a panic :(.
 > 
-> Doesn't the static array waste space, when used for the long lists of
-> entries stuffed in arrays of this structure? It will carry a lot of \0
-> chars, and identical strings can not be de-duplicated by the compiler,
-> unlike when pointers are used?
-> 
+> It's a static char array not a pointer to a string.
 
-I had some problems when we used the pointers instead of arrays. Don't
-recall it now.
-
-Will retry and report.
-> Thanks,
-> Kay
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Right, I missed that part of the switch from struct scsi_dh_devlist to
+struct scsi_dh_device_id.  #-|
+-- 
+Stefan Richter
+-=====-=-=== -=-= -==-=
+http://arcgraph.de/sr/
