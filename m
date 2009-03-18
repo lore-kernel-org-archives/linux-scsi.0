@@ -1,44 +1,75 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: hdparm with USB disk
-Date: Wed, 18 Mar 2009 08:44:41 -0400
-Message-ID: <49C0ECB9.2030500@interlog.com>
-References: <alpine.LSU.2.00.0903181226530.27821@fbirervta.pbzchgretzou.qr>
-Reply-To: dgilbert@interlog.com
+From: Konrad Rzeszutek <konrad@virtualiron.com>
+Subject: Re: [PATCH 1/3] scsi_dh: Add modalias support for SCSI targets
+Date: Wed, 18 Mar 2009 09:44:49 -0400
+Message-ID: <20090318134449.GA19448@mars.virtualiron.com>
+References: <20090318013615.26548.36303.sendpatchset@chandra-ubuntu> <20090318013621.26548.10529.sendpatchset@chandra-ubuntu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:40091 "EHLO
-	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752462AbZCRMot (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Mar 2009 08:44:49 -0400
-In-Reply-To: <alpine.LSU.2.00.0903181226530.27821@fbirervta.pbzchgretzou.qr>
+Received: from host-216-57-134-2.customer.veroxity.net ([216.57.134.2]:41942
+	"EHLO mars.virtualiron.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755833AbZCRNpt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Mar 2009 09:45:49 -0400
+Content-Disposition: inline
+In-Reply-To: <20090318013621.26548.10529.sendpatchset@chandra-ubuntu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jan Engelhardt <jengelh@medozas.de>
-Cc: linux-scsi@vger.kernel.org
+To: Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org, pjones@redhat.com, michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com
 
-Jan Engelhardt wrote:
-> Hi,
-> 
-> 
-> so it happens I have to work with one of those shitty "green" devices 
-> again that think their power management is smarter than me. 
-> Unfortunately, hdparm just does not fly with USB devices, so what is the 
-> preferred tool here?
-> 
-> # hdparm -B 254 /dev/sdb
-> 
-> /dev/sdb:
->  setting Advanced Power Management level to 0xfe (254)
->  HDIO_DRIVE_CMD failed: Input/output error
+.. snip.. 
+>  static int scsi_bus_uevent(struct device *dev, struct kobj_uevent_env *env)
+>  {
+>  	struct scsi_device *sdev;
+> +	char buffer[501];
 
-A SAT layer that supports the SCSI ATA PASS-THROUGH command
-is required in the device. Some USB external drives (often
-from major disk manufacturers) now support that.
+Why '501' ? How did you come up with that number?
 
-A version of hdparm that knows about SAT is also required.
- From memory that is from around hdparm version 7.0 onwards.
+> +	int rc;
+>  
+>  	if (dev->type != &scsi_dev_type)
+>  		return 0;
+>  
+>  	sdev = to_scsi_device(dev);
+>  
+> -	add_uevent_var(env, "MODALIAS=" SCSI_DEVICE_MODALIAS_FMT, sdev->type);
+> +	buffer[500] = '\0';
 
-Doug Gilbert
+Shouldn't that be buffer[501] ?
+
+> +	rc = format_scsi_modalias(sdev, buffer, 500);
+> +	if (rc < 0)
+> +		return rc;
+> +
+> +	add_uevent_var(env, "MODALIAS=%s", buffer);
+>  	return 0;
+>  }
+>  
+> @@ -697,8 +745,11 @@ static ssize_t
+>  sdev_show_modalias(struct device *dev, struct device_attribute *attr, char *buf)
+>  {
+>  	struct scsi_device *sdev;
+> +	ssize_t rc;
+> +
+>  	sdev = to_scsi_device(dev);
+> -	return snprintf (buf, 20, SCSI_DEVICE_MODALIAS_FMT "\n", sdev->type);
+> +	rc = format_scsi_modalias(sdev, buf, 500);
+
+Maybe a #define for that magic number?
+
+> +	return rc;
+>  }
+.. snip ..
+>  /* Ignore any prefix, eg. some architectures prepend _ */
+>  static inline int sym_is(const char *symbol, const char *name)
+>  {
+> @@ -736,6 +769,7 @@ static void do_table(void *symval, unsig
+>  	size -= id_size;
+>  
+>  	for (i = 0; i < size; i += id_size) {
+> +		memset(alias, '\0', 500);
+
+How about:
+memset (alias, 0x0, A_BIG_NUMBER);
 
