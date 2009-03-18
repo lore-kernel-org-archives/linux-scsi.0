@@ -1,38 +1,52 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 0/1] Add 'this_id' scsi host attribute
-Date: Wed, 18 Mar 2009 13:21:26 +0100
-Message-ID: <49C0E746.5060502@suse.de>
+From: hare@suse.de (Hannes Reinecke)
+Subject: [PATCH 1/1] Add 'this_id' host attribute
+Date: Wed, 18 Mar 2009 13:21:45 +0100
+Message-ID: <20090318122146.26B0918C79D@pentland.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36938 "EHLO mx2.suse.de"
+Received: from ns.suse.de ([195.135.220.2]:37502 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753399AbZCRMYL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Mar 2009 08:24:11 -0400
+	id S1754644AbZCRMae (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Mar 2009 08:30:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: sekharan@us.ibm.com, linux-scsi@vger.kernel.org
 
-=46or calculating the TransportID for SPI we need to be able
-to get the SCSI ID of the initiator (ie the SCSI HBA).
-This information is already stored in the 'this_id' field,
-but for some reason not exported via sysfs.
-This patch adds a sysfs attribute 'this_id' to the SCSI
-host.
 
-Cheers,
+To be able to calculate the TransportID for SPI we
+need to detect the SCSI ID of the initiator.
+The 'this_id' field of the scsi host structure
+carries this information, so we should export it
+via sysfs.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/scsi_sysfs.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 7513ce5..77f358b 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -245,6 +245,7 @@ show_shost_active_mode(struct device *dev,
+ static DEVICE_ATTR(active_mode, S_IRUGO | S_IWUSR, show_shost_active_mode, NULL);
+ 
+ shost_rd_attr(unique_id, "%u\n");
++shost_rd_attr(this_id, "%u\n");
+ shost_rd_attr(host_busy, "%hu\n");
+ shost_rd_attr(cmd_per_lun, "%hd\n");
+ shost_rd_attr(can_queue, "%hd\n");
+@@ -256,6 +257,7 @@ shost_rd_attr2(proc_name, hostt->proc_name, "%s\n");
+ 
+ static struct attribute *scsi_sysfs_shost_attrs[] = {
+ 	&dev_attr_unique_id.attr,
++	&dev_attr_this_id.attr,
+ 	&dev_attr_host_busy.attr,
+ 	&dev_attr_cmd_per_lun.attr,
+ 	&dev_attr_can_queue.attr,
+-- 
+1.5.3.2
+
