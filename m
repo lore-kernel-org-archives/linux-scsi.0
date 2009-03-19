@@ -1,99 +1,116 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [RFC B 2/2] libosd: Use of new blk_make_request
-Date: Thu, 19 Mar 2009 16:31:41 +0200
-Message-ID: <49C2574D.6090401@panasas.com>
+Subject: [RFC C 1/5] blk_rq_map_pages() new API
+Date: Thu, 19 Mar 2009 16:33:27 +0200
+Message-ID: <49C257B7.5070301@panasas.com>
 References: <49C254FD.7020202@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:5465 "EHLO
+Received: from gw-ca.panasas.com ([209.116.51.66]:6997 "EHLO
 	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753148AbZCSOc4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Mar 2009 10:32:56 -0400
+	with ESMTP id S1753856AbZCSOel (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Mar 2009 10:34:41 -0400
 In-Reply-To: <49C254FD.7020202@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scs
 
 
-Use new blk_make_request() to allocate a request from bio
-and avoid using deprecated blk_rq_append_bio().
+Define a new API for mapping array of pages into a request.
 
-This patch is dependent on a block layer patch titled:
-    [BLOCK] Export new blk_make_request() which takes bio \
-            and returns request
+Internally the bio is created using the
+rq_map_data + null_mapped + NULL_buffer mode of
+bio_copy_user(). The bio is only referenced once
+and there is no unmap function to call.
+
+TODO:
+   out of the 7 users of blk_rq_map_user + rq_map_data, 6 of them
+   are null_mapped + NULL_buffer and could be converted to this
+   API.
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 ---
- drivers/scsi/osd/osd_initiator.c |   33 +++++++++++----------------------
- 1 files changed, 11 insertions(+), 22 deletions(-)
+ block/blk-map.c        |   54 ++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/blkdev.h |    3 ++
+ 2 files changed, 57 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
-index ccfd347..66c3e92 100644
---- a/drivers/scsi/osd/osd_initiator.c
-+++ b/drivers/scsi/osd/osd_initiator.c
-@@ -1208,6 +1208,14 @@ static int _osd_req_finalize_data_integrity(struct osd_request *or,
- /*
-  * osd_finalize_request and helpers
-  */
-+struct request *_make_request(struct request_queue *q, bool has_write,
-+			      struct bio *bio, gfp_t flags)
+diff --git a/block/blk-map.c b/block/blk-map.c
+index ada399e..60a7a0b 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -325,3 +325,57 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
+ 	return 0;
+ }
+ EXPORT_SYMBOL(blk_rq_map_kern);
++
++/**
++ * blk_rq_map_pages - map pages array to a request, for REQ_TYPE_BLOCK_PC usage
++ * @q:		request queue where request should be inserted
++ * @rq:		request to fill
++ * @pages:	an array of struct page pointers to map
++ * @nr_pages:	count of valid pages at @pages
++ * @offset:	Offset into first page to start from (Must be blk_rq_aligned())
++ * @len:	length of user data to map
++ * @gfp_mask:	memory allocation flags
++ *
++ * Description:
++ *    Data will be mapped directly if possible. Otherwise a bounce
++ *    buffer is used. Can be called multiple times to append multiple
++ *    page arrays. No need to call an unmap function, and bio is only
++ *    referenced once. (Pages are of zero order)
++ */
++int blk_rq_map_pages(struct request_queue *q, struct request *rq,
++		    struct page **pages, unsigned nr_pages,
++		    unsigned long offset, unsigned len, gfp_t gfp_mask)
 +{
-+	if (bio)
-+		return blk_make_request(q, bio, flags);
-+	else
-+		return blk_get_request(q, has_write ? WRITE : READ, flags);
++	struct bio *bio;
++	int reading, ret;
++	struct rq_map_data map_data = {
++		.pages = pages,
++		.nr_entries = nr_pages,
++		.offset = offset,
++		.null_mapped = 1,
++		.page_order = 0,
++	};
++
++	reading = rq_data_dir(rq) == READ;
++
++	/* The name is confusing, but bio_copy_user+map_data+NULL_buffer
++         * Actually just adds the pages to the bio, no copy is performed.
++	 */
++	bio = bio_copy_user(q, &map_data, 0, len, reading, gfp_mask);
++
++	if (IS_ERR(bio))
++		return PTR_ERR(bio);
++
++	bio->bi_flags |= (1 << BIO_NULL_MAPPED);
++
++	/* We might still need to bounce if memory mask does not match */
++	blk_queue_bounce(q, &bio);
++
++	ret = blk_rq_append_bio(q, rq, bio);
++	if (likely(!ret))
++		return 0;
++
++	bio_put(bio);
++	return ret;
 +}
- 
- static int _init_blk_request(struct osd_request *or,
- 	bool has_in, bool has_out)
-@@ -1218,7 +1226,8 @@ static int _init_blk_request(struct osd_request *or,
- 	struct request *req;
- 	int ret = -ENOMEM;
- 
--	req = blk_get_request(q, has_out, flags);
-+	req = _make_request(q, has_out, has_out ? or->out.bio : or->in.bio,
-+			    flags);
- 	if (!req)
- 		goto out;
- 
-@@ -1233,7 +1242,7 @@ static int _init_blk_request(struct osd_request *or,
- 		or->out.req = req;
- 		if (has_in) {
- 			/* allocate bidi request */
--			req = blk_get_request(q, READ, flags);
-+			req = _make_request(q, false, or->in.bio, flags);
- 			if (!req) {
- 				OSD_DEBUG("blk_get_request for bidi failed\n");
- 				goto out;
-@@ -1279,26 +1288,6 @@ int osd_finalize_request(struct osd_request *or,
- 		return ret;
- 	}
- 
--	if (or->out.bio) {
--		ret = blk_rq_append_bio(or->request->q, or->out.req,
--					or->out.bio);
--		if (ret) {
--			OSD_DEBUG("blk_rq_append_bio out failed\n");
--			return ret;
--		}
--		OSD_DEBUG("out bytes=%llu (bytes_req=%u)\n",
--			_LLU(or->out.total_bytes), or->out.req->data_len);
--	}
--	if (or->in.bio) {
--		ret = blk_rq_append_bio(or->request->q, or->in.req, or->in.bio);
--		if (ret) {
--			OSD_DEBUG("blk_rq_append_bio in failed\n");
--			return ret;
--		}
--		OSD_DEBUG("in bytes=%llu (bytes_req=%u)\n",
--			_LLU(or->in.total_bytes), or->in.req->data_len);
--	}
--
- 	or->out.pad_buff = sg_out_pad_buffer;
- 	or->in.pad_buff = sg_in_pad_buffer;
- 
++EXPORT_SYMBOL(blk_rq_map_pages);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 22dcdde..81b681c 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -784,6 +784,9 @@ extern int blk_rq_map_user(struct request_queue *, struct request *,
+ extern int blk_rq_unmap_user(struct bio *);
+ extern int blk_rq_map_kern(struct request_queue *, struct request *, void *,
+ 			   unsigned int, gfp_t);
++extern int blk_rq_map_pages(struct request_queue *, struct request *,
++			    struct page **, unsigned, unsigned long offset,
++			    unsigned , gfp_t);
+ extern int blk_rq_map_user_iov(struct request_queue *, struct request *,
+ 			       struct rq_map_data *, struct sg_iovec *, int,
+ 			       unsigned int, gfp_t);
 -- 
 1.6.2.1
 
