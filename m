@@ -1,108 +1,91 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH] WARN_ON if blk_put_request leaks BIOs
-Date: Thu, 19 Mar 2009 18:29:02 +0200
-Message-ID: <49C272CE.1070408@panasas.com>
-References: <49C21C5A.6030105@panasas.com> <20090319113343.GF27476@kernel.dk>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 1/5] bfa: Brocade BFA FC SCSI driver (bfad)
+Date: Thu, 19 Mar 2009 12:19:17 -0500
+Message-ID: <49C27E95.4050401@cs.wisc.edu>
+References: <200903142003.n2EK39r4031547@blc-10-6.brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:22801 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754664AbZCSQaR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Mar 2009 12:30:17 -0400
-In-Reply-To: <20090319113343.GF27476@kernel.dk>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759978AbZCSRTl@vger.kernel.org>
+In-Reply-To: <200903142003.n2EK39r4031547@blc-10-6.brocade.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jing Huang <huangj@brocade.com>
+Cc: James.Bottomley@HansenPartnership.com, kgudipat@brocade.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rvadivel@brocade.com, vravindr@brocade.com
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Tejun Heo <tj@kernel.org>
+
+some quick general comments:
+
+- Patch needs to be run through checkpatch.pl again.
+- If you are not implementing a callout like issue_lip then you do not 
+need to implement a function that does nothing.
+- Remove the OS compat stuff that just calls right into the linux 
+function. For example kill bfad_os_pci_probe.
+
+Jing Huang wrote:
+> +
+> +/**
+> + * Allocate a Scsi_Host for a port.
+> + */
+> +int
+> +bfad_im_scsi_host_alloc(struct bfad_s *bfad, struct bfad_im_port_s *im_port)
+> +{
+> +	int error = 1;
+> +
+> +	if (!idr_pre_get(&bfad_im_port_index, GFP_KERNEL)) {
+> +		printk(KERN_WARNING "idr_pre_get failure\n");
+> +		goto out;
+> +	}
+> +
+> +	error = idr_get_new(&bfad_im_port_index, im_port,
+> +					 &im_port->idr_id);
+> +	if (error) {
+> +		printk(KERN_WARNING "idr_get_new failure\n");
+> +		goto out;
+> +	}
+> +
+> +	im_port->shost = bfad_os_scsi_host_alloc(im_port, bfad);
+> +	if (!im_port->shost) {
+> +		error = 1;
+> +		goto out_free_idr;
+> +	}
+> +
+> +	im_port->shost->hostdata[0] = (unsigned long)im_port;
 
 
-Put a WARN_ON in __blk_put_request if it is about to
-leak bio(s). This is a serious bug that can happen in error
-handling code paths.
 
-For this to work I have fixed a couple of places in block/ where
-request->bio != NULL ownership was not honored. And a small cleanup
-at sg_io() while at it.
+I think I asked about this before. Why do you just not allocate the bfad 
+or im_port in the hostdata? What is the struct hierarchy? Do you have 
+one bfad for the entire HBA/pci_device then have a im_port for each port 
+on the hba?
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- block/blk-core.c   |    3 +++
- block/blk-merge.c  |    2 ++
- block/scsi_ioctl.c |   21 ++++-----------------
- 3 files changed, 9 insertions(+), 17 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index f9118c0..b3aabdd 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1031,6 +1031,9 @@ void __blk_put_request(struct request_queue *q, struct request *req)
- 
- 	elv_completed_request(q, req);
- 
-+	/* this is a bio leak */
-+	WARN_ON(req->bio != NULL);
-+
- 	/*
- 	 * Request may not have originated from ll_rw_blk. if not,
- 	 * it didn't come out of our reserved rq pools
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 5a244f0..e39cb24 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -403,6 +403,8 @@ static int attempt_merge(struct request_queue *q, struct request *req,
- 	if (blk_rq_cpu_valid(next))
- 		req->cpu = next->cpu;
- 
-+	/* owner-ship of bio passed from next to req */
-+	next->bio = NULL;
- 	__blk_put_request(q, next);
- 	return 1;
- }
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index ee9c67d..626ee27 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -214,21 +214,10 @@ static int blk_fill_sghdr_rq(struct request_queue *q, struct request *rq,
- 	return 0;
- }
- 
--/*
-- * unmap a request that was previously mapped to this sg_io_hdr. handles
-- * both sg and non-sg sg_io_hdr.
-- */
--static int blk_unmap_sghdr_rq(struct request *rq, struct sg_io_hdr *hdr)
--{
--	blk_rq_unmap_user(rq->bio);
--	blk_put_request(rq);
--	return 0;
--}
--
- static int blk_complete_sghdr_rq(struct request *rq, struct sg_io_hdr *hdr,
- 				 struct bio *bio)
- {
--	int r, ret = 0;
-+	int ret = 0;
- 
- 	/*
- 	 * fill in all the output members
-@@ -253,12 +242,10 @@ static int blk_complete_sghdr_rq(struct request *rq, struct sg_io_hdr *hdr,
- 			ret = -EFAULT;
- 	}
- 
--	rq->bio = bio;
--	r = blk_unmap_sghdr_rq(rq, hdr);
--	if (ret)
--		r = ret;
-+	blk_rq_unmap_user(bio);
-+	blk_put_request(rq);
- 
--	return r;
-+	return ret;
- }
- 
- static int sg_io(struct request_queue *q, struct gendisk *bd_disk,
--- 
-1.6.2.1
 
+> +	im_port->shost->unique_id = im_port->idr_id;
+> +	im_port->shost->this_id = -1;
+> +	im_port->shost->max_id = MAX_FCP_TARGET;
+> +	im_port->shost->max_lun = MAX_FCP_LUN;
+> +	im_port->shost->max_cmd_len = 16;
+> +	im_port->shost->can_queue = bfad->cfg_data.ioc_queue_depth;
+> +	im_port->shost->transportt = bfad_im_scsi_transport_template;
+> +
+> +	error = bfad_os_scsi_add_host(im_port->shost, im_port, bfad);
+> +	if (error) {
+> +		printk(KERN_WARNING "bfad_os_scsi_add_host failure %d\n",
+> +							error);
+> +		goto out_fc_rel;
+> +	}
+> +
+> +	/* setup host fixed attribute if the lk supports */
+> +	bfad_os_fc_host_init(im_port);
+> +
+> +	return 0;
+> +
+> +out_fc_rel:
+> +	scsi_host_put(im_port->shost);
+> +
+> +out_free_idr:
+> +	idr_remove(&bfad_im_port_index, im_port->idr_id);
+> +out:
+> +	return error;
+> +}
+> +
