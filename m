@@ -1,307 +1,358 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [RFC C 3/5] libosd: No bio for you
-Date: Thu, 19 Mar 2009 16:35:51 +0200
-Message-ID: <49C25847.6000903@panasas.com>
+Subject: [RFC C 4/5] exofs: No bio for you
+Date: Thu, 19 Mar 2009 16:37:14 +0200
+Message-ID: <49C2589A.2080103@panasas.com>
 References: <49C254FD.7020202@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:8271 "EHLO
+Received: from gw-ca.panasas.com ([209.116.51.66]:6485 "EHLO
 	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754127AbZCSOhG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Mar 2009 10:37:06 -0400
+	with ESMTP id S1753575AbZCSOi3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Mar 2009 10:38:29 -0400
 In-Reply-To: <49C254FD.7020202@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scs
 
 
-Change osd_initiator API to not be bio based.
-The new API will receive an array of pages to
-write/read from. The pages info is held in a new
-struct osd_page_array.
-
-At osd_finalize_request the code uses the new
-blk_rq_map_pages() API to build the request for
-submission.
-
-this patch is dependent on a block layer patch titled:
-   [BLOCK] blk_rq_map_pages() new API
+bio based API to osd_initiator is depreciated. Move to
+a page array API when writing/reading pages.
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 ---
- drivers/scsi/osd/osd_initiator.c |  109 +++++++++++++++++++++-----------------
- include/scsi/osd_initiator.h     |   31 +++++++++--
- 2 files changed, 88 insertions(+), 52 deletions(-)
+ fs/exofs/common.h |    4 --
+ fs/exofs/inode.c  |  108 +++++++++++++++++++++++++++--------------------------
+ 2 files changed, 55 insertions(+), 57 deletions(-)
 
-diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
-index 8885524..d18402c 100644
---- a/drivers/scsi/osd/osd_initiator.c
-+++ b/drivers/scsi/osd/osd_initiator.c
-@@ -52,10 +52,6 @@
- #    define __unused			__attribute__((unused))
- #endif
+diff --git a/fs/exofs/common.h b/fs/exofs/common.h
+index f02cb4c..8a56338 100644
+--- a/fs/exofs/common.h
++++ b/fs/exofs/common.h
+@@ -44,10 +44,6 @@
+ #include <scsi/osd_initiator.h>
+ #include <scsi/osd_sec.h>
  
--/* FIXME: Temporarly until next patch */
+-/* FIXME: Temporarly until exofs tree syncs with scsi-misc's osd_initiator */
 -#define osd_req_write osd_req_write_old
 -#define osd_req_read  osd_req_read_old
 -
- enum { OSD_REQ_RETRIES = 1 };
+ /****************************************************************************
+  * Object ID related defines
+  * NOTE: inode# = object ID - EXOFS_OBJ_OFF
+diff --git a/fs/exofs/inode.c b/fs/exofs/inode.c
+index 0f52e76..31cfd6d 100644
+--- a/fs/exofs/inode.c
++++ b/fs/exofs/inode.c
+@@ -49,9 +49,8 @@ struct page_collect {
+ 	struct inode *inode;
+ 	unsigned expected_pages;
  
- MODULE_AUTHOR("Boaz Harrosh <bharrosh@panasas.com>");
-@@ -585,25 +581,15 @@ static int _osd_req_list_objects(struct osd_request *or,
- 	__be16 action, const struct osd_obj_id *obj, osd_id initial_id,
- 	struct osd_obj_id_list *list, unsigned nelem)
- {
--	struct request_queue *q = or->osd_dev->scsi_device->request_queue;
- 	u64 len = nelem * sizeof(osd_id) + sizeof(*list);
 -	struct bio *bio;
+-	unsigned nr_pages;
+-	unsigned long length;
++	struct osd_pages_array opa;
++	unsigned pg_alloc_count;
+ 	long pg_first;
+ };
  
- 	_osd_req_encode_common(or, action, obj, (u64)initial_id, len);
+@@ -66,9 +65,8 @@ void _pcol_init(struct page_collect *pcol, unsigned expected_pages,
+ 	pcol->inode = inode;
+ 	pcol->expected_pages = expected_pages;
  
- 	if (list->list_identifier)
- 		_osd_req_encode_olist(or, list);
+-	pcol->bio = NULL;
+-	pcol->nr_pages = 0;
+-	pcol->length = 0;
++	memset(&pcol->opa, 0, sizeof(pcol->opa));
++	pcol->pg_alloc_count = 0;
+ 	pcol->pg_first = -1;
  
--	WARN_ON(or->in.bio);
--	bio = bio_map_kern(q, list, len, or->alloc_flags);
--	if (!bio) {
--		OSD_ERR("!!! Failed to allocate list_objects BIO\n");
--		return -ENOMEM;
--	}
+ 	EXOFS_DBGMSG("_pcol_init ino=0x%lx expected_pages=%u\n", inode->i_ino,
+@@ -77,11 +75,10 @@ void _pcol_init(struct page_collect *pcol, unsigned expected_pages,
+ 
+ void _pcol_reset(struct page_collect *pcol)
+ {
+-	pcol->expected_pages -= min(pcol->nr_pages, pcol->expected_pages);
++	pcol->expected_pages -= min(pcol->opa.nr_pages, pcol->expected_pages);
+ 
+-	pcol->bio = NULL;
+-	pcol->nr_pages = 0;
+-	pcol->length = 0;
++	memset(&pcol->opa, 0, sizeof(pcol->opa));
++	pcol->pg_alloc_count = 0;
+ 	pcol->pg_first = -1;
+ 	EXOFS_DBGMSG("_pcol_reset ino=0x%lx expected_pages=%u\n",
+ 		     pcol->inode->i_ino, pcol->expected_pages);
+@@ -98,9 +95,12 @@ int pcol_try_alloc(struct page_collect *pcol)
+ 	int pages = min_t(unsigned, pcol->expected_pages, BIO_MAX_PAGES);
+ 
+ 	for (; pages; pages >>= 1) {
+-		pcol->bio = bio_alloc(GFP_KERNEL, pages);
+-		if (likely(pcol->bio))
++		pcol->opa.pages = kcalloc(pages, sizeof(struct page *),
++					  GFP_KERNEL);
++		if (likely(pcol->opa.pages)) {
++			pcol->pg_alloc_count = pages;
+ 			return 0;
++		}
+ 	}
+ 
+ 	EXOFS_ERR("Failed to kcalloc expected_pages=%d\n",
+@@ -110,21 +110,25 @@ int pcol_try_alloc(struct page_collect *pcol)
+ 
+ void pcol_free(struct page_collect *pcol)
+ {
+-	bio_put(pcol->bio);
+-	pcol->bio = NULL;
++	kfree(pcol->opa.pages);
++	pcol->opa.pages = NULL;
++	pcol->pg_alloc_count = 0;
+ }
+ 
+-int pcol_add_page(struct page_collect *pcol, struct page *page, unsigned len)
++int pcol_add_page(struct page_collect *pcol, struct page *page, int len)
+ {
+-	int added_len = bio_add_pc_page(pcol->req_q, pcol->bio, page, len, 0);
+-	if (unlikely(len != added_len))
++	if (pcol->opa.nr_pages >= pcol->pg_alloc_count)
+ 		return -ENOMEM;
+ 
+-	++pcol->nr_pages;
+-	pcol->length += len;
++	pcol->opa.pages[pcol->opa.nr_pages++] = page;
++	pcol->opa.length += len;
+ 	return 0;
+ }
+ 
++#define __pcol_for_each_segment(page, pcol, i, s) \
++	for (page = pcol->opa.pages[s], i = s; i < pcol->opa.nr_pages; \
++		page = pcol->opa.pages[++(i)])
++
+ static int update_read_page(struct page *page, int ret)
+ {
+ 	if (ret == 0) {
+@@ -164,7 +168,7 @@ static int _readpage(struct page *page, bool is_sync);
+ static int __readpages_done(struct osd_request *or, struct page_collect *pcol,
+ 			    bool do_unlock)
+ {
+-	struct bio_vec *bvec;
++	struct page *page;
+ 	int i;
+ 	u64 resid;
+ 	u64 good_bytes;
+@@ -174,19 +178,18 @@ static int __readpages_done(struct osd_request *or, struct page_collect *pcol,
+ 	osd_end_request(or);
+ 
+ 	if (!ret)
+-		good_bytes = pcol->length;
++		good_bytes = pcol->opa.length;
+ 	else if (ret && !resid)
+ 		good_bytes = 0;
+ 	else
+-		good_bytes = pcol->length - resid;
++		good_bytes = pcol->opa.length - resid;
+ 
+ 	EXOFS_DBGMSG("readpages_done(%ld) good_bytes=%llx"
+ 		     " length=%zx nr_pages=%u\n",
+-		     pcol->inode->i_ino, _LLU(good_bytes), pcol->length,
+-		     pcol->nr_pages);
++		     pcol->inode->i_ino, _LLU(good_bytes), pcol->opa.length,
++		     pcol->opa.nr_pages);
+ 
+-	__bio_for_each_segment(bvec, pcol->bio, i, 0) {
+-		struct page *page = bvec->bv_page;
++	__pcol_for_each_segment(page, pcol, i, 0) {
+ 		struct inode *inode = page->mapping->host;
+ 
+ 		if (inode != pcol->inode)
+@@ -210,7 +213,8 @@ static int __readpages_done(struct osd_request *or, struct page_collect *pcol,
+ 			_readpage(page, false);
+ 		}
+ 
+-		length += bvec->bv_len;
++		length += min_t(u64,
++				pcol->opa.length - length, PAGE_CACHE_SIZE);
+ 	}
+ 
+ 	pcol_free(pcol);
+@@ -229,12 +233,10 @@ static void readpages_done(struct osd_request *or, void *p)
+ 
+ void _unlock_pcol_pages(struct page_collect *pcol, int ret, int rw)
+ {
+-	struct bio_vec *bvec;
++	struct page *page;
+ 	int i;
+ 
+-	__bio_for_each_segment(bvec, pcol->bio, i, 0) {
+-		struct page *page = bvec->bv_page;
 -
--	bio->bi_rw &= ~(1 << BIO_RW);
--	or->in.bio = bio;
--	or->in.total_bytes = bio->bi_size;
-+	opa_map_kern(&or->in.opa, list, len);
-+	or->in.total_bytes = len;
- 	return 0;
- }
++	__pcol_for_each_segment(page, pcol, i, 0) {
+ 		if (rw == READ)
+ 			update_read_page(page, ret);
+ 		else
+@@ -255,11 +257,11 @@ int read_exec(struct page_collect *pcol, bool is_sync)
+ 	loff_t i_start = pcol->pg_first << PAGE_CACHE_SHIFT;
+ 	int ret;
  
-@@ -693,27 +679,35 @@ EXPORT_SYMBOL(osd_req_remove_object);
- 	struct osd_obj_id *first, struct osd_obj_id_list *list, unsigned nelem);
- */
+-	if (!pcol->bio)
++	if (!pcol->opa.pages)
+ 		return 0;
  
--void osd_req_write(struct osd_request *or,
-+void osd_req_write_old(struct osd_request *or,
- 	const struct osd_obj_id *obj, struct bio *bio, u64 offset)
- {
--	_osd_req_encode_common(or, OSD_ACT_WRITE, obj, offset, bio->bi_size);
--	WARN_ON(or->out.bio || or->out.total_bytes);
--	bio->bi_rw |= (1 << BIO_RW);
--	or->out.bio = bio;
--	or->out.total_bytes = bio->bi_size;
-+	BUG_ON(1);
-+}
-+EXPORT_SYMBOL(osd_req_write_old);
-+
-+void osd_req_write(struct osd_request *or,
-+	const struct osd_obj_id *obj, const struct osd_pages_array *opa,
-+	u64 offset)
-+{
-+	_osd_req_encode_common(or, OSD_ACT_WRITE, obj, offset, opa->length);
-+
-+	WARN_ON(or->out.total_bytes);
-+	WARN_ON(or->out.opa.length);
-+	or->out.opa = *opa;
-+	or->out.total_bytes = opa->length;
- }
- EXPORT_SYMBOL(osd_req_write);
+ 	/* see comment in _readpage() about sync reads */
+-	WARN_ON(is_sync && (pcol->nr_pages != 1));
++	WARN_ON(is_sync && (pcol->opa.nr_pages != 1));
  
- int osd_req_write_kern(struct osd_request *or,
--	const struct osd_obj_id *obj, u64 offset, void* buff, u64 len)
-+	const struct osd_obj_id *obj, u64 offset, void *buff, u64 len)
- {
--	struct request_queue *req_q = or->osd_dev->scsi_device->request_queue;
--	struct bio *bio = bio_map_kern(req_q, buff, len, GFP_KERNEL);
-+	struct osd_pages_array opa;
- 
--	if (!bio)
--		return -ENOMEM;
-+	memset(&opa, 0, sizeof(opa));
-+	opa_map_kern(&opa, buff, len);
- 
--	osd_req_write(or, obj, bio, offset);
-+	osd_req_write(or, obj, &opa, offset);
- 	return 0;
- }
- EXPORT_SYMBOL(osd_req_write_kern);
-@@ -742,27 +736,35 @@ void osd_req_flush_object(struct osd_request *or,
- }
- EXPORT_SYMBOL(osd_req_flush_object);
- 
--void osd_req_read(struct osd_request *or,
-+void osd_req_read_old(struct osd_request *or,
- 	const struct osd_obj_id *obj, struct bio *bio, u64 offset)
- {
--	_osd_req_encode_common(or, OSD_ACT_READ, obj, offset, bio->bi_size);
--	WARN_ON(or->in.bio || or->in.total_bytes);
--	bio->bi_rw &= ~(1 << BIO_RW);
--	or->in.bio = bio;
--	or->in.total_bytes = bio->bi_size;
-+	BUG_ON(1);
-+}
-+EXPORT_SYMBOL(osd_req_read_old);
-+
-+void osd_req_read(struct osd_request *or,
-+	const struct osd_obj_id *obj, const struct osd_pages_array *opa,
-+	u64 offset)
-+{
-+	_osd_req_encode_common(or, OSD_ACT_READ, obj, offset, opa->length);
-+
-+	WARN_ON(or->in.total_bytes);
-+	WARN_ON(or->in.opa.length);
-+	or->in.opa = *opa;
-+	or->in.total_bytes = opa->length;
- }
- EXPORT_SYMBOL(osd_req_read);
- 
- int osd_req_read_kern(struct osd_request *or,
--	const struct osd_obj_id *obj, u64 offset, void* buff, u64 len)
-+	const struct osd_obj_id *obj, u64 offset, void *buff, u64 len)
- {
--	struct request_queue *req_q = or->osd_dev->scsi_device->request_queue;
--	struct bio *bio = bio_map_kern(req_q, buff, len, GFP_KERNEL);
-+	struct osd_pages_array opa;
- 
--	if (!bio)
--		return -ENOMEM;
-+	memset(&opa, 0, sizeof(opa));
-+	opa_map_kern(&opa, buff, len);
- 
--	osd_req_read(or, obj, bio, offset);
-+	osd_req_read(or, obj, &opa, offset);
- 	return 0;
- }
- EXPORT_SYMBOL(osd_req_read_kern);
-@@ -1168,7 +1170,7 @@ static int _osd_req_finalize_data_integrity(struct osd_request *or,
- 		unsigned pad;
- 
- 		or->out_data_integ.data_bytes = cpu_to_be64(
--			or->out.bio ? or->out.bio->bi_size : 0);
-+			or->out.opa.length ?: 0);
- 		or->out_data_integ.set_attributes_bytes = cpu_to_be64(
- 			or->set_attr.total_bytes);
- 		or->out_data_integ.get_attributes_bytes = cpu_to_be64(
-@@ -1255,6 +1257,18 @@ out:
- 	return ret;
- }
- 
-+static int _rq_map_opa(struct osd_request *or, struct _osd_io_info *io)
-+{
-+	if (io->opa.pages)
-+		return blk_rq_map_pages(io->req->q, io->req, io->opa.pages,
-+					io->opa.nr_pages, io->opa.offset,
-+					io->opa.length, or->alloc_flags);
-+	else
-+		return blk_rq_map_kern(io->req->q, io->req,
-+				       (void *)io->opa.offset, io->opa.length,
-+				       or->alloc_flags);
-+}
-+
- int osd_finalize_request(struct osd_request *or,
- 	u8 options, const void *cap, const u8 *cap_key)
- {
-@@ -1273,8 +1287,8 @@ int osd_finalize_request(struct osd_request *or,
- 
- 	osd_set_caps(&or->cdb, cap);
- 
--	has_in = or->in.bio || or->get_attr.total_bytes;
--	has_out = or->out.bio || or->set_attr.total_bytes ||
-+	has_in = or->in.opa.length || or->get_attr.total_bytes;
-+	has_out = or->out.opa.length || or->set_attr.total_bytes ||
- 		or->enc_get_attr.total_bytes;
- 
- 	ret = _init_blk_request(or, has_in, has_out);
-@@ -1283,9 +1297,8 @@ int osd_finalize_request(struct osd_request *or,
- 		return ret;
+ 	or = osd_start_request(pcol->sbi->s_dev, GFP_KERNEL);
+ 	if (unlikely(!or)) {
+@@ -267,7 +269,7 @@ int read_exec(struct page_collect *pcol, bool is_sync)
+ 		goto err;
  	}
  
--	if (or->out.bio) {
--		ret = blk_rq_append_bio(or->request->q, or->out.req,
--					or->out.bio);
-+	if (or->out.opa.length) {
-+		ret = _rq_map_opa(or, &or->out);
- 		if (ret) {
- 			OSD_DEBUG("blk_rq_append_bio out failed\n");
- 			return ret;
-@@ -1293,8 +1306,8 @@ int osd_finalize_request(struct osd_request *or,
- 		OSD_DEBUG("out bytes=%llu (bytes_req=%u)\n",
- 			_LLU(or->out.total_bytes), or->out.req->data_len);
+-	osd_req_read(or, &obj, pcol->bio, i_start);
++	osd_req_read(or, &obj, &pcol->opa, i_start);
+ 
+ 	if (is_sync) {
+ 		exofs_sync_op(or, pcol->sbi->s_timeout, oi->i_cred);
+@@ -288,7 +290,7 @@ int read_exec(struct page_collect *pcol, bool is_sync)
+ 	atomic_inc(&pcol->sbi->s_curr_pending);
+ 
+ 	EXOFS_DBGMSG("read_exec obj=%llx start=%llx length=%zx\n",
+-		  obj.id, _LLU(i_start), pcol->length);
++		  obj.id, _LLU(i_start), pcol->opa.length);
+ 
+ 	/* pages ownership was passed to pcol_copy */
+ 	_pcol_reset(pcol);
+@@ -346,7 +348,7 @@ try_again:
+ 
+ 	if (unlikely(pcol->pg_first == -1)) {
+ 		pcol->pg_first = page->index;
+-	} else if (unlikely((pcol->pg_first + pcol->nr_pages) !=
++	} else if (unlikely((pcol->pg_first + pcol->opa.nr_pages) !=
+ 		   page->index)) {
+ 		/* Discontinuity detected, split the request */
+ 		ret = read_exec(pcol, false);
+@@ -355,7 +357,7 @@ try_again:
+ 		goto try_again;
  	}
--	if (or->in.bio) {
--		ret = blk_rq_append_bio(or->request->q, or->in.req, or->in.bio);
-+	if (or->in.opa.length) {
-+		ret = _rq_map_opa(or, &or->in);
- 		if (ret) {
- 			OSD_DEBUG("blk_rq_append_bio in failed\n");
- 			return ret;
-diff --git a/include/scsi/osd_initiator.h b/include/scsi/osd_initiator.h
-index 7a317aa..fa32074 100644
---- a/include/scsi/osd_initiator.h
-+++ b/include/scsi/osd_initiator.h
-@@ -78,6 +78,21 @@ static inline void osd_dev_set_ver(struct osd_dev *od, enum osd_std_version v)
- #endif
- }
  
-+struct osd_pages_array {
-+	struct page **pages;
-+	unsigned nr_pages;
-+	unsigned long offset;
-+	unsigned long length;
-+};
-+
-+static inline void opa_map_kern(struct osd_pages_array *opa, void *buff,
-+				unsigned long length)
-+{
-+	WARN_ON(opa->pages || opa->offset);
-+	opa->offset = (unsigned long)buff;
-+	opa->length = length;
-+}
-+
- struct osd_request;
- typedef void (osd_req_done_fn)(struct osd_request *or, void *private);
+-	if (!pcol->bio) {
++	if (!pcol->opa.pages) {
+ 		ret = pcol_try_alloc(pcol);
+ 		if (unlikely(ret))
+ 			goto fail;
+@@ -371,7 +373,7 @@ try_again:
+ 	if (ret) {
+ 		EXOFS_DBGMSG("Failed pcol_add_page pages[i]=%p "
+ 			  "len=%zx nr_pages=%u length=%zx\n",
+-			  page, len, pcol->nr_pages, pcol->length);
++			  page, len, pcol->opa.nr_pages, pcol->opa.length);
  
-@@ -96,7 +111,7 @@ struct osd_request {
- 	} set_attr, enc_get_attr, get_attr;
+ 		/* split the request, and start again with current page */
+ 		ret = read_exec(pcol, false);
+@@ -439,31 +441,30 @@ static int exofs_writepage(struct page *page, struct writeback_control *wbc2);
+ static void writepages_done(struct osd_request *or, void *p)
+ {
+ 	struct page_collect *pcol = p;
+-	struct bio_vec *bvec;
++	struct page *page;
+ 	int i;
+ 	u64 resid;
+ 	u64  good_bytes;
+ 	u64  length = 0;
+-
++	
+ 	int ret = exofs_check_ok_resid(or, NULL, &resid);
  
- 	struct _osd_io_info {
--		struct bio *bio;
-+		struct osd_pages_array opa;
- 		u64 total_bytes;
- 		struct request *req;
- 		struct _osd_req_data_segment *last_seg;
-@@ -364,12 +379,16 @@ void osd_req_remove_object(struct osd_request *or, struct osd_obj_id *);
+ 	osd_end_request(or);
+ 	atomic_dec(&pcol->sbi->s_curr_pending);
  
- void __deprecated osd_req_write_old(struct osd_request *or,
- 	const struct osd_obj_id *, struct bio *data_out, u64 offset);
-+
-+void osd_req_write(struct osd_request *or,
-+	const struct osd_obj_id *, const struct osd_pages_array *opa,
-+	u64 offset);
- int osd_req_write_kern(struct osd_request *or,
- 	const struct osd_obj_id *obj, u64 offset, void *buff, u64 len);
- void osd_req_append(struct osd_request *or,
--	const struct osd_obj_id *, struct bio *data_out);/* NI */
--void osd_req_create_write(struct osd_request *or,
--	const struct osd_obj_id *, struct bio *data_out, u64 offset);/* NI */
-+	const struct osd_obj_id *, struct osd_pages_array *opa_out);/* NI */
-+void osd_req_create_write(struct osd_request *or, /* NI */
-+	const struct osd_obj_id *, struct osd_pages_array *opa_out, u64 offset);
- void osd_req_clear(struct osd_request *or,
- 	const struct osd_obj_id *, u64 offset, u64 len);/* NI */
- void osd_req_punch(struct osd_request *or,
-@@ -381,6 +400,10 @@ void osd_req_flush_object(struct osd_request *or,
+ 	if (likely(!ret))
+-		good_bytes = pcol->length;
++		good_bytes = pcol->opa.length;
+ 	else if (ret && !resid)
+ 		good_bytes = 0;
+ 	else
+-		good_bytes = pcol->length - resid;
++		good_bytes = pcol->opa.length - resid;
  
- void __deprecated osd_req_read_old(struct osd_request *or,
- 	const struct osd_obj_id *, struct bio *data_in, u64 offset);
-+
-+void osd_req_read(struct osd_request *or,
-+	const struct osd_obj_id *, const struct osd_pages_array *opa_in,
-+	u64 offset);
- int osd_req_read_kern(struct osd_request *or,
- 	const struct osd_obj_id *obj, u64 offset, void *buff, u64 len);
+ 	EXOFS_DBGMSG("writepages_done(%lx) good_bytes=%llx"
+ 		     " length=%zx nr_pages=%u\n",
+-		     pcol->inode->i_ino, _LLU(good_bytes), pcol->length,
+-		     pcol->nr_pages);
++		     pcol->inode->i_ino, _LLU(good_bytes), pcol->opa.length,
++		     pcol->opa.nr_pages);
  
+-	__bio_for_each_segment(bvec, pcol->bio, i, 0) {
+-		struct page *page = bvec->bv_page;
++	__pcol_for_each_segment(page, pcol, i, 0) {
+ 		struct inode *inode = page->mapping->host;
+ 
+ 		if (inode != pcol->inode)
+@@ -485,7 +486,8 @@ static void writepages_done(struct osd_request *or, void *p)
+ 			exofs_writepage(page, NULL);
+ 		}
+ 
+-		length += bvec->bv_len;
++		length += min_t(u64,
++				pcol->opa.length - length, PAGE_CACHE_SIZE);
+ 	}
+ 
+ 	pcol_free(pcol);
+@@ -503,7 +505,7 @@ int write_exec(struct page_collect *pcol)
+ 	loff_t i_start = pcol->pg_first << PAGE_CACHE_SHIFT;
+ 	int ret;
+ 
+-	if (!pcol->bio)
++	if (!pcol->opa.pages)
+ 		return 0;
+ 
+ 	or = osd_start_request(pcol->sbi->s_dev, GFP_KERNEL);
+@@ -522,7 +524,7 @@ int write_exec(struct page_collect *pcol)
+ 
+ 	*pcol_copy = *pcol;
+ 
+-	osd_req_write(or, &obj, pcol_copy->bio, i_start);
++	osd_req_write(or, &obj, &pcol_copy->opa, i_start);
+ 	ret = exofs_async_op(or, writepages_done, pcol_copy, oi->i_cred);
+ 	if (unlikely(ret)) {
+ 		EXOFS_ERR("write_exec: exofs_async_op() Faild\n");
+@@ -532,7 +534,7 @@ int write_exec(struct page_collect *pcol)
+ 	atomic_inc(&pcol->sbi->s_curr_pending);
+ 	EXOFS_DBGMSG("write_exec(%lx, %lx) start=%llx length=%zx\n",
+ 		  pcol->inode->i_ino, pcol->pg_first, _LLU(i_start),
+-		  pcol->length);
++		  pcol->opa.length);
+ 	/* pages ownership was passed to pcol_copy */
+ 	_pcol_reset(pcol);
+ 	return 0;
+@@ -586,7 +588,7 @@ try_again:
+ 
+ 	if (unlikely(pcol->pg_first == -1)) {
+ 		pcol->pg_first = page->index;
+-	} else if (unlikely((pcol->pg_first + pcol->nr_pages) !=
++	} else if (unlikely((pcol->pg_first + pcol->opa.nr_pages) !=
+ 		   page->index)) {
+ 		/* Discontinuity detected, split the request */
+ 		ret = write_exec(pcol);
+@@ -595,7 +597,7 @@ try_again:
+ 		goto try_again;
+ 	}
+ 
+-	if (!pcol->bio) {
++	if (!pcol->opa.pages) {
+ 		ret = pcol_try_alloc(pcol);
+ 		if (unlikely(ret))
+ 			goto fail;
+@@ -608,7 +610,7 @@ try_again:
+ 	if (unlikely(ret)) {
+ 		EXOFS_DBGMSG("Failed pcol_add_page "
+ 			     "nr_pages=%u total_length=%zx\n",
+-			     pcol->nr_pages, pcol->length);
++			     pcol->opa.nr_pages, pcol->opa.length);
+ 
+ 		/* split the request, next loop will start again */
+ 		ret = write_exec(pcol);
 -- 
 1.6.2.1
 
