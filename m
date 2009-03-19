@@ -1,68 +1,40 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [RFC] FC pass thru - Rev V
-Date: Thu, 19 Mar 2009 10:57:07 +0900
-Message-ID: <20090319105704V.fujita.tomonori@lab.ntt.co.jp>
-References: <BAD9A31D-BCDA-46F9-AE12-E310B684498F@qlogic.com>
-	<49BA8E1E.6080809@linux.vnet.ibm.com>
-	<49BCCBC3.7020204@panasas.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 0/2] Evaluate TPGS setting for ALUA device handler
+Date: Thu, 19 Mar 2009 09:05:52 +0100
+Message-ID: <49C1FCE0.3040808@suse.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:51424 "EHLO sh.osrg.net"
+Received: from cantor.suse.de ([195.135.220.2]:36082 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753786AbZCSB5a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Mar 2009 21:57:30 -0400
-In-Reply-To: <49BCCBC3.7020204@panasas.com>
+	id S1750900AbZCSIFz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Mar 2009 04:05:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: sven@linux.vnet.ibm.com, seokmann.ju@qlogic.com, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, futjita.tomonori@lab.ntt.co.jp, giridhar.malavali@qlogic.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sun, 15 Mar 2009 11:34:59 +0200
-Boaz Harrosh <bharrosh@panasas.com> wrote:
+The ALUA device handler should only be attached if the 'TPGS' setting
+in the inquiry structure indicates so. So we should be evaluating the
+'tpgs' setting when trying to attach the ALUA device handler.
+This way we can get rid of the explicit device table in scsi_dh_alua
+and will support any ALUA capable device out-of-the-box.
 
-> Sven Schuetz wrote:
-> > Hi Seokmann,
-> >> Do we have time table for this support to make it available in the 
-> >> upstream?
-> >> I think it would be good to have the feature in 2.6.30 kernel, if 
-> >> possible.
-> >> I will continue to work on and add rest of helper function in the driver.
-> >>
-> >> Thank you,
-> >> Seokmann
-> >>
-> >> ---
-> > 
-> > I am preparing a patch for our zfcp driver and would love to see both 
-> > James&your fc_transport patch as well as the patches for our drivers in 
-> > 2.6.30 too :)
-> > 
-> > Tomo, Boaz - since the current implemantation is based on that patch:
-> > http://marc.info/?l-linux-scsi&m=122785157116659&w=2
-> > which is not agreed upon - can we start the discussion again?
-> > My understanding from the discussion back then was that Boaz proposed a 
-> > change to the patch which Tomo agreed to. See here: 
-> > http://marc.info/?l=linux-scsi&m=122812818916080&w=2
-> > However, a new version of the patch was never posted. So would a patch 
-> > with the proposed change be ok for the two of you which could be posted 
-> > to Jens?
-> > I really appreciate all of your efforts, thanks a lot for that :-)
-> > Have a nice weekend,
-> > Sven
-> 
-> My humble opinion is: That none of the patches should go in. It is easy
-> enough to use the API as it is, and it is more correct then any of the
-> suggested alternatives.
+This is a repost of the patchset send yesterday, including
+the suggestions from James B. to just pull the tpgs setting
+off the inquiry data instead of adding a new field in the
+scsi_device structure.
 
-It's pretty clear that the current API is pretty confusing. If not,
-why do you need to tell SCSI developers how to use it again and again?
-
-Please don't say 'add comments along with the API'. Commenting doesn't
-fix the confusing API. People can use good API without any
-explanation.
-
-But it's better to live with the current API for now. We can fix the
-API latter. I'll read Tejun's block cleanup patchset and figure out
-what to do.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
