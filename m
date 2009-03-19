@@ -1,53 +1,36 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCHSET  0/2] Don't let blk_put_request leak BIOs
-Date: Thu, 19 Mar 2009 12:33:44 +0100
-Message-ID: <20090319113343.GF27476@kernel.dk>
-References: <49C21C5A.6030105@panasas.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12893] Race condition can cause two devices to get assigned the same device minor number.
+Date: Thu, 19 Mar 2009 04:42:39 -0700 (PDT)
+Message-ID: <20090319114239.67E2110800E@picon.linux-foundation.org>
+References: <bug-12893-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:46592 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751201AbZCSLdr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Mar 2009 07:33:47 -0400
-Content-Disposition: inline
-In-Reply-To: <49C21C5A.6030105@panasas.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:47969 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751614AbZCSLns (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Mar 2009 07:43:48 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n2JBgdEp006115
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2009 04:43:15 -0700
+In-Reply-To: <bug-12893-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
+To: linux-scsi@vger.kernel.org
 
-On Thu, Mar 19 2009, Boaz Harrosh wrote:
-> Hi Jens
-> 
-> You never commented on these patches. Please have a look?
-> 
-> The issue is that if we map some memory into a request but then
-> do not execute it. Then calling blk_put_request() will leak the bio(s)
-> unless one does an ugly code like:
-> -	struct bio *bio;
-> -
-> -	while ((bio = rq->bio) != NULL) {
-> -		rq->bio = bio->bi_next;
-> -		bio_endio(bio, 0);
-> -	}
+http://bugzilla.kernel.org/show_bug.cgi?id=12893
 
-Sorry, I think this is a horrible design. blk_put_request() doesn't care
-about any data attachments, in fact (if possible) it should go BUG() if
-the request hasn't been completed in some way or other. It deals with
-the deallocation part, blk_get_request() doesn't attach any data. The
-end result with code like the above is an assymmetric API.
 
-> This problem arise in OSD when we can fail to setup the write
-> or the read side and then we must cleanup the other half.
-> Same problem exist in bsg, on bidi commands. But there the bio
-> is just leaked on the error path, it does not do the ugly loop above.
+alan@lxorguk.ukuu.org.uk changed:
 
-These drivers should just be fixed, then.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |CLOSED
+         Resolution|                            |PATCH_ALREADY_AVAILABLE
 
-So if you have spotted this problem in eg bsg, then please send a patch
-for that to Tomo!
+
+
 
 -- 
-Jens Axboe
-
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
