@@ -1,91 +1,78 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 1/5] bfa: Brocade BFA FC SCSI driver (bfad)
-Date: Thu, 19 Mar 2009 12:19:17 -0500
-Message-ID: <49C27E95.4050401@cs.wisc.edu>
-References: <200903142003.n2EK39r4031547@blc-10-6.brocade.com>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: Re: [PATCH 1/3] scsi_dh: Add modalias support for SCSI targets
+Date: Thu, 19 Mar 2009 11:54:40 -0700
+Message-ID: <1237488880.26341.15.camel@chandra-ubuntu>
+References: <20090318013615.26548.36303.sendpatchset@chandra-ubuntu>
+	 <20090318013621.26548.10529.sendpatchset@chandra-ubuntu>
+	 <ac3eb2510903181130s5dd1b1caje579d765fd338f6f@mail.gmail.com>
+	 <1237403902.14147.25.camel@chandra-ubuntu>
+Reply-To: sekharan@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759978AbZCSRTl@vger.kernel.org>
-In-Reply-To: <200903142003.n2EK39r4031547@blc-10-6.brocade.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jing Huang <huangj@brocade.com>
-Cc: James.Bottomley@HansenPartnership.com, kgudipat@brocade.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rvadivel@brocade.com, vravindr@brocade.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:51818 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753523AbZCSSvu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Mar 2009 14:51:50 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e35.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n2JIlJmM029872
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2009 12:47:19 -0600
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n2JIpmAd206546
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2009 12:51:48 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n2JIph3t010606
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2009 12:51:47 -0600
+In-Reply-To: <1237403902.14147.25.camel@chandra-ubuntu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-some quick general comments:
-
-- Patch needs to be run through checkpatch.pl again.
-- If you are not implementing a callout like issue_lip then you do not 
-need to implement a function that does nothing.
-- Remove the OS compat stuff that just calls right into the linux 
-function. For example kill bfad_os_pci_probe.
-
-Jing Huang wrote:
-> +
-> +/**
-> + * Allocate a Scsi_Host for a port.
-> + */
-> +int
-> +bfad_im_scsi_host_alloc(struct bfad_s *bfad, struct bfad_im_port_s *im_port)
-> +{
-> +	int error = 1;
-> +
-> +	if (!idr_pre_get(&bfad_im_port_index, GFP_KERNEL)) {
-> +		printk(KERN_WARNING "idr_pre_get failure\n");
-> +		goto out;
-> +	}
-> +
-> +	error = idr_get_new(&bfad_im_port_index, im_port,
-> +					 &im_port->idr_id);
-> +	if (error) {
-> +		printk(KERN_WARNING "idr_get_new failure\n");
-> +		goto out;
-> +	}
-> +
-> +	im_port->shost = bfad_os_scsi_host_alloc(im_port, bfad);
-> +	if (!im_port->shost) {
-> +		error = 1;
-> +		goto out_free_idr;
-> +	}
-> +
-> +	im_port->shost->hostdata[0] = (unsigned long)im_port;
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: linux-scsi@vger.kernel.org, pjones@redhat.com, michaelc@cs.wisc.edu, James.Bottomley@hansenpartnership.com
 
 
+On Wed, 2009-03-18 at 12:18 -0700, Chandra Seetharaman wrote:
+> On Wed, 2009-03-18 at 19:30 +0100, Kay Sievers wrote:
+> > On Wed, Mar 18, 2009 at 02:36, Chandra Seetharaman <sekharan@us.ibm.com> wrote:
+> > > From: Peter Jones <pjones@redhat.com>
+> > >
+> > > This patch allows the use of modaliases on scsi targets to correctly
+> > > load scsi device handler modules when the devices are found.
+> > > +++ linux-2.6.28/include/linux/mod_devicetable.h
+> > > @@ -454,4 +454,10 @@ struct dmi_system_id {
+> > >
+> > >  #define DMI_MATCH(a, b)        { a, b }
+> > >
+> > > +struct scsi_dh_device_id {
+> > > +       unsigned char type;
+> > > +       char vendor[9];
+> > > +       char model[17];
+> > > +};
+> > 
+> > Doesn't the static array waste space, when used for the long lists of
+> > entries stuffed in arrays of this structure? It will carry a lot of \0
+> > chars, and identical strings can not be de-duplicated by the compiler,
+> > unlike when pointers are used?
+> > 
+> 
+> I had some problems when we used the pointers instead of arrays. Don't
+> recall it now.
+> 
+> Will retry and report.
 
-I think I asked about this before. Why do you just not allocate the bfad 
-or im_port in the hostdata? What is the struct hierarchy? Do you have 
-one bfad for the entire HBA/pci_device then have a im_port for each port 
-on the hba?
+Hi Kay,
 
+I tried it and realized modpost is what is giving the problem.
 
+When the array for vendor and model is changed to pointers, modpost (at
+the end of make modules) dies with a segmentation fault. 
 
-> +	im_port->shost->unique_id = im_port->idr_id;
-> +	im_port->shost->this_id = -1;
-> +	im_port->shost->max_id = MAX_FCP_TARGET;
-> +	im_port->shost->max_lun = MAX_FCP_LUN;
-> +	im_port->shost->max_cmd_len = 16;
-> +	im_port->shost->can_queue = bfad->cfg_data.ioc_queue_depth;
-> +	im_port->shost->transportt = bfad_im_scsi_transport_template;
-> +
-> +	error = bfad_os_scsi_add_host(im_port->shost, im_port, bfad);
-> +	if (error) {
-> +		printk(KERN_WARNING "bfad_os_scsi_add_host failure %d\n",
-> +							error);
-> +		goto out_fc_rel;
-> +	}
-> +
-> +	/* setup host fixed attribute if the lk supports */
-> +	bfad_os_fc_host_init(im_port);
-> +
-> +	return 0;
-> +
-> +out_fc_rel:
-> +	scsi_host_put(im_port->shost);
-> +
-> +out_free_idr:
-> +	idr_remove(&bfad_im_port_index, im_port->idr_id);
-> +out:
-> +	return error;
-> +}
-> +
+Peter, Any details that you can provide ?
+
+> > Thanks,
+> > Kay
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
