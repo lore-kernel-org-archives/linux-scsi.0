@@ -1,70 +1,145 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCHSET  0/2] Don't let blk_put_request leak BIOs
-Date: Thu, 19 Mar 2009 12:20:10 +0200
-Message-ID: <49C21C5A.6030105@panasas.com>
+Subject: [PATCH 1/2] TESTING: Don't let blk_put_request leak BIOs
+Date: Thu, 19 Mar 2009 12:24:58 +0200
+Message-ID: <49C21D7A.3040606@panasas.com>
+References: <49C21C5A.6030105@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:47503 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750934AbZCSKV0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Mar 2009 06:21:26 -0400
-Received: by nf-out-0910.google.com with SMTP id d21so79016nfb.21
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2009 03:21:23 -0700 (PDT)
+Received: from gw-ca.panasas.com ([209.116.51.66]:24052 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752100AbZCSK0N (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Mar 2009 06:26:13 -0400
+In-Reply-To: <49C21C5A.6030105@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Tejun Heo <tj@kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
 
-Hi Jens
 
-You never commented on these patches. Please have a look?
+If a block ULD had allocated a request and mapped some memory into it,
+but then for some reason failed to execute the request through one of
+the blk_execute_request_xxx routines. Then the associated bio would leak,
+unless ULD resorts to low-level loops intimate of block internals.
 
-The issue is that if we map some memory into a request but then
-do not execute it. Then calling blk_put_request() will leak the bio(s)
-unless one does an ugly code like:
--	struct bio *bio;
+For this to work I have fixed a couple of places in block/ where
+request->bio != NULL ownership was not honoured. And a small cleanup
+at sg_io() while at it.
+
+[TESTING]
+  This code will also catch situations where LLD failed to complete
+  the request before aborting it. Such situations are a BUG. Should we
+  use WARN_ON_ONCE() in that case. The situation above is possible and
+  can happen normally in memory pressure situations so maybe we should
+  devise a bit-flag that ULD denotes that the request was aborted and
+  only WARN_ON if flag was not set.
+  For the duration of linux-next I'm leaving the WARN_ON to catch any
+  problems like found above, and possible memory leaks. Before submission
+  a complimentary patch should remove the WARN_ON. (Or this patch can be
+  rebased)
+
+  Please comment on possible pitfalls.
+
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ block/blk-core.c   |   17 +++++++++++++++++
+ block/blk-merge.c  |    2 ++
+ block/scsi_ioctl.c |   21 ++++-----------------
+ 3 files changed, 23 insertions(+), 17 deletions(-)
+
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 29bcfac..9ee243e 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1055,6 +1055,22 @@ void part_round_stats(int cpu, struct hd_struct *part)
+ EXPORT_SYMBOL_GPL(part_round_stats);
+ 
+ /*
++ * If one of the blk_rq_map_xxx() was called but the request was not
++ * executed by the block layer, then we must release BIOs. Otherwise they
++ * will leak.
++ */
++static void _abort_unexecuted_bios(struct request *req)
++{
++	struct bio *bio;
++
++	WARN_ON(req->bio != NULL);
++	while (unlikely((bio = req->bio) != NULL)) {
++		req->bio = bio->bi_next;
++		bio_endio(bio, 0);
++	}
++}
++
++/*
+  * queue lock must be held
+  */
+ void __blk_put_request(struct request_queue *q, struct request *req)
+@@ -1066,6 +1082,7 @@ void __blk_put_request(struct request_queue *q, struct request *req)
+ 
+ 	elv_completed_request(q, req);
+ 
++	_abort_unexecuted_bios(req);
+ 	/*
+ 	 * Request may not have originated from ll_rw_blk. if not,
+ 	 * it didn't come out of our reserved rq pools
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 5a244f0..e39cb24 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -403,6 +403,8 @@ static int attempt_merge(struct request_queue *q, struct request *req,
+ 	if (blk_rq_cpu_valid(next))
+ 		req->cpu = next->cpu;
+ 
++	/* owner-ship of bio passed from next to req */
++	next->bio = NULL;
+ 	__blk_put_request(q, next);
+ 	return 1;
+ }
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index ee9c67d..626ee27 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -214,21 +214,10 @@ static int blk_fill_sghdr_rq(struct request_queue *q, struct request *rq,
+ 	return 0;
+ }
+ 
+-/*
+- * unmap a request that was previously mapped to this sg_io_hdr. handles
+- * both sg and non-sg sg_io_hdr.
+- */
+-static int blk_unmap_sghdr_rq(struct request *rq, struct sg_io_hdr *hdr)
+-{
+-	blk_rq_unmap_user(rq->bio);
+-	blk_put_request(rq);
+-	return 0;
+-}
 -
--	while ((bio = rq->bio) != NULL) {
--		rq->bio = bio->bi_next;
--		bio_endio(bio, 0);
--	}
+ static int blk_complete_sghdr_rq(struct request *rq, struct sg_io_hdr *hdr,
+ 				 struct bio *bio)
+ {
+-	int r, ret = 0;
++	int ret = 0;
+ 
+ 	/*
+ 	 * fill in all the output members
+@@ -253,12 +242,10 @@ static int blk_complete_sghdr_rq(struct request *rq, struct sg_io_hdr *hdr,
+ 			ret = -EFAULT;
+ 	}
+ 
+-	rq->bio = bio;
+-	r = blk_unmap_sghdr_rq(rq, hdr);
+-	if (ret)
+-		r = ret;
++	blk_rq_unmap_user(bio);
++	blk_put_request(rq);
+ 
+-	return r;
++	return ret;
+ }
+ 
+ static int sg_io(struct request_queue *q, struct gendisk *bd_disk,
+-- 
+1.6.2.1
 
-This problem arise in OSD when we can fail to setup the write
-or the read side and then we must cleanup the other half.
-Same problem exist in bsg, on bidi commands. But there the bio
-is just leaked on the error path, it does not do the ugly loop above.
 
-My proposed solution is that blk_put_request() should see if
-there is a left-over bio and do the deallocation of the bio's
-
-A side effect of this is if before, do to some bugs, drivers failed
-to complete the request fully, the bio would leak. Now it will not
-any more.
-
-All above is the theory, in practice some code was abusing the use
-of request->bio and it needed fixing. I tried to audit all code path
-that call blk_put_request() and fix them.
-
-But it is still dangerous and we should run with this patch in
-linux-next and the block tree and see if the WARN_ON at patch [PATCH 1/2]
-does not trigger. I have marked this patch as TESTING. The final patch
-submitted to Linus should be Minus this WARN_ON.
-
-James
-I'm also sending the osd patch through Jens's tree. So there will not
-be ordering dependency problems from two trees. Is that OK? do I need
-your ACK-BY?
-
-The patches are:
-[PATCH 1/2] TESTING: Don't let blk_put_request leak BIOs
-    This is for linux-next. Before final submission to Linus a patch
-    minus the WARN_ON (and TESTING:) should be submitted.
-
-[PATCH 2/2] libosd: Don't let osd abuse block internals, now that it's fixed
-    This can go through Jens tree, I will make sure it will not conflict
-    with any scsi-misc patches.
-
-Thank you in advance
-Boaz
