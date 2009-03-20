@@ -1,116 +1,90 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: kernel panics and errors on lsi 1064e
-Date: Fri, 20 Mar 2009 15:27:24 +0000
-Message-ID: <1237562844.12008.55.camel@localhost.localdomain>
-References: <Pine.LNX.4.64.0903201242300.27079@tassadar.physics.auth.gr>
+Subject: Re: aacraid: SCSI bus appears hung
+Date: Fri, 20 Mar 2009 15:42:58 +0000
+Message-ID: <1237563778.12008.65.camel@localhost.localdomain>
+References: <gq09cm$abq$2@ger.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:53215 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:36831 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754535AbZCTP1a (ORCPT
+	by vger.kernel.org with ESMTP id S1752908AbZCTPnE (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Mar 2009 11:27:30 -0400
-In-Reply-To: <Pine.LNX.4.64.0903201242300.27079@tassadar.physics.auth.gr>
+	Fri, 20 Mar 2009 11:43:04 -0400
+In-Reply-To: <gq09cm$abq$2@ger.gmane.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dimitris Zilaskos <dzila@tassadar.physics.auth.gr>
-Cc: linux-scsi@vger.kernel.org, "Moore, Eric" <Eric.Moore@lsi.com>
+To: Thomas Mueller <thomas@chaschperli.ch>
+Cc: linux-scsi@vger.kernel.org, aacraid@adaptec.com
 
-On Fri, 2009-03-20 at 12:44 +0200, Dimitris Zilaskos wrote:
-> Hi,
+On Fri, 2009-03-20 at 14:31 +0000, Thomas Mueller wrote:
+> hi 
 > 
-> I was having problems with two nodes rhel4 x86_64 compatible nodes with
-> this:
+> this is on debian etch with kernel 2.6.26 (backports.org) and aacraid 
+> 1.1-5[2456]-ms. the adapter is an adaptec 5805 (rebranded as Supermicro 
+> AOC-USAS-S8iR, f/w 15758), 4+1 WD VelociRaptor 300GB disks, RAID10.
 > 
-> 08:00.0 SCSI storage controller: LSI Logic / Symbios Logic SAS1064E
-> PCI-Express Fusion-MPT SAS (rev 04)
+> the disks aren't very good. about every 2 months the background consistency
+> check detects defectiv blocks on some disks. the hotspare disk takes
+>  over. that's where the  troubles start.
 > 
-> the nodes would panic after doing some task (download a few gigabytes 
-> from net and run a few computations)
+> Mar 19 20:44:30 ib001 kernel: [4312641.290691] aacraid: Host adapter abort request (0,0,0,0)
+> Mar 19 20:44:30 ib001 kernel: [4312641.290792] aacraid: Host adapter reset request. SCSI hang ?
+> Mar 19 20:57:53 ib001 kernel: [4312700.999164] aacraid: Host adapter abort request (0,0,0,0)
+> Mar 19 20:57:53 ib001 kernel: [4312880.704289] aacraid: Host adapter abort request (0,0,0,0)
+> Mar 19 20:57:53 ib001 kernel: [4312880.704388] aacraid: Host adapter reset request. SCSI hang ?
+> Mar 19 20:57:53 ib001 kernel: [4312941.412927] aacraid: Host adapter abort request (0,0,0,0)
+> Mar 19 20:57:53 ib001 kernel: [4312941.413039] aacraid: Host adapter reset request. SCSI hang ?
+> Mar 19 20:57:53 ib001 kernel: [4312951.930474] sd 0:0:0:0: [sda] Result: hostbyte=DID_OK driverbyte=DRIVER_TIMEOUT,SUGGEST_OK
+> Mar 19 20:57:53 ib001 kernel: [4313001.400935] aacraid: Host adapter abort request (0,0,0,0)
+> Mar 19 20:57:53 ib001 kernel: [4313001.401042] aacraid: Host adapter reset request. SCSI hang ?
+> Mar 19 20:57:53 ib001 kernel: [4313061.796830] aacraid: Host adapter abort request (0,0,0,0)
+> Mar 19 20:57:53 ib001 kernel: [4313061.796930] aacraid: Host adapter reset request. SCSI hang ?
+> Mar 19 20:57:53 ib001 kernel: [4313122.675845] aacraid: Host adapter abort request (0,0,0,0)
+> Mar 19 20:57:53 ib001 kernel: [4313122.675931] aacraid: Host adapter reset request. SCSI hang ?
+> Mar 19 20:57:53 ib001 kernel: [4313183.252118] aacraid: Host adapter abort request (0,0,0,0)
+> Mar 19 20:57:53 ib001 kernel: [4313183.252227] aacraid: Host adapter reset request. SCSI hang ?
+> Mar 19 20:57:53 ib001 kernel: [4313239.408236] aacraid: Host adapter abort request (0,0,0,0)
+> Mar 19 20:57:53 ib001 kernel: [4313239.408337] aacraid: Host adapter reset request. SCSI hang ?
+> Mar 19 20:57:53 ib001 kernel: [4313295.503066] aacraid: Host adapter abort request (0,0,0,0)
+> Mar 19 20:57:53 ib001 kernel: [4313295.503145] aacraid: Host adapter reset request. SCSI hang ?
+> Mar 19 20:57:53 ib001 kernel: [4313305.669682] sd 0:0:0:0: [sda] Result: hostbyte=DID_OK driverbyte=DRIVER_TIMEOUT,SUGGEST_OK
+> Mar 19 20:57:53 ib001 kernel: [4313351.860988] aacraid: Host adapter abort request (0,0,0,0)
+> Mar 19 20:57:53 ib001 kernel: [4313351.861020] aacraid: Host adapter abort request (0,0,0,0)
+> Mar 19 20:57:53 ib001 kernel: [4313351.861047] aacraid: Host adapter abort request (0,0,0,0)
+> Mar 19 20:57:53 ib001 kernel: [4313351.861073] aacraid: Host adapter abort request (0,0,0,0)
+> Mar 19 20:57:53 ib001 kernel: [4313351.861100] aacraid: Host adapter abort request (0,0,0,0)
+> Mar 19 20:57:53 ib001 kernel: [4313351.861191] aacraid: Host adapter reset request. SCSI hang ?
+> Mar 19 20:57:53 ib001 kernel: [4313413.717370] aacraid: SCSI bus appears hung
+> Mar 19 20:58:09 ib001 kernel: [4313517.692627] sd 0:0:0:0: [sda] 585084928 512-byte hardware sectors (299563 MB)
+> Mar 19 20:58:09 ib001 kernel: [4313517.692627] sd 0:0:0:0: [sda] Write Protect is off
+> Mar 19 20:58:09 ib001 kernel: [4313517.692627] sd 0:0:0:0: [sda] Mode Sense: 06 00 10 00
+> Mar 19 20:58:09 ib001 kernel: [4313517.692627] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, supports DPO and FUA
+> Mar 19 21:46:34 ib001 kernel: [4317148.271355] sd 0:0:0:0: [sda] 585084928 512-byte hardware sectors (299563 MB)
+> Mar 19 21:46:34 ib001 kernel: [4317148.271355] sd 0:0:0:0: [sda] Write Protect is off
+> Mar 19 21:46:34 ib001 kernel: [4317148.271355] sd 0:0:0:0: [sda] Mode Sense: 06 00 10 00
+> Mar 19 21:46:34 ib001 kernel: [4317148.271355] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, supports DPO and FUA
+> (many "process hung" kernel warnings suppressed)
 > 
-> screenshots of two panics
+> the aacraid seems to be unresponsive after this event. blocking the system.
+> on top of the aacraid device there is drbd running. which 
+> also gets mad about aacraid not responding - and then 
+> the second drbd node (identical machine) also gets stuck.
 > 
-> http://img10.imageshack.us/img10/3184/camxgemspanic.jpg
-> http://img10.imageshack.us/img10/174/wn024.jpg
+> sometimes this is only "resolveable" by rebooting the host. 
 > 
+> same problem on 2 other servers with nearly identical hardware.
 > 
-> Prior to the panic the systems would be up for couple of hours to a couple
-> of days and log this when say a gzip was running:
+> is this expected on an disk failure event?
 > 
-> Mar  5 16:19:30 wn023.grid.auth.gr kernel: mptscsi: ioc0: attempting task
-> abort! (sc=000001019199d4c0)
-> Mar  5 16:19:30 wn023.grid.auth.gr kernel: scsi7 : destination target 11,
-> lun 0
-> Mar  5 16:19:30 wn023.grid.auth.gr kernel:         command = Write (10) 00
-> 01 cd ab d3 00 01 40 00
-> Mar  5 16:19:30 wn023.grid.auth.gr kernel: mptbase: ioc0: IOCStatus=8000
-> LogInfo=31120403 Originator={PL}, Code={Abort}, SubCode(0x0403)
-> Mar  5 16:19:30 wn023.grid.auth.gr kernel: mptbase: ioc0: IOCStatus=8048
-> LogInfo=31140000 Originator={PL}, Code={IO Executed}, SubCode(0x0000)
-> Mar  5 16:19:30 wn023.grid.auth.gr kernel: mptscsi: ioc0: task abort:
-> SUCCESS (sc=000001019199d4c0)
-> Mar  5 16:19:30 wn023.grid.auth.gr kernel: mptbase: ioc0: IOCStatus=804b
-> LogInfo=31120403 Originator={PL}, Code={Abort}, SubCode(0x0403)
-> Mar  5 16:19:30 wn023.grid.auth.gr kernel: mptscsi: ioc0: attempting task
-> abort! (sc=0000010024283d00)
-> Mar  5 16:19:30 wn023.grid.auth.gr kernel: scsi7 : destination target 11,
-> lun 0
-> Mar  5 16:19:30 wn023.grid.auth.gr kernel:         command = Write (10) 00
-> 01 cd ad 13 00 01 40 00
-> Mar  5 16:19:30 wn023.grid.auth.gr kernel: mptscsi: ioc0: attempting task
-> abort! (sc=0000010102db4ac0)
-> Mar  5 16:19:30 wn023.grid.auth.gr kernel: scsi7 : destination target 11,
-> lun 0
-> Mar  5 16:19:30 wn023.grid.auth.gr kernel:         command = Write (10) 00
-> 01 cd ae 53 00 01 40 00
-> Mar  5 16:19:30 wn023.grid.auth.gr kernel: mptscsi: ioc0: attempting task
-> abort! (sc=0000010102db4cc0)
-> Mar  5 16:19:30 wn023.grid.auth.gr kernel: scsi7 : destination target 11,
-> lun 0
-> Mar  5 16:19:30 wn023.grid.auth.gr kernel:         command = Write (10) 00
-> 01 cd af 93 00 01 40 00
-> Mar  5 16:19:30 wn023.grid.auth.gr kernel: mptscsi: ioc0: attempting task
-> abort! (sc=0000010102db40c0)
+> maybe i should try the vanilla 2.6.28.x kernel? 
 
-This is some type of internal fusion firmware failure.  It comes back to
-the driver needing an abort and there's some type of inability to do
-this.
-
-> Memtest for days was running ok.
-> 
-> I found this: https://bugzilla.redhat.com/show_bug.cgi?id=208033
-> 
-> and I upgraded my firmware from
-> http://downloadcenter.intel.com/filter_results.aspx?strTypes=all&ProductID=2
-> 487&OSFullName=OS+Independent&lang=eng&strOSs=38&submit=Go
-
-So that's the right thing to do (or better yet, contact LSI support to
-see if they have a newer version).
-
-> After the upgrade the systems don't seem to panic. But they log this
-> 
-> 
-> mptbase: ioc0: IOCStatus=8000 LogInfo=31123000 Originator={PL},
-> Code={Abort}, SubCode(0x3000)
-> mptbase: ioc0: IOCStatus=804b LogInfo=31123000 Originator={PL},
-> Code={Abort}, SubCode(0x3000)
-> mptbase: ioc0: IOCStatus=804b LogInfo=31123000 Originator={PL},
-> Code={Abort}, SubCode(0x3000)
-> mptbase: ioc0: IOCStatus=804b LogInfo=31123000 Originator={PL},
-> Code={Abort}, SubCode(0x3000)
-> mptbase: ioc0: IOCStatus=804b LogInfo=31123000 Originator={PL},
-> Code={Abort}, SubCode(0x3000)
-
-This has become a log information, so the IOC firmware now dealt with
-whatever the problem was.
-
-
-> Is something broken here? I am close to ask for the systems to be replaced.
-
-You imply that with the firmware upgrade, nothing now goes wrong, so
-everything sounds to be OK.
+Part of the problem seems to be the way the aacraid firmware is reacting
+to disk failures.  It's possible it might recovery faster with a newer
+kernel (I seem to remember seeing "hit it with a bigger hammer" type
+patches going into that).  However, your basic problem of running RAID
+on unreliable disks will still remain.
 
 James
 
