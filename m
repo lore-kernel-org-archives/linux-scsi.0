@@ -1,47 +1,48 @@
 From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 5/5] ibmvfc: Driver version 1.0.5
-Date: Fri, 20 Mar 2009 15:44:40 -0500
-Message-ID: <200903202044.n2KKiaM8006541@d01av03.pok.ibm.com>
+Subject: [PATCH 2/5] ibmvfc: Fixup module parms attributes
+Date: Fri, 20 Mar 2009 15:44:37 -0500
+Message-ID: <200903202044.n2KKiVOC004363@d03av03.boulder.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:59131 "EHLO e3.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753898AbZCTUoj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Mar 2009 16:44:39 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e3.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n2KKfbNU012422
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Mar 2009 16:41:37 -0400
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n2KKibv1172580
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Mar 2009 16:44:37 -0400
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n2KKiaB2006659
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Mar 2009 16:44:37 -0400
+Received: from e33.co.us.ibm.com ([32.97.110.151]:54175 "EHLO
+	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752074AbZCTUoe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Mar 2009 16:44:34 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e33.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n2KKh7wC001767
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Mar 2009 14:43:07 -0600
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n2KKiWH1176016
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Mar 2009 14:44:32 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n2KKiWKk004380
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Mar 2009 14:44:32 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
 
-Bump driver version to 1.0.5.
+The ibmvfc driver really does not handle dynamically changing disc_threads.
+To change this dynamically would cause confusion in the driver regarding
+the number of event structs allocated. Fix this by simply not allowing
+disc_threads to be changed at runtime.
 
 Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 ---
 
- drivers/scsi/ibmvscsi/ibmvfc.h |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/ibmvscsi/ibmvfc.h~ibmvfc_driver_1_0_5 drivers/scsi/ibmvscsi/ibmvfc.h
---- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.h~ibmvfc_driver_1_0_5	2009-03-19 15:25:35.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.h	2009-03-19 15:25:49.000000000 -0500
-@@ -29,8 +29,8 @@
- #include "viosrp.h"
- 
- #define IBMVFC_NAME	"ibmvfc"
--#define IBMVFC_DRIVER_VERSION		"1.0.4"
--#define IBMVFC_DRIVER_DATE		"(November 14, 2008)"
-+#define IBMVFC_DRIVER_VERSION		"1.0.5"
-+#define IBMVFC_DRIVER_DATE		"(March 19, 2009)"
- 
- #define IBMVFC_DEFAULT_TIMEOUT	60
- #define IBMVFC_ADISC_CANCEL_TIMEOUT	45
+diff -puN drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_module_parm_fixups drivers/scsi/ibmvscsi/ibmvfc.c
+--- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_module_parm_fixups	2009-03-02 13:13:22.000000000 -0600
++++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.c	2009-03-18 08:48:42.000000000 -0500
+@@ -75,7 +75,7 @@ MODULE_PARM_DESC(max_lun, "Maximum allow
+ module_param_named(max_targets, max_targets, uint, S_IRUGO);
+ MODULE_PARM_DESC(max_targets, "Maximum allowed targets. "
+ 		 "[Default=" __stringify(IBMVFC_MAX_TARGETS) "]");
+-module_param_named(disc_threads, disc_threads, uint, S_IRUGO | S_IWUSR);
++module_param_named(disc_threads, disc_threads, uint, S_IRUGO);
+ MODULE_PARM_DESC(disc_threads, "Number of device discovery threads to use. "
+ 		 "[Default=" __stringify(IBMVFC_MAX_DISC_THREADS) "]");
+ module_param_named(debug, ibmvfc_debug, uint, S_IRUGO | S_IWUSR);
 _
