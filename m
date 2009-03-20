@@ -1,63 +1,52 @@
-From: Peter Jones <pjones@redhat.com>
-Subject: Re: [PATCH 1/3] scsi_dh: Add modalias support for SCSI targets
-Date: Fri, 20 Mar 2009 14:24:09 -0400
-Message-ID: <49C3DF49.8050408@redhat.com>
-References: <20090318013615.26548.36303.sendpatchset@chandra-ubuntu>	 <20090318013621.26548.10529.sendpatchset@chandra-ubuntu>	 <ac3eb2510903181130s5dd1b1caje579d765fd338f6f@mail.gmail.com>	 <1237403902.14147.25.camel@chandra-ubuntu> <1237488880.26341.15.camel@chandra-ubuntu>
+From: Dimitris Zilaskos <dzila@tassadar.physics.auth.gr>
+Subject: Re: kernel panics and errors on lsi 1064e
+Date: Fri, 20 Mar 2009 22:11:23 +0200 (EET)
+Message-ID: <Pine.LNX.4.64.0903202204490.1954@tassadar.physics.auth.gr>
+References: <Pine.LNX.4.64.0903201242300.27079@tassadar.physics.auth.gr>
+ <1237562844.12008.55.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:53975 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753703AbZCTSYi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Mar 2009 14:24:38 -0400
-In-Reply-To: <1237488880.26341.15.camel@chandra-ubuntu>
+Received: from tassadar.physics.auth.gr ([155.207.123.25]:37727 "EHLO
+	tassadar.physics.auth.gr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751060AbZCTULf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Mar 2009 16:11:35 -0400
+In-Reply-To: <1237562844.12008.55.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sekharan@linux.vnet.ibm.com
-Cc: Kay Sievers <kay.sievers@vrfy.org>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, James.Bottomley@hansenpartnership.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, "Moore, Eric" <Eric.Moore@lsi.com>
 
-On 03/19/2009 02:54 PM, Chandra Seetharaman wrote:
-> On Wed, 2009-03-18 at 12:18 -0700, Chandra Seetharaman wrote:
->> On Wed, 2009-03-18 at 19:30 +0100, Kay Sievers wrote:
->>> On Wed, Mar 18, 2009 at 02:36, Chandra Seetharaman <sekharan@us.ibm.com> wrote:
->>>> From: Peter Jones <pjones@redhat.com>
->>>>
->>>> This patch allows the use of modaliases on scsi targets to correctly
->>>> load scsi device handler modules when the devices are found.
->>>> +++ linux-2.6.28/include/linux/mod_devicetable.h
->>>> @@ -454,4 +454,10 @@ struct dmi_system_id {
->>>>
->>>>  #define DMI_MATCH(a, b)        { a, b }
->>>>
->>>> +struct scsi_dh_device_id {
->>>> +       unsigned char type;
->>>> +       char vendor[9];
->>>> +       char model[17];
->>>> +};
->>> Doesn't the static array waste space, when used for the long lists of
->>> entries stuffed in arrays of this structure? It will carry a lot of \0
->>> chars, and identical strings can not be de-duplicated by the compiler,
->>> unlike when pointers are used?
->>>
->> I had some problems when we used the pointers instead of arrays. Don't
->> recall it now.
->>
->> Will retry and report.
-> 
-> Hi Kay,
-> 
-> I tried it and realized modpost is what is giving the problem.
-> 
-> When the array for vendor and model is changed to pointers, modpost (at
-> the end of make modules) dies with a segmentation fault. 
-> 
-> Peter, Any details that you can provide ?
 
-In this case, the tail wags the dog -- it's a string instead of a pointer basicallly so that the new bits in file2alias.c can look like the other parts of that same file.  It's sortof inconvenient for them to be pointers in there...
+Thank you for you reply,
+
+> So that's the right thing to do (or better yet, contact LSI support to
+> see if they have a newer version).
+
+Will do so
+
+> This has become a log information, so the IOC firmware now dealt with
+> whatever the problem was.
+>
+>
+>> Is something broken here? I am close to ask for the systems to be replaced.
+>
+> You imply that with the firmware upgrade, nothing now goes wrong, so
+> everything sounds to be OK.
+
+
+Well it has been only 3 days, and these strange messages keep showing up, 
+so I am still worried because it will be harder to get them replaced later 
+and at the same time have the users complaining. But it looks like my 
+options are limited.
+
+
+
 
 -- 
-        Peter
-
-If the facts don't fit the theory, change the facts.
-		-- Einstein
+=============================================================================
+Dimitris Zilaskos
+GridAUTH Operations Centre @ Aristotle University of Thessaloniki , Greece
+Tel: +302310998988 Fax: +302310994309
+http://www.grid.auth.gr 
+=============================================================================
