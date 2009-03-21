@@ -1,24 +1,28 @@
-From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
-Subject: 2.6.29-rc8-git5: Reported regressions from 2.6.28
-Date: Sat, 21 Mar 2009 17:28:37 +0100 (CET)
-Message-ID: <GPBuLTara4J.A.3kH.TZTxJB@chimera>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: 2.6.29-rc8-git5: Reported regressions 2.6.27 -> 2.6.28
+Date: Sat, 21 Mar 2009 18:01:13 +0100 (CET)
+Message-ID: <HPkmj74uawF.A.iqE.M8TxJB@chimera>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8BIT
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ogre.sisk.pl ([217.79.144.158]:52071 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753401AbZCUTkf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Mar 2009 15:40:35 -0400
 Content-Disposition: inline
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: Adrian Bunk <bunk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Stable Kernel Team <stable@kernel.org>
 
-This message contains a list of some regressions from 2.6.28, for which there
-are no fixes in the mainline I know of.  If any of them have been fixed already,
-please let me know.
+This message contains a list of some regressions introduced between 2.6.27 and
+2.6.28, for which there are no fixes in the mainline I know of.  If any of them
+have been fixed already, please let me know.
 
-If you know of any other unresolved regressions from 2.6.28, please let me know
-either and I'll add them to the list.  Also, please let me know if any of the
-entries below are invalid.
+If you know of any other unresolved regressions introduced between 2.6.27
+and 2.6.28, please let me know either and I'll add them to the list.
+Also, please let me know if any of the entries below are invalid.
 
 Each entry from the list will be sent additionally in an automatic reply to
 this message with CCs to the people involved in reporting and handling the
@@ -29,251 +33,168 @@ Listed regressions statistics:
 
   Date          Total  Pending  Unresolved
   ----------------------------------------
-  2009-03-21      128       29          26
-  2009-03-14      124       36          32
-  2009-03-03      108       33          28
-  2009-02-24       95       32          24
-  2009-02-14       85       33          27
-  2009-02-08       82       45          36
-  2009-02-04       66       51          39
-  2009-01-20       38       35          27
-  2009-01-11       13       13          10
+  2009-03-21      156       17          15
+  2009-03-14      156       19          16
+  2009-03-03      153       21          16
+  2009-02-24      154       27          23
+  2009-02-15      152       30          26
+  2009-02-04      149       33          30
+  2009-01-20      144       30          27
+  2009-01-11      139       33          30
+  2008-12-21      120       19          17
+  2008-12-13      111       14          13
+  2008-12-07      106       20          17
+  2008-12-04      106       29          21
+  2008-11-22       93       25          15
+  2008-11-16       89       32          18
+  2008-11-09       73       40          27
+  2008-11-02       55       41          29
+  2008-10-25       26       25          20
 
 
 Unresolved regressions
 ----------------------
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12910
-Subject		: Wierd iteractions with CPUFREQ
-Submitter	: Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2009-03-19 5:57 (3 days old)
-References	: http://marc.info/?l=linux-kernel&m=123744265002098&w=4
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12911
+Subject		: Limiting cpu time doesn't work
+Submitter	: Peter Lojkin <ia6432@inbox.ru>
+Date		: 2009-03-19 18:34 (3 days old)
+References	: http://marc.info/?l=linux-kernel&m=123749066504641&w=4
 
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12909
-Subject		: boot/kernel init duration regression from 2.6.28
-Submitter	: CaT <cat-LJ1TwQYPT6cQrrorzV6ljw@public.gmane.org>
-Date		: 2009-03-16 10:25 (6 days old)
-References	: http://marc.info/?l=linux-kernel&m=123720083515950&w=4
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12868
+Subject		: iproute2 and regressing "ipv6: convert tunnels to net_device_ops"
+Submitter	: Jan Engelhardt <jengelh@medozas.de>
+Date		: 2009-03-09 14:46 (13 days old)
+First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=1326c3d5a4b792a2b15877feb7fb691f8945d203
+References	: http://marc.info/?l=linux-netdev&m=123660999632730&w=4
 
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12908
-Subject		: acpi_ex_extract_from_field -- div by zero
-Submitter	: Jiri Slaby <jirislaby-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2009-03-15 10:47 (7 days old)
-References	: http://marc.info/?l=linux-kernel&m=123711408225013&w=4
-Handled-By	: Lin Ming <ming.m.lin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12818
+Subject		: iwlagn broken after suspend to RAM (iwlagn: MAC is in deep sleep!)
+Submitter	: Stefan Seyfried <seife@suse.de>
+Date		: 2009-03-04 08:32 (18 days old)
 
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12872
-Subject		: pwc mmap always fails with EAGAIN
-Submitter	: Markus <M4rkusXXL-S0/GAf8tV78@public.gmane.org>
-Date		: 2009-03-14 16:42 (8 days old)
-References	: http://marc.info/?l=linux-kernel&m=123704902201378&w=4
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12690
+Subject		: DPMS (LCD powersave, poweroff) don't work
+Submitter	: Antonin Kolisek <akolisek@linuxx.hyperlinx.cz>
+Date		: 2009-02-11 09:40 (39 days old)
 
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12871
-Subject		: usb bluetooth crashes system
-Submitter	: Pavel Machek <pavel-+ZI9xUNit7I@public.gmane.org>
-Date		: 2009-03-10 11:23 (12 days old)
-References	: http://marc.info/?l=linux-kernel&m=123668450400940&w=4
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12645
+Subject		: DMI low-memory-protect quirk causes resume hang on Samsung NC10
+Submitter	: Patrick Walton <pcwalton@cs.ucla.edu>
+Date		: 2009-02-06 18:35 (44 days old)
+First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=0af40a4b1050c050e62eb1dc30b82d5ab22bf221
 
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12867
-Subject		: 2.6.29-rc7 broke r8169 MAC on Thecus n2100 ARM board
-Submitter	: Mikael Pettersson <mikpe-1zs4UD6AkMk@public.gmane.org>
-Date		: 2009-03-09 20:29 (13 days old)
-References	: http://marc.info/?l=linux-kernel&m=123663065403760&w=4
-Handled-By	: Francois Romieu <romieu-W8zweXLXuWQS+FvcfC7Uqw@public.gmane.org>
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12634
+Subject		: video distortion and lockup with i830 video chip and 2.6.28.3
+Submitter	: Bob Raitz <pappy_mcfae@yahoo.com>
+Date		: 2009-02-04 21:10 (46 days old)
 
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12861
-Subject		: Xorg fails to start "Failed to allocate space for kernel memory manager"
-Submitter	: Emil Karlson <jkarlson-kf+aQKke1yb1KXRcyAk9cg@public.gmane.org>
-Date		: 2009-03-12 12:06 (10 days old)
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12619
+Subject		: Regression 2.6.28 and last - boot failed
+Submitter	: jan sonnek <ha2nny@gmail.com>
+Date		: 2009-02-01 19:59 (49 days old)
+References	: http://marc.info/?l=linux-kernel&m=123351836213969&w=4
 
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12856
-Subject		: Thinkpad freezes with X.org and acpi=rsdt
-Submitter	: Maciej Piechotka <uzytkownik2-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2009-03-11 16:46 (11 days old)
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12500
+Subject		: r8169: NETDEV WATCHDOG: eth0 (r8169): transmit timed out
+Submitter	: Justin Piszcz <jpiszcz@lucidpixels.com>
+Date		: 2009-01-13 21:19 (68 days old)
+References	: http://marc.info/?l=linux-kernel&m=123188160811322&w=4
+Handled-By	: Francois Romieu <romieu@fr.zoreil.com>
 
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12846
-Subject		: Regression issue with kernel 2.6.29-rc6-git1: high power consumption during sleep
-Submitter	: Raymond Wooninck <tittiatcoke-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2009-03-09 08:18 (13 days old)
-First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=1fb25cb8b83e85f5bf1a4adb3c9a254c4ce92405
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12465
+Subject		: KVM guests stalling on 2.6.28 (bisected)
+Submitter	: Kevin Shanahan <kmshanah@ucwb.org.au>
+Date		: 2009-01-17 03:37 (64 days old)
+References	: http://lkml.org/lkml/2009/3/15/51
+Handled-By	: Avi Kivity <avi@redhat.com>
 
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12836
-Subject		: 2.6.29-rc breaks STD using Intel 945
-Submitter	: Rolf Eike Beer <eike-kernel-F+mm6HnICJmzQB+pC5nmwQ@public.gmane.org>
-Date		: 2009-03-04 19:20 (18 days old)
-References	: http://marc.info/?l=linux-kernel&m=123619451406192&w=4
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12426
+Subject		: TMDC Joystick no longer works in kernel 2.6.28
+Submitter	: Andrew S. Johnson <andy@asjohnson.com>
+Date		: 2009-01-10 21:53 (71 days old)
+First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=6902c0bead4ce266226fc0c5b3828b850bdc884a
+References	: http://marc.info/?l=linux-kernel&m=123162486415366&w=4
 
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12809
-Subject		: iozone regression with 2.6.29-rc6
-Submitter	: Lin Ming <ming.m.lin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Date		: 2009-02-27 9:13 (23 days old)
-First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=1cf6e7d83bf334cc5916137862c920a97aabc018
-References	: http://marc.info/?l=linux-kernel&m=123572630504360&w=4
-		  http://lkml.org/lkml/2009/3/14/265
-Handled-By	: Wu Fengguang <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12421
+Subject		: GPF on 2.6.28 and 2.6.28-rc9-git3, e1000e and e1000 issues
+Submitter	: Doug Bazarnic <doug@bazarnic.net>
+Date		: 2009-01-09 21:26 (72 days old)
+References	: http://marc.info/?l=linux-kernel&m=123153653120204&w=4
 
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12808
-Subject		: Suspend regression with 2.6.29-rc
-Submitter	: Tino Keitel <tino.keitel-Mmb7MZpHnFY@public.gmane.org>
-Date		: 2009-02-24 19:08 (26 days old)
-References	: http://marc.info/?l=linux-kernel&m=123550257312112&w=4
-Handled-By	: Rafael J. Wysocki <rjw-KKrjLPT3xs0@public.gmane.org>
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12411
+Subject		: 2.6.28: BUG in r8169
+Submitter	: Andrey Vul <andrey.vul@gmail.com>
+Date		: 2008-12-31 18:37 (81 days old)
+References	: http://marc.info/?l=linux-kernel&m=123074869611409&w=4
 
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12800
-Subject		: x86 PAT invalid vm_insert_pfn assumptions
-Submitter	: Thomas Hellstrom <thellstrom-pghWNbHTmq7QT0dZR+AlfA@public.gmane.org>
-Date		: 2009-03-02 01:40 (20 days old)
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12404
+Subject		: Oops in 2.6.28-rc9 and -rc8 -- mtrr issues / e1000e
+Submitter	: Kernel <kernel@bazarnic.net>
+Date		: 2008-12-22 9:37 (90 days old)
+References	: http://marc.info/?l=linux-kernel&m=122993873320150&w=4
 
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12792
-Subject		: 2.6.29-rc6-git4 boot failure
-Submitter	: Sachin P. Sant <sachinp-xthvdsQ13ZrQT0dZR+AlfA@public.gmane.org>
-Date		: 2009-02-27 23:19 (23 days old)
-References	: http://ozlabs.org/pipermail/linuxppc-dev/2009-February/068771.html
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12209
+Subject		: oldish top core dumps (in its meminfo() function)
+Submitter	: Andreas Mohr <andi@lisas.de>
+Date		: 2008-12-12 18:49 (100 days old)
+References	: http://marc.info/?l=linux-kernel&m=122910784006472&w=4
+		  http://marc.info/?l=linux-kernel&m=122907511319288&w=4
 
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12778
-Subject		: suspend regression from 29rc5 to 29rc6
-Submitter	: yury <urykhy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2009-02-25 09:25 (25 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12771
-Subject		: Oops in i915_gem_flush
-Submitter	: Kalev Lember <kalev-KfhB8dnw0QSuvFJfX82//w@public.gmane.org>
-Date		: 2009-02-24 08:35 (26 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12765
-Subject		: i915 VT switch with AIGLX causes X lock up
-Submitter	: Sitsofe Wheeler <sitsofe-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
-Date		: 2009-02-21 15:38 (29 days old)
-First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=14d200c5e5bd19219d930bbb9a5a22758c8f5bec
-References	: http://marc.info/?l=linux-kernel&m=123523074304955&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12763
-Subject		: Different cpu MHz values for processor0 and processor1
-Submitter	: Matthew A. Bockol <mbockol-dmoCqaWXHRX2fBVCVOL8/A@public.gmane.org>
-Date		: 2009-02-21 5:42 (29 days old)
-References	: http://marc.info/?l=linux-kernel&m=123519687807246&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12705
-Subject		: X200: Brightness broken since 2.6.29-rc4-58-g4c098bc
-Submitter	: Nico Schottelius <nico-linux-20090213-xuaVFQXs+5hIG4jRRZ66WA@public.gmane.org>
-Date		: 2009-02-13 9:33 (37 days old)
-First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=e806b4957412bf472d826bd8cc571da041248799
-References	: http://marc.info/?l=linux-kernel&m=123451768406825&w=4
-		  http://marc.info/?l=linux-kernel&m=123479975503827&w=2
-Handled-By	: Len Brown <lenb-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12681
-Subject		: s2ram: fails to wake up on Acer Extensa 4220 (SMP disabled)
-Submitter	: Orivej Desh <smpuj-5URONGGNgjI@public.gmane.org>
-Date		: 2009-02-09 13:01 (41 days old)
-First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=1cfe62c8010ac56e1bd3827e30386a87cc2f3594
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12670
-Subject		: BUG: unable to handle kernel paging request at pin_to_kill+0x21
-Submitter	: Alessandro Bono <alessandro.bono-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2009-02-08 11:04 (42 days old)
-References	: http://marc.info/?l=linux-kernel&m=123409113223833&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12668
-Subject		: USB flash disk surprise disconnect
-Submitter	: Vegard Nossum <vegard.nossum-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2009-02-08 10:21 (42 days old)
-References	: http://marc.info/?l=linux-kernel&m=123408851821292&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12574
-Subject		: possible circular locking dependency detected
-Submitter	: Michael S. Tsirkin <m.s.tsirkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2009-01-29 11:35 (52 days old)
-References	: http://lkml.org/lkml/2009/2/9/205
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12499
-Subject		: Problem with using bluetooth adaper connected to usb port
-Submitter	: Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2009-01-13 18:34 (68 days old)
-References	: http://marc.info/?l=linux-kernel&m=123187185426236&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12490
-Subject		: ath5k related kernel panic in 2.6.29-rc1
-Submitter	: Sergey S. Kostyliov <rathamahata-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2009-01-12 7:38 (69 days old)
-References	: http://marc.info/?l=linux-kernel&m=123174591509586&w=4
-Handled-By	: Bob Copeland <me-aXfl/3sk2vNUbtYUoyoikg@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12419
-Subject		: possible circular locking dependency on i915 dma
-Submitter	: Wang Chen <wangchen-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Date		: 2009-01-08 14:11 (73 days old)
-First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=546b0974c39657017407c86fe79811100b60700d
-References	: http://marc.info/?l=linux-kernel&m=123142399720125&w=4
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12061
+Subject		: snd_hda_intel: power_save: sound cracks on powerdown
+Submitter	: Jens Weibler <bugzilla-kernel@jensthebrain.de>
+Date		: 2008-11-18 12:07 (124 days old)
+Handled-By	: Takashi Iwai <tiwai@suse.de>
 
 
 Regressions with patches
 ------------------------
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12870
-Subject		: 2.6.29-rc "TKIP: replay detected" regression
-Submitter	: Hugh Dickins <hugh-DTz5qymZ9yRBDgjK7y7TUQ@public.gmane.org>
-Date		: 2009-03-11 12:07 (11 days old)
-References	: http://marc.info/?l=linux-kernel&m=123677337219148&w=4
-Handled-By	: John W. Linville <linville-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
-Patch		: http://marc.info/?l=linux-wireless&m=123678463704691&w=2
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12612
+Subject		: hard lockup when interrupting cdda2wav
+Submitter	: Matthias Reichl <hias@horus.com>
+Date		: 2009-01-28 16:41 (53 days old)
+References	: http://marc.info/?l=linux-kernel&m=123316111415677&w=4
+Handled-By	: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Patch		: http://marc.info/?l=linux-scsi&m=123371501613019&w=2
 
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12671
-Subject		: uvc_status_cleanup(): undefined reference to `input_unregister_device'
-Submitter	: Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>
-Date		: 2009-02-08 14:58 (42 days old)
-References	: http://marc.info/?l=linux-kernel&m=123410529909318&w=4
-Handled-By	: Randy Dunlap <randy.dunlap-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Patch		: http://lkml.org/lkml/2009/2/15/172
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12667
-Subject		: Badness at kernel/time/timekeeping.c:98 in pmud (timekeeping_suspended)
-Submitter	: Paul Collins <paul-dsjeNyW6Qm/D+ROgJ3VA+kB+6BGkLq7r@public.gmane.org>
-Date		: 2009-01-21 7:15 (60 days old)
-First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=1c5745aa380efb6417b5681104b007c8612fb496
-References	: http://marc.info/?l=linux-kernel&m=123252215315106&w=4
-Handled-By	: Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>
-Patch		: http://lkml.org/lkml/2009/2/16/78
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12208
+Subject		: uml is very slow on 2.6.28 host
+Submitter	: Miklos Szeredi <miklos@szeredi.hu>
+Date		: 2008-12-12 9:35 (100 days old)
+References	: http://marc.info/?l=linux-kernel&m=122907463518593&w=4
+Handled-By	: Miklos Szeredi <miklos@szeredi.hu>
+Patch		: http://marc.info/?l=linux-kernel&m=123750152920779&w=4
 
 
 For details, please visit the bug entries and follow the links given in
 references.
 
 As you can see, there is a Bugzilla entry for each of the listed regressions.
-There also is a Bugzilla entry used for tracking the regressions from 2.6.28,
-unresolved as well as resolved, at:
+There also is a Bugzilla entry used for tracking the regressions introduced
+between 2.6.27 and 2.6.28, unresolved as well as resolved, at:
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12398
+http://bugzilla.kernel.org/show_bug.cgi?id=11808
 
 Please let me know if there are any Bugzilla entries that should be added to
 the list in there.
 
 Thanks,
 Rafael
+
