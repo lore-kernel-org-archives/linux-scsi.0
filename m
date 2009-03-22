@@ -1,53 +1,50 @@
-From: "Jing Huang" <huangj@Brocade.COM>
-Subject: RE: [PATCH 1/5] bfa: Brocade BFA FC SCSI driver (bfad)
-Date: Sat, 21 Mar 2009 16:03:03 -0700
-Message-ID: <4C94DE2070B172459E4F1EE14BD2364E02B4B4A2@HQ-EXCH-5.corp.brocade.com>
-References: <200903142003.n2EK39r4031547@blc-10-6.brocade.com> <49C27E95.4050401@cs.wisc.edu>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] WARN_ON if blk_put_request leaks BIOs
+Date: Sun, 22 Mar 2009 10:51:21 +0200
+Message-ID: <49C5FC09.7050502@panasas.com>
+References: <49C21C5A.6030105@panasas.com> <20090319113343.GF27476@kernel.dk> <49C272CE.1070408@panasas.com> <20090320204543.GE27476@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755574AbZCUXEX@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <49C27E95.4050401@cs.wisc.edu>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: James.Bottomley@HansenPartnership.com, Krishna Gudipati <kgudipat@Brocade.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Ramkumar Vadivelu <rvadivel@Brocade.COM>, Vinodh Ravindran <vravindr@Brocade.COM>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gw-ca.panasas.com ([209.116.51.66]:13039 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751850AbZCVIwp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Mar 2009 04:52:45 -0400
+In-Reply-To: <20090320204543.GE27476@kernel.dk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Tejun Heo <tj@kernel.org>
 
-> some quick general comments:
+Jens Axboe wrote:
+> On Thu, Mar 19 2009, Boaz Harrosh wrote:
+>> Put a WARN_ON in __blk_put_request if it is about to
+>> leak bio(s). This is a serious bug that can happen in error
+>> handling code paths.
+>>
+>> For this to work I have fixed a couple of places in block/ where
+>> request->bio != NULL ownership was not honored. And a small cleanup
+>> at sg_io() while at it.
 > 
-> - Patch needs to be run through checkpatch.pl again.
-> - If you are not implementing a callout like issue_lip then you do not
-> need to implement a function that does nothing.
-> - Remove the OS compat stuff that just calls right into the linux
-> function. For example kill bfad_os_pci_probe.
+> Ho humm, not sure what to do about this. Honestly, in all the time that
+> I have been doing this, this would have found about zero bugs. And now
+> enforces a rule that ->bio must be cleared. Normal bio completion does
+> that automatically, so it's not a problem there, but it's still a new
+> rule just to satisfy this questionable debug mechanism.
 > 
-
-We will fix all he checkpatch issues and make necessary cleanups and
-resubmit soon.
-
-> > +
-> > +	im_port->shost->hostdata[0] = (unsigned long)im_port;
-> 
-> 
-> 
-> I think I asked about this before. Why do you just not allocate the
-bfad
-> or im_port in the hostdata? What is the struct hierarchy? Do you have
-> one bfad for the entire HBA/pci_device then have a im_port for each
-port
-> on the hba?
+> But what the hell, it's simple enough. Kill the totally unrelated
+> scsi_ioctl.c change, and I'll toss it in for a spin.
 > 
 
-Thanks for review the code again. Yes, we have one bfad for each HBA
-port/pci device, and one im_port (im stands for initiator mode) for each
-scsi_host/vport. We can certainly allocate im_port in scsi_host_alloc()
-as you suggest, but currently we allocate all possible fc4 port
-(initiator/tgt/ipfc) in one function, and it is just more convenient to
-do it in one place.
+The scsi_ioctl.c is related. It sets req->bio back from some internal
+held value just to carry it across a static function call, all the while
+when the function is not needed, totally bogus in the error handling check
+of an hard-coded 0, and a call sight that is bigger then the actual function.
+So it was better to fix it then, go around the problem of the code putting
+some private data on req->bio.
+
+I thought the all patch is worth it just for that bit
 
 Thanks
-
-Jing
- 
+Boaz
