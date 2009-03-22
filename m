@@ -1,50 +1,36 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] WARN_ON if blk_put_request leaks BIOs
-Date: Sun, 22 Mar 2009 10:51:21 +0200
-Message-ID: <49C5FC09.7050502@panasas.com>
-References: <49C21C5A.6030105@panasas.com> <20090319113343.GF27476@kernel.dk> <49C272CE.1070408@panasas.com> <20090320204543.GE27476@kernel.dk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 12207] block reads/writes > 122880 bytes to USB tape drive gives EBUSY
+Date: Sun, 22 Mar 2009 13:52:14 -0700 (PDT)
+Message-ID: <20090322205214.A305C108042@picon.linux-foundation.org>
+References: <bug-12207-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:13039 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751850AbZCVIwp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Mar 2009 04:52:45 -0400
-In-Reply-To: <20090320204543.GE27476@kernel.dk>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:37772 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753183AbZCVUwx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 22 Mar 2009 16:52:53 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n2MKqFu1014173
+	for <linux-scsi@vger.kernel.org>; Sun, 22 Mar 2009 13:52:50 -0700
+In-Reply-To: <bug-12207-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Tejun Heo <tj@kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Jens Axboe wrote:
-> On Thu, Mar 19 2009, Boaz Harrosh wrote:
->> Put a WARN_ON in __blk_put_request if it is about to
->> leak bio(s). This is a serious bug that can happen in error
->> handling code paths.
->>
->> For this to work I have fixed a couple of places in block/ where
->> request->bio != NULL ownership was not honored. And a small cleanup
->> at sg_io() while at it.
-> 
-> Ho humm, not sure what to do about this. Honestly, in all the time that
-> I have been doing this, this would have found about zero bugs. And now
-> enforces a rule that ->bio must be cleared. Normal bio completion does
-> that automatically, so it's not a problem there, but it's still a new
-> rule just to satisfy this questionable debug mechanism.
-> 
-> But what the hell, it's simple enough. Kill the totally unrelated
-> scsi_ioctl.c change, and I'll toss it in for a spin.
-> 
+http://bugzilla.kernel.org/show_bug.cgi?id=12207
 
-The scsi_ioctl.c is related. It sets req->bio back from some internal
-held value just to carry it across a static function call, all the while
-when the function is not needed, totally bogus in the error handling check
-of an hard-coded 0, and a call sight that is bigger then the actual function.
-So it was better to fix it then, go around the problem of the code putting
-some private data on req->bio.
 
-I thought the all patch is worth it just for that bit
 
-Thanks
-Boaz
+
+
+------- Comment #23 from philipm@sybase.com  2009-03-22 13:52 -------
+Okay, I *finally* managed to try it out.  It does seem to solve the problem.
+
+Thanks,
+Phil
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
