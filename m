@@ -1,27 +1,137 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: TRIM vs UNMAP vs WRITE SAME and thin devices
-Date: Mon, 23 Mar 2009 15:23:19 -0400
-Message-ID: <49C7E1A7.6050209@rtr.ca>
-References: <20090123041558.GC24652@parisc-linux.org>	 <4979AF62.7070409@redhat.com>	 <1232721777.4430.7.camel@macbook.infradead.org>	 <498DA052.6090605@redhat.com>	 <1234019372.4658.9.camel@localhost.localdomain>	 <498DB350.8000905@redhat.com>	 <22BDA4D9BA18634DB0CFBB2E5A1563446F98BAE155@KFAEXMIPV1.sdcorp.global.sandisk.com> <87f94c370903231205m235402b9t6ec1c77f8bdc0857@mail.gmail.com>
+From: Dimitris Zilaskos <dzila@tassadar.physics.auth.gr>
+Subject: RE: kernel panics and errors on lsi 1064e
+Date: Mon, 23 Mar 2009 21:33:47 +0200 (EET)
+Message-ID: <Pine.LNX.4.64.0903232059090.16669@tassadar.physics.auth.gr>
+References: <Pine.LNX.4.64.0903201242300.27079@tassadar.physics.auth.gr>
+ <1237562844.12008.55.camel@localhost.localdomain>
+ <Pine.LNX.4.64.0903202204490.1954@tassadar.physics.auth.gr>
+ <0D1E8821739E724A86F4D16902CE275C1410DBBE2D@inbmail01.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <87f94c370903231205m235402b9t6ec1c77f8bdc0857@mail.gmail.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: Eyal Shani <Eyal.Shani@sandisk.com>, Ric Wheeler <rwheeler@redhat.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, David Woodhouse <dwmw2@infradead.org>, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <matthew@wil.cx>, Jeff Garzik <jeff@garzik.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Theodore Tso <tytso@mit.edu>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from tassadar.physics.auth.gr ([155.207.123.25]:45467 "EHLO
+	tassadar.physics.auth.gr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758924AbZCWTd7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Mar 2009 15:33:59 -0400
+In-Reply-To: <0D1E8821739E724A86F4D16902CE275C1410DBBE2D@inbmail01.lsi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "Mohapatra, Sisir" <Sisir.Mohapatra@lsi.com>
 
-..
-> On Thu, Feb 12, 2009 at 9:51 AM, Eyal Shani <Eyal.Shani@sandisk.com> wrote:
->> Adding my 5 cents.
+ok now i have this:
+
+
+cat /proc/mpt/version
+mptlinux-3.13.04.00
+   Fusion MPT base driver
+   Fusion MPT SAS host driver
+   Fusion MPT SPI host driver
+   Fusion MPT ioctl driver
+
+but still no debug_level
+
+However I did some tricks to get the driver load so I am not sure I did 
+not mess up.
+
+a) the included binaries are up to 2.6.9-78 kernel so I used the sources 
+tarball prvided.
+b) Executed "compile"
+c) Executed "update"
+d) c) had problems finding mptscsi.ko which was removed by the process.
+e) copied the missing files from another node
+f) ran mkinitrd manually
+g) rebooted, some complains on dmesg about beeing unable to load mptscsi, 
+other than that server booted fine.
+
+Preliminary test with the new driver resulted in no errors, but that's not 
+the same as a real world case. Still the debug_level is not there. Do I 
+need another driver?
+
+Cheers,
+
+
+-- 
+=============================================================================
+Dimitris Zilaskos
+GridAUTH Operations Centre @ Aristotle University of Thessaloniki , Greece
+Tel: +302310998988 Fax: +302310994309
+http://www.grid.auth.gr
+=============================================================================
+
+On Mon, 23 Mar 2009, Desai, Kashyap wrote:
+
+> Hi,
+>
+> After firmware upgrade, you are seeing only MPT logs but system is running fine. Those prints are not harmful, but it requires attention why it happened? I need some information to help you further.
+>
+> 1. Information of driver version. (cat /proc/mpt/version)
+> 2. Information of firmware. (cat /proc/mpt/iocX/info)
+> 3. Driver log level setting.
+>       MPT driver has debug_level settings to get more logs.
+>       Check "cat /sys/class/scsi_host/host*/proc_name"
+>       Use index number for "mptsas" from result of previous command.
+>       "echo 0x8188 > /sys/class/scsi_host/host<index>/debug_level".
+>
+>
+> NOTE: Above debug level settings are available from some version onwards.
+>       Driver used by you may not have this support, depending upon driver	version.
+>
+> Please provide us log with driver debug enable as mention in #3 will help to debug further.
+>
+> Added Sisir and Sathya in CC list.
+>
+> Thanks
+> Kashyap
+>
+>
+>
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Dimitris Zilaskos
+> Sent: Saturday, March 21, 2009 1:41 AM
+> To: James Bottomley
+> Cc: linux-scsi@vger.kernel.org; Moore, Eric
+> Subject: Re: kernel panics and errors on lsi 1064e
+>
+>
+> Thank you for you reply,
+>
+>> So that's the right thing to do (or better yet, contact LSI support to
+>> see if they have a newer version).
+>
+> Will do so
+>
+>> This has become a log information, so the IOC firmware now dealt with
+>> whatever the problem was.
 >>
->> T13 added Trim to the latest ATA8 proposal.
->> http://www.t13.org/Documents/UploadedDocuments/docs2009/d2015r1-ATAATAPI_Command_Set_-_2_ACS-2.pdf
-..
-
-Note that there is also a Rev.1a edition, same link as above
-except change the d2015r1 to d2015r1a:
-
-http://www.t13.org/Documents/UploadedDocuments/docs2009/d2015r1a-ATAATAPI_Command_Set_-_2_ACS-2.pdf
+>>
+>>> Is something broken here? I am close to ask for the systems to be replaced.
+>>
+>> You imply that with the firmware upgrade, nothing now goes wrong, so
+>> everything sounds to be OK.
+>
+>
+> Well it has been only 3 days, and these strange messages keep showing up,
+> so I am still worried because it will be harder to get them replaced later
+> and at the same time have the users complaining. But it looks like my
+> options are limited.
+>
+>
+>
+>
+> -- 
+> =============================================================================
+> Dimitris Zilaskos
+> GridAUTH Operations Centre @ Aristotle University of Thessaloniki , Greece
+> Tel: +302310998988 Fax: +302310994309
+> http://www.grid.auth.gr
+> =============================================================================
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> Internal Virus Database is out of date.
+> Checked by AVG - www.avg.com
+> Version: 8.0.237 / Virus Database: 270.11.10/1995 - Release Date: 03/11/09 08:28:00
+>
