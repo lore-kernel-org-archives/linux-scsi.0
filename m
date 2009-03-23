@@ -1,36 +1,29 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 9621] Problems on booting
-Date: Mon, 23 Mar 2009 09:15:17 -0700 (PDT)
-Message-ID: <20090323161517.0CDFF108063@picon.linux-foundation.org>
-References: <bug-9621-11613@http.bugzilla.kernel.org/>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:59282 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758589AbZCWQRk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Mar 2009 12:17:40 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n2NGFStm023307
-	for <linux-scsi@vger.kernel.org>; Mon, 23 Mar 2009 09:17:09 -0700
-In-Reply-To: <bug-9621-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: 2.6.29-rc8-git5: Reported regressions from 2.6.28
+Date: Mon, 23 Mar 2009 09:23:47 -0700 (PDT)
+Message-ID: <alpine.LFD.2.00.0903230922440.3030@localhost.localdomain>
+References: <GPBuLTara4J.A.3kH.TZTxJB@chimera> <20090321200534.GA30238@elte.hu> <20090323005738.GB6003@localhost>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20090323005738.GB6003@localhost>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Wu Fengguang <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>, "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Adrian Bunk <bunk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Nick Piggin <npiggin-l3A5Bk7waGM@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=9621
-
-
-alan@lxorguk.ukuu.org.uk changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |CLOSED
-         Resolution|                            |CODE_FIX
 
 
 
+On Mon, 23 Mar 2009, Wu Fengguang wrote:
+> > 
+> > I think this was tracked back to the effective halving of 
+> > dirty_ratio by 1cf6e7d83 ("mm: task dirty accounting fix") and 
+> > doubling the ratio fixed the iozone regression.
+> 
+> Yes, exactly. The patch for fixing this regression is trivial.
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+I was planning on applying that patch only after 2.6.29 is out, and then 
+if there are no surprising side effects and nobody complains, we'd then 
+back-port it into stable.
+
+		Linus
