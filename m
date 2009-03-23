@@ -1,79 +1,93 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 2/3] Common code for init and runtime
-Date: Mon, 23 Mar 2009 00:46:19 +0000
-Message-ID: <1237769179.4712.10.camel@localhost.localdomain>
-References: <FE3F06125A99254E8D92161AA4569C6F0693DCE9@sc-exch02.marvell.com>
+From: Wu Fengguang <fengguang.wu@intel.com>
+Subject: Re: 2.6.29-rc8-git5: Reported regressions from 2.6.28
+Date: Mon, 23 Mar 2009 08:57:38 +0800
+Message-ID: <20090323005738.GB6003@localhost>
+References: <GPBuLTara4J.A.3kH.TZTxJB@chimera> <20090321200534.GA30238@elte.hu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:43035 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757140AbZCWAqY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 22 Mar 2009 20:46:24 -0400
-In-Reply-To: <FE3F06125A99254E8D92161AA4569C6F0693DCE9@sc-exch02.marvell.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20090321200534.GA30238@elte.hu>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Ingo Molnar <mingo@elte.hu>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Nick Piggin <npiggin@suse.de>, Peter Zijlstra <a.p.zijlstra@chello.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Yan <ayan@marvell.com>
-Cc: jeff@garzik.org, Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, Michael Wang <qswang@marvell.com>, Jacky Feng <jfeng@marvell.com>, Ying Chu <jasonchu@marvell.com>, Ke Wei <kewei@marvell.com>
 
-On Thu, 2009-03-19 at 01:50 -0700, Andy Yan wrote:
-> From: Andy Yan <ayan@marvell.com>
-> Date: Thu, 19 Mar 2009 21:49:44 +0800
-> Subject: [PATCH 2/3] Common code for init and runtime
-> This patch contains the common code for pci init and disk IO, all
-> supported
-> chips share the same code, the disk flash is supported. Error handling
-> is 
-> enhanced with this patch.
+On Sun, Mar 22, 2009 at 04:05:34AM +0800, Ingo Molnar wrote:
 > 
->  Signed-off-by: Andy Yan <ayan@marvell.com>
->  Signed-off-by: Ke Wei <kewei@marvell.com>
->  Signed-off-by: Ying Chu <jasonchu@marvell.com>
-[...]
+> * Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12809
+> > Subject		: iozone regression with 2.6.29-rc6
+> > Submitter	: Lin Ming <ming.m.lin@intel.com>
+> > Date		: 2009-02-27 9:13 (23 days old)
+> > First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=1cf6e7d83bf334cc5916137862c920a97aabc018
+> > References	: http://marc.info/?l=linux-kernel&m=123572630504360&w=4
+> > 		  http://lkml.org/lkml/2009/3/14/265
+> > Handled-By	: Wu Fengguang <fengguang.wu@intel.com>
+> 
+> I think this was tracked back to the effective halving of 
+> dirty_ratio by 1cf6e7d83 ("mm: task dirty accounting fix") and 
+> doubling the ratio fixed the iozone regression.
 
-I gave it a cursory review, it seems a reasonable copy of mvsas.c
+Yes, exactly. The patch for fixing this regression is trivial.
 
-You need to lose all the kernel version dependent code, since you're
-aiming this at the current kernel (2.6.29-rc):
+However it may be better to revert 1cf6e7d83 for 2.6.29,
+and merge 1cf6e7d83 together with this patch for 2.6.30-rc1.
+This allows a larger window for testing out the possible impacts
+on other workloads.
+ 
+Thanks,
+Fengguang
+---
+writeback: double the dirty thresholds
 
+Enlarge default dirty ratios from 5/10 to 10/20.
+This fixes [Bug #12809] iozone regression with 2.6.29-rc6.
 
-> +#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 25)
-> +#include "sas_task.c"
-> +#endif
+The iozone benchmarks are performed on a 1200M file, with 8GB ram.
 
+iozone -i 0 -i 1 -i 2 -i 3 -i 4 -r 4k -s 64k -s 512m -s 1200m -b tmp.xls
+iozone -B -r 4k -s 64k -s 512m -s 1200m -b tmp.xls
 
-> +#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 20)
-> +static void mvs_work_queue(struct work_struct *work)
-> +{
-> +	struct delayed_work *dw = container_of(work, struct
-> delayed_work, work);
-> +#else
-> +static void mvs_work_queue(void *arg)
-> +{
-> +	struct delayed_work *dw = arg;
-> +#endif
+The performance regression is triggered by commit 1cf6e7d83bf3(mm: task
+dirty accounting fix), which makes more correct/thorough dirty accounting.
 
+The default 5/10 dirty ratios were picked (a) with the old dirty
+logic and (b) largely at random and (c) designed to be aggressive. In
+particular, that (a) means that having fixed some of the dirty accounting,
+maybe the real bug is now that it was always too aggressive, just hidden
+by an accounting issue.
 
-> +#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24)
-> +#include <scsi.h>
-> +#define sg_page(sg)	sg->page
-> +#define for_each_sg(sglist, sg, nr, __i)	\
-> +	for (__i = 0, sg = (sglist); __i < (nr); __i++, sg++)
-> +#endif
-> +#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 25)
-> +#define SAS_PROTOCOL_ALL SAS_PROTO_ALL
-> +#endif
-> +#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 20)
-> +#define MV_INIT_DELAYED_WORK(w, f, d)	INIT_DELAYED_WORK(w, f)
-> +#else
-> +#define MV_INIT_DELAYED_WORK(w, f, d)	INIT_DELAYED_WORK(w, f, (void *)
-> d)
-> +#endif
+The enlarged 10/20 dirty ratios are just about enough to fix the regression.
 
-etc.
+Cc: Nick Piggin <npiggin@suse.de>
+Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Reported-by: "Lin, Ming M" <ming.m.lin@intel.com>
+Tested-by: "Lin, Ming M" <ming.m.lin@intel.com>
+Signed-off-by: Wu Fengguang <fengguang.wu@intel.com>
+---
+ mm/page-writeback.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-James
-
-
+--- mm.orig/mm/page-writeback.c
++++ mm/mm/page-writeback.c
+@@ -66,7 +66,7 @@ static inline long sync_writeback_pages(
+ /*
+  * Start background writeback (via pdflush) at this percentage
+  */
+-int dirty_background_ratio = 5;
++int dirty_background_ratio = 10;
+ 
+ /*
+  * dirty_background_bytes starts at 0 (disabled) so that it is a function of
+@@ -83,7 +83,7 @@ int vm_highmem_is_dirtyable;
+ /*
+  * The generator of dirty data starts writeback at this percentage
+  */
+-int vm_dirty_ratio = 10;
++int vm_dirty_ratio = 20;
+ 
+ /*
+  * vm_dirty_bytes starts at 0 (disabled) so that it is a function of
