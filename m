@@ -1,137 +1,183 @@
-From: Dimitris Zilaskos <dzila@tassadar.physics.auth.gr>
-Subject: RE: kernel panics and errors on lsi 1064e
-Date: Mon, 23 Mar 2009 21:33:47 +0200 (EET)
-Message-ID: <Pine.LNX.4.64.0903232059090.16669@tassadar.physics.auth.gr>
-References: <Pine.LNX.4.64.0903201242300.27079@tassadar.physics.auth.gr>
- <1237562844.12008.55.camel@localhost.localdomain>
- <Pine.LNX.4.64.0903202204490.1954@tassadar.physics.auth.gr>
- <0D1E8821739E724A86F4D16902CE275C1410DBBE2D@inbmail01.lsi.com>
+From: Robert Love <robert.w.love@intel.com>
+Subject: Re: [PATCH 04/14] fcoe: create/destroy fcoe Rx threads on CPU
+ hotplug events
+Date: Mon, 23 Mar 2009 12:42:18 -0700
+Message-ID: <1237837339.9083.20.camel@fritz>
+References: <20090317184124.22987.65368.stgit@fritz>
+	 <20090317184145.22987.97528.stgit@fritz>
+	 <1237769956.4712.14.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tassadar.physics.auth.gr ([155.207.123.25]:45467 "EHLO
-	tassadar.physics.auth.gr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758924AbZCWTd7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Mar 2009 15:33:59 -0400
-In-Reply-To: <0D1E8821739E724A86F4D16902CE275C1410DBBE2D@inbmail01.lsi.com>
+Received: from mga03.intel.com ([143.182.124.21]:49183 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753061AbZCWTmj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Mar 2009 15:42:39 -0400
+In-Reply-To: <1237769956.4712.14.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "Mohapatra, Sisir" <Sisir.Mohapatra@lsi.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-ok now i have this:
+On Sun, 2009-03-22 at 17:59 -0700, James Bottomley wrote: 
+> On Tue, 2009-03-17 at 11:41 -0700, Robert Love wrote:
+> > This patch adds support for dynamically created Rx threads
+> > upon CPU hotplug events.
+> > 
+> > There were existing synchronization problems that this patch
+> > attempts to resolve. The main problem had to do with fcoe_rcv()
+> > running in a different context than the hotplug notifications.
+> > This opened the possiblity that fcoe_rcv() would target a Rx
+> > thread for a skb. However, that thread could become NULL if
+> > the CPU was made offline.
+> > 
+> > This patch uses the Rx queue's (a skb_queue) lock to protect
+> > the thread it's associated with and we use the 'thread' member
+> > of the fcoe_percpu_s to determine if the thread is ready to
+> > accept new skbs.
+> > 
+> > The patch also attempts to do a better job of cleaning up, both
+> > if hotplug registration fails as well as when the module is
+> > removed.
+> > 
+> > Contribution provided by Joe Eykholt <jeykholt@cisco.com> to
+> > fix incorrect use of __cpuinitdata.
+> > 
+> > Signed-off-by: Yi Zou <yi.zou@intel.com>
+> > Signed-off-by: Robert Love <robert.w.love@intel.com>
+> > ---
+> > 
+> >  drivers/scsi/fcoe/libfcoe.c |  246 +++++++++++++++++++++++++++++++++++--------
+> >  1 files changed, 199 insertions(+), 47 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
+> > index 648a2fc..951d244 100644
+> > --- a/drivers/scsi/fcoe/libfcoe.c
+> > +++ b/drivers/scsi/fcoe/libfcoe.c
+> > @@ -81,6 +81,156 @@ static struct notifier_block fcoe_notifier = {
+> >  };
+> >  
+> >  /**
+> > + * fcoe_percpu_thread_create() - Create a receive thread for an online cpu
+> > + * @cpu: cpu index for the online cpu
+> > + */
+> > +static void fcoe_percpu_thread_create(unsigned int cpu)
+> > +{
+> > +	struct fcoe_percpu_s *p;
+> > +	struct task_struct *thread;
+> > +
+> > +	p = &per_cpu(fcoe_percpu, cpu);
+> > +
+> > +	thread = kthread_create(fcoe_percpu_receive_thread,
+> > +				(void *)p, "fcoethread/%d", cpu);
+> > +
+> > +	if (likely(!IS_ERR(p->thread))) {
+> > +		kthread_bind(thread, cpu);
+> > +		wake_up_process(thread);
+> > +
+> > +		spin_lock_bh(&p->fcoe_rx_list.lock);
+> > +		p->thread = thread;
+> > +		spin_unlock_bh(&p->fcoe_rx_list.lock);
+> > +	}
+> > +}
+> > +
+> > +/**
+> > + * fcoe_percpu_thread_destroy() - removes the rx thread for the given cpu
+> > + * @cpu: cpu index the rx thread is to be removed
+> > + *
+> > + * Destroys a per-CPU Rx thread. Any pending skbs are moved to the
+> > + * current CPU's Rx thread. If the thread being destroyed is bound to
+> > + * the CPU processing this context the skbs will be freed.
+> > + */
+> > +static void fcoe_percpu_thread_destroy(unsigned int cpu)
+> > +{
+> > +	struct fcoe_percpu_s *p;
+> > +	struct task_struct *thread;
+> > +	struct page *crc_eof;
+> > +	struct sk_buff *skb;
+> > +#ifdef CONFIG_SMP
+> > +	struct fcoe_percpu_s *p0;
+> > +	unsigned targ_cpu = smp_processor_id();
+> > +#endif /* CONFIG_SMP */
+> > +
+> > +	printk(KERN_DEBUG "fcoe: Destroying receive thread for CPU %d\n", cpu);
+> > +
+> > +	/* Prevent any new skbs from being queued for this CPU. */
+> > +	p = &per_cpu(fcoe_percpu, cpu);
+> > +	spin_lock_bh(&p->fcoe_rx_list.lock);
+> > +	thread = p->thread;
+> > +	p->thread = NULL;
+> > +	crc_eof = p->crc_eof_page;
+> > +	p->crc_eof_page = NULL;
+> > +	p->crc_eof_offset = 0;
+> > +	spin_unlock_bh(&p->fcoe_rx_list.lock);
+> > +
+> > +#ifdef CONFIG_SMP
+> > +	/*
+> > +	 * Don't bother moving the skb's if this context is running
+> > +	 * on the same CPU that is having its thread destroyed. This
+> > +	 * can easily happen when the module is removed.
+> > +	 */
+> > +	if (cpu != targ_cpu) {
+> > +		p0 = &per_cpu(fcoe_percpu, targ_cpu);
+> > +		spin_lock_bh(&p0->fcoe_rx_list.lock);
+> > +		if (p0->thread) {
+> > +			FC_DBG("Moving frames from CPU %d to CPU %d\n",
+> > +			       cpu, targ_cpu);
+> > +
+> > +			while ((skb = __skb_dequeue(&p->fcoe_rx_list)) != NULL)
+> > +				__skb_queue_tail(&p0->fcoe_rx_list, skb);
+> > +			spin_unlock_bh(&p0->fcoe_rx_list.lock);
+> > +		} else {
+> > +			/*
+> > +			 * The targeted CPU is not initialized and cannot accept
+> > +			 * new  skbs. Unlock the targeted CPU and drop the skbs
+> > +			 * on the CPU that is going offline.
+> > +			 */
+> > +			while ((skb = __skb_dequeue(&p->fcoe_rx_list)) != NULL)
+> > +				kfree_skb(skb);
+> > +			spin_unlock_bh(&p0->fcoe_rx_list.lock);
+> > +		}
+> > +	} else {
+> > +		/*
+> > +		 * This scenario occurs when the module is being removed
+> > +		 * and all threads are being destroyed. skbs will continue
+> > +		 * to be shifted from the CPU thread that is being removed
+> > +		 * to the CPU thread associated with the CPU that is processing
+> > +		 * the module removal. Once there is only one CPU Rx thread it
+> > +		 * will reach this case and we will drop all skbs and later
+> > +		 * stop the thread.
+> > +		 */
+> > +		spin_lock_bh(&p->fcoe_rx_list.lock);
+> > +		while ((skb = __skb_dequeue(&p->fcoe_rx_list)) != NULL)
+> > +			kfree_skb(skb);
+> > +		spin_unlock_bh(&p->fcoe_rx_list.lock);
+> > +	}
+> > +#else
+> > +	/*
+> > +	 * This a non-SMP scenario where the singluar Rx thread is
+> > +	 * being removed. Free all skbs and stop the thread.
+> > +	 */
+> > +	spin_lock_bh(&p->fcoe_rx_list.lock);
+> > +	while ((skb = __skb_dequeue(&p->fcoe_rx_list)) != NULL)
+> > +		kfree_skb(skb);
+> > +	spin_unlock_bh(&p->fcoe_rx_list.lock);
+> > +#endif
+> > +
+> > +	if (thread)
+> > +		kthread_stop(thread);
+> 
+> Don't you need a kthread_unbind() somewhere in here?  Under most of your
+> calling conditions (CPU_DEAD events) the bound CPU is toast, so the
+> thread isn't going to be able to wake up on it.
+> 
+Is there a kthread_unbind()? I can't find it, maybe it was removed
+recently.
+
+This function should be moving all work off of the CPU that's going away
+and should also prevent any new work from being scheduled to it (by
+setting p->thread = NULL), so I'm not expecting this thread to wake up
+and do something.
 
 
-cat /proc/mpt/version
-mptlinux-3.13.04.00
-   Fusion MPT base driver
-   Fusion MPT SAS host driver
-   Fusion MPT SPI host driver
-   Fusion MPT ioctl driver
-
-but still no debug_level
-
-However I did some tricks to get the driver load so I am not sure I did 
-not mess up.
-
-a) the included binaries are up to 2.6.9-78 kernel so I used the sources 
-tarball prvided.
-b) Executed "compile"
-c) Executed "update"
-d) c) had problems finding mptscsi.ko which was removed by the process.
-e) copied the missing files from another node
-f) ran mkinitrd manually
-g) rebooted, some complains on dmesg about beeing unable to load mptscsi, 
-other than that server booted fine.
-
-Preliminary test with the new driver resulted in no errors, but that's not 
-the same as a real world case. Still the debug_level is not there. Do I 
-need another driver?
-
-Cheers,
-
-
--- 
-=============================================================================
-Dimitris Zilaskos
-GridAUTH Operations Centre @ Aristotle University of Thessaloniki , Greece
-Tel: +302310998988 Fax: +302310994309
-http://www.grid.auth.gr
-=============================================================================
-
-On Mon, 23 Mar 2009, Desai, Kashyap wrote:
-
-> Hi,
->
-> After firmware upgrade, you are seeing only MPT logs but system is running fine. Those prints are not harmful, but it requires attention why it happened? I need some information to help you further.
->
-> 1. Information of driver version. (cat /proc/mpt/version)
-> 2. Information of firmware. (cat /proc/mpt/iocX/info)
-> 3. Driver log level setting.
->       MPT driver has debug_level settings to get more logs.
->       Check "cat /sys/class/scsi_host/host*/proc_name"
->       Use index number for "mptsas" from result of previous command.
->       "echo 0x8188 > /sys/class/scsi_host/host<index>/debug_level".
->
->
-> NOTE: Above debug level settings are available from some version onwards.
->       Driver used by you may not have this support, depending upon driver	version.
->
-> Please provide us log with driver debug enable as mention in #3 will help to debug further.
->
-> Added Sisir and Sathya in CC list.
->
-> Thanks
-> Kashyap
->
->
->
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Dimitris Zilaskos
-> Sent: Saturday, March 21, 2009 1:41 AM
-> To: James Bottomley
-> Cc: linux-scsi@vger.kernel.org; Moore, Eric
-> Subject: Re: kernel panics and errors on lsi 1064e
->
->
-> Thank you for you reply,
->
->> So that's the right thing to do (or better yet, contact LSI support to
->> see if they have a newer version).
->
-> Will do so
->
->> This has become a log information, so the IOC firmware now dealt with
->> whatever the problem was.
->>
->>
->>> Is something broken here? I am close to ask for the systems to be replaced.
->>
->> You imply that with the firmware upgrade, nothing now goes wrong, so
->> everything sounds to be OK.
->
->
-> Well it has been only 3 days, and these strange messages keep showing up,
-> so I am still worried because it will be harder to get them replaced later
-> and at the same time have the users complaining. But it looks like my
-> options are limited.
->
->
->
->
-> -- 
-> =============================================================================
-> Dimitris Zilaskos
-> GridAUTH Operations Centre @ Aristotle University of Thessaloniki , Greece
-> Tel: +302310998988 Fax: +302310994309
-> http://www.grid.auth.gr
-> =============================================================================
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> Internal Virus Database is out of date.
-> Checked by AVG - www.avg.com
-> Version: 8.0.237 / Virus Database: 270.11.10/1995 - Release Date: 03/11/09 08:28:00
->
