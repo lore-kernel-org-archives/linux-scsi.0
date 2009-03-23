@@ -1,40 +1,159 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 8316] TSSTcorp' 'CD/DVDW TS-L632D timeout under libata.
-Date: Mon, 23 Mar 2009 10:03:19 -0700 (PDT)
-Message-ID: <20090323170320.0038D11D135@picon.linux-foundation.org>
-References: <bug-8316-11613@http.bugzilla.kernel.org/>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: kernel panics and errors on lsi 1064e
+Date: Tue, 24 Mar 2009 01:18:32 +0530
+Message-ID: <0D1E8821739E724A86F4D16902CE275C1410E52A57@inbmail01.lsi.com>
+References: <Pine.LNX.4.64.0903201242300.27079@tassadar.physics.auth.gr>
+ <1237562844.12008.55.camel@localhost.localdomain>
+ <Pine.LNX.4.64.0903202204490.1954@tassadar.physics.auth.gr>
+ <0D1E8821739E724A86F4D16902CE275C1410DBBE2D@inbmail01.lsi.com>,<Pine.LNX.4.64.0903232059090.16669@tassadar.physics.auth.gr>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:37840 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755034AbZCWTnz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Mar 2009 15:43:55 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n2NJhHC5016977
-	for <linux-scsi@vger.kernel.org>; Mon, 23 Mar 2009 12:43:53 -0700
-In-Reply-To: <bug-8316-11613@http.bugzilla.kernel.org/>
+Received: from exprod7og107.obsmtp.com ([64.18.2.167]:41342 "EHLO
+	exprod7og107.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754625AbZCWTsy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Mar 2009 15:48:54 -0400
+In-Reply-To: <Pine.LNX.4.64.0903232059090.16669@tassadar.physics.auth.gr>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Dimitris Zilaskos <dzila@tassadar.physics.auth.gr>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "Mohapatra, Sisir" <Sisir.Mohapatra@lsi.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=8316
-
-
-alan@lxorguk.ukuu.org.uk changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |REJECTED
-         Resolution|                            |INSUFFICIENT_DATA
+Hi,
 
 
+3.13.04.00 is very old version. Can you go for version 3.18.00.00-1 driver version ?
+
+To enable debug you have to follow these steps.
+
+1.  ./makempt  (Is this file present for you ? If not then I can send you.) 
+2.  ./update
+3.  mkinitrd
+
+Thanks
+Kashyap Desai
+________________________________________
+From: Dimitris Zilaskos [dzila@tassadar.physics.auth.gr]
+Sent: Monday, March 23, 2009 3:33 PM
+To: Desai, Kashyap
+Cc: James Bottomley; linux-scsi@vger.kernel.org; Moore, Eric; Prakash, Sathya; Mohapatra, Sisir
+Subject: RE: kernel panics and errors on lsi 1064e
+
+ok now i have this:
 
 
-------- Comment #108 from alan@lxorguk.ukuu.org.uk  2009-03-23 10:03 -------
-Closing out old stale bug
+cat /proc/mpt/version
+mptlinux-3.13.04.00
+   Fusion MPT base driver
+   Fusion MPT SAS host driver
+   Fusion MPT SPI host driver
+   Fusion MPT ioctl driver
+
+but still no debug_level
+
+However I did some tricks to get the driver load so I am not sure I did
+not mess up.
+
+a) the included binaries are up to 2.6.9-78 kernel so I used the sources
+tarball prvided.
+b) Executed "compile"
+c) Executed "update"
+d) c) had problems finding mptscsi.ko which was removed by the process.
+e) copied the missing files from another node
+f) ran mkinitrd manually
+g) rebooted, some complains on dmesg about beeing unable to load mptscsi,
+other than that server booted fine.
+
+Preliminary test with the new driver resulted in no errors, but that's not
+the same as a real world case. Still the debug_level is not there. Do I
+need another driver?
+
+Cheers,
 
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+--
+=============================================================================
+Dimitris Zilaskos
+GridAUTH Operations Centre @ Aristotle University of Thessaloniki , Greece
+Tel: +302310998988 Fax: +302310994309
+http://www.grid.auth.gr
+=============================================================================
+
+On Mon, 23 Mar 2009, Desai, Kashyap wrote:
+
+> Hi,
+>
+> After firmware upgrade, you are seeing only MPT logs but system is running fine. Those prints are not harmful, but it requires attention why it happened? I need some information to help you further.
+>
+> 1. Information of driver version. (cat /proc/mpt/version)
+> 2. Information of firmware. (cat /proc/mpt/iocX/info)
+> 3. Driver log level setting.
+>       MPT driver has debug_level settings to get more logs.
+>       Check "cat /sys/class/scsi_host/host*/proc_name"
+>       Use index number for "mptsas" from result of previous command.
+>       "echo 0x8188 > /sys/class/scsi_host/host<index>/debug_level".
+>
+>
+> NOTE: Above debug level settings are available from some version onwards.
+>       Driver used by you may not have this support, depending upon driver     version.
+>
+> Please provide us log with driver debug enable as mention in #3 will help to debug further.
+>
+> Added Sisir and Sathya in CC list.
+>
+> Thanks
+> Kashyap
+>
+>
+>
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Dimitris Zilaskos
+> Sent: Saturday, March 21, 2009 1:41 AM
+> To: James Bottomley
+> Cc: linux-scsi@vger.kernel.org; Moore, Eric
+> Subject: Re: kernel panics and errors on lsi 1064e
+>
+>
+> Thank you for you reply,
+>
+>> So that's the right thing to do (or better yet, contact LSI support to
+>> see if they have a newer version).
+>
+> Will do so
+>
+>> This has become a log information, so the IOC firmware now dealt with
+>> whatever the problem was.
+>>
+>>
+>>> Is something broken here? I am close to ask for the systems to be replaced.
+>>
+>> You imply that with the firmware upgrade, nothing now goes wrong, so
+>> everything sounds to be OK.
+>
+>
+> Well it has been only 3 days, and these strange messages keep showing up,
+> so I am still worried because it will be harder to get them replaced later
+> and at the same time have the users complaining. But it looks like my
+> options are limited.
+>
+>
+>
+>
+> --
+> =============================================================================
+> Dimitris Zilaskos
+> GridAUTH Operations Centre @ Aristotle University of Thessaloniki , Greece
+> Tel: +302310998988 Fax: +302310994309
+> http://www.grid.auth.gr
+> =============================================================================
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> Internal Virus Database is out of date.
+> Checked by AVG - www.avg.com
+> Version: 8.0.237 / Virus Database: 270.11.10/1995 - Release Date: 03/11/09 08:28:00
+>
