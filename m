@@ -1,93 +1,176 @@
-From: Wu Fengguang <fengguang.wu@intel.com>
-Subject: Re: 2.6.29-rc8-git5: Reported regressions from 2.6.28
-Date: Mon, 23 Mar 2009 08:57:38 +0800
-Message-ID: <20090323005738.GB6003@localhost>
-References: <GPBuLTara4J.A.3kH.TZTxJB@chimera> <20090321200534.GA30238@elte.hu>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 04/14] fcoe: create/destroy fcoe Rx threads on CPU
+	hotplug events
+Date: Mon, 23 Mar 2009 00:59:16 +0000
+Message-ID: <1237769956.4712.14.camel@localhost.localdomain>
+References: <20090317184124.22987.65368.stgit@fritz>
+	 <20090317184145.22987.97528.stgit@fritz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090321200534.GA30238@elte.hu>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Nick Piggin <npiggin@suse.de>, Peter Zijlstra <a.p.zijlstra@chello.nl>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:47110 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757198AbZCWA7T (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 22 Mar 2009 20:59:19 -0400
+In-Reply-To: <20090317184145.22987.97528.stgit@fritz>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Robert Love <robert.w.love@intel.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, Mar 22, 2009 at 04:05:34AM +0800, Ingo Molnar wrote:
+On Tue, 2009-03-17 at 11:41 -0700, Robert Love wrote:
+> This patch adds support for dynamically created Rx threads
+> upon CPU hotplug events.
 > 
-> * Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> There were existing synchronization problems that this patch
+> attempts to resolve. The main problem had to do with fcoe_rcv()
+> running in a different context than the hotplug notifications.
+> This opened the possiblity that fcoe_rcv() would target a Rx
+> thread for a skb. However, that thread could become NULL if
+> the CPU was made offline.
 > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12809
-> > Subject		: iozone regression with 2.6.29-rc6
-> > Submitter	: Lin Ming <ming.m.lin@intel.com>
-> > Date		: 2009-02-27 9:13 (23 days old)
-> > First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=1cf6e7d83bf334cc5916137862c920a97aabc018
-> > References	: http://marc.info/?l=linux-kernel&m=123572630504360&w=4
-> > 		  http://lkml.org/lkml/2009/3/14/265
-> > Handled-By	: Wu Fengguang <fengguang.wu@intel.com>
+> This patch uses the Rx queue's (a skb_queue) lock to protect
+> the thread it's associated with and we use the 'thread' member
+> of the fcoe_percpu_s to determine if the thread is ready to
+> accept new skbs.
 > 
-> I think this was tracked back to the effective halving of 
-> dirty_ratio by 1cf6e7d83 ("mm: task dirty accounting fix") and 
-> doubling the ratio fixed the iozone regression.
+> The patch also attempts to do a better job of cleaning up, both
+> if hotplug registration fails as well as when the module is
+> removed.
+> 
+> Contribution provided by Joe Eykholt <jeykholt@cisco.com> to
+> fix incorrect use of __cpuinitdata.
+> 
+> Signed-off-by: Yi Zou <yi.zou@intel.com>
+> Signed-off-by: Robert Love <robert.w.love@intel.com>
+> ---
+> 
+>  drivers/scsi/fcoe/libfcoe.c |  246 +++++++++++++++++++++++++++++++++++--------
+>  1 files changed, 199 insertions(+), 47 deletions(-)
+> 
+> diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
+> index 648a2fc..951d244 100644
+> --- a/drivers/scsi/fcoe/libfcoe.c
+> +++ b/drivers/scsi/fcoe/libfcoe.c
+> @@ -81,6 +81,156 @@ static struct notifier_block fcoe_notifier = {
+>  };
+>  
+>  /**
+> + * fcoe_percpu_thread_create() - Create a receive thread for an online cpu
+> + * @cpu: cpu index for the online cpu
+> + */
+> +static void fcoe_percpu_thread_create(unsigned int cpu)
+> +{
+> +	struct fcoe_percpu_s *p;
+> +	struct task_struct *thread;
+> +
+> +	p = &per_cpu(fcoe_percpu, cpu);
+> +
+> +	thread = kthread_create(fcoe_percpu_receive_thread,
+> +				(void *)p, "fcoethread/%d", cpu);
+> +
+> +	if (likely(!IS_ERR(p->thread))) {
+> +		kthread_bind(thread, cpu);
+> +		wake_up_process(thread);
+> +
+> +		spin_lock_bh(&p->fcoe_rx_list.lock);
+> +		p->thread = thread;
+> +		spin_unlock_bh(&p->fcoe_rx_list.lock);
+> +	}
+> +}
+> +
+> +/**
+> + * fcoe_percpu_thread_destroy() - removes the rx thread for the given cpu
+> + * @cpu: cpu index the rx thread is to be removed
+> + *
+> + * Destroys a per-CPU Rx thread. Any pending skbs are moved to the
+> + * current CPU's Rx thread. If the thread being destroyed is bound to
+> + * the CPU processing this context the skbs will be freed.
+> + */
+> +static void fcoe_percpu_thread_destroy(unsigned int cpu)
+> +{
+> +	struct fcoe_percpu_s *p;
+> +	struct task_struct *thread;
+> +	struct page *crc_eof;
+> +	struct sk_buff *skb;
+> +#ifdef CONFIG_SMP
+> +	struct fcoe_percpu_s *p0;
+> +	unsigned targ_cpu = smp_processor_id();
+> +#endif /* CONFIG_SMP */
+> +
+> +	printk(KERN_DEBUG "fcoe: Destroying receive thread for CPU %d\n", cpu);
+> +
+> +	/* Prevent any new skbs from being queued for this CPU. */
+> +	p = &per_cpu(fcoe_percpu, cpu);
+> +	spin_lock_bh(&p->fcoe_rx_list.lock);
+> +	thread = p->thread;
+> +	p->thread = NULL;
+> +	crc_eof = p->crc_eof_page;
+> +	p->crc_eof_page = NULL;
+> +	p->crc_eof_offset = 0;
+> +	spin_unlock_bh(&p->fcoe_rx_list.lock);
+> +
+> +#ifdef CONFIG_SMP
+> +	/*
+> +	 * Don't bother moving the skb's if this context is running
+> +	 * on the same CPU that is having its thread destroyed. This
+> +	 * can easily happen when the module is removed.
+> +	 */
+> +	if (cpu != targ_cpu) {
+> +		p0 = &per_cpu(fcoe_percpu, targ_cpu);
+> +		spin_lock_bh(&p0->fcoe_rx_list.lock);
+> +		if (p0->thread) {
+> +			FC_DBG("Moving frames from CPU %d to CPU %d\n",
+> +			       cpu, targ_cpu);
+> +
+> +			while ((skb = __skb_dequeue(&p->fcoe_rx_list)) != NULL)
+> +				__skb_queue_tail(&p0->fcoe_rx_list, skb);
+> +			spin_unlock_bh(&p0->fcoe_rx_list.lock);
+> +		} else {
+> +			/*
+> +			 * The targeted CPU is not initialized and cannot accept
+> +			 * new  skbs. Unlock the targeted CPU and drop the skbs
+> +			 * on the CPU that is going offline.
+> +			 */
+> +			while ((skb = __skb_dequeue(&p->fcoe_rx_list)) != NULL)
+> +				kfree_skb(skb);
+> +			spin_unlock_bh(&p0->fcoe_rx_list.lock);
+> +		}
+> +	} else {
+> +		/*
+> +		 * This scenario occurs when the module is being removed
+> +		 * and all threads are being destroyed. skbs will continue
+> +		 * to be shifted from the CPU thread that is being removed
+> +		 * to the CPU thread associated with the CPU that is processing
+> +		 * the module removal. Once there is only one CPU Rx thread it
+> +		 * will reach this case and we will drop all skbs and later
+> +		 * stop the thread.
+> +		 */
+> +		spin_lock_bh(&p->fcoe_rx_list.lock);
+> +		while ((skb = __skb_dequeue(&p->fcoe_rx_list)) != NULL)
+> +			kfree_skb(skb);
+> +		spin_unlock_bh(&p->fcoe_rx_list.lock);
+> +	}
+> +#else
+> +	/*
+> +	 * This a non-SMP scenario where the singluar Rx thread is
+> +	 * being removed. Free all skbs and stop the thread.
+> +	 */
+> +	spin_lock_bh(&p->fcoe_rx_list.lock);
+> +	while ((skb = __skb_dequeue(&p->fcoe_rx_list)) != NULL)
+> +		kfree_skb(skb);
+> +	spin_unlock_bh(&p->fcoe_rx_list.lock);
+> +#endif
+> +
+> +	if (thread)
+> +		kthread_stop(thread);
 
-Yes, exactly. The patch for fixing this regression is trivial.
+Don't you need a kthread_unbind() somewhere in here?  Under most of your
+calling conditions (CPU_DEAD events) the bound CPU is toast, so the
+thread isn't going to be able to wake up on it.
 
-However it may be better to revert 1cf6e7d83 for 2.6.29,
-and merge 1cf6e7d83 together with this patch for 2.6.30-rc1.
-This allows a larger window for testing out the possible impacts
-on other workloads.
- 
-Thanks,
-Fengguang
----
-writeback: double the dirty thresholds
+James
 
-Enlarge default dirty ratios from 5/10 to 10/20.
-This fixes [Bug #12809] iozone regression with 2.6.29-rc6.
 
-The iozone benchmarks are performed on a 1200M file, with 8GB ram.
-
-iozone -i 0 -i 1 -i 2 -i 3 -i 4 -r 4k -s 64k -s 512m -s 1200m -b tmp.xls
-iozone -B -r 4k -s 64k -s 512m -s 1200m -b tmp.xls
-
-The performance regression is triggered by commit 1cf6e7d83bf3(mm: task
-dirty accounting fix), which makes more correct/thorough dirty accounting.
-
-The default 5/10 dirty ratios were picked (a) with the old dirty
-logic and (b) largely at random and (c) designed to be aggressive. In
-particular, that (a) means that having fixed some of the dirty accounting,
-maybe the real bug is now that it was always too aggressive, just hidden
-by an accounting issue.
-
-The enlarged 10/20 dirty ratios are just about enough to fix the regression.
-
-Cc: Nick Piggin <npiggin@suse.de>
-Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>
-Reported-by: "Lin, Ming M" <ming.m.lin@intel.com>
-Tested-by: "Lin, Ming M" <ming.m.lin@intel.com>
-Signed-off-by: Wu Fengguang <fengguang.wu@intel.com>
----
- mm/page-writeback.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
---- mm.orig/mm/page-writeback.c
-+++ mm/mm/page-writeback.c
-@@ -66,7 +66,7 @@ static inline long sync_writeback_pages(
- /*
-  * Start background writeback (via pdflush) at this percentage
-  */
--int dirty_background_ratio = 5;
-+int dirty_background_ratio = 10;
- 
- /*
-  * dirty_background_bytes starts at 0 (disabled) so that it is a function of
-@@ -83,7 +83,7 @@ int vm_highmem_is_dirtyable;
- /*
-  * The generator of dirty data starts writeback at this percentage
-  */
--int vm_dirty_ratio = 10;
-+int vm_dirty_ratio = 20;
- 
- /*
-  * vm_dirty_bytes starts at 0 (disabled) so that it is a function of
