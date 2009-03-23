@@ -1,209 +1,95 @@
-From: "Ying Chu" <jasonchu@marvell.com>
-Subject: RE: [PATCH 1/3] Layout changes for new mvsas
-Date: Sun, 22 Mar 2009 19:35:17 -0700
-Message-ID: <FE3F06125A99254E8D92161AA4569C6F069ECE57@sc-exch02.marvell.com>
-References: <FE3F06125A99254E8D92161AA4569C6F0693DCE6@sc-exch02.marvell.com> <1237768028.4712.6.camel@localhost.localdomain>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: kernel panics and errors on lsi 1064e
+Date: Mon, 23 Mar 2009 14:25:23 +0530
+Message-ID: <0D1E8821739E724A86F4D16902CE275C1410DBBE2D@inbmail01.lsi.com>
+References: <Pine.LNX.4.64.0903201242300.27079@tassadar.physics.auth.gr>
+ <1237562844.12008.55.camel@localhost.localdomain>
+ <Pine.LNX.4.64.0903202204490.1954@tassadar.physics.auth.gr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=gb2312
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host2.marvell.com ([65.219.4.2]:23331 "EHLO maili.marvell.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753393AbZCWCfW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Mar 2009 22:35:22 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <1237768028.4712.6.camel@localhost.localdomain>
+Received: from exprod7og115.obsmtp.com ([64.18.2.217]:47425 "EHLO
+	exprod7og115.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755860AbZCWIzl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Mar 2009 04:55:41 -0400
+In-Reply-To: <Pine.LNX.4.64.0903202204490.1954@tassadar.physics.auth.gr>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Andy Yan <ayan@marvell.com>
-Cc: jeff@garzik.org, linux-scsi@vger.kernel.org, Michael Wang <qswang@marvell.com>, Jacky Feng <jfeng@marvell.com>, Ke Wei <kewei@marvell.com>
+To: Dimitris Zilaskos <dzila@tassadar.physics.auth.gr>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "Mohapatra, Sisir" <Sisir.Mohapatra@lsi.com>
 
-Sorry about the mess, we will fix our driver and resend the patch file =
-in a solo file.=20
+Hi,
+
+After firmware upgrade, you are seeing only MPT logs but system is running fine. Those prints are not harmful, but it requires attention why it happened? I need some information to help you further.
+
+1. Information of driver version. (cat /proc/mpt/version)
+2. Information of firmware. (cat /proc/mpt/iocX/info)
+3. Driver log level setting. 
+       MPT driver has debug_level settings to get more logs.
+       Check "cat /sys/class/scsi_host/host*/proc_name"
+       Use index number for "mptsas" from result of previous command.
+       "echo 0x8188 > /sys/class/scsi_host/host<index>/debug_level".
+
+ 
+NOTE: Above debug level settings are available from some version onwards. 
+       Driver used by you may not have this support, depending upon driver	version.
+
+Please provide us log with driver debug enable as mention in #3 will help to debug further.
+
+Added Sisir and Sathya in CC list.
+
+Thanks
+Kashyap
+
+
 
 -----Original Message-----
-=46rom: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]=20
-Sent: 2009=C4=EA3=D4=C223=C8=D5 8:27
-To: Andy Yan
-Cc: jeff@garzik.org; Tejun Heo; linux-scsi@vger.kernel.org; Michael Wan=
-g; Jacky Feng; Ying Chu; Ke Wei
-Subject: Re: [PATCH 1/3] Layout changes for new mvsas
-
-On Thu, 2009-03-19 at 01:50 -0700, Andy Yan wrote:
-> >From e444f857a14757cf483cdbd86f91dee32e99d3ac Mon Sep 17 00:00:00=20
-> >2001
-> From: Andy yan <ayan@marvell.com>
-> Date: Thu, 19 Mar 2009 21:46:48 +0800
-> Subject: [PATCH 1/3] Layout changes for new mvsas This patch change=20
-> Kconfig and Makefile for new layout of mvsas, mvsas will have own=20
-> folder, Kconfig, Makefile.
->=20
->  Signed-off-by: Andy Yan <ayan@marvell.com>
->  Signed-off-by: Ke Wei <kewei@marvell.com>
->  Signed-off-by: Ying Chu <jasonchu@marvell.com>
->=20
-> ---
->  drivers/scsi/Kconfig        |    1 +
->  drivers/scsi/Makefile       |    2 +-
->  drivers/scsi/mvsas/Kconfig  |   42
-> ++++++++++++++++++++++++++++++++++++++++++
-
-These lines are broken by your email tool, so it makes the patch unappl=
-yable, I'm afraid.  Could you see Documentation/email-clients.txt and s=
-ee if you can find a way of making the actual patches not be wrapped th=
-is way?
-
->  drivers/scsi/mvsas/Makefile |   32 ++++++++++++++++++++++++++++++++
->  4 files changed, 76 insertions(+), 1 deletions(-)  create mode 10064=
-4=20
-> drivers/scsi/mvsas/Kconfig  create mode 100644=20
-> drivers/scsi/mvsas/Makefile
->=20
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig index=20
-> e2f44e6..5bb77b1 100644
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -507,6 +507,7 @@ config SCSI_AIC7XXX_OLD
-> =20
->  source "drivers/scsi/aic7xxx/Kconfig.aic79xx"
->  source "drivers/scsi/aic94xx/Kconfig"
-> +source "drivers/scsi/mvsas/Kconfig"
-> =20
->  config SCSI_DPT_I2O
->  	tristate "Adaptec I2O RAID support "
-> diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile index=20
-> cf79296..fdb2dd8 100644
-> --- a/drivers/scsi/Makefile
-> +++ b/drivers/scsi/Makefile
-> @@ -124,7 +124,7 @@ obj-$(CONFIG_SCSI_IBMVSCSIS)	+=3D ibmvscsi/
->  obj-$(CONFIG_SCSI_IBMVFC)	+=3D ibmvscsi/
->  obj-$(CONFIG_SCSI_HPTIOP)	+=3D hptiop.o
->  obj-$(CONFIG_SCSI_STEX)		+=3D stex.o
-> -obj-$(CONFIG_SCSI_MVSAS)	+=3D mvsas.o
-> +obj-$(CONFIG_SCSI_MVSAS)	+=3D mvsas/
->  obj-$(CONFIG_PS3_ROM)		+=3D ps3rom.o
->  obj-$(CONFIG_SCSI_CXGB3_ISCSI)	+=3D libiscsi.o libiscsi_tcp.o cxgb3i=
-/
-> =20
-> diff --git a/drivers/scsi/mvsas/Kconfig b/drivers/scsi/mvsas/Kconfig=20
-> new file mode 100644 index 0000000..37096b5
-> --- /dev/null
-> +++ b/drivers/scsi/mvsas/Kconfig
-> @@ -0,0 +1,42 @@
-> +#
-> +# Kernel configuration file for 88SE64XX/88SE94XX SAS/SATA driver.
-> +
-> +# Copyright (c) 2005 Adaptec, Inc.  All rights reserved.
-> +# Copyright (c) 2005 Luben Tuikov <luben_tuikov@adaptec.com>
-
-Interesting copyright for a Marvell file ...
-
-> +# This file is licensed under GPLv2.
-> +#
-> +# This file is part of the 88SE64XX/88SE94XX driver.
-> +#
-> +# The 88SE64XX/88SE94XX driver is free software; you can redistribut=
-e=20
-> +# it and/or modify it under the terms of the GNU General Public=20
-> +License
->=20
-> +# as published by the Free Software Foundation; version 2 of the #=20
-> +License.
-> +#
-> +# The 88SE64XX/88SE94XX driver is distributed in the hope that it=20
-> +will
-> be
-> +# useful, but WITHOUT ANY WARRANTY; without even the implied warrant=
-y
-> of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU =
-#=20
-> +General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License =
-#=20
-> +along with 88SE64XX/88SE94XX Driver; if not, write to the Free
-> Software
-> +# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA =20
-> +02110-1301
-> USA
-> +#
-> +#
-> +
-> +config SCSI_MVSAS
-> +	tristate "Marvell 88SE64XX/88SE94XX SAS/SATA support"
-> +	depends on PCI
-> +	select SCSI_SAS_LIBSAS
-> +	select FW_LOADER
-> +	help
-> +		This driver supports Marvell's SAS/SATA 3Gb/s PCI-E
-> 88SE64XX and 6Gb/s
-> +		PCI-E 88SE94XX chip based host adapters.
-> +
-> +config SCSI_MVSAS_DEBUG
-> +	bool "Compile in debug mode"
-> +	default y
-> +	depends on SCSI_MVSAS
-> +	help
-> +		Compiles the 88SE64XX/88SE94XX driver in debug mode.  In
-> debug mode,
-> +		the driver prints some messages to the console.
-> diff --git a/drivers/scsi/mvsas/Makefile b/drivers/scsi/mvsas/Makefil=
-e=20
-> new file mode 100644 index 0000000..cefc0cf
-> --- /dev/null
-> +++ b/drivers/scsi/mvsas/Makefile
-> @@ -0,0 +1,32 @@
-> +#
-> +# Kernel Makefile for the libsas helpers
-
-Even more interesting description.
-
-> +# Copyright (C) 2005 Adaptec, Inc.  All rights reserved.
-> +# Copyright (C) 2005 Luben Tuikov <luben_tuikov@adaptec.com> # # Thi=
-s=20
-> +file is licensed under GPLv2.
-> +#
-> +# This program is free software; you can redistribute it and/or #=20
-> +modify it under the terms of the GNU General Public License as #=20
-> +published by the Free Software Foundation; version 2 of the #=20
-> +License.
-> +#
-> +# This program is distributed in the hope that it will be useful, #=20
-> +but WITHOUT ANY WARRANTY; without even the implied warranty of #=20
-> +MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU #=20
-> +General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License =
-#=20
-> +along with this program; if not, write to the Free Software #=20
-> +Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 =
-#=20
-> +USA
-> +
-> +ifeq ($(CONFIG_SCSI_MVSAS_DEBUG),y)
-> +	EXTRA_CFLAGS +=3D -DMV_DEBUG
-> +endif
-> +
-> +obj-$(CONFIG_SCSI_MVSAS) +=3D mvsas.o
-> +mvsas-y +=3D  mv_init.o  \
-> +           mv_sas.o   \
-> +           mv_64xx.o  \
-> +           mv_94xx.o
-
-You can't do the Makefile first because if I put it in in this order, a=
-nd someone bisects precisely to this point, we have all the symbols but=
- no actual C files for this Makefile to build, the result would be that=
- the build would break.  Each patch needs to be separately buildable  .=
-=2E.
-I can do this by merging the three patches together (as often makes sen=
-se for new drivers), so this isn't a huge problem.
-
-James
+From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Dimitris Zilaskos
+Sent: Saturday, March 21, 2009 1:41 AM
+To: James Bottomley
+Cc: linux-scsi@vger.kernel.org; Moore, Eric
+Subject: Re: kernel panics and errors on lsi 1064e
 
 
+Thank you for you reply,
+
+> So that's the right thing to do (or better yet, contact LSI support to
+> see if they have a newer version).
+
+Will do so
+
+> This has become a log information, so the IOC firmware now dealt with
+> whatever the problem was.
+>
+>
+>> Is something broken here? I am close to ask for the systems to be replaced.
+>
+> You imply that with the firmware upgrade, nothing now goes wrong, so
+> everything sounds to be OK.
+
+
+Well it has been only 3 days, and these strange messages keep showing up, 
+so I am still worried because it will be harder to get them replaced later 
+and at the same time have the users complaining. But it looks like my 
+options are limited.
+
+
+
+
+-- 
+=============================================================================
+Dimitris Zilaskos
+GridAUTH Operations Centre @ Aristotle University of Thessaloniki , Greece
+Tel: +302310998988 Fax: +302310994309
+http://www.grid.auth.gr 
+=============================================================================
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Internal Virus Database is out of date.
+Checked by AVG - www.avg.com 
+Version: 8.0.237 / Virus Database: 270.11.10/1995 - Release Date: 03/11/09 08:28:00
