@@ -1,76 +1,123 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: eh_abort_handler and calling scsi_done
-Date: Tue, 24 Mar 2009 08:29:57 -0500
-Message-ID: <49C8E055.2060108@linux.vnet.ibm.com>
-References: <20090324114137.GA8616@schmichrtp.de.ibm.com>
+From: hare@suse.de (Hannes Reinecke)
+Subject: [PATCH] Driver 'sd' needs updating
+Date: Tue, 24 Mar 2009 15:14:28 +0100
+Message-ID: <20090324141428.31E5118C7A3@pentland.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:39194 "EHLO e4.ny.us.ibm.com"
+Received: from cantor2.suse.de ([195.135.220.15]:55330 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753204AbZCXN3p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Mar 2009 09:29:45 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e4.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n2ODQim0021863
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Mar 2009 09:26:44 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n2ODThHE158306
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Mar 2009 09:29:43 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n2ODSE9J024411
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Mar 2009 09:28:14 -0400
-In-Reply-To: <20090324114137.GA8616@schmichrtp.de.ibm.com>
+	id S1761124AbZCXOOb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Mar 2009 10:14:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christof Schmitt <christof.schmitt@de.ibm.com>
-Cc: linux-scsi@vger.kernel.org
-
-Your assessment sounds correct to me. The other caveat to note is that
-if for some reason in your eh_abort_handler you don't think the command
-is still outstanding, you should return SUCCESS for this as well.
-
--Brian
-
-Christof Schmitt wrote:
-> I am investigating what is required from a LLD when SCSI commands time
-> out and the SCSI EH calls the eh_abort_handler. The documentation in
-> scsi_eh.txt states:
-> 
->     <<scsi_eh_abort_cmds>>
-> 
-> 	This action is taken for each timed out command.
-> 	hostt->eh_abort_handler() is invoked for each scmd.  The
-> 	handler returns SUCCESS if it has succeeded to make LLDD and
-> 	all related hardware forget about the scmd.
-> 
-> From this and from looking at the code, i would conclude:
-> 
-> 1) If the LLD returns FAILED from the eh_abort_handler, then the
->    command is still allowed to be active in the LLD and the LLD can
->    call scsi_done any time later (probably latest when the
->    eh_host_reset_handler flushes everything that is still pending).
-> 
-> 2) While the abort is pending, but before returning SUCCESS from
->    eh_abort_handler, the LLD can still call scsi_done for the SCSI
->    command to be aborted (the SCSI command might be returned with a
->    status "aborted" if the abort succeeds, or "good" if it was
->    completed just before the abort reached the storage system).
-> 
-> Is this correct? Are there any more limitations a SCSI LLD has to be
-> aware of?
-> 
-> --
-> Christof Schmitt
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 
+If a driver sets blk_queue_prep_rq() it should clean up itself
+and not rely on the bus callbacks to handle this. This removes
+the need to hook into bus->remove() as these should not be used
+at the same time as driver->remove().
+
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Kay Sievers <kay.sievers@vrfy.org>
+---
+ drivers/scsi/scsi_lib.c    |    6 ++++++
+ drivers/scsi/scsi_sysfs.c  |   17 -----------------
+ drivers/scsi/sd.c          |    2 ++
+ drivers/scsi/sr.c          |    1 +
+ include/scsi/scsi_driver.h |    1 +
+ 5 files changed, 10 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 4b13e36..73df41b 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1222,6 +1222,12 @@ int scsi_prep_fn(struct request_queue *q, struct request *req)
+ 	return scsi_prep_return(q, req, ret);
+ }
+ 
++void scsi_reset_prep_fn(struct request_queue *q)
++{
++	blk_queue_prep_rq(q, scsi_prep_fn);
++}
++EXPORT_SYMBOL(scsi_reset_prep_fn);
++
+ /*
+  * scsi_dev_queue_ready: if we can send requests to sdev, return 1 else
+  * return 0.
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index fa4711d..91482f2 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -420,29 +420,12 @@ static int scsi_bus_resume(struct device * dev)
+ 	return err;
+ }
+ 
+-static int scsi_bus_remove(struct device *dev)
+-{
+-	struct device_driver *drv = dev->driver;
+-	struct scsi_device *sdev = to_scsi_device(dev);
+-	int err = 0;
+-
+-	/* reset the prep_fn back to the default since the
+-	 * driver may have altered it and it's being removed */
+-	blk_queue_prep_rq(sdev->request_queue, scsi_prep_fn);
+-
+-	if (drv && drv->remove)
+-		err = drv->remove(dev);
+-
+-	return 0;
+-}
+-
+ struct bus_type scsi_bus_type = {
+         .name		= "scsi",
+         .match		= scsi_bus_match,
+ 	.uevent		= scsi_bus_uevent,
+ 	.suspend	= scsi_bus_suspend,
+ 	.resume		= scsi_bus_resume,
+-	.remove		= scsi_bus_remove,
+ };
+ EXPORT_SYMBOL_GPL(scsi_bus_type);
+ 
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index aeab5d9..64e88e2 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2068,6 +2068,8 @@ static int sd_remove(struct device *dev)
+ {
+ 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
+ 
++	scsi_reset_prep_fn(sdkp->device->request_queue);
++
+ 	device_del(&sdkp->dev);
+ 	del_gendisk(sdkp->disk);
+ 	sd_shutdown(dev);
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index e7fa3ca..914733a 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -889,6 +889,7 @@ static int sr_remove(struct device *dev)
+ {
+ 	struct scsi_cd *cd = dev_get_drvdata(dev);
+ 
++	scsi_reset_prep_fn(cd->device->request_queue);
+ 	del_gendisk(cd->disk);
+ 
+ 	mutex_lock(&sr_ref_mutex);
+diff --git a/include/scsi/scsi_driver.h b/include/scsi/scsi_driver.h
+index 1f5ca7f..2e22929 100644
+--- a/include/scsi/scsi_driver.h
++++ b/include/scsi/scsi_driver.h
+@@ -32,5 +32,6 @@ int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req);
+ int scsi_setup_fs_cmnd(struct scsi_device *sdev, struct request *req);
+ int scsi_prep_state_check(struct scsi_device *sdev, struct request *req);
+ int scsi_prep_return(struct request_queue *q, struct request *req, int ret);
++int scsi_reset_prep_fn(struct request_queue *);
+ 
+ #endif /* _SCSI_SCSI_DRIVER_H */
 -- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
-
+1.5.3.2
 
