@@ -1,42 +1,40 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 8579] 3w_9xxx: 32/64bit cleanness ?? : Mounting doesn't work on 3ware 9500S-4LP RAID-controller and RAID-10
-Date: Tue, 24 Mar 2009 08:51:56 -0700 (PDT)
-Message-ID: <20090324155156.79337108043@picon.linux-foundation.org>
-References: <bug-8579-11613@http.bugzilla.kernel.org/>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH 26/26] qla2xxx: Update version number to 8.03.01-k1.
+Date: Tue, 24 Mar 2009 09:08:20 -0700
+Message-ID: <1237910900-30817-27-git-send-email-andrew.vasquez@qlogic.com>
+References: <1237910900-30817-1-git-send-email-andrew.vasquez@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:52610 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753430AbZCXPxK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Mar 2009 11:53:10 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n2OFqSPH022556
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Mar 2009 08:52:59 -0700
-In-Reply-To: <bug-8579-11613@http.bugzilla.kernel.org/>
+Received: from avexch1.qlogic.com ([198.70.193.115]:29874 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762380AbZCXQIr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Mar 2009 12:08:47 -0400
+In-Reply-To: <1237910900-30817-1-git-send-email-andrew.vasquez@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Seokmann Ju <seokmann.ju@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=8579
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_version.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-
-alan@lxorguk.ukuu.org.uk changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |alan@lxorguk.ukuu.org.uk
-             Status|NEW                         |REJECTED
-         Resolution|                            |INSUFFICIENT_DATA
-
-
-
-
-------- Comment #11 from alan@lxorguk.ukuu.org.uk  2009-03-24 08:51 -------
-Closing stale bug as after this point various fixes were made and the sg list
-accessors have completely changed by now
-
-
+diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
+index a772eab..19d1afc 100644
+--- a/drivers/scsi/qla2xxx/qla_version.h
++++ b/drivers/scsi/qla2xxx/qla_version.h
+@@ -7,9 +7,9 @@
+ /*
+  * Driver version
+  */
+-#define QLA2XXX_VERSION      "8.03.00-k4"
++#define QLA2XXX_VERSION      "8.03.01-k1"
+ 
+ #define QLA_DRIVER_MAJOR_VER	8
+ #define QLA_DRIVER_MINOR_VER	3
+-#define QLA_DRIVER_PATCH_VER	0
++#define QLA_DRIVER_PATCH_VER	1
+ #define QLA_DRIVER_BETA_VER	0
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+1.6.2.rc0.55.g30aa4f
+
