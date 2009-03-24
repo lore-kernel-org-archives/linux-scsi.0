@@ -1,42 +1,144 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: Re: eh_abort_handler and calling scsi_done
-Date: Tue, 24 Mar 2009 15:34:24 +0100
-Message-ID: <20090324143424.GA19469@schmichrtp.de.ibm.com>
-References: <20090324114137.GA8616@schmichrtp.de.ibm.com> <49C8E055.2060108@linux.vnet.ibm.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] Driver 'sd' needs updating
+Date: Tue, 24 Mar 2009 16:43:18 +0200
+Message-ID: <49C8F186.2080705@panasas.com>
+References: <20090324141428.31E5118C7A3@pentland.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate2.uk.ibm.com ([194.196.100.162]:60979 "EHLO
-	mtagate2.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754550AbZCXOea (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Mar 2009 10:34:30 -0400
-Received: from d06nrmr1806.portsmouth.uk.ibm.com (d06nrmr1806.portsmouth.uk.ibm.com [9.149.39.193])
-	by mtagate2.uk.ibm.com (8.13.1/8.13.1) with ESMTP id n2OEYSEK031344
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Mar 2009 14:34:28 GMT
-Received: from d06av04.portsmouth.uk.ibm.com (d06av04.portsmouth.uk.ibm.com [9.149.37.216])
-	by d06nrmr1806.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n2OEYP513461218
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Mar 2009 14:34:27 GMT
-Received: from d06av04.portsmouth.uk.ibm.com (loopback [127.0.0.1])
-	by d06av04.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n2OEYPtR002350
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Mar 2009 14:34:25 GMT
-Content-Disposition: inline
-In-Reply-To: <49C8E055.2060108@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758629AbZCXOpQ@vger.kernel.org>
+In-Reply-To: <20090324141428.31E5118C7A3@pentland.suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Tue, Mar 24, 2009 at 08:29:57AM -0500, Brian King wrote:
-> Your assessment sounds correct to me. The other caveat to note is that
-> if for some reason in your eh_abort_handler you don't think the command
-> is still outstanding, you should return SUCCESS for this as well.
+Hannes Reinecke wrote:
+> If a driver sets blk_queue_prep_rq() it should clean up itself
+> and not rely on the bus callbacks to handle this. This removes
+> the need to hook into bus->remove() as these should not be used
+> at the same time as driver->remove().
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: Kay Sievers <kay.sievers@vrfy.org>
 
-True, thanks for the hint.
+Hi Hannes, please I do not understand this patch.
 
-The idea is that the zfcp driver does not have to break the link
-between the FSF and SCSI commands and the abort_lock in the driver can
-be removed. I guess, now i have some information to figure out if i
-can remove this step and still satisfy the API requirements.
+I was always under the impression that the scsi ULD
+remove() function is called from inside scsi_bus_remove()
+at the very end, please see below.
 
---
-Christof Schmitt
+> ---
+>  drivers/scsi/scsi_lib.c    |    6 ++++++
+>  drivers/scsi/scsi_sysfs.c  |   17 -----------------
+>  drivers/scsi/sd.c          |    2 ++
+>  drivers/scsi/sr.c          |    1 +
+>  include/scsi/scsi_driver.h |    1 +
+>  5 files changed, 10 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 4b13e36..73df41b 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1222,6 +1222,12 @@ int scsi_prep_fn(struct request_queue *q, struct request *req)
+>  	return scsi_prep_return(q, req, ret);
+>  }
+>  
+> +void scsi_reset_prep_fn(struct request_queue *q)
+> +{
+> +	blk_queue_prep_rq(q, scsi_prep_fn);
+> +}
+> +EXPORT_SYMBOL(scsi_reset_prep_fn);
+> +
+>  /*
+>   * scsi_dev_queue_ready: if we can send requests to sdev, return 1 else
+>   * return 0.
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index fa4711d..91482f2 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -420,29 +420,12 @@ static int scsi_bus_resume(struct device * dev)
+>  	return err;
+>  }
+>  
+> -static int scsi_bus_remove(struct device *dev)
+> -{
+> -	struct device_driver *drv = dev->driver;
+> -	struct scsi_device *sdev = to_scsi_device(dev);
+> -	int err = 0;
+> -
+> -	/* reset the prep_fn back to the default since the
+> -	 * driver may have altered it and it's being removed */
+> -	blk_queue_prep_rq(sdev->request_queue, scsi_prep_fn);
+> -
+> -	if (drv && drv->remove)
+> -		err = drv->remove(dev);
+
+This here is where my osd_uld.c::osd_remove() is called.
+
+If this vector is not used will the drv-core call drv->remove(dev)
+in behalf of scsi?
+
+> -
+> -	return 0;
+> -}
+> -
+>  struct bus_type scsi_bus_type = {
+>          .name		= "scsi",
+>          .match		= scsi_bus_match,
+>  	.uevent		= scsi_bus_uevent,
+>  	.suspend	= scsi_bus_suspend,
+>  	.resume		= scsi_bus_resume,
+> -	.remove		= scsi_bus_remove,
+>  };
+>  EXPORT_SYMBOL_GPL(scsi_bus_type);
+>  
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index aeab5d9..64e88e2 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -2068,6 +2068,8 @@ static int sd_remove(struct device *dev)
+
+Until today this was called from within scsi_bus_remove
+what happens after your patch?
+
+>  {
+>  	struct scsi_disk *sdkp = dev_get_drvdata(dev);
+>  
+> +	scsi_reset_prep_fn(sdkp->device->request_queue);
+> +
+>  	device_del(&sdkp->dev);
+>  	del_gendisk(sdkp->disk);
+>  	sd_shutdown(dev);
+> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+> index e7fa3ca..914733a 100644
+> --- a/drivers/scsi/sr.c
+> +++ b/drivers/scsi/sr.c
+> @@ -889,6 +889,7 @@ static int sr_remove(struct device *dev)
+>  {
+>  	struct scsi_cd *cd = dev_get_drvdata(dev);
+>  
+> +	scsi_reset_prep_fn(cd->device->request_queue);
+>  	del_gendisk(cd->disk);
+>  
+>  	mutex_lock(&sr_ref_mutex);
+> diff --git a/include/scsi/scsi_driver.h b/include/scsi/scsi_driver.h
+> index 1f5ca7f..2e22929 100644
+> --- a/include/scsi/scsi_driver.h
+> +++ b/include/scsi/scsi_driver.h
+> @@ -32,5 +32,6 @@ int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req);
+>  int scsi_setup_fs_cmnd(struct scsi_device *sdev, struct request *req);
+>  int scsi_prep_state_check(struct scsi_device *sdev, struct request *req);
+>  int scsi_prep_return(struct request_queue *q, struct request *req, int ret);
+> +int scsi_reset_prep_fn(struct request_queue *);
+>  
+>  #endif /* _SCSI_SCSI_DRIVER_H */
+
+I did not test this patch with osd_uld yet, but I will tomorrow. If my assumption
+is right then drv-core should call my osd_remove just the same, right?
+
+Are there any different timing issue for example the presence of scsi_device
+is still true?
+
+Thanks
+Boaz
