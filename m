@@ -1,57 +1,70 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: eh_abort_handler and calling scsi_done
-Date: Tue, 24 Mar 2009 12:41:38 +0100
-Message-ID: <20090324114137.GA8616@schmichrtp.de.ibm.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] block: add global timeout to requests
+Date: Tue, 24 Mar 2009 12:42:30 +0100
+Message-ID: <20090324114230.GO27476@kernel.dk>
+References: <1237407667.3350.43.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate1.de.ibm.com ([195.212.17.161]:37966 "EHLO
-	mtagate1.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755143AbZCXLlk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Mar 2009 07:41:40 -0400
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate1.de.ibm.com (8.13.1/8.13.1) with ESMTP id n2OBfcGN019144
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Mar 2009 11:41:38 GMT
-Received: from d12av04.megacenter.de.ibm.com (d12av04.megacenter.de.ibm.com [9.149.165.229])
-	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n2OBfctR4092128
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Mar 2009 12:41:38 +0100
-Received: from d12av04.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av04.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n2OBfc6m027419
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Mar 2009 12:41:38 +0100
-Received: from schmichrtp.de.ibm.com (schmichrtp.mainz.de.ibm.com [9.155.23.46])
-	by d12av04.megacenter.de.ibm.com (8.12.11.20060308/8.12.11) with SMTP id n2OBfcuN027416
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Mar 2009 12:41:38 +0100
+Received: from brick.kernel.dk ([93.163.65.50]:37914 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750846AbZCXLmc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Mar 2009 07:42:32 -0400
 Content-Disposition: inline
+In-Reply-To: <1237407667.3350.43.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-I am investigating what is required from a LLD when SCSI commands time
-out and the SCSI EH calls the eh_abort_handler. The documentation in
-scsi_eh.txt states:
+On Wed, Mar 18 2009, James Bottomley wrote:
+> We can eliminate the SCSI command timed out check entirely if the block
+> layer does this for us.  The way to do this in block is to check how
+> long the request has been outstanding if a requeue is requested and
+> ending it if we've gone over retries * timeout.
+> 
+> This will also eliminate many cases in SCSI where we evade the command
+> timeout for various reasons (like initial success converted to requeue)
+> 
+> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+> 
+> ---
+> 
+> Index: linux-2.6/block/blk-core.c
+> ===================================================================
+> --- linux-2.6.orig/block/blk-core.c	2009-02-19 16:42:00.140427205 -0500
+> +++ linux-2.6/block/blk-core.c	2009-03-18 10:36:10.511526815 -0400
+> @@ -937,6 +937,8 @@ EXPORT_SYMBOL(blk_start_queueing);
+>   */
+>  void blk_requeue_request(struct request_queue *q, struct request *rq)
+>  {
+> +	unsigned long wait_for = (rq->retries + 1) * rq->timeout;
+> +
+>  	blk_delete_timer(rq);
+>  	blk_clear_rq_complete(rq);
+>  	trace_block_rq_requeue(q, rq);
+> @@ -944,7 +946,13 @@ void blk_requeue_request(struct request_
+>  	if (blk_rq_tagged(rq))
+>  		blk_queue_end_tag(q, rq);
+>  
+> -	elv_requeue_request(q, rq);
+> +	if (time_before(rq->start_time + wait_for, jiffies)) {
+> +		printk(KERN_ERR "%s: timing out command, waited %lus\n",
+> +		       rq->rq_disk ? rq->rq_disk->disk_name : "?",
+> +		       wait_for/HZ);
+> +		blk_end_request(rq, -EIO, blk_rq_bytes(rq));
+> +	} else
+> +		elv_requeue_request(q, rq);
+>  }
+>  EXPORT_SYMBOL(blk_requeue_request);
 
-    <<scsi_eh_abort_cmds>>
+Applied, though I think a
 
-	This action is taken for each timed out command.
-	hostt->eh_abort_handler() is invoked for each scmd.  The
-	handler returns SUCCESS if it has succeeded to make LLDD and
-	all related hardware forget about the scmd.
+        time_after(jiffies, time)
 
->From this and from looking at the code, i would conclude:
+is usually much clearer, since we are checking for an expired event (not
+an early one) :-)
 
-1) If the LLD returns FAILED from the eh_abort_handler, then the
-   command is still allowed to be active in the LLD and the LLD can
-   call scsi_done any time later (probably latest when the
-   eh_host_reset_handler flushes everything that is still pending).
+-- 
+Jens Axboe
 
-2) While the abort is pending, but before returning SUCCESS from
-   eh_abort_handler, the LLD can still call scsi_done for the SCSI
-   command to be aborted (the SCSI command might be returned with a
-   status "aborted" if the abort succeeds, or "good" if it was
-   completed just before the abort reached the storage system).
-
-Is this correct? Are there any more limitations a SCSI LLD has to be
-aware of?
-
---
-Christof Schmitt
