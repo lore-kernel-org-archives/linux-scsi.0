@@ -1,206 +1,42 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] Driver 'sd' needs updating
-Date: Tue, 24 Mar 2009 16:52:33 +0100
-Message-ID: <49C901C1.5080902@suse.de>
-References: <20090324141428.31E5118C7A3@pentland.suse.de> <49C90012.50009@panasas.com>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------010200020109000809080607"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759273AbZCXPww@vger.kernel.org>
-In-Reply-To: <49C90012.50009@panasas.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 8579] 3w_9xxx: 32/64bit cleanness ?? : Mounting doesn't work on 3ware 9500S-4LP RAID-controller and RAID-10
+Date: Tue, 24 Mar 2009 08:51:56 -0700 (PDT)
+Message-ID: <20090324155156.79337108043@picon.linux-foundation.org>
+References: <bug-8579-11613@http.bugzilla.kernel.org/>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:52610 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753430AbZCXPxK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Mar 2009 11:53:10 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n2OFqSPH022556
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Mar 2009 08:52:59 -0700
+In-Reply-To: <bug-8579-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------010200020109000809080607
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+http://bugzilla.kernel.org/show_bug.cgi?id=8579
 
-Hi Boaz,
 
-Boaz Harrosh wrote:
-> Hannes Reinecke wrote:
->> If a driver sets blk_queue_prep_rq() it should clean up itself
->> and not rely on the bus callbacks to handle this. This removes
->> the need to hook into bus->remove() as these should not be used
->> at the same time as driver->remove().
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> Signed-off-by: Kay Sievers <kay.sievers@vrfy.org>
-> 
-> I spoke too soon please see below
-> 
->> ---
->>  drivers/scsi/scsi_lib.c    |    6 ++++++
->>  drivers/scsi/scsi_sysfs.c  |   17 -----------------
->>  drivers/scsi/sd.c          |    2 ++
->>  drivers/scsi/sr.c          |    1 +
->>  include/scsi/scsi_driver.h |    1 +
->>  5 files changed, 10 insertions(+), 17 deletions(-)
->>
->> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->> index 4b13e36..73df41b 100644
->> --- a/drivers/scsi/scsi_lib.c
->> +++ b/drivers/scsi/scsi_lib.c
->> @@ -1222,6 +1222,12 @@ int scsi_prep_fn(struct request_queue *q, struct request *req)
->>  	return scsi_prep_return(q, req, ret);
->>  }
->>  
->> +void scsi_reset_prep_fn(struct request_queue *q)
-> 
-> Here it is declared void
-> but
-> 
->> diff --git a/include/scsi/scsi_driver.h b/include/scsi/scsi_driver.h
->> index 1f5ca7f..2e22929 100644
->> --- a/include/scsi/scsi_driver.h
->> +++ b/include/scsi/scsi_driver.h
->> @@ -32,5 +32,6 @@ int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req);
->>  int scsi_setup_fs_cmnd(struct scsi_device *sdev, struct request *req);
->>  int scsi_prep_state_check(struct scsi_device *sdev, struct request *req);
->>  int scsi_prep_return(struct request_queue *q, struct request *req, int ret);
->> +int scsi_reset_prep_fn(struct request_queue *);
-> 
-> Here it is returning int.
-> 
-> My FC10 compiler does not like that:
->   drivers/scsi/scsi_lib.c:1415: error: conflicting types for 'scsi_reset_prep_fn'
->   include/scsi/scsi_driver.h:35: error: previous declaration of 'scsi_reset_prep_fn' was here
-> 
->>  
->>  #endif /* _SCSI_SCSI_DRIVER_H */
-> 
-> I fixed it to be void, will test later
-> 
-Argl. You are correct. New patch attached.
+alan@lxorguk.ukuu.org.uk changed:
 
-Cheers,
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |alan@lxorguk.ukuu.org.uk
+             Status|NEW                         |REJECTED
+         Resolution|                            |INSUFFICIENT_DATA
 
-Hannes
+
+
+
+------- Comment #11 from alan@lxorguk.ukuu.org.uk  2009-03-24 08:51 -------
+Closing stale bug as after this point various fixes were made and the sg list
+accessors have completely changed by now
+
+
 -- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Markus Rex, HRB 16746 (AG Nürnberg)
-
---------------010200020109000809080607
-Content-Type: text/x-patch;
- name="0001-Driver-sd-needs-updating.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="0001-Driver-sd-needs-updating.patch"
-
->From 6c8f63205c81922581ebd9a73d5ff92f50910064 Mon Sep 17 00:00:00 2001
-From: Hannes Reinecke <hare@suse.de>
-Date: Tue, 24 Mar 2009 15:13:43 +0100
-Subject: [PATCH] Driver 'sd' needs updating
-
-If a driver sets blk_queue_prep_rq() it should clean up itself
-and not rely on the bus callbacks to handle this. This removes
-the need to hook into bus->remove() as these should not be used
-at the same time as driver->remove().
-
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Kay Sievers <kay.sievers@vrfy.org>
----
- drivers/scsi/scsi_lib.c    |    6 ++++++
- drivers/scsi/scsi_sysfs.c  |   17 -----------------
- drivers/scsi/sd.c          |    2 ++
- drivers/scsi/sr.c          |    1 +
- include/scsi/scsi_driver.h |    1 +
- 5 files changed, 10 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 4b13e36..73df41b 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1222,6 +1222,12 @@ int scsi_prep_fn(struct request_queue *q, struct request *req)
- 	return scsi_prep_return(q, req, ret);
- }
- 
-+void scsi_reset_prep_fn(struct request_queue *q)
-+{
-+	blk_queue_prep_rq(q, scsi_prep_fn);
-+}
-+EXPORT_SYMBOL(scsi_reset_prep_fn);
-+
- /*
-  * scsi_dev_queue_ready: if we can send requests to sdev, return 1 else
-  * return 0.
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index fa4711d..91482f2 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -420,29 +420,12 @@ static int scsi_bus_resume(struct device * dev)
- 	return err;
- }
- 
--static int scsi_bus_remove(struct device *dev)
--{
--	struct device_driver *drv = dev->driver;
--	struct scsi_device *sdev = to_scsi_device(dev);
--	int err = 0;
--
--	/* reset the prep_fn back to the default since the
--	 * driver may have altered it and it's being removed */
--	blk_queue_prep_rq(sdev->request_queue, scsi_prep_fn);
--
--	if (drv && drv->remove)
--		err = drv->remove(dev);
--
--	return 0;
--}
--
- struct bus_type scsi_bus_type = {
-         .name		= "scsi",
-         .match		= scsi_bus_match,
- 	.uevent		= scsi_bus_uevent,
- 	.suspend	= scsi_bus_suspend,
- 	.resume		= scsi_bus_resume,
--	.remove		= scsi_bus_remove,
- };
- EXPORT_SYMBOL_GPL(scsi_bus_type);
- 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index aeab5d9..64e88e2 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2068,6 +2068,8 @@ static int sd_remove(struct device *dev)
- {
- 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
- 
-+	scsi_reset_prep_fn(sdkp->device->request_queue);
-+
- 	device_del(&sdkp->dev);
- 	del_gendisk(sdkp->disk);
- 	sd_shutdown(dev);
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index e7fa3ca..914733a 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -889,6 +889,7 @@ static int sr_remove(struct device *dev)
- {
- 	struct scsi_cd *cd = dev_get_drvdata(dev);
- 
-+	scsi_reset_prep_fn(cd->device->request_queue);
- 	del_gendisk(cd->disk);
- 
- 	mutex_lock(&sr_ref_mutex);
-diff --git a/include/scsi/scsi_driver.h b/include/scsi/scsi_driver.h
-index 1f5ca7f..1f06be0 100644
---- a/include/scsi/scsi_driver.h
-+++ b/include/scsi/scsi_driver.h
-@@ -32,5 +32,6 @@ int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req);
- int scsi_setup_fs_cmnd(struct scsi_device *sdev, struct request *req);
- int scsi_prep_state_check(struct scsi_device *sdev, struct request *req);
- int scsi_prep_return(struct request_queue *q, struct request *req, int ret);
-+void scsi_reset_prep_fn(struct request_queue *);
- 
- #endif /* _SCSI_SCSI_DRIVER_H */
--- 
-1.5.3.2
-
-
---------------010200020109000809080607--
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
