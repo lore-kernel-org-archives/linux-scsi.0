@@ -1,51 +1,37 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH resend] bsg: Add support for submitting requests at
-	tail of queue
-Date: Tue, 24 Mar 2009 13:14:38 +0100
-Message-ID: <20090324121438.GQ27476@kernel.dk>
-References: <49C20CCD.5070607@panasas.com> <49C89CBC.7050306@panasas.com> <20090324210440Z.fujita.tomonori@lab.ntt.co.jp>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 9872] Driver 'sd' needs updating - please use bus_type methods
+Date: Tue, 24 Mar 2009 04:21:34 -0700 (PDT)
+Message-ID: <20090324112134.B95FE108047@picon.linux-foundation.org>
+References: <bug-9872-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:42946 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754642AbZCXMOk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Mar 2009 08:14:40 -0400
-Content-Disposition: inline
-In-Reply-To: <20090324210440Z.fujita.tomonori@lab.ntt.co.jp>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:46438 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757574AbZCXMSs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Mar 2009 08:18:48 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id n2OCHdAc005399
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Mar 2009 05:18:15 -0700
+In-Reply-To: <bug-9872-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: bharrosh@panasas.com, linux-scsi@vger.kernel.org, osd-dev@open-osd.org, dgilbert@interlog.com
+To: linux-scsi@vger.kernel.org
 
-On Tue, Mar 24 2009, FUJITA Tomonori wrote:
-> On Tue, 24 Mar 2009 10:41:32 +0200
-> Boaz Harrosh <bharrosh@panasas.com> wrote:
-> 
-> > Boaz Harrosh wrote:
-> > > Hi Tomo Jens
-> > > 
-> > > Tomo you never ack-by on this patch. I absolutely needs this for the
-> > > user-mode API of osd-initiator. Which is needed with up-coming exofs
-> > > utilities.
-> > > 
-> > > What do you want to do?
-> > > 
-> > > Thanks 
-> > > 
-> > 
-> > Hi Jens.
-> > 
-> > I absolutely need this patch for 2.6.30 merge window. It is totally
-> > un-dangerous since defaults are left unchanged.
-> 
-> The question is we really need this feature or not. Though I guess
-> that we need to address this starvation issue.
+http://bugzilla.kernel.org/show_bug.cgi?id=9872
 
-I'd argue that tail insertion should be the most used way to queue
-commands, head insertion should only be for the cases where you want
-immediate access (like error handling).
+
+alan@lxorguk.ukuu.org.uk changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |CLOSED
+      KernelVersion|2.6.24                      |2.6.27
+         Resolution|                            |CODE_FIX
+
+
+
 
 -- 
-Jens Axboe
-
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
