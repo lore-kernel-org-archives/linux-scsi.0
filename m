@@ -1,70 +1,57 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] block: add global timeout to requests
-Date: Tue, 24 Mar 2009 12:42:30 +0100
-Message-ID: <20090324114230.GO27476@kernel.dk>
-References: <1237407667.3350.43.camel@localhost.localdomain>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH resend] bsg: Add support for submitting requests at
+ tail of queue
+Date: Tue, 24 Mar 2009 21:05:15 +0900
+Message-ID: <20090324210440Z.fujita.tomonori@lab.ntt.co.jp>
+References: <49C20CCD.5070607@panasas.com>
+	<49C89CBC.7050306@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:37914 "EHLO kernel.dk"
+Received: from sh.osrg.net ([192.16.179.4]:50716 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750846AbZCXLmc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Mar 2009 07:42:32 -0400
-Content-Disposition: inline
-In-Reply-To: <1237407667.3350.43.camel@localhost.localdomain>
+	id S1752866AbZCXMF5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Mar 2009 08:05:57 -0400
+In-Reply-To: <49C89CBC.7050306@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: bharrosh@panasas.com
+Cc: jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, osd-dev@open-osd.org, dgilbert@interlog.com
 
-On Wed, Mar 18 2009, James Bottomley wrote:
-> We can eliminate the SCSI command timed out check entirely if the block
-> layer does this for us.  The way to do this in block is to check how
-> long the request has been outstanding if a requeue is requested and
-> ending it if we've gone over retries * timeout.
+On Tue, 24 Mar 2009 10:41:32 +0200
+Boaz Harrosh <bharrosh@panasas.com> wrote:
+
+> Boaz Harrosh wrote:
+> > Hi Tomo Jens
+> > 
+> > Tomo you never ack-by on this patch. I absolutely needs this for the
+> > user-mode API of osd-initiator. Which is needed with up-coming exofs
+> > utilities.
+> > 
+> > What do you want to do?
+> > 
+> > Thanks 
+> > 
 > 
-> This will also eliminate many cases in SCSI where we evade the command
-> timeout for various reasons (like initial success converted to requeue)
+> Hi Jens.
 > 
-> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-> 
-> ---
-> 
-> Index: linux-2.6/block/blk-core.c
-> ===================================================================
-> --- linux-2.6.orig/block/blk-core.c	2009-02-19 16:42:00.140427205 -0500
-> +++ linux-2.6/block/blk-core.c	2009-03-18 10:36:10.511526815 -0400
-> @@ -937,6 +937,8 @@ EXPORT_SYMBOL(blk_start_queueing);
->   */
->  void blk_requeue_request(struct request_queue *q, struct request *rq)
->  {
-> +	unsigned long wait_for = (rq->retries + 1) * rq->timeout;
-> +
->  	blk_delete_timer(rq);
->  	blk_clear_rq_complete(rq);
->  	trace_block_rq_requeue(q, rq);
-> @@ -944,7 +946,13 @@ void blk_requeue_request(struct request_
->  	if (blk_rq_tagged(rq))
->  		blk_queue_end_tag(q, rq);
->  
-> -	elv_requeue_request(q, rq);
-> +	if (time_before(rq->start_time + wait_for, jiffies)) {
-> +		printk(KERN_ERR "%s: timing out command, waited %lus\n",
-> +		       rq->rq_disk ? rq->rq_disk->disk_name : "?",
-> +		       wait_for/HZ);
-> +		blk_end_request(rq, -EIO, blk_rq_bytes(rq));
-> +	} else
-> +		elv_requeue_request(q, rq);
->  }
->  EXPORT_SYMBOL(blk_requeue_request);
+> I absolutely need this patch for 2.6.30 merge window. It is totally
+> un-dangerous since defaults are left unchanged.
 
-Applied, though I think a
+The question is we really need this feature or not. Though I guess
+that we need to address this starvation issue.
 
-        time_after(jiffies, time)
 
-is usually much clearer, since we are checking for an expired event (not
-an early one) :-)
+> I need it because the user-mode utilities for osd and exofs that
+> correspond to code in 2.6.30 will need this patch to compile,
+> because they use a flag constant defined in this patch.
 
--- 
-Jens Axboe
+What do the user-mode utilities does for what?
 
+You always say something like, "we need this for OSD, pNFS or
+something". But I'm not sure you explain the detailed background.
+
+A typical example is, why does the osd library export lots of
+functions that exofs doesn't use with EXPORT_SYMBOL instead of
+EXPORT_SYMBOL_GPL?
