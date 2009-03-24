@@ -1,100 +1,76 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH resend] bsg: Add support for submitting requests at tail
- of queue
-Date: Tue, 24 Mar 2009 14:53:52 +0200
-Message-ID: <49C8D7E0.9000107@panasas.com>
-References: <49C20CCD.5070607@panasas.com>	<49C89CBC.7050306@panasas.com> <20090324210440Z.fujita.tomonori@lab.ntt.co.jp>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: eh_abort_handler and calling scsi_done
+Date: Tue, 24 Mar 2009 08:29:57 -0500
+Message-ID: <49C8E055.2060108@linux.vnet.ibm.com>
+References: <20090324114137.GA8616@schmichrtp.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:55489 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757642AbZCXMza (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Mar 2009 08:55:30 -0400
-Received: by yx-out-2324.google.com with SMTP id 31so2539724yxl.1
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Mar 2009 05:55:27 -0700 (PDT)
-In-Reply-To: <20090324210440Z.fujita.tomonori@lab.ntt.co.jp>
+Received: from e4.ny.us.ibm.com ([32.97.182.144]:39194 "EHLO e4.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753204AbZCXN3p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Mar 2009 09:29:45 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e4.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n2ODQim0021863
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Mar 2009 09:26:44 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n2ODThHE158306
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Mar 2009 09:29:43 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n2ODSE9J024411
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Mar 2009 09:28:14 -0400
+In-Reply-To: <20090324114137.GA8616@schmichrtp.de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: jens.axboe@oracle.com, linux-scsi@vger.kernel.org, osd-dev@open-osd.org, dgilbert@interlog.com
+To: Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-FUJITA Tomonori wrote:
-> On Tue, 24 Mar 2009 10:41:32 +0200
-> Boaz Harrosh <bharrosh@panasas.com> wrote:
+Your assessment sounds correct to me. The other caveat to note is that
+if for some reason in your eh_abort_handler you don't think the command
+is still outstanding, you should return SUCCESS for this as well.
+
+-Brian
+
+Christof Schmitt wrote:
+> I am investigating what is required from a LLD when SCSI commands time
+> out and the SCSI EH calls the eh_abort_handler. The documentation in
+> scsi_eh.txt states:
 > 
->> Boaz Harrosh wrote:
->>> Hi Tomo Jens
->>>
->>> Tomo you never ack-by on this patch. I absolutely needs this for the
->>> user-mode API of osd-initiator. Which is needed with up-coming exofs
->>> utilities.
->>>
->>> What do you want to do?
->>>
->>> Thanks 
->>>
->> Hi Jens.
->>
->> I absolutely need this patch for 2.6.30 merge window. It is totally
->> un-dangerous since defaults are left unchanged.
+>     <<scsi_eh_abort_cmds>>
 > 
-> The question is we really need this feature or not. Though I guess
-> that we need to address this starvation issue.
+> 	This action is taken for each timed out command.
+> 	hostt->eh_abort_handler() is invoked for each scmd.  The
+> 	handler returns SUCCESS if it has succeeded to make LLDD and
+> 	all related hardware forget about the scmd.
 > 
-
-Good, this patch solves exactly that problem. Thanks Tomo
- 
+> From this and from looking at the code, i would conclude:
 > 
->> I need it because the user-mode utilities for osd and exofs that
->> correspond to code in 2.6.30 will need this patch to compile,
->> because they use a flag constant defined in this patch.
+> 1) If the LLD returns FAILED from the eh_abort_handler, then the
+>    command is still allowed to be active in the LLD and the LLD can
+>    call scsi_done any time later (probably latest when the
+>    eh_host_reset_handler flushes everything that is still pending).
 > 
-> What do the user-mode utilities does for what?
+> 2) While the abort is pending, but before returning SUCCESS from
+>    eh_abort_handler, the LLD can still call scsi_done for the SCSI
+>    command to be aborted (the SCSI command might be returned with a
+>    status "aborted" if the abort succeeds, or "good" if it was
+>    completed just before the abort reached the storage system).
 > 
-
-The immediate problem is that the code uses this API and will
-not compile without it. This is because the user-mode library
-exports the exact API and fixture set as the Kernel one. Submitting
-commands in order is one important aspect.
-
-This is a general purpose library for developers to use, with
-published API. In the purpose of attracting users to develop for
-OSD, so the argument of not yet used does not apply. I don't want
-the users to go around inventing work arounds when the solution
-is obvious and the blame is clear.
-
-> You always say something like, "we need this for OSD, pNFS or
-> something". But I'm not sure you explain the detailed background.
+> Is this correct? Are there any more limitations a SCSI LLD has to be
+> aware of?
 > 
+> --
+> Christof Schmitt
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I don't think this argument applies to this particular patch.
-The shortcoming of bsg code is clear and should be fixed. And
-it has a user. libosd in user-mode.
 
-But if you want details then just calling osd_execute_request_async()
-from user-mode in succession, will reveal this problem. Not fixing
-it now will hide mines to any developer that wants to use libosd.
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
 
-> A typical example is, why does the osd library export lots of
-> functions that exofs doesn't use with EXPORT_SYMBOL 
-
-This is unrelated to this patch of course, but...
-They are all used by the osd_ktest.ko which you objected to
-be included in the Kernel, and I removed.
-
-> instead of
-> EXPORT_SYMBOL_GPL?
-
-What is that got to do with it?
-The libosd.ko is a general purpose library for any kind of user.
-It exports the API defined in osd_initiator.h. This API is globally
-public, and has until now 3 implementations Linux-kernel, Linux-user-mode,
-BSD-kernel. I hope it will have many more implementations on all
-major OSs.
-I do not designate this API to be private Linux API, hence
-EXPORT_SYMBOL_GPL does not apply.
-
-Boaz
 
