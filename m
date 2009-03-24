@@ -1,304 +1,362 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 01/26] qla2xxx: Refactor request/response-queue register handling.
-Date: Tue, 24 Mar 2009 09:07:55 -0700
-Message-ID: <1237910900-30817-2-git-send-email-andrew.vasquez@qlogic.com>
+Subject: [PATCH 12/26] qla2xxx: Add Flash-Access-Control support for recent ISPs.
+Date: Tue, 24 Mar 2009 09:08:06 -0700
+Message-ID: <1237910900-30817-13-git-send-email-andrew.vasquez@qlogic.com>
 References: <1237910900-30817-1-git-send-email-andrew.vasquez@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from avexch1.qlogic.com ([198.70.193.115]:29874 "EHLO
 	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762315AbZCXQIZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Mar 2009 12:08:25 -0400
+	with ESMTP id S1759573AbZCXQIf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Mar 2009 12:08:35 -0400
 In-Reply-To: <1237910900-30817-1-git-send-email-andrew.vasquez@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Seokmann Ju <seokmann.ju@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Seokmann Ju <seokmann.ju@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Joe Carnuccio <joe.carnuccio@qlogic.com>
 
-Original code used an overabundance of indirect pointers to
-function helpers.  Instead, the driver can exploit the immutable
-properties of a queue's ISP-association and ID, which are both
-known at queue initialization-time.
+From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 
+Given the low-level interface varies from one flash-part
+manufacturer to the next, the Flash-Access-Control (FAC) mailbox
+command makes the specific flash type transparent to the driver
+by encapsulating a basic set of accessor and update routines.
+Use these new routines where applicable by querying FAC opcode
+get-sector-size at init-time.
+
+Additional cleanups and
 Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h  |   17 +++++++++--------
- drivers/scsi/qla2xxx/qla_iocb.c |   37 +++----------------------------------
- drivers/scsi/qla2xxx/qla_isr.c  |   18 +-----------------
- drivers/scsi/qla2xxx/qla_mid.c  |   10 +++++++++-
- drivers/scsi/qla2xxx/qla_os.c   |   27 +++++++++------------------
- 5 files changed, 31 insertions(+), 78 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h  |    3 +-
+ drivers/scsi/qla2xxx/qla_fw.h   |   14 ++++++
+ drivers/scsi/qla2xxx/qla_gbl.h  |    9 ++++
+ drivers/scsi/qla2xxx/qla_init.c |   15 ++++++
+ drivers/scsi/qla2xxx/qla_mbx.c  |   97 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_sup.c  |   60 +++++++++++++++++++-----
+ 6 files changed, 184 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index e0c5bb5..c2bc67c 100644
+index 261c869..bca572f 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -372,10 +372,10 @@ struct device_reg_2xxx {
- };
+@@ -2260,7 +2260,7 @@ struct qla_hw_data {
+ 		uint32_t	vsan_enabled		:1;
+ 		uint32_t	npiv_supported		:1;
+ 		uint32_t	fce_enabled		:1;
+-		uint32_t	hw_event_marker_found:1;
++		uint32_t	fac_supported		:1;
+ 	} flags;
  
- struct device_reg_25xxmq {
--	volatile uint32_t req_q_in;
--	volatile uint32_t req_q_out;
--	volatile uint32_t rsp_q_in;
--	volatile uint32_t rsp_q_out;
-+	uint32_t req_q_in;
-+	uint32_t req_q_out;
-+	uint32_t rsp_q_in;
-+	uint32_t rsp_q_out;
- };
+ 	/* This spinlock is used to protect "io transactions", you must
+@@ -2382,6 +2382,7 @@ struct qla_hw_data {
+ 				IS_QLA25XX(ha) || IS_QLA81XX(ha))
+ #define IS_NOPOLLING_TYPE(ha)	((IS_QLA25XX(ha) || IS_QLA81XX(ha)) && \
+ 				(ha)->flags.msix_enabled)
++#define IS_FAC_REQUIRED(ha)	(IS_QLA81XX(ha))
  
- typedef union {
-@@ -2102,9 +2102,6 @@ struct isp_operations {
+ #define IS_IIDMA_CAPABLE(ha)    ((ha)->device_type & DT_IIDMA)
+ #define IS_FWI2_CAPABLE(ha)     ((ha)->device_type & DT_FWI2)
+diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
+index 05cf838..9830193 100644
+--- a/drivers/scsi/qla2xxx/qla_fw.h
++++ b/drivers/scsi/qla2xxx/qla_fw.h
+@@ -1403,6 +1403,20 @@ struct access_chip_rsp_84xx {
+ #define MBA_IDC_TIME_EXT	0x8102
  
- 	int (*get_flash_version) (struct scsi_qla_host *, void *);
- 	int (*start_scsi) (srb_t *);
--	void (*wrt_req_reg) (struct qla_hw_data *, uint16_t, uint16_t);
--	void (*wrt_rsp_reg) (struct qla_hw_data *, uint16_t, uint16_t);
--	uint16_t (*rd_req_reg) (struct qla_hw_data *, uint16_t);
- };
+ #define MBC_IDC_ACK		0x101
++#define MBC_FLASH_ACCESS_CTRL	0x3e	/* Control flash access. */
++
++/* Flash access control option field bit definitions */
++#define FAC_OPT_FORCE_SEMAPHORE		BIT_15
++#define FAC_OPT_REQUESTOR_ID		BIT_14
++#define FAC_OPT_CMD_SUBCODE		0xff
++
++/* Flash access control command subcodes */
++#define FAC_OPT_CMD_WRITE_PROTECT	0x00
++#define FAC_OPT_CMD_WRITE_ENABLE	0x01
++#define FAC_OPT_CMD_ERASE_SECTOR	0x02
++#define FAC_OPT_CMD_LOCK_SEMAPHORE	0x03
++#define FAC_OPT_CMD_UNLOCK_SEMAPHORE	0x04
++#define FAC_OPT_CMD_GET_SECTOR_SIZE	0x05
  
- /* MSI-X Support *************************************************************/
-@@ -2200,6 +2197,8 @@ struct rsp_que {
- 	dma_addr_t  dma;
- 	response_t *ring;
- 	response_t *ring_ptr;
-+	uint32_t __iomem *rsp_q_in;	/* FWI2-capable only. */
-+	uint32_t __iomem *rsp_q_out;
- 	uint16_t  ring_index;
- 	uint16_t  out_ptr;
- 	uint16_t  length;
-@@ -2217,6 +2216,8 @@ struct req_que {
- 	dma_addr_t  dma;
- 	request_t *ring;
- 	request_t *ring_ptr;
-+	uint32_t __iomem *req_q_in;	/* FWI2-capable only. */
-+	uint32_t __iomem *req_q_out;
- 	uint16_t  ring_index;
- 	uint16_t  in_ptr;
- 	uint16_t  cnt;
-@@ -2277,7 +2278,7 @@ struct qla_hw_data {
+ struct nvram_81xx {
+ 	/* NVRAM header. */
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index af36238..4d52bf1 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -269,6 +269,15 @@ extern int qla84xx_verify_chip(struct scsi_qla_host *, uint16_t *);
  
- #define MIN_IOBASE_LEN          0x100
- /* Multi queue data structs */
--	device_reg_t    *mqiobase;
-+	device_reg_t __iomem *mqiobase;
- 	uint16_t        msix_count;
- 	uint8_t         mqenable;
- 	struct req_que **req_q_map;
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 2258152..a8abbb9 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -776,7 +776,7 @@ qla24xx_start_scsi(srb_t *sp)
+ extern int qla81xx_idc_ack(scsi_qla_host_t *, uint16_t *);
  
- 	req_cnt = qla24xx_calc_iocbs(tot_dsds);
- 	if (req->cnt < (req_cnt + 2)) {
--		cnt = ha->isp_ops->rd_req_reg(ha, req->id);
-+		cnt = RD_REG_DWORD_RELAXED(req->req_q_out);
++extern int
++qla81xx_fac_get_sector_size(scsi_qla_host_t *, uint32_t *);
++
++extern int
++qla81xx_fac_do_write_enable(scsi_qla_host_t *, int);
++
++extern int
++qla81xx_fac_erase_sector(scsi_qla_host_t *, uint32_t, uint32_t);
++
+ /*
+  * Global Function Prototypes in qla_isr.c source file.
+  */
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 0febfa6..c37888e 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1032,6 +1032,21 @@ qla2x00_setup_chip(scsi_qla_host_t *vha)
+ 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 	}
  
- 		if (req->ring_index < cnt)
- 			req->cnt = cnt - req->ring_index;
-@@ -836,7 +836,8 @@ qla24xx_start_scsi(srb_t *sp)
- 	sp->flags |= SRB_DMA_VALID;
++	if (rval == QLA_SUCCESS && IS_FAC_REQUIRED(ha)) {
++		uint32_t size;
++
++		rval = qla81xx_fac_get_sector_size(vha, &size);
++		if (rval == QLA_SUCCESS) {
++			ha->flags.fac_supported = 1;
++			ha->fdt_block_size = size << 2;
++		} else {
++			qla_printk(KERN_ERR, ha,
++			    "Unsupported FAC firmware (%d.%02d.%02d).\n",
++			    ha->fw_major_version, ha->fw_minor_version,
++			    ha->fw_subminor_version);
++		}
++	}
++
+ 	if (rval) {
+ 		DEBUG2_3(printk("scsi(%ld): Setup chip **** FAILED ****.\n",
+ 		    vha->host_no));
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index b380c6f..2bc08d3 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -3228,3 +3228,100 @@ qla81xx_idc_ack(scsi_qla_host_t *vha, uint16_t *mb)
  
- 	/* Set chip new ring index. */
--	ha->isp_ops->wrt_req_reg(ha, req->id, req->ring_index);
-+	WRT_REG_DWORD(req->req_q_in, req->ring_index);
-+	RD_REG_DWORD_RELAXED(&ha->iobase->isp24.hccr);
- 
- 	/* Manage unprocessed RIO/ZIO commands in response queue. */
- 	if (vha->flags.process_response_queue &&
-@@ -854,35 +855,3 @@ queuing_error:
- 
- 	return QLA_FUNCTION_FAILED;
+ 	return rval;
  }
--
--uint16_t
--qla24xx_rd_req_reg(struct qla_hw_data *ha, uint16_t id)
--{
--	device_reg_t __iomem *reg = (void *) ha->iobase;
--	return RD_REG_DWORD_RELAXED(&reg->isp24.req_q_out);
--}
--
--uint16_t
--qla25xx_rd_req_reg(struct qla_hw_data *ha, uint16_t id)
--{
--	device_reg_t __iomem *reg = (void *) ha->mqiobase + QLA_QUE_PAGE * id;
--	return RD_REG_DWORD_RELAXED(&reg->isp25mq.req_q_out);
--}
--
--void
--qla24xx_wrt_req_reg(struct qla_hw_data *ha, uint16_t id, uint16_t index)
--{
--	device_reg_t __iomem *reg = (void *) ha->iobase;
--	WRT_REG_DWORD(&reg->isp24.req_q_in, index);
--	RD_REG_DWORD_RELAXED(&reg->isp24.req_q_in);
--}
--
--void
--qla25xx_wrt_req_reg(struct qla_hw_data *ha, uint16_t id, uint16_t index)
--{
--	device_reg_t __iomem *reg = (void *) ha->mqiobase + QLA_QUE_PAGE * id;
--	struct device_reg_2xxx __iomem *ioreg = &ha->iobase->isp;
--	WRT_REG_DWORD(&reg->isp25mq.req_q_in, index);
--	RD_REG_DWORD(&ioreg->hccr); /* PCI posting */
--}
--
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index f250e5b..8e91f4a 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1499,7 +1499,6 @@ qla24xx_mbx_completion(scsi_qla_host_t *vha, uint16_t mb0)
- void
- qla24xx_process_response_queue(struct rsp_que *rsp)
++
++int
++qla81xx_fac_get_sector_size(scsi_qla_host_t *vha, uint32_t *sector_size)
++{
++	int rval;
++	mbx_cmd_t mc;
++	mbx_cmd_t *mcp = &mc;
++
++	if (!IS_QLA81XX(vha->hw))
++		return QLA_FUNCTION_FAILED;
++
++	DEBUG11(printk("%s(%ld): entered.\n", __func__, vha->host_no));
++
++	mcp->mb[0] = MBC_FLASH_ACCESS_CTRL;
++	mcp->mb[1] = FAC_OPT_CMD_GET_SECTOR_SIZE;
++	mcp->out_mb = MBX_1|MBX_0;
++	mcp->in_mb = MBX_1|MBX_0;
++	mcp->tov = MBX_TOV_SECONDS;
++	mcp->flags = 0;
++	rval = qla2x00_mailbox_command(vha, mcp);
++
++	if (rval != QLA_SUCCESS) {
++		DEBUG2_3_11(printk("%s(%ld): failed=%x mb[0]=%x mb[1]=%x.\n",
++		    __func__, vha->host_no, rval, mcp->mb[0], mcp->mb[1]));
++	} else {
++		DEBUG11(printk("%s(%ld): done.\n", __func__, vha->host_no));
++		*sector_size = mcp->mb[1];
++	}
++
++	return rval;
++}
++
++int
++qla81xx_fac_do_write_enable(scsi_qla_host_t *vha, int enable)
++{
++	int rval;
++	mbx_cmd_t mc;
++	mbx_cmd_t *mcp = &mc;
++
++	if (!IS_QLA81XX(vha->hw))
++		return QLA_FUNCTION_FAILED;
++
++	DEBUG11(printk("%s(%ld): entered.\n", __func__, vha->host_no));
++
++	mcp->mb[0] = MBC_FLASH_ACCESS_CTRL;
++	mcp->mb[1] = enable ? FAC_OPT_CMD_WRITE_ENABLE :
++	    FAC_OPT_CMD_WRITE_PROTECT;
++	mcp->out_mb = MBX_1|MBX_0;
++	mcp->in_mb = MBX_1|MBX_0;
++	mcp->tov = MBX_TOV_SECONDS;
++	mcp->flags = 0;
++	rval = qla2x00_mailbox_command(vha, mcp);
++
++	if (rval != QLA_SUCCESS) {
++		DEBUG2_3_11(printk("%s(%ld): failed=%x mb[0]=%x mb[1]=%x.\n",
++		    __func__, vha->host_no, rval, mcp->mb[0], mcp->mb[1]));
++	} else {
++		DEBUG11(printk("%s(%ld): done.\n", __func__, vha->host_no));
++	}
++
++	return rval;
++}
++
++int
++qla81xx_fac_erase_sector(scsi_qla_host_t *vha, uint32_t start, uint32_t finish)
++{
++	int rval;
++	mbx_cmd_t mc;
++	mbx_cmd_t *mcp = &mc;
++
++	if (!IS_QLA81XX(vha->hw))
++		return QLA_FUNCTION_FAILED;
++
++	DEBUG11(printk("%s(%ld): entered.\n", __func__, vha->host_no));
++
++	mcp->mb[0] = MBC_FLASH_ACCESS_CTRL;
++	mcp->mb[1] = FAC_OPT_CMD_ERASE_SECTOR;
++	mcp->mb[2] = LSW(start);
++	mcp->mb[3] = MSW(start);
++	mcp->mb[4] = LSW(finish);
++	mcp->mb[5] = MSW(finish);
++	mcp->out_mb = MBX_5|MBX_4|MBX_3|MBX_2|MBX_1|MBX_0;
++	mcp->in_mb = MBX_2|MBX_1|MBX_0;
++	mcp->tov = MBX_TOV_SECONDS;
++	mcp->flags = 0;
++	rval = qla2x00_mailbox_command(vha, mcp);
++
++	if (rval != QLA_SUCCESS) {
++		DEBUG2_3_11(printk("%s(%ld): failed=%x mb[0]=%x mb[1]=%x "
++		    "mb[2]=%x.\n", __func__, vha->host_no, rval, mcp->mb[0],
++		    mcp->mb[1], mcp->mb[2]));
++	} else {
++		DEBUG11(printk("%s(%ld): done.\n", __func__, vha->host_no));
++	}
++
++	return rval;
++}
+diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_sup.c
+index 5b24af8..ff5aa75 100644
+--- a/drivers/scsi/qla2xxx/qla_sup.c
++++ b/drivers/scsi/qla2xxx/qla_sup.c
+@@ -931,31 +931,41 @@ done:
+ 	ha->npiv_info = NULL;
+ }
+ 
+-static void
+-qla24xx_unprotect_flash(struct qla_hw_data *ha)
++static int
++qla24xx_unprotect_flash(scsi_qla_host_t *vha)
  {
--	struct qla_hw_data *ha = rsp->hw;
- 	struct sts_entry_24xx *pkt;
- 	struct scsi_qla_host *vha;
++	struct qla_hw_data *ha = vha->hw;
+ 	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
  
-@@ -1553,7 +1552,7 @@ qla24xx_process_response_queue(struct rsp_que *rsp)
- 	}
++	if (ha->flags.fac_supported)
++		return qla81xx_fac_do_write_enable(vha, 1);
++
+ 	/* Enable flash write. */
+ 	WRT_REG_DWORD(&reg->ctrl_status,
+ 	    RD_REG_DWORD(&reg->ctrl_status) | CSRX_FLASH_ENABLE);
+ 	RD_REG_DWORD(&reg->ctrl_status);	/* PCI Posting. */
  
- 	/* Adjust ring index */
--	ha->isp_ops->wrt_rsp_reg(ha, rsp->id, rsp->ring_index);
-+	WRT_REG_DWORD(rsp->rsp_q_out, rsp->ring_index);
+ 	if (!ha->fdt_wrt_disable)
+-		return;
++		goto done;
+ 
+ 	/* Disable flash write-protection, first clear SR protection bit */
+ 	qla24xx_write_flash_dword(ha, flash_conf_addr(ha, 0x101), 0);
+ 	/* Then write zero again to clear remaining SR bits.*/
+ 	qla24xx_write_flash_dword(ha, flash_conf_addr(ha, 0x101), 0);
++done:
++	return QLA_SUCCESS;
  }
  
- static void
-@@ -2117,18 +2116,3 @@ int qla25xx_request_irq(struct rsp_que *rsp)
- 	msix->rsp = rsp;
- 	return ret;
+-static void
+-qla24xx_protect_flash(struct qla_hw_data *ha)
++static int
++qla24xx_protect_flash(scsi_qla_host_t *vha)
+ {
+ 	uint32_t cnt;
++	struct qla_hw_data *ha = vha->hw;
+ 	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
+ 
++	if (ha->flags.fac_supported)
++		return qla81xx_fac_do_write_enable(vha, 0);
++
+ 	if (!ha->fdt_wrt_disable)
+ 		goto skip_wrt_protect;
+ 
+@@ -973,6 +983,26 @@ skip_wrt_protect:
+ 	WRT_REG_DWORD(&reg->ctrl_status,
+ 	    RD_REG_DWORD(&reg->ctrl_status) & ~CSRX_FLASH_ENABLE);
+ 	RD_REG_DWORD(&reg->ctrl_status);	/* PCI Posting. */
++
++	return QLA_SUCCESS;
++}
++
++static int
++qla24xx_erase_sector(scsi_qla_host_t *vha, uint32_t fdata)
++{
++	struct qla_hw_data *ha = vha->hw;
++	uint32_t start, finish;
++
++	if (ha->flags.fac_supported) {
++		start = fdata >> 2;
++		finish = start + (ha->fdt_block_size >> 2) - 1;
++		return qla81xx_fac_erase_sector(vha, flash_data_addr(ha,
++		    start), flash_data_addr(ha, finish));
++	}
++
++	return qla24xx_write_flash_dword(ha, ha->fdt_erase_cmd,
++	    (fdata & 0xff00) | ((fdata << 16) & 0xff0000) |
++	    ((fdata >> 16) & 0xff));
  }
+ 
+ static int
+@@ -987,8 +1017,6 @@ qla24xx_write_flash_data(scsi_qla_host_t *vha, uint32_t *dwptr, uint32_t faddr,
+ 	void *optrom = NULL;
+ 	struct qla_hw_data *ha = vha->hw;
+ 
+-	ret = QLA_SUCCESS;
 -
--void
--qla25xx_wrt_rsp_reg(struct qla_hw_data *ha, uint16_t id, uint16_t index)
--{
--	device_reg_t __iomem *reg = (void *) ha->mqiobase + QLA_QUE_PAGE * id;
--	WRT_REG_DWORD(&reg->isp25mq.rsp_q_out, index);
--}
--
--void
--qla24xx_wrt_rsp_reg(struct qla_hw_data *ha, uint16_t id, uint16_t index)
--{
--	device_reg_t __iomem *reg = (void *) ha->iobase;
--	WRT_REG_DWORD(&reg->isp24.rsp_q_out, index);
--}
--
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index 785c612..e2bd36e 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -584,6 +584,7 @@ qla25xx_create_req_que(struct qla_hw_data *ha, uint16_t options,
- 	struct req_que *req = NULL;
- 	struct scsi_qla_host *base_vha = pci_get_drvdata(ha->pdev);
- 	uint16_t que_id = 0;
-+	device_reg_t __iomem *reg;
+ 	/* Prepare burst-capable write on supported ISPs. */
+ 	if ((IS_QLA25XX(ha) || IS_QLA81XX(ha)) && !(faddr & 0xfff) &&
+ 	    dwords > OPTROM_BURST_DWORDS) {
+@@ -1004,7 +1032,12 @@ qla24xx_write_flash_data(scsi_qla_host_t *vha, uint32_t *dwptr, uint32_t faddr,
+ 	rest_addr = (ha->fdt_block_size >> 2) - 1;
+ 	sec_mask = ~rest_addr;
  
- 	req = kzalloc(sizeof(struct req_que), GFP_KERNEL);
- 	if (req == NULL) {
-@@ -631,6 +632,9 @@ qla25xx_create_req_que(struct qla_hw_data *ha, uint16_t options,
- 	req->ring_index = 0;
- 	req->cnt = req->length;
- 	req->id = que_id;
-+	reg = ISP_QUE_REG(ha, que_id);
-+	req->req_q_in = &reg->isp25mq.req_q_in;
-+	req->req_q_out = &reg->isp25mq.req_q_out;
- 	req->max_q_depth = ha->req_q_map[0]->max_q_depth;
- 	mutex_unlock(&ha->vport_lock);
+-	qla24xx_unprotect_flash(ha);
++	ret = qla24xx_unprotect_flash(vha);
++	if (ret != QLA_SUCCESS) {
++		qla_printk(KERN_WARNING, ha,
++		    "Unable to unprotect flash for update.\n");
++		goto done;
++	}
  
-@@ -658,7 +662,8 @@ qla25xx_create_rsp_que(struct qla_hw_data *ha, uint16_t options,
- 	int ret = 0;
- 	struct rsp_que *rsp = NULL;
- 	struct scsi_qla_host *base_vha = pci_get_drvdata(ha->pdev);
--	uint16_t que_id = 0;;
-+	uint16_t que_id = 0;
-+	device_reg_t __iomem *reg;
- 
- 	rsp = kzalloc(sizeof(struct rsp_que), GFP_KERNEL);
- 	if (rsp == NULL) {
-@@ -706,6 +711,9 @@ qla25xx_create_rsp_que(struct qla_hw_data *ha, uint16_t options,
- 	rsp->ring_ptr = rsp->ring;
- 	rsp->ring_index = 0;
- 	rsp->id = que_id;
-+	reg = ISP_QUE_REG(ha, que_id);
-+	rsp->rsp_q_in = &reg->isp25mq.rsp_q_in;
-+	rsp->rsp_q_out = &reg->isp25mq.rsp_q_out;
- 	mutex_unlock(&ha->vport_lock);
- 
- 	ret = qla25xx_request_irq(rsp);
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 3ddfa88..a6761ff 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1351,9 +1351,6 @@ static struct isp_operations qla2100_isp_ops = {
- 	.write_optrom		= qla2x00_write_optrom_data,
- 	.get_flash_version	= qla2x00_get_flash_version,
- 	.start_scsi		= qla2x00_start_scsi,
--	.wrt_req_reg		= NULL,
--	.wrt_rsp_reg		= NULL,
--	.rd_req_reg		= NULL,
- };
- 
- static struct isp_operations qla2300_isp_ops = {
-@@ -1389,9 +1386,6 @@ static struct isp_operations qla2300_isp_ops = {
- 	.write_optrom		= qla2x00_write_optrom_data,
- 	.get_flash_version	= qla2x00_get_flash_version,
- 	.start_scsi		= qla2x00_start_scsi,
--	.wrt_req_reg		= NULL,
--	.wrt_rsp_reg		= NULL,
--	.rd_req_reg		= NULL,
- };
- 
- static struct isp_operations qla24xx_isp_ops = {
-@@ -1427,9 +1421,6 @@ static struct isp_operations qla24xx_isp_ops = {
- 	.write_optrom		= qla24xx_write_optrom_data,
- 	.get_flash_version	= qla24xx_get_flash_version,
- 	.start_scsi		= qla24xx_start_scsi,
--	.wrt_req_reg		= qla24xx_wrt_req_reg,
--	.wrt_rsp_reg		= qla24xx_wrt_rsp_reg,
--	.rd_req_reg		= qla24xx_rd_req_reg,
- };
- 
- static struct isp_operations qla25xx_isp_ops = {
-@@ -1465,9 +1456,6 @@ static struct isp_operations qla25xx_isp_ops = {
- 	.write_optrom		= qla24xx_write_optrom_data,
- 	.get_flash_version	= qla24xx_get_flash_version,
- 	.start_scsi		= qla24xx_start_scsi,
--	.wrt_req_reg		= qla24xx_wrt_req_reg,
--	.wrt_rsp_reg		= qla24xx_wrt_rsp_reg,
--	.rd_req_reg		= qla24xx_rd_req_reg,
- };
- 
- static struct isp_operations qla81xx_isp_ops = {
-@@ -1503,9 +1491,6 @@ static struct isp_operations qla81xx_isp_ops = {
- 	.write_optrom		= qla24xx_write_optrom_data,
- 	.get_flash_version	= qla24xx_get_flash_version,
- 	.start_scsi		= qla24xx_start_scsi,
--	.wrt_req_reg		= qla24xx_wrt_req_reg,
--	.wrt_rsp_reg		= qla24xx_wrt_rsp_reg,
--	.rd_req_reg		= qla24xx_rd_req_reg,
- };
- 
- static inline void
-@@ -1927,10 +1912,16 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	ha->rsp_q_map[0] = rsp;
- 	ha->req_q_map[0] = req;
- 
-+	/* FWI2-capable only. */
-+	req->req_q_in = &ha->iobase->isp24.req_q_in;
-+	req->req_q_out = &ha->iobase->isp24.req_q_out;
-+	rsp->rsp_q_in = &ha->iobase->isp24.rsp_q_in;
-+	rsp->rsp_q_out = &ha->iobase->isp24.rsp_q_out;
- 	if (ha->mqenable) {
--		ha->isp_ops->wrt_req_reg = qla25xx_wrt_req_reg;
--		ha->isp_ops->wrt_rsp_reg = qla25xx_wrt_rsp_reg;
--		ha->isp_ops->rd_req_reg = qla25xx_rd_req_reg;
-+		req->req_q_in = &ha->mqiobase->isp25mq.req_q_in;
-+		req->req_q_out = &ha->mqiobase->isp25mq.req_q_out;
-+		rsp->rsp_q_in = &ha->mqiobase->isp25mq.rsp_q_in;
-+		rsp->rsp_q_out =  &ha->mqiobase->isp25mq.rsp_q_out;
+ 	for (liter = 0; liter < dwords; liter++, faddr++, dwptr++) {
+ 		fdata = (faddr & sec_mask) << 2;
+@@ -1017,9 +1050,7 @@ qla24xx_write_flash_data(scsi_qla_host_t *vha, uint32_t *dwptr, uint32_t faddr,
+ 				    ha->fdt_unprotect_sec_cmd,
+ 				    (fdata & 0xff00) | ((fdata << 16) &
+ 				    0xff0000) | ((fdata >> 16) & 0xff));
+-			ret = qla24xx_write_flash_dword(ha, ha->fdt_erase_cmd,
+-			    (fdata & 0xff00) |((fdata << 16) &
+-			    0xff0000) | ((fdata >> 16) & 0xff));
++			ret = qla24xx_erase_sector(vha, fdata);
+ 			if (ret != QLA_SUCCESS) {
+ 				DEBUG9(qla_printk("Unable to erase sector: "
+ 				    "address=%x.\n", faddr));
+@@ -1073,8 +1104,11 @@ qla24xx_write_flash_data(scsi_qla_host_t *vha, uint32_t *dwptr, uint32_t faddr,
+ 			    0xff0000) | ((fdata >> 16) & 0xff));
  	}
  
- 	if (qla2x00_initialize_adapter(base_vha)) {
+-	qla24xx_protect_flash(ha);
+-
++	ret = qla24xx_protect_flash(vha);
++	if (ret != QLA_SUCCESS)
++		qla_printk(KERN_WARNING, ha,
++		    "Unable to protect flash after update.\n");
++done:
+ 	if (optrom)
+ 		dma_free_coherent(&ha->pdev->dev,
+ 		    OPTROM_BURST_SIZE, optrom, optrom_dma);
 -- 
 1.6.2.rc0.55.g30aa4f
 
