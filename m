@@ -1,122 +1,241 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: 2.6.29 regression: ATA bus errors on resume
-Date: Wed, 25 Mar 2009 02:06:59 -0400
-Message-ID: <49C9CA03.7040603@garzik.org>
-References: <cjlqb-7sp-1@gated-at.bofh.it> <cjq6y-6sq-11@gated-at.bofh.it> <49C9BEC8.9020403@devnull.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 2/2] [Target_Core_Mod/Persistent_Reservations]: Add UNIT
+	ATTENTION support for PROUT SAs
+Date: Tue, 24 Mar 2009 23:07:26 -0700
+Message-ID: <1237961246.4138.421.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <49C9BEC8.9020403@devnull.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Niel Lambrechts <niel.lambrechts@gmail.com>
-Cc: "linux.kernel" <linux-kernel@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>, Arjan van de Ven <arjan@infradead.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp128.sbc.mail.sp1.yahoo.com ([69.147.65.187]:47935 "HELO
+	smtp128.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757833AbZCYGHa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Mar 2009 02:07:30 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Douglas Gilbert <dgilbert@interlog.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Boaz Harrosh <bharrosh@panasas.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Niel Lambrechts wrote:
-> On 03/25/2009 03:30 AM, Theodore Tso wrote:
->> On Tue, Mar 24, 2009 at 10:25:57PM +0200, Niel Lambrechts wrote:
->>> Hi,
->>>
->>> After upgrading to 2.6.29 I get the below errors after resuming from
->>> hibernating with s2disk. I ran fsck and tried doing the same thing again
->>> in 2.6.28.9-pae, but do not get any errors there.
->> The ext4 errors are interleaved with hardware errors, and the ext4
->> errors are about I/O errors.
->>
->> EXT4-fs error (device sda6): __ext4_get_inode_loc: unable to read inode block - inode=2346519
->> EXT4-fs error (device sda6) in ext4_reserve_inode_write: IO failure
->>
->> This looks more like a hibernation problem than an ext4 problem.
->> Looks like the hard drive is being left in some inconsistent state
->> after resuming from hibernation.
->>
->>      	   	       		   	   - Ted
-> 
-> Thanks for the info Theodore, this is definitely looks like some type of
-> regression in 2.6.29, as the problem is not evident when I s2disk using
-> 2.6.28.9, even after multiple suspend/resume cycles.
-> 
-> I found some 'ATA bus errors' and 'SError' messages in
-> /var/log/messages, so I've attached the messages from both 2.6.29 and
-> 2.6.28 for comparison.
+>From d3aed0204976bffa99505e606f2909fd61b3b8f3 Mon Sep 17 00:00:00 2001
+From: Nicholas Bellinger <nab@linux-iscsi.org>
+Date: Tue, 24 Mar 2009 22:25:36 -0700
+Subject: [PATCH 2/2] [Target_Core_Mod/Persistent_Reservations]: Add UNIT ATTENTION support for PROUT SAs
 
-Well, here is the interpretation of messages:
+This patch adds support for SAM4 defined UNIT ATTENTION conditions in SPC-3 compliant
+Persistent Reservations PROUT Service Actions REGISTER + SARK=0 (UNREGISTER), RELEASE,
+and CLEAR.
 
-> ata1.00: irq_stat 0x00400008, PHY RDY changed
-> ata1: SError: { PHYRdyChg CommWake }
+The respective UNIT ATTENTION ASCQs for the non PROUT SA calling I_T Nexus
+ports are ASCQ_2AH_RESERVATIONS_RELEASED, ASCQ_2AH_RESERVATIONS_RELEASED,
+and ASCQ_2AH_RESERVATIONS_PREEMPTED.
 
-Your SATA hardware flags a connect-or-disconnect event ("PHY RDY"), 
-which requires us to abort a bunch of queued commands:
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ drivers/lio-core/target_core_pr.c |  107 +++++++++++++++++++++++++++++++++---
+ 1 files changed, 98 insertions(+), 9 deletions(-)
 
-> ata1.00: cmd 60/18:00:77:88:6f/00:00:0e:00:00/40 tag 0 ncq 12288 in
->          res 50/00:30:07:b3:10/00:00:0c:00:00/40 Emask 0x10 (ATA bus error)
-[...]
-> ata1.00: cmd 60/30:68:07:b3:10/00:00:0c:00:00/40 tag 13 ncq 24576 in
->          res 50/00:30:07:b3:10/00:00:0c:00:00/40 Emask 0x10 (ATA bus error)
-
-  ...through the 14th command (tag 13).
-
-> Mar 24 21:29:14 linux-7vph kernel: ata1: hard resetting link
-> Mar 24 21:29:14 linux-7vph kernel: ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> Mar 24 21:29:14 linux-7vph kernel: ata1.00: ACPI cmd ef/02:00:00:00:00:a0 succeeded
-> Mar 24 21:29:14 linux-7vph kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
-> Mar 24 21:29:14 linux-7vph kernel: ata1.00: ACPI cmd ef/5f:00:00:00:00:a0 succeeded
-> Mar 24 21:29:14 linux-7vph kernel: ata1.00: ACPI cmd ef/10:03:00:00:00:a0 filtered out
-> Mar 24 21:29:14 linux-7vph kernel: ata1.00: ACPI cmd ef/02:00:00:00:00:a0 succeeded
-> Mar 24 21:29:14 linux-7vph kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
-> Mar 24 21:29:14 linux-7vph kernel: ata1.00: ACPI cmd ef/5f:00:00:00:00:a0 succeeded
-> Mar 24 21:29:14 linux-7vph kernel: ata1.00: ACPI cmd ef/10:03:00:00:00:a0 filtered out
-> Mar 24 21:29:14 linux-7vph kernel: ata1.00: configured for UDMA/133
-> Mar 24 21:29:14 linux-7vph kernel: ata1.00: configured for UDMA/133
-
-
-SATA link is reset, and ACPI is re-run.
-
-> Mar 24 21:29:14 linux-7vph kernel: sd 0:0:0:0: [sda] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
-> Mar 24 21:29:14 linux-7vph kernel: sd 0:0:0:0: [sda] Sense Key : Aborted Command [current] [descriptor]
-> Mar 24 21:29:14 linux-7vph kernel: Descriptor sense data with sense descriptors (in hex):
-> Mar 24 21:29:14 linux-7vph kernel:         72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00 
-> Mar 24 21:29:14 linux-7vph kernel:         0c 10 b3 07 
-> Mar 24 21:29:14 linux-7vph kernel: sd 0:0:0:0: [sda] Add. Sense: No additional sense information
-> Mar 24 21:29:14 linux-7vph kernel: end_request: I/O error, dev sda, sector 242190455
-
-The SCSI subsystem aborts each of the queued commands.
-
-> Mar 24 21:29:14 linux-7vph kernel: ata1: EH complete
-
-SATA error handling completes
-
-> Mar 24 21:29:14 linux-7vph kernel: EXT4-fs error (device sda6): __ext4_get_inode_loc: unable to read inode block - inode=2330178, block=9338883
-
-ext4 pukes, because of SATA/SCSI errors
-
-> Mar 24 21:29:14 linux-7vph kernel: sd 0:0:0:0: [sda] 390721968 512-byte hardware sectors: (200 GB/186 GiB)
-> Mar 24 21:29:14 linux-7vph kernel: sd 0:0:0:0: [sda] Write Protect is off
-> Mar 24 21:29:14 linux-7vph kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> Mar 24 21:29:14 linux-7vph kernel: sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> Mar 24 21:29:14 linux-7vph kernel: sd 0:0:0:0: [sda] 390721968 512-byte hardware sectors: (200 GB/186 GiB)
-> Mar 24 21:29:14 linux-7vph kernel: sd 0:0:0:0: [sda] Write Protect is off
-> Mar 24 21:29:14 linux-7vph kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> Mar 24 21:29:14 linux-7vph kernel: sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-
-SCSI finished re-initialization.
-
-So from this, a few observations and open questions:
-
-Why didn't these SCSI commands get retried?
-
-Were they left over from prior to resume?
-
-Did SCSI error out the commands too soon?  The probing is not complete 
-until AFTER the sector errors, I note.
-
-Did the system resume before ACPI resume and SCSI resume completed?  It 
-sure looks that way, from the log.
-
-Does the asynchronous probing play a role here?
-
-	Jeff
+diff --git a/drivers/lio-core/target_core_pr.c b/drivers/lio-core/target_core_pr.c
+index d733bae..0ddf54c 100644
+--- a/drivers/lio-core/target_core_pr.c
++++ b/drivers/lio-core/target_core_pr.c
+@@ -38,6 +38,7 @@
+ #include <target_core_hba.h>
+ #include <target_core_transport.h>
+ #include <target_core_pr.h>
++#include <target_core_ua.h>
+ #include <target_core_transport_plugin.h>
+ #include <target_core_fabric_ops.h>
+ #include <target_core_configfs.h>
+@@ -532,12 +533,13 @@ static void core_scsi3_put_pr_reg(t10_pr_registration_t *pr_reg)
+ 	smp_mb__after_atomic_dec();
+ }
+ 
+-static void core_scsi3_check_implict_release(
++static int core_scsi3_check_implict_release(
+ 	se_device_t *dev,
+ 	t10_pr_registration_t *pr_reg)
+ {
+ 	se_node_acl_t *nacl = pr_reg->pr_reg_nacl;
+ 	t10_pr_registration_t *pr_res_holder;
++	int ret = 0;
+ 
+ 	spin_lock(&dev->dev_reservation_lock);
+ 	pr_res_holder = dev->dev_pr_res_holder;
+@@ -556,10 +558,12 @@ static void core_scsi3_check_implict_release(
+ 		 *    field set to zero (see 5.7.11.3).
+ 		 */
+ 		__core_scsi3_complete_pro_release(dev, nacl, pr_reg, 0);
+-#warning FIXME: Registrants only, UA + RESERVATIONS RELEASED
++		ret = 1;
+ #warning FIXME: All Registrants, only release reservation when last registration is freed.
+ 	}
+ 	spin_unlock(&dev->dev_reservation_lock);
++
++	return ret;
+ }
+ 
+ /*
+@@ -681,9 +685,9 @@ static int core_scsi3_emulate_pro_register(
+ 	se_dev_entry_t *se_deve;
+ 	se_lun_t *se_lun = SE_LUN(cmd);
+ 	se_portal_group_t *se_tpg;
+-	t10_pr_registration_t *pr_reg;
++	t10_pr_registration_t *pr_reg, *pr_reg_p;
+ 	t10_reservation_template_t *pr_tmpl = &SU_DEV(dev)->t10_reservation;
+-	int ret = 0;
++	int pr_holder = 0, ret = 0, type;
+ 
+ 	if (!(se_sess) || !(se_lun)) {
+ 		printk(KERN_ERR "SPC-3 PR: se_sess || se_lun_t is NULL!\n");
+@@ -748,6 +752,8 @@ static int core_scsi3_emulate_pro_register(
+ 			core_scsi3_put_pr_reg(pr_reg);
+ 			return PYX_TRANSPORT_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 		}
++		type = pr_reg->pr_res_type;
++
+ 		if (!(ignore_key)) {
+ 			if (res_key != pr_reg->pr_res_key) {
+ 				printk(KERN_ERR "SPC-3 PR REGISTER: Received"
+@@ -771,9 +777,38 @@ static int core_scsi3_emulate_pro_register(
+ 		 * Nexus.
+ 		 */
+ 		if (!(sa_res_key)) {
+-			core_scsi3_check_implict_release(SE_DEV(cmd), pr_reg);
++			pr_holder = core_scsi3_check_implict_release(
++					SE_DEV(cmd), pr_reg);
++
+ 			spin_lock(&pr_tmpl->registration_lock);
++			/*
++			 * Release the calling I_T Nexus registration now..
++			 */
+ 			__core_scsi3_free_registration(SE_DEV(cmd), pr_reg, 1);
++			/*
++			 * From spc4r17, section 5.7.11.3 Unregistering
++			 *
++			 * If the persistent reservation is a registrants only
++			 * type, the device server shall establish a unit
++			 * attention condition for the initiator port associated
++			 * with every registered I_T nexus except for the I_T
++			 * nexus on which the PERSISTENT RESERVE OUT command was
++			 * received, with the additional sense code set to
++			 * RESERVATIONS RELEASED.
++			 */
++			if (pr_holder &&
++			   ((type == PR_TYPE_WRITE_EXCLUSIVE_REGONLY) ||
++			    (type == PR_TYPE_EXCLUSIVE_ACCESS_REGONLY))) {
++				list_for_each_entry(pr_reg_p,
++						&pr_tmpl->registration_list,
++						pr_reg_list) {
++
++					core_scsi3_ua_allocate(
++						pr_reg_p->pr_reg_nacl,
++						cmd->orig_fe_lun, 0x2A,
++						ASCQ_2AH_RESERVATIONS_RELEASED);
++				}
++			}
+ 			spin_unlock(&pr_tmpl->registration_lock);
+ 		} else {
+ 			/*
+@@ -1047,7 +1082,8 @@ static int core_scsi3_emulate_pro_release(
+ 	se_device_t *dev = cmd->se_dev;
+ 	se_session_t *se_sess = SE_SESS(cmd);
+ 	se_lun_t *se_lun = SE_LUN(cmd);
+-	t10_pr_registration_t *pr_reg, *pr_res_holder;
++	t10_pr_registration_t *pr_reg, *pr_reg_p, *pr_res_holder;
++	t10_reservation_template_t *pr_tmpl = &SU_DEV(dev)->t10_reservation;
+ 
+ 	if (!(se_sess) || !(se_lun)) {
+ 		printk(KERN_ERR "SPC-3 PR: se_sess || se_lun_t is NULL!\n");
+@@ -1137,10 +1173,50 @@ static int core_scsi3_emulate_pro_release(
+ 		core_scsi3_put_pr_reg(pr_reg);
+ 		return PYX_TRANSPORT_RESERVATION_CONFLICT;
+ 	}
++	/*
++	 * In response to a persistent reservation release request from the
++	 * persistent reservation holder the device server shall perform a
++	 * release by doing the following as an uninterrupted series of actions:
++	 * a) Release the persistent reservation;
++	 * b) Not remove any registration(s);
++	 * c) If the released persistent reservation is a registrants only type
++	 * or all registrants type persistent reservation,
++	 *    the device server shall establish a unit attention condition for
++	 *    the initiator port associated with every regis-
++	 *    tered I_T nexus other than I_T nexus on which the PERSISTENT
++	 *    RESERVE OUT command with RELEASE service action was received,
++	 *    with the additional sense code set to RESERVATIONS RELEASED; and
++	 * d) If the persistent reservation is of any other type, the device
++	 *    server shall not establish a unit attention condition.
++	 */
+ 	__core_scsi3_complete_pro_release(dev, se_sess->se_node_acl,
+ 			pr_reg, 1);
++
++	if ((type != PR_TYPE_WRITE_EXCLUSIVE_REGONLY) &&
++	    (type != PR_TYPE_EXCLUSIVE_ACCESS_REGONLY) &&
++	    (type != PR_TYPE_WRITE_EXCLUSIVE_ALLREG) &&
++	    (type != PR_TYPE_EXCLUSIVE_ACCESS_ALLREG)) {
++		spin_unlock(&dev->dev_reservation_lock);
++		core_scsi3_put_pr_reg(pr_reg);
++		return 0;
++	}
+ 	spin_unlock(&dev->dev_reservation_lock);
+ 
++	spin_lock(&pr_tmpl->registration_lock);
++	list_for_each_entry(pr_reg_p, &pr_tmpl->registration_list,
++			pr_reg_list) {
++		/*
++		 * Do not establish a UNIT ATTENTION condition
++		 * for the calling I_T Nexus
++		 */
++		if (pr_reg_p == pr_reg)
++			continue;
++
++		core_scsi3_ua_allocate(pr_reg_p->pr_reg_nacl, cmd->orig_fe_lun,
++				0x2A, ASCQ_2AH_RESERVATIONS_RELEASED);
++	}
++	spin_unlock(&pr_tmpl->registration_lock);
++
+ 	core_scsi3_put_pr_reg(pr_reg);
+ 	return 0;
+ }
+@@ -1150,9 +1226,11 @@ static int core_scsi3_emulate_pro_clear(
+ 	u64 res_key)
+ {
+ 	se_device_t *dev = cmd->se_dev;
++	se_node_acl_t *pr_reg_nacl;
+ 	se_session_t *se_sess = SE_SESS(cmd);
+ 	t10_reservation_template_t *pr_tmpl = &SU_DEV(dev)->t10_reservation;
+ 	t10_pr_registration_t *pr_reg, *pr_reg_tmp, *pr_reg_n, *pr_res_holder;
++	int calling_it_nexus = 0;
+ 	/*
+ 	 * Locate the existing *pr_reg via se_node_acl_t pointers
+ 	 */
+@@ -1199,9 +1277,20 @@ static int core_scsi3_emulate_pro_clear(
+ 	spin_lock(&pr_tmpl->registration_lock);
+ 	list_for_each_entry_safe(pr_reg, pr_reg_tmp,
+ 			&pr_tmpl->registration_list, pr_reg_list) {
+-#warning FIXME: UA + RESERVATIONS PREEMPTED for all other registered I_T nexuses
+-		__core_scsi3_free_registration(dev, pr_reg,
+-					(pr_reg_n == pr_reg) ? 1 : 0);
++
++		calling_it_nexus = (pr_reg_n == pr_reg) ? 1 : 0;
++		pr_reg_nacl = pr_reg->pr_reg_nacl;
++		__core_scsi3_free_registration(dev, pr_reg, calling_it_nexus);
++		/*
++		 * e) Establish a unit attention condition for the initiator
++		 *    port associated with every registered I_T nexus other
++		 *    than the I_T nexus on which the PERSISTENT RESERVE OUT
++		 *    command with CLEAR service action was received, with the
++		 *    additional sense code set to RESERVATIONS PREEMPTED.
++		 */
++		if (!(calling_it_nexus))
++			core_scsi3_ua_allocate(pr_reg_nacl, cmd->orig_fe_lun,
++				0x2A, ASCQ_2AH_RESERVATIONS_PREEMPTED);
+ 	}
+ 	spin_unlock(&pr_tmpl->registration_lock);
+ 
+-- 
+1.5.4.1
 
 
 
