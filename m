@@ -1,49 +1,34 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH resend] bsg: Add support for submitting requests at
- tail of queue
-Date: Wed, 25 Mar 2009 13:06:21 +0900
-Message-ID: <20090325130533K.fujita.tomonori@lab.ntt.co.jp>
-References: <49C89CBC.7050306@panasas.com>
-	<20090324210440Z.fujita.tomonori@lab.ntt.co.jp>
-	<49C8D7E0.9000107@panasas.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 06/13] [scsi] changed ioctls to unlocked
+Date: Tue, 24 Mar 2009 22:21:09 -0600
+Message-ID: <20090325042109.GP14127@parisc-linux.org>
+References: <1237929168-15341-7-git-send-email-stoyboyker@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:38529 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751436AbZCYEHD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Mar 2009 00:07:03 -0400
-In-Reply-To: <49C8D7E0.9000107@panasas.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:35372 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751544AbZCYEV1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Mar 2009 00:21:27 -0400
+Content-Disposition: inline
+In-Reply-To: <1237929168-15341-7-git-send-email-stoyboyker@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: fujita.tomonori@lab.ntt.co.jp, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, osd-dev@open-osd.org, dgilbert@interlog.com
+To: stoyboyker@gmail.com
+Cc: linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-On Tue, 24 Mar 2009 14:53:52 +0200
-Boaz Harrosh <bharrosh@panasas.com> wrote:
+On Tue, Mar 24, 2009 at 04:12:41PM -0500, stoyboyker@gmail.com wrote:
+> +static long osst_ioctl(struct file * file, unsigned int cmd_in,
+> +	unsigned long arg)
+>  {
+> +	lock_kernel();
+>  	int		      i, cmd_nr, cmd_type, blk, retval = 0;
 
-> > instead of
-> > EXPORT_SYMBOL_GPL?
-> 
-> What is that got to do with it?
-> The libosd.ko is a general purpose library for any kind of user.
-> It exports the API defined in osd_initiator.h. This API is globally
-> public, and has until now 3 implementations Linux-kernel, Linux-user-mode,
-> BSD-kernel. I hope it will have many more implementations on all
-> major OSs.
-> I do not designate this API to be private Linux API, hence
-> EXPORT_SYMBOL_GPL does not apply.
+Did you try compiling this?  If so, what compiler did you use?  You
+*should* have got an error about mixing code and declarations.
 
-I don't understand your logic.
-
-Your osd code is released under GPL so of course anyone can use (and
-modify) your code (design, or whatever) for whatever he wants as long
-as he follows GPL. EXPORT_SYMBOL_GPL has nothing to do with it.
-
-We are talking about EXPORT_SYMBOL_GPL, it's all about Linux kernel;
-what kinds of Linux kernel modules can use your osd code in Linux
-kernel. The your code will be newly added so EXPORT_SYMBOL_GPL should
-be fine here unless you encourage non-GPL kernel modules.
-
-Or I miss something?
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
