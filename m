@@ -1,68 +1,54 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 5/5] [LIO-Target]: Update core_tmr_alloc_req() usage
-Date: Tue, 24 Mar 2009 22:54:35 -0700
-Message-ID: <1237960475.4138.402.camel@haakon2.linux-iscsi.org>
+Subject: [PATCH 0/2] [Target_Core_Mod]: Add support for UNIT_ATTENTION with
+	SPC-3 PR
+Date: Tue, 24 Mar 2009 23:05:20 -0700
+Message-ID: <1237961120.4138.416.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp115.sbc.mail.sp1.yahoo.com ([69.147.64.88]:22009 "HELO
-	smtp115.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753578AbZCYF7I (ORCPT
+Received: from smtp119.sbc.mail.sp1.yahoo.com ([69.147.64.92]:39875 "HELO
+	smtp119.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752158AbZCYGFY (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Mar 2009 01:59:08 -0400
+	Wed, 25 Mar 2009 02:05:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Douglas Gilbert <dgilbert@interlog.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Boaz Harrosh <bharrosh@panasas.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
->From a13a460d284e32dc62b55e00a20acc154b793e14 Mon Sep 17 00:00:00 2001
-From: Nicholas Bellinger <nab@linux-iscsi.org>
-Date: Mon, 23 Mar 2009 22:42:05 -0700
-Subject: [PATCH 5/5] [LIO-Target]: Update core_tmr_alloc_req() usage
+Greetings all,
 
-This patch updates parameter usage of core_tmr_alloc_req() from target_core_mod
-in iscsi_target_mod code.  It also removes an non-fatal error message from
-iscsi_handle_task_mgt_cmd() related to non ABORT_TASK iSCSI TMRs.
+This patch adds support for SAM4/SPC4 compliant UNIT_ATTENTION with ua_intlck_ctrl 
+control mode page value 00b, 10b and 11b.  The default has been set to 0 in configfs,
+which is to clear the UNIT ATTENTION with a CHECK_CONDITION+Sense data with a
+corresponding ASC+ASCQ.  Currently, Linux/SCSI midlayer clients require a manual sg_request
+to clear the UNIT ATTENTION with a REQUEST_SENSE for modes 10b and 11b.  These values can be
+changed (without active $FABRIC_MOD target ports) for a given target_core_mod storage object
+with ConfigFS via /sys/kernel/config/target/core/$HBA/$DEV/attrib/emulated_ua_intlck_ctrl.
+The echoed values for the attribute into ConfigFS are 0, 1, and 2 respectively for the
+interlock codes 00b, 10b, and 11b.
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/lio-core/iscsi_target.c      |    4 +---
- drivers/lio-core/iscsi_target_util.c |    3 ++-
- 2 files changed, 3 insertions(+), 4 deletions(-)
+These patches are made against lio-core-2.6.git/master and tested on
+v2.6.29 x86 32-bit HVM using sg_persist from sg3_utils.  The lio-core-2.6.git tree
+can be found at: 
 
-diff --git a/drivers/lio-core/iscsi_target.c b/drivers/lio-core/iscsi_target.c
-index 25a107a..33d1363 100644
---- a/drivers/lio-core/iscsi_target.c
-+++ b/drivers/lio-core/iscsi_target.c
-@@ -2343,10 +2343,8 @@ static inline int iscsi_handle_task_mgt_cmd (
- 				"implementation\n");
- 		return(iscsi_add_reject(REASON_PROTOCOL_ERR, 1, buf, conn));
- 	}
--	if ((hdr->function != ABORT_TASK) && (hdr->ref_cmd_sn != RESERVED)) {
--		TRACE_ERROR("RefCmdSN should be set to 0xFFFFFFFF.\n"); 
-+	if ((hdr->function != ABORT_TASK) && (hdr->ref_cmd_sn != RESERVED))
- 		hdr->ref_cmd_sn = RESERVED;
--	}
- 
- 	if (!(cmd = iscsi_allocate_se_cmd_for_tmr(conn, hdr->function))) 
- 		return(iscsi_add_reject(REASON_OUT_OF_RESOURCES, 1, buf, conn));
-diff --git a/drivers/lio-core/iscsi_target_util.c b/drivers/lio-core/iscsi_target_util.c
-index bf74c32..7aa3c7e 100644
---- a/drivers/lio-core/iscsi_target_util.c
-+++ b/drivers/lio-core/iscsi_target_util.c
-@@ -396,7 +396,8 @@ extern iscsi_cmd_t *iscsi_allocate_se_cmd_for_tmr (
- 
- 	se_cmd = cmd->se_cmd;
- 
--	if (!(se_cmd->se_tmr_req = core_tmr_alloc_req((void *)cmd->tmr_req, function))) 
-+	if (!(se_cmd->se_tmr_req = core_tmr_alloc_req(se_cmd,
-+			(void *)cmd->tmr_req, function))) 
- 		goto out;
- 
- 	cmd->tmr_req->se_tmr_req = se_cmd->se_tmr_req;
--- 
-1.5.4.1
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=summary
 
+Subject: [PATCH 1/2] [Target_Core_Mod]: Add support for UNIT_ATTENTION conditions
+Subject: [PATCH 2/2] [Target_Core_Mod/Persistent_Reservations]: Add UNIT ATTENTION support for PROUT SAs 
+
+ drivers/lio-core/Makefile                |    1 +
+ drivers/lio-core/target_core_base.h      |   13 ++
+ drivers/lio-core/target_core_configfs.c  |    4 +
+ drivers/lio-core/target_core_device.c    |   27 +++-
+ drivers/lio-core/target_core_device.h    |    1 +
+ drivers/lio-core/target_core_pr.c        |  107 +++++++++-
+ drivers/lio-core/target_core_tpg.c       |   10 +
+ drivers/lio-core/target_core_transport.c |  127 ++++++++++--
+ drivers/lio-core/target_core_transport.h |    2 +
+ drivers/lio-core/target_core_ua.c        |  333 ++++++++++++++++++++++++++++++
+ drivers/lio-core/target_core_ua.h        |   36 ++++
+ 11 files changed, 632 insertions(+), 29 deletions(-)
 
 
