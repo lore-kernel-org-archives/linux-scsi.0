@@ -1,74 +1,81 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: Re: eh_abort_handler and calling scsi_done
-Date: Wed, 25 Mar 2009 09:52:35 +0100
-Message-ID: <20090325085235.GA4214@schmichrtp.de.ibm.com>
-References: <20090324114137.GA8616@schmichrtp.de.ibm.com> <49C8E055.2060108@linux.vnet.ibm.com> <20090324174609.GA13556@linux.vnet.ibm.com>
+From: hare@suse.de (Hannes Reinecke)
+Subject: [PATCH] aic7xxx leaves timer running on init failure
+Date: Wed, 25 Mar 2009 11:19:37 +0100
+Message-ID: <20090325101937.EC23518C607@pentland.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate4.uk.ibm.com ([195.212.29.137]:42274 "EHLO
-	mtagate4.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757920AbZCYIwt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Mar 2009 04:52:49 -0400
-Received: from d06nrmr1806.portsmouth.uk.ibm.com (d06nrmr1806.portsmouth.uk.ibm.com [9.149.39.193])
-	by mtagate4.uk.ibm.com (8.14.3/8.13.8) with ESMTP id n2P8qkKI067844
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Mar 2009 08:52:46 GMT
-Received: from d06av01.portsmouth.uk.ibm.com (d06av01.portsmouth.uk.ibm.com [9.149.37.212])
-	by d06nrmr1806.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n2P8qkOF3211448
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Mar 2009 08:52:46 GMT
-Received: from d06av01.portsmouth.uk.ibm.com (loopback [127.0.0.1])
-	by d06av01.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n2P8qk8w022424
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Mar 2009 08:52:46 GMT
-Content-Disposition: inline
-In-Reply-To: <20090324174609.GA13556@linux.vnet.ibm.com>
+Received: from cantor.suse.de ([195.135.220.2]:36498 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753259AbZCYKTk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Mar 2009 06:19:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@linux.vnet.ibm.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Mar 24, 2009 at 10:46:09AM -0700, Mike Anderson wrote:
-> Brian King <brking@linux.vnet.ibm.com> wrote:
-> > Your assessment sounds correct to me. The other caveat to note is that
-> > if for some reason in your eh_abort_handler you don't think the command
-> > is still outstanding, you should return SUCCESS for this as well.
-> > 
-> > -Brian
-> > 
-> > Christof Schmitt wrote:
-> > > I am investigating what is required from a LLD when SCSI commands time
-> > > out and the SCSI EH calls the eh_abort_handler. The documentation in
-> > > scsi_eh.txt states:
-> > > 
-> > >     <<scsi_eh_abort_cmds>>
-> > > 
-> > > 	This action is taken for each timed out command.
-> > > 	hostt->eh_abort_handler() is invoked for each scmd.  The
-> > > 	handler returns SUCCESS if it has succeeded to make LLDD and
-> > > 	all related hardware forget about the scmd.
-> > > 
-> > > From this and from looking at the code, i would conclude:
-> > > 
-> > > 1) If the LLD returns FAILED from the eh_abort_handler, then the
-> > >    command is still allowed to be active in the LLD and the LLD can
-> > >    call scsi_done any time later (probably latest when the
-> > >    eh_host_reset_handler flushes everything that is still pending).
-> > > 
-> > > 2) While the abort is pending, but before returning SUCCESS from
-> > >    eh_abort_handler, the LLD can still call scsi_done for the SCSI
-> > >    command to be aborted (the SCSI command might be returned with a
-> > >    status "aborted" if the abort succeeds, or "good" if it was
-> > >    completed just before the abort reached the storage system).
-> > > 
-> 
-> In cases 1 and 2 above calling scsi_done can be done but will cause
-> the request to be stopped in blk_complete_request
-> (scsi_done->blk_complete_request) as the timed out handler has
-> already taken ownership of the command.
 
-I am not too familiar with the blk completion handling. Would calling
-scsi_done for the cases above cause any problems? If there are reasons
-not to call scsi_done here, then this could be mentioned in the scsi
-documentation file.
+aic79xx leaves timers inserted when ahd_init() (which inserts
+two timers at its very end) succeeds but ahd_pci_map_int()
+fails. In this case ahd->init_level gets incremented to 5 only
+when that function succeeds, but ahd_free() calls ahd_shutdown()
+only when ahd->init_level == 5, and ahd_shutdown() is where the
+timers get removed. Since the freeing of the IRQ is not controlled
+by ahd->init_level, we should increment init_level prior to
+calling ahd_pci_map_int().
 
---
-Christof Schmitt
+Reported-by: Jan Beulich <jbeulich@novell.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/aic7xxx/aic79xx_pci.c |    6 ++----
+ drivers/scsi/aic7xxx/aic7xxx_pci.c |    8 ++------
+ 2 files changed, 4 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/scsi/aic7xxx/aic79xx_pci.c b/drivers/scsi/aic7xxx/aic79xx_pci.c
+index a734d77..b8423c4 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_pci.c
++++ b/drivers/scsi/aic7xxx/aic79xx_pci.c
+@@ -377,14 +377,12 @@ ahd_pci_config(struct ahd_softc *ahd, const struct ahd_pci_identity *entry)
+ 	error = ahd_init(ahd);
+ 	if (error != 0)
+ 		return (error);
++	ahd->init_level++;
+ 
+ 	/*
+ 	 * Allow interrupts now that we are completely setup.
+ 	 */
+-	error = ahd_pci_map_int(ahd);
+-	if (!error)
+-		ahd->init_level++;
+-	return error;
++	return ahd_pci_map_int(ahd);
+ }
+ 
+ #ifdef CONFIG_PM
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_pci.c b/drivers/scsi/aic7xxx/aic7xxx_pci.c
+index c07cb6e..4347c8d 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_pci.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_pci.c
+@@ -960,16 +960,12 @@ ahc_pci_config(struct ahc_softc *ahc, const struct ahc_pci_identity *entry)
+ 	error = ahc_init(ahc);
+ 	if (error != 0)
+ 		return (error);
++	ahc->init_level++;
+ 
+ 	/*
+ 	 * Allow interrupts now that we are completely setup.
+ 	 */
+-	error = ahc_pci_map_int(ahc);
+-	if (error != 0)
+-		return (error);
+-
+-	ahc->init_level++;
+-	return (0);
++	return ahc_pci_map_int(ahc);
+ }
+ 
+ /*
+-- 
+1.5.3.2
+
