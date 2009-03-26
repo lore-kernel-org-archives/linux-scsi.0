@@ -1,60 +1,48 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 12945] New: SCSI Generic (sg): BUG: sleeping function called
- from invalid context
-Date: Thu, 26 Mar 2009 12:27:53 GMT
-Message-ID: <bug-12945-11613@http.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Next March 25: Boot failure on powerpc [recursive locking
+	detected]
+Date: Thu, 26 Mar 2009 08:50:03 -0500
+Message-ID: <1238075403.3342.1.camel@localhost.localdomain>
+References: <20090325191229.0e17eaf6.sfr@canb.auug.org.au>
+	 <49CA3BF4.3050801@in.ibm.com>  <49CB2200.50703@in.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:56214 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752296AbZCZN1J (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Mar 2009 09:27:09 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n2QCRr41016227
-	for <linux-scsi@vger.kernel.org>; Thu, 26 Mar 2009 12:27:53 GMT
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:48014 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757663AbZCZNuH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Mar 2009 09:50:07 -0400
+In-Reply-To: <49CB2200.50703@in.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Sachin Sant <sachinp@in.ibm.com>
+Cc: linuxppc-dev@ozlabs.org, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12945
+On Thu, 2009-03-26 at 12:04 +0530, Sachin Sant wrote:
+> Sachin Sant wrote:
+> > Today's next failed to boot on a powerpc box
+> > (Power6 blade IBM,7998-61X) with following recursive locking message.
+> >
+> > =============================================
+> > [ INFO: possible recursive locking detected ]
+> > 2.6.29-next-20090325 #1
+> After bisecting the failure seems to be because of the following
+> patch from James ( block: move SCSI timeout check into block )
+> 
+> http://patchwork.kernel.org/patch/8017/
+> 
+> If i back out the above mentioned patch, the machine boots fine
+> without any problems.
 
-           Summary: SCSI Generic (sg): BUG: sleeping function called from
-                    invalid context
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: 2.6.28.9
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: Other
-        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
-        ReportedBy: txtoxtox285@googlemail.com
-        Regression: No
+Yes, that patch already got dropped for other reasons:
+
+http://marc.info/?t=123740773700002
+
+I'm going to see if I can redo it in a better way, since moving this
+type of timeout checking from scsi to block is a useful generalisation.
+
+James
 
 
-Created an attachment (id=20685)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=20685)
-Stack trace on program kill (2.6.28.9)
-
-I am experimenting with CD audio extraction. I use the SCSI Generic driver for
-this.
-
-My test program uses read() and write() (instead of ioctl) to send requests to
-the driver and receive responses. I use SG_FLAG_DIRECT_IO.
-
-When I kill my program (because I don't want to wait until it has ripped the
-entire CD), I am often rewarded with messages like "BUG: sleeping function
-called from invalid context at linux-2.6.28.9/include/linux/pagemap.h:347". I
-have attached typical stack trace.
-
-Another case when I hit this BUG is when I set a time out and the CD drive
-doesn't respond fast enough. A stack trace is attached.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
