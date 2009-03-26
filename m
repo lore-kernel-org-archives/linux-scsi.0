@@ -1,146 +1,92 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Stale devices in sysfs
-Date: Thu, 26 Mar 2009 21:44:48 +0000
-Message-ID: <1238103888.3342.67.camel@localhost.localdomain>
-References: <635936.80425.qm@web32508.mail.mud.yahoo.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH -next] exofs: fix printk format warnings
+Date: Thu, 26 Mar 2009 14:44:30 -0700
+Message-ID: <49CBF73E.2010808@oracle.com>
+References: <20090326190130.54fc6fde.sfr@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:43750 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757877AbZCZVor (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Mar 2009 17:44:47 -0400
-In-Reply-To: <635936.80425.qm@web32508.mail.mud.yahoo.com>
+Received: from rcsinet12.oracle.com ([148.87.113.124]:62462 "EHLO
+	rgminet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757934AbZCZVpH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Mar 2009 17:45:07 -0400
+In-Reply-To: <20090326190130.54fc6fde.sfr@canb.auug.org.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ahmed A <ahmedcali@yahoo.com>
-Cc: linux-scsi@vger.kernel.org
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>
 
-On Thu, 2009-03-26 at 11:51 -0700, Ahmed A wrote:
-> 
-> 
-> --- On Thu, 3/26/09, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> 
-> > From: James Bottomley <James.Bottomley@HansenPartnership.com>
-> > Subject: Re: Stale devices in sysfs
-> > To: "Ahmed A" <ahmedcali@yahoo.com>
-> > Cc: linux-scsi@vger.kernel.org
-> > Date: Thursday, March 26, 2009, 10:41 AM
-> > On Thu, 2009-03-26 at 10:16 -0700,
-> > Ahmed A wrote:
-> > > Hello,
-> > > 
-> > > I have a two port FC hba in my system.  The hba
-> > is properly connecting
-> > > to a Target, and I can tell it seems all the LUNs
-> > exported to it.
-> > > However, when I browse through the
-> > /sys/class/scsi_host/...
-> > > directory , and output of "lsscsi", I can see "sd"
-> > mappings that are
-> > > old and invalid (cannot write to them).  In my
-> > ouput below,
-> > > sd[e/f/g/h] and sd[c/d] are invalid.
-> > > 
-> > > 1. Is there an command I an issue to flush out the
-> > older mappings?
-> > > 
-> > > 2. Is this a bug in the FC driver?
-> > > 
-> > > [root@pe850 ~]# lsscsi
-> > > [2:0:0:10]   disk    3PARdata
-> > VV           
-> >    0000  /dev/sde
-> > > [2:0:0:11]   disk    3PARdata
-> > VV           
-> >    0000  /dev/sdf
-> > > [2:0:0:254]  enclosu 3PARdata SES   
-> >           0000  -   
-> >    
-> > > [2:0:1:10]   disk    3PARdata
-> > VV           
-> >    0000  /dev/sdg
-> > > [2:0:1:11]   disk    3PARdata
-> > VV           
-> >    0000  /dev/sdh
-> > > [2:0:1:254]  enclosu 3PARdata SES   
-> >           0000  -   
-> >    
-> > > [2:0:2:10]   disk    3PARdata
-> > VV           
-> >    0000  /dev/sdi
-> > > [2:0:2:11]   disk    3PARdata
-> > VV           
-> >    0000  /dev/sdj
-> > > [2:0:2:254]  enclosu 3PARdata SES   
-> >           0000  -   
-> >    
-> > > [3:0:0:10]   disk    3PARdata
-> > VV           
-> >    0000  /dev/sdc
-> > > [3:0:0:11]   disk    3PARdata
-> > VV           
-> >    0000  /dev/sdd
-> > > [3:0:0:254]  enclosu 3PARdata SES   
-> >           0000  -   
-> >    
-> > > [3:0:1:10]   disk    3PARdata
-> > VV           
-> >    0000  /dev/sdk
-> > > [3:0:1:11]   disk    3PARdata
-> > VV           
-> >    0000  /dev/sdl
-> > > [3:0:1:254]  enclosu 3PARdata SES   
-> >           0000  -   
-> >    
-> > > [root@pe850 ~]# 
-> > 
-> > It's very hard to tell anything without knowing which fibre
-> > HBA or
-> > looking in the logs.  However, I'd say you've had some
-> > disconnect event
-> > which exceeded the devloss timeout twice on HBA 2 and once
-> > on HBA 1 ...
-> > this causes LUNs to be re-presented in exactly this fashion
-> > (with the
-> > target number incrementing).
-> > 
-> > It sounds like the problem is whatever event caused this,
-> > and there's
-> > insufficient information to make any guesses about that.
-> > 
-> > James
-> > 
-> > 
-> > 
-> 
-> Hi James, 
-> 
-> Thank you for your reply.  It is an Emulex 2 port FC hba (LPE11002),
-> using the inbox driver version 8.2.0.33.3p.  Yes, there have been some
-> disconnect, initiatied by me by disabling / enablling the port on the
-> target.  Even in these situations, wouldn't the driver remove the
-> old/stale mappings?  I am guessing from you response, there is no way
-> for me to clean-up the old ones.
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-The delete caused by rport removal is supposed to remove them.  There
-should be a message in the logs, something like :
+Fix exofs printk format warnings:
 
-blocked FC remote port time out: removing target and saving binding
+fs/exofs/inode.c:184: warning: format '%zx' expects type 'size_t', but argument 6 has type 'long unsigned int'
+fs/exofs/inode.c:291: warning: format '%zx' expects type 'size_t', but argument 6 has type 'long unsigned int'
+fs/exofs/inode.c:373: warning: format '%zx' expects type 'size_t', but argument 7 has type 'long unsigned int'
+fs/exofs/inode.c:461: warning: format '%zx' expects type 'size_t', but argument 6 has type 'long unsigned int'
+fs/exofs/inode.c:534: warning: format '%zx' expects type 'size_t', but argument 7 has type 'long unsigned int'
+fs/exofs/inode.c:610: warning: format '%zx' expects type 'size_t', but argument 5 has type 'long unsigned int'
 
-You can delete any of the devices by just doing
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+cc: Boaz Harrosh <bharrosh@panasas.com>
+---
+ fs/exofs/inode.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-echo 1 > /sys/class/scsi_device/<h:c:t:l>/device/delete
-
-
-> As to figure out which ones are real, just use the sd mapping with the
-> latest target number, right?
-
-Yes, the transport class allocates them from a per host incrementing
-variable.
-
-James
-
-
+--- linux-next-20090325.orig/fs/exofs/inode.c
++++ linux-next-20090325/fs/exofs/inode.c
+@@ -182,7 +182,7 @@ static int __readpages_done(struct osd_r
+ 		good_bytes = pcol->length - resid;
+ 
+ 	EXOFS_DBGMSG("readpages_done(%ld) good_bytes=%llx"
+-		     " length=%zx nr_pages=%u\n",
++		     " length=%lx nr_pages=%u\n",
+ 		     pcol->inode->i_ino, _LLU(good_bytes), pcol->length,
+ 		     pcol->nr_pages);
+ 
+@@ -288,7 +288,7 @@ static int read_exec(struct page_collect
+ 
+ 	atomic_inc(&pcol->sbi->s_curr_pending);
+ 
+-	EXOFS_DBGMSG("read_exec obj=%llx start=%llx length=%zx\n",
++	EXOFS_DBGMSG("read_exec obj=%llx start=%llx length=%lx\n",
+ 		  obj.id, _LLU(i_start), pcol->length);
+ 
+ 	/* pages ownership was passed to pcol_copy */
+@@ -371,7 +371,7 @@ try_again:
+ 	ret = pcol_add_page(pcol, page, len);
+ 	if (ret) {
+ 		EXOFS_DBGMSG("Failed pcol_add_page pages[i]=%p "
+-			  "len=%zx nr_pages=%u length=%zx\n",
++			  "len=%zx nr_pages=%u length=%lx\n",
+ 			  page, len, pcol->nr_pages, pcol->length);
+ 
+ 		/* split the request, and start again with current page */
+@@ -459,7 +459,7 @@ static void writepages_done(struct osd_r
+ 		good_bytes = pcol->length - resid;
+ 
+ 	EXOFS_DBGMSG("writepages_done(%lx) good_bytes=%llx"
+-		     " length=%zx nr_pages=%u\n",
++		     " length=%lx nr_pages=%u\n",
+ 		     pcol->inode->i_ino, _LLU(good_bytes), pcol->length,
+ 		     pcol->nr_pages);
+ 
+@@ -531,7 +531,7 @@ static int write_exec(struct page_collec
+ 	}
+ 
+ 	atomic_inc(&pcol->sbi->s_curr_pending);
+-	EXOFS_DBGMSG("write_exec(%lx, %lx) start=%llx length=%zx\n",
++	EXOFS_DBGMSG("write_exec(%lx, %lx) start=%llx length=%lx\n",
+ 		  pcol->inode->i_ino, pcol->pg_first, _LLU(i_start),
+ 		  pcol->length);
+ 	/* pages ownership was passed to pcol_copy */
+@@ -608,7 +608,7 @@ try_again:
+ 	ret = pcol_add_page(pcol, page, len);
+ 	if (unlikely(ret)) {
+ 		EXOFS_DBGMSG("Failed pcol_add_page "
+-			     "nr_pages=%u total_length=%zx\n",
++			     "nr_pages=%u total_length=%lx\n",
+ 			     pcol->nr_pages, pcol->length);
+ 
+ 		/* split the request, next loop will start again */
