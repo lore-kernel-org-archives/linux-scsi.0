@@ -1,49 +1,50 @@
-From: Ahmed A <ahmedcali@yahoo.com>
-Subject: Stale devices in sysfs
-Date: Thu, 26 Mar 2009 10:16:36 -0700 (PDT)
-Message-ID: <566532.22288.qm@web32501.mail.mud.yahoo.com>
+From: Kay Sievers <kay.sievers@vrfy.org>
+Subject: Re: [PATCH] Add a 'wait-scan' command to /proc/scsi/scsi.
+Date: Thu, 26 Mar 2009 18:25:25 +0100
+Message-ID: <ac3eb2510903261025y5cacc8a3i32ba8ee8896c9db9@mail.gmail.com>
+References: <1238007647-25752-1-git-send-email-notting@redhat.com>
+	 <20090325190137.GA8509@infradead.org>
+	 <20090325190321.GB25176@nostromo.devel.redhat.com>
+	 <20090325192653.GS14127@parisc-linux.org>
+	 <20090325194756.GA26465@nostromo.devel.redhat.com>
+	 <20090325203624.GT14127@parisc-linux.org>
+	 <20090326144716.GA5696@nostromo.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web32501.mail.mud.yahoo.com ([68.142.207.211]:23152 "HELO
-	web32501.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752583AbZCZRXU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Mar 2009 13:23:20 -0400
+Received: from mail-ew0-f165.google.com ([209.85.219.165]:42237 "EHLO
+	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757583AbZCZRZ2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Mar 2009 13:25:28 -0400
+In-Reply-To: <20090326144716.GA5696@nostromo.devel.redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>, Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, pjones@redhat.com
 
+On Thu, Mar 26, 2009 at 15:47, Bill Nottingham <notting@redhat.com> wrote:
+> Matthew Wilcox (matthew@wil.cx) said:
 
-Hello,
+>> > Well, in the case I'm looking at, udev is what's loading the host
+>> > controllers, and there needs to be some sort of synchronization point
+>> > between that and LVM invocations, fsck, mount, etc. Since scans
+>> > aren't sent over as events for udev to catch, 'udevadm settle'
+>> > isn't enough.
+>>
+>> So ... if we sent a udev event when the scan list was empty, you'd be OK?
+>
+> I'm CC'ing Peter, who has some more ideas - it would definitely be a good
+> start, but we'd probably at least need to know when the scan list started
+> being filled as well.
 
-I have a two port FC hba in my system.  The hba is properly connecting to a Target, and I can tell it seems all the LUNs exported to it.  However, when I browse through the /sys/class/scsi_host/... directory , and output of "lsscsi", I can see "sd" mappings that are old and invalid (cannot write to them).  In my ouput below, sd[e/f/g/h] and sd[c/d] are invalid.
+I don't like to see any uevent send for issues like this. This would
+just be a hack around badly designed system services, which should be
+fixed themselves and not worked around in the kernel. This hack will
+run useless events for system who don't need them.
 
-1. Is there an command I an issue to flush out the older mappings?
+Something like a poll()'able sysfs file, which other subsytems already
+use, and which can be used to wake up a process that can blocks, might
+work fine here.
 
-2. Is this a bug in the FC driver?
-
-[root@pe850 ~]# lsscsi
-[2:0:0:10]   disk    3PARdata VV               0000  /dev/sde
-[2:0:0:11]   disk    3PARdata VV               0000  /dev/sdf
-[2:0:0:254]  enclosu 3PARdata SES              0000  -       
-[2:0:1:10]   disk    3PARdata VV               0000  /dev/sdg
-[2:0:1:11]   disk    3PARdata VV               0000  /dev/sdh
-[2:0:1:254]  enclosu 3PARdata SES              0000  -       
-[2:0:2:10]   disk    3PARdata VV               0000  /dev/sdi
-[2:0:2:11]   disk    3PARdata VV               0000  /dev/sdj
-[2:0:2:254]  enclosu 3PARdata SES              0000  -       
-[3:0:0:10]   disk    3PARdata VV               0000  /dev/sdc
-[3:0:0:11]   disk    3PARdata VV               0000  /dev/sdd
-[3:0:0:254]  enclosu 3PARdata SES              0000  -       
-[3:0:1:10]   disk    3PARdata VV               0000  /dev/sdk
-[3:0:1:11]   disk    3PARdata VV               0000  /dev/sdl
-[3:0:1:254]  enclosu 3PARdata SES              0000  -       
-[root@pe850 ~]# 
-
-Thank you,
-Ahmed.
-
-
-
-      
+Thanks,
+Kay
