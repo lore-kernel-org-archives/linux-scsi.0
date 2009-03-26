@@ -1,43 +1,42 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: [ANNOUNCE]: Auto notification of initiators by SCST targets about
- devices additional/removal or their size changed implemented
-Date: Thu, 26 Mar 2009 22:18:16 +0300
-Message-ID: <49CBD4F8.5080605@vlnb.net>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 12207] block reads/writes > 122880 bytes to USB tape drive
+ gives EBUSY
+Date: Thu, 26 Mar 2009 19:35:28 GMT
+Message-ID: <200903261935.n2QJZSYe021530@demeter.kernel.org>
+References: <bug-12207-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:57198 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759844AbZCZTRS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Mar 2009 15:17:18 -0400
+Received: from demeter.kernel.org ([140.211.167.39]:37805 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932649AbZCZTfa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Mar 2009 15:35:30 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n2QJZSns021531
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Mar 2009 19:35:28 GMT
+In-Reply-To: <bug-12207-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scst-devel <scst-devel@lists.sourceforge.net>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hi All
+http://bugzilla.kernel.org/show_bug.cgi?id=12207
 
-In the recent commits in SCST SVN repository I added to SCST ability to 
-automatically notify initiators about the following two types of events:
 
-1. Devices addition or removal (REPORTED LUNS DATA CHANGED)
+Alan <alan@lxorguk.ukuu.org.uk> changed:
 
-2. If any device changed its size (CAPACITY DATA CHANGED)
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|                            |CODE_FIX
+         Regression|---                         |No
 
-Both types of notifications are supported: Asynchronous Events 
-Notifications (AEN) and Unit Attentions. If a target driver supports 
-AENs, they will be used, otherwise, Unit Attentions will be used.
 
-At the moment in Linux only open-iscsi partially understands those 
-events. It can see added devices. But it doesn't process devices removal 
-or size changed events.
 
-I'm going to make development freeze of SCST 1.0.1 tomorrow. Then after 
-few weeks of testing 1.0.1 is going to be released.
 
-SCST is an alternative implementation of SCSI target subsystem for 
-Linux. You can find more information about it on its home page 
-http://scst.sourceforge.net
+--- Comment #24 from Alan <alan@lxorguk.ukuu.org.uk>  2009-03-26 19:35:26 ---
+5c16034d73da2c1b663aa25dedadbc533b3d811c
 
-Vlad
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
