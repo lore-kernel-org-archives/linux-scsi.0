@@ -1,118 +1,200 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bug 12945] New: SCSI Generic (sg): BUG: sleeping function
- called from invalid context
-Date: Thu, 26 Mar 2009 07:49:52 -0700
-Message-ID: <20090326074952.40ffdcd9.akpm@linux-foundation.org>
-References: <bug-12945-11613@http.bugzilla.kernel.org/>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [PATCH 14/26] qla2xxx: Add reset capabilities for application
+	support.
+Date: Thu, 26 Mar 2009 08:49:17 -0700
+Message-ID: <20090326154917.GB2547@plap4-2.local>
+References: <1237910900-30817-1-git-send-email-andrew.vasquez@qlogic.com> <1237910900-30817-15-git-send-email-andrew.vasquez@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:41515 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755844AbZCZOyg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Mar 2009 10:54:36 -0400
-In-Reply-To: <bug-12945-11613@http.bugzilla.kernel.org/>
+Received: from avexch1.qlogic.com ([198.70.193.115]:8174 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753482AbZCZPtT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Mar 2009 11:49:19 -0400
+Content-Disposition: inline
+In-Reply-To: <1237910900-30817-15-git-send-email-andrew.vasquez@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org, txtoxtox285@googlemail.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>, Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Seokmann Ju <seokmann.ju@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Lalit Chandivade <lalit.chandivade@qlogic.com>
 
+On Tue, 24 Mar 2009, Andrew Vasquez wrote:
 
-(switched to email.  Please respond via emailed reply-to-all, not via the
-bugzilla web interface).
-
-On Thu, 26 Mar 2009 12:27:53 GMT bugzilla-daemon@bugzilla.kernel.org wrote:
-
-> http://bugzilla.kernel.org/show_bug.cgi?id=12945
+> From: Lalit Chandivade <lalit.chandivade@qlogic.com>
 > 
->            Summary: SCSI Generic (sg): BUG: sleeping function called from
->                     invalid context
->            Product: SCSI Drivers
->            Version: 2.5
->     Kernel Version: 2.6.28.9
->           Platform: All
->         OS/Version: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: Other
->         AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
->         ReportedBy: txtoxtox285@googlemail.com
->         Regression: No
-> 
-> 
-> Created an attachment (id=20685)
->  --> (http://bugzilla.kernel.org/attachment.cgi?id=20685)
-> Stack trace on program kill (2.6.28.9)
-> 
-> I am experimenting with CD audio extraction. I use the SCSI Generic driver for
-> this.
-> 
-> My test program uses read() and write() (instead of ioctl) to send requests to
-> the driver and receive responses. I use SG_FLAG_DIRECT_IO.
-> 
-> When I kill my program (because I don't want to wait until it has ripped the
-> entire CD), I am often rewarded with messages like "BUG: sleeping function
-> called from invalid context at linux-2.6.28.9/include/linux/pagemap.h:347". I
-> have attached typical stack trace.
-> 
-> Another case when I hit this BUG is when I set a time out and the CD drive
-> doesn't respond fast enough. A stack trace is attached.
+> Signed-off-by: Lalit Chandivade <lalit.chandivade@qlogic.com>
+> Additional cleanups and
+> Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+> ---
+>  drivers/scsi/qla2xxx/qla_attr.c |   56 +++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/qla2xxx/qla_fw.h   |    1 +
+>  drivers/scsi/qla2xxx/qla_gbl.h  |    1 +
+>  drivers/scsi/qla2xxx/qla_mbx.c  |   26 ++++++++++++++++++
+>  4 files changed, 84 insertions(+), 0 deletions(-)
 
-> [34215.786870] BUG: sleeping function called from invalid context at /mnt/var-pub/src/linux-2.6.28.9/include/linux/pagemap.h:347
-> [34215.786880] in_atomic(): 1, irqs_disabled(): 1, pid: 0, name: swapper
-> [34215.786886] Pid: 0, comm: swapper Not tainted 2.6.28.9 #1
-> [34215.786890] Call Trace:
-> [34215.786894]  <IRQ>  [<ffffffff8026c4cc>] set_page_dirty_lock+0x1a/0x45
-> [34215.786911]  [<ffffffff802ae17d>] bio_unmap_user+0x1e/0x4a
-> [34215.786920]  [<ffffffff802e876b>] __blk_rq_unmap_user+0x14/0x20
-> [34215.786928]  [<ffffffff80210852>] pit_next_event+0x2e/0x49
-> [34215.786934]  [<ffffffff802e8795>] blk_rq_unmap_user+0x1e/0x4b
-> [34215.786965]  [<ffffffffa0163475>] sg_finish_rem_req+0x6d/0x88 [sg]
-> [34215.786979]  [<ffffffffa0164ef3>] sg_rq_end_io+0x131/0x205 [sg]
-> [34215.786986]  [<ffffffff802e5c1f>] end_that_request_last+0x58/0x194
-> [34215.786992]  [<ffffffff802e5e00>] blk_end_io+0x48/0x7d
-> [34215.787019]  [<ffffffffa0026bef>] scsi_next_command+0x219/0x283 [scsi_mod]
-> [34215.787039]  [<ffffffffa00279b1>] scsi_io_completion+0x181/0x53b [scsi_mod]
-> [34215.787047]  [<ffffffff802e9737>] blk_done_softirq+0x5f/0x6d
-> [34215.787054]  [<ffffffff80230787>] __do_softirq+0x5e/0xf8
-> [34215.787061]  [<ffffffff8020ca8c>] call_softirq+0x1c/0x28
-> [34215.787067]  [<ffffffff8020d6bc>] do_softirq+0x2c/0x68
-> [34215.787073]  [<ffffffff80230696>] irq_exit+0x36/0x82
-> [34215.787079]  [<ffffffff8020d79e>] do_IRQ+0xa6/0xb8
-> [34215.787085]  [<ffffffff8020c256>] ret_from_intr+0x0/0xa
-> [34215.787088]  <EOI>  [<ffffffff8034f648>] menu_reflect+0x0/0x6d
-> [34215.787112]  [<ffffffffa0147d51>] acpi_idle_enter_simple+0x170/0x1d6 [processor]
-> [34215.787127]  [<ffffffffa0147d47>] acpi_idle_enter_simple+0x166/0x1d6 [processor]
-> [34215.787134]  [<ffffffff8034eb32>] cpuidle_idle_call+0x73/0xb1
-> [34215.787140]  [<ffffffff8020ac2a>] cpu_idle+0x3c/0x73
+James,
 
-Argh.  sg_finish_rem_req() is called from interrupt context.  But
-blk_rq_unmap_user() can run
-__bio_unmap_user()->set_page_dirty_lock()->lock_page(), which can call
-schedule().  If it does call schedule(), the machine will crash.
+There's a small typo with this commit, the parse base of '16' should
+really be '10':
 
-afacit, blk_rq_unmap_user() has always been a can-sleep function, and
-this is a regression caused by
+	> -+	type = simple_strtol(buf, NULL, 16);
+	> ++	type = simple_strtol(buf, NULL, 10);
 
-commit 6e5a30cba5e7c03b2cd564e968f1dd667a0f7c42
-Author:     FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-AuthorDate: Thu Aug 28 16:17:08 2008 +0900
-Commit:     Jens Axboe <jens.axboe@oracle.com>
-CommitDate: Thu Oct 9 08:56:10 2008 +0200
+It doesn't look like you've added this to scsi-misc yet.  If so,
+please disgard the previous one and add the following.  I can add a
+fix-it patch to my next-patch-queue, if needed...
 
-    sg: convert the direct IO path to use the block layer
-    
-    This patch converts the direct IO path (SG_FLAG_DIRECT_IO) to use the
-    block layer functions (blk_get_request, blk_execute_rq_nowait,
-    blk_rq_map_user, etc) instead of scsi_execute_async().
-    
-    Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-    Signed-off-by: Douglas Gilbert <dougg@torque.net>
-    Cc: Mike Christie <michaelc@cs.wisc.edu>
-    Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-    Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
+Thanks, AV
+
+---
+
+>From 60a75d6e4e1d1a4eb653cd5ee4aca7beb5fa7873 Mon Sep 17 00:00:00 2001
+From: Lalit Chandivade <lalit.chandivade@qlogic.com>
+Date: Mon, 16 Mar 2009 04:29:04 -0700
+Subject: [PATCH 14/26] qla2xxx: Add reset capabilities for application support.
+
+Signed-off-by: Lalit Chandivade <lalit.chandivade@qlogic.com>
+Additional cleanups and
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_attr.c |   56 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_fw.h   |    1 +
+ drivers/scsi/qla2xxx/qla_gbl.h  |    1 +
+ drivers/scsi/qla2xxx/qla_mbx.c  |   26 ++++++++++++++++++
+ 4 files changed, 84 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 117517d..be552ac 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -479,6 +479,61 @@ static struct bin_attribute sysfs_sfp_attr = {
+ 	.read = qla2x00_sysfs_read_sfp,
+ };
+ 
++static ssize_t
++qla2x00_sysfs_write_reset(struct kobject *kobj,
++			struct bin_attribute *bin_attr,
++			char *buf, loff_t off, size_t count)
++{
++	struct scsi_qla_host *vha = shost_priv(dev_to_shost(container_of(kobj,
++	    struct device, kobj)));
++	struct qla_hw_data *ha = vha->hw;
++	int type;
++
++	if (off != 0)
++		return 0;
++
++	type = simple_strtol(buf, NULL, 10);
++	switch (type) {
++	case 0x2025c:
++		qla_printk(KERN_INFO, ha,
++		    "Issuing ISP reset on (%ld).\n", vha->host_no);
++
++		scsi_block_requests(vha->host);
++		set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
++		qla2xxx_wake_dpc(vha);
++		qla2x00_wait_for_chip_reset(vha);
++		scsi_unblock_requests(vha->host);
++		break;
++	case 0x2025d:
++		if (!IS_QLA81XX(ha))
++			break;
++
++		qla_printk(KERN_INFO, ha,
++		    "Issuing MPI reset on (%ld).\n", vha->host_no);
++
++		/* Make sure FC side is not in reset */
++		qla2x00_wait_for_hba_online(vha);
++
++		/* Issue MPI reset */
++		scsi_block_requests(vha->host);
++		if (qla81xx_restart_mpi_firmware(vha) != QLA_SUCCESS)
++			qla_printk(KERN_WARNING, ha,
++			    "MPI reset failed on (%ld).\n", vha->host_no);
++		scsi_unblock_requests(vha->host);
++		break;
++	}
++	return count;
++}
++
++static struct bin_attribute sysfs_reset_attr = {
++	.attr = {
++		.name = "reset",
++		.mode = S_IWUSR,
++	},
++	.size = 0,
++	.write = qla2x00_sysfs_write_reset,
++};
++
+ static struct sysfs_entry {
+ 	char *name;
+ 	struct bin_attribute *attr;
+@@ -490,6 +545,7 @@ static struct sysfs_entry {
+ 	{ "optrom_ctl", &sysfs_optrom_ctl_attr, },
+ 	{ "vpd", &sysfs_vpd_attr, 1 },
+ 	{ "sfp", &sysfs_sfp_attr, 1 },
++	{ "reset", &sysfs_reset_attr, },
+ 	{ NULL },
+ };
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
+index 9830193..e47c4c3 100644
+--- a/drivers/scsi/qla2xxx/qla_fw.h
++++ b/drivers/scsi/qla2xxx/qla_fw.h
+@@ -1403,6 +1403,7 @@ struct access_chip_rsp_84xx {
+ #define MBA_IDC_TIME_EXT	0x8102
+ 
+ #define MBC_IDC_ACK		0x101
++#define MBC_RESTART_MPI_FW	0x3d
+ #define MBC_FLASH_ACCESS_CTRL	0x3e	/* Control flash access. */
+ 
+ /* Flash access control option field bit definitions */
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index c75e7f9..41c3f41 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -73,6 +73,7 @@ extern void qla2x00_abort_all_cmds(scsi_qla_host_t *, int);
+ extern int qla2x00_post_aen_work(struct scsi_qla_host *, enum
+     fc_host_event_code, u32);
+ extern int qla2x00_post_idc_ack_work(struct scsi_qla_host *, uint16_t *);
++extern int qla81xx_restart_mpi_firmware(scsi_qla_host_t *);
+ 
+ extern void qla2x00_abort_fcport_cmds(fc_port_t *);
+ extern struct scsi_qla_host *qla2x00_create_host(struct scsi_host_template *,
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 2bc08d3..dc5e5d9 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -3325,3 +3325,29 @@ qla81xx_fac_erase_sector(scsi_qla_host_t *vha, uint32_t start, uint32_t finish)
+ 
+ 	return rval;
+ }
++
++int
++qla81xx_restart_mpi_firmware(scsi_qla_host_t *vha)
++{
++	int rval = 0;
++	mbx_cmd_t mc;
++	mbx_cmd_t *mcp = &mc;
++
++	DEBUG11(printk("%s(%ld): entered.\n", __func__, vha->host_no));
++
++	mcp->mb[0] = MBC_RESTART_MPI_FW;
++	mcp->out_mb = MBX_0;
++	mcp->in_mb = MBX_0|MBX_1;
++	mcp->tov = MBX_TOV_SECONDS;
++	mcp->flags = 0;
++	rval = qla2x00_mailbox_command(vha, mcp);
++
++	if (rval != QLA_SUCCESS) {
++		DEBUG2_3_11(printk("%s(%ld): failed=%x mb[0]=0x%x mb[1]=0x%x.\n",
++		    __func__, vha->host_no, rval, mcp->mb[0], mcp->mb[1]));
++	} else {
++		DEBUG11(printk("%s(%ld): done.\n", __func__, vha->host_no));
++	}
++
++	return rval;
++}
+-- 
+1.6.2.rc0.55.g30aa4f
 
