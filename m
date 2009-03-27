@@ -1,77 +1,51 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] PM port setting and attached SATA port selector in
-	discover
-Date: Fri, 27 Mar 2009 16:52:21 +0000
-Message-ID: <1238172741.3292.17.camel@localhost.localdomain>
-References: <20090317184151.22987.73806.stgit@fritz>
-	 <20090324231914.25065.44829.stgit@fritz>
-	 <FE3F06125A99254E8D92161AA4569C6F06A98AF5@sc-exch02.marvell.com>
+Subject: Re: [PATCH 0/3] mvsas updated for 88SE64xx and 88SE94xx
+Date: Fri, 27 Mar 2009 16:53:21 +0000
+Message-ID: <1238172801.3292.20.camel@localhost.localdomain>
+References: <FE3F06125A99254E8D92161AA4569C6F0693DCE5@sc-exch02.marvell.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:40376 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:40381 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756250AbZC0QwZ (ORCPT
+	by vger.kernel.org with ESMTP id S1759206AbZC0QxZ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Mar 2009 12:52:25 -0400
-In-Reply-To: <FE3F06125A99254E8D92161AA4569C6F06A98AF5@sc-exch02.marvell.com>
+	Fri, 27 Mar 2009 12:53:25 -0400
+In-Reply-To: <FE3F06125A99254E8D92161AA4569C6F0693DCE5@sc-exch02.marvell.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Andy Yan <ayan@marvell.com>
-Cc: linux-scsi@vger.kernel.org, Michael Wang <qswang@marvell.com>, Jacky Feng <jfeng@marvell.com>, Ying Chu <jasonchu@marvell.com>
+Cc: jeff@garzik.org, Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, Michael Wang <qswang@marvell.com>, Jacky Feng <jfeng@marvell.com>, Ying Chu <jasonchu@marvell.com>, Ke Wei <kewei@marvell.com>
 
-On Wed, 2009-03-25 at 20:03 -0700, Andy Yan wrote:
-> >From 9937ccded1e182b50f1128e80d70768b16d2b5e7 Mon Sep 17 00:00:00 2001
-> From: Andy Yan <ayan@marvell.com>
-> Date: Thu, 26 Mar 2009 18:32:31 +0800
-> Subject: [PATCH] PM port setting and attached SATA port selector in
-> discover
+On Thu, 2009-03-19 at 01:49 -0700, Andy Yan wrote:
+> Greetings all,
+> 	Here are updated mvsas driver with bugfixes and new features.
+> This version contains following main changes
+>   - Switch to new layout to support more types of ASIC.
+>   - SSP TMF supported and related Error Handing enhanced.
+>   - Support flash feature with delay 2*HZ when PHY changed.
+>   - Support Marvell 94xx series ASIC for 6G SAS/SATA, which has 2
+> 88SE64xx chips but any different register description.
+>   - Support SPI flash for HBA-related configuration info.
+>   - Other patch enhanced from kernel side such as increasing PHY type
+> detection wait time. (http://lkml.org/lkml/2009/1/15/502)
 > 
-> Default PM port should be set 0 other than 1.For most SATA disk, it is
-> ignored,
-> But I got that some expander reports attached SATA port selector 1 and
-> won't clear it. Host should pass this check and send command with PMport
-> 0.
-> 
-> ---
->  drivers/scsi/libsas/sas_ata.c      |    2 +-
->  drivers/scsi/libsas/sas_expander.c |    2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/libsas/sas_ata.c
-> b/drivers/scsi/libsas/sas_ata.c
-> index e155011..bea3deb 100644
-> --- a/drivers/scsi/libsas/sas_ata.c
-> +++ b/drivers/scsi/libsas/sas_ata.c
-> @@ -174,7 +174,7 @@ static unsigned int sas_ata_qc_issue(struct
-> ata_queued_cmd *qc)
->  		qc->tf.nsect = 0;
->  	}
->  
-> -	ata_tf_to_fis(&qc->tf, 1, 0, (u8*)&task->ata_task.fis);
-> +	ata_tf_to_fis(&qc->tf, 0, 0, (u8*)&task->ata_task.fis);
->  	task->uldd_task = qc;
->  	if (ata_is_atapi(qc->tf.protocol)) {
->  		memcpy(task->ata_task.atapi_packet, qc->cdb,
-> qc->dev->cdb_len);
-> diff --git a/drivers/scsi/libsas/sas_expander.c
-> b/drivers/scsi/libsas/sas_expander.c
-> index 3da02e4..75ca00b 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -642,7 +642,7 @@ static struct domain_device
-> *sas_ex_discover_end_dev(
->  	struct sas_rphy *rphy;
->  	int res;
->  
-> -	if (phy->attached_sata_host || phy->attached_sata_ps)
-> +	if (phy->attached_sata_host)
+> The first patch is to update the Makefile and Kconfig for layout change.
+> The second patch is to add the code for common use with ASICs.
+> The thirst patch is to add the code for ASIC specific function and const
+> value.
+> The subjects of all patches are 
+> [PATCH 1/3] Layout changes for new mvsas
+> [PATCH 2/3] Common code for init and runtime
+> [PATCH 3/3] ASIC specific
 
-In general this looks OK.  What it's going to cause to happen is that we
-now try to discover SATA port selectors, which aren't supported in
-libsas ... can you check that nothing nasty happens when libsas finds
-one?
+This looks fine.
+
+The patch is still wrapped, though.  If you can't fix the mail client,
+just do a text/plain attachment ... I can pull that into git.
+
+Thanks,
 
 James
 
