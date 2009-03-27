@@ -1,32 +1,35 @@
 From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: [PATCH] lpfc : add module parameter that allows adapter	instances to avoid attachment
-Date: Fri, 27 Mar 2009 09:09:40 -0600
-Message-ID: <20090327150940.GK8014@parisc-linux.org>
-References: <1238097300.27023.2.camel@ogier> <1238098747.3342.54.camel@localhost.localdomain> <49CBE772.80304@emulex.com> <1238100849.3342.58.camel@localhost.localdomain>
+Date: Fri, 27 Mar 2009 09:11:40 -0600
+Message-ID: <20090327151139.GL8014@parisc-linux.org>
+References: <1238097300.27023.2.camel@ogier> <1238098747.3342.54.camel@localhost.localdomain> <49CBE772.80304@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:52605 "EHLO
+Received: from palinux.external.hp.com ([192.25.206.14]:52610 "EHLO
 	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754279AbZC0PJ6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Mar 2009 11:09:58 -0400
+	with ESMTP id S1758843AbZC0PLm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Mar 2009 11:11:42 -0400
 Content-Disposition: inline
-In-Reply-To: <1238100849.3342.58.camel@localhost.localdomain>
+In-Reply-To: <49CBE772.80304@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: James Smart <James.Smart@Emulex.Com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James Smart <James.Smart@Emulex.Com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, Mar 26, 2009 at 03:54:09PM -0500, James Bottomley wrote:
-> Also (as Randy pointed out) you don't account for the domain.  However,
-> you could just by not bothering to convert the string to numbers for the
-> compare, just compare on dev->bus_id ... which is how a generic one
-> would work.
+On Thu, Mar 26, 2009 at 04:37:06PM -0400, James Smart wrote:
+> The oem requirement we have explicitly states not to use the unbind 
+> interface
+> (we proposed unbind at first as well).
+> 
+> The issue is what happens on the link while we are bound for that short
+> amount of time. It confuses the things on the other side of the link.
+> There's a secondary driver that ends up binding to the adapters we exclude,
+> and the things on the other side only expected to see the second driver.
 
-I think it needs to be PCI and not device core.  bus_id isn't guaranteed
-to be unique between different bus types.  I don't know of any that
-conflict, but we don't want to inadvertently disable, say, an SBUS
-device while trying to disable a PCI device.
+By the way, are these interfaces real or virtual (SR-IOV virtual)?  PCI
+bus numbers aren't the most stable way of referring to devices any more.
+I don't suppose we can key this off PCIe DSN, can we?
 
 -- 
 Matthew Wilcox				Intel Open Source Technology Centre
