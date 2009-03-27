@@ -1,291 +1,223 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: [ANNOUNCE]: SCST target drivers suit 1.0.1 development freeze
-Date: Fri, 27 Mar 2009 23:52:49 +0300
-Message-ID: <49CD3CA1.7070706@vlnb.net>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: [eSATA] 2.6.28.7: IO errors
+Date: Sat, 28 Mar 2009 00:18:38 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0903280001020.4635@axis700.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:58191 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755370AbZC0UwC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Mar 2009 16:52:02 -0400
+Received: from mail.gmx.net ([213.165.64.20]:45549 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753116AbZC0XSi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Mar 2009 19:18:38 -0400
+Received: from lyakh (helo=localhost)
+	by axis700.grange with local-esmtp (Exim 4.63)
+	(envelope-from <g.liakhovetski@gmx.de>)
+	id 1LnLJu-000321-3T
+	for linux-scsi@vger.kernel.org; Sat, 28 Mar 2009 00:18:38 +0100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scst-devel <scst-devel@lists.sourceforge.net>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-
-Hi All,
-
-I'm glad to announce that development of SCST drivers suit is frozen and 
-ready for final testing before release, which is scheduled in few weeks 
-time depending from amount of problems found during testing.
-
-The SCST is an alternative implementation of SCSI target subsystem for 
-Linux. It provides unified, consistent interface between SCSI target 
-drivers and Linux kernel and simplifies target drivers development.
-
-SCST allows creation of sophisticated storage devices, which provide 
-advanced functionality, like replication, thin provisioning, 
-deduplication, high availability, automatic backup, etc. Another class 
-of such devices are Virtual Tape Libraries (VTL) as well as other 
-disk-based backup solutions. SCST created devices not limited by IP 
-network interface only, but they can use any link supporting SCSI-style 
-data exchange, including Fibre Channel, SAS and parallel SCSI. It might 
-well be that your favorite storage appliance running SCST in the firmware.
-
-SCST suit consists of a set of subprojects: SCST core itself with a set 
-of device handlers as well as target drivers and user space utilities. 
-Particularly, it has target drivers for iSCSI, QLogic qla2xxx cards and 
-InfiniBand SRP. You can find more info about it on SCST home page 
-http://scst.sourceforge.net.
-
-SCST aims to be included in the mainline kernel. You can find the first 
-iteration of SCST patches review in http://lkml.org/lkml/2008/12/10/245.
-
-You can download SCST target drivers suit 1.0.1 by running a command:
-
-$ svn co https://scst.svn.sourceforge.net/svnroot/scst/branches/1.0.1.x
-
-Summary of changes in SCST core between versions 1.0.0 and 1.0.1
-----------------------------------------------------------------
-
-  - Support for descriptor sense format added
-
-  - Makefiles made more packager friendly (Ruben Laban)
-
-  - Support for variable length CDB added
-
-  - Support for Asynchronous Event Notifications added
-
-  - Implemented "plug-and-play" notifications about new devices in
-    security groups, deleted devices from security groups and changed
-    size of a device. They can be delivered either through AENs (if
-    supported), or Unit Attentions.
-
-  - New command "resync_size" added to scst_vdisk proc interface to tell
-    scst_vdisk to reread size of the corresponding device after it was
-    changed
-
-  - Added pattern matching for initiator names in SCST access control
-    (Gennadiy Nerubayev)
-
-  - Now only sent for execution commands are counted to wait for in TM
-    commands, which made processing of TM commands faster
-
-  - Now devices blocked only in reset TM commands. ABORTs, etc. now done
-    without devices blocking.
-
-  - scst_unregister_session_ex() removed, since there are no users of it
-
-  -  New functions added to scst_user interface:
-
-     * SCST_USER_UNREGISTER_DEVICE - to unregister device, flush mem
-       reuse (SGV) cache and send UCMD_STATE_ON_CACHE_FREEING
-       notifications for all freed buffers to the user space handler.
-       Simple device close doesn't allow that, so all the cached buffers
-       might look as "leaked" from the user space handler POV.
-
-     * SCST_USER_FLUSH_CACHE - to flush mem reuse (SGV) cache and send
-       UCMD_STATE_ON_CACHE_FREEING notifications for all freed buffers to
-       the user space handler
-
-     * SCST_USER_DEVICE_CAPACITY_CHANGED - to notify SCST core that the
-       corresponding device has changed its capacity
-
-  - Clustering of scst_user pages added
-
-  - Added autogenerated SCSI SN in vdisk handler
-
-  - Fixed race in scst_user, which could have lead to usage of already
-    freed command. A misbehaving user space handler could have made ucmd
-    to get dead immediately after the lock is released and that is caught
-    now.
-
-  - Support for CentOS 5.2 added (Bart Van Assche)
-
-  - In scst_vdisk new module parameter num_threads added to specify a
-    number of threads for each vdisk/vcdrom. Default is 5.
-
-  - Access control docs updated
-
-  - Set memory limits according to LOWMEM, not TOTALMEM
-
-  - Major performance increase working with disk based storage
-
-  - Now task_mgmt_fn() callback called for TARGET RESET and NEXUS LOSS
-    functions only once for tgt_dev, which belongs to the session, from
-    which the corresponding request came
-
-  - SGV cache related parameters moved from scst.h to scst_sgv.h
-
-  - Log level mgmt_minor for messages like "Warning: expected transfer
-    length X for opcode Y" changed to be disabled by default
-
-  - Added possibility to coexist if both target driver and dev handler
-    need custom memory allocation. Direct consequences: (1) scst_local
-    can work with scst_user's devices and (2) scst_user now compatible
-    with iscsi-scst if put_page_callback patch not applied.
-
-  - Deprecated scst_cmd_get_tgt_resp_flags() removed
-
-  - SWP and TAS parameters made changeable in vdisk handler
-
-  - External interface changed to fix usage of in_atomic(). Now target
-    drivers and dev handlers need to explicitly supply preferred
-    execution context in scst_cmd_done() and scst_tgt_cmd_done()
-
-  - Handling of internal REQUEST SENSE fixed.
-
-  - Fixed SAM violation (HiSup bit must be set in INQUIRY response)
-
-  - Fixed handling of VERIFY commands that comes with BYTCHK unset
-
-  - Handling of double reset UAs made more reliable
-
-  - A lot of kernel style, checkpatch and sparse fixes (Bart Van Assche)
-
-  - In-kernel build integration (Bart Van Assche)
-
-  - Update for kernels up to 2.6.29
-
-  - A lot of fixes and cleanups (many people)
-
-
-Summary of changes in iSCSI-SCST between versions 1.0.0 and 1.0.1
------------------------------------------------------------------
-
-  - Support for variable length CDB added
-
-  - Sending and receiving padding bytes as well as sense data
-    reimplemented to make it more reliable
-
-  - Support for SCSI Asynchronous Event Notifications added
-
-  - Sessions and connections reinstatement reimplemented to be conforming
-    to iSCSI RFC
-
-  - iscsi-scst-adm fixed
-
-  - Removed artificial limitation of sg_tablesize. It isn't needed,
-    because the regular iSCSI negotiated MaxRecvDataSegmentLength-related
-    facilities do all the job pretty well.
-
-  - Merge with IET r170-211:
-
-    * Update MaxConnections documentation
-
-    * Remove isns config description from man page
-
-    * Check return values of chdir(), ftruncate() and write(), because
-      recent versions of the glibc insist on the return value being
-      checked by introducing __attribute__((warn_unused_result)) to these
-      functions.
-
-    * Fix snprintf use in isns.c
-
-    * Take \0-termination into account when passing strings to
-      isns_tlv_set() to solve incompatibility with MS iSNS 3.0 as IQN
-      length is multiple of 4
-
-    * Fix list corruption if SCST target registration fails
-
-    * Register the target port actually used instead of the default iSCSI
-      port.
-
-    * Remove unused connection->pad
-
-    * Refactor cmnd_execute()
-
-    * Introduce min*/max*() and more list_* macros
-
-    * Multipart PDU support for discovery sessions
-
-    * Add support for Reject PDUs and make use of them in appropriate
-      places.
-
-    * Ignore SIGPIPE in iscsi-scstd
-
-    * Allow removal of kernel target objects if the user space object
-      does not exist
-
-    * Use netlink_socket_release() to clean up netlink sockets correctly
-      (taking care of namespaces)
-
-    * More scalable proc seq_file implementation
-
-    * Segfault in ietd buffer overrun in dump_line
-
-    * Add iscsi-scst-adm support to display list of CHAP accounts and
-      their data
-
-    * Fixed compilation on glibc 2.8
-
-    * Fix CHAP account handling bugs
-
-    * Fix bugs in multi PDU handling code
-
-  - Support for CentOS 5.2 added (Bart Van Assche)
-
-  - Fixed NOP-Out with payload handling
-
-  - Several minor iSCSI RFC violations fixed
-
-  - Update for kernels up to 2.6.29
-
-  - Zero-copy feature, introduced by put_page_callback patch made
-    kernel compile time configurable via
-    CONFIG_TCP_ZERO_COPY_TRANSFER_COMPLETION_NOTIFICATION option. If you
-    upgrade from earlier versions, see the corresponding "[CAUTION]"
-    e-mail in scst-devel mailing list about possible compatibility
-    problems.
-
-  - A lot of cleanups and minor fixes
-
-
-Summary of changes in qla2x00t between versions 1.0.0 and 1.0.1
----------------------------------------------------------------
-
-  - Update to initiator driver from 2.6.27
-
-  - HOWTO added (Amit Mehta)
-
-  - Fixed wrong sess_count decrement on session registration failure
-
-  - Fixed possible oops in the initiator driver on the module unload
-
-  - Updated to work on kernels up to 2.6.29
-
-  - Other minor fixes
-
-
-Summary of changes in SRPT between versions 1.0.0 and 1.0.1
------------------------------------------------------------
-
-  - Update for kernels up to 2.6.29
-
-  - Fixed incorrect SCST state used on error path
-
-  - Unneeded context switches during commands processing eliminated
-
-  - Minor fixes and cleanups
-
-
-Summary of changes in fileio_tgt between versions 1.0.0 and 1.0.1
------------------------------------------------------------------
-
-  - Added notification about device capacity change
-
-  - Usage of new commands SCST_USER_UNREGISTER_DEVICE,
-    SCST_USER_FLUSH_CACHE and SCST_USER_DEVICE_CAPACITY_CHANGED added
-
-  - Sync with vdisk handler
-
-  - Added autogenerated SCSI SN
-
-
-Change logs for other modules have not updated yet, but going to be 
-updated soon.
-
-Thanks to all who made it happen!
-Vlad
+To: linux-scsi@vger.kernel.org
+
+Hi,
+
+I'm using an external eSATA / USB / Firewire 2x1T RAID from WD in RAID1 
+configuration for backups with ext4 under 2.6.28.7. I've got a couple of 
+problems with it before, and today a backup aborted with error messages 
+below. Actually, those errors come from two backup attempts: the first one 
+over NFS, and the second one locally. The system is one year old with an 
+Intel chipset:
+
+00:00.0 Host bridge: Intel Corporation Unknown device 29b0 (rev 02)
+
+with a Core-2D 2.66GHz, so, it does have 3Gbps SATA, and below the driver 
+drops down to 1.5Gbps.
+
+The problems I had before with the disk were, that it has a badly built 
+eSATA connector, the connector doesn't sit firmly enough in it. So, the 
+main question, I guess - cann errors below be caused by that? I think, 
+I'll have to contact WD for an update, or use Firewire for now...
+
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski, Ph.D.
+Freelance Open-Source Software Developer
+
+
+ata4.00: exception Emask 0x40 SAct 0x0 SErr 0x80800 action 0x6 frozen
+ata4: SError: { HostInt 10B8B }
+ata4.00: cmd 35/00:f8:27:87:4a/00:03:09:00:00/e0 tag 0 dma 520192 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x44 (timeout)
+ata4.00: status: { DRDY }
+ata4: hard resetting link
+ata4: SATA link down (SStatus 0 SControl 300)
+ata4: hard resetting link
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata4.00: configured for UDMA/133
+ata4: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x9 t4
+ata4: irq_stat 0x00000040, connection status changed
+ata4.00: configured for UDMA/133
+ata4: EH complete
+sd 3:0:0:0: [sdb] 1953508784 512-byte hardware sectors: (1.00 TB/931 GiB)
+sd 3:0:0:0: [sdb] Write Protect is off
+sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 3:0:0:0: [sdb] 1953508784 512-byte hardware sectors: (1.00 TB/931 GiB)
+sd 3:0:0:0: [sdb] Write Protect is off
+sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+nfsd: last server has exited, flushing export cache
+EXT4-fs: mballoc: 517405 blocks 709 reqs (308 success)
+EXT4-fs: mballoc: 656 extents scanned, 582 goal hits, 77 2^N hits, 0 breaks, 0 lost
+EXT4-fs: mballoc: 99 generated and it took 850048
+EXT4-fs: mballoc: 443177 preallocated, 441245 discarded
+NFSD: Using /var/lib/nfs/v4recovery as the NFSv4 state recovery directory
+NFSD: starting 90-second grace period
+
+[here starts the local backup almost an hour later]
+
+EXT4-fs: barriers enabled
+kjournald2 starting.  Commit interval 5 seconds
+EXT4 FS on sdb1, internal journal on sdb1:8
+EXT4-fs: delayed allocation enabled
+EXT4-fs: file extents enabled
+EXT4-fs: mballoc enabled
+EXT4-fs: mounted filesystem with ordered data mode.
+ata4.00: exception Emask 0x40 SAct 0x0 SErr 0x80800 action 0x6 frozen
+ata4: SError: { HostInt 10B8B }
+ata4.00: cmd 35/00:00:4f:98:44/00:04:31:00:00/e0 tag 0 dma 524288 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x44 (timeout)
+ata4.00: status: { DRDY }
+ata4: hard resetting link
+ata4: SATA link down (SStatus 0 SControl 300)
+ata4: hard resetting link
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata4.00: configured for UDMA/133
+ata4: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x9 t4
+ata4: irq_stat 0x00000040, connection status changed
+ata4.00: configured for UDMA/133
+ata4: EH complete
+sd 3:0:0:0: [sdb] 1953508784 512-byte hardware sectors: (1.00 TB/931 GiB)
+sd 3:0:0:0: [sdb] Write Protect is off
+sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 3:0:0:0: [sdb] 1953508784 512-byte hardware sectors: (1.00 TB/931 GiB)
+sd 3:0:0:0: [sdb] Write Protect is off
+sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ata4.00: exception Emask 0x40 SAct 0x0 SErr 0x80800 action 0x6 frozen
+ata4: SError: { HostInt 10B8B }
+ata4.00: cmd 35/00:00:87:51:47/00:04:31:00:00/e0 tag 0 dma 524288 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x44 (timeout)
+ata4.00: status: { DRDY }
+ata4: hard resetting link
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata4.00: configured for UDMA/133
+ata4: EH complete
+sd 3:0:0:0: [sdb] 1953508784 512-byte hardware sectors: (1.00 TB/931 GiB)
+sd 3:0:0:0: [sdb] Write Protect is off
+sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ata4: limiting SATA link speed to 1.5 Gbps
+ata4.00: exception Emask 0x40 SAct 0x0 SErr 0x80800 action 0x6 frozen
+ata4: SError: { HostInt 10B8B }
+ata4.00: cmd 35/00:00:af:ad:05/00:04:09:00:00/e0 tag 0 dma 524288 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x44 (timeout)
+ata4.00: status: { DRDY }
+ata4: hard resetting link
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata4.00: configured for UDMA/133
+ata4: EH complete
+sd 3:0:0:0: [sdb] 1953508784 512-byte hardware sectors: (1.00 TB/931 GiB)
+sd 3:0:0:0: [sdb] Write Protect is off
+sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ata4.00: exception Emask 0x50 SAct 0x0 SErr 0x280900 action 0x6 frozen
+ata4.00: irq_stat 0x08000000, interface fatal error
+ata4: SError: { UnrecovData HostInt 10B8B BadCRC }
+ata4.00: cmd c8/00:08:57:97:08/00:00:00:00:00/e9 tag 0 dma 4096 in
+         res 50/00:00:36:06:34/00:00:01:00:00/41 Emask 0x50 (ATA bus error)
+ata4.00: status: { DRDY }
+ata4: hard resetting link
+ata4: SATA link down (SStatus 0 SControl 310)
+ata4: hard resetting link
+ata4: SATA link down (SStatus 0 SControl 310)
+ata4: hard resetting link
+ata4: SATA link down (SStatus 0 SControl 310)
+ata4.00: disabled
+ata4: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x9 t4
+ata4: irq_stat 0x00400040, connection status changed
+ata4: hard resetting link
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata4.00: ATA-6: WD      My Book         1105, 1010, max UDMA/133
+ata4.00: 1953508784 sectors, multi 0: LBA48
+ata4.00: configured for UDMA/133
+sd 3:0:0:0: [sdb] Result: hostbyte=DID_OK 
+driverbyte=DRIVER_SENSE,SUGGEST_OK
+sd 3:0:0:0: [sdb] Sense Key : Aborted Command [current] [descriptor]
+Descriptor sense data with sense descriptors (in hex):
+        72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00
+        01 34 06 36
+sd 3:0:0:0: [sdb] Add. Sense: No additional sense information
+end_request: I/O error, dev sdb, sector 151557975
+sd 3:0:0:0: rejecting I/O to offline device
+Buffer I/O error on device sdb1, logical block 2099128
+lost page write due to I/O error on sdb1
+Buffer I/O error on device sdb1, logical block 2099129
+lost page write due to I/O error on sdb1
+Buffer I/O error on device sdb1, logical block 2099130
+lost page write due to I/O error on sdb1
+Buffer I/O error on device sdb1, logical block 2099131
+lost page write due to I/O error on sdb1
+Buffer I/O error on device sdb1, logical block 2099132
+lost page write due to I/O error on sdb1
+sd 3:0:0:0: rejecting I/O to offline device
+Buffer I/O error on device sdb1, logical block 2101059
+lost page write due to I/O error on sdb1
+sd 3:0:0:0: rejecting I/O to offline device
+Buffer I/O error on device sdb1, logical block 2101205
+lost page write due to I/O error on sdb1
+sd 3:0:0:0: rejecting I/O to offline device
+Buffer I/O error on device sdb1, logical block 2104385
+lost page write due to I/O error on sdb1
+Buffer I/O error on device sdb1, logical block 2104386
+lost page write due to I/O error on sdb1
+sd 3:0:0:0: rejecting I/O to offline device
+Buffer I/O error on device sdb1, logical block 2104398
+lost page write due to I/O error on sdb1
+sd 3:0:0:0: rejecting I/O to offline device
+
+[last message repeated multiple times]
+
+sd 3:0:0:0: rejecting I/O to offline device
+ata4: EH complete
+sd 3:0:0:0: rejecting I/O to offline device
+sd 3:0:0:0: rejecting I/O to offline device
+EXT4-fs error (device sdb1): ext4_find_entry: reading directory #4741319 offset 0
+sd 3:0:0:0: rejecting I/O to offline device
+ext4: I/O error while writing superblock for sdb1.
+sd 3:0:0:0: rejecting I/O to offline device
+
+[repeated again]
+
+sd 3:0:0:0: rejecting I/O to offline device
+ata4.00: detaching (SCSI 3:0:0:0)
+Aborting journal on device sdb1:8.
+JBD2: I/O error detected when updating journal superblock for sdb1:8.
+journal commit I/O error
+EXT4-fs error (device sdb1): ext4_find_entry: reading directory #2 offset 0
+ext4: I/O error while writing superblock for sdb1.
+sd 3:0:0:0: [sdb] Synchronizing SCSI cache
+sd 3:0:0:0: [sdb] Stopping disk
+scsi 3:0:0:0: Direct-Access     ATA      WD      My Book  1010 PQ: 0 ANSI: 5
+sd 3:0:0:0: [sdc] 1953508784 512-byte hardware sectors: (1.00 TB/931 GiB)
+sd 3:0:0:0: [sdc] Write Protect is off
+sd 3:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 3:0:0:0: [sdc] 1953508784 512-byte hardware sectors: (1.00 TB/931 GiB)
+sd 3:0:0:0: [sdc] Write Protect is off
+sd 3:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ sdc: sdc1 sdc2
+sd 3:0:0:0: [sdc] Attached SCSI disk
+sd 3:0:0:0: Attached scsi generic sg2 type 0
