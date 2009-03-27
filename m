@@ -1,33 +1,25 @@
-From: Bodo Eggert <7eggert@gmx.de>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH] config: Make need for SCSI_CDROM clearer
-Date: Fri, 27 Mar 2009 10:36:22 +0100
-Message-ID: <E1Ln8UB-0001SM-50@be1.7eggert.dyndns.org>
+Date: Fri, 27 Mar 2009 11:08:07 +0000
+Message-ID: <20090327110807.68cfa9aa@lxorguk.ukuu.org.uk>
 References: <ck4Qt-44e-51@gated-at.bofh.it>
-Reply-To: 7eggert@gmx.de
+	<E1Ln8UB-0001SM-50@be1.7eggert.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-in-12.arcor-online.net ([151.189.21.52]:42671 "EHLO
-	mail-in-12.arcor-online.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757773AbZC0Jg0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Mar 2009 05:36:26 -0400
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:57623 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753488AbZC0LHP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Mar 2009 07:07:15 -0400
+In-Reply-To: <E1Ln8UB-0001SM-50@be1.7eggert.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: 7eggert@gmx.de
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> "CDROM support (except for old IDE and legacy drivers)"?
 
-> Mention ATAPI. We could insert an essay about libata and ide-scsi etc but
-> the failure case is someone enables it which is just fine so keep it
-> simple.
-
-What about:
-
-> +++ b/drivers/scsi/Kconfig
-> @@ -121,7 +121,7 @@ config BLK_DEV_SR
->  tristate "SCSI CDROM support"
-
-"CDROM support (except for old IDE and legacy drivers)"?
-
+I'll update it with Matthews proposed text (which I think is the best)
+and resubmit that (probably next week when I get the time to run that
+patch around again)
