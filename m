@@ -1,244 +1,540 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH] fcoe: prep work to completely remove fc_transport_fcoe code
-Date: Fri, 27 Mar 2009 09:03:29 -0700
-Message-ID: <20090327160328.18274.31785.stgit@fritz>
-References: <20090317184151.22987.73806.stgit@fritz>
+Subject: [PATCH] fcoe: removes fc_transport_fcoe.[ch] code files
+Date: Fri, 27 Mar 2009 09:05:17 -0700
+Message-ID: <20090327160516.18675.86121.stgit@fritz>
+References: <20090317184156.22987.73289.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:64309 "EHLO mga11.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:45448 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753706AbZC0QDb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Mar 2009 12:03:31 -0400
-In-Reply-To: <20090317184151.22987.73806.stgit@fritz>
+	id S1754894AbZC0QFT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Mar 2009 12:05:19 -0400
+In-Reply-To: <20090317184156.22987.73289.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
 From: Vasu Dev <vasu.dev@intel.com>
 
-The fcoe transport code was added for generic FCoE transport
-infrastructure to allow additional offload related module loading
-on demand, this is not required anymore after recently added
-different offload approach by having offload related func ops
-in netdev.
-
-This patch removes fcoe transport related code use, calls functions
-directly between existing libfcoe.c and fcoe_sw.c for now, for
-example fcoe_sw_destroy and fcoe_sw_create calling.
-
-The fcoe_sw.c and libfcoe.c code will be further consolidated in
-later patches and then also the default fcoe sw transport code
-file fcoe_sw.c will be completely removed.
-
-The fcoe transport code files are completely removed in next
-patch to keep this patch simple for reviewing.
-
---
-
-This patch is an update to a previous patch. This update
-resolves a build error as well as fixes a defect related to
-not calling fc_release_transport().
-
-The following updates to the other patches in the series
-are just adjustments to the changes this update introduces.
-
-Signed-off-by: Vasu Dev <vasu.dev@intel.com>
-Signed-off-by: Robert Love <robert.w.love@intel.com>
+Remove unused fc_transport_fcoe.c and fc_transport_fcoe.h
+files.
 ---
 
- drivers/scsi/fcoe/Makefile  |    3 +--
- drivers/scsi/fcoe/fcoe_sw.c |   37 ++++---------------------------------
- drivers/scsi/fcoe/libfcoe.c |   25 ++++++-------------------
- include/scsi/libfcoe.h      |    2 ++
- 4 files changed, 13 insertions(+), 54 deletions(-)
+ drivers/scsi/fcoe/fc_transport_fcoe.c |  443 ---------------------------------
+ include/scsi/fc_transport_fcoe.h      |   54 ----
+ 2 files changed, 0 insertions(+), 497 deletions(-)
+ delete mode 100644 drivers/scsi/fcoe/fc_transport_fcoe.c
+ delete mode 100644 include/scsi/fc_transport_fcoe.h
 
-diff --git a/drivers/scsi/fcoe/Makefile b/drivers/scsi/fcoe/Makefile
-index b78da06..e950adf 100644
---- a/drivers/scsi/fcoe/Makefile
-+++ b/drivers/scsi/fcoe/Makefile
-@@ -4,5 +4,4 @@ obj-$(CONFIG_FCOE) += fcoe.o
- 
- fcoe-y := \
- 	libfcoe.o \
--	fcoe_sw.o \
--	fc_transport_fcoe.o
-+	fcoe_sw.o
-diff --git a/drivers/scsi/fcoe/fcoe_sw.c b/drivers/scsi/fcoe/fcoe_sw.c
-index a675390..f060220 100644
---- a/drivers/scsi/fcoe/fcoe_sw.c
-+++ b/drivers/scsi/fcoe/fcoe_sw.c
-@@ -36,7 +36,6 @@
- 
- #include <scsi/libfc.h>
- #include <scsi/libfcoe.h>
--#include <scsi/fc_transport_fcoe.h>
- 
- #define FCOE_SW_VERSION	"0.1"
- #define	FCOE_SW_NAME	"fcoesw"
-@@ -302,7 +301,7 @@ static inline int fcoe_sw_em_config(struct fc_lport *lp)
-  *
-  * Returns: 0 if link is OK for use by FCoE.
-  */
--static int fcoe_sw_destroy(struct net_device *netdev)
-+int fcoe_sw_destroy(struct net_device *netdev)
- {
- 	struct fc_lport *lp = NULL;
- 	struct fcoe_softc *fc;
-@@ -415,7 +414,7 @@ static struct libfc_function_template fcoe_sw_libfc_fcn_templ = {
-  *
-  * Returns : 0 on success
-  */
--static int fcoe_sw_create(struct net_device *netdev)
-+int fcoe_sw_create(struct net_device *netdev)
- {
- 	int rc;
- 	struct fc_lport *lp = NULL;
-@@ -494,28 +493,7 @@ out_host_put:
- }
- 
- /**
-- * fcoe_sw_match() - The FCoE SW transport match function
+diff --git a/drivers/scsi/fcoe/fc_transport_fcoe.c b/drivers/scsi/fcoe/fc_transport_fcoe.c
+deleted file mode 100644
+index 8862758..0000000
+--- a/drivers/scsi/fcoe/fc_transport_fcoe.c
++++ /dev/null
+@@ -1,443 +0,0 @@
+-/*
+- * Copyright(c) 2007 - 2008 Intel Corporation. All rights reserved.
 - *
-- * Returns : false always
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms and conditions of the GNU General Public License,
+- * version 2, as published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- * Maintained at www.Open-FCoE.org
 - */
--static bool fcoe_sw_match(struct net_device *netdev)
+-
+-#include <linux/pci.h>
+-#include <scsi/libfcoe.h>
+-#include <scsi/fc_transport_fcoe.h>
+-
+-/* internal fcoe transport */
+-struct fcoe_transport_internal {
+-	struct fcoe_transport *t;
+-	struct net_device *netdev;
+-	struct list_head list;
+-};
+-
+-/* fcoe transports list and its lock */
+-static LIST_HEAD(fcoe_transports);
+-static DEFINE_MUTEX(fcoe_transports_lock);
+-
+-/**
+- * fcoe_transport_default() - Returns ptr to the default transport fcoe_sw
+- */
+-struct fcoe_transport *fcoe_transport_default(void)
 -{
--	/* FIXME - for sw transport, always return false */
+-	return &fcoe_sw_transport;
+-}
+-
+-/**
+- * fcoe_transport_to_pcidev() - get the pci dev from a netdev
+- * @netdev: the netdev that pci dev will be retrived from
+- *
+- * Returns: NULL or the corrsponding pci_dev
+- */
+-struct pci_dev *fcoe_transport_pcidev(const struct net_device *netdev)
+-{
+-	if (!netdev->dev.parent)
+-		return NULL;
+-	return to_pci_dev(netdev->dev.parent);
+-}
+-
+-/**
+- * fcoe_transport_device_lookup() - Lookup a transport
+- * @netdev: the netdev the transport to be attached to
+- *
+- * This will look for existing offload driver, if not found, it falls back to
+- * the default sw hba (fcoe_sw) as its fcoe transport.
+- *
+- * Returns: 0 for success
+- */
+-static struct fcoe_transport_internal *
+-fcoe_transport_device_lookup(struct fcoe_transport *t,
+-			     struct net_device *netdev)
+-{
+-	struct fcoe_transport_internal *ti;
+-
+-	/* assign the transpor to this device */
+-	mutex_lock(&t->devlock);
+-	list_for_each_entry(ti, &t->devlist, list) {
+-		if (ti->netdev == netdev) {
+-			mutex_unlock(&t->devlock);
+-			return ti;
+-		}
+-	}
+-	mutex_unlock(&t->devlock);
+-	return NULL;
+-}
+-/**
+- * fcoe_transport_device_add() - Assign a transport to a device
+- * @netdev: the netdev the transport to be attached to
+- *
+- * This will look for existing offload driver, if not found, it falls back to
+- * the default sw hba (fcoe_sw) as its fcoe transport.
+- *
+- * Returns: 0 for success
+- */
+-static int fcoe_transport_device_add(struct fcoe_transport *t,
+-				     struct net_device *netdev)
+-{
+-	struct fcoe_transport_internal *ti;
+-
+-	ti = fcoe_transport_device_lookup(t, netdev);
+-	if (ti) {
+-		printk(KERN_DEBUG "fcoe_transport_device_add:"
+-		       "device %s is already added to transport %s\n",
+-		       netdev->name, t->name);
+-		return -EEXIST;
+-	}
+-	/* allocate an internal struct to host the netdev and the list */
+-	ti = kzalloc(sizeof(*ti), GFP_KERNEL);
+-	if (!ti)
+-		return -ENOMEM;
+-
+-	ti->t = t;
+-	ti->netdev = netdev;
+-	INIT_LIST_HEAD(&ti->list);
+-	dev_hold(ti->netdev);
+-
+-	mutex_lock(&t->devlock);
+-	list_add(&ti->list, &t->devlist);
+-	mutex_unlock(&t->devlock);
+-
+-	printk(KERN_DEBUG "fcoe_transport_device_add:"
+-		       "device %s added to transport %s\n",
+-		       netdev->name, t->name);
+-
+-	return 0;
+-}
+-
+-/**
+- * fcoe_transport_device_remove() - Remove a device from its transport
+- * @netdev: the netdev the transport to be attached to
+- *
+- * This removes the device from the transport so the given transport will
+- * not manage this device any more
+- *
+- * Returns: 0 for success
+- */
+-static int fcoe_transport_device_remove(struct fcoe_transport *t,
+-					struct net_device *netdev)
+-{
+-	struct fcoe_transport_internal *ti;
+-
+-	ti = fcoe_transport_device_lookup(t, netdev);
+-	if (!ti) {
+-		printk(KERN_DEBUG "fcoe_transport_device_remove:"
+-		       "device %s is not managed by transport %s\n",
+-		       netdev->name, t->name);
+-		return -ENODEV;
+-	}
+-	mutex_lock(&t->devlock);
+-	list_del(&ti->list);
+-	mutex_unlock(&t->devlock);
+-	printk(KERN_DEBUG "fcoe_transport_device_remove:"
+-	       "device %s removed from transport %s\n",
+-	       netdev->name, t->name);
+-	dev_put(ti->netdev);
+-	kfree(ti);
+-	return 0;
+-}
+-
+-/**
+- * fcoe_transport_device_remove_all() - Remove all from transport devlist
+- *
+- * This removes the device from the transport so the given transport will
+- * not manage this device any more
+- *
+- * Returns: 0 for success
+- */
+-static void fcoe_transport_device_remove_all(struct fcoe_transport *t)
+-{
+-	struct fcoe_transport_internal *ti, *tmp;
+-
+-	mutex_lock(&t->devlock);
+-	list_for_each_entry_safe(ti, tmp, &t->devlist, list) {
+-		list_del(&ti->list);
+-		kfree(ti);
+-	}
+-	mutex_unlock(&t->devlock);
+-}
+-
+-/**
+- * fcoe_transport_match() - Use the bus device match function to match the hw
+- * @t: The fcoe transport to check
+- * @netdev: The netdev to match against
+- *
+- * This function is used to check if the given transport wants to manage the
+- * input netdev. if the transports implements the match function, it will be
+- * called, o.w. we just compare the pci vendor and device id.
+- *
+- * Returns: true for match up
+- */
+-static bool fcoe_transport_match(struct fcoe_transport *t,
+-				 struct net_device *netdev)
+-{
+-	/* match transport by vendor and device id */
+-	struct pci_dev *pci;
+-
+-	pci = fcoe_transport_pcidev(netdev);
+-
+-	if (pci) {
+-		printk(KERN_DEBUG "fcoe_transport_match:"
+-		       "%s:%x:%x -- %s:%x:%x\n",
+-		       t->name, t->vendor, t->device,
+-		       netdev->name, pci->vendor, pci->device);
+-
+-		/* if transport supports match */
+-		if (t->match)
+-			return t->match(netdev);
+-
+-		/* else just compare the vendor and device id: pci only */
+-		return (t->vendor == pci->vendor) && (t->device == pci->device);
+-	}
 -	return false;
 -}
 -
--/* the sw hba fcoe transport */
--struct fcoe_transport fcoe_sw_transport = {
--	.name = "fcoesw",
--	.create = fcoe_sw_create,
--	.destroy = fcoe_sw_destroy,
--	.match = fcoe_sw_match,
--	.vendor = 0x0,
--	.device = 0xffff,
+-/**
+- * fcoe_transport_lookup() - Check if the transport is already registered
+- * @t: the transport to be looked up
+- *
+- * This compares the parent device (pci) vendor and device id
+- *
+- * Returns: NULL if not found
+- *
+- * TODO: return default sw transport if no other transport is found
+- */
+-static struct fcoe_transport *
+-fcoe_transport_lookup(struct net_device *netdev)
+-{
+-	struct fcoe_transport *t;
+-
+-	mutex_lock(&fcoe_transports_lock);
+-	list_for_each_entry(t, &fcoe_transports, list) {
+-		if (fcoe_transport_match(t, netdev)) {
+-			mutex_unlock(&fcoe_transports_lock);
+-			return t;
+-		}
+-	}
+-	mutex_unlock(&fcoe_transports_lock);
+-
+-	printk(KERN_DEBUG "fcoe_transport_lookup:"
+-	       "use default transport for %s\n", netdev->name);
+-	return fcoe_transport_default();
+-}
+-
+-/**
+- * fcoe_transport_register() - Adds a fcoe transport to the fcoe transports list
+- * @t: ptr to the fcoe transport to be added
+- *
+- * Returns: 0 for success
+- */
+-int fcoe_transport_register(struct fcoe_transport *t)
+-{
+-	struct fcoe_transport *tt;
+-
+-	/* TODO - add fcoe_transport specific initialization here */
+-	mutex_lock(&fcoe_transports_lock);
+-	list_for_each_entry(tt, &fcoe_transports, list) {
+-		if (tt == t) {
+-			mutex_unlock(&fcoe_transports_lock);
+-			return -EEXIST;
+-		}
+-	}
+-	list_add_tail(&t->list, &fcoe_transports);
+-	mutex_unlock(&fcoe_transports_lock);
+-
+-	printk(KERN_DEBUG "fcoe_transport_register:%s\n", t->name);
+-
+-	return 0;
+-}
+-EXPORT_SYMBOL_GPL(fcoe_transport_register);
+-
+-/**
+- * fcoe_transport_unregister() - Remove the tranport fro the fcoe transports list
+- * @t: ptr to the fcoe transport to be removed
+- *
+- * Returns: 0 for success
+- */
+-int fcoe_transport_unregister(struct fcoe_transport *t)
+-{
+-	struct fcoe_transport *tt, *tmp;
+-
+-	mutex_lock(&fcoe_transports_lock);
+-	list_for_each_entry_safe(tt, tmp, &fcoe_transports, list) {
+-		if (tt == t) {
+-			list_del(&t->list);
+-			mutex_unlock(&fcoe_transports_lock);
+-			fcoe_transport_device_remove_all(t);
+-			printk(KERN_DEBUG "fcoe_transport_unregister:%s\n",
+-			       t->name);
+-			return 0;
+-		}
+-	}
+-	mutex_unlock(&fcoe_transports_lock);
+-	return -ENODEV;
+-}
+-EXPORT_SYMBOL_GPL(fcoe_transport_unregister);
+-
+-/**
+- * fcoe_load_transport_driver() - Load an offload driver by alias name
+- * @netdev: the target net device
+- *
+- * Requests for an offload driver module as the fcoe transport, if fails, it
+- * falls back to use the SW HBA (fcoe_sw) as its transport
+- *
+- * TODO -
+- * 	1. supports only PCI device
+- * 	2. needs fix for VLAn and bonding
+- * 	3. pure hw fcoe hba may not have netdev
+- *
+- * Returns: 0 for success
+- */
+-int fcoe_load_transport_driver(struct net_device *netdev)
+-{
+-	struct pci_dev *pci;
+-	struct device *dev = netdev->dev.parent;
+-
+-	if (fcoe_transport_lookup(netdev)) {
+-		/* load default transport */
+-		printk(KERN_DEBUG "fcoe: already loaded transport for %s\n",
+-		       netdev->name);
+-		return -EEXIST;
+-	}
+-
+-	pci = to_pci_dev(dev);
+-	if (dev->bus != &pci_bus_type) {
+-		printk(KERN_DEBUG "fcoe: support noly PCI device\n");
+-		return -ENODEV;
+-	}
+-	printk(KERN_DEBUG "fcoe: loading driver fcoe-pci-0x%04x-0x%04x\n",
+-	       pci->vendor, pci->device);
+-
+-	return request_module("fcoe-pci-0x%04x-0x%04x",
+-			      pci->vendor, pci->device);
+-
+-}
+-EXPORT_SYMBOL_GPL(fcoe_load_transport_driver);
+-
+-/**
+- * fcoe_transport_attach() - Load transport to fcoe
+- * @netdev: the netdev the transport to be attached to
+- *
+- * This will look for existing offload driver, if not found, it falls back to
+- * the default sw hba (fcoe_sw) as its fcoe transport.
+- *
+- * Returns: 0 for success
+- */
+-int fcoe_transport_attach(struct net_device *netdev)
+-{
+-	struct fcoe_transport *t;
+-
+-	/* find the corresponding transport */
+-	t = fcoe_transport_lookup(netdev);
+-	if (!t) {
+-		printk(KERN_DEBUG "fcoe_transport_attach"
+-		       ":no transport for %s:use %s\n",
+-		       netdev->name, t->name);
+-		return -ENODEV;
+-	}
+-	/* add to the transport */
+-	if (fcoe_transport_device_add(t, netdev)) {
+-		printk(KERN_DEBUG "fcoe_transport_attach"
+-		       ":failed to add %s to tramsport %s\n",
+-		       netdev->name, t->name);
+-		return -EIO;
+-	}
+-	/* transport create function */
+-	if (t->create)
+-		t->create(netdev);
+-
+-	printk(KERN_DEBUG "fcoe_transport_attach:transport %s for %s\n",
+-	       t->name, netdev->name);
+-	return 0;
+-}
+-EXPORT_SYMBOL_GPL(fcoe_transport_attach);
+-
+-/**
+- * fcoe_transport_release() - Unload transport from fcoe
+- * @netdev: the net device on which fcoe is to be released
+- *
+- * Returns: 0 for success
+- */
+-int fcoe_transport_release(struct net_device *netdev)
+-{
+-	struct fcoe_transport *t;
+-
+-	/* find the corresponding transport */
+-	t = fcoe_transport_lookup(netdev);
+-	if (!t) {
+-		printk(KERN_DEBUG "fcoe_transport_release:"
+-		       "no transport for %s:use %s\n",
+-		       netdev->name, t->name);
+-		return -ENODEV;
+-	}
+-	/* remove the device from the transport */
+-	if (fcoe_transport_device_remove(t, netdev)) {
+-		printk(KERN_DEBUG "fcoe_transport_release:"
+-		       "failed to add %s to tramsport %s\n",
+-		       netdev->name, t->name);
+-		return -EIO;
+-	}
+-	/* transport destroy function */
+-	if (t->destroy)
+-		t->destroy(netdev);
+-
+-	printk(KERN_DEBUG "fcoe_transport_release:"
+-	       "device %s dettached from transport %s\n",
+-	       netdev->name, t->name);
+-
+-	return 0;
+-}
+-EXPORT_SYMBOL_GPL(fcoe_transport_release);
+-
+-/**
+- * fcoe_transport_init() - Initializes fcoe transport layer
+- *
+- * This prepares for the fcoe transport layer
+- *
+- * Returns: none
+- */
+-int __init fcoe_transport_init(void)
+-{
+-	INIT_LIST_HEAD(&fcoe_transports);
+-	mutex_init(&fcoe_transports_lock);
+-	return 0;
+-}
+-
+-/**
+- * fcoe_transport_exit() - Cleans up the fcoe transport layer
+- *
+- * This cleans up the fcoe transport layer. removing any transport on the list,
+- * note that the transport destroy func is not called here.
+- *
+- * Returns: none
+- */
+-int __exit fcoe_transport_exit(void)
+-{
+-	struct fcoe_transport *t, *tmp;
+-
+-	mutex_lock(&fcoe_transports_lock);
+-	list_for_each_entry_safe(t, tmp, &fcoe_transports, list) {
+-		list_del(&t->list);
+-		mutex_unlock(&fcoe_transports_lock);
+-		fcoe_transport_device_remove_all(t);
+-		mutex_lock(&fcoe_transports_lock);
+-	}
+-	mutex_unlock(&fcoe_transports_lock);
+-	return 0;
+-}
+diff --git a/include/scsi/fc_transport_fcoe.h b/include/scsi/fc_transport_fcoe.h
+deleted file mode 100644
+index 8dca2af..0000000
+--- a/include/scsi/fc_transport_fcoe.h
++++ /dev/null
+@@ -1,54 +0,0 @@
+-#ifndef FC_TRANSPORT_FCOE_H
+-#define FC_TRANSPORT_FCOE_H
+-
+-#include <linux/device.h>
+-#include <linux/netdevice.h>
+-#include <scsi/scsi_host.h>
+-#include <scsi/libfc.h>
+-
+-/**
+- * struct fcoe_transport - FCoE transport struct for generic transport
+- * for Ethernet devices as well as pure HBAs
+- *
+- * @name: name for thsi transport
+- * @bus: physical bus type (pci_bus_type)
+- * @driver: physical bus driver for network device
+- * @create: entry create function
+- * @destroy: exit destroy function
+- * @list: list of transports
+- */
+-struct fcoe_transport {
+-	char *name;
+-	unsigned short vendor;
+-	unsigned short device;
+-	struct bus_type *bus;
+-	struct device_driver *driver;
+-	int (*create)(struct net_device *device);
+-	int (*destroy)(struct net_device *device);
+-	bool (*match)(struct net_device *device);
+-	struct list_head list;
+-	struct list_head devlist;
+-	struct mutex devlock;
 -};
 -
 -/**
-- * fcoe_sw_init() - Registers fcoe_sw_transport
-+ * fcoe_sw_init() - attach to scsi transport
-  *
-  * Returns : 0 on success
-  */
-@@ -530,23 +508,16 @@ int __init fcoe_sw_init(void)
- 		return -ENODEV;
- 	}
- 
--	mutex_init(&fcoe_sw_transport.devlock);
--	INIT_LIST_HEAD(&fcoe_sw_transport.devlist);
--
--	/* register sw transport */
--	fcoe_transport_register(&fcoe_sw_transport);
- 	return 0;
- }
- 
- /**
-- * fcoe_sw_exit() - Unregisters fcoe_sw_transport
-+ * fcoe_sw_exit() - detach from scsi transport
-  *
-  * Returns : 0 on success
-  */
- int __exit fcoe_sw_exit(void)
- {
--	/* dettach the transport */
- 	fc_release_transport(scsi_transport_fcoe_sw);
--	fcoe_transport_unregister(&fcoe_sw_transport);
- 	return 0;
- }
-diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
-index 951d244..334db95 100644
---- a/drivers/scsi/fcoe/libfcoe.c
-+++ b/drivers/scsi/fcoe/libfcoe.c
-@@ -44,7 +44,6 @@
- #include <scsi/libfc.h>
- #include <scsi/fc_frame.h>
- #include <scsi/libfcoe.h>
--#include <scsi/fc_transport_fcoe.h>
- 
- static int debug_fcoe;
- 
-@@ -1081,10 +1080,9 @@ static int fcoe_destroy(const char *buffer, struct kernel_param *kp)
- 		rc = -ENODEV;
- 		goto out_putdev;
- 	}
--	/* pass to transport */
--	rc = fcoe_transport_release(netdev);
-+	rc = fcoe_sw_destroy(netdev);
- 	if (rc) {
--		printk(KERN_ERR "fcoe: fcoe_transport_release(%s) failed\n",
-+		printk(KERN_ERR "fcoe: fcoe_sw_destroy(%s) failed\n",
- 		       netdev->name);
- 		rc = -EIO;
- 		goto out_putdev;
-@@ -1121,10 +1119,9 @@ static int fcoe_create(const char *buffer, struct kernel_param *kp)
- 	}
- 	fcoe_ethdrv_get(netdev);
- 
--	/* pass to transport */
--	rc = fcoe_transport_attach(netdev);
-+	rc = fcoe_sw_create(netdev);
- 	if (rc) {
--		printk(KERN_ERR "fcoe: fcoe_transport_attach(%s) failed\n",
-+		printk(KERN_ERR "fcoe: fcoe_sw_create(%s) failed\n",
- 		       netdev->name);
- 		fcoe_ethdrv_put(netdev);
- 		rc = -EIO;
-@@ -1429,10 +1426,6 @@ EXPORT_SYMBOL_GPL(fcoe_libfc_config);
- /**
-  * fcoe_init() - fcoe module loading initialization
-  *
-- * Initialization routine
-- * 1. Will create fc transport software structure
-- * 2. initialize the link list of port information structure
+- * MODULE_ALIAS_FCOE_PCI
 - *
-  * Returns 0 on success, negative on failure
-  */
- static int __init fcoe_init(void)
-@@ -1464,9 +1457,6 @@ static int __init fcoe_init(void)
- 
- 	mod_timer(&fcoe_timer, jiffies + (10 * HZ));
- 
--	/* initiatlize the fcoe transport */
--	fcoe_transport_init();
+- * some care must be taken with this, vendor and device MUST be a hex value
+- * preceded with 0x and with letters in lower case (0x12ab, not 0x12AB or 12AB)
+- */
+-#define MODULE_ALIAS_FCOE_PCI(vendor, device) \
+-	MODULE_ALIAS("fcoe-pci-" __stringify(vendor) "-" __stringify(device))
 -
- 	fcoe_sw_init();
- 
- 	return 0;
-@@ -1495,9 +1485,9 @@ static void __exit fcoe_exit(void)
- 	/* Stop the timer */
- 	del_timer_sync(&fcoe_timer);
- 
--	/* releases the associated fcoe transport for each lport */
-+	/* releases the associated fcoe hosts */
- 	list_for_each_entry_safe(fc, tmp, &fcoe_hostlist, list)
--		fcoe_transport_release(fc->real_dev);
-+		fcoe_sw_destroy(fc->real_dev);
- 
- 	unregister_hotcpu_notifier(&fcoe_cpu_notifier);
- 
-@@ -1507,8 +1497,5 @@ static void __exit fcoe_exit(void)
- 
- 	/* remove sw trasnport */
- 	fcoe_sw_exit();
+-/* exported funcs */
+-int fcoe_transport_attach(struct net_device *netdev);
+-int fcoe_transport_release(struct net_device *netdev);
+-int fcoe_transport_register(struct fcoe_transport *t);
+-int fcoe_transport_unregister(struct fcoe_transport *t);
+-int fcoe_load_transport_driver(struct net_device *netdev);
+-int __init fcoe_transport_init(void);
+-int __exit fcoe_transport_exit(void);
 -
--	/* detach the transport */
--	fcoe_transport_exit();
- }
- module_exit(fcoe_exit);
-diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
-index 1ad4f93..dc64405 100644
---- a/include/scsi/libfcoe.h
-+++ b/include/scsi/libfcoe.h
-@@ -149,4 +149,6 @@ int fcoe_libfc_config(struct fc_lport *, struct libfc_function_template *);
- /* fcoe sw hba */
- int __init fcoe_sw_init(void);
- int __exit fcoe_sw_exit(void);
-+int fcoe_sw_create(struct net_device *);
-+int fcoe_sw_destroy(struct net_device *);
- #endif /* _LIBFCOE_H */
+-/* fcow_sw is the default transport */
+-extern struct fcoe_transport fcoe_sw_transport;
+-#endif /* FC_TRANSPORT_FCOE_H */
 
