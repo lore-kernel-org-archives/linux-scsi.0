@@ -1,53 +1,47 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH -next] exofs: fix printk format warnings
-Date: Mon, 30 Mar 2009 18:15:30 +0200
-Message-ID: <10f740e80903300915n7eba3a51hd20ede39c76a9421@mail.gmail.com>
-References: <20090326190130.54fc6fde.sfr@canb.auug.org.au>
-	 <49CBF73E.2010808@oracle.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [eSATA] 2.6.28.7: IO errors
+Date: Mon, 30 Mar 2009 12:51:31 -0400
+Message-ID: <49D0F893.9070306@rtr.ca>
+References: <Pine.LNX.4.64.0903280001020.4635@axis700.grange> <20090327235817.GP8014@parisc-linux.org> <Pine.LNX.4.64.0903280139340.4635@axis700.grange> <49D081E6.5010609@kernel.org> <Pine.LNX.4.64.0903301144400.4455@axis700.grange> <49D0972D.3020407@kernel.org> <Pine.LNX.4.64.0903301244320.4455@axis700.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f165.google.com ([209.85.219.165]:35523 "EHLO
-	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752039AbZC3QPe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Mar 2009 12:15:34 -0400
-In-Reply-To: <49CBF73E.2010808@oracle.com>
+Received: from rtr.ca ([76.10.145.34]:55125 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756750AbZC3Qve (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Mar 2009 12:51:34 -0400
+In-Reply-To: <Pine.LNX.4.64.0903301244320.4455@axis700.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: Tejun Heo <tj@kernel.org>, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thu, Mar 26, 2009 at 23:44, Randy Dunlap <randy.dunlap@oracle.com> wrote:
-> From: Randy Dunlap <randy.dunlap@oracle.com>
->
-> Fix exofs printk format warnings:
->
-> fs/exofs/inode.c:184: warning: format '%zx' expects type 'size_t', but argument 6 has type 'long unsigned int'
-> fs/exofs/inode.c:291: warning: format '%zx' expects type 'size_t', but argument 6 has type 'long unsigned int'
-> fs/exofs/inode.c:373: warning: format '%zx' expects type 'size_t', but argument 7 has type 'long unsigned int'
-> fs/exofs/inode.c:461: warning: format '%zx' expects type 'size_t', but argument 6 has type 'long unsigned int'
-> fs/exofs/inode.c:534: warning: format '%zx' expects type 'size_t', but argument 7 has type 'long unsigned int'
-> fs/exofs/inode.c:610: warning: format '%zx' expects type 'size_t', but argument 5 has type 'long unsigned
+Guennadi Liakhovetski wrote:
+> On Mon, 30 Mar 2009, Tejun Heo wrote:
+> 
+>> Hello,
+>>
+>> Guennadi Liakhovetski wrote:
+>>> Hm, using a 62cm long cable ATM, should it be even shorter? It's going to 
+>>> be difficult physically then:-(
+>> 62cm looks short enough.  My long cable is much longer like 2m
+>>
+>>> But what about your drives - dies the 
+>>> connector fit well in the slot and sits firmaly there? With my disk looks 
+>>> likt the connector cannot be inserted completely because of too small a 
+>>> hole in plastic:-(
+>> But mine fits well and firmly, so maybe you need to take out the knife
+>> after all.
+> 
+> yeah, warranty, you know:-( I contacted the retailer, will see. but it's 
+> strange - I bought mine in December 08, so, it's new enough, so, why?... 
+> The opening in the case is ~4.8mm, the plastic part of the connector on 
+> the eSATA cable is ~6.8mm... Ok, that's getting way OT, sorry.
+..
 
-It also wouldn't hurt to
-  - kill EXOFS_DBGMSG()
-  - s/EXOFS_DBGMSG/pr_debug/g
-  - #define pr_fmt(fmt) "%s: " fmt, __func__
+Speaking of which.. dealextreme.com sells surprisingly excellent eSATA
+cables with really sturdy connectors.  Very cheap pricing, too,
+with free shipping worldwide.  An easy way to eliminate cable fuss.
 
-That way we always get printf()-style warning checking, even if
-CONFIG_EXOFS_DEBUG
-is not enabled.
-
-Similar for EXOFS_ERR() -> pr_err()
-
-Gr{oetje,eeting}s,
-
-						Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+Cheers
