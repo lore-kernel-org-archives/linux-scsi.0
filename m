@@ -1,56 +1,28 @@
-From: Jean Delvare <jdelvare@suse.de>
-Subject: Re: [PATCH] libsrp: free kfifo struct in srp_iu_pool_free
-Date: Mon, 30 Mar 2009 21:38:01 +0200
-Message-ID: <200903302138.02155.jdelvare@suse.de>
-References: <200903291119.42080.jdelvare@suse.de> <20090330184458.GB11116@hera.kernel.org> <20090330184901.GC11116@hera.kernel.org>
+From: Chris Wright <chrisw@sous-sol.org>
+Subject: Re: [stable] [PATCH] [SCSI] libiscsi: fix iscsi pool error path
+Date: Mon, 30 Mar 2009 12:43:15 -0700
+Message-ID: <20090330194315.GD18394@sequoia.sous-sol.org>
+References: <200903291119.42080.jdelvare@suse.de> <20090330184458.GB11116@hera.kernel.org> <200903302134.30706.jdelvare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:58913 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759970AbZC3TiD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Mar 2009 15:38:03 -0400
-In-Reply-To: <20090330184901.GC11116@hera.kernel.org>
+Received: from sous-sol.org ([216.99.217.87]:33856 "EHLO sequoia.sous-sol.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754455AbZC3US3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Mar 2009 16:18:29 -0400
 Content-Disposition: inline
+In-Reply-To: <200903302134.30706.jdelvare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Wright <chrisw@sous-sol.org>
-Cc: stable@kernel.org, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
+To: Jean Delvare <jdelvare@suse.de>
+Cc: Chris Wright <chrisw@sous-sol.org>, stable@kernel.org, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
-Hi Chris,
+* Jean Delvare (jdelvare@suse.de) wrote:
+> Making the freeing of q->queue dependent on q->pool being set looks
+> really weird (although it is correct at the moment. But this seems
+> to be fixable in a much simpler way:
 
-Le lundi 30 mars 2009, Chris Wright a =E9crit=A0:
-> Appears to be a small leak here when freeing pool, the kfifo gets lef=
-t
-> behind.  Did I miss a caller that frees kfifo?
->=20
-> Signed-off-by: Chris Wright <chrisw@sous-sol.org>
-> ---
-> diff --git a/drivers/scsi/libsrp.c b/drivers/scsi/libsrp.c
-> index 15e2d13..3a305f8 100644
-> --- a/drivers/scsi/libsrp.c
-> +++ b/drivers/scsi/libsrp.c
-> @@ -81,6 +81,7 @@ static void srp_iu_pool_free(struct srp_queue *q)
->  {
->  	kfree(q->items);
->  	kfree(q->pool);
-> +	kfree(q->queue);
->  }
-> =20
->  static struct srp_buf **srp_ring_alloc(struct device *dev,
->=20
+Fine by me.  I condsidered that and for some reason I thought it was odd
+to do it that way ;-)  The pool is the ->buffer used in the fifo, but...
 
-You appear to be correct, I can't see q->queue being freed anywhere
-either.
-
-Reviewed-by: Jean Delvare <jdelvare@suse.de>
-
---=20
-Jean Delvare
-Suse L3
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Acked-by: Chris Wright <chrisw@sous-sol.org>
