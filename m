@@ -1,45 +1,20 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [eSATA] 2.6.28.7: IO errors
-Date: Mon, 30 Mar 2009 12:57:29 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0903301244320.4455@axis700.grange>
-References: <Pine.LNX.4.64.0903280001020.4635@axis700.grange>
- <20090327235817.GP8014@parisc-linux.org> <Pine.LNX.4.64.0903280139340.4635@axis700.grange>
- <49D081E6.5010609@kernel.org> <Pine.LNX.4.64.0903301144400.4455@axis700.grange>
- <49D0972D.3020407@kernel.org>
+From: "Gwendolen Rose" <manuel.perez@prudentialridgeway.com>
+Subject: Miley hot home video
+Date: Mon, 30 Mar 2009 15:10:40 +0200
+Message-ID: <20090330151040.5020708@prudentialridgeway.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <49D0972D.3020407@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from dsl85-104-1703.ttnet.net.tr ([85.104.6.167]:3399 "HELO
+	dsl85-104-1703.ttnet.net.tr" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with SMTP id S1752145AbZC3MdT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Mar 2009 08:33:19 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, 30 Mar 2009, Tejun Heo wrote:
+Contact us, make few clicks and you won't believe how fast you will get what 
+you need. http://wxl.hriakcypavo.com/
 
-> Hello,
-> 
-> Guennadi Liakhovetski wrote:
-> > Hm, using a 62cm long cable ATM, should it be even shorter? It's going to 
-> > be difficult physically then:-(
-> 
-> 62cm looks short enough.  My long cable is much longer like 2m
-> 
-> > But what about your drives - dies the 
-> > connector fit well in the slot and sits firmaly there? With my disk looks 
-> > likt the connector cannot be inserted completely because of too small a 
-> > hole in plastic:-(
-> 
-> But mine fits well and firmly, so maybe you need to take out the knife
-> after all.
-
-yeah, warranty, you know:-( I contacted the retailer, will see. but it's 
-strange - I bought mine in December 08, so, it's new enough, so, why?... 
-The opening in the case is ~4.8mm, the plastic part of the connector on 
-the eSATA cable is ~6.8mm... Ok, that's getting way OT, sorry.
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski, Ph.D.
-Freelance Open-Source Software Developer
