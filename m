@@ -1,75 +1,87 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [Scst-devel] ISCSI-SCST performance (with also IET and STGT	data)
-Date: Mon, 30 Mar 2009 22:33:58 +0400
-Message-ID: <49D11096.3070804@vlnb.net>
-References: <49D10256.8030307@vlnb.net> <e2e108260903301106y2b750c23kfab978567f3de3a0@mail.gmail.com>
+From: Chris Wright <chrisw@sous-sol.org>
+Subject: Re: [stable] [PATCH] [SCSI] libiscsi: fix iscsi pool error path
+Date: Mon, 30 Mar 2009 18:44:58 +0000
+Message-ID: <20090330184458.GB11116@hera.kernel.org>
+References: <200903291119.42080.jdelvare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757137AbZC3Se1@vger.kernel.org>
-In-Reply-To: <e2e108260903301106y2b750c23kfab978567f3de3a0@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@gmail.com>
-Cc: scst-devel <scst-devel@lists.sourceforge.net>, iscsitarget-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, stgt@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:50749 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757461AbZC3SyY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Mar 2009 14:54:24 -0400
+Content-Disposition: inline
+In-Reply-To: <200903291119.42080.jdelvare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jean Delvare <jdelvare@suse.de>
+Cc: stable@kernel.org, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-Bart Van Assche, on 03/30/2009 10:06 PM wrote:
-> On Mon, Mar 30, 2009 at 7:33 PM, Vladislav Bolkhovitin <vst@vlnb.net> wrote:
->> As part of 1.0.1 release preparations I made some performance tests to make
->> sure there are no performance regressions in SCST overall and iSCSI-SCST
->> particularly. Results were quite interesting, so I decided to publish them
->> together with the corresponding numbers for IET and STGT iSCSI targets. This
->> isn't a real performance comparison, it includes only few chosen tests,
->> because I don't have time for a complete comparison. But I hope somebody
->> will take up what I did and make it complete.
->>
->> Setup:
->>
->> Target: HT 2.4GHz Xeon, x86_32, 2GB of memory limited to 256MB by kernel
->> command line to have less test data footprint, 75GB 15K RPM SCSI disk as
->> backstorage, dual port 1Gbps E1000 Intel network card, 2.6.29 kernel.
->>
->> Initiator: 1.7GHz Xeon, x86_32, 1GB of memory limited to 256MB by kernel
->> command line to have less test data footprint, dual port 1Gbps E1000 Intel
->> network card, 2.6.27 kernel, open-iscsi 2.0-870-rc3.
->>
->> The target exported a 5GB file on XFS for FILEIO and 5GB partition for
->> BLOCKIO.
->>
->> All the tests were ran 3 times and average written. All the values are in
->> MB/s. The tests were ran with CFQ and deadline IO schedulers on the target.
->> All other parameters on both target and initiator were default.
-> 
-> These are indeed interesting results. There are some aspects of the
-> test setup I do not understand however:
-> * All tests have been run with buffered I/O instead of direct I/O
-> (iflag=direct / oflag=direct). My experience is that the results of
-> tests with direct I/O are easier to reproduce (less variation between
-> runs). So I have been wondering why the tests have been run with
-> buffered I/O instead ?
+* Jean Delvare (jdelvare@suse.de) wrote:
+> --- linux-2.6.29-rc5.orig/drivers/scsi/libiscsi.c	2009-01-29 08:27:19.000000000 +0100
+> +++ linux-2.6.29-rc5/drivers/scsi/libiscsi.c	2009-02-16 21:19:14.000000000 +0100
+> @@ -1944,7 +1944,7 @@ iscsi_pool_init(struct iscsi_pool *q, in
+>  		num_arrays++;
+>  	q->pool = kzalloc(num_arrays * max * sizeof(void*), GFP_KERNEL);
+>  	if (q->pool == NULL)
+> -		goto enomem;
+> +		return -ENOMEM;
+>  
+>  	q->queue = kfifo_init((void*)q->pool, max * sizeof(void*),
+>  			      GFP_KERNEL, NULL);
+> @@ -1979,8 +1979,7 @@ void iscsi_pool_free(struct iscsi_pool *
+>  
+>  	for (i = 0; i < q->max; i++)
+>  		kfree(q->pool[i]);
+> -	if (q->pool)
+> -		kfree(q->pool);
+> +	kfree(q->pool);
+>  	kfree(q->queue);
 
-Real applications use buffered I/O, hence it should be used in tests. It 
-  evaluates all the storage stack on both initiator and target as a 
-whole. The results are very reproducible, variation is about 10%.
+AFAICT, This is still broken.
 
-> * It is well known that having more memory in the target system
-> improves performance because of read and write caching. What did you
-> want to demonstrate by limiting the memory of the target system ?
+thanks,
+-chris
+--
 
-If I had full 2GB on the target, I would have to spend on the 
-measurements 10 times more time, since the data footprint should be at 
-least 4x of the cache size. For sequential read/writes 256MB and 2GB of 
-the cache are the same.
+Subject: [PATCH] libiscsi: fix error path on iscsi_pool_init
 
-Where it did matter (io_trash) I increased memory size to full 2GB.
+From: Chris Wright <chrisw@sous-sol.org>
 
-> * Which SCST options were enabled on the target ? Was e.g. the
-> NV_CACHE option enabled ?
+I'm not all that keen on kfifo_init returning ERR_PTR, but...
+q->queue could be ERR_PTR(-ENOMEM) which will break unwinding
+on error.  Make iscsi_pool_free more defensive.
 
-Defaults, i.e. yes, enabled. But it didn't matter, since all the 
-filesystems where mounted on the initiator without data barriers enabled.
-
-Thanks,
-Vlad
-
-P.S. Please don't drop CC.
+Signed-off-by: Chris Wright <chrisw@sous-sol.org>
+---
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index dfaa8ad..2f4df53 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -1995,7 +1995,7 @@ iscsi_pool_init(struct iscsi_pool *q, int max, void ***items, int item_size)
+ 		num_arrays++;
+ 	q->pool = kzalloc(num_arrays * max * sizeof(void*), GFP_KERNEL);
+ 	if (q->pool == NULL)
+-		return -ENOMEM;
++		goto enomem;
+ 
+ 	q->queue = kfifo_init((void*)q->pool, max * sizeof(void*),
+ 			      GFP_KERNEL, NULL);
+@@ -2028,10 +2028,13 @@ void iscsi_pool_free(struct iscsi_pool *q)
+ {
+ 	int i;
+ 
+-	for (i = 0; i < q->max; i++)
+-		kfree(q->pool[i]);
+-	kfree(q->pool);
+-	kfree(q->queue);
++	if (q->pool) {
++		for (i = 0; i < q->max; i++)
++			kfree(q->pool[i]);
++		kfree(q->pool);
++		if (!IS_ERR(q->queue))
++			kfree(q->queue);
++	}
+ }
+ EXPORT_SYMBOL_GPL(iscsi_pool_free);
+ 
