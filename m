@@ -1,100 +1,243 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH] fix recovered error handling
-Date: Mon, 30 Mar 2009 16:55:51 +0000
-Message-ID: <1238432151.25357.14.camel@localhost.localdomain>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: ISCSI-SCST performance (with also IET and STGT data)
+Date: Mon, 30 Mar 2009 21:33:10 +0400
+Message-ID: <49D10256.8030307@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:40920 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751133AbZC3RCk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Mar 2009 13:02:40 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756514AbZC3Rdm@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: scst-devel <scst-devel@lists.sourceforge.net>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, iscsitarget-devel@lists.sourceforge.net, stgt@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Hannes Reinecke <hare@suse.de>
 
-We have a problem with recovered error handling in that any command
-which goes down as BLOCK_PC but which returns a sense code of RECOVERED
-ERROR gets completed with -EIO.  For actual SG_IO commands, this doesn't
-matter at all, since the error return code gets dropped in favour of
-req->errors which contain the SCSI completion code.
+Hi All,
 
-However, if this command is part of the block system, then it will pay
-attention to the returned error code.  In particularly if a SYNCHRONIZE
-CACHE from a barrier command completes with RECOVERED ERROR, the
-resulting -EIO on the barrier causes block to error the request and
-return it to the filesystem.  Fix this by converting the -EIO for
-recovered error to zero, plus remove the printing of this from sd and sr
-so the message isn't double printed.
+As part of 1.0.1 release preparations I made some performance tests to 
+make sure there are no performance regressions in SCST overall and 
+iSCSI-SCST particularly. Results were quite interesting, so I decided to 
+publish them together with the corresponding numbers for IET and STGT 
+iSCSI targets. This isn't a real performance comparison, it includes 
+only few chosen tests, because I don't have time for a complete 
+comparison. But I hope somebody will take up what I did and make it 
+complete.
 
-James
+Setup:
 
----
+Target: HT 2.4GHz Xeon, x86_32, 2GB of memory limited to 256MB by kernel 
+command line to have less test data footprint, 75GB 15K RPM SCSI disk as 
+backstorage, dual port 1Gbps E1000 Intel network card, 2.6.29 kernel.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 4b13e36..ec94652 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -791,6 +791,20 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 				      "%d bytes done.\n",
- 				      req->nr_sectors, good_bytes));
- 
-+	/*
-+	 * Recovered errors need reporting, but they're always treated
-+	 * as success, so fiddle the result code here.  For BLOCK_PC
-+	 * we already took a copy of the original into rq->errors which
-+	 * is what gets returned to the user
-+	 */
-+	if (sense_valid && sshdr.sense_key == RECOVERED_ERROR) {
-+		if (!(req->cmd_flags & REQ_QUIET))
-+			scsi_print_sense("", cmd);
-+		result = 0;
-+		/* BLOCK_PC may have set error */
-+		error = 0;
-+	}
-+	
- 	/* A number of bytes were successfully read.  If there
- 	 * are leftovers and there is some kind of error
- 	 * (result != 0), retry the rest.
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index aeab5d9..3fcb64b 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1051,12 +1051,6 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 		good_bytes = sd_completed_bytes(SCpnt);
- 		break;
- 	case RECOVERED_ERROR:
--		/* Inform the user, but make sure that it's not treated
--		 * as a hard error.
--		 */
--		scsi_print_sense("sd", SCpnt);
--		SCpnt->result = 0;
--		memset(SCpnt->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
- 		good_bytes = scsi_bufflen(SCpnt);
- 		break;
- 	case NO_SENSE:
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index e7fa3ca..0e1a0f2 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -309,15 +309,6 @@ static int sr_done(struct scsi_cmnd *SCpnt)
- 			break;
- 
- 		case RECOVERED_ERROR:
--
--			/*
--			 * An error occured, but it recovered.  Inform the
--			 * user, but make sure that it's not treated as a
--			 * hard error.
--			 */
--			scsi_print_sense("sr", SCpnt);
--			SCpnt->result = 0;
--			SCpnt->sense_buffer[0] = 0x0;
- 			good_bytes = this_count;
- 			break;
- 
+Initiator: 1.7GHz Xeon, x86_32, 1GB of memory limited to 256MB by kernel 
+command line to have less test data footprint, dual port 1Gbps E1000 
+Intel network card, 2.6.27 kernel, open-iscsi 2.0-870-rc3.
 
+The target exported a 5GB file on XFS for FILEIO and 5GB partition for 
+BLOCKIO.
 
+All the tests were ran 3 times and average written. All the values are 
+in MB/s. The tests were ran with CFQ and deadline IO schedulers on the 
+target. All other parameters on both target and initiator were default.
+
+==================================================================
+
+I. SEQUENTIAL ACCESS OVER SINGLE LINE
+
+1. # dd if=/dev/sdX of=/dev/null bs=512K count=2000
+
+			ISCSI-SCST	IET		STGT
+NULLIO:			106		105		103
+FILEIO/CFQ:		82		57		55
+FILEIO/deadline		69		69		67
+BLOCKIO/CFQ		81		28		-
+BLOCKIO/deadline	80		66		-
+
+------------------------------------------------------------------
+
+2. # dd if=/dev/zero of=/dev/sdX bs=512K count=2000
+
+I didn't do other write tests, because I have data on those devices.
+
+			ISCSI-SCST	IET		STGT
+NULLIO:			114		114		114
+
+------------------------------------------------------------------
+
+3. /dev/sdX formatted in ext3 and mounted in /mnt on the initiator. Then
+
+# dd if=/mnt/q of=/dev/null bs=512K count=2000
+
+were ran (/mnt/q was created before by the next test)
+
+			ISCSI-SCST	IET		STGT
+FILEIO/CFQ:		94		66		46
+FILEIO/deadline		74		74		72
+BLOCKIO/CFQ		95		35		-
+BLOCKIO/deadline	94		95		-
+
+------------------------------------------------------------------
+
+4. /dev/sdX formatted in ext3 and mounted in /mnt on the initiator. Then
+
+# dd if=/dev/zero of=/mnt/q bs=512K count=2000
+
+were ran (/mnt/q was created by the next test before)
+
+			ISCSI-SCST	IET		STGT
+FILEIO/CFQ:		97		91		88
+FILEIO/deadline		98		96		90
+BLOCKIO/CFQ		112		110		-
+BLOCKIO/deadline	112		110		-
+
+------------------------------------------------------------------
+
+Conclusions:
+
+1. ISCSI-SCST FILEIO on buffered READs on 27% faster than IET (94 vs 
+74). With CFQ the difference is 42% (94 vs 66).
+
+2. ISCSI-SCST FILEIO on buffered READs on 30% faster than STGT (94 vs 
+72). With CFQ the difference is 104% (94 vs 46).
+
+3. ISCSI-SCST BLOCKIO on buffered READs has about the same performance 
+as IET, but with CFQ it's on 170% faster (95 vs 35).
+
+4. Buffered WRITEs are not so interesting, because they are async. with 
+many outstanding commands at time, hence latency insensitive, but even 
+here ISCSI-SCST always a bit faster than IET.
+
+5. STGT always the worst, sometimes considerably.
+
+6. BLOCKIO on buffered WRITEs is constantly faster, than FILEIO, so, 
+definitely, there is a room for future improvement here.
+
+7. For some reason assess on file system is considerably better, than 
+the same device directly.
+
+==================================================================
+
+II. Mostly random "realistic" access.
+
+For this test I used io_trash utility. For more details see
+http://lkml.org/lkml/2008/11/17/444. To show value of target-side 
+caching in this test target was ran with full 2GB of memory. I ran 
+io_trash with the following parameters: "2 2 ./ 500000000 50000000 10 
+4096 4096 300000 10 90 0 10". Total execution time was measured.
+
+			ISCSI-SCST	IET		STGT
+FILEIO/CFQ:		4m45s		5m		5m17s
+FILEIO/deadline		5m20s		5m22s		5m35s
+BLOCKIO/CFQ		23m3s		23m5s		-
+BLOCKIO/deadline	23m15s		23m25s		-
+
+Conclusions:
+
+1. FILEIO on 500% (five times!) faster than BLOCKIO
+
+2. STGT, as usually, always the worst
+
+3. Deadline always a bit slower
+
+==================================================================
+
+III. SEQUENTIAL ACCESS OVER MPIO
+
+Unfortunately, my dual port network card isn't capable of simultaneous 
+data transfers, so I had to do some "modeling" and put my network 
+devices in 100Mbps mode. To make this model more realistic I also used 
+my old IDE 5200RPM hard drive capable to produce locally 35MB/s 
+throughput. So I modeled the case of double 1Gbps links with 350MB/s 
+backstorage, if all the following rules satisfied:
+
+  - Both links a capable of simultaneous data transfers
+
+  - There is sufficient amount of CPU power on both initiator and target 
+to cover requirements for the data transfers.
+
+All the tests were done with iSCSI-SCST only.
+
+1. # dd if=/dev/sdX of=/dev/null bs=512K count=2000
+
+NULLIO:			23
+FILEIO/CFQ:		20
+FILEIO/deadline		20
+BLOCKIO/CFQ		20
+BLOCKIO/deadline	17
+
+Single line NULLIO is 12.
+
+So, there is a 67% improvement using 2 lines. With 1Gbps it should be 
+equivalent of 200MB/s. Not too bad.
+
+==================================================================
+
+Connection to the target were made with the following iSCSI parameters:
+
+# iscsi-scst-adm --op show --tid=1 --sid=0x10000013d0200
+InitialR2T=No
+ImmediateData=Yes
+MaxConnections=1
+MaxRecvDataSegmentLength=2097152
+MaxXmitDataSegmentLength=131072
+MaxBurstLength=2097152
+FirstBurstLength=262144
+DefaultTime2Wait=2
+DefaultTime2Retain=0
+MaxOutstandingR2T=1
+DataPDUInOrder=Yes
+DataSequenceInOrder=Yes
+ErrorRecoveryLevel=0
+HeaderDigest=None
+DataDigest=None
+OFMarker=No
+IFMarker=No
+OFMarkInt=Reject
+IFMarkInt=Reject
+
+# ietadm --op show --tid=1 --sid=0x10000013d0200
+InitialR2T=No
+ImmediateData=Yes
+MaxConnections=1
+MaxRecvDataSegmentLength=262144
+MaxXmitDataSegmentLength=131072
+MaxBurstLength=2097152
+FirstBurstLength=262144
+DefaultTime2Wait=2
+DefaultTime2Retain=20
+MaxOutstandingR2T=1
+DataPDUInOrder=Yes
+DataSequenceInOrder=Yes
+ErrorRecoveryLevel=0
+HeaderDigest=None
+DataDigest=None
+OFMarker=No
+IFMarker=No
+OFMarkInt=Reject
+IFMarkInt=Reject
+
+# tgtadm --op show --mode session --tid 1 --sid 1
+MaxRecvDataSegmentLength=2097152
+MaxXmitDataSegmentLength=131072
+HeaderDigest=None
+DataDigest=None
+InitialR2T=No
+MaxOutstandingR2T=1
+ImmediateData=Yes
+FirstBurstLength=262144
+MaxBurstLength=2097152
+DataPDUInOrder=Yes
+DataSequenceInOrder=Yes
+ErrorRecoveryLevel=0
+IFMarker=No
+OFMarker=No
+DefaultTime2Wait=2
+DefaultTime2Retain=0
+OFMarkInt=Reject
+IFMarkInt=Reject
+MaxConnections=1
+RDMAExtensions=No
+TargetRecvDataSegmentLength=262144
+InitiatorRecvDataSegmentLength=262144
+MaxOutstandingUnexpectedPDUs=0
+
+Vlad
