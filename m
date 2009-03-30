@@ -1,243 +1,75 @@
 From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: ISCSI-SCST performance (with also IET and STGT data)
-Date: Mon, 30 Mar 2009 21:33:10 +0400
-Message-ID: <49D10256.8030307@vlnb.net>
+Subject: Re: [Scst-devel] ISCSI-SCST performance (with also IET and STGT	data)
+Date: Mon, 30 Mar 2009 22:33:58 +0400
+Message-ID: <49D11096.3070804@vlnb.net>
+References: <49D10256.8030307@vlnb.net> <e2e108260903301106y2b750c23kfab978567f3de3a0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756514AbZC3Rdm@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757137AbZC3Se1@vger.kernel.org>
+In-Reply-To: <e2e108260903301106y2b750c23kfab978567f3de3a0@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: scst-devel <scst-devel@lists.sourceforge.net>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, iscsitarget-devel@lists.sourceforge.net, stgt@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@gmail.com>
+Cc: scst-devel <scst-devel@lists.sourceforge.net>, iscsitarget-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, stgt@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi All,
+Bart Van Assche, on 03/30/2009 10:06 PM wrote:
+> On Mon, Mar 30, 2009 at 7:33 PM, Vladislav Bolkhovitin <vst@vlnb.net> wrote:
+>> As part of 1.0.1 release preparations I made some performance tests to make
+>> sure there are no performance regressions in SCST overall and iSCSI-SCST
+>> particularly. Results were quite interesting, so I decided to publish them
+>> together with the corresponding numbers for IET and STGT iSCSI targets. This
+>> isn't a real performance comparison, it includes only few chosen tests,
+>> because I don't have time for a complete comparison. But I hope somebody
+>> will take up what I did and make it complete.
+>>
+>> Setup:
+>>
+>> Target: HT 2.4GHz Xeon, x86_32, 2GB of memory limited to 256MB by kernel
+>> command line to have less test data footprint, 75GB 15K RPM SCSI disk as
+>> backstorage, dual port 1Gbps E1000 Intel network card, 2.6.29 kernel.
+>>
+>> Initiator: 1.7GHz Xeon, x86_32, 1GB of memory limited to 256MB by kernel
+>> command line to have less test data footprint, dual port 1Gbps E1000 Intel
+>> network card, 2.6.27 kernel, open-iscsi 2.0-870-rc3.
+>>
+>> The target exported a 5GB file on XFS for FILEIO and 5GB partition for
+>> BLOCKIO.
+>>
+>> All the tests were ran 3 times and average written. All the values are in
+>> MB/s. The tests were ran with CFQ and deadline IO schedulers on the target.
+>> All other parameters on both target and initiator were default.
+> 
+> These are indeed interesting results. There are some aspects of the
+> test setup I do not understand however:
+> * All tests have been run with buffered I/O instead of direct I/O
+> (iflag=direct / oflag=direct). My experience is that the results of
+> tests with direct I/O are easier to reproduce (less variation between
+> runs). So I have been wondering why the tests have been run with
+> buffered I/O instead ?
 
-As part of 1.0.1 release preparations I made some performance tests to 
-make sure there are no performance regressions in SCST overall and 
-iSCSI-SCST particularly. Results were quite interesting, so I decided to 
-publish them together with the corresponding numbers for IET and STGT 
-iSCSI targets. This isn't a real performance comparison, it includes 
-only few chosen tests, because I don't have time for a complete 
-comparison. But I hope somebody will take up what I did and make it 
-complete.
+Real applications use buffered I/O, hence it should be used in tests. It 
+  evaluates all the storage stack on both initiator and target as a 
+whole. The results are very reproducible, variation is about 10%.
 
-Setup:
+> * It is well known that having more memory in the target system
+> improves performance because of read and write caching. What did you
+> want to demonstrate by limiting the memory of the target system ?
 
-Target: HT 2.4GHz Xeon, x86_32, 2GB of memory limited to 256MB by kernel 
-command line to have less test data footprint, 75GB 15K RPM SCSI disk as 
-backstorage, dual port 1Gbps E1000 Intel network card, 2.6.29 kernel.
+If I had full 2GB on the target, I would have to spend on the 
+measurements 10 times more time, since the data footprint should be at 
+least 4x of the cache size. For sequential read/writes 256MB and 2GB of 
+the cache are the same.
 
-Initiator: 1.7GHz Xeon, x86_32, 1GB of memory limited to 256MB by kernel 
-command line to have less test data footprint, dual port 1Gbps E1000 
-Intel network card, 2.6.27 kernel, open-iscsi 2.0-870-rc3.
+Where it did matter (io_trash) I increased memory size to full 2GB.
 
-The target exported a 5GB file on XFS for FILEIO and 5GB partition for 
-BLOCKIO.
+> * Which SCST options were enabled on the target ? Was e.g. the
+> NV_CACHE option enabled ?
 
-All the tests were ran 3 times and average written. All the values are 
-in MB/s. The tests were ran with CFQ and deadline IO schedulers on the 
-target. All other parameters on both target and initiator were default.
+Defaults, i.e. yes, enabled. But it didn't matter, since all the 
+filesystems where mounted on the initiator without data barriers enabled.
 
-==================================================================
-
-I. SEQUENTIAL ACCESS OVER SINGLE LINE
-
-1. # dd if=/dev/sdX of=/dev/null bs=512K count=2000
-
-			ISCSI-SCST	IET		STGT
-NULLIO:			106		105		103
-FILEIO/CFQ:		82		57		55
-FILEIO/deadline		69		69		67
-BLOCKIO/CFQ		81		28		-
-BLOCKIO/deadline	80		66		-
-
-------------------------------------------------------------------
-
-2. # dd if=/dev/zero of=/dev/sdX bs=512K count=2000
-
-I didn't do other write tests, because I have data on those devices.
-
-			ISCSI-SCST	IET		STGT
-NULLIO:			114		114		114
-
-------------------------------------------------------------------
-
-3. /dev/sdX formatted in ext3 and mounted in /mnt on the initiator. Then
-
-# dd if=/mnt/q of=/dev/null bs=512K count=2000
-
-were ran (/mnt/q was created before by the next test)
-
-			ISCSI-SCST	IET		STGT
-FILEIO/CFQ:		94		66		46
-FILEIO/deadline		74		74		72
-BLOCKIO/CFQ		95		35		-
-BLOCKIO/deadline	94		95		-
-
-------------------------------------------------------------------
-
-4. /dev/sdX formatted in ext3 and mounted in /mnt on the initiator. Then
-
-# dd if=/dev/zero of=/mnt/q bs=512K count=2000
-
-were ran (/mnt/q was created by the next test before)
-
-			ISCSI-SCST	IET		STGT
-FILEIO/CFQ:		97		91		88
-FILEIO/deadline		98		96		90
-BLOCKIO/CFQ		112		110		-
-BLOCKIO/deadline	112		110		-
-
-------------------------------------------------------------------
-
-Conclusions:
-
-1. ISCSI-SCST FILEIO on buffered READs on 27% faster than IET (94 vs 
-74). With CFQ the difference is 42% (94 vs 66).
-
-2. ISCSI-SCST FILEIO on buffered READs on 30% faster than STGT (94 vs 
-72). With CFQ the difference is 104% (94 vs 46).
-
-3. ISCSI-SCST BLOCKIO on buffered READs has about the same performance 
-as IET, but with CFQ it's on 170% faster (95 vs 35).
-
-4. Buffered WRITEs are not so interesting, because they are async. with 
-many outstanding commands at time, hence latency insensitive, but even 
-here ISCSI-SCST always a bit faster than IET.
-
-5. STGT always the worst, sometimes considerably.
-
-6. BLOCKIO on buffered WRITEs is constantly faster, than FILEIO, so, 
-definitely, there is a room for future improvement here.
-
-7. For some reason assess on file system is considerably better, than 
-the same device directly.
-
-==================================================================
-
-II. Mostly random "realistic" access.
-
-For this test I used io_trash utility. For more details see
-http://lkml.org/lkml/2008/11/17/444. To show value of target-side 
-caching in this test target was ran with full 2GB of memory. I ran 
-io_trash with the following parameters: "2 2 ./ 500000000 50000000 10 
-4096 4096 300000 10 90 0 10". Total execution time was measured.
-
-			ISCSI-SCST	IET		STGT
-FILEIO/CFQ:		4m45s		5m		5m17s
-FILEIO/deadline		5m20s		5m22s		5m35s
-BLOCKIO/CFQ		23m3s		23m5s		-
-BLOCKIO/deadline	23m15s		23m25s		-
-
-Conclusions:
-
-1. FILEIO on 500% (five times!) faster than BLOCKIO
-
-2. STGT, as usually, always the worst
-
-3. Deadline always a bit slower
-
-==================================================================
-
-III. SEQUENTIAL ACCESS OVER MPIO
-
-Unfortunately, my dual port network card isn't capable of simultaneous 
-data transfers, so I had to do some "modeling" and put my network 
-devices in 100Mbps mode. To make this model more realistic I also used 
-my old IDE 5200RPM hard drive capable to produce locally 35MB/s 
-throughput. So I modeled the case of double 1Gbps links with 350MB/s 
-backstorage, if all the following rules satisfied:
-
-  - Both links a capable of simultaneous data transfers
-
-  - There is sufficient amount of CPU power on both initiator and target 
-to cover requirements for the data transfers.
-
-All the tests were done with iSCSI-SCST only.
-
-1. # dd if=/dev/sdX of=/dev/null bs=512K count=2000
-
-NULLIO:			23
-FILEIO/CFQ:		20
-FILEIO/deadline		20
-BLOCKIO/CFQ		20
-BLOCKIO/deadline	17
-
-Single line NULLIO is 12.
-
-So, there is a 67% improvement using 2 lines. With 1Gbps it should be 
-equivalent of 200MB/s. Not too bad.
-
-==================================================================
-
-Connection to the target were made with the following iSCSI parameters:
-
-# iscsi-scst-adm --op show --tid=1 --sid=0x10000013d0200
-InitialR2T=No
-ImmediateData=Yes
-MaxConnections=1
-MaxRecvDataSegmentLength=2097152
-MaxXmitDataSegmentLength=131072
-MaxBurstLength=2097152
-FirstBurstLength=262144
-DefaultTime2Wait=2
-DefaultTime2Retain=0
-MaxOutstandingR2T=1
-DataPDUInOrder=Yes
-DataSequenceInOrder=Yes
-ErrorRecoveryLevel=0
-HeaderDigest=None
-DataDigest=None
-OFMarker=No
-IFMarker=No
-OFMarkInt=Reject
-IFMarkInt=Reject
-
-# ietadm --op show --tid=1 --sid=0x10000013d0200
-InitialR2T=No
-ImmediateData=Yes
-MaxConnections=1
-MaxRecvDataSegmentLength=262144
-MaxXmitDataSegmentLength=131072
-MaxBurstLength=2097152
-FirstBurstLength=262144
-DefaultTime2Wait=2
-DefaultTime2Retain=20
-MaxOutstandingR2T=1
-DataPDUInOrder=Yes
-DataSequenceInOrder=Yes
-ErrorRecoveryLevel=0
-HeaderDigest=None
-DataDigest=None
-OFMarker=No
-IFMarker=No
-OFMarkInt=Reject
-IFMarkInt=Reject
-
-# tgtadm --op show --mode session --tid 1 --sid 1
-MaxRecvDataSegmentLength=2097152
-MaxXmitDataSegmentLength=131072
-HeaderDigest=None
-DataDigest=None
-InitialR2T=No
-MaxOutstandingR2T=1
-ImmediateData=Yes
-FirstBurstLength=262144
-MaxBurstLength=2097152
-DataPDUInOrder=Yes
-DataSequenceInOrder=Yes
-ErrorRecoveryLevel=0
-IFMarker=No
-OFMarker=No
-DefaultTime2Wait=2
-DefaultTime2Retain=0
-OFMarkInt=Reject
-IFMarkInt=Reject
-MaxConnections=1
-RDMAExtensions=No
-TargetRecvDataSegmentLength=262144
-InitiatorRecvDataSegmentLength=262144
-MaxOutstandingUnexpectedPDUs=0
-
+Thanks,
 Vlad
+
+P.S. Please don't drop CC.
