@@ -1,47 +1,62 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 11646] QLA2xxx: Kernel deadlock on high load somewhere after
- 2.6.20
-Date: Tue, 31 Mar 2009 16:02:11 GMT
-Message-ID: <200903311602.n2VG2BVN016001@demeter.kernel.org>
-References: <bug-11646-11613@http.bugzilla.kernel.org/>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [BUGFIX 0/2] BUG Fixes for OSD in mainline (2.6.30)
+Date: Tue, 31 Mar 2009 19:58:59 +0300
+Message-ID: <49D24BD3.2030801@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:48069 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756166AbZCaQCN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Mar 2009 12:02:13 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n2VG2BGU016002
-	for <linux-scsi@vger.kernel.org>; Tue, 31 Mar 2009 16:02:11 GMT
-In-Reply-To: <bug-11646-11613@http.bugzilla.kernel.org/>
+Received: from gw-ca.panasas.com ([209.116.51.66]:20441 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751869AbZCaRA6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Mar 2009 13:00:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Xu Yang <onlyxuyang@qq.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11646
+A very serious and stupid bug was found by users in current osd code,
+which caused it not to be usable in it's current form.
 
+It would hard-lock immediately on any asynchronous execution call
+on an SMP Kernel. Just to show that it was only run on uni-machines
+until today.
 
-mike <mb11628@yahoo.com> changed:
+Since found I've setup a test rig with SMP machines banging on each
+other with multi threaded/devices/mounts and they are still up.
+(Same setup I used to run with UMLs before)
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |mb11628@yahoo.com
+Thanks to Xu Yang <onlyxuyang@qq.com> for reporting this and his devotion
+to finding a fix.
 
+These are the patches
 
+[PATCH 1/2] libosd: BUGFIX: blk_put_request can't be called from within request_end_io
 
+    A fix for a very serious and stupid bug in osd_initiator. It used to
+    call blk_put_request() regardless of if it was from the end_io callback
+    or if called after a sync execution. It should call the unlocked version
+    __blk_put_request() instead.
 
---- Comment #25 from mike <mb11628@yahoo.com>  2009-03-31 16:02:09 ---
-Are there any updates on this bug?  We are planning on installing 4 new
-database servers in the next couple of weeks using Debian Lenny amd64 (2.6.26
-kernel) on servers with dual Qlogic 2460 HBAs using multipathd, connecting to
-an EMC Clarion SAN.
+    Also fixed is the remove of _abort_unexecuted_bios hack, and use of
+    blk_end_request(,-ERROR,) to deallocate half baked requests. I've
+    audited the code and it should be safe.
 
-I came across this bug, but couldn't gauge how big of a concern this should be
-for us.  Is it recommended to use a kernel version of 2.6.20 or older at this
-point or is the behavior seen in this bug a rare/special case?
+    Reported and
+    Tested-by: Xu Yang <onlyxuyang@qq.com>
+    Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+[PATCH 2/2] osd_uld: Remove creation of osd_scsi class symlink
+
+    Remove the creation of the symlink from the device to
+    it's class. On modern systems this is already created by
+    a udev rule and would WARN on load. On old systems it is
+    not needed, none of the current osd user-mode tools use
+    this link.
+
+    Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+
+Please apply for inclusion in the next round of scsi fixes for
+2.6.30
+
+Thank you
+Boaz
