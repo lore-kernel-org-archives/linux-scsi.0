@@ -1,91 +1,132 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [Scst-devel] ISCSI-SCST performance (with also IET and STGT	data)
-Date: Tue, 31 Mar 2009 21:37:40 +0400
-Message-ID: <49D254E4.8050806@vlnb.net>
-References: <49D10256.8030307@vlnb.net>	<e2e108260903301106y2b750c23kfab978567f3de3a0@mail.gmail.com>	<49D11096.3070804@vlnb.net> <e2e108260903301153x38e86097vd29c47507da2879f@mail.gmail.com>
+From: "Ross S. W. Walker" <RWalker@medallion.com>
+Subject: Re: [Scst-devel] ISCSI-SCST performance
+	(withalso IET and STGT	data)
+Date: Tue, 31 Mar 2009 14:43:15 -0400
+Message-ID: <E2BB8074E5500C42984D980D4BD78EF9029E3D0B@MFG-NYC-EXCH2.mfg.prv>
+References: <49D10256.8030307@vlnb.net>	<e2e108260903301106y2b750c23kfab978567f3de3a0@mail.gmail.com>	<49D11096.3070804@vlnb.net><e2e108260903301153x38e86097vd29c47507da2879f@mail.gmail.com>
+	<49D254E4.8050806@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761845AbZCaRh6@vger.kernel.org>
-In-Reply-To: <e2e108260903301153x38e86097vd29c47507da2879f@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@gmail.com>
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <iscsitarget-devel-bounces@lists.sourceforge.net>
+Content-class: urn:content-classes:message
+In-Reply-To: <49D254E4.8050806@vlnb.net>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
+	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=iscsitarget-devel>
+List-Post: <mailto:iscsitarget-devel@lists.sourceforge.net>
+List-Help: <mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
+	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=subscribe>
+Errors-To: iscsitarget-devel-bounces@lists.sourceforge.net
+To: Vladislav Bolkhovitin <vst@vlnb.net>, Bart Van Assche <bart.vanassche@gmail.com>
 Cc: iscsitarget-devel@lists.sourceforge.net, scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, stgt@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Bart Van Assche, on 03/30/2009 10:53 PM wrote:
-> On Mon, Mar 30, 2009 at 8:33 PM, Vladislav Bolkhovitin <vst@vlnb.net>=
- wrote:
->> Bart Van Assche, on 03/30/2009 10:06 PM wrote:
->>> These are indeed interesting results. There are some aspects of the
->>> test setup I do not understand however:
->>> * All tests have been run with buffered I/O instead of direct I/O
->>> (iflag=3Ddirect / oflag=3Ddirect). My experience is that the result=
-s of
->>> tests with direct I/O are easier to reproduce (less variation betwe=
-en
->>> runs). So I have been wondering why the tests have been run with
->>> buffered I/O instead ?
->> Real applications use buffered I/O, hence it should be used in tests=
-=2E It
->>  evaluates all the storage stack on both initiator and target as a w=
-hole.
->> The results are very reproducible, variation is about 10%.
->=20
-> Most applications do indeed use buffered I/O. Database software
-> however often uses direct I/O. It might be interesting to publish
-> performance results for both buffered I/O and direct I/O.
+Vladislav Bolkhovitin wrote:
+> Bart Van Assche, on 03/30/2009 10:53 PM wrote:
+> > =
 
-Yes, sure
+> > Most applications do indeed use buffered I/O. Database software
+> > however often uses direct I/O. It might be interesting to publish
+> > performance results for both buffered I/O and direct I/O.
+> =
 
-> A quote from
-> the paper "Asynchronous I/O Support in Linux 2.5" by Bhattacharya e.a=
-=2E
-> (Linux Symposium, Ottawa, 2003):
->=20
-> Direct I/O (raw and O_DIRECT) transfers data between a user buffer an=
-d
-> a device without copying the data through the kernel=92s buffer cache=
-=2E
-> This mechanism can boost performance if the data is unlikely to be
-> used again in the short term (during a disk backup, for example), or
-> for applications such as large database management systems that
-> perform their own caching.
+> Yes, sure
+> =
 
-Please don't misread phrase "unlikely to be used again in the short=20
-term". If you have read-ahead, all your cached data is *likely* to be=20
-used "again" in the near future after they were read from storage,=20
-although only once in the first read by application. The same is true=20
-for write-back caching, where data written to the cache once for each=20
-command. Both read-ahead and write back are very important for good=20
-performance and O_DIRECT throws them away. All the modern HDDs have a=20
-memory buffer (cache) at least 2MB big on the cheapest ones. This cache=
-=20
-is essential for performance, although how can it make any difference i=
-f=20
-the host computer has, say, 1000 times more memory?
+> > A quote from
+> > the paper "Asynchronous I/O Support in Linux 2.5" by Bhattacharya e.a.
+> > (Linux Symposium, Ottawa, 2003):
+> > =
 
-Thus, to work effectively with O_DIRECT an application has to be very=20
-smart to workaround the lack of read-ahead and write back.
+> > Direct I/O (raw and O_DIRECT) transfers data between a user buffer and
+> > a device without copying the data through the kernel=92s buffer cache.
+> > This mechanism can boost performance if the data is unlikely to be
+> > used again in the short term (during a disk backup, for example), or
+> > for applications such as large database management systems that
+> > perform their own caching.
+> =
 
-I personally consider O_DIRECT (as well as BLOCKIO) as nothing more tha=
-n=20
-a workaround for possible flaws in the storage subsystem. If O_DIRECT=20
-works better, then in 99+% cases there is something in the storage=20
-subsystem, which should be fixed to perform better.
+> Please don't misread phrase "unlikely to be used again in the short =
 
-To be complete, there is one case where O_DIRECT and BLOCKIO have an=20
-advantage: both of them transfer data zero-copy. So they are good if=20
-your memory is too slow comparing to storage (InfiniBand case, for=20
-instance) and additional data copy hurts performance noticeably.
+> term". If you have read-ahead, all your cached data is *likely* to be =
 
-> Bart.
->=20
-> ---------------------------------------------------------------------=
----------
-> _______________________________________________
-> Scst-devel mailing list
-> Scst-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/scst-devel
->=20
+> used "again" in the near future after they were read from storage, =
+
+> although only once in the first read by application. The same is true =
+
+> for write-back caching, where data written to the cache once for each =
+
+> command. Both read-ahead and write back are very important for good =
+
+> performance and O_DIRECT throws them away. All the modern HDDs have a =
+
+> memory buffer (cache) at least 2MB big on the cheapest ones. =
+
+> This cache is essential for performance, although how can it make any =
+
+> difference if the host computer has, say, 1000 times more memory?
+> =
+
+> Thus, to work effectively with O_DIRECT an application has to be very =
+
+> smart to workaround the lack of read-ahead and write back.
+
+True, the application has to perform it's own read-ahead and write-back.
+
+Kind of like how a database does it, or maybe the page cache on the
+iSCSI initiator's system ;-)
+
+> I personally consider O_DIRECT (as well as BLOCKIO) as nothing more than =
+
+> a workaround for possible flaws in the storage subsystem. If O_DIRECT =
+
+> works better, then in 99+% cases there is something in the storage =
+
+> subsystem, which should be fixed to perform better.
+
+That's not true, page cached I/O is broken into page sizes which limits
+the I/O bandwidth of the storage hardware while imposing a higher CPU
+overhead. Obviously page-cached I/O isn't ideal for all situations.
+
+You could also have an amazing backend storage system with it's own
+NVRAM cache. Why put the performance overhead onto the target system
+when you can off-load it to the controller?
+
+> To be complete, there is one case where O_DIRECT and BLOCKIO have an =
+
+> advantage: both of them transfer data zero-copy. So they are good if =
+
+> your memory is too slow comparing to storage (InfiniBand case, for =
+
+> instance) and additional data copy hurts performance noticeably.
+
+The bottom line which will always be true:
+
+Know your workload, configure your storage to match.
+
+The best storage solutions allow the implementor the most flexibility
+in configuring the storage, which I think both IET and SCST do.
+
+IET just needs to fix how it does it workload with CFQ which
+somehow SCST has overcome. Of course SCST tweaks the Linux kernel to
+gain some extra speed.
+
+Vlad, how about a comparison of SCST vs IET without those kernel hooks?
+
+-Ross
+
+______________________________________________________________________
+This e-mail, and any attachments thereto, is intended only for use by
+the addressee(s) named herein and may contain legally privileged
+and/or confidential information. If you are not the intended recipient
+of this e-mail, you are hereby notified that any dissemination,
+distribution or copying of this e-mail, and any attachments thereto,
+is strictly prohibited. If you have received this e-mail in error,
+please immediately notify the sender and permanently delete the
+original and any copy or printout thereof.
+
+
+---------------------------------------------------------------------------=
+---
