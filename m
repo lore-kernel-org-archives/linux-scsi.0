@@ -1,316 +1,147 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: Subject: [PATCH] [Target_Core_Mod]: Add EVPD 0x83 NAA
-	Registered Extended Assigned identifer support
-Date: Mon, 30 Mar 2009 20:46:17 -0700
-Message-ID: <1238471177.4250.197.camel@haakon2.linux-iscsi.org>
-References: <1238299172.4250.116.camel@haakon2.linux-iscsi.org>
-	 <49CF9D57.3030607@interlog.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [stable] [PATCH] [SCSI] libiscsi: fix iscsi pool error path
+Date: Tue, 31 Mar 2009 01:38:09 -0500
+Message-ID: <49D1BA51.4@cs.wisc.edu>
+References: <200903291119.42080.jdelvare@suse.de> <20090330184458.GB11116@hera.kernel.org> <200903302134.30706.jdelvare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from n9a.bullet.mail.mud.yahoo.com ([209.191.87.108]:21911 "HELO
-	n9a.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755212AbZCaDqX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Mar 2009 23:46:23 -0400
-In-Reply-To: <49CF9D57.3030607@interlog.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:51540 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762345AbZCaGrk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 31 Mar 2009 02:47:40 -0400
+In-Reply-To: <200903302134.30706.jdelvare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Brad Fennell <wavebender@hotmail.com>, Jason Hodges <jasonahodges@gmail.com>, Rafiu Fakunle <rafiu@openfiler.com>
+To: Jean Delvare <jdelvare@suse.de>
+Cc: Chris Wright <chrisw@sous-sol.org>, stable@kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
-On Sun, 2009-03-29 at 12:09 -0400, Douglas Gilbert wrote:
-> Nicholas A. Bellinger wrote:
-> > Greetings all,
-> > 
-> > This patch adds emulation for EVPD 0x83 NAA identifier type (0x3) Registered
-> > Extended Assigned format (0x6) from spc4r17 section 7.7.3.6.5.  The WWN value
-> > is based on the emulated Unit Serial Number supplied via ConfigFS into
-> > /sys/kernel/config/target/core/$HBA/$DEV/wwn/evpd_unit_serial for a
-> > given storage object.
-> 
-> Nicholas,
-> May I suggest:
-> s/evpd_unit_serial/vpd_unit_serial/
-> 
-> The "E" in EVPD stands for "enable" and should be used to
-> refer to bit 0, byte 1 in the SCSI INQUIRY command block
-> (cdb). So together with the page code field (byte 2 of the
-> cdb) that forms a so-called "non-standard" INQUIRY requesting
-> a VPD page. I think all other usages should prefer "VPD"
-> or "vpd" (for "vital product data").
-> 
-> My sg3_utils package is partially responsible for the misuse
-> of EVPD and I have been slowly converting such instances
-> to VPD (hopefully I just stamped out the final ones).
-> 
+Jean Delvare wrote:
+> Hi Chris,
+>=20
+> Le lundi 30 mars 2009, Chris Wright a =E9crit :
+>> * Jean Delvare (jdelvare@suse.de) wrote:
+>>> --- linux-2.6.29-rc5.orig/drivers/scsi/libiscsi.c	2009-01-29 08:27:=
+19.000000000 +0100
+>>> +++ linux-2.6.29-rc5/drivers/scsi/libiscsi.c	2009-02-16 21:19:14.00=
+0000000 +0100
+>>> @@ -1944,7 +1944,7 @@ iscsi_pool_init(struct iscsi_pool *q, in
+>>>  		num_arrays++;
+>>>  	q->pool =3D kzalloc(num_arrays * max * sizeof(void*), GFP_KERNEL)=
+;
+>>>  	if (q->pool =3D=3D NULL)
+>>> -		goto enomem;
+>>> +		return -ENOMEM;
+>>> =20
+>>>  	q->queue =3D kfifo_init((void*)q->pool, max * sizeof(void*),
+>>>  			      GFP_KERNEL, NULL);
+>>> @@ -1979,8 +1979,7 @@ void iscsi_pool_free(struct iscsi_pool *
+>>> =20
+>>>  	for (i =3D 0; i < q->max; i++)
+>>>  		kfree(q->pool[i]);
+>>> -	if (q->pool)
+>>> -		kfree(q->pool);
+>>> +	kfree(q->pool);
+>>>  	kfree(q->queue);
+>> AFAICT, This is still broken.
+>>
+>> thanks,
+>> -chris
+>> --
+>>
+>> Subject: [PATCH] libiscsi: fix error path on iscsi_pool_init
+>>
+>> From: Chris Wright <chrisw@sous-sol.org>
+>>
+>> I'm not all that keen on kfifo_init returning ERR_PTR, but...
+>=20
+> Ah, I had not noticed this. Good catch!
+>=20
 
-Hi Doug,
-
-I always assumed the "E" meant Extended wrt SPC, but after looking at
-spc4r17 I noticed that only page code 0x86 (and not 0x83) actually
-refers to the Extended VPD page.
-
-This sounds like a good suggestion to me, and I will go ahead and make
-the change.  Thank you for your input!
-
---nab
-
-> Doug Gilbert
-> 
-> > This patch expects evpd_unit_serial to be in hex.  The first 24 bytes of
-> > evpd_unit_serial is then encoded in binary hex starting at the
-> > VENDOR_SPECIFIC_IDENTIFIER (36-bit) and VENDOR_SPECIFIC_IDENTIFIER_EXTENTION
-> > (64-bit) fields of the NAA identifier.
-> > 
-> > This patch also uses the OpenFabrics OUI (001405) for the IEEE Company ID
-> > field of the NAA identifier.  Note that the NAA (0x3) identifer is a requirement
-> > for logical unit WWN on certain iSCSI capable cluster clients.
-> > 
-> > These patches are made against lio-core-2.6.git/master and tested on
-> > v2.6.29 x86 32-bit HVM using sg_inq from sg3_utils. The lio-core-2.6.git tree
-> > can be found at: 
-> > 
-> > http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=summary
-> > 
-> > Here is what it looks like:
-> > 
-> > *) Set WWN value to target_core_mod/IBLOCK exported Linux LVM blockdevice
-> > 
-> > echo a97e4ce21c0711de829b000c2943d57b > $TARGET/iblock_0/lvm_test0/wwn/evpd_unit_serial
-> > 
-> > *) From target_core_mod side kernel buffer
-> > 
-> > IBLOCK: Created bio_set() for major/minor: 254:2
-> > iblock: Using SPC3_PERSISTENT_RESERVATIONS emulation
-> > iblock: Enabling ALUA Emulation for SPC-3 device
-> > iblock: Adding to default ALUA LU Group: core/alua/lu_gps/default_lu_gp
-> > CORE_iBLOCK[0] - Activating Device with TCQ: 0 at Major: 254 Minor 2
-> >   Vendor: LIO-ORG   Model: IBLOCK            Revision: 3.0
-> >   Type:   Direct-Access                      ANSI SCSI revision: 05
-> > T10 EVPD Unit Serial Number: a97e4ce21c0711de829b000c2943d57b
-> > T10 EVPD Page Length: 72
-> > T10 EVPD Identifer Length: 16
-> > T10 EVPD Identifier Association: addressed logical unit
-> > T10 EVPD Identifier Type: NAA
-> > T10 EVPD Binary Device Identifier: 36001405a97e4ce21c0711de829b000c2
-> > 
-> > *) From Open/iSCSI initiator side using sg_inq
-> > 
-> > initiator#~# sg_inq -p 0x83 -v /dev/sde
-> > VPD INQUIRY: Device Identification page
-> >     inquiry cdb: 12 01 83 00 fc 00
-> >   Designation descriptor number 1, descriptor length: 20
-> >     id_type: NAA,  code_set: Binary
-> >     associated with the addressed logical unit
-> >       NAA 6, IEEE Company_id: 0x1405
-> >       Vendor Specific Identifier: 0xa97e4ce21
-> >       Vendor Specific Identifier Extension: 0xc0711de829b000c2
-> >       [0x6001405a97e4ce21c0711de829b000c2]
-> >   Designation descriptor number 2, descriptor length: 52
-> >     id_type: T10 vendor identification,  code_set: ASCII
-> >     associated with the addressed logical unit
-> >       vendor id: LIO-ORG
-> >       vendor specific: IBLOCK:a97e4ce21c0711de829b000c2943d57b
-> >   Designation descriptor number 3, descriptor length: 8
-> >     transport: Internet SCSI (iSCSI)
-> >     id_type: Relative target port,  code_set: Binary
-> >     associated with the target port
-> >       Relative target port: 0x2
-> >   Designation descriptor number 4, descriptor length: 8
-> >     transport: Internet SCSI (iSCSI)
-> >     id_type: Target port group,  code_set: Binary
-> >     associated with the target port
-> >       Target port group: 0x0
-> >   Designation descriptor number 5, descriptor length: 8
-> >     id_type: Logical unit group,  code_set: Binary
-> >     associated with the addressed logical unit
-> >       Logical unit group: 0x0
-> >   Designation descriptor number 6, descriptor length: 72
-> >     transport: Internet SCSI (iSCSI)
-> >     id_type: SCSI name string,  code_set: UTF-8
-> >     associated with the target port
-> >       SCSI name string:
-> >       iqn.2003-01.org.linux-iscsi.target.i686:sn.cff3eedbd2fd,t,0x0001
-> > 
-> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> > ---
-> >  drivers/lio-core/target_core_transport.c |  117 +++++++++++++++++++++++++-----
-> >  1 files changed, 100 insertions(+), 17 deletions(-)
-> > 
-> > diff --git a/drivers/lio-core/target_core_transport.c b/drivers/lio-core/target_core_transport.c
-> > index 4132da1..e8879a9 100644
-> > --- a/drivers/lio-core/target_core_transport.c
-> > +++ b/drivers/lio-core/target_core_transport.c
-> > @@ -4142,6 +4142,33 @@ static inline void transport_get_maps(se_cmd_t *cmd)
-> >  	cmd->transport_unmap_SG_segments = &transport_generic_unmap_SG_segments;
-> >  }
-> >  
-> > +static unsigned char asciihex_to_binaryhex(unsigned char val[2])
-> > +{
-> > +	unsigned char result = 0;
-> > +	/*
-> > +	 * MSB
-> > +	 */
-> > +	if ((val[0] >= 'a') && (val[0] <= 'f'))
-> > +		result = ((val[0] - 'a' + 10) & 0xf) << 4;
-> > +	else
-> > +		if ((val[0] >= 'A') && (val[0] <= 'F'))
-> > +			result = ((val[0] - 'A' + 10) & 0xf) << 4;
-> > +		else /* digit */
-> > +			result = ((val[0] - '0') & 0xf) << 4;
-> > +	/*
-> > +	 * LSB
-> > +	 */
-> > +	if ((val[1] >= 'a') && (val[1] <= 'f'))
-> > +		result |= ((val[1] - 'a' + 10) & 0xf);
-> > +	else
-> > +		if ((val[1] >= 'A') && (val[1] <= 'F'))
-> > +			result |= ((val[1] - 'A' + 10) & 0xf);
-> > +		else /* digit */
-> > +			result |= ((val[1] - '0') & 0xf);
-> > +
-> > +	return result;
-> > +}
-> > +
-> >  extern int transport_generic_emulate_inquiry(
-> >  	se_cmd_t *cmd,
-> >  	unsigned char type,
-> > @@ -4157,10 +4184,11 @@ extern int transport_generic_emulate_inquiry(
-> >  	t10_alua_tg_pt_gp_member_t *tg_pt_gp_mem;
-> >  	unsigned char *buf = (unsigned char *) T_TASK(cmd)->t_task_buf;
-> >  	unsigned char *cdb = T_TASK(cmd)->t_task_cdb;
-> > -	unsigned char *iqn_sn;
-> > +	unsigned char *iqn_sn, binary, binary_new;
-> >  	u32 prod_len, iqn_sn_len, se_location_len;
-> >  	u32 unit_serial_len, off = 0;
-> > -	u16 len = 0;
-> > +	int i;
-> > +	u16 len = 0, id_len;
-> >  
-> >  	/*
-> >  	 * Make sure we at least have 8 bytes of INQUIRY response payload
-> > @@ -4256,10 +4284,61 @@ extern int transport_generic_emulate_inquiry(
-> >  		 * DESIGNATOR TYPEs see spc4r17 Table 459.
-> >  		 */
-> >  		buf[1] = 0x83;
-> > +		off = 4;
-> > +		/*
-> > +		 * NAA IEEE Registered Extended Assigned designator format,
-> > +		 * see spc4r17 section 7.7.3.6.5
-> > +		 *
-> > +		 * We depend upon a target_core_mod/ConfigFS provided
-> > +		 * /sys/kernel/config/target/core/$HBA/$DEV/wwn/evpd_unit_serial
-> > +		 * value in order to return the NAA id.
-> > +		 */
-> > +		if (!(dev->se_sub_dev->su_dev_flags &
-> > +					SDF_EMULATED_EVPD_UNIT_SERIAL))
-> > +			goto check_t10_vend_desc;
-> > +		if ((off + 20) > cmd->data_length)
-> > +			goto check_t10_vend_desc;
-> > +		/* CODE SET == Binary */
-> > +		buf[off++] = 0x1;
-> > +		/* Set ASSOICATION == addressed logical unit: 0)b */
-> > +		buf[off] = 0x00;
-> > +		/* Identifier/Designator type == NAA identifier */
-> > +		buf[off++] = 0x3;
-> > +		off++;
-> > +		/* Identifier/Designator length */
-> > +		buf[off++] = 0x10;
-> > +		/*
-> > +		 * Start NAA IEEE Registered Extended Identifier/Designator
-> > +		 */
-> > +		buf[off++] = (0x6 << 4);
-> > +		/*
-> > +		 * Use OpenFabrics IEEE Company ID: 00 14 05
-> > +		 */
-> > +		buf[off++] = 0x01;
-> > +		buf[off++] = 0x40;
-> > +		buf[off] = (0x5 << 4);
-> > +		/*
-> > +		 * Return ConfigFS Unit Serial Number information for
-> > +		 * VENDOR_SPECIFIC_IDENTIFIER and
-> > +		 * VENDOR_SPECIFIC_IDENTIFIER_EXTENTION
-> > +		 */
-> > +		binary = asciihex_to_binaryhex(
-> > +					&DEV_T10_WWN(dev)->unit_serial[0]);
-> > +		buf[off++] |= (binary & 0xf0) >> 4;
-> > +		for (i = 0; i < 24; i += 2) {
-> > +			binary_new = asciihex_to_binaryhex(
-> > +				&DEV_T10_WWN(dev)->unit_serial[i+2]);
-> > +			buf[off] = (binary & 0x0f) << 4;
-> > +			buf[off++] |= (binary_new & 0xf0) >> 4;
-> > +			binary = binary_new;
-> > +		}
-> > +		len = 20;
-> > +		off = (len + 4);
-> > +check_t10_vend_desc:
-> >  		/*
-> >  		 * T10 Vendor Identifier Page, see spc4r17 section 7.7.3.4
-> >  		 */
-> > -		len += 8; /* For Vendor field */
-> > +		id_len = 8; /* For Vendor field */
-> >  		prod_len = 4; /* For EVPD Header */
-> >  		prod_len += 8; /* For Vendor field */
-> >  		prod_len += strlen(prod);
-> > @@ -4271,12 +4350,14 @@ extern int transport_generic_emulate_inquiry(
-> >  				strlen(&DEV_T10_WWN(dev)->unit_serial[0]);
-> >  			unit_serial_len++; /* For NULL Terminator */
-> >  
-> > -			if (((len + 4) + (prod_len + unit_serial_len)) >
-> > +			if ((len + (id_len + 4) +
-> > +			    (prod_len + unit_serial_len)) >
-> >  					cmd->data_length) {
-> >  				len += (prod_len + unit_serial_len);
-> >  				goto check_port;
-> >  			}
-> > -			len += sprintf((unsigned char *)&buf[16], "%s:%s", prod,
-> > +			id_len += sprintf((unsigned char *)&buf[off+12],
-> > +					"%s:%s", prod,
-> >  					&DEV_T10_WWN(dev)->unit_serial[0]);
-> >  		} else {
-> >  			iqn_sn = transport_get_iqn_sn();
-> > @@ -4285,24 +4366,26 @@ extern int transport_generic_emulate_inquiry(
-> >  			se_location_len = strlen(se_location);
-> >  			se_location_len++; /* For NULL Terminator */
-> >  
-> > -			if (((len + 4) + (prod_len + iqn_sn_len +
-> > +			if ((len + (id_len + 4) + (prod_len + iqn_sn_len +
-> >  					se_location_len)) > cmd->data_length) {
-> >  				len += (prod_len + iqn_sn_len +
-> >  						se_location_len);
-> >  				goto check_port;
-> >  			}
-> > -			len += sprintf((unsigned char *)&buf[16], "%s:%s:%s",
-> > -					prod, iqn_sn, se_location);
-> > +			id_len += sprintf((unsigned char *)&buf[off+12],
-> > +				"%s:%s:%s", prod, iqn_sn, se_location);
-> >  		}
-> > -		buf[4] = 0x2; /* ASCII */
-> > -		buf[5] = 0x1; /* T10 Vendor ID */
-> > -		buf[6] = 0x0;
-> > -		memcpy((unsigned char *)&buf[8], "LIO-ORG", 8);
-> > -
-> > -		len++; /* Extra Byte for NULL Terminator */
-> > -		buf[7] = len; /* Identifier Length */
-> > -		len += 4; /* Header size for Designation descriptor */
-> > -		off = (len + 4);
-> > +		buf[off] = 0x2; /* ASCII */
-> > +		buf[off+1] = 0x1; /* T10 Vendor ID */
-> > +		buf[off+2] = 0x0;
-> > +		memcpy((unsigned char *)&buf[off+4], "LIO-ORG", 8);
-> > +		/* Extra Byte for NULL Terminator */
-> > +		id_len++;
-> > +		/* Identifier Length */
-> > +		buf[off+3] = id_len;
-> > +		/* Header size for Designation descriptor */
-> > +		len += (id_len + 4);
-> > +		off += (id_len + 4);
-> >  		/*
-> >  		 * se_port_t is only set for INQUIRY EVPD=1 through $FABRIC_MOD
-> >  		 */
-> 
-> 
+Yeah, thanks Chris.
 
 
+>> q->queue could be ERR_PTR(-ENOMEM) which will break unwinding
+>> on error.  Make iscsi_pool_free more defensive.
+>>
+>> Signed-off-by: Chris Wright <chrisw@sous-sol.org>
+>> ---
+>> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+>> index dfaa8ad..2f4df53 100644
+>> --- a/drivers/scsi/libiscsi.c
+>> +++ b/drivers/scsi/libiscsi.c
+>> @@ -1995,7 +1995,7 @@ iscsi_pool_init(struct iscsi_pool *q, int max,=
+ void ***items, int item_size)
+>>  		num_arrays++;
+>>  	q->pool =3D kzalloc(num_arrays * max * sizeof(void*), GFP_KERNEL);
+>>  	if (q->pool =3D=3D NULL)
+>> -		return -ENOMEM;
+>> +		goto enomem;
+>> =20
+>>  	q->queue =3D kfifo_init((void*)q->pool, max * sizeof(void*),
+>>  			      GFP_KERNEL, NULL);
+>> @@ -2028,10 +2028,13 @@ void iscsi_pool_free(struct iscsi_pool *q)
+>>  {
+>>  	int i;
+>> =20
+>> -	for (i =3D 0; i < q->max; i++)
+>> -		kfree(q->pool[i]);
+>> -	kfree(q->pool);
+>> -	kfree(q->queue);
+>> +	if (q->pool) {
+>> +		for (i =3D 0; i < q->max; i++)
+>> +			kfree(q->pool[i]);
+>> +		kfree(q->pool);
+>> +		if (!IS_ERR(q->queue))
+>> +			kfree(q->queue);
+>> +	}
+>>  }
+>>  EXPORT_SYMBOL_GPL(iscsi_pool_free);
+>=20
+> Making the freeing of q->queue dependent on q->pool being set looks
+> really weird (although it is correct at the moment. But this seems
+> to be fixable in a much simpler way:
+>=20
+> ---
+>  drivers/scsi/libiscsi.c |    4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+>=20
+> --- linux-2.6.30-rc0.orig/drivers/scsi/libiscsi.c	2009-03-30 09:27:48=
+=2E000000000 +0200
+> +++ linux-2.6.30-rc0/drivers/scsi/libiscsi.c	2009-03-30 21:15:13.0000=
+00000 +0200
+> @@ -1999,8 +1999,10 @@ iscsi_pool_init(struct iscsi_pool *q, in
+> =20
+>  	q->queue =3D kfifo_init((void*)q->pool, max * sizeof(void*),
+>  			      GFP_KERNEL, NULL);
+> -	if (q->queue =3D=3D ERR_PTR(-ENOMEM))
+> +	if (q->queue =3D=3D ERR_PTR(-ENOMEM)) {
+> +		q->queue =3D NULL;
+>  		goto enomem;
+> +	}
+> =20
+>  	for (i =3D 0; i < max; i++) {
+>  		q->pool[i] =3D kzalloc(item_size, GFP_KERNEL);
+>=20
+> With the benefit that only the error case is slowed down. In both
+> cases we have a problem if q->queue contains an error value but it's
+> not -ENOMEM. Apparently this can't happen today, but it doesn't feel
+> right to assume this will always be true. Maybe it's the right time
+> to fix this as well.
+>=20
+
+Yeah I agree. I will just modify the patch to check for IS_ERR(q->queue=
+)=20
+in there.
+
+I will do a quick sanity test on it here then pass it on to James with=20
+some other stuff for 2.6.30.
+
+Thanks.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
