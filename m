@@ -1,280 +1,418 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH] RFC scsi_error: handle REPORT_LUNS_DATA_CHANGED, CAPACITY_DATA_CHANGED,
-Date: Tue, 31 Mar 2009 13:47:55 -0500
-Message-ID: <12385252751209-git-send-email-michaelc@cs.wisc.edu>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH 3/14 v2] fcoe: Use per-CPU kernel function for dev_stats
+	instead of an array
+Date: Tue, 31 Mar 2009 15:51:50 -0700
+Message-ID: <20090331225150.14562.96936.stgit@fritz>
+References: <20090317184140.22987.74322.stgit@fritz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:48628 "EHLO mx2.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:40285 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1763215AbZCaSsE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 Mar 2009 14:48:04 -0400
+	id S1753558AbZCaWvw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 31 Mar 2009 18:51:52 -0400
+In-Reply-To: <20090317184140.22987.74322.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+Remove the hotplug creation of dev_stats, we allocate for all possible CPUs
+now when we allocate the lport.
 
-This patch passes userspace scsi command errors so userspace can
-handle events like REPORT_LUNS_DATA_CHANGED or CAPACITY_DATA_CHANGED.
-I also hooked it into the QUEUE_FULL parsing so that when we get this
-error userspace will begin to track devices and eventually ramp them
-up (ramp down is still in the kernel but could also be moved).
+v2: Durring the 2.6.30 merge window, before these patches were comitted,
+'percpu_ptr' was renamed 'per_cpu_ptr'. This latest update updates this
+patch for the name change.
 
-Why not just do it in the kernel? After open-iscsi, I would love
-to put almost everything in the kernel, because its split has been
-fun to support :) However, for some of the operations we must handle
-userspace might be easier. I am not 100% sure though and that is one
-of the reasons this is a RFC.
-
-Rescanning a target port is pretty easy today in the kernel. We can
-just kick off a thread and run scsi_scan_target. However, in userspace
-there are already tools that will also handle the removal of old
-devices.
-
-And where it really gets hairy is with handling device size changes.
-Here is some doc on how to resize the disk when iscsi is used:
-http://www.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/5.2/html/Online_Storage_Reconfiguration_Guide/online-iscsi-resizing.html
-
-For FC or SAS the process is similar. Instead of running some iscsi tool
-to rescan devices you can just write to the devices's rescan sysfs attr
-(that is all iscsiadm is doing). Then the multipath steps are the same.
-And then there is the filesystem which will need to be resized too.
-
-Going forward, if this is ok, I think we could also start passing
-userspace DID_TRANSPORT* errors so something like multipath can do
-something with it like fail paths. I could also add some scsi_mod sysfs
-interface to control which errors get sent to userspace and how often
-(something like a ratelimit printk so userspace does not get flooded).
-
-I did a really hacky userspace handler to get started and test the
-kernel code but I am too embarrased of it to post it :) If you want
-to see it just email me off list.
-
-Patch was made over linus's git tree.
-
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+Signed-off-by: Yi Zou <yi.zou@intel.com>
+Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/scsi_error.c   |   83 +++++++++++++++++++++++++++++++++++++++----
- include/scsi/scsi_netlink.h |   25 ++++++++++++-
- 2 files changed, 99 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 0c2c73b..8a4d10e 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -24,6 +24,7 @@
- #include <linux/interrupt.h>
- #include <linux/blkdev.h>
- #include <linux/delay.h>
-+#include <net/netlink.h>
+ drivers/scsi/fcoe/fcoe_sw.c   |   13 +---
+ drivers/scsi/fcoe/libfcoe.c   |  143 +++++------------------------------------
+ drivers/scsi/libfc/fc_fcp.c   |    8 +-
+ drivers/scsi/libfc/fc_lport.c |   11 ++-
+ include/scsi/libfc.h          |   23 ++++++-
+ 5 files changed, 53 insertions(+), 145 deletions(-)
+
+diff --git a/drivers/scsi/fcoe/fcoe_sw.c b/drivers/scsi/fcoe/fcoe_sw.c
+index 2bbbe3c..a675390 100644
+--- a/drivers/scsi/fcoe/fcoe_sw.c
++++ b/drivers/scsi/fcoe/fcoe_sw.c
+@@ -113,8 +113,6 @@ static struct scsi_host_template fcoe_sw_shost_template = {
+  */
+ static int fcoe_sw_lport_config(struct fc_lport *lp)
+ {
+-	int i = 0;
+-
+ 	lp->link_up = 0;
+ 	lp->qfull = 0;
+ 	lp->max_retry_count = 3;
+@@ -123,12 +121,7 @@ static int fcoe_sw_lport_config(struct fc_lport *lp)
+ 	lp->service_params = (FCP_SPPF_INIT_FCN | FCP_SPPF_RD_XRDY_DIS |
+ 			      FCP_SPPF_RETRY | FCP_SPPF_CONF_COMPL);
  
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -33,6 +34,7 @@
- #include <scsi/scsi_transport.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_ioctl.h>
-+#include <scsi/scsi_netlink.h>
+-	/*
+-	 * allocate per cpu stats block
+-	 */
+-	for_each_online_cpu(i)
+-		lp->dev_stats[i] = kzalloc(sizeof(struct fcoe_dev_stats),
+-					   GFP_KERNEL);
++	fc_lport_init_stats(lp);
  
- #include "scsi_priv.h"
- #include "scsi_logging.h"
-@@ -214,9 +216,71 @@ static inline void scsi_eh_prt_fail_stats(struct Scsi_Host *shost,
- #endif
+ 	/* lport fc_lport related configuration */
+ 	fc_lport_config(lp);
+@@ -311,7 +304,6 @@ static inline int fcoe_sw_em_config(struct fc_lport *lp)
+  */
+ static int fcoe_sw_destroy(struct net_device *netdev)
+ {
+-	int cpu;
+ 	struct fc_lport *lp = NULL;
+ 	struct fcoe_softc *fc;
+ 	u8 flogi_maddr[ETH_ALEN];
+@@ -363,8 +355,7 @@ static int fcoe_sw_destroy(struct net_device *netdev)
+ 	fcoe_clean_pending_queue(lp);
  
+ 	/* Free memory used by statistical counters */
+-	for_each_online_cpu(cpu)
+-		kfree(lp->dev_stats[cpu]);
++	fc_lport_free_stats(lp);
+ 
+ 	/* Release the net_device and Scsi_Host */
+ 	dev_put(fc->real_dev);
+diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
+index d22275b..648a2fc 100644
+--- a/drivers/scsi/fcoe/libfcoe.c
++++ b/drivers/scsi/fcoe/libfcoe.c
+@@ -71,9 +71,6 @@ DEFINE_PER_CPU(struct fcoe_percpu_s, fcoe_percpu);
+ /* Function Prototyes */
+ static int fcoe_check_wait_queue(struct fc_lport *);
+ static void fcoe_recv_flogi(struct fcoe_softc *, struct fc_frame *, u8 *);
+-#ifdef CONFIG_HOTPLUG_CPU
+-static int fcoe_cpu_callback(struct notifier_block *, ulong, void *);
+-#endif /* CONFIG_HOTPLUG_CPU */
+ static int fcoe_device_notification(struct notifier_block *, ulong, void *);
+ static void fcoe_dev_setup(void);
+ static void fcoe_dev_cleanup(void);
+@@ -83,87 +80,6 @@ static struct notifier_block fcoe_notifier = {
+ 	.notifier_call = fcoe_device_notification,
+ };
+ 
+-
+-#ifdef CONFIG_HOTPLUG_CPU
+-static struct notifier_block fcoe_cpu_notifier = {
+-	.notifier_call = fcoe_cpu_callback,
+-};
+-
+-/**
+- * fcoe_create_percpu_data() - creates the associated cpu data
+- * @cpu: index for the cpu where fcoe cpu data will be created
+- *
+- * create percpu stats block, from cpu add notifier
+- *
+- * Returns: none
+- */
+-static void fcoe_create_percpu_data(unsigned int cpu)
+-{
+-	struct fc_lport *lp;
+-	struct fcoe_softc *fc;
+-
+-	write_lock_bh(&fcoe_hostlist_lock);
+-	list_for_each_entry(fc, &fcoe_hostlist, list) {
+-		lp = fc->lp;
+-		if (lp->dev_stats[cpu] == NULL)
+-			lp->dev_stats[cpu] =
+-				kzalloc(sizeof(struct fcoe_dev_stats),
+-					GFP_KERNEL);
+-	}
+-	write_unlock_bh(&fcoe_hostlist_lock);
+-}
+-
+-/**
+- * fcoe_destroy_percpu_data() - destroys the associated cpu data
+- * @cpu: index for the cpu where fcoe cpu data will destroyed
+- *
+- * destroy percpu stats block called by cpu add/remove notifier
+- *
+- * Retuns: none
+- */
+-static void fcoe_destroy_percpu_data(unsigned int cpu)
+-{
+-	struct fc_lport *lp;
+-	struct fcoe_softc *fc;
+-
+-	write_lock_bh(&fcoe_hostlist_lock);
+-	list_for_each_entry(fc, &fcoe_hostlist, list) {
+-		lp = fc->lp;
+-		kfree(lp->dev_stats[cpu]);
+-		lp->dev_stats[cpu] = NULL;
+-	}
+-	write_unlock_bh(&fcoe_hostlist_lock);
+-}
+-
+-/**
+- * fcoe_cpu_callback() - fcoe cpu hotplug event callback
+- * @nfb: callback data block
+- * @action: event triggering the callback
+- * @hcpu: index for the cpu of this event
+- *
+- * this creates or destroys per cpu data for fcoe
+- *
+- * Returns NOTIFY_OK always.
+- */
+-static int fcoe_cpu_callback(struct notifier_block *nfb, unsigned long action,
+-			     void *hcpu)
+-{
+-	unsigned int cpu = (unsigned long)hcpu;
+-
+-	switch (action) {
+-	case CPU_ONLINE:
+-		fcoe_create_percpu_data(cpu);
+-		break;
+-	case CPU_DEAD:
+-		fcoe_destroy_percpu_data(cpu);
+-		break;
+-	default:
+-		break;
+-	}
+-	return NOTIFY_OK;
+-}
+-#endif /* CONFIG_HOTPLUG_CPU */
+-
  /**
-+ * scsi_post_cmd_error - Pass scsi command failure info to userspace parser
-+ * @scmd: scsi command
-+ */
-+static void scsi_post_cmd_error(struct scsi_cmnd *scmd)
+  * fcoe_rcv() - this is the fcoe receive function called by NET_RX_SOFTIRQ
+  * @skb: the receive skb
+@@ -181,7 +97,6 @@ int fcoe_rcv(struct sk_buff *skb, struct net_device *dev,
+ 	struct fc_lport *lp;
+ 	struct fcoe_rcv_info *fr;
+ 	struct fcoe_softc *fc;
+-	struct fcoe_dev_stats *stats;
+ 	struct fc_frame_header *fh;
+ 	struct fcoe_percpu_s *fps;
+ 	unsigned short oxid;
+@@ -252,13 +167,7 @@ int fcoe_rcv(struct sk_buff *skb, struct net_device *dev,
+ 
+ 	return 0;
+ err:
+-#ifdef CONFIG_SMP
+-	stats = lp->dev_stats[smp_processor_id()];
+-#else
+-	stats = lp->dev_stats[0];
+-#endif
+-	if (stats)
+-		stats->ErrorFrames++;
++	fc_lport_get_stats(lp)->ErrorFrames++;
+ 
+ err2:
+ 	kfree_skb(skb);
+@@ -495,11 +404,9 @@ int fcoe_xmit(struct fc_lport *lp, struct fc_frame *fp)
+ 	}
+ #endif
+ 	/* update tx stats: regardless if LLD fails */
+-	stats = lp->dev_stats[smp_processor_id()];
+-	if (stats) {
+-		stats->TxFrames++;
+-		stats->TxWords += wlen;
+-	}
++	stats = fc_lport_get_stats(lp);
++	stats->TxFrames++;
++	stats->TxWords += wlen;
+ 
+ 	/* send down to lld */
+ 	fr_dev(fp) = lp;
+@@ -565,8 +472,6 @@ int fcoe_percpu_receive_thread(void *arg)
+ 			continue;
+ 		}
+ 
+-		stats = lp->dev_stats[smp_processor_id()];
+-
+ 		if (unlikely(debug_fcoe)) {
+ 			FC_DBG("skb_info: len:%d data_len:%d head:%p data:%p "
+ 			       "tail:%p end:%p sum:%d dev:%s",
+@@ -593,13 +498,16 @@ int fcoe_percpu_receive_thread(void *arg)
+ 		hp = (struct fcoe_hdr *) skb_network_header(skb);
+ 		fh = (struct fc_frame_header *) skb_transport_header(skb);
+ 
++		stats = fc_lport_get_stats(lp);
+ 		if (unlikely(FC_FCOE_DECAPS_VER(hp) != FC_FCOE_VER)) {
+-			if (stats) {
+-				if (stats->ErrorFrames < 5)
+-					FC_DBG("unknown FCoE version %x",
+-					       FC_FCOE_DECAPS_VER(hp));
+-				stats->ErrorFrames++;
+-			}
++			if (stats->ErrorFrames < 5)
++				printk(KERN_WARNING "FCoE version "
++				       "mismatch: The frame has "
++				       "version %x, but the "
++				       "initiator supports version "
++				       "%x\n", FC_FCOE_DECAPS_VER(hp),
++				       FC_FCOE_VER);
++			stats->ErrorFrames++;
+ 			kfree_skb(skb);
+ 			continue;
+ 		}
+@@ -607,10 +515,8 @@ int fcoe_percpu_receive_thread(void *arg)
+ 		skb_pull(skb, sizeof(struct fcoe_hdr));
+ 		fr_len = skb->len - sizeof(struct fcoe_crc_eof);
+ 
+-		if (stats) {
+-			stats->RxFrames++;
+-			stats->RxWords += fr_len / FCOE_WORD_TO_BYTE;
+-		}
++		stats->RxFrames++;
++		stats->RxWords += fr_len / FCOE_WORD_TO_BYTE;
+ 
+ 		fp = (struct fc_frame *)skb;
+ 		fc_frame_init(fp);
+@@ -885,9 +791,8 @@ static int fcoe_device_notification(struct notifier_block *notifier,
+ 		if (new_link_up)
+ 			fc_linkup(lp);
+ 		else {
+-			stats = lp->dev_stats[smp_processor_id()];
+-			if (stats)
+-				stats->LinkFailureCount++;
++			stats = fc_lport_get_stats(lp);
++			stats->LinkFailureCount++;
+ 			fc_linkdown(lp);
+ 			fcoe_clean_pending_queue(lp);
+ 		}
+@@ -1371,10 +1276,6 @@ static int __init fcoe_init(void)
+ 	INIT_LIST_HEAD(&fcoe_hostlist);
+ 	rwlock_init(&fcoe_hostlist_lock);
+ 
+-#ifdef CONFIG_HOTPLUG_CPU
+-	register_cpu_notifier(&fcoe_cpu_notifier);
+-#endif /* CONFIG_HOTPLUG_CPU */
+-
+ 	for_each_possible_cpu(cpu) {
+ 		p = &per_cpu(fcoe_percpu, cpu);
+ 		skb_queue_head_init(&p->fcoe_rx_list);
+@@ -1430,17 +1331,9 @@ static void __exit fcoe_exit(void)
+ 	struct fcoe_percpu_s *p;
+ 	struct sk_buff *skb;
+ 
+-	/*
+-	 * Stop all call back interfaces
+-	 */
+-#ifdef CONFIG_HOTPLUG_CPU
+-	unregister_cpu_notifier(&fcoe_cpu_notifier);
+-#endif /* CONFIG_HOTPLUG_CPU */
+ 	fcoe_dev_cleanup();
+ 
+-	/*
+-	 * stop timer
+-	 */
++	/* Stop the timer */
+ 	del_timer_sync(&fcoe_timer);
+ 
+ 	/* releases the associated fcoe transport for each lport */
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index a5725f3..0997e8b 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -407,10 +407,12 @@ static void fc_fcp_recv_data(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
+ 
+ 		if (~crc != le32_to_cpu(fr_crc(fp))) {
+ crc_err:
+-			stats = lp->dev_stats[smp_processor_id()];
++			stats = fc_lport_get_stats(lp);
+ 			stats->ErrorFrames++;
++			/* FIXME - per cpu count, not total count! */
+ 			if (stats->InvalidCRCCount++ < 5)
+-				FC_DBG("CRC error on data frame\n");
++				printk(KERN_WARNING "CRC error on data frame for port (%6x)\n",
++				       fc_host_port_id(lp->host));
+ 			/*
+ 			 * Assume the frame is total garbage.
+ 			 * We may have copied it over the good part
+@@ -1752,7 +1754,7 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
+ 	/*
+ 	 * setup the data direction
+ 	 */
+-	stats = lp->dev_stats[smp_processor_id()];
++	stats = fc_lport_get_stats(lp);
+ 	if (sc_cmd->sc_data_direction == DMA_FROM_DEVICE) {
+ 		fsp->req_flags = FC_SRB_READ;
+ 		stats->InputRequests++;
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index 7ef4450..b8178ef 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -267,10 +267,10 @@ EXPORT_SYMBOL(fc_get_host_speed);
+ 
+ struct fc_host_statistics *fc_get_host_stats(struct Scsi_Host *shost)
+ {
+-	int i;
+ 	struct fc_host_statistics *fcoe_stats;
+ 	struct fc_lport *lp = shost_priv(shost);
+ 	struct timespec v0, v1;
++	unsigned int cpu;
+ 
+ 	fcoe_stats = &lp->host_stats;
+ 	memset(fcoe_stats, 0, sizeof(struct fc_host_statistics));
+@@ -279,10 +279,11 @@ struct fc_host_statistics *fc_get_host_stats(struct Scsi_Host *shost)
+ 	jiffies_to_timespec(lp->boot_time, &v1);
+ 	fcoe_stats->seconds_since_last_reset = (v0.tv_sec - v1.tv_sec);
+ 
+-	for_each_online_cpu(i) {
+-		struct fcoe_dev_stats *stats = lp->dev_stats[i];
+-		if (stats == NULL)
+-			continue;
++	for_each_possible_cpu(cpu) {
++		struct fcoe_dev_stats *stats;
++
++		stats = per_cpu_ptr(lp->dev_stats, cpu);
++
+ 		fcoe_stats->tx_frames += stats->TxFrames;
+ 		fcoe_stats->tx_words += stats->TxWords;
+ 		fcoe_stats->rx_frames += stats->RxFrames;
+diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
+index a70eafa..4e1d394 100644
+--- a/include/scsi/libfc.h
++++ b/include/scsi/libfc.h
+@@ -22,6 +22,7 @@
+ 
+ #include <linux/timer.h>
+ #include <linux/if.h>
++#include <linux/percpu.h>
+ 
+ #include <scsi/scsi_transport.h>
+ #include <scsi/scsi_transport_fc.h>
+@@ -661,7 +662,8 @@ struct fc_lport {
+ 	unsigned long		boot_time;
+ 
+ 	struct fc_host_statistics host_stats;
+-	struct fcoe_dev_stats	*dev_stats[NR_CPUS];
++	struct fcoe_dev_stats	*dev_stats;
++
+ 	u64			wwpn;
+ 	u64			wwnn;
+ 	u8			retry_count;
+@@ -722,6 +724,25 @@ static inline void fc_lport_state_enter(struct fc_lport *lp,
+ 	lp->state = state;
+ }
+ 
++static inline int fc_lport_init_stats(struct fc_lport *lp)
 +{
-+	struct sk_buff *skb;
-+	struct nlmsghdr *nlh;
-+	struct scsi_nl_cmd_err_event *ev;
-+	struct scsi_sense_hdr sshdr;
-+	u32 len, skblen;
-+	u16 sense_len = 0;
-+
-+	if (!scsi_nl_sock)
-+		return;
-+
-+	if (status_byte(scmd->result) == CHECK_CONDITION &&
-+	    scsi_command_normalize_sense(scmd, &sshdr))
-+		sense_len = SCSI_SENSE_BUFFERSIZE;
-+
-+	len = SCSI_NL_MSGALIGN(sizeof(*ev) + sense_len);
-+	skblen = NLMSG_SPACE(len);
-+
-+	skb = alloc_skb(skblen, GFP_ATOMIC);
-+	if (!skb) {
-+		scmd_printk(KERN_INFO, scmd, "Could not pass sense to "
-+			    "userspace. Could not allocate buffer.\n");
-+		return;
-+	}
-+
-+	nlh = nlmsg_put(skb, 0, 0, SCSI_TRANSPORT_MSG,
-+			skblen - sizeof(*nlh), 0);
-+	if (!nlh) {
-+		scmd_printk(KERN_INFO, scmd, "Could not pass sense to "
-+			    "userspace. Could not setup buffer space.\n");
-+		goto free_skb;
-+	}
-+
-+	ev = NLMSG_DATA(nlh);
-+	INIT_SCSI_NL_HDR(&ev->snlh, 0, SCSI_NL_CMD_ERR, len);
-+	ev->seconds = get_seconds();
-+	ev->host_no = scmd->device->host->host_no;
-+	ev->id = scmd->device->id;
-+	ev->channel = scmd->device->channel;
-+	ev->lun = scmd->device->lun;
-+
-+	ev->status = scmd->result & 0xff;
-+	ev->masked_status = status_byte(scmd->result);
-+	ev->msg_status = msg_byte(scmd->result);
-+	ev->host_status = host_byte(scmd->result);
-+	ev->driver_status = driver_byte(scmd->result);
-+	ev->sense_len = sense_len;
-+
-+	if (sense_len)
-+		memcpy(&ev[1], scmd->sense_buffer, sense_len);
-+	nlmsg_multicast(scsi_nl_sock, skb, 0, SCSI_NL_GRP_CMD_ERR, GFP_ATOMIC);
-+	return;
-+
-+free_skb:
-+	kfree_skb(skb);
++	/* allocate per cpu stats block */
++	lp->dev_stats = alloc_percpu(struct fcoe_dev_stats);
++	if (!lp->dev_stats)
++		return -ENOMEM;
++	return 0;
 +}
 +
-+/**
-  * scsi_check_sense - Examine scsi cmd sense
-  * @scmd:	Cmd to have sense checked.
-- *
-+ * @post_err:	bool indicating whether to notify userspace
-  * Return value:
-  * 	SUCCESS or FAILED or NEEDS_RETRY
-  *
-@@ -224,7 +288,7 @@ static inline void scsi_eh_prt_fail_stats(struct Scsi_Host *shost,
-  *	When a deferred error is detected the current command has
-  *	not been executed and needs retrying.
-  */
--static int scsi_check_sense(struct scsi_cmnd *scmd)
-+static int scsi_check_sense(struct scsi_cmnd *scmd, bool post_err)
- {
- 	struct scsi_device *sdev = scmd->device;
- 	struct scsi_sense_hdr sshdr;
-@@ -232,6 +296,9 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
- 	if (! scsi_command_normalize_sense(scmd, &sshdr))
- 		return FAILED;	/* no valid sense data */
- 
-+	if (post_err)
-+		scsi_post_cmd_error(scmd);
++static inline void fc_lport_free_stats(struct fc_lport *lp)
++{
++	free_percpu(lp->dev_stats);
++}
 +
- 	if (scsi_sense_is_deferred(&sshdr))
- 		return NEEDS_RETRY;
- 
-@@ -354,7 +421,7 @@ static int scsi_eh_completed_normally(struct scsi_cmnd *scmd)
- 		 * is valid, we have a pretty good idea of what to do.
- 		 * if not, we mark it as FAILED.
- 		 */
--		return scsi_check_sense(scmd);
-+		return scsi_check_sense(scmd, 1);
- 	}
- 	if (host_byte(scmd->result) != DID_OK)
- 		return FAILED;
-@@ -374,7 +441,7 @@ static int scsi_eh_completed_normally(struct scsi_cmnd *scmd)
- 	case COMMAND_TERMINATED:
- 		return SUCCESS;
- 	case CHECK_CONDITION:
--		return scsi_check_sense(scmd);
-+		return scsi_check_sense(scmd, 1);
- 	case CONDITION_GOOD:
- 	case INTERMEDIATE_GOOD:
- 	case INTERMEDIATE_C_GOOD:
-@@ -382,8 +449,9 @@ static int scsi_eh_completed_normally(struct scsi_cmnd *scmd)
- 		 * who knows?  FIXME(eric)
- 		 */
- 		return SUCCESS;
--	case BUSY:
- 	case QUEUE_FULL:
-+		scsi_post_cmd_error(scmd);
-+	case BUSY:
- 	case RESERVATION_CONFLICT:
- 	default:
- 		return FAILED;
-@@ -951,7 +1019,7 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
- 		stu_scmd = NULL;
- 		list_for_each_entry(scmd, work_q, eh_entry)
- 			if (scmd->device == sdev && SCSI_SENSE_VALID(scmd) &&
--			    scsi_check_sense(scmd) == FAILED ) {
-+			    scsi_check_sense(scmd, 0) == FAILED ) {
- 				stu_scmd = scmd;
- 				break;
- 			}
-@@ -1380,6 +1448,7 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 	 */
- 	switch (status_byte(scmd->result)) {
- 	case QUEUE_FULL:
-+		scsi_post_cmd_error(scmd);
- 		/*
- 		 * the case of trying to send too many commands to a
- 		 * tagged queueing device.
-@@ -1398,7 +1467,7 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 	case TASK_ABORTED:
- 		goto maybe_retry;
- 	case CHECK_CONDITION:
--		rtn = scsi_check_sense(scmd);
-+		rtn = scsi_check_sense(scmd, 1);
- 		if (rtn == NEEDS_RETRY)
- 			goto maybe_retry;
- 		/* if rtn == FAILED, we have no sense information;
-diff --git a/include/scsi/scsi_netlink.h b/include/scsi/scsi_netlink.h
-index 536752c..2cac0f5 100644
---- a/include/scsi/scsi_netlink.h
-+++ b/include/scsi/scsi_netlink.h
-@@ -35,8 +35,8 @@
- /* SCSI Transport Broadcast Groups */
- 	/* leaving groups 0 and 1 unassigned */
- #define SCSI_NL_GRP_FC_EVENTS		(1<<2)		/* Group 2 */
--#define SCSI_NL_GRP_CNT			3
--
-+#define SCSI_NL_GRP_CMD_ERR		(1<<3)
-+#define SCSI_NL_GRP_CNT			4
- 
- /* SCSI_TRANSPORT_MSG event message header */
- struct scsi_nl_hdr {
-@@ -65,6 +65,7 @@ struct scsi_nl_hdr {
-  */
- 	/* kernel -> user */
- #define SCSI_NL_SHOST_VENDOR			0x0001
-+#define SCSI_NL_CMD_ERR				0x0002
- 	/* user -> kernel */
- /* SCSI_NL_SHOST_VENDOR msgtype is kernel->user and user->kernel */
- 
-@@ -76,6 +77,26 @@ struct scsi_nl_hdr {
- /* macro to round up message lengths to 8byte boundary */
- #define SCSI_NL_MSGALIGN(len)		(((len) + 7) & ~7)
- 
-+/*
-+ * SCSI CMD error event:
-+ *   SCSI_NL_CMD_ERR
-+ *
-+ * Note: The sense buffer is placed after this structure.
-+ */
-+struct scsi_nl_cmd_err_event {
-+	struct scsi_nl_hdr snlh;	/* must be 1st element ! */
-+	uint64_t seconds;
-+	uint64_t host_no;
-+	uint64_t lun;
-+	uint32_t channel;
-+	uint32_t id;
-+	uint16_t sense_len;		/* len of sense buffer */	
-+	uint8_t status;			/* scsi status */
-+	uint8_t masked_status;		/* shifted, masked scsi status */
-+	uint8_t msg_status;		/* messaging level data (optional) */
-+	uint8_t host_status;		/* errors from host adapter */
-+	uint8_t driver_status;		/* errors from software driver */
-+} __attribute__((aligned(sizeof(uint64_t))));
++static inline struct fcoe_dev_stats *fc_lport_get_stats(struct fc_lport *lp)
++{
++	return per_cpu_ptr(lp->dev_stats, smp_processor_id());
++}
++
  
  /*
-  * SCSI HOST Vendor Unique messages :
--- 
-1.6.0.6
+  * LOCAL PORT LAYER
 
