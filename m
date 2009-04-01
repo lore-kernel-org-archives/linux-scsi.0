@@ -1,37 +1,48 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 1/2] config: Make need for SCSI_CDROM clearer
-Date: Wed, 1 Apr 2009 09:30:46 -0600
-Message-ID: <20090401153046.GC8014@parisc-linux.org>
-References: <20090401135952.22599.26719.stgit@localhost.localdomain> <20090401140014.22599.40007.stgit@localhost.localdomain>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH 1/3] sg: kill unused SZ_SG_IOVEC define
+Date: Wed, 01 Apr 2009 12:40:06 -0400
+Message-ID: <49D398E6.6070907@interlog.com>
+References: <1236733367-30967-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:36385 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754820AbZDAPbF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Apr 2009 11:31:05 -0400
-Content-Disposition: inline
-In-Reply-To: <20090401140014.22599.40007.stgit@localhost.localdomain>
+Received: from smtp.infotech.no ([82.134.31.41]:54568 "EHLO
+	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760325AbZDAQkQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Apr 2009 12:40:16 -0400
+In-Reply-To: <1236733367-30967-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-On Wed, Apr 01, 2009 at 03:00:18PM +0100, Alan Cox wrote:
-> Mention ATAPI. We could insert an essay about libata and ide-scsi etc but
-> the failure case is someone enables it which is just fine so keep it
-> simple.
+FUJITA Tomonori wrote:
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> ---
+>  drivers/scsi/sg.c |    1 -
+>  1 files changed, 0 insertions(+), 1 deletions(-)
 > 
-> (Revised text from suggestion by Matthew Wilcox)
-> 
-> Closes #7736
-> 
-> Signed-off-by: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> index 17d1bd5..e84536b 100644
+> --- a/drivers/scsi/sg.c
+> +++ b/drivers/scsi/sg.c
+> @@ -204,7 +204,6 @@ static void sg_put_dev(Sg_device *sdp);
+>  
+>  #define SZ_SG_HEADER sizeof(struct sg_header)
+>  #define SZ_SG_IO_HDR sizeof(sg_io_hdr_t)
+> -#define SZ_SG_IOVEC sizeof(sg_iovec_t)
+>  #define SZ_SG_REQ_INFO sizeof(sg_req_info_t)
+>  
+>  static int sg_allow_access(struct file *filp, unsigned char *cmd)
 
-Reviewed-by: Matthew Wilcox <willy@linux.intel.com>
+For this patch:
+   [PATCH 1/3] sg: kill unused SZ_SG_IOVEC define
+plus:
+   [PATCH 2/3] sg: remove unnecessary type casts
+   [PATCH 3/3] sg: remove unnecessary forward declaration
+originally submitted 20090310
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+
