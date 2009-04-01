@@ -1,46 +1,37 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 1/3] sg: kill unused SZ_SG_IOVEC define
-Date: Wed, 1 Apr 2009 23:03:41 +0900
-Message-ID: <20090401230303H.fujita.tomonori@lab.ntt.co.jp>
-References: <1236733367-30967-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 1/2] config: Make need for SCSI_CDROM clearer
+Date: Wed, 1 Apr 2009 09:30:46 -0600
+Message-ID: <20090401153046.GC8014@parisc-linux.org>
+References: <20090401135952.22599.26719.stgit@localhost.localdomain> <20090401140014.22599.40007.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mfo11.iij4u.or.jp ([210.138.174.81]:35096 "EHLO
-	mfo11.iij4u.or.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762487AbZDAOom (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Apr 2009 10:44:42 -0400
-In-Reply-To: <1236733367-30967-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Received: from palinux.external.hp.com ([192.25.206.14]:36385 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754820AbZDAPbF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Apr 2009 11:31:05 -0400
+Content-Disposition: inline
+In-Reply-To: <20090401140014.22599.40007.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 11 Mar 2009 10:02:45 +0900
-FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> ---
->  drivers/scsi/sg.c |    1 -
->  1 files changed, 0 insertions(+), 1 deletions(-)
+On Wed, Apr 01, 2009 at 03:00:18PM +0100, Alan Cox wrote:
+> Mention ATAPI. We could insert an essay about libata and ide-scsi etc but
+> the failure case is someone enables it which is just fine so keep it
+> simple.
 > 
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index 17d1bd5..e84536b 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -204,7 +204,6 @@ static void sg_put_dev(Sg_device *sdp);
->  
->  #define SZ_SG_HEADER sizeof(struct sg_header)
->  #define SZ_SG_IO_HDR sizeof(sg_io_hdr_t)
-> -#define SZ_SG_IOVEC sizeof(sg_iovec_t)
->  #define SZ_SG_REQ_INFO sizeof(sg_req_info_t)
->  
->  static int sg_allow_access(struct file *filp, unsigned char *cmd)
-> -- 
-> 1.6.0.6
+> (Revised text from suggestion by Matthew Wilcox)
+> 
+> Closes #7736
+> 
+> Signed-off-by: Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Doug, can I get your ACKs on these patches? They just remove unused
-code.
+Reviewed-by: Matthew Wilcox <willy@linux.intel.com>
 
-Thanks,
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
