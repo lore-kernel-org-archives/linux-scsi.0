@@ -1,69 +1,63 @@
-From: Bart Van Assche <bart.vanassche@gmail.com>
-Subject: Re: ISCSI-SCST performance (with also IET and STGT data)
-Date: Wed, 1 Apr 2009 22:14:24 +0200
-Message-ID: <e2e108260904011314h1e0cf5c5wcdf210eee24d40d8@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Iscsitarget-devel] [Scst-devel] ISCSI-SCST performance
+	(withalso IET and STGT data)
+Date: Wed, 01 Apr 2009 20:23:43 +0000
+Message-ID: <1238617423.3318.82.camel@mulgrave.int.hansenpartnership.com>
 References: <49D10256.8030307@vlnb.net>
+	 <e2e108260903301106y2b750c23kfab978567f3de3a0@mail.gmail.com>
+	 <49D11096.3070804@vlnb.net>
+	 <e2e108260903301153x38e86097vd29c47507da2879f@mail.gmail.com>
+	 <49D254E4.8050806@vlnb.net>
+	 <E2BB8074E5500C42984D980D4BD78EF9029E3D0B@MFG-NYC-EXCH2.mfg.prv>
+	 <e2e108260903312329u118a54bfn3107fdca4b3e2b1d@mail.gmail.com>
+	 <FA7F6940-CD5C-4460-9777-2F7AE3657B8E@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:57012 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756434AbZDAUO2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Apr 2009 16:14:28 -0400
-In-Reply-To: <49D10256.8030307@vlnb.net>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:35613 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757076AbZDAUXr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Apr 2009 16:23:47 -0400
+In-Reply-To: <FA7F6940-CD5C-4460-9777-2F7AE3657B8E@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: scst-devel <scst-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, iscsitarget-devel@lists.sourceforge.net, stgt@vger.kernel.org
+To: Ross Walker <rswwalker@gmail.com>
+Cc: Bart Van Assche <bart.vanassche@gmail.com>, "Ross S. W. Walker" <RWalker@medallion.com>, Vladislav Bolkhovitin <vst@vlnb.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, iSCSI Enterprise Target Developer List <iscsitarget-devel@lists.sourceforge.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stgt@vger.kernel.org" <stgt@vger.kernel.org>, scst-devel <scst-devel@lists.sourceforge.net>
 
-On Mon, Mar 30, 2009 at 7:33 PM, Vladislav Bolkhovitin <vst@vlnb.net> w=
-rote:
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->
-> I. SEQUENTIAL ACCESS OVER SINGLE LINE
->
-> 1. # dd if=3D/dev/sdX of=3D/dev/null bs=3D512K count=3D2000
->
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ISCSI-SCST =A0 =A0 =A0=
-IET =A0 =A0 =A0 =A0 =A0 =A0 STGT
-> NULLIO: =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 106 =A0 =A0 =A0 =A0 =A0 =A0 1=
-05 =A0 =A0 =A0 =A0 =A0 =A0 103
-> FILEIO/CFQ: =A0 =A0 =A0 =A0 =A0 =A0 82 =A0 =A0 =A0 =A0 =A0 =A0 =A057 =
-=A0 =A0 =A0 =A0 =A0 =A0 =A055
-> FILEIO/deadline =A0 =A0 =A0 =A0 69 =A0 =A0 =A0 =A0 =A0 =A0 =A069 =A0 =
-=A0 =A0 =A0 =A0 =A0 =A067
-> BLOCKIO/CFQ =A0 =A0 =A0 =A0 =A0 =A0 81 =A0 =A0 =A0 =A0 =A0 =A0 =A028 =
-=A0 =A0 =A0 =A0 =A0 =A0 =A0-
-> BLOCKIO/deadline =A0 =A0 =A0 =A080 =A0 =A0 =A0 =A0 =A0 =A0 =A066 =A0 =
-=A0 =A0 =A0 =A0 =A0 =A0-
+On Wed, 2009-04-01 at 08:20 -0400, Ross Walker wrote:
+> On Apr 1, 2009, at 2:29 AM, Bart Van Assche <bart.vanassche@gmail.com>  
+> wrote:
+> 
+> > On Tue, Mar 31, 2009 at 8:43 PM, Ross S. W. Walker
+> > <RWalker@medallion.com> wrote:
+> >> IET just needs to fix how it does it workload with CFQ which
+> >> somehow SCST has overcome. Of course SCST tweaks the Linux kernel to
+> >> gain some extra speed.
+> >
+> > I'm not familiar with the implementation details of CFQ, but I know
+> > that one of the changes between SCST 1.0.0 and SCST 1.0.1 is that the
+> > default number of kernel threads of the scst_vdisk kernel module has
+> > been increased to 5. Could this explain the performance difference
+> > between SCST and IET for FILEIO and BLOCKIO ?
+> 
+> Thank for the update. IET has used 8 threads per target for ages now,  
+> I don't think it is that.
+> 
+> It may be how the I/O threads are forked in SCST that causes them to  
+> be in the same I/O context with each other.
+> 
+> I'm pretty sure implementing a version of the patch that was used for  
+> the dump command (found on the LKML) will fix this.
+> 
+> But thanks goes to Vlad for pointing this dificiency out so we can fix  
+> it to help make IET even better.
 
-I have repeated some of these performance tests for iSCSI over IPoIB
-(two DDR PCIe 1.0 ConnectX HCA's connected back to back). The results
-for the buffered I/O test with a block size of 512K (initiator)
-against a file of 1GB residing on a tmpfs filesystem on the target are
-as follows:
+SCST explicitly fiddles with the io context to get this to happen.  It
+has a hack to block to export alloc_io_context:
 
-write-test: iSCSI-SCST 243 MB/s; IET 192 MB/s.
-read-test: iSCSI-SCST 291 MB/s; IET 223 MB/s.
+http://marc.info/?t=122893564800003
 
-And for a block size of 4 KB:
+James
 
-write-test: iSCSI-SCST 43 MB/s; IET 42 MB/s.
-read-test: iSCSI-SCST 288 MB/s; IET 221 MB/s.
 
-Or: depending on the test scenario, SCST transfers data between 2% and
-30% faster via the iSCSI protocol over this network.
-
-Something that is not relevant for this comparison, but interesting to
-know: with the SRP implementation in SCST the maximal read throughput
-is 1290 MB/s on the same setup.
-
-Bart.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
