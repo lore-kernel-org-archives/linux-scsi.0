@@ -1,39 +1,46 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] aacraid driver update
-Date: Wed, 01 Apr 2009 14:32:02 +0000
-Message-ID: <1238596322.3318.18.camel@mulgrave.int.hansenpartnership.com>
-References: <532ABFBDAAC3A34EB12EBA6CEC2838F40204F4B736@ADPE2K703.adaptec.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 1/3] sg: kill unused SZ_SG_IOVEC define
+Date: Wed, 1 Apr 2009 23:03:41 +0900
+Message-ID: <20090401230303H.fujita.tomonori@lab.ntt.co.jp>
+References: <1236733367-30967-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50375 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757957AbZDAOcH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Apr 2009 10:32:07 -0400
-In-Reply-To: <532ABFBDAAC3A34EB12EBA6CEC2838F40204F4B736@ADPE2K703.adaptec.com>
+Received: from mfo11.iij4u.or.jp ([210.138.174.81]:35096 "EHLO
+	mfo11.iij4u.or.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762487AbZDAOom (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Apr 2009 10:44:42 -0400
+In-Reply-To: <1236733367-30967-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Leubner, Achim" <Achim_Leubner@adaptec.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
+To: dgilbert@interlog.com
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-On Wed, 2009-04-01 at 07:16 -0700, Leubner, Achim wrote:
-> I want to send out a required aacraid driver update from version 1.1.5-2456 to 1.1.5-2461 as a patch against the latest scsi-misc-2.6 kernel (2.6.29-rc7). It includes the following changes:
-> - set aac_cache=2 as default value to avoid performance problem (Novell bugzilla #469922)
-> - Dell/PERC controller boot problem fixed (RedHat bugzilla #457552)
-> - WWN flag added to fix SLES10 SP1/SP2 drive detection problems
-> - 64-bit support changes
-> - DECLARE_PCI_DEVICE_TABLE macro added
-> - controller type changes
+On Wed, 11 Mar 2009 10:02:45 +0900
+FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
 
-It would be really nice if, in future, you could send separate patches
-for each of these totally separate fixes.  The reason is bisection ...
-if one of them ends up causing a problem, we'll be able to tell which
-one if they're separate.  Plus, it makes reviewing easier since it's
-clear which change belongs to which fix.
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> ---
+>  drivers/scsi/sg.c |    1 -
+>  1 files changed, 0 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> index 17d1bd5..e84536b 100644
+> --- a/drivers/scsi/sg.c
+> +++ b/drivers/scsi/sg.c
+> @@ -204,7 +204,6 @@ static void sg_put_dev(Sg_device *sdp);
+>  
+>  #define SZ_SG_HEADER sizeof(struct sg_header)
+>  #define SZ_SG_IO_HDR sizeof(sg_io_hdr_t)
+> -#define SZ_SG_IOVEC sizeof(sg_iovec_t)
+>  #define SZ_SG_REQ_INFO sizeof(sg_req_info_t)
+>  
+>  static int sg_allow_access(struct file *filp, unsigned char *cmd)
+> -- 
+> 1.6.0.6
+
+Doug, can I get your ACKs on these patches? They just remove unused
+code.
 
 Thanks,
-
-James
-
-
