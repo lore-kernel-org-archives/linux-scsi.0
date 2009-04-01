@@ -1,184 +1,221 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 1/7] cxgb3i - subscribe to error notification from cxgb3 driver
-Date: Wed,  1 Apr 2009 13:11:23 -0500
-Message-ID: <12386094902138-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 3/7] cxgb3i - re-read ddp settings information after chip reset
+Date: Wed,  1 Apr 2009 13:11:25 -0500
+Message-ID: <123860949112-git-send-email-michaelc@cs.wisc.edu>
 References: <1238609489948-git-send-email-michaelc@cs.wisc.edu>
+ <12386094902138-git-send-email-michaelc@cs.wisc.edu>
+ <12386094901595-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:41463 "EHLO mx2.redhat.com"
+Received: from mx2.redhat.com ([66.187.237.31]:41465 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932619AbZDASLn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S933351AbZDASLn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 1 Apr 2009 14:11:43 -0400
-In-Reply-To: <1238609489948-git-send-email-michaelc@cs.wisc.edu>
+In-Reply-To: <12386094901595-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Karen Xie <kxie@chelsio.com>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Karen Xie <kxie@chelsio.com>
 
-From: Karen Xie <kxie@chelsio.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-[PATCH 2/5 2.6.30] cxgb3i - subscribe to error notification from cxgb3 driver
+Orignally from Karen Xie, but merge conflicts/errors fixed up by
+Mike Christie.
 
-From: Karen Xie <kxie@chelsio.com>
-
-Add error notification handling function which is called during chip reset.
+Re-read the ddp tag information after reset.
 
 Signed-off-by: Karen Xie <kxie@chelsio.com>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/cxgb3i/cxgb3i.h       |   10 ++++++----
- drivers/scsi/cxgb3i/cxgb3i_init.c  |   25 +++++++++++++++++++++++--
- drivers/scsi/cxgb3i/cxgb3i_iscsi.c |   27 +++++++++++++++++++++++----
- 3 files changed, 52 insertions(+), 10 deletions(-)
+ drivers/scsi/cxgb3i/cxgb3i.h       |    2 +-
+ drivers/scsi/cxgb3i/cxgb3i_iscsi.c |  114 ++++++++++++++++++++++--------------
+ 2 files changed, 70 insertions(+), 46 deletions(-)
 
 diff --git a/drivers/scsi/cxgb3i/cxgb3i.h b/drivers/scsi/cxgb3i/cxgb3i.h
-index a7cf550..0942227 100644
+index 0942227..d362860 100644
 --- a/drivers/scsi/cxgb3i/cxgb3i.h
 +++ b/drivers/scsi/cxgb3i/cxgb3i.h
-@@ -66,10 +66,12 @@ struct cxgb3i_hba {
-  * @pdev:	pointer to pci dev
-  * @hba_cnt:	# of hbas (the same as # of ports)
-  * @hba:	all the hbas on this adapter
-+ * @flags:	bit flag for adapter event/status
-  * @tx_max_size: max. tx packet size supported
-  * @rx_max_size: max. rx packet size supported
-  * @tag_format: ddp tag format settings
-  */
-+#define CXGB3I_ADAPTER_FLAG_RESET	0x1
- struct cxgb3i_adapter {
- 	struct list_head list_head;
- 	spinlock_t lock;
-@@ -78,6 +80,7 @@ struct cxgb3i_adapter {
- 	unsigned char hba_cnt;
- 	struct cxgb3i_hba *hba[MAX_NPORTS];
- 
-+	unsigned int flags;
- 	unsigned int tx_max_size;
- 	unsigned int rx_max_size;
- 
-@@ -137,10 +140,9 @@ struct cxgb3i_task_data {
- int cxgb3i_iscsi_init(void);
+@@ -141,7 +141,7 @@ int cxgb3i_iscsi_init(void);
  void cxgb3i_iscsi_cleanup(void);
  
--struct cxgb3i_adapter *cxgb3i_adapter_add(struct t3cdev *);
--void cxgb3i_adapter_remove(struct t3cdev *);
--int cxgb3i_adapter_ulp_init(struct cxgb3i_adapter *);
--void cxgb3i_adapter_ulp_cleanup(struct cxgb3i_adapter *);
-+struct cxgb3i_adapter *cxgb3i_adapter_find_by_tdev(struct t3cdev *);
-+struct cxgb3i_adapter *cxgb3i_adapter_open(struct t3cdev *);
-+void cxgb3i_adapter_close(struct t3cdev *);
+ struct cxgb3i_adapter *cxgb3i_adapter_find_by_tdev(struct t3cdev *);
+-struct cxgb3i_adapter *cxgb3i_adapter_open(struct t3cdev *);
++void cxgb3i_adapter_open(struct t3cdev *);
+ void cxgb3i_adapter_close(struct t3cdev *);
  
  struct cxgb3i_hba *cxgb3i_hba_find_by_netdev(struct net_device *);
- struct cxgb3i_hba *cxgb3i_hba_host_add(struct cxgb3i_adapter *,
-diff --git a/drivers/scsi/cxgb3i/cxgb3i_init.c b/drivers/scsi/cxgb3i/cxgb3i_init.c
-index 1ce9f24..833dbfa 100644
---- a/drivers/scsi/cxgb3i/cxgb3i_init.c
-+++ b/drivers/scsi/cxgb3i/cxgb3i_init.c
-@@ -26,6 +26,7 @@ MODULE_VERSION(DRV_MODULE_VERSION);
- 
- static void open_s3_dev(struct t3cdev *);
- static void close_s3_dev(struct t3cdev *);
-+static void s3_err_handler(struct t3cdev *tdev, u32 status, u32 error);
- 
- static cxgb3_cpl_handler_func cxgb3i_cpl_handlers[NUM_CPL_CMDS];
- static struct cxgb3_client t3c_client = {
-@@ -33,6 +34,7 @@ static struct cxgb3_client t3c_client = {
- 	.handlers = cxgb3i_cpl_handlers,
- 	.add = open_s3_dev,
- 	.remove = close_s3_dev,
-+	.err_handler = s3_err_handler,
- };
- 
- /**
-@@ -49,7 +51,7 @@ static void open_s3_dev(struct t3cdev *t3dev)
- 	}
- 
- 	cxgb3i_sdev_add(t3dev, &t3c_client);
--	cxgb3i_adapter_add(t3dev);
-+	cxgb3i_adapter_open(t3dev);
- }
- 
- /**
-@@ -58,10 +60,29 @@ static void open_s3_dev(struct t3cdev *t3dev)
-  */
- static void close_s3_dev(struct t3cdev *t3dev)
- {
--	cxgb3i_adapter_remove(t3dev);
-+	cxgb3i_adapter_close(t3dev);
- 	cxgb3i_sdev_remove(t3dev);
- }
- 
-+static void s3_err_handler(struct t3cdev *tdev, u32 status, u32 error)
-+{
-+	struct cxgb3i_adapter *snic = cxgb3i_adapter_find_by_tdev(tdev);
-+
-+	cxgb3i_log_info("snic 0x%p, tdev 0x%p, status 0x%x, err 0x%x.\n",
-+			snic, tdev, status, error);
-+	if (!snic)
-+		return;
-+
-+	switch (status) {
-+	case OFFLOAD_STATUS_DOWN:
-+		snic->flags |= CXGB3I_ADAPTER_FLAG_RESET;
-+		break;
-+	case OFFLOAD_STATUS_UP:
-+		snic->flags &= ~CXGB3I_ADAPTER_FLAG_RESET;
-+		break;
-+	}
-+}
-+
- /**
-  * cxgb3i_init_module - module init entry point
-  *
 diff --git a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
-index e185ded..ff6bfd6 100644
+index ff6bfd6..fff8e43 100644
 --- a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
 +++ b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
-@@ -53,11 +53,30 @@ static LIST_HEAD(cxgb3i_snic_list);
- static DEFINE_RWLOCK(cxgb3i_snic_rwlock);
+@@ -71,37 +71,34 @@ struct cxgb3i_adapter *cxgb3i_adapter_find_by_tdev(struct t3cdev *tdev)
+ 	return NULL;
+ }
  
- /**
-- * cxgb3i_adapter_add - init a s3 adapter structure and any h/w settings
-+ * cxgb3i_adpater_find_by_tdev - find the cxgb3i_adapter structure via t3cdev
-+ * @tdev: t3cdev pointer
-+ */
-+struct cxgb3i_adapter *cxgb3i_adapter_find_by_tdev(struct t3cdev *tdev)
-+{
-+	struct cxgb3i_adapter *snic;
-+
-+	read_lock(&cxgb3i_snic_rwlock);
-+	list_for_each_entry(snic, &cxgb3i_snic_list, list_head) {
-+		if (snic->tdev == tdev) {
-+			read_unlock(&cxgb3i_snic_rwlock);
-+			return snic;
-+		}
-+	}
-+	read_unlock(&cxgb3i_snic_rwlock);
-+	return NULL;
+-/**
+- * cxgb3i_adapter_open - init a s3 adapter structure and any h/w settings
+- * @t3dev: t3cdev adapter
+- * return the resulting cxgb3i_adapter struct
+- */
+-struct cxgb3i_adapter *cxgb3i_adapter_open(struct t3cdev *t3dev)
++static inline int adapter_update(struct cxgb3i_adapter *snic)
+ {
+-	struct cxgb3i_adapter *snic;
+-	struct adapter *adapter = tdev2adap(t3dev);
+-	int i;
++	cxgb3i_log_info("snic 0x%p, t3dev 0x%p, updating.\n",
++			snic, snic->tdev);
++	return cxgb3i_adapter_ddp_info(snic->tdev, &snic->tag_format,
++					&snic->tx_max_size,
++					&snic->rx_max_size);
 +}
-+
+ 
+-	snic = kzalloc(sizeof(*snic), GFP_KERNEL);
+-	if (!snic) {
+-		cxgb3i_api_debug("cxgb3 %s, OOM.\n", t3dev->name);
+-		return NULL;
+-	}
+-	spin_lock_init(&snic->lock);
++static int adapter_add(struct cxgb3i_adapter *snic)
++{
++	struct t3cdev *t3dev = snic->tdev;
++	struct adapter *adapter = tdev2adap(t3dev);
++	int i, err;
+ 
+-	snic->tdev = t3dev;
+ 	snic->pdev = adapter->pdev;
+ 	snic->tag_format.sw_bits = sw_tag_idx_bits + sw_tag_age_bits;
+ 
+-	if (cxgb3i_adapter_ddp_init(t3dev, &snic->tag_format,
++	err = cxgb3i_adapter_ddp_info(t3dev, &snic->tag_format,
+ 				    &snic->tx_max_size,
+-				    &snic->rx_max_size) < 0)
+-		goto free_snic;
++				    &snic->rx_max_size);
++	if (err < 0)
++		return err;
+ 
+ 	for_each_port(adapter, i) {
+ 		snic->hba[i] = cxgb3i_hba_host_add(snic, adapter->port[i]);
+ 		if (!snic->hba[i])
+-			goto ulp_cleanup;
++			return -EINVAL;
+ 	}
+ 	snic->hba_cnt = adapter->params.nports;
+ 
+@@ -110,13 +107,40 @@ struct cxgb3i_adapter *cxgb3i_adapter_open(struct t3cdev *t3dev)
+ 	list_add_tail(&snic->list_head, &cxgb3i_snic_list);
+ 	write_unlock(&cxgb3i_snic_rwlock);
+ 
+-	return snic;
++	cxgb3i_log_info("t3dev 0x%p open, snic 0x%p, %u scsi hosts added.\n",
++			t3dev, snic, snic->hba_cnt);
++	return 0;
++}
+ 
+-ulp_cleanup:
+-	cxgb3i_adapter_ddp_cleanup(t3dev);
+-free_snic:
+-	kfree(snic);
+-	return NULL;
 +/**
 + * cxgb3i_adapter_open - init a s3 adapter structure and any h/w settings
-  * @t3dev: t3cdev adapter
-  * return the resulting cxgb3i_adapter struct
-  */
--struct cxgb3i_adapter *cxgb3i_adapter_add(struct t3cdev *t3dev)
-+struct cxgb3i_adapter *cxgb3i_adapter_open(struct t3cdev *t3dev)
- {
- 	struct cxgb3i_adapter *snic;
- 	struct adapter *adapter = tdev2adap(t3dev);
-@@ -101,10 +120,10 @@ free_snic:
++ * @t3dev: t3cdev adapter
++ */
++void cxgb3i_adapter_open(struct t3cdev *t3dev)
++{
++	struct cxgb3i_adapter *snic = cxgb3i_adapter_find_by_tdev(t3dev);
++	int err;
++
++	if (snic)
++		err = adapter_update(snic);
++	else {
++		snic = kzalloc(sizeof(*snic), GFP_KERNEL);
++		if (snic) {
++			spin_lock_init(&snic->lock);
++			snic->tdev = t3dev;
++			err = adapter_add(snic);
++		} else
++			err = -ENOMEM;
++	}
++
++	if (err < 0) {
++		cxgb3i_log_info("snic 0x%p, f 0x%x, t3dev 0x%p open, err %d.\n",
++				snic, snic ? snic->flags : 0, t3dev, err);
++		if (snic) {
++			snic->flags &= ~CXGB3I_ADAPTER_FLAG_RESET;
++			cxgb3i_adapter_close(t3dev);
++		}
++	}
  }
  
  /**
-- * cxgb3i_adapter_remove - release the resources held and cleanup h/w settings
-+ * cxgb3i_adapter_close - release the resources held and cleanup h/w settings
-  * @t3dev: t3cdev adapter
+@@ -125,31 +149,29 @@ free_snic:
   */
--void cxgb3i_adapter_remove(struct t3cdev *t3dev)
-+void cxgb3i_adapter_close(struct t3cdev *t3dev)
+ void cxgb3i_adapter_close(struct t3cdev *t3dev)
  {
++	struct cxgb3i_adapter *snic = cxgb3i_adapter_find_by_tdev(t3dev);
  	int i;
- 	struct cxgb3i_adapter *snic;
+-	struct cxgb3i_adapter *snic;
++
++	if (!snic || snic->flags & CXGB3I_ADAPTER_FLAG_RESET) {
++		cxgb3i_log_info("t3dev 0x%p close, snic 0x%p, f 0x%x.\n",
++				t3dev, snic, snic ? snic->flags : 0);
++		return;
++	}
+ 
+ 	/* remove from the list */
+ 	write_lock(&cxgb3i_snic_rwlock);
+-	list_for_each_entry(snic, &cxgb3i_snic_list, list_head) {
+-		if (snic->tdev == t3dev) {
+-			list_del(&snic->list_head);
+-			break;
+-		}
+-	}
++	list_del(&snic->list_head);
+ 	write_unlock(&cxgb3i_snic_rwlock);
+ 
+-	if (snic) {
+-		for (i = 0; i < snic->hba_cnt; i++) {
+-			if (snic->hba[i]) {
+-				cxgb3i_hba_host_remove(snic->hba[i]);
+-				snic->hba[i] = NULL;
+-			}
++	for (i = 0; i < snic->hba_cnt; i++) {
++		if (snic->hba[i]) {
++			cxgb3i_hba_host_remove(snic->hba[i]);
++			snic->hba[i] = NULL;
+ 		}
+-
+-		/* release ddp resources */
+-		cxgb3i_adapter_ddp_cleanup(snic->tdev);
+-		kfree(snic);
+ 	}
++	cxgb3i_log_info("t3dev 0x%p close, snic 0x%p, %u scsi hosts removed.\n",
++			t3dev, snic, snic->hba_cnt);
++	kfree(snic);
+ }
+ 
+ /**
+@@ -189,7 +211,8 @@ struct cxgb3i_hba *cxgb3i_hba_host_add(struct cxgb3i_adapter *snic,
+ 	shost = iscsi_host_alloc(&cxgb3i_host_template,
+ 				 sizeof(struct cxgb3i_hba), 1);
+ 	if (!shost) {
+-		cxgb3i_log_info("iscsi_host_alloc failed.\n");
++		cxgb3i_log_info("snic 0x%p, ndev 0x%p, host_alloc failed.\n",
++				snic, ndev);
+ 		return NULL;
+ 	}
+ 
+@@ -207,7 +230,8 @@ struct cxgb3i_hba *cxgb3i_hba_host_add(struct cxgb3i_adapter *snic,
+ 	pci_dev_get(snic->pdev);
+ 	err = iscsi_host_add(shost, &snic->pdev->dev);
+ 	if (err) {
+-		cxgb3i_log_info("iscsi_host_add failed.\n");
++		cxgb3i_log_info("snic 0x%p, ndev 0x%p, host_add failed.\n",
++				snic, ndev);
+ 		goto pci_dev_put;
+ 	}
+ 
 -- 
 1.6.0.6
 
