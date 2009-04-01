@@ -1,59 +1,35 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 14/17] scsi: replace custom rq mapping with	blk_rq_map_kern_sgl()
-Date: Wed, 01 Apr 2009 20:17:05 +0300
-Message-ID: <49D3A191.2040000@panasas.com>
-References: <1238593472-30360-1-git-send-email-tj@kernel.org>	 <1238593472-30360-15-git-send-email-tj@kernel.org>	 <49D39DBC.3000206@panasas.com> <1238605538.3318.63.camel@mulgrave.int.hansenpartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: michaelc@cs.wisc.edu
+Subject: iscsi bugfixes and cleanups
+Date: Wed,  1 Apr 2009 13:11:22 -0500
+Message-ID: <1238609489948-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:31800 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752705AbZDARTK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Apr 2009 13:19:10 -0400
-In-Reply-To: <1238605538.3318.63.camel@mulgrave.int.hansenpartnership.com>
+Received: from mx2.redhat.com ([66.187.237.31]:41422 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1765685AbZDASLi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Apr 2009 14:11:38 -0400
+Received: from int-mx2.corp.redhat.com (int-mx2.corp.redhat.com [172.16.27.26])
+	by mx2.redhat.com (8.13.8/8.13.8) with ESMTP id n31IBYme029761
+	for <linux-scsi@vger.kernel.org>; Wed, 1 Apr 2009 14:11:34 -0400
+Received: from ns3.rdu.redhat.com (ns3.rdu.redhat.com [10.11.255.199])
+	by int-mx2.corp.redhat.com (8.13.1/8.13.1) with ESMTP id n31IBVLY011888
+	for <linux-scsi@vger.kernel.org>; Wed, 1 Apr 2009 14:11:31 -0400
+Received: from localhost.localdomain (vpn-12-96.rdu.redhat.com [10.11.12.96])
+	by ns3.rdu.redhat.com (8.13.8/8.13.8) with ESMTP id n31IBUIA029342
+	for <linux-scsi@vger.kernel.org>; Wed, 1 Apr 2009 14:11:30 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, axboe@kernel.dk, linux-kernel@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+To: linux-scsi@vger.kernel.org
 
-On 04/01/2009 08:05 PM, James Bottomley wrote:
-> On Wed, 2009-04-01 at 20:00 +0300, Boaz Harrosh wrote:
->> On 04/01/2009 04:44 PM, Tejun Heo wrote:
->>> Impact: hack removal
->>>
->>> SCSI needs to map sgl into rq for kernel PC requests; however, block
->>> API didn't have such feature so it used its own rq mapping function
->>> which hooked into block/bio internals and is generally considered an
->>> ugly hack.  The private function may also produce requests which are
->>> bigger than queue per-rq limits.
->>>
->>> Block blk_rq_map_kern_sgl().  Kill the private implementation and use
->>> it.
->>>
->>> Signed-off-by: Tejun Heo <tj@kernel.org>
->> James, TOMO
->>
->> what happened to Tomo's patches that removes all this after fixing up
->> all users (sg.c)?
->>
->> I thought that was agreed and done? What is left to do for that to go
->> in.
-> 
-> They couldn't go in because they would break libosd.  You were going to
-> send patches to fix libosd so it no longer relied on the exported
-> function ... did that happen and I missed it?
-> 
+The following patches fix a bug in cxgb3i handling of card reset,
+fix up the the fix up for handling iscsi pool allocation failures,
+and then there is some cleanups. cxgb3i was exporting some functions
+that are not needed.
 
-That's not related. I'm asking about the scsi ULD patches and finally the
-patch to scsi_lib.c. libosd only conflicts with the very last patch to block
-layer. I don't see how that prevents the cleanups to scsi?
+Please apply for the feature window if possible because it has
+the cleanups in there. If this misses the feature window I will
+rebuild the patchset to only include fixes for the rc kernels.
 
-And BTW, I did send RFC patches that removes usage of blk_rq_append_bio() and
-did not receive any comments
+Patchset was made over linus's tree, but builds and applies over
+scsi-misc that was updated today.
 
-> James
-> 
-> 
 
-Boaz
