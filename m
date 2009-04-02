@@ -1,64 +1,102 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: linux-next: scsi tree build failure
-Date: Thu, 02 Apr 2009 14:22:21 +0000
-Message-ID: <1238682141.3383.11.camel@mulgrave.int.hansenpartnership.com>
-References: <20090402164927.97958f84.sfr@canb.auug.org.au>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 7/7] libiscsi: fix iscsi pool error path
+Date: Thu, 02 Apr 2009 10:15:22 -0500
+Message-ID: <49D4D68A.8080606@cs.wisc.edu>
+References: <1238609489948-git-send-email-michaelc@cs.wisc.edu> <12386094922477-git-send-email-michaelc@cs.wisc.edu> <12386094933319-git-send-email-michaelc@cs.wisc.edu> <200904021602.55587.jdelvare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20090402164927.97958f84.sfr@canb.auug.org.au>
-Sender: linux-next-owner@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: linux-next@vger.kernel.org, Vasu Dev <vasu.dev@intel.com>, Robert Love <robert.w.love@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:51398 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750732AbZDBPQZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Apr 2009 11:16:25 -0400
+In-Reply-To: <200904021602.55587.jdelvare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jean Delvare <jdelvare@suse.de>
+Cc: linux-scsi@vger.kernel.org, Chris Wright <chrisw@sous-sol.org>, James Bottomley <James.Bottomley@hansenpartnership.com>
 
-cc: linux-scsi added
+Jean Delvare wrote:
+> Hi Mike,
+>=20
+> Sorry for the late answer, I have been traveling for the last 2 days.
+>=20
+> Le mercredi 01 avril 2009, michaelc@cs.wisc.edu a =C3=A9crit :
+>> From: Jean Delvare <jdelvare@suse.de>
+>>
+>> Le lundi 30 mars 2009, Chris Wright a =C3=A9crit :
+>>> q->queue could be ERR_PTR(-ENOMEM) which will break unwinding
+>>> on error.  Make iscsi_pool_free more defensive.
+>>>
+>> Making the freeing of q->queue dependent on q->pool being set looks
+>> really weird (although it is correct at the moment. But this seems
+>> to be fixable in a much simpler way.
+>>
+>> With the benefit that only the error case is slowed down. In both
+>> cases we have a problem if q->queue contains an error value but it's
+>> not -ENOMEM. Apparently this can't happen today, but it doesn't feel
+>> right to assume this will always be true. Maybe it's the right time
+>> to fix this as well.
+>>
+>> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+>> ---
+>>  drivers/scsi/libiscsi.c |    4 +++-
+>>  1 files changed, 3 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+>> index dfaa8ad..6896283 100644
+>> --- a/drivers/scsi/libiscsi.c
+>> +++ b/drivers/scsi/libiscsi.c
+>> @@ -1999,8 +1999,10 @@ iscsi_pool_init(struct iscsi_pool *q, int max=
+, void ***items, int item_size)
+>> =20
+>>  	q->queue =3D kfifo_init((void*)q->pool, max * sizeof(void*),
+>>  			      GFP_KERNEL, NULL);
+>> -	if (q->queue =3D=3D ERR_PTR(-ENOMEM))
+>> +	if (IS_ERR(q->queue)) {
+>=20
+> This indeed solves the problem I had underlined before, but
+> introduces a new one. Right now the only error returned by kfifo_init
+> is -ENOMEM. This may however change in the future, and then the
+> above code would silently convert the other error code to -ENOMEM.
+> This might make it difficult to trace errors.
 
-On Thu, 2009-04-02 at 16:49 +1100, Stephen Rothwell wrote:
-> Hi James,
-> 
-> Today's linux-next build (powerpc allyesconfig) failed like this:
-> 
-> drivers/scsi/fcoe/fcoe.c:982: error: __ksymtab_fcoe_fc_crc causes a section type conflict
-> drivers/scsi/fcoe/fcoe.c:982: error: __ksymtab_fcoe_fc_crc causes a section type conflict
-> 
-> Reverting commit 0c3cb56ec3321b23e9826cccf822470717be6e08 ("[SCSI] fcoe:
-> cleans up libfcoe.h and adds fcoe.h for fcoe module") makes the error go
-> away.  I have no idea why - the only clue is that the only global
-> declaration of fcoe_fc_crc() is removed by that commit.
-> 
-> Using a different compiler version (4.1.2) also fixed the problem.
+What do you mean by converting other errors codes to -ENOMEM?
 
-Yes, that would be why I didn't see the issue.
+>=20
+> I know this is all just theoretical, at the moment your code is
+> correct, but I don't much like relying on assumptions which are not
+> guaranteed to last. So I would rather cleanly transmit the error code
+> up to the caller, or change the calling convention of kfifo_init() to
 
-> I also had to revert commits 60390544fcc212e0657cf1eea639691d09651943
-> ("[SCSI] fcoe, libfc: fix double fcoe_softc memory alloc") and
-> ba070644bff4390c965e99b1997f2cbec4157b46 ("[SCSI] fcoe, libfcoe: Add
-> support for FIP. FCoE discovery and keep-alive") since they followed the
-> one above.
-> 
-> I wonder if that function even needs to be exported as it is only used
-> withing the one file.
+What do you mean by cleanly transmitting the error code up the caller?
 
-I think it's because the above commit removes the external declaration
-of fcoe_fc_crc ... so now we have an export symbol with no header
-defining it.  I think the correct patch is just not to export the
-symbol.
 
-James
 
----
+> return NULL on error. The former will add a few lines of code, the
+> latter will result in faster code but is obviously more intrusive.
+> The latter might also be undesirable for some reason I am
+> overlooking; I'm really not familiar with kfifo.
+>=20
+> Or you can consider I am too perfectionist and ignore me and go with
+> the current fix, that's also fine with me ;)
+>=20
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 5cdda6e..94e1e31 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -979,7 +979,6 @@ u32 fcoe_fc_crc(struct fc_frame *fp)
- 	}
- 	return crc;
- }
--EXPORT_SYMBOL_GPL(fcoe_fc_crc);
- 
- /**
-  * fcoe_xmit() - FCoE frame transmit function
+I think it is fine for now. We really do  not care what the error is. I=
+f=20
+it fails, it fails. If kfifo_init() were to return some new error code=20
+for different errors we would have to evaluate the kfifo_init() change=20
+as well as the iscsi code to made sure we could handle it or not, until=
+=20
+then it is safest to fail on all errors instead of possible limping=20
+along and possibly causing corruption.
+
+I am also going to remove iscsi's use of kfifos in the next feature win=
+dow.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
