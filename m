@@ -1,63 +1,60 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Iscsitarget-devel] [Scst-devel] ISCSI-SCST performance
-	(withalso IET and STGT data)
-Date: Wed, 01 Apr 2009 20:23:43 +0000
-Message-ID: <1238617423.3318.82.camel@mulgrave.int.hansenpartnership.com>
-References: <49D10256.8030307@vlnb.net>
-	 <e2e108260903301106y2b750c23kfab978567f3de3a0@mail.gmail.com>
-	 <49D11096.3070804@vlnb.net>
-	 <e2e108260903301153x38e86097vd29c47507da2879f@mail.gmail.com>
-	 <49D254E4.8050806@vlnb.net>
-	 <E2BB8074E5500C42984D980D4BD78EF9029E3D0B@MFG-NYC-EXCH2.mfg.prv>
-	 <e2e108260903312329u118a54bfn3107fdca4b3e2b1d@mail.gmail.com>
-	 <FA7F6940-CD5C-4460-9777-2F7AE3657B8E@gmail.com>
+From: Robert Love <robert.w.love@intel.com>
+Subject: Re: Proposal to add sysfs attributes for FCoE in FC Transport layer
+Date: Wed, 01 Apr 2009 17:13:28 -0700
+Message-ID: <1238631208.15031.42.camel@fritz>
+References: <9F784EDD-BC14-4113-B7F2-1E5EBC17B65F@qlogic.com>
+	 <49D37349.3070202@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:35613 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757076AbZDAUXr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Apr 2009 16:23:47 -0400
-In-Reply-To: <FA7F6940-CD5C-4460-9777-2F7AE3657B8E@gmail.com>
+Received: from mga03.intel.com ([143.182.124.21]:16311 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757908AbZDBANb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Apr 2009 20:13:31 -0400
+In-Reply-To: <49D37349.3070202@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ross Walker <rswwalker@gmail.com>
-Cc: Bart Van Assche <bart.vanassche@gmail.com>, "Ross S. W. Walker" <RWalker@medallion.com>, Vladislav Bolkhovitin <vst@vlnb.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, iSCSI Enterprise Target Developer List <iscsitarget-devel@lists.sourceforge.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stgt@vger.kernel.org" <stgt@vger.kernel.org>, scst-devel <scst-devel@lists.sourceforge.net>
+To: James Smart <James.Smart@Emulex.Com>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Joe Carnuccio <joe.carnuccio@qlogic.com>, Marcus Barrow <marcus.barrow@qlogic.com>, David Wagner <david.wagner@qlogic.com>
 
-On Wed, 2009-04-01 at 08:20 -0400, Ross Walker wrote:
-> On Apr 1, 2009, at 2:29 AM, Bart Van Assche <bart.vanassche@gmail.com>  
-> wrote:
+On Wed, 2009-04-01 at 09:59 -0400, James Smart wrote:
+> The largest issue I have is - what attributes are really fc/fcoe specific ?
+> DCBX and PFC are arguably NIC-related parameters and have no business being
+> under the fc transport.  Additionally, whatever we pick, we had better put
+> the same or like parameters with lib_fcoe-supporting adapters in the same
+> place.
 > 
-> > On Tue, Mar 31, 2009 at 8:43 PM, Ross S. W. Walker
-> > <RWalker@medallion.com> wrote:
-> >> IET just needs to fix how it does it workload with CFQ which
-> >> somehow SCST has overcome. Of course SCST tweaks the Linux kernel to
-> >> gain some extra speed.
-> >
-> > I'm not familiar with the implementation details of CFQ, but I know
-> > that one of the changes between SCST 1.0.0 and SCST 1.0.1 is that the
-> > default number of kernel threads of the scst_vdisk kernel module has
-> > been increased to 5. Could this explain the performance difference
-> > between SCST and IET for FILEIO and BLOCKIO ?
+> This is very muddy as some adapters will want present a fc/scsi function
+> only, hiding the nic completely; others may present a nic function and
+> an fcoe function, and physically share the nic; while others will have
+> only the nic and a bunch of software, or a nic with super-features for
+> fcoe.  What object belongs where for what attribute ?
 > 
-> Thank for the update. IET has used 8 threads per target for ages now,  
-> I don't think it is that.
-> 
-> It may be how the I/O threads are forked in SCST that causes them to  
-> be in the same I/O context with each other.
-> 
-> I'm pretty sure implementing a version of the patch that was used for  
-> the dump command (found on the LKML) will fix this.
-> 
-> But thanks goes to Vlad for pointing this dificiency out so we can fix  
-> it to help make IET even better.
+> Another thing that should be brought up is the presentation model when
+> there are multiple FCF's that an FCOE adapter can talk to. I'm a fan of
+> having a new fc_host for every new *initiator* context on a fabric.
+> Meaning, there's a fc_host for each N_Port_Id on each fabric (which is
+> what we have been doing for NPIV and VSANs). Mean an FCOE port, which
+> sees multiple FCFs, or contacts the same FCF on different vlans (which
+> map to different VSANs) need to be separate fc_hosts.  Additionally, we
 
-SCST explicitly fiddles with the io context to get this to happen.  It
-has a hack to block to export alloc_io_context:
+What do you think about having a fcoe_host defined in the FC transport
+that can exist for the FIP phase and then create fc_hosts for each
+N_Port_ID that is logged into the fabric(s)? 
 
-http://marc.info/?t=122893564800003
+We could also have a fcoe_fcf structure that would have a similar
+relationship with the fcoe_host that the rports have with the fc_host
+(at least from the device model perspective). I don't think the
+fcoe_host would be coupled with a scsi_host, or fc_host, since there is
+no intent to use it for I/O, it would be used to do FIP and then we
+switch to fc_hosts just before we log a port into a fabric.
 
-James
+libfcoe has two structures that are used for this purpose
+(include/scsi/libfcoe.h), but they're only used by modules that use
+libfcoe. Maybe they should be moved up to the transport layer, modified
+to fit into the the device model and then have the relevant info exposed
+in sysfs.
 
+//Rob
 
