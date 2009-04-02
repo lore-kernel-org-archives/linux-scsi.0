@@ -1,93 +1,112 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [Scst-devel] [Iscsitarget-devel] ISCSI-SCST	performance (with
- also IET and STGT data)
-Date: Thu, 02 Apr 2009 19:36:26 +0400
-Message-ID: <49D4DB7A.2030004@vlnb.net>
-References: <49D10256.8030307@vlnb.net>	<e2e108260903301106y2b750c23kfab978567f3de3a0@mail.gmail.com>	<49D11096.3070804@vlnb.net>	<e2e108260903301153x38e86097vd29c47507da2879f@mail.gmail.com>	<49D254E4.8050806@vlnb.net>	<E2BB8074E5500C42984D980D4BD78EF9029E3D0B@MFG-NYC-EXCH2.mfg.prv>	<e2e108260903312329u118a54bfn3107fdca4b3e2b1d@mail.gmail.com>	<FA7F6940-CD5C-4460-9777-2F7AE3657B8E@gmail.com>	<1238617423.3318.82.camel@mulgrave.int.hansenpartnership.com>	<49D46B8B.5000708@vlnb.net> <49D47F28.3060409@vlnb.net> <E2BB8074E5500C42984D980D4BD78EF9029E3D14@MFG-NYC-EXCH2.mfg.prv>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 7/7] libiscsi: fix iscsi pool error path
+Date: Thu, 02 Apr 2009 11:05:16 -0500
+Message-ID: <49D4E23C.2010201@cs.wisc.edu>
+References: <1238609489948-git-send-email-michaelc@cs.wisc.edu> <12386094922477-git-send-email-michaelc@cs.wisc.edu> <12386094933319-git-send-email-michaelc@cs.wisc.edu> <200904021602.55587.jdelvare@suse.de> <49D4D68A.8080606@cs.wisc.edu> <20090402152715.GF18394@sequoia.sous-sol.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------050804010509010901010504"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.188]:63894 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751147AbZDBPgf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Apr 2009 11:36:35 -0400
-In-Reply-To: <E2BB8074E5500C42984D980D4BD78EF9029E3D14@MFG-NYC-EXCH2.mfg.prv>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:43225 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750757AbZDBQGS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Apr 2009 12:06:18 -0400
+In-Reply-To: <20090402152715.GF18394@sequoia.sous-sol.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ross S. W. Walker" <RWalker@medallion.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, iSCSI Enterprise Target Developer List <iscsitarget-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, Ross Walker <rswwalker@gmail.com>, stgt@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>
+To: Chris Wright <chrisw@sous-sol.org>
+Cc: Jean Delvare <jdelvare@suse.de>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>
 
-Ross S. W. Walker, on 04/02/2009 06:06 PM wrote:
-> Vladislav Bolkhovitin wrote:
->> Vladislav Bolkhovitin, on 04/02/2009 11:38 AM wrote:
->>> James Bottomley, on 04/02/2009 12:23 AM wrote:
->>>> SCST explicitly fiddles with the io context to get this to happen.  It
->>>> has a hack to block to export alloc_io_context:
->>>>
->>>> http://marc.info/?t=122893564800003
->>> Correct, although I wouldn't call it "fiddle", rather "grouping" ;)
-> 
-> Call it what you like,
-> 
-> Vladislav Bolkhovitin wrote:
->> Ross S. W. Walker, on 03/30/2009 10:33 PM wrote:
->>
->> I would be interested in knowing how your code defeats CFQ's extremely
->> high latency? Does your code reach into the io scheduler too? If not,
->> some code hints would be great.
-> 
-> Hmm, CFQ doesn't have any extra processing latency, especially 
-> "extremely", hence there is nothing to defeat. If it had, how could it 
-> been chosen as the default?
-> 
-> ----------
-> List:       linux-scsi
-> Subject:    [PATCH][RFC 13/23]: Export of alloc_io_context() function
-> From:       Vladislav Bolkhovitin <vst () vlnb ! net>
-> Date:       2008-12-10 18:49:19
-> Message-ID: 49400F2F.4050603 () vlnb ! net
-> 
-> This patch exports alloc_io_context() function. For performance reasons 
-> SCST queues commands using a pool of IO threads. It is considerably 
-> better for performance (>30% increase on sequential reads) if threads in 
->   a pool have the same IO context. Since SCST can be built as a module, 
-> it needs alloc_io_context() function exported.
-> 
-> <snip>
-> ----------
-> 
-> I call that lying.
-> 
->>> But that's not the only reason for good performance. Particularly, it 
->>> can't explain Bart's tmpfs results from the previous message, where the 
->>> majority of I/O done to/from RAM without any I/O scheduler involved. (Or 
->>> does I/O scheduler also involved with tmpfs?) Bart has 4GB RAM, if I 
->>> remember correctly, i.e. the test data set was 25% of RAM.
->> To remove any suspicions that I'm playing dirty games here I should note 
-> <snip>
-> 
-> I don't know what games your playing at, but do me a favor, if your too
-> stupid enough to realize when your caught in a lie and to just shut up
-> then please do me the favor and leave me out of any further correspondence
-> from you.
+This is a multi-part message in MIME format.
+--------------050804010509010901010504
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Think what you want and do what you want. You can even filter out all 
-e-mails from me, that's your right. But:
-
-1. As I wrote grouping threads into a single IO context doesn't explain 
-all the performance difference and finding out reasons for other's 
-performance problems isn't something I can afford at the moment.
-
-2. CFQ doesn't have any processing latency and has never had. Learn to 
-understand what are your writing about and how to correctly express 
-yourself at first. You asked about that latency and I replied that there 
-is nothing to defeat.
-
-3. SCST doesn't have any hooks into CFQ and not going to have in the 
-considerable future.
-
-> Thank you,
+Chris Wright wrote:
+> * Mike Christie (michaelc@cs.wisc.edu) wrote:
+>>>> -	if (q->queue == ERR_PTR(-ENOMEM))
+>>>> +	if (IS_ERR(q->queue)) {
+>>> This indeed solves the problem I had underlined before, but
+>>> introduces a new one. Right now the only error returned by kfifo_init
+>>> is -ENOMEM. This may however change in the future, and then the
+>>> above code would silently convert the other error code to -ENOMEM.
+>>> This might make it difficult to trace errors.
+>> What do you mean by converting other errors codes to -ENOMEM?
 > 
-> -Ross
+> Jean means the goto label...it will jump to essentially return -ENOMEM.
+> 
 
+Ah, ok, I can agree with passing up errors in general. I did the 
+attached patch to propogate the error code upwards. It does not really 
+make much difference now. The iscsi pool init caller just checks for 
+error or no error and does not even print out the error. It will not 
+make tracing errors easier or more difficult. To be useful, we would 
+have to propgate the error higher to userspace so the user can see it. I 
+do not think I have time to get that in the current feature window, so 
+that would have to wait unless you have patches I can test now.
+
+--------------050804010509010901010504
+Content-Type: text/plain;
+ name="libiscsi-propogate-pool-error.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="libiscsi-propogate-pool-error.patch"
+
+libiscsi: propogate errors from kfifo_init to iscsi_pool_init callers
+
+Don't convert kfifo_init's error code to -ENOMEM when passing the
+error to the iscsi_pool_init caller.
+
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 6896283..cf86d59 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -1984,6 +1984,7 @@ int
+ iscsi_pool_init(struct iscsi_pool *q, int max, void ***items, int item_size)
+ {
+ 	int i, num_arrays = 1;
++	int rc = -ENOMEM;
+ 
+ 	memset(q, 0, sizeof(*q));
+ 
+@@ -1995,20 +1996,21 @@ iscsi_pool_init(struct iscsi_pool *q, int max, void ***items, int item_size)
+ 		num_arrays++;
+ 	q->pool = kzalloc(num_arrays * max * sizeof(void*), GFP_KERNEL);
+ 	if (q->pool == NULL)
+-		return -ENOMEM;
++		return rc;
+ 
+ 	q->queue = kfifo_init((void*)q->pool, max * sizeof(void*),
+ 			      GFP_KERNEL, NULL);
+ 	if (IS_ERR(q->queue)) {
+ 		q->queue = NULL;
+-		goto enomem;
++		rc = PTR_ERR(q->queue);		
++		goto fail;
+ 	}
+ 
+ 	for (i = 0; i < max; i++) {
+ 		q->pool[i] = kzalloc(item_size, GFP_KERNEL);
+ 		if (q->pool[i] == NULL) {
+ 			q->max = i;
+-			goto enomem;
++			goto fail;
+ 		}
+ 		__kfifo_put(q->queue, (void*)&q->pool[i], sizeof(void*));
+ 	}
+@@ -2020,9 +2022,9 @@ iscsi_pool_init(struct iscsi_pool *q, int max, void ***items, int item_size)
+ 
+ 	return 0;
+ 
+-enomem:
++fail:
+ 	iscsi_pool_free(q);
+-	return -ENOMEM;
++	return rc;
+ }
+ EXPORT_SYMBOL_GPL(iscsi_pool_init);
+ 
+
+--------------050804010509010901010504--
