@@ -1,57 +1,80 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Proposal to add sysfs attributes for FCoE in FC Transport layer
-Date: Thu, 2 Apr 2009 12:03:58 -0600
-Message-ID: <20090402180358.GV8014@parisc-linux.org>
-References: <9F784EDD-BC14-4113-B7F2-1E5EBC17B65F@qlogic.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: linux-next: scsi tree build failure
+Date: Thu, 02 Apr 2009 18:23:42 +0000
+Message-ID: <1238696622.13399.11.camel@mulgrave.int.hansenpartnership.com>
+References: <20090402164927.97958f84.sfr@canb.auug.org.au>
+	 <1238682141.3383.11.camel@mulgrave.int.hansenpartnership.com>
+	 <1238692778.15031.56.camel@fritz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:56284 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755420AbZDBSEL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Apr 2009 14:04:11 -0400
-Content-Disposition: inline
-In-Reply-To: <9F784EDD-BC14-4113-B7F2-1E5EBC17B65F@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <1238692778.15031.56.camel@fritz>
+Sender: linux-next-owner@vger.kernel.org
+To: Robert Love <robert.w.love@intel.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, "Dev, Vasu" <vasu.dev@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Cc: linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, Joe Carnuccio <joe.carnuccio@qlogic.com>, Marcus Barrow <marcus.barrow@qlogic.com>, David Wagner <david.wagner@qlogic.com>
 
-On Tue, Mar 31, 2009 at 06:06:23PM -0700, Giridhar Malavali wrote:
-> Current DCBX parameter details:
+On Thu, 2009-04-02 at 10:19 -0700, Robert Love wrote:
+> On Thu, 2009-04-02 at 07:22 -0700, James Bottomley wrote:
+> > cc: linux-scsi added
+> > 
+> > On Thu, 2009-04-02 at 16:49 +1100, Stephen Rothwell wrote:
+> > > Hi James,
+> > > 
+> > > Today's linux-next build (powerpc allyesconfig) failed like this:
+> > > 
+> > > drivers/scsi/fcoe/fcoe.c:982: error: __ksymtab_fcoe_fc_crc causes a section type conflict
+> > > drivers/scsi/fcoe/fcoe.c:982: error: __ksymtab_fcoe_fc_crc causes a section type conflict
+> > > 
+> > > Reverting commit 0c3cb56ec3321b23e9826cccf822470717be6e08 ("[SCSI] fcoe:
+> > > cleans up libfcoe.h and adds fcoe.h for fcoe module") makes the error go
+> > > away.  I have no idea why - the only clue is that the only global
+> > > declaration of fcoe_fc_crc() is removed by that commit.
+> > > 
+> > > Using a different compiler version (4.1.2) also fixed the problem.
+> > 
+> > Yes, that would be why I didn't see the issue.
+> > 
+> I built using gcc version 4.3.2 (on x86_64) and didn't see this either.
 > 
-> PGID (Priority group ID)
-> 
-> 1) pgid_priority_group_0;       /* Priority group ID of priority group  
-> 0 */
-> 2) pgid_priority_group_1;       /* Priority group ID of priority group  
-> 1 */
-> 3) pgid_priority_group_2;       /* Priority group ID of priority group  
-> 2 */
-> 4) pgid_priority_group_3;       /* Priority group ID of priority group  
-> 3 */
-> 5) pgid_priority_group_4;       /* Priority group ID of priority group  
-> 4 */
-> 6) pgid_priority_group_5;       /* Priority group ID of priority group  
-> 5 */
-> 7) pgid_priority_group_6;       /* Priority group ID of priority group  
-> 6 */
-> 8) pgid_priority_group_7;       /* Priority group ID of priority group  
-> 7 */
+> > > I also had to revert commits 60390544fcc212e0657cf1eea639691d09651943
+> > > ("[SCSI] fcoe, libfc: fix double fcoe_softc memory alloc") and
+> > > ba070644bff4390c965e99b1997f2cbec4157b46 ("[SCSI] fcoe, libfcoe: Add
+> > > support for FIP. FCoE discovery and keep-alive") since they followed the
+> > > one above.
+> > > 
+> > > I wonder if that function even needs to be exported as it is only used
+> > > withing the one file.
+> > 
+> > I think it's because the above commit removes the external declaration
+> > of fcoe_fc_crc ... so now we have an export symbol with no header
+> > defining it.  I think the correct patch is just not to export the
+> > symbol.
+> > 
+> > James
+> > 
+> > ---
+> > 
+> > diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+> > index 5cdda6e..94e1e31 100644
+> > --- a/drivers/scsi/fcoe/fcoe.c
+> > +++ b/drivers/scsi/fcoe/fcoe.c
+> > @@ -979,7 +979,6 @@ u32 fcoe_fc_crc(struct fc_frame *fp)
+> >  	}
+> >  	return crc;
+> >  }
+> > -EXPORT_SYMBOL_GPL(fcoe_fc_crc);
+> >  
+> >  /**
+> >   * fcoe_xmit() - FCoE frame transmit function
+> > 
+> > 
+> How can we resolve this? Should we provide an updated patch without this
+> line or a new patch to remove the line?
 
-There are a lot of places where you've got the same things repeated 8
-times.  How about:
+Right at the moment, I need someone to verify that this is the fix,
+since I don't have a complaining compiler myself.  If it's this simple,
+I can adjust the patch accordingly.
 
-hostX/pgY/id
-hostX/pgY/bw
-hostX/pgY/pfc
-hostX/pgY/tx_pause
-hostX/pgY/rx_pause
-hostX/pgY/tx_priority
-hostX/pgY/rx_priority
-
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+James
