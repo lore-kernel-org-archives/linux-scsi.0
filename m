@@ -1,45 +1,42 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] osdblk: a Linux block device for OSD objects
-Date: Thu, 02 Apr 2009 12:46:02 -0400
-Message-ID: <49D4EBCA.4000304@garzik.org>
-References: <20090402015455.GA14087@havoc.gtf.org> <49D4AF12.40708@panasas.com>
+Subject: Re: [GIT PULL] Request for pulling exofs for 2.6.30
+Date: Thu, 02 Apr 2009 12:44:52 -0400
+Message-ID: <49D4EB84.6020100@garzik.org>
+References: <49D4E70A.9090507@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <49D4AF12.40708@panasas.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761011AbZDBQqD@vger.kernel.org>
+In-Reply-To: <49D4E70A.9090507@panasas.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: open-osd mailing-list <osd-dev@open-osd.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, axboe@kernel.dk, Andrew Morton <akpm@linux-foundation.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, open-osd mailing-list <osd-dev@open-osd.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Stephen Rothwell <sfr@canb.auug.org.au>
 List-Id: linux-scsi@vger.kernel.org
 
 Boaz Harrosh wrote:
-> On 04/02/2009 04:54 AM, Jeff Garzik wrote:
->> As I promised in older exofs threads, here is a client for libosd
->> _other_ than exofs.  This block driver exports a single OSD object
->> as a Linux block device.
->>
->> See the comment block at the top of the driver for usage instructions.
->>
->>
->>
->>  drivers/block/Kconfig  |   16 +
->>  drivers/block/Makefile |    1 
->>  drivers/block/osdblk.c |  563 +++++++++++++++++++++++++++++++++++++++++++++++++
->>  3 files changed, 580 insertions(+)
->>
+> which is available in the git repository at:
 > 
-> Forwarding to open-osd ml
+>   git://git.open-osd.org/linux-open-osd.git for-linus
 > 
-> Jeff is it OK if I pick up this patch through my tree and will push it
-> together with the other pending patches for 2.6.31 Kernel? I intend to
+> Boaz Harrosh (9):
+>       exofs: Kbuild, Headers and osd utils
+>       exofs: file and file_inode operations
+>       exofs: symlink_inode and fast_symlink_inode operations
+>       exofs: address_space_operations
+>       exofs: dir_inode and directory operations
+>       exofs: super_operations and file_system_type
+>       exofs: export_operations
+>       exofs: Documentation
+>       fs: Add exofs to Kernel build
 
-Please don't add it to any repo just yet.  It is still changing rapidly, 
-and that would just slow me down, at the moment.
 
-More comments later...
+
+For what little weight I have in this area... ACK
+
+But I would suggest _not_ splitting up the add-filesystem patch.  You 
+really only want to split up this stuff for review.
+
+The add-exofs change is one single logical change, and splitting it up 
+across multiple changesets is not the most optimal nor bisect-safe approach.
 
 	Jeff
-
-
-
