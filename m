@@ -1,74 +1,72 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [Scst-devel] ISCSI-SCST performance (with also IET and STGT	data)
-Date: Thu, 02 Apr 2009 21:16:17 +0400
-Message-ID: <49D4F2E1.7000507@vlnb.net>
-References: <49D10256.8030307@vlnb.net> <e2e108260904011314h1e0cf5c5wcdf210eee24d40d8@mail.gmail.com>
+From: Robert Love <robert.w.love@intel.com>
+Subject: Re: linux-next: scsi tree build failure
+Date: Thu, 02 Apr 2009 10:19:38 -0700
+Message-ID: <1238692778.15031.56.camel@fritz>
+References: <20090402164927.97958f84.sfr@canb.auug.org.au>
+	 <1238682141.3383.11.camel@mulgrave.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1765843AbZDBRQl@vger.kernel.org>
-In-Reply-To: <e2e108260904011314h1e0cf5c5wcdf210eee24d40d8@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@gmail.com>
-Cc: scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <1238682141.3383.11.camel@mulgrave.int.hansenpartnership.com>
+Sender: linux-next-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, "Dev, Vasu" <vasu.dev@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Bart Van Assche, on 04/02/2009 12:14 AM wrote:
-> On Mon, Mar 30, 2009 at 7:33 PM, Vladislav Bolkhovitin <vst@vlnb.net> wrote:
-> ==================================================================
->> I. SEQUENTIAL ACCESS OVER SINGLE LINE
->>
->> 1. # dd if=/dev/sdX of=/dev/null bs=512K count=2000
->>
->>                        ISCSI-SCST      IET             STGT
->> NULLIO:                 106             105             103
->> FILEIO/CFQ:             82              57              55
->> FILEIO/deadline         69              69              67
->> BLOCKIO/CFQ             81              28              -
->> BLOCKIO/deadline        80              66              -
+On Thu, 2009-04-02 at 07:22 -0700, James Bottomley wrote:
+> cc: linux-scsi added
 > 
-> I have repeated some of these performance tests for iSCSI over IPoIB
-> (two DDR PCIe 1.0 ConnectX HCA's connected back to back). The results
-> for the buffered I/O test with a block size of 512K (initiator)
-> against a file of 1GB residing on a tmpfs filesystem on the target are
-> as follows:
+> On Thu, 2009-04-02 at 16:49 +1100, Stephen Rothwell wrote:
+> > Hi James,
+> > 
+> > Today's linux-next build (powerpc allyesconfig) failed like this:
+> > 
+> > drivers/scsi/fcoe/fcoe.c:982: error: __ksymtab_fcoe_fc_crc causes a section type conflict
+> > drivers/scsi/fcoe/fcoe.c:982: error: __ksymtab_fcoe_fc_crc causes a section type conflict
+> > 
+> > Reverting commit 0c3cb56ec3321b23e9826cccf822470717be6e08 ("[SCSI] fcoe:
+> > cleans up libfcoe.h and adds fcoe.h for fcoe module") makes the error go
+> > away.  I have no idea why - the only clue is that the only global
+> > declaration of fcoe_fc_crc() is removed by that commit.
+> > 
+> > Using a different compiler version (4.1.2) also fixed the problem.
 > 
-> write-test: iSCSI-SCST 243 MB/s; IET 192 MB/s.
-> read-test: iSCSI-SCST 291 MB/s; IET 223 MB/s.
+> Yes, that would be why I didn't see the issue.
 > 
-> And for a block size of 4 KB:
+I built using gcc version 4.3.2 (on x86_64) and didn't see this either.
+
+> > I also had to revert commits 60390544fcc212e0657cf1eea639691d09651943
+> > ("[SCSI] fcoe, libfc: fix double fcoe_softc memory alloc") and
+> > ba070644bff4390c965e99b1997f2cbec4157b46 ("[SCSI] fcoe, libfcoe: Add
+> > support for FIP. FCoE discovery and keep-alive") since they followed the
+> > one above.
+> > 
+> > I wonder if that function even needs to be exported as it is only used
+> > withing the one file.
 > 
-> write-test: iSCSI-SCST 43 MB/s; IET 42 MB/s.
-> read-test: iSCSI-SCST 288 MB/s; IET 221 MB/s.
-
-Do you have any thoughts why writes are so bad? It shouldn't be so..
-
-> Or: depending on the test scenario, SCST transfers data between 2% and
-> 30% faster via the iSCSI protocol over this network.
+> I think it's because the above commit removes the external declaration
+> of fcoe_fc_crc ... so now we have an export symbol with no header
+> defining it.  I think the correct patch is just not to export the
+> symbol.
 > 
-> Something that is not relevant for this comparison, but interesting to
-> know: with the SRP implementation in SCST the maximal read throughput
-> is 1290 MB/s on the same setup.
-
-This can be well explained. The limiting factor for iSCSI is that 
-iSCSI/TCP processing overloads a single CPU core. You can prove that on 
-vmstat output during the test. Sum of user and sys time should be about 
-100/(number of CPUs) or higher. SRP has a lot more CPU effective, hence 
-better has throughput.
-
-If you try to test with 2 or more parallel IO streams, you should have 
-the correspondingly increased aggregate throughput up to the moment you 
-hit your memory copy bandwidth.
-
-Thanks,
-Vlad
-
-
-> Bart.
+> James
 > 
-> ------------------------------------------------------------------------------
-> _______________________________________________
-> Scst-devel mailing list
-> Scst-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/scst-devel
+> ---
 > 
+> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+> index 5cdda6e..94e1e31 100644
+> --- a/drivers/scsi/fcoe/fcoe.c
+> +++ b/drivers/scsi/fcoe/fcoe.c
+> @@ -979,7 +979,6 @@ u32 fcoe_fc_crc(struct fc_frame *fp)
+>  	}
+>  	return crc;
+>  }
+> -EXPORT_SYMBOL_GPL(fcoe_fc_crc);
+>  
+>  /**
+>   * fcoe_xmit() - FCoE frame transmit function
+> 
+> 
+How can we resolve this? Should we provide an updated patch without this
+line or a new patch to remove the line?
