@@ -1,47 +1,38 @@
-From: Chris Wright <chrisw@sous-sol.org>
-Subject: Re: [PATCH 7/7] libiscsi: fix iscsi pool error path
-Date: Thu, 2 Apr 2009 08:27:15 -0700
-Message-ID: <20090402152715.GF18394@sequoia.sous-sol.org>
-References: <1238609489948-git-send-email-michaelc@cs.wisc.edu> <12386094922477-git-send-email-michaelc@cs.wisc.edu> <12386094933319-git-send-email-michaelc@cs.wisc.edu> <200904021602.55587.jdelvare@suse.de> <49D4D68A.8080606@cs.wisc.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Huang Weiyi <weiyi.huang@gmail.com>
+Subject: [PATCH 8/9] [SCSI] fcoe: remove unused #include <version.h>
+Date: Thu,  2 Apr 2009 23:34:17 +0800
+Message-ID: <1238686457-1116-1-git-send-email-weiyi.huang@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sous-sol.org ([216.99.217.87]:60545 "EHLO sequoia.sous-sol.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753026AbZDBPbX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Apr 2009 11:31:23 -0400
-Content-Disposition: inline
-In-Reply-To: <49D4D68A.8080606@cs.wisc.edu>
+Received: from ti-out-0910.google.com ([209.85.142.191]:42522 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759519AbZDBPeY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Apr 2009 11:34:24 -0400
+Received: by ti-out-0910.google.com with SMTP id i7so569717tid.23
+        for <linux-scsi@vger.kernel.org>; Thu, 02 Apr 2009 08:34:22 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Jean Delvare <jdelvare@suse.de>, linux-scsi@vger.kernel.org, Chris Wright <chrisw@sous-sol.org>, James Bottomley <James.Bottomley@hansenpartnership.com>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, Huang Weiyi <weiyi.huang@gmail.com>
 
-* Mike Christie (michaelc@cs.wisc.edu) wrote:
->>> -	if (q->queue == ERR_PTR(-ENOMEM))
->>> +	if (IS_ERR(q->queue)) {
->>
->> This indeed solves the problem I had underlined before, but
->> introduces a new one. Right now the only error returned by kfifo_init
->> is -ENOMEM. This may however change in the future, and then the
->> above code would silently convert the other error code to -ENOMEM.
->> This might make it difficult to trace errors.
->
-> What do you mean by converting other errors codes to -ENOMEM?
+Remove unused #include <version.h> in drivers/scsi/fcoe/libfcoe.c.
 
-Jean means the goto label...it will jump to essentially return -ENOMEM.
+Signed-off-by: Huang Weiyi <weiyi.huang@gmail.com>
+---
+ drivers/scsi/fcoe/libfcoe.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
->> I know this is all just theoretical, at the moment your code is
->> correct, but I don't much like relying on assumptions which are not
->> guaranteed to last. So I would rather cleanly transmit the error code
->> up to the caller, or change the calling convention of kfifo_init() to
->
-> What do you mean by cleanly transmitting the error code up the caller?
+diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
+index 0d6f5be..1eb4f73 100644
+--- a/drivers/scsi/fcoe/libfcoe.c
++++ b/drivers/scsi/fcoe/libfcoe.c
+@@ -18,7 +18,6 @@
+  */
+ 
+ #include <linux/module.h>
+-#include <linux/version.h>
+ #include <linux/kernel.h>
+ #include <linux/spinlock.h>
+ #include <linux/skbuff.h>
+-- 
+1.6.0.4
 
-It's handwavy here...meaning if kfifo_init returned some other
-error for some other condition, propagating that up the stack to the
-iscsi_pool_init() caller.  Probably not all that critical to return
-ENOMEM vs someother errno in this case.
-
-thanks,
--chris
