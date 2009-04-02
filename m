@@ -1,70 +1,64 @@
-From: "Ross S. W. Walker" <RWalker@medallion.com>
-Subject: RE: [Scst-devel] [Iscsitarget-devel] ISCSI-SCST	performance (with also IET and STGT data)
-Date: Thu, 2 Apr 2009 10:14:45 -0400
-Message-ID: <E2BB8074E5500C42984D980D4BD78EF9029E3D15@MFG-NYC-EXCH2.mfg.prv>
-References: <49D10256.8030307@vlnb.net>	<e2e108260903301106y2b750c23kfab978567f3de3a0@mail.gmail.com>	<49D11096.3070804@vlnb.net>	<e2e108260903301153x38e86097vd29c47507da2879f@mail.gmail.com>	<49D254E4.8050806@vlnb.net>	<E2BB8074E5500C42984D980D4BD78EF9029E3D0B@MFG-NYC-EXCH2.mfg.prv>	<e2e108260903312329u118a54bfn3107fdca4b3e2b1d@mail.gmail.com>	<FA7F6940-CD5C-4460-9777-2F7AE3657B8E@gmail.com>	<1238617423.3318.82.camel@mulgrave.int.hansenpartnership.com> <49D46B8B.5000708@vlnb.net> <49D47F28.3060409@vlnb.net> <E2BB8074E5500C42984D980D4BD78EF9029E3D14@MFG-NYC-EXCH2.mfg.prv>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: linux-next: scsi tree build failure
+Date: Thu, 02 Apr 2009 14:22:21 +0000
+Message-ID: <1238682141.3383.11.camel@mulgrave.int.hansenpartnership.com>
+References: <20090402164927.97958f84.sfr@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailgw.nyc.medallion.com ([63.68.220.242]:1138 "EHLO
-	mailgw.nyc.medallion.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756209AbZDBOOr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Apr 2009 10:14:47 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <E2BB8074E5500C42984D980D4BD78EF9029E3D14@MFG-NYC-EXCH2.mfg.prv>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <20090402164927.97958f84.sfr@canb.auug.org.au>
+Sender: linux-next-owner@vger.kernel.org
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: linux-next@vger.kernel.org, Vasu Dev <vasu.dev@intel.com>, Robert Love <robert.w.love@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, iSCSI Enterprise Target Developer List <iscsitarget-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, Ross Walker <rswwalker@gmail.com>, scst-devel <scst-devel@lists.sourceforge.net>, stgt@vger.kernel.org
 
-Ross S. W. Walker wrote:
-> Vladislav Bolkhovitin wrote:
-> > Vladislav Bolkhovitin, on 04/02/2009 11:38 AM wrote:
-> > > James Bottomley, on 04/02/2009 12:23 AM wrote:
-> > >> 
-> > >> SCST explicitly fiddles with the io context to get this to happen.  It
-> > >> has a hack to block to export alloc_io_context:
-> > >>
-> > >> http://marc.info/?t=122893564800003
-> > > 
-> > > Correct, although I wouldn't call it "fiddle", rather "grouping" ;)
+cc: linux-scsi added
+
+On Thu, 2009-04-02 at 16:49 +1100, Stephen Rothwell wrote:
+> Hi James,
 > 
-> Call it what you like,
+> Today's linux-next build (powerpc allyesconfig) failed like this:
 > 
-> Vladislav Bolkhovitin wrote:
-> > Ross S. W. Walker, on 03/30/2009 10:33 PM wrote:
-> > 
-> > I would be interested in knowing how your code defeats CFQ's extremely
-> > high latency? Does your code reach into the io scheduler too? If not,
-> > some code hints would be great.
+> drivers/scsi/fcoe/fcoe.c:982: error: __ksymtab_fcoe_fc_crc causes a section type conflict
+> drivers/scsi/fcoe/fcoe.c:982: error: __ksymtab_fcoe_fc_crc causes a section type conflict
 > 
-
-The above quoting was wrong, for accuracy, it should have read:
-
-Vladislav Bolkhovitin wrote:
-> Ross S. W. Walker, on 03/30/2009 10:33 PM wrote:
-> > 
-> > I would be interested in knowing how your code defeats CFQ's extremely
-> > high latency? Does your code reach into the io scheduler too? If not,
-> > some code hints would be great.
+> Reverting commit 0c3cb56ec3321b23e9826cccf822470717be6e08 ("[SCSI] fcoe:
+> cleans up libfcoe.h and adds fcoe.h for fcoe module") makes the error go
+> away.  I have no idea why - the only clue is that the only global
+> declaration of fcoe_fc_crc() is removed by that commit.
 > 
-> Hmm, CFQ doesn't have any extra processing latency, especially 
-> "extremely", hence there is nothing to defeat. If it had, how could it 
-> been chosen as the default?
+> Using a different compiler version (4.1.2) also fixed the problem.
 
-Just so there is no misunderstanding who said what here.
+Yes, that would be why I didn't see the issue.
 
--Ross
+> I also had to revert commits 60390544fcc212e0657cf1eea639691d09651943
+> ("[SCSI] fcoe, libfc: fix double fcoe_softc memory alloc") and
+> ba070644bff4390c965e99b1997f2cbec4157b46 ("[SCSI] fcoe, libfcoe: Add
+> support for FIP. FCoE discovery and keep-alive") since they followed the
+> one above.
+> 
+> I wonder if that function even needs to be exported as it is only used
+> withing the one file.
 
-______________________________________________________________________
-This e-mail, and any attachments thereto, is intended only for use by
-the addressee(s) named herein and may contain legally privileged
-and/or confidential information. If you are not the intended recipient
-of this e-mail, you are hereby notified that any dissemination,
-distribution or copying of this e-mail, and any attachments thereto,
-is strictly prohibited. If you have received this e-mail in error,
-please immediately notify the sender and permanently delete the
-original and any copy or printout thereof.
+I think it's because the above commit removes the external declaration
+of fcoe_fc_crc ... so now we have an export symbol with no header
+defining it.  I think the correct patch is just not to export the
+symbol.
 
+James
+
+---
+
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 5cdda6e..94e1e31 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -979,7 +979,6 @@ u32 fcoe_fc_crc(struct fc_frame *fp)
+ 	}
+ 	return crc;
+ }
+-EXPORT_SYMBOL_GPL(fcoe_fc_crc);
+ 
+ /**
+  * fcoe_xmit() - FCoE frame transmit function
