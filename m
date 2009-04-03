@@ -1,48 +1,70 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 0/6] mpt fusion: Firmware Event implementation using
-	seperate WorkQueue
-Date: Fri, 03 Apr 2009 20:44:09 +0000
-Message-ID: <1238791449.3359.91.camel@mulgrave.int.hansenpartnership.com>
-References: <20090403114626.GA17721@lsi.com>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH 00/15] Open-FCoE updates (fixes and a feature) for 2.6.30
+	merge window
+Date: Fri, 03 Apr 2009 14:57:58 -0700
+Message-ID: <20090403215758.10856.6946.stgit@fritz>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:40876 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S937228AbZDCUoM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2009 16:44:12 -0400
-In-Reply-To: <20090403114626.GA17721@lsi.com>
+Received: from mga03.intel.com ([143.182.124.21]:28608 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761611AbZDCV6A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Apr 2009 17:58:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Cc: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
+To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-On Fri, 2009-04-03 at 17:16 +0530, Kashyap, Desai wrote:
-> These patches are created on top of MPT fusion previous patch applied on
-> date 26/02/2009 with subject line: "mpt fusion: config, Taskmgmt cmd,
-> Internal cmd, Ioctl cmd changes"
-> 
-> Some patches are splited into two diffrent patches only for readability
-> purpose for reviewer.
-> 
-> Consider below patches as one logical patch. There is no harm to send
-> those patches as single patch, but to give more readability I have choosen
-> to split.
-> PATCH 2 and PATCH 3.
-> PATCH 4 and PATCH 5.
-> 
-> PATCH 3 and PATCH 5 include only those function which are not part of MPT
-> fusion.
+The following series implements some bug fixes to libfc
+and the addition of dynamic logging capabilities for libfc,
+libfcoe and fcoe.
 
-What actually happened to patch 5?  It looks like you've got two patch
-number 4's
+The bug fixes are mostly related to the rogue rport
+tracking that libfc does before getting a "real"
+rport from the FC transport. Also there are locking
+and state verification fixes.
 
-[PATCH 4/6] mpt fusion: SAS topology scan changes,Expander events, link status events added
-[PATCH 4/6] mpt fusion: Deleted functions for SAS topology scan changes,Expander events, link status events added
+The dynamic logging code was originally mailed to
+linux-scsi during the 2.6.29 rc phase, but was
+incorrectly mixed in with fixes. This is a refresh
+of that patch set. Since that original patch set
+libfcoe and fcoe have been better distinguished as
+separate modules, so this patch set was modified to
+reflect that change.
 
-But the ordering doesn't look to matter at all, fortunately.
+---
 
-James
+Abhijeet Joglekar (6):
+      libfc: whenever queueing delete ev for rport, set state to NONE
+      libfc: Change state to NONE in fc_lport_destroy
+      libfc: During fabric logoff, flush the rport Q after logging off dns port
+      libfc: Track rogue remote ports
+      libfc: Do not retry if the new state is not the same as old state
+      libfc: Hold disc mutex while processing gpn ft resp
+
+Robert Love (9):
+      libfc: Remove unused FC_DBG macro
+      libfc: Convert debug statements in fc_exch.c to use new libfc debug macros.
+      libfc: Convert debug statements in fc_fcp.c to use new libfc debug macros.
+      libfc: Convert debug statements in fc_rport.c to use new libfc debug macros.
+      libfc: Convert debug statements in fc_disc.c to use new libfc debug macros.
+      libfc: Convert debug statements in fc_lport.c to use new libfc debug macros.
+      libfc: Add runtime debugging with debug_logging module parameter
+      libfcoe: Add runtime debugging with module param debug_logging
+      fcoe: Add runtime debug logging with module parameter debug_logging
 
 
+ drivers/scsi/fcoe/fcoe.c      |  108 ++++++++++----------
+ drivers/scsi/fcoe/fcoe.h      |   24 ++++
+ drivers/scsi/fcoe/libfcoe.c   |   94 ++++++++++--------
+ drivers/scsi/libfc/fc_disc.c  |  137 ++++++++++++++------------
+ drivers/scsi/libfc/fc_exch.c  |   58 +++++------
+ drivers/scsi/libfc/fc_fcp.c   |   97 +++++++++---------
+ drivers/scsi/libfc/fc_lport.c |  220 +++++++++++++++++++++--------------------
+ drivers/scsi/libfc/fc_rport.c |  184 +++++++++++++++++++---------------
+ include/scsi/fc_encode.h      |    2 
+ include/scsi/libfc.h          |   78 ++++++++++++---
+ 10 files changed, 565 insertions(+), 437 deletions(-)
+
+-- 
+//Rob
