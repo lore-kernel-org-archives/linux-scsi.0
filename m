@@ -1,72 +1,65 @@
-From: Bart Van Assche <bart.vanassche@gmail.com>
-Subject: Re: [Scst-devel] ISCSI-SCST performance (with also IET and STGTdata)
-Date: Fri, 3 Apr 2009 19:52:53 +0200
-Message-ID: <e2e108260904031052n49501221y4b0273270e1c58d2@mail.gmail.com>
-References: <e2e108260904031008u434e6d06rc7d657a087e64fbc@mail.gmail.com>
-	 <C2F174F99918D54CA2A96E57C5079B6F012A9649@sbc-exmsg2.sbcounty.gov>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] block: fix intermittent dm timeout based oops
+Date: Fri, 3 Apr 2009 20:01:06 +0200
+Message-ID: <20090403180106.GA5178@kernel.dk>
+References: <20090324071730.53D7118C7A2@pentland.suse.de> <20090403143208.GA10005@schmichrtp.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:45293 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755627AbZDCRw5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2009 13:52:57 -0400
-In-Reply-To: <C2F174F99918D54CA2A96E57C5079B6F012A9649@sbc-exmsg2.sbcounty.gov>
+Received: from brick.kernel.dk ([93.163.65.50]:52629 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935812AbZDCSBJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Apr 2009 14:01:09 -0400
+Content-Disposition: inline
+In-Reply-To: <20090403143208.GA10005@schmichrtp.de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Sufficool, Stanley" <ssufficool@rov.sbcounty.gov>
-Cc: Vladislav Bolkhovitin <vst@vlnb.net>, scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-On Fri, Apr 3, 2009 at 7:13 PM, Sufficool, Stanley
-<ssufficool@rov.sbcounty.gov> wrote:
->> On Thu, Apr 2, 2009 at 7:16 PM, Vladislav Bolkhovitin
->> <vst@vlnb.net> wrote:
->> > Bart Van Assche, on 04/02/2009 12:14 AM wrote:
->> >> I have repeated some of these performance tests for iSCSI
->> >> over IPoIB
->> >> (two DDR PCIe 1.0 ConnectX HCA's connected back to back).
->> >> The results
->> >> for the buffered I/O test with a block size of 512K (initiator)
->> >> against a file of 1GB residing on a tmpfs filesystem on the target
->> >> are as follows:
->> >>
->> >> write-test: iSCSI-SCST 243 MB/s; IET 192 MB/s.
->> >> read-test: iSCSI-SCST 291 MB/s; IET 223 MB/s.
->> >>
->> >> And for a block size of 4 KB:
->> >>
->> >> write-test: iSCSI-SCST 43 MB/s; IET 42 MB/s.
->> >> read-test: iSCSI-SCST 288 MB/s; IET 221 MB/s.
->> >
->> > Do you have any thoughts why writes are so bad? It shouldn't be so..
->>
->> It's not impossible that with the 4 KB write test I hit the
->> limits of the initiator system (Intel E6750 CPU, 2.66 GHz,
->> two cores). Some statistics I gathered during the 4 KB write test:
->> Target: CPU load 0.5, 16500 mlx4-comp-0 interrupts per
->> second, same number of interrupts processed by each core (8250/s).
->> Initiator: CPU load 1.0, 32850 mlx4-comp-0 interrupts per
->> second, all interrupts occurred on the same core.
->
-> Are you using connected mode IPoIB and setting the MTU to 4KB? Would
-> fragmentation of IPoIB drive up the interrupt rates?
+On Fri, Apr 03 2009, Christof Schmitt wrote:
+> On Tue, Mar 24, 2009 at 08:17:30AM +0100, Hannes Reinecke wrote:
+> > Very rarely under stress testing of dm, oopses are occuring as
+> > something tampers with an old stack frame.  This has been traced back
+> > to blk_abort_queue() leaving a timeout_list pointing to the stack.
+> > The reason is that sometimes blk_abort_request() won't delete the
+> > timer (if the request is marked as complete but before the timer has
+> > been removed, a small race window).  Fix this by splicing back from
+> > the ususally empty list to the q->timeout_list.
+> > 
+> > Signed-off-by: Hannes Reinecke <hare@suse.de>
+> > ---
+> >  block/blk-timeout.c |    6 ++++++
+> >  1 files changed, 6 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/block/blk-timeout.c b/block/blk-timeout.c
+> > index bbbdc4b..6213123 100644
+> > --- a/block/blk-timeout.c
+> > +++ b/block/blk-timeout.c
+> > @@ -224,6 +224,12 @@ void blk_abort_queue(struct request_queue *q)
+> >  	list_for_each_entry_safe(rq, tmp, &list, timeout_list)
+> >  		blk_abort_request(rq);
+> > 
+> > +	/*
+> > +	 * Occasionally, blk_abort_request() will return without
+> > +	 * deleting the element from the list
+> > +	 */
+> > +	list_splice(&list, &q->timeout_list);
+> > +
+> >  	spin_unlock_irqrestore(q->queue_lock, flags);
+> > 
+> >  }
+> > -- 
+> > 1.5.3.2
+> 
+> I just noticed that this fix is not upstream yet and i have seen test
+> cases hitting this problem.
+> 
+> Jens, are you going to included this patch, or should this go through
+> the SCSI tree?
 
-All tests have been run with default IPoIB settings: an MTU of 2044
-bytes and datagram mode. The following data has been obtained from the
-target system after several 4 KB write tests:
+I will include it, and CC stable as well.
 
-$ cat /sys/class/net/ib0/mode
-datagram
-$ /sbin/ifconfig ib0
-ib0       Link encap:UNSPEC  HWaddr
-80-00-00-48-FE-80-00-00-00-00-00-00-00-00-00-00
-          inet addr:192.168.2.1  Bcast:192.168.2.255  Mask:255.255.255.0
-          inet6 addr: fe80::202:c903:2:d217/64 Scope:Link
-          UP BROADCAST RUNNING MULTICAST  MTU:2044  Metric:1
-          RX packets:88482013 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:38444824 errors:0 dropped:11 overruns:0 carrier:0
-          collisions:0 txqueuelen:256
-          RX bytes:135770573672 (129480.9 Mb)  TX bytes:5647702210 (5386.0 Mb)
+-- 
+Jens Axboe
 
-Bart.
