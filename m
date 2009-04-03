@@ -1,80 +1,73 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] sg: fix iovec bugs introduced by the block layer conversion
-Date: Fri, 3 Apr 2009 09:12:20 +0900
-Message-ID: <20090403091215K.fujita.tomonori@lab.ntt.co.jp>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: linux-next: scsi tree build failure
+Date: Fri, 3 Apr 2009 11:26:02 +1100
+Message-ID: <20090403112602.fa3010c8.sfr@canb.auug.org.au>
+References: <20090402164927.97958f84.sfr@canb.auug.org.au>
+	<1238682141.3383.11.camel@mulgrave.int.hansenpartnership.com>
+	<1238692778.15031.56.camel@fritz>
+	<1238696622.13399.11.camel@mulgrave.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:47180 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754343AbZDCAMb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Apr 2009 20:12:31 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Fri__3_Apr_2009_11_26_02_+1100_PHOPr34U9s=VW=0h"
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <1238696622.13399.11.camel@mulgrave.int.hansenpartnership.com>
+Sender: linux-next-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Robert Love <robert.w.love@intel.com>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, "Dev, Vasu" <vasu.dev@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: dgilbert@interlog.com, linux-scsi@vger.kernel.org
 
-This is a fix for another fallout of the block layer conversion (sorry).
+--Signature=_Fri__3_Apr_2009_11_26_02_+1100_PHOPr34U9s=VW=0h
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-This should be go into 2.6.28.y and 2.6.29.y.
+Hi James,
 
-=
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] sg: fix iovec bugs introduced by the block layer conversion
+On Thu, 02 Apr 2009 18:23:42 +0000 James Bottomley <James.Bottomley@HansenP=
+artnership.com> wrote:
+>
+> On Thu, 2009-04-02 at 10:19 -0700, Robert Love wrote:
+> >
+> > I built using gcc version 4.3.2 (on x86_64) and didn't see this either.
 
-- needs to use copy_from_user for iovec before passing it to
-blk_rq_map_user_iov().
+It may be powerpc specific, I guess.
 
-- before the block layer conversion, if ->dxfer_len and sum of iovec
-disagrees, the shorter one wins. However, currently sg returns
--EINVAL. This restores the old behavior.
+> > > diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+> > > index 5cdda6e..94e1e31 100644
+> > > --- a/drivers/scsi/fcoe/fcoe.c
+> > > +++ b/drivers/scsi/fcoe/fcoe.c
+> > > @@ -979,7 +979,6 @@ u32 fcoe_fc_crc(struct fc_frame *fp)
+> > >  	}
+> > >  	return crc;
+> > >  }
+> > > -EXPORT_SYMBOL_GPL(fcoe_fc_crc);
+> > > =20
+> > >  /**
+> > >   * fcoe_xmit() - FCoE frame transmit function
+> > >=20
+> > >=20
+> Right at the moment, I need someone to verify that this is the fix,
+> since I don't have a complaining compiler myself.  If it's this simple,
+> I can adjust the patch accordingly.
 
-Cc: stable@kernel.org
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/scsi/sg.c |   28 ++++++++++++++++++++++++----
- 1 files changed, 24 insertions(+), 4 deletions(-)
+This fixes it for me.  I will apply that patch to linux-next for today
+(instead of the reverts I did yesterday).
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index ffc8785..1e40518 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1656,10 +1656,30 @@ static int sg_start_req(Sg_request *srp, unsigned char *cmd)
- 		md->null_mapped = hp->dxferp ? 0 : 1;
- 	}
- 
--	if (iov_count)
--		res = blk_rq_map_user_iov(q, rq, md, hp->dxferp, iov_count,
--					  hp->dxfer_len, GFP_ATOMIC);
--	else
-+	if (iov_count) {
-+		int len, size = sizeof(struct sg_iovec) * iov_count;
-+		struct iovec *iov;
-+
-+		iov = kmalloc(size, GFP_ATOMIC);
-+		if (!iov)
-+			return -ENOMEM;
-+
-+		if (copy_from_user(iov, hp->dxferp, size)) {
-+			kfree(iov);
-+			return -EFAULT;
-+		}
-+
-+		len = iov_length(iov, iov_count);
-+		if (hp->dxfer_len < len) {
-+			iov_count = iov_shorten(iov, iov_count, hp->dxfer_len);
-+			len = hp->dxfer_len;
-+		}
-+
-+		res = blk_rq_map_user_iov(q, rq, md, (struct sg_iovec *)iov,
-+					  iov_count,
-+					  len, GFP_ATOMIC);
-+		kfree(iov);
-+	} else
- 		res = blk_rq_map_user(q, rq, md, hp->dxferp,
- 				      hp->dxfer_len, GFP_ATOMIC);
- 
--- 
-1.6.0.6
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
 
+--Signature=_Fri__3_Apr_2009_11_26_02_+1100_PHOPr34U9s=VW=0h
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAknVV5oACgkQjjKRsyhoI8z/RACgjt5Or6luGEVmZ9yt49NBrg49
+bFIAoJhiFOOGrkmyus7A9N9f9Q67d5Jd
+=AKGi
+-----END PGP SIGNATURE-----
+
+--Signature=_Fri__3_Apr_2009_11_26_02_+1100_PHOPr34U9s=VW=0h--
