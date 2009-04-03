@@ -1,14 +1,14 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 0/6] mpt fusion: Firmware Event implementation using seperate WorkQueue
-Date: Fri, 3 Apr 2009 17:16:44 +0530
-Message-ID: <20090403114626.GA17721@lsi.com>
+Subject: [PATCH 1/6] mpt fusion: fix for previous patch taskmgmt in progress should be cleared before return
+Date: Fri, 3 Apr 2009 17:19:48 +0530
+Message-ID: <20090403114943.GB17721@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og111.obsmtp.com ([64.18.2.175]:37169 "EHLO
-	exprod7og111.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759041AbZDCMFx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2009 08:05:53 -0400
+Received: from exprod7og118.obsmtp.com ([64.18.2.8]:46008 "EHLO
+	exprod7og118.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753286AbZDCMIq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2009 08:08:46 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,22 +16,61 @@ To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
 
-These patches are created on top of MPT fusion previous patch applied on
-date 26/02/2009 with subject line: "mpt fusion: config, Taskmgmt cmd,
-Internal cmd, Ioctl cmd changes"
+Small fix for previous Patch applied on 26/02/2009: subject line : "mpt fusion: config, Taskmgmt cmd, Internal cmd, Ioctl cmd changes".
 
-Some patches are splited into two diffrent patches only for readability
-purpose for reviewer.
-
-Consider below patches as one logical patch. There is no harm to send
-those patches as single patch, but to give more readability I have choosen
-to split.
-PATCH 2 and PATCH 3.
-PATCH 4 and PATCH 5.
-
-PATCH 3 and PATCH 5 include only those function which are not part of MPT
-fusion.
+Before returning from function make sure that taskmgmt in progress bit is
+cleared.
 ---
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index 842e4f8..4e90870 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -553,18 +553,20 @@ mptsas_target_reset(MPT_ADAPTER *ioc, u8 channel, u8 id)
+ {
+ 	MPT_FRAME_HDR	*mf;
+ 	SCSITaskMgmt_t	*pScsiTm;
++
+ 	if (mpt_set_taskmgmt_in_progress_flag(ioc) != 0)
+ 		return 0;
+ 
+-
+-	mf = mpt_get_msg_frame(mptsasDeviceResetCtx, ioc);
+-	if (mf == NULL) {
++	if ((mf = mpt_get_msg_frame(mptsasDeviceResetCtx, ioc)) == NULL) {
+ 		dfailprintk(ioc, printk(MYIOC_s_WARN_FMT
+-			"%s, no msg frames @%d!!\n",
+-			ioc->name, __func__, __LINE__));
+-		return 0;
++			"%s, no msg frames @%d!!\n", ioc->name,
++			__func__, __LINE__));
++		goto out_fail;
+ 	}
+ 
++	dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT "TaskMgmt request (mf=%p)\n",
++		ioc->name, mf));
++
+ 	/* Format the Request
+ 	 */
+ 	pScsiTm = (SCSITaskMgmt_t *) mf;
+@@ -577,9 +579,18 @@ mptsas_target_reset(MPT_ADAPTER *ioc, u8 channel, u8 id)
+ 
+ 	DBG_DUMP_TM_REQUEST_FRAME(ioc, (u32 *)mf);
+ 
++	dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT
++	   "TaskMgmt type=%d (sas device delete) fw_channel = %d fw_id = %d)\n",
++	   ioc->name, MPI_SCSITASKMGMT_TASKTYPE_TARGET_RESET, channel, id));
++
+ 	mpt_put_msg_frame_hi_pri(mptsasDeviceResetCtx, ioc, mf);
+ 
+ 	return 1;
++
++ out_fail:
++
++	mpt_clear_taskmgmt_in_progress_flag(ioc);
++	return 0;
+ }
+ 
+ /**
