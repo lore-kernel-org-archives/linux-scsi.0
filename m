@@ -1,53 +1,54 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] sg: fix q->queue_lock on scsi_error_handler path
-Date: Fri, 03 Apr 2009 11:11:52 -0400
-Message-ID: <49D62738.9010807@interlog.com>
-References: <20090403192745E.fujita.tomonori@lab.ntt.co.jp>
-Reply-To: dgilbert@interlog.com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [patch 08/15] esp: fix section mismatch warning
+Date: Fri, 03 Apr 2009 10:25:06 -0500
+Message-ID: <1238772306.3359.17.camel@mulgrave.int.hansenpartnership.com>
+References: <200903042006.n24K6CmE029281@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:51345 "EHLO
-	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759984AbZDCPL7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2009 11:11:59 -0400
-In-Reply-To: <20090403192745E.fujita.tomonori@lab.ntt.co.jp>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54732 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755701AbZDCPZL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2009 11:25:11 -0400
+In-Reply-To: <200903042006.n24K6CmE029281@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: linux-scsi@vger.kernel.org, randy.dunlap@oracle.com, arobinso@nyx.net
 
-FUJITA Tomonori wrote:
-> This is a fix for another fallout of the block layer conversion (sorry
-> again).
+On Wed, 2009-03-04 at 12:06 -0800, akpm@linux-foundation.org wrote:
+> From: Randy Dunlap <randy.dunlap@oracle.com>
 > 
-> This should be go into 2.6.28.y and 2.6.29.y.
+> Not critical.
 > 
-> However, this should go with patches that I sent for 2.6.29.1 and
-> were dropped. So I don't use 'stable@kernel.org' tag.
+> WARNING: drivers/char/esp.o(.text+0x278): Section mismatch in reference from the function show_serial_version() to the variable .init.data:serial_version
+> The function show_serial_version() references
+> the variable __initdata serial_version.
+> This is often because show_serial_version lacks a __initdata
+> annotation or the annotation of serial_version is wrong.
 > 
-> =
-> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Subject: [PATCH] [PATCH] sg: fix q->queue_lock on scsi_error_handler path
+> WARNING: drivers/char/esp.o(.text+0x27d): Section mismatch in reference from the function show_serial_version() to the variable .init.data:serial_name
+> The function show_serial_version() references
+> the variable __initdata serial_name.
+> This is often because show_serial_version lacks a __initdata
+> annotation or the annotation of serial_name is wrong.
 > 
-> sg_rq_end_io() is called via rq->end_io. In some rare cases,
-> sg_rq_end_io calls blk_put_request/blk_rq_unmap_user (when a program
-> issuing a command has gone before the command completion; e.g. by
-> interrupting a program issuing a command before the command
-> completes).
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+> Cc: Andrew J. Robinson <arobinso@nyx.net>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> ---
 > 
-> We can't call blk_put_request/blk_rq_unmap_user in interrupt so the
-> commit c96952ed7031e7c576ecf90cf95b8ec099d5295a uses
-> execute_in_process_context().
+>  drivers/char/esp.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> The problem is that scsi_error_handler() calls rq->end_io too. We
-> can't call blk_put_request/blk_rq_unmap_user too in this path (we hold
-> q->queue_lock).
-> 
-> To avoid the above problem, in these rare cases, this patch always
-> uses schedule_work() instead of execute_in_process_context().
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> diff -puN drivers/char/esp.c~esp-fix-section-mismatch-warning drivers/char/esp.c
+> --- a/drivers/char/esp.c~esp-fix-section-mismatch-warning
+> +++ a/drivers/char/esp.c
 
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+That's not a SCSI driver (so linux-scsi isn't the right list).  esp is
+some type of strange serial driver.
+
+James
+
+
