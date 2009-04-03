@@ -1,93 +1,81 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] osdblk: a Linux block device for OSD objects
-Date: Fri, 03 Apr 2009 06:14:02 -0400
-Message-ID: <49D5E16A.80104@garzik.org>
-References: <20090402015455.GA14087@havoc.gtf.org> <1238722324.13399.25.camel@mulgrave.int.hansenpartnership.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] sg: fix q->queue_lock on scsi_error_handler path
+Date: Fri, 3 Apr 2009 19:28:06 +0900
+Message-ID: <20090403192745E.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:36687 "EHLO mail.dvmed.net"
+Received: from sh.osrg.net ([192.16.179.4]:59546 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753787AbZDCKOH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Apr 2009 06:14:07 -0400
-In-Reply-To: <1238722324.13399.25.camel@mulgrave.int.hansenpartnership.com>
+	id S1759446AbZDCK2O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Apr 2009 06:28:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, axboe@kernel.dk, Andrew Morton <akpm@linux-foundation.org>
+To: James.Bottomley@HansenPartnership.com
+Cc: dgilbert@interlog.com, linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
->> +   1) Map a Linux block device to an existing OSD object.
->> +
->> +      In this example, we will use partition id 1234, object id 5678,
->> +      OSD device /dev/osd1.
->> +
->> +      $ echo "1234 5678 /dev/osd1" > /sys/class/osdblk/add
->> +
->> +
->> +   2) List all active blkdev<->object mappings.
->> +
->> +      In this example, we have performed step #1 twice, creating two blkdevs,
->> +      mapped to two separate OSD objects.
->> +
->> +      $ cat /sys/class/osdblk/list
->> +      0 174 1234 5678 /dev/osd1
->> +      1 179 1994 897123 /dev/osd0
-> 
-> This is a slight violation of the one piece of data per sysfs file
-> rule ... might it not be better as a file named <partid>-<objid> linking
-> to the osd device location in sysfs?
+This is a fix for another fallout of the block layer conversion (sorry
+again).
 
-Yeah...   I leaned more towards a consolidated table, as it was 
-elegantly implemented in just a few lines of code, including locking :)
+This should be go into 2.6.28.y and 2.6.29.y.
 
+However, this should go with patches that I sent for 2.6.29.1 and
+were dropped. So I don't use 'stable@kernel.org' tag.
 
->> +      The columns, in order, are:
->> +      - blkdev unique id
->> +      - blkdev assigned major
->> +      - OSD object partition id
->> +      - OSD object id
->> +      - OSD device
->> +
->> +
->> +   3) Remove an active blkdev<->object mapping.
->> +
+=
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] [PATCH] sg: fix q->queue_lock on scsi_error_handler path
 
+sg_rq_end_io() is called via rq->end_io. In some rare cases,
+sg_rq_end_io calls blk_put_request/blk_rq_unmap_user (when a program
+issuing a command has gone before the command completion; e.g. by
+interrupting a program issuing a command before the command
+completes).
 
->> +	unsigned long		obj_id;
->> +	char			osd_path[0];
->> +};
->> +
->> +static struct class *class_osdblk;		/* /sys/class/osdblk */
->> +static struct mutex ctl_mutex;	/* Serialize open/close/setup/teardown */
->> +static struct osdblk_device *osdblk_devs[OSDBLK_MAX_DEVS];
-> 
-> Might it not be better to do this as a linked list on the private dev
-> structure instead?  This only works if you have one entry
-> in /sys/class/osdblock per device because now you have a device private
-> pointer to hang it off
+We can't call blk_put_request/blk_rq_unmap_user in interrupt so the
+commit c96952ed7031e7c576ecf90cf95b8ec099d5295a uses
+execute_in_process_context().
 
-converted to list
+The problem is that scsi_error_handler() calls rq->end_io too. We
+can't call blk_put_request/blk_rq_unmap_user too in this path (we hold
+q->queue_lock).
 
+To avoid the above problem, in these rare cases, this patch always
+uses schedule_work() instead of execute_in_process_context().
 
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/sg.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
->> +static int osdblk_get_free_req(struct osdblk_device *osdev)
->> +{
->> +	int i;
->> +
->> +	for (i = 0; i < OSDBLK_MAX_REQ; i++) {
->> +		if (!osdev->req[i].rq)
->> +			return i;
->> +	}
-> 
-> Rather than using a static list of outstanding requests, I think you
-> could probably use the block tag handling infrastructure for all of this
-
-converted to use blk-tag.c gadgetry
-
-Thanks for the review!
-
-	Jeff
-
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 1e40518..82312df 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -1312,8 +1312,10 @@ static void sg_rq_end_io(struct request *rq, int uptodate)
+ 		wake_up_interruptible(&sfp->read_wait);
+ 		kill_fasync(&sfp->async_qp, SIGPOLL, POLL_IN);
+ 		kref_put(&sfp->f_ref, sg_remove_sfp);
+-	} else
+-		execute_in_process_context(sg_rq_end_io_usercontext, &srp->ew);
++	} else {
++		INIT_WORK(&srp->ew.work, sg_rq_end_io_usercontext);
++		schedule_work(&srp->ew.work);
++	}
+ }
+ 
+ static struct file_operations sg_fops = {
+@@ -2099,7 +2101,8 @@ static void sg_remove_sfp(struct kref *kref)
+ 	write_unlock_irqrestore(&sg_index_lock, iflags);
+ 	wake_up_interruptible(&sdp->o_excl_wait);
+ 
+-	execute_in_process_context(sg_remove_sfp_usercontext, &sfp->ew);
++	INIT_WORK(&sfp->ew.work, sg_remove_sfp_usercontext);
++	schedule_work(&sfp->ew.work);
+ }
+ 
+ static int
+-- 
+1.6.0.6
 
