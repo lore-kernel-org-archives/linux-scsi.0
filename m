@@ -1,72 +1,221 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] [LIO-Target/ConfigFS]: Add lio_target_port_check_link()
-Date: Fri, 03 Apr 2009 01:26:57 -0700
-Message-ID: <1238747217.4250.451.camel@haakon2.linux-iscsi.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] osdblk: a Linux block device for OSD objects
+Date: Fri, 03 Apr 2009 05:38:41 -0400
+Message-ID: <49D5D921.6080904@garzik.org>
+References: <20090402015455.GA14087@havoc.gtf.org> <49D4AF12.40708@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp119.sbc.mail.sp1.yahoo.com ([69.147.64.92]:25666 "HELO
-	smtp119.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1759956AbZDCI1G (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2009 04:27:06 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <49D4AF12.40708@panasas.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: open-osd mailing-list <osd-dev@open-osd.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, axboe@kernel.dk, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
-To: LKML <linux-kernel@vger.kernel.org>, Linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Joel Becker <joel.becker@oracle.com>, Andrew Morton <akpm@linux-foundation.org>
 
-Greetings all,
+Boaz Harrosh wrote:
+> I have taken that to my heart and will submit patches for that, next week.
+> Including a complimentary patch to this driver. These changes are only
+> intended for 2.6.31 though.
 
-This patch adds struct configfs_item_operations->check_link() for
-lio_target_port_item_ops that allows existing LIO-Target Port Logical Unit
-ACL to prevent an unlink(2) from a exported target_core_mod/ConfigFS
-Linux storage object at:
+Consolidation of common code should occur after osdblk is in one of: 
+open-osd.git, scsi-misc.git, or linux-2.6.git.
 
-/sys/kernel/config/target/iscsi/$TARGET_IQN/$TPGT/lun/$LUN/$PORT
+That way, the code movement can be consolidated into a single changeset, 
+touching exofs, osdblk and libosd all at the same time...
+	-exofs code
+	-osdblk code
+	+libosd code
 
-when iSCSI Initiator LUN ACLs exist to LIO-Target/ConfigFS storage
-objects in:
 
-/sys/kernel/config/target/iscsi/$IQN/$TPGT/acl/$INITIATOR_IQN/$LUN
+> I also want to add a small utility that can manage objects, create, size,
+> remove, and mount as a complimentary wrapper for this driver is "osdblk"
+> a good name for such utility?
 
-These patches are made against lio-core-2.6.git/master and tested on
-v2.6.29 x86 32-bit HVM.  The lio-core-2.6.git tree can be found at: 
+osdblk intentionally maintains -zero- metadata on its own.  Therefore, 
+this utility you propose can be completely generic.  You could call it 
+"osdobjutil", because it need not be tied to the osdblk driver.
 
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=summary
+The osdblk driver needs the following from the utility:
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/lio-core/iscsi_target_configfs.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+- create object of specified size
 
-diff --git a/drivers/lio-core/iscsi_target_configfs.c b/drivers/lio-core/iscsi_target_configfs.c
-index dc6ef88..acaa436 100644
---- a/drivers/lio-core/iscsi_target_configfs.c
-+++ b/drivers/lio-core/iscsi_target_configfs.c
-@@ -523,6 +523,13 @@ out:
- 	return(ret);
- }
- 
-+static int lio_target_port_check_link(struct config_item *lun_ci)
-+{
-+	se_lun_t *lun = container_of(to_config_group(lun_ci), se_lun_t, lun_group);
-+
-+	return atomic_read(&lun->lun_acl_count) ? -EACCES : 0;
-+}
-+
- static int lio_target_port_unlink (struct config_item *lun_ci, struct config_item *se_dev_ci)
- {
- 	iscsi_portal_group_t *tpg;
-@@ -568,6 +575,7 @@ static struct configfs_item_operations lio_target_port_item_ops = {
- 	.show_attribute		= lio_target_port_show,
- 	.store_attribute	= lio_target_port_store,
- 	.allow_link		= lio_target_port_link,
-+	.check_link		= lio_target_port_check_link,
- 	.drop_link		= lio_target_port_unlink,
- };
- 
--- 
-1.5.4.1
+- delete object
+
+and optionally:
+- resize object to new size
+
+There is no need for a mount operation, because this is handled through 
+class_osdblk_add()
+
+
+>> +static int osdblk_get_obj_size(struct osdblk_device *osdev, u64 *size_out)
+>> +{
+>> +	struct osd_request *or;
+>> +	struct osd_attr attr;
+>> +	int ret;
+>> +
+>> +	osd_make_credential(osdev->obj_cred, &osdev->obj);
+>> +
+> 
+> -	osd_make_credential(osdev->obj_cred, &osdev->obj);
+> see below
+
+fixed
+
+
+>> +static void osdblk_osd_complete(struct osd_request *or, void *private)
+>> +{
+>> +	struct osdblk_request *orq = private;
+>> +	struct osd_sense_info osi;
+>> +	int ret = osd_req_decode_sense(or, &osi);
+>> +
+>> +	if (ret)
+>> +		ret = -EIO;
+>> +
+>> +	osd_end_request(or);
+>> +	osdblk_end_request(orq->osdev, orq, ret);
+> 
+> should be reversed, very bad things will happen otherwise
+> 
+> +	osdblk_end_request(orq->osdev, orq, ret);
+> +	osd_end_request(or);
+
+Perhaps you are confusing two different 'struct request' in use?
+
+	- struct request, passed to osdblk for execution
+	- struct request, used by libosd to pass commands
+
+The object lifetime of the struct request stored in 'orq' is longer than 
+the lifetime of the osd_request:
+
+	1) block layer passes 'rq' to osdblk
+	2) osdblk creates new 'or', passes 'or' to libosd
+	3) libosd calls osdblk completion function
+	4) osdblk completes 'or'
+	5) osdblk completes 'rq'
+
+As you can see, the object lifetime of 'or' is entirely within 'rq'.
+
+
+>> +		orq = &osdev->req[rq_idx];
+>> +		orq->tag = rq_idx;
+>> +		orq->rq = rq;
+>> +		orq->bio = bio;
+>> +		orq->osdev = osdev;
+>> +
+>> +		blkdev_dequeue_request(rq);
+>> +
+>> +		osd_make_credential(orq->cred, &osdev->obj);
+> 
+> -		osd_make_credential(orq->cred, &osdev->obj);
+> 
+> Don't do this here do it once on mount. The creds, once we define
+> the credential-manager protocol will have to be acquired at the begging.
+> (See below)
+> 
+> At much later stage, the credential-manager API will be able to callback
+> credentials and clients will need to reacquire them, or on credentials error
+> returns from I/O.
+
+fixed
+
+
+>> +
+>> +		or = osd_start_request(osdev->osd, GFP_NOIO);
+>> +		if (!or) {
+>> +			blk_requeue_request(q, rq);
+>> +			bio_put(bio);
+>> +			break;
+>> +		}
+>> +
+>> +		if (do_write)
+>> +			osd_req_write(or, &osdev->obj, bio,
+>> +				      rq->sector * 512ULL);
+>> +		else
+>> +			osd_req_read(or, &osdev->obj, bio,
+>> +				     rq->sector * 512ULL);
+>> +
+>> +		if (osd_async_op(or, osdblk_osd_complete, orq, orq->cred)) {
+>> +			/* FIXME: leak OSD request 'or' ? */
+> 
+> yes a leak
+> 
+>> +			blk_requeue_request(q, rq);
+> 	
+> +			or->request = NULL;
+
+already fixed, long before writing this email :)
+
+
+>> +			bio_put(bio);
+>> +		}
+>> +	}
+>> +}
+>> +
+>> +static void osdblk_free_disk(struct osdblk_device *osdev)
+>> +{
+>> +	struct gendisk *disk = osdev->disk;
+>> +
+>> +	if (!disk)
+>> +		return;
+>> +
+>> +	if (disk->flags & GENHD_FL_UP)
+>> +		del_gendisk(disk);
+>> +	if (disk->queue)
+>> +		blk_cleanup_queue(disk->queue);
+>> +	put_disk(disk);
+>> +}
+>> +
+>> +static int osdblk_init_disk(struct osdblk_device *osdev)
+>> +{
+>> +	struct gendisk *disk;
+>> +	struct request_queue *q;
+>> +	int rc;
+>> +	u64 obj_size = 0;
+>> +
+> 
+> +	osd_make_credential(osdev->obj_cred, &osdev->obj);
+> 
+> Later, when credential-manager is used, this will get expensive and sleepy
+> possibly going on the network and back.
+
+fixed
+
+
+>> +	if (idx == OSDBLK_MAX_DEVS) {
+>> +		rc = -ENOSPC;
+>> +		goto err_out;
+>> +	}
+>> +
+>> +	if (sscanf(buf, "%lu %lu %s", &osdev->part_id, &osdev->obj_id,
+> 
+> -	if (sscanf(buf, "%lu %lu %s", &osdev->part_id, &osdev->obj_id,
+> +	if (sscanf(buf, "%llu %llu %s", &osdev->obj.partition, &osdev->obj.id,
+> 
+>> +		   osdev->osd_path) != 3) {
+>> +		rc = -EINVAL;
+>> +		goto err_out_slot;
+>> +	}
+>> +
+>> +	osdev->obj.partition = osdev->part_id;
+>> +	osdev->obj.id = osdev->obj_id;
+> 
+> -	osdev->obj.partition = osdev->part_id;
+> -	osdev->obj.id = osdev->obj_id;
+> 
+> osdev->obj_id, and osdev->part_id can be removed.
+
+done
+
+
+> What can I say, great stuff.
+> 
+> OSD is a very clean API, that makes whole subsystems look trivial.
+
+I appreciate it, thanks for the review.
+
+	Jeff
 
 
 
