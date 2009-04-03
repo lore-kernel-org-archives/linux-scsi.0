@@ -1,239 +1,424 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 11/15] libfc: Convert debug statements in fc_disc.c to use new
-	libfc debug macros.
-Date: Fri, 03 Apr 2009 14:58:59 -0700
-Message-ID: <20090403215859.10856.14365.stgit@fritz>
+Subject: [PATCH 10/15] libfc: Convert debug statements in fc_lport.c to use
+	new libfc debug macros.
+Date: Fri, 03 Apr 2009 14:58:52 -0700
+Message-ID: <20090403215852.10856.47791.stgit@fritz>
 References: <20090403215758.10856.6946.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:38536 "EHLO mga01.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:38125 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759769AbZDCV7D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Apr 2009 17:59:03 -0400
+	id S1759769AbZDCV64 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Apr 2009 17:58:56 -0400
 In-Reply-To: <20090403215758.10856.6946.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-Convert debug statements in fc_disc.c to use new libfc
+Convert debug statements in fc_lport.c to use new libfc
 debug macros.
 
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_disc.c |   83 ++++++++++++++++++------------------------
- 1 files changed, 35 insertions(+), 48 deletions(-)
+ drivers/scsi/libfc/fc_lport.c |  156 ++++++++++++++++++++---------------------
+ 1 files changed, 75 insertions(+), 81 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
-index 4c88065..6fabf66 100644
---- a/drivers/scsi/libfc/fc_disc.c
-+++ b/drivers/scsi/libfc/fc_disc.c
-@@ -45,14 +45,6 @@
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index e0c2477..745fa55 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -101,14 +101,6 @@
  
- #define	FC_DISC_DELAY		3
+ #define	DNS_DELAY	      3 /* Discovery delay after RSCN (in seconds)*/
  
--static int fc_disc_debug;
+-static int fc_lport_debug;
 -
--#define FC_DEBUG_DISC(fmt...)			\
+-#define FC_DEBUG_LPORT(fmt...)			\
 -	do {					\
--		if (fc_disc_debug)		\
+-		if (fc_lport_debug)		\
 -			FC_DBG(fmt);		\
 -	} while (0)
 -
- static void fc_disc_gpn_ft_req(struct fc_disc *);
- static void fc_disc_gpn_ft_resp(struct fc_seq *, struct fc_frame *, void *);
- static int fc_disc_new_target(struct fc_disc *, struct fc_rport *,
-@@ -137,8 +129,8 @@ static void fc_disc_rport_callback(struct fc_lport *lport,
- 	struct fc_rport_libfc_priv *rdata = rport->dd_data;
- 	struct fc_disc *disc = &lport->disc;
+ static void fc_lport_error(struct fc_lport *, struct fc_frame *);
  
--	FC_DEBUG_DISC("Received a %d event for port (%6x)\n", event,
--		      rport->port_id);
-+	FC_DISC_DBG(disc, "Received a %d event for port (%6x)\n", event,
-+		    rport->port_id);
+ static void fc_lport_enter_reset(struct fc_lport *);
+@@ -151,8 +143,8 @@ static void fc_lport_rport_callback(struct fc_lport *lport,
+ 				    struct fc_rport *rport,
+ 				    enum fc_rport_event event)
+ {
+-	FC_DEBUG_LPORT("Received a %d event for port (%6x)\n", event,
+-		       rport->port_id);
++	FC_LPORT_DBG(lport, "Received a %d event for port (%6x)\n", event,
++		     rport->port_id);
  
  	switch (event) {
  	case RPORT_EV_CREATED:
-@@ -191,8 +183,7 @@ static void fc_disc_recv_rscn_req(struct fc_seq *sp, struct fc_frame *fp,
- 
- 	lport = disc->lport;
- 
--	FC_DEBUG_DISC("Received an RSCN event on port (%6x)\n",
--		      fc_host_port_id(lport->host));
-+	FC_DISC_DBG(disc, "Received an RSCN event\n");
- 
- 	/* make sure the frame contains an RSCN message */
- 	rp = fc_frame_payload_get(fp, sizeof(*rp));
-@@ -225,8 +216,8 @@ static void fc_disc_recv_rscn_req(struct fc_seq *sp, struct fc_frame *fp,
- 		 */
- 		switch (fmt) {
- 		case ELS_ADDR_FMT_PORT:
--			FC_DEBUG_DISC("Port address format for port (%6x)\n",
--				      ntoh24(pp->rscn_fid));
-+			FC_DISC_DBG(disc, "Port address format for port "
-+				    "(%6x)\n", ntoh24(pp->rscn_fid));
- 			dp = kzalloc(sizeof(*dp), GFP_KERNEL);
- 			if (!dp) {
- 				redisc = 1;
-@@ -243,19 +234,19 @@ static void fc_disc_recv_rscn_req(struct fc_seq *sp, struct fc_frame *fp,
- 		case ELS_ADDR_FMT_DOM:
- 		case ELS_ADDR_FMT_FAB:
- 		default:
--			FC_DEBUG_DISC("Address format is (%d)\n", fmt);
-+			FC_DISC_DBG(disc, "Address format is (%d)\n", fmt);
- 			redisc = 1;
- 			break;
- 		}
- 	}
- 	lport->tt.seq_els_rsp_send(sp, ELS_LS_ACC, NULL);
- 	if (redisc) {
--		FC_DEBUG_DISC("RSCN received: rediscovering\n");
-+		FC_DISC_DBG(disc, "RSCN received: rediscovering\n");
- 		fc_disc_restart(disc);
- 	} else {
--		FC_DEBUG_DISC("RSCN received: not rediscovering. "
--			      "redisc %d state %d in_prog %d\n",
--			      redisc, lport->state, disc->pending);
-+		FC_DISC_DBG(disc, "RSCN received: not rediscovering. "
-+			    "redisc %d state %d in_prog %d\n",
-+			    redisc, lport->state, disc->pending);
- 		list_for_each_entry_safe(dp, next, &disc_ports, peers) {
- 			list_del(&dp->peers);
- 			rport = lport->tt.rport_lookup(lport, dp->ids.port_id);
-@@ -270,7 +261,7 @@ static void fc_disc_recv_rscn_req(struct fc_seq *sp, struct fc_frame *fp,
- 	fc_frame_free(fp);
- 	return;
- reject:
--	FC_DEBUG_DISC("Received a bad RSCN frame\n");
-+	FC_DISC_DBG(disc, "Received a bad RSCN frame\n");
- 	rjt_data.fp = NULL;
- 	rjt_data.reason = ELS_RJT_LOGIC;
- 	rjt_data.explan = ELS_EXPL_NONE;
-@@ -302,7 +293,8 @@ static void fc_disc_recv_req(struct fc_seq *sp, struct fc_frame *fp,
- 		mutex_unlock(&disc->disc_mutex);
+@@ -162,19 +154,19 @@ static void fc_lport_rport_callback(struct fc_lport *lport,
+ 				lport->dns_rp = rport;
+ 				fc_lport_enter_rpn_id(lport);
+ 			} else {
+-				FC_DEBUG_LPORT("Received an CREATED event on "
+-					       "port (%6x) for the directory "
+-					       "server, but the lport is not "
+-					       "in the DNS state, it's in the "
+-					       "%d state", rport->port_id,
+-					       lport->state);
++				FC_LPORT_DBG(lport, "Received an CREATED event "
++					     "on port (%6x) for the directory "
++					     "server, but the lport is not "
++					     "in the DNS state, it's in the "
++					     "%d state", rport->port_id,
++					     lport->state);
+ 				lport->tt.rport_logoff(rport);
+ 			}
+ 			mutex_unlock(&lport->lp_mutex);
+ 		} else
+-			FC_DEBUG_LPORT("Received an event for port (%6x) "
+-				       "which is not the directory server\n",
+-				       rport->port_id);
++			FC_LPORT_DBG(lport, "Received an event for port (%6x) "
++				     "which is not the directory server\n",
++				     rport->port_id);
  		break;
- 	default:
--		FC_DBG("Received an unsupported request. opcode (%x)\n", op);
-+		FC_DISC_DBG(disc, "Received an unsupported request, "
-+			    "the opcode is (%x)\n", op);
+ 	case RPORT_EV_LOGO:
+ 	case RPORT_EV_FAILED:
+@@ -185,9 +177,9 @@ static void fc_lport_rport_callback(struct fc_lport *lport,
+ 			mutex_unlock(&lport->lp_mutex);
+ 
+ 		} else
+-			FC_DEBUG_LPORT("Received an event for port (%6x) "
+-				       "which is not the directory server\n",
+-				       rport->port_id);
++			FC_LPORT_DBG(lport, "Received an event for port (%6x) "
++				     "which is not the directory server\n",
++				     rport->port_id);
  		break;
- 	}
- }
-@@ -320,12 +312,10 @@ static void fc_disc_restart(struct fc_disc *disc)
- 	struct fc_rport_libfc_priv *rdata, *next;
- 	struct fc_lport *lport = disc->lport;
- 
--	FC_DEBUG_DISC("Restarting discovery for port (%6x)\n",
--		      fc_host_port_id(lport->host));
-+	FC_DISC_DBG(disc, "Restarting discovery\n");
- 
- 	list_for_each_entry_safe(rdata, next, &disc->rports, peers) {
- 		rport = PRIV_TO_RPORT(rdata);
--		FC_DEBUG_DISC("list_del(%6x)\n", rport->port_id);
- 		list_del(&rdata->peers);
- 		lport->tt.rport_logoff(rport);
- 	}
-@@ -485,8 +475,7 @@ static void fc_disc_done(struct fc_disc *disc)
- 	struct fc_lport *lport = disc->lport;
- 	enum fc_disc_event event;
- 
--	FC_DEBUG_DISC("Discovery complete for port (%6x)\n",
--		      fc_host_port_id(lport->host));
-+	FC_DISC_DBG(disc, "Discovery complete\n");
- 
- 	event = disc->event;
- 	disc->event = DISC_EV_NONE;
-@@ -510,10 +499,10 @@ static void fc_disc_error(struct fc_disc *disc, struct fc_frame *fp)
+ 	case RPORT_EV_NONE:
+ 		break;
+@@ -363,8 +355,8 @@ static void fc_lport_add_fc4_type(struct fc_lport *lport, enum fc_fh_type type)
+ static void fc_lport_recv_rlir_req(struct fc_seq *sp, struct fc_frame *fp,
+ 				   struct fc_lport *lport)
  {
- 	struct fc_lport *lport = disc->lport;
+-	FC_DEBUG_LPORT("Received RLIR request while in state %s\n",
+-		       fc_lport_state(lport));
++	FC_LPORT_DBG(lport, "Received RLIR request while in state %s\n",
++		     fc_lport_state(lport));
+ 
+ 	lport->tt.seq_els_rsp_send(sp, ELS_LS_ACC, NULL);
+ 	fc_frame_free(fp);
+@@ -389,8 +381,8 @@ static void fc_lport_recv_echo_req(struct fc_seq *sp, struct fc_frame *in_fp,
+ 	void *dp;
+ 	u32 f_ctl;
+ 
+-	FC_DEBUG_LPORT("Received RLIR request while in state %s\n",
+-		       fc_lport_state(lport));
++	FC_LPORT_DBG(lport, "Received RLIR request while in state %s\n",
++		     fc_lport_state(lport));
+ 
+ 	len = fr_len(in_fp) - sizeof(struct fc_frame_header);
+ 	pp = fc_frame_payload_get(in_fp, len);
+@@ -437,8 +429,8 @@ static void fc_lport_recv_rnid_req(struct fc_seq *sp, struct fc_frame *in_fp,
+ 	size_t len;
+ 	u32 f_ctl;
+ 
+-	FC_DEBUG_LPORT("Received RNID request while in state %s\n",
+-		       fc_lport_state(lport));
++	FC_LPORT_DBG(lport, "Received RNID request while in state %s\n",
++		     fc_lport_state(lport));
+ 
+ 	req = fc_frame_payload_get(in_fp, sizeof(*req));
+ 	if (!req) {
+@@ -498,8 +490,8 @@ static void fc_lport_recv_adisc_req(struct fc_seq *sp, struct fc_frame *in_fp,
+ 	size_t len;
+ 	u32 f_ctl;
+ 
+-	FC_DEBUG_LPORT("Received ADISC request while in state %s\n",
+-		       fc_lport_state(lport));
++	FC_LPORT_DBG(lport, "Received ADISC request while in state %s\n",
++		     fc_lport_state(lport));
+ 
+ 	req = fc_frame_payload_get(in_fp, sizeof(*req));
+ 	if (!req) {
+@@ -574,8 +566,8 @@ EXPORT_SYMBOL(fc_fabric_login);
+  */
+ void fc_linkup(struct fc_lport *lport)
+ {
+-	FC_DEBUG_LPORT("Link is up for port (%6x)\n",
+-		       fc_host_port_id(lport->host));
++	printk(KERN_INFO "libfc: Link up on port (%6x)\n",
++	       fc_host_port_id(lport->host));
+ 
+ 	mutex_lock(&lport->lp_mutex);
+ 	if (!lport->link_up) {
+@@ -595,8 +587,8 @@ EXPORT_SYMBOL(fc_linkup);
+ void fc_linkdown(struct fc_lport *lport)
+ {
+ 	mutex_lock(&lport->lp_mutex);
+-	FC_DEBUG_LPORT("Link is down for port (%6x)\n",
+-		       fc_host_port_id(lport->host));
++	printk(KERN_INFO "libfc: Link down on port (%6x)\n",
++	       fc_host_port_id(lport->host));
+ 
+ 	if (lport->link_up) {
+ 		lport->link_up = 0;
+@@ -701,12 +693,11 @@ void fc_lport_disc_callback(struct fc_lport *lport, enum fc_disc_event event)
+ {
+ 	switch (event) {
+ 	case DISC_EV_SUCCESS:
+-		FC_DEBUG_LPORT("Got a SUCCESS event for port (%6x)\n",
+-			       fc_host_port_id(lport->host));
++		FC_LPORT_DBG(lport, "Discovery succeeded\n");
+ 		break;
+ 	case DISC_EV_FAILED:
+-		FC_DEBUG_LPORT("Got a FAILED event for port (%6x)\n",
+-			       fc_host_port_id(lport->host));
++		printk(KERN_ERR "libfc: Discovery failed for port (%6x)\n",
++		       fc_host_port_id(lport->host));
+ 		mutex_lock(&lport->lp_mutex);
+ 		fc_lport_enter_reset(lport);
+ 		mutex_unlock(&lport->lp_mutex);
+@@ -726,8 +717,8 @@ void fc_lport_disc_callback(struct fc_lport *lport, enum fc_disc_event event)
+  */
+ static void fc_lport_enter_ready(struct fc_lport *lport)
+ {
+-	FC_DEBUG_LPORT("Port (%6x) entered Ready from state %s\n",
+-		       fc_host_port_id(lport->host), fc_lport_state(lport));
++	FC_LPORT_DBG(lport, "Entered READY from state %s\n",
++		     fc_lport_state(lport));
+ 
+ 	fc_lport_state_enter(lport, LPORT_ST_READY);
+ 
+@@ -762,8 +753,8 @@ static void fc_lport_recv_flogi_req(struct fc_seq *sp_in,
+ 	u32 local_fid;
+ 	u32 f_ctl;
+ 
+-	FC_DEBUG_LPORT("Received FLOGI request while in state %s\n",
+-		       fc_lport_state(lport));
++	FC_LPORT_DBG(lport, "Received FLOGI request while in state %s\n",
++		     fc_lport_state(lport));
+ 
+ 	fh = fc_frame_header_get(rx_fp);
+ 	remote_fid = ntoh24(fh->fh_s_id);
+@@ -772,12 +763,11 @@ static void fc_lport_recv_flogi_req(struct fc_seq *sp_in,
+ 		goto out;
+ 	remote_wwpn = get_unaligned_be64(&flp->fl_wwpn);
+ 	if (remote_wwpn == lport->wwpn) {
+-		FC_DBG("FLOGI from port with same WWPN %llx "
+-		       "possible configuration error\n",
+-		       (unsigned long long)remote_wwpn);
++		printk(KERN_WARNING "libfc: Received FLOGI from port "
++		       "with same WWPN %llx\n", remote_wwpn);
+ 		goto out;
+ 	}
+-	FC_DBG("FLOGI from port WWPN %llx\n", (unsigned long long)remote_wwpn);
++	FC_LPORT_DBG(lport, "FLOGI from port WWPN %llx\n", remote_wwpn);
+ 
+ 	/*
+ 	 * XXX what is the right thing to do for FIDs?
+@@ -909,7 +899,8 @@ static void fc_lport_recv_req(struct fc_lport *lport, struct fc_seq *sp,
+ 			}
+ 		}
+ 	} else {
+-		FC_DBG("dropping invalid frame (eof %x)\n", fr_eof(fp));
++		FC_LPORT_DBG(lport, "dropping invalid frame (eof %x)\n",
++			     fr_eof(fp));
+ 		fc_frame_free(fp);
+ 	}
+ 	mutex_unlock(&lport->lp_mutex);
+@@ -947,8 +938,8 @@ EXPORT_SYMBOL(fc_lport_reset);
+  */
+ static void fc_lport_enter_reset(struct fc_lport *lport)
+ {
+-	FC_DEBUG_LPORT("Port (%6x) entered RESET state from %s state\n",
+-		       fc_host_port_id(lport->host), fc_lport_state(lport));
++	FC_LPORT_DBG(lport, "Entered RESET state from %s state\n",
++		     fc_lport_state(lport));
+ 
+ 	fc_lport_state_enter(lport, LPORT_ST_RESET);
+ 
+@@ -982,9 +973,9 @@ static void fc_lport_enter_reset(struct fc_lport *lport)
+ static void fc_lport_error(struct fc_lport *lport, struct fc_frame *fp)
+ {
  	unsigned long delay = 0;
--	if (fc_disc_debug)
--		FC_DBG("Error %ld, retries %d/%d\n",
--		       PTR_ERR(fp), disc->retry_count,
--		       FC_DISC_RETRY_LIMIT);
-+
-+	FC_DISC_DBG(disc, "Error %ld, retries %d/%d\n",
-+		    PTR_ERR(fp), disc->retry_count,
-+		    FC_DISC_RETRY_LIMIT);
+-	FC_DEBUG_LPORT("Error %ld in state %s, retries %d\n",
+-		       PTR_ERR(fp), fc_lport_state(lport),
+-		       lport->retry_count);
++	FC_LPORT_DBG(lport, "Error %ld in state %s, retries %d\n",
++		     PTR_ERR(fp), fc_lport_state(lport),
++		     lport->retry_count);
  
  	if (!fp || PTR_ERR(fp) == -FC_EX_TIMEOUT) {
  		/*
-@@ -649,9 +638,9 @@ static int fc_disc_gpn_ft_parse(struct fc_disc *disc, void *buf, size_t len)
- 					      &disc->rogue_rports);
- 				lport->tt.rport_login(rport);
- 			} else
--				FC_DBG("Failed to allocate memory for "
--				       "the newly discovered port (%6x)\n",
--				       dp.ids.port_id);
-+				printk(KERN_WARNING "libfc: Failed to allocate "
-+				       "memory for the newly discovered port "
-+				       "(%6x)\n", dp.ids.port_id);
+@@ -1040,11 +1031,11 @@ static void fc_lport_rft_id_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 
+ 	mutex_lock(&lport->lp_mutex);
+ 
+-	FC_DEBUG_LPORT("Received a RFT_ID response\n");
++	FC_LPORT_DBG(lport, "Received a RFT_ID response\n");
+ 
+ 	if (lport->state != LPORT_ST_RFT_ID) {
+-		FC_DBG("Received a RFT_ID response, but in state %s\n",
+-		       fc_lport_state(lport));
++		FC_LPORT_DBG(lport, "Received a RFT_ID response, but in state "
++			     "%s\n", fc_lport_state(lport));
+ 		if (IS_ERR(fp))
+ 			goto err;
+ 		goto out;
+@@ -1094,11 +1085,11 @@ static void fc_lport_rpn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 
+ 	mutex_lock(&lport->lp_mutex);
+ 
+-	FC_DEBUG_LPORT("Received a RPN_ID response\n");
++	FC_LPORT_DBG(lport, "Received a RPN_ID response\n");
+ 
+ 	if (lport->state != LPORT_ST_RPN_ID) {
+-		FC_DBG("Received a RPN_ID response, but in state %s\n",
+-		       fc_lport_state(lport));
++		FC_LPORT_DBG(lport, "Received a RPN_ID response, but in state "
++			     "%s\n", fc_lport_state(lport));
+ 		if (IS_ERR(fp))
+ 			goto err;
+ 		goto out;
+@@ -1146,11 +1137,11 @@ static void fc_lport_scr_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 
+ 	mutex_lock(&lport->lp_mutex);
+ 
+-	FC_DEBUG_LPORT("Received a SCR response\n");
++	FC_LPORT_DBG(lport, "Received a SCR response\n");
+ 
+ 	if (lport->state != LPORT_ST_SCR) {
+-		FC_DBG("Received a SCR response, but in state %s\n",
+-		       fc_lport_state(lport));
++		FC_LPORT_DBG(lport, "Received a SCR response, but in state "
++			     "%s\n", fc_lport_state(lport));
+ 		if (IS_ERR(fp))
+ 			goto err;
+ 		goto out;
+@@ -1184,8 +1175,8 @@ static void fc_lport_enter_scr(struct fc_lport *lport)
+ {
+ 	struct fc_frame *fp;
+ 
+-	FC_DEBUG_LPORT("Port (%6x) entered SCR state from %s state\n",
+-		       fc_host_port_id(lport->host), fc_lport_state(lport));
++	FC_LPORT_DBG(lport, "Entered SCR state from %s state\n",
++		     fc_lport_state(lport));
+ 
+ 	fc_lport_state_enter(lport, LPORT_ST_SCR);
+ 
+@@ -1213,8 +1204,8 @@ static void fc_lport_enter_rft_id(struct fc_lport *lport)
+ 	struct fc_ns_fts *lps;
+ 	int i;
+ 
+-	FC_DEBUG_LPORT("Port (%6x) entered RFT_ID state from %s state\n",
+-		       fc_host_port_id(lport->host), fc_lport_state(lport));
++	FC_LPORT_DBG(lport, "Entered RFT_ID state from %s state\n",
++		     fc_lport_state(lport));
+ 
+ 	fc_lport_state_enter(lport, LPORT_ST_RFT_ID);
+ 
+@@ -1253,8 +1244,8 @@ static void fc_lport_enter_rpn_id(struct fc_lport *lport)
+ {
+ 	struct fc_frame *fp;
+ 
+-	FC_DEBUG_LPORT("Port (%6x) entered RPN_ID state from %s state\n",
+-		       fc_host_port_id(lport->host), fc_lport_state(lport));
++	FC_LPORT_DBG(lport, "Entered RPN_ID state from %s state\n",
++		     fc_lport_state(lport));
+ 
+ 	fc_lport_state_enter(lport, LPORT_ST_RPN_ID);
+ 
+@@ -1294,8 +1285,8 @@ static void fc_lport_enter_dns(struct fc_lport *lport)
+ 	dp.ids.roles = FC_RPORT_ROLE_UNKNOWN;
+ 	dp.lp = lport;
+ 
+-	FC_DEBUG_LPORT("Port (%6x) entered DNS state from %s state\n",
+-		       fc_host_port_id(lport->host), fc_lport_state(lport));
++	FC_LPORT_DBG(lport, "Entered DNS state from %s state\n",
++		     fc_lport_state(lport));
+ 
+ 	fc_lport_state_enter(lport, LPORT_ST_DNS);
+ 
+@@ -1374,11 +1365,11 @@ static void fc_lport_logo_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 
+ 	mutex_lock(&lport->lp_mutex);
+ 
+-	FC_DEBUG_LPORT("Received a LOGO response\n");
++	FC_LPORT_DBG(lport, "Received a LOGO response\n");
+ 
+ 	if (lport->state != LPORT_ST_LOGO) {
+-		FC_DBG("Received a LOGO response, but in state %s\n",
+-		       fc_lport_state(lport));
++		FC_LPORT_DBG(lport, "Received a LOGO response, but in state "
++			     "%s\n", fc_lport_state(lport));
+ 		if (IS_ERR(fp))
+ 			goto err;
+ 		goto out;
+@@ -1413,8 +1404,8 @@ static void fc_lport_enter_logo(struct fc_lport *lport)
+ 	struct fc_frame *fp;
+ 	struct fc_els_logo *logo;
+ 
+-	FC_DEBUG_LPORT("Port (%6x) entered LOGO state from %s state\n",
+-		       fc_host_port_id(lport->host), fc_lport_state(lport));
++	FC_LPORT_DBG(lport, "Entered LOGO state from %s state\n",
++		     fc_lport_state(lport));
+ 
+ 	fc_lport_state_enter(lport, LPORT_ST_LOGO);
+ 
+@@ -1456,11 +1447,11 @@ static void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 
+ 	mutex_lock(&lport->lp_mutex);
+ 
+-	FC_DEBUG_LPORT("Received a FLOGI response\n");
++	FC_LPORT_DBG(lport, "Received a FLOGI response\n");
+ 
+ 	if (lport->state != LPORT_ST_FLOGI) {
+-		FC_DBG("Received a FLOGI response, but in state %s\n",
+-		       fc_lport_state(lport));
++		FC_LPORT_DBG(lport, "Received a FLOGI response, but in state "
++			     "%s\n", fc_lport_state(lport));
+ 		if (IS_ERR(fp))
+ 			goto err;
+ 		goto out;
+@@ -1475,7 +1466,8 @@ static void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 	did = ntoh24(fh->fh_d_id);
+ 	if (fc_frame_payload_op(fp) == ELS_LS_ACC && did != 0) {
+ 
+-		FC_DEBUG_LPORT("Assigned fid %x\n", did);
++		printk(KERN_INFO "libfc: Assigned FID (%6x) in FLOGI response\n",
++		       did);
+ 		fc_host_port_id(lport->host) = did;
+ 
+ 		flp = fc_frame_payload_get(fp, sizeof(*flp));
+@@ -1494,7 +1486,8 @@ static void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 				if (e_d_tov > lport->e_d_tov)
+ 					lport->e_d_tov = e_d_tov;
+ 				lport->r_a_tov = 2 * e_d_tov;
+-				FC_DBG("Point-to-Point mode\n");
++				printk(KERN_INFO "libfc: Port (%6x) entered "
++				       "point to point mode\n", did);
+ 				fc_lport_ptp_setup(lport, ntoh24(fh->fh_s_id),
+ 						   get_unaligned_be64(
+ 							   &flp->fl_wwpn),
+@@ -1517,7 +1510,7 @@ static void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 			}
  		}
- 
- 		if (np->fp_flags & FC_NS_FID_LAST) {
-@@ -671,9 +660,8 @@ static int fc_disc_gpn_ft_parse(struct fc_disc *disc, void *buf, size_t len)
- 	 */
- 	if (error == 0 && len > 0 && len < sizeof(*np)) {
- 		if (np != &disc->partial_buf) {
--			FC_DEBUG_DISC("Partial buffer remains "
--				      "for discovery by (%6x)\n",
--				      fc_host_port_id(lport->host));
-+			FC_DISC_DBG(disc, "Partial buffer remains "
-+				    "for discovery\n");
- 			memcpy(&disc->partial_buf, np, len);
- 		}
- 		disc->buf_len = (unsigned char) len;
-@@ -721,8 +709,7 @@ static void fc_disc_gpn_ft_resp(struct fc_seq *sp, struct fc_frame *fp,
- 	int error;
- 
- 	mutex_lock(&disc->disc_mutex);
--	FC_DEBUG_DISC("Received a GPN_FT response on port (%6x)\n",
--		      fc_host_port_id(disc->lport->host));
-+	FC_DISC_DBG(disc, "Received a GPN_FT response\n");
- 
- 	if (IS_ERR(fp)) {
- 		fc_disc_error(disc, fp);
-@@ -738,30 +725,30 @@ static void fc_disc_gpn_ft_resp(struct fc_seq *sp, struct fc_frame *fp,
- 	    disc->seq_count == 0) {
- 		cp = fc_frame_payload_get(fp, sizeof(*cp));
- 		if (!cp) {
--			FC_DBG("GPN_FT response too short, len %d\n",
--			       fr_len(fp));
-+			FC_DISC_DBG(disc, "GPN_FT response too short, len %d\n",
-+				    fr_len(fp));
- 		} else if (ntohs(cp->ct_cmd) == FC_FS_ACC) {
- 
- 			/* Accepted, parse the response. */
- 			buf = cp + 1;
- 			len -= sizeof(*cp);
- 		} else if (ntohs(cp->ct_cmd) == FC_FS_RJT) {
--			FC_DBG("GPN_FT rejected reason %x exp %x "
--			       "(check zoning)\n", cp->ct_reason,
--			       cp->ct_explan);
-+			FC_DISC_DBG(disc, "GPN_FT rejected reason %x exp %x "
-+				    "(check zoning)\n", cp->ct_reason,
-+				    cp->ct_explan);
- 			disc->event = DISC_EV_FAILED;
- 			fc_disc_done(disc);
- 		} else {
--			FC_DBG("GPN_FT unexpected response code %x\n",
--			       ntohs(cp->ct_cmd));
-+			FC_DISC_DBG(disc, "GPN_FT unexpected response code "
-+				    "%x\n", ntohs(cp->ct_cmd));
- 		}
- 	} else if (fr_sof(fp) == FC_SOF_N3 &&
- 		   seq_cnt == disc->seq_count) {
- 		buf = fh + 1;
  	} else {
--		FC_DBG("GPN_FT unexpected frame - out of sequence? "
--		       "seq_cnt %x expected %x sof %x eof %x\n",
--		       seq_cnt, disc->seq_count, fr_sof(fp), fr_eof(fp));
-+		FC_DISC_DBG(disc, "GPN_FT unexpected frame - out of sequence? "
-+			    "seq_cnt %x expected %x sof %x eof %x\n",
-+			    seq_cnt, disc->seq_count, fr_sof(fp), fr_eof(fp));
+-		FC_DBG("bad FLOGI response\n");
++		FC_LPORT_DBG(lport, "Bad FLOGI response\n");
  	}
- 	if (buf) {
- 		error = fc_disc_gpn_ft_parse(disc, buf, len);
+ 
+ out:
+@@ -1537,7 +1530,8 @@ void fc_lport_enter_flogi(struct fc_lport *lport)
+ {
+ 	struct fc_frame *fp;
+ 
+-	FC_DEBUG_LPORT("Processing FLOGI state\n");
++	FC_LPORT_DBG(lport, "Entered FLOGI state from %s state\n",
++		     fc_lport_state(lport));
+ 
+ 	fc_lport_state_enter(lport, LPORT_ST_FLOGI);
+ 
 
