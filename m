@@ -1,67 +1,53 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] block: fix intermittent dm timeout based oops
-Date: Fri, 03 Apr 2009 09:35:45 -0500
-Message-ID: <1238769345.3359.15.camel@mulgrave.int.hansenpartnership.com>
-References: <20090324071730.53D7118C7A2@pentland.suse.de>
-	 <20090403143208.GA10005@schmichrtp.de.ibm.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] sg: fix q->queue_lock on scsi_error_handler path
+Date: Fri, 03 Apr 2009 11:11:52 -0400
+Message-ID: <49D62738.9010807@interlog.com>
+References: <20090403192745E.fujita.tomonori@lab.ntt.co.jp>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:34108 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756612AbZDCOfs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2009 10:35:48 -0400
-In-Reply-To: <20090403143208.GA10005@schmichrtp.de.ibm.com>
+Received: from smtp.infotech.no ([82.134.31.41]:51345 "EHLO
+	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759984AbZDCPL7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2009 11:11:59 -0400
+In-Reply-To: <20090403192745E.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christof Schmitt <christof.schmitt@de.ibm.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-On Fri, 2009-04-03 at 16:32 +0200, Christof Schmitt wrote:
-> On Tue, Mar 24, 2009 at 08:17:30AM +0100, Hannes Reinecke wrote:
-> > Very rarely under stress testing of dm, oopses are occuring as
-> > something tampers with an old stack frame.  This has been traced back
-> > to blk_abort_queue() leaving a timeout_list pointing to the stack.
-> > The reason is that sometimes blk_abort_request() won't delete the
-> > timer (if the request is marked as complete but before the timer has
-> > been removed, a small race window).  Fix this by splicing back from
-> > the ususally empty list to the q->timeout_list.
-> > 
-> > Signed-off-by: Hannes Reinecke <hare@suse.de>
-> > ---
-> >  block/blk-timeout.c |    6 ++++++
-> >  1 files changed, 6 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/block/blk-timeout.c b/block/blk-timeout.c
-> > index bbbdc4b..6213123 100644
-> > --- a/block/blk-timeout.c
-> > +++ b/block/blk-timeout.c
-> > @@ -224,6 +224,12 @@ void blk_abort_queue(struct request_queue *q)
-> >  	list_for_each_entry_safe(rq, tmp, &list, timeout_list)
-> >  		blk_abort_request(rq);
-> > 
-> > +	/*
-> > +	 * Occasionally, blk_abort_request() will return without
-> > +	 * deleting the element from the list
-> > +	 */
-> > +	list_splice(&list, &q->timeout_list);
-> > +
-> >  	spin_unlock_irqrestore(q->queue_lock, flags);
-> > 
-> >  }
-> > -- 
-> > 1.5.3.2
+FUJITA Tomonori wrote:
+> This is a fix for another fallout of the block layer conversion (sorry
+> again).
 > 
-> I just noticed that this fix is not upstream yet and i have seen test
-> cases hitting this problem.
+> This should be go into 2.6.28.y and 2.6.29.y.
 > 
-> Jens, are you going to included this patch, or should this go through
-> the SCSI tree?
+> However, this should go with patches that I sent for 2.6.29.1 and
+> were dropped. So I don't use 'stable@kernel.org' tag.
+> 
+> =
+> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Subject: [PATCH] [PATCH] sg: fix q->queue_lock on scsi_error_handler path
+> 
+> sg_rq_end_io() is called via rq->end_io. In some rare cases,
+> sg_rq_end_io calls blk_put_request/blk_rq_unmap_user (when a program
+> issuing a command has gone before the command completion; e.g. by
+> interrupting a program issuing a command before the command
+> completes).
+> 
+> We can't call blk_put_request/blk_rq_unmap_user in interrupt so the
+> commit c96952ed7031e7c576ecf90cf95b8ec099d5295a uses
+> execute_in_process_context().
+> 
+> The problem is that scsi_error_handler() calls rq->end_io too. We
+> can't call blk_put_request/blk_rq_unmap_user too in this path (we hold
+> q->queue_lock).
+> 
+> To avoid the above problem, in these rare cases, this patch always
+> uses schedule_work() instead of execute_in_process_context().
+> 
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-It's a block patch, so it goes through the block tree ... it also needs
-backporting to stable.
-
-James
-
-
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
