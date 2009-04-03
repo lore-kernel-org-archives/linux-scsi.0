@@ -1,90 +1,94 @@
-From: "Love, Robert W" <robert.w.love@intel.com>
-Subject: RE: [PATCH 00/15] Open-FCoE updates (fixes and a feature) for
-	2.6.30 merge window
-Date: Fri, 3 Apr 2009 15:28:33 -0700
-Message-ID: <273D38FBE7C6FE46A1689FCD014A0B8B4164F144@azsmsx505.amr.corp.intel.com>
-References: <20090403215758.10856.6946.stgit@fritz>
- <1238796840.3359.95.camel@mulgrave.int.hansenpartnership.com>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: Re: [PATCH 1/3] scsi_dh: Add modalias support for SCSI targets
+Date: Fri, 03 Apr 2009 15:43:10 -0700
+Message-ID: <1238798590.20924.0.camel@chandra-ubuntu>
+References: <20090318013615.26548.36303.sendpatchset@chandra-ubuntu>
+	 <20090318013621.26548.10529.sendpatchset@chandra-ubuntu>
+	 <ac3eb2510903181130s5dd1b1caje579d765fd338f6f@mail.gmail.com>
+	 <1237403902.14147.25.camel@chandra-ubuntu>
+	 <1237488880.26341.15.camel@chandra-ubuntu>  <49C3DF49.8050408@redhat.com>
+	 <1237846429.14853.6.camel@chandra-ubuntu>
+Reply-To: sekharan@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:17929 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753309AbZDCW2i convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2009 18:28:38 -0400
-In-Reply-To: <1238796840.3359.95.camel@mulgrave.int.hansenpartnership.com>
-Content-Language: en-US
+Received: from e35.co.us.ibm.com ([32.97.110.153]:36207 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754007AbZDCWnI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2009 18:43:08 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e35.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n33McAWb028550
+	for <linux-scsi@vger.kernel.org>; Fri, 3 Apr 2009 16:38:10 -0600
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n33Mh6H4224412
+	for <linux-scsi@vger.kernel.org>; Fri, 3 Apr 2009 16:43:06 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n33Mh54r004816
+	for <linux-scsi@vger.kernel.org>; Fri, 3 Apr 2009 16:43:06 -0600
+In-Reply-To: <1237846429.14853.6.camel@chandra-ubuntu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: sekharan@linux.vnet.ibm.com
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Kay Sievers <kay.sievers@vrfy.org>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, Peter Jones <pjones@redhat.com>
 
-James Bottomley wrote:
-> On Fri, 2009-04-03 at 14:57 -0700, Robert Love wrote:
->> The following series implements some bug fixes to libfc
->> and the addition of dynamic logging capabilities for libfc,
->> libfcoe and fcoe.
-> 
-> Realistically, this is pretty much too late for 2.6.30.  It needs at
-> least a cursory review and incubation in linux-next (which doesn't
-> build over the weekend anyway) which can't happen before Linus
-> declares -rc1 estimated to be on Tuesday.
-> 
-OK, I wasn't sure about your deadlines. Abhijeet's fixes should be
-fine for the early 30 RC phase since they're fixes.
+Hi James,
 
-The debug_logging stuff is a nice-to-have not must-have feature.
-I can keep the set up to date through the early 30 RC phase and
-when you're ready to put stuff into scsi-misc for 31 I'd like to
-get it in early since it touches so many lines of code and is a
-pain to keep current.
+Do you still have any concerns (after Peter's response) ?
 
->> The bug fixes are mostly related to the rogue rport
->> tracking that libfc does before getting a "real"
->> rport from the FC transport. Also there are locking
->> and state verification fixes.
->> 
->> The dynamic logging code was originally mailed to
->> linux-scsi during the 2.6.29 rc phase, but was
->> incorrectly mixed in with fixes. This is a refresh
->> of that patch set. Since that original patch set
->> libfcoe and fcoe have been better distinguished as
->> separate modules, so this patch set was modified to
->> reflect that change.
->> 
->> ---
->> 
->> Abhijeet Joglekar (6):
->>       libfc: whenever queueing delete ev for rport, set state to NONE
->>       libfc: Change state to NONE in fc_lport_destroy
->>       libfc: During fabric logoff, flush the rport Q after logging
->>       off dns port libfc: Track rogue remote ports
->>       libfc: Do not retry if the new state is not the same as old
->>       state libfc: Hold disc mutex while processing gpn ft resp
->> 
->> Robert Love (9):
->>       libfc: Remove unused FC_DBG macro
->>       libfc: Convert debug statements in fc_exch.c to use new libfc
->>       debug macros. libfc: Convert debug statements in fc_fcp.c to
->>       use new libfc debug macros. libfc: Convert debug statements in
->>       fc_rport.c to use new libfc debug macros. libfc: Convert debug
->>       statements in fc_disc.c to use new libfc debug macros. libfc:
->>       Convert debug statements in fc_lport.c to use new libfc debug
->>       macros. libfc: Add runtime debugging with debug_logging module
->>       parameter libfcoe: Add runtime debugging with module param
->> debug_logging fcoe: Add runtime debug logging with module parameter
->> debug_logging  
-> 
-> Couldn't these just have been a single patch?  Or one patch for the
-> macro conversion and one for the module parameters.  There's no need
-> at all to do one patch per file when converting.
-> 
-Yeah, they could have been consolidated, I just thought it would be
-nicer for review since it breaks the patch up a bit. BTW: each of the
-files represents a sub-component within libfc, so they are logically
-divided, not only broken out by file name. It just happens that each
-of our sub components only has one file.
+If not, Can you accept the patches, please.
 
-> James
+Thanks & Regards,
+
+chandra
+On Mon, 2009-03-23 at 15:13 -0700, Chandra Seetharaman wrote:
+> Hi James,
+> 
+> Are your concerns answered with Peter's response ?
+> 
+> Or, changes are required for the patches I posted ?
+> 
+> Thanks and regards,
+> 
+> chandra
+> On Fri, 2009-03-20 at 14:24 -0400, Peter Jones wrote:
+> > On 03/19/2009 02:54 PM, Chandra Seetharaman wrote:
+> > > On Wed, 2009-03-18 at 12:18 -0700, Chandra Seetharaman wrote:
+> > >> On Wed, 2009-03-18 at 19:30 +0100, Kay Sievers wrote:
+> > >>> On Wed, Mar 18, 2009 at 02:36, Chandra Seetharaman <sekharan@us.ibm.com> wrote:
+> > >>>> From: Peter Jones <pjones@redhat.com>
+> > >>>>
+> > >>>> This patch allows the use of modaliases on scsi targets to correctly
+> > >>>> load scsi device handler modules when the devices are found.
+> > >>>> +++ linux-2.6.28/include/linux/mod_devicetable.h
+> > >>>> @@ -454,4 +454,10 @@ struct dmi_system_id {
+> > >>>>
+> > >>>>  #define DMI_MATCH(a, b)        { a, b }
+> > >>>>
+> > >>>> +struct scsi_dh_device_id {
+> > >>>> +       unsigned char type;
+> > >>>> +       char vendor[9];
+> > >>>> +       char model[17];
+> > >>>> +};
+> > >>> Doesn't the static array waste space, when used for the long lists of
+> > >>> entries stuffed in arrays of this structure? It will carry a lot of \0
+> > >>> chars, and identical strings can not be de-duplicated by the compiler,
+> > >>> unlike when pointers are used?
+> > >>>
+> > >> I had some problems when we used the pointers instead of arrays. Don't
+> > >> recall it now.
+> > >>
+> > >> Will retry and report.
+> > > 
+> > > Hi Kay,
+> > > 
+> > > I tried it and realized modpost is what is giving the problem.
+> > > 
+> > > When the array for vendor and model is changed to pointers, modpost (at
+> > > the end of make modules) dies with a segmentation fault. 
+> > > 
+> > > Peter, Any details that you can provide ?
+> > 
+> > In this case, the tail wags the dog -- it's a string instead of a pointer basicallly so that the new bits in file2alias.c can look like the other parts of that same file.  It's sortof inconvenient for them to be pointers in there...
+> > 
 
