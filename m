@@ -1,91 +1,48 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] sg: return EFAULT for an invalid user address
-Date: Sat, 4 Apr 2009 00:35:42 +0900
-Message-ID: <20090404003430M.fujita.tomonori@lab.ntt.co.jp>
+From: Bart Van Assche <bart.vanassche@gmail.com>
+Subject: Re: [Scst-devel] ISCSI-SCST performance (with also IET and STGT data)
+Date: Fri, 3 Apr 2009 19:08:41 +0200
+Message-ID: <e2e108260904031008u434e6d06rc7d657a087e64fbc@mail.gmail.com>
+References: <49D10256.8030307@vlnb.net>
+	 <e2e108260904011314h1e0cf5c5wcdf210eee24d40d8@mail.gmail.com>
+	 <49D4F2E1.7000507@vlnb.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:50122 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759701AbZDCPfv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Apr 2009 11:35:51 -0400
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:53681 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932287AbZDCRIo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2009 13:08:44 -0400
+In-Reply-To: <49D4F2E1.7000507@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: dgilbert@interlog.com, linux-scsi@vger.kernel.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hopefully, This is the last fix for the fallout of the block layer
-conversion...
+On Thu, Apr 2, 2009 at 7:16 PM, Vladislav Bolkhovitin <vst@vlnb.net> wrote:
+> Bart Van Assche, on 04/02/2009 12:14 AM wrote:
+>> I have repeated some of these performance tests for iSCSI over IPoIB
+>> (two DDR PCIe 1.0 ConnectX HCA's connected back to back). The results
+>> for the buffered I/O test with a block size of 512K (initiator)
+>> against a file of 1GB residing on a tmpfs filesystem on the target are
+>> as follows:
+>>
+>> write-test: iSCSI-SCST 243 MB/s; IET 192 MB/s.
+>> read-test: iSCSI-SCST 291 MB/s; IET 223 MB/s.
+>>
+>> And for a block size of 4 KB:
+>>
+>> write-test: iSCSI-SCST 43 MB/s; IET 42 MB/s.
+>> read-test: iSCSI-SCST 288 MB/s; IET 221 MB/s.
+>
+> Do you have any thoughts why writes are so bad? It shouldn't be so..
 
-This should be go into 2.6.28.y and 2.6.29.y with the other sg fixes.
+It's not impossible that with the 4 KB write test I hit the limits of
+the initiator system (Intel E6750 CPU, 2.66 GHz, two cores). Some
+statistics I gathered during the 4 KB write test:
+Target: CPU load 0.5, 16500 mlx4-comp-0 interrupts per second, same
+number of interrupts processed by each core (8250/s).
+Initiator: CPU load 1.0, 32850 mlx4-comp-0 interrupts per second, all
+interrupts occurred on the same core.
 
-=
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] sg: return EFAULT for an invalid user address
-
-blk_rq_unmap_user() returns EFAULT if a program passes an invalid
-address to kernel (the kernel fails to copy data to user space). sg
-needs to pass the returned value to user space instead of ignoring
-it. Before the block layer conversion, sg returns EFAULT
-properly. This restores the old behavior.
-
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/scsi/sg.c |   13 ++++++++-----
- 1 files changed, 8 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 1e40518..f80683a 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -179,7 +179,7 @@ typedef struct sg_device { /* holds the state of each scsi generic device */
- /* tasklet or soft irq callback */
- static void sg_rq_end_io(struct request *rq, int uptodate);
- static int sg_start_req(Sg_request *srp, unsigned char *cmd);
--static void sg_finish_rem_req(Sg_request * srp);
-+static int sg_finish_rem_req(Sg_request * srp);
- static int sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size);
- static ssize_t sg_new_read(Sg_fd * sfp, char __user *buf, size_t count,
- 			   Sg_request * srp);
-@@ -518,7 +518,7 @@ sg_new_read(Sg_fd * sfp, char __user *buf, size_t count, Sg_request * srp)
- 		goto err_out;
- 	}
- err_out:
--	sg_finish_rem_req(srp);
-+	err = sg_finish_rem_req(srp);
- 	return (0 == err) ? count : err;
- }
- 
-@@ -1694,9 +1694,10 @@ static int sg_start_req(Sg_request *srp, unsigned char *cmd)
- 	return res;
- }
- 
--static void
--sg_finish_rem_req(Sg_request * srp)
-+static int sg_finish_rem_req(Sg_request * srp)
- {
-+	int ret = 0;
-+
- 	Sg_fd *sfp = srp->parentfp;
- 	Sg_scatter_hold *req_schp = &srp->data;
- 
-@@ -1708,12 +1709,14 @@ sg_finish_rem_req(Sg_request * srp)
- 
- 	if (srp->rq) {
- 		if (srp->bio)
--			blk_rq_unmap_user(srp->bio);
-+			ret = blk_rq_unmap_user(srp->bio);
- 
- 		blk_put_request(srp->rq);
- 	}
- 
- 	sg_remove_request(sfp, srp);
-+
-+	return ret;
- }
- 
- static int
--- 
-1.6.0.6
-
+Bart.
