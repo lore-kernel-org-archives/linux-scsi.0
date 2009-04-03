@@ -1,54 +1,91 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [patch 08/15] esp: fix section mismatch warning
-Date: Fri, 03 Apr 2009 10:25:06 -0500
-Message-ID: <1238772306.3359.17.camel@mulgrave.int.hansenpartnership.com>
-References: <200903042006.n24K6CmE029281@imap1.linux-foundation.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] sg: return EFAULT for an invalid user address
+Date: Sat, 4 Apr 2009 00:35:42 +0900
+Message-ID: <20090404003430M.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54732 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755701AbZDCPZL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2009 11:25:11 -0400
-In-Reply-To: <200903042006.n24K6CmE029281@imap1.linux-foundation.org>
+Received: from sh.osrg.net ([192.16.179.4]:50122 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759701AbZDCPfv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Apr 2009 11:35:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: linux-scsi@vger.kernel.org, randy.dunlap@oracle.com, arobinso@nyx.net
+To: James.Bottomley@HansenPartnership.com
+Cc: dgilbert@interlog.com, linux-scsi@vger.kernel.org
 
-On Wed, 2009-03-04 at 12:06 -0800, akpm@linux-foundation.org wrote:
-> From: Randy Dunlap <randy.dunlap@oracle.com>
-> 
-> Not critical.
-> 
-> WARNING: drivers/char/esp.o(.text+0x278): Section mismatch in reference from the function show_serial_version() to the variable .init.data:serial_version
-> The function show_serial_version() references
-> the variable __initdata serial_version.
-> This is often because show_serial_version lacks a __initdata
-> annotation or the annotation of serial_version is wrong.
-> 
-> WARNING: drivers/char/esp.o(.text+0x27d): Section mismatch in reference from the function show_serial_version() to the variable .init.data:serial_name
-> The function show_serial_version() references
-> the variable __initdata serial_name.
-> This is often because show_serial_version lacks a __initdata
-> annotation or the annotation of serial_name is wrong.
-> 
-> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-> Cc: Andrew J. Robinson <arobinso@nyx.net>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> ---
-> 
->  drivers/char/esp.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff -puN drivers/char/esp.c~esp-fix-section-mismatch-warning drivers/char/esp.c
-> --- a/drivers/char/esp.c~esp-fix-section-mismatch-warning
-> +++ a/drivers/char/esp.c
+Hopefully, This is the last fix for the fallout of the block layer
+conversion...
 
-That's not a SCSI driver (so linux-scsi isn't the right list).  esp is
-some type of strange serial driver.
+This should be go into 2.6.28.y and 2.6.29.y with the other sg fixes.
 
-James
+=
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] sg: return EFAULT for an invalid user address
 
+blk_rq_unmap_user() returns EFAULT if a program passes an invalid
+address to kernel (the kernel fails to copy data to user space). sg
+needs to pass the returned value to user space instead of ignoring
+it. Before the block layer conversion, sg returns EFAULT
+properly. This restores the old behavior.
+
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/sg.c |   13 ++++++++-----
+ 1 files changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 1e40518..f80683a 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -179,7 +179,7 @@ typedef struct sg_device { /* holds the state of each scsi generic device */
+ /* tasklet or soft irq callback */
+ static void sg_rq_end_io(struct request *rq, int uptodate);
+ static int sg_start_req(Sg_request *srp, unsigned char *cmd);
+-static void sg_finish_rem_req(Sg_request * srp);
++static int sg_finish_rem_req(Sg_request * srp);
+ static int sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size);
+ static ssize_t sg_new_read(Sg_fd * sfp, char __user *buf, size_t count,
+ 			   Sg_request * srp);
+@@ -518,7 +518,7 @@ sg_new_read(Sg_fd * sfp, char __user *buf, size_t count, Sg_request * srp)
+ 		goto err_out;
+ 	}
+ err_out:
+-	sg_finish_rem_req(srp);
++	err = sg_finish_rem_req(srp);
+ 	return (0 == err) ? count : err;
+ }
+ 
+@@ -1694,9 +1694,10 @@ static int sg_start_req(Sg_request *srp, unsigned char *cmd)
+ 	return res;
+ }
+ 
+-static void
+-sg_finish_rem_req(Sg_request * srp)
++static int sg_finish_rem_req(Sg_request * srp)
+ {
++	int ret = 0;
++
+ 	Sg_fd *sfp = srp->parentfp;
+ 	Sg_scatter_hold *req_schp = &srp->data;
+ 
+@@ -1708,12 +1709,14 @@ sg_finish_rem_req(Sg_request * srp)
+ 
+ 	if (srp->rq) {
+ 		if (srp->bio)
+-			blk_rq_unmap_user(srp->bio);
++			ret = blk_rq_unmap_user(srp->bio);
+ 
+ 		blk_put_request(srp->rq);
+ 	}
+ 
+ 	sg_remove_request(sfp, srp);
++
++	return ret;
+ }
+ 
+ static int
+-- 
+1.6.0.6
 
