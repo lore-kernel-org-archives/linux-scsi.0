@@ -1,37 +1,51 @@
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Subject: Need to create sub-directories in /sys/class/fc_host/hostX/ directory
-Date: Sat, 4 Apr 2009 01:26:35 -0700
-Message-ID: <D7953566-5352-4719-A5B0-A2C82786119B@qlogic.com>
-Mime-Version: 1.0 (Apple Message framework v912)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: [PATCH 1/6] mpt fusion: fix for previous patch taskmgmt in
+	progress should be cleared before return
+Date: Sat, 4 Apr 2009 15:15:15 +0530
+Message-ID: <0D1E8821739E724A86F4D16902CE275C1410E52A59@inbmail01.lsi.com>
+References: <20090403114943.GB17721@lsi.com>,<1238780308.3359.58.camel@mulgrave.int.hansenpartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:10093 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752728AbZDDI0i (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Apr 2009 04:26:38 -0400
+Received: from exprod7og105.obsmtp.com ([64.18.2.163]:58954 "EHLO
+	exprod7og105.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754435AbZDDJp1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Apr 2009 05:45:27 -0400
+In-Reply-To: <1238780308.3359.58.camel@mulgrave.int.hansenpartnership.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
 
-> 	I need to create two sub-directory in /sys/class/fc_host/hostX/
-> directory. The directories are /sys/class/fc_host/hostX/fcoe for
-> FCoE host attributes and /sys/class/fc_host/hostX/fcoe/statistics
-> for FCoE statistics. I read the kernel documents regarding the
-> kobject.txt as well as sample driver sources (kobject_example.c and
-> kset_example.c) but could not find proper way to do this.
->
-> 	The FC transport layer uses host_attributes transport container
-> present in scsi_transport_template to display the FC host attributes
-> and statistics. The transport container has only one attribute_group
-> defined. So looks like I can add only one attribute group. The
-> alternative is to create a new kobject and create a sysfs group.
-> In order to do this I need to know the kobject of the parent
-> directory(i.e /sys/class/fc_host/hostX). Since the hostX directory
-> keeps changing as and when the driver gets unloaded and loaded, I
-> can't use static implementation. Is there a way to know the parent
-> directory for this particular directory. If not what is the best way
-> to do this. Any help is highly appreciated.
+James,
 
-Thanks,
-Giridhar Malavali
+After creating patch, I usually run check_patch script available in scripts directory of linux source tree.
+Below changes are just to remove warning and error related to coding standards  from generated patch. 
+
+If you suggest, not to have those changes merge with actual logical patch then please let me know. I can rework and resubmit.
+
+
+Thanks
+Kashyap
+________________________________________
+From: James Bottomley [James.Bottomley@HansenPartnership.com]
+Sent: Friday, April 03, 2009 1:38 PM
+To: Desai, Kashyap
+Cc: linux-scsi@vger.kernel.org; Moore, Eric; Prakash, Sathya
+Subject: Re: [PATCH 1/6] mpt fusion: fix for previous patch taskmgmt in progress should be cleared before return
+
+On Fri, 2009-04-03 at 17:19 +0530, Kashyap, Desai wrote:
+> -
+> -       mf = mpt_get_msg_frame(mptsasDeviceResetCtx, ioc);
+> -       if (mf == NULL) {
+> +       if ((mf = mpt_get_msg_frame(mptsasDeviceResetCtx, ioc)) == NULL) {
+>                 dfailprintk(ioc, printk(MYIOC_s_WARN_FMT
+
+This is making a clear statement (assignment then check) less clear for
+no practical purpose that I can see.
+
+James
+
+
