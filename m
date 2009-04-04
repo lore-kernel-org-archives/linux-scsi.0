@@ -1,94 +1,56 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [PATCH 1/3] scsi_dh: Add modalias support for SCSI targets
-Date: Fri, 03 Apr 2009 15:43:10 -0700
-Message-ID: <1238798590.20924.0.camel@chandra-ubuntu>
-References: <20090318013615.26548.36303.sendpatchset@chandra-ubuntu>
-	 <20090318013621.26548.10529.sendpatchset@chandra-ubuntu>
-	 <ac3eb2510903181130s5dd1b1caje579d765fd338f6f@mail.gmail.com>
-	 <1237403902.14147.25.camel@chandra-ubuntu>
-	 <1237488880.26341.15.camel@chandra-ubuntu>  <49C3DF49.8050408@redhat.com>
-	 <1237846429.14853.6.camel@chandra-ubuntu>
-Reply-To: sekharan@linux.vnet.ibm.com
+From: Bart Van Assche <bart.vanassche@gmail.com>
+Subject: Re: [Scst-devel] ISCSI-SCST performance (with also IET and STGT data)
+Date: Sat, 4 Apr 2009 10:04:26 +0200
+Message-ID: <e2e108260904040104u37953ef7x74b8713dfcf3166a@mail.gmail.com>
+References: <49D10256.8030307@vlnb.net>
+	 <e2e108260904011314h1e0cf5c5wcdf210eee24d40d8@mail.gmail.com>
+	 <49D4F2E1.7000507@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:36207 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754007AbZDCWnI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2009 18:43:08 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e35.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n33McAWb028550
-	for <linux-scsi@vger.kernel.org>; Fri, 3 Apr 2009 16:38:10 -0600
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n33Mh6H4224412
-	for <linux-scsi@vger.kernel.org>; Fri, 3 Apr 2009 16:43:06 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n33Mh54r004816
-	for <linux-scsi@vger.kernel.org>; Fri, 3 Apr 2009 16:43:06 -0600
-In-Reply-To: <1237846429.14853.6.camel@chandra-ubuntu>
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:45456 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752728AbZDDIE3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Apr 2009 04:04:29 -0400
+In-Reply-To: <49D4F2E1.7000507@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sekharan@linux.vnet.ibm.com
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Kay Sievers <kay.sievers@vrfy.org>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, Peter Jones <pjones@redhat.com>
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi James,
+On Thu, Apr 2, 2009 at 7:16 PM, Vladislav Bolkhovitin <vst@vlnb.net> wrote:
+> Bart Van Assche, on 04/02/2009 12:14 AM wrote:
+>> I have repeated some of these performance tests for iSCSI over IPoIB
+>> (two DDR PCIe 1.0 ConnectX HCA's connected back to back). The results
+>> for the buffered I/O test with a block size of 512K (initiator)
+>> against a file of 1GB residing on a tmpfs filesystem on the target are
+>> as follows:
+>>
+>> write-test: iSCSI-SCST 243 MB/s; IET 192 MB/s.
+>> read-test: iSCSI-SCST 291 MB/s; IET 223 MB/s.
+>>
+>> And for a block size of 4 KB:
+>>
+>> write-test: iSCSI-SCST 43 MB/s; IET 42 MB/s.
+>> read-test: iSCSI-SCST 288 MB/s; IET 221 MB/s.
+>
+> Do you have any thoughts why writes are so bad? It shouldn't be so..
 
-Do you still have any concerns (after Peter's response) ?
+By this time I have run the following variation of the 4 KB write test:
+* Target: iSCSI-SCST was exporting a 1 GB file residing on a tmpfs filesystem.
+* Initiator: two processes were writing 4 KB blocks as follows:
+dd if=/dev/zero of=/dev/sdb bs=4K seek=0 count=131072 oflag=sync &
+dd if=/dev/zero of=/dev/sdb bs=4K seek=131072 count=131072 oflag=sync &
 
-If not, Can you accept the patches, please.
+Results:
+* Each dd process on the initiator was writing at a speed of 37.8
+MB/s, or a combined writing speed of 75.6 MB/s.
+* CPU load on the initiator system during the test: 2.0.
+* According to /proc/interrupts, about 38000 mlx4-comp-0 interrupts
+were triggered per second.
 
-Thanks & Regards,
+These results confirm that the initiator system was the bottleneck
+during the 4 KB write test, not the target system.
 
-chandra
-On Mon, 2009-03-23 at 15:13 -0700, Chandra Seetharaman wrote:
-> Hi James,
-> 
-> Are your concerns answered with Peter's response ?
-> 
-> Or, changes are required for the patches I posted ?
-> 
-> Thanks and regards,
-> 
-> chandra
-> On Fri, 2009-03-20 at 14:24 -0400, Peter Jones wrote:
-> > On 03/19/2009 02:54 PM, Chandra Seetharaman wrote:
-> > > On Wed, 2009-03-18 at 12:18 -0700, Chandra Seetharaman wrote:
-> > >> On Wed, 2009-03-18 at 19:30 +0100, Kay Sievers wrote:
-> > >>> On Wed, Mar 18, 2009 at 02:36, Chandra Seetharaman <sekharan@us.ibm.com> wrote:
-> > >>>> From: Peter Jones <pjones@redhat.com>
-> > >>>>
-> > >>>> This patch allows the use of modaliases on scsi targets to correctly
-> > >>>> load scsi device handler modules when the devices are found.
-> > >>>> +++ linux-2.6.28/include/linux/mod_devicetable.h
-> > >>>> @@ -454,4 +454,10 @@ struct dmi_system_id {
-> > >>>>
-> > >>>>  #define DMI_MATCH(a, b)        { a, b }
-> > >>>>
-> > >>>> +struct scsi_dh_device_id {
-> > >>>> +       unsigned char type;
-> > >>>> +       char vendor[9];
-> > >>>> +       char model[17];
-> > >>>> +};
-> > >>> Doesn't the static array waste space, when used for the long lists of
-> > >>> entries stuffed in arrays of this structure? It will carry a lot of \0
-> > >>> chars, and identical strings can not be de-duplicated by the compiler,
-> > >>> unlike when pointers are used?
-> > >>>
-> > >> I had some problems when we used the pointers instead of arrays. Don't
-> > >> recall it now.
-> > >>
-> > >> Will retry and report.
-> > > 
-> > > Hi Kay,
-> > > 
-> > > I tried it and realized modpost is what is giving the problem.
-> > > 
-> > > When the array for vendor and model is changed to pointers, modpost (at
-> > > the end of make modules) dies with a segmentation fault. 
-> > > 
-> > > Peter, Any details that you can provide ?
-> > 
-> > In this case, the tail wags the dog -- it's a string instead of a pointer basicallly so that the new bits in file2alias.c can look like the other parts of that same file.  It's sortof inconvenient for them to be pointers in there...
-> > 
-
+Bart.
