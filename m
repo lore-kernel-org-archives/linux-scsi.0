@@ -1,37 +1,42 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC PATCH 16/19] Target_Core_Mod Task Management infrastructure
-Date: Sat, 04 Apr 2009 21:02:15 -0700
-Message-ID: <1238904135.4250.757.camel@haakon2.linux-iscsi.org>
+Subject: [RFC PATCH 17/19] Target_Core_Mod portal group endpoint
+	infrastructure
+Date: Sat, 04 Apr 2009 21:02:18 -0700
+Message-ID: <1238904138.4250.758.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp124.sbc.mail.sp1.yahoo.com ([69.147.64.97]:20222 "HELO
-	smtp124.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758163AbZDEEGt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Apr 2009 00:06:49 -0400
+Received: from n16b.bullet.mail.mud.yahoo.com ([68.142.207.237]:48577 "HELO
+	n16b.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1758179AbZDEEHE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Apr 2009 00:07:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ming Zhang <blackmagic02881@gmail.com>, Philipp Reisner <philipp.reisner@linbit.com>, Linus Torvalds <torvalds@linux-foundation.org>
 
-This patch adds SPC-3 task management infrastructure and functionality for LUN_RESET.
+The patch adds the core se_portal_group_t functionality that is used internally by
+target_core_mod, as well as ConfigFS enabled fabric modules like LIO-Target v3.0
+(iscsi_target_mod).
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 
-diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
+diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
 new file mode 100644
-index 0000000..c3260c7
+index 0000000..e97b1dc
 --- /dev/null
-+++ b/drivers/target/target_core_tmr.c
-@@ -0,0 +1,395 @@
++++ b/drivers/target/target_core_tpg.c
+@@ -0,0 +1,867 @@
 +/*******************************************************************************
-+ * Filename:  target_core_tmr.c
++ * Filename:  target_core_tpg.c
 + *
-+ * This file contains SPC-3 task management infrastructure
++ * This file contains generic Target Portal Group related functions.
 + *
-+ * Copyright (c) 2009 Rising Tide, Inc.
-+ * Copyright (c) 2009 Linux-iSCSI.org
++ * Copyright (c) 2002, 2003, 2004, 2005 PyX Technologies, Inc.
++ * Copyright (c) 2005, 2006, 2007 SBE, Inc.
++ * Copyright (c) 2007-2009 Rising Tide Software, Inc.
++ * Copyright (c) 2008-2009 Linux-iSCSI.org
 + *
 + * Nicholas A. Bellinger <nab@kernel.org>
 + *
@@ -51,423 +56,910 @@ index 0000000..c3260c7
 + *
 + ******************************************************************************/
 +
-+#define TARGET_CORE_TMR_C
 +
-+#include <linux/version.h>
++#define TARGET_CORE_TPG_C
++
++#include <linux/net.h>
++#include <linux/string.h>
++#include <linux/timer.h>
 +#include <linux/slab.h>
 +#include <linux/spinlock.h>
-+#include <linux/list.h>
++#include <linux/smp_lock.h>
++#include <linux/in.h>
++#include <net/sock.h>
++#include <net/tcp.h>
 +#include <scsi/scsi.h>
 +#include <scsi/scsi_cmnd.h>
 +
 +#include <target/target_core_base.h>
 +#include <target/target_core_device.h>
 +#include <target/target_core_hba.h>
-+#include <target/target_core_pr.h>
-+#include <target/target_core_seobj.h>
-+#include <target/target_core_tmr.h>
 +#include <target/target_core_transport.h>
-+#include <target/target_core_alua.h>
-+#include <target/target_core_transport_plugin.h>
++#include <target/target_core_plugin.h>
++#include <target/target_core_seobj.h>
 +#include <target/target_core_fabric_ops.h>
-+#include <target/target_core_configfs.h>
 +
-+#undef TARGET_CORE_TMR_C
++#undef TARGET_CORE_TPG_C
 +
-+#define DEBUG_LUN_RESET
-+#ifdef DEBUG_LUN_RESET
-+#define DEBUG_LR(x...) printk(KERN_INFO x)
-+#else
-+#define DEBUG_LR(x...)
-+#endif
-+
-+se_tmr_req_t *core_tmr_alloc_req(
-+	se_cmd_t *se_cmd,
-+	void *fabric_tmr_ptr,
-+	u8 function)
-+{
-+	se_tmr_req_t *tmr;
-+
-+	tmr = kmem_cache_zalloc(se_tmr_req_cache, GFP_KERNEL);
-+	if (!(tmr)) {
-+		printk(KERN_ERR "Unable to allocate se_tmr_req_t\n");
-+		return ERR_PTR(-ENOMEM);
-+	}
-+	tmr->task_cmd = se_cmd;
-+	tmr->fabric_tmr_ptr = fabric_tmr_ptr;
-+	tmr->function = function;
-+	INIT_LIST_HEAD(&tmr->tmr_list);
-+
-+	return tmr;
-+}
-+EXPORT_SYMBOL(core_tmr_alloc_req);
-+
-+/*
-+ * Called with se_device_t->se_tmr_lock held.
++/*	core_clear_initiator_node_from_tpg():
++ *
++ *
 + */
-+void __core_tmr_release_req(
-+	se_tmr_req_t *tmr)
++static void core_clear_initiator_node_from_tpg(
++	se_node_acl_t *nacl,
++	se_portal_group_t *tpg)
 +{
-+	list_del(&tmr->tmr_list);
-+	kmem_cache_free(se_tmr_req_cache, tmr);
++	int i;
++	se_dev_entry_t *deve;
++	se_lun_t *lun;
++	se_lun_acl_t *acl, *acl_tmp;
++
++	spin_lock_bh(&nacl->device_list_lock);
++	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
++		deve = &nacl->device_list[i];
++
++		if (!(deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS))
++			continue;
++
++		if (!deve->se_lun) {
++			printk(KERN_ERR "%s device entries device pointer is"
++				" NULL, but Initiator has access.\n",
++				TPG_TFO(tpg)->get_fabric_name());
++			continue;
++		}
++
++		lun = deve->se_lun;
++		spin_unlock_bh(&nacl->device_list_lock);
++		core_update_device_list_for_node(lun, deve->mapped_lun,
++			TRANSPORT_LUNFLAGS_NO_ACCESS, nacl, tpg, 0);
++
++		spin_lock(&lun->lun_acl_lock);
++		list_for_each_entry_safe(acl, acl_tmp,
++					&lun->lun_acl_list, lacl_list) {
++			if (!(strcmp(acl->initiatorname,
++					nacl->initiatorname)) &&
++			     (acl->mapped_lun == deve->mapped_lun))
++				break;
++		}
++
++		if (!acl) {
++			printk(KERN_ERR "Unable to locate se_lun_acl_t for %s,"
++				" mapped_lun: %u\n", nacl->initiatorname,
++				deve->mapped_lun);
++			spin_unlock(&lun->lun_acl_lock);
++			spin_lock_bh(&nacl->device_list_lock);
++			continue;
++		}
++
++		list_del(&acl->lacl_list);
++		spin_unlock(&lun->lun_acl_lock);
++
++		spin_lock_bh(&nacl->device_list_lock);
++		kfree(acl);
++	}
++	spin_unlock_bh(&nacl->device_list_lock);
 +}
 +
-+void core_tmr_release_req(
-+	se_tmr_req_t *tmr)
++/*	__core_tpg_get_initiator_node_acl():
++ *
++ *	spin_lock_bh(&tpg->acl_node_lock); must be held when calling
++ */
++static se_node_acl_t *__core_tpg_get_initiator_node_acl(
++	se_portal_group_t *tpg,
++	const char *initiatorname)
 +{
-+	se_device_t *dev = tmr->tmr_dev;
++	se_node_acl_t *acl;
 +
-+	spin_lock(&dev->se_tmr_lock);
-+	__core_tmr_release_req(tmr);
-+	spin_unlock(&dev->se_tmr_lock);
++	list_for_each_entry(acl, &tpg->acl_node_list, acl_list) {
++		if (!(strcmp(acl->initiatorname, initiatorname)))
++			return acl;
++	}
++
++	return NULL;
 +}
 +
-+int core_tmr_lun_reset(
-+	se_device_t *dev,
-+	se_tmr_req_t *tmr,
-+	struct list_head *preempt_and_abort_list,
-+	se_cmd_t *prout_cmd)
++/*	core_tpg_get_initiator_node_acl():
++ *
++ *
++ */
++se_node_acl_t *core_tpg_get_initiator_node_acl(
++	se_portal_group_t *tpg,
++	unsigned char *initiatorname)
 +{
-+	se_cmd_t *cmd;
-+	se_queue_req_t *qr, *qr_tmp;
-+	se_node_acl_t *tmr_nacl = NULL;
-+	se_portal_group_t *tmr_tpg = NULL;
-+	se_queue_obj_t *qobj = dev->dev_queue_obj;
-+	se_tmr_req_t *tmr_p, *tmr_pp;
-+	se_task_t *task, *task_tmp;
-+	unsigned long flags;
-+	int fe_count, state, tas;
-+	/*
-+	 * TASK_ABORTED status bit, this is configurable via ConfigFS
-+	 * se_device_t attributes.  spc4r17 section 7.4.6 Control mode page
-+	 *
-+	 * A task aborted status (TAS) bit set to zero specifies that aborted
-+	 * tasks shall be terminated by the device server without any response
-+	 * to the application client. A TAS bit set to one specifies that tasks
-+	 * aborted by the actions of an I_T nexus other than the I_T nexus on
-+	 * which the command was received shall be completed with TASK ABORTED
-+	 * status (see SAM-4).
-+	 */
-+	tas = DEV_ATTRIB(dev)->emulate_tas;
-+	/*
-+	 * Determine if this se_tmr is coming from a $FABRIC_MOD
-+	 * or se_device_t passthrough..
-+	 */
-+	if (tmr && tmr->task_cmd && tmr->task_cmd->se_sess) {
-+		tmr_nacl = tmr->task_cmd->se_sess->se_node_acl;
-+		tmr_tpg = tmr->task_cmd->se_sess->se_tpg;
-+		if (tmr_nacl && tmr_tpg) {
-+			DEBUG_LR("LUN_RESET: TMR caller fabric: %s"
-+				" initiator port %s\n",
-+				TPG_TFO(tmr_tpg)->get_fabric_name(),
-+				tmr_nacl->initiatorname);
++	se_node_acl_t *acl;
++
++	spin_lock_bh(&tpg->acl_node_lock);
++	list_for_each_entry(acl, &tpg->acl_node_list, acl_list) {
++		if (!(strcmp(acl->initiatorname, initiatorname)) &&
++		   (!(acl->nodeacl_flags & NAF_DYNAMIC_NODE_ACL))) {
++			spin_unlock_bh(&tpg->acl_node_lock);
++			return acl;
 +		}
 +	}
-+	DEBUG_LR("LUN_RESET: %s starting for [%s], tas: %d\n",
-+		(preempt_and_abort_list) ? "Preempt" : "TMR",
-+		TRANSPORT(dev)->name, tas);
-+	/*
-+	 * Release all pending and outgoing TMRs aside from the received
-+	 * LUN_RESET tmr..
-+	 */
-+	spin_lock(&dev->se_tmr_lock);
-+	list_for_each_entry_safe(tmr_p, tmr_pp, &dev->dev_tmr_list, tmr_list) {
++	spin_unlock_bh(&tpg->acl_node_lock);
++
++	return NULL;
++}
++
++/*	core_tpg_add_node_to_devs():
++ *
++ *
++ */
++void core_tpg_add_node_to_devs(
++	se_node_acl_t *acl,
++	se_portal_group_t *tpg)
++{
++	int i = 0;
++	u32 lun_access = 0;
++	se_lun_t *lun;
++
++	spin_lock(&tpg->tpg_lun_lock);
++	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
++		lun = &tpg->tpg_lun_list[i];
++		if (lun->lun_status != TRANSPORT_LUN_STATUS_ACTIVE)
++			continue;
++
++		spin_unlock(&tpg->tpg_lun_lock);
 +		/*
-+		 * Allow the received TMR to return with FUNCTION_COMPLETE.
++		 * By default in LIO-Target $FABRIC_MOD,
++		 * demo_mode_write_protect is ON, or READ_ONLY;
 +		 */
-+		if (tmr && (tmr_p == tmr))
-+			continue;
-+
-+		cmd = tmr_p->task_cmd;
-+		if (!(cmd)) {
-+			printk(KERN_ERR "Unable to locate se_cmd_t for TMR\n");
-+			continue;
-+		}
-+		/*
-+		 * If this function was called with a valid pr_res_key
-+		 * parameter (eg: for PROUT PREEMPT_AND_ABORT service action
-+		 * skip non regisration key matching TMRs.
-+		 */
-+		if ((preempt_and_abort_list != NULL) &&
-+		    (core_scsi3_check_cdb_abort_and_preempt(
-+					preempt_and_abort_list, cmd) != 0))
-+			continue;
-+		spin_unlock(&dev->se_tmr_lock);
-+
-+		DEBUG_LR("LUN_RESET: %s releasing TMR %p Function: 0x%02x,"
-+			" Response: 0x%02x, t_state: %d\n",
-+			(preempt_and_abort_list) ? "Preempt" : "", tmr_p,
-+			tmr_p->function, tmr_p->response, cmd->t_state);
-+
-+		transport_cmd_finish_abort_tmr(cmd);
-+		spin_lock(&dev->se_tmr_lock);
-+	}
-+	spin_unlock(&dev->se_tmr_lock);
-+	/*
-+	 * Complete outstanding se_task_t CDBs with TASK_ABORTED SAM status.
-+	 * This is following sam4r17, section 5.6 Aborting commands, Table 38
-+	 * for TMR LUN_RESET:
-+	 *
-+	 * a) "Yes" indicates that each command that is aborted on an I_T nexus
-+	 * other than the one that caused the SCSI device condition is
-+	 * completed with TASK ABORTED status, if the TAS bit is set to one in
-+	 * the Control mode page (see SPC-4). "No" indicates that no status is
-+	 * returned for aborted commands.
-+	 *
-+	 * d) If the logical unit reset is caused by a particular I_T nexus
-+	 * (e.g., by a LOGICAL UNIT RESET task management function), then "yes"
-+	 * (TASK_ABORTED status) applies.
-+	 *
-+	 * Otherwise (e.g., if triggered by a hard reset), "no"
-+	 * (no TASK_ABORTED SAM status) applies.
-+	 *
-+	 * Note that this seems to be independent of TAS (Task Aborted Status)
-+	 * in the Control Mode Page.
-+	 */
-+	spin_lock_irqsave(&dev->execute_task_lock, flags);
-+	list_for_each_entry_safe(task, task_tmp, &dev->state_task_list,
-+				t_state_list) {
-+		if (!(TASK_CMD(task))) {
-+			printk(KERN_ERR "TASK_CMD(task) is NULL!\n");
-+			continue;
-+		}
-+		cmd = TASK_CMD(task);
-+
-+		if (!T_TASK(cmd)) {
-+			printk(KERN_ERR "T_TASK(cmd) is NULL for task: %p cmd:"
-+				" %p ITT: 0x%08x\n", task, cmd,
-+				CMD_TFO(cmd)->get_task_tag(cmd));
-+			continue;
-+		}
-+		/*
-+		 * For PREEMPT_AND_ABORT usage, only process commands
-+		 * with a matching reservation key.
-+		 */
-+		if ((preempt_and_abort_list != NULL) &&
-+		    (core_scsi3_check_cdb_abort_and_preempt(
-+					preempt_and_abort_list, cmd) != 0))
-+			continue;
-+		/*
-+		 * Not aborting PROUT PREEMPT_AND_ABORT CDB..
-+		 */
-+		if (prout_cmd == cmd)
-+			continue;
-+
-+		list_del(&task->t_state_list);
-+		atomic_set(&task->task_state_active, 0);
-+		spin_unlock_irqrestore(&dev->execute_task_lock, flags);
-+
-+		spin_lock_irqsave(&T_TASK(cmd)->t_state_lock, flags);
-+		DEBUG_LR("LUN_RESET: %s cmd: %p task: %p ITT/CmdSN: 0x%08x/"
-+			"0x%08x, i_state: %d, t_state/def_t_state: %d/%d cdb:"
-+			" 0x%02x\n", (preempt_and_abort_list) ? "Preempt" : "",
-+			cmd, task, CMD_TFO(cmd)->get_task_tag(cmd),
-+			0, CMD_TFO(cmd)->get_cmd_state(cmd), cmd->t_state,
-+			cmd->deferred_t_state, T_TASK(cmd)->t_task_cdb[0]);
-+		DEBUG_LR("LUN_RESET: ITT[0x%08x] - pr_res_key: 0x%016Lx"
-+			" t_task_cdbs: %d t_task_cdbs_left: %d"
-+			" t_task_cdbs_sent: %d -- t_transport_active: %d"
-+			" t_transport_stop: %d t_transport_sent: %d\n",
-+			CMD_TFO(cmd)->get_task_tag(cmd), cmd->pr_res_key,
-+			T_TASK(cmd)->t_task_cdbs,
-+			atomic_read(&T_TASK(cmd)->t_task_cdbs_left),
-+			atomic_read(&T_TASK(cmd)->t_task_cdbs_sent),
-+			atomic_read(&T_TASK(cmd)->t_transport_active),
-+			atomic_read(&T_TASK(cmd)->t_transport_stop),
-+			atomic_read(&T_TASK(cmd)->t_transport_sent));
-+
-+		if (atomic_read(&task->task_active)) {
-+			atomic_set(&task->task_stop, 1);
-+			spin_unlock_irqrestore(
-+				&T_TASK(cmd)->t_state_lock, flags);
-+
-+			DEBUG_LR("LUN_RESET: Waiting for task: %p to shutdown"
-+				" for dev: %p\n", task, dev);
-+			down(&task->task_stop_sem);
-+			DEBUG_LR("LUN_RESET Completed task: %p shutdown for"
-+				" dev: %p\n", task, dev);
-+			spin_lock_irqsave(&T_TASK(cmd)->t_state_lock, flags);
-+			atomic_dec(&T_TASK(cmd)->t_task_cdbs_left);
-+
-+			atomic_set(&task->task_active, 0);
-+			atomic_set(&task->task_stop, 0);
-+		}
-+		__transport_stop_task_timer(task, &flags);
-+
-+		if (!(atomic_dec_and_test(&T_TASK(cmd)->t_task_cdbs_ex_left))) {
-+			spin_unlock_irqrestore(
-+					&T_TASK(cmd)->t_state_lock, flags);
-+			DEBUG_LR("LUN_RESET: Skipping task: %p, dev: %p for"
-+				" t_task_cdbs_ex_left: %d\n", task, dev,
-+				atomic_read(&T_TASK(cmd)->t_task_cdbs_ex_left));
-+
-+			spin_lock_irqsave(&dev->execute_task_lock, flags);
-+			continue;
-+		}
-+		fe_count = atomic_read(&T_TASK(cmd)->t_fe_count);
-+
-+		if (atomic_read(&T_TASK(cmd)->t_transport_active)) {
-+			DEBUG_LR("LUN_RESET: got t_transport_active = 1 for"
-+				" task: %p, t_fe_count: %d dev: %p\n", task,
-+				fe_count, dev);
-+			spin_unlock_irqrestore(&T_TASK(cmd)->t_state_lock,
-+						flags);
-+			if (fe_count) {
-+				/*
-+				 * TASK ABORTED status (TAS) bit support
-+				 */
-+				if (((tmr_nacl != NULL) &&
-+				     (tmr_nacl == cmd->se_sess->se_node_acl)) ||
-+				     tas)
-+					transport_send_task_abort(cmd);
-+				transport_cmd_finish_abort(cmd, 0);
++		if (!(TPG_TFO(tpg)->tpg_check_demo_mode_write_protect(tpg))) {
++			if (LUN_OBJ_API(lun)->get_device_access) {
++				if (LUN_OBJ_API(lun)->get_device_access(
++						lun->lun_type_ptr) == 0)
++					lun_access =
++						TRANSPORT_LUNFLAGS_READ_ONLY;
++				else
++					lun_access =
++						TRANSPORT_LUNFLAGS_READ_WRITE;
 +			} else
-+				transport_cmd_finish_abort(cmd, 1);
-+
-+			spin_lock_irqsave(&dev->execute_task_lock, flags);
-+			continue;
++				lun_access = TRANSPORT_LUNFLAGS_READ_WRITE;
++		} else {
++			/*
++			 * Allow only optical drives to issue R/W in default RO
++			 * demo mode.
++			 */
++			if (LUN_OBJ_API(lun)->get_device_type(
++					lun->lun_type_ptr) == TYPE_DISK)
++				lun_access = TRANSPORT_LUNFLAGS_READ_ONLY;
++			else
++				lun_access = TRANSPORT_LUNFLAGS_READ_WRITE;
 +		}
-+		DEBUG_LR("LUN_RESET: Got t_transport_active = 0 for task: %p,"
-+			" t_fe_count: %d dev: %p\n", task, fe_count, dev);
-+		spin_unlock_irqrestore(&T_TASK(cmd)->t_state_lock, flags);
 +
-+		if (fe_count) {
-+			/*
-+			 * TASK ABORTED status (TAS) bit support
-+			 */
-+			if (((tmr_nacl != NULL) &&
-+			    (tmr_nacl == cmd->se_sess->se_node_acl)) || tas)
-+				transport_send_task_abort(cmd);
-+			transport_cmd_finish_abort(cmd, 0);
-+		} else
-+			transport_cmd_finish_abort(cmd, 1);
++		printk(KERN_INFO "TARGET_CORE[%s]->TPG[%u]_LUN[%u] - Adding %s"
++			" access for LUN in Demo Mode\n",
++			TPG_TFO(tpg)->get_fabric_name(),
++			TPG_TFO(tpg)->tpg_get_tag(tpg), lun->unpacked_lun,
++			(lun_access == TRANSPORT_LUNFLAGS_READ_WRITE) ?
++			"READ-WRITE" : "READ-ONLY");
 +
-+		spin_lock_irqsave(&dev->execute_task_lock, flags);
++		core_update_device_list_for_node(lun, lun->unpacked_lun,
++				lun_access, acl, tpg, 1);
++		spin_lock(&tpg->tpg_lun_lock);
 +	}
-+	spin_unlock_irqrestore(&dev->execute_task_lock, flags);
-+	/*
-+	 * Release all commands remaining in the se_device_t cmd queue.
-+	 *
-+	 * This follows the same logic as above for the se_device_t
-+	 * se_task_t state list, where commands are returned with
-+	 * TASK_ABORTED status, if there is an outstanding $FABRIC_MOD
-+	 * reference, otherwise the se_cmd_t is released.
-+	 */
-+	spin_lock_irqsave(&qobj->cmd_queue_lock, flags);
-+	list_for_each_entry_safe(qr, qr_tmp, &qobj->qobj_list, qr_list) {
-+		cmd = (se_cmd_t *)qr->cmd;
-+		if (!(cmd)) {
-+			/*
-+			 * Skip these for non PREEMPT_AND_ABORT usage..
-+			 */
-+			if (preempt_and_abort_list != NULL)
-+				continue;
++	spin_unlock(&tpg->tpg_lun_lock);
++}
 +
-+			atomic_dec(&qobj->queue_cnt);
-+			list_del(&qr->qr_list);
-+			kfree(qr);
-+			continue;
-+		}
-+		/*
-+		 * For PREEMPT_AND_ABORT usage, only process commands
-+		 * with a matching reservation key.
-+		 */
-+		if ((preempt_and_abort_list != NULL) &&
-+		    (core_scsi3_check_cdb_abort_and_preempt(
-+					preempt_and_abort_list, cmd) != 0))
-+			continue;
-+		/*
-+		 * Not aborting PROUT PREEMPT_AND_ABORT CDB..
-+		 */
-+		if (prout_cmd == cmd)
-+			continue;
-+
-+		atomic_dec(&T_TASK(cmd)->t_transport_queue_active);
-+		atomic_dec(&qobj->queue_cnt);
-+		list_del(&qr->qr_list);
-+		spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
-+
-+		state = qr->state;
-+		kfree(qr);
-+
-+		DEBUG_LR("LUN_RESET: %s from Device Queue: cmd: %p t_state:"
-+			" %d t_fe_count: %d\n", (preempt_and_abort_list) ?
-+			"Preempt" : "", cmd, state,
-+			atomic_read(&T_TASK(cmd)->t_fe_count));
-+
-+		if (atomic_read(&T_TASK(cmd)->t_fe_count)) {
-+			/*
-+			 * TASK ABORTED status (TAS) bit support
-+			 */
-+			if (((tmr_nacl != NULL) &&
-+			     (tmr_nacl == cmd->se_sess->se_node_acl)) ||
-+			      tas)
-+				transport_send_task_abort(cmd);
-+			transport_cmd_finish_abort(cmd, 0);
-+		} else
-+			transport_cmd_finish_abort(cmd, 1);
-+
-+		spin_lock_irqsave(&qobj->cmd_queue_lock, flags);
++/*      core_set_queue_depth_for_node():
++ *
++ *
++ */
++static int core_set_queue_depth_for_node(
++	se_portal_group_t *tpg,
++	se_node_acl_t *acl)
++{
++	if (!acl->queue_depth) {
++		printk(KERN_ERR "Queue depth for %s Initiator Node: %s is 0,"
++			"defaulting to 1.\n", TPG_TFO(tpg)->get_fabric_name(),
++			acl->initiatorname);
++		acl->queue_depth = 1;
 +	}
-+	spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
 +
-+	spin_lock(&dev->stats_lock);
-+	dev->num_resets++;
-+	spin_unlock(&dev->stats_lock);
-+
-+	DEBUG_LR("LUN_RESET: %s for [%s] Complete\n",
-+			(preempt_and_abort_list) ? "Preempt" : "TMR",
-+			TRANSPORT(dev)->name);
 +	return 0;
 +}
-diff --git a/include/target/target_core_tmr.h b/include/target/target_core_tmr.h
++
++/*      core_create_device_list_for_node():
++ *
++ *
++ */
++static int core_create_device_list_for_node(se_node_acl_t *nacl)
++{
++	se_dev_entry_t *deve;
++	int i;
++
++	nacl->device_list = kzalloc(sizeof(se_dev_entry_t) *
++				TRANSPORT_MAX_LUNS_PER_TPG, GFP_KERNEL);
++	if (!(nacl->device_list)) {
++		printk(KERN_ERR "Unable to allocate memory for"
++			" se_node_acl_t->device_list\n");
++		return -1;
++	}
++	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
++		deve = &nacl->device_list[i];
++
++		atomic_set(&deve->ua_count, 0);
++		spin_lock_init(&deve->ua_lock);
++		INIT_LIST_HEAD(&deve->ua_list);
++	}
++
++	return 0;
++}
++
++/*	core_tpg_check_initiator_node_acl()
++ *
++ *
++ */
++se_node_acl_t *core_tpg_check_initiator_node_acl(
++	se_portal_group_t *tpg,
++	unsigned char *initiatorname)
++{
++	se_node_acl_t *acl;
++
++	acl = core_tpg_get_initiator_node_acl(tpg, initiatorname);
++	if ((acl))
++		return acl;
++
++	if (!(TPG_TFO(tpg)->tpg_check_demo_mode(tpg)))
++		return NULL;
++
++	acl = kzalloc(sizeof(se_node_acl_t), GFP_KERNEL);
++	if (!(acl)) {
++		printk(KERN_ERR "Unable to allocate memory for"
++			" se_node_acl_t.\n");
++		return NULL;
++	}
++
++	INIT_LIST_HEAD(&acl->acl_list);
++	spin_lock_init(&acl->device_list_lock);
++	spin_lock_init(&acl->nacl_sess_lock);
++	acl->queue_depth = TPG_TFO(tpg)->tpg_get_default_depth(tpg);
++	snprintf(acl->initiatorname, TRANSPORT_IQN_LEN, "%s", initiatorname);
++	acl->se_tpg = tpg;
++#ifdef SNMP_SUPPORT
++	acl->acl_index = scsi_get_new_index(SCSI_AUTH_INTR_INDEX);
++	spin_lock_init(&acl->stats_lock);
++#endif /* SNMP_SUPPORT */
++	acl->nodeacl_flags |= NAF_DYNAMIC_NODE_ACL;
++
++	acl->fabric_acl_ptr = TPG_TFO(tpg)->tpg_alloc_fabric_acl(tpg,
++			acl);
++	if (!(acl->fabric_acl_ptr)) {
++		kfree(acl);
++		return NULL;
++	}
++	TPG_TFO(tpg)->set_default_node_attributes(acl);
++
++	if (core_create_device_list_for_node(acl) < 0) {
++		TPG_TFO(tpg)->tpg_release_fabric_acl(tpg, acl);
++		kfree(acl);
++		return NULL;
++	}
++
++	if (core_set_queue_depth_for_node(tpg, acl) < 0) {
++		core_free_device_list_for_node(acl, tpg);
++		TPG_TFO(tpg)->tpg_release_fabric_acl(tpg, acl);
++		kfree(acl);
++		return NULL;
++	}
++
++	core_tpg_add_node_to_devs(acl, tpg);
++
++	spin_lock_bh(&tpg->acl_node_lock);
++	list_add_tail(&acl->acl_list, &tpg->acl_node_list);
++	tpg->num_node_acls++;
++	spin_unlock_bh(&tpg->acl_node_lock);
++
++	printk("%s_TPG[%u] - Added DYNAMIC ACL with TCQ Depth: %d for %s"
++		" Initiator Node: %s\n", TPG_TFO(tpg)->get_fabric_name(),
++		TPG_TFO(tpg)->tpg_get_tag(tpg), acl->queue_depth,
++		TPG_TFO(tpg)->get_fabric_name(), initiatorname);
++
++	return acl;
++}
++EXPORT_SYMBOL(core_tpg_check_initiator_node_acl);
++
++/*	core_tpg_free_node_acls():
++ *
++ *
++ */
++void core_tpg_free_node_acls(se_portal_group_t *tpg)
++{
++	se_node_acl_t *acl, *acl_tmp;
++
++	spin_lock_bh(&tpg->acl_node_lock);
++	list_for_each_entry_safe(acl, acl_tmp, &tpg->acl_node_list, acl_list) {
++		/*
++		 * The kfree() for dynamically allocated Node ACLS is done in
++		 * iscsi_close_session().
++		 */
++		if (acl->nodeacl_flags & NAF_DYNAMIC_NODE_ACL)
++			continue;
++
++		kfree(acl);
++		tpg->num_node_acls--;
++	}
++	spin_unlock_bh(&tpg->acl_node_lock);
++}
++EXPORT_SYMBOL(core_tpg_free_node_acls);
++
++void core_tpg_clear_object_luns(se_portal_group_t *tpg)
++{
++	int i, ret;
++	se_lun_t *lun;
++
++	spin_lock(&tpg->tpg_lun_lock);
++	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
++		lun = &tpg->tpg_lun_list[i];
++
++		if ((lun->lun_status != TRANSPORT_LUN_STATUS_ACTIVE) ||
++		    (lun->lun_type_ptr == NULL))
++			continue;
++
++		spin_unlock(&tpg->tpg_lun_lock);
++		ret = LUN_OBJ_API(lun)->del_obj_from_lun(tpg, lun);
++		spin_lock(&tpg->tpg_lun_lock);
++	}
++	spin_unlock(&tpg->tpg_lun_lock);
++}
++EXPORT_SYMBOL(core_tpg_clear_object_luns);
++
++/*	core_tpg_add_initiator_node_acl():
++ *
++ *
++ */
++se_node_acl_t *core_tpg_add_initiator_node_acl(
++	se_portal_group_t *tpg,
++	const char *initiatorname,
++	u32 queue_depth)
++{
++	se_node_acl_t *acl = NULL;
++
++	spin_lock_bh(&tpg->acl_node_lock);
++	acl = __core_tpg_get_initiator_node_acl(tpg, initiatorname);
++	if ((acl)) {
++		if (acl->nodeacl_flags & NAF_DYNAMIC_NODE_ACL) {
++			acl->nodeacl_flags &= ~NAF_DYNAMIC_NODE_ACL;
++			printk(KERN_INFO "%s_TPG[%u] - Replacing dynamic ACL"
++				" for %s\n", TPG_TFO(tpg)->get_fabric_name(),
++				TPG_TFO(tpg)->tpg_get_tag(tpg), initiatorname);
++			spin_unlock_bh(&tpg->acl_node_lock);
++			goto done;
++		}
++
++		printk(KERN_ERR "ACL entry for %s Initiator"
++			" Node %s already exists for TPG %u, ignoring"
++			" request.\n",  TPG_TFO(tpg)->get_fabric_name(),
++			initiatorname, TPG_TFO(tpg)->tpg_get_tag(tpg));
++		spin_unlock_bh(&tpg->acl_node_lock);
++		return ERR_PTR(-EEXIST);
++	}
++	spin_unlock_bh(&tpg->acl_node_lock);
++
++	acl = kzalloc(sizeof(se_node_acl_t), GFP_KERNEL);
++	if (!(acl)) {
++		printk(KERN_ERR "Unable to allocate memory for senode_acl_t.\n");
++		return ERR_PTR(-ENOMEM);
++	}
++
++	INIT_LIST_HEAD(&acl->acl_list);
++	spin_lock_init(&acl->device_list_lock);
++	spin_lock_init(&acl->nacl_sess_lock);
++	acl->queue_depth = queue_depth;
++	snprintf(acl->initiatorname, TRANSPORT_IQN_LEN, "%s", initiatorname);
++	acl->se_tpg = tpg;
++#ifdef SNMP_SUPPORT
++	acl->acl_index = scsi_get_new_index(SCSI_AUTH_INTR_INDEX);
++	spin_lock_init(&acl->stats_lock);
++#endif /* SNMP_SUPPORT */
++
++	acl->fabric_acl_ptr = TPG_TFO(tpg)->tpg_alloc_fabric_acl(tpg,
++			acl);
++	if (!(acl->fabric_acl_ptr)) {
++		kfree(acl);
++		return ERR_PTR(-ENOMEM);
++	}
++	TPG_TFO(tpg)->set_default_node_attributes(acl);
++
++	if (core_create_device_list_for_node(acl) < 0) {
++		TPG_TFO(tpg)->tpg_release_fabric_acl(tpg, acl);
++		kfree(acl);
++		return ERR_PTR(-ENOMEM);
++	}
++
++	if (core_set_queue_depth_for_node(tpg, acl) < 0) {
++		core_free_device_list_for_node(acl, tpg);
++		TPG_TFO(tpg)->tpg_release_fabric_acl(tpg, acl);
++		kfree(acl);
++		return ERR_PTR(-EINVAL);
++	}
++
++	spin_lock_bh(&tpg->acl_node_lock);
++	list_add_tail(&acl->acl_list, &tpg->acl_node_list);
++	tpg->num_node_acls++;
++	spin_unlock_bh(&tpg->acl_node_lock);
++
++done:
++	printk(KERN_INFO "%s_TPG[%hu] - Added ACL with TCQ Depth: %d for %s"
++		" Initiator Node: %s\n", TPG_TFO(tpg)->get_fabric_name(),
++		TPG_TFO(tpg)->tpg_get_tag(tpg), acl->queue_depth,
++		TPG_TFO(tpg)->get_fabric_name(), initiatorname);
++
++	return acl;
++}
++EXPORT_SYMBOL(core_tpg_add_initiator_node_acl);
++
++/*	core_tpg_del_initiator_node_acl():
++ *
++ *
++ */
++int core_tpg_del_initiator_node_acl(
++	se_portal_group_t *tpg,
++	const char *initiatorname,
++	int force)
++{
++	se_session_t *sess, *init_sess = NULL;
++	se_node_acl_t *acl;
++	int dynamic_acl = 0;
++
++	spin_lock_bh(&tpg->acl_node_lock);
++	acl = __core_tpg_get_initiator_node_acl(tpg, initiatorname);
++	if (!(acl)) {
++		printk(KERN_ERR "Access Control List entry for %s Initiator"
++			" Node %s does not exists for TPG %hu, ignoring"
++			" request.\n", TPG_TFO(tpg)->get_fabric_name(),
++			initiatorname, TPG_TFO(tpg)->tpg_get_tag(tpg));
++		spin_unlock_bh(&tpg->acl_node_lock);
++		return -EINVAL;
++	}
++	if (acl->nodeacl_flags & NAF_DYNAMIC_NODE_ACL) {
++		acl->nodeacl_flags &= ~NAF_DYNAMIC_NODE_ACL;
++		dynamic_acl = 1;
++	}
++	spin_unlock_bh(&tpg->acl_node_lock);
++
++	spin_lock_bh(&tpg->session_lock);
++	list_for_each_entry(sess, &tpg->tpg_sess_list, sess_list) {
++		if (sess->se_node_acl != acl)
++			continue;
++
++		if (!force) {
++			printk(KERN_ERR "Unable to delete Access Control List"
++				" for %s Initiator Node: %s while session is"
++				" operational.  To forcefully delete the"
++				" session use the \"force=1\" parameter.\n",
++				TPG_TFO(tpg)->get_fabric_name(),
++				initiatorname);
++			spin_unlock_bh(&tpg->session_lock);
++
++			spin_lock_bh(&tpg->acl_node_lock);
++			if (dynamic_acl)
++				acl->nodeacl_flags |= NAF_DYNAMIC_NODE_ACL;
++			spin_unlock_bh(&tpg->acl_node_lock);
++			return -EEXIST;
++		}
++		/*
++		 * Determine if the session needs to be closed by our context.
++		 */
++		if (!(TPG_TFO(tpg)->shutdown_session(sess)))
++			continue;
++
++		init_sess = sess;
++		break;
++	}
++	spin_unlock_bh(&tpg->session_lock);
++
++	spin_lock_bh(&tpg->acl_node_lock);
++	list_del(&acl->acl_list);
++	tpg->num_node_acls--;
++	spin_unlock_bh(&tpg->acl_node_lock);
++
++	/*
++	 * If the $FABRIC_MOD session for the Initiator Node ACL exists,
++	 * forcefully shutdown the $FABRIC_MOD session/nexus.
++	 */
++	if (init_sess)
++		TPG_TFO(tpg)->close_session(init_sess);
++
++	core_clear_initiator_node_from_tpg(acl, tpg);
++	core_free_device_list_for_node(acl, tpg);
++
++	TPG_TFO(tpg)->tpg_release_fabric_acl(tpg, acl);
++	acl->fabric_acl_ptr = NULL;
++
++	printk(KERN_INFO "%s_TPG[%hu] - Deleted ACL with TCQ Depth: %d for %s"
++		" Initiator Node: %s\n", TPG_TFO(tpg)->get_fabric_name(),
++		TPG_TFO(tpg)->tpg_get_tag(tpg), acl->queue_depth,
++		TPG_TFO(tpg)->get_fabric_name(), initiatorname);
++
++	kfree(acl);
++	return 0;
++}
++EXPORT_SYMBOL(core_tpg_del_initiator_node_acl);
++
++/*	core_tpg_set_initiator_node_queue_depth():
++ *
++ *
++ */
++int core_tpg_set_initiator_node_queue_depth(
++	se_portal_group_t *tpg,
++	unsigned char *initiatorname,
++	u32 queue_depth,
++	int force)
++{
++	se_session_t *sess, *init_sess = NULL;
++	se_node_acl_t *acl;
++	int dynamic_acl = 0;
++
++	spin_lock_bh(&tpg->acl_node_lock);
++	acl = __core_tpg_get_initiator_node_acl(tpg, initiatorname);
++	if (!(acl)) {
++		printk(KERN_ERR "Access Control List entry for %s Initiator"
++			" Node %s does not exists for TPG %hu, ignoring"
++			" request.\n", TPG_TFO(tpg)->get_fabric_name(),
++			initiatorname, TPG_TFO(tpg)->tpg_get_tag(tpg));
++		spin_unlock_bh(&tpg->acl_node_lock);
++		return -ENODEV;
++	}
++	if (acl->nodeacl_flags & NAF_DYNAMIC_NODE_ACL) {
++		acl->nodeacl_flags &= ~NAF_DYNAMIC_NODE_ACL;
++		dynamic_acl = 1;
++	}
++	spin_unlock_bh(&tpg->acl_node_lock);
++
++	spin_lock_bh(&tpg->session_lock);
++	list_for_each_entry(sess, &tpg->tpg_sess_list, sess_list) {
++		if (sess->se_node_acl != acl)
++			continue;
++
++		if (!force) {
++			printk(KERN_ERR "Unable to change queue depth for %s"
++				" Initiator Node: %s while session is"
++				" operational.  To forcefully change the queue"
++				" depth and force session reinstatement"
++				" use the \"force=1\" parameter.\n",
++				TPG_TFO(tpg)->get_fabric_name(), initiatorname);
++			spin_unlock_bh(&tpg->session_lock);
++
++			spin_lock_bh(&tpg->acl_node_lock);
++			if (dynamic_acl)
++				acl->nodeacl_flags |= NAF_DYNAMIC_NODE_ACL;
++			spin_unlock_bh(&tpg->acl_node_lock);
++			return -EEXIST;
++		}
++		/*
++		 * Determine if the session needs to be closed by our context.
++		 */
++		if (!(TPG_TFO(tpg)->shutdown_session(sess)))
++			continue;
++
++		init_sess = sess;
++		break;
++	}
++
++	/*
++	 * User has requested to change the queue depth for a Initiator Node.
++	 * Change the value in the Node's se_node_acl_t, and call
++	 * core_set_queue_depth_for_node() to add the requested queue depth.
++	 *
++	 * Finally call  TPG_TFO(tpg)->close_session() to force session
++	 * reinstatement to occur if there is an active session for the
++	 * $FABRIC_MOD Initiator Node in question.
++	 */
++	acl->queue_depth = queue_depth;
++
++	if (core_set_queue_depth_for_node(tpg, acl) < 0) {
++		spin_unlock_bh(&tpg->session_lock);
++		/*
++		 * Force session reinstatement if
++		 * core_set_queue_depth_for_node() failed, because we assume
++		 * the $FABRIC_MOD has already the set session reinstatement
++		 * bit from TPG_TFO(tpg)->shutdown_session() called above.
++		 */
++		if (init_sess)
++			TPG_TFO(tpg)->close_session(init_sess);
++
++		spin_lock_bh(&tpg->acl_node_lock);
++		if (dynamic_acl)
++			acl->nodeacl_flags |= NAF_DYNAMIC_NODE_ACL;
++		spin_unlock_bh(&tpg->acl_node_lock);
++		return -EINVAL;
++	}
++	spin_unlock_bh(&tpg->session_lock);
++	/*
++	 * If the $FABRIC_MOD session for the Initiator Node ACL exists,
++	 * forcefully shutdown the $FABRIC_MOD session/nexus.
++	 */
++	if (init_sess)
++		TPG_TFO(tpg)->close_session(init_sess);
++
++	printk(KERN_INFO "Successfuly changed queue depth to: %d for Initiator"
++		" Node: %s on %s Target Portal Group: %u\n", queue_depth,
++		initiatorname, TPG_TFO(tpg)->get_fabric_name(),
++		TPG_TFO(tpg)->tpg_get_tag(tpg));
++
++	spin_lock_bh(&tpg->acl_node_lock);
++	if (dynamic_acl)
++		acl->nodeacl_flags |= NAF_DYNAMIC_NODE_ACL;
++	spin_unlock_bh(&tpg->acl_node_lock);
++
++	return 0;
++}
++EXPORT_SYMBOL(core_tpg_set_initiator_node_queue_depth);
++
++se_portal_group_t *core_tpg_register(
++	struct target_core_fabric_ops *tfo,
++	void *tpg_fabric_ptr,
++	int se_tpg_type)
++{
++	se_lun_t *lun;
++	se_portal_group_t *se_tpg;
++	u32 i;
++
++	se_tpg = kzalloc(sizeof(se_portal_group_t), GFP_KERNEL);
++	if (!(se_tpg)) {
++		printk(KERN_ERR "Unable to allocate se_portal_group_t\n");
++		return ERR_PTR(-ENOMEM);
++	}
++
++	se_tpg->tpg_lun_list = kzalloc((sizeof(se_lun_t) *
++				TRANSPORT_MAX_LUNS_PER_TPG), GFP_KERNEL);
++	if (!(se_tpg->tpg_lun_list)) {
++		printk(KERN_ERR "Unable to allocate se_portal_group_t->"
++				"tpg_lun_list\n");
++		kfree(se_tpg);
++		return ERR_PTR(-ENOMEM);
++	}
++
++	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
++		lun = &se_tpg->tpg_lun_list[i];
++		lun->unpacked_lun = i;
++		lun->lun_type_ptr = NULL;
++		lun->lun_status = TRANSPORT_LUN_STATUS_FREE;
++		atomic_set(&lun->lun_acl_count, 0);
++		INIT_LIST_HEAD(&lun->lun_acl_list);
++		INIT_LIST_HEAD(&lun->lun_cmd_list);
++		spin_lock_init(&lun->lun_acl_lock);
++		spin_lock_init(&lun->lun_cmd_lock);
++		spin_lock_init(&lun->lun_sep_lock);
++	}
++
++	se_tpg->se_tpg_type = se_tpg_type;
++	se_tpg->se_tpg_fabric_ptr = tpg_fabric_ptr;
++	se_tpg->se_tpg_tfo = tfo;
++	INIT_LIST_HEAD(&se_tpg->acl_node_list);
++	INIT_LIST_HEAD(&se_tpg->se_tpg_list);
++	INIT_LIST_HEAD(&se_tpg->tpg_sess_list);
++	spin_lock_init(&se_tpg->acl_node_lock);
++	spin_lock_init(&se_tpg->session_lock);
++	spin_lock_init(&se_tpg->tpg_lun_lock);
++
++	spin_lock_bh(&se_global->se_tpg_lock);
++	list_add_tail(&se_tpg->se_tpg_list, &se_global->g_se_tpg_list);
++	spin_unlock_bh(&se_global->se_tpg_lock);
++
++	printk(KERN_INFO "TARGET_CORE[%s]: Allocated %s se_portal_group_t for"
++		" endpoint: %s, Portal Tag: %u\n", tfo->get_fabric_name(),
++		(se_tpg->se_tpg_type == TRANSPORT_TPG_TYPE_NORMAL) ?
++		"Normal" : "Discovery", (tfo->tpg_get_wwn(se_tpg) == NULL) ?
++		"None" : tfo->tpg_get_wwn(se_tpg), tfo->tpg_get_tag(se_tpg));
++
++	return se_tpg;
++}
++EXPORT_SYMBOL(core_tpg_register);
++
++int core_tpg_deregister(se_portal_group_t *se_tpg)
++{
++	printk(KERN_INFO "TARGET_CORE[%s]: Deallocating %s se_portal_group_t"
++		" for endpoint: %s Portal Tag %u\n",
++		(se_tpg->se_tpg_type == TRANSPORT_TPG_TYPE_NORMAL) ?
++		"Normal" : "Discovery", TPG_TFO(se_tpg)->get_fabric_name(),
++		TPG_TFO(se_tpg)->tpg_get_wwn(se_tpg),
++		TPG_TFO(se_tpg)->tpg_get_tag(se_tpg));
++
++	spin_lock_bh(&se_global->se_tpg_lock);
++	list_del(&se_tpg->se_tpg_list);
++	spin_unlock_bh(&se_global->se_tpg_lock);
++
++	se_tpg->se_tpg_fabric_ptr = NULL;
++	kfree(se_tpg->tpg_lun_list);
++	kfree(se_tpg);
++	return 0;
++}
++EXPORT_SYMBOL(core_tpg_deregister);
++
++se_lun_t *core_tpg_pre_addlun(
++	se_portal_group_t *tpg,
++	u32 unpacked_lun)
++{
++	se_lun_t *lun;
++
++	if (unpacked_lun > (TRANSPORT_MAX_LUNS_PER_TPG-1)) {
++		printk(KERN_ERR "%s LUN: %u exceeds TRANSPORT_MAX_LUNS_PER_TPG"
++			"-1: %u for Target Portal Group: %u\n",
++			TPG_TFO(tpg)->get_fabric_name(),
++			unpacked_lun, TRANSPORT_MAX_LUNS_PER_TPG-1,
++			TPG_TFO(tpg)->tpg_get_tag(tpg));
++		return ERR_PTR(-EOVERFLOW);
++	}
++
++	spin_lock(&tpg->tpg_lun_lock);
++	lun = &tpg->tpg_lun_list[unpacked_lun];
++	if (lun->lun_status == TRANSPORT_LUN_STATUS_ACTIVE) {
++		printk(KERN_ERR "TPG Logical Unit Number: %u is already active"
++			" on %s Target Portal Group: %u, ignoring request.\n",
++			unpacked_lun, TPG_TFO(tpg)->get_fabric_name(),
++			TPG_TFO(tpg)->tpg_get_tag(tpg));
++		spin_unlock(&tpg->tpg_lun_lock);
++		return ERR_PTR(-EINVAL);
++	}
++	spin_unlock(&tpg->tpg_lun_lock);
++
++	return lun;
++}
++EXPORT_SYMBOL(core_tpg_pre_addlun);
++
++int core_tpg_post_addlun(
++	se_portal_group_t *tpg,
++	se_lun_t *lun,
++	int lun_type,
++	u32 lun_access,
++	void *lun_ptr,
++	struct se_obj_lun_type_s *obj_api)
++{
++	lun->lun_obj_api = obj_api;
++	lun->lun_type_ptr = lun_ptr;
++	if (LUN_OBJ_API(lun)->export_obj(lun_ptr, tpg, lun) < 0) {
++		lun->lun_type_ptr = NULL;
++		lun->lun_obj_api = NULL;
++		return -1;
++	}
++
++	spin_lock(&tpg->tpg_lun_lock);
++	lun->lun_access = lun_access;
++	lun->lun_type = lun_type;
++	lun->lun_status = TRANSPORT_LUN_STATUS_ACTIVE;
++	spin_unlock(&tpg->tpg_lun_lock);
++
++	return 0;
++}
++EXPORT_SYMBOL(core_tpg_post_addlun);
++
++se_lun_t *core_tpg_pre_dellun(
++	se_portal_group_t *tpg,
++	u32 unpacked_lun,
++	int lun_type,
++	int *ret)
++{
++	se_lun_t *lun;
++
++	if (unpacked_lun > (TRANSPORT_MAX_LUNS_PER_TPG-1)) {
++		printk(KERN_ERR "%s LUN: %u exceeds TRANSPORT_MAX_LUNS_PER_TPG"
++			"-1: %u for Target Portal Group: %u\n",
++			TPG_TFO(tpg)->get_fabric_name(), unpacked_lun,
++			TRANSPORT_MAX_LUNS_PER_TPG-1,
++			TPG_TFO(tpg)->tpg_get_tag(tpg));
++		return ERR_PTR(-EOVERFLOW);
++	}
++
++	spin_lock(&tpg->tpg_lun_lock);
++	lun = &tpg->tpg_lun_list[unpacked_lun];
++	if (lun->lun_status != TRANSPORT_LUN_STATUS_ACTIVE) {
++		printk(KERN_ERR "%s Logical Unit Number: %u is not active on"
++			" Target Portal Group: %u, ignoring request.\n",
++			TPG_TFO(tpg)->get_fabric_name(), unpacked_lun,
++			TPG_TFO(tpg)->tpg_get_tag(tpg));
++		spin_unlock(&tpg->tpg_lun_lock);
++		return ERR_PTR(-ENODEV);
++	}
++
++	if (lun->lun_type != lun_type) {
++		printk(KERN_ERR "%s Logical Unit Number: %u type: %d does not"
++			" match passed type: %d\n",
++			TPG_TFO(tpg)->get_fabric_name(),
++			unpacked_lun, lun->lun_type, lun_type);
++		spin_unlock(&tpg->tpg_lun_lock);
++		return ERR_PTR(-EINVAL);
++	}
++	spin_unlock(&tpg->tpg_lun_lock);
++
++	core_clear_lun_from_tpg(lun, tpg);
++
++	return lun;
++}
++EXPORT_SYMBOL(core_tpg_pre_dellun);
++
++int core_tpg_post_dellun(
++	se_portal_group_t *tpg,
++	se_lun_t *lun)
++{
++	se_lun_acl_t *acl, *acl_tmp;
++
++	transport_clear_lun_from_sessions(lun);
++
++	LUN_OBJ_API(lun)->unexport_obj(lun->lun_type_ptr, tpg, lun);
++	LUN_OBJ_API(lun)->release_obj(lun->lun_type_ptr);
++
++	spin_lock(&tpg->tpg_lun_lock);
++	lun->lun_status = TRANSPORT_LUN_STATUS_FREE;
++	lun->lun_type = 0;
++	lun->lun_type_ptr = NULL;
++	spin_unlock(&tpg->tpg_lun_lock);
++
++	spin_lock(&lun->lun_acl_lock);
++	list_for_each_entry_safe(acl, acl_tmp, &lun->lun_acl_list, lacl_list) {
++		kfree(acl);
++	}
++	spin_unlock(&lun->lun_acl_lock);
++
++	return 0;
++}
++EXPORT_SYMBOL(core_tpg_post_dellun);
+diff --git a/include/target/target_core_tpg.h b/include/target/target_core_tpg.h
 new file mode 100644
-index 0000000..c649b92
+index 0000000..9532d29
 --- /dev/null
-+++ b/include/target/target_core_tmr.h
-@@ -0,0 +1,43 @@
-+#ifndef TARGET_CORE_TMR_H
-+#define TARGET_CORE_TMR_H
++++ b/include/target/target_core_tpg.h
+@@ -0,0 +1,59 @@
++/*******************************************************************************
++ * Filename:  target_core_tpg.h
++ *
++ * This file contains generic Target Portal Group related definitions.
++ *
++ * Copyright (c) 2002, 2003, 2004, 2005 PyX Technologies, Inc.
++ * Copyright (c) 2005, 2006, 2007 SBE, Inc.
++ * Copyright (c) 2007-2009 Rising Tide Software, Inc.
++ * Copyright (c) 2008-2009 Linux-iSCSI.org
++ *
++ * Nicholas A. Bellinger <nab@kernel.org>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ *
++ ******************************************************************************/
 +
-+/* task management function values */
-+#ifdef ABORT_TASK
-+#undef ABORT_TASK
-+#endif /* ABORT_TASK */
-+#define ABORT_TASK				1
-+#ifdef ABORT_TASK_SET
-+#undef ABORT_TASK_SET
-+#endif /* ABORT_TASK_SET */
-+#define ABORT_TASK_SET				2
-+#ifdef CLEAR_ACA
-+#undef CLEAR_ACA
-+#endif /* CLEAR_ACA */
-+#define CLEAR_ACA				3
-+#ifdef CLEAR_TASK_SET
-+#undef CLEAR_TASK_SET
-+#endif /* CLEAR_TASK_SET */
-+#define CLEAR_TASK_SET				4
-+#define LUN_RESET				5
-+#define TARGET_WARM_RESET			6
-+#define TARGET_COLD_RESET			7
-+#define TASK_REASSIGN				8
 +
-+/* task management response values */
-+#define TMR_FUNCTION_COMPLETE			0
-+#define TMR_TASK_DOES_NOT_EXIST			1
-+#define TMR_LUN_DOES_NOT_EXIST			2
-+#define TMR_TASK_STILL_ALLEGIANT		3
-+#define TMR_TASK_FAILOVER_NOT_SUPPORTED		4
-+#define TMR_TASK_MGMT_FUNCTION_NOT_SUPPORTED	5
-+#define TMR_FUNCTION_AUTHORIZATION_FAILED	6
-+#define TMR_FUNCTION_REJECTED			255
++#ifndef TARGET_CORE_TPG_H
++#define TARGET_CORE_TPG_H
 +
-+extern struct kmem_cache *se_tmr_req_cache;
++extern se_global_t *se_global;
 +
-+extern struct se_tmr_req_s *core_tmr_alloc_req(struct se_cmd_s *, void *, u8);
-+extern void core_tmr_release_req(struct se_tmr_req_s *);
-+extern int core_tmr_lun_reset(struct se_device_s *, struct se_tmr_req_s *,
-+				struct list_head *, struct se_cmd_s *);
++extern se_node_acl_t *core_tpg_get_initiator_node_acl(se_portal_group_t *tpg,
++						unsigned char *);
++extern void core_tpg_add_node_to_devs(struct se_node_acl_s *,
++						struct se_portal_group_s *);
++extern struct se_node_acl_s *core_tpg_check_initiator_node_acl(
++						struct se_portal_group_s *,
++						unsigned char *);
++extern void core_tpg_free_node_acls(struct se_portal_group_s *);
++extern void core_tpg_clear_object_luns(struct se_portal_group_s *);
++extern se_node_acl_t *core_tpg_add_initiator_node_acl(se_portal_group_t *,
++						const char *, u32);
++extern int core_tpg_del_initiator_node_acl(se_portal_group_t *,
++						const char *, int);
++extern int core_tpg_set_initiator_node_queue_depth(se_portal_group_t *,
++						unsigned char *, u32, int);
++extern se_portal_group_t *core_tpg_register(struct target_core_fabric_ops *,
++					void *, int);
++extern int core_tpg_deregister(struct se_portal_group_s *);
++extern se_lun_t *core_tpg_pre_addlun(se_portal_group_t *, u32);
++extern int core_tpg_post_addlun(se_portal_group_t *, se_lun_t *, int, u32,
++				void *, struct se_obj_lun_type_s *);
++extern se_lun_t *core_tpg_pre_dellun(se_portal_group_t *, u32, int, int *);
++extern int core_tpg_post_dellun(se_portal_group_t *, se_lun_t *);
 +
-+#endif /* TARGET_CORE_TMR_H */
++#endif /* TARGET_CORE_TPG_H */
+
 
 
