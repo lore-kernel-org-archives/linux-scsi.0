@@ -1,45 +1,38 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC PATCH 13/19] Target_Core_Mod READ/WRITE command descriptor
-	block generation code
-Date: Sat, 04 Apr 2009 21:02:08 -0700
-Message-ID: <1238904128.4250.754.camel@haakon2.linux-iscsi.org>
+Subject: [RFC PATCH 14/19] Target_Core_Mod SCSI MIBs
+Date: Sat, 04 Apr 2009 21:02:11 -0700
+Message-ID: <1238904131.4250.755.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp116.sbc.mail.sp1.yahoo.com ([69.147.64.89]:24957 "HELO
+Received: from smtp116.sbc.mail.sp1.yahoo.com ([69.147.64.89]:24989 "HELO
 	smtp116.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758003AbZDEEGJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Apr 2009 00:06:09 -0400
+	by vger.kernel.org with SMTP id S1758050AbZDEEGW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Apr 2009 00:06:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ming Zhang <blackmagic02881@gmail.com>, Philipp Reisner <philipp.reisner@linbit.com>, Linus Torvalds <torvalds@linux-foundation.org>
 
-This patch adds support for the generation of READ_6, READ_10, READ_12, READ_16,
-WRITE_6, WRITE_10, WRITE_12 and WRITE_16 command descriptor blocks when handling
-incoming fabric module requests that exceed the max_sectors presented for a storage
-object through struct se_subsystem_api_t.
+This patch adds support for SCSI MIBs through /proc/scsi_target/mib following RFC-4455.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 
-diff --git a/drivers/target/target_core_scdb.c b/drivers/target/target_core_scdb.c
+diff --git a/drivers/target/target_core_mib.c b/drivers/target/target_core_mib.c
 new file mode 100644
-index 0000000..ec111d9
+index 0000000..a2f9349
 --- /dev/null
-+++ b/drivers/target/target_core_scdb.c
-@@ -0,0 +1,154 @@
++++ b/drivers/target/target_core_mib.c
+@@ -0,0 +1,1188 @@
 +/*******************************************************************************
-+ * Filename:  target_core_scdb.c
++ * Filename:  target_core_mib.c
 + *
-+ * This file contains the generic target engine Split CDB related functions.
-+ *
-+ * Copyright (c) 2004-2005 PyX Technologies, Inc.
-+ * Copyright (c) 2005, 2006, 2007 SBE, Inc.
++ * Copyright (c) 2006-2007 SBE, Inc.  All Rights Reserved.
 + * Copyright (c) 2007-2009 Rising Tide Software, Inc.
 + * Copyright (c) 2008-2009 Linux-iSCSI.org
 + *
-+ * Nicholas A. Bellinger <nab@kernel.org>
++ * Nicholas A. Bellinger <nab@linux-iscsi.org>
 + *
 + * This program is free software; you can redistribute it and/or modify
 + * it under the terms of the GNU General Public License as published by
@@ -58,148 +51,1182 @@ index 0000000..ec111d9
 + ******************************************************************************/
 +
 +
-+#define TARGET_CORE_SCDB_C
-+
-+#include <linux/net.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/delay.h>
++#include <linux/timer.h>
 +#include <linux/string.h>
++#include <linux/version.h>
++#include <linux/utsrelease.h>
++#include <linux/utsname.h>
++#include <linux/proc_fs.h>
++#include <linux/seq_file.h>
++#include <linux/blkdev.h>
++#include <scsi/scsi.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi_host.h>
 +
 +#include <target/target_core_base.h>
 +#include <target/target_core_hba.h>
 +#include <target/target_core_transport.h>
-+#include <target/target_core_scdb.h>
++#include <target/target_core_mib.h>
++#include <target/target_core_plugin.h>
++#include <target/target_core_seobj.h>
++#include <target/target_core_fabric_ops.h>
++#include <target/target_core_configfs.h>
 +
-+#undef TARGET_CORE_SCDB_C
++/* SCSI mib table index */
++scsi_index_table_t scsi_index_table;
 +
-+/*	split_cdb_XX_6():
-+ *
-+ *      21-bit LBA w/ 8-bit SECTORS
++#ifndef INITIAL_JIFFIES
++#define INITIAL_JIFFIES ((unsigned long)(unsigned int) (-300*HZ))
++#endif
++
++/* SCSI Instance Table */
++#define SCSI_INST_SW_INDEX		1
++#define SCSI_TRANSPORT_INDEX		1
++
++#define NONE		"None"
++#define ISPRINT(a)   ((a >= ' ') && (a <= '~'))
++
++/* Structure for table row iteration with seq_file */
++typedef struct table_iter_s {
++	int	ti_skip_body;
++	u32	ti_offset;
++	void	*ti_ptr;
++} table_iter_t;
++
++/****************************************************************************
++ * SCSI MIB Tables
++ ****************************************************************************/
++
++/*
++ * SCSI Instance Table
 + */
-+void split_cdb_XX_6(
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb)
++static int scsi_inst_seq_show(struct seq_file *seq, void *v)
 +{
-+	cdb[1] = (lba >> 16) & 0x1f;
-+	cdb[2] = (lba >> 8) & 0xff;
-+	cdb[3] = lba & 0xff;
-+	cdb[4] = *sectors & 0xff;
++	se_hba_t *hba;
++	int i;
++
++	seq_puts(seq, "inst sw_indx\n");
++
++	spin_lock(&se_global->hba_lock);
++	for (i = 0; i < TRANSPORT_MAX_GLOBAL_HBAS; i++) {
++		hba = &se_global->hba_list[i];
++
++		if (!(hba->hba_status & HBA_STATUS_ACTIVE))
++			continue;
++
++		if (!hba->transport)
++			continue;
++
++		seq_printf(seq, "%u %u\n", hba->hba_index, SCSI_INST_SW_INDEX);
++		seq_printf(seq, "plugin: %s version: %s\n",
++				hba->transport->name,
++				TARGET_CORE_VERSION);
++	}
++	spin_unlock(&se_global->hba_lock);
++
++	return 0;
 +}
 +
-+void split_cdb_RW_6(
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb,
-+	int rw)
++static int scsi_inst_seq_open(struct inode *inode, struct file *file)
 +{
-+	cdb[0] = (rw) ? 0x0a : 0x08;
-+	split_cdb_XX_6(lba, sectors, &cdb[0]);
++	return single_open(file, scsi_inst_seq_show, NULL);
 +}
 +
-+/*	split_cdb_XX_10():
-+ *
-+ *	32-bit LBA w/ 16-bit SECTORS
++static const struct file_operations scsi_inst_seq_fops = {
++	.owner	 = THIS_MODULE,
++	.open	 = scsi_inst_seq_open,
++	.read	 = seq_read,
++	.llseek	 = seq_lseek,
++	.release = single_release,
++};
++
++static void *locate_hba_start(
++	struct seq_file *seq,
++	loff_t *pos,
++	int (*do_check)(void *))
++{
++	se_device_t *dev;
++	se_hba_t *hba;
++	table_iter_t *tpg_iter;
++	int i;
++
++	if (*pos != 0)
++		return NULL;
++
++	tpg_iter = kzalloc(sizeof(table_iter_t), GFP_KERNEL);
++	if (!(tpg_iter))
++		return NULL;
++#if 0
++	printk(KERN_INFO "%s[%d] - Allocating iterp: %p\n", current->comm,
++			current->pid, tpg_iter);
++#endif
++	seq->private = (void *)tpg_iter;
++
++	spin_lock(&se_global->hba_lock);
++	for (i = 0; i < TRANSPORT_MAX_GLOBAL_HBAS; i++) {
++		hba = &se_global->hba_list[i];
++
++		if (!(hba->hba_status & HBA_STATUS_ACTIVE))
++			continue;
++		if (do_check((void *)hba) == 0)
++			continue;
++
++		spin_lock(&hba->device_lock);
++		list_for_each_entry(dev, &hba->hba_dev_list, dev_list) {
++			tpg_iter->ti_ptr = (void *)dev;
++			tpg_iter->ti_offset = hba->hba_id;
++			atomic_inc(&hba->dev_mib_access_count);
++#if 0
++			printk(KERN_INFO "[%d]: Incremented dev_mib_access"
++				"_count: %d\n", hba->hba_id,
++				atomic_read(&hba->dev_mib_access_count));
++#endif
++			spin_unlock(&hba->device_lock);
++			spin_unlock(&se_global->hba_lock);
++			return SEQ_START_TOKEN;
++		}
++		spin_unlock(&hba->device_lock);
++	}
++	spin_unlock(&se_global->hba_lock);
++
++	return SEQ_START_TOKEN;
++}
++
++static void *locate_hba_next(
++	struct seq_file *seq,
++	void *v,
++	loff_t *pos,
++	int (*do_check)(void *))
++{
++	table_iter_t *iterp = (table_iter_t *)seq->private;
++	se_device_t *dev, *dev_p, *dev_next = NULL;
++	se_hba_t *hba;
++	int i;
++
++	(*pos)++;
++
++	if (!(iterp))
++		return NULL;
++
++	dev = (se_device_t *)iterp->ti_ptr;
++	if (!(dev))
++		return NULL;
++
++	dev_p = dev;
++	spin_lock(&SE_HBA(dev)->device_lock);
++	list_for_each_entry_continue(dev_p, &dev->se_hba->hba_dev_list,
++			dev_list) {
++		dev_next = dev_p;
++		break;
++	}
++	if ((dev_next)) {
++		iterp->ti_ptr = dev_next;
++		spin_unlock(&SE_HBA(dev)->device_lock);
++		return (void *)iterp;
++	}
++	spin_unlock(&SE_HBA(dev)->device_lock);
++
++	spin_lock(&se_global->hba_lock);
++	hba = &se_global->hba_list[iterp->ti_offset];
++	atomic_dec(&hba->dev_mib_access_count);
++	iterp->ti_ptr = NULL;
++
++	for (i = (iterp->ti_offset + 1); i < TRANSPORT_MAX_GLOBAL_HBAS; i++) {
++		hba = &se_global->hba_list[i];
++
++		if (!(hba->hba_status & HBA_STATUS_ACTIVE))
++			continue;
++		if (do_check((void *)hba) == 0)
++			continue;
++
++		spin_lock(&hba->device_lock);
++		list_for_each_entry(dev, &hba->hba_dev_list, dev_list) {
++			iterp->ti_ptr = (void *)dev;
++			iterp->ti_offset = hba->hba_id;
++			atomic_inc(&hba->dev_mib_access_count);
++
++			spin_unlock(&hba->device_lock);
++			spin_unlock(&se_global->hba_lock);
++			return (void *)iterp;
++		}
++		spin_unlock(&hba->device_lock);
++	}
++	spin_unlock(&se_global->hba_lock);
++
++	return NULL;
++}
++
++static void locate_hba_stop(struct seq_file *seq, void *v)
++{
++	table_iter_t *iterp = (table_iter_t *)seq->private;
++
++	if (!(iterp))
++		return;
++
++	iterp->ti_ptr = NULL;
++	kfree(iterp);
++	seq->private = NULL;
++
++	return;
++}
++
++/*
++ * SCSI Device Table
 + */
-+void split_cdb_XX_10(
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb)
++int do_hba_check(void *p)
 +{
-+	cdb[2] = (lba >> 24) & 0xff;
-+	cdb[3] = (lba >> 16) & 0xff;
-+	cdb[4] = (lba >> 8) & 0xff;
-+	cdb[5] = lba & 0xff;
-+	cdb[7] = (*sectors >> 8) & 0xff;
-+	cdb[8] = *sectors & 0xff;
++	se_hba_t *hba = (se_hba_t *)p;
++
++	return hba->dev_count;
 +}
 +
-+void split_cdb_RW_10(
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb,
-+	int rw)
++static void *scsi_dev_seq_start(struct seq_file *seq, loff_t *pos)
 +{
-+	cdb[0] = (rw) ? 0x2a : 0x28;
-+	split_cdb_XX_10(lba, sectors, &cdb[0]);
++	return locate_hba_start(seq, pos, &do_hba_check);
 +}
 +
-+/*	split_cdb_XX_12():
-+ *
-+ *	32-bit LBA w/ 32-bit SECTORS
++static void *scsi_dev_seq_next(struct seq_file *seq, void *v, loff_t *pos)
++{
++	return locate_hba_next(seq, v, pos, &do_hba_check);
++}
++
++static void scsi_dev_seq_stop(struct seq_file *seq, void *v)
++{
++	locate_hba_stop(seq, v);
++}
++
++static int scsi_dev_seq_show(struct seq_file *seq, void *v)
++{
++	se_hba_t *hba;
++	se_device_t *dev;
++	table_iter_t *iterp = (table_iter_t *)seq->private;
++	int k;
++
++	if (v == SEQ_START_TOKEN)
++		seq_puts(seq, "inst indx role ports\n");
++
++	hba = core_get_hba_from_id(iterp->ti_offset, 0);
++	if (!(hba)) {
++		/* Log error ? */
++		return 0;
++	}
++
++	spin_lock(&hba->device_lock);
++	dev = (se_device_t *)iterp->ti_ptr;
++	if ((dev)) {
++		char str[28];
++
++		seq_printf(seq, "%u %u %s %u\n", hba->hba_index,
++			   dev->dev_index, "Target", dev->dev_port_count);
++
++		memcpy(&str[0], (void *)DEV_T10_WWN(dev), 28);
++
++		/* vendor */
++		for (k = 0; k < 8; k++)
++			str[k] = ISPRINT(DEV_T10_WWN(dev)->vendor[k]) ?
++					DEV_T10_WWN(dev)->vendor[k] : 0x20;
++		str[k] = 0x20;
++
++		/* model */
++		for (k = 0; k < 16; k++)
++			str[k+9] = ISPRINT(DEV_T10_WWN(dev)->model[k]) ?
++					DEV_T10_WWN(dev)->model[k] : 0x20;
++		str[k + 9] = 0;
++
++		seq_printf(seq, "dev_alias: %s\n", str);
++	}
++	spin_unlock(&hba->device_lock);
++
++	/* Release the semaphore */
++	core_put_hba(hba);
++
++	return 0;
++}
++
++static const struct seq_operations scsi_dev_seq_ops = {
++	.start  = scsi_dev_seq_start,
++	.next   = scsi_dev_seq_next,
++	.stop   = scsi_dev_seq_stop,
++	.show   = scsi_dev_seq_show
++};
++
++static int scsi_dev_seq_open(struct inode *inode, struct file *file)
++{
++	return seq_open(file, &scsi_dev_seq_ops);
++}
++
++static const struct file_operations scsi_dev_seq_fops = {
++	.owner	 = THIS_MODULE,
++	.open	 = scsi_dev_seq_open,
++	.read	 = seq_read,
++	.llseek	 = seq_lseek,
++	.release = seq_release,
++};
++
++/*
++ * SCSI Port Table
 + */
-+void split_cdb_XX_12(
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb)
++static void *scsi_port_seq_start(struct seq_file *seq, loff_t *pos)
 +{
-+	cdb[2] = (lba >> 24) & 0xff;
-+	cdb[3] = (lba >> 16) & 0xff;
-+	cdb[4] = (lba >> 8) & 0xff;
-+	cdb[5] = lba & 0xff;
-+	cdb[6] = (*sectors >> 24) & 0xff;
-+	cdb[7] = (*sectors >> 16) & 0xff;
-+	cdb[8] = (*sectors >> 8) & 0xff;
-+	cdb[9] = *sectors & 0xff;
++	return locate_hba_start(seq, pos, &do_hba_check);
 +}
 +
-+void split_cdb_RW_12(
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb,
-+	int rw)
++static void *scsi_port_seq_next(struct seq_file *seq, void *v, loff_t *pos)
 +{
-+	cdb[0] = (rw) ? 0xaa : 0xa8;
-+	split_cdb_XX_12(lba, sectors, &cdb[0]);
++	return locate_hba_next(seq, v, pos, &do_hba_check);
 +}
 +
-+/*	split_cdb_XX_16():
-+ *
-+ *	64-bit LBA w/ 32-bit SECTORS
++static void scsi_port_seq_stop(struct seq_file *seq, void *v)
++{
++	locate_hba_stop(seq, v);
++}
++
++static int scsi_port_seq_show(struct seq_file *seq, void *v)
++{
++	se_hba_t *hba;
++	se_device_t *dev;
++	se_port_t *sep, *sep_tmp;
++	table_iter_t *iterp = (table_iter_t *)seq->private;
++
++	if (v == SEQ_START_TOKEN)
++		seq_puts(seq, "inst device indx role busy_count\n");
++
++	hba = core_get_hba_from_id(iterp->ti_offset, 0);
++	if (!(hba)) {
++		/* Log error ? */
++		return 0;
++	}
++
++	/* FIXME: scsiPortBusyStatuses count */
++	spin_lock(&hba->device_lock);
++	dev = (se_device_t *)iterp->ti_ptr;
++	if ((dev)) {
++		spin_lock(&dev->se_port_lock);
++		list_for_each_entry_safe(sep, sep_tmp, &dev->dev_sep_list,
++				sep_list) {
++			seq_printf(seq, "%u %u %u %s%u %u\n", hba->hba_index,
++				dev->dev_index, sep->sep_index, "Device",
++				dev->dev_index, 0);
++		}
++		spin_unlock(&dev->se_port_lock);
++	}
++	spin_unlock(&hba->device_lock);
++
++	/* Release the semaphore */
++	core_put_hba(hba);
++
++	return 0;
++}
++
++static const struct seq_operations scsi_port_seq_ops = {
++	.start  = scsi_port_seq_start,
++	.next   = scsi_port_seq_next,
++	.stop   = scsi_port_seq_stop,
++	.show   = scsi_port_seq_show
++};
++
++static int scsi_port_seq_open(struct inode *inode, struct file *file)
++{
++	return seq_open(file, &scsi_port_seq_ops);
++}
++
++static const struct file_operations scsi_port_seq_fops = {
++	.owner	 = THIS_MODULE,
++	.open	 = scsi_port_seq_open,
++	.read	 = seq_read,
++	.llseek	 = seq_lseek,
++	.release = seq_release,
++};
++
++/*
++ * SCSI Transport Table
 + */
-+void split_cdb_XX_16(
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb)
++static void *scsi_transport_seq_start(struct seq_file *seq, loff_t *pos)
 +{
-+	cdb[2] = (lba >> 56) & 0xff;
-+	cdb[3] = (lba >> 48) & 0xff;
-+	cdb[4] = (lba >> 40) & 0xff;
-+	cdb[5] = (lba >> 32) & 0xff;
-+	cdb[6] = (lba >> 24) & 0xff;
-+	cdb[7] = (lba >> 16) & 0xff;
-+	cdb[8] = (lba >> 8) & 0xff;
-+	cdb[9] = lba & 0xff;
-+	cdb[10] = (*sectors >> 24) & 0xff;
-+	cdb[11] = (*sectors >> 16) & 0xff;
-+	cdb[12] = (*sectors >> 8) & 0xff;
-+	cdb[13] = *sectors & 0xff;
++	return locate_hba_start(seq, pos, &do_hba_check);
 +}
 +
-+void split_cdb_RW_16(
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb,
-+	int rw)
++static void *scsi_transport_seq_next(struct seq_file *seq, void *v, loff_t *pos)
 +{
-+	cdb[0] = (rw) ? 0x8a : 0x88;
-+	split_cdb_XX_16(lba, sectors, &cdb[0]);
++	return locate_hba_next(seq, v, pos, &do_hba_check);
 +}
-diff --git a/include/target/target_core_scdb.h b/include/target/target_core_scdb.h
++
++static void scsi_transport_seq_stop(struct seq_file *seq, void *v)
++{
++	locate_hba_stop(seq, v);
++}
++
++static int scsi_transport_seq_show(struct seq_file *seq, void *v)
++{
++	se_hba_t *hba;
++	se_device_t *dev;
++	table_iter_t *iterp = (table_iter_t *)seq->private;
++	se_port_t *se, *se_tmp;
++	se_portal_group_t *tpg;
++	t10_wwn_t *wwn;
++	char buf[64];
++
++	if (v == SEQ_START_TOKEN)
++		seq_puts(seq, "inst device indx dev_name\n");
++
++	hba = core_get_hba_from_id(iterp->ti_offset, 0);
++	if (!(hba)) {
++		/* Log error ? */
++		return 0;
++	}
++
++	spin_lock(&hba->device_lock);
++	dev = (se_device_t *)iterp->ti_ptr;
++	if ((dev)) {
++		wwn = DEV_T10_WWN(dev);
++
++		spin_lock(&dev->se_port_lock);
++		list_for_each_entry_safe(se, se_tmp, &dev->dev_sep_list,
++				sep_list) {
++			tpg = se->sep_tpg;
++			sprintf(buf, "scsiTransport%s",
++					TPG_TFO(tpg)->get_fabric_name());
++
++			seq_printf(seq, "%u %s %u %s+%s\n",
++				hba->hba_index, /* scsiTransportIndex */
++				buf,  /* scsiTransportType */
++				TPG_TFO(tpg)->tpg_get_inst_index(tpg),
++				TPG_TFO(tpg)->tpg_get_wwn(tpg),
++				(strlen(wwn->unit_serial)) ?
++				/* scsiTransportDevName */
++				wwn->unit_serial : wwn->vendor);
++		}
++		spin_unlock(&dev->se_port_lock);
++	}
++	spin_unlock(&hba->device_lock);
++
++	/* Release the semaphore */
++	core_put_hba(hba);
++
++	return 0;
++}
++
++static const struct seq_operations scsi_transport_seq_ops = {
++	.start  = scsi_transport_seq_start,
++	.next   = scsi_transport_seq_next,
++	.stop   = scsi_transport_seq_stop,
++	.show   = scsi_transport_seq_show
++};
++
++static int scsi_transport_seq_open(struct inode *inode, struct file *file)
++{
++	return seq_open(file, &scsi_transport_seq_ops);
++}
++
++static const struct file_operations scsi_transport_seq_fops = {
++	.owner	 = THIS_MODULE,
++	.open	 = scsi_transport_seq_open,
++	.read	 = seq_read,
++	.llseek	 = seq_lseek,
++	.release = seq_release,
++};
++
++/*
++ * SCSI Target Device Table
++ */
++static void *scsi_tgt_dev_seq_start(struct seq_file *seq, loff_t *pos)
++{
++	return locate_hba_start(seq, pos, &do_hba_check);
++}
++
++static void *scsi_tgt_dev_seq_next(struct seq_file *seq, void *v, loff_t *pos)
++{
++	return locate_hba_next(seq, v, pos, &do_hba_check);
++}
++
++static void scsi_tgt_dev_seq_stop(struct seq_file *seq, void *v)
++{
++	locate_hba_stop(seq, v);
++}
++
++
++#define LU_COUNT	1  /* for now */
++static int scsi_tgt_dev_seq_show(struct seq_file *seq, void *v)
++{
++	se_hba_t *hba;
++	se_device_t *dev;
++	table_iter_t *iterp = (table_iter_t *)seq->private;
++	int non_accessible_lus = 0;
++	char status[16];
++
++	if (v == SEQ_START_TOKEN)
++		seq_puts(seq, "inst indx num_LUs status non_access_LUs"
++			" resets\n");
++
++	hba = core_get_hba_from_id(iterp->ti_offset, 0);
++	if (!(hba)) {
++		/* Log error ? */
++		return 0;
++	}
++
++	spin_lock(&hba->device_lock);
++	dev = (se_device_t *)iterp->ti_ptr;
++	if ((dev)) {
++		switch (dev->dev_status) {
++		case TRANSPORT_DEVICE_ACTIVATED:
++			strcpy(status, "activated");
++			break;
++		case TRANSPORT_DEVICE_DEACTIVATED:
++			strcpy(status, "deactivated");
++			non_accessible_lus = 1;
++			break;
++		case TRANSPORT_DEVICE_SHUTDOWN:
++			strcpy(status, "shutdown");
++			non_accessible_lus = 1;
++			break;
++		case TRANSPORT_DEVICE_OFFLINE_ACTIVATED:
++		case TRANSPORT_DEVICE_OFFLINE_DEACTIVATED:
++			strcpy(status, "offline");
++			non_accessible_lus = 1;
++			break;
++		default:
++			sprintf(status, "unknown(%d)", dev->dev_status);
++			non_accessible_lus = 1;
++		}
++
++		seq_printf(seq, "%u %u %u %s %u %u\n",
++			   hba->hba_index, dev->dev_index, LU_COUNT,
++			   status, non_accessible_lus, dev->num_resets);
++	}
++	spin_unlock(&hba->device_lock);
++
++	/* Release the semaphore */
++	core_put_hba(hba);
++
++	return 0;
++}
++
++static const struct seq_operations scsi_tgt_dev_seq_ops = {
++	.start  = scsi_tgt_dev_seq_start,
++	.next   = scsi_tgt_dev_seq_next,
++	.stop   = scsi_tgt_dev_seq_stop,
++	.show   = scsi_tgt_dev_seq_show
++};
++
++static int scsi_tgt_dev_seq_open(struct inode *inode, struct file *file)
++{
++	return seq_open(file, &scsi_tgt_dev_seq_ops);
++}
++
++static const struct file_operations scsi_tgt_dev_seq_fops = {
++	.owner	 = THIS_MODULE,
++	.open	 = scsi_tgt_dev_seq_open,
++	.read	 = seq_read,
++	.llseek	 = seq_lseek,
++	.release = seq_release,
++};
++
++/*
++ * SCSI Target Port Table
++ */
++static void *scsi_tgt_port_seq_start(struct seq_file *seq, loff_t *pos)
++{
++	return locate_hba_start(seq, pos, &do_hba_check);
++}
++
++static void *scsi_tgt_port_seq_next(struct seq_file *seq, void *v, loff_t *pos)
++{
++	return locate_hba_next(seq, v, pos, &do_hba_check);
++}
++
++static void scsi_tgt_port_seq_stop(struct seq_file *seq, void *v)
++{
++	locate_hba_stop(seq, v);
++}
++
++static int scsi_tgt_port_seq_show(struct seq_file *seq, void *v)
++{
++	se_hba_t *hba;
++	se_device_t *dev;
++	se_port_t *sep, *sep_tmp;
++	se_portal_group_t *tpg;
++	table_iter_t *iterp = (table_iter_t *)seq->private;
++	u32 rx_mbytes, tx_mbytes;
++	unsigned long long num_cmds;
++	char buf[64];
++
++	if (v == SEQ_START_TOKEN)
++		seq_puts(seq, "inst device indx name port_index in_cmds"
++			" write_mbytes read_mbytes hs_in_cmds\n");
++
++	hba = core_get_hba_from_id(iterp->ti_offset, 0);
++	if (!(hba)) {
++		/* Log error ? */
++		return 0;
++	}
++
++	spin_lock(&hba->device_lock);
++	dev = (se_device_t *)iterp->ti_ptr;
++	if ((dev)) {
++		spin_lock(&dev->se_port_lock);
++		list_for_each_entry_safe(sep, sep_tmp, &dev->dev_sep_list,
++				sep_list) {
++			tpg = sep->sep_tpg;
++			sprintf(buf, "%sPort#",
++				TPG_TFO(tpg)->get_fabric_name());
++
++			seq_printf(seq, "%u %u %u %s%d %s%s%d ",
++			     hba->hba_index,
++			     dev->dev_index,
++			     sep->sep_index,
++			     buf, sep->sep_index,
++			     TPG_TFO(tpg)->tpg_get_wwn(tpg), "+t+",
++			     TPG_TFO(tpg)->tpg_get_tag(tpg));
++
++			spin_lock(&sep->sep_lun->lun_sep_lock);
++			num_cmds = sep->sep_stats.cmd_pdus;
++			rx_mbytes = (sep->sep_stats.rx_data_octets >> 20);
++			tx_mbytes = (sep->sep_stats.tx_data_octets >> 20);
++			spin_unlock(&sep->sep_lun->lun_sep_lock);
++
++			seq_printf(seq, "%llu %u %u %u\n", num_cmds,
++				rx_mbytes, tx_mbytes, 0);
++		}
++		spin_unlock(&dev->se_port_lock);
++	}
++	spin_unlock(&hba->device_lock);
++
++	/* Release the semaphore */
++	core_put_hba(hba);
++
++	return 0;
++}
++
++static const struct seq_operations scsi_tgt_port_seq_ops = {
++	.start  = scsi_tgt_port_seq_start,
++	.next   = scsi_tgt_port_seq_next,
++	.stop   = scsi_tgt_port_seq_stop,
++	.show   = scsi_tgt_port_seq_show
++};
++
++static int scsi_tgt_port_seq_open(struct inode *inode, struct file *file)
++{
++	return seq_open(file, &scsi_tgt_port_seq_ops);
++}
++
++static const struct file_operations scsi_tgt_port_seq_fops = {
++	.owner	 = THIS_MODULE,
++	.open	 = scsi_tgt_port_seq_open,
++	.read	 = seq_read,
++	.llseek	 = seq_lseek,
++	.release = seq_release,
++};
++
++/*
++ * SCSI Authorized Initiator Table:
++ * It contains the SCSI Initiators authorized to be attached to one of the
++ * local Target ports.
++ * Iterates through all active TPGs and extracts the info from the ACLs
++ */
++static void *scsi_auth_intr_seq_start(struct seq_file *seq, loff_t *pos)
++{
++	spin_lock_bh(&se_global->se_tpg_lock);
++	return seq_list_start(&se_global->g_se_tpg_list, *pos);
++}
++
++static void *scsi_auth_intr_seq_next(struct seq_file *seq, void *v,
++					 loff_t *pos)
++{
++	return seq_list_next(v, &se_global->g_se_tpg_list, pos);
++}
++
++static void scsi_auth_intr_seq_stop(struct seq_file *seq, void *v)
++{
++	spin_unlock_bh(&se_global->se_tpg_lock);
++}
++
++static inline int list_is_first(const struct list_head *list,
++				const struct list_head *head)
++{
++	return list->prev == head;
++}
++
++static int scsi_auth_intr_seq_show(struct seq_file *seq, void *v)
++{
++	se_portal_group_t *se_tpg = list_entry(v, se_portal_group_t,
++						se_tpg_list);
++	se_dev_entry_t *deve;
++	se_lun_t *lun;
++	se_node_acl_t *se_nacl;
++	int j;
++
++	if (list_is_first(&se_tpg->se_tpg_list,
++			  &se_global->g_se_tpg_list))
++		seq_puts(seq, "inst dev port indx dev_or_port intr_name "
++			 "map_indx att_count num_cmds read_mbytes "
++			 "write_mbytes hs_num_cmds creation_time row_status\n");
++
++	if (!(se_tpg))
++		return 0;
++
++	spin_lock(&se_tpg->acl_node_lock);
++	list_for_each_entry(se_nacl, &se_tpg->acl_node_list, acl_list) {
++		spin_lock(&se_nacl->device_list_lock);
++		for (j = 0; j < TRANSPORT_MAX_LUNS_PER_TPG; j++) {
++			deve = &se_nacl->device_list[j];
++			if (!(deve->lun_flags &
++					TRANSPORT_LUNFLAGS_INITIATOR_ACCESS) ||
++			    (!deve->se_lun))
++				continue;
++			lun = deve->se_lun;
++			if ((lun->lun_type != TRANSPORT_LUN_TYPE_DEVICE) ||
++			    (!lun->se_dev))
++				continue;
++
++			seq_printf(seq,"%u %u %u %u %u %s %u %u %u %u %u %u"
++						" %u %s\n",
++				/* scsiInstIndex */
++				TPG_TFO(se_tpg)->tpg_get_inst_index(se_tpg),
++				/* scsiDeviceIndex */
++				lun->se_dev->dev_index,
++				/* scsiAuthIntrTgtPortIndex */
++				TPG_TFO(se_tpg)->tpg_get_tag(se_tpg),
++				/* scsiAuthIntrIndex */
++				se_nacl->acl_index,
++				/* scsiAuthIntrDevOrPort */
++				1,
++				/* scsiAuthIntrName */
++				se_nacl->initiatorname[0] ?
++					se_nacl->initiatorname : NONE,
++				/* FIXME: scsiAuthIntrLunMapIndex */
++				0,
++				/* scsiAuthIntrAttachedTimes */
++				deve->attach_count,
++				/* scsiAuthIntrOutCommands */
++				deve->total_cmds,
++				/* scsiAuthIntrReadMegaBytes */
++				(u32)(deve->read_bytes >> 20),
++				/* scsiAuthIntrWrittenMegaBytes */
++				(u32)(deve->write_bytes >> 20),
++				/* FIXME: scsiAuthIntrHSOutCommands */
++				0,
++				/* scsiAuthIntrLastCreation */
++				(u32)(((u32)deve->creation_time -
++					    INITIAL_JIFFIES) * 100 / HZ),
++				/* FIXME: scsiAuthIntrRowStatus */
++				"Ready");
++		}
++		spin_unlock(&se_nacl->device_list_lock);
++	}
++	spin_unlock(&se_tpg->acl_node_lock);
++
++	return 0;
++}
++
++static const struct seq_operations scsi_auth_intr_seq_ops = {
++	.start	= scsi_auth_intr_seq_start,
++	.next	= scsi_auth_intr_seq_next,
++	.stop	= scsi_auth_intr_seq_stop,
++	.show	= scsi_auth_intr_seq_show
++};
++
++static int scsi_auth_intr_seq_open(struct inode *inode, struct file *file)
++{
++	return seq_open(file, &scsi_auth_intr_seq_ops);
++}
++
++static const struct file_operations scsi_auth_intr_seq_fops = {
++	.owner	 = THIS_MODULE,
++	.open	 = scsi_auth_intr_seq_open,
++	.read	 = seq_read,
++	.llseek	 = seq_lseek,
++	.release = seq_release,
++};
++
++/*
++ * SCSI Attached Initiator Port Table:
++ * It lists the SCSI Initiators attached to one of the local Target ports.
++ * Iterates through all active TPGs and use active sessions from each TPG
++ * to list the info fo this table.
++ */
++static void *scsi_att_intr_port_seq_start(struct seq_file *seq, loff_t *pos)
++{
++	spin_lock_bh(&se_global->se_tpg_lock);
++	return seq_list_start(&se_global->g_se_tpg_list, *pos);
++}
++
++static void *scsi_att_intr_port_seq_next(struct seq_file *seq, void *v,
++					 loff_t *pos)
++{
++	return seq_list_next(v, &se_global->g_se_tpg_list, pos);
++}
++
++static void scsi_att_intr_port_seq_stop(struct seq_file *seq, void *v)
++{
++	spin_unlock_bh(&se_global->se_tpg_lock);
++}
++
++static int scsi_att_intr_port_seq_show(struct seq_file *seq, void *v)
++{
++	se_portal_group_t *se_tpg = list_entry(v, se_portal_group_t,
++						se_tpg_list);
++	se_dev_entry_t *deve;
++	se_lun_t *lun;
++	se_node_acl_t *se_nacl;
++	se_session_t *se_sess;
++	unsigned char buf[64];
++	int j;
++
++	if (list_is_first(&se_tpg->se_tpg_list,
++			  &se_global->g_se_tpg_list))
++		seq_puts(seq, "inst dev port indx port_auth_indx port_name"
++			" port_ident\n");
++
++	if (!(se_tpg))
++		return 0;
++
++	spin_lock(&se_tpg->session_lock);
++	list_for_each_entry(se_sess, &se_tpg->tpg_sess_list, sess_list) {
++		if ((TPG_TFO(se_tpg)->sess_logged_in(se_sess)) ||
++		    (!se_sess->se_node_acl) ||
++		    (!se_sess->se_node_acl->device_list))
++			continue;
++
++		se_nacl = se_sess->se_node_acl;
++
++		spin_lock(&se_nacl->device_list_lock);
++		for (j = 0; j < TRANSPORT_MAX_LUNS_PER_TPG; j++) {
++			deve = &se_nacl->device_list[j];
++			if (!(deve->lun_flags &
++					TRANSPORT_LUNFLAGS_INITIATOR_ACCESS) ||
++			   (!deve->se_lun))
++				continue;
++
++			lun = deve->se_lun;
++			if ((lun->lun_type != TRANSPORT_LUN_TYPE_DEVICE) ||
++			    (!lun->se_dev))
++				continue;
++
++			memset(buf, 0, 64);
++			TPG_TFO(se_tpg)->sess_get_initiator_wwn(se_sess,
++					(unsigned char *)&buf[0], 64);
++
++			seq_printf(seq,"%u %u %u %u %u %s+i+%s\n",
++				/* scsiInstIndex */
++				TPG_TFO(se_tpg)->tpg_get_inst_index(se_tpg),
++				/* scsiDeviceIndex */
++				lun->se_dev->dev_index,
++				/* scsiPortIndex */
++				TPG_TFO(se_tpg)->tpg_get_tag(se_tpg),
++				/* scsiAttIntrPortIndex */
++				TPG_TFO(se_tpg)->sess_get_index(se_sess),
++					/* scsiAttIntrPortAuthIntrIdx */
++				se_nacl->acl_index,
++				/* scsiAttIntrPortName */
++				se_nacl->initiatorname[0] ?
++					se_nacl->initiatorname : NONE,
++				/* scsiAttIntrPortIdentifier */
++				buf);
++		}
++		spin_unlock(&se_nacl->device_list_lock);
++	}
++	spin_unlock(&se_tpg->session_lock);
++
++	return 0;
++}
++
++static const struct seq_operations scsi_att_intr_port_seq_ops = {
++	.start	= scsi_att_intr_port_seq_start,
++	.next	= scsi_att_intr_port_seq_next,
++	.stop	= scsi_att_intr_port_seq_stop,
++	.show	= scsi_att_intr_port_seq_show
++};
++
++static int scsi_att_intr_port_seq_open(struct inode *inode, struct file *file)
++{
++	return seq_open(file, &scsi_att_intr_port_seq_ops);
++}
++
++static const struct file_operations scsi_att_intr_port_seq_fops = {
++	.owner	 = THIS_MODULE,
++	.open	 = scsi_att_intr_port_seq_open,
++	.read	 = seq_read,
++	.llseek	 = seq_lseek,
++	.release = seq_release,
++};
++
++/*
++ * SCSI Logical Unit Table
++ */
++static void *scsi_lu_seq_start(struct seq_file *seq, loff_t *pos)
++{
++	return locate_hba_start(seq, pos, &do_hba_check);
++}
++
++static void *scsi_lu_seq_next(struct seq_file *seq, void *v, loff_t *pos)
++{
++	return locate_hba_next(seq, v, pos, &do_hba_check);
++}
++
++static void scsi_lu_seq_stop(struct seq_file *seq, void *v)
++{
++	locate_hba_stop(seq, v);
++}
++
++#define SCSI_LU_INDEX		1
++static int scsi_lu_seq_show(struct seq_file *seq, void *v)
++{
++	se_hba_t *hba;
++	se_device_t *dev;
++	table_iter_t *iterp = (table_iter_t *)seq->private;
++	int j;
++	char str[28];
++
++	if (v == SEQ_START_TOKEN)
++		seq_puts(seq, "inst dev indx LUN lu_name vend prod rev"
++		" dev_type status state-bit num_cmds read_mbytes"
++		" write_mbytes resets full_stat hs_num_cmds creation_time\n");
++
++	hba = core_get_hba_from_id(iterp->ti_offset, 0);
++	if (!(hba)) {
++		/* Log error ? */
++		return 0;
++	}
++
++	spin_lock(&hba->device_lock);
++	dev = (se_device_t *)iterp->ti_ptr;
++	if ((dev)) {
++		/* Fix LU state, if we can read it from the device */
++		seq_printf(seq, "%u %u %u %llu %s", hba->hba_index,
++				dev->dev_index, SCSI_LU_INDEX,
++				(unsigned long long)0, /* FIXME: scsiLuDefaultLun */
++				(strlen(DEV_T10_WWN(dev)->unit_serial)) ?
++				/* scsiLuWwnName */
++				(char *)&DEV_T10_WWN(dev)->unit_serial[0] :
++				"None");
++
++		memcpy(&str[0], (void *)DEV_T10_WWN(dev), 28);
++		/* scsiLuVendorId */
++		for (j = 0; j < 8; j++)
++			str[j] = ISPRINT(DEV_T10_WWN(dev)->vendor[j]) ?
++				DEV_T10_WWN(dev)->vendor[j] : 0x20;
++		str[8] = 0;
++		seq_printf(seq, " %s", str);
++
++		/* scsiLuProductId */
++		for (j = 0; j < 16; j++)
++			str[j] = ISPRINT(DEV_T10_WWN(dev)->model[j]) ?
++				DEV_T10_WWN(dev)->model[j] : 0x20;
++		str[16] = 0;
++		seq_printf(seq, " %s", str);
++
++		/* scsiLuRevisionId */
++		for (j = 0; j < 4; j++)
++			str[j] = ISPRINT(DEV_T10_WWN(dev)->revision[j]) ?
++				DEV_T10_WWN(dev)->revision[j] : 0x20;
++		str[4] = 0;
++		seq_printf(seq, " %s", str);
++
++		seq_printf(seq, " %u %s %s %llu %u %u %u %u %u %u\n",
++			/* scsiLuPeripheralType */
++			   dev->dev_obj_api->get_device_type((void *)dev),
++			   (dev->dev_status == TRANSPORT_DEVICE_ACTIVATED) ?
++			"available" : "notavailable", /* scsiLuStatus */
++			"exposed", 	/* scsiLuState */
++			(unsigned long long)dev->num_cmds,
++			/* scsiLuReadMegaBytes */
++			(u32)(dev->read_bytes >> 20),
++			/* scsiLuWrittenMegaBytes */
++			(u32)(dev->write_bytes >> 20),
++			dev->num_resets, /* scsiLuInResets */
++			0, /* scsiLuOutTaskSetFullStatus */
++			0, /* scsiLuHSInCommands */
++			(u32)(((u32)dev->creation_time - INITIAL_JIFFIES) *
++								100 / HZ));
++	}
++	spin_unlock(&hba->device_lock);
++
++	/* Release the semaphore */
++	core_put_hba(hba);
++
++	return 0;
++}
++
++static const struct seq_operations scsi_lu_seq_ops = {
++	.start  = scsi_lu_seq_start,
++	.next   = scsi_lu_seq_next,
++	.stop   = scsi_lu_seq_stop,
++	.show   = scsi_lu_seq_show
++};
++
++static int scsi_lu_seq_open(struct inode *inode, struct file *file)
++{
++	return seq_open(file, &scsi_lu_seq_ops);
++}
++
++static const struct file_operations scsi_lu_seq_fops = {
++	.owner	 = THIS_MODULE,
++	.open	 = scsi_lu_seq_open,
++	.read	 = seq_read,
++	.llseek	 = seq_lseek,
++	.release = seq_release,
++};
++
++/****************************************************************************/
++
++/*
++ * Remove proc fs entries
++ */
++void remove_scsi_target_mib(void)
++{
++	remove_proc_entry("scsi_target/mib/scsi_inst", NULL);
++	remove_proc_entry("scsi_target/mib/scsi_dev", NULL);
++	remove_proc_entry("scsi_target/mib/scsi_port", NULL);
++	remove_proc_entry("scsi_target/mib/scsi_transport", NULL);
++	remove_proc_entry("scsi_target/mib/scsi_tgt_dev", NULL);
++	remove_proc_entry("scsi_target/mib/scsi_tgt_port", NULL);
++	remove_proc_entry("scsi_target/mib/scsi_auth_intr", NULL);
++	remove_proc_entry("scsi_target/mib/scsi_att_intr_port", NULL);
++	remove_proc_entry("scsi_target/mib/scsi_lu", NULL);
++	remove_proc_entry("scsi_target/mib", NULL);
++}
++
++/*
++ * Create proc fs entries for the mib tables
++ */
++int init_scsi_target_mib(void)
++{
++	struct proc_dir_entry *dir_entry;
++	struct proc_dir_entry *scsi_inst_entry;
++	struct proc_dir_entry *scsi_dev_entry;
++	struct proc_dir_entry *scsi_port_entry;
++	struct proc_dir_entry *scsi_transport_entry;
++	struct proc_dir_entry *scsi_tgt_dev_entry;
++	struct proc_dir_entry *scsi_tgt_port_entry;
++	struct proc_dir_entry *scsi_auth_intr_entry;
++	struct proc_dir_entry *scsi_att_intr_port_entry;
++	struct proc_dir_entry *scsi_lu_entry;
++
++	dir_entry = proc_mkdir("scsi_target/mib", NULL);
++	if (!(dir_entry)) {
++		printk("proc_mkdir() failed.\n");
++		return -1;
++	}
++
++	scsi_inst_entry =
++		create_proc_entry("scsi_target/mib/scsi_inst", 0, NULL);
++	if (scsi_inst_entry)
++		scsi_inst_entry->proc_fops = &scsi_inst_seq_fops;
++	else
++		goto error;
++
++	scsi_dev_entry =
++		create_proc_entry("scsi_target/mib/scsi_dev", 0, NULL);
++	if (scsi_dev_entry)
++		scsi_dev_entry->proc_fops = &scsi_dev_seq_fops;
++	else
++		goto error;
++
++	scsi_port_entry =
++		create_proc_entry("scsi_target/mib/scsi_port", 0, NULL);
++	if (scsi_port_entry)
++		scsi_port_entry->proc_fops = &scsi_port_seq_fops;
++	else
++		goto error;
++
++	scsi_transport_entry =
++		create_proc_entry("scsi_target/mib/scsi_transport", 0, NULL);
++	if (scsi_transport_entry)
++		scsi_transport_entry->proc_fops = &scsi_transport_seq_fops;
++	else
++		goto error;
++
++	scsi_tgt_dev_entry =
++		create_proc_entry("scsi_target/mib/scsi_tgt_dev", 0, NULL);
++	if (scsi_tgt_dev_entry)
++		scsi_tgt_dev_entry->proc_fops = &scsi_tgt_dev_seq_fops;
++	else
++		goto error;
++
++	scsi_tgt_port_entry =
++		create_proc_entry("scsi_target/mib/scsi_tgt_port", 0, NULL);
++	if (scsi_tgt_port_entry)
++		scsi_tgt_port_entry->proc_fops = &scsi_tgt_port_seq_fops;
++	else
++		goto error;
++
++	scsi_auth_intr_entry =
++		create_proc_entry("scsi_target/mib/scsi_auth_intr", 0, NULL);
++	if (scsi_auth_intr_entry)
++		scsi_auth_intr_entry->proc_fops = &scsi_auth_intr_seq_fops;
++	else
++		goto error;
++
++	scsi_att_intr_port_entry =
++	      create_proc_entry("scsi_target/mib/scsi_att_intr_port", 0, NULL);
++	if (scsi_att_intr_port_entry)
++		scsi_att_intr_port_entry->proc_fops =
++				&scsi_att_intr_port_seq_fops;
++	else
++		goto error;
++
++	scsi_lu_entry = create_proc_entry("scsi_target/mib/scsi_lu", 0, NULL);
++	if (scsi_lu_entry)
++		scsi_lu_entry->proc_fops = &scsi_lu_seq_fops;
++	else
++		goto error;
++
++	return 0;
++
++error:
++	printk(KERN_ERR "create_proc_entry() failed.\n");
++	remove_scsi_target_mib();
++	return -1;
++}
++
++/*
++ * Initialize the index table for allocating unique row indexes to various mib
++ * tables
++ */
++void init_scsi_index_table(void)
++{
++	memset(&scsi_index_table, 0, sizeof(scsi_index_table));
++	spin_lock_init(&scsi_index_table.lock);
++}
++
++/*
++ * Allocate a new row index for the entry type specified
++ */
++u32 scsi_get_new_index(scsi_index_t type)
++{
++	u32 new_index;
++
++	if ((type < 0) || (type >= SCSI_INDEX_TYPE_MAX)) {
++		printk(KERN_ERR "Invalid index type %d\n", type);
++		return -1;
++	}
++
++	spin_lock(&scsi_index_table.lock);
++	new_index = ++scsi_index_table.scsi_mib_index[type];
++	if (new_index == 0)
++		new_index = ++scsi_index_table.scsi_mib_index[type];
++	spin_unlock(&scsi_index_table.lock);
++
++	return new_index;
++}
++EXPORT_SYMBOL(scsi_get_new_index);
+diff --git a/include/target/target_core_mib.h b/include/target/target_core_mib.h
 new file mode 100644
-index 0000000..1330bc3
+index 0000000..36cacd5
 --- /dev/null
-+++ b/include/target/target_core_scdb.h
-@@ -0,0 +1,42 @@
++++ b/include/target/target_core_mib.h
+@@ -0,0 +1,57 @@
 +/*******************************************************************************
-+ * Filename:  target_core_scdb.h
++ * Filename:  target_core_mib.h
 + *
-+ * This file contains the iSCSI Transport Split CDB related definitions.
-+ *
-+ * Copyright (c) 2004-2005 PyX Technologies, Inc.
-+ * Copyright (c) 2005, 2006, 2007 SBE, Inc.
++ * Copyright (c) 2006 SBE, Inc.  All Rights Reserved.
 + * Copyright (c) 2007-2009 Rising Tide Software, Inc.
 + * Copyright (c) 2008-2009 Linux-iSCSI.org
 + *
-+ * Nicholas A. Bellinger <nab@kernel.org>
++ * Nicholas A. Bellinger <nab@linux-iscsi.org>
 + *
 + * This program is free software; you can redistribute it and/or modify
 + * it under the terms of the GNU General Public License as published by
@@ -218,18 +1245,36 @@ index 0000000..1330bc3
 + ******************************************************************************/
 +
 +
-+#ifndef TARGET_CORE_SCDB_H
-+#define TARGET_CORE_SCDB_H
++#ifndef TARGET_CORE_MIB_H
++#define TARGET_CORE_MIB_H
 +
-+extern void split_cdb_XX_6(unsigned long long, u32 *, unsigned char *);
-+extern void split_cdb_RW_6(unsigned long long, u32 *, unsigned char *, int);
-+extern void split_cdb_XX_10(unsigned long long, u32 *, unsigned char *);
-+extern void split_cdb_RW_10(unsigned long long, u32 *, unsigned char *, int);
-+extern void split_cdb_XX_12(unsigned long long, u32 *, unsigned char *);
-+extern void split_cdb_RW_12(unsigned long long, u32 *, unsigned char *, int);
-+extern void split_cdb_XX_16(unsigned long long, u32 *, unsigned char *);
-+extern void split_cdb_RW_16(unsigned long long, u32 *, unsigned char *, int);
++extern struct se_global_s *se_global;
 +
-+#endif /* TARGET_CORE_SCDB_H */
++typedef enum {
++	SCSI_INST_INDEX,
++	SCSI_DEVICE_INDEX,
++	SCSI_AUTH_INTR_INDEX,
++	SCSI_INDEX_TYPE_MAX
++} scsi_index_t;
++
++typedef struct scsi_index_table_s {
++	spinlock_t	lock;
++	u32 		scsi_mib_index[SCSI_INDEX_TYPE_MAX];
++} scsi_index_table_t;
++
++/* SCSI Port stats */
++typedef struct scsi_port_stats_s {
++	u64	cmd_pdus;
++	u64	tx_data_octets;
++	u64	rx_data_octets;
++} scsi_port_stats_t;
++
++extern int init_scsi_target_mib(void);
++extern void remove_scsi_target_mib(void);
++extern void init_scsi_index_table(void);
++extern u32 scsi_get_new_index(scsi_index_t);
++
++#endif   /*** TARGET_CORE_MIB_H ***/
++
 
 
