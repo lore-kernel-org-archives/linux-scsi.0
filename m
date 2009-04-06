@@ -1,73 +1,106 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [ANNOUNCE]: Comparison of features sets between different SCSI
- 	targets (SCST, STGT, IET, LIO)
-Date: Mon, 06 Apr 2009 21:57:56 +0400
-Message-ID: <49DA42A4.7060109@vlnb.net>
-References: <49D7AD54.4060408@vlnb.net> <c9a3e4540904060319l3c885641k1217fba468f1fcf8@mail.gmail.com>
+From: berthiaume_wayne@emc.com
+Subject: RE: SCSI Hardware Handler and slow failover with large
+	number ofLUNS
+Date: Mon, 6 Apr 2009 13:59:29 -0400
+Message-ID: <8F08A56613D77044BD153E2AC5DA0F8401AE5283@CORPUSMX40A.corp.emc.com>
+References: <1238880636.11478.8.camel@chandra-ubuntu>
+	<8F08A56613D77044BD153E2AC5DA0F8401A817E4@CORPUSMX40A.corp.emc.com>
+	<1239040026.25764.4.camel@chandra-ubuntu>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:57085 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751323AbZDFR6A (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Apr 2009 13:58:00 -0400
-In-Reply-To: <c9a3e4540904060319l3c885641k1217fba468f1fcf8@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <dm-devel-bounces@redhat.com>
+Content-class: urn:content-classes:message
+In-Reply-To: <1239040026.25764.4.camel@chandra-ubuntu>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: sekharan@linux.vnet.ibm.com
+Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, Babu.Moger@lsi.com
 List-Id: linux-scsi@vger.kernel.org
-To: ronnie sahlberg <ronniesahlberg@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, iscsitarget-devel@lists.sourceforge.net, stgt@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>
 
-ronnie sahlberg, on 04/06/2009 02:19 PM wrote:
-> Why is AEN so important that it is worth 4 entries? SCST is the only 
-> target where this is supported.
+Hi Chandra.
 
-About the related functionality see http://lkml.org/lkml/2009/3/26/290
+	Yes, it is the dm_emc.
 
-> Has AEN not been replaced with sense codes nowadays anyway?
+Regards,
+Wayne.=20
 
-AEN, particularly, is one of the ways to deliver those sense codes
+-----Original Message-----
+From: Chandra Seetharaman [mailto:sekharan@us.ibm.com]=20
+Sent: Monday, April 06, 2009 1:47 PM
+To: berthiaume, wayne
+Cc: dm-devel@redhat.com; linux-scsi@vger.kernel.org; Babu.Moger@lsi.com
+Subject: RE: SCSI Hardware Handler and slow failover with large number
+ofLUNS
 
-> Support for Asynchronous Event Notifications (AEN) 	+ 	- 	- 	-
 
-This is about the AEN infrastructure in the target's core
+On Mon, 2009-04-06 at 11:38 -0400, berthiaume_wayne@emc.com wrote:
+> Hi Chandra.
+>=20
+> 	We're currently testing 1024 LUNs across four paths with the
+> older handler but will be doing the same with the new handler later
+this
 
-> AEN for devices added/removed 	+ 	- 	- 	-
-> AEN for devices resized 	+ 	- 	- 	-
+Hi Wayne,
 
-Those two are about ability to generate particular events
+What do you mean by "older" handler ? dm_emc ?
 
-> 
-> 
-> 
-> Support for Asynchronous Event Notifications (AEN) 	+ 	- 	- 	-
-
-This is about support for AENs delivery by target driver.
-
-> 
-> 
-> 
-> 
-> 
-> On Sun, Apr 5, 2009 at 5:56 AM, Vladislav Bolkhovitin <vst@vlnb.net 
-> <mailto:vst@vlnb.net>> wrote:
-> 
->     Hi All,
-> 
->     I set up http://scst.sourceforge.net/comparison.html page, which
->     compares features of existing SCSI target subsystems for Linux. The
->     comparison includes SCST, STGT, IET and LIO.
-> 
->     I might be not fully correct somewhere, so, if you don't agree with
->     me about some item(s) in the comparison table, please let me know
->     and I will fix that.
-> 
->     Vlad
->     --
->     To unsubscribe from this list: send the line "unsubscribe stgt" in
->     the body of a message to majordomo@vger.kernel.org
->     <mailto:majordomo@vger.kernel.org>
->     More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-
+> month. It sounds like I should move this up in the queue.=20
+>=20
+> Regards,
+> Wayne.=20
+>=20
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org
+> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Chandra
+> Seetharaman
+> Sent: Saturday, April 04, 2009 5:31 PM
+> To: dm-devel; Linux SCSI Mailing list
+> Cc: Moger, Babu
+> Subject: SCSI Hardware Handler and slow failover with large number of
+> LUNS
+>=20
+> Hello All,
+>=20
+> During testing with the latest SCSI DH Handler on a rdac storage, Babu
+> found that the failover time with 100+ luns takes about 15 minutes,
+> which is not good.
+>=20
+> We found that the problem is due to the fact that we serialize
+activate
+> in dm on the work queue.
+>=20
+> We can solve the problem in rdac handler in 2 ways
+>  1. batch up the activates (mode_selects) and send few of them.
+>  2. Do mode selects in async mode.
+>=20
+> Just wondering if anybody had seen the same problem in other storages
+> (EMC, HP and Alua).=20
+>=20
+> Please share your experiences, so we can come up with a solution that
+> works for all hardware handlers.
+>=20
+> regards,
+>=20
+> chandra
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
