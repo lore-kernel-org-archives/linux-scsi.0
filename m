@@ -1,801 +1,855 @@
 From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH 1/7] lpfc 8.3.1 : Fix up kernel-doc function comments (Take
-	2) - Part 1 of 5
-Date: Mon, 6 Apr 2009 18:47:14 -0400
-Message-ID: <1239058034.2344.21.camel@ogier>
+Subject: [PATCH 2/7] lpfc 8.3.1 : Fix up kernel-doc function comments (Take
+	2) - Part 2 of 5
+Date: Mon, 6 Apr 2009 18:47:26 -0400
+Message-ID: <1239058046.2344.23.camel@ogier>
 Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:42993 "EHLO
+Received: from emulex.emulex.com ([138.239.112.1]:42998 "EHLO
 	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754143AbZDFWrY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Apr 2009 18:47:24 -0400
+	with ESMTP id S1754175AbZDFWre (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Apr 2009 18:47:34 -0400
 Received: from xcm.ad.emulex.com (xcm.emulex.com [138.239.112.69])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id n36MlNww017019
-	for <linux-scsi@vger.kernel.org>; Mon, 6 Apr 2009 15:47:23 -0700 (PDT)
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id n36MlWr9017025
+	for <linux-scsi@vger.kernel.org>; Mon, 6 Apr 2009 15:47:32 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fix up kernel-doc function comments (Take 2) - Part 1 of 5
+Fix up kernel-doc function comments (Take 2) - Part 2 of 5
 
 This patch cleans up the kernel-doc formatting in:
-lpfc_els.c
+lpfc_attr.c
+
+Also fix several misspellings of hexidecimal -> hexadecimal.
 
 Signed-off-by: James Smart <James.Smart@emulex.com>
 ---
 
- drivers/scsi/lpfc/lpfc_els.c |  170 +++++++++++++++++++++---------------------
- 1 files changed, 85 insertions(+), 85 deletions(-)
+ drivers/scsi/lpfc/lpfc_attr.c |  199 ++++++++++++++++++++---------------------
+ 1 files changed, 98 insertions(+), 101 deletions(-)
 
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -55,7 +55,7 @@ static void lpfc_register_new_vport(struct lpfc_hba *phba,
- static int lpfc_max_els_tries = 3;
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -51,7 +51,7 @@
+ #define LPFC_LINK_SPEED_STRING "0, 1, 2, 4, 8"
  
  /**
-- * lpfc_els_chk_latt: Check host link attention event for a vport.
-+ * lpfc_els_chk_latt - Check host link attention event for a vport
-  * @vport: pointer to a host virtual N_Port data structure.
+- * lpfc_jedec_to_ascii: Hex to ascii convertor according to JEDEC rules.
++ * lpfc_jedec_to_ascii - Hex to ascii convertor according to JEDEC rules
+  * @incr: integer to convert.
+  * @hdw: ascii string holding converted integer plus a string terminator.
   *
-  * This routine checks whether there is an outstanding host link
-@@ -116,7 +116,7 @@ lpfc_els_chk_latt(struct lpfc_vport *vport)
+@@ -82,7 +82,7 @@ lpfc_jedec_to_ascii(int incr, char hdw[])
  }
  
  /**
-- * lpfc_prep_els_iocb: Allocate and prepare a lpfc iocb data structure.
-+ * lpfc_prep_els_iocb - Allocate and prepare a lpfc iocb data structure
-  * @vport: pointer to a host virtual N_Port data structure.
-  * @expectRsp: flag indicating whether response is expected.
-  * @cmdSize: size of the ELS command.
-@@ -290,7 +290,7 @@ els_iocb_free_pcmb_exit:
+- * lpfc_drvr_version_show: Return the Emulex driver string with version number.
++ * lpfc_drvr_version_show - Return the Emulex driver string with version number
+  * @dev: class unused variable.
+  * @attr: device attribute, not used.
+  * @buf: on return contains the module description text.
+@@ -152,7 +152,7 @@ lpfc_bg_reftag_err_show(struct device *dev, struct device_attribute *attr,
  }
  
  /**
-- * lpfc_issue_fabric_reglogin: Issue fabric registration login for a vport.
-+ * lpfc_issue_fabric_reglogin - Issue fabric registration login for a vport
-  * @vport: pointer to a host virtual N_Port data structure.
+- * lpfc_info_show: Return some pci info about the host in ascii.
++ * lpfc_info_show - Return some pci info about the host in ascii
+  * @dev: class converted to a Scsi_host structure.
+  * @attr: device attribute, not used.
+  * @buf: on return contains the formatted text from lpfc_info().
+@@ -169,7 +169,7 @@ lpfc_info_show(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ /**
+- * lpfc_serialnum_show: Return the hba serial number in ascii.
++ * lpfc_serialnum_show - Return the hba serial number in ascii
+  * @dev: class converted to a Scsi_host structure.
+  * @attr: device attribute, not used.
+  * @buf: on return contains the formatted text serial number.
+@@ -188,7 +188,7 @@ lpfc_serialnum_show(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ /**
+- * lpfc_temp_sensor_show: Return the temperature sensor level.
++ * lpfc_temp_sensor_show - Return the temperature sensor level
+  * @dev: class converted to a Scsi_host structure.
+  * @attr: device attribute, not used.
+  * @buf: on return contains the formatted support level.
+@@ -210,7 +210,7 @@ lpfc_temp_sensor_show(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ /**
+- * lpfc_modeldesc_show: Return the model description of the hba.
++ * lpfc_modeldesc_show - Return the model description of the hba
+  * @dev: class converted to a Scsi_host structure.
+  * @attr: device attribute, not used.
+  * @buf: on return contains the scsi vpd model description.
+@@ -229,7 +229,7 @@ lpfc_modeldesc_show(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ /**
+- * lpfc_modelname_show: Return the model name of the hba.
++ * lpfc_modelname_show - Return the model name of the hba
+  * @dev: class converted to a Scsi_host structure.
+  * @attr: device attribute, not used.
+  * @buf: on return contains the scsi vpd model name.
+@@ -248,7 +248,7 @@ lpfc_modelname_show(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ /**
+- * lpfc_programtype_show: Return the program type of the hba.
++ * lpfc_programtype_show - Return the program type of the hba
+  * @dev: class converted to a Scsi_host structure.
+  * @attr: device attribute, not used.
+  * @buf: on return contains the scsi vpd program type.
+@@ -267,7 +267,7 @@ lpfc_programtype_show(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ /**
+- * lpfc_mlomgmt_show: Return the Menlo Maintenance sli flag.
++ * lpfc_mlomgmt_show - Return the Menlo Maintenance sli flag
+  * @dev: class converted to a Scsi_host structure.
+  * @attr: device attribute, not used.
+  * @buf: on return contains the Menlo Maintenance sli flag.
+@@ -286,7 +286,7 @@ lpfc_mlomgmt_show(struct device *dev, struct device_attribute *attr, char *buf)
+ }
+ 
+ /**
+- * lpfc_vportnum_show: Return the port number in ascii of the hba.
++ * lpfc_vportnum_show - Return the port number in ascii of the hba
+  * @dev: class converted to a Scsi_host structure.
+  * @attr: device attribute, not used.
+  * @buf: on return contains scsi vpd program type.
+@@ -305,7 +305,7 @@ lpfc_vportnum_show(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ /**
+- * lpfc_fwrev_show: Return the firmware rev running in the hba.
++ * lpfc_fwrev_show - Return the firmware rev running in the hba
+  * @dev: class converted to a Scsi_host structure.
+  * @attr: device attribute, not used.
+  * @buf: on return contains the scsi vpd program type.
+@@ -326,7 +326,7 @@ lpfc_fwrev_show(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ /**
+- * lpfc_hdw_show: Return the jedec information about the hba.
++ * lpfc_hdw_show - Return the jedec information about the hba
+  * @dev: class converted to a Scsi_host structure.
+  * @attr: device attribute, not used.
+  * @buf: on return contains the scsi vpd program type.
+@@ -347,7 +347,7 @@ lpfc_hdw_show(struct device *dev, struct device_attribute *attr, char *buf)
+ }
+ 
+ /**
+- * lpfc_option_rom_version_show: Return the adapter ROM FCode version.
++ * lpfc_option_rom_version_show - Return the adapter ROM FCode version
+  * @dev: class converted to a Scsi_host structure.
+  * @attr: device attribute, not used.
+  * @buf: on return contains the ROM and FCode ascii strings.
+@@ -366,7 +366,7 @@ lpfc_option_rom_version_show(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ /**
+- * lpfc_state_show: Return the link state of the port.
++ * lpfc_state_show - Return the link state of the port
+  * @dev: class converted to a Scsi_host structure.
+  * @attr: device attribute, not used.
+  * @buf: on return contains text describing the state of the link.
+@@ -451,7 +451,7 @@ lpfc_link_state_show(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ /**
+- * lpfc_num_discovered_ports_show: Return sum of mapped and unmapped vports.
++ * lpfc_num_discovered_ports_show - Return sum of mapped and unmapped vports
+  * @dev: class device that is converted into a Scsi_host.
+  * @attr: device attribute, not used.
+  * @buf: on return contains the sum of fc mapped and unmapped.
+@@ -474,7 +474,7 @@ lpfc_num_discovered_ports_show(struct device *dev,
+ }
+ 
+ /**
+- * lpfc_issue_lip: Misnomer, name carried over from long ago.
++ * lpfc_issue_lip - Misnomer, name carried over from long ago
+  * @shost: Scsi_Host pointer.
   *
-  * This routine issues a fabric registration login for a @vport. An
-@@ -386,7 +386,7 @@ fail:
+  * Description:
+@@ -529,7 +529,7 @@ lpfc_issue_lip(struct Scsi_Host *shost)
  }
  
  /**
-- * lpfc_cmpl_els_flogi_fabric: Completion function for flogi to a fabric port.
-+ * lpfc_cmpl_els_flogi_fabric - Completion function for flogi to a fabric port
-  * @vport: pointer to a host virtual N_Port data structure.
-  * @ndlp: pointer to a node-list data structure.
-  * @sp: pointer to service parameter data structure.
-@@ -509,7 +509,7 @@ lpfc_cmpl_els_flogi_fabric(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- }
- 
- /**
-- * lpfc_cmpl_els_flogi_nport: Completion function for flogi to an N_Port.
-+ * lpfc_cmpl_els_flogi_nport - Completion function for flogi to an N_Port
-  * @vport: pointer to a host virtual N_Port data structure.
-  * @ndlp: pointer to a node-list data structure.
-  * @sp: pointer to service parameter data structure.
-@@ -626,7 +626,7 @@ fail:
- }
- 
- /**
-- * lpfc_cmpl_els_flogi: Completion callback function for flogi.
-+ * lpfc_cmpl_els_flogi - Completion callback function for flogi
-  * @phba: pointer to lpfc hba data structure.
-  * @cmdiocb: pointer to lpfc command iocb data structure.
-  * @rspiocb: pointer to lpfc response iocb data structure.
-@@ -751,7 +751,7 @@ out:
- }
- 
- /**
-- * lpfc_issue_els_flogi: Issue an flogi iocb command for a vport.
-+ * lpfc_issue_els_flogi - Issue an flogi iocb command for a vport
-  * @vport: pointer to a host virtual N_Port data structure.
-  * @ndlp: pointer to a node-list data structure.
-  * @retry: number of retries to the command IOCB.
-@@ -849,7 +849,7 @@ lpfc_issue_els_flogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- }
- 
- /**
-- * lpfc_els_abort_flogi: Abort all outstanding flogi iocbs.
-+ * lpfc_els_abort_flogi - Abort all outstanding flogi iocbs
-  * @phba: pointer to lpfc hba data structure.
+- * lpfc_do_offline: Issues a mailbox command to bring the link down.
++ * lpfc_do_offline - Issues a mailbox command to bring the link down
+  * @phba: lpfc_hba pointer.
+  * @type: LPFC_EVT_OFFLINE, LPFC_EVT_WARM_START, LPFC_EVT_KILL.
   *
-  * This routine aborts all the outstanding Fabric Login (FLOGI) IOCBs
-@@ -898,7 +898,7 @@ lpfc_els_abort_flogi(struct lpfc_hba *phba)
- }
- 
- /**
-- * lpfc_initial_flogi: Issue an initial fabric login for a vport.
-+ * lpfc_initial_flogi - Issue an initial fabric login for a vport
-  * @vport: pointer to a host virtual N_Port data structure.
+@@ -537,7 +537,7 @@ lpfc_issue_lip(struct Scsi_Host *shost)
+  * Assumes any error from lpfc_do_offline() will be negative.
+  * Can wait up to 5 seconds for the port ring buffers count
+  * to reach zero, prints a warning if it is not zero and continues.
+- * lpfc_workq_post_event() returns a non-zero return coce if call fails.
++ * lpfc_workq_post_event() returns a non-zero return code if call fails.
   *
-  * This routine issues an initial Fabric Login (FLOGI) for the @vport
-@@ -949,7 +949,7 @@ lpfc_initial_flogi(struct lpfc_vport *vport)
+  * Returns:
+  * -EIO error posting the event
+@@ -591,7 +591,7 @@ lpfc_do_offline(struct lpfc_hba *phba, uint32_t type)
  }
  
  /**
-- * lpfc_initial_fdisc: Issue an initial fabric discovery for a vport.
-+ * lpfc_initial_fdisc - Issue an initial fabric discovery for a vport
-  * @vport: pointer to a host virtual N_Port data structure.
+- * lpfc_selective_reset: Offline then onlines the port.
++ * lpfc_selective_reset - Offline then onlines the port
+  * @phba: lpfc_hba pointer.
   *
-  * This routine issues an initial Fabric Discover (FDISC) for the @vport
-@@ -998,7 +998,7 @@ lpfc_initial_fdisc(struct lpfc_vport *vport)
+  * Description:
+@@ -632,7 +632,7 @@ lpfc_selective_reset(struct lpfc_hba *phba)
  }
  
  /**
-- * lpfc_more_plogi: Check and issue remaining plogis for a vport.
-+ * lpfc_more_plogi - Check and issue remaining plogis for a vport
-  * @vport: pointer to a host virtual N_Port data structure.
+- * lpfc_issue_reset: Selectively resets an adapter.
++ * lpfc_issue_reset - Selectively resets an adapter
+  * @dev: class device that is converted into a Scsi_host.
+  * @attr: device attribute, not used.
+  * @buf: containing the string "selective".
+@@ -672,7 +672,7 @@ lpfc_issue_reset(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ /**
+- * lpfc_nport_evt_cnt_show: Return the number of nport events.
++ * lpfc_nport_evt_cnt_show - Return the number of nport events
+  * @dev: class device that is converted into a Scsi_host.
+  * @attr: device attribute, not used.
+  * @buf: on return contains the ascii number of nport events.
+@@ -691,7 +691,7 @@ lpfc_nport_evt_cnt_show(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ /**
+- * lpfc_board_mode_show: Return the state of the board.
++ * lpfc_board_mode_show - Return the state of the board
+  * @dev: class device that is converted into a Scsi_host.
+  * @attr: device attribute, not used.
+  * @buf: on return contains the state of the adapter.
+@@ -720,7 +720,7 @@ lpfc_board_mode_show(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ /**
+- * lpfc_board_mode_store: Puts the hba in online, offline, warm or error state.
++ * lpfc_board_mode_store - Puts the hba in online, offline, warm or error state
+  * @dev: class device that is converted into a Scsi_host.
+  * @attr: device attribute, not used.
+  * @buf: containing one of the strings "online", "offline", "warm" or "error".
+@@ -766,14 +766,14 @@ lpfc_board_mode_store(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ /**
+- * lpfc_get_hba_info: Return various bits of informaton about the adapter.
++ * lpfc_get_hba_info - Return various bits of informaton about the adapter
+  * @phba: pointer to the adapter structure.
+- * @mxri max xri count.
+- * @axri available xri count.
+- * @mrpi max rpi count.
+- * @arpi available rpi count.
+- * @mvpi max vpi count.
+- * @avpi available vpi count.
++ * @mxri: max xri count.
++ * @axri: available xri count.
++ * @mrpi: max rpi count.
++ * @arpi: available rpi count.
++ * @mvpi: max vpi count.
++ * @avpi: available vpi count.
   *
-  * This routine checks whether there are more remaining Port Logins
-@@ -1031,7 +1031,7 @@ lpfc_more_plogi(struct lpfc_vport *vport)
+  * Description:
+  * If an integer pointer for an count is not null then the value for the
+@@ -846,7 +846,7 @@ lpfc_get_hba_info(struct lpfc_hba *phba,
  }
  
  /**
-- * lpfc_plogi_confirm_nport: Confirm pologi wwpn matches stored ndlp.
-+ * lpfc_plogi_confirm_nport - Confirm pologi wwpn matches stored ndlp
-  * @phba: pointer to lpfc hba data structure.
-  * @prsp: pointer to response IOCB payload.
-  * @ndlp: pointer to a node-list data structure.
-@@ -1165,7 +1165,7 @@ lpfc_plogi_confirm_nport(struct lpfc_hba *phba, uint32_t *prsp,
+- * lpfc_max_rpi_show: Return maximum rpi.
++ * lpfc_max_rpi_show - Return maximum rpi
+  * @dev: class device that is converted into a Scsi_host.
+  * @attr: device attribute, not used.
+  * @buf: on return contains the maximum rpi count in decimal or "Unknown".
+@@ -874,7 +874,7 @@ lpfc_max_rpi_show(struct device *dev, struct device_attribute *attr,
  }
  
  /**
-- * lpfc_end_rscn: Check and handle more rscn for a vport.
-+ * lpfc_end_rscn - Check and handle more rscn for a vport
-  * @vport: pointer to a host virtual N_Port data structure.
+- * lpfc_used_rpi_show: Return maximum rpi minus available rpi.
++ * lpfc_used_rpi_show - Return maximum rpi minus available rpi
+  * @dev: class device that is converted into a Scsi_host.
+  * @attr: device attribute, not used.
+  * @buf: containing the used rpi count in decimal or "Unknown".
+@@ -902,7 +902,7 @@ lpfc_used_rpi_show(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ /**
+- * lpfc_max_xri_show: Return maximum xri.
++ * lpfc_max_xri_show - Return maximum xri
+  * @dev: class device that is converted into a Scsi_host.
+  * @attr: device attribute, not used.
+  * @buf: on return contains the maximum xri count in decimal or "Unknown".
+@@ -930,7 +930,7 @@ lpfc_max_xri_show(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ /**
+- * lpfc_used_xri_show: Return maximum xpi minus the available xpi.
++ * lpfc_used_xri_show - Return maximum xpi minus the available xpi
+  * @dev: class device that is converted into a Scsi_host.
+  * @attr: device attribute, not used.
+  * @buf: on return contains the used xri count in decimal or "Unknown".
+@@ -958,7 +958,7 @@ lpfc_used_xri_show(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ /**
+- * lpfc_max_vpi_show: Return maximum vpi.
++ * lpfc_max_vpi_show - Return maximum vpi
+  * @dev: class device that is converted into a Scsi_host.
+  * @attr: device attribute, not used.
+  * @buf: on return contains the maximum vpi count in decimal or "Unknown".
+@@ -986,7 +986,7 @@ lpfc_max_vpi_show(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ /**
+- * lpfc_used_vpi_show: Return maximum vpi minus the available vpi.
++ * lpfc_used_vpi_show - Return maximum vpi minus the available vpi
+  * @dev: class device that is converted into a Scsi_host.
+  * @attr: device attribute, not used.
+  * @buf: on return contains the used vpi count in decimal or "Unknown".
+@@ -1014,7 +1014,7 @@ lpfc_used_vpi_show(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ /**
+- * lpfc_npiv_info_show: Return text about NPIV support for the adapter.
++ * lpfc_npiv_info_show - Return text about NPIV support for the adapter
+  * @dev: class device that is converted into a Scsi_host.
+  * @attr: device attribute, not used.
+  * @buf: text that must be interpreted to determine if npiv is supported.
+@@ -1042,7 +1042,7 @@ lpfc_npiv_info_show(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ /**
+- * lpfc_poll_show: Return text about poll support for the adapter.
++ * lpfc_poll_show - Return text about poll support for the adapter
+  * @dev: class device that is converted into a Scsi_host.
+  * @attr: device attribute, not used.
+  * @buf: on return contains the cfg_poll in hex.
+@@ -1064,7 +1064,7 @@ lpfc_poll_show(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ /**
+- * lpfc_poll_store: Set the value of cfg_poll for the adapter.
++ * lpfc_poll_store - Set the value of cfg_poll for the adapter
+  * @dev: class device that is converted into a Scsi_host.
+  * @attr: device attribute, not used.
+  * @buf: one or more lpfc_polling_flags values.
+@@ -1136,7 +1136,7 @@ lpfc_poll_store(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ /**
+- * lpfc_param_show: Return a cfg attribute value in decimal.
++ * lpfc_param_show - Return a cfg attribute value in decimal
   *
-  * This routine checks whether more Registration State Change
-@@ -1197,7 +1197,7 @@ lpfc_end_rscn(struct lpfc_vport *vport)
+  * Description:
+  * Macro that given an attr e.g. hba_queue_depth expands
+@@ -1164,7 +1164,7 @@ lpfc_##attr##_show(struct device *dev, struct device_attribute *attr, \
  }
  
  /**
-- * lpfc_cmpl_els_plogi: Completion callback function for plogi.
-+ * lpfc_cmpl_els_plogi - Completion callback function for plogi
-  * @phba: pointer to lpfc hba data structure.
-  * @cmdiocb: pointer to lpfc command iocb data structure.
-  * @rspiocb: pointer to lpfc response iocb data structure.
-@@ -1322,7 +1322,7 @@ out:
- }
- 
- /**
-- * lpfc_issue_els_plogi: Issue an plogi iocb command for a vport.
-+ * lpfc_issue_els_plogi - Issue an plogi iocb command for a vport
-  * @vport: pointer to a host virtual N_Port data structure.
-  * @did: destination port identifier.
-  * @retry: number of retries to the command IOCB.
-@@ -1401,7 +1401,7 @@ lpfc_issue_els_plogi(struct lpfc_vport *vport, uint32_t did, uint8_t retry)
- }
- 
- /**
-- * lpfc_cmpl_els_prli: Completion callback function for prli.
-+ * lpfc_cmpl_els_prli - Completion callback function for prli
-  * @phba: pointer to lpfc hba data structure.
-  * @cmdiocb: pointer to lpfc command iocb data structure.
-  * @rspiocb: pointer to lpfc response iocb data structure.
-@@ -1472,7 +1472,7 @@ out:
- }
- 
- /**
-- * lpfc_issue_els_prli: Issue a prli iocb command for a vport.
-+ * lpfc_issue_els_prli - Issue a prli iocb command for a vport
-  * @vport: pointer to a host virtual N_Port data structure.
-  * @ndlp: pointer to a node-list data structure.
-  * @retry: number of retries to the command IOCB.
-@@ -1562,7 +1562,7 @@ lpfc_issue_els_prli(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- }
- 
- /**
-- * lpfc_rscn_disc: Perform rscn discovery for a vport.
-+ * lpfc_rscn_disc - Perform rscn discovery for a vport
-  * @vport: pointer to a host virtual N_Port data structure.
+- * lpfc_param_hex_show: Return a cfg attribute value in hex.
++ * lpfc_param_hex_show - Return a cfg attribute value in hex
   *
-  * This routine performs Registration State Change Notification (RSCN)
-@@ -1588,7 +1588,7 @@ lpfc_rscn_disc(struct lpfc_vport *vport)
- }
- 
- /**
-- * lpfc_adisc_done: Complete the adisc phase of discovery.
-+ * lpfc_adisc_done - Complete the adisc phase of discovery
-  * @vport: pointer to lpfc_vport hba data structure that finished all ADISCs.
+  * Description:
+  * Macro that given an attr e.g. hba_queue_depth expands
+@@ -1173,7 +1173,7 @@ lpfc_##attr##_show(struct device *dev, struct device_attribute *attr, \
+  * lpfc_##attr##_show: Return the hex value of an adapters cfg_xxx field.
+  * @dev: class device that is converted into a Scsi_host.
+  * @attr: device attribute, not used.
+- * @buf: on return contains the attribute value in hexidecimal.
++ * @buf: on return contains the attribute value in hexadecimal.
   *
-  * This function is called when the final ADISC is completed during discovery.
-@@ -1639,7 +1639,7 @@ lpfc_adisc_done(struct lpfc_vport *vport)
+  * Returns: size of formatted string.
+  **/
+@@ -1192,7 +1192,7 @@ lpfc_##attr##_show(struct device *dev, struct device_attribute *attr, \
  }
  
  /**
-- * lpfc_more_adisc: Issue more adisc as needed.
-+ * lpfc_more_adisc - Issue more adisc as needed
-  * @vport: pointer to a host virtual N_Port data structure.
+- * lpfc_param_init: Intializes a cfg attribute.
++ * lpfc_param_init - Intializes a cfg attribute
   *
-  * This routine determines whether there are more ndlps on a @vport
-@@ -1672,7 +1672,7 @@ lpfc_more_adisc(struct lpfc_vport *vport)
+  * Description:
+  * Macro that given an attr e.g. hba_queue_depth expands
+@@ -1226,7 +1226,7 @@ lpfc_##attr##_init(struct lpfc_hba *phba, int val) \
  }
  
  /**
-- * lpfc_cmpl_els_adisc: Completion callback function for adisc.
-+ * lpfc_cmpl_els_adisc - Completion callback function for adisc
-  * @phba: pointer to lpfc hba data structure.
-  * @cmdiocb: pointer to lpfc command iocb data structure.
-  * @rspiocb: pointer to lpfc response iocb data structure.
-@@ -1760,7 +1760,7 @@ out:
- }
- 
- /**
-- * lpfc_issue_els_adisc: Issue an address discover iocb to an node on a vport.
-+ * lpfc_issue_els_adisc - Issue an address discover iocb to an node on a vport
-  * @vport: pointer to a virtual N_Port data structure.
-  * @ndlp: pointer to a node-list data structure.
-  * @retry: number of retries to the command IOCB.
-@@ -1833,7 +1833,7 @@ lpfc_issue_els_adisc(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- }
- 
- /**
-- * lpfc_cmpl_els_logo: Completion callback function for logo.
-+ * lpfc_cmpl_els_logo - Completion callback function for logo
-  * @phba: pointer to lpfc hba data structure.
-  * @cmdiocb: pointer to lpfc command iocb data structure.
-  * @rspiocb: pointer to lpfc response iocb data structure.
-@@ -1910,7 +1910,7 @@ out:
- }
- 
- /**
-- * lpfc_issue_els_logo: Issue a logo to an node on a vport.
-+ * lpfc_issue_els_logo - Issue a logo to an node on a vport
-  * @vport: pointer to a virtual N_Port data structure.
-  * @ndlp: pointer to a node-list data structure.
-  * @retry: number of retries to the command IOCB.
-@@ -1991,7 +1991,7 @@ lpfc_issue_els_logo(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- }
- 
- /**
-- * lpfc_cmpl_els_cmd: Completion callback function for generic els command.
-+ * lpfc_cmpl_els_cmd - Completion callback function for generic els command
-  * @phba: pointer to lpfc hba data structure.
-  * @cmdiocb: pointer to lpfc command iocb data structure.
-  * @rspiocb: pointer to lpfc response iocb data structure.
-@@ -2031,7 +2031,7 @@ lpfc_cmpl_els_cmd(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- }
- 
- /**
-- * lpfc_issue_els_scr: Issue a scr to an node on a vport.
-+ * lpfc_issue_els_scr - Issue a scr to an node on a vport
-  * @vport: pointer to a host virtual N_Port data structure.
-  * @nportid: N_Port identifier to the remote node.
-  * @retry: number of retries to the command IOCB.
-@@ -2125,7 +2125,7 @@ lpfc_issue_els_scr(struct lpfc_vport *vport, uint32_t nportid, uint8_t retry)
- }
- 
- /**
-- * lpfc_issue_els_farpr: Issue a farp to an node on a vport.
-+ * lpfc_issue_els_farpr - Issue a farp to an node on a vport
-  * @vport: pointer to a host virtual N_Port data structure.
-  * @nportid: N_Port identifier to the remote node.
-  * @retry: number of retries to the command IOCB.
-@@ -2236,7 +2236,7 @@ lpfc_issue_els_farpr(struct lpfc_vport *vport, uint32_t nportid, uint8_t retry)
- }
- 
- /**
-- * lpfc_cancel_retry_delay_tmo: Cancel the timer with delayed iocb-cmd retry.
-+ * lpfc_cancel_retry_delay_tmo - Cancel the timer with delayed iocb-cmd retry
-  * @vport: pointer to a host virtual N_Port data structure.
-  * @nlp: pointer to a node-list data structure.
+- * lpfc_param_set: Set a cfg attribute value.
++ * lpfc_param_set - Set a cfg attribute value
   *
-@@ -2291,7 +2291,7 @@ lpfc_cancel_retry_delay_tmo(struct lpfc_vport *vport, struct lpfc_nodelist *nlp)
+  * Description:
+  * Macro that given an attr e.g. hba_queue_depth expands
+@@ -1260,7 +1260,7 @@ lpfc_##attr##_set(struct lpfc_hba *phba, int val) \
  }
  
  /**
-- * lpfc_els_retry_delay: Timer function with a ndlp delayed function timer.
-+ * lpfc_els_retry_delay - Timer function with a ndlp delayed function timer
-  * @ptr: holder for the pointer to the timer function associated data (ndlp).
+- * lpfc_param_store: Set a vport attribute value.
++ * lpfc_param_store - Set a vport attribute value
   *
-  * This routine is invoked by the ndlp delayed-function timer to check
-@@ -2333,7 +2333,7 @@ lpfc_els_retry_delay(unsigned long ptr)
+  * Description:
+  * Macro that given an attr e.g. hba_queue_depth expands
+@@ -1300,7 +1300,7 @@ lpfc_##attr##_store(struct device *dev, struct device_attribute *attr, \
  }
  
  /**
-- * lpfc_els_retry_delay_handler: Work thread handler for ndlp delayed function.
-+ * lpfc_els_retry_delay_handler - Work thread handler for ndlp delayed function
-  * @ndlp: pointer to a node-list data structure.
+- * lpfc_vport_param_show: Return decimal formatted cfg attribute value.
++ * lpfc_vport_param_show - Return decimal formatted cfg attribute value
   *
-  * This routine is the worker-thread handler for processing the @ndlp delayed
-@@ -2404,7 +2404,7 @@ lpfc_els_retry_delay_handler(struct lpfc_nodelist *ndlp)
+  * Description:
+  * Macro that given an attr e.g. hba_queue_depth expands
+@@ -1326,17 +1326,17 @@ lpfc_##attr##_show(struct device *dev, struct device_attribute *attr, \
  }
  
  /**
-- * lpfc_els_retry: Make retry decision on an els command iocb.
-+ * lpfc_els_retry - Make retry decision on an els command iocb
-  * @phba: pointer to lpfc hba data structure.
-  * @cmdiocb: pointer to lpfc command iocb data structure.
-  * @rspiocb: pointer to lpfc response iocb data structure.
-@@ -2732,7 +2732,7 @@ lpfc_els_retry(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- }
- 
- /**
-- * lpfc_els_free_data: Free lpfc dma buffer and data structure with an iocb.
-+ * lpfc_els_free_data - Free lpfc dma buffer and data structure with an iocb
-  * @phba: pointer to lpfc hba data structure.
-  * @buf_ptr1: pointer to the lpfc DMA buffer data structure.
+- * lpfc_vport_param_hex_show: Return hex formatted attribute value.
++ * lpfc_vport_param_hex_show - Return hex formatted attribute value
   *
-@@ -2764,7 +2764,7 @@ lpfc_els_free_data(struct lpfc_hba *phba, struct lpfc_dmabuf *buf_ptr1)
- }
- 
- /**
-- * lpfc_els_free_bpl: Free lpfc dma buffer and data structure with bpl.
-+ * lpfc_els_free_bpl - Free lpfc dma buffer and data structure with bpl
-  * @phba: pointer to lpfc hba data structure.
-  * @buf_ptr: pointer to the lpfc dma buffer data structure.
+  * Description:
+  * Macro that given an attr e.g.
+  * hba_queue_depth expands into a function with the name
+  * lpfc_hba_queue_depth_show
   *
-@@ -2784,7 +2784,7 @@ lpfc_els_free_bpl(struct lpfc_hba *phba, struct lpfc_dmabuf *buf_ptr)
- }
- 
- /**
-- * lpfc_els_free_iocb: Free a command iocb and its associated resources.
-+ * lpfc_els_free_iocb - Free a command iocb and its associated resources
-  * @phba: pointer to lpfc hba data structure.
-  * @elsiocb: pointer to lpfc els command iocb data structure.
+- * lpfc_##attr##_show: prints the attribute value in hexidecimal.
++ * lpfc_##attr##_show: prints the attribute value in hexadecimal.
+  * @dev: class device that is converted into a Scsi_host.
+  * @attr: device attribute, not used.
+- * @buf: on return contains the attribute value in hexidecimal.
++ * @buf: on return contains the attribute value in hexadecimal.
   *
-@@ -2877,7 +2877,7 @@ lpfc_els_free_iocb(struct lpfc_hba *phba, struct lpfc_iocbq *elsiocb)
+  * Returns: length of formatted string.
+  **/
+@@ -1353,7 +1353,7 @@ lpfc_##attr##_show(struct device *dev, struct device_attribute *attr, \
  }
  
  /**
-- * lpfc_cmpl_els_logo_acc: Completion callback function to logo acc response.
-+ * lpfc_cmpl_els_logo_acc - Completion callback function to logo acc response
-  * @phba: pointer to lpfc hba data structure.
-  * @cmdiocb: pointer to lpfc command iocb data structure.
-  * @rspiocb: pointer to lpfc response iocb data structure.
-@@ -2931,7 +2931,7 @@ lpfc_cmpl_els_logo_acc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- }
- 
- /**
-- * lpfc_mbx_cmpl_dflt_rpi: Completion callbk func for unreg dflt rpi mbox cmd.
-+ * lpfc_mbx_cmpl_dflt_rpi - Completion callbk func for unreg dflt rpi mbox cmd
-  * @phba: pointer to lpfc hba data structure.
-  * @pmb: pointer to the driver internal queue element for mailbox command.
+- * lpfc_vport_param_init: Initialize a vport cfg attribute.
++ * lpfc_vport_param_init - Initialize a vport cfg attribute
   *
-@@ -2965,7 +2965,7 @@ lpfc_mbx_cmpl_dflt_rpi(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+  * Description:
+  * Macro that given an attr e.g. hba_queue_depth expands
+@@ -1386,7 +1386,7 @@ lpfc_##attr##_init(struct lpfc_vport *vport, int val) \
  }
  
  /**
-- * lpfc_cmpl_els_rsp: Completion callback function for els response iocb cmd.
-+ * lpfc_cmpl_els_rsp - Completion callback function for els response iocb cmd
-  * @phba: pointer to lpfc hba data structure.
-  * @cmdiocb: pointer to lpfc command iocb data structure.
-  * @rspiocb: pointer to lpfc response iocb data structure.
-@@ -3136,7 +3136,7 @@ out:
- }
- 
- /**
-- * lpfc_els_rsp_acc: Prepare and issue an acc response iocb command.
-+ * lpfc_els_rsp_acc - Prepare and issue an acc response iocb command
-  * @vport: pointer to a host virtual N_Port data structure.
-  * @flag: the els command code to be accepted.
-  * @oldiocb: pointer to the original lpfc command iocb data structure.
-@@ -3275,7 +3275,7 @@ lpfc_els_rsp_acc(struct lpfc_vport *vport, uint32_t flag,
- }
- 
- /**
-- * lpfc_els_rsp_reject: Propare and issue a rjt response iocb command.
-+ * lpfc_els_rsp_reject - Propare and issue a rjt response iocb command
-  * @vport: pointer to a virtual N_Port data structure.
-  * @rejectError:
-  * @oldiocb: pointer to the original lpfc command iocb data structure.
-@@ -3356,7 +3356,7 @@ lpfc_els_rsp_reject(struct lpfc_vport *vport, uint32_t rejectError,
- }
- 
- /**
-- * lpfc_els_rsp_adisc_acc: Prepare and issue acc response to adisc iocb cmd.
-+ * lpfc_els_rsp_adisc_acc - Prepare and issue acc response to adisc iocb cmd
-  * @vport: pointer to a virtual N_Port data structure.
-  * @oldiocb: pointer to the original lpfc command iocb data structure.
-  * @ndlp: pointer to a node-list data structure.
-@@ -3431,7 +3431,7 @@ lpfc_els_rsp_adisc_acc(struct lpfc_vport *vport, struct lpfc_iocbq *oldiocb,
- }
- 
- /**
-- * lpfc_els_rsp_prli_acc: Prepare and issue acc response to prli iocb cmd.
-+ * lpfc_els_rsp_prli_acc - Prepare and issue acc response to prli iocb cmd
-  * @vport: pointer to a virtual N_Port data structure.
-  * @oldiocb: pointer to the original lpfc command iocb data structure.
-  * @ndlp: pointer to a node-list data structure.
-@@ -3529,7 +3529,7 @@ lpfc_els_rsp_prli_acc(struct lpfc_vport *vport, struct lpfc_iocbq *oldiocb,
- }
- 
- /**
-- * lpfc_els_rsp_rnid_acc: Issue rnid acc response iocb command.
-+ * lpfc_els_rsp_rnid_acc - Issue rnid acc response iocb command
-  * @vport: pointer to a virtual N_Port data structure.
-  * @format: rnid command format.
-  * @oldiocb: pointer to the original lpfc command iocb data structure.
-@@ -3635,7 +3635,7 @@ lpfc_els_rsp_rnid_acc(struct lpfc_vport *vport, uint8_t format,
- }
- 
- /**
-- * lpfc_els_disc_adisc: Issue remaining adisc iocbs to npr nodes of a vport.
-+ * lpfc_els_disc_adisc - Issue remaining adisc iocbs to npr nodes of a vport
-  * @vport: pointer to a host virtual N_Port data structure.
+- * lpfc_vport_param_set: Set a vport cfg attribute.
++ * lpfc_vport_param_set - Set a vport cfg attribute
   *
-  * This routine issues Address Discover (ADISC) ELS commands to those
-@@ -3693,7 +3693,7 @@ lpfc_els_disc_adisc(struct lpfc_vport *vport)
+  * Description:
+  * Macro that given an attr e.g. hba_queue_depth expands
+@@ -1417,7 +1417,7 @@ lpfc_##attr##_set(struct lpfc_vport *vport, int val) \
  }
  
  /**
-- * lpfc_els_disc_plogi: Issue plogi for all npr nodes of a vport before adisc.
-+ * lpfc_els_disc_plogi - Issue plogi for all npr nodes of a vport before adisc
-  * @vport: pointer to a host virtual N_Port data structure.
+- * lpfc_vport_param_store: Set a vport attribute.
++ * lpfc_vport_param_store - Set a vport attribute
   *
-  * This routine issues Port Login (PLOGI) ELS commands to all the N_Ports
-@@ -3752,7 +3752,7 @@ lpfc_els_disc_plogi(struct lpfc_vport *vport)
- }
+  * Description:
+  * Macro that given an attr e.g. hba_queue_depth
+@@ -1576,7 +1576,7 @@ static DEVICE_ATTR(lpfc_temp_sensor, S_IRUGO, lpfc_temp_sensor_show, NULL);
+ static char *lpfc_soft_wwn_key = "C99G71SL8032A";
  
  /**
-- * lpfc_els_flush_rscn: Clean up any rscn activities with a vport.
-+ * lpfc_els_flush_rscn - Clean up any rscn activities with a vport
-  * @vport: pointer to a host virtual N_Port data structure.
+- * lpfc_soft_wwn_enable_store: Allows setting of the wwn if the key is valid.
++ * lpfc_soft_wwn_enable_store - Allows setting of the wwn if the key is valid
+  * @dev: class device that is converted into a Scsi_host.
+  * @attr: device attribute, not used.
+  * @buf: containing the string lpfc_soft_wwn_key.
+@@ -1623,10 +1623,10 @@ static DEVICE_ATTR(lpfc_soft_wwn_enable, S_IWUSR, NULL,
+ 		   lpfc_soft_wwn_enable_store);
+ 
+ /**
+- * lpfc_soft_wwpn_show: Return the cfg soft ww port name of the adapter.
++ * lpfc_soft_wwpn_show - Return the cfg soft ww port name of the adapter
+  * @dev: class device that is converted into a Scsi_host.
+  * @attr: device attribute, not used.
+- * @buf: on return contains the wwpn in hexidecimal.
++ * @buf: on return contains the wwpn in hexadecimal.
   *
-  * This routine cleans up any Registration State Change Notification
-@@ -3791,7 +3791,7 @@ lpfc_els_flush_rscn(struct lpfc_vport *vport)
+  * Returns: size of formatted string.
+  **/
+@@ -1643,10 +1643,10 @@ lpfc_soft_wwpn_show(struct device *dev, struct device_attribute *attr,
  }
  
  /**
-- * lpfc_rscn_payload_check: Check whether there is a pending rscn to a did.
-+ * lpfc_rscn_payload_check - Check whether there is a pending rscn to a did
-  * @vport: pointer to a host virtual N_Port data structure.
-  * @did: remote destination port identifier.
+- * lpfc_soft_wwpn_store: Set the ww port name of the adapter.
++ * lpfc_soft_wwpn_store - Set the ww port name of the adapter
+  * @dev class device that is converted into a Scsi_host.
+  * @attr: device attribute, not used.
+- * @buf: contains the wwpn in hexidecimal.
++ * @buf: contains the wwpn in hexadecimal.
+  * @count: number of wwpn bytes in buf
   *
-@@ -3866,7 +3866,7 @@ return_did_out:
- }
+  * Returns:
+@@ -1729,10 +1729,10 @@ static DEVICE_ATTR(lpfc_soft_wwpn, S_IRUGO | S_IWUSR,\
+ 		   lpfc_soft_wwpn_show, lpfc_soft_wwpn_store);
  
  /**
-- * lpfc_rscn_recovery_check: Send recovery event to vport nodes matching rscn
-+ * lpfc_rscn_recovery_check - Send recovery event to vport nodes matching rscn
-  * @vport: pointer to a host virtual N_Port data structure.
+- * lpfc_soft_wwnn_show: Return the cfg soft ww node name for the adapter.
++ * lpfc_soft_wwnn_show - Return the cfg soft ww node name for the adapter
+  * @dev: class device that is converted into a Scsi_host.
+  * @attr: device attribute, not used.
+- * @buf: on return contains the wwnn in hexidecimal.
++ * @buf: on return contains the wwnn in hexadecimal.
   *
-  * This routine sends recovery (NLP_EVT_DEVICE_RECOVERY) event to the
-@@ -3895,7 +3895,7 @@ lpfc_rscn_recovery_check(struct lpfc_vport *vport)
+  * Returns: size of formatted string.
+  **/
+@@ -1747,9 +1747,9 @@ lpfc_soft_wwnn_show(struct device *dev, struct device_attribute *attr,
  }
  
  /**
-- * lpfc_send_rscn_event: Send an RSCN event to management application.
-+ * lpfc_send_rscn_event - Send an RSCN event to management application
-  * @vport: pointer to a host virtual N_Port data structure.
-  * @cmdiocb: pointer to lpfc command iocb data structure.
+- * lpfc_soft_wwnn_store: sets the ww node name of the adapter.
++ * lpfc_soft_wwnn_store - sets the ww node name of the adapter
+  * @cdev: class device that is converted into a Scsi_host.
+- * @buf: contains the ww node name in hexidecimal.
++ * @buf: contains the ww node name in hexadecimal.
+  * @count: number of wwnn bytes in buf.
   *
-@@ -3938,7 +3938,7 @@ lpfc_send_rscn_event(struct lpfc_vport *vport,
+  * Returns:
+@@ -1845,7 +1845,7 @@ MODULE_PARM_DESC(lpfc_nodev_tmo,
+ 		 "for a device to come back");
+ 
+ /**
+- * lpfc_nodev_tmo_show: Return the hba dev loss timeout value.
++ * lpfc_nodev_tmo_show - Return the hba dev loss timeout value
+  * @dev: class converted to a Scsi_host structure.
+  * @attr: device attribute, not used.
+  * @buf: on return contains the dev loss timeout in decimal.
+@@ -1864,7 +1864,7 @@ lpfc_nodev_tmo_show(struct device *dev, struct device_attribute *attr,
  }
  
  /**
-- * lpfc_els_rcv_rscn: Process an unsolicited rscn iocb.
-+ * lpfc_els_rcv_rscn - Process an unsolicited rscn iocb
-  * @vport: pointer to a host virtual N_Port data structure.
-  * @cmdiocb: pointer to lpfc command iocb data structure.
-  * @ndlp: pointer to a node-list data structure.
-@@ -4134,7 +4134,7 @@ lpfc_els_rcv_rscn(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- }
- 
- /**
-- * lpfc_els_handle_rscn: Handle rscn for a vport.
-+ * lpfc_els_handle_rscn - Handle rscn for a vport
-  * @vport: pointer to a host virtual N_Port data structure.
+- * lpfc_nodev_tmo_init: Set the hba nodev timeout value.
++ * lpfc_nodev_tmo_init - Set the hba nodev timeout value
+  * @vport: lpfc vport structure pointer.
+  * @val: contains the nodev timeout value.
   *
-  * This routine handles the Registration State Configuration Notification
-@@ -4222,7 +4222,7 @@ lpfc_els_handle_rscn(struct lpfc_vport *vport)
+@@ -1905,7 +1905,7 @@ lpfc_nodev_tmo_init(struct lpfc_vport *vport, int val)
  }
  
  /**
-- * lpfc_els_rcv_flogi: Process an unsolicited flogi iocb.
-+ * lpfc_els_rcv_flogi - Process an unsolicited flogi iocb
-  * @vport: pointer to a host virtual N_Port data structure.
-  * @cmdiocb: pointer to lpfc command iocb data structure.
-  * @ndlp: pointer to a node-list data structure.
-@@ -4336,7 +4336,7 @@ lpfc_els_rcv_flogi(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- }
- 
- /**
-- * lpfc_els_rcv_rnid: Process an unsolicited rnid iocb.
-+ * lpfc_els_rcv_rnid - Process an unsolicited rnid iocb
-  * @vport: pointer to a host virtual N_Port data structure.
-  * @cmdiocb: pointer to lpfc command iocb data structure.
-  * @ndlp: pointer to a node-list data structure.
-@@ -4391,7 +4391,7 @@ lpfc_els_rcv_rnid(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- }
- 
- /**
-- * lpfc_els_rcv_lirr: Process an unsolicited lirr iocb.
-+ * lpfc_els_rcv_lirr - Process an unsolicited lirr iocb
-  * @vport: pointer to a host virtual N_Port data structure.
-  * @cmdiocb: pointer to lpfc command iocb data structure.
-  * @ndlp: pointer to a node-list data structure.
-@@ -4419,7 +4419,7 @@ lpfc_els_rcv_lirr(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- }
- 
- /**
-- * lpfc_els_rsp_rps_acc: Completion callbk func for MBX_READ_LNK_STAT mbox cmd.
-+ * lpfc_els_rsp_rps_acc - Completion callbk func for MBX_READ_LNK_STAT mbox cmd
-  * @phba: pointer to lpfc hba data structure.
-  * @pmb: pointer to the driver internal queue element for mailbox command.
+- * lpfc_update_rport_devloss_tmo: Update dev loss tmo value.
++ * lpfc_update_rport_devloss_tmo - Update dev loss tmo value
+  * @vport: lpfc vport structure pointer.
   *
-@@ -4513,7 +4513,7 @@ lpfc_els_rsp_rps_acc(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+  * Description:
+@@ -1926,7 +1926,7 @@ lpfc_update_rport_devloss_tmo(struct lpfc_vport *vport)
  }
  
  /**
-- * lpfc_els_rcv_rps: Process an unsolicited rps iocb.
-+ * lpfc_els_rcv_rps - Process an unsolicited rps iocb
-  * @vport: pointer to a host virtual N_Port data structure.
-  * @cmdiocb: pointer to lpfc command iocb data structure.
-  * @ndlp: pointer to a node-list data structure.
-@@ -4590,7 +4590,7 @@ reject_out:
- }
- 
- /**
-- * lpfc_els_rsp_rpl_acc: Issue an accept rpl els command.
-+ * lpfc_els_rsp_rpl_acc - Issue an accept rpl els command
-  * @vport: pointer to a host virtual N_Port data structure.
-  * @cmdsize: size of the ELS command.
-  * @oldiocb: pointer to the original lpfc command iocb data structure.
-@@ -4662,7 +4662,7 @@ lpfc_els_rsp_rpl_acc(struct lpfc_vport *vport, uint16_t cmdsize,
- }
- 
- /**
-- * lpfc_els_rcv_rpl: Process an unsolicited rpl iocb.
-+ * lpfc_els_rcv_rpl - Process an unsolicited rpl iocb
-  * @vport: pointer to a host virtual N_Port data structure.
-  * @cmdiocb: pointer to lpfc command iocb data structure.
-  * @ndlp: pointer to a node-list data structure.
-@@ -4721,7 +4721,7 @@ lpfc_els_rcv_rpl(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- }
- 
- /**
-- * lpfc_els_rcv_farp: Process an unsolicited farp request els command.
-+ * lpfc_els_rcv_farp - Process an unsolicited farp request els command
-  * @vport: pointer to a virtual N_Port data structure.
-  * @cmdiocb: pointer to lpfc command iocb data structure.
-  * @ndlp: pointer to a node-list data structure.
-@@ -4804,7 +4804,7 @@ lpfc_els_rcv_farp(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- }
- 
- /**
-- * lpfc_els_rcv_farpr: Process an unsolicited farp response iocb.
-+ * lpfc_els_rcv_farpr - Process an unsolicited farp response iocb
-  * @vport: pointer to a host virtual N_Port data structure.
-  * @cmdiocb: pointer to lpfc command iocb data structure.
-  * @ndlp: pointer to a node-list data structure.
-@@ -4842,7 +4842,7 @@ lpfc_els_rcv_farpr(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- }
- 
- /**
-- * lpfc_els_rcv_fan: Process an unsolicited fan iocb command.
-+ * lpfc_els_rcv_fan - Process an unsolicited fan iocb command
-  * @vport: pointer to a host virtual N_Port data structure.
-  * @cmdiocb: pointer to lpfc command iocb data structure.
-  * @fan_ndlp: pointer to a node-list data structure.
-@@ -4890,7 +4890,7 @@ lpfc_els_rcv_fan(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- }
- 
- /**
-- * lpfc_els_timeout: Handler funciton to the els timer.
-+ * lpfc_els_timeout - Handler funciton to the els timer
-  * @ptr: holder for the timer function associated data.
+- * lpfc_nodev_tmo_set: Set the vport nodev tmo and devloss tmo values.
++ * lpfc_nodev_tmo_set - Set the vport nodev tmo and devloss tmo values
+  * @vport: lpfc vport structure pointer.
+  * @val: contains the tmo value.
   *
-  * This routine is invoked by the ELS timer after timeout. It posts the ELS
-@@ -4919,7 +4919,7 @@ lpfc_els_timeout(unsigned long ptr)
- }
+@@ -1982,7 +1982,7 @@ lpfc_vport_param_init(devloss_tmo, LPFC_DEF_DEVLOSS_TMO,
+ lpfc_vport_param_show(devloss_tmo)
  
  /**
-- * lpfc_els_timeout_handler: Process an els timeout event.
-+ * lpfc_els_timeout_handler - Process an els timeout event
-  * @vport: pointer to a virtual N_Port data structure.
+- * lpfc_devloss_tmo_set: Sets vport nodev tmo, devloss tmo values, changed bit.
++ * lpfc_devloss_tmo_set - Sets vport nodev tmo, devloss tmo values, changed bit
+  * @vport: lpfc vport structure pointer.
+  * @val: contains the tmo value.
   *
-  * This routine is the actual handler function that processes an ELS timeout
-@@ -4994,7 +4994,7 @@ lpfc_els_timeout_handler(struct lpfc_vport *vport)
- }
+@@ -2094,7 +2094,7 @@ MODULE_PARM_DESC(lpfc_restrict_login,
+ lpfc_vport_param_show(restrict_login);
  
  /**
-- * lpfc_els_flush_cmd: Clean up the outstanding els commands to a vport.
-+ * lpfc_els_flush_cmd - Clean up the outstanding els commands to a vport
-  * @vport: pointer to a host virtual N_Port data structure.
+- * lpfc_restrict_login_init: Set the vport restrict login flag.
++ * lpfc_restrict_login_init - Set the vport restrict login flag
+  * @vport: lpfc vport structure pointer.
+  * @val: contains the restrict login value.
   *
-  * This routine is used to clean up all the outstanding ELS commands on a
-@@ -5076,7 +5076,7 @@ lpfc_els_flush_cmd(struct lpfc_vport *vport)
+@@ -2128,7 +2128,7 @@ lpfc_restrict_login_init(struct lpfc_vport *vport, int val)
  }
  
  /**
-- * lpfc_els_flush_all_cmd: Clean up all the outstanding els commands to a HBA.
-+ * lpfc_els_flush_all_cmd - Clean up all the outstanding els commands to a HBA
-  * @phba: pointer to lpfc hba data structure.
+- * lpfc_restrict_login_set: Set the vport restrict login flag.
++ * lpfc_restrict_login_set - Set the vport restrict login flag
+  * @vport: lpfc vport structure pointer.
+  * @val: contains the restrict login value.
   *
-  * This routine is used to clean up all the outstanding ELS commands on a
-@@ -5137,7 +5137,7 @@ lpfc_els_flush_all_cmd(struct lpfc_hba  *phba)
- }
+@@ -2201,7 +2201,7 @@ LPFC_VPORT_ATTR_R(scan_down, 1, 0, 1,
+ */
  
  /**
-- * lpfc_send_els_failure_event: Posts an ELS command failure event.
-+ * lpfc_send_els_failure_event - Posts an ELS command failure event
-  * @phba: Pointer to hba context object.
-  * @cmdiocbp: Pointer to command iocb which reported error.
-  * @rspiocbp: Pointer to response iocb which reported error.
-@@ -5204,7 +5204,7 @@ lpfc_send_els_failure_event(struct lpfc_hba *phba,
- }
- 
- /**
-- * lpfc_send_els_event: Posts unsolicited els event.
-+ * lpfc_send_els_event - Posts unsolicited els event
-  * @vport: Pointer to vport object.
-  * @ndlp: Pointer FC node object.
-  * @cmd: ELS command code.
-@@ -5284,7 +5284,7 @@ lpfc_send_els_event(struct lpfc_vport *vport,
+- * lpfc_topology_set: Set the adapters topology field.
++ * lpfc_topology_set - Set the adapters topology field
+  * @phba: lpfc_hba pointer.
+  * @val: topology value.
+  *
+@@ -2246,8 +2246,7 @@ static DEVICE_ATTR(lpfc_topology, S_IRUGO | S_IWUSR,
  
 
  /**
-- * lpfc_els_unsol_buffer: Process an unsolicited event data buffer.
-+ * lpfc_els_unsol_buffer - Process an unsolicited event data buffer
-  * @phba: pointer to lpfc hba data structure.
-  * @pring: pointer to a SLI ring.
-  * @vport: pointer to a host virtual N_Port data structure.
-@@ -5592,7 +5592,7 @@ dropit:
- }
+- * lpfc_stat_data_ctrl_store: write call back for lpfc_stat_data_ctrl
+- *  sysfs file.
++ * lpfc_stat_data_ctrl_store - write call back for lpfc_stat_data_ctrl sysfs file
+  * @dev: Pointer to class device.
+  * @buf: Data buffer.
+  * @count: Size of the data buffer.
+@@ -2411,8 +2410,7 @@ lpfc_stat_data_ctrl_store(struct device *dev, struct device_attribute *attr,
  
+
  /**
-- * lpfc_find_vport_by_vpid: Find a vport on a HBA through vport identifier.
-+ * lpfc_find_vport_by_vpid - Find a vport on a HBA through vport identifier
-  * @phba: pointer to lpfc hba data structure.
-  * @vpi: host virtual N_Port identifier.
+- * lpfc_stat_data_ctrl_show: Read callback function for
+- *   lpfc_stat_data_ctrl sysfs file.
++ * lpfc_stat_data_ctrl_show - Read function for lpfc_stat_data_ctrl sysfs file
+  * @dev: Pointer to class device object.
+  * @buf: Data buffer.
   *
-@@ -5622,7 +5622,7 @@ lpfc_find_vport_by_vpid(struct lpfc_hba *phba, uint16_t vpi)
- }
+@@ -2489,8 +2487,7 @@ static DEVICE_ATTR(lpfc_stat_data_ctrl, S_IRUGO | S_IWUSR,
+ 
+
+ /**
+- * sysfs_drvr_stat_data_read: Read callback function for lpfc_drvr_stat_data
+- *  sysfs attribute.
++ * sysfs_drvr_stat_data_read - Read function for lpfc_drvr_stat_data attribute
+  * @kobj: Pointer to the kernel object
+  * @bin_attr: Attribute object
+  * @buff: Buffer pointer
+@@ -2585,7 +2582,7 @@ static struct bin_attribute sysfs_drvr_stat_data_attr = {
+ */
  
  /**
-- * lpfc_els_unsol_event: Process an unsolicited event from an els sli ring.
-+ * lpfc_els_unsol_event - Process an unsolicited event from an els sli ring
-  * @phba: pointer to lpfc hba data structure.
-  * @pring: pointer to a SLI ring.
-  * @elsiocb: pointer to lpfc els iocb data structure.
-@@ -5710,7 +5710,7 @@ lpfc_els_unsol_event(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- }
- 
- /**
-- * lpfc_do_scr_ns_plogi: Issue a plogi to the name server for scr.
-+ * lpfc_do_scr_ns_plogi - Issue a plogi to the name server for scr
-  * @phba: pointer to lpfc hba data structure.
-  * @vport: pointer to a virtual N_Port data structure.
+- * lpfc_link_speed_set: Set the adapters link speed.
++ * lpfc_link_speed_set - Set the adapters link speed
+  * @phba: lpfc_hba pointer.
+  * @val: link speed value.
   *
-@@ -5781,7 +5781,7 @@ lpfc_do_scr_ns_plogi(struct lpfc_hba *phba, struct lpfc_vport *vport)
- }
+@@ -2637,7 +2634,7 @@ MODULE_PARM_DESC(lpfc_link_speed, "Select link speed");
+ lpfc_param_show(link_speed)
  
  /**
-- * lpfc_cmpl_reg_new_vport: Completion callback function to register new vport.
-+ * lpfc_cmpl_reg_new_vport - Completion callback function to register new vport
-  * @phba: pointer to lpfc hba data structure.
-  * @pmb: pointer to the driver internal queue element for mailbox command.
+- * lpfc_link_speed_init: Set the adapters link speed.
++ * lpfc_link_speed_init - Set the adapters link speed
+  * @phba: lpfc_hba pointer.
+  * @val: link speed value.
   *
-@@ -5850,7 +5850,7 @@ lpfc_cmpl_reg_new_vport(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+@@ -2865,7 +2862,7 @@ MODULE_PARM_DESC(lpfc_prot_guard, "host protection guard type");
+ 
+
+ /*
+- * lpfc_sg_seg_cnt: Initial Maximum DMA Segment Count
++ * lpfc_sg_seg_cnt - Initial Maximum DMA Segment Count
+  * This value can be set to values between 64 and 256. The default value is
+  * 64, but may be increased to allow for larger Max I/O sizes. The scsi layer
+  * will be allowed to request I/Os of sizes up to (MAX_SEG_COUNT * SEG_SIZE).
+@@ -2967,7 +2964,7 @@ struct device_attribute *lpfc_vport_attrs[] = {
+ };
+ 
+ /**
+- * sysfs_ctlreg_write: Write method for writing to ctlreg.
++ * sysfs_ctlreg_write - Write method for writing to ctlreg
+  * @kobj: kernel kobject that contains the kernel class device.
+  * @bin_attr: kernel attributes passed to us.
+  * @buf: contains the data to be written to the adapter IOREG space.
+@@ -3017,7 +3014,7 @@ sysfs_ctlreg_write(struct kobject *kobj, struct bin_attribute *bin_attr,
  }
  
  /**
-- * lpfc_register_new_vport: Register a new vport with a HBA.
-+ * lpfc_register_new_vport - Register a new vport with a HBA
-  * @phba: pointer to lpfc hba data structure.
-  * @vport: pointer to a host virtual N_Port data structure.
-  * @ndlp: pointer to a node-list data structure.
-@@ -5899,7 +5899,7 @@ mbox_err_exit:
+- * sysfs_ctlreg_read: Read method for reading from ctlreg.
++ * sysfs_ctlreg_read - Read method for reading from ctlreg
+  * @kobj: kernel kobject that contains the kernel class device.
+  * @bin_attr: kernel attributes passed to us.
+  * @buf: if succesful contains the data from the adapter IOREG space.
+@@ -3078,7 +3075,7 @@ static struct bin_attribute sysfs_ctlreg_attr = {
+ };
+ 
+ /**
+- * sysfs_mbox_idle: frees the sysfs mailbox.
++ * sysfs_mbox_idle - frees the sysfs mailbox
+  * @phba: lpfc_hba pointer
+  **/
+ static void
+@@ -3095,7 +3092,7 @@ sysfs_mbox_idle(struct lpfc_hba *phba)
  }
  
  /**
-- * lpfc_cmpl_els_fdisc: Completion function for fdisc iocb command.
-+ * lpfc_cmpl_els_fdisc - Completion function for fdisc iocb command
-  * @phba: pointer to lpfc hba data structure.
-  * @cmdiocb: pointer to lpfc command iocb data structure.
-  * @rspiocb: pointer to lpfc response iocb data structure.
-@@ -6007,7 +6007,7 @@ out:
+- * sysfs_mbox_write: Write method for writing information via mbox.
++ * sysfs_mbox_write - Write method for writing information via mbox
+  * @kobj: kernel kobject that contains the kernel class device.
+  * @bin_attr: kernel attributes passed to us.
+  * @buf: contains the data to be written to sysfs mbox.
+@@ -3170,7 +3167,7 @@ sysfs_mbox_write(struct kobject *kobj, struct bin_attribute *bin_attr,
  }
  
  /**
-- * lpfc_issue_els_fdisc: Issue a fdisc iocb command.
-+ * lpfc_issue_els_fdisc - Issue a fdisc iocb command
-  * @vport: pointer to a virtual N_Port data structure.
-  * @ndlp: pointer to a node-list data structure.
-  * @retry: number of retries to the command IOCB.
-@@ -6101,7 +6101,7 @@ lpfc_issue_els_fdisc(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- }
+- * sysfs_mbox_read: Read method for reading information via mbox.
++ * sysfs_mbox_read - Read method for reading information via mbox
+  * @kobj: kernel kobject that contains the kernel class device.
+  * @bin_attr: kernel attributes passed to us.
+  * @buf: contains the data to be read from sysfs mbox.
+@@ -3374,7 +3371,7 @@ static struct bin_attribute sysfs_mbox_attr = {
+ };
  
  /**
-- * lpfc_cmpl_els_npiv_logo: Completion function with vport logo.
-+ * lpfc_cmpl_els_npiv_logo - Completion function with vport logo
-  * @phba: pointer to lpfc hba data structure.
-  * @cmdiocb: pointer to lpfc command iocb data structure.
-  * @rspiocb: pointer to lpfc response iocb data structure.
-@@ -6136,7 +6136,7 @@ lpfc_cmpl_els_npiv_logo(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- }
- 
- /**
-- * lpfc_issue_els_npiv_logo: Issue a logo off a vport.
-+ * lpfc_issue_els_npiv_logo - Issue a logo off a vport
-  * @vport: pointer to a virtual N_Port data structure.
-  * @ndlp: pointer to a node-list data structure.
+- * lpfc_alloc_sysfs_attr: Creates the ctlreg and mbox entries.
++ * lpfc_alloc_sysfs_attr - Creates the ctlreg and mbox entries
+  * @vport: address of lpfc vport structure.
   *
-@@ -6197,7 +6197,7 @@ lpfc_issue_els_npiv_logo(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+  * Return codes:
+@@ -3415,7 +3412,7 @@ out:
  }
  
  /**
-- * lpfc_fabric_block_timeout: Handler function to the fabric block timer.
-+ * lpfc_fabric_block_timeout - Handler function to the fabric block timer
-  * @ptr: holder for the timer function associated data.
+- * lpfc_free_sysfs_attr: Removes the ctlreg and mbox entries.
++ * lpfc_free_sysfs_attr - Removes the ctlreg and mbox entries
+  * @vport: address of lpfc vport structure.
+  **/
+ void
+@@ -3437,7 +3434,7 @@ lpfc_free_sysfs_attr(struct lpfc_vport *vport)
+  */
+ 
+ /**
+- * lpfc_get_host_port_id: Copy the vport DID into the scsi host port id.
++ * lpfc_get_host_port_id - Copy the vport DID into the scsi host port id
+  * @shost: kernel scsi host pointer.
+  **/
+ static void
+@@ -3450,7 +3447,7 @@ lpfc_get_host_port_id(struct Scsi_Host *shost)
+ }
+ 
+ /**
+- * lpfc_get_host_port_type: Set the value of the scsi host port type.
++ * lpfc_get_host_port_type - Set the value of the scsi host port type
+  * @shost: kernel scsi host pointer.
+  **/
+ static void
+@@ -3482,7 +3479,7 @@ lpfc_get_host_port_type(struct Scsi_Host *shost)
+ }
+ 
+ /**
+- * lpfc_get_host_port_state: Set the value of the scsi host port state.
++ * lpfc_get_host_port_state - Set the value of the scsi host port state
+  * @shost: kernel scsi host pointer.
+  **/
+ static void
+@@ -3520,7 +3517,7 @@ lpfc_get_host_port_state(struct Scsi_Host *shost)
+ }
+ 
+ /**
+- * lpfc_get_host_speed: Set the value of the scsi host speed.
++ * lpfc_get_host_speed - Set the value of the scsi host speed
+  * @shost: kernel scsi host pointer.
+  **/
+ static void
+@@ -3556,7 +3553,7 @@ lpfc_get_host_speed(struct Scsi_Host *shost)
+ }
+ 
+ /**
+- * lpfc_get_host_fabric_name: Set the value of the scsi host fabric name.
++ * lpfc_get_host_fabric_name - Set the value of the scsi host fabric name
+  * @shost: kernel scsi host pointer.
+  **/
+ static void
+@@ -3582,7 +3579,7 @@ lpfc_get_host_fabric_name (struct Scsi_Host *shost)
+ }
+ 
+ /**
+- * lpfc_get_stats: Return statistical information about the adapter.
++ * lpfc_get_stats - Return statistical information about the adapter
+  * @shost: kernel scsi host pointer.
   *
-  * This routine is invoked by the fabric iocb block timer after
-@@ -6226,7 +6226,7 @@ lpfc_fabric_block_timeout(unsigned long ptr)
+  * Notes:
+@@ -3707,7 +3704,7 @@ lpfc_get_stats(struct Scsi_Host *shost)
  }
  
  /**
-- * lpfc_resume_fabric_iocbs: Issue a fabric iocb from driver internal list.
-+ * lpfc_resume_fabric_iocbs - Issue a fabric iocb from driver internal list
-  * @phba: pointer to lpfc hba data structure.
+- * lpfc_reset_stats: Copy the adapter link stats information.
++ * lpfc_reset_stats - Copy the adapter link stats information
+  * @shost: kernel scsi host pointer.
+  **/
+ static void
+@@ -3788,7 +3785,7 @@ lpfc_reset_stats(struct Scsi_Host *shost)
+  */
+ 
+ /**
+- * lpfc_get_node_by_target: Return the nodelist for a target.
++ * lpfc_get_node_by_target - Return the nodelist for a target
+  * @starget: kernel scsi target pointer.
   *
-  * This routine issues one fabric iocb from the driver internal list to
-@@ -6285,7 +6285,7 @@ repeat:
+  * Returns:
+@@ -3817,7 +3814,7 @@ lpfc_get_node_by_target(struct scsi_target *starget)
  }
  
  /**
-- * lpfc_unblock_fabric_iocbs: Unblock issuing fabric iocb command.
-+ * lpfc_unblock_fabric_iocbs - Unblock issuing fabric iocb command
-  * @phba: pointer to lpfc hba data structure.
+- * lpfc_get_starget_port_id: Set the target port id to the ndlp DID or -1.
++ * lpfc_get_starget_port_id - Set the target port id to the ndlp DID or -1
+  * @starget: kernel scsi target pointer.
+  **/
+ static void
+@@ -3829,7 +3826,7 @@ lpfc_get_starget_port_id(struct scsi_target *starget)
+ }
+ 
+ /**
+- * lpfc_get_starget_node_name: Set the target node name.
++ * lpfc_get_starget_node_name - Set the target node name
+  * @starget: kernel scsi target pointer.
   *
-  * This routine unblocks the  issuing fabric iocb command. The function
-@@ -6303,7 +6303,7 @@ lpfc_unblock_fabric_iocbs(struct lpfc_hba *phba)
+  * Description: Set the target node name to the ndlp node name wwn or zero.
+@@ -3844,7 +3841,7 @@ lpfc_get_starget_node_name(struct scsi_target *starget)
  }
  
  /**
-- * lpfc_block_fabric_iocbs: Block issuing fabric iocb command.
-+ * lpfc_block_fabric_iocbs - Block issuing fabric iocb command
-  * @phba: pointer to lpfc hba data structure.
+- * lpfc_get_starget_port_name: Set the target port name.
++ * lpfc_get_starget_port_name - Set the target port name
+  * @starget: kernel scsi target pointer.
   *
-  * This routine blocks the issuing fabric iocb for a specified amount of
-@@ -6325,7 +6325,7 @@ lpfc_block_fabric_iocbs(struct lpfc_hba *phba)
+  * Description:  set the target port name to the ndlp port name wwn or zero.
+@@ -3859,7 +3856,7 @@ lpfc_get_starget_port_name(struct scsi_target *starget)
  }
  
  /**
-- * lpfc_cmpl_fabric_iocb: Completion callback function for fabric iocb.
-+ * lpfc_cmpl_fabric_iocb - Completion callback function for fabric iocb
-  * @phba: pointer to lpfc hba data structure.
-  * @cmdiocb: pointer to lpfc command iocb data structure.
-  * @rspiocb: pointer to lpfc response iocb data structure.
-@@ -6384,7 +6384,7 @@ lpfc_cmpl_fabric_iocb(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- }
- 
- /**
-- * lpfc_issue_fabric_iocb: Issue a fabric iocb command.
-+ * lpfc_issue_fabric_iocb - Issue a fabric iocb command
-  * @phba: pointer to lpfc hba data structure.
-  * @iocb: pointer to lpfc command iocb data structure.
+- * lpfc_set_rport_loss_tmo: Set the rport dev loss tmo.
++ * lpfc_set_rport_loss_tmo - Set the rport dev loss tmo
+  * @rport: fc rport address.
+  * @timeout: new value for dev loss tmo.
   *
-@@ -6453,7 +6453,7 @@ lpfc_issue_fabric_iocb(struct lpfc_hba *phba, struct lpfc_iocbq *iocb)
+@@ -3877,7 +3874,7 @@ lpfc_set_rport_loss_tmo(struct fc_rport *rport, uint32_t timeout)
  }
  
  /**
-- * lpfc_fabric_abort_vport: Abort a vport's iocbs from driver fabric iocb list.
-+ * lpfc_fabric_abort_vport - Abort a vport's iocbs from driver fabric iocb list
-  * @vport: pointer to a virtual N_Port data structure.
+- * lpfc_rport_show_function: Return rport target information.
++ * lpfc_rport_show_function - Return rport target information
   *
-  * This routine aborts all the IOCBs associated with a @vport from the
-@@ -6493,7 +6493,7 @@ static void lpfc_fabric_abort_vport(struct lpfc_vport *vport)
+  * Description:
+  * Macro that uses field to generate a function with the name lpfc_show_rport_
+@@ -3905,7 +3902,7 @@ lpfc_show_rport_##field (struct device *dev,				\
+ static FC_RPORT_ATTR(field, S_IRUGO, lpfc_show_rport_##field, NULL)
+ 
+ /**
+- * lpfc_set_vport_symbolic_name: Set the vport's symbolic name.
++ * lpfc_set_vport_symbolic_name - Set the vport's symbolic name
+  * @fc_vport: The fc_vport who's symbolic name has been changed.
+  *
+  * Description:
+@@ -4048,7 +4045,7 @@ struct fc_function_template lpfc_vport_transport_functions = {
+ };
+ 
+ /**
+- * lpfc_get_cfgparam: Used during probe_one to init the adapter structure.
++ * lpfc_get_cfgparam - Used during probe_one to init the adapter structure
+  * @phba: lpfc_hba pointer.
+  **/
+ void
+@@ -4097,7 +4094,7 @@ lpfc_get_cfgparam(struct lpfc_hba *phba)
  }
  
  /**
-- * lpfc_fabric_abort_nport: Abort a ndlp's iocbs from driver fabric iocb list.
-+ * lpfc_fabric_abort_nport - Abort a ndlp's iocbs from driver fabric iocb list
-  * @ndlp: pointer to a node-list data structure.
-  *
-  * This routine aborts all the IOCBs associated with an @ndlp from the
-@@ -6533,7 +6533,7 @@ void lpfc_fabric_abort_nport(struct lpfc_nodelist *ndlp)
- }
- 
- /**
-- * lpfc_fabric_abort_hba: Abort all iocbs on driver fabric iocb list.
-+ * lpfc_fabric_abort_hba - Abort all iocbs on driver fabric iocb list
-  * @phba: pointer to lpfc hba data structure.
-  *
-  * This routine aborts all the IOCBs currently on the driver internal
+- * lpfc_get_vport_cfgparam: Used during port create, init the vport structure.
++ * lpfc_get_vport_cfgparam - Used during port create, init the vport structure
+  * @vport: lpfc_vport pointer.
+  **/
+ void
 
 
