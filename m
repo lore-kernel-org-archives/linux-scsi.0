@@ -1,85 +1,73 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: RE: SCSI Hardware Handler and slow failover with large
-	number of LUNS
-Date: Mon, 06 Apr 2009 10:47:06 -0700
-Message-ID: <1239040026.25764.4.camel@chandra-ubuntu>
-References: <1238880636.11478.8.camel@chandra-ubuntu>
-	<8F08A56613D77044BD153E2AC5DA0F8401A817E4@CORPUSMX40A.corp.emc.com>
-Reply-To: sekharan@linux.vnet.ibm.com,
-	device-mapper development <dm-devel@redhat.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [ANNOUNCE]: Comparison of features sets between different SCSI
+ 	targets (SCST, STGT, IET, LIO)
+Date: Mon, 06 Apr 2009 21:57:56 +0400
+Message-ID: <49DA42A4.7060109@vlnb.net>
+References: <49D7AD54.4060408@vlnb.net> <c9a3e4540904060319l3c885641k1217fba468f1fcf8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <8F08A56613D77044BD153E2AC5DA0F8401A817E4@CORPUSMX40A.corp.emc.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: berthiaume_wayne@emc.com
-Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, Babu.Moger@lsi.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.186]:57085 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751323AbZDFR6A (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Apr 2009 13:58:00 -0400
+In-Reply-To: <c9a3e4540904060319l3c885641k1217fba468f1fcf8@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: ronnie sahlberg <ronniesahlberg@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, iscsitarget-devel@lists.sourceforge.net, stgt@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>
 
+ronnie sahlberg, on 04/06/2009 02:19 PM wrote:
+> Why is AEN so important that it is worth 4 entries? SCST is the only 
+> target where this is supported.
 
-On Mon, 2009-04-06 at 11:38 -0400, berthiaume_wayne@emc.com wrote:
-> Hi Chandra.
-> 
-> 	We're currently testing 1024 LUNs across four paths with the
-> older handler but will be doing the same with the new handler later this
+About the related functionality see http://lkml.org/lkml/2009/3/26/290
 
-Hi Wayne,
+> Has AEN not been replaced with sense codes nowadays anyway?
 
-What do you mean by "older" handler ? dm_emc ?
+AEN, particularly, is one of the ways to deliver those sense codes
 
-> month. It sounds like I should move this up in the queue. 
+> Support for Asynchronous Event Notifications (AEN) 	+ 	- 	- 	-
+
+This is about the AEN infrastructure in the target's core
+
+> AEN for devices added/removed 	+ 	- 	- 	-
+> AEN for devices resized 	+ 	- 	- 	-
+
+Those two are about ability to generate particular events
+
 > 
-> Regards,
-> Wayne. 
 > 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Chandra
-> Seetharaman
-> Sent: Saturday, April 04, 2009 5:31 PM
-> To: dm-devel; Linux SCSI Mailing list
-> Cc: Moger, Babu
-> Subject: SCSI Hardware Handler and slow failover with large number of
-> LUNS
 > 
-> Hello All,
+> Support for Asynchronous Event Notifications (AEN) 	+ 	- 	- 	-
+
+This is about support for AENs delivery by target driver.
+
 > 
-> During testing with the latest SCSI DH Handler on a rdac storage, Babu
-> found that the failover time with 100+ luns takes about 15 minutes,
-> which is not good.
 > 
-> We found that the problem is due to the fact that we serialize activate
-> in dm on the work queue.
 > 
-> We can solve the problem in rdac handler in 2 ways
->  1. batch up the activates (mode_selects) and send few of them.
->  2. Do mode selects in async mode.
 > 
-> Just wondering if anybody had seen the same problem in other storages
-> (EMC, HP and Alua). 
 > 
-> Please share your experiences, so we can come up with a solution that
-> works for all hardware handlers.
+> On Sun, Apr 5, 2009 at 5:56 AM, Vladislav Bolkhovitin <vst@vlnb.net 
+> <mailto:vst@vlnb.net>> wrote:
 > 
-> regards,
+>     Hi All,
 > 
-> chandra
+>     I set up http://scst.sourceforge.net/comparison.html page, which
+>     compares features of existing SCSI target subsystems for Linux. The
+>     comparison includes SCST, STGT, IET and LIO.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>     I might be not fully correct somewhere, so, if you don't agree with
+>     me about some item(s) in the comparison table, please let me know
+>     and I will fix that.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>     Vlad
+>     --
+>     To unsubscribe from this list: send the line "unsubscribe stgt" in
+>     the body of a message to majordomo@vger.kernel.org
+>     <mailto:majordomo@vger.kernel.org>
+>     More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+
