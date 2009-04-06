@@ -1,45 +1,85 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [GIT PATCH] final set of SCSI updates for the merge window
-Date: Mon, 06 Apr 2009 20:11:32 +0300
-Message-ID: <49DA37C4.4090208@panasas.com>
-References: <1239033266.3641.9.camel@mulgrave>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: RE: SCSI Hardware Handler and slow failover with large
+	number of LUNS
+Date: Mon, 06 Apr 2009 10:47:06 -0700
+Message-ID: <1239040026.25764.4.camel@chandra-ubuntu>
+References: <1238880636.11478.8.camel@chandra-ubuntu>
+	<8F08A56613D77044BD153E2AC5DA0F8401A817E4@CORPUSMX40A.corp.emc.com>
+Reply-To: sekharan@linux.vnet.ibm.com,
+	device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756967AbZDFRME@vger.kernel.org>
-In-Reply-To: <1239033266.3641.9.camel@mulgrave>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <8F08A56613D77044BD153E2AC5DA0F8401A817E4@CORPUSMX40A.corp.emc.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: berthiaume_wayne@emc.com
+Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, Babu.Moger@lsi.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 04/06/2009 06:54 PM, James Bottomley wrote:
-> This is just an assorted set of driver updates (fcoe, qla2x, stex etc.)
-> 
-> The patch is available here:
-> 
-> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
-> 
-> The short changelog is:
-> 
-> 
-<snip>
-> Hannes Reinecke (1):
->       aic7xxx: leaves timer running on init failure
-> 
 
-I was hoping you would also include this patch:
+On Mon, 2009-04-06 at 11:38 -0400, berthiaume_wayne@emc.com wrote:
+> Hi Chandra.
+> 
+> 	We're currently testing 1024 LUNs across four paths with the
+> older handler but will be doing the same with the new handler later this
 
-http://www.spinics.net/lists/linux-scsi/msg34174.html
-Tested-by: Boaz Harrosh <bharrosh@panasas.com>
+Hi Wayne,
 
-After Hannes explained it looks totally un-dangerous, I've
-been running with it ever since.
+What do you mean by "older" handler ? dm_emc ?
 
-It does remove that annoying dmsg warning every scsi ULD
-has.
-
-<snip>
-
-Thanks
-Boaz
+> month. It sounds like I should move this up in the queue. 
+> 
+> Regards,
+> Wayne. 
+> 
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org
+> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Chandra
+> Seetharaman
+> Sent: Saturday, April 04, 2009 5:31 PM
+> To: dm-devel; Linux SCSI Mailing list
+> Cc: Moger, Babu
+> Subject: SCSI Hardware Handler and slow failover with large number of
+> LUNS
+> 
+> Hello All,
+> 
+> During testing with the latest SCSI DH Handler on a rdac storage, Babu
+> found that the failover time with 100+ luns takes about 15 minutes,
+> which is not good.
+> 
+> We found that the problem is due to the fact that we serialize activate
+> in dm on the work queue.
+> 
+> We can solve the problem in rdac handler in 2 ways
+>  1. batch up the activates (mode_selects) and send few of them.
+>  2. Do mode selects in async mode.
+> 
+> Just wondering if anybody had seen the same problem in other storages
+> (EMC, HP and Alua). 
+> 
+> Please share your experiences, so we can come up with a solution that
+> works for all hardware handlers.
+> 
+> regards,
+> 
+> chandra
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
