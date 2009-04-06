@@ -1,16 +1,14 @@
-From: berthiaume_wayne@emc.com
-Subject: RE: SCSI Hardware Handler and slow failover with large
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: SCSI Hardware Handler and slow failover with large
 	number of LUNS
-Date: Mon, 6 Apr 2009 11:38:41 -0400
-Message-ID: <8F08A56613D77044BD153E2AC5DA0F8401A817E4@CORPUSMX40A.corp.emc.com>
+Date: Mon, 06 Apr 2009 10:43:45 -0500
+Message-ID: <49DA2331.8020609@cs.wisc.edu>
 References: <1238880636.11478.8.camel@chandra-ubuntu>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <dm-devel-bounces@redhat.com>
-Content-class: urn:content-classes:message
 In-Reply-To: <1238880636.11478.8.camel@chandra-ubuntu>
 List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
@@ -21,49 +19,61 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=subscribe>
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
-To: sekharan@linux.vnet.ibm.com, dm-devel@redhat.com, linux-scsi@vger.kernel.org
-Cc: Babu.Moger@lsi.com
+To: sekharan@linux.vnet.ibm.com, device-mapper development <dm-devel@redhat.com>
+Cc: Linux SCSI Mailing list <linux-scsi@vger.kernel.org>, "Moger,
+	Babu" <Babu.Moger@lsi.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Chandra.
+Chandra Seetharaman wrote:
+> Hello All,
+> 
+> During testing with the latest SCSI DH Handler on a rdac storage, Babu
+> found that the failover time with 100+ luns takes about 15 minutes,
+> which is not good.
+> 
+> We found that the problem is due to the fact that we serialize activate
+> in dm on the work queue.
+> 
 
-	We're currently testing 1024 LUNs across four paths with the
-older handler but will be doing the same with the new handler later this
-month. It sounds like I should move this up in the queue.=20
+I thought we talked about this during the review?
 
-Regards,
-Wayne.=20
+> We can solve the problem in rdac handler in 2 ways
+>  1. batch up the activates (mode_selects) and send few of them.
+>  2. Do mode selects in async mode.
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Chandra
-Seetharaman
-Sent: Saturday, April 04, 2009 5:31 PM
-To: dm-devel; Linux SCSI Mailing list
-Cc: Moger, Babu
-Subject: SCSI Hardware Handler and slow failover with large number of
-LUNS
+I think most of the ugliness in the original async mode was due to 
+trying to use the REQ_BLOCK* path. With the scsi_dh_activate path, it 
+should now be easier because in the send path we do not have to worry 
+about queue locks being held and context.
 
-Hello All,
+I think we could just use blk_execute_rq_nowait to send the IO. Then we 
+would have a workqueue/thread per something (maybe per dh module I 
+thought), that would be queued/notified when the IO completed. The 
+thread could then process the IO and handle the next stage if needed.
 
-During testing with the latest SCSI DH Handler on a rdac storage, Babu
-found that the failover time with 100+ luns takes about 15 minutes,
-which is not good.
+Why use the thread you might wonder? I think it fixes another issue with 
+the original async mode, and makes it easier if the scsi_dh module has 
+to send more IO. When using the thread it would not have to worry about 
+the queue_lock being held in the IO completion path and does not have to 
+worry about being run from more restrictive contexts.
 
-We found that the problem is due to the fact that we serialize activate
-in dm on the work queue.
 
-We can solve the problem in rdac handler in 2 ways
- 1. batch up the activates (mode_selects) and send few of them.
- 2. Do mode selects in async mode.
+> 
+> Just wondering if anybody had seen the same problem in other storages
+> (EMC, HP and Alua). 
 
-Just wondering if anybody had seen the same problem in other storages
-(EMC, HP and Alua).=20
+They should all have the same problem.
 
-Please share your experiences, so we can come up with a solution that
-works for all hardware handlers.
 
-regards,
-
-chandra
-
+> 
+> Please share your experiences, so we can come up with a solution that
+> works for all hardware handlers.
+> 
+> regards,
+> 
+> chandra
+> 
+> --
+> dm-devel mailing list
+> dm-devel@redhat.com
+> https://www.redhat.com/mailman/listinfo/dm-devel
