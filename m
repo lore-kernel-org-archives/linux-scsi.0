@@ -1,855 +1,810 @@
 From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH 2/7] lpfc 8.3.1 : Fix up kernel-doc function comments (Take
-	2) - Part 2 of 5
-Date: Mon, 6 Apr 2009 18:47:26 -0400
-Message-ID: <1239058046.2344.23.camel@ogier>
+Subject: [PATCH 3/7] lpfc 8.3.1 : Fix up kernel-doc function comments (Take
+	2) - Part 3 of 5
+Date: Mon, 6 Apr 2009 18:47:36 -0400
+Message-ID: <1239058056.2344.25.camel@ogier>
 Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:42998 "EHLO
+Received: from emulex.emulex.com ([138.239.112.1]:43021 "EHLO
 	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754175AbZDFWre (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Apr 2009 18:47:34 -0400
+	with ESMTP id S1754005AbZDFWrp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Apr 2009 18:47:45 -0400
 Received: from xcm.ad.emulex.com (xcm.emulex.com [138.239.112.69])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id n36MlWr9017025
-	for <linux-scsi@vger.kernel.org>; Mon, 6 Apr 2009 15:47:32 -0700 (PDT)
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id n36MlhFW017042
+	for <linux-scsi@vger.kernel.org>; Mon, 6 Apr 2009 15:47:43 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fix up kernel-doc function comments (Take 2) - Part 2 of 5
+Fix up kernel-doc function comments (Take 2) - Part 3 of 5
 
 This patch cleans up the kernel-doc formatting in:
-lpfc_attr.c
-
-Also fix several misspellings of hexidecimal -> hexadecimal.
+lpfc_sli.c
 
 Signed-off-by: James Smart <James.Smart@emulex.com>
 ---
 
- drivers/scsi/lpfc/lpfc_attr.c |  199 ++++++++++++++++++++---------------------
- 1 files changed, 98 insertions(+), 101 deletions(-)
+ drivers/scsi/lpfc/lpfc_sli.c |  180 ++++++++++++++++++++----------------------
+ 1 files changed, 86 insertions(+), 94 deletions(-)
 
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -51,7 +51,7 @@
- #define LPFC_LINK_SPEED_STRING "0, 1, 2, 4, 8"
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -68,7 +68,7 @@ typedef enum _lpfc_iocb_type {
+ } lpfc_iocb_type;
  
  /**
-- * lpfc_jedec_to_ascii: Hex to ascii convertor according to JEDEC rules.
-+ * lpfc_jedec_to_ascii - Hex to ascii convertor according to JEDEC rules
-  * @incr: integer to convert.
-  * @hdw: ascii string holding converted integer plus a string terminator.
+- * lpfc_cmd_iocb: Get next command iocb entry in the ring.
++ * lpfc_cmd_iocb - Get next command iocb entry in the ring
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
   *
-@@ -82,7 +82,7 @@ lpfc_jedec_to_ascii(int incr, char hdw[])
+@@ -85,7 +85,7 @@ lpfc_cmd_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
  }
  
  /**
-- * lpfc_drvr_version_show: Return the Emulex driver string with version number.
-+ * lpfc_drvr_version_show - Return the Emulex driver string with version number
-  * @dev: class unused variable.
-  * @attr: device attribute, not used.
-  * @buf: on return contains the module description text.
-@@ -152,7 +152,7 @@ lpfc_bg_reftag_err_show(struct device *dev, struct device_attribute *attr,
- }
- 
- /**
-- * lpfc_info_show: Return some pci info about the host in ascii.
-+ * lpfc_info_show - Return some pci info about the host in ascii
-  * @dev: class converted to a Scsi_host structure.
-  * @attr: device attribute, not used.
-  * @buf: on return contains the formatted text from lpfc_info().
-@@ -169,7 +169,7 @@ lpfc_info_show(struct device *dev, struct device_attribute *attr,
- }
- 
- /**
-- * lpfc_serialnum_show: Return the hba serial number in ascii.
-+ * lpfc_serialnum_show - Return the hba serial number in ascii
-  * @dev: class converted to a Scsi_host structure.
-  * @attr: device attribute, not used.
-  * @buf: on return contains the formatted text serial number.
-@@ -188,7 +188,7 @@ lpfc_serialnum_show(struct device *dev, struct device_attribute *attr,
- }
- 
- /**
-- * lpfc_temp_sensor_show: Return the temperature sensor level.
-+ * lpfc_temp_sensor_show - Return the temperature sensor level
-  * @dev: class converted to a Scsi_host structure.
-  * @attr: device attribute, not used.
-  * @buf: on return contains the formatted support level.
-@@ -210,7 +210,7 @@ lpfc_temp_sensor_show(struct device *dev, struct device_attribute *attr,
- }
- 
- /**
-- * lpfc_modeldesc_show: Return the model description of the hba.
-+ * lpfc_modeldesc_show - Return the model description of the hba
-  * @dev: class converted to a Scsi_host structure.
-  * @attr: device attribute, not used.
-  * @buf: on return contains the scsi vpd model description.
-@@ -229,7 +229,7 @@ lpfc_modeldesc_show(struct device *dev, struct device_attribute *attr,
- }
- 
- /**
-- * lpfc_modelname_show: Return the model name of the hba.
-+ * lpfc_modelname_show - Return the model name of the hba
-  * @dev: class converted to a Scsi_host structure.
-  * @attr: device attribute, not used.
-  * @buf: on return contains the scsi vpd model name.
-@@ -248,7 +248,7 @@ lpfc_modelname_show(struct device *dev, struct device_attribute *attr,
- }
- 
- /**
-- * lpfc_programtype_show: Return the program type of the hba.
-+ * lpfc_programtype_show - Return the program type of the hba
-  * @dev: class converted to a Scsi_host structure.
-  * @attr: device attribute, not used.
-  * @buf: on return contains the scsi vpd program type.
-@@ -267,7 +267,7 @@ lpfc_programtype_show(struct device *dev, struct device_attribute *attr,
- }
- 
- /**
-- * lpfc_mlomgmt_show: Return the Menlo Maintenance sli flag.
-+ * lpfc_mlomgmt_show - Return the Menlo Maintenance sli flag
-  * @dev: class converted to a Scsi_host structure.
-  * @attr: device attribute, not used.
-  * @buf: on return contains the Menlo Maintenance sli flag.
-@@ -286,7 +286,7 @@ lpfc_mlomgmt_show(struct device *dev, struct device_attribute *attr, char *buf)
- }
- 
- /**
-- * lpfc_vportnum_show: Return the port number in ascii of the hba.
-+ * lpfc_vportnum_show - Return the port number in ascii of the hba
-  * @dev: class converted to a Scsi_host structure.
-  * @attr: device attribute, not used.
-  * @buf: on return contains scsi vpd program type.
-@@ -305,7 +305,7 @@ lpfc_vportnum_show(struct device *dev, struct device_attribute *attr,
- }
- 
- /**
-- * lpfc_fwrev_show: Return the firmware rev running in the hba.
-+ * lpfc_fwrev_show - Return the firmware rev running in the hba
-  * @dev: class converted to a Scsi_host structure.
-  * @attr: device attribute, not used.
-  * @buf: on return contains the scsi vpd program type.
-@@ -326,7 +326,7 @@ lpfc_fwrev_show(struct device *dev, struct device_attribute *attr,
- }
- 
- /**
-- * lpfc_hdw_show: Return the jedec information about the hba.
-+ * lpfc_hdw_show - Return the jedec information about the hba
-  * @dev: class converted to a Scsi_host structure.
-  * @attr: device attribute, not used.
-  * @buf: on return contains the scsi vpd program type.
-@@ -347,7 +347,7 @@ lpfc_hdw_show(struct device *dev, struct device_attribute *attr, char *buf)
- }
- 
- /**
-- * lpfc_option_rom_version_show: Return the adapter ROM FCode version.
-+ * lpfc_option_rom_version_show - Return the adapter ROM FCode version
-  * @dev: class converted to a Scsi_host structure.
-  * @attr: device attribute, not used.
-  * @buf: on return contains the ROM and FCode ascii strings.
-@@ -366,7 +366,7 @@ lpfc_option_rom_version_show(struct device *dev, struct device_attribute *attr,
- }
- 
- /**
-- * lpfc_state_show: Return the link state of the port.
-+ * lpfc_state_show - Return the link state of the port
-  * @dev: class converted to a Scsi_host structure.
-  * @attr: device attribute, not used.
-  * @buf: on return contains text describing the state of the link.
-@@ -451,7 +451,7 @@ lpfc_link_state_show(struct device *dev, struct device_attribute *attr,
- }
- 
- /**
-- * lpfc_num_discovered_ports_show: Return sum of mapped and unmapped vports.
-+ * lpfc_num_discovered_ports_show - Return sum of mapped and unmapped vports
-  * @dev: class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-  * @buf: on return contains the sum of fc mapped and unmapped.
-@@ -474,7 +474,7 @@ lpfc_num_discovered_ports_show(struct device *dev,
- }
- 
- /**
-- * lpfc_issue_lip: Misnomer, name carried over from long ago.
-+ * lpfc_issue_lip - Misnomer, name carried over from long ago
-  * @shost: Scsi_Host pointer.
+- * lpfc_resp_iocb: Get next response iocb entry in the ring.
++ * lpfc_resp_iocb - Get next response iocb entry in the ring
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
   *
-  * Description:
-@@ -529,7 +529,7 @@ lpfc_issue_lip(struct Scsi_Host *shost)
+@@ -102,7 +102,7 @@ lpfc_resp_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
  }
  
  /**
-- * lpfc_do_offline: Issues a mailbox command to bring the link down.
-+ * lpfc_do_offline - Issues a mailbox command to bring the link down
-  * @phba: lpfc_hba pointer.
-  * @type: LPFC_EVT_OFFLINE, LPFC_EVT_WARM_START, LPFC_EVT_KILL.
+- * __lpfc_sli_get_iocbq: Allocates an iocb object from iocb pool.
++ * __lpfc_sli_get_iocbq - Allocates an iocb object from iocb pool
+  * @phba: Pointer to HBA context object.
   *
-@@ -537,7 +537,7 @@ lpfc_issue_lip(struct Scsi_Host *shost)
-  * Assumes any error from lpfc_do_offline() will be negative.
-  * Can wait up to 5 seconds for the port ring buffers count
-  * to reach zero, prints a warning if it is not zero and continues.
-- * lpfc_workq_post_event() returns a non-zero return coce if call fails.
-+ * lpfc_workq_post_event() returns a non-zero return code if call fails.
+  * This function is called with hbalock held. This function
+@@ -121,7 +121,7 @@ __lpfc_sli_get_iocbq(struct lpfc_hba *phba)
+ }
+ 
+ /**
+- * lpfc_sli_get_iocbq: Allocates an iocb object from iocb pool.
++ * lpfc_sli_get_iocbq - Allocates an iocb object from iocb pool
+  * @phba: Pointer to HBA context object.
   *
-  * Returns:
-  * -EIO error posting the event
-@@ -591,7 +591,7 @@ lpfc_do_offline(struct lpfc_hba *phba, uint32_t type)
+  * This function is called with no lock held. This function
+@@ -142,7 +142,7 @@ lpfc_sli_get_iocbq(struct lpfc_hba *phba)
  }
  
  /**
-- * lpfc_selective_reset: Offline then onlines the port.
-+ * lpfc_selective_reset - Offline then onlines the port
-  * @phba: lpfc_hba pointer.
+- * __lpfc_sli_release_iocbq: Release iocb to the iocb pool.
++ * __lpfc_sli_release_iocbq - Release iocb to the iocb pool
+  * @phba: Pointer to HBA context object.
+  * @iocbq: Pointer to driver iocb object.
   *
-  * Description:
-@@ -632,7 +632,7 @@ lpfc_selective_reset(struct lpfc_hba *phba)
+@@ -164,7 +164,7 @@ __lpfc_sli_release_iocbq(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq)
  }
  
  /**
-- * lpfc_issue_reset: Selectively resets an adapter.
-+ * lpfc_issue_reset - Selectively resets an adapter
-  * @dev: class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-  * @buf: containing the string "selective".
-@@ -672,7 +672,7 @@ lpfc_issue_reset(struct device *dev, struct device_attribute *attr,
- }
- 
- /**
-- * lpfc_nport_evt_cnt_show: Return the number of nport events.
-+ * lpfc_nport_evt_cnt_show - Return the number of nport events
-  * @dev: class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-  * @buf: on return contains the ascii number of nport events.
-@@ -691,7 +691,7 @@ lpfc_nport_evt_cnt_show(struct device *dev, struct device_attribute *attr,
- }
- 
- /**
-- * lpfc_board_mode_show: Return the state of the board.
-+ * lpfc_board_mode_show - Return the state of the board
-  * @dev: class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-  * @buf: on return contains the state of the adapter.
-@@ -720,7 +720,7 @@ lpfc_board_mode_show(struct device *dev, struct device_attribute *attr,
- }
- 
- /**
-- * lpfc_board_mode_store: Puts the hba in online, offline, warm or error state.
-+ * lpfc_board_mode_store - Puts the hba in online, offline, warm or error state
-  * @dev: class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-  * @buf: containing one of the strings "online", "offline", "warm" or "error".
-@@ -766,14 +766,14 @@ lpfc_board_mode_store(struct device *dev, struct device_attribute *attr,
- }
- 
- /**
-- * lpfc_get_hba_info: Return various bits of informaton about the adapter.
-+ * lpfc_get_hba_info - Return various bits of informaton about the adapter
-  * @phba: pointer to the adapter structure.
-- * @mxri max xri count.
-- * @axri available xri count.
-- * @mrpi max rpi count.
-- * @arpi available rpi count.
-- * @mvpi max vpi count.
-- * @avpi available vpi count.
-+ * @mxri: max xri count.
-+ * @axri: available xri count.
-+ * @mrpi: max rpi count.
-+ * @arpi: available rpi count.
-+ * @mvpi: max vpi count.
-+ * @avpi: available vpi count.
+- * lpfc_sli_release_iocbq: Release iocb to the iocb pool.
++ * lpfc_sli_release_iocbq - Release iocb to the iocb pool
+  * @phba: Pointer to HBA context object.
+  * @iocbq: Pointer to driver iocb object.
   *
-  * Description:
-  * If an integer pointer for an count is not null then the value for the
-@@ -846,7 +846,7 @@ lpfc_get_hba_info(struct lpfc_hba *phba,
+@@ -185,8 +185,8 @@ lpfc_sli_release_iocbq(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq)
  }
  
  /**
-- * lpfc_max_rpi_show: Return maximum rpi.
-+ * lpfc_max_rpi_show - Return maximum rpi
-  * @dev: class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-  * @buf: on return contains the maximum rpi count in decimal or "Unknown".
-@@ -874,7 +874,7 @@ lpfc_max_rpi_show(struct device *dev, struct device_attribute *attr,
+- * lpfc_sli_iocb_cmd_type: Get the iocb type.
+- * @iocb_cmnd : iocb command code.
++ * lpfc_sli_iocb_cmd_type - Get the iocb type
++ * @iocb_cmnd: iocb command code.
+  *
+  * This function is called by ring event handler function to get the iocb type.
+  * This function translates the iocb command to an iocb command type used to
+@@ -295,7 +295,7 @@ lpfc_sli_iocb_cmd_type(uint8_t iocb_cmnd)
  }
  
  /**
-- * lpfc_used_rpi_show: Return maximum rpi minus available rpi.
-+ * lpfc_used_rpi_show - Return maximum rpi minus available rpi
-  * @dev: class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-  * @buf: containing the used rpi count in decimal or "Unknown".
-@@ -902,7 +902,7 @@ lpfc_used_rpi_show(struct device *dev, struct device_attribute *attr,
+- * lpfc_sli_ring_map: Issue config_ring mbox for all rings.
++ * lpfc_sli_ring_map - Issue config_ring mbox for all rings
+  * @phba: Pointer to HBA context object.
+  *
+  * This function is called from SLI initialization code
+@@ -338,7 +338,7 @@ lpfc_sli_ring_map(struct lpfc_hba *phba)
  }
  
  /**
-- * lpfc_max_xri_show: Return maximum xri.
-+ * lpfc_max_xri_show - Return maximum xri
-  * @dev: class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-  * @buf: on return contains the maximum xri count in decimal or "Unknown".
-@@ -930,7 +930,7 @@ lpfc_max_xri_show(struct device *dev, struct device_attribute *attr,
+- * lpfc_sli_ringtxcmpl_put: Adds new iocb to the txcmplq.
++ * lpfc_sli_ringtxcmpl_put - Adds new iocb to the txcmplq
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  * @piocb: Pointer to the driver iocb object.
+@@ -370,7 +370,7 @@ lpfc_sli_ringtxcmpl_put(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
  }
  
  /**
-- * lpfc_used_xri_show: Return maximum xpi minus the available xpi.
-+ * lpfc_used_xri_show - Return maximum xpi minus the available xpi
-  * @dev: class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-  * @buf: on return contains the used xri count in decimal or "Unknown".
-@@ -958,7 +958,7 @@ lpfc_used_xri_show(struct device *dev, struct device_attribute *attr,
+- * lpfc_sli_ringtx_get: Get first element of the txq.
++ * lpfc_sli_ringtx_get - Get first element of the txq
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  *
+@@ -391,7 +391,7 @@ lpfc_sli_ringtx_get(struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
  }
  
  /**
-- * lpfc_max_vpi_show: Return maximum vpi.
-+ * lpfc_max_vpi_show - Return maximum vpi
-  * @dev: class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-  * @buf: on return contains the maximum vpi count in decimal or "Unknown".
-@@ -986,7 +986,7 @@ lpfc_max_vpi_show(struct device *dev, struct device_attribute *attr,
+- * lpfc_sli_next_iocb_slot: Get next iocb slot in the ring.
++ * lpfc_sli_next_iocb_slot - Get next iocb slot in the ring
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  *
+@@ -445,7 +445,7 @@ lpfc_sli_next_iocb_slot (struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
  }
  
  /**
-- * lpfc_used_vpi_show: Return maximum vpi minus the available vpi.
-+ * lpfc_used_vpi_show - Return maximum vpi minus the available vpi
-  * @dev: class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-  * @buf: on return contains the used vpi count in decimal or "Unknown".
-@@ -1014,7 +1014,7 @@ lpfc_used_vpi_show(struct device *dev, struct device_attribute *attr,
+- * lpfc_sli_next_iotag: Get an iotag for the iocb.
++ * lpfc_sli_next_iotag - Get an iotag for the iocb
+  * @phba: Pointer to HBA context object.
+  * @iocbq: Pointer to driver iocb object.
+  *
+@@ -520,7 +520,7 @@ lpfc_sli_next_iotag(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq)
  }
  
  /**
-- * lpfc_npiv_info_show: Return text about NPIV support for the adapter.
-+ * lpfc_npiv_info_show - Return text about NPIV support for the adapter
-  * @dev: class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-  * @buf: text that must be interpreted to determine if npiv is supported.
-@@ -1042,7 +1042,7 @@ lpfc_npiv_info_show(struct device *dev, struct device_attribute *attr,
+- * lpfc_sli_submit_iocb: Submit an iocb to the firmware.
++ * lpfc_sli_submit_iocb - Submit an iocb to the firmware
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  * @iocb: Pointer to iocb slot in the ring.
+@@ -577,7 +577,7 @@ lpfc_sli_submit_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
  }
  
  /**
-- * lpfc_poll_show: Return text about poll support for the adapter.
-+ * lpfc_poll_show - Return text about poll support for the adapter
-  * @dev: class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-  * @buf: on return contains the cfg_poll in hex.
-@@ -1064,7 +1064,7 @@ lpfc_poll_show(struct device *dev, struct device_attribute *attr,
+- * lpfc_sli_update_full_ring: Update the chip attention register.
++ * lpfc_sli_update_full_ring - Update the chip attention register
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  *
+@@ -608,7 +608,7 @@ lpfc_sli_update_full_ring(struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
  }
  
  /**
-- * lpfc_poll_store: Set the value of cfg_poll for the adapter.
-+ * lpfc_poll_store - Set the value of cfg_poll for the adapter
-  * @dev: class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-  * @buf: one or more lpfc_polling_flags values.
-@@ -1136,7 +1136,7 @@ lpfc_poll_store(struct device *dev, struct device_attribute *attr,
+- * lpfc_sli_update_ring: Update chip attention register.
++ * lpfc_sli_update_ring - Update chip attention register
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  *
+@@ -632,7 +632,7 @@ lpfc_sli_update_ring(struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
  }
  
  /**
-- * lpfc_param_show: Return a cfg attribute value in decimal.
-+ * lpfc_param_show - Return a cfg attribute value in decimal
+- * lpfc_sli_resume_iocb: Process iocbs in the txq.
++ * lpfc_sli_resume_iocb - Process iocbs in the txq
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
   *
-  * Description:
-  * Macro that given an attr e.g. hba_queue_depth expands
-@@ -1164,7 +1164,7 @@ lpfc_##attr##_show(struct device *dev, struct device_attribute *attr, \
+@@ -672,7 +672,7 @@ lpfc_sli_resume_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
  }
  
  /**
-- * lpfc_param_hex_show: Return a cfg attribute value in hex.
-+ * lpfc_param_hex_show - Return a cfg attribute value in hex
+- * lpfc_sli_next_hbq_slot: Get next hbq entry for the HBQ.
++ * lpfc_sli_next_hbq_slot - Get next hbq entry for the HBQ
+  * @phba: Pointer to HBA context object.
+  * @hbqno: HBQ number.
   *
-  * Description:
-  * Macro that given an attr e.g. hba_queue_depth expands
-@@ -1173,7 +1173,7 @@ lpfc_##attr##_show(struct device *dev, struct device_attribute *attr, \
-  * lpfc_##attr##_show: Return the hex value of an adapters cfg_xxx field.
-  * @dev: class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-- * @buf: on return contains the attribute value in hexidecimal.
-+ * @buf: on return contains the attribute value in hexadecimal.
-  *
-  * Returns: size of formatted string.
-  **/
-@@ -1192,7 +1192,7 @@ lpfc_##attr##_show(struct device *dev, struct device_attribute *attr, \
+@@ -717,7 +717,7 @@ lpfc_sli_next_hbq_slot(struct lpfc_hba *phba, uint32_t hbqno)
  }
  
  /**
-- * lpfc_param_init: Intializes a cfg attribute.
-+ * lpfc_param_init - Intializes a cfg attribute
+- * lpfc_sli_hbqbuf_free_all: Free all the hbq buffers.
++ * lpfc_sli_hbqbuf_free_all - Free all the hbq buffers
+  * @phba: Pointer to HBA context object.
   *
-  * Description:
-  * Macro that given an attr e.g. hba_queue_depth expands
-@@ -1226,7 +1226,7 @@ lpfc_##attr##_init(struct lpfc_hba *phba, int val) \
+  * This function is called with no lock held to free all the
+@@ -771,7 +771,7 @@ lpfc_sli_hbqbuf_free_all(struct lpfc_hba *phba)
  }
  
  /**
-- * lpfc_param_set: Set a cfg attribute value.
-+ * lpfc_param_set - Set a cfg attribute value
-  *
-  * Description:
-  * Macro that given an attr e.g. hba_queue_depth expands
-@@ -1260,7 +1260,7 @@ lpfc_##attr##_set(struct lpfc_hba *phba, int val) \
- }
- 
- /**
-- * lpfc_param_store: Set a vport attribute value.
-+ * lpfc_param_store - Set a vport attribute value
-  *
-  * Description:
-  * Macro that given an attr e.g. hba_queue_depth expands
-@@ -1300,7 +1300,7 @@ lpfc_##attr##_store(struct device *dev, struct device_attribute *attr, \
- }
- 
- /**
-- * lpfc_vport_param_show: Return decimal formatted cfg attribute value.
-+ * lpfc_vport_param_show - Return decimal formatted cfg attribute value
-  *
-  * Description:
-  * Macro that given an attr e.g. hba_queue_depth expands
-@@ -1326,17 +1326,17 @@ lpfc_##attr##_show(struct device *dev, struct device_attribute *attr, \
- }
- 
- /**
-- * lpfc_vport_param_hex_show: Return hex formatted attribute value.
-+ * lpfc_vport_param_hex_show - Return hex formatted attribute value
-  *
-  * Description:
-  * Macro that given an attr e.g.
-  * hba_queue_depth expands into a function with the name
-  * lpfc_hba_queue_depth_show
-  *
-- * lpfc_##attr##_show: prints the attribute value in hexidecimal.
-+ * lpfc_##attr##_show: prints the attribute value in hexadecimal.
-  * @dev: class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-- * @buf: on return contains the attribute value in hexidecimal.
-+ * @buf: on return contains the attribute value in hexadecimal.
-  *
-  * Returns: length of formatted string.
-  **/
-@@ -1353,7 +1353,7 @@ lpfc_##attr##_show(struct device *dev, struct device_attribute *attr, \
- }
- 
- /**
-- * lpfc_vport_param_init: Initialize a vport cfg attribute.
-+ * lpfc_vport_param_init - Initialize a vport cfg attribute
-  *
-  * Description:
-  * Macro that given an attr e.g. hba_queue_depth expands
-@@ -1386,7 +1386,7 @@ lpfc_##attr##_init(struct lpfc_vport *vport, int val) \
- }
- 
- /**
-- * lpfc_vport_param_set: Set a vport cfg attribute.
-+ * lpfc_vport_param_set - Set a vport cfg attribute
-  *
-  * Description:
-  * Macro that given an attr e.g. hba_queue_depth expands
-@@ -1417,7 +1417,7 @@ lpfc_##attr##_set(struct lpfc_vport *vport, int val) \
- }
- 
- /**
-- * lpfc_vport_param_store: Set a vport attribute.
-+ * lpfc_vport_param_store - Set a vport attribute
-  *
-  * Description:
-  * Macro that given an attr e.g. hba_queue_depth
-@@ -1576,7 +1576,7 @@ static DEVICE_ATTR(lpfc_temp_sensor, S_IRUGO, lpfc_temp_sensor_show, NULL);
- static char *lpfc_soft_wwn_key = "C99G71SL8032A";
- 
- /**
-- * lpfc_soft_wwn_enable_store: Allows setting of the wwn if the key is valid.
-+ * lpfc_soft_wwn_enable_store - Allows setting of the wwn if the key is valid
-  * @dev: class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-  * @buf: containing the string lpfc_soft_wwn_key.
-@@ -1623,10 +1623,10 @@ static DEVICE_ATTR(lpfc_soft_wwn_enable, S_IWUSR, NULL,
- 		   lpfc_soft_wwn_enable_store);
- 
- /**
-- * lpfc_soft_wwpn_show: Return the cfg soft ww port name of the adapter.
-+ * lpfc_soft_wwpn_show - Return the cfg soft ww port name of the adapter
-  * @dev: class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-- * @buf: on return contains the wwpn in hexidecimal.
-+ * @buf: on return contains the wwpn in hexadecimal.
-  *
-  * Returns: size of formatted string.
-  **/
-@@ -1643,10 +1643,10 @@ lpfc_soft_wwpn_show(struct device *dev, struct device_attribute *attr,
- }
- 
- /**
-- * lpfc_soft_wwpn_store: Set the ww port name of the adapter.
-+ * lpfc_soft_wwpn_store - Set the ww port name of the adapter
-  * @dev class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-- * @buf: contains the wwpn in hexidecimal.
-+ * @buf: contains the wwpn in hexadecimal.
-  * @count: number of wwpn bytes in buf
-  *
-  * Returns:
-@@ -1729,10 +1729,10 @@ static DEVICE_ATTR(lpfc_soft_wwpn, S_IRUGO | S_IWUSR,\
- 		   lpfc_soft_wwpn_show, lpfc_soft_wwpn_store);
- 
- /**
-- * lpfc_soft_wwnn_show: Return the cfg soft ww node name for the adapter.
-+ * lpfc_soft_wwnn_show - Return the cfg soft ww node name for the adapter
-  * @dev: class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-- * @buf: on return contains the wwnn in hexidecimal.
-+ * @buf: on return contains the wwnn in hexadecimal.
-  *
-  * Returns: size of formatted string.
-  **/
-@@ -1747,9 +1747,9 @@ lpfc_soft_wwnn_show(struct device *dev, struct device_attribute *attr,
- }
- 
- /**
-- * lpfc_soft_wwnn_store: sets the ww node name of the adapter.
-+ * lpfc_soft_wwnn_store - sets the ww node name of the adapter
-  * @cdev: class device that is converted into a Scsi_host.
-- * @buf: contains the ww node name in hexidecimal.
-+ * @buf: contains the ww node name in hexadecimal.
-  * @count: number of wwnn bytes in buf.
-  *
-  * Returns:
-@@ -1845,7 +1845,7 @@ MODULE_PARM_DESC(lpfc_nodev_tmo,
- 		 "for a device to come back");
- 
- /**
-- * lpfc_nodev_tmo_show: Return the hba dev loss timeout value.
-+ * lpfc_nodev_tmo_show - Return the hba dev loss timeout value
-  * @dev: class converted to a Scsi_host structure.
-  * @attr: device attribute, not used.
-  * @buf: on return contains the dev loss timeout in decimal.
-@@ -1864,7 +1864,7 @@ lpfc_nodev_tmo_show(struct device *dev, struct device_attribute *attr,
- }
- 
- /**
-- * lpfc_nodev_tmo_init: Set the hba nodev timeout value.
-+ * lpfc_nodev_tmo_init - Set the hba nodev timeout value
-  * @vport: lpfc vport structure pointer.
-  * @val: contains the nodev timeout value.
-  *
-@@ -1905,7 +1905,7 @@ lpfc_nodev_tmo_init(struct lpfc_vport *vport, int val)
- }
- 
- /**
-- * lpfc_update_rport_devloss_tmo: Update dev loss tmo value.
-+ * lpfc_update_rport_devloss_tmo - Update dev loss tmo value
-  * @vport: lpfc vport structure pointer.
-  *
-  * Description:
-@@ -1926,7 +1926,7 @@ lpfc_update_rport_devloss_tmo(struct lpfc_vport *vport)
- }
- 
- /**
-- * lpfc_nodev_tmo_set: Set the vport nodev tmo and devloss tmo values.
-+ * lpfc_nodev_tmo_set - Set the vport nodev tmo and devloss tmo values
-  * @vport: lpfc vport structure pointer.
-  * @val: contains the tmo value.
-  *
-@@ -1982,7 +1982,7 @@ lpfc_vport_param_init(devloss_tmo, LPFC_DEF_DEVLOSS_TMO,
- lpfc_vport_param_show(devloss_tmo)
- 
- /**
-- * lpfc_devloss_tmo_set: Sets vport nodev tmo, devloss tmo values, changed bit.
-+ * lpfc_devloss_tmo_set - Sets vport nodev tmo, devloss tmo values, changed bit
-  * @vport: lpfc vport structure pointer.
-  * @val: contains the tmo value.
-  *
-@@ -2094,7 +2094,7 @@ MODULE_PARM_DESC(lpfc_restrict_login,
- lpfc_vport_param_show(restrict_login);
- 
- /**
-- * lpfc_restrict_login_init: Set the vport restrict login flag.
-+ * lpfc_restrict_login_init - Set the vport restrict login flag
-  * @vport: lpfc vport structure pointer.
-  * @val: contains the restrict login value.
-  *
-@@ -2128,7 +2128,7 @@ lpfc_restrict_login_init(struct lpfc_vport *vport, int val)
- }
- 
- /**
-- * lpfc_restrict_login_set: Set the vport restrict login flag.
-+ * lpfc_restrict_login_set - Set the vport restrict login flag
-  * @vport: lpfc vport structure pointer.
-  * @val: contains the restrict login value.
-  *
-@@ -2201,7 +2201,7 @@ LPFC_VPORT_ATTR_R(scan_down, 1, 0, 1,
- */
- 
- /**
-- * lpfc_topology_set: Set the adapters topology field.
-+ * lpfc_topology_set - Set the adapters topology field
-  * @phba: lpfc_hba pointer.
-  * @val: topology value.
-  *
-@@ -2246,8 +2246,7 @@ static DEVICE_ATTR(lpfc_topology, S_IRUGO | S_IWUSR,
- 
-
- /**
-- * lpfc_stat_data_ctrl_store: write call back for lpfc_stat_data_ctrl
-- *  sysfs file.
-+ * lpfc_stat_data_ctrl_store - write call back for lpfc_stat_data_ctrl sysfs file
-  * @dev: Pointer to class device.
-  * @buf: Data buffer.
-  * @count: Size of the data buffer.
-@@ -2411,8 +2410,7 @@ lpfc_stat_data_ctrl_store(struct device *dev, struct device_attribute *attr,
- 
-
- /**
-- * lpfc_stat_data_ctrl_show: Read callback function for
-- *   lpfc_stat_data_ctrl sysfs file.
-+ * lpfc_stat_data_ctrl_show - Read function for lpfc_stat_data_ctrl sysfs file
-  * @dev: Pointer to class device object.
-  * @buf: Data buffer.
-  *
-@@ -2489,8 +2487,7 @@ static DEVICE_ATTR(lpfc_stat_data_ctrl, S_IRUGO | S_IWUSR,
- 
-
- /**
-- * sysfs_drvr_stat_data_read: Read callback function for lpfc_drvr_stat_data
-- *  sysfs attribute.
-+ * sysfs_drvr_stat_data_read - Read function for lpfc_drvr_stat_data attribute
-  * @kobj: Pointer to the kernel object
-  * @bin_attr: Attribute object
-  * @buff: Buffer pointer
-@@ -2585,7 +2582,7 @@ static struct bin_attribute sysfs_drvr_stat_data_attr = {
- */
- 
- /**
-- * lpfc_link_speed_set: Set the adapters link speed.
-+ * lpfc_link_speed_set - Set the adapters link speed
-  * @phba: lpfc_hba pointer.
-  * @val: link speed value.
-  *
-@@ -2637,7 +2634,7 @@ MODULE_PARM_DESC(lpfc_link_speed, "Select link speed");
- lpfc_param_show(link_speed)
- 
- /**
-- * lpfc_link_speed_init: Set the adapters link speed.
-+ * lpfc_link_speed_init - Set the adapters link speed
-  * @phba: lpfc_hba pointer.
-  * @val: link speed value.
-  *
-@@ -2865,7 +2862,7 @@ MODULE_PARM_DESC(lpfc_prot_guard, "host protection guard type");
- 
-
- /*
-- * lpfc_sg_seg_cnt: Initial Maximum DMA Segment Count
-+ * lpfc_sg_seg_cnt - Initial Maximum DMA Segment Count
-  * This value can be set to values between 64 and 256. The default value is
-  * 64, but may be increased to allow for larger Max I/O sizes. The scsi layer
-  * will be allowed to request I/Os of sizes up to (MAX_SEG_COUNT * SEG_SIZE).
-@@ -2967,7 +2964,7 @@ struct device_attribute *lpfc_vport_attrs[] = {
+- * lpfc_sli_hbq_to_firmware: Post the hbq buffer to firmware.
++ * lpfc_sli_hbq_to_firmware - Post the hbq buffer to firmware
+  * @phba: Pointer to HBA context object.
+  * @hbqno: HBQ number.
+  * @hbq_buf: Pointer to HBQ buffer.
+@@ -841,7 +841,7 @@ struct lpfc_hbq_init *lpfc_hbq_defs[] = {
  };
  
  /**
-- * sysfs_ctlreg_write: Write method for writing to ctlreg.
-+ * sysfs_ctlreg_write - Write method for writing to ctlreg
-  * @kobj: kernel kobject that contains the kernel class device.
-  * @bin_attr: kernel attributes passed to us.
-  * @buf: contains the data to be written to the adapter IOREG space.
-@@ -3017,7 +3014,7 @@ sysfs_ctlreg_write(struct kobject *kobj, struct bin_attribute *bin_attr,
+- * lpfc_sli_hbqbuf_fill_hbqs: Post more hbq buffers to HBQ.
++ * lpfc_sli_hbqbuf_fill_hbqs - Post more hbq buffers to HBQ
+  * @phba: Pointer to HBA context object.
+  * @hbqno: HBQ number.
+  * @count: Number of HBQ buffers to be posted.
+@@ -901,7 +901,7 @@ err:
  }
  
  /**
-- * sysfs_ctlreg_read: Read method for reading from ctlreg.
-+ * sysfs_ctlreg_read - Read method for reading from ctlreg
-  * @kobj: kernel kobject that contains the kernel class device.
-  * @bin_attr: kernel attributes passed to us.
-  * @buf: if succesful contains the data from the adapter IOREG space.
-@@ -3078,7 +3075,7 @@ static struct bin_attribute sysfs_ctlreg_attr = {
- };
- 
- /**
-- * sysfs_mbox_idle: frees the sysfs mailbox.
-+ * sysfs_mbox_idle - frees the sysfs mailbox
-  * @phba: lpfc_hba pointer
-  **/
- static void
-@@ -3095,7 +3092,7 @@ sysfs_mbox_idle(struct lpfc_hba *phba)
- }
- 
- /**
-- * sysfs_mbox_write: Write method for writing information via mbox.
-+ * sysfs_mbox_write - Write method for writing information via mbox
-  * @kobj: kernel kobject that contains the kernel class device.
-  * @bin_attr: kernel attributes passed to us.
-  * @buf: contains the data to be written to sysfs mbox.
-@@ -3170,7 +3167,7 @@ sysfs_mbox_write(struct kobject *kobj, struct bin_attribute *bin_attr,
- }
- 
- /**
-- * sysfs_mbox_read: Read method for reading information via mbox.
-+ * sysfs_mbox_read - Read method for reading information via mbox
-  * @kobj: kernel kobject that contains the kernel class device.
-  * @bin_attr: kernel attributes passed to us.
-  * @buf: contains the data to be read from sysfs mbox.
-@@ -3374,7 +3371,7 @@ static struct bin_attribute sysfs_mbox_attr = {
- };
- 
- /**
-- * lpfc_alloc_sysfs_attr: Creates the ctlreg and mbox entries.
-+ * lpfc_alloc_sysfs_attr - Creates the ctlreg and mbox entries
-  * @vport: address of lpfc vport structure.
+- * lpfc_sli_hbqbuf_add_hbqs: Post more HBQ buffers to firmware.
++ * lpfc_sli_hbqbuf_add_hbqs - Post more HBQ buffers to firmware
+  * @phba: Pointer to HBA context object.
+  * @qno: HBQ number.
   *
-  * Return codes:
-@@ -3415,7 +3412,7 @@ out:
+@@ -917,7 +917,7 @@ lpfc_sli_hbqbuf_add_hbqs(struct lpfc_hba *phba, uint32_t qno)
  }
  
  /**
-- * lpfc_free_sysfs_attr: Removes the ctlreg and mbox entries.
-+ * lpfc_free_sysfs_attr - Removes the ctlreg and mbox entries
-  * @vport: address of lpfc vport structure.
-  **/
- void
-@@ -3437,7 +3434,7 @@ lpfc_free_sysfs_attr(struct lpfc_vport *vport)
-  */
- 
- /**
-- * lpfc_get_host_port_id: Copy the vport DID into the scsi host port id.
-+ * lpfc_get_host_port_id - Copy the vport DID into the scsi host port id
-  * @shost: kernel scsi host pointer.
-  **/
- static void
-@@ -3450,7 +3447,7 @@ lpfc_get_host_port_id(struct Scsi_Host *shost)
- }
- 
- /**
-- * lpfc_get_host_port_type: Set the value of the scsi host port type.
-+ * lpfc_get_host_port_type - Set the value of the scsi host port type
-  * @shost: kernel scsi host pointer.
-  **/
- static void
-@@ -3482,7 +3479,7 @@ lpfc_get_host_port_type(struct Scsi_Host *shost)
- }
- 
- /**
-- * lpfc_get_host_port_state: Set the value of the scsi host port state.
-+ * lpfc_get_host_port_state - Set the value of the scsi host port state
-  * @shost: kernel scsi host pointer.
-  **/
- static void
-@@ -3520,7 +3517,7 @@ lpfc_get_host_port_state(struct Scsi_Host *shost)
- }
- 
- /**
-- * lpfc_get_host_speed: Set the value of the scsi host speed.
-+ * lpfc_get_host_speed - Set the value of the scsi host speed
-  * @shost: kernel scsi host pointer.
-  **/
- static void
-@@ -3556,7 +3553,7 @@ lpfc_get_host_speed(struct Scsi_Host *shost)
- }
- 
- /**
-- * lpfc_get_host_fabric_name: Set the value of the scsi host fabric name.
-+ * lpfc_get_host_fabric_name - Set the value of the scsi host fabric name
-  * @shost: kernel scsi host pointer.
-  **/
- static void
-@@ -3582,7 +3579,7 @@ lpfc_get_host_fabric_name (struct Scsi_Host *shost)
- }
- 
- /**
-- * lpfc_get_stats: Return statistical information about the adapter.
-+ * lpfc_get_stats - Return statistical information about the adapter
-  * @shost: kernel scsi host pointer.
+- * lpfc_sli_hbqbuf_init_hbqs: Post initial buffers to the HBQ.
++ * lpfc_sli_hbqbuf_init_hbqs - Post initial buffers to the HBQ
+  * @phba: Pointer to HBA context object.
+  * @qno:  HBQ queue number.
   *
-  * Notes:
-@@ -3707,7 +3704,7 @@ lpfc_get_stats(struct Scsi_Host *shost)
+@@ -933,7 +933,7 @@ lpfc_sli_hbqbuf_init_hbqs(struct lpfc_hba *phba, uint32_t qno)
  }
  
  /**
-- * lpfc_reset_stats: Copy the adapter link stats information.
-+ * lpfc_reset_stats - Copy the adapter link stats information
-  * @shost: kernel scsi host pointer.
-  **/
- static void
-@@ -3788,7 +3785,7 @@ lpfc_reset_stats(struct Scsi_Host *shost)
-  */
- 
- /**
-- * lpfc_get_node_by_target: Return the nodelist for a target.
-+ * lpfc_get_node_by_target - Return the nodelist for a target
-  * @starget: kernel scsi target pointer.
+- * lpfc_sli_hbqbuf_find: Find the hbq buffer associated with a tag.
++ * lpfc_sli_hbqbuf_find - Find the hbq buffer associated with a tag
+  * @phba: Pointer to HBA context object.
+  * @tag: Tag of the hbq buffer.
   *
-  * Returns:
-@@ -3817,7 +3814,7 @@ lpfc_get_node_by_target(struct scsi_target *starget)
+@@ -966,7 +966,7 @@ lpfc_sli_hbqbuf_find(struct lpfc_hba *phba, uint32_t tag)
  }
  
  /**
-- * lpfc_get_starget_port_id: Set the target port id to the ndlp DID or -1.
-+ * lpfc_get_starget_port_id - Set the target port id to the ndlp DID or -1
-  * @starget: kernel scsi target pointer.
-  **/
- static void
-@@ -3829,7 +3826,7 @@ lpfc_get_starget_port_id(struct scsi_target *starget)
- }
- 
- /**
-- * lpfc_get_starget_node_name: Set the target node name.
-+ * lpfc_get_starget_node_name - Set the target node name
-  * @starget: kernel scsi target pointer.
+- * lpfc_sli_free_hbq: Give back the hbq buffer to firmware.
++ * lpfc_sli_free_hbq - Give back the hbq buffer to firmware
+  * @phba: Pointer to HBA context object.
+  * @hbq_buffer: Pointer to HBQ buffer.
   *
-  * Description: Set the target node name to the ndlp node name wwn or zero.
-@@ -3844,7 +3841,7 @@ lpfc_get_starget_node_name(struct scsi_target *starget)
+@@ -988,7 +988,7 @@ lpfc_sli_free_hbq(struct lpfc_hba *phba, struct hbq_dmabuf *hbq_buffer)
  }
  
  /**
-- * lpfc_get_starget_port_name: Set the target port name.
-+ * lpfc_get_starget_port_name - Set the target port name
-  * @starget: kernel scsi target pointer.
+- * lpfc_sli_chk_mbx_command: Check if the mailbox is a legitimate mailbox.
++ * lpfc_sli_chk_mbx_command - Check if the mailbox is a legitimate mailbox
+  * @mbxCommand: mailbox command code.
   *
-  * Description:  set the target port name to the ndlp port name wwn or zero.
-@@ -3859,7 +3856,7 @@ lpfc_get_starget_port_name(struct scsi_target *starget)
+  * This function is called by the mailbox event handler function to verify
+@@ -1064,8 +1064,7 @@ lpfc_sli_chk_mbx_command(uint8_t mbxCommand)
  }
  
  /**
-- * lpfc_set_rport_loss_tmo: Set the rport dev loss tmo.
-+ * lpfc_set_rport_loss_tmo - Set the rport dev loss tmo
-  * @rport: fc rport address.
-  * @timeout: new value for dev loss tmo.
+- * lpfc_sli_wake_mbox_wait: Completion handler for mbox issued from
+- *          lpfc_sli_issue_mbox_wait.
++ * lpfc_sli_wake_mbox_wait - lpfc_sli_issue_mbox_wait mbox completion handler
+  * @phba: Pointer to HBA context object.
+  * @pmboxq: Pointer to mailbox command.
   *
-@@ -3877,7 +3874,7 @@ lpfc_set_rport_loss_tmo(struct fc_rport *rport, uint32_t timeout)
+@@ -1096,7 +1095,7 @@ lpfc_sli_wake_mbox_wait(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmboxq)
+ 
+
+ /**
+- * lpfc_sli_def_mbox_cmpl: Default mailbox completion handler.
++ * lpfc_sli_def_mbox_cmpl - Default mailbox completion handler
+  * @phba: Pointer to HBA context object.
+  * @pmb: Pointer to mailbox object.
+  *
+@@ -1140,7 +1139,7 @@ lpfc_sli_def_mbox_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
  }
  
  /**
-- * lpfc_rport_show_function: Return rport target information.
-+ * lpfc_rport_show_function - Return rport target information
+- * lpfc_sli_handle_mb_event: Handle mailbox completions from firmware.
++ * lpfc_sli_handle_mb_event - Handle mailbox completions from firmware
+  * @phba: Pointer to HBA context object.
   *
-  * Description:
-  * Macro that uses field to generate a function with the name lpfc_show_rport_
-@@ -3905,7 +3902,7 @@ lpfc_show_rport_##field (struct device *dev,				\
- static FC_RPORT_ATTR(field, S_IRUGO, lpfc_show_rport_##field, NULL)
- 
- /**
-- * lpfc_set_vport_symbolic_name: Set the vport's symbolic name.
-+ * lpfc_set_vport_symbolic_name - Set the vport's symbolic name
-  * @fc_vport: The fc_vport who's symbolic name has been changed.
-  *
-  * Description:
-@@ -4048,7 +4045,7 @@ struct fc_function_template lpfc_vport_transport_functions = {
- };
- 
- /**
-- * lpfc_get_cfgparam: Used during probe_one to init the adapter structure.
-+ * lpfc_get_cfgparam - Used during probe_one to init the adapter structure
-  * @phba: lpfc_hba pointer.
-  **/
- void
-@@ -4097,7 +4094,7 @@ lpfc_get_cfgparam(struct lpfc_hba *phba)
+  * This function is called with no lock held. This function processes all
+@@ -1260,7 +1259,7 @@ lpfc_sli_handle_mb_event(struct lpfc_hba *phba)
  }
  
  /**
-- * lpfc_get_vport_cfgparam: Used during port create, init the vport structure.
-+ * lpfc_get_vport_cfgparam - Used during port create, init the vport structure
-  * @vport: lpfc_vport pointer.
-  **/
- void
+- * lpfc_sli_get_buff: Get the buffer associated with the buffer tag.
++ * lpfc_sli_get_buff - Get the buffer associated with the buffer tag
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  * @tag: buffer tag.
+@@ -1288,7 +1287,7 @@ lpfc_sli_get_buff(struct lpfc_hba *phba,
+ 
+
+ /**
+- * lpfc_sli_process_unsol_iocb: Unsolicited iocb handler.
++ * lpfc_sli_process_unsol_iocb - Unsolicited iocb handler
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  * @saveq: Pointer to the unsolicited iocb.
+@@ -1484,7 +1483,7 @@ lpfc_sli_process_unsol_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ }
+ 
+ /**
+- * lpfc_sli_iocbq_lookup: Find command iocb for the given response iocb.
++ * lpfc_sli_iocbq_lookup - Find command iocb for the given response iocb
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  * @prspiocb: Pointer to response iocb object.
+@@ -1521,7 +1520,7 @@ lpfc_sli_iocbq_lookup(struct lpfc_hba *phba,
+ }
+ 
+ /**
+- * lpfc_sli_process_sol_iocb: process solicited iocb completion.
++ * lpfc_sli_process_sol_iocb - process solicited iocb completion
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  * @saveq: Pointer to the response iocb to be processed.
+@@ -1614,7 +1613,7 @@ lpfc_sli_process_sol_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ }
+ 
+ /**
+- * lpfc_sli_rsp_pointers_error: Response ring pointer error handler.
++ * lpfc_sli_rsp_pointers_error - Response ring pointer error handler
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  *
+@@ -1652,7 +1651,7 @@ lpfc_sli_rsp_pointers_error(struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
+ }
+ 
+ /**
+- * lpfc_poll_eratt: Error attention polling timer timeout handler.
++ * lpfc_poll_eratt - Error attention polling timer timeout handler
+  * @ptr: Pointer to address of HBA context object.
+  *
+  * This function is invoked by the Error Attention polling timer when the
+@@ -1682,7 +1681,7 @@ void lpfc_poll_eratt(unsigned long ptr)
+ }
+ 
+ /**
+- * lpfc_sli_poll_fcp_ring: Handle FCP ring completion in polling mode.
++ * lpfc_sli_poll_fcp_ring - Handle FCP ring completion in polling mode
+  * @phba: Pointer to HBA context object.
+  *
+  * This function is called from lpfc_queuecommand, lpfc_poll_timeout,
+@@ -1845,7 +1844,7 @@ void lpfc_sli_poll_fcp_ring(struct lpfc_hba *phba)
+ }
+ 
+ /**
+- * lpfc_sli_handle_fast_ring_event: Handle ring events on FCP ring.
++ * lpfc_sli_handle_fast_ring_event - Handle ring events on FCP ring
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  * @mask: Host attention register mask for this ring.
+@@ -2037,7 +2036,7 @@ lpfc_sli_handle_fast_ring_event(struct lpfc_hba *phba,
+ }
+ 
+ /**
+- * lpfc_sli_handle_slow_ring_event: Handle ring events for non-FCP rings.
++ * lpfc_sli_handle_slow_ring_event - Handle ring events for non-FCP rings
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  * @mask: Host attention register mask for this ring.
+@@ -2311,7 +2310,7 @@ lpfc_sli_handle_slow_ring_event(struct lpfc_hba *phba,
+ }
+ 
+ /**
+- * lpfc_sli_abort_iocb_ring: Abort all iocbs in the ring.
++ * lpfc_sli_abort_iocb_ring - Abort all iocbs in the ring
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  *
+@@ -2360,7 +2359,7 @@ lpfc_sli_abort_iocb_ring(struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
+ }
+ 
+ /**
+- * lpfc_sli_flush_fcp_rings: flush all iocbs in the fcp ring.
++ * lpfc_sli_flush_fcp_rings - flush all iocbs in the fcp ring
+  * @phba: Pointer to HBA context object.
+  *
+  * This function flushes all iocbs in the fcp ring and frees all the iocb
+@@ -2424,7 +2423,7 @@ lpfc_sli_flush_fcp_rings(struct lpfc_hba *phba)
+ }
+ 
+ /**
+- * lpfc_sli_brdready: Check for host status bits.
++ * lpfc_sli_brdready - Check for host status bits
+  * @phba: Pointer to HBA context object.
+  * @mask: Bit mask to be checked.
+  *
+@@ -2484,7 +2483,7 @@ lpfc_sli_brdready(struct lpfc_hba *phba, uint32_t mask)
+ #define BARRIER_TEST_PATTERN (0xdeadbeef)
+ 
+ /**
+- * lpfc_reset_barrier: Make HBA ready for HBA reset.
++ * lpfc_reset_barrier - Make HBA ready for HBA reset
+  * @phba: Pointer to HBA context object.
+  *
+  * This function is called before resetting an HBA. This
+@@ -2564,7 +2563,7 @@ restore_hc:
+ }
+ 
+ /**
+- * lpfc_sli_brdkill: Issue a kill_board mailbox command.
++ * lpfc_sli_brdkill - Issue a kill_board mailbox command
+  * @phba: Pointer to HBA context object.
+  *
+  * This function issues a kill_board mailbox command and waits for
+@@ -2651,7 +2650,7 @@ lpfc_sli_brdkill(struct lpfc_hba *phba)
+ }
+ 
+ /**
+- * lpfc_sli_brdreset: Reset the HBA.
++ * lpfc_sli_brdreset - Reset the HBA
+  * @phba: Pointer to HBA context object.
+  *
+  * This function resets the HBA by writing HC_INITFF to the control
+@@ -2714,7 +2713,7 @@ lpfc_sli_brdreset(struct lpfc_hba *phba)
+ }
+ 
+ /**
+- * lpfc_sli_brdrestart: Restart the HBA.
++ * lpfc_sli_brdrestart - Restart the HBA
+  * @phba: Pointer to HBA context object.
+  *
+  * This function is called in the SLI initialization code path to
+@@ -2781,7 +2780,7 @@ lpfc_sli_brdrestart(struct lpfc_hba *phba)
+ }
+ 
+ /**
+- * lpfc_sli_chipset_init: Wait for the restart of the HBA after a restart.
++ * lpfc_sli_chipset_init - Wait for the restart of the HBA after a restart
+  * @phba: Pointer to HBA context object.
+  *
+  * This function is called after a HBA restart to wait for successful
+@@ -2876,7 +2875,7 @@ lpfc_sli_chipset_init(struct lpfc_hba *phba)
+ }
+ 
+ /**
+- * lpfc_sli_hbq_count: Get the number of HBQs to be configured.
++ * lpfc_sli_hbq_count - Get the number of HBQs to be configured
+  *
+  * This function calculates and returns the number of HBQs required to be
+  * configured.
+@@ -2888,7 +2887,7 @@ lpfc_sli_hbq_count(void)
+ }
+ 
+ /**
+- * lpfc_sli_hbq_entry_count: Calculate total number of hbq entries.
++ * lpfc_sli_hbq_entry_count - Calculate total number of hbq entries
+  *
+  * This function adds the number of hbq entries in every HBQ to get
+  * the total number of hbq entries required for the HBA and returns
+@@ -2907,7 +2906,7 @@ lpfc_sli_hbq_entry_count(void)
+ }
+ 
+ /**
+- * lpfc_sli_hbq_size: Calculate memory required for all hbq entries.
++ * lpfc_sli_hbq_size - Calculate memory required for all hbq entries
+  *
+  * This function calculates amount of memory required for all hbq entries
+  * to be configured and returns the total memory required.
+@@ -2919,7 +2918,7 @@ lpfc_sli_hbq_size(void)
+ }
+ 
+ /**
+- * lpfc_sli_hbq_setup: configure and initialize HBQs.
++ * lpfc_sli_hbq_setup - configure and initialize HBQs
+  * @phba: Pointer to HBA context object.
+  *
+  * This function is called during the SLI initialization to configure
+@@ -2988,7 +2987,7 @@ lpfc_sli_hbq_setup(struct lpfc_hba *phba)
+ }
+ 
+ /**
+- * lpfc_sli_config_port: Issue config port mailbox command.
++ * lpfc_sli_config_port - Issue config port mailbox command
+  * @phba: Pointer to HBA context object.
+  * @sli_mode: sli mode - 2/3
+  *
+@@ -3114,7 +3113,7 @@ do_prep_failed:
+ 
+
+ /**
+- * lpfc_sli_hba_setup: SLI intialization function.
++ * lpfc_sli_hba_setup - SLI intialization function
+  * @phba: Pointer to HBA context object.
+  *
+  * This function is the main SLI intialization function. This function
+@@ -3206,7 +3205,7 @@ lpfc_sli_hba_setup_error:
+ 
+
+ /**
+- * lpfc_mbox_timeout: Timeout call back function for mbox timer.
++ * lpfc_mbox_timeout - Timeout call back function for mbox timer
+  * @ptr: context object - pointer to hba structure.
+  *
+  * This is the callback function for mailbox timer. The mailbox
+@@ -3237,7 +3236,7 @@ lpfc_mbox_timeout(unsigned long ptr)
+ 
+
+ /**
+- * lpfc_mbox_timeout_handler: Worker thread function to handle mailbox timeout.
++ * lpfc_mbox_timeout_handler - Worker thread function to handle mailbox timeout
+  * @phba: Pointer to HBA context object.
+  *
+  * This function is called from worker thread when a mailbox command times out.
+@@ -3295,7 +3294,7 @@ lpfc_mbox_timeout_handler(struct lpfc_hba *phba)
+ }
+ 
+ /**
+- * lpfc_sli_issue_mbox: Issue a mailbox command to firmware.
++ * lpfc_sli_issue_mbox - Issue a mailbox command to firmware
+  * @phba: Pointer to HBA context object.
+  * @pmbox: Pointer to mailbox object.
+  * @flag: Flag indicating how the mailbox need to be processed.
+@@ -3632,7 +3631,7 @@ out_not_finished:
+ }
+ 
+ /**
+- * __lpfc_sli_ringtx_put: Add an iocb to the txq.
++ * __lpfc_sli_ringtx_put - Add an iocb to the txq
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  * @piocb: Pointer to address of newly added command iocb.
+@@ -3651,7 +3650,7 @@ __lpfc_sli_ringtx_put(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ }
+ 
+ /**
+- * lpfc_sli_next_iocb: Get the next iocb in the txq.
++ * lpfc_sli_next_iocb - Get the next iocb in the txq
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  * @piocb: Pointer to address of newly added command iocb.
+@@ -3683,7 +3682,7 @@ lpfc_sli_next_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ }
+ 
+ /**
+- * __lpfc_sli_issue_iocb: Lockless version of lpfc_sli_issue_iocb.
++ * __lpfc_sli_issue_iocb - Lockless version of lpfc_sli_issue_iocb
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  * @piocb: Pointer to command iocb.
+@@ -3813,7 +3812,7 @@ __lpfc_sli_issue_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 
+
+ /**
+- * lpfc_sli_issue_iocb: Wrapper function for __lpfc_sli_issue_iocb.
++ * lpfc_sli_issue_iocb - Wrapper function for __lpfc_sli_issue_iocb
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  * @piocb: Pointer to command iocb.
+@@ -3840,7 +3839,7 @@ lpfc_sli_issue_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ }
+ 
+ /**
+- * lpfc_extra_ring_setup: Extra ring setup function.
++ * lpfc_extra_ring_setup - Extra ring setup function
+  * @phba: Pointer to HBA context object.
+  *
+  * This function is called while driver attaches with the
+@@ -3886,7 +3885,7 @@ lpfc_extra_ring_setup( struct lpfc_hba *phba)
+ }
+ 
+ /**
+- * lpfc_sli_async_event_handler: ASYNC iocb handler function.
++ * lpfc_sli_async_event_handler - ASYNC iocb handler function
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  * @iocbq: Pointer to iocb object.
+@@ -3954,7 +3953,7 @@ lpfc_sli_async_event_handler(struct lpfc_hba * phba,
+ 
+
+ /**
+- * lpfc_sli_setup: SLI ring setup function.
++ * lpfc_sli_setup - SLI ring setup function
+  * @phba: Pointer to HBA context object.
+  *
+  * lpfc_sli_setup sets up rings of the SLI interface with
+@@ -4076,7 +4075,7 @@ lpfc_sli_setup(struct lpfc_hba *phba)
+ }
+ 
+ /**
+- * lpfc_sli_queue_setup: Queue initialization function.
++ * lpfc_sli_queue_setup - Queue initialization function
+  * @phba: Pointer to HBA context object.
+  *
+  * lpfc_sli_queue_setup sets up mailbox queues and iocb queues for each
+@@ -4115,7 +4114,7 @@ lpfc_sli_queue_setup(struct lpfc_hba *phba)
+ }
+ 
+ /**
+- * lpfc_sli_host_down: Vport cleanup function.
++ * lpfc_sli_host_down - Vport cleanup function
+  * @vport: Pointer to virtual port object.
+  *
+  * lpfc_sli_host_down is called to clean up the resources
+@@ -4194,7 +4193,7 @@ lpfc_sli_host_down(struct lpfc_vport *vport)
+ }
+ 
+ /**
+- * lpfc_sli_hba_down: Resource cleanup function for the HBA.
++ * lpfc_sli_hba_down - Resource cleanup function for the HBA
+  * @phba: Pointer to HBA context object.
+  *
+  * This function cleans up all iocb, buffers, mailbox commands
+@@ -4299,7 +4298,7 @@ lpfc_sli_hba_down(struct lpfc_hba *phba)
+ }
+ 
+ /**
+- * lpfc_sli_pcimem_bcopy: SLI memory copy function.
++ * lpfc_sli_pcimem_bcopy - SLI memory copy function
+  * @srcp: Source memory pointer.
+  * @destp: Destination memory pointer.
+  * @cnt: Number of words required to be copied.
+@@ -4329,7 +4328,7 @@ lpfc_sli_pcimem_bcopy(void *srcp, void *destp, uint32_t cnt)
+ 
+
+ /**
+- * lpfc_sli_ringpostbuf_put: Function to add a buffer to postbufq.
++ * lpfc_sli_ringpostbuf_put - Function to add a buffer to postbufq
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  * @mp: Pointer to driver buffer object.
+@@ -4352,8 +4351,7 @@ lpfc_sli_ringpostbuf_put(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ }
+ 
+ /**
+- * lpfc_sli_get_buffer_tag: Tag allocation function for a buffer posted
+- *          using CMD_QUE_XRI64_CX iocb.
++ * lpfc_sli_get_buffer_tag - allocates a tag for a CMD_QUE_XRI64_CX buffer
+  * @phba: Pointer to HBA context object.
+  *
+  * When HBQ is enabled, buffers are searched based on tags. This function
+@@ -4378,8 +4376,7 @@ lpfc_sli_get_buffer_tag(struct lpfc_hba *phba)
+ }
+ 
+ /**
+- * lpfc_sli_ring_taggedbuf_get: Search HBQ buffer associated with
+- *              posted using CMD_QUE_XRI64_CX iocb.
++ * lpfc_sli_ring_taggedbuf_get - find HBQ buffer associated with given tag
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  * @tag: Buffer tag.
+@@ -4422,8 +4419,7 @@ lpfc_sli_ring_taggedbuf_get(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ }
+ 
+ /**
+- * lpfc_sli_ringpostbuf_get: SLI2 buffer search function for
+- *      unsolicited ct and els events.
++ * lpfc_sli_ringpostbuf_get - search buffers for unsolicited CT and ELS events
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  * @phys: DMA address of the buffer.
+@@ -4466,7 +4462,7 @@ lpfc_sli_ringpostbuf_get(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ }
+ 
+ /**
+- * lpfc_sli_abort_els_cmpl: Completion handler for the els abort iocbs.
++ * lpfc_sli_abort_els_cmpl - Completion handler for the els abort iocbs
+  * @phba: Pointer to HBA context object.
+  * @cmdiocb: Pointer to driver command iocb object.
+  * @rspiocb: Pointer to driver response iocb object.
+@@ -4542,7 +4538,7 @@ lpfc_sli_abort_els_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ }
+ 
+ /**
+- * lpfc_ignore_els_cmpl: Completion handler for aborted ELS command.
++ * lpfc_ignore_els_cmpl - Completion handler for aborted ELS command
+  * @phba: Pointer to HBA context object.
+  * @cmdiocb: Pointer to driver command iocb object.
+  * @rspiocb: Pointer to driver response iocb object.
+@@ -4572,7 +4568,7 @@ lpfc_ignore_els_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ }
+ 
+ /**
+- * lpfc_sli_issue_abort_iotag: Abort function for a command iocb.
++ * lpfc_sli_issue_abort_iotag - Abort function for a command iocb
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  * @cmdiocb: Pointer to driver command iocb object.
+@@ -4658,15 +4654,14 @@ abort_iotag_exit:
+ }
+ 
+ /**
+- * lpfc_sli_validate_fcp_iocb: Filtering function, used to find commands
+- *                    associated with a vport/SCSI target/lun.
++ * lpfc_sli_validate_fcp_iocb - find commands associated with a vport or LUN
+  * @iocbq: Pointer to driver iocb object.
+  * @vport: Pointer to driver virtual port object.
+  * @tgt_id: SCSI ID of the target.
+  * @lun_id: LUN ID of the scsi device.
+  * @ctx_cmd: LPFC_CTX_LUN/LPFC_CTX_TGT/LPFC_CTX_HOST
+  *
+- * This function acts as iocb filter for functions which abort or count
++ * This function acts as an iocb filter for functions which abort or count
+  * all FCP iocbs pending on a lun/SCSI target/SCSI host. It will return
+  * 0 if the filtering criteria is met for the given iocb and will return
+  * 1 if the filtering criteria is not met.
+@@ -4724,7 +4719,7 @@ lpfc_sli_validate_fcp_iocb(struct lpfc_iocbq *iocbq, struct lpfc_vport *vport,
+ }
+ 
+ /**
+- * lpfc_sli_sum_iocb: Function to count the number of FCP iocbs pending.
++ * lpfc_sli_sum_iocb - Function to count the number of FCP iocbs pending
+  * @vport: Pointer to virtual port.
+  * @tgt_id: SCSI ID of the target.
+  * @lun_id: LUN ID of the scsi device.
+@@ -4762,8 +4757,7 @@ lpfc_sli_sum_iocb(struct lpfc_vport *vport, uint16_t tgt_id, uint64_t lun_id,
+ }
+ 
+ /**
+- * lpfc_sli_abort_fcp_cmpl: Completion handler function for an aborted
+- *       FCP iocb.
++ * lpfc_sli_abort_fcp_cmpl - Completion handler function for aborted FCP IOCBs
+  * @phba: Pointer to HBA context object
+  * @cmdiocb: Pointer to command iocb object.
+  * @rspiocb: Pointer to response iocb object.
+@@ -4781,8 +4775,7 @@ lpfc_sli_abort_fcp_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ }
+ 
+ /**
+- * lpfc_sli_abort_iocb: This function issue abort for all SCSI commands
+- *          pending on a SCSI host(vport)/target/lun.
++ * lpfc_sli_abort_iocb - issue abort for all commands on a host/target/LUN
+  * @vport: Pointer to virtual port.
+  * @pring: Pointer to driver SLI ring object.
+  * @tgt_id: SCSI ID of the target.
+@@ -4854,8 +4847,7 @@ lpfc_sli_abort_iocb(struct lpfc_vport *vport, struct lpfc_sli_ring *pring,
+ }
+ 
+ /**
+- * lpfc_sli_wake_iocb_wait: iocb completion handler for iocb issued using
+- *                          lpfc_sli_issue_iocb_wait.
++ * lpfc_sli_wake_iocb_wait - lpfc_sli_issue_iocb_wait's completion handler
+  * @phba: Pointer to HBA context object.
+  * @cmdiocbq: Pointer to command iocb.
+  * @rspiocbq: Pointer to response iocb.
+@@ -4893,7 +4885,7 @@ lpfc_sli_wake_iocb_wait(struct lpfc_hba *phba,
+ }
+ 
+ /**
+- * lpfc_sli_issue_iocb_wait: Synchronous function to issue iocb commands.
++ * lpfc_sli_issue_iocb_wait - Synchronous function to issue iocb commands
+  * @phba: Pointer to HBA context object..
+  * @pring: Pointer to sli ring.
+  * @piocb: Pointer to command iocb.
+@@ -5000,7 +4992,7 @@ lpfc_sli_issue_iocb_wait(struct lpfc_hba *phba,
+ }
+ 
+ /**
+- * lpfc_sli_issue_mbox_wait: Synchronous function to issue mailbox.
++ * lpfc_sli_issue_mbox_wait - Synchronous function to issue mailbox
+  * @phba: Pointer to HBA context object.
+  * @pmboxq: Pointer to driver mailbox object.
+  * @timeout: Timeout in number of seconds.
+@@ -5070,7 +5062,7 @@ lpfc_sli_issue_mbox_wait(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmboxq,
+ }
+ 
+ /**
+- * lpfc_sli_flush_mbox_queue: mailbox queue cleanup function.
++ * lpfc_sli_flush_mbox_queue - mailbox queue cleanup function
+  * @phba: Pointer to HBA context.
+  *
+  * This function is called to cleanup any pending mailbox
+@@ -5113,7 +5105,7 @@ lpfc_sli_flush_mbox_queue(struct lpfc_hba * phba)
+ }
+ 
+ /**
+- * lpfc_sli_check_eratt: check error attention events
++ * lpfc_sli_check_eratt - check error attention events
+  * @phba: Pointer to HBA context.
+  *
+  * This function is called form timer soft interrupt context to check HBA's
+@@ -5162,7 +5154,7 @@ lpfc_sli_check_eratt(struct lpfc_hba *phba)
+ }
+ 
+ /**
+- * lpfc_sp_intr_handler: The slow-path interrupt handler of lpfc driver.
++ * lpfc_sp_intr_handler - The slow-path interrupt handler of lpfc driver
+  * @irq: Interrupt number.
+  * @dev_id: The device context pointer.
+  *
+@@ -5423,7 +5415,7 @@ send_current_mbox:
+ } /* lpfc_sp_intr_handler */
+ 
+ /**
+- * lpfc_fp_intr_handler: The fast-path interrupt handler of lpfc driver.
++ * lpfc_fp_intr_handler - The fast-path interrupt handler of lpfc driver
+  * @irq: Interrupt number.
+  * @dev_id: The device context pointer.
+  *
+@@ -5510,7 +5502,7 @@ lpfc_fp_intr_handler(int irq, void *dev_id)
+ }  /* lpfc_fp_intr_handler */
+ 
+ /**
+- * lpfc_intr_handler: The device-level interrupt handler of lpfc driver.
++ * lpfc_intr_handler - The device-level interrupt handler of lpfc driver
+  * @irq: Interrupt number.
+  * @dev_id: The device context pointer.
+  *
 
 
