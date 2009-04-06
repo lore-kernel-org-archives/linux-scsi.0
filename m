@@ -1,35 +1,37 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: 2.6.29-git13: Reported regressions from 2.6.28
-Date: Tue, 7 Apr 2009 00:34:59 +0200
-Message-ID: <200904070035.00784.rjw@sisk.pl>
-References: <n4io5wq70ZO.A.gzG.rFn2JB@chimera> <alpine.LFD.2.00.0904061443000.7443@localhost.localdomain>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: [PATCH 0/7] lpfc 8.3.1 : Update lpfc to revision 8.3.1
+Date: Mon, 6 Apr 2009 18:47:02 -0400
+Message-ID: <1239058022.2344.19.camel@ogier>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <alpine.LFD.2.00.0904061443000.7443@localhost.localdomain>
-Content-Disposition: inline
-Sender: linux-acpi-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Trenton Adams <trenton.d.adams@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emulex.emulex.com ([138.239.112.1]:42981 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754245AbZDFWrP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Apr 2009 18:47:15 -0400
+Received: from xcm.ad.emulex.com (xcm.emulex.com [138.239.112.69])
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id n36MlD6s017008
+	for <linux-scsi@vger.kernel.org>; Mon, 6 Apr 2009 15:47:13 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Monday 06 April 2009, Linus Torvalds wrote:
-> 
-> On Mon, 6 Apr 2009, Rafael J. Wysocki wrote:
-> > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13019
-> > Subject		: /proc/<pid>/maps offset output broken in 2.6.29
-> > Submitter	: "Chris Friesen" <cfriesen@nortel.com>
-> > Date		: 2009-04-01 23:18 (6 days old)
-> > References	: http://marc.info/?l=linuxppc-embedded&m=123862902916059&w=4
-> > Handled-By	: Hugh Dickins <hugh@veritas.com>
-> 
-> I don't think that's a regression, nor really a bug. It looks cosmetic, 
-> and likely to be fixed, but not really worth worrying about.
+=EF=BB=BFUpdate lpfc driver to revision 8.3.1
 
-OK, I've dropped it from the list.
+Includes the following changes :
+- A set of 5 patches to update kdoc headers. These were posted earlier
+   but have not been picked up yet.
+- A set of miscellaneous fixes/changes, all small in nature. Includes
+   Null pointer fixes, sparse fixes, and some feature updates.
+ - Update driver version to 8.3.0
 
-Thanks,
-Rafael
+-- james s
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
