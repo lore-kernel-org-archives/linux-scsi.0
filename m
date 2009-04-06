@@ -1,92 +1,125 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: Re: [Scst-devel] [ANNOUNCE]: Comparison of features sets between
- 	different SCSI targets (SCST, STGT, IET, LIO)
-Date: Mon, 06 Apr 2009 20:27:54 +0200
-Message-ID: <49DA49AA.1060106@wpkg.org>
-References: <49D7AD54.4060408@vlnb.net> <49D7B122.50103@wpkg.org> <e2e108260904050429lcd1870ag6656f36a170ccab3@mail.gmail.com> <49D9D9A0.40106@wpkg.org> <49DA33EF.3020700@vlnb.net>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: SCSI Hardware Handler and slow failover with large
+	number of LUNS
+Date: Mon, 06 Apr 2009 13:54:46 -0500
+Message-ID: <49DA4FF6.50601@cs.wisc.edu>
+References: <1238880636.11478.8.camel@chandra-ubuntu>	
+	<49DA2331.8020609@cs.wisc.edu>
+	<1239042098.25764.14.camel@chandra-ubuntu>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx03.syneticon.net ([78.111.66.105]:44778 "EHLO
-	mx03.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751804AbZDFS2A (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Apr 2009 14:28:00 -0400
-In-Reply-To: <49DA33EF.3020700@vlnb.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <1239042098.25764.14.camel@chandra-ubuntu>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: sekharan@linux.vnet.ibm.com
+Cc: device-mapper development <dm-devel@redhat.com>, Linux SCSI Mailing list <linux-scsi@vger.kernel.org>, "Moger,
+	Babu" <Babu.Moger@lsi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: Bart Van Assche <bart.vanassche@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, iscsitarget-devel@lists.sourceforge.net, James Bottomley <James.Bottomley@hansenpartnership.com>, scst-devel <scst-devel@lists.sourceforge.net>, stgt@vger.kernel.org
 
-Vladislav Bolkhovitin schrieb:
-
->> Encrypted device was created with the following additional options 
->> passed to cryptsetup
->> (it provides the most performance on systems where CPU is a 
->> bottleneck, but with decreased
->> security when compared to default options):
->>
->> -c aes-ecb-plain -s 128
->>
->>
->> Generally, CPU on the target was a bottleneck, so I also tested the 
->> load on target.
->>
->>
->> md0, crypt columns - averages from dd
->> us, sy, id, wa - averages from vmstat
->>
->>
->> 1. Disk speeds on the target
->>
->> Raw performance: 102.17 MB/s
->> Raw performance (encrypted):  50.21 MB/s
->>
->>
->> 2. Read-ahead on the initiator: 256 (default); md0, crypt - MB/s
->>
->>                            md0   us  sy  id  wa  | crypt   us  sy  id  
->> wa  STGT                      50.63   4% 45% 18% 33% | 32.52    3% 62% 
->> 16% 19%
->> SCST (debug + no patches) 43.75   0% 26% 30% 44% | 42.05    0% 84%  1% 
->> 15%
->> SCST (fullperf + patches) 45.18   0% 25% 33% 42% | 44.12    0% 81%  2% 
->> 17%
->>
->>
->> 3. Read-ahead on the initiator: 16384; md0, crypt - MB/s
->>
->>                            md0   us  sy  id  wa  | crypt   us  sy  id  
->> wa  STGT                      56.43   3% 55%  2% 40% | 46.90    3% 
->> 90%  3%  4%
->> SCST (debug + no patches) 73.85   0% 58%  1% 41% | 42.70    0% 85%  0% 
->> 15%
->> SCST (fullperf + patches) 76.27   0% 63%  1% 36% | 42.52    0% 85%  0% 
->> 15%
+Chandra Seetharaman wrote:
+> Thanks for the response Mike.
 > 
-> Good! You proved that:
+> On Mon, 2009-04-06 at 10:43 -0500, Mike Christie wrote:
+>> Chandra Seetharaman wrote:
+>>> Hello All,
+>>>
+>>> During testing with the latest SCSI DH Handler on a rdac storage, Babu
+>>> found that the failover time with 100+ luns takes about 15 minutes,
+>>> which is not good.
+>>>
+>>> We found that the problem is due to the fact that we serialize activate
+>>> in dm on the work queue.
+>>>
+>> I thought we talked about this during the review?
 > 
-> 1. SCST is capable to work much better than STGT: 35% for md and 37% for 
-> crypt considering maximum values.
+> Yes, we did and the results were compared to the virgin code (w.r.t rdac
+> handler) and the results were good (also I used only 49 luns) :
+> http://marc.info/?l=dm-devel&m=120889858019762&w=2
 > 
-> 2. Default read-ahead size isn't appropriate for remote data access 
-> cases and should be increased. I slowly have been discussing it in past 
-> few months with Wu Fengguang, the read-ahead maintainer.
+> 
+>>> We can solve the problem in rdac handler in 2 ways
+>>>  1. batch up the activates (mode_selects) and send few of them.
+>>>  2. Do mode selects in async mode.
+>> I think most of the ugliness in the original async mode was due to 
+>> trying to use the REQ_BLOCK* path. With the scsi_dh_activate path, it 
+>> should now be easier because in the send path we do not have to worry 
+>> about queue locks being held and context.
+>>
+> 
+> little confused... we still are using REQ_TYPE_BLOCK_PC
+> 
 
-Note that crypt performance for SCST was worse than that of STGT for 
-large read-ahead values.
-Also, SCST performance on crypt device was more or less the same with 
-256 and 16384 readahead values. I wonder why performance didn't increase 
-here while increasing readahead values? Could anyone recheck if it's the 
-same on some other system?
+But we only have one level of requests. I am talking about when we tried 
+to send a request with REQ_BLOCK_LINUX_BLOCK to the module to tell it to 
+send another request/s with REQ_TYPE_BLOCK_PC. Now we just have the 
+callout and then like you said we can fire REQ_TYPE_BLOCK_PC reuqests 
+from there.
+
+I think when I wrote easier above, I meant to write a cleaner 
+implementation.
 
 
-> Which IO scheduler on the target did you use? I guess, deadline? If so, 
-> you should try with CFQ as well.
 
-I used CFQ.
+>> I think we could just use blk_execute_rq_nowait to send the IO. Then we 
+>> would have a workqueue/thread per something (maybe per dh module I 
+>> thought), that would be queued/notified when the IO completed. The 
+>> thread could then process the IO and handle the next stage if needed.
+>>
+>> Why use the thread you might wonder? I think it fixes another issue with 
+>> the original async mode, and makes it easier if the scsi_dh module has 
+> 
+> can you elaborate the issue ?
 
 
--- 
-Tomasz Chmielewski
-http://wpkg.org
+I think people did not like the complexity of trying to send IO with 
+soft irq context with spin locks held, then also having the extra 
+REQ_BLOCK_LINUX_BLOCK layering.
+
+
+> 
+>> to send more IO. When using the thread it would not have to worry about 
+>> the queue_lock being held in the IO completion path and does not have to 
+>> worry about being run from more restrictive contexts.
+> 
+> You think queue_lock contention is an issue ?
+> 
+> I agree with the restrictive context issue though.
+> 
+> So, your suggestion is to move everything to async ?
+> 
+
+Do mean vs #1 or would you want to seperate and send some stuff async 
+and synchronously?
+
+>>
+>>> Just wondering if anybody had seen the same problem in other storages
+>>> (EMC, HP and Alua). 
+>> They should all have the same problem.
+>>
+>>
+>>> Please share your experiences, so we can come up with a solution that
+>>> works for all hardware handlers.
+>>>
+>>> regards,
+>>>
+>>> chandra
+>>>
+>>> --
+>>> dm-devel mailing list
+>>> dm-devel@redhat.com
+>>> https://www.redhat.com/mailman/listinfo/dm-devel
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
