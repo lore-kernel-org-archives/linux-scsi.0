@@ -1,58 +1,38 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH 7/7] lpfc 8.3.1 : Update version to 8.3.1
-Date: Mon, 6 Apr 2009 18:48:17 -0400
-Message-ID: <1239058097.2344.33.camel@ogier>
-Reply-To: James.Smart@Emulex.Com
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Huang Weiyi <weiyi.huang@gmail.com>
+Subject: [PATCH] [SCSI] fcoe, libfcoe: remove duplicated #include
+Date: Tue,  7 Apr 2009 06:59:02 +0800
+Message-ID: <1239058742-2916-1-git-send-email-weiyi.huang@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:43082 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757702AbZDFWs3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Apr 2009 18:48:29 -0400
-Received: from xcm.ad.emulex.com (xcm.emulex.com [138.239.112.69])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id n36MmPLC017107
-	for <linux-scsi@vger.kernel.org>; Mon, 6 Apr 2009 15:48:28 -0700 (PDT)
+Received: from ti-out-0910.google.com ([209.85.142.187]:51167 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755691AbZDFW7N (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Apr 2009 18:59:13 -0400
+Received: by ti-out-0910.google.com with SMTP id i7so2147177tid.23
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Apr 2009 15:59:10 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, Huang Weiyi <weiyi.huang@gmail.com>
 
-Update driver version to 8.3.1
-Also update copyright end year for driver.
+Remove duplicated #include in drivers/scsi/fcoe/libfcoe.c.
 
-Signed-off-by: James Smart <James.Smart@emulex.com>
-
+Signed-off-by: Huang Weiyi <weiyi.huang@gmail.com>
 ---
+ drivers/scsi/fcoe/libfcoe.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
- drivers/scsi/lpfc/lpfc_version.h |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
---- a/drivers/scsi/lpfc/lpfc_version.h
-+++ b/drivers/scsi/lpfc/lpfc_version.h
-@@ -1,7 +1,7 @@
- /*******************************************************************
-  * This file is part of the Emulex Linux Device Driver for         *
-  * Fibre Channel Host Bus Adapters.                                *
-- * Copyright (C) 2004-2008 Emulex.  All rights reserved.           *
-+ * Copyright (C) 2004-2009 Emulex.  All rights reserved.           *
-  * EMULEX and SLI are trademarks of Emulex.                        *
-  * www.emulex.com                                                  *
-  *                                                                 *
-@@ -18,7 +18,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
- 
--#define LPFC_DRIVER_VERSION "8.3.0"
-+#define LPFC_DRIVER_VERSION "8.3.1"
- 
- #define LPFC_DRIVER_NAME		"lpfc"
- #define LPFC_SP_DRIVER_HANDLER_NAME	"lpfc:sp"
-@@ -26,4 +26,4 @@
- 
- #define LPFC_MODULE_DESC "Emulex LightPulse Fibre Channel SCSI driver " \
- 		LPFC_DRIVER_VERSION
--#define LPFC_COPYRIGHT "Copyright(c) 2004-2008 Emulex.  All rights reserved."
-+#define LPFC_COPYRIGHT "Copyright(c) 2004-2009 Emulex.  All rights reserved."
-
+diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
+index f410f4a..6f63a89 100644
+--- a/drivers/scsi/fcoe/libfcoe.c
++++ b/drivers/scsi/fcoe/libfcoe.c
+@@ -29,7 +29,6 @@
+ #include <linux/ethtool.h>
+ #include <linux/if_ether.h>
+ #include <linux/if_vlan.h>
+-#include <linux/netdevice.h>
+ #include <linux/errno.h>
+ #include <linux/bitops.h>
+ #include <net/rtnetlink.h>
+-- 
+1.6.0.4
 
