@@ -1,58 +1,50 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi_transport_fc.c : .29 merge fix for FC passthru
-	patch
-Date: Tue, 07 Apr 2009 17:58:02 +0000
-Message-ID: <1239127083.29492.8.camel@mulgrave.int.hansenpartnership.com>
-References: <1239126522.8975.2.camel@ogier>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: [PATCH] lpfc: fix 8.3.1 for do_div warning [Bug 13022]
+Date: Tue, 7 Apr 2009 14:03:54 -0400
+Message-ID: <1239127434.27087.4.camel@ogier>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:38643 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759554AbZDGR6E (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Apr 2009 13:58:04 -0400
-In-Reply-To: <1239126522.8975.2.camel@ogier>
+Received: from emulex.emulex.com ([138.239.112.1]:33162 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751435AbZDGSEC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Apr 2009 14:04:02 -0400
+Received: from xcm.ad.emulex.com (xcm.emulex.com [138.239.112.69])
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id n37I41PB013362
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Apr 2009 11:04:01 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, 2009-04-07 at 13:48 -0400, James Smart wrote:
-> James,
-> 
-> It appears that the latest merge of scsi-misc-2.6 picked up a kernel change
-> that killed the bus_id element from struct device.
-> 
-> Here's a quick patch to resolve the inconsistency.  I assumed this was easier
-> than regen-ing the fc pass-thru patch.
-> 
-> This patch to be applied on top of the fc-pass-thru patch.
-> 
-> -- james s
-> 
-> 
->  Signed-off-by: James Smart <james.smart@emulex.com>
-> 
->  ---
-> 
->  scsi_transport_fc.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> 
-> diff -upNr a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-> --- a/drivers/scsi/scsi_transport_fc.c	2009-04-07 13:38:38.000000000 -0400
-> +++ b/drivers/scsi/scsi_transport_fc.c	2009-04-07 13:39:18.000000000 -0400
-> @@ -3920,7 +3920,7 @@ fc_bsg_rportadd(struct Scsi_Host *shost,
->  	if (!q) {
->  		printk(KERN_ERR "%s: bsg interface failed to "
->  				"initialize - no request queue\n",
-> -				 dev->bus_id);
-> +				 dev->kobj.name);
+Correct do_div warning reported by:
+[Bug 13022] New: comparison of distinct pointer types lacks a cast
+http://marc.info/?l=linux-scsi&m=123900867611315&w=2
 
-This actually needs to be dev_name(dev), which is where all the bus_id
-things went.
+To be applied on top of lpfc 8.3.1 patch set.
 
-James
+-- james s 
+
+ Signed-off-by: James Smart <james.smart@emulex.com>
+
+ ---
+
+ lpfc_scsi.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+
+diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+--- a/drivers/scsi/lpfc/lpfc_scsi.c	2009-04-06 18:34:51.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_scsi.c	2009-04-07 13:56:27.000000000 -0400
+@@ -1393,7 +1393,7 @@ lpfc_parse_bg_err(struct lpfc_hba *phba,
+ 		 */
+ 		cmd->sense_buffer[8] = 0;     /* Information */
+ 		cmd->sense_buffer[9] = 0xa;   /* Add. length */
+-		do_div(bghm, cmd->device->sector_size);
++		bghm /= cmd->device->sector_size;
+ 
+ 		failing_sector = scsi_get_lba(cmd);
+ 		failing_sector += bghm;
 
 
