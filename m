@@ -1,95 +1,64 @@
-From: Justin Mattock <justinmattock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: 2.6.29 on MacBook 2,1 fails to reboot (was Re: 2.6.29-git13:
-	Reported regressions from 2.6.28)
-Date: Tue, 7 Apr 2009 10:20:37 -0700
-Message-ID: <dd18b0c30904071020v4b4090d9o9721f2d892d9739c@mail.gmail.com>
-References: <n4io5wq70ZO.A.gzG.rFn2JB@chimera>
-	 <alpine.LFD.2.00.0904061443000.7443@localhost.localdomain>
-	 <49DB7C77.1000702@s5r6.in-berlin.de>
-	 <9b1675090904070944m798ed608i1d9194ebd1ed3961@mail.gmail.com>
-	 <49DB8909.3000905@s5r6.in-berlin.de>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: [PATCH] scsi_transport_fc.c : .29 merge fix for FC passthru patch
+Date: Tue, 7 Apr 2009 13:48:42 -0400
+Message-ID: <1239126522.8975.2.camel@ogier>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <49DB8909.3000905-MtYdepGKPcBMYopoZt5u/LNAH6kLmebB@public.gmane.org>
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Stefan Richter <stefanr-MtYdepGKPcBMYopoZt5u/LNAH6kLmebB@public.gmane.org>
-Cc: "Trenton D. Adams" <trenton.d.adams-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Adrian Bunk <bunk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Takashi Iwai <tiwai-l3A5Bk7waGM@public.gmane.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emulex.emulex.com ([138.239.112.1]:64226 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758589AbZDGRsz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Apr 2009 13:48:55 -0400
+Received: from xcm.ad.emulex.com (xcm.emulex.com [138.239.112.69])
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id n37Hmq5m011741
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Apr 2009 10:48:52 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Apr 7, 2009 at 10:10 AM, Stefan Richter
-<stefanr-MtYdepGKPcBMYopoZt5u/LNAH6kLmebB@public.gmane.org> wrote:
-> Trenton D. Adams wrote:
->> On Tue, Apr 7, 2009 at 10:16 AM, Stefan Richter
->> <stefanr-MtYdepGKPcBMYopoZt5u/LNAH6kLmebB@public.gmane.org> wrote:
->>> Linus Torvalds wrote:
->>>> On Mon, 6 Apr 2009, Rafael J. Wysocki wrote:
->>>>> Bug-Entry =A0 =A0: http://bugzilla.kernel.org/show_bug.cgi?id=3D1=
-3018
->>>>> Subject =A0 =A0 =A0 =A0 =A0 =A0 =A0: 2.6.29 on MacBook 2,1 fails =
-to reboot
-> ...
->>>> The bug _sounds_ like some deadlock due to lock problems - the shu=
-tdown
->>>> path often triggers locks that no other path really cares about. A=
-nd we
->>>> had some lock problems in the sound subsystem that got fixed post-=
-2.6.28,
->>>> for example.
->>>>
->>>> And it looks like the problem is somewhere in sound shutdown:
->>>>
->>>> 12181 delete_module("snd_hda_codec", O_RDONLY|O_EXCL) =3D -1 EAGAI=
-N (Resource temporarily unavailable) <0.000011>
->>>>
->>>> So commits like 91054598f794fb5d8a0b1e747ff8e2e8fc2115b3 ("ALSA: p=
-cm_oss,
->>>> fix locking typo") might explain it.
-> ...
->>> could it be the same as this one?
->>> http://bugzilla.kernel.org/show_bug.cgi?id=3D12321
->>> "System hangs when unloading alsa modules"
->>> http://bugs.gentoo.org/show_bug.cgi?id=3D253535
->>> "System hangs when unloading alsa modules on Kernel >2.6.28"
-> ...
->> The first one looks similar, if not identical. =A0The second one
->> doesn't, because my problem happens on 2.6.29 only, not 2.6.28.
->
-> The Gentoo bug entry too is about a regression _after_ 2.6.28. :-)
-> I.e. 2.6.28.y. are unaffected. =A0It's actually just the downstream
-> duplicate of the kernel.org bug entry.
->
->> Either way, the unload problem with the module didn't happen in
->> 2.6.28.
->
-> Interdependencies between ALSA modules have changed. =A0The Gentoo in=
-it
-> scripts attempted to unload them in an order which deadlocked modprob=
-e
-> due to dependencies. =A0The fix for Gentoo is to just not unload the
-> modules on system shutdown. =A0My Gentoo/amd64 Mac mini was affected =
-by
-> this too; fixed by userland update.
->
-> (Added Cc to tiwai-l3A5Bk7waGM@public.gmane.org)
-> --
-> Stefan Richter
-> -=3D=3D=3D=3D=3D-=3D-=3D=3D=3D -=3D-=3D -=3D=3D-=3D
-> http://arcgraph.de/sr/
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kerne=
-l" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at =A0http://www.tux.org/lkml/
->
+James,
 
-With the imac(kernel 2.6.29)
-/sbin/shutdown -h now   (works)
-but
-/sbin/reboot
-hangs
+It appears that the latest merge of scsi-misc-2.6 picked up a kernel change
+that killed the bus_id element from struct device.
 
---=20
-Justin P. Mattock
+Here's a quick patch to resolve the inconsistency.  I assumed this was easier
+than regen-ing the fc pass-thru patch.
+
+This patch to be applied on top of the fc-pass-thru patch.
+
+-- james s
+
+
+ Signed-off-by: James Smart <james.smart@emulex.com>
+
+ ---
+
+ scsi_transport_fc.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+
+diff -upNr a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+--- a/drivers/scsi/scsi_transport_fc.c	2009-04-07 13:38:38.000000000 -0400
++++ b/drivers/scsi/scsi_transport_fc.c	2009-04-07 13:39:18.000000000 -0400
+@@ -3920,7 +3920,7 @@ fc_bsg_rportadd(struct Scsi_Host *shost,
+ 	if (!q) {
+ 		printk(KERN_ERR "%s: bsg interface failed to "
+ 				"initialize - no request queue\n",
+-				 dev->bus_id);
++				 dev->kobj.name);
+ 		return -ENOMEM;
+ 	}
+ 
+@@ -3933,7 +3933,7 @@ fc_bsg_rportadd(struct Scsi_Host *shost,
+ 	if (err) {
+ 		printk(KERN_ERR "%s: bsg interface failed to "
+ 				"initialize - register queue\n",
+-				 dev->bus_id);
++				 dev->kobj.name);
+ 		blk_cleanup_queue(q);
+ 		return err;
+ 	}
+
+
