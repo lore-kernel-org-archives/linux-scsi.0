@@ -1,87 +1,44 @@
-From: "Trenton D. Adams" <trenton.d.adams-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: 2.6.29 on MacBook 2,1 fails to reboot (was Re: 2.6.29-git13:
-	Reported regressions from 2.6.28)
-Date: Tue, 7 Apr 2009 14:52:59 -0600
-Message-ID: <9b1675090904071352x513510ecm8b2574859b088275@mail.gmail.com>
-References: <n4io5wq70ZO.A.gzG.rFn2JB@chimera>
-	 <alpine.LFD.2.00.0904061443000.7443@localhost.localdomain>
-	 <49DB7C77.1000702@s5r6.in-berlin.de>
-	 <9b1675090904070944m798ed608i1d9194ebd1ed3961@mail.gmail.com>
-	 <49DB8909.3000905@s5r6.in-berlin.de>
-	 <9b1675090904071122k6a53295fwfffc336011edee8e@mail.gmail.com>
-	 <49DBA821.1070408@s5r6.in-berlin.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/3] scsi_dh: Add modalias support for SCSI targets
+Date: Tue, 07 Apr 2009 20:59:33 +0000
+Message-ID: <1239137973.29492.12.camel@mulgrave>
+References: <20090318013615.26548.36303.sendpatchset@chandra-ubuntu>
+	 <20090318013621.26548.10529.sendpatchset@chandra-ubuntu>
+	 <ac3eb2510903181130s5dd1b1caje579d765fd338f6f@mail.gmail.com>
+	 <1237403902.14147.25.camel@chandra-ubuntu>
+	 <1237488880.26341.15.camel@chandra-ubuntu>  <49C3DF49.8050408@redhat.com>
+	 <1237846429.14853.6.camel@chandra-ubuntu>
+	 <1238798590.20924.0.camel@chandra-ubuntu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <49DBA821.1070408-MtYdepGKPcBMYopoZt5u/LNAH6kLmebB@public.gmane.org>
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Stefan Richter <stefanr-MtYdepGKPcBMYopoZt5u/LNAH6kLmebB@public.gmane.org>
-Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Adrian Bunk <bunk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Takashi Iwai <tiwai-l3A5Bk7waGM@public.gmane.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:44351 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756038AbZDGU7d (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Apr 2009 16:59:33 -0400
+In-Reply-To: <1238798590.20924.0.camel@chandra-ubuntu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: sekharan@linux.vnet.ibm.com
+Cc: Kay Sievers <kay.sievers@vrfy.org>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, Peter Jones <pjones@redhat.com>
 
-On Tue, Apr 7, 2009 at 1:23 PM, Stefan Richter
-<stefanr-MtYdepGKPcBMYopoZt5u/LNAH6kLmebB@public.gmane.org> wrote:
-> Trenton D. Adams wrote:
->> On Tue, Apr 7, 2009 at 11:10 AM, Stefan Richter
->> <stefanr-MtYdepGKPcBMYopoZt5u/LNAH6kLmebB@public.gmane.org> wrote:
->>>>> http://bugs.gentoo.org/show_bug.cgi?id=3D253535
->>> Interdependencies between ALSA modules have changed. =A0The Gentoo =
-init
->>> scripts attempted to unload them in an order which deadlocked modpr=
-obe
->>> due to dependencies. =A0The fix for Gentoo is to just not unload th=
-e
->>> modules on system shutdown. =A0My Gentoo/amd64 Mac mini was affecte=
-d by
->>> this too; fixed by userland update.
->>>
->>
->> While that is interesting, I am not seeing that problem on my Gentoo
->> box (the macbook), which is completely up-to-date. =A02.6.28 works, =
-and
->> 2.6.29 doesn't. =A0Same init scripts, different kernels.
->
-> Note that the respective update changed /etc/conf.d/alsasound (a loca=
-l
-> configuration file) to include
-> UNLOAD_ON_STOP=3D"no"
-> KILLPROC_ON_STOP=3D"no"
-> This change by update is not activated by a mere emerge; one needs to
-> incorporate that change with dispatch-conf or an equivalent method.
-> (Or simply edit the file to have these variables set to "no".)
+On Fri, 2009-04-03 at 15:43 -0700, Chandra Seetharaman wrote:
+> Hi James,
+> 
+> Do you still have any concerns (after Peter's response) ?
 
-I run dispatch-conf every time I update.  It did not set it to no by
-default.  I do see the option though.
+Yes, the basic concerns still remain:
 
->
->> And sure, I could put a comment on the rmmod, in the init script, bu=
-t
->> IMO that would be a hack around a _bug_. =A0Which is fine for me. =A0=
-But,
->> is it worth leaving the issue in the kernel?
->
-> Is it a kernel issue if a script attempts to unload a busy module, th=
-en
-> fails to proceed? =A0I wouldn't think so.
+     1. You're forcing autoload now even if the user isn't running
+        dm ... this is going to cause problems with non-dm based path
+        handlers
+     2. autoloading in this fashion is essentially trying to work around
+        a problem in the initrd tools.  The kernel isn't the right place
+        to implement the fix.
 
-I don't know really.  It worked before, now it doesn't.  But, now I'm
-recalling something you said earlier.  They are being done in the
-wrong order.  The gentoo bug mentions the correct order.  I hadn't
-realized that.
+The risks of this approach seem very high, and the rewards pretty small.
 
->
-> But more importantly, is this init scripts related bug really what's
-> happening at your system? =A0Or do you actually experience an entirel=
-y
-> different bug?
+James
 
-It could be.  I will try it out when I get home from work, and get
-back to you.  That would be cool if it was a simple init script
-problem.  Cause then I don't have to do anymore git bisects. ;)
 
-> --
-> Stefan Richter
-> -=3D=3D=3D=3D=3D-=3D-=3D=3D=3D -=3D-=3D -=3D=3D-=3D
-> http://arcgraph.de/sr/
->
