@@ -1,71 +1,63 @@
-From: "Trenton D. Adams" <trenton.d.adams@gmail.com>
-Subject: Re: 2.6.29-git13: Reported regressions from 2.6.28
-Date: Mon, 6 Apr 2009 22:23:29 -0600
-Message-ID: <9b1675090904062123u42a00a80y3a4385740ecc0121@mail.gmail.com>
-References: <n4io5wq70ZO.A.gzG.rFn2JB@chimera>
-	 <alpine.LFD.2.00.0904061443000.7443@localhost.localdomain>
-	 <9b1675090904062056v235af58ehc99cce8ff97fe501@mail.gmail.com>
-	 <alpine.LFD.2.00.0904062103531.4010@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH 00/15] qla2xxx: updates for 2.6.30 [8.03.01-k2]
+Date: Mon,  6 Apr 2009 22:33:36 -0700
+Message-ID: <1239082431-19496-1-git-send-email-andrew.vasquez@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.238]:48799 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751330AbZDGEXb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Apr 2009 00:23:31 -0400
-In-Reply-To: <alpine.LFD.2.00.0904062103531.4010@localhost.localdomain>
+Received: from avexch1.qlogic.com ([198.70.193.115]:29400 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751277AbZDGFdy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Apr 2009 01:33:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, Apr 6, 2009 at 10:07 PM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
->
->
-> On Mon, 6 Apr 2009, Trenton D. Adams wrote:
->> >
->> > This went through bisection, but looking at the email log, I tend to
->> > suspect that maybe Trenton marked some versions good even though they
->> > weren't (because they got versions numbers from v2.6.27), and didn't
->> > realize that that messes up bisection in a big way.
->>
->> Is it appropriate for me to respond to these things?
->
-> Yes. I added you to the cc exactly because it was hard for me to judge
-> from the email discussion that is linked to in the regression list whether
-> you actually _did_ mark some versions good because of confusion about the
-> version numbering.
+Another round of updates/fixes for 2.6.30.
 
-Oh, didn't know you CC'd me.  I have just been searching for my name
-to try and keep up to date on threads I participated in, because the
-list volume is just too much.
+--
 
-> So you may well have done everything right, and I'm not trying to blame
-> you. I just was hoping that maybe that confusion would explain why the
-> bisection didn't seem to pinpoint anything sane..
+Andrew Vasquez (7):
+  qla2xxx: Export additional FCoE attributes for application support.
+  qla2xxx: Correct compilation failures when DEBUG'n' options are
+    enabled.
+  qla2xxx: Correct typo in read_nvram() callback.
+  qla2xxx: Restrict model-name/description device-table usage.
+  qla2xxx: Don't try to 'stop' firmware if already in ROM code.
+  qla2xxx: Add an override option to specify ISP firmware load
+    semantics.
+  qla2xxx: Update version number to 8.03.01-k2.
 
-This gave me a bit of a chuckle. ROFL.  I didn't think you were
-_blaming_ me.  And even if you were, I'd just say "I'M HUMAN MAN". ;)
+Anirban Chakraborty (4):
+  qla2xxx: Add QoS support.
+  qla2xxx: Add CPU affinity support.
+  qla2xxx: Remove reference to request queue from scsi request block.
+  qla2xxx: Use port number to compute nvram/vpd parameter offsets.
 
-It is very well possible that I simply booted the wrong kernel, seeing
-I had like 20 to choose from at the time, after doing all those
-bisects.  This time, I will make the new kernels the default so that
-it is impossible to happen again, assuming that is what happened.  I
-will also stop and start alsa 2 or 3 times, in case it is a deadlock
-timing issue as you mentioned.
+Harish Zunjarrao (1):
+  qla2xxx: Correct hard-coded address of a second-port's NVRAM.
 
-I'm glad to know that I shouldn't be switching kernel versions though.
- I thought that was really crazy.
+Joe Carnuccio (1):
+  qla2xxx: Perform an implicit login to the Management Server.
 
->
->
-> It would be good, especially if this bug doesn't end up being solved some
-> other way... And slow results are better than no results at all ;)
->
->                        Linus
->
+Michael Reed (1):
+  qla2xxx: Conditionally disable automatic queue full tracking.
 
-Okay, I will try again.  Hopefully in a few days I'll have something
-for the bug.
+Seokmann Ju (1):
+  qla2xxx: Correct bus-reset behaviour with recent ISPs.
+
+ drivers/scsi/qla2xxx/qla_attr.c    |   81 ++++++++++---
+ drivers/scsi/qla2xxx/qla_dbg.c     |    7 +-
+ drivers/scsi/qla2xxx/qla_def.h     |   34 ++++--
+ drivers/scsi/qla2xxx/qla_fw.h      |    2 +-
+ drivers/scsi/qla2xxx/qla_gbl.h     |   29 +++--
+ drivers/scsi/qla2xxx/qla_gs.c      |    2 +-
+ drivers/scsi/qla2xxx/qla_init.c    |   90 +++++++++------
+ drivers/scsi/qla2xxx/qla_iocb.c    |   59 +++++----
+ drivers/scsi/qla2xxx/qla_isr.c     |  236 ++++++++++++++++--------------------
+ drivers/scsi/qla2xxx/qla_mbx.c     |   90 ++++++++++-----
+ drivers/scsi/qla2xxx/qla_mid.c     |  118 +++++++++----------
+ drivers/scsi/qla2xxx/qla_os.c      |  233 ++++++++++++++++++++++++++----------
+ drivers/scsi/qla2xxx/qla_sup.c     |   38 +++---
+ drivers/scsi/qla2xxx/qla_version.h |    2 +-
+ 14 files changed, 611 insertions(+), 410 deletions(-)
+
