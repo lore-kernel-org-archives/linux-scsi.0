@@ -1,76 +1,40 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH rev 2] scsi_transport_fc.c : .29 merge fix for FC passthru
-	patch
-Date: Tue, 7 Apr 2009 14:10:43 -0400
-Message-ID: <1239127843.27087.8.camel@ogier>
-Reply-To: James.Smart@Emulex.Com
+From: "Trenton D. Adams" <trenton.d.adams@gmail.com>
+Subject: Re: 2.6.29 on MacBook 2,1 fails to reboot (was Re: 2.6.29-git13:
+	Reported regressions from 2.6.28)
+Date: Tue, 7 Apr 2009 12:22:01 -0600
+Message-ID: <9b1675090904071122k6a53295fwfffc336011edee8e@mail.gmail.com>
+References: <n4io5wq70ZO.A.gzG.rFn2JB@chimera>
+	 <alpine.LFD.2.00.0904061443000.7443@localhost.localdomain>
+	 <49DB7C77.1000702@s5r6.in-berlin.de>
+	 <9b1675090904070944m798ed608i1d9194ebd1ed3961@mail.gmail.com>
+	 <49DB8909.3000905@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:34130 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755805AbZDGSKw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Apr 2009 14:10:52 -0400
-Received: from xcm.ad.emulex.com (xcm.emulex.com [138.239.112.69])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id n37IApIg014257
-	for <linux-scsi@vger.kernel.org>; Tue, 7 Apr 2009 11:10:52 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <49DB8909.3000905@s5r6.in-berlin.de>
+Sender: netdev-owner@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Takashi Iwai <tiwai@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-=EF=BB=BFJames,
+On Tue, Apr 7, 2009 at 11:10 AM, Stefan Richter
+<stefanr@s5r6.in-berlin.de> wrote:
+> Trenton D. Adams wrote:
+> Interdependencies between ALSA modules have changed. =A0The Gentoo in=
+it
+> scripts attempted to unload them in an order which deadlocked modprob=
+e
+> due to dependencies. =A0The fix for Gentoo is to just not unload the
+> modules on system shutdown. =A0My Gentoo/amd64 Mac mini was affected =
+by
+> this too; fixed by userland update.
+>
 
-(Thanks James,  I was looking for that macro, but missed it)
+While that is interesting, I am not seeing that problem on my Gentoo
+box (the macbook), which is completely up-to-date.  2.6.28 works, and
+2.6.29 doesn't.  Same init scripts, different kernels.
 
-The latest merge of scsi-misc-2.6 picked up a kernel
-change that killed the bus_id element from struct device.
-
-Here's a quick patch to resolve the inconsistency.  I assumed this was
-easier than regen-ing the fc pass-thru patch.
-
-This patch to be applied on top of the fc-pass-thru patch.
-
--- james s
-
-
-
- Signed-off-by: James Smart <james.smart@emulex.com>
-
- ---
-
- scsi_transport_fc.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-
-diff -upNr a/drivers/scsi/scsi_transport_fc.c
-b/drivers/scsi/scsi_transport_fc.c
---- a/drivers/scsi/scsi_transport_fc.c	2009-04-07 13:38:38.000000000
--0400
-+++ b/drivers/scsi/scsi_transport_fc.c	2009-04-07 14:05:56.000000000
--0400
-@@ -3920,7 +3920,7 @@ fc_bsg_rportadd(struct Scsi_Host *shost,
- 	if (!q) {
- 		printk(KERN_ERR "%s: bsg interface failed to "
- 				"initialize - no request queue\n",
--				 dev->bus_id);
-+				 dev_name(dev));
- 		return -ENOMEM;
- 	}
-=20
-@@ -3933,7 +3933,7 @@ fc_bsg_rportadd(struct Scsi_Host *shost,
- 	if (err) {
- 		printk(KERN_ERR "%s: bsg interface failed to "
- 				"initialize - register queue\n",
--				 dev->bus_id);
-+				 dev_name(dev));
- 		blk_cleanup_queue(q);
- 		return err;
- 	}
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+And sure, I could put a comment on the rmmod, in the init script, but
+IMO that would be a hack around a _bug_.  Which is fine for me.  But,
+is it worth leaving the issue in the kernel?
