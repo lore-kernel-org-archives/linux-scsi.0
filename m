@@ -1,38 +1,57 @@
-From: Huang Weiyi <weiyi.huang@gmail.com>
-Subject: [PATCH] [SCSI] fcoe, libfcoe: remove duplicated #include
-Date: Tue,  7 Apr 2009 06:59:02 +0800
-Message-ID: <1239058742-2916-1-git-send-email-weiyi.huang@gmail.com>
+From: "Trenton D. Adams" <trenton.d.adams@gmail.com>
+Subject: Re: 2.6.29-git13: Reported regressions from 2.6.28
+Date: Mon, 6 Apr 2009 21:56:27 -0600
+Message-ID: <9b1675090904062056v235af58ehc99cce8ff97fe501@mail.gmail.com>
+References: <n4io5wq70ZO.A.gzG.rFn2JB@chimera>
+	 <alpine.LFD.2.00.0904061443000.7443@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.187]:51167 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755691AbZDFW7N (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Apr 2009 18:59:13 -0400
-Received: by ti-out-0910.google.com with SMTP id i7so2147177tid.23
-        for <linux-scsi@vger.kernel.org>; Mon, 06 Apr 2009 15:59:10 -0700 (PDT)
+Received: from wf-out-1314.google.com ([209.85.200.171]:63442 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753014AbZDGD43 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Apr 2009 23:56:29 -0400
+In-Reply-To: <alpine.LFD.2.00.0904061443000.7443@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, Huang Weiyi <weiyi.huang@gmail.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
 
-Remove duplicated #include in drivers/scsi/fcoe/libfcoe.c.
+On Mon, Apr 6, 2009 at 3:53 PM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+>
+>
+> On Mon, 6 Apr 2009, Rafael J. Wysocki wrote:
+>>
+>> Bug-Entry =A0 =A0 : http://bugzilla.kernel.org/show_bug.cgi?id=3D130=
+18
+>> Subject =A0 =A0 =A0 =A0 =A0 =A0 =A0 : 2.6.29 on MacBook 2,1 fails to=
+ reboot
+>> Submitter =A0 =A0 : Trenton Adams <trenton.d.adams@gmail.com>
+>> Date =A0 =A0 =A0 =A0 =A0: 2009-03-30 2:04 (8 days old)
+>> References =A0 =A0: http://marc.info/?l=3Dlinux-kernel&m=3D123837870=
+307249&w=3D4
+>> Handled-By =A0 =A0: "Morten P.D. Stevens" <mstevens@win-professional=
+=2Ecom>
+>
+> This went through bisection, but looking at the email log, I tend to
+> suspect that maybe Trenton marked some versions good even though they
+> weren't (because they got versions numbers from v2.6.27), and didn't
+> realize that that messes up bisection in a big way.
 
-Signed-off-by: Huang Weiyi <weiyi.huang@gmail.com>
----
- drivers/scsi/fcoe/libfcoe.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+Is it appropriate for me to respond to these things?
 
-diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
-index f410f4a..6f63a89 100644
---- a/drivers/scsi/fcoe/libfcoe.c
-+++ b/drivers/scsi/fcoe/libfcoe.c
-@@ -29,7 +29,6 @@
- #include <linux/ethtool.h>
- #include <linux/if_ether.h>
- #include <linux/if_vlan.h>
--#include <linux/netdevice.h>
- #include <linux/errno.h>
- #include <linux/bitops.h>
- #include <net/rtnetlink.h>
--- 
-1.6.0.4
+I was wondering about that.  Someone had mentioned that I should trust
+the bisect, even when it takes me into "other versions", and it was
+taking me through 2.6.27, which I thought was just really weird.
+Would you like me to try the bisect again with a little more
+diligence, or do you think it can be found with the info given?  It
+may take a week or so, due to being a bit busy.
 
+Thanks
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
