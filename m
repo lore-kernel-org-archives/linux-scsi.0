@@ -1,48 +1,48 @@
-From: "Trenton D. Adams" <trenton.d.adams@gmail.com>
-Subject: Re: 2.6.29 on MacBook 2,1 fails to reboot (was Re: 2.6.29-git13:
-	Reported regressions from 2.6.28)
-Date: Tue, 7 Apr 2009 19:16:08 -0600
-Message-ID: <9b1675090904071816k59080f1fn39737767db4dc0c@mail.gmail.com>
-References: <n4io5wq70ZO.A.gzG.rFn2JB@chimera>
-	 <alpine.LFD.2.00.0904061443000.7443@localhost.localdomain>
-	 <49DB7C77.1000702@s5r6.in-berlin.de>
-	 <9b1675090904070944m798ed608i1d9194ebd1ed3961@mail.gmail.com>
-	 <49DB8909.3000905@s5r6.in-berlin.de>
-	 <9b1675090904071122k6a53295fwfffc336011edee8e@mail.gmail.com>
-	 <49DBA821.1070408@s5r6.in-berlin.de>
-	 <9b1675090904071352x513510ecm8b2574859b088275@mail.gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] osdblk: a Linux block device for OSD objects
+Date: Tue, 07 Apr 2009 21:29:05 -0400
+Message-ID: <49DBFDE1.9010303@garzik.org>
+References: <20090402015455.GA14087@havoc.gtf.org> <20090403094909.GQ5178@kernel.dk> <49D5DDDE.9090407@garzik.org> <49D8856E.3090903@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <9b1675090904071352x513510ecm8b2574859b088275@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Takashi Iwai <tiwai@suse.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <49D8856E.3090903@panasas.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Apr 7, 2009 at 2:52 PM, Trenton D. Adams
-<trenton.d.adams@gmail.com> wrote:
-> On Tue, Apr 7, 2009 at 1:23 PM, Stefan Richter
-> <stefanr@s5r6.in-berlin.de> wrote:
->>
->> But more importantly, is this init scripts related bug really what's
->> happening at your system? =A0Or do you actually experience an entire=
-ly
->> different bug?
->
-> It could be. =A0I will try it out when I get home from work, and get
-> back to you. =A0That would be cool if it was a simple init script
-> problem. =A0Cause then I don't have to do anymore git bisects. ;)
+Boaz Harrosh wrote:
+> On 04/03/2009 12:58 PM, Jeff Garzik wrote:
+>> Jens Axboe wrote:
+>>> This wont work, GFP_NOIO inside the queue lock. You are also only
+>>> cloning the front bio, what happens if you have > 1 bio on the request?
+>>> You seem to dequeue the request and complete all of it, regardless of
+>>> whether bio->bi_size == blk_rq_bytes(rq). I'm assuming you have to clone
+>>> because of how the osd_req_{read,write} works, so I'd suggest storing
+>>> the byte size in your osdblk_request and only completing that in
+>>> osdblk_end_request(). Then do a rq_for_each_bio() look in there, and
+>>> only dequeue if you manage to start an osd request for each of them,
+>>> THEN moving on to the next request.
+> 
+> There is nothing preventing from issuing a linked bio list. The only thing
+> is that osd_read/write looks at the first bio for total size.
+> If the first bio->bi_size does not specify the full length of the chain
+> then we should add another parameter to osd_read/write for that.
+> 
+> The original idea was to specifically allow chained bios.
+> 
+> Please advise?
 
-Yes, the order is what causes this, you can close the bug.
+As passed to us from the block layer, there is nothing special about the 
+size of the first bio, AFAIK.
 
-Sorry for wasting everyone's time.  I thought it was a kernel bug
-because I had not needed to update my gentoo system to make it happen.
+This seems like a libosd bug?  If you want to support chained bio's, I 
+would presume you would either walk the list and sum all sizes, or in 
+some other way input the total request size?
 
-Thanks.
---
-To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	Jeff
+
+
+
