@@ -1,37 +1,60 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: 2.6.29 on MacBook 2,1 fails to reboot (was Re: 2.6.29-git13: Reported regressions from 2.6.28)
-Date: Wed, 8 Apr 2009 10:00:28 +0200
-Message-ID: <200904081000.30313.rjw@sisk.pl>
-References: <n4io5wq70ZO.A.gzG.rFn2JB@chimera> <9b1675090904071352x513510ecm8b2574859b088275@mail.gmail.com> <9b1675090904071816k59080f1fn39737767db4dc0c@mail.gmail.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 1/1] cciss: resubmit export uid, model, vendor, rev to
+	sysfs
+Date: Wed, 8 Apr 2009 10:13:37 +0200
+Message-ID: <20090408081337.GX5178@kernel.dk>
+References: <20090407180411.GA4324@beardog.cca.cpqcorp.net> <20090408061901.GN5178@kernel.dk>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <9b1675090904071816k59080f1fn39737767db4dc0c@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1762834AbZDHIOX@vger.kernel.org>
 Content-Disposition: inline
-Sender: netdev-owner@vger.kernel.org
-To: "Trenton D. Adams" <trenton.d.adams@gmail.com>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Takashi Iwai <tiwai@suse.de>
+In-Reply-To: <20090408061901.GN5178@kernel.dk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, LKML-SCSI <linux-scsi@vger.kernel.org>, andrew.patterson@hp.com, mike.miller@hp.com, kay.sievers@vrfy.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wednesday 08 April 2009, Trenton D. Adams wrote:
-> On Tue, Apr 7, 2009 at 2:52 PM, Trenton D. Adams
-> <trenton.d.adams@gmail.com> wrote:
-> > On Tue, Apr 7, 2009 at 1:23 PM, Stefan Richter
-> > <stefanr@s5r6.in-berlin.de> wrote:
-> >>
-> >> But more importantly, is this init scripts related bug really what's
-> >> happening at your system?  Or do you actually experience an entirely
-> >> different bug?
-> >
-> > It could be.  I will try it out when I get home from work, and get
-> > back to you.  That would be cool if it was a simple init script
-> > problem.  Cause then I don't have to do anymore git bisects. ;)
+On Wed, Apr 08 2009, Jens Axboe wrote:
+> On Tue, Apr 07 2009, Mike Miller (OS Dev) wrote:
+> > Patch 1 of 1 resubmit
+> > 
+> > cciss: add cciss driver sysfs entries
+> > 
+> > This patch adds sysfs entries to the cciss driver needed for the
+> > dm/multipath tools. A file for vendor, model, rev, and unique_id are
+> > added for each logical drive under directory
+> > /sys/bus/pci/devices/<dev>/ccissX/cXdY. Where X = the controller (or
+> > host) number and Y is the logical drive number. A link from
+> > /sys/bus/pci/devices/<dev>/ccissX/cXdY/block:cciss!cXdY to
+> > /sys/block/cciss!cXdY/device is also created.
+> > 
+> > From: Andrew Patterson <andrew.patterson@hp.com>
 > 
-> Yes, the order is what causes this, you can close the bug.
+> You want to put that at the top of the email, so you have
+> {from,description,signed-offs} in that order.
+> 
+> The patch looks fine to me, but my sysfs foo is very weak though. CC'ing
+> Kay, perhaps he can help take a quick look at this.
 
-Closed.
+It doesn't apply to 2.6.30-rc1:
 
-Thanks,
-Rafael
+patching file Documentation/ABI/testing/sysfs-bus-pci-devices-cciss
+patching file drivers/block/cciss.c
+Hunk #1 succeeded at 437 (offset 3 lines).
+Hunk #2 succeeded at 1518 (offset 20 lines).
+Hunk #3 succeeded at 1597 (offset 20 lines).
+Hunk #4 succeeded at 1688 (offset 20 lines).
+Hunk #5 succeeded at 1739 (offset 20 lines).
+Hunk #6 succeeded at 1816 (offset 20 lines).
+Hunk #7 succeeded at 1825 (offset 20 lines).
+Hunk #8 succeeded at 1950 (offset 20 lines).
+Hunk #9 succeeded at 3956 with fuzz 2 (offset 93 lines).
+Hunk #10 succeeded at 4108 (offset 98 lines).
+Hunk #11 succeeded at 4220 (offset 101 lines).
+patching file drivers/block/cciss.h
+Hunk #3 FAILED at 131.
+1 out of 3 hunks FAILED -- saving rejects to file
+drivers/block/cciss.h.rej
+
+-- 
+Jens Axboe
