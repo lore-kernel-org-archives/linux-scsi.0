@@ -1,103 +1,81 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: Re: [patch 2/2] zfcp: Add FC pass-through support
-Date: Wed, 8 Apr 2009 09:39:49 +0200
-Message-ID: <20090408073949.GA4905@schmichrtp.de.ibm.com>
-References: <20090406163145.686874000@de.ibm.com> <20090406163534.659628000@de.ibm.com> <49DBDF26.6090601@emulex.com>
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: Re: [PATCH 1/2 scsi-misc] qla1280: use request_firmware
+Date: Wed, 8 Apr 2009 00:43:42 -0700
+Message-ID: <20090408074342.GA3919@sgi.com>
+References: <1238654083.4940.8.camel@ht.satnam> <1238654959.4940.12.camel@ht.satnam>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate2.de.ibm.com ([195.212.17.162]:36280 "EHLO
-	mtagate2.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759445AbZDHHjw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Apr 2009 03:39:52 -0400
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate2.de.ibm.com (8.13.1/8.13.1) with ESMTP id n387dpUu029510
-	for <linux-scsi@vger.kernel.org>; Wed, 8 Apr 2009 07:39:51 GMT
-Received: from d12av04.megacenter.de.ibm.com (d12av04.megacenter.de.ibm.com [9.149.165.229])
-	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n387dpwF3837992
-	for <linux-scsi@vger.kernel.org>; Wed, 8 Apr 2009 09:39:51 +0200
-Received: from d12av04.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av04.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n387doKN031818
-	for <linux-scsi@vger.kernel.org>; Wed, 8 Apr 2009 09:39:51 +0200
+Received: from relay3.sgi.com ([192.48.156.57]:33847 "EHLO relay.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751316AbZDHHnp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Apr 2009 03:43:45 -0400
 Content-Disposition: inline
-In-Reply-To: <49DBDF26.6090601@emulex.com>
+In-Reply-To: <1238654959.4940.12.camel@ht.satnam>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sven Schuetz <sven@linux.vnet.ibm.com>
+To: Jaswinder Singh Rajput <jaswinder@kernel.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jes Sorensen <jes@sgi.com>, David Woodhouse <dwmw2@infradead.org>, holt@sgi.com
 
-On Tue, Apr 07, 2009 at 07:17:58PM -0400, James Smart wrote:
-> Christof Schmitt wrote:
-> --- a/drivers/s390/scsi/zfcp_fc.c       2009-04-06 17:23:25.000000000 +0200
-> +++ b/drivers/s390/scsi/zfcp_fc.c       2009-04-06 17:24:30.000000000 +0200
-> ...
->> +static void zfcp_fc_generic_els_handler(unsigned long data)
->> +{
->> +       struct zfcp_els_fc_job *els_fc_job = (struct zfcp_els_fc_job *) data;
->> +       struct fc_bsg_job *job = els_fc_job->job;
->> +       struct fc_bsg_reply *reply = job->reply;
->> +
->> +       if (els_fc_job->els.status) {
->> +               /* request rejected or timed out */
->> +               reply->reply_data.ctels_reply.status = FC_CTELS_STATUS_REJECT;
->> +               goto out;
->> +       }
->> +
->> +       reply->reply_data.ctels_reply.status = FC_CTELS_STATUS_OK;
->> +       reply->reply_payload_rcv_len = blk_rq_bytes(job->req->next_rq);
->
-> My intent was to not have the LLDD reference (or even know about) the
-> request structures and that bsg exists underneath.
->
-> Thus, for the last line above, it should be:
->           reply->reply_payload_rcv_len = job->reply_payload->data_len;
->
-> Although, I'm a little surprised that your els interface doesn't supply the
-> received data length to you, rather than the global assumption that you 
-> sized the reply buffer for exactly what you always get.
+On Thu, Apr 02, 2009 at 12:19:19PM +0530, Jaswinder Singh Rajput wrote:
+> It seems LKML is rejected old email because of big size. so I am CC LKML
+> after deleting firmware blobs:
+> 
+> From: Jaswinder Singh Rajput <jaswinderrajput@gmail.com>
+> Date: Thu, 2 Apr 2009 11:13:17 +0530
+> Subject: [PATCH] qla1280: use request_firmware
+> 
+> Firmware blob is little endian looks like this...
+>         unsigned char  Version1
+>         unsigned char  Version2
+>         unsigned char  Version3
+>         unsigned char  Padding
+>         unsigned short start_address
+> 	unsigned short data
 
-I guess this is one thing we have to investigate. Either use the
-data_lan or get the data from the hardware.
+This patch causes a problem.  It looks as though the firmware file may be
+incorrectly built for at least 12160.  We get a checksum error from the
+ISP12160 when it does the checksum:
 
->> +struct zfcp_ct_fc_job {
->> +       struct zfcp_send_ct ct;
->> +       struct fc_bsg_job *job;
->> +};
->> +
->> +static void zfcp_fc_generic_ct_handler(unsigned long data)
->> +{
->> +       struct zfcp_ct_fc_job *ct_fc_job = (struct zfcp_ct_fc_job *) data;
->> +       struct fc_bsg_job *job = ct_fc_job->job;
->> +
->> +       job->reply->reply_data.ctels_reply.status = ct_fc_job->ct.status ?
->> +                               FC_CTELS_STATUS_REJECT : FC_CTELS_STATUS_OK;
->> +       job->state_flags = FC_RQST_STATE_DONE;
->> +       job->reply->reply_payload_rcv_len = blk_rq_bytes(job->req->next_rq);
->
-> same comment as above.
->
->> +       job->job_done(job);
->> +
->> +       zfcp_wka_port_put(ct_fc_job->ct.wka_port);
->> +
->> +       kfree(ct_fc_job);
->> +}
->
-> Are you going to add support for the ELS/CT request timing out (e.g. for
-> bsg_timeout callback) ?
+qla1280 0001:00:03.0: firmware: using built-in firmware qlogic/12160.bin
+qla1280_mailbox_command: Command failed, mailbox0 = 0x0007, mailbox_out0 = 0x4003, istatus = 0x6000
+m0 4003, m1 b141, m2 5555, m3 aa55
+m4 55aa, m5 a5a5, m6 5a5a, m7 2525
+scsi(0): RISC checksum failed.
+scsi(0): initialize: pci probe failed!
+qla1x160: Failed to initialize adapter
 
-We don't have an interface to our hardware to abort ELS or CT
-requests. I suggested to remove the bsg_timeout callback, since there
-is not much zfcp can do here. Any pending request will timeout in the
-SAN or in the HBA if there is not response.
 
-> Everything else looks good, and looks like it wasn't much effort to support.
-> Great.
+>From qla1280_start_firmware():
+        /* Verify checksum of loaded RISC code. */
+        mb[0] = MBC_VERIFY_CHECKSUM;
+        /* mb[1] = ql12_risc_code_addr01; */
+        mb[1] = ha->fwstart;
+        err = qla1280_mailbox_command(ha, BIT_1 | BIT_0, mb);
+        if (err) {
+                printk(KERN_ERR "scsi(%li): RISC checksum failed.\n", ha->host_no);
+                return err;
+        }
 
-Yes, the result looks good.
+jeremy
 
-With 2.6.30-rc1 being out, the next merge window will be for 2.6.31.
-Are you going to push the FC passthrough support for 2.6.31?
 
---
-Christof Schmitt
+> Signed-off-by: Jaswinder Singh Rajput <jaswinderrajput@gmail.com>
+> ---
+>  drivers/scsi/ql1040_fw.h       | 2130 ----------------------------------------
+>  drivers/scsi/ql12160_fw.h      | 1811 ----------------------------------
+>  drivers/scsi/ql1280_fw.h       | 2048 --------------------------------------
+>  drivers/scsi/qla1280.c         |  114 ++-
+>  drivers/scsi/qla1280.h         |    6 +
+>  firmware/Makefile              |    2 +
+>  firmware/WHENCE                |   13 +
+>  firmware/qlogic/1040.bin.ihex  | 2111 +++++++++++++++++++++++++++++++++++++++
+>  firmware/qlogic/12160.bin.ihex | 1771 +++++++++++++++++++++++++++++++++
+>  firmware/qlogic/1280.bin.ihex  | 2008 +++++++++++++++++++++++++++++++++++++
+>  10 files changed, 5985 insertions(+), 6029 deletions(-)
+>  delete mode 100644 drivers/scsi/ql1040_fw.h
+>  delete mode 100644 drivers/scsi/ql12160_fw.h
+>  delete mode 100644 drivers/scsi/ql1280_fw.h
+>  create mode 100644 firmware/qlogic/1040.bin.ihex
+>  create mode 100644 firmware/qlogic/12160.bin.ihex
+>  create mode 100644 firmware/qlogic/1280.bin.ihex
