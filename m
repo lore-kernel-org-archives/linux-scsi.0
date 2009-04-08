@@ -1,60 +1,75 @@
-From: Peter Jones <pjones@redhat.com>
-Subject: Re: [PATCH 1/3] scsi_dh: Add modalias support for SCSI targets
-Date: Wed, 08 Apr 2009 11:08:22 -0400
-Message-ID: <49DCBDE6.5000806@redhat.com>
-References: <20090318013615.26548.36303.sendpatchset@chandra-ubuntu>	 <20090318013621.26548.10529.sendpatchset@chandra-ubuntu>	 <ac3eb2510903181130s5dd1b1caje579d765fd338f6f@mail.gmail.com>	 <1237403902.14147.25.camel@chandra-ubuntu>	 <1237488880.26341.15.camel@chandra-ubuntu>  <49C3DF49.8050408@redhat.com>	 <1237846429.14853.6.camel@chandra-ubuntu>	 <1238798590.20924.0.camel@chandra-ubuntu> <1239137973.29492.12.camel@mulgrave>
+From: Andrew Patterson <andrew.patterson@hp.com>
+Subject: Re: [PATCH 1/1] cciss: resubmit export uid, model, vendor, rev to
+ sysfs
+Date: Wed, 08 Apr 2009 16:24:13 +0000
+Message-ID: <1239207853.19984.207.camel@grinch>
+References: <20090407180411.GA4324@beardog.cca.cpqcorp.net>
+	 <20090408061901.GN5178@kernel.dk>
+	 <ac3eb2510904080526h36673aa7qb5d530df33a60104@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:33728 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932543AbZDHPL2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Apr 2009 11:11:28 -0400
-In-Reply-To: <1239137973.29492.12.camel@mulgrave>
+Received: from g4t0015.houston.hp.com ([15.201.24.18]:43313 "EHLO
+	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753784AbZDHQYT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Apr 2009 12:24:19 -0400
+In-Reply-To: <ac3eb2510904080526h36673aa7qb5d530df33a60104@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: sekharan@linux.vnet.ibm.com, Kay Sievers <kay.sievers@vrfy.org>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: Jens Axboe <jens.axboe@oracle.com>, "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, LKML-SCSI <linux-scsi@vger.kernel.org>, mike.miller@hp.com
 
-On 04/07/2009 04:59 PM, James Bottomley wrote:
-> On Fri, 2009-04-03 at 15:43 -0700, Chandra Seetharaman wrote:
->> Hi James,
->>
->> Do you still have any concerns (after Peter's response) ?
+On Wed, 2009-04-08 at 05:26 -0700, Kay Sievers wrote:
+> On Tue, Apr 7, 2009 at 23:19, Jens Axboe <jens.axboe@oracle.com> wrote:
+> > On Tue, Apr 07 2009, Mike Miller (OS Dev) wrote:
 > 
-> Yes, the basic concerns still remain:
+> > The patch looks fine to me, but my sysfs foo is very weak though. CC'ing
+> > Kay, perhaps he can help take a quick look at this.
 > 
->      1. You're forcing autoload now even if the user isn't running
->         dm ... this is going to cause problems with non-dm based path
->         handlers
+> >> + * Initialize sysfs for each logical drive.  This sets up and registers
+> >> + * the 'c#d#' directory for each individual logical drive under
+> >> + * /sys/bus/pci/devices/<dev/ccis#/. We also create a link from
+> >> + * /sys/block/cciss!c#d# to this entry.
+> >> + */
+> >> +static int cciss_create_ld_sysfs_entry(struct ctlr_info *h,
+> >> +                                    drive_info_struct *drv,
+> >> +                                    int drv_index)
+> >> +{
+> >> +     device_initialize(&drv->dev);
+> >> +     drv->dev.type = &cciss_dev_type;
+> >> +     dev_set_name(&drv->dev, "c%dd%d", h->ctlr, drv_index);
+> >> +     drv->dev.parent = &h->dev;
+> >> +     return device_add(&drv->dev);
+> >> +}
+> 
+> If I read that correctly, you are creating a hierarchy of devices
+> where the devices do not belong to any subsystem? This is what we need
+> to avoid in almost all cases, we need a "subsystem" link in sysfs.
+> 
 
-(Chandra covered this pretty well, so I'll leave it be.)
+Yes, but apparently mistakenly.
 
->      2. autoloading in this fashion is essentially trying to work around
->         a problem in the initrd tools.  The kernel isn't the right place
->         to implement the fix.
+> I wold expect the cciss devices not to be a magic, silently created,
+> subdirectory of a pci device, but to have their own "cciss" bus in
+> sysfs, so the created devices get proper events at creation time. All
+> the cciss devices would show up in its own directory
+> /sys/bus/cciss/devices/*.
+> 
+> I think, you should name all "cciss bus devices" uniquely, and assign
+> them to a "cciss bus_type". We really do not want unclassified devices
+> in the chain of parent devices of a block device.
+> 
 
-This seems backwards to me.  It's not trying to work around a problem
-in the initrd tools; it's trying to avoid creating one by making this
-subsystem unlike others.
+I'll try this.  Although I am wondering whether to put hosts or logical
+drives in /sys/bus/cciss/devices (or both). Can I do what I am doing
+now, just moving it to /sys/bus/cciss/devices? That
+is, /sys/bus/cciss/devices/ccissX/cYdZ.
 
-The point of having modaliases is to allow the kernel to announce that it's
-got a hardware device and notify the userland that appropriate modules should
-be loaded.  That's exactly what we've done here.  What we're trying to avoid
-in the initrd tools is having to have a special handler for this subsystem;
-instead, we'd much rather use the generic mechanism that already exists for
-this purpose.
+Andrew
 
-> The risks of this approach seem very high, and the rewards pretty small.
+> Or do I missing something here?
+> 
+> Kay
 
-Can you please explain what the high risks you're thinking of are?  I'm not
-clear on what undesirable behavior you expect to occur.
 
-The reward is that scsi targets behave exactly like most other types of
-hardware and kernel modules in this regard, without having to write special
-probing for this subsystem in the userland and special handling for loading
-these modules.  That's a pretty big win for maintainability.
-
--- 
-        Peter
