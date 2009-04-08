@@ -1,272 +1,477 @@
 From: Michael Reed <mdr@sgi.com>
-Subject: [PATCH 1/2] qla1280: driver clean up
-Date: Wed, 08 Apr 2009 14:33:48 -0500
-Message-ID: <49DCFC1C.5070805@sgi.com>
+Subject: [PATCH 2/2] qla1280: error recovery rewrite
+Date: Wed, 08 Apr 2009 14:34:33 -0500
+Message-ID: <49DCFC49.8030908@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay2.sgi.com ([192.48.179.30]:44957 "EHLO relay.sgi.com"
+Received: from relay1.sgi.com ([192.48.179.29]:56858 "EHLO relay.sgi.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752045AbZDHTdu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Apr 2009 15:33:50 -0400
+	id S1752045AbZDHTef (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Apr 2009 15:34:35 -0400
 Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [150.166.39.100])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 313163040BB
-	for <linux-scsi@vger.kernel.org>; Wed,  8 Apr 2009 12:33:49 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2A57C8F8049
+	for <linux-scsi@vger.kernel.org>; Wed,  8 Apr 2009 12:34:34 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>
 Cc: Jeremy Higdon <jeremy@sgi.com>, Jes Sorensen <jes@sgi.com>
 
-Remove some unneeded, inactive and unused code, make some trivial
-corrections to comments and a printk, and return a proper status
-in qla1280_queuecommand.  No fundamental logic changes are made.
+The driver now waits for the scsi commands associated with a
+particular error recovery step to be returned to the mid-layer,
+and returns the appropriate SUCCESS or FAILED status.  Removes
+unneeded polling of chip for interrupts.
+
+This patch also bumps the driver version number.
 
 Signed-off-by: Michael Reed <mdr@sgi.com>
 
 
---- a/drivers/scsi/qla1280.c	2009-04-07 14:40:53.000000000 -0500
-+++ b/drivers/scsi/qla1280.c	2009-04-08 10:15:17.606490034 -0500
-@@ -435,7 +435,6 @@ static int qla1280_mailbox_command(struc
- 				   uint8_t, uint16_t *);
- static int qla1280_bus_reset(struct scsi_qla_host *, int);
- static int qla1280_device_reset(struct scsi_qla_host *, int, int);
--static int qla1280_abort_device(struct scsi_qla_host *, int, int, int);
- static int qla1280_abort_command(struct scsi_qla_host *, struct srb *, int);
- static int qla1280_abort_isp(struct scsi_qla_host *);
- #ifdef QLA_64BIT_PTR
-@@ -698,7 +697,7 @@ qla1280_info(struct Scsi_Host *host)
- }
- 
- /**************************************************************************
-- *   qla1200_queuecommand
-+ *   qla1280_queuecommand
-  *     Queue a command to the controller.
-  *
-  * Note:
-@@ -713,7 +712,7 @@ qla1280_queuecommand(struct scsi_cmnd *c
- {
- 	struct Scsi_Host *host = cmd->device->host;
- 	struct scsi_qla_host *ha = (struct scsi_qla_host *)host->hostdata;
--	struct srb *sp = (struct srb *)&cmd->SCp;
-+	struct srb *sp = (struct srb *)CMD_SP(cmd);
- 	int status;
- 
+--- a/drivers/scsi/qla1280.c	2009-04-08 10:28:55.646489186 -0500
++++ b/drivers/scsi/qla1280.c	2009-04-08 10:38:52.382493685 -0500
+@@ -17,9 +17,12 @@
+ * General Public License for more details.
+ *
+ ******************************************************************************/
+-#define QLA1280_VERSION      "3.26"
++#define QLA1280_VERSION      "3.27"
+ /*****************************************************************************
+     Revision History:
++    Rev  3.27, February 10, 2009, Michael Reed
++	- General code cleanup.
++	- Improve error recovery.
+     Rev  3.26, January 16, 2006 Jes Sorensen
+ 	- Ditch all < 2.6 support
+     Rev  3.25.1, February 10, 2005 Christoph Hellwig
+@@ -718,6 +721,8 @@ qla1280_queuecommand(struct scsi_cmnd *c
  	cmd->scsi_done = fn;
-@@ -738,11 +737,9 @@ qla1280_queuecommand(struct scsi_cmnd *c
+ 	sp->cmd = cmd;
+ 	sp->flags = 0;
++	sp->wait = NULL;
++	CMD_HANDLE(cmd) = (unsigned char *)NULL;
  
- enum action {
- 	ABORT_COMMAND,
--	ABORT_DEVICE,
- 	DEVICE_RESET,
- 	BUS_RESET,
+ 	qla1280_print_scsi_cmd(5, cmd);
+ 
+@@ -742,14 +747,6 @@ enum action {
  	ADAPTER_RESET,
--	FAIL
  };
  
- /* timer action for error action processor */
-@@ -768,7 +765,7 @@ static void qla1280_mailbox_timeout(unsi
+-/* timer action for error action processor */
+-static void qla1280_error_wait_timeout(unsigned long __data)
+-{
+-	struct scsi_cmnd *cmd = (struct scsi_cmnd *)__data;
+-	struct srb *sp = (struct srb *)CMD_SP(cmd);
+-
+-	complete(sp->wait);
+-}
+ 
+ static void qla1280_mailbox_timeout(unsigned long __data)
+ {
+@@ -764,6 +761,65 @@ static void qla1280_mailbox_timeout(unsi
+ 	complete(ha->mailbox_wait);
  }
  
- /**************************************************************************
-- * qla1200_error_action
-+ * qla1280_error_action
-  *    The function will attempt to perform a specified error action and
-  *    wait for the results (or time out).
-  *
-@@ -798,6 +795,8 @@ qla1280_error_action(struct scsi_cmnd *c
- 	DECLARE_COMPLETION_ONSTACK(wait);
- 	struct timer_list timer;
- 
-+	ENTER("qla1280_error_action");
++static int
++_qla1280_wait_for_single_command(struct scsi_qla_host *ha, struct srb *sp,
++				 struct completion *wait)
++{
++	int	status = FAILED;
++	struct scsi_cmnd *cmd = sp->cmd;
 +
++	spin_unlock_irq(ha->host->host_lock);
++	wait_for_completion_timeout(wait, 4*HZ);
++	spin_lock_irq(ha->host->host_lock);
++	sp->wait = NULL;
++	if(CMD_HANDLE(cmd) == COMPLETED_HANDLE) {
++		status = SUCCESS;
++		(*cmd->scsi_done)(cmd);
++	}
++	return status;
++}
++
++static int
++qla1280_wait_for_single_command(struct scsi_qla_host *ha, struct srb *sp)
++{
++	DECLARE_COMPLETION_ONSTACK(wait);
++
++	sp->wait = &wait;
++	return _qla1280_wait_for_single_command(ha, sp, &wait);
++}
++
++static int
++qla1280_wait_for_pending_commands(struct scsi_qla_host *ha, int bus, int target)
++{
++	int		cnt;
++	int		status;
++	struct srb	*sp;
++	struct scsi_cmnd *cmd;
++
++	status = SUCCESS;
++
++	/*
++	 * Wait for all commands with the designated bus/target
++	 * to be completed by the firmware
++	 */
++	for (cnt = 0; cnt < MAX_OUTSTANDING_COMMANDS; cnt++) {
++		sp = ha->outstanding_cmds[cnt];
++		if (sp) {
++			cmd = sp->cmd;
++
++			if (bus >= 0 && SCSI_BUS_32(cmd) != bus)
++				continue;
++			if (target >= 0 && SCSI_TCN_32(cmd) != target)
++				continue;
++
++			status = qla1280_wait_for_single_command(ha, sp);
++			if (status == FAILED)
++				break;
++		}
++	}
++	return status;
++}
++
+ /**************************************************************************
+  * qla1280_error_action
+  *    The function will attempt to perform a specified error action and
+@@ -777,11 +833,6 @@ static void qla1280_mailbox_timeout(unsi
+  * Returns:
+  *      SUCCESS or FAILED
+  *
+- * Note:
+- *      Resetting the bus always succeeds - is has to, otherwise the
+- *      kernel will panic! Try a surgical technique - sending a BUS
+- *      DEVICE RESET message - on the offending target before pulling
+- *      the SCSI bus reset line.
+  **************************************************************************/
+ static int
+ qla1280_error_action(struct scsi_cmnd *cmd, enum action action)
+@@ -789,15 +840,19 @@ qla1280_error_action(struct scsi_cmnd *c
+ 	struct scsi_qla_host *ha;
+ 	int bus, target, lun;
+ 	struct srb *sp;
+-	uint16_t data;
+-	unsigned char *handle;
+-	int result, i;
++	int i, found;
++	int result=FAILED;
++	int wait_for_bus=-1;
++	int wait_for_target = -1;
+ 	DECLARE_COMPLETION_ONSTACK(wait);
+-	struct timer_list timer;
+ 
+ 	ENTER("qla1280_error_action");
+ 
  	ha = (struct scsi_qla_host *)(CMD_HOST(cmd)->hostdata);
++	sp = (struct srb *)CMD_SP(cmd);
++	bus = SCSI_BUS_32(cmd);
++	target = SCSI_TCN_32(cmd);
++	lun = SCSI_LUN_32(cmd);
  
  	dprintk(4, "error_action %i, istatus 0x%04x\n", action,
-@@ -807,20 +806,11 @@ qla1280_error_action(struct scsi_cmnd *c
- 		RD_REG_WORD(&ha->iobase->host_cmd),
- 		RD_REG_WORD(&ha->iobase->ictrl), jiffies);
- 
--	ENTER("qla1280_error_action");
- 	if (qla1280_verbose)
- 		printk(KERN_INFO "scsi(%li): Resetting Cmnd=0x%p, "
+ 		RD_REG_WORD(&ha->iobase->istatus));
+@@ -811,73 +866,42 @@ qla1280_error_action(struct scsi_cmnd *c
  		       "Handle=0x%p, action=0x%x\n",
  		       ha->host_no, cmd, CMD_HANDLE(cmd), action);
  
--	if (cmd == NULL) {
--		printk(KERN_WARNING "(scsi?:?:?:?) Reset called with NULL "
--		       "si_Cmnd pointer, failing.\n");
--		LEAVE("qla1280_error_action");
--		return FAILED;
--	}
+-	sp = (struct srb *)CMD_SP(cmd);
+-	handle = CMD_HANDLE(cmd);
 -
--	ha = (struct scsi_qla_host *)cmd->device->host->hostdata;
- 	sp = (struct srb *)CMD_SP(cmd);
- 	handle = CMD_HANDLE(cmd);
- 
-@@ -857,9 +847,6 @@ qla1280_error_action(struct scsi_cmnd *c
- 	 * mean the actual success or fail of the action */
- 	result = FAILED;
- 	switch (action) {
--	case FAIL:
--		break;
+-	/* Check for pending interrupts. */
+-	data = qla1280_debounce_register(&ha->iobase->istatus);
+-	/*
+-	 * The io_request_lock is held when the reset handler is called, hence
+-	 * the interrupt handler cannot be running in parallel as it also
+-	 * grabs the lock. /Jes
+-	 */
+-	if (data & RISC_INT)
+-		qla1280_isr(ha, &ha->done_q);
 -
- 	case ABORT_COMMAND:
- 		if ((sp->flags & SRB_ABORT_PENDING)) {
- 			printk(KERN_WARNING
-@@ -893,15 +880,6 @@ qla1280_error_action(struct scsi_cmnd *c
+ 	/*
+-	 * Determine the suggested action that the mid-level driver wants
+-	 * us to perform.
++	 * Check to see if we have the command in the outstanding_cmds[]
++	 * array.  If not then it must have completed before this error
++	 * action was initiated.  If the error_action isn't ABORT_COMMAND
++	 * then the driver must proceed with the requested action.
+ 	 */
+-	if (handle == (unsigned char *)INVALID_HANDLE || handle == NULL) {
+-		if(action == ABORT_COMMAND) {
+-			/* we never got this command */
+-			printk(KERN_INFO "qla1280: Aborting a NULL handle\n");
+-			return SUCCESS;	/* no action - we don't have command */
++	found = -1;
++	for (i = 0; i < MAX_OUTSTANDING_COMMANDS; i++) {
++		if (sp == ha->outstanding_cmds[i]) {
++			found = i;
++			sp->wait = &wait; /* we'll wait for it to complete */
++			break;
  		}
+-	} else {
+-		sp->wait = &wait;
+ 	}
+ 
+-	bus = SCSI_BUS_32(cmd);
+-	target = SCSI_TCN_32(cmd);
+-	lun = SCSI_LUN_32(cmd);
++	if (found < 0) {	/* driver doesn't have command */
++		result = SUCCESS;
++		if (qla1280_verbose) {
++			printk(KERN_INFO
++			       "scsi(%ld:%d:%d:%d): specified command has "
++			       "already completed.\n", ha->host_no, bus,
++				target, lun);
++		}
++	}
+ 
+-	/* Overloading result.  Here it means the success or fail of the
+-	 * *issue* of the action.  When we return from the routine, it must
+-	 * mean the actual success or fail of the action */
+-	result = FAILED;
+ 	switch (action) {
+-	case ABORT_COMMAND:
+-		if ((sp->flags & SRB_ABORT_PENDING)) {
+-			printk(KERN_WARNING
+-			       "scsi(): Command has a pending abort "
+-			       "message - ABORT_PENDING.\n");
+-			/* This should technically be impossible since we
+-			 * now wait for abort completion */
+-			break;
+-		}
+ 
+-		for (i = 0; i < MAX_OUTSTANDING_COMMANDS; i++) {
+-			if (sp == ha->outstanding_cmds[i]) {
+-				dprintk(1, "qla1280: RISC aborting command\n");
+-				if (qla1280_abort_command(ha, sp, i) == 0)
+-					result = SUCCESS;
+-				else {
+-					/*
+-					 * Since we don't know what might
+-					 * have happend to the command, it
+-					 * is unsafe to remove it from the
+-					 * device's queue at this point.
+-					 * Wait and let the escalation
+-					 * process take care of it.
+-					 */
+-					printk(KERN_WARNING
+-					       "scsi(%li:%i:%i:%i): Unable"
+-					       " to abort command!\n",
+-					       ha->host_no, bus, target, lun);
+-				}
+-			}
+-		}
++	case ABORT_COMMAND:
++		dprintk(1, "qla1280: RISC aborting command\n");
++		/*
++		 * The abort might fail due to race when the host_lock
++		 * is released to issue the abort.  As such, we
++		 * don't bother to check the return status.
++		 */
++		if (found >= 0)
++			qla1280_abort_command(ha, sp, found);
  		break;
  
--	case ABORT_DEVICE:
--		if (qla1280_verbose)
--			printk(KERN_INFO
--			       "scsi(%ld:%d:%d:%d): Queueing abort device "
--			       "command.\n", ha->host_no, bus, target, lun);
--		if (qla1280_abort_device(ha, bus, target, lun) == 0)
--			result = SUCCESS;
--		break;
--
  	case DEVICE_RESET:
- 		if (qla1280_verbose)
+@@ -885,16 +909,21 @@ qla1280_error_action(struct scsi_cmnd *c
  			printk(KERN_INFO
-@@ -1285,8 +1263,6 @@ qla1280_done(struct scsi_qla_host *ha)
+ 			       "scsi(%ld:%d:%d:%d): Queueing device reset "
+ 			       "command.\n", ha->host_no, bus, target, lun);
+-		if (qla1280_device_reset(ha, bus, target) == 0)
+-			result = SUCCESS;
++		if (qla1280_device_reset(ha, bus, target) == 0) {
++			/* issued device reset, set wait conditions */
++			wait_for_bus = bus;
++			wait_for_target = target;
++		}
+ 		break;
+ 
+ 	case BUS_RESET:
+ 		if (qla1280_verbose)
+ 			printk(KERN_INFO "qla1280(%ld:%d): Issued bus "
+ 			       "reset.\n", ha->host_no, bus);
+-		if (qla1280_bus_reset(ha, bus) == 0)
+-			result = SUCCESS;
++		if (qla1280_bus_reset(ha, bus) == 0) {
++			/* issued bus reset, set wait conditions */
++			wait_for_bus = bus;
++		}
+ 		break;
+ 
+ 	case ADAPTER_RESET:
+@@ -907,55 +936,48 @@ qla1280_error_action(struct scsi_cmnd *c
+ 			       "continue automatically\n", ha->host_no);
+ 		}
+ 		ha->flags.reset_active = 1;
+-		/*
+-		 * We restarted all of the commands automatically, so the
+-		 * mid-level code can expect completions momentitarily.
+-		 */
+-		if (qla1280_abort_isp(ha) == 0)
+-			result = SUCCESS;
++
++		if (qla1280_abort_isp(ha) != 0) {	/* it's dead */
++			result = FAILED;
++		}
+ 
+ 		ha->flags.reset_active = 0;
+ 	}
+ 
+-	if (!list_empty(&ha->done_q))
+-		qla1280_done(ha);
+-
+-	/* If we didn't manage to issue the action, or we have no
+-	 * command to wait for, exit here */
+-	if (result == FAILED || handle == NULL ||
+-	    handle == (unsigned char *)INVALID_HANDLE) {
+-		/*
+-		 * Clear completion queue to avoid qla1280_done() trying
+-		 * to complete the command at a later stage after we
+-		 * have exited the current context
+-		 */
+-		sp->wait = NULL;
+-		goto leave;
+-	}
++	/*
++	 * At this point, the host_lock has been released and retaken
++	 * by the issuance of the mailbox command.
++	 * Wait for the command passed in by the mid-layer if it
++	 * was found by the driver.  It might have been returned
++	 * between eh recovery steps, hence the check of the "found"
++	 * variable.
++	 */
+ 
+-	/* set up a timer just in case we're really jammed */
+-	init_timer(&timer);
+-	timer.expires = jiffies + 4*HZ;
+-	timer.data = (unsigned long)cmd;
+-	timer.function = qla1280_error_wait_timeout;
+-	add_timer(&timer);
++	if (found >= 0)
++		result = _qla1280_wait_for_single_command(ha, sp, &wait);
+ 
+-	/* wait for the action to complete (or the timer to expire) */
+-	spin_unlock_irq(ha->host->host_lock);
+-	wait_for_completion(&wait);
+-	del_timer_sync(&timer);
+-	spin_lock_irq(ha->host->host_lock);
+-	sp->wait = NULL;
++	if (action == ABORT_COMMAND && result != SUCCESS) {
++		printk(KERN_WARNING
++		       "scsi(%li:%i:%i:%i): "
++		       "Unable to abort command!\n",
++		       ha->host_no, bus, target, lun);
++	}
+ 
+-	/* the only action we might get a fail for is abort */
+-	if (action == ABORT_COMMAND) {
+-		if(sp->flags & SRB_ABORTED)
+-			result = SUCCESS;
+-		else
+-			result = FAILED;
++	/*
++	 * If the command passed in by the mid-layer has been
++	 * returned by the board, then wait for any additional
++	 * commands which are supposed to complete based upon
++	 * the error action.
++	 *
++	 * All commands are unconditionally returned during a
++	 * call to qla1280_abort_isp(), ADAPTER_RESET.  No need
++	 * to wait for them.
++	 */
++	if (result == SUCCESS && wait_for_bus >= 0) {
++		result = qla1280_wait_for_pending_commands(ha,
++					wait_for_bus, wait_for_target);
+ 	}
+ 
+- leave:
+ 	dprintk(1, "RESET returning %d\n", result);
+ 
+ 	LEAVE("qla1280_error_action");
+@@ -1258,7 +1280,8 @@ qla1280_done(struct scsi_qla_host *ha)
+ 		switch ((CMD_RESULT(cmd) >> 16)) {
+ 		case DID_RESET:
+ 			/* Issue marker command. */
+-			qla1280_marker(ha, bus, target, 0, MK_SYNC_ID);
++			if (!ha->flags.abort_isp_active)
++				qla1280_marker(ha, bus, target, 0, MK_SYNC_ID);
+ 			break;
  		case DID_ABORT:
  			sp->flags &= ~SRB_ABORT_PENDING;
- 			sp->flags |= SRB_ABORTED;
--			if (sp->flags & SRB_TIMEOUT)
--				CMD_RESULT(sp->cmd) = DID_TIME_OUT << 16;
- 			break;
- 		default:
- 			break;
-@@ -2417,9 +2393,6 @@ static int
- qla1280_mailbox_command(struct scsi_qla_host *ha, uint8_t mr, uint16_t *mb)
- {
- 	struct device_reg __iomem *reg = ha->iobase;
--#if 0
--	LIST_HEAD(done_q);
--#endif
- 	int status = 0;
- 	int cnt;
- 	uint16_t *optr, *iptr;
-@@ -2493,19 +2466,9 @@ qla1280_mailbox_command(struct scsi_qla_
- 	mr = MAILBOX_REGISTER_COUNT;
- 	memcpy(optr, iptr, MAILBOX_REGISTER_COUNT * sizeof(uint16_t));
+@@ -1272,12 +1295,11 @@ qla1280_done(struct scsi_qla_host *ha)
+ 		scsi_dma_unmap(cmd);
  
--#if 0
--	/* Go check for any response interrupts pending. */
--	qla1280_isr(ha, &done_q);
--#endif
--
- 	if (ha->flags.reset_marker)
- 		qla1280_rst_aen(ha);
+ 		/* Call the mid-level driver interrupt handler */
+-		CMD_HANDLE(sp->cmd) = (unsigned char *)INVALID_HANDLE;
+ 		ha->actthreads--;
  
--#if 0
--	if (!list_empty(&done_q))
--		qla1280_done(ha, &done_q);
--#endif
+-		(*(cmd)->scsi_done)(cmd);
 -
+-		if(sp->wait != NULL)
++		if (sp->wait == NULL)
++			(*(cmd)->scsi_done)(cmd);
++		else
+ 			complete(sp->wait);
+ 	}
+ 	LEAVE("qla1280_done");
+@@ -3415,6 +3437,7 @@ qla1280_isr(struct scsi_qla_host *ha, st
+ 
+ 					/* Save ISP completion status */
+ 					CMD_RESULT(sp->cmd) = 0;
++					CMD_HANDLE(sp->cmd) = COMPLETED_HANDLE;
+ 
+ 					/* Place block on done queue */
+ 					list_add_tail(&sp->list, done_q);
+@@ -3681,6 +3704,8 @@ qla1280_status_entry(struct scsi_qla_hos
+ 		}
+ 	}
+ 
++	CMD_HANDLE(sp->cmd) = COMPLETED_HANDLE;
++
+ 	/* Place command on done queue. */
+ 	list_add_tail(&sp->list, done_q);
+  out:
+@@ -3736,6 +3761,8 @@ qla1280_error_entry(struct scsi_qla_host
+ 			CMD_RESULT(sp->cmd) = DID_ERROR << 16;
+ 		}
+ 
++		CMD_HANDLE(sp->cmd) = COMPLETED_HANDLE;
++
+ 		/* Place command on done queue. */
+ 		list_add_tail(&sp->list, done_q);
+ 	}
+@@ -3786,19 +3813,16 @@ qla1280_abort_isp(struct scsi_qla_host *
+ 		struct scsi_cmnd *cmd;
+ 		sp = ha->outstanding_cmds[cnt];
+ 		if (sp) {
+-
+ 			cmd = sp->cmd;
+ 			CMD_RESULT(cmd) = DID_RESET << 16;
+-
+-			sp->cmd = NULL;
++			CMD_HANDLE(cmd) = COMPLETED_HANDLE;
+ 			ha->outstanding_cmds[cnt] = NULL;
+-
+-			(*cmd->scsi_done)(cmd);
+-
+-			sp->flags = 0;
++			list_add_tail(&sp->list, &ha->done_q);
+ 		}
+ 	}
+ 
++	qla1280_done(ha);
++
+ 	status = qla1280_load_firmware(ha);
  	if (status)
- 		dprintk(2, "qla1280_mailbox_command: **** FAILED, mailbox0 = "
- 			"0x%x ****\n", mb[0]);
-@@ -2641,41 +2604,6 @@ qla1280_device_reset(struct scsi_qla_hos
- }
- 
- /*
-- * qla1280_abort_device
-- *      Issue an abort message to the device
-- *
-- * Input:
-- *      ha     = adapter block pointer.
-- *      bus    = SCSI BUS.
-- *      target = SCSI ID.
-- *      lun    = SCSI LUN.
-- *
-- * Returns:
-- *      0 = success
-- */
--static int
--qla1280_abort_device(struct scsi_qla_host *ha, int bus, int target, int lun)
--{
--	uint16_t mb[MAILBOX_REGISTER_COUNT];
--	int status;
--
--	ENTER("qla1280_abort_device");
--
--	mb[0] = MBC_ABORT_DEVICE;
--	mb[1] = (bus ? target | BIT_7 : target) << 8 | lun;
--	status = qla1280_mailbox_command(ha, BIT_1 | BIT_0, &mb[0]);
--
--	/* Issue marker command. */
--	qla1280_marker(ha, bus, target, lun, MK_SYNC_ID_LUN);
--
--	if (status)
--		dprintk(2, "qla1280_abort_device: **** FAILED ****\n");
--
--	LEAVE("qla1280_abort_device");
--	return status;
--}
--
--/*
-  * qla1280_abort_command
-  *      Abort command aborts a specified IOCB.
-  *
-@@ -2833,7 +2761,7 @@ qla1280_64bit_start_scsi(struct scsi_qla
- 
- 	/* If room for request in request ring. */
- 	if ((req_cnt + 2) >= ha->req_q_cnt) {
--		status = 1;
-+		status = SCSI_MLQUEUE_HOST_BUSY;
- 		dprintk(2, "qla1280_start_scsi: in-ptr=0x%x  req_q_cnt="
- 			"0x%xreq_cnt=0x%x", ha->req_ring_index, ha->req_q_cnt,
- 			req_cnt);
-@@ -2845,7 +2773,7 @@ qla1280_64bit_start_scsi(struct scsi_qla
- 		     ha->outstanding_cmds[cnt] != NULL; cnt++);
- 
- 	if (cnt >= MAX_OUTSTANDING_COMMANDS) {
--		status = 1;
-+		status = SCSI_MLQUEUE_HOST_BUSY;
- 		dprintk(2, "qla1280_start_scsi: NO ROOM IN "
- 			"OUTSTANDING ARRAY, req_q_cnt=0x%x", ha->req_q_cnt);
  		goto out;
-@@ -3108,7 +3036,7 @@ qla1280_32bit_start_scsi(struct scsi_qla
- 		ha->req_q_cnt, seg_cnt);
- 	/* If room for request in request ring. */
- 	if ((req_cnt + 2) >= ha->req_q_cnt) {
--		status = 1;
-+		status = SCSI_MLQUEUE_HOST_BUSY;
- 		dprintk(2, "qla1280_32bit_start_scsi: in-ptr=0x%x, "
- 			"req_q_cnt=0x%x, req_cnt=0x%x", ha->req_ring_index,
- 			ha->req_q_cnt, req_cnt);
-@@ -3120,7 +3048,7 @@ qla1280_32bit_start_scsi(struct scsi_qla
- 		     (ha->outstanding_cmds[cnt] != 0); cnt++) ;
+--- a/drivers/scsi/qla1280.h	2009-04-07 14:40:53.000000000 -0500
++++ b/drivers/scsi/qla1280.h	2009-04-08 10:27:19.178492197 -0500
+@@ -88,7 +88,8 @@
  
- 	if (cnt >= MAX_OUTSTANDING_COMMANDS) {
--		status = 1;
-+		status = SCSI_MLQUEUE_HOST_BUSY;
- 		dprintk(2, "qla1280_32bit_start_scsi: NO ROOM IN OUTSTANDING "
- 			"ARRAY, req_q_cnt=0x%x\n", ha->req_q_cnt);
- 		goto out;
-@@ -3495,7 +3423,7 @@ qla1280_isr(struct scsi_qla_host *ha, st
- 					 * If we get here we have a real problem!
- 					 */
- 					printk(KERN_WARNING
--					       "qla1280: ISP invalid handle");
-+					       "qla1280: ISP invalid handle\n");
- 				}
- 			}
- 			break;
-@@ -3955,13 +3883,6 @@ qla1280_check_for_dead_scsi_bus(struct s
+ /* Maximum outstanding commands in ISP queues */
+ #define MAX_OUTSTANDING_COMMANDS	512
+-#define INVALID_HANDLE			(MAX_OUTSTANDING_COMMANDS + 2)
++#define COMPLETED_HANDLE		((unsigned char *) \
++					(MAX_OUTSTANDING_COMMANDS + 2))
  
- 		if (scsi_control == SCSI_PHASE_INVALID) {
- 			ha->bus_settings[bus].scsi_bus_dead = 1;
--#if 0
--			CMD_RESULT(cp) = DID_NO_CONNECT << 16;
--			CMD_HANDLE(cp) = INVALID_HANDLE;
--			/* ha->actthreads--; */
--
--			(*(cp)->scsi_done)(cp);
--#endif
- 			return 1;	/* bus is dead */
- 		} else {
- 			ha->bus_settings[bus].scsi_bus_dead = 0;
+ /* ISP request and response entry counts (37-65535) */
+ #define REQUEST_ENTRY_CNT		255 /* Number of request entries. */
