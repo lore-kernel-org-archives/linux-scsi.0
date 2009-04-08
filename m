@@ -1,68 +1,60 @@
-From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
-Subject: Re: [PATCH 1/1] cciss: resubmit export uid, model, vendor, rev to sysfs
-Date: Wed, 8 Apr 2009 09:53:38 -0500
-Message-ID: <20090408145338.GA3998@beardog.cca.cpqcorp.net>
-References: <20090407180411.GA4324@beardog.cca.cpqcorp.net> <20090408061901.GN5178@kernel.dk> <20090408081337.GX5178@kernel.dk>
+From: Peter Jones <pjones@redhat.com>
+Subject: Re: [PATCH 1/3] scsi_dh: Add modalias support for SCSI targets
+Date: Wed, 08 Apr 2009 11:08:22 -0400
+Message-ID: <49DCBDE6.5000806@redhat.com>
+References: <20090318013615.26548.36303.sendpatchset@chandra-ubuntu>	 <20090318013621.26548.10529.sendpatchset@chandra-ubuntu>	 <ac3eb2510903181130s5dd1b1caje579d765fd338f6f@mail.gmail.com>	 <1237403902.14147.25.camel@chandra-ubuntu>	 <1237488880.26341.15.camel@chandra-ubuntu>  <49C3DF49.8050408@redhat.com>	 <1237846429.14853.6.camel@chandra-ubuntu>	 <1238798590.20924.0.camel@chandra-ubuntu> <1239137973.29492.12.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0007.atlanta.hp.com ([15.192.0.44]:5164 "EHLO
-	g5t0007.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763019AbZDHOxi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Apr 2009 10:53:38 -0400
-Content-Disposition: inline
-In-Reply-To: <20090408081337.GX5178@kernel.dk>
+Received: from mx2.redhat.com ([66.187.237.31]:33728 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932543AbZDHPL2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Apr 2009 11:11:28 -0400
+In-Reply-To: <1239137973.29492.12.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, LKML-SCSI <linux-scsi@vger.kernel.org>, andrew.patterson@hp.com, mike.miller@hp.com, kay.sievers@vrfy.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: sekharan@linux.vnet.ibm.com, Kay Sievers <kay.sievers@vrfy.org>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-On Wed, Apr 08, 2009 at 10:13:37AM +0200, Jens Axboe wrote:
-> On Wed, Apr 08 2009, Jens Axboe wrote:
-> > On Tue, Apr 07 2009, Mike Miller (OS Dev) wrote:
-> > > Patch 1 of 1 resubmit
-> > > 
-> > > cciss: add cciss driver sysfs entries
-> > > 
-> > > This patch adds sysfs entries to the cciss driver needed for the
-> > > dm/multipath tools. A file for vendor, model, rev, and unique_id are
-> > > added for each logical drive under directory
-> > > /sys/bus/pci/devices/<dev>/ccissX/cXdY. Where X = the controller (or
-> > > host) number and Y is the logical drive number. A link from
-> > > /sys/bus/pci/devices/<dev>/ccissX/cXdY/block:cciss!cXdY to
-> > > /sys/block/cciss!cXdY/device is also created.
-> > > 
-> > > From: Andrew Patterson <andrew.patterson@hp.com>
-> > 
-> > You want to put that at the top of the email, so you have
-> > {from,description,signed-offs} in that order.
-> > 
-> > The patch looks fine to me, but my sysfs foo is very weak though. CC'ing
-> > Kay, perhaps he can help take a quick look at this.
+On 04/07/2009 04:59 PM, James Bottomley wrote:
+> On Fri, 2009-04-03 at 15:43 -0700, Chandra Seetharaman wrote:
+>> Hi James,
+>>
+>> Do you still have any concerns (after Peter's response) ?
 > 
-> It doesn't apply to 2.6.30-rc1:
+> Yes, the basic concerns still remain:
 > 
-> patching file Documentation/ABI/testing/sysfs-bus-pci-devices-cciss
-> patching file drivers/block/cciss.c
-> Hunk #1 succeeded at 437 (offset 3 lines).
-> Hunk #2 succeeded at 1518 (offset 20 lines).
-> Hunk #3 succeeded at 1597 (offset 20 lines).
-> Hunk #4 succeeded at 1688 (offset 20 lines).
-> Hunk #5 succeeded at 1739 (offset 20 lines).
-> Hunk #6 succeeded at 1816 (offset 20 lines).
-> Hunk #7 succeeded at 1825 (offset 20 lines).
-> Hunk #8 succeeded at 1950 (offset 20 lines).
-> Hunk #9 succeeded at 3956 with fuzz 2 (offset 93 lines).
-> Hunk #10 succeeded at 4108 (offset 98 lines).
-> Hunk #11 succeeded at 4220 (offset 101 lines).
-> patching file drivers/block/cciss.h
-> Hunk #3 FAILED at 131.
-> 1 out of 3 hunks FAILED -- saving rejects to file
-> drivers/block/cciss.h.rej
-> 
-My apologies, I built this against 2.6.29 not thinking that my other
-changes had been merged.
+>      1. You're forcing autoload now even if the user isn't running
+>         dm ... this is going to cause problems with non-dm based path
+>         handlers
 
-But it looks like Kay has issues with the patch. Andrew P.?
+(Chandra covered this pretty well, so I'll leave it be.)
 
--- mikem
+>      2. autoloading in this fashion is essentially trying to work around
+>         a problem in the initrd tools.  The kernel isn't the right place
+>         to implement the fix.
+
+This seems backwards to me.  It's not trying to work around a problem
+in the initrd tools; it's trying to avoid creating one by making this
+subsystem unlike others.
+
+The point of having modaliases is to allow the kernel to announce that it's
+got a hardware device and notify the userland that appropriate modules should
+be loaded.  That's exactly what we've done here.  What we're trying to avoid
+in the initrd tools is having to have a special handler for this subsystem;
+instead, we'd much rather use the generic mechanism that already exists for
+this purpose.
+
+> The risks of this approach seem very high, and the rewards pretty small.
+
+Can you please explain what the high risks you're thinking of are?  I'm not
+clear on what undesirable behavior you expect to occur.
+
+The reward is that scsi targets behave exactly like most other types of
+hardware and kernel modules in this regard, without having to write special
+probing for this subsystem in the userland and special handling for loading
+these modules.  That's a pretty big win for maintainability.
+
+-- 
+        Peter
