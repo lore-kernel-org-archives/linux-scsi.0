@@ -1,50 +1,68 @@
-From: Kay Sievers <kay.sievers@vrfy.org>
-Subject: Re: 2.6.30-rc1: OOPS on usb disk insert
-Date: Wed, 8 Apr 2009 06:25:41 -0700
-Message-ID: <ac3eb2510904080625m228ddc4dl611c3c5c368fab2a@mail.gmail.com>
-References: <49DC3094.5010607@gawab.com> <20090407223828.c9d2cb75.akpm@linux-foundation.org>
-	<49DC3F1F.9040306@gawab.com>
+From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Subject: Re: [PATCH 1/1] cciss: resubmit export uid, model, vendor, rev to sysfs
+Date: Wed, 8 Apr 2009 09:53:38 -0500
+Message-ID: <20090408145338.GA3998@beardog.cca.cpqcorp.net>
+References: <20090407180411.GA4324@beardog.cca.cpqcorp.net> <20090408061901.GN5178@kernel.dk> <20090408081337.GX5178@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:43995 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756188AbZDHNZ6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Apr 2009 09:25:58 -0400
-In-Reply-To: <49DC3F1F.9040306@gawab.com>
+Received: from g5t0007.atlanta.hp.com ([15.192.0.44]:5164 "EHLO
+	g5t0007.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763019AbZDHOxi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Apr 2009 10:53:38 -0400
+Content-Disposition: inline
+In-Reply-To: <20090408081337.GX5178@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Justin Madru <jdm64@gawab.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, Arjan van de Ven <arjan@infradead.org>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, LKML-SCSI <linux-scsi@vger.kernel.org>, andrew.patterson@hp.com, mike.miller@hp.com, kay.sievers@vrfy.org
 
-On Tue, Apr 7, 2009 at 23:07, Justin Madru <jdm64@gawab.com> wrote:
-> Andrew Morton wrote:
->> On Tue, 07 Apr 2009 22:05:24 -0700 Justin Madru <jdm64@gawab.com> wr=
-ote:
+On Wed, Apr 08, 2009 at 10:13:37AM +0200, Jens Axboe wrote:
+> On Wed, Apr 08 2009, Jens Axboe wrote:
+> > On Tue, Apr 07 2009, Mike Miller (OS Dev) wrote:
+> > > Patch 1 of 1 resubmit
+> > > 
+> > > cciss: add cciss driver sysfs entries
+> > > 
+> > > This patch adds sysfs entries to the cciss driver needed for the
+> > > dm/multipath tools. A file for vendor, model, rev, and unique_id are
+> > > added for each logical drive under directory
+> > > /sys/bus/pci/devices/<dev>/ccissX/cXdY. Where X = the controller (or
+> > > host) number and Y is the logical drive number. A link from
+> > > /sys/bus/pci/devices/<dev>/ccissX/cXdY/block:cciss!cXdY to
+> > > /sys/block/cciss!cXdY/device is also created.
+> > > 
+> > > From: Andrew Patterson <andrew.patterson@hp.com>
+> > 
+> > You want to put that at the top of the email, so you have
+> > {from,description,signed-offs} in that order.
+> > 
+> > The patch looks fine to me, but my sysfs foo is very weak though. CC'ing
+> > Kay, perhaps he can help take a quick look at this.
+> 
+> It doesn't apply to 2.6.30-rc1:
+> 
+> patching file Documentation/ABI/testing/sysfs-bus-pci-devices-cciss
+> patching file drivers/block/cciss.c
+> Hunk #1 succeeded at 437 (offset 3 lines).
+> Hunk #2 succeeded at 1518 (offset 20 lines).
+> Hunk #3 succeeded at 1597 (offset 20 lines).
+> Hunk #4 succeeded at 1688 (offset 20 lines).
+> Hunk #5 succeeded at 1739 (offset 20 lines).
+> Hunk #6 succeeded at 1816 (offset 20 lines).
+> Hunk #7 succeeded at 1825 (offset 20 lines).
+> Hunk #8 succeeded at 1950 (offset 20 lines).
+> Hunk #9 succeeded at 3956 with fuzz 2 (offset 93 lines).
+> Hunk #10 succeeded at 4108 (offset 98 lines).
+> Hunk #11 succeeded at 4220 (offset 101 lines).
+> patching file drivers/block/cciss.h
+> Hunk #3 FAILED at 131.
+> 1 out of 3 hunks FAILED -- saving rejects to file
+> drivers/block/cciss.h.rej
+> 
+My apologies, I built this against 2.6.29 not thinking that my other
+changes had been merged.
 
->>> Testing out .30-rc1 and usb devises don't work. I insert my flash d=
-isk
->>> and get this oops.
+But it looks like Kay has issues with the patch. Andrew P.?
 
->> The trace appears to be claiming that kernel/async.c:async_new.func =
-is
->> NULL.
->>
->> But it cannot be - it's initialised at compilation time. =C2=A0Unles=
-s
->> something scribbled on it of course.
-
-I've seen async problems with other subsystem too, maybe caused by a
-corruption which is fixed by:
-  http://patchwork.kernel.org/patch/16776/
-
-  -static void __init acpi_battery_init_async(void *unused, ...
-  +static void acpi_battery_init_async(void *unused, ...
-
-Kay
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- mikem
