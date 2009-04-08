@@ -1,48 +1,48 @@
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Subject: Adding directory under /sys/class/fc_host/hostX
-Date: Tue, 7 Apr 2009 18:05:51 -0700
-Message-ID: <84C2BA6A-9B05-407A-BD34-03EA905D5DE6@qlogic.com>
-Mime-Version: 1.0 (Apple Message framework v912)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:32756 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756889AbZDHBFx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Apr 2009 21:05:53 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Trenton D. Adams" <trenton.d.adams@gmail.com>
+Subject: Re: 2.6.29 on MacBook 2,1 fails to reboot (was Re: 2.6.29-git13:
+	Reported regressions from 2.6.28)
+Date: Tue, 7 Apr 2009 19:16:08 -0600
+Message-ID: <9b1675090904071816k59080f1fn39737767db4dc0c@mail.gmail.com>
+References: <n4io5wq70ZO.A.gzG.rFn2JB@chimera>
+	 <alpine.LFD.2.00.0904061443000.7443@localhost.localdomain>
+	 <49DB7C77.1000702@s5r6.in-berlin.de>
+	 <9b1675090904070944m798ed608i1d9194ebd1ed3961@mail.gmail.com>
+	 <49DB8909.3000905@s5r6.in-berlin.de>
+	 <9b1675090904071122k6a53295fwfffc336011edee8e@mail.gmail.com>
+	 <49DBA821.1070408@s5r6.in-berlin.de>
+	 <9b1675090904071352x513510ecm8b2574859b088275@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <9b1675090904071352x513510ecm8b2574859b088275@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Takashi Iwai <tiwai@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hi,
+On Tue, Apr 7, 2009 at 2:52 PM, Trenton D. Adams
+<trenton.d.adams@gmail.com> wrote:
+> On Tue, Apr 7, 2009 at 1:23 PM, Stefan Richter
+> <stefanr@s5r6.in-berlin.de> wrote:
+>>
+>> But more importantly, is this init scripts related bug really what's
+>> happening at your system? =A0Or do you actually experience an entire=
+ly
+>> different bug?
+>
+> It could be. =A0I will try it out when I get home from work, and get
+> back to you. =A0That would be cool if it was a simple init script
+> problem. =A0Cause then I don't have to do anymore git bisects. ;)
 
-I see following two ways to add sub-directories under the /sys/class/ 
-fc_host/hostX/ in sysfs.
-	a) Add a new attribute_group for each directory to be created in  
-transport_container structure.
-	2) Create a sysfs group and add attributes to it in the transport  
-layer.
+Yes, the order is what causes this, you can close the bug.
 
-	I was thinking of second approach, since the sub-directories that  
-needs to be added, may not be a generic one and specific to transport.  
-In such a case adding the attribute group to transport_container  
-structure may affect all other transport layer. Keeping it local to  
-particular transport layer will restrict the changes to a particular  
-transport layer.
-	
-	I see class devices getting added to the system after host setup  
-routine is completed by transport layer. These sub-directories needs  
-to be created after the class devices are added to the system. Hence,  
-I was thinking of doing this in FC transport layer by passing  
-host_configure routine as part of  transport class declaration.  
-During, host configure routine, the transport layer will go ahead and  
-create the sub-directories and add the attributes to them.
+Sorry for wasting everyone's time.  I thought it was a kernel bug
+because I had not needed to update my gentoo system to make it happen.
 
-Thanks,
-Giridhar.M.B
-
-
-
-
-
-
+Thanks.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
