@@ -1,45 +1,62 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 1/1] scsi: fix q->lock not held warning when target is busy
-Date: Thu,  9 Apr 2009 15:57:10 -0500
-Message-ID: <12393106303764-git-send-email-michaelc@cs.wisc.edu>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 12207] block reads/writes > 122880 bytes to USB tape drive
+ gives EBUSY
+Date: Thu, 9 Apr 2009 21:08:17 GMT
+Message-ID: <200904092108.n39L8He4011331@demeter.kernel.org>
+References: <bug-12207-11613@http.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:60706 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752274AbZDIU5S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Apr 2009 16:57:18 -0400
+Received: from demeter.kernel.org ([140.211.167.39]:58557 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764829AbZDIVIT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Apr 2009 17:08:19 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n39L8H4s011332
+	for <linux-scsi@vger.kernel.org>; Thu, 9 Apr 2009 21:08:17 GMT
+In-Reply-To: <bug-12207-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+http://bugzilla.kernel.org/show_bug.cgi?id=12207
 
-We cannot call blk_plug_device from scsi_target_queue_ready
-because the q lock is not held. And we do not need to call
-it from there because when we return 0, the scsi_request_fn
-not_ready handling will plug the queue for us if needed.
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/scsi_lib.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index d1cb64a..bb218c8 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1291,10 +1291,8 @@ static inline int scsi_target_queue_ready(struct Scsi_Host *shost,
- 		if (--starget->target_blocked == 0) {
- 			SCSI_LOG_MLQUEUE(3, starget_printk(KERN_INFO, starget,
- 					 "unblocking target at zero depth\n"));
--		} else {
--			blk_plug_device(sdev->request_queue);
-+		} else
- 			return 0;
--		}
- 	}
- 
- 	if (scsi_target_is_busy(starget)) {
+
+
+--- Comment #26 from Alan Stern <stern@rowland.harvard.edu>  2009-04-09 21:08:16 ---
+On Tue, 7 Apr 2009 bugzilla-daemon@bugzilla.kernel.org wrote:
+
+> Now I attached another patch including more features;
+> 
+> - returning max_hw_sectors for reading max_sectors
+
+Why do you want to do this?  The attribute is named "max_sectors", so 
+shouldn't it return the value of max_sectors?
+
+> - to limit max_sectors by the special value for usb storage
+
+Where did your limit come from?  I agree, the value should be limited, 
+but the limit should be 4 GB - 1.  Not 8 MB.
+
+> I think these features are required.
+> Of course they are useful for me, I may run my code on many versions of kernel
+> so max_sectors should be checkable and changeable at anytime.
+
+Did you know that max_sectors can also be changed through the block 
+interface?  For example, under /sys/block/sda/queue/ you can write to 
+max_sectors_kb and you can read max_hw_sectors_kb.
+
+> For addition, my PC can send/recv 4MB block but with 8MB ioctl() will report
+> ENOMEM. Usually the PC is running with 1GB RAM and increasing RAM is not
+> effective.
+
+You'll have to trace this down by yourself.
+
+Alan Stern
+
 -- 
-1.6.0.6
-
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
