@@ -1,63 +1,102 @@
-From: Kay Sievers <kay.sievers@vrfy.org>
-Subject: Re: [PATCH 1/1] cciss: resubmit export uid, model, vendor, rev to
-	sysfs
-Date: Thu, 9 Apr 2009 11:12:09 -0700
-Message-ID: <ac3eb2510904091112p4d4cc491o703ead8b93d0b45f@mail.gmail.com>
-References: <20090407180411.GA4324@beardog.cca.cpqcorp.net>
-	<20090408061901.GN5178@kernel.dk> <ac3eb2510904080526h36673aa7qb5d530df33a60104@mail.gmail.com>
-	<1239258160.19984.217.camel@grinch> <ac3eb2510904090719n730dededp54b25390a9087a79@mail.gmail.com>
-	<1239296221.19984.218.camel@grinch> <ac3eb2510904091005q13e5b5a1j3907de22ad3df70c@mail.gmail.com>
-	<1239300433.19984.270.camel@grinch>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [Scst-devel] [ANNOUNCE]: Comparison of features sets between
+ 	different SCSI targets (SCST, STGT, IET, LIO)
+Date: Thu, 09 Apr 2009 22:45:23 +0400
+Message-ID: <49DE4243.5060004@vlnb.net>
+References: <49D7AD54.4060408@vlnb.net> <49D7B122.50103@wpkg.org> <e2e108260904050429lcd1870ag6656f36a170ccab3@mail.gmail.com> <49D9D9A0.40106@wpkg.org> <49DA33EF.3020700@vlnb.net> <49DA49AA.1060106@wpkg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.238]:34123 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753066AbZDISMZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Apr 2009 14:12:25 -0400
-In-Reply-To: <1239300433.19984.270.camel@grinch>
+Received: from moutng.kundenserver.de ([212.227.126.187]:60323 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756245AbZDISpT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Apr 2009 14:45:19 -0400
+In-Reply-To: <49DA49AA.1060106@wpkg.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Patterson <andrew.patterson@hp.com>
-Cc: ens Axboe <jens.axboe@oracle.com>, "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, LKML-SCSI <linux-scsi@vger.kernel.org>
+To: Tomasz Chmielewski <mangoo@wpkg.org>
+Cc: Bart Van Assche <bart.vanassche@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, iscsitarget-devel@lists.sourceforge.net, James Bottomley <James.Bottomley@hansenpartnership.com>, scst-devel <scst-devel@lists.sourceforge.net>, stgt@vger.kernel.org
 
-On Thu, Apr 9, 2009 at 11:07, Andrew Patterson <andrew.patterson@hp.com=
-> wrote:
-> On Thu, 2009-04-09 at 10:05 -0700, Kay Sievers wrote:
 
->> The block device needs a parent, please assign the cciss bus device.
->> It's the driverfs_dev in the genhd struct.
+
+Tomasz Chmielewski, on 04/06/2009 10:27 PM wrote:
+> Vladislav Bolkhovitin schrieb:
+> 
+>>> Encrypted device was created with the following additional options 
+>>> passed to cryptsetup
+>>> (it provides the most performance on systems where CPU is a 
+>>> bottleneck, but with decreased
+>>> security when compared to default options):
+>>>
+>>> -c aes-ecb-plain -s 128
+>>>
+>>>
+>>> Generally, CPU on the target was a bottleneck, so I also tested the 
+>>> load on target.
+>>>
+>>>
+>>> md0, crypt columns - averages from dd
+>>> us, sy, id, wa - averages from vmstat
+>>>
+>>>
+>>> 1. Disk speeds on the target
+>>>
+>>> Raw performance: 102.17 MB/s
+>>> Raw performance (encrypted):  50.21 MB/s
+>>>
+>>>
+>>> 2. Read-ahead on the initiator: 256 (default); md0, crypt - MB/s
+>>>
+>>>                            md0   us  sy  id  wa  | crypt   us  sy  id  
+>>> wa  STGT                      50.63   4% 45% 18% 33% | 32.52    3% 62% 
+>>> 16% 19%
+>>> SCST (debug + no patches) 43.75   0% 26% 30% 44% | 42.05    0% 84%  1% 
+>>> 15%
+>>> SCST (fullperf + patches) 45.18   0% 25% 33% 42% | 44.12    0% 81%  2% 
+>>> 17%
+>>>
+>>>
+>>> 3. Read-ahead on the initiator: 16384; md0, crypt - MB/s
+>>>
+>>>                            md0   us  sy  id  wa  | crypt   us  sy  id  
+>>> wa  STGT                      56.43   3% 55%  2% 40% | 46.90    3% 
+>>> 90%  3%  4%
+>>> SCST (debug + no patches) 73.85   0% 58%  1% 41% | 42.70    0% 85%  0% 
+>>> 15%
+>>> SCST (fullperf + patches) 76.27   0% 63%  1% 36% | 42.52    0% 85%  0% 
+>>> 15%
+>> Good! You proved that:
 >>
->
-> This is already done in cciss_add_disk():
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0disk->fops =3D &cciss_fops;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0disk->private_data =3D &h->drv[drv_index];
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0disk->driverfs_dev =3D &h->drv[drv_index].=
-dev;
->
-> I think my problem is I was assigning cciss_bus_type to the controlle=
-r,
-> not the block device. I have fixed that.
+>> 1. SCST is capable to work much better than STGT: 35% for md and 37% for 
+>> crypt considering maximum values.
+>>
+>> 2. Default read-ahead size isn't appropriate for remote data access 
+>> cases and should be increased. I slowly have been discussing it in past 
+>> few months with Wu Fengguang, the read-ahead maintainer.
+> 
+> Note that crypt performance for SCST was worse than that of STGT for 
+> large read-ahead values.
+> Also, SCST performance on crypt device was more or less the same with 
+> 256 and 16384 readahead values. I wonder why performance didn't increase 
+> here while increasing readahead values?
 
-> # /sbin/udevadm info --attribute-walk "--path=3D/block/cciss!c0d0"
+This is a very big topic. In short, increasing RA alone isn't 
+sufficient, because, while the bigger value transferred over the uplink, 
+the backend storage can get rotated too far, so, to continue reading 
+data from it, there will be a need to wait for that rotation completed.
 
-> =C2=A0looking at parent device
-> '/devices/pci0000:4f/0000:4f:00.0/0000:50:00.0/0000:51:04.0/0000:8b:0=
-0.0/cciss0':
-> =C2=A0 =C2=A0KERNELS=3D=3D"cciss0"
-> =C2=A0 =C2=A0SUBSYSTEMS=3D=3D""
+Try together with the RA increase also decrease max_sectors_kb to 128K 
+or even to 64K.
 
-This device also needs the cciss bus_type assigned, so the subsystem
-becomes cciss, and it also shows up in /sys/bus/cciss/devices/.
+Also, the above actions done on the target can also be quite positive.
 
-Other than that, the sysfs hierarchy looks fine.
+> Could anyone recheck if it's the same on some other system?
+> 
+>> Which IO scheduler on the target did you use? I guess, deadline? If so, 
+>> you should try with CFQ as well.
+> 
+> I used CFQ.
 
-Thanks,
-Kay
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+You didn't apply io_context-XXX.patch, correct? With it you should see a 
+  noticeable increase, like in http://scst.sourceforge.net/vl_res.txt.
