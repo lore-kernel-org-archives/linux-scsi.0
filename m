@@ -1,49 +1,31 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH] scsi: a4000 - Correct driver unregistration in case of
- failure
-Date: Thu, 9 Apr 2009 21:26:50 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0904092125540.22008@anakin>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PROPOSED] ata: Report 16/32bit PIO as best we can
+Date: Thu, 09 Apr 2009 16:42:24 -0400
+Message-ID: <49DE5DB0.3030209@garzik.org>
+References: <20090409133221.18202.63779.stgit@t61.ukuu.org.uk> <49DDF1EB.2060200@rtr.ca> <49DDF744.1090209@garzik.org> <49DE2905.3030102@rtr.ca>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>, Greg Kroah-Hartman <gregkh@suse.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: Linux/m68k <linux-m68k@vger.kernel.org>, linux-scsi@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <49DE2905.3030102@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-commit 7a192ec334cab9fafe3a8665a65af398b0e24730 ("platform driver: fix
-incorrect use of 'platform_bus_type' with 'struct device_driver') turned a
-driver_UNregister into platform_driver_REGISTER. Correct this to
-platform_driver_UNregister.
+Mark Lord wrote:
+> Jeff Garzik wrote:
+>> a single utility should be used to configure a SATA+SAS controller 
+>> port.  Requiring use of hdparm when the port is in SATA mode, and sg_* 
+>> when the port is in SAS mode, is a bit annoying.
+> ..
+> 
+> That's why hdparm uses sg_* whenever possible already.
 
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
----
- drivers/scsi/a4000t.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Does hdparm really call out to external applications sg_senddiag, 
+sg_opcodes, sg_inq, sg_turs, etc.?
 
-diff --git a/drivers/scsi/a4000t.c b/drivers/scsi/a4000t.c
-index 61af3d9..e3519fa 100644
---- a/drivers/scsi/a4000t.c
-+++ b/drivers/scsi/a4000t.c
-@@ -129,7 +129,7 @@ static int __init a4000t_scsi_init(void)
- 	a4000t_scsi_device = platform_device_register_simple("a4000t-scsi",
- 			-1, NULL, 0);
- 	if (IS_ERR(a4000t_scsi_device)) {
--		platform_driver_register(&a4000t_scsi_driver);
-+		platform_driver_unregister(&a4000t_scsi_driver);
- 		return PTR_ERR(a4000t_scsi_device);
- 	}
- 
--- 
-1.6.2.1
+	Jeff
 
-Gr{oetje,eeting}s,
 
-						Geert
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
