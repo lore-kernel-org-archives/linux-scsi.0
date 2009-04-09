@@ -1,35 +1,75 @@
-From: Alexander Beregalov <a.beregalov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: 2.6.30-rc1 cannot boot: scsi/async
-Date: Thu, 9 Apr 2009 17:00:57 +0400
-Message-ID: <a4423d670904090600w7286ec0elda3c608b740281ea@mail.gmail.com>
-References: <a4423d670904081012j30ad104etefeee0c8c682aca9@mail.gmail.com>
-	 <19f34abd0904081015r5549da00w97593be16373bb8c@mail.gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PROPOSED] ata: Report 16/32bit PIO as best we can
+Date: Thu, 09 Apr 2009 09:25:24 -0400
+Message-ID: <49DDF744.1090209@garzik.org>
+References: <20090409133221.18202.63779.stgit@t61.ukuu.org.uk> <49DDF1EB.2060200@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <19f34abd0904081015r5549da00w97593be16373bb8c-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Vegard Nossum <vegard.nossum-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <49DDF1EB.2060200@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-2009/4/8 Vegard Nossum <vegard.nossum-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>:
-> 2009/4/8 Alexander Beregalov <a.beregalov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>:
->> Hi
+Mark Lord wrote:
+> Alan Cox wrote:
+>> Something like this then ?
 >>
->> It is 2*2 SMP system, x86_64.
 >>
->> INFO: task async/0:1073 blocked for more than 120 seconds.
->
->
-> Hi,
->
-> I just proposed a patch to fix this:
->
-> http://marc.info/?l=linux-kernel&m=123920746830420&w=2
->
-> Don't know if it's correct or whether it actually fixes the problem,
-> but you are welcome to try it :-)
+>> The legacy old IDE API for this is a bit primitive so we try and map 
+>> stuff
+>> sensibly onto it.
+>>
+>> - Add flags2 as we ran out of flags
+>> - Set PIO over DMA devices to report 32bit
+>> - Add ability to change the PIO32 settings if the controller permits it
+>> - Add that functionality into the sff drivers
+>> - Add that functionality into the VLB legacy driver
+>> - Turn on the 32bit PIO on the ninja32 and add support there
+>>
+>> Signed-off-by: Alan Cox <alan@linux.intel.com>
+> ..
+> 
+> By all means go ahead with something like this,
+> and thanks for doing it, Alan.
+> 
+> But.. these do look rather suspiciously like sysfs attrs to me.
+> 
+> We didn't have a sysfs in the IDE days (so Gadi added the klunky
+> procfs "settings" thing for there), but we do now.
+> 
+> I'm happy to update hdparm to check sysfs if that's where this
+> ends up, or to do almost nothing for it if we stick with the ioctls.
 
-It works for me as well. Thanks.
+hmmm, Tejun's storage summit presentation would be quite relevant at 
+this juncture :)
+
+The short answer:  we need a control mechanism for tasks such SATA PHY 
+twiddling, host controller reset, host controller configuration 
+(set/clear 32-bit I/O in this example), ...
+
+sysfs attrs are desired for this, but we've held off largely because 
+this is all intertwined with the long term direction of "storage model", 
+"transport protocol" and libata's eventual move away from strict SCSI 
+dependency.
+
+I think the best place for sysfs attr attachment is an ata_transport 
+module, something that's needed to be written for quite a while.  You 
+can see some of the eventual direction in scsi_transport_*.[ch] and 
+raid_class.c.
+
+Eventually I hope to reach a point where the current crop of SATA+SAS 
+controllers out in the field (e.g. mvsas) will attach to 
+scsi_transport_sas or ata_transport, depending on controller port 
+configuration and attached device(s).  And for the sake of users' 
+sanity, a single utility should be used to configure a SATA+SAS 
+controller port.  Requiring use of hdparm when the port is in SATA mode, 
+and sg_* when the port is in SAS mode, is a bit annoying.
+
+	Jeff
+
+
+
+
