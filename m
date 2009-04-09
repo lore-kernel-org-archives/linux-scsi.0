@@ -1,59 +1,79 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [eSATA] 2.6.28.7: IO errors
-Date: Wed, 8 Apr 2009 22:00:48 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0904082200020.4722@axis700.grange>
-References: <Pine.LNX.4.64.0903280001020.4635@axis700.grange>
- <20090327235817.GP8014@parisc-linux.org> <Pine.LNX.4.64.0903280139340.4635@axis700.grange>
- <49D081E6.5010609@kernel.org> <Pine.LNX.4.64.0903301144400.4455@axis700.grange>
- <49D0972D.3020407@kernel.org> <Pine.LNX.4.64.0903301244320.4455@axis700.grange>
- <49D0F893.9070306@rtr.ca>
+From: Justin Madru <jdm64-u1xxEuL7cY4AvxtiuMwx3w@public.gmane.org>
+Subject: Re: 2.6.30-rc1: OOPS on usb disk insert
+Date: Wed, 08 Apr 2009 23:46:37 -0700
+Message-ID: <49DD99CD.4090201@gawab.com>
+References: <49DC3094.5010607@gawab.com> <20090407223828.c9d2cb75.akpm@linux-foundation.org> 	<49DC3F1F.9040306@gawab.com> <ac3eb2510904080625m228ddc4dl611c3c5c368fab2a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:46682 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755576AbZDHUAv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Apr 2009 16:00:51 -0400
-In-Reply-To: <49D0F893.9070306@rtr.ca>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <ac3eb2510904080625m228ddc4dl611c3c5c368fab2a-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Arjan van de Ven <arjan-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Tejun Heo <tj@kernel.org>, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Mon, 30 Mar 2009, Mark Lord wrote:
+Kay Sievers wrote:
+> On Tue, Apr 7, 2009 at 23:07, Justin Madru <jdm64-u1xxEuL7cY4AvxtiuMwx3w@public.gmane.org> wrote:
+>   
+>> Andrew Morton wrote:
+>>     
+>>> On Tue, 07 Apr 2009 22:05:24 -0700 Justin Madru <jdm64-u1xxEuL7cY4AvxtiuMwx3w@public.gmane.org> wrote:
+>>>       
+>
+>   
+>>>> Testing out .30-rc1 and usb devises don't work. I insert my flash disk
+>>>> and get this oops.
+>>>>         
+>
+>   
+>>> The trace appears to be claiming that kernel/async.c:async_new.func is
+>>> NULL.
+>>>
+>>> But it cannot be - it's initialised at compilation time.  Unless
+>>> something scribbled on it of course.
+>>>       
+>
+> I've seen async problems with other subsystem too, maybe caused by a
+> corruption which is fixed by:
+>   http://patchwork.kernel.org/patch/16776/
+>
+>   -static void __init acpi_battery_init_async(void *unused, ...
+>   +static void acpi_battery_init_async(void *unused, ...
+>
+> Kay
+>
+>   
+I've applied the following patches (to try to fix other bugs) and I no 
+longer get a BUG/OOPS
+although the patches might have not been the cause of the fix, but 
+inserting the disk still doesn't works.
 
-> Guennadi Liakhovetski wrote:
-> > On Mon, 30 Mar 2009, Tejun Heo wrote:
-> > 
-> > > Hello,
-> > > 
-> > > Guennadi Liakhovetski wrote:
-> > > > Hm, using a 62cm long cable ATM, should it be even shorter? It's going
-> > > > to be difficult physically then:-(
-> > > 62cm looks short enough.  My long cable is much longer like 2m
-> > > 
-> > > > But what about your drives - dies the connector fit well in the slot and
-> > > > sits firmaly there? With my disk looks likt the connector cannot be
-> > > > inserted completely because of too small a hole in plastic:-(
-> > > But mine fits well and firmly, so maybe you need to take out the knife
-> > > after all.
-> > 
-> > yeah, warranty, you know:-( I contacted the retailer, will see. but it's
-> > strange - I bought mine in December 08, so, it's new enough, so, why?... The
-> > opening in the case is ~4.8mm, the plastic part of the connector on the
-> > eSATA cable is ~6.8mm... Ok, that's getting way OT, sorry.
-> ..
-> 
-> Speaking of which.. dealextreme.com sells surprisingly excellent eSATA
-> cables with really sturdy connectors.  Very cheap pricing, too,
-> with free shipping worldwide.  An easy way to eliminate cable fuss.
+http://patchwork.kernel.org/patch/17199/
+http://patchwork.kernel.org/patch/17025/
+http://patchwork.kernel.org/patch/17039/
 
-Haven't tried that cable, but here's a confirmation of my observation:
+It now complains of: FAT: IO charset cp437 not found
+Which I've found a work around by:
 
-http://forums.techguy.org/hardware/580140-esata-drive-not-recognized.html
+<insert flash disk>
+syslog complains: FAT: IO charset cp437 not found
+sudo modprobe -r nls_cp437
+sudo modprobe -i nls_cp437
+<remove then reinsert flash disk>
+syslog complains: FAT: IO charset iso8859_1 not found
+sudo modprobe -r nls_iso8859_1
+sudo modprobe -i nls_iso8859_1
+<insert flash disk>
+profit!!
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski, Ph.D.
-Freelance Open-Source Software Developer
+So, I have to insert the disk 3 times before it works. although after 
+that it just works, until I reboot and I have to repeat the unload/load 
+modules.
+
+Justin Madru
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
