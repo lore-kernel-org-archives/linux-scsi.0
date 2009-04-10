@@ -1,43 +1,88 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 1/1] cciss: resubmit export uid, model, vendor, rev to
- sysfs
-Date: Thu, 9 Apr 2009 22:17:22 -0700
-Message-ID: <20090409221722.6439ba11.akpm@linux-foundation.org>
-References: <20090407180411.GA4324@beardog.cca.cpqcorp.net>
-	<20090409215226.8b03bc2b.akpm@linux-foundation.org>
-	<1239340134.19984.276.camel@grinch>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 12207] block reads/writes > 122880 bytes to USB tape drive
+ gives EBUSY
+Date: Fri, 10 Apr 2009 09:48:46 GMT
+Message-ID: <200904100948.n3A9mkiW002846@demeter.kernel.org>
+References: <bug-12207-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:45861 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754030AbZDJFV1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Apr 2009 01:21:27 -0400
-In-Reply-To: <1239340134.19984.276.camel@grinch>
+Received: from demeter.kernel.org ([140.211.167.39]:52194 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753093AbZDJJsr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Apr 2009 05:48:47 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n3A9mkaQ002847
+	for <linux-scsi@vger.kernel.org>; Fri, 10 Apr 2009 09:48:46 GMT
+In-Reply-To: <bug-12207-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Patterson <andrew.patterson@hp.com>
-Cc: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>, Jens Axboe <jens.axboe@oracle.com>, LKML <linux-kernel@vger.kernel.org>, LKML-SCSI <linux-scsi@vger.kernel.org>, mike.miller@hp.com
+To: linux-scsi@vger.kernel.org
 
-On Fri, 10 Apr 2009 05:08:54 +0000 Andrew Patterson <andrew.patterson@hp.com> wrote:
+http://bugzilla.kernel.org/show_bug.cgi?id=12207
 
-> > > +	char model[MODEL_LEN + 1];
-> > > ...
-> > > +		return snprintf(buf, MODEL_LEN + 2, "%s\n", drv->model);
-> > 
-> > Isn't the buffer sizing wrong here?  Should be MODEL_LEN+1.
-> > 
-> 
-> Don't we need space for the '\0' and the '\n'?
 
-The second arg to snprintf() tells snprintf() how large the buffer is. 
-That buffer should be sized to allow room for the trailing \0.
+oshida@bb-next.net changed:
 
-So if MODEL_LEN represents the maximum number of characters in a string
-then you want:
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |oshida@bb-next.net
 
-	char model[MODEL_LEN + 2];	/* Room for the \n and the \0 */
-	...
-	return snprintf(buf, sizeof(model), "%s\n", drv->model);
+
+
+
+--- Comment #27 from oshida@bb-next.net  2009-04-10 09:48:44 ---
+Thanks for reading.
+
+Please share that this is just for tape device.
+
+
+> You'll have to trace this down by yourself.
+
+Yes of course, but this is not a matter for me because I was satisfied with 4MB
+limit.
+
+#Via SAS interface, the block size limit for tape device is 4MB w/o any
+configurations.
+#It can be also one of the reason to apply the value for me.
+##On Solaris 10, it is larger than 4MB and I've not found the limit.
+
+
+> Where did your limit come from?
+
+Just above experiments.
+But 4MB (or twiced 8MB) is not my recommend. For reguralizing I hope you to
+decide which is reasonable value.
+
+Generally, there is no device which can operate the block size larger than
+0xffffff bytes. This is from the SCSI tape device specification. (T10/SSC)
+
+
+> Why do you want to do this?  The attribute is named "max_sectors", so 
+> shouldn't it return the value of max_sectors?
+
+I can agree your suggestion but then I need declaring the read only attribute
+named "max_hw_sectors".
+
+I don't know the restrictions arround scsi driver stacks, ex, what max_sectors
+is used for and max_hw_sectors is used for. But by simple image, if a really
+effective value can be set onto a variable, it should be verifiable by reading
+same variable.
+
+
+> Did you know that max_sectors can also be changed through the block 
+> interface?
+
+I'm sorry I did not. Thanks for teaching.
+But I could not find the device (of course tape drive) under that tree. I think
+that is just for kinds of block device which can be manipulated with T10/SBC
+command set.
+
+
+Sincerely,
+Teruo Oshida
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
