@@ -1,74 +1,75 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 12207] block reads/writes > 122880 bytes to USB tape drive
- gives EBUSY
-Date: Fri, 10 Apr 2009 19:29:18 GMT
-Message-ID: <200904101929.n3AJTIkC020026@demeter.kernel.org>
-References: <bug-12207-11613@http.bugzilla.kernel.org/>
+From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Subject: Re: READ CAPACITY (16) failing
+Date: Fri, 10 Apr 2009 14:31:34 -0500
+Message-ID: <20090410193134.GA2615@beardog.cca.cpqcorp.net>
+References: <20090408194357.GA15043@beardog.cca.cpqcorp.net> <20090408195447.GP20983@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:48606 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757175AbZDJT3T convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Apr 2009 15:29:19 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n3AJTIE7020027
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Apr 2009 19:29:18 GMT
-In-Reply-To: <bug-12207-11613@http.bugzilla.kernel.org/>
+Received: from g4t0015.houston.hp.com ([15.201.24.18]:24950 "EHLO
+	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757922AbZDJTbd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Apr 2009 15:31:33 -0400
+Content-Disposition: inline
+In-Reply-To: <20090408195447.GP20983@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: LKML-SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, mike.miller@hp.com, James Bottomley <james.bottomley@hansenpartnership.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=3D12207
+On Wed, Apr 08, 2009 at 01:54:48PM -0600, Matthew Wilcox wrote:
+> On Wed, Apr 08, 2009 at 02:43:57PM -0500, Mike Miller (OS Dev) wrote:
+> > I'm working on the HP Smart Array SCSI driver (hpsa) and I'm seeing the
+> > following failures:
+> > 
+> > hpsa1: <0x3230> at PCI 0000:02:00.0 IRQ 76 using DAC
+> > scsi4 : hpsa
+> > scsi 4:0:0:0: Direct-Access     HP       LOGICAL VOLUME   5.20 PQ: 0 ANSI: 5
+> > sd 4:0:0:0: Attached scsi generic sg4 type 0
+> > sd 4:0:0:0: [sdd] READ CAPACITY(16) failed
+> > sd 4:0:0:0: [sdd] Result: hostbyte=DID_ABORT driverbyte=DRIVER_OK
+> > sd 4:0:0:0: [sdd] Sense not available.
+> > hpsa: cp ffff8800cf400000 has check condition: unknown type: Sense: 0x5,
+> > ASC: 0x20, ASCQ: 0x0, Returning result: 0x2, cmd=[a0 00 00 00 00 00 00 00 10
+> > 00]
+> 
+> > The READ CAPACITY failures are what I'm concerned about. I can't seem to track
+> > down why that's failing.
+> > I've tried printing out the_result from sd but it's not printing out. I'm
+> > assuming that anytime I load the driver it goes thru sd.
+> > 
+> > 	if (the_result) {
+> > 		sense_valid = scsi_sense_valid(&sshdr);
+> > 		if (sense_valid &&
+> > 			sshdr.sense_key == ILLEGAL_REQUEST &&
+> > 			(sshdr.asc == 0x20 || sshdr.asc == 0x24) &&
+> > 			sshdr.ascq == 0x00)
+> > 			/* Invalid Command Operation Code or
+> > 			 * Invalid Field in CDB, just retry
+> > 			 * silently with RC10 */
+> > 			return -EINVAL;
+> > 		}
+> > 	retries--;
+> > 	} while (the_result && retries);
+> > 	printk(KERN_WARNING "sd-mfm: the_result = %d\n", the_result);
+> 
+> Probably the device you're testing against doesn't support RC16, which
+> is fine.  But for some reason, we're not getting valid sense data back
+> from the device.  Now, there's two responses to this that seem rational
+> to me:
+> 
+>  - In sd.c, if the drive has returned no/invalid sense data, try RC10
+>    silently, just like the 0x20 / 0x24 ASC case.
+>  - Find out why this drive doesn't report valid sense data when attached
+>    to hpsa.  I assume it does report valid sense data when attached to
+>    some other scsi card?
 
+Me again,
+The controllers do support RC16. After some more work it looks like RC16 is
+never getting to the driver. I'm snooping the CDB's of all requests as well
+as the completions from the driver and I never see a 0x9e. I do see the
+RC10 (0x25) though, so I think my debug is right.
 
+Why would I never the see the command in the driver?
 
-
-
---- Comment #29 from Kai M=C3=A4kisara <kai.makisara@kolumbus.fi>  2009=
--04-10 19:29:18 ---
-On Fri, 10 Apr 2009, bugzilla-daemon@bugzilla.kernel.org wrote:
-
-> http://bugzilla.kernel.org/show_bug.cgi?id=3D12207
->=20
->=20
->=20
->=20
->=20
-> --- Comment #28 from Alan Stern <stern@rowland.harvard.edu>  2009-04-=
-10 15:19:23 ---
-> On Fri, 10 Apr 2009 bugzilla-daemon@bugzilla.kernel.org wrote:
->=20
-> > --- Comment #27 from oshida@bb-next.net  2009-04-10 09:48:44 ---
-=2E..
-> > > Did you know that max_sectors can also be changed through the blo=
-ck=20
-> > > interface?
-> >=20
-> > I'm sorry I did not. Thanks for teaching.
-> > But I could not find the device (of course tape drive) under that t=
-ree. I think
-> > that is just for kinds of block device which can be manipulated wit=
-h T10/SBC
-> > command set.
->=20
-> No, it is for all block devices.  If you can't find your device under=
-=20
-> /sys/block/ then look for it somewhere else, such as under=20
-> /sys/bus/scsi/devices/.
->=20
-Maybe you should check your facts before telling others where to look.=20
-max_sectors_kb etc. exist only for block devices (in the Unix sense).=20
-Tapes are character devices.
-
-Kai
-
---=20
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Demail
-------- You are receiving this mail because: -------
-You are the assignee for the bug.--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- mikem
