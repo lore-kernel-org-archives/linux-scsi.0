@@ -1,88 +1,37 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 12207] block reads/writes > 122880 bytes to USB tape drive
- gives EBUSY
-Date: Fri, 10 Apr 2009 09:48:46 GMT
-Message-ID: <200904100948.n3A9mkiW002846@demeter.kernel.org>
-References: <bug-12207-11613@http.bugzilla.kernel.org/>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH 1/3] block/blk-map.c: blk_rq_append_bio should ensure it's not appending a chain
+Date: Fri, 10 Apr 2009 07:48:21 -0400
+Message-ID: <20090410114821.GA10602@havoc.gtf.org>
+References: <20090402015455.GA14087@havoc.gtf.org> <20090407225302.GA14248@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:52194 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753093AbZDJJsr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Apr 2009 05:48:47 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n3A9mkaQ002847
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Apr 2009 09:48:46 GMT
-In-Reply-To: <bug-12207-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934857AbZDJLsm@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20090407225302.GA14248@havoc.gtf.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, axboe@kernel.dk, Andrew Morton <akpm@linux-foundation.org>, James.Bottomley@HansenPartnership.com, bharrosh@panasas.com, osd-dev@open-osd.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=12207
 
 
-oshida@bb-next.net changed:
+Add a standard bit of list safety.  The other functions called in
+blk_rq_append_bio() are written to assume only a single bio is passed to
+them.  Therefore, it is an error to _ever_ pass a list to this function.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |oshida@bb-next.net
+Enforce this error by ensuring the bio list is guaranteed to only append
+a single list item with each blk_rq_append_bio() call.
 
+Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
 
-
-
---- Comment #27 from oshida@bb-next.net  2009-04-10 09:48:44 ---
-Thanks for reading.
-
-Please share that this is just for tape device.
-
-
-> You'll have to trace this down by yourself.
-
-Yes of course, but this is not a matter for me because I was satisfied with 4MB
-limit.
-
-#Via SAS interface, the block size limit for tape device is 4MB w/o any
-configurations.
-#It can be also one of the reason to apply the value for me.
-##On Solaris 10, it is larger than 4MB and I've not found the limit.
-
-
-> Where did your limit come from?
-
-Just above experiments.
-But 4MB (or twiced 8MB) is not my recommend. For reguralizing I hope you to
-decide which is reasonable value.
-
-Generally, there is no device which can operate the block size larger than
-0xffffff bytes. This is from the SCSI tape device specification. (T10/SSC)
-
-
-> Why do you want to do this?  The attribute is named "max_sectors", so 
-> shouldn't it return the value of max_sectors?
-
-I can agree your suggestion but then I need declaring the read only attribute
-named "max_hw_sectors".
-
-I don't know the restrictions arround scsi driver stacks, ex, what max_sectors
-is used for and max_hw_sectors is used for. But by simple image, if a really
-effective value can be set onto a variable, it should be verifiable by reading
-same variable.
-
-
-> Did you know that max_sectors can also be changed through the block 
-> interface?
-
-I'm sorry I did not. Thanks for teaching.
-But I could not find the device (of course tape drive) under that tree. I think
-that is just for kinds of block device which can be manipulated with T10/SBC
-command set.
-
-
-Sincerely,
-Teruo Oshida
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+diff --git a/block/blk-map.c b/block/blk-map.c
+index f103729..a7eeac4 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -19,6 +19,7 @@ int blk_rq_append_bio(struct request_queue *q, struct request *rq,
+ 	else {
+ 		rq->biotail->bi_next = bio;
+ 		rq->biotail = bio;
++		bio->bi_next = NULL;
+ 
+ 		rq->data_len += bio->bi_size;
+ 	}
