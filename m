@@ -1,63 +1,74 @@
-From: Andrew Patterson <andrew.patterson@hp.com>
-Subject: Re: [PATCH 1/1] cciss: resubmit export uid, model, vendor, rev to
- sysfs
-Date: Fri, 10 Apr 2009 11:19:53 -0600
-Message-ID: <1239383993.5183.75.camel@grinch>
-References: <20090407180411.GA4324@beardog.cca.cpqcorp.net>
-	 <20090409215226.8b03bc2b.akpm@linux-foundation.org>
-	 <1239340134.19984.276.camel@grinch>
-	 <20090409221722.6439ba11.akpm@linux-foundation.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 12207] block reads/writes > 122880 bytes to USB tape drive
+ gives EBUSY
+Date: Fri, 10 Apr 2009 19:29:18 GMT
+Message-ID: <200904101929.n3AJTIkC020026@demeter.kernel.org>
+References: <bug-12207-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0015.houston.hp.com ([15.201.24.18]:48240 "EHLO
-	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751319AbZDJRUG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Apr 2009 13:20:06 -0400
-In-Reply-To: <20090409221722.6439ba11.akpm@linux-foundation.org>
+Received: from demeter.kernel.org ([140.211.167.39]:48606 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757175AbZDJT3T convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Apr 2009 15:29:19 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n3AJTIE7020027
+	for <linux-scsi@vger.kernel.org>; Fri, 10 Apr 2009 19:29:18 GMT
+In-Reply-To: <bug-12207-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>, Jens Axboe <jens.axboe@oracle.com>, LKML <linux-kernel@vger.kernel.org>, LKML-SCSI <linux-scsi@vger.kernel.org>, mike.miller@hp.com
+To: linux-scsi@vger.kernel.org
 
-On Thu, 2009-04-09 at 22:17 -0700, Andrew Morton wrote: 
-> On Fri, 10 Apr 2009 05:08:54 +0000 Andrew Patterson <andrew.patterson@hp.com> wrote:
-> 
-> > > > +	char model[MODEL_LEN + 1];
-> > > > ...
-> > > > +		return snprintf(buf, MODEL_LEN + 2, "%s\n", drv->model);
-> > > 
-> > > Isn't the buffer sizing wrong here?  Should be MODEL_LEN+1.
-> > > 
-> > 
-> > Don't we need space for the '\0' and the '\n'?
-> 
-> The second arg to snprintf() tells snprintf() how large the buffer is. 
-> That buffer should be sized to allow room for the trailing \0.
-> 
-> So if MODEL_LEN represents the maximum number of characters in a string
-> then you want:
-> 
-> 	char model[MODEL_LEN + 2];	/* Room for the \n and the \0 */
-> 	...
-> 	return snprintf(buf, sizeof(model), "%s\n", drv->model);
+http://bugzilla.kernel.org/show_bug.cgi?id=3D12207
 
-Note that I don't want the '\n" in the source string.  I just want it
-output to the dest string (buf).  I could do:
 
-  return snprintf(buf, sizeof(model) + 1, "%s\n", drv->model);
 
-if that is preferable.  Perhaps what is confusing is using:
 
-#define MODEL_LEN	16
-char model[MODEL_LEN + 1];   /* SCSI model string */
 
-So MODEL_LEN is not accounting for the '\0'.
+--- Comment #29 from Kai M=C3=A4kisara <kai.makisara@kolumbus.fi>  2009=
+-04-10 19:29:18 ---
+On Fri, 10 Apr 2009, bugzilla-daemon@bugzilla.kernel.org wrote:
 
-I am not sure what the convention is here.  It have seen SCSI code that
-uses the above, e.g., include/scsi/scsi_transport_sas.h.  But I am happy
-to have *_LEN account for the '\0' if that makes it less confusing.
+> http://bugzilla.kernel.org/show_bug.cgi?id=3D12207
+>=20
+>=20
+>=20
+>=20
+>=20
+> --- Comment #28 from Alan Stern <stern@rowland.harvard.edu>  2009-04-=
+10 15:19:23 ---
+> On Fri, 10 Apr 2009 bugzilla-daemon@bugzilla.kernel.org wrote:
+>=20
+> > --- Comment #27 from oshida@bb-next.net  2009-04-10 09:48:44 ---
+=2E..
+> > > Did you know that max_sectors can also be changed through the blo=
+ck=20
+> > > interface?
+> >=20
+> > I'm sorry I did not. Thanks for teaching.
+> > But I could not find the device (of course tape drive) under that t=
+ree. I think
+> > that is just for kinds of block device which can be manipulated wit=
+h T10/SBC
+> > command set.
+>=20
+> No, it is for all block devices.  If you can't find your device under=
+=20
+> /sys/block/ then look for it somewhere else, such as under=20
+> /sys/bus/scsi/devices/.
+>=20
+Maybe you should check your facts before telling others where to look.=20
+max_sectors_kb etc. exist only for block devices (in the Unix sense).=20
+Tapes are character devices.
 
-Andrew
+Kai
 
+--=20
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Demail
+------- You are receiving this mail because: -------
+You are the assignee for the bug.--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
