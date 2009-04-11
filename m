@@ -1,87 +1,55 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: READ CAPACITY (16) failing
-Date: Fri, 10 Apr 2009 15:28:38 -0700
-Message-ID: <1239402518.3393.9.camel@mulgrave>
-References: <20090408194357.GA15043@beardog.cca.cpqcorp.net>
-	 <20090408195447.GP20983@parisc-linux.org>
-	 <20090410193134.GA2615@beardog.cca.cpqcorp.net>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 12207] block reads/writes > 122880 bytes to USB tape drive
+ gives EBUSY
+Date: Sat, 11 Apr 2009 02:38:28 GMT
+Message-ID: <200904110238.n3B2cS7T016936@demeter.kernel.org>
+References: <bug-12207-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:46409 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750935AbZDJW2i (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Apr 2009 18:28:38 -0400
-In-Reply-To: <20090410193134.GA2615@beardog.cca.cpqcorp.net>
+Received: from demeter.kernel.org ([140.211.167.39]:60005 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754115AbZDKCib (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Apr 2009 22:38:31 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n3B2cSJP016937
+	for <linux-scsi@vger.kernel.org>; Sat, 11 Apr 2009 02:38:28 GMT
+In-Reply-To: <bug-12207-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
-Cc: Matthew Wilcox <matthew@wil.cx>, LKML-SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, mike.miller@hp.com
+To: linux-scsi@vger.kernel.org
 
-On Fri, 2009-04-10 at 14:31 -0500, Mike Miller (OS Dev) wrote:
-> On Wed, Apr 08, 2009 at 01:54:48PM -0600, Matthew Wilcox wrote:
-> > On Wed, Apr 08, 2009 at 02:43:57PM -0500, Mike Miller (OS Dev) wrote:
-> > > I'm working on the HP Smart Array SCSI driver (hpsa) and I'm seeing the
-> > > following failures:
-> > > 
-> > > hpsa1: <0x3230> at PCI 0000:02:00.0 IRQ 76 using DAC
-> > > scsi4 : hpsa
-> > > scsi 4:0:0:0: Direct-Access     HP       LOGICAL VOLUME   5.20 PQ: 0 ANSI: 5
-> > > sd 4:0:0:0: Attached scsi generic sg4 type 0
-> > > sd 4:0:0:0: [sdd] READ CAPACITY(16) failed
-> > > sd 4:0:0:0: [sdd] Result: hostbyte=DID_ABORT driverbyte=DRIVER_OK
-> > > sd 4:0:0:0: [sdd] Sense not available.
-> > > hpsa: cp ffff8800cf400000 has check condition: unknown type: Sense: 0x5,
-> > > ASC: 0x20, ASCQ: 0x0, Returning result: 0x2, cmd=[a0 00 00 00 00 00 00 00 10
-> > > 00]
-> > 
-> > > The READ CAPACITY failures are what I'm concerned about. I can't seem to track
-> > > down why that's failing.
-> > > I've tried printing out the_result from sd but it's not printing out. I'm
-> > > assuming that anytime I load the driver it goes thru sd.
-> > > 
-> > > 	if (the_result) {
-> > > 		sense_valid = scsi_sense_valid(&sshdr);
-> > > 		if (sense_valid &&
-> > > 			sshdr.sense_key == ILLEGAL_REQUEST &&
-> > > 			(sshdr.asc == 0x20 || sshdr.asc == 0x24) &&
-> > > 			sshdr.ascq == 0x00)
-> > > 			/* Invalid Command Operation Code or
-> > > 			 * Invalid Field in CDB, just retry
-> > > 			 * silently with RC10 */
-> > > 			return -EINVAL;
-> > > 		}
-> > > 	retries--;
-> > > 	} while (the_result && retries);
-> > > 	printk(KERN_WARNING "sd-mfm: the_result = %d\n", the_result);
-> > 
-> > Probably the device you're testing against doesn't support RC16, which
-> > is fine.  But for some reason, we're not getting valid sense data back
-> > from the device.  Now, there's two responses to this that seem rational
-> > to me:
-> > 
-> >  - In sd.c, if the drive has returned no/invalid sense data, try RC10
-> >    silently, just like the 0x20 / 0x24 ASC case.
-> >  - Find out why this drive doesn't report valid sense data when attached
-> >    to hpsa.  I assume it does report valid sense data when attached to
-> >    some other scsi card?
-> 
-> Me again,
-> The controllers do support RC16. After some more work it looks like RC16 is
-> never getting to the driver. I'm snooping the CDB's of all requests as well
-> as the completions from the driver and I never see a 0x9e. I do see the
-> RC10 (0x25) though, so I think my debug is right.
-> 
-> Why would I never the see the command in the driver?
-
-Because your devices are reporting compliance to a standard before RC16
-was implemented (we have a check in sd_try_rc16_first() to see if you
-comply to higher than SBC-2).  Then, after you've failed this, if you
-don't return the conventional 0xffffffff to RC10, we never retry with
-RC16.
-
-James
+http://bugzilla.kernel.org/show_bug.cgi?id=12207
 
 
+
+
+
+--- Comment #30 from Alan Stern <stern@rowland.harvard.edu>  2009-04-11 02:38:27 ---
+On Fri, 10 Apr 2009 bugzilla-daemon@bugzilla.kernel.org wrote:
+
+> Maybe you should check your facts before telling others where to look. 
+> max_sectors_kb etc. exist only for block devices (in the Unix sense). 
+> Tapes are character devices.
+
+There's no need to be rude.  Besides, how would you suggest I check my 
+facts (bearing in mind that I don't have access to any SCSI or USB tape 
+drives)?
+
+As the author of st.c, you certainly are the authority on how this
+works.  And it's definitely true that tapes are char devices.
+
+But isn't it also true that SCSI tapes, like all SCSI devices, have
+their device queue set up by scsi_alloc_queue(), which calls
+blk_init_queue(), which registers the queue's kobject using
+blk_queue_ktype, whose default attributes include both
+queue_max_sectors_entry.attr and queue_max_hw_sectors_entry.attr?  And
+doesn't this mean that SCSI tapes _do_ have max_sectors_kb etc.  
+attributes?
+
+Alan Stern
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
