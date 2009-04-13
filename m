@@ -1,63 +1,101 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: LSF Papers online?
-Date: Tue, 14 Apr 2009 12:30:42 +0900
-Message-ID: <49E40362.1070405@kernel.org>
-References: <49E335BA.3020103@panasas.com> <49E34F41.6050903@panasas.com> <20090413121137.5c5d259c@bike.lwn.net> <200904132340.21525.bzolnier@gmail.com>
+From: Hisashi Hifumi <hifumi.hisashi@oss.ntt.co.jp>
+Subject: [PATCH] qla2xxx:use spin_lock_irqsave/spin_unlock_irqrestore
+  in irq handler
+Date: Mon, 13 Apr 2009 19:40:29 +0900
+Message-ID: <6.0.0.20.2.20090413190947.079089b0@172.19.0.2>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:59212 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751463AbZDNDaH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Apr 2009 23:30:07 -0400
-In-Reply-To: <200904132340.21525.bzolnier@gmail.com>
+Received: from serv2.oss.ntt.co.jp ([222.151.198.100]:47751 "EHLO
+	serv2.oss.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751649AbZDNJXk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2009 05:23:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jonathan Corbet <corbet@lwn.net>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Zach Brown <zach.brown@oracle.com>, Chris Mason <chris.mason@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, linux-driver@qlogic.com
 
-Hello, Bartlomiej.
+Hi
 
-Bartlomiej Zolnierkiewicz wrote:
-> I've started reading it and immediately noticed a thing which made by day. :-)
-> 
-> Sorry if it will sound off-topic or undiplomatic but it is the best occasion
-> to straighten up some facts:
-> 
->  "Discussion then moved on to the current status of getting libata out of
->   SCSI: we have had several successes, notably timer handling and pieces of
->   error handling have moved up to block. Unfortunately, the current progress
->   has reached the point where it's being impeded by the legacy IDE subsystem
-> 
-> Heh, you can also blame the lack of world peace on the legacy IDE subsystem.
-> 
-> I wonder who came up with this ridiculous excuse (I'm sure it wasn't James!).
-
-Eh... It was my session.  It probably is a bit too summarized.  I
-wans't really trying to blame IDE.  The point was that, at this point,
-adding any feature to the block layer is pretty precarious because in
-many places block layer API has become somewhat ambiguous and many
-users have been abusing in interesting ways for quite some time.  IDE,
-due to its history and complexity, happens to be the most complex one
-to clean up, so that was why IDE was mentioned in the session.
-
-It's not like IDE has been preventing libata separation for all those
-years.  It's more like, when finally I got my lazy ass moving about
-moving features from SCSI midlayer to block layer, I realized I better
-clean up block API before moving forward and IDE was the most
-difficult user of block API in the process.
-
-I apologize if it sounded like an attack on IDE.  It's true that IDE
-is the biggest block API abuser but it's mostly due to its long
-history and inherent complexity and you have been doing a lot to clean
-it up, so let's get it done.
-
-I just came back and am still recovering from time difference.  As the
-block map thing kind of became unnecessary, I'll soon test IDE tape
-support and repost them.
-
+I think spin_lock_irqsave/spin_unlock_irqrestore instead of spin_lock_irq/spin_unlock_irq
+should be used in IRQ handler.
+Following is the patch that fixes this issue.
 Thanks.
 
--- 
-tejun
+Signed-off-by :Hisashi Hifumi <hifumi.hisashi@oss.ntt.co.jp>
+
+diff -Nrup linux-2.6.30-rc1.org/drivers/scsi/qla2xxx/qla_isr.c linux-2.6.30-rc1.qla/drivers/scsi/qla2xxx/qla_isr.c
+--- linux-2.6.30-rc1.org/drivers/scsi/qla2xxx/qla_isr.c	2009-04-09 17:18:06.000000000 +0900
++++ linux-2.6.30-rc1.qla/drivers/scsi/qla2xxx/qla_isr.c	2009-04-13 18:21:02.000000000 +0900
+@@ -1692,6 +1692,7 @@ qla24xx_msix_rsp_q(int irq, void *dev_id
+ 	struct qla_hw_data *ha;
+ 	struct rsp_que *rsp;
+ 	struct device_reg_24xx __iomem *reg;
++	unsigned long flags;
+ 
+ 	rsp = (struct rsp_que *) dev_id;
+ 	if (!rsp) {
+@@ -1702,12 +1703,12 @@ qla24xx_msix_rsp_q(int irq, void *dev_id
+ 	ha = rsp->hw;
+ 	reg = &ha->iobase->isp24;
+ 
+-	spin_lock_irq(&ha->hardware_lock);
++	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 
+ 	qla24xx_process_response_queue(rsp);
+ 	WRT_REG_DWORD(&reg->hccr, HCCRX_CLR_RISC_INT);
+ 
+-	spin_unlock_irq(&ha->hardware_lock);
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 
+ 	return IRQ_HANDLED;
+ }
+@@ -1718,6 +1719,7 @@ qla25xx_msix_rsp_q(int irq, void *dev_id
+ 	struct qla_hw_data *ha;
+ 	struct rsp_que *rsp;
+ 	struct device_reg_24xx __iomem *reg;
++	unsigned long flags;
+ 
+ 	rsp = (struct rsp_que *) dev_id;
+ 	if (!rsp) {
+@@ -1728,11 +1730,11 @@ qla25xx_msix_rsp_q(int irq, void *dev_id
+ 	ha = rsp->hw;
+ 	reg = &ha->iobase->isp24;
+ 
+-	spin_lock_irq(&ha->hardware_lock);
++	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 
+ 	qla24xx_process_response_queue(rsp);
+ 
+-	spin_unlock_irq(&ha->hardware_lock);
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 
+ 	return IRQ_HANDLED;
+ }
+@@ -1748,6 +1750,7 @@ qla24xx_msix_default(int irq, void *dev_
+ 	uint32_t	stat;
+ 	uint32_t	hccr;
+ 	uint16_t	mb[4];
++	unsigned long flags;
+ 
+ 	rsp = (struct rsp_que *) dev_id;
+ 	if (!rsp) {
+@@ -1759,7 +1762,7 @@ qla24xx_msix_default(int irq, void *dev_
+ 	reg = &ha->iobase->isp24;
+ 	status = 0;
+ 
+-	spin_lock_irq(&ha->hardware_lock);
++	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 	vha = qla2x00_get_rsp_host(rsp);
+ 	do {
+ 		stat = RD_REG_DWORD(&reg->host_status);
+@@ -1808,7 +1811,7 @@ qla24xx_msix_default(int irq, void *dev_
+ 		}
+ 		WRT_REG_DWORD(&reg->hccr, HCCRX_CLR_RISC_INT);
+ 	} while (0);
+-	spin_unlock_irq(&ha->hardware_lock);
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 
+ 	if (test_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags) &&
+ 	    (status & MBX_INTERRUPT) && ha->flags.mbox_int) {
+
