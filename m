@@ -1,80 +1,49 @@
-From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Subject: Re: [Announce] sg3_utils-1.27 available
-Date: Sun, 12 Apr 2009 20:08:25 -0800 (AKDT)
-Message-ID: <alpine.LNX.2.01.0904122005300.846@filesrv1.baby-dragons.com>
-References: <49E152F8.2020304@interlog.com> <alpine.LNX.2.01.0904111917520.7984@filesrv1.baby-dragons.com> <49E2A915.9070901@interlog.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 14/17] scsi: replace custom rq mapping with
+ blk_rq_map_kern_sgl()
+Date: Mon, 13 Apr 2009 16:42:01 +0900
+Message-ID: <20090413164146J.fujita.tomonori@lab.ntt.co.jp>
+References: <1238593472-30360-1-git-send-email-tj@kernel.org>
+	<1238593472-30360-15-git-send-email-tj@kernel.org>
+	<49D39DBC.3000206@panasas.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns3.baby-dragons.com ([204.91.156.41]:36663 "EHLO
-	ns3.baby-dragons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750848AbZDMEIa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Apr 2009 00:08:30 -0400
-In-Reply-To: <49E2A915.9070901@interlog.com>
+Received: from sh.osrg.net ([192.16.179.4]:51655 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752297AbZDMHnK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Apr 2009 03:43:10 -0400
+In-Reply-To: <49D39DBC.3000206@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: bharrosh@panasas.com
+Cc: tj@kernel.org, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
- 	Hello Doug ,
+On Wed, 01 Apr 2009 20:00:44 +0300
+Boaz Harrosh <bharrosh@panasas.com> wrote:
 
-On Sun, 12 Apr 2009, Douglas Gilbert wrote:
-> Mr. James W. Laferriere wrote:
->>     Hello Doug ,  I thought sometime ago I'd mentioned the lack of support 
->> for device name(actuall filename) expansion in these tools .
->>     I am aware that a simple 'for do' loop would acomplish the same thing 
->> but that requires writing a script/function in order to do something that 
->> bash/ksh/.../??? has had available for quite sometime now .
->>     Would you please entertain the request to add the ability to use shell 
->> expansion of file expansion in the sg3 tools ?
->
-> Jim,
-> sginfo is particularly difficult due to its syntax:
->   sginfo [OPTIONS] [DEVICE] [REPLACEMENT_PARAMETERS]
->
-> In the worst case it would be hard to distinguish
-> between an additional DEVICE and the replacement
-> parameters. As noted in its man page sginfo is a port
-> of Eric Youngdale's scsiinfo utility. I regard sginfo as
-> in legacy mode and suggest people use sdparm instead.
+> On 04/01/2009 04:44 PM, Tejun Heo wrote:
+> > Impact: hack removal
+> > 
+> > SCSI needs to map sgl into rq for kernel PC requests; however, block
+> > API didn't have such feature so it used its own rq mapping function
+> > which hooked into block/bio internals and is generally considered an
+> > ugly hack.  The private function may also produce requests which are
+> > bigger than queue per-rq limits.
+> > 
+> > Block blk_rq_map_kern_sgl().  Kill the private implementation and use
+> > it.
+> > 
+> > Signed-off-by: Tejun Heo <tj@kernel.org>
+> 
+> James, TOMO
+> 
+> what happened to Tomo's patches that removes all this after fixing up
+> all users (sg.c)?
+> 
+> I thought that was agreed and done? What is left to do for that to go
+> in.
 
- 	Ok ,  I see the problem(s) .
-
-> And sdparm does what you want, its syntax is:
->   sdparm [OPTIONS] DEVICE [DEVICE...]
-> That was done in response to a request from you!
-
- 	I thought we had discussed this sometime ago ,  Just getting early 
-old'timers :) .  It helped me very much in a previous life .
-
-> Currently all the utilities in sg3_utils only support
-> one device. In the sg3_utils/scripts directory are bash
-> script examples, some of which do want you want.
-> Even after cleaning up the option processing in sg3_utils
-> with getopt_long() it only takes a small flourish to
-> cause problems if multiple device names are allowed. For
-> example, sg_start can be used to spin down a disk with
-> either:
->    sg_start --stop /dev/sdc
->    sg_start 0 /dev/sdc
-> Now the second invocation becomes ambiguous if multiple
-> device names are allowed and there is a device name called
-> "0" in the current directory.
->
-> Some utilities are already dangerous, even when they look
-> safe. Allowing multiple file names compounds the danger.
-> For example, some SCSI commands are quite creative with
-> their use of zero. If multiple devices were allowed, do
-> not try this:
->  sg_write_same --num=0 /dev/sd*
-
- 	Same as above ,  I'm finally seeing the light .
-
-> Doug Gilbert
- 		Tnx ,  JimL
--- 
-+------------------------------------------------------------------+
-| James   W.   Laferriere | System    Techniques | Give me VMS     |
-| Network&System Engineer | 2133    McCullam Ave |  Give me Linux  |
-| babydr@baby-dragons.com | Fairbanks, AK. 99701 |   only  on  AXP |
-+------------------------------------------------------------------+
+I've converted all the users (sg, st, osst). Nothing is left. So we
+don't need this.
