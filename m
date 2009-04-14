@@ -1,238 +1,247 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 2/2] sym53c8xx_2: slave_alloc/destroy safety (2.6.27.5)
-Date: Tue, 14 Apr 2009 15:47:00 -0500
-Message-ID: <1239742020-11429-3-git-send-email-michaelc@cs.wisc.edu>
-References: <1239742020-11429-1-git-send-email-michaelc@cs.wisc.edu>
- <1239742020-11429-2-git-send-email-michaelc@cs.wisc.edu>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: LSF Papers online?
+Date: Wed, 15 Apr 2009 00:09:06 +0200
+Message-ID: <200904150009.06539.bzolnier@gmail.com>
+References: <49E335BA.3020103@panasas.com> <200904141654.24067.bzolnier@gmail.com> <20090414175441.5ce1f59d@lxorguk.ukuu.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:42281 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754676AbZDNUrL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Apr 2009 16:47:11 -0400
-In-Reply-To: <1239742020-11429-2-git-send-email-michaelc@cs.wisc.edu>
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:64168 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750839AbZDNWJx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2009 18:09:53 -0400
+In-Reply-To: <20090414175441.5ce1f59d@lxorguk.ukuu.org.uk>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Aaro Koskinen <Aaro.Koskinen@nokia.com>, Mike Christie <michaelc@cs.wisc.edu>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, Jonathan Corbet <corbet@lwn.net>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Zach Brown <zach.brown@oracle.com>, Chris Mason <chris.mason@oracle.com>, Tejun Heo <tj@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-From: Aaro Koskinen <Aaro.Koskinen@nokia.com>
 
-Make the sym53c8xx_2 driver slave_alloc/destroy less unsafe. References
-to the destroyed LCB are cleared from the target structure (instead of
-leaving a dangling pointer), and when the last LCB for the target is
-destroyed the reference to the upper layer target data is cleared. The
-host lock is used to prevent a race with the interrupt handler. Also
-user commands are prevented for targets with all LCBs destroyed.
+On Tuesday 14 April 2009 18:54:41 Alan Cox wrote:
+> > The users were not asking for many other things, i.e. libata PATA.
+> 
+> Yes they were, and at the time libata PATA got done the old IDE code had
+> been rotting for a long time. It was only after that you decided to
 
-Signed-off-by: Aaro Koskinen <Aaro.Koskinen@nokia.com>
-Tested-by: Tony Battersby <tonyb@cybernetics.com>
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/sym53c8xx_2/sym_glue.c |   66 +++++++++++++++++++++++++++-------
- drivers/scsi/sym53c8xx_2/sym_hipd.c |   40 ++++++++++++++++++++-
- drivers/scsi/sym53c8xx_2/sym_hipd.h |    2 +
- 3 files changed, 93 insertions(+), 15 deletions(-)
+Since you seem to love going over this over and over and over again... ;)
 
-diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
-index 23e7820..dd4970e 100644
---- a/drivers/scsi/sym53c8xx_2/sym_glue.c
-+++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
-@@ -737,11 +737,14 @@ static int sym53c8xx_slave_alloc(struct scsi_device *sdev)
- 	struct sym_hcb *np = sym_get_hcb(sdev->host);
- 	struct sym_tcb *tp = &np->target[sdev->id];
- 	struct sym_lcb *lp;
-+	unsigned long flags;
-+	int error;
- 
- 	if (sdev->id >= SYM_CONF_MAX_TARGET || sdev->lun >= SYM_CONF_MAX_LUN)
- 		return -ENXIO;
- 
--	tp->starget = sdev->sdev_target;
-+	spin_lock_irqsave(np->s.host->host_lock, flags);
-+
- 	/*
- 	 * Fail the device init if the device is flagged NOSCAN at BOOT in
- 	 * the NVRAM.  This may speed up boot and maintain coherency with
-@@ -753,26 +756,37 @@ static int sym53c8xx_slave_alloc(struct scsi_device *sdev)
- 
- 	if (tp->usrflags & SYM_SCAN_BOOT_DISABLED) {
- 		tp->usrflags &= ~SYM_SCAN_BOOT_DISABLED;
--		starget_printk(KERN_INFO, tp->starget,
-+		starget_printk(KERN_INFO, sdev->sdev_target,
- 				"Scan at boot disabled in NVRAM\n");
--		return -ENXIO;
-+		error = -ENXIO;
-+		goto out;
- 	}
- 
- 	if (tp->usrflags & SYM_SCAN_LUNS_DISABLED) {
--		if (sdev->lun != 0)
--			return -ENXIO;
--		starget_printk(KERN_INFO, tp->starget,
-+		if (sdev->lun != 0) {
-+			error = -ENXIO;
-+			goto out;
-+		}
-+		starget_printk(KERN_INFO, sdev->sdev_target,
- 				"Multiple LUNs disabled in NVRAM\n");
- 	}
- 
- 	lp = sym_alloc_lcb(np, sdev->id, sdev->lun);
--	if (!lp)
--		return -ENOMEM;
-+	if (!lp) {
-+		error = -ENOMEM;
-+		goto out;
-+	}
-+	if (tp->nlcb == 1)
-+		tp->starget = sdev->sdev_target;
- 
- 	spi_min_period(tp->starget) = tp->usr_period;
- 	spi_max_width(tp->starget) = tp->usr_width;
- 
--	return 0;
-+	error = 0;
-+out:
-+	spin_unlock_irqrestore(np->s.host->host_lock, flags);
-+
-+	return error;
- }
- 
- /*
-@@ -819,12 +833,34 @@ static int sym53c8xx_slave_configure(struct scsi_device *sdev)
- static void sym53c8xx_slave_destroy(struct scsi_device *sdev)
- {
- 	struct sym_hcb *np = sym_get_hcb(sdev->host);
--	struct sym_lcb *lp = sym_lp(&np->target[sdev->id], sdev->lun);
-+	struct sym_tcb *tp = &np->target[sdev->id];
-+	struct sym_lcb *lp = sym_lp(tp, sdev->lun);
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(np->s.host->host_lock, flags);
-+
-+	if (lp->busy_itlq || lp->busy_itl) {
-+		/*
-+		 * This really shouldn't happen, but we can't return an error
-+		 * so let's try to stop all on-going I/O.
-+		 */
-+		starget_printk(KERN_WARNING, tp->starget,
-+			       "Removing busy LCB (%d)\n", sdev->lun);
-+		sym_reset_scsi_bus(np, 1);
-+	}
- 
--	if (lp->itlq_tbl)
--		sym_mfree_dma(lp->itlq_tbl, SYM_CONF_MAX_TASK * 4, "ITLQ_TBL");
--	kfree(lp->cb_tags);
--	sym_mfree_dma(lp, sizeof(*lp), "LCB");
-+	if (sym_free_lcb(np, sdev->id, sdev->lun) == 0) {
-+		/*
-+		 * It was the last unit for this target.
-+		 */
-+		tp->head.sval        = 0;
-+		tp->head.wval        = np->rv_scntl3;
-+		tp->head.uval        = 0;
-+		tp->tgoal.check_nego = 1;
-+		tp->starget	     = NULL;
-+	}
-+
-+	spin_unlock_irqrestore(np->s.host->host_lock, flags);
- }
- 
- /*
-@@ -890,6 +926,8 @@ static void sym_exec_user_command (struct sym_hcb *np, struct sym_usrcmd *uc)
- 			if (!((uc->target >> t) & 1))
- 				continue;
- 			tp = &np->target[t];
-+			if (!tp->nlcb)
-+				continue;
- 
- 			switch (uc->cmd) {
- 
-diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
-index 60d6a6d..69ad494 100644
---- a/drivers/scsi/sym53c8xx_2/sym_hipd.c
-+++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c
-@@ -4997,7 +4997,7 @@ struct sym_lcb *sym_alloc_lcb (struct sym_hcb *np, u_char tn, u_char ln)
- 	 */
- 	if (ln && !tp->lunmp) {
- 		tp->lunmp = kcalloc(SYM_CONF_MAX_LUN, sizeof(struct sym_lcb *),
--				GFP_KERNEL);
-+				GFP_ATOMIC);
- 		if (!tp->lunmp)
- 			goto fail;
- 	}
-@@ -5017,6 +5017,7 @@ struct sym_lcb *sym_alloc_lcb (struct sym_hcb *np, u_char tn, u_char ln)
- 		tp->lun0p = lp;
- 		tp->head.lun0_sa = cpu_to_scr(vtobus(lp));
- 	}
-+	tp->nlcb++;
- 
- 	/*
- 	 *  Let the itl task point to error handling.
-@@ -5094,6 +5095,43 @@ fail:
- }
- 
- /*
-+ *  Lun control block deallocation. Returns the number of valid remaing LCBs
-+ *  for the target.
-+ */
-+int sym_free_lcb(struct sym_hcb *np, u_char tn, u_char ln)
-+{
-+	struct sym_tcb *tp = &np->target[tn];
-+	struct sym_lcb *lp = sym_lp(tp, ln);
-+
-+	tp->nlcb--;
-+
-+	if (ln) {
-+		if (!tp->nlcb) {
-+			kfree(tp->lunmp);
-+			sym_mfree_dma(tp->luntbl, 256, "LUNTBL");
-+			tp->lunmp = NULL;
-+			tp->luntbl = NULL;
-+			tp->head.luntbl_sa = cpu_to_scr(vtobus(np->badluntbl));
-+		} else {
-+			tp->luntbl[ln] = cpu_to_scr(vtobus(&np->badlun_sa));
-+			tp->lunmp[ln] = NULL;
-+		}
-+	} else {
-+		tp->lun0p = NULL;
-+		tp->head.lun0_sa = cpu_to_scr(vtobus(&np->badlun_sa));
-+	}
-+
-+	if (lp->itlq_tbl) {
-+		sym_mfree_dma(lp->itlq_tbl, SYM_CONF_MAX_TASK*4, "ITLQ_TBL");
-+		kfree(lp->cb_tags);
-+	}
-+
-+	sym_mfree_dma(lp, sizeof(*lp), "LCB");
-+
-+	return tp->nlcb;
-+}
-+
-+/*
-  *  Queue a SCSI IO to the controller.
-  */
- int sym_queue_scsiio(struct sym_hcb *np, struct scsi_cmnd *cmd, struct sym_ccb *cp)
-diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.h b/drivers/scsi/sym53c8xx_2/sym_hipd.h
-index 1588c90..e4ce480 100644
---- a/drivers/scsi/sym53c8xx_2/sym_hipd.h
-+++ b/drivers/scsi/sym53c8xx_2/sym_hipd.h
-@@ -401,6 +401,7 @@ struct sym_tcb {
- 	 *  An array of bus addresses is used on reselection.
- 	 */
- 	u32	*luntbl;	/* LCBs bus address table	*/
-+	int	nlcb;		/* Number of valid LCBs (including LUN #0) */
- 
- 	/*
- 	 *  LUN table used by the C code.
-@@ -1065,6 +1066,7 @@ int sym_clear_tasks(struct sym_hcb *np, int cam_status, int target, int lun, int
- struct sym_ccb *sym_get_ccb(struct sym_hcb *np, struct scsi_cmnd *cmd, u_char tag_order);
- void sym_free_ccb(struct sym_hcb *np, struct sym_ccb *cp);
- struct sym_lcb *sym_alloc_lcb(struct sym_hcb *np, u_char tn, u_char ln);
-+int sym_free_lcb(struct sym_hcb *np, u_char tn, u_char ln);
- int sym_queue_scsiio(struct sym_hcb *np, struct scsi_cmnd *csio, struct sym_ccb *cp);
- int sym_abort_scsiio(struct sym_hcb *np, struct scsi_cmnd *ccb, int timed_out);
- int sym_reset_scsi_target(struct sym_hcb *np, int target);
--- 
-1.6.0.6
+I would like you to remind you that I wasn't saying NAK to libata PATA
+despite the fact that some people spend quite a big time on trying to
+blame every single IDE problem on me (while I took over only in 2.5.7x,
+received next to none help and wasn't even paid for this work)...
 
+I just wanted to have clear vision of the process instead of "lets merge
+it now and worry about real users later".
+
+I couldn't get this vision neither from you nor Jeff.
+
+There was no technical discussion with Red Hat people at all.
+
+Every uncomfortable technical issue raised was addressed with direct
+"IDE is teh crap" shouting or indirect "you're being difficult" clues.
+
+And don't try to tell me that I was difficult.  Sure I was. :)
+
+Like the vase majority of other kernel people.
+
+In the end we should handle things at the technical level.
+
+This was clearly not the case back then.
+
+I could have also continued to work on IDE after libata PATA.
+
+Even if I would eventually out do it, what would it change?
+
+Fedora will still start shipping with CONFIG_IDE=n and Red Hat will
+still bless libata PATA.
+
+SuSE and Canonical will jump on on ship just to not divert too much.
+
+In the best case I would get a lovely "Bart was right!" comment
+somewhere in libata-core.c. ;)
+
+I was able to see that much and my motivation was completely gone,
+IDE blame shifting was also really very successful in this regard.
+
+So I took a break limiting my involvement to patch reviewing and waiting
+to see how would the situation develop.
+
+It had developed more-or-less like it was predicted.
+
+The "lets build a great new shiny drivers" utopia ended and the real-world
+"oh we have dozens of regressions and still lack hardware coverage" phase
+started.
+
+> revamp it all, duplicating work when you could have helped work on libata
+> PATA. Maybe then there would have been more time to continue working on
+> the split.
+
+Well, it is not like I was working day and night on fixing old IDE,
+I just dusted off old patches and then the ball started to roll.
+
+I did it purely because it was fun to work with many great people (like
+Sergei or Borislav), there were still a lot of IDE users left behind by
+libata PATA and I also didn't want to let my old patches go to waste.
+
+Have you ever wondered why people are still using IDE or sending me
+IDE patches?  No, it is not because I'm such a great guy to work with. :)
+
+Hint: the most reasons are purely technical.
+
+There are still dozens of IDE -> libata regressions.  The fact that such
+fixes are being mislabeled as an "improvements" is hardly fooling anybody.
+
+There are also uses (embedded world) when IDE is better cause it is
+smaller and _much_ simpler.
+
+Maybe you really shouldn't have brought this topic up. ;)
+
+However since you did lets get to some productive conclusions this time.
+
+I'm ready to discuss anything as long as we stick to technical facts.
+
+libata PATA is still not a replacement for IDE and cannot be removed
+anytime soon.
+
+This is the technical fact.
+
+How we should start addressing it and who is going to do work?
+
+>From my side I can help with setting up a another quilt tree and starting
+addressing host driver regressions (there still quite a few of them left),
+and maybe porting a driver or two but this is it.
+
+I'm quite time constrained and I'm also not leaving IDE behind (we still
+have some pending changes there) so I need a lot of help on cleaning up,
+porting and testing of some quite peculiar host drivers.
+
+The whole process will go slowly and will take up long time.
+
+No problem with this as long as we make progress.
+
+This is of course given that you want to finish the work that you started
+with libata PATA and not leave it half-way done.
+
+Comments?  Thoughts?
+
+> > > probably forgotten, but for I occasionally mention it at kernel summits.
+> > Did you you forget about Intel guys and other people working on SSDs?
+> 
+> It seem to be an Intel guy now 8)
+> 
+> > i.e. please go into libata-eh.c, try to make sense out of it and track all
+> > subtle libata-SCSI-block interactions (yes, the code is clean by mingo's
+> > cleanness standard -- this is not the point here)
+> 
+> libata-eh is pretty clear to follow and because it uses the SCSI approach
+> of quiescing the queue doesn't have the creepy horrors of the old IDE
+> layer which was trying to do resets and polled speed changes in IRQ
+> context racing against timers and completion events.
+> 
+> It does that despite handling NCQ, barriers and hotplug. It does this
+> despite being vastly smarter than the old IDE code in its error
+> processing heuristics.
+
+Well, old IDE is a pretty weak reference point.
+
+> > How's about starting with working on the existing ATA/IDE subsystem?
+> > 
+> > You lacked _any_ hands-on experience with it.
+> 
+> But those helping him had extensive, painful, experience with it having
+> maintained the relic for years. The decision to go with libata PATA was
+> well informed and made from a deep understanding of just how big a pile of
+> turd there was lurking in the old drivers, coupled with a view that it
+> would be better to create the new drivers in parallel rather than
+> destabilize the old code while progressing it.
+
+Well, you are not the only person that had such bad experiences with it.
+
+Plus I also put a significant effort into gaining insight into the
+subsystem during 2001-2004 days -- this wasn't clearly visible cause
+my patch game sucked big time compared to my review game (yes, it
+still sucks now but it is getting bit better).  Moreover I learned
+a lot do-nots from the results of 2.5.x IDE rewrite attempt.
+
+I saw that it could have been done in a evolutionary way (which worked
+miracles with SCSI subsystem) without destabilizing it too much and in
+a timely manner.  Got the agreement about this with libata people and
+I started the work in 2003-2004.
+
+Lets skip the historical part here.
+
+The rework was later finished in 2007-2008.
+
+Despite facing heavy competition and lacking any corporate support.
+
+With a few voluntary IDE developers and a bit of help from community.
+
+We actually did a whole lot more changes that were originally intended.
+
+Hey, I've never imagined that we will rewrite almost whole subsystem.
+
+It was possible.  See?
+
+We actually used quite a lot of libata PATA changes on the host driver front
+(though because of the lack of incremental libata PATA changes and the need
+to fix some IDE specific issues first this was not that easy) so maybe if we
+could agree on some mid-point way back in 2005 we would be in a completely
+different place today.
+
+Lets not repeat the history again.
+
+> > The fact that it is much harder to do nowadays than in 2004-2005 (without
+> > ATAPI support, PATA support and heavy dependence on SCSI infrastructure)
+> > is only _your_ fault.
+> 
+> Really - you could have contributed too. Anyway I wrote most of the PATA
+> bits, Tejun wrote a ton of stuff including EH, and Albert Lee wrote
+> chunks of it too.
+
+I did a bit work.  Check your host drivers. :)
+
+> So that would be Red Hat, SuSE and IBM who are to blame right, not just
+> Jeff ? Sounds like a conspiracy to me ;)
+
+There is no conspiracy there.
+
+Just the good old game known from elsewhere.
+
+Top layer modern day kernel hacking is based on business principles.
+
+However, like they say "Hate the Game, Not the Player". :)
+
+There is really nothing wrong with it as long as we don't state
+otherwise to new people so they are fully aware of the situation.
+
+> > Please save us the management fairy-tales and just show us the code.
+> 
+> You've misunderstood free software Bartlomiej. If you want something that
+
+Indeed, I misunderstood it, not this point though.
+
+Anyway, you guys know what I'm getting at.
+
+The opportunity window that was there in 2004-2006 to push things
+forward in a *really* major way and we failed to use.
+
+As I see it now it was in large part my fault of seeing the chance
+and not being able to convince people about it so I'm not pointing
+finger at anybody else.
+
+> badly *you* should us the code or work with other like minded people.
+
+Well, it wasn't me who promised the delivery within the year and later
+avoided the topic for half of the decade.
+
+If Jeff changed his mind or simply didn't want to do this work it was as
+simple as saying it, in PM or otherwise.  Seriously.
+
+Avoiding discussion about uncomfortable topics prevents a progress.
+
+Thanks,
+Bart
+
+"I feel so right, yet I'm so wrong"
