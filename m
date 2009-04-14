@@ -1,42 +1,69 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: Re: [Scst-devel] [ANNOUNCE]: Comparison of features sets between
- 	different SCSI targets (SCST, STGT, IET, LIO)
-Date: Tue, 14 Apr 2009 13:07:31 +0200
-Message-ID: <49E46E73.8020703@wpkg.org>
-References: <49D7AD54.4060408@vlnb.net> <49D7B122.50103@wpkg.org> <e2e108260904050429lcd1870ag6656f36a170ccab3@mail.gmail.com> <49D9D9A0.40106@wpkg.org> <49DA33EF.3020700@vlnb.net> <49DA49AA.1060106@wpkg.org> <49DE4243.5060004@vlnb.net>
+From: "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>
+Subject: I/O error during controller reboot
+Date: Tue, 14 Apr 2009 19:15:36 +0530
+Message-ID: <0D1E8821739E724A86F4D16902CE275C1410F4D02D@inbmail01.lsi.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx03.syneticon.net ([78.111.66.105]:53084 "EHLO
-	mx03.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751540AbZDNLHi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2009 07:07:38 -0400
-In-Reply-To: <49DE4243.5060004@vlnb.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Language: en-US
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, "'sekharan@us.ibm.com'" <sekharan@us.ibm.com>
+Cc: "'dm-devel@redhat.com'" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: Bart Van Assche <bart.vanassche@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, iscsitarget-devel@lists.sourceforge.net, James Bottomley <James.Bottomley@hansenpartnership.com>, scst-devel <scst-devel@lists.sourceforge.net>, stgt@vger.kernel.org
 
-Vladislav Bolkhovitin schrieb:
+James,
 
->> Could anyone recheck if it's the same on some other system?
->>
->>> Which IO scheduler on the target did you use? I guess, deadline? If 
->>> so, you should try with CFQ as well.
->>
->> I used CFQ.
-> 
-> You didn't apply io_context-XXX.patch, correct? With it you should see a 
->  noticeable increase, like in http://scst.sourceforge.net/vl_res.txt.
+I am having issue with scsi_io_completion routine. During device discover=
+y, READ CAPACITY is failing with 02/04/01. It has been retried 5 times(wi=
+th NEED_RETRY) but when retry gets exhausted ,scsi_io_completion simply e=
+nds the request without doing any delay retry as mentioned by you in belo=
+w mail. =20
 
-I didn't apply this one.
-
-I used 2.6.26.x kernel and io_context-XXX.patch was for 2.6.27, 2.6.28 
-and 2.6.29 only; 2.6.27 fails to apply to 2.6.26.8 kernel (perhaps in a 
-trivial way, I didn't check).
+scsi_io_completion routine checks for deferred sense and if not found, it=
+ sets error with -EIO, which eventually ends the request and doesnot allo=
+w for any more retries. I am seeing deffered error being checked only for=
+ REQ_TYPE_BLOCK_PC command type. Does it meant that command with cmd_type=
+ REQ_TYPE_BLOCK_PC having current error sense should not be retried in sc=
+si_io_completion? If yes, then would it be better to retry in rdac device=
+ handler in that case.=20
 
 
--- 
-Tomasz Chmielewski
-http://wpkg.org
+On Tues, 2009-03-10 at 15:47, James Bottomley wrote:
+> > +		if (sense_hdr->asc =3D=3D 0x04 && sense_hdr->ascq =3D=3D 0x01)
+> > +			/* LUN Not Ready - Logical Unit Not=20
+> Ready and is in
+> > +			 * the process of becoming ready
+> > +			 * Just retry.
+> > +			 */
+> > +			return ADD_TO_MLQUEUE;
+> > +		if (sense_hdr->asc =3D=3D 0x04 && sense_hdr->ascq =3D=3D 0x04)
+> > +			/* LUN Not Ready - Format In Progress
+> > +			 *
+> > +			 * Just retry.
+> > +			 */
+> > +			return ADD_TO_MLQUEUE;
+> > +		if (sense_hdr->asc =3D=3D 0x04  && sense_hdr->ascq =3D=3D 0x07)
+> > +			/* LUN Not Ready - Storage controller=20
+> cannot respond
+> > +			 * immediately to a PRIN or PROUT command.
+> > +			 * Just retry.
+> > +			 */
+> > +			return ADD_TO_MLQUEUE;
+>=20
+> For all of these ... along with a few other not ready types,=20
+> we already
+> do a delayed retry at the mid-layer (in scsi_io_completion).  Is there
+> some problem that causes this to need to be handled here as well?
+
+Thanks,
+Vijay
