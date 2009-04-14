@@ -1,61 +1,46 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: LSF Papers online?
-Date: Tue, 14 Apr 2009 11:40:20 -0400
-Message-ID: <49E4AE64.6070708@garzik.org>
-References: <49E335BA.3020103@panasas.com> <200904140324.59657.bzolnier@gmail.com> <49E461E8.10106@garzik.org> <200904141654.24067.bzolnier@gmail.com>
+From: David Howells <dhowells@redhat.com>
+Subject: [PATCH] Fix lpfc_parse_bg_err()'s use of do_div()
+Date: Tue, 14 Apr 2009 16:59:49 +0100
+Message-ID: <20090414155948.27755.2131.stgit@warthog.procyon.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:34461 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750713AbZDNPke (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Apr 2009 11:40:34 -0400
-In-Reply-To: <200904141654.24067.bzolnier@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757343AbZDNQBW@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: james.smart@emulex.com, linux-scsi@vger.kernel.org
+Cc: dhowells@redhat.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jonathan Corbet <corbet@lwn.net>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Zach Brown <zach.brown@oracle.com>, Chris Mason <chris.mason@oracle.com>, Tejun Heo <tj@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-Bartlomiej Zolnierkiewicz wrote:
-> On Tuesday 14 April 2009 12:14:00 Jeff Garzik wrote:
+Fix lpfc_parse_bg_err()'s use of do_div().  It should be passing a 64-bit
+variable as the first parameter.  However, since it's only using a 32-bit
+variable, it doesn't need to use do_div() at all, but can instead use the
+division operator.
 
+This deals with the following warnings:
 
-> The SATA features that needed SCSI infrastructure came 2 years later.
-> 
->> Moving libata out of SCSI is now a long term, far off goal.  A goal that 
->> implies many intermediate steps, cleanups to block, libata, IDE, SCSI 
->> and other block drivers.
-> 
-> "far off"?
-> 
-> The fact that it is much harder to do nowadays than in 2004-2005 (without
-> ATAPI support, PATA support and heavy dependence on SCSI infrastructure)
-> is only _your_ fault.
+  CC      drivers/scsi/lpfc/lpfc_scsi.o
+drivers/scsi/lpfc/lpfc_scsi.c: In function 'lpfc_parse_bg_err':
+drivers/scsi/lpfc/lpfc_scsi.c:1397: warning: comparison of distinct pointer types lacks a cast
+drivers/scsi/lpfc/lpfc_scsi.c:1397: warning: right shift count >= width of type
+drivers/scsi/lpfc/lpfc_scsi.c:1397: warning: passing argument 1 of '__div64_32' from incompatible pointer type
 
-Of course it is.  Use of SCSI driver infrastructure was a sound 
-technical decision, I'll happily defend.  Key reasons SCSI core was used:
+Signed-off-by: David Howells <dhowells@redhat.com>
+---
 
-* ATA-SCSI convergence was clear when libata began.  Time has proven 
-this true:
-
-ATAPI was always SCSI-like.  SAS is plug-compatible with SATA [for some 
-SAS plugs], and SAS transmits SATA frames from SAS expanders and SATA 
-port multipliers.  T10 and T13 standards committees actively 
-collaborate.  SCSI even has a specification, SAT, that describes how to 
-best co-mingle ATA with SCSI.
-
-* SCSI driver infrastructure was the only one advanced enough to support 
-controller hotplug, device hotplug, and all sorts of queueing contortions.
-
-* SCSI was the only infrastructure that _guaranteed_ it would work with 
-existing installers and distros.  For users, there is a clear level of 
-difference in support between /dev/hdXX, /dev/sdXX, and every other 
-block device in the kernel.
-
-SCSI had a higher Just Works(tm) value at the time.
-
-	Jeff
+ drivers/scsi/lpfc/lpfc_scsi.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
 
-
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index b1bd3fc..36fd2e7 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -1394,7 +1394,7 @@ lpfc_parse_bg_err(struct lpfc_hba *phba, struct lpfc_scsi_buf *lpfc_cmd,
+ 		 */
+ 		cmd->sense_buffer[8] = 0;     /* Information */
+ 		cmd->sense_buffer[9] = 0xa;   /* Add. length */
+-		do_div(bghm, cmd->device->sector_size);
++		bghm /= cmd->device->sector_size;
+ 
+ 		failing_sector = scsi_get_lba(cmd);
+ 		failing_sector += bghm;
