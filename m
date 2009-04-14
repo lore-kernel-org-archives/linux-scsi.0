@@ -1,24 +1,33 @@
-From: David Howells <dhowells@redhat.com>
-Subject: Re: [PATCH] Fix lpfc_parse_bg_err()'s use of do_div()
-Date: Tue, 14 Apr 2009 17:12:03 +0100
-Message-ID: <28206.1239725523@redhat.com>
-References: <49E4B51E.3040402@emulex.com> <20090414155948.27755.2131.stgit@warthog.procyon.org.uk>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: [ANNOUNCE]: A target driver for Marvell 88SE64xx(3G) and 88SE94xx(6G)
+ SAS cards
+Date: Tue, 14 Apr 2009 20:16:21 +0400
+Message-ID: <49E4B6D5.9060007@vlnb.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:33094 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756533AbZDNQNm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Apr 2009 12:13:42 -0400
-In-Reply-To: <49E4B51E.3040402@emulex.com>
+Received: from moutng.kundenserver.de ([212.227.126.186]:56489 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757675AbZDNQQR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2009 12:16:17 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: dhowells@redhat.com, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, Andy Yan <ayan@marvell.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-James Smart <James.Smart@Emulex.Com> wrote:
+Hi All,
 
-> I already posted the same fix on 4/7. See:
-> http://marc.info/?l=linux-scsi&m=123912745216961&w=2
+I'm glad to announce that a target driver for Marvell 88SE64xx(3G) and 
+88SE94xx(6G) SAS cards has been just added in the SCST SVN repository. A 
+lot of thanks to Marvell and Andy Yan!
 
-Fair enough.  Feel free to add my Acked-by.
+This driver allows to use a SAS controller based on Marvell 88SE64xx or 
+88SE94xx chips as a SAN storage server (target). More info you can find 
+on the SCST page http://scst.sourceforge.net.
 
-David
+You can download the driver from SCST SVN by running a command:
+
+$ svn co https://scst.svn.sourceforge.net/svnroot/scst
+
+Vlad
