@@ -1,66 +1,61 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: LSF Papers online?
-Date: Tue, 14 Apr 2009 16:47:42 +0200
-Message-ID: <200904141647.43049.bzolnier@gmail.com>
-References: <49E335BA.3020103@panasas.com> <200904132340.21525.bzolnier@gmail.com> <49E40362.1070405@kernel.org>
+Date: Tue, 14 Apr 2009 11:40:20 -0400
+Message-ID: <49E4AE64.6070708@garzik.org>
+References: <49E335BA.3020103@panasas.com> <200904140324.59657.bzolnier@gmail.com> <49E461E8.10106@garzik.org> <200904141654.24067.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:32828 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752040AbZDNOvV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2009 10:51:21 -0400
-Received: by fxm2 with SMTP id 2so2468380fxm.37
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2009 07:51:19 -0700 (PDT)
-In-Reply-To: <49E40362.1070405@kernel.org>
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:34461 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750713AbZDNPke (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Apr 2009 11:40:34 -0400
+In-Reply-To: <200904141654.24067.bzolnier@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jonathan Corbet <corbet@lwn.net>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Zach Brown <zach.brown@oracle.com>, Chris Mason <chris.mason@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jonathan Corbet <corbet@lwn.net>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Zach Brown <zach.brown@oracle.com>, Chris Mason <chris.mason@oracle.com>, Tejun Heo <tj@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-On Tuesday 14 April 2009 05:30:42 Tejun Heo wrote:
-> Hello, Bartlomiej.
+Bartlomiej Zolnierkiewicz wrote:
+> On Tuesday 14 April 2009 12:14:00 Jeff Garzik wrote:
+
+
+> The SATA features that needed SCSI infrastructure came 2 years later.
 > 
-> Bartlomiej Zolnierkiewicz wrote:
-> > I've started reading it and immediately noticed a thing which made by day. :-)
-> > 
-> > Sorry if it will sound off-topic or undiplomatic but it is the best occasion
-> > to straighten up some facts:
-> > 
-> >  "Discussion then moved on to the current status of getting libata out of
-> >   SCSI: we have had several successes, notably timer handling and pieces of
-> >   error handling have moved up to block. Unfortunately, the current progress
-> >   has reached the point where it's being impeded by the legacy IDE subsystem
-> > 
-> > Heh, you can also blame the lack of world peace on the legacy IDE subsystem.
-> > 
-> > I wonder who came up with this ridiculous excuse (I'm sure it wasn't James!).
+>> Moving libata out of SCSI is now a long term, far off goal.  A goal that 
+>> implies many intermediate steps, cleanups to block, libata, IDE, SCSI 
+>> and other block drivers.
 > 
-> Eh... It was my session.  It probably is a bit too summarized.  I
-> wans't really trying to blame IDE.  The point was that, at this point,
-> adding any feature to the block layer is pretty precarious because in
-> many places block layer API has become somewhat ambiguous and many
-> users have been abusing in interesting ways for quite some time.  IDE,
-> due to its history and complexity, happens to be the most complex one
-> to clean up, so that was why IDE was mentioned in the session.
+> "far off"?
 > 
-> It's not like IDE has been preventing libata separation for all those
-> years.  It's more like, when finally I got my lazy ass moving about
-> moving features from SCSI midlayer to block layer, I realized I better
-> clean up block API before moving forward and IDE was the most
-> difficult user of block API in the process.
+> The fact that it is much harder to do nowadays than in 2004-2005 (without
+> ATAPI support, PATA support and heavy dependence on SCSI infrastructure)
+> is only _your_ fault.
 
-Right, this is the proper way of doing it.
+Of course it is.  Use of SCSI driver infrastructure was a sound 
+technical decision, I'll happily defend.  Key reasons SCSI core was used:
 
-> I apologize if it sounded like an attack on IDE.  It's true that IDE
-> is the biggest block API abuser but it's mostly due to its long
-> history and inherent complexity and you have been doing a lot to clean
-> it up, so let's get it done.
+* ATA-SCSI convergence was clear when libata began.  Time has proven 
+this true:
 
-No worries, lets focus on cleaning this up.
+ATAPI was always SCSI-like.  SAS is plug-compatible with SATA [for some 
+SAS plugs], and SAS transmits SATA frames from SAS expanders and SATA 
+port multipliers.  T10 and T13 standards committees actively 
+collaborate.  SCSI even has a specification, SAT, that describes how to 
+best co-mingle ATA with SCSI.
 
-Thanks,
-Bart
+* SCSI driver infrastructure was the only one advanced enough to support 
+controller hotplug, device hotplug, and all sorts of queueing contortions.
+
+* SCSI was the only infrastructure that _guaranteed_ it would work with 
+existing installers and distros.  For users, there is a clear level of 
+difference in support between /dev/hdXX, /dev/sdXX, and every other 
+block device in the kernel.
+
+SCSI had a higher Just Works(tm) value at the time.
+
+	Jeff
+
+
+
