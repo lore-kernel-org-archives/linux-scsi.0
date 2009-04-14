@@ -1,180 +1,45 @@
-From: Eric Moore <eric.moore@lsi.com>
-Subject: [PATCH 10/13] mpt2sas: LUN Reset Support
-Date: Mon, 13 Apr 2009 22:36:10 -0600
-Message-ID: <20090414043607.GK20124@lsil.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [Scst-devel] [ANNOUNCE]: Comparison of features sets between
+ 	different SCSI targets (SCST, STGT, IET, LIO)
+Date: Tue, 14 Apr 2009 22:10:06 +0400
+Message-ID: <49E4D17E.8020602@vlnb.net>
+References: <49D7AD54.4060408@vlnb.net> <49D7B122.50103@wpkg.org> <e2e108260904050429lcd1870ag6656f36a170ccab3@mail.gmail.com> <49D9D9A0.40106@wpkg.org> <49DA33EF.3020700@vlnb.net> <49DA49AA.1060106@wpkg.org> <49DE4243.5060004@vlnb.net> <49E46E73.8020703@wpkg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chip3og50.obsmtp.com ([64.18.14.165]:34058 "EHLO
-	chip3og50.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757457AbZDNSKT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2009 14:10:19 -0400
-Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
-	by mail0.lsil.com (8.12.11/8.12.11) with ESMTP id n3EIAHXE005269
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2009 11:10:17 -0700 (PDT)
-Received: from localhost (emoore-test1.co.lsil.com [172.21.46.33])
-	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id n3EIALlS022658
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2009 11:10:21 -0700
-Content-Disposition: inline
+Received: from moutng.kundenserver.de ([212.227.126.171]:65268 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757527AbZDNSKF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2009 14:10:05 -0400
+In-Reply-To: <49E46E73.8020703@wpkg.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Tomasz Chmielewski <mangoo@wpkg.org>
+Cc: Bart Van Assche <bart.vanassche@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, scst-devel <scst-devel@lists.sourceforge.net>, stgt@vger.kernel.org
 
-Adding new eh_target_reset_handler for target reset. Change the
-eh_device_reset_handler so its sending
-MPI2_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET, instead of
-MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET.  Add new function
-_scsih_scsi_lookup_find_by_lun as a sanity check to insure I_T_L commands are
-completed upon completing lun reset.
 
-Signed-off-by: Eric Moore <eric.moore@lsi.com>
+Tomasz Chmielewski, on 04/14/2009 03:07 PM wrote:
+> Vladislav Bolkhovitin schrieb:
+> 
+>>> Could anyone recheck if it's the same on some other system?
+>>>
+>>>> Which IO scheduler on the target did you use? I guess, deadline? If 
+>>>> so, you should try with CFQ as well.
+>>> I used CFQ.
+>> You didn't apply io_context-XXX.patch, correct? With it you should see a 
+>>  noticeable increase, like in http://scst.sourceforge.net/vl_res.txt.
+> 
+> I didn't apply this one.
+> 
+> I used 2.6.26.x kernel and io_context-XXX.patch was for 2.6.27, 2.6.28 
+> and 2.6.29 only; 2.6.27 fails to apply to 2.6.26.8 kernel (perhaps in a 
+> trivial way, I didn't check).
 
-diff -uparN a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2009-04-13 16:30:29.000000000 -0600
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2009-04-13 17:38:58.000000000 -0600
-@@ -884,6 +884,41 @@ _scsih_scsi_lookup_find_by_target(struct
- }
- 
- /**
-+ * _scsih_scsi_lookup_find_by_lun - search for matching channel:id:lun
-+ * @ioc: per adapter object
-+ * @id: target id
-+ * @lun: lun number
-+ * @channel: channel
-+ * Context: This function will acquire ioc->scsi_lookup_lock.
-+ *
-+ * This will search for a matching channel:id:lun in the scsi_lookup array,
-+ * returning 1 if found.
-+ */
-+static u8
-+_scsih_scsi_lookup_find_by_lun(struct MPT2SAS_ADAPTER *ioc, int id,
-+    unsigned int lun, int channel)
-+{
-+	u8 found;
-+	unsigned long	flags;
-+	int i;
-+
-+	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
-+	found = 0;
-+	for (i = 0 ; i < ioc->request_depth; i++) {
-+		if (ioc->scsi_lookup[i].scmd &&
-+		    (ioc->scsi_lookup[i].scmd->device->id == id &&
-+		    ioc->scsi_lookup[i].scmd->device->channel == channel &&
-+		    ioc->scsi_lookup[i].scmd->device->lun == lun)) {
-+			found = 1;
-+			goto out;
-+		}
-+	}
-+ out:
-+	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
-+	return found;
-+}
-+
-+/**
-  * _scsih_get_chain_buffer_dma - obtain block of chains (dma address)
-  * @ioc: per adapter object
-  * @smid: system request message index
-@@ -1889,7 +1924,6 @@ scsih_abort(struct scsi_cmnd *scmd)
- 	return r;
- }
- 
--
- /**
-  * scsih_dev_reset - eh threads main device reset routine
-  * @sdev: scsi device struct
-@@ -1906,7 +1940,7 @@ scsih_dev_reset(struct scsi_cmnd *scmd)
- 	u16	handle;
- 	int r;
- 
--	printk(MPT2SAS_INFO_FMT "attempting target reset! scmd(%p)\n",
-+	printk(MPT2SAS_INFO_FMT "attempting device reset! scmd(%p)\n",
- 	    ioc->name, scmd);
- 	scsi_print_command(scmd);
- 
-@@ -1941,6 +1975,78 @@ scsih_dev_reset(struct scsi_cmnd *scmd)
- 
- 	mutex_lock(&ioc->tm_cmds.mutex);
- 	mpt2sas_scsih_issue_tm(ioc, handle, 0,
-+	    MPI2_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET, scmd->device->lun,
-+	    30);
-+
-+	/*
-+	 *  sanity check see whether all commands to this device been
-+	 *  completed
-+	 */
-+	if (_scsih_scsi_lookup_find_by_lun(ioc, scmd->device->id,
-+	    scmd->device->lun, scmd->device->channel))
-+		r = FAILED;
-+	else
-+		r = SUCCESS;
-+	ioc->tm_cmds.status = MPT2_CMD_NOT_USED;
-+	mutex_unlock(&ioc->tm_cmds.mutex);
-+
-+ out:
-+	printk(MPT2SAS_INFO_FMT "device reset: %s scmd(%p)\n",
-+	    ioc->name, ((r == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
-+	return r;
-+}
-+
-+/**
-+ * scsih_target_reset - eh threads main target reset routine
-+ * @sdev: scsi device struct
-+ *
-+ * Returns SUCCESS if command aborted else FAILED
-+ */
-+static int
-+scsih_target_reset(struct scsi_cmnd *scmd)
-+{
-+	struct MPT2SAS_ADAPTER *ioc = shost_priv(scmd->device->host);
-+	struct MPT2SAS_DEVICE *sas_device_priv_data;
-+	struct _sas_device *sas_device;
-+	unsigned long flags;
-+	u16	handle;
-+	int r;
-+
-+	printk(MPT2SAS_INFO_FMT "attempting target reset! scmd(%p)\n",
-+	    ioc->name, scmd);
-+	scsi_print_command(scmd);
-+
-+	sas_device_priv_data = scmd->device->hostdata;
-+	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
-+		printk(MPT2SAS_INFO_FMT "target been deleted! scmd(%p)\n",
-+		    ioc->name, scmd);
-+		scmd->result = DID_NO_CONNECT << 16;
-+		scmd->scsi_done(scmd);
-+		r = SUCCESS;
-+		goto out;
-+	}
-+
-+	/* for hidden raid components obtain the volume_handle */
-+	handle = 0;
-+	if (sas_device_priv_data->sas_target->flags &
-+	    MPT_TARGET_FLAGS_RAID_COMPONENT) {
-+		spin_lock_irqsave(&ioc->sas_device_lock, flags);
-+		sas_device = _scsih_sas_device_find_by_handle(ioc,
-+		   sas_device_priv_data->sas_target->handle);
-+		if (sas_device)
-+			handle = sas_device->volume_handle;
-+		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
-+	} else
-+		handle = sas_device_priv_data->sas_target->handle;
-+
-+	if (!handle) {
-+		scmd->result = DID_RESET << 16;
-+		r = FAILED;
-+		goto out;
-+	}
-+
-+	mutex_lock(&ioc->tm_cmds.mutex);
-+	mpt2sas_scsih_issue_tm(ioc, handle, 0,
- 	    MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0, 30);
- 
- 	/*
-@@ -5243,6 +5349,7 @@ static struct scsi_host_template scsih_d
- 	.change_queue_type		= scsih_change_queue_type,
- 	.eh_abort_handler		= scsih_abort,
- 	.eh_device_reset_handler	= scsih_dev_reset,
-+	.eh_target_reset_handler	= scsih_target_reset,
- 	.eh_host_reset_handler		= scsih_host_reset,
- 	.bios_param			= scsih_bios_param,
- 	.can_queue			= 1,
+Yes, io_context patch for 2.6.26.x kernels doesn't exist, because it 
+isn't clear if it has the necessary functionality.
+
+But it's worth for you to upgrade to 2.6.27.x. Have you seen 
+http://scst.sourceforge.net/vl_res.txt?
+
+Vlad
