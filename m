@@ -1,61 +1,112 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 14/17] scsi: replace custom rq mapping with
-	blk_rq_map_kern_sgl()
-Date: Tue, 14 Apr 2009 09:44:31 +0900
-Message-ID: <20090414093401V.fujita.tomonori@lab.ntt.co.jp>
-References: <49E3080F.7080206@kernel.org>
-	<20090413190747V.fujita.tomonori@lab.ntt.co.jp>
-	<20090413125912.GA16337@liondog.tnic>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: LSF Papers online?
+Date: Tue, 14 Apr 2009 03:24:59 +0200
+Message-ID: <200904140324.59657.bzolnier@gmail.com>
+References: <49E335BA.3020103@panasas.com> <200904132340.21525.bzolnier@gmail.com> <49E3BBB9.4040100@garzik.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:49861 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754885AbZDNApo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Apr 2009 20:45:44 -0400
-In-Reply-To: <20090413125912.GA16337@liondog.tnic>
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:59181 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750844AbZDNBWV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Apr 2009 21:22:21 -0400
+Received: by bwz17 with SMTP id 17so2220026bwz.37
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Apr 2009 18:22:18 -0700 (PDT)
+In-Reply-To: <49E3BBB9.4040100@garzik.org>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: fujita.tomonori@lab.ntt.co.jp, tj@kernel.org, bharrosh@panasas.com, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Jonathan Corbet <corbet@lwn.net>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Zach Brown <zach.brown@oracle.com>, Chris Mason <chris.mason@oracle.com>, Tejun Heo <tj@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 13 Apr 2009 14:59:12 +0200
-Borislav Petkov <petkovbb@googlemail.com> wrote:
-
-> Hi,
-> 
-> On Mon, Apr 13, 2009 at 07:07:58PM +0900, FUJITA Tomonori wrote:
-> > On Mon, 13 Apr 2009 18:38:23 +0900
-> > Tejun Heo <tj@kernel.org> wrote:
+On Tuesday 14 April 2009 00:24:57 Jeff Garzik wrote:
+> Bartlomiej Zolnierkiewicz wrote:
+> > I've started reading it and immediately noticed a thing which made by day. :-)
 > > 
-> > > FUJITA Tomonori wrote:
-> > > >> I thought that was agreed and done? What is left to do for that to go
-> > > >> in.
-> > > > 
-> > > > I've converted all the users (sg, st, osst). Nothing is left. So we
-> > > > don't need this.
-> > > 
-> > > Yeah, pulled it.  Okay, so we can postpone diddling with request
-> > > mapping for now.  I'll re-post fixes only from this and the previous
-> > > patchset and proceed with other patchsets.
+> > Sorry if it will sound off-topic or undiplomatic but it is the best occasion
+> > to straighten up some facts:
 > > 
-> > To be honest, I don't think that we can clean up the block
-> > mapping. For example, blk_rq_map_kern_prealloc() in your patchset
-> > doesn't look cleanup to me. It's just moving a hack from ide to the
-> > block (well, I have to admit that I did the same thing when I
-> > converted sg/st/osst...).
+> >  "Discussion then moved on to the current status of getting libata out of
+> >   SCSI: we have had several successes, notably timer handling and pieces of
+> >   error handling have moved up to block. Unfortunately, the current progress
+> >   has reached the point where it's being impeded by the legacy IDE subsystem
+> > 
+> > Heh, you can also blame the lack of world peace on the legacy IDE subsystem.
+> > 
+> > I wonder who came up with this ridiculous excuse (I'm sure it wasn't James!).
+
+It was you!? :)
+
+> > The thing is that during last _five_ years almost nothing was done in this
+> > direction.  Despite the fact that it was #1 condition under which the whole
+> > code has been merged.  Sorry to say it but it seems like the whole merge
+> > strategy was to over-promise things now and worry about delivery later.
 > 
-> Well, since blk_rq_map_kern_prealloc() is going to be used only in
-> ide-cd (driver needs it to queue a sense request from within the irq
-> handler) and since it is considered a hack I could try to move it out of
-> the irq handler
+> Yet, shockingly, users have been happily using libata despite all these 
+> horrors.
 
-It's quite nice if you could do that.
+That was not the issue raised:
 
-But I think that ide-atapi also needs blk_rq_map_kern_prealloc().
+If you think that you can take a "I will deliver later" credit from the
+developers community and later cover it up by "this is still my goal, I
+just need to find some suckers to do it for me" and think that you won by
+fooling people you're sadly mistaken and will most likely have a reality
+check one day (not from me, I really don't care that much to waste my
+precious time on proving you wrong).
 
-> and do away only with blk_rq_map_kern() if that is more
-> of an agreeable solution?
+Having corporate backing will save you only to some point, I would suggest
+you to look at the current situation in area quite close to our area where
+we have another project manager doing heavy mumbo-jumbo on a three years
+behind the schedule, untested and already technically obsolete project.
 
-Yeah, blk_rq_map_kern() is much proper.
+> > To make things worse all the "successes" quoted above are nothing else
+> > like back-ridding on block layer and SCSI improvements which were done by
+> > non-libata developers.
+> 
+> False.  Tejun authored many of the changesets getting timer and error 
+> handling "moved up the stack."
+
+OK, I stand corrected:
+
+s/all/vast majority of/
+
+> >   which is still relying on some very old fields and undocumented behavior
+> >   of the block layer, since the next step is to simplify the block to low level
+> > 
+> > When it comes to block layer interactions the legacy IDE subsystem is just
+> > another "dumb" (== very simple) block layer driver.
+> 
+> Hardly.  The IDE driver has all sorts of special cases that no other 
+> block driver has.  One must roll dice to see which of rq->special, 
+> ->buffer, ->data and ->sense is filled in, and at what times. Is 
+> ->buffer, ->data, etc. pointing to a buffer... or an opaque kernel data 
+> structure?  None of this is clear or documented.
+
+I fail to see how it stops you from working on moving libata out of SCSI,
+also Tejun had patches cleaning it for some time now.
+
+> REQ_TYPE_ATA_* is still around.  Overall the consistency of request 
+> handling across the IDE class drivers is low.  ide-tape sticks out like 
+> a sore thumb with its use of current_nr_sectors.
+
+ditto
+
+What is the relation between REQ_TYPE_ATA_* or ide-tape and moving
+libata out of SCSI?
+
+> IDE's interactions with the block layer are quite complex and opaque, 
+> compared to other block drivers.
+
+They are certainly more complex than most block layer drivers but there
+is very little magic left + Tejun and Borislav are taking care of it
+(there were also a lot of good work done by FUJITA and Boaz in the past).
+
+More importantly how exactly does this stop you from working on moving
+libata out of SCSI?
+
+To me it looks like some silly behind-somebody's back blame shifting...
+
+Thanks,
+Bart
