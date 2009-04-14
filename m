@@ -1,109 +1,45 @@
 From: Eric Moore <eric.moore@lsi.com>
-Subject: [PATCH 11/13] mpt2sas: add query task support for MPT2COMMAND  ioctl
-Date: Mon, 13 Apr 2009 22:36:53 -0600
-Message-ID: <20090414043651.GL20124@lsil.com>
+Subject: [PATCH 13/13] mpt2sas: bump driver version
+Date: Mon, 13 Apr 2009 22:38:30 -0600
+Message-ID: <20090414043826.GN20124@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chip3mo2-old.postini.com ([64.18.14.205]:50750 "EHLO
-	chip3mo2-old.postini.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757983AbZDNSLK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2009 14:11:10 -0400
+Received: from chip3og50.obsmtp.com ([64.18.14.165]:34772 "EHLO
+	chip3og50.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752423AbZDNSMj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2009 14:12:39 -0400
 Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
-	by mail0.lsil.com (8.12.11/8.12.11) with ESMTP id n3EIB736005320
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2009 11:11:07 -0700 (PDT)
+	by mail0.lsil.com (8.12.11/8.12.11) with ESMTP id n3EICaTK005418
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2009 11:12:36 -0700 (PDT)
 Received: from localhost (emoore-test1.co.lsil.com [172.21.46.33])
-	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id n3EIB4nZ022845
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2009 11:11:11 -0700
+	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id n3EICekK023341
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2009 11:12:40 -0700
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-This patch will find an active mid for a query_task request via the ioctl path.
-
-This code is already there for task_abort, so this patch combining code using
-the same fuction _ctl_set_task_mid(), previously _ctl_do_task_abort().
+Bump driver version.
 
 Signed-off-by: Eric Moore <eric.moore@lsi.com>
 
-diff -uparN a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
---- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c	2009-04-13 16:33:48.000000000 -0600
-+++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c	2009-04-13 17:21:01.000000000 -0600
-@@ -473,7 +473,7 @@ _ctl_poll(struct file *filep, poll_table
- }
+diff -auarpN a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h	2009-04-13 16:40:47.000000000 -0600
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h	2009-04-13 17:31:07.000000000 -0600
+@@ -69,11 +69,11 @@
+ #define MPT2SAS_DRIVER_NAME		"mpt2sas"
+ #define MPT2SAS_AUTHOR	"LSI Corporation <DL-MPTFusionLinux@lsi.com>"
+ #define MPT2SAS_DESCRIPTION	"LSI MPT Fusion SAS 2.0 Device Driver"
+-#define MPT2SAS_DRIVER_VERSION		"00.100.11.16"
+-#define MPT2SAS_MAJOR_VERSION		00
++#define MPT2SAS_DRIVER_VERSION		"01.100.02.00"
++#define MPT2SAS_MAJOR_VERSION		01
+ #define MPT2SAS_MINOR_VERSION		100
+-#define MPT2SAS_BUILD_VERSION		11
+-#define MPT2SAS_RELEASE_VERSION		16
++#define MPT2SAS_BUILD_VERSION		12
++#define MPT2SAS_RELEASE_VERSION		00
  
- /**
-- * _ctl_do_task_abort - assign an active smid to the abort_task
-+ * _ctl_set_task_mid - assign an active smid to tm request
-  * @ioc: per adapter object
-  * @karg - (struct mpt2_ioctl_command)
-  * @tm_request - pointer to mf from user space
-@@ -482,7 +482,7 @@ _ctl_poll(struct file *filep, poll_table
-  * during failure, the reply frame is filled.
-  */
- static int
--_ctl_do_task_abort(struct MPT2SAS_ADAPTER *ioc, struct mpt2_ioctl_command *karg,
-+_ctl_set_task_mid(struct MPT2SAS_ADAPTER *ioc, struct mpt2_ioctl_command *karg,
-     Mpi2SCSITaskManagementRequest_t *tm_request)
- {
- 	u8 found = 0;
-@@ -494,6 +494,14 @@ _ctl_do_task_abort(struct MPT2SAS_ADAPTE
- 	Mpi2SCSITaskManagementReply_t *tm_reply;
- 	u32 sz;
- 	u32 lun;
-+	char *desc = NULL;
-+
-+	if (tm_request->TaskType == MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK)
-+		desc = "abort_task";
-+	else if (tm_request->TaskType == MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK)
-+		desc = "query_task";
-+	else
-+		return 0;
- 
- 	lun = scsilun_to_int((struct scsi_lun *)tm_request->LUN);
- 
-@@ -517,13 +525,13 @@ _ctl_do_task_abort(struct MPT2SAS_ADAPTE
- 	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
- 
- 	if (!found) {
--		dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "ABORT_TASK: "
--		    "DevHandle(0x%04x), lun(%d), no active mid!!\n", ioc->name,
--		    tm_request->DevHandle, lun));
-+		dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: "
-+		    "handle(0x%04x), lun(%d), no active mid!!\n", ioc->name,
-+		    desc, tm_request->DevHandle, lun));
- 		tm_reply = ioc->ctl_cmds.reply;
- 		tm_reply->DevHandle = tm_request->DevHandle;
- 		tm_reply->Function = MPI2_FUNCTION_SCSI_TASK_MGMT;
--		tm_reply->TaskType = MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK;
-+		tm_reply->TaskType = tm_request->TaskType;
- 		tm_reply->MsgLength = sizeof(Mpi2SCSITaskManagementReply_t)/4;
- 		tm_reply->VP_ID = tm_request->VP_ID;
- 		tm_reply->VF_ID = tm_request->VF_ID;
-@@ -535,9 +543,9 @@ _ctl_do_task_abort(struct MPT2SAS_ADAPTE
- 		return 1;
- 	}
- 
--	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "ABORT_TASK: "
--	    "DevHandle(0x%04x), lun(%d), smid(%d)\n", ioc->name,
--	    tm_request->DevHandle, lun, tm_request->TaskMID));
-+	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: "
-+	    "handle(0x%04x), lun(%d), task_mid(%d)\n", ioc->name,
-+	    desc, tm_request->DevHandle, lun, tm_request->TaskMID));
- 	return 0;
- }
- 
-@@ -739,8 +747,10 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPT
- 		    (Mpi2SCSITaskManagementRequest_t *)mpi_request;
- 
- 		if (tm_request->TaskType ==
--		    MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK) {
--			if (_ctl_do_task_abort(ioc, &karg, tm_request)) {
-+		    MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK ||
-+		    tm_request->TaskType ==
-+		    MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK) {
-+			if (_ctl_set_task_mid(ioc, &karg, tm_request)) {
- 				mpt2sas_base_free_smid(ioc, smid);
- 				goto out;
- 			}
+ /*
+  * Set MPT2SAS_SG_DEPTH value based on user input.
