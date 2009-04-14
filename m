@@ -1,45 +1,109 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [Scst-devel] [ANNOUNCE]: Comparison of features sets between
- 	different SCSI targets (SCST, STGT, IET, LIO)
-Date: Tue, 14 Apr 2009 22:10:06 +0400
-Message-ID: <49E4D17E.8020602@vlnb.net>
-References: <49D7AD54.4060408@vlnb.net> <49D7B122.50103@wpkg.org> <e2e108260904050429lcd1870ag6656f36a170ccab3@mail.gmail.com> <49D9D9A0.40106@wpkg.org> <49DA33EF.3020700@vlnb.net> <49DA49AA.1060106@wpkg.org> <49DE4243.5060004@vlnb.net> <49E46E73.8020703@wpkg.org>
+From: Eric Moore <eric.moore@lsi.com>
+Subject: [PATCH 11/13] mpt2sas: add query task support for MPT2COMMAND  ioctl
+Date: Mon, 13 Apr 2009 22:36:53 -0600
+Message-ID: <20090414043651.GL20124@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:65268 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757527AbZDNSKF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2009 14:10:05 -0400
-In-Reply-To: <49E46E73.8020703@wpkg.org>
+Received: from chip3mo2-old.postini.com ([64.18.14.205]:50750 "EHLO
+	chip3mo2-old.postini.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757983AbZDNSLK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2009 14:11:10 -0400
+Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
+	by mail0.lsil.com (8.12.11/8.12.11) with ESMTP id n3EIB736005320
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2009 11:11:07 -0700 (PDT)
+Received: from localhost (emoore-test1.co.lsil.com [172.21.46.33])
+	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id n3EIB4nZ022845
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2009 11:11:11 -0700
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomasz Chmielewski <mangoo@wpkg.org>
-Cc: Bart Van Assche <bart.vanassche@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, scst-devel <scst-devel@lists.sourceforge.net>, stgt@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+This patch will find an active mid for a query_task request via the ioctl path.
 
-Tomasz Chmielewski, on 04/14/2009 03:07 PM wrote:
-> Vladislav Bolkhovitin schrieb:
-> 
->>> Could anyone recheck if it's the same on some other system?
->>>
->>>> Which IO scheduler on the target did you use? I guess, deadline? If 
->>>> so, you should try with CFQ as well.
->>> I used CFQ.
->> You didn't apply io_context-XXX.patch, correct? With it you should see a 
->>  noticeable increase, like in http://scst.sourceforge.net/vl_res.txt.
-> 
-> I didn't apply this one.
-> 
-> I used 2.6.26.x kernel and io_context-XXX.patch was for 2.6.27, 2.6.28 
-> and 2.6.29 only; 2.6.27 fails to apply to 2.6.26.8 kernel (perhaps in a 
-> trivial way, I didn't check).
+This code is already there for task_abort, so this patch combining code using
+the same fuction _ctl_set_task_mid(), previously _ctl_do_task_abort().
 
-Yes, io_context patch for 2.6.26.x kernels doesn't exist, because it 
-isn't clear if it has the necessary functionality.
+Signed-off-by: Eric Moore <eric.moore@lsi.com>
 
-But it's worth for you to upgrade to 2.6.27.x. Have you seen 
-http://scst.sourceforge.net/vl_res.txt?
-
-Vlad
+diff -uparN a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+--- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c	2009-04-13 16:33:48.000000000 -0600
++++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c	2009-04-13 17:21:01.000000000 -0600
+@@ -473,7 +473,7 @@ _ctl_poll(struct file *filep, poll_table
+ }
+ 
+ /**
+- * _ctl_do_task_abort - assign an active smid to the abort_task
++ * _ctl_set_task_mid - assign an active smid to tm request
+  * @ioc: per adapter object
+  * @karg - (struct mpt2_ioctl_command)
+  * @tm_request - pointer to mf from user space
+@@ -482,7 +482,7 @@ _ctl_poll(struct file *filep, poll_table
+  * during failure, the reply frame is filled.
+  */
+ static int
+-_ctl_do_task_abort(struct MPT2SAS_ADAPTER *ioc, struct mpt2_ioctl_command *karg,
++_ctl_set_task_mid(struct MPT2SAS_ADAPTER *ioc, struct mpt2_ioctl_command *karg,
+     Mpi2SCSITaskManagementRequest_t *tm_request)
+ {
+ 	u8 found = 0;
+@@ -494,6 +494,14 @@ _ctl_do_task_abort(struct MPT2SAS_ADAPTE
+ 	Mpi2SCSITaskManagementReply_t *tm_reply;
+ 	u32 sz;
+ 	u32 lun;
++	char *desc = NULL;
++
++	if (tm_request->TaskType == MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK)
++		desc = "abort_task";
++	else if (tm_request->TaskType == MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK)
++		desc = "query_task";
++	else
++		return 0;
+ 
+ 	lun = scsilun_to_int((struct scsi_lun *)tm_request->LUN);
+ 
+@@ -517,13 +525,13 @@ _ctl_do_task_abort(struct MPT2SAS_ADAPTE
+ 	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
+ 
+ 	if (!found) {
+-		dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "ABORT_TASK: "
+-		    "DevHandle(0x%04x), lun(%d), no active mid!!\n", ioc->name,
+-		    tm_request->DevHandle, lun));
++		dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: "
++		    "handle(0x%04x), lun(%d), no active mid!!\n", ioc->name,
++		    desc, tm_request->DevHandle, lun));
+ 		tm_reply = ioc->ctl_cmds.reply;
+ 		tm_reply->DevHandle = tm_request->DevHandle;
+ 		tm_reply->Function = MPI2_FUNCTION_SCSI_TASK_MGMT;
+-		tm_reply->TaskType = MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK;
++		tm_reply->TaskType = tm_request->TaskType;
+ 		tm_reply->MsgLength = sizeof(Mpi2SCSITaskManagementReply_t)/4;
+ 		tm_reply->VP_ID = tm_request->VP_ID;
+ 		tm_reply->VF_ID = tm_request->VF_ID;
+@@ -535,9 +543,9 @@ _ctl_do_task_abort(struct MPT2SAS_ADAPTE
+ 		return 1;
+ 	}
+ 
+-	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "ABORT_TASK: "
+-	    "DevHandle(0x%04x), lun(%d), smid(%d)\n", ioc->name,
+-	    tm_request->DevHandle, lun, tm_request->TaskMID));
++	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: "
++	    "handle(0x%04x), lun(%d), task_mid(%d)\n", ioc->name,
++	    desc, tm_request->DevHandle, lun, tm_request->TaskMID));
+ 	return 0;
+ }
+ 
+@@ -739,8 +747,10 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPT
+ 		    (Mpi2SCSITaskManagementRequest_t *)mpi_request;
+ 
+ 		if (tm_request->TaskType ==
+-		    MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK) {
+-			if (_ctl_do_task_abort(ioc, &karg, tm_request)) {
++		    MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK ||
++		    tm_request->TaskType ==
++		    MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK) {
++			if (_ctl_set_task_mid(ioc, &karg, tm_request)) {
+ 				mpt2sas_base_free_smid(ioc, smid);
+ 				goto out;
+ 			}
