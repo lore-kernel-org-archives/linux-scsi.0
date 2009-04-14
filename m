@@ -1,46 +1,37 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [ANNOUNCE]: A target driver for Marvell 88SE64xx(3G) and 88SE94xx(6G)
- SAS cards
-Date: Tue, 14 Apr 2009 14:14:23 -0400
-Message-ID: <49E4D27F.6040406@garzik.org>
-References: <49E4B6D5.9060007@vlnb.net>
+From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Subject: Re: READ CAPACITY (16) failing
+Date: Tue, 14 Apr 2009 13:23:37 -0500
+Message-ID: <20090414182337.GA5999@beardog.cca.cpqcorp.net>
+References: <20090408194357.GA15043@beardog.cca.cpqcorp.net> <20090408195447.GP20983@parisc-linux.org> <20090410193134.GA2615@beardog.cca.cpqcorp.net> <1239402518.3393.9.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46868 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757930AbZDNSOa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Apr 2009 14:14:30 -0400
-In-Reply-To: <49E4B6D5.9060007@vlnb.net>
+Received: from g5t0007.atlanta.hp.com ([15.192.0.44]:14761 "EHLO
+	g5t0007.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751715AbZDNSXi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2009 14:23:38 -0400
+Content-Disposition: inline
+In-Reply-To: <1239402518.3393.9.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, Andy Yan <ayan@marvell.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, LKML-SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, mike.miller@hp.com
 
-Vladislav Bolkhovitin wrote:
-> Hi All,
+On Fri, Apr 10, 2009 at 03:28:38PM -0700, James Bottomley wrote:
+> > 
+> > Why would I never the see the command in the driver?
 > 
-> I'm glad to announce that a target driver for Marvell 88SE64xx(3G) and 
-> 88SE94xx(6G) SAS cards has been just added in the SCST SVN repository. A 
-> lot of thanks to Marvell and Andy Yan!
-> 
-> This driver allows to use a SAS controller based on Marvell 88SE64xx or 
-> 88SE94xx chips as a SAN storage server (target). More info you can find 
-> on the SCST page http://scst.sourceforge.net.
-> 
-> You can download the driver from SCST SVN by running a command:
-> 
-> $ svn co https://scst.svn.sourceforge.net/svnroot/scst
+> Because your devices are reporting compliance to a standard before RC16
+> was implemented (we have a check in sd_try_rc16_first() to see if you
+> comply to higher than SBC-2).  Then, after you've failed this, if you
+> don't return the conventional 0xffffffff to RC10, we never retry with
+> RC16.
 
-Nice!
+Thanks, James, that looks like the culprit. The LUN actually reports that it
+is a SCSI_SPC_3 device but the controller reports SCSI_UNKNOWN. I'll work
+with the firmware guys to fix that.
+Oddly enough, others here don't report seeing the same RC16 failure. Gets
+better and better.
 
-I'm glad to see this progressing.  I'm amazed that some of my original 
-mvsas code still remains :)
-
-I'll give this a shot on my 6440.
-
-	Jeff
-
-
-
+Thanks,
+mikem
