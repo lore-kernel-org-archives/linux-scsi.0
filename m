@@ -1,55 +1,72 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: LSF Papers online?
-Date: Tue, 14 Apr 2009 17:49:17 -0500
-Message-ID: <1239749357.3638.3.camel@mulgrave>
-References: <49E335BA.3020103@panasas.com>
-	 <200904141654.24067.bzolnier@gmail.com>
-	 <20090414175441.5ce1f59d@lxorguk.ukuu.org.uk>
-	 <200904150009.06539.bzolnier@gmail.com>
+From: Eric Moore <eric.moore@lsi.com>
+Subject: [PATCH] mpt2sas: fix hotplug event processing
+Date: Tue, 14 Apr 2009 03:26:30 -0600
+Message-ID: <20090414092628.GA20904@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:60686 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751896AbZDNWtU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Apr 2009 18:49:20 -0400
-In-Reply-To: <200904150009.06539.bzolnier@gmail.com>
+Received: from chip3og52.obsmtp.com ([64.18.14.169]:48693 "EHLO
+	chip3og52.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753531AbZDNXAi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2009 19:00:38 -0400
+Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
+	by mail0.lsil.com (8.12.11/8.12.11) with ESMTP id n3EN0ZIb007567
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2009 16:00:35 -0700 (PDT)
+Received: from localhost (emoore-test1.co.lsil.com [172.21.46.33])
+	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id n3EN0aEU031148
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2009 16:00:36 -0700
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Jonathan Corbet <corbet@lwn.net>, Boaz Harrosh <bharrosh@panasas.com>, Zach Brown <zach.brown@oracle.com>, Chris Mason <chris.mason@oracle.com>, Tejun Heo <tj@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Wed, 2009-04-15 at 00:09 +0200, Bartlomiej Zolnierkiewicz wrote:
+Here's a fix for hotplug events.  The useage of queue_delayed_work seems
+to broke the fifo for processing of firmware events.  After several iterations
+of adding and removing cabling connected to jbods, the devices are not
+getting added.
 
-OK, look, guys, could we stop this argument?  It's becoming a bit old.
+This patch applies over the patch set posted earlier today.
 
-For the record, I was unhappy to have libata pata in SCSI, but it got
-moved into drivers/ata shortly after, limiting my influence.  I thought
-having a slow wind down of legacy pata in drivers/ide but moving to
-libata for sata was the correct split.  I agree with Jeff that the SCSI
-layer did provide unique features that SATA/NCQ needed at the time ...
-but I also think we need to move them into block sooner rather than
-later.
+Signed-off-by: Eric Moore <eric.moore@lsi.com>
 
-I'm the last person ever to proscribe a kernel subsystem that has
-willing volunteers, so drivers/ide is yours as long as you want to
-maintain it.  I can certainly see the merits of a thinner stack to the
-embedded world, and not a few embedded developers seem to agree.
-
-As far as moving it out of SCSI goes, I've always been a supporter of
-this.  Tejun looks like he's willing to execute, so I feel much more
-sanguine that it will happen.  The point of the notes was really to draw
-attention to something I hadn't realised:  we can't refactor block to
-get libata out of SCSI without also changing drivers/ide, which does
-make the problem harder.
-
-On a final note about the urgency of getting libata out of SCSI: Intel
-has been worrying for a while about the fatness of the SCSI/libata
-stack, and its effects on performance, especially command transmission
-via SAT, so I'm hoping they'll be supporting the effort.
-
-Jmaes
-
-
+diff -uaprN a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2009-04-13 17:39:20.000000000 -0600
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2009-04-14 15:43:53.000000000 -0600
+@@ -119,7 +119,7 @@ struct sense_info {
+  */
+ struct fw_event_work {
+ 	struct list_head 	list;
+-	struct delayed_work	work;
++	struct work_struct	work;
+ 	struct MPT2SAS_ADAPTER *ioc;
+ 	u8			VF_ID;
+ 	u8			host_reset_handling;
+@@ -2113,8 +2113,8 @@ _scsih_fw_event_add(struct MPT2SAS_ADAPT
+ 
+ 	spin_lock_irqsave(&ioc->fw_event_lock, flags);
+ 	list_add_tail(&fw_event->list, &ioc->fw_event_list);
+-	INIT_DELAYED_WORK(&fw_event->work, _firmware_event_work);
+-	queue_delayed_work(ioc->firmware_event_thread, &fw_event->work, 1);
++	INIT_WORK(&fw_event->work, _firmware_event_work);
++	queue_work(ioc->firmware_event_thread, &fw_event->work);
+ 	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
+ }
+ 
+@@ -2158,7 +2158,7 @@ _scsih_fw_event_requeue(struct MPT2SAS_A
+ 		return;
+ 
+ 	spin_lock_irqsave(&ioc->fw_event_lock, flags);
+-	queue_delayed_work(ioc->firmware_event_thread, &fw_event->work, delay);
++	queue_work(ioc->firmware_event_thread, &fw_event->work);
+ 	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
+ }
+ 
+@@ -5170,7 +5170,7 @@ static void
+ _firmware_event_work(struct work_struct *work)
+ {
+ 	struct fw_event_work *fw_event = container_of(work,
+-	    struct fw_event_work, work.work);
++	    struct fw_event_work, work);
+ 	unsigned long flags;
+ 	struct MPT2SAS_ADAPTER *ioc = fw_event->ioc;
+ 
