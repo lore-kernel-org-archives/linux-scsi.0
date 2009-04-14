@@ -1,38 +1,55 @@
-From: Huang Weiyi <weiyi.huang@gmail.com>
-Subject: [PATCH 1/2] [SCSI] mpt2sas: remove unused #include <linux/version.h>
-Date: Wed, 15 Apr 2009 06:30:45 +0800
-Message-ID: <1239748245-3144-1-git-send-email-weiyi.huang@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: LSF Papers online?
+Date: Tue, 14 Apr 2009 17:49:17 -0500
+Message-ID: <1239749357.3638.3.camel@mulgrave>
+References: <49E335BA.3020103@panasas.com>
+	 <200904141654.24067.bzolnier@gmail.com>
+	 <20090414175441.5ce1f59d@lxorguk.ukuu.org.uk>
+	 <200904150009.06539.bzolnier@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.191]:48228 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751630AbZDNWax (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2009 18:30:53 -0400
-Received: by ti-out-0910.google.com with SMTP id 11so356837tim.23
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2009 15:30:52 -0700 (PDT)
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:60686 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751896AbZDNWtU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Apr 2009 18:49:20 -0400
+In-Reply-To: <200904150009.06539.bzolnier@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eric.Moore@lsi.com, support@lsi.com
-Cc: DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, Huang Weiyi <weiyi.huang@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Jonathan Corbet <corbet@lwn.net>, Boaz Harrosh <bharrosh@panasas.com>, Zach Brown <zach.brown@oracle.com>, Chris Mason <chris.mason@oracle.com>, Tejun Heo <tj@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-Remove unused #include <linux/version.h> in drivers/scsi/mpt2sas/mpt2sas_base.c.
+On Wed, 2009-04-15 at 00:09 +0200, Bartlomiej Zolnierkiewicz wrote:
 
-Signed-off-by: Huang Weiyi <weiyi.huang@gmail.com>
----
- drivers/scsi/mpt2sas/mpt2sas_base.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+OK, look, guys, could we stop this argument?  It's becoming a bit old.
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index a91f514..ce0e085 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -42,7 +42,6 @@
-  * USA.
-  */
- 
--#include <linux/version.h>
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/errno.h>
--- 
-1.6.1.2
+For the record, I was unhappy to have libata pata in SCSI, but it got
+moved into drivers/ata shortly after, limiting my influence.  I thought
+having a slow wind down of legacy pata in drivers/ide but moving to
+libata for sata was the correct split.  I agree with Jeff that the SCSI
+layer did provide unique features that SATA/NCQ needed at the time ...
+but I also think we need to move them into block sooner rather than
+later.
+
+I'm the last person ever to proscribe a kernel subsystem that has
+willing volunteers, so drivers/ide is yours as long as you want to
+maintain it.  I can certainly see the merits of a thinner stack to the
+embedded world, and not a few embedded developers seem to agree.
+
+As far as moving it out of SCSI goes, I've always been a supporter of
+this.  Tejun looks like he's willing to execute, so I feel much more
+sanguine that it will happen.  The point of the notes was really to draw
+attention to something I hadn't realised:  we can't refactor block to
+get libata out of SCSI without also changing drivers/ide, which does
+make the problem harder.
+
+On a final note about the urgency of getting libata out of SCSI: Intel
+has been worrying for a while about the fatness of the SCSI/libata
+stack, and its effects on performance, especially command transmission
+via SAT, so I'm hoping they'll be supporting the effort.
+
+Jmaes
+
 
