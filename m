@@ -1,58 +1,83 @@
-From: lego_12239@rambler.ru
-Subject: mptscsih dmesg messages
-Date: Wed, 15 Apr 2009 23:08:48 +0400
-Message-ID: <20090415190848.GA21142@debian>
-Reply-To: lego_12239@rambler.ru
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 9/13] mpt2sas: T10 DIF Support - EEDP
+Date: Wed, 15 Apr 2009 15:31:33 -0400
+Message-ID: <yq163h5zpbe.fsf@sermon.lab.mkp.net>
+References: <20090414043511.GJ20124@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=koi8-r
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mxb.rambler.ru ([81.19.66.30]:62916 "EHLO mxb.rambler.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752831AbZDOTPt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Apr 2009 15:15:49 -0400
-Received: from maild.rambler.ru (maild.rambler.ru [81.19.66.33])
-	by mxb.rambler.ru (Postfix) with ESMTP id 192A71C8107
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Apr 2009 23:10:15 +0400 (MSD)
-Received: from localhost (unknown [89.178.146.16])
-	(Authenticated sender: lego_12239@rambler.ru)
-	by maild.rambler.ru (Postfix) with ESMTP id 18CF884467
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Apr 2009 23:08:52 +0400 (MSD)
-Content-Disposition: inline
+Received: from rcsinet12.oracle.com ([148.87.113.124]:60000 "EHLO
+	rgminet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753787AbZDOTbq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Apr 2009 15:31:46 -0400
+In-Reply-To: <20090414043511.GJ20124@lsil.com> (Eric Moore's message of "Mon,
+	13 Apr 2009 22:35:14 -0600")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Eric Moore <eric.moore@lsi.com>
+Cc: linux-scsi@vger.kernel.org
 
-  Hi.
+>>>>> "Eric" == Eric Moore <eric.moore@lsi.com> writes:
 
-  I have Debian 4.0r4a installation on a server with SAS1064E built-in 
-controller:
+Eric,
 
-~$ lspci | grep LSI
-04:00.0 SCSI storage controller: LSI Logic / Symbios Logic SAS1064E PCI-Express Fusion-MPT SAS (rev 02)
++_scsih_setup_eedp(struct scsi_cmnd *scmd, Mpi2SCSIIORequest_t *mpi_request)
+[...]
++	/*
++	 * enable ref/app/guard checking
++	 * auto increment ref tag
++	 */
++	mpi_request->EEDPFlags = eedp_flags |
++	    MPI2_SCSIIO_EEDPFLAGS_INC_PRI_REFTAG |
++	    MPI2_SCSIIO_EEDPFLAGS_CHECK_REFTAG |
++	    MPI2_SCSIIO_EEDPFLAGS_CHECK_APPTAG |
++	    MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD;
 
-Vanilla kernel with aufs2-base5 patch:
+How can you check the app tag?
 
-~$ uname -a
-Linux ftp 2.6.28.7-aufs #10 Fri Mar 6 19:34:56 UTC 2009 i686 GNU/Linux
 
-There are six sata hard disks connected through SAS HDD Hub box to the 
-controller on the motherboard by two sata cables. Everything work all right, 
-but dmesg shows many annoying lines like this:
++_scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
+[...]
++	if (scmd->sc_data_direction == DMA_TO_DEVICE) {
++		sk = ILLEGAL_REQUEST;
++		host_byte = DID_ABORT;
++	} else {
++		sk = ABORTED_COMMAND;
++		host_byte = DID_OK;
++	}
 
-[ 1876.212880] mptscsih: ioc0: attempting task abort! (sc=f6ff1c80)
-[ 1876.212953] sd 8:0:5:0: [sdh] CDB: Write(10): 2a 00 17 42 ee 0f 00 04 00 00
-[ 1876.213635] mptscsih: ioc0: task abort: SUCCESS (sc=f6ff1c80)
-[ 1876.213973] mptscsih: ioc0: attempting task abort! (sc=d1fc18c0)
-[ 1876.214046] sd 8:0:5:0: [sdh] CDB: Read(10): 28 00 17 10 c0 3f 00 00 08 00
-[ 1876.214727] mptscsih: ioc0: task abort: SUCCESS (sc=d1fc18c0)
-[ 1876.215081] mptscsih: ioc0: attempting target reset! (sc=d1fc1ec0)
-[ 1876.215154] sd 8:0:5:0: [sdh] CDB: Write(10): 2a 00 17 42 b1 ff 00 04 00 00
-[ 1877.735588] mptscsih: ioc0: target reset: SUCCESS (sc=d1fc1ec0)
+ILLEGAL REQUEST is used when the HBA detects a mismatch between data and
+protection information.  If you are not receiving PI from the OS (WRITE
+INSERT) then the HBA can't detect an integrity error.  So in the
+DMA_TO_DEVICE case only the target can catch the error (and it will
+return ABORTED_COMMAND).
 
-sdh is a sata Western Digital disk, model WD10EADS.
+For READ, both the drive firmware and the HBA can ostensibly check that
+the data buffers and PI match.
 
-Is this a firmware problem?
+Are your EEDP error flags only set when the HBA firmware detects a
+problem or also when the drive returns ABORTED COMMAND/0x10?
 
-In the mailing list archive I saw similar problem, but I don't sure.
+I.e. do we get double failure scenarios (both drive and HBA detect the
+mismatch)?
 
-Thanks.
+
++	scsi_host_set_prot(shost, SHOST_DIF_TYPE1_PROTECTION
++	    | SHOST_DIF_TYPE3_PROTECTION);
+
+How do you handle Type 3?  The application tag and reference tags are
+both defined as being opaque storage for Type 3.
+
+If I understand correctly, your firmware only deals with the Type 2
+usage model of the application tag.  And Type 1 + 2 usage of the
+reference tag.
+
+
++	scsi_host_set_guard(shost, SHOST_DIX_GUARD_CRC);
+
+Technically speaking that is only required for DIX exchange.  But
+setting it doesn't hurt.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
+
