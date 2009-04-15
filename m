@@ -1,88 +1,74 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [PATCH 1/3] scsi_dh: Add modalias support for SCSI targets
-Date: Wed, 15 Apr 2009 14:52:43 -0700
-Message-ID: <1239832363.1196.5.camel@chandra-ubuntu>
-References: <20090318013615.26548.36303.sendpatchset@chandra-ubuntu>
-	 <20090318013621.26548.10529.sendpatchset@chandra-ubuntu>
-	 <ac3eb2510903181130s5dd1b1caje579d765fd338f6f@mail.gmail.com>
-	 <1237403902.14147.25.camel@chandra-ubuntu>
-	 <1237488880.26341.15.camel@chandra-ubuntu>  <49C3DF49.8050408@redhat.com>
-	 <1237846429.14853.6.camel@chandra-ubuntu>
-	 <1238798590.20924.0.camel@chandra-ubuntu>
-	 <1239137973.29492.12.camel@mulgrave>  <49DCBDE6.5000806@redhat.com>
-Reply-To: sekharan@linux.vnet.ibm.com
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 9/13] mpt2sas: T10 DIF Support - EEDP
+Date: Wed, 15 Apr 2009 18:26:55 -0400
+Message-ID: <yq1ljq1y2mo.fsf@sermon.lab.mkp.net>
+References: <660360F4F2570145BD872F298951B17A76B5F1A5@cosmail03.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:45000 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750925AbZDOVwR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Apr 2009 17:52:17 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e31.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n3FLmxak006031
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Apr 2009 15:48:59 -0600
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n3FLqFIu210132
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Apr 2009 15:52:16 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n3FLqENA011386
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Apr 2009 15:52:15 -0600
-In-Reply-To: <49DCBDE6.5000806@redhat.com>
+Received: from acsinet12.oracle.com ([141.146.126.234]:25357 "EHLO
+	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752218AbZDOW1E (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Apr 2009 18:27:04 -0400
+In-Reply-To: <660360F4F2570145BD872F298951B17A76B5F1A5@cosmail03.lsi.com>
+	(Eric Moore's message of "Wed, 15 Apr 2009 14:07:34 -0600")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Kay Sievers <kay.sievers@vrfy.org>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, Peter Jones <pjones@redhat.com>, Hannes Reinecke <hare@suse.de>
+To: "Moore, Eric" <Eric.Moore@lsi.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hi James,
+>>>>> "Eric" == Moore, Eric <Eric.Moore@lsi.com> writes:
 
-Are your concerns answered ?
+Eric,
 
-Hannes, Kay,
+Eric> The SAS controller firmware checks the tags, not device driver.
+Eric> What this code is doing is setting flags in the SCSI_IO Request
+Eric> message that is being sent to controller firmware.
 
-Is the description related to bus notify BIND DEVICE issue clear now ?
+Yeah, I figured that much.  I guess it makes sense when you treat the
+app tag as being constant (modulo the mask) for one request.
 
-Please respond :)
 
-chandra
-On Wed, 2009-04-08 at 11:08 -0400, Peter Jones wrote:
-> On 04/07/2009 04:59 PM, James Bottomley wrote:
-> > On Fri, 2009-04-03 at 15:43 -0700, Chandra Seetharaman wrote:
-> >> Hi James,
-> >>
-> >> Do you still have any concerns (after Peter's response) ?
-> > 
-> > Yes, the basic concerns still remain:
-> > 
-> >      1. You're forcing autoload now even if the user isn't running
-> >         dm ... this is going to cause problems with non-dm based path
-> >         handlers
-> 
-> (Chandra covered this pretty well, so I'll leave it be.)
-> 
-> >      2. autoloading in this fashion is essentially trying to work around
-> >         a problem in the initrd tools.  The kernel isn't the right place
-> >         to implement the fix.
-> 
-> This seems backwards to me.  It's not trying to work around a problem
-> in the initrd tools; it's trying to avoid creating one by making this
-> subsystem unlike others.
-> 
-> The point of having modaliases is to allow the kernel to announce that it's
-> got a hardware device and notify the userland that appropriate modules should
-> be loaded.  That's exactly what we've done here.  What we're trying to avoid
-> in the initrd tools is having to have a special handler for this subsystem;
-> instead, we'd much rather use the generic mechanism that already exists for
-> this purpose.
-> 
-> > The risks of this approach seem very high, and the rewards pretty small.
-> 
-> Can you please explain what the high risks you're thinking of are?  I'm not
-> clear on what undesirable behavior you expect to occur.
-> 
-> The reward is that scsi targets behave exactly like most other types of
-> hardware and kernel modules in this regard, without having to write special
-> probing for this subsystem in the userland and special handling for loading
-> these modules.  That's a pretty big win for maintainability.
-> 
+Eric> Obviously the only errors the current implementation will only be
+Eric> flaged on READs.
 
+Eric> My line of thinking was I write the code so it won't need to be
+Eric> rewrote later when DIX support is added for SAS3.0.
+
+Ok, that's fine then.
+
+
+Eric> Yes, I was told by the LSI software test lab, they saw drives
+Eric> returning check condition with these ref tag errors.  I wasn't
+Eric> able to repro that.  What I saw were the IOCSTATUS errors, which
+Eric> is what the code handles in _scsih_eedp_error_handling().  Either
+Eric> way, both cases are covered right?
+
+Yeah.  With READ the difference is mostly academic.
+
+
+>> If I understand correctly, your firmware only deals with the Type 2
+>> usage model of the application tag.  And Type 1 + 2 usage of the
+>> reference tag.
+
+Eric> Our controller firmware support all three types of protection..
+
+So you can actually set the application tag (and reference tag) on a
+per-sector basis for Type 1 and 3 provided the OS sends down 520-byte
+sectors?
+
+
+>> + scsi_host_set_guard(shost, SHOST_DIX_GUARD_CRC);
+>> 
+>> Technically speaking that is only required for DIX exchange.  But
+>> setting it doesn't hurt.
+
+Eric> I wasn't sure whether it needed to be set.  Our controller
+Eric> generates the CRC. I'm not sure whether firmware or hardware
+Eric> implementation.
+
+Given that it sounds like your next chip rev. will use the same driver
+it should be ok to leave it in place.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
