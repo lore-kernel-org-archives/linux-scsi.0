@@ -1,47 +1,66 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: LSF Papers online?
-Date: Tue, 14 Apr 2009 23:58:26 -0400
-Message-ID: <1239767906.15559.1.camel@mulgrave>
-References: <49E335BA.3020103@panasas.com>
-	 <200904141654.24067.bzolnier@gmail.com>
-	 <20090414175441.5ce1f59d@lxorguk.ukuu.org.uk>
-	 <200904150009.06539.bzolnier@gmail.com> <1239749357.3638.3.camel@mulgrave>
-	 <49E53AE6.4010803@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 14/17] scsi: replace custom rq mapping with	blk_rq_map_kern_sgl()
+Date: Wed, 15 Apr 2009 13:25:04 +0900
+Message-ID: <49E561A0.7040607@kernel.org>
+References: <20090413125912.GA16337@liondog.tnic>	<20090414093401V.fujita.tomonori@lab.ntt.co.jp>	<20090414100131.GA14646@liondog.tnic> <20090415084431H.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <49E53AE6.4010803@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Jonathan Corbet <corbet@lwn.net>, Boaz Harrosh <bharrosh@panasas.com>, Zach Brown <zach.brown@oracle.com>, Chris Mason <chris.mason@oracle.com>, Tejun Heo <tj@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:48906 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750794AbZDOEZT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Apr 2009 00:25:19 -0400
+In-Reply-To: <20090415084431H.fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: petkovbb@gmail.com, bharrosh@panasas.com, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, axboe@kernel.dk, bzolnier@gmail.com, linux-kernel@vger.kernel.org
 
-On Tue, 2009-04-14 at 19:39 -0600, Robert Hancock wrote:
-> James Bottomley wrote:
-> > 
-> > On a final note about the urgency of getting libata out of SCSI: Intel
-> > has been worrying for a while about the fatness of the SCSI/libata
-> > stack, and its effects on performance, especially command transmission
-> > via SAT, so I'm hoping they'll be supporting the effort.
+Hello,
+
+Sorry about the delay.
+
+FUJITA Tomonori wrote:
+>> Basically, I opted for preallocating a sense request in the ->do_request
+>> routine and do that only on demand, i.e. I reinitialize it only if it
+>> got used in the irq handler. So in case you want to shove a rq sense in
+>> front of the queue, you simply use the already prepared one. Then in the
+>> irq handler it is being finished the usual ways (blk_end_request). Next
+>> time around you ->do_request, you reallocate it again since it got eaten
+>> in the last round.
 > 
-> I really don't see this as being a big driver for this move. If you look 
-> at the code that does the translation of SCSI commands to ATA commands, 
-> there really is not much there at all of any consequence to CPU usage. 
-> Compared to any kind of hardware/controller interactions I wouldn't say 
-> it's likely to be a significant bottleneck at all. In oprofile runs I've 
-> done with heavy ATA activity, the top time consumers are the interrupt 
-> handlers, command issue paths, code that actually is poking IO 
-> registers. The libata-scsi code hasn't even shown up on the radar in my 
-> experience.
+> Sounds a workable solution.
 
-Been there, said that and got the nicely embroidered polo shirt to prove
-it.
+Haven't actually looked at the code but sweeeeeet.
 
-The point is, it doesn't really matter what I say or believe, it matters
-what they do ... and they believe fat stacks impede the performance of
-their SSDs.
+>> The good thing is that now I don't need all those static block layer
+>> structs in the driver (bio, bio_vec, etc) and do the preferred dynamic
+>> allocation instead.
+> 
+> That's surely good.
+> 
+> Well, if you could remove the usage of request structure that are not
+> came from blk_get_request, it will be super. But it's a different
+> topic and Tejun can go forward without such change.
+> 
+>> The patch is ontop of Tejun's series at
+>> http://git.kernel.org/?p=linux/kernel/git/tj/misc.git;a=shortlog;h=ide-phase1
+>> with some small modifications in commit 15783b1443f810ae72cb5ccb3a3a3ccc3aeb8729
+>> wrt proper sense buffer length.
+> 
+> I think that Tejun will drop some of the patchset. At least, we don't
+> need blk_rq_map_kern_prealloc stuff. I think that Tejun doesn't need
+> to play with the mapping API. Well, we need to play with the mapping
+> API for OSD but it's not directly related with the block layer
+> cleanups necessary for the libata SCSI separation.
 
-James
+Yeah, the blk_rq_map_kern_prealloc() was basically shifting rq map
+from ide to blk/bio so that at least codes are all in one place.  If
+it's not necessary, super.  :-)
 
+I'll drop stuff from this and the other patchset and repost them with
+Borislav's patch in a few hours.  Thanks guys.
 
+-- 
+tejun
