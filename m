@@ -1,109 +1,111 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: Re: [PATCH] FC Pass Thru support
-Date: Wed, 15 Apr 2009 14:59:56 +0200
-Message-ID: <20090415125956.GA12670@schmichrtp.de.ibm.com>
-References: <1238088799.19995.3.camel@ogier>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: LSF Papers online?
+Date: Wed, 15 Apr 2009 15:38:20 +0200
+Message-ID: <200904151538.20546.bzolnier@gmail.com>
+References: <49E335BA.3020103@panasas.com> <200904150009.06539.bzolnier@gmail.com> <20090415102829.7fec55f2@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate4.uk.ibm.com ([195.212.29.137]:57084 "EHLO
-	mtagate4.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754038AbZDOM77 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Apr 2009 08:59:59 -0400
-Received: from d06nrmr1806.portsmouth.uk.ibm.com (d06nrmr1806.portsmouth.uk.ibm.com [9.149.39.193])
-	by mtagate4.uk.ibm.com (8.14.3/8.13.8) with ESMTP id n3FCxvsj018986
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Apr 2009 12:59:57 GMT
-Received: from d06av02.portsmouth.uk.ibm.com (d06av02.portsmouth.uk.ibm.com [9.149.37.228])
-	by d06nrmr1806.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n3FCxvBW2928712
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Apr 2009 13:59:57 +0100
-Received: from d06av02.portsmouth.uk.ibm.com (loopback [127.0.0.1])
-	by d06av02.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n3FCxvhJ026218
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Apr 2009 13:59:57 +0100
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20090415102829.7fec55f2@lxorguk.ukuu.org.uk>
 Content-Disposition: inline
-In-Reply-To: <1238088799.19995.3.camel@ogier>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, Jonathan Corbet <corbet@lwn.net>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Zach Brown <zach.brown@oracle.com>, Chris Mason <chris.mason@oracle.com>, Tejun Heo <tj@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: linux-scsi@vger.kernel.org
 
-On Thu, Mar 26, 2009 at 01:33:19PM -0400, James Smart wrote:
+On Wednesday 15 April 2009 11:28:29 Alan Cox wrote:
+> > I just wanted to have clear vision of the process instead of "lets merge
+> > it now and worry about real users later".
 > 
-> All,
+> There was a simple vision which was to provide full coverage for all the
+> relevant ATA controllers using the libata core ASAP and leave the old IDE
+> code "as is". That was what was done.
+
+You took the "shortcut" instead of fixing the issue the "proper" way.
+
+Namely, you defined "relevant" and "full coverage" as you wanted.
+
+Depending on the level of difficulty of the task.
+
+Wasn't IDE PMAC relevant back in 2005?
+
+It was much more relevant than CMD640 or legacy VLB drivers that you ported.
+
+It is 2009 now and IDE PMAC is still much more relevant than some other
+stuff that you're working on.
+
+Wasn't 32-bit PIO important for embedded systems back then?
+[it happened only recently]
+
+You also threw in a bunch of regressions because you didn't start from
+fixing IDE host drivers in incremental evolutionary way.
+
+You didn't even care to backport some obvious/critical fixes to IDE,
+the same IDE that all distributions (including _your_ past employer)
+were still shipping.
+
+Yes, doing it your way was faster for _you_ and gave _you_ huge competition
+advantage but prevented any reasonable review/help from _other_ people.
+
+Reinventing the whole subsystem is not a single person project.
+
+It is just physically impossible to do it properly.
+
+The complexity and the scale is too large and there will be always things
+that you miss or that other people are better at.
+
+> > Every uncomfortable technical issue raised was addressed with direct
+> > "IDE is teh crap" shouting 
 > 
-> Attached is the ELS/CT pass-thru patch for the FC Transport. The patch
-> creates a generic framework that lays on top of bsg and the SGIO v4 ioctl
-> in order to pass transaction requests to LLDD's.
-> 
-> The interface supports the following operations:
->   On an fc_host basis:
->     Request login to the specified N_Port_ID, creating an fc_rport.
->     Request logout of the specified N_Port_ID, deleting an fc_rport
->     Send ELS request to specified N_Port_ID w/o requiring a login, and
->       wait for ELS response.
->     Send CT request to specified N_Port_ID and wait for CT response.
->       Login is required, but LLDD is allowed to manage login and decide
->       whether it stays in place after the request is satisfied.
->     Vendor-Unique request. Allows a LLDD-specific request to be passed
->       to the LLDD, and the passing of a response back to the application.
->   On an fc_rport basis:
->     Send ELS request to nport and wait for ELS response.
->     Send CT request to nport and wait for CT response.
-> 
-> The patch also exports several headers from include/scsi such that
-> they can be available to user-space applications:
->   include/scsi/scsi.h
->   include/scsi/scsi_netlink.h
->   include/scsi/scsi_netlink_fc.h
->   include/scsi/scsi_bsg_fc.h
-> 
-> For further information, refer to the last RFC:
-> http://marc.info/?l=linux-scsi&m=123436574018579&w=2
+> Sorry but you are re-inventing history here. The old IDE layer was crap,
+> and for sound technical reasons including the error handling and the
+> horrible locking problems from the design level up caused by the
+> reset/error/timeout handling paths and the polled speed change on CRC
+> error change down.
 
-This patch triggers the warning WARN_ON(!irqs_disabled()) in
-blk_remove_plug, and the description of __blk_run_queue states:
+That was not the issue raised.
 
-/**
- * __blk_run_queue - run a single device queue
- * @q:  The queue to run
- *
- * Description:
- *    See @blk_run_queue. This variant must be called with the queue
- *    lock held and interrupts disabled.
- *
- */
+> I spent years working on that stuff. Throwing it all away was not my idea
 
-I assume to get this right, fc_bsg_goose_queue should disable
-interrupts when taking the queue lock. See patch below.
+So what?
 
-Christof
----
- drivers/scsi/scsi_transport_fc.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+This doesn't make you special in any way.
 
---- a/drivers/scsi/scsi_transport_fc.c	2009-04-14 14:29:25.000000000 +0200
-+++ b/drivers/scsi/scsi_transport_fc.c	2009-04-14 14:31:41.000000000 +0200
-@@ -3707,13 +3707,14 @@ static void
- fc_bsg_goose_queue(struct fc_rport *rport)
- {
- 	int flagset;
-+	unsigned long flags;
- 
- 	if (!rport->rqst_q)
- 		return;
- 
- 	get_device(&rport->dev);
- 
--	spin_lock(rport->rqst_q->queue_lock);
-+	spin_lock_irqsave(rport->rqst_q->queue_lock, flags);
- 	flagset = test_bit(QUEUE_FLAG_REENTER, &rport->rqst_q->queue_flags) &&
- 		  !test_bit(QUEUE_FLAG_REENTER, &rport->rqst_q->queue_flags);
- 	if (flagset)
-@@ -3721,7 +3722,7 @@ fc_bsg_goose_queue(struct fc_rport *rpor
- 	__blk_run_queue(rport->rqst_q);
- 	if (flagset)
- 		queue_flag_clear(QUEUE_FLAG_REENTER, rport->rqst_q);
--	spin_unlock(rport->rqst_q->queue_lock);
-+	spin_unlock_irqrestore(rport->rqst_q->queue_lock, flags);
- 
- 	put_device(&rport->dev);
- }
+Few other people had similar experiences.
+
+> of fun, but it was clearly the right technical decision. I'm very happy
+> with the state of libata PATA.
+
+Maybe it is the time to retire from kernel hacking then? ;)
+
+You see, I'm not happy with the state of IDE, libata, SCSI, block
+and many other things.  I know that I'll _never_ be.  I also bet that
+most of people working with me feel in the exactly same way.
+
+More seriously, it is 2009 now.
+
+Four years after initial libata PATA introduction and I could still
+spend few next weeks sending one IDE -> libata regression fix per day,
+ranging from possible data corruption through lack of hardware support
+to duplicated code [most of issues can be tracked back to 2005].
+
+However I simply do not care.
+
+I don't need libata PATA.
+
+I don't use it, I'm not paid to work on it and it is not my project.
+
+It seems that it I'm not the only one who misunderstood the free software.
+
+If you are not interested in people wanting to improve _your_ project
+then we can end up the discussion here.
+
+You may not like me but this is pretty lame excuse for denying me
+merit and in turn damaging _your_ own project.
+
+Re-read my previous mail and ping me when you are back to the rational
+thinking.
+
+Till then I'm done with this topic.
