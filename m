@@ -1,61 +1,62 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: queue_depth tracking from LLD
-Date: Thu, 16 Apr 2009 10:40:37 -0400
-Message-ID: <49E74365.3020302@emulex.com>
-References: <20090416093604.GA7096@schmichrtp.de.ibm.com> <49E73D16.9030307@emulex.com> <20090416143350.GD1926@parisc-linux.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/3] scsi_dh: Add modalias support for SCSI targets
+Date: Thu, 16 Apr 2009 17:18:38 +0200
+Message-ID: <49E74C4E.8030407@suse.de>
+References: <20090318013615.26548.36303.sendpatchset@chandra-ubuntu>	 <20090318013621.26548.10529.sendpatchset@chandra-ubuntu>	 <ac3eb2510903181130s5dd1b1caje579d765fd338f6f@mail.gmail.com>	 <1237403902.14147.25.camel@chandra-ubuntu>	 <1237488880.26341.15.camel@chandra-ubuntu>  <49C3DF49.8050408@redhat.com>	 <1237846429.14853.6.camel@chandra-ubuntu>	 <1238798590.20924.0.camel@chandra-ubuntu>	 <1239137973.29492.12.camel@mulgrave>  <49DCBDE6.5000806@redhat.com> <1239832363.1196.5.camel@chandra-ubuntu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:63948 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752919AbZDPOlL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2009 10:41:11 -0400
-In-Reply-To: <20090416143350.GD1926@parisc-linux.org>
+Received: from cantor2.suse.de ([195.135.220.15]:47129 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754397AbZDPPSl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Apr 2009 11:18:41 -0400
+In-Reply-To: <1239832363.1196.5.camel@chandra-ubuntu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Christof Schmitt <christof.schmitt@de.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: sekharan@linux.vnet.ibm.com
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Kay Sievers <kay.sievers@vrfy.org>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, Peter Jones <pjones@redhat.com>
 
-Completely Agree.  The multi-initiator point is the one I try to hammer 
-home. It's what the
-current algorithm completely misses.
+Chandra Seetharaman wrote:
+> Hi James,
+>=20
+> Are your concerns answered ?
+>=20
+> Hannes, Kay,
+>=20
+> Is the description related to bus notify BIND DEVICE issue clear now =
+?
+>=20
+> Please respond :)
+>=20
+Yes, issue is clearer now.
 
-Even though I said its complex - it's really not that difficult. The 
-pain is just figuring out
-what to group and what the rates should be.
+Basically this is another instance where multi-driver binding would mak=
+e
+a difference. Using the 'notifier_chain' approach is basically doing
+the very same thing whilst _not_ using driver core binding.
 
--- james s
+So from that point of view:
 
-Matthew Wilcox wrote:
-> On Thu, Apr 16, 2009 at 10:13:42AM -0400, James Smart wrote:
->   
->> However, for arrays, with multiple luns, the queue depth is usually a 
->> target-level resource,
->> so the midlayer/block-layer's implementation falls on its face fairly 
->> quickly. I brought this
->>     
->
-> If the problem were as simple as the resource being target-level instead
-> of LUN-level, it would be fairly easy to fix (we could do accounting
-> per-target instead of per-LUN).  The problem, AIUI, is multi-initiator
-> where you can't know whether resources are in use or not.
->
->   
->> up 2 yrs ago at storage summit.  What needs to happen is the creation of 
->> queue ramp-down
->> and ramp-up policies that can be selected on a per-lun basis, and have 
->> these implemented
->> in the midlayer (why should the LLDD ever look at scsi command 
->> results).  What will make
->> this difficult is the ramp-up policies, as it can be very target 
->> device-specific or configuration/load
->> centric.
->>     
->
-> While not disagreeing that it's complex, I don't think putting it in the
-> driver makes it less complex.  I completely agree that LLDDs should not
-> be snooping scsi commands or scsi command results.  It should all be in
-> the midlayer so we all share the same bugs ;-)
->
->   
+Acked-by: Hannes Reinecke <hare@suse.de>
+
+However, I would really like to see it merged with my ALUA update
+for scsi_dh; for ALUA matching on the vendor/product tuple is really
+quite pointless and we should be using the 'TPGS' setting in
+the inquiry data.
+
+Trading your ack for mine :-)
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
