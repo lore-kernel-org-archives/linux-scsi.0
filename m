@@ -1,100 +1,183 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: LSF Papers online?
-Date: Thu, 16 Apr 2009 11:45:53 -0600
-Message-ID: <20090416174553.GE1926@parisc-linux.org>
-References: <49E335BA.3020103@panasas.com> <200904141654.24067.bzolnier@gmail.com> <20090414175441.5ce1f59d@lxorguk.ukuu.org.uk> <200904150009.06539.bzolnier@gmail.com> <1239749357.3638.3.camel@mulgrave> <49E53AE6.4010803@gmail.com> <da824cf30904152331r82594e5i1968471af1dbb1fa@mail.gmail.com> <1239899823.3762.37.camel@mulgrave.int.hansenpartnership.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH ver. 5] SCSI: remove scsi_end_request()
+Date: Thu, 16 Apr 2009 15:28:29 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0904161436410.16938-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1239899823.3762.37.camel@mulgrave.int.hansenpartnership.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Grant Grundler <grundler@google.com>, Robert Hancock <hancockrwd@gmail.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:36385 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754989AbZDPT2a (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2009 15:28:30 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <jens.axboe@oracle.com>, Ingo Molnar <mingo@elte.hu>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Thu, Apr 16, 2009 at 11:37:02AM -0500, James Bottomley wrote:
-> of data.   I fully agree that some of the less smart SATA controllers
-> have a lot of catching up to do in this space, but that isn't
-> necessarily a driver issue; you can't polish a turd as the saying
-> goes ...
+This patch (as1144e) removes scsi_end_request().  The routine had only
+one caller, so it is moved inline and simplified.
 
-I guess you haven't seen the episode of Mythbusters where they manage
-to do exactly that?  ;-)
+In addition, if no forward progress has been made then the patch
+decrements a request's retry counter before unpreparing and requeuing
+it, to avoid infinite retry loops.
 
-> IOPS are starting to come up because SSDs are saying they prefer many
-> smaller transactions to an accumulated larger one.  I'm still not
+Finally, fix up an omission left by an earlier change: The "error"
+variable should be passed to blk_end_request().
 
-I don't think that's what SSDs are saying.  The protocol (and controllers)
-still work better if you send down one 128k IO than 32 4k IOs.  But with
-the low latency of doing accesses, it's better to send down a 16k IO
-now than it is to wait around a bit and see if another 16k IO comes along.
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+CC: Martin K. Petersen <martin.petersen@oracle.com>
+CC: Jens Axboe <jens.axboe@oracle.com>
+CC: Ingo Molnar <mingo@elte.hu>
 
-> entirely convinced that trying to rightsize is wrong here:  most of the
-> FS data is getting more contiguous, so even for SSDs we can merge
-> without a lot of work.  A simple back of the envelope calculation can
-> give the rightizing:  If you want a SSD to max out at its 31 allowed
-> tags saturating a 3G sata link, then you're talking 10M per tag per
+---
 
-Better than that, only 8MB of data per tag per second.  SATA effectively
-limits you to 250MB/s.  That's 2016 IOPS per tag.  Of course, this
-assumes you're only doing the NCQ commands and not, say, issuing TRIM
-or something.
+[Based on 2.6.30-rc2]
 
-> second.  If we assume a 4k sector size, that's 2500 IOPS per tag
-> (there's no real point doing less than 4k, because that has us splitting
-> the page cache). Or, to put it another way, over 75k IOPS for a single
-> SSD doesn't make sense ... the interesting question is whether it would
-> make more sense to align on, say 16k io and so expect to max out at 20k
-> IOPS.
+James, is there any reason this patch isn't getting reviewed, rejected,
+or applied?  Ingo has been running with it for quite a while now.
 
-If we're serious about getting 2000 IOPS per tag, then the round-trip
-inside the kernel to recycle a tag has to be less than 500 microseconds.
-Do you have a good idea about how to measure what that is today?
-Here's the call path taken by the AHCI driver:
+Alan Stern
 
-ahci_interrupt()
-ahci_port_intr()
-ata_qc_complete_multiple()
-ata_qc_complete()
-__ata_qc_complete()
-ata_scsi_qc_complete() [qc->complete_fn]
-scsi_done() [qc->scsidone]
-blk_complete_request()
-__blk_complete_request()
-raise_softirq_irqoff()
-...
-blk_done_softirq()
-scsi_softirq_done() [rq->q->softirq_done_fn]
-scsi_finish_command()
-scsi_io_completion()
-scsi_end_request()
-scsi_next_command()
-scsi_run_queue()
-__blk_run_queue()
-blk_invoke_request_fn()
-scsi_request_fn() [q->request_fn]
-scsi_dispatch_cmd()
-ata_scsi_translate() [host->hostt->queuecommand]
-ata_qc_issue()
-ahci_qc_issue() [ap->ops->qc_issue]
 
-I can see a few ways to cut down the latency between knowing a tag is
-no longer used and starting the next command.
+Index: usb-2.6/drivers/scsi/scsi_lib.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/scsi_lib.c
++++ usb-2.6/drivers/scsi/scsi_lib.c
+@@ -513,71 +513,6 @@ void scsi_run_host_queues(struct Scsi_Ho
+ 
+ static void __scsi_release_buffers(struct scsi_cmnd *, int);
+ 
+-/*
+- * Function:    scsi_end_request()
+- *
+- * Purpose:     Post-processing of completed commands (usually invoked at end
+- *		of upper level post-processing and scsi_io_completion).
+- *
+- * Arguments:   cmd	 - command that is complete.
+- *              error    - 0 if I/O indicates success, < 0 for I/O error.
+- *              bytes    - number of bytes of completed I/O
+- *		requeue  - indicates whether we should requeue leftovers.
+- *
+- * Lock status: Assumed that lock is not held upon entry.
+- *
+- * Returns:     cmd if requeue required, NULL otherwise.
+- *
+- * Notes:       This is called for block device requests in order to
+- *              mark some number of sectors as complete.
+- * 
+- *		We are guaranteeing that the request queue will be goosed
+- *		at some point during this call.
+- * Notes:	If cmd was requeued, upon return it will be a stale pointer.
+- */
+-static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int error,
+-					  int bytes, int requeue)
+-{
+-	struct request_queue *q = cmd->device->request_queue;
+-	struct request *req = cmd->request;
+-
+-	/*
+-	 * If there are blocks left over at the end, set up the command
+-	 * to queue the remainder of them.
+-	 */
+-	if (blk_end_request(req, error, bytes)) {
+-		int leftover = (req->hard_nr_sectors << 9);
+-
+-		if (blk_pc_request(req))
+-			leftover = req->data_len;
+-
+-		/* kill remainder if no retrys */
+-		if (error && scsi_noretry_cmd(cmd))
+-			blk_end_request(req, error, leftover);
+-		else {
+-			if (requeue) {
+-				/*
+-				 * Bleah.  Leftovers again.  Stick the
+-				 * leftovers in the front of the
+-				 * queue, and goose the queue again.
+-				 */
+-				scsi_release_buffers(cmd);
+-				scsi_requeue_command(q, cmd);
+-				cmd = NULL;
+-			}
+-			return cmd;
+-		}
+-	}
+-
+-	/*
+-	 * This will goose the queue request function at the end, so we don't
+-	 * need to worry about launching another command.
+-	 */
+-	__scsi_release_buffers(cmd, 0);
+-	scsi_next_command(cmd);
+-	return NULL;
+-}
+-
+ static inline unsigned int scsi_sgtable_index(unsigned short nents)
+ {
+ 	unsigned int index;
+@@ -739,7 +674,6 @@ static void scsi_end_bidi_request(struct
+ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ {
+ 	int result = cmd->result;
+-	int this_count;
+ 	struct request_queue *q = cmd->device->request_queue;
+ 	struct request *req = cmd->request;
+ 	int error = 0;
+@@ -805,24 +739,37 @@ void scsi_io_completion(struct scsi_cmnd
+ 		error = 0;
+ 	}
+ 
+-	/*
+-	 * A number of bytes were successfully read.  If there
+-	 * are leftovers and there is some kind of error
+-	 * (result != 0), retry the rest.
+-	 */
+-	if (scsi_end_request(cmd, error, good_bytes, result == 0) == NULL)
++	if (blk_end_request(req, error, good_bytes) == 0) {
++		/* This request is completely finished; start the next one */
++		 __scsi_release_buffers(cmd, 0);
++		scsi_next_command(cmd);
+ 		return;
+-	this_count = blk_rq_bytes(req);
+-
+-	error = -EIO;
++	}
+ 
+-	if (host_byte(result) == DID_RESET) {
++	/* The request isn't finished yet.  Figure out what to do next. */
++	if (result == 0) {
++		/* No error, so carry out the remainder of the request.
++		 * Failure to make forward progress counts against the
++		 * the number of retries.
++		 */
++		if (good_bytes > 0 || --req->retries >= 0)
++			action = ACTION_REPREP;
++		else {
++			description = "Retries exhausted";
++			action = ACTION_FAIL;
++			error = -EIO;
++		}
++	} else if (error && scsi_noretry_cmd(cmd)) {
++		/* Retrys are disallowed, so kill the remainder. */
++		action = ACTION_FAIL;
++	} else if (host_byte(result) == DID_RESET) {
+ 		/* Third party bus reset or reset for error recovery
+ 		 * reasons.  Just retry the command and see what
+ 		 * happens.
+ 		 */
+ 		action = ACTION_RETRY;
+ 	} else if (sense_valid && !sense_deferred) {
++		error = -EIO;
+ 		switch (sshdr.sense_key) {
+ 		case UNIT_ATTENTION:
+ 			if (cmd->device->removable) {
+@@ -922,7 +869,7 @@ void scsi_io_completion(struct scsi_cmnd
+ 			if (driver_byte(result) & DRIVER_SENSE)
+ 				scsi_print_sense("", cmd);
+ 		}
+-		blk_end_request(req, -EIO, blk_rq_bytes(req));
++		blk_end_request(req, error, blk_rq_bytes(req));
+ 		scsi_next_command(cmd);
+ 		break;
+ 	case ACTION_REPREP:
 
-We could pretend the AHCI driver has a queue depth of 64, queue up
-commands in the driver, swap the tags over, and send out the next command
-before we process this command.
-
-This is similar to a technique that's used in some old SCSI drivers that
-didn't support tagged commands at all -- a second command was queued
-inside the driver while the first was executing on the device.
-
-But then, we had that big movement towards elimintaing queues from inside
-drivers ... maybe we need another way.
-
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
