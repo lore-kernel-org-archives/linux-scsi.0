@@ -1,96 +1,208 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: LSF Papers online?
-Date: Thu, 16 Apr 2009 11:37:02 -0500
-Message-ID: <1239899823.3762.37.camel@mulgrave.int.hansenpartnership.com>
-References: <49E335BA.3020103@panasas.com>
-	 <200904141654.24067.bzolnier@gmail.com>
-	 <20090414175441.5ce1f59d@lxorguk.ukuu.org.uk>
-	 <200904150009.06539.bzolnier@gmail.com> <1239749357.3638.3.camel@mulgrave>
-	 <49E53AE6.4010803@gmail.com>
-	 <da824cf30904152331r82594e5i1968471af1dbb1fa@mail.gmail.com>
+From: Eric Moore <eric.moore@lsi.com>
+Subject: Re: [PATCH 9/13] mpt2sas: T10 DIF Support - EEDP
+Date: Thu, 16 Apr 2009 10:45:16 -0600
+Message-ID: <20090416164514.GA4177@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <da824cf30904152331r82594e5i1968471af1dbb1fa@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exprod7og102.obsmtp.com ([64.18.2.157]:48393 "EHLO
+	exprod7og102.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755925AbZDPQog (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2009 12:44:36 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2009-04-15 at 23:31 -0700, Grant Grundler wrote:
-> On Tue, Apr 14, 2009 at 6:39 PM, Robert Hancock <hancockrwd@gmail.com> wrote:
-> > James Bottomley wrote:
-
-[...]
-> > Compared to
-> > any kind of hardware/controller interactions I wouldn't say it's likely to
-> > be a significant bottleneck at all. In oprofile runs I've done with heavy
-> > ATA activity, the top time consumers are the interrupt handlers,
-> 
-> interrupts just introduce completion reporting latency. Interrupt mitigation
-> techinques/smarter controller can reduce this.
-
-For sure smarter controllers; I'm less convinced on interrupt mitigation
-techniques, primarily because smart controllers tend to do batch
-completion anyway.
-
-The reason storage shouldn't really need interrupt mitigation (like NAPI
-for networks) is that we shouldn't ever really be surprised by an
-interrupt, unlike networks.  We should always know what payloads will be
-coming at us from the device (and have buffers ready and waiting).  Most
-SCSI controllers (including the SAS ones) do all of this today: You can
-send out I/O and on some of them get under two interrupts per gigabyte
-of data.   I fully agree that some of the less smart SATA controllers
-have a lot of catching up to do in this space, but that isn't
-necessarily a driver issue; you can't polish a turd as the saying
-goes ...
-
-> > command issue paths,
-> 
-> Hrm? Is this in the device driver?
-> 
-> > code that actually is poking IO registers.
-> 
-> Stupid controller design. NICs have been able to run without
-> MMIO *Reads* in the performance for more than 5 years now.
-> New "Enterprise" SAS/SATA controllers are better but I'm not
-> at liberty to discuss those. (sorry)
-
-That's both a protocol and a controller issue for SATA: some of the ATA
-transfer modes (like pio) have a lot higher overhead (and,
-unfortunately, less offload in the controller) in the protocol stack and
-can be unavoidable on certain transactions.
-
-> > The libata-scsi code
-> > hasn't even shown up on the radar in my experience.
-> 
-> It won't for normal disk IOPS rates (<1000 IOPS per disk).
-> Run it at 20K or 50K IOPS and see again.
-> NICs are pushing alot more than that.
-
-So again, we get to this terminology problem:  NICs tend to have a fixed
-packet size (the network MTU) so IOPS/s makes a lot of sense for them.
-In most storage transactions we don't really have MTU limitations, so we
-try to right size the outgoing transactions to maximize for bandwidth,
-so IOPS don't tell the full story.  (after all, if I see all my packets
-are 128k, I can artificially reduce the merge limit to 64k and double my
-IOPS).
-
-IOPS are starting to come up because SSDs are saying they prefer many
-smaller transactions to an accumulated larger one.  I'm still not
-entirely convinced that trying to rightsize is wrong here:  most of the
-FS data is getting more contiguous, so even for SSDs we can merge
-without a lot of work.  A simple back of the envelope calculation can
-give the rightizing:  If you want a SSD to max out at its 31 allowed
-tags saturating a 3G sata link, then you're talking 10M per tag per
-second.  If we assume a 4k sector size, that's 2500 IOPS per tag
-(there's no real point doing less than 4k, because that has us splitting
-the page cache). Or, to put it another way, over 75k IOPS for a single
-SSD doesn't make sense ... the interesting question is whether it would
-make more sense to align on, say 16k io and so expect to max out at 20k
-IOPS.
-
-James
+On Wednesday, April 15, 2009 8:55 PM, Martin K. Petersen wrote:
+> For Type 1 I expect you to check guard + match ref tag to CDB LBA +
+> offset.
+>
+> For Type 2 I expect you to check guard + match ref tag to E.I.LBA in
+> 32-byte CDB + offset.
+>
+> For Type 3 I expect you to check guard only.
 
 
+Does this patch look good?
+
+(1) I modified _scsih_setup_eedp so for TYPE1, its sets ref and gaurd checking,
+and for TYPE2 it sets gauard checking.
+
+(2) I removed the calling of scsi_host_set_guard.
+
+
+I'll repost the entire patch set if this is good to go.
+
+
+Eric Moore
+
+
+diff -uaprN a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h	2009-04-13 15:45:09.000000000 -0600
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h	2009-04-13 16:31:27.000000000 -0600
+@@ -61,6 +61,7 @@
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/scsi_transport_sas.h>
+ #include <scsi/scsi_dbg.h>
++#include <scsi/scsi_eh.h>
+ 
+ #include "mpt2sas_debug.h"
+ 
+diff -uaprN a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2009-04-13 15:58:57.000000000 -0600
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2009-04-16 09:55:42.000000000 -0600
+@@ -2390,6 +2390,106 @@ mpt2sas_scsih_reset_handler(struct MPT2S
+ }
+ 
+ /**
++ * _scsih_setup_eedp - setup MPI request for EEDP transfer
++ * @scmd: pointer to scsi command object
++ * @mpi_request: pointer to the SCSI_IO reqest message frame
++ *
++ * Supporting protection 1 and 3.
++ *
++ * Returns nothing
++ */
++static void
++_scsih_setup_eedp(struct scsi_cmnd *scmd, Mpi2SCSIIORequest_t *mpi_request)
++{
++	u16 eedp_flags;
++	unsigned char prot_op = scsi_get_prot_op(scmd);
++	unsigned char prot_type = scsi_get_prot_type(scmd);
++
++	if (prot_type == SCSI_PROT_DIF_TYPE0 ||
++	   prot_type == SCSI_PROT_DIF_TYPE2 ||
++	   prot_op == SCSI_PROT_NORMAL)
++		return;
++
++	if (prot_op ==  SCSI_PROT_READ_STRIP)
++		eedp_flags = MPI2_SCSIIO_EEDPFLAGS_CHECK_REMOVE_OP;
++	else if (prot_op ==  SCSI_PROT_WRITE_INSERT)
++		eedp_flags = MPI2_SCSIIO_EEDPFLAGS_INSERT_OP;
++	else
++		return;
++
++	switch (prot_type) {
++	case SCSI_PROT_DIF_TYPE1:
++
++		/*
++		* enable ref/guard checking
++		* auto increment ref tag
++		*/
++		mpi_request->EEDPFlags = eedp_flags |
++		    MPI2_SCSIIO_EEDPFLAGS_INC_PRI_REFTAG |
++		    MPI2_SCSIIO_EEDPFLAGS_CHECK_REFTAG |
++		    MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD;
++		mpi_request->EEDPBlockSize = scmd->device->sector_size;
++		mpi_request->CDB.EEDP32.PrimaryReferenceTag =
++		    cpu_to_be32(scsi_get_lba(scmd));
++
++		break;
++
++	case SCSI_PROT_DIF_TYPE3:
++
++		/*
++		* enable guard checking
++		*/
++		mpi_request->EEDPFlags = eedp_flags |
++		    MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD;
++		mpi_request->EEDPBlockSize = scmd->device->sector_size;
++
++		break;
++	}
++}
++
++/**
++ * _scsih_eedp_error_handling - return sense code for EEDP errors
++ * @scmd: pointer to scsi command object
++ * @ioc_status: ioc status
++ *
++ * Returns nothing
++ */
++static void
++_scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
++{
++	u8 ascq;
++	u8 sk;
++	u8 host_byte;
++
++	switch (ioc_status) {
++	case MPI2_IOCSTATUS_EEDP_GUARD_ERROR:
++		ascq = 0x01;
++		break;
++	case MPI2_IOCSTATUS_EEDP_APP_TAG_ERROR:
++		ascq = 0x02;
++		break;
++	case MPI2_IOCSTATUS_EEDP_REF_TAG_ERROR:
++		ascq = 0x03;
++		break;
++	default:
++		ascq = 0x00;
++		break;
++	}
++
++	if (scmd->sc_data_direction == DMA_TO_DEVICE) {
++		sk = ILLEGAL_REQUEST;
++		host_byte = DID_ABORT;
++	} else {
++		sk = ABORTED_COMMAND;
++		host_byte = DID_OK;
++	}
++
++	scsi_build_sense_buffer(0, scmd->sense_buffer, sk, 0x10, ascq);
++	scmd->result = DRIVER_SENSE << 24 | (host_byte << 16) |
++	    SAM_STAT_CHECK_CONDITION;
++}
++
++/**
+  * scsih_qcmd - main scsi request entry point
+  * @scmd: pointer to scsi command object
+  * @done: function pointer to be invoked on completion
+@@ -2470,6 +2570,7 @@ scsih_qcmd(struct scsi_cmnd *scmd, void
+ 	}
+ 	mpi_request = mpt2sas_base_get_msg_frame(ioc, smid);
+ 	memset(mpi_request, 0, sizeof(Mpi2SCSIIORequest_t));
++	_scsih_setup_eedp(scmd, mpi_request);
+ 	mpi_request->Function = MPI2_FUNCTION_SCSI_IO_REQUEST;
+ 	if (sas_device_priv_data->sas_target->flags &
+ 	    MPT_TARGET_FLAGS_RAID_COMPONENT)
+@@ -2604,6 +2705,15 @@ _scsih_scsi_ioc_info(struct MPT2SAS_ADAP
+ 	case MPI2_IOCSTATUS_SCSI_EXT_TERMINATED:
+ 		desc_ioc_state = "scsi ext terminated";
+ 		break;
++	case MPI2_IOCSTATUS_EEDP_GUARD_ERROR:
++		desc_ioc_state = "eedp guard error";
++		break;
++	case MPI2_IOCSTATUS_EEDP_REF_TAG_ERROR:
++		desc_ioc_state = "eedp ref tag error";
++		break;
++	case MPI2_IOCSTATUS_EEDP_APP_TAG_ERROR:
++		desc_ioc_state = "eedp app tag error";
++		break;
+ 	default:
+ 		desc_ioc_state = "unknown";
+ 		break;
+@@ -2939,6 +3049,11 @@ scsih_io_done(struct MPT2SAS_ADAPTER *io
+ 			scmd->result = DID_RESET << 16;
+ 		break;
+ 
++	case MPI2_IOCSTATUS_EEDP_GUARD_ERROR:
++	case MPI2_IOCSTATUS_EEDP_REF_TAG_ERROR:
++	case MPI2_IOCSTATUS_EEDP_APP_TAG_ERROR:
++		_scsih_eedp_error_handling(scmd, ioc_status);
++		break;
+ 	case MPI2_IOCSTATUS_SCSI_PROTOCOL_ERROR:
+ 	case MPI2_IOCSTATUS_INVALID_FUNCTION:
+ 	case MPI2_IOCSTATUS_INVALID_SGL:
+@@ -5503,6 +5618,9 @@ scsih_probe(struct pci_dev *pdev, const
+ 		goto out_add_shost_fail;
+ 	}
+ 
++	scsi_host_set_prot(shost, SHOST_DIF_TYPE1_PROTECTION
++	    | SHOST_DIF_TYPE3_PROTECTION);
++
+ 	/* event thread */
+ 	snprintf(ioc->firmware_event_name, sizeof(ioc->firmware_event_name),
+ 	    "fw_event%d", ioc->id);
