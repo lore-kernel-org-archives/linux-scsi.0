@@ -1,62 +1,60 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: [PATCH 9/13] mpt2sas: T10 DIF Support - EEDP
-Date: Wed, 15 Apr 2009 15:53:35 -0700
-Message-ID: <660360F4F2570145BD872F298951B17A76B5F27C@cosmail03.lsi.com>
-References: <yq1ljq1y2mo.fsf@sermon.lab.mkp.net>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 9/13] mpt2sas: T10 DIF Support - EEDP
+Date: Wed, 15 Apr 2009 22:54:31 -0400
+Message-ID: <yq14owpxq8o.fsf@sermon.lab.mkp.net>
+References: <660360F4F2570145BD872F298951B17A76B5F27C@cosmail03.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og116.obsmtp.com ([64.18.2.219]:34750 "EHLO
-	exprod7og116.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756407AbZDOWxn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Apr 2009 18:53:43 -0400
-In-Reply-To: <yq1ljq1y2mo.fsf@sermon.lab.mkp.net>
-Content-Language: en-US
+Received: from acsinet12.oracle.com ([141.146.126.234]:40206 "EHLO
+	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750992AbZDPCyx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Apr 2009 22:54:53 -0400
+In-Reply-To: <660360F4F2570145BD872F298951B17A76B5F27C@cosmail03.lsi.com>
+	(Eric Moore's message of "Wed, 15 Apr 2009 15:53:35 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Moore, Eric" <Eric.Moore@lsi.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wednesday, April 15, 2009 4:27 PM,  Martin K. Petersen wrote:
-> Eric> Yes, I was told by the LSI software test lab, they saw drives
-> Eric> returning check condition with these ref tag errors.  I wasn't
-> Eric> able to repro that.  What I saw were the IOCSTATUS errors, which
-> Eric> is what the code handles in 
-> _scsih_eedp_error_handling().  Either
-> Eric> way, both cases are covered right?
-> 
-> Yeah.  With READ the difference is mostly academic.
+>>>>> "Eric" == Moore, Eric <Eric.Moore@lsi.com> writes:
 
-I forgot to mention how they got the drives to return EEDP errors. They were using sas protocal jammers to inject errors on the bus.
+Eric,
 
-> 
-> 
-> >> If I understand correctly, your firmware only deals with the Type 2
-> >> usage model of the application tag.  And Type 1 + 2 usage of the
-> >> reference tag.
-> 
-> Eric> Our controller firmware support all three types of protection..
-> 
-> So you can actually set the application tag (and reference tag) on a
-> per-sector basis for Type 1 and 3 provided the OS sends down 520-byte
-> sectors?
-> 
+Eric> So what I did is good for type1, which is set the ref tag to the
+Eric> lower 32bit of the lba, and the app tag to zero.
 
-We have a choice of setting the tags on a per IO request basis.  The same tag can apply to all sectors, or you can set some bit telling controller firmware to increment the tag for each sector.    So the bottom line, the current interface I have is not setup for setting each sector from the driver unless I send the normal data having the protection bytes already interleaved in the scatter gather list from the device driver.   (its silly to do that).  
-
-So what I did is good for type1, which is set the ref tag to the lower 32bit of the lba, and the app tag to zero.
-
-For type 3, I asked others for suggestions from a number of co-workers and the software archetic, and they said to set the tags the same way I did for type 1.   Due to my limitations with controller firmware, what do you suggest for type 3?      
+That's fine.
 
 
-> 
-> Eric> I wasn't sure whether it needed to be set.  Our controller
-> Eric> generates the CRC. I'm not sure whether firmware or hardware
-> Eric> implementation.
-> 
-> Given that it sounds like your next chip rev. will use the same driver
-> it should be ok to leave it in place.
-> 
+Eric> For type 3, I asked others for suggestions from a number of
+Eric> co-workers and the software archetic, and they said to set the
+Eric> tags the same way I did for type 1.  Due to my limitations with
+Eric> controller firmware, what do you suggest for type 3?
 
-Thats the plan I hope.
+Well, so technically you are not supposed to set the reference tag to
+the LBA in Type 3.  The 16 bits of the app tag + the 32 bits of the ref
+tag are considered opaque storage.
+
+The storage device has no way of checking neither app, nor ref with Type
+3.  It can only check the guard tag.
+
+My main concern is if you always expect the ref to be lower 32 bits of
+LBA and have the HBA firmware verify that on READ.  Because the ref tag
+could conceivably contain anything and the I/O might fail.
+
+I realize this is a bit academic given that with the current setup your
+HBA will be doing both writing and reading.  But in a multi-initiator
+setup or for future compatibility it might throw a wrench in the
+machinery to have the HBA check the ref tag on Type 3.
+
+For Type 1 I expect you to check guard + match ref tag to CDB LBA +
+offset.
+
+For Type 2 I expect you to check guard + match ref tag to E.I.LBA in
+32-byte CDB + offset.
+
+For Type 3 I expect you to check guard only.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
