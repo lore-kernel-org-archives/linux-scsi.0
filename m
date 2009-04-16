@@ -1,74 +1,149 @@
 From: Grant Grundler <grundler@google.com>
-Subject: Re: LSF Papers online?
-Date: Wed, 15 Apr 2009 23:31:13 -0700
-Message-ID: <da824cf30904152331r82594e5i1968471af1dbb1fa@mail.gmail.com>
-References: <49E335BA.3020103@panasas.com>
-	 <200904141654.24067.bzolnier@gmail.com>
-	 <20090414175441.5ce1f59d@lxorguk.ukuu.org.uk>
-	 <200904150009.06539.bzolnier@gmail.com>
-	 <1239749357.3638.3.camel@mulgrave> <49E53AE6.4010803@gmail.com>
+Subject: Re: [PATCH 1/1mpt fusion:C] Code cleanup patch
+Date: Wed, 15 Apr 2009 23:51:32 -0700
+Message-ID: <da824cf30904152351v3895f4bcu945900a41a14f577@mail.gmail.com>
+References: <20090415111007.GA14284@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <49E53AE6.4010803@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp-out.google.com ([216.239.33.17]:45820 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752511AbZDPGvh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2009 02:51:37 -0400
+Received: from spaceape7.eur.corp.google.com (spaceape7.eur.corp.google.com [172.28.16.141])
+	by smtp-out.google.com with ESMTP id n3G6pYJU001414
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Apr 2009 07:51:34 +0100
+Received: from yx-out-1718.google.com (yxn6.prod.google.com [10.190.4.70])
+	by spaceape7.eur.corp.google.com with ESMTP id n3G6pWCq027347
+	for <linux-scsi@vger.kernel.org>; Wed, 15 Apr 2009 23:51:33 -0700
+Received: by yx-out-1718.google.com with SMTP id 6so197663yxn.34
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Apr 2009 23:51:32 -0700 (PDT)
+In-Reply-To: <20090415111007.GA14284@lsi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Kashyap, Desai" <kashyap.desai@lsi.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-On Tue, Apr 14, 2009 at 6:39 PM, Robert Hancock <hancockrwd@gmail.com> wrote:
-> James Bottomley wrote:
->>
->> On a final note about the urgency of getting libata out of SCSI: Intel
->> has been worrying for a while about the fatness of the SCSI/libata
->> stack, and its effects on performance, especially command transmission
->> via SAT, so I'm hoping they'll be supporting the effort.
+On Wed, Apr 15, 2009 at 4:10 AM, Kashyap, Desai <kashyap.desai@lsi.com>=
+ wrote:
+> Main goal to submit this patch is code cleaup.
+> 1. Better driver debug prints and code indentation.
+
+A few silly nits about the new printk's, etc.
+
+
+=2E..
+> @@ -1596,6 +1600,7 @@ mpt_mapresources(MPT_ADAPTER *ioc)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0u8 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 revision;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0int =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0r =3D -ENODEV;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct pci_dev *pdev;
+> + =C2=A0 =C2=A0 =C2=A0 struct sysinfo s;
 >
-> I really don't see this as being a big driver for this move. If you look at
-> the code that does the translation of SCSI commands to ATA commands, there
-> really is not much there at all of any consequence to CPU usage.
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0pdev =3D ioc->pcidev;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0ioc->bars =3D pci_select_bars(pdev, IORESO=
+URCE_MEM);
+> @@ -1647,6 +1652,11 @@ mpt_mapresources(MPT_ADAPTER *ioc)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+>
+> + =C2=A0 =C2=A0 =C2=A0 si_meminfo(&s);
+> + =C2=A0 =C2=A0 =C2=A0 printk(MYIOC_s_INFO_FMT "%s BIT PCI BUS DMA AD=
+DRESSING SUPPORTED, "
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0"total memory =3D %ld kB\n",
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ioc->name, ioc->dma_mask =3D=3D D=
+MA_64BIT_MASK ? "64" : "32",
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0convert_to_kb(s.totalram));
 
-It's measurable. Just need to get sufficient IO rates going. Normal JBOD/RAID
-controllers don't care.
+1) Is printing one line for dma_mask really necessary?
+Maybe consolidate this onto another line of output. Boot output is
+already too verbose.
 
-See Matthew "the Intel guy" :) Wilcox and Kristen Accardi's paper at LSF2008:
-    http://iou.parisc-linux.org/lsf2008/IO-latency-Kristen-Carlson-Accardi.pdf
+2) Isn't the "total Ram" printed elsewhere at boot time?
+  Will this get printed once for each MPT Adapter in the system?
 
-or just google for "Matthew Wilcox SSD perf" - first four hits I
-looked at are what I expected:
-    hardware.slashdot.org/article.pl?sid=09/02/13/2337258&from=rss
-    markmail.org/message/w22r6y4gik7bjf2w
-    https://kerneltrap.org/mailarchive/linux-scsi/2008/12/10/4388804/thread
-    www.usenix.org/events/lsf08/tech/IO_Carlson_Accardi_SATA.pdf
+Lastly, it's not the total RAM that matters, it depends on *where*
+in the physical address space that RAM is located. I'm sure there
+are better ways to get that than by a device driver printing it.
 
-(last one is the official location of the same paper)
+We have lots of systems with 4G of RAM and some major chunk
+of that is above 4GB addresss. I forget if it's 1GB or 2GB on
+x86 systems.  That is to give more MMIO address space to
+PCI devices that want to live below 4GB phys address and
+possibly use by IOMMUs (I don't know that for x86 - it was
+the case for HP IA64 systems).
 
-> Compared to
-> any kind of hardware/controller interactions I wouldn't say it's likely to
-> be a significant bottleneck at all. In oprofile runs I've done with heavy
-> ATA activity, the top time consumers are the interrupt handlers,
 
-interrupts just introduce completion reporting latency. Interrupt mitigation
-techinques/smarter controller can reduce this.
+> @@ -1768,7 +1779,7 @@ mpt_attach(struct pci_dev *pdev, const struct p=
+ci_device_id *id)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0ioc->reply_sz =3D MPT_REPLY_FRAME_SIZE;
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0ioc->pcidev =3D pdev;
+> - =C2=A0 =C2=A0 =C2=A0 spin_lock_init(&ioc->initializing_hba_lock);
+> +
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_lock_init(&ioc->taskmgmt_lock);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0mutex_init(&ioc->internal_cmds.mutex);
 
-> command issue paths,
 
-Hrm? Is this in the device driver?
+Extra blank line needed? Could probably be dropped.
 
-> code that actually is poking IO registers.
+> @@ -1789,6 +1800,7 @@ mpt_attach(struct pci_dev *pdev, const struct p=
+ci_device_id *id)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0ioc->mfcnt =3D 0;
+> =C2=A0#endif
+>
+> + =C2=A0 =C2=A0 =C2=A0 ioc->sh =3D NULL;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0ioc->cached_fw =3D NULL;
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0/* Initilize SCSI Config Data structure
+> @@ -1805,9 +1817,8 @@ mpt_attach(struct pci_dev *pdev, const struct p=
+ci_device_id *id)
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0/* Initialize workqueue */
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0INIT_DELAYED_WORK(&ioc->fault_reset_work, =
+mpt_fault_reset_work);
+> - =C2=A0 =C2=A0 =C2=A0 spin_lock_init(&ioc->fault_reset_work_lock);
+>
+> - =C2=A0 =C2=A0 =C2=A0 snprintf(ioc->reset_work_q_name, sizeof(ioc->r=
+eset_work_q_name),
+> + =C2=A0 =C2=A0 =C2=A0 snprintf(ioc->reset_work_q_name, MPT_KOBJ_NAME=
+_LEN,
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 "mpt_poll_%d"=
+, ioc->id);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0ioc->reset_work_q =3D
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0create_singlet=
+hread_workqueue(ioc->reset_work_q_name);
+> @@ -1882,11 +1893,14 @@ mpt_attach(struct pci_dev *pdev, const struct=
+ pci_device_id *id)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0case MPI_MANUFACTPAGE_DEVID_SAS1064:
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0case MPI_MANUFACTPAGE_DEVID_SAS1068:
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ioc->errata_fl=
+ag_1064 =3D 1;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ioc->bus_type =3D =
+SAS;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 break;
 
-Stupid controller design. NICs have been able to run without
-MMIO *Reads* in the performance for more than 5 years now.
-New "Enterprise" SAS/SATA controllers are better but I'm not
-at liberty to discuss those. (sorry)
+Why not Just let it fall through to the next case?
+Did someone have problems reading that code?
 
-> The libata-scsi code
-> hasn't even shown up on the radar in my experience.
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0case MPI_MANUFACTPAGE_DEVID_SAS1064E:
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0case MPI_MANUFACTPAGE_DEVID_SAS1068E:
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0case MPI_MANUFACTPAGE_DEVID_SAS1078:
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ioc->bus_type =
+=3D SAS;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 break;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+>
+>
 
-It won't for normal disk IOPS rates (<1000 IOPS per disk).
-Run it at 20K or 50K IOPS and see again.
-NICs are pushing alot more than that.
-
-hth,
+thanks,
 grant
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
