@@ -1,33 +1,33 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: queue_depth tracking from LLD
-Date: Thu, 16 Apr 2009 09:27:36 -0500
-Message-ID: <49E74058.5010401@cs.wisc.edu>
+Date: Thu, 16 Apr 2009 08:33:50 -0600
+Message-ID: <20090416143350.GD1926@parisc-linux.org>
 References: <20090416093604.GA7096@schmichrtp.de.ibm.com> <49E73D16.9030307@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:46726 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756216AbZDPO2T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Apr 2009 10:28:19 -0400
+Received: from palinux.external.hp.com ([192.25.206.14]:34874 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752709AbZDPOdv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2009 10:33:51 -0400
+Content-Disposition: inline
 In-Reply-To: <49E73D16.9030307@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <James.Smart@Emulex.Com>
 Cc: Christof Schmitt <christof.schmitt@de.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-James Smart wrote:
-> The mid-layer queue depth handling is really designed/optimized around 
-> behavior for
-> a JBOD. This, if it's a single-lun device, the LLDD could largely ignore 
-> doing anything
-> with adjusting the queue depth.
-> 
+On Thu, Apr 16, 2009 at 10:13:42AM -0400, James Smart wrote:
 > However, for arrays, with multiple luns, the queue depth is usually a 
 > target-level resource,
 > so the midlayer/block-layer's implementation falls on its face fairly 
 > quickly. I brought this
+
+If the problem were as simple as the resource being target-level instead
+of LUN-level, it would be fairly easy to fix (we could do accounting
+per-target instead of per-LUN).  The problem, AIUI, is multi-initiator
+where you can't know whether resources are in use or not.
+
 > up 2 yrs ago at storage summit.  What needs to happen is the creation of 
 > queue ramp-down
 > and ramp-up policies that can be selected on a per-lun basis, and have 
@@ -38,12 +38,13 @@ James Smart wrote:
 > device-specific or configuration/load
 > centric.
 
-For the rampup are you referring to code like lpfc_rampup_queue_depth? 
-Were were just talking about this on the fcoe list. Why did lpfc and 
-qla2xxx end up implememting their own code? We started to look into 
-moving this into the scsi layer. It does not seem like there was a major 
-reason why it should not have been more common. Was it just one of those 
-things where it got added in one driver then added in another?
+While not disagreeing that it's complex, I don't think putting it in the
+driver makes it less complex.  I completely agree that LLDDs should not
+be snooping scsi commands or scsi command results.  It should all be in
+the midlayer so we all share the same bugs ;-)
 
-If we moved code like that to the scsi layer, then is all the is needed 
-is a interface to config this?
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
