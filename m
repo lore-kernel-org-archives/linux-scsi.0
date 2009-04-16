@@ -1,238 +1,72 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 14/17] scsi: replace custom rq mapping with	blk_rq_map_kern_sgl()
-Date: Thu, 16 Apr 2009 12:06:29 +0900
-Message-ID: <49E6A0B5.2090704@kernel.org>
-References: <20090415084431H.fujita.tomonori@lab.ntt.co.jp> <49E561A0.7040607@kernel.org> <20090415072655.GA11054@liondog.tnic> <20090415164725S.fujita.tomonori@lab.ntt.co.jp> <20090415081259.GB11054@liondog.tnic>
+From: lego_12239@rambler.ru
+Subject: mptscsih dmesg messages
+Date: Thu, 16 Apr 2009 08:20:20 +0400
+Message-ID: <20090416042020.GA2894@debian>
+Reply-To: lego_12239@rambler.ru
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=koi8-r
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:34057 "EHLO hera.kernel.org"
+Received: from mailc.rambler.ru ([81.19.66.27]:3531 "EHLO mailc.rambler.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751988AbZDPDGp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Apr 2009 23:06:45 -0400
-In-Reply-To: <20090415081259.GB11054@liondog.tnic>
+	id S1750944AbZDPEU0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Apr 2009 00:20:26 -0400
+Received: from localhost (unknown [89.178.148.62])
+	(Authenticated sender: lego_12239@rambler.ru)
+	by mailc.rambler.ru (Postfix) with ESMTP id 3F509621C57
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Apr 2009 08:20:24 +0400 (MSD)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: petkovbb@gmail.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, tj@kernel.org, bharrosh@panasas.com, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, axboe@kern
+To: linux-scsi@vger.kernel.org
 
-I updated the patch a bit and folded it into the series after patch
-10.  I hope I didn't butcher the patch too bad.  Can I add your
-Signed-off-by: on the modified patch?  Also, I just started working on
-the atapi version.  Do you already have something?
+  Hi, again.
+
+  Sorry, I forgot to write next additional info in the previous mail.
+
+~$ cat /proc/mpt/summary 
+ioc0: LSISAS1064E B1, FwRev=01100000h, Ports=1, MaxQ=511, IRQ=277
+
+~$ cat /proc/mpt/version 
+mptlinux-3.04.07
+  Fusion MPT base driver
+  Fusion MPT SAS host driver
+
+~$ cat /sys/class/scsi_host/host8/version_fw 
+01.16.00.00
+
+~$ cat /sys/class/scsi_host/host8/version_bios 
+06.10.00.00
+
+  I have Debian 4.0r4a installation on a server with SAS1064E built-in 
+controller:
+
+~$ lspci | grep LSI
+04:00.0 SCSI storage controller: LSI Logic / Symbios Logic SAS1064E PCI-Express Fusion-MPT SAS (rev 02)
+
+Vanilla kernel with aufs2-base5 patch:
+
+~$ uname -a
+Linux ftp 2.6.28.7-aufs #10 Fri Mar 6 19:34:56 UTC 2009 i686 GNU/Linux
+
+There are six sata hard disks connected through SAS HDD Hub box to the 
+controller on the motherboard by two sata cables. Everything work all right, 
+but dmesg shows many annoying lines like this:
+
+[ 1876.212880] mptscsih: ioc0: attempting task abort! (sc=f6ff1c80)
+[ 1876.212953] sd 8:0:5:0: [sdh] CDB: Write(10): 2a 00 17 42 ee 0f 00 04 00 00
+[ 1876.213635] mptscsih: ioc0: task abort: SUCCESS (sc=f6ff1c80)
+[ 1876.213973] mptscsih: ioc0: attempting task abort! (sc=d1fc18c0)
+[ 1876.214046] sd 8:0:5:0: [sdh] CDB: Read(10): 28 00 17 10 c0 3f 00 00 08 00
+[ 1876.214727] mptscsih: ioc0: task abort: SUCCESS (sc=d1fc18c0)
+[ 1876.215081] mptscsih: ioc0: attempting target reset! (sc=d1fc1ec0)
+[ 1876.215154] sd 8:0:5:0: [sdh] CDB: Write(10): 2a 00 17 42 b1 ff 00 04 00 00
+[ 1877.735588] mptscsih: ioc0: target reset: SUCCESS (sc=d1fc1ec0)
+
+sdh is a sata Western Digital disk, model WD10EADS.
+
+Is this a firmware problem?
+
+In the mailing list archive I saw similar problem, but I don't sure.
 
 Thanks.
-
-From: Borislav Petkov <petkovbb@gmail.com>
-Date: Tue, 14 Apr 2009 13:24:43 +0200
-Subject: [PATCH] ide-cd: preallocate rq sense out of the irq path
-
-Preallocate a sense request in the ->do_request method and reinitialize
-it only on demand, in case it's been consumed in the IRQ handler path.
-The reason for this is that we don't want to be mapping rq to bio in
-the IRQ path and introduce all kinds of unnecessary hacks to the block
-layer.
-
-tj: * After this patch, ide_cd_do_request() might sleep.  This should
-      be okay as ide request_fn - do_ide_request() - is invoked only
-      from make_request and plug work.  Make sure this is the case by
-      adding might_sleep() to do_ide_request().
-
-    * Adapted to apply to the tree without blk_rq_map_prealloc()
-      changes.
-
-    * Use of blk_rq_map() and possible failure handling from it are
-      moved to later separate patch.  ide_cd_prep_sense() now handles
-      everything regarding sense rq preparation.
-
-    * Move ide_drive->rq_sense to cdrom_info->sense_rq and put the
-      request when releasing cdrom_info.
-
-    * Both user and kernel PC requests expect sense data to be stored
-      in separate storage other than info->sense_data.  Copy sense
-      data to rq->sense on completion if rq->sense is not NULL.  This
-      fixes bogus sense data on PC requests.
-
-CC: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-CC: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-CC: Tejun Heo <tj@kernel.org>
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- drivers/ide/ide-cd.c |   69 +++++++++++++++++++++++++++++++--------------------
- drivers/ide/ide-cd.h |    3 ++
- drivers/ide/ide-io.c |    3 ++
- 3 files changed, 49 insertions(+), 26 deletions(-)
-
-Index: block/drivers/ide/ide-cd.c
-===================================================================
---- block.orig/drivers/ide/ide-cd.c
-+++ block/drivers/ide/ide-cd.c
-@@ -206,42 +206,44 @@ static void cdrom_analyze_sense_data(ide
- 	ide_cd_log_error(drive->name, failed_command, sense);
- }
- 
--static void cdrom_queue_request_sense(ide_drive_t *drive, void *sense,
--				      struct request *failed_command)
-+static void ide_cd_prep_sense(ide_drive_t *drive, struct request *rq)
- {
- 	struct cdrom_info *info		= drive->driver_data;
--	struct request *rq		= &drive->request_sense_rq;
-+	void *sense			= &info->sense_data;
- 
- 	ide_debug_log(IDE_DBG_SENSE, "enter");
- 
--	if (sense == NULL)
--		sense = &info->sense_data;
-+	if (blk_sense_request(rq))
-+		return;
- 
--	memset(sense, 0, 18);
-+	if (!info->sense_rq) {
-+		struct request *sense_rq;
- 
--	/* stuff the sense request in front of our current request */
--	blk_rq_init(NULL, rq);
--	rq->cmd_type = REQ_TYPE_ATA_PC;
--	rq->rq_disk = info->disk;
-+		memset(sense, 0, 18);
- 
--	rq->data = sense;
--	rq->cmd[0] = GPCMD_REQUEST_SENSE;
--	rq->cmd[4] = 18;
--	rq->data_len = 18;
-+		sense_rq = blk_get_request(drive->queue, 0, __GFP_WAIT);
-+		sense_rq->rq_disk = info->disk;
- 
--	rq->cmd_type = REQ_TYPE_SENSE;
--	rq->cmd_flags |= REQ_PREEMPT;
-+		sense_rq->data = sense;
-+		sense_rq->cmd[0] = GPCMD_REQUEST_SENSE;
-+		sense_rq->cmd[4] = 18;
-+		sense_rq->data_len = 18;
- 
--	/* NOTE! Save the failed command in "rq->special" */
--	rq->special = (void *)failed_command;
-+		sense_rq->cmd_type = REQ_TYPE_SENSE;
-+		sense_rq->cmd_flags |= REQ_PREEMPT;
- 
--	if (failed_command)
--		ide_debug_log(IDE_DBG_SENSE, "failed_cmd: 0x%x",
--					     failed_command->cmd[0]);
-+		info->sense_rq = sense_rq;
-+	}
-+
-+	info->sense_rq->special = rq;
-+}
- 
--	drive->hwif->rq = NULL;
-+static void ide_cd_queue_sense_rq(ide_drive_t *drive)
-+{
-+	struct cdrom_info *info = drive->driver_data;
- 
--	elv_add_request(drive->queue, rq, ELEVATOR_INSERT_FRONT, 0);
-+	BUG_ON(!info->sense_rq);
-+	elv_add_request(drive->queue, info->sense_rq, ELEVATOR_INSERT_FRONT, 0);
- }
- 
- static void ide_cd_complete_failed_rq(ide_drive_t *drive, struct request *rq)
-@@ -252,10 +254,16 @@ static void ide_cd_complete_failed_rq(id
- 	 */
- 	struct request *failed = (struct request *)rq->special;
- 	struct cdrom_info *info = drive->driver_data;
--	void *sense = &info->sense_data;
-+	struct request_sense *sense = &info->sense_data;
- 
- 	if (failed) {
- 		if (failed->sense) {
-+			/*
-+			 * Sense is always read into info->sense_data.
-+			 * Copy back if the failed request has its
-+			 * sense pointer set.
-+			 */
-+			memcpy(failed->sense, sense, sizeof(*sense));
- 			sense = failed->sense;
- 			failed->sense_len = rq->sense_len;
- 		}
-@@ -431,7 +439,7 @@ static int cdrom_decode_status(ide_drive
- 
- 	/* if we got a CHECK_CONDITION status, queue a request sense command */
- 	if (stat & ATA_ERR)
--		cdrom_queue_request_sense(drive, NULL, NULL);
-+		ide_cd_queue_sense_rq(drive);
- 	return 1;
- 
- end_request:
-@@ -445,7 +453,7 @@ end_request:
- 
- 		hwif->rq = NULL;
- 
--		cdrom_queue_request_sense(drive, rq->sense, rq);
-+		ide_cd_queue_sense_rq(drive);
- 		return 1;
- 	} else
- 		return 2;
-@@ -600,6 +608,7 @@ static void ide_cd_error_cmd(ide_drive_t
- 
- static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
- {
-+	struct cdrom_info *info = drive->driver_data;
- 	ide_hwif_t *hwif = drive->hwif;
- 	struct ide_cmd *cmd = &hwif->cmd;
- 	struct request *rq = hwif->rq;
-@@ -775,6 +784,10 @@ out_end:
- 
- 		ide_complete_rq(drive, uptodate ? 0 : -EIO, nsectors << 9);
- 
-+		/* our sense buffer got used, reset it for the next round */
-+		if (sense)
-+			info->sense_rq = NULL;
-+
- 		if (sense && rc == 2)
- 			ide_error(drive, "request sense failure", stat);
- 	}
-@@ -893,6 +906,9 @@ static ide_startstop_t ide_cd_do_request
- 		goto out_end;
- 	}
- 
-+	/* prepare sense request */
-+	ide_cd_prep_sense(drive, rq);
-+
- 	memset(&cmd, 0, sizeof(cmd));
- 
- 	if (rq_data_dir(rq))
-@@ -1634,6 +1650,7 @@ static void ide_cd_release(struct device
- 	ide_debug_log(IDE_DBG_FUNC, "enter");
- 
- 	kfree(info->toc);
-+	blk_put_request(info->sense_rq);
- 	if (devinfo->handle == drive)
- 		unregister_cdrom(devinfo);
- 	drive->driver_data = NULL;
-Index: block/drivers/ide/ide-io.c
-===================================================================
---- block.orig/drivers/ide/ide-io.c
-+++ block/drivers/ide/ide-io.c
-@@ -478,6 +478,9 @@ void do_ide_request(struct request_queue
- 
- 	spin_unlock_irq(q->queue_lock);
- 
-+	/* HLD do_request() callback might sleep, make sure it's okay */
-+	might_sleep();
-+
- 	if (ide_lock_host(host, hwif))
- 		goto plug_device_2;
- 
-Index: block/drivers/ide/ide-cd.h
-===================================================================
---- block.orig/drivers/ide/ide-cd.h
-+++ block/drivers/ide/ide-cd.h
-@@ -98,6 +98,9 @@ struct cdrom_info {
-         struct cdrom_device_info devinfo;
- 
- 	unsigned long write_timeout;
-+
-+	/* current sense rq */
-+	struct request *sense_rq;
- };
- 
- /* ide-cd_verbose.c */
+----- End forwarded message -----
