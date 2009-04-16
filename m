@@ -1,47 +1,41 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: queue_depth tracking from LLD
-Date: Thu, 16 Apr 2009 11:32:41 -0400
-Message-ID: <49E74F99.7090203@emulex.com>
-References: <20090416093604.GA7096@schmichrtp.de.ibm.com> <49E73D16.9030307@emulex.com> <49E74058.5010401@cs.wisc.edu> <49E742CE.3020302@emulex.com> <20090416152707.GA18972@schmichrtp.de.ibm.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: LSF Papers online?
+Date: Thu, 16 Apr 2009 18:01:15 +0200
+Message-ID: <200904161801.15827.bzolnier@gmail.com>
+References: <49E335BA.3020103@panasas.com> <200904151538.20546.bzolnier@gmail.com> <20090415155614.3765ba63@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:38007 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754549AbZDPPdw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2009 11:33:52 -0400
-In-Reply-To: <20090416152707.GA18972@schmichrtp.de.ibm.com>
+Received: from ey-out-2122.google.com ([74.125.78.25]:5193 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751906AbZDPP7J (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2009 11:59:09 -0400
+In-Reply-To: <20090415155614.3765ba63@lxorguk.ukuu.org.uk>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christof Schmitt <christof.schmitt@de.ibm.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, Jonathan Corbet <corbet@lwn.net>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Zach Brown <zach.brown@oracle.com>, Chris Mason <chris.mason@oracle.com>, Tejun Heo <tj@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-
-
-Christof Schmitt wrote:
-> zfcp is one of the drivers that don't have ramp-up/down mechanism in
-> place. And i am trying to understand what is required here.  Is there
-> currently work being done to get queue_depth ramp-up/down in the
-> midlayer?
-
-No work started - but desired.
-
-I'd recommend, rather than implementing it in zfcp, implement it in the
-midlayer for everyone.
-
+On Wednesday 15 April 2009 16:56:14 Alan Cox wrote:
+> > You may not like me but this is pretty lame excuse for denying me
+> > merit and in turn damaging _your_ own project.
 > 
->>> If we moved code like that to the scsi layer, then is all the is needed 
->>> is a interface to config this?
-> 
->> Yep. As mentioned, figuring out what algorithm, for what device and
->> configuration, will be the more interesting thing.
-> 
-> If the LLDs that currently have a private ramp-up/down mechanism in
-> place use a similar strategy, would it make sense to first move them
-> to common code that can be activated from a LLD? And later refine it
-> with device-specific behaviour?
+> Oh finally we get the truth. You are peeved someone went off and did the
+> job that needed doing and it wasn't you.
 
-Yes.
+Peeved about that?
 
--- james s
+Only a bit. :)  This was not the real reason.
+
+> Firstly it isn't *my* project. I just contribute chunks of code to it. I
+> didn't even start the shift to put PATA drivers into libata, I just
+> picked up a job that needed doing, did it and for the most part have now
+> moved on to trying to tackle the tty layer.
+
+However, it is all good now.  I look at tty commits and I'm happy.
+
+Thanks,
+Bart
