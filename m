@@ -1,208 +1,100 @@
-From: Eric Moore <eric.moore@lsi.com>
-Subject: Re: [PATCH 9/13] mpt2sas: T10 DIF Support - EEDP
-Date: Thu, 16 Apr 2009 10:45:16 -0600
-Message-ID: <20090416164514.GA4177@lsil.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: LSF Papers online?
+Date: Thu, 16 Apr 2009 11:45:53 -0600
+Message-ID: <20090416174553.GE1926@parisc-linux.org>
+References: <49E335BA.3020103@panasas.com> <200904141654.24067.bzolnier@gmail.com> <20090414175441.5ce1f59d@lxorguk.ukuu.org.uk> <200904150009.06539.bzolnier@gmail.com> <1239749357.3638.3.camel@mulgrave> <49E53AE6.4010803@gmail.com> <da824cf30904152331r82594e5i1968471af1dbb1fa@mail.gmail.com> <1239899823.3762.37.camel@mulgrave.int.hansenpartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og102.obsmtp.com ([64.18.2.157]:48393 "EHLO
-	exprod7og102.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755925AbZDPQog (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2009 12:44:36 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1239899823.3762.37.camel@mulgrave.int.hansenpartnership.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Grant Grundler <grundler@google.com>, Robert Hancock <hancockrwd@gmail.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org
 
-On Wednesday, April 15, 2009 8:55 PM, Martin K. Petersen wrote:
-> For Type 1 I expect you to check guard + match ref tag to CDB LBA +
-> offset.
->
-> For Type 2 I expect you to check guard + match ref tag to E.I.LBA in
-> 32-byte CDB + offset.
->
-> For Type 3 I expect you to check guard only.
+On Thu, Apr 16, 2009 at 11:37:02AM -0500, James Bottomley wrote:
+> of data.   I fully agree that some of the less smart SATA controllers
+> have a lot of catching up to do in this space, but that isn't
+> necessarily a driver issue; you can't polish a turd as the saying
+> goes ...
 
+I guess you haven't seen the episode of Mythbusters where they manage
+to do exactly that?  ;-)
 
-Does this patch look good?
+> IOPS are starting to come up because SSDs are saying they prefer many
+> smaller transactions to an accumulated larger one.  I'm still not
 
-(1) I modified _scsih_setup_eedp so for TYPE1, its sets ref and gaurd checking,
-and for TYPE2 it sets gauard checking.
+I don't think that's what SSDs are saying.  The protocol (and controllers)
+still work better if you send down one 128k IO than 32 4k IOs.  But with
+the low latency of doing accesses, it's better to send down a 16k IO
+now than it is to wait around a bit and see if another 16k IO comes along.
 
-(2) I removed the calling of scsi_host_set_guard.
+> entirely convinced that trying to rightsize is wrong here:  most of the
+> FS data is getting more contiguous, so even for SSDs we can merge
+> without a lot of work.  A simple back of the envelope calculation can
+> give the rightizing:  If you want a SSD to max out at its 31 allowed
+> tags saturating a 3G sata link, then you're talking 10M per tag per
 
+Better than that, only 8MB of data per tag per second.  SATA effectively
+limits you to 250MB/s.  That's 2016 IOPS per tag.  Of course, this
+assumes you're only doing the NCQ commands and not, say, issuing TRIM
+or something.
 
-I'll repost the entire patch set if this is good to go.
+> second.  If we assume a 4k sector size, that's 2500 IOPS per tag
+> (there's no real point doing less than 4k, because that has us splitting
+> the page cache). Or, to put it another way, over 75k IOPS for a single
+> SSD doesn't make sense ... the interesting question is whether it would
+> make more sense to align on, say 16k io and so expect to max out at 20k
+> IOPS.
 
+If we're serious about getting 2000 IOPS per tag, then the round-trip
+inside the kernel to recycle a tag has to be less than 500 microseconds.
+Do you have a good idea about how to measure what that is today?
+Here's the call path taken by the AHCI driver:
 
-Eric Moore
+ahci_interrupt()
+ahci_port_intr()
+ata_qc_complete_multiple()
+ata_qc_complete()
+__ata_qc_complete()
+ata_scsi_qc_complete() [qc->complete_fn]
+scsi_done() [qc->scsidone]
+blk_complete_request()
+__blk_complete_request()
+raise_softirq_irqoff()
+...
+blk_done_softirq()
+scsi_softirq_done() [rq->q->softirq_done_fn]
+scsi_finish_command()
+scsi_io_completion()
+scsi_end_request()
+scsi_next_command()
+scsi_run_queue()
+__blk_run_queue()
+blk_invoke_request_fn()
+scsi_request_fn() [q->request_fn]
+scsi_dispatch_cmd()
+ata_scsi_translate() [host->hostt->queuecommand]
+ata_qc_issue()
+ahci_qc_issue() [ap->ops->qc_issue]
 
+I can see a few ways to cut down the latency between knowing a tag is
+no longer used and starting the next command.
 
-diff -uaprN a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h	2009-04-13 15:45:09.000000000 -0600
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h	2009-04-13 16:31:27.000000000 -0600
-@@ -61,6 +61,7 @@
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsi_transport_sas.h>
- #include <scsi/scsi_dbg.h>
-+#include <scsi/scsi_eh.h>
- 
- #include "mpt2sas_debug.h"
- 
-diff -uaprN a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2009-04-13 15:58:57.000000000 -0600
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2009-04-16 09:55:42.000000000 -0600
-@@ -2390,6 +2390,106 @@ mpt2sas_scsih_reset_handler(struct MPT2S
- }
- 
- /**
-+ * _scsih_setup_eedp - setup MPI request for EEDP transfer
-+ * @scmd: pointer to scsi command object
-+ * @mpi_request: pointer to the SCSI_IO reqest message frame
-+ *
-+ * Supporting protection 1 and 3.
-+ *
-+ * Returns nothing
-+ */
-+static void
-+_scsih_setup_eedp(struct scsi_cmnd *scmd, Mpi2SCSIIORequest_t *mpi_request)
-+{
-+	u16 eedp_flags;
-+	unsigned char prot_op = scsi_get_prot_op(scmd);
-+	unsigned char prot_type = scsi_get_prot_type(scmd);
-+
-+	if (prot_type == SCSI_PROT_DIF_TYPE0 ||
-+	   prot_type == SCSI_PROT_DIF_TYPE2 ||
-+	   prot_op == SCSI_PROT_NORMAL)
-+		return;
-+
-+	if (prot_op ==  SCSI_PROT_READ_STRIP)
-+		eedp_flags = MPI2_SCSIIO_EEDPFLAGS_CHECK_REMOVE_OP;
-+	else if (prot_op ==  SCSI_PROT_WRITE_INSERT)
-+		eedp_flags = MPI2_SCSIIO_EEDPFLAGS_INSERT_OP;
-+	else
-+		return;
-+
-+	switch (prot_type) {
-+	case SCSI_PROT_DIF_TYPE1:
-+
-+		/*
-+		* enable ref/guard checking
-+		* auto increment ref tag
-+		*/
-+		mpi_request->EEDPFlags = eedp_flags |
-+		    MPI2_SCSIIO_EEDPFLAGS_INC_PRI_REFTAG |
-+		    MPI2_SCSIIO_EEDPFLAGS_CHECK_REFTAG |
-+		    MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD;
-+		mpi_request->EEDPBlockSize = scmd->device->sector_size;
-+		mpi_request->CDB.EEDP32.PrimaryReferenceTag =
-+		    cpu_to_be32(scsi_get_lba(scmd));
-+
-+		break;
-+
-+	case SCSI_PROT_DIF_TYPE3:
-+
-+		/*
-+		* enable guard checking
-+		*/
-+		mpi_request->EEDPFlags = eedp_flags |
-+		    MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD;
-+		mpi_request->EEDPBlockSize = scmd->device->sector_size;
-+
-+		break;
-+	}
-+}
-+
-+/**
-+ * _scsih_eedp_error_handling - return sense code for EEDP errors
-+ * @scmd: pointer to scsi command object
-+ * @ioc_status: ioc status
-+ *
-+ * Returns nothing
-+ */
-+static void
-+_scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
-+{
-+	u8 ascq;
-+	u8 sk;
-+	u8 host_byte;
-+
-+	switch (ioc_status) {
-+	case MPI2_IOCSTATUS_EEDP_GUARD_ERROR:
-+		ascq = 0x01;
-+		break;
-+	case MPI2_IOCSTATUS_EEDP_APP_TAG_ERROR:
-+		ascq = 0x02;
-+		break;
-+	case MPI2_IOCSTATUS_EEDP_REF_TAG_ERROR:
-+		ascq = 0x03;
-+		break;
-+	default:
-+		ascq = 0x00;
-+		break;
-+	}
-+
-+	if (scmd->sc_data_direction == DMA_TO_DEVICE) {
-+		sk = ILLEGAL_REQUEST;
-+		host_byte = DID_ABORT;
-+	} else {
-+		sk = ABORTED_COMMAND;
-+		host_byte = DID_OK;
-+	}
-+
-+	scsi_build_sense_buffer(0, scmd->sense_buffer, sk, 0x10, ascq);
-+	scmd->result = DRIVER_SENSE << 24 | (host_byte << 16) |
-+	    SAM_STAT_CHECK_CONDITION;
-+}
-+
-+/**
-  * scsih_qcmd - main scsi request entry point
-  * @scmd: pointer to scsi command object
-  * @done: function pointer to be invoked on completion
-@@ -2470,6 +2570,7 @@ scsih_qcmd(struct scsi_cmnd *scmd, void
- 	}
- 	mpi_request = mpt2sas_base_get_msg_frame(ioc, smid);
- 	memset(mpi_request, 0, sizeof(Mpi2SCSIIORequest_t));
-+	_scsih_setup_eedp(scmd, mpi_request);
- 	mpi_request->Function = MPI2_FUNCTION_SCSI_IO_REQUEST;
- 	if (sas_device_priv_data->sas_target->flags &
- 	    MPT_TARGET_FLAGS_RAID_COMPONENT)
-@@ -2604,6 +2705,15 @@ _scsih_scsi_ioc_info(struct MPT2SAS_ADAP
- 	case MPI2_IOCSTATUS_SCSI_EXT_TERMINATED:
- 		desc_ioc_state = "scsi ext terminated";
- 		break;
-+	case MPI2_IOCSTATUS_EEDP_GUARD_ERROR:
-+		desc_ioc_state = "eedp guard error";
-+		break;
-+	case MPI2_IOCSTATUS_EEDP_REF_TAG_ERROR:
-+		desc_ioc_state = "eedp ref tag error";
-+		break;
-+	case MPI2_IOCSTATUS_EEDP_APP_TAG_ERROR:
-+		desc_ioc_state = "eedp app tag error";
-+		break;
- 	default:
- 		desc_ioc_state = "unknown";
- 		break;
-@@ -2939,6 +3049,11 @@ scsih_io_done(struct MPT2SAS_ADAPTER *io
- 			scmd->result = DID_RESET << 16;
- 		break;
- 
-+	case MPI2_IOCSTATUS_EEDP_GUARD_ERROR:
-+	case MPI2_IOCSTATUS_EEDP_REF_TAG_ERROR:
-+	case MPI2_IOCSTATUS_EEDP_APP_TAG_ERROR:
-+		_scsih_eedp_error_handling(scmd, ioc_status);
-+		break;
- 	case MPI2_IOCSTATUS_SCSI_PROTOCOL_ERROR:
- 	case MPI2_IOCSTATUS_INVALID_FUNCTION:
- 	case MPI2_IOCSTATUS_INVALID_SGL:
-@@ -5503,6 +5618,9 @@ scsih_probe(struct pci_dev *pdev, const
- 		goto out_add_shost_fail;
- 	}
- 
-+	scsi_host_set_prot(shost, SHOST_DIF_TYPE1_PROTECTION
-+	    | SHOST_DIF_TYPE3_PROTECTION);
-+
- 	/* event thread */
- 	snprintf(ioc->firmware_event_name, sizeof(ioc->firmware_event_name),
- 	    "fw_event%d", ioc->id);
+We could pretend the AHCI driver has a queue depth of 64, queue up
+commands in the driver, swap the tags over, and send out the next command
+before we process this command.
+
+This is similar to a technique that's used in some old SCSI drivers that
+didn't support tagged commands at all -- a second command was queued
+inside the driver while the first was executing on the device.
+
+But then, we had that big movement towards elimintaing queues from inside
+drivers ... maybe we need another way.
+
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
