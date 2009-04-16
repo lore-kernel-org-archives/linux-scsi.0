@@ -1,316 +1,96 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [PATCH 2/2] Evaluate TGPS setting for device handler detection
-Date: Thu, 16 Apr 2009 09:30:45 -0700
-Message-ID: <1239899445.1196.12.camel@chandra-ubuntu>
-References: <20090319080642.4815418C79D@pentland.suse.de>
-Reply-To: sekharan@linux.vnet.ibm.com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: LSF Papers online?
+Date: Thu, 16 Apr 2009 11:37:02 -0500
+Message-ID: <1239899823.3762.37.camel@mulgrave.int.hansenpartnership.com>
+References: <49E335BA.3020103@panasas.com>
+	 <200904141654.24067.bzolnier@gmail.com>
+	 <20090414175441.5ce1f59d@lxorguk.ukuu.org.uk>
+	 <200904150009.06539.bzolnier@gmail.com> <1239749357.3638.3.camel@mulgrave>
+	 <49E53AE6.4010803@gmail.com>
+	 <da824cf30904152331r82594e5i1968471af1dbb1fa@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:52979 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753682AbZDPQab (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2009 12:30:31 -0400
-Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com [9.17.195.228])
-	by e35.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n3GGPFN2018332
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Apr 2009 10:25:15 -0600
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n3GGULrw059132
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Apr 2009 10:30:25 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n3GGUIU8026675
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Apr 2009 10:30:21 -0600
-In-Reply-To: <20090319080642.4815418C79D@pentland.suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <da824cf30904152331r82594e5i1968471af1dbb1fa@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Grant Grundler <grundler@google.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-Looks good to me
+On Wed, 2009-04-15 at 23:31 -0700, Grant Grundler wrote:
+> On Tue, Apr 14, 2009 at 6:39 PM, Robert Hancock <hancockrwd@gmail.com> wrote:
+> > James Bottomley wrote:
 
-Acked-by: Chandra Seetharaman <sekharan@us.ibm.com>
+[...]
+> > Compared to
+> > any kind of hardware/controller interactions I wouldn't say it's likely to
+> > be a significant bottleneck at all. In oprofile runs I've done with heavy
+> > ATA activity, the top time consumers are the interrupt handlers,
+> 
+> interrupts just introduce completion reporting latency. Interrupt mitigation
+> techinques/smarter controller can reduce this.
 
-On Thu, 2009-03-19 at 09:06 +0100, Hannes Reinecke wrote:
-> For correct ALUA support we should evaluate the TPGS setting
-> of the device and only attach the alua device handler to it
-> if not zero.
+For sure smarter controllers; I'm less convinced on interrupt mitigation
+techniques, primarily because smart controllers tend to do batch
+completion anyway.
+
+The reason storage shouldn't really need interrupt mitigation (like NAPI
+for networks) is that we shouldn't ever really be surprised by an
+interrupt, unlike networks.  We should always know what payloads will be
+coming at us from the device (and have buffers ready and waiting).  Most
+SCSI controllers (including the SAS ones) do all of this today: You can
+send out I/O and on some of them get under two interrupts per gigabyte
+of data.   I fully agree that some of the less smart SATA controllers
+have a lot of catching up to do in this space, but that isn't
+necessarily a driver issue; you can't polish a turd as the saying
+goes ...
+
+> > command issue paths,
 > 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/device_handler/scsi_dh.c       |   11 ++++-
->  drivers/scsi/device_handler/scsi_dh_alua.c  |   68 ++++-----------------------
->  drivers/scsi/device_handler/scsi_dh_emc.c   |    8 ++--
->  drivers/scsi/device_handler/scsi_dh_hp_sw.c |   10 ++--
->  drivers/scsi/device_handler/scsi_dh_rdac.c  |   38 +++++++-------
->  include/scsi/scsi_device.h                  |    1 +
->  6 files changed, 47 insertions(+), 89 deletions(-)
+> Hrm? Is this in the device driver?
 > 
-> diff --git a/drivers/scsi/device_handler/scsi_dh.c b/drivers/scsi/device_handler/scsi_dh.c
-> index a518f2e..5932083 100644
-> --- a/drivers/scsi/device_handler/scsi_dh.c
-> +++ b/drivers/scsi/device_handler/scsi_dh.c
-> @@ -28,6 +28,7 @@ struct scsi_dh_devinfo_list {
->  	struct list_head node;
->  	char vendor[9];
->  	char model[17];
-> +	char tpgs;
->  	struct scsi_device_handler *handler;
->  };
+> > code that actually is poking IO registers.
 > 
-> @@ -56,11 +57,13 @@ scsi_dh_cache_lookup(struct scsi_device *sdev)
->  {
->  	struct scsi_dh_devinfo_list *tmp;
->  	struct scsi_device_handler *found_dh = NULL;
-> +	int tpgs = scsi_device_tpgs(sdev);
+> Stupid controller design. NICs have been able to run without
+> MMIO *Reads* in the performance for more than 5 years now.
+> New "Enterprise" SAS/SATA controllers are better but I'm not
+> at liberty to discuss those. (sorry)
+
+That's both a protocol and a controller issue for SATA: some of the ATA
+transfer modes (like pio) have a lot higher overhead (and,
+unfortunately, less offload in the controller) in the protocol stack and
+can be unavoidable on certain transactions.
+
+> > The libata-scsi code
+> > hasn't even shown up on the radar in my experience.
 > 
->  	spin_lock(&list_lock);
->  	list_for_each_entry(tmp, &scsi_dh_dev_list, node) {
->  		if (!strncmp(sdev->vendor, tmp->vendor, strlen(tmp->vendor)) &&
-> -		    !strncmp(sdev->model, tmp->model, strlen(tmp->model))) {
-> +		    !strncmp(sdev->model, tmp->model, strlen(tmp->model)) &&
-> +		    (!tmp->tpgs || (tpgs & tmp->tpgs) != 0)) {
->  			found_dh = tmp->handler;
->  			break;
->  		}
-> @@ -74,12 +77,15 @@ static int scsi_dh_handler_lookup(struct scsi_device_handler *scsi_dh,
->  				  struct scsi_device *sdev)
->  {
->  	int i, found = 0;
-> +	int tpgs = scsi_device_tpgs(sdev);
-> 
->  	for(i = 0; scsi_dh->devlist[i].vendor; i++) {
->  		if (!strncmp(sdev->vendor, scsi_dh->devlist[i].vendor,
->  			     strlen(scsi_dh->devlist[i].vendor)) &&
->  		    !strncmp(sdev->model, scsi_dh->devlist[i].model,
-> -			     strlen(scsi_dh->devlist[i].model))) {
-> +			     strlen(scsi_dh->devlist[i].model)) &&
-> +		    (!scsi_dh->devlist[i].tpgs ||
-> +		     (tpgs & scsi_dh->devlist[i].tpgs) != 0)) {
->  			found = 1;
->  			break;
->  		}
-> @@ -128,6 +134,7 @@ device_handler_match(struct scsi_device_handler *scsi_dh,
->  			strncpy(tmp->model, sdev->model, 16);
->  			tmp->vendor[8] = '\0';
->  			tmp->model[16] = '\0';
-> +			tmp->tpgs = scsi_device_tpgs(sdev);
->  			tmp->handler = found_dh;
->  			spin_lock(&list_lock);
->  			list_add(&tmp->node, &scsi_dh_dev_list);
-> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-> index dba154c..e21460d 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-> @@ -118,43 +118,6 @@ static struct request *get_alua_req(struct scsi_device *sdev,
->  }
-> 
->  /*
-> - * submit_std_inquiry - Issue a standard INQUIRY command
-> - * @sdev: sdev the command should be send to
-> - */
-> -static int submit_std_inquiry(struct scsi_device *sdev, struct alua_dh_data *h)
-> -{
-> -	struct request *rq;
-> -	int err = SCSI_DH_RES_TEMP_UNAVAIL;
-> -
-> -	rq = get_alua_req(sdev, h->inq, ALUA_INQUIRY_SIZE, READ);
-> -	if (!rq)
-> -		goto done;
-> -
-> -	/* Prepare the command. */
-> -	rq->cmd[0] = INQUIRY;
-> -	rq->cmd[1] = 0;
-> -	rq->cmd[2] = 0;
-> -	rq->cmd[4] = ALUA_INQUIRY_SIZE;
-> -	rq->cmd_len = COMMAND_SIZE(INQUIRY);
-> -
-> -	rq->sense = h->sense;
-> -	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
-> -	rq->sense_len = h->senselen = 0;
-> -
-> -	err = blk_execute_rq(rq->q, NULL, rq, 1);
-> -	if (err == -EIO) {
-> -		sdev_printk(KERN_INFO, sdev,
-> -			    "%s: std inquiry failed with %x\n",
-> -			    ALUA_DH_NAME, rq->errors);
-> -		h->senselen = rq->sense_len;
-> -		err = SCSI_DH_IO;
-> -	}
-> -	blk_put_request(rq);
-> -done:
-> -	return err;
-> -}
-> -
-> -/*
->   * submit_vpd_inquiry - Issue an INQUIRY VPD page 0x83 command
->   * @sdev: sdev the command should be sent to
->   */
-> @@ -281,23 +244,19 @@ done:
->  }
-> 
->  /*
-> - * alua_std_inquiry - Evaluate standard INQUIRY command
-> + * alua_check_tpgs - Evaluate TPGS setting
->   * @sdev: device to be checked
->   *
-> - * Just extract the TPGS setting to find out if ALUA
-> + * Just examine the TPGS setting of the device to find out if ALUA
->   * is supported.
->   */
-> -static int alua_std_inquiry(struct scsi_device *sdev, struct alua_dh_data *h)
-> +static int alua_check_tpgs(struct scsi_device *sdev, struct alua_dh_data *h)
->  {
-> -	int err;
-> -
-> -	err = submit_std_inquiry(sdev, h);
-> -
-> -	if (err != SCSI_DH_OK)
-> -		return err;
-> +	int err = SCSI_DH_OK;
-> 
->  	/* Check TPGS setting */
-> -	h->tpgs = (h->inq[5] >> 4) & 0x3;
-> +	h->tpgs = scsi_device_tpgs(sdev);
-> +
->  	switch (h->tpgs) {
->  	case TPGS_MODE_EXPLICIT|TPGS_MODE_IMPLICIT:
->  		sdev_printk(KERN_INFO, sdev,
-> @@ -626,7 +585,7 @@ static int alua_initialize(struct scsi_device *sdev, struct alua_dh_data *h)
->  {
->  	int err;
-> 
-> -	err = alua_std_inquiry(sdev, h);
-> +	err = alua_check_tpgs(sdev, h);
->  	if (err != SCSI_DH_OK)
->  		goto out;
-> 
-> @@ -691,17 +650,8 @@ static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
->  }
-> 
->  static const struct scsi_dh_devlist alua_dev_list[] = {
-> -	{"HP", "MSA VOLUME" },
-> -	{"HP", "HSV101" },
-> -	{"HP", "HSV111" },
-> -	{"HP", "HSV200" },
-> -	{"HP", "HSV210" },
-> -	{"HP", "HSV300" },
-> -	{"IBM", "2107900" },
-> -	{"IBM", "2145" },
-> -	{"Pillar", "Axiom" },
-> -	{"Intel", "Multi-Flex"},
-> -	{NULL, NULL}
-> +	{"", "", 3 },
-> +	{NULL, NULL, 0}
->  };
-> 
->  static int alua_bus_attach(struct scsi_device *sdev);
-> diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
-> index 0e572d2..ff2e653 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_emc.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_emc.c
-> @@ -563,10 +563,10 @@ done:
->  }
-> 
->  static const struct scsi_dh_devlist clariion_dev_list[] = {
-> -	{"DGC", "RAID"},
-> -	{"DGC", "DISK"},
-> -	{"DGC", "VRAID"},
-> -	{NULL, NULL},
-> +	{"DGC", "RAID", 0},
-> +	{"DGC", "DISK", 0},
-> +	{"DGC", "VRAID", 0},
-> +	{NULL, NULL, 0},
->  };
-> 
->  static int clariion_bus_attach(struct scsi_device *sdev);
-> diff --git a/drivers/scsi/device_handler/scsi_dh_hp_sw.c b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-> index f7da753..3dbfbbf 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-> @@ -287,11 +287,11 @@ static int hp_sw_activate(struct scsi_device *sdev)
->  }
-> 
->  static const struct scsi_dh_devlist hp_sw_dh_data_list[] = {
-> -	{"COMPAQ", "MSA1000 VOLUME"},
-> -	{"COMPAQ", "HSV110"},
-> -	{"HP", "HSV100"},
-> -	{"DEC", "HSG80"},
-> -	{NULL, NULL},
-> +	{"COMPAQ", "MSA1000 VOLUME", 0},
-> +	{"COMPAQ", "HSV110", 0},
-> +	{"HP", "HSV100", 0},
-> +	{"DEC", "HSG80", 0},
-> +	{NULL, NULL, 0},
->  };
-> 
->  static int hp_sw_bus_attach(struct scsi_device *sdev);
-> diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
-> index 43b8c51..ad046bd 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_rdac.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
-> @@ -609,25 +609,25 @@ static int rdac_check_sense(struct scsi_device *sdev,
->  }
-> 
->  static const struct scsi_dh_devlist rdac_dev_list[] = {
-> -	{"IBM", "1722"},
-> -	{"IBM", "1724"},
-> -	{"IBM", "1726"},
-> -	{"IBM", "1742"},
-> -	{"IBM", "1814"},
-> -	{"IBM", "1815"},
-> -	{"IBM", "1818"},
-> -	{"IBM", "3526"},
-> -	{"SGI", "TP9400"},
-> -	{"SGI", "TP9500"},
-> -	{"SGI", "IS"},
-> -	{"STK", "OPENstorage D280"},
-> -	{"SUN", "CSM200_R"},
-> -	{"SUN", "LCSM100_F"},
-> -	{"DELL", "MD3000"},
-> -	{"DELL", "MD3000i"},
-> -	{"LSI", "INF-01-00"},
-> -	{"ENGENIO", "INF-01-00"},
-> -	{NULL, NULL},
-> +	{"IBM", "1722", 0},
-> +	{"IBM", "1724", 0},
-> +	{"IBM", "1726", 0},
-> +	{"IBM", "1742", 0},
-> +	{"IBM", "1814", 0},
-> +	{"IBM", "1815", 0},
-> +	{"IBM", "1818", 0},
-> +	{"IBM", "3526", 0},
-> +	{"SGI", "TP9400", 0},
-> +	{"SGI", "TP9500", 0},
-> +	{"SGI", "IS", 0},
-> +	{"STK", "OPENstorage D280", 0},
-> +	{"SUN", "CSM200_R", 0},
-> +	{"SUN", "LCSM100_F", 0},
-> +	{"DELL", "MD3000", 0},
-> +	{"DELL", "MD3000i", 0},
-> +	{"LSI", "INF-01-00", 0},
-> +	{"ENGENIO", "INF-01-00", 0},
-> +	{NULL, NULL, 0},
->  };
-> 
->  static int rdac_bus_attach(struct scsi_device *sdev);
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index 6ac6321..e4df232 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -172,6 +172,7 @@ struct scsi_device {
->  struct scsi_dh_devlist {
->  	char *vendor;
->  	char *model;
-> +	char tpgs;
->  };
-> 
->  struct scsi_device_handler {
-> -- 
-> 1.5.3.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> It won't for normal disk IOPS rates (<1000 IOPS per disk).
+> Run it at 20K or 50K IOPS and see again.
+> NICs are pushing alot more than that.
+
+So again, we get to this terminology problem:  NICs tend to have a fixed
+packet size (the network MTU) so IOPS/s makes a lot of sense for them.
+In most storage transactions we don't really have MTU limitations, so we
+try to right size the outgoing transactions to maximize for bandwidth,
+so IOPS don't tell the full story.  (after all, if I see all my packets
+are 128k, I can artificially reduce the merge limit to 64k and double my
+IOPS).
+
+IOPS are starting to come up because SSDs are saying they prefer many
+smaller transactions to an accumulated larger one.  I'm still not
+entirely convinced that trying to rightsize is wrong here:  most of the
+FS data is getting more contiguous, so even for SSDs we can merge
+without a lot of work.  A simple back of the envelope calculation can
+give the rightizing:  If you want a SSD to max out at its 31 allowed
+tags saturating a 3G sata link, then you're talking 10M per tag per
+second.  If we assume a 4k sector size, that's 2500 IOPS per tag
+(there's no real point doing less than 4k, because that has us splitting
+the page cache). Or, to put it another way, over 75k IOPS for a single
+SSD doesn't make sense ... the interesting question is whether it would
+make more sense to align on, say 16k io and so expect to max out at 20k
+IOPS.
+
+James
+
 
