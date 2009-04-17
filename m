@@ -1,65 +1,63 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [Scst-devel] ISCSI-SCST performance (with also IET and STGT	data)
-Date: Fri, 17 Apr 2009 22:11:09 +0400
-Message-ID: <49E8C63D.8090901@vlnb.net>
-References: <49D10256.8030307@vlnb.net>	<e2e108260904011314h1e0cf5c5wcdf210eee24d40d8@mail.gmail.com>	<49D4F2E1.7000507@vlnb.net> <e2e108260904040104u37953ef7x74b8713dfcf3166a@mail.gmail.com>
+From: Kay Sievers <kay.sievers@vrfy.org>
+Subject: Re: [Scst-devel] Discussion about SCST sysfs layout and
+	implementation.
+Date: Fri, 17 Apr 2009 20:24:32 +0200
+Message-ID: <ac3eb2510904171124h11c4c70bu371fa06127cb45da@mail.gmail.com>
+References: <49E7307A.8000205@vlnb.net> <49E77795.7080204@linux.vnet.ibm.com>
+	<49E85F1C.7040106@vlnb.net> <49E8832F.6070302@linux.vnet.ibm.com>
+	<49E88E3F.8030107@vlnb.net> <49E891C8.1050007@emulex.com>
+	<49E8BFB2.50608@vlnb.net> <ac3eb2510904171056v4c6c971dx99bfb87464a6b02d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:52285 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932284AbZDQSLC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2009 14:11:02 -0400
-In-Reply-To: <e2e108260904040104u37953ef7x74b8713dfcf3166a@mail.gmail.com>
+Received: from mail-bw0-f211.google.com ([209.85.218.211]:40508 "EHLO
+	mail-bw0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757376AbZDQSYt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2009 14:24:49 -0400
+In-Reply-To: <ac3eb2510904171056v4c6c971dx99bfb87464a6b02d@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@gmail.com>
-Cc: scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: James Smart <James.Smart@emulex.com>, Daniel Debonzi <debonzi@linux.vnet.ibm.com>, "scst-devel@lists.sourceforge.net" <scst-devel@lists.sourceforge.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Bart Van Assche, on 04/04/2009 12:04 PM wrote:
-> On Thu, Apr 2, 2009 at 7:16 PM, Vladislav Bolkhovitin <vst@vlnb.net> wrote:
->> Bart Van Assche, on 04/02/2009 12:14 AM wrote:
->>> I have repeated some of these performance tests for iSCSI over IPoIB
->>> (two DDR PCIe 1.0 ConnectX HCA's connected back to back). The results
->>> for the buffered I/O test with a block size of 512K (initiator)
->>> against a file of 1GB residing on a tmpfs filesystem on the target are
->>> as follows:
->>>
->>> write-test: iSCSI-SCST 243 MB/s; IET 192 MB/s.
->>> read-test: iSCSI-SCST 291 MB/s; IET 223 MB/s.
->>>
->>> And for a block size of 4 KB:
->>>
->>> write-test: iSCSI-SCST 43 MB/s; IET 42 MB/s.
->>> read-test: iSCSI-SCST 288 MB/s; IET 221 MB/s.
->> Do you have any thoughts why writes are so bad? It shouldn't be so..
-> 
-> By this time I have run the following variation of the 4 KB write test:
-> * Target: iSCSI-SCST was exporting a 1 GB file residing on a tmpfs filesystem.
-> * Initiator: two processes were writing 4 KB blocks as follows:
-> dd if=/dev/zero of=/dev/sdb bs=4K seek=0 count=131072 oflag=sync &
-> dd if=/dev/zero of=/dev/sdb bs=4K seek=131072 count=131072 oflag=sync &
-> 
-> Results:
-> * Each dd process on the initiator was writing at a speed of 37.8
-> MB/s, or a combined writing speed of 75.6 MB/s.
-> * CPU load on the initiator system during the test: 2.0.
-> * According to /proc/interrupts, about 38000 mlx4-comp-0 interrupts
-> were triggered per second.
-> 
-> These results confirm that the initiator system was the bottleneck
-> during the 4 KB write test, not the target system.
+On Fri, Apr 17, 2009 at 19:56, Kay Sievers <kay.sievers@vrfy.org> wrote:
+> On Fri, Apr 17, 2009 at 19:43, Vladislav Bolkhovitin <vst@vlnb.net> wrote:
+>> Thank you for the suggestion. If nobody objects, we will go with
+>> /sys/class/scst_tgt.
+>
+> On Fri, Apr 17, 2009 at 19:43, Vladislav Bolkhovitin <vst@vlnb.net> wrote:
+>> I agree, looks like using struct device instead of struct kobject should
+>> additionally complicate the code a lot for not clear gain.
+>
+> Thes both replies together suggest that you miss how sysfs and the
+> driver core works. Please go and read the current code, and look at
+> sysfs, before trying anything like this.
+>
+> There is no way to add any stuff to /sys/class/scst_tgt/ without using
+> proper "struct device" objects.
+>
+> For the same reason we will not have a disconnected device tree, we
+> will not havet any raw kobject in the /sys/devices, /sys/class,
+> /sys/bus directories.
 
-If so with oflag=direct you should have a performance gain, because you 
-will eliminate a data copy.
+As a starting point, consider creating a "scst" bus_type. Then make
+sure all devices you need are uniquely named, so they can be in a flat
+list in /sys/bus/scst/devices/.
 
-> Bart.
-> 
-> ------------------------------------------------------------------------------
-> _______________________________________________
-> Scst-devel mailing list
-> Scst-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/scst-devel
-> 
+Then add all the devices as struct_device to the tree, maybe use an
+existing parent struct_device (like a pci device) if you have one, or
+create a custom one in /sys/devices/ if there is nothing to use.
 
+All the devices you add will show up in a hierarchy in /sys/devices/
+depending on the parent information you supply, and every single
+device of your subsystem will be listed in a flat list in
+/sys/bus/scst/devices/*. You will also get proper events for userspace
+that way.
+
+The question is where the actual block devices hang off, and if they
+can use one of the created scst devices, or if they will be virtual
+ones?
+
+Thanks,
+Kay
