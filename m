@@ -1,33 +1,24 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: LSF Papers online?
-Date: Fri, 17 Apr 2009 00:44:36 -0400
-Message-ID: <yq1eivrx51n.fsf@sermon.lab.mkp.net>
-References: <49E335BA.3020103@panasas.com>
-	<da824cf30904161436y1a886789mdb05f38a850c5b46@mail.gmail.com>
+From: Lagina Sidower <hotdak.netpionavaro2001@hotmail.com>
+Subject: =?windows-1251?B?WW91IE5lZWQgdG8gUmVhZCBUaGlzIEltbWVkaWF0ZWx5?=
+Date: Fri, 17 Apr 2009 11:30:05 +0700
+Message-ID: <3678.55690788037$1239946069@news.gmane.org>
+Reply-To: Lagina Sidower <wagar.amanda19928@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+        charset="windows-1251"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet12.oracle.com ([141.146.126.234]:24331 "EHLO
-	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753214AbZDQFT2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2009 01:19:28 -0400
-In-Reply-To: <da824cf30904161436y1a886789mdb05f38a850c5b46@mail.gmail.com>
-	(Grant Grundler's message of "Thu, 16 Apr 2009 14:36:17 -0700")
+Received: from google-58-137-222-2.google.com ([58.137.222.2]:39952 "HELO
+	your.mail.server.name.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with SMTP id S1751005AbZDQF0L (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Apr 2009 01:26:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Zach Brown <zach.brown@oracle.com>, Chris Mason <chris.mason@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
->>>>> "Grant" == Grant Grundler <grundler@google.com> writes:
-
-Grant>     http://iou.parisc-linux.org/lsf2009/tripreport.txt
-
-Just a correction to your 4KB sector support minutes:
-
-READ CAPACITY(16) does report the actual alignment.  The same is true
-for ATA IDENTIFY.  The reporting method is slightly different between
-the two protocols but the net result is the same.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
-
+QXJlIHlvdSBzaWNrIGFuZCB0aXJlZCBvZiBhbGwgdGhlIG1vbmV5LW1ha2luZyBzY2FtcyBvbiB0aGUgd2ViPyBJZiB5b3UncmUgbG9va2luZyBmb3IgdGhlIHJlYWwgZGVhbCB3aGVuIGl0IGNvbWVzIHRvIG1ha2luZyBtb25leSBmcm9tIGhvbWUsIHRoZW4gdGhpcyBtYXkgYmUgdGhlIG1vc3QgaW1wb3J0YW50IG1lc3NhZ2UgeW91IHdpbGwgZXZlciByZWFkIG9ubGluZSENCg0KV2hhdCBpZiB0aGVyZSB3YXMgYSBzeXN0ZW0gdGhhdCB5b3UgY291bGQgdXNlIGluIHRoZSBjb21mb3J0IG9mIHlvdXIgb3duIGhvbWUgYW5kIG1ha2UgbW9yZSBtb25leSB0aGFuIHlvdSBldmVyIGNvdWxkIGluIHlvdXIgam9iLCB1c2luZyBqdXN0IHlvdXIgY29tcHV0ZXIgYW5kIHRoZSBJbnRlcm5ldD8NCg0KV2hhdCBpZiBpdCBvbmx5IHRvb2sgYSBjb3VwbGUgb2YgaG91cnMgcGVyIGRheSBhbmQgd2FzIGF2YWlsYWJsZSB3b3JsZHdpZGU/IFNvdW5kcyB0b28gZ29vZCB0byBiZSB0cnVlPyBJdCBpc24ndCEgWW91IGNhbiBldmVuIHN0YXJ0IHdvcmtpbmcgaW4ganVzdCBhIGZldyBtaW51dGVzIGZyb20gbm93LiBXZSBhcmUgaGVyZSB0byBleHBsYWluISBTaW1wbHkgc2Vu
+ ZCB1cyBhbiBhc3dlciB0byAxNjg0YnJ1bnR6bmlsZXNAZ21haWwuY29tIGlmIHlvdSBhcmUgaW50ZXJlc3RlZCBpbiBvdXIgcHJvbW90aW9uLCBzbyB3ZSBjYW4gYW5zd2VyIHlvdSBiYWNrIHdpdGggZnVydGhlciBkZXRhaWxzLg0KDQpCZXN0IFJlZ2FyZHMsDQpMZWdpdCBPbmxpbmUgSm9icwoKCgoKCgoKCgoKCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpUaGlzIGVtYWlsIGhhcyBiZWVuIHdyaXR0ZW4gYW5kIHByb3ZlZCB0byBiZSBpbiBjb21wbGlhbmNlIHdpdGggdGhlIHJlY2VudGx5IGVzdGFibGlzaGVkIGNhbi1zcGFtIGFjdCBsYXcgaW4gVVMuIFdlIGFyZSBub3QgcHJvdm9raW5nIG9yIGZvcmNpbmcgYW55IHBlcnNvbiBpbiBhbnkgd2F5IHRvIHBhcnRpY2lwYXRlIGluIG91ciBwcm9ncmFtcy4gVG8gcGFydGljaXBhdGUgaXMgeW91ciBvd24gZGVjaXNpb24gYW5kIHlvdSBjYXJyeSB0aGUgcmVzcG9uc2liaWxpdHkgb2YgdGFraW5nIGZ1cnRoZXIgcGFydCBpbiB0aGlzIHByb21vdGlvbi4gQW55d2F5LCBpZiB5b3UgZG9uJ3Qgd2FudCB0byByZWNlaXZlIG1vcmUgZ2
+ 9vZCBvZmZlcnMgZnJvbSB1cywgeW91IGNhbiBzaW1wbHkgVW5zdWJzY3JpYmUgYnkgc2VuZGluZyB1cyBhIG5vdGlmaWNhdGlvbiBlbWFpbCB0byBnZXQubWVfb3V0X25vd0B5YWhvby5jb20gd2l0aCBhIG1haWwtc3ViamVjdCBhbmQgdGV4dCAiVW5zdWJzY3JpYmUgbWUiLCBhbmQgd2Ugd2lsbCBnZXQgeW91ciBlbWFpbCBvdXQgb2Ygb3VyIGxpc3Qgd2l0aGluIDEwIGRheXMuCgpUaGlzIG1lc3NhZ2UgaXMgU1RSSUNUTFkgQ09ORklERU5USUFMIGFuZCBpcyBzb2xlbHkgZm9yIHRoZSBpbmRpdmlkdWFsIG9yIG9yZ2FuaXNhdGlvbiB0byB3aG9tIGl0IGlzIGFkZHJlc3NlZC4gSXQgbWF5IGNvbnRhaW4gUFJJVklMRUdFRCBhbmQgQ09ORklERU5USUFMIGluZm9ybWF0aW9uLiBJZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50LCB5b3UgYXJlIGhlcmVieSBub3RpZmllZCB0aGF0IGFueSBkaXNzZW1pbmF0aW9uLCBkaXN0cmlidXRpb24gb3IgY29weWluZyBvZiB0aGlzIGNvbW11bmljYXRpb24gYW5kIGl0cyBjb250ZW50cyBpcyBzdHJpY3RseSBwcm9oaWJpdGVkLiBJZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50IHlv
+ dSBzaG91bGQgbm90IHJlYWQsIGNvcHksIGRpc3RyaWJ1dGUsIGRpc2Nsb3NlIG9yIG90aGVyd2lzZSB1c2UgdGhlIGluZm9ybWF0aW9uIGluIHRoaXMgZW1haWwuIEVtYWlsIG1heSBiZSBzdXNjZXB0aWJsZSB0byBkYXRhIGNvcnJ1cHRpb24sIGludGVyY2VwdGlvbiBhbmQgdW5hdXRob3Jpc2VkIGFtZW5kbWVudCwgYW5kIHdlIGRvIG5vdCBhY2NlcHQgbGlhYmlsaXR5IGZvciBhbnkgc3VjaCBjb3JydXB0aW9uLCBpbnRlcmNlcHRpb24gb3IgYW1lbmRtZW50IG9yIHRoZSBjb25zZXF1ZW5jZXMgdGhlcmVvZiBvciB5b3VyIHJlbGlhbmNlIG9uIGFueSBpbmZvcm1hdGlvbiBjb250YWluZWQgdGhlcmVpbiBpZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50LiBJZiB5b3UgYXJlIG5vdCBpbnRlcmVzdGVkIGluIHRoZSBvZmZlcmVkIHByb21vdGlvbnMsIHBsZWFzZSBqdXN0IGRvbid0IGFuc3dlci4gSWYgeW91IHRoaW5rIHlvdSBoYXZlIHJlY2VpdmVkIHRoaXMgbWVzc2FnZSBhbmQgaXRzIGNvbnRlbnRzIGluIGVycm9yLCBwbGVhc2UgZGVsZXRlIGl0IGZyb20geW91ciBjb21wdXRlciwgb3IgZm9sbG93IHRoZSB1bnN1YnNjcmliaW5nIH
+ Byb2NlZHVyZSBzaG93biBhYm92ZS4KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCgkJ
