@@ -1,114 +1,78 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 15/15] zfcp: Fix oops when port disappears
-Date: Fri, 17 Apr 2009 15:08:15 +0200
-Message-ID: <20090417131123.790167000@de.ibm.com>
+Subject: [patch 12/15] zfcp: revert previous patch for sbal counting
+Date: Fri, 17 Apr 2009 15:08:12 +0200
+Message-ID: <20090417131123.403436000@de.ibm.com>
 References: <20090417130800.923944000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate8.de.ibm.com ([195.212.29.157]:39170 "EHLO
-	mtagate8.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758258AbZDQNLh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2009 09:11:37 -0400
-Content-Disposition: inline; filename=s390-sles11-12-05-zfcp_fcp_port_handling.patch
+Received: from mtagate7.de.ibm.com ([195.212.29.156]:35631 "EHLO
+	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760798AbZDQNLz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2009 09:11:55 -0400
+Content-Disposition: inline; filename=712-zfcp-sbal-counting.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Martin Petermann <martin.petermann@de.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
 
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
+From: Martin Petermann <martin.petermann@de.ibm.com>
 
-The zfcp_port might have been removed, while the FC fast_io_fail timer
-is still running and could trigger the terminate_rport_io callback.
-Set the pointer to the zfcp_port to NULL and check accordingly
-before using it.
+The current sbal counting can be wrong if a fsf request is
+waiting for free sbals and at the same time qdio request queue
+is shutdown and re-opened. Revering a previous patch fixes this
+issue.
 
-Reviewed-by: Martin Petermann <martin@linux.vnet.ibm.com>
+Signed-off-by: Martin Petermann <martin.petermann@de.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 ---
- drivers/s390/scsi/zfcp_aux.c  |    3 +--
- drivers/s390/scsi/zfcp_fsf.c  |    4 ++++
- drivers/s390/scsi/zfcp_scsi.c |   25 +++++++++++++++++++------
- 3 files changed, 24 insertions(+), 8 deletions(-)
 
---- a/drivers/s390/scsi/zfcp_aux.c	2009-04-17 15:03:37.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_aux.c	2009-04-17 15:04:00.000000000 +0200
-@@ -671,8 +671,7 @@ void zfcp_port_dequeue(struct zfcp_port 
- 	list_del(&port->list);
- 	write_unlock_irq(&zfcp_data.config_lock);
- 	if (port->rport)
--		fc_remote_port_delete(port->rport);
--	port->rport = NULL;
-+		port->rport->dd_data = NULL;
- 	zfcp_adapter_put(port->adapter);
- 	sysfs_remove_group(&port->sysfs_device.kobj, &zfcp_sysfs_port_attrs);
- 	device_unregister(&port->sysfs_device);
---- a/drivers/s390/scsi/zfcp_scsi.c	2009-04-17 15:03:49.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_scsi.c	2009-04-17 15:04:00.000000000 +0200
-@@ -486,10 +486,12 @@ static void zfcp_set_rport_dev_loss_tmo(
-  */
- static void zfcp_scsi_dev_loss_tmo_callbk(struct fc_rport *rport)
- {
--	struct zfcp_port *port = rport->dd_data;
-+	struct zfcp_port *port;
- 
- 	write_lock_irq(&zfcp_data.config_lock);
--	port->rport = NULL;
-+	port = rport->dd_data;
-+	if (port)
-+		port->rport = NULL;
- 	write_unlock_irq(&zfcp_data.config_lock);
+ drivers/s390/scsi/zfcp_fsf.c |   28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
+
+--- a/drivers/s390/scsi/zfcp_fsf.c	2009-04-17 15:03:44.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_fsf.c	2009-04-17 15:03:52.000000000 +0200
+@@ -645,30 +645,30 @@ static void zfcp_fsf_exchange_port_data_
+ 	}
  }
  
-@@ -503,9 +505,18 @@ static void zfcp_scsi_dev_loss_tmo_callb
-  */
- static void zfcp_scsi_terminate_rport_io(struct fc_rport *rport)
+-static int zfcp_fsf_req_sbal_get(struct zfcp_adapter *adapter)
+-	__releases(&adapter->req_q_lock)
+-	__acquires(&adapter->req_q_lock)
++static int zfcp_fsf_sbal_check(struct zfcp_adapter *adapter)
  {
--	struct zfcp_port *port = rport->dd_data;
-+	struct zfcp_port *port;
-+
-+	write_lock_irq(&zfcp_data.config_lock);
-+	port = rport->dd_data;
-+	if (port)
-+		zfcp_port_get(port);
-+	write_unlock_irq(&zfcp_data.config_lock);
+ 	struct zfcp_qdio_queue *req_q = &adapter->req_q;
+-	long ret;
  
--	zfcp_erp_port_reopen(port, 0, "sctrpi1", NULL);
-+	if (port) {
-+		zfcp_erp_port_reopen(port, 0, "sctrpi1", NULL);
-+		zfcp_port_put(port);
-+	}
+-	if (atomic_read(&req_q->count) <= -REQUEST_LIST_SIZE)
+-		return -EIO;
+-	if (atomic_read(&req_q->count) > 0)
+-		return 0;
++	spin_lock_bh(&adapter->req_q_lock);
++	if (atomic_read(&req_q->count))
++		return 1;
++	spin_unlock_bh(&adapter->req_q_lock);
++	return 0;
++}
++
++static int zfcp_fsf_req_sbal_get(struct zfcp_adapter *adapter)
++{
++	long ret;
+ 
+-	atomic_dec(&req_q->count);
+ 	spin_unlock_bh(&adapter->req_q_lock);
+ 	ret = wait_event_interruptible_timeout(adapter->request_wq,
+-					atomic_read(&req_q->count) >= 0,
+-					5 * HZ);
+-	spin_lock_bh(&adapter->req_q_lock);
+-	atomic_inc(&req_q->count);
+-
++			       zfcp_fsf_sbal_check(adapter), 5 * HZ);
+ 	if (ret > 0)
+ 		return 0;
+ 	if (!ret)
+ 		atomic_inc(&adapter->qdio_outb_full);
++
++	spin_lock_bh(&adapter->req_q_lock);
+ 	return -EIO;
  }
  
- static void zfcp_scsi_rport_register(struct zfcp_port *port)
-@@ -534,8 +545,10 @@ static void zfcp_scsi_rport_register(str
- 
- static void zfcp_scsi_rport_block(struct zfcp_port *port)
- {
--	if (port->rport)
--		fc_remote_port_delete(port->rport);
-+	struct fc_rport *rport = port->rport;
-+
-+	if (rport)
-+		fc_remote_port_delete(rport);
- }
- 
- void zfcp_scsi_schedule_rport_register(struct zfcp_port *port)
---- a/drivers/s390/scsi/zfcp_fsf.c	2009-04-17 15:03:52.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_fsf.c	2009-04-17 15:04:00.000000000 +0200
-@@ -172,12 +172,16 @@ static void zfcp_fsf_link_down_info_eval
- 					 struct fsf_link_down_info *link_down)
- {
- 	struct zfcp_adapter *adapter = req->adapter;
-+	unsigned long flags;
- 
- 	if (atomic_read(&adapter->status) & ZFCP_STATUS_ADAPTER_LINK_UNPLUGGED)
- 		return;
- 
- 	atomic_set_mask(ZFCP_STATUS_ADAPTER_LINK_UNPLUGGED, &adapter->status);
-+
-+	read_lock_irqsave(&zfcp_data.config_lock, flags);
- 	zfcp_scsi_schedule_rports_block(adapter);
-+	read_unlock_irqrestore(&zfcp_data.config_lock, flags);
- 
- 	if (!link_down)
- 		goto out;
 
