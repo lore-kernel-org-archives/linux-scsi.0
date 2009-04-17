@@ -1,39 +1,79 @@
 From: Eric Moore <eric.moore@lsi.com>
-Subject: [PATCH 5/14 - 2nd post] mpt2sas: driver name needs to be in the MPT2IOCINFO ioctl
-Date: Fri, 17 Apr 2009 10:27:44 -0600
-Message-ID: <20090417162742.GF7009@lsil.com>
+Subject: [PATCH 7/14 - 2nd post] mpt2sas: Broadcast Primative AEN bug fix
+Date: Fri, 17 Apr 2009 10:29:08 -0600
+Message-ID: <20090417162905.GH7009@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chip3mo2-old.postini.com ([64.18.14.205]:49456 "EHLO
-	chip3mo2-old.postini.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754906AbZDQQ0x (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2009 12:26:53 -0400
+Received: from chip3og51.obsmtp.com ([64.18.14.167]:38892 "EHLO
+	chip3og51.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753704AbZDQQ2D (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2009 12:28:03 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com
 
-The driver name needs to be at the beginining of the driver_version string in
-MPT2IOCINFO ioctl.  This is the same behaviour is there already in the mptsas
-driver.
+Bug fix in the broadcast primative async event code where the driver would
+stop sending tm queries after the first queury was completed. This was due
+driver not reseting the tm_cmds.status field back to MPT2_CMD_NOT_USED after
+completing a task management request.
+
+An addtional fix adding sanity check to insure sas_device->starget set to NULL.
+During multipath testing fail over/fail back, the mid layer was holding onto
+sdev longer than the fail back period, thus starget was getting set to NULL 
+for device being added.
 
 Signed-off-by: Eric Moore <eric.moore@lsi.com>
 
-diff -uarpN a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
---- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c	2009-04-09 16:44:05.000000000 -0600
-+++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c	2009-04-13 15:28:16.000000000 -0600
-@@ -917,9 +917,9 @@ _ctl_getiocinfo(void __user *arg)
- 	karg.pci_information.u.bits.function = PCI_FUNC(ioc->pdev->devfn);
- 	karg.pci_information.segment_id = pci_domain_nr(ioc->pdev->bus);
- 	karg.firmware_version = ioc->facts.FWVersion.Word;
--	strncpy(karg.driver_version, MPT2SAS_DRIVER_VERSION,
--	    MPT2_IOCTL_VERSION_LENGTH);
--	karg.driver_version[MPT2_IOCTL_VERSION_LENGTH - 1] = '\0';
-+	strcpy(karg.driver_version, MPT2SAS_DRIVER_NAME);
-+	strcat(karg.driver_version, "-");
-+	strcat(karg.driver_version, MPT2SAS_DRIVER_VERSION);
- 	karg.bios_version = le32_to_cpu(ioc->bios_pg3.BiosVersion);
+diff -uarpN a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2009-04-09 16:43:07.000000000 -0600
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2009-04-13 15:58:57.000000000 -0600
+@@ -516,12 +516,8 @@ _scsih_sas_device_add(struct MPT2SAS_ADA
+ 	handle = sas_device->handle;
+ 	parent_handle = sas_device->parent_handle;
+ 	sas_address = sas_device->sas_address;
+-	if (!mpt2sas_transport_port_add(ioc, handle, parent_handle)) {
++	if (!mpt2sas_transport_port_add(ioc, handle, parent_handle))
+ 		_scsih_sas_device_remove(ioc, sas_device);
+-	} else if (!sas_device->starget) {
+-		mpt2sas_transport_port_remove(ioc, sas_address, parent_handle);
+-		_scsih_sas_device_remove(ioc, sas_device);
+-	}
+ }
  
- 	if (copy_to_user(arg, &karg, sizeof(karg))) {
+ /**
+@@ -1203,7 +1199,9 @@ scsih_target_destroy(struct scsi_target
+ 	rphy = dev_to_rphy(starget->dev.parent);
+ 	sas_device = mpt2sas_scsih_sas_device_find_by_sas_address(ioc,
+ 	   rphy->identify.sas_address);
+-	if (sas_device)
++	if (sas_device && (sas_device->starget == starget) &&
++	    (sas_device->id == starget->id) &&
++	    (sas_device->channel == starget->channel))
+ 		sas_device->starget = NULL;
+ 
+ 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+@@ -3924,7 +3922,7 @@ _scsih_sas_broadcast_primative_event(str
+ 
+ 		mpt2sas_scsih_issue_tm(ioc, handle, lun,
+ 		    MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK, smid, 30);
+-		termination_count += le32_to_cpu(mpi_reply->TerminationCount);
++		ioc->tm_cmds.status = MPT2_CMD_NOT_USED;
+ 
+ 		if ((mpi_reply->IOCStatus == MPI2_IOCSTATUS_SUCCESS) &&
+ 		    (mpi_reply->ResponseCode ==
+@@ -3934,10 +3932,10 @@ _scsih_sas_broadcast_primative_event(str
+ 			continue;
+ 
+ 		mpt2sas_scsih_issue_tm(ioc, handle, lun,
+-		    MPI2_SCSITASKMGMT_TASKTYPE_ABRT_TASK_SET, smid, 30);
++		    MPI2_SCSITASKMGMT_TASKTYPE_ABRT_TASK_SET, 0, 30);
++		ioc->tm_cmds.status = MPT2_CMD_NOT_USED;
+ 		termination_count += le32_to_cpu(mpi_reply->TerminationCount);
+ 	}
+-	ioc->tm_cmds.status = MPT2_CMD_NOT_USED;
+ 	ioc->broadcast_aen_busy = 0;
+ 	mutex_unlock(&ioc->tm_cmds.mutex);
+ 
