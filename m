@@ -1,63 +1,81 @@
-From: Kay Sievers <kay.sievers@vrfy.org>
-Subject: Re: [Scst-devel] Discussion about SCST sysfs layout and
-	implementation.
-Date: Fri, 17 Apr 2009 20:24:32 +0200
-Message-ID: <ac3eb2510904171124h11c4c70bu371fa06127cb45da@mail.gmail.com>
-References: <49E7307A.8000205@vlnb.net> <49E77795.7080204@linux.vnet.ibm.com>
-	<49E85F1C.7040106@vlnb.net> <49E8832F.6070302@linux.vnet.ibm.com>
-	<49E88E3F.8030107@vlnb.net> <49E891C8.1050007@emulex.com>
-	<49E8BFB2.50608@vlnb.net> <ac3eb2510904171056v4c6c971dx99bfb87464a6b02d@mail.gmail.com>
+From: "Kleber S. Souza" <klebers@linux.vnet.ibm.com>
+Subject: Re: [PATCH] ipr: ipr_remove() marked __devexit
+Date: Fri, 17 Apr 2009 16:08:34 -0300
+Message-ID: <1239995314.6143.1.camel@zeppelin.austin.ibm.com>
+References: <1237839145.13011.54.camel@zeppelin.austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f211.google.com ([209.85.218.211]:40508 "EHLO
-	mail-bw0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757376AbZDQSYt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2009 14:24:49 -0400
-In-Reply-To: <ac3eb2510904171056v4c6c971dx99bfb87464a6b02d@mail.gmail.com>
+Received: from e24smtp01.br.ibm.com ([32.104.18.85]:51851 "EHLO
+	e24smtp01.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762062AbZDQTJS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2009 15:09:18 -0400
+Received: from mailhub1.br.ibm.com (mailhub1.br.ibm.com [9.18.232.109])
+	by e24smtp01.br.ibm.com (8.13.1/8.13.1) with ESMTP id n3HJODiY011412
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Apr 2009 16:24:13 -0300
+Received: from d24av02.br.ibm.com (d24av02.br.ibm.com [9.18.232.47])
+	by mailhub1.br.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n3HJ9Yn71491088
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Apr 2009 16:09:35 -0300
+Received: from d24av02.br.ibm.com (loopback [127.0.0.1])
+	by d24av02.br.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n3HJ9E7H031831
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Apr 2009 16:09:14 -0300
+Received: from [9.18.253.249] (dyn536942.br.ibm.com [9.18.253.249])
+	by d24av02.br.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id n3HJ99bj031753
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Apr 2009 16:09:10 -0300
+In-Reply-To: <1237839145.13011.54.camel@zeppelin.austin.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: James Smart <James.Smart@emulex.com>, Daniel Debonzi <debonzi@linux.vnet.ibm.com>, "scst-devel@lists.sourceforge.net" <scst-devel@lists.sourceforge.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, Apr 17, 2009 at 19:56, Kay Sievers <kay.sievers@vrfy.org> wrote:
-> On Fri, Apr 17, 2009 at 19:43, Vladislav Bolkhovitin <vst@vlnb.net> wrote:
->> Thank you for the suggestion. If nobody objects, we will go with
->> /sys/class/scst_tgt.
->
-> On Fri, Apr 17, 2009 at 19:43, Vladislav Bolkhovitin <vst@vlnb.net> wrote:
->> I agree, looks like using struct device instead of struct kobject should
->> additionally complicate the code a lot for not clear gain.
->
-> Thes both replies together suggest that you miss how sysfs and the
-> driver core works. Please go and read the current code, and look at
-> sysfs, before trying anything like this.
->
-> There is no way to add any stuff to /sys/class/scst_tgt/ without using
-> proper "struct device" objects.
->
-> For the same reason we will not have a disconnected device tree, we
-> will not havet any raw kobject in the /sys/devices, /sys/class,
-> /sys/bus directories.
+Hi,
 
-As a starting point, consider creating a "scst" bus_type. Then make
-sure all devices you need are uniquely named, so they can be in a flat
-list in /sys/bus/scst/devices/.
+Any comments on this patch? 
 
-Then add all the devices as struct_device to the tree, maybe use an
-existing parent struct_device (like a pci device) if you have one, or
-create a custom one in /sys/devices/ if there is nothing to use.
+It was acked by Brian King, do I need to do anything else to get it
+accepted?
 
-All the devices you add will show up in a hierarchy in /sys/devices/
-depending on the parent information you supply, and every single
-device of your subsystem will be listed in a flat list in
-/sys/bus/scst/devices/*. You will also get proper events for userspace
-that way.
-
-The question is where the actual block devices hang off, and if they
-can use one of the created scst devices, or if they will be virtual
-ones?
 
 Thanks,
-Kay
+Kleber
+
+On Mon, 2009-03-23 at 17:12 -0300, Kleber Sacilotto de Souza wrote:
+> Marking the ipr clean up function ipr_remove() as __devexit and using
+> __devexit_p() macro in its address reference.
+> 
+> 
+> Signed-off-by: Kleber Sacilotto de Souza <kleber@linux.vnet.ibm.com>
+> Signed-off-by: Breno Leitao <leitao@linux.vnet.ibm.com>
+> Acked-by: Brian King <brking@linux.vnet.ibm.com>
+> ---
+>  drivers/scsi/ipr.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+> index 0782900..bc39ac6 100644
+> --- a/drivers/scsi/ipr.c
+> +++ b/drivers/scsi/ipr.c
+> @@ -7674,7 +7674,7 @@ static void __ipr_remove(struct pci_dev *pdev)
+>   * Return value:
+>   *     none
+>   **/
+> -static void ipr_remove(struct pci_dev *pdev)
+> +static void __devexit ipr_remove(struct pci_dev *pdev)
+>  {
+>         struct ipr_ioa_cfg *ioa_cfg = pci_get_drvdata(pdev);
+> 
+> @@ -7850,7 +7850,7 @@ static struct pci_driver ipr_driver = {
+>         .name = IPR_NAME,
+>         .id_table = ipr_pci_table,
+>         .probe = ipr_probe,
+> -       .remove = ipr_remove,
+> +       .remove = __devexit_p(ipr_remove),
+>         .shutdown = ipr_shutdown,
+>         .err_handler = &ipr_err_handler,
+>  };
+> --
+> 
+-- 
+Kleber S. Souza
+IBM Linux Technology Center
+
