@@ -1,56 +1,178 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 13/15] zfcp: Fix port reference counting
-Date: Fri, 17 Apr 2009 15:08:13 +0200
-Message-ID: <20090417131123.529354000@de.ibm.com>
-References: <20090417130800.923944000@de.ibm.com>
+From: Daniel Debonzi <debonzi@linux.vnet.ibm.com>
+Subject: Re: [Scst-devel] Discussion about SCST sysfs layout and implementation.
+Date: Fri, 17 Apr 2009 10:25:03 -0300
+Message-ID: <49E8832F.6070302@linux.vnet.ibm.com>
+References: <49E7307A.8000205@vlnb.net> <49E77795.7080204@linux.vnet.ibm.com> <49E85F1C.7040106@vlnb.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate6.de.ibm.com ([195.212.29.155]:52960 "EHLO
-	mtagate6.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760934AbZDQNMP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2009 09:12:15 -0400
-Content-Disposition: inline; filename=713-zfcp-port-refcounting.diff
+Received: from e24smtp02.br.ibm.com ([32.104.18.86]:49030 "EHLO
+	e24smtp02.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760959AbZDQNZK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2009 09:25:10 -0400
+In-Reply-To: <49E85F1C.7040106@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Martin Petermann <martin.petermann@de.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-From: Martin Petermann <martin.petermann@de.ibm.com>
+Vladislav Bolkhovitin wrote:
+> Daniel Debonzi, on 04/16/2009 10:23 PM wrote:
+>> Vladislav Bolkhovitin wrote:
+>>> Hi All,
+>>>
+>>> Below is proposal for the SCST sysfs layout, which will replace 
+>>> existing procfs-based infrastructure. Any comments, questions and 
+>>> suggestions are welcome!
+>>>
+>>> I. SCST sysfs layout.
+>>>
+>>> Root would be /sys/scsi_tgt.
+>>>
+>>> In the root there would be the following files and subdirectories:
+>>>
+>>>  - targets - subdirectory listing names of all registered target 
+>>> drivers.
+>>>
+>>>  - devices - subdirectory listing all registered backend devices.
+>>>
+>>>  - sgv - subdirectory listing all existing SGV pools.
+>>>
+>>>  - drivers - subdirectory listing all loaded target and backend 
+>>> drivers (dev handlers).
+>>>
+>>>  - threads - RW file listing number of global SCST threads. Writing 
+>>> to that file would allow to change that value.
+>>>
+>>>  - trace_level - RW file listing SCST core logging level. Writing to 
+>>> that file would allow to change that. Example content: "out_of_mem | 
+>>> minor | pid | line | function | special | mgmt | mgmt_minor | 
+>>> mgmt_dbg | retry". See current procfs implementation of this file for 
+>>> more info.
+>>>
+>>>  - version - RO file listing version of SCST core and enabled compile 
+>>> time features. Example content: "1.0.2, EXTRACHECKS, 
+>>> DEBUG"                                                                                                                          
+>>
+>>
+>> Based on all I read this last days, I believe we are not allowed to 
+>> include the directory scsi_tgt on /sys root. I think it has to be in a 
+>> existent directory reserved for this sort of application. I just 
+>> didn't figured out which one it would be.
+> 
+> /sys/class? It already has scsi_device, scsi_disk, scsi_generic and 
+> scsi_host.
 
-If this problem appears zfcp ports cannot be de-queued since it is 
-checked for a zero refcount. The port reference counting is wrong for
-existing zfcp ports when e.g. an adapter gets on-line again. During 
-port scanning the reference counting for existing ports should not be
-changed.
+I don't think so because all the directories on /sys/class have symlinks 
+to the files somewhere else. However I noticed that many of them on my 
+system are on /sys/device/virtual
 
-Signed-off-by: Martin Petermann <martin.petermann@de.ibm.com>
-Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
----
+>>> III. Implementation considerations
+>>>
+>>> 1. Top level subdirectories and files should be created by init_scst().
+>>>
+>>> 2. targets/target_driver_name drivers/target_driver_name and should 
+>>> be created by scst_register_target_template() and removed by 
+>>> scst_unregister_target_template().
+>>>
+>>> 3. targets/target_driver_name/target with sessions, luns and 
+>>> ini_groups subdirectories should be created by scst_register() and 
+>>> removed by scst_unregister().
+>>>
+>>> 4. targets/target_driver_name/target/sessions/session and below 
+>>> should be created by scst_init_session() and removed by 
+>>> scst_free_session().
+>>>
+>>> 5. Pass-through devices should be added to devices/ by 
+>>> scst_register_device() and removed by scst_unregister_device(). 
+>>> Initially they should have "handler" link pointed to "none".
+>>>
+>>> 6. Virtual devices should be added to devices/ by 
+>>> scst_register_virtual_device() and removed by 
+>>> scst_unregister_virtual_device().
+>>>
+>>> 7. drivers/dev_handler_name should be added by 
+>>> scst_register_dev_driver() or scst_register_virtual_dev_driver() and 
+>>> removed by scst_unregister_dev_driver() or 
+>>> scst_unregister_virtual_dev_driver().
+>>>
+>>> 8. It isn't clear how to best combine standard and custom entries in 
+>>> targets/target_driver_name/target, devices/device, 
+>>> drivers/target_driver_name and drivers/dev_handler_name, I don't know 
+>>> sysfs interfaces sufficiently well. I can only suggest places, where 
+>>> it should be done:
+>>>
+>>>  - For targets/target_driver_name/target a target driver after 
+>>> scst_register() register call should call new function 
+>>> scst_get_target_root() and add there new entries. Before 
+>>> scst_unregister() call the target driver should remove them at first. 
+>>> Similarly it should be done for drivers/target_driver_name and 
+>>> drivers/dev_handler_name.
+>>>
+>>>  - For devices/device a dev handler should do it in attach() callback 
+>>> and remove in detach() callback. Similarly to scst_get_target_root(), 
+>>> the dev handler should get its sysfs root by calling 
+>>> scst_get_dev_root().
+>>>
+>>> Both should be made in some generic way to minimize duplicated code 
+>>> between target drivers and between dev handlers.
+>>
+>> Also based on what I read, the way to have data structures reflected 
+>> on sysfs is using kobjecs. I feel that the expected approach to have 
+>> it is to include a kobject (or kset depending on the case) on the 
+>> existent structures which will be reflected on the sysfs. I notice 
+>> that on the actual implementation all the proc interface is 
+>> implemented on scst_proc.c and I don't know if it will be possible to 
+>> keep having the access interfaces on a separated source file. We could 
+>> possible have the callback functions on a separated file but I can't 
+>> visualize it without start to touch it more deeply. Probably you guys 
+>> have a better view of this implementation possibilities.
+> 
+> All the above sysfs layout reflects internal SCST objects:
+> 
+> 1. targets/target_driver_name and drivers/target_driver_name -> struct 
+> scst_tgt_template
+> 
+> 2. targets/target_driver_name/target -> struct scst_tgt
+> 
+> 3. targets/target_driver_name/target/sessions/session -> struct 
+> scst_session
+> 
+> 4. targets/target_driver_name/target/ini_groups/group -> struct 
+> scst_acg. (For targets/target_driver_name/target/luns each struct 
+> scst_tgt would have internal struct scst_acg.)
+> 
+> 5. 
+> targets/target_driver_name/target/ini_groups/group/initiators/initiator 
+> -> struct scst_acn
+> 
+> 6. targets/target_driver_name/target/ini_groups/group/luns/lun and 
+> targets/target_driver_name/target/luns/lun -> struct scst_acg_dev
+> 
+> 7. devices/device -> struct scst_device
+> 
+> 8. drivers/dev_handler_name -> struct scst_dev_type
+> 
+> 9. sgv/pool -> struct sgv_pool
+> 
+> So, we should simply add kobjects in them. To manipulate with then 
+> already there is an API, used by procfs, and should be also used by 
+> sysfs. This API is completely out of scst_proc.c
+> 
 
- drivers/s390/scsi/zfcp_fc.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+great, this will save some time.
 
---- a/drivers/s390/scsi/zfcp_fc.c	2009-04-17 15:03:46.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_fc.c	2009-04-17 15:03:54.000000000 +0200
-@@ -539,6 +539,9 @@ static void zfcp_validate_port(struct zf
- {
- 	struct zfcp_adapter *adapter = port->adapter;
- 
-+	if (!(atomic_read(&port->status) & ZFCP_STATUS_COMMON_NOESC))
-+		return;
-+
- 	atomic_clear_mask(ZFCP_STATUS_COMMON_NOESC, &port->status);
- 
- 	if ((port->supported_classes != 0) ||
-@@ -599,10 +602,8 @@ static int zfcp_scan_eval_gpn_ft(struct 
- 		if (acc->wwpn == fc_host_port_name(adapter->scsi_host))
- 			continue;
- 		port = zfcp_get_port_by_wwpn(adapter, acc->wwpn);
--		if (port) {
--			zfcp_port_get(port);
-+		if (port)
- 			continue;
--		}
- 
- 		port = zfcp_port_enqueue(adapter, acc->wwpn,
- 					 ZFCP_STATUS_COMMON_NOESC, d_id);
+> 
+> LAYOUT UPDATE.
+> 
+> Looks like it would be better to move entries from 
+> drivers/target_driver_name to targets/target_driver_name to keep all the 
+> related entries in one place. Then to reflect new state rename drivers/ 
+> to back_drivers/.
+
+Ack.
+
+Thanks,
+Daniel Debonzi
 
