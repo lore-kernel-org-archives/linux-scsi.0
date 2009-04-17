@@ -1,47 +1,59 @@
-From: Ming Lei <tom.leiming@gmail.com>
+From: yakui_zhao <yakui.zhao-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Subject: Re: 2.6.30-rc2-git2: Reported regressions from 2.6.29
-Date: Fri, 17 Apr 2009 09:37:10 +0800
-Message-ID: <d82e647a0904161837w6b6fb652la0da05f9061e95dc@mail.gmail.com>
+Date: Fri, 17 Apr 2009 10:34:53 +0800
+Message-ID: <1239935693.3638.28.camel@localhost.localdomain>
 References: <EJaiQ4Wfaz.A.3YG.4v85JB@chimera>
+	 <1239931813.7661.394.camel@rzhang-dt>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:5887 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756922AbZDQBhL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2009 21:37:11 -0400
-In-Reply-To: <EJaiQ4Wfaz.A.3YG.4v85JB@chimera>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1239931813.7661.394.camel@rzhang-dt>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Zhang Rui <rui.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, mjq59-1xO5oi07KQx4cg9Nei1l7Q@public.gmane.org
+Cc: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Adrian Bunk <bunk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, video4linux-list@redhat.com, laurent.pinchart@skynet.be, mchehab@infradead.org
 
-2009/4/17 Rafael J. Wysocki <rjw@sisk.pl>:
->
-> Bug-Entry =A0 =A0 =A0 : http://bugzilla.kernel.org/show_bug.cgi?id=3D=
-13125
-> Subject =A0 =A0 =A0 =A0 : active uvcvideo breaks over suspend
-> Submitter =A0 =A0 =A0 : Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-> Date =A0 =A0 =A0 =A0 =A0 =A0: 2009-04-15 10:12 (2 days old)
-> References =A0 =A0 =A0: http://marc.info/?l=3Dlinux-kernel&m=3D123979=
-009508840&w=3D4
->
+On Fri, 2009-04-17 at 09:30 +0800, Zhang Rui wrote:
+> On Fri, 2009-04-17 at 05:42 +0800, Rafael J. Wysocki wrote:
+> > 
+> > 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=13095
+> > Subject         : thinkpad-acpi: cannot control brightness with hotkeys
+> > Submitter       : Niel Lambrechts <niel.lambrechts-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> > Date            : 2009-04-11 23:07 (6 days old)
+> > References      : http://lkml.org/lkml/2009/4/11/160
+> > Handled-By      : Matthew Garrett <mjg59-1xO5oi07KQx4cg9Nei1l7Q@public.gmane.org>
+> > Patch           : http://lkml.org/lkml/2009/4/15/339
+> > 
+> > 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=13048
+> > Subject         : /sys/class/backlight/acpi_video0/* is gone on vaio laptop with Intel GM45.
+> > Submitter       : Rodrigo L. Batista <rodrigo-1dof46nAmC8dnm+yROfE0A@public.gmane.org>
+> > Date            : 2009-04-09 04:57 (8 days old)
+> > Handled-By      : yakui_zhao <yakui.zhao-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> > Patch           : http://bugzilla.kernel.org/attachment.cgi?id=20967
+> >                   http://bugzilla.kernel.org/attachment.cgi?id=20959
+> > 
+> > 
+> bug 13095 is a duplicate of bug 13048.
+> patches from Matthew and Yakui are for the same issue.
+> 
+> Yakui, could you verify which patch should be taken please?
+The patch from Matthew is better. 
+It still can work even when the KMS is disabled by adding the boot
+option of "i915.modeset=0".
 
-It is a bug in resume path of uvcvideo driver, and I have sent a patch
-to laurent.pinchart@skynet.be,
-mchehab@infradead.org  and video4linux-list@redhat.com to fix it, but
-still no echo from them.
+Hi, Matthew
+    Will you please push the patch?
+    
+thanks.
 
-The patch title is V4L/DVB:usbvideo:fix uvc resume failed.
-
-Rafael J.
-        If you would like to apply it ,I can resend to you.  Thanks!
-
---=20
-Lei Ming
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> thanks,
+> rui
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
