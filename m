@@ -1,40 +1,60 @@
-From: Eric Moore <eric.moore@lsi.com>
-Subject: [PATCH 14/14 - 2nd post] mpt2sas: bump driver version to 01.100.02.00
-Date: Fri, 17 Apr 2009 10:35:32 -0600
-Message-ID: <20090417163530.GA7088@lsil.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [Scst-devel] Discussion about SCST sysfs layout and 	implementation.
+Date: Fri, 17 Apr 2009 21:42:31 +0400
+Message-ID: <49E8BF87.1040201@vlnb.net>
+References: <49E7307A.8000205@vlnb.net> <49E77795.7080204@linux.vnet.ibm.com> 	<49E85F1C.7040106@vlnb.net> <49E8832F.6070302@linux.vnet.ibm.com> 	<ac3eb2510904170724l654b00b4k79156138f9fd926d@mail.gmail.com> 	<49E8A551.7050307@linux.vnet.ibm.com> <ac3eb2510904170903n4fa28bfdud80fe25b61be3c2a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chip3og63.obsmtp.com ([64.18.14.203]:39568 "EHLO
-	chip3og63.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758410AbZDQQef (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2009 12:34:35 -0400
-Content-Disposition: inline
+Received: from moutng.kundenserver.de ([212.227.126.187]:50451 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758066AbZDQRmZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2009 13:42:25 -0400
+In-Reply-To: <ac3eb2510904170903n4fa28bfdud80fe25b61be3c2a@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: Daniel Debonzi <debonzi@linux.vnet.ibm.com>, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Bump driver version.
+Kay Sievers, on 04/17/2009 08:03 PM wrote:
+> On Fri, Apr 17, 2009 at 17:50, Daniel Debonzi
+> <debonzi@linux.vnet.ibm.com> wrote:
+>> Do you mean that uses struct device is the right way to do it instead of
+>> kobjects or it is just a option to get things on right places into sysfs?
+> 
+> You can not put kobjects in /sys/devices/ and there will be no
+> disconnected kobject tree just for scsi, unless the scsi maintainers
+> really want want that, and then they should create their own
+> filesystem instead, and not use kobjects at all.
 
-Signed-off-by: Eric Moore <eric.moore@lsi.com>
+Perhaps I'm missing something, but why do you think sysfs hierarchy for 
+a SCSI target subsystem can't be put anywhere, but only in /sys/devices?
 
-diff -uarpN a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h	2009-04-13 16:40:47.000000000 -0600
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h	2009-04-17 09:11:51.000000000 -0600
-@@ -69,11 +69,11 @@
- #define MPT2SAS_DRIVER_NAME		"mpt2sas"
- #define MPT2SAS_AUTHOR	"LSI Corporation <DL-MPTFusionLinux@lsi.com>"
- #define MPT2SAS_DESCRIPTION	"LSI MPT Fusion SAS 2.0 Device Driver"
--#define MPT2SAS_DRIVER_VERSION		"00.100.11.16"
--#define MPT2SAS_MAJOR_VERSION		00
-+#define MPT2SAS_DRIVER_VERSION		"01.100.02.00"
-+#define MPT2SAS_MAJOR_VERSION		01
- #define MPT2SAS_MINOR_VERSION		100
--#define MPT2SAS_BUILD_VERSION		11
--#define MPT2SAS_RELEASE_VERSION		16
-+#define MPT2SAS_BUILD_VERSION		02
-+#define MPT2SAS_RELEASE_VERSION		00
- 
- /*
-  * Set MPT2SAS_SG_DEPTH value based on user input.
+Consider /sys/class/scsi_host/ as an example. It is very close to what 
+SCST needs.
+
+And don't forget a SCSI target subsystem, basically, has from 
+implementation POV in common with the regular SCSI (initiator) subsystem 
+only some constants for commands and errors and "SCSI" word in the name. 
+All the internal processing is completely different, similarly to 
+difference between Firefox and Apache, mutt and sendmail, NFS client and 
+server.
+
+>> I don't know this struct closely but my first impression looking to the
+>> source code is that it is tied with hardware and has some complexity we
+>> probably don't need. What do you think?
+> 
+> If you want to integrate with the current scsi devices/objects, which
+> is the only sensible option I think, you have to use struct device
+> devices, kobjects will not get a classification in sysfs, and will be
+> invisible for userspace tools unless you do random readdir() in
+> /sys/devices/ to find them.
+> 
+> Kay
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
