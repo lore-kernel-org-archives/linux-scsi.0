@@ -1,135 +1,188 @@
 From: Eric Moore <eric.moore@lsi.com>
-Subject: [PATCH 6/14 - 2nd post] mpt2sas: Identify Dell series-7 adapters at driver load time
-Date: Fri, 17 Apr 2009 10:28:25 -0600
-Message-ID: <20090417162823.GG7009@lsil.com>
+Subject: [PATCH 9/14 - 2nd post] mpt2sas: T10 DIF Support - EEDP
+Date: Fri, 17 Apr 2009 10:31:16 -0600
+Message-ID: <20090417163113.GA7071@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chip3og65.obsmtp.com ([64.18.14.207]:48853 "EHLO
-	chip3og65.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756698AbZDQQ1U (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2009 12:27:20 -0400
+Received: from chip3og54.obsmtp.com ([64.18.14.173]:42735 "EHLO
+	chip3og54.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751771AbZDQQaQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2009 12:30:16 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com
 
-The Dell branding along with the VID, DID, SSVID, SSDID following the LSI
-branding that contains the card firmware/chip/bios versions.  If the SSDID
-is not known but it is a Dell HBA, the driver will print the SSDID instead
-of the Dell branding string.  Nothing will be printed for non Dell HBAs
+This add support for type 1 and 3 DIF support per the Oracle API.
 
 Signed-off-by: Eric Moore <eric.moore@lsi.com>
 
-diff -uarpN a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c	2009-04-09 16:43:07.000000000 -0600
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c	2009-04-13 15:35:02.000000000 -0600
-@@ -1396,6 +1396,64 @@ mpt2sas_base_put_smid_target_assist(stru
+diff -uarpN a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h	2009-04-13 15:45:09.000000000 -0600
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h	2009-04-13 16:31:27.000000000 -0600
+@@ -61,6 +61,7 @@
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/scsi_transport_sas.h>
+ #include <scsi/scsi_dbg.h>
++#include <scsi/scsi_eh.h>
+ 
+ #include "mpt2sas_debug.h"
+ 
+diff -uarpN a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2009-04-13 15:58:57.000000000 -0600
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2009-04-17 09:04:10.000000000 -0600
+@@ -2390,6 +2390,106 @@ mpt2sas_scsih_reset_handler(struct MPT2S
  }
  
  /**
-+ * _base_display_dell_branding - Disply branding string
-+ * @ioc: per adapter object
++ * _scsih_setup_eedp - setup MPI request for EEDP transfer
++ * @scmd: pointer to scsi command object
++ * @mpi_request: pointer to the SCSI_IO reqest message frame
 + *
-+ * Return nothing.
++ * Supporting protection 1 and 3.
++ *
++ * Returns nothing
 + */
 +static void
-+_base_display_dell_branding(struct MPT2SAS_ADAPTER *ioc)
++_scsih_setup_eedp(struct scsi_cmnd *scmd, Mpi2SCSIIORequest_t *mpi_request)
 +{
-+	char dell_branding[MPT2SAS_DELL_BRANDING_SIZE];
++	u16 eedp_flags;
++	unsigned char prot_op = scsi_get_prot_op(scmd);
++	unsigned char prot_type = scsi_get_prot_type(scmd);
 +
-+	if (ioc->pdev->subsystem_vendor != PCI_VENDOR_ID_DELL)
++	if (prot_type == SCSI_PROT_DIF_TYPE0 ||
++	   prot_type == SCSI_PROT_DIF_TYPE2 ||
++	   prot_op == SCSI_PROT_NORMAL)
 +		return;
 +
-+	memset(dell_branding, 0, MPT2SAS_DELL_BRANDING_SIZE);
-+	switch (ioc->pdev->subsystem_device) {
-+	case MPT2SAS_DELL_6GBPS_SAS_HBA_SSDID:
-+		strncpy(dell_branding, MPT2SAS_DELL_6GBPS_SAS_HBA_BRANDING,
-+		    MPT2SAS_DELL_BRANDING_SIZE - 1);
++	if (prot_op ==  SCSI_PROT_READ_STRIP)
++		eedp_flags = MPI2_SCSIIO_EEDPFLAGS_CHECK_REMOVE_OP;
++	else if (prot_op ==  SCSI_PROT_WRITE_INSERT)
++		eedp_flags = MPI2_SCSIIO_EEDPFLAGS_INSERT_OP;
++	else
++		return;
++
++	mpi_request->EEDPBlockSize = scmd->device->sector_size;
++
++	switch (prot_type) {
++	case SCSI_PROT_DIF_TYPE1:
++
++		/*
++		* enable ref/guard checking
++		* auto increment ref tag
++		*/
++		mpi_request->EEDPFlags = eedp_flags |
++		    MPI2_SCSIIO_EEDPFLAGS_INC_PRI_REFTAG |
++		    MPI2_SCSIIO_EEDPFLAGS_CHECK_REFTAG |
++		    MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD;
++		mpi_request->CDB.EEDP32.PrimaryReferenceTag =
++		    cpu_to_be32(scsi_get_lba(scmd));
++
 +		break;
-+	case MPT2SAS_DELL_PERC_H200_ADAPTER_SSDID:
-+		strncpy(dell_branding, MPT2SAS_DELL_PERC_H200_ADAPTER_BRANDING,
-+		    MPT2SAS_DELL_BRANDING_SIZE - 1);
-+		break;
-+	case MPT2SAS_DELL_PERC_H200_INTEGRATED_SSDID:
-+		strncpy(dell_branding,
-+		    MPT2SAS_DELL_PERC_H200_INTEGRATED_BRANDING,
-+		    MPT2SAS_DELL_BRANDING_SIZE - 1);
-+		break;
-+	case MPT2SAS_DELL_PERC_H200_MODULAR_SSDID:
-+		strncpy(dell_branding,
-+		    MPT2SAS_DELL_PERC_H200_MODULAR_BRANDING,
-+		    MPT2SAS_DELL_BRANDING_SIZE - 1);
-+		break;
-+	case MPT2SAS_DELL_PERC_H200_EMBEDDED_SSDID:
-+		strncpy(dell_branding,
-+		    MPT2SAS_DELL_PERC_H200_EMBEDDED_BRANDING,
-+		    MPT2SAS_DELL_BRANDING_SIZE - 1);
-+		break;
-+	case MPT2SAS_DELL_PERC_H200_SSDID:
-+		strncpy(dell_branding, MPT2SAS_DELL_PERC_H200_BRANDING,
-+		    MPT2SAS_DELL_BRANDING_SIZE - 1);
-+		break;
-+	case MPT2SAS_DELL_6GBPS_SAS_SSDID:
-+		strncpy(dell_branding, MPT2SAS_DELL_6GBPS_SAS_BRANDING,
-+		    MPT2SAS_DELL_BRANDING_SIZE - 1);
-+		break;
-+	default:
-+		sprintf(dell_branding, "0x%4X", ioc->pdev->subsystem_device);
++
++	case SCSI_PROT_DIF_TYPE3:
++
++		/*
++		* enable guard checking
++		*/
++		mpi_request->EEDPFlags = eedp_flags |
++		    MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD;
++
 +		break;
 +	}
-+
-+	printk(MPT2SAS_INFO_FMT "%s: Vendor(0x%04X), Device(0x%04X),"
-+	    " SSVID(0x%04X), SSDID(0x%04X)\n", ioc->name, dell_branding,
-+	    ioc->pdev->vendor, ioc->pdev->device, ioc->pdev->subsystem_vendor,
-+	    ioc->pdev->subsystem_device);
 +}
 +
 +/**
-  * _base_display_ioc_capabilities - Disply IOC's capabilities.
-  * @ioc: per adapter object
-  *
-@@ -1436,6 +1494,8 @@ _base_display_ioc_capabilities(struct MP
- 		i++;
++ * _scsih_eedp_error_handling - return sense code for EEDP errors
++ * @scmd: pointer to scsi command object
++ * @ioc_status: ioc status
++ *
++ * Returns nothing
++ */
++static void
++_scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
++{
++	u8 ascq;
++	u8 sk;
++	u8 host_byte;
++
++	switch (ioc_status) {
++	case MPI2_IOCSTATUS_EEDP_GUARD_ERROR:
++		ascq = 0x01;
++		break;
++	case MPI2_IOCSTATUS_EEDP_APP_TAG_ERROR:
++		ascq = 0x02;
++		break;
++	case MPI2_IOCSTATUS_EEDP_REF_TAG_ERROR:
++		ascq = 0x03;
++		break;
++	default:
++		ascq = 0x00;
++		break;
++	}
++
++	if (scmd->sc_data_direction == DMA_TO_DEVICE) {
++		sk = ILLEGAL_REQUEST;
++		host_byte = DID_ABORT;
++	} else {
++		sk = ABORTED_COMMAND;
++		host_byte = DID_OK;
++	}
++
++	scsi_build_sense_buffer(0, scmd->sense_buffer, sk, 0x10, ascq);
++	scmd->result = DRIVER_SENSE << 24 | (host_byte << 16) |
++	    SAM_STAT_CHECK_CONDITION;
++}
++
++/**
+  * scsih_qcmd - main scsi request entry point
+  * @scmd: pointer to scsi command object
+  * @done: function pointer to be invoked on completion
+@@ -2470,6 +2570,7 @@ scsih_qcmd(struct scsi_cmnd *scmd, void
+ 	}
+ 	mpi_request = mpt2sas_base_get_msg_frame(ioc, smid);
+ 	memset(mpi_request, 0, sizeof(Mpi2SCSIIORequest_t));
++	_scsih_setup_eedp(scmd, mpi_request);
+ 	mpi_request->Function = MPI2_FUNCTION_SCSI_IO_REQUEST;
+ 	if (sas_device_priv_data->sas_target->flags &
+ 	    MPT_TARGET_FLAGS_RAID_COMPONENT)
+@@ -2604,6 +2705,15 @@ _scsih_scsi_ioc_info(struct MPT2SAS_ADAP
+ 	case MPI2_IOCSTATUS_SCSI_EXT_TERMINATED:
+ 		desc_ioc_state = "scsi ext terminated";
+ 		break;
++	case MPI2_IOCSTATUS_EEDP_GUARD_ERROR:
++		desc_ioc_state = "eedp guard error";
++		break;
++	case MPI2_IOCSTATUS_EEDP_REF_TAG_ERROR:
++		desc_ioc_state = "eedp ref tag error";
++		break;
++	case MPI2_IOCSTATUS_EEDP_APP_TAG_ERROR:
++		desc_ioc_state = "eedp app tag error";
++		break;
+ 	default:
+ 		desc_ioc_state = "unknown";
+ 		break;
+@@ -2939,6 +3049,11 @@ scsih_io_done(struct MPT2SAS_ADAPTER *io
+ 			scmd->result = DID_RESET << 16;
+ 		break;
+ 
++	case MPI2_IOCSTATUS_EEDP_GUARD_ERROR:
++	case MPI2_IOCSTATUS_EEDP_REF_TAG_ERROR:
++	case MPI2_IOCSTATUS_EEDP_APP_TAG_ERROR:
++		_scsih_eedp_error_handling(scmd, ioc_status);
++		break;
+ 	case MPI2_IOCSTATUS_SCSI_PROTOCOL_ERROR:
+ 	case MPI2_IOCSTATUS_INVALID_FUNCTION:
+ 	case MPI2_IOCSTATUS_INVALID_SGL:
+@@ -5503,6 +5618,9 @@ scsih_probe(struct pci_dev *pdev, const
+ 		goto out_add_shost_fail;
  	}
  
-+	_base_display_dell_branding(ioc);
++	scsi_host_set_prot(shost, SHOST_DIF_TYPE1_PROTECTION
++	    | SHOST_DIF_TYPE3_PROTECTION);
 +
- 	i = 0;
- 	printk("), ");
- 	printk("Capabilities=(");
-diff -uarpN a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h	2009-04-09 16:43:07.000000000 -0600
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h	2009-04-13 15:37:15.000000000 -0600
-@@ -130,6 +130,30 @@
- #define MPT2SAS_ERR_FMT			KERN_ERR MPT2SAS_FMT
- 
- /*
-+ * Dell HBA branding
-+ */
-+#define MPT2SAS_DELL_BRANDING_SIZE                 32
-+
-+#define MPT2SAS_DELL_6GBPS_SAS_HBA_BRANDING        "Dell 6Gbps SAS HBA"
-+#define MPT2SAS_DELL_PERC_H200_ADAPTER_BRANDING    "Dell PERC H200 Adapter"
-+#define MPT2SAS_DELL_PERC_H200_INTEGRATED_BRANDING "Dell PERC H200 Integrated"
-+#define MPT2SAS_DELL_PERC_H200_MODULAR_BRANDING    "Dell PERC H200 Modular"
-+#define MPT2SAS_DELL_PERC_H200_EMBEDDED_BRANDING   "Dell PERC H200 Embedded"
-+#define MPT2SAS_DELL_PERC_H200_BRANDING            "Dell PERC H200"
-+#define MPT2SAS_DELL_6GBPS_SAS_BRANDING            "Dell 6Gbps SAS"
-+
-+/*
-+ * Dell HBA SSDIDs
-+ */
-+#define MPT2SAS_DELL_6GBPS_SAS_HBA_SSDID           0x1F1C
-+#define MPT2SAS_DELL_PERC_H200_ADAPTER_SSDID       0x1F1D
-+#define MPT2SAS_DELL_PERC_H200_INTEGRATED_SSDID    0x1F1E
-+#define MPT2SAS_DELL_PERC_H200_MODULAR_SSDID       0x1F1F
-+#define MPT2SAS_DELL_PERC_H200_EMBEDDED_SSDID      0x1F20
-+#define MPT2SAS_DELL_PERC_H200_SSDID               0x1F21
-+#define MPT2SAS_DELL_6GBPS_SAS_SSDID               0x1F22
-+
-+/*
-  * per target private data
-  */
- #define MPT_TARGET_FLAGS_RAID_COMPONENT	0x01
+ 	/* event thread */
+ 	snprintf(ioc->firmware_event_name, sizeof(ioc->firmware_event_name),
+ 	    "fw_event%d", ioc->id);
