@@ -1,24 +1,176 @@
-From: Lagina Sidower <hotdak.netpionavaro2001@hotmail.com>
-Subject: =?windows-1251?B?WW91IE5lZWQgdG8gUmVhZCBUaGlzIEltbWVkaWF0ZWx5?=
-Date: Fri, 17 Apr 2009 11:30:05 +0700
-Message-ID: <3678.55690788037$1239946069@news.gmane.org>
-Reply-To: Lagina Sidower <wagar.amanda19928@gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [dm-devel] LSF: Multipathing and path checking question
+Date: Fri, 17 Apr 2009 09:50:37 +0200
+Message-ID: <49E834CD.1090306@suse.de>
+References: <49E7B845.70400@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="windows-1251"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from google-58-137-222-2.google.com ([58.137.222.2]:39952 "HELO
-	your.mail.server.name.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1751005AbZDQF0L (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Apr 2009 01:26:11 -0400
+Received: from cantor2.suse.de ([195.135.220.15]:40019 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754271AbZDQHuk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Apr 2009 03:50:40 -0400
+In-Reply-To: <49E7B845.70400@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-QXJlIHlvdSBzaWNrIGFuZCB0aXJlZCBvZiBhbGwgdGhlIG1vbmV5LW1ha2luZyBzY2FtcyBvbiB0aGUgd2ViPyBJZiB5b3UncmUgbG9va2luZyBmb3IgdGhlIHJlYWwgZGVhbCB3aGVuIGl0IGNvbWVzIHRvIG1ha2luZyBtb25leSBmcm9tIGhvbWUsIHRoZW4gdGhpcyBtYXkgYmUgdGhlIG1vc3QgaW1wb3J0YW50IG1lc3NhZ2UgeW91IHdpbGwgZXZlciByZWFkIG9ubGluZSENCg0KV2hhdCBpZiB0aGVyZSB3YXMgYSBzeXN0ZW0gdGhhdCB5b3UgY291bGQgdXNlIGluIHRoZSBjb21mb3J0IG9mIHlvdXIgb3duIGhvbWUgYW5kIG1ha2UgbW9yZSBtb25leSB0aGFuIHlvdSBldmVyIGNvdWxkIGluIHlvdXIgam9iLCB1c2luZyBqdXN0IHlvdXIgY29tcHV0ZXIgYW5kIHRoZSBJbnRlcm5ldD8NCg0KV2hhdCBpZiBpdCBvbmx5IHRvb2sgYSBjb3VwbGUgb2YgaG91cnMgcGVyIGRheSBhbmQgd2FzIGF2YWlsYWJsZSB3b3JsZHdpZGU/IFNvdW5kcyB0b28gZ29vZCB0byBiZSB0cnVlPyBJdCBpc24ndCEgWW91IGNhbiBldmVuIHN0YXJ0IHdvcmtpbmcgaW4ganVzdCBhIGZldyBtaW51dGVzIGZyb20gbm93LiBXZSBhcmUgaGVyZSB0byBleHBsYWluISBTaW1wbHkgc2Vu
- ZCB1cyBhbiBhc3dlciB0byAxNjg0YnJ1bnR6bmlsZXNAZ21haWwuY29tIGlmIHlvdSBhcmUgaW50ZXJlc3RlZCBpbiBvdXIgcHJvbW90aW9uLCBzbyB3ZSBjYW4gYW5zd2VyIHlvdSBiYWNrIHdpdGggZnVydGhlciBkZXRhaWxzLg0KDQpCZXN0IFJlZ2FyZHMsDQpMZWdpdCBPbmxpbmUgSm9icwoKCgoKCgoKCgoKCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpUaGlzIGVtYWlsIGhhcyBiZWVuIHdyaXR0ZW4gYW5kIHByb3ZlZCB0byBiZSBpbiBjb21wbGlhbmNlIHdpdGggdGhlIHJlY2VudGx5IGVzdGFibGlzaGVkIGNhbi1zcGFtIGFjdCBsYXcgaW4gVVMuIFdlIGFyZSBub3QgcHJvdm9raW5nIG9yIGZvcmNpbmcgYW55IHBlcnNvbiBpbiBhbnkgd2F5IHRvIHBhcnRpY2lwYXRlIGluIG91ciBwcm9ncmFtcy4gVG8gcGFydGljaXBhdGUgaXMgeW91ciBvd24gZGVjaXNpb24gYW5kIHlvdSBjYXJyeSB0aGUgcmVzcG9uc2liaWxpdHkgb2YgdGFraW5nIGZ1cnRoZXIgcGFydCBpbiB0aGlzIHByb21vdGlvbi4gQW55d2F5LCBpZiB5b3UgZG9uJ3Qgd2FudCB0byByZWNlaXZlIG1vcmUgZ2
- 9vZCBvZmZlcnMgZnJvbSB1cywgeW91IGNhbiBzaW1wbHkgVW5zdWJzY3JpYmUgYnkgc2VuZGluZyB1cyBhIG5vdGlmaWNhdGlvbiBlbWFpbCB0byBnZXQubWVfb3V0X25vd0B5YWhvby5jb20gd2l0aCBhIG1haWwtc3ViamVjdCBhbmQgdGV4dCAiVW5zdWJzY3JpYmUgbWUiLCBhbmQgd2Ugd2lsbCBnZXQgeW91ciBlbWFpbCBvdXQgb2Ygb3VyIGxpc3Qgd2l0aGluIDEwIGRheXMuCgpUaGlzIG1lc3NhZ2UgaXMgU1RSSUNUTFkgQ09ORklERU5USUFMIGFuZCBpcyBzb2xlbHkgZm9yIHRoZSBpbmRpdmlkdWFsIG9yIG9yZ2FuaXNhdGlvbiB0byB3aG9tIGl0IGlzIGFkZHJlc3NlZC4gSXQgbWF5IGNvbnRhaW4gUFJJVklMRUdFRCBhbmQgQ09ORklERU5USUFMIGluZm9ybWF0aW9uLiBJZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50LCB5b3UgYXJlIGhlcmVieSBub3RpZmllZCB0aGF0IGFueSBkaXNzZW1pbmF0aW9uLCBkaXN0cmlidXRpb24gb3IgY29weWluZyBvZiB0aGlzIGNvbW11bmljYXRpb24gYW5kIGl0cyBjb250ZW50cyBpcyBzdHJpY3RseSBwcm9oaWJpdGVkLiBJZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50IHlv
- dSBzaG91bGQgbm90IHJlYWQsIGNvcHksIGRpc3RyaWJ1dGUsIGRpc2Nsb3NlIG9yIG90aGVyd2lzZSB1c2UgdGhlIGluZm9ybWF0aW9uIGluIHRoaXMgZW1haWwuIEVtYWlsIG1heSBiZSBzdXNjZXB0aWJsZSB0byBkYXRhIGNvcnJ1cHRpb24sIGludGVyY2VwdGlvbiBhbmQgdW5hdXRob3Jpc2VkIGFtZW5kbWVudCwgYW5kIHdlIGRvIG5vdCBhY2NlcHQgbGlhYmlsaXR5IGZvciBhbnkgc3VjaCBjb3JydXB0aW9uLCBpbnRlcmNlcHRpb24gb3IgYW1lbmRtZW50IG9yIHRoZSBjb25zZXF1ZW5jZXMgdGhlcmVvZiBvciB5b3VyIHJlbGlhbmNlIG9uIGFueSBpbmZvcm1hdGlvbiBjb250YWluZWQgdGhlcmVpbiBpZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50LiBJZiB5b3UgYXJlIG5vdCBpbnRlcmVzdGVkIGluIHRoZSBvZmZlcmVkIHByb21vdGlvbnMsIHBsZWFzZSBqdXN0IGRvbid0IGFuc3dlci4gSWYgeW91IHRoaW5rIHlvdSBoYXZlIHJlY2VpdmVkIHRoaXMgbWVzc2FnZSBhbmQgaXRzIGNvbnRlbnRzIGluIGVycm9yLCBwbGVhc2UgZGVsZXRlIGl0IGZyb20geW91ciBjb21wdXRlciwgb3IgZm9sbG93IHRoZSB1bnN1YnNjcmliaW5nIH
- Byb2NlZHVyZSBzaG93biBhYm92ZS4KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCgkJ
+Hi Mike,
+
+Mike Christie wrote:
+> Hey,
+>=20
+> For this topic:
+>=20
+> -----------------------
+> Next-Gen Multipathing
+> ---------------------
+> Dr. Hannes Reinecke
+>=20
+> ......
+>=20
+> Should path checkers use sd->state to check for errors or availabilit=
+y?
+> ----------------------
+>=20
+> What was decided?
+>=20
+> Could this problem be fixed or helped if multipath tools always sets =
+the
+> fast io fail tmo for FC or the replacement_timeout for iscsi?
+>=20
+No, I already do this for FC (should be checking the replacement_timeou=
+t, too ...)
+
+> If those are set then IO in the blocked queue and in the driver will =
+get
+> failed after fast io fail tmo/replacement_timeout seconds (driver has=
+ to
+> implement a terminate rport IO callback and only mptfc does not now).=
+ So
+> at this time, do we want to fail the path?
+>=20
+> Or are people thinking that we want to fail the path when the problem=
+ is
+> initially detected like when the LLD deletes the rport for fc for exa=
+mple?
+>=20
+Well, the idea is the following:
+
+The primary purpose of the path checkers is to check the availability o=
+f
+the paths (my, that was easy :-).
+
+And the main problem we have with the path checkers is that they are us=
+ing
+actual SCSI commands to determine this, thereby incurring unrelated err=
+ors
+(Disk errors, delaying response due to blocked path behaviour or error =
+handling
+etc). So we have to invest quite a bit of logic to separate the 'true' =
+path
+condition from unrelated errors, simply because we're checking at the w=
+rong
+level; the path state is maintained by the transport layer, not by the
+SCSI layer.
+
+So the suggestion here is to check the transport layer for the path sta=
+tes
+and do away with the existing path_checker SG_IO mechanism.
+
+The secondary use of the path checkers (determine inactive paths) will =
+have
+to be delegated to the priority callouts, which then have to arrange th=
+e
+paths correctly.
+
+=46C Transport already maintains an attribute for the path state, and e=
+ven
+sends netlink events if and when this attribute changes. For iSCSI I ha=
+ve
+to defer to your superior knowledge; of course it would be easiest if
+iSCSI could send out the very same message FC does.
+
+>=20
+>=20
+> Also for this one:
+> -----------------------
+> How to communication device went away:
+> 1) send event to udev (uses netlink)
+> -----------------------
+>=20
+> Is this an event when dev_loss_tmo fires or when the LLD first detect=
+s
+> something like a link down (or any event it might block the rport for=
+),
+> or would it be for when the fast fail io tmo fires (when the fc class=
+ is
+> going to fail running IO and incoming IO), or would we have events fo=
+r
+> all of them?
+>=20
+Currently the event is sent when the device itself is removed from sysf=
+s.
+And only then can we actually update the path maps and (possibly) chang=
+e
+to another part. We cannot do anything when the path is blocked (ie whe=
+n
+dev_loss_tmo is active) as we require this interval to capture jitter o=
+n
+the line.
+
+So we have this state diagram:
+
+sdev state:   RUNNING  <-> BLOCKED -> CANCEL
+mpath state:  path up  <-> <stall> -> path down / remove from map
+
+Notice the '<stall>' here; we cannot check the path state when the
+sdev is blocked as all I/O will be queued. And also note that we
+now lump two different multipath path states together; a path down
+is basically always followed immediately by a path remove event.
+
+However, when all paths are down (and queue_if_no_path is active) we mi=
+ght
+run into a deadlock when a path comes back, as we might not have enough
+memory to actually create the required structures.
+
+Idea was to modify the state machine so that fast_fail_io_tmo is
+being made mandatory, which transitions the sdev into an intermediate
+state 'DISABLED' and sends out a netlink message.
+
+sdev state:   RUNNING <-> BLOCKED <-> DISABLED -> CANCEL
+mpath state:  path up <-> <stall> <-> path down -> remove from map
+
+This will allow us to switch paths early, ie when it moves into
+'DISABLED' state. But the path structure themselves are still alive,
+so when a path comes back between 'DISABLED' and 'CANCEL' we won't
+have an issue reconnecting it. And we could even allow to set a
+dev_loss_tmo to infinity thereby simulating the 'old' behaviour.
+
+However, this proposal didn't go through.
+
+Instead it was proposed to do away with the unlimited queue_if_no_path
+setting and _always_ have a timeout there, so that the machine is able
+to recover after a certain period of time.
+
+I still like my original proposal, though.
+
+Maybe we can do the EU referendum thing and just ask again and again
+until everyone becomes tired of it and just says 'yes' to get rid
+of this issue ...
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
