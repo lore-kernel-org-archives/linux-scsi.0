@@ -1,34 +1,37 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 9/13] mpt2sas: T10 DIF Support - EEDP
-Date: Thu, 16 Apr 2009 20:49:14 -0400
-Message-ID: <yq1iql4w1dh.fsf@sermon.lab.mkp.net>
-References: <20090416164514.GA4177@lsil.com>
+From: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: 2.6.30-rc2-git2: Reported regressions from 2.6.29
+Date: Thu, 16 Apr 2009 17:46:15 -0700 (PDT)
+Message-ID: <alpine.LFD.2.00.0904161742140.4042@localhost.localdomain>
+References: <EJaiQ4Wfaz.A.3YG.4v85JB@chimera>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet13.oracle.com ([148.87.113.125]:44243 "EHLO
-	rgminet13.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761281AbZDQAtc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2009 20:49:32 -0400
-In-Reply-To: <20090416164514.GA4177@lsil.com> (Eric Moore's message of "Thu,
-	16 Apr 2009 10:45:16 -0600")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <EJaiQ4Wfaz.A.3YG.4v85JB@chimera>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
+Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Adrian Bunk <bunk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Eric Moore <eric.moore@lsi.com>
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
->>>>> "Eric" == Eric Moore <eric.moore@lsi.com> writes:
 
-Eric,
 
-Eric> (1) I modified _scsih_setup_eedp so for TYPE1, its sets ref and
-Eric>     gaurd checking, and for TYPE2 it sets gauard checking.
+On Thu, 16 Apr 2009, Rafael J. Wysocki wrote:
+> 
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13098
+> Subject		: 2.6.29-git12 breaks vga=0x0f07 on MSI/Intel GPU
+> Submitter	: Andi Kleen <andi-Vw/NltI1exuRpAAqCnN02g@public.gmane.org>
+> Date		: 2009-04-06 01:14 (11 days old)
+> References	: http://lkml.org/lkml/2009/4/5/200
+> Handled-By	: H. Peter Anvin <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>
 
-You mean Type 3 and not Type 2.  But yes, looks ok.
+I think this got fixed already. The VGA moresettign was reverted back to 
+the old order.
 
-Feel free to add:
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13044
+> Subject		: 2.6.30-rc1 can't find the root fs
+> Submitter	: Heinz Diehl <htd-HjJ2MNWy62to6+H+lsi3Gti2O/JbrIOy@public.gmane.org>
+> Date		: 2009-04-08 13:35 (9 days old)
 
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+This was one of the async things that got fixed by just waiting for module 
+async work to finish.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+		Linus
