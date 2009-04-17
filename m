@@ -1,33 +1,104 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: [PATCH 11/14 - 2nd post] mpt2sas: add query task support for
-	MPT2COMMAND  ioctl
-Date: Fri, 17 Apr 2009 12:00:36 -0600
-Message-ID: <660360F4F2570145BD872F298951B17A76BCACAB@cosmail03.lsi.com>
-References: <1239990644.7190.11.camel@gnattop>
+From: Eric Moore <eric.moore@lsi.com>
+Subject: [PATCH 11/14 - 2nd post] mpt2sas: add query task support for MPT2COMMAND  ioctl
+Date: Fri, 17 Apr 2009 12:04:03 -0600
+Message-ID: <20090417180401.GA7312@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chip3og58.obsmtp.com ([64.18.14.181]:46219 "EHLO
-	chip3og58.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758767AbZDQSAt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2009 14:00:49 -0400
-In-Reply-To: <1239990644.7190.11.camel@gnattop>
-Content-Language: en-US
+Received: from chip3og62.obsmtp.com ([64.18.14.201]:33250 "EHLO
+	chip3og62.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761419AbZDQSC6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2009 14:02:58 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "pbog@us.ibm.com" <pbog@us.ibm.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com
 
-On Friday, April 17, 2009 11:51 AM, Peter Bogdanovic wrote:
-> This patch appears to be the same as the 10th patch in the series and
-> the patch to mpt2sas_ctl.c for _ctl_set_task_mid is missing. 
-> The 11th in
-> the series is available from the series you posted on April 14th so it
-> isn't really holding me back. I just wanted you to know there was a
-> mistake in the 2nd posting of this series.
-> 
+This patch will find an active mid for a query_task request via the ioctl path.
 
-Oops, your right.  I will post the correct patch for [PATCH 11/14]  here shortly.
+This code is already there for task_abort, so this patch combining code using
+the same fuction _ctl_set_task_mid(), previously _ctl_do_task_abort().
 
-Eric
+Signed-off-by: Eric Moore <eric.moore@lsi.com>
+
+diff -uarpN a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+--- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c	2009-04-13 16:33:48.000000000 -0600
++++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c	2009-04-13 17:21:01.000000000 -0600
+@@ -473,7 +473,7 @@ _ctl_poll(struct file *filep, poll_table
+ }
+ 
+ /**
+- * _ctl_do_task_abort - assign an active smid to the abort_task
++ * _ctl_set_task_mid - assign an active smid to tm request
+  * @ioc: per adapter object
+  * @karg - (struct mpt2_ioctl_command)
+  * @tm_request - pointer to mf from user space
+@@ -482,7 +482,7 @@ _ctl_poll(struct file *filep, poll_table
+  * during failure, the reply frame is filled.
+  */
+ static int
+-_ctl_do_task_abort(struct MPT2SAS_ADAPTER *ioc, struct mpt2_ioctl_command *karg,
++_ctl_set_task_mid(struct MPT2SAS_ADAPTER *ioc, struct mpt2_ioctl_command *karg,
+     Mpi2SCSITaskManagementRequest_t *tm_request)
+ {
+ 	u8 found = 0;
+@@ -494,6 +494,14 @@ _ctl_do_task_abort(struct MPT2SAS_ADAPTE
+ 	Mpi2SCSITaskManagementReply_t *tm_reply;
+ 	u32 sz;
+ 	u32 lun;
++	char *desc = NULL;
++
++	if (tm_request->TaskType == MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK)
++		desc = "abort_task";
++	else if (tm_request->TaskType == MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK)
++		desc = "query_task";
++	else
++		return 0;
+ 
+ 	lun = scsilun_to_int((struct scsi_lun *)tm_request->LUN);
+ 
+@@ -517,13 +525,13 @@ _ctl_do_task_abort(struct MPT2SAS_ADAPTE
+ 	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
+ 
+ 	if (!found) {
+-		dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "ABORT_TASK: "
+-		    "DevHandle(0x%04x), lun(%d), no active mid!!\n", ioc->name,
+-		    tm_request->DevHandle, lun));
++		dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: "
++		    "handle(0x%04x), lun(%d), no active mid!!\n", ioc->name,
++		    desc, tm_request->DevHandle, lun));
+ 		tm_reply = ioc->ctl_cmds.reply;
+ 		tm_reply->DevHandle = tm_request->DevHandle;
+ 		tm_reply->Function = MPI2_FUNCTION_SCSI_TASK_MGMT;
+-		tm_reply->TaskType = MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK;
++		tm_reply->TaskType = tm_request->TaskType;
+ 		tm_reply->MsgLength = sizeof(Mpi2SCSITaskManagementReply_t)/4;
+ 		tm_reply->VP_ID = tm_request->VP_ID;
+ 		tm_reply->VF_ID = tm_request->VF_ID;
+@@ -535,9 +543,9 @@ _ctl_do_task_abort(struct MPT2SAS_ADAPTE
+ 		return 1;
+ 	}
+ 
+-	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "ABORT_TASK: "
+-	    "DevHandle(0x%04x), lun(%d), smid(%d)\n", ioc->name,
+-	    tm_request->DevHandle, lun, tm_request->TaskMID));
++	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: "
++	    "handle(0x%04x), lun(%d), task_mid(%d)\n", ioc->name,
++	    desc, tm_request->DevHandle, lun, tm_request->TaskMID));
+ 	return 0;
+ }
+ 
+@@ -739,8 +747,10 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPT
+ 		    (Mpi2SCSITaskManagementRequest_t *)mpi_request;
+ 
+ 		if (tm_request->TaskType ==
+-		    MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK) {
+-			if (_ctl_do_task_abort(ioc, &karg, tm_request)) {
++		    MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK ||
++		    tm_request->TaskType ==
++		    MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK) {
++			if (_ctl_set_task_mid(ioc, &karg, tm_request)) {
+ 				mpt2sas_base_free_smid(ioc, smid);
+ 				goto out;
+ 			}
