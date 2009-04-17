@@ -1,14 +1,14 @@
 From: Eric Moore <eric.moore@lsi.com>
-Subject: [PATCH 10/14 - 2nd post] mpt2sas: LUN Reset Support
-Date: Fri, 17 Apr 2009 10:32:01 -0600
-Message-ID: <20090417163159.GB7071@lsil.com>
+Subject: [PATCH 11/14 - 2nd post] mpt2sas: add query task support for MPT2COMMAND  ioctl
+Date: Fri, 17 Apr 2009 10:32:35 -0600
+Message-ID: <20090417163234.GC7071@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chip3og61.obsmtp.com ([64.18.14.187]:50296 "EHLO
-	chip3og61.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759210AbZDQQaz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2009 12:30:55 -0400
+Received: from chip3og65.obsmtp.com ([64.18.14.207]:51270 "EHLO
+	chip3og65.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759647AbZDQQba (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2009 12:31:30 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
