@@ -1,35 +1,38 @@
 From: Eric Moore <eric.moore@lsi.com>
-Subject: [PATCH 1/14 - 2nd post] mpt2sas: unique ioctl magic number
-Date: Fri, 17 Apr 2009 10:25:02 -0600
-Message-ID: <20090417162501.GB7009@lsil.com>
+Subject: [PATCH 3/14 - 2nd post] mpt2sas: fix oops when firmware sends large sense buffer size
+Date: Fri, 17 Apr 2009 10:26:30 -0600
+Message-ID: <20090417162629.GD7009@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chip3og63.obsmtp.com ([64.18.14.203]:60888 "EHLO
-	chip3og63.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761977AbZDQQX5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2009 12:23:57 -0400
+Received: from chip3og61.obsmtp.com ([64.18.14.187]:46548 "EHLO
+	chip3og61.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753936AbZDQQZZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2009 12:25:25 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com
 
-The current magic number is shared with mptsas driver. This to be unique to
-fix issues with register_ioctls32_conversion in older kernels.  We are making
-this change across all versions of the sas2.0 drivers.
+There is a bug in firmware where the reply message frame says there is a
+16kb sense buffer, when in reality its only 20 bytes.  This fix insures
+the memcpy action doesn't corrupte the memory beyond the 90 bytes allocated in
+the scsi command for sense buffer.
 
 Signed-off-by: Eric Moore <eric.moore@lsi.com>
 
-diff -uaprN a/drivers/scsi/mpt2sas/mpt2sas_ctl.h b/drivers/scsi/mpt2sas/mpt2sas_ctl.h
---- a/drivers/scsi/mpt2sas/mpt2sas_ctl.h	2009-03-16 08:52:29.000000000 -0600
-+++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.h	2009-04-09 16:31:35.000000000 -0600
-@@ -50,7 +50,7 @@
- #endif
- 
- #define MPT2SAS_DEV_NAME	"mpt2ctl"
--#define MPT2_MAGIC_NUMBER	'm'
-+#define MPT2_MAGIC_NUMBER	'L'
- #define MPT2_IOCTL_DEFAULT_TIMEOUT (10) /* in seconds */
- 
- /**
+diff -uarpN a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2009-04-09 16:33:21.000000000 -0600
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2009-04-09 16:42:31.000000000 -0600
+@@ -2863,8 +2863,9 @@ scsih_io_done(struct MPT2SAS_ADAPTER *io
+ 		struct sense_info data;
+ 		const void *sense_data = mpt2sas_base_get_sense_buffer(ioc,
+ 		    smid);
+-		memcpy(scmd->sense_buffer, sense_data,
++		u32 sz = min_t(u32, SCSI_SENSE_BUFFERSIZE,
+ 		    le32_to_cpu(mpi_reply->SenseCount));
++		memcpy(scmd->sense_buffer, sense_data, sz);
+ 		_scsih_normalize_sense(scmd->sense_buffer, &data);
+ 		/* failure prediction threshold exceeded */
+ 		if (data.asc == 0x5D)
