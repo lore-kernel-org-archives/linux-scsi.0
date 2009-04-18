@@ -1,102 +1,85 @@
-From: kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org
-Subject: [PATCH v2] cxgb3i: fix ddp map overrun (v2)
-Date: Fri, 17 Apr 2009 21:45:05 -0700
-Message-ID: <200904180445.n3I4j67l010479@localhost.localdomain>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: leiming <tom.leiming@gmail.com>
+Subject: Re: 2.6.30-rc2-git2: Reported regressions from 2.6.29
+Date: Sat, 18 Apr 2009 12:51:11 +0800
+Message-ID: <20090418125111.6646e997@linux-lm>
+References: <EJaiQ4Wfaz.A.3YG.4v85JB@chimera>
+	<d82e647a0904161837w6b6fb652la0da05f9061e95dc@mail.gmail.com>
+	<200904172336.12414.rjw@sisk.pl>
+	<20090418103226.54250420@linux-lm>
+	<alpine.LFD.2.00.0904171952260.4042@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <grbounce-FC1hwAUAAAA0O9VQcsxVj1UPjHD9r3x_=glio-open-iscsi=m.gmane.org-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Post: <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://googlegroups.com/group/open-iscsi/subscribe>,
-	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Cc: kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <alpine.LFD.2.00.0904171952260.4042@localhost.localdomain>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, video4linux-list@redhat.com, laurent.pinchart@skynet.be, mchehab@infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
+On Fri, 17 Apr 2009 19:55:29 -0700 (PDT)
+Linus Torvalds <torvalds@linux-foundation.org> wrote:
 
-[PATCH v2] cxgb3i: fix ddp map overrun (version 2)
+> > @@ -742,7 +742,7 @@ static int uvc_alloc_urb_buffers(struct
+> > uvc_video_device *video, 
+> >  	/* Buffers are already allocated, bail out. */
+> >  	if (video->urb_size)
+> > -		return 0;
+> > +		return DIV_ROUND_UP(video->urb_size, psize);
+> 
+> I don't think this is right. It should round _down_.
+> 
+> It's supposed to return 'npackets', but if you pass it a different
+> packet size than it was passed originally, it can now return a
+> potentially bigger number than the already allocated buffer, no?
+> 
+> So I think it should round down (ie use a regular divide). No?
 
-From: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+Yes,you are correct, please ignore my last reply, and following is
+the fixed patch.
 
-Fixed a bug in calculating ddp map range when search for free entries:
-it was going beyond the end by one, thus corrupting gl_skb[0].
+Thanks.
 
-Signed-off-by: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+>From a3b3d72cdd57a0699fb643b41b78eb7beb211ff5 Mon Sep 17 00:00:00 2001
+From: Ming Lei <tom.leiming@gmail.com>
+Date: Wed, 15 Apr 2009 22:32:51 +0800
+Subject: [PATCH] V4L/DVB:usbvideo:fix uvc resume failed(v2)
+
+Now urb buffers is not freed before suspend, so uvc_alloc_urb_buffers
+should return packet counts allocated originally during uvc resume
+, instead of zero.
+
+This version uses round down to return packet counts on Linus's
+suggestions, or else may lead to buffer destructed if packet size
+is changed before calling uvc_alloc_urb_buffers() in this kind of
+case.
+
+This patch is against v2.6.30-rc2.
+
+Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 ---
+ drivers/media/video/uvc/uvc_video.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
- drivers/scsi/cxgb3i/cxgb3i_ddp.c |   32 +++++++++++++++++++-------------
- 1 files changed, 19 insertions(+), 13 deletions(-)
+diff --git a/drivers/media/video/uvc/uvc_video.c b/drivers/media/video/uvc/uvc_video.c
+index a95e173..6ce974d 100644
+--- a/drivers/media/video/uvc/uvc_video.c
++++ b/drivers/media/video/uvc/uvc_video.c
+@@ -742,7 +742,7 @@ static int uvc_alloc_urb_buffers(struct uvc_video_device *video,
+ 
+ 	/* Buffers are already allocated, bail out. */
+ 	if (video->urb_size)
+-		return 0;
++		return video->urb_size / psize;
+ 
+ 	/* Compute the number of packets. Bulk endpoints might transfer UVC
+ 	 * payloads accross multiple URBs.
+-- 
+1.6.0.GIT
 
 
-diff --git a/drivers/scsi/cxgb3i/cxgb3i_ddp.c b/drivers/scsi/cxgb3i/cxgb3i_ddp.c
-index d06a661..99c9125 100644
---- a/drivers/scsi/cxgb3i/cxgb3i_ddp.c
-+++ b/drivers/scsi/cxgb3i/cxgb3i_ddp.c
-@@ -120,20 +120,26 @@ static void clear_ddp_map(struct cxgb3i_ddp_info *ddp, unsigned int tag,
- }
- 
- static inline int ddp_find_unused_entries(struct cxgb3i_ddp_info *ddp,
--					  int start, int max, int count,
-+					  unsigned int start, unsigned int max,
-+					  unsigned int count,
- 					  struct cxgb3i_gather_list *gl)
- {
--	unsigned int i, j;
-+	unsigned int i, j, k;
- 
-+	/* not enough entries */
-+	if ((max - start) < count)
-+		return -EBUSY;
-+
-+	max -= count;
- 	spin_lock(&ddp->map_lock);
--	for (i = start; i <= max;) {
--		for (j = 0; j < count; j++) {
--			if (ddp->gl_map[i + j])
-+	for (i = start; i < max;) {
-+		for (j = 0, k = i; j < count; j++, k++) {
-+			if (ddp->gl_map[k])
- 				break;
- 		}
- 		if (j == count) {
--			for (j = 0; j < count; j++)
--				ddp->gl_map[i + j] = gl;
-+			for (j = 0, k = i; j < count; j++, k++)
-+				ddp->gl_map[k] = gl;
- 			spin_unlock(&ddp->map_lock);
- 			return i;
- 		}
-@@ -354,7 +360,7 @@ int cxgb3i_ddp_tag_reserve(struct t3cdev *tdev, unsigned int tid,
- 	struct cxgb3i_ddp_info *ddp = tdev->ulp_iscsi;
- 	struct pagepod_hdr hdr;
- 	unsigned int npods;
--	int idx = -1, idx_max;
-+	int idx = -1;
- 	int err = -ENOMEM;
- 	u32 sw_tag = *tagp;
- 	u32 tag;
-@@ -367,17 +373,17 @@ int cxgb3i_ddp_tag_reserve(struct t3cdev *tdev, unsigned int tid,
- 	}
- 
- 	npods = (gl->nelem + PPOD_PAGES_MAX - 1) >> PPOD_PAGES_SHIFT;
--	idx_max = ddp->nppods - npods + 1;
- 
- 	if (ddp->idx_last == ddp->nppods)
--		idx = ddp_find_unused_entries(ddp, 0, idx_max, npods, gl);
-+		idx = ddp_find_unused_entries(ddp, 0, ddp->nppods, npods, gl);
- 	else {
- 		idx = ddp_find_unused_entries(ddp, ddp->idx_last + 1,
--					      idx_max, npods, gl);
--		if (idx < 0 && ddp->idx_last >= npods)
-+					      ddp->nppods, npods, gl);
-+		if (idx < 0 && ddp->idx_last >= npods) {
- 			idx = ddp_find_unused_entries(ddp, 0,
--						      ddp->idx_last - npods + 1,
-+				min(ddp->idx_last + npods, ddp->nppods),
- 						      npods, gl);
-+		}
- 	}
- 	if (idx < 0) {
- 		ddp_log_debug("xferlen %u, gl %u, npods %u NO DDP.\n",
+
+
+
+-- 
+Lei Ming
