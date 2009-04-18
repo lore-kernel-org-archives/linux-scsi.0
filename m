@@ -1,64 +1,52 @@
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-Subject: [PATCH 1/2] ide: Stop disks on reboot for laptop which cuts power
-Date: Sat, 18 Apr 2009 12:45:58 +0200
-Message-ID: <20090418124558.0426f74c@neptune.home>
-References: <20090418124415.1dc82273@neptune.home>
+From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
+Subject: Re: 2.6.30-rc2-git2: Reported regressions from 2.6.29
+Date: Sat, 18 Apr 2009 14:29:57 +0200
+Message-ID: <200904181429.58406.rjw@sisk.pl>
+References: <EJaiQ4Wfaz.A.3YG.4v85JB@chimera> <200904172336.12414.rjw@sisk.pl> <200904180156.24366.laurent.pinchart@skynet.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20090418124415.1dc82273@neptune.home>
-Sender: linux-ide-owner@vger.kernel.org
-To: Linux IDE <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Linux SCSI <linux-scsi@vger.kernel.org>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <200904180156.24366.laurent.pinchart-AgBVmzD5pcezQB+pC5nmwQ@public.gmane.org>
+Content-Disposition: inline
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Laurent Pinchart <laurent.pinchart-AgBVmzD5pcezQB+pC5nmwQ@public.gmane.org>
+Cc: Ming Lei <tom.leiming-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Adrian Bunk <bunk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, video4linux-list-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mchehab-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-My laptop (Acer Travelmate 660) always cuts the power when rebooting
-which causes the disk to emergency-park it's head.
+On Saturday 18 April 2009, Laurent Pinchart wrote:
+> Hi,
+> 
+> On Friday 17 April 2009 23:36:11 Rafael J. Wysocki wrote:
+> > On Friday 17 April 2009, Ming Lei wrote:
+> > > 2009/4/17 Rafael J. Wysocki <rjw-KKrjLPT3xs0@public.gmane.org>:
+> > > > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=13125
+> > > > Subject         : active uvcvideo breaks over suspend
+> > > > Submitter       : Alan Jenkins <alan-jenkins-cCz0Lq7MMjm9FHfhHBbuYA@public.gmane.org>
+> > > > Date            : 2009-04-15 10:12 (2 days old)
+> > > > References      :
+> > > > http://marc.info/?l=linux-kernel&m=123979009508840&w=4
+> > >
+> > > It is a bug in resume path of uvcvideo driver, and I have sent a patch
+> > > to laurent.pinchart-AgBVmzD5pcezQB+pC5nmwQ@public.gmane.org,
+> > > mchehab-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org  and video4linux-list-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org to fix it, but
+> > > still no echo from them.
+> > >
+> > > The patch title is V4L/DVB:usbvideo:fix uvc resume failed.
+> > >
+> > > Rafael J.
+> > >         If you would like to apply it ,I can resend to you.  Thanks!
+> >
+> > Please resend.
+> 
+> I'm reviewing the patch and I'll push it through my tree during the weekend. 
 
-Add a dmi check to stop disk as for shutdown on this laptop.
+Great, thanks a lot!
 
-Signed-off-by: Bruno Pr=C3=A9mont <bonbons@linux-vserver.org>
----
-diff --git a/drivers/ide/ide-gd.c b/drivers/ide/ide-gd.c
-index 1aebdf1..4b6b71e 100644
---- a/drivers/ide/ide-gd.c
-+++ b/drivers/ide/ide-gd.c
-@@ -7,6 +7,7 @@
- #include <linux/mutex.h>
- #include <linux/ide.h>
- #include <linux/hdreg.h>
-+#include <linux/dmi.h>
-=20
- #if !defined(CONFIG_DEBUG_BLOCK_EXT_DEVT)
- #define IDE_DISK_MINORS		(1 << PARTN_BITS)
-@@ -99,6 +100,19 @@ static void ide_gd_resume(ide_drive_t *drive)
- 		(void)drive->disk_ops->get_capacity(drive);
- }
-=20
-+static const struct dmi_system_id ide_coldreboot_table[] =3D {
-+	{
-+		/* Acer TravelMate 66x cuts power during reboot */
-+		.ident   =3D "Acer TravelMate 660",
-+		.matches =3D {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Acer"),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "TravelMate 660"),
-+		},
-+	},
-+
-+	{ }	/* terminate list */
-+};
-+
- static void ide_gd_shutdown(ide_drive_t *drive)
- {
- #ifdef	CONFIG_ALPHA
-@@ -115,7 +129,8 @@ static void ide_gd_shutdown(ide_drive_t *drive)
- 	   the disk to expire its write cache. */
- 	if (system_state !=3D SYSTEM_POWER_OFF) {
- #else
--	if (system_state =3D=3D SYSTEM_RESTART) {
-+	if (system_state =3D=3D SYSTEM_RESTART &&
-+		!dmi_check_system(ide_coldreboot_table)) {
- #endif
- 		drive->disk_ops->flush(drive);
- 		return;
+> Sorry for the delay, I'm currently traveling.
+
+No problem at all. :-)
+
+Thanks,
+Rafael
