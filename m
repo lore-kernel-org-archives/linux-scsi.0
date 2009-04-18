@@ -1,85 +1,62 @@
-From: leiming <tom.leiming@gmail.com>
-Subject: Re: 2.6.30-rc2-git2: Reported regressions from 2.6.29
-Date: Sat, 18 Apr 2009 12:51:11 +0800
-Message-ID: <20090418125111.6646e997@linux-lm>
-References: <EJaiQ4Wfaz.A.3YG.4v85JB@chimera>
-	<d82e647a0904161837w6b6fb652la0da05f9061e95dc@mail.gmail.com>
-	<200904172336.12414.rjw@sisk.pl>
-	<20090418103226.54250420@linux-lm>
-	<alpine.LFD.2.00.0904171952260.4042@localhost.localdomain>
+From: Zhenwen Xu <helight.xu@gmail.com>
+Subject: [PATCH]fix a warning on drivers/scsi/NCR_D700.c
+Date: Sat, 18 Apr 2009 18:36:42 +0800
+Message-ID: <20090418103642.GA4432@helight>
+Reply-To: Zhenwen Xu <helight.xu@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <alpine.LFD.2.00.0904171952260.4042@localhost.localdomain>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, video4linux-list@redhat.com, laurent.pinchart@skynet.be, mchehab@infradead.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ti-out-0910.google.com ([209.85.142.188]:36656 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754931AbZDRKiP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Apr 2009 06:38:15 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-On Fri, 17 Apr 2009 19:55:29 -0700 (PDT)
-Linus Torvalds <torvalds@linux-foundation.org> wrote:
+fix this warning:
 
-> > @@ -742,7 +742,7 @@ static int uvc_alloc_urb_buffers(struct
-> > uvc_video_device *video, 
-> >  	/* Buffers are already allocated, bail out. */
-> >  	if (video->urb_size)
-> > -		return 0;
-> > +		return DIV_ROUND_UP(video->urb_size, psize);
-> 
-> I don't think this is right. It should round _down_.
-> 
-> It's supposed to return 'npackets', but if you pass it a different
-> packet size than it was passed originally, it can now return a
-> potentially bigger number than the already allocated buffer, no?
-> 
-> So I think it should round down (ie use a regular divide). No?
+drivers/scsi/NCR_D700.c: In function =E2=80=98NCR_D700_probe=E2=80=99:
+drivers/scsi/NCR_D700.c:322: warning: passing argument 2 of =E2=80=98re=
+quest_irq=E2=80=99 from incompatible pointer type
+drivers/scsi/NCR_D700.c:322: warning: passing argument 2 of =E2=80=98re=
+quest_irq=E2=80=99 from incompatible pointer type
+drivers/scsi/NCR_D700.c:322: warning: passing argument 2 of =E2=80=98re=
+quest_irq=E2=80=99 from incompatible pointer type
 
-Yes,you are correct, please ignore my last reply, and following is
-the fixed patch.
 
-Thanks.
-
->From a3b3d72cdd57a0699fb643b41b78eb7beb211ff5 Mon Sep 17 00:00:00 2001
-From: Ming Lei <tom.leiming@gmail.com>
-Date: Wed, 15 Apr 2009 22:32:51 +0800
-Subject: [PATCH] V4L/DVB:usbvideo:fix uvc resume failed(v2)
-
-Now urb buffers is not freed before suspend, so uvc_alloc_urb_buffers
-should return packet counts allocated originally during uvc resume
-, instead of zero.
-
-This version uses round down to return packet counts on Linus's
-suggestions, or else may lead to buffer destructed if packet size
-is changed before calling uvc_alloc_urb_buffers() in this kind of
-case.
-
-This patch is against v2.6.30-rc2.
-
-Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+Signed-off-by: Zhenwen Xu <helight.xu@gmail.com>
 ---
- drivers/media/video/uvc/uvc_video.c |    2 +-
+ drivers/scsi/NCR_D700.c |    2 +-
  1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/media/video/uvc/uvc_video.c b/drivers/media/video/uvc/uvc_video.c
-index a95e173..6ce974d 100644
---- a/drivers/media/video/uvc/uvc_video.c
-+++ b/drivers/media/video/uvc/uvc_video.c
-@@ -742,7 +742,7 @@ static int uvc_alloc_urb_buffers(struct uvc_video_device *video,
- 
- 	/* Buffers are already allocated, bail out. */
- 	if (video->urb_size)
--		return 0;
-+		return video->urb_size / psize;
- 
- 	/* Compute the number of packets. Bulk endpoints might transfer UVC
- 	 * payloads accross multiple URBs.
--- 
-1.6.0.GIT
+diff --git a/drivers/scsi/NCR_D700.c b/drivers/scsi/NCR_D700.c
+index c889d84..1cdf09a 100644
+--- a/drivers/scsi/NCR_D700.c
++++ b/drivers/scsi/NCR_D700.c
+@@ -224,7 +224,7 @@ NCR_D700_probe_one(struct NCR_D700_private *p, int =
+siop, int irq,
+ 	return ret;
+ }
+=20
+-static int
++static irqreturn_t
+ NCR_D700_intr(int irq, void *data)
+ {
+ 	struct NCR_D700_private *p =3D (struct NCR_D700_private *)data;
+--=20
+1.5.6.5
 
-
-
-
-
--- 
-Lei Ming
+--=20
+---------------------------------
+Zhenwen Xu - Open and Free
+Home Page:	http://zhwen.org
+My Studio:	http://dim4.cn
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
