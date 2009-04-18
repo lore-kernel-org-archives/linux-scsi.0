@@ -1,42 +1,60 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] ipr: fix PCI permanent error handler
-Date: Fri, 17 Apr 2009 22:06:26 -0400
-Message-ID: <1240020386.5763.3.camel@mulgrave>
-References: <1239918093.6371.197.camel@zeppelin.austin.ibm.com>
+From: leiming <tom.leiming@gmail.com>
+Subject: Re: 2.6.30-rc2-git2: Reported regressions from 2.6.29
+Date: Sat, 18 Apr 2009 11:50:51 +0800
+Message-ID: <20090418115051.175f292f@linux-lm>
+References: <EJaiQ4Wfaz.A.3YG.4v85JB@chimera>
+	<d82e647a0904161837w6b6fb652la0da05f9061e95dc@mail.gmail.com>
+	<200904172336.12414.rjw@sisk.pl>
+	<20090418103226.54250420@linux-lm>
+	<alpine.LFD.2.00.0904171952260.4042@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:60934 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751897AbZDRDuU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Apr 2009 23:50:20 -0400
-In-Reply-To: <1239918093.6371.197.camel@zeppelin.austin.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <alpine.LFD.2.00.0904171952260.4042@localhost.localdomain>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, video4linux-list@redhat.com, laurent.pinchart@skynet.be, mchehab@infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, 2009-04-16 at 18:41 -0300, Kleber Sacilotto de Souza wrote:
-> The ipr driver can hang if it encounters enough PCI errors
-> to trigger the permanent error handler. The driver will attempt
-> to initiate a "bringdown" of the adapter and fail all pending
-> ops back. However, this bringdown is unlike any other bringdown
-> of the adapter in the code as the driver. In this code path we
-> end up failing back ops with allow_cmds still set to 1. This results
-> in some commands, the HCAM commands in particular, getting immediately
-> re-issued to the adapter on the done call, which results in
-> an infinite loop in ipr_fail_all_ops. Fix this by setting allow_cmds
-> to zero in this path. 
+On Fri, 17 Apr 2009 19:55:29 -0700 (PDT)
+Linus Torvalds <torvalds@linux-foundation.org> wrote:
+
+> @@ -742,7 +742,7 @@ static int uvc_alloc_urb_buffers(struct
+> > uvc_video_device *video, 
+> >  	/* Buffers are already allocated, bail out. */
+> >  	if (video->urb_size)
+> > -		return 0;
+> > +		return DIV_ROUND_UP(video->urb_size, psize);
 > 
-> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
-> Signed-off-by: Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>
+> I don't think this is right. It should round _down_.
+> 
+> It's supposed to return 'npackets', but if you pass it a different
+> packet size than it was passed originally, it can now return a
 
-This signoff chain isn't right ... signoffs are supposed to document the
-hands through which this patch has patched.  I take it this should be
-acked-by Brian King instead?
+Now uvc only uses the previous allocated buffer in suspend/resume
+path, so the packet size doen't change in this path.
 
-James
+> potentially bigger number than the already allocated buffer, no?
 
+If this case does exist, the URBs need to be updated and the patch is 
+not enough. 
 
+> 
+> So I think it should round down (ie use a regular divide). No?
+
+Because the following fact:
+
+	uvc_alloc_urb_buffers()
+	{
+		...
+		video->urb_size = psize * npackets; 
+		...
+	}
+
+so DIV_ROUND_UP still can work correctly.
+
+Thanks!
+
+-- 
+Lei Ming
