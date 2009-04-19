@@ -1,503 +1,310 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH/RFC 07/16] m68k: amiga - A3000 SCSI platform device conversion
-Date: Sat, 18 Apr 2009 20:52:15 +0200
-Message-ID: <1240080744-14995-8-git-send-email-geert@linux-m68k.org>
-References: <1240080744-14995-1-git-send-email-geert@linux-m68k.org>
- <1240080744-14995-2-git-send-email-geert@linux-m68k.org>
- <1240080744-14995-3-git-send-email-geert@linux-m68k.org>
- <1240080744-14995-4-git-send-email-geert@linux-m68k.org>
- <1240080744-14995-5-git-send-email-geert@linux-m68k.org>
- <1240080744-14995-6-git-send-email-geert@linux-m68k.org>
- <1240080744-14995-7-git-send-email-geert@linux-m68k.org>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <1240080744-14995-7-git-send-email-geert@linux-m68k.org>
-Sender: linux-m68k-owner@vger.kernel.org
-To: linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, linux-scsi@vger.kernel.org
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] [Target_Core_Mod/pSCSI]: Add optional legacy	scsi_execute_async()
+ usage for Linux/SCSI passthrough
+Date: Sun, 19 Apr 2009 13:56:43 +0300
+Message-ID: <49EB036B.8090607@panasas.com>
+References: <1239930560.4176.577.camel@haakon2.linux-iscsi.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:36424 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753240AbZDSK4v (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Apr 2009 06:56:51 -0400
+In-Reply-To: <1239930560.4176.577.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <jens.axboe@oracle.com>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, Geoff Levand <geoffrey.levand@am.sony.com>, Douglas Gilbert <dgilbert@interlog.com>, Christoph Hellwig <hch@lst.de>, Paul Mundt <lethal@linux-sh.org>
 
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: linux-scsi@vger.kernel.org
----
- arch/m68k/amiga/platform.c |   11 ++
- drivers/scsi/a3000.c       |  373 ++++++++++++++++++++++++-------------------
- 2 files changed, 219 insertions(+), 165 deletions(-)
+On 04/17/2009 04:09 AM, Nicholas A. Bellinger wrote:
+> Greetings all,
+> 
+> This patch modifies the Target_Core_Mod/ConfigFS v3.0 PSCSI subsystem plugin for target_core_mod v3.0 to add
+> a configurable method of choosing legacy scsi_execute_async() usage for underlying SCSI HTCL struct scsi_device.
+> This method is still the only method of issuing I/O to the Linux SCSI subsystem is used for non TYPE_DISK hardware
+> SCSI and SATA devices that appear under Linux-SCSI, but have not yet been updated to accept raw struct request
+> operations directly.  Some of these include TYPE_ROM, TYPE_TYPE and TYPE_MEDIUM_CHANGER hardware.
+> 
+> This method can be used be used via ConfigFS as follows:
+> 
+> 	export TARGET=/sys/kernel/config/target/core/
+>         # load target_core_mod
+> 	modprobe target_core_mod
+> 	# The Linux/SCSI scsi host id is part of pscsi_$HOST_ID HBA name..
+> 	mkdir -p $TARGET/pscsi_0/sr0
+> 	# echo CTL to the control configfs attribute
+> 	echo scsi_channel_id=0,scsi_target_id=0,scsi_lun_id=0 > $TARGET/pscsi_0/sr0/control
+>         # Activate the target_core_mod/ConfigFS PSCSI storage object
+> 	echo 1 > $TARGET/pscsi_0/sr0/enable
+> 
+> At this point, creating symlinks for SCSI target ports to configfs enabled fabric modules
+> against PSCSI hardware passthrough using te HCTL reference will work.
+> 
+> This patch are made against lio-core-2.6.git/master and tested on
+> v2.6.29 x86 32-bit HVM with TYPE_DISK and v2.6.29 ppc64 with TYPE_ROM.
+> The lio-core-2.6.git tree can be found at: 
+> 
+> http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=summary
+> 
+> :-)
+> 
 
-diff --git a/arch/m68k/amiga/platform.c b/arch/m68k/amiga/platform.c
-index 38f18bf..df1fae3 100644
---- a/arch/m68k/amiga/platform.c
-+++ b/arch/m68k/amiga/platform.c
-@@ -58,6 +58,13 @@ subsys_initcall(amiga_init_bus);
- #endif /* CONFIG_ZORRO */
- 
- 
-+static const struct resource a3000_scsi_resource __initconst = {
-+	.start	= 0xdd0000,
-+	.end	= 0xdd00ff,
-+	.flags	= IORESOURCE_MEM,
-+};
-+
-+
- static int __init amiga_init_devices(void)
- {
- 	if (!MACH_IS_AMIGA)
-@@ -77,6 +84,10 @@ static int __init amiga_init_devices(void)
- 	if (AMIGAHW_PRESENT(AMI_FLOPPY))
- 		platform_device_register_simple("amiga-floppy", -1, NULL, 0);
- 
-+	if (AMIGAHW_PRESENT(A3000_SCSI))
-+		platform_device_register_simple("amiga-a3000-scsi", -1,
-+						&a3000_scsi_resource, 1);
-+
- 	return 0;
- }
- 
-diff --git a/drivers/scsi/a3000.c b/drivers/scsi/a3000.c
-index 6970ce8..73bf9ff 100644
---- a/drivers/scsi/a3000.c
-+++ b/drivers/scsi/a3000.c
-@@ -1,202 +1,157 @@
- #include <linux/types.h>
- #include <linux/mm.h>
--#include <linux/blkdev.h>
- #include <linux/ioport.h>
- #include <linux/init.h>
- #include <linux/spinlock.h>
- #include <linux/interrupt.h>
-+#include <linux/platform_device.h>
- 
- #include <asm/setup.h>
- #include <asm/page.h>
- #include <asm/pgtable.h>
- #include <asm/amigaints.h>
- #include <asm/amigahw.h>
--#include <asm/irq.h>
- 
- #include "scsi.h"
--#include <scsi/scsi_host.h>
- #include "wd33c93.h"
- #include "a3000.h"
- 
--#include<linux/stat.h>
- 
--#define DMA(ptr) ((a3000_scsiregs *)((ptr)->base))
--#define HDATA(ptr) ((struct WD33C93_hostdata *)((ptr)->hostdata))
--
--static struct Scsi_Host *a3000_host = NULL;
--
--static int a3000_release(struct Scsi_Host *instance);
--
--static irqreturn_t a3000_intr (int irq, void *dummy)
-+static irqreturn_t a3000_intr(int irq, void *data)
- {
-+	struct Scsi_Host *host = data;
- 	unsigned long flags;
--	unsigned int status = DMA(a3000_host)->ISTR;
-+	a3000_scsiregs *regs = (a3000_scsiregs *)(host->base);
-+	unsigned int status = regs->ISTR;
- 
- 	if (!(status & ISTR_INT_P))
- 		return IRQ_NONE;
--	if (status & ISTR_INTS)
--	{
--		spin_lock_irqsave(a3000_host->host_lock, flags);
--		wd33c93_intr (a3000_host);
--		spin_unlock_irqrestore(a3000_host->host_lock, flags);
-+	if (status & ISTR_INTS) {
-+		spin_lock_irqsave(host->host_lock, flags);
-+		wd33c93_intr(host);
-+		spin_unlock_irqrestore(host->host_lock, flags);
- 		return IRQ_HANDLED;
- 	}
--	printk("Non-serviced A3000 SCSI-interrupt? ISTR = %02x\n", status);
-+	pr_warning("Non-serviced A3000 SCSI-interrupt? ISTR = %02x\n", status);
- 	return IRQ_NONE;
- }
- 
- static int dma_setup(struct scsi_cmnd *cmd, int dir_in)
- {
--    unsigned short cntr = CNTR_PDMD | CNTR_INTEN;
--    unsigned long addr = virt_to_bus(cmd->SCp.ptr);
--
--    /*
--     * if the physical address has the wrong alignment, or if
--     * physical address is bad, or if it is a write and at the
--     * end of a physical memory chunk, then allocate a bounce
--     * buffer
--     */
--    if (addr & A3000_XFER_MASK)
--    {
--	HDATA(a3000_host)->dma_bounce_len = (cmd->SCp.this_residual + 511)
--	    & ~0x1ff;
--	HDATA(a3000_host)->dma_bounce_buffer =
--	    kmalloc (HDATA(a3000_host)->dma_bounce_len, GFP_KERNEL);
--	
--	/* can't allocate memory; use PIO */
--	if (!HDATA(a3000_host)->dma_bounce_buffer) {
--	    HDATA(a3000_host)->dma_bounce_len = 0;
--	    return 1;
--	}
--
--	if (!dir_in) {
--	    /* copy to bounce buffer for a write */
--	    memcpy (HDATA(a3000_host)->dma_bounce_buffer,
--		cmd->SCp.ptr, cmd->SCp.this_residual);
-+	struct Scsi_Host *host = cmd->device->host;
-+	struct WD33C93_hostdata *hdata = shost_priv(host);
-+	a3000_scsiregs *regs = (a3000_scsiregs *)(host->base);
-+	unsigned short cntr = CNTR_PDMD | CNTR_INTEN;
-+	unsigned long addr = virt_to_bus(cmd->SCp.ptr);
-+
-+	/*
-+	 * if the physical address has the wrong alignment, or if
-+	 * physical address is bad, or if it is a write and at the
-+	 * end of a physical memory chunk, then allocate a bounce
-+	 * buffer
-+	 */
-+	if (addr & A3000_XFER_MASK) {
-+		hdata->dma_bounce_len = (cmd->SCp.this_residual + 511) & ~0x1ff;
-+		hdata->dma_bounce_buffer = kmalloc(hdata->dma_bounce_len,
-+						   GFP_KERNEL);
-+
-+		/* can't allocate memory; use PIO */
-+		if (!hdata->dma_bounce_buffer) {
-+			hdata->dma_bounce_len = 0;
-+			return 1;
-+		}
-+
-+		if (!dir_in) {
-+			/* copy to bounce buffer for a write */
-+			memcpy(hdata->dma_bounce_buffer, cmd->SCp.ptr,
-+			       cmd->SCp.this_residual);
-+		}
-+
-+		addr = virt_to_bus(hdata->dma_bounce_buffer);
- 	}
- 
--	addr = virt_to_bus(HDATA(a3000_host)->dma_bounce_buffer);
--    }
-+	/* setup dma direction */
-+	if (!dir_in)
-+		cntr |= CNTR_DDIR;
- 
--    /* setup dma direction */
--    if (!dir_in)
--	cntr |= CNTR_DDIR;
-+	/* remember direction */
-+	hdata->dma_dir = dir_in;
- 
--    /* remember direction */
--    HDATA(a3000_host)->dma_dir = dir_in;
-+	regs->CNTR = cntr;
- 
--    DMA(a3000_host)->CNTR = cntr;
-+	/* setup DMA *physical* address */
-+	regs->ACR = addr;
- 
--    /* setup DMA *physical* address */
--    DMA(a3000_host)->ACR = addr;
-+	if (dir_in)
-+		/* invalidate any cache */
-+		cache_clear(addr, cmd->SCp.this_residual);
-+	else
-+		/* push any dirty cache */
-+		cache_push(addr, cmd->SCp.this_residual);
- 
--    if (dir_in)
--  	/* invalidate any cache */
--	cache_clear (addr, cmd->SCp.this_residual);
--    else
--	/* push any dirty cache */
--	cache_push (addr, cmd->SCp.this_residual);
-+	/* start DMA */
-+	mb();			/* make sure setup is completed */
-+	regs->ST_DMA = 1;
-+	mb();			/* make sure DMA has started before next IO */
- 
--    /* start DMA */
--    mb();			/* make sure setup is completed */
--    DMA(a3000_host)->ST_DMA = 1;
--    mb();			/* make sure DMA has started before next IO */
--
--    /* return success */
--    return 0;
-+	/* return success */
-+	return 0;
- }
- 
- static void dma_stop(struct Scsi_Host *instance, struct scsi_cmnd *SCpnt,
- 		     int status)
- {
--    /* disable SCSI interrupts */
--    unsigned short cntr = CNTR_PDMD;
--
--    if (!HDATA(instance)->dma_dir)
--	cntr |= CNTR_DDIR;
--
--    DMA(instance)->CNTR = cntr;
--    mb();			/* make sure CNTR is updated before next IO */
--
--    /* flush if we were reading */
--    if (HDATA(instance)->dma_dir) {
--	DMA(instance)->FLUSH = 1;
--	mb();			/* don't allow prefetch */
--	while (!(DMA(instance)->ISTR & ISTR_FE_FLG))
--	    barrier();
--	mb();			/* no IO until FLUSH is done */
--    }
--
--    /* clear a possible interrupt */
--    /* I think that this CINT is only necessary if you are
--     * using the terminal count features.   HM 7 Mar 1994
--     */
--    DMA(instance)->CINT = 1;
--
--    /* stop DMA */
--    DMA(instance)->SP_DMA = 1;
--    mb();			/* make sure DMA is stopped before next IO */
--
--    /* restore the CONTROL bits (minus the direction flag) */
--    DMA(instance)->CNTR = CNTR_PDMD | CNTR_INTEN;
--    mb();			/* make sure CNTR is updated before next IO */
--
--    /* copy from a bounce buffer, if necessary */
--    if (status && HDATA(instance)->dma_bounce_buffer) {
--	if (SCpnt) {
--	    if (HDATA(instance)->dma_dir && SCpnt)
--		memcpy (SCpnt->SCp.ptr,
--			HDATA(instance)->dma_bounce_buffer,
--			SCpnt->SCp.this_residual);
--	    kfree (HDATA(instance)->dma_bounce_buffer);
--	    HDATA(instance)->dma_bounce_buffer = NULL;
--	    HDATA(instance)->dma_bounce_len = 0;
--	} else {
--	    kfree (HDATA(instance)->dma_bounce_buffer);
--	    HDATA(instance)->dma_bounce_buffer = NULL;
--	    HDATA(instance)->dma_bounce_len = 0;
--	}
--    }
--}
-+	struct WD33C93_hostdata *hdata = shost_priv(instance);
-+	a3000_scsiregs *regs = (a3000_scsiregs *)(instance->base);
- 
--static int __init a3000_detect(struct scsi_host_template *tpnt)
--{
--    wd33c93_regs regs;
-+	/* disable SCSI interrupts */
-+	unsigned short cntr = CNTR_PDMD;
- 
--    if  (!MACH_IS_AMIGA || !AMIGAHW_PRESENT(A3000_SCSI))
--	return 0;
--    if (!request_mem_region(0xDD0000, 256, "wd33c93"))
--	return 0;
-+	if (!hdata->dma_dir)
-+		cntr |= CNTR_DDIR;
- 
--    tpnt->proc_name = "A3000";
--    tpnt->proc_info = &wd33c93_proc_info;
--
--    a3000_host = scsi_register (tpnt, sizeof(struct WD33C93_hostdata));
--    if (a3000_host == NULL)
--	goto fail_register;
--
--    a3000_host->base = ZTWO_VADDR(0xDD0000);
--    a3000_host->irq = IRQ_AMIGA_PORTS;
--    DMA(a3000_host)->DAWR = DAWR_A3000;
--    regs.SASR = &(DMA(a3000_host)->SASR);
--    regs.SCMD = &(DMA(a3000_host)->SCMD);
--    HDATA(a3000_host)->no_sync = 0xff;
--    HDATA(a3000_host)->fast = 0;
--    HDATA(a3000_host)->dma_mode = CTRL_DMA;
--    wd33c93_init(a3000_host, regs, dma_setup, dma_stop, WD33C93_FS_12_15);
--    if (request_irq(IRQ_AMIGA_PORTS, a3000_intr, IRQF_SHARED, "A3000 SCSI",
--		    a3000_intr))
--        goto fail_irq;
--    DMA(a3000_host)->CNTR = CNTR_PDMD | CNTR_INTEN;
--
--    return 1;
-+	regs->CNTR = cntr;
-+	mb();			/* make sure CNTR is updated before next IO */
- 
--fail_irq:
--    wd33c93_release();
--    scsi_unregister(a3000_host);
--fail_register:
--    release_mem_region(0xDD0000, 256);
--    return 0;
-+	/* flush if we were reading */
-+	if (hdata->dma_dir) {
-+		regs->FLUSH = 1;
-+		mb();			/* don't allow prefetch */
-+		while (!(regs->ISTR & ISTR_FE_FLG))
-+			barrier();
-+		mb();			/* no IO until FLUSH is done */
-+	}
-+
-+	/* clear a possible interrupt */
-+	/* I think that this CINT is only necessary if you are
-+	 * using the terminal count features.   HM 7 Mar 1994
-+	 */
-+	regs->CINT = 1;
-+
-+	/* stop DMA */
-+	regs->SP_DMA = 1;
-+	mb();			/* make sure DMA is stopped before next IO */
-+
-+	/* restore the CONTROL bits (minus the direction flag) */
-+	regs->CNTR = CNTR_PDMD | CNTR_INTEN;
-+	mb();			/* make sure CNTR is updated before next IO */
-+
-+	/* copy from a bounce buffer, if necessary */
-+	if (status && hdata->dma_bounce_buffer) {
-+		if (SCpnt) {
-+			if (hdata->dma_dir && SCpnt)
-+				memcpy(SCpnt->SCp.ptr,
-+				       hdata->dma_bounce_buffer,
-+				       SCpnt->SCp.this_residual);
-+			kfree(hdata->dma_bounce_buffer);
-+			hdata->dma_bounce_buffer = NULL;
-+			hdata->dma_bounce_len = 0;
-+		} else {
-+			kfree(hdata->dma_bounce_buffer);
-+			hdata->dma_bounce_buffer = NULL;
-+			hdata->dma_bounce_len = 0;
-+		}
-+	}
- }
- 
- static int a3000_bus_reset(struct scsi_cmnd *cmd)
-@@ -213,13 +168,11 @@ static int a3000_bus_reset(struct scsi_cmnd *cmd)
- 	return SUCCESS;
- }
- 
--#define HOSTS_C
--
--static struct scsi_host_template driver_template = {
--	.proc_name		= "A3000",
-+static struct scsi_host_template amiga_a3000_scsi_template = {
-+	.module			= THIS_MODULE,
- 	.name			= "Amiga 3000 built-in SCSI",
--	.detect			= a3000_detect,
--	.release		= a3000_release,
-+	.proc_info		= wd33c93_proc_info,
-+	.proc_name		= "A3000",
- 	.queuecommand		= wd33c93_queuecommand,
- 	.eh_abort_handler	= wd33c93_abort,
- 	.eh_bus_reset_handler	= a3000_bus_reset,
-@@ -231,16 +184,106 @@ static struct scsi_host_template driver_template = {
- 	.use_clustering		= ENABLE_CLUSTERING
- };
- 
-+static int __init amiga_a3000_scsi_probe(struct platform_device *pdev)
-+{
-+	struct resource *res;
-+	struct Scsi_Host *host;
-+	struct WD33C93_hostdata *hdata;
-+	int error;
-+	wd33c93_regs wdregs;
-+	a3000_scsiregs *regs;
-+
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	if (!res)
-+		return -ENODEV;
-+
-+	if (!request_mem_region(res->start, resource_size(res), "wd33c93"))
-+		return -EBUSY;
-+
-+	host = scsi_host_alloc(&amiga_a3000_scsi_template,
-+			       sizeof(struct WD33C93_hostdata));
-+	if (!host) {
-+		error = -ENOMEM;
-+		goto fail_register;
-+	}
-+
-+	host->base = ZTWO_VADDR(res->start);
-+	host->irq = IRQ_AMIGA_PORTS;
- 
--#include "scsi_module.c"
-+	regs = (a3000_scsiregs *)(host->base);
-+	regs->DAWR = DAWR_A3000;
- 
--static int a3000_release(struct Scsi_Host *instance)
-+	wdregs.SASR = &regs->SASR;
-+	wdregs.SCMD = &regs->SCMD;
-+
-+	hdata = shost_priv(host);
-+	hdata->no_sync = 0xff;
-+	hdata->fast = 0;
-+	hdata->dma_mode = CTRL_DMA;
-+
-+	wd33c93_init(host, wdregs, dma_setup, dma_stop, WD33C93_FS_12_15);
-+	error = request_irq(IRQ_AMIGA_PORTS, a3000_intr, IRQF_SHARED,
-+			    "A3000 SCSI", host);
-+	if (error)
-+		goto fail_irq;
-+
-+	regs->CNTR = CNTR_PDMD | CNTR_INTEN;
-+
-+	error = scsi_add_host(host, NULL);
-+	if (error)
-+		goto fail_host;
-+
-+	platform_set_drvdata(pdev, host);
-+
-+	scsi_scan_host(host);
-+	return 0;
-+
-+fail_host:
-+	free_irq(IRQ_AMIGA_PORTS, host);
-+fail_irq:
-+	scsi_host_put(host);
-+fail_register:
-+	release_mem_region(res->start, resource_size(res));
-+	return error;
-+}
-+
-+static int __exit amiga_a3000_scsi_remove(struct platform_device *pdev)
- {
--    wd33c93_release();
--    DMA(instance)->CNTR = 0;
--    release_mem_region(0xDD0000, 256);
--    free_irq(IRQ_AMIGA_PORTS, a3000_intr);
--    return 1;
-+	struct Scsi_Host *host = platform_get_drvdata(pdev);
-+	a3000_scsiregs *regs = (a3000_scsiregs *)(host->base);
-+	struct resource *res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+
-+	regs->CNTR = 0;
-+	scsi_remove_host(host);
-+	free_irq(IRQ_AMIGA_PORTS, host);
-+	scsi_host_put(host);
-+	release_mem_region(res->start, resource_size(res));
-+	return 0;
-+}
-+
-+static struct platform_driver amiga_a3000_scsi_driver = {
-+	.remove = __exit_p(amiga_a3000_scsi_remove),
-+	.driver   = {
-+		.name	= "amiga-a3000-scsi",
-+		.owner	= THIS_MODULE,
-+	},
-+};
-+
-+static int __init amiga_a3000_scsi_init(void)
-+{
-+	return platform_driver_probe(&amiga_a3000_scsi_driver,
-+				     amiga_a3000_scsi_probe);
- }
- 
-+module_init(amiga_a3000_scsi_init);
-+
-+static void __exit amiga_a3000_scsi_exit(void)
-+{
-+	platform_driver_unregister(&amiga_a3000_scsi_driver);
-+}
-+
-+module_exit(amiga_a3000_scsi_exit);
-+
-+MODULE_DESCRIPTION("Amiga 3000 built-in SCSI");
- MODULE_LICENSE("GPL");
-+MODULE_ALIAS("platform:amiga-a3000-scsi");
--- 
-1.6.2.3
+Are you aware that scsi_execute_async() has gone in 2.6.30-rc1?
+
+I'm not sure what would be the best alternative for you. I would say
+a bio, but it is still being debated. Your current options are:
+
+1. bio_alloc then loop () bio_add_pc_page, and finally blk_rq_append_bio
+   (Which block people don't like)
+2. sglist => page-pointers-array translation and blk_rq_map_user with 
+   struct rq_map_data mode. (not possible with all kind of sglists)
+2. sglist => iovec translation and blk_rq_map_user_iov()
+   (Very very ugly mapping of pages to virtual pointers)
+
+I have a similar situation with my OSD code.
+
+Boaz
+
+> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> ---
+>  drivers/target/target_core_pscsi.c |   88 +++++++++++++++++++++++++++++++-----
+>  include/target/target_core_pscsi.h |    2 +
+>  2 files changed, 79 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+> index 0962563..66510f4 100644
+> --- a/drivers/target/target_core_pscsi.c
+> +++ b/drivers/target/target_core_pscsi.c
+> @@ -399,6 +399,8 @@ void *pscsi_allocate_virtdevice(se_hba_t *hba, const char *name)
+>  		return NULL;
+>  	}
+>  	pdv->pdv_se_hba = hba;
+> +	/* Use legacy path unless using ConfigFS FD method */
+> +	pdv->pdv_legacy = 1;
+>  
+>  	printk(KERN_INFO "PSCSI: Allocated pdv: %p for %s\n", pdv, name);
+>  	return (void *)pdv;
+> @@ -555,9 +557,10 @@ int pscsi_activate_device(se_device_t *dev)
+>  	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
+>  	struct Scsi_Host *sh = sd->host;
+>  
+> -	printk(KERN_INFO "CORE_PSCSI[%d] - Activating Device with TCQ: %d at"
+> +	printk(KERN_INFO "CORE_PSCSI[%d] - Activating %s Device with TCQ: %d at"
+>  		" SCSI Location (Channel/Target/LUN) %d/%d/%d\n", sh->host_no,
+> -		 sd->queue_depth, sd->channel, sd->id, sd->lun);
+> +		(pdv->pdv_legacy) ? "Legacy" : "REQ",  sd->queue_depth,
+> +		sd->channel, sd->id, sd->lun);
+>  
+>  	return 0;
+>  }
+> @@ -572,8 +575,9 @@ void pscsi_deactivate_device(se_device_t *dev)
+>  	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
+>  	struct Scsi_Host *sh = sd->host;
+>  
+> -	printk(KERN_INFO "CORE_PSCSI[%d] - Deactivating Device with TCQ: %d at"
+> -		" SCSI Location (Channel/Target/LUN) %d/%d/%d\n", sh->host_no,
+> +	printk(KERN_INFO "CORE_PSCSI[%d] - Deactivating %s Device with TCQ: %d"
+> +		" at SCSI Location (Channel/Target/LUN) %d/%d/%d\n",
+> +		sh->host_no, (pdv->pdv_legacy) ? "Legacy" : "REQ",
+>  		sd->queue_depth, sd->channel, sd->id, sd->lun);
+>  }
+>  
+> @@ -843,6 +847,30 @@ static int pscsi_blk_get_request(se_task_t *task)
+>  	return 0;
+>  }
+>  
+> +static int pscsi_do_task_legacy(
+> +	se_task_t *task,
+> +	pscsi_plugin_task_t *pt,
+> +	pscsi_dev_virt_t *pdv)
+> +{
+> +	se_cmd_t *cmd = TASK_CMD(task);
+> +	void *pscsi_buf = (task->task_sg_num != 0) ? task->task_sg :
+> +			T_TASK(cmd)->t_task_buf;
+> +	int ret;
+> +
+> +	ret = scsi_execute_async(pdv->pdv_sd, pt->pscsi_cdb,
+> +			COMMAND_SIZE(pt->pscsi_cdb[0]), pt->pscsi_direction,
+> +			pscsi_buf, task->task_size, task->task_sg_num,
+> +			(pdv->pdv_sd->type == TYPE_DISK) ? PS_TIMEOUT_DISK :
+> +			PS_TIMEOUT_OTHER, PS_RETRY, (void *)task,
+> +			pscsi_req_done_legacy, GFP_KERNEL);
+> +	if (ret != 0) {
+> +		printk(KERN_ERR "PSCSI Execute(): returned: %d\n", ret);
+> +		return PYX_TRANSPORT_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  /*      pscsi_do_task(): (Part of se_subsystem_api_t template)
+>   *
+>   *
+> @@ -852,6 +880,9 @@ int pscsi_do_task(se_task_t *task)
+>  	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
+>  	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) task->se_dev->dev_ptr;
+>  	struct gendisk *gd = NULL;
+> +
+> +	if (pdv->pdv_legacy)
+> +		return pscsi_do_task_legacy(task, pt, pdv);
+>  	/*
+>  	 * Grab pointer to struct gendisk for TYPE_DISK and TYPE_ROM
+>  	 * cases (eg: cases where struct scsi_device has a backing
+> @@ -1104,6 +1135,7 @@ se_device_t *pscsi_create_virtdevice_from_fd(
+>  		 * Keep track of the struct block_device for now..
+>  		 */
+>  		pdv->pdv_bd = bd;
+> +		pdv->pdv_legacy = 0;
+>  		/*
+>  		 * pscsi_create_type_[disk,rom]() will release host_lock..
+>  		 */
+> @@ -1286,6 +1318,9 @@ int pscsi_map_task_SG(se_task_t *task)
+>  			PAGE_SIZE - 1) >> PAGE_SHIFT;
+>  	int nr_vecs = 0, ret = 0;
+>  
+> +	if (pdv->pdv_legacy)
+> +		return 0;
+> +
+>  	if (!task->task_size)
+>  		return 0;
+>  	/*
+> @@ -1387,6 +1422,9 @@ int pscsi_map_task_non_SG(se_task_t *task)
+>  	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) task->se_dev->dev_ptr;
+>  	int ret = 0;
+>  
+> +	if (pdv->pdv_legacy)
+> +		return 0;
+> +
+>  	if (!task->task_size)
+>  		return 0;
+>  
+> @@ -1407,8 +1445,12 @@ int pscsi_map_task_non_SG(se_task_t *task)
+>  int pscsi_CDB_inquiry(se_task_t *task, u32 size)
+>  {
+>  	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
+> +	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) task->se_dev->dev_ptr;
+>  
+>  	pt->pscsi_direction = DMA_FROM_DEVICE;
+> +	if (pdv->pdv_legacy)
+> +		return pscsi_map_task_non_SG(task);
+> +
+>  	if (pscsi_blk_get_request(task) < 0)
+>  		return -1;
+>  
+> @@ -1418,10 +1460,11 @@ int pscsi_CDB_inquiry(se_task_t *task, u32 size)
+>  int pscsi_CDB_none(se_task_t *task, u32 size)
+>  {
+>  	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
+> +	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) task->se_dev->dev_ptr;
+>  
+>  	pt->pscsi_direction = DMA_NONE;
+>  
+> -	return pscsi_blk_get_request(task);
+> +	return (pdv->pdv_legacy) ? 0 : pscsi_blk_get_request(task);
+>  }
+>  
+>  /*	pscsi_CDB_read_non_SG():
+> @@ -1431,8 +1474,11 @@ int pscsi_CDB_none(se_task_t *task, u32 size)
+>  int pscsi_CDB_read_non_SG(se_task_t *task, u32 size)
+>  {
+>  	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
+> +	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) task->se_dev->dev_ptr;
+>  
+>  	pt->pscsi_direction = DMA_FROM_DEVICE;
+> +	if (pdv->pdv_legacy)
+> +		return pscsi_map_task_non_SG(task);
+>  
+>  	if (pscsi_blk_get_request(task) < 0)
+>  		return PYX_TRANSPORT_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> @@ -1447,11 +1493,13 @@ int pscsi_CDB_read_non_SG(se_task_t *task, u32 size)
+>  int pscsi_CDB_read_SG(se_task_t *task, u32 size)
+>  {
+>  	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
+> +	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) task->se_dev->dev_ptr;
+>  
+>  	pt->pscsi_direction = DMA_FROM_DEVICE;
+>  
+> -	if (pscsi_blk_get_request(task) < 0)
+> -		return PYX_TRANSPORT_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> +	if (!(pdv->pdv_legacy))
+> +		if (pscsi_blk_get_request(task) < 0)
+> +			return PYX_TRANSPORT_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+>  
+>  	if (pscsi_map_task_SG(task) < 0)
+>  		return PYX_TRANSPORT_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> @@ -1466,11 +1514,13 @@ int pscsi_CDB_read_SG(se_task_t *task, u32 size)
+>  int pscsi_CDB_write_non_SG(se_task_t *task, u32 size)
+>  {
+>  	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
+> +	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) task->se_dev->dev_ptr;
+>  
+>  	pt->pscsi_direction = DMA_TO_DEVICE;
+>  
+> -	if (pscsi_blk_get_request(task) < 0)
+> -		return PYX_TRANSPORT_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> +	if (!(pdv->pdv_legacy))
+> +		if (pscsi_blk_get_request(task) < 0)
+> +			return PYX_TRANSPORT_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+>  
+>  	return pscsi_map_task_non_SG(task);
+>  }
+> @@ -1482,11 +1532,13 @@ int pscsi_CDB_write_non_SG(se_task_t *task, u32 size)
+>  int pscsi_CDB_write_SG(se_task_t *task, u32 size)
+>  {
+>  	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
+> +	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) task->se_dev->dev_ptr;
+>  
+>  	pt->pscsi_direction = DMA_TO_DEVICE;
+>  
+> -	if (pscsi_blk_get_request(task) < 0)
+> -		return PYX_TRANSPORT_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> +	if (!(pdv->pdv_legacy))
+> +		if (pscsi_blk_get_request(task) < 0)
+> +			return PYX_TRANSPORT_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+>  
+>  	if (pscsi_map_task_SG(task) < 0)
+>  		return PYX_TRANSPORT_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> @@ -1643,6 +1695,20 @@ static inline void pscsi_process_SAM_status(
+>  	return;
+>  }
+>  
+> +void pscsi_req_done_legacy(void *data, char *sense, int result, int data_len)
+> +{
+> +	se_task_t *task = (se_task_t *)data;
+> +	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *)task->transport_req;
+> +
+> +	pt->pscsi_result = result;
+> +	pt->pscsi_resid = data_len;
+> +
+> +	if (result != 0)
+> +		memcpy(pt->pscsi_sense, sense, SCSI_SENSE_BUFFERSIZE);	
+> +
+> +	pscsi_process_SAM_status(task, pt);
+> +}
+> +
+>  void pscsi_req_done(struct request *req, int uptodate)
+>  {
+>  	se_task_t *task = (se_task_t *)req->end_io_data;
+> diff --git a/include/target/target_core_pscsi.h b/include/target/target_core_pscsi.h
+> index b05b793..0e1d6cf 100644
+> --- a/include/target/target_core_pscsi.h
+> +++ b/include/target/target_core_pscsi.h
+> @@ -94,6 +94,7 @@ extern u32 pscsi_get_dma_length(u32, se_device_t *);
+>  extern u32 pscsi_get_max_sectors(se_device_t *);
+>  extern u32 pscsi_get_queue_depth(se_device_t *);
+>  extern void pscsi_shutdown_hba(struct se_hba_s *);
+> +extern void pscsi_req_done_legacy(void *, char *, int, int);
+>  extern void pscsi_req_done(struct request *, int);
+>  #endif
+>  
+> @@ -120,6 +121,7 @@ typedef struct pscsi_plugin_task_s {
+>  
+>  typedef struct pscsi_dev_virt_s {
+>  	int	pdv_flags;
+> +	int	pdv_legacy; /* Use scsi_execute_async() from HTCL */
+>  	int	pdv_channel_id;
+>  	int	pdv_target_id;
+>  	int	pdv_lun_id;
 
