@@ -1,76 +1,229 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] RFC scsi_error: handle REPORT_LUNS_DATA_CHANGED, CAPACITY_DATA_CHANGED,
-Date: Mon, 20 Apr 2009 11:55:52 +0200
-Message-ID: <49EC46A8.1070704@suse.de>
-References: <12385252751209-git-send-email-michaelc@cs.wisc.edu> <49E90243.7080806@cs.wisc.edu>
+From: "Kashyap, Desai" <kashyap.desai@lsi.com>
+Subject: [PATCH 1/3] mpt fusion: Queue full event handling
+Date: Mon, 20 Apr 2009 16:13:25 +0530
+Message-ID: <20090420104318.GA12813@lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:53751 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754240AbZDTJzy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Apr 2009 05:55:54 -0400
-In-Reply-To: <49E90243.7080806@cs.wisc.edu>
+Received: from chip3og62.obsmtp.com ([64.18.14.201]:39618 "EHLO
+	chip3og62.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754653AbZDTLZH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Apr 2009 07:25:07 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-Hi Mike,
 
-Mike Christie wrote:
-> Hey Hannes
->=20
-> While we are talking about LSF stuff and you are not busy with distro
-> stuff....
->=20
-Ah, irony detector kicked in.
-(Current bugilla count is at 114. Ask me about being busy.)
+Handle Queue full event.
+FW will report Queue full event to Driver and driver will handle this queue
+full event to SCSI Mid layer.
 
-> I implemented this based on what we talked about at the last LSF.
->=20
-Yes, I've seen it. You again beat me to it; I've done an initial implem=
-entation
-already but failed to send it mainline. Sigh.
+---
 
-But yes, we _do_ need something like this.
-
-> I was thinking that maybe using kobject_uevent_env would be better. T=
-he
-> info that gets passed to userspace would be the decoded sense and
-> asc/ascq based on values from the drivers/scsi/constants.c.
->=20
-No. This patch has the possibility of generating _huge_ amounts of
-messages, most of which are information only and of no influence
-to the actual operation.
-udev would be flooded with it and won't be able to react to 'important'
-messages while processing them.
-
-Hence a separate mechanism like the proposed SCSI generic netlink
-facility is the better approach.
-
-> I was also thinking that a udev rule could then just handle something
-> like rescanning for REPORT_LUNS_DATA_CHANGED and handle
-> CAPACITY_DATA_CHANGED by doing all the crap that has to be done.
->=20
-Yes, that was my initial thought, too. But Kay objected because
-of the possible message flooding in udev so we have to use a
-separate facility here.
-
-Actually, I already have a daemon implemented. I can drop you
-a pointer to the location if required.
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
+---
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index 32cdfe7..bc6f4b6 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -121,6 +121,7 @@ static void mptsas_expander_delete(MPT_ADAPTER *ioc,
+ static void mptsas_send_expander_event(struct fw_event_work *fw_event);
+ static void mptsas_not_responding_devices(MPT_ADAPTER *ioc);
+ static void mptsas_scan_sas_topology(MPT_ADAPTER *ioc);
++static void mptsas_handle_queue_full_event(struct fw_event_work *fw_event);
+ static void mptsas_volume_delete(MPT_ADAPTER *ioc, u8 id);
+ 
+ static void mptsas_print_phy_data(MPT_ADAPTER *ioc,
+@@ -680,6 +681,18 @@ mptsas_add_device_component_starget_ir(MPT_ADAPTER *ioc,
+ 		mptsas_add_device_component_by_fw(ioc, phys_disk.PhysDiskBus,
+ 		    phys_disk.PhysDiskID);
+ 
++		mutex_lock(&ioc->sas_device_info_mutex);
++		list_for_each_entry(sas_info, &ioc->sas_device_info_list,
++		    list) {
++			if (!sas_info->is_logical_volume &&
++			    (sas_info->fw.channel == phys_disk.PhysDiskBus &&
++			    sas_info->fw.id == phys_disk.PhysDiskID)) {
++				sas_info->is_hidden_raid_component = 1;
++				sas_info->volume_id = starget->id;
++			}
++		}
++		mutex_unlock(&ioc->sas_device_info_mutex);
++
+ 	}
+ 
+ 	/*
+@@ -747,6 +760,29 @@ mptsas_add_device_component_starget(MPT_ADAPTER *ioc,
+ }
+ 
+ /**
++ *	mptsas_del_device_component_by_os - Once a device has been removed, we
++ *	mark the entry in the list as being cached
++ *	@ioc: Pointer to MPT_ADAPTER structure
++ *	@channel: os mapped id's
++ *	@id:
++ *
++ **/
++static void
++mptsas_del_device_component_by_os(MPT_ADAPTER *ioc, u8 channel, u8 id)
++{
++	struct sas_device_info	*sas_info, *next;
++
++	/*
++	 * Set is_cached flag
++	 */
++	list_for_each_entry_safe(sas_info, next, &ioc->sas_device_info_list,
++		list) {
++		if (sas_info->os.channel == channel && sas_info->os.id == id)
++			sas_info->is_cached = 1;
++	}
++}
++
++/**
+  *	mptsas_del_device_components - Cleaning the list
+  *	@ioc: Pointer to MPT_ADAPTER structure
+  *
+@@ -1576,6 +1612,9 @@ mptsas_firmware_event_work(struct work_struct *work)
+ 	case MPI_EVENT_SAS_PHY_LINK_STATUS:
+ 		mptsas_send_link_status_event(fw_event);
+ 		break;
++	case MPI_EVENT_QUEUE_FULL:
++		mptsas_handle_queue_full_event(fw_event);
++		break;
+ 	}
+ }
+ 
+@@ -1705,6 +1744,9 @@ mptsas_target_destroy(struct scsi_target *starget)
+ 
+ 	vtarget = starget->hostdata;
+ 
++	mptsas_del_device_component_by_os(ioc, starget->channel,
++	    starget->id);
++
+ 
+ 	if (starget->channel == MPTSAS_RAID_CHANNEL)
+ 		goto out;
+@@ -3396,6 +3438,8 @@ mptsas_not_responding_devices(MPT_ADAPTER *ioc)
+ 	/* devices, logical volumes */
+  redo_device_scan:
+ 	list_for_each_entry(sas_info, &ioc->sas_device_info_list, list) {
++		if (sas_info->is_cached)
++			continue;
+ 		if (!sas_info->is_logical_volume) {
+ 			sas_device.handle = 0;
+ 			retry_count = 0;
+@@ -3605,6 +3649,95 @@ mptsas_scan_sas_topology(MPT_ADAPTER *ioc)
+ 	}
+ }
+ 
++
++static void
++mptsas_handle_queue_full_event(struct fw_event_work *fw_event)
++{
++	MPT_ADAPTER *ioc;
++	EventDataQueueFull_t *qfull_data;
++	struct sas_device_info *sas_info;
++	struct scsi_device	*sdev;
++	int depth;
++	int id = -1;
++	int channel = -1;
++	int fw_id, fw_channel;
++	u16 current_depth;
++
++
++	ioc = fw_event->ioc;
++	qfull_data = (EventDataQueueFull_t *)fw_event->event_data;
++	fw_id = qfull_data->TargetID;
++	fw_channel = qfull_data->Bus;
++	current_depth = le16_to_cpu(qfull_data->CurrentDepth);
++
++	/* if hidden raid component, look for the volume id */
++	mutex_lock(&ioc->sas_device_info_mutex);
++	if (mptscsih_is_phys_disk(ioc, fw_channel, fw_id)) {
++		list_for_each_entry(sas_info, &ioc->sas_device_info_list,
++		    list) {
++			if (sas_info->is_cached ||
++			    sas_info->is_logical_volume)
++				continue;
++			if (sas_info->is_hidden_raid_component &&
++			    (sas_info->fw.channel == fw_channel &&
++			    sas_info->fw.id == fw_id)) {
++				id = sas_info->volume_id;
++				channel = MPTSAS_RAID_CHANNEL;
++				goto out;
++			}
++		}
++	} else {
++		list_for_each_entry(sas_info, &ioc->sas_device_info_list,
++		    list) {
++			if (sas_info->is_cached ||
++			    sas_info->is_hidden_raid_component ||
++			    sas_info->is_logical_volume)
++				continue;
++			if (sas_info->fw.channel == fw_channel &&
++			    sas_info->fw.id == fw_id) {
++				id = sas_info->os.id;
++				channel = sas_info->os.channel;
++				goto out;
++			}
++		}
++
++	}
++
++ out:
++	mutex_unlock(&ioc->sas_device_info_mutex);
++
++	if (id != -1) {
++		shost_for_each_device(sdev, ioc->sh) {
++			if (sdev->id == id && sdev->channel == channel) {
++				if (current_depth > sdev->queue_depth) {
++					sdev_printk(KERN_INFO, sdev,
++					    "strange observation, the queue "
++					    "depth is (%d) meanwhile fw queue "
++					    "depth (%d)\n", sdev->queue_depth,
++					    current_depth);
++					continue;
++				}
++				depth = scsi_track_queue_full(sdev,
++				    current_depth - 1);
++				if (depth > 0)
++					sdev_printk(KERN_INFO, sdev,
++					"Queue depth reduced to (%d)\n",
++					   depth);
++				else if (depth < 0)
++					sdev_printk(KERN_INFO, sdev,
++					"Tagged Command Queueing is being "
++					"disabled\n");
++				else if (depth == 0)
++					sdev_printk(KERN_INFO, sdev,
++					"Queue depth not changed yet\n");
++			}
++		}
++	}
++
++	mptsas_free_fw_event(ioc, fw_event);
++}
++
++
+ static struct mptsas_phyinfo *
+ mptsas_find_phyinfo_by_sas_address(MPT_ADAPTER *ioc, u64 sas_address)
+ {
+diff --git a/drivers/message/fusion/mptsas.h b/drivers/message/fusion/mptsas.h
+index 9b47379..36578df 100644
+--- a/drivers/message/fusion/mptsas.h
++++ b/drivers/message/fusion/mptsas.h
+@@ -83,6 +83,12 @@ struct sas_device_info {
+ 	u16			slot;		/* enclosure slot id */
+ 	u64			enclosure_logical_id; /*enclosure address */
+ 	u8			is_logical_volume; /* is this logical volume */
++	/* this belongs to volume */
++	u8			is_hidden_raid_component;
++	/* this valid when is_hidden_raid_component set */
++	u8			volume_id;
++	/* cached data for a removed device */
++	u8			is_cached;
+ };
+ 
+ struct mptsas_hotplug_event {
