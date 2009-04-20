@@ -1,75 +1,104 @@
-From: Ashutosh Naik <ashutosh.naik@gmail.com>
-Subject: Re: [PATCH]ibft: Fix the display of a few fields in the NIC attribute
-	structure in sysfs
-Date: Mon, 20 Apr 2009 21:30:00 +0530
-Message-ID: <81083a450904200900p7f885bf6v1d50a3429293e2f1@mail.gmail.com>
-References: <81083a450904110629j93c5c2j2c1250e9822c3888@mail.gmail.com>
-	 <1239472568.3416.11.camel@mulgrave.int.hansenpartnership.com>
-	 <200904120907.08828.ketuzsezr@darnok.org>
-	 <20090415143744.84d6c598.akpm@linux-foundation.org>
+From: Grant Grundler <grundler@google.com>
+Subject: Re: [PATCH 1/3] mpt fusion: Queue full event handling
+Date: Mon, 20 Apr 2009 09:38:55 -0700
+Message-ID: <da824cf30904200938w627426ds4cee8a08b851e07@mail.gmail.com>
+References: <20090420104318.GA12813@lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:30135 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755797AbZDTQAB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Apr 2009 12:00:01 -0400
-In-Reply-To: <20090415143744.84d6c598.akpm@linux-foundation.org>
+Received: from smtp-out.google.com ([216.239.33.17]:59839 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750807AbZDTQjD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Apr 2009 12:39:03 -0400
+Received: from zps78.corp.google.com (zps78.corp.google.com [172.25.146.78])
+	by smtp-out.google.com with ESMTP id n3KGcveN030307
+	for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2009 17:38:58 +0100
+Received: from an-out-0708.google.com (anac38.prod.google.com [10.100.54.38])
+	by zps78.corp.google.com with ESMTP id n3KGcuQq009280
+	for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2009 09:38:56 -0700
+Received: by an-out-0708.google.com with SMTP id c38so409014ana.25
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2009 09:38:56 -0700 (PDT)
+In-Reply-To: <20090420104318.GA12813@lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: ketuzsezr@darnok.org, James.Bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, pjones@redhat.com, konradr@linux.vnet.ibm.com, vishnu@chelsio.com
+To: "Kashyap, Desai" <kashyap.desai@lsi.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-On Thu, Apr 16, 2009 at 3:07 AM, Andrew Morton
-<akpm@linux-foundation.org> wrote:
-> On Sun, 12 Apr 2009 09:06:59 -0400
-> Konrad Rzeszutek <ketuzsezr@darnok.org> wrote:
+Desai,
+Some nits about comments. And suggestions that you can chose to ignore.=
+ :)
+
+
+On Mon, Apr 20, 2009 at 3:43 AM, Kashyap, Desai <kashyap.desai@lsi.com>=
+ wrote:
+=2E..
+> diff --git a/drivers/message/fusion/mptsas.h b/drivers/message/fusion=
+/mptsas.h
+> index 9b47379..36578df 100644
+> --- a/drivers/message/fusion/mptsas.h
+> +++ b/drivers/message/fusion/mptsas.h
+> @@ -83,6 +83,12 @@ struct sas_device_info {
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0u16 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 slot; =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ /* enclosure slot id */
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0u64 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 enclosure_logical_id; /*enclosure addre=
+ss */
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0u8 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0is_logical_volume; /* is this logica=
+l volume */
+
+"is this logical volume" comment is just repeating the variable name. :=
+)
+Maybe point at a description (e.g. "See page XX of Programmers Guide")
+or omit this comment.
+
+> + =C2=A0 =C2=A0 =C2=A0 /* this belongs to volume */
+> + =C2=A0 =C2=A0 =C2=A0 u8 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0is_hidden_raid_component;
+
+Does "belongs to a volume" mean a "logical volume"?
+
+Suggestion: replace with something like /* is physical dev part of volu=
+me? */
+
+> + =C2=A0 =C2=A0 =C2=A0 /* this valid when is_hidden_raid_component se=
+t */
+> + =C2=A0 =C2=A0 =C2=A0 u8 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0volume_id;
+
+When looking at code, I would have associated volume_id
+with "is_logical_volume" variable. Maybe call this "hidden_raid_VID" ?
+
+> + =C2=A0 =C2=A0 =C2=A0 /* cached data for a removed device */
+> + =C2=A0 =C2=A0 =C2=A0 u8 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0is_cached;
+
+"cached data" generally refers to user payload data.
+I'm pretty sure that's not meant here.
+Suggestion:  /* Device info is cached (or not) */
+
+It's interesting to know this if the device has been removed.
+But the act of caching has to take place before the device is
+gone and thus, this flag will tell us the data was
+read once "before" and may not be current.
+
+Some devices will change the SCSI model string after
+they've spun up and loaded the full firmware from reserved
+tracks on the media.
+
+
+> =C2=A0};
 >
->> > The second question is who picks this up? =A0The drivers/firmware
->> > directory doesn't seem to have a dedicated tree, so I can take thi=
-s
->> > through the SCSI tree if required or Andrew can take it through -m=
-m.
->>
->> Which way works best for everybody? I was thinking SCSI, since the e=
-nd result
->> of this module is to configure the storage used to bootstrap the box=
-=2E
->
-> I can merge merge it later this week.
->
-> However...
->
->
-> : From: Ashutosh Naik <ashutosh.naik@gmail.com>
-> :
-> : Fix the display of a few fields in the iBFT NIC attribute structure=
+> =C2=A0struct mptsas_hotplug_event {
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
  in
-> : sysfs.
-<snip>
-
-> The changelog is bad.
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
 >
-> What does "fix" mean? =A0What does the old output look like and how d=
-oes
-> this patch change it?
->
-> This matters, because this is a userspace interface and who knows, th=
-ere
-> might be applications out there which somehow depend on the old and
-> broken behaviour.
->
-> Of course, that might be totally silly and unrealistic but because we
-> weren't told what the patch actually does, how can I tell?
->
-> Please send a new and complete description of this change, thanks.
-
-Sorry for the delay.
-
-Here is an updated Changelog
-
-The patch ensures that on, if the DHCP
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
