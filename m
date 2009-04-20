@@ -1,69 +1,96 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] RFC scsi_error: handle REPORT_LUNS_DATA_CHANGED, CAPACITY_DATA_CHANGED,
-Date: Mon, 20 Apr 2009 14:35:15 -0500
-Message-ID: <49ECCE73.2010302@cs.wisc.edu>
-References: <12385252751209-git-send-email-michaelc@cs.wisc.edu> <49E90243.7080806@cs.wisc.edu> <49EC46A8.1070704@suse.de>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: [PATCH 1/3] mpt fusion: Queue full event handling
+Date: Mon, 20 Apr 2009 12:52:11 -0700
+Message-ID: <660360F4F2570145BD872F298951B17A76BCB0BA@cosmail03.lsi.com>
+References: <da824cf30904200938w627426ds4cee8a08b851e07@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:38176 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751705AbZDTTfY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Apr 2009 15:35:24 -0400
-In-Reply-To: <49EC46A8.1070704@suse.de>
+Received: from chip3og59.obsmtp.com ([64.18.14.183]:33903 "EHLO
+	chip3og59.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752308AbZDTTw1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Apr 2009 15:52:27 -0400
+In-Reply-To: <da824cf30904200938w627426ds4cee8a08b851e07@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Grant Grundler <grundler@google.com>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
 
-Hannes Reinecke wrote:
-> Hi Mike,
-> 
-> Mike Christie wrote:
->> Hey Hannes
->>
->> While we are talking about LSF stuff and you are not busy with distro
->> stuff....
->>
-> Ah, irony detector kicked in.
-> (Current bugilla count is at 114. Ask me about being busy.)
-> 
->> I implemented this based on what we talked about at the last LSF.
->>
-> Yes, I've seen it. You again beat me to it; I've done an initial implementation
-> already but failed to send it mainline. Sigh.
-> 
-> But yes, we _do_ need something like this.
-> 
->> I was thinking that maybe using kobject_uevent_env would be better. The
->> info that gets passed to userspace would be the decoded sense and
->> asc/ascq based on values from the drivers/scsi/constants.c.
->>
-> No. This patch has the possibility of generating _huge_ amounts of
-> messages, most of which are information only and of no influence
-> to the actual operation.
-> udev would be flooded with it and won't be able to react to 'important'
-> messages while processing them.
+On Monday, April 20, 2009 10:39 AM,  Grant Grundler wrote:
+> > =A0 =A0 =A0 =A0u8 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0is_log=
+ical_volume; /* is=20
+> this logical volume */
+>=20
+> "is this logical volume" comment is just repeating the=20
+> variable name. :)
+> Maybe point at a description (e.g. "See page XX of Programmers Guide"=
+)
+> or omit this comment.
 
+This is a boolean variable meaning whether the device object is a raid =
+volume or not.  If its a raid volume, this is set to 1.  If its not a r=
+aid volume, this is set to zero.  When its set to zero, then it means t=
+he device could be bare drive, hidden raid component, or some other per=
+iphial like tape, cdrom, etc.
 
-Ah yeah.
+>=20
+> > + =A0 =A0 =A0 /* this belongs to volume */
+> > + =A0 =A0 =A0 u8 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0is_hidd=
+en_raid_component;
+>=20
+> Does "belongs to a volume" mean a "logical volume"?
 
-> 
-> Hence a separate mechanism like the proposed SCSI generic netlink
-> facility is the better approach.
-> 
->> I was also thinking that a udev rule could then just handle something
->> like rescanning for REPORT_LUNS_DATA_CHANGED and handle
->> CAPACITY_DATA_CHANGED by doing all the crap that has to be done.
->>
-> Yes, that was my initial thought, too. But Kay objected because
-> of the possible message flooding in udev so we have to use a
-> separate facility here.
-> 
-> Actually, I already have a daemon implemented. I can drop you
-> a pointer to the location if required.
-> 
+This is a boolean variable meaning whether the device object is a hidde=
+n raid component.   A hidden raid component is a drive belonging to a r=
+aid volume set.
 
-Yeah, please send it. I will hook it up to the other patch using the 
-scsi generic netlink code.
+>=20
+> Suggestion: replace with something like /* is physical dev=20
+> part of volume? */
+>=20
+> > + =A0 =A0 =A0 /* this valid when is_hidden_raid_component set */
+> > + =A0 =A0 =A0 u8 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0volume_=
+id;
+>=20
+> When looking at code, I would have associated volume_id
+> with "is_logical_volume" variable. Maybe call this "hidden_raid_VID" =
+?
+
+This is the target id for the volume when the device object happens to =
+be a hidden raid component.
+
+>=20
+> > + =A0 =A0 =A0 /* cached data for a removed device */
+> > + =A0 =A0 =A0 u8 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0is_cach=
+ed;
+>=20
+> "cached data" generally refers to user payload data.
+> I'm pretty sure that's not meant here.
+> Suggestion:  /* Device info is cached (or not) */
+>=20
+> It's interesting to know this if the device has been removed.
+> But the act of caching has to take place before the device is
+> gone and thus, this flag will tell us the data was
+> read once "before" and may not be current.
+>=20
+> Some devices will change the SCSI model string after
+> they've spun up and loaded the full firmware from reserved
+> tracks on the media.
+>=20
+
+No it doesn't  mean that.  =20
+
+What this variable means that this device object is still live in the l=
+ink list after the bare drive has been deleted, hence the data for this=
+ object is cached.   The reason we are caching the device object is due=
+ to a customer request.   This particular customer want us to support r=
+eporting hidden raid components after then have been removed.    They w=
+ant their storage apps to report this information so the service suppor=
+t reps can identify which drive was pulled or failed.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
