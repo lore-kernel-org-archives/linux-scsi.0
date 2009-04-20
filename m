@@ -1,106 +1,70 @@
-From: Grant Grundler <grundler@google.com>
-Subject: Re: [PATCH 1/3] mpt fusion: Queue full event handling
-Date: Mon, 20 Apr 2009 09:38:55 -0700
-Message-ID: <da824cf30904200938w627426ds4cee8a08b851e07@mail.gmail.com>
-References: <20090420104318.GA12813@lsi.com>
+From: "Kleber S. Souza" <klebers@linux.vnet.ibm.com>
+Subject: [PATCH] ipr: RESEND: fix PCI permanent error handler
+Date: Mon, 20 Apr 2009 13:59:42 -0300
+Message-ID: <1240246790.7458.112.camel@zeppelin.austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.33.17]:59839 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750807AbZDTQjD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Apr 2009 12:39:03 -0400
-Received: from zps78.corp.google.com (zps78.corp.google.com [172.25.146.78])
-	by smtp-out.google.com with ESMTP id n3KGcveN030307
-	for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2009 17:38:58 +0100
-Received: from an-out-0708.google.com (anac38.prod.google.com [10.100.54.38])
-	by zps78.corp.google.com with ESMTP id n3KGcuQq009280
-	for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2009 09:38:56 -0700
-Received: by an-out-0708.google.com with SMTP id c38so409014ana.25
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2009 09:38:56 -0700 (PDT)
-In-Reply-To: <20090420104318.GA12813@lsi.com>
+Received: from e24smtp04.br.ibm.com ([32.104.18.25]:43884 "EHLO
+	e24smtp04.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751076AbZDTRBH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Apr 2009 13:01:07 -0400
+Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
+	by e24smtp04.br.ibm.com (8.13.1/8.13.1) with ESMTP id n3KGufQY031949
+	for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2009 13:56:41 -0300
+Received: from d24av01.br.ibm.com (d24av01.br.ibm.com [9.18.232.46])
+	by d24relay01.br.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n3KI0L3w3440736
+	for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2009 15:00:23 -0300
+Received: from d24av01.br.ibm.com (loopback [127.0.0.1])
+	by d24av01.br.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n3KH14Ic030511
+	for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2009 14:01:04 -0300
+Received: from [9.18.200.203] ([9.18.200.203])
+	by d24av01.br.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id n3KH13EG030474
+	for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2009 14:01:03 -0300
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Desai,
-Some nits about comments. And suggestions that you can chose to ignore.=
- :)
+From: Brian King <brking@linux.vnet.ibm.com>
 
+The ipr driver can hang if it encounters enough PCI errors
+to trigger the permanent error handler. The driver will attempt
+to initiate a "bringdown" of the adapter and fail all pending
+ops back. However, this bringdown is unlike any other bringdown
+of the adapter in the code as the driver. In this code path we
+end up failing back ops with allow_cmds still set to 1. This results
+in some commands, the HCAM commands in particular, getting immediately
+re-issued to the adapter on the done call, which results in
+an infinite loop in ipr_fail_all_ops. Fix this by setting allow_cmds
+to zero in this path. 
 
-On Mon, Apr 20, 2009 at 3:43 AM, Kashyap, Desai <kashyap.desai@lsi.com>=
- wrote:
-=2E..
-> diff --git a/drivers/message/fusion/mptsas.h b/drivers/message/fusion=
-/mptsas.h
-> index 9b47379..36578df 100644
-> --- a/drivers/message/fusion/mptsas.h
-> +++ b/drivers/message/fusion/mptsas.h
-> @@ -83,6 +83,12 @@ struct sas_device_info {
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0u16 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 slot; =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- /* enclosure slot id */
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0u64 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 enclosure_logical_id; /*enclosure addre=
-ss */
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0u8 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0is_logical_volume; /* is this logica=
-l volume */
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+Signed-off-by: Kleber S. Souza <klebers@linux.vnet.ibm.com>
+---
 
-"is this logical volume" comment is just repeating the variable name. :=
-)
-Maybe point at a description (e.g. "See page XX of Programmers Guide")
-or omit this comment.
+ drivers/scsi/ipr.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-> + =C2=A0 =C2=A0 =C2=A0 /* this belongs to volume */
-> + =C2=A0 =C2=A0 =C2=A0 u8 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0is_hidden_raid_component;
-
-Does "belongs to a volume" mean a "logical volume"?
-
-Suggestion: replace with something like /* is physical dev part of volu=
-me? */
-
-> + =C2=A0 =C2=A0 =C2=A0 /* this valid when is_hidden_raid_component se=
-t */
-> + =C2=A0 =C2=A0 =C2=A0 u8 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0volume_id;
-
-When looking at code, I would have associated volume_id
-with "is_logical_volume" variable. Maybe call this "hidden_raid_VID" ?
-
-> + =C2=A0 =C2=A0 =C2=A0 /* cached data for a removed device */
-> + =C2=A0 =C2=A0 =C2=A0 u8 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0is_cached;
-
-"cached data" generally refers to user payload data.
-I'm pretty sure that's not meant here.
-Suggestion:  /* Device info is cached (or not) */
-
-It's interesting to know this if the device has been removed.
-But the act of caching has to take place before the device is
-gone and thus, this flag will tell us the data was
-read once "before" and may not be current.
-
-Some devices will change the SCSI model string after
-they've spun up and loaded the full firmware from reserved
-tracks on the media.
-
-
-> =C2=A0};
->
-> =C2=A0struct mptsas_hotplug_event {
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
+diff -puN drivers/scsi/ipr.c~ipr_pci_perm_failure_hang
+drivers/scsi/ipr.c
+---
+linux-2.6/drivers/scsi/ipr.c~ipr_pci_perm_failure_hang      2009-04-15
+09:25:21.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ipr.c        2009-04-15
+09:25:39.000000000 -0500
+@@ -6998,6 +6998,7 @@ static void ipr_pci_perm_failure(struct 
+                ioa_cfg->sdt_state = ABORT_DUMP;
+        ioa_cfg->reset_retries = IPR_NUM_RESET_RELOAD_RETRIES;
+        ioa_cfg->in_ioa_bringdown = 1;
++       ioa_cfg->allow_cmds = 0;
+        ipr_initiate_ioa_reset(ioa_cfg, IPR_SHUTDOWN_NONE);
+        spin_unlock_irqrestore(ioa_cfg->host->host_lock, flags);
+ }
+_
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Kleber S. Souza
+IBM Linux Technology Center
+
