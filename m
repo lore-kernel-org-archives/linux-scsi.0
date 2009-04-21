@@ -1,78 +1,93 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCH] dm mpath: Try recover from I/O failure by
- re-initializing the PG if device is running on one path
-Date: Tue, 21 Apr 2009 10:06:44 +0900
-Message-ID: <49ED1C24.9090303@ct.jp.nec.com>
-References: <E463DF2B2E584B4A82673F53D62C2EF466A0E4DA@cosmail01.lsi.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Ming Lei <tom.leiming-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: 2.6.30-rc2-git2: Reported regressions from 2.6.29
+Date: Tue, 21 Apr 2009 09:47:34 +0800
+Message-ID: <d82e647a0904201847n403424efnb5a0c40a4cac365d@mail.gmail.com>
+References: <EJaiQ4Wfaz.A.3YG.4v85JB@chimera>
+	 <alpine.LFD.2.00.0904171952260.4042@localhost.localdomain>
+	 <20090418125111.6646e997@linux-lm>
+	 <200904202208.23899.laurent.pinchart@skynet.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF466A0E4DA@cosmail01.lsi.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: "Moger, Babu" <Babu.Moger@lsi.com>
-Cc: "'dm-devel@redhat.com'" <dm-devel@redhat.com>, "Chauhan,
-	Vijay" <Vijay.Chauhan@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <200904202208.23899.laurent.pinchart-AgBVmzD5pcezQB+pC5nmwQ@public.gmane.org>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Laurent Pinchart <laurent.pinchart-AgBVmzD5pcezQB+pC5nmwQ@public.gmane.org>
+Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Adrian Bunk <bunk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, video4linux-list-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mchehab-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Babu,
+2009/4/21 Laurent Pinchart <laurent.pinchart-AgBVmzD5pcezQB+pC5nmwQ@public.gmane.org>:
+> On Saturday 18 April 2009 06:51:11 leiming wrote:
+>> On Fri, 17 Apr 2009 19:55:29 -0700 (PDT)
+>>
+>> Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
+>> > > @@ -742,7 +742,7 @@ static int uvc_alloc_urb_buffers(struct
+>> > > uvc_video_device *video,
+>> > > =A0 /* Buffers are already allocated, bail out. */
+>> > > =A0 if (video->urb_size)
+>> > > - =A0 =A0 =A0 =A0 return 0;
+>> > > + =A0 =A0 =A0 =A0 return DIV_ROUND_UP(video->urb_size, psize);
+>> >
+>> > I don't think this is right. It should round _down_.
+>> >
+>> > It's supposed to return 'npackets', but if you pass it a different
+>> > packet size than it was passed originally, it can now return a
+>> > potentially bigger number than the already allocated buffer, no?
+>> >
+>> > So I think it should round down (ie use a regular divide). No?
+>>
+>> Yes,you are correct, please ignore my last reply, and following is
+>> the fixed patch.
+>
+> psize and video->urb_size shouldn't have changed before and after res=
+ume,
+> otherwise we'll get into trouble anyway. A regular divide and a round=
+-up
+> divide should then return the same result. I'll take the regular divi=
+de, as it
+> will be more efficient.
 
-On 2009/04/21 3:05 +0900, Moger, Babu wrote:
-> This patch introduces the mechanism to recover from I/O failures by
-> re-initializing the path if the device is running on only one path. 
-> 
-> Problem: Device mapper fails the path for every I/O error. It does not
-> care about the type of error. There are certain errors which can be
-> recovered by re-initializing the path again. I have seen this problem
-> during my testing on rdac device handler. I have observed I/O errors
-> when there is a change in Lun ownership. When Lun ownership changes
-> device will return back with check condition with
-> sense 0x05/0x94/0x01(SK/ASC/ASCQ -meaning Lun ownership changed).
-> Currently, device mapper fails the path for this error and eventually
-> this will lead to I/O error. We don't want to see I/O error for this reason. 
+Yes.
 
-Shouldn't we handle this type of device error inside device handler?
+>
+>> Thanks.
+>>
+>> From a3b3d72cdd57a0699fb643b41b78eb7beb211ff5 Mon Sep 17 00:00:00 20=
+01
+>> From: Ming Lei <tom.leiming-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>> Date: Wed, 15 Apr 2009 22:32:51 +0800
+>> Subject: [PATCH] V4L/DVB:usbvideo:fix uvc resume failed(v2)
+>>
+>> Now urb buffers is not freed before suspend, so uvc_alloc_urb_buffer=
+s
+>> should return packet counts allocated originally during uvc resume
+>> , instead of zero.
+>>
+>> This version uses round down to return packet counts on Linus's
+>> suggestions, or else may lead to buffer destructed if packet size
+>> is changed before calling uvc_alloc_urb_buffers() in this kind of
+>> case.
+>
+> The comment is misleading. If the packet size changes we need to real=
+locate
+> the buffers anyway. Have you checked if the packet size (which depend=
+s on the
+> endpoint being selected) can be changed between suspend and resume, e=
+ither by
+> the uvcvideo driver (I don't think it can) or the USB core ?
 
+The packet size does not change between suspend and resume.  I mean
+uvc_alloc_urb_buffers()
+still can be used in other cases if buffers was not freed and is
+reuesed in future. It seems there is no
+such cases in uvcvideo now, but uvc_alloc_urb_buffers() really __can__
+ work in such case, isn't it?
 
-> The patch will set the flag pg_init_required if the device is running
-> on single path. The process_queued_ios will re-initialize path if required.
-> I have tested this patch on LSI rdac handler.
-> 
-> Signed-off-by: Babu Moger <babu.moger@lsi.com>
-> ---
-> 
-> --- linux-2.6.30-rc2/drivers/md/dm-mpath.c.orig	2009-04-17 16:49:33.000000000 -0500
-> +++ linux-2.6.30-rc2/drivers/md/dm-mpath.c	2009-04-17 17:09:51.000000000 -0500
-> @@ -1152,6 +1152,15 @@ static int do_end_io(struct multipath *m
->  		return error;
->  
->  	spin_lock_irqsave(&m->lock, flags);
-> +	/*
-> +	 * If this is the only path left, then lets try to
-> +	 * re-initialize the PG one last time..
-> +	 */
-> +	if (m->nr_valid_paths == 1 && m->hw_handler_name) {
-> +		m->pg_init_required = 1;
-> +		spin_unlock_irqrestore(&m->lock, flags);
-> +		goto requeue;
-> +	}
->  	if (!m->nr_valid_paths) {
->  		if (__must_push_back(m)) {
->  			spin_unlock_irqrestore(&m->lock, flags);
+IMHO It is only used to allocate or reserve UVC_URBS usb buffers,
+which size is video->urb_size, and
+npackets can be shortened or enlarged if psize is changed, after all.
 
-What happens in case of a real I/O error (e.g. I/O to a broken sector)?
-Is it correctly handled and returned to upper layer at last?
-I'm asking that because the change looks dm retries such errors forever.
-Or am I missing anything?
+Thanks!
 
-Thanks,
-Kiyoshi Ueda
+--=20
+Lei Ming
