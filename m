@@ -1,109 +1,115 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 5/5] cxgb3i: fix ddp map overrun (v2)
-Date: Tue, 21 Apr 2009 15:32:35 -0500
-Message-ID: <12403459582955-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 2/5] cxgb3i, iser, iscsi_tcp: set target can queue
+Date: Tue, 21 Apr 2009 15:32:32 -0500
+Message-ID: <12403459572661-git-send-email-michaelc@cs.wisc.edu>
 References: <1240345955183-git-send-email-michaelc@cs.wisc.edu>
  <1240345956764-git-send-email-michaelc@cs.wisc.edu>
  <1240345956886-git-send-email-michaelc@cs.wisc.edu>
- <12403459572661-git-send-email-michaelc@cs.wisc.edu>
- <12403459572541-git-send-email-michaelc@cs.wisc.edu>
- <12403459572736-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:35827 "EHLO mx2.redhat.com"
+Received: from mx2.redhat.com ([66.187.237.31]:35814 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756913AbZDUUcq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Apr 2009 16:32:46 -0400
-In-Reply-To: <12403459572736-git-send-email-michaelc@cs.wisc.edu>
+	id S1756836AbZDUUck (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Apr 2009 16:32:40 -0400
+In-Reply-To: <1240345956886-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: "kxie@chelsio.com" <kxie@chelsio.com>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-From: kxie@chelsio.com <kxie@chelsio.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-[PATCH v2] cxgb3i: fix ddp map overrun (version 2)
+Set target can queue limit to the number of preallocated
+session tasks we have.
 
-From: Karen Xie <kxie@chelsio.com>
+This along with the cxgb3i can_queue patch will fix a throughput
+problem where it could only queue one LU worth of data at a time.
 
-Fixed a bug in calculating ddp map range when search for free entries:
-it was going beyond the end by one, thus corrupting gl_skb[0].
-
-Signed-off-by: Karen Xie <kxie@chelsio.com>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/cxgb3i/cxgb3i_ddp.c |   32 +++++++++++++++++++-------------
- 1 files changed, 19 insertions(+), 13 deletions(-)
+ drivers/infiniband/ulp/iser/iscsi_iser.c |    1 +
+ drivers/scsi/cxgb3i/cxgb3i_iscsi.c       |    1 +
+ drivers/scsi/iscsi_tcp.c                 |    1 +
+ drivers/scsi/libiscsi.c                  |   10 ++++++++++
+ include/scsi/libiscsi.h                  |    2 ++
+ 5 files changed, 15 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/cxgb3i/cxgb3i_ddp.c b/drivers/scsi/cxgb3i/cxgb3i_ddp.c
-index d06a661..99c9125 100644
---- a/drivers/scsi/cxgb3i/cxgb3i_ddp.c
-+++ b/drivers/scsi/cxgb3i/cxgb3i_ddp.c
-@@ -120,20 +120,26 @@ static void clear_ddp_map(struct cxgb3i_ddp_info *ddp, unsigned int tag,
+diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
+index 13d7674..75223f5 100644
+--- a/drivers/infiniband/ulp/iser/iscsi_iser.c
++++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
+@@ -599,6 +599,7 @@ static struct scsi_host_template iscsi_iser_sht = {
+ 	.eh_abort_handler       = iscsi_eh_abort,
+ 	.eh_device_reset_handler= iscsi_eh_device_reset,
+ 	.eh_target_reset_handler= iscsi_eh_target_reset,
++	.target_alloc		= iscsi_target_alloc,
+ 	.use_clustering         = DISABLE_CLUSTERING,
+ 	.proc_name              = "iscsi_iser",
+ 	.this_id                = -1,
+diff --git a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
+index fff8e43..b3ca3a0 100644
+--- a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
++++ b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
+@@ -883,6 +883,7 @@ static struct scsi_host_template cxgb3i_host_template = {
+ 	.eh_abort_handler	= iscsi_eh_abort,
+ 	.eh_device_reset_handler = iscsi_eh_device_reset,
+ 	.eh_target_reset_handler = iscsi_eh_target_reset,
++	.target_alloc		= iscsi_target_alloc,
+ 	.use_clustering		= DISABLE_CLUSTERING,
+ 	.this_id		= -1,
+ };
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index f97fc7e..b7c092d 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -851,6 +851,7 @@ static struct scsi_host_template iscsi_sw_tcp_sht = {
+ 	.use_clustering         = DISABLE_CLUSTERING,
+ 	.slave_alloc            = iscsi_sw_tcp_slave_alloc,
+ 	.slave_configure        = iscsi_sw_tcp_slave_configure,
++	.target_alloc		= iscsi_target_alloc,
+ 	.proc_name		= "iscsi_tcp",
+ 	.this_id		= -1,
+ };
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 6896283..e72b4ad 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -1463,6 +1463,16 @@ int iscsi_change_queue_depth(struct scsi_device *sdev, int depth)
  }
+ EXPORT_SYMBOL_GPL(iscsi_change_queue_depth);
  
- static inline int ddp_find_unused_entries(struct cxgb3i_ddp_info *ddp,
--					  int start, int max, int count,
-+					  unsigned int start, unsigned int max,
-+					  unsigned int count,
- 					  struct cxgb3i_gather_list *gl)
- {
--	unsigned int i, j;
-+	unsigned int i, j, k;
- 
-+	/* not enough entries */
-+	if ((max - start) < count)
-+		return -EBUSY;
++int iscsi_target_alloc(struct scsi_target *starget)
++{
++	struct iscsi_cls_session *cls_session = starget_to_session(starget);
++	struct iscsi_session *session = cls_session->dd_data;
 +
-+	max -= count;
- 	spin_lock(&ddp->map_lock);
--	for (i = start; i <= max;) {
--		for (j = 0; j < count; j++) {
--			if (ddp->gl_map[i + j])
-+	for (i = start; i < max;) {
-+		for (j = 0, k = i; j < count; j++, k++) {
-+			if (ddp->gl_map[k])
- 				break;
- 		}
- 		if (j == count) {
--			for (j = 0; j < count; j++)
--				ddp->gl_map[i + j] = gl;
-+			for (j = 0, k = i; j < count; j++, k++)
-+				ddp->gl_map[k] = gl;
- 			spin_unlock(&ddp->map_lock);
- 			return i;
- 		}
-@@ -354,7 +360,7 @@ int cxgb3i_ddp_tag_reserve(struct t3cdev *tdev, unsigned int tid,
- 	struct cxgb3i_ddp_info *ddp = tdev->ulp_iscsi;
- 	struct pagepod_hdr hdr;
- 	unsigned int npods;
--	int idx = -1, idx_max;
-+	int idx = -1;
- 	int err = -ENOMEM;
- 	u32 sw_tag = *tagp;
- 	u32 tag;
-@@ -367,17 +373,17 @@ int cxgb3i_ddp_tag_reserve(struct t3cdev *tdev, unsigned int tid,
- 	}
++	starget->can_queue = session->scsi_cmds_max;
++	return 0;
++}
++EXPORT_SYMBOL_GPL(iscsi_target_alloc);
++
+ void iscsi_session_recovery_timedout(struct iscsi_cls_session *cls_session)
+ {
+ 	struct iscsi_session *session = cls_session->dd_data;
+diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+index 7ffaed2..0289f57 100644
+--- a/include/scsi/libiscsi.h
++++ b/include/scsi/libiscsi.h
+@@ -36,6 +36,7 @@ struct scsi_transport_template;
+ struct scsi_host_template;
+ struct scsi_device;
+ struct Scsi_Host;
++struct scsi_target;
+ struct scsi_cmnd;
+ struct socket;
+ struct iscsi_transport;
+@@ -350,6 +351,7 @@ extern struct Scsi_Host *iscsi_host_alloc(struct scsi_host_template *sht,
+ 					  bool xmit_can_sleep);
+ extern void iscsi_host_remove(struct Scsi_Host *shost);
+ extern void iscsi_host_free(struct Scsi_Host *shost);
++extern int iscsi_target_alloc(struct scsi_target *starget);
  
- 	npods = (gl->nelem + PPOD_PAGES_MAX - 1) >> PPOD_PAGES_SHIFT;
--	idx_max = ddp->nppods - npods + 1;
- 
- 	if (ddp->idx_last == ddp->nppods)
--		idx = ddp_find_unused_entries(ddp, 0, idx_max, npods, gl);
-+		idx = ddp_find_unused_entries(ddp, 0, ddp->nppods, npods, gl);
- 	else {
- 		idx = ddp_find_unused_entries(ddp, ddp->idx_last + 1,
--					      idx_max, npods, gl);
--		if (idx < 0 && ddp->idx_last >= npods)
-+					      ddp->nppods, npods, gl);
-+		if (idx < 0 && ddp->idx_last >= npods) {
- 			idx = ddp_find_unused_entries(ddp, 0,
--						      ddp->idx_last - npods + 1,
-+				min(ddp->idx_last + npods, ddp->nppods),
- 						      npods, gl);
-+		}
- 	}
- 	if (idx < 0) {
- 		ddp_log_debug("xferlen %u, gl %u, npods %u NO DDP.\n",
+ /*
+  * session management
 -- 
 1.6.0.6
 
