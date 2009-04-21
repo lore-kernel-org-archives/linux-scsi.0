@@ -1,17 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 04/11] libfc: During fabric logoff,
-	flush the rport Q after logging off dns port
-Date: Tue, 21 Apr 2009 16:27:09 -0700
-Message-ID: <20090421232709.8165.97257.stgit@fritz>
+Subject: [PATCH 05/11] libfc: Change state to NONE in fc_lport_destroy
+Date: Tue, 21 Apr 2009 16:27:14 -0700
+Message-ID: <20090421232714.8165.62854.stgit@fritz>
 References: <20090421232647.8165.46673.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:49867 "EHLO mga01.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:34461 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753220AbZDUX1K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Apr 2009 19:27:10 -0400
+	id S1753367AbZDUX1P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Apr 2009 19:27:15 -0400
 In-Reply-To: <20090421232647.8165.46673.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,42 +19,33 @@ Cc: Abhijeet Joglekar <abjoglek@cisco.com>, Robert Love <robert.w.love@intel.com
 
 From: Abhijeet Joglekar <abjoglek@cisco.com>
 
-We want to generate the rport queue event (from the logoff)
-before flushing the queue otherwise the event may still be
-in the queue when we logoff.
+After lport_destroy, the local port should not be used again. Transition
+to state NONE, any incoming frames or link up should not transition out
+of this state since we are deleting exchange table and cleaning up the
+local port. Also, mark link as down.
 
 Signed-off-by: Abhijeet Joglekar <abjoglek@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_lport.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
+ drivers/scsi/libfc/fc_lport.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index 52c4f2d..4cd9533 100644
+index 4cd9533..e0c2477 100644
 --- a/drivers/scsi/libfc/fc_lport.c
 +++ b/drivers/scsi/libfc/fc_lport.c
-@@ -618,6 +618,11 @@ int fc_fabric_logoff(struct fc_lport *lport)
+@@ -644,7 +644,12 @@ EXPORT_SYMBOL(fc_fabric_logoff);
+  */
+ int fc_lport_destroy(struct fc_lport *lport)
  {
- 	lport->tt.disc_stop_final(lport);
- 	mutex_lock(&lport->lp_mutex);
-+	if (lport->dns_rp)
-+		lport->tt.rport_logoff(lport->dns_rp);
-+	mutex_unlock(&lport->lp_mutex);
-+	lport->tt.rport_flush_queue();
 +	mutex_lock(&lport->lp_mutex);
- 	fc_lport_enter_logo(lport);
- 	mutex_unlock(&lport->lp_mutex);
- 	cancel_delayed_work_sync(&lport->retry_work);
-@@ -1408,10 +1413,6 @@ static void fc_lport_enter_logo(struct fc_lport *lport)
- 
- 	fc_lport_state_enter(lport, LPORT_ST_LOGO);
- 
--	/* DNS session should be closed so we can release it here */
--	if (lport->dns_rp)
--		lport->tt.rport_logoff(lport->dns_rp);
--
- 	fp = fc_frame_alloc(lport, sizeof(*logo));
- 	if (!fp) {
- 		fc_lport_error(lport, fp);
++	lport->state = LPORT_ST_NONE;
++	lport->link_up = 0;
+ 	lport->tt.frame_send = fc_frame_drop;
++	mutex_unlock(&lport->lp_mutex);
++
+ 	lport->tt.fcp_abort_io(lport);
+ 	lport->tt.exch_mgr_reset(lport, 0, 0);
+ 	return 0;
 
