@@ -1,37 +1,95 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [patch for 2.6.29? 2/2] scsi: mpt: suppress debugobjects
- warning
-Date: Tue, 21 Apr 2009 09:58:43 -0700
-Message-ID: <20090421095843.afc78b80.akpm@linux-foundation.org>
-References: <200903042012.n24KCIKH030001@imap1.linux-foundation.org>
-	<20090420145511.35b9c201.akpm@linux-foundation.org>
-	<0D1E8821739E724A86F4D16902CE275C1410F4D5B1@inbmail01.lsi.com>
+From: "Moger, Babu" <Babu.Moger@lsi.com>
+Subject: RE: [PATCH] dm mpath: Try recover from I/O failure by
+ re-initializing the PG if device is running on one path
+Date: Tue, 21 Apr 2009 10:06:12 -0700
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF466A66DD4@cosmail01.lsi.com>
+References: <E463DF2B2E584B4A82673F53D62C2EF466A0E4DA@cosmail01.lsi.com>
+ <49ED1C24.9090303@ct.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-2022-jp"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:33654 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751705AbZDURC2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Apr 2009 13:02:28 -0400
-In-Reply-To: <0D1E8821739E724A86F4D16902CE275C1410F4D5B1@inbmail01.lsi.com>
+Received: from chip3og54.obsmtp.com ([64.18.14.173]:54807 "EHLO
+	chip3og54.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751932AbZDURGd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Apr 2009 13:06:33 -0400
+In-Reply-To: <49ED1C24.9090303@ct.jp.nec.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "eparis@parisplace.org" <eparis@parisplace.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "tglx@linutronix.de" <tglx@linutronix.de>
+To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Cc: "'dm-devel@redhat.com'" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>, "'sekharan@us.ibm.com'" <sekharan@us.ibm.com>
 
-On Tue, 21 Apr 2009 16:08:45 +0530 "Desai, Kashyap" <Kashyap.Desai@lsi.com> wrote:
+Hi Kiyoshi,
 
-> It is a clean patch. There is not harm to ack it, but since I have already submitted code changes to upstream which have replaced "kernel timer" by "completion queue.", I will suggest to wait for next driver version.
+   Thanks for your comment.
+
+
+> -----Original Message-----
+> From: Kiyoshi Ueda [mailto:k-ueda@ct.jp.nec.com]
+> Sent: Monday, April 20, 2009 8:07 PM
+> To: Moger, Babu
+> Cc: 'dm-devel@redhat.com'; linux-scsi@vger.kernel.org; Chauhan, Vijay;
+> 'sekharan@us.ibm.com'
+> Subject: Re: [PATCH] dm mpath: Try recover from I/O failure by re-
+> initializing the PG if device is running on one path
 > 
-> Init_timer() function will not be called from MPT fusion driver in next version
+> Hi Babu,
+> 
+> On 2009/04/21 3:05 +0900, Moger, Babu wrote:
+> > This patch introduces the mechanism to recover from I/O failures by
+> > re-initializing the path if the device is running on only one path.
+> >
+> > Problem: Device mapper fails the path for every I/O error. It does not
+> > care about the type of error. There are certain errors which can be
+> > recovered by re-initializing the path again. I have seen this problem
+> > during my testing on rdac device handler. I have observed I/O errors
+> > when there is a change in Lun ownership. When Lun ownership changes
+> > device will return back with check condition with
+> > sense 0x05/0x94/0x01(SK/ASC/ASCQ -meaning Lun ownership changed).
+> > Currently, device mapper fails the path for this error and eventually
+> > this will lead to I/O error. We don't want to see I/O error for this
+> reason.
+> 
+> Shouldn't we handle this type of device error inside device handler?
 
-No, that doesn't work.  This means that people who use 2.6.29 and
-2.6.30 will potentially see these warnings.  This potentially includes
-the customers of any distributors who enable debugobjects.
+The current error in question requires re-activation of the path. We already have a code to handle this scenario in device handler. But, the problem is the return status does not go to DM layer. The return status gets lost in scsi layer. For DM layer all the errors are -EIO. Any thoughts from your side.
 
-It creates additional work for users, for support staff and generates
-concern about the stability of the kernel.
+> > The patch will set the flag pg_init_required if the device is running
+> > on single path. The process_queued_ios will re-initialize path if
+> required.
+> > I have tested this patch on LSI rdac handler.
+> >
+> > Signed-off-by: Babu Moger <babu.moger@lsi.com>
+> > ---
+> >
+> > --- linux-2.6.30-rc2/drivers/md/dm-mpath.c.orig	2009-04-17
+> 16:49:33.000000000 -0500
+> > +++ linux-2.6.30-rc2/drivers/md/dm-mpath.c	2009-04-17
+> 17:09:51.000000000 -0500
+> > @@ -1152,6 +1152,15 @@ static int do_end_io(struct multipath *m
+> >  		return error;
+> >
+> >  	spin_lock_irqsave(&m->lock, flags);
+> > +	/*
+> > +	 * If this is the only path left, then lets try to
+> > +	 * re-initialize the PG one last time..
+> > +	 */
+> > +	if (m->nr_valid_paths == 1 && m->hw_handler_name) {
+> > +		m->pg_init_required = 1;
+> > +		spin_unlock_irqrestore(&m->lock, flags);
+> > +		goto requeue;
+> > +	}
+> >  	if (!m->nr_valid_paths) {
+> >  		if (__must_push_back(m)) {
+> >  			spin_unlock_irqrestore(&m->lock, flags);
+> 
+> What happens in case of a real I/O error (e.g. I/O to a broken sector)?
+> Is it correctly handled and returned to upper layer at last?
+> I'm asking that because the change looks dm retries such errors forever.
+> Or am I missing anything?
+> 
+  Yes, you are right. There are chances of that happening. I will investigate and get back.
 
-
+> Thanks,
+> Kiyoshi Ueda
