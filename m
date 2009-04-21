@@ -1,16 +1,17 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 05/11] libfc: Change state to NONE in fc_lport_destroy
-Date: Tue, 21 Apr 2009 16:27:14 -0700
-Message-ID: <20090421232714.8165.62854.stgit@fritz>
+Subject: [PATCH 06/11] libfc: whenever queueing delete ev for rport,
+	set state to NONE
+Date: Tue, 21 Apr 2009 16:27:19 -0700
+Message-ID: <20090421232719.8165.28977.stgit@fritz>
 References: <20090421232647.8165.46673.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:34461 "EHLO mga09.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:59748 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753367AbZDUX1P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Apr 2009 19:27:15 -0400
+	id S1752644AbZDUX1U (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Apr 2009 19:27:20 -0400
 In-Reply-To: <20090421232647.8165.46673.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,33 +20,50 @@ Cc: Abhijeet Joglekar <abjoglek@cisco.com>, Robert Love <robert.w.love@intel.com
 
 From: Abhijeet Joglekar <abjoglek@cisco.com>
 
-After lport_destroy, the local port should not be used again. Transition
-to state NONE, any incoming frames or link up should not transition out
-of this state since we are deleting exchange table and cleaning up the
-local port. Also, mark link as down.
+When a delete event is queued for an rport, set state to NONE so that no
+other processing is done on the rport as it is being removed.
 
 Signed-off-by: Abhijeet Joglekar <abjoglek@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_lport.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+ drivers/scsi/libfc/fc_rport.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index 4cd9533..e0c2477 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -644,7 +644,12 @@ EXPORT_SYMBOL(fc_fabric_logoff);
-  */
- int fc_lport_destroy(struct fc_lport *lport)
- {
-+	mutex_lock(&lport->lp_mutex);
-+	lport->state = LPORT_ST_NONE;
-+	lport->link_up = 0;
- 	lport->tt.frame_send = fc_frame_drop;
-+	mutex_unlock(&lport->lp_mutex);
-+
- 	lport->tt.fcp_abort_io(lport);
- 	lport->tt.exch_mgr_reset(lport, 0, 0);
- 	return 0;
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index 5bf7a94..e675f5a 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -444,6 +444,7 @@ static void fc_rport_error(struct fc_rport *rport, struct fc_frame *fp)
+ 	case RPORT_ST_PRLI:
+ 	case RPORT_ST_LOGO:
+ 		rdata->event = RPORT_EV_FAILED;
++		fc_rport_state_enter(rport, RPORT_ST_NONE);
+ 		queue_work(rport_event_queue,
+ 			   &rdata->event_work);
+ 		break;
+@@ -664,6 +665,7 @@ static void fc_rport_prli_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 	} else {
+ 		FC_DBG("Bad ELS response\n");
+ 		rdata->event = RPORT_EV_FAILED;
++		fc_rport_state_enter(rport, RPORT_ST_NONE);
+ 		queue_work(rport_event_queue, &rdata->event_work);
+ 	}
+ 
+@@ -715,6 +717,7 @@ static void fc_rport_logo_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 	} else {
+ 		FC_DBG("Bad ELS response\n");
+ 		rdata->event = RPORT_EV_LOGO;
++		fc_rport_state_enter(rport, RPORT_ST_NONE);
+ 		queue_work(rport_event_queue, &rdata->event_work);
+ 	}
+ 
+@@ -1293,6 +1296,7 @@ static void fc_rport_recv_logo_req(struct fc_rport *rport, struct fc_seq *sp,
+ 	}
+ 
+ 	rdata->event = RPORT_EV_LOGO;
++	fc_rport_state_enter(rport, RPORT_ST_NONE);
+ 	queue_work(rport_event_queue, &rdata->event_work);
+ 
+ 	lport->tt.seq_els_rsp_send(sp, ELS_LS_ACC, NULL);
 
