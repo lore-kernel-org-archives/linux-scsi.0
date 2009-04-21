@@ -1,62 +1,41 @@
-From: =?GB2312?B?0Lu42Q==?= <xiegang112@gmail.com>
-Subject: The order of generating sd name
-Date: Tue, 21 Apr 2009 17:26:40 +0800
-Message-ID: <d364733c0904210226i2b48ae21pb5c39f338f53194b@mail.gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Is sata_nv compatible with async scsi scan?
+Date: Tue, 21 Apr 2009 06:27:56 -0400
+Message-ID: <49ED9FAC.1080303@garzik.org>
+References: <49ED6FD7.3070307@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.168]:64428 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754041AbZDUJ0m (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Apr 2009 05:26:42 -0400
-Received: by wf-out-1314.google.com with SMTP id 29so2259331wff.4
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2009 02:26:40 -0700 (PDT)
+Received: from srv5.dvmed.net ([207.36.208.214]:34849 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751559AbZDUK2F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Apr 2009 06:28:05 -0400
+In-Reply-To: <49ED6FD7.3070307@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Benny Halevy <bhalevy@panasas.com>
+Cc: Jeff Garzik <jgarzik@redhat.com>, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Arjan van de Ven <arjan@infradead.org>
 
-Hi,
+Benny Halevy wrote:
+> Hi Jeff,
+> 
+> Since 2.6.29 I'm having intermittent problems with booting kernels.
+> After supposedly waiting for scsi async scan to complete,
+> quite frequently I see errors from the init resume process
+> when it fails to find the swap partition and later the root
+> file system fails to load.
+> 
+> A workaround that I found to be helpful is booting the kernel
+> with scsi_mod.scan=sync so I suspect sata_nv has a problem
+> with asynchronous scanning.
 
-I find there will be different name order of sd device when connecting
-different array. My case is as following:
-I have a SUSE server, and two array (let's say host, array1 and
-array2. Two arrays are from different vendor). They are connected
-through FC. There is two HBA controllers(let's say c1,c2) on host.
-case1: host is connected to array1.
-sd driver will generate the name orderly for each HBA controller. For examle:
-c1: /dev/sda  /dev/sdb /dev/sdc
-c2:/dev/sdd /dev/sde  /dev/sdf
+Personally, I think the whole system is broken, so continue to use this 
+workaround until it gets fixed upstream.  This sounds like some timing 
+issues related to waiting for the device probe to finish, something that 
+people keep breaking (witness my USB flash drive boot breakage).
 
-case2: host is connected to array2.
-sd driver will generate the name ramdonly for each HBA controller. For examle:
-c1: /dev/sda  /dev/sdd /dev/sde
-c2:/dev/sdb /dev/sdc  /dev/sdf
-
-Why is the order different with different array?
-
-I went through the sd probe part of linux scsi subsystem.  In
-scsi_probe_lun, an inquery command will be issued to probe the lun.
-This request will be executed with scsi_execute. This function is sync
-and blocked. Because it invokes the blk_execute_rq to exec the
-request, in blk_execute_rq:
-rq->end_io_data = &wait;
-blk_execute_rq_nowait(q, bd_disk, rq, at_head, blk_end_sync_rq);
-wait_for_completion(&wait);
-
-According to above, sd driver probes one lun at one time. Before
-respone to current inquery is returned, no other inquery is issued. In
-another word, the proccess of probe lun is sync and blocked.
-The whole sequence of proble lun is:
-scan host controller->scan target->probe and add lun.
-So,  the whole procedure of sd probe should be serial.  but why is
-there case2? Is it because the different order of executing command on
-array? But according the code of  sd driver, it seems it's not the
-root cause.
-
-Thanks,
+	Jeff
 
 
 
--- 
-Xie Gang
