@@ -1,53 +1,72 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/2] Evaluate TGPS setting for device handler detection
-Date: Tue, 21 Apr 2009 08:24:04 +0200
-Message-ID: <49ED6684.4080601@suse.de>
-References: <20090319080642.4815418C79D@pentland.suse.de> <1239899445.1196.12.camel@chandra-ubuntu> <49ECE046.6060109@cs.wisc.edu>
+Subject: Re: [dm-devel] LSF: Multipathing and path checking question
+Date: Tue, 21 Apr 2009 09:04:08 +0200
+Message-ID: <49ED6FE8.5090009@suse.de>
+References: <49E7B845.70400@cs.wisc.edu> <49E834CD.1090306@suse.de> <49E89866.50205@cs.wisc.edu> <49EC2B65.1050508@suse.de> <49ECC8BB.9020906@cs.wisc.edu> <49ECCCD7.3070200@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:54433 "EHLO mx1.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:54928 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750777AbZDUGYJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Apr 2009 02:24:09 -0400
-In-Reply-To: <49ECE046.6060109@cs.wisc.edu>
+	id S1752757AbZDUHEK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Apr 2009 03:04:10 -0400
+In-Reply-To: <49ECCCD7.3070200@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: sekharan@linux.vnet.ibm.com, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Peter Jones <pjones@redhat.com>
+Cc: device-mapper development <dm-devel@redhat.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 Hi Mike,
 
 Mike Christie wrote:
-> Chandra Seetharaman wrote:
->>>  static const struct scsi_dh_devlist alua_dev_list[] =3D {
->>> -    {"HP", "MSA VOLUME" },
->>> -    {"HP", "HSV101" },
->>> -    {"HP", "HSV111" },
->>> -    {"HP", "HSV200" },
->>> -    {"HP", "HSV210" },
->>> -    {"HP", "HSV300" },
->>> -    {"IBM", "2107900" },
->>> -    {"IBM", "2145" },
->>> -    {"Pillar", "Axiom" },
->>> -    {"Intel", "Multi-Flex"},
->>> -    {NULL, NULL}
->>> +    {"", "", 3 },
->>> +    {NULL, NULL, 0}
->>>  };
->=20
-> Is this going to make problems for the what the module alias patches
-> were trying to do?
->=20
-> Will userspace have to check for the mod alias stuff for scsi_dh_emc,
-> scsi_dh_hp and scsh_dh_rdac, then for scsh_dh_alua does it check for =
+> Mike Christie wrote:
+>> Hannes Reinecke wrote:
+>>>> Today, instead of #2, the Red Hat multipath tools guy and I were
+>>>> talking
+>>>> about doing a probe with SG_IO. For example we would send down a p=
+ath
+>>>> tester IO and then wait for it to be failed with
+>>>> DID_TRANSPORT_FAILFAST.
+>>>>
+>>> No. this is exactly what you cannot do. SG_IO will be stalled when =
 the
-> scsi devices sysfs tpgts file to see if ALUA is support?
-Well, these patch actually precedes the modalias support, so obviously
-we'll have to rework that to take everything (devtype, tpgs, vendor, mo=
-del)
-into account.
+>>> sdev is BLOCKED and will only return a result _after_ the sdev
+>>> transitions
+>>> _out_ of the BLOCKED state.
+>>> Translated to FC this means that whenever dev_loss_tmo is _active_ =
+(!)
+>>> no I/O will be send out neither any I/O result will be returned to
+>>> userland.
+>>>
+>>
+>> That is not true anymore. When fast io fail fires, the sdev and rpor=
+t
+>> will be blocked, but the the fc class will call into the LLD to have=
+ it=20
+>=20
+> I miswrote that. The rport will be show blocked state, but when fast =
+io
+> fail tmo fires, fc_terminate_rport_io will unblock the sdev, and the =
+fc
+> class chkready will fail any IO sent to it and of course
+> terminate_rport_io will fail IO in the driver like I said below. And
+> then you do not need a terminate_rport_io callback to have the fast i=
+o
+> fail tmo now. If you set that timer at least IO in the block queue an=
+d
+> new IO will be failed.
+>=20
+Indeed, I didn't look closely enough. Ok, so I/O will be failed after
+terminate_rport_io.=20
+
+So that means we can just implement a new netlink message after
+terminate_rport_io to inform the multipath daemon about this changes.
+
+And, of course, we _really_ should introduce a new sdev state here.
+Having the sdev set to 'RUNNING' but having all I/O failed in the
+transport class is just a quirky behaviour which is bound to cause
+trouble.
 
 Cheers,
 
