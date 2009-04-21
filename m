@@ -1,92 +1,125 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 4/5] cxgb3i: fix cpu use abuse during writes
-Date: Tue, 21 Apr 2009 15:32:34 -0500
-Message-ID: <12403459572736-git-send-email-michaelc@cs.wisc.edu>
-References: <1240345955183-git-send-email-michaelc@cs.wisc.edu>
- <1240345956764-git-send-email-michaelc@cs.wisc.edu>
- <1240345956886-git-send-email-michaelc@cs.wisc.edu>
- <12403459572661-git-send-email-michaelc@cs.wisc.edu>
- <12403459572541-git-send-email-michaelc@cs.wisc.edu>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: driver synchronization: make scsi_wait_scan more advanced
+Date: Tue, 21 Apr 2009 13:42:06 -0700
+Message-ID: <20090421134206.07b8ee7e@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:35818 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756818AbZDUUcm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Apr 2009 16:32:42 -0400
-In-Reply-To: <12403459572541-git-send-email-michaelc@cs.wisc.edu>
+Received: from casper.infradead.org ([85.118.1.10]:56170 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752660AbZDUUkJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Apr 2009 16:40:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, rmk@arm.linux.org.uk, torvalds@linux-foundation.org, greg@kroah.com
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+(CC'ing linux-scsi as well since this touches a file in drivers/scsi)
 
-When doing a lot (128) of large writes (256K) we can hit the cxgb3_snd_win
-check pretty easily. The driver's xmit thread then takes 100% of the cpu.
 
-The driver should not be returning -EAGAIN for this problem. It should
-be returing -ENOBUFS, then when the window is opened again it should
-queue the xmit thread (it already wakes the xmit thread).
+>From 546fdda8b4124a7473f32decf4a2981984f287db Mon Sep 17 00:00:00 2001
+From: Arjan van de Ven <arjan@linux.intel.com>
+Date: Tue, 21 Apr 2009 13:32:54 -0700
+Subject: [PATCH] driver synchronization: make scsi_wait_scan more advanced
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+
+There is currently only one way for userspace to say "wait for my storage
+device to get ready for the modules I just loaded": to load the
+scsi_wait_scan module. Expectations of userspace are that once this
+module is loaded, all the (storage) devices for which the drivers
+were loaded before the module load are present.
+
+Now, there are some issues with the implementation, and the async
+stuff got caught in the middle of this: The existing code only
+waits for the scsy async probing to finish, but it did not take
+into account at all that probing might not have begun yet.
+(Russell ran into this problem on his computer and the fix works for him)
+
+This patch fixes this more thoroughly than the previous "fix", which
+had some bad side effects (namely, for kernel code that wanted to wait for
+the scsi scan it would also do an async sync, which would deadlock if you did
+it from async context already.. there's a report about that on lkml):
+The patch makes the module first wait for all device driver probes, and then it
+will wait for the scsi parallel scan to finish.
+
+Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
 ---
- drivers/scsi/cxgb3i/cxgb3i_offload.c |    4 +++-
- drivers/scsi/cxgb3i/cxgb3i_pdu.c     |   19 ++++++++++---------
- 2 files changed, 13 insertions(+), 10 deletions(-)
+ drivers/base/dd.c             |    1 +
+ drivers/scsi/scsi_scan.c      |    2 --
+ drivers/scsi/scsi_wait_scan.c |   11 +++++++++++
+ include/linux/device.h        |    1 +
+ 4 files changed, 13 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/cxgb3i/cxgb3i_offload.c b/drivers/scsi/cxgb3i/cxgb3i_offload.c
-index 4d8654c..e11c9c1 100644
---- a/drivers/scsi/cxgb3i/cxgb3i_offload.c
-+++ b/drivers/scsi/cxgb3i/cxgb3i_offload.c
-@@ -1737,7 +1737,7 @@ int cxgb3i_c3cn_send_pdus(struct s3_conn *c3cn, struct sk_buff *skb)
- 		c3cn_tx_debug("c3cn 0x%p, snd %u - %u > %u.\n",
- 				c3cn, c3cn->write_seq, c3cn->snd_una,
- 				cxgb3_snd_win);
--		err = -EAGAIN;
-+		err = -ENOBUFS;
- 		goto out_err;
- 	}
+diff --git a/drivers/base/dd.c b/drivers/base/dd.c
+index f17c326..742cbe6 100644
+--- a/drivers/base/dd.c
++++ b/drivers/base/dd.c
+@@ -179,6 +179,7 @@ void wait_for_device_probe(void)
+ 	wait_event(probe_waitqueue, atomic_read(&probe_count) == 0);
+ 	async_synchronize_full();
+ }
++EXPORT_SYMBOL_GPL(wait_for_device_probe);
  
-@@ -1775,6 +1775,8 @@ done:
- out_err:
- 	if (copied == 0 && err == -EPIPE)
- 		copied = c3cn->err ? c3cn->err : -EPIPE;
-+	else
-+		copied = err;
- 	goto done;
+ /**
+  * driver_probe_device - attempt to bind device & driver together
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index a14d245..6f51ca4 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -180,8 +180,6 @@ int scsi_complete_async_scans(void)
+ 	spin_unlock(&async_scan_lock);
+ 
+ 	kfree(data);
+-	/* Synchronize async operations globally */
+-	async_synchronize_full();
+ 	return 0;
  }
  
-diff --git a/drivers/scsi/cxgb3i/cxgb3i_pdu.c b/drivers/scsi/cxgb3i/cxgb3i_pdu.c
-index 7eebc9a..7091050 100644
---- a/drivers/scsi/cxgb3i/cxgb3i_pdu.c
-+++ b/drivers/scsi/cxgb3i/cxgb3i_pdu.c
-@@ -400,17 +400,18 @@ int cxgb3i_conn_xmit_pdu(struct iscsi_task *task)
- 		return 0;
- 	}
+diff --git a/drivers/scsi/scsi_wait_scan.c b/drivers/scsi/scsi_wait_scan.c
+index 2f21af2..74708fc 100644
+--- a/drivers/scsi/scsi_wait_scan.c
++++ b/drivers/scsi/scsi_wait_scan.c
+@@ -11,10 +11,21 @@
+  */
  
--	if (err < 0 && err != -EAGAIN) {
--		kfree_skb(skb);
--		cxgb3i_tx_debug("itt 0x%x, skb 0x%p, len %u/%u, xmit err %d.\n",
--				task->itt, skb, skb->len, skb->data_len, err);
--		iscsi_conn_printk(KERN_ERR, task->conn, "xmit err %d.\n", err);
--		iscsi_conn_failure(task->conn, ISCSI_ERR_XMIT_FAILED);
-+	if (err == -EAGAIN || err == -ENOBUFS) {
-+		/* reset skb to send when we are called again */
-+		tdata->skb = skb;
- 		return err;
- 	}
--	/* reset skb to send when we are called again */
--	tdata->skb = skb;
--	return -EAGAIN;
-+
-+	kfree_skb(skb);
-+	cxgb3i_tx_debug("itt 0x%x, skb 0x%p, len %u/%u, xmit err %d.\n",
-+			task->itt, skb, skb->len, skb->data_len, err);
-+	iscsi_conn_printk(KERN_ERR, task->conn, "xmit err %d.\n", err);
-+	iscsi_conn_failure(task->conn, ISCSI_ERR_XMIT_FAILED);
-+	return err;
+ #include <linux/module.h>
++#include <linux/device.h>
+ #include <scsi/scsi_scan.h>
+ 
+ static int __init wait_scan_init(void)
+ {
++	/*
++	 * First we need to wait for device probing to finish;
++	 * the drivers we just loaded might just still be probing
++	 * and might not yet have reached the scsi async scanning
++	 */
++	wait_for_device_probe();
++	/*
++	 * and then we wait for the actual asynchronous scsi scan
++	 * to finish.
++	 */
+ 	scsi_complete_async_scans();
+ 	return 0;
  }
+diff --git a/include/linux/device.h b/include/linux/device.h
+index 2918c0e..6a69caa 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -551,6 +551,7 @@ extern int (*platform_notify_remove)(struct device *dev);
+ extern struct device *get_device(struct device *dev);
+ extern void put_device(struct device *dev);
  
- int cxgb3i_pdu_init(void)
++extern void wait_for_device_probe(void);
+ 
+ /* drivers/base/power/shutdown.c */
+ extern void device_shutdown(void);
 -- 
 1.6.0.6
 
+
+
+-- 
+Arjan van de Ven 	Intel Open Source Technology Centre
+For development, discussion and tips for power savings, 
+visit http://www.lesswatts.org
