@@ -1,67 +1,96 @@
-From: Russell King <rmk+lkml@arm.linux.org.uk>
-Subject: Re: driver synchronization: make scsi_wait_scan more advanced
-Date: Tue, 21 Apr 2009 22:10:40 +0100
-Message-ID: <20090421211040.GA27557@flint.arm.linux.org.uk>
-References: <20090421134206.07b8ee7e@infradead.org>
+From: Randy Dunlap <rdunlap-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org>
+Subject: Re: [RFC][PATCH] fix sign extension with 1.5TB usb-storage LBD=y
+Date: Tue, 21 Apr 2009 14:29:54 -0700
+Message-ID: <49EE3AD2.7030100@xenotime.net>
+References: <1240347174.10627.20.camel@nimitz> <20090421211858.GA1926@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:59361 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757886AbZDUVTz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Apr 2009 17:19:55 -0400
-Content-Disposition: inline
-In-Reply-To: <20090421134206.07b8ee7e@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1251
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20090421211858.GA1926-6jwH94ZQLHl74goWV3ctuw@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Matthew Wilcox <matthew-Ztpu424NOJ8@public.gmane.org>
+Cc: Dave Hansen <dave-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org, linux-usb <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, torvalds@linux-foundation.org, greg@kroah.com
 
-On Tue, Apr 21, 2009 at 01:42:06PM -0700, Arjan van de Ven wrote:
-> (CC'ing linux-scsi as well since this touches a file in drivers/scsi)
+Matthew Wilcox wrote:
+> On Tue, Apr 21, 2009 at 01:52:54PM -0700, Dave Hansen wrote:
+>> This is with current git as of this morning, which is at v2.6.30-rc2.
+>>
+>> I have a 1.5TB USB device which gets a bit angry when I plug it in.  It
+>> ends up with a scsi_disk->capacity of ffffffffaea87b30.  I tracked it
+>> down to the lba calculation in read_capacity_10():
+>>
+>> 	lba =	(buffer[0] << 24) | (buffer[1] << 16) |
+>>  		(buffer[2] << 8) | buffer[3];
+>>
+>> lba is getting all 0xf's in its high 32 bits.  It seems odd that this
+>> would happen since 'buffer' is an 'unsigned char', but that is
+>> apparently what is going on.  Note that this isn't an issue 32-bit
+>> kernels compiled with CONFIG_LBD=n since there's no more bits into which
+>> the sign could be extended.
 > 
+> I think I know ... unsigned char gets promoted to signed int since it will
+> fit.  then signed int gets cast to unsigned long long, sign-extending.  C's
+> promotion rules have always felt a bit wacky to me.
 > 
-> From 546fdda8b4124a7473f32decf4a2981984f287db Mon Sep 17 00:00:00 2001
-> From: Arjan van de Ven <arjan@linux.intel.com>
-> Date: Tue, 21 Apr 2009 13:32:54 -0700
-> Subject: [PATCH] driver synchronization: make scsi_wait_scan more advanced
+>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+>> index 3fcb64b..db60e96 100644
+>> --- a/drivers/scsi/sd.c
+>> +++ b/drivers/scsi/sd.c
+>> @@ -1402,7 +1402,7 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
+>>  
+>>  	sector_size =	(buffer[4] << 24) | (buffer[5] << 16) |
+>>  			(buffer[6] << 8) | buffer[7];
+>> -	lba =	(buffer[0] << 24) | (buffer[1] << 16) |
+>> +	lba =	((sector_t)buffer[0] << 24) | (buffer[1] << 16) |
+>>  		(buffer[2] << 8) | buffer[3];
 > 
+> this certainly fixes your problem.  I'd prefer this patch instead, just
+> because I find the cast unaesthetic ...
 > 
-> There is currently only one way for userspace to say "wait for my storage
-> device to get ready for the modules I just loaded": to load the
-> scsi_wait_scan module. Expectations of userspace are that once this
-> module is loaded, all the (storage) devices for which the drivers
-> were loaded before the module load are present.
+> ----
 > 
-> Now, there are some issues with the implementation, and the async
-> stuff got caught in the middle of this: The existing code only
-> waits for the scsy async probing to finish, but it did not take
-> into account at all that probing might not have begun yet.
-> (Russell ran into this problem on his computer and the fix works for him)
+> Fix READ CAPACITY 10 with drives over 1TB
+> 
+> Shifting an unsigned char implicitly casts it to a signed int.  This
+> caused 'lba' to sign-extend and Linux would then try READ CAPACITY 16
+> which was not supported by at least one drive.  Making 'lba' an unsigned
+> int ensures that sign extension will not occur.
+> 
+> Signed-off-by: Matthew Wilcox <willy-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 3fcb64b..c856b1b 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -1373,7 +1373,7 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
+>  	int sense_valid = 0;
+>  	int the_result;
+>  	int retries = 3;
+> -	sector_t lba;
+> +	unsigned lba;
 
-Indeed yes.  With CONFIG_SCSI_SCAN_ASYNC unset, but with the scsi host
-driver built as a module, the behaviour without this patch causes
-problems.  The machine would load the pata_pcmcia driver, which would
-then detect and register the interface:
+sector_t is either unsigned long or u64, depending on CONFIG_LBD.
+Are you saying (implying) that the higher-order bits of it don't matter here?
+If so, I'd just like for that to be clear(er).
 
-  ata1: PATA max PIO0 cmd 0xd0880000 ctl 0xd088000e irq 135
 
-At this point, the insmod process returns, and the init script continued,
-loading scsi_wait_scan which did nothing, and we'd continue the init
-script, which would try to detect and mount the storage attached to this
-interface - and fail because the device probes haven't completed.  The
-only workaround I found was to add a 'sleep 1' to the script to give the
-various layers in the kernel time to sort themselves out.
+>  	unsigned sector_size;
+>  
+>  	do {
+> @@ -1413,7 +1413,7 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
+>  		return -EOVERFLOW;
+>  	}
+>  
+> -	sdkp->capacity = lba + 1;
+> +	sdkp->capacity = (sector_t)lba + 1;
+>  	return sector_size;
+>  }
+>  
+> 
 
-With this patch, the loading of scsi_wait_scan waits for the device to
-finish probing, and we can properly detect and mount the attached storage
-(which in this case is the rootfs) and the 'sleep 1' hack isn't required.
-
-So, for everything but the scsi_scan.c hunk:
-
-Tested-by: Russell King <rmk+kernel@arm.linux.org.uk>
-
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
