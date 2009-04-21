@@ -1,17 +1,18 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 3/5] cxgb3i: fix can_queue and cmd_per_lun initialization
-Date: Tue, 21 Apr 2009 15:32:33 -0500
-Message-ID: <12403459572541-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 4/5] cxgb3i: fix cpu use abuse during writes
+Date: Tue, 21 Apr 2009 15:32:34 -0500
+Message-ID: <12403459572736-git-send-email-michaelc@cs.wisc.edu>
 References: <1240345955183-git-send-email-michaelc@cs.wisc.edu>
  <1240345956764-git-send-email-michaelc@cs.wisc.edu>
  <1240345956886-git-send-email-michaelc@cs.wisc.edu>
  <12403459572661-git-send-email-michaelc@cs.wisc.edu>
+ <12403459572541-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:35811 "EHLO mx2.redhat.com"
+Received: from mx2.redhat.com ([66.187.237.31]:35818 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756831AbZDUUck (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Apr 2009 16:32:40 -0400
-In-Reply-To: <12403459572661-git-send-email-michaelc@cs.wisc.edu>
+	id S1756818AbZDUUcm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Apr 2009 16:32:42 -0400
+In-Reply-To: <12403459572541-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -19,49 +20,73 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-cxgb3i was setting can_queue to only 128 commands, and was
-setting the can_queue and cmd_per_lun to the same value.
+When doing a lot (128) of large writes (256K) we can hit the cxgb3_snd_win
+check pretty easily. The driver's xmit thread then takes 100% of the cpu.
 
-This sets the can_queue to 1024 commands, and sets the cmd_per_lun
-to a safer default of 32.
-
+The driver should not be returning -EAGAIN for this problem. It should
+be returing -ENOBUFS, then when the window is opened again it should
+queue the xmit thread (it already wakes the xmit thread).
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/cxgb3i/cxgb3i.h       |    2 +-
- drivers/scsi/cxgb3i/cxgb3i_iscsi.c |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/cxgb3i/cxgb3i_offload.c |    4 +++-
+ drivers/scsi/cxgb3i/cxgb3i_pdu.c     |   19 ++++++++++---------
+ 2 files changed, 13 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/cxgb3i/cxgb3i.h b/drivers/scsi/cxgb3i/cxgb3i.h
-index d362860..59b0958 100644
---- a/drivers/scsi/cxgb3i/cxgb3i.h
-+++ b/drivers/scsi/cxgb3i/cxgb3i.h
-@@ -34,7 +34,7 @@
- #include "cxgb3i_offload.h"
- #include "cxgb3i_ddp.h"
+diff --git a/drivers/scsi/cxgb3i/cxgb3i_offload.c b/drivers/scsi/cxgb3i/cxgb3i_offload.c
+index 4d8654c..e11c9c1 100644
+--- a/drivers/scsi/cxgb3i/cxgb3i_offload.c
++++ b/drivers/scsi/cxgb3i/cxgb3i_offload.c
+@@ -1737,7 +1737,7 @@ int cxgb3i_c3cn_send_pdus(struct s3_conn *c3cn, struct sk_buff *skb)
+ 		c3cn_tx_debug("c3cn 0x%p, snd %u - %u > %u.\n",
+ 				c3cn, c3cn->write_seq, c3cn->snd_una,
+ 				cxgb3_snd_win);
+-		err = -EAGAIN;
++		err = -ENOBUFS;
+ 		goto out_err;
+ 	}
  
--#define CXGB3I_SCSI_QDEPTH_DFLT	128
-+#define CXGB3I_SCSI_HOST_QDEPTH 1024
- #define CXGB3I_MAX_TARGET	CXGB3I_MAX_CONN
- #define CXGB3I_MAX_LUN		512
- #define ISCSI_PDU_NONPAYLOAD_MAX \
-diff --git a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
-index b3ca3a0..9212400 100644
---- a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
-+++ b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
-@@ -876,10 +876,10 @@ static struct scsi_host_template cxgb3i_host_template = {
- 	.proc_name		= "cxgb3i",
- 	.queuecommand		= iscsi_queuecommand,
- 	.change_queue_depth	= iscsi_change_queue_depth,
--	.can_queue		= CXGB3I_SCSI_QDEPTH_DFLT - 1,
-+	.can_queue		= CXGB3I_SCSI_HOST_QDEPTH,
- 	.sg_tablesize		= SG_ALL,
- 	.max_sectors		= 0xFFFF,
--	.cmd_per_lun		= CXGB3I_SCSI_QDEPTH_DFLT,
-+	.cmd_per_lun		= ISCSI_DEF_CMD_PER_LUN,
- 	.eh_abort_handler	= iscsi_eh_abort,
- 	.eh_device_reset_handler = iscsi_eh_device_reset,
- 	.eh_target_reset_handler = iscsi_eh_target_reset,
+@@ -1775,6 +1775,8 @@ done:
+ out_err:
+ 	if (copied == 0 && err == -EPIPE)
+ 		copied = c3cn->err ? c3cn->err : -EPIPE;
++	else
++		copied = err;
+ 	goto done;
+ }
+ 
+diff --git a/drivers/scsi/cxgb3i/cxgb3i_pdu.c b/drivers/scsi/cxgb3i/cxgb3i_pdu.c
+index 7eebc9a..7091050 100644
+--- a/drivers/scsi/cxgb3i/cxgb3i_pdu.c
++++ b/drivers/scsi/cxgb3i/cxgb3i_pdu.c
+@@ -400,17 +400,18 @@ int cxgb3i_conn_xmit_pdu(struct iscsi_task *task)
+ 		return 0;
+ 	}
+ 
+-	if (err < 0 && err != -EAGAIN) {
+-		kfree_skb(skb);
+-		cxgb3i_tx_debug("itt 0x%x, skb 0x%p, len %u/%u, xmit err %d.\n",
+-				task->itt, skb, skb->len, skb->data_len, err);
+-		iscsi_conn_printk(KERN_ERR, task->conn, "xmit err %d.\n", err);
+-		iscsi_conn_failure(task->conn, ISCSI_ERR_XMIT_FAILED);
++	if (err == -EAGAIN || err == -ENOBUFS) {
++		/* reset skb to send when we are called again */
++		tdata->skb = skb;
+ 		return err;
+ 	}
+-	/* reset skb to send when we are called again */
+-	tdata->skb = skb;
+-	return -EAGAIN;
++
++	kfree_skb(skb);
++	cxgb3i_tx_debug("itt 0x%x, skb 0x%p, len %u/%u, xmit err %d.\n",
++			task->itt, skb, skb->len, skb->data_len, err);
++	iscsi_conn_printk(KERN_ERR, task->conn, "xmit err %d.\n", err);
++	iscsi_conn_failure(task->conn, ISCSI_ERR_XMIT_FAILED);
++	return err;
+ }
+ 
+ int cxgb3i_pdu_init(void)
 -- 
 1.6.0.6
 
