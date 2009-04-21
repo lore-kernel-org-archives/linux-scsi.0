@@ -1,108 +1,68 @@
-From: =?GB2312?B?0Lu42Q==?= <xiegang112@gmail.com>
-Subject: Re: The order of generating sd name
-Date: Tue, 21 Apr 2009 23:01:03 +0800
-Message-ID: <d364733c0904210801n2d317adeh1978d71c35741c0b@mail.gmail.com>
-References: <d364733c0904210226i2b48ae21pb5c39f338f53194b@mail.gmail.com>
-	 <20090421144313.GA313@mars.virtualiron.com>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: [PATCH 0/14 - 2nd post] mpt2sas: driver version 01.100.02.00
+Date: Tue, 21 Apr 2009 08:08:09 -0700
+Message-ID: <660360F4F2570145BD872F298951B17A76BCB2F2@cosmail03.lsi.com>
+References: <20090417162404.GA7009@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=GB2312
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:61506 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751272AbZDUPBF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Apr 2009 11:01:05 -0400
-Received: by wf-out-1314.google.com with SMTP id 29so2359484wff.4
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2009 08:01:03 -0700 (PDT)
-In-Reply-To: <20090421144313.GA313@mars.virtualiron.com>
+Received: from chip3og62.obsmtp.com ([64.18.14.201]:54804 "EHLO
+	chip3og62.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751705AbZDUPIZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Apr 2009 11:08:25 -0400
+In-Reply-To: <20090417162404.GA7009@lsil.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Konrad Rzeszutek <konrad@virtualiron.com>
-Cc: linux-scsi@vger.kernel.org
+To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, Apr 21, 2009 at 10:43 PM, Konrad Rzeszutek
-<konrad@virtualiron.com> wrote:
-> On Tue, Apr 21, 2009 at 05:26:40PM +0800, =D0=BB=B8=D9 wrote:
->> Hi,
->>
->> I find there will be different name order of sd device when connecti=
-ng
->> different array. My case is as following:
->> I have a SUSE server, and two array (let's say host, array1 and
->> array2. Two arrays are from different vendor). They are connected
->> through FC. There is two HBA controllers(let's say c1,c2) on host.
->> case1: host is connected to array1.
->> sd driver will generate the name orderly for each HBA controller. Fo=
-r examle:
->> c1: /dev/sda  /dev/sdb /dev/sdc
->> c2:/dev/sdd /dev/sde  /dev/sdf
->>
->> case2: host is connected to array2.
->> sd driver will generate the name ramdonly for each HBA controller. F=
-or examle:
->> c1: /dev/sda  /dev/sdd /dev/sde
->> c2:/dev/sdb /dev/sdc  /dev/sdf
->>
->> Why is the order different with different array?
->
-> You can also use /dev/disk/by-path instead of the /dev/sdX names.
->
->>
->> I went through the sd probe part of linux scsi subsystem.  In
->> scsi_probe_lun, an inquery command will be issued to probe the lun.
->> This request will be executed with scsi_execute. This function is sy=
-nc
->> and blocked. Because it invokes the blk_execute_rq to exec the
->> request, in blk_execute_rq:
->> rq->end_io_data =3D &wait;
->> blk_execute_rq_nowait(q, bd_disk, rq, at_head, blk_end_sync_rq);
->> wait_for_completion(&wait);
->>
->> According to above, sd driver probes one lun at one time. Before
->> respone to current inquery is returned, no other inquery is issued. =
-In
->> another word, the proccess of probe lun is sync and blocked.
->
-> Per HBA. Since you have two HBA's they can both probe the LUNs at the
-> same time. Or depending on how the array works, it allows you to prob=
-e
-> on the first HBA first, and then on the second.
-I noticed that the async lun scaning was added to sd driver in later
-version of kernel.It seems that the scan of scsi host would start only
-after the scan of previous finished:
+James - Can you please push these patchs into 2.6.30-rc ?
 
-	if (!shost->async_scan)
-		scsi_complete_async_scans();
-Is this means that for the luns which belong to the same host
-controller, the naming order is preserved?
->
->> The whole sequence of proble lun is:
->> scan host controller->scan target->probe and add lun.
->> So,  the whole procedure of sd probe should be serial.  but why is
->> there case2? Is it because the different order of executing command =
-on
->> array? But according the code of  sd driver, it seems it's not the
->> root cause.
->>
->> Thanks,
->>
->>
->>
->> --
->> Xie Gang
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Thankyou,
+Eric Moore
 
-
-
---=20
-Xie Gang
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Friday, April 17, 2009 10:24 AM, Eric Moore wrote:
+> 
+> 2nd Post:
+> Per Martin Petersen suggestions on T10 DIF - For type 1 protection
+> only set reference and gaurd tag checking.  For type 3 protection only
+> set guard tag checking.  Deleted the calling of scsi_host_set_guard.
+> 
+> 1st Post:
+> Here is set of misc bug fix's, to include T10 DIF support, 
+> and Lun Reset
+> Support.
+> 
+> Please consider for inclusion.
+> 
+> Signed-off-by: Eric Moore <eric.moore@lsi.com>
+> 
+> [PATCH 1/14 - 2nd post] mpt2sas: unique ioctl magic number
+> [PATCH 2/14 - 2nd post] mpt2sas: the sanity check in 
+> base_interrupt needs to be on dword boundary
+> [PATCH 3/14 - 2nd post] mpt2sas: fix oops when firmware sends 
+> large sense buffer size
+> [PATCH 4/14 - 2nd post] mpt2sas: running out of message frames
+> [PATCH 5/14 - 2nd post] mpt2sas: driver name needs to be in 
+> the MPT2IOCINFO ioctl
+> [PATCH 6/14 - 2nd post] mpt2sas: Identify Dell series-7 
+> adapters at driver load time.
+> [PATCH 7/14 - 2nd post] mpt2sas: Broadcast Primative AEN bug fix.
+> [PATCH 8/14 - 2nd post] mpt2sas: release diagnotic buffers 
+> prior host reset
+> [PATCH 9/14 - 2nd post] mpt2sas: T10 DIF Support - EEDP
+> [PATCH 10/14 - 2nd post] mpt2sas: LUN Reset Support
+> [PATCH 11/14 - 2nd post] mpt2sas: add query task support for 
+> MPT2COMMAND  ioctl
+> [PATCH 12/14 - 2nd post] mpt2sas: using the same naming 
+> convention for all static function
+> [PATCH 13/14 - 2nd post] mpt2sas: fix hotplug event processing
+> [PATCH 14/14 - 2nd post] mpt2sas: bump driver version to 01.100.02.00
+> --
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
