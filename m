@@ -1,125 +1,91 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: driver synchronization: make scsi_wait_scan more advanced
-Date: Tue, 21 Apr 2009 13:42:06 -0700
-Message-ID: <20090421134206.07b8ee7e@infradead.org>
+From: Dave Hansen <dave@linux.vnet.ibm.com>
+Subject: [RFC][PATCH] fix sign extension with 1.5TB usb-storage LBD=y
+Date: Tue, 21 Apr 2009 13:52:54 -0700
+Message-ID: <1240347174.10627.20.camel@nimitz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:56170 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752660AbZDUUkJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Apr 2009 16:40:09 -0400
+Received: from e37.co.us.ibm.com ([32.97.110.158]:39923 "EHLO
+	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752677AbZDUUxE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Apr 2009 16:53:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, rmk@arm.linux.org.uk, torvalds@linux-foundation.org, greg@kroah.com
+To: linux-kernel <linux-kernel@vger.kernel.org>
+Cc: Matthew Wilcox <matthew@wil.cx>, mdharm-usb@one-eyed-alien.net, linux-usb <linux-usb@vger.kernel.org>, usb-storage@lists.one-eyed-alien.net, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-(CC'ing linux-scsi as well since this touches a file in drivers/scsi)
+This is with current git as of this morning, which is at v2.6.30-rc2.
+
+I have a 1.5TB USB device which gets a bit angry when I plug it in.  It
+ends up with a scsi_disk->capacity of ffffffffaea87b30.  I tracked it
+down to the lba calculation in read_capacity_10():
+
+	lba =	(buffer[0] << 24) | (buffer[1] << 16) |
+ 		(buffer[2] << 8) | buffer[3];
+
+lba is getting all 0xf's in its high 32 bits.  It seems odd that this
+would happen since 'buffer' is an 'unsigned char', but that is
+apparently what is going on.  Note that this isn't an issue 32-bit
+kernels compiled with CONFIG_LBD=n since there's no more bits into which
+the sign could be extended.
+
+The attached one-liner seems to make my system happier.  
+
+Before patch (with a bit of my added debugging):
+
+sd 5:0:0:0: [sdb] read_capacity_10() sector size: 0x200/512 
+sd 5:0:0:0: [sdb] capacity (in 512-byte blocks: ffffffffaea87b30
+sd 5:0:0:0: [sdb] Very big device. Trying to use READ CAPACITY(16).
+sd 5:0:0:0: [sdb] Using 0xffffffff as device size sector_size was: 0xffffffea/-22
+sd 5:0:0:0: [sdb] 4294967296 512-byte hardware sectors: (2.19 TB/2.00 TiB)
+sd 5:0:0:0: [sdb] Write Protect is off
+sd 5:0:0:0: [sdb] Mode Sense: 1c 00 00 00
+sd 5:0:0:0: [sdb] Assuming drive cache: write through
+sd 5:0:0:0: [sdb] read_capacity_10() sector size: 0x200/512 
+sd 5:0:0:0: [sdb] capacity (in 512-byte blocks: ffffffffaea87b30
+sd 5:0:0:0: [sdb] Very big device. Trying to use READ CAPACITY(16).
+sd 5:0:0:0: [sdb] Using 0xffffffff as device size sector_size was: 0xffffffea/-22
+sd 5:0:0:0: [sdb] Assuming drive cache: write through
+ sdb: sdb1 
+sd 5:0:0:0: [sdb] Attached SCSI disk 
+sd 5:0:0:0: [sdb] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+sd 5:0:0:0: [sdb] Sense Key : Aborted Command [current] 
+sd 5:0:0:0: [sdb] Add. Sense: No additional sense information
+
+after patch:
+
+[ 5257.068646] usb 5-2: new high speed USB device using ehci_hcd and address 9
+[ 5257.215421] usb 5-2: configuration #1 chosen from 1 choice
+[ 5257.221640] scsi14 : SCSI emulation for USB Mass Storage devices
+[ 5257.221937] usb-storage: device found at 9
+[ 5257.221939] usb-storage: waiting for device to settle before scanning
+[ 5262.225981] usb-storage: device scan complete
+[ 5262.227477] scsi 14:0:0:0: Direct-Access     Seagate  FreeAgent        102D PQ: 0 ANSI: 4
+[ 5262.227936] sd 14:0:0:0: Attached scsi generic sg3 type 0
+[ 5273.458856] sd 14:0:0:0: [sdc] 2930277168 512-byte hardware sectors: (1.50 TB/1.36 TiB)
+[ 5273.460121] sd 14:0:0:0: [sdc] Write Protect is off
+[ 5273.460126] sd 14:0:0:0: [sdc] Mode Sense: 1c 00 00 00
+[ 5273.460130] sd 14:0:0:0: [sdc] Assuming drive cache: write through
+[ 5273.475750] sd 14:0:0:0: [sdc] Assuming drive cache: write through
+[ 5273.488125]  sdc: sdc1
+[ 5273.541147] sd 14:0:0:0: [sdc] Attached SCSI disk
 
 
->From 546fdda8b4124a7473f32decf4a2981984f287db Mon Sep 17 00:00:00 2001
-From: Arjan van de Ven <arjan@linux.intel.com>
-Date: Tue, 21 Apr 2009 13:32:54 -0700
-Subject: [PATCH] driver synchronization: make scsi_wait_scan more advanced
-
-
-There is currently only one way for userspace to say "wait for my storage
-device to get ready for the modules I just loaded": to load the
-scsi_wait_scan module. Expectations of userspace are that once this
-module is loaded, all the (storage) devices for which the drivers
-were loaded before the module load are present.
-
-Now, there are some issues with the implementation, and the async
-stuff got caught in the middle of this: The existing code only
-waits for the scsy async probing to finish, but it did not take
-into account at all that probing might not have begun yet.
-(Russell ran into this problem on his computer and the fix works for him)
-
-This patch fixes this more thoroughly than the previous "fix", which
-had some bad side effects (namely, for kernel code that wanted to wait for
-the scsi scan it would also do an async sync, which would deadlock if you did
-it from async context already.. there's a report about that on lkml):
-The patch makes the module first wait for all device driver probes, and then it
-will wait for the scsi parallel scan to finish.
-
-Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
----
- drivers/base/dd.c             |    1 +
- drivers/scsi/scsi_scan.c      |    2 --
- drivers/scsi/scsi_wait_scan.c |   11 +++++++++++
- include/linux/device.h        |    1 +
- 4 files changed, 13 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/base/dd.c b/drivers/base/dd.c
-index f17c326..742cbe6 100644
---- a/drivers/base/dd.c
-+++ b/drivers/base/dd.c
-@@ -179,6 +179,7 @@ void wait_for_device_probe(void)
- 	wait_event(probe_waitqueue, atomic_read(&probe_count) == 0);
- 	async_synchronize_full();
- }
-+EXPORT_SYMBOL_GPL(wait_for_device_probe);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 3fcb64b..db60e96 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1402,7 +1402,7 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
  
- /**
-  * driver_probe_device - attempt to bind device & driver together
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index a14d245..6f51ca4 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -180,8 +180,6 @@ int scsi_complete_async_scans(void)
- 	spin_unlock(&async_scan_lock);
+ 	sector_size =	(buffer[4] << 24) | (buffer[5] << 16) |
+ 			(buffer[6] << 8) | buffer[7];
+-	lba =	(buffer[0] << 24) | (buffer[1] << 16) |
++	lba =	((sector_t)buffer[0] << 24) | (buffer[1] << 16) |
+ 		(buffer[2] << 8) | buffer[3];
  
- 	kfree(data);
--	/* Synchronize async operations globally */
--	async_synchronize_full();
- 	return 0;
- }
- 
-diff --git a/drivers/scsi/scsi_wait_scan.c b/drivers/scsi/scsi_wait_scan.c
-index 2f21af2..74708fc 100644
---- a/drivers/scsi/scsi_wait_scan.c
-+++ b/drivers/scsi/scsi_wait_scan.c
-@@ -11,10 +11,21 @@
-  */
- 
- #include <linux/module.h>
-+#include <linux/device.h>
- #include <scsi/scsi_scan.h>
- 
- static int __init wait_scan_init(void)
- {
-+	/*
-+	 * First we need to wait for device probing to finish;
-+	 * the drivers we just loaded might just still be probing
-+	 * and might not yet have reached the scsi async scanning
-+	 */
-+	wait_for_device_probe();
-+	/*
-+	 * and then we wait for the actual asynchronous scsi scan
-+	 * to finish.
-+	 */
- 	scsi_complete_async_scans();
- 	return 0;
- }
-diff --git a/include/linux/device.h b/include/linux/device.h
-index 2918c0e..6a69caa 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -551,6 +551,7 @@ extern int (*platform_notify_remove)(struct device *dev);
- extern struct device *get_device(struct device *dev);
- extern void put_device(struct device *dev);
- 
-+extern void wait_for_device_probe(void);
- 
- /* drivers/base/power/shutdown.c */
- extern void device_shutdown(void);
--- 
-1.6.0.6
+ 	if ((sizeof(sdkp->capacity) == 4) && (lba == 0xffffffff)) {
 
 
+-- Dave
 
--- 
-Arjan van de Ven 	Intel Open Source Technology Centre
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
