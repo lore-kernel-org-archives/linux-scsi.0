@@ -1,82 +1,86 @@
-From: "Moger, Babu" <Babu.Moger@lsi.com>
-Subject: RE: [PATCH] dm mpath: Try recover from I/O failure by
- re-initializing the PG if device is running on one path
-Date: Wed, 22 Apr 2009 08:03:12 -0600
-Message-ID: <E463DF2B2E584B4A82673F53D62C2EF466A6707A@cosmail01.lsi.com>
-References: <E463DF2B2E584B4A82673F53D62C2EF466A0E4DA@cosmail01.lsi.com>
-	<49ED1C24.9090303@ct.jp.nec.com>
-	<E463DF2B2E584B4A82673F53D62C2EF466A66DD4@cosmail01.lsi.com>
-	<49EE7870.3090008@ct.jp.nec.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] RFC: have dm-mpath use already attached scsi_dh
+Date: Wed, 22 Apr 2009 16:15:49 +0200
+Message-ID: <49EF2695.7070701@suse.de>
+References: <1240374806-6043-1-git-send-email-michaelc@cs.wisc.edu> <49EEE071.9060902@suse.de> <49EF2137.80708@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-2022-jp"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <49EE7870.3090008@ct.jp.nec.com>
-Content-Language: en-US
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Cc: "'dm-devel@redhat.com'" <dm-devel@redhat.com>, "Chauhan,
-	Vijay" <Vijay.Chauhan@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:43592 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750813AbZDVOPv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Apr 2009 10:15:51 -0400
+In-Reply-To: <49EF2137.80708@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, Levy_Jerome@emc.com, berthiaume_wayne@emc.com
 
+Hi Mike,
 
-Hi Kiyoshi,
-
-> >>
-> >> Hi Babu,
-> >>
-> >> On 2009/04/21 3:05 +0900, Moger, Babu wrote:
-> >>> This patch introduces the mechanism to recover from I/O failures by
-> >>> re-initializing the path if the device is running on only one path.
-> >>>
-> >>> Problem: Device mapper fails the path for every I/O error. It does =
-not
-> >>> care about the type of error. There are certain errors which can be
-> >>> recovered by re-initializing the path again. I have seen this probl=
-em
-> >>> during my testing on rdac device handler. I have observed I/O error=
-s
-> >>> when there is a change in Lun ownership. When Lun ownership changes
-> >>> device will return back with check condition with
-> >>> sense 0x05/0x94/0x01(SK/ASC/ASCQ -meaning Lun ownership changed).
-> >>> Currently, device mapper fails the path for this error and eventual=
-ly
-> >>> this will lead to I/O error. We don't want to see I/O error for thi=
-s
-> >>> reason.
-> >>
-> >> Shouldn't we handle this type of device error inside device handler?
-> >
-> > The current error in question requires re-activation of the path.
-> > We already have a code to handle this scenario in device handler.
-> > But, the problem is the return status does not go to DM layer.
-> > The return status gets lost in scsi layer. For DM layer all the error=
-s
-> > are -EIO. Any thoughts from your side.
+Mike Christie wrote:
+> Hannes Reinecke wrote:
+>> Hi Mike,
+>>
+>> michaelc@cs.wisc.edu wrote:
+>>> From: Mike Christie <michaelc@cs.wisc.edu>
+>>>
+>>> If you have a mixed environment of clarriions, where some
+>>> support ALAU and some support PNR, what do you put in
+>>> your multipath.conf? With this patch you do not have to worry about
+>>> it. If those modules are loaded before dm-mpath, then they
+>>> will have attached to the correct devices based on inquiry, alua
+>>> commands
+>>> and parsing of data buffers (for example in scsi_dh_emc's alua chec=
+k).
+>>> There is no need for the user to set that info in the multipath.con=
+f.
+>>> And in general since all scsi_dh_modules will attach to the devices
+>>> they work for, we do not need to have users specific this.
+>>>
+>> No. The problem here is the hardware table from scsi_dh is compiled
+>> in and cannot be changed from userland. The multipath.conf OTOH
+>> is purely user-defined and, what's more, the user might have a valid
+>> reason for modifying it.
+>> (EG EMC Clariion can well be run in PNR mode even though ALUA is
+>> active, or the user might want to try ALUA on any as-of-yet unknown
+>> devices)
 >=20
-> Oh, I missed the point and I thought that re-activating the path
-> in your device handler was enough for the error.
-> Currently, I have no idea to handle your case only in dm without
-> seeing I/O error.
+> Ah. I misread the code and misunderstood the compat mode. I thought
+> scsi_dh_emc was failing the attach when ALUA support was detected.
 >=20
-  I have discussed about re-activating path in device handler with Chandr=
-a. Looks like that will lead to other issues (one is long boot up). Look =
-like that is not an option. =20
-> By the way, who did change the ownership when the device was running
-> with one path in your testing?  I can't see why such case happened.
+>>
+>> So _not_ allowing multipath to override the device handler setting
+>> will just add to the confusion and makes error tracking even more
+>> difficult.
+>>
+>> So I would prefer the attached patch, it even save to touch
+>> device handler code at all.
+>>
 >=20
-This can happen if the user knowingly or unknowingly changes the ownershi=
-p. Also we have other feature in our storage which will allow user to red=
-istribute the luns. Thanks for you comment.
+> Thanks. I think this will work for me.
+>=20
+> Are you going to push this for 2.6.30?
+Well, yes, I could.
 
-> Thanks,
-> Kiyoshi Ueda
+However, I'm still waiting for agk to push the request-based
+multipath patches; I've got quite some updates here for multipathing
+which are done with request-based multipath in place;
+disentangling them will be quite time consuming (and pointless).
+
+But this one, sure.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
