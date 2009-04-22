@@ -1,298 +1,80 @@
-From: Takahiro Yasui <tyasui@redhat.com>
-Subject: [RFC] SCSI timeout error recovery issue
-Date: Wed, 22 Apr 2009 13:28:56 -0400
-Message-ID: <49EF53D8.8060001@redhat.com>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: Re: [PATCH] RFC: have dm-mpath use already attached
+	scsi_dh
+Date: Wed, 22 Apr 2009 10:32:24 -0700
+Message-ID: <1240421544.19442.6.camel@chandra-ubuntu>
+References: <1240374806-6043-1-git-send-email-michaelc@cs.wisc.edu>
+	<49EEE071.9060902@suse.de>
+Reply-To: sekharan@linux.vnet.ibm.com,
+	device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:49109 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754849AbZDVR3K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Apr 2009 13:29:10 -0400
-Received: from int-mx2.corp.redhat.com (int-mx2.corp.redhat.com [172.16.27.26])
-	by mx2.redhat.com (8.13.8/8.13.8) with ESMTP id n3MHTARg015984
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2009 13:29:10 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <49EEE071.9060902@suse.de>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: michaelc@cs.wisc.edu, dm-devel@redhat.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: mchristi@redhat.com, mbarrow@redhat.com
 
-Hi,
+I agree with Hannes, that we should allow multipath to override the
+default attachment, mainly to give control to the user.
 
-This is the first post to this list, but I appreciate your comments
-to solve a problem which I found.
+But, I have a small issue with the attached patch. See below.
 
+On Wed, 2009-04-22 at 11:16 +0200, Hannes Reinecke wrote:
+> Hi Mike,
+> 
+<snip>
 
-PROBLEM DESCRIPTION
-===================
+> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+> index 095f77b..46d01d9 100644
+> --- a/drivers/md/dm-mpath.c
+> +++ b/drivers/md/dm-mpath.c
+> @@ -592,12 +592,25 @@ static struct pgpath *parse_path(struct arg_set
+> *as, struct path_selector *ps,
+>  	}
+> 
+>  	if (m->hw_handler_name) {
+> -		r = scsi_dh_attach(bdev_get_queue(p->path.dev->bdev),
+> -				   m->hw_handler_name);
+> +		struct request_queue *q = bdev_get_queue(p->path.dev->bdev);
+> +
+> +		r = scsi_dh_attach(q, m->hw_handler_name);
+> +		if (r == -EBUSY) {
+> +			/*
+> +			 * Already attached to different hw_handler,
+> +			 * try to reattach with correct one.
+> +			 */
+> +			scsi_dh_detach(q);
+> +			r = scsi_dh_attach(q, m->hw_handler_name);
+> +		}
+>  		if (r < 0) {
+> +			ti->error = "error attaching hardware handler";
+>  			dm_put_device(ti, p->path.dev);
+>  			goto bad;
+>  		}
+> +	} else {
+> +		/* Play safe and detach hardware handler */
+> +		scsi_dh_detach(bdev_get_queue(p->path.dev->bdev));
+>  	}
 
-I'm evaluating the behavior of systems with broken devices which
-generate scsi timeout errors. During this test, I encountered the
-problem that a userspace test program took unexpectedly long time
-for its execution.
+I prefer not to detach a previously attached hardware handler, if
+multipath doesn't have any handler associated with the device. Leaving
+it will not do any hard to multipath as the multipath layer would not
+call scsi_dh_activate for the device.
 
-In the scsi-mid layer, A state of a device is changed from "running"
-to "offline" when an error was detected and failed its recovery.
-However, in this test, states of error devices don't stay in
-"offline" but get back to "running", and I/Os are issued to error
-devices several times, and scsi timeout errors happened many times.
-This is the reason why the test program takes long time.
-
-When the SCSI mid-level layer detects a timeout for an I/O to a device
-and failed its recovery, the SCSI mid-level layer changes the device's
-state from "running" to "offline". And then, SCSI mid-level layer
-detects timeout on an another device and failed its recovery, the
-state of the device is changed from "running" to "offline", but
-at the same time, the first device in a "offline" state goes back to
-"running" state.
-
-This means that a timeout error happens on several devices, previous
-errors are forgotten and device states are changed to "running".
-Therefore, a test application can access no responding devices several
-times and timeout errors happen each time.
-
-Here is an example of the sequence with two no responding devices,
-A and B. When they are alternately accessed by a test program, the
-following sequence happens.
-
-  0. Original states of devices
-       device A: "running", device B: "running"
-
-  1. The device A is accessed.
-  2. A scsi timeout happens on the device A and its recovery fails.
-  3. A state of the device A is changed to "offline".
-       device A: "offline", device B: "running"
-  4. The device B is accessed.
-  5. A scsi timeout happens on the device B and its recovery fails.
-  6. The state of devices is changed as follows.
-       device A: "running", device B: "offline"
-
-  7. (go back to step 1 and continue this iteration)
-
-
-BRIEF SOURCE CODE ANALYSIS
-==========================
-
-During the recovery procedure for scsi timeout error, a qla2xxx driver
-calls fc_remote_port_add() and fc_remote_port_delete(). They call
-scsi_device_set_state() internally and changes a state of devices.
-At the beginning of the recovery procedure, states of all devices are
-changed to SDEV_BLOCK state. And then, they go back to SDEV_RUNNING
-state at the end of the recovery procedure, and only one device with
-the error which triggered the recovery procedure goes to SDEV_OFFLINE
-state at last. As a result, the previous states of other devices are
-forgotten.
-
-
-TEST ENVIRONMENT
-================
-
-Kernel version is 2.6.29, and disk devices are connected through
-Fibre Channel using a qla2xxx driver. A scsi timeout is generated by
-a self-made scsi timeout injection module, which wraps the scsi
-queuecommand handler and ignores I/Os to the specified device and
-any I/Os are not passed to the qla2xxx driver.
-
-As for details, please see the source code listed in Appendix B.
-
-
-REQUEST FOR COMMENTS
-====================
-
-- My expectation is scsi mid layer disables failed devices and keeps
-  their "offline" states. Is the scsi behavior correct and intended?
-
-- Which component, scsi mid level or qla2xxx driver, seems wrongly
-  working and needs to be fixed? Otherwise is the method to inject scsi
-  timeout wrong?
-
-- How can we keep no responding devices in the state of "offline" to
-  prevent scsi timeout errors from happening again and again on the same
-  devices? I'm afraid that deleting device files such as /dev/sdx is
-  not a solution when an application accesses devices through device-mapper.
-
-
-APPENDIX A. REPRODUCTION STEPS
-==============================
-
-0. Environment
-    kernel ... 2.6.29
-    scsi LLD ... qla2xxx
-    devices ... /dev/sdc (2:0:0:0), /dev/sdd (2:0:0:1)
-    scsi timeout ... 3 seconds.
-
-1. Getting an address of scsi_host_template for LLD
-
-  Getting an address of scsi_host_template table specific to LLD.
-  In case of qla2xxx driver, a table name is "qla2x00_driver_template".
-
-    # grep qla2x00_driver_template /proc/kallsyms
-    f8a323c0 d qla2x00_driver_template      [qla2xxx]
-
-2. Building and loading the scsi timeout injection module
-
-  Loading the scsi timeout injection module with a "param" option,
-  which is a series of three parameters, scsi_driver_template address
-  got in step 1 and two scsi device targets on which a timeout error
-  is injected.
-
-  Here is an example to inject a scsi timeout to scsi devices,
-  2:0:0:0, 2:0:0:1.
-
-    # insmod scsi_timeout.ko param=0xf8a323c0,2:0:0:0,2:0:0:1
-
-3. Checking device states
-
-  Both devices, /dev/sd[cd], are now in "running" state.
+Device handler would just handle the sense code as defined in the
+kernel.
  
-    # cat /sys/block/sdc/device/state
-    running
-    # cat /sys/block/sdd/device/state
-    running
-
-4. Issuing I/Os to the first device (/dev/sdc)
-
-  Issue I/Os to the first device and it takes about 76 seconds.
-
-    # dd if=/dev/sdc of=/dev/null bs=4096 count=100
-    dd: reading `/dev/sdc': Input/output error
-    0+0 records in
-    0+0 records out
-    0 bytes (0 B) copied, 75.4365 seconds, 0.0 kB/s
-
-5. Check device states
-
-  The first device (/dev/sdc) is changed to "offline".
-
-    # cat /sys/block/sdc/device/state
-    offline
-    # cat /sys/block/sdd/device/state
-    running
-
-6. Issuing I/Os to the second device (/dev/sdd)
-
-  Issue I/Os to the second device and it takes about 76 seconds.
-
-    # dd if=/dev/sdd of=/dev/null bs=4096 count=100
-    dd: reading `/dev/sdd': Input/output error
-    0+0 records in
-    0+0 records out
-    0 bytes (0 B) copied, 75.9649 seconds, 0.0 kB/s
-
-7. Check device states
-
-  The second device (/dev/sdd) is changed to "offline", but the first
-  device (/dev/sdc) is changed back to "running".
-
-    # cat /sys/block/sdc/device/state
-    running
-    # cat /sys/block/sdd/device/state
-    offline
-
-8. Again issuing I/Os to the first device (/dev/sdc)
-
-  I/Os to the first device take 76 seconds once again, because the first
-  device is in the state of running and I/Os issued by a dd command are
-  sent to the device.
-
-    # dd if=/dev/sdc of=/dev/null bs=4096 count=100
-    dd: reading `/dev/sdc': Input/output error
-    0+0 records in
-    0+0 records out
-    0 bytes (0 B) copied, 75.8986 seconds, 0.0 kB/s
-
-
-APPENDIX B. SCSI TIMEOUT INJECTION MODULE
-=========================================
-
-/*
- * scsi timeout injection module
- */
-#include <linux/module.h>
-#include <scsi/scsi_cmnd.h>
-#include <scsi/scsi_host.h>
-#include <scsi/scsi_device.h>
-
-static struct scsi_host_template *sht;
-static char config[32];
-
-static struct target {
-	short host;
-	uint channel;
-	uint id;
-	uint lun;
-} st[2];
-
-static int (*org_qc)(struct scsi_cmnd *,
-		     void (*done)(struct scsi_cmnd *));
-
-
-static inline int check_dev(struct target *st, struct scsi_cmnd *cmd)
-{
-	return (st->host == cmd->device->host->host_no &&
-		st->channel == cmd->device->channel &&
-		st->id == cmd->device->id &&
-		st->lun == cmd->device->lun);
-}
-
-static int dbg_qc(struct scsi_cmnd *cmd,
-		  void (*done)(struct scsi_cmnd *))
-{
-	int ret = 0;
-
-	preempt_disable();
-	if (check_dev(&st[0], cmd) || check_dev(&st[1], cmd))
-		goto done;
-	ret = org_qc(cmd, done);
-done:
-	preempt_enable();
-	return ret;
-}
-
-static int __init scsi_timeout_module_init(void)
-{
-	int ret;
-
-	ret = sscanf(config, "%lx,%hd:%d:%d:%d,%hd:%d:%d:%d",
-		     (ulong *)&sht,
-		     &st[0].host, &st[0].channel, &st[0].id, &st[0].lun,
-		     &st[1].host, &st[1].channel, &st[1].id, &st[1].lun);
-	if (ret != 9) {
-		printk(KERN_INFO "scsi_timeout_module: invalid options\n");
-		return -1;
-	}
-
-	org_qc = sht->queuecommand;
-	sht->queuecommand = dbg_qc;
-
-	printk(KERN_INFO
-	       "scsi timeout injection: %hd:%d:%d:%d %hd:%d:%d:%d\n",
-	       st[0].host, st[0].channel, st[0].id, st[0].lun,
-	       st[1].host, st[1].channel, st[1].id, st[1].lun);
-
-	return 0;
-}
-
-static void __exit scsi_timeout_module_exit(void)
-{
-	sht->queuecommand = org_qc;
-	synchronize_sched();
-}
-
-module_init(scsi_timeout_module_init);
-module_exit(scsi_timeout_module_exit);
-module_param_string(param, config, 32, 0);
-
-MODULE_AUTHOR("Takahiro Yasui <tyasui@redhat.com>");
-MODULE_LICENSE("GPL");
-
-
-Again, I appreciate your kind comments.
-
-Regards,
----
-Takahiro Yasui
-Hitachi Computer Products (America), Inc.
-
-
+> 
+>  	r = ps->type->add_path(ps, &p->path, as->argc, as->argv,
+> &ti->error);
