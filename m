@@ -1,65 +1,67 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] RFC: have dm-mpath use already attached
-	scsi_dh
-Date: Wed, 22 Apr 2009 08:52:55 -0500
-Message-ID: <49EF2137.80708@cs.wisc.edu>
-References: <1240374806-6043-1-git-send-email-michaelc@cs.wisc.edu>
-	<49EEE071.9060902@suse.de>
-Reply-To: device-mapper development <dm-devel@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <49EEE071.9060902@suse.de>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Hannes Reinecke <hare@suse.de>
-Cc: dm-devel@redhat.com, Levy_Jerome@emc.com, linux-scsi@vger.kernel.org
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] ipr: Fix sleeping function called with interrupts disabled
+Date: Wed, 22 Apr 2009 08:58:02 -0500
+Message-ID: <200904221358.n3MDwKNw010452@d01av03.pok.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:56811 "EHLO e6.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756226AbZDVN6W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Apr 2009 09:58:22 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e6.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n3ME0FCI018651
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2009 10:00:15 -0400
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n3MDwLbX189806
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2009 09:58:21 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n3MDwK2t010513
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2009 09:58:20 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
-Hannes Reinecke wrote:
-> Hi Mike,
-> 
-> michaelc@cs.wisc.edu wrote:
->> From: Mike Christie <michaelc@cs.wisc.edu>
->>
->> If you have a mixed environment of clarriions, where some
->> support ALAU and some support PNR, what do you put in
->> your multipath.conf? With this patch you do not have to worry about
->> it. If those modules are loaded before dm-mpath, then they
->> will have attached to the correct devices based on inquiry, alua commands
->> and parsing of data buffers (for example in scsi_dh_emc's alua check).
->> There is no need for the user to set that info in the multipath.conf.
->> And in general since all scsi_dh_modules will attach to the devices
->> they work for, we do not need to have users specific this.
->>
-> No. The problem here is the hardware table from scsi_dh is compiled
-> in and cannot be changed from userland. The multipath.conf OTOH
-> is purely user-defined and, what's more, the user might have a valid
-> reason for modifying it.
-> (EG EMC Clariion can well be run in PNR mode even though ALUA is
-> active, or the user might want to try ALUA on any as-of-yet unknown
-> devices)
 
-Ah. I misread the code and misunderstood the compat mode. I thought 
-scsi_dh_emc was failing the attach when ALUA support was detected.
+The ata_sas_slave_configure was changed such that it now allocates
+some memory for a drain buffer for ATAPI devices. Fixup the ipr
+driver such that we no longer make this call with interrupts disabled.
 
-> 
-> So _not_ allowing multipath to override the device handler setting
-> will just add to the confusion and makes error tracking even more
-> difficult.
-> 
-> So I would prefer the attached patch, it even save to touch
-> device handler code at all.
-> 
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
 
-Thanks. I think this will work for me.
+ drivers/scsi/ipr.c |   13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-Are you going to push this for 2.6.30?
+diff -puN drivers/scsi/ipr.c~ipr_fix_invalid_context drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_fix_invalid_context	2009-04-22 08:37:32.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2009-04-22 08:37:32.000000000 -0500
+@@ -3654,6 +3654,7 @@ static int ipr_slave_configure(struct sc
+ {
+ 	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *) sdev->host->hostdata;
+ 	struct ipr_resource_entry *res;
++	struct ata_port *ap = NULL;
+ 	unsigned long lock_flags = 0;
+ 
+ 	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
+@@ -3672,12 +3673,16 @@ static int ipr_slave_configure(struct sc
+ 		}
+ 		if (ipr_is_vset_device(res) || ipr_is_scsi_disk(res))
+ 			sdev->allow_restart = 1;
+-		if (ipr_is_gata(res) && res->sata_port) {
++		if (ipr_is_gata(res) && res->sata_port)
++			ap = res->sata_port->ap;
++		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
++
++		if (ap) {
+ 			scsi_adjust_queue_depth(sdev, 0, IPR_MAX_CMD_PER_ATA_LUN);
+-			ata_sas_slave_configure(sdev, res->sata_port->ap);
+-		} else {
++			ata_sas_slave_configure(sdev, ap);
++		} else
+ 			scsi_adjust_queue_depth(sdev, 0, sdev->host->cmd_per_lun);
+-		}
++		return 0;
+ 	}
+ 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+ 	return 0;
+_
