@@ -1,49 +1,45 @@
-From: "Chris Friesen" <cfriesen-ZIRUuHA3oDzQT0dZR+AlfA@public.gmane.org>
-Subject: Re: 2.6.29-git13: Reported regressions from 2.6.28
-Date: Wed, 22 Apr 2009 13:32:49 -0600
-Message-ID: <49EF70E1.9030904@nortel.com>
-References: <n4io5wq70ZO.A.gzG.rFn2JB@chimera> <alpine.LFD.2.00.0904061443000.7443@localhost.localdomain> <200904070035.00784.rjw@sisk.pl> <49E79E58.9000606@nortel.com> <alpine.LFD.2.00.0904161432000.4042@localhost.localdomain> <49ECE783.5050704@nortel.com> <Pine.LNX.4.64.0904202352520.2924@blonde.anvils>
+From: "Andries E. Brouwer" <Andries.Brouwer@cwi.nl>
+Subject: Re: [usb-storage] [PATCH] SCSI: add check_capacity flag and
+	sd_read_last_sector()
+Date: Wed, 22 Apr 2009 21:17:52 +0200
+Message-ID: <20090422191752.GA24309@ub>
+References: <Pine.LNX.4.44L0.0904221034340.3405-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.64.0904202352520.2924-XZxpfvf5U/bbmfIwyoSfiQ@public.gmane.org>
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Hugh Dickins <hugh-DTz5qymZ9yRBDgjK7y7TUQ@public.gmane.org>
-Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Adrian Bunk <bunk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Trenton Adams <trenton.d.adams-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hera.cwi.nl ([192.16.191.8]:63144 "EHLO hera.cwi.nl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752265AbZDVTtK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Apr 2009 15:49:10 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0904221034340.3405-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH <greg@kroah.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Hugh Dickins wrote:
-> On Mon, 20 Apr 2009, Chris Friesen wrote:
+On Wed, Apr 22, 2009 at 10:42:36AM -0400, Alan Stern wrote:
+> This patch (as1196) adds a new scsi_device flag to tell sd.c that it
+> should verify the results of READ CAPACITY by trying the read the last
+> sector.
 
->> For anonymous mappings, the older kernels put the starting address of the VMA
->> (from the point of view of the app) as the offset.  Until the recent change,
->> new kernels still did this for most VMAs, but the stack offset was a 64-bit
->> value with no obvious relation to the VMA start address.
-> 
-> No, what they put there was something that in most cases matched the
-> starting address of the VMA; but try moving that VMA with mremap (and
-> an old /proc/<pid>/maps!) and you'll see that the "offset" remained
-> unchanged even when the starting address of the VMA was changed.
-> 
-> (The offset remaining constant so that rmap can locate the VMA's pages
-> and unmap them, despite their being mapped at different virtual
-> addresses in parent and child after a move in one of them.)
-> 
-> ... so I think your app was indeed already broken, wasn't it?
-> 
-> It's also unclear why you'd want to use the offset field for the
-> starting address of the VMA, when /proc/<pid>/maps already shows
-> the starting address of the VMA.  I think you've more to tell us!
+Hi Alan,
 
-Yeah, given the above the app was broken.  We just didn't run into any 
-cases where the assumption caused any problems.
+I can see why you want to do this, but allow me to mutter a bit nevertheless.
+Many devices are flaky and get into strange states requiring error-recovery
+or reboot when you try an I/O that they do not like.
+For this reason, and also for aesthetical reasons, I would prefer never to
+do I/O to a device unless user space asks for it.
 
-Also, it's not so much that we were relying on the offset value for 
-anything, so much as we were parsing the file and had made some 
-assumptions about valid offsets for anonymous memory.
+(So - this would be much more work, but I would prefer a capacity value
+that says "it reported this, but we have not checked yet - try an actual
+I/O if you really want to know", and leave it at that until the value is
+needed. Typically one needs the value (i) to check against it if one
+wants to do I/O, or (ii) when user space asks for it because some fdisk type
+program is invoked. In case (i) an additional read is superfluous.
+In case (ii) user space asked and we try to make sure.)
 
-Anyways, we'll fix it going forward to simply ignore the offset for 
-anonymous memory.
+Comments?
 
-Chris
+Andries
+
