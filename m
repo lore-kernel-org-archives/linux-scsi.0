@@ -1,49 +1,40 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH] SCSI: add check_capacity flag and sd_read_last_sector()
-Date: Wed, 22 Apr 2009 08:57:37 -0700
-Message-ID: <20090422155737.GA18880@kroah.com>
-References: <Pine.LNX.4.44L0.0904221034340.3405-100000@iolanthe.rowland.org>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH] fc transport: pre-emptively terminate i/o upon dev_loss_tmo
+Date: Wed, 22 Apr 2009 12:19:10 -0400
+Message-ID: <49EF437E.6040506@emulex.com>
+References: <20090409130439.042ff514@rwuerthntp>	<49EE3E0D.7000403@cs.wisc.edu>	<49EE403B.8060005@cs.wisc.edu>	<49EE44C2.3060800@cs.wisc.edu> <20090422141323.330c7f78@rwuerthntp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:48508 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753340AbZDVQBb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Apr 2009 12:01:31 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0904221034340.3405-100000@iolanthe.rowland.org>
+Received: from emulex.emulex.com ([138.239.112.1]:52349 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752004AbZDVQTY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2009 12:19:24 -0400
+In-Reply-To: <20090422141323.330c7f78@rwuerthntp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
+To: Ralph Wuerthner <ralphw@linux.vnet.ibm.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wed, Apr 22, 2009 at 10:42:36AM -0400, Alan Stern wrote:
-> This patch (as1196) adds a new scsi_device flag to tell sd.c that it
-> should verify the results of READ CAPACITY by trying the read the last
-> sector.  This is necessary because a large percentage of USB
-> mass-storage devices -- too many for a blacklist -- have a bug whereby
-> they return the total number of sectors rather than the index of the
-> last sector.
-> 
-> The new sd_read_last_sector() routine carries out the test, using a
-> very short timeout and a small number of retries.  Any working device
-> for which the check_capacity flag is set should be able to pass the
-> test easily.
-> 
-> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-> 
-> ---
-> 
-> James & Greg:
-> 
-> Although part of this patch touches usb-storage, the majority of 
-> it affects SCSI files.  Is it okay if the whole thing goes in via 
-> James's tree?
+All the flushes and workq stuff is very tricky. We (Mike Reed and I) had 
+a devil of a time with it on large SMP systems. So adding these quickly 
+is not advised.
 
-No objection from me at all.  Feel free to add a:
-	Acked-by: Greg Kroah-Hartman <gregkh@suse.de>
-to the patch and push it through James.
+I believe what we need to do is add a synchronization between the delete 
+and the add sequences, which right now, expect the workq and flushing to 
+provide it, but left other code paths, where it had to release the locks 
+post the state change, at risk. Let me put something together.
 
-thanks,
+-- james s
 
-greg k-h
+Ralph Wuerthner wrote:
+> Your patch does not work: you are canceling the fast_fail work and
+> dev_loss work without initializing rport first. 
+>
+> We have to make sure that fc_remote_port_add(),
+> fc_remote_port_delete(), and fc_timeout_deleted_rport() do not
+> interfere with each other. Unfortunately I don't know yet how. I have to
+> think more about this.
+>
+>   
