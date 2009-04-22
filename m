@@ -1,223 +1,68 @@
-From: Ralph Wuerthner <ralphw@linux.vnet.ibm.com>
-Subject: Re: [PATCH] fc transport: pre-emptively terminate i/o upon
- dev_loss_tmo
-Date: Wed, 22 Apr 2009 14:13:23 +0200
-Message-ID: <20090422141323.330c7f78@rwuerthntp>
-References: <20090409130439.042ff514@rwuerthntp>
-	<49EE3E0D.7000403@cs.wisc.edu>
-	<49EE403B.8060005@cs.wisc.edu>
-	<49EE44C2.3060800@cs.wisc.edu>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] libata: rewrite SCSI host scheme to be one per ATA host
+Date: Wed, 22 Apr 2009 15:16:18 +0300
+Message-ID: <49EF0A92.1070400@panasas.com>
+References: <20090422090929.GA14928@havoc.gtf.org> <49EEE225.3010700@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate3.uk.ibm.com ([195.212.29.136]:64251 "EHLO
-	mtagate3.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752327AbZDVMNa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2009 08:13:30 -0400
-Received: from d06nrmr1707.portsmouth.uk.ibm.com (d06nrmr1707.portsmouth.uk.ibm.com [9.149.39.225])
-	by mtagate3.uk.ibm.com (8.14.3/8.13.8) with ESMTP id n3MCDR86219968
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2009 12:13:27 GMT
-Received: from d06av01.portsmouth.uk.ibm.com (d06av01.portsmouth.uk.ibm.com [9.149.37.212])
-	by d06nrmr1707.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n3MCDR7U1360080
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2009 13:13:27 +0100
-Received: from d06av01.portsmouth.uk.ibm.com (loopback [127.0.0.1])
-	by d06av01.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n3MCDQnw010203
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2009 13:13:26 +0100
-In-Reply-To: <49EE44C2.3060800@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <49EEE225.3010700@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Tejun Heo <htejun@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi@vger.kernel.org, james.smart@emulex.com
 
-On Tue, 21 Apr 2009 17:12:18 -0500
-Mike Christie <michaelc@cs.wisc.edu> wrote:
-
-> Mike Christie wrote:
-> > Mike Christie wrote:
-> >> Ralph Wuerthner wrote:
-> >>> Mike Christie wrote:
-> >>>> James Smart wrote:
-> >>>>> Pre-emptively terminate i/o on the rport if dev_loss_tmo has
-> >>>>> fired. The desire is to terminate everything, so that the i/o
-> >>>>> is cleaned up prior to the sdev's being unblocked, thus any
-> >>>>> outstanding timeouts/aborts
-> >>>>> are avoided.
-> >>>>>
-> >>>>> Also, we do this early enough such that the rport's port_id
-> >>>>> field is still valid. FCOE libFC code needs this info to find
-> >>>>> the i/o's to terminate.
-> >>>>>
-> >>>>> -- james s
-> >>>>>
-> >>>>>  Signed-off-by: James Smart <james.smart@emulex.com>
-> >>>>>
-> >>>>>  ---
-> >>>>>
-> >>>>>  scsi_transport_fc.c |   11 ++++++++++-
-> >>>>>  1 file changed, 10 insertions(+), 1 deletion(-)
-> >>>>>
-> >>>>>
-> >>>>> diff -upNr a/drivers/scsi/scsi_transport_fc.c 
-> >>>>> b/drivers/scsi/scsi_transport_fc.c
-> >>>>> --- a/drivers/scsi/scsi_transport_fc.c    2008-10-18 
-> >>>>> 10:32:52.000000000 -0400
-> >>>>> +++ b/drivers/scsi/scsi_transport_fc.c    2008-12-05 
-> >>>>> 12:13:54.000000000 -0500
-> >>>>> @@ -3012,6 +3012,16 @@ fc_timeout_deleted_rport(struct work_str
-> >>>>>      rport->port_state = FC_PORTSTATE_NOTPRESENT;
-> >>>>>      rport->flags &= ~FC_RPORT_FAST_FAIL_TIMEDOUT;
-> >>>>>  
-> >>>>> +    /*
-> >>>>> +     * Pre-emptively kill I/O rather than waiting for the work
-> >>>>> queue
-> >>>>> +     * item to teardown the starget. (FCOE libFC folks prefer
-> >>>>> this
-> >>>>> +     * and to have the rport_port_id still set when it's done).
-> >>>>> +     */
-> >>>>> +    spin_unlock_irqrestore(shost->host_lock, flags);
-> >>>>> +    fc_terminate_rport_io(rport);
-> >>>>> +
-> >>>>> +    BUG_ON(rport->port_state != FC_PORTSTATE_NOTPRESENT);
-> >>>>> +
-> >>>> I think we could this this bug_on or we might hit a problem
-> >>>> below where this thread is changing the port_id but some other
-> >>>> thread is calling fc_remote_port_add and changging the port id.
-> >>>>
-> >>>> I think the problem is that fc_remote_port_add only calls 
-> >>>> fc_flush_work which flushes the fc_host work_q:
-> >>>>
-> >>>>
-> >>>> struct fc_rport *
-> >>>> () (struct Scsi_Host *shost, int channel,
-> >>>>          struct fc_rport_identifiers  *ids)
-> >>>> {
-> >>>>          struct fc_internal *fci =
-> >>>> to_fc_internal(shost->transportt); struct fc_host_attrs *fc_host
-> >>>> = shost_to_fc_host(shost); struct fc_rport *rport;
-> >>>>          unsigned long flags;
-> >>>>          int match = 0;
-> >>>>
-> >>>>          /* ensure any stgt delete functions are done */
-> >>>>          fc_flush_work(shost);
-> >>>>
-> >>>>
-> >>>> But fc_timeout_deleted_rport dev_loss_work is running on the 
-> >>>> devloss_work_q.
-> >>>>
-> >>>> So if fc_timeout_deleted_rport grabs the host lock first, it
-> >>>> will set the port state to FC_PORTSTATE_NOTPRESENT, then drop
-> >>>> the lock.
-> >>>>
-> >>>> Once fc_timeout_delete_rport drops the lock, fc_remote_port_add 
-> >>>> could have already passed the fc_flush_work() call because there
-> >>>> was nothing on it. fc_remote_port_add would then drop down to
-> >>>> the list search on the bindings array and see the remote port.
-> >>>> It would then start setting the port state, id and port_name and
-> >>>> node_name, but at the same time, because the host lock no longer
-> >>>> guards it, fc_timedout_deleted_rport could be fiddling with the
-> >>>> same fields and we could end up a mix of values or it could be
-> >>>> running over the BUG_ON.
-> >>>>
-> >>>> Is that right?
-> >>>>
-> >>>> If so do we just want to flush the devloss_work_queue in 
-> >>>> fc_remote_port_add?
-> >>>>
-> >>>>
-> >>>>
-> >>>>>      /* remove the identifiers that aren't used in the
-> >>>>> consisting binding */
-> >>>>>      switch (fc_host->tgtid_bind_type) {
-> >>>>>      case FC_TGTID_BIND_BY_WWPN:
-> >>>>> @@ -3035,7 +3045,6 @@ fc_timeout_deleted_rport(struct work_str
-> >>>>>       * went away and didn't come back - we'll remove
-> >>>>>       * all attached scsi devices.
-> >>>>>       */
-> >>>>> -    spin_unlock_irqrestore(shost->host_lock, flags);
-> >>>>>  
-> >>>>>      scsi_target_unblock(&rport->dev);
-> >>>>>      fc_queue_work(shost, &rport->stgt_delete_work);
-> >>>>>
-> >>>
-> >>> One of our tester hit the problem Michael describes above: right
-> >>> after releasing the shost->host_lock lock in
-> >>> fc_timeout_deleted_rport() the remote port was rediscovered by
-> >>> the LLDD (in our case zfcp), fc_remote_port_add() was called and
-> >>> BUG_ON() triggered.
-> >>>
-> >>> But flushing the devloss_work_queue in fc_remote_port_add() won't
-> >>> help either because it still would be possible that right after
-> >>> the flush_workqueue() call a timer could trigger and 
-> >>> fc_timeout_deleted_rport()
-> >>
-> >>
-> >> What timer could that be? Only the dev_loss_work delayed work
-> >> calls fc_timeout_deleted_rport.
-> >>
-> >> Are you thinking about fc_rport_final_delete?
-> >>
-> >> If you do the
-> >>                 if (!cancel_delayed_work(&rport->dev_loss_work))
-> >>                         fc_flush_devloss(shost);
-> >>
-> >> sequence we should be ok I think, because after that point it
-> >> should have either been canceled or the work has completed.
-> >>
-> > 
-> > I did this in the attached patch. It also will prevent drivers from 
-> > having to worry about about if the terminate rport IO or dev loss 
-> > callback is running at the same time fc_remote_port_add is run.
-> > 
+On 04/22/2009 12:23 PM, Jeff Garzik wrote:
+> Jeff Garzik wrote:
+>> Currently, libata creates a Scsi_Host per port.  This was originally
+>> done to leverage SCSI's infrastructure to arbitrate among master/slave
+>> devices, but is not needed for most modern SATA controllers.   And I
+>> _think_ it is not needed for master/slave if done properly, either.
 > 
-> I forgot to cancel the fail io work too. I guess we can also remove
-> the same calls later in that function.>
->
-> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-> index a152f89..e7bbc65 100644
-> --- a/drivers/scsi/scsi_transport_fc.c
-> +++ b/drivers/scsi/scsi_transport_fc.c
-> @@ -2564,6 +2564,14 @@ fc_remote_port_add(struct Scsi_Host *shost, int channel,
->  	/* ensure any stgt delete functions are done */
->  	fc_flush_work(shost);
+> BTW note the above, with regards to the libata SCSI->block conversion. 
+> libata currently relies on SCSI for some amount of generic device 
+> arbitration, in several situations (see ->qc_defer, 
+> SCSI_MLQUEUE_.*_BUSY).  libata expects SCSI to be intelligent and not 
+> starve devices, etc.
 > 
-> +	/* ensure fail fast is done */
-> +	if (!cancel_delayed_work(&rport->fail_io_work))
-> +		fc_flush_devloss(shost);
-> +
-> +	/* ensure dev loss is done */
-> +	if (!cancel_delayed_work(&rport->dev_loss_work))
-> +		fc_flush_devloss(shost);
-> +
->  	/*
->  	 * Search the list of "active" rports, for an rport that has been
->  	 * deleted, but we've held off the real delete while the target
-> @@ -2630,16 +2638,6 @@ fc_remote_port_add(struct Scsi_Host *shost, int channel,
->  				    (!(ids->roles & FC_PORT_ROLE_FCP_TARGET)))
->  					return rport;
 > 
-> -				/*
-> -				 * Stop the fail io and dev_loss timers.
-> -				 * If they flush, the port_state will
-> -				 * be checked and will NOOP the function.
-> -				 */
-> -				if (!cancel_delayed_work(&rport->fail_io_work))
-> -					fc_flush_devloss(shost);
-> -				if (!cancel_delayed_work(&rport->dev_loss_work))
-> -					fc_flush_devloss(shost);
-> -
->  				spin_lock_irqsave(shost->host_lock, flags);
+>> I was able to successfully boot the following patch on
+>> AHCI/x86-64/Fedora.
+>>
+>> It may work with other controllers -- TRY AT YOUR OWN RISK.  It will
+>> probably fail for master/slave configurations, and SAS & PMP also
+>> need looking at.  It yielded this lsscsi output on my AHCI box:
+>>
+>> [0:0:0:0]    disk    ATA      ST3500320AS      SD15  /dev/sda
+>> [0:2:0:0]    disk    ATA      G.SKILL 128GB SS 02.1  /dev/sdb
+>> [0:5:0:0]    cd/dvd  PIONEER  BD-ROM  BDC-202  1.04  /dev/sr0
 > 
->  				rport->flags &=
-> ~(FC_RPORT_FAST_FAIL_TIMEDOUT |
+> For comparison, here is unmodified 2.6.30-rc3:
+> 
+> [jgarzik@bd ~]$ lsscsi
+> [0:0:0:0]    disk    ATA      ST3500320AS      SD15  /dev/sda
+> [2:0:0:0]    disk    ATA      G.SKILL 128GB SS 02.1  /dev/sdb
+> [5:0:0:0]    cd/dvd  PIONEER  BD-ROM  BDC-202  1.04  /dev/sr0
+> 
 
-Your patch does not work: you are canceling the fast_fail work and
-dev_loss work without initializing rport first. 
+Could the master/slave be simply solved by emulating a SCSI LUN
+for example below is my machine today:
+[]$ lsscsi
+[0:0:0:0]    disk    ATA      ST3160023A       3.01  /dev/sda
+[1:0:0:0]    cd/dvd  _NEC     DVD_RW ND-3550A  1.05  /dev/sr0
+[4:0:0:0]    disk    ATA      WDC WD1600JS-60M 10.0  /dev/sdb
 
-We have to make sure that fc_remote_port_add(),
-fc_remote_port_delete(), and fc_timeout_deleted_rport() do not
-interfere with each other. Unfortunately I don't know yet how. I have to
-think more about this.
+the /dev/sda and /dev/sr0 share a master/slave wide cable (sdb is sata)
 
--- 
-Ralph Wuerthner
+it could be made to scan as:
+[]$ lsscsi
+[0:0:0:0]    disk    ATA      ST3160023A       3.01  /dev/sda
+[0:0:0:1]    cd/dvd  _NEC     DVD_RW ND-3550A  1.05  /dev/sr0
+[1:0:0:0]    disk    ATA      WDC WD1600JS-60M 10.0  /dev/sdb
+
+So we need to emulate the REPORT_LUN (or what ever else) to return
+two LUNs. Or do you want to report a separate target for the master/slave?
+
+Thanks
+Boaz
