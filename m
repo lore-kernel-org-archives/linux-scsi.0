@@ -1,41 +1,34 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: rewrite SCSI host scheme to be one per ATA host
-Date: Wed, 22 Apr 2009 14:36:22 -0400
-Message-ID: <49EF63A6.8040103@garzik.org>
-References: <20090422090929.GA14928@havoc.gtf.org>	 <49EEE225.3010700@garzik.org> <49EF0A92.1070400@panasas.com>	 <49EF337F.1030804@ngrt.de>  <20090422161856.1251f8a0@lxorguk.ukuu.org.uk> <1240414622.3431.14.camel@mulgrave.int.hansenpartnership.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 1/2] ide: Stop disks on reboot for laptop which cuts power
+Date: Wed, 22 Apr 2009 20:28:33 +0200
+Message-ID: <200904222028.33337.bzolnier@gmail.com>
+References: <20090418124415.1dc82273@neptune.home> <20090418124558.0426f74c@neptune.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52742 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752892AbZDVSgc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Apr 2009 14:36:32 -0400
-In-Reply-To: <1240414622.3431.14.camel@mulgrave.int.hansenpartnership.com>
+Received: from wa-out-1112.google.com ([209.85.146.176]:50580 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751383AbZDVSpX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2009 14:45:23 -0400
+In-Reply-To: <20090418124558.0426f74c@neptune.home>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Daniela Engert <dani@ngrt.de>, Boaz Harrosh <bharrosh@panasas.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Tejun Heo <htejun@gmail.com>
+To: Bruno =?utf-8?q?Pr=C3=A9mont?= <bonbons@linux-vserver.org>
+Cc: Linux IDE <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Linux SCSI <linux-scsi@vger.kernel.org>
 
-James Bottomley wrote:
-> On Wed, 2009-04-22 at 16:18 +0100, Alan Cox wrote:
->>> Don't forget, there are ATAPI devices (some Sony CD burners and old 
->>> phase-changers come into mind) which *do* have multiple LUNs sitting 
->>> beyond the PATA port. I don't know if libata supports such setups (my 
->>> old OS/2 driver does) but one shouldn't hijack LUNs to emulate targets.
->> It's a long time ago since I tested it but my 5 CD changer was correctly
->> supported by libata (or more accurately by sr...).
-> 
-> Well, sr supports the discovered CD/DVD; ch is the actual changer
-> manager.  Usually ch attaches to one LUN and sr attaches to another.
+On Saturday 18 April 2009 12:45:58 Bruno Pr=C3=A9mont wrote:
+> My laptop (Acer Travelmate 660) always cuts the power when rebooting
+> which causes the disk to emergency-park it's head.
+>=20
+> Add a dmi check to stop disk as for shutdown on this laptop.
+>=20
+> Signed-off-by: Bruno Pr=C3=A9mont <bonbons@linux-vserver.org>
 
-Like Alan's, if I understand him correctly, my PATA ATAPI CD changer 
-simply presents a bunch of addressible LUNs.  I never loaded, nor seemed 
-to need, ch.
-
-I should boot a current libata and see how it behaves...
-
-	Jeff
-
-
-
+applied
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
