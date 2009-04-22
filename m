@@ -1,67 +1,82 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 1/1] ipr: Fix sleeping function called with interrupts disabled
-Date: Wed, 22 Apr 2009 08:58:02 -0500
-Message-ID: <200904221358.n3MDwKNw010452@d01av03.pok.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:56811 "EHLO e6.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756226AbZDVN6W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Apr 2009 09:58:22 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e6.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n3ME0FCI018651
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2009 10:00:15 -0400
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n3MDwLbX189806
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2009 09:58:21 -0400
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n3MDwK2t010513
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2009 09:58:20 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Moger, Babu" <Babu.Moger@lsi.com>
+Subject: RE: [PATCH] dm mpath: Try recover from I/O failure by
+ re-initializing the PG if device is running on one path
+Date: Wed, 22 Apr 2009 08:03:12 -0600
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF466A6707A@cosmail01.lsi.com>
+References: <E463DF2B2E584B4A82673F53D62C2EF466A0E4DA@cosmail01.lsi.com>
+	<49ED1C24.9090303@ct.jp.nec.com>
+	<E463DF2B2E584B4A82673F53D62C2EF466A66DD4@cosmail01.lsi.com>
+	<49EE7870.3090008@ct.jp.nec.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-2022-jp"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <49EE7870.3090008@ct.jp.nec.com>
+Content-Language: en-US
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Cc: "'dm-devel@redhat.com'" <dm-devel@redhat.com>, "Chauhan,
+	Vijay" <Vijay.Chauhan@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
 
-The ata_sas_slave_configure was changed such that it now allocates
-some memory for a drain buffer for ATAPI devices. Fixup the ipr
-driver such that we no longer make this call with interrupts disabled.
+Hi Kiyoshi,
 
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
+> >>
+> >> Hi Babu,
+> >>
+> >> On 2009/04/21 3:05 +0900, Moger, Babu wrote:
+> >>> This patch introduces the mechanism to recover from I/O failures by
+> >>> re-initializing the path if the device is running on only one path.
+> >>>
+> >>> Problem: Device mapper fails the path for every I/O error. It does =
+not
+> >>> care about the type of error. There are certain errors which can be
+> >>> recovered by re-initializing the path again. I have seen this probl=
+em
+> >>> during my testing on rdac device handler. I have observed I/O error=
+s
+> >>> when there is a change in Lun ownership. When Lun ownership changes
+> >>> device will return back with check condition with
+> >>> sense 0x05/0x94/0x01(SK/ASC/ASCQ -meaning Lun ownership changed).
+> >>> Currently, device mapper fails the path for this error and eventual=
+ly
+> >>> this will lead to I/O error. We don't want to see I/O error for thi=
+s
+> >>> reason.
+> >>
+> >> Shouldn't we handle this type of device error inside device handler?
+> >
+> > The current error in question requires re-activation of the path.
+> > We already have a code to handle this scenario in device handler.
+> > But, the problem is the return status does not go to DM layer.
+> > The return status gets lost in scsi layer. For DM layer all the error=
+s
+> > are -EIO. Any thoughts from your side.
+>=20
+> Oh, I missed the point and I thought that re-activating the path
+> in your device handler was enough for the error.
+> Currently, I have no idea to handle your case only in dm without
+> seeing I/O error.
+>=20
+  I have discussed about re-activating path in device handler with Chandr=
+a. Looks like that will lead to other issues (one is long boot up). Look =
+like that is not an option. =20
+> By the way, who did change the ownership when the device was running
+> with one path in your testing?  I can't see why such case happened.
+>=20
+This can happen if the user knowingly or unknowingly changes the ownershi=
+p. Also we have other feature in our storage which will allow user to red=
+istribute the luns. Thanks for you comment.
 
- drivers/scsi/ipr.c |   13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
-
-diff -puN drivers/scsi/ipr.c~ipr_fix_invalid_context drivers/scsi/ipr.c
---- linux-2.6/drivers/scsi/ipr.c~ipr_fix_invalid_context	2009-04-22 08:37:32.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ipr.c	2009-04-22 08:37:32.000000000 -0500
-@@ -3654,6 +3654,7 @@ static int ipr_slave_configure(struct sc
- {
- 	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *) sdev->host->hostdata;
- 	struct ipr_resource_entry *res;
-+	struct ata_port *ap = NULL;
- 	unsigned long lock_flags = 0;
- 
- 	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
-@@ -3672,12 +3673,16 @@ static int ipr_slave_configure(struct sc
- 		}
- 		if (ipr_is_vset_device(res) || ipr_is_scsi_disk(res))
- 			sdev->allow_restart = 1;
--		if (ipr_is_gata(res) && res->sata_port) {
-+		if (ipr_is_gata(res) && res->sata_port)
-+			ap = res->sata_port->ap;
-+		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
-+
-+		if (ap) {
- 			scsi_adjust_queue_depth(sdev, 0, IPR_MAX_CMD_PER_ATA_LUN);
--			ata_sas_slave_configure(sdev, res->sata_port->ap);
--		} else {
-+			ata_sas_slave_configure(sdev, ap);
-+		} else
- 			scsi_adjust_queue_depth(sdev, 0, sdev->host->cmd_per_lun);
--		}
-+		return 0;
- 	}
- 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
- 	return 0;
-_
+> Thanks,
+> Kiyoshi Ueda
