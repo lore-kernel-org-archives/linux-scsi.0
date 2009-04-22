@@ -1,141 +1,88 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH] RFC: have dm-mpath use already attached scsi_dh
-Date: Tue, 21 Apr 2009 23:33:26 -0500
-Message-ID: <1240374806-6043-1-git-send-email-michaelc@cs.wisc.edu>
-Reply-To: device-mapper development <dm-devel@redhat.com>
-Return-path: <dm-devel-bounces@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: dm-devel@redhat.com, linux-scsi@vger.kernel.org, hare@suse.de
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+From: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+Subject: Re: [PATCH v2] fix sign extension with 1.5TB usb-storage LBD=y
+Date: Wed, 22 Apr 2009 10:32:59 +0300
+Message-ID: <49EEC82B.5040603@panasas.com>
+References: <1240347174.10627.20.camel@nimitz>	 <20090421211858.GA1926@parisc-linux.org> <1240351210.10627.30.camel@nimitz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1240351210.10627.30.camel@nimitz>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Dave Hansen <dave-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: Matthew Wilcox <matthew-Ztpu424NOJ8@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org, linux-usb <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+On 04/22/2009 01:00 AM, Dave Hansen wrote:
+> Here's a patch implementing Al's suggestion.  Not quite as trivial as
+> Matthew's, but even nicer aesthetically.  (Description stolen from
+> Matthew's patch).  I have verified that this fixes my issue.
+> 
+> --
+> 
+> Shifting an unsigned char implicitly casts it to a signed int.  This
+> caused 'lba' to sign-extend and Linux would then try READ CAPACITY 16
+> which was not supported by at least one drive.  Using the
+> get_unaligned_be*() helpers keeps us from having to worry about how the
+> extension might occur.
+> 
+> Signed-off-by: Dave Hansen <dave-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 3fcb64b..c50142b 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -50,6 +50,7 @@
+>  #include <linux/string_helpers.h>
+>  #include <linux/async.h>
+>  #include <asm/uaccess.h>
+> +#include <asm/unaligned.h>
+>  
+>  #include <scsi/scsi.h>
+>  #include <scsi/scsi_cmnd.h>
+> @@ -1344,12 +1345,8 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+>  		return -EINVAL;
+>  	}
+>  
+> -	sector_size =	(buffer[8] << 24) | (buffer[9] << 16) |
+> -			(buffer[10] << 8) | buffer[11];
+> -	lba =  (((u64)buffer[0] << 56) | ((u64)buffer[1] << 48) |
+> -		((u64)buffer[2] << 40) | ((u64)buffer[3] << 32) |
+> -		((u64)buffer[4] << 24) | ((u64)buffer[5] << 16) |
+> -		((u64)buffer[6] << 8) | (u64)buffer[7]);
+> +	sector_size = get_unaligned_be32(&buffer[8]);
+> +	lba =  get_unaligned_be64(&buffer[0]);
 
-If you have a mixed environment of clarriions, where some
-support ALAU and some support PNR, what do you put in
-your multipath.conf? With this patch you do not have to worry about
-it. If those modules are loaded before dm-mpath, then they
-will have attached to the correct devices based on inquiry, alua commands
-and parsing of data buffers (for example in scsi_dh_emc's alua check).
-There is no need for the user to set that info in the multipath.conf.
-And in general since all scsi_dh_modules will attach to the devices
-they work for, we do not need to have users specific this.
+These are actually aligned access it might be worth sacrificing a cast
+to be32/64 for sake of speed.
 
-I kept the code to try and use what the user passed in for compat
-reasons (in case scsi_dh_* was not loaded), but if the scsi
-layer has already attached we use that.
+>  
+>  	sd_read_protection_type(sdkp, buffer);
+>  
+> @@ -1400,10 +1397,8 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
+>  		return -EINVAL;
+>  	}
+>  
+> -	sector_size =	(buffer[4] << 24) | (buffer[5] << 16) |
+> -			(buffer[6] << 8) | buffer[7];
+> -	lba =	(buffer[0] << 24) | (buffer[1] << 16) |
+> -		(buffer[2] << 8) | buffer[3];
+> +	sector_size = get_unaligned_be32(&buffer[4]);
+> +	lba = get_unaligned_be32(&buffer[0]);
+>  
 
-I have not tested the patch. It is only compile tested.
+Here too, both are actually aligned.
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/md/dm-mpath.c                 |   22 +++++++++++++++++++---
- drivers/scsi/device_handler/scsi_dh.c |   22 ++++++++++++++++++++++
- include/scsi/scsi_dh.h                |    6 ++++++
- 3 files changed, 47 insertions(+), 3 deletions(-)
+>  	if ((sizeof(sdkp->capacity) == 4) && (lba == 0xffffffff)) {
+>  		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
+> 
+> 
+> -- Dave
+> 
 
-diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-index 095f77b..bae7b77 100644
---- a/drivers/md/dm-mpath.c
-+++ b/drivers/md/dm-mpath.c
-@@ -571,6 +571,8 @@ static struct pgpath *parse_path(struct arg_set *as, struct path_selector *ps,
- 			       struct dm_target *ti)
- {
- 	int r;
-+	char *hw_handler_name;
-+	struct request_queue *q;
- 	struct pgpath *p;
- 	struct multipath *m = ti->private;
- 
-@@ -591,9 +593,23 @@ static struct pgpath *parse_path(struct arg_set *as, struct path_selector *ps,
- 		goto bad;
- 	}
- 
--	if (m->hw_handler_name) {
--		r = scsi_dh_attach(bdev_get_queue(p->path.dev->bdev),
--				   m->hw_handler_name);
-+
-+	q = bdev_get_queue(p->path.dev->bdev);
-+	hw_handler_name = scsi_dh_get_attached_name(q);
-+	if (hw_handler_name) {
-+		if (!m->hw_handler_name)
-+			m->hw_handler_name = hw_handler_name;
-+		else if (strcmp(hw_handler_name, m->hw_handler_name)) {
-+			/*
-+			 * if there is a mismatch, then assume
-+			 * the scsi layer knew best.
-+			 */
-+			kfree(m->hw_handler_name);
-+			m->hw_handler_name = hw_handler_name;
-+		} else
-+			kfree(hw_handler_name);
-+	} else if (m->hw_handler_name) {
-+		r = scsi_dh_attach(q, m->hw_handler_name);
- 		if (r < 0) {
- 			dm_put_device(ti, p->path.dev);
- 			goto bad;
-diff --git a/drivers/scsi/device_handler/scsi_dh.c b/drivers/scsi/device_handler/scsi_dh.c
-index a518f2e..257327f 100644
---- a/drivers/scsi/device_handler/scsi_dh.c
-+++ b/drivers/scsi/device_handler/scsi_dh.c
-@@ -481,6 +481,28 @@ int scsi_dh_attach(struct request_queue *q, const char *name)
- }
- EXPORT_SYMBOL_GPL(scsi_dh_attach);
- 
-+/**
-+ * scsi_dh_get_attached_name
-+ * @q: request queue to test
-+ *
-+ * Return name of scsi_dh module if attached. Caller must
-+ * free returned string.
-+ */
-+char *scsi_dh_get_attached_name(struct request_queue *q)
-+{
-+	struct scsi_device *sdev;
-+	unsigned long flags;
-+	char *attached = NULL;
-+
-+	spin_lock_irqsave(q->queue_lock, flags);
-+	sdev = q->queuedata;
-+	if (sdev && sdev->scsi_dh_data)
-+		attached = kstrdup(sdev->scsi_dh_data->scsi_dh->name,
-+				   GFP_ATOMIC);
-+	spin_unlock_irqrestore(q->queue_lock, flags);
-+	return attached;
-+}
-+
- /*
-  * scsi_dh_handler_detach - Detach device handler
-  * @sdev - sdev the handler should be detached from
-diff --git a/include/scsi/scsi_dh.h b/include/scsi/scsi_dh.h
-index 33efce2..9373702 100644
---- a/include/scsi/scsi_dh.h
-+++ b/include/scsi/scsi_dh.h
-@@ -60,6 +60,7 @@ extern int scsi_dh_activate(struct request_queue *);
- extern int scsi_dh_handler_exist(const char *);
- extern int scsi_dh_attach(struct request_queue *, const char *);
- extern void scsi_dh_detach(struct request_queue *);
-+extern char *scsi_dh_get_attached_name(struct request_queue *);
- #else
- static inline int scsi_dh_activate(struct request_queue *req)
- {
-@@ -77,4 +78,9 @@ static inline void scsi_dh_detach(struct request_queue *q)
- {
- 	return;
- }
-+
-+extern char *scsi_dh_get_attached_name(struct request_queue *q)
-+{
-+	return NULL;
-+}
- #endif
--- 
-1.6.0.6
+I'm not 100% convinced just a thought.
+Boaz
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
