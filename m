@@ -1,85 +1,57 @@
 From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [PATCH] libata: rewrite SCSI host scheme to be one per ATA host
-Date: Wed, 22 Apr 2009 12:48:05 -0400
-Message-ID: <49EF4A45.8040901@garzik.org>
-References: <20090422090929.GA14928@havoc.gtf.org> <49EEE225.3010700@garzik.org> <49EF0A92.1070400@panasas.com>
+Date: Wed, 22 Apr 2009 12:52:40 -0400
+Message-ID: <49EF4B58.8000204@garzik.org>
+References: <20090422090929.GA14928@havoc.gtf.org> <49EF16F5.5080909@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:38287 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752800AbZDVQsL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Apr 2009 12:48:11 -0400
-In-Reply-To: <49EF0A92.1070400@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <49EF16F5.5080909@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
+To: Mark Lord <lkml@rtr.ca>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Tejun Heo <htejun@gmail.com>
 
-Boaz Harrosh wrote:
-> On 04/22/2009 12:23 PM, Jeff Garzik wrote:
->> Jeff Garzik wrote:
->>> Currently, libata creates a Scsi_Host per port.  This was originally
->>> done to leverage SCSI's infrastructure to arbitrate among master/slave
->>> devices, but is not needed for most modern SATA controllers.   And I
->>> _think_ it is not needed for master/slave if done properly, either.
->> BTW note the above, with regards to the libata SCSI->block conversion. 
->> libata currently relies on SCSI for some amount of generic device 
->> arbitration, in several situations (see ->qc_defer, 
->> SCSI_MLQUEUE_.*_BUSY).  libata expects SCSI to be intelligent and not 
->> starve devices, etc.
+Mark Lord wrote:
+> Jeff Garzik wrote:
+>> Currently, libata creates a Scsi_Host per port.  This was originally
+>> done to leverage SCSI's infrastructure to arbitrate among master/slave
+>> devices, but is not needed for most modern SATA controllers.   And I
+>> _think_ it is not needed for master/slave if done properly, either.
 >>
+>> The patch below converts libata such that there is now a 1:1
+>> correspondence between struct Scsi_Host and struct ata_host.  ATA ports
+>> are represented as SCSI layer 'channels', which is more natural.
 >>
->>> I was able to successfully boot the following patch on
->>> AHCI/x86-64/Fedora.
->>>
->>> It may work with other controllers -- TRY AT YOUR OWN RISK.  It will
->>> probably fail for master/slave configurations, and SAS & PMP also
->>> need looking at.  It yielded this lsscsi output on my AHCI box:
->>>
->>> [0:0:0:0]    disk    ATA      ST3500320AS      SD15  /dev/sda
->>> [0:2:0:0]    disk    ATA      G.SKILL 128GB SS 02.1  /dev/sdb
->>> [0:5:0:0]    cd/dvd  PIONEER  BD-ROM  BDC-202  1.04  /dev/sr0
->> For comparison, here is unmodified 2.6.30-rc3:
->>
->> [jgarzik@bd ~]$ lsscsi
->> [0:0:0:0]    disk    ATA      ST3500320AS      SD15  /dev/sda
->> [2:0:0:0]    disk    ATA      G.SKILL 128GB SS 02.1  /dev/sdb
->> [5:0:0:0]    cd/dvd  PIONEER  BD-ROM  BDC-202  1.04  /dev/sr0
->>
+>> This patch is an experiment, and not meant for upstream anytime soon.
+> ..
 > 
-> Could the master/slave be simply solved by emulating a SCSI LUN
-> for example below is my machine today:
-> []$ lsscsi
-> [0:0:0:0]    disk    ATA      ST3160023A       3.01  /dev/sda
-> [1:0:0:0]    cd/dvd  _NEC     DVD_RW ND-3550A  1.05  /dev/sr0
-> [4:0:0:0]    disk    ATA      WDC WD1600JS-60M 10.0  /dev/sdb
+> Could you perhaps explain how error handling would behave in this scheme?
 > 
-> the /dev/sda and /dev/sr0 share a master/slave wide cable (sdb is sata)
+> Currently, one SATA port can have failures without any impact whatsoever
+> on concurrent operation of other ports, in part because each port is 
+> treated
+> as a completely independent SCSI host.
 > 
-> it could be made to scan as:
-> []$ lsscsi
-> [0:0:0:0]    disk    ATA      ST3160023A       3.01  /dev/sda
-> [0:0:0:1]    cd/dvd  _NEC     DVD_RW ND-3550A  1.05  /dev/sr0
-> [1:0:0:0]    disk    ATA      WDC WD1600JS-60M 10.0  /dev/sdb
-> 
-> So we need to emulate the REPORT_LUN (or what ever else) to return
-> two LUNs. Or do you want to report a separate target for the master/slave?
+> I wonder if that changes with the new (better) scheme proposed here?
 
-Mapping master/slave is not difficult -- each should be a separate 
-target, just like with parallel SCSI.
+It changes, yes, most definitely.  We just have to pay close attention, 
+and make sure to indicate which EH actions are host-wide, channel-wide 
+(== per port, in ATA parlance) or per-device.
 
-The issue with master/slave and simplex is guaranteeing that only _one_ 
-command may be executing at a time, for a given set of targets, i.e. 
-only one command per master/slave pair, only one command per pair of 
-simplex ports (== 4 ATA devices max).
+SCSI handles all these cases, because e.g. you might not want to disrupt 
+all 1,000 SAN devices actively talking to a single SCSI host in Linux.
 
-Originally this was done by setting can_queue==1, cmd_per_lun==1, and 
-assigning each master/slave pair to a different Scsi_Host.
+So...  error handling should behave how it needs to behave ;-)
+
+There might be an issue with concurrent error handling, because of 
+potential sharing of EH threads (== one port's EH must wait for 
+another's, I think)....but not with concurrent and independent 
+operation.  You should be able to reset an AHCI port without affecting 
+data xfer on the other ports.
 
 	Jeff
-
 
 
 
