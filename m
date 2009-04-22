@@ -1,37 +1,32 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] libata: rewrite SCSI host scheme to be one per ATA host
-Date: Wed, 22 Apr 2009 15:37:02 +0000
-Message-ID: <1240414622.3431.14.camel@mulgrave.int.hansenpartnership.com>
-References: <20090422090929.GA14928@havoc.gtf.org>
-	 <49EEE225.3010700@garzik.org> <49EF0A92.1070400@panasas.com>
-	 <49EF337F.1030804@ngrt.de>  <20090422161856.1251f8a0@lxorguk.ukuu.org.uk>
+From: Dan Carpenter <error27@gmail.com>
+Subject: double unlock in aac_fib_send()
+Date: Wed, 22 Apr 2009 18:38:52 +0300 (EAT)
+Message-ID: <alpine.DEB.2.00.0904211811430.27999@bicker>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:57317 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750842AbZDVPhH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Apr 2009 11:37:07 -0400
-In-Reply-To: <20090422161856.1251f8a0@lxorguk.ukuu.org.uk>
+Received: from wa-out-1112.google.com ([209.85.146.181]:30365 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752150AbZDVPj3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2009 11:39:29 -0400
+Received: by wa-out-1112.google.com with SMTP id j5so12714wah.21
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2009 08:39:28 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Daniela Engert <dani@ngrt.de>, Boaz Harrosh <bharrosh@panasas.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Tejun Heo <htejun@gmail.com>
+To: aacraid@adaptec.com
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2009-04-22 at 16:18 +0100, Alan Cox wrote:
-> > Don't forget, there are ATAPI devices (some Sony CD burners and old 
-> > phase-changers come into mind) which *do* have multiple LUNs sitting 
-> > beyond the PATA port. I don't know if libata supports such setups (my 
-> > old OS/2 driver does) but one shouldn't hijack LUNs to emulate targets.
-> 
-> It's a long time ago since I tested it but my 5 CD changer was correctly
-> supported by libata (or more accurately by sr...).
+This is from drivers/scsi/aacraid/commsup.c (2.6.30-rc1)
+   518                  } else if (down_interruptible(&fibptr->event_wait)) {
+   519                          fibptr->done = 2;
+   520                          up(&fibptr->event_wait);
+   521                  }
 
-Well, sr supports the discovered CD/DVD; ch is the actual changer
-manager.  Usually ch attaches to one LUN and sr attaches to another.
+down_interruptible() returns zero if it aquires the lock or -EINTR on 
+failure.  Since we failed to aquire the lock there is no need to call up() 
+on line 520.
 
-James
+Found by smatch (http://repo.or.cz/w/smatch.git).
 
-
+regards,
+dan carpenter
