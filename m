@@ -1,40 +1,73 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: [PATCH] libata: rewrite SCSI host scheme to be one per ATA host
-Date: Wed, 22 Apr 2009 09:09:09 -0400
-Message-ID: <49EF16F5.5080909@rtr.ca>
-References: <20090422090929.GA14928@havoc.gtf.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] [Target_Core_Mod/pSCSI]: Add optional legacy	scsi_execute_async()
+ usage for Linux/SCSI passthrough
+Date: Wed, 22 Apr 2009 16:24:24 +0300
+Message-ID: <49EF1A88.1040105@panasas.com>
+References: <1239930560.4176.577.camel@haakon2.linux-iscsi.org> <49EB036B.8090607@panasas.com> <49EDB8EF.7040503@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:33068 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752483AbZDVNJK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Apr 2009 09:09:10 -0400
-In-Reply-To: <20090422090929.GA14928@havoc.gtf.org>
+Received: from an-out-0708.google.com ([209.85.132.240]:1888 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753053AbZDVNYd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2009 09:24:33 -0400
+In-Reply-To: <49EDB8EF.7040503@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Vladislav Bolkhovitin <vst@vlnb.net>, Tejun Heo <tj@kernel.org>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <jens.axboe@oracle.com>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, Geoff Levand <geoffrey.levand@am.sony.com>, Douglas Gilbert <dgilbert@interlog.com>, Christoph Hellwig <hch@lst.de>, Paul Mundt <lethal@linux-sh.org>
 
-Jeff Garzik wrote:
-> Currently, libata creates a Scsi_Host per port.  This was originally
-> done to leverage SCSI's infrastructure to arbitrate among master/slave
-> devices, but is not needed for most modern SATA controllers.   And I
-> _think_ it is not needed for master/slave if done properly, either.
+On 04/21/2009 03:15 PM, Vladislav Bolkhovitin wrote:
+> Boaz Harrosh, on 04/19/2009 02:56 PM wrote:
+>> On 04/17/2009 04:09 AM, Nicholas A. Bellinger wrote:
 > 
-> The patch below converts libata such that there is now a 1:1
-> correspondence between struct Scsi_Host and struct ata_host.  ATA ports
-> are represented as SCSI layer 'channels', which is more natural.
+> [..]
 > 
-> This patch is an experiment, and not meant for upstream anytime soon.
-..
+>> Are you aware that scsi_execute_async() has gone in 2.6.30-rc1?
+>>
+>> I'm not sure what would be the best alternative for you. I would say
+>> a bio, but it is still being debated. Your current options are:
+>>
+>> 1. bio_alloc then loop () bio_add_pc_page, and finally blk_rq_append_bio
+>>    (Which block people don't like)
+>> 2. sglist => page-pointers-array translation and blk_rq_map_user with 
+>>    struct rq_map_data mode. (not possible with all kind of sglists)
+>> 2. sglist => iovec translation and blk_rq_map_user_iov()
+>>    (Very very ugly mapping of pages to virtual pointers)
+>>
+>> I have a similar situation with my OSD code.
+> 
+> Do you have somewhere in it a need to run an arbitrary CDB with data 
+> pages stored in an sglist? Is that code accepted in the mainline?
+> 
 
-Could you perhaps explain how error handling would behave in this scheme?
+No, I have a direct bio which comes from two sources.
+1. A bio prepared by a filesystem to describe a write/read to a file (osd object)
+2. A cloned bio that comes from a stacking block-device over osd-object.
 
-Currently, one SATA port can have failures without any impact whatsoever
-on concurrent operation of other ports, in part because each port is treated
-as a completely independent SCSI host.
+So I do not have an sglist at all, anywhere in code.
 
-I wonder if that changes with the new (better) scheme proposed here?
+> If yes, why not to resurrect the necessary bits of scsi_execute_async() 
+> (option (1) above)? It was deleted, because in 2.6.30 there are no users 
+> of it left, but if there are users (OSD), then why not to return it? 
+> Seems nothing better for the sg->bio case can be invented.
+> 
 
+I hate scsi_execute_async() for lots of reasons, 
+1. The cover-up of an historical abuse of sglists by sg/sr
+2. Override of use_sg/data-pointer crap
+3. What is data-format got to do with sync/async execution
+4. the need of all that scsi_io_context and the re-invention
+   of async_done API.
+5. ...
+Good riddence
+
+But you might be looking into an API introduced by an RFC by
+Tejun Heo in the form of blk_rq_map_kern_sgl() which should
+be a more appropriate general API for your use.
+(And is not directly usable for me in OSD)
+
+> Vlad
+
+Boaz
