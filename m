@@ -1,48 +1,80 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: The order of generating sd name
-Date: Wed, 22 Apr 2009 08:24:40 -0400
-Message-ID: <1240403080.3431.7.camel@mulgrave.int.hansenpartnership.com>
-References: <d364733c0904210226i2b48ae21pb5c39f338f53194b@mail.gmail.com>
-	 <20090421144313.GA313@mars.virtualiron.com>
-	 <d364733c0904210801n2d317adeh1978d71c35741c0b@mail.gmail.com>
-	 <d364733c0904220409g4a86cf54k82ab3b7afdbcb8a2@mail.gmail.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] [Target_Core_Mod/pSCSI]: Add optional	legacy	scsi_execute_async()
+ usage for Linux/SCSI passthrough
+Date: Wed, 22 Apr 2009 15:34:12 +0300
+Message-ID: <49EF0EC4.7090400@panasas.com>
+References: <1239930560.4176.577.camel@haakon2.linux-iscsi.org>	 <49EB036B.8090607@panasas.com> <1240259765.4176.764.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:52422 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751468AbZDVMYm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Apr 2009 08:24:42 -0400
-In-Reply-To: <d364733c0904220409g4a86cf54k82ab3b7afdbcb8a2@mail.gmail.com>
+Received: from qw-out-2122.google.com ([74.125.92.27]:8334 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751468AbZDVMe0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2009 08:34:26 -0400
+In-Reply-To: <1240259765.4176.764.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?UTF-8?Q?=E8=B0=A2=E7=BA=B2?= <xiegang112@gmail.com>
-Cc: Konrad Rzeszutek <konrad@virtualiron.com>, linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Tejun Heo <tj@kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <jens.axboe@oracle.com>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, Geoff Levand <geoffrey.levand@am.sony.com>, Douglas Gilbert <dgilbert@interlog.com>, Christoph Hellwig <hch@lst.de>, Paul Mundt <lethal@linux-sh.org>
 
-On Wed, 2009-04-22 at 19:09 +0800, =E8=B0=A2=E7=BA=B2 wrote:
-> I found that, my my kernel version is 2.6.16 (SUSE10). And the HBA
-> driver are qla. The scsi async scan is not supported in this version.
-> And It seems that,  if the scan starts at scsi_scan_host, the naming
-> order is ensured.  Did the qla driver scan the lun in the thread
-> qla2x00_do_dpc itself?  To generate the sd name, sd_probe need to be
-> invoked. I can not find the invokation in the qla driver.
+On 04/20/2009 11:36 PM, Nicholas A. Bellinger wrote:
+> On Sun, 2009-04-19 at 13:56 +0300, Boaz Harrosh wrote:
+>> Are you aware that scsi_execute_async() has gone in 2.6.30-rc1?
+>>
+>> I'm not sure what would be the best alternative for you. I would say
+>> a bio, but it is still being debated. Your current options are:
+>>
+>> 1. bio_alloc then loop () bio_add_pc_page, and finally blk_rq_append_bio
+>>    (Which block people don't like)
+>> 2. sglist => page-pointers-array translation and blk_rq_map_user with 
+>>    struct rq_map_data mode. (not possible with all kind of sglists)
+>> 2. sglist => iovec translation and blk_rq_map_user_iov()
+>>    (Very very ugly mapping of pages to virtual pointers)
+>>
+>> I have a similar situation with my OSD code.
+>>
+> 
+> Hey,
+> 
+> Thanks for the pointers on this..  Yeah, I knew it was going away soon,
+> but needed it for some legacy drivers..:-)
+> 
+> Anyways, I will drop this patch for scsi_execute_async() when I branch
+> for v2.6.30-rcX and look and updating target_core_mod/pSCSI to one of
+> the listed methods to get up and running.  From the looks of it however
+> we might want something slightly better than blk_rq_map_user() for the
+> kernel space pages attached to struct scatterlist and page_links..
+> 
+> Just FYI, the target_core_mod struct scatterlist memory will be in
+> struct list_head with struct page for allocated se_cmd_t (received CDB),
+> so it will be pretty easy from the target_core_mod+subsystem plugin side
+> side to put something that along the lines of list =>
+> page-pointers-array translation and blk_rq_map_user() into a new
+> function..
 
-This is business as usual.  The discovery order isn't guaranteed.
-Without async scan it depends on machine deterministic things like the
-order the bios lays out the PCI bus, but that's not going to be constan=
-t
-across machines.  Async scanning just makes reordering less machine
-hardware dependent.
+Be ware that page-pointers-array mean that only first/last page can be
+incomplete and all middle pages must be full PAGE_SIZE. As I recall this
+might not be the case for network sglists.
 
-The way to cope with this is to mount devices by device id or uuid.
+> 
+> lio-core-2.6.git/drivers/target/target_core_transport.c is using
+> include/linux/scatterlist.h macros when interacting with struct
+> scatterlist allocated for each subsystem plugin (from the linked list
+> struct page memory)  I will have a look and see what would need to be
+> down to allow all kinds of sglists with something new..
+> 
 
-James
+right, in the general sglist model, only linked-bios will fit one-to-one.
 
+You should look into something like Tejun's RFCed blk_rq_map_kern_sgl()
+(Which was not yet accepted)
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Thanks for your comments!
+> 
+> --nab
+> 
+> 
+
+We'll see what comes up
+Boaz
