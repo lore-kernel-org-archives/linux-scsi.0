@@ -1,40 +1,31 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH] fc transport: pre-emptively terminate i/o upon dev_loss_tmo
-Date: Wed, 22 Apr 2009 12:19:10 -0400
-Message-ID: <49EF437E.6040506@emulex.com>
-References: <20090409130439.042ff514@rwuerthntp>	<49EE3E0D.7000403@cs.wisc.edu>	<49EE403B.8060005@cs.wisc.edu>	<49EE44C2.3060800@cs.wisc.edu> <20090422141323.330c7f78@rwuerthntp>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: rewrite SCSI host scheme to be one per ATA host
+Date: Wed, 22 Apr 2009 17:27:10 +0100
+Message-ID: <20090422172710.0d9fcc6c@lxorguk.ukuu.org.uk>
+References: <20090422090929.GA14928@havoc.gtf.org>
+	<49EEE225.3010700@garzik.org>
+	<49EF0A92.1070400@panasas.com>
+	<49EF337F.1030804@ngrt.de>
+	<20090422161856.1251f8a0@lxorguk.ukuu.org.uk>
+	<1240414622.3431.14.camel@mulgrave.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:52349 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752004AbZDVQTY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2009 12:19:24 -0400
-In-Reply-To: <20090422141323.330c7f78@rwuerthntp>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1240414622.3431.14.camel@mulgrave.int.hansenpartnership.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Daniela Engert <dani@ngrt.de>, Boaz Harrosh <bharrosh@panasas.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Tejun Heo <htejun@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Ralph Wuerthner <ralphw@linux.vnet.ibm.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-All the flushes and workq stuff is very tricky. We (Mike Reed and I) had 
-a devil of a time with it on large SMP systems. So adding these quickly 
-is not advised.
+> > It's a long time ago since I tested it but my 5 CD changer was correctly
+> > supported by libata (or more accurately by sr...).
+> 
+> Well, sr supports the discovered CD/DVD; ch is the actual changer
+> manager.  Usually ch attaches to one LUN and sr attaches to another.
 
-I believe what we need to do is add a synchronization between the delete 
-and the add sequences, which right now, expect the workq and flushing to 
-provide it, but left other code paths, where it had to release the locks 
-post the state change, at risk. Let me put something together.
+I get 5 LUNS and the hardware looks after the rest - no changer manager
+needed. Early versions of the gnome folks CD probing stuff did give it a
+bit of a fit as the firmware clearly didn't cache all the state that the
+cd mangler asked for.
 
--- james s
-
-Ralph Wuerthner wrote:
-> Your patch does not work: you are canceling the fast_fail work and
-> dev_loss work without initializing rport first. 
->
-> We have to make sure that fc_remote_port_add(),
-> fc_remote_port_delete(), and fc_timeout_deleted_rport() do not
-> interfere with each other. Unfortunately I don't know yet how. I have to
-> think more about this.
->
->   
