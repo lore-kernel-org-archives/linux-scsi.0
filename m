@@ -1,48 +1,49 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] libata: rewrite SCSI host scheme to be one per ATA host
-Date: Wed, 22 Apr 2009 19:27:25 +0000
-Message-ID: <1240428445.3431.22.camel@mulgrave.int.hansenpartnership.com>
-References: <20090422090929.GA14928@havoc.gtf.org>
-	 <49EEE225.3010700@garzik.org> <49EF0A92.1070400@panasas.com>
-	 <49EF337F.1030804@ngrt.de>  <20090422161856.1251f8a0@lxorguk.ukuu.org.uk>
-	 <1240414622.3431.14.camel@mulgrave.int.hansenpartnership.com>
-	 <49EF63A6.8040103@garzik.org>
+From: "Chris Friesen" <cfriesen-ZIRUuHA3oDzQT0dZR+AlfA@public.gmane.org>
+Subject: Re: 2.6.29-git13: Reported regressions from 2.6.28
+Date: Wed, 22 Apr 2009 13:32:49 -0600
+Message-ID: <49EF70E1.9030904@nortel.com>
+References: <n4io5wq70ZO.A.gzG.rFn2JB@chimera> <alpine.LFD.2.00.0904061443000.7443@localhost.localdomain> <200904070035.00784.rjw@sisk.pl> <49E79E58.9000606@nortel.com> <alpine.LFD.2.00.0904161432000.4042@localhost.localdomain> <49ECE783.5050704@nortel.com> <Pine.LNX.4.64.0904202352520.2924@blonde.anvils>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755830AbZDVT1m@vger.kernel.org>
-In-Reply-To: <49EF63A6.8040103@garzik.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Daniela Engert <dani@ngrt.de>, Boaz Harrosh <bharrosh@panasas.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Tejun Heo <htejun@gmail.com>
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.64.0904202352520.2924-XZxpfvf5U/bbmfIwyoSfiQ@public.gmane.org>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hugh Dickins <hugh-DTz5qymZ9yRBDgjK7y7TUQ@public.gmane.org>
+Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Adrian Bunk <bunk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Trenton Adams <trenton.d.adams-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2009-04-22 at 14:36 -0400, Jeff Garzik wrote:
-> James Bottomley wrote:
-> > On Wed, 2009-04-22 at 16:18 +0100, Alan Cox wrote:
-> >>> Don't forget, there are ATAPI devices (some Sony CD burners and old 
-> >>> phase-changers come into mind) which *do* have multiple LUNs sitting 
-> >>> beyond the PATA port. I don't know if libata supports such setups (my 
-> >>> old OS/2 driver does) but one shouldn't hijack LUNs to emulate targets.
-> >> It's a long time ago since I tested it but my 5 CD changer was correctly
-> >> supported by libata (or more accurately by sr...).
-> > 
-> > Well, sr supports the discovered CD/DVD; ch is the actual changer
-> > manager.  Usually ch attaches to one LUN and sr attaches to another.
+Hugh Dickins wrote:
+> On Mon, 20 Apr 2009, Chris Friesen wrote:
+
+>> For anonymous mappings, the older kernels put the starting address of the VMA
+>> (from the point of view of the app) as the offset.  Until the recent change,
+>> new kernels still did this for most VMAs, but the stack offset was a 64-bit
+>> value with no obvious relation to the VMA start address.
 > 
-> Like Alan's, if I understand him correctly, my PATA ATAPI CD changer 
-> simply presents a bunch of addressible LUNs.  I never loaded, nor seemed 
-> to need, ch.
+> No, what they put there was something that in most cases matched the
+> starting address of the VMA; but try moving that VMA with mremap (and
+> an old /proc/<pid>/maps!) and you'll see that the "offset" remained
+> unchanged even when the starting address of the VMA was changed.
+> 
+> (The offset remaining constant so that rmap can locate the VMA's pages
+> and unmap them, despite their being mapped at different virtual
+> addresses in parent and child after a move in one of them.)
+> 
+> ... so I think your app was indeed already broken, wasn't it?
+> 
+> It's also unclear why you'd want to use the offset field for the
+> starting address of the VMA, when /proc/<pid>/maps already shows
+> the starting address of the VMA.  I think you've more to tell us!
 
-Yes, they both seem to be non standard changer implementations that just
-present as many CDs as they could chage to.
+Yeah, given the above the app was broken.  We just didn't run into any 
+cases where the assumption caused any problems.
 
-The ch is actually a driver for devices which conform to the SCSI Media
-Changer standard, which tends to present  LUN zero as the smc device and
-LUN1 as the selected CD/DVD
+Also, it's not so much that we were relying on the offset value for 
+anything, so much as we were parsing the file and had made some 
+assumptions about valid offsets for anonymous memory.
 
-> I should boot a current libata and see how it behaves...
+Anyways, we'll fix it going forward to simply ignore the offset for 
+anonymous memory.
 
-Might be fun.
-
-James
+Chris
