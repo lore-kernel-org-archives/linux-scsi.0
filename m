@@ -1,47 +1,81 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH v2] fix sign extension with 1.5TB usb-storage LBD=y
-Date: Wed, 22 Apr 2009 14:27:12 +0300
-Message-ID: <49EEFF10.3050306@panasas.com>
-References: <1240347174.10627.20.camel@nimitz> <20090421211858.GA1926@parisc-linux.org> <1240351210.10627.30.camel@nimitz> <49EEC82B.5040603@panasas.com> <20090422110921.GE1926@parisc-linux.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: SCSI Driver Regression and Missing Code Block?
+Date: Wed, 22 Apr 2009 05:52:10 -0600
+Message-ID: <20090422115210.GG1926@parisc-linux.org>
+References: <9573387.7901240380756993.JavaMail.root@mail.paragon.co.nz> <7297889.7921240382112001.JavaMail.root@mail.paragon.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:30164 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751409AbZDVL1k (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2009 07:27:40 -0400
-In-Reply-To: <20090422110921.GE1926@parisc-linux.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:52456 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750830AbZDVLwM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2009 07:52:12 -0400
+Content-Disposition: inline
+In-Reply-To: <7297889.7921240382112001.JavaMail.root@mail.paragon.co.nz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Dave Hansen <dave@linux.vnet.ibm.com>, linux-kernel <linux-kernel@vger.kernel.org>, mdharm-usb@one-eyed-alien.net, linux-usb <linux-usb@vger.kernel.org>, usb-storage@lists.one-eyed-alien.net, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, viro <viro@zeniv.linux.org.uk>
+To: Dominic Driver <dominic.driver@paragon.co.nz>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Peter Jones <pjones@redhat.com>, linux-scsi@vger.kernel.org
 
-On 04/22/2009 02:09 PM, Matthew Wilcox wrote:
-> On Wed, Apr 22, 2009 at 10:32:59AM +0300, Boaz Harrosh wrote:
->> These are actually aligned access it might be worth sacrificing a cast
->> to be32/64 for sake of speed.
+On Wed, Apr 22, 2009 at 06:35:12PM +1200, Dominic Driver wrote:
+> Hi Matthew,
 > 
-> "for sake of speed"?  How often do you think we ask a device how large
-> it is?  
+> A look at the Vanilla 2.6.27.19 Kernel reveals that the section of code
+> from the Fedora release that I reinserted is NOT present. This must be
+> a Fedora patch. From my point of view, it's a very useful addition to
+> the IOCTL responses, is it something to consider for inclusion in the
+> Vanilla kernels?
 
-OK, that was the wrong choice of words, on my part. I meant for sake of
-"nobleness". I calculated as a programmer that these are aligned do I make
-the extra effort of stating that in code, or I get lazy because it does
-not matter?
+It certainly is.  Peter Jones posted the patch to linux-scsi on July
+11th last year.  I think it simply got overlooked.  James, you objected
+to an earlier version of this patch; any problems with this version?
 
-> How much overhead do you think is incurred by the unaligned code
-> if the data happens to be aligned?
-> 
+It appears to have been in Fedora for about six months, so it presumably
+doesn't cause much end-user related trouble.
 
-Well for BE systems we are already order of magnitude faster by just
-using the accessors, so I guess we are already well in the "plus" ;)
 
-This is such a small matter, sorry to bother you about it.
-Just that it's a programming style I'm constantly debating with myself,
-feel free to ignore it.
+>From e85e03d7f680b62bb8d4d037fdde6dd94c9582a3 Mon Sep 17 00:00:00 2001
+From: Peter Jones <pjones@redhat.com>
+Date: Wed, 8 Oct 2008 15:10:39 -0400
+Subject: [PATCH] make sr_mod report more accurate drive status after closing the door.
 
-The patch looks very good to me as it is.
+So, what's happening here is that the drive is reporting a sense of
+2/4/1 ("logical unit is becoming ready") from sr_test_unit_ready(), and
+then we ask for the media event notification before checking that result
+at all.  The check_media_event_descriptor() call isn't getting a check
+condition, but it's also reporting that the tray is closed and that
+there's no media.  In actuality it doesn't yet know if there's media or
+not, but there's no way to express that in the media event status field.
 
-Thanks
-Boaz
+My current thought is that if it told us the device isn't yet ready, we
+should return that immediately, since there's nothing that'll tell us
+any more data than that reliably.
+---
+ drivers/scsi/sr_ioctl.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
+index ae87d08..7ee51ff 100644
+--- a/drivers/scsi/sr_ioctl.c
++++ b/drivers/scsi/sr_ioctl.c
+@@ -309,6 +309,11 @@ int sr_drive_status(struct cdrom_device_info *cdi, int slot)
+ 	if (0 == sr_test_unit_ready(cd->device, &sshdr))
+ 		return CDS_DISC_OK;
+ 
++	/* SK/ASC/ASCQ of 2/4/1 means "unit is becoming ready" */
++	if (scsi_sense_valid(&sshdr) && sshdr.sense_key == NOT_READY
++			&& sshdr.asc == 0x04 && sshdr.ascq == 0x01)
++		return CDS_DRIVE_NOT_READY;
++
+ 	if (!cdrom_get_media_event(cdi, &med)) {
+ 		if (med.media_present)
+ 			return CDS_DISC_OK;
+-- 
+1.6.0.1
+
+
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
