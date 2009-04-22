@@ -1,129 +1,65 @@
-From: "Kleber S. Souza" <klebers@linux.vnet.ibm.com>
-Subject: Re: [PATCH] ipr: ipr_remove() marked __devexit
-Date: Wed, 22 Apr 2009 10:50:28 -0300
-Message-ID: <1240408230.8289.3.camel@zeppelin.austin.ibm.com>
-References: <1237839145.13011.54.camel@zeppelin.austin.ibm.com>
-	 <1239995314.6143.1.camel@zeppelin.austin.ibm.com>
-	 <1240020307.5763.1.camel@mulgrave>
-	 <1240235787.7458.13.camel@zeppelin.austin.ibm.com>
-	 <1240237018.3315.14.camel@mulgrave.int.hansenpartnership.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] RFC: have dm-mpath use already attached
+	scsi_dh
+Date: Wed, 22 Apr 2009 08:52:55 -0500
+Message-ID: <49EF2137.80708@cs.wisc.edu>
+References: <1240374806-6043-1-git-send-email-michaelc@cs.wisc.edu>
+	<49EEE071.9060902@suse.de>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e24smtp04.br.ibm.com ([32.104.18.25]:44828 "EHLO
-	e24smtp04.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753193AbZDVNwG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2009 09:52:06 -0400
-Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
-	by e24smtp04.br.ibm.com (8.13.1/8.13.1) with ESMTP id n3MDlY9C031099
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2009 10:47:34 -0300
-Received: from d24av02.br.ibm.com (d24av02.br.ibm.com [9.18.232.47])
-	by d24relay01.br.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n3MEpLhd3190828
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2009 11:51:21 -0300
-Received: from d24av02.br.ibm.com (loopback [127.0.0.1])
-	by d24av02.br.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n3MDq3c3009644
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2009 10:52:03 -0300
-In-Reply-To: <1240237018.3315.14.camel@mulgrave.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <49EEE071.9060902@suse.de>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: dm-devel@redhat.com, Levy_Jerome@emc.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, 2009-04-20 at 14:16 +0000, James Bottomley wrote:
-> On Mon, 2009-04-20 at 10:56 -0300, Kleber S. Souza wrote:
-> > On Fri, 2009-04-17 at 22:05 -0400, James Bottomley wrote:
-> > > On Fri, 2009-04-17 at 16:08 -0300, Kleber S. Souza wrote:
-> > > > Hi,
-> > > >=20
-> > > > Any comments on this patch?=20
-> > > >=20
-> > > > It was acked by Brian King, do I need to do anything else to ge=
-t it
-> > > > accepted?
-> > >=20
-> > > No ... looks OK to me:
-> > >=20
-> > > > Thanks,
-> > > > Kleber
-> > > >=20
-> > > > On Mon, 2009-03-23 at 17:12 -0300, Kleber Sacilotto de Souza wr=
-ote:
-> > > > > Marking the ipr clean up function ipr_remove() as __devexit a=
-nd using
-> > > > > __devexit_p() macro in its address reference.
-> > > > >=20
-> > > > >=20
-> > > > > Signed-off-by: Kleber Sacilotto de Souza <kleber@linux.vnet.i=
-bm.com>
-> > > > > Signed-off-by: Breno Leitao <leitao@linux.vnet.ibm.com>
-> > >=20
-> > > Just explain this signoff?  signed-off-by is supposed to document=
- the
-> > > hands the patch has passed through ... it's not clear what Breno =
-Leitao
-> > > has to do with the transmission of this patch.
-> > >=20
-> >=20
-> > Breno Leit=C3=A3o pointed out to me that this change needed to be m=
-ade based
-> > on the kernel documentation <Documentation/PCI/pci.txt>. I wrote th=
-e
-> > patch, got the ack from Brian King and sent it to the list.
->=20
-> So that should be Reported-by: not Signed-off-by for Breno.
->=20
-> There's no actual ack from Brian King on this email.
->=20
-> James
->=20
+Hannes Reinecke wrote:
+> Hi Mike,
+> 
+> michaelc@cs.wisc.edu wrote:
+>> From: Mike Christie <michaelc@cs.wisc.edu>
+>>
+>> If you have a mixed environment of clarriions, where some
+>> support ALAU and some support PNR, what do you put in
+>> your multipath.conf? With this patch you do not have to worry about
+>> it. If those modules are loaded before dm-mpath, then they
+>> will have attached to the correct devices based on inquiry, alua commands
+>> and parsing of data buffers (for example in scsi_dh_emc's alua check).
+>> There is no need for the user to set that info in the multipath.conf.
+>> And in general since all scsi_dh_modules will attach to the devices
+>> they work for, we do not need to have users specific this.
+>>
+> No. The problem here is the hardware table from scsi_dh is compiled
+> in and cannot be changed from userland. The multipath.conf OTOH
+> is purely user-defined and, what's more, the user might have a valid
+> reason for modifying it.
+> (EG EMC Clariion can well be run in PNR mode even though ALUA is
+> active, or the user might want to try ALUA on any as-of-yet unknown
+> devices)
 
-Resending the patch with the proper tags. Sorry for the confusion.
+Ah. I misread the code and misunderstood the compat mode. I thought 
+scsi_dh_emc was failing the attach when ALUA support was detected.
 
+> 
+> So _not_ allowing multipath to override the device handler setting
+> will just add to the confusion and makes error tracking even more
+> difficult.
+> 
+> So I would prefer the attached patch, it even save to touch
+> device handler code at all.
+> 
 
+Thanks. I think this will work for me.
 
-
-Marking the ipr clean up function ipr_remove() as __devexit and using
-__devexit_p() macro in its address reference.
-
-
-Signed-off-by: Kleber Sacilotto de Souza <kleber@linux.vnet.ibm.com>
-Reported-by: Breno Leitao <leitao@linux.vnet.ibm.com>
-Acked-by: Brian King <brking@linux.vnet.ibm.com>
----
- drivers/scsi/ipr.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 0782900..bc39ac6 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -7674,7 +7674,7 @@ static void __ipr_remove(struct pci_dev *pdev)
-  * Return value:
-  *     none
-  **/
--static void ipr_remove(struct pci_dev *pdev)
-+static void __devexit ipr_remove(struct pci_dev *pdev)
- {
-        struct ipr_ioa_cfg *ioa_cfg =3D pci_get_drvdata(pdev);
-
-@@ -7850,7 +7850,7 @@ static struct pci_driver ipr_driver =3D {
-        .name =3D IPR_NAME,
-        .id_table =3D ipr_pci_table,
-        .probe =3D ipr_probe,
--       .remove =3D ipr_remove,
-+       .remove =3D __devexit_p(ipr_remove),
-        .shutdown =3D ipr_shutdown,
-        .err_handler =3D &ipr_err_handler,
- };
---
-
---=20
-Kleber S. Souza
-IBM Linux Technology Center
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Are you going to push this for 2.6.30?
