@@ -1,73 +1,129 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] [Target_Core_Mod/pSCSI]: Add optional legacy	scsi_execute_async()
- usage for Linux/SCSI passthrough
-Date: Wed, 22 Apr 2009 16:24:24 +0300
-Message-ID: <49EF1A88.1040105@panasas.com>
-References: <1239930560.4176.577.camel@haakon2.linux-iscsi.org> <49EB036B.8090607@panasas.com> <49EDB8EF.7040503@vlnb.net>
+From: "Kleber S. Souza" <klebers@linux.vnet.ibm.com>
+Subject: Re: [PATCH] ipr: ipr_remove() marked __devexit
+Date: Wed, 22 Apr 2009 10:50:28 -0300
+Message-ID: <1240408230.8289.3.camel@zeppelin.austin.ibm.com>
+References: <1237839145.13011.54.camel@zeppelin.austin.ibm.com>
+	 <1239995314.6143.1.camel@zeppelin.austin.ibm.com>
+	 <1240020307.5763.1.camel@mulgrave>
+	 <1240235787.7458.13.camel@zeppelin.austin.ibm.com>
+	 <1240237018.3315.14.camel@mulgrave.int.hansenpartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.240]:1888 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753053AbZDVNYd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2009 09:24:33 -0400
-In-Reply-To: <49EDB8EF.7040503@vlnb.net>
+Received: from e24smtp04.br.ibm.com ([32.104.18.25]:44828 "EHLO
+	e24smtp04.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753193AbZDVNwG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2009 09:52:06 -0400
+Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
+	by e24smtp04.br.ibm.com (8.13.1/8.13.1) with ESMTP id n3MDlY9C031099
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2009 10:47:34 -0300
+Received: from d24av02.br.ibm.com (d24av02.br.ibm.com [9.18.232.47])
+	by d24relay01.br.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n3MEpLhd3190828
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2009 11:51:21 -0300
+Received: from d24av02.br.ibm.com (loopback [127.0.0.1])
+	by d24av02.br.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n3MDq3c3009644
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2009 10:52:03 -0300
+In-Reply-To: <1240237018.3315.14.camel@mulgrave.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>, Tejun Heo <tj@kernel.org>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <jens.axboe@oracle.com>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, Geoff Levand <geoffrey.levand@am.sony.com>, Douglas Gilbert <dgilbert@interlog.com>, Christoph Hellwig <hch@lst.de>, Paul Mundt <lethal@linux-sh.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 04/21/2009 03:15 PM, Vladislav Bolkhovitin wrote:
-> Boaz Harrosh, on 04/19/2009 02:56 PM wrote:
->> On 04/17/2009 04:09 AM, Nicholas A. Bellinger wrote:
-> 
-> [..]
-> 
->> Are you aware that scsi_execute_async() has gone in 2.6.30-rc1?
->>
->> I'm not sure what would be the best alternative for you. I would say
->> a bio, but it is still being debated. Your current options are:
->>
->> 1. bio_alloc then loop () bio_add_pc_page, and finally blk_rq_append_bio
->>    (Which block people don't like)
->> 2. sglist => page-pointers-array translation and blk_rq_map_user with 
->>    struct rq_map_data mode. (not possible with all kind of sglists)
->> 2. sglist => iovec translation and blk_rq_map_user_iov()
->>    (Very very ugly mapping of pages to virtual pointers)
->>
->> I have a similar situation with my OSD code.
-> 
-> Do you have somewhere in it a need to run an arbitrary CDB with data 
-> pages stored in an sglist? Is that code accepted in the mainline?
-> 
+On Mon, 2009-04-20 at 14:16 +0000, James Bottomley wrote:
+> On Mon, 2009-04-20 at 10:56 -0300, Kleber S. Souza wrote:
+> > On Fri, 2009-04-17 at 22:05 -0400, James Bottomley wrote:
+> > > On Fri, 2009-04-17 at 16:08 -0300, Kleber S. Souza wrote:
+> > > > Hi,
+> > > >=20
+> > > > Any comments on this patch?=20
+> > > >=20
+> > > > It was acked by Brian King, do I need to do anything else to ge=
+t it
+> > > > accepted?
+> > >=20
+> > > No ... looks OK to me:
+> > >=20
+> > > > Thanks,
+> > > > Kleber
+> > > >=20
+> > > > On Mon, 2009-03-23 at 17:12 -0300, Kleber Sacilotto de Souza wr=
+ote:
+> > > > > Marking the ipr clean up function ipr_remove() as __devexit a=
+nd using
+> > > > > __devexit_p() macro in its address reference.
+> > > > >=20
+> > > > >=20
+> > > > > Signed-off-by: Kleber Sacilotto de Souza <kleber@linux.vnet.i=
+bm.com>
+> > > > > Signed-off-by: Breno Leitao <leitao@linux.vnet.ibm.com>
+> > >=20
+> > > Just explain this signoff?  signed-off-by is supposed to document=
+ the
+> > > hands the patch has passed through ... it's not clear what Breno =
+Leitao
+> > > has to do with the transmission of this patch.
+> > >=20
+> >=20
+> > Breno Leit=C3=A3o pointed out to me that this change needed to be m=
+ade based
+> > on the kernel documentation <Documentation/PCI/pci.txt>. I wrote th=
+e
+> > patch, got the ack from Brian King and sent it to the list.
+>=20
+> So that should be Reported-by: not Signed-off-by for Breno.
+>=20
+> There's no actual ack from Brian King on this email.
+>=20
+> James
+>=20
 
-No, I have a direct bio which comes from two sources.
-1. A bio prepared by a filesystem to describe a write/read to a file (osd object)
-2. A cloned bio that comes from a stacking block-device over osd-object.
+Resending the patch with the proper tags. Sorry for the confusion.
 
-So I do not have an sglist at all, anywhere in code.
 
-> If yes, why not to resurrect the necessary bits of scsi_execute_async() 
-> (option (1) above)? It was deleted, because in 2.6.30 there are no users 
-> of it left, but if there are users (OSD), then why not to return it? 
-> Seems nothing better for the sg->bio case can be invented.
-> 
 
-I hate scsi_execute_async() for lots of reasons, 
-1. The cover-up of an historical abuse of sglists by sg/sr
-2. Override of use_sg/data-pointer crap
-3. What is data-format got to do with sync/async execution
-4. the need of all that scsi_io_context and the re-invention
-   of async_done API.
-5. ...
-Good riddence
 
-But you might be looking into an API introduced by an RFC by
-Tejun Heo in the form of blk_rq_map_kern_sgl() which should
-be a more appropriate general API for your use.
-(And is not directly usable for me in OSD)
+Marking the ipr clean up function ipr_remove() as __devexit and using
+__devexit_p() macro in its address reference.
 
-> Vlad
 
-Boaz
+Signed-off-by: Kleber Sacilotto de Souza <kleber@linux.vnet.ibm.com>
+Reported-by: Breno Leitao <leitao@linux.vnet.ibm.com>
+Acked-by: Brian King <brking@linux.vnet.ibm.com>
+---
+ drivers/scsi/ipr.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 0782900..bc39ac6 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -7674,7 +7674,7 @@ static void __ipr_remove(struct pci_dev *pdev)
+  * Return value:
+  *     none
+  **/
+-static void ipr_remove(struct pci_dev *pdev)
++static void __devexit ipr_remove(struct pci_dev *pdev)
+ {
+        struct ipr_ioa_cfg *ioa_cfg =3D pci_get_drvdata(pdev);
+
+@@ -7850,7 +7850,7 @@ static struct pci_driver ipr_driver =3D {
+        .name =3D IPR_NAME,
+        .id_table =3D ipr_pci_table,
+        .probe =3D ipr_probe,
+-       .remove =3D ipr_remove,
++       .remove =3D __devexit_p(ipr_remove),
+        .shutdown =3D ipr_shutdown,
+        .err_handler =3D &ipr_err_handler,
+ };
+--
+
+--=20
+Kleber S. Souza
+IBM Linux Technology Center
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
