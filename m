@@ -1,80 +1,42 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCH] dm mpath: Try recover from I/O failure by
- re-initializing the PG if device is running on one path
-Date: Wed, 22 Apr 2009 10:52:48 +0900
-Message-ID: <49EE7870.3090008@ct.jp.nec.com>
-References: <E463DF2B2E584B4A82673F53D62C2EF466A0E4DA@cosmail01.lsi.com>
-	<49ED1C24.9090303@ct.jp.nec.com>
-	<E463DF2B2E584B4A82673F53D62C2EF466A66DD4@cosmail01.lsi.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: SCSI Driver Regression and Missing Code Block?
+Date: Tue, 21 Apr 2009 20:09:28 -0600
+Message-ID: <20090422020928.GD1926@parisc-linux.org>
+References: <30274704.7281240360796458.JavaMail.root@mail.paragon.co.nz> <5313655.7301240361406269.JavaMail.root@mail.paragon.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF466A66DD4@cosmail01.lsi.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: "Moger, Babu" <Babu.Moger@lsi.com>
-Cc: "'dm-devel@redhat.com'" <dm-devel@redhat.com>, "Chauhan,
-	Vijay" <Vijay.Chauhan@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:39851 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751260AbZDVCJa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Apr 2009 22:09:30 -0400
+Content-Disposition: inline
+In-Reply-To: <5313655.7301240361406269.JavaMail.root@mail.paragon.co.nz>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dominic Driver <dominic.driver@paragon.co.nz>
+Cc: linux-scsi@vger.kernel.org
 
-Hi Babu,
-
-On 2009/04/22 2:06 +0900, Moger, Babu wrote:
-> Hi Kiyoshi,
+On Wed, Apr 22, 2009 at 12:50:06PM +1200, Dominic Driver wrote:
+> Hi Guys,
 > 
->    Thanks for your comment.
+> I had an interesting experience with my SATA DVD-RW Drives following a Kernel Upgrade from:
 > 
-> 
->> -----Original Message-----
->> From: Kiyoshi Ueda [mailto:k-ueda@ct.jp.nec.com]
->> Sent: Monday, April 20, 2009 8:07 PM
->> To: Moger, Babu
->> Cc: 'dm-devel@redhat.com'; linux-scsi@vger.kernel.org; Chauhan, Vijay;
->> 'sekharan@us.ibm.com'
->> Subject: Re: [PATCH] dm mpath: Try recover from I/O failure by re-
->> initializing the PG if device is running on one path
->>
->> Hi Babu,
->>
->> On 2009/04/21 3:05 +0900, Moger, Babu wrote:
->>> This patch introduces the mechanism to recover from I/O failures by
->>> re-initializing the path if the device is running on only one path.
->>>
->>> Problem: Device mapper fails the path for every I/O error. It does not
->>> care about the type of error. There are certain errors which can be
->>> recovered by re-initializing the path again. I have seen this problem
->>> during my testing on rdac device handler. I have observed I/O errors
->>> when there is a change in Lun ownership. When Lun ownership changes
->>> device will return back with check condition with
->>> sense 0x05/0x94/0x01(SK/ASC/ASCQ -meaning Lun ownership changed).
->>> Currently, device mapper fails the path for this error and eventually
->>> this will lead to I/O error. We don't want to see I/O error for this
->>> reason.
->>
->> Shouldn't we handle this type of device error inside device handler?
-> 
-> The current error in question requires re-activation of the path.
-> We already have a code to handle this scenario in device handler.
-> But, the problem is the return status does not go to DM layer.
-> The return status gets lost in scsi layer. For DM layer all the errors
-> are -EIO. Any thoughts from your side.
+> 2.6.27.19-170.2.35.fc10.i686
+> to 
+> 2.6.28.6 (Vanilla)
 
-Oh, I missed the point and I thought that re-activating the path
-in your device handler was enough for the error.
-Currently, I have no idea to handle your case only in dm without
-seeing I/O error.
+One of the problems with trying to diagnose the problem is that you're
+going from a distro kernel to a vanilla kernel.  So it's not necessarily
+something we've taken out -- it could be something they've put in and
+we don't know about.
 
-By the way, who did change the ownership when the device was running
-with one path in your testing?  I can't see why such case happened.
+So it'd be really nice to see if 2.6.27 vanilla behaves like 2.6.28
+vanilla or like 2.6.27-fc.  You might also want to try 2.6.29 as Fedora
+do backport patches from later kernels.
 
-Thanks,
-Kiyoshi Ueda
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
