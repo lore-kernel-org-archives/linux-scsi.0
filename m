@@ -1,44 +1,51 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] SCSI: add check_capacity flag and sd_read_last_sector()
-Date: Wed, 22 Apr 2009 08:51:17 -0600
-Message-ID: <20090422145116.GH1926@parisc-linux.org>
-References: <Pine.LNX.4.44L0.0904221034340.3405-100000@iolanthe.rowland.org>
+From: Daniela Engert <dani@ngrt.de>
+Subject: Re: [PATCH] libata: rewrite SCSI host scheme to be one per ATA host
+Date: Wed, 22 Apr 2009 17:10:55 +0200
+Message-ID: <49EF337F.1030804@ngrt.de>
+References: <20090422090929.GA14928@havoc.gtf.org> <49EEE225.3010700@garzik.org> <49EF0A92.1070400@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:33421 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751366AbZDVOvS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2009 10:51:18 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0904221034340.3405-100000@iolanthe.rowland.org>
+Received: from mail-out.m-online.net ([212.18.0.10]:60319 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750988AbZDVPKz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2009 11:10:55 -0400
+In-Reply-To: <49EF0A92.1070400@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH <greg@kroah.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Tejun Heo <htejun@gmail.com>
 
-On Wed, Apr 22, 2009 at 10:42:36AM -0400, Alan Stern wrote:
-> +	/* If the capacity is unknown, we can't test anything */
-> +	if (sdkp->capacity <= 0)
-> +		return rc;
+Boaz Harrosh wrote:
+> On 04/22/2009 12:23 PM, Jeff Garzik wrote:
+>> Jeff Garzik wrote:
+>>> Currently, libata creates a Scsi_Host per port.  This was originally
+>>> done to leverage SCSI's infrastructure to arbitrate among master/slave
+>>> devices, but is not needed for most modern SATA controllers.   And I
+>>> _think_ it is not needed for master/slave if done properly, either.
 
-sector_t is unsigned, so this should be just == 0.
+>>> It may work with other controllers -- TRY AT YOUR OWN RISK.  It will
+>>> probably fail for master/slave configurations, and SAS & PMP also
+>>> need looking at.  It yielded this lsscsi output on my AHCI box:
+>>>
+>>> [0:0:0:0]    disk    ATA      ST3500320AS      SD15  /dev/sda
+>>> [0:2:0:0]    disk    ATA      G.SKILL 128GB SS 02.1  /dev/sdb
+>>> [0:5:0:0]    cd/dvd  PIONEER  BD-ROM  BDC-202  1.04  /dev/sr0
+>> For comparison, here is unmodified 2.6.30-rc3:
+>>
+>> [jgarzik@bd ~]$ lsscsi
+>> [0:0:0:0]    disk    ATA      ST3500320AS      SD15  /dev/sda
+>> [2:0:0:0]    disk    ATA      G.SKILL 128GB SS 02.1  /dev/sdb
+>> [5:0:0:0]    cd/dvd  PIONEER  BD-ROM  BDC-202  1.04  /dev/sr0
+>>
+> 
+> Could the master/slave be simply solved by emulating a SCSI LUN
 
-> +	/* One test should be enough (unless it's inconclusive) */
-> +	sdp->check_capacity = 0;
-> +
-> +	/* If the device doesn't use READ(10), assume we're okay */
-> +	if (!sdp->use_10_for_rw)
-> +		return rc;
-> +
-> +	/* If the capacity is too big for READ(10), assume we're okay */
-> +	if (sdkp->capacity > 0xffffffff)
-> +		return rc;
+Don't forget, there are ATAPI devices (some Sony CD burners and old 
+phase-changers come into mind) which *do* have multiple LUNs sitting 
+beyond the PATA port. I don't know if libata supports such setups (my 
+old OS/2 driver does) but one shouldn't hijack LUNs to emulate targets.
 
-Won't gcc warn about this when sector_t is 32 bits?
-
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Ciao,
+   Dani
