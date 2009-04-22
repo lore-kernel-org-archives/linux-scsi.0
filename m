@@ -1,57 +1,47 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: rewrite SCSI host scheme to be one per ATA host
-Date: Wed, 22 Apr 2009 12:52:40 -0400
-Message-ID: <49EF4B58.8000204@garzik.org>
-References: <20090422090929.GA14928@havoc.gtf.org> <49EF16F5.5080909@rtr.ca>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] SCSI: add check_capacity flag and sd_read_last_sector()
+Date: Wed, 22 Apr 2009 13:17:27 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0904221315340.3405-100000@iolanthe.rowland.org>
+References: <20090422145116.GH1926@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <49EF16F5.5080909@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:54868 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754066AbZDVRR3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2009 13:17:29 -0400
+In-Reply-To: <20090422145116.GH1926@parisc-linux.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH <greg@kroah.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
 
-Mark Lord wrote:
-> Jeff Garzik wrote:
->> Currently, libata creates a Scsi_Host per port.  This was originally
->> done to leverage SCSI's infrastructure to arbitrate among master/slave
->> devices, but is not needed for most modern SATA controllers.   And I
->> _think_ it is not needed for master/slave if done properly, either.
->>
->> The patch below converts libata such that there is now a 1:1
->> correspondence between struct Scsi_Host and struct ata_host.  ATA ports
->> are represented as SCSI layer 'channels', which is more natural.
->>
->> This patch is an experiment, and not meant for upstream anytime soon.
-> ..
+On Wed, 22 Apr 2009, Matthew Wilcox wrote:
+
+> On Wed, Apr 22, 2009 at 10:42:36AM -0400, Alan Stern wrote:
+> > +	/* If the capacity is unknown, we can't test anything */
+> > +	if (sdkp->capacity <= 0)
+> > +		return rc;
 > 
-> Could you perhaps explain how error handling would behave in this scheme?
+> sector_t is unsigned, so this should be just == 0.
+
+It doesn't make any difference.
+
+> > +	/* One test should be enough (unless it's inconclusive) */
+> > +	sdp->check_capacity = 0;
+> > +
+> > +	/* If the device doesn't use READ(10), assume we're okay */
+> > +	if (!sdp->use_10_for_rw)
+> > +		return rc;
+> > +
+> > +	/* If the capacity is too big for READ(10), assume we're okay */
+> > +	if (sdkp->capacity > 0xffffffff)
+> > +		return rc;
 > 
-> Currently, one SATA port can have failures without any impact whatsoever
-> on concurrent operation of other ports, in part because each port is 
-> treated
-> as a completely independent SCSI host.
-> 
-> I wonder if that changes with the new (better) scheme proposed here?
+> Won't gcc warn about this when sector_t is 32 bits?
 
-It changes, yes, most definitely.  We just have to pay close attention, 
-and make sure to indicate which EH actions are host-wide, channel-wide 
-(== per port, in ATA parlance) or per-device.
+My version of gcc doesn't emit a warning (and I don't have CONFIG_LBD 
+defined).  Maybe other versions will.
 
-SCSI handles all these cases, because e.g. you might not want to disrupt 
-all 1,000 SAN devices actively talking to a single SCSI host in Linux.
-
-So...  error handling should behave how it needs to behave ;-)
-
-There might be an issue with concurrent error handling, because of 
-potential sharing of EH threads (== one port's EH must wait for 
-another's, I think)....but not with concurrent and independent 
-operation.  You should be able to reset an AHCI port without affecting 
-data xfer on the other ports.
-
-	Jeff
-
-
+Alan Stern
 
