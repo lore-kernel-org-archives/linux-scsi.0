@@ -1,75 +1,50 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [usb-storage] [PATCH] SCSI: add check_capacity flag and
- sd_read_last_sector()
-Date: Wed, 22 Apr 2009 16:47:03 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0904221633050.3405-100000@iolanthe.rowland.org>
-References: <20090422191752.GA24309@ub>
+From: "Abhijeet Arvind Joglekar (abjoglek)" <abjoglek@cisco.com>
+Subject: RE: [PATCH] fc transport: pre-emptively terminate i/o upon	dev_loss_tmo
+Date: Wed, 22 Apr 2009 13:49:11 -0700
+Message-ID: <9E88C8678BF34240A8C61D4078A3D251F794A9@xmb-sjc-23e.amer.cisco.com>
+References: <1240423291.27035.3.camel@ogier> <49EF6D85.6060404@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:46462 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754569AbZDVUrE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2009 16:47:04 -0400
-In-Reply-To: <20090422191752.GA24309@ub>
+Received: from sj-iport-3.cisco.com ([171.71.176.72]:56226 "EHLO
+	sj-iport-3.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755434AbZDVUtN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2009 16:49:13 -0400
+Content-class: urn:content-classes:message
+In-reply-to: <49EF6D85.6060404@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Andries E. Brouwer" <Andries.Brouwer@cwi.nl>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH <greg@kroah.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Mike Christie <michaelc@cs.wisc.edu>, James.Smart@Emulex.Com
+Cc: linux-scsi@vger.kernel.org, ralphw@linux.vnet.ibm.com, Abhijeet Joglekar <ajoglekar@nuovasystems.com>
 
-On Wed, 22 Apr 2009, Andries E. Brouwer wrote:
-
-> On Wed, Apr 22, 2009 at 10:42:36AM -0400, Alan Stern wrote:
-> > This patch (as1196) adds a new scsi_device flag to tell sd.c that it
-> > should verify the results of READ CAPACITY by trying the read the last
-> > sector.
-> 
-> Hi Alan,
-> 
-> I can see why you want to do this, but allow me to mutter a bit nevertheless.
-> Many devices are flaky and get into strange states requiring error-recovery
-> or reboot when you try an I/O that they do not like.
-> For this reason, and also for aesthetical reasons, I would prefer never to
-> do I/O to a device unless user space asks for it.
-
-I appreciate your caution -- and your aesthetic sensibilities!
-
-Note that a certain amount of I/O goes on independent of userspace (to
-determine the partitioning, if nothing else).  One can make a good case
-that this "check the last sector" falls into the same category.
-
-> (So - this would be much more work, but I would prefer a capacity value
-> that says "it reported this, but we have not checked yet - try an actual
-> I/O if you really want to know", and leave it at that until the value is
-> needed. Typically one needs the value (i) to check against it if one
-> wants to do I/O, or (ii) when user space asks for it because some fdisk type
-> program is invoked. In case (i) an additional read is superfluous.
-> In case (ii) user space asked and we try to make sure.)
-> 
-> Comments?
-
-How would the kernel know when it needed to make sure?  By the time an 
-actual I/O request from userspace arrives, it's probably too late -- 
-the task has already looked at the capacity value and doesn't know that 
-the capacity might change spontaneously.
-
-As a more theoretical point, consider what would happen if the last 
-partition included the "last" sector.  If the capacity got changed 
-after the partitions were determined, we could run into trouble.  
-Better to adjust the capacity right away, before a bogus value can get 
-used.
-
-My thought (expressed in an email some months ago, so it's not
-surprising that people may have forgotten) was that this "check the
-last sector" test would not be applied if we knew beforehand that it
-was unnecessary or the device couldn't support it.  If either of the
-CAPACITY_OK or FIX_CAPACITY flags is set then the last-sector check
-won't be performed.
-
-Thus, when we run across a device that dies during the last-sector
-check, we'll have to add an unusual_devs entry for it.  But since
-that's basically the same position we're in now, I don't see it as much
-of a loss.
-
-Alan Stern
-
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBNaWtlIENocmlzdGllIFttYWls
+dG86bWljaGFlbGNAY3Mud2lzYy5lZHVdIA0KPiBTZW50OiBXZWRuZXNkYXksIEFwcmlsIDIyLCAy
+MDA5IDEyOjE4IFBNDQo+IFRvOiBKYW1lcy5TbWFydEBFbXVsZXguQ29tDQo+IENjOiBsaW51eC1z
+Y3NpQHZnZXIua2VybmVsLm9yZzsgcmFscGh3QGxpbnV4LnZuZXQuaWJtLmNvbTsgDQo+IEFiaGlq
+ZWV0IEpvZ2xla2FyDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIGZjIHRyYW5zcG9ydDogcHJlLWVt
+cHRpdmVseSB0ZXJtaW5hdGUgDQo+IGkvbyB1cG9uIGRldl9sb3NzX3Rtbw0KPiANCj4gSmFtZXMg
+U21hcnQgd3JvdGU6DQo+ID4gTWlrZSwgUmFscGgsDQo+ID4gDQo+ID4gU2VlIGlmIHRoaXMgaGVs
+cHMuIEl0IGNvbXBpbGVzLCBidXQgSSBoYXZlbid0IHRlc3RlZCBpdC4NCj4gPiANCj4gPiBUaGlz
+IG1vZGlmaWVzIHRoZSBmaW5hbCBkZWxldGlvbiBzdGVwcywgYWZ0ZXIgZGV2X2xvc3NfdG1vIA0K
+PiBoYXMgZmlyZWQsIA0KPiA+IHN1Y2ggdGhhdCB3ZSBrZWVwIGEgZmxhZyBpbmRpY2F0aW5nIHdl
+J3JlIGRlbGV0aW5nLCBhbmQgd2UgDQo+IG9ubHkgY2xlYXIgDQo+ID4gdGhlIGZsYWcgb25jZSB0
+aGUgYWRkaXRpb25hbCBzdGVwcyB0aGF0IHdlIGhhZCB0byBwZXJmb3JtIHcvbyBsb2NrLCANCj4g
+PiBhcmUgY29tcGxldGUuICBUaGVuLCBpbiBmY19yZW1vdGVfcG9ydF9hZGQoKSwgd2hlbiB3ZSBm
+YWxsIGludG8gdGhlIA0KPiA+IGNhc2Ugb2YgdXNpbmcgdGhlIHJwb3J0cyBmb3IgdGhlIGJpbmRp
+bmdzLCB3aGljaCBjb3JyZXNwb25kcyB0byB0aGUgDQo+ID4gIm9wZW4iIHVubG9ja2VkIGNvZGUg
+YXJlYSwgd2Ugc3RhbGwgYW5kIHdhaXQgZm9yIHRoZSBkZWxldGUgDQo+IHRvIGZpbmlzaCANCj4g
+PiBiZWZvcmUgY29tcGxldGluZyB0aGUgcmVzdCBvZiB0aGUgYWRkLg0KPiA+IO+7vw0KPiA+IEkn
+bSBhIGxpdHRsZSBuZXJ2b3VzIGFib3V0IHRoZSBkZWxheSBpbiBmY19yZW1vdGVfcG9ydF9hZGQs
+IGJ1dCBpdCANCj4gPiBzaG91bGQgYmUgcXVpY2ssIGFuZCBvdXIgY2FsbGVlcyBzaG91bGQgYmUg
+aW4gYSBjb250ZXh0IHRoYXQgaXQncyANCj4gPiBhbGxvd2VkLg0KPiA+IA0KPiANCj4gSSB0aGlu
+ayB3ZSBjYW4ganVzdCByZXZlcnQgdGhlIHBhdGNoIGlmIHlvdSB3YW50LiBJIGRvIG5vdCANCj4g
+dGhpbmsgaXQgaXMgbmVlZGVkIGZvciB0aGUgZm5pYyBkcml2ZXIgYW55bW9yZS4gSXQgd2FzIG5l
+ZWRlZCANCj4gYmVjYXVzZSBmbmljIG5lZWRlZCB0aGUgcnBvcnQgcG9ydCBpZCB0byBiZSBzZXQg
+d2hlbiANCj4gdGVybWluYXRlX3Jwb3J0X2lvIHdhcyBjYWxsZWQgcmlnaHQ/IEkgZG8gbm90IHRo
+aW5rIGl0IGlzIA0KPiBuZWVkZWQgbm93LCBiZWNhdXNlIGl0IGxvb2tzIGxpa2UgdGhlIGRyaXZl
+ciB3aWxsIGxvb2sgdGhhdCANCj4gdXAgZnJvbSBhbm90aGVyIGNvZGUgcGF0aCBub3cuDQoNClll
+cywgaXQgaXMgb2sgdG8gcmV2ZXJ0IHRoZSBwYXRjaC4gZm5pYyBpcyBub3QgdXNpbmcgdGhlIHJw
+b3J0X2lkIGluIGl0cyB0ZXJtaW5hdGVfcnBvcnRfaW8gY2FsbGJhY2suDQoNCi0tIGFiaGlqZWV0
+DQo=
