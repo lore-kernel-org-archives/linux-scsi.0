@@ -1,68 +1,46 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] libata: rewrite SCSI host scheme to be one per ATA host
-Date: Thu, 23 Apr 2009 18:09:00 +0000
-Message-ID: <1240510141.3514.22.camel@mulgrave.int.hansenpartnership.com>
-References: <20090422090929.GA14928@havoc.gtf.org>
-	 <da824cf30904221208l42e41d38g5af52b1b3b5ea9a1@mail.gmail.com>
-	 <49F04A66.4080303@garzik.org>
-	 <da824cf30904231059v64328d47qa9e535ee194e65e@mail.gmail.com>
+From: Konrad Rzeszutek <konrad@virtualiron.com>
+Subject: Re: [PATCH 2 of 8] block: Export I/O topology for block devices
+	and  partitions
+Date: Thu, 23 Apr 2009 14:13:12 -0400
+Message-ID: <20090423181312.GA8768@mars.virtualiron.com>
+References: <patchbomb.1240464567@sermon.lab.mkp.net> <cbdae69a14895dab8ba7.1240464569@sermon.lab.mkp.net> <20090423105145.GW4593@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:55221 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754175AbZDWSJB (ORCPT
+Received: from host-216-57-134-2.customer.veroxity.net ([216.57.134.2]:61659
+	"EHLO mars.virtualiron.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756866AbZDWSQF (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Apr 2009 14:09:01 -0400
-In-Reply-To: <da824cf30904231059v64328d47qa9e535ee194e65e@mail.gmail.com>
+	Thu, 23 Apr 2009 14:16:05 -0400
+Content-Disposition: inline
+In-Reply-To: <20090423105145.GW4593@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, rwheeler@redhat.com, snitzer@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, 2009-04-23 at 10:59 -0700, Grant Grundler wrote:
-> > As to benefits, the phrase "more natural" means the code naturally aligns
-> > with existing object topologies (ata_host becomes analagous to Scsi_Host),
-> > which always has a long list of technical benefits.
-> >
-> > - we get to remove all the ugly hacks currently in place that assume
-> > ata_port is _the_ first class object.
-> > - we get to remove all the workarounds where SCSI assumes it manipulates all
-> > devices on a controller (not true in current libata)
-> > - SCSI (soon block) host-wide busy, block etc functionality now works as
-> > expected
-> > - it makes the libata conversion from SCSI to block layer easier
-> > - it makes integration with SAS+SATA devices such as mvsas or ipr easier
-> > - the list goes on; that is just off the top of my head, before my morning
-> > Mountain Dew
+> > + * blk_queue_alignment - set alignment for the queue
+> > + * @q:  the request queue for the device
+> > + * @alignment:  alignment offset in bytes
+> > + *
+> > + * Description:
+> > + *   Some devices are naturally misaligned to compensate for things like
+> > + *   the legacy DOS partition table 63-sector offset.  Low-level drivers
+> > + *   should call this function for devices whose first sector is not
+> > + *   naturally aligned.
+> > + */
+> > +void blk_queue_alignment(struct request_queue *q, unsigned int alignment)
+> > +{
+> > +	q->alignment = alignment & (q->granularity - 1);
+> > +	clear_bit(QUEUE_FLAG_MISALIGNED, &q->queue_flags);
+> > +}
+> > +EXPORT_SYMBOL(blk_queue_alignment);
 > 
-> Your initial list is good. In particular the issue around "SCSI Host-wide busy"
-> working as expected. Of all the things listed, this is the only one that *I* can
-> clearly identify as a user visible functional change.
-> 
-> I'm not familiar with the the "workarounds where SCSI assumes it manipulates
-> all devices on a controller" issue. The few SATA controllers I've looked at can
-> deal with each port independently - e.g.  discovery and phy reset. Anyway, this
-> seems to be closely tied with "SCSI Host-wide Busy".
-> 
-> One reason I was thinking of NOT list above: "wide port" in SAS 2.0 controllers.
-> aka "port aggregation". E.g. http://www.pmc-sierra.com/products/details/pm8005/
-> 
-> To change port aggregation on the fly requires the SCSI host controller to be
-> manageable object. This should be a change in transport and not a change
-> in devices available....and there are some other problems with implementing
-> this but this is the main one I initially see.
+> How would low-level drivers know?
 
-This isn't really a correct assessment.  Wide ports are a SAS only
-problem.  So sas has phys and ports ... and it's the port (essentially a
-virtual object) that communicates in the link diagram.
+Should there be a comment/Documentation blurb on how to remediate a
+misaligment? Such as how to modify the partition tables and what to look
+for in the BIOS (if anything) to take advantage of 4K sectors?
 
-A wide port has two or more phys in it.  You can see the handling of
-this in libsas and the sas transport class today, but it's all handled
-in a fashion completely invisible to the SCSI mid layer ... it's an
-inessential abstraction, if you will.
-
-James
-
-
+Is there a corresponding patch for fdisk that understands 4K sectors? Or
+is that already covered by it doing ioctl calls on the block device?
