@@ -1,38 +1,37 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 2 of 8] block: Export I/O topology for block devices and  partitions
-Date: Thu, 23 Apr 2009 09:17:30 -0400
-Message-ID: <yq1mya7bjbp.fsf@sermon.lab.mkp.net>
+Subject: Re: [PATCH 5 of 8] sd: Detect non-rotational devices
+Date: Thu, 23 Apr 2009 09:16:05 -0400
+Message-ID: <yq1r5zjbje2.fsf@sermon.lab.mkp.net>
 References: <patchbomb.1240464567@sermon.lab.mkp.net>
-	<cbdae69a14895dab8ba7.1240464569@sermon.lab.mkp.net>
-	<20090423105145.GW4593@kernel.dk>
+	<d14109aa6209be628074.1240464572@sermon.lab.mkp.net>
+	<20090423105245.GX4593@kernel.dk> <49F04C71.6050304@garzik.org>
+	<20090423113841.GK1926@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20090423105145.GW4593@kernel.dk> (Jens Axboe's message of "Thu,
-	23 Apr 2009 12:51:45 +0200")
+In-Reply-To: <20090423113841.GK1926@parisc-linux.org> (Matthew Wilcox's
+	message of "Thu, 23 Apr 2009 05:38:41 -0600")
 Sender: linux-ide-owner@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, rwheeler@redhat.com, snitzer@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Jeff Garzik <jeff@garzik.org>, Jens Axboe <jens.axboe@oracle.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, rwheeler@redhat.com, snitzer@redhat.com, neilb@suse.de, James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Jens" == Jens Axboe <jens.axboe@oracle.com> writes:
+>>>>> "Matthew" == Matthew Wilcox <matthew@wil.cx> writes:
 
->> + unsigned int alignment;
->> + unsigned int granularity;
->> + unsigned int min_io;
->> + unsigned int opt_io;
->> 
->> unsigned long seg_boundary_mask; void *dma_drain_buffer;
+Matthew> I already did that.  The only problem is that you made me
+Matthew> include the stupid:
 
-Jens> Patch looks fine, but can we group these by name please? alignment
-Jens> could be anything.
+Matthew>         if (ata_id_major_version(args->id) > 7) {
 
-Jens> + unsigned int io_alignment;
-Jens> + unsigned int io_granularity;
-Jens> + unsigned int io_min;
-Jens> + unsigned int io_opt;
+Matthew> so of course it doesn't work on any existing hardware.  How
+Matthew> about applying this patch:
 
-Sure, no problem.
+Maybe we could incubate your patch in the next tree for a bit and see
+what breaks without the version check?
+
+We could even be somewhat conservative like we were with RC16 in SCSI.
+The SATA devices I have here with valid rotational flags all report
+version 7.  I wonder if > 6 do the trick?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
