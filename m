@@ -1,416 +1,264 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 2 of 8] block: Export I/O topology for block devices and
-	partitions
-Date: Thu, 23 Apr 2009 01:29:29 -0400
-Message-ID: <cbdae69a14895dab8ba7.1240464569@sermon.lab.mkp.net>
+Subject: [PATCH 3 of 8] MD: Use new topology calls to indicate alignment and
+	I/O sizes
+Date: Thu, 23 Apr 2009 01:29:30 -0400
+Message-ID: <6299f854d41fd274b047.1240464570@sermon.lab.mkp.net>
 References: <patchbomb.1240464567@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jaguar.mkp.net ([192.139.46.146]:54665 "EHLO jaguar.mkp.net"
+Received: from jaguar.mkp.net ([192.139.46.146]:54638 "EHLO jaguar.mkp.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752294AbZDWFtZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Apr 2009 01:49:25 -0400
+	id S1751470AbZDWFtT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Apr 2009 01:49:19 -0400
 In-Reply-To: <patchbomb.1240464567@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: rwheeler@redhat.com, snitzer@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org
 
-To support devices with physical block sizes bigger than 512 bytes we
-need to ensure proper alignment.  This patch adds support for exposing
-I/O topology characteristics as devices are stacked.
+Switch MD over to the new blk_queue_stack_topology() function which
+checks for aligment and adjusts preferred I/O sizes when stacking.
 
-  hardsect_size remains unchanged.  It is the smallest atomic unit the
-  device can address (i.e. logical block size).
-
-  granularity indicates the smallest I/O the device can access without
-  incurring a read-modify-write penalty.  The granularity is set by
-  low-level drivers from then on it is purely internal to the stacking
-  logic.
-
-  The min_io parameter is the smallest preferred I/O size reported by
-  the device.  In many cases this is the same as granularity.  However,
-  the min_io parameter can be scaled up when stacking (RAID5 chunk
-  size > physical sector size).  min_io is available in sysfs.
-
-  The opt_io characteristic indicates the preferred I/O size reported by
-  the device.  This is usually the stripe width for arrays.  The value
-  is in sysfs.
-
-  The alignment parameter indicates the number of bytes the start of the
-  device/partition is offset from the device granularity.  Partition
-  tools and MD/DM tools can use this to align filesystems to the proper
-  boundaries.
+Also warn if an MD device contains misaligned components.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 ---
-6 files changed, 204 insertions(+), 4 deletions(-)
-block/blk-settings.c   |  135 ++++++++++++++++++++++++++++++++++++++++++++++--
-block/blk-sysfs.c      |   22 +++++++
-block/genhd.c          |   10 +++
-fs/partitions/check.c  |   10 +++
-include/linux/blkdev.h |   30 ++++++++++
-include/linux/genhd.h  |    1 
+6 files changed, 73 insertions(+), 15 deletions(-)
+drivers/md/linear.c    |   10 ++++++++--
+drivers/md/multipath.c |    5 ++---
+drivers/md/raid0.c     |   14 ++++++++++++--
+drivers/md/raid1.c     |   19 +++++++++++++++----
+drivers/md/raid10.c    |   23 +++++++++++++++++++----
+drivers/md/raid5.c     |   17 +++++++++++++++++
 
 
 
-diff --git a/block/blk-settings.c b/block/blk-settings.c
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -292,22 +292,87 @@ EXPORT_SYMBOL(blk_queue_max_segment_size
-  *
-  * Description:
-  *   This should typically be set to the lowest possible sector size
-- *   that the hardware can operate on (possible without reverting to
-- *   even internal read-modify-write operations). Usually the default
-- *   of 512 covers most hardware.
-+ *   (logical block size) that the hardware can operate on.  Usually the
-+ *   default of 512 covers most hardware.
-  **/
- void blk_queue_hardsect_size(struct request_queue *q, unsigned short size)
- {
--	q->hardsect_size = size;
-+	q->hardsect_size = q->granularity = size;
+diff --git a/drivers/md/linear.c b/drivers/md/linear.c
+--- a/drivers/md/linear.c
++++ b/drivers/md/linear.c
+@@ -139,8 +139,8 @@ static linear_conf_t *linear_conf(mddev_
+ 
+ 		disk->rdev = rdev;
+ 
+-		blk_queue_stack_limits(mddev->queue,
+-				       rdev->bdev->bd_disk->queue);
++		blk_queue_stack_topology(mddev->queue, rdev->bdev,
++					 rdev->data_offset);
+ 		/* as we don't honour merge_bvec_fn, we must never risk
+ 		 * violating it, so limit ->max_sector to one PAGE, as
+ 		 * a one page request is never in violation.
+@@ -154,6 +154,12 @@ static linear_conf_t *linear_conf(mddev_
+ 
+ 		cnt++;
+ 	}
++
++	if (queue_alignment(mddev->queue) < 0)
++		printk(KERN_NOTICE
++		       "Warning: %s has one or more misaligned components\n",
++		       mdname(mddev));
++
+ 	if (cnt != raid_disks) {
+ 		printk("linear: not enough drives present. Aborting!\n");
+ 		goto out;
+diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
+--- a/drivers/md/multipath.c
++++ b/drivers/md/multipath.c
+@@ -294,7 +294,7 @@ static int multipath_add_disk(mddev_t *m
+ 	for (path = first; path <= last; path++)
+ 		if ((p=conf->multipaths+path)->rdev == NULL) {
+ 			q = rdev->bdev->bd_disk->queue;
+-			blk_queue_stack_limits(mddev->queue, q);
++			blk_queue_stack_topology(mddev->queue, rdev->bdev, 0);
+ 
+ 		/* as we don't honour merge_bvec_fn, we must never risk
+ 		 * violating it, so limit ->max_sector to one PAGE, as
+@@ -461,8 +461,7 @@ static int multipath_run (mddev_t *mddev
+ 		disk = conf->multipaths + disk_idx;
+ 		disk->rdev = rdev;
+ 
+-		blk_queue_stack_limits(mddev->queue,
+-				       rdev->bdev->bd_disk->queue);
++		blk_queue_stack_topology(mddev->queue, rdev->bdev, 0);
+ 		/* as we don't honour merge_bvec_fn, we must never risk
+ 		 * violating it, not that we ever expect a device with
+ 		 * a merge_bvec_fn to be involved in multipath */
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -120,6 +120,10 @@ static int create_strip_zones (mddev_t *
+ 	zone = &conf->strip_zone[0];
+ 	cnt = 0;
+ 	smallest = NULL;
++
++	blk_queue_min_io(mddev->queue, mddev->chunk_size);
++	blk_queue_opt_io(mddev->queue, mddev->chunk_size * mddev->raid_disks);
++
+ 	zone->dev = conf->devlist;
+ 	list_for_each_entry(rdev1, &mddev->disks, same_set) {
+ 		int j = rdev1->raid_disk;
+@@ -136,8 +140,8 @@ static int create_strip_zones (mddev_t *
+ 		}
+ 		zone->dev[j] = rdev1;
+ 
+-		blk_queue_stack_limits(mddev->queue,
+-				       rdev1->bdev->bd_disk->queue);
++		blk_queue_stack_topology(mddev->queue, rdev1->bdev,
++					 rdev1->data_offset);
+ 		/* as we don't honour merge_bvec_fn, we must never risk
+ 		 * violating it, so limit ->max_sector to one PAGE, as
+ 		 * a one page request is never in violation.
+@@ -151,6 +155,12 @@ static int create_strip_zones (mddev_t *
+ 			smallest = rdev1;
+ 		cnt++;
+ 	}
++
++	if (queue_alignment(mddev->queue) < 0)
++		printk(KERN_NOTICE
++		       "Warning: %s has one or more misaligned components\n",
++		       mdname(mddev));
++
+ 	if (cnt != mddev->raid_disks) {
+ 		printk(KERN_ERR "raid0: too few disks (%d of %d) - "
+ 			"aborting!\n", cnt, mddev->raid_disks);
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1123,8 +1123,8 @@ static int raid1_add_disk(mddev_t *mddev
+ 	for (mirror = first; mirror <= last; mirror++)
+ 		if ( !(p=conf->mirrors+mirror)->rdev) {
+ 
+-			blk_queue_stack_limits(mddev->queue,
+-					       rdev->bdev->bd_disk->queue);
++			blk_queue_stack_topology(mddev->queue, rdev->bdev,
++						 rdev->data_offset);
+ 			/* as we don't honour merge_bvec_fn, we must never risk
+ 			 * violating it, so limit ->max_sector to one PAGE, as
+ 			 * a one page request is never in violation.
+@@ -1145,6 +1145,11 @@ static int raid1_add_disk(mddev_t *mddev
+ 			break;
+ 		}
+ 
++	if (queue_alignment(mddev->queue) < 0)
++		printk(KERN_NOTICE
++		       "Warning: %s has one or more misaligned components\n",
++		       mdname(mddev));
++
+ 	print_conf(conf);
+ 	return err;
  }
- EXPORT_SYMBOL(blk_queue_hardsect_size);
+@@ -1989,8 +1994,8 @@ static int run(mddev_t *mddev)
  
-+/**
-+ * blk_queue_granularity - set I/O granularity for the queue
-+ * @q:  the request queue for the device
-+ * @size:  the I/O granularity, in bytes
-+ *
-+ * Description:
-+ *   This should typically be set to the lowest possible sector size
-+ *   that the hardware can operate on without reverting to
-+ *   read-modify-write operations.
-+ **/
-+void blk_queue_granularity(struct request_queue *q, unsigned short size)
-+{
-+	q->granularity = size;
-+}
-+EXPORT_SYMBOL(blk_queue_granularity);
-+
-+/**
-+ * blk_queue_alignment - set alignment for the queue
-+ * @q:  the request queue for the device
-+ * @alignment:  alignment offset in bytes
-+ *
-+ * Description:
-+ *   Some devices are naturally misaligned to compensate for things like
-+ *   the legacy DOS partition table 63-sector offset.  Low-level drivers
-+ *   should call this function for devices whose first sector is not
-+ *   naturally aligned.
-+ */
-+void blk_queue_alignment(struct request_queue *q, unsigned int alignment)
-+{
-+	q->alignment = alignment & (q->granularity - 1);
-+	clear_bit(QUEUE_FLAG_MISALIGNED, &q->queue_flags);
-+}
-+EXPORT_SYMBOL(blk_queue_alignment);
-+
- /*
-  * Returns the minimum that is _not_ zero, unless both are zero.
-  */
- #define min_not_zero(l, r) (l == 0) ? r : ((r == 0) ? l : min(l, r))
+ 		disk->rdev = rdev;
  
- /**
-+ * blk_queue_min_io - set minimum request size for the queue
-+ * @q:  the request queue for the device
-+ * @min_io:  smallest I/O size in bytes
-+ *
-+ * Description:
-+ *   Some devices have an internal block size bigger than the reported
-+ *   hardware sector size.  This function can be used to signal the
-+ *   smallest I/O the device can perform without incurring a performance
-+ *   penalty.
-+ */
-+void blk_queue_min_io(struct request_queue *q, unsigned int min_io)
-+{
-+	q->min_io = min_io;
-+}
-+EXPORT_SYMBOL(blk_queue_min_io);
-+
-+/**
-+ * blk_queue_opt_io - set optimal request size for the queue
-+ * @q:  the request queue for the device
-+ * @opt_io:  optimal request size in bytes
-+ *
-+ * Description:
-+ *   Drivers can call this function to set the preferred I/O request
-+ *   size for devices that report such a value.
-+ */
-+void blk_queue_opt_io(struct request_queue *q, unsigned int opt_io)
-+{
-+	q->opt_io = opt_io;
-+}
-+EXPORT_SYMBOL(blk_queue_opt_io);
-+
-+/**
-  * blk_queue_stack_limits - inherit underlying queue limits for stacked drivers
-  * @t:	the stacking driver (top)
-  * @b:  the underlying device (bottom)
-@@ -335,6 +400,68 @@ void blk_queue_stack_limits(struct reque
- EXPORT_SYMBOL(blk_queue_stack_limits);
+-		blk_queue_stack_limits(mddev->queue,
+-				       rdev->bdev->bd_disk->queue);
++		blk_queue_stack_topology(mddev->queue, rdev->bdev,
++					 rdev->data_offset);
+ 		/* as we don't honour merge_bvec_fn, we must never risk
+ 		 * violating it, so limit ->max_sector to one PAGE, as
+ 		 * a one page request is never in violation.
+@@ -2001,6 +2006,12 @@ static int run(mddev_t *mddev)
  
- /**
-+ * blk_queue_stack_topology - adjust queue limits for stacked drivers
-+ * @t:	the stacking driver (top)
-+ * @bdev:  the underlying block device (bottom)
-+ * @offset:  offset to beginning of data within component device
-+ **/
-+void blk_queue_stack_topology(struct request_queue *t, struct block_device *bdev,
-+			      sector_t offset)
-+{
-+	struct request_queue *b = bdev_get_queue(bdev);
-+	int misaligned;
+ 		disk->head_position = 0;
+ 	}
 +
-+	/* zero is "infinity" */
-+	t->max_sectors = min_not_zero(t->max_sectors, b->max_sectors);
-+	t->max_hw_sectors = min_not_zero(t->max_hw_sectors, b->max_hw_sectors);
-+	t->seg_boundary_mask = min_not_zero(t->seg_boundary_mask, b->seg_boundary_mask);
++	if (queue_alignment(mddev->queue) < 0)
++		printk(KERN_NOTICE
++		       "Warning: %s has one or more misaligned components\n",
++		       mdname(mddev));
 +
-+	t->max_phys_segments = min_not_zero(t->max_phys_segments, b->max_phys_segments);
-+	t->max_hw_segments = min_not_zero(t->max_hw_segments, b->max_hw_segments);
-+	t->max_segment_size = min_not_zero(t->max_segment_size, b->max_segment_size);
-+	t->hardsect_size = max(t->hardsect_size, b->hardsect_size);
-+	t->min_io = max(t->min_io, b->min_io);
-+	t->granularity = max(t->granularity, b->granularity);
+ 	conf->raid_disks = mddev->raid_disks;
+ 	conf->mddev = mddev;
+ 	INIT_LIST_HEAD(&conf->retry_list);
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1151,8 +1151,8 @@ static int raid10_add_disk(mddev_t *mdde
+ 	for ( ; mirror <= last ; mirror++)
+ 		if ( !(p=conf->mirrors+mirror)->rdev) {
+ 
+-			blk_queue_stack_limits(mddev->queue,
+-					       rdev->bdev->bd_disk->queue);
++			blk_queue_stack_topology(mddev->queue, rdev->bdev,
++						 rdev->data_offset);
+ 			/* as we don't honour merge_bvec_fn, we must never risk
+ 			 * violating it, so limit ->max_sector to one PAGE, as
+ 			 * a one page request is never in violation.
+@@ -1170,6 +1170,11 @@ static int raid10_add_disk(mddev_t *mdde
+ 			break;
+ 		}
+ 
++	if (queue_alignment(mddev->queue) < 0)
++		printk(KERN_NOTICE
++		       "Warning: %s has one or more misaligned components\n",
++		       mdname(mddev));
 +
-+	misaligned = 0;
-+	offset += get_start_sect(bdev) << 9;
-+
-+	/* Bottom device offset aligned? */
-+	if (offset && (offset & (b->granularity - 1)) != b->alignment) {
-+		misaligned = 1;
-+		goto out;
-+	}
-+
-+	/* If top has no alignment, inherit from bottom */
-+	if (!t->alignment)
-+		t->alignment = b->alignment & (b->granularity - 1);
-+
-+	/* Top alignment on logical block boundary? */
-+	if (t->alignment & (t->hardsect_size - 1)) {
-+		misaligned = 1;
-+		goto out;
-+	}
-+
-+out:
-+	if (!t->queue_lock)
-+		WARN_ON_ONCE(1);
-+	else if (misaligned || !test_bit(QUEUE_FLAG_CLUSTER, &b->queue_flags)) {
-+		unsigned long flags;
-+
-+		spin_lock_irqsave(t->queue_lock, flags);
-+
-+		if (!test_bit(QUEUE_FLAG_CLUSTER, &b->queue_flags))
-+			queue_flag_clear(QUEUE_FLAG_CLUSTER, t);
-+
-+		if (misaligned)
-+			queue_flag_set(QUEUE_FLAG_MISALIGNED, t);
-+
-+		spin_unlock_irqrestore(t->queue_lock, flags);
-+	}
-+}
-+EXPORT_SYMBOL(blk_queue_stack_topology);
-+
-+/**
-  * blk_queue_dma_pad - set pad mask
-  * @q:     the request queue for the device
-  * @mask:  pad mask
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -105,6 +105,16 @@ static ssize_t queue_hw_sector_size_show
- 	return queue_var_show(q->hardsect_size, page);
+ 	print_conf(conf);
+ 	return err;
  }
+@@ -2129,6 +2134,10 @@ static int run(mddev_t *mddev)
+ 	spin_lock_init(&conf->device_lock);
+ 	mddev->queue->queue_lock = &conf->device_lock;
  
-+static ssize_t queue_min_io_show(struct request_queue *q, char *page)
-+{
-+	return queue_var_show(q->min_io, page);
-+}
++	blk_queue_min_io(mddev->queue, mddev->chunk_size);
++	blk_queue_opt_io(mddev->queue,
++			 (mddev->chunk_size * mddev->raid_disks) >> 1);
 +
-+static ssize_t queue_opt_io_show(struct request_queue *q, char *page)
-+{
-+	return queue_var_show(q->opt_io, page);
-+}
-+
- static ssize_t
- queue_max_sectors_store(struct request_queue *q, const char *page, size_t count)
- {
-@@ -256,6 +266,16 @@ static struct queue_sysfs_entry queue_hw
- 	.show = queue_hw_sector_size_show,
- };
+ 	list_for_each_entry(rdev, &mddev->disks, same_set) {
+ 		disk_idx = rdev->raid_disk;
+ 		if (disk_idx >= mddev->raid_disks
+@@ -2138,8 +2147,8 @@ static int run(mddev_t *mddev)
  
-+static struct queue_sysfs_entry queue_min_io_entry = {
-+	.attr = {.name = "minimum_io_size", .mode = S_IRUGO },
-+	.show = queue_min_io_show,
-+};
-+
-+static struct queue_sysfs_entry queue_opt_io_entry = {
-+	.attr = {.name = "optimal_io_size", .mode = S_IRUGO },
-+	.show = queue_opt_io_show,
-+};
-+
- static struct queue_sysfs_entry queue_nonrot_entry = {
- 	.attr = {.name = "rotational", .mode = S_IRUGO | S_IWUSR },
- 	.show = queue_nonrot_show,
-@@ -287,6 +307,8 @@ static struct attribute *default_attrs[]
- 	&queue_max_sectors_entry.attr,
- 	&queue_iosched_entry.attr,
- 	&queue_hw_sector_size_entry.attr,
-+	&queue_min_io_entry.attr,
-+	&queue_opt_io_entry.attr,
- 	&queue_nonrot_entry.attr,
- 	&queue_nomerges_entry.attr,
- 	&queue_rq_affinity_entry.attr,
-diff --git a/block/genhd.c b/block/genhd.c
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -848,11 +848,20 @@ static ssize_t disk_capability_show(stru
- 	return sprintf(buf, "%x\n", disk->flags);
- }
+ 		disk->rdev = rdev;
  
-+static ssize_t disk_alignment_show(struct device *dev,
-+				   struct device_attribute *attr, char *buf)
-+{
-+	struct gendisk *disk = dev_to_disk(dev);
-+
-+	return sprintf(buf, "%d\n", queue_alignment(disk->queue));
-+}
-+
- static DEVICE_ATTR(range, S_IRUGO, disk_range_show, NULL);
- static DEVICE_ATTR(ext_range, S_IRUGO, disk_ext_range_show, NULL);
- static DEVICE_ATTR(removable, S_IRUGO, disk_removable_show, NULL);
- static DEVICE_ATTR(ro, S_IRUGO, disk_ro_show, NULL);
- static DEVICE_ATTR(size, S_IRUGO, part_size_show, NULL);
-+static DEVICE_ATTR(alignment, S_IRUGO, disk_alignment_show, NULL);
- static DEVICE_ATTR(capability, S_IRUGO, disk_capability_show, NULL);
- static DEVICE_ATTR(stat, S_IRUGO, part_stat_show, NULL);
- #ifdef CONFIG_FAIL_MAKE_REQUEST
-@@ -871,6 +880,7 @@ static struct attribute *disk_attrs[] = 
- 	&dev_attr_removable.attr,
- 	&dev_attr_ro.attr,
- 	&dev_attr_size.attr,
-+	&dev_attr_alignment.attr,
- 	&dev_attr_capability.attr,
- 	&dev_attr_stat.attr,
- #ifdef CONFIG_FAIL_MAKE_REQUEST
-diff --git a/fs/partitions/check.c b/fs/partitions/check.c
---- a/fs/partitions/check.c
-+++ b/fs/partitions/check.c
-@@ -219,6 +219,13 @@ ssize_t part_size_show(struct device *de
- 	return sprintf(buf, "%llu\n",(unsigned long long)p->nr_sects);
- }
+-		blk_queue_stack_limits(mddev->queue,
+-				       rdev->bdev->bd_disk->queue);
++		blk_queue_stack_topology(mddev->queue, rdev->bdev,
++					 rdev->data_offset);
+ 		/* as we don't honour merge_bvec_fn, we must never risk
+ 		 * violating it, so limit ->max_sector to one PAGE, as
+ 		 * a one page request is never in violation.
+@@ -2150,6 +2159,12 @@ static int run(mddev_t *mddev)
  
-+ssize_t part_alignment_show(struct device *dev,
-+			    struct device_attribute *attr, char *buf)
-+{
-+	struct hd_struct *p = dev_to_part(dev);
-+	return sprintf(buf, "%llu\n", (unsigned long long)p->alignment);
-+}
+ 		disk->head_position = 0;
+ 	}
 +
- ssize_t part_stat_show(struct device *dev,
- 		       struct device_attribute *attr, char *buf)
- {
-@@ -272,6 +279,7 @@ ssize_t part_fail_store(struct device *d
- static DEVICE_ATTR(partition, S_IRUGO, part_partition_show, NULL);
- static DEVICE_ATTR(start, S_IRUGO, part_start_show, NULL);
- static DEVICE_ATTR(size, S_IRUGO, part_size_show, NULL);
-+static DEVICE_ATTR(alignment, S_IRUGO, part_alignment_show, NULL);
- static DEVICE_ATTR(stat, S_IRUGO, part_stat_show, NULL);
- #ifdef CONFIG_FAIL_MAKE_REQUEST
- static struct device_attribute dev_attr_fail =
-@@ -282,6 +290,7 @@ static struct attribute *part_attrs[] = 
- 	&dev_attr_partition.attr,
- 	&dev_attr_start.attr,
- 	&dev_attr_size.attr,
-+	&dev_attr_alignment.attr,
- 	&dev_attr_stat.attr,
- #ifdef CONFIG_FAIL_MAKE_REQUEST
- 	&dev_attr_fail.attr,
-@@ -383,6 +392,7 @@ struct hd_struct *add_partition(struct g
- 	pdev = part_to_dev(p);
++	if (queue_alignment(mddev->queue) < 0)
++		printk(KERN_NOTICE
++		       "Warning: %s has one or more misaligned components\n",
++		       mdname(mddev));
++
+ 	INIT_LIST_HEAD(&conf->retry_list);
  
- 	p->start_sect = start;
-+	p->alignment = queue_sector_alignment(disk->queue, start);
- 	p->nr_sects = len;
- 	p->partno = partno;
- 	p->policy = get_disk_ro(disk);
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -402,6 +402,10 @@ struct request_queue
- 	unsigned short		max_hw_segments;
- 	unsigned short		hardsect_size;
- 	unsigned int		max_segment_size;
-+	unsigned int		alignment;
-+	unsigned int		granularity;
-+	unsigned int		min_io;
-+	unsigned int		opt_io;
+ 	spin_lock_init(&conf->resync_lock);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -4601,6 +4601,23 @@ static int run(mddev_t *mddev)
+ 	md_set_array_sectors(mddev, raid5_size(mddev, 0, 0));
  
- 	unsigned long		seg_boundary_mask;
- 	void			*dma_drain_buffer;
-@@ -461,6 +465,7 @@ struct request_queue
- #define QUEUE_FLAG_NONROT      14	/* non-rotational device (SSD) */
- #define QUEUE_FLAG_VIRT        QUEUE_FLAG_NONROT /* paravirt device */
- #define QUEUE_FLAG_IO_STAT     15	/* do IO stats */
-+#define QUEUE_FLAG_MISALIGNED  16	/* bdev not aligned to disk */
+ 	blk_queue_merge_bvec(mddev->queue, raid5_mergeable_bvec);
++	blk_queue_min_io(mddev->queue, mddev->chunk_size);
++
++	if (mddev->level == 5)
++		blk_queue_opt_io(mddev->queue,
++				 mddev->chunk_size * (mddev->raid_disks - 1));
++	else
++		blk_queue_opt_io(mddev->queue,
++				 mddev->chunk_size * (mddev->raid_disks - 2));
++
++	list_for_each_entry(rdev, &mddev->disks, same_set)
++		blk_queue_stack_topology(mddev->queue, rdev->bdev,
++					 rdev->data_offset);
++
++	if (queue_alignment(mddev->queue) < 0)
++		printk(KERN_NOTICE
++		       "Warning: %s has one or more misaligned components\n",
++		       mdname(mddev));
  
- #define QUEUE_FLAG_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
- 				 (1 << QUEUE_FLAG_CLUSTER) |		\
-@@ -877,7 +882,15 @@ extern void blk_queue_max_phys_segments(
- extern void blk_queue_max_hw_segments(struct request_queue *, unsigned short);
- extern void blk_queue_max_segment_size(struct request_queue *, unsigned int);
- extern void blk_queue_hardsect_size(struct request_queue *, unsigned short);
-+extern void blk_queue_granularity(struct request_queue *, unsigned short);
-+extern void blk_queue_alignment(struct request_queue *q,
-+				unsigned int alignment);
-+extern void blk_queue_min_io(struct request_queue *q, unsigned int min_io);
-+extern void blk_queue_opt_io(struct request_queue *q, unsigned int opt_io);
- extern void blk_queue_stack_limits(struct request_queue *t, struct request_queue *b);
-+extern void blk_queue_stack_topology(struct request_queue *t,
-+				     struct block_device *bdev,
-+				     sector_t offset);
- extern void blk_queue_dma_pad(struct request_queue *, unsigned int);
- extern void blk_queue_update_dma_pad(struct request_queue *, unsigned int);
- extern int blk_queue_dma_drain(struct request_queue *q,
-@@ -978,6 +991,23 @@ static inline int bdev_hardsect_size(str
- 	return queue_hardsect_size(bdev_get_queue(bdev));
- }
- 
-+static inline int queue_alignment(struct request_queue *q)
-+{
-+	if (q && test_bit(QUEUE_FLAG_MISALIGNED, &q->queue_flags))
-+		return -1;
-+
-+	if (q && q->alignment)
-+		return q->alignment;
-+
-+	return 0;
-+}
-+
-+static inline int queue_sector_alignment(struct request_queue *q,
-+					 sector_t sector)
-+{
-+	return ((sector << 9) - q->alignment) & (q->min_io - 1);
-+}
-+
- static inline int queue_dma_alignment(struct request_queue *q)
- {
- 	return q ? q->dma_alignment : 511;
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -90,6 +90,7 @@ struct disk_stats {
- struct hd_struct {
- 	sector_t start_sect;
- 	sector_t nr_sects;
-+	sector_t alignment;
- 	struct device __dev;
- 	struct kobject *holder_dir;
- 	int policy, partno;
+ 	return 0;
+ abort:
 
 
