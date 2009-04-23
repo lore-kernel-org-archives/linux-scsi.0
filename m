@@ -1,85 +1,115 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [Bug 13143] New: scsi_debug doesn't manage more than 1Tb
-Date: Wed, 22 Apr 2009 17:42:25 -0700 (PDT)
-Message-ID: <20090423094200T.fujita.tomonori@lab.ntt.co.jp>
-References: <bug-13143-11613@http.bugzilla.kernel.org/>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [usb-storage] [PATCH] SCSI: add check_capacity flag and
+ sd_read_last_sector()
+Date: Wed, 22 Apr 2009 22:33:47 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0904222225030.23171-100000@netrider.rowland.org>
+References: <20090422230319.GA24621@ub>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:41219 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751240AbZDWAm1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2009 20:42:27 -0400
-Received: by wf-out-1314.google.com with SMTP id 26so217719wfd.4
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2009 17:42:26 -0700 (PDT)
-In-Reply-To: <bug-13143-11613@http.bugzilla.kernel.org/>
+Received: from netrider.rowland.org ([192.131.102.5]:48839 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752081AbZDWCdv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2009 22:33:51 -0400
+In-Reply-To: <20090422230319.GA24621@ub>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org, dgilbert@interlog.com
+To: "Andries E. Brouwer" <Andries.Brouwer@cwi.nl>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH <greg@kroah.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Tue, 21 Apr 2009 16:07:08 GMT
-bugzilla-daemon@bugzilla.kernel.org wrote:
+On Thu, 23 Apr 2009, Andries E. Brouwer wrote:
 
-> http://bugzilla.kernel.org/show_bug.cgi?id=13143
+> > Note that a certain amount of I/O goes on independent of userspace (to
+> > determine the partitioning, if nothing else).  One can make a good case
+> > that this "check the last sector" falls into the same category.
 > 
->            Summary: scsi_debug doesn't manage more than 1Tb
->            Product: SCSI Drivers
->            Version: 2.5
->           Platform: All
->         OS/Version: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: Other
->         AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
->         ReportedBy: tvignaud@mandriva.com
->         Regression: No
+> Yes - I have often muttered about that as well. It has caused problems.
+> One should not try to read a partition table when confronted with a
+> random block device with random data. Only when user space asks.
 > 
+> There have been times when the random device was a magtape, and reading
+> the last tape block would take an hour or so. Timing is something to
+> worry about. When I started using computers boot time was much less
+> than 0.1 second, not noticeable. Today lots of nonsensical things happen
+> and together cause a minute delay, even though computers are ten thousand
+> times faster.
+> Also the error recovery of a SCSI device takes seconds, and only because
+> I removed code that did make it minutes (with many retries on all levels).
 > 
-> While debugging a partitionner software that has issues with disks bigger than
-> 1Tb, I found out that scsi_debug doesn't manage more than 1Tb:
+> Police needs systems that do not tamper with their data.
+> If they take or copy a disk for forensic purposes the disk or copy
+> should remain pristine, precisely as it was found, and not one bit
+> should be changed. Especially time stamps can be important in
+> investigations. But if one mounts ext3 read-only, Linux will (or
+> perhaps would, I have not checked recently) still write to the disk
+> as a result of replaying the journal.
 > 
-> # modprobe scsi_debug virtual_gb=1000
-> # cat /proc/partitions |fgrep sdc
->    8       32 1048576000 sdc
-> # rmmod scsi_debug
-> # modprobe scsi_debug virtual_gb=1100
-> # cat /proc/partitions |fgrep sdc
->    8       32 9223372035860725760 sdc
+> Some disks are used with a whole-disk filesystem, without partition table.
 > 
+> A good system does no I/O at all, unless there is a request.
 > 
-> dmesg shows that the additionnal 100Gb makes it loose sight:
-> sd 16:0:0:0: [sdc] 2097152000 512-byte hardware sectors: (1.07 TB/1000 GiB)
-> versus:
-> sd 15:0:0:0: [sdc] 18446744071721451520 512-byte hardware sectors: (18.4
-> EB/15.9 EiB)
+> > > (So - this would be much more work, but I would prefer a capacity value
+> > > that says "it reported this, but we have not checked yet - try an actual
+> > > I/O if you really want to know", and leave it at that until the value is
+> > > needed. Typically one needs the value (i) to check against it if one
+> > > wants to do I/O, or (ii) when user space asks for it because some fdisk type
+> > > program is invoked. In case (i) an additional read is superfluous.
+> > > In case (ii) user space asked and we try to make sure.)
+> > > 
+> > > Comments?
+> > 
+> > How would the kernel know when it needed to make sure?  By the time an 
+> > actual I/O request from userspace arrives, it's probably too late -- 
+> > the task has already looked at the capacity value and doesn't know that 
+> > the capacity might change spontaneously.
+> 
+> Consider the situation of the old days: a magtape. We used magtape
+> as a block device, but asking for the capacity was a very expensive
+> question - it would involve spooling to the end, and hoping that there
+> was a good tape mark. (Otherwise operator intervention would be needed.)
+> It is not difficult for software to cope with the situation of unknown
+> capacity. It is just a bit silly to write the corresponding code today.
+> There is not enough motivation.
+> 
+> So, I do not object to your code, I just hope that you have a little bit
+> of a bad conscience - the hope to do things right at some unspecified
+> moment in the future.
+> 
+> > As a more theoretical point, consider what would happen if the last 
+> > partition included the "last" sector.  If the capacity got changed 
+> > after the partitions were determined, we could run into trouble.  
+> > Better to adjust the capacity right away, before a bogus value can get 
+> > used.
+> 
+> I disagree. Indeed, consider the situation that some file includes
+> the last sector. Then probably that last sector really exists,
+> and probing is superfluous, a waste of time, possibly needless wear of
+> the device. Consider the situation that a partition includes the last
+> sector. Then the entity that was responsible for the partitioning
+> determined that this last sector is there, and we need not check again.
+> 
+> You see - really the only ordinary software that would be interested
+> is fdisk type software. It does a get_capacity ioctl, and this ioctl
+> should cause the kernel to really find out about the size.
+> 
+> (Yes, I know, there are a few other cases, e.g. for RAIDs.)
+> 
+> And, something I have seen several times: for forensic use one
+> sometimes copies the start of a device, just because one's own
+> disk is smaller than the suspect's disk. Linux should be able to
+> handle the situation of a partition table that describes a
+> partition that extends beyond the end of the disk. All should be
+> fine, except of course that actual I/O to nonexistent sectors causes
+> an I/O error.
 
+I agree with quite a lot (though not all) of what you say.  However
+there's no reason to argue/discuss it further; no doubt you are already
+aware of all the important points on both sides of the issue.
 
-=
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] scsi_debug: fix virtual disk larger than 1TB 
+I _do_ have a somewhat guilty conscience over introducing an extra 
+unsolicited read (actually a pair of reads, since the patch reads 
+sector 0 before trying to read the last sector).  In the end, the only 
+justification is practicality -- the alternative was less workable.
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/scsi/scsi_debug.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 213123b..41a2177 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -887,7 +887,7 @@ static int resp_start_stop(struct scsi_cmnd * scp,
- static sector_t get_sdebug_capacity(void)
- {
- 	if (scsi_debug_virtual_gb > 0)
--		return 2048 * 1024 * scsi_debug_virtual_gb;
-+		return 2048 * 1024 * (sector_t)scsi_debug_virtual_gb;
- 	else
- 		return sdebug_store_sectors;
- }
--- 
-1.5.6.5
+Alan Stern
 
