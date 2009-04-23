@@ -1,45 +1,45 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 5 of 8] sd: Detect non-rotational devices
-Date: Thu, 23 Apr 2009 09:33:47 -0400
-Message-ID: <49F06E3B.104@garzik.org>
-References: <patchbomb.1240464567@sermon.lab.mkp.net>	<d14109aa6209be628074.1240464572@sermon.lab.mkp.net>	<20090423105245.GX4593@kernel.dk> <49F04C71.6050304@garzik.org>	<20090423113841.GK1926@parisc-linux.org> <yq1r5zjbje2.fsf@sermon.lab.mkp.net>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 8 of 8] libata: Report disk alignment and physical block size
+Date: Thu, 23 Apr 2009 10:05:50 -0400
+Message-ID: <yq1iqkvbh35.fsf@sermon.lab.mkp.net>
+References: <patchbomb.1240464567@sermon.lab.mkp.net>
+	<29bae7aef942a1709bb6.1240464575@sermon.lab.mkp.net>
+	<20090423134617.GO1926@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <yq1r5zjbje2.fsf@sermon.lab.mkp.net>
+In-Reply-To: <20090423134617.GO1926@parisc-linux.org> (Matthew Wilcox's
+	message of "Thu, 23 Apr 2009 07:46:17 -0600")
 Sender: linux-ide-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Jens Axboe <jens.axboe@oracle.com>, rwheeler@redhat.com, snitzer@redhat.com, neilb@suse.de, James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, rwheeler@redhat.com, snitzer@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Martin K. Petersen wrote:
->>>>>> "Matthew" == Matthew Wilcox <matthew@wil.cx> writes:
-> 
-> Matthew> I already did that.  The only problem is that you made me
-> Matthew> include the stupid:
-> 
-> Matthew>         if (ata_id_major_version(args->id) > 7) {
-> 
-> Matthew> so of course it doesn't work on any existing hardware.  How
-> Matthew> about applying this patch:
-> 
-> Maybe we could incubate your patch in the next tree for a bit and see
-> what breaks without the version check?
-> 
-> We could even be somewhat conservative like we were with RC16 in SCSI.
-> The SATA devices I have here with valid rotational flags all report
-> version 7.  I wonder if > 6 do the trick?
+>>>>> "Matthew" == Matthew Wilcox <matthew@wil.cx> writes:
 
-linux/ata.h illustrates the standard ATA rules for validating bits of 
-IDENTIFY DEVICE.
+Matthew> I found it clearer to do:
+Matthew> 			u16 first = word_209 & 0x3fff; if
+Matthew> 			(first)
+Matthew> 				lowest_aligned = (1 <<
+Matthew> 				log_per_phys) - first;
 
-Just checking the version was always just a simplistic hack...  we are 
-talking specifically about trusting values listed as undefined in the 
-relevant specs.  That requires more, not less, gymnastics :)
+Matthew> but you may disagree.
 
-	Jeff
+I don't care much either way.
 
 
+>> + rbuf[14] = (lowest_aligned_lba >> 8) & 0x3f;
 
+Matthew> Hm, yes, it could overflow ... 1 << 0xf -1 is 32767 (0x7fff)
+Matthew> which would be larger than could fit in SCSI's RC16 and ends up
+Matthew> inadvertently setting Thin Provisioning Read Zeroes, which we
+Matthew> really don't want.  I suppose reporting 0x3fff is better than
+Matthew> reporting anything else in this field.  All highly theoretical,
+Matthew> since you'd have to have 16MB physical sectors with 512 byte
+Matthew> logical sectors to get to this situation.
 
+Yeah, I agree it's mostly in the academic interest bucket.  Just trying
+to be defensive about what we return, that's all.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
