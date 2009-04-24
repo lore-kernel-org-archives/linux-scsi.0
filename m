@@ -1,38 +1,48 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH] libata: rewrite SCSI host scheme to be one per ATA host
-Date: Fri, 24 Apr 2009 13:00:49 +0200
-Message-ID: <49F19BE1.6030104@s5r6.in-berlin.de>
-References: <20090422090929.GA14928@havoc.gtf.org> <da824cf30904221208l42e41d38g5af52b1b3b5ea9a1@mail.gmail.com>
+From: Kay Sievers <kay.sievers@vrfy.org>
+Subject: Re: [PATCH 2 of 9] block: Export I/O topology for block devices and
+	partitions
+Date: Fri, 24 Apr 2009 14:14:44 +0200
+Message-ID: <ac3eb2510904240514y660973abj7621864e11e514f2@mail.gmail.com>
+References: <patchbomb.1240551141@sermon.lab.mkp.net> <72f4e15760670febdb40.1240551143@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <da824cf30904221208l42e41d38g5af52b1b3b5ea9a1@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:47749 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752567AbZDXMPB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Apr 2009 08:15:01 -0400
+In-Reply-To: <72f4e15760670febdb40.1240551143@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: rwheeler@redhat.com, snitzer@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, jens.axboe@oracle.com, matthew@wil.cx, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Grant Grundler wrote:
-> Data Center
-> environments (not just Google's) like to track disks in many different
-> ways, including the SCSI identifiers since this one "key" for physical
-> location. Breaking the current mappings is going to cause some people
-> a world of pain
+On Fri, Apr 24, 2009 at 07:32, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+> +What: =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0/sys/block/<disk>/alignment
+> +What: =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0/sys/block/<disk>/<partition=
+>/alignment
+> +What: =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0/sys/block/<disk>/queue/mini=
+mum_io_size
+> +What: =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0/sys/block/<disk>/queue/opti=
+mal_io_size
 
-If by SCSI identifiers you mean the Linux SCSI core's h:c:i:l, then
-remember that these are scsi-core internal artifacts without any meaning
-to lower and upper layers whatsoever, including userspace.  (Exception:
- The c:i:l part has some significance with SCSI Parallel Interface
-attached hardware.)
+Wouldn't it be good to include "sector", like the queue files do? The
+alignment of a partition could mean many things.
+  /sys/block/<disk>/sector_alignment
+  /sys/block/<disk>/<partition>/sector_alignment
 
-> since they will need to manually build (and integrate)
-> old->new maps of the SCSI identifiers.
+And prefixing the io values might be easier to read when they show up
+in a group?
+  /sys/block/<disk>/queue/io_minimum_size
+  /sys/block/<disk>/queue/io_optimal_size
+  /sys/block/<disk>/queue/io_...
 
-Stock udev already provides mapping according to actually useful
-identifiers (if the respective transport provides them: persistent and
-unique identifiers of targets and logical units).
--- 
-Stefan Richter
--=====-==--= -=-- ==---
-http://arcgraph.de/sr/
+Thanks,
+Kay
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
