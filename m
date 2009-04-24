@@ -1,75 +1,58 @@
-From: Vaibhav Nipunage <vaibhavnipunage@gmail.com>
-Subject: Re: Mode Pages implementaion
-Date: Fri, 24 Apr 2009 18:54:59 +0530
-Message-ID: <51b3a25b0904240624n90f7392ve9d95d4d28667f3e@mail.gmail.com>
-References: <23213776.post@talk.nabble.com>
-	 <20090424122342.GZ1926@parisc-linux.org>
+From: Kalle Valo <kalle.valo@nokia.com>
+Subject: Re: 2.6.30-rc2-git2: Reported regressions from 2.6.29
+Date: Fri, 24 Apr 2009 16:44:22 +0300
+Message-ID: <87ljpqqi89.fsf@nokia.com>
+References: <EJaiQ4Wfaz.A.3YG.4v85JB@chimera>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:4408 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753946AbZDXNZB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Apr 2009 09:25:01 -0400
-Received: by yw-out-2324.google.com with SMTP id 5so652042ywb.1
-        for <linux-scsi@vger.kernel.org>; Fri, 24 Apr 2009 06:25:00 -0700 (PDT)
-In-Reply-To: <20090424122342.GZ1926@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <EJaiQ4Wfaz.A.3YG.4v85JB@chimera> (ext Rafael J. Wysocki's message of "Thu\, 16 Apr 2009 23\:42\:31 +0200")
+Sender: linux-acpi-owner@vger.kernel.org
+To: "ext Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
 
-Thanks Matthew for you help.
+"Rafael J. Wysocki" <rjw@sisk.pl> writes:
 
-I will go through the SPC-4 and read about it.
-
-But I tried the same (above) thing and try to connect the target
-through open iscsi initiator.In this case on target got 4 as a
-allocation length (for page of 3f). So how to respond information of
-all pages in those 4 bytes? or any thing wrong is happening? Correct
-me if I am wrong.
-
-Thanks once again.
-
-On Fri, Apr 24, 2009 at 5:53 PM, Matthew Wilcox <matthew@wil.cx> wrote:
-> On Fri, Apr 24, 2009 at 03:26:10AM -0700, VaibhavNipunage wrote:
->> When initiator sends Mode Sense (0x1Ah) with requested page opcode (=
-0x3F :
->> all pages), then at that time on target side, target got the Allocat=
-ion
->> Length as 192. I dont know why it is getting 192 size. I read PC-3 d=
-oc,
->> according to that target should receive 256 (for MODE SENSE 6) or 65=
-,536
->> (for MODE SENSE 10). I am confused why this is happening?
+> This message contains a list of some regressions from 2.6.29, for
+> which there are no fixes in the mainline I know of. If any of them
+> have been fixed already, please let me know.
 >
-> Allocation Length is the amount of space the initiator has available
-> for the response. =A0It can be any length (including zero, which SPC4=
- is
-> very clear is not an error). =A0See section 4.3.5.6 Allocation length=
- in
-> spc4r14 or 4.3.4.6 Allocation length in spc3r23.
+> If you know of any other unresolved regressions from 2.6.29, please
+> let me know either and I'll add them to the list. Also, please let
+> me know if any of the entries below are invalid.
 >
-> --
-> Matthew Wilcox =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0Int=
-el Open Source Technology Centre
-> "Bill, look, we understand that you're interested in selling us this
-> operating system, but compare it to ours. =A0We can't possibly take s=
-uch
-> a retrograde step."
+> Each entry from the list will be sent additionally in an automatic reply to
+> this message with CCs to the people involved in reporting and handling the
+> issue.
 >
 
+[...]
 
+> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=13067
+> Subject         : iwl3945: wlan0: beacon loss from AP - sending probe request
+> Submitter       : Maciej Rutecki <maciej.rutecki@gmail.com>
+> Date            : 2009-04-05 9:11 (12 days old)
+> References      : http://marc.info/?l=linux-kernel&m=123892272218266&w=4
 
---=20
-Vaibhav Nipunage
-Systems Engineer
+The regression here is that I added a printk() to inform about beacon
+loss. The issue has been there a long time, the printk() just exposed
+it.
 
-QualEx Systems Pvt. Ltd.
-www.qualexsystems.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Michael wrote a patch which silences the printk:
+
+http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=16eaea5faa37d552b14e246ca56a436e55ca67b3
+
+I fixed the beacon loss detection here:
+
+http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=3b6dc5a431e4fef35717cba53544a95209f49b68
+
+John, I think Michael's patch should be sent to 2.6.30. Any chances
+for that?
+
+Rafael, is it possible to send your regression mails to
+linux-wireless@vger.kernel.org as well? Very few wireless developers
+have time to follow netdev or lkml.
+
+-- 
+Kalle Valo
