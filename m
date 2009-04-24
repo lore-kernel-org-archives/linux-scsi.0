@@ -1,29 +1,39 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 7 of 9] scsi_debug: Add support for physical block exponent and	alignment
-Date: Fri, 24 Apr 2009 02:14:33 -0400
-Message-ID: <yq1ab66a88m.fsf@sermon.lab.mkp.net>
-References: <patchbomb.1240551141@sermon.lab.mkp.net>
-	<7ec2d82b188a9e9d4c56.1240551148@sermon.lab.mkp.net>
-	<49F157B8.4000507@interlog.com>
+From: himanshu padmanabhi <himanshu.padmanabhi@gmail.com>
+Subject: SCSI Reservation Conflicts errors
+Date: Fri, 24 Apr 2009 13:07:04 +0530
+Message-ID: <d5dce2210904240037n2f348d39sed568b6263ce07d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet12.oracle.com ([148.87.113.124]:17919 "EHLO
-	rgminet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758658AbZDXGQj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Apr 2009 02:16:39 -0400
-In-Reply-To: <49F157B8.4000507@interlog.com> (Douglas Gilbert's message of
-	"Fri, 24 Apr 2009 02:10:00 -0400")
+Received: from wf-out-1314.google.com ([209.85.200.168]:14622 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752629AbZDXHhF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Apr 2009 03:37:05 -0400
+Received: by wf-out-1314.google.com with SMTP id 26so883437wfd.4
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Apr 2009 00:37:04 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, rwheeler@redhat.com, snitzer@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, jens.axboe@oracle.com, matthew@wil.cx, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
->>>>> "Doug" == Douglas Gilbert <dgilbert@interlog.com> writes:
+Hi All,
 
-Doug> BTW Does scsi_debug identify itself (in VPD b1h) as a SSD?
+I'm getting many reservation conflicts error messages on initiator
+size when logged-in to the iSCSI target device. Please help me in
+resolving this problem.
 
-Yep!
+In the target size we have Persistent Reservation implemented and I am
+adding Mode Pages support in the target side. So is it due to the this
+persistent reservation? Or what is the reason of getting those
+conflicts? Correct me if I am wrong.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+I read the SPC-3 & SBC, but I am not cleared(understood) regarding
+this Reservation Conflicts.
+
+Please help me.
+
+Thanks in advance.
+
+---------------------------------
+Thanks and Regards,
+Himanshu Padmanabhi
