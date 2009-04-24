@@ -1,44 +1,32 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [PATCH -next] osd_uld: fix printk format warning
-Date: Thu, 23 Apr 2009 14:57:15 -0700
-Message-ID: <49F0E43B.80501@oracle.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH 0 of 9] I/O topology patch kit
+Date: Fri, 24 Apr 2009 01:32:21 -0400
+Message-ID: <patchbomb.1240551141__37598.8422929824$1240551473$gmane$org@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet12.oracle.com ([148.87.113.124]:43503 "EHLO
-	rgminet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751941AbZDWV4W (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Apr 2009 17:56:22 -0400
+Received: from jaguar.mkp.net ([192.139.46.146]:42198 "EHLO jaguar.mkp.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752073AbZDXFgK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Apr 2009 01:36:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>
+To: rwheeler@redhat.com, snitzer@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, jens.axboe@oracle.com, matthew@wil.cx, linux-ide
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Fix printk format warnings in osd_uld:
+Second take of the I/O topology patches.
 
-drivers/scsi/osd/osd_uld.c:191: warning:format '%s' expects type 'char *', but argument 2 has type 'struct path'
+Changes:
 
-Also fix a small typo.
+ - PATCH 2 of 8: New naming as suggested by Jens. Document sysfs ABI.
+ - PATCH [346] of 8: Updated to use the new blk_queue_io_foo() calls.
+ - PATCH 8: Wilcox & Petersen libata READ CAPACITY(16) convergence.
+ - PATCH 9: libata rotation rate heuristics
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- drivers/scsi/osd/osd_uld.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- linux-next-20090423.orig/drivers/scsi/osd/osd_uld.c
-+++ linux-next-20090423/drivers/scsi/osd/osd_uld.c
-@@ -188,7 +188,7 @@ struct osd_dev *osduld_path_lookup(const
- 
- 	error = kern_path(name, LOOKUP_FOLLOW, &path);
- 	if (error) {
--		OSD_ERR("path_lookup of %s faild=>%d\n", path, error);
-+		OSD_ERR("path_lookup of %s failed=>%d\n", name, error);
- 		return ERR_PTR(error);
- 	}
- 
+Wrt. patch 9: Flame away :)
 
 -- 
-~Randy
+Martin K. Petersen	Oracle Linux Engineering
+
+
