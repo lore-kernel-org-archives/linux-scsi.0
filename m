@@ -1,33 +1,35 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Mode Pages implementaion
-Date: Fri, 24 Apr 2009 06:23:42 -0600
-Message-ID: <20090424122342.GZ1926@parisc-linux.org>
-References: <23213776.post@talk.nabble.com>
+Subject: Re: [PATCH 9 of 9] libata: Media rotation rate and form factor heuristics
+Date: Fri, 24 Apr 2009 06:30:54 -0600
+Message-ID: <20090424123054.GA1926@parisc-linux.org>
+References: <patchbomb.1240551141@sermon.lab.mkp.net> <2fc5b2aa370a8ad47db1.1240551150@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:37402 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750952AbZDXMXo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Apr 2009 08:23:44 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <23213776.post@talk.nabble.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <2fc5b2aa370a8ad47db1.1240551150@sermon.lab.mkp.net>
+Sender: linux-ide-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: rwheeler@redhat.com, snitzer@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: VaibhavNipunage <vaibhavnipunage@gmail.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Fri, Apr 24, 2009 at 03:26:10AM -0700, VaibhavNipunage wrote:
-> When initiator sends Mode Sense (0x1Ah) with requested page opcode (0x3F :
-> all pages), then at that time on target side, target got the Allocation
-> Length as 192. I dont know why it is getting 192 size. I read PC-3 doc,
-> according to that target should receive 256 (for MODE SENSE 6) or 65,536
-> (for MODE SENSE 10). I am confused why this is happening? 
+On Fri, Apr 24, 2009 at 01:32:30AM -0400, Martin K. Petersen wrote:
+> This patch delegates setting the queue NONROT flag to SCSI.
+> 
+> It also provides new heuristics for parsing both the form factor and
+> media rotation rate ATA IDENFITY words.
+> 
+> The reported ATA version must be 7 or greater and the device must return
+> values defined as valid in the standard.  Only then are the
+> characteristics reported to SCSI via the VPD B1 page.
+> 
+> This seems like a reasonable compromise to me considering that we have
+> been shipping several kernel releases that key off the rotation rate bit
+> without any version checking whatsoever.  With no complaints so far.
+> 
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-Allocation Length is the amount of space the initiator has available
-for the response.  It can be any length (including zero, which SPC4 is
-very clear is not an error).  See section 4.3.5.6 Allocation length in
-spc4r14 or 4.3.4.6 Allocation length in spc3r23.
+Reviewed-by: Matthew Wilcox <willy@linux.intel.com>
 
 -- 
 Matthew Wilcox				Intel Open Source Technology Centre
