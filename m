@@ -1,95 +1,124 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13143] scsi_debug doesn't manage more than 1Tb
-Date: Sat, 25 Apr 2009 04:43:44 GMT
-Message-ID: <200904250443.n3P4hiSQ014950@demeter.kernel.org>
-References: <bug-13143-11613@http.bugzilla.kernel.org/>
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+Subject: Re: Stop disks on reboot for laptop which cuts power
+Date: Sat, 25 Apr 2009 11:18:18 +0200
+Message-ID: <20090425111818.1728cf21@neptune.home>
+References: <cslAV-2lq-113@gated-at.bofh.it>
+	<9f0e232d-4901-4e60-ac83-c14a6405202d@z5g2000yqn.googlegroups.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:48965 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751067AbZDYEnq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Apr 2009 00:43:46 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n3P4hiqP014951
-	for <linux-scsi@vger.kernel.org>; Sat, 25 Apr 2009 04:43:44 GMT
-In-Reply-To: <bug-13143-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <9f0e232d-4901-4e60-ac83-c14a6405202d@z5g2000yqn.googlegroups.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Ciprian Dorin =?UTF-8?B?Q3LEg2NpdW4=?= <ciprian.craciun@gmail.com>
+Cc: Linux IDE <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Linux SCSI <linux-scsi@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13143
+On Sat, 25 April 2009 Ciprian Dorin Craciun wrote:
+> On Apr 18, 7:30=C2=A0pm, Bruno Pr=C3=A9mont <bonb...@linux-vserver.or=
+g> wrote:
+> > Hi,
+> >
+> > During shutdown (power off) the disks are stopped gracefully thus
+> > the stopping is skipped for reboot case.
+> >
+> > On my Acer Travelmate 660 reboot is more like power-off as it cuts
+> > all power during reboot which currently causes the disk to
+> > emergency-park its head (noisy and shortens disk life).
+> >
+> > This patch series adds a DMI-based check to ide-gd and sd to still
+> > stop the disks for affected laptop during reboot.
+> >
+> > Has been compile an run-tested with libata and just compile-tested
+> > for ide.
+> >
+> > Bruno Pr=C3=A9mont
+>=20
+>     (I've tried to reply to the group by google-groups, but it didn't
+> worked...)
+>=20
+>     I have a Benq JoyBook S32 laptop that has the same behaviour...
+> I've applied you patch, and just replaced the condition (dmi_...) wit=
+h
+> true, and now my laptop works OK while rebooting (it doesn't just cut
+> power to the disks)...
+>=20
+>     So I would say this is a very needed patch for the mainline
+> kernel... Will it be included? Also how do I add my laptop to the
+> table provided in your patch?
+>=20
+>     Thanks,
+>     Ciprian Craciun.
+>=20
+Just a note, my patches do not change the BIOS behavior on reboot, thus
+power is still being cut if it was so before applying the patches. But
+it stops the disks first so those do not suffer from the power cut.
+
+The variant for IDE-GD is on its way for inclusion, for the SD one I
+don't know.
+
+Below is a sample patch to add your system to the list, please check if
+it works when applied on top of my 2 patches. If it doesn't you will
+have to adjust the name of your laptop's manufacturer and it's product
+name to correctly match your system. Please report if it works (or what
+manufacturer/product name it works with) for you.
+The right information can be extracted from dmidecode (System
+Information block)
 
 
+Tejun suggested eventually stopping the disks for all machines though
+as far as I can see here my laptop is the only one affected out of a
+dozen different boxes I have around. (eventually just doing it for
+laptops might be reasonable as generalization)
 
+Bruno
 
-
---- Comment #3 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2009-04-25 04:41:58 ---
-Reply-To: fujita.tomonori@lab.ntt.co.jp
-
-On Tue, 21 Apr 2009 16:07:08 GMT
-bugzilla-daemon@bugzilla.kernel.org wrote:
-
-> http://bugzilla.kernel.org/show_bug.cgi?id=13143
-> 
->            Summary: scsi_debug doesn't manage more than 1Tb
->            Product: SCSI Drivers
->            Version: 2.5
->           Platform: All
->         OS/Version: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: Other
->         AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
->         ReportedBy: tvignaud@mandriva.com
->         Regression: No
-> 
-> 
-> While debugging a partitionner software that has issues with disks bigger than
-> 1Tb, I found out that scsi_debug doesn't manage more than 1Tb:
-> 
-> # modprobe scsi_debug virtual_gb=1000
-> # cat /proc/partitions |fgrep sdc
->    8       32 1048576000 sdc
-> # rmmod scsi_debug
-> # modprobe scsi_debug virtual_gb=1100
-> # cat /proc/partitions |fgrep sdc
->    8       32 9223372035860725760 sdc
-> 
-> 
-> dmesg shows that the additionnal 100Gb makes it loose sight:
-> sd 16:0:0:0: [sdc] 2097152000 512-byte hardware sectors: (1.07 TB/1000 GiB)
-> versus:
-> sd 15:0:0:0: [sdc] 18446744071721451520 512-byte hardware sectors: (18.4
-> EB/15.9 EiB)
-
-
-=
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] scsi_debug: fix virtual disk larger than 1TB 
-
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- drivers/scsi/scsi_debug.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 213123b..41a2177 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -887,7 +887,7 @@ static int resp_start_stop(struct scsi_cmnd * scp,
- static sector_t get_sdebug_capacity(void)
- {
-     if (scsi_debug_virtual_gb > 0)
--        return 2048 * 1024 * scsi_debug_virtual_gb;
-+        return 2048 * 1024 * (sector_t)scsi_debug_virtual_gb;
-     else
-         return sdebug_store_sectors;
- }
+sd, ide-gd: stop disk on reboot for Benq JoyBook S32
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Ciprian Craciun reported that Benq JoyBook S32 was affected by
+the same power-cut on reboot as Acer TravelMate 660, so add it
+to the list.
+
+---
+diff --git a/drivers/ide/ide-gd.c b/drivers/ide/ide-gd.c
+index 4b6b71e..a78813d 100644
+--- a/drivers/ide/ide-gd.c
++++ b/drivers/ide/ide-gd.c
+@@ -109,6 +109,14 @@ static const struct dmi_system_id ide_coldreboot_t=
+able[] =3D {
+ 			DMI_MATCH(DMI_PRODUCT_NAME, "TravelMate 660"),
+ 		},
+ 	},
++	{
++		/* Benq JoyBook S32 cuts power during reboot */
++		.ident   =3D "Benq JoyBook S32",
++		.matches =3D {
++			DMI_MATCH(DMI_SYS_VENDOR, "Benq"),
++			DMI_MATCH(DMI_PRODUCT_NAME, "JoyBook S32"),
++		},
++	},
+=20
+ 	{ }	/* terminate list */
+ };
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index fdad8bc..68c828a 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2137,6 +2137,14 @@ static const struct dmi_system_id sd_coldreboot_=
+table[] =3D {
+ 			DMI_MATCH(DMI_PRODUCT_NAME, "TravelMate 660"),
+ 		},
+ 	},
++	{
++		/* Benq JoyBook S32 cuts power during reboot */
++		.ident   =3D "Benq JoyBook S32",
++		.matches =3D {
++			DMI_MATCH(DMI_SYS_VENDOR, "Benq"),
++			DMI_MATCH(DMI_PRODUCT_NAME, "JoyBook S32"),
++		},
++	},
+=20
+ 	{ }	/* terminate list */
+ };
