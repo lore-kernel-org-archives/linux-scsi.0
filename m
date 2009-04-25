@@ -1,84 +1,95 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [PATCH] [Target_Core_Mod/pSCSI]: Add optional legacy scsi_execute_async()
- usage for Linux/SCSI passthrough
-Date: Fri, 24 Apr 2009 23:17:50 +0400
-Message-ID: <49F2105E.8010001@vlnb.net>
-References: <1239930560.4176.577.camel@haakon2.linux-iscsi.org> <49EB036B.8090607@panasas.com> <49EDB8EF.7040503@vlnb.net> <49EF1A88.1040105@panasas.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13143] scsi_debug doesn't manage more than 1Tb
+Date: Sat, 25 Apr 2009 04:43:44 GMT
+Message-ID: <200904250443.n3P4hiSQ014950@demeter.kernel.org>
+References: <bug-13143-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:60276 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752352AbZDXTSL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Apr 2009 15:18:11 -0400
-In-Reply-To: <49EF1A88.1040105@panasas.com>
+Received: from demeter.kernel.org ([140.211.167.39]:48965 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751067AbZDYEnq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Apr 2009 00:43:46 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n3P4hiqP014951
+	for <linux-scsi@vger.kernel.org>; Sat, 25 Apr 2009 04:43:44 GMT
+In-Reply-To: <bug-13143-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Tejun Heo <tj@kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <jens.axboe@oracle.com>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, Geoff Levand <geoffrey.levand@am.sony.com>, Douglas Gilbert <dgilbert@interlog.com>, Christoph Hellwig <hch@lst.de>, Paul Mundt <lethal@linux-sh.org>
+To: linux-scsi@vger.kernel.org
 
-Boaz Harrosh, on 04/22/2009 05:24 PM wrote:
-> On 04/21/2009 03:15 PM, Vladislav Bolkhovitin wrote:
->> Boaz Harrosh, on 04/19/2009 02:56 PM wrote:
->>> On 04/17/2009 04:09 AM, Nicholas A. Bellinger wrote:
->> [..]
->>
->>> Are you aware that scsi_execute_async() has gone in 2.6.30-rc1?
->>>
->>> I'm not sure what would be the best alternative for you. I would say
->>> a bio, but it is still being debated. Your current options are:
->>>
->>> 1. bio_alloc then loop () bio_add_pc_page, and finally blk_rq_append_bio
->>>    (Which block people don't like)
->>> 2. sglist => page-pointers-array translation and blk_rq_map_user with 
->>>    struct rq_map_data mode. (not possible with all kind of sglists)
->>> 2. sglist => iovec translation and blk_rq_map_user_iov()
->>>    (Very very ugly mapping of pages to virtual pointers)
->>>
->>> I have a similar situation with my OSD code.
->> Do you have somewhere in it a need to run an arbitrary CDB with data 
->> pages stored in an sglist? Is that code accepted in the mainline?
->>
-> 
-> No, I have a direct bio which comes from two sources.
-> 1. A bio prepared by a filesystem to describe a write/read to a file (osd object)
-> 2. A cloned bio that comes from a stacking block-device over osd-object.
-> 
-> So I do not have an sglist at all, anywhere in code.
-> 
->> If yes, why not to resurrect the necessary bits of scsi_execute_async() 
->> (option (1) above)? It was deleted, because in 2.6.30 there are no users 
->> of it left, but if there are users (OSD), then why not to return it? 
->> Seems nothing better for the sg->bio case can be invented.
->>
-> 
-> I hate scsi_execute_async() for lots of reasons, 
-> 1. The cover-up of an historical abuse of sglists by sg/sr
-> 2. Override of use_sg/data-pointer crap
-> 3. What is data-format got to do with sync/async execution
-> 4. the need of all that scsi_io_context and the re-invention
->    of async_done API.
-> 5. ...
-> Good riddence
+http://bugzilla.kernel.org/show_bug.cgi?id=13143
 
-Removal of what can be removed from the above I meant under "the 
-necessary bits".
 
-> But you might be looking into an API introduced by an RFC by
-> Tejun Heo in the form of blk_rq_map_kern_sgl() which should
-> be a more appropriate general API for your use.
 
-Yes, it looks like what's needed.
 
-> (And is not directly usable for me in OSD)
+
+--- Comment #3 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2009-04-25 04:41:58 ---
+Reply-To: fujita.tomonori@lab.ntt.co.jp
+
+On Tue, 21 Apr 2009 16:07:08 GMT
+bugzilla-daemon@bugzilla.kernel.org wrote:
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=13143
 > 
->> Vlad
+>            Summary: scsi_debug doesn't manage more than 1Tb
+>            Product: SCSI Drivers
+>            Version: 2.5
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: Other
+>         AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
+>         ReportedBy: tvignaud@mandriva.com
+>         Regression: No
 > 
-> Boaz
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
+> While debugging a partitionner software that has issues with disks bigger than
+> 1Tb, I found out that scsi_debug doesn't manage more than 1Tb:
+> 
+> # modprobe scsi_debug virtual_gb=1000
+> # cat /proc/partitions |fgrep sdc
+>    8       32 1048576000 sdc
+> # rmmod scsi_debug
+> # modprobe scsi_debug virtual_gb=1100
+> # cat /proc/partitions |fgrep sdc
+>    8       32 9223372035860725760 sdc
+> 
+> 
+> dmesg shows that the additionnal 100Gb makes it loose sight:
+> sd 16:0:0:0: [sdc] 2097152000 512-byte hardware sectors: (1.07 TB/1000 GiB)
+> versus:
+> sd 15:0:0:0: [sdc] 18446744071721451520 512-byte hardware sectors: (18.4
+> EB/15.9 EiB)
 
+
+=
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] scsi_debug: fix virtual disk larger than 1TB 
+
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/scsi_debug.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 213123b..41a2177 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -887,7 +887,7 @@ static int resp_start_stop(struct scsi_cmnd * scp,
+ static sector_t get_sdebug_capacity(void)
+ {
+     if (scsi_debug_virtual_gb > 0)
+-        return 2048 * 1024 * scsi_debug_virtual_gb;
++        return 2048 * 1024 * (sector_t)scsi_debug_virtual_gb;
+     else
+         return sdebug_store_sectors;
+ }
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
