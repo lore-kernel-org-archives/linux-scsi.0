@@ -1,38 +1,41 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: Mainline kernel OLTP performance update
-Date: Mon, 27 Apr 2009 09:02:40 +0200
-Message-ID: <87ljpmk29b.fsf@basil.nowhere.org>
-References: <D7C42C27E6CB1E4D8CBDF2F81EA92A260345836A3A@azsmsx501.amr.corp.intel.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: qla2xxx async scan in kernel 2.6.16
+Date: Sun, 26 Apr 2009 17:27:35 +0000
+Message-ID: <1240766855.4627.2.camel@mulgrave.int.hansenpartnership.com>
+References: <d364733c0904260904t1ba66e7ey1caef491d6428866@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756327AbZD0HDL@vger.kernel.org>
-In-Reply-To: <D7C42C27E6CB1E4D8CBDF2F81EA92A260345836A3A@azsmsx501.amr.corp.intel.com> (Douglas W. Styner's message of "Thu, 23 Apr 2009 09:49:57 -0700")
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Styner, Douglas W" <douglas.w.styner@intel.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51152 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752895AbZDZR1h (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 26 Apr 2009 13:27:37 -0400
+In-Reply-To: <d364733c0904260904t1ba66e7ey1caef491d6428866@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: =?UTF-8?Q?=E8=B0=A2=E7=BA=B2?= <xiegang112@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-"Styner, Douglas W" <douglas.w.styner@intel.com> writes:
+On Mon, 2009-04-27 at 00:04 +0800, =E8=B0=A2=E7=BA=B2 wrote:
+> In kernel 2.6.16, I find that there is no scsi_scan_host in
+> qla2xxx_probe_one. So how does the qla driver scan the scsi device?
 
->
-> ======oprofile 0.9.3 CPU_CLK_UNHALTED for top 30 functions
-> Cycles% 2.6.24.2                   Cycles% 2.6.30-rc2
-> 74.8578 <database>                   67.6966 <database>
+scsi_scan_host() is only really for non hotplug busses that need a fixe=
+d
+id scan.
 
-The dip in database cycles is indeed worrying.
+Hotplug buses use scsi_scan_target() instead when the device appears on
+the bus.  Most do this (like fc) from the target port appearance via th=
+e
+allied transport class.
 
-> 1.0500 qla24xx_start_scsi          1.1724 qla24xx_start_scsi
-> 0.8089 schedule                    1.0578 qla24xx_intr_handler
-> 0.5864 kmem_cache_alloc            0.8259 __schedule
-> 0.4989 __blockdev_direct_IO        0.7451 kmem_cache_alloc
-> 0.4357 __sigsetjmp                 0.4872 __blockdev_direct_IO
-> 0.4152 copy_user_generic_string    0.4390 task_rq_lock
-> 0.3953 qla24xx_intr_handler        0.4338 __sigsetjmp
+James
 
-And also why the qla24xx_intr_handler became ~2.5x as expensive.
-Cc linux-scsi and qla24xx maintainers.
 
--Andi
-
--- 
-ak@linux.intel.com -- Speaking for myself only.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
