@@ -1,59 +1,87 @@
-From: Chris Leech <christopher.leech@intel.com>
-Subject: Re: [PATCH] netdev: storage address support
-Date: Mon, 27 Apr 2009 15:28:00 -0700
-Message-ID: <20090427222800.GA14396@cleech-lnx.jf.intel.com>
-References: <20090424080349.30460.73770.stgit@localhost.localdomain> <20090427.030103.88777540.davem@davemloft.net>
+From: Takahiro Yasui <tyasui@redhat.com>
+Subject: Re: [RFC][PATCH] limit state change to SDEV_BLOCK devices in	scsi_internal_device_unblock
+Date: Mon, 27 Apr 2009 19:52:57 -0400
+Message-ID: <49F64559.5020802@redhat.com>
+References: <49F5E6E5.20904@redhat.com> <1240862889.3387.37.camel@mulgrave.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-2022-JP
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:30604 "EHLO mga03.intel.com"
+Received: from mx2.redhat.com ([66.187.237.31]:36004 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756261AbZD0W2C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Apr 2009 18:28:02 -0400
-Content-Disposition: inline
-In-Reply-To: <20090427.030103.88777540.davem@davemloft.net>
+	id S1754954AbZD0Xwo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Apr 2009 19:52:44 -0400
+In-Reply-To: <1240862889.3387.37.camel@mulgrave.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "gospo@redhat.com" <gospo@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, mchristi@redhat.com, mbarrow@redhat.com
 
-On Mon, Apr 27, 2009 at 03:01:03AM -0700, David Miller wrote:
-> From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-> Date: Fri, 24 Apr 2009 01:03:50 -0700
+James Bottomley wrote:
+>> +	if (sdev->sdev_state != SDEV_BLOCK)
 > 
-> > 2) Server Provided MAC Address (SPMA)
-> > The server indicates to the FCF the address it would like to use for FCoE
-> > traffic.  It's expected that SPMA capable interfaces will have a storage
-> > dedicated MAC address programed into EPROM, flash, or other non-volatile
-> > storage which the driver will be able to provide to the FCoE stack.
-> > 
-> > This adds a net_device_ops function to query a driver for a dedicated storage
-> > address.
-> > 
-> > If ndo_get_storage_address is implemented, then the address will also be
-> > exposed as a sysfs attribute.  In order to do that, a new optional attrs group
-> > is added to the net_device, with the visibility of each attribute protected by
-> > a call to netdev_show_optional_attr().
+> This isn't quite correct.  There are two blocked states in the model
+> currently:  SDEV_BLOCK and SDEV_CREATED_BLOCK ... you'd need to check
+> for both of them
 > 
-> This should be what is currently provided in netdev->perm_addr[]
+>> +		return 0;
 > 
-> I really see no difference.
+> Traditionally the return for an attempted invalid state transition is
+> -EINVAL.
+> 
+> I suppose for lower down, if you check the state, now we know we go 
+> 
+> SDEV_CREATED_BLOCK -> SDEV_CREATED
+> 
+> or
+> 
+> SDEV_BLOCK -> SDEV_RUNNING
+> 
+> so there's no need for the dual scsi_device_set_state.
 
-There seems to be some desire to use separate MAC address for LAN and
-SAN traffic on a converged network, even when using the server provided
-addressing mode for FCoE.  So I'm looking at a device that has an extra
-MAC address in it's EEPROM, that's intended to be used for SAN traffic
-only.
+Thank you for the comments. If I understand your comments correctly, 
+the state transition is better to be defined in scsi_device_set_state(),
+and both transitions, "SDEV_CREATED_BLOCK -> SDEV_CREATED" and
+"SDEV_BLOCK -> SDEV_RUNNING" need to be covered. I updated the patch
+so that the transition of "SDEV_OFFLINE -> SDEV_RUNNING" is prohibited.
 
-At first glance Jiri's "list of device addresses" patch seems to be
-heading towards a more general approach to having multiple MAC
-addresses, without providing any sort of intent on how they should be
-used.  But given that it's trying to solve a bonding + bridging issue,
-the addresses involved seem fairly dynamic and I'm not sure how it
-differs much from the existing uc_list.
+A note in this change is all transitions of "SDEV_OFFLINE -> SDEV_RUNNING"
+is prohibited, and the following state change for devices in SDEV_OFFLINE
+state fails.
 
-Ignoring the issue of intended use for the moment, if an ethernet driver
-wanted to advertise several MAC addresses to the system how should it go
-about that?
+  # echo running > /sys/block/sdX/device/state
 
-- Chris
+Therefore, users need to delete the device once and then those devices
+need to be scanned as follows.
+
+  # echo yes > /sys/block/sdX/device/delete
+  # echo "- - -" > /sys/class/scsi_host/hostX/scan
+
+I appreciate your reviews on it.
+
+Regards,
+---
+Takahiro Yasui
+Hitachi Computer Products (America), Inc.
+
+
+Signed-off-by: Takahiro Yasui <tyasui@redhat.com>
+---
+ drivers/scsi/scsi_lib.c |    1 -
+ 1 file changed, 1 deletion(-)
+
+Index: linux-2.6.29/drivers/scsi/scsi_lib.c
+===================================================================
+--- linux-2.6.29.orig/drivers/scsi/scsi_lib.c
++++ linux-2.6.29/drivers/scsi/scsi_lib.c
+@@ -2258,7 +2258,6 @@ scsi_device_set_state(struct scsi_device
+ 	case SDEV_RUNNING:
+ 		switch (oldstate) {
+ 		case SDEV_CREATED:
+-		case SDEV_OFFLINE:
+ 		case SDEV_QUIESCE:
+ 		case SDEV_BLOCK:
+ 			break;
+
+
+
