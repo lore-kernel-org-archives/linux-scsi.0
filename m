@@ -1,40 +1,45 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] netdev: storage address support
-Date: Mon, 27 Apr 2009 03:01:03 -0700 (PDT)
-Message-ID: <20090427.030103.88777540.davem@davemloft.net>
-References: <20090424080349.30460.73770.stgit@localhost.localdomain>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13143] scsi_debug doesn't manage more than 1Tb
+Date: Mon, 27 Apr 2009 10:41:00 GMT
+Message-ID: <200904271041.n3RAf0XT000556@demeter.kernel.org>
+References: <bug-13143-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46688
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752006AbZD0KBK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Apr 2009 06:01:10 -0400
-In-Reply-To: <20090424080349.30460.73770.stgit@localhost.localdomain>
+Received: from demeter.kernel.org ([140.211.167.39]:34043 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752136AbZD0KlB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Apr 2009 06:41:01 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n3RAf0DN000557
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Apr 2009 10:41:00 GMT
+In-Reply-To: <bug-13143-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jeffrey.t.kirsher@intel.com
-Cc: netdev@vger.kernel.org, gospo@redhat.com, linux-scsi@vger.kernel.org, christopher.leech@intel.com
+To: linux-scsi@vger.kernel.org
 
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Date: Fri, 24 Apr 2009 01:03:50 -0700
+http://bugzilla.kernel.org/show_bug.cgi?id=13143
 
-> 2) Server Provided MAC Address (SPMA)
-> The server indicates to the FCF the address it would like to use for FCoE
-> traffic.  It's expected that SPMA capable interfaces will have a storage
-> dedicated MAC address programed into EPROM, flash, or other non-volatile
-> storage which the driver will be able to provide to the FCoE stack.
-> 
-> This adds a net_device_ops function to query a driver for a dedicated storage
-> address.
-> 
-> If ndo_get_storage_address is implemented, then the address will also be
-> exposed as a sysfs attribute.  In order to do that, a new optional attrs group
-> is added to the net_device, with the visibility of each attribute protected by
-> a call to netdev_show_optional_attr().
 
-This should be what is currently provided in netdev->perm_addr[]
 
-I really see no difference.
+
+
+--- Comment #4 from Thierry Vignaud <tvignaud@mandriva.com>  2009-04-27 10:39:15 ---
+(In reply to comment #1)
+> it seems invalid that you tested linux 2.5 ?
+
+Version was auto filled by bugzilla. Really was 2.6.29.1
+
+> And could you describe it more detailed as in REPORTING-BUGS ?
+
+All needed data was provided in initial comment. And it was enough in order to
+provide a fix.
+
+> I have also ITB disks and it cannot reproduce. Thanks.
+
+It's not about 1Tb disks but about the scsi_debug driver.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
