@@ -1,112 +1,291 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [RFC][PATCH] limit state change to SDEV_BLOCK devices in
-	scsi_internal_device_unblock
-Date: Mon, 27 Apr 2009 20:08:09 +0000
-Message-ID: <1240862889.3387.37.camel@mulgrave.int.hansenpartnership.com>
-References: <49F5E6E5.20904@redhat.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: [ANNOUNCE]: SCST 1.0.1 core, target drivers for iSCSI, QLogic 22xx/23xx
+ and local as well as fileio_tgt backend handler and scstadmin utility v1.0.6
+ released
+Date: Tue, 28 Apr 2009 01:04:44 +0400
+Message-ID: <49F61DEC.3000202@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:36096 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757455AbZD0UIP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Apr 2009 16:08:15 -0400
-In-Reply-To: <49F5E6E5.20904@redhat.com>
+Received: from moutng.kundenserver.de ([212.227.126.186]:61375 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760239AbZD0VEf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Apr 2009 17:04:35 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Takahiro Yasui <tyasui@redhat.com>
-Cc: linux-scsi@vger.kernel.org, mchristi@redhat.com, mbarrow@redhat.com
+To: scst-devel <scst-devel@lists.sourceforge.net>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 2009-04-27 at 13:09 -0400, Takahiro Yasui wrote:
-> Hi,
-> 
-> This is a patch to fix SCSI timeout error recovery issue which
-> I posted about one week ago.
-> 
->   [RFC] SCSI timeout error recovery issue
->   http://marc.info/?l=linux-scsi&m=124042136915970&w=2
-> 
-> scsi timeout on two or more devices may cause extremely long execution
-> time for user applications because SDEV_OFFLINE state is changed to
-> SDEV_RUNNING state during scsi error recovery procedures triggered by
-> a bus reset or a host reset of LLD, and scsi timeout can happens on
-> the same devices many times.
-> 
-> This happens because scsi_internal_device_unblock() changes device's state
-> to SDEV_RUNNING even if a device in other states than SDEV_BLOCK, but
-> scsi_internal_device_block() is a pair with scsi_internal_device_unblock()
-> and only devices in SDEV_BLOCK state are needed to be changed. This patch
-> adds a check of the current device state so that state change and queue
-> activation is not executed for devices in SDEV_BLOCK state.
-> 
-> This patch is based on the idea that devices in SDEV_OFFLINE state need to
-> stay in SDEV_OFFLINE because SDEV_OFFLINE state is done by:
-> 
->  - All recovery procedures, bus reset and host reset, has already failed
->    for devices in SDEV_OFFLINE state.
->    (There is no (or rare?) chance to be recovered.)
-> 
->  - A user has changed the device's state to SDEV_OFFLINE intentionally
->    by an interface such as sysfs.
->    (A user needs to enable devices in SDEV_OFFLINE state before using
->     them again.)
-> 
-> I appreciate any comments and suggestions on this patch.
+Hi All,
 
-The analysis seems good, and the idea of putting state guards to make
-sure we only transition from a correct state is fine.
+I'm glad to announce release 1.0.1 of SCST core, target drivers for 
+iSCSI, QLogic 22xx/23xx and local as well as fileio_tgt backend handler 
+and scstadmin utility v1.0.6.
 
-The actual state transitions only check that going from in state to out
-is permitted by the state model ... rather than actually being correct
-for what the function is trying to do.
+SCST is an alternative implementation of SCSI target subsystem for 
+Linux. It provides unified, consistent interface between SCSI target 
+drivers and Linux kernel as well as between Linux kernel and storage 
+backend handlers, connecting target drivers with real or emulated 
+storage backend.
 
-> Regards,
-> ---
-> Takahiro Yasui
-> Hitachi Computer Products (America), Inc.
-> 
-> 
-> Signed-off-by: Takahiro Yasui <tyasui@redhat.com>
-> ---
->  drivers/scsi/scsi_lib.c |    7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
-> 
-> Index: linux-2.6.29/drivers/scsi/scsi_lib.c
-> ===================================================================
-> --- linux-2.6.29.orig/drivers/scsi/scsi_lib.c
-> +++ linux-2.6.29/drivers/scsi/scsi_lib.c
-> @@ -2633,9 +2633,12 @@ scsi_internal_device_unblock(struct scsi
->  	unsigned long flags;
->  	
->  	/* 
-> -	 * Try to transition the scsi device to SDEV_RUNNING
-> -	 * and goose the device queue if successful.  
-> +	 * Try to transition the scsi device to SDEV_RUNNING if it is
-> +	 * SDEV_BLOCK and goose the device queue if successful.
->  	 */
-> +	if (sdev->sdev_state != SDEV_BLOCK)
+SCST allows creation of sophisticated storage devices, which provide
+advanced functionality, like replication, thin provisioning,
+deduplication, high availability, automatic backup, etc. Another class
+of such devices are Virtual Tape Libraries (VTL) as well as other
+disk-based backup solutions. SCST created devices not limited by IP
+network interface only, but they can use any link supporting SCSI-style
+data exchange, including Fibre Channel, SAS and parallel SCSI. It might
+well be that your favorite storage appliance running SCST in the firmware.
 
-This isn't quite correct.  There are two blocked states in the model
-currently:  SDEV_BLOCK and SDEV_CREATED_BLOCK ... you'd need to check
-for both of them
+More info about SCST core and modules you can find on:
 
-> +		return 0;
+  - SCST core: http://scst.sourceforge.net
 
-Traditionally the return for an attempted invalid state transition is
--EINVAL.
+  - iSCSI target driver iSCSI-SCST: 
+http://scst.sourceforge.net/target_iscsi.html
 
-I suppose for lower down, if you check the state, now we know we go 
+  - QLogic 22xx/23xx Fibre Channel target driver: 
+http://scst.sourceforge.net/target_qla22xx_23xx.html
 
-SDEV_CREATED_BLOCK -> SDEV_CREATED
+  - Local target driver: http://scst.sourceforge.net/target_local.html
 
-or
+  - fileio_tgt backend handler on 
+http://scst.sourceforge.net/handler_fileio_tgt.html.
 
-SDEV_BLOCK -> SDEV_RUNNING
+  - scstadmin: http://scst.sourceforge.net/scst_admin.html
 
-so there's no need for the dual scsi_device_set_state.
+SCST aims to be included in the mainline kernel. You can find the first
+iteration of SCST patches review in http://lkml.org/lkml/2008/12/10/245.
 
-James
+You can download SCST core and modules from 
+http://scst.sourceforge.net/downloads.html.
 
+Summary of changes in SCST core between versions 1.0.0 and 1.0.1
+----------------------------------------------------------------
+
+   - Support for descriptor sense format added
+
+   - Makefiles made more packager friendly (Ruben Laban)
+
+   - Support for variable length CDB added
+
+   - Support for Asynchronous Event Notifications added
+
+   - Implemented "plug-and-play" notifications about new devices in
+     security groups, deleted devices from security groups and changed
+     size of a device. They can be delivered either through AENs (if
+     supported), or Unit Attentions.
+
+   - New command "resync_size" added to scst_vdisk proc interface to tell
+     scst_vdisk to reread size of the corresponding device after it was
+     changed
+
+   - Added pattern matching for initiator names in SCST access control
+     (Gennadiy Nerubayev)
+
+   - Now only sent for execution commands are counted to wait for in TM
+     commands, which made processing of TM commands faster
+
+   - Now devices blocked only in reset TM commands. ABORTs, etc. now done
+     without devices blocking.
+
+   - scst_unregister_session_ex() removed, since there are no users of it
+
+   -  New functions added to scst_user interface:
+
+      * SCST_USER_UNREGISTER_DEVICE - to unregister device, flush mem
+        reuse (SGV) cache and send UCMD_STATE_ON_CACHE_FREEING
+        notifications for all freed buffers to the user space handler.
+        Simple device close doesn't allow that, so all the cached buffers
+        might look as "leaked" from the user space handler POV.
+
+      * SCST_USER_FLUSH_CACHE - to flush mem reuse (SGV) cache and send
+        UCMD_STATE_ON_CACHE_FREEING notifications for all freed buffers to
+        the user space handler
+
+      * SCST_USER_DEVICE_CAPACITY_CHANGED - to notify SCST core that the
+        corresponding device has changed its capacity
+
+   - Clustering of scst_user pages added
+
+   - Added autogenerated SCSI SN in vdisk handler
+
+   - Fixed race in scst_user, which could have lead to usage of already
+     freed command. A misbehaving user space handler could have made ucmd
+     to get dead immediately after the lock is released and that is caught
+     now.
+
+   - Support for CentOS 5.2 added (Bart Van Assche)
+
+   - In scst_vdisk new module parameter num_threads added to specify a
+     number of threads for each vdisk/vcdrom. Default is 5.
+
+   - Access control docs updated
+
+   - Set memory limits according to LOWMEM, not TOTALMEM
+
+   - Major performance increase working with disk based storage
+
+   - Now task_mgmt_fn() callback called for TARGET RESET and NEXUS LOSS
+     functions only once for tgt_dev, which belongs to the session, from
+     which the corresponding request came
+
+   - SGV cache related parameters moved from scst.h to scst_sgv.h
+
+   - Log level mgmt_minor for messages like "Warning: expected transfer
+     length X for opcode Y" changed to be disabled by default
+
+   - Added possibility to coexist if both target driver and dev handler
+     need custom memory allocation. Direct consequences: (1) scst_local
+     can work with scst_user's devices and (2) scst_user now compatible
+     with iscsi-scst if put_page_callback patch not applied.
+
+   - Deprecated scst_cmd_get_tgt_resp_flags() removed
+
+   - SWP and TAS parameters made changeable in vdisk handler
+
+   - External interface changed to fix usage of in_atomic(). Now target
+     drivers and dev handlers need to explicitly supply preferred
+     execution context in scst_cmd_done() and scst_tgt_cmd_done()
+
+   - Handling of internal REQUEST SENSE fixed.
+
+   - Fixed SAM violation (HiSup bit must be set in INQUIRY response)
+
+   - Fixed handling of VERIFY commands that comes with BYTCHK unset
+
+   - Handling of double reset UAs made more reliable
+
+   - A lot of kernel style, checkpatch and sparse fixes (Bart Van Assche)
+
+   - In-kernel build integration (Bart Van Assche)
+
+   - Update for kernels up to 2.6.29
+
+   - A lot of fixes and cleanups (many people)
+
+
+Summary of changes in iSCSI-SCST between versions 1.0.0 and 1.0.1
+-----------------------------------------------------------------
+
+   - Support for variable length CDB added
+
+   - Sending and receiving padding bytes as well as sense data
+     reimplemented to make it more reliable
+
+   - Support for SCSI Asynchronous Event Notifications added
+
+   - Sessions and connections reinstatement reimplemented to be conforming
+     to iSCSI RFC
+
+   - iscsi-scst-adm fixed
+
+   - Removed artificial limitation of sg_tablesize. It isn't needed,
+     because the regular iSCSI negotiated MaxRecvDataSegmentLength-related
+     facilities do all the job pretty well.
+
+   - Merge with IET r170-211:
+
+     * Update MaxConnections documentation
+
+     * Remove isns config description from man page
+
+     * Check return values of chdir(), ftruncate() and write(), because
+       recent versions of the glibc insist on the return value being
+       checked by introducing __attribute__((warn_unused_result)) to these
+       functions.
+
+     * Fix snprintf use in isns.c
+
+     * Take \0-termination into account when passing strings to
+       isns_tlv_set() to solve incompatibility with MS iSNS 3.0 as IQN
+       length is multiple of 4
+
+     * Fix list corruption if SCST target registration fails
+
+     * Register the target port actually used instead of the default iSCSI
+       port.
+
+     * Remove unused connection->pad
+
+     * Refactor cmnd_execute()
+
+     * Introduce min*/max*() and more list_* macros
+
+     * Multipart PDU support for discovery sessions
+
+     * Add support for Reject PDUs and make use of them in appropriate
+       places.
+
+     * Ignore SIGPIPE in iscsi-scstd
+
+     * Allow removal of kernel target objects if the user space object
+       does not exist
+
+     * Use netlink_socket_release() to clean up netlink sockets correctly
+       (taking care of namespaces)
+
+     * More scalable proc seq_file implementation
+
+     * Segfault in ietd buffer overrun in dump_line
+
+     * Add iscsi-scst-adm support to display list of CHAP accounts and
+       their data
+
+     * Fixed compilation on glibc 2.8
+
+     * Fix CHAP account handling bugs
+
+     * Fix bugs in multi PDU handling code
+
+   - Support for CentOS 5.2 added (Bart Van Assche)
+
+   - Fixed NOP-Out with payload handling
+
+   - Several minor iSCSI RFC violations fixed
+
+   - Update for kernels up to 2.6.29
+
+   - Zero-copy feature, introduced by put_page_callback patch made
+     kernel compile time configurable via
+     CONFIG_TCP_ZERO_COPY_TRANSFER_COMPLETION_NOTIFICATION option. If you
+     upgrade from earlier versions, see the corresponding "[CAUTION]"
+     e-mail in scst-devel mailing list about possible compatibility
+     problems.
+
+   - A lot of cleanups and minor fixes
+
+
+Summary of changes in qla2x00t between versions 1.0.0 and 1.0.1
+---------------------------------------------------------------
+
+   - Update to initiator driver from 2.6.27
+
+   - HOWTO added (Amit Mehta)
+
+   - Fixed wrong sess_count decrement on session registration failure
+
+   - Fixed possible oops in the initiator driver on the module unload
+
+   - Updated to work on kernels up to 2.6.29
+
+   - Other minor fixes
+
+
+Summary of changes in fileio_tgt between versions 1.0.0 and 1.0.1
+-----------------------------------------------------------------
+
+   - Added notification about device capacity change
+
+   - Usage of new commands SCST_USER_UNREGISTER_DEVICE,
+     SCST_USER_FLUSH_CACHE and SCST_USER_DEVICE_CAPACITY_CHANGED added
+
+   - Sync with vdisk handler
+
+   - Added autogenerated SCSI SN
+
+
+Thanks to all who made it happen!
+Vlad
 
