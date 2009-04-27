@@ -1,43 +1,64 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] scsi_error: fix scsi_eh_restore_cmnd() documentation
-Date: Mon, 27 Apr 2009 20:54:22 +0200
-Message-ID: <200904272054.22929.bzolnier@gmail.com>
+From: Takahiro Yasui <tyasui@redhat.com>
+Subject: Re: [RFC][PATCH] limit state change to SDEV_BLOCK devices in scsi_internal_device_unblock
+Date: Mon, 27 Apr 2009 15:43:09 -0400
+Message-ID: <49F60ACD.5030204@redhat.com>
+References: <49F5E6E5.20904@redhat.com> <20090427180300.GH1926@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-2022-JP
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:38831 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757247AbZD0SuV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Apr 2009 14:50:21 -0400
-Received: by fxm2 with SMTP id 2so92461fxm.37
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Apr 2009 11:50:19 -0700 (PDT)
-Content-Disposition: inline
+Received: from mx2.redhat.com ([66.187.237.31]:60050 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755767AbZD0Tm5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Apr 2009 15:42:57 -0400
+In-Reply-To: <20090427180300.GH1926@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org, mchristi@redhat.com, mbarrow@redhat.com
 
+Matthew Wilcox wrote:
+> On Mon, Apr 27, 2009 at 01:09:57PM -0400, Takahiro Yasui wrote:
+>> @@ -2633,9 +2633,12 @@ scsi_internal_device_unblock(struct scsi
+>>  	unsigned long flags;
+>>  	
+>>  	/* 
+>> -	 * Try to transition the scsi device to SDEV_RUNNING
+>> -	 * and goose the device queue if successful.  
+>> +	 * Try to transition the scsi device to SDEV_RUNNING if it is
+>> +	 * SDEV_BLOCK and goose the device queue if successful.
+> 
+> I think the code looks good, but the edit to the comment dilutes its
+> flavour somewhat.  How about just moving the comment down below the
+> check, and then you don't need to edit the comment at all?
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Thank you for the suggestion. I updated the patch according to your
+comment.
+
+Regards,
 ---
- drivers/scsi/scsi_error.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Takahiro Yasui
+Hitachi Computer Products (America), Inc.
 
-Index: b/drivers/scsi/scsi_error.c
+
+Signed-off-by: Takahiro Yasui <tyasui@redhat.com>
+---
+ drivers/scsi/scsi_lib.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+Index: linux-2.6.29/drivers/scsi/scsi_lib.c
 ===================================================================
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -641,9 +641,9 @@ EXPORT_SYMBOL(scsi_eh_prep_cmnd);
- /**
-  * scsi_eh_restore_cmnd  - Restore a scsi command info as part of error recory
-  * @scmd:       SCSI command structure to restore
-- * @ses:        saved information from a coresponding call to scsi_prep_eh_cmnd
-+ * @ses:        saved information from a coresponding call to scsi_eh_prep_cmnd
-  *
-- * Undo any damage done by above scsi_prep_eh_cmnd().
-+ * Undo any damage done by above scsi_eh_prep_cmnd().
-  */
- void scsi_eh_restore_cmnd(struct scsi_cmnd* scmd, struct scsi_eh_save *ses)
- {
+--- linux-2.6.29.orig/drivers/scsi/scsi_lib.c
++++ linux-2.6.29/drivers/scsi/scsi_lib.c
+@@ -2631,7 +2631,10 @@ scsi_internal_device_unblock(struct scsi
+ 	struct request_queue *q = sdev->request_queue; 
+ 	int err;
+ 	unsigned long flags;
+-	
++
++	if (sdev->sdev_state != SDEV_BLOCK)
++		return 0;
++
+ 	/* 
+ 	 * Try to transition the scsi device to SDEV_RUNNING
+ 	 * and goose the device queue if successful.  
