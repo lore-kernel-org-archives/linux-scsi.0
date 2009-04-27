@@ -1,64 +1,54 @@
-From: "Abhijeet Arvind Joglekar (abjoglek)" <abjoglek@cisco.com>
-Subject: RE: [PATCH 1/6] fnic: add main file with module infrastructure,fnic structure, Makefile
-Date: Mon, 27 Apr 2009 10:30:45 -0700
-Message-ID: <9E88C8678BF34240A8C61D4078A3D251FE7432@xmb-sjc-23e.amer.cisco.com>
-References: <20090418012941.24787.58754.stgit@feynman.nuovasystems.com> <20090418013232.24787.33309.stgit@feynman.nuovasystems.com> <1240847076.3387.20.camel@mulgrave.int.hansenpartnership.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [RFC][PATCH] limit state change to SDEV_BLOCK devices in scsi_internal_device_unblock
+Date: Mon, 27 Apr 2009 12:03:00 -0600
+Message-ID: <20090427180300.GH1926@parisc-linux.org>
+References: <49F5E6E5.20904@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-2.cisco.com ([171.71.176.71]:37909 "EHLO
-	sj-iport-2.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754728AbZD0Rar convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Apr 2009 13:30:47 -0400
-Content-class: urn:content-classes:message
-In-reply-to: <1240847076.3387.20.camel@mulgrave.int.hansenpartnership.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:41420 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751857AbZD0SDC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Apr 2009 14:03:02 -0400
+Content-Disposition: inline
+In-Reply-To: <49F5E6E5.20904@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, "Joe Eykholt (jeykholt)" <jeykholt@cisco.com>, Mike Christie <michaelc@cs.wisc.edu>
+To: Takahiro Yasui <tyasui@redhat.com>
+Cc: linux-scsi@vger.kernel.org, mchristi@redhat.com, mbarrow@redhat.com
 
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
-> Sent: Monday, April 27, 2009 8:45 AM
-> To: Abhijeet Arvind Joglekar (abjoglek)
-> Cc: linux-scsi@vger.kernel.org; Joe Eykholt (jeykholt)
-> Subject: Re: [PATCH 1/6] fnic: add main file with module 
-> infrastructure,fnic structure, Makefile
-> 
-> On Fri, 2009-04-17 at 18:32 -0700, Abhijeet Joglekar wrote:
-> > fnic_main.c: include module load and unload, PCI device probe, 
-> > scsi-ml, libFC and scsi-transport-fc registration and interfaces
-> > 
-> > fnic.h: has fnic definition and other related data types
-> > 
-> > Makefile:
-> > 
-> > Signed-off-by: Abhijeet Joglekar <abjoglek@cisco.com>
-> > Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
-> > Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-> 
-> I'm guessing this should be:
-> 
-> Signed-off-by: Abhijeet Joglekar <abjoglek@cisco.com>
-> Reviewed-by: Joe Eykholt <jeykholt@cisco.com>
-> Acked-by: Mike Christie <michaelc@cs.wisc.edu>
-> 
-> ?
-> 
-> James
-> 
+On Mon, Apr 27, 2009 at 01:09:57PM -0400, Takahiro Yasui wrote:
+> @@ -2633,9 +2633,12 @@ scsi_internal_device_unblock(struct scsi
+>  	unsigned long flags;
+>  	
+>  	/* 
+> -	 * Try to transition the scsi device to SDEV_RUNNING
+> -	 * and goose the device queue if successful.  
+> +	 * Try to transition the scsi device to SDEV_RUNNING if it is
+> +	 * SDEV_BLOCK and goose the device queue if successful.
 
-Joe is in the module-author and MAINTAINERS list, so his name should
-have "Signed-off-by" tag.
+I think the code looks good, but the edit to the comment dilutes its
+flavour somewhat.  How about just moving the comment down below the
+check, and then you don't need to edit the comment at all?
 
-As Mike said in his email, he contributed changes to driver and reviewed
-the driver code. I put the "Signed-off-by" tag for Mike as a superset to
-include his patch contributions + review. I am ok with the tag that you
-and Mike think is appropriate.
+>  	 */
+> +	if (sdev->sdev_state != SDEV_BLOCK)
+> +		return 0;
+> +
+>  	err = scsi_device_set_state(sdev, SDEV_RUNNING);
+>  	if (err) {
+>  		err = scsi_device_set_state(sdev, SDEV_CREATED);
+> 
+> 
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-thanks
--- abhijeet
-
-
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
