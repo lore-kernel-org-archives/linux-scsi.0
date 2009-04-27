@@ -1,291 +1,59 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: [ANNOUNCE]: SCST 1.0.1 core, target drivers for iSCSI, QLogic 22xx/23xx
- and local as well as fileio_tgt backend handler and scstadmin utility v1.0.6
- released
-Date: Tue, 28 Apr 2009 01:04:44 +0400
-Message-ID: <49F61DEC.3000202@vlnb.net>
+From: Chris Leech <christopher.leech@intel.com>
+Subject: Re: [PATCH] netdev: storage address support
+Date: Mon, 27 Apr 2009 15:28:00 -0700
+Message-ID: <20090427222800.GA14396@cleech-lnx.jf.intel.com>
+References: <20090424080349.30460.73770.stgit@localhost.localdomain> <20090427.030103.88777540.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:61375 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760239AbZD0VEf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Apr 2009 17:04:35 -0400
+Received: from mga03.intel.com ([143.182.124.21]:30604 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756261AbZD0W2C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Apr 2009 18:28:02 -0400
+Content-Disposition: inline
+In-Reply-To: <20090427.030103.88777540.davem@davemloft.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scst-devel <scst-devel@lists.sourceforge.net>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-
-Hi All,
-
-I'm glad to announce release 1.0.1 of SCST core, target drivers for 
-iSCSI, QLogic 22xx/23xx and local as well as fileio_tgt backend handler 
-and scstadmin utility v1.0.6.
-
-SCST is an alternative implementation of SCSI target subsystem for 
-Linux. It provides unified, consistent interface between SCSI target 
-drivers and Linux kernel as well as between Linux kernel and storage 
-backend handlers, connecting target drivers with real or emulated 
-storage backend.
-
-SCST allows creation of sophisticated storage devices, which provide
-advanced functionality, like replication, thin provisioning,
-deduplication, high availability, automatic backup, etc. Another class
-of such devices are Virtual Tape Libraries (VTL) as well as other
-disk-based backup solutions. SCST created devices not limited by IP
-network interface only, but they can use any link supporting SCSI-style
-data exchange, including Fibre Channel, SAS and parallel SCSI. It might
-well be that your favorite storage appliance running SCST in the firmware.
-
-More info about SCST core and modules you can find on:
-
-  - SCST core: http://scst.sourceforge.net
-
-  - iSCSI target driver iSCSI-SCST: 
-http://scst.sourceforge.net/target_iscsi.html
-
-  - QLogic 22xx/23xx Fibre Channel target driver: 
-http://scst.sourceforge.net/target_qla22xx_23xx.html
-
-  - Local target driver: http://scst.sourceforge.net/target_local.html
-
-  - fileio_tgt backend handler on 
-http://scst.sourceforge.net/handler_fileio_tgt.html.
-
-  - scstadmin: http://scst.sourceforge.net/scst_admin.html
-
-SCST aims to be included in the mainline kernel. You can find the first
-iteration of SCST patches review in http://lkml.org/lkml/2008/12/10/245.
-
-You can download SCST core and modules from 
-http://scst.sourceforge.net/downloads.html.
-
-Summary of changes in SCST core between versions 1.0.0 and 1.0.1
-----------------------------------------------------------------
-
-   - Support for descriptor sense format added
-
-   - Makefiles made more packager friendly (Ruben Laban)
-
-   - Support for variable length CDB added
-
-   - Support for Asynchronous Event Notifications added
-
-   - Implemented "plug-and-play" notifications about new devices in
-     security groups, deleted devices from security groups and changed
-     size of a device. They can be delivered either through AENs (if
-     supported), or Unit Attentions.
-
-   - New command "resync_size" added to scst_vdisk proc interface to tell
-     scst_vdisk to reread size of the corresponding device after it was
-     changed
-
-   - Added pattern matching for initiator names in SCST access control
-     (Gennadiy Nerubayev)
-
-   - Now only sent for execution commands are counted to wait for in TM
-     commands, which made processing of TM commands faster
-
-   - Now devices blocked only in reset TM commands. ABORTs, etc. now done
-     without devices blocking.
-
-   - scst_unregister_session_ex() removed, since there are no users of it
-
-   -  New functions added to scst_user interface:
-
-      * SCST_USER_UNREGISTER_DEVICE - to unregister device, flush mem
-        reuse (SGV) cache and send UCMD_STATE_ON_CACHE_FREEING
-        notifications for all freed buffers to the user space handler.
-        Simple device close doesn't allow that, so all the cached buffers
-        might look as "leaked" from the user space handler POV.
-
-      * SCST_USER_FLUSH_CACHE - to flush mem reuse (SGV) cache and send
-        UCMD_STATE_ON_CACHE_FREEING notifications for all freed buffers to
-        the user space handler
-
-      * SCST_USER_DEVICE_CAPACITY_CHANGED - to notify SCST core that the
-        corresponding device has changed its capacity
-
-   - Clustering of scst_user pages added
-
-   - Added autogenerated SCSI SN in vdisk handler
-
-   - Fixed race in scst_user, which could have lead to usage of already
-     freed command. A misbehaving user space handler could have made ucmd
-     to get dead immediately after the lock is released and that is caught
-     now.
-
-   - Support for CentOS 5.2 added (Bart Van Assche)
-
-   - In scst_vdisk new module parameter num_threads added to specify a
-     number of threads for each vdisk/vcdrom. Default is 5.
-
-   - Access control docs updated
-
-   - Set memory limits according to LOWMEM, not TOTALMEM
-
-   - Major performance increase working with disk based storage
-
-   - Now task_mgmt_fn() callback called for TARGET RESET and NEXUS LOSS
-     functions only once for tgt_dev, which belongs to the session, from
-     which the corresponding request came
-
-   - SGV cache related parameters moved from scst.h to scst_sgv.h
-
-   - Log level mgmt_minor for messages like "Warning: expected transfer
-     length X for opcode Y" changed to be disabled by default
-
-   - Added possibility to coexist if both target driver and dev handler
-     need custom memory allocation. Direct consequences: (1) scst_local
-     can work with scst_user's devices and (2) scst_user now compatible
-     with iscsi-scst if put_page_callback patch not applied.
-
-   - Deprecated scst_cmd_get_tgt_resp_flags() removed
-
-   - SWP and TAS parameters made changeable in vdisk handler
-
-   - External interface changed to fix usage of in_atomic(). Now target
-     drivers and dev handlers need to explicitly supply preferred
-     execution context in scst_cmd_done() and scst_tgt_cmd_done()
-
-   - Handling of internal REQUEST SENSE fixed.
-
-   - Fixed SAM violation (HiSup bit must be set in INQUIRY response)
-
-   - Fixed handling of VERIFY commands that comes with BYTCHK unset
-
-   - Handling of double reset UAs made more reliable
-
-   - A lot of kernel style, checkpatch and sparse fixes (Bart Van Assche)
-
-   - In-kernel build integration (Bart Van Assche)
-
-   - Update for kernels up to 2.6.29
-
-   - A lot of fixes and cleanups (many people)
-
-
-Summary of changes in iSCSI-SCST between versions 1.0.0 and 1.0.1
------------------------------------------------------------------
-
-   - Support for variable length CDB added
-
-   - Sending and receiving padding bytes as well as sense data
-     reimplemented to make it more reliable
-
-   - Support for SCSI Asynchronous Event Notifications added
-
-   - Sessions and connections reinstatement reimplemented to be conforming
-     to iSCSI RFC
-
-   - iscsi-scst-adm fixed
-
-   - Removed artificial limitation of sg_tablesize. It isn't needed,
-     because the regular iSCSI negotiated MaxRecvDataSegmentLength-related
-     facilities do all the job pretty well.
-
-   - Merge with IET r170-211:
-
-     * Update MaxConnections documentation
-
-     * Remove isns config description from man page
-
-     * Check return values of chdir(), ftruncate() and write(), because
-       recent versions of the glibc insist on the return value being
-       checked by introducing __attribute__((warn_unused_result)) to these
-       functions.
-
-     * Fix snprintf use in isns.c
-
-     * Take \0-termination into account when passing strings to
-       isns_tlv_set() to solve incompatibility with MS iSNS 3.0 as IQN
-       length is multiple of 4
-
-     * Fix list corruption if SCST target registration fails
-
-     * Register the target port actually used instead of the default iSCSI
-       port.
-
-     * Remove unused connection->pad
-
-     * Refactor cmnd_execute()
-
-     * Introduce min*/max*() and more list_* macros
-
-     * Multipart PDU support for discovery sessions
-
-     * Add support for Reject PDUs and make use of them in appropriate
-       places.
-
-     * Ignore SIGPIPE in iscsi-scstd
-
-     * Allow removal of kernel target objects if the user space object
-       does not exist
-
-     * Use netlink_socket_release() to clean up netlink sockets correctly
-       (taking care of namespaces)
-
-     * More scalable proc seq_file implementation
-
-     * Segfault in ietd buffer overrun in dump_line
-
-     * Add iscsi-scst-adm support to display list of CHAP accounts and
-       their data
-
-     * Fixed compilation on glibc 2.8
-
-     * Fix CHAP account handling bugs
-
-     * Fix bugs in multi PDU handling code
-
-   - Support for CentOS 5.2 added (Bart Van Assche)
-
-   - Fixed NOP-Out with payload handling
-
-   - Several minor iSCSI RFC violations fixed
-
-   - Update for kernels up to 2.6.29
-
-   - Zero-copy feature, introduced by put_page_callback patch made
-     kernel compile time configurable via
-     CONFIG_TCP_ZERO_COPY_TRANSFER_COMPLETION_NOTIFICATION option. If you
-     upgrade from earlier versions, see the corresponding "[CAUTION]"
-     e-mail in scst-devel mailing list about possible compatibility
-     problems.
-
-   - A lot of cleanups and minor fixes
-
-
-Summary of changes in qla2x00t between versions 1.0.0 and 1.0.1
----------------------------------------------------------------
-
-   - Update to initiator driver from 2.6.27
-
-   - HOWTO added (Amit Mehta)
-
-   - Fixed wrong sess_count decrement on session registration failure
-
-   - Fixed possible oops in the initiator driver on the module unload
-
-   - Updated to work on kernels up to 2.6.29
-
-   - Other minor fixes
-
-
-Summary of changes in fileio_tgt between versions 1.0.0 and 1.0.1
------------------------------------------------------------------
-
-   - Added notification about device capacity change
-
-   - Usage of new commands SCST_USER_UNREGISTER_DEVICE,
-     SCST_USER_FLUSH_CACHE and SCST_USER_DEVICE_CAPACITY_CHANGED added
-
-   - Sync with vdisk handler
-
-   - Added autogenerated SCSI SN
-
-
-Thanks to all who made it happen!
-Vlad
-
+To: David Miller <davem@davemloft.net>
+Cc: "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "gospo@redhat.com" <gospo@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+
+On Mon, Apr 27, 2009 at 03:01:03AM -0700, David Miller wrote:
+> From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+> Date: Fri, 24 Apr 2009 01:03:50 -0700
+> 
+> > 2) Server Provided MAC Address (SPMA)
+> > The server indicates to the FCF the address it would like to use for FCoE
+> > traffic.  It's expected that SPMA capable interfaces will have a storage
+> > dedicated MAC address programed into EPROM, flash, or other non-volatile
+> > storage which the driver will be able to provide to the FCoE stack.
+> > 
+> > This adds a net_device_ops function to query a driver for a dedicated storage
+> > address.
+> > 
+> > If ndo_get_storage_address is implemented, then the address will also be
+> > exposed as a sysfs attribute.  In order to do that, a new optional attrs group
+> > is added to the net_device, with the visibility of each attribute protected by
+> > a call to netdev_show_optional_attr().
+> 
+> This should be what is currently provided in netdev->perm_addr[]
+> 
+> I really see no difference.
+
+There seems to be some desire to use separate MAC address for LAN and
+SAN traffic on a converged network, even when using the server provided
+addressing mode for FCoE.  So I'm looking at a device that has an extra
+MAC address in it's EEPROM, that's intended to be used for SAN traffic
+only.
+
+At first glance Jiri's "list of device addresses" patch seems to be
+heading towards a more general approach to having multiple MAC
+addresses, without providing any sort of intent on how they should be
+used.  But given that it's trying to solve a bonding + bridging issue,
+the addresses involved seem fairly dynamic and I'm not sure how it
+differs much from the existing uc_list.
+
+Ignoring the issue of intended use for the moment, if an ethernet driver
+wanted to advertise several MAC addresses to the system how should it go
+about that?
+
+- Chris
