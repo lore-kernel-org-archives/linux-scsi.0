@@ -1,37 +1,38 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] netdev: storage address support
-Date: Mon, 27 Apr 2009 18:48:54 -0700 (PDT)
-Message-ID: <20090427.184854.227522560.davem@davemloft.net>
-References: <20090424080349.30460.73770.stgit@localhost.localdomain>
-	<20090427.030103.88777540.davem@davemloft.net>
-	<20090427222800.GA14396@cleech-lnx.jf.intel.com>
+From: Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] scsi: ses check name in enclosure_component_register
+Date: Mon, 27 Apr 2009 19:18:53 -0700
+Message-ID: <49F6678D.3080207@kernel.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47537
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752932AbZD1BtA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Apr 2009 21:49:00 -0400
-In-Reply-To: <20090427222800.GA14396@cleech-lnx.jf.intel.com>
+Received: from hera.kernel.org ([140.211.167.34]:44308 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752932AbZD1CTv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Apr 2009 22:19:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: christopher.leech@intel.com
-Cc: jeffrey.t.kirsher@intel.com, netdev@vger.kernel.org, gospo@redhat.com, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Kay Sievers <kay.sievers@vrfy.org>, Greg KH <gregkh@suse.de>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Linux-Scsi <linux-scsi@vger.kernel.org>
 
-From: Chris Leech <christopher.leech@intel.com>
-Date: Mon, 27 Apr 2009 15:28:00 -0700
 
-> Ignoring the issue of intended use for the moment, if an ethernet driver
-> wanted to advertise several MAC addresses to the system how should it go
-> about that?
+dev_set_name will use sprintf to copy the name.
+need to check if the name does valid.
 
-Now that's a more interesting question.
+otherwise will error from device_add later.
 
-It seems better to formalize this.   It can be an ethtool
-callback or whatever, but what it should do is return
-an array of addresses, types, and perhaps even indexes
-with types.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-So you could return LAN1, LAN2, LAN3, and SAN1.
+diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
+index 3cf61ec..68743a9 100644
+--- a/drivers/misc/enclosure.c
++++ b/drivers/misc/enclosure.c
+@@ -255,7 +255,7 @@ enclosure_component_register(struct enclosure_device *edev,
+ 	ecomp->number = number;
+ 	cdev = &ecomp->cdev;
+ 	cdev->parent = get_device(&edev->edev);
+-	if (name)
++	if (name && name[0])
+ 		dev_set_name(cdev, name);
+ 	else
+ 		dev_set_name(cdev, "%u", number);
