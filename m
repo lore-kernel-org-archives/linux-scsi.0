@@ -1,60 +1,50 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13143] scsi_debug doesn't manage more than 1Tb
-Date: Tue, 28 Apr 2009 08:33:48 GMT
-Message-ID: <200904280833.n3S8XmVV018835@demeter.kernel.org>
-References: <bug-13143-11613@http.bugzilla.kernel.org/>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] netdev: storage address support
+Date: Tue, 28 Apr 2009 02:12:49 -0700 (PDT)
+Message-ID: <20090428.021249.247190041.davem@davemloft.net>
+References: <20090427222800.GA14396@cleech-lnx.jf.intel.com>
+	<20090427.184854.227522560.davem@davemloft.net>
+	<20090428083048.GB27798@psychotron.englab.brq.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:49160 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753580AbZD1Idt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Apr 2009 04:33:49 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n3S8Xmkk018836
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Apr 2009 08:33:48 GMT
-In-Reply-To: <bug-13143-11613@http.bugzilla.kernel.org/>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45249
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1755386AbZD1JM4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Apr 2009 05:12:56 -0400
+In-Reply-To: <20090428083048.GB27798@psychotron.englab.brq.redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: jpirko@redhat.com
+Cc: christopher.leech@intel.com, jeffrey.t.kirsher@intel.com, netdev@vger.kernel.org, gospo@redhat.com, linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13143
+From: Jiri Pirko <jpirko@redhat.com>
+Date: Tue, 28 Apr 2009 10:30:48 +0200
 
-
-
-
-
---- Comment #5 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2009-04-28 08:32:02 ---
-Reply-To: fujita.tomonori@lab.ntt.co.jp
-
-On Mon, 27 Apr 2009 10:41:00 GMT
-bugzilla-daemon@bugzilla.kernel.org wrote:
-
-> http://bugzilla.kernel.org/show_bug.cgi?id=13143
+> Tue, Apr 28, 2009 at 03:48:54AM CEST, davem@davemloft.net wrote:
+>>From: Chris Leech <christopher.leech@intel.com>
+>>Date: Mon, 27 Apr 2009 15:28:00 -0700
+>>
+>>> Ignoring the issue of intended use for the moment, if an ethernet driver
+>>> wanted to advertise several MAC addresses to the system how should it go
+>>> about that?
+>>
+>>Now that's a more interesting question.
+>>
+>>It seems better to formalize this.   It can be an ethtool
+>>callback or whatever, but what it should do is return
+>>an array of addresses, types, and perhaps even indexes
+>>with types.
 > 
+> Well the list of device addresses from my patch can pretty much solve this.
+> There can be additional field in struct netdev_hw_addr to store flags to
+> identify the mac address type (like primary, lan, san, slave, etc).
 > 
-> 
-> 
-> 
-> --- Comment #4 from Thierry Vignaud <tvignaud@mandriva.com>  2009-04-27 10:39:15 ---
-> (In reply to comment #1)
-> > it seems invalid that you tested linux 2.5 ?
-> 
-> Version was auto filled by bugzilla. Really was 2.6.29.1
-> 
-> > And could you describe it more detailed as in REPORTING-BUGS ?
-> 
-> All needed data was provided in initial comment. And it was enough in order to
-> provide a fix.
+> I think it would be better to do this in general (in struct net_device) then
+> inside each driver exported by ethtool or whatever.
 
-The patch is available:
+Agreed, can you update your patch to provide such a 'type' tag?
 
-http://marc.info/?l=linux-scsi&m=124063464410711&w=2
-
-
-Can you confirm that it fixes the problem?
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Thanks!
