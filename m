@@ -1,262 +1,89 @@
-From: timg@tpi.com (Tim Gardner)
-Subject: [PATCH] mptsas: Fix namespace collisions with ARM arch headers
-Date: Tue, 28 Apr 2009 15:20:32 -0600 (MDT)
-Message-ID: <20090428212032.28A41F88CE@sepang.rtg.net>
+From: "Styner, Douglas W" <douglas.w.styner@intel.com>
+Subject: RE: [PATCH] qla2xxx: Fix a regression due to refactoring in
+ interrupt handler code
+Date: Tue, 28 Apr 2009 14:31:56 -0700
+Message-ID: <D7C42C27E6CB1E4D8CBDF2F81EA92A2603459F44B4@azsmsx501.amr.corp.intel.com>
+References: <alpine.OSX.1.00.0904280916550.25672@ac-mac.qlogic.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <kernel-team-bounces@lists.ubuntu.com>
-List-Unsubscribe: <https://lists.ubuntu.com/mailman/listinfo/kernel-team>,
-	<mailto:kernel-team-request@lists.ubuntu.com?subject=unsubscribe>
-List-Archive: <https://lists.ubuntu.com/archives/kernel-team>
-List-Post: <mailto:kernel-team@lists.ubuntu.com>
-List-Help: <mailto:kernel-team-request@lists.ubuntu.com?subject=help>
-List-Subscribe: <https://lists.ubuntu.com/mailman/listinfo/kernel-team>,
-	<mailto:kernel-team-request@lists.ubuntu.com?subject=subscribe>
-Sender: kernel-team-bounces@lists.ubuntu.com
-Errors-To: kernel-team-bounces@lists.ubuntu.com
-To: Eric.Moore@lsi.com
-Cc: DL-MPTFusionLinux@lsi.com, kernel-team@lists.ubuntu.com, support@lsi.com, linux-scsi@vger.kernel.org
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:42846 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752002AbZD1Vb6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Apr 2009 17:31:58 -0400
+In-Reply-To: <alpine.OSX.1.00.0904280916550.25672@ac-mac.qlogic.org>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Anirban Chakraborty <anirban.chakraborty@qlogic.com>, "andi@firstfloor.org" <andi@firstfloor.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-driver@qlogic.com" <linux-driver@qlogic.com>, "Ma, Chinang" <chinang.ma@intel.com>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>, "willy@linux.intel.com" <willy@linux.intel.com>, "Tripathi, Sharad C" <sharad.c.tripathi@intel.com>
 
-The following changes since commit 5868612ee4797cf90665a47b93a8bb0b96a12600:
-  Tim Gardner (1):
-        mpt2sas: Change reset_type enum to avoid namespace collision.
+> Anirban Chakraborty <anirban.chakraborty@qlogic.com> writes:
+>
+>From: Anirban Chakraborty [mailto:anirban.chakraborty@qlogic.com]
+>Sent: Tuesday, April 28, 2009 9:28 AM
+>To: Styner, Douglas W; andi@firstfloor.org;
+>James.Bottomley@HansenPartnership.com
+>Cc: linux-scsi@vger.kernel.org; linux-driver@qlogic.com
+>Subject: [PATCH] qla2xxx: Fix a regression due to refactoring in interrupt
+>handler code
+>
+>Remove unnecessary search for a response completion host when driver is
+>running
+>in single queue mode. This should fix the increased cycles seen in
+>qla24xx_intr_handler code.
+>
+>Please apply.
+>Thanks,
+>Anirban
+>
+>Reported-by: Styner, Douglas W <douglas.w.styner@intel.com>
+>Signed-off-by: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
 
-are available in the git repository at:
+There is no significant impact from this patch.  The net effect of this patch when using MSI is to replace calls to qla2x00_get_rsp_host(), which calls the in-lined function pci_get_drvdata(), with direct calls to pci_get_drvdata().  qla2x00_get_rsp_host is very inexpensive (~0.0117%), so removing does not have a significant impact.
 
-  git://kernel.ubuntu.com/rtg/linux-2.6 mpt2sas
+Linux OLTP Performance summary
+Kernel#            Speedup(x)   Intr/s  CtxSw/s us%     sys%    idle%   iowait%
+2.6.30-rc3              1.000   30645   43027   75      25      0       0
+2.6.30-rc3_qla2xxx      0.999   30737   43256   75      25      0       0
 
->From 5868612ee4797cf90665a47b93a8bb0b96a12600 Mon Sep 17 00:00:00 2001
-From: Tim Gardner <tim.gardner@canonical.com>
-Date: Tue, 28 Apr 2009 13:54:11 -0600
-Subject: [PATCH] mpt2sas: Change reset_type enum to avoid namespace collision.
+Server configurations:
+Intel Xeon Quad-core 2.0GHz  2 cpus/8 cores/8 threads
+64GB memory, 3 qle2462 FC HBA, 450 spindles (30 logical units)
 
-Preface the enum reset_type declarations with MPT2SAS_ in order to avoid
-namespace collisions with ARM arch definitions, specifically SOFT_RESET.
 
-Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
----
- drivers/scsi/mpt2sas/mpt2sas_base.c      |   16 ++++++++--------
- drivers/scsi/mpt2sas/mpt2sas_base.h      |    8 ++++----
- drivers/scsi/mpt2sas/mpt2sas_config.c    |    2 +-
- drivers/scsi/mpt2sas/mpt2sas_ctl.c       |   10 +++++-----
- drivers/scsi/mpt2sas/mpt2sas_scsih.c     |    7 ++++---
- drivers/scsi/mpt2sas/mpt2sas_transport.c |    4 ++--
- 6 files changed, 24 insertions(+), 23 deletions(-)
+======oprofile CPU_CLK_UNHALTED for top 30 functions
+Cycles% 2.6.30-rc3                 Cycles% 2.6.30-rc3_qla2xxx
+69.1925 <database>                 67.8477 <database>
+1.1314 qla24xx_intr_handler        1.2426 qla24xx_start_scsi
+1.0031 qla24xx_start_scsi          1.1148 qla24xx_intr_handler
+0.8476 __schedule                  0.8508 kmem_cache_alloc
+0.6532 kmem_cache_alloc            0.8021 __schedule
+0.4490 __blockdev_direct_IO        0.5179 __blockdev_direct_IO
+0.4199 __sigsetjmp                 0.4456 __sigsetjmp
+0.3946 __switch_to                 0.3952 scsi_request_fn
+0.3538 __list_add                  0.3817 __switch_to
+0.3499 task_rq_lock                0.3716 task_rq_lock
+0.3402 scsi_request_fn             0.3481 __list_add
+0.3382 rb_get_reader_page          0.3380 rb_get_reader_page
+0.3363 copy_user_generic_string    0.3178 ring_buffer_consume
+0.3324 aio_complete                0.2993 aio_complete
+0.3110 try_to_wake_up              0.2993 copy_user_generic_string
+0.2877 ring_buffer_consume         0.2741 try_to_wake_up
+0.2683 mod_timer                   0.2623 blk_queue_end_tag
+0.2605 qla2x00_process_completed_re0.2573 lock_timer_base
+0.2566 blk_queue_end_tag           0.2522 memset_c
+0.2566 generic_make_request        0.2472 memmove
+0.2547 tcp_sendmsg                 0.2472 qla2x00_process_completed_re
+0.2372 lock_timer_base             0.2270 generic_make_request
+0.2333 memmove                     0.2253 mod_timer
+0.2294 memset_c                    0.2186 __make_request
+0.2080 mempool_free                0.2136 scsi_device_unbusy
+0.2022 generic_file_aio_read       0.2136 kmem_cache_free
+0.1963 scsi_device_unbusy          0.2119 mempool_free
+0.1963 plist_del                   0.2018 kref_get
+0.1944 dequeue_rt_stack            0.2018 plist_del
+0.1924 e1000_xmit_frame            0.1984 ipc_lock
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index a91f514..78ef40e 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -101,7 +101,7 @@ _base_fault_reset_work(struct work_struct *work)
- 	doorbell = mpt2sas_base_get_iocstate(ioc, 0);
- 	if ((doorbell & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_FAULT) {
- 		rc = mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
--		    FORCE_BIG_HAMMER);
-+		    MPT2SAS_FORCE_BIG_HAMMER);
- 		printk(MPT2SAS_WARN_FMT "%s: hard reset: %s\n", ioc->name,
- 		    __func__, (rc == 0) ? "success" : "failed");
- 		doorbell = mpt2sas_base_get_iocstate(ioc, 0);
-@@ -2355,7 +2355,7 @@ mpt2sas_base_sas_iounit_control(struct MPT2SAS_ADAPTER *ioc,
-  issue_host_reset:
- 	if (issue_reset)
- 		mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
--		    FORCE_BIG_HAMMER);
-+		    MPT2SAS_FORCE_BIG_HAMMER);
- 	ioc->base_cmds.status = MPT2_CMD_NOT_USED;
- 	rc = -EFAULT;
-  out:
-@@ -2452,7 +2452,7 @@ mpt2sas_base_scsi_enclosure_processor(struct MPT2SAS_ADAPTER *ioc,
-  issue_host_reset:
- 	if (issue_reset)
- 		mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
--		    FORCE_BIG_HAMMER);
-+		    MPT2SAS_FORCE_BIG_HAMMER);
- 	ioc->base_cmds.status = MPT2_CMD_NOT_USED;
- 	rc = -EFAULT;
-  out:
-@@ -2987,7 +2987,7 @@ _base_diag_reset(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
-  * _base_make_ioc_ready - put controller in READY state
-  * @ioc: per adapter object
-  * @sleep_flag: CAN_SLEEP or NO_SLEEP
-- * @type: FORCE_BIG_HAMMER or SOFT_RESET
-+ * @type: MPT2SAS_FORCE_BIG_HAMMER or MPT2SAS_SOFT_RESET
-  *
-  * Returns 0 for success, non-zero for failure.
-  */
-@@ -3019,7 +3019,7 @@ _base_make_ioc_ready(struct MPT2SAS_ADAPTER *ioc, int sleep_flag,
- 		goto issue_diag_reset;
- 	}
- 
--	if (type == FORCE_BIG_HAMMER)
-+	if (type == MPT2SAS_FORCE_BIG_HAMMER)
- 		goto issue_diag_reset;
- 
- 	if ((ioc_state & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_OPERATIONAL)
-@@ -3110,7 +3110,7 @@ mpt2sas_base_free_resources(struct MPT2SAS_ADAPTER *ioc)
- 	    __func__));
- 
- 	_base_mask_interrupts(ioc);
--	_base_make_ioc_ready(ioc, CAN_SLEEP, SOFT_RESET);
-+	_base_make_ioc_ready(ioc, CAN_SLEEP, MPT2SAS_SOFT_RESET);
- 	if (ioc->pci_irq) {
- 		synchronize_irq(pdev->irq);
- 		free_irq(ioc->pci_irq, ioc);
-@@ -3145,7 +3145,7 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
- 	if (r)
- 		return r;
- 
--	r = _base_make_ioc_ready(ioc, CAN_SLEEP, SOFT_RESET);
-+	r = _base_make_ioc_ready(ioc, CAN_SLEEP, MPT2SAS_SOFT_RESET);
- 	if (r)
- 		goto out_free_resources;
- 
-@@ -3381,7 +3381,7 @@ _wait_for_commands_to_complete(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
-  * mpt2sas_base_hard_reset_handler - reset controller
-  * @ioc: Pointer to MPT_ADAPTER structure
-  * @sleep_flag: CAN_SLEEP or NO_SLEEP
-- * @type: FORCE_BIG_HAMMER or SOFT_RESET
-+ * @type: MPT2SAS_FORCE_BIG_HAMMER or MPT2SAS_SOFT_RESET
-  *
-  * Returns 0 for success, non-zero for failure.
-  */
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index 6945ff4..37ba4b0 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -355,12 +355,12 @@ struct _sas_node {
- 
- /**
-  * enum reset_type - reset state
-- * @FORCE_BIG_HAMMER: issue diagnostic reset
-- * @SOFT_RESET: issue message_unit_reset, if fails to to big hammer
-+ * @MPT2SAS_FORCE_BIG_HAMMER: issue diagnostic reset
-+ * @MPT2SAS_SOFT_RESET: issue message_unit_reset, if fails to to big hammer
-  */
- enum reset_type {
--	FORCE_BIG_HAMMER,
--	SOFT_RESET,
-+	MPT2SAS_FORCE_BIG_HAMMER,
-+	MPT2SAS_SOFT_RESET,
- };
- 
- /**
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_config.c b/drivers/scsi/mpt2sas/mpt2sas_config.c
-index 58cfb97..bb990c2 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_config.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_config.c
-@@ -308,7 +308,7 @@ _config_request(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigRequest_t
-  issue_host_reset:
- 	if (issue_reset)
- 		mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
--		    FORCE_BIG_HAMMER);
-+		    MPT2SAS_FORCE_BIG_HAMMER);
- 	ioc->config_cmds.status = MPT2_CMD_NOT_USED;
- 	if (!retry_count) {
- 		printk(MPT2SAS_INFO_FMT "%s: attempting retry\n",
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-index 2d4f85c..8fd8160 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-@@ -860,7 +860,7 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
- 			mutex_unlock(&ioc->tm_cmds.mutex);
- 		} else
- 			mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
--			    FORCE_BIG_HAMMER);
-+			    MPT2SAS_FORCE_BIG_HAMMER);
- 	}
- 
-  out:
-@@ -1070,7 +1070,7 @@ _ctl_do_reset(void __user *arg)
- 	    __func__));
- 
- 	retval = mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
--	    FORCE_BIG_HAMMER);
-+	    MPT2SAS_FORCE_BIG_HAMMER);
- 	printk(MPT2SAS_INFO_FMT "host reset: %s\n",
- 	    ioc->name, ((!retval) ? "SUCCESS" : "FAILED"));
- 	return 0;
-@@ -1382,7 +1382,7 @@ _ctl_diag_register(void __user *arg, enum block_state state)
-  issue_host_reset:
- 	if (issue_reset)
- 		mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
--		    FORCE_BIG_HAMMER);
-+		    MPT2SAS_FORCE_BIG_HAMMER);
- 
-  out:
- 
-@@ -1690,7 +1690,7 @@ _ctl_diag_release(void __user *arg, enum block_state state)
-  issue_host_reset:
- 	if (issue_reset)
- 		mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
--		    FORCE_BIG_HAMMER);
-+		    MPT2SAS_FORCE_BIG_HAMMER);
- 
-  out:
- 
-@@ -1861,7 +1861,7 @@ _ctl_diag_read_buffer(void __user *arg, enum block_state state)
-  issue_host_reset:
- 	if (issue_reset)
- 		mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
--		    FORCE_BIG_HAMMER);
-+		    MPT2SAS_FORCE_BIG_HAMMER);
- 
-  out:
- 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 0c463c4..866bbed 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -1821,7 +1821,8 @@ mpt2sas_scsih_issue_tm(struct MPT2SAS_ADAPTER *ioc, u16 handle, uint lun,
- 	}
- 	return;
-  issue_host_reset:
--	mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP, FORCE_BIG_HAMMER);
-+	mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
-+		MPT2SAS_FORCE_BIG_HAMMER);
- }
- 
- /**
-@@ -1980,7 +1981,7 @@ scsih_host_reset(struct scsi_cmnd *scmd)
- 	scsi_print_command(scmd);
- 
- 	retval = mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
--	    FORCE_BIG_HAMMER);
-+	    MPT2SAS_FORCE_BIG_HAMMER);
- 	r = (retval < 0) ? FAILED : SUCCESS;
- 	printk(MPT2SAS_INFO_FMT "host reset: %s scmd(%p)\n",
- 	    ioc->name, ((r == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
-@@ -5590,7 +5591,7 @@ scsih_resume(struct pci_dev *pdev)
- 	if (r)
- 		return r;
- 
--	mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP, SOFT_RESET);
-+	mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP, MPT2SAS_SOFT_RESET);
- 	scsi_unblock_requests(shost);
- 	return 0;
- }
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_transport.c b/drivers/scsi/mpt2sas/mpt2sas_transport.c
-index e03dc0b..d08b174 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_transport.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_transport.c
-@@ -447,7 +447,7 @@ transport_expander_report_manufacture(struct MPT2SAS_ADAPTER *ioc,
-  issue_host_reset:
- 	if (issue_reset)
- 		mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
--		    FORCE_BIG_HAMMER);
-+		    MPT2SAS_FORCE_BIG_HAMMER);
-  out:
- 	ioc->transport_cmds.status = MPT2_CMD_NOT_USED;
- 	if (data_out)
-@@ -1182,7 +1182,7 @@ transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
-  issue_host_reset:
- 	if (issue_reset) {
- 		mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
--		    FORCE_BIG_HAMMER);
-+		    MPT2SAS_FORCE_BIG_HAMMER);
- 		rc = -ETIMEDOUT;
- 	}
- 
--- 
-1.5.6.3
+Doug
