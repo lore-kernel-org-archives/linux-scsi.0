@@ -1,236 +1,45 @@
-From: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
-Subject: [PATCH] qla2xxx: Fix a regression due to refactoring in interrupt
- handler code
-Date: Tue, 28 Apr 2009 09:28:28 -0700 (PDT)
-Message-ID: <alpine.OSX.1.00.0904280916550.25672@ac-mac.qlogic.org>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: Re: Mainline kernel OLTP performance update
+Date: Tue, 28 Apr 2009 12:57:05 -0400
+Message-ID: <20090428125705.48ef09e1@dhcp-100-2-144.bos.redhat.com>
+References: <D7C42C27E6CB1E4D8CBDF2F81EA92A260345836A3A@azsmsx501.amr.corp.intel.com>
+	<87ljpmk29b.fsf@basil.nowhere.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch2.qlogic.com ([198.70.193.116]:50335 "EHLO
-	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759674AbZD1Qnk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Apr 2009 12:43:40 -0400
+Received: from mx2.redhat.com ([66.187.237.31]:58064 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755475AbZD1Q5Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Apr 2009 12:57:16 -0400
+In-Reply-To: <87ljpmk29b.fsf@basil.nowhere.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: douglas.w.styner@intel.com, andi@firstfloor.org, James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, linux-driver@qlogic.com
+To: Andi Kleen <andi@firstfloor.org>
+Cc: "Styner, Douglas W" <douglas.w.styner@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org
 
-Remove unnecessary search for a response completion host when driver is running
-in single queue mode. This should fix the increased cycles seen in 
-qla24xx_intr_handler code.
+On Mon, 27 Apr 2009 09:02:40 +0200
+Andi Kleen <andi@firstfloor.org> wrote:
 
-Please apply.
-Thanks,
-Anirban
+> "Styner, Douglas W" <douglas.w.styner@intel.com> writes:
+> 
+> >
+> > ======oprofile 0.9.3 CPU_CLK_UNHALTED for top 30 functions
+> > Cycles% 2.6.24.2                   Cycles% 2.6.30-rc2
+> > 74.8578 <database>                   67.6966 <database>
+> 
+> The dip in database cycles is indeed worrying.
+> 
+> > 1.0500 qla24xx_start_scsi          1.1724 qla24xx_start_scsi
+> > 0.8089 schedule                    1.0578 qla24xx_intr_handler
+> > 0.5864 kmem_cache_alloc            0.8259 __schedule
+> > 0.4989 __blockdev_direct_IO        0.7451 kmem_cache_alloc
+> > 0.4357 __sigsetjmp                 0.4872 __blockdev_direct_IO
+> > 0.4152 copy_user_generic_string    0.4390 task_rq_lock
+> > 0.3953 qla24xx_intr_handler        0.4338 __sigsetjmp
+> 
+> And also why the qla24xx_intr_handler became ~2.5x as expensive.
+> Cc linux-scsi and qla24xx maintainers.
+> 
 
-Reported-by: Styner, Douglas W <douglas.w.styner@intel.com>
-Signed-off-by: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
-
----
- drivers/scsi/qla2xxx/qla_gbl.h  |    6 ++++--
- drivers/scsi/qla2xxx/qla_iocb.c |    4 ++--
- drivers/scsi/qla2xxx/qla_isr.c  |   38 ++++++++++++++++++--------------------
- 3 files changed, 24 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 528913f..088d595 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -294,8 +294,10 @@ qla81xx_fac_erase_sector(scsi_qla_host_t *, uint32_t, uint32_t);
- extern irqreturn_t qla2100_intr_handler(int, void *);
- extern irqreturn_t qla2300_intr_handler(int, void *);
- extern irqreturn_t qla24xx_intr_handler(int, void *);
--extern void qla2x00_process_response_queue(struct rsp_que *);
--extern void qla24xx_process_response_queue(struct rsp_que *);
-+extern void qla2x00_process_response_queue(struct scsi_qla_host *,
-+	struct rsp_que *);
-+extern void qla24xx_process_response_queue(struct scsi_qla_host *,
-+	struct rsp_que *);
- 
- extern int qla2x00_request_irqs(struct qla_hw_data *, struct rsp_que *);
- extern void qla2x00_free_irqs(scsi_qla_host_t *);
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index a8abbb9..3d15565 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -399,7 +399,7 @@ qla2x00_start_scsi(srb_t *sp)
- 	/* Manage unprocessed RIO/ZIO commands in response queue. */
- 	if (vha->flags.process_response_queue &&
- 	    rsp->ring_ptr->signature != RESPONSE_PROCESSED)
--		qla2x00_process_response_queue(rsp);
-+		qla2x00_process_response_queue(vha, rsp);
- 
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 	return (QLA_SUCCESS);
-@@ -842,7 +842,7 @@ qla24xx_start_scsi(srb_t *sp)
- 	/* Manage unprocessed RIO/ZIO commands in response queue. */
- 	if (vha->flags.process_response_queue &&
- 		rsp->ring_ptr->signature != RESPONSE_PROCESSED)
--		qla24xx_process_response_queue(rsp);
-+		qla24xx_process_response_queue(vha, rsp);
- 
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 	return QLA_SUCCESS;
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index d049818..6f1c5ab 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -51,7 +51,7 @@ qla2100_intr_handler(int irq, void *dev_id)
- 	status = 0;
- 
- 	spin_lock(&ha->hardware_lock);
--	vha = qla2x00_get_rsp_host(rsp);
-+	vha = pci_get_drvdata(ha->pdev);
- 	for (iter = 50; iter--; ) {
- 		hccr = RD_REG_WORD(&reg->hccr);
- 		if (hccr & HCCR_RISC_PAUSE) {
-@@ -96,7 +96,7 @@ qla2100_intr_handler(int irq, void *dev_id)
- 			WRT_REG_WORD(&reg->semaphore, 0);
- 			RD_REG_WORD(&reg->semaphore);
- 		} else {
--			qla2x00_process_response_queue(rsp);
-+			qla2x00_process_response_queue(vha, rsp);
- 
- 			WRT_REG_WORD(&reg->hccr, HCCR_CLR_RISC_INT);
- 			RD_REG_WORD(&reg->hccr);
-@@ -147,7 +147,7 @@ qla2300_intr_handler(int irq, void *dev_id)
- 	status = 0;
- 
- 	spin_lock(&ha->hardware_lock);
--	vha = qla2x00_get_rsp_host(rsp);
-+	vha = pci_get_drvdata(ha->pdev);
- 	for (iter = 50; iter--; ) {
- 		stat = RD_REG_DWORD(&reg->u.isp2300.host_status);
- 		if (stat & HSR_RISC_PAUSED) {
-@@ -195,7 +195,7 @@ qla2300_intr_handler(int irq, void *dev_id)
- 			qla2x00_async_event(vha, rsp, mb);
- 			break;
- 		case 0x13:
--			qla2x00_process_response_queue(rsp);
-+			qla2x00_process_response_queue(vha, rsp);
- 			break;
- 		case 0x15:
- 			mb[0] = MBA_CMPLT_1_16BIT;
-@@ -685,9 +685,9 @@ skip_rio:
- 		    vha->host_no));
- 
- 		if (IS_FWI2_CAPABLE(ha))
--			qla24xx_process_response_queue(rsp);
-+			qla24xx_process_response_queue(vha, rsp);
- 		else
--			qla2x00_process_response_queue(rsp);
-+			qla2x00_process_response_queue(vha, rsp);
- 		break;
- 
- 	case MBA_DISCARD_RND_FRAME:
-@@ -872,17 +872,14 @@ qla2x00_process_completed_request(struct scsi_qla_host *vha,
-  * @ha: SCSI driver HA context
-  */
- void
--qla2x00_process_response_queue(struct rsp_que *rsp)
-+qla2x00_process_response_queue(struct scsi_qla_host *vha, struct rsp_que *rsp)
- {
--	struct scsi_qla_host *vha;
- 	struct qla_hw_data *ha = rsp->hw;
- 	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
- 	sts_entry_t	*pkt;
- 	uint16_t        handle_cnt;
- 	uint16_t        cnt;
- 
--	vha = qla2x00_get_rsp_host(rsp);
--
- 	if (!vha->flags.online)
- 		return;
- 
-@@ -1487,12 +1484,9 @@ qla24xx_mbx_completion(scsi_qla_host_t *vha, uint16_t mb0)
-  * @ha: SCSI driver HA context
-  */
- void
--qla24xx_process_response_queue(struct rsp_que *rsp)
-+qla24xx_process_response_queue(struct scsi_qla_host *vha, struct rsp_que *rsp)
- {
- 	struct sts_entry_24xx *pkt;
--	struct scsi_qla_host *vha;
--
--	vha = qla2x00_get_rsp_host(rsp);
- 
- 	if (!vha->flags.online)
- 		return;
-@@ -1626,7 +1620,7 @@ qla24xx_intr_handler(int irq, void *dev_id)
- 	status = 0;
- 
- 	spin_lock(&ha->hardware_lock);
--	vha = qla2x00_get_rsp_host(rsp);
-+	vha = pci_get_drvdata(ha->pdev);
- 	for (iter = 50; iter--; ) {
- 		stat = RD_REG_DWORD(&reg->host_status);
- 		if (stat & HSRX_RISC_PAUSED) {
-@@ -1664,7 +1658,7 @@ qla24xx_intr_handler(int irq, void *dev_id)
- 			break;
- 		case 0x13:
- 		case 0x14:
--			qla24xx_process_response_queue(rsp);
-+			qla24xx_process_response_queue(vha, rsp);
- 			break;
- 		default:
- 			DEBUG2(printk("scsi(%ld): Unrecognized interrupt type "
-@@ -1692,6 +1686,7 @@ qla24xx_msix_rsp_q(int irq, void *dev_id)
- 	struct qla_hw_data *ha;
- 	struct rsp_que *rsp;
- 	struct device_reg_24xx __iomem *reg;
-+	struct scsi_qla_host *vha;
- 
- 	rsp = (struct rsp_que *) dev_id;
- 	if (!rsp) {
-@@ -1701,10 +1696,11 @@ qla24xx_msix_rsp_q(int irq, void *dev_id)
- 	}
- 	ha = rsp->hw;
- 	reg = &ha->iobase->isp24;
-+	vha = pci_get_drvdata(ha->pdev);
- 
- 	spin_lock_irq(&ha->hardware_lock);
- 
--	qla24xx_process_response_queue(rsp);
-+	qla24xx_process_response_queue(vha, rsp);
- 	WRT_REG_DWORD(&reg->hccr, HCCRX_CLR_RISC_INT);
- 
- 	spin_unlock_irq(&ha->hardware_lock);
-@@ -1718,6 +1714,7 @@ qla25xx_msix_rsp_q(int irq, void *dev_id)
- 	struct qla_hw_data *ha;
- 	struct rsp_que *rsp;
- 	struct device_reg_24xx __iomem *reg;
-+	struct scsi_qla_host *vha;
- 
- 	rsp = (struct rsp_que *) dev_id;
- 	if (!rsp) {
-@@ -1730,7 +1727,8 @@ qla25xx_msix_rsp_q(int irq, void *dev_id)
- 
- 	spin_lock_irq(&ha->hardware_lock);
- 
--	qla24xx_process_response_queue(rsp);
-+	vha = qla2x00_get_rsp_host(rsp);
-+	qla24xx_process_response_queue(vha, rsp);
- 
- 	spin_unlock_irq(&ha->hardware_lock);
- 
-@@ -1760,7 +1758,7 @@ qla24xx_msix_default(int irq, void *dev_id)
- 	status = 0;
- 
- 	spin_lock_irq(&ha->hardware_lock);
--	vha = qla2x00_get_rsp_host(rsp);
-+	vha = pci_get_drvdata(ha->pdev);
- 	do {
- 		stat = RD_REG_DWORD(&reg->host_status);
- 		if (stat & HSRX_RISC_PAUSED) {
-@@ -1798,7 +1796,7 @@ qla24xx_msix_default(int irq, void *dev_id)
- 			break;
- 		case 0x13:
- 		case 0x14:
--			qla24xx_process_response_queue(rsp);
-+			qla24xx_process_response_queue(vha, rsp);
- 			break;
- 		default:
- 			DEBUG2(printk("scsi(%ld): Unrecognized interrupt type "
--- 
-1.5.5
-
+They are getting 31000 interrupts/sec vs. 22000/sec on older kernels.
