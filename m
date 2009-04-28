@@ -1,31 +1,45 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] netdev: storage address support
-Date: Tue, 28 Apr 2009 04:25:32 -0700 (PDT)
-Message-ID: <20090428.042532.127201433.davem@davemloft.net>
-References: <20090428083048.GB27798@psychotron.englab.brq.redhat.com>
-	<20090428.021249.247190041.davem@davemloft.net>
-	<20090428101816.GC27798@psychotron.englab.brq.redhat.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH] fc-transport: Close state transition-window during rport
+	deletion.
+Date: Tue, 28 Apr 2009 07:01:52 -0700
+Message-ID: <20090428140152.GA16413@plap4-2.qlogic.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51340
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1755334AbZD1LZj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Apr 2009 07:25:39 -0400
-In-Reply-To: <20090428101816.GC27798@psychotron.englab.brq.redhat.com>
+Received: from avexch1.qlogic.com ([198.70.193.115]:4731 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757159AbZD1OBy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Apr 2009 10:01:54 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jpirko@redhat.com
-Cc: christopher.leech@intel.com, jeffrey.t.kirsher@intel.com, netdev@vger.kernel.org, gospo@redhat.com, linux-scsi@vger.kernel.org
+To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: James Smart <james.smart@emulex.com>
 
-From: Jiri Pirko <jpirko@redhat.com>
-Date: Tue, 28 Apr 2009 12:18:17 +0200
+After an rport's state has transitioned to FC_PORTSTATE_BLOCKED,
+but, prior to making the upcall to 'block' the scsi-target
+associated with an rport, queued commands can recycle and
+ultimately run out of retries causing failures to propagate to
+upper-level drivers.  Close this transition-window by returning
+the non-'retries' modifying DID_IMM_RETRY status for submitted
+I/Os.
 
-> Tue, Apr 28, 2009 at 11:12:49AM CEST, davem@davemloft.net wrote:
->>Agreed, can you update your patch to provide such a 'type' tag?
-> 
-> Ok, I'll do that. What types do you have on the top of your head?
+Issue seen during continuous LIP-injection.
 
-Just start with SAN, LAN, and the ones you need for your work.
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+
+---
+
+diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+index c9184f7..d189e0e 100644
+--- a/include/scsi/scsi_transport_fc.h
++++ b/include/scsi/scsi_transport_fc.h
+@@ -687,6 +687,8 @@ fc_remote_port_chkready(struct fc_rport *rport)
+ 	case FC_PORTSTATE_BLOCKED:
+ 		if (rport->flags & FC_RPORT_FAST_FAIL_TIMEDOUT)
+ 			result = DID_TRANSPORT_FAILFAST << 16;
++		else if (rport->flags & FC_RPORT_DEVLOSS_PENDING)
++			result = DID_IMM_RETRY << 16;
+ 		else
+ 			result = DID_TRANSPORT_DISRUPTED << 16;
+ 		break;
