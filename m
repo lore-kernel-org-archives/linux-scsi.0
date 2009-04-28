@@ -1,67 +1,61 @@
-From: Takahiro Yasui <tyasui@redhat.com>
-Subject: Re: [RFC][PATCH] limit state change to SDEV_BLOCK devices in	scsi_internal_device_unblock
-Date: Mon, 27 Apr 2009 23:27:59 -0400
-Message-ID: <49F677BF.9020106@redhat.com>
-References: <49F5E6E5.20904@redhat.com> <1240862889.3387.37.camel@mulgrave.int.hansenpartnership.com> <49F64559.5020802@redhat.com> <20090428023132.GI1926@parisc-linux.org> <49F66F1F.2050803@redhat.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH] scsi/fc: fix function declarations to be ANSI-compliant
+Date: Mon, 27 Apr 2009 21:49:31 -0700
+Message-ID: <49F68ADB.6010901@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:49501 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751922AbZD1D1q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Apr 2009 23:27:46 -0400
-In-Reply-To: <49F66F1F.2050803@redhat.com>
+Received: from rcsinet11.oracle.com ([148.87.113.123]:21919 "EHLO
+	rgminet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750829AbZD1EsT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Apr 2009 00:48:19 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, mchristi@redhat.com, mbarrow@redhat.com
+To: scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Takahiro Yasui wrote:
-> Matthew Wilcox wrote:
->> On Mon, Apr 27, 2009 at 07:52:57PM -0400, Takahiro Yasui wrote:
->>> James Bottomley wrote:
->>>>> +	if (sdev->sdev_state != SDEV_BLOCK)
->>>> This isn't quite correct.  There are two blocked states in the model
->>>> currently:  SDEV_BLOCK and SDEV_CREATED_BLOCK ... you'd need to check
->>>> for both of them
->>>>
->>>>> +		return 0;
->>>> Traditionally the return for an attempted invalid state transition is
->>>> -EINVAL.
->>>>
->>>> I suppose for lower down, if you check the state, now we know we go 
->>>>
->>>> SDEV_CREATED_BLOCK -> SDEV_CREATED
->>>>
->>>> or
->>>>
->>>> SDEV_BLOCK -> SDEV_RUNNING
->>>>
->>>> so there's no need for the dual scsi_device_set_state.
->>> Thank you for the comments. If I understand your comments correctly, 
->>> the state transition is better to be defined in scsi_device_set_state(),
->>> and both transitions, "SDEV_CREATED_BLOCK -> SDEV_CREATED" and
->>> "SDEV_BLOCK -> SDEV_RUNNING" need to be covered. I updated the patch
->>> so that the transition of "SDEV_OFFLINE -> SDEV_RUNNING" is prohibited.
->> I don't think that's what he meant.  I think he meant something more like:
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-I have one question about the order of comparisons. The original code
-tries to change to SDEV_BLOCK first and retries to SDEV_CREATED.
-If they are transformed just that order, I think that comparisons will
-be as follows.
+Fix scsi/fc function declarations:
 
-	if (sdev->sdev_state == SDEV_BLOCK)
-		sdev->sdev_state = SDEV_RUNNING;
-	else if (sdev->sdev_state == SDEV_CREATED_BLOCK)
-		sdev->sdev_state = SDEV_CREATED;
-	else
-		return -EINVAL;
+drivers/scsi/fcoe/fcoe.c:1356:28: warning: non-ANSI function declaration of function 'fcoe_dev_setup'
+drivers/scsi/libfc/fc_rport.c:1293:20: warning: non-ANSI function declaration of function 'fc_setup_rport'
+drivers/scsi/libfc/fc_rport.c:1302:23: warning: non-ANSI function declaration of function 'fc_destroy_rport'
 
-Is this wrong order?
-
-Regards,
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 ---
-Takahiro Yasui
-Hitachi Computer Products (America), Inc.
+ drivers/scsi/fcoe/fcoe.c      |    2 +-
+ drivers/scsi/libfc/fc_rport.c |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
+--- mmotm-2009-0427-1545.orig/drivers/scsi/fcoe/fcoe.c
++++ mmotm-2009-0427-1545/drivers/scsi/fcoe/fcoe.c
+@@ -1353,7 +1353,7 @@ out:
+ /**
+  * fcoe_dev_setup() - setup link change notification interface
+  */
+-static void fcoe_dev_setup()
++static void fcoe_dev_setup(void)
+ {
+ 	/*
+ 	 * here setup a interface specific wd time to
+--- mmotm-2009-0427-1545.orig/drivers/scsi/libfc/fc_rport.c
++++ mmotm-2009-0427-1545/drivers/scsi/libfc/fc_rport.c
+@@ -1290,7 +1290,7 @@ int fc_rport_init(struct fc_lport *lport
+ }
+ EXPORT_SYMBOL(fc_rport_init);
+ 
+-int fc_setup_rport()
++int fc_setup_rport(void)
+ {
+ 	rport_event_queue = create_singlethread_workqueue("fc_rport_eq");
+ 	if (!rport_event_queue)
+@@ -1299,7 +1299,7 @@ int fc_setup_rport()
+ }
+ EXPORT_SYMBOL(fc_setup_rport);
+ 
+-void fc_destroy_rport()
++void fc_destroy_rport(void)
+ {
+ 	destroy_workqueue(rport_event_queue);
+ }
