@@ -1,54 +1,50 @@
-From: Takahiro Yasui <tyasui@redhat.com>
-Subject: Re: [RFC][PATCH] limit state change to SDEV_BLOCK devices in	scsi_internal_device_unblock
-Date: Mon, 27 Apr 2009 22:51:11 -0400
-Message-ID: <49F66F1F.2050803@redhat.com>
-References: <49F5E6E5.20904@redhat.com> <1240862889.3387.37.camel@mulgrave.int.hansenpartnership.com> <49F64559.5020802@redhat.com> <20090428023132.GI1926@parisc-linux.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
-Content-Transfer-Encoding: 7bit
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: [PATCH 0/3] scsi_dh: Make scsi_dh_activate asynchronous
+Date: Mon, 27 Apr 2009 19:52:30 -0700
+Message-ID: <20090428025230.11108.88559.sendpatchset@chandra-ubuntu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:56089 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751922AbZD1CvB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Apr 2009 22:51:01 -0400
-In-Reply-To: <20090428023132.GI1926@parisc-linux.org>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:59871 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752191AbZD1Cvi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Apr 2009 22:51:38 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e35.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n3S2k1Al007320
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Apr 2009 20:46:01 -0600
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n3S2pbW5079904
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Apr 2009 20:51:37 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n3S2pbDl002806
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Apr 2009 20:51:37 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, mchristi@redhat.com, mbarrow@redhat.com
+To: linux-scsi@vger.kernel.org
+Cc: dm-devel@redhat.com, babu.moger@lsi.com, michaelc@cs.wisc.edu, Chandra Seetharaman <sekharan@us.ibm.com>
 
-Matthew Wilcox wrote:
-> On Mon, Apr 27, 2009 at 07:52:57PM -0400, Takahiro Yasui wrote:
->> James Bottomley wrote:
->>>> +	if (sdev->sdev_state != SDEV_BLOCK)
->>> This isn't quite correct.  There are two blocked states in the model
->>> currently:  SDEV_BLOCK and SDEV_CREATED_BLOCK ... you'd need to check
->>> for both of them
->>>
->>>> +		return 0;
->>> Traditionally the return for an attempted invalid state transition is
->>> -EINVAL.
->>>
->>> I suppose for lower down, if you check the state, now we know we go 
->>>
->>> SDEV_CREATED_BLOCK -> SDEV_CREATED
->>>
->>> or
->>>
->>> SDEV_BLOCK -> SDEV_RUNNING
->>>
->>> so there's no need for the dual scsi_device_set_state.
->> Thank you for the comments. If I understand your comments correctly, 
->> the state transition is better to be defined in scsi_device_set_state(),
->> and both transitions, "SDEV_CREATED_BLOCK -> SDEV_CREATED" and
->> "SDEV_BLOCK -> SDEV_RUNNING" need to be covered. I updated the patch
->> so that the transition of "SDEV_OFFLINE -> SDEV_RUNNING" is prohibited.
-> 
-> I don't think that's what he meant.  I think he meant something more like:
+Hello All,
 
-Thanks a lot. I'll build a patch and send it.
+Currently, device handlers process path activation in series. This leads
+to a lot of time delay when more than 100 luns are involved. For example,
+with lsi rdac 100+ luns take about 12-15 minutes. This was found by Moger
+Babu of LSI.
 
-Regards,
----
-Takahiro Yasui
-Hitachi Computer Products (America), Inc.
+This time delay can be avoided if we can do the activations asynchronously.
+By making scsi_dh_activate() async, we can give the device handlers an
+oppurtunity to decide on how to send the device activation down the wire
+to make the turn around time faster. They can send the commands
+asynchronously or send them in batches.
+
+I brought up this issue on th emailing list few days back
+(http://marc.info/?l=linux-scsi&m=123888063818755&w=2).
+
+This set of patches applies cleanly on 2.6.30-rc3 and is tested on the same.
+
+Please review and provide comments.
+
+This set of patched adds asynchronous support only to rdac handler. WIll be
+sending patches to support other handlers too.
+
+Thanks & Regards,
+
+chandra
+
