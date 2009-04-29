@@ -1,32 +1,50 @@
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [PATCH -next] osd_uld: fix printk format warning
-Date: Wed, 29 Apr 2009 19:51:28 +0100
-Message-ID: <20090429185128.GN8633@ZenIV.linux.org.uk>
-References: <20090429092631.a76e79c5.randy.dunlap@oracle.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 1/4] sd: fix cache flushing message
+Date: Wed, 29 Apr 2009 22:06:28 +0200
+Message-ID: <200904292206.29844.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:60343 "EHLO
-	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752219AbZD2Sv3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Apr 2009 14:51:29 -0400
+Received: from mail-bw0-f163.google.com ([209.85.218.163]:60746 "EHLO
+	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752941AbZD2UHS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Apr 2009 16:07:18 -0400
+Received: by bwz7 with SMTP id 7so1401144bwz.37
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Apr 2009 13:07:16 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <20090429092631.a76e79c5.randy.dunlap@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Wed, Apr 29, 2009 at 09:26:31AM -0700, Randy Dunlap wrote:
-> From: Randy Dunlap <randy.dunlap@oracle.com>
-> 
-> Fix printk format warnings in osd_uld:
-> 
-> drivers/scsi/osd/osd_uld.c:191: warning:format '%s' expects type 'char *', but argument 2 has type 'struct path'
-> 
-> Also fix a small typo.
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+some minor sd.c fixups against linux-next
 
-Applied, will fold on reorder.  Thanks for catching that one and apologies
-for missing the original posting (I am subscribed to linux-scsi, but...)
+ drivers/scsi/sd.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Incidentally, what the hell is going with ->i_cdev in there?  Boaz?
+Index: b/drivers/scsi/sd.c
+===================================================================
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2140,7 +2140,7 @@ static void sd_shutdown(struct device *d
+ 		return;         /* this can happen */
+ 
+ 	if (sdkp->WCE) {
+-		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
++		sd_printk(KERN_NOTICE, sdkp, "Synchronizing disk cache\n");
+ 		sd_sync_cache(sdkp);
+ 	}
+ 
+@@ -2161,7 +2161,7 @@ static int sd_suspend(struct device *dev
+ 		return 0;	/* this can happen */
+ 
+ 	if (sdkp->WCE) {
+-		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
++		sd_printk(KERN_NOTICE, sdkp, "Synchronizing disk cache\n");
+ 		ret = sd_sync_cache(sdkp);
+ 		if (ret)
+ 			goto done;
