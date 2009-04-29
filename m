@@ -1,47 +1,65 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 3/4] sd: use <linux/uaccess.h> include instead of <asm/uaccess.h> one
-Date: Wed, 29 Apr 2009 22:08:52 +0200
-Message-ID: <200904292208.52749.bzolnier@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/4] sd: fix cache flushing message
+Date: Wed, 29 Apr 2009 20:20:00 +0000
+Message-ID: <1241036401.3369.57.camel@mulgrave.int.hansenpartnership.com>
+References: <200904292206.29844.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:50903 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754210AbZD2UHT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Apr 2009 16:07:19 -0400
-Received: by fxm2 with SMTP id 2so1411638fxm.37
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Apr 2009 13:07:18 -0700 (PDT)
-Content-Disposition: inline
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49913 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752279AbZD2UUD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Apr 2009 16:20:03 -0400
+In-Reply-To: <200904292206.29844.bzolnier@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-scsi@vger.kernel.org
 
-Fix
+On Wed, 2009-04-29 at 22:06 +0200, Bartlomiej Zolnierkiewicz wrote:
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+> some minor sd.c fixups against linux-next
+> 
+>  drivers/scsi/sd.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> Index: b/drivers/scsi/sd.c
+> ===================================================================
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -2140,7 +2140,7 @@ static void sd_shutdown(struct device *d
+>  		return;         /* this can happen */
+>  
+>  	if (sdkp->WCE) {
+> -		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+> +		sd_printk(KERN_NOTICE, sdkp, "Synchronizing disk cache\n");
+>  		sd_sync_cache(sdkp);
+>  	}
+>  
+> @@ -2161,7 +2161,7 @@ static int sd_suspend(struct device *dev
+>  		return 0;	/* this can happen */
+>  
+>  	if (sdkp->WCE) {
+> -		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+> +		sd_printk(KERN_NOTICE, sdkp, "Synchronizing disk cache\n");
+>  		ret = sd_sync_cache(sdkp);
+>  		if (ret)
+>  			goto done;
 
-	WARNING: Use #include <linux/uaccess.h> instead of <asm/uaccess.h>
-	#52: FILE: scsi/sd.c:52:
-	+#include <asm/uaccess.h>
+So you want it to say 
 
-issue detected by checkpatch.pl.
+sda: synchronizing disk cache
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/scsi/sd.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+instead of
 
-Index: b/drivers/scsi/sd.c
-===================================================================
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -49,7 +49,7 @@
- #include <linux/mutex.h>
- #include <linux/string_helpers.h>
- #include <linux/async.h>
--#include <asm/uaccess.h>
-+#include <linux/uaccess.h>
- #include <asm/unaligned.h>
- 
- #include <scsi/scsi.h>
+sda: synchronizing SCSI cache
+
+I don't really see that buying us anything in terms of clarity.  What's
+the actual problem it solves?
+
+James
+
+
