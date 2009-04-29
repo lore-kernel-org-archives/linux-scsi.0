@@ -1,47 +1,44 @@
-From: Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH 04/10] block: implement blk_rq_pos/[cur_]sectors() and
-	convert obvious ones
-Date: Wed, 29 Apr 2009 08:49:43 -0600
-Message-ID: <fa686aa40904290749v62a3cf70kc2d6b2a437b0bfe4@mail.gmail.com>
-References: <1240996428-10159-1-git-send-email-tj@kernel.org>
-	<1240996428-10159-5-git-send-email-tj@kernel.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: linux-next: upstream tree build warning with st.c
+Date: Wed, 29 Apr 2009 15:58:10 +0000
+Message-ID: <1241020690.3369.34.camel@mulgrave.int.hansenpartnership.com>
+References: <20090428130354.cbb6ed7d.sfr@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gx0-f166.google.com ([209.85.217.166]:34429 "EHLO
-	mail-gx0-f166.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754253AbZD2OuF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Apr 2009 10:50:05 -0400
-In-Reply-To: <1240996428-10159-5-git-send-email-tj@kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:39104 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758459AbZD2P6M (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Apr 2009 11:58:12 -0400
+In-Reply-To: <20090428130354.cbb6ed7d.sfr@canb.auug.org.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, chirag.kantharia@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, paul.clements@steeleye.com, jesper.juhl@gmail.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, bharrosh@panasas.com
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: linux-next@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Kai Makisara <Kai.Makisara@kolumbus.fi>
 
-On Wed, Apr 29, 2009 at 3:13 AM, Tejun Heo <tj@kernel.org> wrote:
-> Implement accessors - blk_rq_pos(), blk_rq_sectors() and
-> blk_rq_cur_sectors() which return rq->sector, rq->hard_nr_sectors and
-> rq->hard_cur_sectors respectively and convert direct references of th=
-e
-> said fields to the accessors.
->
-> This is in preparation of request data length handling cleanup.
->
-> [ Impact: cleanup ]
-> ---
-[...]
-> =A0drivers/block/xsysace.c =A0 =A0 =A0 =A0 | =A0 10 +++++-----
+On Tue, 2009-04-28 at 13:03 +1000, Stephen Rothwell wrote:
+> Hi James,
+> 
+> Today's linux-next build (powerpc ppc64_defconfig gcc4.4.0) produced this
+> warning (it has for a while):
+> 
+> drivers/scsi/st.c: In function 'st_int_ioctl':
+> drivers/scsi/st.c:2967: warning: suggest parentheses around operand of '!' or change '|' to '||' or '!' to '~'
+> 
+> The code in question:
+> 
+> 	STp->use_pf = !STp->use_pf | PF_TESTED;
+> 
+> looks questionable at best.
 
-Tested-by: and Acked-by: Grant Likely <grant.likely@secretlab.ca>
+Yes, I think it should become
 
-g.
+STp |= PF_TESTED;
 
---=20
-Grant Likely, B.Sc., P.Eng.
-Secret Lab Technologies Ltd.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+but I'm not sure, so I'll defer to Kai.
+
+James
+
+
