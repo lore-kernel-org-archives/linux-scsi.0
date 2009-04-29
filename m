@@ -1,307 +1,251 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 04/10] block: implement blk_rq_pos/[cur_]sectors() and convert obvious ones
-Date: Wed, 29 Apr 2009 18:13:42 +0900
-Message-ID: <1240996428-10159-5-git-send-email-tj@kernel.org>
+Subject: [PATCH 06/10] ide: convert to rq pos and nr_sectors accessors
+Date: Wed, 29 Apr 2009 18:13:44 +0900
+Message-ID: <1240996428-10159-7-git-send-email-tj@kernel.org>
 References: <1240996428-10159-1-git-send-email-tj@kernel.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:48076 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:48093 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756587AbZD2JU0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Apr 2009 05:20:26 -0400
+	id S1755062AbZD2JUb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Apr 2009 05:20:31 -0400
 In-Reply-To: <1240996428-10159-1-git-send-email-tj@kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petko
 Cc: Tejun Heo <tj@kernel.org>
 
-Implement accessors - blk_rq_pos(), blk_rq_sectors() and
-blk_rq_cur_sectors() which return rq->sector, rq->hard_nr_sectors and
-rq->hard_cur_sectors respectively and convert direct references of the
-said fields to the accessors.
+ide doesn't manipulate request fields anymore and thus all hard and
+their soft equivalents are always equal.  Convert all references to
+accessors.
 
-This is in preparation of request data length handling cleanup.
-
-[ Impact: cleanup ]
+[ Impact: use pos and nr_sectors accessors ]
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: Grant Likely <grant.likely@secretlab.ca>
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: Borislav Petkov <petkovbb@googlemail.com>
 Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 ---
- block/blk-barrier.c             |    2 +-
- block/blk-core.c                |    2 +-
- block/cfq-iosched.c             |    2 +-
- drivers/block/ps3disk.c         |    2 +-
- drivers/block/viodasd.c         |    6 +++---
- drivers/block/xsysace.c         |   10 +++++-----
- drivers/ide/ide-cd.c            |    8 ++++----
- drivers/ide/ide-io.c            |    4 ++--
- drivers/message/i2o/i2o_block.c |    2 +-
- drivers/scsi/scsi_lib.c         |    2 +-
- include/linux/blkdev.h          |   23 ++++++++++++++++++++---
- kernel/trace/blktrace.c         |    4 ++--
- 12 files changed, 42 insertions(+), 25 deletions(-)
+ drivers/ide/ide-cd.c       |    8 ++++----
+ drivers/ide/ide-disk.c     |    8 ++++----
+ drivers/ide/ide-dma.c      |    2 +-
+ drivers/ide/ide-floppy.c   |    6 +++---
+ drivers/ide/ide-io.c       |    4 ++--
+ drivers/ide/ide-lib.c      |    2 +-
+ drivers/ide/ide-tape.c     |    6 +++---
+ drivers/ide/ide-taskfile.c |    2 +-
+ drivers/ide/pdc202xx_old.c |    2 +-
+ drivers/ide/tc86c001.c     |    2 +-
+ drivers/ide/tx4939ide.c    |    2 +-
+ 11 files changed, 22 insertions(+), 22 deletions(-)
 
-diff --git a/block/blk-barrier.c b/block/blk-barrier.c
-index c8d0876..c167de5 100644
---- a/block/blk-barrier.c
-+++ b/block/blk-barrier.c
-@@ -163,7 +163,7 @@ static inline bool start_ordered(struct request_queue *q, struct request **rqp)
- 	 * For an empty barrier, there's no actual BAR request, which
- 	 * in turn makes POSTFLUSH unnecessary.  Mask them off.
- 	 */
--	if (!rq->hard_nr_sectors) {
-+	if (!blk_rq_sectors(rq)) {
- 		q->ordered &= ~(QUEUE_ORDERED_DO_BAR |
- 				QUEUE_ORDERED_DO_POSTFLUSH);
- 		/*
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 394c5bd..895e55b 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1683,7 +1683,7 @@ static void blk_account_io_done(struct request *req)
- unsigned int blk_rq_bytes(struct request *rq)
- {
- 	if (blk_fs_request(rq))
--		return rq->hard_nr_sectors << 9;
-+		return blk_rq_sectors(rq) << 9;
- 
- 	return rq->data_len;
- }
-diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index def0c69..575083a 100644
---- a/block/cfq-iosched.c
-+++ b/block/cfq-iosched.c
-@@ -760,7 +760,7 @@ static void cfq_activate_request(struct request_queue *q, struct request *rq)
- 	cfq_log_cfqq(cfqd, RQ_CFQQ(rq), "activate rq, drv=%d",
- 						cfqd->rq_in_driver);
- 
--	cfqd->last_position = rq->hard_sector + rq->hard_nr_sectors;
-+	cfqd->last_position = blk_rq_pos(rq) + blk_rq_sectors(rq);
- }
- 
- static void cfq_deactivate_request(struct request_queue *q, struct request *rq)
-diff --git a/drivers/block/ps3disk.c b/drivers/block/ps3disk.c
-index f6586e4..c238867 100644
---- a/drivers/block/ps3disk.c
-+++ b/drivers/block/ps3disk.c
-@@ -136,7 +136,7 @@ static int ps3disk_submit_request_sg(struct ps3_storage_device *dev,
- 	dev_dbg(&dev->sbd.core,
- 		"%s:%u: %s req has %u bvecs for %lu sectors %lu hard sectors\n",
- 		__func__, __LINE__, op, n, req->nr_sectors,
--		req->hard_nr_sectors);
-+		blk_rq_sectors(req));
- #endif
- 
- 	start_sector = req->sector * priv->blocking_factor;
-diff --git a/drivers/block/viodasd.c b/drivers/block/viodasd.c
-index ecccf65..e821eed 100644
---- a/drivers/block/viodasd.c
-+++ b/drivers/block/viodasd.c
-@@ -368,12 +368,12 @@ static void do_viodasd_request(struct request_queue *q)
- 		blkdev_dequeue_request(req);
- 		/* check that request contains a valid command */
- 		if (!blk_fs_request(req)) {
--			viodasd_end_request(req, -EIO, req->hard_nr_sectors);
-+			viodasd_end_request(req, -EIO, blk_rq_sectors(req));
- 			continue;
- 		}
- 		/* Try sending the request */
- 		if (send_request(req) != 0)
--			viodasd_end_request(req, -EIO, req->hard_nr_sectors);
-+			viodasd_end_request(req, -EIO, blk_rq_sectors(req));
- 	}
- }
- 
-@@ -590,7 +590,7 @@ static int viodasd_handle_read_write(struct vioblocklpevent *bevent)
- 		err = vio_lookup_rc(viodasd_err_table, bevent->sub_result);
- 		printk(VIOD_KERN_WARNING "read/write error %d:0x%04x (%s)\n",
- 				event->xRc, bevent->sub_result, err->msg);
--		num_sect = req->hard_nr_sectors;
-+		num_sect = blk_rq_sectors(req);
- 	}
- 	qlock = req->q->queue_lock;
- 	spin_lock_irqsave(qlock, irq_flags);
-diff --git a/drivers/block/xsysace.c b/drivers/block/xsysace.c
-index b1e1d7e..5722931 100644
---- a/drivers/block/xsysace.c
-+++ b/drivers/block/xsysace.c
-@@ -645,8 +645,8 @@ static void ace_fsm_dostate(struct ace_device *ace)
- 
- 		/* Okay, it's a data request, set it up for transfer */
- 		dev_dbg(ace->dev,
--			"request: sec=%llx hcnt=%lx, ccnt=%x, dir=%i\n",
--			(unsigned long long) req->sector, req->hard_nr_sectors,
-+			"request: sec=%llx hcnt=%x, ccnt=%x, dir=%i\n",
-+			(unsigned long long) req->sector, blk_rq_sectors(req),
- 			req->current_nr_sectors, rq_data_dir(req));
- 
- 		ace->req = req;
-@@ -654,7 +654,7 @@ static void ace_fsm_dostate(struct ace_device *ace)
- 		ace->data_count = req->current_nr_sectors * ACE_BUF_PER_SECTOR;
- 		ace_out32(ace, ACE_MPULBA, req->sector & 0x0FFFFFFF);
- 
--		count = req->hard_nr_sectors;
-+		count = blk_rq_sectors(req);
- 		if (rq_data_dir(req)) {
- 			/* Kick off write request */
- 			dev_dbg(ace->dev, "write data\n");
-@@ -719,8 +719,8 @@ static void ace_fsm_dostate(struct ace_device *ace)
- 		/* bio finished; is there another one? */
- 		if (__blk_end_request(ace->req, 0,
- 					blk_rq_cur_bytes(ace->req))) {
--			/* dev_dbg(ace->dev, "next block; h=%li c=%i\n",
--			 *      ace->req->hard_nr_sectors,
-+			/* dev_dbg(ace->dev, "next block; h=%u c=%u\n",
-+			 *      blk_rq_sectors(ace->req),
- 			 *      ace->req->current_nr_sectors);
- 			 */
- 			ace->data_ptr = ace->req->buffer;
 diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 8bbe222..182320d 100644
+index 182320d..eb4f3dc 100644
 --- a/drivers/ide/ide-cd.c
 +++ b/drivers/ide/ide-cd.c
-@@ -730,7 +730,7 @@ out_end:
- 		if (blk_pc_request(rq))
- 			nsectors = (rq->data_len + 511) >> 9;
- 		else
--			nsectors = rq->hard_nr_sectors;
-+			nsectors = blk_rq_sectors(rq);
+@@ -775,8 +775,8 @@ static ide_startstop_t cdrom_start_rw(ide_drive_t *drive, struct request *rq)
+ 	}
  
- 		if (nsectors == 0)
- 			nsectors = 1;
-@@ -875,7 +875,7 @@ static ide_startstop_t ide_cd_do_request(ide_drive_t *drive, struct request *rq,
+ 	/* fs requests *must* be hardware frame aligned */
+-	if ((rq->nr_sectors & (sectors_per_frame - 1)) ||
+-	    (rq->sector & (sectors_per_frame - 1)))
++	if ((blk_rq_sectors(rq) & (sectors_per_frame - 1)) ||
++	    (blk_rq_pos(rq) & (sectors_per_frame - 1)))
+ 		return ide_stopped;
  
- 	return ide_issue_pc(drive, &cmd);
- out_end:
--	nsectors = rq->hard_nr_sectors;
-+	nsectors = blk_rq_sectors(rq);
+ 	/* use DMA, if possible */
+@@ -868,8 +868,8 @@ static ide_startstop_t ide_cd_do_request(ide_drive_t *drive, struct request *rq,
+ 	cmd.rq = rq;
  
- 	if (nsectors == 0)
- 		nsectors = 1;
-@@ -1359,8 +1359,8 @@ static int ide_cdrom_probe_capabilities(ide_drive_t *drive)
- static int ide_cdrom_prep_fs(struct request_queue *q, struct request *rq)
+ 	if (blk_fs_request(rq) || rq->data_len) {
+-		ide_init_sg_cmd(&cmd, blk_fs_request(rq) ? (rq->nr_sectors << 9)
+-							 : rq->data_len);
++		ide_init_sg_cmd(&cmd, blk_fs_request(rq) ?
++				(blk_rq_sectors(rq) << 9) : rq->data_len);
+ 		ide_map_sg(drive, &cmd);
+ 	}
+ 
+diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
+index c243880..ad18e14 100644
+--- a/drivers/ide/ide-disk.c
++++ b/drivers/ide/ide-disk.c
+@@ -82,7 +82,7 @@ static ide_startstop_t __ide_do_rw_disk(ide_drive_t *drive, struct request *rq,
+ 					sector_t block)
  {
- 	int hard_sect = queue_hardsect_size(q);
--	long block = (long)rq->hard_sector / (hard_sect >> 9);
--	unsigned long blocks = rq->hard_nr_sectors / (hard_sect >> 9);
-+	long block = (long)blk_rq_pos(rq) / (hard_sect >> 9);
-+	unsigned long blocks = blk_rq_sectors(rq) / (hard_sect >> 9);
+ 	ide_hwif_t *hwif	= drive->hwif;
+-	u16 nsectors		= (u16)rq->nr_sectors;
++	u16 nsectors		= (u16)blk_rq_sectors(rq);
+ 	u8 lba48		= !!(drive->dev_flags & IDE_DFLAG_LBA48);
+ 	u8 dma			= !!(drive->dev_flags & IDE_DFLAG_USING_DMA);
+ 	struct ide_cmd		cmd;
+@@ -90,7 +90,7 @@ static ide_startstop_t __ide_do_rw_disk(ide_drive_t *drive, struct request *rq,
+ 	ide_startstop_t		rc;
  
- 	memset(rq->cmd, 0, BLK_MAX_CDB);
+ 	if ((hwif->host_flags & IDE_HFLAG_NO_LBA48_DMA) && lba48 && dma) {
+-		if (block + rq->nr_sectors > 1ULL << 28)
++		if (block + blk_rq_sectors(rq) > 1ULL << 28)
+ 			dma = 0;
+ 		else
+ 			lba48 = 0;
+@@ -195,9 +195,9 @@ static ide_startstop_t ide_do_rw_disk(ide_drive_t *drive, struct request *rq,
  
+ 	ledtrig_ide_activity();
+ 
+-	pr_debug("%s: %sing: block=%llu, sectors=%lu, buffer=0x%08lx\n",
++	pr_debug("%s: %sing: block=%llu, sectors=%u, buffer=0x%08lx\n",
+ 		 drive->name, rq_data_dir(rq) == READ ? "read" : "writ",
+-		 (unsigned long long)block, rq->nr_sectors,
++		 (unsigned long long)block, blk_rq_sectors(rq),
+ 		 (unsigned long)rq->buffer);
+ 
+ 	if (hwif->rw_disk)
+diff --git a/drivers/ide/ide-dma.c b/drivers/ide/ide-dma.c
+index d9123ec..001f68f 100644
+--- a/drivers/ide/ide-dma.c
++++ b/drivers/ide/ide-dma.c
+@@ -103,7 +103,7 @@ ide_startstop_t ide_dma_intr(ide_drive_t *drive)
+ 				ide_finish_cmd(drive, cmd, stat);
+ 			else
+ 				ide_complete_rq(drive, 0,
+-						cmd->rq->nr_sectors << 9);
++						blk_rq_sectors(cmd->rq) << 9);
+ 			return ide_stopped;
+ 		}
+ 		printk(KERN_ERR "%s: %s: bad DMA status (0x%02x)\n",
+diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
+index 537b7c5..1c460bd 100644
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -194,7 +194,7 @@ static void idefloppy_create_rw_cmd(ide_drive_t *drive,
+ {
+ 	struct ide_disk_obj *floppy = drive->driver_data;
+ 	int block = sector / floppy->bs_factor;
+-	int blocks = rq->nr_sectors / floppy->bs_factor;
++	int blocks = blk_rq_sectors(rq) / floppy->bs_factor;
+ 	int cmd = rq_data_dir(rq);
+ 
+ 	ide_debug_log(IDE_DBG_FUNC, "block: %d, blocks: %d", block, blocks);
+@@ -259,8 +259,8 @@ static ide_startstop_t ide_floppy_do_request(ide_drive_t *drive,
+ 			goto out_end;
+ 	}
+ 	if (blk_fs_request(rq)) {
+-		if (((long)rq->sector % floppy->bs_factor) ||
+-		    (rq->nr_sectors % floppy->bs_factor)) {
++		if (((long)blk_rq_pos(rq) % floppy->bs_factor) ||
++		    (blk_rq_sectors(rq) % floppy->bs_factor)) {
+ 			printk(KERN_ERR PFX "%s: unsupported r/w rq size\n",
+ 				drive->name);
+ 			goto out_end;
 diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-index a0309ea..df23bcb 100644
+index df23bcb..59799ca 100644
 --- a/drivers/ide/ide-io.c
 +++ b/drivers/ide/ide-io.c
-@@ -118,7 +118,7 @@ unsigned int ide_rq_bytes(struct request *rq)
- 	if (blk_pc_request(rq))
- 		return rq->data_len;
- 	else
--		return rq->hard_cur_sectors << 9;
-+		return blk_rq_cur_sectors(rq) << 9;
- }
- EXPORT_SYMBOL_GPL(ide_rq_bytes);
+@@ -279,7 +279,7 @@ static ide_startstop_t execute_drive_cmd (ide_drive_t *drive,
  
-@@ -133,7 +133,7 @@ int ide_complete_rq(ide_drive_t *drive, int error, unsigned int nr_bytes)
- 	 * and complete the whole request right now
- 	 */
- 	if (blk_noretry_request(rq) && error <= 0)
--		nr_bytes = rq->hard_nr_sectors << 9;
-+		nr_bytes = blk_rq_sectors(rq) << 9;
+ 	if (cmd) {
+ 		if (cmd->protocol == ATA_PROT_PIO) {
+-			ide_init_sg_cmd(cmd, rq->nr_sectors << 9);
++			ide_init_sg_cmd(cmd, blk_rq_sectors(rq) << 9);
+ 			ide_map_sg(drive, cmd);
+ 		}
  
- 	rc = ide_end_rq(drive, rq, error, nr_bytes);
- 	if (rc == 0)
-diff --git a/drivers/message/i2o/i2o_block.c b/drivers/message/i2o/i2o_block.c
-index 221317e..56e60f0 100644
---- a/drivers/message/i2o/i2o_block.c
-+++ b/drivers/message/i2o/i2o_block.c
-@@ -427,7 +427,7 @@ static void i2o_block_end_request(struct request *req, int error,
- 	unsigned long flags;
+@@ -387,7 +387,7 @@ static ide_startstop_t start_request (ide_drive_t *drive, struct request *rq)
  
- 	if (blk_end_request(req, error, nr_bytes)) {
--		int leftover = (req->hard_nr_sectors << KERNEL_SECTOR_SHIFT);
-+		int leftover = (blk_rq_sectors(req) << KERNEL_SECTOR_SHIFT);
+ 		drv = *(struct ide_driver **)rq->rq_disk->private_data;
  
- 		if (blk_pc_request(req))
- 			leftover = req->data_len;
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 7d49ef5..9ff0ca9 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -546,7 +546,7 @@ static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int error,
- 	 * to queue the remainder of them.
- 	 */
- 	if (blk_end_request(req, error, bytes)) {
--		int leftover = (req->hard_nr_sectors << 9);
-+		int leftover = blk_rq_sectors(req) << 9;
- 
- 		if (blk_pc_request(req))
- 			leftover = req->resid_len;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 6a967ca..1e18ef7 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -832,13 +832,30 @@ static inline void blk_run_address_space(struct address_space *mapping)
- extern void blkdev_dequeue_request(struct request *req);
- 
- /*
-- * blk_end_request() takes bytes instead of sectors as a complete size.
-- * blk_rq_bytes() returns bytes left to complete in the entire request.
-- * blk_rq_cur_bytes() returns bytes left to complete in the current segment.
-+ * blk_rq_pos()		: the current sector
-+ * blk_rq_bytes()	: bytes left in the entire request
-+ * blk_rq_cur_bytes()	: bytes left in the current segment
-+ * blk_rq_sectors()	: sectors left in the entire request
-+ * blk_rq_cur_sectors()	: sectors left in the current segment
-  */
-+static inline sector_t blk_rq_pos(struct request *rq)
-+{
-+	return rq->hard_sector;
-+}
-+
- extern unsigned int blk_rq_bytes(struct request *rq);
- extern unsigned int blk_rq_cur_bytes(struct request *rq);
- 
-+static inline unsigned int blk_rq_sectors(struct request *rq)
-+{
-+	return rq->hard_nr_sectors;
-+}
-+
-+static inline unsigned int blk_rq_cur_sectors(struct request *rq)
-+{
-+	return rq->hard_cur_sectors;
-+}
-+
- /*
-  * Request completion related functions.
-  *
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 921ef5d..42f1c11 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -646,7 +646,7 @@ static void blk_add_trace_rq(struct request_queue *q, struct request *rq,
- 				rq->cmd_len, rq->cmd);
- 	} else  {
- 		what |= BLK_TC_ACT(BLK_TC_FS);
--		__blk_add_trace(bt, rq->hard_sector, rq->hard_nr_sectors << 9,
-+		__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_sectors(rq) << 9,
- 				rw, what, rq->errors, 0, NULL);
+-		return drv->do_request(drive, rq, rq->sector);
++		return drv->do_request(drive, rq, blk_rq_pos(rq));
  	}
+ 	return do_special(drive);
+ kill_rq:
+diff --git a/drivers/ide/ide-lib.c b/drivers/ide/ide-lib.c
+index 56ff8c4..05b7fbc 100644
+--- a/drivers/ide/ide-lib.c
++++ b/drivers/ide/ide-lib.c
+@@ -114,7 +114,7 @@ static void ide_dump_ata_error(ide_drive_t *drive, u8 err)
+ 
+ 		if (rq)
+ 			printk(KERN_CONT ", sector=%llu",
+-			       (unsigned long long)rq->sector);
++			       (unsigned long long)blk_rq_pos(rq));
+ 	}
+ 	printk(KERN_CONT "\n");
  }
-@@ -857,7 +857,7 @@ void blk_add_driver_data(struct request_queue *q,
- 		__blk_add_trace(bt, 0, rq->data_len, 0, BLK_TA_DRV_DATA,
- 				rq->errors, len, data);
+diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+index 3813a0e..e166045 100644
+--- a/drivers/ide/ide-tape.c
++++ b/drivers/ide/ide-tape.c
+@@ -586,7 +586,7 @@ static void ide_tape_create_rw_cmd(idetape_tape_t *tape,
+ 				   struct ide_atapi_pc *pc, struct request *rq,
+ 				   u8 opcode)
+ {
+-	unsigned int length = rq->nr_sectors;
++	unsigned int length = blk_rq_sectors(rq);
+ 
+ 	ide_init_pc(pc);
+ 	put_unaligned(cpu_to_be32(length), (unsigned int *) &pc->c[1]);
+@@ -617,8 +617,8 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
+ 	struct ide_cmd cmd;
+ 	u8 stat;
+ 
+-	debug_log(DBG_SENSE, "sector: %llu, nr_sectors: %lu\n"
+-		  (unsigned long long)rq->sector, rq->nr_sectors);
++	debug_log(DBG_SENSE, "sector: %llu, nr_sectors: %u\n"
++		  (unsigned long long)blk_rq_pos(rq), blk_rq_sectors(rq));
+ 
+ 	if (!(blk_special_request(rq) || blk_sense_request(rq))) {
+ 		/* We do not support buffer cache originated requests. */
+diff --git a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
+index f400eb4..a0c3e1b 100644
+--- a/drivers/ide/ide-taskfile.c
++++ b/drivers/ide/ide-taskfile.c
+@@ -385,7 +385,7 @@ out_end:
+ 	if ((cmd->tf_flags & IDE_TFLAG_FS) == 0)
+ 		ide_finish_cmd(drive, cmd, stat);
  	else
--		__blk_add_trace(bt, rq->hard_sector, rq->hard_nr_sectors << 9,
-+		__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_sectors(rq) << 9,
- 				0, BLK_TA_DRV_DATA, rq->errors, len, data);
+-		ide_complete_rq(drive, 0, cmd->rq->nr_sectors << 9);
++		ide_complete_rq(drive, 0, blk_rq_sectors(cmd->rq) << 9);
+ 	return ide_stopped;
+ out_err:
+ 	ide_error_cmd(drive, cmd);
+diff --git a/drivers/ide/pdc202xx_old.c b/drivers/ide/pdc202xx_old.c
+index 248a54b..c2a16a8 100644
+--- a/drivers/ide/pdc202xx_old.c
++++ b/drivers/ide/pdc202xx_old.c
+@@ -177,7 +177,7 @@ static void pdc202xx_dma_start(ide_drive_t *drive)
+ 		u8 clock = inb(high_16 + 0x11);
+ 
+ 		outb(clock | (hwif->channel ? 0x08 : 0x02), high_16 + 0x11);
+-		word_count = (rq->nr_sectors << 8);
++		word_count = (blk_rq_sectors(rq) << 8);
+ 		word_count = (rq_data_dir(rq) == READ) ?
+ 					word_count | 0x05000000 :
+ 					word_count | 0x06000000;
+diff --git a/drivers/ide/tc86c001.c b/drivers/ide/tc86c001.c
+index b4cf42d..05a93d6 100644
+--- a/drivers/ide/tc86c001.c
++++ b/drivers/ide/tc86c001.c
+@@ -112,7 +112,7 @@ static void tc86c001_dma_start(ide_drive_t *drive)
+ 	ide_hwif_t *hwif	= drive->hwif;
+ 	unsigned long sc_base	= hwif->config_data;
+ 	unsigned long twcr_port	= sc_base + (drive->dn ? 0x06 : 0x04);
+-	unsigned long nsectors	= hwif->rq->nr_sectors;
++	unsigned long nsectors	= blk_rq_sectors(hwif->rq);
+ 
+ 	/*
+ 	 * We have to manually load the sector count and size into
+diff --git a/drivers/ide/tx4939ide.c b/drivers/ide/tx4939ide.c
+index 564422d..5ca7622 100644
+--- a/drivers/ide/tx4939ide.c
++++ b/drivers/ide/tx4939ide.c
+@@ -307,7 +307,7 @@ static int tx4939ide_dma_setup(ide_drive_t *drive, struct ide_cmd *cmd)
+ 	tx4939ide_writew(SECTOR_SIZE / 2, base, drive->dn ?
+ 			 TX4939IDE_Xfer_Cnt_2 : TX4939IDE_Xfer_Cnt_1);
+ 
+-	tx4939ide_writew(cmd->rq->nr_sectors, base, TX4939IDE_Sec_Cnt);
++	tx4939ide_writew(blk_rq_sectors(cmd->rq), base, TX4939IDE_Sec_Cnt);
+ 
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(blk_add_driver_data);
 -- 
 1.6.0.2
 
