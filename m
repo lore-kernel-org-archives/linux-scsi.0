@@ -1,57 +1,54 @@
-From: Dan Williams <dan.j.williams@gmail.com>
-Subject: Re: [PATCHSET] block,scsi,libata: implement alt_size
-Date: Thu, 30 Apr 2009 14:15:48 -0700
-Message-ID: <e9c3a7c20904301415t621670a0l1bd64c7d74d369f@mail.gmail.com>
-References: <1233456951-992-1-git-send-email-tj@kernel.org>
-	 <49F902CF.7080307@garzik.org> <49F903DD.8040707@kernel.org>
-	 <49FA0349.3090706@garzik.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH]: fixing gcc 4.4 compiler warning: suggest parentheses
+	around operand of =?UTF-8?Q?=E2=80=98!=E2=80=99?=
+Date: Thu, 30 Apr 2009 21:31:24 +0000
+Message-ID: <1241127084.3320.14.camel@mulgrave.int.hansenpartnership.com>
+References: <20090430060430.GA6040@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:26471 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752985AbZD3VPt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Apr 2009 17:15:49 -0400
-In-Reply-To: <49FA0349.3090706@garzik.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41434 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751022AbZD3VbZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Apr 2009 17:31:25 -0400
+In-Reply-To: <20090430060430.GA6040@localhost>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, Mauelshagen@redhat.com, dm-devel@redhat.com
+To: Sergey Senozhatsky <sergey.senozhatsky@mail.by>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, Kai Makisara <Kai.Makisara@kolumbus.fi>
 
-On Thu, Apr 30, 2009 at 1:00 PM, Jeff Garzik <jeff@garzik.org> wrote:
-> Tejun Heo wrote:
->>
->> Hello,
->>
->> Jeff Garzik wrote:
->>>
->>> <shrug> =A0I suppose...
->>>
->>> It just seems like a nasty hack, but unfortunately I don't see
->>> anyone stepping up to do it properly -- with a DM device
->>> automatically layered on top that splits the device into separate
->>> regions: one block device for the 'regular' area, and one for the
->>> HPA.
->>
->> Isn't that more hacky? =A0I don't know. =A0All that dm needs to know=
- is
->> the location of the metadata which is located w.r.t. the end of the
->> device which might be at a different location if BIOS tried to pull
->> silly stunts. =A0So, exporting the size BIOS might have used seems l=
-ike
->> a straight forward solution to me.
->
-> "<shrug> I suppose" is basically a reluctant ack, in the absence of o=
-ther
-> solutions :)
->
+On Thu, 2009-04-30 at 09:04 +0300, Sergey Senozhatsky wrote:
+> Trivial: fixing gcc 4.4 compiler warning:
+> drivers/scsi/st.c: In function =E2=80=98st_int_ioctl=E2=80=99:
+> drivers/scsi/st.c:2967: warning: suggest parentheses around operand o=
+f =E2=80=98!=E2=80=99 or change =E2=80=98|=E2=80=99 to =E2=80=98||=E2=80=
+=99 or =E2=80=98!=E2=80=99 to =E2=80=98~=E2=80=99
+>=20
+> Signed-off-by: Sergey Senozhatsky <sergey.senozhatsky@mail.by>
+>=20
+> ---
+>=20
+> diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+> index eb24efe..2bde8a5 100644
+> --- a/drivers/scsi/st.c
+> +++ b/drivers/scsi/st.c
+> @@ -2964,7 +2964,7 @@ static int st_int_ioctl(struct scsi_tape *STp, =
+unsigned int cmd_in, unsigned lon
+>  			    !(STp->use_pf & PF_TESTED)) {
+>  				/* Try the other possible state of Page Format if not
+>  				   already tried */
+> -				STp->use_pf =3D !STp->use_pf | PF_TESTED;
+> +				STp->use_pf =3D (!STp->use_pf) | PF_TESTED;
 
-Couldn't the "fix" also just be a note to users to disable ignore_hpa
-if they notice that there raid arrays are not assembling correctly?
+This just doesn't look right.  As I said to the warning reporter, I
+think STp->use_pf |=3D PF_TESTED; is the correct fix, but I need Kai to
+check this.
 
---
-Dan
+James
+
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
