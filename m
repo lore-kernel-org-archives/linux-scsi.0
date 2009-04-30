@@ -1,55 +1,59 @@
-From: Rabin Vincent <rabin@rab.in>
-Subject: Re: lockdep warning from firmware loader
-Date: Fri, 1 May 2009 03:18:01 +0530
-Message-ID: <20090430214617.GA13109@debian>
-References: <Pine.SOC.4.64.0904241017380.219@math.ut.ee>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH]: fixing gcc 4.4 compiler warning: suggest parentheses
+ around operand of =?UTF-8?Q?=E2=80=98!=E2=80=99?=
+Date: Thu, 30 Apr 2009 14:46:56 -0700
+Message-ID: <20090430144656.714fe853.akpm@linux-foundation.org>
+References: <20090430060430.GA6040@localhost>
+	<1241127084.3320.14.camel@mulgrave.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.224]:24078 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750909AbZD3VsT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Apr 2009 17:48:19 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.SOC.4.64.0904241017380.219@math.ut.ee>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:37139 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753402AbZD3Vt5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Apr 2009 17:49:57 -0400
+In-Reply-To: <1241127084.3320.14.camel@mulgrave.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Meelis Roos <mroos@linux.ee>
-Cc: Linux Kernel list <linux-kernel@vger.kernel.org>, jaswinderrajput@gmail.com, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: sergey.senozhatsky@mail.by, linux-scsi@vger.kernel.org, Kai.Makisara@kolumbus.fi
 
-(CCs added)
+On Thu, 30 Apr 2009 21:31:24 +0000
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-On Fri, Apr 24, 2009 at 10:21:13AM +0300, Meelis Roos wrote:
-> This 2.6.30-rc3 running on SMP sparc64. Loading the qla1280 pci scsi 
-> driver causes a firmware load that in turn causes a lockdep warning like 
-> below. Firmware loading still seems to work fine.
-[..]
-> Apr 23 22:20:39 korvits kernel: [  143.912020] qla1280: QLA1040 found on PCI bus 0, dev 3
-> Apr 23 22:20:39 korvits kernel: [  143.971811] PCI: Enabling device: (0002:00:03.0), cmd 7
-> Apr 23 22:20:39 korvits kernel: [  143.972842] ------------[ cut here ]------------
-> Apr 23 22:20:39 korvits kernel: [  144.026699] WARNING: at kernel/lockdep.c:2280 lockdep_trace_alloc+0xbc/0x100()
-> Apr 23 22:20:39 korvits kernel: [  144.113197] Modules linked in:
-> Apr 23 22:20:39 korvits kernel: [  144.149622] Call Trace:
-> Apr 23 22:20:39 korvits kernel: [  144.178818]  [000000000045d7cc] warn_slowpath+0x6c/0xa0
-> Apr 23 22:20:39 korvits kernel: [  144.241329]  [00000000004886fc] lockdep_trace_alloc+0xbc/0x100
-> Apr 23 22:20:39 korvits kernel: [  144.311140]  [00000000004e67b8] kmem_cache_alloc+0x18/0x160
-> Apr 23 22:20:39 korvits kernel: [  144.377821]  [0000000000604d68] _request_firmware+0x28/0x520
-> Apr 23 22:20:39 korvits kernel: [  144.445533]  [000000000060531c] request_firmware+0x1c/0x40
-> Apr 23 22:20:39 korvits kernel: [  144.511180]  [000000000061ba98] qla1280_load_firmware+0x2f8/0x7e0
-> Apr 23 22:20:39 korvits kernel: [  144.584108]  [00000000006e1498] qla1280_probe_one+0x390/0x7a8
-> Apr 23 22:20:39 korvits kernel: [  144.652874]  [00000000005ce55c] local_pci_probe+0x1c/0x40
-> Apr 23 22:20:39 korvits kernel: [  144.717468]  [00000000005ce8e0] pci_device_probe+0x60/0xa0
-> Apr 23 22:20:39 korvits kernel: [  144.783106]  [00000000005fff78] driver_probe_device+0x78/0x1a0
-> Apr 23 22:20:39 korvits kernel: [  144.852911]  [000000000060012c] __driver_attach+0x8c/0xa0
-> Apr 23 22:20:39 korvits kernel: [  144.917505]  [00000000005ff6c8] bus_for_each_dev+0x68/0xa0
-> Apr 23 22:20:39 korvits kernel: [  144.983141]  [00000000005ffde0] driver_attach+0x20/0x40
-> Apr 23 22:20:39 korvits kernel: [  145.045657]  [00000000005fee64] bus_add_driver+0x104/0x280
-> Apr 23 22:20:39 korvits kernel: [  145.111292]  [0000000000600454] driver_register+0x74/0x180
-> Apr 23 22:20:39 korvits kernel: [  145.176928]  [00000000005cedb4] __pci_register_driver+0x54/0xe0
-> Apr 23 22:20:39 korvits kernel: [  145.247808] ---[ end trace 6edbdc497698d192 ]---
-> Apr 23 22:20:39 korvits kernel: [  145.302997] qla1280 0002:00:03.0: firmware: using built-in firmware qlogic/1040.bin
+> On Thu, 2009-04-30 at 09:04 +0300, Sergey Senozhatsky wrote:
+> > Trivial: fixing gcc 4.4 compiler warning:
+> > drivers/scsi/st.c: In function =E2=80=98st_int_ioctl=E2=80=99:
+> > drivers/scsi/st.c:2967: warning: suggest parentheses around operand=
+ of =E2=80=98!=E2=80=99 or change =E2=80=98|=E2=80=99 to =E2=80=98||=E2=
+=80=99 or =E2=80=98!=E2=80=99 to =E2=80=98~=E2=80=99
+> >=20
+> > Signed-off-by: Sergey Senozhatsky <sergey.senozhatsky@mail.by>
+> >=20
+> > ---
+> >=20
+> > diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+> > index eb24efe..2bde8a5 100644
+> > --- a/drivers/scsi/st.c
+> > +++ b/drivers/scsi/st.c
+> > @@ -2964,7 +2964,7 @@ static int st_int_ioctl(struct scsi_tape *STp=
+, unsigned int cmd_in, unsigned lon
+> >  			    !(STp->use_pf & PF_TESTED)) {
+> >  				/* Try the other possible state of Page Format if not
+> >  				   already tried */
+> > -				STp->use_pf =3D !STp->use_pf | PF_TESTED;
+> > +				STp->use_pf =3D (!STp->use_pf) | PF_TESTED;
+>=20
+> This just doesn't look right.  As I said to the warning reporter, I
+> think STp->use_pf |=3D PF_TESTED; is the correct fix, but I need Kai =
+to
+> check this.
 
-This is because the driver calls request_firmware() with interrupts
-disabled.
-
-Rabin
+yeah, good point.  The code looks very confused.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
