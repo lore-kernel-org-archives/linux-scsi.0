@@ -1,40 +1,58 @@
-From: Matthew Wilcox <matthew-Ztpu424NOJ8@public.gmane.org>
-Subject: Re: [PATCH 5/5] USB: Wait for USB and SCSI block boot devices
-Date: Wed, 29 Apr 2009 19:35:26 -0600
-Message-ID: <20090430013526.GD8822@parisc-linux.org>
-References: <20090430001255.GA3897@cuplxvomd02.corp.sa.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] [Target_Core_Mod/pSCSI]: Add	block/blk-map.c:blk_rq_map_kern_sg()
+ usage
+Date: Thu, 30 Apr 2009 10:37:55 +0900
+Message-ID: <49F900F3.2060009@kernel.org>
+References: <1240965782.32740.309.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20090430001255.GA3897-CFZJ1or75eBPWxJt6d6B6bQa8qPdvLwY@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: David VomLehn <dvomlehn-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
-Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, gregkh-l3A5Bk7waGM@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:44523 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753140AbZD3Bmy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Apr 2009 21:42:54 -0400
+In-Reply-To: <1240965782.32740.309.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Douglas Gilbert <dgilbert@interlog.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <jens.axboe@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, Vladislav Bolkhovitin <vst@vlnb.net>
 
-On Wed, Apr 29, 2009 at 05:12:55PM -0700, David VomLehn wrote:
->  	scsi_finish_async_scan(data);
-> +	bootdev_probe_done(BOOTDEV_BLOCK_MASK);
->  	return 0;
->  }
->  
-> @@ -1855,6 +1856,7 @@ void scsi_scan_host(struct Scsi_Host *shost)
->  		return;
->  	}
->  
-> +	bootdev_found(BOOTDEV_BLOCK_MASK);
->  	p = kthread_run(do_scan_async, data, "scsi_scan_%d", shost->host_no);
->  	if (IS_ERR(p))
+Hello, Nicholas.
 
-Where are the definitions of these functions to be found?
+Nicholas A. Bellinger wrote:
+...
+> Once Tejun's patches for block/blk-map.c:blk_rq_map_kern_sg() have
+> been included upstream, the legacy pscsi_map_task_SG() will be
+> removed and blk-map will become the preferred method for accessing
+> struct scatterlist -> struct scsi_device for SCSI target operations.
+> For now, I have created a blk-map branch in lio-core-2.6.git with
+> LINUX_USE_NEW_BLK_MAP=1 and left LINUX_USE_NEW_BLK_MAP=0 in branch
+> master.
+
+Hmm... I don't think the patch will go in as-is although there seem to
+be some places which can make use of sg mapping interface (including
+OSD).  Currently there are following problems.
+
+* Single kmalloc()ing the whole bio has higher chance of failing if
+  the bvec becomes very large.
+
+* Boaz is worried about performance implications with going back and
+  forth between sgl and bvec.
+
+In longer term, I think where we should be headed is...
+
+* Expand sgl( or t) such that 1. it uses separate list for cpu and dma
+  addresses so that it doesn't take up twice as much space
+  unnecessarily, 2. sgl's can be easily chained (alerady somewhat
+  there) and thus we don't have to worry about chaining in higher
+  layer.
+
+* Replace bvec with sgl in bio.
+
+Dunno what we should do in the meantime tho.
+
+Thanks.
 
 -- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+tejun
