@@ -1,38 +1,77 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 08/10] block: cleanup rq->data_len usages
-Date: Thu, 30 Apr 2009 10:35:57 -0500
-Message-ID: <1241105757.3320.1.camel@mulgrave.int.hansenpartnership.com>
-References: <1240996428-10159-1-git-send-email-tj@kernel.org>
-	 <1240996428-10159-9-git-send-email-tj@kernel.org>
-	 <49F9AC04.9060403@panasas.com>
+From: David VomLehn <dvomlehn@cisco.com>
+Subject: [PATCH 5/5] USB: Wait for USB and SCSI block boot devices, v2
+Date: Thu, 30 Apr 2009 08:48:20 -0700
+Message-ID: <20090430154820.GA15170@cuplxvomd02.corp.sa.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932350AbZD3Ph2@vger.kernel.org>
-In-Reply-To: <49F9AC04.9060403@panasas.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Tejun Heo <tj@kernel.org>, axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, chirag.kantharia@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, jesper.juhl@gmail.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, "Darrick J. Wong" <djwong@us.ibm.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sj-iport-3.cisco.com ([171.71.176.72]:26997 "EHLO
+	sj-iport-3.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932970AbZD3PsZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Apr 2009 11:48:25 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-usb@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, 2009-04-30 at 16:47 +0300, Boaz Harrosh wrote:
-> > @@ -966,7 +965,7 @@ static int scsi_init_sgtable(struct request
-> *req, struct scsi_data_buffer *sdb,
-> >       BUG_ON(count > sdb->table.nents);
-> >       sdb->table.nents = count;
-> >       if (blk_pc_request(req))
-> > -             sdb->length = req->data_len;
-> > +             sdb->length = blk_rq_bytes(req);
-> >       else
-> >               sdb->length = blk_rq_sectors(req) << 9;
-> 
-> Is this true. I thought they must be the same now. I was actually
-> anticipating this if() removed.
+From: Alan Stern <stern@rowland.harvard.edu
 
-Me too ... there's one of these in scsi_lib.c as well.
+Add synchronization for USB and SCSI block devices.
 
-The difference comes because filesystem requests are always in sectors,
-but BLOCK_PC requests are always in bytes .... we should be able to wrap
-the accessors so they do the correct conversions.
+History
+v2	Correct location of call to bootdev_found
+v1	Initial version
 
-James
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu
+Signed-off-by: David VomLehn <dvomlehn@cisco.com>
+---
+ drivers/scsi/scsi_scan.c  |    2 ++
+ drivers/usb/storage/usb.c |    3 +++
+ 2 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 6f51ca4..735b061 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1834,6 +1834,7 @@ static int do_scan_async(void *_data)
+ 	struct async_scan_data *data = _data;
+ 	do_scsi_scan_host(data->shost);
+ 	scsi_finish_async_scan(data);
++	bootdev_probe_done(BOOTDEV_BLOCK_MASK);
+ 	return 0;
+ }
+ 
+@@ -1855,6 +1856,7 @@ void scsi_scan_host(struct Scsi_Host *shost)
+ 		return;
+ 	}
+ 
++	bootdev_found(BOOTDEV_BLOCK_MASK);
+ 	p = kthread_run(do_scan_async, data, "scsi_scan_%d", shost->host_no);
+ 	if (IS_ERR(p))
+ 		do_scan_async(data);
+diff --git a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
+index 8060b85..ea7abab 100644
+--- a/drivers/usb/storage/usb.c
++++ b/drivers/usb/storage/usb.c
+@@ -837,6 +837,7 @@ static int usb_stor_scan_thread(void * __us)
+ 		/* Should we unbind if no devices were detected? */
+ 	}
+ 
++	bootdev_probe_done(BOOTDEV_BLOCK_MASK);
+ 	complete_and_exit(&us->scanning_done, 0);
+ }
+ 
+@@ -937,10 +938,12 @@ int usb_stor_probe2(struct us_data *us)
+ 	}
+ 
+ 	/* Start up the thread for delayed SCSI-device scanning */
++	bootdev_found(BOOTDEV_BLOCK_MASK);
+ 	th = kthread_create(usb_stor_scan_thread, us, "usb-stor-scan");
+ 	if (IS_ERR(th)) {
+ 		printk(KERN_WARNING USB_STORAGE 
+ 		       "Unable to start the device-scanning thread\n");
++		bootdev_probe_done(BOOTDEV_BLOCK_MASK);
+ 		complete(&us->scanning_done);
+ 		quiesce_and_remove_host(us);
+ 		result = PTR_ERR(th);
