@@ -1,544 +1,172 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 07/10] block: drop request->hard_* and *nr_sectors
-Date: Thu, 30 Apr 2009 16:46:22 +0300
-Message-ID: <49F9ABAE.60405@panasas.com>
-References: <1240996428-10159-1-git-send-email-tj@kernel.org> <1240996428-10159-8-git-send-email-tj@kernel.org>
+Subject: Re: [PATCH 08/10] block: cleanup rq->data_len usages
+Date: Thu, 30 Apr 2009 16:47:48 +0300
+Message-ID: <49F9AC04.9060403@panasas.com>
+References: <1240996428-10159-1-git-send-email-tj@kernel.org> <1240996428-10159-9-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1240996428-10159-8-git-send-email-tj@kernel.org>
+In-Reply-To: <1240996428-10159-9-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, chirag.kantharia@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, jesper.juhl@gmail.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, chirag.kantharia@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, jesper.juhl@gmail.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, "Darrick J. Wong" <djwong@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
 On 04/29/2009 12:13 PM, Tejun Heo wrote:
-> struct request has had a few different ways to represent some
-> properties of a request.  ->hard_* represent block layer's view of the
-> request progress (completion cursor) and the ones without the prefix
-> are supposed to represent the issue cursor and allowed to be updated
-> as necessary by the low level drivers.  The thing is that as block
-> layer supports partial completion, the two cursors really aren't
-> necessary and only cause confusion.  In addition, manual management of
-> request detail from low level drivers is cumbersome and error-prone at
-> the very least.
+> With recent unification of fields, it's now guaranteed that
+> rq->data_len always equals blk_rq_bytes().  Convert all non-IDE direct
+> users to accessors.  IDE will be converted in a separate patch.
 > 
-> Another interesting duplicate fields are rq->[hard_]nr_sectors and
-> rq->{hard_cur|current}_nr_sectors against rq->data_len and
-> rq->bio->bi_size.  This is more convoluted than the hard_ case.
-> 
-> rq->[hard_]nr_sectors are initialized for requests with bio but
-> blk_rq_bytes() uses it only for !pc requests.  rq->data_len is
-> initialized for all request but blk_rq_bytes() uses it only for pc
-> requests.  This causes good amount of confusion throughout block layer
-> and its drivers and determining the request length has been a bit of
-> black magic which may or may not work depending on circumstances and
-> what the specific LLD is actually doing.
-> 
-> rq->{hard_cur|current}_nr_sectors represent the number of sectors in
-> the contiguous data area at the front.  This is mainly used by drivers
-> which transfers data by walking request segment-by-segment.  This
-> value always equals rq->bio->bi_size >> 9.  However, data length for
-> pc requests may not be multiple of 512 bytes and using this field
-> becomes a bit confusing.
-> 
-> In general, having multiple fields to represent the same property
-> leads only to confusion and subtle bugs.  With recent block low level
-> driver cleanups, no driver is accessing or manipulating these
-> duplicate fields directly.  Drop all the duplicates.  Now rq->sector
-> means the current sector, rq->data_len the current total length and
-> rq->bio->bi_size the current segment length.  Everything else is
-> defined in terms of these three and available only through accessors.
-> 
-> * blk_recalc_rq_sectors() is collapsed into blk_update_request() and
->   now handles pc and fs requests equally other than rq->sector update.
->   This means that now pc requests can use partial completion too (no
->   in-kernel user yet tho).
-> 
-> * bio_cur_sectors() is replaced with bio_cur_bytes() as block layer
->   now uses byte count as the primary data length.
-> 
-> * blk_rq_pos() is now guranteed to be always correct.  In-block users
->   converted.
-> 
-> * blk_rq_bytes() is now guaranteed to be always valid as is
->   blk_rq_sectors().  In-block users converted.
-> 
-> * blk_rq_sectors() is now guaranteed to equal blk_rq_bytes() >> 9.
->   More convenient one is used.
-> 
-> [ Impact: API cleanup, single way to represent one property of a request ]
+> [ Impact: convert direct rq->data_len usages to blk_rq_bytes() ]
 > 
 > Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Pete Zaitcev <zaitcev@redhat.com>
+> Cc: Eric Moore <Eric.Moore@lsi.com>
+> Cc: Markus Lidel <Markus.Lidel@shadowconnect.com>
+> Cc: Darrick J. Wong <djwong@us.ibm.com>
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Cc: Eric Moore <Eric.Moore@lsi.com>
 > Cc: Boaz Harrosh <bharrosh@panasas.com>
+> Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 > ---
->  block/blk-core.c         |   81 +++++++++++++++++-----------------------------
->  block/blk-merge.c        |   36 ++------------------
->  block/blk.h              |    1 -
->  block/cfq-iosched.c      |   10 +++---
->  include/linux/bio.h      |    6 ++--
->  include/linux/blkdev.h   |   37 +++++++++------------
->  include/linux/elevator.h |    2 +-
->  kernel/trace/blktrace.c  |   16 ++++----
->  8 files changed, 67 insertions(+), 122 deletions(-)
-> 
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index 82dc206..3596ca7 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -127,7 +127,7 @@ void blk_rq_init(struct request_queue *q, struct request *rq)
->  	INIT_LIST_HEAD(&rq->timeout_list);
->  	rq->cpu = -1;
->  	rq->q = q;
-> -	rq->sector = rq->hard_sector = (sector_t) -1;
-> +	rq->sector = (sector_t) -1;
->  	INIT_HLIST_NODE(&rq->hash);
->  	RB_CLEAR_NODE(&rq->rb_node);
->  	rq->cmd = rq->__cmd;
-> @@ -189,8 +189,7 @@ void blk_dump_rq_flags(struct request *rq, char *msg)
->  	       (unsigned long long)blk_rq_pos(rq),
->  	       blk_rq_sectors(rq), blk_rq_cur_sectors(rq));
->  	printk(KERN_INFO "  bio %p, biotail %p, buffer %p, len %u\n",
-> -						rq->bio, rq->biotail,
-> -						rq->buffer, rq->data_len);
-> +	       rq->bio, rq->biotail, rq->buffer, blk_rq_bytes(rq));
->  
->  	if (blk_pc_request(rq)) {
->  		printk(KERN_INFO "  cdb: ");
-> @@ -1096,7 +1095,7 @@ void init_request_from_bio(struct request *req, struct bio *bio)
->  		req->cmd_flags |= REQ_NOIDLE;
->  
->  	req->errors = 0;
-> -	req->hard_sector = req->sector = bio->bi_sector;
-> +	req->sector = bio->bi_sector;
->  	req->ioprio = bio_prio(bio);
->  	blk_rq_bio_prep(req->q, req, bio);
->  }
-> @@ -1113,14 +1112,13 @@ static inline bool queue_should_plug(struct request_queue *q)
->  static int __make_request(struct request_queue *q, struct bio *bio)
->  {
->  	struct request *req;
-> -	int el_ret, nr_sectors;
-> +	int el_ret;
-> +	unsigned int bytes = bio->bi_size;
->  	const unsigned short prio = bio_prio(bio);
->  	const int sync = bio_sync(bio);
->  	const int unplug = bio_unplug(bio);
->  	int rw_flags;
->  
-> -	nr_sectors = bio_sectors(bio);
-> -
->  	/*
->  	 * low level driver can indicate that it wants pages above a
->  	 * certain limit bounced to low memory (ie for highmem, or even
-> @@ -1145,7 +1143,7 @@ static int __make_request(struct request_queue *q, struct bio *bio)
->  
->  		req->biotail->bi_next = bio;
->  		req->biotail = bio;
-> -		req->nr_sectors = req->hard_nr_sectors += nr_sectors;
-> +		req->data_len += bytes;
->  		req->ioprio = ioprio_best(req->ioprio, prio);
->  		if (!blk_rq_cpu_valid(req))
->  			req->cpu = bio->bi_comp_cpu;
-> @@ -1171,10 +1169,8 @@ static int __make_request(struct request_queue *q, struct bio *bio)
->  		 * not touch req->buffer either...
->  		 */
->  		req->buffer = bio_data(bio);
-> -		req->current_nr_sectors = bio_cur_sectors(bio);
-> -		req->hard_cur_sectors = req->current_nr_sectors;
-> -		req->sector = req->hard_sector = bio->bi_sector;
-> -		req->nr_sectors = req->hard_nr_sectors += nr_sectors;
-> +		req->sector = bio->bi_sector;
-> +		req->data_len += bytes;
->  		req->ioprio = ioprio_best(req->ioprio, prio);
->  		if (!blk_rq_cpu_valid(req))
->  			req->cpu = bio->bi_comp_cpu;
-> @@ -1557,7 +1553,7 @@ EXPORT_SYMBOL(submit_bio);
->  int blk_rq_check_limits(struct request_queue *q, struct request *rq)
->  {
->  	if (blk_rq_sectors(rq) > q->max_sectors ||
-> -	    rq->data_len > q->max_hw_sectors << 9) {
-> +	    blk_rq_bytes(rq) > q->max_hw_sectors << 9) {
->  		printk(KERN_ERR "%s: over max size limit.\n", __func__);
->  		return -EIO;
+<snip>
+>  drivers/scsi/osd/osd_initiator.c         |    4 ++--
+>  fs/exofs/osd.c                           |    4 ++--
+<snip>
+> diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
+> index 2a5f077..d178a8b 100644
+> --- a/drivers/scsi/osd/osd_initiator.c
+> +++ b/drivers/scsi/osd/osd_initiator.c
+> @@ -1299,7 +1299,7 @@ int osd_finalize_request(struct osd_request *or,
+>  			return ret;
+>  		}
+>  		OSD_DEBUG("out bytes=%llu (bytes_req=%u)\n",
+> -			_LLU(or->out.total_bytes), or->out.req->data_len);
+> +			_LLU(or->out.total_bytes), blk_rq_bytes(or->out.req));
 >  	}
-> @@ -1675,35 +1671,6 @@ static void blk_account_io_done(struct request *req)
->  	}
->  }
->  
-> -/**
-> - * blk_rq_bytes - Returns bytes left to complete in the entire request
-> - * @rq: the request being processed
-> - **/
-> -unsigned int blk_rq_bytes(struct request *rq)
-> -{
-> -	if (blk_fs_request(rq))
-> -		return blk_rq_sectors(rq) << 9;
-> -
-> -	return rq->data_len;
-> -}
-> -EXPORT_SYMBOL_GPL(blk_rq_bytes);
-> -
-> -/**
-> - * blk_rq_cur_bytes - Returns bytes left to complete in the current segment
-> - * @rq: the request being processed
-> - **/
-> -unsigned int blk_rq_cur_bytes(struct request *rq)
-> -{
-> -	if (blk_fs_request(rq))
-> -		return rq->current_nr_sectors << 9;
-> -
-> -	if (rq->bio)
-> -		return rq->bio->bi_size;
-> -
-> -	return rq->data_len;
-> -}
-> -EXPORT_SYMBOL_GPL(blk_rq_cur_bytes);
-> -
->  struct request *elv_next_request(struct request_queue *q)
->  {
->  	struct request *rq;
-> @@ -1736,7 +1703,7 @@ struct request *elv_next_request(struct request_queue *q)
->  		if (rq->cmd_flags & REQ_DONTPREP)
->  			break;
->  
-> -		if (q->dma_drain_size && rq->data_len) {
-> +		if (q->dma_drain_size && blk_rq_bytes(rq)) {
->  			/*
->  			 * make sure space for the drain appears we
->  			 * know we can do this because max_hw_segments
-> @@ -1759,7 +1726,7 @@ struct request *elv_next_request(struct request_queue *q)
->  			 * avoid resource deadlock.  REQ_STARTED will
->  			 * prevent other fs requests from passing this one.
->  			 */
-> -			if (q->dma_drain_size && rq->data_len &&
-> +			if (q->dma_drain_size && blk_rq_bytes(rq) &&
->  			    !(rq->cmd_flags & REQ_DONTPREP)) {
->  				/*
->  				 * remove the space for the drain we added
-> @@ -1911,8 +1878,7 @@ bool blk_update_request(struct request *req, int error, unsigned int nr_bytes)
->  		 * can find how many bytes remain in the request
->  		 * later.
->  		 */
-> -		req->nr_sectors = req->hard_nr_sectors = 0;
-> -		req->current_nr_sectors = req->hard_cur_sectors = 0;
-> +		req->data_len = 0;
->  		return false;
+>  	if (or->in.bio) {
+>  		ret = blk_rq_append_bio(or->request->q, or->in.req, or->in.bio);
+> @@ -1308,7 +1308,7 @@ int osd_finalize_request(struct osd_request *or,
+>  			return ret;
+>  		}
+>  		OSD_DEBUG("in bytes=%llu (bytes_req=%u)\n",
+> -			_LLU(or->in.total_bytes), or->in.req->data_len);
+> +			_LLU(or->in.total_bytes), blk_rq_bytes(or->in.req));
 >  	}
 >  
-> @@ -1926,8 +1892,25 @@ bool blk_update_request(struct request *req, int error, unsigned int nr_bytes)
->  		bio_iovec(bio)->bv_len -= nr_bytes;
->  	}
->  
-> -	blk_recalc_rq_sectors(req, total_bytes >> 9);
-> +	req->data_len -= total_bytes;
-> +	req->buffer = bio_data(req->bio);
-> +
-> +	/* update sector only for requests with clear definition of sector */
-> +	if (blk_fs_request(req) || blk_discard_rq(req))
-> +		req->sector += total_bytes >> 9;
-> +
-> +	/*
-> +	 * If total number of sectors is less than the first segment
-> +	 * size, something has gone terribly wrong.
-> +	 */
-> +	if (blk_rq_bytes(req) < blk_rq_cur_bytes(req)) {
-> +		printk(KERN_ERR "blk: request botched\n");
-> +		req->data_len = blk_rq_cur_bytes(req);
-> +	}
+>  	or->out.pad_buff = sg_out_pad_buffer;
 
-What happens in the last bio/segment? Is it not allowed with block_pc commands
-that blk_rq_bytes(req) (was data_len) be smaller then sum_bytes(bio-chain)?
-Also I never understood the drain is it not appended to the last bio? I thought it
-is costumery in the Kernel to allow mapping longer then actual length?
+Sorry about this stupid debug-print. Leftover from the learning days
+Ack for this bit.
 
-Maybe you would want blk_rq_cur_bytes(req) to return the minimum of the two, and let
-bio's be longer then bytes requested. (ie. reverse above logic)
-
-> +
-> +	/* recalculate the number of segments */
->  	blk_recalc_rq_segments(req);
-> +
->  	return true;
->  }
->  EXPORT_SYMBOL_GPL(blk_update_request);
-> @@ -2049,11 +2032,7 @@ void blk_rq_bio_prep(struct request_queue *q, struct request *rq,
->  		rq->nr_phys_segments = bio_phys_segments(q, bio);
->  		rq->buffer = bio_data(bio);
->  	}
-> -	rq->current_nr_sectors = bio_cur_sectors(bio);
-> -	rq->hard_cur_sectors = rq->current_nr_sectors;
-> -	rq->hard_nr_sectors = rq->nr_sectors = bio_sectors(bio);
->  	rq->data_len = bio->bi_size;
-> -
->  	rq->bio = rq->biotail = bio;
->  
->  	if (bio->bi_bdev)
-> diff --git a/block/blk-merge.c b/block/blk-merge.c
-> index bf62a87..b8df66a 100644
-> --- a/block/blk-merge.c
-> +++ b/block/blk-merge.c
-> @@ -9,35 +9,6 @@
->  
->  #include "blk.h"
->  
-> -void blk_recalc_rq_sectors(struct request *rq, int nsect)
-> -{
-> -	if (blk_fs_request(rq) || blk_discard_rq(rq)) {
-> -		rq->hard_sector += nsect;
-> -		rq->hard_nr_sectors -= nsect;
-> -
-> -		/*
-> -		 * Move the I/O submission pointers ahead if required.
-> -		 */
-> -		if ((rq->nr_sectors >= rq->hard_nr_sectors) &&
-> -		    (rq->sector <= rq->hard_sector)) {
-> -			rq->sector = rq->hard_sector;
-> -			rq->nr_sectors = rq->hard_nr_sectors;
-> -			rq->hard_cur_sectors = bio_cur_sectors(rq->bio);
-> -			rq->current_nr_sectors = rq->hard_cur_sectors;
-> -			rq->buffer = bio_data(rq->bio);
-> -		}
-> -
-> -		/*
-> -		 * if total number of sectors is less than the first segment
-> -		 * size, something has gone terribly wrong
-> -		 */
-> -		if (rq->nr_sectors < rq->current_nr_sectors) {
-> -			printk(KERN_ERR "blk: request botched\n");
-> -			rq->nr_sectors = rq->current_nr_sectors;
-> -		}
-> -	}
-> -}
-> -
->  static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
->  					     struct bio *bio)
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 39b3acf..3d16c70 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -682,14 +682,13 @@ EXPORT_SYMBOL(scsi_release_buffers);
+>  static void scsi_end_bidi_request(struct scsi_cmnd *cmd)
 >  {
-> @@ -199,8 +170,9 @@ new_segment:
+>  	struct request *req = cmd->request;
+> -	unsigned int dlen = req->data_len;
+> -	unsigned int next_dlen = req->next_rq->data_len;
 >  
+>  	req->resid_len = scsi_out(cmd)->resid;
+>  	req->next_rq->resid_len = scsi_in(cmd)->resid;
 >  
->  	if (unlikely(rq->cmd_flags & REQ_COPY_USER) &&
-> -	    (rq->data_len & q->dma_pad_mask)) {
-> -		unsigned int pad_len = (q->dma_pad_mask & ~rq->data_len) + 1;
-> +	    (blk_rq_bytes(rq) & q->dma_pad_mask)) {
-> +		unsigned int pad_len =
-> +			(q->dma_pad_mask & ~blk_rq_bytes(rq)) + 1;
+>  	/* The req and req->next_rq have not been completed */
+> -	BUG_ON(blk_end_bidi_request(req, 0, dlen, next_dlen));
+> +	BUG_ON(blk_end_bidi_request(req, 0, blk_rq_bytes(req),
+> +				    blk_rq_bytes(req->next_rq)));
 >  
->  		sg->length += pad_len;
->  		rq->extra_len += pad_len;
-> @@ -398,7 +370,7 @@ static int attempt_merge(struct request_queue *q, struct request *req,
->  	req->biotail->bi_next = next->bio;
->  	req->biotail = next->biotail;
+
+Just blk_end_request_all() actually. If you let blk_end_request_all also do bidi
+
+>  	scsi_release_buffers(cmd);
 >  
-> -	req->nr_sectors = req->hard_nr_sectors += next->hard_nr_sectors;
-> +	req->data_len += blk_rq_bytes(next);
->  
->  	elv_merge_requests(q, req, next);
->  
-> diff --git a/block/blk.h b/block/blk.h
-> index 5111559..ab54529 100644
-> --- a/block/blk.h
-> +++ b/block/blk.h
-> @@ -101,7 +101,6 @@ int ll_front_merge_fn(struct request_queue *q, struct request *req,
->  int attempt_back_merge(struct request_queue *q, struct request *rq);
->  int attempt_front_merge(struct request_queue *q, struct request *rq);
->  void blk_recalc_rq_segments(struct request *rq);
-> -void blk_recalc_rq_sectors(struct request *rq, int nsect);
->  
->  void blk_queue_congestion_threshold(struct request_queue *q);
->  
-> diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-> index db4d990..99ac430 100644
-> --- a/block/cfq-iosched.c
-> +++ b/block/cfq-iosched.c
-> @@ -579,9 +579,9 @@ cfq_prio_tree_lookup(struct cfq_data *cfqd, struct rb_root *root,
->  		 * Sort strictly based on sector.  Smallest to the left,
->  		 * largest to the right.
->  		 */
-> -		if (sector > cfqq->next_rq->sector)
-> +		if (sector > blk_rq_pos(cfqq->next_rq))
->  			n = &(*p)->rb_right;
-> -		else if (sector < cfqq->next_rq->sector)
-> +		else if (sector < blk_rq_pos(cfqq->next_rq))
->  			n = &(*p)->rb_left;
->  		else
->  			break;
-> @@ -611,8 +611,8 @@ static void cfq_prio_tree_add(struct cfq_data *cfqd, struct cfq_queue *cfqq)
->  		return;
->  
->  	cfqq->p_root = &cfqd->prio_trees[cfqq->org_ioprio];
-> -	__cfqq = cfq_prio_tree_lookup(cfqd, cfqq->p_root, cfqq->next_rq->sector,
-> -					 &parent, &p);
-> +	__cfqq = cfq_prio_tree_lookup(cfqd, cfqq->p_root,
-> +				      blk_rq_pos(cfqq->next_rq), &parent, &p);
->  	if (!__cfqq) {
->  		rb_link_node(&cfqq->p_node, parent, p);
->  		rb_insert_color(&cfqq->p_node, cfqq->p_root);
-> @@ -996,7 +996,7 @@ static struct cfq_queue *cfqq_close(struct cfq_data *cfqd,
->  	if (cfq_rq_close(cfqd, __cfqq->next_rq))
->  		return __cfqq;
->  
-> -	if (__cfqq->next_rq->sector < sector)
-> +	if (blk_rq_pos(__cfqq->next_rq) < sector)
->  		node = rb_next(&__cfqq->p_node);
+
+and then it can be in-lined into caller, where blk_pc_request(req) just do blk_end_request_all
+regardless (and only the residual setting is conditional)
+
+I'll send a patch to scsi_lib later once this settles a bit.
+
+> @@ -966,7 +965,7 @@ static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb,
+>  	BUG_ON(count > sdb->table.nents);
+>  	sdb->table.nents = count;
+>  	if (blk_pc_request(req))
+> -		sdb->length = req->data_len;
+> +		sdb->length = blk_rq_bytes(req);
 >  	else
->  		node = rb_prev(&__cfqq->p_node);
-> diff --git a/include/linux/bio.h b/include/linux/bio.h
-> index f37ca8c..d30ec6f 100644
-> --- a/include/linux/bio.h
-> +++ b/include/linux/bio.h
-> @@ -218,12 +218,12 @@ struct bio {
->  #define bio_sectors(bio)	((bio)->bi_size >> 9)
->  #define bio_empty_barrier(bio)	(bio_barrier(bio) && !bio_has_data(bio) && !bio_discard(bio))
->  
-> -static inline unsigned int bio_cur_sectors(struct bio *bio)
-> +static inline unsigned int bio_cur_bytes(struct bio *bio)
->  {
->  	if (bio->bi_vcnt)
-> -		return bio_iovec(bio)->bv_len >> 9;
-> +		return bio_iovec(bio)->bv_len;
->  	else /* dataless requests such as discard */
-> -		return bio->bi_size >> 9;
-> +		return bio->bi_size;
->  }
->  
->  static inline void *bio_data(struct bio *bio)
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index 1e18ef7..943cbfe 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -166,19 +166,8 @@ struct request {
->  	enum rq_cmd_type_bits cmd_type;
->  	unsigned long atomic_flags;
->  
-> -	/* Maintain bio traversal state for part by part I/O submission.
-> -	 * hard_* are block layer internals, no driver should touch them!
-> -	 */
-> -
-> -	sector_t sector;		/* next sector to submit */
-> -	sector_t hard_sector;		/* next sector to complete */
-> -	unsigned long nr_sectors;	/* no. of sectors left to submit */
-> -	unsigned long hard_nr_sectors;	/* no. of sectors left to complete */
-> -	/* no. of sectors left to submit in the current segment */
-> -	unsigned int current_nr_sectors;
-> -
-> -	/* no. of sectors left to complete in the current segment */
-> -	unsigned int hard_cur_sectors;
-> +	sector_t sector;	/* sector cursor */
-> +	unsigned int data_len;	/* total data len, don't access directly */
->  
->  	struct bio *bio;
->  	struct bio *biotail;
-> @@ -226,7 +215,6 @@ struct request {
->  	unsigned char __cmd[BLK_MAX_CDB];
->  	unsigned char *cmd;
->  
-> -	unsigned int data_len;
->  	unsigned int extra_len;	/* length of alignment and padding */
->  	unsigned int sense_len;
->  	unsigned int resid_len;	/* residual count */
-> @@ -840,20 +828,27 @@ extern void blkdev_dequeue_request(struct request *req);
->   */
->  static inline sector_t blk_rq_pos(struct request *rq)
->  {
-> -	return rq->hard_sector;
-> +	return rq->sector;
-> +}
-> +
-> +static inline unsigned int blk_rq_bytes(struct request *rq)
-> +{
-> +	return rq->data_len;
->  }
->  
-> -extern unsigned int blk_rq_bytes(struct request *rq);
-> -extern unsigned int blk_rq_cur_bytes(struct request *rq);
-> +static inline int blk_rq_cur_bytes(struct request *rq)
-> +{
-> +	return rq->bio ? bio_cur_bytes(rq->bio) : 0;
-> +}
->  
->  static inline unsigned int blk_rq_sectors(struct request *rq)
->  {
-> -	return rq->hard_nr_sectors;
-> +	return blk_rq_bytes(rq) >> 9;
->  }
->  
->  static inline unsigned int blk_rq_cur_sectors(struct request *rq)
->  {
-> -	return rq->hard_cur_sectors;
-> +	return blk_rq_cur_bytes(rq) >> 9;
->  }
->  
->  /*
-> @@ -928,7 +923,7 @@ static inline void blk_end_request_all(struct request *rq, int error)
->   */
->  static inline bool blk_end_request_cur(struct request *rq, int error)
->  {
-> -	return blk_end_request(rq, error, rq->hard_cur_sectors << 9);
-> +	return blk_end_request(rq, error, blk_rq_cur_bytes(rq));
->  }
->  
->  /**
-> @@ -981,7 +976,7 @@ static inline void __blk_end_request_all(struct request *rq, int error)
->   */
->  static inline bool __blk_end_request_cur(struct request *rq, int error)
->  {
-> -	return __blk_end_request(rq, error, rq->hard_cur_sectors << 9);
-> +	return __blk_end_request(rq, error, blk_rq_cur_bytes(rq));
->  }
->  
->  extern void blk_complete_request(struct request *);
-> diff --git a/include/linux/elevator.h b/include/linux/elevator.h
-> index c59b769..4e46287 100644
-> --- a/include/linux/elevator.h
-> +++ b/include/linux/elevator.h
-> @@ -171,7 +171,7 @@ enum {
->  	ELV_MQUEUE_MUST,
->  };
->  
-> -#define rq_end_sector(rq)	((rq)->sector + (rq)->nr_sectors)
-> +#define rq_end_sector(rq)	(blk_rq_pos(rq) + blk_rq_sectors(rq))
->  #define rb_entry_rq(node)	rb_entry((node), struct request, rb_node)
->  
->  /*
-> diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-> index 42f1c11..5708a14 100644
-> --- a/kernel/trace/blktrace.c
-> +++ b/kernel/trace/blktrace.c
-> @@ -642,12 +642,12 @@ static void blk_add_trace_rq(struct request_queue *q, struct request *rq,
->  
->  	if (blk_pc_request(rq)) {
->  		what |= BLK_TC_ACT(BLK_TC_PC);
-> -		__blk_add_trace(bt, 0, rq->data_len, rw, what, rq->errors,
-> -				rq->cmd_len, rq->cmd);
-> +		__blk_add_trace(bt, 0, blk_rq_bytes(rq), rw,
-> +				what, rq->errors, rq->cmd_len, rq->cmd);
->  	} else  {
->  		what |= BLK_TC_ACT(BLK_TC_FS);
-> -		__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_sectors(rq) << 9,
-> -				rw, what, rq->errors, 0, NULL);
-> +		__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq), rw,
-> +				what, rq->errors, 0, NULL);
->  	}
->  }
->  
-> @@ -854,11 +854,11 @@ void blk_add_driver_data(struct request_queue *q,
->  		return;
->  
->  	if (blk_pc_request(rq))
-> -		__blk_add_trace(bt, 0, rq->data_len, 0, BLK_TA_DRV_DATA,
-> -				rq->errors, len, data);
-> +		__blk_add_trace(bt, 0, blk_rq_bytes(rq), 0,
-> +				BLK_TA_DRV_DATA, rq->errors, len, data);
->  	else
-> -		__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_sectors(rq) << 9,
-> -				0, BLK_TA_DRV_DATA, rq->errors, len, data);
-> +		__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq), 0,
-> +				BLK_TA_DRV_DATA, rq->errors, len, data);
->  }
->  EXPORT_SYMBOL_GPL(blk_add_driver_data);
->  
+>  		sdb->length = blk_rq_sectors(req) << 9;
 
-Thanks, very^3 nice stuff
+Is this true. I thought they must be the same now. I was actually anticipating this if() removed.
+
+>  	return BLKPREP_OK;
+> @@ -1087,21 +1086,21 @@ int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
+>  		if (unlikely(ret))
+>  			return ret;
+>  	} else {
+> -		BUG_ON(req->data_len);
+> +		BUG_ON(blk_rq_bytes(req));
+>  
+>  		memset(&cmd->sdb, 0, sizeof(cmd->sdb));
+>  		req->buffer = NULL;
+>  	}
+>  
+>  	cmd->cmd_len = req->cmd_len;
+> -	if (!req->data_len)
+> +	if (!blk_rq_bytes(req))
+>  		cmd->sc_data_direction = DMA_NONE;
+>  	else if (rq_data_dir(req) == WRITE)
+>  		cmd->sc_data_direction = DMA_TO_DEVICE;
+>  	else
+>  		cmd->sc_data_direction = DMA_FROM_DEVICE;
+>  	
+> -	cmd->transfersize = req->data_len;
+> +	cmd->transfersize = blk_rq_bytes(req);
+>  	cmd->allowed = req->retries;
+>  	return BLKPREP_OK;
+>  }
+> diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
+> index 48ba413..1030327 100644
+> --- a/drivers/scsi/scsi_tgt_lib.c
+> +++ b/drivers/scsi/scsi_tgt_lib.c
+> @@ -387,7 +387,7 @@ static int scsi_map_user_pages(struct scsi_tgt_cmd *tcmd, struct scsi_cmnd *cmd,
+>  	 * we use REQ_TYPE_BLOCK_PC so scsi_init_io doesn't set the
+>  	 * length for us.
+>  	 */
+> -	cmd->sdb.length = rq->data_len;
+> +	cmd->sdb.length = blk_rq_bytes(rq);
+>  
+>  	return 0;
+>  
+> diff --git a/fs/exofs/osd.c b/fs/exofs/osd.c
+> index b249ae9..c97420b 100644
+> --- a/fs/exofs/osd.c
+> +++ b/fs/exofs/osd.c
+> @@ -50,10 +50,10 @@ int exofs_check_ok_resid(struct osd_request *or, u64 *in_resid, u64 *out_resid)
+>  
+>  	/* FIXME: should be include in osd_sense_info */
+>  	if (in_resid)
+> -		*in_resid = or->in.req ? or->in.req->data_len : 0;
+> +		*in_resid = or->in.req ? blk_rq_bytes(or->in.req) : 0;
+
++		*in_resid = or->in.req ? or->in.req->resid_len : 0;
+
+>  
+>  	if (out_resid)
+> -		*out_resid = or->out.req ? or->out.req->data_len : 0;
+> +		*out_resid = or->out.req ? blk_rq_bytes(or->out.req) : 0;
+
++		*out_resid = or->out.req ? or->out.req->resid_len : 0;
+
+>  
+>  	return ret;
+>  }
+
+OK This segment is wrong. It should be moved to the residual count patch
+(PATCH 3/10) the assignment into *in_resid/*out_resid should shourly triggered
+a warning ;-)
+
+Thanks
 Boaz
