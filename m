@@ -1,261 +1,85 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] [Target_Core_Mod/pSCSI]: Add
-	block/blk-map.c:blk_rq_map_kern_sg() usage
-Date: Thu, 30 Apr 2009 12:10:43 -0700
-Message-ID: <1241118643.32740.517.camel@haakon2.linux-iscsi.org>
-References: <1240965782.32740.309.camel@haakon2.linux-iscsi.org>
-	 <49F97157.4070901@panasas.com>
+From: "Styner, Douglas W" <douglas.w.styner@intel.com>
+Subject: RE: [PATCH] qla2xxx: Fix a regression due to refactoring in
+ interrupt handler code
+Date: Thu, 30 Apr 2009 12:22:13 -0700
+Message-ID: <D7C42C27E6CB1E4D8CBDF2F81EA92A260345AD5C03@azsmsx501.amr.corp.intel.com>
+References: <D7C42C27E6CB1E4D8CBDF2F81EA92A2603459F44B4@azsmsx501.amr.corp.intel.com>
+ <C61D3444.E384%anirban.chakraborty@qlogic.com>
+ <D7C42C27E6CB1E4D8CBDF2F81EA92A260345A63FE0@azsmsx501.amr.corp.intel.com>
+ <C03D50D6-2441-4AE3-9AD2-24037612BF1C@qlogic.com>
+ <D7C42C27E6CB1E4D8CBDF2F81EA92A260345A643F9@azsmsx501.amr.corp.intel.com>
+ <453B218D-08A2-4C95-8799-46B9B88A6373@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from n26.bullet.mail.mud.yahoo.com ([68.142.206.221]:39348 "HELO
-	n26.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752667AbZD3TKu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Apr 2009 15:10:50 -0400
-In-Reply-To: <49F97157.4070901@panasas.com>
+Received: from mga02.intel.com ([134.134.136.20]:55056 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751022AbZD3TWP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Apr 2009 15:22:15 -0400
+In-Reply-To: <453B218D-08A2-4C95-8799-46B9B88A6373@qlogic.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Douglas Gilbert <dgilbert@interlog.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <jens.axboe@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, Vladislav Bolkhovitin <vst@vlnb.net>
+To: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
+Cc: "andi@firstfloor.org" <andi@firstfloor.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux Driver <Linux-Driver@qlogic.com>, "Ma, Chinang" <chinang.ma@intel.com>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>, "willy@linux.intel.com" <willy@linux.intel.com>, "Tripathi, Sharad C" <sharad.c.tripathi@intel.com>
 
-On Thu, 2009-04-30 at 12:37 +0300, Boaz Harrosh wrote:
-> On 04/29/2009 03:43 AM, Nicholas A. Bellinger wrote:
-> > Greetings all,
-> > 
-> > This patch adds a new version of pscsi_map_task_SG() for the Linux/SCSI
-> > passthrough subsystem plugin for target_core_mod v3.0 that uses Tejun's blk-map
-> > patches on v2.6.30-rcX from git.kernel.org/pub/scm/linux/kernel/tj/misc.git blk-map.
-> > This patch adds a LINUX_USE_NEW_BLK_MAP define to allow both blk_rq_map_kern_sg() and
-> > legacy, non blk_rq_map_kern_sg() operation (with some limitiations with the latter) to
-> > function.
-> > 
-> > Once Tejun's patches for block/blk-map.c:blk_rq_map_kern_sg() have been included
-> > upstream, the legacy pscsi_map_task_SG() will be removed and blk-map will become
-> > the preferred method for accessing struct scatterlist -> struct scsi_device for
-> > SCSI target operations.  For now, I have created a blk-map branch in lio-core-2.6.git with
-> > LINUX_USE_NEW_BLK_MAP=1 and left LINUX_USE_NEW_BLK_MAP=0 in branch master.
-> > 
-> > This patch also updates pscsi_map_task_non_SG()'s usage of blk_rq_map_kern(), whos
-> > parameters have also been simplified in Tejun's patches.  It has been tested with
-> > lio-core-2.6.git branch master and blk-map and tested on v2.6.30-rc3 x86 32-bit
-> > HVM. The lio-core-2.6.git tree can be found at: 
-> > 
-> > http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=summary
-> > 
-> > So far, using Tejun's new code with LINUX_USE_NEW_BLK_MAP=1 is passing badblocks from
-> > target_core_Mod/pSCSI exported Vmware mpt-fusion virtual SCSI HBA of TYPE_DISK.  Both the
-> > ConfigFS 'file-descriptor' method and 'SCSI HCTL reference' method for accessing
-> > struct scsi_device have been tested and are working with lio-core-2.6.git blk-map.
-> > 
-> > Currently *without* the blk-map patches on v2.6.30-rc3, is target_core_mod/pSCSI export is
-> > limited to TYPE_DISK and TYPE_ROM that reference a struct block_device using the ConfigFS
-> > 'file descriptor' method.  This is because bio_add_page() expects struct block_device to be
-> 
-> Better use bio_add_pc_page(). bio_add_page is only meant for fs requests.
-> 
+Anirban Chakraborty <anirban.chakraborty@qlogic.com> writes:
+> Can you please try the attached patch? 
+Yes, results below.
 
-<nod>, I was only using bio_add_page() in the pre v2.6.30 code for
-target_core_mod/pSCSI because bio_add_pc_page() is not exported from
-fs/bio.c.  Perhaps since bio_add_pc_page() is intended to be for SCSI
-target mode with struct request it should be EXPORT_SYMBOL_GPL()..?
+> Also, what f/w version are you running with? 
+[root@linux-srv2 ~]# cat /sys/class/scsi_host/host23/fw_version
+4.00.27 (82)
 
-> > each struct bio associated with the struct request w/o Tejun's blk_rq_map_kern_sg().
-> > 
-> > Thanks Tejun for this patch series!  Things have been stable so far and I hope to try some
-> > 'bare-metal' and IOV enabled Linux/SCSI target exports using this patch series, along with validating
-> > blk-map on some non TYPE_DISK exports using target_core_mod/pSCSI.  I believe you intend this series for
-> > v2.6.31 correct..? 
-> > 
-> > Boaz, have you had a chance to port your stuff over to this yet..?  Other comments..?
-> > 
-> 
-> No. As I said, these patches were not good for me. I do not have scatterlist at all.
-> I have a pre-made bio, both from filesystem and a block device. So my needs are different.
+> What tool are you using to generate the load?
+Industry-standard OLTP benchmark from tpc.org (vendor proprietary database).
+-----------------
+Summary: Measured performance impact of perf.patch
 
-Understood..
+No impact on throughput, interrupts or cpu usage.  Take oprofile data with a grain of sand; notice 3% drop in cycles for <database> with no change in vmstat cpu utilization (oprofile accuracy is the subject of another thread). 
 
-> Please note that the patches as last sent, were not good in my opinion, for regressing on
-> some robustness and performance issues.
-> 
-> There might be another solution for you, BTW. I'll be reposting a James Bottomley's
-> patch in 1-2 days that makes blk_rq_map_kern() append the buffers it receives instead
-> of only supporting a single call. So you can allocate the request and call blk_rq_map_kern()
-> in a loop for-each-sg. The bad thing with this is that the biovec inside will be allocated
-> multiple times, jumping from small pools to bigger ones.
+Linux OLTP Performance summary
+Kernel#            Speedup(x)   Intr/s  CtxSw/s us%     sys%    idle%   iowait%
+2.6.30-rc3              1.000   30645   43027   75      25      0       0
+2.6.30-rc3_qla2xxx_p    1.000   30612   43178   75      25      0       0
 
-Ok, I will plan on testing both methods (single call
-blk_rq_map_kern_sg() vs. appending buffers with blk_rq_map_kern()) using
-the pSCSI export on v2.6.30-rc3..
+Server configurations:
+Intel Xeon Quad-core 2.0GHz  2 cpus/8 cores/8 threads
+64GB memory, 3 qle2462 FC HBA, 450 spindles (30 logical units)
 
->  If only there was a way to specify a pre-allocated bio-size.
 
-Hrrmm, can you explain a bit more about what this would entail..?  From
-the SCSI target API side, mapping a contigious array of struct
-scatterlist's from the caller into struct request (and struct bio) in
-place of bvec would still make the most sense I think.
-
-In the OSD case where you are already passing into pre-formatted bio's
-it would be up to the caller to format and validate the your pages via
-an internally allocated (or preallocated) array of scatterlists.
-
-Anyways, I will think about it some more and see what can be found..
-
-> 
-> Patch is attached for convenience
-> 
-> > --nab
-> > 
-> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> > ---
-> >  drivers/target/MCONFIG_TARGET      |    1 +
-> >  drivers/target/Makefile            |    4 ++-
-> >  drivers/target/target_core_pscsi.c |   49 ++++++++++++++++++++++++++++++++++-
-> >  3 files changed, 51 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/drivers/target/MCONFIG_TARGET b/drivers/target/MCONFIG_TARGET
-> > index 8023deb..96541c4 100644
-> > --- a/drivers/target/MCONFIG_TARGET
-> > +++ b/drivers/target/MCONFIG_TARGET
-> > @@ -22,3 +22,4 @@ LINUX_FILEIO ?= 1
-> >  LINUX_VPD_PAGE_CHECK?=1
-> >  
-> >  LIO_TARGET_CONFIGFS?=1
-> > +LINUX_USE_NEW_BLK_MAP?=0
-> > diff --git a/drivers/target/Makefile b/drivers/target/Makefile
-> > index 47fef07..a19490d 100644
-> > --- a/drivers/target/Makefile
-> > +++ b/drivers/target/Makefile
-> > @@ -73,7 +73,9 @@ endif
-> >  ifeq ($(LINUX_SCSI_MEDIA_ROM), 1)
-> >  EXTRA_CFLAGS += -DLINUX_SCSI_MEDIA_ROM
-> >  endif
-> > -
-> > +ifeq ($(LINUX_USE_NEW_BLK_MAP), 1)
-> > +EXTRA_CFLAGS += -DLINUX_USE_NEW_BLK_MAP
-> > +endif
-> >  ifeq ($(DEBUG_DEV), 1)
-> >  EXTRA_CFLAGS += -DDEBUG_DEV
-> >  endif
-> > diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-> > index 0962563..0edcb9a 100644
-> > --- a/drivers/target/target_core_pscsi.c
-> > +++ b/drivers/target/target_core_pscsi.c
-> > @@ -518,7 +518,12 @@ se_device_t *pscsi_create_virtdevice(
-> >  				" parameter\n");
-> >  		return NULL;
-> >  	}
-> > -
-> > +#ifndef LINUX_USE_NEW_BLK_MAP
-> > +	printk(KERN_ERR "Sorry, when running on >= v2.6.30 w/o blk-map branch"
-> > +		" you need to use the ConfigFS file descriptor method for"
-> > +		" accessing Linux/SCSI passthrough storage objects\n");
-> > +	return -EINVAL;
-> > +#endif
-> >  	spin_lock_irq(sh->host_lock);
-> >  	list_for_each_entry(sd, &sh->__devices, siblings) {
-> >  		if (!(pdv->pdv_channel_id == sd->channel) ||
-> > @@ -1269,6 +1274,39 @@ static inline struct bio *pscsi_get_bio(pscsi_dev_virt_t *pdv, int sg_num)
-> >  #define DEBUG_PSCSI(x...)
-> >  #endif
-> >  
-> > +#ifdef LINUX_USE_NEW_BLK_MAP
-> 
-> As I understand, you have a full Linux tree, at the git above.
-> The LINUX_USE_NEW_BLK_MAP define is not nice. And only causes more work
-> for you.
-> 
-> You leave master branch code based on current Kernel.
-> 
-> Then at blk-map branch you apply the correct lio patches together with Tejun's
-> at the proper places. After the fixture or change you are looking for. As if
-> lio was in kernel and this is the proper propagation of patches.
-> 
-> If you do this because of an out-of-tree compilation support, then here
-> too, you keep two branches, easily rebase two chains of patches, and provide
-> a tar-ball for the kernel in question. (git-web just does that for you
-> automatically.)
-> 
-> Because look, as long as you have LINUX_USE_NEW_BLK_MAP usage (in any branch)
-> then the code is not acceptable into mainline, and is just an experiment.
-> 
-
-Yeah, I was using LINUX_USE_NEW_BLK_MAP as a temporary measure so that I
-could keep both branches in sync for now.  I will kill it moving
-forward.
-
-Thanks for your comments,
-
---nab
-
-> > +
-> > +/*	pscsi_map_task_SG()
-> > + *
-> > + *	This function uses the new struct scatterlist-> struct request mapping
-> > + *      from git.kernel.org/pub/scm/linux/kernel/tj/misc.git blk-map
-> > + *
-> > + *	This code is not upstream yet, so lio-core-2.6.git now has a blk-map
-> > + *	branch until this happens..
-> > + */
-> > +int pscsi_map_task_SG(se_task_t *task)
-> > +{
-> > +	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
-> > +	struct request *rq = pt->pscsi_req;
-> > +	int ret;
-> > +	/*
-> > +	 * For SCF_SCSI_DATA_SG_IO_CDB, use block/blk-map.c:blk_rq_map_kern_sg()
-> > +	 * for mapping struct scatterlist to struct request.  Thanks Tejun!
-> > +	 */
-> > +	ret = blk_rq_map_kern_sg(rq, task->task_sg, task->task_sg_num,
-> > +			GFP_KERNEL);
-> > +	if (ret != 0) {
-> > +		printk(KERN_ERR "blk_rq_map_kern_sg() failed for rq: %p"
-> > +				" task_sg: %p task_sg_num: %u\n",
-> > +			rq, task->task_sg, task->task_sg_num);
-> > +		return -1;
-> > +	}
-> > +
-> > +	return task->task_sg_num;
-> > +}
-> > +
-> > +#else
-> > +
-> >  /*      pscsi_map_task_SG():
-> >   *
-> >   *
-> > @@ -1376,6 +1414,9 @@ fail:
-> >  	return ret;
-> >  }
-> >  
-> > +#endif /* LINUX_USE_NEW_BLK_MAP */
-> > +
-> > +
-> >  /*	pscsi_map_task_non_SG():
-> >   *
-> >   *
-> > @@ -1389,10 +1430,14 @@ int pscsi_map_task_non_SG(se_task_t *task)
-> >  
-> >  	if (!task->task_size)
-> >  		return 0;
-> > -
-> > +#ifdef LINUX_USE_NEW_BLK_MAP
-> 
-> source code is not a version management system, Use git for that
-> 
-> > +	ret = blk_rq_map_kern(pt->pscsi_req, T_TASK(cmd)->t_task_buf,
-> > +			task->task_size, GFP_KERNEL);
-> > +#else
-> >  	ret = blk_rq_map_kern(pdv->pdv_sd->request_queue,
-> >  			pt->pscsi_req, T_TASK(cmd)->t_task_buf,
-> >  			task->task_size, GFP_KERNEL);
-> > +#endif
-> >  	if (ret < 0) {
-> >  		printk(KERN_ERR "PSCSI: blk_rq_map_kern() failed: %d\n", ret);
-> >  		return PYX_TRANSPORT_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-> 
-> 
-> Cheers
-> Boaz
+======oprofile CPU_CLK_UNHALTED for top 30 functions
+Cycles% 2.6.30-rc3                 Cycles% 2.6.30-rc3_qla2xxx
+69.1925 <database>                 66.1187 <database>
+1.1314 qla24xx_intr_handler        1.2120 qla24xx_start_scsi
+1.0031 qla24xx_start_scsi          1.0710 qla24xx_intr_handler
+0.8476 __schedule                  0.9050 kmem_cache_alloc
+0.6532 kmem_cache_alloc            0.8729 __schedule
+0.4490 __blockdev_direct_IO        0.4659 __blockdev_direct_IO
+0.4199 __sigsetjmp                 0.4284 __sigsetjmp
+0.3946 __switch_to                 0.4123 __switch_to
+0.3538 __list_add                  0.3856 kstat_irqs_cpu
+0.3499 task_rq_lock                0.3802 scsi_request_fn
+0.3402 scsi_request_fn             0.3749 task_rq_lock
+0.3382 rb_get_reader_page          0.3552 __list_add
+0.3363 copy_user_generic_string    0.3516 rb_get_reader_page
+0.3324 aio_complete                0.3481 aio_complete
+0.3110 try_to_wake_up              0.3124 ring_buffer_consume
+0.2877 ring_buffer_consume         0.3052 try_to_wake_up
+0.2683 mod_timer                   0.2874 memset_c
+0.2605 qla2x00_process_completed_re0.2802 tcp_sendmsg
+0.2566 blk_queue_end_tag           0.2624 copy_user_generic_string
+0.2566 generic_make_request        0.2570 kfree
+0.2547 tcp_sendmsg                 0.2570 lock_timer_base
+0.2372 lock_timer_base             0.2553 blk_queue_end_tag
+0.2333 memmove                     0.2535 qla2x00_process_completed_re
+0.2294 memset_c                    0.2463 mod_timer
+0.2080 mempool_free                0.2392 generic_make_request
+0.2022 generic_file_aio_read       0.2267 scsi_device_unbusy
+0.1963 scsi_device_unbusy          0.2213 mempool_free
+0.1963 plist_del                   0.2160 kref_get
+0.1944 dequeue_rt_stack            0.2088 memmove
+0.1924 e1000_xmit_frame            0.2017 kmem_cache_free
 
 
