@@ -1,50 +1,128 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH -next] osd_uld: fix printk format warning
-Date: Thu, 30 Apr 2009 13:30:07 +0300
-Message-ID: <49F97DAF.2050605@panasas.com>
-References: <20090429092631.a76e79c5.randy.dunlap@oracle.com> <20090429185128.GN8633@ZenIV.linux.org.uk>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH 1/4] sd: fix cache flushing message
+Date: Thu, 30 Apr 2009 13:35:32 +0200
+Message-ID: <49F98D04.9010005@interlog.com>
+References: <200904292206.29844.bzolnier@gmail.com> <200904292253.07817.bzolnier@gmail.com> <1241039642.3369.67.camel@mulgrave.int.hansenpartnership.com> <200904292354.03136.bzolnier@gmail.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.27]:50618 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751437AbZD3KaT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Apr 2009 06:30:19 -0400
-Received: by qw-out-2122.google.com with SMTP id 5so1471724qwd.37
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2009 03:30:19 -0700 (PDT)
-In-Reply-To: <20090429185128.GN8633@ZenIV.linux.org.uk>
+Received: from smtp.infotech.no ([82.134.31.41]:54557 "EHLO
+	elrond2.infotech.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763390AbZD3Lfh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Apr 2009 07:35:37 -0400
+In-Reply-To: <200904292354.03136.bzolnier@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, linux-scsi@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org
 
-On 04/29/2009 09:51 PM, Al Viro wrote:
-> On Wed, Apr 29, 2009 at 09:26:31AM -0700, Randy Dunlap wrote:
->> From: Randy Dunlap <randy.dunlap@oracle.com>
->>
->> Fix printk format warnings in osd_uld:
->>
->> drivers/scsi/osd/osd_uld.c:191: warning:format '%s' expects type 'char *', but argument 2 has type 'struct path'
->>
->> Also fix a small typo.
+Bartlomiej Zolnierkiewicz wrote:
+> On Wednesday 29 April 2009 23:14:02 James Bottomley wrote:
+>> On Wed, 2009-04-29 at 22:53 +0200, Bartlomiej Zolnierkiewicz wrote:
+>>> On Wednesday 29 April 2009 22:22:51 Jeff Garzik wrote:
+>>>> James Bottomley wrote:
+>>>>> On Wed, 2009-04-29 at 22:06 +0200, Bartlomiej Zolnierkiewicz wrote:
+>>>>>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>>>>>> ---
+>>>>>> some minor sd.c fixups against linux-next
+>>>>>>
+>>>>>>  drivers/scsi/sd.c |    4 ++--
+>>>>>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>>>>>
+>>>>>> Index: b/drivers/scsi/sd.c
+>>>>>> ===================================================================
+>>>>>> --- a/drivers/scsi/sd.c
+>>>>>> +++ b/drivers/scsi/sd.c
+>>>>>> @@ -2140,7 +2140,7 @@ static void sd_shutdown(struct device *d
+>>>>>>  		return;         /* this can happen */
+>>>>>>  
+>>>>>>  	if (sdkp->WCE) {
+>>>>>> -		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+>>>>>> +		sd_printk(KERN_NOTICE, sdkp, "Synchronizing disk cache\n");
+>>>>>>  		sd_sync_cache(sdkp);
+>>>>>>  	}
+>>>>>>  
+>>>>>> @@ -2161,7 +2161,7 @@ static int sd_suspend(struct device *dev
+>>>>>>  		return 0;	/* this can happen */
+>>>>>>  
+>>>>>>  	if (sdkp->WCE) {
+>>>>>> -		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+>>>>>> +		sd_printk(KERN_NOTICE, sdkp, "Synchronizing disk cache\n");
+>>>>>>  		ret = sd_sync_cache(sdkp);
+>>>>>>  		if (ret)
+>>>>>>  			goto done;
+>>>>> So you want it to say 
+>>>>>
+>>>>> sda: synchronizing disk cache
+>>>>>
+>>>>> instead of
+>>>>>
+>>>>> sda: synchronizing SCSI cache
+>>>>>
+>>>>> I don't really see that buying us anything in terms of clarity.  What's
+>>>>> the actual problem it solves?
+>>> Inconsistent kernel messages:
+>>>
+>>> 	if (sdkp->WCE) {
+>>> 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+>>> 		sd_sync_cache(sdkp);
+>>> 	}
+>>>
+>>> 	if (system_state != SYSTEM_RESTART && sdkp->device->manage_start_stop) {
+>>> 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+>>> 		sd_start_stop_device(sdkp, 0);
+>>> 	}
+>>>
+>>>> Indeed.
+>>>>
+>>>> And we can argue for weeks about English text, too.  Non-disk devices 
+>>> Or we can just apply the patch and go back with the program.
+>>>
+>>>> like SSDs have caches too, so I'd say "SCSI cache" is more accurate than 
+>>>> "disk cache".  But maybe "SCSI writeback cache" would be even better.
+>>> Could you please explain me what *SCSI* cache is?
+>> It's the cache described by SBC (SCSI Block Commandset).
 > 
-> Applied, will fold on reorder.  Thanks for catching that one and apologies
-> for missing the original posting (I am subscribed to linux-scsi, but...)
+> Sorry, I don't buy it.
 > 
-> Incidentally, what the hell is going with ->i_cdev in there?  Boaz?
+> There is no "SCSI cache" in the SBC spec (at least not in sbc2r16).
 
-Thanks for asking. The thing is that this function is called from within
-the kernel by exofs. Now I have found that if user-mode as never opened
-an handle on my char-device, then inode->i_cdev is NULL even though it is
-registered and found. My mount utility for exofs does an open/close on the
-char-device before calling the Kernel mounter, but this is just a script
-and can be missed by users. (I guess I need to submit an mount.exofs. where
-should it be submitted?)
+The search function must be faulty on your pdf viewer.
+     sbc2r16 section 4.10
+     sbc3r18 section 4.12
+The timing of writing back volatile and non-volatile
+caches is also discussed in several places in spc4r18.
 
-Alternatively we perhaps need a udev rule that, one - loads osd.ko when
-OSD_TYPE devices are discovered by scsi (like sd), and two - do the above
-open/close. I was meaning to ask someone about these things.
+Note that t10 and t13 standards do not necessarily prefix
+terms with "SCSI" or "ATA" unless there is room for
+confusion. For example "device" is such an overused term
+that d2015r1-ATAATAPI_Command_Set_-_2_ACS-2.pdf defines both
+"ATA device" and "device" to be the same thing.
 
-Much obliged
-Boaz
+In the context of an OS storage system unadorned terms like
+"device" and "cache" are imprecise because the kernel
+uses these terms for its own purposes (e.g. an ATA host
+is a (PCI bus) device to the kernel).
+
+So the discussion is about a cache, or caches, that
+reside on a SCSI logical unit or SCSI target. In ATA
+land that would be an ATA or ATAPI device.
+
+Doug Gilbert
+
+
+>>> Does ATA disks have *SCSI* cache (whatever it is)?
+>> Only if you use it via SAT (SCSI to ATA translation).
+> 
+> Hmm, and without SAT there is ATA cache, right? :)
+> 
+>>> Please also note that sd.c uses "disk" all over the place.
+>> Yes, but I think the four other suggestions for text demonstrate the
+>> need to get something worm proof back on this can ASAP.
+> 
+> Well, "SCSI device writeback cache" should be fine with everybody, no? ;)
+> 
+> Anyway, please just scrap that patch.
+
