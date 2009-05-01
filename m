@@ -1,49 +1,42 @@
-From: "Abhijeet Arvind Joglekar (abjoglek)" <abjoglek@cisco.com>
-Subject: RE: [PATCH] libfc,fcoe,fnic: Separate rport and lport max retrycounts
-Date: Fri, 1 May 2009 10:12:57 -0700
-Message-ID: <9E88C8678BF34240A8C61D4078A3D251010B08FB@xmb-sjc-23e.amer.cisco.com>
-References: <20090501165111.16733.31537.stgit@feynman.nuovasystems.com> <1241197721.3302.35.camel@mulgrave.int.hansenpartnership.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 08/10] block: cleanup rq->data_len usages
+Date: Fri, 1 May 2009 20:27:58 +0200
+Message-ID: <20090501182758.GC4593@kernel.dk>
+References: <1240996428-10159-1-git-send-email-tj@kernel.org> <1240996428-10159-9-git-send-email-tj@kernel.org> <49F9AC04.9060403@panasas.com> <1241105757.3320.1.camel@mulgrave.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-6.cisco.com ([171.71.176.117]:42616 "EHLO
-	sj-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764711AbZEARM7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 May 2009 13:12:59 -0400
-Content-class: urn:content-classes:message
-In-reply-to: <1241197721.3302.35.camel@mulgrave.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1241105757.3320.1.camel@mulgrave.int.hansenpartnership.com>
+Sender: linux-ide-owner@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, robert.w.love@intel.com
+Cc: Boaz Harrosh <bharrosh@panasas.com>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, chirag.kantharia@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, jesper.juhl@gmail.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, "Darrick J. Wong" <djwong@us.ibm.com>
+List-Id: linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
-> Sent: Friday, May 01, 2009 10:09 AM
-> To: Abhijeet Arvind Joglekar (abjoglek)
-> Cc: linux-scsi@vger.kernel.org; robert.w.love@intel.com
-> Subject: Re: [PATCH] libfc,fcoe,fnic: Separate rport and 
-> lport max retrycounts
-> 
-> On Fri, 2009-05-01 at 10:01 -0700, Abhijeet Joglekar wrote:
-> > This patch is a minor update to the libfc/fcoe/fnic 
-> drivers. It adds a 
-> > separate knob to libFC to allow the lower-level driver 
-> (fnic or fcoe) 
-> > to configure the number of retries for lport and rport separately.
+On Thu, Apr 30 2009, James Bottomley wrote:
+> On Thu, 2009-04-30 at 16:47 +0300, Boaz Harrosh wrote:
+> > > @@ -966,7 +965,7 @@ static int scsi_init_sgtable(struct request
+> > *req, struct scsi_data_buffer *sdb,
+> > >       BUG_ON(count > sdb->table.nents);
+> > >       sdb->table.nents = count;
+> > >       if (blk_pc_request(req))
+> > > -             sdb->length = req->data_len;
+> > > +             sdb->length = blk_rq_bytes(req);
+> > >       else
+> > >               sdb->length = blk_rq_sectors(req) << 9;
 > > 
-> > Its not a bug fix, so it didnt get submitted along with Robert's 
-> > previous set of libFC fixes for -rc4. Since its needed for fnic, 
-> > maybe, it can go along with the fnic changes in scsi-misc. 
-> Will that work?
+> > Is this true. I thought they must be the same now. I was actually
+> > anticipating this if() removed.
 > 
-> Sure, but I thought you wanted fnic in -rc-fixes for 2.6.30?
+> Me too ... there's one of these in scsi_lib.c as well.
 > 
-> James
+> The difference comes because filesystem requests are always in sectors,
+> but BLOCK_PC requests are always in bytes .... we should be able to wrap
+> the accessors so they do the correct conversions.
 
-Oops, I meant along with fnic when you pick it in -rc-fixes for 2.6.30.
+blk_rq_bytes() already takes care of this, it can be used on any type
+request. So just kill the if/else.
 
-thanks
--- abhijeet
+-- 
+Jens Axboe
+
