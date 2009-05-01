@@ -1,52 +1,57 @@
-From: Sergey Senozhatsky <sergey.senozhatsky@mail.by>
-Subject: Re: [PATCH]: fixing gcc 4.4 compiler warning: suggest parentheses
-	around operand of ???!???
-Date: Fri, 1 May 2009 02:09:13 +0300
-Message-ID: <20090430230913.GA5833@mydomain.tld>
-References: <20090430060430.GA6040@localhost> <1241127084.3320.14.camel@mulgrave.int.hansenpartnership.com> <20090430215906.GA5214@mydomain.tld> <1241129324.3320.21.camel@mulgrave.int.hansenpartnership.com> <20090430222642.GP8633@ZenIV.linux.org.uk>
+From: Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] scsi: ses check name in enclosure_component_register -v2
+Date: Thu, 30 Apr 2009 19:13:41 -0700
+Message-ID: <49FA5AD5.3070804@kernel.org>
+References: <49F6678D.3080207@kernel.org> <1240957589.3380.67.camel@mulgrave.int.hansenpartnership.com> <49F7979A.8040302@kernel.org> <1240964289.3380.73.camel@mulgrave.int.hansenpartnership.com> <49F7A71F.5040709@kernel.org> <20090429020331.GF21648@parisc-linux.org> <49F7CA9A.5000701@kernel.org> <20090429110846.GG21648@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [212.98.175.89] ([212.98.175.89]:50177 "EHLO mydomain.tld"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754773AbZD3XKS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Apr 2009 19:10:18 -0400
-Content-Disposition: inline
-In-Reply-To: <20090430222642.GP8633@ZenIV.linux.org.uk>
+Received: from hera.kernel.org ([140.211.167.34]:39536 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752900AbZEACOr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Apr 2009 22:14:47 -0400
+In-Reply-To: <20090429110846.GG21648@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, Kai Makisara <Kai.Makisara@kolumbus.fi>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Kay Sievers <kay.sievers@vrfy.org>, Greg KH <gregkh@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Linux-Scsi <linux-scsi@vger.kernel.org>
 
-On (30/04/09 23:26), Al Viro wrote:
-> On Thu, Apr 30, 2009 at 10:08:44PM +0000, James Bottomley wrote:
-> 
-> > Well, I know why (!STp->use_pf) is wrong: it would set USE_PF in an
-> > incredibly obscure fashon.  The flag PF_TESTED seems to imply that it's
-> > a don't check this again type deal, and the if clause is looking for it
-> > not being set, hence I think the most likely thing to be done here is
-> > set the PF_TESTED flag.
-> 
-> Not _set_ USE_PF; what's happening there is
-> 	^= USE_PF | PF_TESTED; 	/* we know that PF_TESTED was not set */
-> 
 
-st.h:#define PF_TESTED   2
-st.h:#define USE_PF      1
+dev_set_name will use sprintf to copy the name.
+need to check if the name does valid.
 
-st.c:2963
-if (cmdstatp->sense_hdr.sense_key == ILLEGAL_REQUEST && !(STp->use_pf & PF_TESTED))
+otherwise will error from device_add later.
 
-'&& !(STp->use_pf & PF_TESTED)' means: STp->use_pf == 0 or STp->use_pf != ... 0010 (PF_TESTED).
+v2: add %s in dev_set_name according to James
 
-if == 0
-STp->use_pf = !0 | 2    -> 3
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-if > PF_TESTED
-STp->use_pf = 0 | PF_TESTED     -> PF_TESTED
+---
+ drivers/misc/enclosure.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-I need to think about
-> I think the most likely thing to be done here is set the PF_TESTED flag.
-
-Sergey.
-
+Index: linux-2.6/drivers/misc/enclosure.c
+===================================================================
+--- linux-2.6.orig/drivers/misc/enclosure.c
++++ linux-2.6/drivers/misc/enclosure.c
+@@ -119,7 +119,7 @@ enclosure_register(struct device *dev, c
+ 	edev->edev.class = &enclosure_class;
+ 	edev->edev.parent = get_device(dev);
+ 	edev->cb = cb;
+-	dev_set_name(&edev->edev, name);
++	dev_set_name(&edev->edev, "%s", name);
+ 	err = device_register(&edev->edev);
+ 	if (err)
+ 		goto err;
+@@ -255,8 +255,8 @@ enclosure_component_register(struct encl
+ 	ecomp->number = number;
+ 	cdev = &ecomp->cdev;
+ 	cdev->parent = get_device(&edev->edev);
+-	if (name)
+-		dev_set_name(cdev, name);
++	if (name && name[0])
++		dev_set_name(cdev, "%s", name);
+ 	else
+ 		dev_set_name(cdev, "%u", number);
+ 
