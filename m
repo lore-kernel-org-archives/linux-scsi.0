@@ -1,46 +1,66 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Status of aic79xx driver in the linux kernel
-Date: Sat, 02 May 2009 08:42:46 -0500
-Message-ID: <1241271766.3639.18.camel@mulgrave.int.hansenpartnership.com>
-References: <49FC3DB8.4030701@cohtech.com>
+From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Subject: Re: [PATCH 1/5] initdev:kernel: Asynchronously-discovered device
+	synchronization, v5
+Date: Sat, 02 May 2009 09:01:16 -0500
+Message-ID: <1241272876.3639.27.camel@mulgrave.int.hansenpartnership.com>
+References: <20090502022551.GA15600@cuplxvomd02.corp.sa.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:57927 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753804AbZEBNmr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 May 2009 09:42:47 -0400
-In-Reply-To: <49FC3DB8.4030701@cohtech.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20090502022551.GA15600-CFZJ1or75eBPWxJt6d6B6bQa8qPdvLwY@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David VomLehn <dvomlehn-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arjan-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Howard Wilkinson <howard@cohtech.com>
-Cc: fedora-kernel-list@redhat.com, linux-scsi@vger.kernel.org
 
-On Sat, 2009-05-02 at 13:34 +0100, Howard Wilkinson wrote:
-> I have been having some problems with an Adaptec 39320A-R card and have 
-> been poking around and found that the driver in the kernel claims to be 
-> derived from an Adaptec version 2.0.15 which was release in October 
-> 2005! There is a later version on the Adaptec site from April 2007 - 
-> 2.0.26.
-> 
-> I was wondering if anybody knows the actual status of the driver in the 
-> kernel i.e. has it diverged so far that the Adaptec updates are moot; 
-> have they already been incorporated into the kernel but the docs not 
-> updated to reflect this, or ...
+On Fri, 2009-05-01 at 19:25 -0700, David VomLehn wrote:
+> +Init Device Discovery Synchronization
+> +=====================================
+> +Init devices are those devices that must be used or configured before
+> +starting up the /bin/init process.  They may be explicitly specified as
+> +kernel command line parameters, such as console=ttyUSB0,115200, or
+> +implicitly specified, such as ip=dhcp.
+> +
+> +Earlier versions of the Linux kernel used a single-threaded approach to
+> +boot initialization. This took a number of seconds, which meant that
+> +devices were generally set up before being used or configured. Modern
+> +kernels use a multithreaded approach, which requires synchronization between
+> +code that probes and initializes init devices, and code that uses and
+> +configures them.  Support of fine-grained boot concurrency requires
+> +distinguishing between types of init devices, so that devices can be used as
+> +soon as they are initialized.
+> +
+> +There are several types of init devices:
+> +-	consoles
+> +-	network devices
+> +-	block devices
 
-It has diverged quite far.  The original source of the split was
-removing chunks of the BSD glue layer and converting it over to use the
-SPI transport class.  Adaptec has updated it since then, notably to
-support the new PCIe card.
+OK, so in your scheme, I get why console devices: they need to be
+present early before we start dumping console output otherwise it can
+get lost.
 
-> I ask because I am trying to decide whether to invest the time to look 
-> at integrating the latest Adaptec drop to see if my problems go away.
+However, I don't see the need for either network or block.
 
-If they're not present with the adaptec supplied driver, then yes, there
-must be some fix in there that needs to be in the kernel one ... the
-problem will be finding it.
+For network, the only early discovery use is net root (which can be done
+fully asynchronously) or net console (which I think can be supplied a
+raft of information and isn't usually expected to be up by early boot
+because of the TCP stack dependence) neither of which is a compelling
+use case.
+
+Block, likewise, is a udev type discovery:  We can specify the root by
+some type of ID and we can wait until that is found, rather than have an
+elaborate system to check when discovery is finished, which is the only
+benefit this code seems to provide.
+
+What I'm getting at is that I don't see the benefit of this in the light
+of Arjan's async boot system, which can also tell us when all discovery
+is complete ... what added benefit am I missing here?
 
 James
 
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
