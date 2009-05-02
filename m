@@ -1,46 +1,66 @@
 From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
 Subject: Re: [PATCH 1/5] initdev:kernel: Asynchronously-discovered device
  synchronization, v5
-Date: Sat, 2 May 2009 10:16:39 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0905021010200.23879-100000@netrider.rowland.org>
-References: <20090502133153.GA8116@atlas.home>
+Date: Sat, 2 May 2009 13:55:45 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0905021335150.26241-100000@netrider.rowland.org>
+References: <1241272876.3639.27.camel@mulgrave.int.hansenpartnership.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20090502133153.GA8116-2JxNCdI+WHxBDLzU/O5InQ@public.gmane.org>
+In-Reply-To: <1241272876.3639.27.camel-0iu6Cu4xQGLV0bN/WMK0Sm4KqUE0Tg80jeSHHoATDr/QT0dZR+AlfA@public.gmane.org>
 Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: David VomLehn <dvomlehn-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
-Cc: Sergey Vlasov <vsu-u2l5PoMzF/Uox3rIn2DAYQ@public.gmane.org>, Kernel development list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arjan-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
+To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: David VomLehn <dvomlehn-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arjan-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-I agree with Sergey's comments.  In addition:
+On Sat, 2 May 2009, James Bottomley wrote:
 
-On Fri, May 01, 2009 at 07:25:51PM -0700, David VomLehn wrote:
+> OK, so in your scheme, I get why console devices: they need to be
+> present early before we start dumping console output otherwise it can
+> get lost.
+> 
+> However, I don't see the need for either network or block.
+> 
+> For network, the only early discovery use is net root (which can be done
+> fully asynchronously)
 
-> +initdev_wait(enum initdev_type type, bool (*done)(void))
-> +	Wait until one of two conditions is met:
-> +	o	All possible init devices of the given type have been probed
-> +	o	The "done" function returns true
-> +
-> +	The type is one of:
-> +		BOOTDEV_CONSOLE
-> +		BOOTDEV_NETDEV
-> +		BOOTDEV_BLOCK
+Are you referring to the "rootwait" kernel parameter?  Is there a 
+reason why this is a boot-time parameter instead of always being set?  
+I mean, under what circumstances would you _not_ want to wait until the 
+root device is present?
 
-These should be named INITDEV_CONSOLE_TYPE and so on, with the final 
-_TYPE suffix to help prevent confusion with INITDEV_CONSOLE_MASK.
+>  or net console (which I think can be supplied a
+> raft of information and isn't usually expected to be up by early boot
+> because of the TCP stack dependence) neither of which is a compelling
+> use case.
 
-Also, in patch 3/5:
+Are you sure the real reason it isn't expected to be up isn't the lack
+of a mechanism of the type being proposed?
 
-> --- a/drivers/accessibility/braille/braille_console.c
-> +++ b/drivers/accessibility/braille/braille_console.c
-> @@ -35,6 +35,7 @@
->  #include <linux/keyboard.h>
->  #include <linux/kbd_kern.h>
->  #include <linux/input.h>
-> +#include <linux/initdev.h>
+> Block, likewise, is a udev type discovery:  We can specify the root by
+> some type of ID and we can wait until that is found, rather than have an
+> elaborate system to check when discovery is finished, which is the only
+> benefit this code seems to provide.
 
-What does this do?  It looks like a typo.
+The real benefit of knowing when discovery is complete is that it tells
+you when to give up and stop waiting.  However I have to agree that in
+the case of the root device, there really isn't much point in giving
+up.
+
+Perhaps with some enterprise systems, it is preferred to have the 
+system fail with an explicit error message rather than wait 
+indefinitely...
+
+> What I'm getting at is that I don't see the benefit of this in the light
+> of Arjan's async boot system, which can also tell us when all discovery
+> is complete ... what added benefit am I missing here?
+
+How does Arjan's async boot system tell use when all discovery is
+complete?  AFAICS, it only tells you when all its async tasks are
+finished.  But device discovery and registration sometimes use other
+asynchronous techniques which Arjan's code is unaware of.  Examples:  
+the USB khubd thread, the USB mass-storage scanning thread, and the
+SCSI async-scanning thread.
 
 Alan Stern
 
