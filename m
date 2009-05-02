@@ -1,70 +1,42 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: [PATCH 1/5] initdev:kernel: Asynchronously-discovered device
- synchronization, v5
-Date: Sat, 2 May 2009 13:55:45 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0905021335150.26241-100000@netrider.rowland.org>
-References: <1241272876.3639.27.camel@mulgrave.int.hansenpartnership.com>
+From: Roel Kluin <roel.kluin@gmail.com>
+Subject: [PATCH] Invalid request_limit unnoticed?
+Date: Sat, 02 May 2009 22:14:54 +0200
+Message-ID: <49FCA9BE.3030408@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1241272876.3639.27.camel-0iu6Cu4xQGLV0bN/WMK0Sm4KqUE0Tg80jeSHHoATDr/QT0dZR+AlfA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: David VomLehn <dvomlehn-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arjan-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ew0-f224.google.com ([209.85.219.224]:42145 "EHLO
+	mail-ew0-f224.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754405AbZEBUOz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 May 2009 16:14:55 -0400
+Received: by ewy24 with SMTP id 24so2993470ewy.37
+        for <linux-scsi@vger.kernel.org>; Sat, 02 May 2009 13:14:54 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-On Sat, 2 May 2009, James Bottomley wrote:
+Remove redundant test on unsigned.
 
-> OK, so in your scheme, I get why console devices: they need to be
-> present early before we start dumping console output otherwise it can
-> get lost.
-> 
-> However, I don't see the need for either network or block.
-> 
-> For network, the only early discovery use is net root (which can be done
-> fully asynchronously)
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com> 
+---
+Maybe a different test is required? 
 
-Are you referring to the "rootwait" kernel parameter?  Is there a 
-reason why this is a boot-time parameter instead of always being set?  
-I mean, under what circumstances would you _not_ want to wait until the 
-root device is present?
+To see that it is unsigned:
 
->  or net console (which I think can be supplied a
-> raft of information and isn't usually expected to be up by early boot
-> because of the TCP stack dependence) neither of which is a compelling
-> use case.
+git grep -E -n "(req_lim_delta|__be32;$)"
 
-Are you sure the real reason it isn't expected to be up isn't the lack
-of a mechanism of the type being proposed?
-
-> Block, likewise, is a udev type discovery:  We can specify the root by
-> some type of ID and we can wait until that is found, rather than have an
-> elaborate system to check when discovery is finished, which is the only
-> benefit this code seems to provide.
-
-The real benefit of knowing when discovery is complete is that it tells
-you when to give up and stop waiting.  However I have to agree that in
-the case of the root device, there really isn't much point in giving
-up.
-
-Perhaps with some enterprise systems, it is preferred to have the 
-system fail with an explicit error message rather than wait 
-indefinitely...
-
-> What I'm getting at is that I don't see the benefit of this in the light
-> of Arjan's async boot system, which can also tell us when all discovery
-> is complete ... what added benefit am I missing here?
-
-How does Arjan's async boot system tell use when all discovery is
-complete?  AFAICS, it only tells you when all its async tasks are
-finished.  But device discovery and registration sometimes use other
-asynchronous techniques which Arjan's code is unaware of.  Examples:  
-the USB khubd thread, the USB mass-storage scanning thread, and the
-SCSI async-scanning thread.
-
-Alan Stern
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index c9aa761..8d3925f 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -910,9 +910,6 @@ static void login_rsp(struct srp_event_struct *evt_struct)
+ 
+ 	dev_info(hostdata->dev, "SRP_LOGIN succeeded\n");
+ 
+-	if (evt_struct->xfer_iu->srp.login_rsp.req_lim_delta < 0)
+-		dev_err(hostdata->dev, "Invalid request_limit.\n");
+-
+ 	/* Now we know what the real request-limit is.
+ 	 * This value is set rather than added to request_limit because
+ 	 * request_limit could have been set to -1 by this client.
