@@ -1,32 +1,186 @@
-From: Howard Wilkinson <howard@cohtech.com>
-Subject: Status of aic79xx driver in the linux kernel
-Date: Sat, 02 May 2009 13:34:00 +0100
-Message-ID: <49FC3DB8.4030701@cohtech.com>
+From: Sergey Vlasov <vsu-u2l5PoMzF/Uox3rIn2DAYQ@public.gmane.org>
+Subject: Re: [PATCH 4/5] initdev:kernel: Await network init device
+	discovery, v2
+Date: Sat, 2 May 2009 17:36:03 +0400
+Message-ID: <20090502133603.GB8116@atlas.home>
+References: <20090502022858.GA15981@cuplxvomd02.corp.sa.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from finsbury-fw1.cohtech.com ([193.150.189.1]:57862 "EHLO
-	mailhost2.cohtech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754324AbZEBNf3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 May 2009 09:35:29 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="V0207lvV8h4k8FAm"
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20090502022858.GA15981-CFZJ1or75eBPWxJt6d6B6bQa8qPdvLwY@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David VomLehn <dvomlehn-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arjan-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: fedora-kernel-list@redhat.com, linux-scsi@vger.kernel.org
 
-I have been having some problems with an Adaptec 39320A-R card and have 
-been poking around and found that the driver in the kernel claims to be 
-derived from an Adaptec version 2.0.15 which was release in October 
-2005! There is a later version on the Adaptec site from April 2007 - 
-2.0.26.
 
-I was wondering if anybody knows the actual status of the driver in the 
-kernel i.e. has it diverged so far that the Adaptec updates are moot; 
-have they already been incorporated into the kernel but the docs not 
-updated to reflect this, or ...
+--V0207lvV8h4k8FAm
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I ask because I am trying to decide whether to invest the time to look 
-at integrating the latest Adaptec drop to see if my problems go away.
+On Fri, May 01, 2009 at 07:28:58PM -0700, David VomLehn wrote:
+> Delay IP autoconfiguration until network boot devices have been initializ=
+ed.
+> This depends on the boot device discovery code and on the asynchronous
+> function call infrastructure.
+>=20
+> History
+> v2	Change bootdev_* to initdev_*
+> v1	Initial release
+>=20
+> Signed-off-by: David VomLehn <dvomlehn-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
+> ---
+>  net/core/dev.c      |    2 +
+>  net/ipv4/ipconfig.c |   56 +++++++++++++++++++++++++++++++++++++++++++++=
++++++-
+>  2 files changed, 57 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/net/core/dev.c b/net/core/dev.c
+> index 308a7d0..73cb282 100644
+> --- a/net/core/dev.c
+> +++ b/net/core/dev.c
+> @@ -93,6 +93,7 @@
+>  #include <linux/ethtool.h>
+>  #include <linux/notifier.h>
+>  #include <linux/skbuff.h>
+> +#include <linux/device.h>
+>  #include <net/net_namespace.h>
+>  #include <net/sock.h>
+>  #include <linux/rtnetlink.h>
+> @@ -4497,6 +4498,7 @@ int register_netdevice(struct net_device *dev)
+>  		dev->reg_state =3D NETREG_UNREGISTERED;
+>  	}
+> =20
+> +	initdev_registered(BOOTDEV_NETDEV);
+>  out:
+>  	return ret;
+> =20
+> diff --git a/net/ipv4/ipconfig.c b/net/ipv4/ipconfig.c
+> index 90d22ae..65a7ecd 100644
+> --- a/net/ipv4/ipconfig.c
+> +++ b/net/ipv4/ipconfig.c
+> @@ -53,6 +53,7 @@
+>  #include <linux/root_dev.h>
+>  #include <linux/delay.h>
+>  #include <linux/nfs_fs.h>
+> +#include <linux/async.h>
+>  #include <net/net_namespace.h>
+>  #include <net/arp.h>
+>  #include <net/ip.h>
+> @@ -182,12 +183,48 @@ struct ic_device {
+>  static struct ic_device *ic_first_dev __initdata =3D NULL;/* List of ope=
+n device */
+>  static struct net_device *ic_dev __initdata =3D NULL;	/* Selected device=
+ */
+> =20
+> +/*
+> + * Wait for required network devices to come up
+> + * If the networking device name was specified on the kernel command line
+> + * and that device is now registered, we have the device we want to conf=
+igure
+> + * and we return true. Otherwise, we return false. So, if no device was
+> + * specified on the command line, we wait for all possible network devic=
+es to
+> + * be initialized.
+> + */
+> +static bool have_all_netdevs(void)
+> +{
+> +	struct net_device *dev;
+> +	bool	result =3D false;
+> +
+> +	rtnl_lock();
+> +
+> +	for_each_netdev(&init_net, dev) {
+> +		if (dev->flags & IFF_LOOPBACK)
+> +			continue;
+> +
+> +		/* If a specific device name was specified and that name is
+> +		 * registered, we have the device we need. */
+> +		if (user_dev_name[0] && !strcmp(dev->name, user_dev_name)) {
+> +			result =3D true;
+> +			break;
+> +		}
+> +	}
+> +
+> +	rtnl_unlock();
+> +
+> +	return result;
+> +
+> +}
+> +
+>  static int __init ic_open_devs(void)
+>  {
+>  	struct ic_device *d, **last;
+>  	struct net_device *dev;
+>  	unsigned short oflags;
+> =20
+> +	/* Wait for networking devices */
+> +	initdev_wait(BOOTDEV_NETDEV, have_all_netdevs);
+> +
+>  	last =3D &ic_first_dev;
+>  	rtnl_lock();
+> =20
+> @@ -1263,6 +1300,7 @@ __be32 __init root_nfs_parse_addr(char *name)
+> =20
+>  /*
+>   *	IP Autoconfig dispatcher.
+> + *	Return zero on success, negative one on failure
+>   */
+> =20
+>  static int __init ip_auto_config(void)
+> @@ -1397,7 +1435,23 @@ static int __init ip_auto_config(void)
+>  	return 0;
+>  }
+> =20
+> -late_initcall(ip_auto_config);
+> +static void __init ip_auto_config_async(void *data, async_cookie_t cooki=
+e)
+> +{
+> +	ip_auto_config();
+> +}
+> +
+> +static async_cookie_t ic_cookie;
 
-Howard.
+This write-only variable is useless.
 
+> +/*
+> + * Start a thread to do IP autoconfiguration
+> + */
+> +static int __init ip_auto_configurator(void)
+> +{
+> +	ic_cookie =3D async_schedule(ip_auto_config_async, NULL);
+> +
+> +	return 0;
+> +}
+> +
+> +late_initcall(ip_auto_configurator);
+> =20
+> =20
+>  /*
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+
+--V0207lvV8h4k8FAm
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkn8TEMACgkQW82GfkQfsqLVhgCZAWUNR/PA4gpkCRHBTwwG72rB
+ejUAn2PQXbya8SIcahwId4el8Pp75SV4
+=FH1J
+-----END PGP SIGNATURE-----
+
+--V0207lvV8h4k8FAm--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
