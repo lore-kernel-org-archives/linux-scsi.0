@@ -1,20 +1,30 @@
-From: David Miller <davem@davemloft.net>
-Subject: MPT fusion SAS target numbering...
-Date: Sat, 02 May 2009 15:15:10 -0700 (PDT)
-Message-ID: <20090502.151510.127219702.davem@davemloft.net>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: MPT fusion SAS target numbering...
+Date: Sat, 2 May 2009 16:44:54 -0600
+Message-ID: <660360F4F2570145BD872F298951B17A80F01F53@cosmail03.lsi.com>
+References: <20090502.151510.127219702.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:59537
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754101AbZEBWPQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 May 2009 18:15:16 -0400
+Received: from chip3og60.obsmtp.com ([64.18.14.185]:46953 "EHLO
+	chip3og60.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752000AbZEBWqG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 May 2009 18:46:06 -0400
+In-Reply-To: <20090502.151510.127219702.davem@davemloft.net>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eric.Moore@lsi.com
-Cc: linux-scsi@vger.kernel.org, tayfun.kocaoglu@sun.com, Greg.Onufer@sun.com
+To: David Miller <davem@davemloft.net>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "tayfun.kocaoglu@sun.com" <tayfun.kocaoglu@sun.com>, "Greg.Onufer@sun.com" <Greg.Onufer@sun.com>
 
+the sas transport layer is assigning the target id's
+________________________________________
+From: David Miller [davem@davemloft.net]
+Sent: Saturday, May 02, 2009 4:15 PM
+To: Moore, Eric
+Cc: linux-scsi@vger.kernel.org; tayfun.kocaoglu@sun.com; Greg.Onufer@sun.com
+Subject: MPT fusion SAS target numbering...
 
 Hello Eric, I have a question about the behavior of the Linux MPT
 Fusion SAS driver, and I hope you can clue me in.
