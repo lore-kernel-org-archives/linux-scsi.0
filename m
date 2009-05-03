@@ -1,50 +1,35 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] set CONFIG_SCSI_MULTI_LUN by default and update help
-Date: Sun, 3 May 2009 14:37:24 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0905031135020.17195-100000@netrider.rowland.org>
-References: <20090503152408.GT8822@parisc-linux.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: New TRIM/UNMAP tree published (2009-05-02)
+Date: Sun, 03 May 2009 14:40:10 -0400
+Message-ID: <49FDE50A.4060503@garzik.org>
+References: <1238683047-13588-1-git-send-email-willy@linux.intel.com> <49D8A3D7.5070507@panasas.com> <20090503061150.GF10704@linux.intel.com> <20090503071619.GP8822@parisc-linux.org> <Pine.LNX.4.64.0905031346350.29671@blonde.anvils> <20090503144847.GR8822@parisc-linux.org> <49FDB21B.3080301@panasas.com> <20090503154216.GU8822@parisc-linux.org> <49FDC786.6070309@panasas.com> <49FDE3BB.505@garzik.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:42122 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752801AbZECSh0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 May 2009 14:37:26 -0400
-In-Reply-To: <20090503152408.GT8822@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <49FDE3BB.505@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>, Jens Axboe <jens.axboe@oracle.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, Hugh Dickins <hugh@veritas.com>, Matthew Wilcox <willy@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <lkml@rtr.ca>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, ?ric Piel <eric.piel@tremplin-utc.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
 
-On Sun, 3 May 2009, Matthew Wilcox wrote:
+Jeff Garzik wrote:
+> (2) determine at init if queue (a) supports explicit DISCARD and/or (b) 
+> supports DISCARD flag passed with READ or WRITE
 
-> > The problem is we don't trust USB manufacturers with standards
-> > compliance any further than they could spit a rat, so we assume when
-> > they say they conform to SCSI-3 or above that they must have got it
-> > wrong and push it back down to SCSI-2.
 
-Indeed, we have run across a number of USB devices which claim to be 
-SCSI-3 compliant and then crash when they receive a REPORT LUNS 
-command.
+As an aside -- does any existing command set support case #b, above?
 
-> > Because of this, no-one actually knows how many working SCSI-3 USB
-> > devices we might have supported.
-> 
-> This is true.  Suggestions for a better way to handle USB devices ... ?
+AFAICT, ATA, SCSI and NVMHCI all have a single, explicit hardware 
+command to discard/deallocate unused sectors.
 
-Is there any reason usb-storage shouldn't set the FORCELUNS flag for 
-all devices not known to have only one LUN?
+Therefore, creating REQ_TYPE_DISCARD seems to eliminate any need for new 
+hook ->prepare_discard().
 
-Eric is trying to address two separate issues.  One is bad or outdated 
-wording of the Kconfig help text for SCSI_MULTI_LUN.  The other is the 
-fact that some USB devices can't be used to their full extent when the 
-option isn't set, and people rolling their own configs (as opposed to 
-using a distro kernel) tend not to enable it.  Maybe changing the help 
-text will be enough for both problems.
+This provides a 1:1 correspondence between hardware and struct request, 
+most closely matching the setup of known hardware.
 
-As for future treatment of USB devices claiming SCSI-3 compliance (or 
-above), I don't know.  Keep the field unchanged but set a flag to rule 
-out the use of REPORT LUNS?
+	Jeff
 
-Alan Stern
+
 
