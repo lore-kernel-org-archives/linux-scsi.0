@@ -1,51 +1,59 @@
-From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Subject: Re: 2.6.30-rc4 Weird messages with ext4
-Date: Sun, 03 May 2009 20:45:51 +0000
-Message-ID: <1241383551.5596.116.camel@mulgrave.int.hansenpartnership.com>
-References: <200905031508.06053.papadako@csd.uoc.gr>
-	 <49FE0105.6010107@gmail.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: New TRIM/UNMAP tree published (2009-05-02)
+Date: Sun, 3 May 2009 15:48:37 -0600
+Message-ID: <20090503214836.GV8822@parisc-linux.org>
+References: <1238683047-13588-1-git-send-email-willy@linux.intel.com> <49D8A3D7.5070507@panasas.com> <20090503061150.GF10704@linux.intel.com> <20090503071619.GP8822@parisc-linux.org> <Pine.LNX.4.64.0905031346350.29671@blonde.anvils> <20090503144847.GR8822@parisc-linux.org> <49FDB21B.3080301@panasas.com> <20090503154216.GU8822@parisc-linux.org> <49FDC786.6070309@panasas.com> <49FDE3BB.505@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <49FE0105.6010107-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Robert Hancock <hancockrwd-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Panagiotis Papadakos <papadako-YET4oHL9trYCep0kKqy/Kg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <49FDE3BB.505@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, Hugh Dickins <hugh@veritas.com>, Matthew Wilcox <willy@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>, linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <lkml@rtr.ca>, David Woodhouse <dwmw2@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, 2009-05-03 at 14:39 -0600, Robert Hancock wrote:
-> Panagiotis Papadakos wrote:
-> > Hi.
-> > 
-> > When I connect my ext4 formatted Seagate 1.5 TB USB box,
-> > I get the messages of the style:
-> > 
-> > [sdb] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE           
-> > [sdb] Sense Key : Illegal Request [current]                     
-> > [sdb] Add. Sense: Logical block address out of range 
-> > 
-> > By the way I am not getting such messages with 2.6.29.
-> > 
-> > Anyone knows what might be wrong?
-> 
-> Sounds like something's messing up with the disk size detection, as it 
-> gets detected as a 2TB drive. CCing linux-usb and linux-scsi.
+On Sun, May 03, 2009 at 02:34:35PM -0400, Jeff Garzik wrote:
+> Yes, the task of figuring out -what to do- in the queue's request  
+> function is quite complex, and discard makes it even more so.
+>
+> The API makes life difficult -- you have to pass temporary info to  
+> yourself in ->prepare_flush_fn() and ->prepare_discard_fn(), and the  
+> overall sum is a bewildering collection of opcodes, flags, and internal  
+> driver notes to itself.
+>
+> Add to this yet another prep function, ->prep_rq_fn()
+>
+> It definitely sucks, especially with regards to failed atomic  
+> allocations...   but I think fixing this quite a big more than Matthew  
+> probably willing to tackle ;-)
 
-There was a screw up in the READ CAPACITY 16 rewrite.  The fix is here:
+I'm completely confused by the block layer API, to be honest.  Trying to
+deduce how to add a new feature at this stage is hard (compare it to
+adding the reflink operation to the VFS ...).  I'm definitely willing to
+tackle changing the block device API, but it may take a while.
 
-commit 8f76d151b010980d137bfdc736d1d8f64b489165
-Author: Dave Hansen <dave-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Date:   Tue Apr 21 16:43:27 2009 -0700
+> My ideal block layer interface would be a lot more opcode-based, e.g.
+>
+> (1) create REQ_TYPE_DISCARD
+>
+> (2) determine at init if queue (a) supports explicit DISCARD and/or (b)  
+> supports DISCARD flag passed with READ or WRITE
+>
+> (3) when creating a discard request, use block helpers w/ queue-specific  
+> knowledge to create either
+> 	(a) one request, REQ_TYPE_FS, with discard flag or
+> 	(b) two requests, REQ_TYPE_FS followed by REQ_TYPE_DISCARD
 
-    [SCSI] fix sign extension with 1.5TB usb-storage LBD=y
- 
-It's just gone upstream.
+I'm not sure we need option 3b.
 
-James
+> (4) blkdev_issue_discard() would function like an empty barrier, and  
+> unconditionally create REQ_TYPE_DISCARD.
 
+I can certainly prototype a replacement for discard_prep_fn along these lines.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
