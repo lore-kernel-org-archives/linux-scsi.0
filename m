@@ -1,59 +1,61 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: MPT fusion SAS target numbering...
-Date: Sun, 03 May 2009 20:00:22 +0000
-Message-ID: <1241380822.5596.114.camel@mulgrave.int.hansenpartnership.com>
-References: <1241307038.3639.73.camel@mulgrave.int.hansenpartnership.com>
-	 <20090502.170912.263716496.davem@davemloft.net>
-	 <1241323833.3639.77.camel@mulgrave.int.hansenpartnership.com>
-	 <20090503.124509.203910506.davem@davemloft.net>
+From: Robert Hancock <hancockrwd-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: 2.6.30-rc4 Weird messages with ext4
+Date: Sun, 03 May 2009 14:39:33 -0600
+Message-ID: <49FE0105.6010107@gmail.com>
+References: <200905031508.06053.papadako@csd.uoc.gr>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51156 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753189AbZECUAX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 May 2009 16:00:23 -0400
-In-Reply-To: <20090503.124509.203910506.davem@davemloft.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <200905031508.06053.papadako-YET4oHL9trYCep0kKqy/Kg@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Panagiotis Papadakos <papadako-YET4oHL9trYCep0kKqy/Kg@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: Eric.Moore@lsi.com, linux-scsi@vger.kernel.org, tayfun.kocaoglu@sun.com, Greg.Onufer@sun.com
 
-On Sun, 2009-05-03 at 12:45 -0700, David Miller wrote:
-> From: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Date: Sat, 02 May 2009 23:10:33 -0500
+Panagiotis Papadakos wrote:
+> Hi.
 > 
-> > I Understand, that's why it's like the Fibre persistent bindings.  There
-> > are, unfortunately, good reasons why it can't be used as the target id,
-> > but if we just exported the id, udev can create a device node using it
-> > and you can mount via that device node in an across boot consistent
-> > manner ... will that do?
+> When I connect my ext4 formatted Seagate 1.5 TB USB box,
+> I get the messages of the style:
 > 
-> I see no reason why you wouldn't want to use known perfectly good
-> persistent SCSI target IDs computed by the card.
+> [sdb] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE           
+> [sdb] Sense Key : Illegal Request [current]                     
+> [sdb] Add. Sense: Logical block address out of range 
+> 
+> By the way I am not getting such messages with 2.6.29.
+> 
+> Anyone knows what might be wrong?
 
-The technical reason is that the lifetime rules for the IDs in the card
-firmware don't match the lifetime rules in the mid layer and target ids
-in the mid layer have to be unique.  It's not a problem absent hotplug,
-but SAS is a hotplug bus.
+Sounds like something's messing up with the disk size detection, as it 
+gets detected as a 2TB drive. CCing linux-usb and linux-scsi.
 
- ... unplug from phy1 and plug immediately into phy2 is the most
-pathological case for this.
-
-We could take the fusion target ID as a hint and only overrule it if it
-would cause duplicate IDs, so get it right 95% of the time ... but I can
-just bet we'd see a large number of complaints about the surprise factor
-involved in the 5% of cases where we had to allocate a new id.
-
-> It doesn't make any sense, and it is inconsistent with how any
-> other piece of code in the world handles these values provided
-> by the card.
-
-We can export the values provided by the card, and udev can create a
-device node based on them, thus giving apparent persistence to device
-nodes with this, so that would solve the boot from and mount from issue.
-
-James
-
-
+Apr 27 20:42:15 cray-7 kernel: [    7.600940] scsi 2:0:0:0: 
+Direct-Access     ST315003 41AS                  PQ: 0 ANSI: 2
+Apr 27 20:42:15 cray-7 kernel: [    7.601701] sd 2:0:0:0: Attached scsi 
+generic sg2 type 0
+Apr 27 20:42:15 cray-7 kernel: [    7.623420] sd 2:0:0:0: [sdb] Very big 
+device. Trying to use READ CAPACITY(16).
+Apr 27 20:42:15 cray-7 kernel: [    7.624694] sd 2:0:0:0: [sdb] Using 
+0xffffffff as device size
+Apr 27 20:42:15 cray-7 kernel: [    7.624703] sd 2:0:0:0: [sdb] 
+4294967296 512-byte hardware sectors: (2.19 TB/2.00 TiB)
+Apr 27 20:42:15 cray-7 kernel: [    7.627074] sd 2:0:0:0: [sdb] Write 
+Protect is off
+Apr 27 20:42:15 cray-7 kernel: [    7.649077] sd 2:0:0:0: [sdb] Very big 
+device. Trying to use READ CAPACITY(16).
+Apr 27 20:42:15 cray-7 kernel: [    7.650288] sd 2:0:0:0: [sdb] Using 
+0xffffffff as device size
+Apr 27 20:42:15 cray-7 kernel: [    7.652566]  sdb: unknown partition table
+Apr 27 20:42:15 cray-7 kernel: [    7.674807] sd 2:0:0:0: [sdb] Attached 
+SCSI disk
+Apr 27 20:42:15 cray-7 kernel: [    7.683409] sd 2:0:0:0: [sdb] Result: 
+hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Apr 27 20:42:15 cray-7 kernel: [    7.683418] sd 2:0:0:0: [sdb] Sense 
+Key : Illegal Request [current]
+Apr 27 20:42:15 cray-7 kernel: [    7.683425] sd 2:0:0:0: [sdb] Add. 
+Sense: Logical block address out of range
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
