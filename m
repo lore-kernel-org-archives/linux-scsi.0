@@ -1,65 +1,58 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: New TRIM/UNMAP tree published (2009-05-02)
-Date: Sun, 03 May 2009 14:47:47 -0500
-Message-ID: <1241380067.5596.103.camel@mulgrave.int.hansenpartnership.com>
-References: <1238683047-13588-1-git-send-email-willy@linux.intel.com>
-	 <49D8A3D7.5070507@panasas.com> <20090503061150.GF10704@linux.intel.com>
-	 <20090503071619.GP8822@parisc-linux.org>
-	 <Pine.LNX.4.64.0905031346350.29671@blonde.anvils>
-	 <20090503144847.GR8822@parisc-linux.org> <49FDB21B.3080301@panasas.com>
-	 <20090503154216.GU8822@parisc-linux.org> <49FDC786.6070309@panasas.com>
-	 <49FDE3BB.505@garzik.org>  <49FDE50A.4060503@garzik.org>
-	 <1241377472.5596.88.camel@mulgrave.int.hansenpartnership.com>
-	 <49FDEE64.5090302@garzik.org>
+Subject: Re: MPT fusion SAS target numbering...
+Date: Sun, 03 May 2009 20:00:22 +0000
+Message-ID: <1241380822.5596.114.camel@mulgrave.int.hansenpartnership.com>
+References: <1241307038.3639.73.camel@mulgrave.int.hansenpartnership.com>
+	 <20090502.170912.263716496.davem@davemloft.net>
+	 <1241323833.3639.77.camel@mulgrave.int.hansenpartnership.com>
+	 <20090503.124509.203910506.davem@davemloft.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <49FDEE64.5090302@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Matthew Wilcox <matthew@wil.cx>, Jens Axboe <jens.axboe@oracle.com>, Boaz Harrosh <bharrosh@panasas.com>, Hugh Dickins <hugh@veritas.com>, Matthew Wilcox <willy@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <lkml@rtr.ca>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51156 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753189AbZECUAX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 May 2009 16:00:23 -0400
+In-Reply-To: <20090503.124509.203910506.davem@davemloft.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: Eric.Moore@lsi.com, linux-scsi@vger.kernel.org, tayfun.kocaoglu@sun.com, Greg.Onufer@sun.com
 
-On Sun, 2009-05-03 at 15:20 -0400, Jeff Garzik wrote:
-> [tangent...]
+On Sun, 2009-05-03 at 12:45 -0700, David Miller wrote:
+> From: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Date: Sat, 02 May 2009 23:10:33 -0500
 > 
-> Does make you wonder if a ->init_rq_fn() would be helpful, one that 
-> could perform gfp_t allocations rather than GFP_ATOMIC?  The idea being 
-> to call ->init_rq_fn() almost immediately after creation of struct 
-> request, by the struct request creator.
+> > I Understand, that's why it's like the Fibre persistent bindings.  There
+> > are, unfortunately, good reasons why it can't be used as the target id,
+> > but if we just exported the id, udev can create a device node using it
+> > and you can mount via that device node in an across boot consistent
+> > manner ... will that do?
+> 
+> I see no reason why you wouldn't want to use known perfectly good
+> persistent SCSI target IDs computed by the card.
 
-Isn't that what the current prep_fn actually is?
+The technical reason is that the lifetime rules for the IDs in the card
+firmware don't match the lifetime rules in the mid layer and target ids
+in the mid layer have to be unique.  It's not a problem absent hotplug,
+but SAS is a hotplug bus.
 
-> I obviously have not thought in depth about this, but it does seem that 
-> init_rq_fn(), called earlier in struct request lifetime, could eliminate 
-> the need for ->prepare_flush, ->prepare_discard, and perhaps could be a 
-> better place for some of the ->prep_rq_fn logic.
+ ... unplug from phy1 and plug immediately into phy2 is the most
+pathological case for this.
 
-It's hard to see how ... prep_rq_fn is already called pretty early ...
-almost as soon as the elevator has decided to spit out the request
+We could take the fusion target ID as a hint and only overrule it if it
+would cause duplicate IDs, so get it right 95% of the time ... but I can
+just bet we'd see a large number of complaints about the surprise factor
+involved in the 5% of cases where we had to allocate a new id.
 
-> The creator of struct request generally has more freedom to sleep, and 
-> it seems logical to give low-level drivers a "fill in LLD-specific info" 
-> hook BEFORE the request is ever added to a request_queue.
+> It doesn't make any sense, and it is inconsistent with how any
+> other piece of code in the world handles these values provided
+> by the card.
 
-Unfortunately it's not really possible to find a sleeping context in
-there:  The elevators have to operate from the current
-elv_next_request() context, which, in most drivers can either be user or
-interrupt.
-
-The way the block layer is designed is to pull allocations up the stack
-much closer to the process (usually at the bio creation point) because
-that allows the elevators to operate even in memory starved conditions.
-If we pushed the allocation down into the request level, we'd need some
-type of threading (bad for performance) and the request processing would
-stall when some GFP_KERNEL allocation went out to lunch finding memory.
-
-The ideal for REQ_TYPE_DISCARD seems to be to force a page allocation
-tied to a bio when it's issued at the top.  That way everyone has enough
-memory when it comes down the stack (both extents and WRITE SAME sector
-will fit into a page ... although only just for WRITE SAME on 4k
-sectors).
+We can export the values provided by the card, and udev can create a
+device node based on them, thus giving apparent persistence to device
+nodes with this, so that would solve the boot from and mount from issue.
 
 James
 
