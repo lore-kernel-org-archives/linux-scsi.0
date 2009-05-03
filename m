@@ -1,64 +1,65 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] set CONFIG_SCSI_MULTI_LUN by default and update help
-Date: Sun, 03 May 2009 09:57:15 -0500
-Message-ID: <1241362635.5596.34.camel@mulgrave.int.hansenpartnership.com>
-References: <49FDA2CA.4040601@tremplin-utc.net>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: New TRIM/UNMAP tree published (2009-05-02)
+Date: Sun, 03 May 2009 18:02:51 +0300
+Message-ID: <49FDB21B.3080301@panasas.com>
+References: <1238683047-13588-1-git-send-email-willy@linux.intel.com> <49D8A3D7.5070507@panasas.com> <20090503061150.GF10704@linux.intel.com> <20090503071619.GP8822@parisc-linux.org> <Pine.LNX.4.64.0905031346350.29671@blonde.anvils> <20090503144847.GR8822@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:48849 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753207AbZECO5Q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 May 2009 10:57:16 -0400
-In-Reply-To: <49FDA2CA.4040601@tremplin-utc.net>
+Received: from gw-ca.panasas.com ([209.116.51.66]:16101 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753878AbZECPEE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 May 2009 11:04:04 -0400
+In-Reply-To: <20090503144847.GR8822@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?ISO-8859-1?Q?=C9ric?= Piel <eric.piel@tremplin-utc.net>
-Cc: linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Hugh Dickins <hugh@veritas.com>, Matthew Wilcox <willy@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>, linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <lkml@rtr.ca>
 
-On Sun, 2009-05-03 at 15:57 +0200, =C3=89ric Piel wrote:
-> Hello,=20
->=20
-> Here is a patch against 2.6.30-rc4, but probably material for 2.6.31,
-> which should avoid a couple of people to have the same problem as me.
->=20
-> Eric
-> =3D=3D
->=20
-> I had to set CONFIG_SCSI_MULTI_LUN to y in order to get my SE W595
-> working when plugging it as a mass storage. Looking at SCSI option to
-> get a phone behaving correctly was convoluted to say the
-> least. There are quite a few other reports about USB card readers
-> needing this option as well.
->=20
-> This patch improves the help text to make the use of the option more
-> obvious and also defaults it to Y. I couldn't find any explicit repor=
-ts
-> of devices not working because of multiple LUNs probing, but only
-> reports of people would had heard of such reports. In addition, every
-> mainstream distro have this option activated, so it should definitely
-> not be too dangerous.
->=20
-> Signed-off-by: Eric Piel <eric.piel@tremplin-utc.net>
+On 05/03/2009 05:48 PM, Matthew Wilcox wrote:
+> On Sun, May 03, 2009 at 02:07:32PM +0100, Hugh Dickins wrote:
+>> I notice OCZ hope to have updated Vertex firmware mid-May,
+>> such that their TRIM support matches up with (y)ours.
+> 
+> Excellent.
+> 
+>> You have GFP_KERNEL allocations in your discard_fn()s.  I believe that
+>> allocations down at that level will need to be GFP_NOIO - the bio mempool
+>> might be empty by this point, you don't want memory allocation to get into
+>> submitting even more I/O to satisfy your discard_fn().  Does it need its
+>> own mempool of reserve pages?  My guess is that you can get away without
+>> that, since a failed discard, though regrettable, loses no data.
+> 
+> You make a good point.  There's definitely still work to be done around
+> error handling.  OTOH, we could always do what IDE does ...
+> 
+> static void idedisk_prepare_flush(struct request_queue *q, struct request *rq)
+> {
+>         ide_drive_t *drive = q->queuedata;
+>         struct ide_cmd *cmd = kmalloc(sizeof(*cmd), GFP_ATOMIC);
+> 
+>         /* FIXME: map struct ide_taskfile on rq->cmd[] */
+>         BUG_ON(cmd == NULL);
+> 
+> 
+> 
 
-Actually, I'd really rather not alter the default value of this setting=
-=2E
-Multi-lun is rapidly becoming obsolete: any modern devices conforming t=
-o
-SCSI-3 use REPORT LUNS instead of doing LUN scanning, which gets us out
-of the issue.  Conversely, the ancient devices which rely on correctly
-setting this are more likely to get upset about any change in the
-balance.
+Out from the frying pan and into the fire. ;-)
 
-In your case, just add the changer's inquiry strings with a
-BLIST_FORCELUN.
+I agree with Hugh. The allocation is done at, too-low in the food chain.
+(And that free of buffer at upper layer allocated by lower layer).
 
-James
+I think you need to separate the: "does lld need buffer, what size"
+from the "here is buffer prepare", so upper layer that can sleep does
+sleep.
 
+In all other buffer needing operations the allocation is done before
+submission of request, No?
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Just my $0.017
+Thanks
+Boaz
+
+BTW:
+ I've not have time to review second round will "TODO"
