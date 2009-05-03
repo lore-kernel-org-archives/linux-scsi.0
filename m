@@ -1,33 +1,49 @@
-From: Hugh Dickins <hugh@veritas.com>
-Subject: Re: New TRIM/UNMAP tree published (2009-05-02)
-Date: Sun, 3 May 2009 16:05:08 +0100 (BST)
-Message-ID: <Pine.LNX.4.64.0905031603150.32125@blonde.anvils>
-References: <1238683047-13588-1-git-send-email-willy@linux.intel.com>
- <49D8A3D7.5070507@panasas.com> <20090503061150.GF10704@linux.intel.com>
- <20090503071619.GP8822@parisc-linux.org> <Pine.LNX.4.64.0905031346350.29671@blonde.anvils>
- <20090503144847.GR8822@parisc-linux.org>
+From: =?UTF-8?B?w4lyaWMgUGllbA==?= <eric.piel@tremplin-utc.net>
+Subject: Re: [PATCH] set CONFIG_SCSI_MULTI_LUN by default and update help
+Date: Sun, 03 May 2009 17:08:30 +0200
+Message-ID: <49FDB36E.7010402@tremplin-utc.net>
+References: <49FDA2CA.4040601@tremplin-utc.net> <1241362635.5596.34.camel@mulgrave.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20090503144847.GR8822@parisc-linux.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Matthew Wilcox <willy@linux.intel.com>, Boaz Harrosh <bharrosh@panasas.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>, linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <lkml@rtr.ca>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailservice.tudelft.nl ([130.161.131.5]:22220 "EHLO
+	mailservice.tudelft.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754727AbZECPIg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 May 2009 11:08:36 -0400
+In-Reply-To: <1241362635.5596.34.camel@mulgrave.int.hansenpartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
 
-On Sun, 3 May 2009, Matthew Wilcox wrote:
-> 
-> You make a good point.  There's definitely still work to be done around
-> error handling.  OTOH, we could always do what IDE does ...
-> 
-> static void idedisk_prepare_flush(struct request_queue *q, struct request *rq)
-> {
->         ide_drive_t *drive = q->queuedata;
->         struct ide_cmd *cmd = kmalloc(sizeof(*cmd), GFP_ATOMIC);
-> 
->         /* FIXME: map struct ide_taskfile on rq->cmd[] */
->         BUG_ON(cmd == NULL);
+James Bottomley schreef:
+> On Sun, 2009-05-03 at 15:57 +0200, =C3=89ric Piel wrote:
+:
+>=20
+> Actually, I'd really rather not alter the default value of this setti=
+ng.
+> Multi-lun is rapidly becoming obsolete: any modern devices conforming=
+ to
+> SCSI-3 use REPORT LUNS instead of doing LUN scanning, which gets us o=
+ut
+> of the issue.  Conversely, the ancient devices which rely on correctl=
+y
+> setting this are more likely to get upset about any change in the
+> balance.
+Yes, I understand. Would like me to resend the patch without the change
+on the default value. IMHO, it provides a better wording.
 
-Oooh, you're winding me up.  Certainly not.  Off with the Top Of your Head!
+>=20
+> In your case, just add the changer's inquiry strings with a
+> BLIST_FORCELUN.
+Where, into the usb-storage driver? I guess there is no usb device whic=
+h
+can get confused by this, so it should work fine as well :-)
 
-Hugh
+Eric
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
