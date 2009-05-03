@@ -1,50 +1,33 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] set CONFIG_SCSI_MULTI_LUN by default and update help
-Date: Sun, 3 May 2009 09:24:08 -0600
-Message-ID: <20090503152408.GT8822@parisc-linux.org>
-References: <49FDA2CA.4040601@tremplin-utc.net> <1241362635.5596.34.camel@mulgrave.int.hansenpartnership.com> <20090503151153.GS8822@parisc-linux.org> <1241364068.5596.55.camel@mulgrave.int.hansenpartnership.com>
+Subject: Re: New TRIM/UNMAP tree published (2009-05-02)
+Date: Sun, 3 May 2009 09:42:16 -0600
+Message-ID: <20090503154216.GU8822@parisc-linux.org>
+References: <1238683047-13588-1-git-send-email-willy@linux.intel.com> <49D8A3D7.5070507@panasas.com> <20090503061150.GF10704@linux.intel.com> <20090503071619.GP8822@parisc-linux.org> <Pine.LNX.4.64.0905031346350.29671@blonde.anvils> <20090503144847.GR8822@parisc-linux.org> <49FDB21B.3080301@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:33369 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754428AbZECPYI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 May 2009 11:24:08 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756251AbZECPmc@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1241364068.5596.55.camel@mulgrave.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <49FDB21B.3080301@panasas.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Hugh Dickins <hugh@veritas.com>, Matthew Wilcox <willy@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>, linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <lkml@rtr.ca>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: ?ric Piel <eric.piel@tremplin-utc.net>, linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
 
-On Sun, May 03, 2009 at 10:21:08AM -0500, James Bottomley wrote:
-> On Sun, 2009-05-03 at 09:11 -0600, Matthew Wilcox wrote:
-> > On Sun, May 03, 2009 at 09:57:15AM -0500, James Bottomley wrote:
-> > > Actually, I'd really rather not alter the default value of this setting.
-> > > Multi-lun is rapidly becoming obsolete: any modern devices conforming to
-> > > SCSI-3 use REPORT LUNS instead of doing LUN scanning, which gets us out
-> > > of the issue.  Conversely, the ancient devices which rely on correctly
-> > > setting this are more likely to get upset about any change in the
-> > > balance.
-> > 
-> > Yes, but USB devices are prohibited from being SCSI-3 devices, so it's
-> > not becoming obsolete.
+On Sun, May 03, 2009 at 06:02:51PM +0300, Boaz Harrosh wrote:
+> I agree with Hugh. The allocation is done at, too-low in the food chain.
+> (And that free of buffer at upper layer allocated by lower layer).
 > 
-> No they're not, there's nothing in the USB specs that say this.  UAS
-> will specifically require it.
+> I think you need to separate the: "does lld need buffer, what size"
+> from the "here is buffer prepare", so upper layer that can sleep does
+> sleep.
 
-I didn't mean "prohibited by the USB spec", I meant "prohibited by Linux",
-for the exact reason you say below.
+So you want two function pointers in the request queue relating to discard?
 
-> The problem is we don't trust USB manufacturers with standards
-> compliance any further than they could spit a rat, so we assume when
-> they say they conform to SCSI-3 or above that they must have got it
-> wrong and push it back down to SCSI-2.
-> 
-> Because of this, no-one actually knows how many working SCSI-3 USB
-> devices we might have supported.
+> In all other buffer needing operations the allocation is done before
+> submission of request, No?
 
-This is true.  Suggestions for a better way to handle USB devices ... ?
+It's not true for the flush request (the example I quoted).  Obviously,
+the solution adopted here by IDE is Bad and Wrong ...
 
 -- 
 Matthew Wilcox				Intel Open Source Technology Centre
