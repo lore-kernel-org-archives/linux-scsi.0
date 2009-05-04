@@ -1,58 +1,30 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: [PATCH 1/5] initdev:kernel: Asynchronously-discovered device
- synchronization, v5
-Date: Mon, 4 May 2009 10:30:06 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0905041026560.2961-100000@iolanthe.rowland.org>
-References: <20090503162115.2dff79bd@infradead.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 08/11] block: cleanup rq->data_len usages
+Date: Mon, 04 May 2009 18:41:32 +0400
+Message-ID: <49FEFE9C.9060102@ru.mvista.com>
+References: <1241423927-11871-1-git-send-email-tj@kernel.org> <1241423927-11871-9-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20090503162115.2dff79bd-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Arjan van de Ven <arjan-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, David VomLehn <dvomlehn-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1241423927-11871-9-git-send-email-tj@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, mike.miller@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, bharrosh@panasas.com, "Darrick J. Wong" <djwong@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, 3 May 2009, Arjan van de Ven wrote:
+Tejun Heo wrote:
 
-> > Perhaps with some enterprise systems, it is preferred to have the 
-> > system fail with an explicit error message rather than wait 
-> > indefinitely...
-> 
-> actually, in an enterprise system, you want to reboot.
-> The bootloader might boot a different kernel the next time
-> that is known to work.
-> (for example, the current kernel might have been booted with the "once"
-> grub option)
+> With recent unification of fields, it's now guaranteed that
+> rq->data_len always equals blk_rq_bytes().  Convert all non-IDE direct
+> users to accessors.  IDE will be converted in a separate patch.
 
-Which makes it imperative that the system knows when all the block
-devices have been probed, so it can stop waiting.
+> Boaz: spotted incorrect data_len/resid_len conversion in osd.
 
-> > How does Arjan's async boot system tell use when all discovery is
-> > complete?  AFAICS, it only tells you when all its async tasks are
-> > finished.  But device discovery and registration sometimes use other
-> > asynchronous techniques which Arjan's code is unaware of.
-> > Examples: the USB khubd thread, the USB mass-storage scanning thread,
-> > and the SCSI async-scanning thread.
-> 
-> for normal device probing we already have infrastructure though...
-> wait_for_device_probe, driver_probe_done and friends...
-> (the scsi scanning thread is being converted to the async
-> infrastructure btw)
-> 
-> do we need to invent more ?
+> [ Impact: convert direct rq->data_len usages to blk_rq_bytes() ]
 
-I suppose the usb-storage scanning thread could also be converted to 
-the async infrastructure, although I haven't heard of anybody working 
-on it.
+> Signed-off-by: Tejun Heo <tj@kernel.org>
 
-But the USB hub driver's thread (khubd) cannot be converted.  It is 
-central to the discovery of USB-based block devices.  How would you 
-handle that?
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Alan Stern
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+MBR, Sergei
