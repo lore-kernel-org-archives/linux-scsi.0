@@ -1,71 +1,60 @@
-From: Arjan van de Ven <arjan-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH 1/5] initdev:kernel: Asynchronously-discovered device
- synchronization, v5
-Date: Mon, 4 May 2009 07:45:22 -0700
-Message-ID: <20090504074522.13f1ed77@infradead.org>
-References: <20090503162115.2dff79bd@infradead.org>
-	<Pine.LNX.4.44L0.0905041026560.2961-100000@iolanthe.rowland.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: Linux doesn't support bigger than 2TB IEEE-1394 disk
+Date: Mon, 04 May 2009 16:45:14 +0200
+Message-ID: <49FEFF7A.3090603@s5r6.in-berlin.de>
+References: <85681F9DCBFF144DA59C70D83EBC1DA2E1EDE7@EIOISER.ioi.com.tw>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.0905041026560.2961-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, David VomLehn <dvomlehn-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:45803 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751443AbZEDOpc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 May 2009 10:45:32 -0400
+In-Reply-To: <85681F9DCBFF144DA59C70D83EBC1DA2E1EDE7@EIOISER.ioi.com.tw>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ronald <Ronald@ioi.com.tw>
+Cc: linux1394-user@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-On Mon, 4 May 2009 10:30:06 -0400 (EDT)
-Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org> wrote:
-
-> On Sun, 3 May 2009, Arjan van de Ven wrote:
+Ronald wrote at linux1394-user:
+> Linux doesn't support bigger than 2TB IEEE-1394 disk.
 > 
-> > > Perhaps with some enterprise systems, it is preferred to have the 
-> > > system fail with an explicit error message rather than wait 
-> > > indefinitely...
-> > 
-> > actually, in an enterprise system, you want to reboot.
-> > The bootloader might boot a different kernel the next time
-> > that is known to work.
-> > (for example, the current kernel might have been booted with the
-> > "once" grub option)
-> 
-> Which makes it imperative that the system knows when all the block
-> devices have been probed, so it can stop waiting.
-> 
-> > > How does Arjan's async boot system tell use when all discovery is
-> > > complete?  AFAICS, it only tells you when all its async tasks are
-> > > finished.  But device discovery and registration sometimes use
-> > > other asynchronous techniques which Arjan's code is unaware of.
-> > > Examples: the USB khubd thread, the USB mass-storage scanning
-> > > thread, and the SCSI async-scanning thread.
-> > 
-> > for normal device probing we already have infrastructure though...
-> > wait_for_device_probe, driver_probe_done and friends...
-> > (the scsi scanning thread is being converted to the async
-> > infrastructure btw)
-> > 
-> > do we need to invent more ?
-> 
-> I suppose the usb-storage scanning thread could also be converted to 
-> the async infrastructure, although I haven't heard of anybody working 
-> on it.
-> 
-> But the USB hub driver's thread (khubd) cannot be converted.  It is 
-> central to the discovery of USB-based block devices.  How would you 
-> handle that?
+> Will Linux have new driver for this issue?
 
-take a ref in the driver_probe_done() sense, and release it when you
-know you're done probing....
+(Adding Cc: linux-scsi)
 
-at that point all existing infrastructure will just work.
+As far as I can tell, Linux does support IEEE 1394 disks of any size. 
+However, if I'm not mistaken, disks larger than 2 TB require that the 
+READ CAPACITY (16) command is used to check the disk's capacity, rather 
+than the usual READ CAPACITY (10) command.  Somebody correct me if I'm 
+wrong.
 
+By far most firmwares of IEEE 1394/ SBP-2 chipsets implement only the 
+RBC (Reduced Block Commands) command set specification, or at least 
+claim so in their INQUIRY response.  If I understood correctly, the 
+Linux SCSI stack will never send READ CAPACITY (16) to them since this 
+command is not included in RBC.
 
+It is only part of the more general SBC (SCSI Block Commands) 
+specification.  But Linux won't also send READ CAPACITY (16) to disks 
+which claim SBC support, unless they also claim conformance to a 
+reasonably recent SCSI revision (I don't remember which one and am too 
+lazy to check).  This is because older firmwares may crash if they 
+receive READ CAPACITY (16).
+
+Ronald, do you know of a specific series of SBP-2 firmwares which do 
+actually support READ CAPACITY (16) properly but are treated by Linux as 
+if they wouldn't?  If so, we could add a workaround to our drivers to 
+treat them like recent SBC implementations.  We would have to match 
+against their firmware_revision field which you get logged in dmesg if 
+you load the sbp2 or firewire-sbp2 driver with the module parameter 
+workarounds=0x1000.
+
+(Still, I could be mistaken and the problem might be something else than 
+which READ CAPACITY flavor to use.  Maybe somebody more familiar with 
+the block oriented SCSI command sets could comment.)
 -- 
-Arjan van de Ven 	Intel Open Source Technology Centre
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Stefan Richter
+-=====-=-=== -=-= -==-=
+http://arcgraph.de/sr/
