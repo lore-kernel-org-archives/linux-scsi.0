@@ -1,162 +1,250 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 09/11] ide: cleanup rq->data_len usages
-Date: Mon,  4 May 2009 16:58:45 +0900
-Message-ID: <1241423927-11871-10-git-send-email-tj@kernel.org>
+Subject: [PATCH 11/11] block: blk_rq_[cur_]_{sectors|bytes}() usage cleanup
+Date: Mon,  4 May 2009 16:58:47 +0900
+Message-ID: <1241423927-11871-12-git-send-email-tj@kernel.org>
 References: <1241423927-11871-1-git-send-email-tj@kernel.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:57172 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752018AbZEDIJQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 May 2009 04:09:16 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1241423927-11871-1-git-send-email-tj@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petko
 Cc: Tejun Heo <tj@kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-With recent unification of fields, it's now guaranteed that
-rq->data_len always equals blk_rq_bytes().  Convert all direct users
-to accessors.
+With the previous changes, the followings are now guaranteed for all
+requests in any valid state.
 
-[ Impact: convert direct rq->data_len usages to blk_rq_bytes() ]
+* blk_rq_sectors() == blk_rq_bytes() >> 9
+* blk_rq_cur_sectors() == blk_rq_cur_bytes() >> 9
+
+Clean up accessor usages.  Notable changes are
+
+* nbd,i2o_block: end_all used instead of explicit byte count
+* scsi_lib: unnecessary conditional on request type removed
+
+[ Impact: cleanup ]
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Borislav Petkov <petkovbb@googlemail.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Paul Clements <paul.clements@steeleye.com>
+Cc: Pete Zaitcev <zaitcev@redhat.com>
+Cc: Alex Dubov <oakad@yahoo.com>
+Cc: Markus Lidel <Markus.Lidel@shadowconnect.com>
+Cc: David Woodhouse <dwmw2@infradead.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>
 ---
- drivers/ide/ide-atapi.c  |    4 ++--
- drivers/ide/ide-cd.c     |   25 +++++++------------------
- drivers/ide/ide-floppy.c |    4 ++--
- drivers/ide/ide-io.c     |    2 +-
- 4 files changed, 12 insertions(+), 23 deletions(-)
+ drivers/block/floppy.c              |    7 +++----
+ drivers/block/nbd.c                 |    6 +++---
+ drivers/block/ub.c                  |    2 +-
+ drivers/block/z2ram.c               |    2 +-
+ drivers/memstick/core/mspro_block.c |    4 ++--
+ drivers/message/i2o/i2o_block.c     |   16 ++++------------
+ drivers/mtd/mtd_blkdevs.c           |    2 +-
+ drivers/sbus/char/jsflash.c         |    2 +-
+ drivers/scsi/scsi_lib.c             |    7 ++-----
+ 9 files changed, 18 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
-index e4a02a0..792534d 100644
---- a/drivers/ide/ide-atapi.c
-+++ b/drivers/ide/ide-atapi.c
-@@ -255,7 +255,7 @@ void ide_retry_pc(ide_drive_t *drive)
- 	ide_init_pc(pc);
- 	memcpy(pc->c, sense_rq->cmd, 12);
- 	pc->buf = bio_data(sense_rq->bio);	/* pointer to mapped address */
--	pc->req_xfer = sense_rq->data_len;
-+	pc->req_xfer = blk_rq_bytes(sense_rq);
+diff --git a/drivers/block/floppy.c b/drivers/block/floppy.c
+index 4524862..1e27ed9 100644
+--- a/drivers/block/floppy.c
++++ b/drivers/block/floppy.c
+@@ -2512,8 +2512,7 @@ static void copy_buffer(int ssize, int max_sector, int max_sector_2)
  
- 	if (drive->media == ide_tape)
- 		set_bit(IDE_AFLAG_IGNORE_DSC, &drive->atapi_flags);
-@@ -303,7 +303,7 @@ int ide_cd_get_xferlen(struct request *rq)
- 		return 32768;
- 	else if (blk_sense_request(rq) || blk_pc_request(rq) ||
- 			 rq->cmd_type == REQ_TYPE_ATA_PC)
--		return rq->data_len;
-+		return blk_rq_bytes(rq);
- 	else
- 		return 0;
- }
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 94a341b..1a58b38 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -576,7 +576,7 @@ static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
- 	struct request *rq = hwif->rq;
- 	ide_expiry_t *expiry = NULL;
- 	int dma_error = 0, dma, thislen, uptodate = 0;
--	int write = (rq_data_dir(rq) == WRITE) ? 1 : 0, rc = 0, nsectors;
-+	int write = (rq_data_dir(rq) == WRITE) ? 1 : 0, rc = 0;
- 	int sense = blk_sense_request(rq);
- 	unsigned int timeout;
- 	u16 len;
-@@ -706,9 +706,7 @@ static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
+ 	remaining = current_count_sectors << 9;
+ #ifdef FLOPPY_SANITY_CHECK
+-	if ((remaining >> 9) > blk_rq_sectors(current_req) &&
+-	    CT(COMMAND) == FD_WRITE) {
++	if (remaining > blk_rq_bytes(current_req) && CT(COMMAND) == FD_WRITE) {
+ 		DPRINT("in copy buffer\n");
+ 		printk("current_count_sectors=%ld\n", current_count_sectors);
+ 		printk("remaining=%d\n", remaining >> 9);
+@@ -2530,7 +2529,7 @@ static void copy_buffer(int ssize, int max_sector, int max_sector_2)
  
- out_end:
- 	if (blk_pc_request(rq) && rc == 0) {
--		if (blk_end_request(rq, 0, rq->data_len))
--			BUG();
--
-+		blk_end_request_all(rq, 0);
- 		hwif->rq = NULL;
- 	} else {
- 		if (sense && uptodate)
-@@ -726,22 +724,14 @@ out_end:
- 			ide_cd_error_cmd(drive, cmd);
+ 	dma_buffer = floppy_track_buffer + ((fsector_t - buffer_min) << 9);
  
- 		/* make sure it's fully ended */
--		if (blk_pc_request(rq))
--			nsectors = (rq->data_len + 511) >> 9;
--		else
--			nsectors = blk_rq_sectors(rq);
--
--		if (nsectors == 0)
--			nsectors = 1;
--
- 		if (blk_fs_request(rq) == 0) {
--			rq->resid_len = rq->data_len -
-+			rq->resid_len = blk_rq_bytes(rq) -
- 				(cmd->nbytes - cmd->nleft);
- 			if (uptodate == 0 && (cmd->tf_flags & IDE_TFLAG_WRITE))
- 				rq->resid_len += cmd->last_xfer_len;
+-	size = blk_rq_cur_sectors(current_req) << 9;
++	size = blk_rq_cur_bytes(current_req);
+ 
+ 	rq_for_each_segment(bv, current_req, iter) {
+ 		if (!remaining)
+@@ -2879,7 +2878,7 @@ static int make_raw_rw_request(void)
+ 				printk("write\n");
+ 			return 0;
  		}
+-	} else if (raw_cmd->length > blk_rq_sectors(current_req) << 9 ||
++	} else if (raw_cmd->length > blk_rq_bytes(current_req) ||
+ 		   current_count_sectors > blk_rq_sectors(current_req)) {
+ 		DPRINT("buffer overrun in direct transfer\n");
+ 		return 0;
+diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
+index 977a573..fad167d 100644
+--- a/drivers/block/nbd.c
++++ b/drivers/block/nbd.c
+@@ -110,7 +110,7 @@ static void nbd_end_request(struct request *req)
+ 			req, error ? "failed" : "done");
  
--		ide_complete_rq(drive, uptodate ? 0 : -EIO, nsectors << 9);
-+		ide_complete_rq(drive, uptodate ? 0 : -EIO, blk_rq_bytes(rq));
- 
- 		if (sense && rc == 2)
- 			ide_error(drive, "request sense failure", stat);
-@@ -818,7 +808,7 @@ static void cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
- 		 */
- 		alignment = queue_dma_alignment(q) | q->dma_pad_mask;
- 		if ((unsigned long)buf & alignment
--		    || rq->data_len & q->dma_pad_mask
-+		    || blk_rq_bytes(rq) & q->dma_pad_mask
- 		    || object_is_on_stack(buf))
- 			drive->dma = 0;
- 	}
-@@ -866,9 +856,8 @@ static ide_startstop_t ide_cd_do_request(ide_drive_t *drive, struct request *rq,
- 
- 	cmd.rq = rq;
- 
--	if (blk_fs_request(rq) || rq->data_len) {
--		ide_init_sg_cmd(&cmd, blk_fs_request(rq) ?
--				(blk_rq_sectors(rq) << 9) : rq->data_len);
-+	if (blk_fs_request(rq) || blk_rq_bytes(rq)) {
-+		ide_init_sg_cmd(&cmd, blk_rq_bytes(rq));
- 		ide_map_sg(drive, &cmd);
- 	}
- 
-diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index 1c460bd..6509817 100644
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -220,14 +220,14 @@ static void idefloppy_blockpc_cmd(struct ide_disk_obj *floppy,
- 	ide_init_pc(pc);
- 	memcpy(pc->c, rq->cmd, sizeof(pc->c));
- 	pc->rq = rq;
--	if (rq->data_len) {
-+	if (blk_rq_bytes(rq)) {
- 		pc->flags |= PC_FLAG_DMA_OK;
- 		if (rq_data_dir(rq) == WRITE)
- 			pc->flags |= PC_FLAG_WRITING;
- 	}
- 	/* pio will be performed by ide_pio_bytes() which handles sg fine */
- 	pc->buf = NULL;
--	pc->req_xfer = pc->buf_size = rq->data_len;
-+	pc->req_xfer = pc->buf_size = blk_rq_bytes(rq);
+ 	spin_lock_irqsave(q->queue_lock, flags);
+-	__blk_end_request(req, error, blk_rq_sectors(req) << 9);
++	__blk_end_request_all(req, error);
+ 	spin_unlock_irqrestore(q->queue_lock, flags);
  }
  
- static ide_startstop_t ide_floppy_do_request(ide_drive_t *drive,
-diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-index 59799ca..ca2519d 100644
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -116,7 +116,7 @@ void ide_complete_cmd(ide_drive_t *drive, struct ide_cmd *cmd, u8 stat, u8 err)
- unsigned int ide_rq_bytes(struct request *rq)
+@@ -231,7 +231,7 @@ static int nbd_send_req(struct nbd_device *lo, struct request *req)
  {
- 	if (blk_pc_request(rq))
--		return rq->data_len;
-+		return blk_rq_bytes(rq);
- 	else
- 		return blk_rq_cur_sectors(rq) << 9;
+ 	int result, flags;
+ 	struct nbd_request request;
+-	unsigned long size = blk_rq_sectors(req) << 9;
++	unsigned long size = blk_rq_bytes(req);
+ 
+ 	request.magic = htonl(NBD_REQUEST_MAGIC);
+ 	request.type = htonl(nbd_cmd(req));
+@@ -243,7 +243,7 @@ static int nbd_send_req(struct nbd_device *lo, struct request *req)
+ 			lo->disk->disk_name, req,
+ 			nbdcmd_to_ascii(nbd_cmd(req)),
+ 			(unsigned long long)blk_rq_pos(req) << 9,
+-			blk_rq_sectors(req) << 9);
++			blk_rq_bytes(req));
+ 	result = sock_xmit(lo, 1, &request, sizeof(request),
+ 			(nbd_cmd(req) == NBD_CMD_WRITE) ? MSG_MORE : 0);
+ 	if (result <= 0) {
+diff --git a/drivers/block/ub.c b/drivers/block/ub.c
+index 1591f61..40d03cf 100644
+--- a/drivers/block/ub.c
++++ b/drivers/block/ub.c
+@@ -739,7 +739,7 @@ static void ub_cmd_build_block(struct ub_dev *sc, struct ub_lun *lun,
+ 	cmd->cdb[8] = nblks;
+ 	cmd->cdb_len = 10;
+ 
+-	cmd->len = blk_rq_sectors(rq) * 512;
++	cmd->len = blk_rq_bytes(rq);
  }
+ 
+ static void ub_cmd_build_packet(struct ub_dev *sc, struct ub_lun *lun,
+diff --git a/drivers/block/z2ram.c b/drivers/block/z2ram.c
+index d4e6b71..6a13838 100644
+--- a/drivers/block/z2ram.c
++++ b/drivers/block/z2ram.c
+@@ -72,7 +72,7 @@ static void do_z2_request(struct request_queue *q)
+ 	struct request *req;
+ 	while ((req = elv_next_request(q)) != NULL) {
+ 		unsigned long start = blk_rq_pos(req) << 9;
+-		unsigned long len  = blk_rq_cur_sectors(req) << 9;
++		unsigned long len  = blk_rq_cur_bytes(req);
+ 
+ 		if (start + len > z2ram_size) {
+ 			printk( KERN_ERR DEVICE_NAME ": bad access: block=%lu, count=%u\n",
+diff --git a/drivers/memstick/core/mspro_block.c b/drivers/memstick/core/mspro_block.c
+index 9e600d2..93b2c61 100644
+--- a/drivers/memstick/core/mspro_block.c
++++ b/drivers/memstick/core/mspro_block.c
+@@ -680,7 +680,7 @@ try_again:
+ 		t_sec = blk_rq_pos(msb->block_req) << 9;
+ 		sector_div(t_sec, msb->page_size);
+ 
+-		count = blk_rq_sectors(msb->block_req) << 9;
++		count = blk_rq_bytes(msb->block_req);
+ 		count /= msb->page_size;
+ 
+ 		param.system = msb->system;
+@@ -745,7 +745,7 @@ static int mspro_block_complete_req(struct memstick_dev *card, int error)
+ 					t_len *= msb->page_size;
+ 			}
+ 		} else
+-			t_len = blk_rq_sectors(msb->block_req) << 9;
++			t_len = blk_rq_bytes(msb->block_req);
+ 
+ 		dev_dbg(&card->dev, "transferred %x (%d)\n", t_len, error);
+ 
+diff --git a/drivers/message/i2o/i2o_block.c b/drivers/message/i2o/i2o_block.c
+index 6b61d28..e153f5d 100644
+--- a/drivers/message/i2o/i2o_block.c
++++ b/drivers/message/i2o/i2o_block.c
+@@ -426,15 +426,9 @@ static void i2o_block_end_request(struct request *req, int error,
+ 	struct request_queue *q = req->q;
+ 	unsigned long flags;
+ 
+-	if (blk_end_request(req, error, nr_bytes)) {
+-		int leftover = (blk_rq_sectors(req) << KERNEL_SECTOR_SHIFT);
+-
+-		if (blk_pc_request(req))
+-			leftover = blk_rq_bytes(req);
+-
++	if (blk_end_request(req, error, nr_bytes))
+ 		if (error)
+-			blk_end_request(req, -EIO, leftover);
+-	}
++			blk_end_request_all(req, -EIO);
+ 
+ 	spin_lock_irqsave(q->queue_lock, flags);
+ 
+@@ -832,15 +826,13 @@ static int i2o_block_transfer(struct request *req)
+ 
+ 		memcpy(mptr, cmd, 10);
+ 		mptr += 4;
+-		*mptr++ =
+-		    cpu_to_le32(blk_rq_sectors(req) << KERNEL_SECTOR_SHIFT);
++		*mptr++ = cpu_to_le32(blk_rq_bytes(req));
+ 	} else
+ #endif
+ 	{
+ 		msg->u.head[1] = cpu_to_le32(cmd | HOST_TID << 12 | tid);
+ 		*mptr++ = cpu_to_le32(ctl_flags);
+-		*mptr++ =
+-		    cpu_to_le32(blk_rq_sectors(req) << KERNEL_SECTOR_SHIFT);
++		*mptr++ = cpu_to_le32(blk_rq_bytes(req));
+ 		*mptr++ =
+ 		    cpu_to_le32((u32) (blk_rq_pos(req) << KERNEL_SECTOR_SHIFT));
+ 		*mptr++ =
+diff --git a/drivers/mtd/mtd_blkdevs.c b/drivers/mtd/mtd_blkdevs.c
+index 4ea2e67..50c76a2 100644
+--- a/drivers/mtd/mtd_blkdevs.c
++++ b/drivers/mtd/mtd_blkdevs.c
+@@ -48,7 +48,7 @@ static int do_blktrans_request(struct mtd_blktrans_ops *tr,
+ 	char *buf;
+ 
+ 	block = blk_rq_pos(req) << 9 >> tr->blkshift;
+-	nsect = blk_rq_cur_sectors(req) << 9 >> tr->blkshift;
++	nsect = blk_rq_cur_bytes(req) >> tr->blkshift;
+ 
+ 	buf = req->buffer;
+ 
+diff --git a/drivers/sbus/char/jsflash.c b/drivers/sbus/char/jsflash.c
+index 2132c90..d56ddaa 100644
+--- a/drivers/sbus/char/jsflash.c
++++ b/drivers/sbus/char/jsflash.c
+@@ -189,7 +189,7 @@ static void jsfd_do_request(struct request_queue *q)
+ 	while ((req = elv_next_request(q)) != NULL) {
+ 		struct jsfd_part *jdp = req->rq_disk->private_data;
+ 		unsigned long offset = blk_rq_pos(req) << 9;
+-		size_t len = blk_rq_cur_sectors(req) << 9;
++		size_t len = blk_rq_cur_bytes(req);
+ 
+ 		if ((offset + len) > jdp->dsize) {
+ 			__blk_end_request_cur(req, -EIO);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 3d16c70..ee308f6 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -546,7 +546,7 @@ static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int error,
+ 	 * to queue the remainder of them.
+ 	 */
+ 	if (blk_end_request(req, error, bytes)) {
+-		int leftover = blk_rq_sectors(req) << 9;
++		int leftover = blk_rq_bytes(req);
+ 
+ 		if (blk_pc_request(req))
+ 			leftover = req->resid_len;
+@@ -964,10 +964,7 @@ static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb,
+ 	count = blk_rq_map_sg(req->q, req, sdb->table.sgl);
+ 	BUG_ON(count > sdb->table.nents);
+ 	sdb->table.nents = count;
+-	if (blk_pc_request(req))
+-		sdb->length = blk_rq_bytes(req);
+-	else
+-		sdb->length = blk_rq_sectors(req) << 9;
++	sdb->length = blk_rq_bytes(req);
+ 	return BLKPREP_OK;
+ }
+ 
 -- 
 1.6.0.2
 
