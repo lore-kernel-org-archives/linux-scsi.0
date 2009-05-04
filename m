@@ -1,269 +1,46 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH -next] osd_uld: fix printk format warning
-Date: Mon, 04 May 2009 19:09:33 +0300
-Message-ID: <49FF133D.9020603@panasas.com>
-References: <20090429092631.a76e79c5.randy.dunlap@oracle.com> <20090429185128.GN8633@ZenIV.linux.org.uk> <49F97DAF.2050605@panasas.com> <20090503183541.GX8633@ZenIV.linux.org.uk> <20090503190238.GZ8633@ZenIV.linux.org.uk>
+From: Dan Williams <dan.j.williams@gmail.com>
+Subject: Re: [PATCHSET] block,scsi,libata: implement alt_size
+Date: Mon, 4 May 2009 09:48:37 -0700
+Message-ID: <e9c3a7c20905040948m572e23dj1aa197dbd20ff037@mail.gmail.com>
+References: <1233456951-992-1-git-send-email-tj@kernel.org>
+	 <49F902CF.7080307@garzik.org> <49F903DD.8040707@kernel.org>
+	 <49FA0349.3090706@garzik.org>
+	 <e9c3a7c20904301415t621670a0l1bd64c7d74d369f@mail.gmail.com>
+	 <49FEA127.1000905@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:23388 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754509AbZEDQJn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 May 2009 12:09:43 -0400
-In-Reply-To: <20090503190238.GZ8633@ZenIV.linux.org.uk>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <49FEA127.1000905@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, Mauelshagen@redhat.com, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, linux-scsi@vger.kernel.org
 
-On 05/03/2009 10:02 PM, Al Viro wrote:
-> On Sun, May 03, 2009 at 07:35:41PM +0100, Al Viro wrote:
->> IDGI.  Why not simply do filp_open() and keep struct file * until the
->> end to pin the thing down?  And turn your function into
->> 	check that file->f_op is &osd_fops, if it isn't - ERR_PTR(-EINVAL),
->> if it is - &((...)file->private_data)->od 
->>
->> IOW, how about something like this (on top of previous patches)?
-> 
+On Mon, May 4, 2009 at 1:02 AM, Tejun Heo <tj@kernel.org> wrote:
+>> Couldn't the "fix" also just be a note to users to disable ignore_hp=
+a
+>> if they notice that there raid arrays are not assembling correctly?
+>
+> I don't know. =A0If it doesn't work automatically, the solution reall=
+y
+> isn't worth much. =A0People generally don't (shouldn't need to) have =
+any
+> idea what HPA is. =A0It basically boils down to "Linux doesn't suppor=
+t
+> RAID". =A0:-)
+>
+> Maybe we should just put this issue to the rest and strongly advise
+> people against BIOS raids.
 
-Thanks Al, very much. It is exactly what I was hoping for, but could not
-figure out for myself.
+That's a bit too far :-).  The real issue is that Linux is ignoring a
+property of the platform.  To me ignoring HPA is like ignoring an e820
+reserved memory region.  You might be able to get away with it
+sometimes, but other times it breaks.
 
-I will give it an hard testing ASAP, and will queue it for next kernel (2.6.31).
+However, in the end I think having 'alt_size' available is a useful
+mechanism for discovering and handling the ignore_hpa=3D1 case.   The
+policy about when to trust it can be left to userspace.
 
-Can I take the osd cleanup hunk form your patchset + Randy's fix and serialize them
-together with this through the scsi tree? (Together with the rest of the osd patches)
-Is your patchset dependent on the osd bit for removal of some code? If so then I'll
-send this patch through your tree so not to have conflicts in linux-next.
-
-Thanks again
-Boaz
-
-> diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
-> index 22b59e1..9fff4ca 100644
-> --- a/drivers/scsi/osd/osd_uld.c
-> +++ b/drivers/scsi/osd/osd_uld.c
-> @@ -173,68 +173,19 @@ static const struct file_operations osd_fops = {
->  	.unlocked_ioctl = osd_uld_ioctl,
->  };
->  
-> -struct osd_dev *osduld_path_lookup(const char *name)
-> +struct osd_dev *osduld_device(struct file *file)
->  {
-> -	struct path path;
-> -	struct inode *inode;
-> -	struct cdev *cdev;
-> -	struct osd_uld_device *uninitialized_var(oud);
-> -	int error;
-> -
-> -	if (!name || !*name) {
-> -		OSD_ERR("Mount with !path || !*path\n");
-> -		return ERR_PTR(-EINVAL);
-> -	}
-> -
-> -	error = kern_path(name, LOOKUP_FOLLOW, &path);
-> -	if (error) {
-> -		OSD_ERR("path_lookup of %s failed=>%d\n", name, error);
-> -		return ERR_PTR(error);
-> -	}
-> -
-> -	inode = path.dentry->d_inode;
-> -	error = -EINVAL; /* Not the right device e.g osd_uld_device */
-> -	if (!S_ISCHR(inode->i_mode)) {
-> -		OSD_DEBUG("!S_ISCHR()\n");
-> -		goto out;
-> -	}
-> -
-> -	cdev = inode->i_cdev;
-> -	if (!cdev) {
-> -		OSD_ERR("Before mounting an OSD Based filesystem\n");
-> -		OSD_ERR("  user-mode must open+close the %s device\n", name);
-> -		OSD_ERR("  Example: bash: echo < %s\n", name);
-> -		goto out;
-> -	}
-> +	struct osd_uld_device *oud;
->  
->  	/* The Magic wand. Is it our char-dev */
->  	/* TODO: Support sg devices */
-> -	if (cdev->owner != THIS_MODULE) {
-> -		OSD_ERR("Error mounting %s - is not an OSD device\n", name);
-> -		goto out;
-> -	}
-> -
-> -	oud = container_of(cdev, struct osd_uld_device, cdev);
-> -
-> -	__uld_get(oud);
-> -	error = 0;
-> -
-> -out:
-> -	path_put(&path);
-> -	return error ? ERR_PTR(error) : &oud->od;
-> -}
-> -EXPORT_SYMBOL(osduld_path_lookup);
-> -
-> -void osduld_put_device(struct osd_dev *od)
-> -{
-> -	if (od) {
-> -		struct osd_uld_device *oud = container_of(od,
-> -						struct osd_uld_device, od);
-> +	if (file->f_op != &osd_fops)
-> +		return ERR_PTR(-EINVAL);
->  
-> -		__uld_put(oud);
-> -	}
-> +	oud = file->private_data;
-> +	return &oud->od;
->  }
-> -EXPORT_SYMBOL(osduld_put_device);
-> +EXPORT_SYMBOL(osduld_device);
->  
->  /*
->   * Scsi Device operations
-> diff --git a/fs/exofs/exofs.h b/fs/exofs/exofs.h
-> index 0fd4c78..45e41f2 100644
-> --- a/fs/exofs/exofs.h
-> +++ b/fs/exofs/exofs.h
-> @@ -57,6 +57,7 @@
->   * our extension to the in-memory superblock
->   */
->  struct exofs_sb_info {
-> +	struct file	*s_file;		/* underlying file */
->  	struct osd_dev	*s_dev;			/* returned by get_osd_dev    */
->  	osd_id		s_pid;			/* partition ID of file system*/
->  	int		s_timeout;		/* timeout for OSD operations */
-> diff --git a/fs/exofs/super.c b/fs/exofs/super.c
-> index 3cdb761..c3fcb6d 100644
-> --- a/fs/exofs/super.c
-> +++ b/fs/exofs/super.c
-> @@ -35,9 +35,10 @@
->  
->  #include <linux/string.h>
->  #include <linux/parser.h>
-> -#include <linux/vfs.h>
-> +#include <linux/statfs.h>
->  #include <linux/random.h>
->  #include <linux/exportfs.h>
-> +#include <linux/file.h>
->  
->  #include "exofs.h"
->  
-> @@ -271,7 +272,7 @@ static void exofs_put_super(struct super_block *sb)
->  				  msecs_to_jiffies(100));
->  	}
->  
-> -	osduld_put_device(sbi->s_dev);
-> +	fput(sbi->s_file);
->  	kfree(sb->s_fs_info);
->  	sb->s_fs_info = NULL;
->  }
-> @@ -295,13 +296,15 @@ static int exofs_fill_super(struct super_block *sb, void *data, int silent)
->  	sb->s_fs_info = sbi;
->  
->  	/* use mount options to fill superblock */
-> -	sbi->s_dev = osduld_path_lookup(opts->dev_name);
-> -	if (IS_ERR(sbi->s_dev)) {
-> -		ret = PTR_ERR(sbi->s_dev);
-> -		sbi->s_dev = NULL;
-> +	sbi->s_file = filp_open(opts->dev_name, O_RDWR, 0);
-> +	ret = PTR_ERR(sbi->s_file);
-> +	if (IS_ERR(sbi->s_file))
->  		goto free_sbi;
-> -	}
->  
-> +	sbi->s_dev = osduld_device(sbi->s_file);
-> +	ret = PTR_ERR(sbi->s_dev);
-> +	if (IS_ERR(sbi->s_dev))
-> +		goto close_sbi;
->  	sbi->s_pid = opts->pid;
->  	sbi->s_timeout = opts->timeout;
->  
-> @@ -326,7 +329,7 @@ static int exofs_fill_super(struct super_block *sb, void *data, int silent)
->  			EXOFS_ERR(
->  			       "exofs_fill_super: osd_start_request failed.\n");
->  		ret = -ENOMEM;
-> -		goto free_sbi;
-> +		goto close_sbi;
->  	}
->  	ret = osd_req_read_kern(or, &obj, 0, &fscb, sizeof(fscb));
->  	if (unlikely(ret)) {
-> @@ -334,7 +337,7 @@ static int exofs_fill_super(struct super_block *sb, void *data, int silent)
->  			EXOFS_ERR(
->  			       "exofs_fill_super: osd_req_read_kern failed.\n");
->  		ret = -ENOMEM;
-> -		goto free_sbi;
-> +		goto close_sbi;
->  	}
->  
->  	ret = exofs_sync_op(or, sbi->s_timeout, sbi->s_cred);
-> @@ -342,7 +345,7 @@ static int exofs_fill_super(struct super_block *sb, void *data, int silent)
->  		if (!silent)
->  			EXOFS_ERR("exofs_fill_super: exofs_sync_op failed.\n");
->  		ret = -EIO;
-> -		goto free_sbi;
-> +		goto close_sbi;
->  	}
->  
->  	sb->s_magic = le16_to_cpu(fscb.s_magic);
-> @@ -354,7 +357,7 @@ static int exofs_fill_super(struct super_block *sb, void *data, int silent)
->  		if (!silent)
->  			EXOFS_ERR("ERROR: Bad magic value\n");
->  		ret = -EINVAL;
-> -		goto free_sbi;
-> +		goto close_sbi;
->  	}
->  
->  	/* start generation numbers from a random point */
-> @@ -368,14 +371,14 @@ static int exofs_fill_super(struct super_block *sb, void *data, int silent)
->  	if (IS_ERR(root)) {
->  		EXOFS_ERR("ERROR: exofs_iget failed\n");
->  		ret = PTR_ERR(root);
-> -		goto free_sbi;
-> +		goto close_sbi;
->  	}
->  	sb->s_root = d_alloc_root(root);
->  	if (!sb->s_root) {
->  		iput(root);
->  		EXOFS_ERR("ERROR: get root inode failed\n");
->  		ret = -ENOMEM;
-> -		goto free_sbi;
-> +		goto close_sbi;
->  	}
->  
->  	if (!S_ISDIR(root->i_mode)) {
-> @@ -384,7 +387,7 @@ static int exofs_fill_super(struct super_block *sb, void *data, int silent)
->  		EXOFS_ERR("ERROR: corrupt root inode (mode = %hd)\n",
->  		       root->i_mode);
->  		ret = -EINVAL;
-> -		goto free_sbi;
-> +		goto close_sbi;
->  	}
->  
->  	ret = 0;
-> @@ -393,8 +396,9 @@ out:
->  		osd_end_request(or);
->  	return ret;
->  
-> +close_sbi:
-> +	fput(sbi->s_file);
->  free_sbi:
-> -	osduld_put_device(sbi->s_dev); /* NULL safe */
->  	kfree(sbi);
->  	goto out;
->  }
-> diff --git a/include/scsi/osd_initiator.h b/include/scsi/osd_initiator.h
-> index b24d961..f9b6847 100644
-> --- a/include/scsi/osd_initiator.h
-> +++ b/include/scsi/osd_initiator.h
-> @@ -55,8 +55,8 @@ struct osd_dev {
->  };
->  
->  /* Retrieve/return osd_dev(s) for use by Kernel clients */
-> -struct osd_dev *osduld_path_lookup(const char *dev_name); /*Use IS_ERR/ERR_PTR*/
-> -void osduld_put_device(struct osd_dev *od);
-> +struct file;
-> +struct osd_dev *osduld_device(struct file *); /*Use IS_ERR/ERR_PTR*/
->  
->  /* Add/remove test ioctls from external modules */
->  typedef int (do_test_fn)(struct osd_dev *od, unsigned cmd, unsigned long arg);
-
+Thanks,
+Dan
