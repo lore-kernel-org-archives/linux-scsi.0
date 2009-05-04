@@ -1,72 +1,62 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 07/10] block: drop request->hard_* and *nr_sectors
-Date: Mon, 04 May 2009 14:06:29 +0900
-Message-ID: <49FE77D5.9040909@kernel.org>
-References: <1240996428-10159-1-git-send-email-tj@kernel.org> <1240996428-10159-8-git-send-email-tj@kernel.org> <49F9ABAE.60405@panasas.com>
+Subject: Re: [PATCHSET] block,scsi,libata: implement alt_size
+Date: Mon, 04 May 2009 17:02:47 +0900
+Message-ID: <49FEA127.1000905@kernel.org>
+References: <1233456951-992-1-git-send-email-tj@kernel.org>	
+	<49F902CF.7080307@garzik.org> <49F903DD.8040707@kernel.org>	
+	<49FA0349.3090706@garzik.org>
+	<e9c3a7c20904301415t621670a0l1bd64c7d74d369f@mail.gmail.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <49F9ABAE.60405@panasas.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, chirag.kantharia@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, jesper.juhl@gmail.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <e9c3a7c20904301415t621670a0l1bd64c7d74d369f@mail.gmail.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Dan Williams <dan.j.williams@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, Mauelshagen@redhat.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, jens.axboe@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
-Hello, Boaz.
-
-Boaz Harrosh wrote:
->> @@ -1926,8 +1892,25 @@ bool blk_update_request(struct request *req, int error, unsigned int nr_bytes)
->>  		bio_iovec(bio)->bv_len -= nr_bytes;
->>  	}
->>  
->> -	blk_recalc_rq_sectors(req, total_bytes >> 9);
->> +	req->data_len -= total_bytes;
->> +	req->buffer = bio_data(req->bio);
->> +
->> +	/* update sector only for requests with clear definition of sector */
->> +	if (blk_fs_request(req) || blk_discard_rq(req))
->> +		req->sector += total_bytes >> 9;
->> +
->> +	/*
->> +	 * If total number of sectors is less than the first segment
->> +	 * size, something has gone terribly wrong.
->> +	 */
->> +	if (blk_rq_bytes(req) < blk_rq_cur_bytes(req)) {
->> +		printk(KERN_ERR "blk: request botched\n");
->> +		req->data_len = blk_rq_cur_bytes(req);
->> +	}
+Dan Williams wrote:
+> On Thu, Apr 30, 2009 at 1:00 PM, Jeff Garzik <jeff@garzik.org> wrote:
+>> Tejun Heo wrote:
+>>> Hello,
+>>>
+>>> Jeff Garzik wrote:
+>>>> <shrug>  I suppose...
+>>>>
+>>>> It just seems like a nasty hack, but unfortunately I don't see
+>>>> anyone stepping up to do it properly -- with a DM device
+>>>> automatically layered on top that splits the device into separate
+>>>> regions: one block device for the 'regular' area, and one for the
+>>>> HPA.
+>>> Isn't that more hacky?  I don't know.  All that dm needs to know is
+>>> the location of the metadata which is located w.r.t. the end of the
+>>> device which might be at a different location if BIOS tried to pull
+>>> silly stunts.  So, exporting the size BIOS might have used seems like
+>>> a straight forward solution to me.
+>> "<shrug> I suppose" is basically a reluctant ack, in the absence of other
+>> solutions :)
+>>
 > 
-> What happens in the last bio/segment?
+> Couldn't the "fix" also just be a note to users to disable ignore_hpa
+> if they notice that there raid arrays are not assembling correctly?
 
-Can you please elaborate a bit?  Nothing really changes for the last
-bio/segment.
+I don't know.  If it doesn't work automatically, the solution really
+isn't worth much.  People generally don't (shouldn't need to) have any
+idea what HPA is.  It basically boils down to "Linux doesn't support
+RAID".  :-)
 
-> Is it not allowed with block_pc commands that blk_rq_bytes(req) (was
-> data_len) be smaller then sum_bytes(bio-chain)?
-
-Well, before, it wasn't well defined.  For PC requests w/o bio, any
-completion was full completion which isn't exactly data_len being
-allowed to be shorter than actual data length but more like data_len
-being completely ignored.  If a PC request has bio, the request should
-be completed with full bio data length.  After recent changes, all PC
-requests use bio and thus should fully complete the PC requests and
-this patch doesn't change anything about that.
-
-> Also I never understood the drain is it not appended to the last
-> bio? I thought it is costumery in the Kernel to allow mapping longer
-> then actual length?
-
-drain is implemented in slightly hacky way.  All that's guaranteed is
-extra room in the mapped sgl.  bio never sees it.
-
-> Maybe you would want blk_rq_cur_bytes(req) to return the minimum of
-> the two, and let bio's be longer then bytes requested. (ie. reverse
-> above logic)
-
-No, blk_rq_bytes() == sum of bio_rq_cur_bytes() of all bios in the
-request and must NEVER be shorter than bio_rq_cur_bytes() by
-definition.
+Maybe we should just put this issue to the rest and strongly advise
+people against BIOS raids.
 
 Thanks.
 
