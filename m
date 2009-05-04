@@ -1,91 +1,67 @@
-From: "Kleber S. Souza" <klebers@linux.vnet.ibm.com>
-Subject: Re: [PATCH] ipr: RESEND: fix PCI permanent error handler
-Date: Mon, 04 May 2009 10:41:02 -0300
-Message-ID: <1241444469.8515.21.camel@zeppelin.austin.ibm.com>
-References: <1240246790.7458.112.camel@zeppelin.austin.ibm.com>
-	 <1240258429.3315.60.camel@mulgrave.int.hansenpartnership.com>
-	 <49ECD89D.3000005@linux.vnet.ibm.com>
-	 <1240846712.3387.18.camel@mulgrave.int.hansenpartnership.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 04/11] block: implement blk_rq_pos/[cur_]sectors() and
+ convert obvious ones
+Date: Mon, 04 May 2009 17:45:24 +0400
+Message-ID: <49FEF174.6040505@ru.mvista.com>
+References: <1241423927-11871-1-git-send-email-tj@kernel.org> <1241423927-11871-5-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e24smtp04.br.ibm.com ([32.104.18.25]:52379 "EHLO
-	e24smtp04.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751286AbZEDNmB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 May 2009 09:42:01 -0400
-Received: from mailhub3.br.ibm.com (mailhub3.br.ibm.com [9.18.232.110])
-	by e24smtp04.br.ibm.com (8.13.1/8.13.1) with ESMTP id n44DfuW2016157
-	for <linux-scsi@vger.kernel.org>; Mon, 4 May 2009 10:41:56 -0300
-Received: from d24av02.br.ibm.com (d24av02.br.ibm.com [9.18.232.47])
-	by mailhub3.br.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n44DgMx32142232
-	for <linux-scsi@vger.kernel.org>; Mon, 4 May 2009 10:42:22 -0300
-Received: from d24av02.br.ibm.com (loopback [127.0.0.1])
-	by d24av02.br.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n44DfwTx025387
-	for <linux-scsi@vger.kernel.org>; Mon, 4 May 2009 10:41:58 -0300
-In-Reply-To: <1240846712.3387.18.camel@mulgrave.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1241423927-11871-5-git-send-email-tj@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, mike.miller@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, bharrosh@panasas.com
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, 2009-04-27 at 15:38 +0000, James Bottomley wrote:
-> On Mon, 2009-04-20 at 15:18 -0500, Brian King wrote:
-> > Kleber found the problem, debugged it, and provided a fix to me.
-> > I provided him with an alternate patch to fix it. I'm assuming this
-> > should have been handled by me submitting with my signoff alone and
-> > adding a reported-by tag for Kleber. Sorry for the confusion. Shall
-> > I resend as I just described?
-> 
-> The original patch has the tabs replaced by spaces problem, so an
-> applyable patch correctly attributed would be appreciated.
-> 
-> James
-> 
-> 
+Tejun Heo wrote:
 
-Sending the patch again, now with tabs.
+> Implement accessors - blk_rq_pos(), blk_rq_sectors() and
+> blk_rq_cur_sectors() which return rq->sector, rq->hard_nr_sectors and
 
-Kleber
+    Well, blk_rq_pos() returns rq->hard_sector, not rq->sector, doesn't it?
 
+> rq->hard_cur_sectors respectively and convert direct references of the
+> said fields to the accessors.
 
+> This is in preparation of request data length handling cleanup.
 
-The ipr driver can hang if it encounters enough PCI errors
-to trigger the permanent error handler. The driver will attempt
-to initiate a "bringdown" of the adapter and fail all pending
-ops back. However, this bringdown is unlike any other bringdown
-of the adapter in the code as the driver. In this code path we
-end up failing back ops with allow_cmds still set to 1. This results
-in some commands, the HCAM commands in particular, getting immediately
-re-issued to the adapter on the done call, which results in
-an infinite loop in ipr_fail_all_ops. Fix this by setting allow_cmds
-to zero in this path. 
+> const added to struct request * parameter to accessors as suggested by
+> Geert Uytterhoeven.
 
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
-Signed-off-by: Kleber S. Souza <klebers@linux.vnet.ibm.com>
----
- drivers/scsi/ipr.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+> [ Impact: cleanup ]
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index dd689de..d640359 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -7003,6 +7003,7 @@ static void ipr_pci_perm_failure(struct pci_dev
-*pdev)
- 		ioa_cfg->sdt_state = ABORT_DUMP;
- 	ioa_cfg->reset_retries = IPR_NUM_RESET_RELOAD_RETRIES;
- 	ioa_cfg->in_ioa_bringdown = 1;
-+	ioa_cfg->allow_cmds = 0;
- 	ipr_initiate_ioa_reset(ioa_cfg, IPR_SHUTDOWN_NONE);
- 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, flags);
- }
--- 
-1.6.0.6
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Acked-by: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+> Acked-by: Stephen Rothwell <sfr@canb.auug.org.au>
+> Tested-by: Grant Likely <grant.likely@secretlab.ca>
+> Acked-by: Grant Likely <grant.likely@secretlab.ca>
 
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 7ab93d9..b921d91 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -833,13 +833,30 @@ static inline void blk_run_address_space(struct address_space *mapping)
+>  extern void blkdev_dequeue_request(struct request *req);
+>  
+>  /*
+> - * blk_end_request() takes bytes instead of sectors as a complete size.
+> - * blk_rq_bytes() returns bytes left to complete in the entire request.
+> - * blk_rq_cur_bytes() returns bytes left to complete in the current segment.
+> + * blk_rq_pos()		: the current sector
+> + * blk_rq_bytes()	: bytes left in the entire request
+> + * blk_rq_cur_bytes()	: bytes left in the current segment
+> + * blk_rq_sectors()	: sectors left in the entire request
+> + * blk_rq_cur_sectors()	: sectors left in the current segment
+>   */
+> +static inline sector_t blk_rq_pos(const struct request *rq)
+> +{
+> +	return rq->hard_sector;
+> +}
+> +
 
--- 
-Kleber S. Souza
-IBM Linux Technology Center
+[...]
 
+MBR, Sergei
