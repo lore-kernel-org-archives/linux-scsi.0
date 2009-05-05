@@ -1,33 +1,96 @@
-From: Dan Williams <dan.j.williams@gmail.com>
-Subject: Re: [PATCHSET] block,scsi,libata: implement alt_size
-Date: Tue, 5 May 2009 08:34:21 -0700
-Message-ID: <e9c3a7c20905050834t79a1c03dt83df288b2f38ed76@mail.gmail.com>
-References: <1233456951-992-1-git-send-email-tj@kernel.org>
-	 <49F902CF.7080307@garzik.org> <49F903DD.8040707@kernel.org>
-	 <49FA0349.3090706@garzik.org>
-	 <e9c3a7c20904301415t621670a0l1bd64c7d74d369f@mail.gmail.com>
-	 <49FEA127.1000905@kernel.org>
-	 <e9c3a7c20905040948m572e23dj1aa197dbd20ff037@mail.gmail.com>
-	 <49FFB275.7000507@kernel.org>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [PATCH 1/5] initdev:kernel: Asynchronously-discovered device
+ synchronization, v5
+Date: Tue, 5 May 2009 23:47:25 +0800
+Message-ID: <20090505234725.5ab247db@linux-lm>
+References: <20090504074522.13f1ed77@infradead.org>
+	<Pine.LNX.4.44L0.0905041100500.3092-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <49FFB275.7000507@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, Mauelshagen@redhat.com, dm-devel@redhat.com
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from wf-out-1314.google.com ([209.85.200.175]:7821 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751975AbZEEPrj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 May 2009 11:47:39 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0905041100500.3092-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Arjan van de Ven <arjan@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, David VomLehn <dvomlehn@cisco.com>, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-usb@vger.kernel.org, greg@kroah.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
 
-On Mon, May 4, 2009 at 8:28 PM, Tejun Heo <tj@kernel.org> wrote:
-> Pushing this in the kernel without updating dm-raid is kind of
-> pointless. =A0Who should I be poking to get the userland part moving?
+On Mon, 4 May 2009 11:07:52 -0400 (EDT)
+Alan Stern <stern@rowland.harvard.edu> wrote:
 
-Dmraid is not the only potential user.  Mdadm will also care about
-this as I have seen a report that points to a user having what looks
-like an HPA issue with an Intel(R) Matrix array.  So, there are two
-immediate users for this interface.  Heinz is the right person to poke
-for dmraid updates.  I'll handle the mdadm update.
+> On Mon, 4 May 2009, Arjan van de Ven wrote:
+> 
+> > > > for normal device probing we already have infrastructure
+> > > > though... wait_for_device_probe, driver_probe_done and
+> > > > friends... (the scsi scanning thread is being converted to the
+> > > > async infrastructure btw)
+> > > > 
+> > > > do we need to invent more ?
+> > > 
+> > > I suppose the usb-storage scanning thread could also be converted
+> > > to the async infrastructure, although I haven't heard of anybody
+> > > working on it.
+> > > 
+> > > But the USB hub driver's thread (khubd) cannot be converted.  It
+> > > is central to the discovery of USB-based block devices.  How
+> > > would you handle that?
+> > 
+> > take a ref in the driver_probe_done() sense, and release it when you
+> > know you're done probing....
+> > 
+> > at that point all existing infrastructure will just work.
+> 
+> Isn't there still something missing?  The wait_for_device_probe()  
+> routine would wait until all attached devices had been probed.  But
+> why should prepare_namespace() have to wait that long?  Wouldn't it be
+> better to wait only until the root device has been registered?
 
-Thanks,
-Dan
+Yes, maybe David should merge the following patch into the patch
+No.5(initdev:kernel: USB and SCSI block init device notification, v3).
+
+Right?
+
+diff --git a/init/do_mounts.c b/init/do_mounts.c
+index dd7ee5f..22fd773 100644
+--- a/init/do_mounts.c
++++ b/init/do_mounts.c
+@@ -358,6 +358,12 @@ void __init mount_root(void)
+ #endif
+ }
+ 
++static int root_dev_done()
++{
++	return !!(ROOT_DEV = name_to_dev_t(saved_root_name));
++}
++
++
+ /*
+  * Prepare the namespace - decide what/where to mount, load ramdisks,
+etc. */
+@@ -398,12 +404,12 @@ void __init prepare_namespace(void)
+ 		goto out;
+ 
+ 	/* wait for any asynchronous scanning to complete */
+-	if ((ROOT_DEV == 0) && root_wait) {
++	if (ROOT_DEV == 0 && root_wait) {
+ 		printk(KERN_INFO "Waiting for root device %s...\n",
+ 			saved_root_name);
+-		while (driver_probe_done() != 0 ||
+-			(ROOT_DEV = name_to_dev_t(saved_root_name)) ==
+0)
+-			msleep(100);
++		do {
++			initdev_wait(BOOTDEV_BLOCK, root_dev_done);
++		} while (!ROOT_DEV);
+ 		async_synchronize_full();
+ 	}
+ 
+
+
+
+-- 
+Lei Ming
