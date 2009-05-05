@@ -1,43 +1,50 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: drivers/scsi/st.c:2967: warning: suggest parentheses around operand
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: drivers/scsi/st.c:2967: warning: suggest parentheses around operand
 	of '!' or change '|' to '||' or '!' to '~'
-Date: Tue, 5 May 2009 09:51:38 +0200
-Message-ID: <10f740e80905050051q37524c4dv5d33b501b704b3b0@mail.gmail.com>
+Date: Tue, 5 May 2009 10:38:10 +0200
+Message-ID: <18943.64242.208899.90833@pilspetsen.it.uu.se>
+References: <10f740e80905050051q37524c4dv5d33b501b704b3b0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f224.google.com ([209.85.219.224]:35913 "EHLO
-	mail-ew0-f224.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754482AbZEEHvj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 May 2009 03:51:39 -0400
+Received: from aun.it.uu.se ([130.238.12.36]:51030 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758520AbZEEIiV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 May 2009 04:38:21 -0400
+In-Reply-To: <10f740e80905050051q37524c4dv5d33b501b704b3b0@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-drivers/scsi/st.c:2967: warning: suggest parentheses around operand of
-'!' or change '|' to '||' or '!' to '~'
+Geert Uytterhoeven writes:
+ > drivers/scsi/st.c:2967: warning: suggest parentheses around operand of
+ > '!' or change '|' to '||' or '!' to '~'
+ > 
+ >         if (cmdstatp->sense_hdr.sense_key == ILLEGAL_REQUEST &&
+ >             !(STp->use_pf & PF_TESTED)) {
+ >                 /* Try the other possible state of Page Format if not
+ >                    already tried */
+ >                 STp->use_pf = !STp->use_pf | PF_TESTED;
+ >                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ >                 st_release_request(SRpnt);
+ >                 SRpnt = NULL;
+ >                 return st_int_ioctl(STp, cmd_in, arg);
+ >         }
+ > 
+ > Looks indeed incorrect to me...
 
-        if (cmdstatp->sense_hdr.sense_key == ILLEGAL_REQUEST &&
-            !(STp->use_pf & PF_TESTED)) {
-                /* Try the other possible state of Page Format if not
-                   already tried */
-                STp->use_pf = !STp->use_pf | PF_TESTED;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-                st_release_request(SRpnt);
-                SRpnt = NULL;
-                return st_int_ioctl(STp, cmd_in, arg);
-        }
+I noticed that too yesterday. I believe the intention is
 
-Looks indeed incorrect to me...
+	STp->use_pf = (!STp->use_pf) | PF_TESTED;
 
-Gr{oetje,eeting}s,
+which in this case (PF_TESTED is clear) is the same as
 
-						Geert
+	STp->use_pf = (STp->use_pf ^ USE_PF) | PF_TESTED;
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+which matches the comment, or
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+	STp->use_pf ^= (USE_PF | PF_TESTED);
+
+if you want to micro-optimize.
