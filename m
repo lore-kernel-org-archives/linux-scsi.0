@@ -1,77 +1,38 @@
-From: Greg Kroah-Hartman <gregkh@suse.de>
-Subject: [PATCH] ibmvscsi: gadget: at91_udc: remove driver_data direct
-	access of struct device
-Date: Mon, 4 May 2009 12:59:44 -0700
-Message-ID: <20090504195944.GA22706@kroah.com>
+From: David VomLehn <dvomlehn@cisco.com>
+Subject: Re: [PATCH 3/5] initdev:kernel: Await console discovery, v5
+Date: Mon, 4 May 2009 17:17:56 -0700
+Message-ID: <20090505001756.GB29124@cuplxvomd02.corp.sa.net>
+References: <20090502022756.GA15838@cuplxvomd02.corp.sa.net> <20090502113825.11bc7876@linux-lm>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:56010 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753803AbZEDUFE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 May 2009 16:05:04 -0400
+Received: from sj-iport-1.cisco.com ([171.71.176.70]:3194 "EHLO
+	sj-iport-1.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751491AbZEEARz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 May 2009 20:17:55 -0400
 Content-Disposition: inline
+In-Reply-To: <20090502113825.11bc7876@linux-lm>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Brian King <brking@linux.vnet.ibm.com>, Robert Jennings <rcj@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-usb@vger.kernel.org, greg@kroah.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, arjan@infradead.org
 
-From: Greg Kroah-Hartman <gregkh@suse.de>
+On Fri, May 01, 2009 at 11:38:25PM -0400, Ming Lei wrote:
+> On Fri, 1 May 2009 19:27:56 -0700
+> David VomLehn <dvomlehn@cisco.com> wrote:
+...
+> > diff --git a/drivers/accessibility/braille/braille_console.c
+> > b/drivers/accessibility/braille/braille_console.c index
+> > d672cfe..4420ac3 100644 ---
+> > +
+> > +	initdev_register(BOOTDEV_CONSOLE);
+> 
+> Should it be initdev_registered(BOOTDEV_CONSOLE)?
 
-In the near future, the driver core is going to not allow direct access
-to the driver_data pointer in struct device.  Instead, the functions
-dev_get_drvdata() and dev_set_drvdata() should be used.  These functions
-have been around since the beginning, so are backwards compatible with
-all older kernel versions.
+Yes.
 
-Cc: linux-scsi@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>
-Cc: Robert Jennings <rcj@linux.vnet.ibm.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+> Lei Ming
 
----
- drivers/scsi/ibmvscsi/ibmvscsi.c |    6 +++---
- drivers/scsi/ibmvscsi/ibmvstgt.c |    2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+Thanks!
 
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -1657,7 +1657,7 @@ static int ibmvscsi_probe(struct vio_dev
- 	unsigned long wait_switch = 0;
- 	int rc;
- 
--	vdev->dev.driver_data = NULL;
-+	dev_set_drvdata(&vdev->dev, NULL);
- 
- 	host = scsi_host_alloc(&driver_template, sizeof(*hostdata));
- 	if (!host) {
-@@ -1723,7 +1723,7 @@ static int ibmvscsi_probe(struct vio_dev
- 			scsi_scan_host(host);
- 	}
- 
--	vdev->dev.driver_data = hostdata;
-+	dev_set_drvdata(&vdev->dev, hostdata);
- 	return 0;
- 
-       add_srp_port_failed:
-@@ -1740,7 +1740,7 @@ static int ibmvscsi_probe(struct vio_dev
- 
- static int ibmvscsi_remove(struct vio_dev *vdev)
- {
--	struct ibmvscsi_host_data *hostdata = vdev->dev.driver_data;
-+	struct ibmvscsi_host_data *hostdata = dev_get_drvdata(&vdev->dev);
- 	release_event_pool(&hostdata->pool, hostdata);
- 	ibmvscsi_ops->release_crq_queue(&hostdata->queue, hostdata,
- 					max_events);
---- a/drivers/scsi/ibmvscsi/ibmvstgt.c
-+++ b/drivers/scsi/ibmvscsi/ibmvstgt.c
-@@ -892,7 +892,7 @@ free_vport:
- 
- static int ibmvstgt_remove(struct vio_dev *dev)
- {
--	struct srp_target *target = (struct srp_target *) dev->dev.driver_data;
-+	struct srp_target *target = dev_get_drvdata(&dev->dev);
- 	struct Scsi_Host *shost = target->shost;
- 	struct vio_port *vport = target->ldata;
- 
+David VomLehn
