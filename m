@@ -1,35 +1,54 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [GIT PATCH] block,scsi,ide: unify sector and data_len, take#2
-Date: Tue, 05 May 2009 12:59:58 +0900
-Message-ID: <49FFB9BE.1090709@gmail.com>
-References: <1241423927-11871-1-git-send-email-tj@kernel.org>
+From: Ming Lei <tom.leiming-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 5/5] initdev:kernel: USB and SCSI block init device
+	notification, v3
+Date: Tue, 5 May 2009 12:05:19 +0800
+Message-ID: <d82e647a0905042105g7639fc84g736668c371c40053@mail.gmail.com>
+References: <20090502023000.GA16076@cuplxvomd02.corp.sa.net>
+	 <20090502115539.396206bc@linux-lm>
+	 <20090505001950.GC29124@cuplxvomd02.corp.sa.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1241423927-11871-1-git-send-email-tj@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petko
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20090505001950.GC29124-CFZJ1or75eBPWxJt6d6B6bQa8qPdvLwY@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David VomLehn <dvomlehn-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arjan-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+2009/5/5 David VomLehn <dvomlehn-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>:
+> On Fri, May 01, 2009 at 11:55:39PM -0400, Ming Lei wrote:
+>> On Fri, 1 May 2009 19:30:00 -0700
+>> David VomLehn <dvomlehn-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org> wrote:
+>>
+>> > From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org
+>> > diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+>> > index 6f51ca4..735b061 100644
+>> > --- a/drivers/scsi/scsi_scan.c
+>> > +++ b/drivers/scsi/scsi_scan.c
+> ...
+>> > @@ -1834,6 +1834,7 @@ static int do_scan_async(void *_data)
+>> > =A0 =A0 struct async_scan_data *data =3D _data;
+>> > =A0 =A0 do_scsi_scan_host(data->shost);
+>> > =A0 =A0 scsi_finish_async_scan(data);
+>> > + =A0 initdev_probe_done(BOOTDEV_BLOCK_MASK);
+>>
+>> Which code are waiting for the block device's probe done?
+>
+> None yet. That remains to be done.
+>
 
-Tejun Heo wrote:
-> Upon ack, please pull from the following git tree.
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git block-unify-sector-and-data_len
+Would you mind submitting  the code path of waitting for probe done to =
+allow a
+intact review?  Without the waitting code, it is a a little difficult
+to undersand or verify
+your patch, IMHO.
 
-git tree has been updated as per comments.
+Thanks
 
-* Acked-by:'s added.
-
-* Too early blk_rq_bytes() conversion in ide-tape pushed to later
-  patch.
-
-Both changes are minor and don't make any difference to the final
-result.  The new commit is f7ff5f0d7cda0b0da5e7de36dd97ff75412bbe16.
-
-Thanks.
-
--- 
-tejun
+--=20
+Lei Ming
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
