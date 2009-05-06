@@ -1,16 +1,17 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 6/8] fcoe: removes fcoe_watchdog
-Date: Wed, 06 May 2009 10:52:40 -0700
-Message-ID: <20090506175240.26695.34712.stgit@fritz>
+Subject: [PATCH 5/8] fcoe: reduces lock cost when adding a new skb to
+	fcoe_pending_queue
+Date: Wed, 06 May 2009 10:52:34 -0700
+Message-ID: <20090506175234.26695.38431.stgit@fritz>
 References: <20090506175206.26695.19457.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:34266 "EHLO mga01.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:33710 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755524AbZEFRwq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 May 2009 13:52:46 -0400
+	id S1752907AbZEFRwg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 May 2009 13:52:36 -0400
 In-Reply-To: <20090506175206.26695.19457.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,149 +20,114 @@ Cc: Vasu Dev <vasu.dev@intel.com>
 
 From: Vasu Dev <vasu.dev@intel.com>
 
-Removes periodic fcoe_watchdog timer used across all fcoe interface
-maintained in fcoe_hostlist instead added new fcoe_queue_timer
-per fcoe interface.
+Currently fcoe_pending_queue.lock held twice for every new skb
+adding to this queue when already least one pkt is pending in this
+queue and that is not uncommon once skb pkts starts getting queued
+here upon fcoe_start_io => dev_queue_xmit failure.
 
-Added timer is armed only when some pending skb need to be flushed
-as oppose to periodic 1 second fcoe_watchdog, since now
-fcoe_queue_timer is used on demand thus set this to 2 jiffies.
+This patch moves most fcoe_pending_queue logic to fcoe_check_wait_queue
+function, this new logic grabs fcoe_pending_queue.lock only once to
+add a new skb instead twice as used to be.
 
-Now fcoe_queue_timer is much simple than fcoe_watchdog using lock to
-process all fcoe interface from fcoe_hostlist.
-
-I noticed +ve performance result with using 2 jiffies timer as
-this helps flushing fcoe_pending_queue quickly.
+I think after this patch call flow around fcoe_check_wait_queue
+calling in fcoe_xmit is bit simplified with modified
+fcoe_check_wait_queue function taking care of adding and
+removing pending skb in one function.
 
 Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 ---
 
- drivers/scsi/fcoe/fcoe.c |   52 ++++++++++++++++------------------------------
- drivers/scsi/fcoe/fcoe.h |    1 +
- 2 files changed, 19 insertions(+), 34 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |   37 +++++++++++++++----------------------
+ 1 files changed, 15 insertions(+), 22 deletions(-)
 
 diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 7d44a49..cf62e99 100644
+index 03e1926..7d44a49 100644
 --- a/drivers/scsi/fcoe/fcoe.c
 +++ b/drivers/scsi/fcoe/fcoe.c
-@@ -54,7 +54,6 @@ MODULE_LICENSE("GPL v2");
- /* fcoe host list */
- LIST_HEAD(fcoe_hostlist);
- DEFINE_RWLOCK(fcoe_hostlist_lock);
--DEFINE_TIMER(fcoe_timer, NULL, 0, 0);
- DEFINE_PER_CPU(struct fcoe_percpu_s, fcoe_percpu);
+@@ -71,7 +71,7 @@ static struct fc_lport *fcoe_hostlist_lookup(const struct net_device *);
+ static int fcoe_hostlist_add(const struct fc_lport *);
+ static int fcoe_hostlist_remove(const struct fc_lport *);
  
- /* Function Prototypes */
-@@ -167,6 +166,18 @@ static int fcoe_lport_config(struct fc_lport *lp)
- }
- 
- /**
-+ * fcoe_queue_timer() - fcoe queue timer
-+ * @lp: the fc_lport pointer
-+ *
-+ * Calls fcoe_check_wait_queue on timeout
-+ *
-+ */
-+static void fcoe_queue_timer(ulong lp)
-+{
-+	fcoe_check_wait_queue((struct fc_lport *)lp, NULL);
-+}
-+
-+/**
-  * fcoe_netdev_config() - Set up netdev for SW FCoE
-  * @lp : ptr to the fc_lport
-  * @netdev : ptr to the associated netdevice struct
-@@ -236,6 +247,7 @@ static int fcoe_netdev_config(struct fc_lport *lp, struct net_device *netdev)
- 	}
- 	skb_queue_head_init(&fc->fcoe_pending_queue);
- 	fc->fcoe_pending_queue_active = 0;
-+	setup_timer(&fc->timer, fcoe_queue_timer, (unsigned long)lp);
- 
- 	/* setup Source Mac Address */
- 	memcpy(fc->ctlr.ctl_src_addr, fc->real_dev->dev_addr,
-@@ -386,6 +398,9 @@ static int fcoe_if_destroy(struct net_device *netdev)
- 	/* Free existing skbs */
- 	fcoe_clean_pending_queue(lp);
- 
-+	/* Stop the timer */
-+	del_timer_sync(&fc->timer);
-+
- 	/* Free memory used by statistical counters */
- 	fc_lport_free_stats(lp);
- 
-@@ -1259,32 +1274,6 @@ int fcoe_percpu_receive_thread(void *arg)
- }
- 
- /**
-- * fcoe_watchdog() - fcoe timer callback
-- * @vp:
-- *
-- * This checks the pending queue length for fcoe and set lport qfull
-- * if the FCOE_MAX_QUEUE_DEPTH is reached. This is done for all fc_lport on the
-- * fcoe_hostlist.
-- *
-- * Returns: 0 for success
-- */
--void fcoe_watchdog(ulong vp)
--{
--	struct fcoe_softc *fc;
+-static int fcoe_check_wait_queue(struct fc_lport *);
++static void fcoe_check_wait_queue(struct fc_lport *, struct sk_buff *);
+ static int fcoe_device_notification(struct notifier_block *, ulong, void *);
+ static void fcoe_dev_setup(void);
+ static void fcoe_dev_cleanup(void);
+@@ -988,7 +988,7 @@ u32 fcoe_fc_crc(struct fc_frame *fp)
+  */
+ int fcoe_xmit(struct fc_lport *lp, struct fc_frame *fp)
+ {
+-	int wlen, rc = 0;
++	int wlen;
+ 	u32 crc;
+ 	struct ethhdr *eh;
+ 	struct fcoe_crc_eof *cp;
+@@ -1107,18 +1107,9 @@ int fcoe_xmit(struct fc_lport *lp, struct fc_frame *fp)
+ 	/* send down to lld */
+ 	fr_dev(fp) = lp;
+ 	if (fc->fcoe_pending_queue.qlen)
+-		rc = fcoe_check_wait_queue(lp);
 -
--	read_lock(&fcoe_hostlist_lock);
--	list_for_each_entry(fc, &fcoe_hostlist, list) {
--		if (fc->ctlr.lp)
--			fcoe_check_wait_queue(fc->ctlr.lp, NULL);
+-	if (rc == 0)
+-		rc = fcoe_start_io(skb);
+-
+-	if (rc) {
+-		spin_lock_bh(&fc->fcoe_pending_queue.lock);
+-		__skb_queue_tail(&fc->fcoe_pending_queue, skb);
+-		spin_unlock_bh(&fc->fcoe_pending_queue.lock);
+-		if (fc->fcoe_pending_queue.qlen > FCOE_MAX_QUEUE_DEPTH)
+-			lp->qfull = 1;
 -	}
--	read_unlock(&fcoe_hostlist_lock);
--
--	fcoe_timer.expires = jiffies + (1 * HZ);
--	add_timer(&fcoe_timer);
--}
--
--
--/**
-  * fcoe_check_wait_queue() - attempt to clear the transmit backlog
-  * @lp: the fc_lport
-  *
-@@ -1332,6 +1321,8 @@ static void fcoe_check_wait_queue(struct fc_lport *lp, struct sk_buff *skb)
- 
- 	if (fc->fcoe_pending_queue.qlen < FCOE_LOW_QUEUE_DEPTH)
- 		lp->qfull = 0;
-+	if (fc->fcoe_pending_queue.qlen && !timer_pending(&fc->timer))
-+		mod_timer(&fc->timer, jiffies + 2);
- 	fc->fcoe_pending_queue_active = 0;
- out:
- 	if (fc->fcoe_pending_queue.qlen > FCOE_MAX_QUEUE_DEPTH)
-@@ -1808,10 +1799,6 @@ static int __init fcoe_init(void)
- 	/* Setup link change notification */
- 	fcoe_dev_setup();
- 
--	setup_timer(&fcoe_timer, fcoe_watchdog, 0);
--
--	mod_timer(&fcoe_timer, jiffies + (10 * HZ));
--
- 	fcoe_if_init();
++		fcoe_check_wait_queue(lp, skb);
++	else if (fcoe_start_io(skb))
++		fcoe_check_wait_queue(lp, skb);
  
  	return 0;
-@@ -1837,9 +1824,6 @@ static void __exit fcoe_exit(void)
+ }
+@@ -1284,7 +1275,7 @@ void fcoe_watchdog(ulong vp)
+ 	read_lock(&fcoe_hostlist_lock);
+ 	list_for_each_entry(fc, &fcoe_hostlist, list) {
+ 		if (fc->ctlr.lp)
+-			fcoe_check_wait_queue(fc->ctlr.lp);
++			fcoe_check_wait_queue(fc->ctlr.lp, NULL);
+ 	}
+ 	read_unlock(&fcoe_hostlist_lock);
  
- 	fcoe_dev_cleanup();
+@@ -1305,16 +1296,17 @@ void fcoe_watchdog(ulong vp)
+  * The wait_queue is used when the skb transmit fails. skb will go
+  * in the wait_queue which will be emptied by the timer function or
+  * by the next skb transmit.
+- *
+- * Returns: 0 for success
+  */
+-static int fcoe_check_wait_queue(struct fc_lport *lp)
++static void fcoe_check_wait_queue(struct fc_lport *lp, struct sk_buff *skb)
+ {
+ 	struct fcoe_softc *fc = lport_priv(lp);
+-	struct sk_buff *skb;
+-	int rc = -1;
++	int rc;
  
--	/* Stop the timer */
--	del_timer_sync(&fcoe_timer);
--
- 	/* releases the associated fcoe hosts */
- 	list_for_each_entry_safe(fc, tmp, &fcoe_hostlist, list)
- 		fcoe_if_destroy(fc->real_dev);
-diff --git a/drivers/scsi/fcoe/fcoe.h b/drivers/scsi/fcoe/fcoe.h
-index 917aae8..a1eb8c1 100644
---- a/drivers/scsi/fcoe/fcoe.h
-+++ b/drivers/scsi/fcoe/fcoe.h
-@@ -61,6 +61,7 @@ struct fcoe_softc {
- 	struct packet_type  fip_packet_type;
- 	struct sk_buff_head fcoe_pending_queue;
- 	u8	fcoe_pending_queue_active;
-+	struct timer_list timer;		/* queue timer */
- 	struct fcoe_ctlr ctlr;
- };
+ 	spin_lock_bh(&fc->fcoe_pending_queue.lock);
++
++	if (skb)
++		__skb_queue_tail(&fc->fcoe_pending_queue, skb);
++
+ 	if (fc->fcoe_pending_queue_active)
+ 		goto out;
+ 	fc->fcoe_pending_queue_active = 1;
+@@ -1341,10 +1333,11 @@ static int fcoe_check_wait_queue(struct fc_lport *lp)
+ 	if (fc->fcoe_pending_queue.qlen < FCOE_LOW_QUEUE_DEPTH)
+ 		lp->qfull = 0;
+ 	fc->fcoe_pending_queue_active = 0;
+-	rc = fc->fcoe_pending_queue.qlen;
+ out:
++	if (fc->fcoe_pending_queue.qlen > FCOE_MAX_QUEUE_DEPTH)
++		lp->qfull = 1;
+ 	spin_unlock_bh(&fc->fcoe_pending_queue.lock);
+-	return rc;
++	return;
+ }
  
+ /**
 
