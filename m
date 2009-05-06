@@ -1,67 +1,100 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH] Invalid request_limit unnoticed?
-Date: Wed, 06 May 2009 16:24:18 -0500
-Message-ID: <4A020002.6020109@linux.vnet.ibm.com>
-References: <49FCA9BE.3030408@gmail.com>
+From: "Karen Xie" <kxie@chelsio.com>
+Subject: RE: [PATCH 4/4] bnx2i: Add bnx2i iSCSI driver.
+Date: Wed, 6 May 2009 16:02:17 -0700
+Message-ID: <8A71B368A89016469F72CD08050AD33405483CFC@maui.asicdesigners.com>
+References: <1241208039-6813-1-git-send-email-mchan@broadcom.com> <1241208039-6813-5-git-send-email-mchan@broadcom.com> <4A01BF6A.90707@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e38.co.us.ibm.com ([32.97.110.159]:57540 "EHLO
-	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761002AbZEFVYZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 May 2009 17:24:25 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e38.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n46LLmmG025565
-	for <linux-scsi@vger.kernel.org>; Wed, 6 May 2009 15:21:48 -0600
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n46LOPYg239010
-	for <linux-scsi@vger.kernel.org>; Wed, 6 May 2009 15:24:25 -0600
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n46LONji028827
-	for <linux-scsi@vger.kernel.org>; Wed, 6 May 2009 15:24:25 -0600
-In-Reply-To: <49FCA9BE.3030408@gmail.com>
+Received: from stargate.chelsio.com ([67.207.112.58]:30040 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751242AbZEFXCM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 May 2009 19:02:12 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roel Kluin <roel.kluin@gmail.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Robert C Jennings <rcjenn@us.ibm.com>, Santiago Leon <sleon@ec.ibm.com>
-
-Acked by: Brian King <brking@linux.vnet.ibm.com>
-
-Roel Kluin wrote:
-> Remove redundant test on unsigned.
-> 
-> Signed-off-by: Roel Kluin <roel.kluin@gmail.com> 
-> ---
-> Maybe a different test is required? 
-> 
-> To see that it is unsigned:
-> 
-> git grep -E -n "(req_lim_delta|__be32;$)"
-> 
-> diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-> index c9aa761..8d3925f 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-> @@ -910,9 +910,6 @@ static void login_rsp(struct srp_event_struct *evt_struct)
-> 
->  	dev_info(hostdata->dev, "SRP_LOGIN succeeded\n");
-> 
-> -	if (evt_struct->xfer_iu->srp.login_rsp.req_lim_delta < 0)
-> -		dev_err(hostdata->dev, "Invalid request_limit.\n");
-> -
->  	/* Now we know what the real request-limit is.
->  	 * This value is set rather than added to request_limit because
->  	 * request_limit could have been set to -1 by this client.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi@googlegroups.com
+Cc: davem@davemloft.net, James.Bottomley@HansenPartnership.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, Jayamohan Kalickal <jayamohank@serverengines.com>
 
 
--- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
+-----Original Message-----
+From: netdev-owner@vger.kernel.org [mailto:netdev-owner@vger.kernel.org]
+On Behalf Of Mike Christie
+Sent: Wednesday, May 06, 2009 9:49 AM
+To: open-iscsi@googlegroups.com
+Cc: davem@davemloft.net; James.Bottomley@HansenPartnership.com;
+netdev@vger.kernel.org; linux-scsi@vger.kernel.org; Karen Xie; Jayamohan
+Kalickal
+Subject: Re: [PATCH 4/4] bnx2i: Add bnx2i iSCSI driver.
 
 
+> +
+> +/**
+> + * bnx2i_nl_mesg_recv -
+> + * @buf:	pointer to buffer containing vendor specific message
+> + * @buf:	buffer length
+> + *
+> + */
+> +static int bnx2i_nl_mesg_recv(struct Scsi_Host *shost, uint16_t
+priv_op,
+> +			      int status, char *buf, int buflen)
+> +{
+> +	struct bnx2i_hba *hba = iscsi_host_priv(shost);
+> +
+> +	switch (priv_op) {
+> +	case NX2_UIO_UEVENT_NEIGH_LOOKUP:
+> +	default:
+> +		/* handle by cnic driver */
+> +		hba->cnic->nl_priv_msg_recv(hba->cnic, priv_op, buf,
+buflen);
+> +		break;
+> +	}
+> +
+> +	return buflen;
+> +}
+
+I think I was wrong with one of the comments I gave you.
+
+It seems like we have two iscsi net config models.
+
+1. qla4xxx and Server Engines type of setup where the driver just tells 
+the card to use some ip or do dhcp and some other net settings and it 
+does all the net magic. The iscsi driver does not have to worry about 
+anything like the dhcp process or arp. It only passes down the setup
+values.
+
+2. cxgb3i and bnx2i type of model where kernel or userspace code is 
+needed to execute many net operations.
+- Right now, cxgb3i sort of cheated :) and only supports static IPs. It 
+currently uses the iscsi set param interface to do this.
+
+- bnx2i wants to add more complicated features and is going to do them 
+in userspace. It us using the private messages that were added in the 
+previous patch.
+
+
+I think cxgb3i is one day going to want to support the same features 
+bnx2i does. If that is right, then should we just make the NX2_UIO 
+events common iscsi events, and hook cxb3i in? It would not use the 
+iscsi set param interface at all and would work just like bnx2i. Is that
+
+possible? What about future drivers? Are done making iscsi cards and 
+drivers. If so, thank goodness :)  If not then maybe we want to consider
+
+some future driver using the #2 module and possibly using this.
+
+[Karen] for cxgb3i, we are looking into support dynamic IP, so making
+the events common to iscsi would be helpful.
+
+If cxgb3i is really only going to support static ip setup and we think 
+that bnx2i is going to be unique on how it sets up the network then I 
+NX2_UIO private events are fine. Or is this a case of we are thinking 
+that iscsi hardware people are creating crazy interfaces so there is no 
+why to predict what they are going to do so there is no point in trying 
+to design for them.
+--
+To unsubscribe from this list: send the line "unsubscribe netdev" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
