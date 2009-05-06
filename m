@@ -1,70 +1,81 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH] 3ware scsi_dma_unmap fix
-Date: Wed, 6 May 2009 13:11:37 +0900
-Message-ID: <20090506131234Q.fujita.tomonori@lab.ntt.co.jp>
-References: <20090506091238I.fujita.tomonori@lab.ntt.co.jp>
-	<b1bc6a000905051725y167f6b67pa243807954eda78a@mail.gmail.com>
-	<20090506093400K.fujita.tomonori@lab.ntt.co.jp>
+From: "Norman Diamond" <n0diamond@yahoo.co.jp>
+Subject: Adaptec driver crashes (3/3)
+Date: Wed, 6 May 2009 16:13:53 +0900
+Message-ID: <507A39B029A94344AD588481FAAF019A@DIAMOND8600>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-2022-jp";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [192.16.179.4] ([192.16.179.4]:48713 "EHLO sh.osrg.net"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1750702AbZEFENt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 May 2009 00:13:49 -0400
-In-Reply-To: <20090506093400K.fujita.tomonori@lab.ntt.co.jp>
+Received: from smtp10.mail.tnz.yahoo.co.jp ([203.216.226.138]:22094 "HELO
+	smtp10.mail.tnz.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752381AbZEFHUp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 May 2009 03:20:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: aradford@gmail.com
-Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, 6 May 2009 09:33:45 +0900
-FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+A tougher non-100%-reproducible way to crash a Linux system is as follows.
 
-> On Tue, 5 May 2009 17:25:40 -0700
-> adam radford <aradford@gmail.com> wrote:
-> 
-> > I wouldn't do that.  The generic_buffer_virt stuff is there because
-> > the hardware can't DMA < 512 bytes, so we sg_copy_to/from_buffer()
-> > there, then dma from generic_buffer_virt.
-> 
-> Thanks, I see. Yeah, if the hardware can't DMA < 512 bytes, the driver
-> needs such workaround.
+I don't remember exactly what I did, but for some reason I guessed it might 
+happen a second time, so I set the console to a text mode terminal before it 
+happened the second time (since Linux doesn't give Blue Screens of Death 
+otherwise).  This is with an Adaptec 1480 card, AIC7xxx driver.
 
-I have one more question about this issue.
+I wish I had a wooden table so I wouldn't have to read and type this stuff 
+back in by hand.  (In case anyone here doesn't read thedailywtf, ignore the 
+part about the wooden table.  I still wish I wouldn't have to read and type 
+this stuff back in by hand.) 
 
-Looks like the driver can't work properly in the case of the length <
-512 bytes and scsi_sg_count > 1. That is, the driver says that the
-request is successful but the data isn't copied fully. Note that
-applications can send such requests with SG_IO and iovec. Can't we
-remove the scsi_sg_count(srb) == 1 tests?
+BUG: unable to handle kernel NULL pointer dereference at virtual address 0000000
+0
+printing eip: c04a50af *pde = 00000000
+Oops: 0000 [#1] SMP
+Modules linked in: snd_seq_dummy snd_seq_oss snd_seq_midi_event snd_seq snd_seq_
+device snd_pcm_oss snd_mixer_oss fuse lp pcspkr snd_intel8x0 snd_ac97_codec ac97
+_bus e100 snd_pcm snd_timer snd video mii iTCO_wdt soundcore serio_raw iTCO_vend
+or_support output psmouse evdev pcmcia intel_agp agpgart shpchp snd_page_alloc p
+arport_pc parport sg yenta_socket rsrc_nonstatic pcmcia_core aufs squashfs sqlzm
+a unlzma
 
-diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
-index 8b7983a..0d8b1c0 100644
---- a/drivers/scsi/3w-9xxx.c
-+++ b/drivers/scsi/3w-9xxx.c
-@@ -1847,8 +1847,7 @@ static int twa_scsiop_execute_scsi(TW_Device_Extension *tw_dev, int request_id,
- 		/* Map sglist from scsi layer to cmd packet */
- 
- 		if (scsi_sg_count(srb)) {
--			if ((scsi_sg_count(srb) == 1) &&
--			    (scsi_bufflen(srb) < TW_MIN_SGL_LENGTH)) {
-+			if (scsi_bufflen(srb) < TW_MIN_SGL_LENGTH) {
- 				if (srb->sc_data_direction == DMA_TO_DEVICE ||
- 				    srb->sc_data_direction == DMA_BIDIRECTIONAL)
- 					scsi_sg_copy_to_buffer(srb,
-@@ -1924,11 +1923,9 @@ static void twa_scsiop_execute_scsi_complete(TW_Device_Extension *tw_dev, int re
- 	if (scsi_bufflen(cmd) < TW_MIN_SGL_LENGTH &&
- 	    (cmd->sc_data_direction == DMA_FROM_DEVICE ||
- 	     cmd->sc_data_direction == DMA_BIDIRECTIONAL)) {
--		if (scsi_sg_count(cmd) == 1) {
--			void *buf = tw_dev->generic_buffer_virt[request_id];
-+		void *buf = tw_dev->generic_buffer_virt[request_id];
- 
--			scsi_sg_copy_from_buffer(cmd, buf, TW_SECTOR_SIZE);
--		}
-+		scsi_sg_copy_from_buffer(cmd, buf, TW_SECTOR_SIZE);
- 	}
- } /* End twa_scsiop_execute_scsi_complete() */
- 
+Pid: 3531, comm: klogs Not tainted (2.6.24.3 #1)
+EIP: 0060:[<c04a50af>] EFLAGS: 00010046 CPU: 0
+EIP is at ahc_handle_scsiint+0xdbf/0xef0
+EAX: 00000000 EBX: 00000007 ECX: 00000001 EDX: 0000000d
+ESI: ede17e00 EDI: 00000000 EBP: 00000000 ESP: ed507de4
+ DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
+Process klogd (pid: 3531, ti=ed506000 task=edd6aaa0 task.ti=ed506000)
+Stack: 00000001 00000041 00000001 ee6a6580 d662d853 41410000 000000a0 ead93024
+       c01806db 00a0ee08 00000041 00000007 00000000 00000001 00000000 00000000
+       ed53b541 00000001 ede17e00 00000064 00000082 0000000b c04b20f9 ede0cd60
+Call Trace:
+ [<c01806db>] __link_path_walk+0xaab/0xe10
+ [<c04b20f9>] ahc_linux_isr+0x1e9/0x260
+ [<c0151025>] handle_IRQ_event+0x25/0x50
+ [<c01529bc>] handle_level_irq+0x7c/0xf0
+ [<c010748b>] do_IRQ+0x3b/0x70
+ [<efbe3d90>] aufs_getattr+0x0/0xa0 [aufs]
+ [<c01052d3>] common_interrupt+0x23/0x30
+ [<efbe3d90>] aufs_getattr+0x0/0xa0 [aufs]
+ [<efbe3d9e>] aufs_getattr+0xe/0xa0 [aufs]
+ [<c017fa47>] getname+0xa7/0xc0
+ [<c03b7acf>] security_inode_getattr+0x1f/0x30
+ [<c017a4f8>] vfs_getattr+0x48/0x70
+ [<c017a727>] vfs_stat_fd+0x37/0x60
+ [<c017a82f>] sys_stat64+0xf/0x30
+ [<c01775ee>] vfs_write+0x11e/0x140
+ [<c0177c31>] sys_write+0x41/0x70
+ [<c012cc1a>] sys_time+0xa/0x30
+ [<c0104352>] syscall_call+0x7/0xb
+ [<c0700000>] rpcb_getport_prepare+0x10/0x40
+ =======================
+Code: 24 2c e8 c5 95 ff ff b9 14 00 00 00 89 f0 8d 54 24 2c c7 44 24 04 00 00 00
+ 00 c7 04 24 b6 d1 80 c0 e8 56 e9 ff ff e9 8d f8 ff ff <8b> 07 89 fa 0f b6 58 1b
+ 0f b6 c3 89 44 24 1c 89 f0 e8 5b a5 00
+EIP: [<c04a50af>] ahc_handle_scsiint+0xdbf/0xef0 SS:ESP 0068:ed507de4
+Kernel panic - not syncing : Fatal exception in interrupt
+--------------------------------------
+Power up the Internet with Yahoo! Toolbar.
+http://pr.mail.yahoo.co.jp/toolbar/
