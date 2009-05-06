@@ -1,40 +1,51 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13242] System Panics with emulex lpfc driver during the boot
-Date: Wed, 6 May 2009 15:54:28 GMT
-Message-ID: <200905061554.n46FsSaQ012812@demeter.kernel.org>
-References: <bug-13242-11613@http.bugzilla.kernel.org/>
+From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Subject: Re: [PATCH 3/4] iscsi class, libiscsi: Add net config.
+Date: Wed, 06 May 2009 11:40:54 -0500
+Message-ID: <4A01BD96.60204@cs.wisc.edu>
+References: <1241208039-6813-1-git-send-email-mchan@broadcom.com> <1241208039-6813-4-git-send-email-mchan@broadcom.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:53869 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755910AbZEFPy2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 May 2009 11:54:28 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n46FsSLs012813
-	for <linux-scsi@vger.kernel.org>; Wed, 6 May 2009 15:54:28 GMT
-In-Reply-To: <bug-13242-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <grbounce-FC1hwAUAAAA0O9VQcsxVj1UPjHD9r3x_=glio-open-iscsi=m.gmane.org-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <1241208039-6813-4-git-send-email-mchan-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Post: <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://googlegroups.com/group/open-iscsi/subscribe>,
+	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: Michael Chan <mchan-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Cc: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=13242
 
 
+Michael Chan wrote:
+> Add ISCSI_NETLINK messages to get/set vendor specific information.
+> This is to support bnx2i that handles net config of private iSCSI
+> IP address in userspace.
+> 
+> Signed-off-by: Anil Veerabhadrappa <anilgv-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+> Signed-off-by: Michael Chan <mchan-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+> Signed-off-by: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+> Acked-by: David S. Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+> ---
+>  drivers/scsi/scsi_transport_iscsi.c |   59 ++++++++++++++++++++++++++++++++++-
+>  include/scsi/iscsi_if.h             |   14 ++++++++
+>  include/scsi/scsi_transport_iscsi.h |    6 +++
+>  3 files changed, 78 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+> index 0947954..ef3af96 100644
+> --- a/drivers/scsi/scsi_transport_iscsi.c
+> +++ b/drivers/scsi/scsi_transport_iscsi.c
+> @@ -995,6 +995,37 @@ int iscsi_recv_pdu(struct iscsi_cls_conn *conn, struct iscsi_hdr *hdr,
+>  }
+>  EXPORT_SYMBOL_GPL(iscsi_recv_pdu);
+>  
+> +extern int iscsi_vendor_priv_mesg(struct Scsi_Host *shost,
 
+Just a cut and paste error probably. You have an extern in there.
 
-
---- Comment #3 from James Smart <james.smart@emulex.com>  2009-05-06 15:54:27 ---
-Created an attachment (id=21247)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=21247)
-8.3.1 patchset
-
-These were already posted upstream on 4/6/09:
-http://marc.info/?l=linux-scsi&m=123905804324575&w=2
-
-Let me know the results.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+> +				  struct iscsi_transport *transport,
+> +				  uint16_t priv_op,
+> +				  char *data, uint16_t data_size)
+> +{
