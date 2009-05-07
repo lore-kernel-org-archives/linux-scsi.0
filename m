@@ -1,16 +1,16 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [RFC 3/4] New blk_make_request(), takes bio, returns a request
-Date: Thu, 07 May 2009 19:16:28 +0300
-Message-ID: <4A03095C.7030008@panasas.com>
+Subject: [RFC 4/4] libosd: Use of new blk_make_request
+Date: Thu, 07 May 2009 19:18:58 +0300
+Message-ID: <4A0309F2.4060203@panasas.com>
 References: <4A0307F4.50205@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:13919 "EHLO
+Received: from gw-ca.panasas.com ([209.116.51.66]:10850 "EHLO
 	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753524AbZEGQQg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 May 2009 12:16:36 -0400
+	with ESMTP id S1753837AbZEGQTL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 May 2009 12:19:11 -0400
 In-Reply-To: <4A0307F4.50205@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,96 +18,110 @@ To: Jens Axboe <Jens.Axboe@oracle.com>, James Bottomley <James.Bottomley@hansenp
 Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
 
-New block API:
-given a struct bio allocates a new request. This is the parallel of
-generic_make_request for BLOCK_PC commands users.
+Use new blk_make_request() to allocate a request from bio
+and avoid using deprecated blk_rq_append_bio().
 
-The passed bio may be a chained-bio. The bio is bounced if needed
-inside the call to this member.
+This patch is dependent on a block layer patch titled:
+    [BLOCK] New blk_make_request() takes bio returns request
 
-This is in the effort of un-exporting blk_rq_append_bio().
+This is the last usage of blk_rq_append_bio in osd, it can now
+be un-exported.
 
-Requested-comments-by: Boaz Harrosh <bharrosh@panasas.com>
-TO: Jens Axboe <Jens.Axboe@oracle.com>
+Also at this point Jeff's osdblk driver will properly
+work, as osd_initiator now supports chained-bios.
+
+Request-comments-by: Boaz Harrosh <bharrosh@panasas.com>
+CC: Jeff Garzik <jeff@garzik.org>
 CC: Tejun Heo <tj@kernel.org>
 CC: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 CC: James Bottomley <James.Bottomley@hansenpartnership.com>
-CC: Jeff Garzik <jeff@garzik.org>
 ---
- block/blk-core.c       |   46 ++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/blkdev.h |    2 ++
- 2 files changed, 48 insertions(+), 0 deletions(-)
+ drivers/scsi/osd/osd_initiator.c |   48 ++++++++++++++++++-------------------
+ 1 files changed, 23 insertions(+), 25 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 2998fe3..d79c6e8 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -902,6 +902,52 @@ struct request *blk_get_request(struct request_queue *q, int rw, gfp_t gfp_mask)
- EXPORT_SYMBOL(blk_get_request);
- 
- /**
-+ * blk_make_request - given a bio, allocate a corresponding struct request.
-+ *
-+ * @bio:  The bio describing the memory mappings that will be submitted for IO.
-+ *        It may be a chained-bio properly constructed by block/bio layer.
-+ *
-+ * blk_make_request is the parallel of generic_make_request for BLOCK_PC
-+ * type commands. Where the struct request needs to be farther initialized by
-+ * the caller. It is passed a &struct bio, which describes the memory info to
-+ * be read/written to/from.
-+ *
-+ * The caller of blk_make_request must make sure that bi_io_vec
-+ * are set to describe the memory buffers. That bio_data_dir() will return
-+ * the needed direction of the request. (And all bio's in the passed bio-chain
-+ * are properly set accordingly), the passed total_bytes may be shorter then
-+ * the passed total_bytes(bio-chain).
-+ *
-+ * If called under none-sleepable conditions, mapped bio buffers must not
-+ * need bouncing, by calling the appropriate masked or flagged allocator,
-+ * suitable for the target device. Otherwise the call to blk_queue_bounce will
-+ * BUG.
-+ */
-+struct request *blk_make_request(struct request_queue *q, struct bio *bio,
-+				 gfp_t gfp_mask)
+diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
+index a36c406..3d460f8 100644
+--- a/drivers/scsi/osd/osd_initiator.c
++++ b/drivers/scsi/osd/osd_initiator.c
+@@ -1304,6 +1304,21 @@ static int _osd_req_finalize_data_integrity(struct osd_request *or,
+ /*
+  * osd_finalize_request and helpers
+  */
++static struct request *_make_request(struct request_queue *q, bool has_write,
++			      struct _osd_io_info *oii, gfp_t flags)
 +{
-+	struct request *rq = blk_get_request(q, bio_data_dir(bio), gfp_mask);
++	if (oii->bio)
++		return blk_make_request(q, oii->bio, flags);
++	else {
++		struct request *req;
 +
-+	if (unlikely(!rq))
-+		return ERR_PTR(-ENOMEM);
++		req = blk_get_request(q, has_write ? WRITE : READ, flags);
++		if (unlikely(!req))
++			return ERR_PTR(-ENOMEM);
 +
-+	for_each_bio(bio) {
-+		struct bio *bounce_bio = bio;
-+		int ret;
-+
-+		blk_queue_bounce(q, &bounce_bio);
-+		ret = blk_rq_append_bio(q, rq, bounce_bio);
-+		if (unlikely(ret)) {
-+			blk_put_request(rq);
-+			return ERR_PTR(ret);
-+		}
++		return req;
 +	}
-+
-+	return rq;
 +}
-+EXPORT_SYMBOL(blk_make_request);
-+
-+/**
-  * blk_start_queueing - initiate dispatch of requests to device
-  * @q:		request queue to kick into gear
-  *
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index b4f71f1..19728b0 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -752,6 +752,8 @@ extern void blk_rq_init(struct request_queue *q, struct request *rq);
- extern void blk_put_request(struct request *);
- extern void __blk_put_request(struct request_queue *, struct request *);
- extern struct request *blk_get_request(struct request_queue *, int, gfp_t);
-+extern struct request *blk_make_request(struct request_queue *, struct bio *,
-+					gfp_t);
- extern void blk_insert_request(struct request_queue *, struct request *, int, void *);
- extern void blk_requeue_request(struct request_queue *, struct request *);
- extern int blk_rq_check_limits(struct request_queue *q, struct request *rq);
+ 
+ static int _init_blk_request(struct osd_request *or,
+ 	bool has_in, bool has_out)
+@@ -1312,11 +1327,13 @@ static int _init_blk_request(struct osd_request *or,
+ 	struct scsi_device *scsi_device = or->osd_dev->scsi_device;
+ 	struct request_queue *q = scsi_device->request_queue;
+ 	struct request *req;
+-	int ret = -ENOMEM;
++	int ret;
+ 
+-	req = blk_get_request(q, has_out, flags);
+-	if (!req)
++	req = _make_request(q, has_out, has_out ? &or->out : &or->in, flags);
++	if (IS_ERR(req)) {
++		ret = PTR_ERR(req);
+ 		goto out;
++	}
+ 
+ 	or->request = req;
+ 	req->cmd_type = REQ_TYPE_BLOCK_PC;
+@@ -1329,9 +1346,10 @@ static int _init_blk_request(struct osd_request *or,
+ 		or->out.req = req;
+ 		if (has_in) {
+ 			/* allocate bidi request */
+-			req = blk_get_request(q, READ, flags);
+-			if (!req) {
++			req = _make_request(q, false, &or->in, flags);
++			if (IS_ERR(req)) {
+ 				OSD_DEBUG("blk_get_request for bidi failed\n");
++				ret = PTR_ERR(req);
+ 				goto out;
+ 			}
+ 			req->cmd_type = REQ_TYPE_BLOCK_PC;
+@@ -1376,26 +1394,6 @@ int osd_finalize_request(struct osd_request *or,
+ 		return ret;
+ 	}
+ 
+-	if (or->out.bio) {
+-		ret = blk_rq_append_bio(or->request->q, or->out.req,
+-					or->out.bio);
+-		if (ret) {
+-			OSD_DEBUG("blk_rq_append_bio out failed\n");
+-			return ret;
+-		}
+-		OSD_DEBUG("out bytes=%llu (bytes_req=%u)\n",
+-			_LLU(or->out.total_bytes), or->out.req->data_len);
+-	}
+-	if (or->in.bio) {
+-		ret = blk_rq_append_bio(or->request->q, or->in.req, or->in.bio);
+-		if (ret) {
+-			OSD_DEBUG("blk_rq_append_bio in failed\n");
+-			return ret;
+-		}
+-		OSD_DEBUG("in bytes=%llu (bytes_req=%u)\n",
+-			_LLU(or->in.total_bytes), or->in.req->data_len);
+-	}
+-
+ 	or->out.pad_buff = sg_out_pad_buffer;
+ 	or->in.pad_buff = sg_in_pad_buffer;
+ 
 -- 
 1.6.2.1
 
