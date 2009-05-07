@@ -1,16 +1,16 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 2/3] scsi_dh: Remove the workqueue used for
-	activate
-Date: Wed, 06 May 2009 22:32:43 -0500
-Message-ID: <4A02565B.9060105@cs.wisc.edu>
+Subject: Re: [PATCH 3/3] scsi_dh: rdac handler: Batch up MODE
+	SELECTs and send few of them
+Date: Wed, 06 May 2009 22:39:54 -0500
+Message-ID: <4A02580A.2060704@cs.wisc.edu>
 References: <20090428025230.11108.88559.sendpatchset@chandra-ubuntu>
-	<20090428025242.11108.43024.sendpatchset@chandra-ubuntu>
+	<20090428025248.11108.38596.sendpatchset@chandra-ubuntu>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20090428025242.11108.43024.sendpatchset@chandra-ubuntu>
+In-Reply-To: <20090428025248.11108.38596.sendpatchset@chandra-ubuntu>
 List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
@@ -25,11 +25,18 @@ Cc: linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 Chandra Seetharaman wrote:
-> Since scsi_dh_activate() has become an asynchronous function,
-> we do not need a workqueue for submitting scsi_dh_activate().
-> 
-> This patch just removes the workqueue that submits scsi_dh_activate().
-> 
+>  }
+>  
+> -static int rdac_activate(struct scsi_device *sdev, activate_complete fn, void *data)
+> +static int queue_mode_select(struct scsi_device *sdev,
+> +				activate_complete fn, void *data)
+> +{
+> +	struct rdac_queue_data *qdata;
+> +	struct rdac_controller *ctlr;
+> +
+> +	qdata = kzalloc(sizeof(*qdata), GFP_KERNEL);
 
-Before this is merged, we need to convert the other device handlers to 
-use blk_execute_rq_nowait or use their own workqueue_struct right?
+
+I think you want to use GFP_NOIO or GFP_ATOMIC here. If GFP_NOIO can 
+block and screw up other devices using that multipathd workqueue struct 
+maybe GFP_ATOMIC would be best since we can have dm-mpath retry later.
