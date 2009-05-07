@@ -1,103 +1,152 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 3/6] libosd: Better printout of OSD target system information
-Date: Thu, 07 May 2009 18:25:08 +0300
-Message-ID: <4A02FD54.2010906@panasas.com>
+Subject: [PATCH 4/6] libosd: osd_req_{read,write}_kern new API
+Date: Thu, 07 May 2009 18:27:10 +0300
+Message-ID: <4A02FDCE.9030103@panasas.com>
 References: <4A02FBE1.4000406@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:2325 "EHLO
+Received: from gw-ca.panasas.com ([209.116.51.66]:3356 "EHLO
 	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751007AbZEGPZM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 May 2009 11:25:12 -0400
+	with ESMTP id S1754163AbZEGP1R (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 May 2009 11:27:17 -0400
 In-Reply-To: <4A02FBE1.4000406@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
 
 
-Shorten out the Attributes names.
-Align all results on column 24.
-Print system ID in a new line.
+By popular demand, define useful wrappers for osd_req_read/write
+that receive kernel pointers. All users had their own.
+
+Also remove these from exofs
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 ---
- drivers/scsi/osd/osd_initiator.c |   23 ++++++++++++-----------
- 1 files changed, 12 insertions(+), 11 deletions(-)
+ drivers/scsi/osd/osd_initiator.c |   28 ++++++++++++++++++++++++++++
+ fs/exofs/common.h                |    6 ------
+ fs/exofs/osd.c                   |   26 --------------------------
+ include/scsi/osd_initiator.h     |    4 ++++
+ 4 files changed, 32 insertions(+), 32 deletions(-)
 
 diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
-index 1ce6b24..15f0bbc 100644
+index 15f0bbc..c98153b 100644
 --- a/drivers/scsi/osd/osd_initiator.c
 +++ b/drivers/scsi/osd/osd_initiator.c
-@@ -118,39 +118,39 @@ static int _osd_print_system_info(struct osd_dev *od, void *caps)
- 		_osd_ver_desc(or));
+@@ -789,6 +789,20 @@ void osd_req_write(struct osd_request *or,
+ }
+ EXPORT_SYMBOL(osd_req_write);
  
- 	pFirst = get_attrs[a++].val_ptr;
--	OSD_INFO("OSD_ATTR_RI_VENDOR_IDENTIFICATION [%s]\n",
-+	OSD_INFO("VENDOR_IDENTIFICATION  [%s]\n",
- 		(char *)pFirst);
++int osd_req_write_kern(struct osd_request *or,
++	const struct osd_obj_id *obj, u64 offset, void* buff, u64 len)
++{
++	struct request_queue *req_q = or->osd_dev->scsi_device->request_queue;
++	struct bio *bio = bio_map_kern(req_q, buff, len, GFP_KERNEL);
++
++	if (IS_ERR(bio))
++		return PTR_ERR(bio);
++
++	osd_req_write(or, obj, bio, offset);
++	return 0;
++}
++EXPORT_SYMBOL(osd_req_write_kern);
++
+ /*TODO: void osd_req_append(struct osd_request *,
+ 	const struct osd_obj_id *, struct bio *data_out); */
+ /*TODO: void osd_req_create_write(struct osd_request *,
+@@ -824,6 +838,20 @@ void osd_req_read(struct osd_request *or,
+ }
+ EXPORT_SYMBOL(osd_req_read);
  
- 	pFirst = get_attrs[a++].val_ptr;
--	OSD_INFO("OSD_ATTR_RI_PRODUCT_IDENTIFICATION [%s]\n",
-+	OSD_INFO("PRODUCT_IDENTIFICATION [%s]\n",
- 		(char *)pFirst);
++int osd_req_read_kern(struct osd_request *or,
++	const struct osd_obj_id *obj, u64 offset, void* buff, u64 len)
++{
++	struct request_queue *req_q = or->osd_dev->scsi_device->request_queue;
++	struct bio *bio = bio_map_kern(req_q, buff, len, GFP_KERNEL);
++
++	if (IS_ERR(bio))
++		return PTR_ERR(bio);
++
++	osd_req_read(or, obj, bio, offset);
++	return 0;
++}
++EXPORT_SYMBOL(osd_req_read_kern);
++
+ void osd_req_get_attributes(struct osd_request *or,
+ 	const struct osd_obj_id *obj)
+ {
+diff --git a/fs/exofs/common.h b/fs/exofs/common.h
+index b1512c4..24667ee 100644
+--- a/fs/exofs/common.h
++++ b/fs/exofs/common.h
+@@ -175,10 +175,4 @@ int exofs_async_op(struct osd_request *or,
  
- 	pFirst = get_attrs[a++].val_ptr;
--	OSD_INFO("OSD_ATTR_RI_PRODUCT_MODEL [%s]\n",
-+	OSD_INFO("PRODUCT_MODEL          [%s]\n",
- 		(char *)pFirst);
+ int extract_attr_from_req(struct osd_request *or, struct osd_attr *attr);
  
- 	pFirst = get_attrs[a++].val_ptr;
--	OSD_INFO("OSD_ATTR_RI_PRODUCT_REVISION_LEVEL [%u]\n",
-+	OSD_INFO("PRODUCT_REVISION_LEVEL [%u]\n",
- 		pFirst ? get_unaligned_be32(pFirst) : ~0U);
+-int osd_req_read_kern(struct osd_request *or,
+-	const struct osd_obj_id *obj, u64 offset, void *buff, u64 len);
+-
+-int osd_req_write_kern(struct osd_request *or,
+-	const struct osd_obj_id *obj, u64 offset, void *buff, u64 len);
+-
+ #endif /*ifndef __EXOFS_COM_H__*/
+diff --git a/fs/exofs/osd.c b/fs/exofs/osd.c
+index b249ae9..48cc4d1 100644
+--- a/fs/exofs/osd.c
++++ b/fs/exofs/osd.c
+@@ -125,29 +125,3 @@ int extract_attr_from_req(struct osd_request *or, struct osd_attr *attr)
  
- 	pFirst = get_attrs[a++].val_ptr;
--	OSD_INFO("OSD_ATTR_RI_PRODUCT_SERIAL_NUMBER [%s]\n",
-+	OSD_INFO("PRODUCT_SERIAL_NUMBER  [%s]\n",
- 		(char *)pFirst);
+ 	return -EIO;
+ }
+-
+-int osd_req_read_kern(struct osd_request *or,
+-	const struct osd_obj_id *obj, u64 offset, void* buff, u64 len)
+-{
+-	struct request_queue *req_q = or->osd_dev->scsi_device->request_queue;
+-	struct bio *bio = bio_map_kern(req_q, buff, len, GFP_KERNEL);
+-
+-	if (!bio)
+-		return -ENOMEM;
+-
+-	osd_req_read(or, obj, bio, offset);
+-	return 0;
+-}
+-
+-int osd_req_write_kern(struct osd_request *or,
+-	const struct osd_obj_id *obj, u64 offset, void* buff, u64 len)
+-{
+-	struct request_queue *req_q = or->osd_dev->scsi_device->request_queue;
+-	struct bio *bio = bio_map_kern(req_q, buff, len, GFP_KERNEL);
+-
+-	if (!bio)
+-		return -ENOMEM;
+-
+-	osd_req_write(or, obj, bio, offset);
+-	return 0;
+-}
+diff --git a/include/scsi/osd_initiator.h b/include/scsi/osd_initiator.h
+index b24d961..6132790 100644
+--- a/include/scsi/osd_initiator.h
++++ b/include/scsi/osd_initiator.h
+@@ -364,6 +364,8 @@ void osd_req_remove_object(struct osd_request *or, struct osd_obj_id *);
  
- 	pFirst = get_attrs[a].val_ptr;
--	OSD_INFO("OSD_ATTR_RI_OSD_NAME [%s]\n", (char *)pFirst);
-+	OSD_INFO("OSD_NAME               [%s]\n", (char *)pFirst);
- 	a++;
+ void osd_req_write(struct osd_request *or,
+ 	const struct osd_obj_id *, struct bio *data_out, u64 offset);
++int osd_req_write_kern(struct osd_request *or,
++	const struct osd_obj_id *obj, u64 offset, void *buff, u64 len);
+ void osd_req_append(struct osd_request *or,
+ 	const struct osd_obj_id *, struct bio *data_out);/* NI */
+ void osd_req_create_write(struct osd_request *or,
+@@ -379,6 +381,8 @@ void osd_req_flush_object(struct osd_request *or,
  
- 	pFirst = get_attrs[a++].val_ptr;
--	OSD_INFO("OSD_ATTR_RI_TOTAL_CAPACITY [0x%llx]\n",
-+	OSD_INFO("TOTAL_CAPACITY         [0x%llx]\n",
- 		pFirst ? _LLU(get_unaligned_be64(pFirst)) : ~0ULL);
+ void osd_req_read(struct osd_request *or,
+ 	const struct osd_obj_id *, struct bio *data_in, u64 offset);
++int osd_req_read_kern(struct osd_request *or,
++	const struct osd_obj_id *obj, u64 offset, void *buff, u64 len);
  
- 	pFirst = get_attrs[a++].val_ptr;
--	OSD_INFO("OSD_ATTR_RI_USED_CAPACITY [0x%llx]\n",
-+	OSD_INFO("USED_CAPACITY          [0x%llx]\n",
- 		pFirst ? _LLU(get_unaligned_be64(pFirst)) : ~0ULL);
- 
- 	pFirst = get_attrs[a++].val_ptr;
--	OSD_INFO("OSD_ATTR_RI_NUMBER_OF_PARTITIONS [%llu]\n",
-+	OSD_INFO("NUMBER_OF_PARTITIONS   [%llu]\n",
- 		pFirst ? _LLU(get_unaligned_be64(pFirst)) : ~0ULL);
- 
- 	if (a >= nelem)
-@@ -158,7 +158,7 @@ static int _osd_print_system_info(struct osd_dev *od, void *caps)
- 
- 	/* FIXME: Where are the time utilities */
- 	pFirst = get_attrs[a++].val_ptr;
--	OSD_INFO("OSD_ATTR_RI_CLOCK [0x%02x%02x%02x%02x%02x%02x]\n",
-+	OSD_INFO("CLOCK                  [0x%02x%02x%02x%02x%02x%02x]\n",
- 		((char *)pFirst)[0], ((char *)pFirst)[1],
- 		((char *)pFirst)[2], ((char *)pFirst)[3],
- 		((char *)pFirst)[4], ((char *)pFirst)[5]);
-@@ -169,7 +169,8 @@ static int _osd_print_system_info(struct osd_dev *od, void *caps)
- 
- 		hex_dump_to_buffer(get_attrs[a].val_ptr, len, 32, 1,
- 				   sid_dump, sizeof(sid_dump), true);
--		OSD_INFO("OSD_ATTR_RI_OSD_SYSTEM_ID(%d) [%s]\n", len, sid_dump);
-+		OSD_INFO("OSD_SYSTEM_ID(%d)\n"
-+			 "        [%s]\n", len, sid_dump);
- 		a++;
- 	}
- out:
+ /*
+  * Root/Partition/Collection/Object Attributes commands
 -- 
 1.6.2.1
 
