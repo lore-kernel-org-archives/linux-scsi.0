@@ -1,43 +1,49 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [PATCH 5/10] scsi: megaraid_sas - Fixed load/unload issue and
- Fire the system pd DCDB cmd to MegaRAID SAS FW to get the system PDs
-Date: Thu, 7 May 2009 09:05:22 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C354FF72AE@cosmail02.lsi.com>
-References: <20090506142057.8a2c51ab.akpm@linux-foundation.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [patchset 0/6] osd changes  for 2.6.31
+Date: Thu, 07 May 2009 18:18:57 +0300
+Message-ID: <4A02FBE1.4000406@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og117.obsmtp.com ([64.18.2.6]:35295 "EHLO
-	exprod7og117.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753731AbZEGPGN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 May 2009 11:06:13 -0400
-In-Reply-To: <20090506142057.8a2c51ab.akpm@linux-foundation.org>
-Content-Language: en-US
+Received: from gw-ca.panasas.com ([209.116.51.66]:32254 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757260AbZEGPTG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 May 2009 11:19:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Austria, Winston" <Winston.Austria@lsi.com>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
 
-Andrew,
+Hi James
 
-Will add one patch to change all the defination.
+I'm sending some patches that have accumulated for the next merge window.
+If they could sit in scsi-misc (and linux-next).
 
-Thanks,
+On top of these I will later send a couple of patches for
+getting rid of the use of blk_rq_append_bio, as well as
+support for chained-bios for Jeff's pending osdblk driver.
+These should go in first, as the "other work" is rebased ontop
+of these here.
 
-Bo Yang
+These are the list of patches:
 
------Original Message-----
-From: Andrew Morton [mailto:akpm@linux-foundation.org] 
-Sent: Wednesday, May 06, 2009 5:21 PM
-To: Yang, Bo
-Cc: Yang, Bo; James.Bottomley@HansenPartnership.com; linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Austria, Winston
-Subject: Re: [PATCH 5/10] scsi: megaraid_sas - Fixed load/unload issue and Fire the system pd DCDB cmd to MegaRAID SAS FW to get the system PDs
+[PATCH 01/6] libosd: OSD2r05: Additional command enums
+[PATCH 02/6] libosd: OSD2r05: Attribute definitions  
+[PATCH 03/6] libosd: Better printout of OSD target system information
 
-On Tue, 5 May 2009 19:24:07 -0600
-"Yang, Bo" <Bo.Yang@lsi.com> wrote:
+  These are just small stuff that have been added after the last merge window
 
-> +} __attribute__ ((packed));
+[PATCH 04/6] libosd: osd_req_{read,write}_kern new API
+  This is refactoring of common code used by a few library users
 
-Please use __packed.  I'd suggest this be done as a single driver-wide cleanup
-patch at a convenient time.
+[PATCH 05/6] libosd: Let _osd_req_finalize_data_integrity receive number of out_bytes
+[PATCH 06/6] libosd: osd_req_{read,write} takes a length parameter
+  These patches are in preparation for supporting bio-chains. BIO-chains support is
+  needed both by Jeff's osdblk stacking block device, as well as future work in exofs
+  and pNFS-Objects layout-driver.
+
+  The support is not yet finished until acceptance of a couple of patches to the block
+  layer and corresponding patches to osd which I will send next.
+
+Thank you in advance
+Boaz
