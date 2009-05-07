@@ -1,42 +1,36 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 3/3] scsi_dh: rdac handler: Batch up MODE
-	SELECTs and send few of them
-Date: Wed, 06 May 2009 22:39:54 -0500
-Message-ID: <4A02580A.2060704@cs.wisc.edu>
-References: <20090428025230.11108.88559.sendpatchset@chandra-ubuntu>
-	<20090428025248.11108.38596.sendpatchset@chandra-ubuntu>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [GIT PATCH] block,scsi,ide: unify sector and data_len, take#2
+Date: Thu, 7 May 2009 19:23:34 +0900
+Message-ID: <20090507192427K.fujita.tomonori@lab.ntt.co.jp>
+References: <1241423927-11871-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20090428025248.11108.38596.sendpatchset@chandra-ubuntu>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: device-mapper development <dm-devel@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sh.osrg.net ([192.16.179.4]:38424 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756850AbZEGK2L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 May 2009 06:28:11 -0400
+In-Reply-To: <1241423927-11871-1-git-send-email-tj@kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: tj@kernel.org
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, bharrosh@panasas.com
 
-Chandra Seetharaman wrote:
->  }
->  
-> -static int rdac_activate(struct scsi_device *sdev, activate_complete fn, void *data)
-> +static int queue_mode_select(struct scsi_device *sdev,
-> +				activate_complete fn, void *data)
-> +{
-> +	struct rdac_queue_data *qdata;
-> +	struct rdac_controller *ctlr;
-> +
-> +	qdata = kzalloc(sizeof(*qdata), GFP_KERNEL);
+On Mon,  4 May 2009 16:58:36 +0900
+Tejun Heo <tj@kernel.org> wrote:
 
+> Hello,
+> 
+> Upon ack, please pull from the following git tree.
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git block-unify-sector-and-data_len
+> 
+> This is the second take of block-unify-sector-and-data_len patchset.
+> The primary goal of this patchset is to consolidate all the similar
+> bug slightly different current position and data length fields in
+> struct request.  For detailed description, please read the description
+> in the last take[L].  Changes from the last take[L] are
 
-I think you want to use GFP_NOIO or GFP_ATOMIC here. If GFP_NOIO can 
-block and screw up other devices using that multipathd workqueue struct 
-maybe GFP_ATOMIC would be best since we can have dm-mpath retry later.
+Looks really nice. Finally, the block insulates the internal! SCSI
+did two years ago ;)
