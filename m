@@ -1,128 +1,82 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [RFC 4/4] libosd: Use of new blk_make_request
-Date: Thu, 07 May 2009 19:18:58 +0300
-Message-ID: <4A0309F2.4060203@panasas.com>
-References: <4A0307F4.50205@panasas.com>
+From: "Michael Chan" <mchan@broadcom.com>
+Subject: Re: [PATCH 4/4] bnx2i: Add bnx2i iSCSI driver.
+Date: Thu, 7 May 2009 10:03:44 -0700
+Message-ID: <1241715824.9177.8.camel@HP1>
+References: <1241208039-6813-1-git-send-email-mchan@broadcom.com>
+ <1241208039-6813-5-git-send-email-mchan@broadcom.com>
+ <4A01BF6A.90707@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:10850 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753837AbZEGQTL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 May 2009 12:19:11 -0400
-In-Reply-To: <4A0307F4.50205@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <4A01BF6A.90707@cs.wisc.edu>
+Sender: netdev-owner@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, "davem@davemloft.net" <davem@davemloft.net>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Karen Xie <kxie@chelsio.com>, Jayamohan Kalickal <jayamohank@serverengines.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <Jens.Axboe@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>, Tejun
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
 
-Use new blk_make_request() to allocate a request from bio
-and avoid using deprecated blk_rq_append_bio().
+On Wed, 2009-05-06 at 09:48 -0700, Mike Christie wrote:
+> > +
+> > +/**
+> > + * bnx2i_nl_mesg_recv -
+> > + * @buf:	pointer to buffer containing vendor specific message
+> > + * @buf:	buffer length
+> > + *
+> > + */
+> > +static int bnx2i_nl_mesg_recv(struct Scsi_Host *shost, uint16_t priv_op,
+> > +			      int status, char *buf, int buflen)
+> > +{
+> > +	struct bnx2i_hba *hba = iscsi_host_priv(shost);
+> > +
+> > +	switch (priv_op) {
+> > +	case NX2_UIO_UEVENT_NEIGH_LOOKUP:
+> > +	default:
+> > +		/* handle by cnic driver */
+> > +		hba->cnic->nl_priv_msg_recv(hba->cnic, priv_op, buf, buflen);
+> > +		break;
+> > +	}
+> > +
+> > +	return buflen;
+> > +}
+> 
+> I think I was wrong with one of the comments I gave you.
+> 
+> It seems like we have two iscsi net config models.
+> 
+> 1. qla4xxx and Server Engines type of setup where the driver just tells 
+> the card to use some ip or do dhcp and some other net settings and it 
+> does all the net magic. The iscsi driver does not have to worry about 
+> anything like the dhcp process or arp. It only passes down the setup values.
+> 
+> 2. cxgb3i and bnx2i type of model where kernel or userspace code is 
+> needed to execute many net operations.
+> - Right now, cxgb3i sort of cheated :) and only supports static IPs. It 
+> currently uses the iscsi set param interface to do this.
+> 
+> - bnx2i wants to add more complicated features and is going to do them 
+> in userspace. It us using the private messages that were added in the 
+> previous patch.
+> 
+> 
+> I think cxgb3i is one day going to want to support the same features 
+> bnx2i does. If that is right, then should we just make the NX2_UIO 
+> events common iscsi events, and hook cxb3i in? It would not use the 
+> iscsi set param interface at all and would work just like bnx2i. Is that 
+> possible? What about future drivers? Are done making iscsi cards and 
+> drivers. If so, thank goodness :)  If not then maybe we want to consider 
+> some future driver using the #2 module and possibly using this.
+> 
+> If cxgb3i is really only going to support static ip setup and we think 
+> that bnx2i is going to be unique on how it sets up the network then I 
+> NX2_UIO private events are fine. Or is this a case of we are thinking 
+> that iscsi hardware people are creating crazy interfaces so there is no 
+> why to predict what they are going to do so there is no point in trying 
+> to design for them.
 
-This patch is dependent on a block layer patch titled:
-    [BLOCK] New blk_make_request() takes bio returns request
-
-This is the last usage of blk_rq_append_bio in osd, it can now
-be un-exported.
-
-Also at this point Jeff's osdblk driver will properly
-work, as osd_initiator now supports chained-bios.
-
-Request-comments-by: Boaz Harrosh <bharrosh@panasas.com>
-CC: Jeff Garzik <jeff@garzik.org>
-CC: Tejun Heo <tj@kernel.org>
-CC: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-CC: James Bottomley <James.Bottomley@hansenpartnership.com>
----
- drivers/scsi/osd/osd_initiator.c |   48 ++++++++++++++++++-------------------
- 1 files changed, 23 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
-index a36c406..3d460f8 100644
---- a/drivers/scsi/osd/osd_initiator.c
-+++ b/drivers/scsi/osd/osd_initiator.c
-@@ -1304,6 +1304,21 @@ static int _osd_req_finalize_data_integrity(struct osd_request *or,
- /*
-  * osd_finalize_request and helpers
-  */
-+static struct request *_make_request(struct request_queue *q, bool has_write,
-+			      struct _osd_io_info *oii, gfp_t flags)
-+{
-+	if (oii->bio)
-+		return blk_make_request(q, oii->bio, flags);
-+	else {
-+		struct request *req;
-+
-+		req = blk_get_request(q, has_write ? WRITE : READ, flags);
-+		if (unlikely(!req))
-+			return ERR_PTR(-ENOMEM);
-+
-+		return req;
-+	}
-+}
- 
- static int _init_blk_request(struct osd_request *or,
- 	bool has_in, bool has_out)
-@@ -1312,11 +1327,13 @@ static int _init_blk_request(struct osd_request *or,
- 	struct scsi_device *scsi_device = or->osd_dev->scsi_device;
- 	struct request_queue *q = scsi_device->request_queue;
- 	struct request *req;
--	int ret = -ENOMEM;
-+	int ret;
- 
--	req = blk_get_request(q, has_out, flags);
--	if (!req)
-+	req = _make_request(q, has_out, has_out ? &or->out : &or->in, flags);
-+	if (IS_ERR(req)) {
-+		ret = PTR_ERR(req);
- 		goto out;
-+	}
- 
- 	or->request = req;
- 	req->cmd_type = REQ_TYPE_BLOCK_PC;
-@@ -1329,9 +1346,10 @@ static int _init_blk_request(struct osd_request *or,
- 		or->out.req = req;
- 		if (has_in) {
- 			/* allocate bidi request */
--			req = blk_get_request(q, READ, flags);
--			if (!req) {
-+			req = _make_request(q, false, &or->in, flags);
-+			if (IS_ERR(req)) {
- 				OSD_DEBUG("blk_get_request for bidi failed\n");
-+				ret = PTR_ERR(req);
- 				goto out;
- 			}
- 			req->cmd_type = REQ_TYPE_BLOCK_PC;
-@@ -1376,26 +1394,6 @@ int osd_finalize_request(struct osd_request *or,
- 		return ret;
- 	}
- 
--	if (or->out.bio) {
--		ret = blk_rq_append_bio(or->request->q, or->out.req,
--					or->out.bio);
--		if (ret) {
--			OSD_DEBUG("blk_rq_append_bio out failed\n");
--			return ret;
--		}
--		OSD_DEBUG("out bytes=%llu (bytes_req=%u)\n",
--			_LLU(or->out.total_bytes), or->out.req->data_len);
--	}
--	if (or->in.bio) {
--		ret = blk_rq_append_bio(or->request->q, or->in.req, or->in.bio);
--		if (ret) {
--			OSD_DEBUG("blk_rq_append_bio in failed\n");
--			return ret;
--		}
--		OSD_DEBUG("in bytes=%llu (bytes_req=%u)\n",
--			_LLU(or->in.total_bytes), or->in.req->data_len);
--	}
--
- 	or->out.pad_buff = sg_out_pad_buffer;
- 	or->in.pad_buff = sg_in_pad_buffer;
- 
--- 
-1.6.2.1
+If there is any possibility that cxgb3i will use something similar to
+bnx2i, I think we can change the message to a standard one and make the
+message structure somewhat more generic.  We'll probably still need a
+private area in the message for hardware or vendor specific information.
 
 
