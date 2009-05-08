@@ -1,39 +1,41 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/4] mvsas: bugfix for NULL pointer execption
-Date: Fri, 08 May 2009 18:05:55 -0400
-Message-ID: <4A04ACC3.4080004@garzik.org>
-References: <20090508061504.GA1880@jason.marvell.com> <1241797393.3327.52.camel@mulgrave.int.hansenpartnership.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 16/18] gdrom: dequeue in-flight request
+Date: Sat, 09 May 2009 08:43:53 +0900
+Message-ID: <4A04C3B9.6090801@kernel.org>
+References: <1241751256-17435-1-git-send-email-tj@kernel.org>	 <1241751256-17435-17-git-send-email-tj@kernel.org> <1241812425.18200.0.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:43903 "EHLO mail.dvmed.net"
+Received: from hera.kernel.org ([140.211.167.34]:57497 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754162AbZEHWF5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 May 2009 18:05:57 -0400
-In-Reply-To: <1241797393.3327.52.camel@mulgrave.int.hansenpartnership.com>
+	id S1751039AbZEHXqh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 May 2009 19:46:37 -0400
+In-Reply-To: <1241812425.18200.0.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Ying Chu <jasonchu@marvell.com>, linux-scsi@vger.kernel.org
+To: Adrian McMenamin <adrian@newgolddream.dyndns.info>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, rusty@rustcorp.com.au, James.Bottomley@HansenPartnership.com, mike.miller@hp.com, donari75@gmail.com, paul.clements@steeleye.com, tim@cyberelk.net, Geert.Uytterhoeven@sonycom.com, davem@davemloft.net, Laurent@lvivier.info, jgarzik@pobox.com, jeremy@xensource.com, grant.likely@secretlab.ca, sfr@canb.auug.org.au, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, oakad@yahoo.com, drzeus@drzeus.cx, dwmw2@infradead.org, Markus.Lidel@shadowconnect.com, wein@de.ibm.com, schwidefsky@de.ibm.com, zaitcev@redhat.com, fujita.tomonori@lab.ntt.co.jp, axboe@kernel.dk
 
-James Bottomley wrote:
-> On Fri, 2009-05-08 at 14:15 +0800, Ying Chu wrote:
->> >From 347191384292c6e9a9a572c657049bc11615fb82 Mon Sep 17 00:00:00 2001
->> From: Andy <ayan@marvell.com>
->> Date: Mon, 4 May 2009 23:29:26 +0800
->> Subject: [PATCH 1/4] mvsas: bug fix, null pointer may be used
+Adrian McMenamin wrote:
+> On Fri, 2009-05-08 at 11:54 +0900, Tejun Heo wrote:
+>> gdrom already dequeues and fully completes requests on normal path and
+>> the error paths can be easily converted to do so too.  Clean it up and
+>> dequeue requests on error paths too.
 >>
->> Null pointer exception when mvi_dev is null.
+>> While at it remove superflous blk_fs_request() && !blk_rq_sectors()
+>> condition check.
+>>
+>> [ Impact: dequeue in-flight request, cleanup ]
+>>
+>> Signed-off-by: Tejun Heo <tj@kernel.org>
+>> Cc: Adrian McMenamin <adrian@mcmen.demon.co.uk>
+>> ---
 > 
-> A little more explanation might be helpful.  It looks to me that you get
-> this issue when you have in-flight I/O to a device we've been notified
-> has gone (because you NULL out lldd_dev in the removal notification
-> routine).
-> 
-> In which case, don't we have other races where this can happen, like in
-> mvs_I_T_nexus_reset()?
+> Tested-by: Adrian McMenamin <adrian@mcmen.demon.co.uk>
+> Acked-by: Adrian McMenamin <adrian@mcmen.demon.co.uk>
 
-Agreed...
+Thanks.
 
-
+-- 
+tejun
