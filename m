@@ -1,33 +1,34 @@
-From: Adrian McMenamin <adrian@newgolddream.dyndns.info>
-Subject: Re: [PATCH 16/18] gdrom: dequeue in-flight request
-Date: Fri, 08 May 2009 20:53:45 +0100
-Message-ID: <1241812425.18200.0.camel@localhost.localdomain>
-References: <1241751256-17435-1-git-send-email-tj@kernel.org>
-	 <1241751256-17435-17-git-send-email-tj@kernel.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 3/4] mvsas: Set Hardware Bit for TMF
+Date: Fri, 08 May 2009 16:08:13 -0400
+Message-ID: <4A04912D.9030807@garzik.org>
+References: <20090508061704.GA1888@jason.marvell.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1241751256-17435-17-git-send-email-tj@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, rusty@rustcorp.com.au, James.Bottomley@HansenPartnership.com, mike.miller@hp.com, donari75@gmail.com, paul.clements@steeleye.com, tim@cyberelk.net, Geert.Uytterhoeven@sonycom.com, davem@davemloft.net, Laurent@lvivier.info, jgarzik@pobox.com, jeremy@xensource.com, grant.likely@secretlab.ca, sfr@canb.auug.org.au, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, oakad@yahoo.com, drzeus@drzeus.cx, dwmw2@infradead.org, Markus.Lidel@shadowconnect.com, wein@de.ibm.com, schwidefsky@de.ibm.com, zaitcev@redhat.com, fujita.tomonori@lab.ntt.co.jp, axboe@kernel.dk
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:48737 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756649AbZEHUIO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 May 2009 16:08:14 -0400
+In-Reply-To: <20090508061704.GA1888@jason.marvell.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ying Chu <jasonchu@marvell.com>
+Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com
 
-On Fri, 2009-05-08 at 11:54 +0900, Tejun Heo wrote:
-> gdrom already dequeues and fully completes requests on normal path and
-> the error paths can be easily converted to do so too.  Clean it up and
-> dequeue requests on error paths too.
+Ying Chu wrote:
+>>From a939392afc59960b4a9bd8244e2e8fe43b7016f6 Mon Sep 17 00:00:00 2001
+> From: Andy Yan <ayan@marvell.com>
+> Date: Mon, 4 May 2009 23:33:58 +0800
+> Subject: [PATCH 3/4] bug fix: task frame type setting
 > 
-> While at it remove superflous blk_fs_request() && !blk_rq_sectors()
-> condition check.
+> Set SSP Task Frame for TMF task.
 > 
-> [ Impact: dequeue in-flight request, cleanup ]
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Adrian McMenamin <adrian@mcmen.demon.co.uk>
-> ---
+> Signed-off-by: Ying Chu <jasonchu@marvell.com>
+> Signed-off-by: Andy Yan <ayan@marvell.com>
+> Signed-off-by: Ke Wei <kewei@marvell.com>
 
-Tested-by: Adrian McMenamin <adrian@mcmen.demon.co.uk>
-Acked-by: Adrian McMenamin <adrian@mcmen.demon.co.uk>
+Acked-by: Jeff Garzik <jgarzik@redhat.com>
+
 
