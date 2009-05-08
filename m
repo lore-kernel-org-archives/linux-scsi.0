@@ -1,36 +1,43 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [GIT PATCH] block,scsi,ide: unify sector and data_len, take#2
-Date: Fri, 08 May 2009 18:11:16 +0900
-Message-ID: <4A03F734.2020000@kernel.org>
-References: <1241423927-11871-1-git-send-email-tj@kernel.org>	<20090507192427K.fujita.tomonori@lab.ntt.co.jp> <20090508110630H.fujita.tomonori@lab.ntt.co.jp>
+From: "Norman Diamond" <n0diamond@yahoo.co.jp>
+Subject: Re: sg timeout problem
+Date: Fri, 8 May 2009 20:22:23 +0900
+Message-ID: <AB775258E58247F6A0960B1AFEC0E103@DIAMOND8600>
+References: <BB8F41726E2941CEB399F732BB3ED9E5@DIAMOND8600> <20090506103852.19cb69b9@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20090508110630H.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-ide-owner@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, bharrosh@panasas.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp11.mail.tnz.yahoo.co.jp ([203.216.226.139]:35978 "HELO
+	smtp11.mail.tnz.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753466AbZEHLWi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 May 2009 07:22:38 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hello,
+>> But if sg is running on top of an actual SCSI driver, someone aborts the
+>> ioctl after 3 seconds.  The ioctl returns success even though the
+>> operation didn't complete.  I tried this with two Adaptec drivers and one
+>> NinjaSCSI driver with 100% repro.
+>>
+>> What am I missing?  I need the call to run to completion.
+>
+> If you set it to the max of a signed int does it behave, or to a large
+> value thats well under the limit. That will help tell if there is a
+> problem with sign handling in the scsi code somewhere or it is getting
+> multiplied up for some reason.
 
-FUJITA Tomonori wrote:
-> btw, you are still working on the cleanups of the block API, right?
+I have the impression now that the drives are lying and it's not the fault
+of the drivers or cards.  The same problem occured with a fourth card and a
+non-Linux system.
 
-The patchset I sent out today was the last large cleanup patchset I
-had waiting.  I think I'm now ready to move onto adding new features.
+Anyway I also tried changing the timeout to 86400000 milliseconds (one day)
+and it made no difference.  So again I stop blaming the drivers.
 
-> I also want to see some cleanups of request completion functions a bit
-> (e.g. we don't need _bidi_ stuff, we have too many completion
-> functions, etc...).
-
-Hmmm... the bidi stuff not being used widely, I didn't pay too much
-attention to it.  What do you have in mind?  Can you elaborate a bit?
-We changed the API a lot anyway so if there's more to do doing it now
-wouldn't be a bad idea.
-
-Thanks.
-
--- 
-tejun
+--------------------------------------
+Power up the Internet with Yahoo! Toolbar.
+http://pr.mail.yahoo.co.jp/toolbar/
