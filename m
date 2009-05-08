@@ -1,294 +1,246 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 03/18] mg_disk: dequeue and track in-flight request
-Date: Fri,  8 May 2009 11:54:01 +0900
-Message-ID: <1241751256-17435-4-git-send-email-tj@kernel.org>
+Subject: [PATCH 17/18] block: convert to dequeueing model (easy ones)
+Date: Fri,  8 May 2009 11:54:15 +0900
+Message-ID: <1241751256-17435-18-git-send-email-tj@kernel.org>
 References: <1241751256-17435-1-git-send-email-tj@kernel.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:36183 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753947AbZEHC4K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 May 2009 22:56:10 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1241751256-17435-1-git-send-email-tj@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, rusty@rustcorp.com.au, James.Bottomley@HansenPartnership.com, mike.miller@hp.com, donari75@gmail.c
 Cc: Tejun Heo <tj@kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-mg_disk has at most single request in flight per device.  Till now,
-whenever it needs to access the in-flight request it called
-elv_next_request().  This patch makes mg_disk track the in-flight
-request directly using mg_host->req and dequeue it when processing
-starts.
+plat-omap/mailbox, floppy, viocd, mspro_block, i2o_block and
+mmc/card/queue are already pretty close to dequeueing model and can be
+converted with simple changes.  Convert them.
 
-q->queuedata is set to mg_host so that mg_host can be determined
-without fetching request from the queue.
+While at it,
 
-[ Impact: dequeue in-flight request, one elv_next_request() per request ]
+* xen-blkfront: !fs check moved downwards to share dequeue call with
+  normal path.
+
+* mspro_block: __blk_end_request(..., blk_rq_cur_byte()) converted to
+  __blk_end_request_cur()
+
+* mmc/card/queue: loop of __blk_end_request() converted to
+  __blk_end_request_all()
+
+
+[ Impact: dequeue in-flight request ]
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: unsik Kim <donari75@gmail.com>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Jeremy Fitzhardinge <jeremy@xensource.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Alex Dubov <oakad@yahoo.com>
+Cc: Markus Lidel <Markus.Lidel@shadowconnect.com>
+Cc: Pierre Ossman <drzeus@drzeus.cx>
 ---
- drivers/block/mg_disk.c |  109 +++++++++++++++++++++++++---------------------
- 1 files changed, 59 insertions(+), 50 deletions(-)
+ arch/arm/plat-omap/mailbox.c        |    9 +++++++++
+ drivers/block/floppy.c              |    4 +++-
+ drivers/block/xen-blkfront.c        |   13 +++++++------
+ drivers/cdrom/viocd.c               |    2 ++
+ drivers/memstick/core/mspro_block.c |    8 +++++---
+ drivers/message/i2o/i2o_block.c     |    6 ++++--
+ drivers/mmc/card/queue.c            |   12 ++++++------
+ 7 files changed, 36 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/block/mg_disk.c b/drivers/block/mg_disk.c
-index be32388..1ca5d14 100644
---- a/drivers/block/mg_disk.c
-+++ b/drivers/block/mg_disk.c
-@@ -135,6 +135,7 @@ struct mg_host {
- 	struct device *dev;
+diff --git a/arch/arm/plat-omap/mailbox.c b/arch/arm/plat-omap/mailbox.c
+index 538ba75..7a1f5c2 100644
+--- a/arch/arm/plat-omap/mailbox.c
++++ b/arch/arm/plat-omap/mailbox.c
+@@ -198,6 +198,8 @@ static void mbox_tx_work(struct work_struct *work)
  
- 	struct request_queue *breq;
-+	struct request *req;
- 	spinlock_t lock;
- 	struct gendisk *gd;
+ 		spin_lock(q->queue_lock);
+ 		rq = elv_next_request(q);
++		if (rq)
++			blkdev_dequeue_request(rq);
+ 		spin_unlock(q->queue_lock);
  
-@@ -171,17 +172,27 @@ struct mg_host {
- 
- static void mg_request(struct request_queue *);
- 
-+static bool mg_end_request(struct mg_host *host, int err, unsigned int nr_bytes)
-+{
-+	if (__blk_end_request(host->req, err, nr_bytes))
-+		return true;
-+
-+	host->req = NULL;
-+	return false;
-+}
-+
-+static bool mg_end_request_cur(struct mg_host *host, int err)
-+{
-+	return mg_end_request(host, err, blk_rq_cur_bytes(host->req));
-+}
-+
- static void mg_dump_status(const char *msg, unsigned int stat,
- 		struct mg_host *host)
- {
- 	char *name = MG_DISK_NAME;
--	struct request *req;
- 
--	if (host->breq) {
--		req = elv_next_request(host->breq);
--		if (req)
--			name = req->rq_disk->disk_name;
--	}
-+	if (host->req)
-+		name = host->req->rq_disk->disk_name;
- 
- 	printk(KERN_ERR "%s: %s: status=0x%02x { ", name, msg, stat & 0xff);
- 	if (stat & ATA_BUSY)
-@@ -217,13 +228,9 @@ static void mg_dump_status(const char *msg, unsigned int stat,
- 			printk("AddrMarkNotFound ");
- 		printk("}");
- 		if (host->error & (ATA_BBK | ATA_UNC | ATA_IDNF | ATA_AMNF)) {
--			if (host->breq) {
--				req = elv_next_request(host->breq);
--				if (req)
--					printk(", sector=%u",
--					       (unsigned int)blk_rq_pos(req));
--			}
--
-+			if (host->req)
-+				printk(", sector=%u",
-+				       (unsigned int)blk_rq_pos(host->req));
- 		}
- 		printk("\n");
- 	}
-@@ -453,11 +460,10 @@ static int mg_disk_init(struct mg_host *host)
- 
- static void mg_bad_rw_intr(struct mg_host *host)
- {
--	struct request *req = elv_next_request(host->breq);
--	if (req != NULL)
--		if (++req->errors >= MG_MAX_ERRORS ||
--				host->error == MG_ERR_TIMEOUT)
--			__blk_end_request_cur(req, -EIO);
-+	if (host->req)
-+		if (++host->req->errors >= MG_MAX_ERRORS ||
-+		    host->error == MG_ERR_TIMEOUT)
-+			mg_end_request_cur(host, -EIO);
- }
- 
- static unsigned int mg_out(struct mg_host *host,
-@@ -515,7 +521,7 @@ static void mg_read(struct request *req)
- 
- 		outb(MG_CMD_RD_CONF, (unsigned long)host->dev_base +
- 				MG_REG_COMMAND);
--	} while (__blk_end_request(req, 0, MG_SECTOR_SIZE));
-+	} while (mg_end_request(host, 0, MG_SECTOR_SIZE));
- }
- 
- static void mg_write(struct request *req)
-@@ -545,14 +551,14 @@ static void mg_write(struct request *req)
- 
- 		outb(MG_CMD_WR_CONF, (unsigned long)host->dev_base +
- 				MG_REG_COMMAND);
--	} while (__blk_end_request(req, 0, MG_SECTOR_SIZE));
-+	} while (mg_end_request(host, 0, MG_SECTOR_SIZE));
- }
- 
- static void mg_read_intr(struct mg_host *host)
- {
-+	struct request *req = host->req;
- 	u32 i;
- 	u16 *buff;
--	struct request *req;
- 
- 	/* check status */
- 	do {
-@@ -571,7 +577,6 @@ static void mg_read_intr(struct mg_host *host)
- 
- ok_to_read:
- 	/* get current segment of request */
--	req = elv_next_request(host->breq);
- 	buff = (u16 *)req->buffer;
- 
- 	/* read 1 sector */
-@@ -585,7 +590,7 @@ ok_to_read:
- 	/* send read confirm */
- 	outb(MG_CMD_RD_CONF, (unsigned long)host->dev_base + MG_REG_COMMAND);
- 
--	if (__blk_end_request(req, 0, MG_SECTOR_SIZE)) {
-+	if (mg_end_request(host, 0, MG_SECTOR_SIZE)) {
- 		/* set handler if read remains */
- 		host->mg_do_intr = mg_read_intr;
- 		mod_timer(&host->timer, jiffies + 3 * HZ);
-@@ -595,14 +600,11 @@ ok_to_read:
- 
- static void mg_write_intr(struct mg_host *host)
- {
-+	struct request *req = host->req;
- 	u32 i, j;
- 	u16 *buff;
--	struct request *req;
- 	bool rem;
- 
--	/* get current segment of request */
--	req = elv_next_request(host->breq);
--
- 	/* check status */
- 	do {
- 		i = inb((unsigned long)host->dev_base + MG_REG_STATUS);
-@@ -619,7 +621,7 @@ static void mg_write_intr(struct mg_host *host)
- 	return;
- 
- ok_to_write:
--	if ((rem = __blk_end_request(req, 0, MG_SECTOR_SIZE))) {
-+	if ((rem = mg_end_request(host, 0, MG_SECTOR_SIZE))) {
- 		/* write 1 sector and set handler if remains */
- 		buff = (u16 *)req->buffer;
- 		for (j = 0; j < MG_STORAGE_BUFFER_SIZE >> 1; j++) {
-@@ -644,44 +646,47 @@ void mg_times_out(unsigned long data)
- {
- 	struct mg_host *host = (struct mg_host *)data;
- 	char *name;
--	struct request *req;
- 
- 	spin_lock_irq(&host->lock);
- 
--	req = elv_next_request(host->breq);
--	if (!req)
-+	if (!host->req)
- 		goto out_unlock;
- 
- 	host->mg_do_intr = NULL;
- 
--	name = req->rq_disk->disk_name;
-+	name = host->req->rq_disk->disk_name;
- 	printk(KERN_DEBUG "%s: timeout\n", name);
- 
- 	host->error = MG_ERR_TIMEOUT;
- 	mg_bad_rw_intr(host);
- 
--	mg_request(host->breq);
- out_unlock:
-+	mg_request(host->breq);
- 	spin_unlock_irq(&host->lock);
- }
- 
- static void mg_request_poll(struct request_queue *q)
- {
--	struct request *req;
--	struct mg_host *host;
-+	struct mg_host *host = q->queuedata;
- 
--	while ((req = elv_next_request(q)) != NULL) {
--		host = req->rq_disk->private_data;
-+	while (1) {
-+		if (!host->req) {
-+			host->req = elv_next_request(q);
-+			if (host->req)
-+				blkdev_dequeue_request(host->req);
-+			else
-+				break;
-+		}
- 
--		if (unlikely(!blk_fs_request(req))) {
--			__blk_end_request_cur(req, -EIO);
-+		if (unlikely(!blk_fs_request(host->req))) {
-+			mg_end_request_cur(host, -EIO);
- 			continue;
+ 		if (!rq)
+@@ -208,6 +210,9 @@ static void mbox_tx_work(struct work_struct *work)
+ 		ret = __mbox_msg_send(mbox, tx_data->msg, tx_data->arg);
+ 		if (ret) {
+ 			enable_mbox_irq(mbox, IRQ_TX);
++			spin_lock(q->queue_lock);
++			blk_requeue_request(q, rq);
++			spin_unlock(q->queue_lock);
+ 			return;
  		}
  
--		if (rq_data_dir(req) == READ)
--			mg_read(req);
-+		if (rq_data_dir(host->req) == READ)
-+			mg_read(host->req);
- 		else
--			mg_write(req);
-+			mg_write(host->req);
- 	}
- }
- 
-@@ -733,16 +738,19 @@ static unsigned int mg_issue_req(struct request *req,
- /* This function also called from IRQ context */
- static void mg_request(struct request_queue *q)
- {
-+	struct mg_host *host = q->queuedata;
- 	struct request *req;
--	struct mg_host *host;
- 	u32 sect_num, sect_cnt;
- 
+@@ -238,6 +243,8 @@ static void mbox_rx_work(struct work_struct *work)
  	while (1) {
--		req = elv_next_request(q);
--		if (!req)
--			return;
--
--		host = req->rq_disk->private_data;
-+		if (!host->req) {
-+			host->req = elv_next_request(q);
-+			if (host->req)
-+				blkdev_dequeue_request(host->req);
-+			else
-+				break;
+ 		spin_lock_irqsave(q->queue_lock, flags);
+ 		rq = elv_next_request(q);
++		if (rq)
++			blkdev_dequeue_request(rq);
+ 		spin_unlock_irqrestore(q->queue_lock, flags);
+ 		if (!rq)
+ 			break;
+@@ -345,6 +352,8 @@ omap_mbox_read(struct device *dev, struct device_attribute *attr, char *buf)
+ 	while (1) {
+ 		spin_lock_irqsave(q->queue_lock, flags);
+ 		rq = elv_next_request(q);
++		if (rq)
++			blkdev_dequeue_request(rq);
+ 		spin_unlock_irqrestore(q->queue_lock, flags);
+ 
+ 		if (!rq)
+diff --git a/drivers/block/floppy.c b/drivers/block/floppy.c
+index 1e27ed9..e2c70d2 100644
+--- a/drivers/block/floppy.c
++++ b/drivers/block/floppy.c
+@@ -931,7 +931,7 @@ static inline void unlock_fdc(void)
+ 	del_timer(&fd_timeout);
+ 	cont = NULL;
+ 	clear_bit(0, &fdc_busy);
+-	if (elv_next_request(floppy_queue))
++	if (current_req || elv_next_request(floppy_queue))
+ 		do_fd_request(floppy_queue);
+ 	spin_unlock_irqrestore(&floppy_lock, flags);
+ 	wake_up(&fdc_wait);
+@@ -2913,6 +2913,8 @@ static void redo_fd_request(void)
+ 
+ 			spin_lock_irq(floppy_queue->queue_lock);
+ 			req = elv_next_request(floppy_queue);
++			if (req)
++				blkdev_dequeue_request(req);
+ 			spin_unlock_irq(floppy_queue->queue_lock);
+ 			if (!req) {
+ 				do_floppy = NULL;
+diff --git a/drivers/block/xen-blkfront.c b/drivers/block/xen-blkfront.c
+index 91fc565..66f8345 100644
+--- a/drivers/block/xen-blkfront.c
++++ b/drivers/block/xen-blkfront.c
+@@ -301,22 +301,23 @@ static void do_blkif_request(struct request_queue *rq)
+ 
+ 	while ((req = elv_next_request(rq)) != NULL) {
+ 		info = req->rq_disk->private_data;
+-		if (!blk_fs_request(req)) {
+-			__blk_end_request_cur(req, -EIO);
+-			continue;
+-		}
+ 
+ 		if (RING_FULL(&info->ring))
+ 			goto wait;
+ 
++		blkdev_dequeue_request(req);
++
++		if (!blk_fs_request(req)) {
++			__blk_end_request_all(req, -EIO);
++			continue;
 +		}
-+		req = host->req;
++
+ 		pr_debug("do_blk_req %p: cmd %p, sec %lx, "
+ 			 "(%u/%u) buffer:%p [%s]\n",
+ 			 req, req->cmd, (unsigned long)blk_rq_pos(req),
+ 			 blk_rq_cur_sectors(req), blk_rq_sectors(req),
+ 			 req->buffer, rq_data_dir(req) ? "write" : "read");
  
- 		/* check unwanted request call */
- 		if (host->mg_do_intr)
-@@ -762,12 +770,12 @@ static void mg_request(struct request_queue *q)
- 					"%s: bad access: sector=%d, count=%d\n",
- 					req->rq_disk->disk_name,
- 					sect_num, sect_cnt);
--			__blk_end_request_cur(req, -EIO);
-+			mg_end_request_cur(host, -EIO);
+-
+-		blkdev_dequeue_request(req);
+ 		if (blkif_queue_request(req)) {
+ 			blk_requeue_request(rq, req);
+ wait:
+diff --git a/drivers/cdrom/viocd.c b/drivers/cdrom/viocd.c
+index 6e190a9..bbe9f08 100644
+--- a/drivers/cdrom/viocd.c
++++ b/drivers/cdrom/viocd.c
+@@ -298,6 +298,8 @@ static void do_viocd_request(struct request_queue *q)
+ 	struct request *req;
+ 
+ 	while ((rwreq == 0) && ((req = elv_next_request(q)) != NULL)) {
++		blkdev_dequeue_request(req);
++
+ 		if (!blk_fs_request(req))
+ 			__blk_end_request_all(req, -EIO);
+ 		else if (send_request(req) < 0) {
+diff --git a/drivers/memstick/core/mspro_block.c b/drivers/memstick/core/mspro_block.c
+index 93b2c61..58f5be8 100644
+--- a/drivers/memstick/core/mspro_block.c
++++ b/drivers/memstick/core/mspro_block.c
+@@ -672,8 +672,7 @@ try_again:
+ 					       msb->req_sg);
+ 
+ 		if (!msb->seg_count) {
+-			chunk = __blk_end_request(msb->block_req, -ENOMEM,
+-					blk_rq_cur_bytes(msb->block_req));
++			chunk = __blk_end_request_cur(msb->block_req, -ENOMEM);
  			continue;
  		}
  
- 		if (unlikely(!blk_fs_request(req))) {
--			__blk_end_request_cur(req, -EIO);
-+			mg_end_request_cur(host, -EIO);
- 			continue;
- 		}
- 
-@@ -981,6 +989,7 @@ static int mg_probe(struct platform_device *plat_dev)
- 				__func__, __LINE__);
- 		goto probe_err_5;
+@@ -711,6 +710,7 @@ try_again:
+ 		dev_dbg(&card->dev, "issue end\n");
+ 		return -EAGAIN;
  	}
-+	host->breq->queuedata = host;
++	blkdev_dequeue_request(msb->block_req);
  
- 	/* mflash is random device, thanx for the noop */
- 	elevator_exit(host->breq->elevator);
+ 	dev_dbg(&card->dev, "trying again\n");
+ 	chunk = 1;
+@@ -825,8 +825,10 @@ static void mspro_block_submit_req(struct request_queue *q)
+ 		return;
+ 
+ 	if (msb->eject) {
+-		while ((req = elv_next_request(q)) != NULL)
++		while ((req = elv_next_request(q)) != NULL) {
++			blkdev_dequeue_request(req);
+ 			__blk_end_request_all(req, -ENODEV);
++		}
+ 
+ 		return;
+ 	}
+diff --git a/drivers/message/i2o/i2o_block.c b/drivers/message/i2o/i2o_block.c
+index e153f5d..8b5cbfc 100644
+--- a/drivers/message/i2o/i2o_block.c
++++ b/drivers/message/i2o/i2o_block.c
+@@ -916,8 +916,10 @@ static void i2o_block_request_fn(struct request_queue *q)
+ 				blk_stop_queue(q);
+ 				break;
+ 			}
+-		} else
+-			__blk_end_request_cur(req, -EIO);
++		} else {
++			blkdev_dequeue_request(req);
++			__blk_end_request_all(req, -EIO);
++		}
+ 	}
+ };
+ 
+diff --git a/drivers/mmc/card/queue.c b/drivers/mmc/card/queue.c
+index 7a72e75..4b70f1e 100644
+--- a/drivers/mmc/card/queue.c
++++ b/drivers/mmc/card/queue.c
+@@ -54,8 +54,11 @@ static int mmc_queue_thread(void *d)
+ 
+ 		spin_lock_irq(q->queue_lock);
+ 		set_current_state(TASK_INTERRUPTIBLE);
+-		if (!blk_queue_plugged(q))
++		if (!blk_queue_plugged(q)) {
+ 			req = elv_next_request(q);
++			if (req)
++				blkdev_dequeue_request(req);
++		}
+ 		mq->req = req;
+ 		spin_unlock_irq(q->queue_lock);
+ 
+@@ -88,15 +91,12 @@ static void mmc_request(struct request_queue *q)
+ {
+ 	struct mmc_queue *mq = q->queuedata;
+ 	struct request *req;
+-	int ret;
+ 
+ 	if (!mq) {
+ 		printk(KERN_ERR "MMC: killing requests for dead queue\n");
+ 		while ((req = elv_next_request(q)) != NULL) {
+-			do {
+-				ret = __blk_end_request(req, -EIO,
+-							blk_rq_cur_bytes(req));
+-			} while (ret);
++			blkdev_dequeue_request(req);
++			__blk_end_request_all(req, -EIO);
+ 		}
+ 		return;
+ 	}
 -- 
 1.6.0.2
 
