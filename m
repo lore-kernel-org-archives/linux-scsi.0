@@ -1,200 +1,202 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 05/18] ataflop: dequeue and track in-flight request
-Date: Fri,  8 May 2009 11:54:03 +0900
-Message-ID: <1241751256-17435-6-git-send-email-tj@kernel.org>
+Subject: [PATCH 04/18] hd: dequeue and track in-flight request
+Date: Fri,  8 May 2009 11:54:02 +0900
+Message-ID: <1241751256-17435-5-git-send-email-tj@kernel.org>
 References: <1241751256-17435-1-git-send-email-tj@kernel.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:36180 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753751AbZEHC4K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 May 2009 22:56:10 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1241751256-17435-1-git-send-email-tj@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, rusty@rustcorp.com.au, James.Bottomley@HansenPartnership.com, mike.miller@hp.com, donari75@gmail.c
 Cc: Tejun Heo <tj@kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-ataflop has single request in flight.  Till now, whenever it needs to
-access the in-flight request it called elv_next_request().  This patch
-makes ataflop track the in-flight request directly and dequeue it when
-processing starts.  The added complexity is minimal and this will help
-future block layer changes.
+hd has at most single request in flight.  Till now, whenever it needs
+to access the in-flight request it called elv_next_request().  This
+patch makes hd track the in-flight request directly and dequeue it
+when processing starts.  The added complexity is minimal and this will
+help future block layer changes.
 
 [ Impact: dequeue in-flight request, one elv_next_request() per request ]
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/block/ataflop.c |   63 ++++++++++++++++++++++++++---------------------
- 1 files changed, 35 insertions(+), 28 deletions(-)
+ drivers/block/hd.c |   63 +++++++++++++++++++++++++++++++++-------------------
+ 1 files changed, 40 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/block/ataflop.c b/drivers/block/ataflop.c
-index 234024c..89a591d 100644
---- a/drivers/block/ataflop.c
-+++ b/drivers/block/ataflop.c
-@@ -79,9 +79,7 @@
- #undef DEBUG
+diff --git a/drivers/block/hd.c b/drivers/block/hd.c
+index a3b3994..288ab63 100644
+--- a/drivers/block/hd.c
++++ b/drivers/block/hd.c
+@@ -98,10 +98,9 @@
  
- static struct request_queue *floppy_queue;
--
--#define QUEUE (floppy_queue)
--#define CURRENT elv_next_request(floppy_queue)
-+static struct request *fd_request;
+ static DEFINE_SPINLOCK(hd_lock);
+ static struct request_queue *hd_queue;
++static struct request *hd_req;
  
- /* Disk types: DD, HD, ED */
- static struct atari_disk_type {
-@@ -376,6 +374,12 @@ static DEFINE_TIMER(readtrack_timer, fd_readtrack_check, 0, 0);
- static DEFINE_TIMER(timeout_timer, fd_times_out, 0, 0);
- static DEFINE_TIMER(fd_timer, check_change, 0, 0);
- 	
-+static void fd_end_request_cur(int err)
+ #define MAJOR_NR HD_MAJOR
+-#define QUEUE (hd_queue)
+-#define CURRENT elv_next_request(hd_queue)
+ 
+ #define TIMEOUT_VALUE	(6*HZ)
+ #define	HD_DELAY	0
+@@ -195,11 +194,24 @@ static void __init hd_setup(char *str, int *ints)
+ 	NR_HD = hdind+1;
+ }
+ 
++static bool hd_end_request(int err, unsigned int bytes)
 +{
-+	if (!__blk_end_request_cur(fd_request, err))
-+		fd_request = NULL;
++	if (__blk_end_request(hd_req, err, bytes))
++		return true;
++	hd_req = NULL;
++	return false;
 +}
 +
- static inline void start_motor_off_timer(void)
++static bool hd_end_request_cur(int err)
++{
++	return hd_end_request(err, blk_rq_cur_bytes(hd_req));
++}
++
+ static void dump_status(const char *msg, unsigned int stat)
  {
- 	mod_timer(&motor_off_timer, jiffies + FD_MOTOR_OFF_DELAY);
-@@ -606,15 +610,15 @@ static void fd_error( void )
- 		return;
- 	}
+ 	char *name = "hd?";
+-	if (CURRENT)
+-		name = CURRENT->rq_disk->disk_name;
++	if (hd_req)
++		name = hd_req->rq_disk->disk_name;
  
--	if (!CURRENT)
-+	if (!fd_request)
- 		return;
- 
--	CURRENT->errors++;
--	if (CURRENT->errors >= MAX_ERRORS) {
-+	fd_request->errors++;
-+	if (fd_request->errors >= MAX_ERRORS) {
- 		printk(KERN_ERR "fd%d: too many errors.\n", SelectedDrive );
--		__blk_end_request_cur(CURRENT, -EIO);
-+		fd_end_request_cur(-EIO);
- 	}
--	else if (CURRENT->errors == RECALIBRATE_ERRORS) {
-+	else if (fd_request->errors == RECALIBRATE_ERRORS) {
- 		printk(KERN_WARNING "fd%d: recalibrating\n", SelectedDrive );
- 		if (SelectedDrive != -1)
- 			SUD.track = -1;
-@@ -725,14 +729,14 @@ static void do_fd_action( int drive )
- 	    if (IS_BUFFERED( drive, ReqSide, ReqTrack )) {
- 		if (ReqCmd == READ) {
- 		    copy_buffer( SECTOR_BUFFER(ReqSector), ReqData );
--		    if (++ReqCnt < blk_rq_cur_sectors(CURRENT)) {
-+		    if (++ReqCnt < blk_rq_cur_sectors(fd_request)) {
- 			/* read next sector */
- 			setup_req_params( drive );
- 			goto repeat;
- 		    }
- 		    else {
- 			/* all sectors finished */
--			__blk_end_request_cur(CURRENT, 0);
-+			fd_end_request_cur(0);
- 			redo_fd_request();
- 			return;
- 		    }
-@@ -1130,14 +1134,14 @@ static void fd_rwsec_done1(int status)
+ #ifdef VERBOSE_ERRORS
+ 	printk("%s: %s: status=0x%02x { ", name, msg, stat & 0xff);
+@@ -227,8 +239,8 @@ static void dump_status(const char *msg, unsigned int stat)
+ 		if (hd_error & (BBD_ERR|ECC_ERR|ID_ERR|MARK_ERR)) {
+ 			printk(", CHS=%d/%d/%d", (inb(HD_HCYL)<<8) + inb(HD_LCYL),
+ 				inb(HD_CURRENT) & 0xf, inb(HD_SECTOR));
+-			if (CURRENT)
+-				printk(", sector=%ld", blk_rq_pos(CURRENT));
++			if (hd_req)
++				printk(", sector=%ld", blk_rq_pos(hd_req));
  		}
+ 		printk("\n");
  	}
-   
--	if (++ReqCnt < blk_rq_cur_sectors(CURRENT)) {
-+	if (++ReqCnt < blk_rq_cur_sectors(fd_request)) {
- 		/* read next sector */
- 		setup_req_params( SelectedDrive );
- 		do_fd_action( SelectedDrive );
- 	}
- 	else {
- 		/* all sectors finished */
--		__blk_end_request_cur(CURRENT, 0);
-+		fd_end_request_cur(0);
- 		redo_fd_request();
- 	}
+@@ -406,11 +418,12 @@ static void unexpected_hd_interrupt(void)
+  */
+ static void bad_rw_intr(void)
+ {
+-	struct request *req = CURRENT;
++	struct request *req = hd_req;
++
+ 	if (req != NULL) {
+ 		struct hd_i_struct *disk = req->rq_disk->private_data;
+ 		if (++req->errors >= MAX_ERRORS || (hd_error & BBD_ERR)) {
+-			__blk_end_request_cur(req, -EIO);
++			hd_end_request_cur(-EIO);
+ 			disk->special_op = disk->recalibrate = 1;
+ 		} else if (req->errors % RESET_FREQ == 0)
+ 			reset = 1;
+@@ -454,14 +467,14 @@ static void read_intr(void)
  	return;
-@@ -1378,7 +1382,7 @@ static void setup_req_params( int drive )
- 	ReqData = ReqBuffer + 512 * ReqCnt;
  
- 	if (UseTrackbuffer)
--		read_track = (ReqCmd == READ && CURRENT->errors == 0);
-+		read_track = (ReqCmd == READ && fd_request->errors == 0);
- 	else
- 		read_track = 0;
+ ok_to_read:
+-	req = CURRENT;
++	req = hd_req;
+ 	insw(HD_DATA, req->buffer, 256);
+ #ifdef DEBUG
+ 	printk("%s: read: sector %ld, remaining = %u, buffer=%p\n",
+ 	       req->rq_disk->disk_name, blk_rq_pos(req) + 1,
+ 	       blk_rq_sectors(req) - 1, req->buffer+512);
+ #endif
+-	if (__blk_end_request(req, 0, 512)) {
++	if (hd_end_request(0, 512)) {
+ 		SET_HANDLER(&read_intr);
+ 		return;
+ 	}
+@@ -475,7 +488,7 @@ ok_to_read:
  
-@@ -1392,25 +1396,28 @@ static void redo_fd_request(void)
- 	int drive, type;
- 	struct atari_floppy_struct *floppy;
+ static void write_intr(void)
+ {
+-	struct request *req = CURRENT;
++	struct request *req = hd_req;
+ 	int i;
+ 	int retries = 100000;
  
--	DPRINT(("redo_fd_request: CURRENT=%p dev=%s CURRENT->sector=%ld\n",
--		CURRENT, CURRENT ? CURRENT->rq_disk->disk_name : "",
--		CURRENT ? blk_rq_pos(CURRENT) : 0 ));
-+	DPRINT(("redo_fd_request: fd_request=%p dev=%s fd_request->sector=%ld\n",
-+		fd_request, fd_request ? fd_request->rq_disk->disk_name : "",
-+		fd_request ? blk_rq_pos(fd_request) : 0 ));
+@@ -494,7 +507,7 @@ static void write_intr(void)
+ 	return;
  
- 	IsFormatting = 0;
+ ok_to_write:
+-	if (__blk_end_request(req, 0, 512)) {
++	if (hd_end_request(0, 512)) {
+ 		SET_HANDLER(&write_intr);
+ 		outsw(HD_DATA, req->buffer, 256);
+ 		return;
+@@ -525,18 +538,18 @@ static void hd_times_out(unsigned long dummy)
  
- repeat:
-+	if (!fd_request) {
-+		fd_request = elv_next_request(floppy_queue);
-+		if (!fd_request)
-+			goto the_end;
-+		blkdev_dequeue_request(fd_request);
-+	}
+ 	do_hd = NULL;
  
 -	if (!CURRENT)
--		goto the_end;
--
--	floppy = CURRENT->rq_disk->private_data;
-+	floppy = fd_request->rq_disk->private_data;
- 	drive = floppy - unit;
- 	type = floppy->type;
- 	
- 	if (!UD.connected) {
- 		/* drive not connected */
- 		printk(KERN_ERR "Unknown Device: fd%d\n", drive );
++	if (!hd_req)
+ 		return;
+ 
+ 	spin_lock_irq(hd_queue->queue_lock);
+ 	reset = 1;
+-	name = CURRENT->rq_disk->disk_name;
++	name = hd_req->rq_disk->disk_name;
+ 	printk("%s: timeout\n", name);
+-	if (++CURRENT->errors >= MAX_ERRORS) {
++	if (++hd_req->errors >= MAX_ERRORS) {
+ #ifdef DEBUG
+ 		printk("%s: too many errors\n", name);
+ #endif
 -		__blk_end_request_cur(CURRENT, -EIO);
-+		fd_end_request_cur(-EIO);
- 		goto repeat;
++		hd_end_request_cur(-EIO);
  	}
- 		
-@@ -1426,12 +1433,12 @@ repeat:
- 		/* user supplied disk type */
- 		if (--type >= NUM_DISK_MINORS) {
- 			printk(KERN_WARNING "fd%d: invalid disk format", drive );
--			__blk_end_request_cur(CURRENT, -EIO);
-+			fd_end_request_cur(-EIO);
- 			goto repeat;
- 		}
- 		if (minor2disktype[type].drive_types > DriveType)  {
- 			printk(KERN_WARNING "fd%d: unsupported disk format", drive );
--			__blk_end_request_cur(CURRENT, -EIO);
-+			fd_end_request_cur(-EIO);
- 			goto repeat;
- 		}
- 		type = minor2disktype[type].index;
-@@ -1440,8 +1447,8 @@ repeat:
- 		UD.autoprobe = 0;
+ 	hd_request();
+ 	spin_unlock_irq(hd_queue->queue_lock);
+@@ -551,7 +564,7 @@ static int do_special_op(struct hd_i_struct *disk, struct request *req)
  	}
- 	
--	if (blk_rq_pos(CURRENT) + 1 > UDT->blocks) {
--		__blk_end_request_cur(CURRENT, -EIO);
-+	if (blk_rq_pos(fd_request) + 1 > UDT->blocks) {
-+		fd_end_request_cur(-EIO);
+ 	if (disk->head > 16) {
+ 		printk("%s: cannot handle device with more than 16 heads - giving up\n", req->rq_disk->disk_name);
+-		__blk_end_request_cur(req, -EIO);
++		hd_end_request_cur(-EIO);
+ 	}
+ 	disk->special_op = 0;
+ 	return 1;
+@@ -578,11 +591,15 @@ static void hd_request(void)
+ repeat:
+ 	del_timer(&device_timer);
+ 
+-	req = CURRENT;
+-	if (!req) {
+-		do_hd = NULL;
+-		return;
++	if (!hd_req) {
++		hd_req = elv_next_request(hd_queue);
++		if (!hd_req) {
++			do_hd = NULL;
++			return;
++		}
++		blkdev_dequeue_request(hd_req);
+ 	}
++	req = hd_req;
+ 
+ 	if (reset) {
+ 		reset_hd();
+@@ -595,7 +612,7 @@ repeat:
+ 	    ((block+nsect) > get_capacity(req->rq_disk))) {
+ 		printk("%s: bad access: block=%d, count=%d\n",
+ 			req->rq_disk->disk_name, block, nsect);
+-		__blk_end_request_cur(req, -EIO);
++		hd_end_request_cur(-EIO);
  		goto repeat;
  	}
  
-@@ -1449,9 +1456,9 @@ repeat:
- 	del_timer( &motor_off_timer );
- 		
- 	ReqCnt = 0;
--	ReqCmd = rq_data_dir(CURRENT);
--	ReqBlock = blk_rq_pos(CURRENT);
--	ReqBuffer = CURRENT->buffer;
-+	ReqCmd = rq_data_dir(fd_request);
-+	ReqBlock = blk_rq_pos(fd_request);
-+	ReqBuffer = fd_request->buffer;
- 	setup_req_params( drive );
- 	do_fd_action( drive );
- 
+@@ -635,7 +652,7 @@ repeat:
+ 			break;
+ 		default:
+ 			printk("unknown hd-command\n");
+-			__blk_end_request_cur(req, -EIO);
++			hd_end_request_cur(-EIO);
+ 			break;
+ 		}
+ 	}
 -- 
 1.6.0.2
 
