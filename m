@@ -1,53 +1,51 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 2/4] mvsas: Deadlocks meet when TMF tasks issue
-Date: Fri, 08 May 2009 10:49:25 -0500
-Message-ID: <1241797765.3327.57.camel@mulgrave.int.hansenpartnership.com>
-References: <20090508061605.GA1884@jason.marvell.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCHSET] block,scsi,libata: implement alt_size
+Date: Fri, 08 May 2009 12:21:45 -0400
+Message-ID: <4A045C19.4060801@garzik.org>
+References: <1233456951-992-1-git-send-email-tj@kernel.org>	
+	<49F902CF.7080307@garzik.org> <49F903DD.8040707@kernel.org>	
+	<49FA0349.3090706@garzik.org>	
+	<e9c3a7c20904301415t621670a0l1bd64c7d74d369f@mail.gmail.com>	
+	<49FEA127.1000905@kernel.org>	
+	<e9c3a7c20905040948m572e23dj1aa197dbd20ff037@mail.gmail.com>	
+	<49FFB275.7000507@kernel.org>
+	<e9c3a7c20905050834t79a1c03dt83df288b2f38ed76@mail.gmail.com>
+	<4A03F7A8.9090204@kernel.org>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:56241 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753705AbZEHPtZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 May 2009 11:49:25 -0400
-In-Reply-To: <20090508061605.GA1884@jason.marvell.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <4A03F7A8.9090204@kernel.org>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-scsi@vger.kernel.org, Mauelshagen@redhat.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, jens.axboe@oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: Ying Chu <jasonchu@marvell.com>
-Cc: linux-scsi@vger.kernel.org, jeff@garzik.org
 
-On Fri, 2009-05-08 at 14:16 +0800, Ying Chu wrote:
-> >From 58f754f51fced4a39adcf708319e3de946a0d61a Mon Sep 17 00:00:00 2001
-> From: Andy <ayan@marvell.com>
-> Date: Mon, 4 May 2009 23:31:43 +0800
-> Subject: [PATCH 2/4] bug fix: deal lock 
+Tejun Heo wrote:
+> Dan Williams wrote:
+>> On Mon, May 4, 2009 at 8:28 PM, Tejun Heo <tj@kernel.org> wrote:
+>>> Pushing this in the kernel without updating dm-raid is kind of
+>>> pointless.  Who should I be poking to get the userland part moving?
+>> Dmraid is not the only potential user.  Mdadm will also care about
+>> this as I have seen a report that points to a user having what looks
+>> like an HPA issue with an Intel(R) Matrix array.  So, there are two
+>> immediate users for this interface.  Heinz is the right person to poke
+>> for dmraid updates.  I'll handle the mdadm update.
 > 
-> TMF task need be issued with Interrupt Disabled, or Deadlock may take place.
-> 
-> Signed-off-by: Ying Chu <jasonchu@marvell.com>
-> Signed-off-by: Andy Yan <ayan@marvell.com>
-> Signed-off-by: Ke Wei <kewei@marvell.com>
-> ---
->  drivers/scsi/mvsas/mv_sas.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-> index 318ec01..cb002ef 100644
-> --- a/drivers/scsi/mvsas/mv_sas.c
-> +++ b/drivers/scsi/mvsas/mv_sas.c
-> @@ -1446,7 +1446,7 @@ static int mvs_exec_internal_tmf_task(struct domain_device *dev,
->  		task->timer.expires = jiffies + MVS_TASK_TIMEOUT*HZ;
->  		add_timer(&task->timer);
->  
-> -		res = mvs_task_exec(task, 1, GFP_KERNEL, NULL, 0, 1, tmf);
-> +		res = mvs_task_exec(task, 1, GFP_KERNEL, NULL, 1, 1, tmf);
+> Alright, then.  With Jeff's reluctant ack and scheduled mdadm update,
+> I guess this one can go upstream.  I'll refresh the patchset and
+> repost.  Umm... BTW do I have Heinz's mail address right?
 
-That eliminates the last user of the unlocked case.
+The email addr is correct according to dmraid-current.tar.bz2 (dated Sep 
+2008), at least.  I don't have any better info.
 
-Can't we just drop the conditional lock from mvs_task_exec() now
-instead?  It will make the code much cleaner.
-
-James
-
-
+	Jeff
