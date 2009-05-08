@@ -1,7 +1,7 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 08/18] paride: dequeue in-flight request
-Date: Fri,  8 May 2009 11:54:06 +0900
-Message-ID: <1241751256-17435-9-git-send-email-tj@kernel.org>
+Subject: [PATCH 01/18] ide: dequeue in-flight request
+Date: Fri,  8 May 2009 11:53:59 +0900
+Message-ID: <1241751256-17435-2-git-send-email-tj@kernel.org>
 References: <1241751256-17435-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1241751256-17435-1-git-send-email-tj@kernel.org>
@@ -10,140 +10,217 @@ To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.ker
 Cc: Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-pd/pf/pcd have track in-flight request by pd/pf/pcd_req.  They can be
-converted to dequeueing model by updating fetching and completion
-paths.  Convert them.
+ide generally has single request in flight and tracks it using
+hwif->rq and all state handlers follow the following convention.
 
-Note that removal of elv_next_request() call from pf_next_buf()
-doesn't make any functional difference.  The path is traveled only
-during partial completion of a request and elv_next_request() call
-must return the same request anyway.
+* ide_started is returned if the request is in flight.
+
+* ide_stopped is returned if the queue needs to be restarted.  The
+  request might or might not have been processed fully or partially.
+
+* hwif->rq is set to NULL, when an issued request completes.
+
+So, dequeueing model can be implemented by dequeueing after fetch,
+requeueing if hwif->rq isn't NULL on ide_stopped return and doing
+about the same thing on completion / port unlock paths.  These changes
+can be made in ide-io proper.
+
+In addition to the above main changes, the following updates are
+necessary.
+
+* ide-cd shouldn't dequeue a request when issuing REQUEST SENSE for it
+  as the request is already dequeued.
+
+* ide-atapi uses request queue as stack when issuing REQUEST SENSE to
+  put the REQUEST SENSE in front of the failed request.  This now
+  needs to be done using requeueing.
 
 [ Impact: dequeue in-flight request ]
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Tim Waugh <tim@cyberelk.net>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Borislav Petkov <petkovbb@googlemail.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 ---
- drivers/block/paride/pcd.c |   18 ++++++++++++------
- drivers/block/paride/pd.c  |   14 +++++++++-----
- drivers/block/paride/pf.c  |   14 +++++++-------
- 3 files changed, 28 insertions(+), 18 deletions(-)
+ drivers/ide/ide-atapi.c |   14 ++++++++++++--
+ drivers/ide/ide-cd.c    |    8 --------
+ drivers/ide/ide-io.c    |   34 +++++++++++++++++++++++++++-------
+ 3 files changed, 39 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/block/paride/pcd.c b/drivers/block/paride/pcd.c
-index 2d5dc0a..425f815 100644
---- a/drivers/block/paride/pcd.c
-+++ b/drivers/block/paride/pcd.c
-@@ -719,9 +719,12 @@ static void do_pcd_request(struct request_queue * q)
- 	if (pcd_busy)
- 		return;
- 	while (1) {
--		pcd_req = elv_next_request(q);
--		if (!pcd_req)
--			return;
-+		if (!pcd_req) {
-+			pcd_req = elv_next_request(q);
-+			if (!pcd_req)
-+				return;
-+			blkdev_dequeue_request(pcd_req);
-+		}
+diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
+index 792534d..2874c3d 100644
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -246,6 +246,7 @@ EXPORT_SYMBOL_GPL(ide_queue_sense_rq);
+  */
+ void ide_retry_pc(ide_drive_t *drive)
+ {
++	struct request *failed_rq = drive->hwif->rq;
+ 	struct request *sense_rq = &drive->sense_rq;
+ 	struct ide_atapi_pc *pc = &drive->request_sense_pc;
  
- 		if (rq_data_dir(pcd_req) == READ) {
- 			struct pcd_unit *cd = pcd_req->rq_disk->private_data;
-@@ -734,8 +737,10 @@ static void do_pcd_request(struct request_queue * q)
- 			pcd_busy = 1;
- 			ps_set_intr(do_pcd_read, NULL, 0, nice);
- 			return;
--		} else
--			__blk_end_request_cur(pcd_req, -EIO);
-+		} else {
-+			__blk_end_request_all(pcd_req, -EIO);
-+			pcd_req = NULL;
+@@ -260,8 +261,17 @@ void ide_retry_pc(ide_drive_t *drive)
+ 	if (drive->media == ide_tape)
+ 		set_bit(IDE_AFLAG_IGNORE_DSC, &drive->atapi_flags);
+ 
+-	if (ide_queue_sense_rq(drive, pc))
+-		ide_complete_rq(drive, -EIO, blk_rq_bytes(drive->hwif->rq));
++	/*
++	 * Push back the failed request and put request sense on top
++	 * of it.  The failed command will be retried after sense data
++	 * is acquired.
++	 */
++	blk_requeue_request(failed_rq->q, failed_rq);
++	drive->hwif->rq = NULL;
++	if (ide_queue_sense_rq(drive, pc)) {
++		blkdev_dequeue_request(failed_rq);
++		ide_complete_rq(drive, -EIO, blk_rq_bytes(failed_rq));
++	}
+ }
+ EXPORT_SYMBOL_GPL(ide_retry_pc);
+ 
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 1a58b38..1f88911 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -404,15 +404,7 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
+ 
+ end_request:
+ 	if (stat & ATA_ERR) {
+-		struct request_queue *q = drive->queue;
+-		unsigned long flags;
+-
+-		spin_lock_irqsave(q->queue_lock, flags);
+-		blkdev_dequeue_request(rq);
+-		spin_unlock_irqrestore(q->queue_lock, flags);
+-
+ 		hwif->rq = NULL;
+-
+ 		return ide_queue_sense_rq(drive, rq) ? 2 : 1;
+ 	} else
+ 		return 2;
+diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+index ca2519d..abda733 100644
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -487,10 +487,10 @@ void do_ide_request(struct request_queue *q)
+ 
+ 	if (!ide_lock_port(hwif)) {
+ 		ide_hwif_t *prev_port;
++
++		WARN_ON_ONCE(hwif->rq);
+ repeat:
+ 		prev_port = hwif->host->cur_port;
+-		hwif->rq = NULL;
+-
+ 		if (drive->dev_flags & IDE_DFLAG_SLEEPING &&
+ 		    time_after(drive->sleep, jiffies)) {
+ 			ide_unlock_port(hwif);
+@@ -519,7 +519,12 @@ repeat:
+ 		 * we know that the queue isn't empty, but this can happen
+ 		 * if the q->prep_rq_fn() decides to kill a request
+ 		 */
+-		rq = elv_next_request(drive->queue);
++		if (!rq) {
++			rq = elv_next_request(drive->queue);
++			if (rq)
++				blkdev_dequeue_request(rq);
 +		}
++
+ 		spin_unlock_irq(q->queue_lock);
+ 		spin_lock_irq(&hwif->lock);
+ 
+@@ -555,8 +560,11 @@ repeat:
+ 		startstop = start_request(drive, rq);
+ 		spin_lock_irq(&hwif->lock);
+ 
+-		if (startstop == ide_stopped)
++		if (startstop == ide_stopped) {
++			rq = hwif->rq;
++			hwif->rq = NULL;
+ 			goto repeat;
++		}
+ 	} else
+ 		goto plug_device;
+ out:
+@@ -572,18 +580,24 @@ plug_device:
+ plug_device_2:
+ 	spin_lock_irq(q->queue_lock);
+ 
++	if (rq)
++		blk_requeue_request(q, rq);
+ 	if (!elv_queue_empty(q))
+ 		blk_plug_device(q);
+ }
+ 
+-static void ide_plug_device(ide_drive_t *drive)
++static void ide_requeue_and_plug(ide_drive_t *drive, struct request *rq)
+ {
+ 	struct request_queue *q = drive->queue;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(q->queue_lock, flags);
++
++	if (rq)
++		blk_requeue_request(q, rq);
+ 	if (!elv_queue_empty(q))
+ 		blk_plug_device(q);
++
+ 	spin_unlock_irqrestore(q->queue_lock, flags);
+ }
+ 
+@@ -632,6 +646,7 @@ void ide_timer_expiry (unsigned long data)
+ 	unsigned long	flags;
+ 	int		wait = -1;
+ 	int		plug_device = 0;
++	struct request	*uninitialized_var(rq_in_flight);
+ 
+ 	spin_lock_irqsave(&hwif->lock, flags);
+ 
+@@ -693,6 +708,8 @@ void ide_timer_expiry (unsigned long data)
+ 		spin_lock_irq(&hwif->lock);
+ 		enable_irq(hwif->irq);
+ 		if (startstop == ide_stopped) {
++			rq_in_flight = hwif->rq;
++			hwif->rq = NULL;
+ 			ide_unlock_port(hwif);
+ 			plug_device = 1;
+ 		}
+@@ -701,7 +718,7 @@ void ide_timer_expiry (unsigned long data)
+ 
+ 	if (plug_device) {
+ 		ide_unlock_host(hwif->host);
+-		ide_plug_device(drive);
++		ide_requeue_and_plug(drive, rq_in_flight);
  	}
  }
  
-@@ -744,7 +749,8 @@ static inline void next_request(int err)
- 	unsigned long saved_flags;
+@@ -787,6 +804,7 @@ irqreturn_t ide_intr (int irq, void *dev_id)
+ 	ide_startstop_t startstop;
+ 	irqreturn_t irq_ret = IRQ_NONE;
+ 	int plug_device = 0;
++	struct request *uninitialized_var(rq_in_flight);
  
- 	spin_lock_irqsave(&pcd_lock, saved_flags);
--	__blk_end_request_cur(pcd_req, err);
-+	if (!__blk_end_request_cur(pcd_req, err))
-+		pcd_req = NULL;
- 	pcd_busy = 0;
- 	do_pcd_request(pcd_queue);
- 	spin_unlock_irqrestore(&pcd_lock, saved_flags);
-diff --git a/drivers/block/paride/pd.c b/drivers/block/paride/pd.c
-index 9ec5d4a..d2ca3f5 100644
---- a/drivers/block/paride/pd.c
-+++ b/drivers/block/paride/pd.c
-@@ -410,11 +410,14 @@ static void run_fsm(void)
- 				pd_claimed = 0;
- 				phase = NULL;
- 				spin_lock_irqsave(&pd_lock, saved_flags);
--				__blk_end_request_cur(pd_req,
--						      res == Ok ? 0 : -EIO);
--				pd_req = elv_next_request(pd_queue);
--				if (!pd_req)
--					stop = 1;
-+				if (!__blk_end_request_cur(pd_req,
-+						res == Ok ? 0 : -EIO)) {
-+					pd_req = elv_next_request(pd_queue);
-+					if (!pd_req)
-+						stop = 1;
-+					else
-+						blkdev_dequeue_request(pd_req);
-+				}
- 				spin_unlock_irqrestore(&pd_lock, saved_flags);
- 				if (stop)
- 					return;
-@@ -706,6 +709,7 @@ static void do_pd_request(struct request_queue * q)
- 	pd_req = elv_next_request(q);
- 	if (!pd_req)
- 		return;
-+	blkdev_dequeue_request(pd_req);
+ 	if (host->host_flags & IDE_HFLAG_SERIALIZE) {
+ 		if (hwif != host->cur_port)
+@@ -866,6 +884,8 @@ irqreturn_t ide_intr (int irq, void *dev_id)
+ 	 */
+ 	if (startstop == ide_stopped) {
+ 		BUG_ON(hwif->handler);
++		rq_in_flight = hwif->rq;
++		hwif->rq = NULL;
+ 		ide_unlock_port(hwif);
+ 		plug_device = 1;
+ 	}
+@@ -875,7 +895,7 @@ out:
+ out_early:
+ 	if (plug_device) {
+ 		ide_unlock_host(hwif->host);
+-		ide_plug_device(drive);
++		ide_requeue_and_plug(drive, rq_in_flight);
+ 	}
  
- 	schedule_fsm();
- }
-diff --git a/drivers/block/paride/pf.c b/drivers/block/paride/pf.c
-index e88c889..d6f7bd8 100644
---- a/drivers/block/paride/pf.c
-+++ b/drivers/block/paride/pf.c
-@@ -752,10 +752,8 @@ static struct request_queue *pf_queue;
- 
- static void pf_end_request(int err)
- {
--	if (pf_req) {
--		__blk_end_request_cur(pf_req, err);
-+	if (pf_req && !__blk_end_request_cur(pf_req, err))
- 		pf_req = NULL;
--	}
- }
- 
- static void do_pf_request(struct request_queue * q)
-@@ -763,9 +761,12 @@ static void do_pf_request(struct request_queue * q)
- 	if (pf_busy)
- 		return;
- repeat:
--	pf_req = elv_next_request(q);
--	if (!pf_req)
--		return;
-+	if (!pf_req) {
-+		pf_req = elv_next_request(q);
-+		if (!pf_req)
-+			return;
-+		blkdev_dequeue_request(pf_req);
-+	}
- 
- 	pf_current = pf_req->rq_disk->private_data;
- 	pf_block = blk_rq_pos(pf_req);
-@@ -806,7 +807,6 @@ static int pf_next_buf(void)
- 	if (!pf_count) {
- 		spin_lock_irqsave(&pf_spin_lock, saved_flags);
- 		pf_end_request(0);
--		pf_req = elv_next_request(pf_queue);
- 		spin_unlock_irqrestore(&pf_spin_lock, saved_flags);
- 		if (!pf_req)
- 			return 1;
+ 	return irq_ret;
 -- 
 1.6.0.2
 
