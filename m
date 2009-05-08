@@ -1,7 +1,7 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 16/18] gdrom: dequeue in-flight request
-Date: Fri,  8 May 2009 11:54:14 +0900
-Message-ID: <1241751256-17435-17-git-send-email-tj@kernel.org>
+Subject: [PATCH 13/18] mtd_blkdevs: dequeue in-flight request
+Date: Fri,  8 May 2009 11:54:11 +0900
+Message-ID: <1241751256-17435-14-git-send-email-tj@kernel.org>
 References: <1241751256-17435-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1241751256-17435-1-git-send-email-tj@kernel.org>
@@ -10,72 +10,62 @@ To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.ker
 Cc: Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-gdrom already dequeues and fully completes requests on normal path and
-the error paths can be easily converted to do so too.  Clean it up and
-dequeue requests on error paths too.
+mtd_blkdevs processes requests one-by-one synchronously from a kthread
+and can be easily converted to dequeueing model.  Convert it.
 
-While at it remove superflous blk_fs_request() && !blk_rq_sectors()
-condition check.
-
-[ Impact: dequeue in-flight request, cleanup ]
+[ Impact: dequeue in-flight request ]
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Adrian McMenamin <adrian@mcmen.demon.co.uk>
+Cc: David Woodhouse <dwmw2@infradead.org>
 ---
- drivers/cdrom/gdrom.c |   28 +++++++++++++---------------
- 1 files changed, 13 insertions(+), 15 deletions(-)
+ drivers/mtd/mtd_blkdevs.c |   17 +++++++++++++----
+ 1 files changed, 13 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/cdrom/gdrom.c b/drivers/cdrom/gdrom.c
-index 488423c..3cc02bf 100644
---- a/drivers/cdrom/gdrom.c
-+++ b/drivers/cdrom/gdrom.c
-@@ -638,33 +638,31 @@ static void gdrom_readdisk_dma(struct work_struct *work)
- 	kfree(read_command);
- }
- 
--static void gdrom_request_handler_dma(struct request *req)
--{
--	/* dequeue, add to list of deferred work
--	* and then schedule workqueue */
--	blkdev_dequeue_request(req);
--	list_add_tail(&req->queuelist, &gdrom_deferred);
--	schedule_work(&work);
--}
--
- static void gdrom_request(struct request_queue *rq)
+diff --git a/drivers/mtd/mtd_blkdevs.c b/drivers/mtd/mtd_blkdevs.c
+index 50c76a2..3e10442 100644
+--- a/drivers/mtd/mtd_blkdevs.c
++++ b/drivers/mtd/mtd_blkdevs.c
+@@ -89,18 +89,22 @@ static int mtd_blktrans_thread(void *arg)
  {
- 	struct request *req;
+ 	struct mtd_blktrans_ops *tr = arg;
+ 	struct request_queue *rq = tr->blkcore_priv->rq;
++	struct request *req = NULL;
  
- 	while ((req = elv_next_request(rq)) != NULL) {
-+		blkdev_dequeue_request(req);
+ 	/* we might get involved when memory gets low, so use PF_MEMALLOC */
+ 	current->flags |= PF_MEMALLOC;
+ 
+ 	spin_lock_irq(rq->queue_lock);
 +
- 		if (!blk_fs_request(req)) {
- 			printk(KERN_DEBUG "GDROM: Non-fs request ignored\n");
--			__blk_end_request_cur(req, -EIO);
-+			__blk_end_request_all(req, -EIO);
-+			continue;
- 		}
- 		if (rq_data_dir(req) != READ) {
- 			printk(KERN_NOTICE "GDROM: Read only device -");
- 			printk(" write request ignored\n");
--			__blk_end_request_cur(req, -EIO);
-+			__blk_end_request_all(req, -EIO);
-+			continue;
- 		}
--		if (blk_rq_sectors(req))
--			gdrom_request_handler_dma(req);
--		else
--			__blk_end_request_cur(req, -EIO);
-+
-+		/*
-+		 * Add to list of deferred work and then schedule
-+		 * workqueue.
-+		 */
-+		list_add_tail(&req->queuelist, &gdrom_deferred);
-+		schedule_work(&work);
+ 	while (!kthread_should_stop()) {
+-		struct request *req;
+ 		struct mtd_blktrans_dev *dev;
+ 		int res;
+ 
+-		req = elv_next_request(rq);
+-
++		if (!req) {
++			req = elv_next_request(rq);
++			if (req)
++				blkdev_dequeue_request(req);
++		}
+ 		if (!req) {
+ 			set_current_state(TASK_INTERRUPTIBLE);
+ 			spin_unlock_irq(rq->queue_lock);
+@@ -120,8 +124,13 @@ static int mtd_blktrans_thread(void *arg)
+ 
+ 		spin_lock_irq(rq->queue_lock);
+ 
+-		__blk_end_request_cur(req, res);
++		if (!__blk_end_request_cur(req, res))
++			req = NULL;
  	}
- }
++
++	if (req)
++		__blk_end_request_all(req, -EIO);
++
+ 	spin_unlock_irq(rq->queue_lock);
  
+ 	return 0;
 -- 
 1.6.0.2
 
