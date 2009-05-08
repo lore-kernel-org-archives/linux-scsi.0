@@ -1,7 +1,7 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 04/18] hd: dequeue and track in-flight request
-Date: Fri,  8 May 2009 11:54:02 +0900
-Message-ID: <1241751256-17435-5-git-send-email-tj@kernel.org>
+Subject: [PATCH 06/18] swim3: dequeue in-flight request
+Date: Fri,  8 May 2009 11:54:04 +0900
+Message-ID: <1241751256-17435-7-git-send-email-tj@kernel.org>
 References: <1241751256-17435-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1241751256-17435-1-git-send-email-tj@kernel.org>
@@ -10,193 +10,159 @@ To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.ker
 Cc: Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-hd has at most single request in flight.  Till now, whenever it needs
-to access the in-flight request it called elv_next_request().  This
-patch makes hd track the in-flight request directly and dequeue it
-when processing starts.  The added complexity is minimal and this will
-help future block layer changes.
+swim3 has at most single request in flight and already tracks it using
+fd_req.  Convert it to dequeuing model by updating request fetching
+and wrapping completion function.
 
-[ Impact: dequeue in-flight request, one elv_next_request() per request ]
+[ Impact: dequeue in-flight request ]
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/block/hd.c |   63 +++++++++++++++++++++++++++++++++-------------------
- 1 files changed, 40 insertions(+), 23 deletions(-)
+ drivers/block/swim3.c |   47 ++++++++++++++++++++++++++++++++++-------------
+ 1 files changed, 34 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/block/hd.c b/drivers/block/hd.c
-index a3b3994..288ab63 100644
---- a/drivers/block/hd.c
-+++ b/drivers/block/hd.c
-@@ -98,10 +98,9 @@
+diff --git a/drivers/block/swim3.c b/drivers/block/swim3.c
+index c1b9a4d..f48c6dd 100644
+--- a/drivers/block/swim3.c
++++ b/drivers/block/swim3.c
+@@ -251,6 +251,20 @@ static int floppy_release(struct gendisk *disk, fmode_t mode);
+ static int floppy_check_change(struct gendisk *disk);
+ static int floppy_revalidate(struct gendisk *disk);
  
- static DEFINE_SPINLOCK(hd_lock);
- static struct request_queue *hd_queue;
-+static struct request *hd_req;
- 
- #define MAJOR_NR HD_MAJOR
--#define QUEUE (hd_queue)
--#define CURRENT elv_next_request(hd_queue)
- 
- #define TIMEOUT_VALUE	(6*HZ)
- #define	HD_DELAY	0
-@@ -195,11 +194,24 @@ static void __init hd_setup(char *str, int *ints)
- 	NR_HD = hdind+1;
- }
- 
-+static bool hd_end_request(int err, unsigned int bytes)
++static bool swim3_end_request(int err, unsigned int nr_bytes)
 +{
-+	if (__blk_end_request(hd_req, err, bytes))
++	if (__blk_end_request(fd_req, err, nr_bytes))
 +		return true;
-+	hd_req = NULL;
++
++	fd_req = NULL;
 +	return false;
 +}
 +
-+static bool hd_end_request_cur(int err)
++static bool swim3_end_request_cur(int err)
 +{
-+	return hd_end_request(err, blk_rq_cur_bytes(hd_req));
++	return swim3_end_request(err, blk_rq_cur_bytes(fd_req));
 +}
 +
- static void dump_status(const char *msg, unsigned int stat)
+ static void swim3_select(struct floppy_state *fs, int sel)
  {
- 	char *name = "hd?";
--	if (CURRENT)
--		name = CURRENT->rq_disk->disk_name;
-+	if (hd_req)
-+		name = hd_req->rq_disk->disk_name;
- 
- #ifdef VERBOSE_ERRORS
- 	printk("%s: %s: status=0x%02x { ", name, msg, stat & 0xff);
-@@ -227,8 +239,8 @@ static void dump_status(const char *msg, unsigned int stat)
- 		if (hd_error & (BBD_ERR|ECC_ERR|ID_ERR|MARK_ERR)) {
- 			printk(", CHS=%d/%d/%d", (inb(HD_HCYL)<<8) + inb(HD_LCYL),
- 				inb(HD_CURRENT) & 0xf, inb(HD_SECTOR));
--			if (CURRENT)
--				printk(", sector=%ld", blk_rq_pos(CURRENT));
-+			if (hd_req)
-+				printk(", sector=%ld", blk_rq_pos(hd_req));
- 		}
- 		printk("\n");
- 	}
-@@ -406,11 +418,12 @@ static void unexpected_hd_interrupt(void)
-  */
- static void bad_rw_intr(void)
- {
--	struct request *req = CURRENT;
-+	struct request *req = hd_req;
-+
- 	if (req != NULL) {
- 		struct hd_i_struct *disk = req->rq_disk->private_data;
- 		if (++req->errors >= MAX_ERRORS || (hd_error & BBD_ERR)) {
--			__blk_end_request_cur(req, -EIO);
-+			hd_end_request_cur(-EIO);
- 			disk->special_op = disk->recalibrate = 1;
- 		} else if (req->errors % RESET_FREQ == 0)
- 			reset = 1;
-@@ -454,14 +467,14 @@ static void read_intr(void)
- 	return;
- 
- ok_to_read:
--	req = CURRENT;
-+	req = hd_req;
- 	insw(HD_DATA, req->buffer, 256);
- #ifdef DEBUG
- 	printk("%s: read: sector %ld, remaining = %u, buffer=%p\n",
- 	       req->rq_disk->disk_name, blk_rq_pos(req) + 1,
- 	       blk_rq_sectors(req) - 1, req->buffer+512);
- #endif
--	if (__blk_end_request(req, 0, 512)) {
-+	if (hd_end_request(0, 512)) {
- 		SET_HANDLER(&read_intr);
+ 	struct swim3 __iomem *sw = fs->swim3;
+@@ -310,7 +324,14 @@ static void start_request(struct floppy_state *fs)
+ 		wake_up(&fs->wait);
  		return;
  	}
-@@ -475,7 +488,7 @@ ok_to_read:
- 
- static void write_intr(void)
- {
--	struct request *req = CURRENT;
-+	struct request *req = hd_req;
- 	int i;
- 	int retries = 100000;
- 
-@@ -494,7 +507,7 @@ static void write_intr(void)
- 	return;
- 
- ok_to_write:
--	if (__blk_end_request(req, 0, 512)) {
-+	if (hd_end_request(0, 512)) {
- 		SET_HANDLER(&write_intr);
- 		outsw(HD_DATA, req->buffer, 256);
- 		return;
-@@ -525,18 +538,18 @@ static void hd_times_out(unsigned long dummy)
- 
- 	do_hd = NULL;
- 
--	if (!CURRENT)
-+	if (!hd_req)
- 		return;
- 
- 	spin_lock_irq(hd_queue->queue_lock);
- 	reset = 1;
--	name = CURRENT->rq_disk->disk_name;
-+	name = hd_req->rq_disk->disk_name;
- 	printk("%s: timeout\n", name);
--	if (++CURRENT->errors >= MAX_ERRORS) {
-+	if (++hd_req->errors >= MAX_ERRORS) {
- #ifdef DEBUG
- 		printk("%s: too many errors\n", name);
- #endif
--		__blk_end_request_cur(CURRENT, -EIO);
-+		hd_end_request_cur(-EIO);
- 	}
- 	hd_request();
- 	spin_unlock_irq(hd_queue->queue_lock);
-@@ -551,7 +564,7 @@ static int do_special_op(struct hd_i_struct *disk, struct request *req)
- 	}
- 	if (disk->head > 16) {
- 		printk("%s: cannot handle device with more than 16 heads - giving up\n", req->rq_disk->disk_name);
--		__blk_end_request_cur(req, -EIO);
-+		hd_end_request_cur(-EIO);
- 	}
- 	disk->special_op = 0;
- 	return 1;
-@@ -578,11 +591,15 @@ static void hd_request(void)
- repeat:
- 	del_timer(&device_timer);
- 
--	req = CURRENT;
--	if (!req) {
--		do_hd = NULL;
--		return;
-+	if (!hd_req) {
-+		hd_req = elv_next_request(hd_queue);
-+		if (!hd_req) {
-+			do_hd = NULL;
-+			return;
+-	while (fs->state == idle && (req = elv_next_request(swim3_queue))) {
++	while (fs->state == idle) {
++		if (!fd_req) {
++			fd_req = elv_next_request(swim3_queue);
++			if (!fd_req)
++				break;
++			blkdev_dequeue_request(fd_req);
 +		}
-+		blkdev_dequeue_request(hd_req);
- 	}
-+	req = hd_req;
++		req = fd_req;
+ #if 0
+ 		printk("do_fd_req: dev=%s cmd=%d sec=%ld nr_sec=%u buf=%p\n",
+ 		       req->rq_disk->disk_name, req->cmd,
+@@ -320,11 +341,11 @@ static void start_request(struct floppy_state *fs)
+ #endif
  
- 	if (reset) {
- 		reset_hd();
-@@ -595,7 +612,7 @@ repeat:
- 	    ((block+nsect) > get_capacity(req->rq_disk))) {
- 		printk("%s: bad access: block=%d, count=%d\n",
- 			req->rq_disk->disk_name, block, nsect);
--		__blk_end_request_cur(req, -EIO);
-+		hd_end_request_cur(-EIO);
- 		goto repeat;
- 	}
- 
-@@ -635,7 +652,7 @@ repeat:
- 			break;
- 		default:
- 			printk("unknown hd-command\n");
+ 		if (blk_rq_pos(req) >= fs->total_secs) {
 -			__blk_end_request_cur(req, -EIO);
-+			hd_end_request_cur(-EIO);
- 			break;
++			swim3_end_request_cur(-EIO);
+ 			continue;
  		}
+ 		if (fs->ejected) {
+-			__blk_end_request_cur(req, -EIO);
++			swim3_end_request_cur(-EIO);
+ 			continue;
+ 		}
+ 
+@@ -332,7 +353,7 @@ static void start_request(struct floppy_state *fs)
+ 			if (fs->write_prot < 0)
+ 				fs->write_prot = swim3_readbit(fs, WRITE_PROT);
+ 			if (fs->write_prot) {
+-				__blk_end_request_cur(req, -EIO);
++				swim3_end_request_cur(-EIO);
+ 				continue;
+ 			}
+ 		}
+@@ -505,7 +526,7 @@ static void act(struct floppy_state *fs)
+ 		case do_transfer:
+ 			if (fs->cur_cyl != fs->req_cyl) {
+ 				if (fs->retries > 5) {
+-					__blk_end_request_cur(fd_req, -EIO);
++					swim3_end_request_cur(-EIO);
+ 					fs->state = idle;
+ 					return;
+ 				}
+@@ -537,7 +558,7 @@ static void scan_timeout(unsigned long data)
+ 	out_8(&sw->intr_enable, 0);
+ 	fs->cur_cyl = -1;
+ 	if (fs->retries > 5) {
+-		__blk_end_request_cur(fd_req, -EIO);
++		swim3_end_request_cur(-EIO);
+ 		fs->state = idle;
+ 		start_request(fs);
+ 	} else {
+@@ -556,7 +577,7 @@ static void seek_timeout(unsigned long data)
+ 	out_8(&sw->select, RELAX);
+ 	out_8(&sw->intr_enable, 0);
+ 	printk(KERN_ERR "swim3: seek timeout\n");
+-	__blk_end_request_cur(fd_req, -EIO);
++	swim3_end_request_cur(-EIO);
+ 	fs->state = idle;
+ 	start_request(fs);
+ }
+@@ -580,7 +601,7 @@ static void settle_timeout(unsigned long data)
+ 		return;
  	}
+ 	printk(KERN_ERR "swim3: seek settle timeout\n");
+-	__blk_end_request_cur(fd_req, -EIO);
++	swim3_end_request_cur(-EIO);
+ 	fs->state = idle;
+ 	start_request(fs);
+ }
+@@ -603,7 +624,7 @@ static void xfer_timeout(unsigned long data)
+ 	printk(KERN_ERR "swim3: timeout %sing sector %ld\n",
+ 	       (rq_data_dir(fd_req)==WRITE? "writ": "read"),
+ 	       (long)blk_rq_pos(fd_req));
+-	__blk_end_request_cur(fd_req, -EIO);
++	swim3_end_request_cur(-EIO);
+ 	fs->state = idle;
+ 	start_request(fs);
+ }
+@@ -634,7 +655,7 @@ static irqreturn_t swim3_interrupt(int irq, void *dev_id)
+ 				printk(KERN_ERR "swim3: seen sector but cyl=ff?\n");
+ 				fs->cur_cyl = -1;
+ 				if (fs->retries > 5) {
+-					__blk_end_request_cur(fd_req, -EIO);
++					swim3_end_request_cur(-EIO);
+ 					fs->state = idle;
+ 					start_request(fs);
+ 				} else {
+@@ -717,7 +738,7 @@ static irqreturn_t swim3_interrupt(int irq, void *dev_id)
+ 				printk("swim3: error %sing block %ld (err=%x)\n",
+ 				       rq_data_dir(fd_req) == WRITE? "writ": "read",
+ 				       (long)blk_rq_pos(fd_req), err);
+-				__blk_end_request_cur(fd_req, -EIO);
++				swim3_end_request_cur(-EIO);
+ 				fs->state = idle;
+ 			}
+ 		} else {
+@@ -726,12 +747,12 @@ static irqreturn_t swim3_interrupt(int irq, void *dev_id)
+ 				printk(KERN_ERR "swim3: fd dma: stat=%x resid=%d\n", stat, resid);
+ 				printk(KERN_ERR "  state=%d, dir=%x, intr=%x, err=%x\n",
+ 				       fs->state, rq_data_dir(fd_req), intr, err);
+-				__blk_end_request_cur(fd_req, -EIO);
++				swim3_end_request_cur(-EIO);
+ 				fs->state = idle;
+ 				start_request(fs);
+ 				break;
+ 			}
+-			if (__blk_end_request(fd_req, 0, fs->scount << 9)) {
++			if (swim3_end_request(0, fs->scount << 9)) {
+ 				fs->req_sector += fs->scount;
+ 				if (fs->req_sector > fs->secpertrack) {
+ 					fs->req_sector -= fs->secpertrack;
 -- 
 1.6.0.2
 
