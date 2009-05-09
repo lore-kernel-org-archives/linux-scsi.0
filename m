@@ -1,41 +1,58 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 4/4] mvsas: Fine-tuned tags array for alignment
-Date: Sat, 09 May 2009 02:52:16 -0400
-Message-ID: <4A052820.3080802@garzik.org>
-References: <20090508061852.GA1893@jason.marvell.com> <1241795999.3327.38.camel@mulgrave.int.hansenpartnership.com> <4A045C62.50404@garzik.org> <B610F018B81B3143B10B3A7DC04C693E185056A0AA@SC-VEXCH2.marvell.com>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH 01/18] ide: dequeue in-flight request
+Date: Sat, 9 May 2009 08:56:19 +0200
+Message-ID: <20090509065619.GA8966@liondog.tnic>
+References: <1241751256-17435-1-git-send-email-tj@kernel.org> <1241751256-17435-2-git-send-email-tj@kernel.org>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:43389 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754918AbZEIGwU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 9 May 2009 02:52:20 -0400
-In-Reply-To: <B610F018B81B3143B10B3A7DC04C693E185056A0AA@SC-VEXCH2.marvell.com>
+Received: from mail-bw0-f174.google.com ([209.85.218.174]:65193 "EHLO
+	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751397AbZEIG42 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 May 2009 02:56:28 -0400
+Content-Disposition: inline
+In-Reply-To: <1241751256-17435-2-git-send-email-tj@kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ying Chu <jasonchu@marvell.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andy Yan <ayan@marvell.com>, Ke Wei <kewei@marvell.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, rusty@rustcorp.com.au, James.Bottomley@HansenPartnership.com, mike.miller@hp.com, donari75@gmail.com, paul.clements@steeleye.com, tim@cyberelk.net, Geert.Uytterhoeven@sonycom.com, davem@davemloft.net, Laurent@lvivier.info, jgarzik@pobox.com, jeremy@xensource.com, grant.likely@secretlab.ca, adrian@mcmen.demon.co.uk, sfr@canb.auug.org.au, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, oakad@yahoo.com, drzeus@drzeus.cx, dwmw2@infradead.org, Markus.Lidel@shadowconnect.com, wein@de.ibm.com, schwidefsky@de.ibm.com, zaitcev@redhat.com, fujita.tomonori@lab.ntt.co.jp, axboe@kernel.dk
 
-Ying Chu wrote:
-> Hi, James
+On Fri, May 08, 2009 at 11:53:59AM +0900, Tejun Heo wrote:
+> ide generally has single request in flight and tracks it using
+> hwif->rq and all state handlers follow the following convention.
 > 
-> DECLARE_BITMAP isn't a good option for mvsas, since the tags array couldn't be global(it's chip-related) and even if we define the static tag array both in mv64xx.c and mv94xx.c, it still couldn't honor 88SE9480 as there are 2 separate cores. So if we use DECLARE_BITMAP, it's hard to maintain the corresponding tag for different core.  
+> * ide_started is returned if the request is in flight.
 > 
-> Can we use the following replacement:
->  -	u8 tags[MVS_SLOTS >> 3];
->  +	unsigned long tags[MVS_SLOTS / BITS_PER_LONG];
+> * ide_stopped is returned if the queue needs to be restarted.  The
+>   request might or might not have been processed fully or partially.
+> 
+> * hwif->rq is set to NULL, when an issued request completes.
+> 
+> So, dequeueing model can be implemented by dequeueing after fetch,
+> requeueing if hwif->rq isn't NULL on ide_stopped return and doing
+> about the same thing on completion / port unlock paths.  These changes
+> can be made in ide-io proper.
+> 
+> In addition to the above main changes, the following updates are
+> necessary.
+> 
+> * ide-cd shouldn't dequeue a request when issuing REQUEST SENSE for it
+>   as the request is already dequeued.
+> 
+> * ide-atapi uses request queue as stack when issuing REQUEST SENSE to
+>   put the REQUEST SENSE in front of the failed request.  This now
+>   needs to be done using requeueing.
+> 
+> [ Impact: dequeue in-flight request ]
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Cc: Borislav Petkov <petkovbb@googlemail.com>
+> Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-You are doing exactly the same thing as DECLARE_BITMAP here, so just use 
-DECLARE_BITMAP :)
+Acked-by: Borislav Petkov <petkovbb@gmail.com>
 
-include/linux/types.h:
-	#define DECLARE_BITMAP(name,bits) \
-	        unsigned long name[BITS_TO_LONGS(bits)]
-
-Regards,
-
-	Jeff
-
-
-
+-- 
+Regards/Gruss,
+    Boris.
