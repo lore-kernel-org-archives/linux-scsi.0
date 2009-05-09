@@ -1,47 +1,33 @@
-From: Andy Yan <ayan@marvell.com>
-Subject: RE: [PATCH 1/4] mvsas: bugfix for NULL pointer execption
-Date: Sat, 9 May 2009 00:26:18 -0700
-Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5956BCA03C9@SC-VEXCH1.marvell.com>
-References: <20090508061504.GA1880@jason.marvell.com>
- <1241797393.3327.52.camel@mulgrave.int.hansenpartnership.com>
- <4A04ACC3.4080004@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 2/4] mvsas: Deadlocks meet when TMF tasks issue
+Date: Sat, 09 May 2009 03:30:59 -0400
+Message-ID: <4A053133.1060907@garzik.org>
+References: <20090508061605.GA1884@jason.marvell.com> <1241797765.3327.57.camel@mulgrave.int.hansenpartnership.com> <4A04ACB3.5060608@garzik.org> <5FF020A1CFFEEC49BD1E09530C4FF5956BCA03C8@SC-VEXCH1.marvell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host2.marvell.com ([65.219.4.2]:26800 "EHLO maili.marvell.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751137AbZEIH0W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 9 May 2009 03:26:22 -0400
-In-Reply-To: <4A04ACC3.4080004@garzik.org>
-Content-Language: en-US
+Received: from srv5.dvmed.net ([207.36.208.214]:47848 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750936AbZEIHbD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 9 May 2009 03:31:03 -0400
+In-Reply-To: <5FF020A1CFFEEC49BD1E09530C4FF5956BCA03C8@SC-VEXCH1.marvell.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Ying Chu <jasonchu@marvell.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Andy Yan <ayan@marvell.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Ying Chu <jasonchu@marvell.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-SmFtZXMsDQoJVGhpcyBjYXNlIGhhcHBlbnMgd2l0aCBpcnEgY29taW5nIGxhdGUsIHRoZSBkZXZp
-Y2UgbWF5IGJlIGdvbmUgd2hlbiB0aGUgaXJxIGlzIGdvdHRlbiwgb3RoZXIgY2FzZXMgYXJlIGlu
-IG5vcm1hbCBzdGFnZSwgbGxkZF9kZXYgd29uJ3QgYmUgbnVsbC4NCg0KUmVnYXJkcw0KQW5keSBZ
-YW4NCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IGxpbnV4LXNjc2ktb3duZXJA
-dmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtc2NzaS1vd25lckB2Z2VyLmtlcm5lbC5vcmdd
-IE9uIEJlaGFsZiBPZiBKZWZmIEdhcnppaw0KU2VudDogMjAwOcTqNdTCOcjVIDY6MDYNClRvOiBK
-YW1lcyBCb3R0b21sZXkNCkNjOiBZaW5nIENodTsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcN
-ClN1YmplY3Q6IFJlOiBbUEFUQ0ggMS80XSBtdnNhczogYnVnZml4IGZvciBOVUxMIHBvaW50ZXIg
-ZXhlY3B0aW9uDQoNCkphbWVzIEJvdHRvbWxleSB3cm90ZToNCj4gT24gRnJpLCAyMDA5LTA1LTA4
-IGF0IDE0OjE1ICswODAwLCBZaW5nIENodSB3cm90ZToNCj4+ID5Gcm9tIDM0NzE5MTM4NDI5MmM2
-ZTlhOWE1NzJjNjU3MDQ5YmMxMTYxNWZiODIgTW9uIFNlcCAxNyAwMDowMDowMCAyMDAxDQo+PiBG
-cm9tOiBBbmR5IDxheWFuQG1hcnZlbGwuY29tPg0KPj4gRGF0ZTogTW9uLCA0IE1heSAyMDA5IDIz
-OjI5OjI2ICswODAwDQo+PiBTdWJqZWN0OiBbUEFUQ0ggMS80XSBtdnNhczogYnVnIGZpeCwgbnVs
-bCBwb2ludGVyIG1heSBiZSB1c2VkDQo+Pg0KPj4gTnVsbCBwb2ludGVyIGV4Y2VwdGlvbiB3aGVu
-IG12aV9kZXYgaXMgbnVsbC4NCj4gDQo+IEEgbGl0dGxlIG1vcmUgZXhwbGFuYXRpb24gbWlnaHQg
-YmUgaGVscGZ1bC4gIEl0IGxvb2tzIHRvIG1lIHRoYXQgeW91IGdldA0KPiB0aGlzIGlzc3VlIHdo
-ZW4geW91IGhhdmUgaW4tZmxpZ2h0IEkvTyB0byBhIGRldmljZSB3ZSd2ZSBiZWVuIG5vdGlmaWVk
-DQo+IGhhcyBnb25lIChiZWNhdXNlIHlvdSBOVUxMIG91dCBsbGRkX2RldiBpbiB0aGUgcmVtb3Zh
-bCBub3RpZmljYXRpb24NCj4gcm91dGluZSkuDQo+IA0KPiBJbiB3aGljaCBjYXNlLCBkb24ndCB3
-ZSBoYXZlIG90aGVyIHJhY2VzIHdoZXJlIHRoaXMgY2FuIGhhcHBlbiwgbGlrZSBpbg0KPiBtdnNf
-SV9UX25leHVzX3Jlc2V0KCk/DQoNCkFncmVlZC4uLg0KDQoNCi0tDQpUbyB1bnN1YnNjcmliZSBm
-cm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtc2NzaSIgaW4N
-CnRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQpNb3Jl
-IG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZv
-Lmh0bWwNCg==
+Andy Yan wrote:
+> James,
+> 	For considering the possibility of future use, I did not remove the parameter; I will check this and remove it with next patch if it is OK.
+
+
+Generally, we encourage immediate elimination of all code not actively used.
+
+The only major exception to this rule is structures or ABI that are 
+visible to userland, such as ioctls, where we must maintain binary 
+compatibility.
+
+	Jeff
+
+
