@@ -1,69 +1,59 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/3] block: add alt_size
-Date: Sat, 09 May 2009 23:04:12 +0900
-Message-ID: <4A058D5C.6030206@kernel.org>
-References: <1241828002-12742-1-git-send-email-tj@kernel.org>
-	<1241828002-12742-2-git-send-email-tj@kernel.org>
-	<ac3eb2510905090645u5e482ffcu4b3ddc26e81247e6@mail.gmail.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 4/4] mvsas: Fine-tuned tags array for alignment
+Date: Sat, 09 May 2009 09:38:19 -0500
+Message-ID: <1241879899.3542.6.camel@mulgrave>
+References: <20090508061852.GA1893@jason.marvell.com>
+	 <1241795999.3327.38.camel@mulgrave.int.hansenpartnership.com>
+	 <4A045C62.50404@garzik.org>
+	 <B610F018B81B3143B10B3A7DC04C693E185056A0AA@SC-VEXCH2.marvell.com>
+	 <4A052820.3080802@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <ac3eb2510905090645u5e482ffcu4b3ddc26e81247e6@mail.gmail.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Kay Sievers <kay.sievers@vrfy.org>
-Cc: jeff@garzik.org, linux-scsi@vger.kernel.org, Mauelshagen@redhat.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, jens.axboe@oracle.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:59265 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751728AbZEIOiT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 May 2009 10:38:19 -0400
+In-Reply-To: <4A052820.3080802@garzik.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Ying Chu <jasonchu@marvell.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andy Yan <ayan@marvell.com>, Ke Wei <kewei@marvell.com>
 
-Hello,
-
-Kay Sievers wrote:
-> What does "alt_" stand for? I think that should be more descriptive in
-> an exported interface.
-
-Alternative.
-
-> And can we please keep the "size_*" in front of the name, so that they
-> group together?
-
-Maybe, but size_alt?  Any better ideas?
-
-> Also, values with magic block counts, while there is no way to get the
-> blocksize with the same interface, are pretty weird. I think the
-> current "size" attribute is just a bug.
-
-Logical block size is fixed at 512 bytes.  Offset and size are always
-represented in multiples of 512 bytes and only get converted to
-hardware block size in the lld.
-
-> Not sure, how that should be solved, by adding a "blocksize" attribute
-> that is always in the same context as the current "size*" values, or
-> by just using bytes for new attributes here.
+On Sat, 2009-05-09 at 02:52 -0400, Jeff Garzik wrote:
+> Ying Chu wrote:
+> > Hi, James
+> > 
+> > DECLARE_BITMAP isn't a good option for mvsas, since the tags array couldn't be global(it's chip-related) and even if we define the static tag array both in mv64xx.c and mv94xx.c, it still couldn't honor 88SE9480 as there are 2 separate cores. So if we use DECLARE_BITMAP, it's hard to maintain the corresponding tag for different core.  
+> > 
+> > Can we use the following replacement:
+> >  -	u8 tags[MVS_SLOTS >> 3];
+> >  +	unsigned long tags[MVS_SLOTS / BITS_PER_LONG];
 > 
-> Almost all tools I've seen using these attributes, have hardcoded *
-> 512 in there, which may cause trouble pretty soon. And this is mostly
-> a failure of the interface and not of the users, I think.
+> You are doing exactly the same thing as DECLARE_BITMAP here, so just use 
+> DECLARE_BITMAP :)
+> 
+> include/linux/types.h:
+> 	#define DECLARE_BITMAP(name,bits) \
+> 	        unsigned long name[BITS_TO_LONGS(bits)]
 
-No, it will never break.  It will always be 512.  It's there to give
-nine bit shift to allow additional 9 bit of addressing without going
-to the next full blown bitwidth.  It's chosen to be the lowest common
-denominator which gives enough addressing boost to hold things
-together till the next bitwidth becomes popular.
+Right, it's one of those annoying definitions that's designed to be
+compound, so things like
 
-For userlevel exporting, it might have been better to use just bytes
-there as preformance isn't really an issue, but, well, it's already
-determined, so..
+static DECLARE_BITMAP(x, y);
 
-Thanks.
+is legal as well as
 
--- 
-tejun
+struct {
+	DECLARE_BITMAP(x,y);
+};
+
+in either case, the scope is precisely what an ordinary variable would
+have had at that point.
+
+Most of our DECLARE_XX are designed like this.
+
+James
+
+
