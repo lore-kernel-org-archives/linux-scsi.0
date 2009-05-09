@@ -1,72 +1,67 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: 2.6.30-rc2-git2: Reported regressions from 2.6.29
-Date: Sat, 9 May 2009 11:28:19 +0800
-Message-ID: <20090509112819.759594d5@linux-lm>
-References: <EJaiQ4Wfaz.A.3YG.4v85JB@chimera>
-	<200904202208.23899.laurent.pinchart@skynet.be>
-	<d82e647a0904201847n403424efnb5a0c40a4cac365d@mail.gmail.com>
-	<200904220121.12002.laurent.pinchart@skynet.be>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 2/3] scsi: add scsi_device->alt_capacity
+Date: Fri, 08 May 2009 23:23:19 -0500
+Message-ID: <1241842999.6357.2.camel@mulgrave>
+References: <1241828002-12742-1-git-send-email-tj@kernel.org>
+	 <1241828002-12742-3-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757661AbZEID33@vger.kernel.org>
-In-Reply-To: <200904220121.12002.laurent.pinchart@skynet.be>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Laurent Pinchart <laurent.pinchart@skynet.be>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, video4linux-list@redhat.com, mchehab@infradead.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33910 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750872AbZEIEXU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 May 2009 00:23:20 -0400
+In-Reply-To: <1241828002-12742-3-git-send-email-tj@kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Mauelshagen@RedHat.com, dm-devel@RedHat.com, dan.j.williams@gmail.com
 
-On Wed, 22 Apr 2009 01:21:10 +0200
-Laurent Pinchart <laurent.pinchart@skynet.be> wrote:
-
-> Hi,
+On Sat, 2009-05-09 at 09:13 +0900, Tejun Heo wrote:
+> Add scsi_device->alt_capacity and let sd pass it over to genhd.  This
+> is to allow SCSI low level drivers to configure alt_capacity via
+> slave_configure().
 > 
-> On Tuesday 21 April 2009 03:47:34 Ming Lei wrote:
-> > 2009/4/21 Laurent Pinchart <laurent.pinchart@skynet.be>:
-> > > On Saturday 18 April 2009 06:51:11 leiming wrote:
-
-> > >> From a3b3d72cdd57a0699fb643b41b78eb7beb211ff5 Mon Sep 17
-> > >> 00:00:00 2001 From: Ming Lei <tom.leiming@gmail.com>
-> > >> Date: Wed, 15 Apr 2009 22:32:51 +0800
-> > >> Subject: [PATCH] V4L/DVB:usbvideo:fix uvc resume failed(v2)
-> > >>
-> > >> Now urb buffers is not freed before suspend, so
-> > >> uvc_alloc_urb_buffers should return packet counts allocated
-> > >> originally during uvc resume , instead of zero.
-> > >>
-> > >> This version uses round down to return packet counts on Linus's
-> > >> suggestions, or else may lead to buffer destructed if packet size
-> > >> is changed before calling uvc_alloc_urb_buffers() in this kind of
-> > >> case.
-> > >
-> > > The comment is misleading. If the packet size changes we need to
-> > > reallocate the buffers anyway. Have you checked if the packet
-> > > size (which depends on the endpoint being selected) can be
-> > > changed between suspend and resume, either by the uvcvideo driver
-> > > (I don't think it can) or the USB core ?
-> >
-> > The packet size does not change between suspend and resume.  I mean
-> > uvc_alloc_urb_buffers() still can be used in other cases if buffers
-> > was not freed and is reuesed in future. It seems there is no such
-> > cases in uvcvideo now, but uvc_alloc_urb_buffers() really __can__
-> > work in such case, isn't it?
-> >
-> > IMHO It is only used to allocate or reserve UVC_URBS usb buffers,
-> > which size is video->urb_size, and npackets can be shortened or
-> > enlarged if psize is changed, after all.
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Jens Axboe <jens.axboe@oracle.com>
+> Cc: Dan Williams <dan.j.williams@gmail.com>
+> Cc: Jeff Garzik <jeff@garzik.org>
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> ---
+>  drivers/scsi/sd.c          |    1 +
+>  include/scsi/scsi_device.h |    1 +
+>  2 files changed, 2 insertions(+), 0 deletions(-)
 > 
-> You're right. Patch applied, thanks.
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 3fcb64b..f3448bf 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -1839,6 +1839,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
+>  	blk_queue_ordered(sdkp->disk->queue, ordered, sd_prepare_flush);
+>  
+>  	set_capacity(disk, sdkp->capacity);
+> +	set_alt_capacity(disk, sdp->alt_capacity);
+>  	kfree(buffer);
+>  
+>   out:
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index 3f566af..b24fdeb 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -92,6 +92,7 @@ struct scsi_device {
+>  	unsigned int manufacturer;	/* Manufacturer of device, for using 
+>  					 * vendor-specific cmd's */
+>  	unsigned sector_size;	/* size in bytes */
+> +	size_t alt_capacity;	/* alternative capacity, used by sd */
+>  
+>  	void *hostdata;		/* available to low-level driver */
+>  	char type;
 
-Rc5 has been released today, why isn't this patch accepted by upstream
-now?  It is really a bug fix.
+This is done at slightly the wrong level.  Capacity is actually a
+property of struct scsi_disk not struct scsi_device ... shouldn't
+alt_capacity be at the same level?
 
-Thanks.
+James
 
-> 
-> Best regards,
-> 
-> Laurent Pinchart
-> 
 
--- 
-Lei Ming
