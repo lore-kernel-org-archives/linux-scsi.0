@@ -1,59 +1,41 @@
-From: Ying Chu <jasonchu@marvell.com>
-Subject: RE: [PATCH 4/4] mvsas: Fine-tuned tags array for alignment
-Date: Fri, 8 May 2009 23:52:27 -0700
-Message-ID: <B610F018B81B3143B10B3A7DC04C693E185056A0AA@SC-VEXCH2.marvell.com>
-References: <20090508061852.GA1893@jason.marvell.com>
- <1241795999.3327.38.camel@mulgrave.int.hansenpartnership.com>
- <4A045C62.50404@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 4/4] mvsas: Fine-tuned tags array for alignment
+Date: Sat, 09 May 2009 02:52:16 -0400
+Message-ID: <4A052820.3080802@garzik.org>
+References: <20090508061852.GA1893@jason.marvell.com> <1241795999.3327.38.camel@mulgrave.int.hansenpartnership.com> <4A045C62.50404@garzik.org> <B610F018B81B3143B10B3A7DC04C693E185056A0AA@SC-VEXCH2.marvell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host2.marvell.com ([65.219.4.2]:34206 "EHLO maili.marvell.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751182AbZEIGmY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 9 May 2009 02:42:24 -0400
-In-Reply-To: <4A045C62.50404@garzik.org>
-Content-Language: en-US
+Received: from srv5.dvmed.net ([207.36.208.214]:43389 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754918AbZEIGwU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 9 May 2009 02:52:20 -0400
+In-Reply-To: <B610F018B81B3143B10B3A7DC04C693E185056A0AA@SC-VEXCH2.marvell.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Jeff Garzik' <jeff@garzik.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andy Yan <ayan@marvell.com>, Ke Wei <kewei@marvell.com>
+To: Ying Chu <jasonchu@marvell.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andy Yan <ayan@marvell.com>, Ke Wei <kewei@marvell.com>
 
-SGksIEphbWVzDQoNCkRFQ0xBUkVfQklUTUFQIGlzbid0IGEgZ29vZCBvcHRpb24gZm9yIG12c2Fz
-LCBzaW5jZSB0aGUgdGFncyBhcnJheSBjb3VsZG4ndCBiZSBnbG9iYWwoaXQncyBjaGlwLXJlbGF0
-ZWQpIGFuZCBldmVuIGlmIHdlIGRlZmluZSB0aGUgc3RhdGljIHRhZyBhcnJheSBib3RoIGluIG12
-NjR4eC5jIGFuZCBtdjk0eHguYywgaXQgc3RpbGwgY291bGRuJ3QgaG9ub3IgODhTRTk0ODAgYXMg
-dGhlcmUgYXJlIDIgc2VwYXJhdGUgY29yZXMuIFNvIGlmIHdlIHVzZSBERUNMQVJFX0JJVE1BUCwg
-aXQncyBoYXJkIHRvIG1haW50YWluIHRoZSBjb3JyZXNwb25kaW5nIHRhZyBmb3IgZGlmZmVyZW50
-IGNvcmUuICANCg0KQ2FuIHdlIHVzZSB0aGUgZm9sbG93aW5nIHJlcGxhY2VtZW50Og0KIC0JdTgg
-dGFnc1tNVlNfU0xPVFMgPj4gM107DQogKwl1bnNpZ25lZCBsb25nIHRhZ3NbTVZTX1NMT1RTIC8g
-QklUU19QRVJfTE9OR107DQoNClRoYW5rIHlvdS4NCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0t
-LS0NCkZyb206IEplZmYgR2FyemlrIFttYWlsdG86amVmZkBnYXJ6aWsub3JnXSANClNlbnQ6IDIw
-MDnE6jXUwjnI1SAwOjIzDQpUbzogSmFtZXMgQm90dG9tbGV5DQpDYzogWWluZyBDaHU7IGxpbnV4
-LXNjc2lAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBSZTogW1BBVENIIDQvNF0gbXZzYXM6IEZp
-bmUtdHVuZWQgdGFncyBhcnJheSBmb3IgYWxpZ25tZW50DQoNCkphbWVzIEJvdHRvbWxleSB3cm90
-ZToNCj4gT24gRnJpLCAyMDA5LTA1LTA4IGF0IDE0OjE4ICswODAwLCBZaW5nIENodSB3cm90ZToN
-Cj4+ID5Gcm9tIDIyNjliMGZmM2MyNTczZjc2Y2IwNTY5ZWI1ZGE5OWU5ZjEyNzExZDEgTW9uIFNl
-cCAxNyAwMDowMDowMCANCj4+ID4yMDAxDQo+PiBGcm9tOiBheWFuIDxheWFuQG1hcnZlbGwuY29t
-Pg0KPj4gRGF0ZTogRnJpLCA4IE1heSAyMDA5IDE5OjU5OjM5ICswODAwDQo+PiBTdWJqZWN0OiBb
-UEFUQ0ggNC80XSBidWcgZml4OiBhbGlnbm1lbnQNCj4+DQo+PiBGaW5lLXR1bmVkIHRhZ3MgYXJy
-YXkgd2l0aCB1MzIgZm9yIGFsaWdubWVudC4gDQo+Pg0KPj4gU2lnbmVkLW9mZi1ieTogWWluZyBD
-aHUgPGphc29uY2h1QG1hcnZlbGwuY29tPg0KPj4gU2lnbmVkLW9mZi1ieTogQW5keSBZYW4gPGF5
-YW5AbWFydmVsbC5jb20+DQo+PiBTaWduZWQtb2ZmLWJ5OiBLZSBXZWkgPGtld2VpQG1hcnZlbGwu
-Y29tPg0KPj4gLS0tDQo+PiAgZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5oIHwgICAgMiArLQ0K
-Pj4gIDEgZmlsZXMgY2hhbmdlZCwgMSBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9ucygtKQ0KPj4N
-Cj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmggDQo+PiBiL2RyaXZl
-cnMvc2NzaS9tdnNhcy9tdl9zYXMuaCBpbmRleCA3NWI5NzQ4Li4wNGYyN2JmIDEwMDY0NA0KPj4g
-LS0tIGEvZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5oDQo+PiArKysgYi9kcml2ZXJzL3Njc2kv
-bXZzYXMvbXZfc2FzLmgNCj4+IEBAIC0zMTMsNyArMzEzLDcgQEAgc3RydWN0IG12c19pbmZvIHsN
-Cj4+ICAJY29uc3Qgc3RydWN0IG12c19jaGlwX2luZm8gKmNoaXA7DQo+PiAgDQo+PiAgCWludCB0
-YWdzX251bTsNCj4+IC0JdTggdGFnc1tNVlNfU0xPVFMgPj4gM107DQo+PiArCXUzMiB0YWdzW01W
-U19TTE9UUyA+PiA1XTsNCj4gDQo+IFdoeSBub3QganVzdCBkbw0KPiANCj4gREVDTEFSRV9CSVRN
-QVAodGFncywgTVZTX1NMT1RTKTsNCj4gDQo+IGhlcmU/IC4uLiB0aGF0IHdheSB5b3UncmUgdXNp
-bmcgdGhlIGNvcnJlY3RseSBkZWZpbmVkIHR5cGUgZm9yIHRoZSANCj4gYml0bWFwIG9wZXJhdGlv
-bnMgYW5kIHlvdSBjYW4gbG9zZSB0aGUgc3B1cmlvdXMgKHZvaWQgKikgY2FzdCBpbiB5b3VyIA0K
-PiBiaXRtYXAgd3JhcHBlciBvcGVyYXRpb25zLg0KDQpBZ3JlZWQuICBUeXBlICd1MzInIGlzIGlu
-Y29ycmVjdCBmb3IgYml0bWFwIG9wZXJhdGlvbnMuLi4gIGl0IG5lZWRzIHRvIGJlICd1bnNpZ25l
-ZCBsb25nJywgd2hpY2ggaXMgd2hhdCBERUNMQVJFX0JJVE1BUCBnaXZlcyB5b3UuDQoNCglKZWZm
-DQoNCg0KDQoNCg==
+Ying Chu wrote:
+> Hi, James
+> 
+> DECLARE_BITMAP isn't a good option for mvsas, since the tags array couldn't be global(it's chip-related) and even if we define the static tag array both in mv64xx.c and mv94xx.c, it still couldn't honor 88SE9480 as there are 2 separate cores. So if we use DECLARE_BITMAP, it's hard to maintain the corresponding tag for different core.  
+> 
+> Can we use the following replacement:
+>  -	u8 tags[MVS_SLOTS >> 3];
+>  +	unsigned long tags[MVS_SLOTS / BITS_PER_LONG];
+
+You are doing exactly the same thing as DECLARE_BITMAP here, so just use 
+DECLARE_BITMAP :)
+
+include/linux/types.h:
+	#define DECLARE_BITMAP(name,bits) \
+	        unsigned long name[BITS_TO_LONGS(bits)]
+
+Regards,
+
+	Jeff
+
+
+
