@@ -1,75 +1,38 @@
-From: Kay Sievers <kay.sievers@vrfy.org>
-Subject: Re: [PATCH 1/3] block: add alt_size
-Date: Sat, 9 May 2009 18:26:56 +0200
-Message-ID: <ac3eb2510905090926r4ac0bc52kb8639101f0c78d86@mail.gmail.com>
-References: <1241828002-12742-1-git-send-email-tj@kernel.org>
-	<1241828002-12742-2-git-send-email-tj@kernel.org> <ac3eb2510905090645u5e482ffcu4b3ddc26e81247e6@mail.gmail.com>
-	<4A058D5C.6030206@kernel.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: 2.6.30-rc2-git2: Reported regressions from 2.6.29
+Date: Sat, 9 May 2009 09:24:51 -0700 (PDT)
+Message-ID: <alpine.LFD.2.01.0905090923370.3586@localhost.localdomain>
+References: <EJaiQ4Wfaz.A.3YG.4v85JB@chimera>
+	<200904202208.23899.laurent.pinchart@skynet.be>
+	<d82e647a0904201847n403424efnb5a0c40a4cac365d@mail.gmail.com>
+	<200904220121.12002.laurent.pinchart@skynet.be>
+	<20090509112819.759594d5@linux-lm>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4A058D5C.6030206@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, Mauelshagen@redhat.com, dm-devel@redhat.com, dan.j.williams@gmail.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pm-bounces@lists.linux-foundation.org>
+In-Reply-To: <20090509112819.759594d5@linux-lm>
+List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.linux-foundation.org>
+List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.linux-foundation.org
+Errors-To: linux-pm-bounces@lists.linux-foundation.org
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: Adrian Bunk <bunk@kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Natalie Protasevich <protasnb@gmail.com>, mchehab@infradead.org, Linux ACPI <linux-acpi@vger.kernel.org>, video4linux-list@redhat.com, Laurent Pinchart <laurent.pinchart@skynet.be>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, May 9, 2009 at 16:04, Tejun Heo <tj@kernel.org> wrote:
-> Kay Sievers wrote:
->> What does "alt_" stand for? I think that should be more descriptive =
-in
->> an exported interface.
->
-> Alternative.
->
->> And can we please keep the "size_*" in front of the name, so that th=
-ey
->> group together?
->
-> Maybe, but size_alt? =C2=A0Any better ideas?
 
-"size_limit"
-"size_restricted"
-"size_clipped"
-"size_constrain"
 
-anything that ideally would express that this is smaller than the
-actual "size", and that is is a "configured" value and not some
-hardware property.
+On Sat, 9 May 2009, Ming Lei wrote:
+> 
+> Rc5 has been released today, why isn't this patch accepted by upstream
+> now?  It is really a bug fix.
 
->> Also, values with magic block counts, while there is no way to get t=
-he
->> blocksize with the same interface, are pretty weird. I think the
->> current "size" attribute is just a bug.
->
-> Logical block size is fixed at 512 bytes. =C2=A0Offset and size are a=
-lways
-> represented in multiples of 512 bytes and only get converted to
-> hardware block size in the lld.
+I can take it directly, but was hoping to get it through the regular DVB 
+tree. Haven't had a DVB update request yet (or maybe it got lost?)
 
-Oh, good. Didn't know that this will always be 512, even for devices
-with a native size larger than this.
-
->> Not sure, how that should be solved, by adding a "blocksize" attribu=
-te
->> that is always in the same context as the current "size*" values, or
->> by just using bytes for new attributes here.
->>
->> Almost all tools I've seen using these attributes, have hardcoded *
->> 512 in there, which may cause trouble pretty soon. And this is mostl=
-y
->> a failure of the interface and not of the users, I think.
->
-> No, it will never break. =C2=A0It will always be 512.
-
-Cool. No problem then. :)
-
-> For userlevel exporting, it might have been better to use just bytes
-> there as preformance isn't really an issue, but, well, it's already
-> determined, so..
-
-Right, but if it can not change, it's fine, I guess.
-
-Thanks,
-Kay
+		Linus
