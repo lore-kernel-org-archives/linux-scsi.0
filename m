@@ -1,43 +1,52 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [patchset 0/4] osd: Stop usage of blk_rq_append_bio
-Date: Sat, 09 May 2009 17:12:58 +0900
-Message-ID: <4A053B0A.9010501@kernel.org>
-References: <4A0307F4.50205@panasas.com>
+From: Kay Sievers <kay.sievers@vrfy.org>
+Subject: Re: [PATCH 1/3] block: add alt_size
+Date: Sat, 9 May 2009 15:45:36 +0200
+Message-ID: <ac3eb2510905090645u5e482ffcu4b3ddc26e81247e6@mail.gmail.com>
+References: <1241828002-12742-1-git-send-email-tj@kernel.org>
+	<1241828002-12742-2-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:39523 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752427AbZEIIOg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 9 May 2009 04:14:36 -0400
-In-Reply-To: <4A0307F4.50205@panasas.com>
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:64011 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751245AbZEINp5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 May 2009 09:45:57 -0400
+In-Reply-To: <1241828002-12742-2-git-send-email-tj@kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Jens Axboe <Jens.Axboe@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, Mauelshagen@redhat.com, dm-devel@redhat.com, dan.j.williams@gmail.com
 
-Boaz Harrosh wrote:
-> Osd library needs to submit pre-allocated bios, form several sources.
-> osdblk exofs and pNFS-layout driver all have prepared bios for IO submission.
-> On top of that the osd library needs to append additional segments to the
-> IO memory, for get/set attributes and more.
-> 
-> All these are done today by use of a temporary hack - blk_rq_append_bio.
-> This is bad on few accounts.
-> 1. blk_rq_append_bio was not meant to be exported and is very specific to its users.
-> 2. blk_rq_append_bio does not support chained bios.
-> 3. blk_rq_append_bio does not bounce the bio and therefore current osd implementation
->    has a bug.
-> 
-> The proposed solution adds two new fixtures to the block layer, and a corresponding
-> fixing patch to osd. These are:
-> 
-> [PATCH 1/4] allow blk_rq_map_kern to append to requests
+On Sat, May 9, 2009 at 02:13, Tejun Heo <tj@kernel.org> wrote:
+> This patch adds alt_size to genhd and exports it via sysfs. =C2=A0alt=
+_size
+> is always smaller than the regular size. =C2=A0Being a hint, alt_size=
+ can
+> also be set from userland by writing to the sysfs node mostly for
+> debugging and testing.
 
-blk_rq_map_kern() part of modification looks good to me.
+What does "alt_" stand for? I think that should be more descriptive in
+an exported interface.
 
-Thanks.
+And can we please keep the "size_*" in front of the name, so that they
+group together?
 
--- 
-tejun
+Also, values with magic block counts, while there is no way to get the
+blocksize with the same interface, are pretty weird. I think the
+current "size" attribute is just a bug.
+Not sure, how that should be solved, by adding a "blocksize" attribute
+that is always in the same context as the current "size*" values, or
+by just using bytes for new attributes here.
+
+Almost all tools I've seen using these attributes, have hardcoded *
+512 in there, which may cause trouble pretty soon. And this is mostly
+a failure of the interface and not of the users, I think.
+
+Thanks,
+Kay
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
