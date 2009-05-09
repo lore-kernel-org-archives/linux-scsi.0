@@ -1,58 +1,42 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 01/18] ide: dequeue in-flight request
-Date: Sat, 9 May 2009 08:56:19 +0200
-Message-ID: <20090509065619.GA8966@liondog.tnic>
-References: <1241751256-17435-1-git-send-email-tj@kernel.org> <1241751256-17435-2-git-send-email-tj@kernel.org>
-Reply-To: petkovbb@gmail.com
+From: Ying Chu <jasonchu@marvell.com>
+Subject: RE: [PATCH 4/4] mvsas: Fine-tuned tags array for alignment
+Date: Fri, 8 May 2009 23:59:21 -0700
+Message-ID: <B610F018B81B3143B10B3A7DC04C693E185056A0AC@SC-VEXCH2.marvell.com>
+References: <20090508061852.GA1893@jason.marvell.com>
+ <1241795999.3327.38.camel@mulgrave.int.hansenpartnership.com>
+ <4A045C62.50404@garzik.org>
+ <B610F018B81B3143B10B3A7DC04C693E185056A0AA@SC-VEXCH2.marvell.com>
+ <4A052820.3080802@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f174.google.com ([209.85.218.174]:65193 "EHLO
-	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751397AbZEIG42 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 May 2009 02:56:28 -0400
-Content-Disposition: inline
-In-Reply-To: <1241751256-17435-2-git-send-email-tj@kernel.org>
+Received: from host2.marvell.com ([65.219.4.2]:4093 "EHLO maili.marvell.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752845AbZEIG7W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 9 May 2009 02:59:22 -0400
+In-Reply-To: <4A052820.3080802@garzik.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, rusty@rustcorp.com.au, James.Bottomley@HansenPartnership.com, mike.miller@hp.com, donari75@gmail.com, paul.clements@steeleye.com, tim@cyberelk.net, Geert.Uytterhoeven@sonycom.com, davem@davemloft.net, Laurent@lvivier.info, jgarzik@pobox.com, jeremy@xensource.com, grant.likely@secretlab.ca, adrian@mcmen.demon.co.uk, sfr@canb.auug.org.au, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, oakad@yahoo.com, drzeus@drzeus.cx, dwmw2@infradead.org, Markus.Lidel@shadowconnect.com, wein@de.ibm.com, schwidefsky@de.ibm.com, zaitcev@redhat.com, fujita.tomonori@lab.ntt.co.jp, axboe@kernel.dk
+To: 'Jeff Garzik' <jeff@garzik.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andy Yan <ayan@marvell.com>, Ke Wei <kewei@marvell.com>
 
-On Fri, May 08, 2009 at 11:53:59AM +0900, Tejun Heo wrote:
-> ide generally has single request in flight and tracks it using
-> hwif->rq and all state handlers follow the following convention.
-> 
-> * ide_started is returned if the request is in flight.
-> 
-> * ide_stopped is returned if the queue needs to be restarted.  The
->   request might or might not have been processed fully or partially.
-> 
-> * hwif->rq is set to NULL, when an issued request completes.
-> 
-> So, dequeueing model can be implemented by dequeueing after fetch,
-> requeueing if hwif->rq isn't NULL on ide_stopped return and doing
-> about the same thing on completion / port unlock paths.  These changes
-> can be made in ide-io proper.
-> 
-> In addition to the above main changes, the following updates are
-> necessary.
-> 
-> * ide-cd shouldn't dequeue a request when issuing REQUEST SENSE for it
->   as the request is already dequeued.
-> 
-> * ide-atapi uses request queue as stack when issuing REQUEST SENSE to
->   put the REQUEST SENSE in front of the failed request.  This now
->   needs to be done using requeueing.
-> 
-> [ Impact: dequeue in-flight request ]
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Cc: Borislav Petkov <petkovbb@googlemail.com>
-> Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-Acked-by: Borislav Petkov <petkovbb@gmail.com>
-
--- 
-Regards/Gruss,
-    Boris.
+V2VsbCwgdGhhbmsgeW91Lg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogSmVm
+ZiBHYXJ6aWsgW21haWx0bzpqZWZmQGdhcnppay5vcmddIA0KU2VudDogMjAwOcTqNdTCOcjVIDE0
+OjUyDQpUbzogWWluZyBDaHUNCkNjOiBKYW1lcyBCb3R0b21sZXk7IGxpbnV4LXNjc2lAdmdlci5r
+ZXJuZWwub3JnOyBBbmR5IFlhbjsgS2UgV2VpDQpTdWJqZWN0OiBSZTogW1BBVENIIDQvNF0gbXZz
+YXM6IEZpbmUtdHVuZWQgdGFncyBhcnJheSBmb3IgYWxpZ25tZW50DQoNCllpbmcgQ2h1IHdyb3Rl
+Og0KPiBIaSwgSmFtZXMNCj4gDQo+IERFQ0xBUkVfQklUTUFQIGlzbid0IGEgZ29vZCBvcHRpb24g
+Zm9yIG12c2FzLCBzaW5jZSB0aGUgdGFncyBhcnJheSBjb3VsZG4ndCBiZSBnbG9iYWwoaXQncyBj
+aGlwLXJlbGF0ZWQpIGFuZCBldmVuIGlmIHdlIGRlZmluZSB0aGUgc3RhdGljIHRhZyBhcnJheSBi
+b3RoIGluIG12NjR4eC5jIGFuZCBtdjk0eHguYywgaXQgc3RpbGwgY291bGRuJ3QgaG9ub3IgODhT
+RTk0ODAgYXMgdGhlcmUgYXJlIDIgc2VwYXJhdGUgY29yZXMuIFNvIGlmIHdlIHVzZSBERUNMQVJF
+X0JJVE1BUCwgaXQncyBoYXJkIHRvIG1haW50YWluIHRoZSBjb3JyZXNwb25kaW5nIHRhZyBmb3Ig
+ZGlmZmVyZW50IGNvcmUuICANCj4gDQo+IENhbiB3ZSB1c2UgdGhlIGZvbGxvd2luZyByZXBsYWNl
+bWVudDoNCj4gIC0JdTggdGFnc1tNVlNfU0xPVFMgPj4gM107DQo+ICArCXVuc2lnbmVkIGxvbmcg
+dGFnc1tNVlNfU0xPVFMgLyBCSVRTX1BFUl9MT05HXTsNCg0KWW91IGFyZSBkb2luZyBleGFjdGx5
+IHRoZSBzYW1lIHRoaW5nIGFzIERFQ0xBUkVfQklUTUFQIGhlcmUsIHNvIGp1c3QgdXNlIERFQ0xB
+UkVfQklUTUFQIDopDQoNCmluY2x1ZGUvbGludXgvdHlwZXMuaDoNCgkjZGVmaW5lIERFQ0xBUkVf
+QklUTUFQKG5hbWUsYml0cykgXA0KCSAgICAgICAgdW5zaWduZWQgbG9uZyBuYW1lW0JJVFNfVE9f
+TE9OR1MoYml0cyldDQoNClJlZ2FyZHMsDQoNCglKZWZmDQoNCg0KDQo=
