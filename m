@@ -1,41 +1,41 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 16/18] gdrom: dequeue in-flight request
-Date: Sat, 09 May 2009 08:43:53 +0900
-Message-ID: <4A04C3B9.6090801@kernel.org>
-References: <1241751256-17435-1-git-send-email-tj@kernel.org>	 <1241751256-17435-17-git-send-email-tj@kernel.org> <1241812425.18200.0.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:57497 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751039AbZEHXqh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 May 2009 19:46:37 -0400
-In-Reply-To: <1241812425.18200.0.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Subject: [GIT PATCH] block,scsi,libata: implement alt_size, take#2
+Date: Sat,  9 May 2009 09:13:19 +0900
+Message-ID: <1241828002-12742-1-git-send-email-tj@kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, Mauelshagen@RedHat.c
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian McMenamin <adrian@newgolddream.dyndns.info>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, rusty@rustcorp.com.au, James.Bottomley@HansenPartnership.com, mike.miller@hp.com, donari75@gmail.com, paul.clements@steeleye.com, tim@cyberelk.net, Geert.Uytterhoeven@sonycom.com, davem@davemloft.net, Laurent@lvivier.info, jgarzik@pobox.com, jeremy@xensource.com, grant.likely@secretlab.ca, sfr@canb.auug.org.au, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, oakad@yahoo.com, drzeus@drzeus.cx, dwmw2@infradead.org, Markus.Lidel@shadowconnect.com, wein@de.ibm.com, schwidefsky@de.ibm.com, zaitcev@redhat.com, fujita.tomonori@lab.ntt.co.jp, axboe@kernel.dk
 
-Adrian McMenamin wrote:
-> On Fri, 2009-05-08 at 11:54 +0900, Tejun Heo wrote:
->> gdrom already dequeues and fully completes requests on normal path and
->> the error paths can be easily converted to do so too.  Clean it up and
->> dequeue requests on error paths too.
->>
->> While at it remove superflous blk_fs_request() && !blk_rq_sectors()
->> condition check.
->>
->> [ Impact: dequeue in-flight request, cleanup ]
->>
->> Signed-off-by: Tejun Heo <tj@kernel.org>
->> Cc: Adrian McMenamin <adrian@mcmen.demon.co.uk>
->> ---
-> 
-> Tested-by: Adrian McMenamin <adrian@mcmen.demon.co.uk>
-> Acked-by: Adrian McMenamin <adrian@mcmen.demon.co.uk>
+Hello,
+
+Upon ack, please pull from the following git tree.
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git block-alt_size
+
+This is the second take of implement-alt_size patchset.  Other than
+being refreshed to apply on the current block tree, there's no real
+change from the last take[L].
+
+Jeff reluctantly acked it and Dan Williams is gonna handle mdadm part
+of userland, so I guess it's about time to push this in.
+
+This patchset is on top of the current block#for-2.6.31(f68adec3) and
+can be automatically merged with block-peek-fetch branch by pulling.
+diffstat follows.
+
+ block/genhd.c              |   26 ++++++++++++++++++++++++++
+ drivers/ata/libata-core.c  |    2 ++
+ drivers/ata/libata-scsi.c  |    2 ++
+ drivers/scsi/sd.c          |    1 +
+ include/linux/genhd.h      |   13 ++++++++++++-
+ include/linux/libata.h     |    1 +
+ include/scsi/scsi_device.h |    1 +
+ 7 files changed, 45 insertions(+), 1 deletion(-)
 
 Thanks.
 
--- 
+--
 tejun
+
+[L] http://thread.gmane.org/gmane.linux.kernel.device-mapper.devel/7235
