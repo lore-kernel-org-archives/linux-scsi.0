@@ -1,60 +1,73 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/3] scsi: add scsi_device->alt_capacity
-Date: Sun, 10 May 2009 10:26:48 +0900
-Message-ID: <4A062D58.6030401@kernel.org>
-References: <1241828002-12742-1-git-send-email-tj@kernel.org>	 <1241828002-12742-3-git-send-email-tj@kernel.org>	 <1241842999.6357.2.camel@mulgrave>  <4A05AAA4.9010806@kernel.org> <1241886223.3542.37.camel@mulgrave.int.hansenpartnership.com>
+From: "Norman Diamond" <n0diamond@yahoo.co.jp>
+Subject: Re: Adaptec driver crashes (1/3 and 2/3)
+Date: Sun, 10 May 2009 19:09:25 +0900
+Message-ID: <C112FA2011134214977C4C45098BBB48@DIAMOND8600>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-2022-jp";
+	reply-type=response
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:43691 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755337AbZEJB2N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 9 May 2009 21:28:13 -0400
-In-Reply-To: <1241886223.3542.37.camel@mulgrave.int.hansenpartnership.com>
+Received: from smtp11.mail.tnz.yahoo.co.jp ([203.216.226.139]:49137 "HELO
+	smtp11.mail.tnz.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750830AbZEJKKE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 10 May 2009 06:10:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Mauelshagen@RedHat.com, dm-devel@RedHat.com, dan.j.williams@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hello, James.
+Norman Diamond (I) wrote:
+> James Bottomley wrote:
+>> On Wed, 2009-05-06 at 16:13 +0900, Norman Diamond wrote:
+>>> The easiest 100% reproducible way to crash a Linux system is as follows.
+>>>
+>>> Insert either an Adaptec 1460 PCMCIA card or Adaptec 1480 CardBus card. 
+>>> Remove the card.  Insert the card again.  Even if you knew to set the 
+>>> console to a text mode terminal first (since Linux doesn't give Blue 
+>>> Screens of Death otherwise), you still won't get a dump.  Not much to go 
+>>> on without a dump, but at least it's 100% repro.
+>>
+>> Sounds like something's still pinned.  When you remove it the first time, 
+>> can you remove the module? (that's aha152x_cs right?).
+>
+> With the 1460, after removing the first time, no I couldn't rmmod the 
+> module.
+> However, yesterday with the 1460 I couldn't repro the kernel crash. 
+> Yesterday with the 1460 I could only repro less severe lossage.
 
-James Bottomley wrote:
-> On Sun, 2009-05-10 at 01:09 +0900, Tejun Heo wrote:
->> James Bottomley wrote:
->>> This is done at slightly the wrong level.  Capacity is actually a
->>> property of struct scsi_disk not struct scsi_device ... shouldn't
->>> alt_capacity be at the same level?
->> Hmmm... I think that was my first try and then I moved it to sdev for
->> some reason I can't rememer now.  I'll look into it again and try to
->> move it into sdev.
-> 
-> Really one of the things I was wondering is why even scsi_disk ...
-> capacity is in there, but it's also in gendisk, so I've thought
-> (admittedly never translated it to action) that we could just remove the
-> duplication in scsi_disk.
-> 
-> This alt_capacity looks to be a pure ATA thing...  I can't find it
-> in the SCSI specs and there doesn't seem to be a SAT equivalent of
-> the commands.  Ideally, what should be happening is that the ata ULD
-> would issue the capacity commands and just set the block
-> alt_capacity without having to worry about transporting the value up
-> and down the stack.  Matthew Wilcox thought we could begin an
-> implementation of the ATA uld using the ATA_16 command to transport
-> it through SCSI ... this might provide the good reason to begin
-> that.
+Today I tried Knoppix 6.0.1, kernel 2.6.28.4.  aha152x_cs is a module here 
+too.  When inserting a 1460, nothing happened.  Removing a 1460, nothing 
+happened.  Inserting a 1460, nothing happened.  I modprobed aha152x_cs.  It 
+modprobed successfully.  Removing a 1460, inserting, removing, inserting, 
+nothing happened, even though the module remained loaded.  The older 
+partially working kernel was better than this.
 
-Yeap, it's a purely ATA specific workaround.
+> Yesterday with the 1480 I did repro the kernel crash, the same as before. 
+> The aic7xxx driver was compiled in, not a module.
 
-Now I remembered what was the problem.  The problem was that the
-latest hook libata can use is ->slave_configure which is called before
-HLD attaches, so there's no sdkp or genhd associated during libata
-configuration.  Longer term, this definitely is something which should
-be stripped out of SCSI whether that happens with ATA HLD on top of
-SCSI or a completely separate stack.  Any better ideas on how to work
-around this for now?
+Today with Knoppix 6.0.1, kernel 2.6.28.4, this one is worse too.  Here 
+aic7xxx is a module, not compiled in.  I don't remember if I had to modprobe 
+it manually but I think not.  I think that inserting a 1480 automatically 
+modprobed the module and it worked for the time being.  However, removing 
+the card started the time bomb.  Reinsertion was no longer necessary. 
+Around 20 seconds after removal, if the console was in text mode then there 
+would be a 1-line crash message with no dump.  Attempts to rmmod aic7xxx 
+failed.  It didn't matter if I tried 0, 1, or multiple times while the time 
+bomb was running, rmmod failed and the crash was still coming.
 
-Thanks.
+One time I shut down Knoppix 6.0.1 from whatever KDE's Start button is 
+called, the usual way of doing a shutdown, instead of letting a crash do it. 
+When the CD-ROM tray popped open, I guessed that Knoppix was nearly done 
+shutting down, so I hit the Enter key, and the power went off a few seconds 
+later.  Older versions had some text mode messages on the screen during 
+shutdown, and told us at the same time as it popped open the CD tray.  OK, 
+this one isn't the fault of a SCSI driver.
 
--- 
-tejun
+Sometimes there are reasons to stick to older partially working versions. 
+
+--------------------------------------
+Power up the Internet with Yahoo! Toolbar.
+http://pr.mail.yahoo.co.jp/toolbar/
