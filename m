@@ -1,54 +1,132 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 18/18] block: implement and enforce request peek/start/fetch
-Date: Sun, 10 May 2009 23:52:32 +0200
-Message-ID: <200905102352.33478.bzolnier@gmail.com>
-References: <1241751256-17435-1-git-send-email-tj@kernel.org> <1241751256-17435-19-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 03/11] block: add rq->resid_len
+Date: Mon, 11 May 2009 08:48:53 +0900
+Message-ID: <4A0767E5.5050205@kernel.org>
+References: <1241423927-11871-1-git-send-email-tj@kernel.org> <1241423927-11871-4-git-send-email-tj@kernel.org> <4A06DFAB.40205@panasas.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1241751256-17435-19-git-send-email-tj@kernel.org>
-Content-Disposition: inline
+In-Reply-To: <4A06DFAB.40205@panasas.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, rusty@rustcorp.com.au, James.Bottomley@hansenpartnership.com, mike.miller@hp.com, donari75@gmail.com, paul.clements@steeleye.com, tim@cyberelk.net, Geert.Uytterhoeven@sonycom.com, davem@davemloft.net, Laurent@lvivier.info, jgarzik@pobox.com, jeremy@xensource.com, grant.likely@secretlab.ca, adrian@mcmen.demon.co.uk, sfr@canb.auug.org.au, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, oakad@yahoo.com, drzeus@drzeus.cx, dwmw2@infradead.org, Markus.Lidel@shadowconnect.com, wein@de.ibm.com, schwidefsky@de.ibm.com, zaitcev@redhat.com, fujita.tomonori@lab.ntt.co.jp, axboe@kernel.dk
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, Doug Gilbert <dgilbert@interlog.com>, "Darrick J. Wong" <djwong@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Friday 08 May 2009 04:54:16 Tejun Heo wrote:
-> Till now block layer allowed two separate modes of request execution.
-> A request is always acquired from the request queue via
-> elv_next_request().  After that, drivers are free to either dequeue it
-> or process it without dequeueing.  Dequeue allows elv_next_request()
-> to return the next request so that multiple requests can be in flight.
-> 
-> Executing requests without dequeueing has its merits mostly in
-> allowing drivers for simpler devices which can't do sg to deal with
-> segments only without considering request boundary.  However, the
-> benefit this brings is dubious and declining while the cost of the API
-> ambiguity is increasing.  Segment based drivers are usually for very
-> old or limited devices and as converting to dequeueing model isn't
-> difficult, it doesn't justify the API overhead it puts on block layer
-> and its more modern users.
-> 
-> Previous patches converted all block low level drivers to dequeueing
-> model.  This patch completes the API transition by...
-> 
-> * renaming elv_next_request() to blk_peek_request()
-> 
-> * renaming blkdev_dequeue_request() to blk_start_request()
-> 
-> * adding blk_fetch_request() which is combination of peek and start
-> 
-> * disallowing completion of queued (not started) requests
-> 
-> * applying new API to all LLDs
-> 
-> Renamings are for consistency and to break out of tree code so that
-> it's apparent that out of tree drivers need updating.
-> 
-> [ Impact: block request issue API cleanup, no functional change ]
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
+Hello, Boaz.
 
-Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Boaz Harrosh wrote:
+
+> Hi Tejun, I've carefully reviewed these files which I know more
+> about.  The drivers/block files I've skipped, since I'm not familiar
+> with this code.
+> 
+> Except a small fallout, it looks very good. See some comments plus
+> Ack/review below
+
+Thanks a lot for reviewing it closely.  It's really nice to have
+careful extra pair of eyes on the changes.  :-)
+
+>> --- a/drivers/message/fusion/mptsas.c
+>> +++ b/drivers/message/fusion/mptsas.c
+>> @@ -1357,8 +1357,7 @@ static int mptsas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+>>  		smprep = (SmpPassthroughReply_t *)ioc->sas_mgmt.reply;
+>>  		memcpy(req->sense, smprep, sizeof(*smprep));
+>>  		req->sense_len = sizeof(*smprep);
+>> -		req->data_len = 0;
+>> -		rsp->data_len -= smprep->ResponseDataLength;
+>> +		rsp->resid_len = rsp->data_len - smprep->ResponseDataLength;
+>>  	} else {
+>>  		printk(MYIOC_s_ERR_FMT "%s: smp passthru reply failed to be returned\n",
+>>  		    ioc->name, __func__);
+> 
+> I think original code was assuming full residual count on the else side
+> (not MPT_IOCTL_STATUS_RF_VALID). So maybe add:
+> 
+> +		rsp->resid_len = rsp->data_len;
+
+Does resid_len make any sense w/ failed requests?  I think we would be
+better off with declaring residual count to be undefined on request
+failure.  Is there any place which depends on it?
+
+That said, the value is eventually exported to userland, so it might
+be better to not change it.  Eh... I don't know.
+
+>> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+>> index 3da02e4..6605ec9 100644
+>> --- a/drivers/scsi/libsas/sas_expander.c
+>> +++ b/drivers/scsi/libsas/sas_expander.c
+>> @@ -1936,12 +1936,8 @@ int sas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+>>  			       bio_data(rsp->bio), rsp->data_len);
+>>  	if (ret > 0) {
+>>  		/* positive number is the untransferred residual */
+>> -		rsp->data_len = ret;
+>> -		req->data_len = 0;
+>> +		rsp->resid_len = ret;
+>>  		ret = 0;
+>> -	} else if (ret == 0) {
+>> -		rsp->data_len = 0;
+>> -		req->data_len = 0;
+>>  	}
+>>  
+>>  	return ret;
+> 
+> This is actually a bug fix, as well as a strait conversion
+
+Can you elaborate a bit about the bug fix part?
+
+>> @@ -549,7 +549,7 @@ static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int error,
+>>  		int leftover = (req->hard_nr_sectors << 9);
+>>  
+>>  		if (blk_pc_request(req))
+>> -			leftover = req->data_len;
+>> +			leftover = req->resid_len;
+> 
+> This is the fallout:
+> 
+> The above is just a case of:
+> 
+> -		int leftover = (req->hard_nr_sectors << 9);
+> -
+> -		if (blk_pc_request(req))
+> -			leftover = req->data_len;
+> +		int leftover = blk_rq_bytes();
+> 
+> Which you separated into to stages, much later right?
+
+Aieee.. yeah, that's one stupid misconversion.  That function should
+just use blk_end_request_all().  Will fix.  Thanks for spotting it.
+
+>> @@ -778,7 +778,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+>>  			scsi_end_bidi_request(cmd);
+>>  			return;
+>>  		}
+>> -		req->data_len = scsi_get_resid(cmd);
+>> +		req->resid_len = scsi_get_resid(cmd);
+>>  	}
+>>  
+>>  	BUG_ON(blk_bidi_rq(req)); /* bidi not support for !blk_pc_request yet */
+> 
+> Except the fallout the rest of scsi_lib looks good, specifically the
+> bidi_parts.
+> 
+> I'll send a farther cleanup to scsi_lib based on this patchset later.
+
+Cool.
+
+> I've started farther cleanup based on your patchset. However I had a
+> merge conflict when merging your branch with Linus-2.6.30-rc5,
+> around the block areas, do you know what that might be? I've
+> continued to work based on your branch alone, but will wait and post
+> it later once things settle.
+
+I saw a conflict in blkdev.h but there could be other things.  I think
+it should be fine to just base things on my branch.  I or Jens should
+be able to handle merge conflicts later.
+
+I'll update the patchset and repost soonish.
+
+Thanks a lot.
+
+-- 
+tejun
