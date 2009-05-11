@@ -1,58 +1,75 @@
-From: Thomas Horsten <thomas@horsten.com>
-Subject: MegaRAID issue with multiple logical drives with separate I/O queues
-Date: Mon, 11 May 2009 13:48:39 +0100
-Message-ID: <5d932cdc0905110548w77aee181o2071e28aca588756@mail.gmail.com>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: Is TRIM/DISCARD going to be a performance problem?
+Date: Mon, 11 May 2009 09:15:57 -0400
+Message-ID: <4A08250D.1010902@redhat.com>
+References: <E1M2ts6-0005jr-Cg@closure.thunk.org> <20090510165259.GA31850@logfs.org> <20090511083754.GA29082@mit.edu> <20090511100624.GB6585@logfs.org> <20090511112729.GD29082@mit.edu> <20090511120936.GB6277@mit.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:37256 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755874AbZEKMsk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 May 2009 08:48:40 -0400
-Received: by fxm2 with SMTP id 2so2642344fxm.37
-        for <linux-scsi@vger.kernel.org>; Mon, 11 May 2009 05:48:39 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ext4-owner@vger.kernel.org>
+In-Reply-To: <20090511120936.GB6277@mit.edu>
+Sender: linux-ext4-owner@vger.kernel.org
+To: Theodore Tso <tytso@mit.edu>
+Cc: =?ISO-8859-1?Q?J=F6rn_Engel?= <joern@logfs.org>, Matthew Wilcox <willy@linux.intel.com>, Jens Axboe <jens.axboe@oracle.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hi,
+On 05/11/2009 08:09 AM, Theodore Tso wrote:
+> On Mon, May 11, 2009 at 07:27:29AM -0400, Theodore Tso wrote:
+>> I believe the ATA TRIM draft standards specs don't have the 1-4
+>> megabyte; that craziness is only coming from the SCSI world.  So we do
+>           ^^^^  I left out the worlds "granularity requirement", sorry.
+>
+>> have more information than what Intel has released; also, note that
+>> OCZ is the first vendor who has shipped publically available SSD
+>> firmware with Trim support.  Supposely Intel is going to try to get me
+>> their trim-enabled firmware under NDA, but that hasn't happened yet.
+>
+> I just did a bit more web browsing, and it appears that OCZ's
+> userspace support for trim is currently Windows-only, and they've
+> implemented it by taking the filesystme off line, and running a
+> userspace utility that sends TRIM requests for all of the free space
+> on the drive.
+>
+> After doing this, write speeds for sequential writes, random 512k
+> writes, and random 4k writes all went up by approximately 15-20% on
+> the OCZ Vertex, at least according to one user who did some
+> benchmarks.  I'm not sure how repeatable that is, and how many random
+> writes you can do before performance levels fall back to the pre-TRIM
+> levels.
+>
+> It's also supported only on 32-bit Windows XP.  On 64-bit platforms,
+> there seems to be an unfortunate tendency (probability around 50%)
+> that the TRIM enablement software trashes the data stored on the SSD.
+> So there is currently a warning on the OCZ discussion web forum that
+> the tools should only be used on 32-bit Windows platforms.
+>
+> All of the web browsing I've doen confirms that the ATA folks expect
+> trim to work on 512-sector granularity.  It's only the lazy b*stards
+> who don't want to change how their large high-end storage boxes work
+> that are trying to push for 1-4 megabyte alignment and granularity
+> requirements in the SCSI standards.  I'm not that worred about the
+> crappy flash devices (mostly SD and Compact flash devices, not SSD's)
+> that don't do sub-erase block wear-leveling and management; those will
+> probably get weeded out of the market pretty quickly, since SSD's that
+> crappy will have really lousy small random write performance as well,
+> and web sites like Anandtech and PC Perspectives have picked up on why
+> that really hurts your OS performance on said crappy SSD's.
+>
+> 						- Ted
 
-I have a server with a MegaRAID SATA 300-8X. The controller has 5*1TB
-drives attached.
+I don't think that the large arrays are being lazy - it is more a matter of 
+having to track an enormous amount of storage and running out of bits. There has 
+been some movement towards using smaller erase chunk sizes which should make 
+this less of an issue.
 
-Previously I had 5*250GB drives on the controller all configured as a
-single logical RAID5 drive. But the controller only supports up to 2TB
-logical drives so after upgrading I had to configure 3 logical drives
-(sda, sdb, sdc) in order to make use of all the space. These are in
-turn configured into logical volumes with LVM.
+One thing that will bite people in the SCSI space might be the WRITE_SAME with 
+discard bit set. (Adding linux-scsi to this thread)
 
-However, the performance seems to suffer very badly when accessing
-several of the logical drives concurrently.
+On the plus side, this has very clear semantics. but if you send down requests 
+that are not aligned or too small, the device will have to "zero" the contents 
+of the specified sectors in order to be compliant if I understand correctly.
 
-I'm guessing that this is because the IO scheduler maintains separate
-queues for each of the drives and assumes they can be accessed in
-parallel, causing lots of inefficient seeks across the array,
-degrading performance (and potentially wearing out the disks faster)
-int he process. Switching the IO scheduler to noop seems to help a
-little but by no means cures the issue.
+In this case, coalescing would almost always be a win as well,
 
-I wonder if it would be possible/desirable to somehow force all the
-logical drives to share the same I/O queue. Has this been done before
-for any other drivers? And is it even the right approach to resolve
-this issue?
+ric
 
-Although don't have much experience with SCSI drivers I would be happy
-to try to work on a solution if someone with knowledge of the LSI
-driver could offer me guidance. I'm not sure where it should be done,
-either in the MegaRAID driver itself, by exposing the logical drives
-as one joint SCSI drive to the kernel - or a more generic solution at
-a higher level by somehow joining the drives with a kind of
-master/slave setting using the /sys interface (e.g.: echo sda >
-/sys/block/sdb/master, telling the kernel that sdb is in fact a part
-of the same disk as sda and thus should share it's I/O queue etc.).
-
-I would welcome any insights in this matter.
-
-Best regards,
-Thomas
