@@ -1,310 +1,452 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Next May 11 : BUG during scsi initialization
-Date: Mon, 11 May 2009 05:52:33 -0600
-Message-ID: <20090511115233.GB8112@parisc-linux.org>
-References: <20090511161442.3e9d9cb9.sfr@canb.auug.org.au> <4A081002.4050802@in.ibm.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 08/11] block: cleanup rq->data_len usages
+Date: Mon, 11 May 2009 15:02:13 +0300
+Message-ID: <4A0813C5.2080403@panasas.com>
+References: <1241423927-11871-1-git-send-email-tj@kernel.org> <1241423927-11871-9-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-next-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4A081002.4050802@in.ibm.com>
-Sender: linux-next-owner@vger.kernel.org
-To: Sachin Sant <sachinp@in.ibm.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linuxppc-dev@ozlabs.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1241423927-11871-9-git-send-email-tj@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, "Darrick J. Wong" <djwong@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, May 11, 2009 at 05:16:10PM +0530, Sachin Sant wrote:
-> Today's Next tree failed to boot on a Power6 box with following BUG :
+On 05/04/2009 10:58 AM, Tejun Heo wrote:
+> With recent unification of fields, it's now guaranteed that
+> rq->data_len always equals blk_rq_bytes().  Convert all non-IDE direct
+> users to accessors.  IDE will be converted in a separate patch.
+> 
+> Boaz: spotted incorrect data_len/resid_len conversion in osd.
+> 
+> [ Impact: convert direct rq->data_len usages to blk_rq_bytes() ]
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Pete Zaitcev <zaitcev@redhat.com>
+> Cc: Eric Moore <Eric.Moore@lsi.com>
+> Cc: Markus Lidel <Markus.Lidel@shadowconnect.com>
+> Cc: Darrick J. Wong <djwong@us.ibm.com>
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Cc: Eric Moore <Eric.Moore@lsi.com>
+> Cc: Boaz Harrosh <bharrosh@panasas.com>
+> Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> ---
+>  drivers/ata/libata-scsi.c                |    2 +-
+>  drivers/block/ub.c                       |    8 ++++----
+>  drivers/message/fusion/mptsas.c          |   20 ++++++++++----------
+>  drivers/message/i2o/i2o_block.c          |    2 +-
+>  drivers/scsi/libsas/sas_expander.c       |    8 ++++----
+>  drivers/scsi/libsas/sas_host_smp.c       |   18 +++++++++---------
+>  drivers/scsi/mpt2sas/mpt2sas_transport.c |   21 +++++++++++----------
+>  drivers/scsi/osd/osd_initiator.c         |    4 ++--
+>  drivers/scsi/scsi_lib.c                  |   13 ++++++-------
+>  drivers/scsi/scsi_tgt_lib.c              |    2 +-
+>  10 files changed, 49 insertions(+), 49 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 2733b0c..6e4c600 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -1084,7 +1084,7 @@ static int atapi_drain_needed(struct request *rq)
+>  	if (likely(!blk_pc_request(rq)))
+>  		return 0;
+>  
+> -	if (!rq->data_len || (rq->cmd_flags & REQ_RW))
+> +	if (!blk_rq_bytes(rq) || (rq->cmd_flags & REQ_RW))
+>  		return 0;
+>  
+>  	return atapi_cmd_type(rq->cmd[0]) == ATAPI_MISC;
+> diff --git a/drivers/block/ub.c b/drivers/block/ub.c
+> index dc3b899..1591f61 100644
+> --- a/drivers/block/ub.c
+> +++ b/drivers/block/ub.c
+> @@ -747,7 +747,7 @@ static void ub_cmd_build_packet(struct ub_dev *sc, struct ub_lun *lun,
+>  {
+>  	struct request *rq = urq->rq;
+>  
+> -	if (rq->data_len == 0) {
+> +	if (blk_rq_bytes(rq) == 0) {
+>  		cmd->dir = UB_DIR_NONE;
+>  	} else {
+>  		if (rq_data_dir(rq) == WRITE)
+> @@ -762,7 +762,7 @@ static void ub_cmd_build_packet(struct ub_dev *sc, struct ub_lun *lun,
+>  	memcpy(&cmd->cdb, rq->cmd, rq->cmd_len);
+>  	cmd->cdb_len = rq->cmd_len;
+>  
+> -	cmd->len = rq->data_len;
+> +	cmd->len = blk_rq_bytes(rq);
+>  
+>  	/*
+>  	 * To reapply this to every URB is not as incorrect as it looks.
+> @@ -783,8 +783,8 @@ static void ub_rw_cmd_done(struct ub_dev *sc, struct ub_scsi_cmd *cmd)
+>  
+>  	if (cmd->error == 0) {
+>  		if (blk_pc_request(rq)) {
+> -			if (cmd->act_len < rq->data_len)
+> -				rq->resid_len = rq->data_len - cmd->act_len;
+> +			if (cmd->act_len < blk_rq_bytes(rq))
+> +				rq->resid_len = blk_rq_bytes(rq) - cmd->act_len;
+>  			scsi_status = 0;
+>  		} else {
+>  			if (cmd->act_len != cmd->len) {
+> diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+> index 5d5f347..4e6fcf0 100644
+> --- a/drivers/message/fusion/mptsas.c
+> +++ b/drivers/message/fusion/mptsas.c
+> @@ -1277,8 +1277,8 @@ static int mptsas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+>  	/* do we need to support multiple segments? */
+>  	if (req->bio->bi_vcnt > 1 || rsp->bio->bi_vcnt > 1) {
+>  		printk(MYIOC_s_ERR_FMT "%s: multiple segments req %u %u, rsp %u %u\n",
+> -		    ioc->name, __func__, req->bio->bi_vcnt, req->data_len,
+> -		    rsp->bio->bi_vcnt, rsp->data_len);
+> +		    ioc->name, __func__, req->bio->bi_vcnt, blk_rq_bytes(req),
+> +		    rsp->bio->bi_vcnt, blk_rq_bytes(rsp));
+>  		return -EINVAL;
+>  	}
+>  
+> @@ -1295,7 +1295,7 @@ static int mptsas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+>  	smpreq = (SmpPassthroughRequest_t *)mf;
+>  	memset(smpreq, 0, sizeof(*smpreq));
+>  
+> -	smpreq->RequestDataLength = cpu_to_le16(req->data_len - 4);
+> +	smpreq->RequestDataLength = cpu_to_le16(blk_rq_bytes(req) - 4);
+>  	smpreq->Function = MPI_FUNCTION_SMP_PASSTHROUGH;
+>  
+>  	if (rphy)
+> @@ -1321,10 +1321,10 @@ static int mptsas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+>  		       MPI_SGE_FLAGS_END_OF_BUFFER |
+>  		       MPI_SGE_FLAGS_DIRECTION |
+>  		       mpt_addr_size()) << MPI_SGE_FLAGS_SHIFT;
+> -	flagsLength |= (req->data_len - 4);
+> +	flagsLength |= (blk_rq_bytes(req) - 4);
+>  
+>  	dma_addr_out = pci_map_single(ioc->pcidev, bio_data(req->bio),
+> -				      req->data_len, PCI_DMA_BIDIRECTIONAL);
+> +				      blk_rq_bytes(req), PCI_DMA_BIDIRECTIONAL);
+>  	if (!dma_addr_out)
+>  		goto put_mf;
+>  	mpt_add_sge(psge, flagsLength, dma_addr_out);
+> @@ -1332,9 +1332,9 @@ static int mptsas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+>  
+>  	/* response */
+>  	flagsLength = MPT_SGE_FLAGS_SSIMPLE_READ;
+> -	flagsLength |= rsp->data_len + 4;
+> +	flagsLength |= blk_rq_bytes(rsp) + 4;
+>  	dma_addr_in =  pci_map_single(ioc->pcidev, bio_data(rsp->bio),
+> -				      rsp->data_len, PCI_DMA_BIDIRECTIONAL);
+> +				      blk_rq_bytes(rsp), PCI_DMA_BIDIRECTIONAL);
+>  	if (!dma_addr_in)
+>  		goto unmap;
+>  	mpt_add_sge(psge, flagsLength, dma_addr_in);
+> @@ -1357,7 +1357,7 @@ static int mptsas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+>  		smprep = (SmpPassthroughReply_t *)ioc->sas_mgmt.reply;
+>  		memcpy(req->sense, smprep, sizeof(*smprep));
+>  		req->sense_len = sizeof(*smprep);
+> -		rsp->resid_len = rsp->data_len - smprep->ResponseDataLength;
+> +		rsp->resid_len = blk_rq_bytes(rsp) - smprep->ResponseDataLength;
+>  	} else {
+>  		printk(MYIOC_s_ERR_FMT "%s: smp passthru reply failed to be returned\n",
+>  		    ioc->name, __func__);
+> @@ -1365,10 +1365,10 @@ static int mptsas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+>  	}
+>  unmap:
+>  	if (dma_addr_out)
+> -		pci_unmap_single(ioc->pcidev, dma_addr_out, req->data_len,
+> +		pci_unmap_single(ioc->pcidev, dma_addr_out, blk_rq_bytes(req),
+>  				 PCI_DMA_BIDIRECTIONAL);
+>  	if (dma_addr_in)
+> -		pci_unmap_single(ioc->pcidev, dma_addr_in, rsp->data_len,
+> +		pci_unmap_single(ioc->pcidev, dma_addr_in, blk_rq_bytes(rsp),
+>  				 PCI_DMA_BIDIRECTIONAL);
+>  put_mf:
+>  	if (mf)
+> diff --git a/drivers/message/i2o/i2o_block.c b/drivers/message/i2o/i2o_block.c
+> index 510eb47..6b61d28 100644
+> --- a/drivers/message/i2o/i2o_block.c
+> +++ b/drivers/message/i2o/i2o_block.c
+> @@ -430,7 +430,7 @@ static void i2o_block_end_request(struct request *req, int error,
+>  		int leftover = (blk_rq_sectors(req) << KERNEL_SECTOR_SHIFT);
+>  
+>  		if (blk_pc_request(req))
+> -			leftover = req->data_len;
+> +			leftover = blk_rq_bytes(req);
+>  
+>  		if (error)
+>  			blk_end_request(req, -EIO, leftover);
 
-This doesn't actually appear to be a SCSI bug ... it looks like SCSI tried
-to allocate memory and things went wrong in the memory allocator:
+Note:
+  This can be blk_end_request_all() and "int leftover =" dropped.
 
-[c0000000c7d038b0] [c0000000005d67d8] ._spin_lock+0x10/0x24
-[c0000000c7d03920] [c00000000013fbdc] .__slab_alloc_page+0x344/0x3cc
-[c0000000c7d039e0] [c000000000141168] .kmem_cache_alloc+0x13c/0x21c
-[c0000000c7d03aa0] [c000000000141b04] .kmem_cache_create+0x294/0x2a8
-[c0000000c7d03b90] [d000000000ea14cc] .scsi_init_queue+0x38/0x170 [scsi_mod]
+> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+> index 6605ec9..531af9e 100644
+> --- a/drivers/scsi/libsas/sas_expander.c
+> +++ b/drivers/scsi/libsas/sas_expander.c
+> @@ -1927,13 +1927,13 @@ int sas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+>  	/* do we need to support multiple segments? */
+>  	if (req->bio->bi_vcnt > 1 || rsp->bio->bi_vcnt > 1) {
+>  		printk("%s: multiple segments req %u %u, rsp %u %u\n",
+> -		       __func__, req->bio->bi_vcnt, req->data_len,
+> -		       rsp->bio->bi_vcnt, rsp->data_len);
+> +		       __func__, req->bio->bi_vcnt, blk_rq_bytes(req),
+> +		       rsp->bio->bi_vcnt, blk_rq_bytes(rsp));
+>  		return -EINVAL;
+>  	}
+>  
+> -	ret = smp_execute_task(dev, bio_data(req->bio), req->data_len,
+> -			       bio_data(rsp->bio), rsp->data_len);
+> +	ret = smp_execute_task(dev, bio_data(req->bio), blk_rq_bytes(req),
+> +			       bio_data(rsp->bio), blk_rq_bytes(rsp));
+>  	if (ret > 0) {
+>  		/* positive number is the untransferred residual */
+>  		rsp->resid_len = ret;
+> diff --git a/drivers/scsi/libsas/sas_host_smp.c b/drivers/scsi/libsas/sas_host_smp.c
+> index 89952ed..be9a951 100644
+> --- a/drivers/scsi/libsas/sas_host_smp.c
+> +++ b/drivers/scsi/libsas/sas_host_smp.c
+> @@ -137,21 +137,21 @@ int sas_smp_host_handler(struct Scsi_Host *shost, struct request *req,
+>  	int error = -EINVAL;
+>  
+>  	/* eight is the minimum size for request and response frames */
+> -	if (req->data_len < 8 || rsp->data_len < 8)
+> +	if (blk_rq_bytes(req) < 8 || blk_rq_bytes(rsp) < 8)
+>  		goto out;
+>  
+> -	if (bio_offset(req->bio) + req->data_len > PAGE_SIZE ||
+> -	    bio_offset(rsp->bio) + rsp->data_len > PAGE_SIZE) {
+> +	if (bio_offset(req->bio) + blk_rq_bytes(req) > PAGE_SIZE ||
+> +	    bio_offset(rsp->bio) + blk_rq_bytes(rsp) > PAGE_SIZE) {
+>  		shost_printk(KERN_ERR, shost,
+>  			"SMP request/response frame crosses page boundary");
+>  		goto out;
+>  	}
+>  
+> -	req_data = kzalloc(req->data_len, GFP_KERNEL);
+> +	req_data = kzalloc(blk_rq_bytes(req), GFP_KERNEL);
+>  
+>  	/* make sure frame can always be built ... we copy
+>  	 * back only the requested length */
+> -	resp_data = kzalloc(max(rsp->data_len, 128U), GFP_KERNEL);
+> +	resp_data = kzalloc(max(blk_rq_bytes(rsp), 128U), GFP_KERNEL);
+>  
+>  	if (!req_data || !resp_data) {
+>  		error = -ENOMEM;
+> @@ -160,7 +160,7 @@ int sas_smp_host_handler(struct Scsi_Host *shost, struct request *req,
+>  
+>  	local_irq_disable();
+>  	buf = kmap_atomic(bio_page(req->bio), KM_USER0) + bio_offset(req->bio);
+> -	memcpy(req_data, buf, req->data_len);
+> +	memcpy(req_data, buf, blk_rq_bytes(req));
+>  	kunmap_atomic(buf - bio_offset(req->bio), KM_USER0);
+>  	local_irq_enable();
+>  
+> @@ -176,8 +176,8 @@ int sas_smp_host_handler(struct Scsi_Host *shost, struct request *req,
+>  	resp_data[1] = req_data[1];
+>  	resp_data[2] = SMP_RESP_FUNC_UNK;
+>  
+> -	req->resid_len = req->data_len;
+> -	rsp->resid_len = rsp->data_len;
+> +	req->resid_len = blk_rq_bytes(req);
+> +	rsp->resid_len = blk_rq_bytes(rsp);
+>  
+>  	switch (req_data[1]) {
+>  	case SMP_REPORT_GENERAL:
+> @@ -264,7 +264,7 @@ int sas_smp_host_handler(struct Scsi_Host *shost, struct request *req,
+>  
+>  	local_irq_disable();
+>  	buf = kmap_atomic(bio_page(rsp->bio), KM_USER0) + bio_offset(rsp->bio);
+> -	memcpy(buf, resp_data, rsp->data_len);
+> +	memcpy(buf, resp_data, blk_rq_bytes(rsp));
+>  	flush_kernel_dcache_page(bio_page(rsp->bio));
+>  	kunmap_atomic(buf - bio_offset(rsp->bio), KM_USER0);
+>  	local_irq_enable();
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_transport.c b/drivers/scsi/mpt2sas/mpt2sas_transport.c
+> index 53759c5..af95a44 100644
+> --- a/drivers/scsi/mpt2sas/mpt2sas_transport.c
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_transport.c
+> @@ -1041,7 +1041,7 @@ transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+>  	if (req->bio->bi_vcnt > 1 || rsp->bio->bi_vcnt > 1) {
+>  		printk(MPT2SAS_ERR_FMT "%s: multiple segments req %u %u, "
+>  		    "rsp %u %u\n", ioc->name, __func__, req->bio->bi_vcnt,
+> -		    req->data_len, rsp->bio->bi_vcnt, rsp->data_len);
+> +		    blk_rq_bytes(req), rsp->bio->bi_vcnt, blk_rq_bytes(rsp));
+>  		return -EINVAL;
+>  	}
+>  
+> @@ -1104,7 +1104,7 @@ transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+>  	*((u64 *)&mpi_request->SASAddress) = (rphy) ?
+>  	    cpu_to_le64(rphy->identify.sas_address) :
+>  	    cpu_to_le64(ioc->sas_hba.sas_address);
+> -	mpi_request->RequestDataLength = cpu_to_le16(req->data_len - 4);
+> +	mpi_request->RequestDataLength = cpu_to_le16(blk_rq_bytes(req) - 4);
+>  	psge = &mpi_request->SGL;
+>  
+>  	/* WRITE sgel first */
+> @@ -1112,13 +1112,13 @@ transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+>  	    MPI2_SGE_FLAGS_END_OF_BUFFER | MPI2_SGE_FLAGS_HOST_TO_IOC);
+>  	sgl_flags = sgl_flags << MPI2_SGE_FLAGS_SHIFT;
+>  	dma_addr_out = pci_map_single(ioc->pdev, bio_data(req->bio),
+> -	      req->data_len, PCI_DMA_BIDIRECTIONAL);
+> +		blk_rq_bytes(req), PCI_DMA_BIDIRECTIONAL);
+>  	if (!dma_addr_out) {
+>  		mpt2sas_base_free_smid(ioc, le16_to_cpu(smid));
+>  		goto unmap;
+>  	}
+>  
+> -	ioc->base_add_sg_single(psge, sgl_flags | (req->data_len - 4),
+> +	ioc->base_add_sg_single(psge, sgl_flags | (blk_rq_bytes(req) - 4),
+>  	    dma_addr_out);
+>  
+>  	/* incr sgel */
+> @@ -1129,14 +1129,14 @@ transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+>  	    MPI2_SGE_FLAGS_LAST_ELEMENT | MPI2_SGE_FLAGS_END_OF_BUFFER |
+>  	    MPI2_SGE_FLAGS_END_OF_LIST);
+>  	sgl_flags = sgl_flags << MPI2_SGE_FLAGS_SHIFT;
+> -	dma_addr_in =  pci_map_single(ioc->pdev, bio_data(rsp->bio),
+> -	      rsp->data_len, PCI_DMA_BIDIRECTIONAL);
+> +	dma_addr_in = pci_map_single(ioc->pdev, bio_data(rsp->bio),
+> +				     blk_rq_bytes(rsp), PCI_DMA_BIDIRECTIONAL);
+>  	if (!dma_addr_in) {
+>  		mpt2sas_base_free_smid(ioc, le16_to_cpu(smid));
+>  		goto unmap;
+>  	}
+>  
+> -	ioc->base_add_sg_single(psge, sgl_flags | (rsp->data_len + 4),
+> +	ioc->base_add_sg_single(psge, sgl_flags | (blk_rq_bytes(rsp) + 4),
+>  	    dma_addr_in);
+>  
+>  	dtransportprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s - "
+> @@ -1170,7 +1170,8 @@ transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+>  
+>  		memcpy(req->sense, mpi_reply, sizeof(*mpi_reply));
+>  		req->sense_len = sizeof(*mpi_reply);
+> -		rsp->resid_len = rsp->data_len - mpi_reply->ResponseDataLength;
+> +		rsp->resid_len = blk_rq_bytes(rsp) -
+> +				 mpi_reply->ResponseDataLength;
+>  	} else {
+>  		dtransportprintk(ioc, printk(MPT2SAS_DEBUG_FMT
+>  		    "%s - no reply\n", ioc->name, __func__));
+> @@ -1186,10 +1187,10 @@ transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+>  
+>   unmap:
+>  	if (dma_addr_out)
+> -		pci_unmap_single(ioc->pdev, dma_addr_out, req->data_len,
+> +		pci_unmap_single(ioc->pdev, dma_addr_out, blk_rq_bytes(req),
+>  		    PCI_DMA_BIDIRECTIONAL);
+>  	if (dma_addr_in)
+> -		pci_unmap_single(ioc->pdev, dma_addr_in, rsp->data_len,
+> +		pci_unmap_single(ioc->pdev, dma_addr_in, blk_rq_bytes(rsp),
+>  		    PCI_DMA_BIDIRECTIONAL);
+>  
+>   out:
+> diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
+> index 2a5f077..d178a8b 100644
+> --- a/drivers/scsi/osd/osd_initiator.c
+> +++ b/drivers/scsi/osd/osd_initiator.c
+> @@ -1299,7 +1299,7 @@ int osd_finalize_request(struct osd_request *or,
+>  			return ret;
+>  		}
+>  		OSD_DEBUG("out bytes=%llu (bytes_req=%u)\n",
+> -			_LLU(or->out.total_bytes), or->out.req->data_len);
+> +			_LLU(or->out.total_bytes), blk_rq_bytes(or->out.req));
+>  	}
+>  	if (or->in.bio) {
+>  		ret = blk_rq_append_bio(or->request->q, or->in.req, or->in.bio);
+> @@ -1308,7 +1308,7 @@ int osd_finalize_request(struct osd_request *or,
+>  			return ret;
+>  		}
+>  		OSD_DEBUG("in bytes=%llu (bytes_req=%u)\n",
+> -			_LLU(or->in.total_bytes), or->in.req->data_len);
+> +			_LLU(or->in.total_bytes), blk_rq_bytes(or->in.req));
+>  	}
+>  
+>  	or->out.pad_buff = sg_out_pad_buffer;
 
-Which memory allocator did you have selected (SLAB, SLUB, SLOB, SLQB)?
+Ack-by: Boaz Harrosh <bharrosh@panasas.com>
 
-> BUG: spinlock bad magic on CPU#1, modprobe/63
-> Unable to handle kernel paging request for data at address 0xffffc994838
-> Faulting instruction address: 0xc00000000035f5a8
-> Oops: Kernel access of bad area, sig: 11 [#1]
-> SMP NR_CPUS=1024 DEBUG_PAGEALLOC NUMA pSeries
-> Modules linked in: scsi_mod(+)
-> NIP: c00000000035f5a8 LR: c00000000035f58c CTR: 0000000000136f8c
-> REGS: c0000000c7d03500 TRAP: 0300   Not tainted  (2.6.30-rc5-autotest-next-20090511)
-> MSR: 8000000000009032 <EE,ME,IR,DR>  CR: 28222484  XER: 0000000f
-> DAR: 00000ffffc994838, DSISR: 0000000040000000
-> TASK = c0000000c7cf0a80[63] 'modprobe' THREAD: c0000000c7d00000 CPU: 1
-> GPR00: c00000000035f58c c0000000c7d03780 c000000000aaeed8 
-> 0000000000000031 GPR04: 0000000000000000 00000000585cf4e0 
-> 0000000000673580 80000000565a6cc0 GPR08: 0000000000000000 
-> c0000000009ebf50 0000000000000000 c0000000009ebf38 GPR12: 
-> 0000000028222482 c000000000b82600 0000000000000000 0000000000000000  
-> GPR16: 0000000000000000 0000000000000000 0000000000000000 
-> 0000000000000000 GPR20: 0000000000000018 ffffffffffffffff 
-> c0000000009bbe40 0000000000000010 GPR24: 0000000000210d00 
-> c0000000c6caff80 c0000000dfc732a0 c000000000f61380 GPR28: 
-> c0000000007c8350 c0000000008a4280 c000000000a2f928 00000ffffc994550 NIP 
-> [c00000000035f5a8] .spin_bug+0x90/0xd4
-> LR [c00000000035f58c] .spin_bug+0x74/0xd4
-> Call Trace:
-> [c0000000c7d03780] [c00000000035f58c] .spin_bug+0x74/0xd4 (unreliable)
-> [c0000000c7d03810] [c00000000035f890] ._raw_spin_lock+0x48/0x184
-> [c0000000c7d038b0] [c0000000005d67d8] ._spin_lock+0x10/0x24
-> [c0000000c7d03920] [c00000000013fbdc] .__slab_alloc_page+0x344/0x3cc
-> [c0000000c7d039e0] [c000000000141168] .kmem_cache_alloc+0x13c/0x21c
-> [c0000000c7d03aa0] [c000000000141b04] .kmem_cache_create+0x294/0x2a8
-> [c0000000c7d03b90] [d000000000ea14cc] .scsi_init_queue+0x38/0x170 [scsi_mod]
-> [c0000000c7d03c20] [d000000000ea13c8] .init_scsi+0x1c/0xe8 [scsi_mod]
-> [c0000000c7d03ca0] [c0000000000092c0] .do_one_initcall+0x80/0x19c
-> [c0000000c7d03d90] [c0000000000c0540] .SyS_init_module+0xe0/0x244
-> [c0000000c7d03e30] [c000000000008534] syscall_exit+0x0/0x40
-> Instruction dump:
-> 7f84e378 e87e8020 38c604d0 e8e902ea 4827fced 60000000 2fbf0000 80bd0004  
-> 409e0010 e8de8028 38e0ffff 4800000c <e8ff02ea> 38df04d0 7fa4eb78 811d0008 
-> ---[ end trace f725820a6fa9dbb7 ]---
-> /init: line 21:    63 Segmentation fault      modprobe $file
->
-> I have attached the dmesg log here. Let me know if any other information  
-> is required.
->
-> Thanks
-> -Sachin
->
-> -- 
->
-> ---------------------------------
-> Sachin Sant
-> IBM Linux Technology Center
-> India Systems and Technology Labs
-> Bangalore, India
-> ---------------------------------
->
+Stupid prints. I'll Q a patch that removes them once this is accepted.
+Thanks.
 
-> Using 007bc904 bytes for initrd buffer
-> Please wait, loading kernel...
-> Allocated 01100000 bytes for kernel @ 02300000
->    Elf64 kernel loaded...
-> Loading ramdisk...
-> ramdisk loaded 007bc904 @ 03400000
-> OF stdout device is: /vdevice/vty@30000000
-> Preparing to boot Linux version 2.6.30-rc5-autotest-next-20090511 (root@mpower6lp5) (gcc version 4.3.2 [gcc-4_3-branch revision 141291] (SUSE Linux) ) #1 SMP Mon May 11 16:01:58 IST 2009
-> Calling ibm,client-architecture... done
-> command line: root=/dev/sda3 sysrq=1 insmod=sym53c8xx insmod=ipr crashkernel=512M-:256M IDENT=1242039097 
-> memory layout at init:
->   alloc_bottom : 0000000003bc0000
->   alloc_top    : 0000000008000000
->   alloc_top_hi : 0000000008000000
->   rmo_top      : 0000000008000000
->   ram_top      : 0000000008000000
-> instantiating rtas at 0x00000000074e0000... done
-> boot cpu hw idx 0000000000000000
-> copying OF device tree...
-> Building dt strings...
-> Building dt structure...
-> Device tree strings 0x0000000003bd0000 -> 0x0000000003bd15c2
-> Device tree struct  0x0000000003be0000 -> 0x0000000003c00000
-> Calling quiesce...
-> returning from prom_init
-> Crash kernel location must be 0x2000000
-> Reserving 256MB of memory at 32MB for crashkernel (System RAM: 4096MB)
-> Phyp-dump disabled at boot time
-> Using pSeries machine description
-> Using 1TB segments
-> Found initrd at 0xc000000003400000:0xc000000003bbc904
-> console [udbg0] enabled
-> Partition configured for 2 cpus.
-> CPU maps initialized for 2 threads per core
-> Starting Linux PPC64 #1 SMP Mon May 11 16:01:58 IST 2009
-> -----------------------------------------------------
-> ppc64_pft_size                = 0x1a
-> physicalMemorySize            = 0x100000000
-> htab_hash_mask                = 0x7ffff
-> -----------------------------------------------------
-> Initializing cgroup subsys cpuset
-> Initializing cgroup subsys cpu
-> Linux version 2.6.30-rc5-autotest-next-20090511 (root@mpower6lp5) (gcc version 4.3.2 [gcc-4_3-branch revision 141291] (SUSE Linux) ) #1 SMP Mon May 11 16:01:58 IST 2009
-> [boot]0012 Setup Arch
-> EEH: No capable adapters found
-> PPC64 nvram contains 15360 bytes
-> Zone PFN ranges:
->   DMA      0x00000000 -> 0x00010000
->   Normal   0x00010000 -> 0x00010000
-> Movable zone start PFN for each node
-> early_node_map[2] active PFN ranges
->     2: 0x00000000 -> 0x0000e000
->     3: 0x0000e000 -> 0x00010000
-> Could not find start_pfn for node 0
-> [boot]0015 Setup Done
-> Built 3 zonelists in Node order, mobility grouping on.  Total pages: 65472
-> Policy zone: DMA
-> Kernel command line: root=/dev/sda3 sysrq=1 insmod=sym53c8xx insmod=ipr crashkernel=512M-:256M IDENT=1242039097 
-> Experimental hierarchical RCU implementation.
-> RCU-based detection of stalled CPUs is enabled.
-> Experimental hierarchical RCU init done.
-> NR_IRQS:512
-> [boot]0020 XICS Init
-> [boot]0021 XICS Done
-> PID hash table entries: 4096 (order: 12, 32768 bytes)
-> clocksource: timebase mult[7d0000] shift[22] registered
-> Console: colour dummy device 80x25
-> console handover: boot [udbg0] -> real [hvc0]
-> allocated 2621440 bytes of page_cgroup
-> please try cgroup_disable=memory option if you don't want
-> freeing bootmem node 2
-> freeing bootmem node 3
-> Memory: 3881920k/4194304k available (8896k kernel code, 312384k reserved, 2048k data, 4287k bss, 448k init)
-> Calibrating delay loop... 1022.36 BogoMIPS (lpj=5111808)
-> Security Framework initialized
-> SELinux:  Disabled at boot.
-> Dentry cache hash table entries: 524288 (order: 6, 4194304 bytes)
-> Inode-cache hash table entries: 262144 (order: 5, 2097152 bytes)
-> Mount-cache hash table entries: 4096
-> Initializing cgroup subsys ns
-> Initializing cgroup subsys cpuacct
-> Initializing cgroup subsys memory
-> Initializing cgroup subsys devices
-> Initializing cgroup subsys freezer
-> Processor 1 found.
-> Brought up 2 CPUs
-> net_namespace: 1936 bytes
-> NET: Registered protocol family 16
-> IBM eBus Device Driver
-> PCI: Probing PCI hardware
-> bio: create slab <bio-0> at 0
-> usbcore: registered new interface driver usbfs
-> usbcore: registered new interface driver hub
-> usbcore: registered new device driver usb
-> Failed to register trace events module notifier
-> NET: Registered protocol family 2
-> IP route cache hash table entries: 32768 (order: 2, 262144 bytes)
-> TCP established hash table entries: 131072 (order: 5, 2097152 bytes)
-> TCP bind hash table entries: 65536 (order: 5, 2097152 bytes)
-> TCP: Hash tables configured (established 131072 bind 65536)
-> TCP reno registered
-> NET: Registered protocol family 1
-> Unpacking initramfs...
-> IOMMU table initialized, virtual merging enabled
-> audit: initializing netlink socket (disabled)
-> type=2000 audit(1242039145.533:1): initialized
-> Kprobe smoke test started
-> Kprobe smoke test passed successfully
-> HugeTLB registered 16 MB page size, pre-allocated 0 pages
-> HugeTLB registered 16 GB page size, pre-allocated 0 pages
-> VFS: Disk quotas dquot_6.5.2
-> Dquot-cache hash table entries: 8192 (order 0, 65536 bytes)
-> Btrfs loaded
-> msgmni has been set to 7580
-> alg: No test for stdrng (krng)
-> Block layer SCSI generic (bsg) driver version 0.4 loaded (major 254)
-> io scheduler noop registered
-> io scheduler anticipatory registered
-> io scheduler deadline registered
-> io scheduler cfq registered (default)
-> pci_hotplug: PCI Hot Plug PCI Core version: 0.5
-> rpaphp: RPA HOT Plug PCI Controller Driver version: 0.1
-> Generic RTC Driver v1.07
-> Serial: 8250/16550 driver, 4 ports, IRQ sharing disabled
-> pmac_zilog: 0.6 (Benjamin Herrenschmidt <benh@kernel.crashing.org>)
-> input: Macintosh mouse button emulation as /devices/virtual/input/input0
-> Uniform Multi-Platform E-IDE driver
-> ide-gd driver 1.18
-> IBM eHEA ethernet device driver (Release EHEA_0101)
-> ehea: eth0: Jumbo frames are disabled
-> ehea: eth0 -> logical port id #2
-> ehci_hcd: USB 2.0 'Enhanced' Host Controller (EHCI) Driver
-> ohci_hcd: USB 1.1 'Open' Host Controller (OHCI) Driver
-> mice: PS/2 mouse device common for all mice
-> EDAC MC: Ver: 2.1.0 May 11 2009
-> usbcore: registered new interface driver hiddev
-> usbcore: registered new interface driver usbhid
-> usbhid: v2.6:USB HID core driver
-> TCP cubic registered
-> NET: Registered protocol family 15
-> registered taskstats version 1
-> Freeing unused kernel memory: 448k freed
-> doing fast boot
-> SysRq : Changing Loglevel
-> Loglevel set to 1
-> BUG: spinlock bad magic on CPU#1, modprobe/63
-> Unable to handle kernel paging request for data at address 0xffffc994838
-> Faulting instruction address: 0xc00000000035f5a8
-> Oops: Kernel access of bad area, sig: 11 [#1]
-> SMP NR_CPUS=1024 DEBUG_PAGEALLOC NUMA pSeries
-> Modules linked in: scsi_mod(+)
-> NIP: c00000000035f5a8 LR: c00000000035f58c CTR: 0000000000136f8c
-> REGS: c0000000c7d03500 TRAP: 0300   Not tainted  (2.6.30-rc5-autotest-next-20090511)
-> MSR: 8000000000009032 <EE,ME,IR,DR>  CR: 28222484  XER: 0000000f
-> DAR: 00000ffffc994838, DSISR: 0000000040000000
-> TASK = c0000000c7cf0a80[63] 'modprobe' THREAD: c0000000c7d00000 CPU: 1
-> GPR00: c00000000035f58c c0000000c7d03780 c000000000aaeed8 0000000000000031 
-> GPR04: 0000000000000000 00000000585cf4e0 0000000000673580 80000000565a6cc0 
-> GPR08: 0000000000000000 c0000000009ebf50 0000000000000000 c0000000009ebf38 
-> GPR12: 0000000028222482 c000000000b82600 0000000000000000 0000000000000000 
-> GPR16: 0000000000000000 0000000000000000 0000000000000000 0000000000000000 
-> GPR20: 0000000000000018 ffffffffffffffff c0000000009bbe40 0000000000000010 
-> GPR24: 0000000000210d00 c0000000c6caff80 c0000000dfc732a0 c000000000f61380 
-> GPR28: c0000000007c8350 c0000000008a4280 c000000000a2f928 00000ffffc994550 
-> NIP [c00000000035f5a8] .spin_bug+0x90/0xd4
-> LR [c00000000035f58c] .spin_bug+0x74/0xd4
-> Call Trace:
-> [c0000000c7d03780] [c00000000035f58c] .spin_bug+0x74/0xd4 (unreliable)
-> [c0000000c7d03810] [c00000000035f890] ._raw_spin_lock+0x48/0x184
-> [c0000000c7d038b0] [c0000000005d67d8] ._spin_lock+0x10/0x24
-> [c0000000c7d03920] [c00000000013fbdc] .__slab_alloc_page+0x344/0x3cc
-> [c0000000c7d039e0] [c000000000141168] .kmem_cache_alloc+0x13c/0x21c
-> [c0000000c7d03aa0] [c000000000141b04] .kmem_cache_create+0x294/0x2a8
-> [c0000000c7d03b90] [d000000000ea14cc] .scsi_init_queue+0x38/0x170 [scsi_mod]
-> [c0000000c7d03c20] [d000000000ea13c8] .init_scsi+0x1c/0xe8 [scsi_mod]
-> [c0000000c7d03ca0] [c0000000000092c0] .do_one_initcall+0x80/0x19c
-> [c0000000c7d03d90] [c0000000000c0540] .SyS_init_module+0xe0/0x244
-> [c0000000c7d03e30] [c000000000008534] syscall_exit+0x0/0x40
-> Instruction dump:
-> 7f84e378 e87e8020 38c604d0 e8e902ea 4827fced 60000000 2fbf0000 80bd0004 
-> 409e0010 e8de8028 38e0ffff 4800000c <e8ff02ea> 38df04d0 7fa4eb78 811d0008 
-> ---[ end trace f725820a6fa9dbb7 ]---
-> /init: line 21:    63 Segmentation fault      modprobe $file
-> Creating device nodes with udev
-> udevd version 128 started
-> 
-> 
-> After the udevadm settle timeout, the events queue contains:
-> 
-> 632: /devices/vio/30000007
-> 
-> 
-> Boot logging started on /dev/hvc0(/dev/console) at Mon May 11 10:52:56 2009
-> 
-> 
-> After the udevadm settle timeout, the events queue contains:
-> 
-> 632: /devices/vio/30000007
-> 
-> 
-> 
-> 
-> After the udevadm settle timeout, the events queue contains:
-> 
-> 632: /devices/vio/30000007
-> 
-> 
-> 
-> 
-> After the udevadm settle timeout, the events queue contains:
-> 
-> 632: /devices/vio/30000007
-> 
-> 
-> Waiting for device /dev/sda3 to appear: ..............................Could not find /dev/sda3.
-> Want me to fall back to /dev/sda3? (Y/n) 
-> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 39b3acf..3d16c70 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -682,14 +682,13 @@ EXPORT_SYMBOL(scsi_release_buffers);
+>  static void scsi_end_bidi_request(struct scsi_cmnd *cmd)
+>  {
+>  	struct request *req = cmd->request;
+> -	unsigned int dlen = req->data_len;
+> -	unsigned int next_dlen = req->next_rq->data_len;
+>  
+>  	req->resid_len = scsi_out(cmd)->resid;
+>  	req->next_rq->resid_len = scsi_in(cmd)->resid;
+>  
+>  	/* The req and req->next_rq have not been completed */
+> -	BUG_ON(blk_end_bidi_request(req, 0, dlen, next_dlen));
+> +	BUG_ON(blk_end_bidi_request(req, 0, blk_rq_bytes(req),
+> +				    blk_rq_bytes(req->next_rq)));
+>  
+>  	scsi_release_buffers(cmd);
+>  
+> @@ -966,7 +965,7 @@ static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb,
+>  	BUG_ON(count > sdb->table.nents);
+>  	sdb->table.nents = count;
+>  	if (blk_pc_request(req))
+> -		sdb->length = req->data_len;
+> +		sdb->length = blk_rq_bytes(req);
+>  	else
+>  		sdb->length = blk_rq_sectors(req) << 9;
+>  	return BLKPREP_OK;
+> @@ -1087,21 +1086,21 @@ int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
+>  		if (unlikely(ret))
+>  			return ret;
+>  	} else {
+> -		BUG_ON(req->data_len);
+> +		BUG_ON(blk_rq_bytes(req));
+>  
+>  		memset(&cmd->sdb, 0, sizeof(cmd->sdb));
+>  		req->buffer = NULL;
+>  	}
+>  
+>  	cmd->cmd_len = req->cmd_len;
+> -	if (!req->data_len)
+> +	if (!blk_rq_bytes(req))
+>  		cmd->sc_data_direction = DMA_NONE;
+>  	else if (rq_data_dir(req) == WRITE)
+>  		cmd->sc_data_direction = DMA_TO_DEVICE;
+>  	else
+>  		cmd->sc_data_direction = DMA_FROM_DEVICE;
+>  	
+> -	cmd->transfersize = req->data_len;
+> +	cmd->transfersize = blk_rq_bytes(req);
+>  	cmd->allowed = req->retries;
+>  	return BLKPREP_OK;
+>  }
 
+Reviewed-by: Boaz Harrosh <bharrosh@panasas.com>
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+> diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
+> index 48ba413..1030327 100644
+> --- a/drivers/scsi/scsi_tgt_lib.c
+> +++ b/drivers/scsi/scsi_tgt_lib.c
+> @@ -387,7 +387,7 @@ static int scsi_map_user_pages(struct scsi_tgt_cmd *tcmd, struct scsi_cmnd *cmd,
+>  	 * we use REQ_TYPE_BLOCK_PC so scsi_init_io doesn't set the
+>  	 * length for us.
+>  	 */
+> -	cmd->sdb.length = rq->data_len;
+> +	cmd->sdb.length = blk_rq_bytes(rq);
+
+Note to self:
+  This code and the comment is wrong scsi_init_io does set everything right. It should be dropped.
+  Once everything settles, I'll send a patch to remove this.
+
+>  
+>  	return 0;
+>  
+
+I've reviewed all the scsi parts.
+
+(We had a 24 hours internet  outage so these replys where delayed)
+
+Thanks
+Boaz
