@@ -1,88 +1,56 @@
 From: Andy Yan <ayan@marvell.com>
-Subject: [PATCH 2/5] bug fix: dead lock
-Date: Tue, 12 May 2009 00:56:08 +0800
-Message-ID: <20090511165608.GB9627@Andy.marvell.com>
+Subject: [PATCH 3/5] bug fix: Null pointer may be used
+Date: Tue, 12 May 2009 00:59:00 +0800
+Message-ID: <20090511165900.GA9638@Andy.marvell.com>
 Reply-To: ayan@marvell.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host2.marvell.com ([65.219.4.2]:55558 "EHLO maili.marvell.com"
+Received: from host2.marvell.com ([65.219.4.2]:58297 "EHLO maili.marvell.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751665AbZEKIFW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 May 2009 04:05:22 -0400
+	id S1752091AbZEKIIO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 May 2009 04:08:14 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: james.bottomley@hansenpartnership.com, jeff@garzik.org
 
->From fda3efb9dfb8d2b1ff5ef12ee7473ec0c1e8368e Mon Sep 17 00:00:00 2001
+>From d4529158b4e32d68b41a052c9b66de7243e0c4ce Mon Sep 17 00:00:00 2001
 From: Andy Yan <ayan@marvell.com>
-Date: Mon, 11 May 2009 20:05:26 +0800
-Subject: [PATCH 2/5] bug fix: dead lock
- 
-TMF task should be issued with Interrupt Disabled, or Deadlock may take place.
-Clean-up unused parameters and conditonal lock.
+Date: Mon, 11 May 2009 21:49:52 +0800
+Subject: [PATCH 3/5] bug fix: Null pointer may be used
+
+Null pointer check to avoid corruption.
 
 Signed-off-by: Ying Chu <jasonchu@marvell.com>
 Signed-off-by: Andy Yan <ayan@marvell.com>
 Signed-off-by: Ke Wei <kewei@marvell.com>
+
 ---
- drivers/scsi/mvsas/mv_sas.c |   14 ++++++--------
- 1 files changed, 6 insertions(+), 8 deletions(-)
+ drivers/scsi/mvsas/mv_sas.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index f709319..4279b5e 100644
+index 4279b5e..3fc396f 100644
 --- a/drivers/scsi/mvsas/mv_sas.c
 +++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -868,8 +868,8 @@ static int mvs_task_prep_ssp(struct mvs_info *mvi,
- 
- #define	DEV_IS_GONE(mvi_dev)	((!mvi_dev || (mvi_dev->dev_type == NO_DEVICE)))
- static int mvs_task_exec(struct sas_task *task, const int num, gfp_t gfp_flags,
--				struct completion *completion, int lock,
--				int is_tmf, struct mvs_tmf_task *tmf)
-+				struct completion *completion,int is_tmf,
-+				struct mvs_tmf_task *tmf)
- {
- 	struct domain_device *dev = task->dev;
- 	struct mvs_info *mvi;
-@@ -892,8 +892,7 @@ static int mvs_task_exec(struct sas_task *task, const int num, gfp_t gfp_flags,
- 
- 	mvi = mvs_find_dev_mvi(task->dev);
- 
--	if (lock)
--		spin_lock_irqsave(&mvi->lock, flags);
-+	spin_lock_irqsave(&mvi->lock, flags);
- 	do {
- 		dev = t->dev;
- 		mvi_dev = (struct mvs_device *)dev->lldd_dev;
-@@ -1020,15 +1019,14 @@ out_done:
- 		MVS_CHIP_DISP->start_delivery(mvi,
- 			(mvi->tx_prod - 1) & (MVS_CHIP_SLOT_SZ - 1));
+@@ -1873,11 +1873,11 @@ int mvs_slot_complete(struct mvs_info *mvi, u32 rx_desc, u32 flags)
  	}
--	if (lock)
--		spin_unlock_irqrestore(&mvi->lock, flags);
-+	spin_unlock_irqrestore(&mvi->lock, flags);
- 	return rc;
- }
  
- int mvs_queue_command(struct sas_task *task, const int num,
- 			gfp_t gfp_flags)
- {
--	return mvs_task_exec(task, num, gfp_flags, NULL, 1, 0, NULL);
-+	return mvs_task_exec(task, num, gfp_flags, NULL, 0, NULL);
- }
+ out:
+-	if (mvi_dev)
++	if (mvi_dev) {
+ 		mvi_dev->runing_req--;
+-	if (sas_protocol_ata(task->task_proto))
+-		mvs_free_reg_set(mvi, mvi_dev);
+-
++		if (sas_protocol_ata(task->task_proto))
++			mvs_free_reg_set(mvi, mvi_dev);
++	}
+ 	mvs_slot_task_free(mvi, task, slot, slot_idx);
+ 	sts = tstat->stat;
  
- static void mvs_slot_free(struct mvs_info *mvi, u32 rx_desc)
-@@ -1448,7 +1446,7 @@ static int mvs_exec_internal_tmf_task(struct domain_device *dev,
- 		task->timer.expires = jiffies + MVS_TASK_TIMEOUT*HZ;
- 		add_timer(&task->timer);
- 
--		res = mvs_task_exec(task, 1, GFP_KERNEL, NULL, 0, 1, tmf);
-+		res = mvs_task_exec(task, 1, GFP_KERNEL, NULL, 1, tmf);
- 
- 		if (res) {
- 			del_timer(&task->timer);
 -- 
 1.6.2.1
 
