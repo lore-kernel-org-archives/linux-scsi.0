@@ -1,90 +1,69 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 2/3] scsi: simplify the bidi completion
-Date: Mon, 11 May 2009 17:56:08 +0900
-Message-ID: <1242032169-22422-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-References: <1242032169-22422-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 1/3] block: let blk_end_request_all handle bidi requests
+Date: Mon, 11 May 2009 11:06:30 +0200
+Message-ID: <20090511090629.GO4694@kernel.dk>
+References: <1242032169-22422-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1242032169-22422-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:37525 "EHLO sh.osrg.net"
+Received: from brick.kernel.dk ([93.163.65.50]:39580 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753304AbZEKI46 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 May 2009 04:56:58 -0400
-In-Reply-To: <1242032169-22422-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	id S1753856AbZEKJG3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 May 2009 05:06:29 -0400
+Content-Disposition: inline
+In-Reply-To: <1242032169-22422-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: tj@kernel.org, James.Bottomley@HansenPartnership.com, bharrosh@panasas.com, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: tj@kernel.org, James.Bottomley@HansenPartnership.com, bharrosh@panasas.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Let's use blk_end_request_all() instead of blk_end_bidi_request().
+On Mon, May 11 2009, FUJITA Tomonori wrote:
+> blk_end_request_all() and __blk_end_request_all() should finish all
+> bytes including bidi, by definition. That's what all bidi users need ,
+> bidi requests must be complete as a whole (partial completion is
+> impossible).
+> 
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> ---
+>  include/linux/blkdev.h |   12 ++++++++++--
+>  1 files changed, 10 insertions(+), 2 deletions(-)
+> 
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 8919683..3b5c564 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -911,8 +911,12 @@ static inline bool blk_end_request(struct request *rq, int error,
+>  static inline void blk_end_request_all(struct request *rq, int error)
+>  {
+>  	bool pending;
+> +	unsigned int bidi_bytes = 0;
+>  
+> -	pending = blk_end_request(rq, error, blk_rq_bytes(rq));
+> +	if (unlikely(blk_bidi_rq(rq)))
+> +		bidi_bytes = blk_rq_bytes(rq->next_rq);
+> +
+> +	pending = blk_end_bidi_request(rq, error, blk_rq_bytes(rq), bidi_bytes);
+>  	BUG_ON(pending);
+>  }
+>  
+> @@ -963,8 +967,12 @@ static inline bool __blk_end_request(struct request *rq, int error,
+>  static inline void __blk_end_request_all(struct request *rq, int error)
+>  {
+>  	bool pending;
+> +	unsigned int bidi_bytes = 0;
+> +
+> +	if (unlikely(blk_bidi_rq(rq)))
+> +		bidi_bytes = blk_rq_bytes(rq->next_rq);
+>  
+> -	pending = __blk_end_request(rq, error, blk_rq_bytes(rq));
+> +	pending = __blk_end_bidi_request(rq, error, blk_rq_bytes(rq), bidi_bytes);
+>  	BUG_ON(pending);
+>  }
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/scsi/scsi_lib.c |   43 +++++++++++++------------------------------
- 1 files changed, 13 insertions(+), 30 deletions(-)
+Looks ok, perhaps we can next get rid of the bidi naming? It's all
+pretty much folded into one anyway, using __blk_end_bidi_request() from
+generic end-request handling looks confusing.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index b12750f..a54bec9 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -673,33 +673,6 @@ void scsi_release_buffers(struct scsi_cmnd *cmd)
- EXPORT_SYMBOL(scsi_release_buffers);
- 
- /*
-- * Bidi commands Must be complete as a whole, both sides at once.  If
-- * part of the bytes were written and lld returned scsi_in()->resid
-- * and/or scsi_out()->resid this information will be left in
-- * req->resid_len and req->next_rq->resid_len. The upper-layer driver
-- * can decide what to do with this information.
-- */
--static void scsi_end_bidi_request(struct scsi_cmnd *cmd)
--{
--	struct request *req = cmd->request;
--
--	req->resid_len = scsi_out(cmd)->resid;
--	req->next_rq->resid_len = scsi_in(cmd)->resid;
--
--	/* The req and req->next_rq have not been completed */
--	BUG_ON(blk_end_bidi_request(req, 0, blk_rq_bytes(req),
--				    blk_rq_bytes(req->next_rq)));
--
--	scsi_release_buffers(cmd);
--
--	/*
--	 * This will goose the queue request function at the end, so we don't
--	 * need to worry about launching another command.
--	 */
--	scsi_next_command(cmd);
--}
--
--/*
-  * Function:    scsi_io_completion()
-  *
-  * Purpose:     Completion processing for block device I/O requests.
-@@ -772,12 +745,22 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 			if (!sense_deferred)
- 				error = -EIO;
- 		}
-+
-+		req->resid_len = scsi_get_resid(cmd);
-+
- 		if (scsi_bidi_cmnd(cmd)) {
--			/* will also release_buffers */
--			scsi_end_bidi_request(cmd);
-+			/*
-+			 * Bidi commands Must be complete as a whole,
-+			 * both sides at once.
-+			 */
-+			req->next_rq->resid_len = scsi_in(cmd)->resid;
-+
-+			blk_end_request_all(req, 0);
-+
-+			scsi_release_buffers(cmd);
-+			scsi_next_command(cmd);
- 			return;
- 		}
--		req->resid_len = scsi_get_resid(cmd);
- 	}
- 
- 	BUG_ON(blk_bidi_rq(req)); /* bidi not support for !blk_pc_request yet */
 -- 
-1.6.0.6
+Jens Axboe
 
