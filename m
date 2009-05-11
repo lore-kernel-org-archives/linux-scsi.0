@@ -1,15 +1,15 @@
 From: Andy Yan <ayan@marvell.com>
-Subject: optimization of code
-Date: Tue, 12 May 2009 01:02:26 +0800
-Message-ID: <20090511170226.GC9638@Andy.marvell.com>
+Subject: [PATCH 5/5] optimization of code
+Date: Tue, 12 May 2009 01:06:40 +0800
+Message-ID: <20090511170640.GD9638@Andy.marvell.com>
 Reply-To: ayan@marvell.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host2.marvell.com ([65.219.4.2]:61922 "EHLO maili.marvell.com"
+Received: from host2.marvell.com ([65.219.4.2]:4592 "EHLO maili.marvell.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752704AbZEKILj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 May 2009 04:11:39 -0400
+	id S1752516AbZEKIP4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 May 2009 04:15:56 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
