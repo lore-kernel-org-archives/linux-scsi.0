@@ -1,64 +1,60 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 03/11] block: add rq->resid_len
-Date: Mon, 11 May 2009 14:49:09 +0900
-Message-ID: <20090511145024B.fujita.tomonori@lab.ntt.co.jp>
-References: <1241423927-11871-4-git-send-email-tj@kernel.org>
-	<4A06DFAB.40205@panasas.com>
-	<4A0767E5.5050205@kernel.org>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [GIT PATCH] block: unify request processing model and
+	implement peek/fetch
+Date: Mon, 11 May 2009 09:52:53 +0200
+Message-ID: <20090511075253.GH4694@kernel.dk>
+References: <1241751256-17435-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:50652 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750991AbZEKFyG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 May 2009 01:54:06 -0400
-In-Reply-To: <4A0767E5.5050205@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1241751256-17435-1-git-send-email-tj@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, rusty@rustcorp.com.au, James.Bottomley@HansenPartnership.com, mike.miller@hp.com, donari75@gmail.com, paul.clements@steeleye.com, tim@cyberelk.net, Geert.Uytterhoeven@sonycom.com, davem@davemloft.net, Laurent@lvivier.info, jgarzik@pobox.com, jeremy@xensource.com, grant.likely@secretlab.ca, adrian@mcmen.demon.co.uk, sfr@canb.auug.org.au, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, oakad@yahoo.com, drzeus@drzeus.cx, dwmw2@infradead.org, Markus.Lidel@shadowconnect.com, wein@de.ibm.com, schwidefsky@de.ibm.com, zaitcev@redhat.com, fujita.tomonori@lab.ntt.co.jp
 List-Id: linux-scsi@vger.kernel.org
-To: tj@kernel.org
-Cc: bharrosh@panasas.com, axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, dgilbert@interlog.com, djwong@us.ibm.com
 
-On Mon, 11 May 2009 08:48:53 +0900
-Tejun Heo <tj@kernel.org> wrote:
+On Fri, May 08 2009, Tejun Heo wrote:
+> Hello,
+> 
+> Upon ack, please pull from the following git tree.
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git block-peek-fetch
+> 
+> Block layer has allowed two different models of request processing.
+> elv_next_request() is used to peek at the top of the queue, after
+> peeking, a LLD could start processing it immediately or dequeue and
+> then start processing.
+> 
+> The non-dequeuing behavior is mostly useful for simpler device drivers
+> (usually PIO based) which process requests on segment basis.  By using
+> the block layer queue tip as the current request pointer, they don't
+> have to care about request boundaries and just process things
+> segment-by-segment.
+> 
+> However, this dual mode of operations complicates and ambiguates block
+> layer API.  Block layer can't tell whether a request has begun
+> processing or not in deterministic manner.  This makes accounting
+> inaccurate and implementing high level features in block layer
+> difficult.  For example, it isn't clear when a block layer timeout
+> timer should be started or how queue queiscing for EH should be
+> implemented.  Even when problems can be worked aroudn, it makes the
+> implementation fragile.
+> 
+> Although allowing llds ignore request boundaries makes things simpler
+> for certain drivers, the number of drivers benefit form it aren't too
+> many and driver stacks which are even mildly complex have to deal with
+> request boundaries anyway.  Also, the benefit itself isn't that
+> significant.  In most cases, it is just another way of doing things
+> rather than the definitively better way.  IOW, if there were no such
+> alternative, nobody would have missed it.
+> 
+> This patchset converts all block layer llds to dequeuing model and
+> then clean up API to simplify a bit and enforce dequeueing model.
+> This patchset contains the following patches.
 
-> Hello, Boaz.
-> 
-> Boaz Harrosh wrote:
-> 
-> > Hi Tejun, I've carefully reviewed these files which I know more
-> > about.  The drivers/block files I've skipped, since I'm not familiar
-> > with this code.
-> > 
-> > Except a small fallout, it looks very good. See some comments plus
-> > Ack/review below
-> 
-> Thanks a lot for reviewing it closely.  It's really nice to have
-> careful extra pair of eyes on the changes.  :-)
-> 
-> >> --- a/drivers/message/fusion/mptsas.c
-> >> +++ b/drivers/message/fusion/mptsas.c
-> >> @@ -1357,8 +1357,7 @@ static int mptsas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
-> >>  		smprep = (SmpPassthroughReply_t *)ioc->sas_mgmt.reply;
-> >>  		memcpy(req->sense, smprep, sizeof(*smprep));
-> >>  		req->sense_len = sizeof(*smprep);
-> >> -		req->data_len = 0;
-> >> -		rsp->data_len -= smprep->ResponseDataLength;
-> >> +		rsp->resid_len = rsp->data_len - smprep->ResponseDataLength;
-> >>  	} else {
-> >>  		printk(MYIOC_s_ERR_FMT "%s: smp passthru reply failed to be returned\n",
-> >>  		    ioc->name, __func__);
-> > 
-> > I think original code was assuming full residual count on the else side
-> > (not MPT_IOCTL_STATUS_RF_VALID). So maybe add:
-> > 
-> > +		rsp->resid_len = rsp->data_len;
-> 
-> Does resid_len make any sense w/ failed requests?  I think we would be
-> better off with declaring residual count to be undefined on request
-> failure.  Is there any place which depends on it?
+Glad this finally got completed, thanks a lot Tejun! Applied.
 
-IIRC, I wrote the code. I think that this doesn't matter but it's
-better not to change the behavior unless Eric ack on this change
-(maybe LSI has some management binary that assume this behavior though
-it's unlikely).
+-- 
+Jens Axboe
+
