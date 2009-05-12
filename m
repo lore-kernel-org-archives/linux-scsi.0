@@ -1,46 +1,43 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 03/11] block: add rq->resid_len
-Date: Tue, 12 May 2009 18:53:46 +0300
-Message-ID: <4A099B8A.1020401@panasas.com>
-References: <1241423927-11871-1-git-send-email-tj@kernel.org> <1241423927-11871-4-git-send-email-tj@kernel.org> <4A06DFAB.40205@panasas.com> <4A0767E5.5050205@kernel.org> <4A080C9D.9000109@panasas.com> <4A08C26E.80801@kernel.org> <4A093782.80701@panasas.com> <4A093C54.2060706@kernel.org> <4A0946D6.4010405@panasas.com> <4A094A11.2030300@kernel.org> <4A09589A.5030800@panasas.com> <4A0993BA.7090505@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757363AbZELPyW@vger.kernel.org>
-In-Reply-To: <4A0993BA.7090505@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, Doug Gilbert <dgilbert@interlog.com>, "Darrick J. Wong" <djwong@us.ibm.com>
+From: akpm@linux-foundation.org
+Subject: [patch for 2.6.30? 1/1] drivers/scsi/NCR_D700.c: fix IRQ handler return type
+Date: Tue, 12 May 2009 13:29:13 -0700
+Message-ID: <200905122048.n4CKmSw7030088@imap1.linux-foundation.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:46343 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751625AbZELUvG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 May 2009 16:51:06 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, helight.xu@gmail.com, James.Bottomley@HansenPartnership.com
 
-On 05/12/2009 06:20 PM, Tejun Heo wrote:
-> Boaz Harrosh wrote:
-> 
->> The solution to this, I think, is that the bouncing layer should
->> receive a residual count, and not bounce anything beyond what's
->> transferred. (On reads, writes does nothing), and zero-out the
->> rest. This of course means that all block drivers make sure residual
->> is properly set, the way it should as explained in this
->> thread. (SCSI does the right thing where it can, for example see
->> scsi_execute())
-> 
-> Umm... shouldn't the request just be successfully finished with
-> positive residue count and with sense data if necessary?  Block layer
-> request failure means, and has always meant, complete failure.
-> 
+From: Zhenwen Xu <helight.xu@gmail.com>
 
-I see, however if so then bouncing must take into consideration the residual
-count in the successful case, so not to copy garbage bytes. And drivers audited
-to make sure residual is set accordingly.
+drivers/scsi/NCR_D700.c: In function `NCR_D700_probe':
+drivers/scsi/NCR_D700.c:322: warning: passing argument 2 of `request_irq' from incompatible pointer type
+drivers/scsi/NCR_D700.c:322: warning: passing argument 2 of `request_irq' from incompatible pointer type
+drivers/scsi/NCR_D700.c:322: warning: passing argument 2 of `request_irq' from incompatible pointer type
 
-I wish we would set resid_len to data_len at begining and let drivers
-reset that on success properly, like SCSI does. I'll look at it farther
-when I have a bit of time.
+Signed-off-by: Zhenwen Xu <helight.xu@gmail.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
-Finally I see a distinct separate usage for the request->error member?
+ drivers/scsi/NCR_D700.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> Thanks.
-> 
-
-Thanks
-Boaz
+diff -puN drivers/scsi/NCR_D700.c~drivers-scsi-ncr_d700c-fix-irq-handler-return-type drivers/scsi/NCR_D700.c
+--- a/drivers/scsi/NCR_D700.c~drivers-scsi-ncr_d700c-fix-irq-handler-return-type
++++ a/drivers/scsi/NCR_D700.c
+@@ -224,7 +224,7 @@ NCR_D700_probe_one(struct NCR_D700_priva
+ 	return ret;
+ }
+ 
+-static int
++static irqreturn_t
+ NCR_D700_intr(int irq, void *data)
+ {
+ 	struct NCR_D700_private *p = (struct NCR_D700_private *)data;
+_
