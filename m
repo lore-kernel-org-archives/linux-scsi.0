@@ -1,49 +1,54 @@
 From: akpm@linux-foundation.org
-Subject: [patch 4/9] sg_io: don't perform unneeded copy in compat code
-Date: Tue, 12 May 2009 13:49:45 -0700
-Message-ID: <200905122109.n4CL91qa011424@imap1.linux-foundation.org>
+Subject: [patch 8/9] scsi: ses check name in enclosure_component_register()
+Date: Tue, 12 May 2009 13:49:48 -0700
+Message-ID: <200905122109.n4CL93Do011437@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:36886 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:50059 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750939AbZELVOc (ORCPT
+	by vger.kernel.org with ESMTP id S1755406AbZELVbk (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 May 2009 17:14:32 -0400
+	Tue, 12 May 2009 17:31:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, alexey.zaytsev@gmail.com, James.Bottomley@HansenPartnership.com, dgilbert@interlog.com, fujita.tomonori@lab.ntt.co.jp, jens.axboe@oracle.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, yinghai@kernel.org, James.Bottomley@HansenPartnership.com
 
-From: Alexey Zaytsev <alexey.zaytsev@gmail.com>
+From: Yinghai Lu <yinghai@kernel.org>
 
-The members from 'status' in struct sg_io_hdr to the last are used to
-transfer information from kernel to user space.  The values that user
-space sets are just ignored.
+dev_set_name will use sprintf to copy the name.  need to check if the name
+does valid.
 
-Signed-off-by: Alexey Zaytsev <alexey.zaytsev@gmail.com>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
+Otherwise the code will error from device_add() later.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- fs/compat_ioctl.c |    6 ------
- 1 file changed, 6 deletions(-)
+ drivers/misc/enclosure.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff -puN fs/compat_ioctl.c~sg_io-dont-perform-unneeded-copy-in-compat-code fs/compat_ioctl.c
---- a/fs/compat_ioctl.c~sg_io-dont-perform-unneeded-copy-in-compat-code
-+++ a/fs/compat_ioctl.c
-@@ -787,12 +787,6 @@ static int sg_ioctl_trans(unsigned int f
- 	if (put_user(compat_ptr(data), &sgio->usr_ptr))
- 		return -EFAULT;
+diff -puN drivers/misc/enclosure.c~scsi-ses-check-name-in-enclosure_component_register-v2 drivers/misc/enclosure.c
+--- a/drivers/misc/enclosure.c~scsi-ses-check-name-in-enclosure_component_register-v2
++++ a/drivers/misc/enclosure.c
+@@ -119,7 +119,7 @@ enclosure_register(struct device *dev, c
+ 	edev->edev.class = &enclosure_class;
+ 	edev->edev.parent = get_device(dev);
+ 	edev->cb = cb;
+-	dev_set_name(&edev->edev, name);
++	dev_set_name(&edev->edev, "%s", name);
+ 	err = device_register(&edev->edev);
+ 	if (err)
+ 		goto err;
+@@ -255,8 +255,8 @@ enclosure_component_register(struct encl
+ 	ecomp->number = number;
+ 	cdev = &ecomp->cdev;
+ 	cdev->parent = get_device(&edev->edev);
+-	if (name)
+-		dev_set_name(cdev, name);
++	if (name && name[0])
++		dev_set_name(cdev, "%s", name);
+ 	else
+ 		dev_set_name(cdev, "%u", number);
  
--	if (copy_in_user(&sgio->status, &sgio32->status,
--			 (4 * sizeof(unsigned char)) +
--			 (2 * sizeof(unsigned short)) +
--			 (3 * sizeof(int))))
--		return -EFAULT;
--
- 	err = sys_ioctl(fd, cmd, (unsigned long) sgio);
- 
- 	if (err >= 0) {
 _
