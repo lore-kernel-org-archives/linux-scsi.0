@@ -1,68 +1,91 @@
 From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH 03/11] block: add rq->resid_len
-Date: Tue, 12 May 2009 09:19:32 +0900
-Message-ID: <4A08C094.2060602@kernel.org>
-References: <1241423927-11871-4-git-send-email-tj@kernel.org>	 <4A06DFAB.40205@panasas.com> <4A0767E5.5050205@kernel.org>	 <20090511145024B.fujita.tomonori@lab.ntt.co.jp> <1242051500.3338.9.camel@mulgrave.int.hansenpartnership.com>
+Date: Tue, 12 May 2009 09:27:26 +0900
+Message-ID: <4A08C26E.80801@kernel.org>
+References: <1241423927-11871-1-git-send-email-tj@kernel.org> <1241423927-11871-4-git-send-email-tj@kernel.org> <4A06DFAB.40205@panasas.com> <4A0767E5.5050205@kernel.org> <4A080C9D.9000109@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:57218 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754049AbZELAXo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 May 2009 20:23:44 -0400
-In-Reply-To: <1242051500.3338.9.camel@mulgrave.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4A080C9D.9000109@panasas.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, Doug Gilbert <dgilbert@interlog.com>, "Darrick J. Wong" <djwong@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, bharrosh@panasas.com, axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, dgilbert@interlog.com, djwong@us.ibm.com
 
-Hello, all.
+Hello, Boaz.
 
-James Bottomley wrote:
->>> Does resid_len make any sense w/ failed requests?  I think we would be
->>> better off with declaring residual count to be undefined on request
->>> failure.  Is there any place which depends on it?
->> IIRC, I wrote the code. I think that this doesn't matter but it's
->> better not to change the behavior unless Eric ack on this change
->> (maybe LSI has some management binary that assume this behavior though
->> it's unlikely).
+Boaz Harrosh wrote:
+> On 05/11/2009 02:48 AM, Tejun Heo wrote:
+>> Does resid_len make any sense w/ failed requests?  I think we would be
+>> better off with declaring residual count to be undefined on request
+>> failure.  Is there any place which depends on it?
+>>
+>> That said, the value is eventually exported to userland, so it might
+>> be better to not change it.  Eh... I don't know.
 > 
-> Actually, yes it does, for many possible reasons.
+> When possible, residual should be exact because the residual amount
+> is not bounced and might even be zeroed-out for security, as the
+> meaning of residual is that these bytes are garbage.
+
+When a request failed, the whole buffer is garbage.  There's no
+partial transfer.  There shouldn't be.  I don't think residual count
+on request failure means anything.  Also, the 'whenever possible'
+doesn't mean much when the issuer can't determine whether the value is
+valid or not.  On success, we should guarantee resid count is valid,
+on failure, I don't see a way we can.
+
+>>>> index 3da02e4..6605ec9 100644
+>>>> --- a/drivers/scsi/libsas/sas_expander.c
+>>>> +++ b/drivers/scsi/libsas/sas_expander.c
+>>>> @@ -1936,12 +1936,8 @@ int sas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+>>>>  			       bio_data(rsp->bio), rsp->data_len);
+>>>>  	if (ret > 0) {
+>>>>  		/* positive number is the untransferred residual */
+>>>> -		rsp->data_len = ret;
+>>>> -		req->data_len = 0;
+>>>> +		rsp->resid_len = ret;
+>>>>  		ret = 0;
+>>>> -	} else if (ret == 0) {
+>>>> -		rsp->data_len = 0;
+>>>> -		req->data_len = 0;
+>>>>  	}
+>>>>  
+>>>>  	return ret;
+>>> This is actually a bug fix, as well as a strait conversion
+>> Can you elaborate a bit about the bug fix part?
 > 
-> The first being if the device is too stupid to report an actual sector
-> location the next best way of determining where the error occurred is
-> from the residual.  We don't make use of this in kernel (perhaps we
-> should?) but some of the user space programs for CD/DVD burning do.
+> Nothing big really, just that before (according to the comment), the
+> theoretical negative case would be full-residual. and now it is zero
+> (untouched).
 
-Really?  Residual count on command success is used but on failure?
-That's a dangerous territory.  When a SG_IO fails, the only data the
-app should be accessing is the sense data if the status indicates its
-validity.  The problems with residual count on failed command are...
+Yeah, the same thing as above, I suppose.
 
-* Not well defined.  What does it mean really?  It can't indicate
-  successful partial transfer.  If the request partially succeeded,
-  the required behavior is to successfully complete the request
-  partially with residual count and then fail the latter part when
-  issued again.  If the failure applies to the whole request but
-  location information is useful, it should be carried in the sense
-  data.
+> I know that in iscsi a negative residual is possible which means
+> over-flow. That is: the target had more data to give then the buffer
+> had space for. (which is not an error at all)
 
-* What about corner values?  What does 0 or full resid count on
-  failure mean?
+Hmm... I've never seen negative residual in use.  Is it even defined?
 
-* Different layers of failing.  In SG_IO interface, a request may fail
-  with -EIO way before it reaches block layer.  Residual count can't
-  be set to any meaningful value in these cases.  We can set it to
-  full count for these fast fail paths, but do we really wanna go
-  there?  Another problem is when a driver is missing SG_IO
-  capability.  Who's responsible for setting resid count in that case?
-  How is upper layer gonna determine a SG_IO failed because lower
-  level driver didn't support it or it genuinely failed?
+>>> The above is just a case of:
+>>>
+>>> -		int leftover = (req->hard_nr_sectors << 9);
+>>> -
+>>> -		if (blk_pc_request(req))
+>>> -			leftover = req->data_len;
+>>> +		int leftover = blk_rq_bytes();
+>>>
+>>> Which you separated into to stages, much later right?
+>> Aieee.. yeah, that's one stupid misconversion.  That function should
+>> just use blk_end_request_all().  Will fix.  Thanks for spotting it.
+> 
+> Yes, there is a couple of other places that have that with the
+> meaning of blk_end_request_all() (Have I commented on one?). Are you
+> doing this conversion in these patchset? or this is for a second
+> pass?
 
-I think it's just silly to give any meaning to resid count when the
-request fails.  It's best to leave the field unmodified or just
-declare it undefined.
+If you spot some, please go ahead and submit patches.  I don't have
+any patch in my queue which hasn't been posted.
 
 Thanks.
 
