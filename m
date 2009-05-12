@@ -1,33 +1,79 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 03/11] block: add rq->resid_len
-Date: Wed, 13 May 2009 00:20:26 +0900
-Message-ID: <4A0993BA.7090505@kernel.org>
-References: <1241423927-11871-1-git-send-email-tj@kernel.org> <1241423927-11871-4-git-send-email-tj@kernel.org> <4A06DFAB.40205@panasas.com> <4A0767E5.5050205@kernel.org> <4A080C9D.9000109@panasas.com> <4A08C26E.80801@kernel.org> <4A093782.80701@panasas.com> <4A093C54.2060706@kernel.org> <4A0946D6.4010405@panasas.com> <4A094A11.2030300@kernel.org> <4A09589A.5030800@panasas.com>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: [Bugme-new] [Bug 13273] New: Error by disconnecting USB flash
+ storage in 2.6.30-rc5 x86-64
+Date: Tue, 12 May 2009 11:27:23 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0905121113260.2824-100000@iolanthe.rowland.org>
+References: <20090511140153.fe1b3f01.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4A09589A.5030800@panasas.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, fujita.tomonori@lab.ntt.co.jp, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, Doug Gilbert <dgilbert@interlog.com>, "Darrick J. Wong" <djwong@us.ibm.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20090511140153.fe1b3f01.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: peter.kovar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bugzilla-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org, bugme-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Boaz Harrosh wrote:
+On Mon, 11 May 2009, Andrew Morton wrote:
 
-> The solution to this, I think, is that the bouncing layer should
-> receive a residual count, and not bounce anything beyond what's
-> transferred. (On reads, writes does nothing), and zero-out the
-> rest. This of course means that all block drivers make sure residual
-> is properly set, the way it should as explained in this
-> thread. (SCSI does the right thing where it can, for example see
-> scsi_execute())
+> > http://bugzilla.kernel.org/show_bug.cgi?id=13273
+> > 
+> >            Summary: Error by disconnecting USB flash storage in 2.6.30-rc5
+> >                     x86-64
 
-Umm... shouldn't the request just be successfully finished with
-positive residue count and with sense data if necessary?  Block layer
-request failure means, and has always meant, complete failure.
+> > [36225.730491] Call Trace:
+> > [36225.730494]  [<ffffffff8113afdb>] register_disk+0xcb/0x140
+> > [36225.730501]  [<ffffffff81208f77>] add_disk+0x87/0x160
+> > [36225.730508]  [<ffffffffa002ad06>] sd_probe_async+0x1a6/0x290 [sd_mod]
 
-Thanks.
+Like I said earlier, this is a problem in the SCSI stack.  In
+particular, sd_probe_sync() fails to acquire the host's scan_mutex or
+to test scsi_host_scan_allowed().  Evidently Arjan's conversion to the
+async framework did not preserve the software environment as it should
+have.
 
--- 
-tejun
+Let us know if this patch helps.
+
+Alan Stern
+
+
+Index: usb-2.6/drivers/scsi/sd.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/sd.c
++++ usb-2.6/drivers/scsi/sd.c
+@@ -1892,12 +1892,16 @@ static int sd_format_disk_name(char *pre
+ static void sd_probe_async(void *data, async_cookie_t cookie)
+ {
+ 	struct scsi_disk *sdkp = data;
+-	struct scsi_device *sdp;
++	struct scsi_device *sdp = sdkp->device;
++	struct Scsi_Host *shost = sdp->host;
+ 	struct gendisk *gd;
+ 	u32 index;
+ 	struct device *dev;
+ 
+-	sdp = sdkp->device;
++	mutex_lock(&shost->scan_mutex);
++	if (!scsi_host_scan_allowed(shost))
++		goto out_unlock_host;
++
+ 	gd = sdkp->disk;
+ 	index = sdkp->index;
+ 	dev = &sdp->sdev_gendev;
+@@ -1915,8 +1919,10 @@ static void sd_probe_async(void *data, a
+ 	sdkp->dev.class = &sd_disk_class;
+ 	dev_set_name(&sdkp->dev, dev_name(&sdp->sdev_gendev));
+ 
+-	if (device_add(&sdkp->dev))
+-		goto out_free_index;
++	if (device_add(&sdkp->dev)) {
++		ida_remove(&sd_index_ida, index);
++		goto out_unlock_host;
++	}
+ 
+ 	get_device(&sdp->sdev_gendev);
+ 
+@@ -1955,10 +1961,8 @@ static void sd_probe_async(void *data, a
+ 	sd_printk(KERN_NOTICE, sdkp, "Attached SCSI %sdisk\n",
+ 		  sdp->removable ? "removable " : "");
+ 
+-	return;
