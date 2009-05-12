@@ -1,43 +1,59 @@
 From: akpm@linux-foundation.org
-Subject: [patch for 2.6.30? 1/1] drivers/scsi/NCR_D700.c: fix IRQ handler return type
-Date: Tue, 12 May 2009 13:29:13 -0700
-Message-ID: <200905122048.n4CKmSw7030088@imap1.linux-foundation.org>
+Subject: [patch 1/9] scsi: use the common hex_asc array rather than a private one
+Date: Tue, 12 May 2009 13:49:43 -0700
+Message-ID: <200905122108.n4CL8xBh011327@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:46343 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:35982 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751625AbZELUvG (ORCPT
+	by vger.kernel.org with ESMTP id S1755402AbZELVLo (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 May 2009 16:51:06 -0400
+	Tue, 12 May 2009 17:11:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, helight.xu@gmail.com, James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com
 
-From: Zhenwen Xu <helight.xu@gmail.com>
+From: Harvey Harrison <harvey.harrison@gmail.com>
 
-drivers/scsi/NCR_D700.c: In function `NCR_D700_probe':
-drivers/scsi/NCR_D700.c:322: warning: passing argument 2 of `request_irq' from incompatible pointer type
-drivers/scsi/NCR_D700.c:322: warning: passing argument 2 of `request_irq' from incompatible pointer type
-drivers/scsi/NCR_D700.c:322: warning: passing argument 2 of `request_irq' from incompatible pointer type
+Also use the hi/lo helpers.
 
-Signed-off-by: Zhenwen Xu <helight.xu@gmail.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/NCR_D700.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/ibmmca.c    |    3 +--
+ drivers/scsi/ultrastor.c |    4 ++--
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-diff -puN drivers/scsi/NCR_D700.c~drivers-scsi-ncr_d700c-fix-irq-handler-return-type drivers/scsi/NCR_D700.c
---- a/drivers/scsi/NCR_D700.c~drivers-scsi-ncr_d700c-fix-irq-handler-return-type
-+++ a/drivers/scsi/NCR_D700.c
-@@ -224,7 +224,7 @@ NCR_D700_probe_one(struct NCR_D700_priva
- 	return ret;
- }
- 
--static int
-+static irqreturn_t
- NCR_D700_intr(int irq, void *data)
+diff -puN drivers/scsi/ibmmca.c~scsi-use-the-common-hex_asc-array-rather-than-a-private-one drivers/scsi/ibmmca.c
+--- a/drivers/scsi/ibmmca.c~scsi-use-the-common-hex_asc-array-rather-than-a-private-one
++++ a/drivers/scsi/ibmmca.c
+@@ -1002,12 +1002,11 @@ static char *ti_p(int dev)
+ /* interpreter for logical device numbers (ldn) */
+ static char *ti_l(int val)
  {
- 	struct NCR_D700_private *p = (struct NCR_D700_private *)data;
+-	const char hex[16] = "0123456789abcdef";
+ 	static char answer[2];
+ 
+ 	answer[1] = (char) (0x0);
+ 	if (val <= MAX_LOG_DEV)
+-		answer[0] = hex[val];
++		answer[0] = hex_asc[val];
+ 	else
+ 		answer[0] = '-';
+ 	return (char *) &answer;
+diff -puN drivers/scsi/ultrastor.c~scsi-use-the-common-hex_asc-array-rather-than-a-private-one drivers/scsi/ultrastor.c
+--- a/drivers/scsi/ultrastor.c~scsi-use-the-common-hex_asc-array-rather-than-a-private-one
++++ a/drivers/scsi/ultrastor.c
+@@ -876,8 +876,8 @@ static int ultrastor_abort(struct scsi_c
+ 	for (i = 0; i < 16; i++)
+ 	  {
+ 	    unsigned char p = inb(port0 + i);
+-	    out[28 + i * 3] = "0123456789abcdef"[p >> 4];
+-	    out[29 + i * 3] = "0123456789abcdef"[p & 15];
++	    out[28 + i * 3] = hex_asc_hi(p);
++	    out[29 + i * 3] = hex_asc_lo(p);
+ 	    out[30 + i * 3] = ' ';
+ 	  }
+ 	out[28 + i * 3] = '\n';
 _
