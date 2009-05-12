@@ -1,68 +1,54 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Re: [PATCH 1/3] block: add alt_size
-Date: Tue, 12 May 2009 09:53:05 +0900
-Message-ID: <4A08C871.9000100@kernel.org>
-References: <1241828002-12742-1-git-send-email-tj@kernel.org>
-	<1241828002-12742-2-git-send-email-tj@kernel.org>
-	<ac3eb2510905090645u5e482ffcu4b3ddc26e81247e6@mail.gmail.com>
-	<4A058D5C.6030206@kernel.org>
-	<20090511134534.GA32678@mars.virtualiron.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+Subject: [PATCH block#for-2.6.31] scsi: fix resid_len mis-conversion in scsi_end_request()
+Date: Tue, 12 May 2009 11:15:22 +0900
+Message-ID: <4A08DBBA.1000208@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20090511134534.GA32678@mars.virtualiron.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Konrad Rzeszutek <konrad@virtualiron.com>
-Cc: jens.axboe@oracle.com, jeff@garzik.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, martin.petersen@oracle.com, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, Mauelshagen@redhat.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:40468 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757270AbZELCPe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 May 2009 22:15:34 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Boa
 
-Konrad Rzeszutek wrote:
-> .. snip ..
->>> Also, values with magic block counts, while there is no way to get the
->>> blocksize with the same interface, are pretty weird. I think the
->>> current "size" attribute is just a bug.
->> Logical block size is fixed at 512 bytes.  Offset and size are always
->> represented in multiples of 512 bytes and only get converted to
->> hardware block size in the lld.
-> 
-> That interpretation is at odds with the work that Martin Peterson is
-> doing with the 4K support. In the e-mail titled: "Re: [PATCH 4 of 8] sd:
-> Physical block size and alignment support",
-> Message-ID:<yq1ab67b51p.fsf@sermon.lab.mkp.net> he says:
-> 
-> "
-> 	Konrad> about what a 'logical block', and 'physical block' is
-> 	Konrad> vs. 'hardware sector' ?
-> 
-> 	Well, another item on my todo list is to kill the notion of hardware
-> 	sector completely.  The protocols have been referring to logical blocks
-> 	for ages.
-> 
-> 	It hasn't been a big problem until now because logical block size has
-> 	been equal to the hardware sector size.  That's no longer a valid
-> 	assumption.
-> "
-> 
-> Are the ATA/SCSI/etc specs at odds with each other about this?
+Commit c3a4d78c580de4edc9ef0f7c59812fb02ceb037f introduced
+rq->data_len and converted residual count users to it.  While
+converting, it mistakenly converted scsi_end_request() to finish
+requests with residual count when it wants to do is fully complete the
+request.  Fix it by using blk_end_request_all() instead.
 
-Hardware specs aren't of concern here.  The logical block concept is
-there simply to give 9 bit addressing advantage, nothing more, nothing
-less.  If hardware's sector size doesn't match it, the lld should be
-mapping the sector addresses and sizes and cdrom and a few other
-drives have been doing that for ages.  There's nothing new about
-devices with sectors larger than 512 bytes.
+This bug was spotted by Boaz Harrosh.
 
-Thanks.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Spotted-by: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+---
+ drivers/scsi/scsi_lib.c |    7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
--- 
-tejun
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index a54bec9..e410d66 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -546,14 +546,9 @@ static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int error,
+ 	 * to queue the remainder of them.
+ 	 */
+ 	if (blk_end_request(req, error, bytes)) {
+-		int leftover = blk_rq_bytes(req);
+-
+-		if (blk_pc_request(req))
+-			leftover = req->resid_len;
+-
+ 		/* kill remainder if no retrys */
+ 		if (error && scsi_noretry_cmd(cmd))
+-			blk_end_request(req, error, leftover);
++			blk_end_request_all(req, error);
+ 		else {
+ 			if (requeue) {
+ 				/*
+
