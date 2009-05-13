@@ -1,16 +1,25 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 03/13] libiscsi: handle param allocation failures
-Date: Wed, 13 May 2009 17:57:40 -0500
-Message-ID: <1242255472240-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 12/13] libiscsi: add task aborted state
+Date: Wed, 13 May 2009 17:57:49 -0500
+Message-ID: <12422554763029-git-send-email-michaelc@cs.wisc.edu>
 References: <12422554702856-git-send-email-michaelc@cs.wisc.edu>
  <12422554711659-git-send-email-michaelc@cs.wisc.edu>
  <12422554711865-git-send-email-michaelc@cs.wisc.edu>
+ <1242255472240-git-send-email-michaelc@cs.wisc.edu>
+ <12422554724154-git-send-email-michaelc@cs.wisc.edu>
+ <12422554733484-git-send-email-michaelc@cs.wisc.edu>
+ <12422554731307-git-send-email-michaelc@cs.wisc.edu>
+ <12422554742374-git-send-email-michaelc@cs.wisc.edu>
+ <12422554743206-git-send-email-michaelc@cs.wisc.edu>
+ <12422554752623-git-send-email-michaelc@cs.wisc.edu>
+ <12422554753201-git-send-email-michaelc@cs.wisc.edu>
+ <12422554764013-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:51807 "EHLO mx2.redhat.com"
+Received: from mx2.redhat.com ([66.187.237.31]:51876 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761963AbZEMW5x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 May 2009 18:57:53 -0400
-In-Reply-To: <12422554711865-git-send-email-michaelc@cs.wisc.edu>
+	id S1761210AbZEMW56 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 May 2009 18:57:58 -0400
+In-Reply-To: <12422554764013-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -18,187 +27,278 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-If we could not allocate the initiator name or some other id like
-the hwaddress or netdev, then userspace could deal with the failure
-by just running in a dregraded mode.
-
-Now we want to be able to switch values for the params and we
-want some feedback, so this patch will check if a string like
-the initiatorname could not be allocated and return an error.
+If a task did not complete normally due to a TMF, libiscsi will
+now complete the task with the state ISCSI_TASK_ABRT_TMF. Drivers
+like bnx2i that need to free resources if a command did not complete normally
+can then check the task state. If a driver does not need to send
+a special command if we have dropped the session then they can check
+for ISCSI_TASK_ABRT_SESS_RECOV.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/libiscsi.c |  108 ++++++++++++++--------------------------------
- 1 files changed, 33 insertions(+), 75 deletions(-)
+ drivers/infiniband/ulp/iser/iscsi_iser.c |    7 +--
+ drivers/scsi/libiscsi.c                  |   60 +++++++++++++++++------------
+ drivers/scsi/libiscsi_tcp.c              |    4 +-
+ include/scsi/libiscsi.h                  |    2 +
+ 4 files changed, 41 insertions(+), 32 deletions(-)
 
+diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
+index ffbe0c7..0ba6ec8 100644
+--- a/drivers/infiniband/ulp/iser/iscsi_iser.c
++++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
+@@ -257,11 +257,8 @@ static void iscsi_iser_cleanup_task(struct iscsi_task *task)
+ {
+ 	struct iscsi_iser_task *iser_task = task->dd_data;
+ 
+-	/*
+-	 * mgmt tasks do not need special cleanup and we do not
+-	 * allocate anything in the init task callout
+-	 */
+-	if (!task->sc || task->state == ISCSI_TASK_PENDING)
++	/* mgmt tasks do not need special cleanup */
++	if (!task->sc)
+ 		return;
+ 
+ 	if (iser_task->status == ISER_TASK_STATUS_STARTED) {
 diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 11bc3e1..b4aaf2e 100644
+index dafa054..b00be6c 100644
 --- a/drivers/scsi/libiscsi.c
 +++ b/drivers/scsi/libiscsi.c
-@@ -2656,6 +2656,23 @@ int iscsi_conn_bind(struct iscsi_cls_session *cls_session,
+@@ -443,18 +443,20 @@ EXPORT_SYMBOL_GPL(iscsi_put_task);
+ /**
+  * iscsi_complete_task - finish a task
+  * @task: iscsi cmd task
++ * @state: state to complete task with
+  *
+  * Must be called with session lock.
+  */
+-static void iscsi_complete_task(struct iscsi_task *task)
++static void iscsi_complete_task(struct iscsi_task *task, int state)
+ {
+ 	struct iscsi_conn *conn = task->conn;
+ 
+-	if (task->state == ISCSI_TASK_COMPLETED)
++	if (task->state == ISCSI_TASK_COMPLETED ||
++	    task->state == ISCSI_TASK_ABRT_TMF ||
++	    task->state == ISCSI_TASK_ABRT_SESS_RECOV)
+ 		return;
+ 	WARN_ON_ONCE(task->state == ISCSI_TASK_FREE);
+-
+-	task->state = ISCSI_TASK_COMPLETED;
++	task->state = state;
+ 
+ 	if (!list_empty(&task->running))
+ 		list_del_init(&task->running);
+@@ -478,6 +480,7 @@ static void fail_scsi_task(struct iscsi_task *task, int err)
+ {
+ 	struct iscsi_conn *conn = task->conn;
+ 	struct scsi_cmnd *sc;
++	int state;
+ 
+ 	/*
+ 	 * if a command completes and we get a successful tmf response
+@@ -488,14 +491,20 @@ static void fail_scsi_task(struct iscsi_task *task, int err)
+ 	if (!sc)
+ 		return;
+ 
+-	if (task->state == ISCSI_TASK_PENDING)
++	if (task->state == ISCSI_TASK_PENDING) {
+ 		/*
+ 		 * cmd never made it to the xmit thread, so we should not count
+ 		 * the cmd in the sequencing
+ 		 */
+ 		conn->session->queued_cmdsn--;
++		/* it was never sent so just complete like normal */
++		state = ISCSI_TASK_COMPLETED;
++	} else if (err == DID_TRANSPORT_DISRUPTED)
++		state = ISCSI_TASK_ABRT_SESS_RECOV;
++	else
++		state = ISCSI_TASK_ABRT_TMF;
+ 
+-	sc->result = err;
++	sc->result = err << 16;
+ 	if (!scsi_bidi_cmnd(sc))
+ 		scsi_set_resid(sc, scsi_bufflen(sc));
+ 	else {
+@@ -503,7 +512,7 @@ static void fail_scsi_task(struct iscsi_task *task, int err)
+ 		scsi_in(sc)->resid = scsi_in(sc)->length;
+ 	}
+ 
+-	iscsi_complete_task(task);
++	iscsi_complete_task(task, state);
  }
- EXPORT_SYMBOL_GPL(iscsi_conn_bind);
  
-+static int iscsi_switch_str_param(char **param, char *new_val_buf)
-+{
-+	char *new_val;
-+
-+	if (*param) {
-+		if (!strcmp(*param, new_val_buf))
-+			return 0;
-+	}
-+
-+	new_val = kstrdup(new_val_buf, GFP_NOIO);
-+	if (!new_val)
-+		return -ENOMEM;
-+
-+	kfree(*param);
-+	*param = new_val;
-+	return 0;
-+}
+ static int iscsi_prep_mgmt_task(struct iscsi_conn *conn,
+@@ -731,7 +740,7 @@ out:
+ 	ISCSI_DBG_SESSION(session, "cmd rsp done [sc %p res %d itt 0x%x]\n",
+ 			  sc, sc->result, task->itt);
+ 	conn->scsirsp_pdus_cnt++;
+-	iscsi_complete_task(task);
++	iscsi_complete_task(task, ISCSI_TASK_COMPLETED);
+ }
  
- int iscsi_set_param(struct iscsi_cls_conn *cls_conn,
- 		    enum iscsi_param param, char *buf, int buflen)
-@@ -2728,38 +2745,15 @@ int iscsi_set_param(struct iscsi_cls_conn *cls_conn,
- 		sscanf(buf, "%u", &conn->exp_statsn);
+ /**
+@@ -769,7 +778,7 @@ iscsi_data_in_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 			  "[sc %p res %d itt 0x%x]\n",
+ 			  sc, sc->result, task->itt);
+ 	conn->scsirsp_pdus_cnt++;
+-	iscsi_complete_task(task);
++	iscsi_complete_task(task, ISCSI_TASK_COMPLETED);
+ }
+ 
+ static void iscsi_tmf_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
+@@ -990,7 +999,7 @@ int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 		}
+ 
+ 		iscsi_tmf_rsp(conn, hdr);
+-		iscsi_complete_task(task);
++		iscsi_complete_task(task, ISCSI_TASK_COMPLETED);
  		break;
- 	case ISCSI_PARAM_USERNAME:
--		kfree(session->username);
--		session->username = kstrdup(buf, GFP_KERNEL);
--		if (!session->username)
--			return -ENOMEM;
--		break;
-+		return iscsi_switch_str_param(&session->username, buf);
- 	case ISCSI_PARAM_USERNAME_IN:
--		kfree(session->username_in);
--		session->username_in = kstrdup(buf, GFP_KERNEL);
--		if (!session->username_in)
--			return -ENOMEM;
--		break;
-+		return iscsi_switch_str_param(&session->username_in, buf);
- 	case ISCSI_PARAM_PASSWORD:
--		kfree(session->password);
--		session->password = kstrdup(buf, GFP_KERNEL);
--		if (!session->password)
--			return -ENOMEM;
--		break;
-+		return iscsi_switch_str_param(&session->password, buf);
- 	case ISCSI_PARAM_PASSWORD_IN:
--		kfree(session->password_in);
--		session->password_in = kstrdup(buf, GFP_KERNEL);
--		if (!session->password_in)
--			return -ENOMEM;
--		break;
-+		return iscsi_switch_str_param(&session->password_in, buf);
- 	case ISCSI_PARAM_TARGET_NAME:
--		/* this should not change between logins */
--		if (session->targetname)
--			break;
--
--		session->targetname = kstrdup(buf, GFP_KERNEL);
--		if (!session->targetname)
--			return -ENOMEM;
--		break;
-+		return iscsi_switch_str_param(&session->targetname, buf);
- 	case ISCSI_PARAM_TPGT:
- 		sscanf(buf, "%d", &session->tpgt);
+ 	case ISCSI_OP_NOOP_IN:
+ 		iscsi_update_cmdsn(session, (struct iscsi_nopin*)hdr);
+@@ -1008,7 +1017,7 @@ int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 			goto recv_pdu;
+ 
+ 		mod_timer(&conn->transport_timer, jiffies + conn->recv_timeout);
+-		iscsi_complete_task(task);
++		iscsi_complete_task(task, ISCSI_TASK_COMPLETED);
  		break;
-@@ -2767,25 +2761,11 @@ int iscsi_set_param(struct iscsi_cls_conn *cls_conn,
- 		sscanf(buf, "%d", &conn->persistent_port);
- 		break;
- 	case ISCSI_PARAM_PERSISTENT_ADDRESS:
--		/*
--		 * this is the address returned in discovery so it should
--		 * not change between logins.
--		 */
--		if (conn->persistent_address)
--			break;
--
--		conn->persistent_address = kstrdup(buf, GFP_KERNEL);
--		if (!conn->persistent_address)
--			return -ENOMEM;
--		break;
-+		return iscsi_switch_str_param(&conn->persistent_address, buf);
- 	case ISCSI_PARAM_IFACE_NAME:
--		if (!session->ifacename)
--			session->ifacename = kstrdup(buf, GFP_KERNEL);
--		break;
-+		return iscsi_switch_str_param(&session->ifacename, buf);
- 	case ISCSI_PARAM_INITIATOR_NAME:
--		if (!session->initiatorname)
--			session->initiatorname = kstrdup(buf, GFP_KERNEL);
--		break;
-+		return iscsi_switch_str_param(&session->initiatorname, buf);
  	default:
- 		return -ENOSYS;
+ 		rc = ISCSI_ERR_BAD_OPCODE;
+@@ -1020,7 +1029,7 @@ out:
+ recv_pdu:
+ 	if (iscsi_recv_pdu(conn->cls_conn, hdr, data, datalen))
+ 		rc = ISCSI_ERR_CONN_FAILED;
+-	iscsi_complete_task(task);
++	iscsi_complete_task(task, ISCSI_TASK_COMPLETED);
+ 	return rc;
+ }
+ EXPORT_SYMBOL_GPL(__iscsi_complete_pdu);
+@@ -1262,7 +1271,7 @@ check_mgmt:
+ 					 struct iscsi_task, running);
+ 		list_del_init(&conn->task->running);
+ 		if (conn->session->state == ISCSI_STATE_LOGGING_OUT) {
+-			fail_scsi_task(conn->task, DID_IMM_RETRY << 16);
++			fail_scsi_task(conn->task, DID_IMM_RETRY);
+ 			continue;
+ 		}
+ 		rc = iscsi_prep_scsi_cmd_pdu(conn->task);
+@@ -1273,7 +1282,7 @@ check_mgmt:
+ 				conn->task = NULL;
+ 				goto again;
+ 			} else
+-				fail_scsi_task(conn->task, DID_ABORT << 16);
++				fail_scsi_task(conn->task, DID_ABORT);
+ 			continue;
+ 		}
+ 		rc = iscsi_xmit_task(conn);
+@@ -1469,7 +1478,7 @@ int iscsi_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
+ 
+ prepd_reject:
+ 	sc->scsi_done = NULL;
+-	iscsi_complete_task(task);
++	iscsi_complete_task(task, ISCSI_TASK_COMPLETED);
+ reject:
+ 	spin_unlock(&session->lock);
+ 	ISCSI_DBG_SESSION(session, "cmd 0x%x rejected (%d)\n",
+@@ -1479,7 +1488,7 @@ reject:
+ 
+ prepd_fault:
+ 	sc->scsi_done = NULL;
+-	iscsi_complete_task(task);
++	iscsi_complete_task(task, ISCSI_TASK_COMPLETED);
+ fault:
+ 	spin_unlock(&session->lock);
+ 	ISCSI_DBG_SESSION(session, "iscsi: cmd 0x%x is not queued (%d)\n",
+@@ -1665,7 +1674,7 @@ static void fail_scsi_tasks(struct iscsi_conn *conn, unsigned lun,
+ 		ISCSI_DBG_SESSION(conn->session,
+ 				  "failing sc %p itt 0x%x state %d\n",
+ 				  task->sc, task->itt, task->state);
+-		fail_scsi_task(task, error << 16);
++		fail_scsi_task(task, error);
  	}
-@@ -2856,10 +2836,7 @@ int iscsi_session_get_param(struct iscsi_cls_session *cls_session,
- 		len = sprintf(buf, "%s\n", session->ifacename);
- 		break;
- 	case ISCSI_PARAM_INITIATOR_NAME:
--		if (!session->initiatorname)
--			len = sprintf(buf, "%s\n", "unknown");
--		else
--			len = sprintf(buf, "%s\n", session->initiatorname);
-+		len = sprintf(buf, "%s\n", session->initiatorname);
- 		break;
- 	default:
- 		return -ENOSYS;
-@@ -2925,29 +2902,16 @@ int iscsi_host_get_param(struct Scsi_Host *shost, enum iscsi_host_param param,
+ }
  
- 	switch (param) {
- 	case ISCSI_HOST_PARAM_NETDEV_NAME:
--		if (!ihost->netdev)
--			len = sprintf(buf, "%s\n", "default");
--		else
--			len = sprintf(buf, "%s\n", ihost->netdev);
-+		len = sprintf(buf, "%s\n", ihost->netdev);
- 		break;
- 	case ISCSI_HOST_PARAM_HWADDRESS:
--		if (!ihost->hwaddress)
--			len = sprintf(buf, "%s\n", "default");
--		else
--			len = sprintf(buf, "%s\n", ihost->hwaddress);
-+		len = sprintf(buf, "%s\n", ihost->hwaddress);
- 		break;
- 	case ISCSI_HOST_PARAM_INITIATOR_NAME:
--		if (!ihost->initiatorname)
--			len = sprintf(buf, "%s\n", "unknown");
--		else
--			len = sprintf(buf, "%s\n", ihost->initiatorname);
-+		len = sprintf(buf, "%s\n", ihost->initiatorname);
- 		break;
- 	case ISCSI_HOST_PARAM_IPADDRESS:
--		if (!strlen(ihost->local_address))
--			len = sprintf(buf, "%s\n", "unknown");
--		else
--			len = sprintf(buf, "%s\n",
--				      ihost->local_address);
-+		len = sprintf(buf, "%s\n", ihost->local_address);
- 		break;
- 	default:
- 		return -ENOSYS;
-@@ -2964,17 +2928,11 @@ int iscsi_host_set_param(struct Scsi_Host *shost, enum iscsi_host_param param,
- 
- 	switch (param) {
- 	case ISCSI_HOST_PARAM_NETDEV_NAME:
--		if (!ihost->netdev)
--			ihost->netdev = kstrdup(buf, GFP_KERNEL);
--		break;
-+		return iscsi_switch_str_param(&ihost->netdev, buf);
- 	case ISCSI_HOST_PARAM_HWADDRESS:
--		if (!ihost->hwaddress)
--			ihost->hwaddress = kstrdup(buf, GFP_KERNEL);
--		break;
-+		return iscsi_switch_str_param(&ihost->hwaddress, buf);
- 	case ISCSI_HOST_PARAM_INITIATOR_NAME:
--		if (!ihost->initiatorname)
--			ihost->initiatorname = kstrdup(buf, GFP_KERNEL);
--		break;
-+		return iscsi_switch_str_param(&ihost->initiatorname, buf);
- 	default:
- 		return -ENOSYS;
+@@ -1868,7 +1877,7 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
  	}
+ 
+ 	if (task->state == ISCSI_TASK_PENDING) {
+-		fail_scsi_task(task, DID_ABORT << 16);
++		fail_scsi_task(task, DID_ABORT);
+ 		goto success;
+ 	}
+ 
+@@ -1899,7 +1908,7 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
+ 		 * then sent more data for the cmd.
+ 		 */
+ 		spin_lock(&session->lock);
+-		fail_scsi_task(task, DID_ABORT << 16);
++		fail_scsi_task(task, DID_ABORT);
+ 		conn->tmf_state = TMF_INITIAL;
+ 		spin_unlock(&session->lock);
+ 		iscsi_start_tx(conn);
+@@ -2572,7 +2581,7 @@ static void
+ fail_mgmt_tasks(struct iscsi_session *session, struct iscsi_conn *conn)
+ {
+ 	struct iscsi_task *task;
+-	int i;
++	int i, state;
+ 
+ 	for (i = 0; i < conn->session->cmds_max; i++) {
+ 		task = conn->session->cmds[i];
+@@ -2585,7 +2594,11 @@ fail_mgmt_tasks(struct iscsi_session *session, struct iscsi_conn *conn)
+ 		ISCSI_DBG_SESSION(conn->session,
+ 				  "failing mgmt itt 0x%x state %d\n",
+ 				  task->itt, task->state);
+-		iscsi_complete_task(task);
++		state = ISCSI_TASK_ABRT_SESS_RECOV;
++		if (task->state == ISCSI_TASK_PENDING)
++			state = ISCSI_TASK_COMPLETED;
++		iscsi_complete_task(task, state);
++
+ 	}
+ }
+ 
+@@ -2642,10 +2655,7 @@ static void iscsi_start_session_recovery(struct iscsi_session *session,
+ 	 * flush queues.
+ 	 */
+ 	spin_lock_bh(&session->lock);
+-	if (flag == STOP_CONN_RECOVER)
+-		fail_scsi_tasks(conn, -1, DID_TRANSPORT_DISRUPTED);
+-	else
+-		fail_scsi_tasks(conn, -1, DID_ERROR);
++	fail_scsi_tasks(conn, -1, DID_TRANSPORT_DISRUPTED);
+ 	fail_mgmt_tasks(session, conn);
+ 	spin_unlock_bh(&session->lock);
+ 	mutex_unlock(&session->eh_mutex);
+diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
+index b84a1d8..2bc0709 100644
+--- a/drivers/scsi/libiscsi_tcp.c
++++ b/drivers/scsi/libiscsi_tcp.c
+@@ -440,8 +440,8 @@ void iscsi_tcp_cleanup_task(struct iscsi_task *task)
+ 	struct iscsi_tcp_task *tcp_task = task->dd_data;
+ 	struct iscsi_r2t_info *r2t;
+ 
+-	/* nothing to do for mgmt or pending tasks */
+-	if (!task->sc || task->state == ISCSI_TASK_PENDING)
++	/* nothing to do for mgmt */
++	if (!task->sc)
+ 		return;
+ 
+ 	/* flush task's r2t queues */
+diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+index facae71..196525c 100644
+--- a/include/scsi/libiscsi.h
++++ b/include/scsi/libiscsi.h
+@@ -86,6 +86,8 @@ enum {
+ 	ISCSI_TASK_COMPLETED,
+ 	ISCSI_TASK_PENDING,
+ 	ISCSI_TASK_RUNNING,
++	ISCSI_TASK_ABRT_TMF,		/* aborted due to TMF */
++	ISCSI_TASK_ABRT_SESS_RECOV,	/* aborted due to session recovery */
+ };
+ 
+ struct iscsi_r2t_info {
 -- 
 1.5.2.1
 
