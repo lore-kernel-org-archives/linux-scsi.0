@@ -1,93 +1,96 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 03/11] block: add rq->resid_len
-Date: Wed, 13 May 2009 15:30:10 +0900
-Message-ID: <4A0A68F2.1040600@kernel.org>
-References: <1241423927-11871-4-git-send-email-tj@kernel.org>	 <4A06DFAB.40205@panasas.com> <4A0767E5.5050205@kernel.org>	 <20090511145024B.fujita.tomonori@lab.ntt.co.jp>	 <1242051500.3338.9.camel@mulgrave.int.hansenpartnership.com>	 <4A08C094.2060602@kernel.org>	 <1242099783.19949.8.camel@mulgrave.int.hansenpartnership.com>	 <4A09115D.3080009@kernel.org>	 <1242137329.3308.6.camel@mulgrave.int.hansenpartnership.com>	 <4A0992ED.4090200@kernel.org> <1242143126.3308.20.camel@mulgrave.int.hansenpartnership.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [patchset 0/4] osd: Stop usage of blk_rq_append_bio
+Date: Wed, 13 May 2009 17:28:10 +0300
+Message-ID: <4A0AD8FA.6030903@panasas.com>
+References: <4A0307F4.50205@panasas.com> <20090512112539.GH4140@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1242143126.3308.20.camel@mulgrave.int.hansenpartnership.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, bharrosh@panasas.com, axboe@kernel.dk, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, bzolnier@gmail.com, petkovbb@googlemail.com, sshtylyov@ru.mvista.com, mike.miller@hp.com, Eric.Moore@lsi.com, stern@rowland.harvard.edu, zaitcev@redhat.com, Geert.Uytterhoeven@sonycom.com, sfr@canb.auug.org.au, grant.likely@secretlab.ca, paul.clements@steeleye.com, tim@cyberelk.net, jeremy@xensource.com, adrian@mcmen.demon.co.uk, oakad@yahoo.com, dwmw2@infradead.org, schwidefsky@de.ibm.com, ballabio_dario@emc.com, davem@davemloft.net, rusty@rustcorp.com.au, Markus.Lidel@shadowconnect.com, dgilbert@interlog.com, djwong@us.ibm.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gw-ca.panasas.com ([209.116.51.66]:5558 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754398AbZEMO2W (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 May 2009 10:28:22 -0400
+In-Reply-To: <20090512112539.GH4140@kernel.dk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-Hello, James.
-
-James Bottomley wrote:
->> Shouldn't those be request successful w/ sense data?  Please note that
->> the term "error" in this context means failure of block layer request
->> not SCSI layer CHECK SENSE.
-> 
-> Heh, well, this is where we get into interpretations.  For SG_IO
-> requests, we have three separate ways of returning error.  The error
-> return to the block layer, the results return and the sense code.  The
-> error to block is a somewhat later addition to the layer, so not all
-> cases are handled right or agreed (for instance we just altered BLOCK_PC
-> with recovered error from -EIO to no error).  So hopefully we've just
-> decided that deferred and current but recovered all fall into the no
-> error to block, but results and sense to the user.
-> 
-> Note that the error to block is basically discarded from SG_IO before we
-> return to the user, so the user *only* has results and sense to go by,
-> thus the concept of residual not valid on error to block is something
-> the user can't check.  That's why a consistent definition in all cases
-> (i.e. the amount of data the HBA transferred) is the correct one and
-> allows userspace to make the determination of what it should do based on
-> the returns it gets.
-
-Okay, I was thinking SG_IO will return error for rq failures and I
-remember pretty clearly following the failure path recently while
-debugging eject problem but my memory is pretty unreliable.
-Checking... oops, yeap, you're right.
-
->> I'm still reluctant to do it because...
+On 05/12/2009 02:25 PM, Jens Axboe wrote:
+> On Thu, May 07 2009, Boaz Harrosh wrote:
+>> Osd library needs to submit pre-allocated bios, form several sources.
+>> osdblk exofs and pNFS-layout driver all have prepared bios for IO submission.
+>> On top of that the osd library needs to append additional segments to the
+>> IO memory, for get/set attributes and more.
 >>
->> * Its definition still isn't clear (well, at least to me) and if it's
->>   defined as the number of valid bytes on request success and the
->>   number of bytes HBA transferred on request failure, I don't think
->>   it's all that useful.
+>> All these are done today by use of a temporary hack - blk_rq_append_bio.
+>> This is bad on few accounts.
+>> 1. blk_rq_append_bio was not meant to be exported and is very specific to its users.
+>> 2. blk_rq_append_bio does not support chained bios.
+>> 3. blk_rq_append_bio does not bounce the bio and therefore current osd implementation
+>>    has a bug.
+>>
+>> The proposed solution adds two new fixtures to the block layer, and a corresponding
+>> fixing patch to osd. These are:
+>>
+>> [PATCH 1/4] allow blk_rq_map_kern to append to requests
+>> [PATCH 2/4] libosd: Use new blk_rq_map_kern
+>>
+>>   This is originally a James patch and it's used, to let blk_rq_map_kern append it's buffer
+>>   to existing bio, and there for is able to be called multiple times in a loop, to append
+>>   multiple segments. This API can also be useful for scsi/block targets that have segment
+>>   information in some other memory structure (like scatterlist) and wants to set it into
+>>   a request. Until such time that they have a proper support for mapping scatterlists directly.
+>>   (Since above called on long lists might not be good for performance)
+>>
+>>   Here in osd it makes tons of sense, and should be considered for inclusion.
+>>   (The patches are based on linus-tip but should patch on block tree)
+>>
+>> [RFC 3/4] New blk_make_request(), takes bio, returns a request
+>> [RFC 4/4] libosd: Use of new blk_make_request
+>>   
+>>   Here I propose a new block API, that will support proper delegation of a bio
+>>   to a full request. Please read inside the patch descriptions for details.
+>>   After this patch both osd and block layer will have the proper support for osdblk
+>>   driver as well as future needs.
+>>   These patches also eliminate the last use of blk_rq_append_bio which can be now un-exported.
+>>
+>>   These two patches conflic with Tejun's branch and are based on linus-tip. Upon positive review
+>>   I will serialize them with Tejun and submit them properly. But first they must be agreed upon.
+>>   Jens, I specially need your opinion on this?
 > 
-> It's not valid bytes in either case ... it's number transferred.  One
-> can infer from a successful SCSI status code that number transferred ==
-> valid bytes, but I'd rather we didn't say that.
+> Looks sane to me. Can you resubmit against 'for-2.6.31' of the block git
+> repo?
 > 
->> * Seen from userland, residue count on request failure has never been
->>   guaranteed and there doesn't seem to be any valid in kernel user.
-> 
-> But that's the point ... we don't define for userland what request
-> failure is very well.
-> 
->> * It would be extra code explicitly setting the residue count to full
->>   on failure path.  If it's something necessary, full residue count on
->>   failure needs to be made default.  If not, it will only add more
->>   confusion.
-> 
-> OK, so if what you're asking is that we can regard the residue as
-> invalid if SG_IO itself returns an error, then I can agree ... but not
-> if blk_end_request() returns error, because that error gets ignored by
-> SG_IO.
 
-I was confused that rq failure would cause error return from SG_IO.
-Sorry about that.  There still is a problem tho.  Buffer for a bounced
-SG_IO request is copied back on failure but when a bounced kernel PC
-request fails, the data is not copied back in bio_copy_kern_endio().
-This is what would break Boaz's code.
+Thanks Jens.
 
-So, it seems what we should do is
+I have done the rebase and ran some tests, however I was unable to test these patches
+as is, because there are some inter tree fallouts.
 
-1. Always copy back bounced buffer whether the request failed or not.
-   Whether resid_len should be considered while copying back, I'm not
-   sure about given that resid_len isn't properly implemented in some
-   drivers.
+Jens, James, Stephan, I please need your help
 
-2. Revert the original behavior of setting resid_len to full on
-   request issue and audit the affected code paths.
+The situation is like that.
+- Both block/for-next and scsi/master are based on an old osd upstream-point (v2.6.30-rc3--ce8a7424)
+- Linus tip has important OSD patches that went in via scsi-rc-fixes which changed Wire format
+- If I try and merge block/for-next ontop of plain linus/master I get a merge conflict
+- If I try merge scsi/master block/for-next I get build errors / conflicts
 
-How does it sound?
+So there is no sane tree point that I can test on.
 
-Thanks.
+It would be nice if both Jens block/for-next and scsi-misc/master could be rebased on Linus rc5++
+and resolve these conflicts. (And scsi-misc conflicts with Tejun's cleanups be put in a second stage
+tree)
 
--- 
-tejun
+Should I send the patches as is half tested? Or wait for things to settle after I tested them
+with all changes included?
+
+I have cut a new osd/linux-next branch which is based, not on linus, but on v2.6.30-rc3--ce8a7424
+the base point for block/for-next and scsi-misc/master. So in next it should all come together
+well, and I will try to clone tomorrow's next and test on top of that.
+
+Please Advise on what I should do?
+
+Thanks in advance
+Boaz
