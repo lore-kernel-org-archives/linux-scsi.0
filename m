@@ -1,589 +1,164 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 09/13] libiscsi: handle cleanup task races
-Date: Wed, 13 May 2009 17:57:46 -0500
-Message-ID: <12422554752623-git-send-email-michaelc@cs.wisc.edu>
-References: <12422554702856-git-send-email-michaelc@cs.wisc.edu>
- <12422554711659-git-send-email-michaelc@cs.wisc.edu>
- <12422554711865-git-send-email-michaelc@cs.wisc.edu>
- <1242255472240-git-send-email-michaelc@cs.wisc.edu>
- <12422554724154-git-send-email-michaelc@cs.wisc.edu>
- <12422554733484-git-send-email-michaelc@cs.wisc.edu>
- <12422554731307-git-send-email-michaelc@cs.wisc.edu>
- <12422554742374-git-send-email-michaelc@cs.wisc.edu>
- <12422554743206-git-send-email-michaelc@cs.wisc.edu>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:51861 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762121AbZEMW55 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 May 2009 18:57:57 -0400
-In-Reply-To: <12422554743206-git-send-email-michaelc@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Subject: [net-next-2.6 PATCH 1/8] ixgbe: Add FCoE feature register defines to
+	82599
+Date: Wed, 13 May 2009 16:09:39 -0700
+Message-ID: <20090513230924.11416.68752.stgit@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: davem@davemloft.net
+Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, Yi Zou <yi.zou@intel.com>, Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>, Jeff Kirsher <jeffrey.t.kirsher@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+From: Yi Zou <yi.zou@intel.com>
 
-bnx2i needs to send a hardware specific cleanup command if
-a command has not completed normally (iscsi/scsi response from
-target), and the session is still ok (this is the case when we
-send a TMF to stop the command).
+This adds FCoE related register defines to 82599.
 
-At this time it will need to drop the session lock. The problem
-with the current code is that fail_all_commands assumes we
-will hold the lock the entire time, so it uses list_for_each_entry_safe.
-If while bnx2i drops the session lock multiple cmds complete then
-list_for_each_entry_safe will not handle this correctly.
-
-This patch removes the running lists and just has us loop over
-the cmds array (in later patches we will then replace that
-array with a block tag map at the session level). It also fixes
-up the completion path so that if the TMF code and the normal recv
-path were completing the same command then they both do not try
-to do release the refcount taken when the task is queued.
-
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+Signed-off-by: Yi Zou <yi.zou@intel.com>
+Acked-by: Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
+Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
 ---
- drivers/scsi/libiscsi.c |  225 ++++++++++++++++++++++++-----------------------
- include/scsi/libiscsi.h |    5 +-
- 2 files changed, 118 insertions(+), 112 deletions(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index c648bd3..a9d7e52 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -109,7 +109,7 @@ iscsi_update_cmdsn(struct iscsi_session *session, struct iscsi_nopin *hdr)
- 		 * if the window closed with IO queued, then kick the
- 		 * xmit thread
- 		 */
--		if (!list_empty(&session->leadconn->xmitqueue) ||
-+		if (!list_empty(&session->leadconn->cmdqueue) ||
- 		    !list_empty(&session->leadconn->mgmtqueue)) {
- 			if (!(session->tt->caps & CAP_DATA_PATH_OFFLOAD))
- 				iscsi_conn_queue_work(session->leadconn);
-@@ -366,7 +366,6 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
- 		return -EIO;
+ drivers/net/ixgbe/ixgbe_type.h |   84 ++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 84 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/ixgbe/ixgbe_type.h b/drivers/net/ixgbe/ixgbe_type.h
+index 9fd79a0..c2d9ed5 100644
+--- a/drivers/net/ixgbe/ixgbe_type.h
++++ b/drivers/net/ixgbe/ixgbe_type.h
+@@ -478,6 +478,63 @@
+ #define IXGBE_RTTDTECC_NO_BCN   0x00000100
+ #define IXGBE_RTTBCNRC    0x04984
  
- 	task->state = ISCSI_TASK_RUNNING;
--	list_move_tail(&task->running, &conn->run_list);
++/* FCoE registers */
++#define IXGBE_FCPTRL    0x02410 /* FC User Desc. PTR Low */
++#define IXGBE_FCPTRH    0x02414 /* FC USer Desc. PTR High */
++#define IXGBE_FCBUFF    0x02418 /* FC Buffer Control */
++#define IXGBE_FCDMARW   0x02420 /* FC Receive DMA RW */
++#define IXGBE_FCINVST0  0x03FC0 /* FC Invalid DMA Context Status Reg 0 */
++#define IXGBE_FCINVST(_i)       (IXGBE_FCINVST0 + ((_i) * 4))
++#define IXGBE_FCBUFF_VALID      (1 << 0)   /* DMA Context Valid */
++#define IXGBE_FCBUFF_BUFFSIZE   (3 << 3)   /* User Buffer Size */
++#define IXGBE_FCBUFF_WRCONTX    (1 << 7)   /* 0: Initiator, 1: Target */
++#define IXGBE_FCBUFF_BUFFCNT    0x0000ff00 /* Number of User Buffers */
++#define IXGBE_FCBUFF_OFFSET     0xffff0000 /* User Buffer Offset */
++#define IXGBE_FCBUFF_BUFFSIZE_SHIFT  3
++#define IXGBE_FCBUFF_BUFFCNT_SHIFT   8
++#define IXGBE_FCBUFF_OFFSET_SHIFT    16
++#define IXGBE_FCDMARW_WE        (1 << 14)   /* Write enable */
++#define IXGBE_FCDMARW_RE        (1 << 15)   /* Read enable */
++#define IXGBE_FCDMARW_FCOESEL   0x000001ff  /* FC X_ID: 11 bits */
++#define IXGBE_FCDMARW_LASTSIZE  0xffff0000  /* Last User Buffer Size */
++#define IXGBE_FCDMARW_LASTSIZE_SHIFT 16
++
++/* FCoE SOF/EOF */
++#define IXGBE_TEOFF     0x04A94 /* Tx FC EOF */
++#define IXGBE_TSOFF     0x04A98 /* Tx FC SOF */
++#define IXGBE_REOFF     0x05158 /* Rx FC EOF */
++#define IXGBE_RSOFF     0x051F8 /* Rx FC SOF */
++/* FCoE Filter Context Registers */
++#define IXGBE_FCFLT     0x05108 /* FC FLT Context */
++#define IXGBE_FCFLTRW   0x05110 /* FC Filter RW Control */
++#define IXGBE_FCPARAM   0x051d8 /* FC Offset Parameter */
++#define IXGBE_FCFLT_VALID       (1 << 0)   /* Filter Context Valid */
++#define IXGBE_FCFLT_FIRST       (1 << 1)   /* Filter First */
++#define IXGBE_FCFLT_SEQID       0x00ff0000 /* Sequence ID */
++#define IXGBE_FCFLT_SEQCNT      0xff000000 /* Sequence Count */
++#define IXGBE_FCFLTRW_RVALDT    (1 << 13)  /* Fast Re-Validation */
++#define IXGBE_FCFLTRW_WE        (1 << 14)  /* Write Enable */
++#define IXGBE_FCFLTRW_RE        (1 << 15)  /* Read Enable */
++/* FCoE Receive Control */
++#define IXGBE_FCRXCTRL  0x05100 /* FC Receive Control */
++#define IXGBE_FCRXCTRL_FCOELLI  (1 << 0)   /* Low latency interrupt */
++#define IXGBE_FCRXCTRL_SAVBAD   (1 << 1)   /* Save Bad Frames */
++#define IXGBE_FCRXCTRL_FRSTRDH  (1 << 2)   /* EN 1st Read Header */
++#define IXGBE_FCRXCTRL_LASTSEQH (1 << 3)   /* EN Last Header in Seq */
++#define IXGBE_FCRXCTRL_ALLH     (1 << 4)   /* EN All Headers */
++#define IXGBE_FCRXCTRL_FRSTSEQH (1 << 5)   /* EN 1st Seq. Header */
++#define IXGBE_FCRXCTRL_ICRC     (1 << 6)   /* Ignore Bad FC CRC */
++#define IXGBE_FCRXCTRL_FCCRCBO  (1 << 7)   /* FC CRC Byte Ordering */
++#define IXGBE_FCRXCTRL_FCOEVER  0x00000f00 /* FCoE Version: 4 bits */
++#define IXGBE_FCRXCTRL_FCOEVER_SHIFT 8
++/* FCoE Redirection */
++#define IXGBE_FCRECTL   0x0ED00 /* FC Redirection Control */
++#define IXGBE_FCRETA0   0x0ED10 /* FC Redirection Table 0 */
++#define IXGBE_FCRETA(_i)        (IXGBE_FCRETA0 + ((_i) * 4)) /* FCoE Redir */
++#define IXGBE_FCRECTL_ENA       0x1        /* FCoE Redir Table Enable */
++#define IXGBE_FCRETA_SIZE       8          /* Max entries in FCRETA */
++#define IXGBE_FCRETA_ENTRY_MASK 0x0000007f /* 7 bits for the queue index */
++
+ /* Stats registers */
+ #define IXGBE_CRCERRS   0x04000
+ #define IXGBE_ILLERRC   0x04004
+@@ -549,6 +606,13 @@
+ #define IXGBE_QPRDC(_i) (0x01430 + ((_i) * 0x40)) /* 16 of these */
+ #define IXGBE_QBTC_L(_i) (0x08700 + ((_i) * 0x8)) /* 16 of these */
+ #define IXGBE_QBTC_H(_i) (0x08704 + ((_i) * 0x8)) /* 16 of these */
++#define IXGBE_FCCRC     0x05118 /* Count of Good Eth CRC w/ Bad FC CRC */
++#define IXGBE_FCOERPDC  0x0241C /* FCoE Rx Packets Dropped Count */
++#define IXGBE_FCLAST    0x02424 /* FCoE Last Error Count */
++#define IXGBE_FCOEPRC   0x02428 /* Number of FCoE Packets Received */
++#define IXGBE_FCOEDWRC  0x0242C /* Number of FCoE DWords Received */
++#define IXGBE_FCOEPTC   0x08784 /* Number of FCoE Packets Transmitted */
++#define IXGBE_FCOEDWTC  0x08788 /* Number of FCoE DWords Transmitted */
  
- 	conn->scsicmd_pdus_cnt++;
- 	ISCSI_DBG_SESSION(session, "iscsi prep [%s cid %d sc %p cdb 0x%x "
-@@ -382,26 +381,23 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
- }
+ /* Management */
+ #define IXGBE_MAVTV(_i) (0x05010 + ((_i) * 4)) /* 8 of these (0-7) */
+@@ -1153,6 +1217,7 @@
  
- /**
-- * iscsi_complete_command - finish a task
-+ * iscsi_free_task - free a task
-  * @task: iscsi cmd task
-  *
-  * Must be called with session lock.
-  * This function returns the scsi command to scsi-ml or cleans
-  * up mgmt tasks then returns the task to the pool.
+ /* ETYPE Queue Filter/Select Bit Masks */
+ #define IXGBE_MAX_ETQF_FILTERS  8
++#define IXGBE_ETQF_FCOE         0x08000000 /* bit 27 */
+ #define IXGBE_ETQF_BCN          0x10000000 /* bit 28 */
+ #define IXGBE_ETQF_1588         0x40000000 /* bit 30 */
+ #define IXGBE_ETQF_FILTER_EN    0x80000000 /* bit 31 */
+@@ -1175,6 +1240,7 @@
   */
--static void iscsi_complete_command(struct iscsi_task *task)
-+static void iscsi_free_task(struct iscsi_task *task)
- {
- 	struct iscsi_conn *conn = task->conn;
- 	struct iscsi_session *session = conn->session;
- 	struct scsi_cmnd *sc = task->sc;
+ #define IXGBE_ETQF_FILTER_EAPOL          0
+ #define IXGBE_ETQF_FILTER_BCN            1
++#define IXGBE_ETQF_FILTER_FCOE           2
+ #define IXGBE_ETQF_FILTER_1588           3
+ /* VLAN Control Bit Masks */
+ #define IXGBE_VLNCTRL_VET       0x0000FFFF  /* bits 0-15 */
+@@ -1579,6 +1645,8 @@
+ #define IXGBE_RXD_ERR_IPE       0x80    /* IP Checksum Error */
+ #define IXGBE_RXDADV_ERR_MASK           0xfff00000 /* RDESC.ERRORS mask */
+ #define IXGBE_RXDADV_ERR_SHIFT          20         /* RDESC.ERRORS shift */
++#define IXGBE_RXDADV_ERR_FCEOFE         0x80000000 /* FCoEFe/IPE */
++#define IXGBE_RXDADV_ERR_FCERR          0x00700000 /* FCERR/FDIRERR */
+ #define IXGBE_RXDADV_ERR_HBO    0x00800000 /*Header Buffer Overflow */
+ #define IXGBE_RXDADV_ERR_CE     0x01000000 /* CRC Error */
+ #define IXGBE_RXDADV_ERR_LE     0x02000000 /* Length Error */
+@@ -1598,6 +1666,12 @@
+ #define IXGBE_RXDADV_STAT_FLM           IXGBE_RXD_STAT_FLM /* FDir Match */
+ #define IXGBE_RXDADV_STAT_VP            IXGBE_RXD_STAT_VP  /* IEEE VLAN Pkt */
+ #define IXGBE_RXDADV_STAT_MASK          0x000fffff /* Stat/NEXTP: bit 0-19 */
++#define IXGBE_RXDADV_STAT_FCEOFS        0x00000040 /* FCoE EOF/SOF Stat */
++#define IXGBE_RXDADV_STAT_FCSTAT        0x00000030 /* FCoE Pkt Stat */
++#define IXGBE_RXDADV_STAT_FCSTAT_NOMTCH 0x00000000 /* 00: No Ctxt Match */
++#define IXGBE_RXDADV_STAT_FCSTAT_NODDP  0x00000010 /* 01: Ctxt w/o DDP */
++#define IXGBE_RXDADV_STAT_FCSTAT_FCPRSP 0x00000020 /* 10: Recv. FCP_RSP */
++#define IXGBE_RXDADV_STAT_FCSTAT_DDP    0x00000030 /* 11: Ctxt w/ DDP */
  
- 	session->tt->cleanup_task(task);
--	list_del_init(&task->running);
--	task->state = ISCSI_TASK_COMPLETED;
-+	task->state = ISCSI_TASK_FREE;
- 	task->sc = NULL;
+ /* PSRTYPE bit definitions */
+ #define IXGBE_PSRTYPE_TCPHDR    0x00000010
+@@ -1831,6 +1905,16 @@ struct ixgbe_adv_tx_context_desc {
+ #define IXGBE_ADVTXD_POPTS_IPSEC      0x00000400 /* IPSec offload request */
+ #define IXGBE_ADVTXD_TUCMD_IPSEC_TYPE_ESP 0x00002000 /* IPSec Type ESP */
+ #define IXGBE_ADVTXD_TUCMD_IPSEC_ENCRYPT_EN 0x00004000/* ESP Encrypt Enable */
++#define IXGBE_ADVTXT_TUCMD_FCOE      0x00008000       /* FCoE Frame Type */
++#define IXGBE_ADVTXD_FCOEF_EOF_MASK  (0x3 << 10)      /* FC EOF index */
++#define IXGBE_ADVTXD_FCOEF_SOF       ((1 << 2) << 10) /* FC SOF index */
++#define IXGBE_ADVTXD_FCOEF_PARINC    ((1 << 3) << 10) /* Rel_Off in F_CTL */
++#define IXGBE_ADVTXD_FCOEF_ORIE      ((1 << 4) << 10) /* Orientation: End */
++#define IXGBE_ADVTXD_FCOEF_ORIS      ((1 << 5) << 10) /* Orientation: Start */
++#define IXGBE_ADVTXD_FCOEF_EOF_N     (0x0 << 10)      /* 00: EOFn */
++#define IXGBE_ADVTXD_FCOEF_EOF_T     (0x1 << 10)      /* 01: EOFt */
++#define IXGBE_ADVTXD_FCOEF_EOF_NI    (0x2 << 10)      /* 10: EOFni */
++#define IXGBE_ADVTXD_FCOEF_EOF_A     (0x3 << 10)      /* 11: EOFa */
+ #define IXGBE_ADVTXD_L4LEN_SHIFT     8  /* Adv ctxt L4LEN shift */
+ #define IXGBE_ADVTXD_MSS_SHIFT       16  /* Adv ctxt MSS shift */
  
--	if (conn->task == task)
--		conn->task = NULL;
- 	/*
- 	 * login task is preallocated so do not free
- 	 */
-@@ -410,9 +406,6 @@ static void iscsi_complete_command(struct iscsi_task *task)
- 
- 	__kfifo_put(session->cmdpool.queue, (void*)&task, sizeof(void*));
- 
--	if (conn->ping_task == task)
--		conn->ping_task = NULL;
--
- 	if (sc) {
- 		task->sc = NULL;
- 		/* SCSI eh reuses commands to verify us */
-@@ -435,7 +428,7 @@ EXPORT_SYMBOL_GPL(__iscsi_get_task);
- static void __iscsi_put_task(struct iscsi_task *task)
- {
- 	if (atomic_dec_and_test(&task->refcount))
--		iscsi_complete_command(task);
-+		iscsi_free_task(task);
- }
- 
- void iscsi_put_task(struct iscsi_task *task)
-@@ -448,14 +441,50 @@ void iscsi_put_task(struct iscsi_task *task)
- }
- EXPORT_SYMBOL_GPL(iscsi_put_task);
- 
-+/**
-+ * iscsi_complete_task - finish a task
-+ * @task: iscsi cmd task
-+ *
-+ * Must be called with session lock.
-+ */
-+static void iscsi_complete_task(struct iscsi_task *task)
-+{
-+	struct iscsi_conn *conn = task->conn;
-+
-+	if (task->state == ISCSI_TASK_COMPLETED)
-+		return;
-+	WARN_ON_ONCE(task->state == ISCSI_TASK_FREE);
-+
-+	task->state = ISCSI_TASK_COMPLETED;
-+
-+	if (!list_empty(&task->running))
-+		list_del_init(&task->running);
-+
-+	if (conn->task == task)
-+		conn->task = NULL;
-+
-+	if (conn->ping_task == task)
-+		conn->ping_task = NULL;
-+
-+	/* release get from queueing */
-+	__iscsi_put_task(task);
-+}
-+
- /*
-- * session lock must be held
-+ * session lock must be held and if not called for a task that is
-+ * still pending or from the xmit thread, then xmit thread must
-+ * be suspended.
-  */
--static void fail_command(struct iscsi_conn *conn, struct iscsi_task *task,
--			 int err)
-+static void fail_scsi_task(struct iscsi_task *task, int err)
- {
-+	struct iscsi_conn *conn = task->conn;
- 	struct scsi_cmnd *sc;
- 
-+	/*
-+	 * if a command completes and we get a successful tmf response
-+	 * we will hit this because the scsi eh abort code does not take
-+	 * a ref to the task.
-+	 */
- 	sc = task->sc;
- 	if (!sc)
- 		return;
-@@ -475,10 +504,7 @@ static void fail_command(struct iscsi_conn *conn, struct iscsi_task *task,
- 		scsi_in(sc)->resid = scsi_in(sc)->length;
- 	}
- 
--	if (conn->task == task)
--		conn->task = NULL;
--	/* release ref from queuecommand */
--	__iscsi_put_task(task);
-+	iscsi_complete_task(task);
- }
- 
- static int iscsi_prep_mgmt_task(struct iscsi_conn *conn,
-@@ -518,7 +544,6 @@ static int iscsi_prep_mgmt_task(struct iscsi_conn *conn,
- 		session->state = ISCSI_STATE_LOGGING_OUT;
- 
- 	task->state = ISCSI_TASK_RUNNING;
--	list_move_tail(&task->running, &conn->mgmt_run_list);
- 	ISCSI_DBG_SESSION(session, "mgmtpdu [op 0x%x hdr->itt 0x%x "
- 			  "datalen %d]\n", hdr->opcode & ISCSI_OPCODE_MASK,
- 			  hdr->itt, task->data_count);
-@@ -564,6 +589,8 @@ __iscsi_conn_send_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
- 	atomic_set(&task->refcount, 1);
- 	task->conn = conn;
- 	task->sc = NULL;
-+	INIT_LIST_HEAD(&task->running);
-+	task->state = ISCSI_TASK_PENDING;
- 
- 	if (data_size) {
- 		memcpy(task->data, data, data_size);
-@@ -575,7 +602,7 @@ __iscsi_conn_send_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
- 		if (conn->session->tt->alloc_pdu(task, hdr->opcode)) {
- 			iscsi_conn_printk(KERN_ERR, conn, "Could not allocate "
- 					 "pdu for mgmt task.\n");
--			goto requeue_task;
-+			goto free_task;
- 		}
- 	}
- 
-@@ -591,30 +618,22 @@ __iscsi_conn_send_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
- 						   task->conn->session->age);
- 	}
- 
--	INIT_LIST_HEAD(&task->running);
--	list_add_tail(&task->running, &conn->mgmtqueue);
--
- 	if (session->tt->caps & CAP_DATA_PATH_OFFLOAD) {
- 		if (iscsi_prep_mgmt_task(conn, task))
- 			goto free_task;
- 
- 		if (session->tt->xmit_task(task))
- 			goto free_task;
--
--	} else
-+	} else {
-+		list_add_tail(&task->running, &conn->mgmtqueue);
- 		iscsi_conn_queue_work(conn);
-+	}
- 
- 	return task;
- 
- free_task:
- 	__iscsi_put_task(task);
- 	return NULL;
--
--requeue_task:
--	if (task != conn->login_task)
--		__kfifo_put(session->cmdpool.queue, (void*)&task,
--			    sizeof(void*));
--	return NULL;
- }
- 
- int iscsi_conn_send_pdu(struct iscsi_cls_conn *cls_conn, struct iscsi_hdr *hdr,
-@@ -709,11 +728,10 @@ invalid_datalen:
- 			sc->result = (DID_BAD_TARGET << 16) | rhdr->cmd_status;
- 	}
- out:
--	ISCSI_DBG_SESSION(session, "done [sc %p res %d itt 0x%x]\n",
-+	ISCSI_DBG_SESSION(session, "cmd rsp done [sc %p res %d itt 0x%x]\n",
- 			  sc, sc->result, task->itt);
- 	conn->scsirsp_pdus_cnt++;
--
--	__iscsi_put_task(task);
-+	iscsi_complete_task(task);
- }
- 
- /**
-@@ -747,8 +765,11 @@ iscsi_data_in_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
- 			sc->result = (DID_BAD_TARGET << 16) | rhdr->cmd_status;
- 	}
- 
-+	ISCSI_DBG_SESSION(conn->session, "data in with status done "
-+			  "[sc %p res %d itt 0x%x]\n",
-+			  sc, sc->result, task->itt);
- 	conn->scsirsp_pdus_cnt++;
--	__iscsi_put_task(task);
-+	iscsi_complete_task(task);
- }
- 
- static void iscsi_tmf_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
-@@ -969,7 +990,7 @@ int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
- 		}
- 
- 		iscsi_tmf_rsp(conn, hdr);
--		__iscsi_put_task(task);
-+		iscsi_complete_task(task);
- 		break;
- 	case ISCSI_OP_NOOP_IN:
- 		iscsi_update_cmdsn(session, (struct iscsi_nopin*)hdr);
-@@ -987,7 +1008,7 @@ int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
- 			goto recv_pdu;
- 
- 		mod_timer(&conn->transport_timer, jiffies + conn->recv_timeout);
--		__iscsi_put_task(task);
-+		iscsi_complete_task(task);
- 		break;
- 	default:
- 		rc = ISCSI_ERR_BAD_OPCODE;
-@@ -999,7 +1020,7 @@ out:
- recv_pdu:
- 	if (iscsi_recv_pdu(conn->cls_conn, hdr, data, datalen))
- 		rc = ISCSI_ERR_CONN_FAILED;
--	__iscsi_put_task(task);
-+	iscsi_complete_task(task);
- 	return rc;
- }
- EXPORT_SYMBOL_GPL(__iscsi_complete_pdu);
-@@ -1176,7 +1197,12 @@ void iscsi_requeue_task(struct iscsi_task *task)
- {
- 	struct iscsi_conn *conn = task->conn;
- 
--	list_move_tail(&task->running, &conn->requeue);
-+	/*
-+	 * this may be on the requeue list already if the xmit_task callout
-+	 * is handling the r2ts while we are adding new ones
-+	 */
-+	if (list_empty(&task->running))
-+		list_add_tail(&task->running, &conn->requeue);
- 	iscsi_conn_queue_work(conn);
- }
- EXPORT_SYMBOL_GPL(iscsi_requeue_task);
-@@ -1216,6 +1242,7 @@ check_mgmt:
- 	while (!list_empty(&conn->mgmtqueue)) {
- 		conn->task = list_entry(conn->mgmtqueue.next,
- 					 struct iscsi_task, running);
-+		list_del_init(&conn->task->running);
- 		if (iscsi_prep_mgmt_task(conn, conn->task)) {
- 			__iscsi_put_task(conn->task);
- 			conn->task = NULL;
-@@ -1227,23 +1254,26 @@ check_mgmt:
- 	}
- 
- 	/* process pending command queue */
--	while (!list_empty(&conn->xmitqueue)) {
-+	while (!list_empty(&conn->cmdqueue)) {
- 		if (conn->tmf_state == TMF_QUEUED)
- 			break;
- 
--		conn->task = list_entry(conn->xmitqueue.next,
-+		conn->task = list_entry(conn->cmdqueue.next,
- 					 struct iscsi_task, running);
-+		list_del_init(&conn->task->running);
- 		if (conn->session->state == ISCSI_STATE_LOGGING_OUT) {
--			fail_command(conn, conn->task, DID_IMM_RETRY << 16);
-+			fail_scsi_task(conn->task, DID_IMM_RETRY << 16);
- 			continue;
- 		}
- 		rc = iscsi_prep_scsi_cmd_pdu(conn->task);
- 		if (rc) {
- 			if (rc == -ENOMEM) {
-+				list_add_tail(&conn->task->running,
-+					      &conn->cmdqueue);
- 				conn->task = NULL;
- 				goto again;
- 			} else
--				fail_command(conn, conn->task, DID_ABORT << 16);
-+				fail_scsi_task(conn->task, DID_ABORT << 16);
- 			continue;
- 		}
- 		rc = iscsi_xmit_task(conn);
-@@ -1270,8 +1300,8 @@ check_mgmt:
- 
- 		conn->task = list_entry(conn->requeue.next,
- 					 struct iscsi_task, running);
-+		list_del_init(&conn->task->running);
- 		conn->task->state = ISCSI_TASK_RUNNING;
--		list_move_tail(conn->requeue.next, &conn->run_list);
- 		rc = iscsi_xmit_task(conn);
- 		if (rc)
- 			goto again;
-@@ -1412,7 +1442,6 @@ int iscsi_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
- 		reason = FAILURE_OOM;
- 		goto reject;
- 	}
--	list_add_tail(&task->running, &conn->xmitqueue);
- 
- 	if (session->tt->caps & CAP_DATA_PATH_OFFLOAD) {
- 		reason = iscsi_prep_scsi_cmd_pdu(task);
-@@ -1429,8 +1458,10 @@ int iscsi_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
- 			reason = FAILURE_SESSION_NOT_READY;
- 			goto prepd_reject;
- 		}
--	} else
-+	} else {
-+		list_add_tail(&task->running, &conn->cmdqueue);
- 		iscsi_conn_queue_work(conn);
-+	}
- 
- 	session->queued_cmdsn++;
- 	spin_unlock(&session->lock);
-@@ -1439,7 +1470,7 @@ int iscsi_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
- 
- prepd_reject:
- 	sc->scsi_done = NULL;
--	iscsi_complete_command(task);
-+	iscsi_complete_task(task);
- reject:
- 	spin_unlock(&session->lock);
- 	ISCSI_DBG_SESSION(session, "cmd 0x%x rejected (%d)\n",
-@@ -1449,7 +1480,7 @@ reject:
- 
- prepd_fault:
- 	sc->scsi_done = NULL;
--	iscsi_complete_command(task);
-+	iscsi_complete_task(task);
- fault:
- 	spin_unlock(&session->lock);
- 	ISCSI_DBG_SESSION(session, "iscsi: cmd 0x%x is not queued (%d)\n",
-@@ -1618,44 +1649,24 @@ static int iscsi_exec_task_mgmt_fn(struct iscsi_conn *conn,
-  * Fail commands. session lock held and recv side suspended and xmit
-  * thread flushed
-  */
--static void fail_all_commands(struct iscsi_conn *conn, unsigned lun,
--			      int error)
-+static void fail_scsi_tasks(struct iscsi_conn *conn, unsigned lun,
-+			    int error)
- {
--	struct iscsi_task *task, *tmp;
--
--	if (conn->task) {
--		if (lun == -1 ||
--		    (conn->task->sc && conn->task->sc->device->lun == lun))
--			conn->task = NULL;
--	}
-+	struct iscsi_task *task;
-+	int i;
- 
--	/* flush pending */
--	list_for_each_entry_safe(task, tmp, &conn->xmitqueue, running) {
--		if (lun == task->sc->device->lun || lun == -1) {
--			ISCSI_DBG_SESSION(conn->session,
--					  "failing pending sc %p itt 0x%x\n",
--					  task->sc, task->itt);
--			fail_command(conn, task, error << 16);
--		}
--	}
-+	for (i = 0; i < conn->session->cmds_max; i++) {
-+		task = conn->session->cmds[i];
-+		if (!task->sc || task->state == ISCSI_TASK_FREE)
-+			continue;
- 
--	list_for_each_entry_safe(task, tmp, &conn->requeue, running) {
--		if (lun == task->sc->device->lun || lun == -1) {
--			ISCSI_DBG_SESSION(conn->session,
--					  "failing requeued sc %p itt 0x%x\n",
--					  task->sc, task->itt);
--			fail_command(conn, task, error << 16);
--		}
--	}
-+		if (lun != -1 && lun != task->sc->device->lun)
-+			continue;
- 
--	/* fail all other running */
--	list_for_each_entry_safe(task, tmp, &conn->run_list, running) {
--		if (lun == task->sc->device->lun || lun == -1) {
--			ISCSI_DBG_SESSION(conn->session,
--					 "failing in progress sc %p itt 0x%x\n",
--					 task->sc, task->itt);
--			fail_command(conn, task, error << 16);
--		}
-+		ISCSI_DBG_SESSION(conn->session,
-+				  "failing sc %p itt 0x%x state %d\n",
-+				  task->sc, task->itt, task->state);
-+		fail_scsi_task(task, error << 16);
- 	}
- }
- 
-@@ -1859,7 +1870,7 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
- 	}
- 
- 	if (task->state == ISCSI_TASK_PENDING) {
--		fail_command(conn, task, DID_ABORT << 16);
-+		fail_scsi_task(task, DID_ABORT << 16);
- 		goto success;
- 	}
- 
-@@ -1890,7 +1901,7 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
- 		 * then sent more data for the cmd.
- 		 */
- 		spin_lock(&session->lock);
--		fail_command(conn, task, DID_ABORT << 16);
-+		fail_scsi_task(task, DID_ABORT << 16);
- 		conn->tmf_state = TMF_INITIAL;
- 		spin_unlock(&session->lock);
- 		iscsi_start_tx(conn);
-@@ -1997,7 +2008,7 @@ int iscsi_eh_device_reset(struct scsi_cmnd *sc)
- 	iscsi_suspend_tx(conn);
- 
- 	spin_lock_bh(&session->lock);
--	fail_all_commands(conn, sc->device->lun, DID_ERROR);
-+	fail_scsi_tasks(conn, sc->device->lun, DID_ERROR);
- 	conn->tmf_state = TMF_INITIAL;
- 	spin_unlock_bh(&session->lock);
- 
-@@ -2304,6 +2315,7 @@ iscsi_session_setup(struct iscsi_transport *iscsit, struct Scsi_Host *shost,
- 		if (cmd_task_size)
- 			task->dd_data = &task[1];
- 		task->itt = cmd_i;
-+		task->state = ISCSI_TASK_FREE;
- 		INIT_LIST_HEAD(&task->running);
- 	}
- 
-@@ -2390,10 +2402,8 @@ iscsi_conn_setup(struct iscsi_cls_session *cls_session, int dd_size,
- 	conn->transport_timer.data = (unsigned long)conn;
- 	conn->transport_timer.function = iscsi_check_transport_timeouts;
- 
--	INIT_LIST_HEAD(&conn->run_list);
--	INIT_LIST_HEAD(&conn->mgmt_run_list);
- 	INIT_LIST_HEAD(&conn->mgmtqueue);
--	INIT_LIST_HEAD(&conn->xmitqueue);
-+	INIT_LIST_HEAD(&conn->cmdqueue);
- 	INIT_LIST_HEAD(&conn->requeue);
- 	INIT_WORK(&conn->xmitwork, iscsi_xmitworker);
- 
-@@ -2561,27 +2571,24 @@ int iscsi_conn_start(struct iscsi_cls_conn *cls_conn)
- EXPORT_SYMBOL_GPL(iscsi_conn_start);
- 
- static void
--flush_control_queues(struct iscsi_session *session, struct iscsi_conn *conn)
-+fail_mgmt_tasks(struct iscsi_session *session, struct iscsi_conn *conn)
- {
--	struct iscsi_task *task, *tmp;
-+	struct iscsi_task *task;
-+	int i;
- 
--	/* handle pending */
--	list_for_each_entry_safe(task, tmp, &conn->mgmtqueue, running) {
--		ISCSI_DBG_SESSION(session, "flushing pending mgmt task "
--				  "itt 0x%x\n", task->itt);
--		/* release ref from prep task */
--		__iscsi_put_task(task);
--	}
-+	for (i = 0; i < conn->session->cmds_max; i++) {
-+		task = conn->session->cmds[i];
-+		if (task->sc)
-+			continue;
- 
--	/* handle running */
--	list_for_each_entry_safe(task, tmp, &conn->mgmt_run_list, running) {
--		ISCSI_DBG_SESSION(session, "flushing running mgmt task "
--				  "itt 0x%x\n", task->itt);
--		/* release ref from prep task */
--		__iscsi_put_task(task);
--	}
-+		if (task->state == ISCSI_TASK_FREE)
-+			continue;
- 
--	conn->task = NULL;
-+		ISCSI_DBG_SESSION(conn->session,
-+				  "failing mgmt itt 0x%x state %d\n",
-+				  task->itt, task->state);
-+		iscsi_complete_task(task);
-+	}
- }
- 
- static void iscsi_start_session_recovery(struct iscsi_session *session,
-@@ -2638,10 +2645,10 @@ static void iscsi_start_session_recovery(struct iscsi_session *session,
- 	 */
- 	spin_lock_bh(&session->lock);
- 	if (flag == STOP_CONN_RECOVER)
--		fail_all_commands(conn, -1, DID_TRANSPORT_DISRUPTED);
-+		fail_scsi_tasks(conn, -1, DID_TRANSPORT_DISRUPTED);
- 	else
--		fail_all_commands(conn, -1, DID_ERROR);
--	flush_control_queues(session, conn);
-+		fail_scsi_tasks(conn, -1, DID_ERROR);
-+	fail_mgmt_tasks(session, conn);
- 	spin_unlock_bh(&session->lock);
- 	mutex_unlock(&session->eh_mutex);
- }
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index 88d33a4..facae71 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -82,6 +82,7 @@ enum {
- 
- 
- enum {
-+	ISCSI_TASK_FREE,
- 	ISCSI_TASK_COMPLETED,
- 	ISCSI_TASK_PENDING,
- 	ISCSI_TASK_RUNNING,
-@@ -181,9 +182,7 @@ struct iscsi_conn {
- 
- 	/* xmit */
- 	struct list_head	mgmtqueue;	/* mgmt (control) xmit queue */
--	struct list_head	mgmt_run_list;	/* list of control tasks */
--	struct list_head	xmitqueue;	/* data-path cmd queue */
--	struct list_head	run_list;	/* list of cmds in progress */
-+	struct list_head	cmdqueue;	/* data-path cmd queue */
- 	struct list_head	requeue;	/* tasks needing another run */
- 	struct work_struct	xmitwork;	/* per-conn. xmit workqueue */
- 	unsigned long		suspend_tx;	/* suspend Tx */
--- 
-1.5.2.1
 
