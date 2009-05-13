@@ -1,47 +1,42 @@
-From: "Phil Endecott" <phil_joqdm_endecott@chezphil.org>
-Subject: Signal when device is disconnected
-Date: Wed, 13 May 2009 18:49:05 +0100
-Message-ID: <1242236945846@dmwebmail.dmwebmail.chezphil.org>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [PATCH 0/7] lpfc 8.3.1 : Update lpfc to revision 8.3.1
+Date: Wed, 13 May 2009 12:22:51 -0700
+Message-ID: <4A0B1E0B.40108@oracle.com>
+References: <1239058022.2344.19.camel@ogier>
 Mime-Version: 1.0
-Content-Type: text/plain; format="flowed"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from japan.chezphil.org ([77.240.5.4]:5309 "EHLO japan.chezphil.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759848AbZEMS0c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 May 2009 14:26:32 -0400
-Received: from localhost ([127.0.0.1] helo=chezphil.org)
-	by japan.chezphil.org with esmtp (Exim 4.69)
-	(envelope-from <phil_joqdm_endecott@chezphil.org>)
-	id 1M4IZm-0004lI-R0
-	for linux-scsi@vger.kernel.org; Wed, 13 May 2009 18:49:06 +0100
+Received: from acsinet12.oracle.com ([141.146.126.234]:48841 "EHLO
+	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754053AbZEMTUw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 May 2009 15:20:52 -0400
+In-Reply-To: <1239058022.2344.19.camel@ogier>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Smart@Emulex.Com
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Dear Experts,
+James Smart wrote:
+> Update lpfc driver to revision 8.3.1
+> 
+> Includes the following changes :
+> - A set of 5 patches to update kdoc headers. These were posted earlier
+>    but have not been picked up yet.
+> - A set of miscellaneous fixes/changes, all small in nature. Includes
+>    Null pointer fixes, sparse fixes, and some feature updates.
+>  - Update driver version to 8.3.0
+> 
+> -- james s
 
-The proc/bus/usb API has an ioctl that can arrange for the application 
-to receive a signal when the device is disconnected.  Is there anything 
-similar for the SCSI generic (or other SCSI) APIs?
+James (Bottomley),
 
-Assuming that there isn't, I think I need to either poll the device to 
-see if it's still there, or listen on a netlink socket for a removal 
-uevent, or I need to find the USB device corresponding to the sg device 
-that I'm using and use its signal-on-removal ioctl.  In the latter 
-case, is there a way to traverse from an sg device's /sys directory to 
-the corresponding usb device's /sys directory?  /sys seems to be full 
-of symlinks but I can't find the one that I need in this case.
+Can we get this patchset merged for 2.6.30?
 
-Basically I have a fairly simple user-space driver for a USB SCSI 
-device that uses the SCSI-generic API, and I want it to terminate 
-tidily when the device is detached.
+It fixes http://bugzilla.kernel.org/show_bug.cgi?id=13242
+which I am also running into quite often.
 
-Many thanks for any advice.
-
-
-Phil.
-
-(Please Cc: me in any replies.)
-
-
-
+-- 
+~Randy
+LPC 2009, Sept. 23-25, Portland, Oregon
+http://linuxplumbersconf.org/2009/
