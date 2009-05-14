@@ -1,88 +1,59 @@
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Subject: [net-next-2.6 PATCH 8/8] ixgbe: Add FCoE related statistics to 82599
-Date: Wed, 13 May 2009 16:12:16 -0700
-Message-ID: <20090513231216.11416.9332.stgit@localhost.localdomain>
-References: <20090513230924.11416.68752.stgit@localhost.localdomain>
+From: "Mukker, Atul" <Atul.Mukker@lsi.com>
+Subject: [RFQ] New driver architecture questions
+Date: Wed, 13 May 2009 19:57:46 -0600
+Message-ID: <6C678488C5CEE74F813A4D1948FD2DC7A95E6D37@cosmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20090513230924.11416.68752.stgit@localhost.localdomain>
-Sender: netdev-owner@vger.kernel.org
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, Yi Zou <yi.zou@intel.com>, Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>, Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Content-Type: text/plain; charset=Windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1762593AbZENCBp@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: "Austria, Winston" <Winston.Austria@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Yi Zou <yi.zou@intel.com>
+Hello Kernel experts out there!
 
-This adds FCoE related statistics to 82599, including number Rx-ed and Tx-ed
-FCoE packets, number of Rx-ed and Tx-ed FCoE packets in dwords, number of bad
-Fiber Channel CRCs detected in FCoE packets, and number of FCoE packets dropped
-on the Rx side.
+=20
 
-Signed-off-by: Yi Zou <yi.zou@intel.com>
-Acked-by: Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
-Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
----
+We (a division of LSI Corp.) are planning to initiate a new driver desi=
+gn for future generation of LSI RAID controllers. The new class of RAID=
+ controllers would be supported under various operating systems in addi=
+tion to Linux.
 
- drivers/net/ixgbe/ixgbe_ethtool.c |    8 ++++++++
- drivers/net/ixgbe/ixgbe_main.c    |    8 ++++++++
- drivers/net/ixgbe/ixgbe_type.h    |    6 ++++++
- 3 files changed, 22 insertions(+), 0 deletions(-)
+As part of the revamping exercise, we would like to design the driver i=
+n such a fashion that much of the driver source code can be made common=
+ across drivers offered for various operating systems.
 
-diff --git a/drivers/net/ixgbe/ixgbe_ethtool.c b/drivers/net/ixgbe/ixgbe_ethtool.c
-index c0167d6..39fb98f 100644
---- a/drivers/net/ixgbe/ixgbe_ethtool.c
-+++ b/drivers/net/ixgbe/ixgbe_ethtool.c
-@@ -91,6 +91,14 @@ static struct ixgbe_stats ixgbe_gstrings_stats[] = {
- 	{"alloc_rx_page_failed", IXGBE_STAT(alloc_rx_page_failed)},
- 	{"alloc_rx_buff_failed", IXGBE_STAT(alloc_rx_buff_failed)},
- 	{"rx_no_dma_resources", IXGBE_STAT(hw_rx_no_dma_resources)},
-+#ifdef IXGBE_FCOE
-+	{"fcoe_bad_fccrc", IXGBE_STAT(stats.fccrc)},
-+	{"rx_fcoe_dropped", IXGBE_STAT(stats.fcoerpdc)},
-+	{"rx_fcoe_packets", IXGBE_STAT(stats.fcoeprc)},
-+	{"rx_fcoe_dwords", IXGBE_STAT(stats.fcoedwrc)},
-+	{"tx_fcoe_packets", IXGBE_STAT(stats.fcoeptc)},
-+	{"tx_fcoe_dwords", IXGBE_STAT(stats.fcoedwtc)},
-+#endif /* IXGBE_FCOE */
- };
- 
- #define IXGBE_QUEUE_STATS_LEN \
-diff --git a/drivers/net/ixgbe/ixgbe_main.c b/drivers/net/ixgbe/ixgbe_main.c
-index e7c44a3..d69a052 100644
---- a/drivers/net/ixgbe/ixgbe_main.c
-+++ b/drivers/net/ixgbe/ixgbe_main.c
-@@ -4002,6 +4002,14 @@ void ixgbe_update_stats(struct ixgbe_adapter *adapter)
- 		IXGBE_READ_REG(hw, IXGBE_TORH); /* to clear */
- 		adapter->stats.lxonrxc += IXGBE_READ_REG(hw, IXGBE_LXONRXCNT);
- 		adapter->stats.lxoffrxc += IXGBE_READ_REG(hw, IXGBE_LXOFFRXCNT);
-+#ifdef IXGBE_FCOE
-+		adapter->stats.fccrc += IXGBE_READ_REG(hw, IXGBE_FCCRC);
-+		adapter->stats.fcoerpdc += IXGBE_READ_REG(hw, IXGBE_FCOERPDC);
-+		adapter->stats.fcoeprc += IXGBE_READ_REG(hw, IXGBE_FCOEPRC);
-+		adapter->stats.fcoeptc += IXGBE_READ_REG(hw, IXGBE_FCOEPTC);
-+		adapter->stats.fcoedwrc += IXGBE_READ_REG(hw, IXGBE_FCOEDWRC);
-+		adapter->stats.fcoedwtc += IXGBE_READ_REG(hw, IXGBE_FCOEDWTC);
-+#endif /* IXGBE_FCOE */
- 	} else {
- 		adapter->stats.lxonrxc += IXGBE_READ_REG(hw, IXGBE_LXONRXC);
- 		adapter->stats.lxoffrxc += IXGBE_READ_REG(hw, IXGBE_LXOFFRXC);
-diff --git a/drivers/net/ixgbe/ixgbe_type.h b/drivers/net/ixgbe/ixgbe_type.h
-index b3de723..38f835d 100644
---- a/drivers/net/ixgbe/ixgbe_type.h
-+++ b/drivers/net/ixgbe/ixgbe_type.h
-@@ -2157,6 +2157,12 @@ struct ixgbe_hw_stats {
- 	u64 fdirfstat_fremove;
- 	u64 fdirmatch;
- 	u64 fdirmiss;
-+	u64 fccrc;
-+	u64 fcoerpdc;
-+	u64 fcoeprc;
-+	u64 fcoeptc;
-+	u64 fcoedwrc;
-+	u64 fcoedwtc;
- };
- 
- /* forward declaration */
+The obvious benefits being:
 
+1.                   Reduction of feature disparity across various oper=
+ating systems.
+
+2.                   Increased customer satisfaction in terms of suppor=
+t consistency across all available operating systems.
+
+3.                   More synergy between the driver team members and i=
+ncreased collaboration.
+
+4.                   Decreased overheads in terms of maintenance, fixin=
+g issues across the board, defect and change requests tracking etc.
+
+5.                   More channelized test engineering.
+
+etc=85.
+
+Our concern is, is such a design acceptable to Linux community, with ou=
+r intention being keeping the model open source.
+
+Insights, feedback would be highly appreciated!=20
+
+Best regards,
+Atul Mukker
+Staff Engineer,
+LSI Corp.--
+To unsubscribe from this list: send the line "unsubscribe linux-kernel"=
+ in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
