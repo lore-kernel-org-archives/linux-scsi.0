@@ -1,36 +1,44 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 0/3] block: completion related functions cleanup
-Date: Fri, 15 May 2009 00:46:17 +0900
-Message-ID: <4A0C3CC9.8090706@kernel.org>
-References: <1242032169-22422-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <4A0C2297.5040001@panasas.com> <4A0C2515.9060602@kernel.org> <4A0C2769.4090508@panasas.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH] tgt: Wrong comment and redundant code in scsi_map_user_pages
+Date: Thu, 14 May 2009 18:55:49 +0300
+Message-ID: <4A0C3F05.5030308@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:55082 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751486AbZENPpL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 May 2009 11:45:11 -0400
-In-Reply-To: <4A0C2769.4090508@panasas.com>
+Received: from gw-ca.panasas.com ([209.116.51.66]:8807 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752468AbZENPzw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 May 2009 11:55:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Boaz Harrosh wrote:
-> From: Boaz Harrosh <bharrosh@panasas.com>
-> Date: Thu, 14 May 2009 16:46:03 +0300
-> Subject: [PATCH] scsi_lib: remove unused variable
-> 
-> The last request completion cleanup in scsi_lib left an unused
-> this_count variable in scsi_io_completion().
-> (It was used before in a code segment that now uses blk_end_request_all())
-> 
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 
-Acked-by: Tejun Heo <tj@kernel.org>
+scsi_init_io() fully prepares the command properly. scsi_tgt_lib need
+not assign scsi_cmnd members any more.
 
-Thanks.
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ drivers/scsi/scsi_tgt_lib.c |    5 -----
+ 1 files changed, 0 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
+index 1030327..ef11b4d 100644
+--- a/drivers/scsi/scsi_tgt_lib.c
++++ b/drivers/scsi/scsi_tgt_lib.c
+@@ -383,11 +383,6 @@ static int scsi_map_user_pages(struct scsi_tgt_cmd *tcmd, struct scsi_cmnd *cmd,
+ 		scsi_release_buffers(cmd);
+ 		goto unmap_rq;
+ 	}
+-	/*
+-	 * we use REQ_TYPE_BLOCK_PC so scsi_init_io doesn't set the
+-	 * length for us.
+-	 */
+-	cmd->sdb.length = blk_rq_bytes(rq);
+ 
+ 	return 0;
+ 
 -- 
-tejun
+1.6.2.1
+
