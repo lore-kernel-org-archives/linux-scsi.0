@@ -1,77 +1,81 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 4/9] zfcp: Remove unnecessary default case and assignments
-Date: Fri, 15 May 2009 13:18:17 +0200
-Message-ID: <20090515112221.762099000@de.ibm.com>
+Subject: [patch 6/9] zfcp: Increase ref counter for port open requests
+Date: Fri, 15 May 2009 13:18:19 +0200
+Message-ID: <20090515112222.042636000@de.ibm.com>
 References: <20090515111813.314177000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate8.de.ibm.com ([195.212.29.157]:62794 "EHLO
-	mtagate8.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754829AbZEOLWW (ORCPT
+Received: from mtagate1.de.ibm.com ([195.212.17.161]:44443 "EHLO
+	mtagate1.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753165AbZEOLWW (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2009 07:22:22 -0400
-Content-Disposition: inline; filename=703-zfcp-dead-code.diff
+Content-Disposition: inline; filename=705-zfcp-refcount-portopen.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Martin Petermann <martin.petermann@de.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
 
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
+From: Martin Petermann <martin.petermann@de.ibm.com>
 
-enum dma_data_direction only has the 4 values DMA_BIDIRECTIONAL,
-DMA_TO_DEVICE, DMA_FROM_DEVICE and DMA_NONE. No need to have the
-default case. While changing this, setup sbtype in one place to make
-sparse happy.
+In rare cases, open port request might timeout, erp calls
+zfcp_port_put, port gets dequeued. Now, the late returning (or
+dismissed) fsf-port-open calls the fsf_port_open_handler that tries to
+reference the port data structure leading to a kernel oops.
 
-The default value of retval is already -EIO, so remove the
-additional assignment for these two cases.
-
-Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
+Signed-off-by: Martin Petermann <martin.petermann@de.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 ---
 
- drivers/s390/scsi/zfcp_fsf.c |   10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+ drivers/s390/scsi/zfcp_fsf.c |   12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
---- a/drivers/s390/scsi/zfcp_fsf.c	2009-05-15 12:56:02.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_fsf.c	2009-05-15 12:56:15.000000000 +0200
-@@ -2314,7 +2314,7 @@ int zfcp_fsf_send_fcp_command_task(struc
- {
- 	struct zfcp_fsf_req *req;
- 	struct fcp_cmnd_iu *fcp_cmnd_iu;
--	unsigned int sbtype;
-+	unsigned int sbtype = SBAL_FLAGS0_TYPE_READ;
- 	int real_bytes, retval = -EIO;
- 	struct zfcp_adapter *adapter = unit->port->adapter;
+--- a/drivers/s390/scsi/zfcp_fsf.c	2009-05-15 12:56:17.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_fsf.c	2009-05-15 12:56:19.000000000 +0200
+@@ -1402,7 +1402,7 @@ static void zfcp_fsf_open_port_handler(s
+ 	struct fsf_plogi *plogi;
  
-@@ -2356,11 +2356,9 @@ int zfcp_fsf_send_fcp_command_task(struc
- 	switch (scsi_cmnd->sc_data_direction) {
- 	case DMA_NONE:
- 		req->qtcb->bottom.io.data_direction = FSF_DATADIR_CMND;
--		sbtype = SBAL_FLAGS0_TYPE_READ;
+ 	if (req->status & ZFCP_STATUS_FSFREQ_ERROR)
+-		return;
++		goto out;
+ 
+ 	switch (header->fsf_status) {
+ 	case FSF_PORT_ALREADY_OPEN:
+@@ -1464,6 +1464,9 @@ static void zfcp_fsf_open_port_handler(s
+ 		req->status |= ZFCP_STATUS_FSFREQ_ERROR;
  		break;
- 	case DMA_FROM_DEVICE:
- 		req->qtcb->bottom.io.data_direction = FSF_DATADIR_READ;
--		sbtype = SBAL_FLAGS0_TYPE_READ;
- 		fcp_cmnd_iu->rddata = 1;
- 		break;
- 	case DMA_TO_DEVICE:
-@@ -2369,8 +2367,6 @@ int zfcp_fsf_send_fcp_command_task(struc
- 		fcp_cmnd_iu->wddata = 1;
- 		break;
- 	case DMA_BIDIRECTIONAL:
--	default:
--		retval = -EIO;
- 		goto failed_scsi_cmnd;
  	}
++
++out:
++	zfcp_port_put(port);
+ }
  
-@@ -2394,9 +2390,7 @@ int zfcp_fsf_send_fcp_command_task(struc
- 					     scsi_sglist(scsi_cmnd),
- 					     FSF_MAX_SBALS_PER_REQ);
- 	if (unlikely(real_bytes < 0)) {
--		if (req->sbal_number < FSF_MAX_SBALS_PER_REQ)
--			retval = -EIO;
--		else {
-+		if (req->sbal_number >= FSF_MAX_SBALS_PER_REQ) {
- 			dev_err(&adapter->ccw_device->dev,
- 				"Oversize data package, unit 0x%016Lx "
- 				"on port 0x%016Lx closed\n",
+ /**
+@@ -1476,6 +1479,7 @@ int zfcp_fsf_open_port(struct zfcp_erp_a
+ 	struct qdio_buffer_element *sbale;
+ 	struct zfcp_adapter *adapter = erp_action->adapter;
+ 	struct zfcp_fsf_req *req;
++	struct zfcp_port *port = erp_action->port;
+ 	int retval = -EIO;
+ 
+ 	spin_lock_bh(&adapter->req_q_lock);
+@@ -1496,16 +1500,18 @@ int zfcp_fsf_open_port(struct zfcp_erp_a
+         sbale[1].flags |= SBAL_FLAGS_LAST_ENTRY;
+ 
+ 	req->handler = zfcp_fsf_open_port_handler;
+-	req->qtcb->bottom.support.d_id = erp_action->port->d_id;
+-	req->data = erp_action->port;
++	req->qtcb->bottom.support.d_id = port->d_id;
++	req->data = port;
+ 	req->erp_action = erp_action;
+ 	erp_action->fsf_req = req;
++	zfcp_port_get(port);
+ 
+ 	zfcp_fsf_start_erp_timer(req);
+ 	retval = zfcp_fsf_req_send(req);
+ 	if (retval) {
+ 		zfcp_fsf_req_free(req);
+ 		erp_action->fsf_req = NULL;
++		zfcp_port_put(port);
+ 	}
+ out:
+ 	spin_unlock_bh(&adapter->req_q_lock);
 
