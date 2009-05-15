@@ -1,13 +1,13 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 03/13] block: Move queue limits to an embedded struct
-Date: Fri, 15 May 2009 00:40:25 -0400
-Message-ID: <1242362435-11953-4-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 11/13] scsi_debug: Add support for physical block exponent and alignment
+Date: Fri, 15 May 2009 00:40:33 -0400
+Message-ID: <1242362435-11953-12-git-send-email-martin.petersen@oracle.com>
 References: <1242362435-11953-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet11.oracle.com ([141.146.126.233]:58073 "EHLO
-	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753122AbZEOEmL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2009 00:42:11 -0400
+Received: from acsinet12.oracle.com ([141.146.126.234]:16994 "EHLO
+	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753346AbZEOEmb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2009 00:42:31 -0400
 In-Reply-To: <1242362435-11953-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,259 +16,100 @@ Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
 From: Martin K. Petersen <martin.petersen@oracle.com>
 
-To accommodate stacking drivers that do not have an associated request
-queue we're moving the limits to a separate, embedded structure.
+This patch adds support for setting the physical block exponent and
+lowest aligned LBA in the READ CAPACITY(16) response.
+
+The B0 VPD page is adjusted accordingly.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- block/blk-settings.c   |   55 +++++++++++++++++++++++++++++------------------
- include/linux/blkdev.h |   44 ++++++++++++++++++++++---------------
- 2 files changed, 60 insertions(+), 39 deletions(-)
+ drivers/scsi/scsi_debug.c |   30 +++++++++++++++++++++++++++++-
+ 1 files changed, 29 insertions(+), 1 deletions(-)
 
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index 0b32f98..b0f547c 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -179,16 +179,16 @@ void blk_queue_bounce_limit(struct request_queue *q, u64 dma_mask)
- 	 */
- 	if (b_pfn < (min_t(u64, 0xffffffffUL, BLK_BOUNCE_HIGH) >> PAGE_SHIFT))
- 		dma = 1;
--	q->bounce_pfn = max_low_pfn;
-+	q->limits.bounce_pfn = max_low_pfn;
- #else
- 	if (b_pfn < blk_max_low_pfn)
- 		dma = 1;
--	q->bounce_pfn = b_pfn;
-+	q->limits.bounce_pfn = b_pfn;
- #endif
- 	if (dma) {
- 		init_emergency_isa_pool();
- 		q->bounce_gfp = GFP_NOIO | GFP_DMA;
--		q->bounce_pfn = b_pfn;
-+		q->limits.bounce_pfn = b_pfn;
- 	}
- }
- EXPORT_SYMBOL(blk_queue_bounce_limit);
-@@ -211,10 +211,10 @@ void blk_queue_max_sectors(struct request_queue *q, unsigned int max_sectors)
- 	}
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 213123b..f0198e0 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -101,6 +101,8 @@ static const char * scsi_debug_version_date = "20070104";
+ #define DEF_DIF 0
+ #define DEF_GUARD 0
+ #define DEF_ATO 1
++#define DEF_PHYSBLK_EXP 0
++#define DEF_LOWEST_ALIGNED 0
  
- 	if (BLK_DEF_MAX_SECTORS > max_sectors)
--		q->max_hw_sectors = q->max_sectors = max_sectors;
-+		q->limits.max_hw_sectors = q->limits.max_sectors = max_sectors;
- 	else {
--		q->max_sectors = BLK_DEF_MAX_SECTORS;
--		q->max_hw_sectors = max_sectors;
-+		q->limits.max_sectors = BLK_DEF_MAX_SECTORS;
-+		q->limits.max_hw_sectors = max_sectors;
- 	}
- }
- EXPORT_SYMBOL(blk_queue_max_sectors);
-@@ -222,9 +222,9 @@ EXPORT_SYMBOL(blk_queue_max_sectors);
- void blk_queue_max_hw_sectors(struct request_queue *q, unsigned int max_sectors)
+ /* bit mask values for scsi_debug_opts */
+ #define SCSI_DEBUG_OPT_NOISE   1
+@@ -156,6 +158,8 @@ static int scsi_debug_dix = DEF_DIX;
+ static int scsi_debug_dif = DEF_DIF;
+ static int scsi_debug_guard = DEF_GUARD;
+ static int scsi_debug_ato = DEF_ATO;
++static int scsi_debug_physblk_exp = DEF_PHYSBLK_EXP;
++static int scsi_debug_lowest_aligned = DEF_LOWEST_ALIGNED;
+ 
+ static int scsi_debug_cmnd_count = 0;
+ 
+@@ -657,7 +661,12 @@ static unsigned char vpdb0_data[] = {
+ 
+ static int inquiry_evpd_b0(unsigned char * arr)
  {
- 	if (BLK_DEF_MAX_SECTORS > max_sectors)
--		q->max_hw_sectors = BLK_DEF_MAX_SECTORS;
-+		q->limits.max_hw_sectors = BLK_DEF_MAX_SECTORS;
- 	else
--		q->max_hw_sectors = max_sectors;
-+		q->limits.max_hw_sectors = max_sectors;
- }
- EXPORT_SYMBOL(blk_queue_max_hw_sectors);
++	unsigned int gran;
++
+ 	memcpy(arr, vpdb0_data, sizeof(vpdb0_data));
++	gran = 1 << scsi_debug_physblk_exp;
++	arr[2] = (gran >> 8) & 0xff;
++	arr[3] = gran & 0xff;
+ 	if (sdebug_store_sectors > 0x400) {
+ 		arr[4] = (sdebug_store_sectors >> 24) & 0xff;
+ 		arr[5] = (sdebug_store_sectors >> 16) & 0xff;
+@@ -945,6 +954,9 @@ static int resp_readcap16(struct scsi_cmnd * scp,
+ 	arr[9] = (scsi_debug_sector_size >> 16) & 0xff;
+ 	arr[10] = (scsi_debug_sector_size >> 8) & 0xff;
+ 	arr[11] = scsi_debug_sector_size & 0xff;
++	arr[13] = scsi_debug_physblk_exp & 0xf;
++	arr[14] = (scsi_debug_lowest_aligned >> 8) & 0x3f;
++	arr[15] = scsi_debug_lowest_aligned & 0xff;
  
-@@ -247,7 +247,7 @@ void blk_queue_max_phys_segments(struct request_queue *q,
- 		       __func__, max_segments);
- 	}
+ 	if (scsi_debug_dif) {
+ 		arr[12] = (scsi_debug_dif - 1) << 1; /* P_TYPE */
+@@ -2380,6 +2392,8 @@ module_param_named(dix, scsi_debug_dix, int, S_IRUGO);
+ module_param_named(dif, scsi_debug_dif, int, S_IRUGO);
+ module_param_named(guard, scsi_debug_guard, int, S_IRUGO);
+ module_param_named(ato, scsi_debug_ato, int, S_IRUGO);
++module_param_named(physblk_exp, scsi_debug_physblk_exp, int, S_IRUGO);
++module_param_named(lowest_aligned, scsi_debug_lowest_aligned, int, S_IRUGO);
  
--	q->max_phys_segments = max_segments;
-+	q->limits.max_phys_segments = max_segments;
- }
- EXPORT_SYMBOL(blk_queue_max_phys_segments);
- 
-@@ -271,7 +271,7 @@ void blk_queue_max_hw_segments(struct request_queue *q,
- 		       __func__, max_segments);
- 	}
- 
--	q->max_hw_segments = max_segments;
-+	q->limits.max_hw_segments = max_segments;
- }
- EXPORT_SYMBOL(blk_queue_max_hw_segments);
- 
-@@ -292,7 +292,7 @@ void blk_queue_max_segment_size(struct request_queue *q, unsigned int max_size)
- 		       __func__, max_size);
+ MODULE_AUTHOR("Eric Youngdale + Douglas Gilbert");
+ MODULE_DESCRIPTION("SCSI debug adapter driver");
+@@ -2401,7 +2415,9 @@ MODULE_PARM_DESC(ptype, "SCSI peripheral type(def=0[disk])");
+ MODULE_PARM_DESC(scsi_level, "SCSI level to simulate(def=5[SPC-3])");
+ MODULE_PARM_DESC(virtual_gb, "virtual gigabyte size (def=0 -> use dev_size_mb)");
+ MODULE_PARM_DESC(vpd_use_hostno, "0 -> dev ids ignore hostno (def=1 -> unique dev ids)");
+-MODULE_PARM_DESC(sector_size, "hardware sector size in bytes (def=512)");
++MODULE_PARM_DESC(sector_size, "logical block size in bytes (def=512)");
++MODULE_PARM_DESC(physblk_exp, "physical block exponent (def=0)");
++MODULE_PARM_DESC(lowest_aligned, "lowest aligned lba (def=0)");
+ MODULE_PARM_DESC(dix, "data integrity extensions mask (def=0)");
+ MODULE_PARM_DESC(dif, "data integrity field type: 0-3 (def=0)");
+ MODULE_PARM_DESC(guard, "protection checksum: 0=crc, 1=ip (def=0)");
+@@ -2874,6 +2890,18 @@ static int __init scsi_debug_init(void)
+ 		return -EINVAL;
  	}
  
--	q->max_segment_size = max_size;
-+	q->limits.max_segment_size = max_size;
- }
- EXPORT_SYMBOL(blk_queue_max_segment_size);
- 
-@@ -308,7 +308,7 @@ EXPORT_SYMBOL(blk_queue_max_segment_size);
-  **/
- void blk_queue_logical_block_size(struct request_queue *q, unsigned short size)
- {
--	q->logical_block_size = size;
-+	q->limits.logical_block_size = size;
- }
- EXPORT_SYMBOL(blk_queue_logical_block_size);
- 
-@@ -325,14 +325,27 @@ EXPORT_SYMBOL(blk_queue_logical_block_size);
- void blk_queue_stack_limits(struct request_queue *t, struct request_queue *b)
- {
- 	/* zero is "infinity" */
--	t->max_sectors = min_not_zero(t->max_sectors, b->max_sectors);
--	t->max_hw_sectors = min_not_zero(t->max_hw_sectors, b->max_hw_sectors);
--	t->seg_boundary_mask = min_not_zero(t->seg_boundary_mask, b->seg_boundary_mask);
--
--	t->max_phys_segments = min_not_zero(t->max_phys_segments, b->max_phys_segments);
--	t->max_hw_segments = min_not_zero(t->max_hw_segments, b->max_hw_segments);
--	t->max_segment_size = min_not_zero(t->max_segment_size, b->max_segment_size);
--	t->logical_block_size = max(t->logical_block_size, b->logical_block_size);
-+	t->limits.max_sectors = min_not_zero(queue_max_sectors(t),
-+					     queue_max_sectors(b));
++	if (scsi_debug_physblk_exp > 15) {
++		printk(KERN_ERR "scsi_debug_init: invalid physblk_exp %u\n",
++		       scsi_debug_physblk_exp);
++		return -EINVAL;
++	}
 +
-+	t->limits.max_hw_sectors = min_not_zero(queue_max_hw_sectors(t),
-+						queue_max_hw_sectors(b));
++	if (scsi_debug_lowest_aligned > 0x3fff) {
++		printk(KERN_ERR "scsi_debug_init: lowest_aligned too big: %u\n",
++		       scsi_debug_lowest_aligned);
++		return -EINVAL;
++	}
 +
-+	t->limits.seg_boundary_mask = min_not_zero(queue_segment_boundary(t),
-+						   queue_segment_boundary(b));
-+
-+	t->limits.max_phys_segments = min_not_zero(queue_max_phys_segments(t),
-+						   queue_max_phys_segments(b));
-+
-+	t->limits.max_hw_segments = min_not_zero(queue_max_hw_segments(t),
-+						 queue_max_hw_segments(b));
-+
-+	t->limits.max_segment_size = min_not_zero(queue_max_segment_size(t),
-+						  queue_max_segment_size(b));
-+
-+	t->limits.logical_block_size = max(queue_logical_block_size(t),
-+					   queue_logical_block_size(b));
-+
- 	if (!t->queue_lock)
- 		WARN_ON_ONCE(1);
- 	else if (!test_bit(QUEUE_FLAG_CLUSTER, &b->queue_flags)) {
-@@ -430,7 +443,7 @@ void blk_queue_segment_boundary(struct request_queue *q, unsigned long mask)
- 		       __func__, mask);
- 	}
- 
--	q->seg_boundary_mask = mask;
-+	q->limits.seg_boundary_mask = mask;
- }
- EXPORT_SYMBOL(blk_queue_segment_boundary);
- 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index e7950df..2655673 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -307,6 +307,21 @@ struct blk_cmd_filter {
- 	struct kobject kobj;
- };
- 
-+struct queue_limits {
-+	unsigned long		bounce_pfn;
-+	unsigned long		seg_boundary_mask;
-+
-+	unsigned int		max_hw_sectors;
-+	unsigned int		max_sectors;
-+	unsigned int		max_segment_size;
-+
-+	unsigned short		logical_block_size;
-+	unsigned short		max_hw_segments;
-+	unsigned short		max_phys_segments;
-+
-+	unsigned char		no_cluster;
-+};
-+
- struct request_queue
- {
- 	/*
-@@ -358,7 +373,6 @@ struct request_queue
- 	/*
- 	 * queue needs bounce pages for pages above this limit
- 	 */
--	unsigned long		bounce_pfn;
- 	gfp_t			bounce_gfp;
- 
- 	/*
-@@ -387,14 +401,6 @@ struct request_queue
- 	unsigned int		nr_congestion_off;
- 	unsigned int		nr_batching;
- 
--	unsigned int		max_sectors;
--	unsigned int		max_hw_sectors;
--	unsigned short		max_phys_segments;
--	unsigned short		max_hw_segments;
--	unsigned short		logical_block_size;
--	unsigned int		max_segment_size;
--
--	unsigned long		seg_boundary_mask;
- 	void			*dma_drain_buffer;
- 	unsigned int		dma_drain_size;
- 	unsigned int		dma_pad_mask;
-@@ -410,6 +416,8 @@ struct request_queue
- 	struct timer_list	timeout;
- 	struct list_head	timeout_list;
- 
-+	struct queue_limits	limits;
-+
- 	/*
- 	 * sg stuff
- 	 */
-@@ -989,45 +997,45 @@ extern void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter);
- 
- static inline unsigned long queue_bounce_pfn(struct request_queue *q)
- {
--	return q->bounce_pfn;
-+	return q->limits.bounce_pfn;
- }
- 
- static inline unsigned long queue_segment_boundary(struct request_queue *q)
- {
--	return q->seg_boundary_mask;
-+	return q->limits.seg_boundary_mask;
- }
- 
- static inline unsigned int queue_max_sectors(struct request_queue *q)
- {
--	return q->max_sectors;
-+	return q->limits.max_sectors;
- }
- 
- static inline unsigned int queue_max_hw_sectors(struct request_queue *q)
- {
--	return q->max_hw_sectors;
-+	return q->limits.max_hw_sectors;
- }
- 
- static inline unsigned short queue_max_hw_segments(struct request_queue *q)
- {
--	return q->max_hw_segments;
-+	return q->limits.max_hw_segments;
- }
- 
- static inline unsigned short queue_max_phys_segments(struct request_queue *q)
- {
--	return q->max_phys_segments;
-+	return q->limits.max_phys_segments;
- }
- 
- static inline unsigned int queue_max_segment_size(struct request_queue *q)
- {
--	return q->max_segment_size;
-+	return q->limits.max_segment_size;
- }
- 
- static inline unsigned short queue_logical_block_size(struct request_queue *q)
- {
- 	int retval = 512;
- 
--	if (q && q->logical_block_size)
--		retval = q->logical_block_size;
-+	if (q && q->limits.logical_block_size)
-+		retval = q->limits.logical_block_size;
- 
- 	return retval;
- }
+ 	if (scsi_debug_dev_size_mb < 1)
+ 		scsi_debug_dev_size_mb = 1;  /* force minimum 1 MB ramdisk */
+ 	sz = (unsigned long)scsi_debug_dev_size_mb * 1048576;
 -- 
 1.6.0.6
 
