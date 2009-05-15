@@ -1,115 +1,83 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 11/13] scsi_debug: Add support for physical block exponent and alignment
-Date: Fri, 15 May 2009 00:40:33 -0400
-Message-ID: <1242362435-11953-12-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 09/13] sd: Detect non-rotational devices
+Date: Fri, 15 May 2009 00:40:31 -0400
+Message-ID: <1242362435-11953-10-git-send-email-martin.petersen@oracle.com>
 References: <1242362435-11953-1-git-send-email-martin.petersen@oracle.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet12.oracle.com ([141.146.126.234]:16994 "EHLO
-	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753346AbZEOEmb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2009 00:42:31 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1242362435-11953-1-git-send-email-martin.petersen@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: rwheeler@redhat.com, snitzer@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Martin K. Petersen <martin.petersen@oracle.com>
 
-This patch adds support for setting the physical block exponent and
-lowest aligned LBA in the READ CAPACITY(16) response.
-
-The B0 VPD page is adjusted accordingly.
+Detect non-rotational devices and set the queue flag accordingly.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/scsi/scsi_debug.c |   30 +++++++++++++++++++++++++++++-
- 1 files changed, 29 insertions(+), 1 deletions(-)
+ drivers/scsi/sd.c |   27 +++++++++++++++++++++++++++
+ 1 files changed, 27 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 213123b..f0198e0 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -101,6 +101,8 @@ static const char * scsi_debug_version_date = "20070104";
- #define DEF_DIF 0
- #define DEF_GUARD 0
- #define DEF_ATO 1
-+#define DEF_PHYSBLK_EXP 0
-+#define DEF_LOWEST_ALIGNED 0
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 86a8b12..ee61136 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -50,6 +50,7 @@
+ #include <linux/string_helpers.h>
+ #include <linux/async.h>
+ #include <asm/uaccess.h>
++#include <asm/unaligned.h>
  
- /* bit mask values for scsi_debug_opts */
- #define SCSI_DEBUG_OPT_NOISE   1
-@@ -156,6 +158,8 @@ static int scsi_debug_dix = DEF_DIX;
- static int scsi_debug_dif = DEF_DIF;
- static int scsi_debug_guard = DEF_GUARD;
- static int scsi_debug_ato = DEF_ATO;
-+static int scsi_debug_physblk_exp = DEF_PHYSBLK_EXP;
-+static int scsi_debug_lowest_aligned = DEF_LOWEST_ALIGNED;
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -1800,6 +1801,29 @@ void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
+ }
  
- static int scsi_debug_cmnd_count = 0;
- 
-@@ -657,7 +661,12 @@ static unsigned char vpdb0_data[] = {
- 
- static int inquiry_evpd_b0(unsigned char * arr)
- {
-+	unsigned int gran;
+ /**
++ * sd_read_block_characteristics - Query block dev. characteristics
++ * @disk: disk to query
++ */
++static void sd_read_block_characteristics(struct scsi_disk *sdkp)
++{
++	char *buffer;
++	u16 rot;
 +
- 	memcpy(arr, vpdb0_data, sizeof(vpdb0_data));
-+	gran = 1 << scsi_debug_physblk_exp;
-+	arr[2] = (gran >> 8) & 0xff;
-+	arr[3] = gran & 0xff;
- 	if (sdebug_store_sectors > 0x400) {
- 		arr[4] = (sdebug_store_sectors >> 24) & 0xff;
- 		arr[5] = (sdebug_store_sectors >> 16) & 0xff;
-@@ -945,6 +954,9 @@ static int resp_readcap16(struct scsi_cmnd * scp,
- 	arr[9] = (scsi_debug_sector_size >> 16) & 0xff;
- 	arr[10] = (scsi_debug_sector_size >> 8) & 0xff;
- 	arr[11] = scsi_debug_sector_size & 0xff;
-+	arr[13] = scsi_debug_physblk_exp & 0xf;
-+	arr[14] = (scsi_debug_lowest_aligned >> 8) & 0x3f;
-+	arr[15] = scsi_debug_lowest_aligned & 0xff;
- 
- 	if (scsi_debug_dif) {
- 		arr[12] = (scsi_debug_dif - 1) << 1; /* P_TYPE */
-@@ -2380,6 +2392,8 @@ module_param_named(dix, scsi_debug_dix, int, S_IRUGO);
- module_param_named(dif, scsi_debug_dif, int, S_IRUGO);
- module_param_named(guard, scsi_debug_guard, int, S_IRUGO);
- module_param_named(ato, scsi_debug_ato, int, S_IRUGO);
-+module_param_named(physblk_exp, scsi_debug_physblk_exp, int, S_IRUGO);
-+module_param_named(lowest_aligned, scsi_debug_lowest_aligned, int, S_IRUGO);
- 
- MODULE_AUTHOR("Eric Youngdale + Douglas Gilbert");
- MODULE_DESCRIPTION("SCSI debug adapter driver");
-@@ -2401,7 +2415,9 @@ MODULE_PARM_DESC(ptype, "SCSI peripheral type(def=0[disk])");
- MODULE_PARM_DESC(scsi_level, "SCSI level to simulate(def=5[SPC-3])");
- MODULE_PARM_DESC(virtual_gb, "virtual gigabyte size (def=0 -> use dev_size_mb)");
- MODULE_PARM_DESC(vpd_use_hostno, "0 -> dev ids ignore hostno (def=1 -> unique dev ids)");
--MODULE_PARM_DESC(sector_size, "hardware sector size in bytes (def=512)");
-+MODULE_PARM_DESC(sector_size, "logical block size in bytes (def=512)");
-+MODULE_PARM_DESC(physblk_exp, "physical block exponent (def=0)");
-+MODULE_PARM_DESC(lowest_aligned, "lowest aligned lba (def=0)");
- MODULE_PARM_DESC(dix, "data integrity extensions mask (def=0)");
- MODULE_PARM_DESC(dif, "data integrity field type: 0-3 (def=0)");
- MODULE_PARM_DESC(guard, "protection checksum: 0=crc, 1=ip (def=0)");
-@@ -2874,6 +2890,18 @@ static int __init scsi_debug_init(void)
- 		return -EINVAL;
- 	}
- 
-+	if (scsi_debug_physblk_exp > 15) {
-+		printk(KERN_ERR "scsi_debug_init: invalid physblk_exp %u\n",
-+		       scsi_debug_physblk_exp);
-+		return -EINVAL;
-+	}
++	/* Block Device Characteristics VPD */
++	buffer = scsi_get_vpd_page(sdkp->device, 0xb1);
 +
-+	if (scsi_debug_lowest_aligned > 0x3fff) {
-+		printk(KERN_ERR "scsi_debug_init: lowest_aligned too big: %u\n",
-+		       scsi_debug_lowest_aligned);
-+		return -EINVAL;
-+	}
++	if (buffer == NULL)
++		return;
 +
- 	if (scsi_debug_dev_size_mb < 1)
- 		scsi_debug_dev_size_mb = 1;  /* force minimum 1 MB ramdisk */
- 	sz = (unsigned long)scsi_debug_dev_size_mb * 1048576;
++	rot = get_unaligned_be16(&buffer[4]);
++
++	if (rot == 1)
++		queue_flag_set_unlocked(QUEUE_FLAG_NONROT, sdkp->disk->queue);
++
++	kfree(buffer);
++}
++
++/**
+  *	sd_revalidate_disk - called the first time a new disk is seen,
+  *	performs disk spin up, read_capacity, etc.
+  *	@disk: struct gendisk we care about
+@@ -1836,6 +1860,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 	 */
+ 	if (sdkp->media_present) {
+ 		sd_read_capacity(sdkp, buffer);
++		sd_read_block_characteristics(sdkp);
+ 		sd_read_write_protect_flag(sdkp, buffer);
+ 		sd_read_cache_type(sdkp, buffer);
+ 		sd_read_app_tag_own(sdkp, buffer);
+@@ -1976,6 +2001,8 @@ static void sd_probe_async(void *data, async_cookie_t cookie)
+ 	add_disk(gd);
+ 	sd_dif_config_host(sdkp);
+ 
++	sd_revalidate_disk(gd);
++
+ 	sd_printk(KERN_NOTICE, sdkp, "Attached SCSI %sdisk\n",
+ 		  sdp->removable ? "removable " : "");
+ 
 -- 
 1.6.0.6
 
