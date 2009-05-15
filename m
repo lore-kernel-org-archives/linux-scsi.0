@@ -1,86 +1,199 @@
-From: Ravish Tayal <ravish.tayal@gmail.com>
-Subject: Fwd: Query to optimize PageCache size in system
-Date: Fri, 15 May 2009 11:21:56 +0530
-Message-ID: <e42309110905142251v7bce0203p486a0cceacdffe82@mail.gmail.com>
-References: <e42309110905130732xf4313a6qba1f30a2d89728be@mail.gmail.com>
-	 <e42309110905130805r135c3373xa6ecda0e45180d34@mail.gmail.com>
-	 <20090513155444.GF15360@parisc-linux.org>
-	 <e42309110905142210k332b8818l695a03efdc75673f@mail.gmail.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] block: remove blk_end_bidi_request and
+ __blk_end_bidi_request
+Date: Fri, 15 May 2009 16:35:19 +0900
+Message-ID: <20090515163416M.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-px0-f123.google.com ([209.85.216.123]:43527 "EHLO
-	mail-px0-f123.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757864AbZEOFvz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2009 01:51:55 -0400
-In-Reply-To: <e42309110905142210k332b8818l695a03efdc75673f@mail.gmail.com>
+Received: from sh.osrg.net ([192.16.179.4]:38168 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754445AbZEOHg2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 May 2009 03:36:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-arm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-usb@vger.kernel.org
-Cc: ravish.tayal@conexant.com
+To: jens.axboe@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, tj@kernel.org, James.Bottomley@HansenPartnership.com, bharrosh@panasas.com
 
-Including Linux mailing list in the mail thread.
+The block core does:
 
-Thanks Matthew,
-Please see my inline explanations.
+- blk_end_request and blk_end_request_all calls blk_end_bidi_request.
+- __blk_end_request and __blk_end_request_all calls __blk_end_bidi_request.
 
-On Wed, May 13, 2009 at 9:24 PM, Matthew Wilcox <matthew@wil.cx> wrote:
-> On Wed, May 13, 2009 at 08:35:52PM +0530, Ravish Tayal wrote:
->> I am looking for help to reduce the number of cached pages in the
->> system. I am using 2.6.12 linux kernel on ARM processor.for my
->> embedded USB mass storage application.
->
+The bidi name is confusing since all the callers are generic
+completion functions.
 
-> Why do you think the number of cached pages is a problem? =A0What pro=
-blem
-> are you experiencing that you think is caused by having a large numbe=
-r
-> of cached pages?
->
-RT: My intention is to keep the Zone->nr_inactive to be minimum. By
-which I means in case File system read operation pages which are in
-active list should alow to be part of the page cache, while once moved
-to inactive list it should be soon aged out to free list.
-Which for embedded scenario would allow low memory devices to keep
-good amount of free memory.
+A bidi request must be completed as a whole so let's reorganize the
+functions a bit:
 
-Currently I am periodically calling try_to_free_pages to get it done ;-=
-)
+- blk_end_request_all calls blk_end_request, __blk_end_request_all
+calls __blk_end_request
 
->> 3. Is there any provision in linux kernel through which I can restri=
-ct
->> the new page allocation for disk operation to not to be added in the
->> page-cache =A0?
+- blk_end_request and __blk_end_request complete a bidi request as a
+whole because we always have to complete a bidi request as a whole.
 
->> 4. If I open the file with O_DIRECT Flag would page_cache be avoided=
-,
->> irrespective it is file read or File write operations?
->
-> Question 4 appears to be the answer to question 3. =A0O_DIRECT works =
-for
-> both reads and writes, but does have restrictions on alignment.
->
 
-RT: I tried to use the O_DIRECT options with bftpd ftp =A0server +
-2.6.12 kernel, In File write operation I have observed no difference
-in term page caching behaviour.
-Though in that setup file read operation starts failining which I
-didn't debug much.
+It might be better to change blk_update_bidi_request too since we
+can't update a bidi request.
 
-Thanks for your suggestion.
-regards
-Ravish Tayal
-> --
-> Matthew Wilcox =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0Int=
-el Open Source Technology Centre
-> "Bill, look, we understand that you're interested in selling us this
-> operating system, but compare it to ours. =A0We can't possibly take s=
-uch
-> a retrograde step."
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ block/blk-core.c |   94 +++++++++++++++---------------------------------------
+ 1 files changed, 26 insertions(+), 68 deletions(-)
+
+diff --git a/block/blk-core.c b/block/blk-core.c
+index a2d97de..2c6d0ec 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1972,7 +1972,6 @@ static bool blk_update_bidi_request(struct request *rq, int error,
+ 	if (blk_update_request(rq, error, nr_bytes))
+ 		return true;
+ 
+-	/* Bidi request must be completed as a whole */
+ 	if (unlikely(blk_bidi_rq(rq)) &&
+ 	    blk_update_request(rq->next_rq, error, bidi_bytes))
+ 		return true;
+@@ -2010,27 +2009,28 @@ static void blk_finish_request(struct request *req, int error)
+ }
+ 
+ /**
+- * blk_end_bidi_request - Complete a bidi request
+- * @rq:         the request to complete
+- * @error:      %0 for success, < %0 for error
+- * @nr_bytes:   number of bytes to complete @rq
+- * @bidi_bytes: number of bytes to complete @rq->next_rq
++ * blk_end_request - Helper function for drivers to complete the request.
++ * @rq:       the request being processed
++ * @error:    %0 for success, < %0 for error
++ * @nr_bytes: number of bytes to complete
+  *
+  * Description:
+- *     Ends I/O on a number of bytes attached to @rq and @rq->next_rq.
+- *     Drivers that supports bidi can safely call this member for any
+- *     type of request, bidi or uni.  In the later case @bidi_bytes is
+- *     just ignored.
++ *     Ends I/O on a number of bytes attached to @rq.
++ *     If @rq has leftover, sets it up for the next range of segments.
+  *
+  * Return:
+  *     %false - we are done with this request
+  *     %true  - still buffers pending for this request
+  **/
+-static bool blk_end_bidi_request(struct request *rq, int error,
+-				 unsigned int nr_bytes, unsigned int bidi_bytes)
++bool blk_end_request(struct request *rq, int error, unsigned int nr_bytes)
+ {
+ 	struct request_queue *q = rq->q;
+ 	unsigned long flags;
++	unsigned int bidi_bytes = 0;
++	bool pending;
++
++	if (unlikely(blk_bidi_rq(rq)))
++		bidi_bytes = blk_rq_bytes(rq->next_rq);
+ 
+ 	if (blk_update_bidi_request(rq, error, nr_bytes, bidi_bytes))
+ 		return true;
+@@ -2041,51 +2041,6 @@ static bool blk_end_bidi_request(struct request *rq, int error,
+ 
+ 	return false;
+ }
+-
+-/**
+- * __blk_end_bidi_request - Complete a bidi request with queue lock held
+- * @rq:         the request to complete
+- * @error:      %0 for success, < %0 for error
+- * @nr_bytes:   number of bytes to complete @rq
+- * @bidi_bytes: number of bytes to complete @rq->next_rq
+- *
+- * Description:
+- *     Identical to blk_end_bidi_request() except that queue lock is
+- *     assumed to be locked on entry and remains so on return.
+- *
+- * Return:
+- *     %false - we are done with this request
+- *     %true  - still buffers pending for this request
+- **/
+-static bool __blk_end_bidi_request(struct request *rq, int error,
+-				   unsigned int nr_bytes, unsigned int bidi_bytes)
+-{
+-	if (blk_update_bidi_request(rq, error, nr_bytes, bidi_bytes))
+-		return true;
+-
+-	blk_finish_request(rq, error);
+-
+-	return false;
+-}
+-
+-/**
+- * blk_end_request - Helper function for drivers to complete the request.
+- * @rq:       the request being processed
+- * @error:    %0 for success, < %0 for error
+- * @nr_bytes: number of bytes to complete
+- *
+- * Description:
+- *     Ends I/O on a number of bytes attached to @rq.
+- *     If @rq has leftover, sets it up for the next range of segments.
+- *
+- * Return:
+- *     %false - we are done with this request
+- *     %true  - still buffers pending for this request
+- **/
+-bool blk_end_request(struct request *rq, int error, unsigned int nr_bytes)
+-{
+-	return blk_end_bidi_request(rq, error, nr_bytes, 0);
+-}
+ EXPORT_SYMBOL_GPL(blk_end_request);
+ 
+ /**
+@@ -2099,12 +2054,8 @@ EXPORT_SYMBOL_GPL(blk_end_request);
+ void blk_end_request_all(struct request *rq, int error)
+ {
+ 	bool pending;
+-	unsigned int bidi_bytes = 0;
+-
+-	if (unlikely(blk_bidi_rq(rq)))
+-		bidi_bytes = blk_rq_bytes(rq->next_rq);
+ 
+-	pending = blk_end_bidi_request(rq, error, blk_rq_bytes(rq), bidi_bytes);
++	pending = blk_end_request(rq, error, blk_rq_bytes(rq));
+ 	BUG_ON(pending);
+ }
+ EXPORT_SYMBOL_GPL(blk_end_request_all);
+@@ -2142,7 +2093,18 @@ EXPORT_SYMBOL_GPL(blk_end_request_cur);
+  **/
+ bool __blk_end_request(struct request *rq, int error, unsigned int nr_bytes)
+ {
+-	return __blk_end_bidi_request(rq, error, nr_bytes, 0);
++	bool pending;
++	unsigned int bidi_bytes = 0;
++
++	if (unlikely(blk_bidi_rq(rq)))
++		bidi_bytes = blk_rq_bytes(rq->next_rq);
++
++	if (blk_update_bidi_request(rq, error, nr_bytes, bidi_bytes))
++		return true;
++
++	blk_finish_request(rq, error);
++
++	return false;
+ }
+ EXPORT_SYMBOL_GPL(__blk_end_request);
+ 
+@@ -2157,12 +2119,8 @@ EXPORT_SYMBOL_GPL(__blk_end_request);
+ void __blk_end_request_all(struct request *rq, int error)
+ {
+ 	bool pending;
+-	unsigned int bidi_bytes = 0;
+-
+-	if (unlikely(blk_bidi_rq(rq)))
+-		bidi_bytes = blk_rq_bytes(rq->next_rq);
+ 
+-	pending = __blk_end_bidi_request(rq, error, blk_rq_bytes(rq), bidi_bytes);
++	pending = __blk_end_request(rq, error, blk_rq_bytes(rq));
+ 	BUG_ON(pending);
+ }
+ EXPORT_SYMBOL_GPL(__blk_end_request_all);
+-- 
+1.6.0.6
+
