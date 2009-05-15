@@ -1,47 +1,41 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 0/3] block: completion related functions cleanup
-Date: Fri, 15 May 2009 09:12:41 +0900
-Message-ID: <20090515091134C.fujita.tomonori@lab.ntt.co.jp>
-References: <4A0C2297.5040001@panasas.com>
-	<4A0C2515.9060602@kernel.org>
-	<4A0C2769.4090508@panasas.com>
+From: adam radford <aradford@gmail.com>
+Subject: Re: [RFQ] New driver architecture questions
+Date: Thu, 14 May 2009 17:58:03 -0700
+Message-ID: <b1bc6a000905141758y20aa7852h8b1012e3da6f8c0f@mail.gmail.com>
+References: <6C678488C5CEE74F813A4D1948FD2DC7A95E6D37@cosmail02.lsi.com>
+	 <4A0B858F.3080405@garzik.org>
+	 <6C678488C5CEE74F813A4D1948FD2DC7A95E6D38@cosmail02.lsi.com>
+	 <4A0B9B0D.6080006@garzik.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:46160 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755079AbZEOANv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 May 2009 20:13:51 -0400
-In-Reply-To: <4A0C2769.4090508@panasas.com>
+Received: from mail-gx0-f166.google.com ([209.85.217.166]:34465 "EHLO
+	mail-gx0-f166.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754261AbZEOA6E (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 May 2009 20:58:04 -0400
+In-Reply-To: <4A0B9B0D.6080006@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: tj@kernel.org, fujita.tomonori@lab.ntt.co.jp, jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "Mukker, Atul" <Atul.Mukker@lsi.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Austria, Winston" <Winston.Austria@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, 14 May 2009 17:15:05 +0300
-Boaz Harrosh <bharrosh@panasas.com> wrote:
+On Wed, May 13, 2009 at 9:16 PM, Jeff Garzik <jeff@garzik.org> wrote:
+> Taking drivers/net/e1000e as an
+> example,
+>
+>        hw.h            hardware-specific defines, ~cross-OS
+>        82571.c         code specific to 8257x chip family, ~cross-OS
 
-> On 05/14/2009 05:05 PM, Tejun Heo wrote:
-> > Nice spotting.  Looks like the variable can be killed completely?
-> > 
-> > Thanks.
-> > 
-> 
-> Sorry yes, here:
-> ---
-> From: Boaz Harrosh <bharrosh@panasas.com>
-> Date: Thu, 14 May 2009 16:46:03 +0300
-> Subject: [PATCH] scsi_lib: remove unused variable
-> 
-> The last request completion cleanup in scsi_lib left an unused
-> this_count variable in scsi_io_completion().
-> (It was used before in a code segment that now uses blk_end_request_all())
-> 
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+82571.c contains Linux specific code such as:  including Linux
+specific header files, calls to msleep().
 
-Ah, I overlooked this.
+>        ich8lan.c       code specific to ICH8+ chip family, ~cross-OS
 
-Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+ich8lan.c contains Linux specific code such as:  might_sleep(),
+mutex_trylock(), mutex_unlock(), udelay(), msleep(), writel(), readl().
 
-Thanks,
+Perhaps this is a bad example?  It seems like the "common layer"
+sections that are "cross-OS" shouldn't contain any Linux specific code at all.
+
+-Adam
