@@ -1,41 +1,74 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [RFQ] New driver architecture questions
-Date: Fri, 15 May 2009 12:16:41 -0600
-Message-ID: <20090515181641.GB15360@parisc-linux.org>
-References: <6C678488C5CEE74F813A4D1948FD2DC7A95E6D37@cosmail02.lsi.com> <4A0B858F.3080405@garzik.org> <6C678488C5CEE74F813A4D1948FD2DC7A95E6D38@cosmail02.lsi.com> <4A0B9B0D.6080006@garzik.org> <b1bc6a000905141758y20aa7852h8b1012e3da6f8c0f@mail.gmail.com> <646765f40905141801k5ae6249p925a4a377652c62e@mail.gmail.com> <4A0CDB27.6090009@garzik.org> <6C678488C5CEE74F813A4D1948FD2DC7A96C7789@cosmail02.lsi.com> <20090515163626.GA15360@parisc-linux.org> <6C678488C5CEE74F813A4D1948FD2DC7A96C7848@cosmail02.lsi.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 12/13] libata: Report disk alignment and physical block
+ size
+Date: Fri, 15 May 2009 14:17:11 -0400
+Message-ID: <4A0DB1A7.4000209@garzik.org>
+References: <1242362435-11953-1-git-send-email-martin.petersen@oracle.com> <1242362435-11953-13-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:52044 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753715AbZEOSQk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2009 14:16:40 -0400
-Content-Disposition: inline
-In-Reply-To: <6C678488C5CEE74F813A4D1948FD2DC7A96C7848@cosmail02.lsi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1242362435-11953-13-git-send-email-martin.petersen@oracle.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: rwheeler@redhat.com, snitzer@redhat.com, neilb@suse.de, James.Bottomley@hansenpartnership.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Mukker, Atul" <Atul.Mukker@lsi.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Julian Calaby <julian.calaby@gmail.com>, adam radford <aradford@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Austria, Winston" <Winston.Austria@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, May 15, 2009 at 12:03:39PM -0600, Mukker, Atul wrote:
-> > The solution to "We have some people who speak French and other people who
-> > speak German" is not to invent Esperanto ;-)
-> [Atul] We really wish they could communicate in English :-), since that's not an option, we agree in principle that using native Linux Kernel APIs wherever possible is probably a good idea.
+Martin K. Petersen wrote:
+> From: Martin K. Petersen <martin.petersen@oracle.com>
+> 
+> For disks with 4KB sectors, report the correct block size and alignment
+> when filling out the READ CAPACITY(16) response.
+> 
+> This patch is based upon code from Matthew Wilcox' 4KB ATA tree.  I
+> fixed the bug I reported a while back caused by ATA and SCSI using
+> different approaches to describing the alignment.
+> 
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> ---
+>  drivers/ata/libata-scsi.c |   23 ++++++++++++++++++++++-
+>  1 files changed, 22 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 6e4c600..5072003 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -2376,7 +2376,23 @@ saving_not_supp:
+>   */
+>  static unsigned int ata_scsiop_read_cap(struct ata_scsi_args *args, u8 *rbuf)
+>  {
+> -	u64 last_lba = args->dev->n_sectors - 1; /* LBA of the last block */
+> +	struct ata_device *dev = args->dev;
+> +	u64 last_lba = dev->n_sectors - 1; /* LBA of the last block */
+> +	u8 log_per_phys = 0;
+> +	u16 lowest_aligned = 0;
+> +	u16 word_106 = dev->id[106];
+> +	u16 word_209 = dev->id[209];
+> +
+> +	if ((word_106 & 0xc000) == 0x4000) {
+> +		/* Number and offset of logical sectors per physical sector */
+> +		if (word_106 & (1 << 13))
+> +			log_per_phys = word_106 & 0xf;
+> +		if ((word_209 & 0xc000) == 0x4000) {
+> +			u16 first = dev->id[209] & 0x3fff;
+> +			if (first > 0)
+> +				lowest_aligned = (1 << log_per_phys) - first;
+> +		}
+> +	}
+>  
+>  	VPRINTK("ENTER\n");
+>  
+> @@ -2407,6 +2423,11 @@ static unsigned int ata_scsiop_read_cap(struct ata_scsi_args *args, u8 *rbuf)
+>  		/* sector size */
+>  		rbuf[10] = ATA_SECT_SIZE >> 8;
+>  		rbuf[11] = ATA_SECT_SIZE & 0xff;
+> +
+> +		rbuf[12] = 0;
+> +		rbuf[13] = log_per_phys;
+> +		rbuf[14] = (lowest_aligned >> 8) & 0x3f;
+> +		rbuf[15] = lowest_aligned;
 
-I'd stick to the C APIs where possible ... oh, that's what Linux does.  OK ;-)
+applied
 
-> > Using one or the other internally is fine (we don't care what you do),
-> > but we want to see memcpy().  By the way, the documentation I found for
-> > ScsiPortMoveMemory() seems to indicate that it's memmove(), not memcpy().
-> > Mapping memcpy() to ScsiPortMoveMemory() is fine ... but you can't
-> > realiably go the other way.
-> [Atul] It's actually memcpy(),http://msdn.microsoft.com/en-us/library/ms805434.aspx
 
-No, it's memmove().  "The (ReadBuffer + Length) can overlap the area
-pointed to by WriteBuffer."
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
