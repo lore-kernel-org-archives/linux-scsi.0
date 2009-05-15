@@ -1,7 +1,7 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 07/13] block: Deprecate blk_queue_stack_limits
-Date: Fri, 15 May 2009 00:40:29 -0400
-Message-ID: <1242362435-11953-8-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 10/13] sd: Block limits VPD support
+Date: Fri, 15 May 2009 00:40:32 -0400
+Message-ID: <1242362435-11953-11-git-send-email-martin.petersen@oracle.com>
 References: <1242362435-11953-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1242362435-11953-1-git-send-email-martin.petersen@oracle.com>
@@ -12,78 +12,56 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Martin K. Petersen <martin.petersen@oracle.com>
 
-blk_queue_stack_limits() has been replaced by blk_stack_limits() and
-disk_stack_limits() and can be removed.
+Query the block limits VPD page and adjust queue minimum and optimal I/O
+sizes.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- block/blk-settings.c   |   40 ----------------------------------------
- include/linux/blkdev.h |    1 -
- 2 files changed, 0 insertions(+), 41 deletions(-)
+ drivers/scsi/sd.c |   24 ++++++++++++++++++++++++
+ 1 files changed, 24 insertions(+), 0 deletions(-)
 
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index aea6762..001ab8d 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -402,46 +402,6 @@ EXPORT_SYMBOL(blk_queue_io_opt);
- #define min_not_zero(l, r) (l == 0) ? r : ((r == 0) ? l : min(l, r))
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index ee61136..6bdf931 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1801,6 +1801,29 @@ void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
+ }
  
  /**
-- * blk_queue_stack_limits - inherit underlying queue limits for stacked drivers
-- * @t:	the stacking driver (top)
-- * @b:  the underlying device (bottom)
-- **/
--void blk_queue_stack_limits(struct request_queue *t, struct request_queue *b)
--{
--	/* zero is "infinity" */
--	t->limits.max_sectors = min_not_zero(queue_max_sectors(t),
--					     queue_max_sectors(b));
--
--	t->limits.max_hw_sectors = min_not_zero(queue_max_hw_sectors(t),
--						queue_max_hw_sectors(b));
--
--	t->limits.seg_boundary_mask = min_not_zero(queue_segment_boundary(t),
--						   queue_segment_boundary(b));
--
--	t->limits.max_phys_segments = min_not_zero(queue_max_phys_segments(t),
--						   queue_max_phys_segments(b));
--
--	t->limits.max_hw_segments = min_not_zero(queue_max_hw_segments(t),
--						 queue_max_hw_segments(b));
--
--	t->limits.max_segment_size = min_not_zero(queue_max_segment_size(t),
--						  queue_max_segment_size(b));
--
--	t->limits.logical_block_size = max(queue_logical_block_size(t),
--					   queue_logical_block_size(b));
--
--	if (!t->queue_lock)
--		WARN_ON_ONCE(1);
--	else if (!test_bit(QUEUE_FLAG_CLUSTER, &b->queue_flags)) {
--		unsigned long flags;
--		spin_lock_irqsave(t->queue_lock, flags);
--		queue_flag_clear(QUEUE_FLAG_CLUSTER, t);
--		spin_unlock_irqrestore(t->queue_lock, flags);
--	}
--}
--EXPORT_SYMBOL(blk_queue_stack_limits);
--
--/**
-  * blk_stack_limits - adjust queue_limits for stacked devices
-  * @t:	the stacking driver limits (top)
-  * @bdev:  the underlying queue limits (bottom)
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 55d19dc..df5a8cd 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -923,7 +923,6 @@ extern int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
- 			    sector_t offset);
- extern void disk_stack_limits(struct gendisk *disk, struct block_device *bdev,
- 			      sector_t offset);
--extern void blk_queue_stack_limits(struct request_queue *t, struct request_queue *b);
- extern void blk_queue_dma_pad(struct request_queue *, unsigned int);
- extern void blk_queue_update_dma_pad(struct request_queue *, unsigned int);
- extern int blk_queue_dma_drain(struct request_queue *q,
++ * sd_read_block_limits - Query disk device for preferred I/O sizes.
++ * @disk: disk to query
++ */
++static void sd_read_block_limits(struct scsi_disk *sdkp)
++{
++	unsigned int sector_sz = sdkp->device->sector_size;
++	char *buffer;
++
++	/* Block Limits VPD */
++	buffer = scsi_get_vpd_page(sdkp->device, 0xb0);
++
++	if (buffer == NULL)
++		return;
++
++	blk_queue_io_min(sdkp->disk->queue,
++			 get_unaligned_be16(&buffer[6]) * sector_sz);
++	blk_queue_io_opt(sdkp->disk->queue,
++			 get_unaligned_be32(&buffer[12]) * sector_sz);
++
++	kfree(buffer);
++}
++
++/**
+  * sd_read_block_characteristics - Query block dev. characteristics
+  * @disk: disk to query
+  */
+@@ -1860,6 +1883,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 	 */
+ 	if (sdkp->media_present) {
+ 		sd_read_capacity(sdkp, buffer);
++		sd_read_block_limits(sdkp);
+ 		sd_read_block_characteristics(sdkp);
+ 		sd_read_write_protect_flag(sdkp, buffer);
+ 		sd_read_cache_type(sdkp, buffer);
 -- 
 1.6.0.6
 
