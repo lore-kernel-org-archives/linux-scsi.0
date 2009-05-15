@@ -1,26 +1,43 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 0/9] zfcp updates for 2.6.31
-Date: Fri, 15 May 2009 13:18:13 +0200
-Message-ID: <20090515111813.314177000@de.ibm.com>
+From: "Mukker, Atul" <Atul.Mukker@lsi.com>
+Subject: RE: [RFQ] New driver architecture questions
+Date: Fri, 15 May 2009 08:56:25 -0600
+Message-ID: <6C678488C5CEE74F813A4D1948FD2DC7A96C7789@cosmail02.lsi.com>
+References: <6C678488C5CEE74F813A4D1948FD2DC7A95E6D37@cosmail02.lsi.com>
+ 	<4A0B858F.3080405@garzik.org>
+ <6C678488C5CEE74F813A4D1948FD2DC7A95E6D38@cosmail02.lsi.com>
+ 	<4A0B9B0D.6080006@garzik.org>
+ <b1bc6a000905141758y20aa7852h8b1012e3da6f8c0f@mail.gmail.com>
+ <646765f40905141801k5ae6249p925a4a377652c62e@mail.gmail.com>
+ <4A0CDB27.6090009@garzik.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate6.de.ibm.com ([195.212.29.155]:36363 "EHLO
-	mtagate6.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750944AbZEOLXU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2009 07:23:20 -0400
+Received: from exprod7og111.obsmtp.com ([64.18.2.175]:54621 "EHLO
+	exprod7og111.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753436AbZEOO5i convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2009 10:57:38 -0400
+In-Reply-To: <4A0CDB27.6090009@garzik.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com
+To: Jeff Garzik <jeff@garzik.org>, Julian Calaby <julian.calaby@gmail.com>
+Cc: adam radford <aradford@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Austria, Winston" <Winston.Austria@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-James,
+>>
+> >> Perhaps this is a bad example?  It seems like the "common layer"
+> >> sections that are "cross-OS" shouldn't contain any Linux specific code
+> at all.
+> >
+> > I think the implication is that the cross-OS parts are coded, as it
+> > happens, in the linux coding style, using linux functions, but then a
+> > Windows layer maps these to Windows specific functions.
+> 
+> Correct.
+> 
+> 	Jeff
+> 
+> 
+> 
+[Atul] I think we are close, for example, memcpy API in the stack is osi_memcpy(), which translates to memcpy() on Linux and ScsiPortMoveMemory() on windows.
 
-this is the series of zfcp patches for the 2.6.31 merge window. My
-plan was to resubmit the zfcp FC pass-through patch to fix the small
-issues found during review on linux-scsi. Now that the patch has
-already been included in scsi-misc, i put the changes in a new patch.
-I assume this is the simpler approach.
-
-The patches apply on the current scsi-misc tree.
-
---
-Christof Schmitt
