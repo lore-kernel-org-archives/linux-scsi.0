@@ -1,107 +1,183 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH block#for-2.6.31 1/3] ub: use __blk_end_request_all()
-Date: Sat, 16 May 2009 00:14:35 +0900
-Message-ID: <4A0D86DB.9000203@kernel.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH block#for-2.6.31 2/3] block: set rq->resid_len to blk_rq_bytes()
+ on issue
+Date: Sat, 16 May 2009 00:18:42 +0900
+Message-ID: <4A0D87D2.7090806@gmail.com>
+References: <4A0D86DB.9000203@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:55127 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752461AbZEOPPI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 May 2009 11:15:08 -0400
+Received: from mail-px0-f123.google.com ([209.85.216.123]:58951 "EHLO
+	mail-px0-f123.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753057AbZEOPSq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2009 11:18:46 -0400
+In-Reply-To: <4A0D86DB.9000203@kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-s
 
-ub_end_rq() always tries to complete full request.  The @cmd_len
-parameter was there because rq->data_len used to be overwritten with
-residue count.  Drop @cmd_len and use __blk_end_request_all().
+In commit c3a4d78c580de4edc9ef0f7c59812fb02ceb037f, while introducing
+rq->resid_len, the default value of residue count was changed from
+full count to zero.  The conversion was done under the assumption that
+when a request fails residue count wasn't defined.  However, Boaz and
+James pointed out that this wasn't true and the residue count should
+be preserved for failed requests too.
+
+This patchset restores the original behavior by setting rq->resid_len
+to blk_rq_bytes(rq) on issue and restoring explicit clearing in
+affected drivers.  While at it, take advantage of the fact that
+rq->resid_len is set to full count where applicable.
+
+* ide-cd: rq->resid_len cleared on pc success
+
+* mptsas: req->resid_len cleared on success
+
+* sas_expander: rsp/req->resid_len cleared on success
+
+* mpt2sas_transport: req->resid_len cleared on success
+
+* ide-cd, ide-tape, mptsas, sas_host_smp, mpt2sas_transport, ub: take
+  advantage of initial full count to simplify code
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <jens.axboe@oracle.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Pete Zaitcev <zaitcev@redhat.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Borislav Petkov <petkovbb@googlemail.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Eric Moore <Eric.Moore@lsi.com>
+Cc: Darrick J. Wong <djwong@us.ibm.com>
 ---
- drivers/block/ub.c |   24 +++++++-----------------
- 1 file changed, 7 insertions(+), 17 deletions(-)
+ block/blk-core.c                         |    1 +
+ drivers/block/ub.c                       |    3 +--
+ drivers/ide/ide-cd.c                     |    4 ++--
+ drivers/ide/ide-tape.c                   |    2 +-
+ drivers/message/fusion/mptsas.c          |    3 ++-
+ drivers/scsi/libsas/sas_expander.c       |    4 ++++
+ drivers/scsi/libsas/sas_host_smp.c       |    3 ---
+ drivers/scsi/mpt2sas/mpt2sas_transport.c |    4 ++--
+ 8 files changed, 13 insertions(+), 11 deletions(-)
 
+Index: block/block/blk-core.c
+===================================================================
+--- block.orig/block/blk-core.c
++++ block/block/blk-core.c
+@@ -2198,6 +2198,7 @@ void blk_rq_bio_prep(struct request_queu
+ 		rq->buffer = bio_data(bio);
+ 	}
+ 	rq->__data_len = bio->bi_size;
++	rq->resid_len = bio->bi_size;
+ 	rq->bio = rq->biotail = bio;
+ 
+ 	if (bio->bi_bdev)
+Index: block/drivers/ide/ide-cd.c
+===================================================================
+--- block.orig/drivers/ide/ide-cd.c
++++ block/drivers/ide/ide-cd.c
+@@ -699,6 +699,7 @@ static ide_startstop_t cdrom_newpc_intr(
+ 
+ out_end:
+ 	if (blk_pc_request(rq) && rc == 0) {
++		rq->resid_len = 0;
+ 		blk_end_request_all(rq, 0);
+ 		hwif->rq = NULL;
+ 	} else {
+@@ -718,8 +719,7 @@ out_end:
+ 
+ 		/* make sure it's fully ended */
+ 		if (blk_fs_request(rq) == 0) {
+-			rq->resid_len = blk_rq_bytes(rq) -
+-				(cmd->nbytes - cmd->nleft);
++			rq->resid_len -= cmd->nbytes - cmd->nleft;
+ 			if (uptodate == 0 && (cmd->tf_flags & IDE_TFLAG_WRITE))
+ 				rq->resid_len += cmd->last_xfer_len;
+ 		}
+Index: block/drivers/ide/ide-tape.c
+===================================================================
+--- block.orig/drivers/ide/ide-tape.c
++++ block/drivers/ide/ide-tape.c
+@@ -380,7 +380,7 @@ static int ide_tape_callback(ide_drive_t
+ 		}
+ 
+ 		tape->first_frame += blocks;
+-		rq->resid_len = blk_rq_bytes(rq) - blocks * tape->blk_size;
++		rq->resid_len -= blocks * tape->blk_size;
+ 
+ 		if (pc->error) {
+ 			uptodate = 0;
+Index: block/drivers/message/fusion/mptsas.c
+===================================================================
+--- block.orig/drivers/message/fusion/mptsas.c
++++ block/drivers/message/fusion/mptsas.c
+@@ -1357,7 +1357,8 @@ static int mptsas_smp_handler(struct Scs
+ 		smprep = (SmpPassthroughReply_t *)ioc->sas_mgmt.reply;
+ 		memcpy(req->sense, smprep, sizeof(*smprep));
+ 		req->sense_len = sizeof(*smprep);
+-		rsp->resid_len = blk_rq_bytes(rsp) - smprep->ResponseDataLength;
++		req->resid_len = 0;
++		rsp->resid_len -= smprep->ResponseDataLength;
+ 	} else {
+ 		printk(MYIOC_s_ERR_FMT "%s: smp passthru reply failed to be returned\n",
+ 		    ioc->name, __func__);
+Index: block/drivers/scsi/libsas/sas_expander.c
+===================================================================
+--- block.orig/drivers/scsi/libsas/sas_expander.c
++++ block/drivers/scsi/libsas/sas_expander.c
+@@ -1937,7 +1937,11 @@ int sas_smp_handler(struct Scsi_Host *sh
+ 	if (ret > 0) {
+ 		/* positive number is the untransferred residual */
+ 		rsp->resid_len = ret;
++		req->resid_len = 0;
+ 		ret = 0;
++	} else if (ret == 0) {
++		rsp->resid_len = 0;
++		req->resid_len = 0;
+ 	}
+ 
+ 	return ret;
+Index: block/drivers/scsi/libsas/sas_host_smp.c
+===================================================================
+--- block.orig/drivers/scsi/libsas/sas_host_smp.c
++++ block/drivers/scsi/libsas/sas_host_smp.c
+@@ -176,9 +176,6 @@ int sas_smp_host_handler(struct Scsi_Hos
+ 	resp_data[1] = req_data[1];
+ 	resp_data[2] = SMP_RESP_FUNC_UNK;
+ 
+-	req->resid_len = blk_rq_bytes(req);
+-	rsp->resid_len = blk_rq_bytes(rsp);
+-
+ 	switch (req_data[1]) {
+ 	case SMP_REPORT_GENERAL:
+ 		req->resid_len -= 8;
+Index: block/drivers/scsi/mpt2sas/mpt2sas_transport.c
+===================================================================
+--- block.orig/drivers/scsi/mpt2sas/mpt2sas_transport.c
++++ block/drivers/scsi/mpt2sas/mpt2sas_transport.c
+@@ -1170,8 +1170,8 @@ transport_smp_handler(struct Scsi_Host *
+ 
+ 		memcpy(req->sense, mpi_reply, sizeof(*mpi_reply));
+ 		req->sense_len = sizeof(*mpi_reply);
+-		rsp->resid_len = blk_rq_bytes(rsp) -
+-				 mpi_reply->ResponseDataLength;
++		req->resid_len = 0;
++		rsp->resid_len -= mpi_reply->ResponseDataLength;
+ 	} else {
+ 		dtransportprintk(ioc, printk(MPT2SAS_DEBUG_FMT
+ 		    "%s - no reply\n", ioc->name, __func__));
 Index: block/drivers/block/ub.c
 ===================================================================
 --- block.orig/drivers/block/ub.c
 +++ block/drivers/block/ub.c
-@@ -360,8 +360,7 @@ static void ub_cmd_build_block(struct ub
- static void ub_cmd_build_packet(struct ub_dev *sc, struct ub_lun *lun,
-     struct ub_scsi_cmd *cmd, struct ub_request *urq);
- static void ub_rw_cmd_done(struct ub_dev *sc, struct ub_scsi_cmd *cmd);
--static void ub_end_rq(struct request *rq, unsigned int status,
--    unsigned int cmd_len);
-+static void ub_end_rq(struct request *rq, unsigned int status);
- static int ub_rw_cmd_retry(struct ub_dev *sc, struct ub_lun *lun,
-     struct ub_request *urq, struct ub_scsi_cmd *cmd);
- static int ub_submit_scsi(struct ub_dev *sc, struct ub_scsi_cmd *cmd);
-@@ -644,13 +643,13 @@ static int ub_request_fn_1(struct ub_lun
+@@ -781,8 +781,7 @@ static void ub_rw_cmd_done(struct ub_dev
  
- 	if (atomic_read(&sc->poison)) {
- 		blk_start_request(rq);
--		ub_end_rq(rq, DID_NO_CONNECT << 16, blk_rq_bytes(rq));
-+		ub_end_rq(rq, DID_NO_CONNECT << 16);
- 		return 0;
- 	}
- 
- 	if (lun->changed && !blk_pc_request(rq)) {
- 		blk_start_request(rq);
--		ub_end_rq(rq, SAM_STAT_CHECK_CONDITION, blk_rq_bytes(rq));
-+		ub_end_rq(rq, SAM_STAT_CHECK_CONDITION);
- 		return 0;
- 	}
- 
-@@ -702,7 +701,7 @@ static int ub_request_fn_1(struct ub_lun
- 
- drop:
- 	ub_put_cmd(lun, cmd);
--	ub_end_rq(rq, DID_ERROR << 16, blk_rq_bytes(rq));
-+	ub_end_rq(rq, DID_ERROR << 16);
- 	return 0;
- }
- 
-@@ -777,7 +776,6 @@ static void ub_rw_cmd_done(struct ub_dev
- 	struct ub_request *urq = cmd->back;
- 	struct request *rq;
- 	unsigned int scsi_status;
--	unsigned int cmd_len;
- 
- 	rq = urq->rq;
- 
-@@ -816,17 +814,14 @@ static void ub_rw_cmd_done(struct ub_dev
- 
- 	urq->rq = NULL;
- 
--	cmd_len = cmd->len;
- 	ub_put_cmd(lun, cmd);
--	ub_end_rq(rq, scsi_status, cmd_len);
-+	ub_end_rq(rq, scsi_status);
- 	blk_start_queue(lun->disk->queue);
- }
- 
--static void ub_end_rq(struct request *rq, unsigned int scsi_status,
--    unsigned int cmd_len)
-+static void ub_end_rq(struct request *rq, unsigned int scsi_status)
- {
- 	int error;
--	long rqlen;
- 
- 	if (scsi_status == 0) {
- 		error = 0;
-@@ -834,12 +829,7 @@ static void ub_end_rq(struct request *rq
- 		error = -EIO;
- 		rq->errors = scsi_status;
- 	}
--	rqlen = blk_rq_bytes(rq);    /* Oddly enough, this is the residue. */
--	if (__blk_end_request(rq, error, cmd_len)) {
--		printk(KERN_WARNING DRV_NAME
--		    ": __blk_end_request blew, %s-cmd total %u rqlen %ld\n",
--		    blk_pc_request(rq)? "pc": "fs", cmd_len, rqlen);
--	}
-+	__blk_end_request_all(rq, error);
- }
- 
- static int ub_rw_cmd_retry(struct ub_dev *sc, struct ub_lun *lun,
+ 	if (cmd->error == 0) {
+ 		if (blk_pc_request(rq)) {
+-			if (cmd->act_len < blk_rq_bytes(rq))
+-				rq->resid_len = blk_rq_bytes(rq) - cmd->act_len;
++			rq->resid_len -= min(cmd->act_len, rq->resid_len);
+ 			scsi_status = 0;
+ 		} else {
+ 			if (cmd->act_len != cmd->len) {
