@@ -1,14 +1,14 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 1/9] zfcp: Use correct req_id for traces
-Date: Fri, 15 May 2009 13:18:14 +0200
-Message-ID: <20090515112221.368308000@de.ibm.com>
+Subject: [patch 4/9] zfcp: Remove unnecessary default case and assignments
+Date: Fri, 15 May 2009 13:18:17 +0200
+Message-ID: <20090515112221.762099000@de.ibm.com>
 References: <20090515111813.314177000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate7.de.ibm.com ([195.212.29.156]:38843 "EHLO
-	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754532AbZEOLWW (ORCPT
+Received: from mtagate8.de.ibm.com ([195.212.29.157]:62794 "EHLO
+	mtagate8.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754829AbZEOLWW (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2009 07:22:22 -0400
-Content-Disposition: inline; filename=700-zfcp-trace-req_id.diff
+Content-Disposition: inline; filename=703-zfcp-dead-code.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
@@ -16,61 +16,62 @@ Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.c
 
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-The zfcp traces used the fsf_req address in place of the req_id.
-Change this to save the correct req_id.
+enum dma_data_direction only has the 4 values DMA_BIDIRECTIONAL,
+DMA_TO_DEVICE, DMA_FROM_DEVICE and DMA_NONE. No need to have the
+default case. While changing this, setup sbtype in one place to make
+sparse happy.
+
+The default value of retval is already -EIO, so remove the
+additional assignment for these two cases.
 
 Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 ---
 
- drivers/s390/scsi/zfcp_dbf.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/s390/scsi/zfcp_fsf.c |   10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
---- a/drivers/s390/scsi/zfcp_dbf.c	2009-05-15 12:56:02.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_dbf.c	2009-05-15 12:56:08.000000000 +0200
-@@ -163,7 +163,7 @@ void zfcp_hba_dbf_event_fsf_response(str
+--- a/drivers/s390/scsi/zfcp_fsf.c	2009-05-15 12:56:02.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_fsf.c	2009-05-15 12:56:15.000000000 +0200
+@@ -2314,7 +2314,7 @@ int zfcp_fsf_send_fcp_command_task(struc
+ {
+ 	struct zfcp_fsf_req *req;
+ 	struct fcp_cmnd_iu *fcp_cmnd_iu;
+-	unsigned int sbtype;
++	unsigned int sbtype = SBAL_FLAGS0_TYPE_READ;
+ 	int real_bytes, retval = -EIO;
+ 	struct zfcp_adapter *adapter = unit->port->adapter;
+ 
+@@ -2356,11 +2356,9 @@ int zfcp_fsf_send_fcp_command_task(struc
+ 	switch (scsi_cmnd->sc_data_direction) {
+ 	case DMA_NONE:
+ 		req->qtcb->bottom.io.data_direction = FSF_DATADIR_CMND;
+-		sbtype = SBAL_FLAGS0_TYPE_READ;
+ 		break;
+ 	case DMA_FROM_DEVICE:
+ 		req->qtcb->bottom.io.data_direction = FSF_DATADIR_READ;
+-		sbtype = SBAL_FLAGS0_TYPE_READ;
+ 		fcp_cmnd_iu->rddata = 1;
+ 		break;
+ 	case DMA_TO_DEVICE:
+@@ -2369,8 +2367,6 @@ int zfcp_fsf_send_fcp_command_task(struc
+ 		fcp_cmnd_iu->wddata = 1;
+ 		break;
+ 	case DMA_BIDIRECTIONAL:
+-	default:
+-		retval = -EIO;
+ 		goto failed_scsi_cmnd;
  	}
  
- 	response->fsf_command = fsf_req->fsf_command;
--	response->fsf_reqid = (unsigned long)fsf_req;
-+	response->fsf_reqid = fsf_req->req_id;
- 	response->fsf_seqno = fsf_req->seq_no;
- 	response->fsf_issued = fsf_req->issued;
- 	response->fsf_prot_status = qtcb->prefix.prot_status;
-@@ -737,7 +737,7 @@ void zfcp_san_dbf_event_ct_request(struc
- 	spin_lock_irqsave(&adapter->san_dbf_lock, flags);
- 	memset(r, 0, sizeof(*r));
- 	strncpy(r->tag, "octc", ZFCP_DBF_TAG_SIZE);
--	r->fsf_reqid = (unsigned long)fsf_req;
-+	r->fsf_reqid = fsf_req->req_id;
- 	r->fsf_seqno = fsf_req->seq_no;
- 	r->s_id = fc_host_port_id(adapter->scsi_host);
- 	r->d_id = wka_port->d_id;
-@@ -773,7 +773,7 @@ void zfcp_san_dbf_event_ct_response(stru
- 	spin_lock_irqsave(&adapter->san_dbf_lock, flags);
- 	memset(r, 0, sizeof(*r));
- 	strncpy(r->tag, "rctc", ZFCP_DBF_TAG_SIZE);
--	r->fsf_reqid = (unsigned long)fsf_req;
-+	r->fsf_reqid = fsf_req->req_id;
- 	r->fsf_seqno = fsf_req->seq_no;
- 	r->s_id = wka_port->d_id;
- 	r->d_id = fc_host_port_id(adapter->scsi_host);
-@@ -803,7 +803,7 @@ static void zfcp_san_dbf_event_els(const
- 	spin_lock_irqsave(&adapter->san_dbf_lock, flags);
- 	memset(rec, 0, sizeof(*rec));
- 	strncpy(rec->tag, tag, ZFCP_DBF_TAG_SIZE);
--	rec->fsf_reqid = (unsigned long)fsf_req;
-+	rec->fsf_reqid = fsf_req->req_id;
- 	rec->fsf_seqno = fsf_req->seq_no;
- 	rec->s_id = s_id;
- 	rec->d_id = d_id;
-@@ -965,7 +965,7 @@ static void zfcp_scsi_dbf_event(const ch
- 						      ZFCP_DBF_SCSI_FCP_SNS_INFO);
- 				}
- 
--				rec->fsf_reqid = (unsigned long)fsf_req;
-+				rec->fsf_reqid = fsf_req->req_id;
- 				rec->fsf_seqno = fsf_req->seq_no;
- 				rec->fsf_issued = fsf_req->issued;
- 			}
+@@ -2394,9 +2390,7 @@ int zfcp_fsf_send_fcp_command_task(struc
+ 					     scsi_sglist(scsi_cmnd),
+ 					     FSF_MAX_SBALS_PER_REQ);
+ 	if (unlikely(real_bytes < 0)) {
+-		if (req->sbal_number < FSF_MAX_SBALS_PER_REQ)
+-			retval = -EIO;
+-		else {
++		if (req->sbal_number >= FSF_MAX_SBALS_PER_REQ) {
+ 			dev_err(&adapter->ccw_device->dev,
+ 				"Oversize data package, unit 0x%016Lx "
+ 				"on port 0x%016Lx closed\n",
 
