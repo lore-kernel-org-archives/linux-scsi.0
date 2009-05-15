@@ -1,199 +1,76 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] block: remove blk_end_bidi_request and
- __blk_end_bidi_request
-Date: Fri, 15 May 2009 16:35:19 +0900
-Message-ID: <20090515163416M.fujita.tomonori@lab.ntt.co.jp>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: [patch 1/9] zfcp: Use correct req_id for traces
+Date: Fri, 15 May 2009 13:18:14 +0200
+Message-ID: <20090515112221.368308000@de.ibm.com>
+References: <20090515111813.314177000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:38168 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754445AbZEOHg2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 May 2009 03:36:28 -0400
+Received: from mtagate7.de.ibm.com ([195.212.29.156]:38843 "EHLO
+	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754532AbZEOLWW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2009 07:22:22 -0400
+Content-Disposition: inline; filename=700-zfcp-trace-req_id.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, tj@kernel.org, James.Bottomley@HansenPartnership.com, bharrosh@panasas.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Christof Schmitt <christof.schmitt@de.ibm.com>
 
-The block core does:
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-- blk_end_request and blk_end_request_all calls blk_end_bidi_request.
-- __blk_end_request and __blk_end_request_all calls __blk_end_bidi_request.
+The zfcp traces used the fsf_req address in place of the req_id.
+Change this to save the correct req_id.
 
-The bidi name is confusing since all the callers are generic
-completion functions.
-
-A bidi request must be completed as a whole so let's reorganize the
-functions a bit:
-
-- blk_end_request_all calls blk_end_request, __blk_end_request_all
-calls __blk_end_request
-
-- blk_end_request and __blk_end_request complete a bidi request as a
-whole because we always have to complete a bidi request as a whole.
-
-
-It might be better to change blk_update_bidi_request too since we
-can't update a bidi request.
-
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
+Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 ---
- block/blk-core.c |   94 +++++++++++++++---------------------------------------
- 1 files changed, 26 insertions(+), 68 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index a2d97de..2c6d0ec 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1972,7 +1972,6 @@ static bool blk_update_bidi_request(struct request *rq, int error,
- 	if (blk_update_request(rq, error, nr_bytes))
- 		return true;
+ drivers/s390/scsi/zfcp_dbf.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+--- a/drivers/s390/scsi/zfcp_dbf.c	2009-05-15 12:56:02.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_dbf.c	2009-05-15 12:56:08.000000000 +0200
+@@ -163,7 +163,7 @@ void zfcp_hba_dbf_event_fsf_response(str
+ 	}
  
--	/* Bidi request must be completed as a whole */
- 	if (unlikely(blk_bidi_rq(rq)) &&
- 	    blk_update_request(rq->next_rq, error, bidi_bytes))
- 		return true;
-@@ -2010,27 +2009,28 @@ static void blk_finish_request(struct request *req, int error)
- }
+ 	response->fsf_command = fsf_req->fsf_command;
+-	response->fsf_reqid = (unsigned long)fsf_req;
++	response->fsf_reqid = fsf_req->req_id;
+ 	response->fsf_seqno = fsf_req->seq_no;
+ 	response->fsf_issued = fsf_req->issued;
+ 	response->fsf_prot_status = qtcb->prefix.prot_status;
+@@ -737,7 +737,7 @@ void zfcp_san_dbf_event_ct_request(struc
+ 	spin_lock_irqsave(&adapter->san_dbf_lock, flags);
+ 	memset(r, 0, sizeof(*r));
+ 	strncpy(r->tag, "octc", ZFCP_DBF_TAG_SIZE);
+-	r->fsf_reqid = (unsigned long)fsf_req;
++	r->fsf_reqid = fsf_req->req_id;
+ 	r->fsf_seqno = fsf_req->seq_no;
+ 	r->s_id = fc_host_port_id(adapter->scsi_host);
+ 	r->d_id = wka_port->d_id;
+@@ -773,7 +773,7 @@ void zfcp_san_dbf_event_ct_response(stru
+ 	spin_lock_irqsave(&adapter->san_dbf_lock, flags);
+ 	memset(r, 0, sizeof(*r));
+ 	strncpy(r->tag, "rctc", ZFCP_DBF_TAG_SIZE);
+-	r->fsf_reqid = (unsigned long)fsf_req;
++	r->fsf_reqid = fsf_req->req_id;
+ 	r->fsf_seqno = fsf_req->seq_no;
+ 	r->s_id = wka_port->d_id;
+ 	r->d_id = fc_host_port_id(adapter->scsi_host);
+@@ -803,7 +803,7 @@ static void zfcp_san_dbf_event_els(const
+ 	spin_lock_irqsave(&adapter->san_dbf_lock, flags);
+ 	memset(rec, 0, sizeof(*rec));
+ 	strncpy(rec->tag, tag, ZFCP_DBF_TAG_SIZE);
+-	rec->fsf_reqid = (unsigned long)fsf_req;
++	rec->fsf_reqid = fsf_req->req_id;
+ 	rec->fsf_seqno = fsf_req->seq_no;
+ 	rec->s_id = s_id;
+ 	rec->d_id = d_id;
+@@ -965,7 +965,7 @@ static void zfcp_scsi_dbf_event(const ch
+ 						      ZFCP_DBF_SCSI_FCP_SNS_INFO);
+ 				}
  
- /**
-- * blk_end_bidi_request - Complete a bidi request
-- * @rq:         the request to complete
-- * @error:      %0 for success, < %0 for error
-- * @nr_bytes:   number of bytes to complete @rq
-- * @bidi_bytes: number of bytes to complete @rq->next_rq
-+ * blk_end_request - Helper function for drivers to complete the request.
-+ * @rq:       the request being processed
-+ * @error:    %0 for success, < %0 for error
-+ * @nr_bytes: number of bytes to complete
-  *
-  * Description:
-- *     Ends I/O on a number of bytes attached to @rq and @rq->next_rq.
-- *     Drivers that supports bidi can safely call this member for any
-- *     type of request, bidi or uni.  In the later case @bidi_bytes is
-- *     just ignored.
-+ *     Ends I/O on a number of bytes attached to @rq.
-+ *     If @rq has leftover, sets it up for the next range of segments.
-  *
-  * Return:
-  *     %false - we are done with this request
-  *     %true  - still buffers pending for this request
-  **/
--static bool blk_end_bidi_request(struct request *rq, int error,
--				 unsigned int nr_bytes, unsigned int bidi_bytes)
-+bool blk_end_request(struct request *rq, int error, unsigned int nr_bytes)
- {
- 	struct request_queue *q = rq->q;
- 	unsigned long flags;
-+	unsigned int bidi_bytes = 0;
-+	bool pending;
-+
-+	if (unlikely(blk_bidi_rq(rq)))
-+		bidi_bytes = blk_rq_bytes(rq->next_rq);
- 
- 	if (blk_update_bidi_request(rq, error, nr_bytes, bidi_bytes))
- 		return true;
-@@ -2041,51 +2041,6 @@ static bool blk_end_bidi_request(struct request *rq, int error,
- 
- 	return false;
- }
--
--/**
-- * __blk_end_bidi_request - Complete a bidi request with queue lock held
-- * @rq:         the request to complete
-- * @error:      %0 for success, < %0 for error
-- * @nr_bytes:   number of bytes to complete @rq
-- * @bidi_bytes: number of bytes to complete @rq->next_rq
-- *
-- * Description:
-- *     Identical to blk_end_bidi_request() except that queue lock is
-- *     assumed to be locked on entry and remains so on return.
-- *
-- * Return:
-- *     %false - we are done with this request
-- *     %true  - still buffers pending for this request
-- **/
--static bool __blk_end_bidi_request(struct request *rq, int error,
--				   unsigned int nr_bytes, unsigned int bidi_bytes)
--{
--	if (blk_update_bidi_request(rq, error, nr_bytes, bidi_bytes))
--		return true;
--
--	blk_finish_request(rq, error);
--
--	return false;
--}
--
--/**
-- * blk_end_request - Helper function for drivers to complete the request.
-- * @rq:       the request being processed
-- * @error:    %0 for success, < %0 for error
-- * @nr_bytes: number of bytes to complete
-- *
-- * Description:
-- *     Ends I/O on a number of bytes attached to @rq.
-- *     If @rq has leftover, sets it up for the next range of segments.
-- *
-- * Return:
-- *     %false - we are done with this request
-- *     %true  - still buffers pending for this request
-- **/
--bool blk_end_request(struct request *rq, int error, unsigned int nr_bytes)
--{
--	return blk_end_bidi_request(rq, error, nr_bytes, 0);
--}
- EXPORT_SYMBOL_GPL(blk_end_request);
- 
- /**
-@@ -2099,12 +2054,8 @@ EXPORT_SYMBOL_GPL(blk_end_request);
- void blk_end_request_all(struct request *rq, int error)
- {
- 	bool pending;
--	unsigned int bidi_bytes = 0;
--
--	if (unlikely(blk_bidi_rq(rq)))
--		bidi_bytes = blk_rq_bytes(rq->next_rq);
- 
--	pending = blk_end_bidi_request(rq, error, blk_rq_bytes(rq), bidi_bytes);
-+	pending = blk_end_request(rq, error, blk_rq_bytes(rq));
- 	BUG_ON(pending);
- }
- EXPORT_SYMBOL_GPL(blk_end_request_all);
-@@ -2142,7 +2093,18 @@ EXPORT_SYMBOL_GPL(blk_end_request_cur);
-  **/
- bool __blk_end_request(struct request *rq, int error, unsigned int nr_bytes)
- {
--	return __blk_end_bidi_request(rq, error, nr_bytes, 0);
-+	bool pending;
-+	unsigned int bidi_bytes = 0;
-+
-+	if (unlikely(blk_bidi_rq(rq)))
-+		bidi_bytes = blk_rq_bytes(rq->next_rq);
-+
-+	if (blk_update_bidi_request(rq, error, nr_bytes, bidi_bytes))
-+		return true;
-+
-+	blk_finish_request(rq, error);
-+
-+	return false;
- }
- EXPORT_SYMBOL_GPL(__blk_end_request);
- 
-@@ -2157,12 +2119,8 @@ EXPORT_SYMBOL_GPL(__blk_end_request);
- void __blk_end_request_all(struct request *rq, int error)
- {
- 	bool pending;
--	unsigned int bidi_bytes = 0;
--
--	if (unlikely(blk_bidi_rq(rq)))
--		bidi_bytes = blk_rq_bytes(rq->next_rq);
- 
--	pending = __blk_end_bidi_request(rq, error, blk_rq_bytes(rq), bidi_bytes);
-+	pending = __blk_end_request(rq, error, blk_rq_bytes(rq));
- 	BUG_ON(pending);
- }
- EXPORT_SYMBOL_GPL(__blk_end_request_all);
--- 
-1.6.0.6
+-				rec->fsf_reqid = (unsigned long)fsf_req;
++				rec->fsf_reqid = fsf_req->req_id;
+ 				rec->fsf_seqno = fsf_req->seq_no;
+ 				rec->fsf_issued = fsf_req->issued;
+ 			}
 
