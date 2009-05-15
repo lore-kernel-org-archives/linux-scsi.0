@@ -1,54 +1,53 @@
-From: Joe Perches <joe@perches.com>
-Subject: [PATCH 09/11] drivers/scsi: Convert #ifdef DEBUG printk(KERN_DEBUG to pr_debug(
-Date: Fri, 15 May 2009 10:59:43 -0700
-Message-ID: <d6d5dc09d259cc1da0fef2b1e9c6b7588cccf0b4.1242407227.git.joe@perches.com>
-References: <cover.1242407227.git.joe@perches.com>
+From: "Mukker, Atul" <Atul.Mukker@lsi.com>
+Subject: RE: [RFQ] New driver architecture questions
+Date: Fri, 15 May 2009 12:03:39 -0600
+Message-ID: <6C678488C5CEE74F813A4D1948FD2DC7A96C7848@cosmail02.lsi.com>
+References: <6C678488C5CEE74F813A4D1948FD2DC7A95E6D37@cosmail02.lsi.com>
+ <4A0B858F.3080405@garzik.org>
+ <6C678488C5CEE74F813A4D1948FD2DC7A95E6D38@cosmail02.lsi.com>
+ <4A0B9B0D.6080006@garzik.org>
+ <b1bc6a000905141758y20aa7852h8b1012e3da6f8c0f@mail.gmail.com>
+ <646765f40905141801k5ae6249p925a4a377652c62e@mail.gmail.com>
+ <4A0CDB27.6090009@garzik.org>
+ <6C678488C5CEE74F813A4D1948FD2DC7A96C7789@cosmail02.lsi.com>
+ <20090515163626.GA15360@parisc-linux.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 136-022.dsl.LABridge.com ([206.117.136.22]:2057 "EHLO
-	mail.perches.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755045AbZEOSAF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2009 14:00:05 -0400
-In-Reply-To: <cover.1242407227.git.joe@perches.com>
-In-Reply-To: <cover.1242407227.git.joe@perches.com>
-References: <cover.1242407227.git.joe@perches.com>
+Received: from exprod7og106.obsmtp.com ([64.18.2.165]:44962 "EHLO
+	exprod7og106.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754669AbZEOSEm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2009 14:04:42 -0400
+In-Reply-To: <20090515163626.GA15360@parisc-linux.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Jeff Garzik <jeff@garzik.org>, Julian Calaby <julian.calaby@gmail.com>, adam radford <aradford@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Austria, Winston" <Winston.Austria@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-From: Joe Perches <joe@perches.com>
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/scsi/aha1542.c |    8 ++------
- 1 files changed, 2 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
-index 8059494..29d5118 100644
---- a/drivers/scsi/aha1542.c
-+++ b/drivers/scsi/aha1542.c
-@@ -509,9 +509,7 @@ static void aha1542_intr_handle(struct Scsi_Host *shost)
- 		if (mbistatus == 3)
- 			continue;	/* Aborted command not found */
- 
--#ifdef DEBUG
--		printk(KERN_DEBUG "...done %d %d\n", mbo, mbi);
--#endif
-+		pr_debug("...done %d %d\n", mbo, mbi);
- 
- 		SCtmp = HOSTDATA(shost)->SCint[mbo];
- 
-@@ -654,9 +652,7 @@ static int aha1542_queuecommand(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *))
- 	HOSTDATA(SCpnt->device->host)->aha1542_last_mbo_used = mbo;
- 	spin_unlock_irqrestore(&aha1542_lock, flags);
- 
--#ifdef DEBUG
--	printk(KERN_DEBUG "Sending command (%d %x)...", mbo, done);
--#endif
-+	pr_debug("Sending command (%d %x)...", mbo, done);
- 
- 	any2scsi(mb[mbo].ccbptr, SCSI_BUF_PA(&ccb[mbo]));	/* This gets trashed for some reason */
- 
--- 
-1.6.3.1.9.g95405b.dirty
+> -----Original Message-----
+> From: Matthew Wilcox [mailto:matthew@wil.cx]
+> Sent: Friday, May 15, 2009 12:36 PM
+> To: Mukker, Atul
+> Cc: Jeff Garzik; Julian Calaby; adam radford; linux-
+> kernel@vger.kernel.org; Austria, Winston; linux-scsi@vger.kernel.org
+> Subject: Re: [RFQ] New driver architecture questions
+> 
+> On Fri, May 15, 2009 at 08:56:25AM -0600, Mukker, Atul wrote:
+> > [Atul] I think we are close, for example, memcpy API in the stack is
+> osi_memcpy(), which translates to memcpy() on Linux and
+> ScsiPortMoveMemory() on windows.
+> 
+> The solution to "We have some people who speak French and other people who
+> speak German" is not to invent Esperanto ;-)
+[Atul] We really wish they could communicate in English :-), since that's not an option, we agree in principle that using native Linux Kernel APIs wherever possible is probably a good idea.
+> 
+> Using one or the other internally is fine (we don't care what you do),
+> but we want to see memcpy().  By the way, the documentation I found for
+> ScsiPortMoveMemory() seems to indicate that it's memmove(), not memcpy().
+> Mapping memcpy() to ScsiPortMoveMemory() is fine ... but you can't
+> realiably go the other way.
+[Atul] It's actually memcpy(),http://msdn.microsoft.com/en-us/library/ms805434.aspx
 
