@@ -1,38 +1,54 @@
-From: Pete Zaitcev <zaitcev@redhat.com>
-Subject: Re: [PATCH block#for-2.6.31 1/3] ub: use __blk_end_request_all()
-Date: Fri, 15 May 2009 11:31:14 -0600
-Message-ID: <20090515113114.68ae93ae.zaitcev@redhat.com>
-References: <4A0D86DB.9000203@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 09/11] drivers/scsi: Convert #ifdef DEBUG printk(KERN_DEBUG to pr_debug(
+Date: Fri, 15 May 2009 10:59:43 -0700
+Message-ID: <d6d5dc09d259cc1da0fef2b1e9c6b7588cccf0b4.1242407227.git.joe@perches.com>
+References: <cover.1242407227.git.joe@perches.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:49531 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754985AbZEORlC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 May 2009 13:41:02 -0400
-In-Reply-To: <4A0D86DB.9000203@kernel.org>
+Received: from 136-022.dsl.LABridge.com ([206.117.136.22]:2057 "EHLO
+	mail.perches.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755045AbZEOSAF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2009 14:00:05 -0400
+In-Reply-To: <cover.1242407227.git.joe@perches.com>
+In-Reply-To: <cover.1242407227.git.joe@perches.com>
+References: <cover.1242407227.git.joe@perches.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Borislav Petkov <petkovbb@googlemail.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
 
-On Sat, 16 May 2009 00:14:35 +0900, Tejun Heo <tj@kernel.org> wrote:
+From: Joe Perches <joe@perches.com>
 
-> @@ -834,12 +829,7 @@ static void ub_end_rq(struct request *rq
->  		error = -EIO;
->  		rq->errors = scsi_status;
->  	}
-> -	rqlen = blk_rq_bytes(rq);    /* Oddly enough, this is the residue. */
-> -	if (__blk_end_request(rq, error, cmd_len)) {
-> -		printk(KERN_WARNING DRV_NAME
-> -		    ": __blk_end_request blew, %s-cmd total %u rqlen %ld\n",
-> -		    blk_pc_request(rq)? "pc": "fs", cmd_len, rqlen);
-> -	}
-> +	__blk_end_request_all(rq, error);
->  }
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/scsi/aha1542.c |    8 ++------
+ 1 files changed, 2 insertions(+), 6 deletions(-)
 
-I applaud this. We needed blk_end_this_mudafakin_request() for a long time.
-Why two underscores?
+diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
+index 8059494..29d5118 100644
+--- a/drivers/scsi/aha1542.c
++++ b/drivers/scsi/aha1542.c
+@@ -509,9 +509,7 @@ static void aha1542_intr_handle(struct Scsi_Host *shost)
+ 		if (mbistatus == 3)
+ 			continue;	/* Aborted command not found */
+ 
+-#ifdef DEBUG
+-		printk(KERN_DEBUG "...done %d %d\n", mbo, mbi);
+-#endif
++		pr_debug("...done %d %d\n", mbo, mbi);
+ 
+ 		SCtmp = HOSTDATA(shost)->SCint[mbo];
+ 
+@@ -654,9 +652,7 @@ static int aha1542_queuecommand(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *))
+ 	HOSTDATA(SCpnt->device->host)->aha1542_last_mbo_used = mbo;
+ 	spin_unlock_irqrestore(&aha1542_lock, flags);
+ 
+-#ifdef DEBUG
+-	printk(KERN_DEBUG "Sending command (%d %x)...", mbo, done);
+-#endif
++	pr_debug("Sending command (%d %x)...", mbo, done);
+ 
+ 	any2scsi(mb[mbo].ccbptr, SCSI_BUF_PA(&ccb[mbo]));	/* This gets trashed for some reason */
+ 
+-- 
+1.6.3.1.9.g95405b.dirty
 
--- Pete
