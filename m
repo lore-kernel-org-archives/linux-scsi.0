@@ -1,62 +1,96 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: I/O Topology v3
-Date: Fri, 15 May 2009 00:40:22 -0400
-Message-ID: <1242362435-11953-1-git-send-email-martin.petersen@oracle.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet11.oracle.com ([148.87.113.123]:43369 "EHLO
-	rgminet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752006AbZEOEmE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2009 00:42:04 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH 04/13] block: Expose stacked device queues in sysfs
+Date: Fri, 15 May 2009 00:40:26 -0400
+Message-ID: <1242362435-11953-5-git-send-email-martin.petersen@oracle.com>
+References: <1242362435-11953-1-git-send-email-martin.petersen@oracle.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1242362435-11953-1-git-send-email-martin.petersen@oracle.com>
+Sender: linux-ide-owner@vger.kernel.org
 To: rwheeler@redhat.com, snitzer@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+List-Id: linux-scsi@vger.kernel.org
 
+From: Martin K. Petersen <martin.petersen@oracle.com>
 
-Third take of the I/O topology patches.  This time against Jens' 2.6.31
-tree.
+Currently stacking devices do not have a queue directory in sysfs.
+However, many of the I/O characteristics like sector size, maximum
+request size, etc. are queue properties.
 
-Changes:
+This patch enables the queue directory for MD/DM devices.  The elevator
+code has been modified to deal with queues that do not have an I/O
+scheduler.
 
- - Remove the notion of hardsect_size as it about to become a confusing
-   anachronism.  Use logical_block_size to refer to the block size used
-   when talking to the device via ATA/SCSI.
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+---
+ block/blk-sysfs.c |    6 +++---
+ block/elevator.c  |   13 ++++++++++++-
+ 2 files changed, 15 insertions(+), 4 deletions(-)
 
- - Use the term physical_block_size to refer to the device physical
-   sector size.
-
-   (Logical and physical are the terms used in the T10/T13 standards).
-
- - Move queue limits to an embedded struct so DM can get rid of its
-   internal I/O restriction housekeeping and use the same stacking
-   function as MD.
-
- - Switch MD to new stacking API.  Once MD has been updated, the old
-   stacking function can be removed.
-
-Block layer topology enablement:
-
-        0001-block-Do-away-with-the-notion-of-hardsect_size.patch
-        0002-block-Use-accessor-functions-for-queue-limits.patch
-        0003-block-Move-queue-limits-to-an-embedded-struct.patch
-        0004-block-Expose-stacked-device-queues-in-sysfs.patch
-        0005-block-Export-I-O-topology-for-block-devices-and-par.patch
-
-Post merge:
-
-        0006-MD-Use-new-topology-calls-to-indicate-alignment-and.patch
-        0007-block-Deprecate-blk_queue_stack_limits.patch
-        0008-sd-Physical-block-size-and-alignment-support.patch
-        0009-sd-Detect-non-rotational-devices.patch
-        0010-sd-Block-limits-VPD-support.patch
-
-Independent:
-
-        0011-scsi_debug-Add-support-for-physical-block-exponent.patch
-        0012-libata-Report-disk-alignment-and-physical-block-siz.patch
-        0013-libata-Media-rotation-rate-and-form-factor-heuristi.patch
-
---
-Martin K. Petersen      Oracle Linux Engineering
-
-
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index 142a4ac..3ccdadb 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -395,9 +395,6 @@ int blk_register_queue(struct gendisk *disk)
+ 	if (WARN_ON(!q))
+ 		return -ENXIO;
+ 
+-	if (!q->request_fn)
+-		return 0;
+-
+ 	ret = kobject_add(&q->kobj, kobject_get(&disk_to_dev(disk)->kobj),
+ 			  "%s", "queue");
+ 	if (ret < 0)
+@@ -405,6 +402,9 @@ int blk_register_queue(struct gendisk *disk)
+ 
+ 	kobject_uevent(&q->kobj, KOBJ_ADD);
+ 
++	if (!q->request_fn)
++		return 0;
++
+ 	ret = elv_register_queue(q);
+ 	if (ret) {
+ 		kobject_uevent(&q->kobj, KOBJ_REMOVE);
+diff --git a/block/elevator.c b/block/elevator.c
+index 9189200..143fb6a 100644
+--- a/block/elevator.c
++++ b/block/elevator.c
+@@ -575,6 +575,9 @@ void elv_drain_elevator(struct request_queue *q)
+  */
+ void elv_quiesce_start(struct request_queue *q)
+ {
++	if (!q->elevator)
++		return;
++
+ 	queue_flag_set(QUEUE_FLAG_ELVSWITCH, q);
+ 
+ 	/*
+@@ -1050,6 +1053,9 @@ ssize_t elv_iosched_store(struct request_queue *q, const char *name,
+ 	char elevator_name[ELV_NAME_MAX];
+ 	struct elevator_type *e;
+ 
++	if (!q->elevator)
++		return count;
++
+ 	strlcpy(elevator_name, name, sizeof(elevator_name));
+ 	strstrip(elevator_name);
+ 
+@@ -1073,10 +1079,15 @@ ssize_t elv_iosched_store(struct request_queue *q, const char *name,
+ ssize_t elv_iosched_show(struct request_queue *q, char *name)
+ {
+ 	struct elevator_queue *e = q->elevator;
+-	struct elevator_type *elv = e->elevator_type;
++	struct elevator_type *elv;
+ 	struct elevator_type *__e;
+ 	int len = 0;
+ 
++	if (!q->elevator)
++		return sprintf(name, "none\n");
++
++	elv = e->elevator_type;
++
+ 	spin_lock(&elv_list_lock);
+ 	list_for_each_entry(__e, &elv_list, list) {
+ 		if (!strcmp(elv->elevator_name, __e->elevator_name))
+-- 
+1.6.0.6
 
