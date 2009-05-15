@@ -1,7 +1,7 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 08/13] sd: Physical block size and alignment support
-Date: Fri, 15 May 2009 00:40:30 -0400
-Message-ID: <1242362435-11953-9-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 07/13] block: Deprecate blk_queue_stack_limits
+Date: Fri, 15 May 2009 00:40:29 -0400
+Message-ID: <1242362435-11953-8-git-send-email-martin.petersen@oracle.com>
 References: <1242362435-11953-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1242362435-11953-1-git-send-email-martin.petersen@oracle.com>
@@ -12,94 +12,78 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Martin K. Petersen <martin.petersen@oracle.com>
 
-Extract physical block size and lowest aligned LBA from READ
-CAPACITY(16) response and adjust queue parameters.
-
-Report physical block size and alignment when applicable.
+blk_queue_stack_limits() has been replaced by blk_stack_limits() and
+disk_stack_limits() and can be removed.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/scsi/sd.c |   23 +++++++++++++++++++++--
- drivers/scsi/sd.h |    1 +
- 2 files changed, 22 insertions(+), 2 deletions(-)
+ block/blk-settings.c   |   40 ----------------------------------------
+ include/linux/blkdev.h |    1 -
+ 2 files changed, 0 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index c3afcae..86a8b12 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1306,6 +1306,7 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 	int sense_valid = 0;
- 	int the_result;
- 	int retries = 3;
-+	unsigned int alignment;
- 	unsigned long long lba;
- 	unsigned sector_size;
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index aea6762..001ab8d 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -402,46 +402,6 @@ EXPORT_SYMBOL(blk_queue_io_opt);
+ #define min_not_zero(l, r) (l == 0) ? r : ((r == 0) ? l : min(l, r))
  
-@@ -1346,6 +1347,16 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 
- 	sector_size =	(buffer[8] << 24) | (buffer[9] << 16) |
- 			(buffer[10] << 8) | buffer[11];
-+
-+	/* Logical blocks per physical block exponent */
-+	sdkp->hw_sector_size = (1 << (buffer[13] & 0xf)) * sector_size;
-+
-+	/* Lowest aligned logical block */
-+	alignment = ((buffer[14] & 0x3f) << 8 | buffer[15]) * sector_size;
-+	blk_queue_io_alignment(sdp->request_queue, alignment);
-+	if (alignment && sdkp->first_scan)
-+		sd_printk(KERN_NOTICE, sdkp, "%u-byte alignment\n", alignment);
-+
- 	lba =  (((u64)buffer[0] << 56) | ((u64)buffer[1] << 48) |
- 		((u64)buffer[2] << 40) | ((u64)buffer[3] << 32) |
- 		((u64)buffer[4] << 24) | ((u64)buffer[5] << 16) |
-@@ -1402,6 +1413,7 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 
- 	sector_size =	(buffer[4] << 24) | (buffer[5] << 16) |
- 			(buffer[6] << 8) | buffer[7];
-+	sdkp->hw_sector_size = sector_size;
- 	lba =	(buffer[0] << 24) | (buffer[1] << 16) |
- 		(buffer[2] << 8) | buffer[3];
- 
-@@ -1526,11 +1538,17 @@ got_data:
- 		string_get_size(sz, STRING_UNITS_10, cap_str_10,
- 				sizeof(cap_str_10));
- 
--		if (sdkp->first_scan || old_capacity != sdkp->capacity)
-+		if (sdkp->first_scan || old_capacity != sdkp->capacity) {
- 			sd_printk(KERN_NOTICE, sdkp,
--				  "%llu %d-byte hardware sectors: (%s/%s)\n",
-+				  "%llu %d-byte logical blocks: (%s/%s)\n",
- 				  (unsigned long long)sdkp->capacity,
- 				  sector_size, cap_str_10, cap_str_2);
-+
-+			if (sdkp->hw_sector_size != sector_size)
-+				sd_printk(KERN_NOTICE, sdkp,
-+					  "%u-byte physical blocks\n",
-+					  sdkp->hw_sector_size);
-+		}
- 	}
- 
- 	/* Rescale capacity to 512-byte units */
-@@ -1543,6 +1561,7 @@ got_data:
- 	else if (sector_size == 256)
- 		sdkp->capacity >>= 1;
- 
-+	blk_queue_physical_block_size(sdp->request_queue, sdkp->hw_sector_size);
- 	sdkp->device->sector_size = sector_size;
- }
- 
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 708778c..8474b5b 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -45,6 +45,7 @@ struct scsi_disk {
- 	unsigned int	openers;	/* protected by BKL for now, yuck */
- 	sector_t	capacity;	/* size in 512-byte sectors */
- 	u32		index;
-+	unsigned short	hw_sector_size;
- 	u8		media_present;
- 	u8		write_prot;
- 	u8		protection_type;/* Data Integrity Field */
+ /**
+- * blk_queue_stack_limits - inherit underlying queue limits for stacked drivers
+- * @t:	the stacking driver (top)
+- * @b:  the underlying device (bottom)
+- **/
+-void blk_queue_stack_limits(struct request_queue *t, struct request_queue *b)
+-{
+-	/* zero is "infinity" */
+-	t->limits.max_sectors = min_not_zero(queue_max_sectors(t),
+-					     queue_max_sectors(b));
+-
+-	t->limits.max_hw_sectors = min_not_zero(queue_max_hw_sectors(t),
+-						queue_max_hw_sectors(b));
+-
+-	t->limits.seg_boundary_mask = min_not_zero(queue_segment_boundary(t),
+-						   queue_segment_boundary(b));
+-
+-	t->limits.max_phys_segments = min_not_zero(queue_max_phys_segments(t),
+-						   queue_max_phys_segments(b));
+-
+-	t->limits.max_hw_segments = min_not_zero(queue_max_hw_segments(t),
+-						 queue_max_hw_segments(b));
+-
+-	t->limits.max_segment_size = min_not_zero(queue_max_segment_size(t),
+-						  queue_max_segment_size(b));
+-
+-	t->limits.logical_block_size = max(queue_logical_block_size(t),
+-					   queue_logical_block_size(b));
+-
+-	if (!t->queue_lock)
+-		WARN_ON_ONCE(1);
+-	else if (!test_bit(QUEUE_FLAG_CLUSTER, &b->queue_flags)) {
+-		unsigned long flags;
+-		spin_lock_irqsave(t->queue_lock, flags);
+-		queue_flag_clear(QUEUE_FLAG_CLUSTER, t);
+-		spin_unlock_irqrestore(t->queue_lock, flags);
+-	}
+-}
+-EXPORT_SYMBOL(blk_queue_stack_limits);
+-
+-/**
+  * blk_stack_limits - adjust queue_limits for stacked devices
+  * @t:	the stacking driver limits (top)
+  * @bdev:  the underlying queue limits (bottom)
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 55d19dc..df5a8cd 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -923,7 +923,6 @@ extern int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
+ 			    sector_t offset);
+ extern void disk_stack_limits(struct gendisk *disk, struct block_device *bdev,
+ 			      sector_t offset);
+-extern void blk_queue_stack_limits(struct request_queue *t, struct request_queue *b);
+ extern void blk_queue_dma_pad(struct request_queue *, unsigned int);
+ extern void blk_queue_update_dma_pad(struct request_queue *, unsigned int);
+ extern int blk_queue_dma_drain(struct request_queue *q,
 -- 
 1.6.0.6
 
