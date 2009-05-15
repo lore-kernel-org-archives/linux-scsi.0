@@ -1,77 +1,111 @@
 From: Tejun Heo <htejun@gmail.com>
 Subject: Re: [PATCH block#for-2.6.31 2/3] block: set rq->resid_len to blk_rq_bytes()
  on issue
-Date: Sat, 16 May 2009 07:14:44 +0900
-Message-ID: <4A0DE954.4020102@gmail.com>
-References: <4A0D86DB.9000203@kernel.org>	<4A0D87D2.7090806@gmail.com> <20090515112901.84d4dd97.zaitcev@redhat.com>
+Date: Sat, 16 May 2009 07:18:27 +0900
+Message-ID: <4A0DEA33.5050905@gmail.com>
+References: <4A0D86DB.9000203@kernel.org> <4A0D87D2.7090806@gmail.com> <4A0D8C73.50208@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:64615 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754214AbZEOWO5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2009 18:14:57 -0400
-In-Reply-To: <20090515112901.84d4dd97.zaitcev@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4A0D8C73.50208@ru.mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Borislav Petkov <petkovbb@googlemail.com>, Pete Zaitcev <zaitcev@redhat.com>, Eric Moore <Eric.Moore@lsi.com>, "Darrick J. Wong" <djwong@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Pete Zaitcev <zaitcev@redhat.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Borislav Petkov <petkovbb@googlemail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Eric Moore <Eric.Moore@lsi.com>, "Darrick J. Wong" <djwong@us.ibm.com>
 
-Pete Zaitcev wrote:
-> On Sat, 16 May 2009 00:18:42 +0900, Tejun Heo <htejun@gmail.com> wrote:
+Hello,
+
+Sergei Shtylyov wrote:
+>> Index: block/drivers/message/fusion/mptsas.c
+>> ===================================================================
+>> --- block.orig/drivers/message/fusion/mptsas.c
+>> +++ block/drivers/message/fusion/mptsas.c
+>> @@ -1357,7 +1357,8 @@ static int mptsas_smp_handler(struct Scs
+>>          smprep = (SmpPassthroughReply_t *)ioc->sas_mgmt.reply;
+>>          memcpy(req->sense, smprep, sizeof(*smprep));
+>>          req->sense_len = sizeof(*smprep);
+>> -        rsp->resid_len = blk_rq_bytes(rsp) - smprep->ResponseDataLength;
+>> +        req->resid_len = 0;
+>> +        rsp->resid_len -= smprep->ResponseDataLength;
 > 
->> In commit c3a4d78c580de4edc9ef0f7c59812fb02ceb037f, while introducing
->> rq->resid_len, the default value of residue count was changed from
->> full count to zero. []
+>    Is negative resid_len intended here? If so, shouldn't it be simply:
 > 
-> So it's not a residue anymore, right? You should've renamed it to
-> rq->count or something, then. Now we have this:
+>         rsp->resid_len = -smprep->ResponseDataLength;
 
-It still is.  It just is restoring the original behavior.
+>From patch description.
 
->> +++ block/drivers/block/ub.c
->> @@ -781,8 +781,7 @@ static void ub_rw_cmd_done(struct ub_dev
+ This patchset restores the original behavior by setting rq->resid_len
+ to blk_rq_bytes(rq) on issue and restoring explicit clearing in
+ affected drivers.
+
+So, rsp->resid_len equals the initial request length before the
+subtraction and after subtraction it becomes the residue count.  The
+original code was
+
+	req->data_len = 0;
+	rsp->data_len -= smprep->ResponseDataLength;
+
+>> Index: block/drivers/scsi/libsas/sas_expander.c
+>> ===================================================================
+>> --- block.orig/drivers/scsi/libsas/sas_expander.c
+>> +++ block/drivers/scsi/libsas/sas_expander.c
+>> @@ -1937,7 +1937,11 @@ int sas_smp_handler(struct Scsi_Host *sh
+>>      if (ret > 0) {
+>>          /* positive number is the untransferred residual */
+>>          rsp->resid_len = ret;
+>> +        req->resid_len = 0;
+>>          ret = 0;
+>> +    } else if (ret == 0) {
+>> +        rsp->resid_len = 0;
+>> +        req->resid_len = 0;
+
+Heh... there's a reason I mentioned the original commit.  The original
+code was
+
+	if (ret > 0) {
+		/* positive number is the untransferred residual */
+		rsp->data_len = ret;
+		req->data_len = 0;
+		ret = 0;
+	} else if (ret == 0) {
+		rsp->data_len = 0;
+		req->data_len = 0;
+	}
+
+>> Index: block/drivers/scsi/libsas/sas_host_smp.c
+>> ===================================================================
+>> --- block.orig/drivers/scsi/libsas/sas_host_smp.c
+>> +++ block/drivers/scsi/libsas/sas_host_smp.c
+>> @@ -176,9 +176,6 @@ int sas_smp_host_handler(struct Scsi_Hos
+>>      resp_data[1] = req_data[1];
+>>      resp_data[2] = SMP_RESP_FUNC_UNK;
 >>  
->>  	if (cmd->error == 0) {
->>  		if (blk_pc_request(rq)) {
->> -			if (cmd->act_len < blk_rq_bytes(rq))
->> -				rq->resid_len = blk_rq_bytes(rq) - cmd->act_len;
->> +			rq->resid_len -= min(cmd->act_len, rq->resid_len);
->>  			scsi_status = 0;
+>> -    req->resid_len = blk_rq_bytes(req);
+>> -    rsp->resid_len = blk_rq_bytes(rsp);
+>> -
+
+Cuz it's already set to blk_rq_bytes().
+
+>>      switch (req_data[1]) {
+>>      case SMP_REPORT_GENERAL:
+>>          req->resid_len -= 8;
+>> Index: block/drivers/scsi/mpt2sas/mpt2sas_transport.c
+>> ===================================================================
+>> --- block.orig/drivers/scsi/mpt2sas/mpt2sas_transport.c
+>> +++ block/drivers/scsi/mpt2sas/mpt2sas_transport.c
+>> @@ -1170,8 +1170,8 @@ transport_smp_handler(struct Scsi_Host *
+>>  
+>>          memcpy(req->sense, mpi_reply, sizeof(*mpi_reply));
+>>          req->sense_len = sizeof(*mpi_reply);
+>> -        rsp->resid_len = blk_rq_bytes(rsp) -
+>> -                 mpi_reply->ResponseDataLength;
+>> +        req->resid_len = 0;
+>> +        rsp->resid_len -= mpi_reply->ResponseDataLength;
 > 
-> You are subtracting resid_len from itself. Just how in the world
-> can this be correct?
->
-> Even it if is, in fact, correct, it's such an eggregious violation
-> of good style, that your good programmer's card is going to lose
-> a big coupon and have a hole punched in it.
+>    Again, is negative resid_len intended?
 
-The original code was
-
- if (cmd->act_len >= rq->data_len)
-	rq->data_len = 0;
- else
-	rq->data_len -= cmd->act_len
-
-So, I could have written
-
- if (cmd->act_len >= rq->resid_len)
-	rq->resid_len = 0;
- else
-	rq->resid_len -= cmd->act_len
-
-Instead I wrote
-
- rq->resid_len -= min(cmd->act_len, rq->resid_len);
-
-It's just capping the amount to be subtracted so that resid_len
-doesn't underflow.  What is so wrong or bad style about that?
-
-> This is not in Linus' tree yet, but I'm going to take a hard look
-> at this once it shows up.
-
-It would be great if you do before it hits Linus's tree.
+Ditto.
 
 Thanks.
 
