@@ -1,111 +1,39 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH block#for-2.6.31 2/3] block: set rq->resid_len to blk_rq_bytes()
- on issue
-Date: Sat, 16 May 2009 07:18:27 +0900
-Message-ID: <4A0DEA33.5050905@gmail.com>
-References: <4A0D86DB.9000203@kernel.org> <4A0D87D2.7090806@gmail.com> <4A0D8C73.50208@ru.mvista.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH block#for-2.6.31 1/3] ub: use __blk_end_request_all()
+Date: Sat, 16 May 2009 07:19:48 +0900
+Message-ID: <4A0DEA84.6010909@kernel.org>
+References: <4A0D86DB.9000203@kernel.org> <20090515113114.68ae93ae.zaitcev@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4A0D8C73.50208@ru.mvista.com>
+In-Reply-To: <20090515113114.68ae93ae.zaitcev@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Borislav Petkov <petkovbb@googlemail.com>, Pete Zaitcev <zaitcev@redhat.com>, Eric Moore <Eric.Moore@lsi.com>, "Darrick J. Wong" <djwong@us.ibm.com>
+To: Pete Zaitcev <zaitcev@redhat.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Borislav Petkov <petkovbb@googlemail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
-
-Sergei Shtylyov wrote:
->> Index: block/drivers/message/fusion/mptsas.c
->> ===================================================================
->> --- block.orig/drivers/message/fusion/mptsas.c
->> +++ block/drivers/message/fusion/mptsas.c
->> @@ -1357,7 +1357,8 @@ static int mptsas_smp_handler(struct Scs
->>          smprep = (SmpPassthroughReply_t *)ioc->sas_mgmt.reply;
->>          memcpy(req->sense, smprep, sizeof(*smprep));
->>          req->sense_len = sizeof(*smprep);
->> -        rsp->resid_len = blk_rq_bytes(rsp) - smprep->ResponseDataLength;
->> +        req->resid_len = 0;
->> +        rsp->resid_len -= smprep->ResponseDataLength;
+Pete Zaitcev wrote:
+> On Sat, 16 May 2009 00:14:35 +0900, Tejun Heo <tj@kernel.org> wrote:
 > 
->    Is negative resid_len intended here? If so, shouldn't it be simply:
+>> @@ -834,12 +829,7 @@ static void ub_end_rq(struct request *rq
+>>  		error = -EIO;
+>>  		rq->errors = scsi_status;
+>>  	}
+>> -	rqlen = blk_rq_bytes(rq);    /* Oddly enough, this is the residue. */
+>> -	if (__blk_end_request(rq, error, cmd_len)) {
+>> -		printk(KERN_WARNING DRV_NAME
+>> -		    ": __blk_end_request blew, %s-cmd total %u rqlen %ld\n",
+>> -		    blk_pc_request(rq)? "pc": "fs", cmd_len, rqlen);
+>> -	}
+>> +	__blk_end_request_all(rq, error);
+>>  }
 > 
->         rsp->resid_len = -smprep->ResponseDataLength;
+> I applaud this. We needed blk_end_this_mudafakin_request() for a long time.
+> Why two underscores?
 
->From patch description.
-
- This patchset restores the original behavior by setting rq->resid_len
- to blk_rq_bytes(rq) on issue and restoring explicit clearing in
- affected drivers.
-
-So, rsp->resid_len equals the initial request length before the
-subtraction and after subtraction it becomes the residue count.  The
-original code was
-
-	req->data_len = 0;
-	rsp->data_len -= smprep->ResponseDataLength;
-
->> Index: block/drivers/scsi/libsas/sas_expander.c
->> ===================================================================
->> --- block.orig/drivers/scsi/libsas/sas_expander.c
->> +++ block/drivers/scsi/libsas/sas_expander.c
->> @@ -1937,7 +1937,11 @@ int sas_smp_handler(struct Scsi_Host *sh
->>      if (ret > 0) {
->>          /* positive number is the untransferred residual */
->>          rsp->resid_len = ret;
->> +        req->resid_len = 0;
->>          ret = 0;
->> +    } else if (ret == 0) {
->> +        rsp->resid_len = 0;
->> +        req->resid_len = 0;
-
-Heh... there's a reason I mentioned the original commit.  The original
-code was
-
-	if (ret > 0) {
-		/* positive number is the untransferred residual */
-		rsp->data_len = ret;
-		req->data_len = 0;
-		ret = 0;
-	} else if (ret == 0) {
-		rsp->data_len = 0;
-		req->data_len = 0;
-	}
-
->> Index: block/drivers/scsi/libsas/sas_host_smp.c
->> ===================================================================
->> --- block.orig/drivers/scsi/libsas/sas_host_smp.c
->> +++ block/drivers/scsi/libsas/sas_host_smp.c
->> @@ -176,9 +176,6 @@ int sas_smp_host_handler(struct Scsi_Hos
->>      resp_data[1] = req_data[1];
->>      resp_data[2] = SMP_RESP_FUNC_UNK;
->>  
->> -    req->resid_len = blk_rq_bytes(req);
->> -    rsp->resid_len = blk_rq_bytes(rsp);
->> -
-
-Cuz it's already set to blk_rq_bytes().
-
->>      switch (req_data[1]) {
->>      case SMP_REPORT_GENERAL:
->>          req->resid_len -= 8;
->> Index: block/drivers/scsi/mpt2sas/mpt2sas_transport.c
->> ===================================================================
->> --- block.orig/drivers/scsi/mpt2sas/mpt2sas_transport.c
->> +++ block/drivers/scsi/mpt2sas/mpt2sas_transport.c
->> @@ -1170,8 +1170,8 @@ transport_smp_handler(struct Scsi_Host *
->>  
->>          memcpy(req->sense, mpi_reply, sizeof(*mpi_reply));
->>          req->sense_len = sizeof(*mpi_reply);
->> -        rsp->resid_len = blk_rq_bytes(rsp) -
->> -                 mpi_reply->ResponseDataLength;
->> +        req->resid_len = 0;
->> +        rsp->resid_len -= mpi_reply->ResponseDataLength;
-> 
->    Again, is negative resid_len intended?
-
-Ditto.
+The ones with two underscores are to be called with queue lock held.
+Ones without grab queue lock themselves.
 
 Thanks.
 
