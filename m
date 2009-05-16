@@ -1,54 +1,176 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 11/18] swim: dequeue in-flight request
-Date: Sat, 16 May 2009 23:56:05 +0400
-Message-ID: <4A0F1A55.8080701@ru.mvista.com>
-References: <1241751256-17435-1-git-send-email-tj@kernel.org> <1241751256-17435-12-git-send-email-tj@kernel.org> <4A0EC2AD.20704@ru.mvista.com> <4A0ECF8E.6000209@kernel.org>
+Subject: Re: [PATCH 15/18] z2ram: dequeue in-flight request
+Date: Sat, 16 May 2009 23:58:27 +0400
+Message-ID: <4A0F1AE3.5080105@ru.mvista.com>
+References: <1241751256-17435-1-git-send-email-tj@kernel.org> <1241751256-17435-16-git-send-email-tj@kernel.org> <4A0EB7A0.10107@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4A0ECF8E.6000209@kernel.org>
+In-Reply-To: <4A0EB7A0.10107@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, rusty@rustcorp.com.au, James.Bottomley@HansenPartnership.com, mike.miller@hp.com, donari75@gmail.com, paul.clements@steeleye.com, tim@cyberelk.net, Geert.Uytterhoeven@sonycom.com, davem@davemloft.net, Laurent@lvivier.info, jgarzik@pobox.com, jeremy@xensource.com, grant.likely@secretlab.ca, adrian@mcmen.demon.co.uk, sfr@canb.auug.org.au, bzolnier@gmail.com, petkovbb@googlemail.com, oakad@yahoo.com, drzeus@drzeus.cx, dwmw2@infradead.org, Markus.Lidel@shadowconnect.com, wein@de.ibm.com, schwidefsky@de.ibm.com, zaitcev@redhat.com, fujita.tomonori@lab.ntt.co.jp, axboe@kernel.dk
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, rusty@rustcorp.com.au, James.Bottomley@HansenPartnership.com, mike.miller@hp.com, donari75@gmail.com, paul.clements@steeleye.com, tim@cyberelk.net, Geert.Uytterhoeven@sonycom.com, davem@davemloft.net, Laurent@lvivier.info, jgarzik@pobox.com, jeremy@xensource.com, grant.likely@secretlab.ca, adrian@mcmen.demon.co.uk, sfr@canb.auug.org.au, bzolnier@gmail.com, petkovbb@googlemail.com, oakad@yahoo.com, drzeus@drzeus.cx, dwmw2@infradead.org, Markus.Lidel@shadowconnect.com, wein@de.ibm.com, schwidefsky@de.ibm.com, zaitcev@redhat.com, fujita.tomonori@lab.ntt.co.jp, axboe@kernel.dk
 List-Id: linux-scsi@vger.kernel.org
 
-Hello.
+Hello, I wrote:
 
-Tejun Heo wrote:
+   Oops, sent this message only to Tejun before, so have to repost now...
 
->>   And without duplication:
->>     
+>> z2ram processes requests one-by-one synchronously and can be easily
+>> converted to dequeueing model.  Convert it.
+>>
+>> [ Impact: dequeue in-flight request ]
+>>
+>> Signed-off-by: Tejun Heo <tj@kernel.org>
+>> ---
+>>  drivers/block/z2ram.c |   19 +++++++++++++++----
+>>  1 files changed, 15 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/block/z2ram.c b/drivers/block/z2ram.c
+>> index 6a13838..c909c1a 100644
+>> --- a/drivers/block/z2ram.c
+>> +++ b/drivers/block/z2ram.c
+>> @@ -70,15 +70,21 @@ static struct gendisk *z2ram_gendisk;
+>>  static void do_z2_request(struct request_queue *q)
+>>  {
+>>      struct request *req;
+>> -    while ((req = elv_next_request(q)) != NULL) {
+>> +
+>> +    req = elv_next_request(q);
+>> +    if (req)
+>> +        blkdev_dequeue_request(req);
+>> +
+>> +    while (req) {
+>>          unsigned long start = blk_rq_pos(req) << 9;
+>>          unsigned long len  = blk_rq_cur_bytes(req);
+>> +        int err = 0;
+>>  
+>>          if (start + len > z2ram_size) {
+>>              printk( KERN_ERR DEVICE_NAME ": bad access: block=%lu, 
+>> count=%u\n",
+>>                  blk_rq_pos(req), blk_rq_cur_sectors(req));
+>> -            __blk_end_request_cur(req, -EIO);
+>> -            continue;
+>> +            err = -EIO;
+>> +            goto done;
+>>          }
+>>          while (len) {
+>>              unsigned long addr = start & Z2RAM_CHUNKMASK;
+>> @@ -93,7 +99,12 @@ static void do_z2_request(struct request_queue *q)
+>>              start += size;
+>>              len -= size;
+>>          }
+>> -        __blk_end_request_cur(req, 0);
+>> +    done:
+>> +        if (!__blk_end_request_cur(req, err)) {
+>> +            req = elv_next_request(q);
+>> +            if (req)
+>> +                blkdev_dequeue_request(req);
+>> +        }
+>>      }
+>>  }
+>>   
 >
-> Similar response as the if/else one on the other thread.  Is it really
-> any significantly better?  The 'duplication' here is basically one
-> liner
+>   I'm sure this can be made more compact and without duplication (in 
+> many other cases as well):
+>
+> @@ -70,15 +70,21 @@ static struct gendisk *z2ram_gendisk;
+>
+> static void do_z2_request(struct request_queue *q)
+> {
+>     struct request *req;
+> +
+>     while ((req = elv_next_request(q)) != NULL) {
+>         unsigned long start = blk_rq_pos(req) << 9;
+>         unsigned long len  = blk_rq_cur_bytes(req);
 
-   Not true, it's 3-liner. I wouldn't bother with one liner.
+  Oops, missed:
 
-> after the peek/fetch change
++         int err;
++
+>
+> +        blkdev_dequeue_request(req);
+> +
 
-   The peek/fetch code itself is duplicated. :-/
++again:
 
-> and when the duplication is minimal,
-> I usually find it clearer to put the loop condition at the while
-> clause itself.
+>         if (start + len > z2ram_size) {
+>             printk( KERN_ERR DEVICE_NAME ": bad access: block=%lu, 
+> count=%u\n",
+>                 blk_rq_pos(req), blk_rq_cur_sectors(req));
+> -            __blk_end_request_cur(req, -EIO);
+> -            continue;
+> +            err = -EIO;
+> +            goto done;
+>         }
+>         while (len) {
+>             unsigned long addr = start & Z2RAM_CHUNKMASK;
+> @@ -93,7 +99,12 @@ static void do_z2_request(struct request_queue *q)
+>             start += size;
+>             len -= size;
+>         }
+> -        __blk_end_request_cur(req, 0);
++            err = 0;
+> +    done:
+> +        if (__blk_end_request_cur(req, err));
+> +            break;
 
-   No problem, we could just keep an old form of *while* loop.
+  Oops, should've been:
 
-> If you think it's significantly better,
++            if (__blk_end_request_cur(req, err))
++                goto again;
 
-   I do hink it avoids duplicating peek/fetch code.
+>     }
+> }
 
-> please go ahead and submit the patch but to me the change you're proposing is
-> basically cosmetic and not even a clearly better one at that.
->   
+  It can also be:
 
-   Should probably look at the resulting assembly to see how much it's 
-differrent.
+@@ -70,15 +70,21 @@ static struct gendisk *z2ram_gendisk;
+static void do_z2_request(struct request_queue *q)
+{
+-    struct request *req;
+-    while ((req = elv_next_request(q)) != NULL) {
++    while (1) {
++        struct request *req = elv_next_request(q);
++        unsigned long start, len;
++        int err;
++
++        if (req == NULL)
++            break;
++
++        blkdev_dequeue_request(req);
++
++again:
++        start = blk_rq_pos(req) << 9;
++        len = blk_rq_cur_bytes(req);
 
-> Thanks.
+        if (start + len > z2ram_size) {
+            printk( KERN_ERR DEVICE_NAME ": bad access: block=%lu, 
+count=%u\n",
+                blk_rq_pos(req), blk_rq_cur_sectors(req));
+-            __blk_end_request_cur(req, -EIO);
+-            continue;
++            err = -EIO;
++            goto done;
+        }
+        while (len) {
+            unsigned long addr = start & Z2RAM_CHUNKMASK;
+@@ -93,7 +99,12 @@ static void do_z2_request(struct request_queue *q)
+            start += size;
+            len -= size;
+        }
+-        __blk_end_request_cur(req, 0);
++        err = 0;
++    done:
++        if (__blk_end_request_cur(req, err))
++            goto again;
+    }
+}
 
-WBR, Sergei
+
+if you want to get rid of the assignement in the *while* statement...
+
+MBR, Sergei
 
 
