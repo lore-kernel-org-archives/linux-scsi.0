@@ -1,54 +1,190 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH block#for-2.6.31 2/3] block: set rq->resid_len to blk_rq_bytes()
- on issue
-Date: Sat, 16 May 2009 09:14:23 +0900
-Message-ID: <4A0E055F.9000308@gmail.com>
-References: <4A0D86DB.9000203@kernel.org>	<4A0D87D2.7090806@gmail.com>	<20090515112901.84d4dd97.zaitcev@redhat.com>	<4A0DE954.4020102@gmail.com> <20090515171645.7a92d46c.zaitcev@redhat.com>
+Subject: [PATCH UPDATED block#for-2.6.31 2/3] block: set rq->resid_len to
+ blk_rq_bytes() on issue
+Date: Sat, 16 May 2009 09:18:24 +0900
+Message-ID: <4A0E0650.1020500@gmail.com>
+References: <4A0D86DB.9000203@kernel.org> <4A0D87D2.7090806@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20090515171645.7a92d46c.zaitcev@redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Pete Zaitcev <zaitcev@redhat.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Borislav Petkov <petkovbb@googlemail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Eric Moore <Eric.Moore@lsi.com>, "Darrick J. Wong" <djwong@us.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pz0-f115.google.com ([209.85.222.115]:61107 "EHLO
+	mail-pz0-f115.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753907AbZEPAS2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2009 20:18:28 -0400
+In-Reply-To: <4A0D87D2.7090806@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-s
 
-Hello,
+In commit c3a4d78c580de4edc9ef0f7c59812fb02ceb037f, while introducing
+rq->resid_len, the default value of residue count was changed from
+full count to zero.  The conversion was done under the assumption that
+when a request fails residue count wasn't defined.  However, Boaz and
+James pointed out that this wasn't true and the residue count should
+be preserved for failed requests too.
 
-Pete Zaitcev wrote:
->> So, I could have written
->>
->>  if (cmd->act_len >= rq->resid_len)
->> 	rq->resid_len = 0;
->>  else
->> 	rq->resid_len -= cmd->act_len
->>
->> Instead I wrote
->>
->>  rq->resid_len -= min(cmd->act_len, rq->resid_len);
->>
->> It's just capping the amount to be subtracted so that resid_len
->> doesn't underflow.  What is so wrong or bad style about that?
-> 
-> Curse of the gifted, I guess. To use a subtraction instead of zero
-> this way looks like a pointless, even mischievous obfuscation to me.
+This patchset restores the original behavior by setting rq->resid_len
+to blk_rq_bytes(rq) on issue and restoring explicit clearing in
+affected drivers.  While at it, take advantage of the fact that
+rq->resid_len is set to full count where applicable.
 
-Ummm... I don't know.  I prefer min/max over if/else when capping
-values.  To me, it makes the intention clearer but you're the
-maintainer and don't like the style, so I'll update the patch so that
-it has the if/else clause.  :-)
+* ide-cd: rq->resid_len cleared on pc success
 
-> Also, we probably want a stack_dump or a printk when actual length
-> exceeds the requested length, don't we? If it ever happens, we
-> might be overwriting some I/O buffer somewhere.
+* mptsas: req->resid_len cleared on success
 
-It depends on particular implementation.  Transport overflow doesn't
-necessarily become actual buffer overflow depending on hardware and
-driver implementation.  If you think the user needs to be warned about
-transport overflow, please go ahead and add a warning there.
+* sas_expander: rsp/req->resid_len cleared on success
+
+* mpt2sas_transport: req->resid_len cleared on success
+
+* ide-cd, ide-tape, mptsas, sas_host_smp, mpt2sas_transport, ub: take
+  advantage of initial full count to simplify code
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <jens.axboe@oracle.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Pete Zaitcev <zaitcev@redhat.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Borislav Petkov <petkovbb@googlemail.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Eric Moore <Eric.Moore@lsi.com>
+Cc: Darrick J. Wong <djwong@us.ibm.com>
+---
+ub updated per Pete's comment.
 
 Thanks.
 
--- 
-tejun
+ block/blk-core.c                         |    1 +
+ drivers/block/ub.c                       |    6 ++++--
+ drivers/ide/ide-cd.c                     |    4 ++--
+ drivers/ide/ide-tape.c                   |    2 +-
+ drivers/message/fusion/mptsas.c          |    3 ++-
+ drivers/scsi/libsas/sas_expander.c       |    4 ++++
+ drivers/scsi/libsas/sas_host_smp.c       |    3 ---
+ drivers/scsi/mpt2sas/mpt2sas_transport.c |    4 ++--
+ 8 files changed, 16 insertions(+), 11 deletions(-)
+
+Index: block/block/blk-core.c
+===================================================================
+--- block.orig/block/blk-core.c
++++ block/block/blk-core.c
+@@ -2198,6 +2198,7 @@ void blk_rq_bio_prep(struct request_queu
+ 		rq->buffer = bio_data(bio);
+ 	}
+ 	rq->__data_len = bio->bi_size;
++	rq->resid_len = bio->bi_size;
+ 	rq->bio = rq->biotail = bio;
+ 
+ 	if (bio->bi_bdev)
+Index: block/drivers/ide/ide-cd.c
+===================================================================
+--- block.orig/drivers/ide/ide-cd.c
++++ block/drivers/ide/ide-cd.c
+@@ -699,6 +699,7 @@ static ide_startstop_t cdrom_newpc_intr(
+ 
+ out_end:
+ 	if (blk_pc_request(rq) && rc == 0) {
++		rq->resid_len = 0;
+ 		blk_end_request_all(rq, 0);
+ 		hwif->rq = NULL;
+ 	} else {
+@@ -718,8 +719,7 @@ out_end:
+ 
+ 		/* make sure it's fully ended */
+ 		if (blk_fs_request(rq) == 0) {
+-			rq->resid_len = blk_rq_bytes(rq) -
+-				(cmd->nbytes - cmd->nleft);
++			rq->resid_len -= cmd->nbytes - cmd->nleft;
+ 			if (uptodate == 0 && (cmd->tf_flags & IDE_TFLAG_WRITE))
+ 				rq->resid_len += cmd->last_xfer_len;
+ 		}
+Index: block/drivers/ide/ide-tape.c
+===================================================================
+--- block.orig/drivers/ide/ide-tape.c
++++ block/drivers/ide/ide-tape.c
+@@ -380,7 +380,7 @@ static int ide_tape_callback(ide_drive_t
+ 		}
+ 
+ 		tape->first_frame += blocks;
+-		rq->resid_len = blk_rq_bytes(rq) - blocks * tape->blk_size;
++		rq->resid_len -= blocks * tape->blk_size;
+ 
+ 		if (pc->error) {
+ 			uptodate = 0;
+Index: block/drivers/message/fusion/mptsas.c
+===================================================================
+--- block.orig/drivers/message/fusion/mptsas.c
++++ block/drivers/message/fusion/mptsas.c
+@@ -1357,7 +1357,8 @@ static int mptsas_smp_handler(struct Scs
+ 		smprep = (SmpPassthroughReply_t *)ioc->sas_mgmt.reply;
+ 		memcpy(req->sense, smprep, sizeof(*smprep));
+ 		req->sense_len = sizeof(*smprep);
+-		rsp->resid_len = blk_rq_bytes(rsp) - smprep->ResponseDataLength;
++		req->resid_len = 0;
++		rsp->resid_len -= smprep->ResponseDataLength;
+ 	} else {
+ 		printk(MYIOC_s_ERR_FMT "%s: smp passthru reply failed to be returned\n",
+ 		    ioc->name, __func__);
+Index: block/drivers/scsi/libsas/sas_expander.c
+===================================================================
+--- block.orig/drivers/scsi/libsas/sas_expander.c
++++ block/drivers/scsi/libsas/sas_expander.c
+@@ -1937,7 +1937,11 @@ int sas_smp_handler(struct Scsi_Host *sh
+ 	if (ret > 0) {
+ 		/* positive number is the untransferred residual */
+ 		rsp->resid_len = ret;
++		req->resid_len = 0;
+ 		ret = 0;
++	} else if (ret == 0) {
++		rsp->resid_len = 0;
++		req->resid_len = 0;
+ 	}
+ 
+ 	return ret;
+Index: block/drivers/scsi/libsas/sas_host_smp.c
+===================================================================
+--- block.orig/drivers/scsi/libsas/sas_host_smp.c
++++ block/drivers/scsi/libsas/sas_host_smp.c
+@@ -176,9 +176,6 @@ int sas_smp_host_handler(struct Scsi_Hos
+ 	resp_data[1] = req_data[1];
+ 	resp_data[2] = SMP_RESP_FUNC_UNK;
+ 
+-	req->resid_len = blk_rq_bytes(req);
+-	rsp->resid_len = blk_rq_bytes(rsp);
+-
+ 	switch (req_data[1]) {
+ 	case SMP_REPORT_GENERAL:
+ 		req->resid_len -= 8;
+Index: block/drivers/scsi/mpt2sas/mpt2sas_transport.c
+===================================================================
+--- block.orig/drivers/scsi/mpt2sas/mpt2sas_transport.c
++++ block/drivers/scsi/mpt2sas/mpt2sas_transport.c
+@@ -1170,8 +1170,8 @@ transport_smp_handler(struct Scsi_Host *
+ 
+ 		memcpy(req->sense, mpi_reply, sizeof(*mpi_reply));
+ 		req->sense_len = sizeof(*mpi_reply);
+-		rsp->resid_len = blk_rq_bytes(rsp) -
+-				 mpi_reply->ResponseDataLength;
++		req->resid_len = 0;
++		rsp->resid_len -= mpi_reply->ResponseDataLength;
+ 	} else {
+ 		dtransportprintk(ioc, printk(MPT2SAS_DEBUG_FMT
+ 		    "%s - no reply\n", ioc->name, __func__));
+Index: block/drivers/block/ub.c
+===================================================================
+--- block.orig/drivers/block/ub.c
++++ block/drivers/block/ub.c
+@@ -781,8 +781,10 @@ static void ub_rw_cmd_done(struct ub_dev
+ 
+ 	if (cmd->error == 0) {
+ 		if (blk_pc_request(rq)) {
+-			if (cmd->act_len < blk_rq_bytes(rq))
+-				rq->resid_len = blk_rq_bytes(rq) - cmd->act_len;
++			if (cmd->act_len >= rq->resid_len)
++				rq->resid_len = 0;
++			else
++				rq->resid_len -= cmd->act_len;
+ 			scsi_status = 0;
+ 		} else {
+ 			if (cmd->act_len != cmd->len) {
