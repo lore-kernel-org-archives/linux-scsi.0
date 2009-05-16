@@ -1,173 +1,51 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 11/18] swim: dequeue in-flight request
-Date: Sat, 16 May 2009 17:42:05 +0400
-Message-ID: <4A0EC2AD.20704@ru.mvista.com>
-References: <1241751256-17435-1-git-send-email-tj@kernel.org> <1241751256-17435-12-git-send-email-tj@kernel.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH block#for-2.6.31 2/3] block: set rq->resid_len to blk_rq_bytes()
+ on issue
+Date: Sat, 16 May 2009 22:48:29 +0900
+Message-ID: <4A0EC42D.2080905@gmail.com>
+References: <4A0D86DB.9000203@kernel.org> <4A0D87D2.7090806@gmail.com> <4A0D8C73.50208@ru.mvista.com> <4A0DEA33.5050905@gmail.com> <4A0EB1AD.6050806@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1241751256-17435-12-git-send-email-tj@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, rusty@rustcorp.com.au, James.Bottomley@HansenPartnership.com, mike.miller@hp.com, donari75@gmail.com, paul.clements@steeleye.com, tim@cyberelk.net, Geert.Uytterhoeven@sonycom.com, davem@davemloft.net, Laurent@lvivier.info, jgarzik@pobox.com, jeremy@xensource.com, grant.likely@secretlab.ca, adrian@mcmen.demon.co.uk, sfr@canb.auug.org.au, bzolnier@gmail.com, petkovbb@googlemail.com, oakad@yahoo.com, drzeus@drzeus.cx, dwmw2@infradead.org, Markus.Lidel@shadowconnect.com, wein@de.ibm.com, schwidefsky@de.ibm.com, zaitcev@redhat.com, fujita.tomonori@lab.ntt.co.jp, axboe@kernel.dk
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pz0-f115.google.com ([209.85.222.115]:41674 "EHLO
+	mail-pz0-f115.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752953AbZEPNsc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 16 May 2009 09:48:32 -0400
+In-Reply-To: <4A0EB1AD.6050806@ru.mvista.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Borislav Petkov <petkovbb@googlemail.com>, Pete Zaitcev <zaitcev@redhat.com>, Eric Moore <Eric.Moore@lsi.com>, "Darrick J. Wong" <djwong@us.ibm.com>
 
-Hello.
+Hello, Sergei.
 
-Tejun Heo wrote:
+Sergei Shtylyov wrote:
+>> Heh... there's a reason I mentioned the original commit.  The original
+>> code was
+>>
+>>     if (ret > 0) {
+>>         /* positive number is the untransferred residual */
+>>         rsp->data_len = ret;
+>>         req->data_len = 0;
+>>         ret = 0;
+>>     } else if (ret == 0) {
+>>         rsp->data_len = 0;
+>>         req->data_len = 0;
+>>     }
+>>   
+> 
+>   But still,
+> 
+>                req->data_len = 0;
+> 
+> is common between both branches, so could be moved after the *if*
+> statement.
 
-> swim processes requests one-by-one synchronously and can easily be
-> converted to dequeuing model.  Convert it.
->
-> [ Impact: dequeue in-flight request ]
->
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Laurent Vivier <Laurent@lvivier.info>
-> ---
->  drivers/block/swim.c |   47 +++++++++++++++++++++++------------------------
->  1 files changed, 23 insertions(+), 24 deletions(-)
->
-> diff --git a/drivers/block/swim.c b/drivers/block/swim.c
-> index fc6a1c3..dedd489 100644
-> --- a/drivers/block/swim.c
-> +++ b/drivers/block/swim.c
-> @@ -514,7 +514,7 @@ static int floppy_read_sectors(struct floppy_state *fs,
->  			ret = swim_read_sector(fs, side, track, sector,
->  						buffer);
->  			if (try-- == 0)
-> -				return -1;
-> +				return -EIO;
->  		} while (ret != 512);
->  
->  		buffer += ret;
-> @@ -528,38 +528,37 @@ static void redo_fd_request(struct request_queue *q)
->  	struct request *req;
->  	struct floppy_state *fs;
->  
-> -	while ((req = elv_next_request(q))) {
-> +	req = elv_next_request(q);
-> +	if (req)
-> +		blkdev_dequeue_request(req);
-> +
-> +	while (req) {
-> +		int err = -EIO;
->  
->  		fs = req->rq_disk->private_data;
-> -		if (blk_rq_pos(req) >= fs->total_secs) {
-> -			__blk_end_request_cur(req, -EIO);
-> -			continue;
-> -		}
-> -		if (!fs->disk_in) {
-> -			__blk_end_request_cur(req, -EIO);
-> -			continue;
-> -		}
-> -		if (rq_data_dir(req) == WRITE) {
-> -			if (fs->write_protected) {
-> -				__blk_end_request_cur(req, -EIO);
-> -				continue;
-> -			}
-> -		}
-> +		if (blk_rq_pos(req) >= fs->total_secs)
-> +			goto done;
-> +		if (!fs->disk_in)
-> +			goto done;
-> +		if (rq_data_dir(req) == WRITE && fs->write_protected)
-> +			goto done;
-> +
->  		switch (rq_data_dir(req)) {
->  		case WRITE:
->  			/* NOT IMPLEMENTED */
-> -			__blk_end_request_cur(req, -EIO);
->  			break;
->  		case READ:
-> -			if (floppy_read_sectors(fs, blk_rq_pos(req),
-> -						blk_rq_cur_sectors(req),
-> -						req->buffer)) {
-> -				__blk_end_request_cur(req, -EIO);
-> -				continue;
-> -			}
-> -			__blk_end_request_cur(req, 0);
-> +			err = floppy_read_sectors(fs, blk_rq_pos(req),
-> +						  blk_rq_cur_sectors(req),
-> +						  req->buffer);
->  			break;
->  		}
-> +	done:
-> +		if (!__blk_end_request_cur(req, err)) {
-> +			req = elv_next_request(q);
-> +			if (req)
-> +				blkdev_dequeue_request(req);
-> +		}
->  	}
->  }
+Yeah, sure, feel free to submit a patch, but I don't know.  Does it
+even matter at all as long as the intention is clear?
 
-   And without duplication:
+Thanks.
 
-@@ -528,38 +528,37 @@
- static void redo_fd_request(struct request_queue *q)
- {
-- 	struct request *req;
- 	struct floppy_state *fs;
- 
--	while ((req = elv_next_request(q))) {
-+	while (1) {
-+	 	struct request *req = elv_next_request(q);
-+		int err;
-+ 
-+		if (req == NULL)
-+			break;
-+		blkdev_dequeue_request(req);
- 
-+again:
-+		err = -EIO;
- 		fs = req->rq_disk->private_data;
--		if (blk_rq_pos(req) >= fs->total_secs) {
--			__blk_end_request_cur(req, -EIO);
--			continue;
--		}
--		if (!fs->disk_in) {
--			__blk_end_request_cur(req, -EIO);
--			continue;
--		}
--		if (rq_data_dir(req) == WRITE) {
--			if (fs->write_protected) {
--				__blk_end_request_cur(req, -EIO);
--				continue;
--			}
--		}
-+		if (blk_rq_pos(req) >= fs->total_secs)
-+			goto done;
-+		if (!fs->disk_in)
-+			goto done;
-+		if (rq_data_dir(req) == WRITE && fs->write_protected)
-+			goto done;
-+
- 		switch (rq_data_dir(req)) {
- 		case WRITE:
- 			/* NOT IMPLEMENTED */
--			__blk_end_request_cur(req, -EIO);
- 			break;
- 		case READ:
--			if (floppy_read_sectors(fs, blk_rq_pos(req),
--						blk_rq_cur_sectors(req),
--						req->buffer)) {
--				__blk_end_request_cur(req, -EIO);
--				continue;
--			}
--			__blk_end_request_cur(req, 0);
-+			err = floppy_read_sectors(fs, blk_rq_pos(req),
-+						  blk_rq_cur_sectors(req),
-+						  req->buffer);
- 			break;
- 		}
-+	done:
-+		if (__blk_end_request_cur(req, err))
-+			goto again;
- 	}
- }
-
-
-MBR, Sergei
-
-
+-- 
+tejun
