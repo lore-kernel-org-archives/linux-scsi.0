@@ -1,134 +1,62 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] scsi_error: fix scsi_eh_lock_door() documentation
-Date: Sun, 17 May 2009 17:18:15 +0200
-Message-ID: <200905171718.15555.bzolnier@gmail.com>
-References: <200905162126.22659.bzolnier@gmail.com> <1242570648.11755.7.camel@mulgrave.int.hansenpartnership.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [patchset 0/5 version 2] osd: Stop usage of blk_rq_append_bio
+Date: Sun, 17 May 2009 18:52:16 +0300
+Message-ID: <4A1032B0.5000003@panasas.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:38278 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753330AbZEQPU3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 May 2009 11:20:29 -0400
-Received: by mail-ew0-f176.google.com with SMTP id 24so3531116ewy.37
-        for <linux-scsi@vger.kernel.org>; Sun, 17 May 2009 08:20:29 -0700 (PDT)
-In-Reply-To: <1242570648.11755.7.camel@mulgrave.int.hansenpartnership.com>
-Content-Disposition: inline
+Received: from gw-ca.panasas.com ([209.116.51.66]:19580 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750878AbZEQPxa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 May 2009 11:53:30 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org
+To: Jens Axboe <Jens.Axboe@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-On Sunday 17 May 2009 16:30:48 James Bottomley wrote:
-> On Sat, 2009-05-16 at 21:26 +0200, Bartlomiej Zolnierkiewicz wrote:
-> > Nowadays eh_lock_door_done() uses blk_get_request() instead of
-> > scsi_allocate_request().
-> 
-> I appreciate any attempt to clean up the rather parlous state of our
-> documentation.  However, unfortunately, this isn't a simple search and
+[Version 2]
+- Update to axboe/linux-2.6-block.git for-2.6.31 branch
+- Added 5th patch that removes the export of blk_rq_append_bio()
 
-To be honest, I get a very different feeling here...
+[Version 1]
+Osd library needs to submit pre-allocated bios, form several sources.
+osdblk exofs and pNFS-layout driver all have prepared bios for IO submission.
+On top of that the osd library needs to append additional segments to the
+IO memory, for get/set attributes and more.
 
-My two previous obviously correct and trivial patches fixing documentation
-for scsi_device_lookup_by_target() and scsi_eh_restore_cmnd() seem to be
-just lost (they were posted on 27th April)...
+All these are done today by use of a temporary hack - blk_rq_append_bio().
+This is bad on few accounts.
+1. blk_rq_append_bio was not meant to be exported and is very specific to its users.
+2. blk_rq_append_bio does not support chained bios.
+3. blk_rq_append_bio does not bounce the bio and therefore current osd implementation
+   has a bug.
 
-> replace job ... what you've done here is transform an obviously
-> incorrect set of statements into a more plausible but still incorrect
-> set of statements.
-> 
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > ---
-> > on top of linux-next
-> > 
-> >  drivers/scsi/scsi_error.c |    6 +++---
-> >  1 file changed, 3 insertions(+), 3 deletions(-)
-> > 
-> > Index: b/drivers/scsi/scsi_error.c
-> > ===================================================================
-> > --- a/drivers/scsi/scsi_error.c
-> > +++ b/drivers/scsi/scsi_error.c
-> > @@ -1451,7 +1451,7 @@ static void eh_lock_door_done(struct req
-> >   * @sdev:	SCSI device to prevent medium removal
-> >   *
-> >   * Locking:
-> > - * 	We must be called from process context; scsi_allocate_request()
-> > + * 	We must be called from process context; blk_get_request()
-> >   * 	may sleep.
-> 
-> Actually, it may or may not depending upon what the user tells it in the
-> gfp argument, so the best course here is to kill everything after the
-> semicolon.
-> 
-> >   * Notes:
-> > @@ -1459,11 +1459,11 @@ static void eh_lock_door_done(struct req
-> >   * 	head of the devices request queue, and continue.
-> >   *
-> >   * Bugs:
-> > - * 	scsi_allocate_request() may sleep waiting for existing requests to
-> > + * 	blk_get_request() may sleep waiting for existing requests to
-> >   * 	be processed.  However, since we haven't kicked off any request
-> >   * 	processing for this host, this may deadlock.
-> 
-> May have been true for scsi_allocate_request, certainly untrue for
-> blk_get_request, since we've gone to great pains to eliminate these
-> problems.
+The proposed solution adds two new fixtures to the block layer, and a corresponding
+fixing patch to osd. These are:
 
-Okay, I recall the trick used there now (AKA "batching" processes)...
+[PATCH 1/5] allow blk_rq_map_kern to append to requests
+[PATCH 2/5] libosd: Use new blk_rq_map_kern
 
-> > - *	If scsi_allocate_request() fails for what ever reason, we
-> > + *	If blk_get_request() fails for what ever reason, we
-> >   *	completely forget to lock the door.
-> 
-> Misleading, since blk_get_request() cannot fail given the gfp flags
-> we're using.
-> 
-> So the correct way to fix all of this (including a code change to
-> prevent the spurious null check on blk_get_request() return) is below.
+  This is originally a James patch. It is used, to let blk_rq_map_kern append it's buffer
+  to existing bio, and therefor is able to be called multiple times in a loop, to append
+  multiple segments. This API can also be useful for scsi/block targets that have segment
+  information in some other memory structure (like scatterlist) and wants to set it into
+  a request. Until such time that they have a proper support for mapping scatterlists directly.
+  (Above called on long lists might not be good for performance)
 
-Agreed, this version is much better.
+  Here in osd it makes tons of sense.
 
-> James
-> 
-> ---
-> 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 0c2c73b..a2a47c3 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -1451,28 +1451,21 @@ static void eh_lock_door_done(struct request *req, int uptodate)
->   * @sdev:	SCSI device to prevent medium removal
->   *
->   * Locking:
-> - * 	We must be called from process context; scsi_allocate_request()
-> - * 	may sleep.
-> + * 	We must be called from process context.
->   *
->   * Notes:
->   * 	We queue up an asynchronous "ALLOW MEDIUM REMOVAL" request on the
->   * 	head of the devices request queue, and continue.
-> - *
-> - * Bugs:
-> - * 	scsi_allocate_request() may sleep waiting for existing requests to
-> - * 	be processed.  However, since we haven't kicked off any request
-> - * 	processing for this host, this may deadlock.
-> - *
-> - *	If scsi_allocate_request() fails for what ever reason, we
-> - *	completely forget to lock the door.
->   */
->  static void scsi_eh_lock_door(struct scsi_device *sdev)
->  {
->  	struct request *req;
->  
-> +	/*
-> +	 * blk_get_request with GFP_KERNEL (__GFP_WAIT) sleeps until a
-> +	 * request becomes available
-> +	 */
->  	req = blk_get_request(sdev->request_queue, READ, GFP_KERNEL);
-> -	if (!req)
-> -		return;
->  
->  	req->cmd[0] = ALLOW_MEDIUM_REMOVAL;
->  	req->cmd[1] = 0;
+[PATCH 3/5] New blk_make_request(), takes bio, returns a request
+[PATCH 4/5] libosd: Use of new blk_make_request
+  
+  Here I propose a new block API, that will support proper delegation of a bio
+  to a full request. Please read inside the patch descriptions for details.
+  After this patch both osd and block layer will have the proper support for osdblk
+  driver as well as future needs.
+  These patches also eliminate the last use of blk_rq_append_bio which can be finally un-exported.
+
+[PATCH 5/5] Un-export blk_rq_append_bio
+
+Thank you
+Boaz
