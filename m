@@ -1,16 +1,16 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 4/5] libosd: Use of new blk_make_request
-Date: Sun, 17 May 2009 18:58:41 +0300
-Message-ID: <4A103431.908@panasas.com>
+Subject: [PATCH 5/5] Un-export blk_rq_append_bio
+Date: Sun, 17 May 2009 19:00:01 +0300
+Message-ID: <4A103481.7000200@panasas.com>
 References: <4A1032B0.5000003@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:16799 "EHLO
+Received: from gw-ca.panasas.com ([209.116.51.66]:15644 "EHLO
 	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751520AbZEQP6p (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 May 2009 11:58:45 -0400
+	with ESMTP id S1751499AbZEQQAF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 May 2009 12:00:05 -0400
 In-Reply-To: <4A1032B0.5000003@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,105 +18,59 @@ To: Jens Axboe <Jens.Axboe@oracle.com>, James Bottomley <James.Bottomley@hansenp
 Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
 
-Use new blk_make_request() to allocate a request from bio
-and avoid using deprecated blk_rq_append_bio().
-
-This patch is dependent on a block layer patch titled:
-    [BLOCK] New blk_make_request() takes bio returns request
-
-This is the last usage of blk_rq_append_bio in osd, it can now
-be un-exported.
+OSD was the last in-tree user of blk_rq_append_bio(). Now
+that it is fixed blk_rq_append_bio is un-exported and
+is only used internally by block layer.
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-CC: Jeff Garzik <jeff@garzik.org>
-CC: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- drivers/scsi/osd/osd_initiator.c |   48 ++++++++++++++++++-------------------
- 1 files changed, 23 insertions(+), 25 deletions(-)
+ block/blk-map.c        |    1 -
+ block/blk.h            |    2 ++
+ include/linux/blkdev.h |    6 ------
+ 3 files changed, 2 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
-index bf66e30..865ec0f 100644
---- a/drivers/scsi/osd/osd_initiator.c
-+++ b/drivers/scsi/osd/osd_initiator.c
-@@ -1200,6 +1200,21 @@ static int _osd_req_finalize_data_integrity(struct osd_request *or,
- /*
-  * osd_finalize_request and helpers
-  */
-+static struct request *_make_request(struct request_queue *q, bool has_write,
-+			      struct _osd_io_info *oii, gfp_t flags)
-+{
-+	if (oii->bio)
-+		return blk_make_request(q, oii->bio, flags);
-+	else {
-+		struct request *req;
-+
-+		req = blk_get_request(q, has_write ? WRITE : READ, flags);
-+		if (unlikely(!req))
-+			return ERR_PTR(-ENOMEM);
-+
-+		return req;
-+	}
-+}
- 
- static int _init_blk_request(struct osd_request *or,
- 	bool has_in, bool has_out)
-@@ -1208,11 +1223,13 @@ static int _init_blk_request(struct osd_request *or,
- 	struct scsi_device *scsi_device = or->osd_dev->scsi_device;
- 	struct request_queue *q = scsi_device->request_queue;
- 	struct request *req;
--	int ret = -ENOMEM;
-+	int ret;
- 
--	req = blk_get_request(q, has_out, flags);
--	if (!req)
-+	req = _make_request(q, has_out, has_out ? &or->out : &or->in, flags);
-+	if (IS_ERR(req)) {
-+		ret = PTR_ERR(req);
- 		goto out;
-+	}
- 
- 	or->request = req;
- 	req->cmd_type = REQ_TYPE_BLOCK_PC;
-@@ -1225,9 +1242,10 @@ static int _init_blk_request(struct osd_request *or,
- 		or->out.req = req;
- 		if (has_in) {
- 			/* allocate bidi request */
--			req = blk_get_request(q, READ, flags);
--			if (!req) {
-+			req = _make_request(q, false, &or->in, flags);
-+			if (IS_ERR(req)) {
- 				OSD_DEBUG("blk_get_request for bidi failed\n");
-+				ret = PTR_ERR(req);
- 				goto out;
- 			}
- 			req->cmd_type = REQ_TYPE_BLOCK_PC;
-@@ -1271,26 +1289,6 @@ int osd_finalize_request(struct osd_request *or,
- 		return ret;
+diff --git a/block/blk-map.c b/block/blk-map.c
+index caa05a6..ef2492a 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -24,7 +24,6 @@ int blk_rq_append_bio(struct request_queue *q, struct request *rq,
  	}
+ 	return 0;
+ }
+-EXPORT_SYMBOL(blk_rq_append_bio);
  
--	if (or->out.bio) {
--		ret = blk_rq_append_bio(or->request->q, or->out.req,
--					or->out.bio);
--		if (ret) {
--			OSD_DEBUG("blk_rq_append_bio out failed\n");
--			return ret;
--		}
--		OSD_DEBUG("out bytes=%llu (bytes_req=%u)\n",
--			_LLU(or->out.total_bytes), blk_rq_bytes(or->out.req));
--	}
--	if (or->in.bio) {
--		ret = blk_rq_append_bio(or->request->q, or->in.req, or->in.bio);
--		if (ret) {
--			OSD_DEBUG("blk_rq_append_bio in failed\n");
--			return ret;
--		}
--		OSD_DEBUG("in bytes=%llu (bytes_req=%u)\n",
--			_LLU(or->in.total_bytes), blk_rq_bytes(or->in.req));
--	}
+ static int __blk_rq_unmap_user(struct bio *bio)
+ {
+diff --git a/block/blk.h b/block/blk.h
+index 9e0042c..c863ec2 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -13,6 +13,8 @@ extern struct kobj_type blk_queue_ktype;
+ void init_request_from_bio(struct request *req, struct bio *bio);
+ void blk_rq_bio_prep(struct request_queue *q, struct request *rq,
+ 			struct bio *bio);
++int blk_rq_append_bio(struct request_queue *q, struct request *rq,
++		      struct bio *bio);
+ void blk_dequeue_request(struct request *rq);
+ void __blk_queue_free_tags(struct request_queue *q);
+ 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 88a83e1..564445b 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -758,12 +758,6 @@ extern int sg_scsi_ioctl(struct request_queue *, struct gendisk *, fmode_t,
+ 			 struct scsi_ioctl_command __user *);
+ 
+ /*
+- * Temporary export, until SCSI gets fixed up.
+- */
+-extern int blk_rq_append_bio(struct request_queue *q, struct request *rq,
+-			     struct bio *bio);
 -
- 	or->out.pad_buff = sg_out_pad_buffer;
- 	or->in.pad_buff = sg_in_pad_buffer;
- 
+-/*
+  * A queue has just exitted congestion.  Note this in the global counter of
+  * congested queues, and wake up anyone who was waiting for requests to be
+  * put back.
 -- 
 1.6.2.1
 
