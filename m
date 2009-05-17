@@ -1,16 +1,16 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 3/5] New blk_make_request(), takes bio, returns a request
-Date: Sun, 17 May 2009 18:57:15 +0300
-Message-ID: <4A1033DB.2030908@panasas.com>
+Subject: [PATCH 4/5] libosd: Use of new blk_make_request
+Date: Sun, 17 May 2009 18:58:41 +0300
+Message-ID: <4A103431.908@panasas.com>
 References: <4A1032B0.5000003@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:9200 "EHLO
+Received: from gw-ca.panasas.com ([209.116.51.66]:16799 "EHLO
 	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751260AbZEQP5U (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 May 2009 11:57:20 -0400
+	with ESMTP id S1751520AbZEQP6p (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 May 2009 11:58:45 -0400
 In-Reply-To: <4A1032B0.5000003@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,91 +18,105 @@ To: Jens Axboe <Jens.Axboe@oracle.com>, James Bottomley <James.Bottomley@hansenp
 Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
 
-New block API:
-given a struct bio allocates a new request. This is the parallel of
-generic_make_request for BLOCK_PC commands users.
+Use new blk_make_request() to allocate a request from bio
+and avoid using deprecated blk_rq_append_bio().
 
-The passed bio may be a chained-bio. The bio is bounced if needed
-inside the call to this member.
+This patch is dependent on a block layer patch titled:
+    [BLOCK] New blk_make_request() takes bio returns request
 
-This is in the effort of un-exporting blk_rq_append_bio().
+This is the last usage of blk_rq_append_bio in osd, it can now
+be un-exported.
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 CC: Jeff Garzik <jeff@garzik.org>
+CC: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- block/blk-core.c       |   45 +++++++++++++++++++++++++++++++++++++++++++++
- include/linux/blkdev.h |    2 ++
- 2 files changed, 47 insertions(+), 0 deletions(-)
+ drivers/scsi/osd/osd_initiator.c |   48 ++++++++++++++++++-------------------
+ 1 files changed, 23 insertions(+), 25 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index a2d97de..89261d2 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -891,6 +891,51 @@ struct request *blk_get_request(struct request_queue *q, int rw, gfp_t gfp_mask)
- EXPORT_SYMBOL(blk_get_request);
- 
- /**
-+ * blk_make_request - given a bio, allocate a corresponding struct request.
-+ *
-+ * @bio:  The bio describing the memory mappings that will be submitted for IO.
-+ *        It may be a chained-bio properly constructed by block/bio layer.
-+ *
-+ * blk_make_request is the parallel of generic_make_request for BLOCK_PC
-+ * type commands. Where the struct request needs to be farther initialized by
-+ * the caller. It is passed a &struct bio, which describes the memory info of
-+ * the I/O transfer.
-+ *
-+ * The caller of blk_make_request must make sure that bi_io_vec
-+ * are set to describe the memory buffers. That bio_data_dir() will return
-+ * the needed direction of the request. (And all bio's in the passed bio-chain
-+ * are properly set accordingly)
-+ *
-+ * If called under none-sleepable conditions, mapped bio buffers must not
-+ * need bouncing, by calling the appropriate masked or flagged allocator,
-+ * suitable for the target device. Otherwise the call to blk_queue_bounce will
-+ * BUG.
-+ */
-+struct request *blk_make_request(struct request_queue *q, struct bio *bio,
-+				 gfp_t gfp_mask)
+diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
+index bf66e30..865ec0f 100644
+--- a/drivers/scsi/osd/osd_initiator.c
++++ b/drivers/scsi/osd/osd_initiator.c
+@@ -1200,6 +1200,21 @@ static int _osd_req_finalize_data_integrity(struct osd_request *or,
+ /*
+  * osd_finalize_request and helpers
+  */
++static struct request *_make_request(struct request_queue *q, bool has_write,
++			      struct _osd_io_info *oii, gfp_t flags)
 +{
-+	struct request *rq = blk_get_request(q, bio_data_dir(bio), gfp_mask);
++	if (oii->bio)
++		return blk_make_request(q, oii->bio, flags);
++	else {
++		struct request *req;
 +
-+	if (unlikely(!rq))
-+		return ERR_PTR(-ENOMEM);
++		req = blk_get_request(q, has_write ? WRITE : READ, flags);
++		if (unlikely(!req))
++			return ERR_PTR(-ENOMEM);
 +
-+	for_each_bio(bio) {
-+		struct bio *bounce_bio = bio;
-+		int ret;
-+
-+		blk_queue_bounce(q, &bounce_bio);
-+		ret = blk_rq_append_bio(q, rq, bounce_bio);
-+		if (unlikely(ret)) {
-+			blk_put_request(rq);
-+			return ERR_PTR(ret);
-+		}
++		return req;
 +	}
-+
-+	return rq;
 +}
-+EXPORT_SYMBOL(blk_make_request);
-+
-+/**
-  * blk_requeue_request - put a request back on queue
-  * @q:		request queue where request should be inserted
-  * @rq:		request to be inserted
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index f9d60a7..88a83e1 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -740,6 +740,8 @@ extern void blk_rq_init(struct request_queue *q, struct request *rq);
- extern void blk_put_request(struct request *);
- extern void __blk_put_request(struct request_queue *, struct request *);
- extern struct request *blk_get_request(struct request_queue *, int, gfp_t);
-+extern struct request *blk_make_request(struct request_queue *, struct bio *,
-+					gfp_t);
- extern void blk_insert_request(struct request_queue *, struct request *, int, void *);
- extern void blk_requeue_request(struct request_queue *, struct request *);
- extern int blk_rq_check_limits(struct request_queue *q, struct request *rq);
+ 
+ static int _init_blk_request(struct osd_request *or,
+ 	bool has_in, bool has_out)
+@@ -1208,11 +1223,13 @@ static int _init_blk_request(struct osd_request *or,
+ 	struct scsi_device *scsi_device = or->osd_dev->scsi_device;
+ 	struct request_queue *q = scsi_device->request_queue;
+ 	struct request *req;
+-	int ret = -ENOMEM;
++	int ret;
+ 
+-	req = blk_get_request(q, has_out, flags);
+-	if (!req)
++	req = _make_request(q, has_out, has_out ? &or->out : &or->in, flags);
++	if (IS_ERR(req)) {
++		ret = PTR_ERR(req);
+ 		goto out;
++	}
+ 
+ 	or->request = req;
+ 	req->cmd_type = REQ_TYPE_BLOCK_PC;
+@@ -1225,9 +1242,10 @@ static int _init_blk_request(struct osd_request *or,
+ 		or->out.req = req;
+ 		if (has_in) {
+ 			/* allocate bidi request */
+-			req = blk_get_request(q, READ, flags);
+-			if (!req) {
++			req = _make_request(q, false, &or->in, flags);
++			if (IS_ERR(req)) {
+ 				OSD_DEBUG("blk_get_request for bidi failed\n");
++				ret = PTR_ERR(req);
+ 				goto out;
+ 			}
+ 			req->cmd_type = REQ_TYPE_BLOCK_PC;
+@@ -1271,26 +1289,6 @@ int osd_finalize_request(struct osd_request *or,
+ 		return ret;
+ 	}
+ 
+-	if (or->out.bio) {
+-		ret = blk_rq_append_bio(or->request->q, or->out.req,
+-					or->out.bio);
+-		if (ret) {
+-			OSD_DEBUG("blk_rq_append_bio out failed\n");
+-			return ret;
+-		}
+-		OSD_DEBUG("out bytes=%llu (bytes_req=%u)\n",
+-			_LLU(or->out.total_bytes), blk_rq_bytes(or->out.req));
+-	}
+-	if (or->in.bio) {
+-		ret = blk_rq_append_bio(or->request->q, or->in.req, or->in.bio);
+-		if (ret) {
+-			OSD_DEBUG("blk_rq_append_bio in failed\n");
+-			return ret;
+-		}
+-		OSD_DEBUG("in bytes=%llu (bytes_req=%u)\n",
+-			_LLU(or->in.total_bytes), blk_rq_bytes(or->in.req));
+-	}
+-
+ 	or->out.pad_buff = sg_out_pad_buffer;
+ 	or->in.pad_buff = sg_in_pad_buffer;
+ 
 -- 
 1.6.2.1
 
