@@ -1,205 +1,207 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH UPDATED block#for-2.6.31 2/3] block: set rq->resid_len
- to blk_rq_bytes() on issue
-Date: Sun, 17 May 2009 11:48:18 +0300
-Message-ID: <4A0FCF52.7070406@panasas.com>
-References: <4A0D86DB.9000203@kernel.org> <4A0D87D2.7090806@gmail.com> <4A0E0650.1020500@gmail.com>
+From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
+Subject: Re: 2.6.30-rc6: Reported regressions from 2.6.29
+Date: Sun, 17 May 2009 12:34:21 +0200
+Message-ID: <200905171234.23436.rjw@sisk.pl>
+References: <_AjETDMbIoL.A.DcH.RYzDKB@chimera> <20090517073327.GC1583@elte.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4A0E0650.1020500@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Borislav Petkov <petkovbb@googlemail.com>, Pete Zaitcev <zaitcev@redhat.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Eric Moore <Eric.Moore@lsi.com>, "Darrick J. Wong" <djwong@us.ibm.com>
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20090517073327.GC1583-X9Un+BFzKDI@public.gmane.org>
+Content-Disposition: inline
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>
+Cc: Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Martin Bammer <mrb74-RbZlAiThDcE@public.gmane.org>, Jeff Garzik <jgarzik-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Kumar Gala <galak-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Adrian Bunk <bunk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, Jeff Mahoney <jeffm-IBi9RG/b67k@public.gmane.org>, Stephen Hemminger <shemminger-ZtmgI6mnKB3QT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 05/16/2009 03:18 AM, Tejun Heo wrote:
-> In commit c3a4d78c580de4edc9ef0f7c59812fb02ceb037f, while introducing
-> rq->resid_len, the default value of residue count was changed from
-> full count to zero.  The conversion was done under the assumption that
-> when a request fails residue count wasn't defined.  However, Boaz and
-> James pointed out that this wasn't true and the residue count should
-> be preserved for failed requests too.
+On Sunday 17 May 2009, Ingo Molnar wrote:
 > 
-> This patchset restores the original behavior by setting rq->resid_len
-> to blk_rq_bytes(rq) on issue and restoring explicit clearing in
-> affected drivers.  While at it, take advantage of the fact that
-> rq->resid_len is set to full count where applicable.
+> * Rafael J. Wysocki <rjw-KKrjLPT3xs0@public.gmane.org> wrote:
 > 
-> * ide-cd: rq->resid_len cleared on pc success
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13325
+> > Subject		: 2.6.30-rc kills my box hard - and lockdep chains
+> > Submitter	: Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>
+> > Date		: 2009-05-14 15:49 (3 days old)
+> > References	: http://marc.info/?l=linux-kernel&m=124231630701394&w=4
 > 
-> * mptsas: req->resid_len cleared on success
+> Jonathan, there's a side-issue reported there, us running out of 
+> lockdep space. Could you try this commit from -tip:
 > 
-> * sas_expander: rsp/req->resid_len cleared on success
+> d80c19d: lockdep: increase MAX_LOCKDEP_ENTRIES and MAX_LOCKDEP_CHAINS
 > 
-> * mpt2sas_transport: req->resid_len cleared on success
+> (which i'll get to Linus in the next ~24 hours.) Maybe that allows 
+> lockdep to report the reason for the deadlock.
 > 
-> * ide-cd, ide-tape, mptsas, sas_host_smp, mpt2sas_transport, ub: take
->   advantage of initial full count to simplify code
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13321
+> > Subject		: kernel crash with NULL pointer when boot
+> > Submitter	: Martin Bammer <mrb74-RbZlAiThDcE@public.gmane.org>
+> > Date		: 2009-05-16 12:37 (1 days old)
+> > References	: http://lkml.org/lkml/2009/5/16/100
 > 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Jens Axboe <jens.axboe@oracle.com>
-> Cc: Boaz Harrosh <bharrosh@panasas.com>
-> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Cc: Pete Zaitcev <zaitcev@redhat.com>
-> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Cc: Borislav Petkov <petkovbb@googlemail.com>
-> Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> Cc: Eric Moore <Eric.Moore@lsi.com>
-> Cc: Darrick J. Wong <djwong@us.ibm.com>
-> ---
-> ub updated per Pete's comment.
+> that crash is in reiserfs_for_each_xattr(), during sys_unlink()'s 
+> xattr teardown.
 > 
-> Thanks.
+> There's been a good deal of reiserfs changes in this cycle - some 
+> touch the xattr code as well. Some of them fairly late in the cycle, 
+> in the last two weeks:
 > 
->  block/blk-core.c                         |    1 +
->  drivers/block/ub.c                       |    6 ++++--
->  drivers/ide/ide-cd.c                     |    4 ++--
->  drivers/ide/ide-tape.c                   |    2 +-
->  drivers/message/fusion/mptsas.c          |    3 ++-
->  drivers/scsi/libsas/sas_expander.c       |    4 ++++
->  drivers/scsi/libsas/sas_host_smp.c       |    3 ---
->  drivers/scsi/mpt2sas/mpt2sas_transport.c |    4 ++--
->  8 files changed, 16 insertions(+), 11 deletions(-)
+>  earth4:~/tip> gll v2.6.29..linus --since=two-weeks-ago fs/reiserfs/
+>  2a32ceb: Fix races around the access to ->s_options
+>  677c9b2: reiserfs: remove privroot hiding in lookup
+>  b82bb72: reiserfs: dont associate security.* with xattr files
+>  ab17c4f: reiserfs: fixup xattr_root caching
+>  edcc37a: Always lookup priv_root on reiserfs mount and keep it
+>  5a6059c: reiserfs: Expand i_mutex to enclose lookup_one_len
 > 
-> Index: block/block/blk-core.c
-> ===================================================================
-> --- block.orig/block/blk-core.c
-> +++ block/block/blk-core.c
-> @@ -2198,6 +2198,7 @@ void blk_rq_bio_prep(struct request_queu
->  		rq->buffer = bio_data(bio);
->  	}
->  	rq->__data_len = bio->bi_size;
-> +	rq->resid_len = bio->bi_size;
->  	rq->bio = rq->biotail = bio;
->  
+> Martin, you could try a blind revert of say ... ab17c4f, which looks 
+> the most suspect and which is also a rather large commit.
+> 
+> Or/and you could try a bisect - perhaps accelerated via:
+> 
+>    git bisect start fs/reiserfs/
 
-Hi Tejun.
-Surly this is not enough. This is not the only place rq->__data_len gets a value.
-Specifically it can be added to in blk_rq_append_bio. You must then update
-all places that set rq->__data_len to also set rq->resid_len.
+I think there's a fix already for this in the works, but it hasn't been merged
+yet.  It looks like Jeff has just posted some reiserfs fixes. :-)
 
-Alternatively you could do a single:
-+	rq->resid_len = blk_rq_bytes(rq);
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13297
+> > Subject		: kernel panic -  not syncing : fatel exception in interupt
+> > Submitter	: rob <rob1-z2Ut7v/pTR/vt0rt8C/ehw@public.gmane.org>
+> > Date		: 2009-05-12 19:34 (5 days old)
+> > References	: http://marc.info/?l=linux-kernel&m=124216126903309&w=4
+> 
+> tainted crash, but probably legit. It does show some badness in an 
+> old-IDE legacy codepath:
+> 
+> [<c0371865>] error_code+0x65/0x6c
+> [<c0110155>] do_page_fault+0x0/0x1e0
+> [<c027dafc>] ide_complete_rq+0xf/0x3b
+> [<c02870a0>] cdrom_newpc_intr+0x64d/0x6cd
+> [<c0286a53>] cdrom_newpc_intr+0x0/0x6cd
+> [<c027dcc2>] ide_intr+0x109/0x161
+> [<c0132298>] handle_IRQ_event+0x54/0xc7
+> [<c013354a>] handle_level_irq+0x4f/0x85
+> [<c0103df7>] handle_irq+0x17/0x20
+> [<c0103da5>] do_IRQ+0x2b/0x66
+> [<c0102be9>] common_interupt+0x29/0x30
+> [<c0480000>] cmd40x_init+0x2ac/0x38d
+> [<c0106db3>] default_idle+0x25/0x38
+> [<c01019be>] cpu_idle+0x19/0x2d
+> [<c0468907>] start_kernel+0x23f/0x242
+> 
+> report subject line is too unspecific, it should be changed to 
+> something like:
+> 
+>   legacy IDE cmd40x related bootup crash
+> 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13296
+> > Subject		: Lockdep violation at cleanup_workqueue_thread during suspend
+> > Submitter	: Zdenek Kabelac <zdenek.kabelac-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> > Date		: 2009-05-12 7:59 (5 days old)
+> > References	: http://marc.info/?l=linux-kernel&m=124211522525625&w=4
+> 
+> looks like wireless related - the dependency that connects the 
+> locks in a wrong way appears to be:
+> 
+>  -> #2 (cfg80211_mutex){+.+.+.}:
+>         [<ffffffff80271a64>] __lock_acquire+0xc64/0x10a0
+>         [<ffffffff80271f38>] lock_acquire+0x98/0x140
+>         [<ffffffff8054e78c>] __mutex_lock_common+0x4c/0x3b0
+>         [<ffffffff8054ebf6>] mutex_lock_nested+0x46/0x60
+>         [<ffffffffa007e66a>] reg_todo+0x19a/0x590 [cfg80211]
+>         [<ffffffff80258f18>] worker_thread+0x1e8/0x3a0
+>         [<ffffffff8025dc3a>] kthread+0x5a/0xa0
+>         [<ffffffff8020d23a>] child_rip+0xa/0x20
+> 
+> (havent checked deeper)
+> 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13245
+> > Subject		: possible circular locking dependency detected
+> > Submitter	: Miles Lane <miles.lane-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> > Date		: 2009-05-04 16:56 (13 days old)
+> 
+> same as #13296 above. (The one above should be merged into this one 
+> i guess)
 
-inside  blk_fetch_request(q) or before the call to prep_fn, or even at
-__elv_add_request().
+Yes, I've merged the two.
 
-Currently this is a bug with chained bios
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13126
+> > Subject		: BUG: MAX_LOCKDEP_ENTRIES too low! when mounting rootfs
+> > Submitter	: Alexander Beregalov <a.beregalov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> > Date		: 2009-04-15 12:43 (32 days old)
+> > References	: http://marc.info/?l=linux-kernel&m=123979949820538&w=4
+> 
+> should be resolved via the lockdep space extension fix.
+> 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13118
+> > Subject		: iptables very slow after commit 784544739a25c30637397ace5489eeb6e15d7d49
+> > Submitter	: Jeff Chua <jeff.chua.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> > Date		: 2009-04-10 16:05 (37 days old)
+> > References	: http://lkml.org/lkml/2009/4/10/111
+> > 		  http://lkml.org/lkml/2009/4/25/83
+> > Handled-By	: Eric Dumazet <dada1-fPLkHRcR87vqlBn2x/YWAg@public.gmane.org>
+> 
+> solved by:
+> 
+>  commit 942e4a2bd680c606af0211e64eb216be2e19bf61
+>  Author: Stephen Hemminger <shemminger-ZtmgI6mnKB3QT0dZR+AlfA@public.gmane.org>
+>  Date:   Tue Apr 28 22:36:33 2009 -0700
+> 
+>     netfilter: revised locking for x_tables
 
-Thanks
-Boaz
+Already closed.
 
->  	if (bio->bi_bdev)
-> Index: block/drivers/ide/ide-cd.c
-> ===================================================================
-> --- block.orig/drivers/ide/ide-cd.c
-> +++ block/drivers/ide/ide-cd.c
-> @@ -699,6 +699,7 @@ static ide_startstop_t cdrom_newpc_intr(
->  
->  out_end:
->  	if (blk_pc_request(rq) && rc == 0) {
-> +		rq->resid_len = 0;
->  		blk_end_request_all(rq, 0);
->  		hwif->rq = NULL;
->  	} else {
-> @@ -718,8 +719,7 @@ out_end:
->  
->  		/* make sure it's fully ended */
->  		if (blk_fs_request(rq) == 0) {
-> -			rq->resid_len = blk_rq_bytes(rq) -
-> -				(cmd->nbytes - cmd->nleft);
-> +			rq->resid_len -= cmd->nbytes - cmd->nleft;
->  			if (uptodate == 0 && (cmd->tf_flags & IDE_TFLAG_WRITE))
->  				rq->resid_len += cmd->last_xfer_len;
->  		}
-> Index: block/drivers/ide/ide-tape.c
-> ===================================================================
-> --- block.orig/drivers/ide/ide-tape.c
-> +++ block/drivers/ide/ide-tape.c
-> @@ -380,7 +380,7 @@ static int ide_tape_callback(ide_drive_t
->  		}
->  
->  		tape->first_frame += blocks;
-> -		rq->resid_len = blk_rq_bytes(rq) - blocks * tape->blk_size;
-> +		rq->resid_len -= blocks * tape->blk_size;
->  
->  		if (pc->error) {
->  			uptodate = 0;
-> Index: block/drivers/message/fusion/mptsas.c
-> ===================================================================
-> --- block.orig/drivers/message/fusion/mptsas.c
-> +++ block/drivers/message/fusion/mptsas.c
-> @@ -1357,7 +1357,8 @@ static int mptsas_smp_handler(struct Scs
->  		smprep = (SmpPassthroughReply_t *)ioc->sas_mgmt.reply;
->  		memcpy(req->sense, smprep, sizeof(*smprep));
->  		req->sense_len = sizeof(*smprep);
-> -		rsp->resid_len = blk_rq_bytes(rsp) - smprep->ResponseDataLength;
-> +		req->resid_len = 0;
-> +		rsp->resid_len -= smprep->ResponseDataLength;
->  	} else {
->  		printk(MYIOC_s_ERR_FMT "%s: smp passthru reply failed to be returned\n",
->  		    ioc->name, __func__);
-> Index: block/drivers/scsi/libsas/sas_expander.c
-> ===================================================================
-> --- block.orig/drivers/scsi/libsas/sas_expander.c
-> +++ block/drivers/scsi/libsas/sas_expander.c
-> @@ -1937,7 +1937,11 @@ int sas_smp_handler(struct Scsi_Host *sh
->  	if (ret > 0) {
->  		/* positive number is the untransferred residual */
->  		rsp->resid_len = ret;
-> +		req->resid_len = 0;
->  		ret = 0;
-> +	} else if (ret == 0) {
-> +		rsp->resid_len = 0;
-> +		req->resid_len = 0;
->  	}
->  
->  	return ret;
-> Index: block/drivers/scsi/libsas/sas_host_smp.c
-> ===================================================================
-> --- block.orig/drivers/scsi/libsas/sas_host_smp.c
-> +++ block/drivers/scsi/libsas/sas_host_smp.c
-> @@ -176,9 +176,6 @@ int sas_smp_host_handler(struct Scsi_Hos
->  	resp_data[1] = req_data[1];
->  	resp_data[2] = SMP_RESP_FUNC_UNK;
->  
-> -	req->resid_len = blk_rq_bytes(req);
-> -	rsp->resid_len = blk_rq_bytes(rsp);
-> -
->  	switch (req_data[1]) {
->  	case SMP_REPORT_GENERAL:
->  		req->resid_len -= 8;
-> Index: block/drivers/scsi/mpt2sas/mpt2sas_transport.c
-> ===================================================================
-> --- block.orig/drivers/scsi/mpt2sas/mpt2sas_transport.c
-> +++ block/drivers/scsi/mpt2sas/mpt2sas_transport.c
-> @@ -1170,8 +1170,8 @@ transport_smp_handler(struct Scsi_Host *
->  
->  		memcpy(req->sense, mpi_reply, sizeof(*mpi_reply));
->  		req->sense_len = sizeof(*mpi_reply);
-> -		rsp->resid_len = blk_rq_bytes(rsp) -
-> -				 mpi_reply->ResponseDataLength;
-> +		req->resid_len = 0;
-> +		rsp->resid_len -= mpi_reply->ResponseDataLength;
->  	} else {
->  		dtransportprintk(ioc, printk(MPT2SAS_DEBUG_FMT
->  		    "%s - no reply\n", ioc->name, __func__));
-> Index: block/drivers/block/ub.c
-> ===================================================================
-> --- block.orig/drivers/block/ub.c
-> +++ block/drivers/block/ub.c
-> @@ -781,8 +781,10 @@ static void ub_rw_cmd_done(struct ub_dev
->  
->  	if (cmd->error == 0) {
->  		if (blk_pc_request(rq)) {
-> -			if (cmd->act_len < blk_rq_bytes(rq))
-> -				rq->resid_len = blk_rq_bytes(rq) - cmd->act_len;
-> +			if (cmd->act_len >= rq->resid_len)
-> +				rq->resid_len = 0;
-> +			else
-> +				rq->resid_len -= cmd->act_len;
->  			scsi_status = 0;
->  		} else {
->  			if (cmd->act_len != cmd->len) {
+> commit log does not credit reporters and testers and does not 
+> mention bugzilla id.
+
+Sigh.
+
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13116
+> > Subject		: Can't boot with nosmp
+> > Submitter	: Stephen Hemminger <shemminger-ZtmgI6mnKB3QT0dZR+AlfA@public.gmane.org>
+> > Date		: 2009-04-15 4:18 (32 days old)
+> > References	: http://marc.info/?l=linux-kernel&m=123976917817920&w=4
+> > Handled-By	: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> 
+> I think this might be fixed by:
+> 
+>  d6de2c8: async: Fix module loading async-work regression
+
+That would be good to verify.  Stephen?
+
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13107
+> > Subject		: LTP 20080131 causes defunct processes w/2.6.30-rc1
+> > Submitter	: Kumar Gala <galak-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>
+> > Date		: 2009-04-09 15:43 (38 days old)
+> > First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=b3bfa0cba867f23365b81658b47efd906830879b
+> > References	: http://marc.info/?l=linux-kernel&m=123929187208953&w=4
+> > 		  http://lkml.org/lkml/2009/4/10/193
+> > Handled-By	: Sukadev Bhattiprolu <sukadev-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+> 
+> Oleg says in that thread that it's as-designed, and followup 
+> questions were not replied to (yet).
+> 
+> But ... a relevant seeming commit has been bisected to so this 
+> shouldnt be ignored that easily.
+> 
+> Andrew, you merged the commit that was bisected to:
+> 
+>   From b3bfa0cba867f23365b81658b47efd906830879b Mon Sep 17 00:00:00 2001
+>   From: Sukadev Bhattiprolu <sukadev-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+>   Date: Thu, 2 Apr 2009 16:58:08 -0700
+>   Subject: [PATCH] signals: protect cinit from blocked fatal signals
+> 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13068
+> > Subject		: Lockdep warining in inotify_dev_queue_event
+> > Submitter	: Sachin Sant <sachinp-xthvdsQ13ZrQT0dZR+AlfA@public.gmane.org>
+> > Date		: 2009-04-05 12:37 (42 days old)
+> > References	: http://marc.info/?l=linux-kernel&m=123893439229272&w=4
+> 
+> should be fixed by:
+> 
+> 381a80e: inotify: use GFP_NOFS in kernel_event() to work around a lockdep false-positive
+
+Closed.
+
+Thanks a lot,
+Rafael
