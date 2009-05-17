@@ -1,73 +1,83 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 1/5] allow blk_rq_map_kern to append to requests
-Date: Sun, 17 May 2009 18:55:18 +0300
-Message-ID: <4A103366.9040200@panasas.com>
+Subject: [PATCH 2/5] libosd: Use new blk_rq_map_kern
+Date: Sun, 17 May 2009 18:56:17 +0300
+Message-ID: <4A1033A1.6080403@panasas.com>
 References: <4A1032B0.5000003@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:14278 "EHLO
+Received: from gw-ca.panasas.com ([209.116.51.66]:19551 "EHLO
 	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750893AbZEQPzX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 May 2009 11:55:23 -0400
+	with ESMTP id S1751204AbZEQP4V (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 May 2009 11:56:21 -0400
 In-Reply-To: <4A1032B0.5000003@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <Jens.Axboe@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
 Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Use blk_rq_append_bio() internally instead of blk_rq_bio_prep()
-so blk_rq_map_kern can be called multiple times, to map multiple
-buffers.
+Now that blk_rq_map_kern will append the buffer onto the
+request we can use it easily for adding extra segments
+(eg. attributes)
 
-This is in the effort to un-export blk_rq_append_bio()
+This patch is dependent on a block layer patch titled:
+   [BLOCK] allow blk_rq_map_kern to append to requests
 
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 ---
- block/blk-map.c |   12 ++++++++++--
- 1 files changed, 10 insertions(+), 2 deletions(-)
+ drivers/scsi/osd/osd_initiator.c |   24 ++----------------------
+ 1 files changed, 2 insertions(+), 22 deletions(-)
 
-diff --git a/block/blk-map.c b/block/blk-map.c
-index 56082be..caa05a6 100644
---- a/block/blk-map.c
-+++ b/block/blk-map.c
-@@ -282,7 +282,8 @@ EXPORT_SYMBOL(blk_rq_unmap_user);
-  *
-  * Description:
-  *    Data will be mapped directly if possible. Otherwise a bounce
-- *    buffer is used.
-+ *    buffer is used. Can be called multple times to append multple
-+ *    buffers.
-  */
- int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
- 		    unsigned int len, gfp_t gfp_mask)
-@@ -290,6 +291,7 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
- 	int reading = rq_data_dir(rq) == READ;
- 	int do_copy = 0;
- 	struct bio *bio;
-+	int ret;
+diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
+index d178a8b..bf66e30 100644
+--- a/drivers/scsi/osd/osd_initiator.c
++++ b/drivers/scsi/osd/osd_initiator.c
+@@ -826,26 +826,6 @@ int osd_req_add_set_attr_list(struct osd_request *or,
+ }
+ EXPORT_SYMBOL(osd_req_add_set_attr_list);
  
- 	if (len > (q->max_hw_sectors << 9))
- 		return -EINVAL;
-@@ -311,7 +313,13 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
- 	if (do_copy)
- 		rq->cmd_flags |= REQ_COPY_USER;
+-static int _append_map_kern(struct request *req,
+-	void *buff, unsigned len, gfp_t flags)
+-{
+-	struct bio *bio;
+-	int ret;
+-
+-	bio = bio_map_kern(req->q, buff, len, flags);
+-	if (IS_ERR(bio)) {
+-		OSD_ERR("Failed bio_map_kern(%p, %d) => %ld\n", buff, len,
+-			PTR_ERR(bio));
+-		return PTR_ERR(bio);
+-	}
+-	ret = blk_rq_append_bio(req->q, req, bio);
+-	if (ret) {
+-		OSD_ERR("Failed blk_rq_append_bio(%p) => %d\n", bio, ret);
+-		bio_put(bio);
+-	}
+-	return ret;
+-}
+-
+ static int _req_append_segment(struct osd_request *or,
+ 	unsigned padding, struct _osd_req_data_segment *seg,
+ 	struct _osd_req_data_segment *last_seg, struct _osd_io_info *io)
+@@ -861,14 +841,14 @@ static int _req_append_segment(struct osd_request *or,
+ 		else
+ 			pad_buff = io->pad_buff;
  
--	blk_rq_bio_prep(q, rq, bio);
-+	ret = blk_rq_append_bio(q, rq, bio);
-+	if (unlikely(ret)) {
-+		/* request is too big */
-+		bio_put(bio);
-+		return ret;
-+	}
-+
- 	blk_queue_bounce(q, &rq->bio);
- 	rq->buffer = NULL;
- 	return 0;
+-		ret = _append_map_kern(io->req, pad_buff, padding,
++		ret = blk_rq_map_kern(io->req->q, io->req, pad_buff, padding,
+ 				       or->alloc_flags);
+ 		if (ret)
+ 			return ret;
+ 		io->total_bytes += padding;
+ 	}
+ 
+-	ret = _append_map_kern(io->req, seg->buff, seg->total_bytes,
++	ret = blk_rq_map_kern(io->req->q, io->req, seg->buff, seg->total_bytes,
+ 			       or->alloc_flags);
+ 	if (ret)
+ 		return ret;
 -- 
 1.6.2.1
 
