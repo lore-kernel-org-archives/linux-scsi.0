@@ -1,36 +1,33 @@
-From: Avi Kivity <avi@redhat.com>
-Subject: Re: KVM 10/Gb Ethernet PCIe passthrough with Linux/iSCSI and large
- block sizes
-Date: Sun, 17 May 2009 22:53:04 +0300
-Message-ID: <4A106B20.7000809@redhat.com>
-References: <1242361761.21442.276.camel@haakon2.linux-iscsi.org>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [net-next-2.6 PATCH 1/8] ixgbe: Add FCoE feature register
+ defines to 82599
+Date: Sun, 17 May 2009 13:57:56 -0700 (PDT)
+Message-ID: <20090517.135756.172992829.davem@davemloft.net>
+References: <20090513230924.11416.68752.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <kvm-owner@vger.kernel.org>
-In-Reply-To: <1242361761.21442.276.camel@haakon2.linux-iscsi.org>
-Sender: kvm-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: kvm-devel <kvm@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux-netdev <netdev@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, "H. Peter Anvin" <hpa@zytor.com>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, Sheng Yang <sheng@linux.intel.com>, Leonid Grossman <leonid.grossman@neterion.com>, Ramkrishna Vepa <Ramkrishna.Vepa@neterion.com>, Rastapur Santosh <santosh.rastapur@neterion.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50534
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753112AbZEQU57 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 17 May 2009 16:57:59 -0400
+In-Reply-To: <20090513230924.11416.68752.stgit@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jeffrey.t.kirsher@intel.com
+Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, yi.zou@intel.com, peter.p.waskiewicz.jr@intel.com
 
-Nicholas A. Bellinger wrote:
-> Greetings all,
->
-> The first test results for Linux/iSCSI Initiators and targets for large
-> block sizes using 10 Gb/sec Ethernet + PCIe device-passthrough into
-> Linux/KVM guests have been posted at:
->
-> http://linux-iscsi.org/index.php/KVM-LIO-Target
->
-> So far, the results have been quite impressive using the Neterion X3100
-> series hardware with recent KVM-85 stable code (with Marcelo's patches,
-> see the above link) on v2.6.29.2 KVM guests, and using v2.6.30-rc3 KVM
-> Hosts.
->   
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Date: Wed, 13 May 2009 16:09:39 -0700
 
-Thanks for posting this!  Very impressive results.
+> From: Yi Zou <yi.zou@intel.com>
+> 
+> This adds FCoE related register defines to 82599.
+> 
+> Signed-off-by: Yi Zou <yi.zou@intel.com>
+> Acked-by: Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
+> Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
 
--- 
-Do not meddle in the internals of kernels, for they are subtle and quick to panic.
-
+Applied.
