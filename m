@@ -1,148 +1,205 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [patchset 0/4] osd: Stop usage of blk_rq_append_bio
-Date: Sun, 17 May 2009 11:24:40 +0300
-Message-ID: <4A0FC9C8.6040907@panasas.com>
-References: <4A0307F4.50205@panasas.com> <20090512112539.GH4140@kernel.dk>	 <4A0AD8FA.6030903@panasas.com>  <4A0ADAEF.3040501@panasas.com>	 <1242226048.4728.24.camel@mulgrave.int.hansenpartnership.com>	 <4A0C3086.2010802@panasas.com> <1242315327.11484.2.camel@mulgrave.int.hansenpartnership.com> <4A0C4295.4080101@panasas.com> <4A0C494D.6040803@panasas.com>
+Subject: Re: [PATCH UPDATED block#for-2.6.31 2/3] block: set rq->resid_len
+ to blk_rq_bytes() on issue
+Date: Sun, 17 May 2009 11:48:18 +0300
+Message-ID: <4A0FCF52.7070406@panasas.com>
+References: <4A0D86DB.9000203@kernel.org> <4A0D87D2.7090806@gmail.com> <4A0E0650.1020500@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:49976 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751951AbZEQIYs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 May 2009 04:24:48 -0400
-Received: by fg-out-1718.google.com with SMTP id d23so406745fga.17
-        for <linux-scsi@vger.kernel.org>; Sun, 17 May 2009 01:24:47 -0700 (PDT)
-In-Reply-To: <4A0C494D.6040803@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4A0E0650.1020500@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Borislav Petkov <petkovbb@googlemail.com>, Pete Zaitcev <zaitcev@redhat.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Eric Moore <Eric.Moore@lsi.com>, "Darrick J. Wong" <djwong@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>, Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-On 05/14/2009 07:46 PM, James Bottomley wrote:
-> On Thu, 2009-05-14 at 19:11 +0300, Boaz Harrosh wrote:
->> On 05/14/2009 06:35 PM, James Bottomley wrote:
->> <snip>
->>>> I see that you rebased by now, though I suspect the fc's blk_end_request
->>>> call will fail to build if merged with block tree.
->>> Yes, that's the bit we need a postmerge tree for.  It has to build on
->>> it's own in scsi-misc, but it's making use of an API Tejun is altering,
->>> so the block postmerge has to do the API alteration based on the SCSI
->>> tree.
->>>
->> Tejun's cleanup is a bit tricky and cross trees wide. It will need to be
->> completely postponed to post merge which will be a pity since there are
->> so many patches ontop of it in block-next. Unless we want to sacrifice
->> the build ability of the tree between block-merge and the fixup to this driver.
->>
->> Perhaps you could do a scsi-post-merge tree that has only this driver, already
->> with the new needed code?
+On 05/16/2009 03:18 AM, Tejun Heo wrote:
+> In commit c3a4d78c580de4edc9ef0f7c59812fb02ceb037f, while introducing
+> rq->resid_len, the default value of residue count was changed from
+> full count to zero.  The conversion was done under the assumption that
+> when a request fails residue count wasn't defined.  However, Boaz and
+> James pointed out that this wasn't true and the residue count should
+> be preserved for failed requests too.
 > 
-> If necessary.  However, the disadvantage of doing it this way around is
-> that I have to squash together the two patches (FC transport patch and
-> the update to tejun's API) otherwise we get a bisection break.
+> This patchset restores the original behavior by setting rq->resid_len
+> to blk_rq_bytes(rq) on issue and restoring explicit clearing in
+> affected drivers.  While at it, take advantage of the fact that
+> rq->resid_len is set to full count where applicable.
 > 
-> James
+> * ide-cd: rq->resid_len cleared on pc success
+> 
+> * mptsas: req->resid_len cleared on success
+> 
+> * sas_expander: rsp/req->resid_len cleared on success
+> 
+> * mpt2sas_transport: req->resid_len cleared on success
+> 
+> * ide-cd, ide-tape, mptsas, sas_host_smp, mpt2sas_transport, ub: take
+>   advantage of initial full count to simplify code
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Jens Axboe <jens.axboe@oracle.com>
+> Cc: Boaz Harrosh <bharrosh@panasas.com>
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Cc: Pete Zaitcev <zaitcev@redhat.com>
+> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Cc: Borislav Petkov <petkovbb@googlemail.com>
+> Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Cc: Eric Moore <Eric.Moore@lsi.com>
+> Cc: Darrick J. Wong <djwong@us.ibm.com>
+> ---
+> ub updated per Pete's comment.
+> 
+> Thanks.
+> 
+>  block/blk-core.c                         |    1 +
+>  drivers/block/ub.c                       |    6 ++++--
+>  drivers/ide/ide-cd.c                     |    4 ++--
+>  drivers/ide/ide-tape.c                   |    2 +-
+>  drivers/message/fusion/mptsas.c          |    3 ++-
+>  drivers/scsi/libsas/sas_expander.c       |    4 ++++
+>  drivers/scsi/libsas/sas_host_smp.c       |    3 ---
+>  drivers/scsi/mpt2sas/mpt2sas_transport.c |    4 ++--
+>  8 files changed, 16 insertions(+), 11 deletions(-)
+> 
+> Index: block/block/blk-core.c
+> ===================================================================
+> --- block.orig/block/blk-core.c
+> +++ block/block/blk-core.c
+> @@ -2198,6 +2198,7 @@ void blk_rq_bio_prep(struct request_queu
+>  		rq->buffer = bio_data(bio);
+>  	}
+>  	rq->__data_len = bio->bi_size;
+> +	rq->resid_len = bio->bi_size;
+>  	rq->bio = rq->biotail = bio;
+>  
 
-Either, almost the complete block tree together with below patch needs to
-be post-merge, rebased over a single scsi-misc patch: "FC Pass Thru"
+Hi Tejun.
+Surly this is not enough. This is not the only place rq->__data_len gets a value.
+Specifically it can be added to in blk_rq_append_bio. You must then update
+all places that set rq->__data_len to also set rq->resid_len.
 
-or a single scsi-misc patch is rebased post-merge over block-tree, yes
-with below squashed in.
+Alternatively you could do a single:
++	rq->resid_len = blk_rq_bytes(rq);
 
-But merging the trees as they are will cause bisection break from the
-second merge to below patch.
+inside  blk_fetch_request(q) or before the call to prep_fn, or even at
+__elv_add_request().
 
-So since the block tree is much more code, I'd say squash below and post-
-merge the single "FC Pass Thru support" patch.
+Currently this is a bug with chained bios
 
-Tejun, I need your review on this patch have you had a chance to look at it?
-
+Thanks
 Boaz
 
-> 
-> Below is a patch that should be squashed into scsi-misc's:
->  [04576e3] [SCSI] FC Pass Thru support
-> 
-> In order to compile and work ontop of Tejun's block layer revamps,
-> in block-next
-> 
-> Tejun please review, specially the blk_fetch_request bit. Thanks
-> 
-> Boaz
-> ---
-> From: Boaz Harrosh <bharrosh@panasas.com>
-> Date: Thu, 14 May 2009 19:32:46 +0300
-> Subject: [SQUASHME] into: FC Pass Thru support
-> 
-> This patch should be squashed into
->   [SCSI] FC Pass Thru support
-> 
-> If it needs to compile after Tejun's block-layer revamps
-> 
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> ---
->  drivers/scsi/scsi_transport_fc.c |   20 ++++++++------------
->  1 files changed, 8 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-> index 4df8c3c..41c90fe 100644
-> --- a/drivers/scsi/scsi_transport_fc.c
-> +++ b/drivers/scsi/scsi_transport_fc.c
-> @@ -3409,7 +3409,6 @@ fc_bsg_jobdone(struct fc_bsg_job *job)
->  	struct request *req = job->req;
->  	struct request *rsp = req->next_rq;
->  	unsigned long flags;
-> -	unsigned rsp_len = 0, req_len = blk_rq_bytes(req);
->  	int err;
+>  	if (bio->bi_bdev)
+> Index: block/drivers/ide/ide-cd.c
+> ===================================================================
+> --- block.orig/drivers/ide/ide-cd.c
+> +++ block/drivers/ide/ide-cd.c
+> @@ -699,6 +699,7 @@ static ide_startstop_t cdrom_newpc_intr(
 >  
->  	spin_lock_irqsave(&job->job_lock, flags);
-> @@ -3425,16 +3424,15 @@ fc_bsg_jobdone(struct fc_bsg_job *job)
->  		job->req->sense_len = job->reply_len;
+>  out_end:
+>  	if (blk_pc_request(rq) && rc == 0) {
+> +		rq->resid_len = 0;
+>  		blk_end_request_all(rq, 0);
+>  		hwif->rq = NULL;
+>  	} else {
+> @@ -718,8 +719,7 @@ out_end:
 >  
->  	/* we assume all request payload was transferred, residual == 0 */
-> -	req->data_len = 0;
-> +	req->resid_len = 0;
+>  		/* make sure it's fully ended */
+>  		if (blk_fs_request(rq) == 0) {
+> -			rq->resid_len = blk_rq_bytes(rq) -
+> -				(cmd->nbytes - cmd->nleft);
+> +			rq->resid_len -= cmd->nbytes - cmd->nleft;
+>  			if (uptodate == 0 && (cmd->tf_flags & IDE_TFLAG_WRITE))
+>  				rq->resid_len += cmd->last_xfer_len;
+>  		}
+> Index: block/drivers/ide/ide-tape.c
+> ===================================================================
+> --- block.orig/drivers/ide/ide-tape.c
+> +++ block/drivers/ide/ide-tape.c
+> @@ -380,7 +380,7 @@ static int ide_tape_callback(ide_drive_t
+>  		}
 >  
->  	if (rsp) {
-> -		rsp_len = blk_rq_bytes(rsp);
-> -		BUG_ON(job->reply->reply_payload_rcv_len > rsp_len);
->  		/* set reply (bidi) residual */
-> -		rsp->data_len = (rsp_len - job->reply->reply_payload_rcv_len);
-> +		rsp->resid_len = blk_rq_bytes(rsp) -
-> +					job->reply->reply_payload_rcv_len;
+>  		tape->first_frame += blocks;
+> -		rq->resid_len = blk_rq_bytes(rq) - blocks * tape->blk_size;
+> +		rq->resid_len -= blocks * tape->blk_size;
+>  
+>  		if (pc->error) {
+>  			uptodate = 0;
+> Index: block/drivers/message/fusion/mptsas.c
+> ===================================================================
+> --- block.orig/drivers/message/fusion/mptsas.c
+> +++ block/drivers/message/fusion/mptsas.c
+> @@ -1357,7 +1357,8 @@ static int mptsas_smp_handler(struct Scs
+>  		smprep = (SmpPassthroughReply_t *)ioc->sas_mgmt.reply;
+>  		memcpy(req->sense, smprep, sizeof(*smprep));
+>  		req->sense_len = sizeof(*smprep);
+> -		rsp->resid_len = blk_rq_bytes(rsp) - smprep->ResponseDataLength;
+> +		req->resid_len = 0;
+> +		rsp->resid_len -= smprep->ResponseDataLength;
+>  	} else {
+>  		printk(MYIOC_s_ERR_FMT "%s: smp passthru reply failed to be returned\n",
+>  		    ioc->name, __func__);
+> Index: block/drivers/scsi/libsas/sas_expander.c
+> ===================================================================
+> --- block.orig/drivers/scsi/libsas/sas_expander.c
+> +++ block/drivers/scsi/libsas/sas_expander.c
+> @@ -1937,7 +1937,11 @@ int sas_smp_handler(struct Scsi_Host *sh
+>  	if (ret > 0) {
+>  		/* positive number is the untransferred residual */
+>  		rsp->resid_len = ret;
+> +		req->resid_len = 0;
+>  		ret = 0;
+> +	} else if (ret == 0) {
+> +		rsp->resid_len = 0;
+> +		req->resid_len = 0;
 >  	}
 >  
-> -	blk_end_bidi_request(req, err, req_len, rsp_len);
-> +	blk_end_request_all(req, err);
+>  	return ret;
+> Index: block/drivers/scsi/libsas/sas_host_smp.c
+> ===================================================================
+> --- block.orig/drivers/scsi/libsas/sas_host_smp.c
+> +++ block/drivers/scsi/libsas/sas_host_smp.c
+> @@ -176,9 +176,6 @@ int sas_smp_host_handler(struct Scsi_Hos
+>  	resp_data[1] = req_data[1];
+>  	resp_data[2] = SMP_RESP_FUNC_UNK;
 >  
->  	fc_destroy_bsgjob(job);
->  }
-> @@ -3496,7 +3494,7 @@ fc_bsg_map_buffer(struct fc_bsg_buffer *buf, struct request *req)
->  		return -ENOMEM;
->  	sg_init_table(buf->sg_list, req->nr_phys_segments);
->  	buf->sg_cnt = blk_rq_map_sg(req->q, req, buf->sg_list);
-> -	buf->payload_len = req->data_len;
-> +	buf->payload_len = blk_rq_bytes(req);
->  	return 0;
->  }
->  
-> @@ -3762,14 +3760,12 @@ fc_bsg_request_handler(struct request_queue *q, struct Scsi_Host *shost,
->  		return;
->  
->  	while (!blk_queue_plugged(q)) {
-> -		req = elv_next_request(q);
-> -		if (!req)
-> -			break;
+> -	req->resid_len = blk_rq_bytes(req);
+> -	rsp->resid_len = blk_rq_bytes(rsp);
 > -
->  		if (rport && (rport->port_state == FC_PORTSTATE_BLOCKED))
->  				break;
+>  	switch (req_data[1]) {
+>  	case SMP_REPORT_GENERAL:
+>  		req->resid_len -= 8;
+> Index: block/drivers/scsi/mpt2sas/mpt2sas_transport.c
+> ===================================================================
+> --- block.orig/drivers/scsi/mpt2sas/mpt2sas_transport.c
+> +++ block/drivers/scsi/mpt2sas/mpt2sas_transport.c
+> @@ -1170,8 +1170,8 @@ transport_smp_handler(struct Scsi_Host *
 >  
-> -		blkdev_dequeue_request(req);
-> +		req = blk_fetch_request(q);
-> +		if (!req)
-> +			break;
+>  		memcpy(req->sense, mpi_reply, sizeof(*mpi_reply));
+>  		req->sense_len = sizeof(*mpi_reply);
+> -		rsp->resid_len = blk_rq_bytes(rsp) -
+> -				 mpi_reply->ResponseDataLength;
+> +		req->resid_len = 0;
+> +		rsp->resid_len -= mpi_reply->ResponseDataLength;
+>  	} else {
+>  		dtransportprintk(ioc, printk(MPT2SAS_DEBUG_FMT
+>  		    "%s - no reply\n", ioc->name, __func__));
+> Index: block/drivers/block/ub.c
+> ===================================================================
+> --- block.orig/drivers/block/ub.c
+> +++ block/drivers/block/ub.c
+> @@ -781,8 +781,10 @@ static void ub_rw_cmd_done(struct ub_dev
 >  
->  		if (rport && (rport->port_state != FC_PORTSTATE_ONLINE)) {
->  			req->errors = -ENXIO;
-
+>  	if (cmd->error == 0) {
+>  		if (blk_pc_request(rq)) {
+> -			if (cmd->act_len < blk_rq_bytes(rq))
+> -				rq->resid_len = blk_rq_bytes(rq) - cmd->act_len;
+> +			if (cmd->act_len >= rq->resid_len)
+> +				rq->resid_len = 0;
+> +			else
+> +				rq->resid_len -= cmd->act_len;
+>  			scsi_status = 0;
+>  		} else {
+>  			if (cmd->act_len != cmd->len) {
