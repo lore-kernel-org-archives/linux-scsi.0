@@ -1,188 +1,175 @@
 From: Eric Moore <eric.moore@lsi.com>
-Subject: [PATCH 1/5] mpt2sas: T10 DIF Support
-Date: Mon, 18 May 2009 12:59:41 -0600
-Message-ID: <20090518185939.GB26609@lsil.com>
+Subject: [PATCH 2/5] mpt2sas: LUN Reset Support
+Date: Mon, 18 May 2009 13:00:45 -0600
+Message-ID: <20090518190043.GC26609@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og119.obsmtp.com ([64.18.2.16]:51135 "EHLO
-	exprod7og119.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753075AbZERSxw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 May 2009 14:53:52 -0400
+Received: from exprod7og109.obsmtp.com ([64.18.2.171]:34182 "EHLO
+	exprod7og109.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753278AbZERSzD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 May 2009 14:55:03 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org
 
-This add support for type 1 and 3 DIF support per the Oracle API.
+Adding new eh_target_reset_handler for target reset. Change the
+eh_device_reset_handler so its sending
+MPI2_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET, instead of
+MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET.  Add new function
+_scsih_scsi_lookup_find_by_lun as a sanity check to insure I_T_L commands are
+completed upon completing lun reset.
 
 Signed-off-by: Eric Moore <eric.moore@lsi.com>
 
-diff -uaprN a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h	2009-05-18 12:23:24.000000000 -0600
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h	2009-05-18 12:23:24.000000000 -0600
-@@ -61,6 +61,7 @@
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsi_transport_sas.h>
- #include <scsi/scsi_dbg.h>
-+#include <scsi/scsi_eh.h>
- 
- #include "mpt2sas_debug.h"
- 
 diff -uaprN a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
 --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2009-05-18 12:23:24.000000000 -0600
 +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2009-05-18 12:23:24.000000000 -0600
-@@ -2390,6 +2390,106 @@ mpt2sas_scsih_reset_handler(struct MPT2S
+@@ -884,6 +884,41 @@ _scsih_scsi_lookup_find_by_target(struct
  }
  
  /**
-+ * _scsih_setup_eedp - setup MPI request for EEDP transfer
-+ * @scmd: pointer to scsi command object
-+ * @mpi_request: pointer to the SCSI_IO reqest message frame
++ * _scsih_scsi_lookup_find_by_lun - search for matching channel:id:lun
++ * @ioc: per adapter object
++ * @id: target id
++ * @lun: lun number
++ * @channel: channel
++ * Context: This function will acquire ioc->scsi_lookup_lock.
 + *
-+ * Supporting protection 1 and 3.
-+ *
-+ * Returns nothing
++ * This will search for a matching channel:id:lun in the scsi_lookup array,
++ * returning 1 if found.
 + */
-+static void
-+_scsih_setup_eedp(struct scsi_cmnd *scmd, Mpi2SCSIIORequest_t *mpi_request)
++static u8
++_scsih_scsi_lookup_find_by_lun(struct MPT2SAS_ADAPTER *ioc, int id,
++    unsigned int lun, int channel)
 +{
-+	u16 eedp_flags;
-+	unsigned char prot_op = scsi_get_prot_op(scmd);
-+	unsigned char prot_type = scsi_get_prot_type(scmd);
++	u8 found;
++	unsigned long	flags;
++	int i;
 +
-+	if (prot_type == SCSI_PROT_DIF_TYPE0 ||
-+	   prot_type == SCSI_PROT_DIF_TYPE2 ||
-+	   prot_op == SCSI_PROT_NORMAL)
-+		return;
++	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
++	found = 0;
++	for (i = 0 ; i < ioc->request_depth; i++) {
++		if (ioc->scsi_lookup[i].scmd &&
++		    (ioc->scsi_lookup[i].scmd->device->id == id &&
++		    ioc->scsi_lookup[i].scmd->device->channel == channel &&
++		    ioc->scsi_lookup[i].scmd->device->lun == lun)) {
++			found = 1;
++			goto out;
++		}
++	}
++ out:
++	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
++	return found;
++}
 +
-+	if (prot_op ==  SCSI_PROT_READ_STRIP)
-+		eedp_flags = MPI2_SCSIIO_EEDPFLAGS_CHECK_REMOVE_OP;
-+	else if (prot_op ==  SCSI_PROT_WRITE_INSERT)
-+		eedp_flags = MPI2_SCSIIO_EEDPFLAGS_INSERT_OP;
++/**
+  * _scsih_get_chain_buffer_dma - obtain block of chains (dma address)
+  * @ioc: per adapter object
+  * @smid: system request message index
+@@ -1889,7 +1924,6 @@ scsih_abort(struct scsi_cmnd *scmd)
+ 	return r;
+ }
+ 
+-
+ /**
+  * scsih_dev_reset - eh threads main device reset routine
+  * @sdev: scsi device struct
+@@ -1906,7 +1940,7 @@ scsih_dev_reset(struct scsi_cmnd *scmd)
+ 	u16	handle;
+ 	int r;
+ 
+-	printk(MPT2SAS_INFO_FMT "attempting target reset! scmd(%p)\n",
++	printk(MPT2SAS_INFO_FMT "attempting device reset! scmd(%p)\n",
+ 	    ioc->name, scmd);
+ 	scsi_print_command(scmd);
+ 
+@@ -1941,6 +1975,78 @@ scsih_dev_reset(struct scsi_cmnd *scmd)
+ 
+ 	mutex_lock(&ioc->tm_cmds.mutex);
+ 	mpt2sas_scsih_issue_tm(ioc, handle, 0,
++	    MPI2_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET, scmd->device->lun,
++	    30);
++
++	/*
++	 *  sanity check see whether all commands to this device been
++	 *  completed
++	 */
++	if (_scsih_scsi_lookup_find_by_lun(ioc, scmd->device->id,
++	    scmd->device->lun, scmd->device->channel))
++		r = FAILED;
 +	else
-+		return;
++		r = SUCCESS;
++	ioc->tm_cmds.status = MPT2_CMD_NOT_USED;
++	mutex_unlock(&ioc->tm_cmds.mutex);
 +
-+	mpi_request->EEDPBlockSize = scmd->device->sector_size;
-+
-+	switch (prot_type) {
-+	case SCSI_PROT_DIF_TYPE1:
-+
-+		/*
-+		* enable ref/guard checking
-+		* auto increment ref tag
-+		*/
-+		mpi_request->EEDPFlags = eedp_flags |
-+		    MPI2_SCSIIO_EEDPFLAGS_INC_PRI_REFTAG |
-+		    MPI2_SCSIIO_EEDPFLAGS_CHECK_REFTAG |
-+		    MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD;
-+		mpi_request->CDB.EEDP32.PrimaryReferenceTag =
-+		    cpu_to_be32(scsi_get_lba(scmd));
-+
-+		break;
-+
-+	case SCSI_PROT_DIF_TYPE3:
-+
-+		/*
-+		* enable guard checking
-+		*/
-+		mpi_request->EEDPFlags = eedp_flags |
-+		    MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD;
-+
-+		break;
-+	}
++ out:
++	printk(MPT2SAS_INFO_FMT "device reset: %s scmd(%p)\n",
++	    ioc->name, ((r == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
++	return r;
 +}
 +
 +/**
-+ * _scsih_eedp_error_handling - return sense code for EEDP errors
-+ * @scmd: pointer to scsi command object
-+ * @ioc_status: ioc status
++ * scsih_target_reset - eh threads main target reset routine
++ * @sdev: scsi device struct
 + *
-+ * Returns nothing
++ * Returns SUCCESS if command aborted else FAILED
 + */
-+static void
-+_scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
++static int
++scsih_target_reset(struct scsi_cmnd *scmd)
 +{
-+	u8 ascq;
-+	u8 sk;
-+	u8 host_byte;
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(scmd->device->host);
++	struct MPT2SAS_DEVICE *sas_device_priv_data;
++	struct _sas_device *sas_device;
++	unsigned long flags;
++	u16	handle;
++	int r;
 +
-+	switch (ioc_status) {
-+	case MPI2_IOCSTATUS_EEDP_GUARD_ERROR:
-+		ascq = 0x01;
-+		break;
-+	case MPI2_IOCSTATUS_EEDP_APP_TAG_ERROR:
-+		ascq = 0x02;
-+		break;
-+	case MPI2_IOCSTATUS_EEDP_REF_TAG_ERROR:
-+		ascq = 0x03;
-+		break;
-+	default:
-+		ascq = 0x00;
-+		break;
++	printk(MPT2SAS_INFO_FMT "attempting target reset! scmd(%p)\n",
++	    ioc->name, scmd);
++	scsi_print_command(scmd);
++
++	sas_device_priv_data = scmd->device->hostdata;
++	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
++		printk(MPT2SAS_INFO_FMT "target been deleted! scmd(%p)\n",
++		    ioc->name, scmd);
++		scmd->result = DID_NO_CONNECT << 16;
++		scmd->scsi_done(scmd);
++		r = SUCCESS;
++		goto out;
 +	}
 +
-+	if (scmd->sc_data_direction == DMA_TO_DEVICE) {
-+		sk = ILLEGAL_REQUEST;
-+		host_byte = DID_ABORT;
-+	} else {
-+		sk = ABORTED_COMMAND;
-+		host_byte = DID_OK;
++	/* for hidden raid components obtain the volume_handle */
++	handle = 0;
++	if (sas_device_priv_data->sas_target->flags &
++	    MPT_TARGET_FLAGS_RAID_COMPONENT) {
++		spin_lock_irqsave(&ioc->sas_device_lock, flags);
++		sas_device = _scsih_sas_device_find_by_handle(ioc,
++		   sas_device_priv_data->sas_target->handle);
++		if (sas_device)
++			handle = sas_device->volume_handle;
++		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
++	} else
++		handle = sas_device_priv_data->sas_target->handle;
++
++	if (!handle) {
++		scmd->result = DID_RESET << 16;
++		r = FAILED;
++		goto out;
 +	}
 +
-+	scsi_build_sense_buffer(0, scmd->sense_buffer, sk, 0x10, ascq);
-+	scmd->result = DRIVER_SENSE << 24 | (host_byte << 16) |
-+	    SAM_STAT_CHECK_CONDITION;
-+}
-+
-+/**
-  * scsih_qcmd - main scsi request entry point
-  * @scmd: pointer to scsi command object
-  * @done: function pointer to be invoked on completion
-@@ -2470,6 +2570,7 @@ scsih_qcmd(struct scsi_cmnd *scmd, void
- 	}
- 	mpi_request = mpt2sas_base_get_msg_frame(ioc, smid);
- 	memset(mpi_request, 0, sizeof(Mpi2SCSIIORequest_t));
-+	_scsih_setup_eedp(scmd, mpi_request);
- 	mpi_request->Function = MPI2_FUNCTION_SCSI_IO_REQUEST;
- 	if (sas_device_priv_data->sas_target->flags &
- 	    MPT_TARGET_FLAGS_RAID_COMPONENT)
-@@ -2604,6 +2705,15 @@ _scsih_scsi_ioc_info(struct MPT2SAS_ADAP
- 	case MPI2_IOCSTATUS_SCSI_EXT_TERMINATED:
- 		desc_ioc_state = "scsi ext terminated";
- 		break;
-+	case MPI2_IOCSTATUS_EEDP_GUARD_ERROR:
-+		desc_ioc_state = "eedp guard error";
-+		break;
-+	case MPI2_IOCSTATUS_EEDP_REF_TAG_ERROR:
-+		desc_ioc_state = "eedp ref tag error";
-+		break;
-+	case MPI2_IOCSTATUS_EEDP_APP_TAG_ERROR:
-+		desc_ioc_state = "eedp app tag error";
-+		break;
- 	default:
- 		desc_ioc_state = "unknown";
- 		break;
-@@ -2939,6 +3049,11 @@ scsih_io_done(struct MPT2SAS_ADAPTER *io
- 			scmd->result = DID_RESET << 16;
- 		break;
++	mutex_lock(&ioc->tm_cmds.mutex);
++	mpt2sas_scsih_issue_tm(ioc, handle, 0,
+ 	    MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0, 30);
  
-+	case MPI2_IOCSTATUS_EEDP_GUARD_ERROR:
-+	case MPI2_IOCSTATUS_EEDP_REF_TAG_ERROR:
-+	case MPI2_IOCSTATUS_EEDP_APP_TAG_ERROR:
-+		_scsih_eedp_error_handling(scmd, ioc_status);
-+		break;
- 	case MPI2_IOCSTATUS_SCSI_PROTOCOL_ERROR:
- 	case MPI2_IOCSTATUS_INVALID_FUNCTION:
- 	case MPI2_IOCSTATUS_INVALID_SGL:
-@@ -5503,6 +5618,9 @@ scsih_probe(struct pci_dev *pdev, const
- 		goto out_add_shost_fail;
- 	}
- 
-+	scsi_host_set_prot(shost, SHOST_DIF_TYPE1_PROTECTION
-+	    | SHOST_DIF_TYPE3_PROTECTION);
-+
- 	/* event thread */
- 	snprintf(ioc->firmware_event_name, sizeof(ioc->firmware_event_name),
- 	    "fw_event%d", ioc->id);
+ 	/*
+@@ -5255,6 +5361,7 @@ static struct scsi_host_template scsih_d
+ 	.change_queue_type		= scsih_change_queue_type,
+ 	.eh_abort_handler		= scsih_abort,
+ 	.eh_device_reset_handler	= scsih_dev_reset,
++	.eh_target_reset_handler	= scsih_target_reset,
+ 	.eh_host_reset_handler		= scsih_host_reset,
+ 	.bios_param			= scsih_bios_param,
+ 	.can_queue			= 1,
