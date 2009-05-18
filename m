@@ -1,36 +1,30 @@
 From: Eric Moore <eric.moore@lsi.com>
-Subject: [PATCH] mpt2sas: driver version incorrect for 2.6.30 kernel
-Date: Mon, 18 May 2009 12:57:24 -0600
-Message-ID: <20090518185722.GA26604@lsil.com>
+Subject: [PATCH 0/5] mpt2sas: enhancements for 2.6.31 kernel
+Date: Mon, 18 May 2009 12:58:52 -0600
+Message-ID: <20090518185850.GA26609@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og106.obsmtp.com ([64.18.2.165]:56978 "EHLO
-	exprod7og106.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752064AbZERSvj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 May 2009 14:51:39 -0400
+Received: from exprod7og105.obsmtp.com ([64.18.2.163]:53216 "EHLO
+	exprod7og105.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751191AbZERSxF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 May 2009 14:53:05 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org
 
-Please consider for the 2.6.30 kernel.
+Please consider for the 2.6.31 merge.
 
-The MPT2SAS_MAJOR_VERSION didn't get bumped from 00 to 01. The applications
-will see it incorrectly as 00.100.02.00 driver instead of 01.100.02.00.
+Here are set of patchs posted over a month that missed 2.6.30 window.
+This includes LUN reset and T10 DIF support.
 
 Signed-off-by: Eric Moore <eric.moore@lsi.com>
 
-diff -uaprN a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h	2009-05-18 12:05:21.000000000 -0600
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h	2009-05-18 12:05:21.000000000 -0600
-@@ -69,7 +69,7 @@
- #define MPT2SAS_AUTHOR	"LSI Corporation <DL-MPTFusionLinux@lsi.com>"
- #define MPT2SAS_DESCRIPTION	"LSI MPT Fusion SAS 2.0 Device Driver"
- #define MPT2SAS_DRIVER_VERSION		"01.100.02.00"
--#define MPT2SAS_MAJOR_VERSION		00
-+#define MPT2SAS_MAJOR_VERSION		01
- #define MPT2SAS_MINOR_VERSION		100
- #define MPT2SAS_BUILD_VERSION		02
- #define MPT2SAS_RELEASE_VERSION		00
+[PATCH 1/5] mpt2sas: T10 DIF Support - EEDP
+[PATCH 2/5] mpt2sas: LUN Reset Support
+[PATCH 3/5] mpt2sas: add query task support for MPT2COMMAND  ioctl
+[PATCH 4/5] mpt2sas: using the same naming convention for all static function
+[PATCH 5/5] mpt2sas: bump driver version to 01.100.03.00
+
