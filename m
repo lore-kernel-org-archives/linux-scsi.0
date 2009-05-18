@@ -1,37 +1,38 @@
-From: Eric Moore <eric.moore@lsi.com>
-Subject: [PATCH 5/5] mpt2sas: bump driver version to 01.100.03.00
-Date: Mon, 18 May 2009 13:02:49 -0600
-Message-ID: <20090518190247.GF26609@lsil.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 03/13] block: Move queue limits to an embedded struct
+Date: Mon, 18 May 2009 14:50:08 -0400
+Message-ID: <20090518185007.GA839@redhat.com>
+References: <1242362435-11953-1-git-send-email-martin.petersen@oracle.com> <1242362435-11953-4-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og110.obsmtp.com ([64.18.2.173]:54904 "EHLO
-	exprod7og110.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752446AbZERS5A (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 May 2009 14:57:00 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1242362435-11953-4-git-send-email-martin.petersen@oracle.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: rwheeler@redhat.com, jeff@garzik.org, neilb@suse.de, James.Bottomley@hansenpartnership.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, agk@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org
 
-Bump driver version.
+On Fri, May 15 2009 at 12:40am -0400,
+Martin K. Petersen <martin.petersen@oracle.com> wrote:
 
-Signed-off-by: Eric Moore <eric.moore@lsi.com>
+> From: Martin K. Petersen <martin.petersen@oracle.com>
+> 
+> To accommodate stacking drivers that do not have an associated request
+> queue we're moving the limits to a separate, embedded structure.
 
-diff -uaprN a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h	2009-05-18 12:23:24.000000000 -0600
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h	2009-05-18 12:23:24.000000000 -0600
-@@ -69,10 +69,10 @@
- #define MPT2SAS_DRIVER_NAME		"mpt2sas"
- #define MPT2SAS_AUTHOR	"LSI Corporation <DL-MPTFusionLinux@lsi.com>"
- #define MPT2SAS_DESCRIPTION	"LSI MPT Fusion SAS 2.0 Device Driver"
--#define MPT2SAS_DRIVER_VERSION		"01.100.02.00"
-+#define MPT2SAS_DRIVER_VERSION		"01.100.03.00"
- #define MPT2SAS_MAJOR_VERSION		01
- #define MPT2SAS_MINOR_VERSION		100
--#define MPT2SAS_BUILD_VERSION		02
-+#define MPT2SAS_BUILD_VERSION		03
- #define MPT2SAS_RELEASE_VERSION		00
- 
- /*
+Given DM motivated this change, any reason you held off including the
+associated DM changes (in a separate patch in the series)?  Your initial
+DM patch looked reasonable.
+
+On some level leaving that patch out of the series prevents reviewers
+the opportunity to really see why a separate 'queue_limits' structure is
+even needed.  The follow-up question being: is the topology
+infrastructure adequately equipped to support DM?  I think so
+but having others' review would be nice.
+
+Are you looking for such DM changes to be submitted through Alasdair's
+tree _after_ your changes go upstream through Jens' tree?
+
+Regards,
+Mike
