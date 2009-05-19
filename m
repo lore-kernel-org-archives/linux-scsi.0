@@ -1,33 +1,43 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH resend] scsi_lib: remove unused variable
-Date: Tue, 19 May 2009 19:54:32 +0200
-Message-ID: <20090519175432.GE4140@kernel.dk>
-References: <4A12B62A.9020708@panasas.com>
+Subject: Re: [PATCH 05/13] block: Export I/O topology for block devices and
+	partitions
+Date: Tue, 19 May 2009 20:15:30 +0200
+Message-ID: <20090519181530.GH4140@kernel.dk>
+References: <1242362435-11953-1-git-send-email-martin.petersen@oracle.com> <1242362435-11953-6-git-send-email-martin.petersen@oracle.com> <20090518175741.GM4140@kernel.dk> <20090518181204.GC32085@redhat.com> <yq1fxf1gi3y.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:60822 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751961AbZESRyb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 May 2009 13:54:31 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4A12B62A.9020708@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <yq1fxf1gi3y.fsf@sermon.lab.mkp.net>
+Sender: linux-ide-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Tejun Heo <tj@kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, May 19 2009, Boaz Harrosh wrote:
+On Tue, May 19 2009, Martin K. Petersen wrote:
+> >>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
 > 
-> The last request completion cleanup in scsi_lib left an unused
-> this_count variable in scsi_io_completion().
-> (It was used before in a code segment that now uses blk_end_request_all())
+> >> I really hate the 'alignment' name, nobody will know wtf that is
+> >> without looking it up. The rest of the names are fairly self
+> >> explanatory.  offset? offset_size? misalignment? Not very good with
+> >> names, but perhaps we can find something more appropriate :-)
 > 
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> Acked-by: Tejun Heo <tj@kernel.org>
-> Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Yeah, it's a tricky thing to convey.  And despite all the other
+> convergence otherwise happening in the standards, T10 and T13 do not
+> agree how to describe the logical/physical alignment.
+> 
+> 
+> Mike> I agree that 'alignment' is too terse/confusing given that it is
+> Mike> an offset we're exposing.  How about 'alignment_offset'?
+> 
+> I thought I had already changed it to alignment_offset like we talked
+> about a while ago.  But I guess that change was only done mentally :)
+> 
+> Jens, are you ok with that name?
 
-Thanks, added.
+I think so, I can't think of anything better :-)
+
+If you repost an updated 5/13 patch and I'll add it to the mix.
 
 -- 
 Jens Axboe
