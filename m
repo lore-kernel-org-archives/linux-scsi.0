@@ -1,89 +1,99 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 3/5] New blk_make_request(), takes bio, returns a
-	request
-Date: Tue, 19 May 2009 14:49:53 +0200
-Message-ID: <20090519124953.GA4140@kernel.dk>
-References: <4A1032B0.5000003@panasas.com> <4A1033DB.2030908@panasas.com> <20090519094130.GW4140@kernel.dk> <4A1284F7.2050703@panasas.com> <20090519101308.GX4140@kernel.dk> <4A12A5BB.3060105@panasas.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH version 2] [SQUASHME] "FC Pass Thru support" fixed for block/for-2.6.31
+ tree
+Date: Tue, 19 May 2009 15:54:59 +0300
+Message-ID: <4A12AC23.30808@panasas.com>
+References: <4A12797B.2060901@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:55769 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751656AbZESMtx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 May 2009 08:49:53 -0400
-Content-Disposition: inline
-In-Reply-To: <4A12A5BB.3060105@panasas.com>
+Received: from gw-ca.panasas.com ([209.116.51.66]:9546 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750849AbZESM4Z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 May 2009 08:56:25 -0400
+In-Reply-To: <4A12797B.2060901@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+To: Stephen Rothwell <sfr@canb.auug.org.au>, Tejun Heo <tj@kernel.org>, James Smart <James.Smart@Emulex.Com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-sc>
+Cc: FUJITA Tomonori <tomof@acm.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>
 
-On Tue, May 19 2009, Boaz Harrosh wrote:
-> On 05/19/2009 01:13 PM, Jens Axboe wrote:
-> > On Tue, May 19 2009, Boaz Harrosh wrote:
-> <snip>
-> >> Thanks Jens, for your comment.
-> >>
-> >> I have three sources of bio allocations.
-> >> 1. bio_map_kern which uses bio_kmalloc (recently fixed by Tejun)
-> >> 2. by osdblk which does a clone and will not ever wait.
-> >>    (I've fixed the code to split up the IO on allocation failure into
-> >>     smaller requests (will repost soon))
-> >> 3. Future code in exofs and pNFS-Client that will only ever use bio_kmalloc.
-> > 
-> > All of those are fine!
-> > 
-> >> Should we add something to the Documentation, and/or above doc_book comment
-> >> to warn off users?
-> > 
-> > Yes I think so. I'm generally weary of adding interfaces that are easy
-> > to misuse. This one has that potential, but it also has merits. So I'll
-> > merge your series, if you could send a patch updating the
-> > comment/docbook, then that would be great.
-> > 
-> 
-> As my English sucks, please read proof below addition. I will repost later
-> today.
-> 
-> Should I just post this one patch, or all the 5?
-> (alternatively I have these on a public git tree reabased on
-> block/for-next branch.)
 
-Just this one is fine, I already merged the series.
+This patch should be squashed into
+    [SCSI] FC Pass Thru support
 
-> Thanks Boaz
-> ---
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index 89261d2..4dc4e32 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -910,6 +910,15 @@ EXPORT_SYMBOL(blk_get_request);
->   * need bouncing, by calling the appropriate masked or flagged allocator,
->   * suitable for the target device. Otherwise the call to blk_queue_bounce will
->   * BUG.
-> + *
-> + * WARNING: When allocating/cloning a bio-chain, careful consideration should be
-> + * given to how you allocate bios. In particular, you cannot use __GFP_WAIT for
-> + * anything but the first bio in the chain. Otherwise you risk deadlocking,
-> + * waiting for a bio to be returned to the pool, which will never return, since
-> + * it was not submitted yet.
+If it needs to compile after Tejun's block-layer revamps
+(all of them)
 
-Perhaps something like:
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+Acked-by: Tejun Heo <tj@kernel.org>
+---
+ drivers/scsi/scsi_transport_fc.c |   22 ++++++++++------------
+ 1 files changed, 10 insertions(+), 12 deletions(-)
 
-Otherwise you risk waiting for IO completion of a bio that hasn't been
-submitted yet, thus resulting in a deadlock.
-
-> + * Alternatively bios should be allocated using bio_kmalloc only.
-> + * If possible a long IO should be split into smaller parts when allocation
-> + * fails. Partial allocation should not be an error, or you risk a live-lock.
->   */
->  struct request *blk_make_request(struct request_queue *q, struct bio *bio,
->  				 gfp_t gfp_mask)
-
-Alternatively bios should be allocated using bio_kmalloc() instead of
-bio_alloc(), as that avoids the mempool deadlock. If possible a big IO
-should be ...
-
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 4df8c3c..809b75c 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -3409,7 +3409,6 @@ fc_bsg_jobdone(struct fc_bsg_job *job)
+ 	struct request *req = job->req;
+ 	struct request *rsp = req->next_rq;
+ 	unsigned long flags;
+-	unsigned rsp_len = 0, req_len = blk_rq_bytes(req);
+ 	int err;
+ 
+ 	spin_lock_irqsave(&job->job_lock, flags);
+@@ -3425,16 +3424,17 @@ fc_bsg_jobdone(struct fc_bsg_job *job)
+ 		job->req->sense_len = job->reply_len;
+ 
+ 	/* we assume all request payload was transferred, residual == 0 */
+-	req->data_len = 0;
++	req->resid_len = 0;
+ 
+ 	if (rsp) {
+-		rsp_len = blk_rq_bytes(rsp);
+-		BUG_ON(job->reply->reply_payload_rcv_len > rsp_len);
++		WARN_ON(job->reply->reply_payload_rcv_len > rsp->resid_len);
++
+ 		/* set reply (bidi) residual */
+-		rsp->data_len = (rsp_len - job->reply->reply_payload_rcv_len);
++		rsp->resid_len -= min(job->reply->reply_payload_rcv_len, 
++				      rsp->resid_len);
+ 	}
+ 
+-	blk_end_bidi_request(req, err, req_len, rsp_len);
++	blk_end_request_all(req, err);
+ 
+ 	fc_destroy_bsgjob(job);
+ }
+@@ -3496,7 +3496,7 @@ fc_bsg_map_buffer(struct fc_bsg_buffer *buf, struct request *req)
+ 		return -ENOMEM;
+ 	sg_init_table(buf->sg_list, req->nr_phys_segments);
+ 	buf->sg_cnt = blk_rq_map_sg(req->q, req, buf->sg_list);
+-	buf->payload_len = req->data_len;
++	buf->payload_len = blk_rq_bytes(req);
+ 	return 0;
+ }
+ 
+@@ -3762,14 +3762,12 @@ fc_bsg_request_handler(struct request_queue *q, struct Scsi_Host *shost,
+ 		return;
+ 
+ 	while (!blk_queue_plugged(q)) {
+-		req = elv_next_request(q);
+-		if (!req)
+-			break;
+-
+ 		if (rport && (rport->port_state == FC_PORTSTATE_BLOCKED))
+ 				break;
+ 
+-		blkdev_dequeue_request(req);
++		req = blk_fetch_request(q);
++		if (!req)
++			break;
+ 
+ 		if (rport && (rport->port_state != FC_PORTSTATE_ONLINE)) {
+ 			req->errors = -ENXIO;
 -- 
-Jens Axboe
+1.6.2.1
+
 
