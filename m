@@ -1,99 +1,71 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH version 2] [SQUASHME] "FC Pass Thru support" fixed for block/for-2.6.31
- tree
-Date: Tue, 19 May 2009 15:54:59 +0300
-Message-ID: <4A12AC23.30808@panasas.com>
-References: <4A12797B.2060901@panasas.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: how to block in_atomic scsi requests for long time
+Date: Tue, 19 May 2009 07:32:18 -0600
+Message-ID: <20090519133218.GB31779@parisc-linux.org>
+References: <c70ff3ad0905190504o77d966dbxcb07eb39d1225f08@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:9546 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750849AbZESM4Z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 May 2009 08:56:25 -0400
-In-Reply-To: <4A12797B.2060901@panasas.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:37875 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752901AbZESNcR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 May 2009 09:32:17 -0400
+Content-Disposition: inline
+In-Reply-To: <c70ff3ad0905190504o77d966dbxcb07eb39d1225f08@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>, Tejun Heo <tj@kernel.org>, James Smart <James.Smart@Emulex.Com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-sc>
-Cc: FUJITA Tomonori <tomof@acm.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>
+To: saeed bishara <saeed.bishara@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
+On Tue, May 19, 2009 at 03:04:07PM +0300, saeed bishara wrote:
+>     I have a system with 4 disks that configured to enter standby
+> mode, the power supplier of this system can't drive concurrent
+> spin-ups of more than one disk, and it needs the spin-ups to be few
+> seconds far from each other.
+>     I've implemented this feature by adding a semaphore, and in the
+> scsi_dispatch_command, the process will wait for that semaphore if the
+> disk in standby mode and other disk in a middle of doing spinup. but
+> the problem is that sometimes that function is called while in atomic
+> context, and waiting to the semaphore is prohibeted.
+>     how do you guys suggest to block a request which comes in atomic mode?
 
-This patch should be squashed into
-    [SCSI] FC Pass Thru support
+Call scsi_queue_insert(cmd, SCSI_MLQUEUE_HOST_BUSY); and return
+SCSI_MLQUEUE_HOST_BUSY.  The midlayer won't retry the command until
+another command finishes.  This has the downside that it won't try a
+command to the spun-up device until a command has finished either ...
 
-If it needs to compile after Tejun's block-layer revamps
-(all of them)
+This is kind of the wrong way to do it though.  Are you sending down
+commands to standby the device, or are the drives moving to standby
+state on their own recognisance?  It would be better to block the other
+devices.  See this code?
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-Acked-by: Tejun Heo <tj@kernel.org>
----
- drivers/scsi/scsi_transport_fc.c |   22 ++++++++++------------
- 1 files changed, 10 insertions(+), 12 deletions(-)
+        /* Check to see if the scsi lld made this device blocked. */
+        if (unlikely(scsi_device_blocked(cmd->device))) {
+                /* 
+                 * in blocked state, the command is just put back on
+                 * the device queue.  The suspend state has already
+                 * blocked the queue so future requests should not
+                 * occur until the device transitions out of the
+                 * suspend state.
+                 */
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 4df8c3c..809b75c 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -3409,7 +3409,6 @@ fc_bsg_jobdone(struct fc_bsg_job *job)
- 	struct request *req = job->req;
- 	struct request *rsp = req->next_rq;
- 	unsigned long flags;
--	unsigned rsp_len = 0, req_len = blk_rq_bytes(req);
- 	int err;
- 
- 	spin_lock_irqsave(&job->job_lock, flags);
-@@ -3425,16 +3424,17 @@ fc_bsg_jobdone(struct fc_bsg_job *job)
- 		job->req->sense_len = job->reply_len;
- 
- 	/* we assume all request payload was transferred, residual == 0 */
--	req->data_len = 0;
-+	req->resid_len = 0;
- 
- 	if (rsp) {
--		rsp_len = blk_rq_bytes(rsp);
--		BUG_ON(job->reply->reply_payload_rcv_len > rsp_len);
-+		WARN_ON(job->reply->reply_payload_rcv_len > rsp->resid_len);
-+
- 		/* set reply (bidi) residual */
--		rsp->data_len = (rsp_len - job->reply->reply_payload_rcv_len);
-+		rsp->resid_len -= min(job->reply->reply_payload_rcv_len, 
-+				      rsp->resid_len);
- 	}
- 
--	blk_end_bidi_request(req, err, req_len, rsp_len);
-+	blk_end_request_all(req, err);
- 
- 	fc_destroy_bsgjob(job);
- }
-@@ -3496,7 +3496,7 @@ fc_bsg_map_buffer(struct fc_bsg_buffer *buf, struct request *req)
- 		return -ENOMEM;
- 	sg_init_table(buf->sg_list, req->nr_phys_segments);
- 	buf->sg_cnt = blk_rq_map_sg(req->q, req, buf->sg_list);
--	buf->payload_len = req->data_len;
-+	buf->payload_len = blk_rq_bytes(req);
- 	return 0;
- }
- 
-@@ -3762,14 +3762,12 @@ fc_bsg_request_handler(struct request_queue *q, struct Scsi_Host *shost,
- 		return;
- 
- 	while (!blk_queue_plugged(q)) {
--		req = elv_next_request(q);
--		if (!req)
--			break;
--
- 		if (rport && (rport->port_state == FC_PORTSTATE_BLOCKED))
- 				break;
- 
--		blkdev_dequeue_request(req);
-+		req = blk_fetch_request(q);
-+		if (!req)
-+			break;
- 
- 		if (rport && (rport->port_state != FC_PORTSTATE_ONLINE)) {
- 			req->errors = -ENXIO;
+                scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
+
+                SCSI_LOG_MLQUEUE(3, printk("queuecommand : device blocked \n"));
+
+                /*
+                 * NOTE: rtn is still zero here because we don't need the
+                 * queue to be plugged on return (it's already stopped)
+                 */
+                goto out;
+        }
+
+You need to make the drives go into this state (by calling
+scsi_internal_device_block()) when they suspend, if you can tell when
+they suspend.
+
 -- 
-1.6.2.1
-
-
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
