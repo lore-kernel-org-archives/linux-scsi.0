@@ -1,148 +1,87 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 4/4] bnx2i: Add bnx2i iSCSI driver.
-Date: Tue, 19 May 2009 09:22:02 -0500
-Message-ID: <4A12C08A.1080600@cs.wisc.edu>
-References: <1241208039-6813-1-git-send-email-mchan@broadcom.com> <1241208039-6813-5-git-send-email-mchan@broadcom.com> <4A01BF6A.90707@cs.wisc.edu> <1241715824.9177.8.camel@HP1> <4A034C2A.50107@cs.wisc.edu> <1242697859.10180.147.camel@HP1>
+From: saeed bishara <saeed.bishara@gmail.com>
+Subject: Re: how to block in_atomic scsi requests for long time
+Date: Tue, 19 May 2009 17:59:53 +0300
+Message-ID: <c70ff3ad0905190759o37237a0s13c1e92183b6899@mail.gmail.com>
+References: <c70ff3ad0905190504o77d966dbxcb07eb39d1225f08@mail.gmail.com>
+	 <20090519133218.GB31779@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:50879 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752952AbZESOWO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 May 2009 10:22:14 -0400
-In-Reply-To: <1242697859.10180.147.camel@HP1>
+Received: from fg-out-1718.google.com ([72.14.220.154]:24193 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750820AbZESO7y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 May 2009 10:59:54 -0400
+Received: by fg-out-1718.google.com with SMTP id 16so1422137fgg.17
+        for <linux-scsi@vger.kernel.org>; Tue, 19 May 2009 07:59:54 -0700 (PDT)
+In-Reply-To: <20090519133218.GB31779@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Chan <mchan@broadcom.com>
-Cc: "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, "davem@davemloft.net" <davem@davemloft.net>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Karen Xie <kxie@chelsio.com>, anilgv@broadcom.com, benli@broadcom.com
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
 
-Michael Chan wrote:
-> On Thu, 2009-05-07 at 14:01 -0700, Mike Christie wrote:
->> Michael Chan wrote:
->>> On Wed, 2009-05-06 at 09:48 -0700, Mike Christie wrote:
->>>> I think cxgb3i is one day going to want to support the same features 
->>>> bnx2i does. If that is right, then should we just make the NX2_UIO 
->>>> events common iscsi events, and hook cxb3i in? It would not use the 
->>>> iscsi set param interface at all and would work just like bnx2i. Is that 
->>>> possible? What about future drivers? Are done making iscsi cards and 
->>>> drivers. If so, thank goodness :)  If not then maybe we want to consider 
->>>> some future driver using the #2 module and possibly using this.
->>>>
->>>> If cxgb3i is really only going to support static ip setup and we think 
->>>> that bnx2i is going to be unique on how it sets up the network then I 
->>>> NX2_UIO private events are fine. Or is this a case of we are thinking 
->>>> that iscsi hardware people are creating crazy interfaces so there is no 
->>>> why to predict what they are going to do so there is no point in trying 
->>>> to design for them.
->>> If there is any possibility that cxgb3i will use something similar to
->>> bnx2i, I think we can change the message to a standard one and make the
->>> message structure somewhat more generic.  We'll probably still need a
->>> private area in the message for hardware or vendor specific information.
->>>
->> Ok sounds good to me.
->>
-> 
-> Here are the more generic NETLINK_ISCSI messages and the iscsi transport
-> code to support them, please review.
-> 
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index d69a53a..60cb6cb 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -995,6 +995,39 @@ int iscsi_recv_pdu(struct iscsi_cls_conn *conn, struct iscsi_hdr *hdr,
->  }
->  EXPORT_SYMBOL_GPL(iscsi_recv_pdu);
->  
-> +int iscsi_offload_mesg(struct Scsi_Host *shost,
-> +		       struct iscsi_transport *transport, uint32_t type,
-> +		       char *data, uint16_t data_size)
-> +{
-> +	struct nlmsghdr	*nlh;
-> +	struct sk_buff *skb;
-> +	struct iscsi_uevent *ev;
-> +	int len = NLMSG_SPACE(sizeof(*ev) + data_size);
-> +
-> +	skb = alloc_skb(len, GFP_ATOMIC);
-> +	if (!skb) {
-> +		printk(KERN_ERR "can not deliver iscsi offload message:OOM\n");
-> +		return -ENOMEM;
-> +	}
-> +
-> +	nlh = __nlmsg_put(skb, 0, 0, 0, (len - sizeof(*nlh)), 0);
-> +	ev = NLMSG_DATA(nlh);
-> +	memset(ev, 0, sizeof(*ev));
-> +	ev->type = type;
-> +	ev->transport_handle = iscsi_handle(transport);
-> +	switch (type) {
-> +	case ISCSI_KEVENT_PATH_REQ:
-> +		ev->r.req_path.host_no = shost->host_no;
-> +	case ISCSI_KEVENT_IF_DOWN:
-> +		ev->r.notify_if_down.host_no = shost->host_no;
-> +	}
-> +
-> +	memcpy((char*)ev + sizeof(*ev), data, data_size);
-> +
-> +	return iscsi_broadcast_skb(skb, GFP_KERNEL);
+On 5/19/09, Matthew Wilcox <matthew@wil.cx> wrote:
+> On Tue, May 19, 2009 at 03:04:07PM +0300, saeed bishara wrote:
+>>     I have a system with 4 disks that configured to enter standby
+>> mode, the power supplier of this system can't drive concurrent
+>> spin-ups of more than one disk, and it needs the spin-ups to be few
+>> seconds far from each other.
+>>     I've implemented this feature by adding a semaphore, and in the
+>> scsi_dispatch_command, the process will wait for that semaphore if the
+>> disk in standby mode and other disk in a middle of doing spinup. but
+>> the problem is that sometimes that function is called while in atomic
+>> context, and waiting to the semaphore is prohibeted.
+>>     how do you guys suggest to block a request which comes in atomic mode?
+>
+> Call scsi_queue_insert(cmd, SCSI_MLQUEUE_HOST_BUSY); and return
+> SCSI_MLQUEUE_HOST_BUSY.  The midlayer won't retry the command until
+> another command finishes.  This has the downside that it won't try a
+> command to the spun-up device until a command has finished either ...
+>
+> This is kind of the wrong way to do it though.  Are you sending down
+> commands to standby the device, or are the drives moving to standby
+> state on their own recognisance?  It would be better to block the other
+> devices.  See this code?
+I'm actually supporting both cases, timer standby and immediate standby.
+right now, the decision to block a requests is taken when a new
+command is to be dispatched, the code checks if the disk in standby
+and another disk is spinning up  then the current command is blocked.
+this makes your first suggestion to use the SCSI_MLQUEUE_HOST_BUSY
+more easy to implement. but, in that case, as there are no queued
+commands for that device, how can I trigger the midlayer to resume
+sending commands for that device? can that be done using
+scsi_run_queue?
 
-
-You can sync up what the gfp flag used here and for the alloc_skb call 
-above. If you have process context, you probably want to use GFP_NOIO, 
-because this could be called for reconnect for a disk in use.
-
-If you do not have process context then you would need to use GFP_ATOMIC.
-
-
-> +}
-> +EXPORT_SYMBOL_GPL(iscsi_offload_mesg);
-> +
->  void iscsi_conn_error_event(struct iscsi_cls_conn *conn, enum iscsi_err error)
->  {
->  	struct nlmsghdr	*nlh;
-> @@ -1393,6 +1426,30 @@ iscsi_set_host_param(struct iscsi_transport *transport,
->  }
->  
->  static int
-> +iscsi_set_path(struct iscsi_transport *transport, struct iscsi_uevent *ev)
-> +{
-> +	struct Scsi_Host *shost;
-> +	struct iscsi_path *params;
-> +	int err;
-> +
-> +	if (!transport->set_path)
-> +		return -ENOSYS;
-> +
-> +	shost = scsi_host_lookup(ev->u.set_path.host_no);
-> +	if (!shost) {
-> +		printk(KERN_ERR "set path could not find host no %u\n",
-> +		       ev->u.set_path.host_no);
-> +		return -ENODEV;
-> +	}
-> +
-> +	params = (struct iscsi_path *)((char*)ev + sizeof(*ev));
-> +	err = transport->set_path(shost, params);
-> +				      
-> +	scsi_host_put(shost);
-> +	return err;
-> +}
-> +
-> +static int
->  iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh)
->  {
->  	int err = 0;
-> @@ -1411,7 +1468,8 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh)
->  	if (!try_module_get(transport->owner))
->  		return -EINVAL;
->  
-> -	priv->daemon_pid = NETLINK_CREDS(skb)->pid;
-> +	if (nlh->nlmsg_type != ISCSI_UEVENT_PATH_UPDATE)
-> +		priv->daemon_pid = NETLINK_CREDS(skb)->pid;
->  
-
-Instead of using broadcast above and in some other places and then doing 
-this check, could we just use multicast groups or something else? The 
-events from iscsid could be in one group and then events for uip would 
-be in another?
-
-Or is it more common to do it like this or will it break compat with 
-other tools if we change it?
+>
+>         /* Check to see if the scsi lld made this device blocked. */
+>         if (unlikely(scsi_device_blocked(cmd->device))) {
+>                 /*
+>                  * in blocked state, the command is just put back on
+>                  * the device queue.  The suspend state has already
+>                  * blocked the queue so future requests should not
+>                  * occur until the device transitions out of the
+>                  * suspend state.
+>                  */
+>
+>                 scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
+>
+>                 SCSI_LOG_MLQUEUE(3, printk("queuecommand : device blocked
+> \n"));
+>
+>                 /*
+>                  * NOTE: rtn is still zero here because we don't need the
+>                  * queue to be plugged on return (it's already stopped)
+>                  */
+>                 goto out;
+>         }
+>
+> You need to make the drives go into this state (by calling
+> scsi_internal_device_block()) when they suspend, if you can tell when
+> they suspend.
+>
+> --
+> Matthew Wilcox				Intel Open Source Technology Centre
+> "Bill, look, we understand that you're interested in selling us this
+> operating system, but compare it to ours.  We can't possibly take such
+> a retrograde step."
+>
