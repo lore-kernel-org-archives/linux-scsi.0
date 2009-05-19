@@ -1,58 +1,32 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] [SQUASHME] "FC Pass Thru support" fixed for block/for-2.6.31
- tree
-Date: Tue, 19 May 2009 13:14:38 +0300
-Message-ID: <4A12868E.6030108@panasas.com>
-References: <4A12797B.2060901@panasas.com> <4A128484.4000708@kernel.org>
+From: saeed bishara <saeed.bishara@gmail.com>
+Subject: how to block in_atomic scsi requests for long time
+Date: Tue, 19 May 2009 15:04:07 +0300
+Message-ID: <c70ff3ad0905190504o77d966dbxcb07eb39d1225f08@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:30004 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752354AbZESKOo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 May 2009 06:14:44 -0400
-In-Reply-To: <4A128484.4000708@kernel.org>
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:65298 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750849AbZESMEH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 May 2009 08:04:07 -0400
+Received: by fxm2 with SMTP id 2so3821583fxm.37
+        for <linux-scsi@vger.kernel.org>; Tue, 19 May 2009 05:04:07 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, James Smart <James.Smart@Emulex.Com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <tomof@acm.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>
+To: linux-scsi@vger.kernel.org
 
-On 05/19/2009 01:05 PM, Tejun Heo wrote:
-> Hello, Boaz.
-> 
-> Just two minor things.
-> 
-> Boaz Harrosh wrote:
->>  	/* we assume all request payload was transferred, residual == 0 */
->> -	req->data_len = 0;
->> +	req->resid_len = 0;
->>  
->>  	if (rsp) {
->> -		rsp_len = blk_rq_bytes(rsp);
->> -		BUG_ON(job->reply->reply_payload_rcv_len > rsp_len);
-> 
-> Maybe convert it to WARN_ON() instead of removing?
+Hi,
+    I have a system with 4 disks that configured to enter standby
+mode, the power supplier of this system can't drive concurrent
+spin-ups of more than one disk, and it needs the spin-ups to be few
+seconds far from each other.
+    I've implemented this feature by adding a semaphore, and in the
+scsi_dispatch_command, the process will wait for that semaphore if the
+disk in standby mode and other disk in a middle of doing spinup. but
+the problem is that sometimes that function is called while in atomic
+context, and waiting to the semaphore is prohibeted.
+    how do you guys suggest to block a request which comes in atomic mode?
 
-Sorry, You are absolutely correct should add it back. (With a WARN_ON)
 
-> 
->>  		/* set reply (bidi) residual */
->> -		rsp->data_len = (rsp_len - job->reply->reply_payload_rcv_len);
->> +		rsp->resid_len = blk_rq_bytes(rsp) -
->> +					job->reply->reply_payload_rcv_len;
-> 
-> With the fix-fallouts patchset it, this can be
-> 
-> 	rsp->resid_len -= job->reply->reply_payload_rcv_len;
-> 
-
-Sure.
-
-> Other than above misc points,
-> 
-> Acked-by: Tejun Heo <tj@kernel.org>
-> 
-
-Will repost as reply to Original patch, thanks
-Boaz
+saeed
