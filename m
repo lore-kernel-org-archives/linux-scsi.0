@@ -1,118 +1,51 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH version 2] New blk_make_request(), takes bio, returns a request
-Date: Tue, 19 May 2009 16:35:05 +0300
-Message-ID: <4A12B589.1070003@panasas.com>
-References: <4A1032B0.5000003@panasas.com> <4A1033DB.2030908@panasas.com>
+Subject: [PATCH resend] scsi_lib: remove unused variable
+Date: Tue, 19 May 2009 16:37:46 +0300
+Message-ID: <4A12B62A.9020708@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:12902 "EHLO
+Received: from gw-ca.panasas.com ([209.116.51.66]:13055 "EHLO
 	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752903AbZESNfJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 May 2009 09:35:09 -0400
-In-Reply-To: <4A1033DB.2030908@panasas.com>
+	with ESMTP id S1754717AbZESNiZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 May 2009 09:38:25 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <Jens.Axboe@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+To: Jens Axboe <Jens.Axboe@oracle.com>, Tejun Heo <tj@kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <li>
 
 
-New block API:
-given a struct bio allocates a new request. This is the parallel of
-generic_make_request for BLOCK_PC commands users.
-
-The passed bio may be a chained-bio. The bio is bounced if needed
-inside the call to this member.
-
-This is in the effort of un-exporting blk_rq_append_bio().
+The last request completion cleanup in scsi_lib left an unused
+this_count variable in scsi_io_completion().
+(It was used before in a code segment that now uses blk_end_request_all())
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-CC: Jeff Garzik <jeff@garzik.org>
+Acked-by: Tejun Heo <tj@kernel.org>
+Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- block/blk-core.c       |   54 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/blkdev.h |    2 +
- 2 files changed, 56 insertions(+), 0 deletions(-)
+ drivers/scsi/scsi_lib.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index a2d97de..3145a37 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -891,6 +891,60 @@ struct request *blk_get_request(struct request_queue *q, int rw, gfp_t gfp_mask)
- EXPORT_SYMBOL(blk_get_request);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index e410d66..d7c6c75 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -706,7 +706,6 @@ EXPORT_SYMBOL(scsi_release_buffers);
+ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ {
+ 	int result = cmd->result;
+-	int this_count;
+ 	struct request_queue *q = cmd->device->request_queue;
+ 	struct request *req = cmd->request;
+ 	int error = 0;
+@@ -789,7 +788,6 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	 */
+ 	if (scsi_end_request(cmd, error, good_bytes, result == 0) == NULL)
+ 		return;
+-	this_count = blk_rq_bytes(req);
  
- /**
-+ * blk_make_request - given a bio, allocate a corresponding struct request.
-+ *
-+ * @bio:  The bio describing the memory mappings that will be submitted for IO.
-+ *        It may be a chained-bio properly constructed by block/bio layer.
-+ *
-+ * blk_make_request is the parallel of generic_make_request for BLOCK_PC
-+ * type commands. Where the struct request needs to be farther initialized by
-+ * the caller. It is passed a &struct bio, which describes the memory info of
-+ * the I/O transfer.
-+ *
-+ * The caller of blk_make_request must make sure that bi_io_vec
-+ * are set to describe the memory buffers. That bio_data_dir() will return
-+ * the needed direction of the request. (And all bio's in the passed bio-chain
-+ * are properly set accordingly)
-+ *
-+ * If called under none-sleepable conditions, mapped bio buffers must not
-+ * need bouncing, by calling the appropriate masked or flagged allocator,
-+ * suitable for the target device. Otherwise the call to blk_queue_bounce will
-+ * BUG.
-+ *
-+ * WARNING: When allocating/cloning a bio-chain, careful consideration should be
-+ * given to how you allocate bios. In particular, you cannot use __GFP_WAIT for
-+ * anything but the first bio in the chain. Otherwise you risk waiting for IO
-+ * completion of a bio that hasn't been submitted yet, thus resulting in a
-+ * deadlock. Alternatively bios should be allocated using bio_kmalloc() instead
-+ * of bio_alloc(), as that avoids the mempool deadlock.
-+ * If possible a big IO should be split into smaller parts when allocation
-+ * fails. Partial allocation should not be an error, or you risk a live-lock.
-+ */
-+struct request *blk_make_request(struct request_queue *q, struct bio *bio,
-+				 gfp_t gfp_mask)
-+{
-+	struct request *rq = blk_get_request(q, bio_data_dir(bio), gfp_mask);
-+
-+	if (unlikely(!rq))
-+		return ERR_PTR(-ENOMEM);
-+
-+	for_each_bio(bio) {
-+		struct bio *bounce_bio = bio;
-+		int ret;
-+
-+		blk_queue_bounce(q, &bounce_bio);
-+		ret = blk_rq_append_bio(q, rq, bounce_bio);
-+		if (unlikely(ret)) {
-+			blk_put_request(rq);
-+			return ERR_PTR(ret);
-+		}
-+	}
-+
-+	return rq;
-+}
-+EXPORT_SYMBOL(blk_make_request);
-+
-+/**
-  * blk_requeue_request - put a request back on queue
-  * @q:		request queue where request should be inserted
-  * @rq:		request to be inserted
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index f9d60a7..88a83e1 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -740,6 +740,8 @@ extern void blk_rq_init(struct request_queue *q, struct request *rq);
- extern void blk_put_request(struct request *);
- extern void __blk_put_request(struct request_queue *, struct request *);
- extern struct request *blk_get_request(struct request_queue *, int, gfp_t);
-+extern struct request *blk_make_request(struct request_queue *, struct bio *,
-+					gfp_t);
- extern void blk_insert_request(struct request_queue *, struct request *, int, void *);
- extern void blk_requeue_request(struct request_queue *, struct request *);
- extern int blk_rq_check_limits(struct request_queue *q, struct request *rq);
+ 	error = -EIO;
+ 
 -- 
 1.6.2.1
-
 
