@@ -1,56 +1,44 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH version 2] [SQUASHME] "FC Pass Thru support" fixed for
-	block/for-2.6.31 tree
-Date: Wed, 20 May 2009 14:47:45 +0000
-Message-ID: <1242830865.2881.13.camel@localhost.localdomain>
-References: <4A12797B.2060901@panasas.com> <4A12AC23.30808@panasas.com>
-	 <20090520111619.87f815b1.sfr@canb.auug.org.au>
-	 <1242830240.2881.10.camel@localhost.localdomain>
-	 <20090521004251.9160e228.sfr@canb.auug.org.au>
+From: Ferenc Wagner <wferi@niif.hu>
+Subject: [PATCH] [SCSI] qla2xxx: Fix documentation of ql2xfdmienable module parameter
+Date: Wed, 20 May 2009 17:40:53 +0200
+Message-ID: <87pre3ixyy.fsf@tac.ki.iif.hu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:53057 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756389AbZETOrm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 May 2009 10:47:42 -0400
-In-Reply-To: <20090521004251.9160e228.sfr@canb.auug.org.au>
+Received: from tac.ki.iif.hu ([193.6.222.43]:56967 "EHLO tac.ki.iif.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755250AbZETPky (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 May 2009 11:40:54 -0400
+Received: from wferi by tac.ki.iif.hu with local (Exim 4.69)
+	(envelope-from <wferi@niif.hu>)
+	id 1M6nuX-0003SQ-Ol
+	for linux-scsi@vger.kernel.org; Wed, 20 May 2009 17:40:53 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Tejun Heo <tj@kernel.org>, James Smart <James.Smart@Emulex.Com>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <tomof@acm.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>
+To: linux-scsi@vger.kernel.org
 
-On Thu, 2009-05-21 at 00:42 +1000, Stephen Rothwell wrote:
-> Hi James,
-> 
-> On Wed, 20 May 2009 14:37:20 +0000 James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> >
-> > Unfortuantely, I still need the block tree for-next to be rebased up to
-> > the current linus head because of a couple of conflicts:
-> > 
-> > CONFLICT (content): Merge conflict in drivers/block/hd.c
-> > CONFLICT (content): Merge conflict in drivers/block/mg_disk.c
-> 
-> As discussed elsewhere, a merge of Linus' tree into the block tree will
-> fix this.
+The default is enabled since 7e47e5ca184548341a82eeb2238ee3622c43cae1.
 
-Yes, I know, I was just adding urgency because scsi-misc has the two
-conflicting commits in it, so it can't be merged into block for-next.
+Signed-off-by: Ferenc Wagner <wferi@niif.hu>
+---
+ drivers/scsi/qla2xxx/qla_os.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-> > So they obviously moved into linus head but wasn't taken out of block
-> > for-next.
-> 
-> Indeed.
-
-OK, so I think your pulling of my posmerge tree can cope with the fact
-that I did the necessary rebasing in block for-next before I made it the
-base of my combined tree .... think of this as a nice test.
-
-Just building now ... if it works, I'll push to SCSI post merge and all
-our problems should go away.
-
-James
-
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index e4fdcda..8f76b07 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -68,8 +68,8 @@ static void qla2x00_free_device(scsi_qla_host_t *);
+ int ql2xfdmienable=1;
+ module_param(ql2xfdmienable, int, S_IRUGO|S_IRUSR);
+ MODULE_PARM_DESC(ql2xfdmienable,
+-		"Enables FDMI registratons "
+-		"Default is 0 - no FDMI. 1 - perfom FDMI.");
++		"Enables FDMI registrations. "
++		"0 - no FDMI. Default is 1 - perform FDMI.");
+ 
+ #define MAX_Q_DEPTH    32
+ static int ql2xmaxqdepth = MAX_Q_DEPTH;
+-- 
+1.5.6.5
 
