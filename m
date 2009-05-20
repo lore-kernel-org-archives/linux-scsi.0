@@ -1,44 +1,41 @@
-From: Ferenc Wagner <wferi@niif.hu>
-Subject: [PATCH] [SCSI] qla2xxx: Fix documentation of ql2xfdmienable module parameter
-Date: Wed, 20 May 2009 17:40:53 +0200
-Message-ID: <87pre3ixyy.fsf@tac.ki.iif.hu>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH version 2] [SQUASHME] "FC Pass Thru support" fixed for
+	block/for-2.6.31 tree
+Date: Wed, 20 May 2009 16:20:25 +0000
+Message-ID: <1242836425.2881.44.camel@localhost.localdomain>
+References: <4A12797B.2060901@panasas.com> <4A12AC23.30808@panasas.com>
+	 <20090520111619.87f815b1.sfr@canb.auug.org.au>
+	 <1242830240.2881.10.camel@localhost.localdomain>
+	 <20090521004251.9160e228.sfr@canb.auug.org.au>
+	 <1242830865.2881.13.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tac.ki.iif.hu ([193.6.222.43]:56967 "EHLO tac.ki.iif.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755250AbZETPky (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 May 2009 11:40:54 -0400
-Received: from wferi by tac.ki.iif.hu with local (Exim 4.69)
-	(envelope-from <wferi@niif.hu>)
-	id 1M6nuX-0003SQ-Ol
-	for linux-scsi@vger.kernel.org; Wed, 20 May 2009 17:40:53 +0200
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49794 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753985AbZETQUX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 May 2009 12:20:23 -0400
+In-Reply-To: <1242830865.2881.13.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, Tejun Heo <tj@kernel.org>, James Smart <James.Smart@Emulex.Com>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <tomof@acm.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>
 
-The default is enabled since 7e47e5ca184548341a82eeb2238ee3622c43cae1.
+On Wed, 2009-05-20 at 14:47 +0000, James Bottomley wrote:
+> OK, so I think your pulling of my posmerge tree can cope with the fact
+> that I did the necessary rebasing in block for-next before I made it the
+> base of my combined tree .... think of this as a nice test.
+> 
+> Just building now ... if it works, I'll push to SCSI post merge and all
+> our problems should go away.
 
-Signed-off-by: Ferenc Wagner <wferi@niif.hu>
----
- drivers/scsi/qla2xxx/qla_os.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Unfortunately the combined tree hits a BUG_ON blk-core.c:2045 when doing
+SPI domain validation.
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index e4fdcda..8f76b07 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -68,8 +68,8 @@ static void qla2x00_free_device(scsi_qla_host_t *);
- int ql2xfdmienable=1;
- module_param(ql2xfdmienable, int, S_IRUGO|S_IRUSR);
- MODULE_PARM_DESC(ql2xfdmienable,
--		"Enables FDMI registratons "
--		"Default is 0 - no FDMI. 1 - perfom FDMI.");
-+		"Enables FDMI registrations. "
-+		"0 - no FDMI. Default is 1 - perform FDMI.");
- 
- #define MAX_Q_DEPTH    32
- static int ql2xmaxqdepth = MAX_Q_DEPTH;
--- 
-1.5.6.5
+There will be a short delay ...
+
+James
+
 
