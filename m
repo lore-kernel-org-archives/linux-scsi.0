@@ -1,69 +1,51 @@
-From: wuzhangjin@gmail.com
-Subject: [loongson-PATCH-v1 24/27] fixup for FUJITSU disk
-Date: Thu, 21 May 2009 06:12:46 +0800
-Message-ID: <a998340033c8f89ec028b354ebe2956239144049.1242855716.git.wuzhangjin@gmail.com>
-References: <cover.1242855716.git.wuzhangjin@gmail.com>
-Return-path: <linux-mips-bounce@linux-mips.org>
-In-Reply-To: <cover.1242855716.git.wuzhangjin@gmail.com>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-To: linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Wu Zhangjin <wuzhangjin@gmail.com>, Yan hua <yanh@lemote.com>, Philippe Vachon <philippe@cowpig.ca>, Zhang Le <r0bertz@gentoo.org>, Zhang Fuxin <zhangfx@lemote.com>, Arnaud Patard <apatard@mandriva.com>, loongson-dev@googlegroups.com, gnewsense-dev@nongnu.org, Nicholas Mc Guire <hofrat@hofr.at>, Liu Junliang <liujl@lemote.com>, Erwan Lerale <erwan@thiscow.com>
+From: "Michael Chan" <mchan-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Subject: Re: [PATCH 4/4] bnx2i: Add bnx2i iSCSI driver.
+Date: Wed, 20 May 2009 15:22:44 -0700
+Message-ID: <1242858164.10180.316.camel@HP1>
+References: <1241208039-6813-1-git-send-email-mchan@broadcom.com> <1241208039-6813-5-git-send-email-mchan@broadcom.com> <4A01BF6A.90707@cs.wisc.edu> <1241715824.9177.8.camel@HP1> <4A034C2A.50107@cs.wisc.edu> <1242697859.10180.147.camel@HP1> <4A12C08A.1080600@cs.wisc.edu> <1242766039.10180.178.camel@HP1> <4A132B6B.5030008@cs.wisc.edu> <1242838735.10180.228.camel@HP1> <4A14608F.6070800@cs.wisc.edu>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <grbounce-FC1hwAUAAAA0O9VQcsxVj1UPjHD9r3x_=glio-open-iscsi=m.gmane.org-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <4A14608F.6070800-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Post: <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://googlegroups.com/group/open-iscsi/subscribe>,
+	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: "open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org" <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>, Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Cc: "davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org" <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>, Anil Veerabhadrappa <anilgv-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Benjamin Li <benli-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Wu Zhangjin <wuzhangjin@gmail.com>
 
-This is originally from the to-mips branch from
-http://dev.lemote.com/code/linux_loongson
 
-Signed-off-by: Wu Zhangjin <wuzhangjin@gmail.com>
----
- drivers/ide/amd74xx.c |   19 +++++++++++++++++++
- 1 files changed, 19 insertions(+), 0 deletions(-)
+On Wed, 2009-05-20 at 12:57 -0700, Mike Christie wrote:
+> Michael Chan wrote:
+> > diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
+> > index 2c1a4af..0990dbb 100644
+> > --- a/include/scsi/iscsi_if.h
+> > +++ b/include/scsi/iscsi_if.h
+> > @@ -23,6 +23,9 @@
+> >  
+> 
+> > + */
+> > +struct iscsi_path {
+> > +	uint64_t	handle;
+> > +	uint8_t		mac_addr[6];
+> > +	uint8_t		mac_addr_old[6];
+> > +	uint32_t	ip_addr_len;	/* 4 or 16 */
+> > +	union {
+> > +		struct in_addr	v4_addr;
+> > +		struct in6_addr	v6_addr;
+> > +	} src;
+> > +	union {
+> > +		struct in_addr	v4_addr;
+> > +		struct in6_addr	v6_addr;
+> 
+> I think we have to include in6.h and in.h in this file, right? iser 
+> would not compile with this patch without it. If that is right and it 
+> works for you now, I can just fix it when I merge the patch.
+> 
 
-diff --git a/drivers/ide/amd74xx.c b/drivers/ide/amd74xx.c
-index 77267c8..8f488b8 100644
---- a/drivers/ide/amd74xx.c
-+++ b/drivers/ide/amd74xx.c
-@@ -23,6 +23,11 @@
- 
- #define DRV_NAME "amd74xx"
- 
-+static const char *am74xx_quirk_drives[] = {
-+	"FUJITSU MHZ2160BH G2",
-+	NULL
-+};
-+
- enum {
- 	AMD_IDE_CONFIG		= 0x41,
- 	AMD_CABLE_DETECT	= 0x42,
-@@ -112,6 +117,19 @@ static void amd_set_pio_mode(ide_drive_t *drive, const u8 pio)
- 	amd_set_drive(drive, XFER_PIO_0 + pio);
- }
- 
-+static void amd_quirkproc(ide_drive_t *drive)
-+{
-+	const char **list, *m = (char *)&drive->id[ATA_ID_PROD];
-+
-+	for (list = am74xx_quirk_drives; *list != NULL; list++)
-+			if (strstr(m, *list) != NULL) {
-+				drive->quirk_list = 2;
-+				return;
-+			}
-+
-+	drive->quirk_list = 0;
-+}
-+
- static void amd7409_cable_detect(struct pci_dev *dev)
- {
- 	/* no host side cable detection */
-@@ -194,6 +212,7 @@ static void __devinit init_hwif_amd74xx(ide_hwif_t *hwif)
- static const struct ide_port_ops amd_port_ops = {
- 	.set_pio_mode		= amd_set_pio_mode,
- 	.set_dma_mode		= amd_set_drive,
-+	.quirkproc		= amd_quirkproc,
- 	.cable_detect		= amd_cable_detect,
- };
- 
--- 
-1.6.2.1
+Yes, either include these files here in iscsi_if.h or include them in
+places where iscsi_if.h is included.  Which way do you prefer?
