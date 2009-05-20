@@ -1,58 +1,42 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
+From: Boaz Harrosh <bharrosh@panasas.com>
 Subject: Re: [PATCH version 2] [SQUASHME] "FC Pass Thru support" fixed for
  block/for-2.6.31 tree
-Date: Wed, 20 May 2009 14:16:28 +1000
-Message-ID: <20090520141628.582cb448.sfr@canb.auug.org.au>
-References: <4A12797B.2060901@panasas.com>
-	<4A12AC23.30808@panasas.com>
+Date: Wed, 20 May 2009 11:11:09 +0300
+Message-ID: <4A13BB1D.10901@panasas.com>
+References: <4A12797B.2060901@panasas.com>	<4A12AC23.30808@panasas.com> <20090520111619.87f815b1.sfr@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Wed__20_May_2009_14_16_28_+1000_gF8FiI+IDVbYZhMO"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:48596 "EHLO smtps.tip.net.au"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750746AbZETEQf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 May 2009 00:16:35 -0400
-In-Reply-To: <4A12AC23.30808@panasas.com>
+Received: from yx-out-2324.google.com ([74.125.44.30]:57212 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752629AbZETILR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 May 2009 04:11:17 -0400
+In-Reply-To: <20090520111619.87f815b1.sfr@canb.auug.org.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Tejun Heo <tj@kernel.org>, James Smart <James.Smart@Emulex.Com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <tomof@acm.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>, James Smart <James.Smart@Emulex.Com>, James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <tomof@acm.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>
 
---Signature=_Wed__20_May_2009_14_16_28_+1000_gF8FiI+IDVbYZhMO
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On 05/20/2009 04:16 AM, Stephen Rothwell wrote:
+> On Tue, 19 May 2009 15:54:59 +0300 Boaz Harrosh <bharrosh@panasas.com> wrote:
+>>
+>> This patch should be squashed into
+>>     [SCSI] FC Pass Thru support
+>>
+>> If it needs to compile after Tejun's block-layer revamps
+>> (all of them)
+> 
+> Is there some reason that the FC passthrough support (and any followup
+> patches) can't be pushed through the block tree.  It clearly currently
+> doesn't depend on anything new in the scsi tree ...
+> 
 
-Hi Boaz,
+If it will go through block tree it needs James Bottomley's Ack, I
+guess?
 
-On Tue, 19 May 2009 15:54:59 +0300 Boaz Harrosh <bharrosh@panasas.com> wrot=
-e:
->
->=20
-> This patch should be squashed into
->     [SCSI] FC Pass Thru support
->=20
-> If it needs to compile after Tejun's block-layer revamps
-> (all of them)
+It does, in any case, need Ack from James Smart first. James ?
 
-I have used this as my merge fixup for today.  Thanks for that.
+Thanks
+Boaz
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
-
---Signature=_Wed__20_May_2009_14_16_28_+1000_gF8FiI+IDVbYZhMO
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkoThBwACgkQjjKRsyhoI8wVpACgg0tX0yvpad8e1k60pvWQldMu
-K2cAn2wM7CP0itIQh3I3ecH8R9xGuJo7
-=hETH
------END PGP SIGNATURE-----
-
---Signature=_Wed__20_May_2009_14_16_28_+1000_gF8FiI+IDVbYZhMO--
