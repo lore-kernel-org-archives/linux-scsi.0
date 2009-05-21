@@ -1,52 +1,54 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 4/4] bnx2i: Add bnx2i iSCSI driver.
-Date: Wed, 20 May 2009 17:51:42 -0500
-Message-ID: <4A14897E.9000006@cs.wisc.edu>
-References: <1241208039-6813-1-git-send-email-mchan@broadcom.com> <1241208039-6813-5-git-send-email-mchan@broadcom.com> <4A01BF6A.90707@cs.wisc.edu> <1241715824.9177.8.camel@HP1> <4A034C2A.50107@cs.wisc.edu> <1242697859.10180.147.camel@HP1> <4A12C08A.1080600@cs.wisc.edu> <1242766039.10180.178.camel@HP1> <4A132B6B.5030008@cs.wisc.edu> <1242838735.10180.228.camel@HP1> <4A14608F.6070800@cs.wisc.edu> <1242858164.10180.316.camel@HP1>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] block: fix oops with block tag queueing
+Date: Thu, 21 May 2009 10:55:45 +0900
+Message-ID: <4A14B4A1.5050303@gmail.com>
+References: <1242839186.2881.57.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:55857 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750944AbZETWvw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 May 2009 18:51:52 -0400
-In-Reply-To: <1242858164.10180.316.camel@HP1>
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:42294 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754453AbZEUBzx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 May 2009 21:55:53 -0400
+Received: by bwz22 with SMTP id 22so751008bwz.37
+        for <linux-scsi@vger.kernel.org>; Wed, 20 May 2009 18:55:53 -0700 (PDT)
+In-Reply-To: <1242839186.2881.57.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: open-iscsi@googlegroups.com
-Cc: "davem@davemloft.net" <davem@davemloft.net>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Karen Xie <kxie@chelsio.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Benjamin Li <benli@broadcom.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jens Axboe <Jens.Axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Michael Chan wrote:
+James Bottomley wrote:
+> commit e8939a50466fd963eb1ba9118c34b9ffb7ff6aa6
+> Author: Tejun Heo <tj@kernel.org>
+> Date:   Fri May 8 11:54:16 2009 +0900
 > 
-> On Wed, 2009-05-20 at 12:57 -0700, Mike Christie wrote:
->> Michael Chan wrote:
->>> diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
->>> index 2c1a4af..0990dbb 100644
->>> --- a/include/scsi/iscsi_if.h
->>> +++ b/include/scsi/iscsi_if.h
->>> @@ -23,6 +23,9 @@
->>>  
->>> + */
->>> +struct iscsi_path {
->>> +	uint64_t	handle;
->>> +	uint8_t		mac_addr[6];
->>> +	uint8_t		mac_addr_old[6];
->>> +	uint32_t	ip_addr_len;	/* 4 or 16 */
->>> +	union {
->>> +		struct in_addr	v4_addr;
->>> +		struct in6_addr	v6_addr;
->>> +	} src;
->>> +	union {
->>> +		struct in_addr	v4_addr;
->>> +		struct in6_addr	v6_addr;
->> I think we have to include in6.h and in.h in this file, right? iser 
->> would not compile with this patch without it. If that is right and it 
->> works for you now, I can just fix it when I merge the patch.
->>
+>     block: implement and enforce request peek/start/fetch
 > 
-> Yes, either include these files here in iscsi_if.h or include them in
-> places where iscsi_if.h is included.  Which way do you prefer?
+> Added a BUG_ON(blk_queued_rq(req)) to the top of blk_finish_req().
+> Unfortunately, this checks whether req->queuelist is empty.  This list
+> is doing double duty both as the queue list and the tag list, so tagged
+> requests come in here with this not empty and boom (the tag list is
+> emptied by blk_queue_end_tag() lower down).
 > 
+> Fix this by moving the BUG_ON to below the end tag we also seem
+> vulnerable to this in blk_requeue_request() as well.  I think all uses
+> of blk_queued_rq() need auditing because the check is clearly wrong in
+> the tagged case.
+> 
+> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Here is fine.
+Oops,
+
+Acked-by: Tejun Heo <tj@kernel.org>
+
+There are also some drivers which use queuelist for internal purposes
+after dequeueing, which also screws up blk_queued_rq() test in
+addition to being questionable practice to begin with.  Maybe we would
+be better off with a flag?
+
+Thanks.
+
+-- 
+tejun
