@@ -1,55 +1,56 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: old-EH and SAS (was Re: [PATCH 2/2] block: add function for waiting
- for a specific free tag)
-Date: Thu, 21 May 2009 11:34:04 -0500
-Message-ID: <4A15827C.6020705@linux.vnet.ibm.com>
-References: <20090520065942.GD11363@kernel.dk> <20090520070104.GF11363@kernel.dk> <4A13EFBC.4010005@gmail.com> <4A145B5D.8020607@garzik.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] block: fix oops with block tag queueing
+Date: Thu, 21 May 2009 19:47:06 +0300
+Message-ID: <4A15858A.5000906@panasas.com>
+References: <1242839186.2881.57.camel@localhost.localdomain> <4A14B4A1.5050303@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:37677 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754960AbZEUQeJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 May 2009 12:34:09 -0400
-In-Reply-To: <4A145B5D.8020607@garzik.org>
+Received: from gw-ca.panasas.com ([209.116.51.66]:31664 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755203AbZEUQrO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 May 2009 12:47:14 -0400
+In-Reply-To: <4A14B4A1.5050303@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>, Jens Axboe <jens.axboe@oracle.com>, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <Jens.Axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Jeff Garzik wrote:
-> Brian King did a new-EH conversion for ipr, some time ago.  Maybe that
-> work could be picked up, extended to libsas, and permit removal of all
-> the old-EH code remaining in libata.
+On 05/21/2009 04:55 AM, Tejun Heo wrote:
+> James Bottomley wrote:
+>> commit e8939a50466fd963eb1ba9118c34b9ffb7ff6aa6
+>> Author: Tejun Heo <tj@kernel.org>
+>> Date:   Fri May 8 11:54:16 2009 +0900
+>>
+>>     block: implement and enforce request peek/start/fetch
+>>
+>> Added a BUG_ON(blk_queued_rq(req)) to the top of blk_finish_req().
+>> Unfortunately, this checks whether req->queuelist is empty.  This list
+>> is doing double duty both as the queue list and the tag list, so tagged
+>> requests come in here with this not empty and boom (the tag list is
+>> emptied by blk_queue_end_tag() lower down).
+>>
+>> Fix this by moving the BUG_ON to below the end tag we also seem
+>> vulnerable to this in blk_requeue_request() as well.  I think all uses
+>> of blk_queued_rq() need auditing because the check is clearly wrong in
+>> the tagged case.
+>>
+>> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+> 
+> Oops,
+> 
+> Acked-by: Tejun Heo <tj@kernel.org>
+> 
+> There are also some drivers which use queuelist for internal purposes
+> after dequeueing, which also screws up blk_queued_rq() test in
+> addition to being questionable practice to begin with.  Maybe we would
+> be better off with a flag?
+> 
 
-There are a couple different ways to accomplish this, and they relate to
-how many scsi hosts we end up using for a single SAS HBA.
+What is the REQ_STARTED flag for?
 
-Single scsi_host solution
-This solution really requires libata to more or less stop using scsi core.
-At the very least the concept of it "owning" the scsi host must go away.
-Additionally, as far as EH goes, quiescing the entire scsi host each time
-we want to do some exception handling for a SATA device kills the performance
-of the SAS devices on the HBA, so we would need to have a better layered
-EH that only quiesced what needs to be quiesced and then called out to
-different pluggable EH handling routines.
+> Thanks.
+> 
 
-Multiple scsi_host solution
-This is what my patch to ipr did. It was the path of least resistance at
-the time and worked reasonably well for ipr, but may not have been the
-best solution for libsas without further enhancements. In this solution,
-there is a scsi_host for each ATA port found on the SAS fabric. This
-allows most of the existing libata code to simply work with minimal changes.
-The biggest issue with this approach is we lose adapter queue depth tracking.
-We really would need queue groups or some similar solution in order for this
-to work for libsas.
-
--Brian
-
--- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
-
-
+Boaz
