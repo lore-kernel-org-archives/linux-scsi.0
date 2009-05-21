@@ -1,54 +1,52 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] block: fix oops with block tag queueing
-Date: Thu, 21 May 2009 10:55:45 +0900
-Message-ID: <4A14B4A1.5050303@gmail.com>
-References: <1242839186.2881.57.camel@localhost.localdomain>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] tgt: Wrong comment and redundant code in scsi_map_user_pages
+Date: Thu, 21 May 2009 15:49:06 +0300
+Message-ID: <4A154DC2.3020803@panasas.com>
+References: <4A0C3F05.5030308@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:42294 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754453AbZEUBzx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 May 2009 21:55:53 -0400
-Received: by bwz22 with SMTP id 22so751008bwz.37
-        for <linux-scsi@vger.kernel.org>; Wed, 20 May 2009 18:55:53 -0700 (PDT)
-In-Reply-To: <1242839186.2881.57.camel@localhost.localdomain>
+Received: from gw-ca.panasas.com ([209.116.51.66]:3319 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750880AbZEUMtO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 May 2009 08:49:14 -0400
+In-Reply-To: <4A0C3F05.5030308@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jens Axboe <Jens.Axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: FUJITA Tomonori <tomof@acm.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-James Bottomley wrote:
-> commit e8939a50466fd963eb1ba9118c34b9ffb7ff6aa6
-> Author: Tejun Heo <tj@kernel.org>
-> Date:   Fri May 8 11:54:16 2009 +0900
+On 05/14/2009 06:55 PM, Boaz Harrosh wrote:
+> scsi_init_io() fully prepares the command properly. scsi_tgt_lib need
+> not assign scsi_cmnd members any more.
 > 
->     block: implement and enforce request peek/start/fetch
+> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> ---
+>  drivers/scsi/scsi_tgt_lib.c |    5 -----
+>  1 files changed, 0 insertions(+), 5 deletions(-)
 > 
-> Added a BUG_ON(blk_queued_rq(req)) to the top of blk_finish_req().
-> Unfortunately, this checks whether req->queuelist is empty.  This list
-> is doing double duty both as the queue list and the tag list, so tagged
-> requests come in here with this not empty and boom (the tag list is
-> emptied by blk_queue_end_tag() lower down).
-> 
-> Fix this by moving the BUG_ON to below the end tag we also seem
-> vulnerable to this in blk_requeue_request() as well.  I think all uses
-> of blk_queued_rq() need auditing because the check is clearly wrong in
-> the tagged case.
-> 
-> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+> diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
+> index 1030327..ef11b4d 100644
+> --- a/drivers/scsi/scsi_tgt_lib.c
+> +++ b/drivers/scsi/scsi_tgt_lib.c
+> @@ -383,11 +383,6 @@ static int scsi_map_user_pages(struct scsi_tgt_cmd *tcmd, struct scsi_cmnd *cmd,
+>  		scsi_release_buffers(cmd);
+>  		goto unmap_rq;
+>  	}
+> -	/*
+> -	 * we use REQ_TYPE_BLOCK_PC so scsi_init_io doesn't set the
+> -	 * length for us.
+> -	 */
+> -	cmd->sdb.length = blk_rq_bytes(rq);
+>  
+>  	return 0;
+>  
 
-Oops,
+Dear TOMO
+Ping?
 
-Acked-by: Tejun Heo <tj@kernel.org>
+James I forgot to say this should be for post-merge tree as the use
+of blk_rq_bytes(rq) was done by Tejun. (Given Tomo's Ack of course)
 
-There are also some drivers which use queuelist for internal purposes
-after dequeueing, which also screws up blk_queued_rq() test in
-addition to being questionable practice to begin with.  Maybe we would
-be better off with a flag?
-
-Thanks.
-
--- 
-tejun
+Thanks
+Boaz
