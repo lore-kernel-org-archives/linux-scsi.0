@@ -1,38 +1,70 @@
-From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 24/24] mpt fusion: [2.6.30-rc6] hotplug event MPTSAS_DEL_DEVICE fix
-Date: Fri, 22 May 2009 16:42:28 +0530
-Message-ID: <20090522111220.GR16331@lsi.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: scsi_sysfs_add_sdev(): uevent emission versus attribute creation
+Date: Fri, 22 May 2009 14:01:21 +0200
+Message-ID: <4A169411.1010600@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og120.obsmtp.com ([64.18.2.18]:33905 "EHLO
-	exprod7og120.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753010AbZEVLdd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 May 2009 07:33:33 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-hotplug-owner@vger.kernel.org>
+Sender: linux-hotplug-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
+Cc: linux-hotplug@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
+Hi,
 
-This is a fix for hotplug remove event.
-Added code which will remove device on receiving MPTSAS_DEL_DEVICE event.
----
+drivers/scsi/scsi_sysfs.c::scsi_sysfs_add_sdev() is currently performing 
+the following steps (and more) in this order:
 
-Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
----
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index 5562894..5b88a25 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -4028,6 +4028,9 @@ mptsas_hotplug_work(MPT_ADAPTER *ioc, struct fw_event_work *fw_event,
- 		break;
- 
- 	case MPTSAS_DEL_DEVICE:
-+		phy_info = mptsas_find_phyinfo_by_sas_address(ioc,
-+		    hot_plug_info->sas_address);
-+		mptsas_del_end_device(ioc, phy_info);
- 		break;
- 
- 	case MPTSAS_DEL_PHYSDISK:
+   - add target device (parent of a logical unit device = sdev)
+   - add sdev_gendev (...?)
+   - add sdev
+
+     These steps implicitly generate KOBJ_ADD uevents.  Userspace is
+     rushing to look at the new devices and do something with them.
+     Also, the driver core looks at the sdev and attaches command set
+     drivers like sd to them.
+
+     sd discovers the block device, partitions and so on, and adds its
+     own sysfs representations.  KOBJ_ADD uevents happen for the block
+     device(s).  Again, userspace gets busy looing at the new block
+     devices.  It starts creating /dev/disk/by-* symlinks.
+
+     After command set driver probes and hence device_add(sdev...) are
+     done, scsi_sysfs_add_sdev proceeds:
+
+   - add request queue related attributes beneath the gendev
+   - bsg_register_queue
+   - add SCSI host template attributes beneath the gendev
+   - transport_add_device, which among else adds transport class
+     related attributes
+
+For many years now, the sbp2 driver has been providing a host template 
+attribute which contains the SBP specific target identifier and logical 
+unit identifier.  Userspace is taking this attribute to create the 
+/dev/disk/by-id symlink.
+
+That's obviously racy.  The sdev's attribute should already be there 
+when the disk's and partitions' symlinks are going to be created.
+
+Most of the time it works, at some occasions it fails because userspace 
+was quicker than the kernel.  Actually, I heard that it's the other way 
+around for many users:  Most of the time it _doesn't_ work for them.
+
+How am I going to fix this?
+
+a)  We could suppress uevents until after all attributes were added, and 
+generate the uevents as the last step.  But the trouble is that this 
+apparently requires modification of all upper layer drivers, since 
+neither suppression nor replay of uevents propagate implicitly to child 
+devices.  So that doesn't sound like a feasible plan.
+
+b)  Add the attributes before device_add?  I can't see how though.
+
+c)  Suppress ULD binding until after all attributes were created, and 
+trigger driver core's driver matching/ binding as the last step in 
+scsi_sysfs_add_sdev?
+-- 
+Stefan Richter
+-=====-==--= -=-= =-==-
+http://arcgraph.de/sr/
