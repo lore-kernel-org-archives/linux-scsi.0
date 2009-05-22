@@ -1,14 +1,14 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 2/24] mpt fusion: [2.6.30-rc6] Added support for MPT discovery completion check
-Date: Fri, 22 May 2009 16:09:43 +0530
-Message-ID: <20090522103943.GD16245@lsi.com>
+Subject: [PATCH 3/24] mpt fusion: [2.6.30-rc6] Optimized SendEvent notification Using Doorbell instead of FIFO
+Date: Fri, 22 May 2009 16:10:34 +0530
+Message-ID: <20090522104034.GE16245@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og117.obsmtp.com ([64.18.2.6]:47059 "EHLO
+Received: from exprod7og117.obsmtp.com ([64.18.2.6]:47338 "EHLO
 	exprod7og117.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752792AbZEVLAn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 May 2009 07:00:43 -0400
+	with ESMTP id S1752992AbZEVLBd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 May 2009 07:01:33 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,172 +16,132 @@ To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
 
-sas_discovery_quiesce_io flag is used to control IO start/resume functionality.
-IO will be stoped while doing discovery of topology. Once discovery is completed
-It will resume IO. Resending patch including James review.
+SendEventNotification was handled through FIFO, now it is using doorbell 
+to communicate with hardware. Added Sleep Flag as an extra argument to support Can-Sleep 
+feature.
+Resending patch including compilation error fix reviewed by Grant Grundler.
 
 Signed-off-by: Kashyap Desai <kadesai@lsi.com>
 ---
 diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index a663692..54326e0 100644
+index 54326e0..0d2fb0e 100644
 --- a/drivers/message/fusion/mptbase.c
 +++ b/drivers/message/fusion/mptbase.c
-@@ -277,6 +277,56 @@ mpt_get_cb_idx(MPT_DRIVER_CLASS dclass)
- }
+@@ -192,7 +192,8 @@ static void 	mpt_read_ioc_pg_1(MPT_ADAPTER *ioc);
+ static void 	mpt_read_ioc_pg_4(MPT_ADAPTER *ioc);
+ static void	mpt_timer_expired(unsigned long data);
+ static void	mpt_get_manufacturing_pg_0(MPT_ADAPTER *ioc);
+-static int	SendEventNotification(MPT_ADAPTER *ioc, u8 EvSwitch);
++static int	SendEventNotification(MPT_ADAPTER *ioc, u8 EvSwitch,
++	int sleepFlag);
+ static int	SendEventAck(MPT_ADAPTER *ioc, EventNotificationReply_t *evnp);
+ static int	mpt_host_page_access_control(MPT_ADAPTER *ioc, u8 access_control_value, int sleepFlag);
+ static int	mpt_host_page_alloc(MPT_ADAPTER *ioc, pIOCInit_t ioc_init);
+@@ -208,7 +209,8 @@ static int	procmpt_iocinfo_read(char *buf, char **start, off_t offset,
+ static void	mpt_get_fw_exp_ver(char *buf, MPT_ADAPTER *ioc);
  
- /**
-+ * mpt_is_discovery_complete - determine if discovery has completed
-+ * @ioc: per adatper instance
-+ *
-+ * Returns 1 when discovery completed, else zero.
-+ */
-+static int
-+mpt_is_discovery_complete(MPT_ADAPTER *ioc)
-+{
-+	ConfigExtendedPageHeader_t hdr;
-+	CONFIGPARMS cfg;
-+	SasIOUnitPage0_t *buffer;
-+	dma_addr_t dma_handle;
-+	int rc = 0;
+ //int		mpt_HardResetHandler(MPT_ADAPTER *ioc, int sleepFlag);
+-static int	ProcessEventNotification(MPT_ADAPTER *ioc, EventNotificationReply_t *evReply, int *evHandlers);
++static int	ProcessEventNotification(MPT_ADAPTER *ioc,
++		EventNotificationReply_t *evReply, int *evHandlers);
+ static void	mpt_iocstatus_info(MPT_ADAPTER *ioc, u32 ioc_status, MPT_FRAME_HDR *mf);
+ static void	mpt_fc_log_info(MPT_ADAPTER *ioc, u32 log_info);
+ static void	mpt_spi_log_info(MPT_ADAPTER *ioc, u32 log_info);
+@@ -2472,28 +2474,36 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
+ 		}
+ 	}
+ 
++	/*  Enable MPT base driver management of EventNotification
++	 *  and EventAck handling.
++	 */
++	if ((ret == 0) && (!ioc->facts.EventState)) {
++		dinitprintk(ioc, printk(MYIOC_s_INFO_FMT
++			"SendEventNotification\n",
++		    ioc->name));
++		ret = SendEventNotification(ioc, 1, sleepFlag);	/* 1=Enable */
++	}
 +
-+	memset(&hdr, 0, sizeof(ConfigExtendedPageHeader_t));
-+	memset(&cfg, 0, sizeof(CONFIGPARMS));
-+	hdr.PageVersion = MPI_SASIOUNITPAGE0_PAGEVERSION;
-+	hdr.PageType = MPI_CONFIG_PAGETYPE_EXTENDED;
-+	hdr.ExtPageType = MPI_CONFIG_EXTPAGETYPE_SAS_IO_UNIT;
-+	cfg.cfghdr.ehdr = &hdr;
-+	cfg.action = MPI_CONFIG_ACTION_PAGE_HEADER;
++	if (ioc->alt_ioc && alt_ioc_ready && !ioc->alt_ioc->facts.EventState)
++		rc = SendEventNotification(ioc->alt_ioc, 1, sleepFlag);
 +
-+	if ((mpt_config(ioc, &cfg)))
-+		goto out;
-+	if (!hdr.ExtPageLength)
-+		goto out;
-+
-+	buffer = pci_alloc_consistent(ioc->pcidev, hdr.ExtPageLength * 4,
-+	    &dma_handle);
-+	if (!buffer)
-+		goto out;
-+
-+	cfg.physAddr = dma_handle;
-+	cfg.action = MPI_CONFIG_ACTION_PAGE_READ_CURRENT;
-+
-+	if ((mpt_config(ioc, &cfg)))
-+		goto out_free_consistent;
-+
-+	if (!(buffer->PhyData[0].PortFlags &
-+	    MPI_SAS_IOUNIT0_PORT_FLAGS_DISCOVERY_IN_PROGRESS))
-+		rc = 1;
-+
-+ out_free_consistent:
-+	pci_free_consistent(ioc->pcidev, hdr.ExtPageLength * 4,
-+	    buffer, dma_handle);
-+ out:
-+	return rc;
-+}
-+
-+/**
-  *	mpt_fault_reset_work - work performed on workq after ioc fault
-  *	@work: input argument, used to derive ioc
-  *
-@@ -307,6 +357,12 @@ mpt_fault_reset_work(struct work_struct *work)
- 			printk(MYIOC_s_WARN_FMT "IOC is in FAULT state after "
- 			    "reset (%04xh)\n", ioc->name, ioc_raw_state &
- 			    MPI_DOORBELL_DATA_MASK);
-+	} else if (ioc->bus_type == SAS && ioc->sas_discovery_quiesce_io) {
-+		if ((mpt_is_discovery_complete(ioc))) {
-+			devtprintk(ioc, printk(MYIOC_s_DEBUG_FMT "clearing "
-+			    "discovery_quiesce_io flag\n", ioc->name));
-+			ioc->sas_discovery_quiesce_io = 0;
+ 	if (ret == 0) {
+ 		/* Enable! (reply interrupt) */
+ 		CHIPREG_WRITE32(&ioc->chip->IntMask, MPI_HIM_DIM);
+ 		ioc->active = 1;
+ 	}
+-
+-	if (reset_alt_ioc_active && ioc->alt_ioc) {
+-		/* (re)Enable alt-IOC! (reply interrupt) */
+-		dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "alt_ioc reply irq re-enabled\n",
+-		    ioc->alt_ioc->name));
+-		CHIPREG_WRITE32(&ioc->alt_ioc->chip->IntMask, MPI_HIM_DIM);
+-		ioc->alt_ioc->active = 1;
++	if (rc == 0) {	/* alt ioc */
++		if (reset_alt_ioc_active && ioc->alt_ioc) {
++			/* (re)Enable alt-IOC! (reply interrupt) */
++			dinitprintk(ioc, printk(MYIOC_s_DEBUG_FMT "alt-ioc"
++				"reply irq re-enabled\n",
++				ioc->alt_ioc->name));
++			CHIPREG_WRITE32(&ioc->alt_ioc->chip->IntMask,
++				MPI_HIM_DIM);
++			ioc->alt_ioc->active = 1;
 +		}
  	}
  
-  out:
-diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
-index e75300c..1b258b2 100644
---- a/drivers/message/fusion/mptbase.h
-+++ b/drivers/message/fusion/mptbase.h
-@@ -706,6 +706,7 @@ typedef struct _MPT_ADAPTER
- 	struct mutex		 sas_discovery_mutex;
- 	u8			 sas_discovery_runtime;
- 	u8			 sas_discovery_ignore_events;
-+	u8			 sas_discovery_quiesce_io;
- 	int			 sas_index; /* index refrencing */
- 	MPT_SAS_MGMT		 sas_mgmt;
- 	struct work_struct	 sas_persist_task;
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index b162f7a..40dbaaa 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -1008,6 +1008,8 @@ mptsas_slave_alloc(struct scsi_device *sdev)
+-	/*  Enable MPT base driver management of EventNotification
+-	 *  and EventAck handling.
+-	 */
+-	if ((ret == 0) && (!ioc->facts.EventState))
+-		(void) SendEventNotification(ioc, 1);	/* 1=Enable EventNotification */
+-
+-	if (ioc->alt_ioc && alt_ioc_ready && !ioc->alt_ioc->facts.EventState)
+-		(void) SendEventNotification(ioc->alt_ioc, 1);	/* 1=Enable EventNotification */
+ 
+ 	/*	Add additional "reason" check before call to GetLanConfigPages
+ 	 *	(combined with GetIoUnitPage2 call).  This prevents a somewhat
+@@ -6019,30 +6029,28 @@ mpt_get_manufacturing_pg_0(MPT_ADAPTER *ioc)
+  *	SendEventNotification - Send EventNotification (on or off) request to adapter
+  *	@ioc: Pointer to MPT_ADAPTER structure
+  *	@EvSwitch: Event switch flags
++ *	@sleepFlag: Specifies whether the process can sleep
+  */
  static int
- mptsas_qcmd(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
+-SendEventNotification(MPT_ADAPTER *ioc, u8 EvSwitch)
++SendEventNotification(MPT_ADAPTER *ioc, u8 EvSwitch, int sleepFlag)
  {
-+	MPT_SCSI_HOST	*hd;
-+	MPT_ADAPTER	*ioc;
- 	VirtDevice	*vdevice = SCpnt->device->hostdata;
+-	EventNotification_t	*evnp;
++	EventNotification_t	evn;
++	MPIDefaultReply_t	reply_buf;
  
- 	if (!vdevice || !vdevice->vtarget || vdevice->vtarget->deleted) {
-@@ -1016,6 +1018,12 @@ mptsas_qcmd(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
- 		return 0;
- 	}
+-	evnp = (EventNotification_t *) mpt_get_msg_frame(mpt_base_index, ioc);
+-	if (evnp == NULL) {
+-		devtverboseprintk(ioc, printk(MYIOC_s_WARN_FMT "Unable to allocate event request frame!\n",
+-				ioc->name));
+-		return 0;
+-	}
+-	memset(evnp, 0, sizeof(*evnp));
+-
+-	devtverboseprintk(ioc, printk(MYIOC_s_DEBUG_FMT "Sending EventNotification (%d) request %p\n", ioc->name, EvSwitch, evnp));
++	memset(&evn, 0, sizeof(EventNotification_t));
++	memset(&reply_buf, 0, sizeof(MPIDefaultReply_t));
  
-+	hd = shost_priv(SCpnt->device->host);
-+	ioc = hd->ioc;
-+
-+	if (ioc->sas_discovery_quiesce_io)
-+		return SCSI_MLQUEUE_HOST_BUSY;
-+
- //	scsi_print_command(SCpnt);
+-	evnp->Function = MPI_FUNCTION_EVENT_NOTIFICATION;
+-	evnp->ChainOffset = 0;
+-	evnp->MsgFlags = 0;
+-	evnp->Switch = EvSwitch;
++	evn.Function = MPI_FUNCTION_EVENT_NOTIFICATION;
++	evn.Switch = EvSwitch;
++	evn.MsgContext = cpu_to_le32(mpt_base_index << 16);
  
- 	return mptscsih_qcmd(SCpnt,done);
-@@ -3009,6 +3017,7 @@ mptsas_send_discovery_event(MPT_ADAPTER *ioc,
- 	EVENT_DATA_SAS_DISCOVERY *discovery_data)
- {
- 	struct mptsas_discovery_event *ev;
-+	u32 discovery_status;
+-	mpt_put_msg_frame(mpt_base_index, ioc, (MPT_FRAME_HDR *)evnp);
++	devtverboseprintk(ioc, printk(MYIOC_s_DEBUG_FMT
++	    "Sending EventNotification (%d) request %p\n",
++	    ioc->name, EvSwitch, &evn));
  
- 	/*
- 	 * DiscoveryStatus
-@@ -3017,7 +3026,9 @@ mptsas_send_discovery_event(MPT_ADAPTER *ioc,
- 	 * kicks off discovery, and return to zero
- 	 * once its completed.
- 	 */
--	if (discovery_data->DiscoveryStatus)
-+	discovery_status = le32_to_cpu(discovery_data->DiscoveryStatus);
-+	ioc->sas_discovery_quiesce_io = discovery_status ? 1 : 0;
-+	if (discovery_status)
- 		return;
- 
- 	ev = kzalloc(sizeof(*ev), GFP_ATOMIC);
-@@ -3299,12 +3310,22 @@ mptsas_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	return error;
+-	return 0;
++	return mpt_handshake_req_reply_wait(ioc, sizeof(EventNotification_t),
++	    (u32 *)&evn, sizeof(MPIDefaultReply_t), (u16 *)&reply_buf, 30,
++	    sleepFlag);
  }
  
-+void
-+mptsas_shutdown(struct pci_dev *pdev)
-+{
-+	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
-+
-+	ioc->sas_discovery_quiesce_io = 0;
-+}
-+
- static void __devexit mptsas_remove(struct pci_dev *pdev)
- {
- 	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
- 	struct mptsas_portinfo *p, *n;
- 	int i;
- 
-+	mptsas_shutdown(pdev);
-+
- 	ioc->sas_discovery_ignore_events = 1;
- 	sas_remove_host(ioc->sh);
- 
-@@ -3342,7 +3363,7 @@ static struct pci_driver mptsas_driver = {
- 	.id_table	= mptsas_pci_table,
- 	.probe		= mptsas_probe,
- 	.remove		= __devexit_p(mptsas_remove),
--	.shutdown	= mptscsih_shutdown,
-+	.shutdown	= mptsas_shutdown,
- #ifdef CONFIG_PM
- 	.suspend	= mptscsih_suspend,
- 	.resume		= mptscsih_resume,
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
