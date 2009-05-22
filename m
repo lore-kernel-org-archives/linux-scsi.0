@@ -1,39 +1,34 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 05/13] block: Export I/O topology for block devices and partitions
-Date: Fri, 22 May 2009 09:34:12 -0400
-Message-ID: <yq1ljopdzxn.fsf@sermon.lab.mkp.net>
-References: <1242362435-11953-1-git-send-email-martin.petersen@oracle.com>
-	<1242362435-11953-6-git-send-email-martin.petersen@oracle.com>
-	<20090518175741.GM4140@kernel.dk> <20090518181204.GC32085@redhat.com>
-	<yq1fxf1gi3y.fsf@sermon.lab.mkp.net> <20090519181530.GH4140@kernel.dk>
-	<yq1ws8bealr.fsf@sermon.lab.mkp.net>
-	<20090522073050.GH11363@kernel.dk>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 4/24] mpt fusion: [2.6.30-rc6] small fix for 1078 data
+	corruption issue
+Date: Fri, 22 May 2009 09:27:03 -0500
+Message-ID: <1243002423.2873.2.camel@localhost.localdomain>
+References: <20090522104130.GF16245@lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet11.oracle.com ([141.146.126.233]:17363 "EHLO
-	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752320AbZEVNeQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 May 2009 09:34:16 -0400
-In-Reply-To: <20090522073050.GH11363@kernel.dk> (Jens Axboe's message of "Fri,
-	22 May 2009 09:30:51 +0200")
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:55915 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753960AbZEVO1E (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 May 2009 10:27:04 -0400
+In-Reply-To: <20090522104130.GF16245@lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Kashyap, Desai" <kashyap.desai@lsi.com>
+Cc: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
->>>>> "Jens" == Jens Axboe <jens.axboe@oracle.com> writes:
+On Fri, 2009-05-22 at 16:11 +0530, Kashyap, Desai wrote:
+> Patch applied on 21/01/2009: "Fixing 1078 data curruption" need this changes
+> also.
+> message flags will use runtime sense width instead of compile time as
+> explain in patch applied on 21/01/2009 "Fixing 1078 data curruption".
 
-Jens> I replaced the original patch and went to apply this, but it fails
-Jens> even at the first patch. What is this against? If you want it
-Jens> queued for 2.6.31, please post it against the for-2.6.31 branch of
-Jens> the block repo.
+This description doesn't make a whole lot of sense, since patch "Fixing
+1078 data corruption" is 1/24 of this series ... I take it these two
+patches should be merged?
 
-Weird.  It was cut against your for-2.6.31 branch as of a few days ago.
-I just updated to your latest and greatest and the patches still apply
-cleanly for me.
+James
 
-Are you sure you got the patch order right?
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
