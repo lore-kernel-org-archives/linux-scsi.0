@@ -1,42 +1,35 @@
-From: Kay Sievers <kay.sievers@vrfy.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: scsi_sysfs_add_sdev(): uevent emission versus attribute creation
-Date: Fri, 22 May 2009 14:30:18 +0200
-Message-ID: <ac3eb2510905220530i46c2e2e5ve8e621953428a92@mail.gmail.com>
-References: <4A169411.1010600@s5r6.in-berlin.de>
+Date: Fri, 22 May 2009 15:02:28 +0200
+Message-ID: <4A16A264.60301@s5r6.in-berlin.de>
+References: <4A169411.1010600@s5r6.in-berlin.de> <ac3eb2510905220530i46c2e2e5ve8e621953428a92@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-hotplug-owner@vger.kernel.org>
-In-Reply-To: <4A169411.1010600@s5r6.in-berlin.de>
-Sender: linux-hotplug-owner@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux-scsi@vger.kernel.org, linux-hotplug@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:57677 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752497AbZEVNCe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 May 2009 09:02:34 -0400
+In-Reply-To: <ac3eb2510905220530i46c2e2e5ve8e621953428a92@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: linux-scsi@vger.kernel.org, linux-hotplug@vger.kernel.org
 
-On Fri, May 22, 2009 at 14:01, Stefan Richter <stefanr@s5r6.in-berlin.d=
-e> wrote:
-> For many years now, the sbp2 driver has been providing a host templat=
-e
-> attribute which contains the SBP specific target identifier and logic=
-al unit
-> identifier. =C2=A0Userspace is taking this attribute to create the
-> /dev/disk/by-id symlink.
->
-> That's obviously racy. =C2=A0The sdev's attribute should already be t=
-here when
-> the disk's and partitions' symlinks are going to be created.
+Kay Sievers wrote:
+> On Fri, May 22, 2009 at 14:01, Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+>> The sdev's attribute should already be there when
+>> the disk's and partitions' symlinks are going to be created.
+...
+> Maybe it can hook into:
+>   BUS_NOTIFY_ADD_DEVICE
+> to create the additional attributes?
+> 
+> That logic is in: drivers/base/core.c : 941.
 
-> How am I going to fix this?
-
-Maybe it can hook into:
-  BUS_NOTIFY_ADD_DEVICE
-to create the additional attributes?
-
-That logic is in: drivers/base/core.c : 941.
-
-Kay
---
-To unsubscribe from this list: send the line "unsubscribe linux-hotplug=
-" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yes, this looks good.  I'll give it a try.
+-- 
+Stefan Richter
+-=====-==--= -=-= =-==-
+http://arcgraph.de/sr/
