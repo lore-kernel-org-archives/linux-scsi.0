@@ -1,14 +1,14 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 3/24] mpt fusion: [2.6.30-rc6] Optimized SendEvent notification Using Doorbell instead of FIFO
-Date: Fri, 22 May 2009 16:10:34 +0530
-Message-ID: <20090522104034.GE16245@lsi.com>
+Subject: [PATCH 4/24] mpt fusion: [2.6.30-rc6] small fix for 1078 data corruption issue
+Date: Fri, 22 May 2009 16:11:30 +0530
+Message-ID: <20090522104130.GF16245@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og117.obsmtp.com ([64.18.2.6]:47338 "EHLO
-	exprod7og117.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752992AbZEVLBd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 May 2009 07:01:33 -0400
+Received: from exprod7og110.obsmtp.com ([64.18.2.173]:60977 "EHLO
+	exprod7og110.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752992AbZEVLCa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 May 2009 07:02:30 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,132 +16,73 @@ To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
 
-SendEventNotification was handled through FIFO, now it is using doorbell 
-to communicate with hardware. Added Sleep Flag as an extra argument to support Can-Sleep 
-feature.
-Resending patch including compilation error fix reviewed by Grant Grundler.
-
-Signed-off-by: Kashyap Desai <kadesai@lsi.com>
+Patch applied on 21/01/2009: "Fixing 1078 data curruption" need this changes
+also.
+message flags will use runtime sense width instead of compile time as
+explain in patch applied on 21/01/2009 "Fixing 1078 data curruption".
 ---
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 54326e0..0d2fb0e 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -192,7 +192,8 @@ static void 	mpt_read_ioc_pg_1(MPT_ADAPTER *ioc);
- static void 	mpt_read_ioc_pg_4(MPT_ADAPTER *ioc);
- static void	mpt_timer_expired(unsigned long data);
- static void	mpt_get_manufacturing_pg_0(MPT_ADAPTER *ioc);
--static int	SendEventNotification(MPT_ADAPTER *ioc, u8 EvSwitch);
-+static int	SendEventNotification(MPT_ADAPTER *ioc, u8 EvSwitch,
-+	int sleepFlag);
- static int	SendEventAck(MPT_ADAPTER *ioc, EventNotificationReply_t *evnp);
- static int	mpt_host_page_access_control(MPT_ADAPTER *ioc, u8 access_control_value, int sleepFlag);
- static int	mpt_host_page_alloc(MPT_ADAPTER *ioc, pIOCInit_t ioc_init);
-@@ -208,7 +209,8 @@ static int	procmpt_iocinfo_read(char *buf, char **start, off_t offset,
- static void	mpt_get_fw_exp_ver(char *buf, MPT_ADAPTER *ioc);
+
+Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
+---
+diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
+index 1b258b2..8cd0a16 100644
+--- a/drivers/message/fusion/mptbase.h
++++ b/drivers/message/fusion/mptbase.h
+@@ -767,9 +767,10 @@ typedef struct _mpt_sge {
+ } MptSge_t;
  
- //int		mpt_HardResetHandler(MPT_ADAPTER *ioc, int sleepFlag);
--static int	ProcessEventNotification(MPT_ADAPTER *ioc, EventNotificationReply_t *evReply, int *evHandlers);
-+static int	ProcessEventNotification(MPT_ADAPTER *ioc,
-+		EventNotificationReply_t *evReply, int *evHandlers);
- static void	mpt_iocstatus_info(MPT_ADAPTER *ioc, u32 ioc_status, MPT_FRAME_HDR *mf);
- static void	mpt_fc_log_info(MPT_ADAPTER *ioc, u32 log_info);
- static void	mpt_spi_log_info(MPT_ADAPTER *ioc, u32 log_info);
-@@ -2472,28 +2474,36 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
- 		}
- 	}
  
-+	/*  Enable MPT base driver management of EventNotification
-+	 *  and EventAck handling.
-+	 */
-+	if ((ret == 0) && (!ioc->facts.EventState)) {
-+		dinitprintk(ioc, printk(MYIOC_s_INFO_FMT
-+			"SendEventNotification\n",
-+		    ioc->name));
-+		ret = SendEventNotification(ioc, 1, sleepFlag);	/* 1=Enable */
-+	}
-+
-+	if (ioc->alt_ioc && alt_ioc_ready && !ioc->alt_ioc->facts.EventState)
-+		rc = SendEventNotification(ioc->alt_ioc, 1, sleepFlag);
-+
- 	if (ret == 0) {
- 		/* Enable! (reply interrupt) */
- 		CHIPREG_WRITE32(&ioc->chip->IntMask, MPI_HIM_DIM);
- 		ioc->active = 1;
- 	}
--
--	if (reset_alt_ioc_active && ioc->alt_ioc) {
--		/* (re)Enable alt-IOC! (reply interrupt) */
--		dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "alt_ioc reply irq re-enabled\n",
--		    ioc->alt_ioc->name));
--		CHIPREG_WRITE32(&ioc->alt_ioc->chip->IntMask, MPI_HIM_DIM);
--		ioc->alt_ioc->active = 1;
-+	if (rc == 0) {	/* alt ioc */
-+		if (reset_alt_ioc_active && ioc->alt_ioc) {
-+			/* (re)Enable alt-IOC! (reply interrupt) */
-+			dinitprintk(ioc, printk(MYIOC_s_DEBUG_FMT "alt-ioc"
-+				"reply irq re-enabled\n",
-+				ioc->alt_ioc->name));
-+			CHIPREG_WRITE32(&ioc->alt_ioc->chip->IntMask,
-+				MPI_HIM_DIM);
-+			ioc->alt_ioc->active = 1;
-+		}
- 	}
+-#define mpt_msg_flags() \
+-	((sizeof(dma_addr_t) == sizeof(u64)) ? MPI_SCSIIO_MSGFLGS_SENSE_WIDTH_64 : \
+-		MPI_SCSIIO_MSGFLGS_SENSE_WIDTH_32)
++#define mpt_msg_flags(ioc) \
++	(ioc->sg_addr_size == sizeof(u64)) ?		\
++	MPI_SCSIIO_MSGFLGS_SENSE_WIDTH_64 : 		\
++	MPI_SCSIIO_MSGFLGS_SENSE_WIDTH_32
  
--	/*  Enable MPT base driver management of EventNotification
--	 *  and EventAck handling.
--	 */
--	if ((ret == 0) && (!ioc->facts.EventState))
--		(void) SendEventNotification(ioc, 1);	/* 1=Enable EventNotification */
--
--	if (ioc->alt_ioc && alt_ioc_ready && !ioc->alt_ioc->facts.EventState)
--		(void) SendEventNotification(ioc->alt_ioc, 1);	/* 1=Enable EventNotification */
+ #define MPT_SGE_FLAGS_64_BIT_ADDRESSING \
+ 	(MPI_SGE_FLAGS_64_BIT_ADDRESSING << MPI_SGE_FLAGS_SHIFT)
+diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
+index 55f6102..bece386 100644
+--- a/drivers/message/fusion/mptctl.c
++++ b/drivers/message/fusion/mptctl.c
+@@ -1895,7 +1895,7 @@ mptctl_do_mpt_command (struct mpt_ioctl_command karg, void __user *mfPtr)
+ 			}
  
- 	/*	Add additional "reason" check before call to GetLanConfigPages
- 	 *	(combined with GetIoUnitPage2 call).  This prevents a somewhat
-@@ -6019,30 +6029,28 @@ mpt_get_manufacturing_pg_0(MPT_ADAPTER *ioc)
-  *	SendEventNotification - Send EventNotification (on or off) request to adapter
-  *	@ioc: Pointer to MPT_ADAPTER structure
-  *	@EvSwitch: Event switch flags
-+ *	@sleepFlag: Specifies whether the process can sleep
-  */
- static int
--SendEventNotification(MPT_ADAPTER *ioc, u8 EvSwitch)
-+SendEventNotification(MPT_ADAPTER *ioc, u8 EvSwitch, int sleepFlag)
- {
--	EventNotification_t	*evnp;
-+	EventNotification_t	evn;
-+	MPIDefaultReply_t	reply_buf;
+ 			pScsiReq->MsgFlags &= ~MPI_SCSIIO_MSGFLGS_SENSE_WIDTH;
+-			pScsiReq->MsgFlags |= mpt_msg_flags();
++			pScsiReq->MsgFlags |= mpt_msg_flags(ioc);
  
--	evnp = (EventNotification_t *) mpt_get_msg_frame(mpt_base_index, ioc);
--	if (evnp == NULL) {
--		devtverboseprintk(ioc, printk(MYIOC_s_WARN_FMT "Unable to allocate event request frame!\n",
--				ioc->name));
--		return 0;
--	}
--	memset(evnp, 0, sizeof(*evnp));
--
--	devtverboseprintk(ioc, printk(MYIOC_s_DEBUG_FMT "Sending EventNotification (%d) request %p\n", ioc->name, EvSwitch, evnp));
-+	memset(&evn, 0, sizeof(EventNotification_t));
-+	memset(&reply_buf, 0, sizeof(MPIDefaultReply_t));
  
--	evnp->Function = MPI_FUNCTION_EVENT_NOTIFICATION;
--	evnp->ChainOffset = 0;
--	evnp->MsgFlags = 0;
--	evnp->Switch = EvSwitch;
-+	evn.Function = MPI_FUNCTION_EVENT_NOTIFICATION;
-+	evn.Switch = EvSwitch;
-+	evn.MsgContext = cpu_to_le32(mpt_base_index << 16);
+ 			/* verify that app has not requested
+@@ -1981,7 +1981,7 @@ mptctl_do_mpt_command (struct mpt_ioctl_command karg, void __user *mfPtr)
+ 			int dataSize;
  
--	mpt_put_msg_frame(mpt_base_index, ioc, (MPT_FRAME_HDR *)evnp);
-+	devtverboseprintk(ioc, printk(MYIOC_s_DEBUG_FMT
-+	    "Sending EventNotification (%d) request %p\n",
-+	    ioc->name, EvSwitch, &evn));
+ 			pScsiReq->MsgFlags &= ~MPI_SCSIIO_MSGFLGS_SENSE_WIDTH;
+-			pScsiReq->MsgFlags |= mpt_msg_flags();
++			pScsiReq->MsgFlags |= mpt_msg_flags(ioc);
  
--	return 0;
-+	return mpt_handshake_req_reply_wait(ioc, sizeof(EventNotification_t),
-+	    (u32 *)&evn, sizeof(MPIDefaultReply_t), (u16 *)&reply_buf, 30,
-+	    sleepFlag);
- }
  
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+ 			/* verify that app has not requested
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+index a1ce079..8c08c73 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -1357,7 +1357,7 @@ mptscsih_qcmd(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
+ 	pScsiReq->CDBLength = SCpnt->cmd_len;
+ 	pScsiReq->SenseBufferLength = MPT_SENSE_BUFFER_SIZE;
+ 	pScsiReq->Reserved = 0;
+-	pScsiReq->MsgFlags = mpt_msg_flags();
++	pScsiReq->MsgFlags = mpt_msg_flags(ioc);
+ 	int_to_scsilun(SCpnt->device->lun, (struct scsi_lun *)pScsiReq->LUN);
+ 	pScsiReq->Control = cpu_to_le32(scsictl);
+ 
+@@ -3108,7 +3108,7 @@ mptscsih_do_cmd(MPT_SCSI_HOST *hd, INTERNAL_CMD *io)
+ 
+ 	pScsiReq->Reserved = 0;
+ 
+-	pScsiReq->MsgFlags = mpt_msg_flags();
++	pScsiReq->MsgFlags = mpt_msg_flags(ioc);
+ 	/* MsgContext set in mpt_get_msg_fram call  */
+ 
+ 	int_to_scsilun(io->lun, (struct scsi_lun *)pScsiReq->LUN);
