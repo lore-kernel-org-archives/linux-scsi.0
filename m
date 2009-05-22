@@ -1,25 +1,25 @@
 From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH 6/17] lpfc 8.3.2 : Addition of SLI4 Interface - Base
-	Support - Part 3 of 6
-Date: Fri, 22 May 2009 14:51:59 -0400
-Message-ID: <1243018319.7729.49.camel@ogier>
+Subject: [PATCH 7/17] lpfc 8.3.2 : Addition of SLI4 Interface - Base
+	Support - Part 4 of 6
+Date: Fri, 22 May 2009 14:52:08 -0400
+Message-ID: <1243018328.7729.51.camel@ogier>
 Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:42020 "EHLO
+Received: from emulex.emulex.com ([138.239.112.1]:42030 "EHLO
 	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754804AbZEVSwB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 May 2009 14:52:01 -0400
+	with ESMTP id S1755129AbZEVSwL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 May 2009 14:52:11 -0400
 Received: from xcm.ad.emulex.com (xcm.emulex.com [138.239.112.69])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id n4MIq34x029741
-	for <linux-scsi@vger.kernel.org>; Fri, 22 May 2009 11:52:03 -0700 (PDT)
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id n4MIqCwL029754
+	for <linux-scsi@vger.kernel.org>; Fri, 22 May 2009 11:52:12 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Addition of SLI4 Interface - Base Support - Part 3 of 6
+Addition of SLI4 Interface - Base Support - Part 4 of 6
 
 Adds new hardware and interface definitions.
 
@@ -32,505 +32,16 @@ teardown, etc.
 
  ---
 
- lpfc_scsi.h  |    2 
- lpfc_sli.c   | 1263 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++--
- lpfc_sli.h   |   27 +
- lpfc_sli4.h  |  467 +++++++++++++++++++++
- lpfc_vport.c |   23 +
- 5 files changed, 1748 insertions(+), 34 deletions(-)
+ lpfc_init.c | 1466 +++++++++++++++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 1302 insertions(+), 164 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.h b/drivers/scsi/lpfc/lpfc_scsi.h
---- a/drivers/scsi/lpfc/lpfc_scsi.h	2008-12-16 09:34:12.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_scsi.h	2009-05-22 13:16:40.000000000 -0400
-@@ -140,6 +140,8 @@ struct lpfc_scsi_buf {
- 	struct fcp_rsp *fcp_rsp;
- 	struct ulp_bde64 *fcp_bpl;
- 
-+	dma_addr_t dma_phys_bpl;
-+
- 	/* cur_iocbq has phys of the dma-able buffer.
- 	 * Iotag is in here
- 	 */
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
---- a/drivers/scsi/lpfc/lpfc_sli4.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h	2009-05-22 13:16:40.000000000 -0400
-@@ -0,0 +1,467 @@
-+/*******************************************************************
-+ * This file is part of the Emulex Linux Device Driver for         *
-+ * Fibre Channel Host Bus Adapters.                                *
-+ * Copyright (C) 2009 Emulex.  All rights reserved.                *
-+ * EMULEX and SLI are trademarks of Emulex.                        *
-+ * www.emulex.com                                                  *
-+ *                                                                 *
-+ * This program is free software; you can redistribute it and/or   *
-+ * modify it under the terms of version 2 of the GNU General       *
-+ * Public License as published by the Free Software Foundation.    *
-+ * This program is distributed in the hope that it will be useful. *
-+ * ALL EXPRESS OR IMPLIED CONDITIONS, REPRESENTATIONS AND          *
-+ * WARRANTIES, INCLUDING ANY IMPLIED WARRANTY OF MERCHANTABILITY,  *
-+ * FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT, ARE      *
-+ * DISCLAIMED, EXCEPT TO THE EXTENT THAT SUCH DISCLAIMERS ARE HELD *
-+ * TO BE LEGALLY INVALID.  See the GNU General Public License for  *
-+ * more details, a copy of which can be found in the file COPYING  *
-+ * included with this package.                                     *
-+ *******************************************************************/
-+
-+#define LPFC_ACTIVE_MBOX_WAIT_CNT               100
-+#define LPFC_RELEASE_NOTIFICATION_INTERVAL	32
-+#define LPFC_GET_QE_REL_INT			32
-+#define LPFC_RPI_LOW_WATER_MARK			10
-+/* Number of SGL entries can be posted in a 4KB nonembedded mbox command */
-+#define LPFC_NEMBED_MBOX_SGL_CNT		254
-+
-+/* Multi-queue arrangement for fast-path FCP work queues */
-+#define LPFC_FN_EQN_MAX       8
-+#define LPFC_SP_EQN_DEF       1
-+#define LPFC_FP_EQN_DEF       1
-+#define LPFC_FP_EQN_MIN       1
-+#define LPFC_FP_EQN_MAX       (LPFC_FN_EQN_MAX - LPFC_SP_EQN_DEF)
-+
-+#define LPFC_FN_WQN_MAX       32
-+#define LPFC_SP_WQN_DEF       1
-+#define LPFC_FP_WQN_DEF       4
-+#define LPFC_FP_WQN_MIN       1
-+#define LPFC_FP_WQN_MAX       (LPFC_FN_WQN_MAX - LPFC_SP_WQN_DEF)
-+
-+/*
-+ * Provide the default FCF Record attributes used by the driver
-+ * when nonFIP mode is configured and there is no other default
-+ * FCF Record attributes.
-+ */
-+#define LPFC_FCOE_FCF_DEF_INDEX	0
-+#define LPFC_FCOE_FCF_GET_FIRST	0xFFFF
-+#define LPFC_FCOE_FCF_NEXT_NONE	0xFFFF
-+
-+/* First 3 bytes of default FCF MAC is specified by FC_MAP */
-+#define LPFC_FCOE_FCF_MAC3	0xFF
-+#define LPFC_FCOE_FCF_MAC4	0xFF
-+#define LPFC_FCOE_FCF_MAC5	0xFE
-+#define LPFC_FCOE_FCF_MAP0	0x0E
-+#define LPFC_FCOE_FCF_MAP1	0xFC
-+#define LPFC_FCOE_FCF_MAP2	0x00
-+#define LPFC_FCOE_MAX_RCV_SIZE	0x5AC
-+#define LPFC_FCOE_FKA_ADV_PER	0
-+#define LPFC_FCOE_FIP_PRIORITY	0x80
-+
-+enum lpfc_sli4_queue_type {
-+	LPFC_EQ,
-+	LPFC_GCQ,
-+	LPFC_MCQ,
-+	LPFC_WCQ,
-+	LPFC_RCQ,
-+	LPFC_MQ,
-+	LPFC_WQ,
-+	LPFC_HRQ,
-+	LPFC_DRQ
-+};
-+
-+/* The queue sub-type defines the functional purpose of the queue */
-+enum lpfc_sli4_queue_subtype {
-+	LPFC_NONE,
-+	LPFC_MBOX,
-+	LPFC_FCP,
-+	LPFC_ELS,
-+	LPFC_USOL
-+};
-+
-+union sli4_qe {
-+	void *address;
-+	struct lpfc_eqe *eqe;
-+	struct lpfc_cqe *cqe;
-+	struct lpfc_mcqe *mcqe;
-+	struct lpfc_wcqe_complete *wcqe_complete;
-+	struct lpfc_wcqe_release *wcqe_release;
-+	struct sli4_wcqe_xri_aborted *wcqe_xri_aborted;
-+	struct lpfc_rcqe_complete *rcqe_complete;
-+	struct lpfc_mqe *mqe;
-+	union  lpfc_wqe *wqe;
-+	struct lpfc_rqe *rqe;
-+};
-+
-+struct lpfc_queue {
-+	struct list_head list;
-+	enum lpfc_sli4_queue_type type;
-+	enum lpfc_sli4_queue_subtype subtype;
-+	struct lpfc_hba *phba;
-+	struct list_head child_list;
-+	uint32_t entry_count;	/* Number of entries to support on the queue */
-+	uint32_t entry_size;	/* Size of each queue entry. */
-+	uint32_t queue_id;	/* Queue ID assigned by the hardware */
-+	struct list_head page_list;
-+	uint32_t page_count;	/* Number of pages allocated for this queue */
-+
-+	uint32_t host_index;	/* The host's index for putting or getting */
-+	uint32_t hba_index;	/* The last known hba index for get or put */
-+	union sli4_qe qe[1];	/* array to index entries (must be last) */
-+};
-+
-+struct lpfc_cq_event {
-+	struct list_head list;
-+	union {
-+		struct lpfc_mcqe		mcqe_cmpl;
-+		struct lpfc_acqe_link		acqe_link;
-+		struct lpfc_acqe_fcoe		acqe_fcoe;
-+		struct lpfc_acqe_dcbx		acqe_dcbx;
-+		struct lpfc_rcqe		rcqe_cmpl;
-+		struct sli4_wcqe_xri_aborted	wcqe_axri;
-+	} cqe;
-+};
-+
-+struct lpfc_sli4_link {
-+	uint8_t speed;
-+	uint8_t duplex;
-+	uint8_t status;
-+	uint8_t physical;
-+	uint8_t fault;
-+};
-+
-+struct lpfc_fcf {
-+	uint8_t	 fabric_name[8];
-+	uint8_t  mac_addr[6];
-+	uint16_t fcf_indx;
-+	uint16_t fcfi;
-+	uint32_t fcf_flag;
-+#define FCF_AVAILABLE	0x01 /* FCF available for discovery */
-+#define FCF_REGISTERED	0x02 /* FCF registered with FW */
-+#define FCF_DISCOVERED	0x04 /* FCF discovery started  */
-+#define FCF_BOOT_ENABLE 0x08 /* Boot bios use this FCF */
-+#define FCF_IN_USE	0x10 /* Atleast one discovery completed */
-+#define FCF_VALID_VLAN	0x20 /* Use the vlan id specified */
-+	uint32_t priority;
-+	uint32_t addr_mode;
-+	uint16_t vlan_id;
-+};
-+
-+#define LPFC_REGION23_SIGNATURE "RG23"
-+#define LPFC_REGION23_VERSION	1
-+#define LPFC_REGION23_LAST_REC  0xff
-+struct lpfc_fip_param_hdr {
-+	uint8_t type;
-+#define FCOE_PARAM_TYPE		0xA0
-+	uint8_t length;
-+#define FCOE_PARAM_LENGTH	2
-+	uint8_t parm_version;
-+#define FIPP_VERSION		0x01
-+	uint8_t parm_flags;
-+#define	lpfc_fip_param_hdr_fipp_mode_SHIFT	6
-+#define	lpfc_fip_param_hdr_fipp_mode_MASK	0x3
-+#define lpfc_fip_param_hdr_fipp_mode_WORD	parm_flags
-+#define	FIPP_MODE_ON				0x2
-+#define	FIPP_MODE_OFF				0x0
-+#define FIPP_VLAN_VALID				0x1
-+};
-+
-+struct lpfc_fcoe_params {
-+	uint8_t fc_map[3];
-+	uint8_t reserved1;
-+	uint16_t vlan_tag;
-+	uint8_t reserved[2];
-+};
-+
-+struct lpfc_fcf_conn_hdr {
-+	uint8_t type;
-+#define FCOE_CONN_TBL_TYPE		0xA1
-+	uint8_t length;   /* words */
-+	uint8_t reserved[2];
-+};
-+
-+struct lpfc_fcf_conn_rec {
-+	uint16_t flags;
-+#define	FCFCNCT_VALID		0x0001
-+#define	FCFCNCT_BOOT		0x0002
-+#define	FCFCNCT_PRIMARY		0x0004   /* if not set, Secondary */
-+#define	FCFCNCT_FBNM_VALID	0x0008
-+#define	FCFCNCT_SWNM_VALID	0x0010
-+#define	FCFCNCT_VLAN_VALID	0x0020
-+#define	FCFCNCT_AM_VALID	0x0040
-+#define	FCFCNCT_AM_PREFERRED	0x0080   /* if not set, AM Required */
-+#define	FCFCNCT_AM_SPMA		0x0100	 /* if not set, FPMA */
-+
-+	uint16_t vlan_tag;
-+	uint8_t fabric_name[8];
-+	uint8_t switch_name[8];
-+};
-+
-+struct lpfc_fcf_conn_entry {
-+	struct list_head list;
-+	struct lpfc_fcf_conn_rec conn_rec;
-+};
-+
-+/*
-+ * Define the host's bootstrap mailbox.  This structure contains
-+ * the member attributes needed to create, use, and destroy the
-+ * bootstrap mailbox region.
-+ *
-+ * The macro definitions for the bmbx data structure are defined
-+ * in lpfc_hw4.h with the register definition.
-+ */
-+struct lpfc_bmbx {
-+	struct lpfc_dmabuf *dmabuf;
-+	struct dma_address dma_address;
-+	void *avirt;
-+	dma_addr_t aphys;
-+	uint32_t bmbx_size;
-+};
-+
-+#define LPFC_EQE_SIZE LPFC_EQE_SIZE_4
-+
-+#define LPFC_EQE_SIZE_4B 	4
-+#define LPFC_EQE_SIZE_16B	16
-+#define LPFC_CQE_SIZE		16
-+#define LPFC_WQE_SIZE		64
-+#define LPFC_MQE_SIZE		256
-+#define LPFC_RQE_SIZE		8
-+
-+#define LPFC_EQE_DEF_COUNT	1024
-+#define LPFC_CQE_DEF_COUNT      256
-+#define LPFC_WQE_DEF_COUNT      64
-+#define LPFC_MQE_DEF_COUNT      16
-+#define LPFC_RQE_DEF_COUNT	512
-+
-+#define LPFC_QUEUE_NOARM	false
-+#define LPFC_QUEUE_REARM	true
-+
-+
-+/*
-+ * SLI4 CT field defines
-+ */
-+#define SLI4_CT_RPI 0
-+#define SLI4_CT_VPI 1
-+#define SLI4_CT_VFI 2
-+#define SLI4_CT_FCFI 3
-+
-+#define LPFC_SLI4_MAX_SEGMENT_SIZE 0x10000
-+
-+/*
-+ * SLI4 specific data structures
-+ */
-+struct lpfc_max_cfg_param {
-+	uint16_t max_xri;
-+	uint16_t xri_base;
-+	uint16_t xri_used;
-+	uint16_t max_rpi;
-+	uint16_t rpi_base;
-+	uint16_t rpi_used;
-+	uint16_t max_vpi;
-+	uint16_t vpi_base;
-+	uint16_t vpi_used;
-+	uint16_t max_vfi;
-+	uint16_t vfi_base;
-+	uint16_t vfi_used;
-+	uint16_t max_fcfi;
-+	uint16_t fcfi_base;
-+	uint16_t fcfi_used;
-+	uint16_t max_eq;
-+	uint16_t max_rq;
-+	uint16_t max_cq;
-+	uint16_t max_wq;
-+};
-+
-+struct lpfc_hba;
-+/* SLI4 HBA multi-fcp queue handler struct */
-+struct lpfc_fcp_eq_hdl {
-+	uint32_t idx;
-+	struct lpfc_hba *phba;
-+};
-+
-+/* SLI4 HBA data structure entries */
-+struct lpfc_sli4_hba {
-+	void __iomem *conf_regs_memmap_p; /* Kernel memory mapped address for
-+					     PCI BAR0, config space registers */
-+	void __iomem *ctrl_regs_memmap_p; /* Kernel memory mapped address for
-+					     PCI BAR1, control registers */
-+	void __iomem *drbl_regs_memmap_p; /* Kernel memory mapped address for
-+					     PCI BAR2, doorbell registers */
-+	/* BAR0 PCI config space register memory map */
-+	void __iomem *UERRLOregaddr; /* Address to UERR_STATUS_LO register */
-+	void __iomem *UERRHIregaddr; /* Address to UERR_STATUS_HI register */
-+	void __iomem *ONLINE0regaddr; /* Address to components of internal UE */
-+	void __iomem *ONLINE1regaddr; /* Address to components of internal UE */
-+#define LPFC_ONLINE_NERR	0xFFFFFFFF
-+	void __iomem *SCRATCHPADregaddr; /* Address to scratchpad register */
-+	/* BAR1 FCoE function CSR register memory map */
-+	void __iomem *STAregaddr;    /* Address to HST_STATE register */
-+	void __iomem *ISRregaddr;    /* Address to HST_ISR register */
-+	void __iomem *IMRregaddr;    /* Address to HST_IMR register */
-+	void __iomem *ISCRregaddr;   /* Address to HST_ISCR register */
-+	/* BAR2 VF-0 doorbell register memory map */
-+	void __iomem *RQDBregaddr;   /* Address to RQ_DOORBELL register */
-+	void __iomem *WQDBregaddr;   /* Address to WQ_DOORBELL register */
-+	void __iomem *EQCQDBregaddr; /* Address to EQCQ_DOORBELL register */
-+	void __iomem *MQDBregaddr;   /* Address to MQ_DOORBELL register */
-+	void __iomem *BMBXregaddr;   /* Address to BootStrap MBX register */
-+
-+	struct msix_entry *msix_entries;
-+	uint32_t cfg_eqn;
-+	struct lpfc_fcp_eq_hdl *fcp_eq_hdl; /* FCP per-WQ handle */
-+	/* Pointers to the constructed SLI4 queues */
-+	struct lpfc_queue **fp_eq; /* Fast-path event queue */
-+	struct lpfc_queue *sp_eq;  /* Slow-path event queue */
-+	struct lpfc_queue **fcp_wq;/* Fast-path FCP work queue */
-+	struct lpfc_queue *mbx_wq; /* Slow-path MBOX work queue */
-+	struct lpfc_queue *els_wq; /* Slow-path ELS work queue */
-+	struct lpfc_queue *hdr_rq; /* Slow-path Header Receive queue */
-+	struct lpfc_queue *dat_rq; /* Slow-path Data Receive queue */
-+	struct lpfc_queue **fcp_cq;/* Fast-path FCP compl queue */
-+	struct lpfc_queue *mbx_cq; /* Slow-path mailbox complete queue */
-+	struct lpfc_queue *els_cq; /* Slow-path ELS response complete queue */
-+	struct lpfc_queue *rxq_cq; /* Slow-path unsolicited complete queue */
-+
-+	/* Setup information for various queue parameters */
-+	int eq_esize;
-+	int eq_ecount;
-+	int cq_esize;
-+	int cq_ecount;
-+	int wq_esize;
-+	int wq_ecount;
-+	int mq_esize;
-+	int mq_ecount;
-+	int rq_esize;
-+	int rq_ecount;
-+#define LPFC_SP_EQ_MAX_INTR_SEC         10000
-+#define LPFC_FP_EQ_MAX_INTR_SEC         10000
-+
-+	uint32_t intr_enable;
-+	struct lpfc_bmbx bmbx;
-+	struct lpfc_max_cfg_param max_cfg_param;
-+	uint16_t next_xri; /* last_xri - max_cfg_param.xri_base = used */
-+	uint16_t next_rpi;
-+	uint16_t scsi_xri_max;
-+	uint16_t scsi_xri_cnt;
-+	struct list_head lpfc_free_sgl_list;
-+	struct list_head lpfc_sgl_list;
-+	struct lpfc_sglq **lpfc_els_sgl_array;
-+	struct list_head lpfc_abts_els_sgl_list;
-+	struct lpfc_scsi_buf **lpfc_scsi_psb_array;
-+	struct list_head lpfc_abts_scsi_buf_list;
-+	uint32_t total_sglq_bufs;
-+	struct lpfc_sglq **lpfc_sglq_active_list;
-+	struct list_head lpfc_rpi_hdr_list;
-+	unsigned long *rpi_bmask;
-+	uint16_t rpi_count;
-+	struct lpfc_sli4_flags sli4_flags;
-+	struct list_head sp_rspiocb_work_queue;
-+	struct list_head sp_cqe_event_pool;
-+	struct list_head sp_asynce_work_queue;
-+	struct list_head sp_fcp_xri_aborted_work_queue;
-+	struct list_head sp_els_xri_aborted_work_queue;
-+	struct list_head sp_unsol_work_queue;
-+	struct lpfc_sli4_link link_state;
-+	spinlock_t abts_scsi_buf_list_lock; /* list of aborted SCSI IOs */
-+	spinlock_t abts_sgl_list_lock; /* list of aborted els IOs */
-+};
-+
-+enum lpfc_sge_type {
-+	GEN_BUFF_TYPE,
-+	SCSI_BUFF_TYPE
-+};
-+
-+struct lpfc_sglq {
-+	/* lpfc_sglqs are used in double linked lists */
-+	struct list_head list;
-+	struct list_head clist;
-+	enum lpfc_sge_type buff_type; /* is this a scsi sgl */
-+	uint16_t iotag;         /* pre-assigned IO tag */
-+	uint16_t sli4_xritag;   /* pre-assigned XRI, (OXID) tag. */
-+	struct sli4_sge *sgl;	/* pre-assigned SGL */
-+	void *virt;		/* virtual address. */
-+	dma_addr_t phys;	/* physical address */
-+};
-+
-+struct lpfc_rpi_hdr {
-+	struct list_head list;
-+	uint32_t len;
-+	struct lpfc_dmabuf *dmabuf;
-+	uint32_t page_count;
-+	uint32_t start_rpi;
-+};
-+
-+/*
-+ * SLI4 specific function prototypes
-+ */
-+int lpfc_pci_function_reset(struct lpfc_hba *);
-+int lpfc_sli4_hba_setup(struct lpfc_hba *);
-+int lpfc_sli4_hba_down(struct lpfc_hba *);
-+int lpfc_sli4_config(struct lpfc_hba *, struct lpfcMboxq *, uint8_t,
-+		     uint8_t, uint32_t, bool);
-+void lpfc_sli4_mbox_cmd_free(struct lpfc_hba *, struct lpfcMboxq *);
-+void lpfc_sli4_mbx_sge_set(struct lpfcMboxq *, uint32_t, dma_addr_t, uint32_t);
-+void lpfc_sli4_mbx_sge_get(struct lpfcMboxq *, uint32_t,
-+			   struct lpfc_mbx_sge *);
-+
-+void lpfc_sli4_hba_reset(struct lpfc_hba *);
-+struct lpfc_queue *lpfc_sli4_queue_alloc(struct lpfc_hba *, uint32_t,
-+			uint32_t);
-+void lpfc_sli4_queue_free(struct lpfc_queue *);
-+uint32_t lpfc_eq_create(struct lpfc_hba *, struct lpfc_queue *, uint16_t);
-+uint32_t lpfc_cq_create(struct lpfc_hba *, struct lpfc_queue *,
-+			struct lpfc_queue *, uint32_t, uint32_t);
-+uint32_t lpfc_mq_create(struct lpfc_hba *, struct lpfc_queue *,
-+			struct lpfc_queue *, uint32_t);
-+uint32_t lpfc_wq_create(struct lpfc_hba *, struct lpfc_queue *,
-+			struct lpfc_queue *, uint32_t);
-+uint32_t lpfc_rq_create(struct lpfc_hba *, struct lpfc_queue *,
-+			struct lpfc_queue *, struct lpfc_queue *, uint32_t);
-+uint32_t lpfc_eq_destroy(struct lpfc_hba *, struct lpfc_queue *);
-+uint32_t lpfc_cq_destroy(struct lpfc_hba *, struct lpfc_queue *);
-+uint32_t lpfc_mq_destroy(struct lpfc_hba *, struct lpfc_queue *);
-+uint32_t lpfc_wq_destroy(struct lpfc_hba *, struct lpfc_queue *);
-+uint32_t lpfc_rq_destroy(struct lpfc_hba *, struct lpfc_queue *,
-+			 struct lpfc_queue *);
-+int lpfc_sli4_queue_setup(struct lpfc_hba *);
-+void lpfc_sli4_queue_unset(struct lpfc_hba *);
-+int lpfc_sli4_post_sgl(struct lpfc_hba *, dma_addr_t, dma_addr_t, uint16_t);
-+int lpfc_sli4_repost_scsi_sgl_list(struct lpfc_hba *);
-+int lpfc_sli4_remove_all_sgl_pages(struct lpfc_hba *);
-+uint16_t lpfc_sli4_next_xritag(struct lpfc_hba *);
-+int lpfc_sli4_post_async_mbox(struct lpfc_hba *);
-+int lpfc_sli4_post_sgl_list(struct lpfc_hba *phba);
-+int lpfc_sli4_post_scsi_sgl_block(struct lpfc_hba *, struct list_head *, int);
-+struct lpfc_cq_event *__lpfc_sli4_cq_event_alloc(struct lpfc_hba *);
-+struct lpfc_cq_event *lpfc_sli4_cq_event_alloc(struct lpfc_hba *);
-+void __lpfc_sli4_cq_event_release(struct lpfc_hba *, struct lpfc_cq_event *);
-+void lpfc_sli4_cq_event_release(struct lpfc_hba *, struct lpfc_cq_event *);
-+int lpfc_sli4_init_rpi_hdrs(struct lpfc_hba *);
-+int lpfc_sli4_post_rpi_hdr(struct lpfc_hba *, struct lpfc_rpi_hdr *);
-+int lpfc_sli4_post_all_rpi_hdrs(struct lpfc_hba *);
-+struct lpfc_rpi_hdr *lpfc_sli4_create_rpi_hdr(struct lpfc_hba *);
-+void lpfc_sli4_remove_rpi_hdrs(struct lpfc_hba *);
-+int lpfc_sli4_alloc_rpi(struct lpfc_hba *);
-+void lpfc_sli4_free_rpi(struct lpfc_hba *, int);
-+void lpfc_sli4_remove_rpis(struct lpfc_hba *);
-+void lpfc_sli4_async_event_proc(struct lpfc_hba *);
-+int lpfc_sli4_resume_rpi(struct lpfc_nodelist *);
-+void lpfc_sli4_fcp_xri_abort_event_proc(struct lpfc_hba *);
-+void lpfc_sli4_els_xri_abort_event_proc(struct lpfc_hba *);
-+void lpfc_sli4_fcp_xri_aborted(struct lpfc_hba *,
-+			       struct sli4_wcqe_xri_aborted *);
-+void lpfc_sli4_els_xri_aborted(struct lpfc_hba *,
-+			       struct sli4_wcqe_xri_aborted *);
-+int lpfc_sli4_brdreset(struct lpfc_hba *);
-+int lpfc_sli4_add_fcf_record(struct lpfc_hba *, struct fcf_record *);
-+void lpfc_sli_remove_dflt_fcf(struct lpfc_hba *);
-+int lpfc_sli4_get_els_iocb_cnt(struct lpfc_hba *);
-+int lpfc_sli4_init_vpi(struct lpfc_hba *, uint16_t);
-+uint32_t lpfc_sli4_cq_release(struct lpfc_queue *, bool);
-+uint32_t lpfc_sli4_eq_release(struct lpfc_queue *, bool);
-+void lpfc_sli4_fcfi_unreg(struct lpfc_hba *, uint16_t);
-+int lpfc_sli4_read_fcf_record(struct lpfc_hba *, uint16_t);
-+void lpfc_mbx_cmpl_read_fcf_record(struct lpfc_hba *, LPFC_MBOXQ_t *);
-+int lpfc_sli4_post_status_check(struct lpfc_hba *);
-+uint8_t lpfc_sli4_mbox_opcode_get(struct lpfc_hba *, struct lpfcMboxq *);
-+
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2009-05-22 13:14:55.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2009-05-22 13:16:40.000000000 -0400
-@@ -29,9 +29,12 @@
- #include <scsi/scsi_device.h>
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2009-05-22 13:14:13.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_init.c	2009-05-22 13:16:55.000000000 -0400
+@@ -34,8 +34,10 @@
  #include <scsi/scsi_host.h>
  #include <scsi/scsi_transport_fc.h>
-+#include <scsi/fc/fc_fs.h>
  
 +#include "lpfc_hw4.h"
  #include "lpfc_hw.h"
@@ -539,319 +50,1048 @@ diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
  #include "lpfc_nl.h"
  #include "lpfc_disc.h"
  #include "lpfc_scsi.h"
-@@ -121,6 +124,76 @@ __lpfc_sli_get_iocbq(struct lpfc_hba *ph
- }
+@@ -51,9 +53,23 @@ char *_dump_buf_dif;
+ unsigned long _dump_buf_dif_order;
+ spinlock_t _dump_buf_lock;
  
- /**
-+ * __lpfc_clear_active_sglq - Remove the active sglq for this XRI.
-+ * @phba: Pointer to HBA context object.
-+ * @xritag: XRI value.
-+ *
-+ * This function clears the sglq pointer from the array of acive
-+ * sglq's. The xritag that is passed in is used to index into the
-+ * array. Before the xritag can be used it needs to be adjusted
-+ * by subtracting the xribase.
-+ *
-+ * Returns sglq ponter = success, NULL = Failure.
-+ **/
-+static struct lpfc_sglq *
-+__lpfc_clear_active_sglq(struct lpfc_hba *phba, uint16_t xritag)
-+{
-+	uint16_t adj_xri;
-+	struct lpfc_sglq *sglq;
-+	adj_xri = xritag - phba->sli4_hba.max_cfg_param.xri_base;
-+	if (adj_xri > phba->sli4_hba.max_cfg_param.max_xri)
-+		return NULL;
-+	sglq = phba->sli4_hba.lpfc_sglq_active_list[adj_xri];
-+	phba->sli4_hba.lpfc_sglq_active_list[adj_xri] = NULL;
-+	return sglq;
-+}
-+
-+/**
-+ * __lpfc_get_active_sglq - Get the active sglq for this XRI.
-+ * @phba: Pointer to HBA context object.
-+ * @xritag: XRI value.
-+ *
-+ * This function returns the sglq pointer from the array of acive
-+ * sglq's. The xritag that is passed in is used to index into the
-+ * array. Before the xritag can be used it needs to be adjusted
-+ * by subtracting the xribase.
-+ *
-+ * Returns sglq ponter = success, NULL = Failure.
-+ **/
-+static struct lpfc_sglq *
-+__lpfc_get_active_sglq(struct lpfc_hba *phba, uint16_t xritag)
-+{
-+	uint16_t adj_xri;
-+	struct lpfc_sglq *sglq;
-+	adj_xri = xritag - phba->sli4_hba.max_cfg_param.xri_base;
-+	if (adj_xri > phba->sli4_hba.max_cfg_param.max_xri)
-+		return NULL;
-+	sglq =  phba->sli4_hba.lpfc_sglq_active_list[adj_xri];
-+	return sglq;
-+}
-+
-+/**
-+ * __lpfc_sli_get_sglq - Allocates an iocb object from sgl pool
-+ * @phba: Pointer to HBA context object.
-+ *
-+ * This function is called with hbalock held. This function
-+ * Gets a new driver sglq object from the sglq list. If the
-+ * list is not empty then it is successful, it returns pointer to the newly
-+ * allocated sglq object else it returns NULL.
-+ **/
-+static struct lpfc_sglq *
-+__lpfc_sli_get_sglq(struct lpfc_hba *phba)
-+{
-+	struct list_head *lpfc_sgl_list = &phba->sli4_hba.lpfc_sgl_list;
-+	struct lpfc_sglq *sglq = NULL;
-+	uint16_t adj_xri;
-+	list_remove_head(lpfc_sgl_list, sglq, struct lpfc_sglq, list);
-+	adj_xri = sglq->sli4_xritag - phba->sli4_hba.max_cfg_param.xri_base;
-+	phba->sli4_hba.lpfc_sglq_active_list[adj_xri] = sglq;
-+	return sglq;
-+}
-+
-+/**
-  * lpfc_sli_get_iocbq - Allocates an iocb object from iocb pool
-  * @phba: Pointer to HBA context object.
-  *
-@@ -298,6 +371,14 @@ lpfc_sli_iocb_cmd_type(uint8_t iocb_cmnd
- 	case CMD_GEN_REQUEST64_CR:
- 	case CMD_GEN_REQUEST64_CX:
- 	case CMD_XMIT_ELS_RSP64_CX:
-+	case DSSCMD_IWRITE64_CR:
-+	case DSSCMD_IWRITE64_CX:
-+	case DSSCMD_IREAD64_CR:
-+	case DSSCMD_IREAD64_CX:
-+	case DSSCMD_INVALIDATE_DEK:
-+	case DSSCMD_SET_KEK:
-+	case DSSCMD_GET_KEK_ID:
-+	case DSSCMD_GEN_XFER:
- 		type = LPFC_SOL_IOCB;
- 		break;
- 	case CMD_ABORT_XRI_CN:
-@@ -2629,6 +2710,56 @@ lpfc_sli_brdready_s3(struct lpfc_hba *ph
- 	return retval;
- }
+-static int lpfc_parse_vpd(struct lpfc_hba *, uint8_t *, int);
+ static void lpfc_get_hba_model_desc(struct lpfc_hba *, uint8_t *, uint8_t *);
+ static int lpfc_post_rcv_buf(struct lpfc_hba *);
++static int lpfc_sli4_queue_create(struct lpfc_hba *);
++static void lpfc_sli4_queue_destroy(struct lpfc_hba *);
++static int lpfc_create_bootstrap_mbox(struct lpfc_hba *);
++static int lpfc_setup_endian_order(struct lpfc_hba *);
++static int lpfc_sli4_read_config(struct lpfc_hba *);
++static void lpfc_destroy_bootstrap_mbox(struct lpfc_hba *);
++static void lpfc_free_sgl_list(struct lpfc_hba *);
++static int lpfc_init_sgl_list(struct lpfc_hba *);
++static int lpfc_init_active_sgl_array(struct lpfc_hba *);
++static void lpfc_free_active_sgl(struct lpfc_hba *);
++static int lpfc_hba_down_post_s3(struct lpfc_hba *phba);
++static int lpfc_hba_down_post_s4(struct lpfc_hba *phba);
++static int lpfc_sli4_cq_event_pool_create(struct lpfc_hba *);
++static void lpfc_sli4_cq_event_pool_destroy(struct lpfc_hba *);
++static void lpfc_sli4_cq_event_release_all(struct lpfc_hba *);
  
+ static struct scsi_transport_template *lpfc_transport_template = NULL;
+ static struct scsi_transport_template *lpfc_vport_transport_template = NULL;
+@@ -646,6 +662,77 @@ lpfc_hba_down_post_s3(struct lpfc_hba *p
+ 
+ 	return 0;
+ }
 +/**
-+ * lpfc_sli_brdready_s4 - Check for sli4 host ready status
-+ * @phba: Pointer to HBA context object.
-+ * @mask: Bit mask to be checked.
++ * lpfc_hba_down_post_s4 - Perform lpfc uninitialization after HBA reset
++ * @phba: pointer to lpfc HBA data structure.
 + *
-+ * This function checks the host status register to check if HBA is
-+ * ready. This function will wait in a loop for the HBA to be ready
-+ * If the HBA is not ready , the function will will reset the HBA PCI
-+ * function again. The function returns 1 when HBA fail to be ready
-+ * otherwise returns zero.
++ * This routine will do uninitialization after the HBA is reset when bring
++ * down the SLI Layer.
++ *
++ * Return codes
++ *   0 - sucess.
++ *   Any other value - error.
 + **/
 +static int
-+lpfc_sli_brdready_s4(struct lpfc_hba *phba, uint32_t mask)
++lpfc_hba_down_post_s4(struct lpfc_hba *phba)
 +{
-+	uint32_t status;
-+	int retval = 0;
++	struct lpfc_scsi_buf *psb, *psb_next;
++	LIST_HEAD(aborts);
++	int ret;
++	unsigned long iflag = 0;
++	ret = lpfc_hba_down_post_s3(phba);
++	if (ret)
++		return ret;
++	/* At this point in time the HBA is either reset or DOA. Either
++	 * way, nothing should be on lpfc_abts_els_sgl_list, it needs to be
++	 * on the lpfc_sgl_list so that it can either be freed if the
++	 * driver is unloading or reposted if the driver is restarting
++	 * the port.
++	 */
++	spin_lock_irq(&phba->hbalock);  /* required for lpfc_sgl_list and */
++					/* scsl_buf_list */
++	/* abts_sgl_list_lock required because worker thread uses this
++	 * list.
++	 */
++	spin_lock(&phba->sli4_hba.abts_sgl_list_lock);
++	list_splice_init(&phba->sli4_hba.lpfc_abts_els_sgl_list,
++			&phba->sli4_hba.lpfc_sgl_list);
++	spin_unlock(&phba->sli4_hba.abts_sgl_list_lock);
++	/* abts_scsi_buf_list_lock required because worker thread uses this
++	 * list.
++	 */
++	spin_lock(&phba->sli4_hba.abts_scsi_buf_list_lock);
++	list_splice_init(&phba->sli4_hba.lpfc_abts_scsi_buf_list,
++			&aborts);
++	spin_unlock(&phba->sli4_hba.abts_scsi_buf_list_lock);
++	spin_unlock_irq(&phba->hbalock);
 +
-+	/* Read the HBA Host Status Register */
-+	status = lpfc_sli4_post_status_check(phba);
-+
-+	if (status) {
-+		phba->pport->port_state = LPFC_VPORT_UNKNOWN;
-+		lpfc_sli_brdrestart(phba);
-+		status = lpfc_sli4_post_status_check(phba);
++	list_for_each_entry_safe(psb, psb_next, &aborts, list) {
++		psb->pCmd = NULL;
++		psb->status = IOSTAT_SUCCESS;
 +	}
-+
-+	/* Check to see if any errors occurred during init */
-+	if (status) {
-+		phba->link_state = LPFC_HBA_ERROR;
-+		retval = 1;
-+	} else
-+		phba->sli4_hba.intr_enable = 0;
-+
-+	return retval;
-+}
-+
-+/**
-+ * lpfc_sli_brdready - Wrapper func for checking the hba readyness
-+ * @phba: Pointer to HBA context object.
-+ * @mask: Bit mask to be checked.
-+ *
-+ * This routine wraps the actual SLI3 or SLI4 hba readyness check routine
-+ * from the API jump table function pointer from the lpfc_hba struct.
-+ **/
-+int
-+lpfc_sli_brdready(struct lpfc_hba *phba, uint32_t mask)
-+{
-+	return phba->lpfc_sli_brdready(phba, mask);
-+}
-+
- #define BARRIER_TEST_PATTERN (0xdeadbeef)
- 
- /**
-@@ -2863,7 +2994,66 @@ lpfc_sli_brdreset(struct lpfc_hba *phba)
- }
- 
- /**
-- * lpfc_sli_brdrestart - Restart the HBA
-+ * lpfc_sli4_brdreset - Reset a sli-4 HBA
-+ * @phba: Pointer to HBA context object.
-+ *
-+ * This function resets a SLI4 HBA. This function disables PCI layer parity
-+ * checking during resets the device. The caller is not required to hold
-+ * any locks.
-+ *
-+ * This function returns 0 always.
-+ **/
-+int
-+lpfc_sli4_brdreset(struct lpfc_hba *phba)
-+{
-+	struct lpfc_sli *psli = &phba->sli;
-+	uint16_t cfg_value;
-+	uint8_t qindx;
-+
-+	/* Reset HBA */
-+	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
-+			"0295 Reset HBA Data: x%x x%x\n",
-+			phba->pport->port_state, psli->sli_flag);
-+
-+	/* perform board reset */
-+	phba->fc_eventTag = 0;
-+	phba->pport->fc_myDID = 0;
-+	phba->pport->fc_prevDID = 0;
-+
-+	/* Turn off parity checking and serr during the physical reset */
-+	pci_read_config_word(phba->pcidev, PCI_COMMAND, &cfg_value);
-+	pci_write_config_word(phba->pcidev, PCI_COMMAND,
-+			      (cfg_value &
-+			      ~(PCI_COMMAND_PARITY | PCI_COMMAND_SERR)));
-+
-+	spin_lock_irq(&phba->hbalock);
-+	psli->sli_flag &= ~(LPFC_PROCESS_LA);
-+	phba->fcf.fcf_flag = 0;
-+	/* Clean up the child queue list for the CQs */
-+	list_del_init(&phba->sli4_hba.mbx_wq->list);
-+	list_del_init(&phba->sli4_hba.els_wq->list);
-+	list_del_init(&phba->sli4_hba.hdr_rq->list);
-+	list_del_init(&phba->sli4_hba.dat_rq->list);
-+	list_del_init(&phba->sli4_hba.mbx_cq->list);
-+	list_del_init(&phba->sli4_hba.els_cq->list);
-+	list_del_init(&phba->sli4_hba.rxq_cq->list);
-+	for (qindx = 0; qindx < phba->cfg_fcp_wq_count; qindx++)
-+		list_del_init(&phba->sli4_hba.fcp_wq[qindx]->list);
-+	for (qindx = 0; qindx < phba->cfg_fcp_eq_count; qindx++)
-+		list_del_init(&phba->sli4_hba.fcp_cq[qindx]->list);
-+	spin_unlock_irq(&phba->hbalock);
-+
-+	/* Now physically reset the device */
-+	lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
-+			"0389 Performing PCI function reset!\n");
-+	/* Perform FCoE PCI function reset */
-+	lpfc_pci_function_reset(phba);
-+
++	spin_lock_irqsave(&phba->scsi_buf_list_lock, iflag);
++	list_splice(&aborts, &phba->lpfc_scsi_buf_list);
++	spin_unlock_irqrestore(&phba->scsi_buf_list_lock, iflag);
 +	return 0;
 +}
 +
 +/**
-+ * lpfc_sli_brdrestart_s3 - Restart a sli-3 hba
-  * @phba: Pointer to HBA context object.
-  *
-  * This function is called in the SLI initialization code path to
-@@ -2875,8 +3065,8 @@ lpfc_sli_brdreset(struct lpfc_hba *phba)
-  * The function does not guarantee completion of MBX_RESTART mailbox
-  * command before the return of this function.
-  **/
--int
--lpfc_sli_brdrestart(struct lpfc_hba *phba)
-+static int
-+lpfc_sli_brdrestart_s3(struct lpfc_hba *phba)
- {
- 	MAILBOX_t *mb;
- 	struct lpfc_sli *psli;
-@@ -2915,7 +3105,7 @@ lpfc_sli_brdrestart(struct lpfc_hba *phb
- 	lpfc_sli_brdreset(phba);
- 	phba->pport->stopped = 0;
- 	phba->link_state = LPFC_INIT_START;
--
-+	phba->hba_flag = 0;
- 	spin_unlock_irq(&phba->hbalock);
++ * lpfc_hba_down_post - Wrapper func for hba down post routine
++ * @phba: pointer to lpfc HBA data structure.
++ *
++ * This routine wraps the actual SLI3 or SLI4 routine for performing
++ * uninitialization after the HBA is reset when bring down the SLI Layer.
++ *
++ * Return codes
++ *   0 - sucess.
++ *   Any other value - error.
++ **/
++int
++lpfc_hba_down_post(struct lpfc_hba *phba)
++{
++	return (*phba->lpfc_hba_down_post)(phba);
++}
  
- 	memset(&psli->lnk_stat_offsets, 0, sizeof(psli->lnk_stat_offsets));
-@@ -2930,6 +3120,55 @@ lpfc_sli_brdrestart(struct lpfc_hba *phb
+ /**
+  * lpfc_hb_timeout - The HBA-timer timeout handler
+@@ -853,6 +940,25 @@ lpfc_offline_eratt(struct lpfc_hba *phba
  }
  
  /**
-+ * lpfc_sli_brdrestart_s4 - Restart the sli-4 hba
-+ * @phba: Pointer to HBA context object.
++ * lpfc_sli4_offline_eratt - Bring lpfc offline on SLI4 hardware error attention
++ * @phba: pointer to lpfc hba data structure.
 + *
-+ * This function is called in the SLI initialization code path to restart
-+ * a SLI4 HBA. The caller is not required to hold any lock.
-+ * At the end of the function, it calls lpfc_hba_down_post function to
-+ * free any pending commands.
++ * This routine is called to bring a SLI4 HBA offline when HBA hardware error
++ * other than Port Error 6 has been detected.
 + **/
-+static int
-+lpfc_sli_brdrestart_s4(struct lpfc_hba *phba)
++static void
++lpfc_sli4_offline_eratt(struct lpfc_hba *phba)
 +{
-+	struct lpfc_sli *psli = &phba->sli;
-+
-+
-+	/* Restart HBA */
-+	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
-+			"0296 Restart HBA Data: x%x x%x\n",
-+			phba->pport->port_state, psli->sli_flag);
-+
++	lpfc_offline_prep(phba);
++	lpfc_offline(phba);
 +	lpfc_sli4_brdreset(phba);
-+
-+	spin_lock_irq(&phba->hbalock);
-+	phba->pport->stopped = 0;
-+	phba->link_state = LPFC_INIT_START;
-+	phba->hba_flag = 0;
-+	spin_unlock_irq(&phba->hbalock);
-+
-+	memset(&psli->lnk_stat_offsets, 0, sizeof(psli->lnk_stat_offsets));
-+	psli->stats_start = get_seconds();
-+
 +	lpfc_hba_down_post(phba);
-+
-+	return 0;
++	lpfc_sli4_post_status_check(phba);
++	lpfc_unblock_mgmt_io(phba);
++	phba->link_state = LPFC_HBA_ERROR;
 +}
 +
 +/**
-+ * lpfc_sli_brdrestart - Wrapper func for restarting hba
-+ * @phba: Pointer to HBA context object.
-+ *
-+ * This routine wraps the actual SLI3 or SLI4 hba restart routine from the
-+ * API jump table function pointer from the lpfc_hba struct.
-+**/
-+int
-+lpfc_sli_brdrestart(struct lpfc_hba *phba)
-+{
-+	return phba->lpfc_sli_brdrestart(phba);
-+}
-+
-+/**
-  * lpfc_sli_chipset_init - Wait for the restart of the HBA after a restart
-  * @phba: Pointer to HBA context object.
+  * lpfc_handle_deferred_eratt - The HBA hardware deferred error handler
+  * @phba: pointer to lpfc hba data structure.
   *
-@@ -3353,6 +3592,488 @@ lpfc_sli_hba_setup_error:
- 	return rc;
+@@ -1057,6 +1163,65 @@ lpfc_handle_eratt_s3(struct lpfc_hba *ph
  }
  
-+/**
-+ * lpfc_sli4_read_fcoe_params - Read fcoe params from conf region
-+ * @phba: Pointer to HBA context object.
-+ * @mboxq: mailbox pointer.
-+ * This function issue a dump mailbox command to read config region
-+ * 23 and parse the records in the region and populate driver
-+ * data structure.
+ /**
++ * lpfc_handle_eratt_s4 - The SLI4 HBA hardware error handler
++ * @phba: pointer to lpfc hba data structure.
++ *
++ * This routine is invoked to handle the SLI4 HBA hardware error attention
++ * conditions.
 + **/
-+static int
-+lpfc_sli4_read_fcoe_params(struct lpfc_hba *phba,
-+		LPFC_MBOXQ_t *mboxq)
++static void
++lpfc_handle_eratt_s4(struct lpfc_hba *phba)
++{
++	struct lpfc_vport *vport = phba->pport;
++	uint32_t event_data;
++	struct Scsi_Host *shost;
++
++	/* If the pci channel is offline, ignore possible errors, since
++	 * we cannot communicate with the pci card anyway.
++	 */
++	if (pci_channel_offline(phba->pcidev))
++		return;
++	/* If resets are disabled then leave the HBA alone and return */
++	if (!phba->cfg_enable_hba_reset)
++		return;
++
++	/* Send an internal error event to mgmt application */
++	lpfc_board_errevt_to_mgmt(phba);
++
++	/* For now, the actual action for SLI4 device handling is not
++	 * specified yet, just treated it as adaptor hardware failure
++	 */
++	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++			"0143 SLI4 Adapter Hardware Error Data: x%x x%x\n",
++			phba->work_status[0], phba->work_status[1]);
++
++	event_data = FC_REG_DUMP_EVENT;
++	shost = lpfc_shost_from_vport(vport);
++	fc_host_post_vendor_event(shost, fc_get_event_number(),
++				  sizeof(event_data), (char *) &event_data,
++				  SCSI_NL_VID_TYPE_PCI | PCI_VENDOR_ID_EMULEX);
++
++	lpfc_sli4_offline_eratt(phba);
++}
++
++/**
++ * lpfc_handle_eratt - Wrapper func for handling hba error attention
++ * @phba: pointer to lpfc HBA data structure.
++ *
++ * This routine wraps the actual SLI3 or SLI4 hba error attention handling
++ * routine from the API jump table function pointer from the lpfc_hba struct.
++ *
++ * Return codes
++ *   0 - sucess.
++ *   Any other value - error.
++ **/
++void
++lpfc_handle_eratt(struct lpfc_hba *phba)
++{
++	(*phba->lpfc_handle_eratt)(phba);
++}
++
++/**
+  * lpfc_handle_latt - The HBA link event handler
+  * @phba: pointer to lpfc hba data structure.
+  *
+@@ -1312,6 +1477,7 @@ lpfc_get_hba_model_desc(struct lpfc_hba 
+ 	uint16_t dev_id = phba->pcidev->device;
+ 	int max_speed;
+ 	int GE = 0;
++	int oneConnect = 0; /* default is not a oneConnect */
+ 	struct {
+ 		char * name;
+ 		int    max_speed;
+@@ -1457,6 +1623,14 @@ lpfc_get_hba_model_desc(struct lpfc_hba 
+ 	case PCI_DEVICE_ID_PROTEUS_S:
+ 		m = (typeof(m)) {"LPemv12002-S", max_speed, "PCIe IOV"};
+ 		break;
++	case PCI_DEVICE_ID_TIGERSHARK:
++		oneConnect = 1;
++		m = (typeof(m)) {"OCe10100-F", max_speed, "PCIe"};
++		break;
++	case PCI_DEVICE_ID_TIGERSHARK_S:
++		oneConnect = 1;
++		m = (typeof(m)) {"OCe10100-F-S", max_speed, "PCIe"};
++		break;
+ 	default:
+ 		m = (typeof(m)){ NULL };
+ 		break;
+@@ -1464,13 +1638,24 @@ lpfc_get_hba_model_desc(struct lpfc_hba 
+ 
+ 	if (mdp && mdp[0] == '\0')
+ 		snprintf(mdp, 79,"%s", m.name);
+-	if (descp && descp[0] == '\0')
+-		snprintf(descp, 255,
+-			"Emulex %s %d%s %s %s",
+-			m.name, m.max_speed,
+-			(GE) ? "GE" : "Gb",
+-			m.bus,
+-			(GE) ? "FCoE Adapter" : "Fibre Channel Adapter");
++	/* oneConnect hba requires special processing, they are all initiators
++	 * and we put the port number on the end
++	 */
++	if (descp && descp[0] == '\0') {
++		if (oneConnect)
++			snprintf(descp, 255,
++				"Emulex OneConnect %s, FCoE Initiator, Port %s",
++				m.name,
++				phba->Port);
++		else
++			snprintf(descp, 255,
++				"Emulex %s %d%s %s %s",
++				m.name, m.max_speed,
++				(GE) ? "GE" : "Gb",
++				m.bus,
++				(GE) ? "FCoE Adapter" :
++					"Fibre Channel Adapter");
++	}
+ }
+ 
+ /**
+@@ -1911,14 +2096,21 @@ lpfc_online(struct lpfc_hba *phba)
+ 		return 1;
+ 	}
+ 
+-	if (lpfc_sli_hba_setup(phba)) {	/* Initialize the HBA */
+-		lpfc_unblock_mgmt_io(phba);
+-		return 1;
++	if (phba->sli_rev == LPFC_SLI_REV4) {
++		if (lpfc_sli4_hba_setup(phba)) { /* Initialize SLI4 HBA */
++			lpfc_unblock_mgmt_io(phba);
++			return 1;
++		}
++	} else {
++		if (lpfc_sli_hba_setup(phba)) {	/* Initialize SLI2/SLI3 HBA */
++			lpfc_unblock_mgmt_io(phba);
++			return 1;
++		}
+ 	}
+ 
+ 	vports = lpfc_create_vport_work_array(phba);
+ 	if (vports != NULL)
+-		for(i = 0; i <= phba->max_vpi && vports[i] != NULL; i++) {
++		for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++) {
+ 			struct Scsi_Host *shost;
+ 			shost = lpfc_shost_from_vport(vports[i]);
+ 			spin_lock_irq(shost->host_lock);
+@@ -1980,11 +2172,12 @@ lpfc_offline_prep(struct lpfc_hba * phba
+ 	/* Issue an unreg_login to all nodes on all vports */
+ 	vports = lpfc_create_vport_work_array(phba);
+ 	if (vports != NULL) {
+-		for(i = 0; i <= phba->max_vpi && vports[i] != NULL; i++) {
++		for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++) {
+ 			struct Scsi_Host *shost;
+ 
+ 			if (vports[i]->load_flag & FC_UNLOADING)
+ 				continue;
++			vports[i]->vfi_state &= ~LPFC_VFI_REGISTERED;
+ 			shost =	lpfc_shost_from_vport(vports[i]);
+ 			list_for_each_entry_safe(ndlp, next_ndlp,
+ 						 &vports[i]->fc_nodes,
+@@ -2029,11 +2222,11 @@ lpfc_offline(struct lpfc_hba *phba)
+ 	if (phba->pport->fc_flag & FC_OFFLINE_MODE)
+ 		return;
+ 
+-	/* stop all timers associated with this hba */
+-	lpfc_stop_phba_timers(phba);
++	/* stop port and all timers associated with this hba */
++	lpfc_stop_port(phba);
+ 	vports = lpfc_create_vport_work_array(phba);
+ 	if (vports != NULL)
+-		for(i = 0; i <= phba->max_vpi && vports[i] != NULL; i++)
++		for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++)
+ 			lpfc_stop_vport_timers(vports[i]);
+ 	lpfc_destroy_vport_work_array(phba, vports);
+ 	lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
+@@ -2046,7 +2239,7 @@ lpfc_offline(struct lpfc_hba *phba)
+ 	spin_unlock_irq(&phba->hbalock);
+ 	vports = lpfc_create_vport_work_array(phba);
+ 	if (vports != NULL)
+-		for(i = 0; i <= phba->max_vpi && vports[i] != NULL; i++) {
++		for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++) {
+ 			shost = lpfc_shost_from_vport(vports[i]);
+ 			spin_lock_irq(shost->host_lock);
+ 			vports[i]->work_port_events = 0;
+@@ -2139,6 +2332,10 @@ lpfc_create_port(struct lpfc_hba *phba, 
+ 	shost->max_lun = vport->cfg_max_luns;
+ 	shost->this_id = -1;
+ 	shost->max_cmd_len = 16;
++	if (phba->sli_rev == LPFC_SLI_REV4) {
++		shost->dma_boundary = LPFC_SLI4_MAX_SEGMENT_SIZE;
++		shost->sg_tablesize = phba->cfg_sg_seg_cnt;
++	}
+ 
+ 	/*
+ 	 * Set initial can_queue value since 0 is no longer supported and
+@@ -2156,6 +2353,7 @@ lpfc_create_port(struct lpfc_hba *phba, 
+ 
+ 	/* Initialize all internally managed lists. */
+ 	INIT_LIST_HEAD(&vport->fc_nodes);
++	INIT_LIST_HEAD(&vport->rcv_buffer_list);
+ 	spin_lock_init(&vport->work_port_lock);
+ 
+ 	init_timer(&vport->fc_disctmo);
+@@ -2347,192 +2545,501 @@ void lpfc_host_attrib_init(struct Scsi_H
+ }
+ 
+ /**
+- * lpfc_enable_msix - Enable MSI-X interrupt mode
++ * lpfc_stop_port_s3 - Stop SLI3 device port
+  * @phba: pointer to lpfc hba data structure.
+  *
+- * This routine is invoked to enable the MSI-X interrupt vectors. The kernel
+- * function pci_enable_msix() is called to enable the MSI-X vectors. Note that
+- * pci_enable_msix(), once invoked, enables either all or nothing, depending
+- * on the current availability of PCI vector resources. The device driver is
+- * responsible for calling the individual request_irq() to register each MSI-X
+- * vector with a interrupt handler, which is done in this function. Note that
+- * later when device is unloading, the driver should always call free_irq()
+- * on all MSI-X vectors it has done request_irq() on before calling
+- * pci_disable_msix(). Failure to do so results in a BUG_ON() and a device
+- * will be left with MSI-X enabled and leaks its vectors.
+- *
+- * Return codes
+- *   0 - sucessful
+- *   other values - error
++ * This routine is invoked to stop an SLI3 device port, it stops the device
++ * from generating interrupts and stops the device driver's timers for the
++ * device.
+  **/
+-static int
+-lpfc_enable_msix(struct lpfc_hba *phba)
++static void
++lpfc_stop_port_s3(struct lpfc_hba *phba)
+ {
+-	int rc, i;
+-	LPFC_MBOXQ_t *pmb;
++	/* Clear all interrupt enable conditions */
++	writel(0, phba->HCregaddr);
++	readl(phba->HCregaddr); /* flush */
++	/* Clear all pending interrupts */
++	writel(0xffffffff, phba->HAregaddr);
++	readl(phba->HAregaddr); /* flush */
+ 
+-	/* Set up MSI-X multi-message vectors */
+-	for (i = 0; i < LPFC_MSIX_VECTORS; i++)
+-		phba->msix_entries[i].entry = i;
++	/* Reset some HBA SLI setup states */
++	lpfc_stop_hba_timers(phba);
++	phba->pport->work_port_events = 0;
++}
+ 
+-	/* Configure MSI-X capability structure */
+-	rc = pci_enable_msix(phba->pcidev, phba->msix_entries,
+-				ARRAY_SIZE(phba->msix_entries));
+-	if (rc) {
+-		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+-				"0420 PCI enable MSI-X failed (%d)\n", rc);
+-		goto msi_fail_out;
+-	} else
+-		for (i = 0; i < LPFC_MSIX_VECTORS; i++)
+-			lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+-					"0477 MSI-X entry[%d]: vector=x%x "
+-					"message=%d\n", i,
+-					phba->msix_entries[i].vector,
+-					phba->msix_entries[i].entry);
+-	/*
+-	 * Assign MSI-X vectors to interrupt handlers
+-	 */
++/**
++ * lpfc_stop_port_s4 - Stop SLI4 device port
++ * @phba: pointer to lpfc hba data structure.
++ *
++ * This routine is invoked to stop an SLI4 device port, it stops the device
++ * from generating interrupts and stops the device driver's timers for the
++ * device.
++ **/
++static void
++lpfc_stop_port_s4(struct lpfc_hba *phba)
++{
++	/* Reset some HBA SLI4 setup states */
++	lpfc_stop_hba_timers(phba);
++	phba->pport->work_port_events = 0;
++	phba->sli4_hba.intr_enable = 0;
++	/* Hard clear it for now, shall have more graceful way to wait later */
++	phba->sli.sli_flag &= ~LPFC_SLI_MBOX_ACTIVE;
++}
+ 
+-	/* vector-0 is associated to slow-path handler */
+-	rc = request_irq(phba->msix_entries[0].vector, &lpfc_sp_intr_handler,
+-			 IRQF_SHARED, LPFC_SP_DRIVER_HANDLER_NAME, phba);
+-	if (rc) {
+-		lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
+-				"0421 MSI-X slow-path request_irq failed "
+-				"(%d)\n", rc);
+-		goto msi_fail_out;
+-	}
++/**
++ * lpfc_stop_port - Wrapper function for stopping hba port
++ * @phba: Pointer to HBA context object.
++ *
++ * This routine wraps the actual SLI3 or SLI4 hba stop port routine from
++ * the API jump table function pointer from the lpfc_hba struct.
++ **/
++void
++lpfc_stop_port(struct lpfc_hba *phba)
++{
++	phba->lpfc_stop_port(phba);
++}
+ 
+-	/* vector-1 is associated to fast-path handler */
+-	rc = request_irq(phba->msix_entries[1].vector, &lpfc_fp_intr_handler,
+-			 IRQF_SHARED, LPFC_FP_DRIVER_HANDLER_NAME, phba);
++/**
++ * lpfc_sli4_remove_dflt_fcf - Remove the driver default fcf record from the port.
++ * @phba: pointer to lpfc hba data structure.
++ *
++ * This routine is invoked to remove the driver default fcf record from
++ * the port.  This routine currently acts on FCF Index 0.
++ *
++ **/
++void
++lpfc_sli_remove_dflt_fcf(struct lpfc_hba *phba)
++{
++	int rc = 0;
++	LPFC_MBOXQ_t *mboxq;
++	struct lpfc_mbx_del_fcf_tbl_entry *del_fcf_record;
++	uint32_t mbox_tmo, req_len;
++	uint32_t shdr_status, shdr_add_status;
+ 
+-	if (rc) {
+-		lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
+-				"0429 MSI-X fast-path request_irq failed "
+-				"(%d)\n", rc);
+-		goto irq_fail_out;
++	mboxq = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
++	if (!mboxq) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++			"2020 Failed to allocate mbox for ADD_FCF cmd\n");
++		return;
+ 	}
+ 
++	req_len = sizeof(struct lpfc_mbx_del_fcf_tbl_entry) -
++		  sizeof(struct lpfc_sli4_cfg_mhdr);
++	rc = lpfc_sli4_config(phba, mboxq, LPFC_MBOX_SUBSYSTEM_FCOE,
++			      LPFC_MBOX_OPCODE_FCOE_DELETE_FCF,
++			      req_len, LPFC_SLI4_MBX_EMBED);
+ 	/*
+-	 * Configure HBA MSI-X attention conditions to messages
++	 * In phase 1, there is a single FCF index, 0.  In phase2, the driver
++	 * supports multiple FCF indices.
+ 	 */
+-	pmb = (LPFC_MBOXQ_t *) mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
++	del_fcf_record = &mboxq->u.mqe.un.del_fcf_entry;
++	bf_set(lpfc_mbx_del_fcf_tbl_count, del_fcf_record, 1);
++	bf_set(lpfc_mbx_del_fcf_tbl_index, del_fcf_record,
++	       phba->fcf.fcf_indx);
+ 
+-	if (!pmb) {
+-		rc = -ENOMEM;
+-		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-				"0474 Unable to allocate memory for issuing "
+-				"MBOX_CONFIG_MSI command\n");
+-		goto mem_fail_out;
++	if (!phba->sli4_hba.intr_enable)
++		rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_POLL);
++	else {
++		mbox_tmo = lpfc_mbox_tmo_val(phba, MBX_SLI4_CONFIG);
++		rc = lpfc_sli_issue_mbox_wait(phba, mboxq, mbox_tmo);
+ 	}
+-	rc = lpfc_config_msi(phba, pmb);
+-	if (rc)
+-		goto mbx_fail_out;
+-	rc = lpfc_sli_issue_mbox(phba, pmb, MBX_POLL);
+-	if (rc != MBX_SUCCESS) {
+-		lpfc_printf_log(phba, KERN_WARNING, LOG_MBOX,
+-				"0351 Config MSI mailbox command failed, "
+-				"mbxCmd x%x, mbxStatus x%x\n",
+-				pmb->mb.mbxCommand, pmb->mb.mbxStatus);
+-		goto mbx_fail_out;
++	/* The IOCTL status is embedded in the mailbox subheader. */
++	shdr_status = bf_get(lpfc_mbox_hdr_status,
++			     &del_fcf_record->header.cfg_shdr.response);
++	shdr_add_status = bf_get(lpfc_mbox_hdr_add_status,
++				 &del_fcf_record->header.cfg_shdr.response);
++	if (shdr_status || shdr_add_status || rc != MBX_SUCCESS) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
++				"2516 DEL FCF of default FCF Index failed "
++				"mbx status x%x, status x%x add_status x%x\n",
++				rc, shdr_status, shdr_add_status);
+ 	}
+-
+-	/* Free memory allocated for mailbox command */
+-	mempool_free(pmb, phba->mbox_mem_pool);
+-	return rc;
+-
+-mbx_fail_out:
+-	/* Free memory allocated for mailbox command */
+-	mempool_free(pmb, phba->mbox_mem_pool);
+-
+-mem_fail_out:
+-	/* free the irq already requested */
+-	free_irq(phba->msix_entries[1].vector, phba);
+-
+-irq_fail_out:
+-	/* free the irq already requested */
+-	free_irq(phba->msix_entries[0].vector, phba);
+-
+-msi_fail_out:
+-	/* Unconfigure MSI-X capability structure */
+-	pci_disable_msix(phba->pcidev);
+-	return rc;
++	if (rc != MBX_TIMEOUT)
++		mempool_free(mboxq, phba->mbox_mem_pool);
+ }
+ 
+ /**
+- * lpfc_disable_msix - Disable MSI-X interrupt mode
++ * lpfc_sli4_parse_latt_fault - Parse sli4 link-attention link fault code
+  * @phba: pointer to lpfc hba data structure.
++ * @acqe_link: pointer to the async link completion queue entry.
+  *
+- * This routine is invoked to release the MSI-X vectors and then disable the
+- * MSI-X interrupt mode.
++ * This routine is to parse the SLI4 link-attention link fault code and
++ * translate it into the base driver's read link attention mailbox command
++ * status.
++ *
++ * Return: Link-attention status in terms of base driver's coding.
+  **/
+-static void
+-lpfc_disable_msix(struct lpfc_hba *phba)
++static uint16_t
++lpfc_sli4_parse_latt_fault(struct lpfc_hba *phba,
++			   struct lpfc_acqe_link *acqe_link)
+ {
+-	int i;
++	uint16_t latt_fault;
+ 
+-	/* Free up MSI-X multi-message vectors */
+-	for (i = 0; i < LPFC_MSIX_VECTORS; i++)
+-		free_irq(phba->msix_entries[i].vector, phba);
+-	/* Disable MSI-X */
+-	pci_disable_msix(phba->pcidev);
++	switch (bf_get(lpfc_acqe_link_fault, acqe_link)) {
++	case LPFC_ASYNC_LINK_FAULT_NONE:
++	case LPFC_ASYNC_LINK_FAULT_LOCAL:
++	case LPFC_ASYNC_LINK_FAULT_REMOTE:
++		latt_fault = 0;
++		break;
++	default:
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"0398 Invalid link fault code: x%x\n",
++				bf_get(lpfc_acqe_link_fault, acqe_link));
++		latt_fault = MBXERR_ERROR;
++		break;
++	}
++	return latt_fault;
+ }
+ 
+ /**
+- * lpfc_enable_msi - Enable MSI interrupt mode
++ * lpfc_sli4_parse_latt_type - Parse sli4 link attention type
+  * @phba: pointer to lpfc hba data structure.
++ * @acqe_link: pointer to the async link completion queue entry.
+  *
+- * This routine is invoked to enable the MSI interrupt mode. The kernel
+- * function pci_enable_msi() is called to enable the MSI vector. The
+- * device driver is responsible for calling the request_irq() to register
+- * MSI vector with a interrupt the handler, which is done in this function.
++ * This routine is to parse the SLI4 link attention type and translate it
++ * into the base driver's link attention type coding.
+  *
+- * Return codes
+- * 	0 - sucessful
+- * 	other values - error
+- */
+-static int
+-lpfc_enable_msi(struct lpfc_hba *phba)
++ * Return: Link attention type in terms of base driver's coding.
++ **/
++static uint8_t
++lpfc_sli4_parse_latt_type(struct lpfc_hba *phba,
++			  struct lpfc_acqe_link *acqe_link)
+ {
+-	int rc;
+-
+-	rc = pci_enable_msi(phba->pcidev);
+-	if (!rc)
+-		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+-				"0462 PCI enable MSI mode success.\n");
+-	else {
+-		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+-				"0471 PCI enable MSI mode failed (%d)\n", rc);
+-		return rc;
+-	}
++	uint8_t att_type;
+ 
+-	rc = request_irq(phba->pcidev->irq, lpfc_intr_handler,
+-			 IRQF_SHARED, LPFC_DRIVER_NAME, phba);
+-	if (rc) {
+-		pci_disable_msi(phba->pcidev);
+-		lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
+-				"0478 MSI request_irq failed (%d)\n", rc);
++	switch (bf_get(lpfc_acqe_link_status, acqe_link)) {
++	case LPFC_ASYNC_LINK_STATUS_DOWN:
++	case LPFC_ASYNC_LINK_STATUS_LOGICAL_DOWN:
++		att_type = AT_LINK_DOWN;
++		break;
++	case LPFC_ASYNC_LINK_STATUS_UP:
++		/* Ignore physical link up events - wait for logical link up */
++		att_type = AT_RESERVED;
++		break;
++	case LPFC_ASYNC_LINK_STATUS_LOGICAL_UP:
++		att_type = AT_LINK_UP;
++		break;
++	default:
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"0399 Invalid link attention type: x%x\n",
++				bf_get(lpfc_acqe_link_status, acqe_link));
++		att_type = AT_RESERVED;
++		break;
+ 	}
+-	return rc;
++	return att_type;
+ }
+ 
+ /**
+- * lpfc_disable_msi - Disable MSI interrupt mode
++ * lpfc_sli4_parse_latt_link_speed - Parse sli4 link-attention link speed
+  * @phba: pointer to lpfc hba data structure.
++ * @acqe_link: pointer to the async link completion queue entry.
+  *
+- * This routine is invoked to disable the MSI interrupt mode. The driver
+- * calls free_irq() on MSI vector it has done request_irq() on before
+- * calling pci_disable_msi(). Failure to do so results in a BUG_ON() and
+- * a device will be left with MSI enabled and leaks its vector.
+- */
+-
+-static void
+-lpfc_disable_msi(struct lpfc_hba *phba)
++ * This routine is to parse the SLI4 link-attention link speed and translate
++ * it into the base driver's link-attention link speed coding.
++ *
++ * Return: Link-attention link speed in terms of base driver's coding.
++ **/
++static uint8_t
++lpfc_sli4_parse_latt_link_speed(struct lpfc_hba *phba,
++				struct lpfc_acqe_link *acqe_link)
+ {
+-	free_irq(phba->pcidev->irq, phba);
+-	pci_disable_msi(phba->pcidev);
+-	return;
++	uint8_t link_speed;
++
++	switch (bf_get(lpfc_acqe_link_speed, acqe_link)) {
++	case LPFC_ASYNC_LINK_SPEED_ZERO:
++		link_speed = LA_UNKNW_LINK;
++		break;
++	case LPFC_ASYNC_LINK_SPEED_10MBPS:
++		link_speed = LA_UNKNW_LINK;
++		break;
++	case LPFC_ASYNC_LINK_SPEED_100MBPS:
++		link_speed = LA_UNKNW_LINK;
++		break;
++	case LPFC_ASYNC_LINK_SPEED_1GBPS:
++		link_speed = LA_1GHZ_LINK;
++		break;
++	case LPFC_ASYNC_LINK_SPEED_10GBPS:
++		link_speed = LA_10GHZ_LINK;
++		break;
++	default:
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"0483 Invalid link-attention link speed: x%x\n",
++				bf_get(lpfc_acqe_link_speed, acqe_link));
++		link_speed = LA_UNKNW_LINK;
++		break;
++	}
++	return link_speed;
++}
++
++/**
++ * lpfc_sli4_async_link_evt - Process the asynchronous link event
++ * @phba: pointer to lpfc hba data structure.
++ * @acqe_link: pointer to the async link completion queue entry.
++ *
++ * This routine is to handle the SLI4 asynchronous link event.
++ **/
++static void
++lpfc_sli4_async_link_evt(struct lpfc_hba *phba,
++			 struct lpfc_acqe_link *acqe_link)
 +{
 +	struct lpfc_dmabuf *mp;
-+	struct lpfc_mqe *mqe;
-+	uint32_t data_length;
++	LPFC_MBOXQ_t *pmb;
++	MAILBOX_t *mb;
++	READ_LA_VAR *la;
++	uint8_t att_type;
++
++	att_type = lpfc_sli4_parse_latt_type(phba, acqe_link);
++	if (att_type != AT_LINK_DOWN && att_type != AT_LINK_UP)
++		return;
++	pmb = (LPFC_MBOXQ_t *)mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
++	if (!pmb) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
++				"0395 The mboxq allocation failed\n");
++		return;
++	}
++	mp = kmalloc(sizeof(struct lpfc_dmabuf), GFP_KERNEL);
++	if (!mp) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
++				"0396 The lpfc_dmabuf allocation failed\n");
++		goto out_free_pmb;
++	}
++	mp->virt = lpfc_mbuf_alloc(phba, 0, &mp->phys);
++	if (!mp->virt) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
++				"0397 The mbuf allocation failed\n");
++		goto out_free_dmabuf;
++	}
++
++	/* Cleanup any outstanding ELS commands */
++	lpfc_els_flush_all_cmd(phba);
++
++	/* Block ELS IOCBs until we have done process link event */
++	phba->sli.ring[LPFC_ELS_RING].flag |= LPFC_STOP_IOCB_EVENT;
++
++	/* Update link event statistics */
++	phba->sli.slistat.link_event++;
++
++	/* Create pseudo lpfc_handle_latt mailbox command from link ACQE */
++	lpfc_read_la(phba, pmb, mp);
++	pmb->vport = phba->pport;
++
++	/* Parse and translate status field */
++	mb = &pmb->u.mb;
++	mb->mbxStatus = lpfc_sli4_parse_latt_fault(phba, acqe_link);
++
++	/* Parse and translate link attention fields */
++	la = (READ_LA_VAR *) &pmb->u.mb.un.varReadLA;
++	la->eventTag = acqe_link->event_tag;
++	la->attType = att_type;
++	la->UlnkSpeed = lpfc_sli4_parse_latt_link_speed(phba, acqe_link);
++
++	/* Fake the the following irrelvant fields */
++	la->topology = TOPOLOGY_PT_PT;
++	la->granted_AL_PA = 0;
++	la->il = 0;
++	la->pb = 0;
++	la->fa = 0;
++	la->mm = 0;
++
++	/* Keep the link status for extra SLI4 state machine reference */
++	phba->sli4_hba.link_state.speed =
++				bf_get(lpfc_acqe_link_speed, acqe_link);
++	phba->sli4_hba.link_state.duplex =
++				bf_get(lpfc_acqe_link_duplex, acqe_link);
++	phba->sli4_hba.link_state.status =
++				bf_get(lpfc_acqe_link_status, acqe_link);
++	phba->sli4_hba.link_state.physical =
++				bf_get(lpfc_acqe_link_physical, acqe_link);
++	phba->sli4_hba.link_state.fault =
++				bf_get(lpfc_acqe_link_fault, acqe_link);
++
++	/* Invoke the lpfc_handle_latt mailbox command callback function */
++	lpfc_mbx_cmpl_read_la(phba, pmb);
++
++	return;
++
++out_free_dmabuf:
++	kfree(mp);
++out_free_pmb:
++	mempool_free(pmb, phba->mbox_mem_pool);
++}
++
++/**
++ * lpfc_sli4_async_fcoe_evt - Process the asynchronous fcoe event
++ * @phba: pointer to lpfc hba data structure.
++ * @acqe_link: pointer to the async fcoe completion queue entry.
++ *
++ * This routine is to handle the SLI4 asynchronous fcoe event.
++ **/
++static void
++lpfc_sli4_async_fcoe_evt(struct lpfc_hba *phba,
++			 struct lpfc_acqe_fcoe *acqe_fcoe)
++{
++	uint8_t event_type = bf_get(lpfc_acqe_fcoe_event_type, acqe_fcoe);
 +	int rc;
++
++	switch (event_type) {
++	case LPFC_FCOE_EVENT_TYPE_NEW_FCF:
++		lpfc_printf_log(phba, KERN_ERR, LOG_DISCOVERY,
++			"2546 New FCF found index 0x%x tag 0x%x \n",
++			acqe_fcoe->fcf_index,
++			acqe_fcoe->event_tag);
++		/*
++		 * If the current FCF is in discovered state,
++		 * do nothing.
++		 */
++		spin_lock_irq(&phba->hbalock);
++		if (phba->fcf.fcf_flag & FCF_DISCOVERED) {
++			spin_unlock_irq(&phba->hbalock);
++			break;
++		}
++		spin_unlock_irq(&phba->hbalock);
++
++		/* Read the FCF table and re-discover SAN. */
++		rc = lpfc_sli4_read_fcf_record(phba,
++			LPFC_FCOE_FCF_GET_FIRST);
++		if (rc)
++			lpfc_printf_log(phba, KERN_ERR, LOG_DISCOVERY,
++				"2547 Read FCF record failed 0x%x\n",
++				rc);
++		break;
++
++	case LPFC_FCOE_EVENT_TYPE_FCF_TABLE_FULL:
++		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
++			"2548 FCF Table full count 0x%x tag 0x%x \n",
++			bf_get(lpfc_acqe_fcoe_fcf_count, acqe_fcoe),
++			acqe_fcoe->event_tag);
++		break;
++
++	case LPFC_FCOE_EVENT_TYPE_FCF_DEAD:
++		lpfc_printf_log(phba, KERN_ERR, LOG_DISCOVERY,
++			"2549 FCF disconnected fron network index 0x%x"
++			" tag 0x%x \n", acqe_fcoe->fcf_index,
++			acqe_fcoe->event_tag);
++		/* If the event is not for currently used fcf do nothing */
++		if (phba->fcf.fcf_indx != acqe_fcoe->fcf_index)
++			break;
++		/*
++		 * Currently, driver support only one FCF - so treat this as
++		 * a link down.
++		 */
++		lpfc_linkdown(phba);
++		/* Unregister FCF if no devices connected to it */
++		lpfc_unregister_unused_fcf(phba);
++		break;
++
++	default:
++		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
++			"0288 Unknown FCoE event type 0x%x event tag "
++			"0x%x\n", event_type, acqe_fcoe->event_tag);
++		break;
++	}
++}
++
++/**
++ * lpfc_sli4_async_dcbx_evt - Process the asynchronous dcbx event
++ * @phba: pointer to lpfc hba data structure.
++ * @acqe_link: pointer to the async dcbx completion queue entry.
++ *
++ * This routine is to handle the SLI4 asynchronous dcbx event.
++ **/
++static void
++lpfc_sli4_async_dcbx_evt(struct lpfc_hba *phba,
++			 struct lpfc_acqe_dcbx *acqe_dcbx)
++{
++	lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
++			"0290 The SLI4 DCBX asynchronous event is not "
++			"handled yet\n");
++}
++
++/**
++ * lpfc_sli4_async_event_proc - Process all the pending asynchronous event
++ * @phba: pointer to lpfc hba data structure.
++ *
++ * This routine is invoked by the worker thread to process all the pending
++ * SLI4 asynchronous events.
++ **/
++void lpfc_sli4_async_event_proc(struct lpfc_hba *phba)
++{
++	struct lpfc_cq_event *cq_event;
++
++	/* First, declare the async event has been handled */
++	spin_lock_irq(&phba->hbalock);
++	phba->hba_flag &= ~ASYNC_EVENT;
++	spin_unlock_irq(&phba->hbalock);
++	/* Now, handle all the async events */
++	while (!list_empty(&phba->sli4_hba.sp_asynce_work_queue)) {
++		/* Get the first event from the head of the event queue */
++		spin_lock_irq(&phba->hbalock);
++		list_remove_head(&phba->sli4_hba.sp_asynce_work_queue,
++				 cq_event, struct lpfc_cq_event, list);
++		spin_unlock_irq(&phba->hbalock);
++		/* Process the asynchronous event */
++		switch (bf_get(lpfc_trailer_code, &cq_event->cqe.mcqe_cmpl)) {
++		case LPFC_TRAILER_CODE_LINK:
++			lpfc_sli4_async_link_evt(phba,
++						 &cq_event->cqe.acqe_link);
++			break;
++		case LPFC_TRAILER_CODE_FCOE:
++			lpfc_sli4_async_fcoe_evt(phba,
++						 &cq_event->cqe.acqe_fcoe);
++			break;
++		case LPFC_TRAILER_CODE_DCBX:
++			lpfc_sli4_async_dcbx_evt(phba,
++						 &cq_event->cqe.acqe_dcbx);
++			break;
++		default:
++			lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
++					"1804 Invalid asynchrous event code: "
++					"x%x\n", bf_get(lpfc_trailer_code,
++					&cq_event->cqe.mcqe_cmpl));
++			break;
++		}
++		/* Free the completion event processed to the free pool */
++		lpfc_sli4_cq_event_release(phba, cq_event);
++	}
++}
++
++/**
++ * lpfc_api_table_setup - Set up per hba pci-device group func api jump table
++ * @phba: pointer to lpfc hba data structure.
++ * @dev_grp: The HBA PCI-Device group number.
++ *
++ * This routine is invoked to set up the per HBA PCI-Device group function
++ * API jump table entries.
++ *
++ * Return: 0 if success, otherwise -ENODEV
++ **/
++int
++lpfc_api_table_setup(struct lpfc_hba *phba, uint8_t dev_grp)
++{
++	int rc;
++
++	/* Set up lpfc PCI-device group */
++	phba->pci_dev_grp = dev_grp;
++
++	/* The LPFC_PCI_DEV_OC uses SLI4 */
++	if (dev_grp == LPFC_PCI_DEV_OC)
++		phba->sli_rev = LPFC_SLI_REV4;
++
++	/* Set up device INIT API function jump table */
++	rc = lpfc_init_api_table_setup(phba, dev_grp);
++	if (rc)
++		return -ENODEV;
++	/* Set up SCSI API function jump table */
++	rc = lpfc_scsi_api_table_setup(phba, dev_grp);
++	if (rc)
++		return -ENODEV;
++	/* Set up SLI API function jump table */
++	rc = lpfc_sli_api_table_setup(phba, dev_grp);
++	if (rc)
++		return -ENODEV;
++	/* Set up MBOX API function jump table */
++	rc = lpfc_mbox_api_table_setup(phba, dev_grp);
++	if (rc)
++		return -ENODEV;
++
++	return 0;
+ }
+ 
+ /**
+@@ -2764,6 +3271,292 @@ lpfc_sli_driver_resource_unset(struct lp
+ }
+ 
+ /**
++ * lpfc_sli4_driver_resource_setup - Setup drvr internal resources for SLI4 dev
++ * @phba: pointer to lpfc hba data structure.
++ *
++ * This routine is invoked to set up the driver internal resources specific to
++ * support the SLI-4 HBA device it attached to.
++ *
++ * Return codes
++ * 	0 - sucessful
++ * 	other values - error
++ **/
++static int
++lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
++{
++	struct lpfc_sli *psli;
++	int rc;
++	int i, hbq_count;
++
++	/* Before proceed, wait for POST done and device ready */
++	rc = lpfc_sli4_post_status_check(phba);
++	if (rc)
++		return -ENODEV;
++
++	/*
++	 * Initialize timers used by driver
++	 */
++
++	/* Heartbeat timer */
++	init_timer(&phba->hb_tmofunc);
++	phba->hb_tmofunc.function = lpfc_hb_timeout;
++	phba->hb_tmofunc.data = (unsigned long)phba;
++
++	psli = &phba->sli;
++	/* MBOX heartbeat timer */
++	init_timer(&psli->mbox_tmo);
++	psli->mbox_tmo.function = lpfc_mbox_timeout;
++	psli->mbox_tmo.data = (unsigned long) phba;
++	/* Fabric block timer */
++	init_timer(&phba->fabric_block_timer);
++	phba->fabric_block_timer.function = lpfc_fabric_block_timeout;
++	phba->fabric_block_timer.data = (unsigned long) phba;
++	/* EA polling mode timer */
++	init_timer(&phba->eratt_poll);
++	phba->eratt_poll.function = lpfc_poll_eratt;
++	phba->eratt_poll.data = (unsigned long) phba;
++	/*
++	 * We need to do a READ_CONFIG mailbox command here before
++	 * calling lpfc_get_cfgparam. For VFs this will report the
++	 * MAX_XRI, MAX_VPI, MAX_RPI, MAX_IOCB, and MAX_VFI settings.
++	 * All of the resources allocated
++	 * for this Port are tied to these values.
++	 */
++	/* Get all the module params for configuring this host */
++	lpfc_get_cfgparam(phba);
++	phba->max_vpi = LPFC_MAX_VPI;
++	/* This will be set to correct value after the read_config mbox */
++	phba->max_vports = 0;
 +
 +	/* Program the default value of vlan_id and fc_map */
 +	phba->valid_vlan = 0;
@@ -859,1215 +1099,590 @@ diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
 +	phba->fc_map[1] = LPFC_FCOE_FCF_MAP1;
 +	phba->fc_map[2] = LPFC_FCOE_FCF_MAP2;
 +
-+	mqe = &mboxq->u.mqe;
-+	if (lpfc_dump_fcoe_param(phba, mboxq))
-+		return -ENOMEM;
++	/*
++	 * Since the sg_tablesize is module parameter, the sg_dma_buf_size
++	 * used to create the sg_dma_buf_pool must be dynamically calculated.
++	 * 2 segments are added since the IOCB needs a command and response bde.
++	 * To insure that the scsi sgl does not cross a 4k page boundary only
++	 * sgl sizes of 1k, 2k, 4k, and 8k are supported.
++	 * Table of sgl sizes and seg_cnt:
++	 * sgl size, 	sg_seg_cnt	total seg
++	 * 1k		50		52
++	 * 2k		114		116
++	 * 4k		242		244
++	 * 8k		498		500
++	 * cmd(32) + rsp(160) + (52 * sizeof(sli4_sge)) = 1024
++	 * cmd(32) + rsp(160) + (116 * sizeof(sli4_sge)) = 2048
++	 * cmd(32) + rsp(160) + (244 * sizeof(sli4_sge)) = 4096
++	 * cmd(32) + rsp(160) + (500 * sizeof(sli4_sge)) = 8192
++	 */
++	if (phba->cfg_sg_seg_cnt <= LPFC_DEFAULT_SG_SEG_CNT)
++		phba->cfg_sg_seg_cnt = 50;
++	else if (phba->cfg_sg_seg_cnt <= 114)
++		phba->cfg_sg_seg_cnt = 114;
++	else if (phba->cfg_sg_seg_cnt <= 242)
++		phba->cfg_sg_seg_cnt = 242;
++	else
++		phba->cfg_sg_seg_cnt = 498;
 +
-+	mp = (struct lpfc_dmabuf *) mboxq->context1;
-+	rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_POLL);
++	phba->cfg_sg_dma_buf_size = sizeof(struct fcp_cmnd)
++					+ sizeof(struct fcp_rsp);
++	phba->cfg_sg_dma_buf_size +=
++		((phba->cfg_sg_seg_cnt + 2) * sizeof(struct sli4_sge));
 +
-+	lpfc_printf_log(phba, KERN_INFO, LOG_MBOX | LOG_SLI,
-+			"(%d):2571 Mailbox cmd x%x Status x%x "
-+			"Data: x%x x%x x%x x%x x%x x%x x%x x%x x%x "
-+			"x%x x%x x%x x%x x%x x%x x%x x%x x%x "
-+			"CQ: x%x x%x x%x x%x\n",
-+			mboxq->vport ? mboxq->vport->vpi : 0,
-+			bf_get(lpfc_mqe_command, mqe),
-+			bf_get(lpfc_mqe_status, mqe),
-+			mqe->un.mb_words[0], mqe->un.mb_words[1],
-+			mqe->un.mb_words[2], mqe->un.mb_words[3],
-+			mqe->un.mb_words[4], mqe->un.mb_words[5],
-+			mqe->un.mb_words[6], mqe->un.mb_words[7],
-+			mqe->un.mb_words[8], mqe->un.mb_words[9],
-+			mqe->un.mb_words[10], mqe->un.mb_words[11],
-+			mqe->un.mb_words[12], mqe->un.mb_words[13],
-+			mqe->un.mb_words[14], mqe->un.mb_words[15],
-+			mqe->un.mb_words[16], mqe->un.mb_words[50],
-+			mboxq->mcqe.word0,
-+			mboxq->mcqe.mcqe_tag0, 	mboxq->mcqe.mcqe_tag1,
-+			mboxq->mcqe.trailer);
-+
-+	if (rc) {
-+		lpfc_mbuf_free(phba, mp->virt, mp->phys);
-+		kfree(mp);
-+		return -EIO;
-+	}
-+	data_length = mqe->un.mb_words[5];
-+	if (data_length > DMP_FCOEPARAM_RGN_SIZE)
-+		return -EIO;
-+
-+	lpfc_parse_fcoe_conf(phba, mp->virt, data_length);
-+	lpfc_mbuf_free(phba, mp->virt, mp->phys);
-+	kfree(mp);
-+	return 0;
-+}
-+
-+/**
-+ * lpfc_sli4_read_rev - Issue READ_REV and collect vpd data
-+ * @phba: pointer to lpfc hba data structure.
-+ * @mboxq: pointer to the LPFC_MBOXQ_t structure.
-+ * @vpd: pointer to the memory to hold resulting port vpd data.
-+ * @vpd_size: On input, the number of bytes allocated to @vpd.
-+ *	      On output, the number of data bytes in @vpd.
-+ *
-+ * This routine executes a READ_REV SLI4 mailbox command.  In
-+ * addition, this routine gets the port vpd data.
-+ *
-+ * Return codes
-+ * 	0 - sucessful
-+ * 	ENOMEM - could not allocated memory.
-+ **/
-+static int
-+lpfc_sli4_read_rev(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq,
-+		    uint8_t *vpd, uint32_t *vpd_size)
-+{
-+	int rc = 0;
-+	uint32_t dma_size;
-+	struct lpfc_dmabuf *dmabuf;
-+	struct lpfc_mqe *mqe;
-+
-+	dmabuf = kzalloc(sizeof(struct lpfc_dmabuf), GFP_KERNEL);
-+	if (!dmabuf)
-+		return -ENOMEM;
++	/* Initialize buffer queue management fields */
++	hbq_count = lpfc_sli_hbq_count();
++	for (i = 0; i < hbq_count; ++i)
++		INIT_LIST_HEAD(&phba->hbqs[i].hbq_buffer_list);
++	INIT_LIST_HEAD(&phba->rb_pend_list);
++	phba->hbqs[LPFC_ELS_HBQ].hbq_alloc_buffer = lpfc_sli4_rb_alloc;
++	phba->hbqs[LPFC_ELS_HBQ].hbq_free_buffer = lpfc_sli4_rb_free;
 +
 +	/*
-+	 * Get a DMA buffer for the vpd data resulting from the READ_REV
-+	 * mailbox command.
++	 * Initialize the SLI Layer to run with lpfc SLI4 HBAs.
 +	 */
-+	dma_size = *vpd_size;
-+	dmabuf->virt = dma_alloc_coherent(&phba->pcidev->dev,
-+					  dma_size,
-+					  &dmabuf->phys,
-+					  GFP_KERNEL);
-+	if (!dmabuf->virt) {
-+		kfree(dmabuf);
++	/* Initialize the Abort scsi buffer list used by driver */
++	spin_lock_init(&phba->sli4_hba.abts_scsi_buf_list_lock);
++	INIT_LIST_HEAD(&phba->sli4_hba.lpfc_abts_scsi_buf_list);
++	/* This abort list used by worker thread */
++	spin_lock_init(&phba->sli4_hba.abts_sgl_list_lock);
++
++	/*
++	 * Initialize dirver internal slow-path work queues
++	 */
++
++	/* Driver internel slow-path CQ Event pool */
++	INIT_LIST_HEAD(&phba->sli4_hba.sp_cqe_event_pool);
++	/* Response IOCB work queue list */
++	INIT_LIST_HEAD(&phba->sli4_hba.sp_rspiocb_work_queue);
++	/* Asynchronous event CQ Event work queue list */
++	INIT_LIST_HEAD(&phba->sli4_hba.sp_asynce_work_queue);
++	/* Fast-path XRI aborted CQ Event work queue list */
++	INIT_LIST_HEAD(&phba->sli4_hba.sp_fcp_xri_aborted_work_queue);
++	/* Slow-path XRI aborted CQ Event work queue list */
++	INIT_LIST_HEAD(&phba->sli4_hba.sp_els_xri_aborted_work_queue);
++	/* Receive queue CQ Event work queue list */
++	INIT_LIST_HEAD(&phba->sli4_hba.sp_unsol_work_queue);
++
++	/* Initialize the driver internal SLI layer lists. */
++	lpfc_sli_setup(phba);
++	lpfc_sli_queue_setup(phba);
++
++	/* Allocate device driver memory */
++	rc = lpfc_mem_alloc(phba, SGL_ALIGN_SZ);
++	if (rc)
 +		return -ENOMEM;
-+	}
-+	memset(dmabuf->virt, 0, dma_size);
 +
-+	/*
-+	 * The SLI4 implementation of READ_REV conflicts at word1,
-+	 * bits 31:16 and SLI4 adds vpd functionality not present
-+	 * in SLI3.  This code corrects the conflicts.
-+	 */
-+	lpfc_read_rev(phba, mboxq);
-+	mqe = &mboxq->u.mqe;
-+	mqe->un.read_rev.vpd_paddr_high = putPaddrHigh(dmabuf->phys);
-+	mqe->un.read_rev.vpd_paddr_low = putPaddrLow(dmabuf->phys);
-+	mqe->un.read_rev.word1 &= 0x0000FFFF;
-+	bf_set(lpfc_mbx_rd_rev_vpd, &mqe->un.read_rev, 1);
-+	bf_set(lpfc_mbx_rd_rev_avail_len, &mqe->un.read_rev, dma_size);
++	/* Create the bootstrap mailbox command */
++	rc = lpfc_create_bootstrap_mbox(phba);
++	if (unlikely(rc))
++		goto out_free_mem;
 +
-+	rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_POLL);
-+	if (rc) {
-+		dma_free_coherent(&phba->pcidev->dev, dma_size,
-+				  dmabuf->virt, dmabuf->phys);
-+		return -EIO;
-+	}
++	/* Set up the host's endian order with the device. */
++	rc = lpfc_setup_endian_order(phba);
++	if (unlikely(rc))
++		goto out_free_bsmbx;
 +
-+	lpfc_printf_log(phba, KERN_INFO, LOG_MBOX | LOG_SLI,
-+			"(%d):0380 Mailbox cmd x%x Status x%x "
-+			"Data: x%x x%x x%x x%x x%x x%x x%x x%x x%x "
-+			"x%x x%x x%x x%x x%x x%x x%x x%x x%x "
-+			"CQ: x%x x%x x%x x%x\n",
-+			mboxq->vport ? mboxq->vport->vpi : 0,
-+			bf_get(lpfc_mqe_command, mqe),
-+			bf_get(lpfc_mqe_status, mqe),
-+			mqe->un.mb_words[0], mqe->un.mb_words[1],
-+			mqe->un.mb_words[2], mqe->un.mb_words[3],
-+			mqe->un.mb_words[4], mqe->un.mb_words[5],
-+			mqe->un.mb_words[6], mqe->un.mb_words[7],
-+			mqe->un.mb_words[8], mqe->un.mb_words[9],
-+			mqe->un.mb_words[10], mqe->un.mb_words[11],
-+			mqe->un.mb_words[12], mqe->un.mb_words[13],
-+			mqe->un.mb_words[14], mqe->un.mb_words[15],
-+			mqe->un.mb_words[16], mqe->un.mb_words[50],
-+			mboxq->mcqe.word0,
-+			mboxq->mcqe.mcqe_tag0, 	mboxq->mcqe.mcqe_tag1,
-+			mboxq->mcqe.trailer);
++	/* Set up the hba's configuration parameters. */
++	rc = lpfc_sli4_read_config(phba);
++	if (unlikely(rc))
++		goto out_free_bsmbx;
 +
-+	/*
-+	 * The available vpd length cannot be bigger than the
-+	 * DMA buffer passed to the port.  Catch the less than
-+	 * case and update the caller's size.
-+	 */
-+	if (mqe->un.read_rev.avail_vpd_len < *vpd_size)
-+		*vpd_size = mqe->un.read_rev.avail_vpd_len;
-+
-+	lpfc_sli_pcimem_bcopy(dmabuf->virt, vpd, *vpd_size);
-+	dma_free_coherent(&phba->pcidev->dev, dma_size,
-+			  dmabuf->virt, dmabuf->phys);
-+	kfree(dmabuf);
-+	return 0;
-+}
-+
-+/**
-+ * lpfc_sli4_arm_cqeq_intr - Arm sli-4 device completion and event queues
-+ * @phba: pointer to lpfc hba data structure.
-+ *
-+ * This routine is called to explicitly arm the SLI4 device's completion and
-+ * event queues
-+ **/
-+static void
-+lpfc_sli4_arm_cqeq_intr(struct lpfc_hba *phba)
-+{
-+	uint8_t fcp_eqidx;
-+
-+	lpfc_sli4_cq_release(phba->sli4_hba.mbx_cq, LPFC_QUEUE_REARM);
-+	lpfc_sli4_cq_release(phba->sli4_hba.els_cq, LPFC_QUEUE_REARM);
-+	lpfc_sli4_cq_release(phba->sli4_hba.rxq_cq, LPFC_QUEUE_REARM);
-+	for (fcp_eqidx = 0; fcp_eqidx < phba->cfg_fcp_eq_count; fcp_eqidx++)
-+		lpfc_sli4_cq_release(phba->sli4_hba.fcp_cq[fcp_eqidx],
-+				     LPFC_QUEUE_REARM);
-+	lpfc_sli4_eq_release(phba->sli4_hba.sp_eq, LPFC_QUEUE_REARM);
-+	for (fcp_eqidx = 0; fcp_eqidx < phba->cfg_fcp_eq_count; fcp_eqidx++)
-+		lpfc_sli4_eq_release(phba->sli4_hba.fp_eq[fcp_eqidx],
-+				     LPFC_QUEUE_REARM);
-+}
-+
-+/**
-+ * lpfc_sli4_hba_setup - SLI4 device intialization PCI function
-+ * @phba: Pointer to HBA context object.
-+ *
-+ * This function is the main SLI4 device intialization PCI function. This
-+ * function is called by the HBA intialization code, HBA reset code and
-+ * HBA error attention handler code. Caller is not required to hold any
-+ * locks.
-+ **/
-+int
-+lpfc_sli4_hba_setup(struct lpfc_hba *phba)
-+{
-+	int rc;
-+	LPFC_MBOXQ_t *mboxq;
-+	struct lpfc_mqe *mqe;
-+	uint8_t *vpd;
-+	uint32_t vpd_size;
-+	uint32_t ftr_rsp = 0;
-+	struct Scsi_Host *shost = lpfc_shost_from_vport(phba->pport);
-+	struct lpfc_vport *vport = phba->pport;
-+	struct lpfc_dmabuf *mp;
-+
-+	/* Perform a PCI function reset to start from clean */
++	/* Perform a function reset */
 +	rc = lpfc_pci_function_reset(phba);
 +	if (unlikely(rc))
-+		return -ENODEV;
++		goto out_free_bsmbx;
 +
-+	/* Check the HBA Host Status Register for readyness */
-+	rc = lpfc_sli4_post_status_check(phba);
-+	if (unlikely(rc))
-+		return -ENODEV;
-+	else {
-+		spin_lock_irq(&phba->hbalock);
-+		phba->sli.sli_flag |= LPFC_SLI_ACTIVE;
-+		spin_unlock_irq(&phba->hbalock);
-+	}
-+
-+	/*
-+	 * Allocate a single mailbox container for initializing the
-+	 * port.
-+	 */
-+	mboxq = (LPFC_MBOXQ_t *) mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
-+	if (!mboxq)
-+		return -ENOMEM;
-+
-+	/*
-+	 * Continue initialization with default values even if driver failed
-+	 * to read FCoE param config regions
-+	 */
-+	if (lpfc_sli4_read_fcoe_params(phba, mboxq))
-+		lpfc_printf_log(phba, KERN_ERR, LOG_MBOX | LOG_INIT,
-+			"2570 Failed to read FCoE parameters \n");
-+
-+	/* Issue READ_REV to collect vpd and FW information. */
-+	vpd_size = PAGE_SIZE;
-+	vpd = kzalloc(vpd_size, GFP_KERNEL);
-+	if (!vpd) {
-+		rc = -ENOMEM;
-+		goto out_free_mbox;
-+	}
-+
-+	rc = lpfc_sli4_read_rev(phba, mboxq, vpd, &vpd_size);
-+	if (unlikely(rc))
-+		goto out_free_vpd;
-+
-+	mqe = &mboxq->u.mqe;
-+	if ((bf_get(lpfc_mbx_rd_rev_sli_lvl,
-+		    &mqe->un.read_rev) != LPFC_SLI_REV4) ||
-+	    (bf_get(lpfc_mbx_rd_rev_fcoe, &mqe->un.read_rev) == 0)) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_MBOX | LOG_SLI,
-+			"0376 READ_REV Error. SLI Level %d "
-+			"FCoE enabled %d\n",
-+			bf_get(lpfc_mbx_rd_rev_sli_lvl, &mqe->un.read_rev),
-+			bf_get(lpfc_mbx_rd_rev_fcoe, &mqe->un.read_rev));
-+		rc = -EIO;
-+		goto out_free_vpd;
-+	}
-+	/* Single threaded at this point, no need for lock */
-+	spin_lock_irq(&phba->hbalock);
-+	phba->hba_flag |= HBA_FCOE_SUPPORT;
-+	spin_unlock_irq(&phba->hbalock);
-+	/*
-+	 * Evaluate the read rev and vpd data. Populate the driver
-+	 * state with the results. If this routine fails, the failure
-+	 * is not fatal as the driver will use generic values.
-+	 */
-+	rc = lpfc_parse_vpd(phba, vpd, vpd_size);
-+	if (unlikely(!rc)) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_MBOX | LOG_SLI,
-+				"0377 Error %d parsing vpd. "
-+				"Using defaults.\n", rc);
-+		rc = 0;
-+	}
-+
-+	/* By now, we should determine the SLI revision, hard code for now */
-+	phba->sli_rev = LPFC_SLI_REV4;
-+
-+	/*
-+	 * Discover the port's supported feature set and match it against the
-+	 * hosts requests.
-+	 */
-+	lpfc_request_features(phba, mboxq);
-+	rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_POLL);
-+	if (unlikely(rc)) {
-+		rc = -EIO;
-+		goto out_free_vpd;
-+	}
-+
-+	/*
-+	 * The port must support FCP initiator mode as this is the
-+	 * only mode running in the host.
-+	 */
-+	if (!(bf_get(lpfc_mbx_rq_ftr_rsp_fcpi, &mqe->un.req_ftrs))) {
-+		lpfc_printf_log(phba, KERN_WARNING, LOG_MBOX | LOG_SLI,
-+				"0378 No support for fcpi mode.\n");
-+		ftr_rsp++;
-+	}
-+
-+	/*
-+	 * If the port cannot support the host's requested features
-+	 * then turn off the global config parameters to disable the
-+	 * feature in the driver.  This is not a fatal error.
-+	 */
-+	if ((phba->cfg_enable_bg) &&
-+	    !(bf_get(lpfc_mbx_rq_ftr_rsp_dif, &mqe->un.req_ftrs)))
-+		ftr_rsp++;
-+
-+	if (phba->max_vpi && phba->cfg_enable_npiv &&
-+	    !(bf_get(lpfc_mbx_rq_ftr_rsp_npiv, &mqe->un.req_ftrs)))
-+		ftr_rsp++;
-+
-+	if (ftr_rsp) {
-+		lpfc_printf_log(phba, KERN_WARNING, LOG_MBOX | LOG_SLI,
-+				"0379 Feature Mismatch Data: x%08x %08x "
-+				"x%x x%x x%x\n", mqe->un.req_ftrs.word2,
-+				mqe->un.req_ftrs.word3, phba->cfg_enable_bg,
-+				phba->cfg_enable_npiv, phba->max_vpi);
-+		if (!(bf_get(lpfc_mbx_rq_ftr_rsp_dif, &mqe->un.req_ftrs)))
-+			phba->cfg_enable_bg = 0;
-+		if (!(bf_get(lpfc_mbx_rq_ftr_rsp_npiv, &mqe->un.req_ftrs)))
-+			phba->cfg_enable_npiv = 0;
-+	}
-+
-+	/* These SLI3 features are assumed in SLI4 */
-+	spin_lock_irq(&phba->hbalock);
-+	phba->sli3_options |= (LPFC_SLI3_NPIV_ENABLED | LPFC_SLI3_HBQ_ENABLED);
-+	spin_unlock_irq(&phba->hbalock);
-+
-+	/* Read the port's service parameters. */
-+	lpfc_read_sparam(phba, mboxq, vport->vpi);
-+	mboxq->vport = vport;
-+	rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_POLL);
-+	mp = (struct lpfc_dmabuf *) mboxq->context1;
-+	if (rc == MBX_SUCCESS) {
-+		memcpy(&vport->fc_sparam, mp->virt, sizeof(struct serv_parm));
-+		rc = 0;
-+	}
-+
-+	/*
-+	 * This memory was allocated by the lpfc_read_sparam routine. Release
-+	 * it to the mbuf pool.
-+	 */
-+	lpfc_mbuf_free(phba, mp->virt, mp->phys);
-+	kfree(mp);
-+	mboxq->context1 = NULL;
-+	if (unlikely(rc)) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_MBOX | LOG_SLI,
-+				"0382 READ_SPARAM command failed "
-+				"status %d, mbxStatus x%x\n",
-+				rc, bf_get(lpfc_mqe_status, mqe));
-+		phba->link_state = LPFC_HBA_ERROR;
-+		rc = -EIO;
-+		goto out_free_vpd;
-+	}
-+
-+	if (phba->cfg_soft_wwnn)
-+		u64_to_wwn(phba->cfg_soft_wwnn,
-+			   vport->fc_sparam.nodeName.u.wwn);
-+	if (phba->cfg_soft_wwpn)
-+		u64_to_wwn(phba->cfg_soft_wwpn,
-+			   vport->fc_sparam.portName.u.wwn);
-+	memcpy(&vport->fc_nodename, &vport->fc_sparam.nodeName,
-+	       sizeof(struct lpfc_name));
-+	memcpy(&vport->fc_portname, &vport->fc_sparam.portName,
-+	       sizeof(struct lpfc_name));
-+
-+	/* Update the fc_host data structures with new wwn. */
-+	fc_host_node_name(shost) = wwn_to_u64(vport->fc_nodename.u.wwn);
-+	fc_host_port_name(shost) = wwn_to_u64(vport->fc_portname.u.wwn);
-+
-+	/* Register SGL pool to the device using non-embedded mailbox command */
-+	rc = lpfc_sli4_post_sgl_list(phba);
-+	if (unlikely(rc)) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_MBOX | LOG_SLI,
-+				"0582 Error %d during sgl post operation", rc);
-+		rc = -ENODEV;
-+		goto out_free_vpd;
-+	}
-+
-+	/* Register SCSI SGL pool to the device */
-+	rc = lpfc_sli4_repost_scsi_sgl_list(phba);
-+	if (unlikely(rc)) {
-+		lpfc_printf_log(phba, KERN_WARNING, LOG_MBOX | LOG_SLI,
-+				"0383 Error %d during scsi sgl post opeation",
-+				rc);
-+		/* Some Scsi buffers were moved to the abort scsi list */
-+		/* A pci function reset will repost them */
-+		rc = -ENODEV;
-+		goto out_free_vpd;
-+	}
-+
-+	/* Post the rpi header region to the device. */
-+	rc = lpfc_sli4_post_all_rpi_hdrs(phba);
-+	if (unlikely(rc)) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_MBOX | LOG_SLI,
-+				"0393 Error %d during rpi post operation\n",
-+				rc);
-+		rc = -ENODEV;
-+		goto out_free_vpd;
-+	}
-+	/* Temporary initialization of lpfc_fip_flag to non-fip */
-+	bf_set(lpfc_fip_flag, &phba->sli4_hba.sli4_flags, 0);
-+
-+	/* Set up all the queues to the device */
-+	rc = lpfc_sli4_queue_setup(phba);
-+	if (unlikely(rc)) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_MBOX | LOG_SLI,
-+				"0381 Error %d during queue setup.\n ", rc);
-+		goto out_stop_timers;
-+	}
-+
-+	/* Arm the CQs and then EQs on device */
-+	lpfc_sli4_arm_cqeq_intr(phba);
-+
-+	/* Indicate device interrupt mode */
-+	phba->sli4_hba.intr_enable = 1;
-+
-+	/* Allow asynchronous mailbox command to go through */
-+	spin_lock_irq(&phba->hbalock);
-+	phba->sli.sli_flag &= ~LPFC_SLI_ASYNC_MBX_BLK;
-+	spin_unlock_irq(&phba->hbalock);
-+
-+	/* Post receive buffers to the device */
-+	lpfc_sli4_rb_setup(phba);
-+
-+	/* Start the ELS watchdog timer */
-+	/*
-+	 * The driver for SLI4 is not yet ready to process timeouts
-+	 * or interrupts.  Once it is, the comment bars can be removed.
-+	 */
-+	/* mod_timer(&vport->els_tmofunc,
-+	 *           jiffies + HZ * (phba->fc_ratov*2)); */
-+
-+	/* Start heart beat timer */
-+	mod_timer(&phba->hb_tmofunc,
-+		  jiffies + HZ * LPFC_HB_MBOX_INTERVAL);
-+	phba->hb_outstanding = 0;
-+	phba->last_completion_time = jiffies;
-+
-+	/* Start error attention (ERATT) polling timer */
-+	mod_timer(&phba->eratt_poll, jiffies + HZ * LPFC_ERATT_POLL_INTERVAL);
-+
-+	/*
-+	 * The port is ready, set the host's link state to LINK_DOWN
-+	 * in preparation for link interrupts.
-+	 */
-+	lpfc_init_link(phba, mboxq, phba->cfg_topology, phba->cfg_link_speed);
-+	mboxq->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
-+	lpfc_set_loopback_flag(phba);
-+	/* Change driver state to LPFC_LINK_DOWN right before init link */
-+	spin_lock_irq(&phba->hbalock);
-+	phba->link_state = LPFC_LINK_DOWN;
-+	spin_unlock_irq(&phba->hbalock);
-+	rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_NOWAIT);
-+	if (unlikely(rc != MBX_NOT_FINISHED)) {
-+		kfree(vpd);
-+		return 0;
-+	} else
-+		rc = -EIO;
-+
-+	/* Unset all the queues set up in this routine when error out */
++	/* Create all the SLI4 queues */
++	rc = lpfc_sli4_queue_create(phba);
 +	if (rc)
-+		lpfc_sli4_queue_unset(phba);
++		goto out_free_bsmbx;
 +
-+out_stop_timers:
++	/* Create driver internal CQE event pool */
++	rc = lpfc_sli4_cq_event_pool_create(phba);
 +	if (rc)
-+		lpfc_stop_hba_timers(phba);
-+out_free_vpd:
-+	kfree(vpd);
-+out_free_mbox:
-+	mempool_free(mboxq, phba->mbox_mem_pool);
-+	return rc;
-+}
- 
- /**
-  * lpfc_mbox_timeout - Timeout call back function for mbox timer
-@@ -3812,13 +4533,420 @@ lpfc_sli_issue_mbox_s3(struct lpfc_hba *
- 
- out_not_finished:
- 	if (processing_queue) {
--		pmbox->mb.mbxStatus = MBX_NOT_FINISHED;
-+		pmbox->u.mb.mbxStatus = MBX_NOT_FINISHED;
- 		lpfc_mbox_cmpl_put(phba, pmbox);
- 	}
- 	return MBX_NOT_FINISHED;
- }
- 
- /**
-+ * lpfc_sli4_post_sync_mbox - Post an SLI4 mailbox to the bootstrap mailbox
-+ * @phba: Pointer to HBA context object.
-+ * @mboxq: Pointer to mailbox object.
-+ *
-+ * The function posts a mailbox to the port.  The mailbox is expected
-+ * to be comletely filled in and ready for the port to operate on it.
-+ * This routine executes a synchronous completion operation on the
-+ * mailbox by polling for its completion.
-+ *
-+ * The caller must not be holding any locks when calling this routine.
-+ *
-+ * Returns:
-+ *	MBX_SUCCESS - mailbox posted successfully
-+ *	Any of the MBX error values.
-+ **/
-+static int
-+lpfc_sli4_post_sync_mbox(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
-+{
-+	int rc = MBX_SUCCESS;
-+	unsigned long iflag;
-+	uint32_t db_ready;
-+	uint32_t mcqe_status;
-+	uint32_t mbx_cmnd;
-+	unsigned long timeout;
-+	struct lpfc_sli *psli = &phba->sli;
-+	struct lpfc_mqe *mb = &mboxq->u.mqe;
-+	struct lpfc_bmbx_create *mbox_rgn;
-+	struct dma_address *dma_address;
-+	struct lpfc_register bmbx_reg;
++		goto out_destroy_queue;
 +
-+	/*
-+	 * Only one mailbox can be active to the bootstrap mailbox region
-+	 * at a time and there is no queueing provided.
-+	 */
-+	spin_lock_irqsave(&phba->hbalock, iflag);
-+	if (psli->sli_flag & LPFC_SLI_MBOX_ACTIVE) {
-+		spin_unlock_irqrestore(&phba->hbalock, iflag);
-+		lpfc_printf_log(phba, KERN_ERR, LOG_MBOX | LOG_SLI,
-+				"(%d):2532 Mailbox command x%x (x%x) "
-+				"cannot issue Data: x%x x%x\n",
-+				mboxq->vport ? mboxq->vport->vpi : 0,
-+				mboxq->u.mb.mbxCommand,
-+				lpfc_sli4_mbox_opcode_get(phba, mboxq),
-+				psli->sli_flag, MBX_POLL);
-+		return MBXERR_ERROR;
-+	}
-+	/* The server grabs the token and owns it until release */
-+	psli->sli_flag |= LPFC_SLI_MBOX_ACTIVE;
-+	phba->sli.mbox_active = mboxq;
-+	spin_unlock_irqrestore(&phba->hbalock, iflag);
-+
-+	/*
-+	 * Initialize the bootstrap memory region to avoid stale data areas
-+	 * in the mailbox post.  Then copy the caller's mailbox contents to
-+	 * the bmbx mailbox region.
-+	 */
-+	mbx_cmnd = bf_get(lpfc_mqe_command, mb);
-+	memset(phba->sli4_hba.bmbx.avirt, 0, sizeof(struct lpfc_bmbx_create));
-+	lpfc_sli_pcimem_bcopy(mb, phba->sli4_hba.bmbx.avirt,
-+			      sizeof(struct lpfc_mqe));
-+
-+	/* Post the high mailbox dma address to the port and wait for ready. */
-+	dma_address = &phba->sli4_hba.bmbx.dma_address;
-+	writel(dma_address->addr_hi, phba->sli4_hba.BMBXregaddr);
-+
-+	timeout = msecs_to_jiffies(lpfc_mbox_tmo_val(phba, mbx_cmnd)
-+				   * 1000) + jiffies;
-+	do {
-+		bmbx_reg.word0 = readl(phba->sli4_hba.BMBXregaddr);
-+		db_ready = bf_get(lpfc_bmbx_rdy, &bmbx_reg);
-+		if (!db_ready)
-+			msleep(2);
-+
-+		if (time_after(jiffies, timeout)) {
-+			rc = MBXERR_ERROR;
-+			goto exit;
-+		}
-+	} while (!db_ready);
-+
-+	/* Post the low mailbox dma address to the port. */
-+	writel(dma_address->addr_lo, phba->sli4_hba.BMBXregaddr);
-+	timeout = msecs_to_jiffies(lpfc_mbox_tmo_val(phba, mbx_cmnd)
-+				   * 1000) + jiffies;
-+	do {
-+		bmbx_reg.word0 = readl(phba->sli4_hba.BMBXregaddr);
-+		db_ready = bf_get(lpfc_bmbx_rdy, &bmbx_reg);
-+		if (!db_ready)
-+			msleep(2);
-+
-+		if (time_after(jiffies, timeout)) {
-+			rc = MBXERR_ERROR;
-+			goto exit;
-+		}
-+	} while (!db_ready);
-+
-+	/*
-+	 * Read the CQ to ensure the mailbox has completed.
-+	 * If so, update the mailbox status so that the upper layers
-+	 * can complete the request normally.
-+	 */
-+	lpfc_sli_pcimem_bcopy(phba->sli4_hba.bmbx.avirt, mb,
-+			      sizeof(struct lpfc_mqe));
-+	mbox_rgn = (struct lpfc_bmbx_create *) phba->sli4_hba.bmbx.avirt;
-+	lpfc_sli_pcimem_bcopy(&mbox_rgn->mcqe, &mboxq->mcqe,
-+			      sizeof(struct lpfc_mcqe));
-+	mcqe_status = bf_get(lpfc_mcqe_status, &mbox_rgn->mcqe);
-+
-+	/* Prefix the mailbox status with range x4000 to note SLI4 status. */
-+	if (mcqe_status != MB_CQE_STATUS_SUCCESS) {
-+		bf_set(lpfc_mqe_status, mb, LPFC_MBX_ERROR_RANGE | mcqe_status);
-+		rc = MBXERR_ERROR;
-+	}
-+
-+	lpfc_printf_log(phba, KERN_INFO, LOG_MBOX | LOG_SLI,
-+			"(%d):0356 Mailbox cmd x%x (x%x) Status x%x "
-+			"Data: x%x x%x x%x x%x x%x x%x x%x x%x x%x x%x x%x"
-+			" x%x x%x CQ: x%x x%x x%x x%x\n",
-+			mboxq->vport ? mboxq->vport->vpi : 0,
-+			mbx_cmnd, lpfc_sli4_mbox_opcode_get(phba, mboxq),
-+			bf_get(lpfc_mqe_status, mb),
-+			mb->un.mb_words[0], mb->un.mb_words[1],
-+			mb->un.mb_words[2], mb->un.mb_words[3],
-+			mb->un.mb_words[4], mb->un.mb_words[5],
-+			mb->un.mb_words[6], mb->un.mb_words[7],
-+			mb->un.mb_words[8], mb->un.mb_words[9],
-+			mb->un.mb_words[10], mb->un.mb_words[11],
-+			mb->un.mb_words[12], mboxq->mcqe.word0,
-+			mboxq->mcqe.mcqe_tag0, 	mboxq->mcqe.mcqe_tag1,
-+			mboxq->mcqe.trailer);
-+exit:
-+	/* We are holding the token, no needed for lock when release */
-+	spin_lock_irqsave(&phba->hbalock, iflag);
-+	psli->sli_flag &= ~LPFC_SLI_MBOX_ACTIVE;
-+	phba->sli.mbox_active = NULL;
-+	spin_unlock_irqrestore(&phba->hbalock, iflag);
-+	return rc;
-+}
-+
-+/**
-+ * lpfc_sli_issue_mbox_s4 - Issue an SLI4 mailbox command to firmware
-+ * @phba: Pointer to HBA context object.
-+ * @pmbox: Pointer to mailbox object.
-+ * @flag: Flag indicating how the mailbox need to be processed.
-+ *
-+ * This function is called by discovery code and HBA management code to submit
-+ * a mailbox command to firmware with SLI-4 interface spec.
-+ *
-+ * Return codes the caller owns the mailbox command after the return of the
-+ * function.
-+ **/
-+static int
-+lpfc_sli_issue_mbox_s4(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq,
-+		       uint32_t flag)
-+{
-+	struct lpfc_sli *psli = &phba->sli;
-+	unsigned long iflags;
-+	int rc;
-+
-+	/* Detect polling mode and jump to a handler */
-+	if (!phba->sli4_hba.intr_enable) {
-+		if (flag == MBX_POLL)
-+			rc = lpfc_sli4_post_sync_mbox(phba, mboxq);
-+		else
-+			rc = -EIO;
-+		if (rc != MBX_SUCCESS)
-+			lpfc_printf_log(phba, KERN_ERR, LOG_MBOX | LOG_SLI,
-+					"(%d):2541 Mailbox command x%x "
-+					"(x%x) cannot issue Data: x%x x%x\n",
-+					mboxq->vport ? mboxq->vport->vpi : 0,
-+					mboxq->u.mb.mbxCommand,
-+					lpfc_sli4_mbox_opcode_get(phba, mboxq),
-+					psli->sli_flag, flag);
-+		return rc;
-+	} else if (flag == MBX_POLL) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_MBOX | LOG_SLI,
-+				"(%d):2542 Mailbox command x%x (x%x) "
-+				"cannot issue Data: x%x x%x\n",
-+				mboxq->vport ? mboxq->vport->vpi : 0,
-+				mboxq->u.mb.mbxCommand,
-+				lpfc_sli4_mbox_opcode_get(phba, mboxq),
-+				psli->sli_flag, flag);
-+		return -EIO;
-+	}
-+
-+	/* Now, interrupt mode asynchrous mailbox command */
-+	rc = lpfc_mbox_cmd_check(phba, mboxq);
++	/* Initialize and populate the iocb list per host */
++	rc = lpfc_init_sgl_list(phba);
 +	if (rc) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_MBOX | LOG_SLI,
-+				"(%d):2543 Mailbox command x%x (x%x) "
-+				"cannot issue Data: x%x x%x\n",
-+				mboxq->vport ? mboxq->vport->vpi : 0,
-+				mboxq->u.mb.mbxCommand,
-+				lpfc_sli4_mbox_opcode_get(phba, mboxq),
-+				psli->sli_flag, flag);
-+		goto out_not_finished;
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"1400 Failed to initialize sgl list.\n");
++		goto out_destroy_cq_event_pool;
 +	}
-+	rc = lpfc_mbox_dev_check(phba);
-+	if (unlikely(rc)) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_MBOX | LOG_SLI,
-+				"(%d):2544 Mailbox command x%x (x%x) "
-+				"cannot issue Data: x%x x%x\n",
-+				mboxq->vport ? mboxq->vport->vpi : 0,
-+				mboxq->u.mb.mbxCommand,
-+				lpfc_sli4_mbox_opcode_get(phba, mboxq),
-+				psli->sli_flag, flag);
-+		goto out_not_finished;
++	rc = lpfc_init_active_sgl_array(phba);
++	if (rc) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"1430 Failed to initialize sgl list.\n");
++		goto out_free_sgl_list;
 +	}
 +
-+	/* Put the mailbox command to the driver internal FIFO */
-+	psli->slistat.mbox_busy++;
-+	spin_lock_irqsave(&phba->hbalock, iflags);
-+	lpfc_mbox_put(phba, mboxq);
-+	spin_unlock_irqrestore(&phba->hbalock, iflags);
-+	lpfc_printf_log(phba, KERN_INFO, LOG_MBOX | LOG_SLI,
-+			"(%d):0354 Mbox cmd issue - Enqueue Data: "
-+			"x%x (x%x) x%x x%x x%x\n",
-+			mboxq->vport ? mboxq->vport->vpi : 0xffffff,
-+			bf_get(lpfc_mqe_command, &mboxq->u.mqe),
-+			lpfc_sli4_mbox_opcode_get(phba, mboxq),
-+			phba->pport->port_state,
-+			psli->sli_flag, MBX_NOWAIT);
-+	/* Wake up worker thread to transport mailbox command from head */
-+	lpfc_worker_wake_up(phba);
-+
-+	return MBX_BUSY;
-+
-+out_not_finished:
-+	return MBX_NOT_FINISHED;
-+}
-+
-+/**
-+ * lpfc_sli4_post_async_mbox - Post an SLI4 mailbox command to device
-+ * @phba: Pointer to HBA context object.
-+ *
-+ * This function is called by worker thread to send a mailbox command to
-+ * SLI4 HBA firmware.
-+ *
-+ **/
-+int
-+lpfc_sli4_post_async_mbox(struct lpfc_hba *phba)
-+{
-+	struct lpfc_sli *psli = &phba->sli;
-+	LPFC_MBOXQ_t *mboxq;
-+	int rc = MBX_SUCCESS;
-+	unsigned long iflags;
-+	struct lpfc_mqe *mqe;
-+	uint32_t mbx_cmnd;
-+
-+	/* Check interrupt mode before post async mailbox command */
-+	if (unlikely(!phba->sli4_hba.intr_enable))
-+		return MBX_NOT_FINISHED;
-+
-+	/* Check for mailbox command service token */
-+	spin_lock_irqsave(&phba->hbalock, iflags);
-+	if (unlikely(psli->sli_flag & LPFC_SLI_ASYNC_MBX_BLK)) {
-+		spin_unlock_irqrestore(&phba->hbalock, iflags);
-+		return MBX_NOT_FINISHED;
++	rc = lpfc_sli4_init_rpi_hdrs(phba);
++	if (rc) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"1432 Failed to initialize rpi headers.\n");
++		goto out_free_active_sgl;
 +	}
-+	if (psli->sli_flag & LPFC_SLI_MBOX_ACTIVE) {
-+		spin_unlock_irqrestore(&phba->hbalock, iflags);
-+		return MBX_NOT_FINISHED;
++
++	phba->sli4_hba.fcp_eq_hdl = kzalloc((sizeof(struct lpfc_fcp_eq_hdl) *
++				    phba->cfg_fcp_eq_count), GFP_KERNEL);
++	if (!phba->sli4_hba.fcp_eq_hdl) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"2572 Failed allocate memory for fast-path "
++				"per-EQ handle array\n");
++		goto out_remove_rpi_hdrs;
 +	}
-+	if (unlikely(phba->sli.mbox_active)) {
-+		spin_unlock_irqrestore(&phba->hbalock, iflags);
-+		lpfc_printf_log(phba, KERN_ERR, LOG_MBOX | LOG_SLI,
-+				"0384 There is pending active mailbox cmd\n");
-+		return MBX_NOT_FINISHED;
-+	}
-+	/* Take the mailbox command service token */
-+	psli->sli_flag |= LPFC_SLI_MBOX_ACTIVE;
 +
-+	/* Get the next mailbox command from head of queue */
-+	mboxq = lpfc_mbox_get(phba);
-+
-+	/* If no more mailbox command waiting for post, we're done */
-+	if (!mboxq) {
-+		psli->sli_flag &= ~LPFC_SLI_MBOX_ACTIVE;
-+		spin_unlock_irqrestore(&phba->hbalock, iflags);
-+		return MBX_SUCCESS;
-+	}
-+	phba->sli.mbox_active = mboxq;
-+	spin_unlock_irqrestore(&phba->hbalock, iflags);
-+
-+	/* Check device readiness for posting mailbox command */
-+	rc = lpfc_mbox_dev_check(phba);
-+	if (unlikely(rc))
-+		/* Driver clean routine will clean up pending mailbox */
-+		goto out_not_finished;
-+
-+	/* Prepare the mbox command to be posted */
-+	mqe = &mboxq->u.mqe;
-+	mbx_cmnd = bf_get(lpfc_mqe_command, mqe);
-+
-+	/* Start timer for the mbox_tmo and log some mailbox post messages */
-+	mod_timer(&psli->mbox_tmo, (jiffies +
-+		  (HZ * lpfc_mbox_tmo_val(phba, mbx_cmnd))));
-+
-+	lpfc_printf_log(phba, KERN_INFO, LOG_MBOX | LOG_SLI,
-+			"(%d):0355 Mailbox cmd x%x (x%x) issue Data: "
-+			"x%x x%x\n",
-+			mboxq->vport ? mboxq->vport->vpi : 0, mbx_cmnd,
-+			lpfc_sli4_mbox_opcode_get(phba, mboxq),
-+			phba->pport->port_state, psli->sli_flag);
-+
-+	if (mbx_cmnd != MBX_HEARTBEAT) {
-+		if (mboxq->vport) {
-+			lpfc_debugfs_disc_trc(mboxq->vport,
-+				LPFC_DISC_TRC_MBOX_VPORT,
-+				"MBOX Send vport: cmd:x%x mb:x%x x%x",
-+				mbx_cmnd, mqe->un.mb_words[0],
-+				mqe->un.mb_words[1]);
-+		} else {
-+			lpfc_debugfs_disc_trc(phba->pport,
-+				LPFC_DISC_TRC_MBOX,
-+				"MBOX Send: cmd:x%x mb:x%x x%x",
-+				mbx_cmnd, mqe->un.mb_words[0],
-+				mqe->un.mb_words[1]);
-+		}
-+	}
-+	psli->slistat.mbox_cmd++;
-+
-+	/* Post the mailbox command to the port */
-+	rc = lpfc_sli4_mq_put(phba->sli4_hba.mbx_wq, mqe);
-+	if (rc != MBX_SUCCESS) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_MBOX | LOG_SLI,
-+				"(%d):2533 Mailbox command x%x (x%x) "
-+				"cannot issue Data: x%x x%x\n",
-+				mboxq->vport ? mboxq->vport->vpi : 0,
-+				mboxq->u.mb.mbxCommand,
-+				lpfc_sli4_mbox_opcode_get(phba, mboxq),
-+				psli->sli_flag, MBX_NOWAIT);
-+		goto out_not_finished;
++	phba->sli4_hba.msix_entries = kzalloc((sizeof(struct msix_entry) *
++				      phba->sli4_hba.cfg_eqn), GFP_KERNEL);
++	if (!phba->sli4_hba.msix_entries) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"2573 Failed allocate memory for msi-x "
++				"interrupt vector entries\n");
++		goto out_free_fcp_eq_hdl;
 +	}
 +
 +	return rc;
 +
-+out_not_finished:
-+	spin_lock_irqsave(&phba->hbalock, iflags);
-+	mboxq->u.mb.mbxStatus = MBX_NOT_FINISHED;
-+	__lpfc_mbox_cmpl_put(phba, mboxq);
-+	/* Release the token */
-+	psli->sli_flag &= ~LPFC_SLI_MBOX_ACTIVE;
-+	phba->sli.mbox_active = NULL;
-+	spin_unlock_irqrestore(&phba->hbalock, iflags);
-+
-+	return MBX_NOT_FINISHED;
++out_free_fcp_eq_hdl:
++	kfree(phba->sli4_hba.fcp_eq_hdl);
++out_remove_rpi_hdrs:
++	lpfc_sli4_remove_rpi_hdrs(phba);
++out_free_active_sgl:
++	lpfc_free_active_sgl(phba);
++out_free_sgl_list:
++	lpfc_free_sgl_list(phba);
++out_destroy_cq_event_pool:
++	lpfc_sli4_cq_event_pool_destroy(phba);
++out_destroy_queue:
++	lpfc_sli4_queue_destroy(phba);
++out_free_bsmbx:
++	lpfc_destroy_bootstrap_mbox(phba);
++out_free_mem:
++	lpfc_mem_free(phba);
++	return rc;
 +}
 +
 +/**
-+ * lpfc_sli_issue_mbox - Wrapper func for issuing mailbox command
-+ * @phba: Pointer to HBA context object.
-+ * @pmbox: Pointer to mailbox object.
-+ * @flag: Flag indicating how the mailbox need to be processed.
++ * lpfc_sli4_driver_resource_unset - Unset drvr internal resources for SLI4 dev
++ * @phba: pointer to lpfc hba data structure.
 + *
-+ * This routine wraps the actual SLI3 or SLI4 mailbox issuing routine from
-+ * the API jump table function pointer from the lpfc_hba struct.
-+ *
-+ * Return codes the caller owns the mailbox command after the return of the
-+ * function.
++ * This routine is invoked to unset the driver internal resources set up
++ * specific for supporting the SLI-4 HBA device it attached to.
 + **/
-+int
-+lpfc_sli_issue_mbox(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmbox, uint32_t flag)
++static void
++lpfc_sli4_driver_resource_unset(struct lpfc_hba *phba)
 +{
-+	return phba->lpfc_sli_issue_mbox(phba, pmbox, flag);
-+}
-+
-+/**
-+ * lpfc_mbox_api_table_setup - Set up mbox api fucntion jump table
-+ * @phba: The hba struct for which this call is being executed.
-+ * @dev_grp: The HBA PCI-Device group number.
-+ *
-+ * This routine sets up the mbox interface API function jump table in @phba
-+ * struct.
-+ * Returns: 0 - success, -ENODEV - failure.
-+ **/
-+int
-+lpfc_mbox_api_table_setup(struct lpfc_hba *phba, uint8_t dev_grp)
-+{
-+
-+	switch (dev_grp) {
-+	case LPFC_PCI_DEV_LP:
-+		phba->lpfc_sli_issue_mbox = lpfc_sli_issue_mbox_s3;
-+		phba->lpfc_sli_handle_slow_ring_event =
-+				lpfc_sli_handle_slow_ring_event_s3;
-+		phba->lpfc_sli_hbq_to_firmware = lpfc_sli_hbq_to_firmware_s3;
-+		phba->lpfc_sli_brdrestart = lpfc_sli_brdrestart_s3;
-+		phba->lpfc_sli_brdready = lpfc_sli_brdready_s3;
-+		break;
-+	case LPFC_PCI_DEV_OC:
-+		phba->lpfc_sli_issue_mbox = lpfc_sli_issue_mbox_s4;
-+		phba->lpfc_sli_handle_slow_ring_event =
-+				lpfc_sli_handle_slow_ring_event_s4;
-+		phba->lpfc_sli_hbq_to_firmware = lpfc_sli_hbq_to_firmware_s4;
-+		phba->lpfc_sli_brdrestart = lpfc_sli_brdrestart_s4;
-+		phba->lpfc_sli_brdready = lpfc_sli_brdready_s4;
-+		break;
-+	default:
-+		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+				"1420 Invalid HBA PCI-device group: 0x%x\n",
-+				dev_grp);
-+		return -ENODEV;
-+		break;
-+	}
-+	return 0;
-+}
-+
-+/**
-  * __lpfc_sli_ringtx_put - Add an iocb to the txq
-  * @phba: Pointer to HBA context object.
-  * @pring: Pointer to driver SLI ring object.
-@@ -4501,28 +5629,42 @@ lpfc_sli_hba_down(struct lpfc_hba *phba)
- 
- 	/* Return any active mbox cmds */
- 	del_timer_sync(&psli->mbox_tmo);
--	spin_lock_irqsave(&phba->hbalock, flags);
- 
--	spin_lock(&phba->pport->work_port_lock);
-+	spin_lock_irqsave(&phba->pport->work_port_lock, flags);
- 	phba->pport->work_port_events &= ~WORKER_MBOX_TMO;
--	spin_unlock(&phba->pport->work_port_lock);
-+	spin_unlock_irqrestore(&phba->pport->work_port_lock, flags);
- 
--	/* Return any pending or completed mbox cmds */
--	list_splice_init(&phba->sli.mboxq, &completions);
--	if (psli->mbox_active) {
--		list_add_tail(&psli->mbox_active->list, &completions);
--		psli->mbox_active = NULL;
--		psli->sli_flag &= ~LPFC_SLI_MBOX_ACTIVE;
--	}
--	list_splice_init(&phba->sli.mboxq_cmpl, &completions);
--	spin_unlock_irqrestore(&phba->hbalock, flags);
-+	return 1;
-+}
-+
-+/**
-+ * lpfc_sli4_hba_down - PCI function resource cleanup for the SLI4 HBA
-+ * @phba: Pointer to HBA context object.
-+ *
-+ * This function cleans up all queues, iocb, buffers, mailbox commands while
-+ * shutting down the SLI4 HBA FCoE function. This function is called with no
-+ * lock held and always returns 1.
-+ *
-+ * This function does the following to cleanup driver FCoE function resources:
-+ * - Free discovery resources for each virtual port
-+ * - Cleanup any pending fabric iocbs
-+ * - Iterate through the iocb txq and free each entry in the list.
-+ * - Free up any buffer posted to the HBA.
-+ * - Clean up all the queue entries: WQ, RQ, MQ, EQ, CQ, etc.
-+ * - Free mailbox commands in the mailbox queue.
-+ **/
-+int
-+lpfc_sli4_hba_down(struct lpfc_hba *phba)
-+{
-+	/* Stop the SLI4 device port */
-+	lpfc_stop_port(phba);
-+
-+	/* Tear down the queues in the HBA */
-+	lpfc_sli4_queue_unset(phba);
++	struct lpfc_fcf_conn_entry *conn_entry, *next_conn_entry;
 +
 +	/* unregister default FCFI from the HBA */
 +	lpfc_sli4_fcfi_unreg(phba, phba->fcf.fcfi);
- 
--	while (!list_empty(&completions)) {
--		list_remove_head(&completions, pmb, LPFC_MBOXQ_t, list);
--		pmb->mb.mbxStatus = MBX_NOT_FINISHED;
--		if (pmb->mbox_cmpl)
--			pmb->mbox_cmpl(phba,pmb);
--	}
- 	return 1;
- }
- 
-@@ -4853,7 +5995,10 @@ lpfc_sli_issue_abort_iotag(struct lpfc_h
- 	iabt = &abtsiocbp->iocb;
- 	iabt->un.acxri.abortType = ABORT_TYPE_ABTS;
- 	iabt->un.acxri.abortContextTag = icmd->ulpContext;
--	iabt->un.acxri.abortIoTag = icmd->ulpIoTag;
-+	if (phba->sli_rev == LPFC_SLI_REV4)
-+		iabt->un.acxri.abortIoTag = cmdiocb->sli4_xritag;
-+	else
-+		iabt->un.acxri.abortIoTag = icmd->ulpIoTag;
- 	iabt->ulpLe = 1;
- 	iabt->ulpClass = icmd->ulpClass;
- 
-@@ -4869,7 +6014,7 @@ lpfc_sli_issue_abort_iotag(struct lpfc_h
- 			 "abort cmd iotag x%x\n",
- 			 iabt->un.acxri.abortContextTag,
- 			 iabt->un.acxri.abortIoTag, abtsiocbp->iotag);
--	retval = __lpfc_sli_issue_iocb(phba, pring, abtsiocbp, 0);
-+	retval = __lpfc_sli_issue_iocb(phba, pring->ringno, abtsiocbp, 0);
- 
- 	if (retval)
- 		__lpfc_sli_release_iocbq(phba, abtsiocbp);
-@@ -5052,7 +6197,10 @@ lpfc_sli_abort_iocb(struct lpfc_vport *v
- 		cmd = &iocbq->iocb;
- 		abtsiocb->iocb.un.acxri.abortType = ABORT_TYPE_ABTS;
- 		abtsiocb->iocb.un.acxri.abortContextTag = cmd->ulpContext;
--		abtsiocb->iocb.un.acxri.abortIoTag = cmd->ulpIoTag;
-+		if (phba->sli_rev == LPFC_SLI_REV4)
-+			abtsiocb->iocb.un.acxri.abortIoTag = iocbq->sli4_xritag;
-+		else
-+			abtsiocb->iocb.un.acxri.abortIoTag = cmd->ulpIoTag;
- 		abtsiocb->iocb.ulpLe = 1;
- 		abtsiocb->iocb.ulpClass = cmd->ulpClass;
- 		abtsiocb->vport = phba->pport;
-@@ -5064,7 +6212,8 @@ lpfc_sli_abort_iocb(struct lpfc_vport *v
- 
- 		/* Setup callback routine and issue the command. */
- 		abtsiocb->iocb_cmpl = lpfc_sli_abort_fcp_cmpl;
--		ret_val = lpfc_sli_issue_iocb(phba, pring, abtsiocb, 0);
-+		ret_val = lpfc_sli_issue_iocb(phba, pring->ringno,
-+					      abtsiocb, 0);
- 		if (ret_val == IOCB_ERROR) {
- 			lpfc_sli_release_iocbq(phba, abtsiocb);
- 			errcnt++;
-@@ -5145,7 +6294,7 @@ lpfc_sli_wake_iocb_wait(struct lpfc_hba 
-  **/
- int
- lpfc_sli_issue_iocb_wait(struct lpfc_hba *phba,
--			 struct lpfc_sli_ring *pring,
-+			 uint32_t ring_number,
- 			 struct lpfc_iocbq *piocb,
- 			 struct lpfc_iocbq *prspiocbq,
- 			 uint32_t timeout)
-@@ -5176,7 +6325,7 @@ lpfc_sli_issue_iocb_wait(struct lpfc_hba
- 		readl(phba->HCregaddr); /* flush */
- 	}
- 
--	retval = lpfc_sli_issue_iocb(phba, pring, piocb, 0);
-+	retval = lpfc_sli_issue_iocb(phba, ring_number, piocb, 0);
- 	if (retval == IOCB_SUCCESS) {
- 		timeout_req = timeout * HZ;
- 		timeleft = wait_event_timeout(done_q,
-@@ -5385,6 +6534,58 @@ lpfc_sli_eratt_read(struct lpfc_hba *phb
++
++	/* Free the default FCR table */
++	lpfc_sli_remove_dflt_fcf(phba);
++
++	/* Free memory allocated for msi-x interrupt vector entries */
++	kfree(phba->sli4_hba.msix_entries);
++
++	/* Free memory allocated for fast-path work queue handles */
++	kfree(phba->sli4_hba.fcp_eq_hdl);
++
++	/* Free the allocated rpi headers. */
++	lpfc_sli4_remove_rpi_hdrs(phba);
++
++	/* Free the ELS sgl list */
++	lpfc_free_active_sgl(phba);
++	lpfc_free_sgl_list(phba);
++
++	/* Free the SCSI sgl management array */
++	kfree(phba->sli4_hba.lpfc_scsi_psb_array);
++
++	/* Free the SLI4 queues */
++	lpfc_sli4_queue_destroy(phba);
++
++	/* Free the completion queue EQ event pool */
++	lpfc_sli4_cq_event_release_all(phba);
++	lpfc_sli4_cq_event_pool_destroy(phba);
++
++	/* Reset SLI4 HBA FCoE function */
++	lpfc_pci_function_reset(phba);
++
++	/* Free the bsmbx region. */
++	lpfc_destroy_bootstrap_mbox(phba);
++
++	/* Free the SLI Layer memory with SLI4 HBAs */
++	lpfc_mem_free_all(phba);
++
++	/* Free the current connect table */
++	list_for_each_entry_safe(conn_entry, next_conn_entry,
++		&phba->fcf_conn_rec_list, list)
++		kfree(conn_entry);
++
++	return;
++}
++
++/**
+  * lpfc_init_api_table_setup - Set up init api fucntion jump table
+  * @phba: The hba struct for which this call is being executed.
+  * @dev_grp: The HBA PCI-Device group number.
+@@ -2782,6 +3575,11 @@ lpfc_init_api_table_setup(struct lpfc_hb
+ 		phba->lpfc_handle_eratt = lpfc_handle_eratt_s3;
+ 		phba->lpfc_stop_port = lpfc_stop_port_s3;
+ 		break;
++	case LPFC_PCI_DEV_OC:
++		phba->lpfc_hba_down_post = lpfc_hba_down_post_s4;
++		phba->lpfc_handle_eratt = lpfc_handle_eratt_s4;
++		phba->lpfc_stop_port = lpfc_stop_port_s4;
++		break;
+ 	default:
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"1431 Invalid HBA PCI-device group: 0x%x\n",
+@@ -2956,6 +3754,346 @@ out_free_iocbq:
  }
  
  /**
-+ * lpfc_sli4_eratt_read - read sli-4 error attention events
-+ * @phba: Pointer to HBA context.
++ * lpfc_free_sgl_list - Free sgl list.
++ * @phba: pointer to lpfc hba data structure.
 + *
-+ * This function is called to read the SLI4 device error attention registers
-+ * for possible error attention events. The caller must hold the hostlock
-+ * with spin_lock_irq().
++ * This routine is invoked to free the driver's sgl list and memory.
++ **/
++static void
++lpfc_free_sgl_list(struct lpfc_hba *phba)
++{
++	struct lpfc_sglq *sglq_entry = NULL, *sglq_next = NULL;
++	LIST_HEAD(sglq_list);
++	int rc = 0;
++
++	spin_lock_irq(&phba->hbalock);
++	list_splice_init(&phba->sli4_hba.lpfc_sgl_list, &sglq_list);
++	spin_unlock_irq(&phba->hbalock);
++
++	list_for_each_entry_safe(sglq_entry, sglq_next,
++				 &sglq_list, list) {
++		list_del(&sglq_entry->list);
++		lpfc_mbuf_free(phba, sglq_entry->virt, sglq_entry->phys);
++		kfree(sglq_entry);
++		phba->sli4_hba.total_sglq_bufs--;
++	}
++	rc = lpfc_sli4_remove_all_sgl_pages(phba);
++	if (rc) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
++			"2005 Unable to deregister pages from HBA: %x", rc);
++	}
++	kfree(phba->sli4_hba.lpfc_els_sgl_array);
++}
++
++/**
++ * lpfc_init_active_sgl_array - Allocate the buf to track active ELS XRIs.
++ * @phba: pointer to lpfc hba data structure.
 + *
-+ * This fucntion returns 1 when there is Error Attention in the Host Attention
-+ * Register and returns 0 otherwise.
++ * This routine is invoked to allocate the driver's active sgl memory.
++ * This array will hold the sglq_entry's for active IOs.
 + **/
 +static int
-+lpfc_sli4_eratt_read(struct lpfc_hba *phba)
++lpfc_init_active_sgl_array(struct lpfc_hba *phba)
 +{
-+	uint32_t uerr_sta_hi, uerr_sta_lo;
-+	uint32_t onlnreg0, onlnreg1;
++	int size;
++	size = sizeof(struct lpfc_sglq *);
++	size *= phba->sli4_hba.max_cfg_param.max_xri;
 +
-+	/* For now, use the SLI4 device internal unrecoverable error
-+	 * registers for error attention. This can be changed later.
-+	 */
-+	onlnreg0 = readl(phba->sli4_hba.ONLINE0regaddr);
-+	onlnreg1 = readl(phba->sli4_hba.ONLINE1regaddr);
-+	if ((onlnreg0 != LPFC_ONLINE_NERR) || (onlnreg1 != LPFC_ONLINE_NERR)) {
-+		uerr_sta_lo = readl(phba->sli4_hba.UERRLOregaddr);
-+		uerr_sta_hi = readl(phba->sli4_hba.UERRHIregaddr);
-+		if (uerr_sta_lo || uerr_sta_hi) {
-+			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+					"1423 HBA Unrecoverable error: "
-+					"uerr_lo_reg=0x%x, uerr_hi_reg=0x%x, "
-+					"online0_reg=0x%x, online1_reg=0x%x\n",
-+					uerr_sta_lo, uerr_sta_hi,
-+					onlnreg0, onlnreg1);
-+			/* TEMP: as the driver error recover logic is not
-+			 * fully developed, we just log the error message
-+			 * and the device error attention action is now
-+			 * temporarily disabled.
-+			 */
-+			return 0;
-+			phba->work_status[0] = uerr_sta_lo;
-+			phba->work_status[1] = uerr_sta_hi;
-+			spin_lock_irq(&phba->hbalock);
-+			/* Set the driver HA work bitmap */
-+			phba->work_ha |= HA_ERATT;
-+			/* Indicate polling handles this ERATT */
-+			phba->hba_flag |= HBA_ERATT_HANDLED;
-+			spin_unlock_irq(&phba->hbalock);
-+			return 1;
-+		}
-+	}
++	phba->sli4_hba.lpfc_sglq_active_list =
++		kzalloc(size, GFP_KERNEL);
++	if (!phba->sli4_hba.lpfc_sglq_active_list)
++		return -ENOMEM;
 +	return 0;
 +}
 +
 +/**
-  * lpfc_sli_check_eratt - check error attention events
-  * @phba: Pointer to HBA context.
-  *
-@@ -5434,6 +6635,10 @@ lpfc_sli_check_eratt(struct lpfc_hba *ph
- 		/* Read chip Host Attention (HA) register */
- 		ha_copy = lpfc_sli_eratt_read(phba);
- 		break;
-+	case LPFC_SLI_REV4:
-+		/* Read devcie Uncoverable Error (UERR) registers */
-+		ha_copy = lpfc_sli4_eratt_read(phba);
-+		break;
- 	default:
- 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 				"0299 Invalid SLI revision (%d)\n",
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
---- a/drivers/scsi/lpfc/lpfc_sli.h	2008-10-18 10:32:52.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.h	2009-05-22 13:16:40.000000000 -0400
-@@ -29,13 +29,23 @@ typedef enum _lpfc_ctx_cmd {
- 	LPFC_CTX_HOST
- } lpfc_ctx_cmd;
- 
-+/* This structure is used to carry the needed response IOCB states */
-+struct lpfc_sli4_rspiocb_info {
-+	uint8_t hw_status;
-+	uint8_t bfield;
-+#define LPFC_XB	0x1
-+#define LPFC_PV	0x2
-+	uint8_t priority;
-+	uint8_t reserved;
-+};
++ * lpfc_free_active_sgl - Free the buf that tracks active ELS XRIs.
++ * @phba: pointer to lpfc hba data structure.
++ *
++ * This routine is invoked to walk through the array of active sglq entries
++ * and free all of the resources.
++ * This is just a place holder for now.
++ **/
++static void
++lpfc_free_active_sgl(struct lpfc_hba *phba)
++{
++	kfree(phba->sli4_hba.lpfc_sglq_active_list);
++}
 +
- /* This structure is used to handle IOCB requests / responses */
- struct lpfc_iocbq {
- 	/* lpfc_iocbqs are used in double linked lists */
- 	struct list_head list;
- 	struct list_head clist;
- 	uint16_t iotag;         /* pre-assigned IO tag */
--	uint16_t rsvd1;
-+	uint16_t sli4_xritag;   /* pre-assigned XRI, (OXID) tag. */
- 
- 	IOCB_t iocb;		/* IOCB cmd */
- 	uint8_t retry;		/* retry counter for IOCB cmd - if needed */
-@@ -65,7 +75,7 @@ struct lpfc_iocbq {
- 			   struct lpfc_iocbq *);
- 	void (*iocb_cmpl) (struct lpfc_hba *, struct lpfc_iocbq *,
- 			   struct lpfc_iocbq *);
--
-+	struct lpfc_sli4_rspiocb_info sli4_info;
- };
- 
- #define SLI_IOCB_RET_IOCB      1	/* Return IOCB if cmd ring full */
-@@ -81,14 +91,18 @@ struct lpfc_iocbq {
- typedef struct lpfcMboxq {
- 	/* MBOXQs are used in single linked lists */
- 	struct list_head list;	/* ptr to next mailbox command */
--	MAILBOX_t mb;		/* Mailbox cmd */
--	struct lpfc_vport *vport;/* virutal port pointer */
-+	union {
-+		MAILBOX_t mb;		/* Mailbox cmd */
-+		struct lpfc_mqe mqe;
-+	} u;
-+	struct lpfc_vport *vport;/* virtual port pointer */
- 	void *context1;		/* caller context information */
- 	void *context2;		/* caller context information */
- 
- 	void (*mbox_cmpl) (struct lpfc_hba *, struct lpfcMboxq *);
- 	uint8_t mbox_flag;
--
-+	struct lpfc_mcqe mcqe;
-+	struct lpfc_mbx_nembed_sge_virt *sge_array;
- } LPFC_MBOXQ_t;
- 
- #define MBX_POLL        1	/* poll mailbox till command done, then
-@@ -234,6 +248,7 @@ struct lpfc_sli {
- #define LPFC_PROCESS_LA           0x400	/* Able to process link attention */
- #define LPFC_BLOCK_MGMT_IO        0x800	/* Don't allow mgmt mbx or iocb cmds */
- #define LPFC_MENLO_MAINT          0x1000 /* need for menl fw download */
-+#define LPFC_SLI_ASYNC_MBX_BLK    0x2000 /* Async mailbox is blocked */
- 
- 	struct lpfc_sli_ring ring[LPFC_MAX_RING];
- 	int fcp_ring;		/* ring used for FCP initiator commands */
-@@ -261,6 +276,8 @@ struct lpfc_sli {
- 
- #define LPFC_MBOX_TMO           30	/* Sec tmo for outstanding mbox
- 					   command */
-+#define LPFC_MBOX_SLI4_CONFIG_TMO 60	/* Sec tmo for outstanding mbox
-+					   command */
- #define LPFC_MBOX_TMO_FLASH_CMD 300     /* Sec tmo for outstanding FLASH write
- 					 * or erase cmds. This is especially
- 					 * long because of the potential of
-diff -upNr a/drivers/scsi/lpfc/lpfc_vport.c b/drivers/scsi/lpfc/lpfc_vport.c
---- a/drivers/scsi/lpfc/lpfc_vport.c	2009-05-19 09:39:28.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_vport.c	2009-05-22 13:16:40.000000000 -0400
-@@ -32,8 +32,10 @@
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_transport_fc.h>
-+#include "lpfc_hw4.h"
- #include "lpfc_hw.h"
- #include "lpfc_sli.h"
-+#include "lpfc_sli4.h"
- #include "lpfc_nl.h"
- #include "lpfc_disc.h"
- #include "lpfc_scsi.h"
-@@ -89,6 +91,8 @@ lpfc_alloc_vpi(struct lpfc_hba *phba)
- 		vpi = 0;
- 	else
- 		set_bit(vpi, phba->vpi_bmask);
-+	if (phba->sli_rev == LPFC_SLI_REV4)
-+		phba->sli4_hba.max_cfg_param.vpi_used++;
- 	spin_unlock_irq(&phba->hbalock);
- 	return vpi;
- }
-@@ -96,8 +100,12 @@ lpfc_alloc_vpi(struct lpfc_hba *phba)
- static void
- lpfc_free_vpi(struct lpfc_hba *phba, int vpi)
- {
-+	if (vpi == 0)
-+		return;
- 	spin_lock_irq(&phba->hbalock);
- 	clear_bit(vpi, phba->vpi_bmask);
-+	if (phba->sli_rev == LPFC_SLI_REV4)
-+		phba->sli4_hba.max_cfg_param.vpi_used--;
- 	spin_unlock_irq(&phba->hbalock);
- }
- 
-@@ -308,6 +316,21 @@ lpfc_vport_create(struct fc_vport *fc_vp
- 		goto error_out;
- 	}
- 
-+	/*
-+	 * In SLI4, the vpi must be activated before it can be used
-+	 * by the port.
-+	 */
-+	if (phba->sli_rev == LPFC_SLI_REV4) {
-+		rc = lpfc_sli4_init_vpi(phba, vpi);
-+		if (rc) {
-+			lpfc_printf_log(phba, KERN_ERR, LOG_VPORT,
-+					"1838 Failed to INIT_VPI on vpi %d "
-+					"status %d\n", vpi, rc);
-+			rc = VPORT_NORESOURCES;
-+			lpfc_free_vpi(phba, vpi);
-+			goto error_out;
-+		}
++/**
++ * lpfc_init_sgl_list - Allocate and initialize sgl list.
++ * @phba: pointer to lpfc hba data structure.
++ *
++ * This routine is invoked to allocate and initizlize the driver's sgl
++ * list and set up the sgl xritag tag array accordingly.
++ *
++ * Return codes
++ *	0 - sucessful
++ *	other values - error
++ **/
++static int
++lpfc_init_sgl_list(struct lpfc_hba *phba)
++{
++	struct lpfc_sglq *sglq_entry = NULL;
++	int i;
++	int els_xri_cnt;
++
++	els_xri_cnt = lpfc_sli4_get_els_iocb_cnt(phba);
++	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
++				"2400 lpfc_init_sgl_list els %d.\n",
++				els_xri_cnt);
++	/* Initialize and populate the sglq list per host/VF. */
++	INIT_LIST_HEAD(&phba->sli4_hba.lpfc_sgl_list);
++	INIT_LIST_HEAD(&phba->sli4_hba.lpfc_abts_els_sgl_list);
++
++	/* Sanity check on XRI management */
++	if (phba->sli4_hba.max_cfg_param.max_xri <= els_xri_cnt) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
++				"2562 No room left for SCSI XRI allocation: "
++				"max_xri=%d, els_xri=%d\n",
++				phba->sli4_hba.max_cfg_param.max_xri,
++				els_xri_cnt);
++		return -ENOMEM;
 +	}
- 
- 	/* Assign an unused board number */
- 	if ((instance = lpfc_get_instance()) < 0) {
++
++	/* Allocate memory for the ELS XRI management array */
++	phba->sli4_hba.lpfc_els_sgl_array =
++			kzalloc((sizeof(struct lpfc_sglq *) * els_xri_cnt),
++			GFP_KERNEL);
++
++	if (!phba->sli4_hba.lpfc_els_sgl_array) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
++				"2401 Failed to allocate memory for ELS "
++				"XRI management array of size %d.\n",
++				els_xri_cnt);
++		return -ENOMEM;
++	}
++
++	/* Keep the SCSI XRI into the XRI management array */
++	phba->sli4_hba.scsi_xri_max =
++			phba->sli4_hba.max_cfg_param.max_xri - els_xri_cnt;
++	phba->sli4_hba.scsi_xri_cnt = 0;
++
++	phba->sli4_hba.lpfc_scsi_psb_array =
++			kzalloc((sizeof(struct lpfc_scsi_buf *) *
++			phba->sli4_hba.scsi_xri_max), GFP_KERNEL);
++
++	if (!phba->sli4_hba.lpfc_scsi_psb_array) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
++				"2563 Failed to allocate memory for SCSI "
++				"XRI management array of size %d.\n",
++				phba->sli4_hba.scsi_xri_max);
++		kfree(phba->sli4_hba.lpfc_els_sgl_array);
++		return -ENOMEM;
++	}
++
++	for (i = 0; i < els_xri_cnt; i++) {
++		sglq_entry = kzalloc(sizeof(struct lpfc_sglq), GFP_KERNEL);
++		if (sglq_entry == NULL) {
++			printk(KERN_ERR "%s: only allocated %d sgls of "
++				"expected %d count. Unloading driver.\n",
++				__func__, i, els_xri_cnt);
++			goto out_free_mem;
++		}
++
++		sglq_entry->sli4_xritag = lpfc_sli4_next_xritag(phba);
++		if (sglq_entry->sli4_xritag == NO_XRI) {
++			kfree(sglq_entry);
++			printk(KERN_ERR "%s: failed to allocate XRI.\n"
++				"Unloading driver.\n", __func__);
++			goto out_free_mem;
++		}
++		sglq_entry->buff_type = GEN_BUFF_TYPE;
++		sglq_entry->virt = lpfc_mbuf_alloc(phba, 0, &sglq_entry->phys);
++		if (sglq_entry->virt == NULL) {
++			kfree(sglq_entry);
++			printk(KERN_ERR "%s: failed to allocate mbuf.\n"
++				"Unloading driver.\n", __func__);
++			goto out_free_mem;
++		}
++		sglq_entry->sgl = sglq_entry->virt;
++		memset(sglq_entry->sgl, 0, LPFC_BPL_SIZE);
++
++		/* The list order is used by later block SGL registraton */
++		spin_lock_irq(&phba->hbalock);
++		list_add_tail(&sglq_entry->list, &phba->sli4_hba.lpfc_sgl_list);
++		phba->sli4_hba.lpfc_els_sgl_array[i] = sglq_entry;
++		phba->sli4_hba.total_sglq_bufs++;
++		spin_unlock_irq(&phba->hbalock);
++	}
++	return 0;
++
++out_free_mem:
++	kfree(phba->sli4_hba.lpfc_scsi_psb_array);
++	lpfc_free_sgl_list(phba);
++	return -ENOMEM;
++}
++
++/**
++ * lpfc_sli4_init_rpi_hdrs - Post the rpi header memory region to the port
++ * @phba: pointer to lpfc hba data structure.
++ *
++ * This routine is invoked to post rpi header templates to the
++ * HBA consistent with the SLI-4 interface spec.  This routine
++ * posts a PAGE_SIZE memory region to the port to hold up to
++ * PAGE_SIZE modulo 64 rpi context headers.
++ * No locks are held here because this is an initialization routine
++ * called only from probe or lpfc_online when interrupts are not
++ * enabled and the driver is reinitializing the device.
++ *
++ * Return codes
++ * 	0 - sucessful
++ * 	ENOMEM - No availble memory
++ *      EIO - The mailbox failed to complete successfully.
++ **/
++int
++lpfc_sli4_init_rpi_hdrs(struct lpfc_hba *phba)
++{
++	int rc = 0;
++	int longs;
++	uint16_t rpi_count;
++	struct lpfc_rpi_hdr *rpi_hdr;
++
++	INIT_LIST_HEAD(&phba->sli4_hba.lpfc_rpi_hdr_list);
++
++	/*
++	 * Provision an rpi bitmask range for discovery. The total count
++	 * is the difference between max and base + 1.
++	 */
++	rpi_count = phba->sli4_hba.max_cfg_param.rpi_base +
++		    phba->sli4_hba.max_cfg_param.max_rpi - 1;
++
++	longs = ((rpi_count) + BITS_PER_LONG - 1) / BITS_PER_LONG;
++	phba->sli4_hba.rpi_bmask = kzalloc(longs * sizeof(unsigned long),
++					   GFP_KERNEL);
++	if (!phba->sli4_hba.rpi_bmask)
++		return -ENOMEM;
++
++	rpi_hdr = lpfc_sli4_create_rpi_hdr(phba);
++	if (!rpi_hdr) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_MBOX | LOG_SLI,
++				"0391 Error during rpi post operation\n");
++		lpfc_sli4_remove_rpis(phba);
++		rc = -ENODEV;
++	}
++
++	return rc;
++}
++
++/**
++ * lpfc_sli4_create_rpi_hdr - Allocate an rpi header memory region
++ * @phba: pointer to lpfc hba data structure.
++ *
++ * This routine is invoked to allocate a single 4KB memory region to
++ * support rpis and stores them in the phba.  This single region
++ * provides support for up to 64 rpis.  The region is used globally
++ * by the device.
++ *
++ * Returns:
++ *   A valid rpi hdr on success.
++ *   A NULL pointer on any failure.
++ **/
++struct lpfc_rpi_hdr *
++lpfc_sli4_create_rpi_hdr(struct lpfc_hba *phba)
++{
++	uint16_t rpi_limit, curr_rpi_range;
++	struct lpfc_dmabuf *dmabuf;
++	struct lpfc_rpi_hdr *rpi_hdr;
++
++	rpi_limit = phba->sli4_hba.max_cfg_param.rpi_base +
++		    phba->sli4_hba.max_cfg_param.max_rpi - 1;
++
++	spin_lock_irq(&phba->hbalock);
++	curr_rpi_range = phba->sli4_hba.next_rpi;
++	spin_unlock_irq(&phba->hbalock);
++
++	/*
++	 * The port has a limited number of rpis. The increment here
++	 * is LPFC_RPI_HDR_COUNT - 1 to account for the starting value
++	 * and to allow the full max_rpi range per port.
++	 */
++	if ((curr_rpi_range + (LPFC_RPI_HDR_COUNT - 1)) > rpi_limit)
++		return NULL;
++
++	/*
++	 * First allocate the protocol header region for the port.  The
++	 * port expects a 4KB DMA-mapped memory region that is 4K aligned.
++	 */
++	dmabuf = kzalloc(sizeof(struct lpfc_dmabuf), GFP_KERNEL);
++	if (!dmabuf)
++		return NULL;
++
++	dmabuf->virt = dma_alloc_coherent(&phba->pcidev->dev,
++					  LPFC_HDR_TEMPLATE_SIZE,
++					  &dmabuf->phys,
++					  GFP_KERNEL);
++	if (!dmabuf->virt) {
++		rpi_hdr = NULL;
++		goto err_free_dmabuf;
++	}
++
++	memset(dmabuf->virt, 0, LPFC_HDR_TEMPLATE_SIZE);
++	if (!IS_ALIGNED(dmabuf->phys, LPFC_HDR_TEMPLATE_SIZE)) {
++		rpi_hdr = NULL;
++		goto err_free_coherent;
++	}
++
++	/* Save the rpi header data for cleanup later. */
++	rpi_hdr = kzalloc(sizeof(struct lpfc_rpi_hdr), GFP_KERNEL);
++	if (!rpi_hdr)
++		goto err_free_coherent;
++
++	rpi_hdr->dmabuf = dmabuf;
++	rpi_hdr->len = LPFC_HDR_TEMPLATE_SIZE;
++	rpi_hdr->page_count = 1;
++	spin_lock_irq(&phba->hbalock);
++	rpi_hdr->start_rpi = phba->sli4_hba.next_rpi;
++	list_add_tail(&rpi_hdr->list, &phba->sli4_hba.lpfc_rpi_hdr_list);
++
++	/*
++	 * The next_rpi stores the next module-64 rpi value to post
++	 * in any subsequent rpi memory region postings.
++	 */
++	phba->sli4_hba.next_rpi += LPFC_RPI_HDR_COUNT;
++	spin_unlock_irq(&phba->hbalock);
++	return rpi_hdr;
++
++ err_free_coherent:
++	dma_free_coherent(&phba->pcidev->dev, LPFC_HDR_TEMPLATE_SIZE,
++			  dmabuf->virt, dmabuf->phys);
++ err_free_dmabuf:
++	kfree(dmabuf);
++	return NULL;
++}
++
++/**
++ * lpfc_sli4_remove_rpi_hdrs - Remove all rpi header memory regions
++ * @phba: pointer to lpfc hba data structure.
++ *
++ * This routine is invoked to remove all memory resources allocated
++ * to support rpis. This routine presumes the caller has released all
++ * rpis consumed by fabric or port logins and is prepared to have
++ * the header pages removed.
++ **/
++void
++lpfc_sli4_remove_rpi_hdrs(struct lpfc_hba *phba)
++{
++	struct lpfc_rpi_hdr *rpi_hdr, *next_rpi_hdr;
++
++	list_for_each_entry_safe(rpi_hdr, next_rpi_hdr,
++				 &phba->sli4_hba.lpfc_rpi_hdr_list, list) {
++		list_del(&rpi_hdr->list);
++		dma_free_coherent(&phba->pcidev->dev, rpi_hdr->len,
++				  rpi_hdr->dmabuf->virt, rpi_hdr->dmabuf->phys);
++		kfree(rpi_hdr->dmabuf);
++		kfree(rpi_hdr);
++	}
++
++	phba->sli4_hba.next_rpi = phba->sli4_hba.max_cfg_param.rpi_base;
++	memset(phba->sli4_hba.rpi_bmask, 0, sizeof(*phba->sli4_hba.rpi_bmask));
++}
++
++/**
+  * lpfc_hba_alloc - Allocate driver hba data structure for a device.
+  * @pdev: pointer to pci device data structure.
+  *
 
 
