@@ -1,253 +1,82 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH 1/6] fnic: add main file with module infrastructure, fnic structure, Makefile
-Date: Sat, 23 May 2009 20:07:37 +0200
-Message-ID: <200905232007.48340.eike-kernel@sf-tec.de>
-References: <20090418012941.24787.58754.stgit@feynman.nuovasystems.com> <20090418013232.24787.33309.stgit@feynman.nuovasystems.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: 2.6.30=rc6=git6 -- ata_piix 0000:00:1f.2: DMA-API: device driver maps memory from kernel text or rodata [addr=c0fff000]
+Date: Sat, 23 May 2009 22:23:35 +0200
+Message-ID: <200905232223.35780.rjw@sisk.pl>
+References: <a44ae5cd0905230731q4df31403nd54ff9e2c496c77a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2750345.gZO6qlf9DT";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:37191 "EHLO mail.sf-mail.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750756AbZEWSPL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 23 May 2009 14:15:11 -0400
-In-Reply-To: <20090418013232.24787.33309.stgit@feynman.nuovasystems.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: Abhijeet Joglekar <abjoglek@cisco.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, jeykholt@cisco.com
-
---nextPart2750345.gZO6qlf9DT
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <a44ae5cd0905230731q4df31403nd54ff9e2c496c77a@mail.gmail.com>
 Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+To: Miles Lane <miles.lane@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Tejun Heo <tj@kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-Abhijeet Joglekar wrote:
-> fnic_main.c: include module load and unload, PCI device probe, scsi-ml,
-> libFC and scsi-transport-fc registration and interfaces
->
-> fnic.h: has fnic definition and other related data types
+Adding CCs.
 
-I am really late, but just wanted to give my to cents.
+On Saturday 23 May 2009, Miles Lane wrote:
+> [  865.788574] WARNING: at lib/dma-debug.c:576
+> check_for_illegal_area+0xdb/0x105()
+> [  865.788585] Hardware name: 1000HE
+> [  865.788596] ata_piix 0000:00:1f.2: DMA-API: device driver maps
+> memory from kernel text or rodata [addr=c0fff000] [size=4096]
+> [  865.788607] Modules linked in: sco bnep rfcomm l2cap pci_slot
+> snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_hwdep
+> snd_pcm_oss snd_mixer_oss snd_pcm snd_seq_dummy snd_seq_oss
+> snd_seq_midi_event btusb snd_seq bluetooth snd_timer snd_seq_device
+> ath9k snd soundcore snd_page_alloc atl1e
+> [  865.788718] Pid: 1559, comm: mount.ntfs Not tainted 2.6.30-rc6-git6 #2
+> [  865.788727] Call Trace:
+> [  865.788745]  [<c10206f4>] warn_slowpath_common+0x65/0x7c
+> [  865.788761]  [<c11666e2>] ? check_for_illegal_area+0xdb/0x105
+> [  865.788777]  [<c102073f>] warn_slowpath_fmt+0x24/0x27
+> [  865.788793]  [<c11666e2>] check_for_illegal_area+0xdb/0x105
+> [  865.788811]  [<c1167629>] debug_dma_map_sg+0x10f/0x11b
+> [  865.788829]  [<c121347e>] ata_qc_issue+0x1b0/0x233
+> [  865.788848]  [<c1218cf0>] __ata_scsi_queuecmd+0x15a/0x1a7
+> [  865.788864]  [<c11fde34>] ? scsi_done+0x0/0xd
+> [  865.788879]  [<c12187d4>] ? ata_scsi_rw_xlat+0x0/0x1e9
+> [  865.788895]  [<c1218dbe>] ata_scsi_queuecmd+0x45/0x73
+> [  865.788909]  [<c11fde34>] ? scsi_done+0x0/0xd
+> [  865.788925]  [<c11fdf6e>] scsi_dispatch_cmd+0x12d/0x165
+> [  865.788941]  [<c1202253>] scsi_request_fn+0x299/0x3ca
+> [  865.788956]  [<c10282bf>] ? del_timer+0x47/0x4e
+> [  865.788974]  [<c11505b8>] __generic_unplug_device+0x26/0x29
+> [  865.788990]  [<c11505ff>] generic_unplug_device+0x21/0x2f
+> [  865.789006]  [<c11516c6>] blk_unplug+0x16/0x19
+> [  865.789021]  [<c11516d4>] blk_backing_dev_unplug+0xb/0xd
+> [  865.789038]  [<c10a57cf>] block_sync_page+0x24/0x28
+> [  865.789053]  [<c1069728>] sync_page+0x38/0x41
+> [  865.789068]  [<c106973a>] sync_page_killable+0x9/0x37
+> [  865.789085]  [<c13ab475>] __wait_on_bit_lock+0x34/0x6f
+> [  865.789099]  [<c1069731>] ? sync_page_killable+0x0/0x37
+> [  865.789115]  [<c1069613>] __lock_page_killable+0x71/0x78
+> [  865.789132]  [<c1030d9f>] ? wake_bit_function+0x0/0x37
+> [  865.789147]  [<c1069642>] lock_page_killable+0x28/0x2b
+> [  865.789162]  [<c106ad22>] generic_file_aio_read+0x315/0x493
+> [  865.789183]  [<c108c36c>] do_sync_read+0xaa/0xe5
+> [  865.789199]  [<c113181d>] ? file_has_perm+0x87/0xa1
+> [  865.789216]  [<c1030d70>] ? autoremove_wake_function+0x0/0x2f
+> [  865.789234]  [<c112e180>] ? security_file_permission+0xf/0x11
+> [  865.789250]  [<c108c43c>] ? rw_verify_area+0x95/0xb6
+> [  865.789265]  [<c108c2c2>] ? do_sync_read+0x0/0xe5
+> [  865.789280]  [<c108ca03>] vfs_read+0x8d/0xea
+> [  865.789296]  [<c108cab3>] sys_pread64+0x53/0x6b
+> [  865.789313]  [<c1002c34>] syscall_call+0x7/0xb
+> [  865.789325] ---[ end trace 1ec3ba9a74f5a8d5 ]---
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
+> 
 
-> +static int __devinit fnic_probe(struct pci_dev *pdev,
-> +				const struct pci_device_id *ent)
-> +{
-> +	struct Scsi_Host *host;
-> +	struct fc_lport *lp;
-> +	struct fnic *fnic;
-> +	mempool_t *pool;
-> +	int err;
-> +	int i;
-> +	unsigned long flags;
-> +
-> +	/*
-> +	 * Allocate SCSI Host and set up association between host,
-> +	 * local port, and fnic
-> +	 */
-> +	host =3D scsi_host_alloc(&fnic_host_template,
-> +			       sizeof(struct fc_lport) + sizeof(struct fnic));
-> +	if (!host) {
-> +		printk(KERN_ERR PFX "Unable to alloc SCSI host\n");
-> +		err =3D -ENOMEM;
-> +		goto err_out;
-> +	}
-> +	lp =3D shost_priv(host);
-> +	lp->host =3D host;
-> +	fnic =3D lport_priv(lp);
-> +	fnic->lport =3D lp;
-> +
-> +	snprintf(fnic->name, sizeof(fnic->name) - 1, "%s%d", DRV_NAME,
-> +		 host->host_no);
-> +
-> +	host->transportt =3D fnic_fc_transport;
-> +
-> +	err =3D scsi_init_shared_tag_map(host, FNIC_MAX_IO_REQ);
-> +	if (err) {
-> +		shost_printk(KERN_ERR, fnic->lport->host,
-> +			     "Unable to alloc shared tag map\n");
-> +		goto err_out_free_hba;
-> +	}
-> +
-> +	/* Setup PCI resources */
-> +	pci_set_drvdata(pdev, fnic);
-> +
-> +	fnic->pdev =3D pdev;
-> +
-> +	err =3D pci_enable_device(pdev);
-> +	if (err) {
-> +		shost_printk(KERN_ERR, fnic->lport->host,
-> +			     "Cannot enable PCI device, aborting.\n");
-> +		goto err_out_free_hba;
-> +	}
 
-If you use devres here you can save some code both in init error path as we=
-ll=20
-as in the remove handler (see Documentation/driver-model/devres.txt).
-
-> +	err =3D pci_request_regions(pdev, DRV_NAME);
-> +	if (err) {
-> +		shost_printk(KERN_ERR, fnic->lport->host,
-> +			     "Cannot enable PCI resources, aborting\n");
-> +		goto err_out_disable_device;
-> +	}
-> +
-> +	pci_set_master(pdev);
-> +
-> +	/* Query PCI controller on system for DMA addressing
-> +	 * limitation for the device.  Try 40-bit first, and
-> +	 * fail to 32-bit.
-> +	 */
-> +	err =3D pci_set_dma_mask(pdev, DMA_40BIT_MASK);
-> +	if (err) {
-> +		err =3D pci_set_dma_mask(pdev, DMA_32BIT_MASK);
-> +		if (err) {
-> +			shost_printk(KERN_ERR, fnic->lport->host,
-> +				     "No usable DMA configuration "
-> +				     "aborting\n");
-> +			goto err_out_release_regions;
-> +		}
-> +		err =3D pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
-> +		if (err) {
-> +			shost_printk(KERN_ERR, fnic->lport->host,
-> +				     "Unable to obtain 32-bit DMA "
-> +				     "for consistent allocations, aborting.\n");
-> +			goto err_out_release_regions;
-> +		}
-> +	} else {
-> +		err =3D pci_set_consistent_dma_mask(pdev, DMA_40BIT_MASK);
-> +		if (err) {
-> +			shost_printk(KERN_ERR, fnic->lport->host,
-> +				     "Unable to obtain 40-bit DMA "
-> +				     "for consistent allocations, aborting.\n");
-> +			goto err_out_release_regions;
-> +		}
-> +	}
-> +
-> +	/* Map vNIC resources from BAR0 */
-> +	if (!(pci_resource_flags(pdev, 0) & IORESOURCE_MEM)) {
-> +		shost_printk(KERN_ERR, fnic->lport->host,
-> +			     "BAR0 not memory-map'able, aborting.\n");
-> +		err =3D -ENODEV;
-> +		goto err_out_release_regions;
-> +	}
-> +
-> +	fnic->bar0.vaddr =3D pci_iomap(pdev, 0, 0);
-> +	fnic->bar0.bus_addr =3D pci_resource_start(pdev, 0);
-
-bus_addr is used never again. Can it be removed?
-
-> +	fnic->bar0.len =3D pci_resource_len(pdev, 0);
-> +
-> +	if (!fnic->bar0.vaddr) {
-> +		shost_printk(KERN_ERR, fnic->lport->host,
-> +			     "Cannot memory-map BAR0 res hdr, "
-> +			     "aborting.\n");
-> +		err =3D -ENODEV;
-> +		goto err_out_release_regions;
-> +	}
-> +
-> +	fnic->vdev =3D vnic_dev_register(NULL, fnic, pdev, &fnic->bar0);
-> +	if (!fnic->vdev) {
-> +		shost_printk(KERN_ERR, fnic->lport->host,
-> +			     "vNIC registration failed, "
-> +			     "aborting.\n");
-> +		err =3D -ENODEV;
-> +		goto err_out_iounmap;
-> +	}
-> +
-> +	err =3D fnic_dev_wait(fnic->vdev, vnic_dev_open,
-> +			    vnic_dev_open_done, 0);
-> +	if (err) {
-> +		shost_printk(KERN_ERR, fnic->lport->host,
-> +			     "vNIC dev open failed, aborting.\n");
-> +		goto err_out_vnic_unregister;
-> +	}
-> +
-> +	err =3D vnic_dev_init(fnic->vdev, 0);
-> +	if (err) {
-> +		shost_printk(KERN_ERR, fnic->lport->host,
-> +			     "vNIC dev init failed, aborting.\n");
-> +		goto err_out_dev_close;
-> +	}
-> +
-> +	err =3D vnic_dev_mac_addr(fnic->vdev, fnic->mac_addr);
-> +	if (err) {
-> +		shost_printk(KERN_ERR, fnic->lport->host,
-> +			     "vNIC get MAC addr failed \n");
-> +		goto err_out_dev_close;
-> +	}
-> +
-> +	/* Get vNIC configuration */
-> +	err =3D fnic_get_vnic_config(fnic);
-> +	if (err) {
-> +		shost_printk(KERN_ERR, fnic->lport->host,
-> +			     "Get vNIC configuration failed, "
-> +			     "aborting.\n");
-> +		goto err_out_dev_close;
-> +	}
-> +	host->max_lun =3D fnic->config.luns_per_tgt;
-> +	host->max_id =3D FNIC_MAX_FCP_TARGET;
-> +
-> +	fnic_get_res_counts(fnic);
-> +
-> +	err =3D fnic_set_intr_mode(fnic);
-> +	if (err) {
-> +		shost_printk(KERN_ERR, fnic->lport->host,
-> +			     "Failed to set intr mode, "
-> +			     "aborting.\n");
-> +		goto err_out_dev_close;
-> +	}
-> +
-> +	err =3D fnic_request_intr(fnic);
-> +	if (err) {
-> +		shost_printk(KERN_ERR, fnic->lport->host,
-> +			     "Unable to request irq.\n");
-> +		goto err_out_clear_intr;
-> +	}
-> +
-> +	err =3D fnic_alloc_vnic_resources(fnic);
-> +	if (err) {
-> +		shost_printk(KERN_ERR, fnic->lport->host,
-> +			     "Failed to alloc vNIC resources, "
-> +			     "aborting.\n");
-> +		goto err_out_free_intr;
-> +	}
-> +
-> +
-> +	/* initialize all fnic locks */
-> +	spin_lock_init(&fnic->fnic_lock);
-> +
-> +	for (i =3D 0; i < FNIC_WQ_MAX; i++)
-i < ARRAY_SIZE(fnic->wq_lock)
-
-> +		spin_lock_init(&fnic->wq_lock[i]);
-> +
-> +	for (i =3D 0; i < FNIC_WQ_COPY_MAX; i++) {
-i < ARRAY_SIZE(fnic->wq_copy_lock)
-
-No matter by which number this will be scaled this gives you the right numb=
-er=20
-of elements.
-
-Greetings,
-
-Eike
-
---nextPart2750345.gZO6qlf9DT
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iEYEABECAAYFAkoYO3QACgkQXKSJPmm5/E5hOACgkGlRSP5pJx/zE7qbOikMPDDz
-JTEAoKRUYVEU8z9P/BowtIdKZwz+Lge6
-=R9u8
------END PGP SIGNATURE-----
-
---nextPart2750345.gZO6qlf9DT--
+-- 
+Everyone knows that debugging is twice as hard as writing a program
+in the first place.  So if you're as clever as you can be when you write it,
+how will you ever debug it? --- Brian Kernighan
