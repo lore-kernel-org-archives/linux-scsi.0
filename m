@@ -1,76 +1,142 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: 2.6.30=rc6=git6 -- ata_piix 0000:00:1f.2: DMA-API: device driver
- maps memory from kernel text or rodata [addr=c0fff000]
-Date: Sun, 24 May 2009 02:00:00 -0600
-Message-ID: <4A18FE80.30403@gmail.com>
-References: <a44ae5cd0905230731q4df31403nd54ff9e2c496c77a@mail.gmail.com> <200905232223.35780.rjw@sisk.pl>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: kernel crash when BSG request timesout
+Date: Sun, 24 May 2009 14:00:04 +0300
+Message-ID: <4A1928B4.7030807@panasas.com>
+References: <8DE113F8-5448-44BD-9EFE-27701933C126@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <200905232223.35780.rjw@sisk.pl>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Miles Lane <miles.lane@gmail.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Tejun Heo <tj@kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gw-ca.panasas.com ([209.116.51.66]:13320 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752090AbZEXLBn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 May 2009 07:01:43 -0400
+In-Reply-To: <8DE113F8-5448-44BD-9EFE-27701933C126@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Cc: linux-scsi@vger.kernel.org
 
-Rafael J. Wysocki wrote:
-> Adding CCs.
+On 05/22/2009 11:51 PM, Giridhar Malavali wrote:
+> Hi,
 > 
-> On Saturday 23 May 2009, Miles Lane wrote:
->> [  865.788574] WARNING: at lib/dma-debug.c:576
->> check_for_illegal_area+0xdb/0x105()
->> [  865.788585] Hardware name: 1000HE
->> [  865.788596] ata_piix 0000:00:1f.2: DMA-API: device driver maps
->> memory from kernel text or rodata [addr=c0fff000] [size=4096]
->> [  865.788607] Modules linked in: sco bnep rfcomm l2cap pci_slot
->> snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_hwdep
->> snd_pcm_oss snd_mixer_oss snd_pcm snd_seq_dummy snd_seq_oss
->> snd_seq_midi_event btusb snd_seq bluetooth snd_timer snd_seq_device
->> ath9k snd soundcore snd_page_alloc atl1e
->> [  865.788718] Pid: 1559, comm: mount.ntfs Not tainted 2.6.30-rc6-git6 #2
->> [  865.788727] Call Trace:
->> [  865.788745]  [<c10206f4>] warn_slowpath_common+0x65/0x7c
->> [  865.788761]  [<c11666e2>] ? check_for_illegal_area+0xdb/0x105
->> [  865.788777]  [<c102073f>] warn_slowpath_fmt+0x24/0x27
->> [  865.788793]  [<c11666e2>] check_for_illegal_area+0xdb/0x105
->> [  865.788811]  [<c1167629>] debug_dma_map_sg+0x10f/0x11b
->> [  865.788829]  [<c121347e>] ata_qc_issue+0x1b0/0x233
->> [  865.788848]  [<c1218cf0>] __ata_scsi_queuecmd+0x15a/0x1a7
->> [  865.788864]  [<c11fde34>] ? scsi_done+0x0/0xd
->> [  865.788879]  [<c12187d4>] ? ata_scsi_rw_xlat+0x0/0x1e9
->> [  865.788895]  [<c1218dbe>] ata_scsi_queuecmd+0x45/0x73
->> [  865.788909]  [<c11fde34>] ? scsi_done+0x0/0xd
->> [  865.788925]  [<c11fdf6e>] scsi_dispatch_cmd+0x12d/0x165
->> [  865.788941]  [<c1202253>] scsi_request_fn+0x299/0x3ca
->> [  865.788956]  [<c10282bf>] ? del_timer+0x47/0x4e
->> [  865.788974]  [<c11505b8>] __generic_unplug_device+0x26/0x29
->> [  865.788990]  [<c11505ff>] generic_unplug_device+0x21/0x2f
->> [  865.789006]  [<c11516c6>] blk_unplug+0x16/0x19
->> [  865.789021]  [<c11516d4>] blk_backing_dev_unplug+0xb/0xd
->> [  865.789038]  [<c10a57cf>] block_sync_page+0x24/0x28
->> [  865.789053]  [<c1069728>] sync_page+0x38/0x41
->> [  865.789068]  [<c106973a>] sync_page_killable+0x9/0x37
->> [  865.789085]  [<c13ab475>] __wait_on_bit_lock+0x34/0x6f
->> [  865.789099]  [<c1069731>] ? sync_page_killable+0x0/0x37
->> [  865.789115]  [<c1069613>] __lock_page_killable+0x71/0x78
->> [  865.789132]  [<c1030d9f>] ? wake_bit_function+0x0/0x37
->> [  865.789147]  [<c1069642>] lock_page_killable+0x28/0x2b
->> [  865.789162]  [<c106ad22>] generic_file_aio_read+0x315/0x493
->> [  865.789183]  [<c108c36c>] do_sync_read+0xaa/0xe5
->> [  865.789199]  [<c113181d>] ? file_has_perm+0x87/0xa1
->> [  865.789216]  [<c1030d70>] ? autoremove_wake_function+0x0/0x2f
->> [  865.789234]  [<c112e180>] ? security_file_permission+0xf/0x11
->> [  865.789250]  [<c108c43c>] ? rw_verify_area+0x95/0xb6
->> [  865.789265]  [<c108c2c2>] ? do_sync_read+0x0/0xe5
->> [  865.789280]  [<c108ca03>] vfs_read+0x8d/0xea
->> [  865.789296]  [<c108cab3>] sys_pread64+0x53/0x6b
->> [  865.789313]  [<c1002c34>] syscall_call+0x7/0xb
->> [  865.789325] ---[ end trace 1ec3ba9a74f5a8d5 ]---
+> 	While testing the FC pass thru support I am constantly hitting a  
+> kernel crash when BSG request times out.
+> I took the latest FC pass thru patches from James Smart from
+> http://marc.info/?l=linux-scsi&m=123436574018579&w=2. and on top of it  
+> applied Boaz patches from
+> http://markmail.org/search/?q=FC+pass-through+support+&x=0&y=0#query:FC 
+> %20passthrough%20support%20from%3A%22Boaz%20Harrosh%22+page:2+mid:ke4lj4cg5ftc6nsc+state:results
+> 
+> Is there any additional patches I am missing?
+> 
+> Thanks,
+> Giridhar.M.B
+> 
+> [ 1464.584437] ------------[ cut here ]------------
+> [ 1464.584437] kernel BUG at block/blk-softirq.c:110!
+> [ 1464.584437] invalid opcode: 0000 [#1] SMP DEBUG_PAGEALLOC
+> [ 1464.584437] last sysfs file: /sys/devices/system/cpu/cpu3/cache/ 
+> index2/shared_cpu_map
+> [ 1464.584437] CPU 3
+> [ 1464.584437] Modules linked in: qla2xxx netconsole scsi_transport_fc  
+> [last unloaded: qla2xxx]
+> [ 1464.584437] Pid: 0, comm: swapper Not tainted 2.6.30-rc4 #3 X7DB8
+> [ 1464.584437] RIP: 0010:[<ffffffff80361112>]  [<ffffffff80361112>]  
+> __blk_complete_request+0xe8/0xec
+> [ 1464.584437] RSP: 0018:ffff880001063e10  EFLAGS: 00010046
+> [ 1464.584437] RAX: 0000000000000001 RBX: ffff88007ab93e80 RCX:  
+> ffffffff8070f680
+> [ 1464.584437] RDX: 0000000000008988 RSI: 0000000000000086 RDI:  
+> ffff88007ab93e80
+> [ 1464.584437] RBP: ffff880001063e30 R08: 00000000ffffffff R09:  
+> 0000000000000003
+> [ 1464.584437] R10: 000000000000000a R11: 0000000000000000 R12:  
+> ffff88007a8b26c8
+> [ 1464.584437] R13: ffff88007a8b2a70 R14: ffff88007a8b26c8 R15:  
+> 0000000000000286
+> [ 1464.584437] FS:  0000000000000000(0000) GS:ffff880001060000(0000)  
+> knlGS:0000000000000000
+> [ 1464.584437] CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+> [ 1464.584437] CR2: 00007f7943ffd4a8 CR3: 000000007fb1e000 CR4:  
+> 00000000000006e0
+> [ 1464.584437] DR0: 0000000000000000 DR1: 0000000000000000 DR2:  
+> 0000000000000000
+> [ 1464.584437] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:  
+> 0000000000000400
+> [ 1464.584437] Process swapper (pid: 0, threadinfo ffff88007f9fe000,  
+> task ffff88007f9e1990)
+> [ 1464.584437] Stack:
+> [ 1464.584437]  ffff88007a8b2970 ffff88007ab93e80 0000000000000000  
+> ffff88007a8b2a70
+> [ 1464.584437]  ffff880001063e50 ffffffff80361299 ffff88007a8b26c8  
+> ffff88007a8b2930
+> [ 1464.584437]  ffff880001063e90 ffffffff803614e5 ffff88007f9b8000  
+> ffff88007a8b26c8
+> [ 1464.584437] Call Trace:
+> [ 1464.584437]  <IRQ> <0> [<ffffffff80361299>] blk_rq_timed_out 
+> +0x48/0x67
+> [ 1464.584437]  [<ffffffff803614e5>] blk_rq_timed_out_timer+0xd6/0x121
+> [ 1464.584437]  [<ffffffff8036140f>] ? blk_rq_timed_out_timer+0x0/0x121
+> [ 1464.584437]  [<ffffffff80240857>] run_timer_softirq+0x147/0x215
+> [ 1464.584437]  [<ffffffff8023b67b>] ? raise_softirq+0x59/0x68
+> [ 1464.584437]  [<ffffffff8023bf67>] __do_softirq+0xba/0x1a3
+> [ 1464.584437]  [<ffffffff8020c36c>] call_softirq+0x1c/0x30
+> [ 1464.584437]  [<ffffffff8020de61>] do_softirq+0x61/0xa0
+> [ 1464.584437]  [<ffffffff8023b8b1>] irq_exit+0x51/0x59
+> [ 1464.584437]  [<ffffffff8021d888>] smp_apic_timer_interrupt+0x6d/0x96
+> [ 1464.584437]  [<ffffffff8020bd83>] apic_timer_interrupt+0x13/0x20
+> [ 1464.584437]  <EOI> <0> [<ffffffff80212ac8>] ? mwait_idle+0xfe/0x10f
+> [ 1464.584437]  [<ffffffff80212abf>] ? mwait_idle+0xf5/0x10f
+> [ 1464.584437]  [<ffffffff8020a4ce>] ? cpu_idle+0x63/0x97
+> [ 1464.584437]  [<ffffffff8050d3c4>] ? start_secondary+0x183/0x1df
+> [ 1464.584437] Code: b7 0f 36 80 48 89 5b 28 66 c7 43 30 00 00 48 8d  
+> 73 10 31 d2 e8 4c 8a ef ff eb b2 bf 04 00 00 00 e8 05 a3 ed ff 0f 1f  
+> 40 00 eb a2 <0f> 0b eb fe 55 48 89 e5 48 8d 47 50 f0 0f ba 28 00 19 d2  
+> 85 d2
+> [ 1464.584437] RIP  [<ffffffff80361112>] __blk_complete_request 
+> +0xe8/0xec
+> [ 1464.584437]  RSP <ffff880001063e10>
+> [ 1464.584437] ---[ end trace 7325773d478b6460 ]---
+> [ 1464.584437] Kernel panic - not syncing: Fatal exception in interrupt
+> [ 1464.584437] Pid: 0, comm: swapper Tainted: G      D    2.6.30-rc4 #3
+> [ 1464.584437] Call Trace:
+> [ 1464.584437]  <IRQ>  [<ffffffff8051098a>] panic+0x75/0x146
+> [ 1464.584437]  [<ffffffff8020f31b>] oops_end+0x8f/0x97
+> [ 1464.584437]  [<ffffffff8020f4ea>] die+0x46/0x60
+> [ 1464.584437]  [<ffffffff8020cb76>] do_trap+0x129/0x152
+> [ 1464.584437]  [<ffffffff8024f84d>] ? atomic_notifier_call_chain 
+> +0x15/0x17
+> [ 1464.584437]  [<ffffffff8020cf62>] do_invalid_op+0x90/0xa1
+> [ 1464.584437]  [<ffffffff80361112>] ? __blk_complete_request+0xe8/0xec
+> [ 1464.584437]  [<ffffffff80513acf>] ? trace_hardirqs_off_thunk+0x3a/ 
+> 0x6c
+> [ 1464.584437]  [<ffffffff8020c005>] invalid_op+0x15/0x20
+> [ 1464.584437]  [<ffffffff80361112>] ? __blk_complete_request+0xe8/0xec
+> [ 1464.584437]  [<ffffffff80361299>] blk_rq_timed_out+0x48/0x67
+> [ 1464.584437]  [<ffffffff803614e5>] blk_rq_timed_out_timer+0xd6/0x121
+> [ 1464.584437]  [<ffffffff8036140f>] ? blk_rq_timed_out_timer+0x0/0x121
+> [ 1464.584437]  [<ffffffff80240857>] run_timer_softirq+0x147/0x215
+> [ 1464.584437]  [<ffffffff8023b67b>] ? raise_softirq+0x59/0x68
+> [ 1464.584437]  [<ffffffff8023bf67>] __do_softirq+0xba/0x1a3
+> [ 1464.584437]  [<ffffffff8020c36c>] call_softirq+0x1c/0x30
+> [ 1464.584437]  [<ffffffff8020de61>] do_softirq+0x61/0xa0
+> [ 1464.584437]  [<ffffffff8023b8b1>] irq_exit+0x51/0x59
+> [ 1464.584437]  [<ffffffff8021d888>] smp_apic_timer_interrupt+0x6d/0x96
+> [ 1464.584437]  [<ffffffff8020bd83>] apic_timer_interrupt+0x13/0x20
+> [ 1464.584437]  <EOI>  [<ffffffff80212ac8>] ? mwait_idle+0xfe/0x10f
+> [ 1464.584437]  [<ffffffff80212abf>] ? mwait_idle+0xf5/0x10f
+> [ 1464.584437]  [<ffffffff8020a4ce>] ? cpu_idle+0x63/0x97
+> [ 1464.584437]  [<ffffffff8050d3c4>] ? start_secondary+0x183/0x1df
+> 
+> --
 
-Well, this seems to tell us that somebody's apparently doing SCSI reads 
-or writes using kernel addresses. Unfortunately it doesn't really tell 
-us where this request came from. The stack trace occurred inside the 
-mount.ntfs process.. could FUSE be doing something bad?
+I did not exactly understand which tree are you using. There where
+lots of related changes around these areas
 
-Was anything strange happening on the machine when this showed up?
+Please try James post merge tree for the FC pass through support.
+It has all you need:
+ git clone git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-post-merge-2.6.git
+
+Thanks
+Boaz
