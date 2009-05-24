@@ -1,109 +1,78 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 10/10] osd: Remove out-of-tree left overs
-Date: Sun, 24 May 2009 20:05:58 +0300
-Message-ID: <1243184758-17169-1-git-send-email-bharrosh@panasas.com>
-References: <4A197CB5.60709@panasas.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] async: make sure independent async domains can't
+	accidentally entangle.
+Date: Sun, 24 May 2009 13:50:43 -0500
+Message-ID: <1243191043.2889.20.camel@localhost.localdomain>
+References: <1243175371.2889.17.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:1664 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754350AbZEXRF7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 May 2009 13:05:59 -0400
-In-Reply-To: <4A197CB5.60709@panasas.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:55206 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752949AbZEXSum (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 May 2009 14:50:42 -0400
+In-Reply-To: <1243175371.2889.17.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>
-Cc: Jeff Garzik <jeff@garzik.org>
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-* Delete Makefile. It is only used for out-of-tree compilation
-  and was never needed. It slipped in by mistake.
-* Remove from Kbuild all the out of tree stuff as promised.
+On Sun, 2009-05-24 at 09:29 -0500, James Bottomley wrote:
+> The problem occurs when async_synchronize_full_domain() is called when
+> the async_pending list is not empty.  This will cause lowest_running()
+> to return the cookie of the first entry on the async_pending list, which
+> might be nothing at all to do with the domain being asked for and thus
+> cause the domain synchronization to wait for an unrelated domain.   This
+> can cause a deadlock if domain synchronization is used from one domain
+> to wait for another.
+> 
+> Fix by running over the async_pending list to see if any pending items
+> actually belong to our domain (and return their cookies if they do).
+> 
+> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+OK, so that version locked up under testing ... this version doesn't ---
+I think the phrase "MUST be called with the lock held!" was supposed to
+be some sort of clue ...
+
+James
+
 ---
- drivers/scsi/osd/Kbuild   |   25 -------------------------
- drivers/scsi/osd/Makefile |   37 -------------------------------------
- 2 files changed, 0 insertions(+), 62 deletions(-)
- delete mode 100755 drivers/scsi/osd/Makefile
 
-diff --git a/drivers/scsi/osd/Kbuild b/drivers/scsi/osd/Kbuild
-index 0e207aa..5fd73d7 100644
---- a/drivers/scsi/osd/Kbuild
-+++ b/drivers/scsi/osd/Kbuild
-@@ -11,31 +11,6 @@
- # it under the terms of the GNU General Public License version 2
- #
+diff --git a/kernel/async.c b/kernel/async.c
+index 968ef94..13ed571 100644
+--- a/kernel/async.c
++++ b/kernel/async.c
+@@ -92,19 +92,21 @@ extern int initcall_debug;
+ static async_cookie_t  __lowest_in_progress(struct list_head *running)
+ {
+ 	struct async_entry *entry;
++	async_cookie_t ret = next_cookie; /* begin with "infinity" value */
++
+ 	if (!list_empty(running)) {
+ 		entry = list_first_entry(running,
+ 			struct async_entry, list);
+-		return entry->cookie;
++		ret = entry->cookie;
+ 	} else if (!list_empty(&async_pending)) {
+-		entry = list_first_entry(&async_pending,
+-			struct async_entry, list);
+-		return entry->cookie;
+-	} else {
+-		/* nothing in progress... next_cookie is "infinity" */
+-		return next_cookie;
++		list_for_each_entry(entry, &async_pending, list)
++			if (entry->running == running) {
++				ret = entry->cookie;
++				break;
++			}
+ 	}
  
--ifneq ($(OSD_INC),)
--# we are built out-of-tree Kconfigure everything as on
--
--CONFIG_SCSI_OSD_INITIATOR=m
--ccflags-y += -DCONFIG_SCSI_OSD_INITIATOR -DCONFIG_SCSI_OSD_INITIATOR_MODULE
--
--CONFIG_SCSI_OSD_ULD=m
--ccflags-y += -DCONFIG_SCSI_OSD_ULD -DCONFIG_SCSI_OSD_ULD_MODULE
--
--# CONFIG_SCSI_OSD_DPRINT_SENSE =
--#	0 - no print of errors
--#	1 - print errors
--#	2 - errors + warrnings
--ccflags-y += -DCONFIG_SCSI_OSD_DPRINT_SENSE=1
--
--# Uncomment to turn debug on
--# ccflags-y += -DCONFIG_SCSI_OSD_DEBUG
--
--# if we are built out-of-tree and the hosting kernel has OSD headers
--# then "ccflags-y +=" will not pick the out-off-tree headers. Only by doing
--# this it will work. This might break in future kernels
--LINUXINCLUDE := -I$(OSD_INC) $(LINUXINCLUDE)
--
--endif
--
- # libosd.ko - osd-initiator library
- libosd-y := osd_initiator.o
- obj-$(CONFIG_SCSI_OSD_INITIATOR) += libosd.o
-diff --git a/drivers/scsi/osd/Makefile b/drivers/scsi/osd/Makefile
-deleted file mode 100755
-index d905344..0000000
---- a/drivers/scsi/osd/Makefile
-+++ /dev/null
-@@ -1,37 +0,0 @@
--#
--# Makefile for the OSD modules (out of tree)
--#
--# Copyright (C) 2008 Panasas Inc.  All rights reserved.
--#
--# Authors:
--#   Boaz Harrosh <bharrosh@panasas.com>
--#   Benny Halevy <bhalevy@panasas.com>
--#
--# This program is free software; you can redistribute it and/or modify
--# it under the terms of the GNU General Public License version 2
--#
--# This Makefile is used to call the kernel Makefile in case of an out-of-tree
--# build.
--# $KSRC should point to a Kernel source tree otherwise host's default is
--# used. (eg. /lib/modules/`uname -r`/build)
--
--# include path for out-of-tree Headers
--OSD_INC ?= `pwd`/../../../include
--
--# allow users to override these
--# e.g. to compile for a kernel that you aren't currently running
--KSRC ?= /lib/modules/$(shell uname -r)/build
--KBUILD_OUTPUT ?=
--ARCH ?=
--V ?= 0
--
--# this is the basic Kbuild out-of-tree invocation, with the M= option
--KBUILD_BASE = +$(MAKE) -C $(KSRC) M=`pwd` KBUILD_OUTPUT=$(KBUILD_OUTPUT) ARCH=$(ARCH) V=$(V)
--
--all: libosd
--
--libosd: ;
--	$(KBUILD_BASE) OSD_INC=$(OSD_INC) modules
--
--clean:
--	$(KBUILD_BASE) clean
--- 
-1.6.2.1
++	return ret;
+ }
+ 
+ static async_cookie_t  lowest_in_progress(struct list_head *running)
+
 
