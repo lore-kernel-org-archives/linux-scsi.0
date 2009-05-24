@@ -1,149 +1,73 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 04/10 resend] libosd: osd_req_{read,write}_kern new API
-Date: Sun, 24 May 2009 20:02:22 +0300
-Message-ID: <1243184542-16993-1-git-send-email-bharrosh@panasas.com>
+Subject: [PATCH 05/10 resend] libosd: Let _osd_req_finalize_data_integrity receive number of out_bytes
+Date: Sun, 24 May 2009 20:04:00 +0300
+Message-ID: <1243184640-17028-1-git-send-email-bharrosh@panasas.com>
 References: <4A197CB5.60709@panasas.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:1717 "EHLO
+Received: from gw-ca.panasas.com ([209.116.51.66]:1628 "EHLO
 	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754207AbZEXRDk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 May 2009 13:03:40 -0400
+	with ESMTP id S1754160AbZEXREB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 May 2009 13:04:01 -0400
 In-Reply-To: <4A197CB5.60709@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>
 Cc: Jeff Garzik <jeff@garzik.org>
 
-By popular demand, define usefull wrappers for osd_req_read/write
-that recieve kernel pointers. All users had their own.
+_osd_req_finalize_data_integrity was trying to deduce the number of
+out_bytes from passed osd_request->out.bio. This is wrong when
+the bio is chained. The caller of _osd_req_finalize_data_integrity
+has more ready available information and should just pass it.
 
-Also remove these from exofs
+Also in the light of future support for CDB-continuation segment this is
+a better solution.
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 ---
- drivers/scsi/osd/osd_initiator.c |   28 ++++++++++++++++++++++++++++
- fs/exofs/common.h                |    6 ------
- fs/exofs/osd.c                   |   26 --------------------------
- include/scsi/osd_initiator.h     |    4 ++++
- 4 files changed, 32 insertions(+), 32 deletions(-)
+ drivers/scsi/osd/osd_initiator.c |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
-index 15f0bbc..c98153b 100644
+index c98153b..ba2ebae 100644
 --- a/drivers/scsi/osd/osd_initiator.c
 +++ b/drivers/scsi/osd/osd_initiator.c
-@@ -789,6 +789,20 @@ void osd_req_write(struct osd_request *or,
+@@ -1262,7 +1262,7 @@ static inline void osd_sec_parms_set_in_offset(bool is_v1,
  }
- EXPORT_SYMBOL(osd_req_write);
  
-+int osd_req_write_kern(struct osd_request *or,
-+	const struct osd_obj_id *obj, u64 offset, void* buff, u64 len)
-+{
-+	struct request_queue *req_q = or->osd_dev->scsi_device->request_queue;
-+	struct bio *bio = bio_map_kern(req_q, buff, len, GFP_KERNEL);
-+
-+	if (IS_ERR(bio))
-+		return PTR_ERR(bio);
-+
-+	osd_req_write(or, obj, bio, offset);
-+	return 0;
-+}
-+EXPORT_SYMBOL(osd_req_write_kern);
-+
- /*TODO: void osd_req_append(struct osd_request *,
- 	const struct osd_obj_id *, struct bio *data_out); */
- /*TODO: void osd_req_create_write(struct osd_request *,
-@@ -824,6 +838,20 @@ void osd_req_read(struct osd_request *or,
- }
- EXPORT_SYMBOL(osd_req_read);
- 
-+int osd_req_read_kern(struct osd_request *or,
-+	const struct osd_obj_id *obj, u64 offset, void* buff, u64 len)
-+{
-+	struct request_queue *req_q = or->osd_dev->scsi_device->request_queue;
-+	struct bio *bio = bio_map_kern(req_q, buff, len, GFP_KERNEL);
-+
-+	if (IS_ERR(bio))
-+		return PTR_ERR(bio);
-+
-+	osd_req_read(or, obj, bio, offset);
-+	return 0;
-+}
-+EXPORT_SYMBOL(osd_req_read_kern);
-+
- void osd_req_get_attributes(struct osd_request *or,
- 	const struct osd_obj_id *obj)
+ static int _osd_req_finalize_data_integrity(struct osd_request *or,
+-	bool has_in, bool has_out, const u8 *cap_key)
++	bool has_in, bool has_out, u64 out_data_bytes, const u8 *cap_key)
  {
-diff --git a/fs/exofs/common.h b/fs/exofs/common.h
-index b1512c4..24667ee 100644
---- a/fs/exofs/common.h
-+++ b/fs/exofs/common.h
-@@ -175,10 +175,4 @@ int exofs_async_op(struct osd_request *or,
+ 	struct osd_security_parameters *sec_parms = _osd_req_sec_params(or);
+ 	int ret;
+@@ -1277,8 +1277,7 @@ static int _osd_req_finalize_data_integrity(struct osd_request *or,
+ 		};
+ 		unsigned pad;
  
- int extract_attr_from_req(struct osd_request *or, struct osd_attr *attr);
+-		or->out_data_integ.data_bytes = cpu_to_be64(
+-			or->out.bio ? or->out.bio->bi_size : 0);
++		or->out_data_integ.data_bytes = cpu_to_be64(out_data_bytes);
+ 		or->out_data_integ.set_attributes_bytes = cpu_to_be64(
+ 			or->set_attr.total_bytes);
+ 		or->out_data_integ.get_attributes_bytes = cpu_to_be64(
+@@ -1370,6 +1369,7 @@ int osd_finalize_request(struct osd_request *or,
+ {
+ 	struct osd_cdb_head *cdbh = osd_cdb_head(&or->cdb);
+ 	bool has_in, has_out;
++	u64 out_data_bytes = or->out.total_bytes;
+ 	int ret;
  
--int osd_req_read_kern(struct osd_request *or,
--	const struct osd_obj_id *obj, u64 offset, void *buff, u64 len);
--
--int osd_req_write_kern(struct osd_request *or,
--	const struct osd_obj_id *obj, u64 offset, void *buff, u64 len);
--
- #endif /*ifndef __EXOFS_COM_H__*/
-diff --git a/fs/exofs/osd.c b/fs/exofs/osd.c
-index b249ae9..48cc4d1 100644
---- a/fs/exofs/osd.c
-+++ b/fs/exofs/osd.c
-@@ -125,29 +125,3 @@ int extract_attr_from_req(struct osd_request *or, struct osd_attr *attr)
+ 	if (options & OSD_REQ_FUA)
+@@ -1439,7 +1439,8 @@ int osd_finalize_request(struct osd_request *or,
+ 		}
+ 	}
  
- 	return -EIO;
- }
--
--int osd_req_read_kern(struct osd_request *or,
--	const struct osd_obj_id *obj, u64 offset, void* buff, u64 len)
--{
--	struct request_queue *req_q = or->osd_dev->scsi_device->request_queue;
--	struct bio *bio = bio_map_kern(req_q, buff, len, GFP_KERNEL);
--
--	if (!bio)
--		return -ENOMEM;
--
--	osd_req_read(or, obj, bio, offset);
--	return 0;
--}
--
--int osd_req_write_kern(struct osd_request *or,
--	const struct osd_obj_id *obj, u64 offset, void* buff, u64 len)
--{
--	struct request_queue *req_q = or->osd_dev->scsi_device->request_queue;
--	struct bio *bio = bio_map_kern(req_q, buff, len, GFP_KERNEL);
--
--	if (!bio)
--		return -ENOMEM;
--
--	osd_req_write(or, obj, bio, offset);
--	return 0;
--}
-diff --git a/include/scsi/osd_initiator.h b/include/scsi/osd_initiator.h
-index b24d961..6132790 100644
---- a/include/scsi/osd_initiator.h
-+++ b/include/scsi/osd_initiator.h
-@@ -364,6 +364,8 @@ void osd_req_remove_object(struct osd_request *or, struct osd_obj_id *);
+-	ret = _osd_req_finalize_data_integrity(or, has_in, has_out, cap_key);
++	ret = _osd_req_finalize_data_integrity(or, has_in, has_out,
++					       out_data_bytes, cap_key);
+ 	if (ret)
+ 		return ret;
  
- void osd_req_write(struct osd_request *or,
- 	const struct osd_obj_id *, struct bio *data_out, u64 offset);
-+int osd_req_write_kern(struct osd_request *or,
-+	const struct osd_obj_id *obj, u64 offset, void *buff, u64 len);
- void osd_req_append(struct osd_request *or,
- 	const struct osd_obj_id *, struct bio *data_out);/* NI */
- void osd_req_create_write(struct osd_request *or,
-@@ -379,6 +381,8 @@ void osd_req_flush_object(struct osd_request *or,
- 
- void osd_req_read(struct osd_request *or,
- 	const struct osd_obj_id *, struct bio *data_in, u64 offset);
-+int osd_req_read_kern(struct osd_request *or,
-+	const struct osd_obj_id *obj, u64 offset, void *buff, u64 len);
- 
- /*
-  * Root/Partition/Collection/Object Attributes commands
 -- 
 1.6.2.1
 
