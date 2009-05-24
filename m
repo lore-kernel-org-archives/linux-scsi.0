@@ -1,142 +1,187 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: kernel crash when BSG request timesout
-Date: Sun, 24 May 2009 14:00:04 +0300
-Message-ID: <4A1928B4.7030807@panasas.com>
-References: <8DE113F8-5448-44BD-9EFE-27701933C126@qlogic.com>
+From: Alexander Beregalov <a.beregalov@gmail.com>
+Subject: next-20090522: kernel hungs at boot (async, libata/scsi)
+Date: Sun, 24 May 2009 15:43:32 +0400
+Message-ID: <a4423d670905240443q75da19f7k210263fcb81297ae@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-ca.panasas.com ([209.116.51.66]:13320 "EHLO
-	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752090AbZEXLBn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 May 2009 07:01:43 -0400
-In-Reply-To: <8DE113F8-5448-44BD-9EFE-27701933C126@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-next-owner@vger.kernel.org>
+Sender: linux-next-owner@vger.kernel.org
+To: linux-next <linux-next@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Cc: linux-scsi@vger.kernel.org
 
-On 05/22/2009 11:51 PM, Giridhar Malavali wrote:
-> Hi,
-> 
-> 	While testing the FC pass thru support I am constantly hitting a  
-> kernel crash when BSG request times out.
-> I took the latest FC pass thru patches from James Smart from
-> http://marc.info/?l=linux-scsi&m=123436574018579&w=2. and on top of it  
-> applied Boaz patches from
-> http://markmail.org/search/?q=FC+pass-through+support+&x=0&y=0#query:FC 
-> %20passthrough%20support%20from%3A%22Boaz%20Harrosh%22+page:2+mid:ke4lj4cg5ftc6nsc+state:results
-> 
-> Is there any additional patches I am missing?
-> 
-> Thanks,
-> Giridhar.M.B
-> 
-> [ 1464.584437] ------------[ cut here ]------------
-> [ 1464.584437] kernel BUG at block/blk-softirq.c:110!
-> [ 1464.584437] invalid opcode: 0000 [#1] SMP DEBUG_PAGEALLOC
-> [ 1464.584437] last sysfs file: /sys/devices/system/cpu/cpu3/cache/ 
-> index2/shared_cpu_map
-> [ 1464.584437] CPU 3
-> [ 1464.584437] Modules linked in: qla2xxx netconsole scsi_transport_fc  
-> [last unloaded: qla2xxx]
-> [ 1464.584437] Pid: 0, comm: swapper Not tainted 2.6.30-rc4 #3 X7DB8
-> [ 1464.584437] RIP: 0010:[<ffffffff80361112>]  [<ffffffff80361112>]  
-> __blk_complete_request+0xe8/0xec
-> [ 1464.584437] RSP: 0018:ffff880001063e10  EFLAGS: 00010046
-> [ 1464.584437] RAX: 0000000000000001 RBX: ffff88007ab93e80 RCX:  
-> ffffffff8070f680
-> [ 1464.584437] RDX: 0000000000008988 RSI: 0000000000000086 RDI:  
-> ffff88007ab93e80
-> [ 1464.584437] RBP: ffff880001063e30 R08: 00000000ffffffff R09:  
-> 0000000000000003
-> [ 1464.584437] R10: 000000000000000a R11: 0000000000000000 R12:  
-> ffff88007a8b26c8
-> [ 1464.584437] R13: ffff88007a8b2a70 R14: ffff88007a8b26c8 R15:  
-> 0000000000000286
-> [ 1464.584437] FS:  0000000000000000(0000) GS:ffff880001060000(0000)  
-> knlGS:0000000000000000
-> [ 1464.584437] CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-> [ 1464.584437] CR2: 00007f7943ffd4a8 CR3: 000000007fb1e000 CR4:  
-> 00000000000006e0
-> [ 1464.584437] DR0: 0000000000000000 DR1: 0000000000000000 DR2:  
-> 0000000000000000
-> [ 1464.584437] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:  
-> 0000000000000400
-> [ 1464.584437] Process swapper (pid: 0, threadinfo ffff88007f9fe000,  
-> task ffff88007f9e1990)
-> [ 1464.584437] Stack:
-> [ 1464.584437]  ffff88007a8b2970 ffff88007ab93e80 0000000000000000  
-> ffff88007a8b2a70
-> [ 1464.584437]  ffff880001063e50 ffffffff80361299 ffff88007a8b26c8  
-> ffff88007a8b2930
-> [ 1464.584437]  ffff880001063e90 ffffffff803614e5 ffff88007f9b8000  
-> ffff88007a8b26c8
-> [ 1464.584437] Call Trace:
-> [ 1464.584437]  <IRQ> <0> [<ffffffff80361299>] blk_rq_timed_out 
-> +0x48/0x67
-> [ 1464.584437]  [<ffffffff803614e5>] blk_rq_timed_out_timer+0xd6/0x121
-> [ 1464.584437]  [<ffffffff8036140f>] ? blk_rq_timed_out_timer+0x0/0x121
-> [ 1464.584437]  [<ffffffff80240857>] run_timer_softirq+0x147/0x215
-> [ 1464.584437]  [<ffffffff8023b67b>] ? raise_softirq+0x59/0x68
-> [ 1464.584437]  [<ffffffff8023bf67>] __do_softirq+0xba/0x1a3
-> [ 1464.584437]  [<ffffffff8020c36c>] call_softirq+0x1c/0x30
-> [ 1464.584437]  [<ffffffff8020de61>] do_softirq+0x61/0xa0
-> [ 1464.584437]  [<ffffffff8023b8b1>] irq_exit+0x51/0x59
-> [ 1464.584437]  [<ffffffff8021d888>] smp_apic_timer_interrupt+0x6d/0x96
-> [ 1464.584437]  [<ffffffff8020bd83>] apic_timer_interrupt+0x13/0x20
-> [ 1464.584437]  <EOI> <0> [<ffffffff80212ac8>] ? mwait_idle+0xfe/0x10f
-> [ 1464.584437]  [<ffffffff80212abf>] ? mwait_idle+0xf5/0x10f
-> [ 1464.584437]  [<ffffffff8020a4ce>] ? cpu_idle+0x63/0x97
-> [ 1464.584437]  [<ffffffff8050d3c4>] ? start_secondary+0x183/0x1df
-> [ 1464.584437] Code: b7 0f 36 80 48 89 5b 28 66 c7 43 30 00 00 48 8d  
-> 73 10 31 d2 e8 4c 8a ef ff eb b2 bf 04 00 00 00 e8 05 a3 ed ff 0f 1f  
-> 40 00 eb a2 <0f> 0b eb fe 55 48 89 e5 48 8d 47 50 f0 0f ba 28 00 19 d2  
-> 85 d2
-> [ 1464.584437] RIP  [<ffffffff80361112>] __blk_complete_request 
-> +0xe8/0xec
-> [ 1464.584437]  RSP <ffff880001063e10>
-> [ 1464.584437] ---[ end trace 7325773d478b6460 ]---
-> [ 1464.584437] Kernel panic - not syncing: Fatal exception in interrupt
-> [ 1464.584437] Pid: 0, comm: swapper Tainted: G      D    2.6.30-rc4 #3
-> [ 1464.584437] Call Trace:
-> [ 1464.584437]  <IRQ>  [<ffffffff8051098a>] panic+0x75/0x146
-> [ 1464.584437]  [<ffffffff8020f31b>] oops_end+0x8f/0x97
-> [ 1464.584437]  [<ffffffff8020f4ea>] die+0x46/0x60
-> [ 1464.584437]  [<ffffffff8020cb76>] do_trap+0x129/0x152
-> [ 1464.584437]  [<ffffffff8024f84d>] ? atomic_notifier_call_chain 
-> +0x15/0x17
-> [ 1464.584437]  [<ffffffff8020cf62>] do_invalid_op+0x90/0xa1
-> [ 1464.584437]  [<ffffffff80361112>] ? __blk_complete_request+0xe8/0xec
-> [ 1464.584437]  [<ffffffff80513acf>] ? trace_hardirqs_off_thunk+0x3a/ 
-> 0x6c
-> [ 1464.584437]  [<ffffffff8020c005>] invalid_op+0x15/0x20
-> [ 1464.584437]  [<ffffffff80361112>] ? __blk_complete_request+0xe8/0xec
-> [ 1464.584437]  [<ffffffff80361299>] blk_rq_timed_out+0x48/0x67
-> [ 1464.584437]  [<ffffffff803614e5>] blk_rq_timed_out_timer+0xd6/0x121
-> [ 1464.584437]  [<ffffffff8036140f>] ? blk_rq_timed_out_timer+0x0/0x121
-> [ 1464.584437]  [<ffffffff80240857>] run_timer_softirq+0x147/0x215
-> [ 1464.584437]  [<ffffffff8023b67b>] ? raise_softirq+0x59/0x68
-> [ 1464.584437]  [<ffffffff8023bf67>] __do_softirq+0xba/0x1a3
-> [ 1464.584437]  [<ffffffff8020c36c>] call_softirq+0x1c/0x30
-> [ 1464.584437]  [<ffffffff8020de61>] do_softirq+0x61/0xa0
-> [ 1464.584437]  [<ffffffff8023b8b1>] irq_exit+0x51/0x59
-> [ 1464.584437]  [<ffffffff8021d888>] smp_apic_timer_interrupt+0x6d/0x96
-> [ 1464.584437]  [<ffffffff8020bd83>] apic_timer_interrupt+0x13/0x20
-> [ 1464.584437]  <EOI>  [<ffffffff80212ac8>] ? mwait_idle+0xfe/0x10f
-> [ 1464.584437]  [<ffffffff80212abf>] ? mwait_idle+0xf5/0x10f
-> [ 1464.584437]  [<ffffffff8020a4ce>] ? cpu_idle+0x63/0x97
-> [ 1464.584437]  [<ffffffff8050d3c4>] ? start_secondary+0x183/0x1df
-> 
-> --
+Hi
 
-I did not exactly understand which tree are you using. There where
-lots of related changes around these areas
+Host has pata_amd (ata1,2) and pata_pdc2027x (ata3,4).
 
-Please try James post merge tree for the FC pass through support.
-It has all you need:
- git clone git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-post-merge-2.6.git
+It cannot add ata2 and ata4.
 
-Thanks
-Boaz
+bus: 'pci': driver_probe_device: matched device 0000:00:09.0 with
+driver pata_amd
+bus: 'pci': really_probe: probing driver pata_amd with device 0000:00:09.0
+pata_amd 0000:00:09.0: version 0.4.1
+pata_amd 0000:00:09.0: setting latency timer to 64
+scsi0 : pata_amd
+device: 'host0': device_add
+bus: 'scsi': add device host0
+device: 'host0': device_add
+scsi1 : pata_amd
+device: 'host1': device_add
+bus: 'scsi': add device host1
+device: 'host1': device_add
+ata1: PATA max UDMA/133 cmd 0x1f0 ctl 0x3f6 bmdma 0xf000 irq 14
+ata2: PATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0xf008 irq 15
+driver: '0000:00:09.0': driver_bound: bound to device 'pata_amd'
+bus: 'pci': really_probe: bound device 0000:00:09.0 to driver pata_amd
+bus: 'pci': add driver pata_pdc2027x
+bus: 'pci': driver_probe_device: matched device 0000:01:08.0 with
+driver pata_pdc2027x
+bus: 'pci': really_probe: probing driver pata_pdc2027x with device 0000:01:08.0
+pata_pdc2027x 0000:01:08.0: version 1.0
+ACPI: PCI Interrupt Link [APC1] enabled at IRQ 16
+pata_pdc2027x 0000:01:08.0: PCI INT A -> Link[APC1] -> GSI 16 (level,
+high) -> IRQ 16
+pata_pdc2027x 0000:01:08.0: PLL input clock 16686 kHz
+scsi2 : pata_pdc2027x
+device: 'host2': device_add
+bus: 'scsi': add device host2
+device: 'host2': device_add
+ata1.00: ATA-7: ST3250823A, 3.02, max UDMA/100
+ata1.00: 488397168 sectors, multi 16: LBA48
+ata1: nv_mode_filter: 0x3f39f&0x3f01f->0x3f01f, BIOS=0x3f000
+(0xc600c600) ACPI=0x3f01f (20:600:0x13)
+scsi3 : pata_pdc2027x
+device: 'host3': device_add
+bus: 'scsi': add device host3
+device: 'host3': device_add
+ata3: PATA max UDMA/100 mmio m65536@0xed040000 cmd 0xed0417c0 irq 16
+ata4: PATA max UDMA/100 mmio m65536@0xed040000 cmd 0xed0415c0 irq 16
+driver: '0000:01:08.0': driver_bound: bound to device 'pata_pdc2027x'
+bus: 'pci': really_probe: bound device 0000:01:08.0 to driver pata_pdc2027x
+ata1.00: configured for UDMA/100
+
+ata3.00: ATA-7: ST3250823A, 3.03, max UDMA/100
+ata3.00: 488397168 sectors, multi 16: LBA48
+ata3.00: configured for UDMA/100
+
+INFO: task swapper:1 blocked for more than 120 seconds.
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+swapper       D c0586e00  5492     1      0 0x00000000
+ f704ff3c 00000046 c014eca4 c0586e00 00000296 f7050000 f7050284 e41d1a0a
+ 00000003 00000001 f7050284 f704ff3c c0144247 f704ff60 c0586e6c 00000000
+ f704ff80 c014456d f7050000 f7050000 c044fb85 c06eb6e0 00000005 c014eca4
+Call Trace:
+ [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
+ [<c0144247>] ? lowest_in_progress+0x37/0x70
+ [<c014456d>] async_synchronize_cookie_domain+0xbd/0x150
+ [<c044fb85>] ? _spin_unlock_irqrestore+0x55/0x70
+ [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
+ [<c013e520>] ? autoremove_wake_function+0x0/0x40
+ [<c014460d>] async_synchronize_cookie+0xd/0x10
+ [<c0144628>] async_synchronize_full+0x18/0x40
+ [<c033e318>] wait_for_device_probe+0x68/0x70
+ [<c013e520>] ? autoremove_wake_function+0x0/0x40
+ [<c0704e62>] prepare_namespace+0x18/0x17c
+ [<c018b510>] ? sys_access+0x20/0x30
+ [<c070450b>] kernel_init+0xd8/0xf1
+ [<c0704433>] ? kernel_init+0x0/0xf1
+ [<c0103677>] kernel_thread_helper+0x7/0x10
+no locks held by swapper/1.
+INFO: task async/0:500 blocked for more than 120 seconds.
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+async/0       D c0586e00  7380   500      2 0x00000000
+ f7103ed4 00000046 c014eca4 c0586e00 00000292 f72a0000 f72a0284 5b573649
+ 00000001 00000003 f72a0284 f7103ed4 c0144247 f7103ef8 c06ec3c0 00000000
+ f7103f18 c014456d f7103f20 c034ca95 00000002 f70ed9cc 00000005 22222222
+Call Trace:
+ [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
+ [<c0144247>] ? lowest_in_progress+0x37/0x70
+ [<c014456d>] async_synchronize_cookie_domain+0xbd/0x150
+ [<c034ca95>] ? scsi_alloc_target+0x275/0x2c0
+ [<c013e520>] ? autoremove_wake_function+0x0/0x40
+ [<c0144665>] async_synchronize_full_domain+0x15/0x20
+ [<c034d5f2>] __scsi_add_device+0xb2/0xe0
+ [<c01444dd>] ? async_synchronize_cookie_domain+0x2d/0x150
+ [<c03611d3>] ata_scsi_scan_host+0x103/0x180
+ [<c035dac1>] async_port_probe+0x91/0xc0
+ [<c0144350>] async_thread+0xd0/0x230
+ [<c044d12d>] ? schedule+0x37d/0x4c0
+ [<c014ed0b>] ? trace_hardirqs_on+0xb/0x10
+ [<c0124ac0>] ? default_wake_function+0x0/0x10
+ [<c0144280>] ? async_thread+0x0/0x230
+ [<c013e2a3>] kthread+0x43/0x80
+ [<c013e260>] ? kthread+0x0/0x80
+ [<c0103677>] kernel_thread_helper+0x7/0x10
+1 lock held by async/0/500:
+ #0:  (&shost->scan_mutex){+.+...}, at: [<c034d5ae>] __scsi_add_device+0x6e/0xe0
+INFO: task async/1:502 blocked for more than 120 seconds.
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+async/1       D c0586e00  7488   502      2 0x00000000
+ f6aeff24 00000046 c014eca4 c0586e00 00000292 f72a2920 f72a2ba4 5b0bdd4d
+ 00000001 00000001 f72a2ba4 f6aeff24 c0144247 f6aeff48 c0586e6c 00000000
+ f6aeff68 c014456d f6aeff34 f72a2920 c0108981 00000000 00000002 f6aeff48
+Call Trace:
+ [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
+ [<c0144247>] ? lowest_in_progress+0x37/0x70
+ [<c014456d>] async_synchronize_cookie_domain+0xbd/0x150
+ [<c0108981>] ? sched_clock+0x21/0x70
+ [<c014c23d>] ? put_lock_stats+0xd/0x30
+ [<c013e520>] ? autoremove_wake_function+0x0/0x40
+ [<c014460d>] async_synchronize_cookie+0xd/0x10
+ [<c035dad1>] async_port_probe+0xa1/0xc0
+ [<c0144350>] async_thread+0xd0/0x230
+ [<c044d12d>] ? schedule+0x37d/0x4c0
+ [<c014ed0b>] ? trace_hardirqs_on+0xb/0x10
+ [<c0124ac0>] ? default_wake_function+0x0/0x10
+ [<c0144280>] ? async_thread+0x0/0x230
+ [<c013e2a3>] kthread+0x43/0x80
+ [<c013e260>] ? kthread+0x0/0x80
+ [<c0103677>] kernel_thread_helper+0x7/0x10
+no locks held by async/1/502.
+INFO: task async/2:509 blocked for more than 120 seconds.
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+async/2       D c0586e00  7604   509      2 0x00000000
+ f72abf24 00000046 c014eca4 c0586e00 00000292 f71cd240 f71cd4c4 71cf4cd4
+ 00000001 00000001 f71cd4c4 f72abf24 c0144247 f72abf48 c0586e6c 00000000
+ f72abf68 c014456d 00000292 f72abf38 c014ed0b f72abf48 00000003 00000292
+Call Trace:
+ [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
+ [<c0144247>] ? lowest_in_progress+0x37/0x70
+ [<c014456d>] async_synchronize_cookie_domain+0xbd/0x150
+ [<c014ed0b>] ? trace_hardirqs_on+0xb/0x10
+ [<c013e520>] ? autoremove_wake_function+0x0/0x40
+ [<c014460d>] async_synchronize_cookie+0xd/0x10
+ [<c035dab5>] async_port_probe+0x85/0xc0
+ [<c0144350>] async_thread+0xd0/0x230
+ [<c044d12d>] ? schedule+0x37d/0x4c0
+ [<c014ed0b>] ? trace_hardirqs_on+0xb/0x10
+ [<c0124ac0>] ? default_wake_function+0x0/0x10
+ [<c0144280>] ? async_thread+0x0/0x230
+ [<c013e2a3>] kthread+0x43/0x80
+ [<c013e260>] ? kthread+0x0/0x80
+ [<c0103677>] kernel_thread_helper+0x7/0x10
+no locks held by async/2/509.
+INFO: task async/3:511 blocked for more than 120 seconds.
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+async/3       D c0586e00  7604   511      2 0x00000000
+ f7163f24 00000046 c014eca4 c0586e00 00000292 f70a9490 f70a9714 5b5d68ff
+ 00000001 00000001 f70a9714 f7163f24 c0144247 f7163f48 c0586e6c 00000000
+ f7163f68 c014456d f7163f34 f70a9490 c0108981 00000000 00000004 f7163f48
+Call Trace:
+ [<c014eca4>] ? trace_hardirqs_on_caller+0x124/0x180
+ [<c0144247>] ? lowest_in_progress+0x37/0x70
+ [<c014456d>] async_synchronize_cookie_domain+0xbd/0x150
+ [<c0108981>] ? sched_clock+0x21/0x70
+ [<c014c23d>] ? put_lock_stats+0xd/0x30
+ [<c013e520>] ? autoremove_wake_function+0x0/0x40
+ [<c014460d>] async_synchronize_cookie+0xd/0x10
+ [<c035dad1>] async_port_probe+0xa1/0xc0
+ [<c0144350>] async_thread+0xd0/0x230
+ [<c044d12d>] ? schedule+0x37d/0x4c0
+ [<c014ed0b>] ? trace_hardirqs_on+0xb/0x10
+ [<c0124ac0>] ? default_wake_function+0x0/0x10
+ [<c0144280>] ? async_thread+0x0/0x230
+ [<c013e2a3>] kthread+0x43/0x80
+ [<c013e260>] ? kthread+0x0/0x80
+ [<c0103677>] kernel_thread_helper+0x7/0x10
+no locks held by async/3/511.
