@@ -1,79 +1,47 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 0/] OSD changes for 2.6.31
-Date: Sun, 24 May 2009 19:58:29 +0300
-Message-ID: <4A197CB5.60709@panasas.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 01/10 resend] libosd: OSD2r05: Additional command enums
+Date: Sun, 24 May 2009 20:00:39 +0300
+Message-ID: <1243184439-16881-1-git-send-email-bharrosh@panasas.com>
+References: <4A197CB5.60709@panasas.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f174.google.com ([209.85.218.174]:41084 "EHLO
-	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752991AbZEXQ6f (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 May 2009 12:58:35 -0400
-Received: by bwz22 with SMTP id 22so2619719bwz.37
-        for <linux-scsi@vger.kernel.org>; Sun, 24 May 2009 09:58:35 -0700 (PDT)
+Received: from gw-ca.panasas.com ([209.116.51.66]:1853 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753641AbZEXRAn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 May 2009 13:00:43 -0400
+In-Reply-To: <4A197CB5.60709@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
-Cc: Jeff Garzik <jeff@garzik.org>, Al Viro <viro@ZenIV.linux.org.uk>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>
+Cc: Jeff Garzik <jeff@garzik.org>
 
+Add all constant definitions of new OSD commands added in
+revision 4 & 5. Mainly for creating snapshots and clones.
 
-These are the accumulated osd patches for the next merge window,
-Linux 2.6.31. 
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ include/scsi/osd_protocol.h |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-Most of these patches are a repost rebased on latest scsi-misc
+diff --git a/include/scsi/osd_protocol.h b/include/scsi/osd_protocol.h
+index 62b2ab8..2cc8e8b 100644
+--- a/include/scsi/osd_protocol.h
++++ b/include/scsi/osd_protocol.h
+@@ -303,7 +303,15 @@ enum osd_service_actions {
+ 	OSD_ACT_V2(REMOVE_MEMBER_OBJECTS,	0x21)
+ 	OSD_ACT_V2(GET_MEMBER_ATTRIBUTES,	0x22)
+ 	OSD_ACT_V2(SET_MEMBER_ATTRIBUTES,	0x23)
++
++	OSD_ACT_V2(CREATE_CLONE,		0x28)
++	OSD_ACT_V2(CREATE_SNAPSHOT,		0x29)
++	OSD_ACT_V2(DETACH_CLONE,		0x2A)
++	OSD_ACT_V2(REFRESH_SNAPSHOT_CLONE,	0x2B)
++	OSD_ACT_V2(RESTORE_PARTITION_FROM_SNAPSHOT, 0x2C)
++
+ 	OSD_ACT_V2(READ_MAP,			0x31)
++	OSD_ACT_V2(READ_MAPS_COMPARE,		0x32)
+ 
+ 	OSD_ACT_V1_V2(PERFORM_SCSI_COMMAND,	0x8F7E, 0x8F7C)
+ 	OSD_ACT_V1_V2(SCSI_TASK_MANAGEMENT,	0x8F7F, 0x8F7D)
+-- 
+1.6.2.1
 
-List of patches:
-[PATCH 01/10 resend] libosd: OSD2r05: Additional command enums                                                        
-[PATCH 02/10 resend] libosd: OSD2r05: Attribute definitions
-[PATCH 03/10 resend] libosd: Better printout of OSD target system information
-[PATCH 04/10 resend] libosd: osd_req_{read,write}_kern new API
-[PATCH 05/10 resend] libosd: Let _osd_req_finalize_data_integrity receive number of out_bytes
-[PATCH 06/10 resend] libosd: osd_req_{read,write} takes a length parameter
-
-   These are a resend. The last 2 patches are important for supporting Jeff's
-   osdblk driver. (The first 4 are old patches that thier time has come)
-
-[PATCH 07/10] libosd: Define an osd_dev wrapper to retrieve the request_queue
-   Simple wrapper
-
-[PATCH 08/10] osduld: use filp_open() when looking up an osd-device
-
-    This patch was inspired by Al Viro. It uses the in-kernel open-file
-    mechanism to look up the osd char-device for Kernel users like exofs
-    and later pNFS-Objlayout.
-    It was heavily tested and works well.
-    It fixes the problem we had before, of need to open+close a file handle
-    on the osd-char-device before mounting an exofs.
-    Please review
-
-[PATCH 09/10] libosd: Use REQ_QUIET requests.
-    Recent scsi_lib changes, caused a dmesg span in exofs+osd regular use,
-    because of the way we routinely receive a recovered scsi sense. Recently, for
-    reason I could not find, this condition started to print messages at:
-       scsi_io_comlition:778 (look for "== RECOVERED_ERROR")
-    Use of a REQ_QUIET flag is needed to silence these prints.
-    OSD has it's own prints for scsi-sense returns, when needed.
-
-[PATCH 10/10] osd: Remove out-of-tree left overs
-
-log stat
- drivers/scsi/osd/Kbuild          |   25 -----------
- drivers/scsi/osd/Makefile        |   37 -----------------
- drivers/scsi/osd/osd_initiator.c |   83 +++++++++++++++++++++++++++-----------
- drivers/scsi/osd/osd_uld.c       |   66 ++++++++++++++----------------
- fs/exofs/common.h                |    6 ---
- fs/exofs/inode.c                 |    8 ++--
- fs/exofs/osd.c                   |   26 ------------
- include/scsi/osd_attributes.h    |   74 +++++++++++++++++++++++++++++++++-
- include/scsi/osd_initiator.h     |   14 +++++-
- include/scsi/osd_protocol.h      |    8 ++++
- 10 files changed, 185 insertions(+), 162 deletions(-)
- delete mode 100755 drivers/scsi/osd/Makefile
-
-These patches are available in the git repository at:
-
-  git://git.open-osd.org/linux-open-osd.git osd-devel
-
-Thanks
-Boaz
