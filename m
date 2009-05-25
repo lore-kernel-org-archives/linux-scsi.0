@@ -1,32 +1,40 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [loongson-PATCH-v1 24/27] fixup for FUJITSU disk
-Date: Mon, 25 May 2009 23:17:16 +0400
-Message-ID: <4A1AEEBC.2080108@ru.mvista.com>
-References: <cover.1242855716.git.wuzhangjin@gmail.com>	<1243230339.9819.18.camel@localhost.localdomain>	<4A1A4A54.6090401@lemote.com> <200905251656.25357.bzolnier@gmail.com>	<4A1AEBF7.7040402@ru.mvista.com> <yq1tz39dmmn.fsf@sermon.lab.mkp.net>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 25/20] sysfs: Only support removing emtpy sysfs  directories.
+Date: Mon, 25 May 2009 16:14:04 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0905251555050.26833-100000@netrider.rowland.org>
+References: <1243275596.2975.4.camel@poy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <yq1tz39dmmn.fsf@sermon.lab.mkp.net>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, =?UTF-8?B?6IOh5rSq5YW1?= <huhb@lemote.com>, yanh@lemote.com, wuzhangjin@gmail.com, linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Philippe Vachon <philippe@cowpig.ca>, Zhang Le <r0bertz@gentoo.org>, Zhang Fuxin <zhangfx@lemote.com>, Arnaud Patard <apatard@mandriva.com>, loongson-dev@googlegroups.com, gnewsense-dev@nongnu.org, Nicholas Mc Guire <hofrat@hofr.at>, Liu Junliang <liujl@lemote.com>, Erwan Lerale <erwan@thiscow.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <1243275596.2975.4.camel@poy>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, SCSI development list <linux-scsi@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Kroah-Hartman <gregkh@suse.de>, Kernel development list <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Cornelia Huck <cornelia.huck@de.ibm.com>, linux-fsdevel@vger.kernel.org, "Eric W. Biederman" <ebiederm@aristanetworks.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello.
+On Mon, 25 May 2009, Kay Sievers wrote:
 
-Martin K. Petersen wrote:
+> On Mon, 2009-05-25 at 11:49 -0400, Alan Stern wrote:
+> > Since this appears to be a bug in the SCSI layer, let's add some SCSI
+> > people to the CC: list.
+> > 
+> > To summarize the problem: The SCSI core tries to unregister a host 
+> > while its sysfs directory is still non-empty because the target hasn't 
+> > been unregistered yet.
+> 
+> > Can you provide more of the context?  I'd like to see the log starting 
+> > from when these devices were first registered.
+> 
+> I was able to trigger it with a USB storage device only, connected to a
+> hub, and I removed the hub from the host.
 
->>>Could you please explain the issue with platform specific code a bit
->>>more?
+Okay, it's a long log dump, but useful.  Evidently the problem is
+caused by the fact that scsi_target_reap() is called by
+scsi_device_dev_release_usercontext() instead of by
+__scsi_remove_device() (both functions in drivers/scsi/scsi_sysfs.c).
 
->>>Is it related to a cable detection by any chance?
+There's probably a reason for this, but I don't know what it is.  Maybe 
+James can explain.
 
-> Sergei>    I guess it's rdmsr()/wrmsr()...
+Alan Stern
 
-> Those are only used when the driver is explicitly loaded with
-> use_msr=1.  The default is to use PCI config space/VSA.
-
-    But you need them defined for the driver to build...
-
-MBR, Sergei
