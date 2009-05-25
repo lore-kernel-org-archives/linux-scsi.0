@@ -1,42 +1,84 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 03/13] scsi: unify allocation of scsi command and sense
-	buffer
-Date: Mon, 25 May 2009 12:49:08 +0200
-Message-ID: <20090525104908.GV11363@kernel.dk>
-References: <1243236668-3398-1-git-send-email-jens.axboe@oracle.com> <1243236668-3398-6-git-send-email-jens.axboe@oracle.com> <20090525074124.GA31746@infradead.org> <20090525074647.GK11363@kernel.dk> <20090525075008.GA23413@infradead.org> <4A1A7406.5060106@panasas.com> <20090525104215.GA3191@infradead.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 0/] OSD changes for 2.6.31
+Date: Mon, 25 May 2009 10:39:30 -0400
+Message-ID: <4A1AADA2.7050302@garzik.org>
+References: <4A197CB5.60709@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:54925 "EHLO kernel.dk"
+Received: from srv5.dvmed.net ([207.36.208.214]:59819 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753429AbZEYKtH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 May 2009 06:49:07 -0400
-Content-Disposition: inline
-In-Reply-To: <20090525104215.GA3191@infradead.org>
+	id S1751190AbZEYOjs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 May 2009 10:39:48 -0400
+In-Reply-To: <4A197CB5.60709@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, chris.mason@oracle.com, david@fromorbit.com, akpm@linux-foundation.org, jack@suse.cz, yanmin_zhang@linux.intel.com, linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, Andi Kleen <andi@firstfloor.org>, James Bottomley <James.Bottomley@hansenpartnership.com>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>, Al Viro <viro@ZenIV.linux.org.uk>
 
-On Mon, May 25 2009, Christoph Hellwig wrote:
-> On Mon, May 25, 2009 at 01:33:42PM +0300, Boaz Harrosh wrote:
-> > 1. If we have a machine with few type of hosts active each with it's own
-> > cmnd_slab we end up with many more slabs then today. Even though at the
-> > end they all happen to be of the same size. (With the pool reserves it
-> > can get big also).
+Boaz Harrosh wrote:
+> These are the accumulated osd patches for the next merge window,
+> Linux 2.6.31. 
 > 
-> Note that this should be optional.  Device not having their own
-> per-command structure would continue using the global pools.  Those
-> that have their own per-command structures already have their own pools
-> anyway.
+> Most of these patches are a repost rebased on latest scsi-misc
+> 
+> List of patches:
+> [PATCH 01/10 resend] libosd: OSD2r05: Additional command enums                                                        
+> [PATCH 02/10 resend] libosd: OSD2r05: Attribute definitions
+> [PATCH 03/10 resend] libosd: Better printout of OSD target system information
+> [PATCH 04/10 resend] libosd: osd_req_{read,write}_kern new API
+> [PATCH 05/10 resend] libosd: Let _osd_req_finalize_data_integrity receive number of out_bytes
+> [PATCH 06/10 resend] libosd: osd_req_{read,write} takes a length parameter
+> 
+>    These are a resend. The last 2 patches are important for supporting Jeff's
+>    osdblk driver. (The first 4 are old patches that thier time has come)
+> 
+> [PATCH 07/10] libosd: Define an osd_dev wrapper to retrieve the request_queue
+>    Simple wrapper
+> 
+> [PATCH 08/10] osduld: use filp_open() when looking up an osd-device
+> 
+>     This patch was inspired by Al Viro. It uses the in-kernel open-file
+>     mechanism to look up the osd char-device for Kernel users like exofs
+>     and later pNFS-Objlayout.
+>     It was heavily tested and works well.
+>     It fixes the problem we had before, of need to open+close a file handle
+>     on the osd-char-device before mounting an exofs.
+>     Please review
+> 
+> [PATCH 09/10] libosd: Use REQ_QUIET requests.
+>     Recent scsi_lib changes, caused a dmesg span in exofs+osd regular use,
+>     because of the way we routinely receive a recovered scsi sense. Recently, for
+>     reason I could not find, this condition started to print messages at:
+>        scsi_io_comlition:778 (look for "== RECOVERED_ERROR")
+>     Use of a REQ_QUIET flag is needed to silence these prints.
+>     OSD has it's own prints for scsi-sense returns, when needed.
+> 
+> [PATCH 10/10] osd: Remove out-of-tree left overs
+> 
+> log stat
+>  drivers/scsi/osd/Kbuild          |   25 -----------
+>  drivers/scsi/osd/Makefile        |   37 -----------------
+>  drivers/scsi/osd/osd_initiator.c |   83 +++++++++++++++++++++++++++-----------
+>  drivers/scsi/osd/osd_uld.c       |   66 ++++++++++++++----------------
+>  fs/exofs/common.h                |    6 ---
+>  fs/exofs/inode.c                 |    8 ++--
+>  fs/exofs/osd.c                   |   26 ------------
+>  include/scsi/osd_attributes.h    |   74 +++++++++++++++++++++++++++++++++-
+>  include/scsi/osd_initiator.h     |   14 +++++-
+>  include/scsi/osd_protocol.h      |    8 ++++
+>  10 files changed, 185 insertions(+), 162 deletions(-)
+>  delete mode 100755 drivers/scsi/osd/Makefile
+> 
+> These patches are available in the git repository at:
+> 
+>   git://git.open-osd.org/linux-open-osd.git osd-devel
 
-The multiple pools of the same size "issue" can also easily be resolved
-by having SCSI provide a way to setup/destroy these pools. Then it can
-just reuse an existing pool, if it has the same size.
+Any chance osdblk could get added to this patchset sometime soon?
 
-However, I doubt that this is really a real life issue that's worth
-worrying about.
+	Jeff
 
--- 
-Jens Axboe
+
+
 
