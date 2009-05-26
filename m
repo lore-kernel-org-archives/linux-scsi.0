@@ -1,34 +1,89 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [loongson-PATCH-v1 24/27] fixup for FUJITSU disk
-Date: Tue, 26 May 2009 08:56:05 +0100
-Message-ID: <20090526085605.014d0087@lxorguk.ukuu.org.uk>
-References: <cover.1242855716.git.wuzhangjin@gmail.com>
-	<1243230339.9819.18.camel@localhost.localdomain>
-	<4A1A4A54.6090401@lemote.com>
-	<200905251656.25357.bzolnier@gmail.com>
-	<4A1AEBF7.7040402@ru.mvista.com>
-	<yq1tz39dmmn.fsf@sermon.lab.mkp.net>
-	<1243300890.9819.40.camel@localhost.localdomain>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 03/13] scsi: unify allocation of scsi command and sense
+	buffer
+Date: Tue, 26 May 2009 16:56:30 +0900
+Message-ID: <20090526165644D.fujita.tomonori@lab.ntt.co.jp>
+References: <20090526062952.GB11363@kernel.dk>
+	<20090526162545U.fujita.tomonori@lab.ntt.co.jp>
+	<20090526073229.GC11363@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-mips-bounce@linux-mips.org>
-In-Reply-To: <1243300890.9819.40.camel@localhost.localdomain>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-To: yanh@lemote.com
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, =?UTF-8?B?6IOh5rSq5YW1?= <huhb@lemote.com>, wuzhangjin@gmail.com, linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Philippe Vachon <philippe@cowpig.ca>, Zhang Le <r0bertz@gentoo.org>, Zhang Fuxin <zhangfx@lemote.com>, Arnaud Patard <apatard@mandriva.com>, loongson-dev@googlegroups.com, gnewsense-dev@nongnu.org, Nicholas Mc Guire <hofrat@hofr.at>, Liu Junliang <liujl@lemote.com>, Erwan Lerale <erwan@thiscow.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sh.osrg.net ([192.16.179.4]:49551 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754508AbZEZH6P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 May 2009 03:58:15 -0400
+In-Reply-To: <20090526073229.GC11363@kernel.dk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jens.axboe@oracle.com
+Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, rdreier@cisco.com, bharrosh@panasas.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, chris.mason@oracle.com, david@fromorbit.com, hch@infradead.org, akpm@linux-foundation.org, jack@suse.cz, yanmin_zhang@linux.intel.com, linux-scsi@vger.kernel.org
 
-> > In any case I have yet to see a CS5536 system whose BIOS sets the cable
-> > detection bit.  If that's the problem I guess we could add a quirk flag
-> > to override the (lack of) BIOS setting.
+On Tue, 26 May 2009 09:32:29 +0200
+Jens Axboe <jens.axboe@oracle.com> wrote:
+
+> On Tue, May 26 2009, FUJITA Tomonori wrote:
+> > On Tue, 26 May 2009 08:29:53 +0200
+> > Jens Axboe <jens.axboe@oracle.com> wrote:
 > > 
-> This may be the cause that udma5 cannot be set.
+> > > On Tue, May 26 2009, FUJITA Tomonori wrote:
+> > > > On Mon, 25 May 2009 18:45:25 -0700
+> > > > Roland Dreier <rdreier@cisco.com> wrote:
+> > > > 
+> > > > >  > Ideally there should be a MACRO that is defined to WORD_SIZE on cache-coherent
+> > > > >  > ARCHs and to SMP_CACHE_BYTES on none-cache-coherent systems and use that size
+> > > > >  > at the __align() attribute. (So only stupid ARCHES get hurt)
+> > > > > 
+> > > > > this seems to come up repeatedly -- I had a proposal a _long_ time ago
+> > > > > that never quite got merged, cf http://lwn.net/Articles/2265/ and
+> > > > > http://lwn.net/Articles/2269/ -- from 2002 (!?).  The idea is to go a
+> > > > 
+> > > > Yeah, I think that Benjamin did last time:
+> > > > 
+> > > > http://www.mail-archive.com/linux-scsi@vger.kernel.org/msg12632.html
+> > > > 
+> > > > IIRC, James didn't like it so I wrote the current code. I didn't see
+> > > > any big performance difference with scsi_debug:
+> > > > 
+> > > > http://marc.info/?l=linux-scsi&m=120038907123706&w=2
+> > > > 
+> > > > Jens, you see the performance difference due to this unification?
+> > > 
+> > > Yes, it's definitely a worth while optimization. The problem isn't as
+> > > such this specific allocation, it's the total number of allocations we
+> > > do for a piece of IO. This sense buffer one is just one of many, I'm
+> > > continually working to reduce them. If we get rid of this one and add
+> > > the ->alloc_cmd() stuff, we can kill one more. The bio path already lost
+> > > one. So in the IO stack, we went from 6 allocations to 3 for a piece of
+> > > IO. And then it starts to add up. Even at just 30-50k iops, that's more
+> > > than 1% of time in the testing I did.
+> > 
+> > I see, thanks. Hmm, possibly slab becomes slower. ;)
+> > 
+> > Then I think that we need something like the ->alloc_cmd()
+> > method. Let's ask James. 
+> > 
+> > I don't think that it's just about simply adding the hook; there are
+> > some issues that we need to think about. Though Boaz worries too much
+> > a bit, I think.
+> > 
+> > I'm not sure about this patch if we add ->alloc_cmd(). I doubt that
+> > there are any llds don't use ->alloc_cmd() worry about the overhead of
+> > the separated sense buffer allocation. If a lld doesn't define the own
+> > alloc_cmd, then I think it's fine to use the generic command
+> > allocator that does the separate sense buffer allocation.
+> 
+> I think we should do the two things seperately. If we can safely inline
+> the sense buffer in the command by doing the right alignment, then lets
+> do that. The ->alloc_cmd() approach will be easier to do with an inline
+> sense buffer.
+
+BTW, only alignment is not enough (Boaz didn't point out it, I
+think). You need alignment and a hole after the buffer:
+
+http://lkml.org/lkml/2007/12/20/661
 
 
-If the system doesn't have working BIOS cable detect as per the
-documentation for the chip then just return the "unknown" cable type and
-libata will do device side cable detect.
-
-Alan
+I think that it is one of these good reasons that we should not inline
+the sense buffer. We will enlarge scsi_cmnd lots.
