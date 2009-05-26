@@ -1,63 +1,28 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] block: fix oops with block tag queueing
-Date: Wed, 27 May 2009 07:53:50 +0900
-Message-ID: <4A1C72FE.2040604@gmail.com>
-References: <1242839186.2881.57.camel@localhost.localdomain>	 <4A14B4A1.5050303@gmail.com> <1243353531.2815.37.camel@localhost.localdomain>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: sata_sil24 0000:04:00.0: DMA-API: device driver frees DMA sg
+ list    with different entry count [map count=13] [unmap count=10]
+Date: Tue, 26 May 2009 17:40:11 -0600
+Message-ID: <4A1C7DDB.9010605@gmail.com>
+References: <64bb37e0905261214g2957924ar837339367f320d4c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:44066 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759459AbZEZWwb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 May 2009 18:52:31 -0400
-Received: by bwz22 with SMTP id 22so4183570bwz.37
-        for <linux-scsi@vger.kernel.org>; Tue, 26 May 2009 15:52:32 -0700 (PDT)
-In-Reply-To: <1243353531.2815.37.camel@localhost.localdomain>
+Received: from mail-fx0-f168.google.com ([209.85.220.168]:34981 "EHLO
+	mail-fx0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758324AbZEZXkP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 May 2009 19:40:15 -0400
+In-Reply-To: <64bb37e0905261214g2957924ar837339367f320d4c@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jens Axboe <Jens.Axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Torsten Kaiser <just.for.lkml@googlemail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-James Bottomley wrote:
-> On Thu, 2009-05-21 at 10:55 +0900, Tejun Heo wrote:
->> James Bottomley wrote:
->>> commit e8939a50466fd963eb1ba9118c34b9ffb7ff6aa6
->>> Author: Tejun Heo <tj@kernel.org>
->>> Date:   Fri May 8 11:54:16 2009 +0900
->>>
->>>     block: implement and enforce request peek/start/fetch
->>>
->>> Added a BUG_ON(blk_queued_rq(req)) to the top of blk_finish_req().
->>> Unfortunately, this checks whether req->queuelist is empty.  This list
->>> is doing double duty both as the queue list and the tag list, so tagged
->>> requests come in here with this not empty and boom (the tag list is
->>> emptied by blk_queue_end_tag() lower down).
->>>
->>> Fix this by moving the BUG_ON to below the end tag we also seem
->>> vulnerable to this in blk_requeue_request() as well.  I think all uses
->>> of blk_queued_rq() need auditing because the check is clearly wrong in
->>> the tagged case.
->>>
->>> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
->> Oops,
->>
->> Acked-by: Tejun Heo <tj@kernel.org>
->>
->> There are also some drivers which use queuelist for internal purposes
->> after dequeueing, which also screws up blk_queued_rq() test in
->> addition to being questionable practice to begin with.  Maybe we would
->> be better off with a flag?
-> 
-> Either is fine by me ... could we get some fix in, please?  I'm
-> currently carrying this below the merge-base on the SCSI postmerge tree
-> to prevent my main build server oopsing under SCSI testing ... I'm a bit
-> surprised we haven't had more reports from linux-oops ... but you can
-> bet that if Jens moves libata to generic tag use, that will change ...
+Torsten Kaiser wrote:
+> On upgrading to 2.6.30-rc1 I enable the DMA-Debugging option
+> CONFIG_DMA_API_DEBUG=y
+> Since then I get the following or similar errors on each boot:
 
-For now, I think your patch is fine and thus the Acked-by.  Jens?
+Please retest with a newer -rc, this patch likely fixes it:
 
-Thanks.
-
--- 
-tejun
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=5825627c9463581fd9e70f8285685889ae5bb9bb
