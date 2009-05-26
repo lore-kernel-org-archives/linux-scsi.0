@@ -1,42 +1,59 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Bug in SCSI async probing
-Date: Tue, 26 May 2009 10:34:23 -0500
-Message-ID: <1243352063.2815.34.camel@localhost.localdomain>
-References: <Pine.LNX.4.44L0.0905261040230.5554-100000@iolanthe.rowland.org>
+Subject: Re: [PATCH] block: fix oops with block tag queueing
+Date: Tue, 26 May 2009 15:58:51 +0000
+Message-ID: <1243353531.2815.37.camel@localhost.localdomain>
+References: <1242839186.2881.57.camel@localhost.localdomain>
+	 <4A14B4A1.5050303@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41315 "EHLO
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50220 "EHLO
 	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753683AbZEZPeX (ORCPT
+	by vger.kernel.org with ESMTP id S1751327AbZEZP6u (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 May 2009 11:34:23 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0905261040230.5554-100000@iolanthe.rowland.org>
+	Tue, 26 May 2009 11:58:50 -0400
+In-Reply-To: <4A14B4A1.5050303@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Arjan van de Ven <arjan@linux.intel.com>, SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jens Axboe <Jens.Axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 2009-05-26 at 11:22 -0400, Alan Stern wrote:
-> James & Arjan:
+On Thu, 2009-05-21 at 10:55 +0900, Tejun Heo wrote:
+> James Bottomley wrote:
+> > commit e8939a50466fd963eb1ba9118c34b9ffb7ff6aa6
+> > Author: Tejun Heo <tj@kernel.org>
+> > Date:   Fri May 8 11:54:16 2009 +0900
+> > 
+> >     block: implement and enforce request peek/start/fetch
+> > 
+> > Added a BUG_ON(blk_queued_rq(req)) to the top of blk_finish_req().
+> > Unfortunately, this checks whether req->queuelist is empty.  This list
+> > is doing double duty both as the queue list and the tag list, so tagged
+> > requests come in here with this not empty and boom (the tag list is
+> > emptied by blk_queue_end_tag() lower down).
+> > 
+> > Fix this by moving the BUG_ON to below the end tag we also seem
+> > vulnerable to this in blk_requeue_request() as well.  I think all uses
+> > of blk_queued_rq() need auditing because the check is clearly wrong in
+> > the tagged case.
+> > 
+> > Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 > 
-> Am I missing something here?  It looks like
+> Oops,
 > 
-> 	fastboot: make scsi probes asynchronous
+> Acked-by: Tejun Heo <tj@kernel.org>
 > 
-> has introduced a bug in the sd probing code.  AFAICT, there is now
-> nothing to prevent do_scan_async() from returning before
-> sd_probe_async() has run.
+> There are also some drivers which use queuelist for internal purposes
+> after dequeueing, which also screws up blk_queued_rq() test in
+> addition to being questionable practice to begin with.  Maybe we would
+> be better off with a flag?
 
-True, but this isn't really a problem.
-
-> Doesn't this mean that there's nothing to prevent sd_remove() from 
-> being called and trying to unregister the disk _before_ 
-> sd_probe_async() has managed to register it?
-
-Yes, we've been discussing this ... most of the removal functions now
-need async_synchronize calls to mitigate this type of race.
+Either is fine by me ... could we get some fix in, please?  I'm
+currently carrying this below the merge-base on the SCSI postmerge tree
+to prevent my main build server oopsing under SCSI testing ... I'm a bit
+surprised we haven't had more reports from linux-oops ... but you can
+bet that if Jens moves libata to generic tag use, that will change ...
 
 James
 
