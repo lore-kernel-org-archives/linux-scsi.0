@@ -1,79 +1,56 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 03/13] scsi: unify allocation of scsi command and sense
- buffer
-Date: Wed, 27 May 2009 12:11:11 +0300
-Message-ID: <4A1D03AF.4010102@panasas.com>
-References: <4A1C1331.8060304@panasas.com>	<20090527103637W.fujita.tomonori@lab.ntt.co.jp>	<4A1CF1C1.2000607@panasas.com> <20090527172616R.fujita.tomonori@lab.ntt.co.jp>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 25/20] sysfs: Only support removing emtpy sysfs  directories.
+Date: Wed, 27 May 2009 13:35:31 +0200
+Message-ID: <4A1D2583.8040803@suse.de>
+References: <Pine.LNX.4.44L0.0905262214370.21274-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20090527172616R.fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <Pine.LNX.4.44L0.0905262214370.21274-100000@netrider.rowland.org>
 Sender: linux-fsdevel-owner@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, rdreier@cisco.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, chris.mason@oracle.com, david@fromorbit.com, hch@infradead.org, akpm@linux-foundation.org, jack@suse.cz, yanmin_zhang@linux.intel.com, linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Kay Sievers <kay.sievers@vrfy.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Kroah-Hartman <gregkh@suse.de>, Kernel development list <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Cornelia Huck <cornelia.huck@de.ibm.com>, linux-fsdevel@vger.kernel.org, "Eric W. Biederman" <ebiederm@aristanetworks.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 05/27/2009 11:26 AM, FUJITA Tomonori wrote:
-> On Wed, 27 May 2009 10:54:41 +0300
-> Boaz Harrosh <bharrosh@panasas.com> wrote:
-> 
->> On 05/27/2009 04:36 AM, FUJITA Tomonori wrote:
->>> On Tue, 26 May 2009 19:05:05 +0300
->>> Boaz Harrosh <bharrosh@panasas.com> wrote:
->>>
->>>> On 05/26/2009 06:31 PM, FUJITA Tomonori wrote:
->>>>> Can we just fix some drivers not to do the DMA with the sense buffer in
->>>>> scsi_cmnd? IIRC, there are only five or six drivers that do such.
->>>> This is not so.
->>>> All drivers that go through scsi_eh_prep_cmnd() will eventually DMA through
->>>> the regular read path. Including all the drivers that do nothing and let
->>>> scsi-ml do the REQUEST_SENSE
->>>>
->>>> Actually I have exact numbers, from the last time I did all that
->>> Hmm, we discussed this before, I think.
->>>
->> Sure we did I sent these patches. to summarize, 3 types of drivers:
->> 1. Only memcpy into sense_buffer				- 60%
->> 2. Use scsi_eh_prep_cmnd and DMA read into sense.
->> 2.1 Do nothing and scsi-ml does scsi_eh_prep_cmnd		- 30%
->> 3. Prepare DMA descriptors for sense_buffer before execution	- 10%
+Hi all,
+
+Alan Stern wrote:
+> On Wed, 27 May 2009, Kay Sievers wrote:
+>=20
+>> On Wed, May 27, 2009 at 01:49, James Bottomley
+>> <James.Bottomley@hansenpartnership.com> wrote:
 >>
->>> scsi-ml uses scsi_eh_prep_cmnd only via scsi_send_eh_cmnd(). There are
->>> some users of scsi_send_eh_cmnd in scsi-ml but only scsi_request_sense
->>> does the DMA in the sense_buffer of scsi_cmnd.
->>>
->> Also drivers use scsi_eh_prep_cmnd at interrupt time and proceed to
->> DMA into the sense_buffer.
->>
->>> Only scsi_error_handler() uses scsi_request_sense() and
->>> scsi_send_eh_cmnd() works synchronously. So scsi-ml can easily avoid
->>> the the DMA in the sense_buffer of scsi_cmnd if we have one sense
->>> buffer per scsi_host.
->> Not so. As James explained then, once you have a CHECK_CONDITION return, the
->> Q-per-host is frozen, yes. But as soon as you send the REQUEST_SENSE the 
->> target Q is unfrozen again and all in-flight commands can error, much before
->> the REQUEST_SENSE returns.
-> 
-> Hmm, I'm not sure what you mean.
-> 
-> Why is 'all in-flight commands can error' a problem? The sense_buffer
-> per host is used by only scsi_eh kernel thread.
+>>> OK ... perhaps we have to wait a little harder: try this; it waits =
+until
+>>> all the targets have disappeared from visibility via an event.
+>> That seems to work fine here.
+>=20
+> It's good for a short-term fix.  For the longer term, I still think=20
+> it's a mistake to wait for the sdevs to be released before deleting t=
+he=20
+> target.  It gives user programs the ability to block the host-removal=
+=20
+> thread indefinitely.
+>=20
+Quite so. We should rather see to have the reference counting fixed
+properly, than this would go away automatically.
 
-I agree, then the current situation has a problem.
+So I just have to look for someone to fix my iSCSI bugs, than I could
+revamp my patchset ...
 
-Target has command A && B in Q.
-- A returns CHECK_CONDITION, scsi_eh thread kicks in, sends a REQUEST_SENSE.
-- Immediately command B returns with CHECK_CONDITION, Target Q is frozen again.
-- message is queued for scsi_eh thread but that one is stuck waiting for the first
-  REQUEST_SENSE to return, and the second-REQUEST_SENSE is never sent, target Q is
-  frozen forever.
+Sigh.
 
-I guess all the drivers that support target queueing do not depend on scsi_eh
-thread to issue the REQUEST_SENSE command. As I said, there are very few drivers
-that do nothing and let scsi_eh take care of REQUEST_SENSE.
+Cheers,
 
-This will not however solve these drivers that might need many
-concurrent sense buffers.
-
-Boaz
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-fsdevel=
+" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
