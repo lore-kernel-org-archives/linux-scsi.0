@@ -1,63 +1,56 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] block: fix oops with block tag queueing
-Date: Wed, 27 May 2009 06:27:10 +0200
-Message-ID: <20090527042710.GP11363@kernel.dk>
-References: <1242839186.2881.57.camel@localhost.localdomain> <4A14B4A1.5050303@gmail.com> <1243353531.2815.37.camel@localhost.localdomain> <4A1C72FE.2040604@gmail.com>
+From: Jaswinder Singh Rajput <jaswinder@kernel.org>
+Subject: [RFC][PATCH] [SCSI]: scsi_transport_iscsi.c return -EOVERFLOW for
+ Too many iscsi targets
+Date: Wed, 27 May 2009 10:44:39 +0530
+Message-ID: <1243401279.3118.2.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:38269 "EHLO kernel.dk"
+Received: from hera.kernel.org ([140.211.167.34]:39082 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750866AbZE0E1J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 May 2009 00:27:09 -0400
-Content-Disposition: inline
-In-Reply-To: <4A1C72FE.2040604@gmail.com>
+	id S1754196AbZE0FXU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 May 2009 01:23:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Ingo Molnar <mingo@elte.hu>, LKML <linux-kernel@vger.kernel.org>, Mike Christie <mic>
 
-On Wed, May 27 2009, Tejun Heo wrote:
-> James Bottomley wrote:
-> > On Thu, 2009-05-21 at 10:55 +0900, Tejun Heo wrote:
-> >> James Bottomley wrote:
-> >>> commit e8939a50466fd963eb1ba9118c34b9ffb7ff6aa6
-> >>> Author: Tejun Heo <tj@kernel.org>
-> >>> Date:   Fri May 8 11:54:16 2009 +0900
-> >>>
-> >>>     block: implement and enforce request peek/start/fetch
-> >>>
-> >>> Added a BUG_ON(blk_queued_rq(req)) to the top of blk_finish_req().
-> >>> Unfortunately, this checks whether req->queuelist is empty.  This list
-> >>> is doing double duty both as the queue list and the tag list, so tagged
-> >>> requests come in here with this not empty and boom (the tag list is
-> >>> emptied by blk_queue_end_tag() lower down).
-> >>>
-> >>> Fix this by moving the BUG_ON to below the end tag we also seem
-> >>> vulnerable to this in blk_requeue_request() as well.  I think all uses
-> >>> of blk_queued_rq() need auditing because the check is clearly wrong in
-> >>> the tagged case.
-> >>>
-> >>> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-> >> Oops,
-> >>
-> >> Acked-by: Tejun Heo <tj@kernel.org>
-> >>
-> >> There are also some drivers which use queuelist for internal purposes
-> >> after dequeueing, which also screws up blk_queued_rq() test in
-> >> addition to being questionable practice to begin with.  Maybe we would
-> >> be better off with a flag?
-> > 
-> > Either is fine by me ... could we get some fix in, please?  I'm
-> > currently carrying this below the merge-base on the SCSI postmerge tree
-> > to prevent my main build server oopsing under SCSI testing ... I'm a bit
-> > surprised we haven't had more reports from linux-oops ... but you can
-> > bet that if Jens moves libata to generic tag use, that will change ...
-> 
-> For now, I think your patch is fine and thus the Acked-by.  Jens?
+setting err as -EOVERFLOW for Too many iscsi targets.
 
-Yes indeed, sorry for the delay. I'll commit it.
+Also fixes compiler warning for gcc < 4.3.3 :
 
--- 
-Jens Axboe
+  CC      drivers/scsi/scsi_transport_iscsi.o
+drivers/scsi/scsi_transport_iscsi.c: In function =E2=80=98iscsi_add_ses=
+sion=E2=80=99:
+drivers/scsi/scsi_transport_iscsi.c:678: warning: =E2=80=98err=E2=80=99=
+ may be used uninitialized in this function
 
+Signed-off-by: Jaswinder Singh Rajput <jaswinderrajput@gmail.com>
+---
+ drivers/scsi/scsi_transport_iscsi.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_tr=
+ansport_iscsi.c
+index 0947954..fdcda7f 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -693,6 +693,7 @@ int iscsi_add_session(struct iscsi_cls_session *ses=
+sion, unsigned int target_id)
+ 						 "Too many iscsi targets. Max "
+ 						 "number of targets is %d.\n",
+ 						 ISCSI_MAX_TARGET - 1);
++			err =3D -EOVERFLOW;
+ 			goto release_host;
+ 		}
+ 	}
+--=20
+1.6.0.6
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
