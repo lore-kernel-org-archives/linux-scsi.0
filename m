@@ -1,56 +1,62 @@
-From: Jaswinder Singh Rajput <jaswinder@kernel.org>
-Subject: [RFC][PATCH] [SCSI]: scsi_transport_iscsi.c return -EOVERFLOW for
- Too many iscsi targets
-Date: Wed, 27 May 2009 10:44:39 +0530
-Message-ID: <1243401279.3118.2.camel@localhost.localdomain>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 03/13] scsi: unify allocation of scsi command and sense
+ buffer
+Date: Wed, 27 May 2009 10:54:41 +0300
+Message-ID: <4A1CF1C1.2000607@panasas.com>
+References: <1243349222.2815.22.camel@localhost.localdomain>	<20090527003152X.fujita.tomonori@lab.ntt.co.jp>	<4A1C1331.8060304@panasas.com> <20090527103637W.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:39082 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754196AbZE0FXU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 May 2009 01:23:20 -0400
+Received: from gw-ca.panasas.com ([209.116.51.66]:28198 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753889AbZE0Hzo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 May 2009 03:55:44 -0400
+In-Reply-To: <20090527103637W.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Ingo Molnar <mingo@elte.hu>, LKML <linux-kernel@vger.kernel.org>, Mike Christie <mic>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, rdreier@cisco.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, chris.mason@oracle.com, david@fromorbit.com, hch@infradead.org, akpm@linux-foundation.org, jack@suse.cz, yanmin_zhang@linux.intel.com, linux-scsi@vger.kernel.org
 
-setting err as -EOVERFLOW for Too many iscsi targets.
+On 05/27/2009 04:36 AM, FUJITA Tomonori wrote:
+> On Tue, 26 May 2009 19:05:05 +0300
+> Boaz Harrosh <bharrosh@panasas.com> wrote:
+> 
+>> On 05/26/2009 06:31 PM, FUJITA Tomonori wrote:
+>>> Can we just fix some drivers not to do the DMA with the sense buffer in
+>>> scsi_cmnd? IIRC, there are only five or six drivers that do such.
+>> This is not so.
+>> All drivers that go through scsi_eh_prep_cmnd() will eventually DMA through
+>> the regular read path. Including all the drivers that do nothing and let
+>> scsi-ml do the REQUEST_SENSE
+>>
+>> Actually I have exact numbers, from the last time I did all that
+> 
+> Hmm, we discussed this before, I think.
+> 
 
-Also fixes compiler warning for gcc < 4.3.3 :
+Sure we did I sent these patches. to summarize, 3 types of drivers:
+1. Only memcpy into sense_buffer				- 60%
+2. Use scsi_eh_prep_cmnd and DMA read into sense.
+2.1 Do nothing and scsi-ml does scsi_eh_prep_cmnd		- 30%
+3. Prepare DMA descriptors for sense_buffer before execution	- 10%
 
-  CC      drivers/scsi/scsi_transport_iscsi.o
-drivers/scsi/scsi_transport_iscsi.c: In function =E2=80=98iscsi_add_ses=
-sion=E2=80=99:
-drivers/scsi/scsi_transport_iscsi.c:678: warning: =E2=80=98err=E2=80=99=
- may be used uninitialized in this function
+> scsi-ml uses scsi_eh_prep_cmnd only via scsi_send_eh_cmnd(). There are
+> some users of scsi_send_eh_cmnd in scsi-ml but only scsi_request_sense
+> does the DMA in the sense_buffer of scsi_cmnd.
+> 
 
-Signed-off-by: Jaswinder Singh Rajput <jaswinderrajput@gmail.com>
----
- drivers/scsi/scsi_transport_iscsi.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Also drivers use scsi_eh_prep_cmnd at interrupt time and proceed to
+DMA into the sense_buffer.
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_tr=
-ansport_iscsi.c
-index 0947954..fdcda7f 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -693,6 +693,7 @@ int iscsi_add_session(struct iscsi_cls_session *ses=
-sion, unsigned int target_id)
- 						 "Too many iscsi targets. Max "
- 						 "number of targets is %d.\n",
- 						 ISCSI_MAX_TARGET - 1);
-+			err =3D -EOVERFLOW;
- 			goto release_host;
- 		}
- 	}
---=20
-1.6.0.6
+> Only scsi_error_handler() uses scsi_request_sense() and
+> scsi_send_eh_cmnd() works synchronously. So scsi-ml can easily avoid
+> the the DMA in the sense_buffer of scsi_cmnd if we have one sense
+> buffer per scsi_host.
 
+Not so. As James explained then, once you have a CHECK_CONDITION return, the
+Q-per-host is frozen, yes. But as soon as you send the REQUEST_SENSE the 
+target Q is unfrozen again and all in-flight commands can error, much before
+the REQUEST_SENSE returns.
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Boaz
