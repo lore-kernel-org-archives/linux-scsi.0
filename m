@@ -1,83 +1,56 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: Bad emulex/linux FC behavior
-Date: Wed, 27 May 2009 18:00:13 -0400
-Message-ID: <4A1DB7ED.5080702@emulex.com>
-References: <4A1DAC5E.2070709@greshamstorage.com>
+From: ebiederm@xmission.com (Eric W. Biederman)
+Subject: Re: [PATCH 25/20] sysfs: Only support removing emtpy sysfs  directories.
+Date: Wed, 27 May 2009 15:06:09 -0700
+Message-ID: <m1ljoi6w1a.fsf@fess.ebiederm.org>
+References: <Pine.LNX.4.44L0.0905271736460.2669-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:52977 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751503AbZE0WAg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 May 2009 18:00:36 -0400
-In-Reply-To: <4A1DAC5E.2070709@greshamstorage.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.0905271736460.2669-100000@iolanthe.rowland.org> (Alan Stern's message of "Wed\, 27 May 2009 17\:38\:50 -0400 \(EDT\)")
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Kay Sievers <kay.sievers@vrfy.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Greg Kroah-Hartman <gregkh@suse.de>, Kernel development list <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Cornelia Huck <cornelia.huck@de.ibm.com>, linux-fsdevel@vger.kernel.org, "Eric W. Biederman" <ebiederm@aristanetworks.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Linton <jli@greshamstorage.com>
-Cc: Linux Scsi <linux-scsi@vger.kernel.org>
 
-(bad by your interpretation, not bad by others....)
+Alan Stern <stern@rowland.harvard.edu> writes:
 
-The reason for the behavior is to replicate the parallel scsi behavior, 
-which is expected/required by many people.  I certainly disagree with 
-unconditionally nooping the bus reset handler - and it certainly defeats 
-the intended purpose of the reset (for errors other than the one you are 
-encountering).   We can certainly discuss adding a parameter that 
-controls the behavior, but this should be on a transport basis, not on 
-an adapter-specific manner.
+> On Wed, 27 May 2009, Eric W. Biederman wrote:
+>
+>> Alan Stern <stern@rowland.harvard.edu> writes:
+>> 
+>> >
+>> > As fas as I know, they can't.  Instead, they can cause the SCSI layer 
+>> > to unregister a sysfs directory containing a child directory.  :-)
+>> >
+>> > Basically, a user program can delay removal of the child (i.e., the
+>> > target) directory indefinitely, because currently the target isn't
+>> > unregistered when all its children are removed -- it's unregistered
+>> > when all its children are _released_.
+>> 
+>> Ok.  Is this opens of /dev/sda1 and the like that are being held open by
+>> userspace that are potentially causing problems?
+>
+> Yes, plus any other mechanism for preventing a struct device's refcount 
+> from going to 0.
 
-However, the question in my mind is - why did you get to bus reset ?  
-The upstream kernel should be going through it's successively larger 
-hammer reset policy. There should be device (lun) resets, followed by 
-target resets, then the bus reset. If the error was target-centric, it 
-should not have hit the bus reset.
+Thanks.  The discussion makes sense now.
 
-Looking at the 8.3.1 driver - it looks like somewhere along the line, we 
-dropped the patches that added the target-reset support. This really 
-concerns me. I'll repost them, and that should resolve your issue - 
-unless the target is completely gone. However, for older kernels, the 
-midlayer didn't have target reset support, so there has to be a 
-different answer.
+>> I think I have the fix to that...
+>
+> The fix is to delete the target when its children are deleted, and not
+> wait until the children are released.
 
--- james s
+I think I can do both.
 
+I am currently working on a patchset which at the VFS layer disconnects a
+fd from an underlying device.  It does the necessary use count tracking
+and when the disconnect is done it returns.  As part of the disconnect it
+calls the release method.
 
-Jeremy Linton wrote:
-> While hunting for a data integrity problem, I discovered that the emulex lpfc driver sends target resets to all attached 
-> devices on a SAN in the lpfc_reset_bus_handler() routine. That routine is exported in the host template and is 
-> indirectly called by scsi_eh_ready_devs() when any device attached to the current HBA fails (more on this later).
->
-> I believe this is fundamentally the wrong thing to be doing. It makes sense for a parallel SCSI bus but not on a SAN. 
-> SAN attached devices are completely independent, and a single target failure should not result in anyone zoned together 
-> with the failed device being reset.
->
-> This is not an unusual configuration. Our product runs in an environment where the customers regularly have a pool of 
-> tape drives shared among a mix of server platforms/applications. Having our machine spuriously sending resets to devices 
-> currently in use by other servers is a serious problem.
->
-> Lun resets are defined by the T10 specifications to drop reservations, clear soft write protect flags, clear medium 
-> removal preventions, etc. I can't find anywhere that describes the behaviors of write back buffers during resets, but I 
-> believe I've found one device which dumps the write back buffer without flushing it to the media when it receives a 
-> reset. Either way, any application or application that depends on system drivers using reservations as a method of 
-> device arbitration between machines/application instances is going to have serious problems. Should an attached Linux 
-> machine clear those reservations it will result in a data integrity problems.
->
-> As such, I suggest that the emulex driver simply return from the eh_bus_reset_handler. I've been running like that for a 
-> few days and it doesn't adversely affect anything. I've also looked at the qlogic driver and it has a similar piece of 
-> code but the functionality can be enabled/disabled by the enable_target_reset flag (from nvram) in qla2x00_loop_reset(). 
-> Frankly, I can't really imagine a scenario where its valid to reset an attached device on a SAN if a completely 
-> different device fails. Personally, I would remove the code there too.
->
-> Our machines are running fairly old kernels, but the latest RC kernels appear to still have the same code.
->
->
->
->
->
->
->
->
->
->
->   
+We already do this in at least sysfs, proc, sysctl, and sound.  So I
+figure it is time to move this into some generic code so we don't need
+to duplicate the bugs and the insanities.
+
+Once merged it would take just a few lines of code to use this functionality.
+
+Eric
