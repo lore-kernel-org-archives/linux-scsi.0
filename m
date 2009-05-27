@@ -1,56 +1,50 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: [PATCH 25/20] sysfs: Only support removing emtpy sysfs  directories.
-Date: Wed, 27 May 2009 15:06:09 -0700
-Message-ID: <m1ljoi6w1a.fsf@fess.ebiederm.org>
-References: <Pine.LNX.4.44L0.0905271736460.2669-100000@iolanthe.rowland.org>
+Date: Wed, 27 May 2009 18:15:25 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0905271810320.2669-100000@iolanthe.rowland.org>
+References: <1243460550.6067.82.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.0905271736460.2669-100000@iolanthe.rowland.org> (Alan Stern's message of "Wed\, 27 May 2009 17\:38\:50 -0400 \(EDT\)")
+In-Reply-To: <1243460550.6067.82.camel@localhost.localdomain>
 Sender: linux-fsdevel-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Kay Sievers <kay.sievers@vrfy.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Greg Kroah-Hartman <gregkh@suse.de>, Kernel development list <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Cornelia Huck <cornelia.huck@de.ibm.com>, linux-fsdevel@vger.kernel.org, "Eric W. Biederman" <ebiederm@aristanetworks.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Hannes Reinecke <hare@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, SCSI development list <linux-scsi@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Kroah-Hartman <gregkh@suse.de>, Kernel development list <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Cornelia Huck <cornelia.huck@de.ibm.com>, linux-fsdevel@vger.kernel.org, "Eric W. Biederman" <ebiederm@aristanetworks.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Alan Stern <stern@rowland.harvard.edu> writes:
+On Wed, 27 May 2009, James Bottomley wrote:
 
-> On Wed, 27 May 2009, Eric W. Biederman wrote:
->
->> Alan Stern <stern@rowland.harvard.edu> writes:
->> 
->> >
->> > As fas as I know, they can't.  Instead, they can cause the SCSI layer 
->> > to unregister a sysfs directory containing a child directory.  :-)
->> >
->> > Basically, a user program can delay removal of the child (i.e., the
->> > target) directory indefinitely, because currently the target isn't
->> > unregistered when all its children are removed -- it's unregistered
->> > when all its children are _released_.
->> 
->> Ok.  Is this opens of /dev/sda1 and the like that are being held open by
->> userspace that are potentially causing problems?
->
-> Yes, plus any other mechanism for preventing a struct device's refcount 
-> from going to 0.
+> I find the terms delete and release too close for comfort, which is why
+> I've always been careful to say remove from visibility.
 
-Thanks.  The discussion makes sense now.
+Okay; I'll use your terms when conversing with you.  :-)
 
->> I think I have the fix to that...
->
-> The fix is to delete the target when its children are deleted, and not
-> wait until the children are released.
+> > That's fine.  You remove a target from visibility when target->reap_ref
+> > becomes 0.  The target isn't released until the target's embedded
+> > struct device's refcount becomes 0.  To make this work, simply have
+> > scsi_alloc_sdev() call
+> > 
+> > 	get_device(&starget->dev);
+> > 
+> > and have scsi_device_dev_release_usercontext() call
+> > 
+> > 	put_device(&starget->dev);
+> > 
+> > Doesn't that do exactly what you're asking for?
+> 
+> That's um what we do to day ... the addition has to be to the visibility
+> management.
 
-I think I can do both.
+That's what I was trying to accomplish in the patch you said was wrong.  
+It moved the call to scsi_target_reap() from
+scsi_device_dev_release_usercontext() into __scsi_remove_device().  
+That is, the target's count of underlying sdevs was to be decremented
+whenever an sdev was removed from visibility, not when the sdev was
+released.
 
-I am currently working on a patchset which at the VFS layer disconnects a
-fd from an underlying device.  It does the necessary use count tracking
-and when the disconnect is done it returns.  As part of the disconnect it
-calls the release method.
+That's how the problem should be solved.  But the details need to be 
+correct, and I don't understand how they all work (as you noticed when 
+reading the patch).
 
-We already do this in at least sysfs, proc, sysctl, and sound.  So I
-figure it is time to move this into some generic code so we don't need
-to duplicate the bugs and the insanities.
+Alan Stern
 
-Once merged it would take just a few lines of code to use this functionality.
-
-Eric
