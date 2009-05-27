@@ -1,302 +1,195 @@
 From: scameron@beardog.cca.cpqcorp.net
-Subject: [PATCH 1/2] cciss: Factor out core of sendcmd() for a more sane interface
-Date: Wed, 27 May 2009 15:26:07 -0500
-Message-ID: <20090527202607.GA29327@beardog.cca.cpqcorp.net>
+Subject: [PATCH 2/2] cciss: Fix SCSI device reset handler
+Date: Wed, 27 May 2009 15:30:07 -0500
+Message-ID: <20090527203007.GA30160@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0008.atlanta.hp.com ([15.192.0.45]:21794 "EHLO
-	g5t0008.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758357AbZE0UZo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 May 2009 16:25:44 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755058AbZE0UaA@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, jens.axboe@kernel.dk, akpm@linux-foundation.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@kernel.dk, akpm@linux-foundation.org
 Cc: mikem@beardog.cca.cpqcorp.net, scameron@beardog.cca.cpqcorp.net
+List-Id: linux-scsi@vger.kernel.org
 
 
-Factor out the core of sendcmd() to provide a simpler interface
-which exposes all the error information to the caller and make the
-original sendcmd use this new function.  Rationale: The SCSI error
-handling routines need to send commands with interrupts turned off,
-but they also need access to the full error information.
+
+Fix the SCSI reset error handler to send a working, properly
+addressed reset message to the target device and add code to
+wait for the target device to become ready by polling it with
+Test Unit Ready.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cca.cpqcorp.net>
 ---
 
-diff -puN drivers/block/cciss.c~cciss_sendcmd_cleanup drivers/block/cciss.c
---- lx2630-6/drivers/block/cciss.c~cciss_sendcmd_cleanup	2009-05-27 12:47:16.000000000 -0500
-+++ lx2630-6-scameron/drivers/block/cciss.c	2009-05-27 13:33:13.000000000 -0500
-@@ -2378,41 +2378,21 @@ static int add_sendcmd_reject(__u8 cmd,
- 	return 0;
+The existing reset code was broken in that it didn't bother to
+set the 8-byte LUN address to anything besides zero, so the
+command was addressed to the controller, which pretended to 
+the driver that the command succeeded, while doing nothing.
+Ages ago I tested this code, but unbeknownst to me, my test
+was flawed, and what I thought was a tape drive getting reset
+was actually nothing of the sort.  Unfortunately, there is 
+still lots of Smartarray firmware that doesn't handle doing
+target resets right, and this code won't help in those cases,
+but it also shouldn't make things worse in those cases than
+they already are.
+
+diff -puN drivers/block/cciss.c~cciss_fix_lun_reset drivers/block/cciss.c
+--- lx2630-6/drivers/block/cciss.c~cciss_fix_lun_reset	2009-05-27 14:22:12.000000000 -0500
++++ lx2630-6-scameron/drivers/block/cciss.c	2009-05-27 14:22:12.000000000 -0500
+@@ -1979,6 +1979,13 @@ static int fill_cmd(CommandList_struct *
+ 			c->Request.CDB[0] = BMIC_WRITE;
+ 			c->Request.CDB[6] = BMIC_CACHE_FLUSH;
+ 			break;
++		case TEST_UNIT_READY:
++			memcpy(c->Header. LUN.LunAddrBytes, scsi3addr, 8);
++			c->Request.CDBLen = 6;
++			c->Request.Type.Attribute = ATTR_SIMPLE;
++			c->Request.Type.Direction = XFER_NONE;
++			c->Request.Timeout = 0;
++			break;
+ 		default:
+ 			printk(KERN_WARNING
+ 			       "cciss%d:  Unknown Command 0x%c\n", ctlr, cmd);
+@@ -1997,13 +2004,14 @@ static int fill_cmd(CommandList_struct *
+ 			memcpy(&c->Request.CDB[4], buff, 8);
+ 			break;
+ 		case 1:	/* RESET message */
+-			c->Request.CDBLen = 12;
++			memcpy(c->Header.LUN.LunAddrBytes, scsi3addr, 8);
++			c->Request.CDBLen = 16;
+ 			c->Request.Type.Attribute = ATTR_SIMPLE;
+-			c->Request.Type.Direction = XFER_WRITE;
++			c->Request.Type.Direction = XFER_NONE;
+ 			c->Request.Timeout = 0;
+ 			memset(&c->Request.CDB[0], 0, sizeof(c->Request.CDB));
+ 			c->Request.CDB[0] = cmd;	/* reset */
+-			c->Request.CDB[1] = 0x04;	/* reset a LUN */
++			c->Request.CDB[1] = 0x03;	/* reset a target */
+ 			break;
+ 		case 3:	/* No-Op message */
+ 			c->Request.CDBLen = 1;
+diff -puN drivers/block/cciss_scsi.c~cciss_fix_lun_reset drivers/block/cciss_scsi.c
+--- lx2630-6/drivers/block/cciss_scsi.c~cciss_fix_lun_reset	2009-05-27 14:22:12.000000000 -0500
++++ lx2630-6-scameron/drivers/block/cciss_scsi.c	2009-05-27 14:22:12.000000000 -0500
+@@ -58,6 +58,18 @@ static int sendcmd(
+ 	unsigned char *scsi3addr,
+ 	int cmd_type);
+ 
++static int fill_cmd(CommandList_struct *c, __u8 cmd, int ctlr, void *buff,
++	size_t size,
++	unsigned int use_unit_num, /* 0: address the controller,
++				      1: address logical volume log_unit,
++				      2: periph device address is scsi3addr */
++	unsigned int log_unit, __u8 page_code, unsigned char *scsi3addr,
++	int cmd_type);
++
++static int sendcmd_core(ctlr_info_t *h, CommandList_struct *c);
++
++static CommandList_struct *cmd_alloc(ctlr_info_t *h, int get_from_pool);
++static void cmd_free(ctlr_info_t *h, CommandList_struct *c, int got_from_pool);
+ 
+ static int cciss_scsi_proc_info(
+ 		struct Scsi_Host *sh,
+@@ -1575,6 +1587,68 @@ cciss_seq_tape_report(struct seq_file *s
+ 	CPQ_TAPE_UNLOCK(ctlr, flags);
  }
  
--/*
-- * Send a command to the controller, and wait for it to complete.
-- * Only used at init time.
-+/* Send command c to controller h and poll for it to complete.
-+ * Turns interrupts off on the board.  Used at driver init time
-+ * and during SCSI error recovery.
-  */
--static int sendcmd(__u8 cmd, int ctlr, void *buff, size_t size, unsigned int use_unit_num,	/* 0: address the controller,
--												   1: address logical volume log_unit,
--												   2: periph device address is scsi3addr */
--		   unsigned int log_unit,
--		   __u8 page_code, unsigned char *scsi3addr, int cmd_type)
-+static int sendcmd_core(ctlr_info_t *h, CommandList_struct *c)
- {
--	CommandList_struct *c;
- 	int i;
- 	unsigned long complete;
--	ctlr_info_t *info_p = hba[ctlr];
-+	int status = IO_ERROR;
- 	u64bit buff_dma_handle;
--	int status, done = 0;
- 
--	if ((c = cmd_alloc(info_p, 1)) == NULL) {
--		printk(KERN_WARNING "cciss: unable to get memory");
--		return IO_ERROR;
--	}
--	status = fill_cmd(c, cmd, ctlr, buff, size, use_unit_num,
--			  log_unit, page_code, scsi3addr, cmd_type);
--	if (status != IO_OK) {
--		cmd_free(info_p, c, 1);
--		return status;
--	}
--      resend_cmd1:
--	/*
--	 * Disable interrupt
--	 */
--#ifdef CCISS_DEBUG
--	printk(KERN_DEBUG "cciss: turning intr off\n");
--#endif				/* CCISS_DEBUG */
--	info_p->access.set_intr_mask(info_p, CCISS_INTR_OFF);
-+resend_cmd1:
-+
-+	/* Disable interrupt on the board. */
-+	h->access.set_intr_mask(h, CCISS_INTR_OFF);
- 
- 	/* Make sure there is room in the command FIFO */
- 	/* Actually it should be completely empty at this time */
-@@ -2420,21 +2400,15 @@ static int sendcmd(__u8 cmd, int ctlr, v
- 	/* tape side of the driver. */
- 	for (i = 200000; i > 0; i--) {
- 		/* if fifo isn't full go */
--		if (!(info_p->access.fifo_full(info_p))) {
--
-+		if (!(h->access.fifo_full(h)))
- 			break;
--		}
- 		udelay(10);
- 		printk(KERN_WARNING "cciss cciss%d: SendCmd FIFO full,"
--		       " waiting!\n", ctlr);
-+		       " waiting!\n", h->ctlr);
- 	}
--	/*
--	 * Send the cmd
--	 */
--	info_p->access.submit_command(info_p, c);
--	done = 0;
-+	h->access.submit_command(h, c); /* Send the cmd */
- 	do {
--		complete = pollcomplete(ctlr);
-+		complete = pollcomplete(h->ctlr);
- 
- #ifdef CCISS_DEBUG
- 		printk(KERN_DEBUG "cciss: command completed\n");
-@@ -2443,97 +2417,116 @@ static int sendcmd(__u8 cmd, int ctlr, v
- 		if (complete == 1) {
- 			printk(KERN_WARNING
- 			       "cciss cciss%d: SendCmd Timeout out, "
--			       "No command list address returned!\n", ctlr);
-+			       "No command list address returned!\n", h->ctlr);
- 			status = IO_ERROR;
--			done = 1;
- 			break;
- 		}
- 
--		/* This will need to change for direct lookup completions */
--		if ((complete & CISS_ERROR_BIT)
--		    && (complete & ~CISS_ERROR_BIT) == c->busaddr) {
--			/* if data overrun or underun on Report command
--			   ignore it
--			 */
--			if (((c->Request.CDB[0] == CISS_REPORT_LOG) ||
--			     (c->Request.CDB[0] == CISS_REPORT_PHYS) ||
--			     (c->Request.CDB[0] == CISS_INQUIRY)) &&
--			    ((c->err_info->CommandStatus ==
--			      CMD_DATA_OVERRUN) ||
--			     (c->err_info->CommandStatus == CMD_DATA_UNDERRUN)
--			    )) {
--				complete = c->busaddr;
--			} else {
--				if (c->err_info->CommandStatus ==
--				    CMD_UNSOLICITED_ABORT) {
--					printk(KERN_WARNING "cciss%d: "
--					       "unsolicited abort %p\n",
--					       ctlr, c);
--					if (c->retry_count < MAX_CMD_RETRIES) {
--						printk(KERN_WARNING
--						       "cciss%d: retrying %p\n",
--						       ctlr, c);
--						c->retry_count++;
--						/* erase the old error */
--						/* information */
--						memset(c->err_info, 0,
--						       sizeof
--						       (ErrorInfo_struct));
--						goto resend_cmd1;
--					} else {
--						printk(KERN_WARNING
--						       "cciss%d: retried %p too "
--						       "many times\n", ctlr, c);
--						status = IO_ERROR;
--						goto cleanup1;
--					}
--				} else if (c->err_info->CommandStatus ==
--					   CMD_UNABORTABLE) {
--					printk(KERN_WARNING
--					       "cciss%d: command could not be aborted.\n",
--					       ctlr);
--					status = IO_ERROR;
--					goto cleanup1;
--				}
--				printk(KERN_WARNING "ciss ciss%d: sendcmd"
--				       " Error %x \n", ctlr,
--				       c->err_info->CommandStatus);
--				printk(KERN_WARNING "ciss ciss%d: sendcmd"
--				       " offensive info\n"
--				       "  size %x\n   num %x   value %x\n",
--				       ctlr,
--				       c->err_info->MoreErrInfo.Invalid_Cmd.
--				       offense_size,
--				       c->err_info->MoreErrInfo.Invalid_Cmd.
--				       offense_num,
--				       c->err_info->MoreErrInfo.Invalid_Cmd.
--				       offense_value);
--				status = IO_ERROR;
--				goto cleanup1;
--			}
-+		/* If it's not the cmd we're looking for, save it for later */
-+		if ((complete & ~CISS_ERROR_BIT) != c->busaddr) {
-+			if (add_sendcmd_reject(c->Request.CDB[0],
-+				h->ctlr, complete) != 0)
-+				BUG(); /* we are hosed if we get here. */
-+			continue;
-+		}
-+
-+		/* It is our command.  If no error, we're done. */
-+		if (!(complete & CISS_ERROR_BIT)) {
-+			status = IO_OK;
-+			break;
-+		}
-+
-+		/* There is an error... */
-+
-+		/* if data overrun or underun on Report command ignore it */
-+		if (((c->Request.CDB[0] == CISS_REPORT_LOG) ||
-+		     (c->Request.CDB[0] == CISS_REPORT_PHYS) ||
-+		     (c->Request.CDB[0] == CISS_INQUIRY)) &&
-+			((c->err_info->CommandStatus == CMD_DATA_OVERRUN) ||
-+			 (c->err_info->CommandStatus == CMD_DATA_UNDERRUN))) {
-+			complete = c->busaddr;
-+			status = IO_OK;
-+			break;
- 		}
--		/* This will need changing for direct lookup completions */
--		if (complete != c->busaddr) {
--			if (add_sendcmd_reject(cmd, ctlr, complete) != 0) {
--				BUG();	/* we are pretty much hosed if we get here. */
-+
-+		if (c->err_info->CommandStatus == CMD_UNSOLICITED_ABORT) {
-+			printk(KERN_WARNING "cciss%d: unsolicited abort %p\n",
-+				h->ctlr, c);
-+			if (c->retry_count < MAX_CMD_RETRIES) {
-+				printk(KERN_WARNING "cciss%d: retrying %p\n",
-+				   h->ctlr, c);
-+				c->retry_count++;
-+				/* erase the old error information */
-+				memset(c->err_info, 0, sizeof(c->err_info));
-+				goto resend_cmd1;
- 			}
--			continue;
--		} else
--			done = 1;
--	} while (!done);
-+			printk(KERN_WARNING "cciss%d: retried %p too many "
-+				"times\n", h->ctlr, c);
-+			status = IO_ERROR;
-+			goto cleanup1;
-+		}
-+
-+		if (c->err_info->CommandStatus == CMD_UNABORTABLE) {
-+			printk(KERN_WARNING "cciss%d: command could not be "
-+				"aborted.\n", h->ctlr);
-+			status = IO_ERROR;
-+			goto cleanup1;
-+		}
- 
--      cleanup1:
-+		printk(KERN_WARNING "cciss%d: sendcmd error\n", h->ctlr);
-+		printk(KERN_WARNING "cmd = 0x%02x, CommandStatus = 0x%02x\n",
-+			c->Request.CDB[0], c->err_info->CommandStatus);
-+		if (c->err_info->CommandStatus == CMD_TARGET_STATUS) {
-+			printk(KERN_WARNING "Target status = 0x%02x\n",
-+			c->err_info->ScsiStatus);
-+			if (c->err_info->ScsiStatus == 2) /* chk cond */
-+				printk(KERN_WARNING "Sense key = 0x%02x\n",
-+					0xf & c->err_info->SenseInfo[2]);
-+		}
-+
-+		status = IO_ERROR;
-+		goto cleanup1;
-+
-+	} while (1);
-+
-+cleanup1:
- 	/* unlock the data buffer from DMA */
- 	buff_dma_handle.val32.lower = c->SG[0].Addr.lower;
- 	buff_dma_handle.val32.upper = c->SG[0].Addr.upper;
--	pci_unmap_single(info_p->pdev, (dma_addr_t) buff_dma_handle.val,
-+	pci_unmap_single(h->pdev, (dma_addr_t) buff_dma_handle.val,
- 			 c->SG[0].Len, PCI_DMA_BIDIRECTIONAL);
- #ifdef CONFIG_CISS_SCSI_TAPE
- 	/* if we saved some commands for later, process them now. */
--	if (info_p->scsi_rejects.ncompletions > 0)
--		do_cciss_intr(0, info_p);
-+	if (h->scsi_rejects.ncompletions > 0)
-+		do_cciss_intr(0, h);
- #endif
--	cmd_free(info_p, c, 1);
-+	return status;
-+}
-+
-+/*
-+ * Send a command to the controller, and wait for it to complete.
-+ * Used at init time, and during SCSI error recovery.
-+ */
-+static int sendcmd(__u8 cmd, int ctlr, void *buff, size_t size,
-+	unsigned int use_unit_num,/* 0: address the controller,
-+				     1: address logical volume log_unit,
-+				     2: periph device address is scsi3addr */
-+	unsigned int log_unit,
-+	__u8 page_code, unsigned char *scsi3addr, int cmd_type)
++static int wait_for_device_to_become_ready(ctlr_info_t *h,
++	unsigned char lunaddr[])
 +{
++	int rc;
++	int count = 0;
++	int waittime = HZ;
 +	CommandList_struct *c;
-+	int status;
 +
-+	c = cmd_alloc(hba[ctlr], 1);
++	c = cmd_alloc(h, 1);
 +	if (!c) {
-+		printk(KERN_WARNING "cciss: unable to get memory");
++		printk(KERN_WARNING "cciss%d: out of memory in "
++			"wait_for_device_to_become_ready.\n", h->ctlr);
 +		return IO_ERROR;
 +	}
-+	status = fill_cmd(c, cmd, ctlr, buff, size, use_unit_num,
-+			  log_unit, page_code, scsi3addr, cmd_type);
-+	if (status == IO_OK)
-+		status = sendcmd_core(hba[ctlr], c);
-+	cmd_free(hba[ctlr], c, 1);
- 	return status;
- }
++
++	/* Send test unit ready until device ready, or give up. */
++	while (count < 20) {
++
++		/* Wait for a bit.  do this first, because if we send
++		 * the TUR right away, the reset will just abort it.
++		 */
++		set_current_state(TASK_INTERRUPTIBLE);
++		schedule_timeout(waittime);
++		count++;
++
++		/* Increase wait time with each try, up to a point. */
++		if (waittime < (HZ * 30))
++			waittime = waittime * 2;
++
++		/* Send the Test Unit Ready */
++		rc = fill_cmd(c, TEST_UNIT_READY, h->ctlr, NULL, 0, 0, 0, 0,
++			lunaddr, TYPE_CMD);
++		if (rc == 0) {
++			rc = sendcmd_core(h, c);
++			/* sendcmd turned off interrupts, turn 'em back on. */
++			h->access.set_intr_mask(h, CCISS_INTR_ON);
++		}
++
++		if (rc == 0 && c->err_info->CommandStatus == CMD_SUCCESS)
++			break;
++
++		if (rc == 0 &&
++			c->err_info->CommandStatus == CMD_TARGET_STATUS &&
++			c->err_info->ScsiStatus == SAM_STAT_CHECK_CONDITION &&
++			(c->err_info->SenseInfo[2] == NO_SENSE ||
++			c->err_info->SenseInfo[2] == UNIT_ATTENTION))
++			break;
++
++		printk(KERN_WARNING "cciss%d: Waiting %d secs "
++			"for device to become ready.\n",
++			h->ctlr, waittime / HZ);
++		rc = 1; /* device not ready. */
++	}
++
++	if (rc)
++		printk("cciss%d: giving up on device.\n", h->ctlr);
++	else
++		printk(KERN_WARNING "cciss%d: device is ready.\n", h->ctlr);
++
++	cmd_free(h, c, 1);
++	return rc;
++}
  
+ /* Need at least one of these error handlers to keep ../scsi/hosts.c from 
+  * complaining.  Doing a host- or bus-reset can't do anything good here. 
+@@ -1591,6 +1665,7 @@ static int cciss_eh_device_reset_handler
+ {
+ 	int rc;
+ 	CommandList_struct *cmd_in_trouble;
++	unsigned char lunaddr[8];
+ 	ctlr_info_t **c;
+ 	int ctlr;
+ 
+@@ -1600,19 +1675,17 @@ static int cciss_eh_device_reset_handler
+ 		return FAILED;
+ 	ctlr = (*c)->ctlr;
+ 	printk(KERN_WARNING "cciss%d: resetting tape drive or medium changer.\n", ctlr);
+-
+ 	/* find the command that's giving us trouble */
+ 	cmd_in_trouble = (CommandList_struct *) scsicmd->host_scribble;
+-	if (cmd_in_trouble == NULL) { /* paranoia */
++	if (cmd_in_trouble == NULL) /* paranoia */
+ 		return FAILED;
+-	}
++	memcpy(lunaddr, &cmd_in_trouble->Header.LUN.LunAddrBytes[0], 8);
+ 	/* send a reset to the SCSI LUN which the command was sent to */
+-	rc = sendcmd(CCISS_RESET_MSG, ctlr, NULL, 0, 2, 0, 0, 
+-		(unsigned char *) &cmd_in_trouble->Header.LUN.LunAddrBytes[0], 
++	rc = sendcmd(CCISS_RESET_MSG, ctlr, NULL, 0, 2, 0, 0, lunaddr,
+ 		TYPE_MSG);
+ 	/* sendcmd turned off interrupts on the board, turn 'em back on. */
+ 	(*c)->access.set_intr_mask(*c, CCISS_INTR_ON);
+-	if (rc == 0)
++	if (rc == 0 && wait_for_device_to_become_ready(*c, lunaddr) == 0)
+ 		return SUCCESS;
+ 	printk(KERN_WARNING "cciss%d: resetting device failed.\n", ctlr);
+ 	return FAILED;
+diff -puN drivers/block/cciss.h~cciss_fix_lun_reset drivers/block/cciss.h
 _
