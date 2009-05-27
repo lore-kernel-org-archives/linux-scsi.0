@@ -1,50 +1,61 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: [PATCH 12/24] mpt fusion: [2.6.30-rc6] fix for previous patch
-	taskmgmt in progess should be cleared before return
-Date: Wed, 27 May 2009 18:44:38 +0530
-Message-ID: <0D1E8821739E724A86F4D16902CE275C141A260AF5@inbmail01.lsi.com>
-References: <20090522110235.GF16331@lsi.com>
- <1243011716.2873.24.camel@localhost.localdomain>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [RFC][PATCH] [SCSI]: scsi_transport_iscsi.c return -EOVERFLOW
+ for Too many iscsi targets
+Date: Wed, 27 May 2009 09:27:06 -0500
+Message-ID: <4A1D4DBA.8050802@cs.wisc.edu>
+References: <1243401279.3118.2.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og123.obsmtp.com ([64.18.2.24]:54156 "EHLO
-	exprod7og123.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759255AbZE0NOj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 May 2009 09:14:39 -0400
-In-Reply-To: <1243011716.2873.24.camel@localhost.localdomain>
-Content-Language: en-US
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:59073 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753996AbZE0O2Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 May 2009 10:28:25 -0400
+In-Reply-To: <1243401279.3118.2.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+To: Jaswinder Singh Rajput <jaswinder@kernel.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Ingo Molnar <mingo@elte.hu>, LKML <linux-kernel@vger.kernel.org>
 
-James,
+Jaswinder Singh Rajput wrote:
+> setting err as -EOVERFLOW for Too many iscsi targets.
+>=20
+> Also fixes compiler warning for gcc < 4.3.3 :
+>=20
+>   CC      drivers/scsi/scsi_transport_iscsi.o
+> drivers/scsi/scsi_transport_iscsi.c: In function =E2=80=98iscsi_add_s=
+ession=E2=80=99:
+> drivers/scsi/scsi_transport_iscsi.c:678: warning: =E2=80=98err=E2=80=99=
+ may be used uninitialized in this function
+>=20
+> Signed-off-by: Jaswinder Singh Rajput <jaswinderrajput@gmail.com>
+> ---
+>  drivers/scsi/scsi_transport_iscsi.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_=
+transport_iscsi.c
+> index 0947954..fdcda7f 100644
+> --- a/drivers/scsi/scsi_transport_iscsi.c
+> +++ b/drivers/scsi/scsi_transport_iscsi.c
+> @@ -693,6 +693,7 @@ int iscsi_add_session(struct iscsi_cls_session *s=
+ession, unsigned int target_id)
+>  						 "Too many iscsi targets. Max "
+>  						 "number of targets is %d.\n",
+>  						 ISCSI_MAX_TARGET - 1);
+> +			err =3D -EOVERFLOW;
+>  			goto release_host;
+>  		}
+>  	}
 
-I have included all your review comments in my next submission.
 
-Thanks
-Kashyap
+=46ine by me. Send it through whatever tree you guys want.
 
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
-Sent: Friday, May 22, 2009 10:32 PM
-To: Desai, Kashyap
-Cc: linux-scsi@vger.kernel.org; Moore, Eric; Prakash, Sathya
-Subject: Re: [PATCH 12/24] mpt fusion: [2.6.30-rc6] fix for previous patch taskmgmt in progess should be cleared before return
-
-On Fri, 2009-05-22 at 16:32 +0530, Kashyap, Desai wrote:
-> Small fix for previous Patch applied on 26/02/2009: subject line :
-> "mpt fusion: config, Taskmgmt cmd, Internal cmd, Ioctl cmd changes".
-
-OK, so this seems to be completely bogus as well since there's no such
-patch in any of the trees.
-
-If I look at what the patch is doing, it seems it should be merged with
-your 11/24 "rewrite of ioctl_cmds internal generated function" which
-introduces the bug?
-
-James
-
-
+Acked-by: Mike Christie <michaelc@cs.wisc.edu>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
