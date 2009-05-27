@@ -1,47 +1,41 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 03/13] scsi: unify allocation of scsi command and sense
- buffer
-Date: Wed, 27 May 2009 10:36:40 +0900
-Message-ID: <20090527103637W.fujita.tomonori@lab.ntt.co.jp>
-References: <1243349222.2815.22.camel@localhost.localdomain>
-	<20090527003152X.fujita.tomonori@lab.ntt.co.jp>
-	<4A1C1331.8060304@panasas.com>
+From: Torsten Kaiser <just.for.lkml@googlemail.com>
+Subject: Re: sata_sil24 0000:04:00.0: DMA-API: device driver frees DMA sg list
+	with different entry count [map count=13] [unmap count=10]
+Date: Wed, 27 May 2009 04:11:56 +0200
+Message-ID: <64bb37e0905261911v1b80456ckbc7b7c7858d4b28a@mail.gmail.com>
+References: <64bb37e0905261214g2957924ar837339367f320d4c@mail.gmail.com>
+	 <4A1C7DDB.9010605@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:49539 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752337AbZE0Bif (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 May 2009 21:38:35 -0400
-In-Reply-To: <4A1C1331.8060304@panasas.com>
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:37723 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756842AbZE0CL4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 May 2009 22:11:56 -0400
+In-Reply-To: <4A1C7DDB.9010605@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, rdreier@cisco.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, chris.mason@oracle.com, david@fromorbit.com, hch@infradead.org, akpm@linux-foundation.org, jack@suse.cz, yanmin_zhang@linux.intel.com, linux-scsi@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Tue, 26 May 2009 19:05:05 +0300
-Boaz Harrosh <bharrosh@panasas.com> wrote:
+On Wed, May 27, 2009 at 1:40 AM, Robert Hancock <hancockrwd@gmail.com> wrote:
+> Torsten Kaiser wrote:
+>>
+>> On upgrading to 2.6.30-rc1 I enable the DMA-Debugging option
+>> CONFIG_DMA_API_DEBUG=y
+>> Since then I get the following or similar errors on each boot:
+>
+> Please retest with a newer -rc, this patch likely fixes it:
+>
+> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=5825627c9463581fd9e70f8285685889ae5bb9bb
+>
 
-> On 05/26/2009 06:31 PM, FUJITA Tomonori wrote:
-> > 
-> > Can we just fix some drivers not to do the DMA with the sense buffer in
-> > scsi_cmnd? IIRC, there are only five or six drivers that do such.
-> 
-> This is not so.
-> All drivers that go through scsi_eh_prep_cmnd() will eventually DMA through
-> the regular read path. Including all the drivers that do nothing and let
-> scsi-ml do the REQUEST_SENSE
-> 
-> Actually I have exact numbers, from the last time I did all that
+I saw this with 2.6.30-rc1 the first time, but I'm not sure if it
+broke during the merge window or if it was always broken, because I
+did not have enable DMA_API_DEBUG with earlier kernels.
 
-Hmm, we discussed this before, I think.
+But I'm seeing it with all -rc since then. The traces I posted were
+from -rc6 and -rc7.
 
-scsi-ml uses scsi_eh_prep_cmnd only via scsi_send_eh_cmnd(). There are
-some users of scsi_send_eh_cmnd in scsi-ml but only scsi_request_sense
-does the DMA in the sense_buffer of scsi_cmnd.
-
-Only scsi_error_handler() uses scsi_request_sense() and
-scsi_send_eh_cmnd() works synchronously. So scsi-ml can easily avoid
-the the DMA in the sense_buffer of scsi_cmnd if we have one sense
-buffer per scsi_host.
+Torsten
