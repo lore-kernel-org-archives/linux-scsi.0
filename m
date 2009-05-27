@@ -1,30 +1,34 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 18/24] mpt fusion: [2.6.30-rc6] Code Cleanup patch
-Date: Wed, 27 May 2009 17:53:43 +0000
-Message-ID: <1243446823.6067.40.camel@localhost.localdomain>
-References: <20090522110832.GL16331@lsi.com>
+From: ebiederm@xmission.com (Eric W. Biederman)
+Subject: Re: [PATCH 25/20] sysfs: Only support removing emtpy sysfs  directories.
+Date: Wed, 27 May 2009 11:00:17 -0700
+Message-ID: <m1ljoi1l5a.fsf@fess.ebiederm.org>
+References: <Pine.LNX.4.44L0.0905262214370.21274-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:38796 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932761AbZE0Rxo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 May 2009 13:53:44 -0400
-In-Reply-To: <20090522110832.GL16331@lsi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.0905262214370.21274-100000@netrider.rowland.org> (Alan Stern's message of "Tue\, 26 May 2009 22\:17\:41 -0400 \(EDT\)")
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Kay Sievers <kay.sievers@vrfy.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Greg Kroah-Hartman <gregkh@suse.de>, Kernel development list <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Cornelia Huck <cornelia.huck@de.ibm.com>, linux-fsdevel@vger.kernel.org, "Eric W. Biederman" <ebiederm@aristanetworks.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Cc: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-On Fri, 2009-05-22 at 16:38 +0530, Kashyap, Desai wrote:
-> +
-> +#define mpt_sg_next    sg_next
+Alan Stern <stern@rowland.harvard.edu> writes:
 
-So everything in here looks vaguely OK (modulo a few over wrapped
-prints) except this ... what's the point of adding this obfuscation?
+> On Wed, 27 May 2009, Kay Sievers wrote:
+>
+>> On Wed, May 27, 2009 at 01:49, James Bottomley
+>> <James.Bottomley@hansenpartnership.com> wrote:
+>> 
+>> > OK ... perhaps we have to wait a little harder: try this; it waits until
+>> > all the targets have disappeared from visibility via an event.
+>> 
+>> That seems to work fine here.
+>
+> It's good for a short-term fix.  For the longer term, I still think 
+> it's a mistake to wait for the sdevs to be released before deleting the 
+> target.  It gives user programs the ability to block the host-removal 
+> thread indefinitely.
 
-James
+How can user programs block removal indefinitely today?
 
-
+Eric
