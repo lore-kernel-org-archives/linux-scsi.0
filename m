@@ -1,61 +1,55 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [RFC][PATCH] [SCSI]: scsi_transport_iscsi.c return -EOVERFLOW
- for Too many iscsi targets
-Date: Wed, 27 May 2009 09:27:06 -0500
-Message-ID: <4A1D4DBA.8050802@cs.wisc.edu>
-References: <1243401279.3118.2.camel@localhost.localdomain>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 25/20] sysfs: Only support removing emtpy sysfs
+	directories.
+Date: Wed, 27 May 2009 16:01:34 +0000
+Message-ID: <1243440094.6067.10.camel@localhost.localdomain>
+References: <Pine.LNX.4.44L0.0905262214370.21274-100000@netrider.rowland.org>
+	 <4A1D2583.8040803@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:59073 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753996AbZE0O2Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 May 2009 10:28:25 -0400
-In-Reply-To: <1243401279.3118.2.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <4A1D2583.8040803@suse.de>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Kay Sievers <kay.sievers@vrfy.org>, SCSI development list <linux-scsi@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Kroah-Hartman <gregkh@suse.de>, Kernel development list <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Cornelia Huck <cornelia.huck@de.ibm.com>, linux-fsdevel@vger.kernel.org, "Eric W. Biederman" <ebiederm@aristanetworks.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jaswinder Singh Rajput <jaswinder@kernel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Ingo Molnar <mingo@elte.hu>, LKML <linux-kernel@vger.kernel.org>
 
-Jaswinder Singh Rajput wrote:
-> setting err as -EOVERFLOW for Too many iscsi targets.
->=20
-> Also fixes compiler warning for gcc < 4.3.3 :
->=20
->   CC      drivers/scsi/scsi_transport_iscsi.o
-> drivers/scsi/scsi_transport_iscsi.c: In function =E2=80=98iscsi_add_s=
-ession=E2=80=99:
-> drivers/scsi/scsi_transport_iscsi.c:678: warning: =E2=80=98err=E2=80=99=
- may be used uninitialized in this function
->=20
-> Signed-off-by: Jaswinder Singh Rajput <jaswinderrajput@gmail.com>
-> ---
->  drivers/scsi/scsi_transport_iscsi.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
->=20
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_=
-transport_iscsi.c
-> index 0947954..fdcda7f 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -693,6 +693,7 @@ int iscsi_add_session(struct iscsi_cls_session *s=
-ession, unsigned int target_id)
->  						 "Too many iscsi targets. Max "
->  						 "number of targets is %d.\n",
->  						 ISCSI_MAX_TARGET - 1);
-> +			err =3D -EOVERFLOW;
->  			goto release_host;
->  		}
->  	}
+On Wed, 2009-05-27 at 13:35 +0200, Hannes Reinecke wrote:
+> Hi all,
+> 
+> Alan Stern wrote:
+> > On Wed, 27 May 2009, Kay Sievers wrote:
+> > 
+> >> On Wed, May 27, 2009 at 01:49, James Bottomley
+> >> <James.Bottomley@hansenpartnership.com> wrote:
+> >>
+> >>> OK ... perhaps we have to wait a little harder: try this; it waits until
+> >>> all the targets have disappeared from visibility via an event.
+> >> That seems to work fine here.
+> > 
+> > It's good for a short-term fix.  For the longer term, I still think 
+> > it's a mistake to wait for the sdevs to be released before deleting the 
+> > target.  It gives user programs the ability to block the host-removal 
+> > thread indefinitely.
+> > 
+> Quite so. We should rather see to have the reference counting fixed
+> properly, than this would go away automatically.
+
+Hardly ... our current refcounting is on destruction (releases).  This
+problem is an instance of visibility (the del calls) we need the
+visibility teardown to work nicely.  We currently have no refcounting on
+the visibility.  Even if we did (and we could add a ref on when the
+underlying device del calls are done), what happens if the target needs
+to become visible again.  Apparently the generic device infrastructure
+can't accept doing an add on a previously del'd device.
+
+The most obvious way of fixing this is to have a special case for
+targets of dying hosts ... they could call del early on the
+understanding that they're never getting new underlying devices.  That
+would allow the wait to trigger on the last target del, which is what is
+optimal.
+
+James
 
 
-=46ine by me. Send it through whatever tree you guys want.
-
-Acked-by: Mike Christie <michaelc@cs.wisc.edu>
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
