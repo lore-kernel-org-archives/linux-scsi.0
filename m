@@ -1,295 +1,153 @@
 From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 06/10] ibmvfc: Add support for NPIV Logout
-Date: Thu, 28 May 2009 16:17:29 -0500
-Message-ID: <200905282117.n4SLHTgj025772@d03av02.boulder.ibm.com>
+Subject: [PATCH 07/10] ibmvfc: Add flush on halt support
+Date: Thu, 28 May 2009 16:17:30 -0500
+Message-ID: <200905282117.n4SLHUoe032746@d03av01.boulder.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e39.co.us.ibm.com ([32.97.110.160]:39656 "EHLO
-	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763711AbZE1VRd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 May 2009 17:17:33 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e39.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n4SLDigN027985
-	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2009 15:13:44 -0600
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n4SLHVM5157108
+Received: from e35.co.us.ibm.com ([32.97.110.153]:45744 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763916AbZE1VRm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 May 2009 17:17:42 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e35.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n4SLBBrZ022686
+	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2009 15:11:11 -0600
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n4SLHV0U199164
+	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2009 15:17:32 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n4SLHVUV032762
 	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2009 15:17:31 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n4SLHU9u025804
-	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2009 15:17:30 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
 
-This patch adds support for a new command supported by the Virtual I/O
-Server, NPIV Logout. The command will abort all outstanding commands
-and log out of the fabric. Currently, the only way to do this is
-by breaking the CRQ, which can take a fairly long time when lots of
-commands are outstanding. The NPIV Logout commands provides a mechanism
-to accomplish virtually the same function, but is much faster.
+The virtual I/O server controlling the NPIV adapter associated with
+a virtual fibre channel adapter can send a HALT event to the client.
+When this occurs, the client can no longer send commands until a RESUME
+is received. By adding support for flush on halt, we will get all of
+our outstanding commands flushed back before the Virtual I/O server
+enters the halt state, eliminating potential command timeouts for
+outstanding commands which might occur if we did not support this feature. 
 
 Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 ---
 
- drivers/scsi/ibmvscsi/ibmvfc.c |   97 +++++++++++++++++++++++++++++++++++++++--
- drivers/scsi/ibmvscsi/ibmvfc.h |   12 ++++-
- 2 files changed, 105 insertions(+), 4 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c |   34 +++++++++++++++++++++++++++++++---
+ drivers/scsi/ibmvscsi/ibmvfc.h |   13 +++++++++++--
+ 2 files changed, 42 insertions(+), 5 deletions(-)
 
-diff -puN drivers/scsi/ibmvscsi/ibmvfc.h~ibmvfc_npiv_logout drivers/scsi/ibmvscsi/ibmvfc.h
---- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.h~ibmvfc_npiv_logout	2009-03-31 08:46:13.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.h	2009-03-31 08:46:13.000000000 -0500
-@@ -57,9 +57,10 @@
-  * Ensure we have resources for ERP and initialization:
-  * 1 for ERP
-  * 1 for initialization
-+ * 1 for NPIV Logout
-  * 2 for each discovery thread
-  */
--#define IBMVFC_NUM_INTERNAL_REQ	(1 + 1 + (disc_threads * 2))
-+#define IBMVFC_NUM_INTERNAL_REQ	(1 + 1 + 1 + (disc_threads * 2))
- 
- #define IBMVFC_MAD_SUCCESS		0x00
- #define IBMVFC_MAD_NOT_SUPPORTED	0xF1
-@@ -127,6 +128,7 @@ enum ibmvfc_mad_types {
- 	IBMVFC_IMPLICIT_LOGOUT	= 0x0040,
- 	IBMVFC_PASSTHRU		= 0x0200,
- 	IBMVFC_TMF_MAD		= 0x0100,
-+	IBMVFC_NPIV_LOGOUT	= 0x0800,
+diff -puN drivers/scsi/ibmvscsi/ibmvfc.h~ibmvfc_flush_on_halt drivers/scsi/ibmvscsi/ibmvfc.h
+--- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.h~ibmvfc_flush_on_halt	2009-05-05 16:26:52.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.h	2009-05-05 16:26:52.000000000 -0500
+@@ -207,7 +207,8 @@ struct ibmvfc_npiv_login_resp {
+ #define IBMVFC_NATIVE_FC		0x01
+ #define IBMVFC_CAN_FLUSH_ON_HALT	0x08
+ 	u32 reserved;
+-	u64 capabilites;
++	u64 capabilities;
++#define IBMVFC_CAN_FLUSH_ON_HALT	0x08
+ 	u32 max_cmds;
+ 	u32 scsi_id_sz;
+ 	u64 max_dma_len;
+@@ -547,9 +548,17 @@ struct ibmvfc_crq_queue {
+ 	dma_addr_t msg_token;
  };
  
- struct ibmvfc_mad_common {
-@@ -143,6 +145,10 @@ struct ibmvfc_npiv_login_mad {
- 	struct srp_direct_buf buffer;
- }__attribute__((packed, aligned (8)));
- 
-+struct ibmvfc_npiv_logout_mad {
-+	struct ibmvfc_mad_common common;
-+}__attribute__((packed, aligned (8)));
++enum ibmvfc_ae_link_state {
++	IBMVFC_AE_LS_LINK_UP		= 0x01,
++	IBMVFC_AE_LS_LINK_BOUNCED	= 0x02,
++	IBMVFC_AE_LS_LINK_DOWN		= 0x04,
++	IBMVFC_AE_LS_LINK_DEAD		= 0x08,
++};
 +
- #define IBMVFC_MAX_NAME 256
+ struct ibmvfc_async_crq {
+ 	volatile u8 valid;
+-	u8 pad[3];
++	u8 link_state;
++	u8 pad[2];
+ 	u32 pad2;
+ 	volatile u64 event;
+ 	volatile u64 scsi_id;
+diff -puN drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_flush_on_halt drivers/scsi/ibmvscsi/ibmvfc.c
+--- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_flush_on_halt	2009-05-05 16:26:52.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.c	2009-05-08 17:19:56.000000000 -0500
+@@ -110,7 +110,7 @@ static const struct {
+ 	{ IBMVFC_FABRIC_MAPPED, IBMVFC_XPORT_DEAD, DID_ERROR, 0, 1, "transport dead" },
+ 	{ IBMVFC_FABRIC_MAPPED, IBMVFC_CONFIG_ERROR, DID_ERROR, 1, 1, "configuration error" },
+ 	{ IBMVFC_FABRIC_MAPPED, IBMVFC_NAME_SERVER_FAIL, DID_ERROR, 1, 1, "name server failure" },
+-	{ IBMVFC_FABRIC_MAPPED, IBMVFC_LINK_HALTED, DID_REQUEUE, 0, 0, "link halted" },
++	{ IBMVFC_FABRIC_MAPPED, IBMVFC_LINK_HALTED, DID_REQUEUE, 1, 0, "link halted" },
+ 	{ IBMVFC_FABRIC_MAPPED, IBMVFC_XPORT_GENERAL, DID_OK, 1, 0, "general transport error" },
  
- struct ibmvfc_npiv_login {
-@@ -561,6 +567,7 @@ struct ibmvfc_async_crq_queue {
- union ibmvfc_iu {
- 	struct ibmvfc_mad_common mad_common;
- 	struct ibmvfc_npiv_login_mad npiv_login;
-+	struct ibmvfc_npiv_logout_mad npiv_logout;
- 	struct ibmvfc_discover_targets discover_targets;
- 	struct ibmvfc_port_login plogi;
- 	struct ibmvfc_process_login prli;
-@@ -627,6 +634,8 @@ struct ibmvfc_event_pool {
+ 	{ IBMVFC_VIOS_FAILURE, IBMVFC_CRQ_FAILURE, DID_REQUEUE, 1, 1, "CRQ failure" },
+@@ -1169,8 +1169,9 @@ static void ibmvfc_set_login_info(struct
+ 	login_info->partition_num = vhost->partition_number;
+ 	login_info->vfc_frame_version = 1;
+ 	login_info->fcp_version = 3;
++	login_info->flags = IBMVFC_FLUSH_ON_HALT;
+ 	if (vhost->client_migrated)
+-		login_info->flags = IBMVFC_CLIENT_MIGRATED;
++		login_info->flags |= IBMVFC_CLIENT_MIGRATED;
  
- enum ibmvfc_host_action {
- 	IBMVFC_HOST_ACTION_NONE = 0,
-+	IBMVFC_HOST_ACTION_LOGO,
-+	IBMVFC_HOST_ACTION_LOGO_WAIT,
- 	IBMVFC_HOST_ACTION_INIT,
- 	IBMVFC_HOST_ACTION_INIT_WAIT,
- 	IBMVFC_HOST_ACTION_QUERY,
-@@ -682,6 +691,7 @@ struct ibmvfc_host {
- 	int reinit;
- 	int delay_init;
- 	int scan_complete;
-+	int logged_in;
- 	int events_to_log;
- #define IBMVFC_AE_LINKUP	0x0001
- #define IBMVFC_AE_LINKDOWN	0x0002
-diff -puN drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_npiv_logout drivers/scsi/ibmvscsi/ibmvfc.c
---- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_npiv_logout	2009-03-31 08:46:13.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.c	2009-03-31 08:46:13.000000000 -0500
-@@ -143,6 +143,7 @@ static void ibmvfc_npiv_login(struct ibm
- static void ibmvfc_tgt_send_prli(struct ibmvfc_target *);
- static void ibmvfc_tgt_send_plogi(struct ibmvfc_target *);
- static void ibmvfc_tgt_query_target(struct ibmvfc_target *);
-+static void ibmvfc_npiv_logout(struct ibmvfc_host *);
+ 	login_info->max_cmds = max_requests + IBMVFC_NUM_INTERNAL_REQ;
+ 	login_info->capabilities = IBMVFC_CAN_MIGRATE;
+@@ -2185,8 +2186,25 @@ static void ibmvfc_handle_async(struct i
+ 		   " node_name: %llx\n", desc, crq->scsi_id, crq->wwpn, crq->node_name);
  
- static const char *unknown_error = "unknown error";
- 
-@@ -477,6 +478,10 @@ static void ibmvfc_set_host_action(struc
- 		if (vhost->action == IBMVFC_HOST_ACTION_INIT_WAIT)
- 			vhost->action = action;
- 		break;
-+	case IBMVFC_HOST_ACTION_LOGO_WAIT:
-+		if (vhost->action == IBMVFC_HOST_ACTION_LOGO)
-+			vhost->action = action;
+ 	switch (crq->event) {
+-	case IBMVFC_AE_LINK_UP:
+ 	case IBMVFC_AE_RESUME:
++		switch (crq->link_state) {
++		case IBMVFC_AE_LS_LINK_DOWN:
++			ibmvfc_link_down(vhost, IBMVFC_LINK_DOWN);
++			break;
++		case IBMVFC_AE_LS_LINK_DEAD:
++			ibmvfc_link_down(vhost, IBMVFC_LINK_DEAD);
++			break;
++		case IBMVFC_AE_LS_LINK_UP:
++		case IBMVFC_AE_LS_LINK_BOUNCED:
++		default:
++			vhost->events_to_log |= IBMVFC_AE_LINKUP;
++			vhost->delay_init = 1;
++			__ibmvfc_reset_host(vhost);
++			break;
++		};
++
 +		break;
- 	case IBMVFC_HOST_ACTION_INIT_WAIT:
- 		if (vhost->action == IBMVFC_HOST_ACTION_INIT)
- 			vhost->action = action;
-@@ -496,6 +501,7 @@ static void ibmvfc_set_host_action(struc
- 		if (vhost->action == IBMVFC_HOST_ACTION_ALLOC_TGTS)
- 			vhost->action = action;
- 		break;
-+	case IBMVFC_HOST_ACTION_LOGO:
- 	case IBMVFC_HOST_ACTION_INIT:
- 	case IBMVFC_HOST_ACTION_TGT_DEL:
- 	case IBMVFC_HOST_ACTION_QUERY_TGTS:
-@@ -647,6 +653,7 @@ static void ibmvfc_release_crq_queue(str
- 	} while (rc == H_BUSY || H_IS_LONG_BUSY(rc));
- 
- 	vhost->state = IBMVFC_NO_CRQ;
-+	vhost->logged_in = 0;
- 	dma_unmap_single(vhost->dev, crq->msg_token, PAGE_SIZE, DMA_BIDIRECTIONAL);
- 	free_page((unsigned long)crq->msgs);
- }
-@@ -693,6 +700,7 @@ static int ibmvfc_reset_crq(struct ibmvf
- 	} while (rc == H_BUSY || H_IS_LONG_BUSY(rc));
- 
- 	vhost->state = IBMVFC_NO_CRQ;
-+	vhost->logged_in = 0;
- 	ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_NONE);
- 
- 	/* Clean out the queue */
-@@ -808,10 +816,10 @@ static void ibmvfc_purge_requests(struct
++	case IBMVFC_AE_LINK_UP:
+ 		vhost->events_to_log |= IBMVFC_AE_LINKUP;
+ 		vhost->delay_init = 1;
+ 		__ibmvfc_reset_host(vhost);
+@@ -2505,6 +2523,14 @@ static ssize_t ibmvfc_show_host_npiv_ver
+ 	return snprintf(buf, PAGE_SIZE, "%d\n", vhost->login_buf->resp.version);
  }
  
- /**
-- * __ibmvfc_reset_host - Reset the connection to the server (no locking)
-+ * ibmvfc_hard_reset_host - Reset the connection to the server by breaking the CRQ
-  * @vhost:	struct ibmvfc host to reset
-  **/
--static void __ibmvfc_reset_host(struct ibmvfc_host *vhost)
-+static void ibmvfc_hard_reset_host(struct ibmvfc_host *vhost)
- {
- 	int rc;
- 
-@@ -827,9 +835,25 @@ static void __ibmvfc_reset_host(struct i
- }
- 
- /**
-- * ibmvfc_reset_host - Reset the connection to the server
-+ * __ibmvfc_reset_host - Reset the connection to the server (no locking)
-  * @vhost:	struct ibmvfc host to reset
-  **/
-+static void __ibmvfc_reset_host(struct ibmvfc_host *vhost)
++static ssize_t ibmvfc_show_host_capabilities(struct device *dev,
++					     struct device_attribute *attr, char *buf)
 +{
-+	if (vhost->logged_in && vhost->action != IBMVFC_HOST_ACTION_LOGO_WAIT &&
-+	    !ibmvfc_set_host_state(vhost, IBMVFC_INITIALIZING)) {
-+		scsi_block_requests(vhost->host);
-+		ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_LOGO);
-+		vhost->job_step = ibmvfc_npiv_logout;
-+		wake_up(&vhost->work_wait_q);
-+	} else
-+		ibmvfc_hard_reset_host(vhost);
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct ibmvfc_host *vhost = shost_priv(shost);
++	return snprintf(buf, PAGE_SIZE, "%llx\n", vhost->login_buf->resp.capabilities);
 +}
 +
-+/**
-+ * ibmvfc_reset_host - Reset the connection to the server
-+ * @vhost:	ibmvfc host struct
-+ **/
- static void ibmvfc_reset_host(struct ibmvfc_host *vhost)
- {
- 	unsigned long flags;
-@@ -2230,6 +2254,7 @@ static void ibmvfc_handle_crq(struct ibm
- 		return;
- 	case IBMVFC_CRQ_XPORT_EVENT:
- 		vhost->state = IBMVFC_NO_CRQ;
-+		vhost->logged_in = 0;
- 		ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_NONE);
- 		if (crq->format == IBMVFC_PARTITION_MIGRATED) {
- 			/* We need to re-setup the interpartition connection */
-@@ -3554,6 +3579,7 @@ static void ibmvfc_npiv_login_done(struc
- 		return;
- 	}
+ /**
+  * ibmvfc_show_log_level - Show the adapter's error logging level
+  * @dev:	class device struct
+@@ -2554,6 +2580,7 @@ static DEVICE_ATTR(device_name, S_IRUGO,
+ static DEVICE_ATTR(port_loc_code, S_IRUGO, ibmvfc_show_host_loc_code, NULL);
+ static DEVICE_ATTR(drc_name, S_IRUGO, ibmvfc_show_host_drc_name, NULL);
+ static DEVICE_ATTR(npiv_version, S_IRUGO, ibmvfc_show_host_npiv_version, NULL);
++static DEVICE_ATTR(capabilities, S_IRUGO, ibmvfc_show_host_capabilities, NULL);
+ static DEVICE_ATTR(log_level, S_IRUGO | S_IWUSR,
+ 		   ibmvfc_show_log_level, ibmvfc_store_log_level);
  
-+	vhost->logged_in = 1;
- 	npiv_max_sectors = min((uint)(rsp->max_dma_len >> 9), IBMVFC_MAX_SECTORS);
- 	dev_info(vhost->dev, "Host partition: %s, device: %s %s %s max sectors %u\n",
- 		 rsp->partition_name, rsp->device_name, rsp->port_loc_code,
-@@ -3612,6 +3638,65 @@ static void ibmvfc_npiv_login(struct ibm
+@@ -2609,6 +2636,7 @@ static struct device_attribute *ibmvfc_a
+ 	&dev_attr_port_loc_code,
+ 	&dev_attr_drc_name,
+ 	&dev_attr_npiv_version,
++	&dev_attr_capabilities,
+ 	&dev_attr_log_level,
+ 	NULL
  };
- 
- /**
-+ * ibmvfc_npiv_logout_done - Completion handler for NPIV Logout
-+ * @vhost:		ibmvfc host struct
-+ *
-+ **/
-+static void ibmvfc_npiv_logout_done(struct ibmvfc_event *evt)
-+{
-+	struct ibmvfc_host *vhost = evt->vhost;
-+	u32 mad_status = evt->xfer_iu->npiv_logout.common.status;
-+
-+	ibmvfc_free_event(evt);
-+
-+	switch (mad_status) {
-+	case IBMVFC_MAD_SUCCESS:
-+		if (list_empty(&vhost->sent) &&
-+		    vhost->action == IBMVFC_HOST_ACTION_LOGO_WAIT) {
-+			ibmvfc_init_host(vhost, 0);
-+			return;
-+		}
-+		break;
-+	case IBMVFC_MAD_FAILED:
-+	case IBMVFC_MAD_NOT_SUPPORTED:
-+	case IBMVFC_MAD_CRQ_ERROR:
-+	case IBMVFC_MAD_DRIVER_FAILED:
-+	default:
-+		ibmvfc_dbg(vhost, "NPIV Logout failed. 0x%X\n", mad_status);
-+		break;
-+	}
-+
-+	ibmvfc_hard_reset_host(vhost);
-+}
-+
-+/**
-+ * ibmvfc_npiv_logout - Issue an NPIV Logout
-+ * @vhost:		ibmvfc host struct
-+ *
-+ **/
-+static void ibmvfc_npiv_logout(struct ibmvfc_host *vhost)
-+{
-+	struct ibmvfc_npiv_logout_mad *mad;
-+	struct ibmvfc_event *evt;
-+
-+	evt = ibmvfc_get_event(vhost);
-+	ibmvfc_init_event(evt, ibmvfc_npiv_logout_done, IBMVFC_MAD_FORMAT);
-+
-+	mad = &evt->iu.npiv_logout;
-+	memset(mad, 0, sizeof(*mad));
-+	mad->common.version = 1;
-+	mad->common.opcode = IBMVFC_NPIV_LOGOUT;
-+	mad->common.length = sizeof(struct ibmvfc_npiv_logout_mad);
-+
-+	ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_LOGO_WAIT);
-+
-+	if (!ibmvfc_send_event(evt, vhost, default_timeout))
-+		ibmvfc_dbg(vhost, "Sent NPIV logout\n");
-+	else
-+		ibmvfc_link_down(vhost, IBMVFC_LINK_DEAD);
-+}
-+
-+/**
-  * ibmvfc_dev_init_to_do - Is there target initialization work to do?
-  * @vhost:		ibmvfc host struct
-  *
-@@ -3647,6 +3732,7 @@ static int __ibmvfc_work_to_do(struct ib
- 	switch (vhost->action) {
- 	case IBMVFC_HOST_ACTION_NONE:
- 	case IBMVFC_HOST_ACTION_INIT_WAIT:
-+	case IBMVFC_HOST_ACTION_LOGO_WAIT:
- 		return 0;
- 	case IBMVFC_HOST_ACTION_TGT_INIT:
- 	case IBMVFC_HOST_ACTION_QUERY_TGTS:
-@@ -3659,6 +3745,7 @@ static int __ibmvfc_work_to_do(struct ib
- 			if (tgt->action == IBMVFC_TGT_ACTION_INIT_WAIT)
- 				return 0;
- 		return 1;
-+	case IBMVFC_HOST_ACTION_LOGO:
- 	case IBMVFC_HOST_ACTION_INIT:
- 	case IBMVFC_HOST_ACTION_ALLOC_TGTS:
- 	case IBMVFC_HOST_ACTION_TGT_DEL:
-@@ -3765,8 +3852,12 @@ static void ibmvfc_do_work(struct ibmvfc
- 	vhost->events_to_log = 0;
- 	switch (vhost->action) {
- 	case IBMVFC_HOST_ACTION_NONE:
-+	case IBMVFC_HOST_ACTION_LOGO_WAIT:
- 	case IBMVFC_HOST_ACTION_INIT_WAIT:
- 		break;
-+	case IBMVFC_HOST_ACTION_LOGO:
-+		vhost->job_step(vhost);
-+		break;
- 	case IBMVFC_HOST_ACTION_INIT:
- 		BUG_ON(vhost->state != IBMVFC_INITIALIZING);
- 		if (vhost->delay_init) {
 _
