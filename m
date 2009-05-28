@@ -1,61 +1,44 @@
-From: Kay Sievers <kay.sievers@vrfy.org>
-Subject: Re: [Bug 13311] New: mptsas: ioc0: removing ssp device, kernel oops
-Date: Thu, 28 May 2009 13:54:05 +0200
-Message-ID: <ac3eb2510905280454p1cdcbf0cxbb8e2907209ae974@mail.gmail.com>
-References: <bug-13311-11613@http.bugzilla.kernel.org/> <20090528010038.b4d3b2b9.akpm@linux-foundation.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: kernel crash when BSG request timesout
+Date: Thu, 28 May 2009 09:54:28 -0400
+Message-ID: <4A1E9794.7090503@interlog.com>
+References: <8DE113F8-5448-44BD-9EFE-27701933C126@qlogic.com>	<4A1928B4.7030807@panasas.com>	<3688CE86-250A-4D29-A3EB-ED1B46F82377@qlogic.com> <20090528150147U.fujita.tomonori@lab.ntt.co.jp>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:63251 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754569AbZE1LyT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 May 2009 07:54:19 -0400
-Received: by bwz22 with SMTP id 22so5376110bwz.37
-        for <linux-scsi@vger.kernel.org>; Thu, 28 May 2009 04:54:20 -0700 (PDT)
-In-Reply-To: <20090528010038.b4d3b2b9.akpm@linux-foundation.org>
+Received: from firefly.infotech.no ([82.134.31.146]:33677 "EHLO
+	elrond.bb.infotech.no" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754385AbZE1Nye (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 May 2009 09:54:34 -0400
+In-Reply-To: <20090528150147U.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: mike.tummy@gmail.com, linux-scsi@vger.kernel.org, bugzilla-daemon@bugzilla.kernel.org, Greg KH <greg@kroah.com>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: giridhar.malavali@qlogic.com, bharrosh@panasas.com, linux-scsi@vger.kernel.org, James.Smart@Emulex.Com
 
-On Thu, May 28, 2009 at 10:00, Andrew Morton <akpm@linux-foundation.org=
-> wrote:
+FUJITA Tomonori wrote:
+> CC'ed James Smart,
+> 
+> On Tue, 26 May 2009 11:38:14 -0700
+> Giridhar Malavali <giridhar.malavali@qlogic.com> wrote:
+> 
+>> Thanks for the pointer. I will check with the post-merge tree.
+>>
+>> 	The crash I am seeing is because of softirq_done_fn not set in the  
+>> request queue for BSG request. Even in the post-merge tree I don't see  
+>> FC transport setting this function during the allocation of the  
+>> request queue.  When BSG request times out, I see that it executes  
+>> __blk_complete_request function where check is done for its existence.  
+>> I see this getting set for SCSI request during queue allocation in  
+>> scsi_lib.c. Is this required for BSG request?
+> 
+> Yeah, you need to set q->softirq_done_fn if you use the block timeout
+> infrastructure. The current bsg user, SMP, uses bsg but it doesn't use
+> the timeout infrastructure so it doesn't set q->softirq_done_fn.
 
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0Product: SCSI Drivers
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0Version: 2.5
->> =C2=A0 =C2=A0 Kernel Version: 2.6.27.21
->
-> Is it reproducible? =C2=A0If so, is there any change that it can be r=
-etested
-> under a 2.6.29-based kernel?
+sg3_utils version 1.27 (and later) is a user of bsg, sending
+SCSI commands through. Will timeouts works? [I didn't check.]
 
-This driver version:
-  MPT_LINUX_VERSION_COMMON       "4.00.43.00suse"
-seems not in the upstream kernel:
-  MPT_LINUX_VERSION_COMMON       "3.04.07"
-
-The failing code is only in the new driver. This bug should move to
-the Novell bugzilla, so the people who added the driver to the SUSE
-kernel can check with LSI directly.
-
-> OK, I assume that the scsi driver did something bad to sysfs and
-> that sysfs then fell on its face.
->
-> Really, given the frequency and imaginativeness with which drivers
-> abuse sysfs, the driver-core should be more robust.
->
-> Kay, would you have time to plunk through this and see if we can
-> strengthen the sysfs code a bit so it doesn't crash?
-
-Might be a missing lock/wrong refcounting issue in the caller, where
-two threads try to remove the same thing. With Eric's upcoming changes
-to the cleanup logic in sysfs, this should be handled better.
-
-Thanks,
-Kay
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Doug Gilbert
