@@ -1,70 +1,52 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: aic94xx driver very slow / low writing speed on sata-discs
-Date: Thu, 28 May 2009 01:58:16 -0700
-Message-ID: <20090528015816.8c561ece.akpm@linux-foundation.org>
-References: <4A082DA1.9090805@jc-embedded.com>
+From: Jeremy Linton <jlinton@greshamstorage.com>
+Subject: Re: Bad emulex/linux FC error handing behavior
+Date: Thu, 28 May 2009 04:36:58 -0500
+Message-ID: <4A1E5B3A.1070202@greshamstorage.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:52019 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1762880AbZE1I6j (ORCPT
+Received: from gatekeeper.greshamstorage.com ([12.166.178.178]:37781 "EHLO
+	AUSEXCH1.greshamstorage.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751477AbZE1Jgx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 May 2009 04:58:39 -0400
-In-Reply-To: <4A082DA1.9090805@jc-embedded.com>
+	Thu, 28 May 2009 05:36:53 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Thomas Lange <lange@jc-embedded.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Darrick J. Wong" <djwong@us.ibm.com>
+To: Linux Scsi <linux-scsi@vger.kernel.org>, james.smart@emulex.com
 
-On Mon, 11 May 2009 15:52:33 +0200 Thomas Lange <lange@jc-embedded.com> wrote:
+James Smart wrote:
+ > However, the question in my mind is - why did you get to bus reset ?
+	Because the device is having intermittent problems? The whole error handler sequence fails (tur failures, etc), and it 
+ends up marking the device off-line. In the process it shoots everything else in the head. This is the behavior i'm 
+having a problem with. I don't really care about the state of the failing device, it is having a physical problem. My 
+problem is the remainder of the shared devices which are having their activities interrupted. In many cases, those other 
+machines/devices many not even have visibility to the failing device. It becomes a serious error isolation problem. From 
+the perspective of other hosts, the only way to track the error down is to actually have an analyzer attached to the 
+interrupted devices. Assuming it reproduces, the analyzer can then detect the reset and identify the source port it 
+originated from. That machine may then be removed from the SAN. This whole process can be nearly impossible to perform 
+at a customer's site.
 
-> Hi all,
-> 
-> this is my second post to LKML regarding the issue with aic94xx driver.
-> In the meantime I have some additional information to share:
-> We did some more testing and found out that partitions on the discs 
-> attached to the controller sometimes are not recognized during boot.
-> That leads to the problem that they cannot be mounted at all.
-> I would be happy to get some hints on the issue
-> as well as provide some of my spare time and our company's hardware to 
-> do some testing.
-> 
-> Here is the description of my first observation of the problem:
-> We have a couple of supermicro servers in our company that have adaptec
-> aic94xx onboard, and there is the following issue that
-> the aic94xx writing speed is very slow for sata disks connected.
-> writing speed 5-6MB/s
-> (tested with dd if=/dev/zero of=/dev/partition on aic9410w)
-> reading speed: above 70MB/s
-> (tested with dd if=/dev/partition of=/dev/zero on aic9410w)
-> Another observation is that the LED showing disc activity
-> continuously glows as soon as the driver has been loaded and that it
-> does not stop to glow from then on. Also the hard disks connected to the
-> aic9410w are not recognized every time after booting the system. In most
-> cases a second boot resolves the issue.
-> With other operating sytem there is no such problem i.e. hardware itself 
-> is okay.
-> 
-> I send relevant output information of the aic94xx driver attached with this
-> mail. Please CC answers to this post to me (langeATjc-embedded.com) as 
-> I'm not
-> in the kernel-list.
 
-I don't know what to do about this, sorry.  That driver is basically
-unmaintained.
+ >The reason for the behavior is to replicate the parallel scsi behavior,
+ >which is expected/required by many people.
 
-Looking through the boot messages, this:
+	I'm confused by this. For parallel SCSI, there were device dependencies due to the physical bus. The bus reset was 
+standard error handing because a bad/failing SCSI device often put the bus in a unrecoverable state for the remainder of 
+the devices. SPI also rarely had multiple initiators sharing devices.
+	I was unaware of how big the "hammer" lpfc tends to use against the SAN when a device fails. I suspect that I'm not the 
+only one. Is there are way to simulate the SPI behavior(?), short of actually resetting all attached devices? For that 
+matter, I'm a little confused what exactly the intended behavior is. Can you enlighten me? I could understand if it was 
+just resetting all luns on a particular device, but its resetting all attached devices.
 
-> sas: DONE DISCOVERY on port 1, pid:1712, result:0
-> sas: sas_form_port: phy0 belongs to port0 already(1)!
-> sas: sas_form_port: phy1 belongs to port1 already(1)!
 
-is the only thing which stands out to me.  And according to google,
-you're basically the only person who ever saw it come out.
+ > We can certainly discuss adding a parameter that
+ > controls the behavior, but this should be on a transport basis, not on
+ > an adapter-specific manner.
 
-ooh, that code has a maintainer.  Darrick, does the above look like
-something which could make the driver run all slowly?
+	Thats a great plan. To me it makes sense that this behavior should be transport dependent, I would want it for SPI, but 
+not for FC or iSCSI. How likely is that to be accepted? The SCSI error hander seem to be completely transport 
+independent. Initially, I targeted the emulex driver because the qlogic already has a way to disable the behavior, and 
+the LSI driver doesn't appear to support this behavior at all.
 
-Thanks.
+
