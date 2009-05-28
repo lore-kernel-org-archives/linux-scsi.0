@@ -1,63 +1,49 @@
-From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
-Subject: Re: [PATCH v6] cciss: add cciss driver sysfs entries
-Date: Thu, 28 May 2009 15:24:59 -0500
-Message-ID: <20090528202459.GC4846@beardog.cca.cpqcorp.net>
-References: <20090413164524.17977.99322.stgit@bluto.andrew>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 25/20] sysfs: Only support removing emtpy sysfs  directories.
+Date: Thu, 28 May 2009 17:04:59 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0905281656590.4059-100000@iolanthe.rowland.org>
+References: <1243541439.2830.21.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0027.austin.hp.com ([15.216.28.34]:14250 "EHLO
-	g1t0027.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761608AbZE1UYh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 May 2009 16:24:37 -0400
-Content-Disposition: inline
-In-Reply-To: <20090413164524.17977.99322.stgit@bluto.andrew>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <1243541439.2830.21.camel@localhost.localdomain>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Hannes Reinecke <hare@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, SCSI development list <linux-scsi@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Kroah-Hartman <gregkh@suse.de>, Kernel development list <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Cornelia Huck <cornelia.huck@de.ibm.com>, linux-fsdevel@vger.kernel.org, "Eric W. Biederman" <ebiederm@aristanetworks.com>
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@beardog.cca.cpqcorp.net, jens@beardog.cca.cpqcorp.net, Andrew Patterson <andrew.patterson@hp.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, LKML-SCSI <linux-scsi@vger.kernel.org>
 
-On Mon, Apr 13, 2009 at 10:45:25AM -0600, Andrew Patterson wrote:
-This is version six of my patch to add sysfs entries to the cciss driver.
+On Thu, 28 May 2009, James Bottomley wrote:
 
-Changelog:
+> > How so?  Why not unlink the target from the host's list when the 
+> > device_del() call returns?  A new target can be created any time after 
+> > that, since the old one is now completely invisible.
+> 
+> The answer to that one is several emails back: we need the target in the
+> host list for the lifetime of the devices ... it's alterable, but even
+> more auditing.
 
-Version 3
-Got rid of /sys/class/cciss_* entries.  Now only show vendor, model, 
-rev, and unique_id at /sys/bus/pci/devices/ccissX/cXdY.  Where X is the
-controller nubmer and Y is the logical drive number.
-Fixed a double memcpy of the serial number.
-Documented new sysfs entries in 
-Documentation/ABI/testing/sysfs-bus-pci-devices-cciss
-Fixed tabs in Documentation/ABI/testing/sysfs-bus-pci-devices-cciss
-Removed unneeded device_attribute release functions
-Fixed pahole-reported holes.
+I don't recall you mentioning that the target had to be linked into the 
+host's list for the lifetime of the devices; I thought you said merely 
+that the target had to _exist_ for the lifetime of the devices.
 
-Version 4
-Moved cciss_sysfs.c into cciss.c
-Added cciss_bus_type to logical drive so we get /sys/bus/cciss/device/ccissX.
+Does it really need to be linked, or is existence of the structure 
+sufficient?
 
-Version 5 
-Added cciss_bus_type to hba so we get /sys/bus/cciss/device/cYdZ.
+Likewise, after a device is removed from visibility, does it need to 
+remain linked into the host's and target's lists?
 
-Version 6
+> > P.S.: Does scsi_target_reap() really ever get called in non-process
+> > context?  I couldn't find any place where that might happen.
+> 
+> From the device release, which is done by last put, which could be I/O
+> context.
 
-Use "sizeof() + 1" instead of "*LEN + 2" for *_show() routines.
-Added back in ABI docs.
-The following patch adds sysfs entries for the cciss driver. It adds
-vendor, model, rev, and unique_id under /sys/block/cciss!c#d#/device
-needed for RedHat BZ:
+But scsi_target_reap() isn't called directly from the device release.  
+It's called from scsi_device_dev_release_usercontext().
 
-   https://bugzilla.redhat.com/show_bug.cgi?id=484419
+And besides, in the patch I'm working on it isn't called from either of 
+those places -- it's called from __scsi_remove_device().  So I'll go 
+ahead and get rid of scsi_target_reap_usercontext().
 
-This patch is based off os linus's 2.6 tree (2.6.30-rc1).
+Alan Stern
 
- .../ABI/testing/sysfs-bus-pci-devices-cciss        |   33 ++
- drivers/block/cciss.c                              |  267 ++++++++++++++++++++
- drivers/block/cciss.h                              |   24 +-
- 3 files changed, 314 insertions(+), 10 deletions(-)
- create mode 100644 Documentation/ABI/testing/sysfs-bus-pci-devices-cciss
-
-
--- 
-Andrew Patterson
