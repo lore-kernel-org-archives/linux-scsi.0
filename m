@@ -1,49 +1,47 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 25/20] sysfs: Only support removing emtpy sysfs  directories.
-Date: Thu, 28 May 2009 17:04:59 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0905281656590.4059-100000@iolanthe.rowland.org>
-References: <1243541439.2830.21.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <1243541439.2830.21.camel@localhost.localdomain>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Hannes Reinecke <hare@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, SCSI development list <linux-scsi@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Kroah-Hartman <gregkh@suse.de>, Kernel development list <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Cornelia Huck <cornelia.huck@de.ibm.com>, linux-fsdevel@vger.kernel.org, "Eric W. Biederman" <ebiederm@aristanetworks.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 01/10] ibmvfc: Fix invalid error response handling
+Date: Thu, 28 May 2009 16:17:22 -0500
+Message-ID: <200905282115.n4SLFH6q029819@d01av02.pok.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e7.ny.us.ibm.com ([32.97.182.137]:45625 "EHLO e7.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759997AbZE1VRX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 May 2009 17:17:23 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e7.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n4SL5lhP026467
+	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2009 17:05:47 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n4SLHOJu244274
+	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2009 17:17:24 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n4SLFHZ1029901
+	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2009 17:15:18 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
-On Thu, 28 May 2009, James Bottomley wrote:
 
-> > How so?  Why not unlink the target from the host's list when the 
-> > device_del() call returns?  A new target can be created any time after 
-> > that, since the old one is now completely invisible.
-> 
-> The answer to that one is several emails back: we need the target in the
-> host list for the lifetime of the devices ... it's alterable, but even
-> more auditing.
+Fix an obvious bug in processing error responses for SCSI commands
+which can result in successful responses being incorrectly returned
+with DID_ERROR.
 
-I don't recall you mentioning that the target had to be linked into the 
-host's list for the lifetime of the devices; I thought you said merely 
-that the target had to _exist_ for the lifetime of the devices.
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
 
-Does it really need to be linked, or is existence of the structure 
-sufficient?
+ drivers/scsi/ibmvscsi/ibmvfc.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Likewise, after a device is removed from visibility, does it need to 
-remain linked into the host's and target's lists?
-
-> > P.S.: Does scsi_target_reap() really ever get called in non-process
-> > context?  I couldn't find any place where that might happen.
-> 
-> From the device release, which is done by last put, which could be I/O
-> context.
-
-But scsi_target_reap() isn't called directly from the device release.  
-It's called from scsi_device_dev_release_usercontext().
-
-And besides, in the patch I'm working on it isn't called from either of 
-those places -- it's called from __scsi_remove_device().  So I'll go 
-ahead and get rid of scsi_target_reap_usercontext().
-
-Alan Stern
-
+diff -puN drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_fix_fcp_rsp_len_chk drivers/scsi/ibmvscsi/ibmvfc.c
+--- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_fix_fcp_rsp_len_chk	2009-05-12 16:17:49.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.c	2009-05-13 15:56:44.000000000 -0500
+@@ -275,7 +275,7 @@ static int ibmvfc_get_err_result(struct 
+ 	int fc_rsp_len = rsp->fcp_rsp_len;
+ 
+ 	if ((rsp->flags & FCP_RSP_LEN_VALID) &&
+-	    ((!fc_rsp_len && fc_rsp_len != 4 && fc_rsp_len != 8) ||
++	    ((fc_rsp_len && fc_rsp_len != 4 && fc_rsp_len != 8) ||
+ 	     rsp->data.info.rsp_code))
+ 		return DID_ERROR << 16;
+ 
+_
