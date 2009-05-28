@@ -1,48 +1,99 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: kernel crash when BSG request timesout
-Date: Fri, 29 May 2009 07:23:59 +0900
-Message-ID: <20090529072351Q.fujita.tomonori@lab.ntt.co.jp>
-References: <3688CE86-250A-4D29-A3EB-ED1B46F82377@qlogic.com>
-	<20090528150147U.fujita.tomonori@lab.ntt.co.jp>
-	<4A1E9794.7090503@interlog.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 0/2 version 4] osdblk: a Linux block device for OSD objects
+Date: Thu, 28 May 2009 18:31:00 -0400
+Message-ID: <4A1F10A4.30601@garzik.org>
+References: <4A155FF6.3060005@panasas.com> <4A15D883.1060104@garzik.org> <4A1B9DA4.2080304@panasas.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:38553 "EHLO sh.osrg.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:35588 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751078AbZE1WYQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 May 2009 18:24:16 -0400
-In-Reply-To: <4A1E9794.7090503@interlog.com>
+	id S1751011AbZE1WbE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 May 2009 18:31:04 -0400
+In-Reply-To: <4A1B9DA4.2080304@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: fujita.tomonori@lab.ntt.co.jp, giridhar.malavali@qlogic.com, bharrosh@panasas.com, linux-scsi@vger.kernel.org, James.Smart@Emulex.Com
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>, Jens Axboe <jens.axboe@oracle.com>
 
-On Thu, 28 May 2009 09:54:28 -0400
-Douglas Gilbert <dgilbert@interlog.com> wrote:
-
-> FUJITA Tomonori wrote:
-> > CC'ed James Smart,
-> > 
-> > On Tue, 26 May 2009 11:38:14 -0700
-> > Giridhar Malavali <giridhar.malavali@qlogic.com> wrote:
-> > 
-> >> Thanks for the pointer. I will check with the post-merge tree.
-> >>
-> >> 	The crash I am seeing is because of softirq_done_fn not set in the  
-> >> request queue for BSG request. Even in the post-merge tree I don't see  
-> >> FC transport setting this function during the allocation of the  
-> >> request queue.  When BSG request times out, I see that it executes  
-> >> __blk_complete_request function where check is done for its existence.  
-> >> I see this getting set for SCSI request during queue allocation in  
-> >> scsi_lib.c. Is this required for BSG request?
-> > 
-> > Yeah, you need to set q->softirq_done_fn if you use the block timeout
-> > infrastructure. The current bsg user, SMP, uses bsg but it doesn't use
-> > the timeout infrastructure so it doesn't set q->softirq_done_fn.
+Boaz Harrosh wrote:
+> On 05/22/2009 01:41 AM, Jeff Garzik wrote:
+>> Boaz Harrosh wrote:
+>>> I'm posting for review a new version of the osdblk driver. What's new?
+>>>
+>>> * Once block/for-2.6.31 and all pending osd patches hit mainline. this new version
+>>>   is ready for submission.
+>>>   - The relevant osd patches have been posted on the mailing list, but I'll send an orderly
+>>>     set for scsi-misc and scsi-post-merge on Sunday.
+>>>   - All the prerequisite block patches are already in Jens's tree.
+>>>
+>>> * Below is the diff from Jeff's last version of the patch. these things have changed:
+>>>  {SQUASHME: osdblk} Block and OSD Api fixups and bug fixes
+>>>
+>>>  - Block API changes from Tejuns revamps
+>>>  - OSD Api changes for supporting bio-chaining
+>>>  - do_flush requests do not need bio clonning
+>>>    (And might not have any so prevent such a crash)
+>>>  - osdblk_make_credential is here to stay
+>>>  - Use bio_kmalloc and avoid the bio_alloc dead/live locks.
+>>>    TODO: Split request into smaller chunks if allocations fail.
+>>>  - Only use __GFP_WAIT on first bio allocation. (Not relevant since
+>>>    __GFP_WAIT is not used)
+>>>
+>>> * Added an extra patch:
+>>>  - [PATCH 2/2] osdblk: Adjust queue limits to lower device's limits
+>>>
+>>> This is ontop of the post-merge tree. Jeff? will you push this driver
+>>> through your tree?
+>>>
+>>> What is left is to bang some serious testing on this driver. I'll do
+>>> that next.
+>> The changes look reasonable to me...   if you wanted to get it into your 
+>> tree and push it with other OSD stuff, that would be fine to me.
+>>
+>> I think you are in a better position to deal with all the pre-req's, and 
+>> in a better position to test osdblk more completely.
+>>
+>> Have you messed around with the user tools yet?  osdblk needs a tool 
+>> that creates an OSD object of a specified size, etc.
+>>
+>> 	Jeff
+>>
 > 
-> sg3_utils version 1.27 (and later) is a user of bsg, sending
-> SCSI commands through. Will timeouts works? [I didn't check.]
+> Thanks Jeff.
+> 
+> So is this a:
+> Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
 
-Yeah, it should work.
+Yes, if it works in your testing.  Please make sure the commit is "From: 
+Jeff Garzik" as well, thanks.
+
+
+> But please send me a commit log, or should I scribble one?
+
+Just a one-line "add osdblk, block driver for OSD objects" should be fine.
+
+
+> About the user-mode tool: Sorry I'm so very busy with the pNFS
+> layout driver and export that I do not have time for it right now.
+> 
+> For testing I just use exofs, create a file and dd to some offset to
+> make it of some size. Very very stupid I know, but easy. (The obj-id
+> I can guess as I know the code)
+> 
+> Tell me if you absolutely need a fast hack that just takes the ids
+> and size and creates one object, for now.
+
+Some simple tool like that is needed; a user shouldn't have to know 
+exofs just to be able to use osdblk :)
+
+If nothing else appears, I'll whip something up before 2.6.31, but I was 
+of course hoping to talk you into it, since you could do it faster and 
+better than me :)
+
+	Jeff
+
+
+
+
