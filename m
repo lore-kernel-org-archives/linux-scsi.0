@@ -1,30 +1,24 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13311] mptsas: ioc0: removing ssp device, kernel oops
-Date: Thu, 28 May 2009 08:01:07 GMT
-Message-ID: <200905280801.n4S817DA022310@demeter.kernel.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bug 13311] New: mptsas: ioc0: removing ssp device, kernel oops
+Date: Thu, 28 May 2009 01:00:38 -0700
+Message-ID: <20090528010038.b4d3b2b9.akpm@linux-foundation.org>
 References: <bug-13311-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:42907 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757724AbZE1IBF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 May 2009 04:01:05 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n4S817SH022311
-	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2009 08:01:07 GMT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:51672 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759039AbZE1IBI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 May 2009 04:01:08 -0400
 In-Reply-To: <bug-13311-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=13311
-
+To: mike.tummy@gmail.com
+Cc: linux-scsi@vger.kernel.org, bugzilla-daemon@bugzilla.kernel.org, Kay Sievers <kay.sievers@vrfy.org>, Greg KH <greg@kroah.com>
 
 
-
-
---- Comment #1 from Andrew Morton <akpm@linux-foundation.org>  2009-05-28 08:01:06 ---
 (switched to email.  Please respond via emailed reply-to-all, not via the
 bugzilla web interface).
 
@@ -63,8 +57,3 @@ But the core bug is presumably in the mptsas driver.  Perhaps you can
 also see if you can work out what it did wrong?
 
 Thanks.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
