@@ -1,153 +1,111 @@
 From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 07/10] ibmvfc: Add flush on halt support
-Date: Thu, 28 May 2009 16:17:30 -0500
-Message-ID: <200905282117.n4SLHUoe032746@d03av01.boulder.ibm.com>
+Subject: [PATCH 09/10] ibmvfc: Improve LOGO/PRLO ELS handling
+Date: Thu, 28 May 2009 16:17:33 -0500
+Message-ID: <200905282115.n4SLFREd030795@d01av02.pok.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:45744 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763916AbZE1VRm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 May 2009 17:17:42 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e35.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n4SLBBrZ022686
-	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2009 15:11:11 -0600
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n4SLHV0U199164
-	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2009 15:17:32 -0600
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n4SLHVUV032762
-	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2009 15:17:31 -0600
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:50999 "EHLO e5.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1763187AbZE1VRc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 May 2009 17:17:32 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e5.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n4SLBwSA026254
+	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2009 17:11:58 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n4SLHYTg232550
+	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2009 17:17:34 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n4SLFRer030822
+	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2009 17:15:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
 
-The virtual I/O server controlling the NPIV adapter associated with
-a virtual fibre channel adapter can send a HALT event to the client.
-When this occurs, the client can no longer send commands until a RESUME
-is received. By adding support for flush on halt, we will get all of
-our outstanding commands flushed back before the Virtual I/O server
-enters the halt state, eliminating potential command timeouts for
-outstanding commands which might occur if we did not support this feature. 
+There are several scenarios where the ibmvfc driver needs to
+try to log back into a target on the fabric. Today when these events
+occur, we simply go through re-discovery for all attached targets,
+assuming that either the query of the name server or an ADISC will
+indicate we might need to log back into the target, which doesn't
+work for all scenarios. Fix this by taking note of the affected target(s)
+in these conditions and ensuring we try to PLOGI back into the target.
 
 Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 ---
 
- drivers/scsi/ibmvscsi/ibmvfc.c |   34 +++++++++++++++++++++++++++++++---
- drivers/scsi/ibmvscsi/ibmvfc.h |   13 +++++++++++--
- 2 files changed, 42 insertions(+), 5 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c |   38 +++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 37 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/ibmvscsi/ibmvfc.h~ibmvfc_flush_on_halt drivers/scsi/ibmvscsi/ibmvfc.h
---- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.h~ibmvfc_flush_on_halt	2009-05-05 16:26:52.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.h	2009-05-05 16:26:52.000000000 -0500
-@@ -207,7 +207,8 @@ struct ibmvfc_npiv_login_resp {
- #define IBMVFC_NATIVE_FC		0x01
- #define IBMVFC_CAN_FLUSH_ON_HALT	0x08
- 	u32 reserved;
--	u64 capabilites;
-+	u64 capabilities;
-+#define IBMVFC_CAN_FLUSH_ON_HALT	0x08
- 	u32 max_cmds;
- 	u32 scsi_id_sz;
- 	u64 max_dma_len;
-@@ -547,9 +548,17 @@ struct ibmvfc_crq_queue {
- 	dma_addr_t msg_token;
- };
- 
-+enum ibmvfc_ae_link_state {
-+	IBMVFC_AE_LS_LINK_UP		= 0x01,
-+	IBMVFC_AE_LS_LINK_BOUNCED	= 0x02,
-+	IBMVFC_AE_LS_LINK_DOWN		= 0x04,
-+	IBMVFC_AE_LS_LINK_DEAD		= 0x08,
-+};
-+
- struct ibmvfc_async_crq {
- 	volatile u8 valid;
--	u8 pad[3];
-+	u8 link_state;
-+	u8 pad[2];
- 	u32 pad2;
- 	volatile u64 event;
- 	volatile u64 scsi_id;
-diff -puN drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_flush_on_halt drivers/scsi/ibmvscsi/ibmvfc.c
---- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_flush_on_halt	2009-05-05 16:26:52.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.c	2009-05-08 17:19:56.000000000 -0500
-@@ -110,7 +110,7 @@ static const struct {
- 	{ IBMVFC_FABRIC_MAPPED, IBMVFC_XPORT_DEAD, DID_ERROR, 0, 1, "transport dead" },
- 	{ IBMVFC_FABRIC_MAPPED, IBMVFC_CONFIG_ERROR, DID_ERROR, 1, 1, "configuration error" },
- 	{ IBMVFC_FABRIC_MAPPED, IBMVFC_NAME_SERVER_FAIL, DID_ERROR, 1, 1, "name server failure" },
--	{ IBMVFC_FABRIC_MAPPED, IBMVFC_LINK_HALTED, DID_REQUEUE, 0, 0, "link halted" },
-+	{ IBMVFC_FABRIC_MAPPED, IBMVFC_LINK_HALTED, DID_REQUEUE, 1, 0, "link halted" },
- 	{ IBMVFC_FABRIC_MAPPED, IBMVFC_XPORT_GENERAL, DID_OK, 1, 0, "general transport error" },
- 
- 	{ IBMVFC_VIOS_FAILURE, IBMVFC_CRQ_FAILURE, DID_REQUEUE, 1, 1, "CRQ failure" },
-@@ -1169,8 +1169,9 @@ static void ibmvfc_set_login_info(struct
- 	login_info->partition_num = vhost->partition_number;
- 	login_info->vfc_frame_version = 1;
- 	login_info->fcp_version = 3;
-+	login_info->flags = IBMVFC_FLUSH_ON_HALT;
- 	if (vhost->client_migrated)
--		login_info->flags = IBMVFC_CLIENT_MIGRATED;
-+		login_info->flags |= IBMVFC_CLIENT_MIGRATED;
- 
- 	login_info->max_cmds = max_requests + IBMVFC_NUM_INTERNAL_REQ;
- 	login_info->capabilities = IBMVFC_CAN_MIGRATE;
-@@ -2185,8 +2186,25 @@ static void ibmvfc_handle_async(struct i
- 		   " node_name: %llx\n", desc, crq->scsi_id, crq->wwpn, crq->node_name);
- 
- 	switch (crq->event) {
--	case IBMVFC_AE_LINK_UP:
- 	case IBMVFC_AE_RESUME:
-+		switch (crq->link_state) {
-+		case IBMVFC_AE_LS_LINK_DOWN:
-+			ibmvfc_link_down(vhost, IBMVFC_LINK_DOWN);
-+			break;
-+		case IBMVFC_AE_LS_LINK_DEAD:
-+			ibmvfc_link_down(vhost, IBMVFC_LINK_DEAD);
-+			break;
-+		case IBMVFC_AE_LS_LINK_UP:
-+		case IBMVFC_AE_LS_LINK_BOUNCED:
-+		default:
-+			vhost->events_to_log |= IBMVFC_AE_LINKUP;
-+			vhost->delay_init = 1;
-+			__ibmvfc_reset_host(vhost);
-+			break;
-+		};
-+
-+		break;
-+	case IBMVFC_AE_LINK_UP:
- 		vhost->events_to_log |= IBMVFC_AE_LINKUP;
- 		vhost->delay_init = 1;
- 		__ibmvfc_reset_host(vhost);
-@@ -2505,6 +2523,14 @@ static ssize_t ibmvfc_show_host_npiv_ver
- 	return snprintf(buf, PAGE_SIZE, "%d\n", vhost->login_buf->resp.version);
+diff -puN drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_better_relogin drivers/scsi/ibmvscsi/ibmvfc.c
+--- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_better_relogin	2009-05-20 10:30:06.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.c	2009-05-20 10:30:06.000000000 -0500
+@@ -1485,6 +1485,27 @@ static void ibmvfc_log_error(struct ibmv
  }
  
-+static ssize_t ibmvfc_show_host_capabilities(struct device *dev,
-+					     struct device_attribute *attr, char *buf)
+ /**
++ * ibmvfc_relogin - Log back into the specified device
++ * @sdev:	scsi device struct
++ *
++ **/
++static void ibmvfc_relogin(struct scsi_device *sdev)
 +{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct ibmvfc_host *vhost = shost_priv(shost);
-+	return snprintf(buf, PAGE_SIZE, "%llx\n", vhost->login_buf->resp.capabilities);
++	struct ibmvfc_host *vhost = shost_priv(sdev->host);
++	struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
++	struct ibmvfc_target *tgt;
++
++	list_for_each_entry(tgt, &vhost->targets, queue) {
++		if (rport == tgt->rport) {
++			ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_DEL_RPORT);
++			break;
++		}
++	}
++
++	ibmvfc_reinit_host(vhost);
 +}
 +
- /**
-  * ibmvfc_show_log_level - Show the adapter's error logging level
-  * @dev:	class device struct
-@@ -2554,6 +2580,7 @@ static DEVICE_ATTR(device_name, S_IRUGO,
- static DEVICE_ATTR(port_loc_code, S_IRUGO, ibmvfc_show_host_loc_code, NULL);
- static DEVICE_ATTR(drc_name, S_IRUGO, ibmvfc_show_host_drc_name, NULL);
- static DEVICE_ATTR(npiv_version, S_IRUGO, ibmvfc_show_host_npiv_version, NULL);
-+static DEVICE_ATTR(capabilities, S_IRUGO, ibmvfc_show_host_capabilities, NULL);
- static DEVICE_ATTR(log_level, S_IRUGO | S_IWUSR,
- 		   ibmvfc_show_log_level, ibmvfc_store_log_level);
++/**
+  * ibmvfc_scsi_done - Handle responses from commands
+  * @evt:	ibmvfc event to be handled
+  *
+@@ -1516,7 +1537,7 @@ static void ibmvfc_scsi_done(struct ibmv
+ 			if ((rsp->flags & FCP_SNS_LEN_VALID) && rsp->fcp_sense_len && rsp_len <= 8)
+ 				memcpy(cmnd->sense_buffer, rsp->data.sense + rsp_len, sense_len);
+ 			if ((vfc_cmd->status & IBMVFC_VIOS_FAILURE) && (vfc_cmd->error == IBMVFC_PLOGI_REQUIRED))
+-				ibmvfc_reinit_host(evt->vhost);
++				ibmvfc_relogin(cmnd->device);
  
-@@ -2609,6 +2636,7 @@ static struct device_attribute *ibmvfc_a
- 	&dev_attr_port_loc_code,
- 	&dev_attr_drc_name,
- 	&dev_attr_npiv_version,
-+	&dev_attr_capabilities,
- 	&dev_attr_log_level,
- 	NULL
- };
+ 			if (!cmnd->result && (!scsi_get_resid(cmnd) || (rsp->flags & FCP_RESID_OVER)))
+ 				cmnd->result = (DID_ERROR << 16);
+@@ -2181,6 +2202,7 @@ static void ibmvfc_handle_async(struct i
+ 				struct ibmvfc_host *vhost)
+ {
+ 	const char *desc = ibmvfc_get_ae_desc(crq->event);
++	struct ibmvfc_target *tgt;
+ 
+ 	ibmvfc_log(vhost, 3, "%s event received. scsi_id: %llx, wwpn: %llx,"
+ 		   " node_name: %llx\n", desc, crq->scsi_id, crq->wwpn, crq->node_name);
+@@ -2218,9 +2240,23 @@ static void ibmvfc_handle_async(struct i
+ 	case IBMVFC_AE_SCN_NPORT:
+ 	case IBMVFC_AE_SCN_GROUP:
+ 		vhost->events_to_log |= IBMVFC_AE_RSCN;
++		ibmvfc_reinit_host(vhost);
++		break;
+ 	case IBMVFC_AE_ELS_LOGO:
+ 	case IBMVFC_AE_ELS_PRLO:
+ 	case IBMVFC_AE_ELS_PLOGI:
++		list_for_each_entry(tgt, &vhost->targets, queue) {
++			if (!crq->scsi_id && !crq->wwpn && !crq->node_name)
++				break;
++			if (crq->scsi_id && tgt->scsi_id != crq->scsi_id)
++				continue;
++			if (crq->wwpn && tgt->ids.port_name != crq->wwpn)
++				continue;
++			if (crq->node_name && tgt->ids.node_name != crq->node_name)
++				continue;
++			ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_DEL_RPORT);
++		}
++
+ 		ibmvfc_reinit_host(vhost);
+ 		break;
+ 	case IBMVFC_AE_LINK_DOWN:
 _
