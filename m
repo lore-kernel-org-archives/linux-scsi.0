@@ -1,44 +1,54 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 1/1] ibmvscsi: Add 16 byte CDB support
-Date: Fri, 29 May 2009 14:10:49 -0500
-Message-ID: <200905291910.n4TJAobp017691@d01av03.pok.ibm.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 2/2] cciss: Fix SCSI device reset handler
+Date: Fri, 29 May 2009 12:42:08 -0700
+Message-ID: <20090529124208.531839fe.akpm@linux-foundation.org>
+References: <20090527203007.GA30160@beardog.cca.cpqcorp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:54994 "EHLO e6.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752142AbZE2TKt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 May 2009 15:10:49 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e6.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n4TJDNsk004552
-	for <linux-scsi@vger.kernel.org>; Fri, 29 May 2009 15:13:23 -0400
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n4TJAona223584
-	for <linux-scsi@vger.kernel.org>; Fri, 29 May 2009 15:10:50 -0400
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n4TJAowl017704
-	for <linux-scsi@vger.kernel.org>; Fri, 29 May 2009 15:10:50 -0400
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:36922 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752123AbZE2TmQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 May 2009 15:42:16 -0400
+In-Reply-To: <20090527203007.GA30160@beardog.cca.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, rcjenn@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@kernel.dk, mikem@beardog.cca.cpqcorp.net, scameron@beardog.cca.cpqcorp.net
 
+On Wed, 27 May 2009 15:30:07 -0500
+scameron@beardog.cca.cpqcorp.net wrote:
 
-Adds support for 16 byte CDBs to the ibmvscsi driver.
+> +static int wait_for_device_to_become_ready(ctlr_info_t *h,
+> +	unsigned char lunaddr[])
+> +{
+> +	int rc;
+> +	int count = 0;
+> +	int waittime = HZ;
+> +	CommandList_struct *c;
+> +
+> +	c = cmd_alloc(h, 1);
+> +	if (!c) {
+> +		printk(KERN_WARNING "cciss%d: out of memory in "
+> +			"wait_for_device_to_become_ready.\n", h->ctlr);
+> +		return IO_ERROR;
+> +	}
+> +
+> +	/* Send test unit ready until device ready, or give up. */
+> +	while (count < 20) {
+> +
+> +		/* Wait for a bit.  do this first, because if we send
+> +		 * the TUR right away, the reset will just abort it.
+> +		 */
+> +		set_current_state(TASK_INTERRUPTIBLE);
+> +		schedule_timeout(waittime);
 
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
+That's schedule_timeout_interruptible().
 
- drivers/scsi/ibmvscsi/ibmvscsi.c |    1 +
- 1 file changed, 1 insertion(+)
+The problem with interruptible sleeps of this nature is that they are
+no-ops if the calling process happens to have signal_pending().  I
+suspect that this condition will break your driver.
 
-diff -puN drivers/scsi/ibmvscsi/ibmvscsi.c~ibmvscsi_max_cmd_len drivers/scsi/ibmvscsi/ibmvscsi.c
---- linux-2.6/drivers/scsi/ibmvscsi/ibmvscsi.c~ibmvscsi_max_cmd_len	2009-05-29 14:09:20.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvscsi.c	2009-05-29 14:09:20.000000000 -0500
-@@ -1687,6 +1687,7 @@ static int ibmvscsi_probe(struct vio_dev
- 	host->max_lun = 8;
- 	host->max_id = max_id;
- 	host->max_channel = max_channel;
-+	host->max_cmd_len = 16;
- 
- 	if (scsi_add_host(hostdata->host, hostdata->dev))
- 		goto add_host_failed;
-_
+If so, switching to schedule_timeout_uninterruptible() will unbreak it.
+
