@@ -1,43 +1,43 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: RE: [PATCH 0/8] Open-FCoE fixes for 2.6.30 RC
-Date: Fri, 29 May 2009 20:59:44 +0000
-Message-ID: <1243630784.2919.57.camel@localhost.localdomain>
-References: <20090506175206.26695.19457.stgit@fritz>
-	 <273D38FBE7C6FE46A1689FCD014A0B8B55417A17@azsmsx505.amr.corp.intel.com>
+From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Subject: Re: [PATCH v6] cciss: add cciss driver sysfs entries
+Date: Fri, 29 May 2009 16:32:18 -0500
+Message-ID: <20090529213218.GA20102@beardog.cca.cpqcorp.net>
+References: <20090413164524.17977.99322.stgit@bluto.andrew> <20090413164530.17977.32550.stgit@bluto.andrew> <20090528202124.GB4846@beardog.cca.cpqcorp.net> <20090529124813.689b7667.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51598 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751254AbZE2U7n (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 May 2009 16:59:43 -0400
-In-Reply-To: <273D38FBE7C6FE46A1689FCD014A0B8B55417A17@azsmsx505.amr.corp.intel.com>
+Received: from g5t0009.atlanta.hp.com ([15.192.0.46]:16428 "EHLO
+	g5t0009.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753403AbZE2Vbz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 May 2009 17:31:55 -0400
+Content-Disposition: inline
+In-Reply-To: <20090529124813.689b7667.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Love, Robert W" <robert.w.love@intel.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: jens.axboe@oracle.com, andrew.patterson@hp.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, scameron@beardog.cca.cpqcorp.net
 
-On Thu, 2009-05-28 at 15:22 -0700, Love, Robert W wrote:
-> Robert Love wrote:
-> > The following series implements general fixes to libfc, libfcoe and
-> > fcoe. 
+On Fri, May 29, 2009 at 12:48:13PM -0700, Andrew Morton wrote:
+> On Thu, 28 May 2009 15:21:24 -0500
+> "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net> wrote:
+> 
+> > From: Andrew Patterson <andrew.patterson@hp.com>
 > > 
-> > Note: One patch adds the FIP ehtertype to if_ether.h. As discussed on
-> > netdev, this change was pre-acked and it was requested that the
-> > change go through 
-> > the SCSI tree.
+> > This patch adds sysfs entries to the cciss driver needed for the
+> > dm/multipath tools. A file for vendor, model, rev, and unique_id is
+> > added for each logical drive under directory
+> > /sys/bus/pci/devices/<dev>/ccissX/cXdY. Where X = the controller (or
+> > host) number and Y is the logical drive number. A link from
+> > /sys/bus/pci/devices/<dev>/ccissX/cXdY/block:cciss!cXdY to
+> > /sys/block/cciss!cXdY/device is also created. A bus is created
+> > in /sys/bus/cciss.  A link is created from the pci ccissX entry to
+> > /sys/bus/cciss/devices/ccissX.
+> > Please consider this for inclusion.
 > > 
-> James, aside of the two patches that weren't appropriate for -rc will
-> the other 6 in this set be pushed upstream for -rc?
+> > Signed-off-by: Mike Miller <mike.miller@hp.com>
+> 
+> Did Andrew's signed-off-by: get lost?
 
-I sort of lost track of which the other 6 were.  If I look at the
-patches, the bug fixes seem to be: 1-4 and 7.  Then for non bug fixes: 5
-is a lock optimisation, 6 is a watchdog optimisation and 8 is moving
-header contents ... and can all wait for the merge window.  Is that
-about right?
+No, I converted it into the From: field. Another screw up, I guess.
 
-James
-
-
+mikem
