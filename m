@@ -1,59 +1,102 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH block#for-2.6.31] block: fix an oops on BLKPREP_KILL
-Date: Sun, 31 May 2009 08:11:39 +0200
-Message-ID: <20090531061139.GS11363@kernel.dk>
-References: <1243635503.2919.67.camel@localhost.localdomain> <20090530044137.GM11363@kernel.dk> <1243693384.5223.7.camel@mulgrave.int.hansenpartnership.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 0/2 version 4] osdblk: a Linux block device for OSD objects
+Date: Sun, 31 May 2009 12:50:12 +0300
+Message-ID: <4A2252D4.3080301@panasas.com>
+References: <4A155FF6.3060005@panasas.com> <4A15D883.1060104@garzik.org> <4A1B9DA4.2080304@panasas.com> <4A1F10A4.30601@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1243693384.5223.7.camel@mulgrave.int.hansenpartnership.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Tejun Heo <htejun@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gw-ca.panasas.com ([209.116.51.66]:27424 "EHLO
+	laguna.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753080AbZEaJuU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 31 May 2009 05:50:20 -0400
+In-Reply-To: <4A1F10A4.30601@garzik.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>, Jens Axboe <jens.axboe@oracle.com>
 
-On Sat, May 30 2009, James Bottomley wrote:
-> On Sat, 2009-05-30 at 06:41 +0200, Jens Axboe wrote:
-> > On Fri, May 29 2009, James Bottomley wrote:
-> > > Doing a bit of torture testing, I ran across a BUG in the block
-> > > subsystem (at blk-core.c:2048): the test for if the request is queued.
-> > > 
-> > > It turns out the trigger was a BLKPREP_KILL coming out of the SCSI prep
-> > > function.  Currently for BLKPREP_KILL requests, we send them straight
-> > > into __blk_end_request_all() with an error, but they've never been
-> > > dequeued, so they trip the bug.  Fix this by starting requests before
-> > > killing them.
-> > > 
-> > > Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-> > > 
-> > > ---
-> > > 
-> > > diff --git a/block/blk-core.c b/block/blk-core.c
-> > > index 8b3b74e..9a0568c 100644
-> > > --- a/block/blk-core.c
-> > > +++ b/block/blk-core.c
-> > > @@ -1789,6 +1789,7 @@ struct request *blk_peek_request(struct request_queue *q)
-> > >  			break;
-> > >  		} else if (ret == BLKPREP_KILL) {
-> > >  			rq->cmd_flags |= REQ_QUIET;
-> > > +			blk_start_request(rq);
-> > >  			__blk_end_request_all(rq, -EIO);
-> > >  		} else {
-> > >  			printk(KERN_ERR "%s: bad return=%d\n", __func__, ret);
-> > 
-> > Given how illogical that now looks, I think it could do with a comment.
-> > I'll add that while applying.
+On 05/29/2009 01:31 AM, Jeff Garzik wrote:
+> Boaz Harrosh wrote:
+>> On 05/22/2009 01:41 AM, Jeff Garzik wrote:
+>>> Boaz Harrosh wrote:
+>>>> I'm posting for review a new version of the osdblk driver. What's new?
+>>>>
+>>>> * Once block/for-2.6.31 and all pending osd patches hit mainline. this new version
+>>>>   is ready for submission.
+>>>>   - The relevant osd patches have been posted on the mailing list, but I'll send an orderly
+>>>>     set for scsi-misc and scsi-post-merge on Sunday.
+>>>>   - All the prerequisite block patches are already in Jens's tree.
+>>>>
+>>>> * Below is the diff from Jeff's last version of the patch. these things have changed:
+>>>>  {SQUASHME: osdblk} Block and OSD Api fixups and bug fixes
+>>>>
+>>>>  - Block API changes from Tejuns revamps
+>>>>  - OSD Api changes for supporting bio-chaining
+>>>>  - do_flush requests do not need bio clonning
+>>>>    (And might not have any so prevent such a crash)
+>>>>  - osdblk_make_credential is here to stay
+>>>>  - Use bio_kmalloc and avoid the bio_alloc dead/live locks.
+>>>>    TODO: Split request into smaller chunks if allocations fail.
+>>>>  - Only use __GFP_WAIT on first bio allocation. (Not relevant since
+>>>>    __GFP_WAIT is not used)
+>>>>
+>>>> * Added an extra patch:
+>>>>  - [PATCH 2/2] osdblk: Adjust queue limits to lower device's limits
+>>>>
+>>>> This is ontop of the post-merge tree. Jeff? will you push this driver
+>>>> through your tree?
+>>>>
+>>>> What is left is to bang some serious testing on this driver. I'll do
+>>>> that next.
+>>> The changes look reasonable to me...   if you wanted to get it into your 
+>>> tree and push it with other OSD stuff, that would be fine to me.
+>>>
+>>> I think you are in a better position to deal with all the pre-req's, and 
+>>> in a better position to test osdblk more completely.
+>>>
+>>> Have you messed around with the user tools yet?  osdblk needs a tool 
+>>> that creates an OSD object of a specified size, etc.
+>>>
+>>> 	Jeff
+>>>
+>> Thanks Jeff.
+>>
+>> So is this a:
+>> Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
 > 
-> Um, if it looks illogical, then so is the new everything has to be
-> dequeued before completion requirement ...  I agree a comment reminding
-> people why it has to work this way doesn't hurt, but if it looks
-> illogical then there might be something wrong with the rules requiring
-> this to happen ...
+> Yes, if it works in your testing.  Please make sure the commit is "From: 
+> Jeff Garzik" as well, thanks.
+> 
+> 
+>> But please send me a commit log, or should I scribble one?
+> 
+> Just a one-line "add osdblk, block driver for OSD objects" should be fine.
+> 
+> 
+>> About the user-mode tool: Sorry I'm so very busy with the pNFS
+>> layout driver and export that I do not have time for it right now.
+>>
+>> For testing I just use exofs, create a file and dd to some offset to
+>> make it of some size. Very very stupid I know, but easy. (The obj-id
+>> I can guess as I know the code)
+>>
+>> Tell me if you absolutely need a fast hack that just takes the ids
+>> and size and creates one object, for now.
+> 
+> Some simple tool like that is needed; a user shouldn't have to know 
+> exofs just to be able to use osdblk :)
+> 
+> If nothing else appears, I'll whip something up before 2.6.31, but I was 
+> of course hoping to talk you into it, since you could do it faster and 
+> better than me :)
+> 
+> 	Jeff
+> 
 
-It's not a bad idea to be a little extra paranoid with such an API
-change, we can always relax this restriction later.
+OK I will release something Quick-And-Dirty end of this week.
+It should do those three tasks osdblk needs:
+Create Resize Delete object@partition@device
 
--- 
-Jens Axboe
-
+Boaz
