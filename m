@@ -1,73 +1,55 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [RFC][PATCH] Introduce the parameter to limit scsi timeout
- count
-Date: Mon, 01 Jun 2009 20:02:38 +0000
-Message-ID: <1243886558.4203.31.camel@mulgrave.int.hansenpartnership.com>
-References: <4A2428B5.9000701@redhat.com>
+Subject: Re: [PATCH] scsi_devinfo: update Hitachi entries
+Date: Mon, 01 Jun 2009 15:06:16 -0500
+Message-ID: <1243886776.4203.33.camel@mulgrave.int.hansenpartnership.com>
+References: <4A2405FD.3000901@redhat.com>
+	 <1243875275.4203.19.camel@mulgrave.int.hansenpartnership.com>
+	 <4A241229.5050009@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33264 "EHLO
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54740 "EHLO
 	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754618AbZFAUCm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Jun 2009 16:02:42 -0400
-In-Reply-To: <4A2428B5.9000701@redhat.com>
+	by vger.kernel.org with ESMTP id S1752491AbZFAUGT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Jun 2009 16:06:19 -0400
+In-Reply-To: <4A241229.5050009@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Takahiro Yasui <tyasui@redhat.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Mon, 2009-06-01 at 15:15 -0400, Takahiro Yasui wrote:
-> Hi,
+On Mon, 2009-06-01 at 13:38 -0400, Takahiro Yasui wrote:
+> James Bottomley wrote:
+> > On Mon, 2009-06-01 at 12:46 -0400, Takahiro Yasui wrote:
+> >>  	{"HITACHI", "DISK-SUBSYSTEM", "*", BLIST_ATTACH_PQ3 | BLIST_SPARSELUN | BLIST_LARGELUN},
+> >> -	{"HITACHI", "OPEN-E", "*", BLIST_ATTACH_PQ3 | BLIST_SPARSELUN | BLIST_LARGELUN},
+> >> +	{"HITACHI", "OPEN-", "*", BLIST_REPORTLUN2},
+> > 
+> > Can we drop the BLIST_ATTACH_PQ3?  It was there for not only to get the
+> > sequential scan to work, but also so LUN0 would be registered with the
+> > OS (I think for some control purpose) which would no longer happen.
 > 
-> I would like to solve an issue related to scsi timeout.
+> BLIST_ATTACH_PQ3 was added to "OPEN-E" in the following commit:
+>   commit: 13f7e5acc8b329080672c13f05f252ace5b79825
 > 
-> A storage can break down in the way that it does not respond to
-> scsi commands such as read/write, while a storage successfully
-> respond to scsi commands such as test unit ready.
-> (It may depend on implementation of storage.)
+> ---
+> Unfortunately, SANs exist that are SCSI-2 and do NOT support REPORT_LUNS, but
+> report a unknown device with PQ 3 on LUN 0. We still need to scan them, and
+> most probably we even need BLIST_SPARSELUN (and BLIST_LARGELUN). See the bug
+> reference for an infamous example.
+> ---
 > 
-> When this type of a device trouble happens, the scsi-mid layer
-> detects timeout for the device and the scsi-mid layer tries to
-> recover the error. Then, scsi-mid layer detects that the device
-> has been recovered by the result of Test Unit Ready.
+> According to the commit, "OPEN-E" does not support REPORT_LUNS, but
+> "OPEN-E" can handle REPORT_LUNS. In addition, other "OPEN-" models
+> can do as well.
 > 
-> Therefore, the state of the device is not changed to offline
-> and user application can continue to issue I/Os to the device.
-> This may cause timeout errors repeatedly on the same device,
-> and application can not do proper actions quickly.
-> 
-> To solve this issue, let me propose the sysfs parameter to
-> limit scsi timeout count in scsi-mid layer. This parameter
-> is tunable as a module parameter to address the issue at
-> system boot.
-> 
-> * example
-> 
->  - Limit a scsi timout count to 1
->     # echo 1 > /sys/block/<sdX>/device/max_timeout_cnt
-> 
->  - Display a current timeout count
->     # cat /sys/block/<sdX>/device/iotimeout_cnt
-> 
->  - Load scsi module with a default scsi timeout count (5)
->     # insmod scsi_mod.ko max_timeout_count=5
-> 
-> I appreciate your comments and suggestions.
+> I would like to know in which case BLIST_ATTACH_PQ3 is required.
 
-It doesn't really look like a good solution to the problem you're
-describing, particularly if it's just a few isolated arrays.
-
-The code you propose would certainly catch things like usb devices which
-are known for random timeouts; plus a lot of SCSI/ATA devices suffer
-isolated timeouts because of I/O load.  Global code like this could end
-up offlining them.
-
-Which arrays are these, and what's the taxonomy of the failure ... if
-TUR succeeds, perhaps there's another command for the arrays we could
-send that would fail or timeout ... or perhaps there's a different way
-they should be recovered.
+That, I believe is the question I asked you.  If you don't know the
+answer, just leave the BLIST_ATTACH_PQ3 in. it's harmless for the report
+luns case and it will still attach a PQ disconnected LUN0, which was the
+original behaviour.
 
 James
 
