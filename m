@@ -1,49 +1,59 @@
-From: Takahiro Yasui <tyasui@redhat.com>
-Subject: Re: [PATCH] scsi_devinfo: update Hitachi entries
-Date: Mon, 01 Jun 2009 13:38:49 -0400
-Message-ID: <4A241229.5050009@redhat.com>
-References: <4A2405FD.3000901@redhat.com> <1243875275.4203.19.camel@mulgrave.int.hansenpartnership.com>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH 0/6] Open-FCoE Features for 2.6.31
+Date: Mon, 01 Jun 2009 10:49:48 -0700
+Message-ID: <20090601174948.12911.35446.stgit@fritz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:43041 "EHLO mx2.redhat.com"
+Received: from mga11.intel.com ([192.55.52.93]:20293 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750952AbZFARf4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Jun 2009 13:35:56 -0400
-In-Reply-To: <1243875275.4203.19.camel@mulgrave.int.hansenpartnership.com>
+	id S1750776AbZFARtq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Jun 2009 13:49:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> On Mon, 2009-06-01 at 12:46 -0400, Takahiro Yasui wrote:
->>  	{"HITACHI", "DISK-SUBSYSTEM", "*", BLIST_ATTACH_PQ3 | BLIST_SPARSELUN | BLIST_LARGELUN},
->> -	{"HITACHI", "OPEN-E", "*", BLIST_ATTACH_PQ3 | BLIST_SPARSELUN | BLIST_LARGELUN},
->> +	{"HITACHI", "OPEN-", "*", BLIST_REPORTLUN2},
-> 
-> Can we drop the BLIST_ATTACH_PQ3?  It was there for not only to get the
-> sequential scan to work, but also so LUN0 would be registered with the
-> OS (I think for some control purpose) which would no longer happen.
+The following series consists of logging improvements, watchdog and locking
+optimizations and the move of the FIP protocol definition to a more appropriate
+header file.
 
-BLIST_ATTACH_PQ3 was added to "OPEN-E" in the following commit:
-  commit: 13f7e5acc8b329080672c13f05f252ace5b79825
+These patches apply to scsi-misc-post-merge with net-next-2.6 merged in. Some
+fcoe/ code was touched by a net-next change (storage MAC address addition and
+usage) and since the logging changes touch so many lines it created this
+dependency.
+
+These patches may or may not depend on the other five outstanding Open-FCoE
+fixes as discussed on linux-scsi. Those five patches were in the tree that
+this code was tested on before this submission.
 
 ---
-Unfortunately, SANs exist that are SCSI-2 and do NOT support REPORT_LUNS, but
-report a unknown device with PQ 3 on LUN 0. We still need to scan them, and
-most probably we even need BLIST_SPARSELUN (and BLIST_LARGELUN). See the bug
-reference for an infamous example.
----
 
-According to the commit, "OPEN-E" does not support REPORT_LUNS, but
-"OPEN-E" can handle REPORT_LUNS. In addition, other "OPEN-" models
-can do as well.
+Robert Love (4):
+      libfc: Add runtime debugging with debug_logging module parameter
+      libfcoe: Add runtime debugging with module param debug_logging
+      fcoe: Add runtime debug logging with module parameter debug_logging
+      net, libfcoe: Add the FCoE Initialization Protocol ethertype
 
-I would like to know in which case BLIST_ATTACH_PQ3 is required.
+Vasu Dev (2):
+      fcoe: removes fcoe_watchdog
+      fcoe: reduces lock cost when adding a new skb to fcoe_pending_queue
 
-Thanks,
----
-Takahiro Yasui
-Hitachi Computer Products (America), Inc.
+
+ drivers/scsi/fcoe/fcoe.c      |  195 ++++++++++++++++++-----------------------
+ drivers/scsi/fcoe/fcoe.h      |   25 +++++
+ drivers/scsi/fcoe/libfcoe.c   |   94 +++++++++++---------
+ drivers/scsi/libfc/fc_disc.c  |   83 +++++++----------
+ drivers/scsi/libfc/fc_exch.c  |   58 +++++-------
+ drivers/scsi/libfc/fc_fcp.c   |   97 +++++++++++---------
+ drivers/scsi/libfc/fc_lport.c |  156 ++++++++++++++++-----------------
+ drivers/scsi/libfc/fc_rport.c |  120 +++++++++++--------------
+ include/linux/if_ether.h      |    1 
+ include/scsi/fc/fc_fip.h      |    7 -
+ include/scsi/fc_encode.h      |    2 
+ include/scsi/libfc.h          |   77 ++++++++++++++--
+ 12 files changed, 466 insertions(+), 449 deletions(-)
+
+-- 
+
+//Rob
