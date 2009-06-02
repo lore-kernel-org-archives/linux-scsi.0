@@ -1,60 +1,32 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 2/2] cciss: Fix SCSI device reset handler
-Date: Tue, 2 Jun 2009 14:50:11 +0200
-Message-ID: <20090602125011.GJ11363@kernel.dk>
-References: <20090527203007.GA30160@beardog.cca.cpqcorp.net> <20090529124208.531839fe.akpm@linux-foundation.org>
+From: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [Bugme-new] [Bug 13420] New: NULL pointer dereference after
+	hard-resetting a usb-connected iPod
+Date: Mon, 1 Jun 2009 22:59:12 -0700
+Message-ID: <20090602055912.GA28470@kroah.com>
+References: <bug-13420-10286@http.bugzilla.kernel.org/> <20090601214801.0d59154a.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:55825 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752181AbZFBMuK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Jun 2009 08:50:10 -0400
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20090529124208.531839fe.akpm@linux-foundation.org>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20090601214801.0d59154a.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bugzilla-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org, bugme-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org, dariush-0tmriiNh0bMb1SvskN2V4Q@public.gmane.org, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: scameron@beardog.cca.cpqcorp.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, mikem@beardog.cca.cpqcorp.net
 
-On Fri, May 29 2009, Andrew Morton wrote:
-> On Wed, 27 May 2009 15:30:07 -0500
-> scameron@beardog.cca.cpqcorp.net wrote:
-> 
-> > +static int wait_for_device_to_become_ready(ctlr_info_t *h,
-> > +	unsigned char lunaddr[])
-> > +{
-> > +	int rc;
-> > +	int count = 0;
-> > +	int waittime = HZ;
-> > +	CommandList_struct *c;
-> > +
-> > +	c = cmd_alloc(h, 1);
-> > +	if (!c) {
-> > +		printk(KERN_WARNING "cciss%d: out of memory in "
-> > +			"wait_for_device_to_become_ready.\n", h->ctlr);
-> > +		return IO_ERROR;
-> > +	}
-> > +
-> > +	/* Send test unit ready until device ready, or give up. */
-> > +	while (count < 20) {
-> > +
-> > +		/* Wait for a bit.  do this first, because if we send
-> > +		 * the TUR right away, the reset will just abort it.
-> > +		 */
-> > +		set_current_state(TASK_INTERRUPTIBLE);
-> > +		schedule_timeout(waittime);
-> 
-> That's schedule_timeout_interruptible().
-> 
-> The problem with interruptible sleeps of this nature is that they are
-> no-ops if the calling process happens to have signal_pending().  I
-> suspect that this condition will break your driver.
-> 
-> If so, switching to schedule_timeout_uninterruptible() will unbreak it.
+On Mon, Jun 01, 2009 at 09:48:01PM -0700, Andrew Morton wrote:
+> Kay: if you have time: driver do this rather a lot and it would be good
+> if we could bullet-proof the core a bit more to handle these bugs more
+> gracefully.
 
-I added Stephens patch and your fixup.
+This should be fixed in 2.6.30-rc8 by making the driver core more robust
+in this type of problem.  It will still spit out a big tracedump if it
+happens, so that will be good to see what is going on.
 
--- 
-Jens Axboe
+thanks,
 
+greg k-h
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
