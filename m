@@ -1,32 +1,148 @@
-From: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: [Bugme-new] [Bug 13420] New: NULL pointer dereference after
-	hard-resetting a usb-connected iPod
-Date: Mon, 1 Jun 2009 22:59:12 -0700
-Message-ID: <20090602055912.GA28470@kroah.com>
-References: <bug-13420-10286@http.bugzilla.kernel.org/> <20090601214801.0d59154a.akpm@linux-foundation.org>
+ hard-resetting a usb-connected iPod
+Date: Tue, 2 Jun 2009 11:07:48 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0906021106360.3074-300000@iolanthe.rowland.org>
+References: <20090602055912.GA28470@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20090601214801.0d59154a.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bugzilla-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org, bugme-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org, dariush-0tmriiNh0bMb1SvskN2V4Q@public.gmane.org, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1559625215-290796434-1243955268=:3074"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:49280 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752940AbZFBPHr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jun 2009 11:07:47 -0400
+In-Reply-To: <20090602055912.GA28470@kroah.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, bugzilla-daemon@bugzilla.kernel.org, dariush@forouher.de, Kay Sievers <kay.sievers@vrfy.org>
 
-On Mon, Jun 01, 2009 at 09:48:01PM -0700, Andrew Morton wrote:
-> Kay: if you have time: driver do this rather a lot and it would be good
-> if we could bullet-proof the core a bit more to handle these bugs more
-> gracefully.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+  Send mail to mime@docserver.cac.washington.edu for more info.
 
-This should be fixed in 2.6.30-rc8 by making the driver core more robust
-in this type of problem.  It will still spit out a big tracedump if it
-happens, so that will be good to see what is going on.
+---1559625215-290796434-1243955268=:3074
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 
-thanks,
+On Mon, 1 Jun 2009, Greg KH wrote:
 
-greg k-h
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> On Mon, Jun 01, 2009 at 09:48:01PM -0700, Andrew Morton wrote:
+> > Kay: if you have time: driver do this rather a lot and it would be good
+> > if we could bullet-proof the core a bit more to handle these bugs more
+> > gracefully.
+> 
+> This should be fixed in 2.6.30-rc8 by making the driver core more robust
+> in this type of problem.  It will still spit out a big tracedump if it
+> happens, so that will be good to see what is going on.
+
+It's better to remove these problems at the source.  The two attached 
+patches should take care of it.
+
+Alan Stern
+
+---1559625215-290796434-1243955268=:3074
+Content-Type: TEXT/PLAIN; charset=US-ASCII; name=scsi-wait1
+Content-Transfer-Encoding: BASE64
+Content-ID: <Pine.LNX.4.44L0.0906021107480.3074@iolanthe.rowland.org>
+Content-Description: 
+Content-Disposition: attachment; filename=scsi-wait1
+
+VGhpcyBwYXRjaCAoYXMxMjUyKSBmaXhlcyBhIGJ1ZyBpbiB0aGUgc2QgcHJv
+YmluZyBjb2RlLiAgV2hlbiB0aGUNCnByb2JlIHJvdXRpbmUgd2FzIHNwbGl0
+IHVwIGludG8gYSBzeW5jaHJvbm91cyBhbmQgYW4gYXN5bmNocm9ub3VzDQpw
+YXJ0LCB0b28gbXVjaCB3YXMgcHV0IGludG8gdGhlIGFzeW5jaHJvbm91cyBw
+YXJ0LiAgSXQncyBpbXBvcnRhbnQNCnRoYXQgYWxsIHRoZSBwb3NzaWJsZSBm
+YWlsdXJlIG1vZGVzIG9jY3VyIHN5bmNocm9ub3VzbHksIHNvIHRoYXQgdGhl
+DQpkcml2ZXIgY29yZSBrbm93cyB3aGV0aGVyIHRoZSBwcm9iZSB3YXMgc3Vj
+Y2Vzc2Z1bCBldmVuIGJlZm9yZSB0aGUNCmFzeW5jIHBhcnQgaXMgY29tcGxl
+dGUuDQoNCkFub3RoZXIgYnVnIGlzIHRoYXQgZGV2aWNlIHJlbW92YWwgaGFz
+IHRvIHdhaXQgZm9yIHRoZSBhc3luYyBwcm9iaW5nDQp0byBmaW5pc2ghICBU
+aGUgcGF0Y2ggYWRkcmVzc2VzIGJvdGggYnVncywgYnkgbW92aW5nIHNvbWUg
+Y29kZSBiYWNrDQpmcm9tIHNkX3Byb2JlX2FzeW5jKCkgdG8gc2RfcHJvYmUo
+KSBhbmQgYnkgYWRkaW5nIGEgY2FsbCB0bw0KYXN5bmNfc3luY2hyb25pemVf
+ZnVsbCgpIGF0IHRoZSBzdGFydCBvZiBzZF9yZW1vdmUoKS4NCg0KU2lnbmVk
+LW9mZi1ieTogQWxhbiBTdGVybiA8c3Rlcm5Acm93bGFuZC5oYXJ2YXJkLmVk
+dT4NCg0KLS0tDQoNCkluZGV4OiB1c2ItMi42L2RyaXZlcnMvc2NzaS9zZC5j
+DQo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09DQotLS0gdXNiLTIuNi5vcmlnL2Ry
+aXZlcnMvc2NzaS9zZC5jDQorKysgdXNiLTIuNi9kcml2ZXJzL3Njc2kvc2Qu
+Yw0KQEAgLTE5MDIsMjQgKzE5MDIsNiBAQCBzdGF0aWMgdm9pZCBzZF9wcm9i
+ZV9hc3luYyh2b2lkICpkYXRhLCBhDQogCWluZGV4ID0gc2RrcC0+aW5kZXg7
+DQogCWRldiA9ICZzZHAtPnNkZXZfZ2VuZGV2Ow0KIA0KLQlpZiAoIXNkcC0+
+cmVxdWVzdF9xdWV1ZS0+cnFfdGltZW91dCkgew0KLQkJaWYgKHNkcC0+dHlw
+ZSAhPSBUWVBFX01PRCkNCi0JCQlibGtfcXVldWVfcnFfdGltZW91dChzZHAt
+PnJlcXVlc3RfcXVldWUsIFNEX1RJTUVPVVQpOw0KLQkJZWxzZQ0KLQkJCWJs
+a19xdWV1ZV9ycV90aW1lb3V0KHNkcC0+cmVxdWVzdF9xdWV1ZSwNCi0JCQkJ
+CSAgICAgU0RfTU9EX1RJTUVPVVQpOw0KLQl9DQotDQotCWRldmljZV9pbml0
+aWFsaXplKCZzZGtwLT5kZXYpOw0KLQlzZGtwLT5kZXYucGFyZW50ID0gJnNk
+cC0+c2Rldl9nZW5kZXY7DQotCXNka3AtPmRldi5jbGFzcyA9ICZzZF9kaXNr
+X2NsYXNzOw0KLQlkZXZfc2V0X25hbWUoJnNka3AtPmRldiwgZGV2X25hbWUo
+JnNkcC0+c2Rldl9nZW5kZXYpKTsNCi0NCi0JaWYgKGRldmljZV9hZGQoJnNk
+a3AtPmRldikpDQotCQlnb3RvIG91dF9mcmVlX2luZGV4Ow0KLQ0KLQlnZXRf
+ZGV2aWNlKCZzZHAtPnNkZXZfZ2VuZGV2KTsNCi0NCiAJaWYgKGluZGV4IDwg
+U0RfTUFYX0RJU0tTKSB7DQogCQlnZC0+bWFqb3IgPSBzZF9tYWpvcigoaW5k
+ZXggJiAweGYwKSA+PiA0KTsNCiAJCWdkLT5maXJzdF9taW5vciA9ICgoaW5k
+ZXggJiAweGYpIDw8IDQpIHwgKGluZGV4ICYgMHhmZmYwMCk7DQpAQCAtMTk1
+NCwxMSArMTkzNiw2IEBAIHN0YXRpYyB2b2lkIHNkX3Byb2JlX2FzeW5jKHZv
+aWQgKmRhdGEsIGENCiANCiAJc2RfcHJpbnRrKEtFUk5fTk9USUNFLCBzZGtw
+LCAiQXR0YWNoZWQgU0NTSSAlc2Rpc2tcbiIsDQogCQkgIHNkcC0+cmVtb3Zh
+YmxlID8gInJlbW92YWJsZSAiIDogIiIpOw0KLQ0KLQlyZXR1cm47DQotDQot
+IG91dF9mcmVlX2luZGV4Og0KLQlpZGFfcmVtb3ZlKCZzZF9pbmRleF9pZGEs
+IGluZGV4KTsNCiB9DQogDQogLyoqDQpAQCAtMjAyNiw2ICsyMDAzLDI0IEBA
+IHN0YXRpYyBpbnQgc2RfcHJvYmUoc3RydWN0IGRldmljZSAqZGV2KQ0KIAlz
+ZGtwLT5vcGVuZXJzID0gMDsNCiAJc2RrcC0+cHJldmlvdXNfc3RhdGUgPSAx
+Ow0KIA0KKwlpZiAoIXNkcC0+cmVxdWVzdF9xdWV1ZS0+cnFfdGltZW91dCkg
+ew0KKwkJaWYgKHNkcC0+dHlwZSAhPSBUWVBFX01PRCkNCisJCQlibGtfcXVl
+dWVfcnFfdGltZW91dChzZHAtPnJlcXVlc3RfcXVldWUsIFNEX1RJTUVPVVQp
+Ow0KKwkJZWxzZQ0KKwkJCWJsa19xdWV1ZV9ycV90aW1lb3V0KHNkcC0+cmVx
+dWVzdF9xdWV1ZSwNCisJCQkJCSAgICAgU0RfTU9EX1RJTUVPVVQpOw0KKwl9
+DQorDQorCWRldmljZV9pbml0aWFsaXplKCZzZGtwLT5kZXYpOw0KKwlzZGtw
+LT5kZXYucGFyZW50ID0gJnNkcC0+c2Rldl9nZW5kZXY7DQorCXNka3AtPmRl
+di5jbGFzcyA9ICZzZF9kaXNrX2NsYXNzOw0KKwlkZXZfc2V0X25hbWUoJnNk
+a3AtPmRldiwgZGV2X25hbWUoJnNkcC0+c2Rldl9nZW5kZXYpKTsNCisNCisJ
+aWYgKGRldmljZV9hZGQoJnNka3AtPmRldikpDQorCQlnb3RvIG91dF9mcmVl
+X2luZGV4Ow0KKw0KKwlnZXRfZGV2aWNlKCZzZHAtPnNkZXZfZ2VuZGV2KTsN
+CisNCiAJYXN5bmNfc2NoZWR1bGUoc2RfcHJvYmVfYXN5bmMsIHNka3ApOw0K
+IA0KIAlyZXR1cm4gMDsNCkBAIC0yMDU1LDcgKzIwNTAsMTEgQEAgc3RhdGlj
+IGludCBzZF9wcm9iZShzdHJ1Y3QgZGV2aWNlICpkZXYpDQogICoqLw0KIHN0
+YXRpYyBpbnQgc2RfcmVtb3ZlKHN0cnVjdCBkZXZpY2UgKmRldikNCiB7DQot
+CXN0cnVjdCBzY3NpX2Rpc2sgKnNka3AgPSBkZXZfZ2V0X2RydmRhdGEoZGV2
+KTsNCisJc3RydWN0IHNjc2lfZGlzayAqc2RrcDsNCisNCisJLyogV2FpdCBm
+b3Igc2RfcHJvYmVfYXN5bmMgdG8gZmluaXNoICovDQorCWFzeW5jX3N5bmNo
+cm9uaXplX2Z1bGwoKTsNCisJc2RrcCA9IGRldl9nZXRfZHJ2ZGF0YShkZXYp
+Ow0KIA0KIAlkZXZpY2VfZGVsKCZzZGtwLT5kZXYpOw0KIAlkZWxfZ2VuZGlz
+ayhzZGtwLT5kaXNrKTsNCg==
+---1559625215-290796434-1243955268=:3074
+Content-Type: TEXT/PLAIN; charset=US-ASCII; name=scsi-wait2
+Content-Transfer-Encoding: BASE64
+Content-ID: <Pine.LNX.4.44L0.0906021107481.3074@iolanthe.rowland.org>
+Content-Description: 
+Content-Disposition: attachment; filename=scsi-wait2
+
+VGhpcyBwYXRjaCAoYXMxMjQ2KSBmaXhlcyBhIGJ1ZyBpbiB0aGUgc2NzaV93
+YWl0X3NjYW4gbW9kdWxlLiAgSXQncw0Kc3VwcG9zZWQgdG8gd2FpdCB1bnRp
+bCBhbGwgU0NTSSBwcm9iaW5nIGlzIGZpbmlzaGVkIC0tIGJ1dCBpdCBkb2Vz
+bid0LA0KYmVjYXVzZSBvZiBzZF9wcm9iZV9hc3luYygpLiAgVGhpcyByb3V0
+aW5lIGlzIHJ1biBieSBhc3luY19zY2hlZHVsZSgpLA0Kbm90IHRoZSBTQ1NJ
+IGFzeW5jIG1lY2hhbmlzbS4gIENvbnNlcXVlbnRseSB3ZSBoYXZlIHRvIG1h
+a2UgYW4gZXh0cmENCmNhbGwgdG8gYXN5bmNfc3luY2hyb25pemVfZnVsbCgp
+IHRvIHdhaXQgZm9yIGl0Lg0KDQpTaWduZWQtb2ZmLWJ5OiBBbGFuIFN0ZXJu
+IDxzdGVybkByb3dsYW5kLmhhcnZhcmQuZWR1Pg0KDQotLS0NCg0KSW5kZXg6
+IHVzYi0yLjYvZHJpdmVycy9zY3NpL3Njc2lfd2FpdF9zY2FuLmMNCj09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT0NCi0tLSB1c2ItMi42Lm9yaWcvZHJpdmVycy9z
+Y3NpL3Njc2lfd2FpdF9zY2FuLmMNCisrKyB1c2ItMi42L2RyaXZlcnMvc2Nz
+aS9zY3NpX3dhaXRfc2Nhbi5jDQpAQCAtMTIsNiArMTIsNyBAQA0KIA0KICNp
+bmNsdWRlIDxsaW51eC9tb2R1bGUuaD4NCiAjaW5jbHVkZSA8bGludXgvZGV2
+aWNlLmg+DQorI2luY2x1ZGUgPGxpbnV4L2FzeW5jLmg+DQogI2luY2x1ZGUg
+PHNjc2kvc2NzaV9zY2FuLmg+DQogDQogc3RhdGljIGludCBfX2luaXQgd2Fp
+dF9zY2FuX2luaXQodm9pZCkNCkBAIC0yNyw2ICsyOCwxMyBAQCBzdGF0aWMg
+aW50IF9faW5pdCB3YWl0X3NjYW5faW5pdCh2b2lkKQ0KIAkgKiB0byBmaW5p
+c2guDQogCSAqLw0KIAlzY3NpX2NvbXBsZXRlX2FzeW5jX3NjYW5zKCk7DQor
+CS8qDQorCSAqIElmIGFueSBvZiB0aG9zZSBhc3luY2hyb25vdXMgU0NTSSBz
+Y2FucyBjYWxsZWQgc2RfcHJvYmUoKQ0KKwkgKiB0aGVuIGl0IHByb2JhYmx5
+IHF1ZXVlZCBhbm90aGVyIGpvYiB0byBydW4gc2RfcHJvYmVfYXN5bmMoKS4N
+CisJICogV2FpdCBmb3IgdGhhdCB0byBmaW5pc2guDQorCSAqLw0KKwlhc3lu
+Y19zeW5jaHJvbml6ZV9mdWxsKCk7DQorDQogCXJldHVybiAwOw0KIH0NCiAN
+Cg==
+---1559625215-290796434-1243955268=:3074--
