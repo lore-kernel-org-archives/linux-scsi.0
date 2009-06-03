@@ -1,187 +1,158 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 19/20] qla2xxx: Synchronize MPI settings after a PE Reset.
-Date: Wed,  3 Jun 2009 09:55:30 -0700
-Message-ID: <1244048131-56590-20-git-send-email-andrew.vasquez@qlogic.com>
+Subject: [PATCH 17/20] qla2xxx: Reduce lock-contention during do-work processing.
+Date: Wed,  3 Jun 2009 09:55:28 -0700
+Message-ID: <1244048131-56590-18-git-send-email-andrew.vasquez@qlogic.com>
 References: <1244048131-56590-1-git-send-email-andrew.vasquez@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:4799 "EHLO
+Received: from avexch1.qlogic.com ([198.70.193.115]:4855 "EHLO
 	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756942AbZFCQzt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jun 2009 12:55:49 -0400
+	with ESMTP id S1757364AbZFCQzv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jun 2009 12:55:51 -0400
 In-Reply-To: <1244048131-56590-1-git-send-email-andrew.vasquez@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Ensure MPS remains in synchronization across all NIC/FCoE
-functions after a reset.
+Queued work processing will now be serialized with its own
+lower-priority spinlock.  This also simplifies the work-queue
+interface for future work-queue consumers.
 
 Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_gbl.h  |    6 ++++
- drivers/scsi/qla2xxx/qla_init.c |   52 ++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_mbx.c  |   63 +++++++++++++++++++++++++++++++++++++++
- 3 files changed, 121 insertions(+), 0 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h |    2 +
+ drivers/scsi/qla2xxx/qla_os.c  |   45 +++++++++++++++++++--------------------
+ 2 files changed, 24 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 1ef18cc..65b12d8 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -299,6 +299,12 @@ qla2x00_get_xgmac_stats(scsi_qla_host_t *, dma_addr_t, uint16_t, uint16_t *);
- extern int
- qla2x00_get_dcbx_params(scsi_qla_host_t *, dma_addr_t, uint16_t);
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 88ddae0..00aa48d 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2561,6 +2561,8 @@ typedef struct scsi_qla_host {
+ 	struct list_head list;
+ 	struct list_head vp_fcports;	/* list of fcports */
+ 	struct list_head work_list;
++	spinlock_t work_lock;
++
+ 	/* Commonly used flags and state information. */
+ 	struct Scsi_Host *host;
+ 	unsigned long	host_no;
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 128b3d5..dcf0116 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -2533,6 +2533,8 @@ struct scsi_qla_host *qla2x00_create_host(struct scsi_host_template *sht,
+ 	INIT_LIST_HEAD(&vha->work_list);
+ 	INIT_LIST_HEAD(&vha->list);
  
-+extern int
-+qla2x00_read_ram_word(scsi_qla_host_t *, uint32_t, uint32_t *);
++	spin_lock_init(&vha->work_lock);
 +
-+extern int
-+qla2x00_write_ram_word(scsi_qla_host_t *, uint32_t, uint32_t);
-+
- /*
-  * Global Function Prototypes in qla_isr.c source file.
-  */
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 36cea22..2620261 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -886,6 +886,56 @@ cont_alloc:
- 	    htonl(offsetof(struct qla2xxx_fw_dump, isp));
+ 	sprintf(vha->host_str, "%s_%ld", QLA2XXX_DRIVER_NAME, vha->host_no);
+ 	return vha;
+ 
+@@ -2541,13 +2543,11 @@ fail:
  }
  
-+static int
-+qla81xx_mpi_sync(scsi_qla_host_t *vha)
-+{
-+#define MPS_MASK	0xe0
-+	int rval;
-+	uint16_t dc;
-+	uint32_t dw;
-+	struct qla_hw_data *ha = vha->hw;
+ static struct qla_work_evt *
+-qla2x00_alloc_work(struct scsi_qla_host *vha, enum qla_work_type type,
+-    int locked)
++qla2x00_alloc_work(struct scsi_qla_host *vha, enum qla_work_type type)
+ {
+ 	struct qla_work_evt *e;
+ 
+-	e = kzalloc(sizeof(struct qla_work_evt), locked ? GFP_ATOMIC:
+-	    GFP_KERNEL);
++	e = kzalloc(sizeof(struct qla_work_evt), GFP_ATOMIC);
+ 	if (!e)
+ 		return NULL;
+ 
+@@ -2558,17 +2558,15 @@ qla2x00_alloc_work(struct scsi_qla_host *vha, enum qla_work_type type,
+ }
+ 
+ static int
+-qla2x00_post_work(struct scsi_qla_host *vha, struct qla_work_evt *e, int locked)
++qla2x00_post_work(struct scsi_qla_host *vha, struct qla_work_evt *e)
+ {
+-	unsigned long uninitialized_var(flags);
+-	struct qla_hw_data *ha = vha->hw;
++	unsigned long flags;
+ 
+-	if (!locked)
+-		spin_lock_irqsave(&ha->hardware_lock, flags);
++	spin_lock_irqsave(&vha->work_lock, flags);
+ 	list_add_tail(&e->list, &vha->work_list);
++	spin_unlock_irqrestore(&vha->work_lock, flags);
+ 	qla2xxx_wake_dpc(vha);
+-	if (!locked)
+-		spin_unlock_irqrestore(&ha->hardware_lock, flags);
 +
-+	if (!IS_QLA81XX(vha->hw))
-+		return QLA_SUCCESS;
+ 	return QLA_SUCCESS;
+ }
+ 
+@@ -2578,13 +2576,13 @@ qla2x00_post_aen_work(struct scsi_qla_host *vha, enum fc_host_event_code code,
+ {
+ 	struct qla_work_evt *e;
+ 
+-	e = qla2x00_alloc_work(vha, QLA_EVT_AEN, 1);
++	e = qla2x00_alloc_work(vha, QLA_EVT_AEN);
+ 	if (!e)
+ 		return QLA_FUNCTION_FAILED;
+ 
+ 	e->u.aen.code = code;
+ 	e->u.aen.data = data;
+-	return qla2x00_post_work(vha, e, 1);
++	return qla2x00_post_work(vha, e);
+ }
+ 
+ int
+@@ -2592,25 +2590,27 @@ qla2x00_post_idc_ack_work(struct scsi_qla_host *vha, uint16_t *mb)
+ {
+ 	struct qla_work_evt *e;
+ 
+-	e = qla2x00_alloc_work(vha, QLA_EVT_IDC_ACK, 1);
++	e = qla2x00_alloc_work(vha, QLA_EVT_IDC_ACK);
+ 	if (!e)
+ 		return QLA_FUNCTION_FAILED;
+ 
+ 	memcpy(e->u.idc_ack.mb, mb, QLA_IDC_ACK_REGS * sizeof(uint16_t));
+-	return qla2x00_post_work(vha, e, 1);
++	return qla2x00_post_work(vha, e);
+ }
+ 
+ static void
+ qla2x00_do_work(struct scsi_qla_host *vha)
+ {
+-	struct qla_work_evt *e;
+-	struct qla_hw_data *ha = vha->hw;
++	struct qla_work_evt *e, *tmp;
++	unsigned long flags;
++	LIST_HEAD(work);
+ 
+-	spin_lock_irq(&ha->hardware_lock);
+-	while (!list_empty(&vha->work_list)) {
+-		e = list_entry(vha->work_list.next, struct qla_work_evt, list);
++	spin_lock_irqsave(&vha->work_lock, flags);
++	list_splice_init(&vha->work_list, &work);
++	spin_unlock_irqrestore(&vha->work_lock, flags);
 +
-+	rval = qla2x00_write_ram_word(vha, 0x7c00, 1);
-+	if (rval != QLA_SUCCESS) {
-+		DEBUG2(qla_printk(KERN_WARNING, ha,
-+		    "Sync-MPI: Unable to acquire semaphore.\n"));
-+		goto done;
-+	}
-+
-+	pci_read_config_word(vha->hw->pdev, 0x54, &dc);
-+	rval = qla2x00_read_ram_word(vha, 0x7a15, &dw);
-+	if (rval != QLA_SUCCESS) {
-+		DEBUG2(qla_printk(KERN_WARNING, ha,
-+		    "Sync-MPI: Unable to read sync.\n"));
-+		goto done_release;
-+	}
-+
-+	dc &= MPS_MASK;
-+	if (dc == (dw & MPS_MASK))
-+		goto done_release;
-+
-+	dw &= ~MPS_MASK;
-+	dw |= dc;
-+	rval = qla2x00_write_ram_word(vha, 0x7a15, dw);
-+	if (rval != QLA_SUCCESS) {
-+		DEBUG2(qla_printk(KERN_WARNING, ha,
-+		    "Sync-MPI: Unable to gain sync.\n"));
-+	}
-+
-+done_release:
-+	rval = qla2x00_write_ram_word(vha, 0x7c00, 0);
-+	if (rval != QLA_SUCCESS) {
-+		DEBUG2(qla_printk(KERN_WARNING, ha,
-+		    "Sync-MPI: Unable to release semaphore.\n"));
-+	}
-+
-+done:
-+	return rval;
-+}
-+
- /**
-  * qla2x00_setup_chip() - Load and start RISC firmware.
-  * @ha: HA context
-@@ -910,6 +960,8 @@ qla2x00_setup_chip(scsi_qla_host_t *vha)
- 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
++	list_for_each_entry_safe(e, tmp, &work, list) {
+ 		list_del_init(&e->list);
+-		spin_unlock_irq(&ha->hardware_lock);
+ 
+ 		switch (e->type) {
+ 		case QLA_EVT_AEN:
+@@ -2623,10 +2623,9 @@ qla2x00_do_work(struct scsi_qla_host *vha)
+ 		}
+ 		if (e->flags & QLA_EVT_FLAG_FREE)
+ 			kfree(e);
+-		spin_lock_irq(&ha->hardware_lock);
  	}
- 
-+	qla81xx_mpi_sync(vha);
-+
- 	/* Load firmware sequences */
- 	rval = ha->isp_ops->load_risc(vha, &srisc_address);
- 	if (rval == QLA_SUCCESS) {
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index f215578..451ece0 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -3545,3 +3545,66 @@ qla2x00_get_dcbx_params(scsi_qla_host_t *vha, dma_addr_t tlv_dma,
- 
- 	return rval;
+-	spin_unlock_irq(&ha->hardware_lock);
  }
 +
-+int
-+qla2x00_read_ram_word(scsi_qla_host_t *vha, uint32_t risc_addr, uint32_t *data)
-+{
-+	int rval;
-+	mbx_cmd_t mc;
-+	mbx_cmd_t *mcp = &mc;
-+
-+	if (!IS_FWI2_CAPABLE(vha->hw))
-+		return QLA_FUNCTION_FAILED;
-+
-+	DEBUG11(printk("%s(%ld): entered.\n", __func__, vha->host_no));
-+
-+	mcp->mb[0] = MBC_READ_RAM_EXTENDED;
-+	mcp->mb[1] = LSW(risc_addr);
-+	mcp->mb[8] = MSW(risc_addr);
-+	mcp->out_mb = MBX_8|MBX_1|MBX_0;
-+	mcp->in_mb = MBX_3|MBX_2|MBX_0;
-+	mcp->tov = 30;
-+	mcp->flags = 0;
-+	rval = qla2x00_mailbox_command(vha, mcp);
-+	if (rval != QLA_SUCCESS) {
-+		DEBUG2_3_11(printk("%s(%ld): failed=%x mb[0]=%x.\n", __func__,
-+		    vha->host_no, rval, mcp->mb[0]));
-+	} else {
-+		DEBUG11(printk("%s(%ld): done.\n", __func__, vha->host_no));
-+		*data = mcp->mb[3] << 16 | mcp->mb[2];
-+	}
-+
-+	return rval;
-+}
-+
-+int
-+qla2x00_write_ram_word(scsi_qla_host_t *vha, uint32_t risc_addr, uint32_t data)
-+{
-+	int rval;
-+	mbx_cmd_t mc;
-+	mbx_cmd_t *mcp = &mc;
-+
-+	if (!IS_FWI2_CAPABLE(vha->hw))
-+                return QLA_FUNCTION_FAILED;
-+
-+	DEBUG11(printk("%s(%ld): entered.\n", __func__, vha->host_no));
-+
-+	mcp->mb[0] = MBC_WRITE_RAM_WORD_EXTENDED;
-+	mcp->mb[1] = LSW(risc_addr);
-+	mcp->mb[2] = LSW(data);
-+	mcp->mb[3] = MSW(data);
-+	mcp->mb[8] = MSW(risc_addr);
-+	mcp->out_mb = MBX_8|MBX_3|MBX_2|MBX_1|MBX_0;
-+	mcp->in_mb = MBX_0;
-+	mcp->tov = 30;
-+	mcp->flags = 0;
-+	rval = qla2x00_mailbox_command(vha, mcp);
-+	if (rval != QLA_SUCCESS) {
-+		DEBUG2_3_11(printk("%s(%ld): failed=%x mb[0]=%x.\n", __func__,
-+		    vha->host_no, rval, mcp->mb[0]));
-+	} else {
-+		DEBUG11(printk("%s(%ld): done.\n", __func__, vha->host_no));
-+	}
-+
-+	return rval;
-+}
+ /* Relogins all the fcports of a vport
+  * Context: dpc thread
+  */
 -- 
 1.6.3.1.244.gf9275
 
