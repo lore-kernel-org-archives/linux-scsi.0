@@ -1,167 +1,496 @@
 From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 3/4] ibmvscsi: Enable fast fail feature
-Date: Wed, 03 Jun 2009 10:00:03 -0500
-Message-ID: <4A268FF3.80805@linux.vnet.ibm.com>
+Subject: [PATCH 4/4] ibmvscsi: Add support for capabilities MAD
+Date: Wed, 03 Jun 2009 10:01:29 -0500
+Message-ID: <4A269049.6060102@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e39.co.us.ibm.com ([32.97.110.160]:51752 "EHLO
-	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754507AbZFCPAK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jun 2009 11:00:10 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e39.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n53EuFnd006040
-	for <linux-scsi@vger.kernel.org>; Wed, 3 Jun 2009 08:56:15 -0600
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n53F08qQ155692
-	for <linux-scsi@vger.kernel.org>; Wed, 3 Jun 2009 09:00:09 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n53F04c5023095
-	for <linux-scsi@vger.kernel.org>; Wed, 3 Jun 2009 09:00:08 -0600
+Received: from e38.co.us.ibm.com ([32.97.110.159]:49637 "EHLO
+	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758718AbZFCPGZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jun 2009 11:06:25 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e38.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n53F3XkA007840
+	for <linux-scsi@vger.kernel.org>; Wed, 3 Jun 2009 09:03:33 -0600
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n53F6H9U194566
+	for <linux-scsi@vger.kernel.org>; Wed, 3 Jun 2009 09:06:26 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n53F1XUL009773
+	for <linux-scsi@vger.kernel.org>; Wed, 3 Jun 2009 09:01:34 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Robert Jennings <rcj@linux.vnet.ibm.com>
 
 
-From: Robert Jennings <rcj@linux.vnet.ibm.com>
-
-A new mode of error reporting, fast fail, has been added to the VIOS
-which allows failover to happen more quickly.
-
-If this new fast fail mode is enabled on the VIOS and the vSCSI client
-supports the mode, the VIOS will not return MEDIUM error on path failures,
-but rather return VIOSRP_ADAPTER_FAIL in the crq response, which 
-ibmvscsi will translate to DID_ERROR. 
-
-This new mode can be enabled for single path configurations as well,
-so it is the new default error reporting mode. A module parameter is
-provided to disable this new behavior on the off chance it causes a
-problem on some old VIOS version.
+Add support to ibmvscsi for the capabilities MAD. This command gets sent
+to the Virtual I/O server prior to login in order to communicate client
+capabilities. Additionally it returns information regarding capabilities
+that the server supports. The two main capabilities communicated in this
+MAD are related to partition migration and client reserve. Client reserve
+allows for SCSI-2 reservations to be sent to virtual disks which are backed
+by physical LUNs and will result in the reservation being sent to the
+physical LUN.
 
 Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 ---
 
- drivers/scsi/ibmvscsi/ibmvscsi.c |   59 ++++++++++++++++++++++++++++++++++++++-
- drivers/scsi/ibmvscsi/viosrp.h   |   14 ++++++++-
- 2 files changed, 71 insertions(+), 2 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvscsi.c |  224 ++++++++++++++++++++++++++++++++++-----
+ drivers/scsi/ibmvscsi/ibmvscsi.h |    4 
+ drivers/scsi/ibmvscsi/viosrp.h   |   54 +++++++++
+ 3 files changed, 255 insertions(+), 27 deletions(-)
 
-diff -puN drivers/scsi/ibmvscsi/ibmvscsi.c~ibmvscsi_fastfail drivers/scsi/ibmvscsi/ibmvscsi.c
---- linux-2.6/drivers/scsi/ibmvscsi/ibmvscsi.c~ibmvscsi_fastfail	2009-06-03 09:32:22.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvscsi.c	2009-06-03 09:32:22.000000000 -0500
-@@ -94,6 +94,7 @@ static int abort_timeout = 60;
- static int reset_timeout = 60;
+diff -puN drivers/scsi/ibmvscsi/ibmvscsi.c~ibmvscsi_client_reserve drivers/scsi/ibmvscsi/ibmvscsi.c
+--- linux-2.6/drivers/scsi/ibmvscsi/ibmvscsi.c~ibmvscsi_client_reserve	2009-06-03 09:35:33.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvscsi.c	2009-06-03 09:35:33.000000000 -0500
+@@ -70,6 +70,7 @@
+ #include <linux/moduleparam.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/delay.h>
++#include <linux/of.h>
+ #include <asm/firmware.h>
+ #include <asm/vio.h>
+ #include <asm/firmware.h>
+@@ -95,6 +96,7 @@ static int reset_timeout = 60;
  static int max_requests = IBMVSCSI_MAX_REQUESTS_DEFAULT;
  static int max_events = IBMVSCSI_MAX_REQUESTS_DEFAULT + 2;
-+static int fast_fail = 1;
+ static int fast_fail = 1;
++static int client_reserve = 1;
  
  static struct scsi_transport_template *ibmvscsi_transport_template;
  
-@@ -114,6 +115,8 @@ module_param_named(init_timeout, init_ti
- MODULE_PARM_DESC(init_timeout, "Initialization timeout in seconds");
- module_param_named(max_requests, max_requests, int, S_IRUGO);
+@@ -117,6 +119,8 @@ module_param_named(max_requests, max_req
  MODULE_PARM_DESC(max_requests, "Maximum requests for this adapter");
-+module_param_named(fast_fail, fast_fail, int, S_IRUGO | S_IWUSR);
-+MODULE_PARM_DESC(fast_fail, "Enable fast fail. [Default=1]");
+ module_param_named(fast_fail, fast_fail, int, S_IRUGO | S_IWUSR);
+ MODULE_PARM_DESC(fast_fail, "Enable fast fail. [Default=1]");
++module_param_named(client_reserve, client_reserve, int, S_IRUGO );
++MODULE_PARM_DESC(client_reserve, "Attempt client managed reserve/release");
  
  /* ------------------------------------------------------------
   * Routines for the event pool and event structs
-@@ -863,6 +866,60 @@ static int send_srp_login(struct ibmvscs
+@@ -790,6 +794,53 @@ static int ibmvscsi_queuecommand(struct
+  */
+ 
+ /**
++ * map_persist_bufs: - Pre-map persistent data for adapter logins
++ * @hostdata:   ibmvscsi_host_data of host
++ *
++ * Map the capabilities and adapter info DMA buffers to avoid runtime failures.
++ * Return 1 on error, 0 on success.
++ */
++static int map_persist_bufs(struct ibmvscsi_host_data *hostdata)
++{
++
++	hostdata->caps_addr = dma_map_single(hostdata->dev, &hostdata->caps,
++					     sizeof(hostdata->caps), DMA_BIDIRECTIONAL);
++
++	if (dma_mapping_error(hostdata->dev, hostdata->caps_addr)) {
++		dev_err(hostdata->dev, "Unable to map capabilities buffer!\n");
++		return 1;
++	}
++
++	hostdata->adapter_info_addr = dma_map_single(hostdata->dev,
++						     &hostdata->madapter_info,
++						     sizeof(hostdata->madapter_info),
++						     DMA_BIDIRECTIONAL);
++	if (dma_mapping_error(hostdata->dev, hostdata->adapter_info_addr)) {
++		dev_err(hostdata->dev, "Unable to map adapter info buffer!\n");
++		dma_unmap_single(hostdata->dev, hostdata->caps_addr,
++				 sizeof(hostdata->caps), DMA_BIDIRECTIONAL);
++		return 1;
++	}
++
++	return 0;
++}
++
++/**
++ * unmap_persist_bufs: - Unmap persistent data needed for adapter logins
++ * @hostdata:   ibmvscsi_host_data of host
++ *
++ * Unmap the capabilities and adapter info DMA buffers
++ */
++static void unmap_persist_bufs(struct ibmvscsi_host_data *hostdata)
++{
++	dma_unmap_single(hostdata->dev, hostdata->caps_addr,
++			 sizeof(hostdata->caps), DMA_BIDIRECTIONAL);
++
++	dma_unmap_single(hostdata->dev, hostdata->adapter_info_addr,
++			 sizeof(hostdata->madapter_info), DMA_BIDIRECTIONAL);
++}
++
++/**
+  * login_rsp: - Handle response to SRP login request
+  * @evt_struct:	srp_event_struct with the response
+  *
+@@ -817,6 +868,7 @@ static void login_rsp(struct srp_event_s
+ 	}
+ 
+ 	dev_info(hostdata->dev, "SRP_LOGIN succeeded\n");
++	hostdata->client_migrated = 0;
+ 
+ 	/* Now we know what the real request-limit is.
+ 	 * This value is set rather than added to request_limit because
+@@ -866,6 +918,93 @@ static int send_srp_login(struct ibmvscs
  };
  
  /**
-+ * fast_fail_rsp: - Handle response to MAD enable fast fail
++ * capabilities_rsp: - Handle response to MAD adapter capabilities request
 + * @evt_struct:	srp_event_struct with the response
 + *
-+ * Used as a "done" callback by when sending enable fast fail. Gets called
-+ * by ibmvscsi_handle_crq()
++ * Used as a "done" callback by when sending adapter_info.
 + */
-+static void fast_fail_rsp(struct srp_event_struct *evt_struct)
++static void capabilities_rsp(struct srp_event_struct *evt_struct)
 +{
 +	struct ibmvscsi_host_data *hostdata = evt_struct->hostdata;
-+	u8 status = evt_struct->xfer_iu->mad.fast_fail.common.status;
 +
-+	if (status == VIOSRP_MAD_NOT_SUPPORTED)
-+		dev_err(hostdata->dev, "fast_fail not supported in server\n");
-+	else if (status == VIOSRP_MAD_FAILED)
-+		dev_err(hostdata->dev, "fast_fail request failed\n");
-+	else if (status != VIOSRP_MAD_SUCCESS)
-+		dev_err(hostdata->dev, "error 0x%X enabling fast_fail\n", status);
++	if (evt_struct->xfer_iu->mad.capabilities.common.status) {
++		dev_err(hostdata->dev, "error 0x%X getting capabilities info\n",
++			evt_struct->xfer_iu->mad.capabilities.common.status);
++	} else {
++		if (hostdata->caps.migration.common.server_support != SERVER_SUPPORTS_CAP)
++			dev_info(hostdata->dev, "Partition migration not supported\n");
++
++		if (client_reserve) {
++			if (hostdata->caps.reserve.common.server_support ==
++			    SERVER_SUPPORTS_CAP)
++				dev_info(hostdata->dev, "Client reserve enabled\n");
++			else
++				dev_info(hostdata->dev, "Client reserve not supported\n");
++		}
++	}
 +
 +	send_srp_login(hostdata);
 +}
 +
 +/**
-+ * init_host - Start host initialization
++ * send_mad_capabilities: - Sends the mad capabilities request
++ *      and stores the result so it can be retrieved with
 + * @hostdata:	ibmvscsi_host_data of host
-+ *
-+ * Returns zero if successful.
 + */
-+static int enable_fast_fail(struct ibmvscsi_host_data *hostdata)
++static void send_mad_capabilities(struct ibmvscsi_host_data *hostdata)
 +{
-+	int rc;
-+	unsigned long flags;
-+	struct viosrp_fast_fail *fast_fail_mad;
++	struct viosrp_capabilities *req;
 +	struct srp_event_struct *evt_struct;
-+
-+	if (!fast_fail)
-+		return send_srp_login(hostdata);
++	unsigned long flags;
++	struct device_node *of_node = hostdata->dev->archdata.of_node;
++	const char *location;
 +
 +	evt_struct = get_event_struct(&hostdata->pool);
 +	BUG_ON(!evt_struct);
 +
-+	init_event_struct(evt_struct, fast_fail_rsp, VIOSRP_MAD_FORMAT, info_timeout);
++	init_event_struct(evt_struct, capabilities_rsp,
++			  VIOSRP_MAD_FORMAT, info_timeout);
 +
-+	fast_fail_mad = &evt_struct->iu.mad.fast_fail;
-+	memset(fast_fail_mad, 0, sizeof(*fast_fail_mad));
-+	fast_fail_mad->common.type = VIOSRP_ENABLE_FAST_FAIL;
-+	fast_fail_mad->common.length = sizeof(*fast_fail_mad);
++	req = &evt_struct->iu.mad.capabilities;
++	memset(req, 0, sizeof(*req));
++
++	hostdata->caps.flags = CAP_LIST_SUPPORTED;
++	if (hostdata->client_migrated)
++		hostdata->caps.flags |= CLIENT_MIGRATED;
++
++	strncpy(hostdata->caps.name, dev_name(&hostdata->host->shost_gendev),
++		sizeof(hostdata->caps.name));
++	hostdata->caps.name[sizeof(hostdata->caps.name) - 1] = '\0';
++
++	location = of_get_property(of_node, "ibm,loc-code", NULL);
++	location = location ? location : dev_name(hostdata->dev);
++	strncpy(hostdata->caps.loc, location, sizeof(hostdata->caps.loc));
++	hostdata->caps.loc[sizeof(hostdata->caps.loc) - 1] = '\0';
++
++	req->common.type = VIOSRP_CAPABILITIES_TYPE;
++	req->buffer = hostdata->caps_addr;
++
++	hostdata->caps.migration.common.cap_type = MIGRATION_CAPABILITIES;
++	hostdata->caps.migration.common.length = sizeof(hostdata->caps.migration);
++	hostdata->caps.migration.common.server_support = SERVER_SUPPORTS_CAP;
++	hostdata->caps.migration.ecl = 1;
++
++	if (client_reserve) {
++		hostdata->caps.reserve.common.cap_type = RESERVATION_CAPABILITIES;
++		hostdata->caps.reserve.common.length = sizeof(hostdata->caps.reserve);
++		hostdata->caps.reserve.common.server_support = SERVER_SUPPORTS_CAP;
++		hostdata->caps.reserve.type = CLIENT_RESERVE_SCSI_2;
++		req->common.length = sizeof(hostdata->caps);
++	} else
++		req->common.length = sizeof(hostdata->caps) - sizeof(hostdata->caps.reserve);
 +
 +	spin_lock_irqsave(hostdata->host->host_lock, flags);
-+	rc = ibmvscsi_send_srp_event(evt_struct, hostdata, info_timeout * 2);
++	if (ibmvscsi_send_srp_event(evt_struct, hostdata, info_timeout * 2))
++		dev_err(hostdata->dev, "couldn't send CAPABILITIES_REQ!\n");
 +	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
-+	return rc;
-+}
++};
 +
 +/**
-  * adapter_info_rsp: - Handle response to MAD adapter info request
+  * fast_fail_rsp: - Handle response to MAD enable fast fail
   * @evt_struct:	srp_event_struct with the response
   *
-@@ -903,7 +960,7 @@ static void adapter_info_rsp(struct srp_
- 		}
- 	}
+@@ -884,7 +1023,7 @@ static void fast_fail_rsp(struct srp_eve
+ 	else if (status != VIOSRP_MAD_SUCCESS)
+ 		dev_err(hostdata->dev, "error 0x%X enabling fast_fail\n", status);
  
 -	send_srp_login(hostdata);
-+	enable_fast_fail(hostdata);
++	send_mad_capabilities(hostdata);
  }
  
  /**
-diff -puN drivers/scsi/ibmvscsi/viosrp.h~ibmvscsi_fastfail drivers/scsi/ibmvscsi/viosrp.h
---- linux-2.6/drivers/scsi/ibmvscsi/viosrp.h~ibmvscsi_fastfail	2009-06-03 09:32:22.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/viosrp.h	2009-06-03 09:32:22.000000000 -0500
-@@ -86,7 +86,14 @@ enum viosrp_mad_types {
- 	VIOSRP_EMPTY_IU_TYPE = 0x01,
- 	VIOSRP_ERROR_LOG_TYPE = 0x02,
- 	VIOSRP_ADAPTER_INFO_TYPE = 0x03,
--	VIOSRP_HOST_CONFIG_TYPE = 0x04
-+	VIOSRP_HOST_CONFIG_TYPE = 0x04,
-+	VIOSRP_ENABLE_FAST_FAIL = 0x08,
+@@ -900,8 +1039,10 @@ static int enable_fast_fail(struct ibmvs
+ 	struct viosrp_fast_fail *fast_fail_mad;
+ 	struct srp_event_struct *evt_struct;
+ 
+-	if (!fast_fail)
+-		return send_srp_login(hostdata);
++	if (!fast_fail) {
++		send_mad_capabilities(hostdata);
++		return 0;
++	}
+ 
+ 	evt_struct = get_event_struct(&hostdata->pool);
+ 	BUG_ON(!evt_struct);
+@@ -929,10 +1070,6 @@ static int enable_fast_fail(struct ibmvs
+ static void adapter_info_rsp(struct srp_event_struct *evt_struct)
+ {
+ 	struct ibmvscsi_host_data *hostdata = evt_struct->hostdata;
+-	dma_unmap_single(hostdata->dev,
+-			 evt_struct->iu.mad.adapter_info.buffer,
+-			 evt_struct->iu.mad.adapter_info.common.length,
+-			 DMA_BIDIRECTIONAL);
+ 
+ 	if (evt_struct->xfer_iu->mad.adapter_info.common.status) {
+ 		dev_err(hostdata->dev, "error %d getting adapter info\n",
+@@ -977,7 +1114,6 @@ static void send_mad_adapter_info(struct
+ 	struct viosrp_adapter_info *req;
+ 	struct srp_event_struct *evt_struct;
+ 	unsigned long flags;
+-	dma_addr_t addr;
+ 
+ 	evt_struct = get_event_struct(&hostdata->pool);
+ 	BUG_ON(!evt_struct);
+@@ -992,28 +1128,11 @@ static void send_mad_adapter_info(struct
+ 	
+ 	req->common.type = VIOSRP_ADAPTER_INFO_TYPE;
+ 	req->common.length = sizeof(hostdata->madapter_info);
+-	req->buffer = addr = dma_map_single(hostdata->dev,
+-					    &hostdata->madapter_info,
+-					    sizeof(hostdata->madapter_info),
+-					    DMA_BIDIRECTIONAL);
++	req->buffer = hostdata->adapter_info_addr;
+ 
+-	if (dma_mapping_error(hostdata->dev, req->buffer)) {
+-		if (!firmware_has_feature(FW_FEATURE_CMO))
+-			dev_err(hostdata->dev,
+-			        "Unable to map request_buffer for "
+-			        "adapter_info!\n");
+-		free_event_struct(&hostdata->pool, evt_struct);
+-		return;
+-	}
+-	
+ 	spin_lock_irqsave(hostdata->host->host_lock, flags);
+-	if (ibmvscsi_send_srp_event(evt_struct, hostdata, info_timeout * 2)) {
++	if (ibmvscsi_send_srp_event(evt_struct, hostdata, info_timeout * 2))
+ 		dev_err(hostdata->dev, "couldn't send ADAPTER_INFO_REQ!\n");
+-		dma_unmap_single(hostdata->dev,
+-				 addr,
+-				 sizeof(hostdata->madapter_info),
+-				 DMA_BIDIRECTIONAL);
+-	}
+ 	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
+ };
+ 
+@@ -1361,6 +1480,7 @@ void ibmvscsi_handle_crq(struct viosrp_c
+ 		if (crq->format == 0x06) {
+ 			/* We need to re-setup the interpartition connection */
+ 			dev_info(hostdata->dev, "Re-enabling adapter!\n");
++			hostdata->client_migrated = 1;
+ 			purge_requests(hostdata, DID_REQUEUE);
+ 			if ((ibmvscsi_ops->reenable_crq_queue(&hostdata->queue,
+ 							      hostdata)) ||
+@@ -1529,6 +1649,46 @@ static int ibmvscsi_change_queue_depth(s
+ /* ------------------------------------------------------------
+  * sysfs attributes
+  */
++static ssize_t show_host_vhost_loc(struct device *dev,
++				   struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
++	int len;
++
++	len = snprintf(buf, sizeof(hostdata->caps.loc), "%s\n",
++		       hostdata->caps.loc);
++	return len;
++}
++
++static struct device_attribute ibmvscsi_host_vhost_loc = {
++	.attr = {
++		 .name = "vhost_loc",
++		 .mode = S_IRUGO,
++		 },
++	.show = show_host_vhost_loc,
 +};
 +
-+enum viosrp_mad_status {
-+	VIOSRP_MAD_SUCCESS = 0x00,
-+	VIOSRP_MAD_NOT_SUPPORTED = 0xF1,
-+	VIOSRP_MAD_FAILED = 0xF7,
++static ssize_t show_host_vhost_name(struct device *dev,
++				    struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
++	int len;
++
++	len = snprintf(buf, sizeof(hostdata->caps.name), "%s\n",
++		       hostdata->caps.name);
++	return len;
++}
++
++static struct device_attribute ibmvscsi_host_vhost_name = {
++	.attr = {
++		 .name = "vhost_name",
++		 .mode = S_IRUGO,
++		 },
++	.show = show_host_vhost_name,
++};
++
+ static ssize_t show_host_srp_version(struct device *dev,
+ 				     struct device_attribute *attr, char *buf)
+ {
+@@ -1652,6 +1812,8 @@ static struct device_attribute ibmvscsi_
  };
  
+ static struct device_attribute *ibmvscsi_attrs[] = {
++	&ibmvscsi_host_vhost_loc,
++	&ibmvscsi_host_vhost_name,
+ 	&ibmvscsi_host_srp_version,
+ 	&ibmvscsi_host_partition_name,
+ 	&ibmvscsi_host_partition_number,
+@@ -1732,6 +1894,11 @@ static int ibmvscsi_probe(struct vio_dev
+ 	atomic_set(&hostdata->request_limit, -1);
+ 	hostdata->host->max_sectors = IBMVSCSI_MAX_SECTORS_DEFAULT;
+ 
++	if (map_persist_bufs(hostdata)) {
++		dev_err(&vdev->dev, "couldn't map persistent buffers\n");
++		goto persist_bufs_failed;
++	}
++
+ 	rc = ibmvscsi_ops->init_crq_queue(&hostdata->queue, hostdata, max_events);
+ 	if (rc != 0 && rc != H_RESOURCE) {
+ 		dev_err(&vdev->dev, "couldn't initialize crq. rc=%d\n", rc);
+@@ -1792,6 +1959,8 @@ static int ibmvscsi_probe(struct vio_dev
+       init_pool_failed:
+ 	ibmvscsi_ops->release_crq_queue(&hostdata->queue, hostdata, max_events);
+       init_crq_failed:
++	unmap_persist_bufs(hostdata);
++      persist_bufs_failed:
+ 	scsi_host_put(host);
+       scsi_host_alloc_failed:
+ 	return -1;
+@@ -1800,6 +1969,7 @@ static int ibmvscsi_probe(struct vio_dev
+ static int ibmvscsi_remove(struct vio_dev *vdev)
+ {
+ 	struct ibmvscsi_host_data *hostdata = vdev->dev.driver_data;
++	unmap_persist_bufs(hostdata);
+ 	release_event_pool(&hostdata->pool, hostdata);
+ 	ibmvscsi_ops->release_crq_queue(&hostdata->queue, hostdata,
+ 					max_events);
+diff -puN drivers/scsi/ibmvscsi/ibmvscsi.h~ibmvscsi_client_reserve drivers/scsi/ibmvscsi/ibmvscsi.h
+--- linux-2.6/drivers/scsi/ibmvscsi/ibmvscsi.h~ibmvscsi_client_reserve	2009-06-03 09:35:33.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvscsi.h	2009-06-03 09:35:33.000000000 -0500
+@@ -90,6 +90,7 @@ struct event_pool {
+ /* all driver data associated with a host adapter */
+ struct ibmvscsi_host_data {
+ 	atomic_t request_limit;
++	int client_migrated;
+ 	struct device *dev;
+ 	struct event_pool pool;
+ 	struct crq_queue queue;
+@@ -97,6 +98,9 @@ struct ibmvscsi_host_data {
+ 	struct list_head sent;
+ 	struct Scsi_Host *host;
+ 	struct mad_adapter_info_data madapter_info;
++	struct capabilities caps;
++	dma_addr_t caps_addr;
++	dma_addr_t adapter_info_addr;
+ };
+ 
+ /* routines for managing a command/response queue */
+diff -puN drivers/scsi/ibmvscsi/viosrp.h~ibmvscsi_client_reserve drivers/scsi/ibmvscsi/viosrp.h
+--- linux-2.6/drivers/scsi/ibmvscsi/viosrp.h~ibmvscsi_client_reserve	2009-06-03 09:35:33.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/viosrp.h	2009-06-03 09:35:33.000000000 -0500
+@@ -37,6 +37,7 @@
+ 
+ #define SRP_VERSION "16.a"
+ #define SRP_MAX_IU_LEN	256
++#define SRP_MAX_LOC_LEN 32
+ 
+ union srp_iu {
+ 	struct srp_login_req login_req;
+@@ -87,6 +88,7 @@ enum viosrp_mad_types {
+ 	VIOSRP_ERROR_LOG_TYPE = 0x02,
+ 	VIOSRP_ADAPTER_INFO_TYPE = 0x03,
+ 	VIOSRP_HOST_CONFIG_TYPE = 0x04,
++	VIOSRP_CAPABILITIES_TYPE = 0x05,
+ 	VIOSRP_ENABLE_FAST_FAIL = 0x08,
+ };
+ 
+@@ -96,6 +98,28 @@ enum viosrp_mad_status {
+ 	VIOSRP_MAD_FAILED = 0xF7,
+ };
+ 
++enum viosrp_capability_type {
++	MIGRATION_CAPABILITIES = 0x01,
++	RESERVATION_CAPABILITIES = 0x02,
++};
++
++enum viosrp_capability_support {
++	SERVER_DOES_NOT_SUPPORTS_CAP = 0x0,
++	SERVER_SUPPORTS_CAP = 0x01,
++	SERVER_CAP_DATA = 0x02,
++};
++
++enum viosrp_reserve_type {
++	CLIENT_RESERVE_SCSI_2 = 0x01,
++};
++
++enum viosrp_capability_flag {
++	CLIENT_MIGRATED = 0x01,
++	CLIENT_RECONNECT = 0x02,
++	CAP_LIST_SUPPORTED = 0x04,
++	CAP_LIST_DATA = 0x08,
++};
++
  /* 
-@@ -127,11 +134,16 @@ struct viosrp_host_config {
- 	u64 buffer;
+  * Common MAD header
+  */
+@@ -138,12 +162,42 @@ struct viosrp_fast_fail {
+ 	struct mad_common common;
  };
  
-+struct viosrp_fast_fail {
++struct viosrp_capabilities {
 +	struct mad_common common;
++	u64 buffer;
++};
++
++struct mad_capability_common {
++	u32 cap_type;
++	u16 length;
++	u16 server_support;
++};
++
++struct mad_reserve_cap {
++	struct mad_capability_common common;
++	u32 type;
++};
++
++struct mad_migration_cap {
++	struct mad_capability_common common;
++	u32 ecl;
++};
++
++struct capabilities{
++	u32 flags;
++	char name[SRP_MAX_LOC_LEN];
++	char loc[SRP_MAX_LOC_LEN];
++	struct mad_migration_cap migration;
++	struct mad_reserve_cap reserve;
 +};
 +
  union mad_iu {
@@ -169,7 +498,8 @@ diff -puN drivers/scsi/ibmvscsi/viosrp.h~ibmvscsi_fastfail drivers/scsi/ibmvscsi
  	struct viosrp_error_log error_log;
  	struct viosrp_adapter_info adapter_info;
  	struct viosrp_host_config host_config;
-+	struct viosrp_fast_fail fast_fail;
+ 	struct viosrp_fast_fail fast_fail;
++	struct viosrp_capabilities capabilities;
  };
  
  union viosrp_iu {
