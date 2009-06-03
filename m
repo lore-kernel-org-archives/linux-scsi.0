@@ -1,55 +1,60 @@
-From: Takahiro Yasui <tyasui@redhat.com>
-Subject: Re: [PATCH] scsi_devinfo: update Hitachi entries
-Date: Wed, 03 Jun 2009 12:40:39 -0400
-Message-ID: <4A26A787.6020903@redhat.com>
-References: <4A2405FD.3000901@redhat.com>	 <1243875275.4203.19.camel@mulgrave.int.hansenpartnership.com>	 <4A241229.5050009@redhat.com> <1243886776.4203.33.camel@mulgrave.int.hansenpartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
-Content-Transfer-Encoding: 7bit
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH 01/20] qla2xxx: Export negotiated fabric-parameters for application support.
+Date: Wed,  3 Jun 2009 09:55:12 -0700
+Message-ID: <1244048131-56590-2-git-send-email-andrew.vasquez@qlogic.com>
+References: <1244048131-56590-1-git-send-email-andrew.vasquez@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:37299 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757893AbZFCQhg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Jun 2009 12:37:36 -0400
-In-Reply-To: <1243886776.4203.33.camel@mulgrave.int.hansenpartnership.com>
+Received: from avexch1.qlogic.com ([198.70.193.115]:4799 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753965AbZFCQza (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jun 2009 12:55:30 -0400
+In-Reply-To: <1244048131-56590-1-git-send-email-andrew.vasquez@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hi James,
-
->> I would like to know in which case BLIST_ATTACH_PQ3 is required.
-> 
-> That, I believe is the question I asked you.  If you don't know the
-> answer, just leave the BLIST_ATTACH_PQ3 in. it's harmless for the report
-> luns case and it will still attach a PQ disconnected LUN0, which was the
-> original behaviour.
-
-According to the mail by which BLIST_ATTACH_PQ3 is introduced,
-those two issues were reported.
-
-http://marc.info/?l=linux-scsi&m=114366299120761&w=2
-> - Blacklist flags are not used to do special handling if needed.
-> - If the device does NOT support the REPORT_LUNS scan, we won't
->   see any LUN at all, as we don't even look for LUN 1 then.
-
-In kernel 2.6.16,  sequential_lun_scan() had a argument, lun0_res,
-and lun >=1 was not recognized when lun0 was not attached. Therefore,
-it seems that BLIST_ATTACH_PQ3 was necessary to pretend lun0 exists.
-
-But if those two are the only reason to be solved, I don't think
-BLIST_ATTACH_PQ3 is necessary for storages which can handle REPORT_LUNS.
-
-As you mentioned, leaving BLIST_ATTACH_PQ3 in the flag does not change
-the original behaviour, but I hope the BLIST_ATTACH_PQ3 flag is removed
-from OPEN-E so that lun0 is not installed when a storage returns PQ3 as
-other storages.
-
-Again, I appreciate your comments.
-
-Thanks,
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 ---
-Takahiro Yasui
-Hitachi Computer Products (America), Inc.
+ drivers/scsi/qla2xxx/qla_attr.c |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index fc30f8e..524ceb9 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1115,6 +1115,15 @@ qla2x00_vn_port_mac_address_show(struct device *dev,
+ 	    vha->fcoe_vn_port_mac[1], vha->fcoe_vn_port_mac[0]);
+ }
+ 
++static ssize_t
++qla2x00_fabric_param_show(struct device *dev, struct device_attribute *attr,
++    char *buf)
++{
++	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
++
++	return snprintf(buf, PAGE_SIZE, "%d\n", vha->hw->switch_cap);
++}
++
+ static DEVICE_ATTR(driver_version, S_IRUGO, qla2x00_drvr_version_show, NULL);
+ static DEVICE_ATTR(fw_version, S_IRUGO, qla2x00_fw_version_show, NULL);
+ static DEVICE_ATTR(serial_num, S_IRUGO, qla2x00_serial_num_show, NULL);
+@@ -1146,6 +1155,7 @@ static DEVICE_ATTR(flash_block_size, S_IRUGO, qla2x00_flash_block_size_show,
+ static DEVICE_ATTR(vlan_id, S_IRUGO, qla2x00_vlan_id_show, NULL);
+ static DEVICE_ATTR(vn_port_mac_address, S_IRUGO,
+ 		   qla2x00_vn_port_mac_address_show, NULL);
++static DEVICE_ATTR(fabric_param, S_IRUGO, qla2x00_fabric_param_show, NULL);
+ 
+ struct device_attribute *qla2x00_host_attrs[] = {
+ 	&dev_attr_driver_version,
+@@ -1170,6 +1180,7 @@ struct device_attribute *qla2x00_host_attrs[] = {
+ 	&dev_attr_flash_block_size,
+ 	&dev_attr_vlan_id,
+ 	&dev_attr_vn_port_mac_address,
++	&dev_attr_fabric_param,
+ 	NULL,
+ };
+ 
+-- 
+1.6.3.1.244.gf9275
 
