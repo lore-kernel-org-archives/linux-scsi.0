@@ -1,41 +1,33 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 16/20] qla2xxx: Avoid explicit LOGO during driver host tear-down.
-Date: Wed,  3 Jun 2009 09:55:27 -0700
-Message-ID: <1244048131-56590-17-git-send-email-andrew.vasquez@qlogic.com>
-References: <1244048131-56590-1-git-send-email-andrew.vasquez@qlogic.com>
+From: "Zou, Yi" <yi.zou@intel.com>
+Subject: Question regarding protocol specific mtu for FCoE
+Date: Wed, 3 Jun 2009 10:56:41 -0700
+Message-ID: <7C88852EF6F99F4EB538472FCFEBE2223A7E6F45@orsmsx509.amr.corp.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:4799 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756762AbZFCQzo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jun 2009 12:55:44 -0400
-In-Reply-To: <1244048131-56590-1-git-send-email-andrew.vasquez@qlogic.com>
+Received: from mga11.intel.com ([192.55.52.93]:28620 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750958AbZFCR4l convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jun 2009 13:56:41 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Leech, Christopher" <christopher.leech@intel.com>, "Dev, Vasu" <vasu.dev@intel.com>, "Love, Robert W" <robert.w.love@intel.com>, "Ma, Steve" <steve.ma@intel.com>, "Waskiewicz Jr, Peter P" <peter.p.waskiewicz.jr@intel.com>, "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>
 
-As firmware will ultimately terminate (stop) and port
-states-cleared.
+Hi,
+I am trying to figure out a way to support a different MTU for Fiber
+Channel over Ethernet (FCoE), where it is preferred to have a baby jumbo
+frame with MTU=2158 (14 bytes FCoE header + 24 bytes FC header + 2112
+bytes max FC payload + 4 bytes FC CRC + 4 bytes FCoE trailer).
 
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_attr.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Similar to nedev->mtu being used everywhere for LAN traffic, I wonder if
+it is desirable or feasible to add another protocol specific MTU (which
+is my case is FCoE) to netdev so any eth driver supporting converged
+traffic (e.g. LAN + FCoE) over netdev can make use of it.
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 74e6970..cbdafb0 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -1465,7 +1465,8 @@ qla2x00_terminate_rport_io(struct fc_rport *rport)
- 	 * At this point all fcport's software-states are cleared.  Perform any
- 	 * final cleanup of firmware resources (PCBs and XCBs).
- 	 */
--	if (fcport->loop_id != FC_NO_LOOP_ID)
-+	if (fcport->loop_id != FC_NO_LOOP_ID &&
-+	    !test_bit(UNLOADING, &fcport->vha->dpc_flags))
- 		fcport->vha->hw->isp_ops->fabric_logout(fcport->vha,
- 			fcport->loop_id, fcport->d_id.b.domain,
- 			fcport->d_id.b.area, fcport->d_id.b.al_pa);
--- 
-1.6.3.1.244.gf9275
+Thanks.
+
+Yi Zou
 
