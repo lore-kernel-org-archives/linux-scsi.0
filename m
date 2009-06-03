@@ -1,43 +1,48 @@
-From: Kasper Sandberg <lkml@metanurb.dk>
-Subject: Re: sata_sil24 0000:04:00.0: DMA-API: device driver frees DMA sg
-	list  with different entry count [map count=13] [unmap count=10]
-Date: Wed, 03 Jun 2009 22:21:43 +0200
-Message-ID: <1244060503.11698.3.camel@localhost>
-References: <64bb37e0905261214g2957924ar837339367f320d4c@mail.gmail.com>
-	 <4A1C7DDB.9010605@gmail.com>
-	 <64bb37e0906031230m22234268k9fdcd43dc1d35f18@mail.gmail.com>
+From: "Zou, Yi" <yi.zou@intel.com>
+Subject: RE: Question regarding protocol specific mtu for FCoE
+Date: Wed, 3 Jun 2009 13:43:02 -0700
+Message-ID: <7C88852EF6F99F4EB538472FCFEBE2223A7E7050@orsmsx509.amr.corp.intel.com>
+References: <7C88852EF6F99F4EB538472FCFEBE2223A7E6F45@orsmsx509.amr.corp.intel.com>
+	 <4A26BAF7.3070301@hp.com>
+	 <7C88852EF6F99F4EB538472FCFEBE2223A7E6FBD@orsmsx509.amr.corp.intel.com>
+ <1244057245.3191.17.camel@achroite>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755448AbZFCUVv@vger.kernel.org>
-In-Reply-To: <64bb37e0906031230m22234268k9fdcd43dc1d35f18@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Torsten Kaiser <just.for.lkml@googlemail.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:33402 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751826AbZFCUnO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jun 2009 16:43:14 -0400
+In-Reply-To: <1244057245.3191.17.camel@achroite>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ben Hutchings <bhutchings@solarflare.com>
+Cc: Rick Jones <rick.jones2@hp.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Leech, Christopher" <christopher.leech@intel.com>, "Dev, Vasu" <vasu.dev@intel.com>, "Love, Robert W" <robert.w.love@intel.com>, "Ma, Steve" <steve.ma@intel.com>, "Waskiewicz Jr, Peter P" <peter.p.waskiewicz.jr@intel.com>, "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>
 
-On Wed, 2009-06-03 at 21:30 +0200, Torsten Kaiser wrote:
-> On Wed, May 27, 2009 at 1:40 AM, Robert Hancock <hancockrwd@gmail.com> wrote:
-> > Torsten Kaiser wrote:
-> >>
-> >> On upgrading to 2.6.30-rc1 I enable the DMA-Debugging option
-> >> CONFIG_DMA_API_DEBUG=y
-> >> Since then I get the following or similar errors on each boot:
-> >
-> > Please retest with a newer -rc, this patch likely fixes it:
-> >
-> > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=5825627c9463581fd9e70f8285685889ae5bb9bb
-> >
-> 
-> Still happens with 2.6.30-rc8 (see trace at the end of the email)
-> 
-<snip>
+>On Wed, 2009-06-03 at 12:16 -0700, Zou, Yi wrote:
+>[...]
+>> FCoE is on L2 layer, no path specific MTU, everything goes out as
+>> whatever mtu known to the nic. Since the nic is expected to be used
+>for
+>> converged traffic involving multiple traffic types, e.g. LAN, FCoE, I
+>> was wondering if it makes sense to have the additional MTU.
+>Essentially,
+>> the nic driver will be able to setup via netdev for different MTUs
+>for
+>> converged traffic.
+>
+>Wouldn't you use separate VLANs for FCoE and other traffic?  So maybe
+>we
+>should allow for per-VLAN rather than per-protocol MTU.
+>
+>Ben.
+>
+>From what I can tell, you will not be able to set vlan device's MTU
+that is larger than the real_dev->mtu, as in vlan_dev_change_mtu().
 
-Does this actually give you any problems? should I be scared to give .30
-a test?
+Thanks.
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+yi
+
