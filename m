@@ -1,21 +1,21 @@
 From: Brian King <brking@linux.vnet.ibm.com>
 Subject: [PATCH 1/4] ibmvscsi: Add specific timeouts for operations
-Date: Wed, 03 Jun 2009 09:54:32 -0500
-Message-ID: <200906031454.n53EsXdG031590@d03av03.boulder.ibm.com>
+Date: Wed, 03 Jun 2009 09:57:33 -0500
+Message-ID: <200906031457.n53EvX1o027984@d01av04.pok.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e9.ny.us.ibm.com ([32.97.182.139]:37860 "EHLO e9.ny.us.ibm.com"
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:44001 "EHLO e1.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755200AbZFCOyn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Jun 2009 10:54:43 -0400
-Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
-	by e9.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n53EgOmb026595
-	for <linux-scsi@vger.kernel.org>; Wed, 3 Jun 2009 10:42:24 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n53EsiGD1437904
-	for <linux-scsi@vger.kernel.org>; Wed, 3 Jun 2009 10:54:44 -0400
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n53EsY2O031701
-	for <linux-scsi@vger.kernel.org>; Wed, 3 Jun 2009 08:54:35 -0600
+	id S1753410AbZFCO5c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Jun 2009 10:57:32 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e1.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n53ErMTf020430
+	for <linux-scsi@vger.kernel.org>; Wed, 3 Jun 2009 10:53:22 -0400
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n53EvY3D242498
+	for <linux-scsi@vger.kernel.org>; Wed, 3 Jun 2009 10:57:34 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n53EvY6R028005
+	for <linux-scsi@vger.kernel.org>; Wed, 3 Jun 2009 10:57:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
