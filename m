@@ -1,45 +1,40 @@
-From: Roland Dreier <rdreier@cisco.com>
-Subject: Re: Question regarding protocol specific mtu for FCoE
-Date: Wed, 03 Jun 2009 16:27:25 -0700
-Message-ID: <adaiqjc99uq.fsf@cisco.com>
-References: <7C88852EF6F99F4EB538472FCFEBE2223A7E6F45@orsmsx509.amr.corp.intel.com>
-	<4A26BAF7.3070301@hp.com>
-	<7C88852EF6F99F4EB538472FCFEBE2223A7E6FBD@orsmsx509.amr.corp.intel.com>
-	<4A26E4AE.4020607@hp.com> <adazlcp814o.fsf@cisco.com>
-	<4A26FB01.1020502@hp.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: sata_sil24 0000:04:00.0: DMA-API: device driver frees DMA sg
+ list  with different entry count [map count=13] [unmap count=10]
+Date: Wed, 03 Jun 2009 17:33:21 -0600
+Message-ID: <4A270841.7070107@gmail.com>
+References: <64bb37e0905261214g2957924ar837339367f320d4c@mail.gmail.com>	 <4A1C7DDB.9010605@gmail.com>	 <64bb37e0906031230m22234268k9fdcd43dc1d35f18@mail.gmail.com> <1244060503.11698.3.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-6.cisco.com ([171.71.176.117]:2116 "EHLO
-	sj-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752949AbZFCX1Y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jun 2009 19:27:24 -0400
-In-Reply-To: <4A26FB01.1020502@hp.com> (Rick Jones's message of "Wed, 03 Jun
-	2009 15:36:49 -0700")
+Received: from yw-out-2324.google.com ([74.125.46.29]:6978 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752239AbZFCXdX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jun 2009 19:33:23 -0400
+In-Reply-To: <1244060503.11698.3.camel@localhost>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rick Jones <rick.jones2@hp.com>
-Cc: "Zou, Yi" <yi.zou@intel.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Leech, Christopher" <christopher.leech@intel.com>, "Dev, Vasu" <vasu.dev@intel.com>, "Love, Robert W" <robert.w.love@intel.com>, "Ma, Steve" <steve.ma@intel.com>, "Waskiewicz Jr, Peter P" <peter.p.waskiewicz.jr@intel.com>, "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>
+To: Kasper Sandberg <lkml@metanurb.dk>
+Cc: Torsten Kaiser <just.for.lkml@googlemail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
+Kasper Sandberg wrote:
+> On Wed, 2009-06-03 at 21:30 +0200, Torsten Kaiser wrote:
+>> On Wed, May 27, 2009 at 1:40 AM, Robert Hancock <hancockrwd@gmail.com> wrote:
+>>> Torsten Kaiser wrote:
+>>>> On upgrading to 2.6.30-rc1 I enable the DMA-Debugging option
+>>>> CONFIG_DMA_API_DEBUG=y
+>>>> Since then I get the following or similar errors on each boot:
+>>> Please retest with a newer -rc, this patch likely fixes it:
+>>>
+>>> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=5825627c9463581fd9e70f8285685889ae5bb9bb
+>>>
+>> Still happens with 2.6.30-rc8 (see trace at the end of the email)
+>>
+> <snip>
+> 
+> Does this actually give you any problems? should I be scared to give .30
+> a test?
 
- > Aren't all stations in the same broadcast domain "supposed" to have
- > the same MTU, at least down at L2? So, a station in the broadcast
- > domain just doing IP and a station in the broadcast domain doing
- > IP+FCoE "should" have the same MTU at the HW level right?
- > 
- > I could see where there would be lots of PMTU going-on if the
- > communications were to off-campus sites also had an FCoE upping their
- > MTU.  Otherwise, the MSS exchange at connection establishment is going
- > to preclude it right?  PMTU only "hits" when one has a so called
- > "dumb-bell" network which is "wider" at the ends than in the middle.
-
-Yes, I think such dumb-bell networks would be pretty common (servers in
-two different data centers with FCoE enabled, talking through an
-old-school WAN with 1500 MTU).  And even if they're not as common I
-think, we probably do want to have some way to handle this.
-
-I'm probably not as up on old and/or obscure networking protocols, but
-to me FCoE is the first time I've been forced to think about coexistence
-of IP and non-IP protocols through the same netdev.
-
- - R.
+If Torsten's diagnosis is correct it's a problem with the DMA debugging 
+code, not an actual driver bug.
