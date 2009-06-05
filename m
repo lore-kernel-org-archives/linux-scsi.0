@@ -1,67 +1,165 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] dma-debug: disable DMA_API_DEBUG for now
-Date: Fri, 5 Jun 2009 17:33:14 +0900
-Message-ID: <20090605173232N.fujita.tomonori@lab.ntt.co.jp>
+From: Joerg Roedel <joerg.roedel@amd.com>
+Subject: Re: [PATCH] dma-debug: disable DMA_API_DEBUG for now
+Date: Fri, 5 Jun 2009 12:41:33 +0200
+Message-ID: <20090605104132.GE24836@amd.com>
+References: <20090605173232N.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:52275 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751379AbZFEIdn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Jun 2009 04:33:43 -0400
+Received: from outbound-sin.frontbridge.com ([207.46.51.80]:44241 "EHLO
+	SG2EHSOBE006.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751636AbZFEKl7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jun 2009 06:41:59 -0400
+Content-Disposition: inline
+In-Reply-To: <20090605173232N.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: mingo@elte.hu, lethal@linux-sh.org
-Cc: joerg.roedel@amd.com, just.for.lkml@googlemail.com, hancockrwd@gmail.com, jens.axboe@oracle.com, bharrosh@panasas.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: mingo@elte.hu, lethal@linux-sh.org, just.for.lkml@googlemail.com, hancockrwd@gmail.com, jens.axboe@oracle.com, bharrosh@panasas.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-dma-debugs wrongly assumes that no multiple DMA transfers are
-performed against the same dma address on one device at the same
-time. However it's true only with hardware IOMMUs. For example, an
-application can easily send the same buffer twice with different
-lengths to one device by using DIO and AIO. If these requests are not
-unmapped in the same order in which they were mapped,
-hash_bucket_find() finds a wrong entry and gives a false warning.
 
-We should fix this before 2.6.30 release. Seems that there is no
-easy way to fix it. I think that it's better to just disable
-dma-debug for now.
+On Fri, Jun 05, 2009 at 05:33:14PM +0900, FUJITA Tomonori wrote:
+> dma-debugs wrongly assumes that no multiple DMA transfers are
+> performed against the same dma address on one device at the same
+> time. However it's true only with hardware IOMMUs. For example, an
+> application can easily send the same buffer twice with different
+> lengths to one device by using DIO and AIO. If these requests are not
+> unmapped in the same order in which they were mapped,
+> hash_bucket_find() finds a wrong entry and gives a false warning.
+>=20
+> We should fix this before 2.6.30 release. Seems that there is no
+> easy way to fix it. I think that it's better to just disable
+> dma-debug for now.
+>=20
+> Torsten Kaiser found this bug with the RAID1 configuration:
+>=20
+> http://marc.info/?t=3D124336541900008&r=3D1&w=3D2
+>=20
 
-Torsten Kaiser found this bug with the RAID1 configuration:
+Argh, I never thought that this can happen. But its not explicitly
+forbidden so we have to handle this situation. Thanks for tracking down
+the bug to this issue.
+However, I think there is a somehow simple fix for the issue. Patch is
+attached. Its the least intrusive way I can think of to fix this
+problem.
+But its up to Linus/Ingo to decide if it can be accepted at this very
+late point in the cycle. Since dma-debug is new with 2.6.30 it will at
+least not introduce any regression. The patch is boot and basically
+load-tested with some disk and network load and showed no issues on my
+test machine. The diffstat looks big but more than the half of the patc=
+h
+adds comments to explain what it does. So the diffstat looks bigger tha=
+n
+the actual change.
+Linus, if you think my patch is not acceptable at this point then pleas=
+e
+apply the patch from FUJITA Tomonori.
 
-http://marc.info/?t=124336541900008&r=1&w=2
+Regards,
+
+	Joerg
+
+=46rom c0baa4d43a674c9cc321af3b23a6d5c9b46d65bd Mon Sep 17 00:00:00 200=
+1
+=46rom: Joerg Roedel <joerg.roedel@amd.com>
+Date: Fri, 5 Jun 2009 12:01:35 +0200
+Subject: [PATCH] dma-debug: change hash_bucket_find from first-fit to b=
+est-fit
+
+Some device drivers map the same physical address multiple times to a
+dma address. Without an IOMMU this results in the same dma address bein=
+g
+put into the dma-debug hash multiple times. With a first-fit match in
+hash_bucket_find() this function may return the wrong dma_debug_entry.
+This can result in false positive warnings. This patch fixes it by
+changing the first-fit behavior of hash_bucket_find() into a best-fit
+algorithm.
 
 Reported-by: Torsten Kaiser <just.for.lkml@googlemail.com>
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Reported-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Signed-off-by: Joerg Roedel <joerg.roedel@amd.com>
 ---
- arch/sh/Kconfig  |    1 -
- arch/x86/Kconfig |    1 -
- 2 files changed, 0 insertions(+), 2 deletions(-)
+ lib/dma-debug.c |   43 +++++++++++++++++++++++++++++++++++++++----
+ 1 files changed, 39 insertions(+), 4 deletions(-)
 
-diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
-index e7390dd..4fb19d7 100644
---- a/arch/sh/Kconfig
-+++ b/arch/sh/Kconfig
-@@ -14,7 +14,6 @@ config SUPERH
- 	select HAVE_GENERIC_DMA_COHERENT
- 	select HAVE_IOREMAP_PROT if MMU
- 	select HAVE_ARCH_TRACEHOOK
--	select HAVE_DMA_API_DEBUG
- 	help
- 	  The SuperH is a RISC processor targeted for use in embedded systems
- 	  and consumer electronics; it was also used in the Sega Dreamcast
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index a6efe0a..b3cf490 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -42,7 +42,6 @@ config X86
- 	select HAVE_GENERIC_DMA_COHERENT if X86_32
- 	select HAVE_EFFICIENT_UNALIGNED_ACCESS
- 	select USER_STACKTRACE_SUPPORT
--	select HAVE_DMA_API_DEBUG
- 	select HAVE_KERNEL_GZIP
- 	select HAVE_KERNEL_BZIP2
- 	select HAVE_KERNEL_LZMA
--- 
-1.6.0.6
+diff --git a/lib/dma-debug.c b/lib/dma-debug.c
+index 69da09a..2b16536 100644
+--- a/lib/dma-debug.c
++++ b/lib/dma-debug.c
+@@ -185,15 +185,50 @@ static void put_hash_bucket(struct hash_bucket *b=
+ucket,
+ static struct dma_debug_entry *hash_bucket_find(struct hash_bucket *bu=
+cket,
+ 						struct dma_debug_entry *ref)
+ {
+-	struct dma_debug_entry *entry;
++	struct dma_debug_entry *entry, *ret =3D NULL;
++	int matches =3D 0, match_lvl, last_lvl =3D 0;
+=20
+ 	list_for_each_entry(entry, &bucket->list, list) {
+-		if ((entry->dev_addr =3D=3D ref->dev_addr) &&
+-		    (entry->dev =3D=3D ref->dev))
++		if ((entry->dev_addr !=3D ref->dev_addr) ||
++		    (entry->dev !=3D ref->dev))
++			continue;
++
++		/*
++		 * Some drivers map the same physical address multiple
++		 * times. Without a hardware IOMMU this results in the
++		 * same device addresses being put into the dma-debug
++		 * hash multiple times too. This can result in false
++		 * positives being reported. Therfore we implement a
++		 * best-fit algorithm here which returns the entry from
++		 * the hash which fits best to the reference value
++		 * instead of the first-fit.
++		 */
++		matches +=3D 1;
++		match_lvl =3D 0;
++		entry->size      =3D=3D ref->size      ? ++match_lvl : match_lvl;
++		entry->type      =3D=3D ref->type      ? ++match_lvl : match_lvl;
++		entry->direction =3D=3D ref->direction ? ++match_lvl : match_lvl;
++
++		if (match_lvl =3D=3D 3) {
++			/* perfect-fit - return the result */
+ 			return entry;
++		} else if (match_lvl > last_lvl) {
++			/*
++			 * We found an entry that fits better then the
++			 * previous one
++			 */
++			last_lvl =3D match_lvl;
++			ret      =3D entry;
++		}
+ 	}
+=20
+-	return NULL;
++	/*
++	 * If we have multiple matches but no perfect-fit, just return
++	 * NULL.
++	 */
++	ret =3D (matches =3D=3D 1) ? ret : NULL;
++
++	return ret;
+ }
+=20
+ /*
+--=20
+1.6.3.1
 
+
+
+
+--=20
+           | Advanced Micro Devices GmbH
+ Operating | Karl-Hammerschmidt-Str. 34, 85609 Dornach bei M=FCnchen
+ System    |=20
+ Research  | Gesch=E4ftsf=FChrer: Thomas M. McCoy, Giuliano Meroni
+ Center    | Sitz: Dornach, Gemeinde Aschheim, Landkreis M=FCnchen
+           | Registergericht M=FCnchen, HRB Nr. 43632
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
