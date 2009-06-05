@@ -1,77 +1,58 @@
-From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Subject: Re: arcmsr serious issues
-Date: Fri, 5 Jun 2009 10:07:08 -0800 (AKDT)
-Message-ID: <alpine.LNX.2.01.0906051003270.18210@filesrv1.baby-dragons.com>
-References: <4A292974.7020908@inf.ethz.ch> <1244212208.3922.6.camel@mulgrave.site>
+From: Joerg Roedel <joro@8bytes.org>
+Subject: Re: [PATCH] dma-debug: disable DMA_API_DEBUG for now
+Date: Fri, 5 Jun 2009 20:20:17 +0200
+Message-ID: <20090605182015.GA10342@8bytes.org>
+References: <20090605173232N.fujita.tomonori@lab.ntt.co.jp> <20090605104132.GE24836@amd.com> <64bb37e0906050852g2be64c7elb2872a6129d13f56@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns3.baby-dragons.com ([204.91.156.41]:44827 "EHLO
-	ns3.baby-dragons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751960AbZFESS7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jun 2009 14:18:59 -0400
-In-Reply-To: <1244212208.3922.6.camel@mulgrave.site>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756125AbZFESUg@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <64bb37e0906050852g2be64c7elb2872a6129d13f56@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Torsten Kaiser <just.for.lkml@googlemail.com>
+Cc: Joerg Roedel <joerg.roedel@amd.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Linus Torvalds <torvalds@linux-foundation.org>, mingo@elte.hu, lethal@linux-sh.org, hancockrwd@gmail.com, jens.axboe@oracle.com, bharrosh@panasas.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Benjamin Schindler <bschindler@inf.ethz.ch>, linux-scsi@vger.kernel.org, support@areca.com.tw
 
-On Fri, 5 Jun 2009, James Bottomley wrote:
-> On Fri, 2009-06-05 at 16:19 +0200, Benjamin Schindler wrote:
->> Hi
->> (I'm not subscribed to this list, so please cc me)
->>
->> I tried to install gentoo linux on a areca ARC-1210 raid controller, but
->> I'm having serious issues. The problem start on more heavy I/O with:
->>
->> arcmsr6: abort device command of scsi id = 0 lun = 0
->>
->>  From this point, the system has serious issues. With xfs for example,
->> the following happens:
->>
->> arcmsr6: abort device command of scsi id = 0 lun = 0
->
-> This is an abort, likely triggered by a timeout.
->
->> sd 6:0:0:0: [sda] Result: hostbyte=DID_OK
->> driverbyte=DRIVER_TIMEOUT,SUGGEST_OK
->
-> This looks very suggestive, nothing in the arcmsr ... or indeed any
-> driver ever sets DRIVER_TIMEOUT ... it looks like a mangled result code
-> somehow.  It definitely lead to the resulting failure.
->
-> Cc:ing Areca people to see if they have any idea.
->
-> James
+On Fri, Jun 05, 2009 at 05:52:27PM +0200, Torsten Kaiser wrote:
+> 
+> This doesn't look right to me.
+> The comment above says "returns the entry from the hash which fits
+> best", but this will always return NULL, if there are are multiple
+> entrys, but no perfect match.
 
- 	I am QUITE sure the .config as shown did not create the kernel messages 
-as shown .  One does have to enable the 'CONFIG_FUSION' in order to use it .
+This is intentional. If there is no perfect-fit there is no way to tell
+which entry was meant. So we potentially report wrong errors with a
+wrong mapping backtrace which confuses even more than the wrong
+"DMA-API: device driver tries to free DMA memory it has not allocated".
 
- 	... Snipped to show context .
+> Should there be a warning if more then one possible match were found?
 
->> Fusion MPT base driver 3.04.07
+True. That would be better. But I tried to keep the code change as small
+as possible without disabling the feature completly.
 
- 	... Snipped to show context .
+> * driver maps address 'a' with size 1
+> * driver maps same address 'a' with size 2
+> * driver wrongly unmaps the second allocation with size 1
+>   -> no warning, because the first allocation is returned
 
->> Copyright (c) 1999-2008 LSI Corporation
->>  sda1 sda2
->> sd 6:0:0:0: [sda] Attached SCSI disk
->> sd 6:0:0:0: Attached scsi generic sg1 type 0
->> scsi 6:0:16:0: Attached scsi generic sg2 type 3
->> Fusion MPT SPI Host driver 3.04.07
->> Fusion MPT FC Host driver 3.04.07
->> Fusion MPT SAS Host driver 3.04.07
+Hmm, I am not sure if we can handle this situation correctly in the
+dma-debug code. There is no unique key to identify a mapping request
+which allows to assign an unmap request to it. Currently dma-debug uses
+device and dma-address. But that seems not to be sufficient. The
+best-fit algorithm is also a but fuzzy of course.
 
- 	... Snipped to show context .
+> * driver wants to correctly unmap the first allocation
+>   -> wrong warning about this unmap because size mismatch
 
->> # CONFIG_FUSION is not set
+Ok, at least we get a warning about a bug. Not very useful because it
+reports the wrong bug. Is this the situation which triggered the
+original bug report?
 
- 	... Snipped to show context .
+> Also what about sg_call_ents and sg_mapped_ents?
+> Could it be possible to get the same address/size with different sg-counts.
 
- 		Hth ,  JimL
--- 
-+------------------------------------------------------------------+
-| James   W.   Laferriere | System    Techniques | Give me VMS     |
-| Network&System Engineer | 2133    McCullam Ave |  Give me Linux  |
-| babydr@baby-dragons.com | Fairbanks, AK. 99701 |   only  on  AXP |
-+------------------------------------------------------------------+
+It looks not forbidden in the API. So I guess this can happen too.
+
+Regards,
+
+	Joerg
