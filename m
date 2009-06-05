@@ -1,16 +1,16 @@
 From: Benjamin Schindler <bschindler@inf.ethz.ch>
 Subject: Re: arcmsr serious issues
-Date: Fri, 05 Jun 2009 20:20:44 +0000
-Message-ID: <4A297E1C.90704@inf.ethz.ch>
+Date: Fri, 05 Jun 2009 20:22:19 +0000
+Message-ID: <4A297E7B.4060600@inf.ethz.ch>
 References: <4A292974.7020908@inf.ethz.ch> <1244212208.3922.6.camel@mulgrave.site> <alpine.LNX.2.01.0906051003270.18210@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xsmtp0.ethz.ch ([82.130.70.14]:57318 "EHLO XSMTP0.ethz.ch"
+Received: from xsmtp1.ethz.ch ([82.130.70.13]:9021 "EHLO xsmtp1.ethz.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752408AbZFESYL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Jun 2009 14:24:11 -0400
+	id S1751018AbZFESk5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Jun 2009 14:40:57 -0400
 In-Reply-To: <alpine.LNX.2.01.0906051003270.18210@filesrv1.baby-dragons.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,18 +19,13 @@ Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.ker
 
 Hi
 
-I used the gentoo-livecd and an installed system (Which I sent the 
-.config with)
-Both kernels exhibit the very same problem. I'm sorry that the two don't 
-mix.
-
-I have dmesg which shows similar behaviour. However, that machine just 
-died (Power supply broken - it will take some time until I get it back) 
-so I cannot post that data now.
+Btw - I also just tried with acpi=off noapic just to make sure the 
+issues are not related to those system as suggested in some mails I 
+found on kernel-devel.
+Turning those 2 options off did not help
 
 Cheers
 Benjamin
-
 
 Mr. James W. Laferriere wrote:
 > On Fri, 5 Jun 2009, James Bottomley wrote:
