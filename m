@@ -1,72 +1,42 @@
-From: David VomLehn <dvomlehn@cisco.com>
-Subject: [PATCH 7/7] initdev:kernel:Await block device discovery
-Date: Fri, 5 Jun 2009 19:34:16 -0700
-Message-ID: <20090606023416.GA5798@cuplxvomd02.corp.sa.net>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH 1/7] initdev:kernel:Asynchronously-discovered device	synchronization,
+ v6
+Date: Sat, 06 Jun 2009 10:43:18 +0200
+Message-ID: <4A2A2C26.1070106@s5r6.in-berlin.de>
+References: <20090606023403.GA5645@cuplxvomd02.corp.sa.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: netdev-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: akpm@linux-foundation.org, linux-usb@vger.kernel.org, greg@kroah.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, arjan@infradead.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:60678 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751445AbZFFIoM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Jun 2009 04:44:12 -0400
+In-Reply-To: <20090606023403.GA5645@cuplxvomd02.corp.sa.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: David VomLehn <dvomlehn@cisco.com>
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-usb@vger.kernel.org, greg@kroah.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, arjan@infradead.org
 
-Use the initdev infrastructure to wait for a root device to become available.
-This should make most uses of the kernel rootwait parameter unnecessary. The
-only time it should be necessary is when the root device might not be attached
-at boot time.
+David VomLehn wrote:
+> +Some rules about correct usage:
+> +o	Each call to initdev_found *must* be matched by a call to
+> +	initdev_probe_done.
 
-Signed-off-by: David VomLehn <dvomlehn@cisco>
----
- init/do_mounts.c |   29 +++++++++++++++++++++++++----
- 1 files changed, 25 insertions(+), 4 deletions(-)
+This would be useful as inline kerneldoc documentation at initdev_found().
 
-diff --git a/init/do_mounts.c b/init/do_mounts.c
-index dd7ee5f..36a92ae 100644
---- a/init/do_mounts.c
-+++ b/init/do_mounts.c
-@@ -358,6 +358,18 @@ void __init mount_root(void)
- #endif
- }
- 
-+/**
-+ * root_present - determine whether the root device is available yet
-+ *
-+ * Returns true if the root device is available, false if not. The check to
-+ * see if the root device is available is done by check to see whether it
-+ * has been assigned a major/minor device number.
-+ */
-+static bool root_present(void)
-+{
-+	return name_to_dev_t(saved_root_name) != 0;
-+}
-+
- /*
-  * Prepare the namespace - decide what/where to mount, load ramdisks, etc.
-  */
-@@ -398,12 +410,21 @@ void __init prepare_namespace(void)
- 		goto out;
- 
- 	/* wait for any asynchronous scanning to complete */
--	if ((ROOT_DEV == 0) && root_wait) {
-+	if (ROOT_DEV == 0) {
- 		printk(KERN_INFO "Waiting for root device %s...\n",
- 			saved_root_name);
--		while (driver_probe_done() != 0 ||
--			(ROOT_DEV = name_to_dev_t(saved_root_name)) == 0)
--			msleep(100);
-+		if (root_wait) {
-+			while (driver_probe_done() != 0 ||
-+				(ROOT_DEV = name_to_dev_t(saved_root_name)) ==
-+					0)
-+				msleep(100);
-+		}
-+
-+		else {
-+			initdev_wait(INITDEV_BLOCK_TYPE, root_present);
-+			ROOT_DEV = name_to_dev_t(saved_root_name);
-+		}
-+
- 		async_synchronize_full();
- 	}
- 
+> +o	The value of initdev_mask passed to initdev_found and
+> +	initdev_probe_done for a given device must be identical.
+
+And this as kerneldoc at initdev_probe_done().
+
+What happens if the calls or the call arguments aren't balanced, e.g. 
+due to a mistake in an error path?  The kernel will hang?
+
+(BTW, much, though possibly not all, of the "History" section of your 
+changelog should be below the --- delimiter, and the "v6" in the subject 
+should be within the [PATCH ...] prefix.)
+-- 
+Stefan Richter
+-=====-==--= -==- --==-
+http://arcgraph.de/sr/
