@@ -1,62 +1,46 @@
-From: Torsten Kaiser <just.for.lkml@googlemail.com>
-Subject: Re: [PATCH] dma-debug: disable DMA_API_DEBUG for now
-Date: Sat, 6 Jun 2009 00:11:15 +0200
-Message-ID: <64bb37e0906051511y766af2d3sc12ee2dd2048d905@mail.gmail.com>
-References: <20090605173232N.fujita.tomonori@lab.ntt.co.jp>
-	 <20090605104132.GE24836@amd.com>
-	 <64bb37e0906050852g2be64c7elb2872a6129d13f56@mail.gmail.com>
-	 <20090605182015.GA10342@8bytes.org>
+From: David VomLehn <dvomlehn-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH 0/7] initdev:kernel:Introduction to initdev patchset
+Date: Fri, 5 Jun 2009 19:34:00 -0700
+Message-ID: <20090606023400.GA5562@cuplxvomd02.corp.sa.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:53033 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752117AbZFEWLP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jun 2009 18:11:15 -0400
-In-Reply-To: <20090605182015.GA10342@8bytes.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arjan-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joerg Roedel <joro@8bytes.org>
-Cc: Joerg Roedel <joerg.roedel@amd.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Linus Torvalds <torvalds@linux-foundation.org>, mingo@elte.hu, lethal@linux-sh.org, hancockrwd@gmail.com, jens.axboe@oracle.com, bharrosh@panasas.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, Jun 5, 2009 at 8:20 PM, Joerg Roedel <joro@8bytes.org> wrote:
-> On Fri, Jun 05, 2009 at 05:52:27PM +0200, Torsten Kaiser wrote:
->> Should there be a warning if more then one possible match were found?
->
-> True. That would be better. But I tried to keep the code change as small
-> as possible without disabling the feature completly.
->
->> * driver maps address 'a' with size 1
->> * driver maps same address 'a' with size 2
->> * driver wrongly unmaps the second allocation with size 1
->>   -> no warning, because the first allocation is returned
->
-> Hmm, I am not sure if we can handle this situation correctly in the
-> dma-debug code. There is no unique key to identify a mapping request
-> which allows to assign an unmap request to it. Currently dma-debug uses
-> device and dma-address. But that seems not to be sufficient. The
-> best-fit algorithm is also a but fuzzy of course.
+In days of yore, great fields of USB devices were discovered and initialized
+long before they were harvested for use. Race conditions were unknown, and
+all was well. As time passed in the land of Linux, the tilling of the bit
+fields yielded great reductions in boot time, and there was much rejoicing.
+Yet, some dispaired, for things were not as they had once been. The now-
+hasty arrival at /bin/init startup meant some USB devices were not yet fully
+ripened, leaving /dev/console unopened and network devices unconfigured.
 
-Maybe we just shouldn't try to handle it at all:
+This patch allows boot-time users of devices specified in kernel command line
+parameters to wait until discovery and initialization of those devices.
+The kernel command line that specify devices are "ip", "root", and "console".
+This code supports device discovery on USB and SCSI buses. It mostly
+eliminates the need for the rootwait kernel parameter.
 
-static void add_dma_entry(struct dma_debug_entry *entry)
-{
-        struct hash_bucket *bucket;
-        unsigned long flags;
+This introduction is followed by 7 patches:
+1	Basic initdev infrastructure
+2	USB device discovery notification
+3	Wait for console
+4	Wait for network devices
+5	USB and SCSI block device notification
+6	Additional SCSI block device notification for asynchronous function
+7	Wait for block device used for root
 
-        bucket = get_hash_bucket(entry, &flags);
-        if(hash_bucket_find(bucket, entry)) {
-                printk(KERN_ERR "DMA-API: device mapped same address twice, "
-                  "this use case cannot be handled currently -
-disabling debugging\n");
-                global_disable = true;
-        }
-        hash_bucket_add(bucket, entry);
-        put_hash_bucket(bucket, &flags);
-}
+(Many thanks to Alan Stern, who said we could solve this without offensive
+timeouts and then set about doing the integration into USB and SCSI)
 
-This would allow this feature to remain for most cased, but would also
-prevent all false warnings.
+Signed-off-by: David VomLehn <dvomlehn-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
+---
 
-Torsten
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
