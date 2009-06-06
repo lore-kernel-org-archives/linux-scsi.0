@@ -1,42 +1,52 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH 1/7] initdev:kernel:Asynchronously-discovered device	synchronization,
- v6
-Date: Sat, 06 Jun 2009 10:43:18 +0200
-Message-ID: <4A2A2C26.1070106@s5r6.in-berlin.de>
-References: <20090606023403.GA5645@cuplxvomd02.corp.sa.net>
+From: Stefan Richter <stefanr-MtYdepGKPcBMYopoZt5u/LNAH6kLmebB@public.gmane.org>
+Subject: Re: [PATCH 3/7] initdev:kernel:Await console discovery, v6
+Date: Sat, 06 Jun 2009 10:55:09 +0200
+Message-ID: <4A2A2EED.3060506@s5r6.in-berlin.de>
+References: <20090606023407.GA5695@cuplxvomd02.corp.sa.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:60678 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751445AbZFFIoM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Jun 2009 04:44:12 -0400
-In-Reply-To: <20090606023403.GA5645@cuplxvomd02.corp.sa.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20090606023407.GA5695-CFZJ1or75eBPWxJt6d6B6bQa8qPdvLwY@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David VomLehn <dvomlehn-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arjan-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: David VomLehn <dvomlehn@cisco.com>
-Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-usb@vger.kernel.org, greg@kroah.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, arjan@infradead.org
 
 David VomLehn wrote:
-> +Some rules about correct usage:
-> +o	Each call to initdev_found *must* be matched by a call to
-> +	initdev_probe_done.
+> Wait for the console device to become available.
+> 
+> History
+> v6	Changed BOOTDEV_* to INITDEV_*.
+> v5.1	Corrected call to initdev_register() to be initdev_registered().
+> v5	Change bootdev_* to initdev_*.
+> v4	Use new hotplug synchronization infrastructure. Include Braille
+> 	console support.
+> v3.2	Use only a single new command line parameter by adding the possible
+> 	value "forever".  Add message specifying the parameter to modify to
+> 	increase the delay for console initialization
+> v3.1	Correct the abbreviation for milliseconds in
+> 	Documentation/kernel-parameters.txt to be "ms", not "mS". Thanks to
+> 	Peter Anvin for this.
+> v3	Increase the default delay to 1 second and add kernel command line
+> 	parameters to override the default delay. Thanks to David Brownell for
+> 	his helpful suggestions.
+> v2	Wait for the preferred console rather than any console. Make the
+> 	delay interval a tunable.
+> v1	Initial version
+> 
+> Signed-off-by: David VomLehn <dvomlehn-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
+> ---
+>  drivers/accessibility/braille/braille_console.c |    2 +
+>  kernel/printk.c                                 |   29 ++++++++++++++++++++++-
+>  2 files changed, 30 insertions(+), 1 deletions(-)
 
-This would be useful as inline kerneldoc documentation at initdev_found().
-
-> +o	The value of initdev_mask passed to initdev_found and
-> +	initdev_probe_done for a given device must be identical.
-
-And this as kerneldoc at initdev_probe_done().
-
-What happens if the calls or the call arguments aren't balanced, e.g. 
-due to a mistake in an error path?  The kernel will hang?
-
-(BTW, much, though possibly not all, of the "History" section of your 
-changelog should be below the --- delimiter, and the "v6" in the subject 
-should be within the [PATCH ...] prefix.)
+Is this diff complete?
 -- 
 Stefan Richter
 -=====-==--= -==- --==-
 http://arcgraph.de/sr/
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
