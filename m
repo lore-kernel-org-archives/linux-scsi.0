@@ -1,49 +1,53 @@
-From: Andy Yan <ayan@marvell.com>
-Subject: RE: [ANNOUNCE]: A target driver for Marvell 88SE64xx(3G) and
- 88SE94xx(6G) SAS cards
-Date: Sat, 6 Jun 2009 21:16:21 -0700
-Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF595714E3356@SC-VEXCH1.marvell.com>
-References: <49E4B6D5.9060007@vlnb.net>
- <D27CA15508148C428A25104ADEFAAC8103AC1E41@CORPUSMX50C.corp.emc.com>
+From: "Figo.zhang" <figo1802@gmail.com>
+Subject: [PATCH]scsi_debug:c: fix call vfree()
+Date: Sun, 07 Jun 2009 13:30:02 +0800
+Message-ID: <1244352602.3355.17.camel@myhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host2.marvell.com ([65.219.4.2]:43242 "EHLO maili.marvell.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750892AbZFGEQV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 7 Jun 2009 00:16:21 -0400
-In-Reply-To: <D27CA15508148C428A25104ADEFAAC8103AC1E41@CORPUSMX50C.corp.emc.com>
-Content-Language: en-US
+Received: from rv-out-0506.google.com ([209.85.198.233]:64787 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751262AbZFGFag (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Jun 2009 01:30:36 -0400
+Received: by rv-out-0506.google.com with SMTP id f9so958158rvb.1
+        for <linux-scsi@vger.kernel.org>; Sat, 06 Jun 2009 22:30:38 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Foster_Brian@emc.com" <Foster_Brian@emc.com>, "vst@vlnb.net" <vst@vlnb.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "scst-devel@lists.sourceforge.net" <scst-devel@lists.sourceforge.net>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Douglas Gilbert <dougg@torque.net>, linux-scsi@vger.kernel.org
 
-QnJpYW4sDQoJVGhpcyBkcml2ZXIgY2FuIHdvcmsgd2l0aCA2MzIwLCBhbmQgSSB3aWxsIGFkZCBh
-IFJFQURNRSBmb3IgdGhpcyB0YXJnZXQgZHJpdmVyIHdpdGggbmV4dCB1cGRhdGVzIGZvciBjb2Rl
-LCBJIHRoaW5rIHlvdSB3aWxsIGZpbmQgdGhlIGNhdXNlIHlvdSBjYW4ndCBkZXRlY3QgdGhlIExV
-Ti4NCg0KUmVnYXJkcw0KQW5keSBZYW4NCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZy
-b206IEZvc3Rlcl9CcmlhbkBlbWMuY29tIFttYWlsdG86Rm9zdGVyX0JyaWFuQGVtYy5jb21dIA0K
-U2VudDogMjAwOcTqNtTCNsjVIDI6MTANClRvOiB2c3RAdmxuYi5uZXQ7IGxpbnV4LXNjc2lAdmdl
-ci5rZXJuZWwub3JnDQpDYzogc2NzdC1kZXZlbEBsaXN0cy5zb3VyY2Vmb3JnZS5uZXQ7IEFuZHkg
-WWFuOyBKYW1lcy5Cb3R0b21sZXlASGFuc2VuUGFydG5lcnNoaXAuY29tDQpTdWJqZWN0OiBSRTog
-W0FOTk9VTkNFXTogQSB0YXJnZXQgZHJpdmVyIGZvciBNYXJ2ZWxsIDg4U0U2NHh4KDNHKSBhbmQg
-ODhTRTk0eHgoNkcpIFNBUyBjYXJkcw0KDQo+IEhpIEFsbCwNCj4gDQo+IEknbSBnbGFkIHRvIGFu
-bm91bmNlIHRoYXQgYSB0YXJnZXQgZHJpdmVyIGZvciBNYXJ2ZWxsIDg4U0U2NHh4KDNHKSBhbmQN
-Cj4gODhTRTk0eHgoNkcpIFNBUyBjYXJkcyBoYXMgYmVlbiBqdXN0IGFkZGVkIGluIHRoZSBTQ1NU
-IFNWTiByZXBvc2l0b3J5Lg0KQQ0KPiBsb3Qgb2YgdGhhbmtzIHRvIE1hcnZlbGwgYW5kIEFuZHkg
-WWFuIQ0KPiANCj4gVGhpcyBkcml2ZXIgYWxsb3dzIHRvIHVzZSBhIFNBUyBjb250cm9sbGVyIGJh
-c2VkIG9uIE1hcnZlbGwgODhTRTY0eHgNCm9yDQo+IDg4U0U5NHh4IGNoaXBzIGFzIGEgU0FOIHN0
-b3JhZ2Ugc2VydmVyICh0YXJnZXQpLiBNb3JlIGluZm8geW91IGNhbg0KZmluZA0KPiBvbiB0aGUg
-U0NTVCBwYWdlIGh0dHA6Ly9zY3N0LnNvdXJjZWZvcmdlLm5ldC4NCj4gDQo+IFlvdSBjYW4gZG93
-bmxvYWQgdGhlIGRyaXZlciBmcm9tIFNDU1QgU1ZOIGJ5IHJ1bm5pbmcgYSBjb21tYW5kOg0KPiAN
-Cj4gJCBzdm4gY28gaHR0cHM6Ly9zY3N0LnN2bi5zb3VyY2Vmb3JnZS5uZXQvc3Zucm9vdC9zY3N0
-DQo+IA0KDQpIaSBWbGFkL0FuZHksDQoNCklzIHRoaXMgdGFyZ2V0IGRyaXZlciBleHBlY3RlZCB0
-byB3b3JrIHdpdGggNjMyMCBjYXJkcyBhcyB3ZWxsPyBVc2luZw0KdGhpcyBkcml2ZXIsIEkgd2Fz
-IGFibGUgdG8gZGlzY292ZXIgYSBTQVRBIGRyaXZlIGNvbm5lY3RlZCB0byB0aGUgNjMyMA0KaW4g
-aW5pdGlhdG9yIG1vZGUuIA0KDQpJIGNvbm5lY3RlZCB0aGUgNjMyMCBkaXJlY3RseSB0byBhIHNl
-Y29uZCA2MzIwIG9uIGFub3RoZXIgbWFjaGluZSwgc2V0DQp1cCBhIHZpcnR1YWwgTFVOIHdpdGgg
-U0NTVCAoYWRkZWQgdG8gdGhlIGRlZmF1bHQgZ3JvdXAsIGV0Yy4pIGFuZA0KZW5hYmxlZCB0YXJn
-ZXQgbW9kZSwgYnV0IEknbSBub3Qgc2VlaW5nIGFueXRoaW5nIG9uIHRoZSBpbml0aWF0b3Igc2lk
-ZS4gDQoNCkJyaWFuDQo=
+vfree() does it's own 'NULL' check,so no need for check before
+calling it.
+
+Signed-off-by: Figo.zhang <figo1802@gmail.com>
+---   
+drivers/scsi/scsi_debug.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 213123b..c24af62 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -2976,8 +2976,7 @@ bus_unreg:
+ dev_unreg:
+ 	device_unregister(&pseudo_primary);
+ free_vm:
+-	if (dif_storep)
+-		vfree(dif_storep);
++	vfree(dif_storep);
+ 	vfree(fake_storep);
+ 
+ 	return ret;
+@@ -2995,8 +2994,7 @@ static void __exit scsi_debug_exit(void)
+ 	bus_unregister(&pseudo_lld_bus);
+ 	device_unregister(&pseudo_primary);
+ 
+-	if (dif_storep)
+-		vfree(dif_storep);
++	vfree(dif_storep);
+ 
+ 	vfree(fake_storep);
+ }
+
+
