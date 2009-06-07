@@ -1,97 +1,49 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH 7/7] initdev:kernel:Await block device discovery
-Date: Sat, 06 Jun 2009 12:04:38 +0200
-Message-ID: <4A2A3F36.4070408@s5r6.in-berlin.de>
-References: <20090606023416.GA5798@cuplxvomd02.corp.sa.net>
+From: Andy Yan <ayan@marvell.com>
+Subject: RE: [ANNOUNCE]: A target driver for Marvell 88SE64xx(3G) and
+ 88SE94xx(6G) SAS cards
+Date: Sat, 6 Jun 2009 21:16:21 -0700
+Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF595714E3356@SC-VEXCH1.marvell.com>
+References: <49E4B6D5.9060007@vlnb.net>
+ <D27CA15508148C428A25104ADEFAAC8103AC1E41@CORPUSMX50C.corp.emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:60970 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750792AbZFFKFa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Jun 2009 06:05:30 -0400
-In-Reply-To: <20090606023416.GA5798@cuplxvomd02.corp.sa.net>
+Received: from host2.marvell.com ([65.219.4.2]:43242 "EHLO maili.marvell.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750892AbZFGEQV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 7 Jun 2009 00:16:21 -0400
+In-Reply-To: <D27CA15508148C428A25104ADEFAAC8103AC1E41@CORPUSMX50C.corp.emc.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David VomLehn <dvomlehn@cisco.com>
-Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-usb@vger.kernel.org, greg@kroah.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, arjan@infradead.org
+To: "Foster_Brian@emc.com" <Foster_Brian@emc.com>, "vst@vlnb.net" <vst@vlnb.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "scst-devel@lists.sourceforge.net" <scst-devel@lists.sourceforge.net>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
 
-David VomLehn wrote:
-> --- a/init/do_mounts.c
-> +++ b/init/do_mounts.c
-> @@ -358,6 +358,18 @@ void __init mount_root(void)
->  #endif
->  }
->  
-> +/**
-> + * root_present - determine whether the root device is available yet
-> + *
-> + * Returns true if the root device is available, false if not. The check to
-> + * see if the root device is available is done by check to see whether it
-> + * has been assigned a major/minor device number.
-> + */
-> +static bool root_present(void)
-> +{
-> +	return name_to_dev_t(saved_root_name) != 0;
-> +}
-> +
->  /*
->   * Prepare the namespace - decide what/where to mount, load ramdisks, etc.
->   */
-> @@ -398,12 +410,21 @@ void __init prepare_namespace(void)
->  		goto out;
->  
->  	/* wait for any asynchronous scanning to complete */
-> -	if ((ROOT_DEV == 0) && root_wait) {
-> +	if (ROOT_DEV == 0) {
->  		printk(KERN_INFO "Waiting for root device %s...\n",
->  			saved_root_name);
-> -		while (driver_probe_done() != 0 ||
-> -			(ROOT_DEV = name_to_dev_t(saved_root_name)) == 0)
-> -			msleep(100);
-> +		if (root_wait) {
-> +			while (driver_probe_done() != 0 ||
-> +				(ROOT_DEV = name_to_dev_t(saved_root_name)) ==
-> +					0)
-> +				msleep(100);
-> +		}
-> +
-> +		else {
-> +			initdev_wait(INITDEV_BLOCK_TYPE, root_present);
-> +			ROOT_DEV = name_to_dev_t(saved_root_name);
-> +		}
-> +
->  		async_synchronize_full();
->  	}
->  
-
-This together with 1/7, 5/7, 6/7 looks seriously flawed, if not broken.
-
-1.)  It depends on the rootdelay so big that it is guaranteed that one 
-or more initdev_found() have been called before prepare_namespace()'s 
-ssleep(root_delay) is over.  This is because initdev_wait() does not 
-wait at all if called when the number of pending initdevs is 0.
-
-Hence the whole thing, as currently implemented, is quite useless:  The 
-user/admin has to guess what a safe rootdelay value is, and then the 
-kernel will always be delayed for >= rootdelay.
-
-2.)  The fact that initdev_wait() does not wait at all when there are no 
-pending initdevs causes another failure.  If there are sequences of the 
-following type:
-
-	initdev_found(INITDEV_BLOCK_TYPE);
-	initdev_probe_done(INITDEV_BLOCK_TYPE); /* found other dev */
-	initdev_found(INITDEV_BLOCK_TYPE);
-	initdev_probe_done(INITDEV_BLOCK_TYPE); /* found root dev */
-
-then prepare_namespace() will fall through without ROOT_DEV found and 
-booting will fail, won't it?
-
-I suspect that there are similar problems with the console and 
-networking parts of the patch series.
--- 
-Stefan Richter
--=====-==--= -==- --==-
-http://arcgraph.de/sr/
+QnJpYW4sDQoJVGhpcyBkcml2ZXIgY2FuIHdvcmsgd2l0aCA2MzIwLCBhbmQgSSB3aWxsIGFkZCBh
+IFJFQURNRSBmb3IgdGhpcyB0YXJnZXQgZHJpdmVyIHdpdGggbmV4dCB1cGRhdGVzIGZvciBjb2Rl
+LCBJIHRoaW5rIHlvdSB3aWxsIGZpbmQgdGhlIGNhdXNlIHlvdSBjYW4ndCBkZXRlY3QgdGhlIExV
+Ti4NCg0KUmVnYXJkcw0KQW5keSBZYW4NCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZy
+b206IEZvc3Rlcl9CcmlhbkBlbWMuY29tIFttYWlsdG86Rm9zdGVyX0JyaWFuQGVtYy5jb21dIA0K
+U2VudDogMjAwOcTqNtTCNsjVIDI6MTANClRvOiB2c3RAdmxuYi5uZXQ7IGxpbnV4LXNjc2lAdmdl
+ci5rZXJuZWwub3JnDQpDYzogc2NzdC1kZXZlbEBsaXN0cy5zb3VyY2Vmb3JnZS5uZXQ7IEFuZHkg
+WWFuOyBKYW1lcy5Cb3R0b21sZXlASGFuc2VuUGFydG5lcnNoaXAuY29tDQpTdWJqZWN0OiBSRTog
+W0FOTk9VTkNFXTogQSB0YXJnZXQgZHJpdmVyIGZvciBNYXJ2ZWxsIDg4U0U2NHh4KDNHKSBhbmQg
+ODhTRTk0eHgoNkcpIFNBUyBjYXJkcw0KDQo+IEhpIEFsbCwNCj4gDQo+IEknbSBnbGFkIHRvIGFu
+bm91bmNlIHRoYXQgYSB0YXJnZXQgZHJpdmVyIGZvciBNYXJ2ZWxsIDg4U0U2NHh4KDNHKSBhbmQN
+Cj4gODhTRTk0eHgoNkcpIFNBUyBjYXJkcyBoYXMgYmVlbiBqdXN0IGFkZGVkIGluIHRoZSBTQ1NU
+IFNWTiByZXBvc2l0b3J5Lg0KQQ0KPiBsb3Qgb2YgdGhhbmtzIHRvIE1hcnZlbGwgYW5kIEFuZHkg
+WWFuIQ0KPiANCj4gVGhpcyBkcml2ZXIgYWxsb3dzIHRvIHVzZSBhIFNBUyBjb250cm9sbGVyIGJh
+c2VkIG9uIE1hcnZlbGwgODhTRTY0eHgNCm9yDQo+IDg4U0U5NHh4IGNoaXBzIGFzIGEgU0FOIHN0
+b3JhZ2Ugc2VydmVyICh0YXJnZXQpLiBNb3JlIGluZm8geW91IGNhbg0KZmluZA0KPiBvbiB0aGUg
+U0NTVCBwYWdlIGh0dHA6Ly9zY3N0LnNvdXJjZWZvcmdlLm5ldC4NCj4gDQo+IFlvdSBjYW4gZG93
+bmxvYWQgdGhlIGRyaXZlciBmcm9tIFNDU1QgU1ZOIGJ5IHJ1bm5pbmcgYSBjb21tYW5kOg0KPiAN
+Cj4gJCBzdm4gY28gaHR0cHM6Ly9zY3N0LnN2bi5zb3VyY2Vmb3JnZS5uZXQvc3Zucm9vdC9zY3N0
+DQo+IA0KDQpIaSBWbGFkL0FuZHksDQoNCklzIHRoaXMgdGFyZ2V0IGRyaXZlciBleHBlY3RlZCB0
+byB3b3JrIHdpdGggNjMyMCBjYXJkcyBhcyB3ZWxsPyBVc2luZw0KdGhpcyBkcml2ZXIsIEkgd2Fz
+IGFibGUgdG8gZGlzY292ZXIgYSBTQVRBIGRyaXZlIGNvbm5lY3RlZCB0byB0aGUgNjMyMA0KaW4g
+aW5pdGlhdG9yIG1vZGUuIA0KDQpJIGNvbm5lY3RlZCB0aGUgNjMyMCBkaXJlY3RseSB0byBhIHNl
+Y29uZCA2MzIwIG9uIGFub3RoZXIgbWFjaGluZSwgc2V0DQp1cCBhIHZpcnR1YWwgTFVOIHdpdGgg
+U0NTVCAoYWRkZWQgdG8gdGhlIGRlZmF1bHQgZ3JvdXAsIGV0Yy4pIGFuZA0KZW5hYmxlZCB0YXJn
+ZXQgbW9kZSwgYnV0IEknbSBub3Qgc2VlaW5nIGFueXRoaW5nIG9uIHRoZSBpbml0aWF0b3Igc2lk
+ZS4gDQoNCkJyaWFuDQo=
