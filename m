@@ -1,52 +1,39 @@
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Subject: Initializing the residual length to proper value for BSG requests
-Date: Mon, 8 Jun 2009 13:14:54 -0700
-Message-ID: <CC60250D-396C-4D7C-B24B-8356EA12CDFC@qlogic.com>
-Mime-Version: 1.0 (Apple Message framework v912)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+From: "Michael Chan" <mchan@broadcom.com>
+Subject: Re: [PATCH 3/4] iscsi class, libiscsi: Add net config.
+Date: Mon, 8 Jun 2009 13:06:24 -0700
+Message-ID: <1244491584.9184.416.camel@HP1>
+References: <1241208039-6813-1-git-send-email-mchan@broadcom.com>
+ <1241208039-6813-4-git-send-email-mchan@broadcom.com>
+ <1244483774.4079.368.camel@mulgrave.site>
+ <4A2D5374.3030503@cs.wisc.edu> <4A2D6F64.7020502@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:11850 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751742AbZFHUOv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2009 16:14:51 -0400
+Received: from mms1.broadcom.com ([216.31.210.17]:1529 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752547AbZFHUQV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Jun 2009 16:16:21 -0400
+In-Reply-To: <4A2D6F64.7020502@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-Hi,
-
-	While testing the CT pass thru with BSG, I am seeing that residual  
-length for bi-directional request are not getting set properly (rq- 
- >next_rq->resid_len is not getting set with proper value). I am using  
-scsi-post-merge tree( http://www.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-post-merge-2.6.git) 
-. I do see that req->resid_len getting set whenever a request is  
-fetched from the block layer. I don't see a similar code for bi- 
-directional request. This code below sets the residual length for bi- 
-directional command. Hope this is a proper place to initialize the  
-residual length. Do any body see any side effects because of this  
-change.
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "davem@davemloft.net" <davem@davemloft.net>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
 
-diff --git a/block/bsg.c b/block/bsg.c
-index 2d746e3..2cffacb 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -281,12 +281,16 @@ bsg_map_hdr(struct bsg_device *bd, struct  
-sg_io_v4 *hdr, fmode_t has_write_perm,
-                 }
-                 rq->next_rq = next_rq;
-                 next_rq->cmd_type = rq->cmd_type;
+On Mon, 2009-06-08 at 13:07 -0700, Hans de Goede wrote:
+> <snip>
+> 
+> Sorry for jumping in the middle of a thread, I missed the
+> libiscsi in the subject. Can someone please resent me the
+> libiscsi part of this patchset so that I can review it ?
+> 
+> (I'm the libiscsi author)
+> 
 
-                 dxferp = (void*)(unsigned long)hdr->din_xferp;
-                 ret =  blk_rq_map_user(q, next_rq, NULL, dxferp,
-                                        hdr->din_xfer_len, GFP_KERNEL);
-                 if (ret)
-                         goto out;
-+               rq->next_rq->resid_len = blk_rq_bytes(rq->next_rq);
+I'll be sending a new patchset later today and I'll CC you.  In the
+final version, we are not modifying libiscsi, only scsi_transport_iscsi.
 
-         }
+Thanks.
 
-Thanks,
-Giridhar.M.B
 
