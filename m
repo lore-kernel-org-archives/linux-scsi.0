@@ -1,49 +1,84 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: 2.6.30-rc8 Oops whilst booting
-Date: Mon, 8 Jun 2009 08:55:03 +1000 (EST)
-Message-ID: <2f9e3044bafcae848f74a1492b0ea471.squirrel@neil.brown.name>
-References: <200906061959.55592.chris2553@googlemail.com>
-    <200906062215.30571.chris2553@googlemail.com>
-    <1244381140.30664.12.camel@ht.satnam>
-    <c6b1100b0906071138g2c46fb34vc1a2beb9438f1f1e@mail.gmail.com>
-    <1244413881.18742.31.camel@ht.satnam>
+From: Benjamin Schindler <bschindler@inf.ethz.ch>
+Subject: Re: arcmsr serious issues
+Date: Mon, 08 Jun 2009 09:14:29 +0200
+Message-ID: <4A2CBA55.6020100@inf.ethz.ch>
+References: <4A292974.7020908@inf.ethz.ch> <1244212208.3922.6.camel@mulgrave.site> <alpine.LNX.2.01.0906051003270.18210@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756710AbZFGWz2@vger.kernel.org>
-In-Reply-To: <1244413881.18742.31.camel@ht.satnam>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jaswinder Singh Rajput <jaswinder@kernel.org>
-Cc: Chris Clayton <chris2553@googlemail.com>, linux-kernel@vger.kernel.org, James Bottomley <james.bottomley@hansenpartnership.com>, scsi <linux-scsi@vger.kernel.org>, Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from xsmtp0.ethz.ch ([82.130.70.14]:19523 "EHLO XSMTP0.ethz.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750894AbZFHHNS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Jun 2009 03:13:18 -0400
+In-Reply-To: <alpine.LNX.2.01.0906051003270.18210@filesrv1.baby-dragons.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, support@areca.com.tw
 
-On Mon, June 8, 2009 8:31 am, Jaswinder Singh Rajput wrote:
-> On Sun, 2009-06-07 at 19:38 +0100, Chris Clayton wrote:
->> 2009/6/7 Jaswinder Singh Ra
->> >> > http://img231.imageshack.us/img231/8931/dscn0610.jpg
+Hi
 
-This message says that it found a vfat filesystem on 8:3x (I cannot see
-what digit should be 'x').  That is probably sdc1 or sdc2. Maybe even
-sdc6 or sdc7.
-However the vfat filesystem didn't have /sbin/init.
+I just returned that machine as more issues unrelated to the
+raid-controller started to appear. There is probably some hardware fault.
+I'll report back once I get it back and if the problems persist
 
->> http://img99.imageshack.us/my.php?image=dscn0617b.jpg
+Thanks
+Benjamin
 
-This one says it couldn't find anything at 8,22, which I think
-should be sdb6.
-It also shows that you have and sdc6, but sdb only goes up to sdb3.
-
-So it seems that your disk drives have changed name - not a wholely
-unexpected event these days.
-
-We now need answers to questions like:
- - what device do you expect the root filesystem to be on
- - how is the kernel being told this?  Maybe it is hard coded
-    into your initrd.  Knowing which distro and what /etc/fstab
-    says might help (though it wouldn't help me, I'm just about out
-    of my depth at this point)
-Maybe if you changed /etc/fstab to mount by uuid instead of hardcoding
-e.g. /etc/sdb3, and then run "mkinitramfs" or whatever, it might work.
-
-Good luck,
-NeilBrown
+Mr. James W. Laferriere wrote:
+> On Fri, 5 Jun 2009, James Bottomley wrote:
+>> On Fri, 2009-06-05 at 16:19 +0200, Benjamin Schindler wrote:
+>>> Hi
+>>> (I'm not subscribed to this list, so please cc me)
+>>>
+>>> I tried to install gentoo linux on a areca ARC-1210 raid controller,
+>>> but
+>>> I'm having serious issues. The problem start on more heavy I/O with:
+>>>
+>>> arcmsr6: abort device command of scsi id = 0 lun = 0
+>>>
+>>>  From this point, the system has serious issues. With xfs for example,
+>>> the following happens:
+>>>
+>>> arcmsr6: abort device command of scsi id = 0 lun = 0
+>>
+>> This is an abort, likely triggered by a timeout.
+>>
+>>> sd 6:0:0:0: [sda] Result: hostbyte=DID_OK
+>>> driverbyte=DRIVER_TIMEOUT,SUGGEST_OK
+>>
+>> This looks very suggestive, nothing in the arcmsr ... or indeed any
+>> driver ever sets DRIVER_TIMEOUT ... it looks like a mangled result code
+>> somehow.  It definitely lead to the resulting failure.
+>>
+>> Cc:ing Areca people to see if they have any idea.
+>>
+>> James
+>
+>     I am QUITE sure the .config as shown did not create the kernel
+> messages as shown .  One does have to enable the 'CONFIG_FUSION' in
+> order to use it .
+>
+>     ... Snipped to show context .
+>
+>>> Fusion MPT base driver 3.04.07
+>
+>     ... Snipped to show context .
+>
+>>> Copyright (c) 1999-2008 LSI Corporation
+>>>  sda1 sda2
+>>> sd 6:0:0:0: [sda] Attached SCSI disk
+>>> sd 6:0:0:0: Attached scsi generic sg1 type 0
+>>> scsi 6:0:16:0: Attached scsi generic sg2 type 3
+>>> Fusion MPT SPI Host driver 3.04.07
+>>> Fusion MPT FC Host driver 3.04.07
+>>> Fusion MPT SAS Host driver 3.04.07
+>
+>     ... Snipped to show context .
+>
+>>> # CONFIG_FUSION is not set
+>
+>     ... Snipped to show context .
+>
+>         Hth ,  JimL
