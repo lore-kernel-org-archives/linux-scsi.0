@@ -1,67 +1,44 @@
-From: scameron@beardog.cca.cpqcorp.net
-Subject: [patch 8/8] cciss: decode unit attention in SCSI error handling code
-Date: Mon, 8 Jun 2009 16:10:57 -0500
-Message-ID: <20090608211057.GN23523@beardog.cca.cpqcorp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCHv2 1/5] ibmvscsi: Add 16 byte CDB support
+Date: Mon, 08 Jun 2009 16:19:01 -0500
+Message-ID: <200906082119.n58LJ23C016418@d01av01.pok.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0026.austin.hp.com ([15.216.28.33]:27838 "EHLO
-	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752648AbZFHVKd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2009 17:10:33 -0400
-Content-Disposition: inline
+Received: from e4.ny.us.ibm.com ([32.97.182.144]:50477 "EHLO e4.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753685AbZFHVTB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Jun 2009 17:19:01 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e4.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n58LEHio030309
+	for <linux-scsi@vger.kernel.org>; Mon, 8 Jun 2009 17:14:17 -0400
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n58LJ34F131632
+	for <linux-scsi@vger.kernel.org>; Mon, 8 Jun 2009 17:19:03 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n58LJ2Nw016459
+	for <linux-scsi@vger.kernel.org>; Mon, 8 Jun 2009 17:19:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@kernel.dk, akpm@linux-foundation.org
-Cc: scameron@beardog.cca.cpqcorp.net, mikem@beardog.cca.cpqcorp.net
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
 
+Adds support for 16 byte CDBs to the ibmvscsi driver.
 
-Make SCSI reset error handler decode unit attention ASC
-and after a target reset wait for a unit attention that indicates
-a reset occurred rather than just for any old unit attention.
-
-Signed-off-by: Stephen M. Cameron <scameron@beardog.cca.cpqcorp.net>
-
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 ---
 
----
+ drivers/scsi/ibmvscsi/ibmvscsi.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-
-diff -puN drivers/block/cciss_scsi.c~decode_unit_attn drivers/block/cciss_scsi.c
---- linux-next/drivers/block/cciss_scsi.c~decode_unit_attn	2009-06-08 12:59:13.000000000 -0500
-+++ linux-next-scameron/drivers/block/cciss_scsi.c	2009-06-08 14:35:43.000000000 -0500
-@@ -1604,16 +1604,25 @@ static int wait_for_device_to_become_rea
+diff -puN drivers/scsi/ibmvscsi/ibmvscsi.c~ibmvscsi_max_cmd_len drivers/scsi/ibmvscsi/ibmvscsi.c
+--- scsi-misc-2.6/drivers/scsi/ibmvscsi/ibmvscsi.c~ibmvscsi_max_cmd_len	2009-06-08 15:54:02.000000000 -0500
++++ scsi-misc-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvscsi.c	2009-06-08 15:54:02.000000000 -0500
+@@ -1684,6 +1684,7 @@ static int ibmvscsi_probe(struct vio_dev
+ 	host->max_lun = 8;
+ 	host->max_id = max_id;
+ 	host->max_channel = max_channel;
++	host->max_cmd_len = 16;
  
- 		(void) process_sendcmd_error(h, c);
- 
--		if (rc == 0 && c->err_info->CommandStatus == CMD_SUCCESS)
--			break;
-+		if (rc != 0)
-+			goto retry_tur;
- 
--		if (rc == 0 &&
--			c->err_info->CommandStatus == CMD_TARGET_STATUS &&
--			c->err_info->ScsiStatus == SAM_STAT_CHECK_CONDITION &&
--			(c->err_info->SenseInfo[2] == NO_SENSE ||
--			c->err_info->SenseInfo[2] == UNIT_ATTENTION))
-+		if (c->err_info->CommandStatus == CMD_SUCCESS)
- 			break;
- 
-+		if (c->err_info->CommandStatus == CMD_TARGET_STATUS &&
-+			c->err_info->ScsiStatus == SAM_STAT_CHECK_CONDITION) {
-+			if (c->err_info->SenseInfo[2] == NO_SENSE)
-+				break;
-+			if (c->err_info->SenseInfo[2] == UNIT_ATTENTION) {
-+				unsigned char asc;
-+				asc = c->err_info->SenseInfo[12];
-+				check_for_unit_attention(h, c);
-+				if (asc == POWER_OR_RESET)
-+					break;
-+			}
-+		}
-+retry_tur:
- 		printk(KERN_WARNING "cciss%d: Waiting %d secs "
- 			"for device to become ready.\n",
- 			h->ctlr, waittime / HZ);
+ 	if (scsi_add_host(hostdata->host, hostdata->dev))
+ 		goto add_host_failed;
 _
