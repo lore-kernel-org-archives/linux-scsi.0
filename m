@@ -1,47 +1,56 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 2/4] ibmvscsi: Send adapter info before login
-Date: Mon, 08 Jun 2009 15:09:33 -0500
-Message-ID: <1244491773.4079.595.camel@mulgrave.site>
-References: <200906031454.n53EsIr8011153@d01av04.pok.ibm.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 4/6] SCSI: simplify target destruction
+Date: Mon, 8 Jun 2009 16:14:45 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0906081610190.13888-100000@netrider.rowland.org>
+References: <4A2CC313.1030703@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:52114 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751478AbZFHUJf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2009 16:09:35 -0400
-In-Reply-To: <200906031454.n53EsIr8011153@d01av04.pok.ibm.com>
+Received: from netrider.rowland.org ([192.131.102.5]:34074 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750853AbZFHUOo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2009 16:14:44 -0400
+In-Reply-To: <4A2CC313.1030703@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, rcjenn@linux.vnet.ibm.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Kay Sievers <kay.sievers@vrfy.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Wed, 2009-06-03 at 09:54 -0500, Brian King wrote:
-> The ibmvscsi driver currently sends the SRP Login before sending the Adapter
-> Info MAD, which can result in commands getting sent to the virtual adapter
-> before we are ready for them. This results in a slight window where the target
-> devices may not behave as expected. Change the order and close the window.
+On Mon, 8 Jun 2009, Hannes Reinecke wrote:
+
+> Hi Alan,
 > 
-> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
-> ---
-> 
->  drivers/scsi/ibmvscsi/ibmvscsi.c |  173 +++++++++++++++++++--------------------
->  1 file changed, 85 insertions(+), 88 deletions(-)
+> Alan Stern wrote:
+> > This patch (as1249) adds an extra state, STARGET_NEW, to the SCSI
+> > target state model.  A target is in this state initially and changes
+> > over to STARGET_CREATED when the hostt->target_alloc() call has been
+> > made.
+> > 
+> > This simplifies target destruction.  There's no need for a separate
+> > scsi_target_destroy() function; everything can be handled within
+> > scsi_target_reap().  The error paths are more robust because now it's
+> > easy to verify that all the destructors are called along every
+> > pathway.
+> > 
+> Hmm. Is there a specific reason why we have to keep the ->reap_ref
+> counter around and cannot use the 'normal' driver core reference
+> counting for this?
 
-This one just doesn't want to apply:
+Yes, there's a very good reason.
 
-patching file drivers/scsi/ibmvscsi/ibmvscsi.c
-Hunk #4 FAILED at 961.
-Hunk #5 succeeded at 1279 (offset -3 lines).
-Hunk #6 succeeded at 1289 (offset -3 lines).
-1 out of 6 hunks FAILED -- saving rejects to file
-drivers/scsi/ibmvscsi/ibmvscsi.c.rej
+> Duplicating refcounting doesn't seem logical to me, given that
+> we already have a 'struct device' hanging about ...
 
-Could you check scsi-misc and see what's up?
+We are talking about two different refcounts serving two different
+purposes.  The refcount that is embedded inside struct device controls
+the structure's overall lifetime; when that count goes to 0 the release
+method is called and the structure is deallocated.
 
-Thanks,
+By contrast, starget->reap_ref is (or rather, becomes later on in the 
+patch series) a count of the number of visible LUNs below the target.  
+When this number drops to 0 the target is removed from visibility, 
+i.e., we call device_del() for it.  But it remains allocated until the 
+other refcount also becomes 0.
 
-James
-
+Alan Stern
 
