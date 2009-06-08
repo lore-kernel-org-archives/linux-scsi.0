@@ -1,50 +1,55 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: 2.6.30-rc8 Oops whilst booting
-Date: Mon, 08 Jun 2009 12:49:22 -0500
-Message-ID: <1244483362.4079.358.camel@mulgrave.site>
-References: <200906061959.55592.chris2553@googlemail.com>
-	 <200906062215.30571.chris2553@googlemail.com>
-	 <1244381140.30664.12.camel@ht.satnam>
-	 <c6b1100b0906071138g2c46fb34vc1a2beb9438f1f1e@mail.gmail.com>
-	 <1244413881.18742.31.camel@ht.satnam>
-	 <2f9e3044bafcae848f74a1492b0ea471.squirrel@neil.brown.name>
-	 <c6b1100b0906080108y191bb157n67ec681ade2a0d13@mail.gmail.com>
-	 <c6b1100b0906080358y4033c402ra236eff3f972d169@mail.gmail.com>
-	 <1244460875.12644.2.camel@ht.satnam>
-	 <c6b1100b0906080553o2aa77a40pe0077b1b10a7d88a@mail.gmail.com>
-	 <alpine.LFD.2.01.0906080916130.6847@localhost.localdomain>
-	 <1244480796.4079.301.camel@mulgrave.site>
-	 <alpine.LFD.2.01.0906081039520.6847@localhost.localdomain>
+Subject: Re: [PATCH 3/4] iscsi class, libiscsi: Add net config.
+Date: Mon, 08 Jun 2009 12:56:14 -0500
+Message-ID: <1244483774.4079.368.camel@mulgrave.site>
+References: <1241208039-6813-1-git-send-email-mchan@broadcom.com>
+	 <1241208039-6813-4-git-send-email-mchan@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49761 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750758AbZFHRtX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2009 13:49:23 -0400
-In-Reply-To: <alpine.LFD.2.01.0906081039520.6847@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1241208039-6813-4-git-send-email-mchan@broadcom.com>
+Sender: netdev-owner@vger.kernel.org
+To: Michael Chan <mchan@broadcom.com>
+Cc: davem@davemloft.net, michaelc@cs.wisc.edu, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Chris Clayton <chris2553@googlemail.com>, Jaswinder Singh Rajput <jaswinder@kernel.org>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Arjan van de Ven <arjan@linux.intel.com>
 
-On Mon, 2009-06-08 at 10:42 -0700, Linus Torvalds wrote:
+On Fri, 2009-05-01 at 13:00 -0700, Michael Chan wrote:
+> Add ISCSI_NETLINK messages to get/set vendor specific information.
+> This is to support bnx2i that handles net config of private iSCSI
+> IP address in userspace.
 > 
-> On Mon, 8 Jun 2009, James Bottomley wrote:
-> > 
-> > I think it's a bug in the async code.  It's providing cookies too high
-> > because it doesn't stop after it finds a running entry.
-> > 
-> > Can we try this as the fix?
-> 
-> Ok, this looks likely.
-> 
-> That said, why doesn't that function look like this?
+> Signed-off-by: Anil Veerabhadrappa <anilgv@broadcom.com>
+> Signed-off-by: Michael Chan <mchan@broadcom.com>
+> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+> Acked-by: David S. Miller <davem@davemloft.net>
 
-That's probably a better style ... or simply put an if ... else if to
-make it exclusive.
+This patch is rejecting pretty badly against both SCSI and net ... is
+there an update (I saw you updated the other three patches in this
+series on the 23rd, but not this one)?
 
 James
+
+---
+
+patching file drivers/scsi/scsi_transport_iscsi.c
+Hunk #1 succeeded at 1015 with fuzz 2 (offset 20 lines).
+Hunk #2 FAILED at 1416.
+Hunk #3 FAILED at 1456.
+Hunk #4 succeeded at 1611 with fuzz 2 (offset 80 lines).
+2 out of 4 hunks FAILED -- saving rejects to file
+drivers/scsi/scsi_transport_iscsi.c.rej
+patching file include/scsi/iscsi_if.h
+Hunk #1 succeeded at 60 with fuzz 2 (offset 8 lines).
+Hunk #2 FAILED at 69.
+Hunk #3 FAILED at 165.
+Hunk #4 FAILED at 204.
+3 out of 4 hunks FAILED -- saving rejects to file
+include/scsi/iscsi_if.h.rej
+patching file include/scsi/scsi_transport_iscsi.h
+Hunk #1 FAILED at 132.
+Hunk #2 succeeded at 151 with fuzz 2 (offset 2 lines).
+1 out of 2 hunks FAILED -- saving rejects to file
+include/scsi/scsi_transport_iscsi.h.rej
 
 
