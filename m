@@ -1,145 +1,57 @@
-From: Chris Clayton <chris2553@googlemail.com>
-Subject: Re: 2.6.30-rc8 Oops whilst booting
-Date: Mon, 8 Jun 2009 16:17:37 +0100
-Message-ID: <c6b1100b0906080817q5378f512s8ce03727a362e8c5@mail.gmail.com>
-References: <200906061959.55592.chris2553@googlemail.com>
-	 <200906062215.30571.chris2553@googlemail.com>
-	 <1244381140.30664.12.camel@ht.satnam>
-	 <c6b1100b0906071138g2c46fb34vc1a2beb9438f1f1e@mail.gmail.com>
-	 <1244413881.18742.31.camel@ht.satnam>
-	 <2f9e3044bafcae848f74a1492b0ea471.squirrel@neil.brown.name>
-	 <c6b1100b0906080108y191bb157n67ec681ade2a0d13@mail.gmail.com>
-	 <1244471000.4079.36.camel@mulgrave.site>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [ANNOUNCE]: A target driver for Marvell 88SE64xx(3G) and 88SE94xx(6G)
+ SAS cards
+Date: Mon, 08 Jun 2009 19:30:23 +0400
+Message-ID: <4A2D2E8F.6090207@vlnb.net>
+References: <49E4B6D5.9060007@vlnb.net> <D27CA15508148C428A25104ADEFAAC8103AC1E41@CORPUSMX50C.corp.emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:55986 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755174AbZFHPRi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2009 11:17:38 -0400
-In-Reply-To: <1244471000.4079.36.camel@mulgrave.site>
+Received: from moutng.kundenserver.de ([212.227.126.188]:57500 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756092AbZFHPaR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2009 11:30:17 -0400
+In-Reply-To: <D27CA15508148C428A25104ADEFAAC8103AC1E41@CORPUSMX50C.corp.emc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: NeilBrown <neilb@suse.de>, Jaswinder Singh Rajput <jaswinder@kernel.org>, linux-kernel@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Arjan van de Ven <arjan@infradead.org>
+To: Foster_Brian@emc.com
+Cc: linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, ayan@marvell.com, James.Bottomley@HansenPartnership.com
 
-Sorry James, I forgot to ask...
+Hi Brian,
 
-2009/6/8 James Bottomley <James.Bottomley@hansenpartnership.com>:
-> On Mon, 2009-06-08 at 09:08 +0100, Chris Clayton wrote:
->> Hi Neil,
+Foster_Brian@emc.com, on 06/05/2009 10:10 PM wrote:
+>> Hi All,
 >>
->> Thanks for the reply.
+>> I'm glad to announce that a target driver for Marvell 88SE64xx(3G) and
+>> 88SE94xx(6G) SAS cards has been just added in the SCST SVN repository.
+> A
+>> lot of thanks to Marvell and Andy Yan!
 >>
->> 2009/6/7 NeilBrown <neilb@suse.de>:
->> > On Mon, June 8, 2009 8:31 am, Jaswinder Singh Rajput wrote:
->> >> On Sun, 2009-06-07 at 19:38 +0100, Chris Clayton wrote:
->> >>> 2009/6/7 Jaswinder Singh Ra
->> >>> >> > http://img231.imageshack.us/img231/8931/dscn0610.jpg
->> >
->> > This message says that it found a vfat filesystem on 8:3x (I canno=
-t see
->> > what digit should be 'x'). =A0That is probably sdc1 or sdc2. Maybe=
- even
->> > sdc6 or sdc7.
->> > However the vfat filesystem didn't have /sbin/init.
->> >
+>> This driver allows to use a SAS controller based on Marvell 88SE64xx
+> or
+>> 88SE94xx chips as a SAN storage server (target). More info you can
+> find
+>> on the SCST page http://scst.sourceforge.net.
 >>
->> >>> http://img99.imageshack.us/my.php?image=3Ddscn0617b.jpg
->> >
->> > This one says it couldn't find anything at 8,22, which I think
->> > should be sdb6.
->> > It also shows that you have and sdc6, but sdb only goes up to sdb3=
-=2E
->> >
->> > So it seems that your disk drives have changed name - not a wholel=
-y
->> > unexpected event these days.
->> >
->> > We now need answers to questions like:
->> > =A0- what device do you expect the root filesystem to be on
->> > =A0- how is the kernel being told this? =A0Maybe it is hard coded
->> > =A0 =A0into your initrd. =A0Knowing which distro and what /etc/fst=
-ab
->> > =A0 =A0says might help (though it wouldn't help me, I'm just about=
- out
->> > =A0 =A0of my depth at this point)
->> > Maybe if you changed /etc/fstab to mount by uuid instead of hardco=
-ding
->> > e.g. /etc/sdb3, and then run "mkinitramfs" or whatever, it might w=
-ork.
->> >
+>> You can download the driver from SCST SVN by running a command:
 >>
->> Yes, I've just been looking at the photographs of the panics again a=
-nd
->> I've noticed that two of my discs are being detected in the "wrong
->> order". There are three HDDS. The first, /dev/sda, is the master on
->> the first IDE port and contains sda1..sda7. The second, normally
->> /dev/sdb, is the slave on that port and contains sdb1..sdb6. The
->> third, normally /dev/sdc, is attached to the first SATA port and
->> contains sdc1..sdc3. The second photograph I posted shows that sdb a=
-nd
->> sdc have been reversed. The first partition on the disc that is
->> normally /dev/sdb does indeed have a FAT32 filesystem in the first
->> partition.
+>> $ svn co https://scst.svn.sourceforge.net/svnroot/scst
 >>
->> By the way, I should have said that in between the panics that the t=
-wo
->> photographs show, I copied contents of /dev/sdc1, which I normally
->> boot from, to /dev/sdb6, so that I minimised the risk to sdc1 in the
->> reboot festival that bisecting would involve. I also, of course,
->> changed the name of the root partition that is passed to the kernel =
-by
->> GRUB and amended /etc/fstab on /dev/sdb6. That's why the partitions
->> shown in the photographs seem inconsistent. Sorry I forgot to mentio=
-n
->> that - I really shouldn't do these things late at night :-).
->
-> Actually, you can save yourself a lot of pain by mounting by label
-> instead ... that way both grub and fstab will find your root disc eve=
-n
-> if it has swapped order.
->
+> 
+> Hi Vlad/Andy,
+> 
+> Is this target driver expected to work with 6320 cards as well? Using
+> this driver, I was able to discover a SATA drive connected to the 6320
+> in initiator mode. 
+> 
+> I connected the 6320 directly to a second 6320 on another machine, set
+> up a virtual LUN with SCST (added to the default group, etc.) and
+> enabled target mode, but I'm not seeing anything on the initiator side. 
 
-Would I be right in assuming from this that "out-of-order" detection
-is expected behaviour? If so, I'll fix up my system and shut up :-) I
-suspect I may not be the only person on the planet who specifies the
-root filesystem in this way, though.
+Double check you don't have in the kernel log messages like "tgt_dev for 
+LUN X not found, command to unexisting LU?" (I assume you have SCST 
+tracing enabled, it is by default so in the SVN trunk/). If you do, then 
+you didn't setup the virtual LUN correctly.
 
-Thanks
-
->> As I indicate above, when booting the partition I have set up to do
->> this bisecting, =A0I expect the root filesystem to be on /dev/hdb6. =
-As I
->> also indicate, this information is passed to the kernel through GRUB=
-'s
->> /boot/grub/menu.lst. The kernel is configured specifically for my
->> system and the drivers needed to boot the system are built in to the
->> kernel, so I don't use an initrd. IIRC, that's the way Slackware is
->> installed today, except, of course, it's a big fat kernel with all
->> drivers needed to boot any system built in. I could be wrong on that
->> though, it's a while since I installed
->
-> The fact that a slave on the first channel is detected after the SATA
-> indicates a problem with async probing. =A0What are the two drivers f=
-or
-> these?
->
-> James
->
->
->
-
-
-
---=20
-No, Sir; there is nothing which has yet been contrived by man, by which
-so much happiness is produced as by a good tavern or inn - Doctor Samue=
-l
-Johnson
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Vlad
