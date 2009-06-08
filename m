@@ -1,57 +1,53 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [ANNOUNCE]: A target driver for Marvell 88SE64xx(3G) and 88SE94xx(6G)
- SAS cards
-Date: Mon, 08 Jun 2009 19:30:23 +0400
-Message-ID: <4A2D2E8F.6090207@vlnb.net>
-References: <49E4B6D5.9060007@vlnb.net> <D27CA15508148C428A25104ADEFAAC8103AC1E41@CORPUSMX50C.corp.emc.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: 2.6.30-rc8 Oops whilst booting
+Date: Mon, 08 Jun 2009 15:32:04 +0000
+Message-ID: <1244475124.4079.177.camel@mulgrave.site>
+References: <200906061959.55592.chris2553@googlemail.com>
+	 <200906062215.30571.chris2553@googlemail.com>
+	 <1244381140.30664.12.camel@ht.satnam>
+	 <c6b1100b0906071138g2c46fb34vc1a2beb9438f1f1e@mail.gmail.com>
+	 <1244413881.18742.31.camel@ht.satnam>
+	 <2f9e3044bafcae848f74a1492b0ea471.squirrel@neil.brown.name>
+	 <c6b1100b0906080108y191bb157n67ec681ade2a0d13@mail.gmail.com>
+	 <1244471000.4079.36.camel@mulgrave.site>
+	 <c6b1100b0906080817q5378f512s8ce03727a362e8c5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.188]:57500 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756092AbZFHPaR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2009 11:30:17 -0400
-In-Reply-To: <D27CA15508148C428A25104ADEFAAC8103AC1E41@CORPUSMX50C.corp.emc.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43356 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753569AbZFHPcG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2009 11:32:06 -0400
+In-Reply-To: <c6b1100b0906080817q5378f512s8ce03727a362e8c5@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Foster_Brian@emc.com
-Cc: linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, ayan@marvell.com, James.Bottomley@HansenPartnership.com
+To: Chris Clayton <chris2553@googlemail.com>
+Cc: NeilBrown <neilb@suse.de>, Jaswinder Singh Rajput <jaswinder@kernel.org>, linux-kernel@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Arjan van de Ven <arjan@infradead.org>
 
-Hi Brian,
-
-Foster_Brian@emc.com, on 06/05/2009 10:10 PM wrote:
->> Hi All,
->>
->> I'm glad to announce that a target driver for Marvell 88SE64xx(3G) and
->> 88SE94xx(6G) SAS cards has been just added in the SCST SVN repository.
-> A
->> lot of thanks to Marvell and Andy Yan!
->>
->> This driver allows to use a SAS controller based on Marvell 88SE64xx
-> or
->> 88SE94xx chips as a SAN storage server (target). More info you can
-> find
->> on the SCST page http://scst.sourceforge.net.
->>
->> You can download the driver from SCST SVN by running a command:
->>
->> $ svn co https://scst.svn.sourceforge.net/svnroot/scst
->>
+On Mon, 2009-06-08 at 16:17 +0100, Chris Clayton wrote:
+> > Actually, you can save yourself a lot of pain by mounting by label
+> > instead ... that way both grub and fstab will find your root disc even
+> > if it has swapped order.
+> >
 > 
-> Hi Vlad/Andy,
-> 
-> Is this target driver expected to work with 6320 cards as well? Using
-> this driver, I was able to discover a SATA drive connected to the 6320
-> in initiator mode. 
-> 
-> I connected the 6320 directly to a second 6320 on another machine, set
-> up a virtual LUN with SCST (added to the default group, etc.) and
-> enabled target mode, but I'm not seeing anything on the initiator side. 
+> Would I be right in assuming from this that "out-of-order" detection
+> is expected behaviour? If so, I'll fix up my system and shut up :-) I
+> suspect I may not be the only person on the planet who specifies the
+> root filesystem in this way, though.
 
-Double check you don't have in the kernel log messages like "tgt_dev for 
-LUN X not found, command to unexisting LU?" (I assume you have SCST 
-tracing enabled, it is by default so in the SVN trunk/). If you do, then 
-you didn't setup the virtual LUN correctly.
+Yes and no ... yes generally because parallel asynchronous probing does
+relax the ordering rules, so if you have multiple devices the ordering
+can easily change.  No in your particular case because you have a single
+ata_piix and even with async enabled it should probe PATA first (master
+and slave) followed by SATA.  The fact that the PATA and SATA probes
+didn't synchronise is a bug somewhere, but I'm not sure where.
 
-Vlad
+Could you fix your system to do the label mounting and post the full
+boot log where it's out of sequence?  I have a nasty feeling we might
+have got the ata probe order correct only to be thrown out of order by
+sd driver attachment.
+
+James
+
+
