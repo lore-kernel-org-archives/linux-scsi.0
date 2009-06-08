@@ -1,7 +1,7 @@
 From: Chris Clayton <chris2553@googlemail.com>
 Subject: Re: 2.6.30-rc8 Oops whilst booting
-Date: Mon, 8 Jun 2009 16:04:46 +0100
-Message-ID: <c6b1100b0906080804q6d29226bie2cd719e5d532aed@mail.gmail.com>
+Date: Mon, 8 Jun 2009 16:17:37 +0100
+Message-ID: <c6b1100b0906080817q5378f512s8ce03727a362e8c5@mail.gmail.com>
 References: <200906061959.55592.chris2553@googlemail.com>
 	 <200906062215.30571.chris2553@googlemail.com>
 	 <1244381140.30664.12.camel@ht.satnam>
@@ -14,17 +14,17 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:46425 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753100AbZFHPKI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2009 11:10:08 -0400
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:55986 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755174AbZFHPRi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2009 11:17:38 -0400
 In-Reply-To: <1244471000.4079.36.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: NeilBrown <neilb@suse.de>, Jaswinder Singh Rajput <jaswinder@kernel.org>, linux-kernel@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Arjan van de Ven <arjan@infradead.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: NeilBrown <neilb@suse.de>, Jaswinder Singh Rajput <jaswinder@kernel.org>, linux-kernel@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Arjan van de Ven <arjan@infradead.org>
 
-Hi James,
+Sorry James, I forgot to ask...
 
 2009/6/8 James Bottomley <James.Bottomley@hansenpartnership.com>:
 > On Mon, 2009-06-08 at 09:08 +0100, Chris Clayton wrote:
@@ -101,6 +101,14 @@ n
 n
 > if it has swapped order.
 >
+
+Would I be right in assuming from this that "out-of-order" detection
+is expected behaviour? If so, I'll fix up my system and shut up :-) I
+suspect I may not be the only person on the planet who specifies the
+root filesystem in this way, though.
+
+Thanks
+
 >> As I indicate above, when booting the partition I have set up to do
 >> this bisecting, =A0I expect the root filesystem to be on /dev/hdb6. =
 As I
@@ -118,43 +126,18 @@ As I
 or
 > these?
 >
-
-I think this is the relevant part of my .config:
-
-CONFIG_ATA=3Dy
-# CONFIG_ATA_NONSTANDARD is not set
-CONFIG_ATA_ACPI=3Dy
-# CONFIG_SATA_PMP is not set
-# CONFIG_SATA_AHCI is not set
-# CONFIG_SATA_SIL24 is not set
-CONFIG_ATA_SFF=3Dy
-# CONFIG_SATA_SVW is not set
-CONFIG_ATA_PIIX=3Dy <<<<=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D
-# CONFIG_SATA_MV is not set
-# CONFIG_SATA_NV is not set
-# CONFIG_PDC_ADMA is not set
-# CONFIG_SATA_QSTOR is not set
-# CONFIG_SATA_PROMISE is not set
-# CONFIG_SATA_SX4 is not set
-# CONFIG_SATA_SIL is not set
-# CONFIG_SATA_SIS is not set
-# CONFIG_SATA_ULI is not set
-# CONFIG_SATA_VIA is not set
-# CONFIG_SATA_VITESSE is not set
-# CONFIG_SATA_INIC162X is not set
-
-The ATA/(E)IDE driver is disabled.
-
-Chris
-
 > James
 >
+>
+>
+
+
 
 --=20
-No, Sir; there is nothing which has yet been contrived by man, by
-which so much happiness is produced as by a good tavern or inn -
-Doctor Samuel Johnson
+No, Sir; there is nothing which has yet been contrived by man, by which
+so much happiness is produced as by a good tavern or inn - Doctor Samue=
+l
+Johnson
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
