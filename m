@@ -1,14 +1,14 @@
 From: scameron@beardog.cca.cpqcorp.net
-Subject: [patch 5/8] cciss: separate error processing and command retrying code in sendcmd_withirq_core()
-Date: Mon, 8 Jun 2009 16:05:56 -0500
-Message-ID: <20090608210556.GK23523@beardog.cca.cpqcorp.net>
+Subject: [patch 6/8] cciss: change SCSI error handling routines to work with interrupts enabled.
+Date: Mon, 8 Jun 2009 16:07:45 -0500
+Message-ID: <20090608210745.GL23523@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:27247 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752648AbZFHVFc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2009 17:05:32 -0400
+Received: from g1t0028.austin.hp.com ([15.216.28.35]:48987 "EHLO
+	g1t0028.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752941AbZFHVHV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2009 17:07:21 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,10 +17,7 @@ Cc: scameron@beardog.cca.cpqcorp.net, mikem@beardog.cca.cpqcorp.net
 
 
 
-Separate the error processing from sendcmd_withirq_core from the code
-which retries commands.  The rationale for this is that the SCSI error
-handling code can then be made to use sendcmd_withirq_core, but avoid
-retrying commands.
+Change cciss scsi error handling routines to work with interrupts enabled.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cca.cpqcorp.net>
 ---
@@ -28,133 +25,80 @@ Signed-off-by: Stephen M. Cameron <scameron@beardog.cca.cpqcorp.net>
 ---
 
 
-diff -puN drivers/block/cciss.c~cciss_separate_error_processing drivers/block/cciss.c
---- linux-next/drivers/block/cciss.c~cciss_separate_error_processing	2009-06-08 12:58:58.000000000 -0500
-+++ linux-next-scameron/drivers/block/cciss.c	2009-06-08 12:58:58.000000000 -0500
-@@ -2292,26 +2292,12 @@ static int check_target_status(ctlr_info
- 	return IO_ERROR;
- }
- 
--static int sendcmd_withirq_core(ctlr_info_t *h, CommandList_struct *c)
-+static int process_sendcmd_error(ctlr_info_t *h, CommandList_struct *c)
- {
--	DECLARE_COMPLETION_ONSTACK(wait);
--	u64bit buff_dma_handle;
--	unsigned long flags;
- 	int return_status = IO_OK;
- 
--resend_cmd2:
--	c->waiting = &wait;
--	/* Put the request on the tail of the queue and send it */
--	spin_lock_irqsave(CCISS_LOCK(h->ctlr), flags);
--	addQ(&h->reqQ, c);
--	h->Qdepth++;
--	start_io(h);
--	spin_unlock_irqrestore(CCISS_LOCK(h->ctlr), flags);
--
--	wait_for_completion(&wait);
--
--	if (c->err_info->CommandStatus == 0)
--		goto command_done;
-+	if (c->err_info->CommandStatus == CMD_SUCCESS)
-+		return IO_OK;
- 
- 	switch (c->err_info->CommandStatus) {
- 	case CMD_TARGET_STATUS:
-@@ -2322,7 +2308,7 @@ resend_cmd2:
- 		/* expected for inquiry and report lun commands */
- 		break;
- 	case CMD_INVALID:
--		printk(KERN_WARNING "cciss: Cmd 0x%02x is "
-+		printk(KERN_WARNING "cciss: cmd 0x%02x is "
- 		       "reported invalid\n", c->Request.CDB[0]);
- 		return_status = IO_ERROR;
- 		break;
-@@ -2355,19 +2341,7 @@ resend_cmd2:
- 		printk(KERN_WARNING
- 		       "cciss%d: unsolicited abort 0x%02x\n", h->ctlr,
- 			c->Request.CDB[0]);
--		if (c->retry_count < MAX_CMD_RETRIES) {
--			printk(KERN_WARNING
--			       "cciss%d: retrying 0x%02x\n", h->ctlr,
--				c->Request.CDB[0]);
--			c->retry_count++;
--			/* erase the old error information */
--			memset(c->err_info, 0,
--			       sizeof(ErrorInfo_struct));
--			return_status = IO_OK;
--			INIT_COMPLETION(wait);
--			goto resend_cmd2;
--		}
--		return_status = IO_ERROR;
-+		return_status = IO_NEEDS_RETRY;
- 		break;
- 	default:
- 		printk(KERN_WARNING "cciss: cmd 0x%02x returned "
-@@ -2375,6 +2349,44 @@ resend_cmd2:
- 		       c->err_info->CommandStatus);
- 		return_status = IO_ERROR;
- 	}
-+	return return_status;
-+}
-+
+diff -puN drivers/block/cciss.c~cciss_scsi_err_handler_intr_enabled drivers/block/cciss.c
+--- linux-next/drivers/block/cciss.c~cciss_scsi_err_handler_intr_enabled	2009-06-08 12:59:02.000000000 -0500
++++ linux-next-scameron/drivers/block/cciss.c	2009-06-08 12:59:02.000000000 -0500
+@@ -184,6 +184,9 @@ static int sendcmd(__u8 cmd, int ctlr, v
+ static int sendcmd_withirq(__u8 cmd, int ctlr, void *buff, size_t size,
+ 			__u8 page_code, unsigned char scsi3addr[],
+ 			int cmd_type);
 +static int sendcmd_withirq_core(ctlr_info_t *h, CommandList_struct *c,
-+	int attempt_retry)
-+{
-+	DECLARE_COMPLETION_ONSTACK(wait);
-+	u64bit buff_dma_handle;
-+	unsigned long flags;
-+	int return_status = IO_OK;
-+
-+resend_cmd2:
-+	c->waiting = &wait;
-+	/* Put the request on the tail of the queue and send it */
-+	spin_lock_irqsave(CCISS_LOCK(h->ctlr), flags);
-+	addQ(&h->reqQ, c);
-+	h->Qdepth++;
-+	start_io(h);
-+	spin_unlock_irqrestore(CCISS_LOCK(h->ctlr), flags);
-+
-+	wait_for_completion(&wait);
-+
-+	if (c->err_info->CommandStatus == 0 || !attempt_retry)
-+		goto command_done;
-+
-+	return_status = process_sendcmd_error(h, c);
-+
-+	if (return_status == IO_NEEDS_RETRY &&
-+		c->retry_count < MAX_CMD_RETRIES) {
-+		printk(KERN_WARNING "cciss%d: retrying 0x%02x\n", h->ctlr,
-+			c->Request.CDB[0]);
-+		c->retry_count++;
-+		/* erase the old error information */
-+		memset(c->err_info, 0, sizeof(ErrorInfo_struct));
-+		return_status = IO_OK;
-+		INIT_COMPLETION(wait);
-+		goto resend_cmd2;
-+	}
++	int attempt_retry);
++static int process_sendcmd_error(ctlr_info_t *h, CommandList_struct *c);
  
- command_done:
- 	/* unlock the buffers from DMA */
-@@ -2399,7 +2411,8 @@ static int sendcmd_withirq(__u8 cmd, int
- 	return_status = fill_cmd(c, cmd, ctlr, buff, size, page_code,
- 		scsi3addr, cmd_type);
- 	if (return_status == IO_OK)
--		return_status = sendcmd_withirq_core(h, c);
-+		return_status = sendcmd_withirq_core(h, c, 1);
+ static void fail_all_cmds(unsigned long ctlr);
+ static int scan_thread(void *data);
+diff -puN drivers/block/cciss_scsi.c~cciss_scsi_err_handler_intr_enabled drivers/block/cciss_scsi.c
+--- linux-next/drivers/block/cciss_scsi.c~cciss_scsi_err_handler_intr_enabled	2009-06-08 12:59:02.000000000 -0500
++++ linux-next-scameron/drivers/block/cciss_scsi.c	2009-06-08 12:59:02.000000000 -0500
+@@ -49,8 +49,6 @@ static int fill_cmd(CommandList_struct *
+ 	__u8 page_code, unsigned char *scsi3addr,
+ 	int cmd_type);
+ 
+-static int sendcmd_core(ctlr_info_t *h, CommandList_struct *c);
+-
+ static CommandList_struct *cmd_alloc(ctlr_info_t *h, int get_from_pool);
+ static void cmd_free(ctlr_info_t *h, CommandList_struct *c, int got_from_pool);
+ 
+@@ -1601,11 +1599,10 @@ static int wait_for_device_to_become_rea
+ 		/* Send the Test Unit Ready */
+ 		rc = fill_cmd(c, TEST_UNIT_READY, h->ctlr, NULL, 0, 0,
+ 			lunaddr, TYPE_CMD);
+-		if (rc == 0) {
+-			rc = sendcmd_core(h, c);
+-			/* sendcmd turned off interrupts, turn 'em back on. */
+-			h->access.set_intr_mask(h, CCISS_INTR_ON);
+-		}
++		if (rc == 0)
++			rc = sendcmd_withirq_core(h, c, 0);
 +
- 	cmd_free(h, c, 0);
- 	return return_status;
- }
-diff -puN drivers/block/cciss.h~cciss_separate_error_processing drivers/block/cciss.h
---- linux-next/drivers/block/cciss.h~cciss_separate_error_processing	2009-06-08 12:58:58.000000000 -0500
-+++ linux-next-scameron/drivers/block/cciss.h	2009-06-08 12:58:58.000000000 -0500
-@@ -11,6 +11,7 @@
++		(void) process_sendcmd_error(h, c);
  
- #define IO_OK		0
- #define IO_ERROR	1
-+#define IO_NEEDS_RETRY  3
+ 		if (rc == 0 && c->err_info->CommandStatus == CMD_SUCCESS)
+ 			break;
+@@ -1663,10 +1660,8 @@ static int cciss_eh_device_reset_handler
+ 		return FAILED;
+ 	memcpy(lunaddr, &cmd_in_trouble->Header.LUN.LunAddrBytes[0], 8);
+ 	/* send a reset to the SCSI LUN which the command was sent to */
+-	rc = sendcmd(CCISS_RESET_MSG, ctlr, NULL, 0, 0, lunaddr,
++	rc = sendcmd_withirq(CCISS_RESET_MSG, ctlr, NULL, 0, 0, lunaddr,
+ 		TYPE_MSG);
+-	/* sendcmd turned off interrupts on the board, turn 'em back on. */
+-	(*c)->access.set_intr_mask(*c, CCISS_INTR_ON);
+ 	if (rc == 0 && wait_for_device_to_become_ready(*c, lunaddr) == 0)
+ 		return SUCCESS;
+ 	printk(KERN_WARNING "cciss%d: resetting device failed.\n", ctlr);
+@@ -1677,6 +1672,7 @@ static int  cciss_eh_abort_handler(struc
+ {
+ 	int rc;
+ 	CommandList_struct *cmd_to_abort;
++	unsigned char lunaddr[8];
+ 	ctlr_info_t **c;
+ 	int ctlr;
  
- #define VENDOR_LEN	8
- #define MODEL_LEN	16
+@@ -1691,11 +1687,9 @@ static int  cciss_eh_abort_handler(struc
+ 	cmd_to_abort = (CommandList_struct *) scsicmd->host_scribble;
+ 	if (cmd_to_abort == NULL) /* paranoia */
+ 		return FAILED;
+-	rc = sendcmd(CCISS_ABORT_MSG, ctlr, &cmd_to_abort->Header.Tag, 0, 0,
+-		(unsigned char *) &cmd_to_abort->Header.LUN.LunAddrBytes[0], 
+-		TYPE_MSG);
+-	/* sendcmd turned off interrupts on the board, turn 'em back on. */
+-	(*c)->access.set_intr_mask(*c, CCISS_INTR_ON);
++	memcpy(lunaddr, &cmd_to_abort->Header.LUN.LunAddrBytes[0], 8);
++	rc = sendcmd_withirq(CCISS_ABORT_MSG, ctlr, &cmd_to_abort->Header.Tag,
++		0, 0, lunaddr, TYPE_MSG);
+ 	if (rc == 0)
+ 		return SUCCESS;
+ 	return FAILED;
 _
