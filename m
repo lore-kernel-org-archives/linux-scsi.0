@@ -1,14 +1,14 @@
 From: scameron@beardog.cca.cpqcorp.net
-Subject: [patch 4/8] cciss: factor out fix target status processing code from sendcmd functions
-Date: Mon, 8 Jun 2009 16:04:35 -0500
-Message-ID: <20090608210435.GJ23523@beardog.cca.cpqcorp.net>
+Subject: [patch 5/8] cciss: separate error processing and command retrying code in sendcmd_withirq_core()
+Date: Mon, 8 Jun 2009 16:05:56 -0500
+Message-ID: <20090608210556.GK23523@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0007.atlanta.hp.com ([15.192.0.44]:4312 "EHLO
-	g5t0007.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751986AbZFHVEM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2009 17:04:12 -0400
+Received: from g4t0014.houston.hp.com ([15.201.24.17]:27247 "EHLO
+	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752648AbZFHVFc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2009 17:05:32 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,110 +17,144 @@ Cc: scameron@beardog.cca.cpqcorp.net, mikem@beardog.cca.cpqcorp.net
 
 
 
-Factor out code to process target status of completed commands in sendcmd()
-and sendcmd_withirq_core(), and fix problem that bad target status was ignored in
-sendcmd_withirq_core.
+Separate the error processing from sendcmd_withirq_core from the code
+which retries commands.  The rationale for this is that the SCSI error
+handling code can then be made to use sendcmd_withirq_core, but avoid
+retrying commands.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cca.cpqcorp.net>
-
 ---
 
 ---
 
 
-diff -puN drivers/block/cciss.c~cciss_sendcmd_withirq_targstatus_fix drivers/block/cciss.c
---- linux-next/drivers/block/cciss.c~cciss_sendcmd_withirq_targstatus_fix	2009-06-08 12:58:53.000000000 -0500
-+++ linux-next-scameron/drivers/block/cciss.c	2009-06-08 12:58:53.000000000 -0500
-@@ -2267,6 +2267,31 @@ static int fill_cmd(CommandList_struct *
- 	return status;
+diff -puN drivers/block/cciss.c~cciss_separate_error_processing drivers/block/cciss.c
+--- linux-next/drivers/block/cciss.c~cciss_separate_error_processing	2009-06-08 12:58:58.000000000 -0500
++++ linux-next-scameron/drivers/block/cciss.c	2009-06-08 12:58:58.000000000 -0500
+@@ -2292,26 +2292,12 @@ static int check_target_status(ctlr_info
+ 	return IO_ERROR;
  }
  
-+static int check_target_status(ctlr_info_t *h, CommandList_struct *c)
-+{
-+	switch (c->err_info->ScsiStatus) {
-+	case SAM_STAT_GOOD:
-+		return IO_OK;
-+	case SAM_STAT_CHECK_CONDITION:
-+		switch (0xf & c->err_info->SenseInfo[2]) {
-+		case 0: return IO_OK; /* no sense */
-+		case 1: return IO_OK; /* recovered error */
-+		default:
-+			printk(KERN_WARNING "cciss%d: cmd 0x%02x "
-+				"check condition, sense key = 0x%02x\n",
-+				h->ctlr, c->Request.CDB[0],
-+				c->err_info->SenseInfo[2]);
-+		}
-+		break;
-+	default:
-+		printk(KERN_WARNING "cciss%d: cmd 0x%02x"
-+			"scsi status = 0x%02x\n", h->ctlr,
-+			c->Request.CDB[0], c->err_info->ScsiStatus);
-+		break;
-+	}
-+	return IO_ERROR;
-+}
-+
- static int sendcmd_withirq_core(ctlr_info_t *h, CommandList_struct *c)
+-static int sendcmd_withirq_core(ctlr_info_t *h, CommandList_struct *c)
++static int process_sendcmd_error(ctlr_info_t *h, CommandList_struct *c)
  {
- 	DECLARE_COMPLETION_ONSTACK(wait);
-@@ -2290,16 +2315,7 @@ resend_cmd2:
+-	DECLARE_COMPLETION_ONSTACK(wait);
+-	u64bit buff_dma_handle;
+-	unsigned long flags;
+ 	int return_status = IO_OK;
+ 
+-resend_cmd2:
+-	c->waiting = &wait;
+-	/* Put the request on the tail of the queue and send it */
+-	spin_lock_irqsave(CCISS_LOCK(h->ctlr), flags);
+-	addQ(&h->reqQ, c);
+-	h->Qdepth++;
+-	start_io(h);
+-	spin_unlock_irqrestore(CCISS_LOCK(h->ctlr), flags);
+-
+-	wait_for_completion(&wait);
+-
+-	if (c->err_info->CommandStatus == 0)
+-		goto command_done;
++	if (c->err_info->CommandStatus == CMD_SUCCESS)
++		return IO_OK;
  
  	switch (c->err_info->CommandStatus) {
  	case CMD_TARGET_STATUS:
--		printk(KERN_WARNING "cciss: cmd 0x%02x "
--		"has completed with errors\n", c->Request.CDB[0]);
--		if (c->err_info->ScsiStatus) {
--			printk(KERN_WARNING "cciss: cmd 0x%02x "
--			       "has SCSI Status = %x\n",
--			       c->Request.CDB[0], c->err_info->ScsiStatus);
--			if (c->err_info->ScsiStatus == SAM_STAT_CHECK_CONDITION)
--				printk(KERN_WARNING "sense key = 0x%02x\n",
--					0xf & c->err_info->SenseInfo[2]);
--		}
-+		return_status = check_target_status(h, c);
+@@ -2322,7 +2308,7 @@ resend_cmd2:
+ 		/* expected for inquiry and report lun commands */
  		break;
- 	case CMD_DATA_UNDERRUN:
- 	case CMD_DATA_OVERRUN:
-@@ -2710,33 +2726,29 @@ resend_cmd1:
- 			printk(KERN_WARNING "cciss%d: retried %p too many "
- 				"times\n", h->ctlr, c);
- 			status = IO_ERROR;
--			goto cleanup1;
-+			break;
- 		}
+ 	case CMD_INVALID:
+-		printk(KERN_WARNING "cciss: Cmd 0x%02x is "
++		printk(KERN_WARNING "cciss: cmd 0x%02x is "
+ 		       "reported invalid\n", c->Request.CDB[0]);
+ 		return_status = IO_ERROR;
+ 		break;
+@@ -2355,19 +2341,7 @@ resend_cmd2:
+ 		printk(KERN_WARNING
+ 		       "cciss%d: unsolicited abort 0x%02x\n", h->ctlr,
+ 			c->Request.CDB[0]);
+-		if (c->retry_count < MAX_CMD_RETRIES) {
+-			printk(KERN_WARNING
+-			       "cciss%d: retrying 0x%02x\n", h->ctlr,
+-				c->Request.CDB[0]);
+-			c->retry_count++;
+-			/* erase the old error information */
+-			memset(c->err_info, 0,
+-			       sizeof(ErrorInfo_struct));
+-			return_status = IO_OK;
+-			INIT_COMPLETION(wait);
+-			goto resend_cmd2;
+-		}
+-		return_status = IO_ERROR;
++		return_status = IO_NEEDS_RETRY;
+ 		break;
+ 	default:
+ 		printk(KERN_WARNING "cciss: cmd 0x%02x returned "
+@@ -2375,6 +2349,44 @@ resend_cmd2:
+ 		       c->err_info->CommandStatus);
+ 		return_status = IO_ERROR;
+ 	}
++	return return_status;
++}
++
++static int sendcmd_withirq_core(ctlr_info_t *h, CommandList_struct *c,
++	int attempt_retry)
++{
++	DECLARE_COMPLETION_ONSTACK(wait);
++	u64bit buff_dma_handle;
++	unsigned long flags;
++	int return_status = IO_OK;
++
++resend_cmd2:
++	c->waiting = &wait;
++	/* Put the request on the tail of the queue and send it */
++	spin_lock_irqsave(CCISS_LOCK(h->ctlr), flags);
++	addQ(&h->reqQ, c);
++	h->Qdepth++;
++	start_io(h);
++	spin_unlock_irqrestore(CCISS_LOCK(h->ctlr), flags);
++
++	wait_for_completion(&wait);
++
++	if (c->err_info->CommandStatus == 0 || !attempt_retry)
++		goto command_done;
++
++	return_status = process_sendcmd_error(h, c);
++
++	if (return_status == IO_NEEDS_RETRY &&
++		c->retry_count < MAX_CMD_RETRIES) {
++		printk(KERN_WARNING "cciss%d: retrying 0x%02x\n", h->ctlr,
++			c->Request.CDB[0]);
++		c->retry_count++;
++		/* erase the old error information */
++		memset(c->err_info, 0, sizeof(ErrorInfo_struct));
++		return_status = IO_OK;
++		INIT_COMPLETION(wait);
++		goto resend_cmd2;
++	}
  
- 		if (c->err_info->CommandStatus == CMD_UNABORTABLE) {
- 			printk(KERN_WARNING "cciss%d: command could not be "
- 				"aborted.\n", h->ctlr);
- 			status = IO_ERROR;
--			goto cleanup1;
-+			break;
- 		}
+ command_done:
+ 	/* unlock the buffers from DMA */
+@@ -2399,7 +2411,8 @@ static int sendcmd_withirq(__u8 cmd, int
+ 	return_status = fill_cmd(c, cmd, ctlr, buff, size, page_code,
+ 		scsi3addr, cmd_type);
+ 	if (return_status == IO_OK)
+-		return_status = sendcmd_withirq_core(h, c);
++		return_status = sendcmd_withirq_core(h, c, 1);
++
+ 	cmd_free(h, c, 0);
+ 	return return_status;
+ }
+diff -puN drivers/block/cciss.h~cciss_separate_error_processing drivers/block/cciss.h
+--- linux-next/drivers/block/cciss.h~cciss_separate_error_processing	2009-06-08 12:58:58.000000000 -0500
++++ linux-next-scameron/drivers/block/cciss.h	2009-06-08 12:58:58.000000000 -0500
+@@ -11,6 +11,7 @@
  
--		printk(KERN_WARNING "cciss%d: sendcmd error\n", h->ctlr);
--		printk(KERN_WARNING "cmd = 0x%02x, CommandStatus = 0x%02x\n",
--			c->Request.CDB[0], c->err_info->CommandStatus);
- 		if (c->err_info->CommandStatus == CMD_TARGET_STATUS) {
--			printk(KERN_WARNING "Target status = 0x%02x\n",
--			c->err_info->ScsiStatus);
--			if (c->err_info->ScsiStatus == 2) /* chk cond */
--				printk(KERN_WARNING "Sense key = 0x%02x\n",
--					0xf & c->err_info->SenseInfo[2]);
-+			status = check_target_status(h, c);
-+			break;
- 		}
+ #define IO_OK		0
+ #define IO_ERROR	1
++#define IO_NEEDS_RETRY  3
  
-+		printk(KERN_WARNING "cciss%d: sendcmd error\n", h->ctlr);
-+		printk(KERN_WARNING "cmd = 0x%02x, CommandStatus = 0x%02x\n",
-+			c->Request.CDB[0], c->err_info->CommandStatus);
- 		status = IO_ERROR;
--		goto cleanup1;
-+		break;
- 
- 	} while (1);
- 
--cleanup1:
- 	/* unlock the data buffer from DMA */
- 	buff_dma_handle.val32.lower = c->SG[0].Addr.lower;
- 	buff_dma_handle.val32.upper = c->SG[0].Addr.upper;
+ #define VENDOR_LEN	8
+ #define MODEL_LEN	16
 _
