@@ -1,31 +1,47 @@
-From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 3/4] iscsi class, libiscsi: Add net config.
-Date: Mon, 08 Jun 2009 22:07:00 +0200
-Message-ID: <4A2D6F64.7020502@redhat.com>
-References: <1241208039-6813-1-git-send-email-mchan@broadcom.com>	 <1241208039-6813-4-git-send-email-mchan@broadcom.com> <1244483774.4079.368.camel@mulgrave.site> <4A2D5374.3030503@cs.wisc.edu>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 2/4] ibmvscsi: Send adapter info before login
+Date: Mon, 08 Jun 2009 15:09:33 -0500
+Message-ID: <1244491773.4079.595.camel@mulgrave.site>
+References: <200906031454.n53EsIr8011153@d01av04.pok.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <grbounce-FC1hwAUAAAA0O9VQcsxVj1UPjHD9r3x_=glio-open-iscsi=m.gmane.org-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <4A2D5374.3030503-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Post: <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://googlegroups.com/group/open-iscsi/subscribe>,
-	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Michael Chan <mchan-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:52114 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751478AbZFHUJf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2009 16:09:35 -0400
+In-Reply-To: <200906031454.n53EsIr8011153@d01av04.pok.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, rcjenn@linux.vnet.ibm.com
+
+On Wed, 2009-06-03 at 09:54 -0500, Brian King wrote:
+> The ibmvscsi driver currently sends the SRP Login before sending the Adapter
+> Info MAD, which can result in commands getting sent to the virtual adapter
+> before we are ready for them. This results in a slight window where the target
+> devices may not behave as expected. Change the order and close the window.
+> 
+> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+> ---
+> 
+>  drivers/scsi/ibmvscsi/ibmvscsi.c |  173 +++++++++++++++++++--------------------
+>  1 file changed, 85 insertions(+), 88 deletions(-)
+
+This one just doesn't want to apply:
+
+patching file drivers/scsi/ibmvscsi/ibmvscsi.c
+Hunk #4 FAILED at 961.
+Hunk #5 succeeded at 1279 (offset -3 lines).
+Hunk #6 succeeded at 1289 (offset -3 lines).
+1 out of 6 hunks FAILED -- saving rejects to file
+drivers/scsi/ibmvscsi/ibmvscsi.c.rej
+
+Could you check scsi-misc and see what's up?
+
+Thanks,
+
+James
 
 
-<snip>
-
-Sorry for jumping in the middle of a thread, I missed the
-libiscsi in the subject. Can someone please resent me the
-libiscsi part of this patchset so that I can review it ?
-
-(I'm the libiscsi author)
-
-Thanks & Regards,
-
-Hans
