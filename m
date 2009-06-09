@@ -1,123 +1,110 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH] Revert "block: WARN in __blk_put_request() for
- potential bio leak"
-Date: Wed, 10 Jun 2009 08:00:32 +0900
-Message-ID: <20090610080039B.fujita.tomonori@lab.ntt.co.jp>
-References: <4A2E4D4F.90901@panasas.com>
-	<20090609221019A.fujita.tomonori@lab.ntt.co.jp>
-	<4A2E645F.9090008@panasas.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/17] mpt fusion: Submission of reviewed patch once
+ again for [2.6.30-rc6]
+Date: Tue, 09 Jun 2009 23:01:01 +0000
+Message-ID: <1244588461.12321.161.camel@mulgrave.site>
+References: <20090529110454.GA10181@lsi.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:43096 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750878AbZFIXAo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Jun 2009 19:00:44 -0400
-In-Reply-To: <4A2E645F.9090008@panasas.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:48252 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752216AbZFIXBE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Jun 2009 19:01:04 -0400
+In-Reply-To: <20090529110454.GA10181@lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: fujita.tomonori@lab.ntt.co.jp, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
+To: "Kashyap, Desai" <kashyap.desai@lsi.com>
+Cc: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-On Tue, 09 Jun 2009 16:32:15 +0300
-Boaz Harrosh <bharrosh@panasas.com> wrote:
-
-> On 06/09/2009 04:10 PM, FUJITA Tomonori wrote:
-> > On Tue, 09 Jun 2009 14:53:51 +0300
-> > Boaz Harrosh <bharrosh@panasas.com> wrote:
-> > 
-> >> Please do not revert. This is the point of all this.
-> >>
-> >> If there is no leak, You should NULL out the req->bio
-> >> for now, and for 2.6.31 change the code to do 
-> >> blk_end_request_all(). That's what blk_end_request does,
-> >> since you are doing your own completion then set req->bio
-> >> to null after you're done. (And before put_request)
-> >>
-> >> This stuff is good for error paths to catch leaks, please
-> >> leave it?
-> > 
-> > Has this your good stuff found any bio leak bugs in mainline? In
-> > addition, breaking working code is not a proper development style.
-> > 
+On Fri, 2009-05-29 at 16:34 +0530, Kashyap, Desai wrote:
+> Resending all pending mpt fusion patch based on 2.6.30-rc6 version.
+> Applying previous patches were giving "hunk failed" errors.
+> Now patches are synced with latest 2.6.30-rc6 kernel.
 > 
-> It has found for me in error paths. That's why I put it.
->
-> I Issue bsg bidi commands every day all day, and never seen this.
-> What driver are you using? and can you post the stack trace.
+> Included all comments pointed by James B in previous submission.
+> There are not logical changes in this patches.
 
-See the original mail. I already said, "BSG SMP requests get the
-following warnings". I use mptsas however all BSG SMP users hit this
-bug. The stack trace is not useful because the bsg users don't call
-blk_put_request directly.
+Actually, there are, but I elided patches 4 deleting uses of
+mpt_timer_expired and 5 which actually deletes it.
 
-But If you want to see:
+There were also several commented on docbook required fixes outstanding.
+I just bundled them up into this patch, and will apply it at the end
+(can't be bothered to fix up each individual patch).
 
-Call Trace:
- [<ffffffff80320349>] ? __blk_put_request+0x52/0xc0
- [<ffffffff8022fd26>] warn_slowpath_common+0x77/0xa4
- [<ffffffff8022fd62>] warn_slowpath_null+0xf/0x11
- [<ffffffff80320349>] __blk_put_request+0x52/0xc0
- [<ffffffff803206d6>] ? blk_put_request+0x20/0x46
- [<ffffffff803206e4>] blk_put_request+0x2e/0x46
- [<ffffffff80327f64>] blk_complete_sgv4_hdr_rq+0x1a8/0x1b7
- [<ffffffff80328a36>] bsg_ioctl+0x1b4/0x1eb
- [<ffffffff8032dfea>] ? __up_read+0x1c/0x9a
- [<ffffffff804aab20>] ? _spin_unlock_irqrestore+0x3f/0x47
- [<ffffffff802a0f10>] vfs_ioctl+0x2a/0x78
- [<ffffffff802a13cc>] do_vfs_ioctl+0x46e/0x4aa
- [<ffffffff80246384>] ? up_read+0x26/0x2b
- [<ffffffff8020b8e9>] ? retint_swapgs+0xe/0x13
- [<ffffffff802a144a>] sys_ioctl+0x42/0x65
- [<ffffffff8020aeab>] system_call_fastpath+0x16/0x1b
+So you don't need to do anything: the mptfusion patch series should be
+in scsi-misc.
 
-> The driver does something wrong. bsg over scsi-ml does not have this
-> problem. Why?
+James
 
-Because scsi-ml calls blk_end_request() but BSG SMP users don't.
+---
+
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index 88a1a6d..7888b40 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -636,8 +636,7 @@ mptsas_add_device_component_by_fw(MPT_ADAPTER *ioc, u8 channel, u8 id)
+ }
+ 
+ /**
+- *	mptsas_add_device_component_starget_ir - Handle Integrated RAID, adding
+- *	each individual device to list
++ *	mptsas_add_device_component_starget_ir - Handle Integrated RAID, adding each individual device to list
+  *	@ioc: Pointer to MPT_ADAPTER structure
+  *	@channel: fw mapped id's
+  *	@id:
+@@ -776,8 +775,7 @@ mptsas_add_device_component_starget(MPT_ADAPTER *ioc,
+ }
+ 
+ /**
+- *	mptsas_del_device_component_by_os - Once a device has been removed, we
+- *	mark the entry in the list as being cached
++ *	mptsas_del_device_component_by_os - Once a device has been removed, we mark the entry in the list as being cached
+  *	@ioc: Pointer to MPT_ADAPTER structure
+  *	@channel: os mapped id's
+  *	@id:
+@@ -1125,11 +1123,12 @@ mptsas_target_reset_queue(MPT_ADAPTER *ioc,
+ }
+ 
+ /**
+- *	mptsas_taskmgmt_complete - Completion for TARGET_RESET after
+- *	NOT_RESPONDING_EVENT, enable work queue to finish off removing device
+- *	from upper layers. then send next TARGET_RESET in the queue.
++ *	mptsas_taskmgmt_complete - complete SAS task management function 
+  *	@ioc: Pointer to MPT_ADAPTER structure
+  *
++ *	Completion for TARGET_RESET after NOT_RESPONDING_EVENT, enable work
++ *	queue to finish off removing device from upper layers. then send next
++ *	TARGET_RESET in the queue.
+  **/
+ static int
+ mptsas_taskmgmt_complete(MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf, MPT_FRAME_HDR *mr)
+@@ -1441,8 +1440,7 @@ mptsas_add_end_device(MPT_ADAPTER *ioc, struct mptsas_phyinfo *phy_info)
+ }
+ 
+ /**
+- *	mptsas_del_end_device - report a deleted end device to sas transport
+- *	layer
++ *	mptsas_del_end_device - report a deleted end device to sas transport layer
+  *	@ioc: Pointer to MPT_ADAPTER structure
+  *	@phy_info: decribes attached device
+  *
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+index 9668120..024e830 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -2442,10 +2442,7 @@ mptscsih_get_scsi_lookup(MPT_ADAPTER *ioc, int i)
+ EXPORT_SYMBOL(mptscsih_get_scsi_lookup);
+ 
+ /**
+- * mptscsih_getclear_scsi_lookup
+- *
+- * retrieves and clears scmd entry from ScsiLookup[] array list
+- *
++ * mptscsih_getclear_scsi_lookup -  retrieves and clears scmd entry from ScsiLookup[] array list
+  * @ioc: Pointer to MPT_ADAPTER structure
+  * @i: index into the array
+  *
 
 
-> > Anyway, setting req->bio in bsg works. Either is fine by me.
-> > 
-> > 
-> > Jens, can you please send either patch to Linus now?
-> > 
-> > =
-> > From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > Subject: [PATCH] bsg: setting rq->bio to NULL
-> > 
-> > Due to commit 1cd96c242a829d52f7a5ae98f554ca9775429685 ("block: WARN
-> > in __blk_put_request() for potential bio leak"), BSG SMP requests get
-> > the false warnings:
-> > 
-> > WARNING: at block/blk-core.c:1068 __blk_put_request+0x52/0xc0()
-> > 
-> > This sets rq->bio to NULL to avoid that false warnings.
-> > 
-> > 
-> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > ---
-> >  block/bsg.c |    3 +++
-> >  1 files changed, 3 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/block/bsg.c b/block/bsg.c
-> > index 206060e..dd81be4 100644
-> > --- a/block/bsg.c
-> > +++ b/block/bsg.c
-> > @@ -315,6 +315,7 @@ out:
-> >  	blk_put_request(rq);
-> >  	if (next_rq) {
-> >  		blk_rq_unmap_user(next_rq->bio);
-> 
-> I do not understand this here please explain? We have called blk_rq_map_user()
-> and have bailed out on error later, without calling blk_execute_rq*. Now usually
-> the bios are *double* referenced, one for the usual call of blk_end_request() that will
-> release bios once, and second for the blk_rq_unmap_user() that will release second time.
-> But here you only call blk_rq_unmap_user() don't you need to call blk_end_request() also?
-
-If I understand correctly, blk_end_request() doesn't release bios of a
-request that blk_rq_map_user was called against.
-
-You can test this without any SAS hardware. Let me know when you find
-a bio leak here.
