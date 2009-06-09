@@ -1,30 +1,24 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13311] mptsas: ioc0: removing ssp device, kernel oops
-Date: Tue, 9 Jun 2009 21:53:10 GMT
-Message-ID: <200906092153.n59LrABk017355@demeter.kernel.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bug 13311] New: mptsas: ioc0: removing ssp device, kernel oops
+Date: Tue, 9 Jun 2009 14:52:47 -0700
+Message-ID: <20090609145247.9a418dc8.akpm@linux-foundation.org>
 References: <bug-13311-11613@http.bugzilla.kernel.org/>
+	<20090528010038.b4d3b2b9.akpm@linux-foundation.org>
+	<5e83fab10906091427i23f15492rbd5c6b587cb578c8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:56661 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754749AbZFIVxH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Jun 2009 17:53:07 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n59LrAtC017356
-	for <linux-scsi@vger.kernel.org>; Tue, 9 Jun 2009 21:53:10 GMT
-In-Reply-To: <bug-13311-11613@http.bugzilla.kernel.org/>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:42411 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754856AbZFIVxJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Jun 2009 17:53:09 -0400
+In-Reply-To: <5e83fab10906091427i23f15492rbd5c6b587cb578c8@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mike Loseke <mike.tummy@gmail.com>
+Cc: linux-scsi@vger.kernel.org, bugzilla-daemon@bugzilla.kernel.org, kay.sievers@vrfy.org, greg@kroah.com, Eric Moore <Eric.Moore@lsil.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13311
-
-
-
-
-
---- Comment #5 from Andrew Morton <akpm@linux-foundation.org>  2009-06-09 21:53:09 ---
 On Tue, 9 Jun 2009 15:27:05 -0600
 Mike Loseke <mike.tummy@gmail.com> wrote:
 
@@ -148,9 +142,4 @@ handle those errors.
 > Jun  8 17:06:11 tile01-secondary kernel: CR2: 0000000000000000
 > Jun  8 17:06:11 tile01-secondary kernel: ---[ end trace 54f83dcc0f7b0b26 ]---
 > 
->
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+> 
