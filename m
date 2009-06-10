@@ -1,69 +1,56 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 0/] OSD changes for 2.6.31
-Date: Wed, 10 Jun 2009 12:10:46 +0300
-Message-ID: <4A2F7896.2070905@panasas.com>
-References: <4A197CB5.60709@panasas.com>
+Subject: Re: [PATCH] Revert "block: WARN in __blk_put_request() for potential
+ bio leak"
+Date: Wed, 10 Jun 2009 12:21:19 +0300
+Message-ID: <4A2F7B0F.1030205@panasas.com>
+References: <4A2F6B8E.8060700@panasas.com>	<20090610172956C.fujita.tomonori@lab.ntt.co.jp>	<4A2F729A.1060101@panasas.com> <20090610175238P.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ip67-152-220-66.z220-152-67.customer.algx.net ([67.152.220.66]:8650
-	"EHLO daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755353AbZFJJKu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Jun 2009 05:10:50 -0400
-In-Reply-To: <4A197CB5.60709@panasas.com>
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:64854 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757782AbZFJJVV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Jun 2009 05:21:21 -0400
+Received: by fxm9 with SMTP id 9so600305fxm.37
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2009 02:21:23 -0700 (PDT)
+In-Reply-To: <20090610175238P.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
-Cc: Jeff Garzik <jeff@garzik.org>, Al Viro <viro@ZenIV.linux.org.uk>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: jens.axboe@oracle.com, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-On 05/24/2009 07:58 PM, Boaz Harrosh wrote:
-> These are the accumulated osd patches for the next merge window,
-> Linux 2.6.31. 
+On 06/10/2009 11:52 AM, FUJITA Tomonori wrote:
+> On Wed, 10 Jun 2009 11:45:14 +0300
+> Boaz Harrosh <bharrosh@panasas.com> wrote:
 > 
-> Most of these patches are a repost rebased on latest scsi-misc
+>>>
+>> The fact that ALL block drivers call it for proper service of ALL ULDS,
+>> does it not make it a rule?
 > 
-> List of patches:
-> [PATCH 01/10 resend] libosd: OSD2r05: Additional command enums                                                        
-> [PATCH 02/10 resend] libosd: OSD2r05: Attribute definitions
-> [PATCH 03/10 resend] libosd: Better printout of OSD target system information
-> [PATCH 04/10 resend] libosd: osd_req_{read,write}_kern new API
-> [PATCH 05/10 resend] libosd: Let _osd_req_finalize_data_integrity receive number of out_bytes
-> [PATCH 06/10 resend] libosd: osd_req_{read,write} takes a length parameter
-> 
->    These are a resend. The last 2 patches are important for supporting Jeff's
->    osdblk driver. (The first 4 are old patches that thier time has come)
-> 
-> [PATCH 07/10] libosd: Define an osd_dev wrapper to retrieve the request_queue
->    Simple wrapper
-> 
-> [PATCH 08/10] osduld: use filp_open() when looking up an osd-device
-> 
->     This patch was inspired by Al Viro. It uses the in-kernel open-file
->     mechanism to look up the osd char-device for Kernel users like exofs
->     and later pNFS-Objlayout.
->     It was heavily tested and works well.
->     It fixes the problem we had before, of need to open+close a file handle
->     on the osd-char-device before mounting an exofs.
->     Please review
-> 
-> [PATCH 09/10] libosd: Use REQ_QUIET requests.
->     Recent scsi_lib changes, caused a dmesg span in exofs+osd regular use,
->     because of the way we routinely receive a recovered scsi sense. Recently, for
->     reason I could not find, this condition started to print messages at:
->        scsi_io_comlition:778 (look for "== RECOVERED_ERROR")
->     Use of a REQ_QUIET flag is needed to silence these prints.
->     OSD has it's own prints for scsi-sense returns, when needed.
-> 
-> [PATCH 10/10] osd: Remove out-of-tree left overs
+> BSG SMP code is not ULD.
 > 
 
-The merge window has risen upon us and these patches are still not
-in scsi-misc. (Luckily they where in linux-next through the osd tree)
-If these will not go into 2.6.31 I'm very screwed, with the pNFS stuff,
-Please reconsider?
+BSG is certainly a ULD, Upper-Layer-Driver that can issue block commands
+through block layer and block-queue.
 
-Thanks in advance
+SMP is a block device class that has it's own LLDs.
+
+The way I understand
+
+|---------|      |--------------|      |-----------|
+| ULD     |----->|  block layer |----->| block LLD |
+|---------|      |--------------|      |-----------|
+
+So I meant block ULD or block layer user code. That is what I meant
+by ULD, what do you mean?
+
+<snip>
+> 
+> FYI, you live in a land where very few live.
+> 
+
+I thought I was working on the Linux-Kernel. Is there another
+place I should be?
+
 Boaz
-
