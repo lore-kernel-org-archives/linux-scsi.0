@@ -1,59 +1,58 @@
 From: akpm@linux-foundation.org
-Subject: [patch 7/7] scsi/pcmcia/nsp_cs: time_out reaches -1
-Date: Wed, 10 Jun 2009 12:56:59 -0700
-Message-ID: <200906101956.n5AJuxAb009936@imap1.linux-foundation.org>
+Subject: [patch 6/7] qla2x: fix printk format warnings
+Date: Wed, 10 Jun 2009 12:56:58 -0700
+Message-ID: <200906101956.n5AJuxWQ009933@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:59640 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:55068 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1761671AbZFJT5A (ORCPT
+	by vger.kernel.org with ESMTP id S1761712AbZFJT5E (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Jun 2009 15:57:00 -0400
+	Wed, 10 Jun 2009 15:57:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, randy.dunlap@oracle.com, seokmann.ju@qlogic.com
 
-From: Roel Kluin <roel.kluin@gmail.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-With a postfix decrement timeouts will reach -1 rather than 0, so the
-errors do not appear.
+Fix qla2xxx printk format warnings:
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+drivers/scsi/qla2xxx/qla_sup.c:915: warning: long long unsigned int format, u64 arg (arg 5)
+drivers/scsi/qla2xxx/qla_sup.c:915: warning: long long unsigned int format, u64 arg (arg 6)
+drivers/scsi/qla2xxx/qla_sup.c:923: warning: long long unsigned int format, u64 arg (arg 5)
+drivers/scsi/qla2xxx/qla_sup.c:923: warning: long long unsigned int format, u64 arg (arg 6)
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+Acked-by: Seokmann Ju <seokmann.ju@qlogic.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/pcmcia/nsp_cs.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/qla2xxx/qla_sup.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/pcmcia/nsp_cs.c~scsi-pcmcia-nsp_cs-time_out-reaches-1 drivers/scsi/pcmcia/nsp_cs.c
---- a/drivers/scsi/pcmcia/nsp_cs.c~scsi-pcmcia-nsp_cs-time_out-reaches-1
-+++ a/drivers/scsi/pcmcia/nsp_cs.c
-@@ -530,7 +530,7 @@ static int nsp_negate_signal(struct scsi
- 		if (reg == 0xff) {
- 			break;
+diff -puN drivers/scsi/qla2xxx/qla_sup.c~qla2x-fix-printk-format-warnings drivers/scsi/qla2xxx/qla_sup.c
+--- a/drivers/scsi/qla2xxx/qla_sup.c~qla2x-fix-printk-format-warnings
++++ a/drivers/scsi/qla2xxx/qla_sup.c
+@@ -945,7 +945,9 @@ qla2xxx_flash_npiv_conf(scsi_qla_host_t 
+ 
+ 		DEBUG2(qla_printk(KERN_INFO, ha, "NPIV[%02x]: wwpn=%llx "
+ 			"wwnn=%llx vf_id=0x%x Q_qos=0x%x F_qos=0x%x.\n", cnt,
+-			vid.port_name, vid.node_name, le16_to_cpu(entry->vf_id),
++			(unsigned long long)vid.port_name,
++			(unsigned long long)vid.node_name,
++			le16_to_cpu(entry->vf_id),
+ 			entry->q_qos, entry->f_qos));
+ 
+ 		if (i < QLA_PRECONFIG_VPORTS) {
+@@ -954,7 +956,8 @@ qla2xxx_flash_npiv_conf(scsi_qla_host_t 
+ 				qla_printk(KERN_INFO, ha,
+ 				"NPIV-Config: Failed to create vport [%02x]: "
+ 				"wwpn=%llx wwnn=%llx.\n", cnt,
+-				vid.port_name, vid.node_name);
++				(unsigned long long)vid.port_name,
++				(unsigned long long)vid.node_name);
  		}
--	} while ((time_out-- != 0) && (reg & mask) != 0);
-+	} while ((--time_out != 0) && (reg & mask) != 0);
- 
- 	if (time_out == 0) {
- 		nsp_msg(KERN_DEBUG, " %s signal off timeut", str);
-@@ -801,7 +801,7 @@ static void nsp_pio_read(struct scsi_cmn
- 
- 	data->FifoCount = ocount;
- 
--	if (time_out == 0) {
-+	if (time_out < 0) {
- 		nsp_msg(KERN_DEBUG, "pio read timeout resid=%d this_residual=%d buffers_residual=%d",
- 			scsi_get_resid(SCpnt), SCpnt->SCp.this_residual,
- 			SCpnt->SCp.buffers_residual);
-@@ -897,7 +897,7 @@ static void nsp_pio_write(struct scsi_cm
- 
- 	data->FifoCount = ocount;
- 
--	if (time_out == 0) {
-+	if (time_out < 0) {
- 		nsp_msg(KERN_DEBUG, "pio write timeout resid=0x%x",
- 		                                        scsi_get_resid(SCpnt));
  	}
+ done:
 _
