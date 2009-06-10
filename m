@@ -1,389 +1,273 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 1/3] fcoe: Add runtime debug logging with module parameter
+Subject: [PATCH 2/3] libfcoe: Add runtime debugging with module param
 	debug_logging
-Date: Wed, 10 Jun 2009 15:30:59 -0700
-Message-ID: <20090610223059.11663.17661.stgit@fritz>
+Date: Wed, 10 Jun 2009 15:31:05 -0700
+Message-ID: <20090610223104.11663.58406.stgit@fritz>
 References: <20090610223054.11663.26451.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:26968 "EHLO mga03.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:30505 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751467AbZFJWa5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Jun 2009 18:30:57 -0400
+	id S1755343AbZFJWbD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Jun 2009 18:31:03 -0400
 In-Reply-To: <20090610223054.11663.26451.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 Cc: Robert Love <robert.w.love@intel.com>
 
-This patch converts all FC_DBG statements to use new runtime tunable
-debug macros. The fcoe.ko module now has a debug_logging module
-parameter.
-
-fcoe_debug_logging is an unsigned integer representing a bitmask of all
-available logging levels. Currently only two logging levels are
-supported-
+This patch adds a 'debug_logging' module parameter to
+libfcoe.ko. It is an unsigned int that represents a bitmask of
+available debug logging levels, each of which can be tuned at
+runtime. Currently there are only two logging levels for this
+module-
 
    bit
-LSB 0 = general fcoe logging
-    1 = netdevice related logging
-
-This patch also attempts to clean up some debug statement formatting
-so it's more readable.
+LSB 0 = libfcoe general logging
+    1 = FIP logging
 
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/fcoe.c |  108 +++++++++++++++++++++++-----------------------
- drivers/scsi/fcoe/fcoe.h |   24 ++++++++++
- 2 files changed, 77 insertions(+), 55 deletions(-)
+ drivers/scsi/fcoe/libfcoe.c |   94 +++++++++++++++++++++++++------------------
+ 1 files changed, 54 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index bd9c865..fa19650 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -45,8 +45,6 @@
+diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
+index 2f5bc7f..f544340 100644
+--- a/drivers/scsi/fcoe/libfcoe.c
++++ b/drivers/scsi/fcoe/libfcoe.c
+@@ -56,15 +56,28 @@ static void fcoe_ctlr_recv_work(struct work_struct *);
  
- #include "fcoe.h"
+ static u8 fcoe_all_fcfs[ETH_ALEN] = FIP_ALL_FCF_MACS;
  
--static int debug_fcoe;
--
- MODULE_AUTHOR("Open-FCoE.org");
- MODULE_DESCRIPTION("FCoE");
- MODULE_LICENSE("GPL v2");
-@@ -305,23 +303,22 @@ static int fcoe_netdev_config(struct fc_lport *lp, struct net_device *netdev)
- #ifdef NETIF_F_FCOE_CRC
- 	if (netdev->features & NETIF_F_FCOE_CRC) {
- 		lp->crc_offload = 1;
--		printk(KERN_DEBUG "fcoe:%s supports FCCRC offload\n",
--		       netdev->name);
-+		FCOE_NETDEV_DBG(netdev, "Supports FCCRC offload\n");
- 	}
- #endif
- #ifdef NETIF_F_FSO
- 	if (netdev->features & NETIF_F_FSO) {
- 		lp->seq_offload = 1;
- 		lp->lso_max = netdev->gso_max_size;
--		printk(KERN_DEBUG "fcoe:%s supports LSO for max len 0x%x\n",
--		       netdev->name, lp->lso_max);
-+		FCOE_NETDEV_DBG(netdev, "Supports LSO for max len 0x%x\n",
-+				lp->lso_max);
- 	}
- #endif
- 	if (netdev->fcoe_ddp_xid) {
- 		lp->lro_enabled = 1;
- 		lp->lro_xid = netdev->fcoe_ddp_xid;
--		printk(KERN_DEBUG "fcoe:%s supports LRO for max xid 0x%x\n",
--		       netdev->name, lp->lro_xid);
-+		FCOE_NETDEV_DBG(netdev, "Supports LRO for max xid 0x%x\n",
-+				lp->lro_xid);
- 	}
- 	skb_queue_head_init(&fc->fcoe_pending_queue);
- 	fc->fcoe_pending_queue_active = 0;
-@@ -407,7 +404,8 @@ static int fcoe_shost_config(struct fc_lport *lp, struct Scsi_Host *shost,
- 	/* add the new host to the SCSI-ml */
- 	rc = scsi_add_host(lp->host, dev);
- 	if (rc) {
--		FC_DBG("fcoe_shost_config:error on scsi_add_host\n");
-+		FCOE_NETDEV_DBG(fcoe_netdev(lp), "fcoe_shost_config: "
-+				"error on scsi_add_host\n");
- 		return rc;
- 	}
- 	sprintf(fc_host_symbolic_name(lp->host), "%s v%s over %s",
-@@ -448,8 +446,7 @@ static int fcoe_if_destroy(struct net_device *netdev)
- 
- 	BUG_ON(!netdev);
- 
--	printk(KERN_DEBUG "fcoe_if_destroy:interface on %s\n",
--	       netdev->name);
-+	FCOE_NETDEV_DBG(netdev, "Destroying interface\n");
- 
- 	lp = fcoe_hostlist_lookup(netdev);
- 	if (!lp)
-@@ -560,8 +557,7 @@ static int fcoe_if_create(struct net_device *netdev)
- 
- 	BUG_ON(!netdev);
- 
--	printk(KERN_DEBUG "fcoe_if_create:interface on %s\n",
--	       netdev->name);
-+	FCOE_NETDEV_DBG(netdev, "Create Interface\n");
- 
- 	lp = fcoe_hostlist_lookup(netdev);
- 	if (lp)
-@@ -570,7 +566,7 @@ static int fcoe_if_create(struct net_device *netdev)
- 	shost = libfc_host_alloc(&fcoe_shost_template,
- 				 sizeof(struct fcoe_softc));
- 	if (!shost) {
--		FC_DBG("Could not allocate host structure\n");
-+		FCOE_NETDEV_DBG(netdev, "Could not allocate host structure\n");
- 		return -ENOMEM;
- 	}
- 	lp = shost_priv(shost);
-@@ -579,7 +575,8 @@ static int fcoe_if_create(struct net_device *netdev)
- 	/* configure fc_lport, e.g., em */
- 	rc = fcoe_lport_config(lp);
- 	if (rc) {
--		FC_DBG("Could not configure lport\n");
-+		FCOE_NETDEV_DBG(netdev, "Could not configure lport for the "
-+				"interface\n");
- 		goto out_host_put;
- 	}
- 
-@@ -593,28 +590,32 @@ static int fcoe_if_create(struct net_device *netdev)
- 	/* configure lport network properties */
- 	rc = fcoe_netdev_config(lp, netdev);
- 	if (rc) {
--		FC_DBG("Could not configure netdev for the interface\n");
-+		FCOE_NETDEV_DBG(netdev, "Could not configure netdev for the "
-+				"interface\n");
- 		goto out_netdev_cleanup;
- 	}
- 
- 	/* configure lport scsi host properties */
- 	rc = fcoe_shost_config(lp, shost, &netdev->dev);
- 	if (rc) {
--		FC_DBG("Could not configure shost for lport\n");
-+		FCOE_NETDEV_DBG(netdev, "Could not configure shost for the "
-+				"interface\n");
- 		goto out_netdev_cleanup;
- 	}
- 
- 	/* lport exch manager allocation */
- 	rc = fcoe_em_config(lp);
- 	if (rc) {
--		FC_DBG("Could not configure em for lport\n");
-+		FCOE_NETDEV_DBG(netdev, "Could not configure the EM for the "
-+				"interface\n");
- 		goto out_netdev_cleanup;
- 	}
- 
- 	/* Initialize the library */
- 	rc = fcoe_libfc_config(lp, &fcoe_libfc_fcn_templ);
- 	if (rc) {
--		FC_DBG("Could not configure libfc for lport!\n");
-+		FCOE_NETDEV_DBG(netdev, "Could not configure libfc for the "
-+				"interface\n");
- 		goto out_lp_destroy;
- 	}
- 
-@@ -653,7 +654,7 @@ static int __init fcoe_if_init(void)
- 		fc_attach_transport(&fcoe_transport_function);
- 
- 	if (!scsi_transport_fcoe_sw) {
--		printk(KERN_ERR "fcoe_init:fc_attach_transport() failed\n");
-+		printk(KERN_ERR "fcoe: Failed to attach to the FC transport\n");
- 		return -ENODEV;
- 	}
- 
-@@ -714,7 +715,7 @@ static void fcoe_percpu_thread_destroy(unsigned int cpu)
- 	unsigned targ_cpu = smp_processor_id();
- #endif /* CONFIG_SMP */
- 
--	printk(KERN_DEBUG "fcoe: Destroying receive thread for CPU %d\n", cpu);
-+	FCOE_DBG("Destroying receive thread for CPU %d\n", cpu);
- 
- 	/* Prevent any new skbs from being queued for this CPU. */
- 	p = &per_cpu(fcoe_percpu, cpu);
-@@ -736,8 +737,8 @@ static void fcoe_percpu_thread_destroy(unsigned int cpu)
- 		p0 = &per_cpu(fcoe_percpu, targ_cpu);
- 		spin_lock_bh(&p0->fcoe_rx_list.lock);
- 		if (p0->thread) {
--			FC_DBG("Moving frames from CPU %d to CPU %d\n",
--			       cpu, targ_cpu);
-+			FCOE_DBG("Moving frames from CPU %d to CPU %d\n",
-+				 cpu, targ_cpu);
- 
- 			while ((skb = __skb_dequeue(&p->fcoe_rx_list)) != NULL)
- 				__skb_queue_tail(&p0->fcoe_rx_list, skb);
-@@ -803,12 +804,12 @@ static int fcoe_cpu_callback(struct notifier_block *nfb,
- 	switch (action) {
- 	case CPU_ONLINE:
- 	case CPU_ONLINE_FROZEN:
--		FC_DBG("CPU %x online: Create Rx thread\n", cpu);
-+		FCOE_DBG("CPU %x online: Create Rx thread\n", cpu);
- 		fcoe_percpu_thread_create(cpu);
- 		break;
- 	case CPU_DEAD:
- 	case CPU_DEAD_FROZEN:
--		FC_DBG("CPU %x offline: Remove Rx thread\n", cpu);
-+		FCOE_DBG("CPU %x offline: Remove Rx thread\n", cpu);
- 		fcoe_percpu_thread_destroy(cpu);
- 		break;
- 	default:
-@@ -846,24 +847,21 @@ int fcoe_rcv(struct sk_buff *skb, struct net_device *dev,
- 	fc = container_of(ptype, struct fcoe_softc, fcoe_packet_type);
- 	lp = fc->ctlr.lp;
- 	if (unlikely(lp == NULL)) {
--		FC_DBG("cannot find hba structure");
-+		FCOE_NETDEV_DBG(dev, "Cannot find hba structure");
- 		goto err2;
- 	}
- 	if (!lp->link_up)
- 		goto err2;
- 
--	if (unlikely(debug_fcoe)) {
--		FC_DBG("skb_info: len:%d data_len:%d head:%p data:%p tail:%p "
--		       "end:%p sum:%d dev:%s", skb->len, skb->data_len,
--		       skb->head, skb->data, skb_tail_pointer(skb),
--		       skb_end_pointer(skb), skb->csum,
--		       skb->dev ? skb->dev->name : "<NULL>");
--
--	}
-+	FCOE_NETDEV_DBG(dev, "skb_info: len:%d data_len:%d head:%p "
-+			"data:%p tail:%p end:%p sum:%d dev:%s",
-+			skb->len, skb->data_len, skb->head, skb->data,
-+			skb_tail_pointer(skb), skb_end_pointer(skb),
-+			skb->csum, skb->dev ? skb->dev->name : "<NULL>");
- 
- 	/* check for FCOE packet type */
- 	if (unlikely(eth_hdr(skb)->h_proto != htons(ETH_P_FCOE))) {
--		FC_DBG("wrong FC type frame");
-+		FCOE_NETDEV_DBG(dev, "Wrong FC type frame");
- 		goto err;
- 	}
- 
-@@ -901,8 +899,9 @@ int fcoe_rcv(struct sk_buff *skb, struct net_device *dev,
- 		 * the first CPU now. For non-SMP systems this
- 		 * will check the same CPU twice.
- 		 */
--		FC_DBG("CPU is online, but no receive thread ready "
--		       "for incoming skb- using first online CPU.\n");
-+		FCOE_NETDEV_DBG(dev, "CPU is online, but no receive thread "
-+				"ready for incoming skb- using first online "
-+				"CPU.\n");
- 
- 		spin_unlock_bh(&fps->fcoe_rx_list.lock);
- 		cpu = first_cpu(cpu_online_map);
-@@ -1201,19 +1200,17 @@ int fcoe_percpu_receive_thread(void *arg)
- 		fr = fcoe_dev_from_skb(skb);
- 		lp = fr->fr_dev;
- 		if (unlikely(lp == NULL)) {
--			FC_DBG("invalid HBA Structure");
-+			FCOE_NETDEV_DBG(skb->dev, "Invalid HBA Structure");
- 			kfree_skb(skb);
- 			continue;
- 		}
- 
--		if (unlikely(debug_fcoe)) {
--			FC_DBG("skb_info: len:%d data_len:%d head:%p data:%p "
--			       "tail:%p end:%p sum:%d dev:%s",
--			       skb->len, skb->data_len,
--			       skb->head, skb->data, skb_tail_pointer(skb),
--			       skb_end_pointer(skb), skb->csum,
--			       skb->dev ? skb->dev->name : "<NULL>");
--		}
-+		FCOE_NETDEV_DBG(skb->dev, "skb_info: len:%d data_len:%d "
-+				"head:%p data:%p tail:%p end:%p sum:%d dev:%s",
-+				skb->len, skb->data_len,
-+				skb->head, skb->data, skb_tail_pointer(skb),
-+				skb_end_pointer(skb), skb->csum,
-+				skb->dev ? skb->dev->name : "<NULL>");
- 
- 		/*
- 		 * Save source MAC address before discarding header.
-@@ -1233,7 +1230,7 @@ int fcoe_percpu_receive_thread(void *arg)
- 		stats = fc_lport_get_stats(lp);
- 		if (unlikely(FC_FCOE_DECAPS_VER(hp) != FC_FCOE_VER)) {
- 			if (stats->ErrorFrames < 5)
--				printk(KERN_WARNING "FCoE version "
-+				printk(KERN_WARNING "fcoe: FCoE version "
- 				       "mismatch: The frame has "
- 				       "version %x, but the "
- 				       "initiator supports version "
-@@ -1286,7 +1283,7 @@ int fcoe_percpu_receive_thread(void *arg)
- 		if (fr_flags(fp) & FCPHF_CRC_UNCHECKED) {
- 			if (le32_to_cpu(fr_crc(fp)) !=
- 			    ~crc32(~0, skb->data, fr_len)) {
--				if (debug_fcoe || stats->InvalidCRCCount < 5)
-+				if (stats->InvalidCRCCount < 5)
- 					printk(KERN_WARNING "fcoe: dropping "
- 					       "frame with CRC error\n");
- 				stats->InvalidCRCCount++;
-@@ -1432,7 +1429,8 @@ static int fcoe_device_notification(struct notifier_block *notifier,
- 	case NETDEV_REGISTER:
- 		break;
- 	default:
--		FC_DBG("Unknown event %ld from netdev netlink\n", event);
-+		FCOE_NETDEV_DBG(real_dev, "Unknown event %ld "
-+				"from netdev netlink\n", event);
- 	}
- 	if (link_possible && !fcoe_link_ok(lp))
- 		fcoe_ctlr_link_up(&fc->ctlr);
-@@ -1505,8 +1503,8 @@ static int fcoe_ethdrv_get(const struct net_device *netdev)
- 
- 	owner = fcoe_netdev_to_module_owner(netdev);
- 	if (owner) {
--		printk(KERN_DEBUG "fcoe:hold driver module %s for %s\n",
--		       module_name(owner), netdev->name);
-+		FCOE_NETDEV_DBG(netdev, "Hold driver module %s\n",
-+				module_name(owner));
- 		return  try_module_get(owner);
- 	}
- 	return -ENODEV;
-@@ -1527,8 +1525,8 @@ static int fcoe_ethdrv_put(const struct net_device *netdev)
- 
- 	owner = fcoe_netdev_to_module_owner(netdev);
- 	if (owner) {
--		printk(KERN_DEBUG "fcoe:release driver module %s for %s\n",
--		       module_name(owner), netdev->name);
-+		FCOE_NETDEV_DBG(netdev, "Release driver module %s\n",
-+				module_name(owner));
- 		module_put(owner);
- 		return 0;
- 	}
-@@ -1559,7 +1557,7 @@ static int fcoe_destroy(const char *buffer, struct kernel_param *kp)
- 	}
- 	rc = fcoe_if_destroy(netdev);
- 	if (rc) {
--		printk(KERN_ERR "fcoe: fcoe_if_destroy(%s) failed\n",
-+		printk(KERN_ERR "fcoe: Failed to destroy interface (%s)\n",
- 		       netdev->name);
- 		rc = -EIO;
- 		goto out_putdev;
-@@ -1598,7 +1596,7 @@ static int fcoe_create(const char *buffer, struct kernel_param *kp)
- 
- 	rc = fcoe_if_create(netdev);
- 	if (rc) {
--		printk(KERN_ERR "fcoe: fcoe_if_create(%s) failed\n",
-+		printk(KERN_ERR "fcoe: Failed to create interface (%s)\n",
- 		       netdev->name);
- 		fcoe_ethdrv_put(netdev);
- 		rc = -EIO;
-diff --git a/drivers/scsi/fcoe/fcoe.h b/drivers/scsi/fcoe/fcoe.h
-index a1eb8c1..0d724fa 100644
---- a/drivers/scsi/fcoe/fcoe.h
-+++ b/drivers/scsi/fcoe/fcoe.h
-@@ -40,6 +40,30 @@
- #define FCOE_MIN_XID		0x0001	/* the min xid supported by fcoe_sw */
- #define FCOE_MAX_XID		0x07ef	/* the max xid supported by fcoe_sw */
- 
-+unsigned int fcoe_debug_logging;
-+module_param_named(debug_logging, fcoe_debug_logging, int, S_IRUGO|S_IWUSR);
+-static u32 fcoe_ctlr_debug;	/* 1 for basic, 2 for noisy debug */
++unsigned int libfcoe_debug_logging;
++module_param_named(debug_logging, libfcoe_debug_logging, int, S_IRUGO|S_IWUSR);
 +MODULE_PARM_DESC(debug_logging, "a bit mask of logging levels");
+ 
+-#define FIP_DBG_LVL(level, fmt, args...) 				\
++#define LIBFCOE_LOGGING     0x01 /* General logging, not categorized */
++#define LIBFCOE_FIP_LOGGING 0x02 /* FIP logging */
 +
-+#define FCOE_LOGGING        0x01 /* General logging, not categorized */
-+#define FCOE_NETDEV_LOGGING 0x02 /* Netdevice logging */
-+
-+#define FCOE_CHECK_LOGGING(LEVEL, CMD)					\
++#define LIBFCOE_CHECK_LOGGING(LEVEL, CMD)				\
 +do {                                                            	\
-+	if (unlikely(fcoe_debug_logging & LEVEL))			\
-+		do {							\
++	if (unlikely(libfcoe_debug_logging & LEVEL))			\
+ 		do {							\
+-			if (fcoe_ctlr_debug >= (level))			\
+-				FC_DBG(fmt, ##args);			\
+-		} while (0)
 +			CMD;						\
 +		} while (0);						\
 +} while (0);
 +
-+#define FCOE_DBG(fmt, args...)						\
-+	FCOE_CHECK_LOGGING(FCOE_LOGGING,				\
-+			   printk(KERN_INFO "fcoe: " fmt, ##args);)
-+
-+#define FCOE_NETDEV_DBG(netdev, fmt, args...)			\
-+	FCOE_CHECK_LOGGING(FCOE_NETDEV_LOGGING,			\
-+			   printk(KERN_INFO "fcoe: %s" fmt,	\
-+				  netdev->name, ##args);)
-+
++#define LIBFCOE_DBG(fmt, args...)					\
++	LIBFCOE_CHECK_LOGGING(LIBFCOE_LOGGING,				\
++			      printk(KERN_INFO "libfcoe: " fmt, ##args);)
+ 
+-#define FIP_DBG(fmt, args...)	FIP_DBG_LVL(1, fmt, ##args)
++#define LIBFCOE_FIP_DBG(fmt, args...)					\
++	LIBFCOE_CHECK_LOGGING(LIBFCOE_FIP_LOGGING,			\
++			      printk(KERN_INFO "fip: " fmt, ##args);)
+ 
  /*
-  * this percpu struct for fcoe
-  */
+  * Return non-zero if FCF fcoe_size has been validated.
+@@ -243,7 +256,7 @@ void fcoe_ctlr_link_up(struct fcoe_ctlr *fip)
+ 		fip->last_link = 1;
+ 		fip->link = 1;
+ 		spin_unlock_bh(&fip->lock);
+-		FIP_DBG("%s", "setting AUTO mode.\n");
++		LIBFCOE_FIP_DBG("%s", "setting AUTO mode.\n");
+ 		fc_linkup(fip->lp);
+ 		fcoe_ctlr_solicit(fip, NULL);
+ 	} else
+@@ -614,7 +627,8 @@ static int fcoe_ctlr_parse_adv(struct sk_buff *skb, struct fcoe_fcf *fcf)
+ 			       ((struct fip_mac_desc *)desc)->fd_mac,
+ 			       ETH_ALEN);
+ 			if (!is_valid_ether_addr(fcf->fcf_mac)) {
+-				FIP_DBG("invalid MAC addr in FIP adv\n");
++				LIBFCOE_FIP_DBG("Invalid MAC address "
++						"in FIP adv\n");
+ 				return -EINVAL;
+ 			}
+ 			break;
+@@ -647,8 +661,8 @@ static int fcoe_ctlr_parse_adv(struct sk_buff *skb, struct fcoe_fcf *fcf)
+ 		case FIP_DT_LOGO:
+ 		case FIP_DT_ELP:
+ 		default:
+-			FIP_DBG("unexpected descriptor type %x in FIP adv\n",
+-				desc->fip_dtype);
++			LIBFCOE_FIP_DBG("unexpected descriptor type %x "
++					"in FIP adv\n", desc->fip_dtype);
+ 			/* standard says ignore unknown descriptors >= 128 */
+ 			if (desc->fip_dtype < FIP_DT_VENDOR_BASE)
+ 				return -EINVAL;
+@@ -664,8 +678,8 @@ static int fcoe_ctlr_parse_adv(struct sk_buff *skb, struct fcoe_fcf *fcf)
+ 	return 0;
+ 
+ len_err:
+-	FIP_DBG("FIP length error in descriptor type %x len %zu\n",
+-		desc->fip_dtype, dlen);
++	LIBFCOE_FIP_DBG("FIP length error in descriptor type %x len %zu\n",
++			desc->fip_dtype, dlen);
+ 	return -EINVAL;
+ }
+ 
+@@ -728,9 +742,10 @@ static void fcoe_ctlr_recv_adv(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 	}
+ 	mtu_valid = fcoe_ctlr_mtu_valid(fcf);
+ 	fcf->time = jiffies;
+-	FIP_DBG_LVL(found ? 2 : 1, "%s FCF for fab %llx map %x val %d\n",
+-		    found ? "old" : "new",
+-		    fcf->fabric_name, fcf->fc_map, mtu_valid);
++	if (!found) {
++		LIBFCOE_FIP_DBG("New FCF for fab %llx map %x val %d\n",
++				fcf->fabric_name, fcf->fc_map, mtu_valid);
++	}
+ 
+ 	/*
+ 	 * If this advertisement is not solicited and our max receive size
+@@ -807,7 +822,8 @@ static void fcoe_ctlr_recv_els(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 			       ((struct fip_mac_desc *)desc)->fd_mac,
+ 			       ETH_ALEN);
+ 			if (!is_valid_ether_addr(granted_mac)) {
+-				FIP_DBG("invalid MAC addrs in FIP ELS\n");
++				LIBFCOE_FIP_DBG("Invalid MAC address "
++						"in FIP ELS\n");
+ 				goto drop;
+ 			}
+ 			break;
+@@ -825,8 +841,8 @@ static void fcoe_ctlr_recv_els(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 			els_dtype = desc->fip_dtype;
+ 			break;
+ 		default:
+-			FIP_DBG("unexpected descriptor type %x "
+-				"in FIP adv\n", desc->fip_dtype);
++			LIBFCOE_FIP_DBG("unexpected descriptor type %x "
++					"in FIP adv\n", desc->fip_dtype);
+ 			/* standard says ignore unknown descriptors >= 128 */
+ 			if (desc->fip_dtype < FIP_DT_VENDOR_BASE)
+ 				goto drop;
+@@ -867,8 +883,8 @@ static void fcoe_ctlr_recv_els(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 	return;
+ 
+ len_err:
+-	FIP_DBG("FIP length error in descriptor type %x len %zu\n",
+-		desc->fip_dtype, dlen);
++	LIBFCOE_FIP_DBG("FIP length error in descriptor type %x len %zu\n",
++			desc->fip_dtype, dlen);
+ drop:
+ 	kfree_skb(skb);
+ }
+@@ -894,7 +910,7 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
+ 	struct fc_lport *lp = fip->lp;
+ 	u32	desc_mask;
+ 
+-	FIP_DBG("Clear Virtual Link received\n");
++	LIBFCOE_FIP_DBG("Clear Virtual Link received\n");
+ 	if (!fcf)
+ 		return;
+ 	if (!fcf || !fc_host_port_id(lp->host))
+@@ -952,9 +968,9 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
+ 	 * reset only if all required descriptors were present and valid.
+ 	 */
+ 	if (desc_mask) {
+-		FIP_DBG("missing descriptors mask %x\n", desc_mask);
++		LIBFCOE_FIP_DBG("missing descriptors mask %x\n", desc_mask);
+ 	} else {
+-		FIP_DBG("performing Clear Virtual Link\n");
++		LIBFCOE_FIP_DBG("performing Clear Virtual Link\n");
+ 		fcoe_ctlr_reset(fip, FIP_ST_ENABLED);
+ 	}
+ }
+@@ -1002,10 +1018,6 @@ static int fcoe_ctlr_recv_handler(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 	op = ntohs(fiph->fip_op);
+ 	sub = fiph->fip_subcode;
+ 
+-	FIP_DBG_LVL(2, "ver %x op %x/%x dl %x fl %x\n",
+-		    FIP_VER_DECAPS(fiph->fip_ver), op, sub,
+-		    ntohs(fiph->fip_dl_len), ntohs(fiph->fip_flags));
+-
+ 	if (FIP_VER_DECAPS(fiph->fip_ver) != FIP_VER)
+ 		goto drop;
+ 	if (ntohs(fiph->fip_dl_len) * FIP_BPW + sizeof(*fiph) > skb->len)
+@@ -1017,7 +1029,7 @@ static int fcoe_ctlr_recv_handler(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 		fip->map_dest = 0;
+ 		fip->state = FIP_ST_ENABLED;
+ 		state = FIP_ST_ENABLED;
+-		FIP_DBG("using FIP mode\n");
++		LIBFCOE_FIP_DBG("Using FIP mode\n");
+ 	}
+ 	spin_unlock_bh(&fip->lock);
+ 	if (state != FIP_ST_ENABLED)
+@@ -1052,14 +1064,15 @@ static void fcoe_ctlr_select(struct fcoe_ctlr *fip)
+ 	struct fcoe_fcf *best = NULL;
+ 
+ 	list_for_each_entry(fcf, &fip->fcfs, list) {
+-		FIP_DBG("consider FCF for fab %llx VFID %d map %x val %d\n",
+-			fcf->fabric_name, fcf->vfid,
+-			fcf->fc_map, fcoe_ctlr_mtu_valid(fcf));
++		LIBFCOE_FIP_DBG("consider FCF for fab %llx VFID %d map %x "
++				"val %d\n", fcf->fabric_name, fcf->vfid,
++				fcf->fc_map, fcoe_ctlr_mtu_valid(fcf));
+ 		if (!fcoe_ctlr_fcf_usable(fcf)) {
+-			FIP_DBG("FCF for fab %llx map %x %svalid %savailable\n",
+-				fcf->fabric_name, fcf->fc_map,
+-				(fcf->flags & FIP_FL_SOL) ? "" : "in",
+-				(fcf->flags & FIP_FL_AVAIL) ? "" : "un");
++			LIBFCOE_FIP_DBG("FCF for fab %llx map %x %svalid "
++					"%savailable\n", fcf->fabric_name,
++					fcf->fc_map, (fcf->flags & FIP_FL_SOL)
++					? "" : "in", (fcf->flags & FIP_FL_AVAIL)
++					? "" : "un");
+ 			continue;
+ 		}
+ 		if (!best) {
+@@ -1069,7 +1082,8 @@ static void fcoe_ctlr_select(struct fcoe_ctlr *fip)
+ 		if (fcf->fabric_name != best->fabric_name ||
+ 		    fcf->vfid != best->vfid ||
+ 		    fcf->fc_map != best->fc_map) {
+-			FIP_DBG("conflicting fabric, VFID, or FC-MAP\n");
++			LIBFCOE_FIP_DBG("Conflicting fabric, VFID, "
++					"or FC-MAP\n");
+ 			return;
+ 		}
+ 		if (fcf->pri < best->pri)
+@@ -1113,7 +1127,7 @@ static void fcoe_ctlr_timeout(unsigned long arg)
+ 	if (sel != fcf) {
+ 		fcf = sel;		/* the old FCF may have been freed */
+ 		if (sel) {
+-			printk(KERN_INFO "host%d: FIP selected "
++			printk(KERN_INFO "libfcoe: host%d: FIP selected "
+ 			       "Fibre-Channel Forwarder MAC %s\n",
+ 			       fip->lp->host->host_no,
+ 			       print_mac(buf, sel->fcf_mac));
+@@ -1123,7 +1137,7 @@ static void fcoe_ctlr_timeout(unsigned long arg)
+ 			fip->ctlr_ka_time = jiffies + sel->fka_period;
+ 			fip->link = 1;
+ 		} else {
+-			printk(KERN_NOTICE "host%d: "
++			printk(KERN_NOTICE "libfcoe: host%d: "
+ 			       "FIP Fibre-Channel Forwarder timed out.  "
+ 			       "Starting FCF discovery.\n",
+ 			       fip->lp->host->host_no);
+@@ -1247,7 +1261,7 @@ int fcoe_ctlr_recv_flogi(struct fcoe_ctlr *fip, struct fc_frame *fp, u8 *sa)
+ 			return -EINVAL;
+ 		}
+ 		fip->state = FIP_ST_NON_FIP;
+-		FIP_DBG("received FLOGI LS_ACC using non-FIP mode\n");
++		LIBFCOE_FIP_DBG("received FLOGI LS_ACC using non-FIP mode\n");
+ 
+ 		/*
+ 		 * FLOGI accepted.
+@@ -1276,7 +1290,7 @@ int fcoe_ctlr_recv_flogi(struct fcoe_ctlr *fip, struct fc_frame *fp, u8 *sa)
+ 			memcpy(fip->dest_addr, sa, ETH_ALEN);
+ 			fip->map_dest = 0;
+ 			if (fip->state == FIP_ST_NON_FIP)
+-				FIP_DBG("received FLOGI REQ, "
++				LIBFCOE_FIP_DBG("received FLOGI REQ, "
+ 						"using non-FIP mode\n");
+ 			fip->state = FIP_ST_NON_FIP;
+ 		}
 
