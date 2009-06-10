@@ -1,64 +1,43 @@
-From: christophe.varoqui@free.fr
-Subject: do Symmetrix multipath-tools defaults need update ? or
- scsi-to-blk errors management ?
-Date: Wed, 10 Jun 2009 23:49:59 +0200 (CEST)
-Message-ID: <1766094670.1725191244670599365.JavaMail.root@zimbra16-e3.priv.proxad.net>
-References: <2113818871.1724831244670374246.JavaMail.root@zimbra16-e3.priv.proxad.net>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH 0/3] Updated Open-FCoE patches for 2.6.31
+Date: Wed, 10 Jun 2009 15:30:54 -0700
+Message-ID: <20090610223054.11663.26451.stgit@fritz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <2113818871.1724831244670374246.JavaMail.root@zimbra16-e3.priv.proxad.net>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Levy_Jerome@emc.com
-Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:9750 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754825AbZFJWav (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Jun 2009 18:30:51 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-Hi Jerome,
+The following series is an updated patchset for the libfc, libfcoe and fcoe runtime logging.
 
-EMC recently asked my/one-of-your client to active "queue_if_no_path" on Symmetrix logical units, which is not the current default setting in the upstream multipath-tools package.
+This is just a repost of previously posted patches. It is prepared against linux-next
+because at the time of this posting linux-next has scsi-misc and net-next merged.
 
-I'd like to know if you intent on submitting a patch to change the default setting accordingly, or if you'd rather let the no-queueing default unchanged and work on fixing the root cause of this issue.
+---
 
-::: Background information, root cause :::
-
-The Symmetrix array proved to return scsi errors io to submitters in certains circumstances (I was told of errors on R1+R2 network link). The linux kernel lacking finesse in the SCSI->DM error reporting ends-up invalidating in turn each path of the multipath before the multipathd daemon gets a chance to revalidate. "queue_if_no_path" being disabled, the io errors ends up in the FS layer and in the userspace submitter.
-
-::: error log on a 2.6.9 (rhel 4.7) kernel :::
-
-SCSI error : <h b t l> return code 0x8000002
-current sday: sense key Aborted Command
-Additional sense: Internal target failure
-end_request: I/O error, dev sday, sector XXXXX
-device-mapper: dm-multipath: Failing path 67:32.
-
-::: unfortunate side effect of queue_if_no_path :::
-
-Activating "queue_if_no_path" is certainly an effecient work-around for this kind of short-lived retriable errors, but this feature compromises data-protection on clusters relying on persistent reservation to fence ios from passive nodes. Ironically, the reason is quite similar : SCSI return codes for reservation conflicts also end up invalidating each path of a multipath, and worse, the io causing the conflict gets queued ! and retried ! until the poor active drops its reservation, unleashing data-corrupting ios from passive node queues on the logical unit.
-
-::: error log on a 2.6.29.x kernel for a reservation conflict :::
-
-sd h:b:t:l: reservation conflict
-sd h:b:t:l: [sdu] Unhandled error code
-sd h:b:t:l: [sdu] Result: hostbyte=DID_OK driver_byte=DRIVER_OK,SUGGEST_OK
-end_request: I/O error, dev sdu, sector XXXXX
-device-mapper: dm-multipath: Failing path 65:64.
-
-::: persistent reservation + queue_if_no_path, possible solution ? :::
-
-Seems to me scsi_lib.c::scsi_io_completion() should be able to cancel a reservation conflicting io and signal blk_end_request() with no error reported.
+Robert Love (3):
+      libfc: Add runtime debugging with debug_logging module parameter
+      libfcoe: Add runtime debugging with module param debug_logging
+      fcoe: Add runtime debug logging with module parameter debug_logging
 
 
-Please comment.
+ drivers/scsi/fcoe/fcoe.c      |  108 ++++++++++++++--------------
+ drivers/scsi/fcoe/fcoe.h      |   24 ++++++
+ drivers/scsi/fcoe/libfcoe.c   |   94 ++++++++++++++-----------
+ drivers/scsi/libfc/fc_disc.c  |   83 +++++++++-------------
+ drivers/scsi/libfc/fc_exch.c  |   58 +++++++--------
+ drivers/scsi/libfc/fc_fcp.c   |   97 +++++++++++++------------
+ drivers/scsi/libfc/fc_lport.c |  156 ++++++++++++++++++++---------------------
+ drivers/scsi/libfc/fc_rport.c |  120 +++++++++++++-------------------
+ include/scsi/fc_encode.h      |    2 -
+ include/scsi/libfc.h          |   77 +++++++++++++++++---
+ 10 files changed, 432 insertions(+), 387 deletions(-)
 
-Best regards,
-cvaroqui
+-- 
+//Rob
