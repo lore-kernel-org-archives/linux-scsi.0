@@ -1,212 +1,144 @@
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Subject: Re: [Suspected SPAM] Re: kernel crash when BSG request timesout
-Date: Wed, 10 Jun 2009 00:56:05 -0700
-Message-ID: <7DDBFE45-260F-4645-94FE-DB600B79F92C@qlogic.com>
-References: <4A1928B4.7030807@panasas.com> <3688CE86-250A-4D29-A3EB-ED1B46F82377@qlogic.com> <20090528150147U.fujita.tomonori@lab.ntt.co.jp> <20090528151304Q.fujita.tomonori@lab.ntt.co.jp>
-Mime-Version: 1.0 (Apple Message framework v912)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] Revert "block: WARN in __blk_put_request() for potential
+ bio leak"
+Date: Wed, 10 Jun 2009 11:15:10 +0300
+Message-ID: <4A2F6B8E.8060700@panasas.com>
+References: <4A2E4D4F.90901@panasas.com>	<20090609221019A.fujita.tomonori@lab.ntt.co.jp>	<4A2E645F.9090008@panasas.com> <20090610080039B.fujita.tomonori@lab.ntt.co.jp>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:38919 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754741AbZFJH4E (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Jun 2009 03:56:04 -0400
-In-Reply-To: <20090528151304Q.fujita.tomonori@lab.ntt.co.jp>
+Received: from ip67-152-220-66.z220-152-67.customer.algx.net ([67.152.220.66]:7168
+	"EHLO daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754853AbZFJIPO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Jun 2009 04:15:14 -0400
+In-Reply-To: <20090610080039B.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: "bharrosh@panasas.com" <bharrosh@panasas.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Smart@Emulex.Com" <James.Smart@Emulex.Com>
+Cc: jens.axboe@oracle.com, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-
-	After applying the changes from Fujita, I see that application never  
-completes when BSG time out happens.  Once the BSG request times out,  
-I see fc_bsg_softirq_done routine destroying the bsg_job but does not  
-send any response back to the application. The application infinitely  
-waits for the response with following warning message
-
-Jun  9 17:22:09 elab60 kernel: [  480.666830]INFO: task sgv4_els:6058  
-blocked for more than 120 seconds.
-Jun  9 17:22:09 elab60 kernel: [  480.666833] "echo 0 > /proc/sys/ 
-kernel/hung_task_timeout_secs" disables this message.
-Jun  9 17:22:09 elab60 kernel: [  480.666835] sgv4_els      D  
-0000000000000000     0  6058   5993
-Jun  9 17:22:09 elab60 kernel: [  480.666838]  ffff88007f173b78  
-0000000000000082 0000000000000000 ffffffffa003f880
-Jun  9 17:22:09 elab60 kernel: [  480.666842]  ffff880001030000  
-000000000000ff00 000000000000c8b8 ffff88007fbf6990
-Jun  9 17:22:09 elab60 kernel: [  480.666845]  ffff88007fbf6c18  
-00000001a00382cf 00000000ffff3524 ffff88007f93c990
-Jun  9 17:22:09 elab60 kernel: [  480.666848] Call Trace:
-Jun  9 17:22:09 elab60 kernel: [  480.666858]  [<ffffffffa00015d2>] ?  
-fc_bsg_map_buffer+0x2a/0x72 [scsi_transport_fc]
-Jun  9 17:22:09 elab60 kernel: [  480.666864]  [<ffffffff8029a2ba>] ?  
-cache_alloc_debugcheck_after+0x73/0x243
-Jun  9 17:22:09 elab60 kernel: [  480.666868]  [<ffffffff80511ebe>]  
-schedule+0x9/0x1d
-Jun  9 17:22:09 elab60 kernel: [  480.666871]  [<ffffffff8051210f>]  
-schedule_timeout+0x12f/0x164
-Jun  9 17:22:09 elab60 kernel: [  480.666873]  [<ffffffff805113f7>]  
-wait_for_common+0xb8/0x15e
-Jun  9 17:22:09 elab60 kernel: [  480.666878]  [<ffffffff80230feb>] ?  
-default_wake_function+0x0/0xf
-Jun  9 17:22:09 elab60 kernel: [  480.666880]  [<ffffffff80511527>]  
-wait_for_completion+0x18/0x1a
-Jun  9 17:22:09 elab60 kernel: [  480.666884]  [<ffffffff80360da6>]  
-blk_execute_rq+0x7f/0xc9
-Jun  9 17:22:09 elab60 kernel: [  480.666887]  [<ffffffff80365c28>]  
-bsg_ioctl+0x1c0/0x227
-Jun  9 17:22:09 elab60 kernel: [  480.666890]  [<ffffffff80514362>] ?  
-_spin_unlock_irqrestore+0x2b/0x32
-Jun  9 17:22:09 elab60 kernel: [  480.666894]  [<ffffffff802adb36>]  
-vfs_ioctl+0x2a/0x95
-Jun  9 17:22:09 elab60 kernel: [  480.666896]  [<ffffffff802adc22>]  
-do_vfs_ioctl+0x81/0x583
-Jun  9 17:22:09 elab60 kernel: [  480.666898]  [<ffffffff80514372>] ?  
-_spin_unlock+0x9/0xb
-Jun  9 17:22:09 elab60 kernel: [  480.666901]  [<ffffffff802ae165>]  
-sys_ioctl+0x41/0x65
-Jun  9 17:22:09 elab60 kernel: [  480.666904]  [<ffffffff8020b26b>]  
-system_call_fastpath+0x16/0x1b
-
-	I see that function blk_end_request_all calls blk_finish_request  
-routine to complete the response to application. After adding this  
-call in fc_bsg_softirq_done function, the application gets the  
-response and completes.
-
-Is this a proper fix? How does block layer request completes when  
-timeout happens?
-
-/**
-  * fc_bsg_softirq_done - softirq done routine for destroying the bsg  
-requests
-  * @req:        BSG request that holds the job to be destroyed
-  */
-static void fc_bsg_softirq_done(struct request *rq)
-{
-         struct fc_bsg_job *job = rq->special;
-         unsigned long flags;
-
-         spin_lock_irqsave(&job->job_lock, flags);
-+      job->state_flags |= FC_RQST_STATE_DONE;
-         job->ref_cnt--;
-         spin_unlock_irqrestore(&job->job_lock, flags);
-+      blk_end_request_all(rq, rq->errors);
-         fc_destroy_bsgjob(job);
-
-- Giridhar.M.B
-
-
-
-Once the BSG request times
-On May 27, 2009, at 11:12 PM, FUJITA Tomonori wrote:
-
-> On Thu, 28 May 2009 15:01:21 +0900
-> FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
->
->> CC'ed James Smart,
->>
->> On Tue, 26 May 2009 11:38:14 -0700
->> Giridhar Malavali <giridhar.malavali@qlogic.com> wrote:
->>
->>> Thanks for the pointer. I will check with the post-merge tree.
+On 06/10/2009 02:00 AM, FUJITA Tomonori wrote:
+> On Tue, 09 Jun 2009 16:32:15 +0300
+> Boaz Harrosh <bharrosh@panasas.com> wrote:
+> 
+>> On 06/09/2009 04:10 PM, FUJITA Tomonori wrote:
+>>> On Tue, 09 Jun 2009 14:53:51 +0300
+>>> Boaz Harrosh <bharrosh@panasas.com> wrote:
 >>>
->>> 	The crash I am seeing is because of softirq_done_fn not set in the
->>> request queue for BSG request. Even in the post-merge tree I don't  
->>> see
->>> FC transport setting this function during the allocation of the
->>> request queue.  When BSG request times out, I see that it executes
->>> __blk_complete_request function where check is done for its  
->>> existence.
->>> I see this getting set for SCSI request during queue allocation in
->>> scsi_lib.c. Is this required for BSG request?
+>>>> Please do not revert. This is the point of all this.
+>>>>
+>>>> If there is no leak, You should NULL out the req->bio
+>>>> for now, and for 2.6.31 change the code to do 
+>>>> blk_end_request_all(). That's what blk_end_request does,
+>>>> since you are doing your own completion then set req->bio
+>>>> to null after you're done. (And before put_request)
+>>>>
+>>>> This stuff is good for error paths to catch leaks, please
+>>>> leave it?
+>>> Has this your good stuff found any bio leak bugs in mainline? In
+>>> addition, breaking working code is not a proper development style.
+>>>
+>> It has found for me in error paths. That's why I put it.
 >>
->> Yeah, you need to set q->softirq_done_fn if you use the block timeout
->> infrastructure. The current bsg user, SMP, uses bsg but it doesn't  
->> use
->> the timeout infrastructure so it doesn't set q->softirq_done_fn.
->>
->> If q->softirq_done_fn returns BLK_EH_HANDLED, the block layer doesn't
->> expect that q->softirq_done_fn frees the request (currently,
->> fc_bsg_job_timeout does); The block layer calls q->softirq_done_fn
->> for it.
->
-> Oops,
->
-> If q->rq_timed_out_fn returns BLK_EH_HANDLED, the block layer doesn't
-> expect that q->rq_timed_out_fn frees the request (currently,
-> fc_bsg_job_timeout does); The block layer calls q->softirq_done_fn to
-> clean up the request.
->
->
->> The attached patch works? It just adds q->softirq_done_fn and moves
->> fc_destroy_bsgjob from fc_bsg_job_timeout to it. fc_bsg_job_timeout
->> returns BLK_EH_NOT_HANDLED when a job is done since the job will be
->> finished shortly so we don't want the block layer to do anything for
->> the job.
->>
->> It might be better to use q->softirq_done_fn for all the requests not
->> only for expired requests, as SCSI-ml does, that is, job->job_done
->> calls blk_complete_request().
->>
->>
->> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/ 
->> scsi_transport_fc.c
->> index 3f64d93..c58e33a 100644
->> --- a/drivers/scsi/scsi_transport_fc.c
->> +++ b/drivers/scsi/scsi_transport_fc.c
->> @@ -3439,6 +3439,16 @@ fc_bsg_jobdone(struct fc_bsg_job *job)
->> 	fc_destroy_bsgjob(job);
->> }
->>
->> +static void fc_bsg_softirq_done(struct request *rq)
->> +{
->> +	struct fc_bsg_job *job = rq->special;
->> +	unsigned long flags;
->> +
->> +	spin_lock_irqsave(&job->job_lock, flags);
->> +	job->ref_cnt--;
->> +	spin_unlock_irqrestore(&job->job_lock, flags);
->> +	fc_destroy_bsgjob(job);
->> +}
->>
->> /**
->>  * fc_bsg_job_timeout - handler for when a bsg request timesout
->> @@ -3471,19 +3481,12 @@ fc_bsg_job_timeout(struct request *req)
->> 				"abort failed with status %d\n", err);
->> 	}
->>
->> -	if (!done) {
->> -		spin_lock_irqsave(&job->job_lock, flags);
->> -		job->ref_cnt--;
->> -		spin_unlock_irqrestore(&job->job_lock, flags);
->> -		fc_destroy_bsgjob(job);
->> -	}
->> -
->> -	/* the blk_end_sync_io() doesn't check the error */
->> -	return BLK_EH_HANDLED;
->> +	if (done)
->> +		return BLK_EH_NOT_HANDLED;
->> +	else
->> +		return BLK_EH_HANDLED;
->> }
->>
->> -
->> -
->> static int
->> fc_bsg_map_buffer(struct fc_bsg_buffer *buf, struct request *req)
->> {
->> @@ -3879,6 +3882,7 @@ fc_bsg_hostadd(struct Scsi_Host *shost,  
->> struct fc_host_attrs *fc_host)
->>
->> 	q->queuedata = shost;
->> 	queue_flag_set_unlocked(QUEUE_FLAG_BIDI, q);
->> +	blk_queue_softirq_done(q, fc_bsg_softirq_done);
->> 	blk_queue_rq_timed_out(q, fc_bsg_job_timeout);
->> 	blk_queue_rq_timeout(q, FC_DEFAULT_BSG_TIMEOUT);
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux- 
->> scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> I Issue bsg bidi commands every day all day, and never seen this.
+>> What driver are you using? and can you post the stack trace.
+> 
+> See the original mail. I already said, "BSG SMP requests get the
+> following warnings". I use mptsas however all BSG SMP users hit this
+> bug. The stack trace is not useful because the bsg users don't call
+> blk_put_request directly.
+> 
+> But If you want to see:
+> 
+> Call Trace:
+>  [<ffffffff80320349>] ? __blk_put_request+0x52/0xc0
+>  [<ffffffff8022fd26>] warn_slowpath_common+0x77/0xa4
+>  [<ffffffff8022fd62>] warn_slowpath_null+0xf/0x11
+>  [<ffffffff80320349>] __blk_put_request+0x52/0xc0
+>  [<ffffffff803206d6>] ? blk_put_request+0x20/0x46
+>  [<ffffffff803206e4>] blk_put_request+0x2e/0x46
+>  [<ffffffff80327f64>] blk_complete_sgv4_hdr_rq+0x1a8/0x1b7
+>  [<ffffffff80328a36>] bsg_ioctl+0x1b4/0x1eb
+>  [<ffffffff8032dfea>] ? __up_read+0x1c/0x9a
+>  [<ffffffff804aab20>] ? _spin_unlock_irqrestore+0x3f/0x47
+>  [<ffffffff802a0f10>] vfs_ioctl+0x2a/0x78
+>  [<ffffffff802a13cc>] do_vfs_ioctl+0x46e/0x4aa
+>  [<ffffffff80246384>] ? up_read+0x26/0x2b
+>  [<ffffffff8020b8e9>] ? retint_swapgs+0xe/0x13
+>  [<ffffffff802a144a>] sys_ioctl+0x42/0x65
+>  [<ffffffff8020aeab>] system_call_fastpath+0x16/0x1b
+> 
+>> The driver does something wrong. bsg over scsi-ml does not have this
+>> problem. Why?
+> 
+> Because scsi-ml calls blk_end_request() but BSG SMP users don't.
+> 
+> 
 
+That is a violation of block API. All block drivers must call
+blk_end_request(). If they do not, then they can not for example be
+called from inside Kernel. They relay on special bsg behavior
+that always uses map_user.
+
+This must be fixed. So you see that WARN_ON was right on the spot ;)
+
+>>> Anyway, setting req->bio in bsg works. Either is fine by me.
+>>>
+>>>
+>>> Jens, can you please send either patch to Linus now?
+>>>
+>>> =
+>>> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+>>> Subject: [PATCH] bsg: setting rq->bio to NULL
+>>>
+>>> Due to commit 1cd96c242a829d52f7a5ae98f554ca9775429685 ("block: WARN
+>>> in __blk_put_request() for potential bio leak"), BSG SMP requests get
+>>> the false warnings:
+>>>
+>>> WARNING: at block/blk-core.c:1068 __blk_put_request+0x52/0xc0()
+>>>
+>>> This sets rq->bio to NULL to avoid that false warnings.
+>>>
+>>>
+>>> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+>>> ---
+>>>  block/bsg.c |    3 +++
+>>>  1 files changed, 3 insertions(+), 0 deletions(-)
+>>>
+>>> diff --git a/block/bsg.c b/block/bsg.c
+>>> index 206060e..dd81be4 100644
+>>> --- a/block/bsg.c
+>>> +++ b/block/bsg.c
+>>> @@ -315,6 +315,7 @@ out:
+>>>  	blk_put_request(rq);
+>>>  	if (next_rq) {
+>>>  		blk_rq_unmap_user(next_rq->bio);
+>> I do not understand this here please explain? We have called blk_rq_map_user()
+>> and have bailed out on error later, without calling blk_execute_rq*. Now usually
+>> the bios are *double* referenced, one for the usual call of blk_end_request() that will
+>> release bios once, and second for the blk_rq_unmap_user() that will release second time.
+>> But here you only call blk_rq_unmap_user() don't you need to call blk_end_request() also?
+> 
+> If I understand correctly, blk_end_request() doesn't release bios of a
+> request that blk_rq_map_user was called against.
+> 
+
+This is the part I do not understand. The comment in map_user says that the bio
+ref count is taken twice, so when reference drops once at  blk_end_request()
+the bio is not yet freed, but will so in unmap_user. But if blk_end_request()
+is not called then there is no double drop of reference. I do want to understand,
+how is the bio gets freed, is it forced some how?
+
+> You can test this without any SAS hardware. Let me know when you find
+> a bio leak here.
+
+How can I test this without SAS hardware? Please point me to documentation.
+
+I do believe you that there is no leak, I just want to understand why?
+And any way, all "BSG SMP" drivers must be fixed to call blk_end_request().
+They can not be dependent on the specific ULD that calls them.
+
+Thanks
+Boaz
