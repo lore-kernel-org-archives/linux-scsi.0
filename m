@@ -1,41 +1,59 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: [Patch 5/5] lpfc 8.3.3 : Update driver version to 8.3.3
-Date: Wed, 10 Jun 2009 17:23:24 -0400
-Message-ID: <1244669004.9571.23.camel@ogier>
-Reply-To: James.Smart@Emulex.Com
+From: "Michael Chan" <mchan@broadcom.com>
+Subject: [PATCH] cnic, bnx2i: Fix build failure when CONFIG_PCI is not
+ set.
+Date: Wed, 10 Jun 2009 13:35:28 -0700
+Message-ID: <1244666128-7685-1-git-send-email-mchan@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:37973 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758254AbZFJVX0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Jun 2009 17:23:26 -0400
-Received: from xcm.ad.emulex.com (xcm.emulex.com [138.239.112.69])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id n5ALNSRA001429
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2009 14:23:28 -0700 (PDT)
+Received: from mms1.broadcom.com ([216.31.210.17]:1639 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753256AbZFJVZy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Jun 2009 17:25:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, davem@davemloft.net
+Cc: linux-scsi@vger.kernel.org, Michael Chan <mchan@broadcom.com>
 
-Update driver version to 8.3.3
+CNIC and BNX2I must depend on PCI.  Dependencies do not get
+propagated through select.
 
-Signed-off-by: James Smart <James.Smart@emulex.com>
+Signed-off-by: Michael Chan <mchan@broadcom.com>
 ---
+ drivers/net/Kconfig        |    5 +++--
+ drivers/scsi/bnx2i/Kconfig |    1 +
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
- drivers/scsi/lpfc/lpfc_version.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
---- a/drivers/scsi/lpfc/lpfc_version.h
-+++ b/drivers/scsi/lpfc/lpfc_version.h
-@@ -18,7 +18,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
+diff --git a/drivers/net/Kconfig b/drivers/net/Kconfig
+index f3c4a3b..f690314 100644
+--- a/drivers/net/Kconfig
++++ b/drivers/net/Kconfig
+@@ -2266,8 +2266,9 @@ config BNX2
  
--#define LPFC_DRIVER_VERSION "8.3.2"
-+#define LPFC_DRIVER_VERSION "8.3.3"
- 
- #define LPFC_DRIVER_NAME		"lpfc"
- #define LPFC_SP_DRIVER_HANDLER_NAME	"lpfc:sp"
+ config CNIC
+ 	tristate "Broadcom CNIC support"
+-	depends on BNX2
+-	depends on UIO
++	depends on PCI
++	select BNX2
++	select UIO
+ 	help
+ 	  This driver supports offload features of Broadcom NetXtremeII
+ 	  gigabit Ethernet cards.
+diff --git a/drivers/scsi/bnx2i/Kconfig b/drivers/scsi/bnx2i/Kconfig
+index 820d428..b62b482 100644
+--- a/drivers/scsi/bnx2i/Kconfig
++++ b/drivers/scsi/bnx2i/Kconfig
+@@ -2,6 +2,7 @@ config SCSI_BNX2_ISCSI
+ 	tristate "Broadcom NetXtreme II iSCSI support"
+ 	select SCSI_ISCSI_ATTRS
+ 	select CNIC
++	depends on PCI
+ 	---help---
+ 	This driver supports iSCSI offload for the Broadcom NetXtreme II
+ 	devices.
+-- 
+1.5.6.GIT
 
 
