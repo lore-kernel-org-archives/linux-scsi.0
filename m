@@ -1,79 +1,41 @@
 From: akpm@linux-foundation.org
-Subject: [patch 3/7] scsi: annotate gdth_rdcap_data, gdth_rdcap16_data endianness
-Date: Wed, 10 Jun 2009 12:56:56 -0700
-Message-ID: <200906101956.n5AJuuo0009906@imap1.linux-foundation.org>
+Subject: [patch 5/7] scsi: ncr53c8xx: div reaches -1
+Date: Wed, 10 Jun 2009 12:56:57 -0700
+Message-ID: <200906101956.n5AJuwkh009930@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:36352 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:45003 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1761674AbZFJT47 (ORCPT
+	by vger.kernel.org with ESMTP id S1761659AbZFJT47 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 10 Jun 2009 15:56:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com, bharrosh@panasas.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, matthew@wil.cx
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
+From: Roel Kluin <roel.kluin@gmail.com>
 
-It would be easy to get rid of the typedefs too, but I kept this
-minimal.
+With while(--div >= 0) { ... } div reaches -1.
 
-Noticed by sparse:
-drivers/scsi/gdth.c:2395:31: warning: incorrect type in assignment (different base types)
-drivers/scsi/gdth.c:2395:31:    expected unsigned int [unsigned] [assigned] [usertype] last_block_no
-drivers/scsi/gdth.c:2395:31:    got restricted __be32 [usertype] <noident>
-drivers/scsi/gdth.c:2396:27: warning: incorrect type in assignment (different base types)
-drivers/scsi/gdth.c:2396:27:    expected unsigned int [unsigned] [assigned] [usertype] block_length
-drivers/scsi/gdth.c:2396:27:    got restricted __be32 [usertype] <noident>
-drivers/scsi/gdth.c:2406:33: warning: incorrect type in assignment (different base types)
-drivers/scsi/gdth.c:2406:33:    expected unsigned long long [unsigned] [usertype] last_block_no
-drivers/scsi/gdth.c:2406:33:    got restricted __be64 [usertype] <noident>
-drivers/scsi/gdth.c:2407:33: warning: incorrect type in assignment (different base types)
-drivers/scsi/gdth.c:2407:33:    expected unsigned int [unsigned] [usertype] block_length
-drivers/scsi/gdth.c:2407:33:    got restricted __be32 [usertype] <noident>
-
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+Cc: Matthew Wilcox <matthew@wil.cx>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/gdth.c |    2 +-
- drivers/scsi/gdth.h |    8 ++++----
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/ncr53c8xx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/gdth.c~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness drivers/scsi/gdth.c
---- a/drivers/scsi/gdth.c~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness
-+++ a/drivers/scsi/gdth.c
-@@ -2391,7 +2391,7 @@ static int gdth_internal_cache_cmd(gdth_
-       case READ_CAPACITY:
-         TRACE2(("Read capacity hdrive %d\n",t));
-         if (ha->hdr[t].size > (ulong64)0xffffffff)
--            rdc.last_block_no = 0xffffffff;
-+            rdc.last_block_no = cpu_to_be32(0xffffffff);
-         else
-             rdc.last_block_no = cpu_to_be32(ha->hdr[t].size-1);
-         rdc.block_length  = cpu_to_be32(SECTOR_SIZE);
-diff -puN drivers/scsi/gdth.h~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness drivers/scsi/gdth.h
---- a/drivers/scsi/gdth.h~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness
-+++ a/drivers/scsi/gdth.h
-@@ -968,14 +968,14 @@ typedef struct {
+diff -puN drivers/scsi/ncr53c8xx.c~scsi-ncr53c8xx-div-reaches-1 drivers/scsi/ncr53c8xx.c
+--- a/drivers/scsi/ncr53c8xx.c~scsi-ncr53c8xx-div-reaches-1
++++ a/drivers/scsi/ncr53c8xx.c
+@@ -5444,7 +5444,7 @@ static void ncr_getsync(struct ncb *np, 
+ 	**	input speed faster than the period.
+ 	*/
+ 	kpc = per * clk;
+-	while (--div >= 0)
++	while (--div > 0)
+ 		if (kpc >= (div_10M[div] << 2)) break;
  
- /* READ_CAPACITY data format */
- typedef struct {
--    ulong32     last_block_no;
--    ulong32     block_length;
-+	__be32 last_block_no;
-+	__be32 block_length;
- } PACKED gdth_rdcap_data;
- 
- /* READ_CAPACITY (16) data format */
- typedef struct {
--    ulong64     last_block_no;
--    ulong32     block_length;
-+	__be64 last_block_no;
-+	__be32 block_length;
- } PACKED gdth_rdcap16_data;
- 
- /* REQUEST_SENSE data format */
+ 	/*
 _
