@@ -1,70 +1,69 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH] Revert "block: WARN in __blk_put_request() for
- potential bio leak"
-Date: Wed, 10 Jun 2009 17:52:27 +0900
-Message-ID: <20090610175238P.fujita.tomonori@lab.ntt.co.jp>
-References: <4A2F6B8E.8060700@panasas.com>
-	<20090610172956C.fujita.tomonori@lab.ntt.co.jp>
-	<4A2F729A.1060101@panasas.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 0/] OSD changes for 2.6.31
+Date: Wed, 10 Jun 2009 12:10:46 +0300
+Message-ID: <4A2F7896.2070905@panasas.com>
+References: <4A197CB5.60709@panasas.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:38437 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755607AbZFJIwf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Jun 2009 04:52:35 -0400
-In-Reply-To: <4A2F729A.1060101@panasas.com>
+Received: from ip67-152-220-66.z220-152-67.customer.algx.net ([67.152.220.66]:8650
+	"EHLO daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755353AbZFJJKu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Jun 2009 05:10:50 -0400
+In-Reply-To: <4A197CB5.60709@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: fujita.tomonori@lab.ntt.co.jp, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
+To: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Al Viro <viro@ZenIV.linux.org.uk>
 
-On Wed, 10 Jun 2009 11:45:14 +0300
-Boaz Harrosh <bharrosh@panasas.com> wrote:
-
-> On 06/10/2009 11:29 AM, FUJITA Tomonori wrote:
-> > On Wed, 10 Jun 2009 11:15:10 +0300
-> > Boaz Harrosh <bharrosh@panasas.com> wrote:
-> >> That is a violation of block API. All block drivers must call
-> >> blk_end_request().
-> > 
-> > Where can I find a documentation about it?
-> > 
+On 05/24/2009 07:58 PM, Boaz Harrosh wrote:
+> These are the accumulated osd patches for the next merge window,
+> Linux 2.6.31. 
 > 
-> No documentation
+> Most of these patches are a repost rebased on latest scsi-misc
 > 
-> > If not, can you stop claiming a new rule?
-> > 
+> List of patches:
+> [PATCH 01/10 resend] libosd: OSD2r05: Additional command enums                                                        
+> [PATCH 02/10 resend] libosd: OSD2r05: Attribute definitions
+> [PATCH 03/10 resend] libosd: Better printout of OSD target system information
+> [PATCH 04/10 resend] libosd: osd_req_{read,write}_kern new API
+> [PATCH 05/10 resend] libosd: Let _osd_req_finalize_data_integrity receive number of out_bytes
+> [PATCH 06/10 resend] libosd: osd_req_{read,write} takes a length parameter
 > 
-> The fact that ALL block drivers call it for proper service of ALL ULDS,
-> does it not make it a rule?
-
-BSG SMP code is not ULD.
-
-
-> > If you want to propose a new rule, you need to fix the existing users
-> > first.
-> > 
+>    These are a resend. The last 2 patches are important for supporting Jeff's
+>    osdblk driver. (The first 4 are old patches that thier time has come)
 > 
-> Sorry I missed them. I couldn't even imagine that there will be any.
-> Will send patches, sorry.
-
-I'll take care about it.
-
-
-> >> If they do not, then they can not for example be
-> >> called from inside Kernel. They relay on special bsg behavior
-> >> that always uses map_user.
-> > 
-> > Of course, we send SMP requests only via BSG. SMP is the first reason
-> > why we invented BSG.
-> > 
+> [PATCH 07/10] libosd: Define an osd_dev wrapper to retrieve the request_queue
+>    Simple wrapper
 > 
-> Of course what? Show me the big fat comment that says:
->   only use from BSG!!! other wise broken block driver.
+> [PATCH 08/10] osduld: use filp_open() when looking up an osd-device
+> 
+>     This patch was inspired by Al Viro. It uses the in-kernel open-file
+>     mechanism to look up the osd char-device for Kernel users like exofs
+>     and later pNFS-Objlayout.
+>     It was heavily tested and works well.
+>     It fixes the problem we had before, of need to open+close a file handle
+>     on the osd-char-device before mounting an exofs.
+>     Please review
+> 
+> [PATCH 09/10] libosd: Use REQ_QUIET requests.
+>     Recent scsi_lib changes, caused a dmesg span in exofs+osd regular use,
+>     because of the way we routinely receive a recovered scsi sense. Recently, for
+>     reason I could not find, this condition started to print messages at:
+>        scsi_io_comlition:778 (look for "== RECOVERED_ERROR")
+>     Use of a REQ_QUIET flag is needed to silence these prints.
+>     OSD has it's own prints for scsi-sense returns, when needed.
+> 
+> [PATCH 10/10] osd: Remove out-of-tree left overs
+> 
 
-I think that the majority of SCSI people know that.
+The merge window has risen upon us and these patches are still not
+in scsi-misc. (Luckily they where in linux-next through the osd tree)
+If these will not go into 2.6.31 I'm very screwed, with the pNFS stuff,
+Please reconsider?
 
-FYI, you live in a land where very few live.
+Thanks in advance
+Boaz
 
