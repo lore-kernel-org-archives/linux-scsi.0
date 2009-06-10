@@ -1,260 +1,168 @@
 From: James Smart <James.Smart@Emulex.Com>
-Subject: [Patch 2/5] lpfc 8.3.3 : FC/FCOE discovery fixes
-Date: Wed, 10 Jun 2009 17:22:56 -0400
-Message-ID: <1244668976.9571.17.camel@ogier>
+Subject: [Patch 3/5] lpfc 8.3.3 : Fix a couple of spin_lock and memory
+	issues and a crash
+Date: Wed, 10 Jun 2009 17:23:06 -0400
+Message-ID: <1244668986.9571.19.camel@ogier>
 Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:37918 "EHLO
+Received: from emulex.emulex.com ([138.239.112.1]:37939 "EHLO
 	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755281AbZFJVW5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Jun 2009 17:22:57 -0400
+	with ESMTP id S1757861AbZFJVXG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Jun 2009 17:23:06 -0400
 Received: from xcm.ad.emulex.com (xcm.emulex.com [138.239.112.69])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id n5ALMxVW001366
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2009 14:22:59 -0700 (PDT)
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id n5ALN99T001389
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2009 14:23:09 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>
 
-FC/FCoE discovery fixes
+Fix a couple of spin_lock and memory issues and a crash
 
 Contains the following changes:
-- Force vport to send LOGO to fabric controller when deleting vport
-- Fixed driver failing to register login when a PLOGI is received
-- Fixes for FIP discovery
-- Added stricter checks for FCF addressing mode
-- Added code to send only FLOGI, FDISC and LOGO to Fabric controller as FIP
-- Fixed handling of LOGO from Fabric port
-- Fixed consecutive link up events skipped link_down processing
+- Fixed error paths retaking a spin lock which they already hold
+- Added code to free memory in a couple of error paths
+- Added code to free RPI bit map while unloading driver
+- Added code to write zero to memory object allocated through dma_alloc_coherent
+- Fixed crash/hang with target or LUN resets
 
 Signed-off-by: James Smart <James.Smart@emulex.com>
 ---
 
- drivers/scsi/lpfc/lpfc_els.c       |   13 +++++++++++++
- drivers/scsi/lpfc/lpfc_hbadisc.c   |   35 ++++++++++++++++++++++++++++-------
- drivers/scsi/lpfc/lpfc_hw4.h       |    2 +-
- drivers/scsi/lpfc/lpfc_mbox.c      |    6 ++++--
- drivers/scsi/lpfc/lpfc_nportdisc.c |    2 +-
- drivers/scsi/lpfc/lpfc_sli.c       |   24 +++++++++++-------------
- drivers/scsi/lpfc/lpfc_sli.h       |    1 +
- drivers/scsi/lpfc/lpfc_vport.c     |    2 --
- 8 files changed, 59 insertions(+), 26 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c |    1 +
+ drivers/scsi/lpfc/lpfc_mbox.c |    1 +
+ drivers/scsi/lpfc/lpfc_sli.c  |   42 ++++++++++++++++++++++++++++++++---------
+ 3 files changed, 35 insertions(+), 9 deletions(-)
 
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -168,6 +168,19 @@ lpfc_prep_els_iocb(struct lpfc_vport *vport, uint8_t expectRsp,
- 	if (elsiocb == NULL)
- 		return NULL;
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -3540,6 +3540,7 @@ lpfc_sli4_driver_resource_unset(struct lpfc_hba *phba)
  
-+	/*
-+	 * If this command is for fabric controller and HBA running
-+	 * in FIP mode send FLOGI, FDISC and LOGO as FIP frames.
-+	 */
-+	if ((did == Fabric_DID) &&
-+		bf_get(lpfc_fip_flag, &phba->sli4_hba.sli4_flags) &&
-+		((elscmd == ELS_CMD_FLOGI) ||
-+		 (elscmd == ELS_CMD_FDISC) ||
-+		 (elscmd == ELS_CMD_LOGO)))
-+		elsiocb->iocb_flag |= LPFC_FIP_ELS;
-+	else
-+		elsiocb->iocb_flag &= ~LPFC_FIP_ELS;
-+
- 	icmd = &elsiocb->iocb;
+ 	/* Free the allocated rpi headers. */
+ 	lpfc_sli4_remove_rpi_hdrs(phba);
++	lpfc_sli4_remove_rpis(phba);
  
- 	/* fill in BDEs for command */
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -1197,6 +1197,11 @@ lpfc_match_fcf_conn_list(struct lpfc_hba *phba,
- {
- 	struct lpfc_fcf_conn_entry *conn_entry;
- 
-+	/* If FCF not available return 0 */
-+	if (!bf_get(lpfc_fcf_record_fcf_avail, new_fcf_record) ||
-+		!bf_get(lpfc_fcf_record_fcf_valid, new_fcf_record))
-+		return 0;
-+
- 	if (!phba->cfg_enable_fip) {
- 		*boot_flag = 0;
- 		*addr_mode = bf_get(lpfc_fcf_record_mac_addr_prov,
-@@ -1216,6 +1221,14 @@ lpfc_match_fcf_conn_list(struct lpfc_hba *phba,
- 		*boot_flag = 0;
- 		*addr_mode = bf_get(lpfc_fcf_record_mac_addr_prov,
- 			new_fcf_record);
-+
-+		/*
-+		 * When there are no FCF connect entries, use driver's default
-+		 * addressing mode - FPMA.
-+		 */
-+		if (*addr_mode & LPFC_FCF_FPMA)
-+			*addr_mode = LPFC_FCF_FPMA;
-+
- 		*vlan_id = 0xFFFF;
- 		return 1;
+ 	/* Free the ELS sgl list */
+ 	lpfc_free_active_sgl(phba);
+--- a/drivers/scsi/lpfc/lpfc_mbox.c
++++ b/drivers/scsi/lpfc/lpfc_mbox.c
+@@ -1631,6 +1631,7 @@ lpfc_sli4_config(struct lpfc_hba *phba, struct lpfcMboxq *mbox,
+ 		/* In case of malloc fails, proceed with whatever we have */
+ 		if (!viraddr)
+ 			break;
++		memset(viraddr, 0, PAGE_SIZE);
+ 		mbox->sge_array->addr[pagen] = viraddr;
+ 		/* Keep the first page for later sub-header construction */
+ 		if (pagen == 0)
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -4139,8 +4139,11 @@ lpfc_sli4_read_fcoe_params(struct lpfc_hba *phba,
+ 		return -EIO;
  	}
-@@ -1241,6 +1254,14 @@ lpfc_match_fcf_conn_list(struct lpfc_hba *phba,
+ 	data_length = mqe->un.mb_words[5];
+-	if (data_length > DMP_FCOEPARAM_RGN_SIZE)
++	if (data_length > DMP_FCOEPARAM_RGN_SIZE) {
++		lpfc_mbuf_free(phba, mp->virt, mp->phys);
++		kfree(mp);
+ 		return -EIO;
++	}
+ 
+ 	lpfc_parse_fcoe_conf(phba, mp->virt, data_length);
+ 	lpfc_mbuf_free(phba, mp->virt, mp->phys);
+@@ -7351,6 +7354,32 @@ lpfc_sli_wake_iocb_wait(struct lpfc_hba *phba,
+ }
+ 
+ /**
++ * lpfc_chk_iocb_flg - Test IOCB flag with lock held.
++ * @phba: Pointer to HBA context object..
++ * @piocbq: Pointer to command iocb.
++ * @flag: Flag to test.
++ *
++ * This routine grabs the hbalock and then test the iocb_flag to
++ * see if the passed in flag is set.
++ * Returns:
++ * 1 if flag is set.
++ * 0 if flag is not set.
++ **/
++static int
++lpfc_chk_iocb_flg(struct lpfc_hba *phba,
++		 struct lpfc_iocbq *piocbq, uint32_t flag)
++{
++	unsigned long iflags;
++	int ret;
++
++	spin_lock_irqsave(&phba->hbalock, iflags);
++	ret = piocbq->iocb_flag & flag;
++	spin_unlock_irqrestore(&phba->hbalock, iflags);
++	return ret;
++
++}
++
++/**
+  * lpfc_sli_issue_iocb_wait - Synchronous function to issue iocb commands
+  * @phba: Pointer to HBA context object..
+  * @pring: Pointer to sli ring.
+@@ -7417,7 +7446,7 @@ lpfc_sli_issue_iocb_wait(struct lpfc_hba *phba,
+ 	if (retval == IOCB_SUCCESS) {
+ 		timeout_req = timeout * HZ;
+ 		timeleft = wait_event_timeout(done_q,
+-				piocb->iocb_flag & LPFC_IO_WAKE,
++				lpfc_chk_iocb_flg(phba, piocb, LPFC_IO_WAKE),
+ 				timeout_req);
+ 
+ 		if (piocb->iocb_flag & LPFC_IO_WAKE) {
+@@ -7602,20 +7631,16 @@ lpfc_sli_eratt_read(struct lpfc_hba *phba)
+ 		if ((HS_FFER1 & phba->work_hs) &&
+ 		    ((HS_FFER2 | HS_FFER3 | HS_FFER4 | HS_FFER5 |
+ 		     HS_FFER6 | HS_FFER7) & phba->work_hs)) {
+-			spin_lock_irq(&phba->hbalock);
+ 			phba->hba_flag |= DEFER_ERATT;
+-			spin_unlock_irq(&phba->hbalock);
+ 			/* Clear all interrupt enable conditions */
+ 			writel(0, phba->HCregaddr);
+ 			readl(phba->HCregaddr);
  		}
  
- 		/*
-+		 * If connection record does not support any addressing mode,
-+		 * skip the FCF record.
-+		 */
-+		if (!(bf_get(lpfc_fcf_record_mac_addr_prov, new_fcf_record)
-+			& (LPFC_FCF_FPMA | LPFC_FCF_SPMA)))
-+			continue;
-+
-+		/*
- 		 * Check if the connection record specifies a required
- 		 * addressing mode.
- 		 */
-@@ -1272,6 +1293,11 @@ lpfc_match_fcf_conn_list(struct lpfc_hba *phba,
- 		else
- 			*boot_flag = 0;
- 
-+		/*
-+		 * If user did not specify any addressing mode, or if the
-+		 * prefered addressing mode specified by user is not supported
-+		 * by FCF, allow fabric to pick the addressing mode.
-+		 */
- 		*addr_mode = bf_get(lpfc_fcf_record_mac_addr_prov,
- 				new_fcf_record);
- 		/*
-@@ -1297,12 +1323,6 @@ lpfc_match_fcf_conn_list(struct lpfc_hba *phba,
- 			!(conn_entry->conn_rec.flags & FCFCNCT_AM_SPMA) &&
- 			(*addr_mode & LPFC_FCF_FPMA))
- 				*addr_mode = LPFC_FCF_FPMA;
--		/*
--		 * If user did not specify any addressing mode, use FPMA if
--		 * possible else use SPMA.
--		 */
--		else if (*addr_mode & LPFC_FCF_FPMA)
--			*addr_mode = LPFC_FCF_FPMA;
- 
- 		if (conn_entry->conn_rec.flags & FCFCNCT_VLAN_VALID)
- 			*vlan_id = conn_entry->conn_rec.vlan_tag;
-@@ -1864,7 +1884,7 @@ lpfc_mbx_cmpl_read_la(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 		vport->fc_flag &= ~FC_BYPASSED_MODE;
- 	spin_unlock_irq(shost->host_lock);
- 
--	if (((phba->fc_eventTag + 1) < la->eventTag) ||
-+	if ((phba->fc_eventTag  < la->eventTag) ||
- 	    (phba->fc_eventTag == la->eventTag)) {
- 		phba->fc_stat.LinkMultiEvent++;
- 		if (la->attType == AT_LINK_UP)
-@@ -2925,6 +2945,7 @@ lpfc_unreg_rpi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 		lpfc_no_rpi(phba, ndlp);
- 		ndlp->nlp_rpi = 0;
- 		ndlp->nlp_flag &= ~NLP_RPI_VALID;
-+		ndlp->nlp_flag &= ~NLP_NPR_ADISC;
+ 		/* Set the driver HA work bitmap */
+-		spin_lock_irq(&phba->hbalock);
+ 		phba->work_ha |= HA_ERATT;
+ 		/* Indicate polling handles this ERATT */
+ 		phba->hba_flag |= HBA_ERATT_HANDLED;
+-		spin_unlock_irq(&phba->hbalock);
  		return 1;
  	}
  	return 0;
---- a/drivers/scsi/lpfc/lpfc_hw4.h
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -1128,7 +1128,7 @@ struct fcf_record {
- #define lpfc_fcf_record_mac_5_WORD		word4
- #define lpfc_fcf_record_fcf_avail_SHIFT		16
- #define lpfc_fcf_record_fcf_avail_MASK		0x000000FF
--#define lpfc_fcf_record_fc_avail_WORD		word4
-+#define lpfc_fcf_record_fcf_avail_WORD		word4
- #define lpfc_fcf_record_mac_addr_prov_SHIFT	24
- #define lpfc_fcf_record_mac_addr_prov_MASK	0x000000FF
- #define lpfc_fcf_record_mac_addr_prov_WORD	word4
---- a/drivers/scsi/lpfc/lpfc_mbox.c
-+++ b/drivers/scsi/lpfc/lpfc_mbox.c
-@@ -1715,8 +1715,10 @@ lpfc_request_features(struct lpfc_hba *phba, struct lpfcMboxq *mboxq)
- 	/* Set up host requested features. */
- 	bf_set(lpfc_mbx_rq_ftr_rq_fcpi, &mboxq->u.mqe.un.req_ftrs, 1);
- 
--	/* Virtual fabrics and FIPs are not supported yet. */
--	bf_set(lpfc_mbx_rq_ftr_rq_ifip, &mboxq->u.mqe.un.req_ftrs, 0);
-+	if (phba->cfg_enable_fip)
-+		bf_set(lpfc_mbx_rq_ftr_rq_ifip, &mboxq->u.mqe.un.req_ftrs, 0);
-+	else
-+		bf_set(lpfc_mbx_rq_ftr_rq_ifip, &mboxq->u.mqe.un.req_ftrs, 1);
- 
- 	/* Enable DIF (block guard) only if configured to do so. */
- 	if (phba->cfg_enable_bg)
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -497,7 +497,7 @@ lpfc_rcv_logo(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		lpfc_els_rsp_acc(vport, ELS_CMD_PRLO, cmdiocb, ndlp, NULL);
- 	else
- 		lpfc_els_rsp_acc(vport, ELS_CMD_ACC, cmdiocb, ndlp, NULL);
--	if ((ndlp->nlp_type & NLP_FABRIC) &&
-+	if ((ndlp->nlp_DID == Fabric_DID) &&
- 		vport->port_type == LPFC_NPIV_PORT) {
- 		lpfc_linkdown_port(vport);
- 		mod_timer(&ndlp->nlp_delayfunc, jiffies + HZ * 1);
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -4491,8 +4491,10 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
- 		rc = -ENODEV;
- 		goto out_free_vpd;
- 	}
--	/* Temporary initialization of lpfc_fip_flag to non-fip */
--	bf_set(lpfc_fip_flag, &phba->sli4_hba.sli4_flags, 0);
-+	if (phba->cfg_enable_fip)
-+		bf_set(lpfc_fip_flag, &phba->sli4_hba.sli4_flags, 1);
-+	else
-+		bf_set(lpfc_fip_flag, &phba->sli4_hba.sli4_flags, 0);
- 
- 	/* Set up all the queues to the device */
- 	rc = lpfc_sli4_queue_setup(phba);
-@@ -5856,18 +5858,13 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq,
- 
- 	fip = bf_get(lpfc_fip_flag, &phba->sli4_hba.sli4_flags);
- 	/* The fcp commands will set command type */
--	if ((!(iocbq->iocb_flag &  LPFC_IO_FCP)) && (!fip))
--		command_type = ELS_COMMAND_NON_FIP;
--	else if (!(iocbq->iocb_flag &  LPFC_IO_FCP))
--		command_type = ELS_COMMAND_FIP;
--	else if (iocbq->iocb_flag &  LPFC_IO_FCP)
-+	if (iocbq->iocb_flag &  LPFC_IO_FCP)
- 		command_type = FCP_COMMAND;
--	else {
--		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
--			"2019 Invalid cmd 0x%x\n",
--			iocbq->iocb.ulpCommand);
--		return IOCB_ERROR;
--	}
-+	else if (fip && (iocbq->iocb_flag & LPFC_FIP_ELS))
-+		command_type = ELS_COMMAND_FIP;
-+	else
-+		command_type = ELS_COMMAND_NON_FIP;
-+
- 	/* Some of the fields are in the right position already */
- 	memcpy(wqe, &iocbq->iocb, sizeof(union lpfc_wqe));
- 	abort_tag = (uint32_t) iocbq->iotag;
-@@ -11467,6 +11464,7 @@ lpfc_sli4_build_dflt_fcf_record(struct lpfc_hba *phba,
- 	bf_set(lpfc_fcf_record_fc_map_1, fcf_record, phba->fc_map[1]);
- 	bf_set(lpfc_fcf_record_fc_map_2, fcf_record, phba->fc_map[2]);
- 	bf_set(lpfc_fcf_record_fcf_valid, fcf_record, 1);
-+	bf_set(lpfc_fcf_record_fcf_avail, fcf_record, 1);
- 	bf_set(lpfc_fcf_record_fcf_index, fcf_record, fcf_index);
- 	bf_set(lpfc_fcf_record_mac_addr_prov, fcf_record,
- 		LPFC_FCF_FPMA | LPFC_FCF_SPMA);
---- a/drivers/scsi/lpfc/lpfc_sli.h
-+++ b/drivers/scsi/lpfc/lpfc_sli.h
-@@ -56,6 +56,7 @@ struct lpfc_iocbq {
- #define LPFC_DRIVER_ABORTED	8	/* driver aborted this request */
- #define LPFC_IO_FABRIC		0x10	/* Iocb send using fabric scheduler */
- #define LPFC_DELAY_MEM_FREE	0x20    /* Defer free'ing of FC data */
-+#define LPFC_FIP_ELS		0x40
- 
- 	uint8_t abort_count;
- 	uint8_t rsvd2;
---- a/drivers/scsi/lpfc/lpfc_vport.c
-+++ b/drivers/scsi/lpfc/lpfc_vport.c
-@@ -695,8 +695,6 @@ lpfc_vport_delete(struct fc_vport *fc_vport)
+@@ -7661,12 +7686,10 @@ lpfc_sli4_eratt_read(struct lpfc_hba *phba)
+ 			return 0;
+ 			phba->work_status[0] = uerr_sta_lo;
+ 			phba->work_status[1] = uerr_sta_hi;
+-			spin_lock_irq(&phba->hbalock);
+ 			/* Set the driver HA work bitmap */
+ 			phba->work_ha |= HA_ERATT;
+ 			/* Indicate polling handles this ERATT */
+ 			phba->hba_flag |= HBA_ERATT_HANDLED;
+-			spin_unlock_irq(&phba->hbalock);
+ 			return 1;
  		}
- 		vport->unreg_vpi_cmpl = VPORT_INVAL;
- 		timeout = msecs_to_jiffies(phba->fc_ratov * 2000);
--		if (ndlp->nlp_state == NLP_STE_UNUSED_NODE)
--			goto skip_logo;
- 		if (!lpfc_issue_els_npiv_logo(vport, ndlp))
- 			while (vport->unreg_vpi_cmpl == VPORT_INVAL && timeout)
- 				timeout = schedule_timeout(timeout);
+ 	}
+@@ -9349,6 +9372,7 @@ lpfc_sli4_queue_alloc(struct lpfc_hba *phba, uint32_t entry_size,
+ 			kfree(dmabuf);
+ 			goto out_fail;
+ 		}
++		memset(dmabuf->virt, 0, PAGE_SIZE);
+ 		dmabuf->buffer_tag = x;
+ 		list_add_tail(&dmabuf->list, &queue->page_list);
+ 		/* initialize queue's entry array */
+@@ -9771,7 +9795,7 @@ lpfc_wq_create(struct lpfc_hba *phba, struct lpfc_queue *wq,
+ 	/* link the wq onto the parent cq child list */
+ 	list_add_tail(&wq->list, &cq->child_list);
+ out:
+-	if (rc == MBX_TIMEOUT)
++	if (rc != MBX_TIMEOUT)
+ 		mempool_free(mbox, phba->mbox_mem_pool);
+ 	return status;
+ }
 
 
