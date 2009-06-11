@@ -1,48 +1,27 @@
-From: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: PATCH: PMC-Sierra MaxRAID driver to support 6Gb/s SAS RAID
  controller
-Date: Thu, 11 Jun 2009 06:25:57 -0700 (PDT)
-Message-ID: <alpine.LNX.1.10.0906110624310.5980@rslab159.pmc-sierra.bc.ca>
-References: <alpine.LNX.1.10.0906101259500.24722@rslab159.pmc-sierra.bc.ca> <200906111348.02029.eike-kernel@sf-tec.de>
+Date: Thu, 11 Jun 2009 09:08:12 -0500
+Message-ID: <1244729292.3998.9.camel@mulgrave.site>
+References: <alpine.LNX.1.10.0906101259500.24722@rslab159.pmc-sierra.bc.ca>
+	 <200906111348.02029.eike-kernel@sf-tec.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:46020 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760643AbZFKOG7 (ORCPT
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:34995 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750813AbZFKOIO (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Jun 2009 10:06:59 -0400
+	Thu, 11 Jun 2009 10:08:14 -0400
 In-Reply-To: <200906111348.02029.eike-kernel@sf-tec.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, anil_ravindranath@pmc-sierra.com, gregkh@suse.de
+Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>, linux-scsi@vger.kernel.org, gregkh@suse.de
 
-Rolf,
-
-Thanks for your review. I will look into your inputs and incorporate them 
-in the driver.
-
-with regards,
-  Anil
-
-On Thu, 11 Jun 2009, Rolf Eike Beer wrote:
-
+On Thu, 2009-06-11 at 13:47 +0200, Rolf Eike Beer wrote:
 > Anil Ravindranath wrote:
-> > Hi,
-> >
-> > This patch adds a driver to support PMC-Sierra 6Gb/s SAS RAID controller.
-> > This patch is created against scsi-misc-2.6.git.
-> 
-> > +module_param_named(debug, pmcraid_debug, uint, (S_IRUGO | S_IWUSR));
-> > +MODULE_PARM_DESC(debug,
-> > +		 "Enable driver verbose message logging. Set 1  to enable."
-> > +		 "(default: 0)");
-> 
-> I would say that "1" would enable this is rather obvious. And since this is 
-> only 0 or 1 better use bool instead of uint.
-> 
-> 
 > > +static int pmcraid_slave_alloc(struct scsi_device *scsi_dev)
 > > +{
 > > +	struct pmcraid_resource_entry *temp, *res = NULL;
@@ -55,162 +34,18 @@ On Thu, 11 Jun 2009, Rolf Eike Beer wrote:
 > 
 > hostdata is void* AFAIR so there is no need to cast. It's C, there is no need 
 > to cast to or from void* anywhere if the other thing is a pointer.
-> 
-> > +static int pmcraid_slave_configure(struct scsi_device *sdev)
-> > +{
-> > +	struct pmcraid_resource_entry *res = NULL;
-> > +
-> > +	res = sdev->hostdata;
-> 
-> No need to initialize res to NULL.
-> 
-> > +static u32 pmcraid_read_interrupts(struct pmcraid_instance *pinstance)
-> > +{
-> > +
-> > +	return ioread32(pinstance->int_regs.ioa_host_interrupt_reg);
-> > +}
-> 
-> Extra newline.
-> 
-> > +/**
-> > + * pmcraid_disable_interrupts - Masks and clears all specified interrupts
-> > + *
-> > + * @pinstance: pointer to per adapter instance structure
-> > + * @intr: interrupts to disable
-> > + *
-> > + * Return Value
-> > + *	 None
-> > + */
-> 
-> Well, that's rather obvious if it's a void function, isn't it? ;)
-> 
-> 
-> > +static int __devinit pmcraid_probe(
-> > +	struct pci_dev *pdev,
-> > +	const struct pci_device_id *dev_id
-> > +)
-> > +{
-> > +	struct pmcraid_instance *pinstance;
-> > +	struct Scsi_Host *host;
-> > +	void __iomem *mapped_pci_addr;
-> > +	int rc = PCIBIOS_SUCCESSFUL;
-> > +
-> > +	if (pmcraid_adapter_count >= PMCRAID_MAX_ADAPTERS) {
-> > +		pmcraid_err
-> > +			("maximum number(%d) of supported adapters reached\n",
-> > +			 pmcraid_adapter_count);
-> > +		return -ENOMEM;
-> > +	}
-> > +
-> > +	pmcraid_adapter_count++;
-> 
-> This counter may need a lock, else you might get into trouble.
-> 
-> > +	rc = pci_enable_device(pdev);
-> 
-> Well, I ask it every time, but nevertheless: why not use devres for your 
-> driver? It will make error handling in _probe as well as the _release stuff 
-> much easier.
-> 
-> > +	if (rc) {
-> > +		dev_err(&pdev->dev, "Cannot enable adapter\n");
-> > +		pmcraid_adapter_count--;
-> > +		goto out;
-> > +	}
-> 
-> Just "return rc" here. This goto into the middle of the function just for a 
-> return is IMHO hard to read.
-> 
-> > +	dev_info(&pdev->dev,
-> > +		"Found IOA(%x:%x) on PCI bus %d slot %d with IRQ: %d\n",
-> > +		 pdev->vendor, pdev->device, pdev->bus->number,
-> > +		 PCI_SLOT(pdev->bus->number), pdev->irq);
-> 
-> The IRQ and stuff is printed by request_irq() or such anyway. If you have 
-> enabled MSI the IRQ is a different one anyway.
-> 
-> > +	/* zero out entire instance structure */
-> > +	pinstance = (struct pmcraid_instance *)host->hostdata;
-> > +	memset(pinstance, 0, sizeof(struct pmcraid_instance));
-> 
-> memset(pinstance, 0, sizeof(*pinstance));
-> 
-> > +	/* Schedule worker thread to handle CCN and take care of adding and
-> > +	 * removing devices to OS
-> > +	 */
-> > +	schedule_work(&pinstance->worker_q);
-> > +
-> > +out:
-> > +	return rc;
-> > +
-> > +out_remove_host:
-> > +	scsi_remove_host(host);
-> > +
-> > +out_release_bufs:
-> > +	pmcraid_release_buffers(pinstance);
-> > +
-> > +out_unregister_isr:
-> > +	pmcraid_kill_tasklets(pinstance);
-> > +	pmcraid_unregister_interrupt_handler(pinstance);
-> > +
-> > +out_scsi_host_put:
-> > +	scsi_host_put(host);
-> > +
-> > +cleanup_nomem:
-> > +	iounmap(mapped_pci_addr);
-> > +
-> > +out_release_regions:
-> > +	pci_release_regions(pdev);
-> > +
-> > +out_disable_device:
-> > +	pmcraid_adapter_count--;
-> > +	pci_set_drvdata(pdev, NULL);
-> > +	pci_disable_device(pdev);
-> > +	rc = -ENODEV;
-> > +	goto out;
-> > +}
-> 
-> Just "return rc" here. And maybe it's a good idea to just keep the previous rc 
-> so you will see it was ENOMEM or whatever.
-> 
-> > +/* PMC PCI vendor ID and device ID values */
-> > +#define PCI_VENDOR_ID_PMC			0x11F8
-> > +#define PCI_DEVICE_ID_PMC_MAXRAID		0x5220
-> > +#define PCI_DEVICE_ID_PMC_0x8010		0x8010
-> 
-> You could just use the 0x8010 directly at the only place this constant is 
-> referenced.
-> 
-> > +#define IOARCB_LENGTH_CODE(n)         (((n)-3)/8 + (((n)-3)%8 > 0))
-> 
-> Oh, wow. I needed to throw this into a for loop to understand what you are 
-> doing here. Try DIV_ROUND_CLOSEST(n, 8) from include/kernel.h which does right 
-> the same.
-> 
-> > +/* macros to help in debugging */
-> > +#define pmcraid_err(...)  \
-> > +	printk(KERN_ERR "MaxRAID: "__VA_ARGS__)
-> > +
-> > +#define pmcraid_info(...) \
-> > +	if (pmcraid_debug) \
-> > +		printk(KERN_INFO "MaxRAID: "__VA_ARGS__)
-> 
-> Those should probably be rewritten to use pr_err() and pr_debug(). Or better 
-> use dev_dbg() and dev_info() directly.
-> 
-> > +/*
-> > + * pmcraid_adapter_id - structure defining the adapter id used by LLD
-> > + */
-> > +union pmcraid_adapter_id {
-> > +	struct {
-> > +		u32 slot_no:8;
-> 
-> Why not use u8?
-> 
-> > +		u32 bus_number:24;
-> > +	} y;
-> 
-> Greetings,
-> 
-> Eike
-> 
+
+Then please read the actual source *before* commenting.  hostdata is an
+unsigned long hostdata[0] in struct Scsi_Host because we elongate the
+allocation area by howmuch extra space is requested.
+
+The above statement is technically correct; however, since so many
+people get this slightly wrong, we have an inline function shost_priv()
+which takes the host and returns a void* pointer to the hostdata area,
+so it's much better framed as
+
+pinstance = shost_priv(scsi_dev->host);
+
+James
+
+
