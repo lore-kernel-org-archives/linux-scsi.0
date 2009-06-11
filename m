@@ -1,39 +1,57 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH] Revert "block: WARN in __blk_put_request() for
- potential bio leak"
-Date: Thu, 11 Jun 2009 19:10:38 +0900
-Message-ID: <20090611191022W.fujita.tomonori@lab.ntt.co.jp>
-References: <4A2F6B8E.8060700@panasas.com>
-	<20090610172956C.fujita.tomonori@lab.ntt.co.jp>
-	<4A2F7014.2030705@panasas.com>
+Subject: Re: [patch 4/7] sg_io: don't perform unneeded copy in compat code
+Date: Thu, 11 Jun 2009 19:31:06 +0900
+Message-ID: <20090611193102F.fujita.tomonori@lab.ntt.co.jp>
+References: <200906101956.n5AJuvuQ009909@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:59824 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:45903 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758607AbZFKKKt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Jun 2009 06:10:49 -0400
-In-Reply-To: <4A2F7014.2030705@panasas.com>
+	id S1759785AbZFKKb1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Jun 2009 06:31:27 -0400
+In-Reply-To: <200906101956.n5AJuvuQ009909@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: fujita.tomonori@lab.ntt.co.jp, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
+To: akpm@linux-foundation.org
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, alexey.zaytsev@gmail.com, dgilbert@interlog.com, fujita.tomonori@lab.ntt.co.jp, jens.axboe@oracle.com
 
-On Wed, 10 Jun 2009 11:34:28 +0300
-Boaz Harrosh <bharrosh@panasas.com> wrote:
+On Wed, 10 Jun 2009 12:56:56 -0700
+akpm@linux-foundation.org wrote:
 
-> On 06/10/2009 11:29 AM, FUJITA Tomonori wrote:
-> > 
-> > Read the code. I think that you totally misunderstand these functions.
-> > 
+> From: Alexey Zaytsev <alexey.zaytsev@gmail.com>
 > 
-> Thanks for the detail explanation. This really help me a lot
+> The members from 'status' in struct sg_io_hdr to the last are used to
+> transfer information from kernel to user space.  The values that user
+> space sets are just ignored.
+> 
+> Signed-off-by: Alexey Zaytsev <alexey.zaytsev@gmail.com>
+> Cc: Douglas Gilbert <dgilbert@interlog.com>
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Cc: Jens Axboe <jens.axboe@oracle.com>
+> Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> ---
+> 
+>  fs/compat_ioctl.c |    6 ------
+>  1 file changed, 6 deletions(-)
+> 
+> diff -puN fs/compat_ioctl.c~sg_io-dont-perform-unneeded-copy-in-compat-code fs/compat_ioctl.c
+> --- a/fs/compat_ioctl.c~sg_io-dont-perform-unneeded-copy-in-compat-code
+> +++ a/fs/compat_ioctl.c
+> @@ -787,12 +787,6 @@ static int sg_ioctl_trans(unsigned int f
+>  	if (put_user(compat_ptr(data), &sgio->usr_ptr))
+>  		return -EFAULT;
+>  
+> -	if (copy_in_user(&sgio->status, &sgio32->status,
+> -			 (4 * sizeof(unsigned char)) +
+> -			 (2 * sizeof(unsigned short)) +
+> -			 (3 * sizeof(int))))
+> -		return -EFAULT;
+> -
+>  	err = sys_ioctl(fd, cmd, (unsigned long) sgio);
+>  
+>  	if (err >= 0) {
 
-I already explained before this mail (though I was wrong wrt the
-bounce path, I think), see the forth and fifth lines from the bottom:
-
-http://marc.info/?l=linux-scsi&m=124458845603617&w=2
-
-You just repeated the same question without reading my mail or the
-code. I don't know how to help such people.
+Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
