@@ -1,235 +1,135 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: PATCH: PMC-Sierra MaxRAID driver to support 6Gb/s SAS RAID controller
-Date: Thu, 11 Jun 2009 13:47:49 +0200
-Message-ID: <200906111348.02029.eike-kernel@sf-tec.de>
-References: <alpine.LNX.1.10.0906101259500.24722@rslab159.pmc-sierra.bc.ca>
+From: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+Subject: Re: PATCH: PMC-Sierra MaxRAID driver to support 6Gb/s SAS RAID
+ controller
+Date: Thu, 11 Jun 2009 06:11:07 -0700 (PDT)
+Message-ID: <alpine.LNX.1.10.0906110608570.3603@rslab159.pmc-sierra.bc.ca>
+References: <alpine.LNX.1.10.0906101259500.24722@rslab159.pmc-sierra.bc.ca> <da824cf30906102014re508926lf4e64c0f0623291e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart7380776.hLyUHJ7Qom";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:52067 "EHLO mail.sf-mail.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752390AbZFKLsJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Jun 2009 07:48:09 -0400
-In-Reply-To: <alpine.LNX.1.10.0906101259500.24722@rslab159.pmc-sierra.bc.ca>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:43051 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751740AbZFKNwK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Jun 2009 09:52:10 -0400
+In-Reply-To: <da824cf30906102014re508926lf4e64c0f0623291e@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+To: Grant Grundler <grundler@google.com>
 Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, gregkh@suse.de
 
---nextPart7380776.hLyUHJ7Qom
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-Anil Ravindranath wrote:
-> Hi,
->
-> This patch adds a driver to support PMC-Sierra 6Gb/s SAS RAID controller.
-> This patch is created against scsi-misc-2.6.git.
+Hi Grant,
 
-> +module_param_named(debug, pmcraid_debug, uint, (S_IRUGO | S_IWUSR));
-> +MODULE_PARM_DESC(debug,
-> +		 "Enable driver verbose message logging. Set 1  to enable."
-> +		 "(default: 0)");
+Thanks for all your inputs. I will look into each one of them and get back 
+to you soon.
 
-I would say that "1" would enable this is rather obvious. And since this is=
-=20
-only 0 or 1 better use bool instead of uint.
+with regards,
+   Anil
 
+On Wed, 10 Jun 2009, Grant Grundler wrote:
 
-> +static int pmcraid_slave_alloc(struct scsi_device *scsi_dev)
-> +{
-> +	struct pmcraid_resource_entry *temp, *res =3D NULL;
-> +	struct pmcraid_instance *pinstance;
-> +	u8 target, bus, lun;
-> +	unsigned long lock_flags;
-> +	int rc =3D -ENXIO;
-> +
-> +	pinstance =3D (struct pmcraid_instance *)scsi_dev->host->hostdata;
-
-hostdata is void* AFAIR so there is no need to cast. It's C, there is no ne=
-ed=20
-to cast to or from void* anywhere if the other thing is a pointer.
-
-> +static int pmcraid_slave_configure(struct scsi_device *sdev)
-> +{
-> +	struct pmcraid_resource_entry *res =3D NULL;
-> +
-> +	res =3D sdev->hostdata;
-
-No need to initialize res to NULL.
-
-> +static u32 pmcraid_read_interrupts(struct pmcraid_instance *pinstance)
-> +{
-> +
-> +	return ioread32(pinstance->int_regs.ioa_host_interrupt_reg);
-> +}
-
-Extra newline.
-
-> +/**
-> + * pmcraid_disable_interrupts - Masks and clears all specified interrupts
-> + *
-> + * @pinstance: pointer to per adapter instance structure
-> + * @intr: interrupts to disable
-> + *
-> + * Return Value
-> + *	 None
-> + */
-
-Well, that's rather obvious if it's a void function, isn't it? ;)
-
-
-> +static int __devinit pmcraid_probe(
-> +	struct pci_dev *pdev,
-> +	const struct pci_device_id *dev_id
-> +)
-> +{
-> +	struct pmcraid_instance *pinstance;
-> +	struct Scsi_Host *host;
-> +	void __iomem *mapped_pci_addr;
-> +	int rc =3D PCIBIOS_SUCCESSFUL;
-> +
-> +	if (pmcraid_adapter_count >=3D PMCRAID_MAX_ADAPTERS) {
-> +		pmcraid_err
-> +			("maximum number(%d) of supported adapters reached\n",
-> +			 pmcraid_adapter_count);
-> +		return -ENOMEM;
-> +	}
-> +
-> +	pmcraid_adapter_count++;
-
-This counter may need a lock, else you might get into trouble.
-
-> +	rc =3D pci_enable_device(pdev);
-
-Well, I ask it every time, but nevertheless: why not use devres for your=20
-driver? It will make error handling in _probe as well as the _release stuff=
-=20
-much easier.
-
-> +	if (rc) {
-> +		dev_err(&pdev->dev, "Cannot enable adapter\n");
-> +		pmcraid_adapter_count--;
-> +		goto out;
-> +	}
-
-Just "return rc" here. This goto into the middle of the function just for a=
-=20
-return is IMHO hard to read.
-
-> +	dev_info(&pdev->dev,
-> +		"Found IOA(%x:%x) on PCI bus %d slot %d with IRQ: %d\n",
-> +		 pdev->vendor, pdev->device, pdev->bus->number,
-> +		 PCI_SLOT(pdev->bus->number), pdev->irq);
-
-The IRQ and stuff is printed by request_irq() or such anyway. If you have=20
-enabled MSI the IRQ is a different one anyway.
-
-> +	/* zero out entire instance structure */
-> +	pinstance =3D (struct pmcraid_instance *)host->hostdata;
-> +	memset(pinstance, 0, sizeof(struct pmcraid_instance));
-
-memset(pinstance, 0, sizeof(*pinstance));
-
-> +	/* Schedule worker thread to handle CCN and take care of adding and
-> +	 * removing devices to OS
-> +	 */
-> +	schedule_work(&pinstance->worker_q);
-> +
-> +out:
-> +	return rc;
-> +
-> +out_remove_host:
-> +	scsi_remove_host(host);
-> +
-> +out_release_bufs:
-> +	pmcraid_release_buffers(pinstance);
-> +
-> +out_unregister_isr:
-> +	pmcraid_kill_tasklets(pinstance);
-> +	pmcraid_unregister_interrupt_handler(pinstance);
-> +
-> +out_scsi_host_put:
-> +	scsi_host_put(host);
-> +
-> +cleanup_nomem:
-> +	iounmap(mapped_pci_addr);
-> +
-> +out_release_regions:
-> +	pci_release_regions(pdev);
-> +
-> +out_disable_device:
-> +	pmcraid_adapter_count--;
-> +	pci_set_drvdata(pdev, NULL);
-> +	pci_disable_device(pdev);
-> +	rc =3D -ENODEV;
-> +	goto out;
-> +}
-
-Just "return rc" here. And maybe it's a good idea to just keep the previous=
- rc=20
-so you will see it was ENOMEM or whatever.
-
-> +/* PMC PCI vendor ID and device ID values */
-> +#define PCI_VENDOR_ID_PMC			0x11F8
-> +#define PCI_DEVICE_ID_PMC_MAXRAID		0x5220
-> +#define PCI_DEVICE_ID_PMC_0x8010		0x8010
-
-You could just use the 0x8010 directly at the only place this constant is=20
-referenced.
-
-> +#define IOARCB_LENGTH_CODE(n)         (((n)-3)/8 + (((n)-3)%8 > 0))
-
-Oh, wow. I needed to throw this into a for loop to understand what you are=
-=20
-doing here. Try DIV_ROUND_CLOSEST(n, 8) from include/kernel.h which does ri=
-ght=20
-the same.
-
-> +/* macros to help in debugging */
-> +#define pmcraid_err(...)  \
-> +	printk(KERN_ERR "MaxRAID: "__VA_ARGS__)
-> +
-> +#define pmcraid_info(...) \
-> +	if (pmcraid_debug) \
-> +		printk(KERN_INFO "MaxRAID: "__VA_ARGS__)
-
-Those should probably be rewritten to use pr_err() and pr_debug(). Or bette=
-r=20
-use dev_dbg() and dev_info() directly.
-
+> On Wed, Jun 10, 2009 at 1:07 PM, Anil
+> Ravindranath<anil_ravindranath@pmc-sierra.com> wrote:
+> > Hi, This patch adds a driver to support PMC-Sierra 6Gb/s SAS RAID controller.
+> 
+> Anil,
+> 
+> Thanks for posting this patch!
+> I'm very glad to see it. Please don't take the comments below too
+> negatively, they are
+> really targeted at the code.
+> 
+> And because my employer's preferred email handler is broken WRT handling patches
+> ("reply" got word wrapped entirely...utter crap), I'll just cut/paste
+> the bits I'm commenting
+> on in this round...just some quick feedback before I bail for the day.
+> 
+> 
 > +/*
-> + * pmcraid_adapter_id - structure defining the adapter id used by LLD
+> + * pmcraid_driver_build_date - get the driver build date.
+> + * This routine makes use of GCC's __DATE__ macro and frames an integer with
+> + * month, day and year values retrieved.
 > + */
-> +union pmcraid_adapter_id {
-> +	struct {
-> +		u32 slot_no:8;
-
-Why not use u8?
-
-> +		u32 bus_number:24;
-> +	} y;
-
-Greetings,
-
-Eike
-
---nextPart7380776.hLyUHJ7Qom
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iEYEABECAAYFAkow7vEACgkQXKSJPmm5/E5oaQCfSQH8iD+FjAAKf0oACMjxTzDH
-VhQAnjN1VgKSS8i9ZTHCUqHg19GbPfte
-=MhFv
------END PGP SIGNATURE-----
-
---nextPart7380776.hLyUHJ7Qom--
+> +static inline int pmcraid_driver_build_date(void)
+> +{
+> +       char cdate[32];
+> +       char mon[12];
+> +       char day[12];
+> +       char year[12];
+> +       char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+> +               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+> +       };
+> +       int i_month, i_day, i_year;
+> +       int i = 0, j = 0;
+> ...
+> 
+> 
+> All the "driver build date" stuff can be deleted.
+> 
+> The build date is embedded whenever someone compiles the kernel and
+> it's embeded in the kernel string. E.g.:
+> # uname -a
+> Linux hostA 2.6.26-2-amd64 #1 SMP Fri Mar 27 04:02:59 UTC 2009 x86_64 GNU/Linux
+> 
+> Folks can separately build the module. But the module version is what
+> matters and not the build date.
+> An older version with a newer build date is still an older version. At
+> both HP and Google, I never
+> cared about the build date of any driver module.
+> 
+> What I would be interested in are the compiler version/flags used to
+> build a module.
+> I don't know if that is captured in modinfo fields though. We should
+> consider doing
+> that by default if someone knows how to do it easily.  Kernel newbie project?
+> 
+> 
+> +/*
+> + * pmcraid_driver_version - structure defining PMC MaxRAID controller driver
+> + * version information.
+> + *
+> + * .day     : driver build date, day of month (1 to 31)
+> + * .month   : driver build date, month of the year (1 to 12)
+> + * .year    : driver build date, year
+> + * .version : version number in major_version << 16 | minor version < 8 | patch
+> + * .name    : driver module name
+> + */
+> 
+> pmcraid_get_driver_version() and related code can also be deleted.
+> The correct way to handle this is via "modinfo".
+> 
+> Driver versioning is handled with MODULE_VERSION() and you've already
+> used that correctly.
+> 
+> 
+> +#if !defined(VERSION)
+> +#define PMCRAID_DRIVER_VERSION         "1.0.0"
+> +#else
+> +#define PMCRAID_DRIVER_VERSION         VERSION
+> +#endif
+> 
+> I'm not sure I like this. My fear is that might get defined someplace
+> else already.
+> However, I can see how it would be useful to track different .ko files when
+> evaluating different compilers, compiler options or other -DPMC_FAST_MODE
+> type flags.
+> 
+> In any case, "VERSION" is too generic. Please don't use that exact string.
+> 
+> 
+> +#define PMCRAID_DEVFILE                "pmcsas"
+> 
+> is defined twice in drivers/scsi/pmcraid.h.
+> Isn't udev or some other tool responsible for setting this up?
+> I don't recall any other driver encoding what it's /dev files shoud
+> be called.  But I'm not clueful about PMCRAID_DEVFILE use yet.
+> 
+> 
+> And I noticed lots of IOCTLs...some of which could be deleted.
+> I'll send more feedback at a later date. The above should be
+> something to get started on though.
+> 
+> thanks!
+> grant
+> 
