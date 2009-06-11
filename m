@@ -1,56 +1,61 @@
-From: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
-Subject: Re: PATCH: PMC-Sierra MaxRAID driver to support 6Gb/s SAS RAID
- controller
-Date: Wed, 10 Jun 2009 22:54:03 -0700 (PDT)
-Message-ID: <alpine.LNX.1.10.0906102249430.32153@rslab159.pmc-sierra.bc.ca>
-References: <alpine.LNX.1.10.0906101259500.24722@rslab159.pmc-sierra.bc.ca> <20090611012319.GC31460@suse.de>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [ANNOUNCE]: A target driver for Marvell 88SE64xx(3G) and 88SE94xx(6G)
+ SAS cards
+Date: Thu, 11 Jun 2009 11:52:34 +0400
+Message-ID: <4A30B7C2.3020303@vlnb.net>
+References: <49E4B6D5.9060007@vlnb.net> <D27CA15508148C428A25104ADEFAAC8103AC1E41@CORPUSMX50C.corp.emc.com> <4A2D2E8F.6090207@vlnb.net> <D27CA15508148C428A25104ADEFAAC8103BB6034@CORPUSMX50C.corp.emc.com> <5FF020A1CFFEEC49BD1E09530C4FF595714E369F@SC-VEXCH1.marvell.com> <4A2FFE26.5050408@vlnb.net> <5FF020A1CFFEEC49BD1E09530C4FF595714E3DF1@SC-VEXCH1.marvell.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:40732 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753696AbZFKGfH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Jun 2009 02:35:07 -0400
-In-Reply-To: <20090611012319.GC31460@suse.de>
+Received: from moutng.kundenserver.de ([212.227.126.177]:61936 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755160AbZFKHwr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jun 2009 03:52:47 -0400
+In-Reply-To: <5FF020A1CFFEEC49BD1E09530C4FF595714E3DF1@SC-VEXCH1.marvell.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <gregkh@suse.de>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, anil_ravindranath@pmc-sierra.com
+To: Andy Yan <ayan@marvell.com>
+Cc: "Foster_Brian@emc.com" <Foster_Brian@emc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "scst-devel@lists.sourceforge.net" <scst-devel@lists.sourceforge.net>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
 
+Andy Yan, on 06/11/2009 05:11 AM wrote:
+> No, enable target mode and then add LUN.
 
+Why to have the race window open?
 
-On Wed, 10 Jun 2009, Greg KH wrote:
+Vlad
 
-> On Wed, Jun 10, 2009 at 01:07:12PM -0700, Anil Ravindranath wrote:
-> > Hi,
-> > 
-> > This patch adds a driver to support PMC-Sierra 6Gb/s SAS RAID controller. 
-> > This patch is created against scsi-misc-2.6.git.
-> 
-> You forgot a "Signed-off-by:" line, that will be necessary for anyone to
-> be able to accept this patch :(
-> 
-Oops. Sorry.
+> -----Original Message-----
+> From: Vladislav Bolkhovitin [mailto:vst@vlnb.net]=20
+> Sent: 2009=E5=B9=B46=E6=9C=8811=E6=97=A5 2:41
+> To: Andy Yan
+> Cc: Foster_Brian@emc.com; linux-scsi@vger.kernel.org; scst-devel@list=
+s.sourceforge.net; James.Bottomley@HansenPartnership.com
+> Subject: Re: [ANNOUNCE]: A target driver for Marvell 88SE64xx(3G) and=
+ 88SE94xx(6G) SAS cards
+>=20
+> Andy Yan, on 06/09/2009 05:27 AM wrote:
+>> Brian,
+>> Please set unique SAS address for each SAS port of target controller=
+,
+>> and make sure you do correct connection, you can get the SAS address=
+ of
+>> attaching device from "attach sas address ".Then enable target mode =
+and
+>> add target LUN.
+>=20
+> Do you mean "add target LUN and then enable target mode"? Otherwise a=
+n=20
+> initiator can connect while there are no LUNs configured on the targe=
+t=20
+> and confused by it.
+>=20
+>> Regards
+>> Andy Yan
 
-SIGNED-OFF-BY: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
-
-> > +static struct pci_device_id pmcraid_pci_table[] __devinitdata = {
-> > +	{PCI_VENDOR_ID_PMC, PCI_DEVICE_ID_PMC_MAXRAID,
-> > +	 PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-> > +	 (kernel_ulong_t)&pmcraid_chip_cfg[0]
-> > +	},
-> > +	{PCI_VENDOR_ID_PMC, PCI_DEVICE_ID_PMC_0x8010,
-> > +	 PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-> > +	 (kernel_ulong_t)&pmcraid_chip_cfg[0]
-> > +	},
-> 
-> Minor nit, you can use the PCI_DRIVER() macro here to make it a bit
-> cleaner.
->
-Sure. I will look into this and modify accordingly.
- 
-> thanks,
-> 
-> greg k-h
-> 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
