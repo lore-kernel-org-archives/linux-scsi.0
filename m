@@ -1,37 +1,67 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Return of PENDING status to SCSI driver
-Date: Fri, 12 Jun 2009 07:32:56 -0400
-Message-ID: <4A323CE8.7010207@garzik.org>
-References: <3e7aae30906120229p3bbeb7f0jd07c5f1e823a456a@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13519] New: Syntax error. Not enough parameters for macro
+ 'qla_printk'.
+Date: Fri, 12 Jun 2009 12:25:13 GMT
+Message-ID: <bug-13519-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:49585 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751103AbZFLLc5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Jun 2009 07:32:57 -0400
-In-Reply-To: <3e7aae30906120229p3bbeb7f0jd07c5f1e823a456a@mail.gmail.com>
+Received: from demeter.kernel.org ([140.211.167.39]:60737 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751221AbZFLMZL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Jun 2009 08:25:11 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5CCPDtO030612
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2009 12:25:13 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ramya Desai <ramya.desai@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Ramya Desai wrote:
-> Dear Experts,
-> 
-> I am writing my mass storage class driver for my custom USB device.
-> My device is capable of queuing the commands that are issued to it.
-> So, I wanted to send the second command from my driver even before the
-> completion of first command.
-> To do this I wanted to return the PENDING status to the SCSI layer
-> immediately after receiving the command.
+http://bugzilla.kernel.org/show_bug.cgi?id=13519
 
-Simply queue as many commands as possible to your hardware, and complete 
-them when they are done.  Use can_queue or scsi_adjust_queue_depth() to 
-set queueing limits.
+           Summary: Syntax error. Not enough parameters for macro
+                    'qla_printk'.
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 2.6.30
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: QLOGIC QLA2XXX
+        AssignedTo: scsi_drivers-qla2xxx@kernel-bugs.osdl.org
+        ReportedBy: ettl.martin@gmx.de
+        Regression: No
 
-	Jeff
+
+Hi,
+
+i have detected a wrong macro call in file qla_sup.c. To detect this issue i
+used the static code analysis tool cppcheck. It prints the following output:
+
+[linux-2.6.30/drivers/scsi/qla2xxx/qla_sup.c:352]: (error) Syntax error. Not
+enough parameters for macro 'qla_printk'.
+
+Take a look at file qla_sup.c line 352 
+
+                DEBUG9_10(qla_printk(
+                    "NVRAM didn't go ready...\n"));
 
 
+The maro definition is in file qla_def.h (2657):
 
+#define qla_printk(level, ha, format, arg...) \
+    dev_printk(level , &((ha)->pdev->dev) , format , ## arg)
+
+As you can see, it needs more than one parameter.
+
+Best regards
+
+Ettl Martin
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
