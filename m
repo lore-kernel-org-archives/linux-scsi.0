@@ -1,110 +1,44 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 12727] AIC79xx problem on Adaptec 29320A-P controller
-Date: Fri, 12 Jun 2009 14:42:01 GMT
-Message-ID: <200906121442.n5CEg1lA010814@demeter.kernel.org>
-References: <bug-12727-11613@http.bugzilla.kernel.org/>
+From: Torsten Kaiser <just.for.lkml@googlemail.com>
+Subject: Re: [PATCH] dma-debug: disable DMA_API_DEBUG for now
+Date: Fri, 12 Jun 2009 16:51:01 +0200
+Message-ID: <64bb37e0906120751u14cac347hfa2356372e1e0a6a@mail.gmail.com>
+References: <20090605173232N.fujita.tomonori@lab.ntt.co.jp>
+	 <20090605104132.GE24836@amd.com>
+	 <64bb37e0906101341j341f5179o9abfa888a6b96fc3@mail.gmail.com>
+	 <20090611081032.GN5139@amd.com>
+	 <64bb37e0906111038h1a5b9f17oec6c6368d2fbd36d@mail.gmail.com>
+	 <20090612141346.GY5139@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:60673 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757079AbZFLOl7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Jun 2009 10:41:59 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5CEg1m5010815
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2009 14:42:01 GMT
-In-Reply-To: <bug-12727-11613@http.bugzilla.kernel.org/>
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:33004 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753016AbZFLOvA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Jun 2009 10:51:00 -0400
+In-Reply-To: <20090612141346.GY5139@amd.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Joerg Roedel <joerg.roedel@amd.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Linus Torvalds <torvalds@linux-foundation.org>, mingo@elte.hu, lethal@linux-sh.org, hancockrwd@gmail.com, jens.axboe@oracle.com, bharrosh@panasas.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12727
+On Fri, Jun 12, 2009 at 4:13 PM, Joerg Roedel<joerg.roedel@amd.com> wrote:
+> On Thu, Jun 11, 2009 at 07:38:47PM +0200, Torsten Kaiser wrote:
+>> DMA-API: device driver tries to free DM
+>> A memory it has not allocated [device address=0x000000011e4c3000]
+>> [size=4096 bytes]
+>
+> Hmm, looking again over the code I've seen that the ref
+> dma_debug_entries are not alway filled with all necessary information
+> for best-fit. Can you please try if you still get false warnings when
+> you apply the two patches attached instead of the one I sent yesterday?
 
+Hmm... There isn't a get_nr_mapped_entries() in 2.6.30.
+Are these patches again the current linus tree?
 
+For unfilled information I wanted to complain that for non-sg mapping
+sg_call_ents never gets filled. But as dma_entry_alloc() does a
+memset() to clean the entrys it should not matter.
+And what about dma_debug_entry.paddr? Should this also be compared?
 
-
-
---- Comment #1 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2009-06-12 14:42:00 ---
-Reply-To: James.Bottomley@HansenPartnership.com
-
-On Tue, 2009-02-17 at 10:09 -0800, bugme-daemon@bugzilla.kernel.org
-wrote:
-> http://bugzilla.kernel.org/show_bug.cgi?id=12727
-> 
->            Summary: AIC79xx problem on Adaptec 29320A-P controller
->            Product: SCSI Drivers
->            Version: 2.5
->      KernelVersion: 2.6.25.20-0.1-default
->           Platform: All
->         OS/Version: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: Other
->         AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
->         ReportedBy: j@jensen-net.org
-> 
-> 
-> Latest working kernel version: N/A
-> Earliest failing kernel version: 2.6.25.20-0.1-default
-> Distribution: OpenSUSE 11.0
-> Hardware Environment: Supermicro server
-> Software Environment: 
-> Problem Description:
-> When there is a pause in writing to the tape after that the error occurs.
-> 
-> Steps to reproduce: tar some data to tape.
-> 
-> Hardware information and error is below:
-> Linux version 2.6.25.20-0.1-default (geeko@buildhost) (gcc version 4.3.1
-> 20080507 (prerelease) [gcc-4_3-branch revision 135036] (SUSE Linux) ) #1 SMP
-> 2008-12-12 20:30:38 +0100
-> scsi0 : Adaptec AIC79XX PCI-X SCSI HBA DRIVER, Rev 3.0
->         <Adaptec 29320A Ultra320 SCSI adapter>
->         aic7901: Ultra320 Wide Channel A, SCSI Id=7, PCI-X 101-133Mhz, 512 SCBs
->  target0:0:3: asynchronous
-> scsi 0:0:3:0: Sequential-Access IBM      ULTRIUM-TD3      7AP5 PQ: 0 ANSI: 3
->  target0:0:3: Beginning Domain Validation
->  target0:0:3: wide asynchronous
->  target0:0:3: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 127)
->  target0:0:3: Ending Domain Validation
-> scsi 0:0:3:1: Medium Changer    EXABYTE  MAGNUM 224       C270 PQ: 0 ANSI: 4
-> 
-> osst :I: Tape driver with OnStream support version 0.99.4
-> osst :I: $Id: osst.c,v 1.73 2005/01/01 21:13:34 wriede Exp $
-> st: Version 20080221, fixed bufsize 32768, s/g segs 256
-> st 0:0:3:0: Attached scsi tape st0
-> st 0:0:3:0: st0: try direct i/o: yes (alignment 4 B)
-> st0: Block limits 1 - 16777215 bytes.
-> 
-> scsi0: PCI error Interrupt
-> >>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
-> scsi0: Dumping Card State at program address 0x7f Mode 0x22
-
-Following up on this, we have a Novell bugzilla (partner restricted, I'm
-afraid):
-
-https://bugzilla.novell.com/show_bug.cgi?id=509845
-
-The good thing about the novell one is that the partner managed to get a
-SCSI analyser on the tape.  The analysis shows that the tape actually
-has a firmware bug in that if it sees Information Units of type 0x02
-(MULTIPLE COMMANDS) it just stops responding.  It can cope with any
-other type of Information Unit, apparently.
-
-We'll be trying to get HP to fix the firmware, but an alternative
-solution might simply be to blacklist this device in the SPI transport
-class to disable information unit transfers, which should fix your
-problem
-
-[Of course, a second problem is how to get the aic79xx driver to behave
-nicely handling errors in situations like this, but I'll leave that for
-another day.]
-
-James
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Torsten
