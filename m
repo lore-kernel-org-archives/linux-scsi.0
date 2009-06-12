@@ -1,34 +1,59 @@
-From: Ramya Desai <ramya.desai@gmail.com>
-Subject: Return of PENDING status to SCSI driver
-Date: Fri, 12 Jun 2009 14:59:04 +0530
-Message-ID: <3e7aae30906120229p3bbeb7f0jd07c5f1e823a456a@mail.gmail.com>
+From: Andy Yan <ayan@marvell.com>
+Subject: RE: [ANNOUNCE]: A target driver for Marvell 88SE64xx(3G) and
+ 88SE94xx(6G) SAS cards
+Date: Fri, 12 Jun 2009 02:51:34 -0700
+Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF595714E42B1@SC-VEXCH1.marvell.com>
+References: <49E4B6D5.9060007@vlnb.net>
+ <D27CA15508148C428A25104ADEFAAC8103AC1E41@CORPUSMX50C.corp.emc.com>
+ <4A2D2E8F.6090207@vlnb.net>
+ <D27CA15508148C428A25104ADEFAAC8103BB6034@CORPUSMX50C.corp.emc.com>
+ <5FF020A1CFFEEC49BD1E09530C4FF595714E369F@SC-VEXCH1.marvell.com>
+ <4A2FFE26.5050408@vlnb.net>
+ <5FF020A1CFFEEC49BD1E09530C4FF595714E3DF1@SC-VEXCH1.marvell.com>
+ <4A30B7C2.3020303@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.24]:2216 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753453AbZFLJ3C (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Jun 2009 05:29:02 -0400
-Received: by qw-out-2122.google.com with SMTP id 5so1357744qwd.37
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2009 02:29:04 -0700 (PDT)
+Received: from host2.marvell.com ([65.219.4.2]:56018 "EHLO maili.marvell.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933581AbZFLJvf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Jun 2009 05:51:35 -0400
+In-Reply-To: <4A30B7C2.3020303@vlnb.net>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: "Foster_Brian@emc.com" <Foster_Brian@emc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "scst-devel@lists.sourceforge.net" <scst-devel@lists.sourceforge.net>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
 
-Dear Experts,
-
-I am writing my mass storage class driver for my custom USB device.
-My device is capable of queuing the commands that are issued to it.
-So, I wanted to send the second command from my driver even before the
-completion of first command.
-To do this I wanted to return the PENDING status to the SCSI layer
-immediately after receiving the command.
-
-Can I do as explained above? I studied the default MS class driver, in
-which no PENDING status was available.
-
-Thanks in advance,
-
-Regards,
-RD
+VmxhZCwNCglUaGlzIGRlc2lnbiBpcyBmb3IgaG90IExVTiBjaGFuZ2VzLCBmb3IgTGludXggZG9u
+J3QgY2FyZSB1bml0IGF0dGVudGlvbg0KInJlcG9ydCBsdW4gY2hhbmdlIiwgc28gcmVzZXQgcGh5
+IGlzIHVzZWQgdG8gdHJpZ2dlciB0aGUgaW5pdGlhdG9yIHRvIHJlc2Nhbg0KdGhlIHBoeSB3aGVu
+ICJyZXBvcnQgbHVuIGNoYW5nZSIgZXZlbnQgaXMgZ290dGVuLCBhbHNvIGl0IHRyeSB0byBzdXBw
+b3J0IGR5bmFtaWMNCmNvbm5lY3Rpb24gb2YgdHdvIGNvbnRyb2xsZXIgKGJvdGggYXJlIGluaXRp
+YXRvciAmJiB0YXJnZXQpLiBJZiBzb21lIGdvb2QgaWRlYSBmb3IgcmVzb2x2ZSB0aGlzIGlzc3Vl
+LCB2ZXJ5IHdlbGNvbWUsIHRoYW5rcyENCg0KQW5keSBZYW4NCg0KLS0tLS1PcmlnaW5hbCBNZXNz
+YWdlLS0tLS0NCkZyb206IFZsYWRpc2xhdiBCb2xraG92aXRpbiBbbWFpbHRvOnZzdEB2bG5iLm5l
+dF0gDQpTZW50OiAyMDA5xOo21MIxMcjVIDE1OjUzDQpUbzogQW5keSBZYW4NCkNjOiBGb3N0ZXJf
+QnJpYW5AZW1jLmNvbTsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IHNjc3QtZGV2ZWxAbGlz
+dHMuc291cmNlZm9yZ2UubmV0OyBKYW1lcy5Cb3R0b21sZXlASGFuc2VuUGFydG5lcnNoaXAuY29t
+DQpTdWJqZWN0OiBSZTogW0FOTk9VTkNFXTogQSB0YXJnZXQgZHJpdmVyIGZvciBNYXJ2ZWxsIDg4
+U0U2NHh4KDNHKSBhbmQgODhTRTk0eHgoNkcpIFNBUyBjYXJkcw0KDQpBbmR5IFlhbiwgb24gMDYv
+MTEvMjAwOSAwNToxMSBBTSB3cm90ZToNCj4gTm8sIGVuYWJsZSB0YXJnZXQgbW9kZSBhbmQgdGhl
+biBhZGQgTFVOLg0KDQpXaHkgdG8gaGF2ZSB0aGUgcmFjZSB3aW5kb3cgb3Blbj8NCg0KVmxhZA0K
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IFZsYWRpc2xhdiBCb2xraG92
+aXRpbiBbbWFpbHRvOnZzdEB2bG5iLm5ldF0gDQo+IFNlbnQ6IDIwMDnE6jbUwjExyNUgMjo0MQ0K
+PiBUbzogQW5keSBZYW4NCj4gQ2M6IEZvc3Rlcl9CcmlhbkBlbWMuY29tOyBsaW51eC1zY3NpQHZn
+ZXIua2VybmVsLm9yZzsgc2NzdC1kZXZlbEBsaXN0cy5zb3VyY2Vmb3JnZS5uZXQ7IEphbWVzLkJv
+dHRvbWxleUBIYW5zZW5QYXJ0bmVyc2hpcC5jb20NCj4gU3ViamVjdDogUmU6IFtBTk5PVU5DRV06
+IEEgdGFyZ2V0IGRyaXZlciBmb3IgTWFydmVsbCA4OFNFNjR4eCgzRykgYW5kIDg4U0U5NHh4KDZH
+KSBTQVMgY2FyZHMNCj4gDQo+IEFuZHkgWWFuLCBvbiAwNi8wOS8yMDA5IDA1OjI3IEFNIHdyb3Rl
+Og0KPj4gQnJpYW4sDQo+PiBQbGVhc2Ugc2V0IHVuaXF1ZSBTQVMgYWRkcmVzcyBmb3IgZWFjaCBT
+QVMgcG9ydCBvZiB0YXJnZXQgY29udHJvbGxlciwNCj4+IGFuZCBtYWtlIHN1cmUgeW91IGRvIGNv
+cnJlY3QgY29ubmVjdGlvbiwgeW91IGNhbiBnZXQgdGhlIFNBUyBhZGRyZXNzIG9mDQo+PiBhdHRh
+Y2hpbmcgZGV2aWNlIGZyb20gImF0dGFjaCBzYXMgYWRkcmVzcyAiLlRoZW4gZW5hYmxlIHRhcmdl
+dCBtb2RlIGFuZA0KPj4gYWRkIHRhcmdldCBMVU4uDQo+IA0KPiBEbyB5b3UgbWVhbiAiYWRkIHRh
+cmdldCBMVU4gYW5kIHRoZW4gZW5hYmxlIHRhcmdldCBtb2RlIj8gT3RoZXJ3aXNlIGFuIA0KPiBp
+bml0aWF0b3IgY2FuIGNvbm5lY3Qgd2hpbGUgdGhlcmUgYXJlIG5vIExVTnMgY29uZmlndXJlZCBv
+biB0aGUgdGFyZ2V0IA0KPiBhbmQgY29uZnVzZWQgYnkgaXQuDQo+IA0KPj4gUmVnYXJkcw0KPj4g
+QW5keSBZYW4NCg0K
