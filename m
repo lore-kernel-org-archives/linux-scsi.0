@@ -1,22 +1,31 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 12727] New: AIC79xx problem on Adaptec 29320A-P controller
-Date: Fri, 12 Jun 2009 09:41:55 -0500
-Message-ID: <1244817715.4184.10.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 12727] AIC79xx problem on Adaptec 29320A-P controller
+Date: Fri, 12 Jun 2009 14:42:01 GMT
+Message-ID: <200906121442.n5CEg1lA010814@demeter.kernel.org>
 References: <bug-12727-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:55595 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756324AbZFLOlz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Jun 2009 10:41:55 -0400
+Received: from demeter.kernel.org ([140.211.167.39]:60673 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757079AbZFLOl7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Jun 2009 10:41:59 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5CEg1m5010815
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2009 14:42:01 GMT
 In-Reply-To: <bug-12727-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugme-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=12727
+
+
+
+
+
+--- Comment #1 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2009-06-12 14:42:00 ---
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Tue, 2009-02-17 at 10:09 -0800, bugme-daemon@bugzilla.kernel.org
 wrote:
@@ -95,4 +104,7 @@ another day.]
 
 James
 
-
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
