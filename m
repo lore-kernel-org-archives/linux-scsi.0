@@ -1,66 +1,46 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: Re: [RFC PATCH 4/4] drivers: convert fc drivers calling
-	scsi_track_queue_full
-Date: Fri, 12 Jun 2009 14:57:08 +0200
-Message-ID: <20090612125708.GB8017@schmichrtp.de.ibm.com>
-References: <12427123671020-git-send-email-michaelc@cs.wisc.edu> <12427123683166-git-send-email-michaelc@cs.wisc.edu> <1242712369913-git-send-email-michaelc@cs.wisc.edu> <12427123692457-git-send-email-michaelc@cs.wisc.edu> <1242712370448-git-send-email-michaelc@cs.wisc.edu> <1242712370737-git-send-email-michaelc@cs.wisc.edu>
+From: Ramya Desai <ramya.desai@gmail.com>
+Subject: Re: Return of PENDING status to SCSI driver
+Date: Fri, 12 Jun 2009 18:24:46 +0530
+Message-ID: <3e7aae30906120554u189d4abdye0f40cd2ddc12f58@mail.gmail.com>
+References: <3e7aae30906120229p3bbeb7f0jd07c5f1e823a456a@mail.gmail.com>
+	 <4A323CE8.7010207@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate2.uk.ibm.com ([194.196.100.162]:39008 "EHLO
-	mtagate2.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760836AbZFLM5I (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Jun 2009 08:57:08 -0400
-Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
-	by mtagate2.uk.ibm.com (8.13.1/8.13.1) with ESMTP id n5CCvAAi005480
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2009 12:57:10 GMT
-Received: from d06av02.portsmouth.uk.ibm.com (d06av02.portsmouth.uk.ibm.com [9.149.37.228])
-	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n5CCvASv1478690
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2009 13:57:10 +0100
-Received: from d06av02.portsmouth.uk.ibm.com (loopback [127.0.0.1])
-	by d06av02.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n5CCv98H019949
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2009 13:57:09 +0100
-Content-Disposition: inline
-In-Reply-To: <1242712370737-git-send-email-michaelc@cs.wisc.edu>
+Received: from mail-qy0-f174.google.com ([209.85.221.174]:45044 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760056AbZFLNA4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Jun 2009 09:00:56 -0400
+Received: by qyk4 with SMTP id 4so211782qyk.33
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2009 06:00:58 -0700 (PDT)
+In-Reply-To: <4A323CE8.7010207@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, May 19, 2009 at 12:52:47AM -0500, michaelc@cs.wisc.edu wrote:
-> From: Mike Christie <michaelc@cs.wisc.edu>
-> 
-> This converts the fc drivers that were using scsi_track_queue_full
-> to track the queue full from the change_queue_depth callback.
-> 
-> I have not yet tested the qla2xxx or lpfc parts.
-> 
-> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+On 6/12/09, Jeff Garzik <jeff@garzik.org> wrote:
+> Ramya Desai wrote:
+>
+> > Dear Experts,
+> >
+> > I am writing my mass storage class driver for my custom USB device.
+> > My device is capable of queuing the commands that are issued to it.
+> > So, I wanted to send the second command from my driver even before the
+> > completion of first command.
+> > To do this I wanted to return the PENDING status to the SCSI layer
+> > immediately after receiving the command.
+> >
+>
+>  Simply queue as many commands as possible to your hardware, and complete
+> them when they are done.  Use can_queue or scsi_adjust_queue_depth() to set
+> queueing limits.
+>
+>         Jeff
 
-In scsi-misc zfcp also implements the change_queue_depth callback, so
-this has to be adjusted, too:
---
-zfcp: Add reason attribute to scsi_change_queue_depth callback
+I used can_queue  to change the queue depth to 5, but I am not getting
+the next command until I finish (Done) the first command. I wanted the
+second command to come to my driver, even before first command
+finishes.
 
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-
-Now that zfcp implements the scsi_change_queue_depth callback, the
-reason attribute is also required here.
-
-Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
----
- drivers/s390/scsi/zfcp_scsi.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
---- a/drivers/s390/scsi/zfcp_scsi.c	2009-06-12 14:16:55.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_scsi.c	2009-06-12 14:33:20.000000000 +0200
-@@ -28,7 +28,8 @@ char *zfcp_get_fcp_sns_info_ptr(struct f
- 	return fcp_sns_info_ptr;
- }
- 
--static int zfcp_scsi_change_queue_depth(struct scsi_device *sdev, int depth)
-+static int zfcp_scsi_change_queue_depth(struct scsi_device *sdev, int depth,
-+					int reason)
- {
- 	scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), depth);
- 	return sdev->queue_depth;
+-RD
