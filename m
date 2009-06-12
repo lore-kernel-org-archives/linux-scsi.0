@@ -1,51 +1,49 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: RFC: Adding new block layer error codes
-Date: Thu, 11 Jun 2009 16:16:57 -0500
-Message-ID: <4A317449.4040602@cs.wisc.edu>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: walt <w41ter@gmail.com>
+Subject: Question about scsi device names
+Date: Thu, 11 Jun 2009 17:36:13 -0700
+Message-ID: <h0s7tv$d8f$1@ger.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: linux-fsdevel <linux-fsdevel@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Jens
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from main.gmane.org ([80.91.229.2]:48465 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750718AbZFLAg2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Jun 2009 20:36:28 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1MEuks-0002UR-1L
+	for linux-scsi@vger.kernel.org; Fri, 12 Jun 2009 00:36:26 +0000
+Received: from adsl-69-234-202-135.dsl.irvnca.pacbell.net ([69.234.202.135])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2009 00:36:26 +0000
+Received: from w41ter by adsl-69-234-202-135.dsl.irvnca.pacbell.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2009 00:36:26 +0000
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hi,
+Hi list,
 
-Sorry to cc so many FS guys. I am a lowly SCSI guy :), so I have no idea 
-what lists you guys normally hang out on.
+Here is some background for my question:
 
-The problem is dm-multipath needs more information about why a IO is 
-being failed. If it gets a error because a cable went bad, then we want 
-to retry a new path right away. If it gets a error because the device is 
-dead, then we want to fail it upwards.
+I have a machine with two sata disks, one connected to the
+onboard sata controller, the other to an add-on ESATA board
+plugged into the PCIX slot.
 
-Block layer drivers currently return a errno.h type of error code like 
--EIO or -EOPNOTSUPP to blk_end_request/blk_end_request_all and friends. 
-So a long time ago, I tried to just add new errno values for the block 
-layer to use (http://marc.info/?l=linux-kernel&m=107715299008231&w=2). 
-People did not like this for various reasons.
+My puzzle:
 
-Next, I tried adding new block layer error codes 
-(http://marc.info/?l=linux-kernel&m=107961883915068&w=2  and again here 
-http://marc.info/?l=linux-scsi&m=112487427230642&w=2 and actually I 
-modified those again a couple times but cannot find the links). My 
-concern with the approach in these patches is that while they work well 
-for errors that dm-multipath needs to handle, I have no idea what File 
-Systems devs need. Also I think this would be useful for RAID.
+When I boot a kernel from the 2.6.28 series, the onboard
+controller's disk gets dubbed /dev/sdb, and the ESATA disk
+is /dev/sda.
 
-Now, at work I have lots of bugzillas so I can finally spend some time 
-at work to finish this up, and I want to know what developers need. If 
-the lower layers can tell you what failed (device or connection to a 
-device or driver) and if the lower layers thought the problem was 
-retryable or not from its perspective is that good enough. Something 
-like this http://marc.info/?l=linux-scsi&m=112487427230642&w=2 ?
+When I boot the same machine with a more recent kernel like
+Linus's 2.6.30 series, the device names are reversed.
+
+Is this change in behavior expected based on recent kernel
+patches?
+
+Thanks.
+
+
