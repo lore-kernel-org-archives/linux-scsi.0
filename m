@@ -1,23 +1,31 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 12727] New: AIC79xx problem on Adaptec 29320A-P controller
-Date: Sat, 13 Jun 2009 12:19:05 -0500
-Message-ID: <1244913545.5323.26.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 12727] AIC79xx problem on Adaptec 29320A-P controller
+Date: Sat, 13 Jun 2009 17:19:15 GMT
+Message-ID: <200906131719.n5DHJFew024948@demeter.kernel.org>
 References: <bug-12727-11613@http.bugzilla.kernel.org/>
-	 <1244817715.4184.10.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54650 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753157AbZFMRTK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 13 Jun 2009 13:19:10 -0400
-In-Reply-To: <1244817715.4184.10.camel@mulgrave.site>
+Received: from demeter.kernel.org ([140.211.167.39]:59880 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755226AbZFMRTN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 13 Jun 2009 13:19:13 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5DHJFwl024949
+	for <linux-scsi@vger.kernel.org>; Sat, 13 Jun 2009 17:19:15 GMT
+In-Reply-To: <bug-12727-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugme-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=12727
+
+
+
+
+
+--- Comment #2 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2009-06-13 17:19:13 ---
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Fri, 2009-06-12 at 09:41 -0500, James Bottomley wrote:
 > On Tue, 2009-02-17 at 10:09 -0800, bugme-daemon@bugzilla.kernel.org
@@ -106,49 +114,52 @@ the setting and not try to enable information units.
 James
 
 ---
-diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c
+b/drivers/scsi/aic7xxx/aic79xx_osm.c
 index 0f829b3..75b2331 100644
 --- a/drivers/scsi/aic7xxx/aic79xx_osm.c
 +++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
 @@ -627,19 +627,15 @@ ahd_linux_target_alloc(struct scsi_target *starget)
- 					    starget->id, &tstate);
- 
- 		if ((flags  & CFPACKETIZED) == 0) {
--			/* Do not negotiate packetized transfers */
--			spi_rd_strm(starget) = 0;
--			spi_pcomp_en(starget) = 0;
--			spi_rti(starget) = 0;
--			spi_wr_flow(starget) = 0;
--			spi_hold_mcs(starget) = 0;
-+			/* don't negotiate packetized (IU) transfers */
-+			spi_max_iu(starget) = 0;
- 		} else {
- 			if ((ahd->features & AHD_RTI) == 0)
- 				spi_rti(starget) = 0;
- 		}
- 
- 		if ((flags & CFQAS) == 0)
--			spi_qas(starget) = 0;
-+			spi_max_qas(starget) = 0;
- 
- 		/* Transinfo values have been set to BIOS settings */
- 		spi_max_width(starget) = (flags & CFWIDEB) ? 1 : 0;
-diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+                         starget->id, &tstate);
+
+         if ((flags  & CFPACKETIZED) == 0) {
+-            /* Do not negotiate packetized transfers */
+-            spi_rd_strm(starget) = 0;
+-            spi_pcomp_en(starget) = 0;
+-            spi_rti(starget) = 0;
+-            spi_wr_flow(starget) = 0;
+-            spi_hold_mcs(starget) = 0;
++            /* don't negotiate packetized (IU) transfers */
++            spi_max_iu(starget) = 0;
+         } else {
+             if ((ahd->features & AHD_RTI) == 0)
+                 spi_rti(starget) = 0;
+         }
+
+         if ((flags & CFQAS) == 0)
+-            spi_qas(starget) = 0;
++            spi_max_qas(starget) = 0;
+
+         /* Transinfo values have been set to BIOS settings */
+         spi_max_width(starget) = (flags & CFWIDEB) ? 1 : 0;
+diff --git a/drivers/scsi/scsi_transport_spi.c
+b/drivers/scsi/scsi_transport_spi.c
 index f49f55c..654a34f 100644
 --- a/drivers/scsi/scsi_transport_spi.c
 +++ b/drivers/scsi/scsi_transport_spi.c
-@@ -234,8 +234,10 @@ static int spi_setup_transport_attrs(struct transport_container *tc,
- 	spi_width(starget) = 0;	/* narrow */
- 	spi_max_width(starget) = 1;
- 	spi_iu(starget) = 0;	/* no IU */
-+	spi_max_iu(starget) = 1;
- 	spi_dt(starget) = 0;	/* ST */
- 	spi_qas(starget) = 0;
-+	spi_max_qas(starget) = 1;
- 	spi_wr_flow(starget) = 0;
- 	spi_rd_strm(starget) = 0;
- 	spi_rti(starget) = 0;
-@@ -360,9 +362,9 @@ static DEVICE_ATTR(field, S_IRUGO,				\
+@@ -234,8 +234,10 @@ static int spi_setup_transport_attrs(struct
+transport_container *tc,
+     spi_width(starget) = 0;    /* narrow */
+     spi_max_width(starget) = 1;
+     spi_iu(starget) = 0;    /* no IU */
++    spi_max_iu(starget) = 1;
+     spi_dt(starget) = 0;    /* ST */
+     spi_qas(starget) = 0;
++    spi_max_qas(starget) = 1;
+     spi_wr_flow(starget) = 0;
+     spi_rd_strm(starget) = 0;
+     spi_rti(starget) = 0;
+@@ -360,9 +362,9 @@ static DEVICE_ATTR(field, S_IRUGO,                \
  /* The Parallel SCSI Tranport Attributes: */
  spi_transport_max_attr(offset, "%d\n");
  spi_transport_max_attr(width, "%d\n");
@@ -160,77 +171,91 @@ index f49f55c..654a34f 100644
  spi_transport_rd_attr(wr_flow, "%d\n");
  spi_transport_rd_attr(rd_strm, "%d\n");
  spi_transport_rd_attr(rti, "%d\n");
-@@ -874,13 +876,13 @@ spi_dv_device_internal(struct scsi_device *sdev, u8 *buffer)
- 
- 	/* try QAS requests; this should be harmless to set if the
- 	 * target supports it */
--	if (scsi_device_qas(sdev)) {
-+	if (scsi_device_qas(sdev) && spi_max_qas(starget)) {
- 		DV_SET(qas, 1);
- 	} else {
- 		DV_SET(qas, 0);
- 	}
- 
--	if (scsi_device_ius(sdev) && min_period < 9) {
-+	if (scsi_device_ius(sdev) && spi_max_iu(starget) && min_period < 9) {
- 		/* This u320 (or u640). Set IU transfers */
- 		DV_SET(iu, 1);
- 		/* Then set the optional parameters */
-@@ -1412,12 +1414,18 @@ static mode_t target_attribute_is_visible(struct kobject *kobj,
- 	else if (attr == &dev_attr_iu.attr &&
- 		 spi_support_ius(starget))
- 		return TARGET_ATTRIBUTE_HELPER(iu);
-+	else if (attr == &dev_attr_max_iu.attr &&
-+		 spi_support_ius(starget))
-+		return TARGET_ATTRIBUTE_HELPER(iu);
- 	else if (attr == &dev_attr_dt.attr &&
- 		 spi_support_dt(starget))
- 		return TARGET_ATTRIBUTE_HELPER(dt);
- 	else if (attr == &dev_attr_qas.attr &&
- 		 spi_support_qas(starget))
- 		return TARGET_ATTRIBUTE_HELPER(qas);
-+	else if (attr == &dev_attr_max_qas.attr &&
-+		 spi_support_qas(starget))
-+		return TARGET_ATTRIBUTE_HELPER(qas);
- 	else if (attr == &dev_attr_wr_flow.attr &&
- 		 spi_support_ius(starget))
- 		return TARGET_ATTRIBUTE_HELPER(wr_flow);
+@@ -874,13 +876,13 @@ spi_dv_device_internal(struct scsi_device *sdev, u8
+*buffer)
+
+     /* try QAS requests; this should be harmless to set if the
+      * target supports it */
+-    if (scsi_device_qas(sdev)) {
++    if (scsi_device_qas(sdev) && spi_max_qas(starget)) {
+         DV_SET(qas, 1);
+     } else {
+         DV_SET(qas, 0);
+     }
+
+-    if (scsi_device_ius(sdev) && min_period < 9) {
++    if (scsi_device_ius(sdev) && spi_max_iu(starget) && min_period < 9) {
+         /* This u320 (or u640). Set IU transfers */
+         DV_SET(iu, 1);
+         /* Then set the optional parameters */
+@@ -1412,12 +1414,18 @@ static mode_t target_attribute_is_visible(struct
+kobject *kobj,
+     else if (attr == &dev_attr_iu.attr &&
+          spi_support_ius(starget))
+         return TARGET_ATTRIBUTE_HELPER(iu);
++    else if (attr == &dev_attr_max_iu.attr &&
++         spi_support_ius(starget))
++        return TARGET_ATTRIBUTE_HELPER(iu);
+     else if (attr == &dev_attr_dt.attr &&
+          spi_support_dt(starget))
+         return TARGET_ATTRIBUTE_HELPER(dt);
+     else if (attr == &dev_attr_qas.attr &&
+          spi_support_qas(starget))
+         return TARGET_ATTRIBUTE_HELPER(qas);
++    else if (attr == &dev_attr_max_qas.attr &&
++         spi_support_qas(starget))
++        return TARGET_ATTRIBUTE_HELPER(qas);
+     else if (attr == &dev_attr_wr_flow.attr &&
+          spi_support_ius(starget))
+         return TARGET_ATTRIBUTE_HELPER(wr_flow);
 @@ -1447,8 +1455,10 @@ static struct attribute *target_attributes[] = {
- 	&dev_attr_width.attr,
- 	&dev_attr_max_width.attr,
- 	&dev_attr_iu.attr,
-+	&dev_attr_max_iu.attr,
- 	&dev_attr_dt.attr,
- 	&dev_attr_qas.attr,
-+	&dev_attr_max_qas.attr,
- 	&dev_attr_wr_flow.attr,
- 	&dev_attr_rd_strm.attr,
- 	&dev_attr_rti.attr,
-diff --git a/include/scsi/scsi_transport_spi.h b/include/scsi/scsi_transport_spi.h
+     &dev_attr_width.attr,
+     &dev_attr_max_width.attr,
+     &dev_attr_iu.attr,
++    &dev_attr_max_iu.attr,
+     &dev_attr_dt.attr,
+     &dev_attr_qas.attr,
++    &dev_attr_max_qas.attr,
+     &dev_attr_wr_flow.attr,
+     &dev_attr_rd_strm.attr,
+     &dev_attr_rti.attr,
+diff --git a/include/scsi/scsi_transport_spi.h
+b/include/scsi/scsi_transport_spi.h
 index 286e962..7497a38 100644
 --- a/include/scsi/scsi_transport_spi.h
 +++ b/include/scsi/scsi_transport_spi.h
 @@ -36,8 +36,10 @@ struct spi_transport_attrs {
- 	unsigned int width:1;	/* 0 - narrow, 1 - wide */
- 	unsigned int max_width:1;
- 	unsigned int iu:1;	/* Information Units enabled */
-+	unsigned int max_iu:1;
- 	unsigned int dt:1;	/* DT clocking enabled */
- 	unsigned int qas:1;	/* Quick Arbitration and Selection enabled */
-+	unsigned int max_qas:1;
- 	unsigned int wr_flow:1;	/* Write Flow control enabled */
- 	unsigned int rd_strm:1;	/* Read streaming enabled */
- 	unsigned int rti:1;	/* Retain Training Information */
+     unsigned int width:1;    /* 0 - narrow, 1 - wide */
+     unsigned int max_width:1;
+     unsigned int iu:1;    /* Information Units enabled */
++    unsigned int max_iu:1;
+     unsigned int dt:1;    /* DT clocking enabled */
+     unsigned int qas:1;    /* Quick Arbitration and Selection enabled */
++    unsigned int max_qas:1;
+     unsigned int wr_flow:1;    /* Write Flow control enabled */
+     unsigned int rd_strm:1;    /* Read streaming enabled */
+     unsigned int rti:1;    /* Retain Training Information */
 @@ -77,8 +79,10 @@ struct spi_host_attrs {
- #define spi_width(x)	(((struct spi_transport_attrs *)&(x)->starget_data)->width)
- #define spi_max_width(x) (((struct spi_transport_attrs *)&(x)->starget_data)->max_width)
- #define spi_iu(x)	(((struct spi_transport_attrs *)&(x)->starget_data)->iu)
-+#define spi_max_iu(x)	(((struct spi_transport_attrs *)&(x)->starget_data)->max_iu)
- #define spi_dt(x)	(((struct spi_transport_attrs *)&(x)->starget_data)->dt)
- #define spi_qas(x)	(((struct spi_transport_attrs *)&(x)->starget_data)->qas)
-+#define spi_max_qas(x)	(((struct spi_transport_attrs *)&(x)->starget_data)->max_qas)
- #define spi_wr_flow(x)	(((struct spi_transport_attrs *)&(x)->starget_data)->wr_flow)
- #define spi_rd_strm(x)	(((struct spi_transport_attrs *)&(x)->starget_data)->rd_strm)
- #define spi_rti(x)	(((struct spi_transport_attrs *)&(x)->starget_data)->rti)
+ #define spi_width(x)    (((struct spi_transport_attrs
+*)&(x)->starget_data)->width)
+ #define spi_max_width(x) (((struct spi_transport_attrs
+*)&(x)->starget_data)->max_width)
+ #define spi_iu(x)    (((struct spi_transport_attrs *)&(x)->starget_data)->iu)
++#define spi_max_iu(x)    (((struct spi_transport_attrs
+*)&(x)->starget_data)->max_iu)
+ #define spi_dt(x)    (((struct spi_transport_attrs *)&(x)->starget_data)->dt)
+ #define spi_qas(x)    (((struct spi_transport_attrs
+*)&(x)->starget_data)->qas)
++#define spi_max_qas(x)    (((struct spi_transport_attrs
+*)&(x)->starget_data)->max_qas)
+ #define spi_wr_flow(x)    (((struct spi_transport_attrs
+*)&(x)->starget_data)->wr_flow)
+ #define spi_rd_strm(x)    (((struct spi_transport_attrs
+*)&(x)->starget_data)->rd_strm)
+ #define spi_rti(x)    (((struct spi_transport_attrs
+*)&(x)->starget_data)->rti)
 
-
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
