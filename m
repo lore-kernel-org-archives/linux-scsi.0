@@ -1,55 +1,54 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: DELL Universal Xport no attach blacklist
-Date: Sat, 13 Jun 2009 09:20:43 -0500
-Message-ID: <1244902843.5323.5.camel@mulgrave.site>
-References: <d1392840906130711o7a1cba14k2b5379511c700817@mail.gmail.com>
+From: Torsten Kaiser <just.for.lkml@googlemail.com>
+Subject: Re: [PATCH] dma-debug: disable DMA_API_DEBUG for now
+Date: Sat, 13 Jun 2009 16:26:06 +0200
+Message-ID: <64bb37e0906130726i7b6ac33dma25e17c72cca54dd@mail.gmail.com>
+References: <20090605173232N.fujita.tomonori@lab.ntt.co.jp>
+	 <20090605104132.GE24836@amd.com>
+	 <64bb37e0906101341j341f5179o9abfa888a6b96fc3@mail.gmail.com>
+	 <20090611081032.GN5139@amd.com>
+	 <64bb37e0906111038h1a5b9f17oec6c6368d2fbd36d@mail.gmail.com>
+	 <20090612141346.GY5139@amd.com>
+	 <64bb37e0906120751u14cac347hfa2356372e1e0a6a@mail.gmail.com>
+	 <20090613111014.GA18638@8bytes.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:40530 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753822AbZFMOUq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 13 Jun 2009 10:20:46 -0400
-In-Reply-To: <d1392840906130711o7a1cba14k2b5379511c700817@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761705AbZFMO0Z@vger.kernel.org>
+In-Reply-To: <20090613111014.GA18638@8bytes.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Joerg Roedel <joro@8bytes.org>
+Cc: Joerg Roedel <joerg.roedel@amd.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Linus Torvalds <torvalds@linux-foundation.org>, mingo@elte.hu, lethal@linux-sh.org, hancockrwd@gmail.com, jens.axboe@oracle.com, bharrosh@panasas.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Thomas Witzel <witzel.thomas@gmail.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Sat, 2009-06-13 at 10:11 -0400, Thomas Witzel wrote:
-> I have been getting tons of Buffer I/O errors on the Universal Xport
-> devices of my DELL MD3000. This can be managed by not attaching
-> them....
-> Can you please add the DELL Universal Xport to the no attach list in
-> scsi_devinfo.c ? I'm not sure how to submit a patch because I don't
-> know which version of the kernel the patch should be against, but I
-> know its not yet in the newest Linus kernel. I want this line added
-> please,
-> 
-> --- scsi-git/scsi_devinfo.c     2009-03-31 10:54:00.000000000 -0400
-> +++ scsi/scsi_devinfo.c 2009-06-13 10:08:46.000000000 -0400
-> @@ -225,6 +225,7 @@
->         {"SGI", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
->         {"IBM", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
->         {"SUN", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
-> +       {"DELL", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
->         {"SMSC", "USB 2 HS-CF", NULL, BLIST_SPARSELUN | BLIST_INQUIRY_36},
->         {"SONY", "CD-ROM CDU-8001", NULL, BLIST_BORKEN},
->         {"SONY", "TSL", NULL, BLIST_FORCELUN},          /* DDS3 & DDS4
-> autoloaders */
+On Sat, Jun 13, 2009 at 1:10 PM, Joerg Roedel<joro@8bytes.org> wrote:
+> On Fri, Jun 12, 2009 at 04:51:01PM +0200, Torsten Kaiser wrote:
+>> On Fri, Jun 12, 2009 at 4:13 PM, Joerg Roedel<joerg.roedel@amd.com> wrote:
+>> > On Thu, Jun 11, 2009 at 07:38:47PM +0200, Torsten Kaiser wrote:
+>> >> DMA-API: device driver tries to free DM
+>> >> A memory it has not allocated [device address=0x000000011e4c3000]
+>> >> [size=4096 bytes]
+>> >
+>> > Hmm, looking again over the code I've seen that the ref
+>> > dma_debug_entries are not alway filled with all necessary information
+>> > for best-fit. Can you please try if you still get false warnings when
+>> > you apply the two patches attached instead of the one I sent yesterday?
+>>
+>> Hmm... There isn't a get_nr_mapped_entries() in 2.6.30.
+>> Are these patches again the current linus tree?
+>
+> Indeed. These patches are against tip/core/iommu but should also apply
+> against current linus/master too.
 
-I'll add it via cut and paste.
+OK, I will try 2.6.30-git6 with and without these patches.
 
-For future reference, you can submit the patch yourself too if you
-follow Documentation/SubmittingPatches.  The only real problem with the
-above is that there's no signoff line, it's not tree relative and your
-mailer seems to have converted tabs to spaces (we have a separate file
-Documentation/email-clients.txt to try to address this, but it's not
-comprehensive, there being more broken email clients out there than we
-can document fixes for).
+>> For unfilled information I wanted to complain that for non-sg mapping
+>> sg_call_ents never gets filled. But as dma_entry_alloc() does a
+>> memset() to clean the entrys it should not matter.
+>> And what about dma_debug_entry.paddr? Should this also be compared?
+>
+> paddr shouldn't matter. We also can't compare against it because it is
+> not a parameter we get in the unmap path (not always).
 
-James
+check_unmap() checks it and sg_call_ents are also optional.
 
-
+Torsten
