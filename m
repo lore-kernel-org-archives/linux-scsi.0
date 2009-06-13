@@ -1,257 +1,47 @@
-From: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
-Subject: Re: PATCH: PMC-Sierra MaxRAID driver to support 6Gb/s SAS RAID
- controller
-Date: Sat, 13 Jun 2009 01:50:44 -0700 (PDT)
-Message-ID: <alpine.LNX.1.10.0906130115440.24868@rslab159.pmc-sierra.bc.ca>
-References: <alpine.LNX.1.10.0906101259500.24722@rslab159.pmc-sierra.bc.ca> <200906111348.02029.eike-kernel@sf-tec.de>
+From: Joerg Roedel <joro@8bytes.org>
+Subject: Re: [PATCH] dma-debug: disable DMA_API_DEBUG for now
+Date: Sat, 13 Jun 2009 13:10:14 +0200
+Message-ID: <20090613111014.GA18638@8bytes.org>
+References: <20090605173232N.fujita.tomonori@lab.ntt.co.jp> <20090605104132.GE24836@amd.com> <64bb37e0906101341j341f5179o9abfa888a6b96fc3@mail.gmail.com> <20090611081032.GN5139@amd.com> <64bb37e0906111038h1a5b9f17oec6c6368d2fbd36d@mail.gmail.com> <20090612141346.GY5139@amd.com> <64bb37e0906120751u14cac347hfa2356372e1e0a6a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:37605 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752599AbZFMJcF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 13 Jun 2009 05:32:05 -0400
-In-Reply-To: <200906111348.02029.eike-kernel@sf-tec.de>
+Received: from 8bytes.org ([88.198.83.132]:38243 "EHLO 8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750896AbZFMLKN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 13 Jun 2009 07:10:13 -0400
+Content-Disposition: inline
+In-Reply-To: <64bb37e0906120751u14cac347hfa2356372e1e0a6a@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, anil_ravindranath@pmc-sierra.com, gregkh@suse.de
+To: Torsten Kaiser <just.for.lkml@googlemail.com>
+Cc: Joerg Roedel <joerg.roedel@amd.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Linus Torvalds <torvalds@linux-foundation.org>, mingo@elte.hu, lethal@linux-sh.org, hancockrwd@gmail.com, jens.axboe@oracle.com, bharrosh@panasas.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Please see my responses below...
-
-On Thu, 11 Jun 2009, Rolf Eike Beer wrote:
-
-> Anil Ravindranath wrote:
-> > Hi,
+On Fri, Jun 12, 2009 at 04:51:01PM +0200, Torsten Kaiser wrote:
+> On Fri, Jun 12, 2009 at 4:13 PM, Joerg Roedel<joerg.roedel@amd.com> wrote:
+> > On Thu, Jun 11, 2009 at 07:38:47PM +0200, Torsten Kaiser wrote:
+> >> DMA-API: device driver tries to free DM
+> >> A memory it has not allocated [device address=0x000000011e4c3000]
+> >> [size=4096 bytes]
 > >
-> > This patch adds a driver to support PMC-Sierra 6Gb/s SAS RAID controller.
-> > This patch is created against scsi-misc-2.6.git.
+> > Hmm, looking again over the code I've seen that the ref
+> > dma_debug_entries are not alway filled with all necessary information
+> > for best-fit. Can you please try if you still get false warnings when
+> > you apply the two patches attached instead of the one I sent yesterday?
 > 
-> > +module_param_named(debug, pmcraid_debug, uint, (S_IRUGO | S_IWUSR));
-> > +MODULE_PARM_DESC(debug,
-> > +		 "Enable driver verbose message logging. Set 1  to enable."
-> > +		 "(default: 0)");
-> 
-> I would say that "1" would enable this is rather obvious. And since this is 
-> only 0 or 1 better use bool instead of uint.
-> 
-This can be changed to bool as well. But in future if we want to add more 
-than two values, hence we kept int for now.
+> Hmm... There isn't a get_nr_mapped_entries() in 2.6.30.
+> Are these patches again the current linus tree?
 
-> 
-> > +static int pmcraid_slave_alloc(struct scsi_device *scsi_dev)
-> > +{
-> > +	struct pmcraid_resource_entry *temp, *res = NULL;
-> > +	struct pmcraid_instance *pinstance;
-> > +	u8 target, bus, lun;
-> > +	unsigned long lock_flags;
-> > +	int rc = -ENXIO;
-> > +
-> > +	pinstance = (struct pmcraid_instance *)scsi_dev->host->hostdata;
-> 
-> hostdata is void* AFAIR so there is no need to cast. It's C, there is no need 
-> to cast to or from void* anywhere if the other thing is a pointer.
-> 
+Indeed. These patches are against tip/core/iommu but should also apply
+against current linus/master too.
 
-Will use shost_priv() here.
+> For unfilled information I wanted to complain that for non-sg mapping
+> sg_call_ents never gets filled. But as dma_entry_alloc() does a
+> memset() to clean the entrys it should not matter.
+> And what about dma_debug_entry.paddr? Should this also be compared?
 
-> > +static int pmcraid_slave_configure(struct scsi_device *sdev)
-> > +{
-> > +	struct pmcraid_resource_entry *res = NULL;
-> > +
-> > +	res = sdev->hostdata;
-> 
-> No need to initialize res to NULL.
-> 
-Agreed. Remove initalize to NULL here.
+paddr shouldn't matter. We also can't compare against it because it is
+not a parameter we get in the unmap path (not always).
 
-> > +static u32 pmcraid_read_interrupts(struct pmcraid_instance *pinstance)
-> > +{
-> > +
-> > +	return ioread32(pinstance->int_regs.ioa_host_interrupt_reg);
-> > +}
-> 
-> Extra newline.
-> 
+Joerg
 
-Will remove extra newline
-
-> > +/**
-> > + * pmcraid_disable_interrupts - Masks and clears all specified interrupts
-> > + *
-> > + * @pinstance: pointer to per adapter instance structure
-> > + * @intr: interrupts to disable
-> > + *
-> > + * Return Value
-> > + *	 None
-> > + */
-> 
-> Well, that's rather obvious if it's a void function, isn't it? ;)
-> 
-
-Followed commenting convention. Can remove return value. no problem.
-
-> 
-> > +static int __devinit pmcraid_probe(
-> > +	struct pci_dev *pdev,
-> > +	const struct pci_device_id *dev_id
-> > +)
-> > +{
-> > +	struct pmcraid_instance *pinstance;
-> > +	struct Scsi_Host *host;
-> > +	void __iomem *mapped_pci_addr;
-> > +	int rc = PCIBIOS_SUCCESSFUL;
-> > +
-> > +	if (pmcraid_adapter_count >= PMCRAID_MAX_ADAPTERS) {
-> > +		pmcraid_err
-> > +			("maximum number(%d) of supported adapters reached\n",
-> > +			 pmcraid_adapter_count);
-> > +		return -ENOMEM;
-> > +	}
-> > +
-> > +	pmcraid_adapter_count++;
-> 
-> This counter may need a lock, else you might get into trouble.
-> 
-
-I am not sure if we need lock here as we will hit probe serially for every 
-controller found.
-That said, we will change it to atomic.
-
-> > +	rc = pci_enable_device(pdev);
-> 
-> Well, I ask it every time, but nevertheless: why not use devres for your 
-> driver? It will make error handling in _probe as well as the _release stuff 
-> much easier.
->
-
-If we choose devres approach, we will have to make make changes 
-accordingly. For now can we stick to pci functions.
-
-> > +	if (rc) {
-> > +		dev_err(&pdev->dev, "Cannot enable adapter\n");
-> > +		pmcraid_adapter_count--;
-> > +		goto out;
-> > +	}
-> 
-> Just "return rc" here. This goto into the middle of the function just for a 
-> return is IMHO hard to read.
-> 
-
-Will be done.
-
-> > +	dev_info(&pdev->dev,
-> > +		"Found IOA(%x:%x) on PCI bus %d slot %d with IRQ: %d\n",
-> > +		 pdev->vendor, pdev->device, pdev->bus->number,
-> > +		 PCI_SLOT(pdev->bus->number), pdev->irq);
-> 
-
-Removed extra pci printing info.
-
-> The IRQ and stuff is printed by request_irq() or such anyway. If you have 
-> enabled MSI the IRQ is a different one anyway.
-> 
-> > +	/* zero out entire instance structure */
-> > +	pinstance = (struct pmcraid_instance *)host->hostdata;
-> > +	memset(pinstance, 0, sizeof(struct pmcraid_instance));
-> 
-> memset(pinstance, 0, sizeof(*pinstance));
-> 
-
-Done.
-
-> > +	/* Schedule worker thread to handle CCN and take care of adding and
-> > +	 * removing devices to OS
-> > +	 */
-> > +	schedule_work(&pinstance->worker_q);
-> > +
-> > +out:
-> > +	return rc;
-> > +
-> > +out_remove_host:
-> > +	scsi_remove_host(host);
-> > +
-> > +out_release_bufs:
-> > +	pmcraid_release_buffers(pinstance);
-> > +
-> > +out_unregister_isr:
-> > +	pmcraid_kill_tasklets(pinstance);
-> > +	pmcraid_unregister_interrupt_handler(pinstance);
-> > +
-> > +out_scsi_host_put:
-> > +	scsi_host_put(host);
-> > +
-> > +cleanup_nomem:
-> > +	iounmap(mapped_pci_addr);
-> > +
-> > +out_release_regions:
-> > +	pci_release_regions(pdev);
-> > +
-> > +out_disable_device:
-> > +	pmcraid_adapter_count--;
-> > +	pci_set_drvdata(pdev, NULL);
-> > +	pci_disable_device(pdev);
-> > +	rc = -ENODEV;
-> > +	goto out;
-> > +}
-> 
-> Just "return rc" here. And maybe it's a good idea to just keep the previous rc 
-> so you will see it was ENOMEM or whatever.
-> 
-Will remove goto out and add return -ENODEV if probe fails.
-
-> > +/* PMC PCI vendor ID and device ID values */
-> > +#define PCI_VENDOR_ID_PMC			0x11F8
-> > +#define PCI_DEVICE_ID_PMC_MAXRAID		0x5220
-> > +#define PCI_DEVICE_ID_PMC_0x8010		0x8010
-> 
-> You could just use the 0x8010 directly at the only place this constant is 
-> referenced.
-> 
-
-This will be changed once we add device_ids in pci_ids.h
-
-> > +#define IOARCB_LENGTH_CODE(n)         (((n)-3)/8 + (((n)-3)%8 > 0))
-> 
-> Oh, wow. I needed to throw this into a for loop to understand what you are 
-> doing here. Try DIV_ROUND_CLOSEST(n, 8) from include/kernel.h which does right 
-> the same.
-> 
-
-Done.
-
-> > +/* macros to help in debugging */
-> > +#define pmcraid_err(...)  \
-> > +	printk(KERN_ERR "MaxRAID: "__VA_ARGS__)
-> > +
-> > +#define pmcraid_info(...) \
-> > +	if (pmcraid_debug) \
-> > +		printk(KERN_INFO "MaxRAID: "__VA_ARGS__)
-> 
-> Those should probably be rewritten to use pr_err() and pr_debug(). Or better 
-> use dev_dbg() and dev_info() directly.
-> 
-I guess we cannot use dev_ functions as we want to print even when dev is 
-not initialized. Yes we can use pr_ functions but we want to control
-printing by our print/debug flags.
-
-> > +/*
-> > + * pmcraid_adapter_id - structure defining the adapter id used by LLD
-> > + */
-> > +union pmcraid_adapter_id {
-> > +	struct {
-> > +		u32 slot_no:8;
-> 
-> Why not use u8?
-> 
-
-PMC-sierra managament applications expect this to be an integer.
-
-> > +		u32 bus_number:24;
-> > +	} y;
-> 
-> Greetings,
-> 
-> Eike
-> 
