@@ -1,47 +1,41 @@
-From: Joerg Roedel <joro@8bytes.org>
-Subject: Re: [PATCH] dma-debug: disable DMA_API_DEBUG for now
-Date: Sat, 13 Jun 2009 13:10:14 +0200
-Message-ID: <20090613111014.GA18638@8bytes.org>
-References: <20090605173232N.fujita.tomonori@lab.ntt.co.jp> <20090605104132.GE24836@amd.com> <64bb37e0906101341j341f5179o9abfa888a6b96fc3@mail.gmail.com> <20090611081032.GN5139@amd.com> <64bb37e0906111038h1a5b9f17oec6c6368d2fbd36d@mail.gmail.com> <20090612141346.GY5139@amd.com> <64bb37e0906120751u14cac347hfa2356372e1e0a6a@mail.gmail.com>
+From: Thomas Witzel <witzel.thomas@gmail.com>
+Subject: DELL Universal Xport no attach blacklist
+Date: Sat, 13 Jun 2009 10:11:08 -0400
+Message-ID: <d1392840906130711o7a1cba14k2b5379511c700817@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 8bytes.org ([88.198.83.132]:38243 "EHLO 8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750896AbZFMLKN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 13 Jun 2009 07:10:13 -0400
-Content-Disposition: inline
-In-Reply-To: <64bb37e0906120751u14cac347hfa2356372e1e0a6a@mail.gmail.com>
+Received: from mail-ew0-f210.google.com ([209.85.219.210]:44515 "EHLO
+	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753621AbZFMOLH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 13 Jun 2009 10:11:07 -0400
+Received: by ewy6 with SMTP id 6so3757460ewy.37
+        for <linux-scsi@vger.kernel.org>; Sat, 13 Jun 2009 07:11:09 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Torsten Kaiser <just.for.lkml@googlemail.com>
-Cc: Joerg Roedel <joerg.roedel@amd.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Linus Torvalds <torvalds@linux-foundation.org>, mingo@elte.hu, lethal@linux-sh.org, hancockrwd@gmail.com, jens.axboe@oracle.com, bharrosh@panasas.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, Jun 12, 2009 at 04:51:01PM +0200, Torsten Kaiser wrote:
-> On Fri, Jun 12, 2009 at 4:13 PM, Joerg Roedel<joerg.roedel@amd.com> wrote:
-> > On Thu, Jun 11, 2009 at 07:38:47PM +0200, Torsten Kaiser wrote:
-> >> DMA-API: device driver tries to free DM
-> >> A memory it has not allocated [device address=0x000000011e4c3000]
-> >> [size=4096 bytes]
-> >
-> > Hmm, looking again over the code I've seen that the ref
-> > dma_debug_entries are not alway filled with all necessary information
-> > for best-fit. Can you please try if you still get false warnings when
-> > you apply the two patches attached instead of the one I sent yesterday?
-> 
-> Hmm... There isn't a get_nr_mapped_entries() in 2.6.30.
-> Are these patches again the current linus tree?
+I have been getting tons of Buffer I/O errors on the Universal Xport
+devices of my DELL MD3000. This can be managed by not attaching
+them....
+Can you please add the DELL Universal Xport to the no attach list in
+scsi_devinfo.c ? I'm not sure how to submit a patch because I don't
+know which version of the kernel the patch should be against, but I
+know its not yet in the newest Linus kernel. I want this line added
+please,
 
-Indeed. These patches are against tip/core/iommu but should also apply
-against current linus/master too.
+--- scsi-git/scsi_devinfo.c     2009-03-31 10:54:00.000000000 -0400
++++ scsi/scsi_devinfo.c 2009-06-13 10:08:46.000000000 -0400
+@@ -225,6 +225,7 @@
+        {"SGI", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+        {"IBM", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+        {"SUN", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
++       {"DELL", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+        {"SMSC", "USB 2 HS-CF", NULL, BLIST_SPARSELUN | BLIST_INQUIRY_36},
+        {"SONY", "CD-ROM CDU-8001", NULL, BLIST_BORKEN},
+        {"SONY", "TSL", NULL, BLIST_FORCELUN},          /* DDS3 & DDS4
+autoloaders */
 
-> For unfilled information I wanted to complain that for non-sg mapping
-> sg_call_ents never gets filled. But as dma_entry_alloc() does a
-> memset() to clean the entrys it should not matter.
-> And what about dma_debug_entry.paddr? Should this also be compared?
-
-paddr shouldn't matter. We also can't compare against it because it is
-not a parameter we get in the unmap path (not always).
-
-Joerg
-
+Thank you,
+Thomas Witzel
