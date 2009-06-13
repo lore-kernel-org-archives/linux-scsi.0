@@ -1,133 +1,236 @@
-From: Torsten Kaiser <just.for.lkml@googlemail.com>
-Subject: Re: [PATCH] dma-debug: disable DMA_API_DEBUG for now
-Date: Sat, 13 Jun 2009 19:08:01 +0200
-Message-ID: <64bb37e0906131008x59b25b94u501fc2192cc28be0@mail.gmail.com>
-References: <20090605173232N.fujita.tomonori@lab.ntt.co.jp>
-	 <20090605104132.GE24836@amd.com>
-	 <64bb37e0906101341j341f5179o9abfa888a6b96fc3@mail.gmail.com>
-	 <20090611081032.GN5139@amd.com>
-	 <64bb37e0906111038h1a5b9f17oec6c6368d2fbd36d@mail.gmail.com>
-	 <20090612141346.GY5139@amd.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug 12727] New: AIC79xx problem on Adaptec 29320A-P controller
+Date: Sat, 13 Jun 2009 12:19:05 -0500
+Message-ID: <1244913545.5323.26.camel@mulgrave.site>
+References: <bug-12727-11613@http.bugzilla.kernel.org/>
+	 <1244817715.4184.10.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:56121 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755262AbZFMRIA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 13 Jun 2009 13:08:00 -0400
-In-Reply-To: <20090612141346.GY5139@amd.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54650 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753157AbZFMRTK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 13 Jun 2009 13:19:10 -0400
+In-Reply-To: <1244817715.4184.10.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joerg Roedel <joerg.roedel@amd.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Linus Torvalds <torvalds@linux-foundation.org>, mingo@elte.hu, lethal@linux-sh.org, hancockrwd@gmail.com, jens.axboe@oracle.com, bharrosh@panasas.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: bugme-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Jun 12, 2009 at 4:13 PM, Joerg Roedel<joerg.roedel@amd.com> wrote:
-> On Thu, Jun 11, 2009 at 07:38:47PM +0200, Torsten Kaiser wrote:
->> DMA-API: device driver tries to free DM
->> A memory it has not allocated [device address=0x000000011e4c3000]
->> [size=4096 bytes]
->
-> Hmm, looking again over the code I've seen that the ref
-> dma_debug_entries are not alway filled with all necessary information
-> for best-fit. Can you please try if you still get false warnings when
-> you apply the two patches attached instead of the one I sent yesterday?
+On Fri, 2009-06-12 at 09:41 -0500, James Bottomley wrote:
+> On Tue, 2009-02-17 at 10:09 -0800, bugme-daemon@bugzilla.kernel.org
+> wrote:
+> > http://bugzilla.kernel.org/show_bug.cgi?id=12727
+> > 
+> >            Summary: AIC79xx problem on Adaptec 29320A-P controller
+> >            Product: SCSI Drivers
+> >            Version: 2.5
+> >      KernelVersion: 2.6.25.20-0.1-default
+> >           Platform: All
+> >         OS/Version: Linux
+> >               Tree: Mainline
+> >             Status: NEW
+> >           Severity: normal
+> >           Priority: P1
+> >          Component: Other
+> >         AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
+> >         ReportedBy: j@jensen-net.org
+> > 
+> > 
+> > Latest working kernel version: N/A
+> > Earliest failing kernel version: 2.6.25.20-0.1-default
+> > Distribution: OpenSUSE 11.0
+> > Hardware Environment: Supermicro server
+> > Software Environment: 
+> > Problem Description:
+> > When there is a pause in writing to the tape after that the error occurs.
+> > 
+> > Steps to reproduce: tar some data to tape.
+> > 
+> > Hardware information and error is below:
+> > Linux version 2.6.25.20-0.1-default (geeko@buildhost) (gcc version 4.3.1
+> > 20080507 (prerelease) [gcc-4_3-branch revision 135036] (SUSE Linux) ) #1 SMP
+> > 2008-12-12 20:30:38 +0100
+> > scsi0 : Adaptec AIC79XX PCI-X SCSI HBA DRIVER, Rev 3.0
+> >         <Adaptec 29320A Ultra320 SCSI adapter>
+> >         aic7901: Ultra320 Wide Channel A, SCSI Id=7, PCI-X 101-133Mhz, 512 SCBs
+> >  target0:0:3: asynchronous
+> > scsi 0:0:3:0: Sequential-Access IBM      ULTRIUM-TD3      7AP5 PQ: 0 ANSI: 3
+> >  target0:0:3: Beginning Domain Validation
+> >  target0:0:3: wide asynchronous
+> >  target0:0:3: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 127)
+> >  target0:0:3: Ending Domain Validation
+> > scsi 0:0:3:1: Medium Changer    EXABYTE  MAGNUM 224       C270 PQ: 0 ANSI: 4
+> > 
+> > osst :I: Tape driver with OnStream support version 0.99.4
+> > osst :I: $Id: osst.c,v 1.73 2005/01/01 21:13:34 wriede Exp $
+> > st: Version 20080221, fixed bufsize 32768, s/g segs 256
+> > st 0:0:3:0: Attached scsi tape st0
+> > st 0:0:3:0: st0: try direct i/o: yes (alignment 4 B)
+> > st0: Block limits 1 - 16777215 bytes.
+> > 
+> > scsi0: PCI error Interrupt
+> > >>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+> > scsi0: Dumping Card State at program address 0x7f Mode 0x22
+> 
+> Following up on this, we have a Novell bugzilla (partner restricted, I'm
+> afraid):
+> 
+> https://bugzilla.novell.com/show_bug.cgi?id=509845
+> 
+> The good thing about the novell one is that the partner managed to get a
+> SCSI analyser on the tape.  The analysis shows that the tape actually
+> has a firmware bug in that if it sees Information Units of type 0x02
+> (MULTIPLE COMMANDS) it just stops responding.  It can cope with any
+> other type of Information Unit, apparently.
+> 
+> We'll be trying to get HP to fix the firmware, but an alternative
+> solution might simply be to blacklist this device in the SPI transport
+> class to disable information unit transfers, which should fix your
+> problem
+> 
+> [Of course, a second problem is how to get the aic79xx driver to behave
+> nicely handling errors in situations like this, but I'll leave that for
+> another day.]
 
-I tested these patches
-(0001-dma-debug-check-for-sg_call_ents-in-best-fit-algorit.patch and
-0002-dma-debug-be-more-careful-when-building-reference-en.patch)
-against 2.6.30-git6 and did not see any warnings.
+OK, so this patch should be an interim one until I can blacklist the
+devices permanently.
 
-I can't be 100% sure about the fix, because I do not have a reliable
-trigger, but it looks quite good.
+What it does is allow the Adaptec firmware to pass on its values for
+Packetize and QAS ... you just need to set Packetize to 'no' for the
+tape device in the bios and the kernel (after this patch) will respect
+the setting and not try to enable information units.
 
-Torsten
+James
+
+---
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+index 0f829b3..75b2331 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -627,19 +627,15 @@ ahd_linux_target_alloc(struct scsi_target *starget)
+ 					    starget->id, &tstate);
+ 
+ 		if ((flags  & CFPACKETIZED) == 0) {
+-			/* Do not negotiate packetized transfers */
+-			spi_rd_strm(starget) = 0;
+-			spi_pcomp_en(starget) = 0;
+-			spi_rti(starget) = 0;
+-			spi_wr_flow(starget) = 0;
+-			spi_hold_mcs(starget) = 0;
++			/* don't negotiate packetized (IU) transfers */
++			spi_max_iu(starget) = 0;
+ 		} else {
+ 			if ((ahd->features & AHD_RTI) == 0)
+ 				spi_rti(starget) = 0;
+ 		}
+ 
+ 		if ((flags & CFQAS) == 0)
+-			spi_qas(starget) = 0;
++			spi_max_qas(starget) = 0;
+ 
+ 		/* Transinfo values have been set to BIOS settings */
+ 		spi_max_width(starget) = (flags & CFWIDEB) ? 1 : 0;
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index f49f55c..654a34f 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -234,8 +234,10 @@ static int spi_setup_transport_attrs(struct transport_container *tc,
+ 	spi_width(starget) = 0;	/* narrow */
+ 	spi_max_width(starget) = 1;
+ 	spi_iu(starget) = 0;	/* no IU */
++	spi_max_iu(starget) = 1;
+ 	spi_dt(starget) = 0;	/* ST */
+ 	spi_qas(starget) = 0;
++	spi_max_qas(starget) = 1;
+ 	spi_wr_flow(starget) = 0;
+ 	spi_rd_strm(starget) = 0;
+ 	spi_rti(starget) = 0;
+@@ -360,9 +362,9 @@ static DEVICE_ATTR(field, S_IRUGO,				\
+ /* The Parallel SCSI Tranport Attributes: */
+ spi_transport_max_attr(offset, "%d\n");
+ spi_transport_max_attr(width, "%d\n");
+-spi_transport_rd_attr(iu, "%d\n");
++spi_transport_max_attr(iu, "%d\n");
+ spi_transport_rd_attr(dt, "%d\n");
+-spi_transport_rd_attr(qas, "%d\n");
++spi_transport_max_attr(qas, "%d\n");
+ spi_transport_rd_attr(wr_flow, "%d\n");
+ spi_transport_rd_attr(rd_strm, "%d\n");
+ spi_transport_rd_attr(rti, "%d\n");
+@@ -874,13 +876,13 @@ spi_dv_device_internal(struct scsi_device *sdev, u8 *buffer)
+ 
+ 	/* try QAS requests; this should be harmless to set if the
+ 	 * target supports it */
+-	if (scsi_device_qas(sdev)) {
++	if (scsi_device_qas(sdev) && spi_max_qas(starget)) {
+ 		DV_SET(qas, 1);
+ 	} else {
+ 		DV_SET(qas, 0);
+ 	}
+ 
+-	if (scsi_device_ius(sdev) && min_period < 9) {
++	if (scsi_device_ius(sdev) && spi_max_iu(starget) && min_period < 9) {
+ 		/* This u320 (or u640). Set IU transfers */
+ 		DV_SET(iu, 1);
+ 		/* Then set the optional parameters */
+@@ -1412,12 +1414,18 @@ static mode_t target_attribute_is_visible(struct kobject *kobj,
+ 	else if (attr == &dev_attr_iu.attr &&
+ 		 spi_support_ius(starget))
+ 		return TARGET_ATTRIBUTE_HELPER(iu);
++	else if (attr == &dev_attr_max_iu.attr &&
++		 spi_support_ius(starget))
++		return TARGET_ATTRIBUTE_HELPER(iu);
+ 	else if (attr == &dev_attr_dt.attr &&
+ 		 spi_support_dt(starget))
+ 		return TARGET_ATTRIBUTE_HELPER(dt);
+ 	else if (attr == &dev_attr_qas.attr &&
+ 		 spi_support_qas(starget))
+ 		return TARGET_ATTRIBUTE_HELPER(qas);
++	else if (attr == &dev_attr_max_qas.attr &&
++		 spi_support_qas(starget))
++		return TARGET_ATTRIBUTE_HELPER(qas);
+ 	else if (attr == &dev_attr_wr_flow.attr &&
+ 		 spi_support_ius(starget))
+ 		return TARGET_ATTRIBUTE_HELPER(wr_flow);
+@@ -1447,8 +1455,10 @@ static struct attribute *target_attributes[] = {
+ 	&dev_attr_width.attr,
+ 	&dev_attr_max_width.attr,
+ 	&dev_attr_iu.attr,
++	&dev_attr_max_iu.attr,
+ 	&dev_attr_dt.attr,
+ 	&dev_attr_qas.attr,
++	&dev_attr_max_qas.attr,
+ 	&dev_attr_wr_flow.attr,
+ 	&dev_attr_rd_strm.attr,
+ 	&dev_attr_rti.attr,
+diff --git a/include/scsi/scsi_transport_spi.h b/include/scsi/scsi_transport_spi.h
+index 286e962..7497a38 100644
+--- a/include/scsi/scsi_transport_spi.h
++++ b/include/scsi/scsi_transport_spi.h
+@@ -36,8 +36,10 @@ struct spi_transport_attrs {
+ 	unsigned int width:1;	/* 0 - narrow, 1 - wide */
+ 	unsigned int max_width:1;
+ 	unsigned int iu:1;	/* Information Units enabled */
++	unsigned int max_iu:1;
+ 	unsigned int dt:1;	/* DT clocking enabled */
+ 	unsigned int qas:1;	/* Quick Arbitration and Selection enabled */
++	unsigned int max_qas:1;
+ 	unsigned int wr_flow:1;	/* Write Flow control enabled */
+ 	unsigned int rd_strm:1;	/* Read streaming enabled */
+ 	unsigned int rti:1;	/* Retain Training Information */
+@@ -77,8 +79,10 @@ struct spi_host_attrs {
+ #define spi_width(x)	(((struct spi_transport_attrs *)&(x)->starget_data)->width)
+ #define spi_max_width(x) (((struct spi_transport_attrs *)&(x)->starget_data)->max_width)
+ #define spi_iu(x)	(((struct spi_transport_attrs *)&(x)->starget_data)->iu)
++#define spi_max_iu(x)	(((struct spi_transport_attrs *)&(x)->starget_data)->max_iu)
+ #define spi_dt(x)	(((struct spi_transport_attrs *)&(x)->starget_data)->dt)
+ #define spi_qas(x)	(((struct spi_transport_attrs *)&(x)->starget_data)->qas)
++#define spi_max_qas(x)	(((struct spi_transport_attrs *)&(x)->starget_data)->max_qas)
+ #define spi_wr_flow(x)	(((struct spi_transport_attrs *)&(x)->starget_data)->wr_flow)
+ #define spi_rd_strm(x)	(((struct spi_transport_attrs *)&(x)->starget_data)->rd_strm)
+ #define spi_rti(x)	(((struct spi_transport_attrs *)&(x)->starget_data)->rti)
 
 
-Just for reference, with an unpatched 2.6.30-git6 the warning was still there:
-Jun 13 16:54:56 treogen [  168.201493] ------------[ cut here ]------------
-Jun 13 16:54:56 treogen [  168.201512] WARNING: at lib/dma-debug.c:827
-check_unmap+0x593/0x670()
-Jun 13 16:54:56 treogen [  168.201517] Hardware name: KFN5-D SLI
-Jun 13 16:54:56 treogen [  168.201522] sata_sil24 0000:04:00.0:
-DMA-API: device driver frees DMA sg lis
-t with different entry count [map count=1] [unmap count=2]
-Jun 13 16:54:56 treogen [  168.201526] Modules linked in: msp3400
-tuner tea5767 tda8290 tuner_xc2028 xc
-5000 tda9887 tuner_simple tuner_types mt20xx tea5761 bttv ir_common
-v4l2_common videodev v4l1_compat v4
-l2_compat_ioctl32 videobuf_dma_sg videobuf_core pata_amd btcx_risc tveeprom sg
-Jun 13 16:54:56 treogen [  168.201562] Pid: 0, comm: swapper Not
-tainted 2.6.30-git6 #1
-Jun 13 16:54:56 treogen [  168.201566] Call Trace:
-Jun 13 16:54:56 treogen [  168.201569]  <IRQ>  [<ffffffff8120bb63>] ?
-check_unmap+0x593/0x670
-Jun 13 16:54:56 treogen [  168.201585]  [<ffffffff81044138>]
-warn_slowpath_common+0x78/0xd0
-Jun 13 16:54:56 treogen [  168.201591]  [<ffffffff81044214>]
-warn_slowpath_fmt+0x64/0x70
-Jun 13 16:54:56 treogen [  168.201599]  [<ffffffff810b3bf5>] ?
-__slab_free+0x185/0x340
-Jun 13 16:54:56 treogen [  168.201606]  [<ffffffff8120bb63>]
-check_unmap+0x593/0x670
-Jun 13 16:54:56 treogen [  168.201615]  [<ffffffff810e532d>] ?
-bio_free+0x4d/0x60
-Jun 13 16:54:56 treogen [  168.201622]  [<ffffffff810e5350>] ?
-bio_fs_destructor+0x10/0x20
-Jun 13 16:54:56 treogen [  168.201628]  [<ffffffff8120bd3e>]
-debug_dma_unmap_sg+0xfe/0x140
-Jun 13 16:54:56 treogen [  168.201636]  [<ffffffff812ab102>] ?
-put_device+0x12/0x20
-Jun 13 16:54:56 treogen [  168.201645]  [<ffffffff812c9248>]
-ata_sg_clean+0x78/0xf0
-Jun 13 16:54:56 treogen [  168.201651]  [<ffffffff812c92f5>]
-__ata_qc_complete+0x35/0x110
-Jun 13 16:54:56 treogen [  168.201658]  [<ffffffff812c948d>]
-ata_qc_complete+0xbd/0x250
-Jun 13 16:54:56 treogen [  168.201665]  [<ffffffff812c99bc>]
-ata_qc_complete_multiple+0x9c/0xf0
-Jun 13 16:54:56 treogen [  168.201674]  [<ffffffff812df219>]
-sil24_interrupt+0xb9/0x5b0
-Jun 13 16:54:56 treogen [  168.201681]  [<ffffffff81061c5c>] ?
-getnstimeofday+0x5c/0xf0
-Jun 13 16:54:56 treogen [  168.201688]  [<ffffffff8105dba9>] ?
-ktime_get_ts+0x59/0x60
-Jun 13 16:54:56 treogen [  168.201696]  [<ffffffff81074598>]
-handle_IRQ_event+0x68/0x160
-Jun 13 16:54:56 treogen [  168.201703]  [<ffffffff8107663d>]
-handle_fasteoi_irq+0x6d/0xe0
-Jun 13 16:54:56 treogen [  168.201710]  [<ffffffff8100e33f>]
-handle_irq+0x1f/0x30
-Jun 13 16:54:56 treogen [  168.201715]  [<ffffffff8100d9ba>] do_IRQ+0x6a/0xe0
-Jun 13 16:54:56 treogen [  168.201722]  [<ffffffff8100bd53>]
-ret_from_intr+0x0/0xa
-Jun 13 16:54:56 treogen [  168.201725]  <EOI>  [<ffffffff8101340a>] ?
-default_idle+0x6a/0xd0
-Jun 13 16:54:56 treogen [  168.201738]  [<ffffffff8105ebff>] ?
-notifier_call_chain+0x3f/0x80
-Jun 13 16:54:56 treogen [  168.201744]  [<ffffffff810134a8>] ?
-c1e_idle+0x38/0x100
-Jun 13 16:54:56 treogen [  168.201751]  [<ffffffff8105ec65>] ?
-atomic_notifier_call_chain+0x15/0x20
-Jun 13 16:54:56 treogen [  168.201757]  [<ffffffff8100a662>] ?
-cpu_idle+0x62/0xb0
-Jun 13 16:54:56 treogen [  168.201766]  [<ffffffff8147190d>] ?
-rest_init+0x6d/0x80
-Jun 13 16:54:56 treogen [  168.201774]  [<ffffffff8171dcad>] ?
-start_kernel+0x342/0x405
-Jun 13 16:54:56 treogen [  168.201781]  [<ffffffff8171d289>] ?
-x86_64_start_reservations+0x99/0xb9
-Jun 13 16:54:56 treogen [  168.201787]  [<ffffffff8171d389>] ?
-x86_64_start_kernel+0xe0/0xf2
-Jun 13 16:54:56 treogen [  168.201792] ---[ end trace 7ab4a9443c6c6e69 ]---
-Jun 13 16:54:56 treogen [  168.201795] Mapped at:
-Jun 13 16:54:56 treogen [  168.201797]  [<ffffffff8120c609>]
-debug_dma_map_sg+0x159/0x180
-Jun 13 16:54:56 treogen [  168.201805]  [<ffffffff812c97bc>]
-ata_qc_issue+0x19c/0x300
-Jun 13 16:54:56 treogen [  168.201812]  [<ffffffff812cf6b8>]
-ata_scsi_translate+0xa8/0x180
-Jun 13 16:54:56 treogen [  168.201818]  [<ffffffff812d2251>]
-ata_scsi_queuecmd+0xb1/0x2d0
-Jun 13 16:54:56 treogen [  168.201823]  [<ffffffff812b5fb3>]
-scsi_dispatch_cmd+0xe3/0x220
