@@ -1,45 +1,69 @@
-From: Joerg Roedel <joro@8bytes.org>
-Subject: Re: [PATCH] dma-debug: disable DMA_API_DEBUG for now
-Date: Mon, 15 Jun 2009 09:46:17 +0200
-Message-ID: <20090615074616.GD18638@8bytes.org>
-References: <20090605173232N.fujita.tomonori@lab.ntt.co.jp> <20090605104132.GE24836@amd.com> <64bb37e0906101341j341f5179o9abfa888a6b96fc3@mail.gmail.com> <20090611081032.GN5139@amd.com> <64bb37e0906111038h1a5b9f17oec6c6368d2fbd36d@mail.gmail.com> <20090612141346.GY5139@amd.com> <64bb37e0906131008x59b25b94u501fc2192cc28be0@mail.gmail.com>
+From: Ramya Desai <ramya.desai@gmail.com>
+Subject: Re: Return of PENDING status to SCSI driver
+Date: Mon, 15 Jun 2009 17:37:14 +0530
+Message-ID: <3e7aae30906150507h5927319as8fcf2bd61eba6b83@mail.gmail.com>
+References: <3e7aae30906120229p3bbeb7f0jd07c5f1e823a456a@mail.gmail.com>
+	 <4A323CE8.7010207@garzik.org>
+	 <3e7aae30906120554u189d4abdye0f40cd2ddc12f58@mail.gmail.com>
+	 <4A34BFDC.2000408@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 8bytes.org ([88.198.83.132]:55929 "EHLO 8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750877AbZFOHqQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Jun 2009 03:46:16 -0400
-Content-Disposition: inline
-In-Reply-To: <64bb37e0906131008x59b25b94u501fc2192cc28be0@mail.gmail.com>
+Received: from mail-qy0-f173.google.com ([209.85.221.173]:43263 "EHLO
+	mail-qy0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756729AbZFOMHN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jun 2009 08:07:13 -0400
+Received: by qyk3 with SMTP id 3so204545qyk.33
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Jun 2009 05:07:15 -0700 (PDT)
+In-Reply-To: <4A34BFDC.2000408@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Torsten Kaiser <just.for.lkml@googlemail.com>
-Cc: Joerg Roedel <joerg.roedel@amd.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Linus Torvalds <torvalds@linux-foundation.org>, mingo@elte.hu, lethal@linux-sh.org, hancockrwd@gmail.com, jens.axboe@oracle.com, bharrosh@panasas.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sat, Jun 13, 2009 at 07:08:01PM +0200, Torsten Kaiser wrote:
-> On Fri, Jun 12, 2009 at 4:13 PM, Joerg Roedel<joerg.roedel@amd.com> wrote:
-> > On Thu, Jun 11, 2009 at 07:38:47PM +0200, Torsten Kaiser wrote:
-> >> DMA-API: device driver tries to free DM
-> >> A memory it has not allocated [device address=0x000000011e4c3000]
-> >> [size=4096 bytes]
-> >
-> > Hmm, looking again over the code I've seen that the ref
-> > dma_debug_entries are not alway filled with all necessary information
-> > for best-fit. Can you please try if you still get false warnings when
-> > you apply the two patches attached instead of the one I sent yesterday?
-> 
-> I tested these patches
-> (0001-dma-debug-check-for-sg_call_ents-in-best-fit-algorit.patch and
-> 0002-dma-debug-be-more-careful-when-building-reference-en.patch)
-> against 2.6.30-git6 and did not see any warnings.
-> 
-> I can't be 100% sure about the fix, because I do not have a reliable
-> trigger, but it looks quite good.
+On 6/14/09, Boaz Harrosh <bharrosh@panasas.com> wrote:
+> On 06/12/2009 03:54 PM, Ramya Desai wrote:
+>  > On 6/12/09, Jeff Garzik <jeff@garzik.org> wrote:
+>  >> Ramya Desai wrote:
+>  >>
+>  >>> Dear Experts,
+>  >>>
+>  >>> I am writing my mass storage class driver for my custom USB device.
+>  >>> My device is capable of queuing the commands that are issued to it.
+>  >>> So, I wanted to send the second command from my driver even before the
+>  >>> completion of first command.
+>  >>> To do this I wanted to return the PENDING status to the SCSI layer
+>  >>> immediately after receiving the command.
+>  >>>
+>  >>  Simply queue as many commands as possible to your hardware, and complete
+>  >> them when they are done.  Use can_queue or scsi_adjust_queue_depth() to set
+>  >> queueing limits.
+>  >>
+>  >>         Jeff
+>  >
+>  > I used can_queue  to change the queue depth to 5, but I am not getting
+>  > the next command until I finish (Done) the first command. I wanted the
+>  > second command to come to my driver, even before first command
+>  > finishes.
+>  >
+>  > -RD
+>
+>
+> If you are using the existing USB mass storage infrastructure then
+>  it will not work. This is because all commands are issued from a
+>  thread per host, which does a synchronous execution of one command
+>  at a time. In fact it does not even have a Q, but a global one cmnd
+>  pointer per host. And therefor sets can_queue to 1.
+>
+>  Are you using the existing USB infrastructure?
+>
+>
+>  Boaz
+>
+I am replacing the default USB mass storage driver with the one I am
+developing. But I am using the default SCSI and USB stack provided by
+Linux.
 
-Ok cool, I will push these two patches upstream then and will send them
-to -stable too. So we get this fixed in a 30.x release too. Thanks a lot
-for your testing.
+So is there any another way to make my driver asynchronous?
 
-	Joerg
-
+-RD
