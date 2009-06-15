@@ -1,56 +1,59 @@
-From: "Michael Chan" <mchan@broadcom.com>
-Subject: Re: [PATCH] let bnx2i iSCSI driver depend on PCI
-Date: Mon, 15 Jun 2009 13:35:30 -0700
-Message-ID: <1245098130.12000.30.camel@HP1>
-References: <20090615203542.GB4788@osiris.boeblingen.de.ibm.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 1/1] cciss: resubmit kernel scan thread for MSA2012
+Date: Mon, 15 Jun 2009 14:25:50 -0700
+Message-ID: <20090615142550.7a840730.akpm@linux-foundation.org>
+References: <20090310151738.GA18243@beardog.cca.cpqcorp.net>
+	<1236700241.14822.4.camel@localhost.localdomain>
+	<20090310163426.GC18243@beardog.cca.cpqcorp.net>
+	<20090310153933.7a7fc224.akpm@linux-foundation.org>
+	<20090311161733.GF28208@beardog.cca.cpqcorp.net>
+	<20090311151436.c9be9ab4.akpm@linux-foundation.org>
+	<20090312162653.GA10839@beardog.cca.cpqcorp.net>
+	<20090615203955.GD6471@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3112 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751437AbZFOUmz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Jun 2009 16:42:55 -0400
-In-Reply-To: <20090615203542.GB4788@osiris.boeblingen.de.ibm.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:60626 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S935281AbZFOV0S (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Jun 2009 17:26:18 -0400
+In-Reply-To: <20090615203955.GD6471@beardog.cca.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Cc: James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, coldwell@redhat.com, hare@novell.com
 
+On Mon, 15 Jun 2009 15:39:55 -0500
+"Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net> wrote:
 
-On Mon, 2009-06-15 at 13:35 -0700, Heiko Carstens wrote:
-> From: Heiko Carstens <heiko.carstens@de.ibm.com>
-> 
-> allyesconfig on s390 fails like this because of lack of PCI:
-> 
-> drivers/scsi/bnx2i/bnx2i_iscsi.c:760:
->   error: implicit declaration of function 'pci_dev_get'
-> 
+> I'm getting reports that the driver hangs in the scan thread during rmmod. I
+> call kthread_stop in cciss_remove_one. Do I also neesd to call complete()?
 
-A similar patch is already in James' tree:
+Yep.
 
-http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=babdb788f7ec1a782a52240a5f6dae568f32565f
+static int scan_thread(void *data)
+{
+	ctlr_info_t *h = data;
+	int rc;
+	DECLARE_COMPLETION_ONSTACK(wait);
+	h->rescan_wait = &wait;
 
-Thanks.
+	for (;;) {
+		rc = wait_for_completion_interruptible(&wait);
+		if (kthread_should_stop())
+			break;
+		if (!rc)
+			rebuild_lun_table(h, 0);
+	}
+	return 0;
+}
 
-> Cc: Michael Chan <mchan@broadcom.com>
-> Signed-off-by: Heiko Carstens <heiko.carstens@de.ibm.com>
-> ---
->  drivers/scsi/bnx2i/Kconfig |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> Index: linux-2.6/drivers/scsi/bnx2i/Kconfig
-> ===================================================================
-> --- linux-2.6.orig/drivers/scsi/bnx2i/Kconfig
-> +++ linux-2.6/drivers/scsi/bnx2i/Kconfig
-> @@ -2,6 +2,7 @@ config SCSI_BNX2_ISCSI
->  	tristate "Broadcom NetXtreme II iSCSI support"
->  	select SCSI_ISCSI_ATTRS
->  	select CNIC
-> +	depends on PCI
->  	---help---
->  	This driver supports iSCSI offload for the Broadcom NetXtreme II
->  	devices.
-> 
+Two things will cause that wait_for_completion_interruptible() to
+return: a complete() and a signal_pending().  But this is a kernel
+thread, and kernel threads start out with all signals blocked.
 
+> During my testing everything seemed to working OK.
 
+That's odd.
