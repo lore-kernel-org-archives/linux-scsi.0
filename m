@@ -1,44 +1,73 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Return of PENDING status to SCSI driver
-Date: Mon, 15 Jun 2009 13:19:08 -0400
-Message-ID: <4A36828C.1020506@garzik.org>
-References: <4A363EB4.8000102@panasas.com>	 <Pine.LNX.4.44L0.0906150958570.2928-100000@iolanthe.rowland.org>	 <3e7aae30906150707we781237o366950971d748b6f@mail.gmail.com>	 <4A365BBE.3010708@panasas.com> <3e7aae30906150742l18e74a8fua5f08686c2c76454@mail.gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [RFC PATCH 2/4] scsi error: have scsi-ml call	change_queue_depth
+ to handle QUEUE_FULL
+Date: Mon, 15 Jun 2009 12:34:49 -0500
+Message-ID: <4A368639.20701@cs.wisc.edu>
+References: <12427123671020-git-send-email-michaelc@cs.wisc.edu> <12427123683166-git-send-email-michaelc@cs.wisc.edu> <1242712369913-git-send-email-michaelc@cs.wisc.edu> <12427123692457-git-send-email-michaelc@cs.wisc.edu> <20090612124849.GA8017@schmichrtp.de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:45122 "EHLO mail.dvmed.net"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:56351 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752647AbZFORTF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Jun 2009 13:19:05 -0400
-In-Reply-To: <3e7aae30906150742l18e74a8fua5f08686c2c76454@mail.gmail.com>
+	id S932404AbZFORe6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Jun 2009 13:34:58 -0400
+In-Reply-To: <20090612124849.GA8017@schmichrtp.de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ramya Desai <ramya.desai@gmail.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Alan Stern <stern@rowland.harvard.edu>, USB list <linux-usb@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James Smart <James.Smart@Emulex.Com>, Andrew Vasquez <linux-driver@qlogic.com>
 
-Ramya Desai wrote:
-> I can not post the code in public because of some limitations I have.
-> But Still I am confused with return status (to SCSI layer) for the
-> command while it is in progress, to get the next command. Is it some
-> thing like PENDING?
+On 06/12/2009 07:48 AM, Christof Schmitt wrote:
+> On Tue, May 19, 2009 at 12:52:45AM -0500, michaelc@cs.wisc.edu wrote:
+>> From: Mike Christie<michaelc@cs.wisc.edu>
+>>
+>> This has scsi-ml call the change_queue_depth functions when
+>> we get a QUEUE_FULL. It will only change the queue depth if
+>> change_queue_depth is set because the LLD may have to
+>> modify some internal resources, so I thought this would
+>> be the safest route.
+>>
+>>
+>> Signed-off-by: Mike Christie<michaelc@cs.wisc.edu>
+>> ---
+>>   drivers/scsi/scsi_error.c |   26 +++++++++++++++++++++++++-
+>>   1 files changed, 25 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+>> index 0c2c73b..792644e 100644
+>> --- a/drivers/scsi/scsi_error.c
+>> +++ b/drivers/scsi/scsi_error.c
+>> @@ -331,6 +331,27 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
+>>   	}
+>>   }
+>>
+>> +static void scsi_handle_queue_full(struct scsi_device *sdev)
+>> +{
+>> +	struct scsi_host_template *sht = sdev->host->hostt;
+>> +	struct scsi_device *tmp_sdev;
+>> +
+>> +	if (!sht->change_queue_depth)
+>> +		return;
+>> +
+>> +	shost_for_each_device(tmp_sdev, sdev->host) {
+>> +		if (tmp_sdev->id != sdev->id)
+>> +			continue;
+>> +		/*
+>> +		 * We do not know the number of commands that were at
+>> +		 * the device when we got the queue full so we start
+>> +		 * from the highest possible value and work our way down.
+>> +		 */
+>> +		sht->change_queue_depth(tmp_sdev, tmp_sdev->queue_depth - 1,
+>> +					SCSI_QDEPTH_QFULL);
+>> +	}
+>> +}
+>> +
+>
+> This was called because of a "queue full" for one SCSI device. Why do
+> you decrement the queue depth for all SCSI devices on the same host
+> and not only for one device?
 
-
-To repeat:  any "return status" of a currently-executing command is 
-largely irrelevant to you.
-
-1) You are given a command, via ->queuecommand
-
-2) You send that command to hardware
-
-3) When hardware is done, call the completion callback
-
-Your driver never returns a "pending" status to the SCSI layer.  The 
-SCSI layer is __already__ fully aware that a command is pending, when it 
-is passed to your driver.
-
-	Jeff
-
-
-
-
+It should actually do it for only the devices on the same target where 
+the problem occurred. I copied the code from lpfc and qla2xxx and cannot 
+remember the reason why this is done now.  I am ccing AndrewV and JamesS.
