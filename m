@@ -1,70 +1,45 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: =?windows-1252?Q?Re=3A_-git_tree_build_failure_=232=3A?=
- =?windows-1252?Q?_drivers/net/cnic=2Ec=3A2520=3A_error=3A_implicit?=
- =?windows-1252?Q?_declaration_of_function_=91=5F=5Fsymbol=5Fget=92?=
-Date: Sun, 14 Jun 2009 20:27:40 -0500
-Message-ID: <4A35A38C.1050606@cs.wisc.edu>
-References: <20090612184343.GA11900@elte.hu> <4A32A1E4.8080708@oracle.com>	 <20090613062933.GA14034@elte.hu>	 <alpine.LFD.2.01.0906131309560.3237@localhost.localdomain>	 <1244925747.5323.57.camel@mulgrave.site>  <1244940182.12000.5.camel@HP1> <1244943216.5323.86.camel@mulgrave.site>
+From: Joerg Roedel <joro@8bytes.org>
+Subject: Re: [PATCH] dma-debug: disable DMA_API_DEBUG for now
+Date: Mon, 15 Jun 2009 09:46:17 +0200
+Message-ID: <20090615074616.GD18638@8bytes.org>
+References: <20090605173232N.fujita.tomonori@lab.ntt.co.jp> <20090605104132.GE24836@amd.com> <64bb37e0906101341j341f5179o9abfa888a6b96fc3@mail.gmail.com> <20090611081032.GN5139@amd.com> <64bb37e0906111038h1a5b9f17oec6c6368d2fbd36d@mail.gmail.com> <20090612141346.GY5139@amd.com> <64bb37e0906131008x59b25b94u501fc2192cc28be0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:52432 "EHLO sabe.cs.wisc.edu"
+Received: from 8bytes.org ([88.198.83.132]:55929 "EHLO 8bytes.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750773AbZFOB2k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Jun 2009 21:28:40 -0400
-In-Reply-To: <1244943216.5323.86.camel@mulgrave.site>
+	id S1750877AbZFOHqQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Jun 2009 03:46:16 -0400
+Content-Disposition: inline
+In-Reply-To: <64bb37e0906131008x59b25b94u501fc2192cc28be0@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Michael Chan <mchan@broadcom.com>, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@elte.hu>, Randy Dunlap <randy.dunlap@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "David S. Miller" <davem@davemloft.net>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Torsten Kaiser <just.for.lkml@googlemail.com>
+Cc: Joerg Roedel <joerg.roedel@amd.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Linus Torvalds <torvalds@linux-foundation.org>, mingo@elte.hu, lethal@linux-sh.org, hancockrwd@gmail.com, jens.axboe@oracle.com, bharrosh@panasas.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> On Sat, 2009-06-13 at 17:43 -0700, Michael Chan wrote:
->> On Sat, 2009-06-13 at 13:42 -0700, James Bottomley wrote:
->>> On Sat, 2009-06-13 at 13:11 -0700, Linus Torvalds wrote:
->>>>
->>>> That makes no sense. 
->>>>
->>>> Look at the first #include in the file - it already includes 
->>>> <linux/module.h>.
->>>>
->>>> Why do we need to do it twice?
->>> We don't ... it's the wrong fix.  The actual problem is that
->>> __symbol_get() is only defined for the modular case.  What it looks to
->>> be doing is a reflection call on bnx2_cnic_probe().  I'm not sure why
->>> it's doing this ... other than perhaps cnic wants to avoid an explicit
->>> bnx2 dependency?  I actually think it's incorrect, since the netdev code
->>> before it just checked bnx2 is present, so I see no harm in an explicit
->>> call, so this should fix it.
->>>
->>> If it had a good reason for the reflective call, then symbol_get()
->>> without the __ should be used.
->>>
->>> Michael Chan, could you confirm?
->>>
->> Thanks James and Ingo.  We don't want to have a symbol dependency on
->> bnx2 because this driver eventually will support the 10G bnx2x driver as
->> well.  So we want the driver to support either or both NIC drivers
->> without both drivers loaded.  Please use the patch below.
+On Sat, Jun 13, 2009 at 07:08:01PM +0200, Torsten Kaiser wrote:
+> On Fri, Jun 12, 2009 at 4:13 PM, Joerg Roedel<joerg.roedel@amd.com> wrote:
+> > On Thu, Jun 11, 2009 at 07:38:47PM +0200, Torsten Kaiser wrote:
+> >> DMA-API: device driver tries to free DM
+> >> A memory it has not allocated [device address=0x000000011e4c3000]
+> >> [size=4096 bytes]
+> >
+> > Hmm, looking again over the code I've seen that the ref
+> > dma_debug_entries are not alway filled with all necessary information
+> > for best-fit. Can you please try if you still get false warnings when
+> > you apply the two patches attached instead of the one I sent yesterday?
 > 
-> Um, but that's not going to work very well.  When you have your 10G
-> driver, they'll both have to export the symbol name bnx2_cnic_probe
-> which the kernel isn't going to like.  You can differentiate the symbols
-> and add a multiple symbol lookup in init_bnx2_cnic(), but that's getting
-> ugly.
+> I tested these patches
+> (0001-dma-debug-check-for-sg_call_ents-in-best-fit-algorit.patch and
+> 0002-dma-debug-be-more-careful-when-building-reference-en.patch)
+> against 2.6.30-git6 and did not see any warnings.
 > 
-> What about doing something more standard, like bus matching?  That's how
-> the SCSI upper layer drivers work:  we export a virtual SCSI bus and
-> they bind to it if a supporting device appears.  You could do something
-> similar exporting a virtual cnic bus from your network drivers and get
-> the cnic driver to bind to it.
-> 
+> I can't be 100% sure about the fix, because I do not have a reliable
+> trigger, but it looks quite good.
 
-Something like bus matching would be nice. I think this is going to be a 
-bigger problem in the future with everyone putting as many functions on 
-a card as possible. We already have the cxgb3 net driver with a iwarp 
-(iw_cxgb3) and iscsi (cxgb3i) driver, so maybe something in the net or 
-driver model code would be best?
+Ok cool, I will push these two patches upstream then and will send them
+to -stable too. So we get this fixed in a 30.x release too. Thanks a lot
+for your testing.
 
-Today, you can't have two pci_drivers attaching to the same device can you?
+	Joerg
+
