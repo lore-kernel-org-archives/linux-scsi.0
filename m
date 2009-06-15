@@ -1,45 +1,45 @@
-From: Paul Mundt <lethal@linux-sh.org>
-Subject: [PATCH] scsi: bnx2i depends on PCI.
-Date: Tue, 16 Jun 2009 03:11:23 +0900
-Message-ID: <20090615181123.GB30693@linux-sh.org>
+From: Peter Jones <pjones@redhat.com>
+Subject: Re: [PATCH 0/3] scsi_dh: Make scsi device handler modules automatically
+ inserted
+Date: Mon, 15 Jun 2009 14:29:52 -0400
+Message-ID: <4A369320.2080202@redhat.com>
+References: <20090427180609.22758.93035.sendpatchset@chandra-ubuntu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 124x34x33x190.ap124.ftth.ucom.ne.jp ([124.34.33.190]:42242 "EHLO
-	master.linux-sh.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764834AbZFOSMY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jun 2009 14:12:24 -0400
-Content-Disposition: inline
+Received: from mx2.redhat.com ([66.187.237.31]:53658 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755074AbZFOS35 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Jun 2009 14:29:57 -0400
+In-Reply-To: <20090427180609.22758.93035.sendpatchset@chandra-ubuntu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Michael Chan <mchan@broadcom.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com, hare@suse.de
 
-This fixes up the CONFIG_PCI=n case, primarily triggered on
-allmodconfig/allyesconfig builds:
+On 04/27/2009 02:06 PM, Chandra Seetharaman wrote:
+> Hello,
+> 
+> Currently, SCSI targets doesn't have modalias support. It wasn't an issue
+> until SCSI device handler came along.
+> 
+> We want the SCSI device handler modules to be insmodded automatically
+> when the specific SCSI targets are probed and found.
+> 
+> This set of patches adds the modalias support for SCSI targets and
+> also makes the relevant changes to SCSI device handler modules to 
+> make use of it.
+> 
+> Applies cleanly on 2.6.30-rc3 and is tested on the same.
+> 
+> Please review and consider this for inclusion.
+> 
+> Originally sent on March 17 2009 (http://marc.info/?l=linux-scsi&m=123734001009654&w=2).
+> 
+> Resending after testing on 2.6.30-rc3 and with an ack from Hannes.
 
-drivers/scsi/bnx2i/bnx2i_iscsi.c:760: error: implicit declaration of function 'pci_dev_get'
-make[4]: *** [drivers/scsi/bnx2i/bnx2i_iscsi.o] Error 1
-make[3]: *** [drivers/scsi/bnx2i] Error 2
+Was there ever any followup to this?
 
-The entire driver is PCI dependent, so just reflect it in the Kconfig.
-
-Signed-off-by: Paul Mundt <lethal@linux-sh.org>
-Cc: Michael Chan <mchan@broadcom.com>
-
----
-
- drivers/scsi/bnx2i/Kconfig |    1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/scsi/bnx2i/Kconfig b/drivers/scsi/bnx2i/Kconfig
-index 820d428..0d63146 100644
---- a/drivers/scsi/bnx2i/Kconfig
-+++ b/drivers/scsi/bnx2i/Kconfig
-@@ -1,5 +1,6 @@
- config SCSI_BNX2_ISCSI
- 	tristate "Broadcom NetXtreme II iSCSI support"
-+	depends on PCI
- 	select SCSI_ISCSI_ATTRS
- 	select CNIC
- 	---help---
+-- 
+        Peter
