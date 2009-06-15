@@ -1,78 +1,52 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13547] New: Buffer overrun in FlashPoint.c
-Date: Mon, 15 Jun 2009 13:46:21 GMT
-Message-ID: <bug-13547-11613@http.bugzilla.kernel.org/>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: Return of PENDING status to SCSI driver
+Date: Mon, 15 Jun 2009 10:01:46 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0906150958570.2928-100000@iolanthe.rowland.org>
+References: <4A363EB4.8000102@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:49140 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751516AbZFONqV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jun 2009 09:46:21 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5FDkLbu000647
-	for <linux-scsi@vger.kernel.org>; Mon, 15 Jun 2009 13:46:21 GMT
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4A363EB4.8000102-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+Cc: Ramya Desai <ramya.desai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13547
+On Mon, 15 Jun 2009, Boaz Harrosh wrote:
 
-           Summary: Buffer overrun in FlashPoint.c
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: 2.6.30
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: Other
-        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
-        ReportedBy: ettl.martin@gmx.de
-        Regression: No
+> >> If you are using the existing USB mass storage infrastructure then
+> >>  it will not work. This is because all commands are issued from a
+> >>  thread per host, which does a synchronous execution of one command
+> >>  at a time. In fact it does not even have a Q, but a global one cmnd
+> >>  pointer per host. And therefor sets can_queue to 1.
+> >>
+> >>  Are you using the existing USB infrastructure?
+> >>
+> >>
+> >>  Boaz
+> >>
+> > I am replacing the default USB mass storage driver with the one I am
+> > developing. But I am using the default SCSI and USB stack provided by
+> > Linux.
+> > 
+> > So is there any another way to make my driver asynchronous?
+> > 
+> > -RD
+> 
+> I was afraid so.
+> 
+> There is a lot of code you will need to change in current USB storage stack
+> SCSI is built with native support for queuing, but not so USB-storage-stack.
 
+Boaz:
 
-Hi,
+It looks like you didn't read Ramya's reply to your last message.  
+Ramya isn't keeping the USB storage "stack" -- it is being replaced by
+a new driver -- so there's no point talking about making changes to it.
 
-i detected a possible buffer overrun in File
-linux-2.6.30/drivers/scsi/FlashPoint.c
+Alan Stern
 
-I used the static code analysis tool cppcheck to detect this. It printed the
-following message:
-[linux-2.6.30/drivers/scsi/FlashPoint.c:1222]: (all) Buffer overrun
-
-
-Lets take a look at line 1222:
-        // ...
-    for (thisCard = 0; thisCard <= MAX_CARDS; thisCard++) {
-
-        if (thisCard == MAX_CARDS) {
-
-            return FAILURE;
-        }
-
-1222        if (FPT_BL_Card[thisCard].ioPort == ioport) {
-
-            CurrCard = &FPT_BL_Card[thisCard];
-            FPT_SccbMgrTableInitCard(CurrCard, thisCard);
-            break;
-        }
-
-          // ...
-
-The for loop terminates when thisCard <= MAX_CARDS. MAX_CARDS is defined as 8
-in this file. Here there are 9 iterations made. This is one to much.  
-A possible solution to avoid this:
-
-    for (thisCard = 0; thisCard < MAX_CARDS; thisCard++) {
-
-Best regards
-
-Ettl Martin
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
