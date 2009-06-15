@@ -1,86 +1,57 @@
-From: kxie@chelsio.com
-Subject: [PATCH 2/2 2.6.30-rc v2] cxgb3i -- suppot of different kernel
- page sizes
-Date: Mon, 15 Jun 2009 11:15:16 -0700
-Message-ID: <200906151815.n5FIFGcA008961@localhost.localdomain>
+From: "Karen Xie" <kxie@chelsio.com>
+Subject: RE: [PATCH 1/2 2.6.30-rc] cxgb3i -- add a refcnt to track ddp usage
+Date: Mon, 15 Jun 2009 11:10:42 -0700
+Message-ID: <8A71B368A89016469F72CD08050AD33405A4160B@maui.asicdesigners.com>
+References: <200906132129.n5DLT1l5029019@localhost.localdomain> <1244937189.5323.63.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:8935 "EHLO
+Received: from stargate.chelsio.com ([67.207.112.58]:26759 "EHLO
 	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752412AbZFOSIA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jun 2009 14:08:00 -0400
+	with ESMTP id S1753203AbZFOSIx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jun 2009 14:08:53 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
-Cc: kxie@chelsio.com, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu
 
-[PATCH 2/2 2.6.30-rc v2] cxgb3i -- suppot of different kernel page sizes
+Hi, James,
 
-From: Karen Xie <kxie@chelsio.com>
+Thanks, I've re-submitted the patches to use kref instead.
 
-The default kernel pages supported are 4K, 8K, 16K, and 64K. Re-calculate
-entries if PAGE_SIZE is not one of the defaults.
+Best regards,
+Karen
 
-Signed-off-by: Karen Xie <kxie@chelsio.com>
----
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
+Sent: Saturday, June 13, 2009 4:53 PM
+To: Karen Xie
+Cc: linux-scsi@vger.kernel.org; open-iscsi@googlegroups.com;
+michaelc@cs.wisc.edu
+Subject: Re: [PATCH 1/2 2.6.30-rc] cxgb3i -- add a refcnt to track ddp
+usage
 
- drivers/scsi/cxgb3i/cxgb3i_ddp.c |   36 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 36 insertions(+), 0 deletions(-)
+On Sat, 2009-06-13 at 14:29 -0700, kxie@chelsio.com wrote:
+> [PATCH 1/2 2.6.30-rc] cxgb3i -- add a refcnt to track ddp usage
+> 
+> From: Karen Xie <kxie@chelsio.com>
+> 
+> The iscsi ddp functionality could be used by multiple iscsi entities,
+> add a refcnt to keep track of it, so we would not release it
+pre-maturely.
+
+The code is fine as it stands but, I wonder, would you consider using a
+kref for this?  The reasons are twofold:
+
+     1. It's a well understood kernel paradigm that works ... this would
+        be helpful for the far distant time when chelsio no longer wants
+        to maintain this driver.
+     2. It includes useful and appropriate warnings for common bugs in
+        refcounted code, such as use of a freed reference.
+
+James
 
 
-diff --git a/drivers/scsi/cxgb3i/cxgb3i_ddp.c b/drivers/scsi/cxgb3i/cxgb3i_ddp.c
-index 8eb2848..344fd53 100644
---- a/drivers/scsi/cxgb3i/cxgb3i_ddp.c
-+++ b/drivers/scsi/cxgb3i/cxgb3i_ddp.c
-@@ -206,6 +206,31 @@ int cxgb3i_ddp_find_page_index(unsigned long pgsz)
- 	return DDP_PGIDX_MAX;
- }
- 
-+/**
-+ * cxgb3i_ddp_adjust_page_table - adjust page table with PAGE_SIZE
-+ * return the ddp page index, if no match is found return DDP_PGIDX_MAX.
-+ */
-+int cxgb3i_ddp_adjust_page_table(void)
-+{
-+	int i;
-+	unsigned int base_order, order;
-+
-+	if (PAGE_SIZE < (1UL << ddp_page_shift[0])) {
-+		ddp_log_info("PAGE_SIZE 0x%lx too small, min. 0x%lx.\n",
-+				PAGE_SIZE, 1UL << ddp_page_shift[0]);
-+		return -EINVAL;
-+	}
-+
-+	base_order = get_order(1UL << ddp_page_shift[0]);
-+	order = get_order(1 << PAGE_SHIFT);
-+	for (i = 0; i < DDP_PGIDX_MAX; i++) {
-+		/* first is the kernel page size, then just doubling the size */
-+		ddp_page_order[i] = order - base_order + i;
-+		ddp_page_shift[i] = PAGE_SHIFT + i;
-+	}
-+	return 0;
-+}
-+
- static inline void ddp_gl_unmap(struct pci_dev *pdev,
- 				struct cxgb3i_gather_list *gl)
- {
-@@ -727,6 +752,17 @@ void cxgb3i_ddp_init(struct t3cdev *tdev)
- {
- 	if (page_idx == DDP_PGIDX_MAX) {
- 		page_idx = cxgb3i_ddp_find_page_index(PAGE_SIZE);
-+
-+		if (page_idx == DDP_PGIDX_MAX) {
-+			ddp_log_info("system PAGE_SIZE %lu, update hw.\n",
-+					PAGE_SIZE);
-+			if (cxgb3i_ddp_adjust_page_table() < 0) {
-+				ddp_log_info("PAGE_SIZE %lu, ddp disabled.\n",
-+						PAGE_SIZE);
-+				return;
-+			}
-+			page_idx = cxgb3i_ddp_find_page_index(PAGE_SIZE);
-+		}
- 		ddp_log_info("system PAGE_SIZE %lu, ddp idx %u.\n",
- 				PAGE_SIZE, page_idx);
- 	}
