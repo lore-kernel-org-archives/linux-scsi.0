@@ -1,44 +1,58 @@
-From: Joe Eykholt <jeykholt-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
-Subject: duplicated host_no
-Date: Mon, 15 Jun 2009 23:05:50 -0700
-Message-ID: <4A37363E.7090605@cisco.com>
+From: Joe Eykholt <jeykholt@cisco.com>
+Subject: [PATCH] scsi: fix duplicate host number
+Date: Mon, 15 Jun 2009 23:22:14 -0700
+Message-ID: <20090616062214.15969.55575.stgit@savbu-fcoe15.qa.nuovasystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Unsubscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
-	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://www.open-fcoe.org/pipermail/devel>
-List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
-	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-To: "devel-s9riP+hp16TNLxjTenLetw@public.gmane.org" <devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>, Linux SCSI Mailing List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sj-iport-1.cisco.com ([171.71.176.70]:4293 "EHLO
+	sj-iport-1.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751336AbZFPGWM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jun 2009 02:22:12 -0400
+Received: from sj-core-5.cisco.com (sj-core-5.cisco.com [171.71.177.238])
+	by sj-dkim-2.cisco.com (8.12.11/8.12.11) with ESMTP id n5G6MExu024223
+	for <linux-scsi@vger.kernel.org>; Mon, 15 Jun 2009 23:22:14 -0700
+Received: from savbu-fcoe15.qa.nuovasystems.com (savbu-savbu-fcoe15.cisco.com [10.193.164.35])
+	by sj-core-5.cisco.com (8.13.8/8.13.8) with ESMTP id n5G6ME35002916
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Jun 2009 06:22:14 GMT
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Cool bug.  Two SCSI devs with the same host_id.
+Just once, two fcoe instances got the same host number
+from scsi_add_host().
 
-This is with fcoe and a bunch of patches in development.
+Use atomic_t and atomic_inc_return() to get next host number.
+Subtract 1, so that scsi_host still starts with 0.
 
-I ran a loop including creating and deleting a bunch of fcoe instances on an MP system.
-After 140 some times, I see this:
+Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
+---
+ drivers/scsi/hosts.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-[ 7250.276749] scsi148 : FCoE Driver
-[ 7250.276752] device eth0 entered promiscuous mode
-[ 7250.276784] scsi148 : FCoE Driver
-[ 7250.277526] host148: lport ffffffff: Entered RESET state from none state
-[ 7250.277530] libfc: Link up on port (     0)
-[ 7250.277532] host148: lport      0: Entered FLOGI state from reset state
-[ 7250.305961] ------------[ cut here ]------------
-[ 7250.310653] WARNING: at fs/sysfs/dir.c:487 sysfs_add_one+0xc7/0xde()
-[ 7250.317096] Hardware name: X7DB8
-[ 7250.320372] sysfs: cannot create duplicate filename '/bus/scsi/devices/host148'
 
-This is unlikely to show up in real life, but it can happen in
-stress tests like this, and the system doesn't work so well afterwards.
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 89d41a4..e9aaba9 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -40,7 +40,7 @@
+ #include "scsi_logging.h"
+ 
+ 
+-static int scsi_host_next_hn;		/* host_no for next new host */
++static atomic_t scsi_host_next_hn;	/* host_no for next new host */
+ 
+ 
+ static void scsi_host_cls_release(struct device *dev)
+@@ -333,7 +333,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 
+ 	mutex_init(&shost->scan_mutex);
+ 
+-	shost->host_no = scsi_host_next_hn++; /* XXX(hch): still racy */
++	shost->host_no = atomic_inc_return(&scsi_host_next_hn) - 1;
+ 	shost->dma_channel = 0xff;
+ 
+ 	/* These three are default values which can be overridden */
 
-I'll submit a patch that uses atomic_inc_return for the host numbers.
 
-	Joe
