@@ -1,124 +1,50 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: About SCSI INQUIRY command
-Date: Tue, 16 Jun 2009 09:11:56 -0400
-Message-ID: <1245157916.3965.4.camel@mulgrave.site>
-References: <97a757510906160033r4245c9aan2eac3d4dc1e45765@mail.gmail.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [RFC PATCH 2/4] scsi error: have scsi-ml call	change_queue_depth
+ to handle QUEUE_FULL
+Date: Tue, 16 Jun 2009 09:16:15 -0400
+Message-ID: <4A379B1F.2070708@emulex.com>
+References: <12427123671020-git-send-email-michaelc@cs.wisc.edu> <12427123683166-git-send-email-michaelc@cs.wisc.edu> <1242712369913-git-send-email-michaelc@cs.wisc.edu> <12427123692457-git-send-email-michaelc@cs.wisc.edu> <20090612124849.GA8017@schmichrtp.de.ibm.com> <4A368639.20701@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:48858 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751998AbZFPNL5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Jun 2009 09:11:57 -0400
-In-Reply-To: <97a757510906160033r4245c9aan2eac3d4dc1e45765@mail.gmail.com>
+Received: from emulex.emulex.com ([138.239.112.1]:43558 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753896AbZFPNQ1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jun 2009 09:16:27 -0400
+In-Reply-To: <4A368639.20701@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Madhavi Manchala <madhavi.lscsi@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Christof Schmitt <christof.schmitt@de.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Vasquez <linux-driver@qlogic.com>
 
-On Tue, 2009-06-16 at 13:03 +0530, Madhavi Manchala wrote:
-> Dear All,
-> 
-> I'm developing a USB class driver for UAS device. I have modified the
-> storage driver code as per my custom driver requirements. As a part of
-> this, I have registered to the scsi layer through following snippet in
-> the storage_probe function. I have seen the code in one of the SAS
-> driver's implementation.
-> 
-> 
-> static DECLARE_TRANSPORT_CLASS(host_class,
-> 		"uas_host", NULL, NULL, NULL);
-> 
-> /*
->  * Register transport class with SCSI layer
-> */
-> error = transport_class_register(&host_class);
-> if (error)
-> 	goto BadDevice;
-> 
-> /*
->  * Attach transport template to SCSI layer
->  * which shall be used for executing tasks and
->  * task management functions.
->  */
-> transport_template = domain_attach_transport(&transport_functions);
-> if (!transport_template)
-> 	goto BadDevice;
-> 
-> /* Associate transport template to SCSI host transport template */
-> host->transportt = transport_template;
-> host->max_id = ~0;
-> host->max_lun = ~0;
-> 
-> struct scsi_transport_template *
-> attach_transport(void)
-> {
-> 	struct uas_internal *i;
-> 
-> 	i = kzalloc(sizeof(struct uas_internal), GFP_KERNEL);
-> 	if (!i)
-> 		return NULL;
-> 
-> 	i->t.host_attrs.ac.attrs = &i->host_attrs[0];
-> 	i->t.host_attrs.ac.class = &host_class.class;
-> 	i->t.host_attrs.ac.match = uas_host_match;
-> 	transport_container_register(&i->t.host_attrs);
-> 	i->t.host_size = sizeof(struct uas_host_attrs);
-> 
-> 	return &i->t;
-> }
-> 
-> struct scsi_transport_template *
-> domain_attach_transport(struct domain_function_template *dft)
-> {
-> 	struct scsi_transport_template *stt = attach_transport();
-> 
-> 	if (!stt)
-> 		return stt;
-> 
-> 	i = to_uas_internal(stt);
-> 	i->dft = dft;
-> 	stt->create_work_queue = 1;
-> 	stt->eh_timed_out = uas_scsi_timed_out;
-> 	stt->eh_strategy_handler = uas_scsi_recover_host;
-> 
-> 	return stt;
-> }
-> 
-> When I insert the device I am able to see the disk drive (fdisk -l).
-> However, I am continuously getting the following statements
-> infinitely. I get the INQUIRY command continuously with "Bad Target
-> Number". For normal usb-storage devices I get this message 7 times and
-> stops and get the next command like TEST_UNIT_READY.
-> 
-> <scsi_get_command> invoked!
-> <__scsi_get_command> invoked!
-> <scsi_dispatch_cmd> invoked!
-> <drivers/usb/storage/scsiglue.c> <queuecommand> Entry!
-> <usb_stor_show_command> Entry. Command INQUIRY (6 Bytes)!
-> Command INQUIRY (6 bytes)
->  12 00 00 00 24 00
-> <drivers/usb/storage/scsiglue.c> <queuecommand> Exit!
-> *** thread awakened
-> Bad target number (1400:0)
-> scsi cmd done, result=0x40000
-> *** thread sleeping
-> <scsi_finish_command> invoked!
-> 
-> Please suggest me where am I doing wrong. Do I need any other ways to
-> register the transport layer to SCSI layer.
-> 
-> Any suggestion would help me and it would be appreciated.
 
-Since you don't post the code, I have to guess, but I suspect you've
-called scsi_scan_host() somewhere ... that would loop around for your
-template max_id, which looks like the behaviour you're seeing.  If the
-bus is hotplug (like USB or SAS or something) you don't need to call
-scsi_scan_host() instead just report each instance you discover inside
-your transport class.
 
-James
+Mike Christie wrote:
+>> This was called because of a "queue full" for one SCSI device. Why do
+>> you decrement the queue depth for all SCSI devices on the same host
+>> and not only for one device?
+>>     
+>
+> It should actually do it for only the devices on the same target where 
+> the problem occurred. I copied the code from lpfc and qla2xxx and cannot 
+> remember the reason why this is done now.  I am ccing AndrewV and JamesS.
+>
+>   
+
+Agree that it should be localized to the target and not propagated to 
+all targets.   Our design issue was choosing how to apply the backoff - 
+did a queue full on a single lun imply the entire target is full ?  
+Thus, should we reduce all luns at that point, or only the lun that saw 
+the queue full.   All depends on how fast you want to ramp down the 
+overall situation and how biased things get on multiple luns..  And the 
+same decision on the ramp up - to we raise everyone, or let the luns 
+function independently.  Raising everyone too quickly recauses the 
+issue, and why would one hot lun steal capacity/queuing depth for a slow 
+lun ?  There's a lot of assumptions being made in this choice on what is 
+the gating resource (the io capacity of the target being equally shared 
+by all luns).
+
+-- james s
 
 
