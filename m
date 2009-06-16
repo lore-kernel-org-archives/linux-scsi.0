@@ -1,58 +1,113 @@
-From: Joe Eykholt <jeykholt@cisco.com>
-Subject: [PATCH] scsi: fix duplicate host number
-Date: Mon, 15 Jun 2009 23:22:14 -0700
-Message-ID: <20090616062214.15969.55575.stgit@savbu-fcoe15.qa.nuovasystems.com>
+From: Madhavi Manchala <madhavi.lscsi@gmail.com>
+Subject: About SCSI INQUIRY command
+Date: Tue, 16 Jun 2009 13:03:17 +0530
+Message-ID: <97a757510906160033r4245c9aan2eac3d4dc1e45765@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-1.cisco.com ([171.71.176.70]:4293 "EHLO
-	sj-iport-1.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751336AbZFPGWM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jun 2009 02:22:12 -0400
-Received: from sj-core-5.cisco.com (sj-core-5.cisco.com [171.71.177.238])
-	by sj-dkim-2.cisco.com (8.12.11/8.12.11) with ESMTP id n5G6MExu024223
-	for <linux-scsi@vger.kernel.org>; Mon, 15 Jun 2009 23:22:14 -0700
-Received: from savbu-fcoe15.qa.nuovasystems.com (savbu-savbu-fcoe15.cisco.com [10.193.164.35])
-	by sj-core-5.cisco.com (8.13.8/8.13.8) with ESMTP id n5G6ME35002916
-	for <linux-scsi@vger.kernel.org>; Tue, 16 Jun 2009 06:22:14 GMT
+Received: from mail-px0-f189.google.com ([209.85.216.189]:38414 "EHLO
+	mail-px0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751506AbZFPHdP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jun 2009 03:33:15 -0400
+Received: by pxi27 with SMTP id 27so778106pxi.33
+        for <linux-scsi@vger.kernel.org>; Tue, 16 Jun 2009 00:33:18 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Just once, two fcoe instances got the same host number
-from scsi_add_host().
+Dear All,
 
-Use atomic_t and atomic_inc_return() to get next host number.
-Subtract 1, so that scsi_host still starts with 0.
-
-Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
----
- drivers/scsi/hosts.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+I'm developing a USB class driver for UAS device. I have modified the
+storage driver code as per my custom driver requirements. As a part of
+this, I have registered to the scsi layer through following snippet in
+the storage_probe function. I have seen the code in one of the SAS
+driver's implementation.
 
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 89d41a4..e9aaba9 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -40,7 +40,7 @@
- #include "scsi_logging.h"
- 
- 
--static int scsi_host_next_hn;		/* host_no for next new host */
-+static atomic_t scsi_host_next_hn;	/* host_no for next new host */
- 
- 
- static void scsi_host_cls_release(struct device *dev)
-@@ -333,7 +333,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 
- 	mutex_init(&shost->scan_mutex);
- 
--	shost->host_no = scsi_host_next_hn++; /* XXX(hch): still racy */
-+	shost->host_no = atomic_inc_return(&scsi_host_next_hn) - 1;
- 	shost->dma_channel = 0xff;
- 
- 	/* These three are default values which can be overridden */
+static DECLARE_TRANSPORT_CLASS(host_class,
+		"uas_host", NULL, NULL, NULL);
 
+/*
+ * Register transport class with SCSI layer
+*/
+error = transport_class_register(&host_class);
+if (error)
+	goto BadDevice;
 
+/*
+ * Attach transport template to SCSI layer
+ * which shall be used for executing tasks and
+ * task management functions.
+ */
+transport_template = domain_attach_transport(&transport_functions);
+if (!transport_template)
+	goto BadDevice;
+
+/* Associate transport template to SCSI host transport template */
+host->transportt = transport_template;
+host->max_id = ~0;
+host->max_lun = ~0;
+
+struct scsi_transport_template *
+attach_transport(void)
+{
+	struct uas_internal *i;
+
+	i = kzalloc(sizeof(struct uas_internal), GFP_KERNEL);
+	if (!i)
+		return NULL;
+
+	i->t.host_attrs.ac.attrs = &i->host_attrs[0];
+	i->t.host_attrs.ac.class = &host_class.class;
+	i->t.host_attrs.ac.match = uas_host_match;
+	transport_container_register(&i->t.host_attrs);
+	i->t.host_size = sizeof(struct uas_host_attrs);
+
+	return &i->t;
+}
+
+struct scsi_transport_template *
+domain_attach_transport(struct domain_function_template *dft)
+{
+	struct scsi_transport_template *stt = attach_transport();
+
+	if (!stt)
+		return stt;
+
+	i = to_uas_internal(stt);
+	i->dft = dft;
+	stt->create_work_queue = 1;
+	stt->eh_timed_out = uas_scsi_timed_out;
+	stt->eh_strategy_handler = uas_scsi_recover_host;
+
+	return stt;
+}
+
+When I insert the device I am able to see the disk drive (fdisk -l).
+However, I am continuously getting the following statements
+infinitely. I get the INQUIRY command continuously with "Bad Target
+Number". For normal usb-storage devices I get this message 7 times and
+stops and get the next command like TEST_UNIT_READY.
+
+<scsi_get_command> invoked!
+<__scsi_get_command> invoked!
+<scsi_dispatch_cmd> invoked!
+<drivers/usb/storage/scsiglue.c> <queuecommand> Entry!
+<usb_stor_show_command> Entry. Command INQUIRY (6 Bytes)!
+Command INQUIRY (6 bytes)
+ 12 00 00 00 24 00
+<drivers/usb/storage/scsiglue.c> <queuecommand> Exit!
+*** thread awakened
+Bad target number (1400:0)
+scsi cmd done, result=0x40000
+*** thread sleeping
+<scsi_finish_command> invoked!
+
+Please suggest me where am I doing wrong. Do I need any other ways to
+register the transport layer to SCSI layer.
+
+Any suggestion would help me and it would be appreciated.
+
+Thanks and Regards,
+Madhavi M
