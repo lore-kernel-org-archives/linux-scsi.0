@@ -1,23 +1,32 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
 Subject: Re: Return of PENDING status to SCSI driver
-Date: Tue, 16 Jun 2009 11:22:22 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0906161119210.4970-100000@iolanthe.rowland.org>
-References: <3e7aae30906160809y32f0c8f6j3352cd1ec2bfe34a@mail.gmail.com>
+Date: Tue, 16 Jun 2009 18:27:57 +0300
+Message-ID: <4A37B9FD.6020007@panasas.com>
+References: <4A363EB4.8000102@panasas.com>	 <Pine.LNX.4.44L0.0906150958570.2928-100000@iolanthe.rowland.org>	 <3e7aae30906150707we781237o366950971d748b6f@mail.gmail.com>	 <4A365BBE.3010708@panasas.com>	 <3e7aae30906150742l18e74a8fua5f08686c2c76454@mail.gmail.com>	 <4A36776C.5010208@panasas.com>	 <3e7aae30906160635g4d191a4exdb710554a349cac0@mail.gmail.com>	 <4A37ABDC.4050308@panasas.com> <3e7aae30906160809y32f0c8f6j3352cd1ec2bfe34a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:55122 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754243AbZFPPWU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jun 2009 11:22:20 -0400
-In-Reply-To: <3e7aae30906160809y32f0c8f6j3352cd1ec2bfe34a@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <3e7aae30906160809y32f0c8f6j3352cd1ec2bfe34a-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Ramya Desai <ramya.desai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ramya Desai <ramya.desai@gmail.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, USB list <linux-usb@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-On Tue, 16 Jun 2009, Ramya Desai wrote:
-
+On 06/16/2009 06:09 PM, Ramya Desai wrote:
+>>  >       /* error and abort handlers */
+>>  >       .eh_abort_handler =             command_abort,
+>>  >       .eh_device_reset_handler =      device_reset,
+>>  >       .eh_bus_reset_handler =         bus_reset,
+> 
+> Currently I have not implemented these functions. I will register a
+> transport handler for the above functions and use strategy handler for
+> error handling at later point of time.
+> 
+> Here is my queuecommand implementation. Please let me know if any
+> other part of the code is required to find the problem.
+> 
+> 
 > static int queuecommand(struct scsi_cmnd *srb,
 > 			void (*done)(struct scsi_cmnd *))
 > {
@@ -29,9 +38,76 @@ On Tue, 16 Jun 2009, Ramya Desai wrote:
 > 
 > 	/* check for state-transition errors */
 > 	if (us->srb != NULL) {
+> 		printk(KERN_ERR USB_STORAGE "Error in %s: us->srb = %p\n",
+> 			__func__, us->srb);
+> 		return SCSI_MLQUEUE_HOST_BUSY;
+> 	}
+> 
 
-This test is your problem.  It will succeed as soon as you have 
-accepted one command.  You need to remove it.
+Did you not change this to an array? always true now!
 
-Alan Stern
+> 	/* fail the command if we are disconnecting */
+> 	if (test_bit(US_FLIDX_DISCONNECTING, &us->dflags)) {
+> 		US_DEBUGP("Fail command during disconnect\n");
+> 		srb->result = DID_NO_CONNECT << 16;
+> 		done(srb);
+> 		return 0;
+> 	}
+> 
+> 		
+> 	/* Create one task per SCSI command */
+> 	task = uas_create_task(srb, us, GFP_ATOMIC);
+> 	if (!task)
+> 	     return -ENOMEM;
+> 	
 
+What does that do ?
+
+> 	
+> 
+> 	/* enqueue the command and wake up the control thread */
+> 	srb->scsi_done = done;
+> 
+>           //us->srb = srb; // eliminated, as a task has been created
+> per SCSI command
+> 
+> 
+> 	
+> 		/* Queue the above created task */
+> 		res = uas_queue(task, us);
+> 
+
+Does that return immediately?
+
+> 		/* Examine */
+> 		if (res) {
+> 			
+> 	           //Checking the status of the queue
+>                     if (res == -UAS_QUEUE_FULL) {
+>         	srb->result = DID_SOFT_ERROR << 16; /* retry */
+> 			res = 0;
+> 			done(srb);
+> 			}
+> 			return res;
+> 		}
+> 	
+> 	
+> 
+> 	printk("MyTag: <%s> <%s> Exit!\n",__FILE__, __FUNCTION__);
+> 
+
+So do you see this print?
+You should see up to 5 prints before the first done is called
+by the uas_queue(task.
+
+what do you see?
+
+
+> 	return 0;  //Returning 0 to get the next command
+> }
+
+Boaz
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
