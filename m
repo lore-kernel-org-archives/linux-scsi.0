@@ -1,43 +1,86 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH] scsi: fix duplicate host number
-Date: Tue, 16 Jun 2009 19:01:30 +0200
-Message-ID: <4A37CFEA.3070106@s5r6.in-berlin.de>
-References: <20090616062214.15969.55575.stgit@savbu-fcoe15.qa.nuovasystems.com>
+From: Greg KH <gregkh@suse.de>
+Subject: Re: PATCH: PMC-Sierra MaxRAID driver to support 6Gb/s SAS RAID
+	controller
+Date: Tue, 16 Jun 2009 10:08:12 -0700
+Message-ID: <20090616170812.GA27570@suse.de>
+References: <alpine.LNX.1.10.0906101259500.24722@rslab159.pmc-sierra.bc.ca> <4A31319C.605@linux.vnet.ibm.com> <alpine.LNX.1.10.0906160546520.6270@rslab159.pmc-sierra.bc.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:50810 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754240AbZFPRBm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jun 2009 13:01:42 -0400
-In-Reply-To: <20090616062214.15969.55575.stgit@savbu-fcoe15.qa.nuovasystems.com>
+Received: from cantor.suse.de ([195.135.220.2]:56018 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752200AbZFPRMc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Jun 2009 13:12:32 -0400
+Content-Disposition: inline
+In-Reply-To: <alpine.LNX.1.10.0906160546520.6270@rslab159.pmc-sierra.bc.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Eykholt <jeykholt@cisco.com>
-Cc: linux-scsi@vger.kernel.org
+To: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+Cc: Brian King <brking@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-Joe Eykholt wrote:
-> Subtract 1, so that scsi_host still starts with 0.
-...
-> -static int scsi_host_next_hn;		/* host_no for next new host */
-> +static atomic_t scsi_host_next_hn;	/* host_no for next new host */
->  
->  
->  static void scsi_host_cls_release(struct device *dev)
-> @@ -333,7 +333,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
->  
->  	mutex_init(&shost->scan_mutex);
->  
-> -	shost->host_no = scsi_host_next_hn++; /* XXX(hch): still racy */
-> +	shost->host_no = atomic_inc_return(&scsi_host_next_hn) - 1;
+On Tue, Jun 16, 2009 at 07:10:43AM -0700, Anil Ravindranath wrote:
+> 
+> Please see my responses below...
+> 
+> On Thu, 11 Jun 2009, Brian King wrote:
+> 
+> > Anil Ravindranath wrote:
+> > > +/*
+> > > + * Supporting user-level control interface through IOCTL commands.
+> > > + * pmcraid_major - major number to use
+> > > + * pmcraid_minor - minor number(s) to use
+> > > + */
+> > > +static unsigned int pmcraid_major;
+> > > +static struct class *pmcraid_class;
+> > > +DECLARE_BITMAP(pmcraid_minor, PMCRAID_MAX_ADAPTERS);
+> > 
+> > New IOCTL interfaces are generally not acceptable in a new driver. Some alternative
+> > interfaces include sysfs, netlink, and debugfs. Refer to the ipr driver for
+> > an example of avoiding using IOCTLs. Additional comments below on how to
+> > remove the dependency.
+> > 
+> 
+> 
+> 1.We want to have a single RAID management Appliction interface to support 
+> multiple wide range of OS platforms.
 
-Can also be written
+However, Linux already has RAID management applications, so you need to
+use that, and interact properly with them.  Do not create new interfaces
+that duplicate existing ones, that harms all existing users of Linux and
+would force them to use your "special" tool, when that should not be
+necessary at all.
 
-static atomic_t scsi_host_next_hn = ATOMIC_INIT(-1);
-...
-	shost->host_no = atomic_inc_return(&scsi_host_next_hn);
--- 
-Stefan Richter
--=====-==--= -==- =----
-http://arcgraph.de/sr/
+So please remove the custom ioctls, as they should not be needed for
+proper operation with the "normal" Linux tools, right?
+
+> IOCTL is the best approach as this interface is available in all OS
+> platforms.
+
+Just because other operating systems allow you to create new ioctls,
+doesn't mean it's a good idea :)
+
+> 2.Also we have commands which requires additional command parameters
+> which need to be passed down to FW and we think IOCTL is best approach
+> to send these parameters down field by field. We didn't find any other
+> cleaner way to pass these additional command parameters seperately
+> from the usual data buffer.
+
+What type of commands do you need to do this for?  And what makes it
+unique from other controllers of this type?
+
+> 3. we chose IOCTL as we want our Application interface to have full
+> control of filling in the fields(like FW specific headers) as passthru
+> to driver.
+
+Again, what is different here from other controllers that implement this
+same type of functionality?
+
+Creating custom ioctls for every individual controller, leads to an
+explosion of different tools needed to manage the same type of devices,
+which is madness as I am sure you can imagine.
+
+So please, stick with the standard interfaces if at all possible.
+
+thanks,
+
+greg k-h
