@@ -1,59 +1,44 @@
-From: Greg Kroah-Hartman <gregkh@suse.de>
-Subject: [PATCH 47/64] scsi: remove driver_data direct access of struct device
-Date: Mon, 15 Jun 2009 22:46:36 -0700
-Message-ID: <1245131213-24168-47-git-send-email-gregkh@suse.de>
-References: <20090616051351.GA23627@kroah.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:48435 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935899AbZFPFvd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Jun 2009 01:51:33 -0400
-In-Reply-To: <20090616051351.GA23627@kroah.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Joe Eykholt <jeykholt-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
+Subject: duplicated host_no
+Date: Mon, 15 Jun 2009 23:05:50 -0700
+Message-ID: <4A37363E.7090605@cisco.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Unsubscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://www.open-fcoe.org/pipermail/devel>
+List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: "devel-s9riP+hp16TNLxjTenLetw@public.gmane.org" <devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>, Linux SCSI Mailing List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@suse.de>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-In the near future, the driver core is going to not allow direct access
-to the driver_data pointer in struct device.  Instead, the functions
-dev_get_drvdata() and dev_set_drvdata() should be used.  These functions
-have been around since the beginning, so are backwards compatible with
-all older kernel versions.
+Cool bug.  Two SCSI devs with the same host_id.
 
-Cc: linux-scsi@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
----
- drivers/scsi/aha1740.c |    2 +-
- drivers/scsi/libsrp.c  |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+This is with fcoe and a bunch of patches in development.
 
-diff --git a/drivers/scsi/aha1740.c b/drivers/scsi/aha1740.c
-index ed0e3e5..5381357 100644
---- a/drivers/scsi/aha1740.c
-+++ b/drivers/scsi/aha1740.c
-@@ -646,7 +646,7 @@ static int aha1740_probe (struct device *dev)
- 
- static __devexit int aha1740_remove (struct device *dev)
- {
--	struct Scsi_Host *shpnt = dev->driver_data;
-+	struct Scsi_Host *shpnt = dev_get_drvdata(dev);
- 	struct aha1740_hostdata *host = HOSTDATA (shpnt);
- 
- 	scsi_remove_host(shpnt);
-diff --git a/drivers/scsi/libsrp.c b/drivers/scsi/libsrp.c
-index 15e2d13..2742ae8 100644
---- a/drivers/scsi/libsrp.c
-+++ b/drivers/scsi/libsrp.c
-@@ -135,7 +135,7 @@ int srp_target_alloc(struct srp_target *target, struct device *dev,
- 	INIT_LIST_HEAD(&target->cmd_queue);
- 
- 	target->dev = dev;
--	target->dev->driver_data = target;
-+	dev_set_drvdata(target->dev, target);
- 
- 	target->srp_iu_size = iu_size;
- 	target->rx_ring_size = nr;
--- 
-1.6.3.2
+I ran a loop including creating and deleting a bunch of fcoe instances on an MP system.
+After 140 some times, I see this:
 
+[ 7250.276749] scsi148 : FCoE Driver
+[ 7250.276752] device eth0 entered promiscuous mode
+[ 7250.276784] scsi148 : FCoE Driver
+[ 7250.277526] host148: lport ffffffff: Entered RESET state from none state
+[ 7250.277530] libfc: Link up on port (     0)
+[ 7250.277532] host148: lport      0: Entered FLOGI state from reset state
+[ 7250.305961] ------------[ cut here ]------------
+[ 7250.310653] WARNING: at fs/sysfs/dir.c:487 sysfs_add_one+0xc7/0xde()
+[ 7250.317096] Hardware name: X7DB8
+[ 7250.320372] sysfs: cannot create duplicate filename '/bus/scsi/devices/host148'
+
+This is unlikely to show up in real life, but it can happen in
+stress tests like this, and the system doesn't work so well afterwards.
+
+I'll submit a patch that uses atomic_inc_return for the host numbers.
+
+	Joe
