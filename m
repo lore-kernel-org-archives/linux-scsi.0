@@ -1,53 +1,37 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 2/2] ipr: differentiate pci-x and pci-e based adapters
-Date: Wed, 17 Jun 2009 12:19:06 -0500
-Message-ID: <4A39258A.1060508@linux.vnet.ibm.com>
-References: <20090616220853.799518360@linux.vnet.ibm.com> <4A381917.9000309@linux.vnet.ibm.com> <4A390EBB.8040208@linux.vnet.ibm.com> <4A392007.8020407@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH 5/5] qla2xxx: Update version number to 8.03.01-k4.
+Date: Wed, 17 Jun 2009 10:30:32 -0700
+Message-ID: <1245259832-8595-6-git-send-email-andrew.vasquez@qlogic.com>
+References: <1245259832-8595-1-git-send-email-andrew.vasquez@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:57480 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753297AbZFQRTF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jun 2009 13:19:05 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e33.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n5HHH5tG003113
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2009 11:17:05 -0600
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n5HHJ7R7224652
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2009 11:19:07 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n5HHJ7QJ024673
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2009 11:19:07 -0600
-In-Reply-To: <4A392007.8020407@linux.vnet.ibm.com>
+Received: from avexch1.qlogic.com ([198.70.193.115]:16588 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759936AbZFQRad (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jun 2009 13:30:33 -0400
+In-Reply-To: <1245259832-8595-1-git-send-email-andrew.vasquez@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Wayne Boyer <wayneb@linux.vnet.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Acked-by: Brian King <brking@linux.vnet.ibm.com>
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_version.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Wayne Boyer wrote:
-> Brian King wrote:
->> Wayne Boyer wrote:
->>> @@ -7539,7 +7539,8 @@
->>>  	ata_host_init(&ioa_cfg->ata_host, &pdev->dev,
->>>  		      sata_port_info.flags, &ipr_sata_ops);
->>>
->>> -	ioa_cfg->chip_cfg = ipr_get_chip_cfg(dev_id);
->>> +	ioa_cfg->ipr_chip = ipr_get_chip_info(dev_id);
->>> +	ioa_cfg->chip_cfg = ioa_cfg->ipr_chip->cfg;
->> If ipr_get_chip_info returns NULL you will oops here.
->>
-> 
-> Updated patch below.
-> 
-
-
+diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
+index b63feaf..8436970 100644
+--- a/drivers/scsi/qla2xxx/qla_version.h
++++ b/drivers/scsi/qla2xxx/qla_version.h
+@@ -7,7 +7,7 @@
+ /*
+  * Driver version
+  */
+-#define QLA2XXX_VERSION      "8.03.01-k3"
++#define QLA2XXX_VERSION      "8.03.01-k4"
+ 
+ #define QLA_DRIVER_MAJOR_VER	8
+ #define QLA_DRIVER_MINOR_VER	3
 -- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
-
+1.6.3.2.306.g4f4fa
 
