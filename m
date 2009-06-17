@@ -1,160 +1,135 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: [PATCH][SCST]: Fix for possible race on the main SCST module unload
- in sysfs
-Date: Wed, 17 Jun 2009 20:25:23 +0400
-Message-ID: <4A3918F3.5010303@vlnb.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Subject: [PATCH] fc-transport: BSG clean-up changes for normal and timeout completions (scsi-post-merge tree)
+Date: Wed, 17 Jun 2009 09:31:30 -0700
+Message-ID: <9A4AF066-850F-4EC0-A4A7-9850C73632E4@qlogic.com>
+Mime-Version: 1.0 (Apple Message framework v912)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:51636 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753291AbZFQQ0L (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jun 2009 12:26:11 -0400
+Received: from avexch1.qlogic.com ([198.70.193.115]:8424 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758227AbZFQQb2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jun 2009 12:31:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: scst-devel@lists.sourceforge.net, Daniel Debonzi <debonzi@linux.vnet.ibm.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "James.Smart@Emulex.Com Smart" <James.Smart@Emulex.Com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-This patch implements waiting on the main SCST module unload until no
-objects in SCST's sysfs hierarchy have external references. It prevents
-a race, when SCST sysfs code unloaded too early.
 
-Signed-off-by: Vladislav Bolkhovitin <vst@vlnb.net>
+Registered the softirq_done function for BSG request since this is  
+requried by the block layer using block level
+request timeout functionality. This function will be called by the  
+block layer as part of time out clean process to release the  BSG  
+request.
 
- scst_sysfs.c |   45 +++++++++++++++++++++++++--------------------
- 1 file changed, 25 insertions(+), 20 deletions(-)
+Moved some of the BSG request completion activities to softirq_done  
+routine to take care of both normal and timout completions.
 
-Index: scst/src/scst_sysfs.c
-===================================================================
---- scst/src/scst_sysfs.c	(revision 887)
-+++ scst/src/scst_sysfs.c	(working copy)
-@@ -13,7 +13,9 @@
- 
- static DEFINE_MUTEX(scst_sysfs_mutex);
- 
--static struct kobject *scst_sysfs_root_kobj;
-+static DECLARE_COMPLETION(scst_sysfs_root_release_completion);
-+
-+static struct kobject scst_sysfs_root_kobj;
- static struct kobject *scst_targets_kobj;
- static struct kobject *scst_devices_kobj;
- static struct kobject *scst_sgv_kobj;
-@@ -21,7 +23,10 @@ static struct kobject *scst_back_drivers
- 
- static struct sysfs_ops scst_sysfs_ops;
- 
--static void scst_sysfs_release(struct kobject *kobj);
-+static void scst_sysfs_release(struct kobject *kobj)
-+{
-+	kfree(kobj);
-+}
- 
- int scst_create_tgtt_sysfs(struct scst_tgt_template *tgtt)
- {
-@@ -344,9 +349,9 @@ static struct attribute *scst_sysfs_root
- 	NULL,
- };
- 
--static void scst_sysfs_release(struct kobject *kobj)
-+static void scst_sysfs_root_release(struct kobject *kobj)
- {
--	kfree(kobj);
-+	complete_all(&scst_sysfs_root_release_completion);
- }
- 
- static ssize_t scst_show(struct kobject *kobj, struct attribute *attr,
-@@ -374,7 +379,7 @@ static struct sysfs_ops scst_sysfs_ops =
- 
- static struct kobj_type scst_sysfs_root_ktype = {
- 	.sysfs_ops = &scst_sysfs_ops,
--	.release = scst_sysfs_release,
-+	.release = scst_sysfs_root_release,
- 	.default_attrs = scst_sysfs_root_default_attrs,
- };
- 
-@@ -385,23 +390,18 @@ int __init scst_sysfs_init(void)
- 
- 	TRACE_ENTRY();
- 
--	scst_sysfs_root_kobj = kzalloc(sizeof(*scst_sysfs_root_kobj),
--					GFP_KERNEL);
--	if (!scst_sysfs_root_kobj)
--		goto sysfs_root_error;
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+---
+  drivers/scsi/scsi_transport_fc.c |   37 ++++++++++++++++++ 
++------------------
+  1 files changed, 19 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/ 
+scsi_transport_fc.c
+index 3f64d93..453d9e6 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -3397,7 +3397,6 @@ fc_destroy_bsgjob(struct fc_bsg_job *job)
+  	kfree(job);
+  }
+
 -
--	retval = kobject_init_and_add(scst_sysfs_root_kobj,
-+	retval = kobject_init_and_add(&scst_sysfs_root_kobj,
- 			&scst_sysfs_root_ktype, kernel_kobj, "%s", "scst_tgt");
- 	if (retval != 0)
- 		goto sysfs_root_add_error;
- 
- 	scst_targets_kobj = kobject_create_and_add("targets",
--				scst_sysfs_root_kobj);
-+				&scst_sysfs_root_kobj);
- 	if (!scst_targets_kobj)
- 		goto targets_kobj_error;
- 
- 	scst_devices_kobj = kobject_create_and_add("devices",
--				scst_sysfs_root_kobj);
-+				&scst_sysfs_root_kobj);
- 	if (!scst_devices_kobj)
- 		goto devices_kobj_error;
- 
-@@ -410,12 +410,12 @@ int __init scst_sysfs_init(void)
- 		goto sgv_kobj_error;
- 
- 	retval = kobject_init_and_add(scst_sgv_kobj, &sgv_ktype,
--			scst_sysfs_root_kobj, "%s", "sgv");
-+			&scst_sysfs_root_kobj, "%s", "sgv");
- 	if (retval != 0)
- 		goto sgv_kobj_add_error;
- 
- 	scst_back_drivers_kobj = kobject_create_and_add("back_drivers",
--					scst_sysfs_root_kobj);
-+					&scst_sysfs_root_kobj);
- 	if (!scst_back_drivers_kobj)
- 		goto back_drivers_kobj_error;
- 
-@@ -439,12 +439,11 @@ devices_kobj_error:
- 	kobject_put(scst_targets_kobj);
- 
- targets_kobj_error:
--	kobject_del(scst_sysfs_root_kobj);
-+	kobject_del(&scst_sysfs_root_kobj);
- 
- sysfs_root_add_error:
--	kobject_put(scst_sysfs_root_kobj);
-+	kobject_put(&scst_sysfs_root_kobj);
- 
--sysfs_root_error:
- 	if (retval == 0)
- 		retval = -EINVAL;
- 	goto out;
-@@ -454,6 +453,8 @@ void __exit scst_sysfs_cleanup(void)
- {
- 	TRACE_ENTRY();
- 
-+	PRINT_INFO("%s", "Exiting SCST sysfs hierarchy...");
+  /**
+   * fc_bsg_jobdone - completion routine for bsg requests that the LLD  
+has
+   *                  completed
+@@ -3408,15 +3407,10 @@ fc_bsg_jobdone(struct fc_bsg_job *job)
+  {
+  	struct request *req = job->req;
+  	struct request *rsp = req->next_rq;
+-	unsigned long flags;
+  	int err;
+
+-	spin_lock_irqsave(&job->job_lock, flags);
+-	job->state_flags |= FC_RQST_STATE_DONE;
+-	job->ref_cnt--;
+-	spin_unlock_irqrestore(&job->job_lock, flags);
+-
+  	err = job->req->errors = job->reply->result;
 +
- 	kobject_del(scst_sgv_kobj);
- 	kobject_put(scst_sgv_kobj);
- 
-@@ -466,8 +467,12 @@ void __exit scst_sysfs_cleanup(void)
- 	kobject_del(scst_back_drivers_kobj);
- 	kobject_put(scst_back_drivers_kobj);
- 
--	kobject_del(scst_sysfs_root_kobj);
--	kobject_put(scst_sysfs_root_kobj);
-+	kobject_del(&scst_sysfs_root_kobj);
-+	kobject_put(&scst_sysfs_root_kobj);
+  	if (err < 0)
+  		/* we're only returning the result field in the reply */
+  		job->req->sense_len = sizeof(uint32_t);
+@@ -3433,13 +3427,27 @@ fc_bsg_jobdone(struct fc_bsg_job *job)
+  		rsp->resid_len -= min(job->reply->reply_payload_rcv_len,
+  				      rsp->resid_len);
+  	}
++	blk_complete_request(req);
++}
 +
-+	wait_for_completion(&scst_sysfs_root_release_completion);
-+
-+	PRINT_INFO("%s", "Exiting SCST sysfs hierarchy done");
- 
- 	TRACE_EXIT();
- 	return;
++/**
++ * fc_bsg_softirq_done - softirq done routine for destroying the bsg  
+requests
++ * @req:        BSG request that holds the job to be destroyed
++ */
++static void fc_bsg_softirq_done(struct request *rq)
++{
++	struct fc_bsg_job *job = rq->special;
++	unsigned long flags;
+
+-	blk_end_request_all(req, err);
++	spin_lock_irqsave(&job->job_lock, flags);
++	job->state_flags |= FC_RQST_STATE_DONE;
++	job->ref_cnt--;
++	spin_unlock_irqrestore(&job->job_lock, flags);
+
++	blk_end_request_all(rq, rq->errors);
+  	fc_destroy_bsgjob(job);
+  }
+
+-
+  /**
+   * fc_bsg_job_timeout - handler for when a bsg request timesout
+   * @req:	request that timed out
+@@ -3471,19 +3479,10 @@ fc_bsg_job_timeout(struct request *req)
+  				"abort failed with status %d\n", err);
+  	}
+
+-	if (!done) {
+-		spin_lock_irqsave(&job->job_lock, flags);
+-		job->ref_cnt--;
+-		spin_unlock_irqrestore(&job->job_lock, flags);
+-		fc_destroy_bsgjob(job);
+-	}
+-
+  	/* the blk_end_sync_io() doesn't check the error */
+  	return BLK_EH_HANDLED;
+  }
+
+-
+-
+  static int
+  fc_bsg_map_buffer(struct fc_bsg_buffer *buf, struct request *req)
+  {
+@@ -3879,6 +3878,7 @@ fc_bsg_hostadd(struct Scsi_Host *shost, struct  
+fc_host_attrs *fc_host)
+
+  	q->queuedata = shost;
+  	queue_flag_set_unlocked(QUEUE_FLAG_BIDI, q);
++	blk_queue_softirq_done(q, fc_bsg_softirq_done);
+  	blk_queue_rq_timed_out(q, fc_bsg_job_timeout);
+  	blk_queue_rq_timeout(q, FC_DEFAULT_BSG_TIMEOUT);
+
+@@ -3924,6 +3924,7 @@ fc_bsg_rportadd(struct Scsi_Host *shost, struct  
+fc_rport *rport)
+
+  	q->queuedata = rport;
+  	queue_flag_set_unlocked(QUEUE_FLAG_BIDI, q);
++	blk_queue_softirq_done(q, fc_bsg_softirq_done);
+  	blk_queue_rq_timed_out(q, fc_bsg_job_timeout);
+  	blk_queue_rq_timeout(q, BLK_DEFAULT_SG_TIMEOUT);
 
 -- 
-Home page of SCST and target drivers: http://scst.sourceforge.net
 
