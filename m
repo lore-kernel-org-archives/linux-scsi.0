@@ -1,53 +1,32 @@
-From: Changli Gao <xiaosuo@gmail.com>
-Subject: [PATCH] scsi_wait_scan: no option appears when configuring for scsi_wait_scan.
-Date: Wed, 17 Jun 2009 10:07:32 +0800
-Message-ID: <4A384FE4.9090703@gmail.com>
-Reply-To: xiaosuo <xiaosuo@gmail.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] scsi_wait_scan: no option appears when configuring for
+	scsi_wait_scan.
+Date: Tue, 16 Jun 2009 20:12:54 -0600
+Message-ID: <20090617021254.GQ19977@parisc-linux.org>
+References: <4A384FE4.9090703@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=GB2312
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pz0-f187.google.com ([209.85.222.187]:48763 "EHLO
-	mail-pz0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751704AbZFQCHm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jun 2009 22:07:42 -0400
+Received: from palinux.external.hp.com ([192.25.206.14]:48494 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751699AbZFQCMw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jun 2009 22:12:52 -0400
+Content-Disposition: inline
+In-Reply-To: <4A384FE4.9090703@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, xiaosuo <xiaosuo@gmail.com>
+To: Changli Gao <xiaosuo@gmail.com>
+Cc: James.Bottomley@HansenPartnership.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-FIXBUG: missing comment after tristate leads to no option for
-scsci_wait_scan when configuring.
+On Wed, Jun 17, 2009 at 10:07:32AM +0800, Changli Gao wrote:
+> FIXBUG: missing comment after tristate leads to no option for
+> scsci_wait_scan when configuring.
 
-When build kernel, this module is always built if I choose SCSI, and I
-can't find any option in the configuration menu, so I can't disable it
-or build it into kernel statically. After diving into the kernel source
-code, I found no comment after keyword tristate, then I added the
-comment and help.
+Please search the archives.  Patches along these lines have been rejected
+before.
 
-Signed-off-by: Changli Gao <xiaosuo@gmail.com <mailto:xiaosuo@gmail.com>>
-----
-
-Kconfig | 7 ++++++-
-1 file changed, 6 insertions(+), 1 deletion(-)
-
---- drivers/scsi/Kconfig.orig	2009-06-17 09:52:46.000000000 +0800
-+++ drivers/scsi/Kconfig	2009-06-17 09:55:57.000000000 +0800
-@@ -259,10 +259,15 @@
- 	  or async on the kernel's command line.
- 
- config SCSI_WAIT_SCAN
--	tristate
-+	tristate "Wait until all the async scans are complete"
- 	default m
- 	depends on SCSI
- 	depends on MODULES
-+	help
-+	  Wait until all the async scans are complete. The idea is to use it in
-+	  initrd/initramfs scripts.  You modprobe it after all the modprobes of
-+	  the root SCSI drivers and it will wait until they have all finished
-+	  scanning their busses before allowing the boot to proceed
- 
- menu "SCSI Transports"
- 	depends on SCSI
-
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
