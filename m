@@ -1,184 +1,242 @@
 From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: PATCH: PMC-Sierra MaxRAID driver to support 6Gb/s SAS RAID controller
-Date: Wed, 17 Jun 2009 10:09:48 -0500
-Message-ID: <4A39073C.6070202@linux.vnet.ibm.com>
-References: <alpine.LNX.1.10.0906101259500.24722@rslab159.pmc-sierra.bc.ca> <4A31319C.605@linux.vnet.ibm.com> <alpine.LNX.1.10.0906160546520.6270@rslab159.pmc-sierra.bc.ca>
+Subject: Re: [PATCH 1/2] ipr: add test for MSI interrupt support
+Date: Wed, 17 Jun 2009 10:39:12 -0500
+Message-ID: <4A390E20.7060006@linux.vnet.ibm.com>
+References: <20090616220853.799518360@linux.vnet.ibm.com> <4A381908.8090000@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e9.ny.us.ibm.com ([32.97.182.139]:47592 "EHLO e9.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751956AbZFQPKN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Jun 2009 11:10:13 -0400
-Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
-	by e9.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n5HEvfZr025951
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2009 10:57:41 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n5HFA43K1404946
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2009 11:10:07 -0400
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n5HF9oLg018726
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2009 09:09:55 -0600
-In-Reply-To: <alpine.LNX.1.10.0906160546520.6270@rslab159.pmc-sierra.bc.ca>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:58031 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754021AbZFQPjL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jun 2009 11:39:11 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e35.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n5HFW5FU002518
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2009 09:32:05 -0600
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n5HFdD2o254110
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2009 09:39:13 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n5HFdDnk001681
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2009 09:39:13 -0600
+In-Reply-To: <4A381908.8090000@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, gregkh@suse.de
+To: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Anil Ravindranath wrote:
->>> +/*
->>> + * Supporting user-level control interface through IOCTL commands.
->>> + * pmcraid_major - major number to use
->>> + * pmcraid_minor - minor number(s) to use
->>> + */
->>> +static unsigned int pmcraid_major;
->>> +static struct class *pmcraid_class;
->>> +DECLARE_BITMAP(pmcraid_minor, PMCRAID_MAX_ADAPTERS);
->> New IOCTL interfaces are generally not acceptable in a new driver. Some alternative
->> interfaces include sysfs, netlink, and debugfs. Refer to the ipr driver for
->> an example of avoiding using IOCTLs. Additional comments below on how to
->> remove the dependency.
->>
+Acked-by: Brian King <brking@linux.vnet.ibm.com>
+
+Wayne Boyer wrote:
+> The return value from pci_enable_msi() can not always be trusted.  This patch
+> adds code to generate an interrupt after MSI has been enabled and tests
+> whether or not we can receive and process it.  If the tests fails, then fall
+> back to LSI.
 > 
+> Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+> ---
 > 
-> 1.We want to have a single RAID management Appliction interface to support 
-> multiple wide range of OS platforms. IOCTL is the best approach as this 
-> interface is available in all OS platforms.
-
-This can also be accomplished with an OS abstraction layer in the management
-application.
-
-
-> 2.Also we have commands which requires additional command parameters 
-> which need to be passed down to FW and we think IOCTL is best approach to send 
-> these parameters down field by field. We didn't find any other cleaner way 
-> to pass these additional command parameters seperately from the usual 
-> data buffer.
+>  drivers/scsi/ipr.c |  108 +++++++++++++++++++++++++++++++++++++++++++++++++----
+>  drivers/scsi/ipr.h |    6 +-
+>  2 files changed, 105 insertions(+), 9 deletions(-)
 > 
-> 3. we chose IOCTL as we want our Application interface to have full  
-> control of filling in the fields(like FW specific headers) as passthru to driver.
-
-The ipr driver has similar requirements, but after taking a good look at
-what the user space management application required, I was able to use SG_IO to
-send these commands to either the adapter itself or the associated disks or disk
-arrays. I'm not sure if you can do this or not, but I would encourage you to take
-a look at it. Here are some of the advantages of this approach:
-
-1. No need to duplicate any error handling for these commands. SCSI core handles
-   timeouts and error recovery like all other commands.
-2. Reduces code in the driver. All commands now come through queuecommand.
-3. scsi_block_requests holds off these commands when blocked like all other commands
-4. All commands flow through one path rather than having a side door which allows
-   you to send commands not only to the adapter but also the disks, if I read the code
-   correctly.
-5. No need to worry about host or device queue depths being exceeded
-
-
-> Question:
+> Index: b/drivers/scsi/ipr.c
+> ===================================================================
+> --- a/drivers/scsi/ipr.c	2009-06-03 16:04:14.000000000 -0700
+> +++ b/drivers/scsi/ipr.c	2009-06-15 16:36:36.000000000 -0700
+> @@ -7366,6 +7366,7 @@
+>  	INIT_LIST_HEAD(&ioa_cfg->used_res_q);
+>  	INIT_WORK(&ioa_cfg->work_q, ipr_worker_thread);
+>  	init_waitqueue_head(&ioa_cfg->reset_wait_q);
+> +	init_waitqueue_head(&ioa_cfg->msi_wait_q);
+>  	ioa_cfg->sdt_state = INACTIVE;
+>  	if (ipr_enable_cache)
+>  		ioa_cfg->cache_state = CACHE_ENABLED;
+> @@ -7416,6 +7417,89 @@
+>  }
 > 
-> Below I see a bunch of inputs regarding using netlink. 
+>  /**
+> + * ipr_test_intr - Handle the interrupt generated in ipr_test_msi().
+> + * @pdev:		PCI device struct
+> + *
+> + * Description: Simply set the msi_received flag to 1 indicating that
+> + * Message Signaled Interrupts are supported.
+> + *
+> + * Return value:
+> + * 	0 on success / non-zero on failure
+> + **/
+> +static irqreturn_t __devinit ipr_test_intr(int irq, void *devp)
+> +{
+> +	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)devp;
+> +	unsigned long lock_flags = 0;
+> +	irqreturn_t rc = IRQ_HANDLED;
+> +
+> +	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
+> +
+> +	ioa_cfg->msi_received = 1;
+> +	wake_up(&ioa_cfg->msi_wait_q);
+> +
+> +	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+> +	return rc;
+> +}
+> +
+> +/**
+> + * ipr_test_msi - Test for Message Signaled Interrupt (MSI) support.
+> + * @pdev:		PCI device struct
+> + *
+> + * Description: The return value from pci_enable_msi() can not always be
+> + * trusted.  This routine sets up and initiates a test interrupt to determine
+> + * if the interrupt is received via the ipr_test_intr() service routine.
+> + * If the tests fails, the driver will fall back to LSI.
+> + *
+> + * Return value:
+> + * 	0 on success / non-zero on failure
+> + **/
+> +static int __devinit ipr_test_msi(struct ipr_ioa_cfg *ioa_cfg,
+> +				  struct pci_dev *pdev)
+> +{
+> +	int rc;
+> +	volatile u32 int_reg;
+> +	unsigned long lock_flags = 0;
+> +
+> +	ENTER;
+> +
+> +	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
+> +	init_waitqueue_head(&ioa_cfg->msi_wait_q);
+> +	ioa_cfg->msi_received = 0;
+> +	ipr_mask_and_clear_interrupts(ioa_cfg, ~IPR_PCII_IOA_TRANS_TO_OPER);
+> +	writel(IPR_PCII_IO_DEBUG_ACKNOWLEDGE, ioa_cfg->regs.clr_interrupt_mask_reg);
+> +	int_reg = readl(ioa_cfg->regs.sense_interrupt_mask_reg);
+> +	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+> +
+> +	rc = request_irq(pdev->irq, ipr_test_intr, 0, IPR_NAME, ioa_cfg);
+> +	if (rc) {
+> +		dev_err(&pdev->dev, "Can not assign irq %d\n", pdev->irq);
+> +		return rc;
+> +	} else if (ipr_debug)
+> +		dev_info(&pdev->dev, "IRQ assigned: %d\n", pdev->irq);
+> +
+> +	writel(IPR_PCII_IO_DEBUG_ACKNOWLEDGE, ioa_cfg->regs.sense_interrupt_reg);
+> +	int_reg = readl(ioa_cfg->regs.sense_interrupt_reg);
+> +	wait_event_timeout(ioa_cfg->msi_wait_q, ioa_cfg->msi_received, HZ);
+> +	ipr_mask_and_clear_interrupts(ioa_cfg, ~IPR_PCII_IOA_TRANS_TO_OPER);
+> +
+> +	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
+> +	if (!ioa_cfg->msi_received) {
+> +		/* MSI test failed */
+> +		dev_info(&pdev->dev, "MSI test failed.  Falling back to LSI.\n");
+> +		rc = -EOPNOTSUPP;
+> +	} else if (ipr_debug)
+> +		dev_info(&pdev->dev, "MSI test succeeded.\n");
+> +
+> +	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+> +
+> +	free_irq(pdev->irq, ioa_cfg);
+> +
+> +	LEAVE;
+> +
+> +	return rc;
+> +}
+> +
+> +/**
+>   * ipr_probe_ioa - Allocates memory and does first stage of initialization
+>   * @pdev:		PCI device struct
+>   * @dev_id:		PCI device id struct
+> @@ -7440,11 +7524,6 @@
+>  		goto out;
+>  	}
 > 
-> For all driver to appl async events processing we chose SIGIO approach 
-> followed by an ioctl to collect the data from driver. 
+> -	if (!(rc = pci_enable_msi(pdev)))
+> -		dev_info(&pdev->dev, "MSI enabled\n");
+> -	else if (ipr_debug)
+> -		dev_info(&pdev->dev, "Cannot enable MSI\n");
+> -
+>  	dev_info(&pdev->dev, "Found IOA with IRQ: %d\n", pdev->irq);
 > 
-> Is it okay if we stick to SIGIO way or should we change it to netlink?
-
-The part that looks ugly with the SIGIO implementation to me is the fact
-that you have the 5 second delay after an AEN occurs, waiting for the user
-applications to read the buffer. In my experience delays like this often cause
-problems. If the system is very heavily loaded 5 seconds may not be long enough.
-Knowing the best time to use is always the tricky part. 
-
-Using an interface like netlink would allow you to just fire the data off
-to userspace and forget about it. Any applications registered to receive
-the notifications would receive them and the driver would not need to care.
-
-In the ipr driver I have a similar requirement, but don't actually send any data
-back up to userspace. I simply generate a KOBJ_CHANGE kobject_uevent. The user space
-apps then trigger on that to go figure out what changed. If you use kobject_uevent_env
-you can also pass some data up to the application to make figuring this out easier.
-
-
->>> +static int pmcraid_error_handler(struct pmcraid_cmd *cmd)
->>> +{
->>> +	struct scsi_cmnd *scsi_cmd = cmd->scsi_cmd;
->>> +	struct pmcraid_resource_entry *res = scsi_cmd->device->hostdata;
->>> +	struct pmcraid_instance *pinstance = cmd->drv_inst;
->>> +	struct pmcraid_ioasa *ioasa = &cmd->ioa_cb->ioasa;
->>> +	u32 ioasc = le32_to_cpu(ioasa->ioasc);
->>> +	u32 masked_ioasc = ioasc & PMCRAID_IOASC_SENSE_MASK;
->>> +
->>> +	if (!res) {
->>> +		pmcraid_info("resource pointer is NULL\n");
->>> +		return 0;
->>> +	}
->> There seems to be a fair amount of code here that runs without locks that reads
->> and writes shared data structures which has me concerned that you could have
->> some very hard to track down bugs in the future...
->>
-> If you are refering to the above code(pmcraid_error_code), I don't see a 
-> reason why need a lock here.
-
-I guess I wasn't referring to this patch of code in particular, just speaking in
-general. One example would be in the ioctl path. There you make a bunch of checks
-of the state of the adapter without holding any locks, then proceed to build and
-send the command. From the time you last check the state of the adapter to
-the point where you actually send the command to the adapter you could have
-taken an error interrupt and be in the process of resetting the adapter. Not sure
-what happens if you issue an MMIO on this hardware while you are resetting it,
-I know there is plenty of hardware that doesn't like this.
-
-
->>> +static ssize_t pmcraid_show_drv_version(
->>> +	struct device *dev,
->>> +	struct device_attribute *attr,
->>> +	char *buf
->>> +)
->>> +{
->>> +	return snprintf(buf, PAGE_SIZE, "version: %s, build date: %s\n",
->>> +			PMCRAID_DRIVER_VERSION, PMCRAID_DRIVER_DATE);
->>> +}
->>> +
->>> +static struct device_attribute pmcraid_driver_version_attr = {
->>> +	.attr = {
->>> +		 .name = "drv_version",
->>> +		 .mode = S_IRUGO,
->>> +		 },
->>> +	.show = pmcraid_show_drv_version,
->> Should be able to just use MODULE_VERSION instead.
->>
-> we just kept so that if somebody looks and wants to know. We have used 
-> MODULE_VERSION also.
-
-Since you are using MODULE_VERSION, this information is already available
-in /sys/module/pmcraid/version, so this becomes redundant.
-
-
->>> +
->>> +#define PMCRAID_IOCTL_GET_DRIVER_STATISTICS  \
->>> +	DRV_IOCTL(3, _ARGSIZE(struct pmcraid_driver_statistics))
->> I would think this could be implemented with device and host sysfs
->> attributes instead.
->>
->>> +
->>> +#define PMCRAID_IOCTL_GET_ADAPTER_ID         \
->>> +	DRV_IOCTL(4, _ARGSIZE(union pmcraid_adapter_id))
->> A scsi host sysfs attribute should work here
->>
->>> +
->>> +#define PMCRAID_IOCTL_RESET_ADAPTER          \
->>> +	DRV_IOCTL(5, sizeof(struct pmcraid_ioctl_header))
->> A writable sysfs file should work for this
->>
+>  	host = scsi_host_alloc(&driver_template, sizeof(*ioa_cfg));
+> @@ -7518,6 +7597,18 @@
+>  		goto cleanup_nomem;
+>  	}
 > 
-> Since our Appl needs this info thru IOCTLs we are using this.
+> +	/* Enable MSI style interrupts if they are supported. */
+> +	if (!(rc = pci_enable_msi(pdev))) {
+> +		rc = ipr_test_msi(ioa_cfg, pdev);
+> +		if (rc == -EOPNOTSUPP)
+> +			pci_disable_msi(pdev);
+> +		else if (rc)
+> +			goto out_msi_disable;
+> +		else
+> +			dev_info(&pdev->dev, "MSI enabled with IRQ: %d\n", pdev->irq);
+> +	} else if (ipr_debug)
+> +		dev_info(&pdev->dev, "Cannot enable MSI.\n");
+> +
+>  	/* Save away PCI config space for use following IOA reset */
+>  	rc = pci_save_state(pdev);
+> 
+> @@ -7555,7 +7646,9 @@
+>  		ioa_cfg->ioa_unit_checked = 1;
+> 
+>  	ipr_mask_and_clear_interrupts(ioa_cfg, ~IPR_PCII_IOA_TRANS_TO_OPER);
+> -	rc = request_irq(pdev->irq, ipr_isr, IRQF_SHARED, IPR_NAME, ioa_cfg);
+> +	rc = request_irq(pdev->irq, ipr_isr,
+> +			 ioa_cfg->msi_received ? 0 : IRQF_SHARED,
+> +			 IPR_NAME, ioa_cfg);
+> 
+>  	if (rc) {
+>  		dev_err(&pdev->dev, "Couldn't register IRQ %d! rc=%d\n",
+> @@ -7582,12 +7675,13 @@
+>  	ipr_free_mem(ioa_cfg);
+>  cleanup_nomem:
+>  	iounmap(ipr_regs);
+> +out_msi_disable:
+> +	pci_disable_msi(pdev);
+>  out_release_regions:
+>  	pci_release_regions(pdev);
+>  out_scsi_host_put:
+>  	scsi_host_put(host);
+>  out_disable:
+> -	pci_disable_msi(pdev);
+>  	pci_disable_device(pdev);
+>  	goto out;
+>  }
+> Index: b/drivers/scsi/ipr.h
+> ===================================================================
+> --- a/drivers/scsi/ipr.h	2009-06-03 16:04:15.000000000 -0700
+> +++ b/drivers/scsi/ipr.h	2009-06-15 16:35:43.000000000 -0700
+> @@ -37,8 +37,8 @@
+>  /*
+>   * Literals
+>   */
+> -#define IPR_DRIVER_VERSION "2.4.2"
+> -#define IPR_DRIVER_DATE "(January 21, 2009)"
+> +#define IPR_DRIVER_VERSION "2.4.3"
+> +#define IPR_DRIVER_DATE "(June 10, 2009)"
+> 
+>  /*
+>   * IPR_MAX_CMD_PER_LUN: This defines the maximum number of outstanding
+> @@ -1094,6 +1094,7 @@
+>  	u8 needs_hard_reset:1;
+>  	u8 dual_raid:1;
+>  	u8 needs_warm_reset:1;
+> +	u8 msi_received:1;
+> 
+>  	u8 revid;
+> 
+> @@ -1179,6 +1180,7 @@
+>  	struct work_struct work_q;
+> 
+>  	wait_queue_head_t reset_wait_q;
+> +	wait_queue_head_t msi_wait_q;
+> 
+>  	struct ipr_dump *dump;
+>  	enum ipr_sdt_state sdt_state;
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-The advantage of using sdev_attrs and shost_attrs for these
-is that allows the information to be available to the user without
-the need of special utilities. 
-
--Brian
 
 -- 
 Brian King
