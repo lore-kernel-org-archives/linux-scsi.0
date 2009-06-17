@@ -1,103 +1,45 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PATCH] intermediate set of SCSI updates for the merge window
-Date: Wed, 17 Jun 2009 10:22:13 -0400
-Message-ID: <1245248533.8585.5.camel@mulgrave.site>
+From: Konrad Rzeszutek <konrad@virtualiron.com>
+Subject: Re: Question about scsi device names
+Date: Wed, 17 Jun 2009 10:19:58 -0400
+Message-ID: <20090617141958.GB22727@mars.virtualiron.com>
+References: <h0s7tv$d8f$1@ger.gmane.org> <a43edf1b0906161235h124f3ca0y6f62419c38fcaa84@mail.gmail.com> <h199nr$g7a$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933975AbZFQOWb@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from host-216-57-134-2.customer.veroxity.net ([216.57.134.2]:56475
+	"EHLO mars.virtualiron.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753544AbZFQOej (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Jun 2009 10:34:39 -0400
+Content-Disposition: inline
+In-Reply-To: <h199nr$g7a$1@ger.gmane.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: walt <w41ter@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-These represent an initial update set (including a few bug fixes) that
-have been incubating in linux-next.  Hopefully I'll be sending the last
-set of updates next tuesday.
+On Tue, Jun 16, 2009 at 04:26:58PM -0700, walt wrote:
+> Billy Crook wrote:
+>> ... the letter naming of block
+>> devices in /dev/ is arbitrary and should be presumed unreliable.  It
+>> is dependant on the order in which the devices were detected.  In your
+>> case, it is likely that modules are being loaded in another order than
+>> before.  This could happen for a variety of reasons including module
+>> renames, removals, or additions.
+>>
+>> To reliably reference block devices, use LABEL=, or UUID= in fstab, or
+>> /dev/disk/by-*/* anywhere else...
+>
+> Thanks, that's helpful info.  The reason this came up is that the sata
+> disk on the onboard controller is the boot disk, and it's annoying to
+> have the boot fail because the ESATA disk is powered on or off, as the
+> case may be.
+>
+> The kernel chooses the root partition based on its own value of rdev,
 
-The update is available from
+Which on most distros is the initrd image (/dev/ram0)?
 
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
-
-The short changelog is:
-
-Alexey Zaytsev (1):
-      compat: don't perform unneeded copy in sg_io code
-
-Anirban Chakraborty (1):
-      qla2xxx: Resolve a performance issue in interrupt
-
-Christof Schmitt (1):
-      zfcp: Update FC pass-through support
-
-James Bottomley (2):
-      aic79xx: make driver respect nvram for IU and QAS settings
-      don't attach ULD to Dell Universal Xport
-
-James Smart (6):
-      lpfc 8.3.3 : Update driver version to 8.3.3
-      lpfc 8.3.3 : Add support for Target Reset handler entrypoint
-      lpfc 8.3.3 : Fix a couple of spin_lock and memory issues and a crash
-      lpfc 8.3.3 : FC/FCOE discovery fixes
-      lpfc 8.3.3 : Fix various SLI-3 vs SLI-4 differences
-      FC Pass Thru support
-
-Michael Chan (1):
-      cnic, bnx2i: Fix build failure when CONFIG_PCI is not set.
-
-Randy Dunlap (1):
-      qla2xxx: fix printk format warnings
-
-Roel Kluin (2):
-      nsp_cs: time_out reaches -1
-      ncr53c8xx: div reaches -1
-
-Sven Schuetz (1):
-      zfcp: Add FC pass-through support
-
-and the diffstat:
- Documentation/scsi/scsi_fc_transport.txt |   14 
- Documentation/scsi/scsi_mid_low_api.txt  |    5 
- drivers/net/Kconfig                      |    5 
- drivers/s390/scsi/zfcp_aux.c             |   10 
- drivers/s390/scsi/zfcp_def.h             |   18 
- drivers/s390/scsi/zfcp_erp.c             |    2 
- drivers/s390/scsi/zfcp_ext.h             |    6 
- drivers/s390/scsi/zfcp_fc.c              |  185 ++++++++
- drivers/s390/scsi/zfcp_fsf.c             |    3 
- drivers/s390/scsi/zfcp_scsi.c            |   15 
- drivers/scsi/aic7xxx/aic79xx_osm.c       |   10 
- drivers/scsi/bnx2i/Kconfig               |    1 
- drivers/scsi/lpfc/lpfc.h                 |    4 
- drivers/scsi/lpfc/lpfc_attr.c            |    6 
- drivers/scsi/lpfc/lpfc_ct.c              |    4 
- drivers/scsi/lpfc/lpfc_els.c             |   27 +
- drivers/scsi/lpfc/lpfc_hbadisc.c         |   35 +
- drivers/scsi/lpfc/lpfc_hw.h              |    1 
- drivers/scsi/lpfc/lpfc_hw4.h             |    6 
- drivers/scsi/lpfc/lpfc_init.c            |   34 -
- drivers/scsi/lpfc/lpfc_mbox.c            |    7 
- drivers/scsi/lpfc/lpfc_nportdisc.c       |    2 
- drivers/scsi/lpfc/lpfc_scsi.c            |  661 +++++++++++++++----------------
- drivers/scsi/lpfc/lpfc_sli.c             |  264 +++++++++---
- drivers/scsi/lpfc/lpfc_sli.h             |    1 
- drivers/scsi/lpfc/lpfc_sli4.h            |    2 
- drivers/scsi/lpfc/lpfc_version.h         |    2 
- drivers/scsi/lpfc/lpfc_vport.c           |    2 
- drivers/scsi/ncr53c8xx.c                 |    2 
- drivers/scsi/pcmcia/nsp_cs.c             |    6 
- drivers/scsi/qla2xxx/qla_isr.c           |   15 
- drivers/scsi/qla2xxx/qla_sup.c           |    7 
- drivers/scsi/scsi_devinfo.c              |    1 
- drivers/scsi/scsi_transport_fc.c         |  614 ++++++++++++++++++++++++++++
- drivers/scsi/scsi_transport_spi.c        |   18 
- fs/compat_ioctl.c                        |    6 
- include/Kbuild                           |    1 
- include/scsi/Kbuild                      |    4 
- include/scsi/scsi_bsg_fc.h               |  322 +++++++++++++++
- include/scsi/scsi_host.h                 |    9 
- include/scsi/scsi_transport_fc.h         |   52 ++
- include/scsi/scsi_transport_spi.h        |    4 
- 42 files changed, 1888 insertions(+), 505 deletions(-)
-
-James
+You _need_ to have an initrd image. Then rdev points to (1,0 -
+/dev/ram0) and executes the /init process which takes care of scaning
+the disks for the labels and pivots in a root filesystem depending on the label
+(or the LVM if that is there).
