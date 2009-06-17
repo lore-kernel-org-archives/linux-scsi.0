@@ -1,32 +1,56 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] scsi_wait_scan: no option appears when configuring for
-	scsi_wait_scan.
-Date: Tue, 16 Jun 2009 20:12:54 -0600
-Message-ID: <20090617021254.GQ19977@parisc-linux.org>
-References: <4A384FE4.9090703@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 2/2] block: revert "bsg: setting rq->bio to NULL"
+Date: Wed, 17 Jun 2009 15:10:11 +0900
+Message-ID: <1245219011-20481-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+References: <1245219011-20481-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:48494 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751699AbZFQCMw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jun 2009 22:12:52 -0400
-Content-Disposition: inline
-In-Reply-To: <4A384FE4.9090703@gmail.com>
+Received: from sh.osrg.net ([192.16.179.4]:47171 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751321AbZFQGMw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Jun 2009 02:12:52 -0400
+In-Reply-To: <1245219011-20481-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Changli Gao <xiaosuo@gmail.com>
-Cc: James.Bottomley@HansenPartnership.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com
+Cc: linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com
 
-On Wed, Jun 17, 2009 at 10:07:32AM +0800, Changli Gao wrote:
-> FIXBUG: missing comment after tristate leads to no option for
-> scsci_wait_scan when configuring.
+The SMP handler (sas_smp_request) was fixed to use the block API
+properly, so we don't need this workaround to avoid blk_put_request()
+warning.
 
-Please search the archives.  Patches along these lines have been rejected
-before.
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ block/bsg.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
+diff --git a/block/bsg.c b/block/bsg.c
+index 5358f9a..2d746e3 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -315,7 +315,6 @@ out:
+ 	blk_put_request(rq);
+ 	if (next_rq) {
+ 		blk_rq_unmap_user(next_rq->bio);
+-		next_rq->bio = NULL;
+ 		blk_put_request(next_rq);
+ 	}
+ 	return ERR_PTR(ret);
+@@ -449,7 +448,6 @@ static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
+ 		hdr->dout_resid = rq->resid_len;
+ 		hdr->din_resid = rq->next_rq->resid_len;
+ 		blk_rq_unmap_user(bidi_bio);
+-		rq->next_rq->bio = NULL;
+ 		blk_put_request(rq->next_rq);
+ 	} else if (rq_data_dir(rq) == READ)
+ 		hdr->din_resid = rq->resid_len;
+@@ -468,7 +466,6 @@ static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
+ 	blk_rq_unmap_user(bio);
+ 	if (rq->cmd != rq->__cmd)
+ 		kfree(rq->cmd);
+-	rq->bio = NULL;
+ 	blk_put_request(rq);
+ 
+ 	return ret;
 -- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+1.6.0.6
+
