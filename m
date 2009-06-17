@@ -1,55 +1,59 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH][SQUASHME] osdblk is dependent on SCSI_OSD_ULD
-Date: Wed, 17 Jun 2009 16:36:28 +0300
-Message-ID: <4A38F15C.5050204@panasas.com>
-References: <20090616165923.8ca4ddcb.sfr@canb.auug.org.au>	<4A37CC79.5000907@oracle.com>	<4A38E55E.7050006@panasas.com> <20090617231250.4aefe5e8.sfr@canb.auug.org.au>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: [PATCH][SQUASHME] osdblk is dependent on SCSI_OSD_ULD
+Date: Wed, 17 Jun 2009 23:49:19 +1000
+Message-ID: <20090617234919.dd6e5983.sfr@canb.auug.org.au>
+References: <20090616165923.8ca4ddcb.sfr@canb.auug.org.au>
+	<4A37CC79.5000907@oracle.com>
+	<4A38E55E.7050006@panasas.com>
+	<20090617231250.4aefe5e8.sfr@canb.auug.org.au>
+	<4A38F15C.5050204@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20090617231250.4aefe5e8.sfr@canb.auug.org.au>
-Sender: linux-next-owner@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>, Jeff Garzik <jeff@garzik.org>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Wed__17_Jun_2009_23_49_19_+1000_+6aQ7i/TNBnA+MS/"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from chilli.pcug.org.au ([203.10.76.44]:47783 "EHLO smtps.tip.net.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756072AbZFQNtX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Jun 2009 09:49:23 -0400
+In-Reply-To: <4A38F15C.5050204@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dunlap@oracle.com>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
 
-I will be squashing the below patch into the osdblk patch and will
-rebase the "linux-next" branch. (No one is dependent on this branch
-so there is no reason not too)
+--Signature=_Wed__17_Jun_2009_23_49_19_+1000_+6aQ7i/TNBnA+MS/
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
----
-Stephen Rothwell wrote:
-When
-CONFIG_BLK_DEV_OSD=y
-CONFIG_SCSI_OSD_INITIATOR=y
-\# CONFIG_SCSI_OSD_ULD is not set
+Hi Boaz,
 
-build fails with:
-drivers/built-in.o: In function `class_osdblk_remove':
-osdblk.c:(.text+0x55376): undefined reference to `osduld_put_device'
-drivers/built-in.o: In function `class_osdblk_add':
-osdblk.c:(.text+0x5564d): undefined reference to `osduld_path_lookup'
-osdblk.c:(.text+0x5584d): undefined reference to `osduld_put_device'
+On Wed, 17 Jun 2009 16:36:28 +0300 Boaz Harrosh <bharrosh@panasas.com> wrot=
+e:
+>
+> Stephen Rothwell wrote:
+> When
+> CONFIG_BLK_DEV_OSD=3Dy
+> CONFIG_SCSI_OSD_INITIATOR=3Dy
+> \# CONFIG_SCSI_OSD_ULD is not set
 
-Fix by setting the proper dependency for this driver
+Actually it was Randy Dunlap.
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/block/Kconfig |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
 
-diff --git a/drivers/block/Kconfig b/drivers/block/Kconfig
-index 2f55a4b..1d886e0 100644
---- a/drivers/block/Kconfig
-+++ b/drivers/block/Kconfig
-@@ -300,7 +300,7 @@ config BLK_DEV_NBD
- 
- config BLK_DEV_OSD
- 	tristate "OSD object-as-blkdev support"
--	depends on SCSI_OSD_INITIATOR
-+	depends on SCSI_OSD_ULD
- 	---help---
- 	  Saying Y or M here will allow the exporting of a single SCSI
- 	  OSD (object-based storage) object as a Linux block device.
--- 
-1.6.2.1
+--Signature=_Wed__17_Jun_2009_23_49_19_+1000_+6aQ7i/TNBnA+MS/
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAko49F8ACgkQjjKRsyhoI8yU/wCfaV0LpwpZKTraLrgXmBm8CPWO
+o1QAn02zYblA05SsQfAE24HmmmAYyoi5
+=zoTO
+-----END PGP SIGNATURE-----
+
+--Signature=_Wed__17_Jun_2009_23_49_19_+1000_+6aQ7i/TNBnA+MS/--
