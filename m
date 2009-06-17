@@ -1,41 +1,46 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 1/5] qla2xxx: Fixed a bug in number of response queue creation logic.
-Date: Wed, 17 Jun 2009 10:30:28 -0700
-Message-ID: <1245259832-8595-2-git-send-email-andrew.vasquez@qlogic.com>
-References: <1245259832-8595-1-git-send-email-andrew.vasquez@qlogic.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH 0/3] update blacklist matching to be usable by the
+ transport classes
+Date: Wed, 17 Jun 2009 15:00:44 -0400
+Message-ID: <1245265244.8585.94.camel@mulgrave.site>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:16588 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759070AbZFQRac (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jun 2009 13:30:32 -0400
-In-Reply-To: <1245259832-8595-1-git-send-email-andrew.vasquez@qlogic.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:38360 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932677AbZFQTAo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Jun 2009 15:00:44 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by bedivere.hansenpartnership.com (Postfix) with ESMTP id 936ED8EE10E
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2009 12:00:47 -0700 (PDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+	by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id YGF2GqqsQyRB for <linux-scsi@vger.kernel.org>;
+	Wed, 17 Jun 2009 12:00:47 -0700 (PDT)
+Received: from [192.168.10.224] (newmulgrave.ext.hansenpartnership.com [192.168.10.224])
+	by bedivere.hansenpartnership.com (Postfix) with ESMTP id 343638EE0F1
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2009 12:00:47 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Anirban Chakraborty <anirban.chakraborty@qlogic.com>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-From: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
+Since the discovery of a problem with Information Unit transfers on an
+Ultrium tape, we need a way of blacklisting the tape.  Unfortunately,
+the current blacklist mechanism is embedded in scsi_devinfo.c and isn't
+amenable to modification. This patch series
 
-Cc: stable@kernel.org
-Signed-off-by: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_os.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+1/3: Fixes the problem with devinfo so that the transport classes can
+use it.  The interface is deliberately in scsi_priv.h so the hosts can't
+use it
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index dcf0116..f0396e7 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1663,7 +1663,7 @@ skip_pio:
- 		/* queue 0 uses two msix vectors */
- 		if (ql2xmultique_tag) {
- 			cpus = num_online_cpus();
--			ha->max_rsp_queues = (ha->msix_count - 1 - cpus) ?
-+			ha->max_rsp_queues = (ha->msix_count - 1 > cpus) ?
- 				(cpus + 1) : (ha->msix_count - 1);
- 			ha->max_req_queues = 2;
- 		} else if (ql2xmaxqueues > 1) {
--- 
-1.6.3.2.306.g4f4fa
+2/3: Updates some minor problems with the SPI transport class capability
+code (instead of believing the inquiry data, it now believes only its
+own settings)
+
+3/3: Add the ultrium tape drives to the new blacklist code.
+
+James
+
 
