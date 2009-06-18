@@ -1,76 +1,86 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] SCSI: explain the hidden scsi_wait_scan Kconfig
- variable
-Date: Thu, 18 Jun 2009 15:21:26 +0000
-Message-ID: <1245338486.7586.13.camel@mulgrave.site>
-References: <4A384FE4.9090703@gmail.com>
-	 <20090617021254.GQ19977@parisc-linux.org>
-	 <tkrat.ad6f8fb712020451@s5r6.in-berlin.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13572] New: hdparm -W1 /dev/sda causes oops and hard lockup
+Date: Thu, 18 Jun 2009 16:05:30 GMT
+Message-ID: <bug-13572-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:45420 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754907AbZFRPV1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Jun 2009 11:21:27 -0400
-In-Reply-To: <tkrat.ad6f8fb712020451@s5r6.in-berlin.de>
+Received: from demeter.kernel.org ([140.211.167.39]:32884 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755228AbZFRQF2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Jun 2009 12:05:28 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5IG5U9l002644
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Jun 2009 16:05:30 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Matthew Wilcox <matthew@wil.cx>, Changli Gao <xiaosuo@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed, 2009-06-17 at 12:07 +0200, Stefan Richter wrote:
-> People keep sending patches to expose CONFIG_SCSI_WAIT_SCAN as a tunable
-> item.  These patches aren't accepted upstream, so let's stop the ongoing
-> irritation of people due to this obscure and strange installed module
-> and its Kconfig option.
-> 
-> Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
-> ---
->  drivers/scsi/Kconfig |   17 ++++++++++++++++-
->  1 file changed, 16 insertions(+), 1 deletion(-)
-> 
-> Index: b/drivers/scsi/Kconfig
-> ===================================================================
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -259,10 +259,25 @@ config SCSI_SCAN_ASYNC
->  	  or async on the kernel's command line.
->  
->  config SCSI_WAIT_SCAN
-> -	tristate
-> +	tristate  # No prompt here, this is a hidden option.
+http://bugzilla.kernel.org/show_bug.cgi?id=13572
 
-Adding comments explaining this is good, I think.
-
->  	default m
->  	depends on SCSI
->  	depends on MODULES
-> +	help
-> +	  Wait until all the async scans are complete.  The idea is to use
-> +	  it in initrd/ initramfs scripts.  You modprobe it after all the
-> +	  modprobes of the root SCSI drivers and it will wait until they
-> +	  have all finished scanning their buses before allowing the boot
-> +	  to proceed.
-> +
-> +	  Of course this does not work if targets boot independently of and
-> +	  in parallel with the initiator, and/ or with transports with non-
-> +	  deterministic target discovery schemes, and/ or if a transport
-> +	  driver does not support scsi_wait_scan.
-> +
-> +	  Still, this option is not exposed as a prompt because little is
-> +	  to be gained by disabling it, whereas people who accidentally
-> +	  switch it off may wonder why their mkinitrd gets into trouble.
-
-But not a help text that can never be shown.  Turn this into a comment
-and I'll apply the patch.
-
-The reason is the fact that this could be construed as a detectable bug
-(option with help that can never be displayed) and someone with too much
-time on their hands someday might make a static checker for it.
-
-James
+           Summary: hdparm -W1 /dev/sda causes oops and hard lockup
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 2.6.30, 2.6.30-rc6
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: SCSI
+        AssignedTo: linux-scsi@vger.kernel.org
+        ReportedBy: vc@artstyle.net
+        Regression: No
 
 
+Worked in 2.6.29.
+
+[  257.940560] ata1.00: configured for UDMA/100 
+[  257.940694] ata1: EH complete 
+[  257.940799] BUG: unable to handle kernel NULL pointer dereference at
+00000228 
+[  257.940965] IP: [<c031dae3>] scsi_device_get+0x3/0x60 
+[  257.941116] *pde = 00000000  
+[  257.941224] Oops: 0000 [#2] SMP 
+[  257.941380] last sysfs file:
+/sys/devices/LNXSYSTM:00/device:00/PNP0A03:00/device:0a/PNP0C09:00/ACPI0003:00/power_supply/ACAD/online 
+[  257.941470] Modules linked in: netconsole ipt_ECN iptable_mangle xt_recent
+xt_tcpudp ipt_REJECT ipt_LOG iptable_filter ip_tables x_tables dm_mod
+usb_storage snd_intel8x0 snd_ac97_codec ac97_bus snd_pcm_oss snd_mixer_oss
+snd_pcm uhci_hcd ehci_hcd snd_timer snd i2c_i801 rsrc_nonstatic e100 psmouse
+mousedev soundcore rtc_cmos snd_page_alloc i2c_core usbcore pcmcia_core mii
+rtc_core rtc_lib evdev intel_agp 8250_pnp(-) intel_rng rng_core agpgart sonypi
+[last unloaded: parport]
+[  257.943760]  
+[  257.943825] Pid: 937, comm: scsi_eh_0 Tainted: G      D   
+(2.6.30+vc+ipmi+ow #2) PCG-R505TL(UC)       
+[  257.943905] EIP: 0060:[<c031dae3>] EFLAGS: 00010007 CPU: 0 
+[  257.943982] EIP is at scsi_device_get+0x3/0x60 
+[  257.944051] EAX: fffffff8 EBX: fffffff8 ECX: 00008484 EDX: 00000246 
+[  257.944123] ESI: fffffff8 EDI: cb9ac400 EBP: 00000000 ESP: cb9d4f68 
+[  257.944192]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068 
+[  257.944262] Process scsi_eh_0 (pid: 937, ti=cb9d4000 task=cb9cd860
+task.ti=cb9d4000) 
+[  257.944337] Stack: 
+[  257.944394]  cb9ac400 c031dcaa 00000246 00000293 cb9ac400 cb9d4fc0 00000000
+c0322c93 
+[  257.944415]  00000000 00000086 cb82cfb0 cb824d20 00000001 cb9cdae8 cb9d4fc0
+00000000 
+[  257.944415]  00000003 cb824d2c cb9ac444 cb9ac454 c01230d0
+[  257.944415] Call Trace: 
+[  257.944415]  [<c031dcaa>] ? __scsi_iterate_devices+0x3a/0x70 
+[  257.944415]  [<c0322c93>] ? scsi_error_handler+0xe3/0x5a0 
+[  257.944415]  [<c01230d0>] ? complete+0x40/0x60 
+[  257.944415]  [<c0322bb0>] ? scsi_error_handler+0x0/0x5a0 
+[  257.944415] Code: 24 24 c4 69 90 89 d8 e8 81 c1 eb 0d 90  90  90 c3 30 00 0c
+ff c3 74 
+[  257.944415] EIP: [<c031dae3>]  SS:ESP 0068:cb9d4f68 
+[  257.944415] ---[ end trace 962c3e68e35a750c ]--- 
+
+OOPS was collected via netconsole.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
