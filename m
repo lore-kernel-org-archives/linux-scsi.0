@@ -1,36 +1,67 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13437] found overlapping data buffer
-Date: Thu, 18 Jun 2009 09:06:51 GMT
-Message-ID: <200906180906.n5I96pA1004950@demeter.kernel.org>
-References: <bug-13437-11613@http.bugzilla.kernel.org/>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] Consolidate shared code between enic and fnic drivers.
+Date: Thu, 18 Jun 2009 11:29:47 +0200
+Message-ID: <4A3A090B.9020306@suse.de>
+References: <20090618050502.30610.69142.stgit@palito_client100.nuovasystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:36155 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754748AbZFRJGt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Jun 2009 05:06:49 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5I96pRG004951
-	for <linux-scsi@vger.kernel.org>; Thu, 18 Jun 2009 09:06:51 GMT
-In-Reply-To: <bug-13437-11613@http.bugzilla.kernel.org/>
+Received: from cantor2.suse.de ([195.135.220.15]:55877 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752320AbZFRJ3q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Jun 2009 05:29:46 -0400
+In-Reply-To: <20090618050502.30610.69142.stgit@palito_client100.nuovasystems.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Scott Feldman <scofeldm@cisco.com>
+Cc: James.Bottomley@HansenPartnership.com, davem@davemloft.net, michaelc@cs.wisc.edu, gospo@redhat.com, abjoglek@cisco.com, jeykholt@cisco.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13437
+Hi all,
 
+Scott Feldman wrote:
+> Consolidate shared code between enic and fnic drivers.
+>=20
+> [David/James, we need a little help with this one...this single patch
+> spans scsi and netdev, so we're not sure which tree/maintainer needs
+> to pick up the patch.  Please advise.  It's for 2.6.31.  The patch is
+> against linux-2.6.git.]
+>=20
+Ah, finally. I was actually waiting someone would spot this ...
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
+> The Cisco enic 10G Ethernet driver and the fnic FCoE HBA driver share
+> much of the same hardware-access code because enic and fnic devices a=
+re
+> really two functions on a converged-I/O PCIe device.  This patch
+> consolidates the shared code into one shared module, thus eliminating
+> the code duplication.  No functional changes are made by the patch.
+>=20
+> Why weren't these consolidated in the first place?  fnic went in late=
+ in
+> 2.6.30 on the scsi branch (merge exception for new drivers), and it w=
+as
+> too late to modify enic which was already included in 2.6.28.
+>=20
+Hmm. Seeing that we're getting more and more of these type of drivers
+(cf bnx2 / bnx2i / cnic, enic / fnic, and at least one other in the pip=
+e)
+one does wonder whether we should establish a separate directory for
+these kind of things.
+drivers/virtual or drivers/shared springs to mind.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-         Resolution|PATCH_ALREADY_AVAILABLE     |CODE_FIX
+Having them in the network directory is probably not the
+correct choice.
 
+Cheers,
 
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: Markus Rex, HRB 16746 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
