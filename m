@@ -1,68 +1,50 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] tmscsim: Fix big left-shifts of unsigned char
-Date: Thu, 18 Jun 2009 07:36:13 -0600
-Message-ID: <20090618133613.GA19977@parisc-linux.org>
-References: <4A3A2FA2.60005@gmail.com> <1245330204.4773.10.camel@mulgrave.site> <20090618131632.GZ19977@parisc-linux.org> <4A3A40C9.9020900@panasas.com>
+From: Ben Hutchings <bhutchings@solarflare.com>
+Subject: Re: [PATCH] Consolidate shared code between enic and fnic drivers.
+Date: Thu, 18 Jun 2009 15:03:47 +0100
+Message-ID: <1245333827.2799.6.camel@achroite>
+References: <20090618050502.30610.69142.stgit@palito_client100.nuovasystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:52129 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752112AbZFRNgL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Jun 2009 09:36:11 -0400
-Content-Disposition: inline
-In-Reply-To: <4A3A40C9.9020900@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20090618050502.30610.69142.stgit@palito_client100.nuovasystems.com>
+Sender: netdev-owner@vger.kernel.org
+To: Scott Feldman <scofeldm@cisco.com>
+Cc: James.Bottomley@HansenPartnership.com, davem@davemloft.net, michaelc@cs.wisc.edu, gospo@redhat.com, abjoglek@cisco.com, jeykholt@cisco.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Roel Kluin <roel.kluin@gmail.com>, garloff@suse.de, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-On Thu, Jun 18, 2009 at 04:27:37PM +0300, Boaz Harrosh wrote:
-> > The (unsigned) cast is short for (unsigned int) -- it doesn't mean
-> > 'cast to an unsigned version of the type that it already has'.
-> > 
-> > Now, in practice what happens is:
-> > 
-> > 6.5.7:
-> > 
-> > The integer promotions are performed on each of the operands. The type
-> > of the result is that of the promoted left operand.
-> > 
+On Wed, 2009-06-17 at 22:05 -0700, Scott Feldman wrote:
+> Consolidate shared code between enic and fnic drivers.
 > 
-> Note the left operand, not the lvalue.
-
-Yes, but the *promoted* left operand.  Look at 6.3.1 again, and you'll
-see an unsigned char is promoted to int.
-
-> > so bval would be promoted from an unsigned char to a signed int, and
-> > then shifted left by 24 bits, resulting in a potentially negative number.
-> > But dc390_laststatus is an u32, so the |= converts this negative number
-> > into a positive one, leading to the same answer that would have been
-> > carried out in unsigned arithmetic.
+> [David/James, we need a little help with this one...this single patch
+> spans scsi and netdev, so we're not sure which tree/maintainer needs
+> to pick up the patch.  Please advise.  It's for 2.6.31.  The patch is
+> against linux-2.6.git.]
 > 
-> It could get dangerous in 64bit integer machines if the negative number
-> gets truncated to 32bit while converted. So if the bval was > 127
-> and we get a 64bit signed negative number what will happen then?
-
-For one, Linux doesn't support an ILP64 model.  I32LP64 and ILP32 are
-the only two models supported.
-
-If we assume support for I64, then the value 255 gets promoted to be a
-64-bit signed integer, and then shifted left by 24 bits.  The sign bit
-is way up at 63, so it doesn't become negative.
-
-Then it'll be ORed with the u32.  The u32 gets promoted to an s64 for
-the operation, the OR is done in 64-bit arithmetic, then truncated back
-down to u32 for the assignment.  Again, I don't see the problem.
-
-> > So you're right (the cast isn't needed) for the wrong reason ;-)
+> The Cisco enic 10G Ethernet driver and the fnic FCoE HBA driver share
+> much of the same hardware-access code because enic and fnic devices are
+> really two functions on a converged-I/O PCIe device.  This patch
+> consolidates the shared code into one shared module, thus eliminating
+> the code duplication.  No functional changes are made by the patch.
 > 
-> Are you sure. It looks we need the cast
+> Why weren't these consolidated in the first place?  fnic went in late in
+> 2.6.30 on the scsi branch (merge exception for new drivers), and it was
+> too late to modify enic which was already included in 2.6.28.
+> 
+> The changes are as follows:
+> 
+>   o a new module vnic which is shared between fnic and enic
+[...]
 
-I'm going to need to see a better argument than that before I'm convinced ;-)
+Please use a less generic name, like "cisco_vnic".  Solarflare is also
+using the term vNIC to refer to its hardware virtualisation features and
+I wouldn't be surprised if this term came to be used generically in
+future .
+
+Ben.
 
 -- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Ben Hutchings, Senior Software Engineer, Solarflare Communications
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
+
