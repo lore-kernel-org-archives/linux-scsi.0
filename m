@@ -1,43 +1,76 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] tmscsim: Fix big left-shifts of unsigned char
-Date: Thu, 18 Jun 2009 08:55:38 -0600
-Message-ID: <20090618145538.GC19977@parisc-linux.org>
-References: <4A3A2FA2.60005@gmail.com> <1245330204.4773.10.camel@mulgrave.site> <20090618131632.GZ19977@parisc-linux.org> <4A3A40C9.9020900@panasas.com> <20090618133613.GA19977@parisc-linux.org> <1245336342.7586.4.camel@mulgrave.site>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] SCSI: explain the hidden scsi_wait_scan Kconfig
+ variable
+Date: Thu, 18 Jun 2009 15:21:26 +0000
+Message-ID: <1245338486.7586.13.camel@mulgrave.site>
+References: <4A384FE4.9090703@gmail.com>
+	 <20090617021254.GQ19977@parisc-linux.org>
+	 <tkrat.ad6f8fb712020451@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:54521 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751399AbZFROzg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Jun 2009 10:55:36 -0400
-Content-Disposition: inline
-In-Reply-To: <1245336342.7586.4.camel@mulgrave.site>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:45420 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754907AbZFRPV1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Jun 2009 11:21:27 -0400
+In-Reply-To: <tkrat.ad6f8fb712020451@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Roel Kluin <roel.kluin@gmail.com>, garloff@suse.de, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Matthew Wilcox <matthew@wil.cx>, Changli Gao <xiaosuo@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-On Thu, Jun 18, 2009 at 02:45:42PM +0000, James Bottomley wrote:
-> On Thu, 2009-06-18 at 07:36 -0600, Matthew Wilcox wrote:
-> > For one, Linux doesn't support an ILP64 model.  I32LP64 and ILP32 are
-> > the only two models supported.
+On Wed, 2009-06-17 at 12:07 +0200, Stefan Richter wrote:
+> People keep sending patches to expose CONFIG_SCSI_WAIT_SCAN as a tunable
+> item.  These patches aren't accepted upstream, so let's stop the ongoing
+> irritation of people due to this obscure and strange installed module
+> and its Kconfig option.
 > 
-> Heh ... embedded is easy to forget.  I believe, for reasons I have had
-> explained at length but understandably don't wish to go through again,
-> Sony has an IP32L64 model for the PS3 which causes all sorts of erm
-> problems.
+> Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+> ---
+>  drivers/scsi/Kconfig |   17 ++++++++++++++++-
+>  1 file changed, 16 insertions(+), 1 deletion(-)
+> 
+> Index: b/drivers/scsi/Kconfig
+> ===================================================================
+> --- a/drivers/scsi/Kconfig
+> +++ b/drivers/scsi/Kconfig
+> @@ -259,10 +259,25 @@ config SCSI_SCAN_ASYNC
+>  	  or async on the kernel's command line.
+>  
+>  config SCSI_WAIT_SCAN
+> -	tristate
+> +	tristate  # No prompt here, this is a hidden option.
 
-And they compile the kernel in that mode?  I'd not heard of that before.
-Not that it makes any difference to this case ... but I suppose we
-mostly assume that a pointer fits in an unsigned long, and rarely assume
-vice-versa.
+Adding comments explaining this is good, I think.
 
-I know Windows supports an IL32P64 mode, and IRIX had an ILP64 mode,
-but this is the first I've heard of an IP32L64 mode.  There's no limits
-to the craziness some people will do, I suppose.
+>  	default m
+>  	depends on SCSI
+>  	depends on MODULES
+> +	help
+> +	  Wait until all the async scans are complete.  The idea is to use
+> +	  it in initrd/ initramfs scripts.  You modprobe it after all the
+> +	  modprobes of the root SCSI drivers and it will wait until they
+> +	  have all finished scanning their buses before allowing the boot
+> +	  to proceed.
+> +
+> +	  Of course this does not work if targets boot independently of and
+> +	  in parallel with the initiator, and/ or with transports with non-
+> +	  deterministic target discovery schemes, and/ or if a transport
+> +	  driver does not support scsi_wait_scan.
+> +
+> +	  Still, this option is not exposed as a prompt because little is
+> +	  to be gained by disabling it, whereas people who accidentally
+> +	  switch it off may wonder why their mkinitrd gets into trouble.
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+But not a help text that can never be shown.  Turn this into a comment
+and I'll apply the patch.
+
+The reason is the fact that this could be construed as a detectable bug
+(option with help that can never be displayed) and someone with too much
+time on their hands someday might make a static checker for it.
+
+James
+
+
