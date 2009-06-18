@@ -1,72 +1,98 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 0/3] scsi_dh: Make scsi device handler modules
- automatically inserted
-Date: Thu, 18 Jun 2009 17:48:26 -0500
-Message-ID: <1245365306.4286.27.camel@mulgrave.site>
-References: <20090427180609.22758.93035.sendpatchset@chandra-ubuntu>
-	 <4A369320.2080202@redhat.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [Suspected SPAM] Re: [PATCH] fc-transport: BSG clean-up
+ changes for normal and timeout completions (scsi-post-merge tree)
+Date: Fri, 19 Jun 2009 08:27:34 +0900
+Message-ID: <20090619082733Y.fujita.tomonori@lab.ntt.co.jp>
+References: <9A4AF066-850F-4EC0-A4A7-9850C73632E4@qlogic.com>
+	<20090618093311K.fujita.tomonori@lab.ntt.co.jp>
+	<58607277-D587-4B56-AB2F-361B486FAEBC@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41927 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758510AbZFRXFy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Jun 2009 19:05:54 -0400
-In-Reply-To: <4A369320.2080202@redhat.com>
+Received: from sh.osrg.net ([192.16.179.4]:51432 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753439AbZFRX1k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Jun 2009 19:27:40 -0400
+In-Reply-To: <58607277-D587-4B56-AB2F-361B486FAEBC@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Peter Jones <pjones@redhat.com>
-Cc: Chandra Seetharaman <sekharan@us.ibm.com>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, hare@suse.de
+To: giridhar.malavali@qlogic.com
+Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com
 
-On Mon, 2009-06-15 at 14:29 -0400, Peter Jones wrote:
-> On 04/27/2009 02:06 PM, Chandra Seetharaman wrote:
-> > Hello,
-> > 
-> > Currently, SCSI targets doesn't have modalias support. It wasn't an issue
-> > until SCSI device handler came along.
-> > 
-> > We want the SCSI device handler modules to be insmodded automatically
-> > when the specific SCSI targets are probed and found.
-> > 
-> > This set of patches adds the modalias support for SCSI targets and
-> > also makes the relevant changes to SCSI device handler modules to 
-> > make use of it.
-> > 
-> > Applies cleanly on 2.6.30-rc3 and is tested on the same.
-> > 
-> > Please review and consider this for inclusion.
-> > 
-> > Originally sent on March 17 2009 (http://marc.info/?l=linux-scsi&m=123734001009654&w=2).
-> > 
-> > Resending after testing on 2.6.30-rc3 and with an ack from Hannes.
+On Thu, 18 Jun 2009 12:05:24 -0700
+Giridhar Malavali <giridhar.malavali@qlogic.com> wrote:
+
+> >>  /**
+> >>   * fc_bsg_job_timeout - handler for when a bsg request timesout
+> >>   * @req:	request that timed out
+> >> @@ -3471,19 +3479,10 @@ fc_bsg_job_timeout(struct request *req)
+> >>  				"abort failed with status %d\n", err);
+> >>  	}
+> >>
+> >> -	if (!done) {
+> >> -		spin_lock_irqsave(&job->job_lock, flags);
+> >> -		job->ref_cnt--;
+> >> -		spin_unlock_irqrestore(&job->job_lock, flags);
+> >> -		fc_destroy_bsgjob(job);
+> >> -	}
+> >> -
+> >>  	/* the blk_end_sync_io() doesn't check the error */
+> >>  	return BLK_EH_HANDLED;
+> >
+> > I think that you need to return a proper value here; see my previous
+> > patch. If a job is done, we need to return BLK_EH_NOT_HANDLED here;
+> > otherwise the block layer calls __blk_complete_request for the job
+> > (and later we call blk_complete_request for the same job).
+> >
+> > The rest looks fine by me.
 > 
-> Was there ever any followup to this?
+> static void blk_rq_timed_out(struct request *req)
+> {
+>          struct request_queue *q = req->q;
+>          enum blk_eh_timer_return ret;
+> 
+>          ret = q->rq_timed_out_fn(req);
+>          switch (ret) {
+>          case BLK_EH_HANDLED:
+>                  __blk_complete_request(req);
+>                  break;
+>          case BLK_EH_RESET_TIMER:
+>                  blk_clear_rq_complete(req);
+>                  blk_add_timer(req);
+>                  break;
+>          case BLK_EH_NOT_HANDLED:
+>                  /*
+>                   * LLD handles this for now but in the future
+>                   * we can send a request msg to abort the command
+>                   * and we can move more of the generic scsi eh code to
+>                   * the blk layer.
+>                   */
+>                  break;
+> 
+> 	As per this code, the completion routine will be called only if we  
+> return BLK_EH_HANDLED from fc transport.
 
-OK, since I've forgotten where we are, let me summarise what I think the
-situation is (correct me if I misstate any of the facts):
-
-This code adds no functional value to the kernel because dm already
-autoloads the correct handlers based on the inquiry strings
-
-The only value it adds is that by overloading the module table with the
-inquiry strings, mkinitrd pulls in the correct dm handlers for the state
-the system was in.
-
-the unaddressed problems are:
-
-The kernel now tries to load the dm handler for the device dynamically
-whether or not the user is actually deploying multi-path (previously dm
-does this and if it's not loaded, that doesn't happen).  It's entirely
-unclear whether this would interfere with proprietary multipath handlers
-or even cause problems in single path systems which were designed that
-way.
-
-So as I see it, the functional benefit to a running kernel is zero and
-the functional risk exists but is unquantified, so it seems far better
-simply to solve this issue in mkinitrd.
-
-James
+Correct.
 
 
+> In our case the abort of the  
+> timed out request
+> has been completed and handled. That's the reason I returned  
+> BLK_EH_HANDLED always.
+
+Hmm, if the 'done' is not zero in fc_bsg_job_timeout, the request
+should not be aborted or completed?
+
+I mean that if (job->state_flags & FC_RQST_STATE_DONE) is true, the
+low level driver handler (such as zfcp_fc_generic_els_handler) is
+performing the request. So fc_bsg_job_timeout() can't abort or
+complete that request. fc_bsg_job_timeout() needs to ignore the
+request.
+
+
+> 	In case of returning BLK_EH_NOT_HANDLED when does the bsg job  
+> completion happens? I did see that by returning BLK_EH_NOT_HANDLED the  
+> application never got response back.
+
+The low level driver handler will call job->job_done later.
