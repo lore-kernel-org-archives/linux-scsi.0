@@ -1,55 +1,64 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] Consolidate shared code between enic and fnic drivers.
-Date: Thu, 18 Jun 2009 12:45:47 -0500
-Message-ID: <4A3A7D4B.5050204@cs.wisc.edu>
-References: <C65FC516.7747%scofeldm@cisco.com>
+From: "Michael Chan" <mchan@broadcom.com>
+Subject: Re: [PATCH -next] bnx2i/cnic: kconfig interactions
+Date: Thu, 18 Jun 2009 11:39:21 -0700
+Message-ID: <1245350361.12000.219.camel@nseg_linux_HP1.broadcom.com>
+References: <20090618145949.d933719a.sfr@canb.auug.org.au>
+ <4A3A7175.8080006@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:48242 "EHLO sabe.cs.wisc.edu"
+Received: from mms1.broadcom.com ([216.31.210.17]:4949 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753702AbZFRRq4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Jun 2009 13:46:56 -0400
-In-Reply-To: <C65FC516.7747%scofeldm@cisco.com>
+	id S1753533AbZFRSrd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Jun 2009 14:47:33 -0400
+In-Reply-To: <4A3A7175.8080006@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Scott Feldman <scofeldm@cisco.com>
-Cc: Hannes Reinecke <hare@suse.de>, James.Bottomley@HansenPartnership.com, davem@davemloft.net, gospo@redhat.com, abjoglek@cisco.com, jeykholt@cisco.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Sam Ravnborg <sam@ravnborg.org>, Anil Veerabhadrappa <anilgv@broadcom.com>, scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Scott Feldman wrote:
-> On 6/18/09 10:03 AM, "Mike Christie" <michaelc@cs.wisc.edu> wrote:
+
+On Thu, 2009-06-18 at 09:55 -0700, Randy Dunlap wrote:
+> From: Randy Dunlap <randy.dunlap@oracle.com>
 > 
->> Hannes Reinecke wrote:
->>> Hmm. Seeing that we're getting more and more of these type of drivers
->>> (cf bnx2 / bnx2i / cnic, enic / fnic, and at least one other in the pipe)
->>> one does wonder whether we should establish a separate directory for
->>> these kind of things.
->>> drivers/virtual or drivers/shared springs to mind.
->>>
->>> Having them in the network directory is probably not the
->>> correct choice.
->>>
->> I think it might sometimes. I am not sure though. I think we have two
->> models. One where this common/lib/helper/shim module requires a net
->> driver/netdev and one where it does not.
->>
->> I think vnic should go in a new dir. fnic does not require enic to
->> interact with hardare. It only needs the vnic module and vnic module
->> should not need the enic one. The fnic module does not interact with the
->> network layer's net_device.
+> NETDEVICES + NETDEV_1000 need to be enabled so that kconfig will check
+> those branches for selects and enforce "select UIO" under CNIC.
+> Otherwise the build fails with:
+
+I think this patch is better than your previous patch to select UIO.
+Other iSCSI drivers that select net drivers will probably need something
+similar too.
+
+Thanks.
+Acked-by: Michael Chan <mchan@broadcom.com>
+
 > 
-> I wanted to break vnic out into a new dir, but I couldn't figure out where
-> this new dir lives.  I considered drivers/net/vnic, drivers/net/enic/vnic,
-> and drivers/vnic.  But none seemed right so I just left the vnic files in
-> the enic dir and built two modules there.  The fnic linkage is awkward, but
-> it works.  I like Hannes suggestion of drivers/shared/vnic (or
-> drivers/shared/cisco_vnic per Ben), especially if there are other drivers in
-> the tree that could use the drivers/shared dir today.
+> ERROR: "uio_unregister_device" [drivers/net/cnic.ko] undefined!
+> ERROR: "uio_event_notify" [drivers/net/cnic.ko] undefined!
+> ERROR: "__uio_register_device" [drivers/net/cnic.ko] undefined!
+> 
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+> Cc: Sam Ravnborg <sam@ravnborg.org>
+> Cc: Anil Veerabhadrappa <anilgv@broadcom.com>
+> Cc: Michael Chan <mchan@broadcom.com>
+> ---
+>  drivers/scsi/bnx2i/Kconfig |    2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> --- linux-next-20090618.orig/drivers/scsi/bnx2i/Kconfig
+> +++ linux-next-20090618/drivers/scsi/bnx2i/Kconfig
+> @@ -1,6 +1,8 @@
+>  config SCSI_BNX2_ISCSI
+>  	tristate "Broadcom NetXtreme II iSCSI support"
+>  	select SCSI_ISCSI_ATTRS
+> +	select NETDEVICES
+> +	select NETDEV_1000
+>  	select CNIC
+>  	depends on PCI
+>  	---help---
+> 
+> 
 > 
 
-For the includes then, do we put them in include/shared/cisco_vnic or do 
-we do that EXTRA_CFLAGS += -Idrivers/shared/cisco_vnic? In that patch 
-for fnic/vnic/enic I sent a while back I did the EXTRA_CFLAGS, only 
-because that is how cxgb3/iw_cxgb3 was doing it. I am not sure if that 
-is nice or not. It was on the TODO to check it out.
+
