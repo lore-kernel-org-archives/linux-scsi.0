@@ -1,51 +1,64 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [PATCH -next] bnx2i/cnic: kconfig interactions
-Date: Thu, 18 Jun 2009 09:55:17 -0700
-Message-ID: <4A3A7175.8080006@oracle.com>
-References: <20090618145949.d933719a.sfr@canb.auug.org.au>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] Consolidate shared code between enic and fnic drivers.
+Date: Thu, 18 Jun 2009 12:03:24 -0500
+Message-ID: <4A3A735C.7090603@cs.wisc.edu>
+References: <20090618050502.30610.69142.stgit@palito_client100.nuovasystems.com> <4A3A090B.9020306@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20090618145949.d933719a.sfr@canb.auug.org.au>
-Sender: linux-next-owner@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Sam Ravnborg <sam@ravnborg.org>, Anil Veerabhadrappa <anilgv@broadcom.com>, Michael Chan <mchan@broadcom.com>, scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <4A3A090B.9020306@suse.de>
+Sender: netdev-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Scott Feldman <scofeldm@cisco.com>, James.Bottomley@HansenPartnership.com, davem@davemloft.net, gospo@redhat.com, abjoglek@cisco.com, jeykholt@cisco.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+Hannes Reinecke wrote:
+> Hi all,
+> 
+> Scott Feldman wrote:
+>> Consolidate shared code between enic and fnic drivers.
+>>
+>> [David/James, we need a little help with this one...this single patch
+>> spans scsi and netdev, so we're not sure which tree/maintainer needs
+>> to pick up the patch.  Please advise.  It's for 2.6.31.  The patch is
+>> against linux-2.6.git.]
+>>
+> Ah, finally. I was actually waiting someone would spot this ...
+> 
+>> The Cisco enic 10G Ethernet driver and the fnic FCoE HBA driver share
+>> much of the same hardware-access code because enic and fnic devices are
+>> really two functions on a converged-I/O PCIe device.  This patch
+>> consolidates the shared code into one shared module, thus eliminating
+>> the code duplication.  No functional changes are made by the patch.
+>>
+>> Why weren't these consolidated in the first place?  fnic went in late in
+>> 2.6.30 on the scsi branch (merge exception for new drivers), and it was
+>> too late to modify enic which was already included in 2.6.28.
+>>
+> Hmm. Seeing that we're getting more and more of these type of drivers
+> (cf bnx2 / bnx2i / cnic, enic / fnic, and at least one other in the pipe)
+> one does wonder whether we should establish a separate directory for
+> these kind of things.
+> drivers/virtual or drivers/shared springs to mind.
+> 
+> Having them in the network directory is probably not the
+> correct choice.
+> 
 
-NETDEVICES + NETDEV_1000 need to be enabled so that kconfig will check
-those branches for selects and enforce "select UIO" under CNIC.
-Otherwise the build fails with:
+I think it might sometimes. I am not sure though. I think we have two 
+models. One where this common/lib/helper/shim module requires a net 
+driver/netdev and one where it does not.
 
-ERROR: "uio_unregister_device" [drivers/net/cnic.ko] undefined!
-ERROR: "uio_event_notify" [drivers/net/cnic.ko] undefined!
-ERROR: "__uio_register_device" [drivers/net/cnic.ko] undefined!
+I think vnic should go in a new dir. fnic does not require enic to 
+interact with hardare. It only needs the vnic module and vnic module 
+should not need the enic one. The fnic module does not interact with the 
+  network layer's net_device.
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Sam Ravnborg <sam@ravnborg.org>
-Cc: Anil Veerabhadrappa <anilgv@broadcom.com>
-Cc: Michael Chan <mchan@broadcom.com>
----
- drivers/scsi/bnx2i/Kconfig |    2 ++
- 1 file changed, 2 insertions(+)
+For the second model, maybe cnic should be in the net dir. I am not 
+sure. Here, bnx2i needs cnic which requires bnx2 to interact with the 
+hardware. bnx2i does not directly interact with the net_device, but it 
+does through the cnic/bnx2 code. cxb3/cxgb3i implements this model too.
 
---- linux-next-20090618.orig/drivers/scsi/bnx2i/Kconfig
-+++ linux-next-20090618/drivers/scsi/bnx2i/Kconfig
-@@ -1,6 +1,8 @@
- config SCSI_BNX2_ISCSI
- 	tristate "Broadcom NetXtreme II iSCSI support"
- 	select SCSI_ISCSI_ATTRS
-+	select NETDEVICES
-+	select NETDEV_1000
- 	select CNIC
- 	depends on PCI
- 	---help---
-
-
-
--- 
-~Randy
-LPC 2009, Sept. 23-25, Portland, Oregon
-http://linuxplumbersconf.org/2009/
+I am fine with the second type of module going in a new dir too, but I 
+just wanted to make sure everyone knows the differences between the models.
