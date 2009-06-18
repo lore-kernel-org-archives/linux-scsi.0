@@ -1,50 +1,76 @@
-From: Ben Hutchings <bhutchings@solarflare.com>
-Subject: Re: [PATCH] Consolidate shared code between enic and fnic drivers.
-Date: Thu, 18 Jun 2009 15:03:47 +0100
-Message-ID: <1245333827.2799.6.camel@achroite>
-References: <20090618050502.30610.69142.stgit@palito_client100.nuovasystems.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20090618050502.30610.69142.stgit@palito_client100.nuovasystems.com>
-Sender: netdev-owner@vger.kernel.org
-To: Scott Feldman <scofeldm@cisco.com>
-Cc: James.Bottomley@HansenPartnership.com, davem@davemloft.net, michaelc@cs.wisc.edu, gospo@redhat.com, abjoglek@cisco.com, jeykholt@cisco.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/2] ibmvfc: Process async events before command responses
+Date: Thu, 18 Jun 2009 09:06:52 -0500
+Message-ID: <200906181404.n5IE4Zuf015313@d01av02.pok.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:33954 "EHLO e2.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756509AbZFROGz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Jun 2009 10:06:55 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e2.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n5IE2GYX025675
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Jun 2009 10:02:16 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n5IE6tqn255154
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Jun 2009 10:06:56 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n5IE4bBd015479
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Jun 2009 10:04:37 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
-On Wed, 2009-06-17 at 22:05 -0700, Scott Feldman wrote:
-> Consolidate shared code between enic and fnic drivers.
-> 
-> [David/James, we need a little help with this one...this single patch
-> spans scsi and netdev, so we're not sure which tree/maintainer needs
-> to pick up the patch.  Please advise.  It's for 2.6.31.  The patch is
-> against linux-2.6.git.]
-> 
-> The Cisco enic 10G Ethernet driver and the fnic FCoE HBA driver share
-> much of the same hardware-access code because enic and fnic devices are
-> really two functions on a converged-I/O PCIe device.  This patch
-> consolidates the shared code into one shared module, thus eliminating
-> the code duplication.  No functional changes are made by the patch.
-> 
-> Why weren't these consolidated in the first place?  fnic went in late in
-> 2.6.30 on the scsi branch (merge exception for new drivers), and it was
-> too late to modify enic which was already included in 2.6.28.
-> 
-> The changes are as follows:
-> 
->   o a new module vnic which is shared between fnic and enic
-[...]
 
-Please use a less generic name, like "cisco_vnic".  Solarflare is also
-using the term vNIC to refer to its hardware virtualisation features and
-I wouldn't be surprised if this term came to be used generically in
-future .
+Since async events could indicate changes to link status, or
+events which could affect decisions made during discovery, we should
+process async events prior to command completion responses.
 
-Ben.
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
 
--- 
-Ben Hutchings, Senior Software Engineer, Solarflare Communications
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+ drivers/scsi/ibmvscsi/ibmvfc.c |   20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
+diff -puN drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_async_first drivers/scsi/ibmvscsi/ibmvfc.c
+--- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_async_first	2009-06-16 13:29:55.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.c	2009-06-16 13:29:55.000000000 -0500
+@@ -2783,27 +2783,27 @@ static void ibmvfc_tasklet(void *data)
+ 
+ 	spin_lock_irqsave(vhost->host->host_lock, flags);
+ 	while (!done) {
+-		/* Pull all the valid messages off the CRQ */
+-		while ((crq = ibmvfc_next_crq(vhost)) != NULL) {
+-			ibmvfc_handle_crq(crq, vhost);
+-			crq->valid = 0;
+-		}
+-
+ 		/* Pull all the valid messages off the async CRQ */
+ 		while ((async = ibmvfc_next_async_crq(vhost)) != NULL) {
+ 			ibmvfc_handle_async(async, vhost);
+ 			async->valid = 0;
+ 		}
+ 
+-		vio_enable_interrupts(vdev);
+-		if ((crq = ibmvfc_next_crq(vhost)) != NULL) {
+-			vio_disable_interrupts(vdev);
++		/* Pull all the valid messages off the CRQ */
++		while ((crq = ibmvfc_next_crq(vhost)) != NULL) {
+ 			ibmvfc_handle_crq(crq, vhost);
+ 			crq->valid = 0;
+-		} else if ((async = ibmvfc_next_async_crq(vhost)) != NULL) {
++		}
++
++		vio_enable_interrupts(vdev);
++		if ((async = ibmvfc_next_async_crq(vhost)) != NULL) {
+ 			vio_disable_interrupts(vdev);
+ 			ibmvfc_handle_async(async, vhost);
+ 			async->valid = 0;
++		} else if ((crq = ibmvfc_next_crq(vhost)) != NULL) {
++			vio_disable_interrupts(vdev);
++			ibmvfc_handle_crq(crq, vhost);
++			crq->valid = 0;
+ 		} else
+ 			done = 1;
+ 	}
+_
