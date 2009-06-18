@@ -1,205 +1,71 @@
-From: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
-Subject: Re: PATCH: PMC-Sierra MaxRAID driver to support 6Gb/s SAS RAID
- controller
-Date: Thu, 18 Jun 2009 11:08:47 -0700 (PDT)
-Message-ID: <alpine.LNX.1.10.0906181048450.29349@rslab159.pmc-sierra.bc.ca>
-References: <alpine.LNX.1.10.0906101259500.24722@rslab159.pmc-sierra.bc.ca> <4A31319C.605@linux.vnet.ibm.com> <alpine.LNX.1.10.0906160546520.6270@rslab159.pmc-sierra.bc.ca> <4A39073C.6070202@linux.vnet.ibm.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: [PATCH update 1] SCSI: explain the hidden scsi_wait_scan Kconfig
+ variable
+Date: Thu, 18 Jun 2009 21:03:17 +0200 (CEST)
+Message-ID: <tkrat.7b61f3efc75de80e@s5r6.in-berlin.de>
+References: <4A384FE4.9090703@gmail.com>
+ <20090617021254.GQ19977@parisc-linux.org>
+ <tkrat.ad6f8fb712020451@s5r6.in-berlin.de>
+ <1245338486.7586.13.camel@mulgrave.site>
+ <20090618165926.GA13229@uranus.ravnborg.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: TEXT/PLAIN; CHARSET=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:54623 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756503AbZFRSvK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Jun 2009 14:51:10 -0400
-In-Reply-To: <4A39073C.6070202@linux.vnet.ibm.com>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:41302 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754120AbZFRTDa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Jun 2009 15:03:30 -0400
+In-Reply-To: <20090618165926.GA13229@uranus.ravnborg.org>
+Content-Disposition: INLINE
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, gregkh@suse.de, anil_ravindranath@pmc-sierra.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Sam Ravnborg <sam@ravnborg.org>, Matthew Wilcox <matthew@wil.cx>, Changli Gao <xiaosuo@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
+People keep sending patches to expose CONFIG_SCSI_WAIT_SCAN as a tunable
+item.  These patches aren't accepted upstream, so let's stop the ongoing
+irritation of people due to the unconditionally installed module and its
+Kconfig symbol.
 
-We will remove the IOCTLs(except Passthru)which driver maintains. We agree 
-that Applications can get this info from sysfs and other linux tools/utils.
+Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+---
+update 1: more precise wording
 
-Regarding our own PassThru ioctl support, we want to keep this for the 
-following reasons:
+ drivers/scsi/Kconfig |   15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
-1. We are not exposing any devices like physical disk devices, tapes. 
-we expose only RAID logical devices. If somebody wants to access these devices 
-using any linux supported utils or tools (like scsi generic) they can do that and 
-driver is not stopping it.
+Index: b/drivers/scsi/Kconfig
+===================================================================
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -259,10 +259,23 @@ config SCSI_SCAN_ASYNC
+ 	  or async on the kernel's command line.
+ 
+ config SCSI_WAIT_SCAN
+-	tristate
++	tristate  # No prompt here, this is an invisible symbol.
+ 	default m
+ 	depends on SCSI
+ 	depends on MODULES
++	help
++	  Wait until all the async scans are complete.  The idea is to use
++	  it in initrd/ initramfs scripts.  You modprobe it after all the
++	  modprobes of the root SCSI drivers and it will wait until they
++	  have all finished scanning their buses before allowing the boot
++	  to proceed.  (This method is not applicable if targets boot
++	  independently in parallel with the initiator, or with transports
++	  with non-deterministic target discovery schemes, or if a transport
++	  driver does not support scsi_wait_scan.)
++
++	  This symbol is not exposed as a prompt because little is to be
++	  gained by disabling it, whereas people who accidentally switch it
++	  off may wonder why their mkinitrd gets into trouble.
+ 
+ menu "SCSI Transports"
+ 	depends on SCSI
 
-2. But we want our PMC-Sierra RAID management application to send passthru 
-commands using our own defined passthru ioctl. As part of this passthru 
-IOCTL our application collects or sends data which are PMC-sierra specific 
-and have a value add for our product.
+-- 
+Stefan Richter
+-=====-==--= -==- =--=-
+http://arcgraph.de/sr/
 
-3. Our PMC-Sierra RAID management application is a closed source 
-application which is provided as a binary only. iprutils is a open source 
-appliction
-
-
-On Wed, 17 Jun 2009, Brian King wrote:
-
-> Anil Ravindranath wrote:
-> >>> +/*
-> >>> + * Supporting user-level control interface through IOCTL commands.
-> >>> + * pmcraid_major - major number to use
-> >>> + * pmcraid_minor - minor number(s) to use
-> >>> + */
-> >>> +static unsigned int pmcraid_major;
-> >>> +static struct class *pmcraid_class;
-> >>> +DECLARE_BITMAP(pmcraid_minor, PMCRAID_MAX_ADAPTERS);
-> >> New IOCTL interfaces are generally not acceptable in a new driver. Some alternative
-> >> interfaces include sysfs, netlink, and debugfs. Refer to the ipr driver for
-> >> an example of avoiding using IOCTLs. Additional comments below on how to
-> >> remove the dependency.
-> >>
-> > 
-> > 
-> > 1.We want to have a single RAID management Appliction interface to support 
-> > multiple wide range of OS platforms. IOCTL is the best approach as this 
-> > interface is available in all OS platforms.
-> 
-> This can also be accomplished with an OS abstraction layer in the management
-> application.
-> 
-> 
-> > 2.Also we have commands which requires additional command parameters 
-> > which need to be passed down to FW and we think IOCTL is best approach to send 
-> > these parameters down field by field. We didn't find any other cleaner way 
-> > to pass these additional command parameters seperately from the usual 
-> > data buffer.
-> > 
-> > 3. we chose IOCTL as we want our Application interface to have full  
-> > control of filling in the fields(like FW specific headers) as passthru to driver.
-> 
-> The ipr driver has similar requirements, but after taking a good look at
-> what the user space management application required, I was able to use SG_IO to
-> send these commands to either the adapter itself or the associated disks or disk
-> arrays. I'm not sure if you can do this or not, but I would encourage you to take
-> a look at it. Here are some of the advantages of this approach:
-> 
-> 1. No need to duplicate any error handling for these commands. SCSI core handles
->    timeouts and error recovery like all other commands.
-> 2. Reduces code in the driver. All commands now come through queuecommand.
-> 3. scsi_block_requests holds off these commands when blocked like all other commands
-> 4. All commands flow through one path rather than having a side door which allows
->    you to send commands not only to the adapter but also the disks, if I read the code
->    correctly.
-> 5. No need to worry about host or device queue depths being exceeded
-> 
-> 
-> > Question:
-> > 
-> > Below I see a bunch of inputs regarding using netlink. 
-> > 
-> > For all driver to appl async events processing we chose SIGIO approach 
-> > followed by an ioctl to collect the data from driver. 
-> > 
-> > Is it okay if we stick to SIGIO way or should we change it to netlink?
-> 
-> The part that looks ugly with the SIGIO implementation to me is the fact
-> that you have the 5 second delay after an AEN occurs, waiting for the user
-> applications to read the buffer. In my experience delays like this often cause
-> problems. If the system is very heavily loaded 5 seconds may not be long enough.
-> Knowing the best time to use is always the tricky part. 
-> 
-> Using an interface like netlink would allow you to just fire the data off
-> to userspace and forget about it. Any applications registered to receive
-> the notifications would receive them and the driver would not need to care.
-> 
-> In the ipr driver I have a similar requirement, but don't actually send any data
-> back up to userspace. I simply generate a KOBJ_CHANGE kobject_uevent. The user space
-> apps then trigger on that to go figure out what changed. If you use kobject_uevent_env
-> you can also pass some data up to the application to make figuring this out easier.
-> 
-> 
-> >>> +static int pmcraid_error_handler(struct pmcraid_cmd *cmd)
-> >>> +{
-> >>> +	struct scsi_cmnd *scsi_cmd = cmd->scsi_cmd;
-> >>> +	struct pmcraid_resource_entry *res = scsi_cmd->device->hostdata;
-> >>> +	struct pmcraid_instance *pinstance = cmd->drv_inst;
-> >>> +	struct pmcraid_ioasa *ioasa = &cmd->ioa_cb->ioasa;
-> >>> +	u32 ioasc = le32_to_cpu(ioasa->ioasc);
-> >>> +	u32 masked_ioasc = ioasc & PMCRAID_IOASC_SENSE_MASK;
-> >>> +
-> >>> +	if (!res) {
-> >>> +		pmcraid_info("resource pointer is NULL\n");
-> >>> +		return 0;
-> >>> +	}
-> >> There seems to be a fair amount of code here that runs without locks that reads
-> >> and writes shared data structures which has me concerned that you could have
-> >> some very hard to track down bugs in the future...
-> >>
-> > If you are refering to the above code(pmcraid_error_code), I don't see a 
-> > reason why need a lock here.
-> 
-> I guess I wasn't referring to this patch of code in particular, just speaking in
-> general. One example would be in the ioctl path. There you make a bunch of checks
-> of the state of the adapter without holding any locks, then proceed to build and
-> send the command. From the time you last check the state of the adapter to
-> the point where you actually send the command to the adapter you could have
-> taken an error interrupt and be in the process of resetting the adapter. Not sure
-> what happens if you issue an MMIO on this hardware while you are resetting it,
-> I know there is plenty of hardware that doesn't like this.
-> 
-> 
-> >>> +static ssize_t pmcraid_show_drv_version(
-> >>> +	struct device *dev,
-> >>> +	struct device_attribute *attr,
-> >>> +	char *buf
-> >>> +)
-> >>> +{
-> >>> +	return snprintf(buf, PAGE_SIZE, "version: %s, build date: %s\n",
-> >>> +			PMCRAID_DRIVER_VERSION, PMCRAID_DRIVER_DATE);
-> >>> +}
-> >>> +
-> >>> +static struct device_attribute pmcraid_driver_version_attr = {
-> >>> +	.attr = {
-> >>> +		 .name = "drv_version",
-> >>> +		 .mode = S_IRUGO,
-> >>> +		 },
-> >>> +	.show = pmcraid_show_drv_version,
-> >> Should be able to just use MODULE_VERSION instead.
-> >>
-> > we just kept so that if somebody looks and wants to know. We have used 
-> > MODULE_VERSION also.
-> 
-> Since you are using MODULE_VERSION, this information is already available
-> in /sys/module/pmcraid/version, so this becomes redundant.
-> 
-> 
-> >>> +
-> >>> +#define PMCRAID_IOCTL_GET_DRIVER_STATISTICS  \
-> >>> +	DRV_IOCTL(3, _ARGSIZE(struct pmcraid_driver_statistics))
-> >> I would think this could be implemented with device and host sysfs
-> >> attributes instead.
-> >>
-> >>> +
-> >>> +#define PMCRAID_IOCTL_GET_ADAPTER_ID         \
-> >>> +	DRV_IOCTL(4, _ARGSIZE(union pmcraid_adapter_id))
-> >> A scsi host sysfs attribute should work here
-> >>
-> >>> +
-> >>> +#define PMCRAID_IOCTL_RESET_ADAPTER          \
-> >>> +	DRV_IOCTL(5, sizeof(struct pmcraid_ioctl_header))
-> >> A writable sysfs file should work for this
-> >>
-> > 
-> > Since our Appl needs this info thru IOCTLs we are using this.
-> 
-> The advantage of using sdev_attrs and shost_attrs for these
-> is that allows the information to be available to the user without
-> the need of special utilities. 
-> 
-> -Brian
-> 
-> -- 
-> Brian King
-> Linux on Power Virtualization
-> IBM Linux Technology Center
-> 
-> 
-> 
