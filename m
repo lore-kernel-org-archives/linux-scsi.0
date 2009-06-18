@@ -1,44 +1,124 @@
-From: walt <w41ter@gmail.com>
-Subject: Re: Question about scsi device names
-Date: Wed, 17 Jun 2009 12:56:00 -0700
-Message-ID: <h1bhod$d1$1@ger.gmane.org>
-References: <h0s7tv$d8f$1@ger.gmane.org> <a43edf1b0906161235h124f3ca0y6f62419c38fcaa84@mail.gmail.com> <h199nr$g7a$1@ger.gmane.org> <20090617141958.GB22727@mars.virtualiron.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] fc-transport: BSG clean-up changes for normal and
+ timeout completions (scsi-post-merge tree)
+Date: Thu, 18 Jun 2009 09:33:20 +0900
+Message-ID: <20090618093311K.fujita.tomonori@lab.ntt.co.jp>
+References: <9A4AF066-850F-4EC0-A4A7-9850C73632E4@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:50630 "EHLO ciao.gmane.org"
+Received: from sh.osrg.net ([192.16.179.4]:40803 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753074AbZFQT4H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Jun 2009 15:56:07 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1MH1Eu-0004bL-Av
-	for linux-scsi@vger.kernel.org; Wed, 17 Jun 2009 19:56:08 +0000
-Received: from adsl-69-234-185-122.dsl.irvnca.pacbell.net ([69.234.185.122])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2009 19:56:08 +0000
-Received: from w41ter by adsl-69-234-185-122.dsl.irvnca.pacbell.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2009 19:56:08 +0000
-In-Reply-To: <20090617141958.GB22727@mars.virtualiron.com>
+	id S1752277AbZFRAd0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Jun 2009 20:33:26 -0400
+In-Reply-To: <9A4AF066-850F-4EC0-A4A7-9850C73632E4@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: giridhar.malavali@qlogic.com
+Cc: James.Bottomley@HansenPartnership.com, James.Smart@Emulex.Com, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com
 
-Konrad Rzeszutek wrote:
-> On Tue, Jun 16, 2009 at 04:26:58PM -0700, walt wrote:
+On Wed, 17 Jun 2009 09:31:30 -0700
+Giridhar Malavali <giridhar.malavali@qlogic.com> wrote:
 
->> The kernel chooses the root partition based on its own value of rdev,
->
-> Which on most distros is the initrd image (/dev/ram0)?
->
-> You _need_ to have an initrd image. Then rdev points to (1,0 -
-> /dev/ram0) and executes the /init process which takes care of scaning
-> the disks for the labels and pivots in a root filesystem depending on the label
-> (or the LVM if that is there).
+> 
+> Registered the softirq_done function for BSG request since this is  
+> requried by the block layer using block level
+> request timeout functionality. This function will be called by the  
+> block layer as part of time out clean process to release the  BSG  
+> request.
+> 
+> Moved some of the BSG request completion activities to softirq_done  
+> routine to take care of both normal and timout completions.
+> 
+> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-Excellent, thanks very much.  This is the first time in many years I've
-had to worry about a vaguely defined root partition, so I forgot about
-initrd.
+The patch seems to be malformed to me.
 
+
+>   drivers/scsi/scsi_transport_fc.c |   37 ++++++++++++++++++ 
+> +------------------
+>   1 files changed, 19 insertions(+), 18 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/ 
+> scsi_transport_fc.c
+> index 3f64d93..453d9e6 100644
+> --- a/drivers/scsi/scsi_transport_fc.c
+> +++ b/drivers/scsi/scsi_transport_fc.c
+> @@ -3397,7 +3397,6 @@ fc_destroy_bsgjob(struct fc_bsg_job *job)
+>   	kfree(job);
+>   }
+> 
+> -
+>   /**
+>    * fc_bsg_jobdone - completion routine for bsg requests that the LLD  
+> has
+>    *                  completed
+> @@ -3408,15 +3407,10 @@ fc_bsg_jobdone(struct fc_bsg_job *job)
+>   {
+>   	struct request *req = job->req;
+>   	struct request *rsp = req->next_rq;
+> -	unsigned long flags;
+>   	int err;
+> 
+> -	spin_lock_irqsave(&job->job_lock, flags);
+> -	job->state_flags |= FC_RQST_STATE_DONE;
+> -	job->ref_cnt--;
+> -	spin_unlock_irqrestore(&job->job_lock, flags);
+> -
+>   	err = job->req->errors = job->reply->result;
+> +
+>   	if (err < 0)
+>   		/* we're only returning the result field in the reply */
+>   		job->req->sense_len = sizeof(uint32_t);
+> @@ -3433,13 +3427,27 @@ fc_bsg_jobdone(struct fc_bsg_job *job)
+>   		rsp->resid_len -= min(job->reply->reply_payload_rcv_len,
+>   				      rsp->resid_len);
+>   	}
+> +	blk_complete_request(req);
+> +}
+> +
+> +/**
+> + * fc_bsg_softirq_done - softirq done routine for destroying the bsg  
+> requests
+> + * @req:        BSG request that holds the job to be destroyed
+> + */
+> +static void fc_bsg_softirq_done(struct request *rq)
+> +{
+> +	struct fc_bsg_job *job = rq->special;
+> +	unsigned long flags;
+> 
+> -	blk_end_request_all(req, err);
+> +	spin_lock_irqsave(&job->job_lock, flags);
+> +	job->state_flags |= FC_RQST_STATE_DONE;
+> +	job->ref_cnt--;
+> +	spin_unlock_irqrestore(&job->job_lock, flags);
+> 
+> +	blk_end_request_all(rq, rq->errors);
+>   	fc_destroy_bsgjob(job);
+>   }
+> 
+> -
+>   /**
+>    * fc_bsg_job_timeout - handler for when a bsg request timesout
+>    * @req:	request that timed out
+> @@ -3471,19 +3479,10 @@ fc_bsg_job_timeout(struct request *req)
+>   				"abort failed with status %d\n", err);
+>   	}
+> 
+> -	if (!done) {
+> -		spin_lock_irqsave(&job->job_lock, flags);
+> -		job->ref_cnt--;
+> -		spin_unlock_irqrestore(&job->job_lock, flags);
+> -		fc_destroy_bsgjob(job);
+> -	}
+> -
+>   	/* the blk_end_sync_io() doesn't check the error */
+>   	return BLK_EH_HANDLED;
+
+I think that you need to return a proper value here; see my previous
+patch. If a job is done, we need to return BLK_EH_NOT_HANDLED here;
+otherwise the block layer calls __blk_complete_request for the job
+(and later we call blk_complete_request for the same job).
+
+The rest looks fine by me.
