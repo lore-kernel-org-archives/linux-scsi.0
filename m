@@ -1,98 +1,36 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [Suspected SPAM] Re: [PATCH] fc-transport: BSG clean-up
- changes for normal and timeout completions (scsi-post-merge tree)
-Date: Fri, 19 Jun 2009 08:27:34 +0900
-Message-ID: <20090619082733Y.fujita.tomonori@lab.ntt.co.jp>
-References: <9A4AF066-850F-4EC0-A4A7-9850C73632E4@qlogic.com>
-	<20090618093311K.fujita.tomonori@lab.ntt.co.jp>
-	<58607277-D587-4B56-AB2F-361B486FAEBC@qlogic.com>
+From: David Strand <dpstrand@gmail.com>
+Subject: [PATCH] mpt fusion: mptfc crash fixed
+Date: Thu, 18 Jun 2009 16:39:03 -0700
+Message-ID: <448b15030906181639u2c65f35bg611b5d5b45af0826@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:51432 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753439AbZFRX1k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Jun 2009 19:27:40 -0400
-In-Reply-To: <58607277-D587-4B56-AB2F-361B486FAEBC@qlogic.com>
+Received: from mail-yx0-f192.google.com ([209.85.210.192]:54902 "EHLO
+	mail-yx0-f192.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752534AbZFRXqj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Jun 2009 19:46:39 -0400
+Received: by yxe30 with SMTP id 30so1991903yxe.4
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Jun 2009 16:46:29 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: giridhar.malavali@qlogic.com
-Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com
+To: scsi <linux-scsi@vger.kernel.org>
 
-On Thu, 18 Jun 2009 12:05:24 -0700
-Giridhar Malavali <giridhar.malavali@qlogic.com> wrote:
+I found that if I interrupt a fibre channel link to cause a link state
+change, the mptfc driver crashes. Patch follows:
 
-> >>  /**
-> >>   * fc_bsg_job_timeout - handler for when a bsg request timesout
-> >>   * @req:	request that timed out
-> >> @@ -3471,19 +3479,10 @@ fc_bsg_job_timeout(struct request *req)
-> >>  				"abort failed with status %d\n", err);
-> >>  	}
-> >>
-> >> -	if (!done) {
-> >> -		spin_lock_irqsave(&job->job_lock, flags);
-> >> -		job->ref_cnt--;
-> >> -		spin_unlock_irqrestore(&job->job_lock, flags);
-> >> -		fc_destroy_bsgjob(job);
-> >> -	}
-> >> -
-> >>  	/* the blk_end_sync_io() doesn't check the error */
-> >>  	return BLK_EH_HANDLED;
-> >
-> > I think that you need to return a proper value here; see my previous
-> > patch. If a job is done, we need to return BLK_EH_NOT_HANDLED here;
-> > otherwise the block layer calls __blk_complete_request for the job
-> > (and later we call blk_complete_request for the same job).
-> >
-> > The rest looks fine by me.
-> 
-> static void blk_rq_timed_out(struct request *req)
-> {
->          struct request_queue *q = req->q;
->          enum blk_eh_timer_return ret;
-> 
->          ret = q->rq_timed_out_fn(req);
->          switch (ret) {
->          case BLK_EH_HANDLED:
->                  __blk_complete_request(req);
->                  break;
->          case BLK_EH_RESET_TIMER:
->                  blk_clear_rq_complete(req);
->                  blk_add_timer(req);
->                  break;
->          case BLK_EH_NOT_HANDLED:
->                  /*
->                   * LLD handles this for now but in the future
->                   * we can send a request msg to abort the command
->                   * and we can move more of the generic scsi eh code to
->                   * the blk layer.
->                   */
->                  break;
-> 
-> 	As per this code, the completion routine will be called only if we  
-> return BLK_EH_HANDLED from fc transport.
+diff -Nuar linux-2.6.30.vanilla/drivers/message/fusion/mptfc.c
+linux-2.6.30.new/drivers/message/fusion/mptfc.c
+--- linux-2.6.30.vanilla/drivers/message/fusion/mptfc.c	2009-06-09
+20:05:27.000000000 -0700
++++ linux-2.6.30.new/drivers/message/fusion/mptfc.c	2009-06-10
+18:23:08.000000000 -0700
+@@ -1071,7 +1071,7 @@
+ mptfc_link_status_change(struct work_struct *work)
+ {
+ 	MPT_ADAPTER             *ioc =
+-		container_of(work, MPT_ADAPTER, fc_rescan_work);
++		container_of(work, MPT_ADAPTER, fc_lsc_work);
+ 	int ii;
 
-Correct.
-
-
-> In our case the abort of the  
-> timed out request
-> has been completed and handled. That's the reason I returned  
-> BLK_EH_HANDLED always.
-
-Hmm, if the 'done' is not zero in fc_bsg_job_timeout, the request
-should not be aborted or completed?
-
-I mean that if (job->state_flags & FC_RQST_STATE_DONE) is true, the
-low level driver handler (such as zfcp_fc_generic_els_handler) is
-performing the request. So fc_bsg_job_timeout() can't abort or
-complete that request. fc_bsg_job_timeout() needs to ignore the
-request.
-
-
-> 	In case of returning BLK_EH_NOT_HANDLED when does the bsg job  
-> completion happens? I did see that by returning BLK_EH_NOT_HANDLED the  
-> application never got response back.
-
-The low level driver handler will call job->job_done later.
+ 	for (ii=0; ii < ioc->facts.NumberOfPorts; ii++)
