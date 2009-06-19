@@ -1,36 +1,28 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13572] hdparm -W1 /dev/sda causes oops and hard lockup
-Date: Fri, 19 Jun 2009 14:43:48 GMT
-Message-ID: <200906191443.n5JEhmxZ001050@demeter.kernel.org>
-References: <bug-13572-11613@http.bugzilla.kernel.org/>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH] scsi_transport_fc: fix missing kernel-doc
+Date: Fri, 19 Jun 2009 13:23:40 -0400
+Message-ID: <4A3BC99C.2050009@emulex.com>
+References: <4A3AFA7D.3060301@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:47763 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751243AbZFSOnp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jun 2009 10:43:45 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5JEhmG7001051
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Jun 2009 14:43:48 GMT
-In-Reply-To: <bug-13572-11613@http.bugzilla.kernel.org/>
+Received: from emulex.emulex.com ([138.239.112.1]:50613 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752672AbZFSRXp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jun 2009 13:23:45 -0400
+In-Reply-To: <4A3AFA7D.3060301@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13572
+Acked-by:  James Smart  <james.smart@emulex.com>
 
-
-Vladimir Prodan <vc@artstyle.net> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|RESOLVED                    |CLOSED
-
-
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Randy Dunlap wrote:
+> From: Randy Dunlap <randy.dunlap@oracle.com>
+>
+> Add missing kernel-doc notation in scsi_transport_fc.c:
+>
+>
+>   
