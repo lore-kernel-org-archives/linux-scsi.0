@@ -1,46 +1,26 @@
-From: giridhar.malavali@qlogic.com
-Subject: [PATCH 2/2] fc_transport: Selective return value from BSG timeout function
-Date: Fri, 19 Jun 2009 16:26:54 -0700
-Message-ID: <1245454014-1889-3-git-send-email-giridhar.malavali@qlogic.com>
-References: <1245454014-1889-1-git-send-email-giridhar.malavali@qlogic.com>
+From: "Paul Lung (paul.lung@loglogic.com)" <Paul.Lung@loglogic.com>
+Subject: How To Get WWN and Device Mapping
+Date: Fri, 19 Jun 2009 16:54:04 -0700
+Message-ID: <D9D8963FC28A1C49BBF5EE152BE9763601278B8276@CBA0EXBE01.CBA0.centerbeam.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:57598 "EHLO mx.mv.qlogic.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752278AbZFSXcq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Jun 2009 19:32:46 -0400
-In-Reply-To: <1245454014-1889-1-git-send-email-giridhar.malavali@qlogic.com>
+Received: from smtp6.centerbeam.com ([64.95.134.54]:4160 "EHLO
+	SMTP6.centerbeam.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042AbZFTAER convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jun 2009 20:04:17 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Hi,
 
-The return value from BSG timout function should be based on the state of the BSG job. This helps
-block layer to take selective actions to clean up BSG job.
+I'm using 2.6.25.14 kernel with the qla2xxx driver turned on for a SAN, and I tried to use SCLI from QLogic to get the linux device->wwn mapping. However, SCLI does not seem to be able to detect any LUNs with the driver in 2.6.25 kernel. I then found that doing a scsi_id on a device(say, ./block/sde)  will give me the wwn, with an extra number in the front. However, further research seems to indicate that scsi_id does not always give back the wwn. It's is totally dependent on the physical device being queried. 
 
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/scsi/scsi_transport_fc.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+So, is there any way to reliably get the WWN of a linux device? The qla2xxx driver must have gotten the wwn of all the drives on the SAN. Is this information "published" anywhere?
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 453d9e6..140c50c 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -3480,7 +3480,10 @@ fc_bsg_job_timeout(struct request *req)
- 	}
- 
- 	/* the blk_end_sync_io() doesn't check the error */
--	return BLK_EH_HANDLED;
-+	if (done)
-+		return BLK_EH_NOT_HANDLED;
-+	else
-+		return BLK_EH_HANDLED;
- }
- 
- static int
--- 
-1.6.2.rc1.30.gd43c
+Thank you very much for your time.
 
+Paul Lung
