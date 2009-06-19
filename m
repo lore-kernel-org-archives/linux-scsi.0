@@ -1,46 +1,42 @@
-From: Peter Jones <pjones@redhat.com>
-Subject: Re: [PATCH 0/3] scsi_dh: Make scsi device handler modules automatically
- inserted
-Date: Fri, 19 Jun 2009 14:58:48 -0400
-Message-ID: <4A3BDFE8.3090003@redhat.com>
-References: <20090427180609.22758.93035.sendpatchset@chandra-ubuntu>	 <4A369320.2080202@redhat.com> <1245365306.4286.27.camel@mulgrave.site>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: Re: [PATCH 0/3] scsi_dh: Make scsi device handler modules
+	automatically inserted
+Date: Fri, 19 Jun 2009 12:37:14 -0700
+Message-ID: <1245440234.7393.36.camel@chandra-ubuntu>
+References: <20090427180609.22758.93035.sendpatchset@chandra-ubuntu>
+	 <4A369320.2080202@redhat.com>  <1245365306.4286.27.camel@mulgrave.site>
+Reply-To: sekharan@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:56549 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751632AbZFSS6y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Jun 2009 14:58:54 -0400
+Received: from e37.co.us.ibm.com ([32.97.110.158]:51838 "EHLO
+	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751021AbZFSTfN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jun 2009 15:35:13 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e37.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n5JJYWTT020660
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Jun 2009 13:34:32 -0600
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n5JJZE3O252178
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Jun 2009 13:35:14 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n5JJZD3e013960
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Jun 2009 13:35:13 -0600
 In-Reply-To: <1245365306.4286.27.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Chandra Seetharaman <sekharan@us.ibm.com>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, hare@suse.de
+Cc: Peter Jones <pjones@redhat.com>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, hare@suse.de
 
-On 06/18/2009 06:48 PM, James Bottomley wrote:
-> On Mon, 2009-06-15 at 14:29 -0400, Peter Jones wrote:
->> On 04/27/2009 02:06 PM, Chandra Seetharaman wrote:
->>> Hello,
->>>
->>> Currently, SCSI targets doesn't have modalias support. It wasn't an issue
->>> until SCSI device handler came along.
->>>
->>> We want the SCSI device handler modules to be insmodded automatically
->>> when the specific SCSI targets are probed and found.
->>>
->>> This set of patches adds the modalias support for SCSI targets and
->>> also makes the relevant changes to SCSI device handler modules to 
->>> make use of it.
->>>
->>> Applies cleanly on 2.6.30-rc3 and is tested on the same.
->>>
->>> Please review and consider this for inclusion.
->>>
->>> Originally sent on March 17 2009 (http://marc.info/?l=linux-scsi&m=123734001009654&w=2).
->>>
->>> Resending after testing on 2.6.30-rc3 and with an ack from Hannes.
->> Was there ever any followup to this?
+Hi James,
+
+Thanks for getting back on this.
+
+On Thu, 2009-06-18 at 17:48 -0500, James Bottomley wrote:
+
+> > 
+> > Was there ever any followup to this?
 > 
 > OK, since I've forgotten where we are, let me summarise what I think the
 > situation is (correct me if I misstate any of the facts):
@@ -48,21 +44,48 @@ On 06/18/2009 06:48 PM, James Bottomley wrote:
 > This code adds no functional value to the kernel because dm already
 > autoloads the correct handlers based on the inquiry strings
 
-I don't agree here.  It adds functional value to the entire system by making the
-loading of device drivers use the same method no matter which kernel subsystem
-the driver is part of.  This is a very tangible benefit in terms of maintainability.
+First point of clarification:
 
+The main purpose of moving the device handlers from the dm-layer to scsi
+layer was that the time at which dm-layer comes in is too late.
+
+SCSI-DH was added mainly to make sure that scsi layer recognize that
+these are special devices and has to be handled differently.
+
+(Original problem was that during device probing lot of ios are sent to
+passive paths which caused boot time delays and tons of errors messages.
+These increase linearly with the number of luns and the number of
+passive paths, i.e more redundant the system is, more time it takes to
+boot and more error messages it spits out).
+
+To paraphrase, if we were willing to wait till dm layer loads
+appropriate device handler modules, there would be no need for us to
+move the device handlers to SCSI layer.
+
+With that clarification....
+
+Having device handlers in SCSI is useful _only_ if we have the
+appropriate device handler modules in initrd. Otherwise, the user will
+go thru all the sufferings (boot delay and error messages) that they
+went thru when the device handlers were in dm-layer voiding the very
+benefit of moving the handlers to SCSI layer.
+
+As of today (actually since scsi dh was in the kernel), I suggest the
+users of scsi device handler modules to create a new initrd with the
+required scsi_dh module
+(http://sources.redhat.com/lvm2/wiki/MultipathUsageGuide#head-fb3efbb82fa69ca86b7db26423c235ae6c280caa)
+
+Ideal way to solve this problem is to make sure the
+appropriate/necessary modules are built into the initrd image
+automatically (as is the case with all other devices that need a
+driver), without the user/admin doing it .
+
+Hence this patch.
+> 
 > The only value it adds is that by overloading the module table with the
 > inquiry strings, mkinitrd pulls in the correct dm handlers for the state
 > the system was in.
-
-You keep on saying this, and to me it seems very strange.  The patch does no
-"overloading" of vendor strings -- it uses them just like the PCI vendor/device ID or
-USB idVendor/idDevice.  Fundamentally they are the same thing: an identifier to
-tell us what device we're looking at.  There's no overloading here, it's just
-hooking them up to the kernel's generalized mechanism for loading modules based on
-this kind of data.
-
+> 
 > the unaddressed problems are:
 > 
 > The kernel now tries to load the dm handler for the device dynamically
@@ -72,12 +95,33 @@ this kind of data.
 > or even cause problems in single path systems which were designed that
 > way.
 
-I just don't see how this is a real concern -- the whole point of the drivers
-which we're autoloading here is to work with specific hardware that's designed to
-work in this fashion.  What's more, if that hardware is being used for single-path,
-and the driver is loaded and it decides to reconfigure to prefer a path that's not
-plugged in, surely that's a bug in the device handler driver, and should be fixed
-there, rather than blocking the auto-loading of such drivers?
+This is by design (of SCSI DH). We do want the device to be attached to
+its handler _irrespective_ of whether multipath comes along or not.
 
--- 
-        Peter
+BTW, there is _no_ infrastructure in multipath for handlers. They were
+removed from multipath when scsi dh came along. So, no worries about
+proprietary multipath handlers. Also, multipath _can_ attach a device to
+a different (SCSI) device handler if it finds that the one that is
+already attached is not the right one.
+
+SCSI DH is implemented to make accessing the devices better (as is the
+case with any device specific driver over generic one). So, the effect
+of scsi dh handler on single path system is towards betterment
+than being problematic.
+
+> So as I see it, the functional benefit to a running kernel is zero and
+> the functional risk exists but is unquantified, so it seems far better
+> simply to solve this issue in mkinitrd.
+
+I do not agree. This functionality makes the scsi devices behave the
+same way as the other devices, and hence make the system admin's life
+easier.
+
+I hope you consider this feature in a better light now :)
+
+chandra
+> 
+> James
+> 
+> 
+
