@@ -1,113 +1,52 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [Suspected SPAM] Re: [Suspected SPAM] Re: [PATCH]
- fc-transport: BSG clean-up changes for normal and timeout completions
- (scsi-post-merge tree)
-Date: Fri, 19 Jun 2009 09:52:55 +0900
-Message-ID: <20090619095255Q.fujita.tomonori@lab.ntt.co.jp>
-References: <58607277-D587-4B56-AB2F-361B486FAEBC@qlogic.com>
-	<20090619082733Y.fujita.tomonori@lab.ntt.co.jp>
-	<89F7BA77-707C-4842-8352-EFFF60F92605@qlogic.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH] scsi_transport_fc: fix missing kernel-doc
+Date: Thu, 18 Jun 2009 19:39:57 -0700
+Message-ID: <4A3AFA7D.3060301@oracle.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama50.ecl.ntt.co.jp ([129.60.39.147]:34827 "EHLO
-	tama50.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750833AbZFSBKB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Jun 2009 21:10:01 -0400
-In-Reply-To: <89F7BA77-707C-4842-8352-EFFF60F92605@qlogic.com>
+Received: from rcsinet12.oracle.com ([148.87.113.124]:46726 "EHLO
+	rgminet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752713AbZFSCnL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Jun 2009 22:43:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: giridhar.malavali@qlogic.com
-Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com
+To: scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On Thu, 18 Jun 2009 17:36:11 -0700
-Giridhar Malavali <giridhar.malavali@qlogic.com> wrote:
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-> 
-> On Jun 18, 2009, at 4:27 PM, FUJITA Tomonori wrote:
-> 
-> > On Thu, 18 Jun 2009 12:05:24 -0700
-> > Giridhar Malavali <giridhar.malavali@qlogic.com> wrote:
-> >
-> >>>> /**
-> >>>>  * fc_bsg_job_timeout - handler for when a bsg request timesout
-> >>>>  * @req:	request that timed out
-> >>>> @@ -3471,19 +3479,10 @@ fc_bsg_job_timeout(struct request *req)
-> >>>> 				"abort failed with status %d\n", err);
-> >>>> 	}
-> >>>>
-> >>>> -	if (!done) {
-> >>>> -		spin_lock_irqsave(&job->job_lock, flags);
-> >>>> -		job->ref_cnt--;
-> >>>> -		spin_unlock_irqrestore(&job->job_lock, flags);
-> >>>> -		fc_destroy_bsgjob(job);
-> >>>> -	}
-> >>>> -
-> >>>> 	/* the blk_end_sync_io() doesn't check the error */
-> >>>> 	return BLK_EH_HANDLED;
-> >>>
-> >>> I think that you need to return a proper value here; see my previous
-> >>> patch. If a job is done, we need to return BLK_EH_NOT_HANDLED here;
-> >>> otherwise the block layer calls __blk_complete_request for the job
-> >>> (and later we call blk_complete_request for the same job).
-> >>>
-> >>> The rest looks fine by me.
-> >>
-> >> static void blk_rq_timed_out(struct request *req)
-> >> {
-> >>         struct request_queue *q = req->q;
-> >>         enum blk_eh_timer_return ret;
-> >>
-> >>         ret = q->rq_timed_out_fn(req);
-> >>         switch (ret) {
-> >>         case BLK_EH_HANDLED:
-> >>                 __blk_complete_request(req);
-> >>                 break;
-> >>         case BLK_EH_RESET_TIMER:
-> >>                 blk_clear_rq_complete(req);
-> >>                 blk_add_timer(req);
-> >>                 break;
-> >>         case BLK_EH_NOT_HANDLED:
-> >>                 /*
-> >>                  * LLD handles this for now but in the future
-> >>                  * we can send a request msg to abort the command
-> >>                  * and we can move more of the generic scsi eh code  
-> >> to
-> >>                  * the blk layer.
-> >>                  */
-> >>                 break;
-> >>
-> >> 	As per this code, the completion routine will be called only if we
-> >> return BLK_EH_HANDLED from fc transport.
-> >
-> > Correct.
-> >
-> >
-> >> In our case the abort of the
-> >> timed out request
-> >> has been completed and handled. That's the reason I returned
-> >> BLK_EH_HANDLED always.
-> >
-> > Hmm, if the 'done' is not zero in fc_bsg_job_timeout, the request
-> > should not be aborted or completed?
-> >
-> > I mean that if (job->state_flags & FC_RQST_STATE_DONE) is true, the
-> > low level driver handler (such as zfcp_fc_generic_els_handler) is
-> > performing the request. So fc_bsg_job_timeout() can't abort or
-> > complete that request. fc_bsg_job_timeout() needs to ignore the
-> > request.
-> 
-> I agree, the code has to be changed to
-> if (done)
-> 	return BLK_EH_NOT_HANDLED;
-> else
-> 	return BLK_EH_HANDLED;
+Add missing kernel-doc notation in scsi_transport_fc.c:
 
-Yeah, that's exactly what my patches did here. After fixing it, you
-can add my Acked-by if you like.
+Warning(drivers/scsi/scsi_transport_fc.c:3593): No description found for parameter 'q'
+Warning(drivers/scsi/scsi_transport_fc.c:3700): No description found for parameter 'q'
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ drivers/scsi/scsi_transport_fc.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+--- linux-2.6.30-git14.orig/drivers/scsi/scsi_transport_fc.c
++++ linux-2.6.30-git14/drivers/scsi/scsi_transport_fc.c
+@@ -3584,6 +3584,7 @@ enum fc_dispatch_result {
+ 
+ /**
+  * fc_bsg_host_dispatch - process fc host bsg requests and dispatch to LLDD
++ * @q:		fc host request queue
+  * @shost:	scsi host rport attached to
+  * @job:	bsg job to be processed
+  */
+@@ -3690,6 +3691,7 @@ fc_bsg_goose_queue(struct fc_rport *rpor
+ 
+ /**
+  * fc_bsg_rport_dispatch - process rport bsg requests and dispatch to LLDD
++ * @q:		rport request queue
+  * @shost:	scsi host rport attached to
+  * @rport:	rport request destined to
+  * @job:	bsg job to be processed
 
 
-I guess that there is a race in fc pass thru support if a request is
-timed out while a low driver is performing a request. I need to look
-at it later.
+-- 
+~Randy
+LPC 2009, Sept. 23-25, Portland, Oregon
+http://linuxplumbersconf.org/2009/
