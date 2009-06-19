@@ -1,112 +1,58 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] Driver 'sd' needs updating
-Date: Thu, 18 Jun 2009 22:41:14 -0500
-Message-ID: <1245382874.11739.1.camel@mulgrave.site>
-References: <20090618075718.A768ED381D@pentland.suse.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13572] hdparm -W1 /dev/sda causes oops and hard lockup
+Date: Fri, 19 Jun 2009 14:42:50 GMT
+Message-ID: <200906191442.n5JEgoKa000775@demeter.kernel.org>
+References: <bug-13572-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:40435 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752875AbZFSDlO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Jun 2009 23:41:14 -0400
-In-Reply-To: <20090618075718.A768ED381D@pentland.suse.de>
+Received: from demeter.kernel.org ([140.211.167.39]:47761 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750928AbZFSOmu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jun 2009 10:42:50 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5JEgoJt000776
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Jun 2009 14:42:50 GMT
+In-Reply-To: <bug-13572-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, 2009-06-18 at 09:57 +0200, Hannes Reinecke wrote:
-> If a SCSI ULD driver sets blk_queue_prep_rq(), it should clean it
-> up itself on remove(), and not from the bus callbacks. This
-> removes the need to hook into bus->remove(), which should not
-> be used at the same time as driver->remove().
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> Signed-off-by: Kay Sievers <kay.sievers@vrfy.org>
-> ---
->  drivers/scsi/scsi_lib.c    |    1 +
->  drivers/scsi/scsi_priv.h   |    1 -
->  drivers/scsi/scsi_sysfs.c  |   17 -----------------
->  drivers/scsi/sd.c          |    1 +
->  drivers/scsi/sr.c          |    1 +
->  include/scsi/scsi_driver.h |    1 +
->  6 files changed, 4 insertions(+), 18 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 30f3275..f3c4089 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1207,6 +1207,7 @@ int scsi_prep_fn(struct request_queue *q, struct request *req)
->  		ret = scsi_setup_blk_pc_cmnd(sdev, req);
->  	return scsi_prep_return(q, req, ret);
->  }
-> +EXPORT_SYMBOL(scsi_prep_fn);
->  
->  /*
->   * scsi_dev_queue_ready: if we can send requests to sdev, return 1 else
-> diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-> index fbc83be..1ade801 100644
-> --- a/drivers/scsi/scsi_priv.h
-> +++ b/drivers/scsi/scsi_priv.h
-> @@ -71,7 +71,6 @@ extern int scsi_init_queue(void);
->  extern void scsi_exit_queue(void);
->  struct request_queue;
->  struct request;
-> -extern int scsi_prep_fn(struct request_queue *, struct request *);
->  extern struct kmem_cache *scsi_sdb_cache;
->  
->  /* scsi_proc.c */
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index fa4711d..91482f2 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -420,29 +420,12 @@ static int scsi_bus_resume(struct device * dev)
->  	return err;
->  }
->  
-> -static int scsi_bus_remove(struct device *dev)
-> -{
-> -	struct device_driver *drv = dev->driver;
-> -	struct scsi_device *sdev = to_scsi_device(dev);
-> -	int err = 0;
-> -
-> -	/* reset the prep_fn back to the default since the
-> -	 * driver may have altered it and it's being removed */
-> -	blk_queue_prep_rq(sdev->request_queue, scsi_prep_fn);
-> -
-> -	if (drv && drv->remove)
-> -		err = drv->remove(dev);
-> -
-> -	return 0;
-> -}
-> -
->  struct bus_type scsi_bus_type = {
->          .name		= "scsi",
->          .match		= scsi_bus_match,
->  	.uevent		= scsi_bus_uevent,
->  	.suspend	= scsi_bus_suspend,
->  	.resume		= scsi_bus_resume,
-> -	.remove		= scsi_bus_remove,
->  };
->  EXPORT_SYMBOL_GPL(scsi_bus_type);
->  
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 878b17a..93c4bed 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -2053,6 +2053,7 @@ static int sd_remove(struct device *dev)
->  	struct scsi_disk *sdkp;
->  
->  	async_synchronize_full();
-> +	blk_queue_prep_rq(sdkp->device->request_queue, scsi_prep_fn);
->  	sdkp = dev_get_drvdata(dev);
-
-This isn't really going to work ... you're using sdkp before it gets
-initialised ... did this actually get tested?
-
-James
+http://bugzilla.kernel.org/show_bug.cgi?id=13572
 
 
+Vladimir Prodan <vc@artstyle.net> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|                            |INVALID
+
+
+
+
+--- Comment #2 from Vladimir Prodan <vc@artstyle.net>  2009-06-19 14:42:49 ---
+James, thank you! You're right, it seems it was reproducible corruption of
+device list caused by some IPMI code. Sorry, I am using IPMI patches from
+http://openipmi.sf.net/ since 2004 (2.6.6) and have no problems with them until
+now. Unfinished git bisection shows that problem is around here:
+
+bad cced7d0 2009-05-19 21:51:07 +0400 [Corey Minyard] serial: Add a polled
+interface to the 8250 driver
+    9483290 2009-05-19 21:51:06 +0400 [Corey Minyard] serial: Add support for
+doing a console using the poll interface
+    5bdfc86 2009-05-19 21:51:06 +0400 [Corey Minyard] serial: Add a poll
+interface to the serial core
+ok  6acac9a 2009-05-19 21:51:05 +0400 [Corey Minyard] serial: Add circular
+buffer helpers
+    62ed3da 2009-05-19 21:51:05 +0400 [Corey Minyard] serial: Add a function to
+abstract the tty code from the drivers
+    6657022 2009-05-19 21:51:10 +0400 [Corey Minyard] ipmi_emu
+ok  af85f59 2009-05-19 21:51:10 +0400 [Corey Minyard] ipmi_si_max_busy-fixed
+
+I'll try find the cause and tell Corey about it.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
