@@ -1,63 +1,60 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: How To Get WWN and Device Mapping
-Date: Fri, 19 Jun 2009 19:21:24 -0500
-Message-ID: <1245457284.12515.13.camel@mulgrave.site>
-References: <D9D8963FC28A1C49BBF5EE152BE9763601278B8276@CBA0EXBE01.CBA0.centerbeam.com>
+From: Jaswinder Singh Rajput <jaswinder@kernel.org>
+Subject: [SCSI RESEND] scsi_transport_iscsi.c return -EOVERFLOW for Too
+ many iscsi targets
+Date: Sat, 20 Jun 2009 13:29:21 +0530
+Message-ID: <1245484761.3102.11.camel@localhost.localdomain>
+References: <1243401279.3118.2.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:34266 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752576AbZFTAVY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Jun 2009 20:21:24 -0400
-In-Reply-To: <D9D8963FC28A1C49BBF5EE152BE9763601278B8276@CBA0EXBE01.CBA0.centerbeam.com>
+Received: from hera.kernel.org ([140.211.167.34]:47845 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751938AbZFTIGl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 20 Jun 2009 04:06:41 -0400
+In-Reply-To: <1243401279.3118.2.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Paul Lung (paul.lung@loglogic.com)" <Paul.Lung@loglogic.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-
-On Fri, 2009-06-19 at 16:54 -0700, Paul Lung (paul.lung@loglogic.com)
-wrote:
-> Hi,
-> 
-> I'm using 2.6.25.14 kernel with the qla2xxx driver turned on for a
-> SAN, and I tried to use SCLI from QLogic to get the linux device->wwn
-> mapping. However, SCLI does not seem to be able to detect any LUNs
-> with the driver in 2.6.25 kernel.
-
-You'll need to ask qlogic about their tools.
-
->  I then found that doing a scsi_id on a device(say, ./block/sde)  will
-> give me the wwn, with an extra number in the front.
-
-man scsi_id will tell you what this is and why it's there.
-
->  However, further research seems to indicate that scsi_id does not
-> always give back the wwn. It's is totally dependent on the physical
-> device being queried. 
-
-For WWN this is true ... the device must export it properly via the
-correct VPD inquiry for it to be displayed ... although most fibre
-devices do nowadays.
-
-> So, is there any way to reliably get the WWN of a linux device? The
-> qla2xxx driver must have gotten the wwn of all the drives on the SAN.
-> Is this information "published" anywhere?
-
-I think you're confusing WWN and WWPN ... it's the latter the fibre has
-to know. If it's the WWPN you're after, it's the fc_transport port_name
-attribute (either of the rport or the target).
-
-James
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Ingo Molnar <mingo@elte.hu>, LKML <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
 
 
-> 
-> Thank you very much for your time.
-> 
-> Paul Lung--
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+setting err as -EOVERFLOW for Too many iscsi targets.
 
+Also fixes compiler warning for gcc 4.3.3 and gcc 4.4 :
+
+  CC      drivers/scsi/scsi_transport_iscsi.o
+drivers/scsi/scsi_transport_iscsi.c: In function =E2=80=98iscsi_add_ses=
+sion=E2=80=99:
+drivers/scsi/scsi_transport_iscsi.c:678: warning: =E2=80=98err=E2=80=99=
+ may be used uninitialized in this function
+
+Signed-off-by: Jaswinder Singh Rajput <jaswinderrajput@gmail.com>
+---
+ drivers/scsi/scsi_transport_iscsi.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_tr=
+ansport_iscsi.c
+index 0947954..fdcda7f 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -693,6 +693,7 @@ int iscsi_add_session(struct iscsi_cls_session *ses=
+sion, unsigned int target_id)
+ 						 "Too many iscsi targets. Max "
+ 						 "number of targets is %d.\n",
+ 						 ISCSI_MAX_TARGET - 1);
++			err =3D -EOVERFLOW;
+ 			goto release_host;
+ 		}
+ 	}
+--=20
+1.6.0.6
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
