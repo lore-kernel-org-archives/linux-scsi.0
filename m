@@ -1,60 +1,36 @@
-From: Jaswinder Singh Rajput <jaswinder@kernel.org>
-Subject: [SCSI RESEND] scsi_transport_iscsi.c return -EOVERFLOW for Too
- many iscsi targets
-Date: Sat, 20 Jun 2009 13:29:21 +0530
-Message-ID: <1245484761.3102.11.camel@localhost.localdomain>
-References: <1243401279.3118.2.camel@localhost.localdomain>
+From: Ravish Tayal <ravish.tayal@gmail.com>
+Subject: generic_make_request fucntion for scsi_disk
+Date: Sat, 20 Jun 2009 19:35:03 +0530
+Message-ID: <e42309110906200705j6a731ecay204969f639af5330@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:47845 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751938AbZFTIGl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 20 Jun 2009 04:06:41 -0400
-In-Reply-To: <1243401279.3118.2.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Ingo Molnar <mingo@elte.hu>, LKML <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
+
+Hello,
+
+I am debugging Filesystem code for USB mass storage devices.  I need
+help to figure out after generic_make_request how the request is
+placed to scsi disk (sd) requeset queue and than how sd qeueuecommand
+to usb_storeage thread.  (in which context, is it system call context)
 
 
-setting err as -EOVERFLOW for Too many iscsi targets.
+inside generic_make_request
 
-Also fixes compiler warning for gcc 4.3.3 and gcc 4.4 :
+1.   q = bdev_get_queue(bio->bi_bdev);  [is sd.c register queue this
+queue or any other scsi file?]
+2.     ret = q->make_request_fn(q, bio);  [which file contain this
+make_request_fn for scsi disk driver (generic)]
 
-  CC      drivers/scsi/scsi_transport_iscsi.o
-drivers/scsi/scsi_transport_iscsi.c: In function =E2=80=98iscsi_add_ses=
-sion=E2=80=99:
-drivers/scsi/scsi_transport_iscsi.c:678: warning: =E2=80=98err=E2=80=99=
- may be used uninitialized in this function
+As per my unsderanding flow is like
+Fat_writepage ->_block_write_full_page --> blkdev_writepage-->
+block_write_full_page-->submit_bh-->generic_make_request ???  (sd ??)
+----> queuecommand
 
-Signed-off-by: Jaswinder Singh Rajput <jaswinderrajput@gmail.com>
----
- drivers/scsi/scsi_transport_iscsi.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Please suggest any sorce file, link or document.
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_tr=
-ansport_iscsi.c
-index 0947954..fdcda7f 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -693,6 +693,7 @@ int iscsi_add_session(struct iscsi_cls_session *ses=
-sion, unsigned int target_id)
- 						 "Too many iscsi targets. Max "
- 						 "number of targets is %d.\n",
- 						 ISCSI_MAX_TARGET - 1);
-+			err =3D -EOVERFLOW;
- 			goto release_host;
- 		}
- 	}
---=20
-1.6.0.6
-
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+with thanks
+Ravish
