@@ -1,34 +1,24 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13594] SMART responses for SATA disks on SAS get interpreted as
- errors
-Date: Sun, 21 Jun 2009 18:55:07 GMT
-Message-ID: <200906211855.n5LIt7iU026590@demeter.kernel.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug 13594] New: SMART responses for SATA disks on SAS get
+ interpreted as errors
+Date: Sun, 21 Jun 2009 13:55:00 -0500
+Message-ID: <1245610500.4328.234.camel@mulgrave.site>
 References: <bug-13594-11613@http.bugzilla.kernel.org/>
+	 <1245610071.4328.232.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:41578 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752730AbZFUSzF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Jun 2009 14:55:05 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5LIt7Zk026591
-	for <linux-scsi@vger.kernel.org>; Sun, 21 Jun 2009 18:55:07 GMT
-In-Reply-To: <bug-13594-11613@http.bugzilla.kernel.org/>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:53617 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752242AbZFUSzC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 21 Jun 2009 14:55:02 -0400
+In-Reply-To: <1245610071.4328.232.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=3D13594
-
-
-
-
-
---- Comment #2 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org> =
- 2009-06-21 18:55:06 ---
-Reply-To: James.Bottomley@HansenPartnership.com
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
 On Sun, 2009-06-21 at 13:47 -0500, James Bottomley wrote:
 > >   [  811.091916] sd 0:0:0:0: [sda] Sense Key : Recovered Error [cur=
@@ -88,22 +78,19 @@ index f3c4089..a0235c9 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
 @@ -774,7 +774,8 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsi=
-gned int
-good_bytes)
-      * is what gets returned to the user
-      */
-     if (sense_valid && sshdr.sense_key =3D=3D RECOVERED_ERROR) {
--        if (!(req->cmd_flags & REQ_QUIET))
-+        if (!(req->cmd_flags & REQ_QUIET) &&
-+            !(sshdr.asc =3D=3D 0x00 && sshdr.ascq =3D=3D 0x1d))
-             scsi_print_sense("", cmd);
-         result =3D 0;
-         /* BLOCK_PC may have set error */
+gned int good_bytes)
+ 	 * is what gets returned to the user
+ 	 */
+ 	if (sense_valid && sshdr.sense_key =3D=3D RECOVERED_ERROR) {
+-		if (!(req->cmd_flags & REQ_QUIET))
++		if (!(req->cmd_flags & REQ_QUIET) &&
++		    !(sshdr.asc =3D=3D 0x00 && sshdr.ascq =3D=3D 0x1d))
+ 			scsi_print_sense("", cmd);
+ 		result =3D 0;
+ 		/* BLOCK_PC may have set error */
 
---=20
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Demail
-------- You are receiving this mail because: -------
-You are the assignee for the bug.--
+
+--
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
 the body of a message to majordomo@vger.kernel.org
