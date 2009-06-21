@@ -1,64 +1,110 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 13594] SMART responses for SATA disks on SAS get
- interpreted as errors
-Date: Sun, 21 Jun 2009 14:07:08 -0500
-Message-ID: <1245611228.4328.239.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13594] SMART responses for SATA disks on SAS get interpreted as
+ errors
+Date: Sun, 21 Jun 2009 20:53:37 GMT
+Message-ID: <200906212053.n5LKrbJM004461@demeter.kernel.org>
 References: <bug-13594-11613@http.bugzilla.kernel.org/>
-	 <200906211858.n5LIwS5j027520@demeter.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:37822 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752132AbZFUTHI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 21 Jun 2009 15:07:08 -0400
-In-Reply-To: <200906211858.n5LIwS5j027520@demeter.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:49066 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750780AbZFUUxe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Jun 2009 16:53:34 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5LKrbOV004462
+	for <linux-scsi@vger.kernel.org>; Sun, 21 Jun 2009 20:53:37 GMT
+In-Reply-To: <bug-13594-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org, "Moore, Eric" <Eric.Moore@lsi.com>
+To: linux-scsi@vger.kernel.org
 
-On Sun, 2009-06-21 at 18:58 +0000, bugzilla-daemon@bugzilla.kernel.org
-wrote:
+http://bugzilla.kernel.org/show_bug.cgi?id=13594
+
+
+
+
+
+--- Comment #5 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2009-06-21 20:53:36 ---
+Reply-To: dgilbert@interlog.com
+
+bugzilla-daemon@bugzilla.kernel.org wrote:
 > http://bugzilla.kernel.org/show_bug.cgi?id=13594
 > 
 > 
 > 
 > 
 > 
-> --- Comment #3 from Steinar H. Gunderson <sgunderson@bigfoot.com>  2009-06-21 18:58:28 ---
-> (In reply to comment #1)
-> > This is a message the kernel prints out on all recovered error returns
-> > (except those marked REQ_QUIET).  It's purely informational and doesn't
-> > affect return processing of the command at all, so the kernel is
-> > actually treating this as a successful completion not an error.
+> --- Comment #4 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2009-06-21 19:07:13 ---
+> Reply-To: James.Bottomley@HansenPartnership.com
 > 
-> OK.
+> On Sun, 2009-06-21 at 18:58 +0000, bugzilla-daemon@bugzilla.kernel.org
+> wrote:
+>> http://bugzilla.kernel.org/show_bug.cgi?id=13594
+>>
+>>
+>>
+>>
+>>
+>> --- Comment #3 from Steinar H. Gunderson <sgunderson@bigfoot.com>  2009-06-21 18:58:28 ---
+>> (In reply to comment #1)
+>>> This is a message the kernel prints out on all recovered error returns
+>>> (except those marked REQ_QUIET).  It's purely informational and doesn't
+>>> affect return processing of the command at all, so the kernel is
+>>> actually treating this as a successful completion not an error.
+>> OK.
+>>
+>>> So this sounds like the bug ... however, for the LSI card, this bug will
+>>> be in the SAT layer in the fusion firmware.  I can shut the kernel up by
+>>> making the recovered error processing clause look for 01/00/1D as well
+>>> as REQ_QUIET, but it won't affect this problem.
+>> I tried reporting this to the Linux fusionmpt driver people a while ago, but
+>> never received any response (thus this bug)... I guess I'm out of luck,
 > 
-> > So this sounds like the bug ... however, for the LSI card, this bug will
-> > be in the SAT layer in the fusion firmware.  I can shut the kernel up by
-> > making the recovered error processing clause look for 01/00/1D as well
-> > as REQ_QUIET, but it won't affect this problem.
+> OK, cc'd LSI people, let's see if I get better luck
 > 
-> I tried reporting this to the Linux fusionmpt driver people a while ago, but
-> never received any response (thus this bug)... I guess I'm out of luck,
+>>  then,
+>> if there's nothing that can be done for it in the kernel. It's a bit weird,
+>> though; one would believe people ran smartd on their systems and discovered
+>> this already.
+> 
+> I can guess that it's some type of firmware mode problem: either it runs
+> for SMART or it runs for normal commands, hence the hiatus.  If that's
+> true, you'd likely only see the problem in a large disk setup ... it
+> might also be possible to work around by simply quiescing the card
+> before sending down SMART commands (that would be grossly inefficient,
+> but at least devices wouldn't get errored).
 
-OK, cc'd LSI people, let's see if I get better luck
+I have just replicated the "ATA pass through information
+available" message report on a similar vintage LSI
+controller and a SATA disk with a recent smartctl
+version.
 
->  then,
-> if there's nothing that can be done for it in the kernel. It's a bit weird,
-> though; one would believe people ran smartd on their systems and discovered
-> this already.
+There is no need to report this in the kernel error log,
+as the smartmontools ATA pass-through (SCSI) command asked
+for the final state of the ATA registers and the sense
+buffer is the conduit for that information. That ASC/ASCQ
+pair basically means "you asked for them and here they
+are". [reference: sat2r07b.pdf section 12.2.5 table 107
+when CK_COND is 1]
 
-I can guess that it's some type of firmware mode problem: either it runs
-for SMART or it runs for normal commands, hence the hiatus.  If that's
-true, you'd likely only see the problem in a large disk setup ... it
-might also be possible to work around by simply quiescing the card
-before sending down SMART commands (that would be grossly inefficient,
-but at least devices wouldn't get errored).
+As for the hiccup, I have noticed that with SAS (SCSI)
+disks from Seagate there is a curious sound and a pause
+before the response to LOG SENSE SCSI command (the
+type the smartmontools uses on SCSI disks).
 
-James
+Another annoyance is that the disk must be ready (i.e.
+spun up) before MODE SENSE and LOG SENSE work, haven't
+Seagate heard of flash :-)
+SCSI standards permit that (i.e. only
+a small number of commands have to work when the disk
+is not ready) but you would think accessing metadata
+given the disk has spun up once since power up could
+be accomplished from RAM or flash.
 
+Doug Gilbert
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
