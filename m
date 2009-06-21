@@ -1,58 +1,88 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [SCSI RESEND] scsi_transport_iscsi.c return -EOVERFLOW for Too
- many iscsi targets
-Date: Sun, 21 Jun 2009 11:35:22 -0500
-Message-ID: <4A3E614A.2020300@cs.wisc.edu>
-References: <1243401279.3118.2.camel@localhost.localdomain> <1245484761.3102.11.camel@localhost.localdomain>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13594] New: SMART responses for SATA disks on SAS get
+ interpreted as errors
+Date: Sun, 21 Jun 2009 17:26:29 GMT
+Message-ID: <bug-13594-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:37624 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751333AbZFUQgz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 21 Jun 2009 12:36:55 -0400
-In-Reply-To: <1245484761.3102.11.camel@localhost.localdomain>
+Received: from demeter.kernel.org ([140.211.167.39]:36341 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751266AbZFUR00 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Jun 2009 13:26:26 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5LHQThU028527
+	for <linux-scsi@vger.kernel.org>; Sun, 21 Jun 2009 17:26:29 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jaswinder Singh Rajput <jaswinder@kernel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Ingo Molnar <mingo@elte.hu>, LKML <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On 06/20/2009 02:59 AM, Jaswinder Singh Rajput wrote:
-> setting err as -EOVERFLOW for Too many iscsi targets.
->
-> Also fixes compiler warning for gcc 4.3.3 and gcc 4.4 :
->
->    CC      drivers/scsi/scsi_transport_iscsi.o
-> drivers/scsi/scsi_transport_iscsi.c: In function =E2=80=98iscsi_add_s=
-ession=E2=80=99:
-> drivers/scsi/scsi_transport_iscsi.c:678: warning: =E2=80=98err=E2=80=99=
- may be used uninitialized in this function
->
-> Signed-off-by: Jaswinder Singh Rajput<jaswinderrajput@gmail.com>
-> ---
->   drivers/scsi/scsi_transport_iscsi.c |    1 +
->   1 files changed, 1 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_=
-transport_iscsi.c
-> index 0947954..fdcda7f 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -693,6 +693,7 @@ int iscsi_add_session(struct iscsi_cls_session *s=
-ession, unsigned int target_id)
->   						 "Too many iscsi targets. Max "
->   						 "number of targets is %d.\n",
->   						 ISCSI_MAX_TARGET - 1);
-> +			err =3D -EOVERFLOW;
->   			goto release_host;
->   		}
->   	}
+http://bugzilla.kernel.org/show_bug.cgi?id=3D13594
+
+           Summary: SMART responses for SATA disks on SAS get interpret=
+ed
+                    as errors
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 2.6.30-rc6
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: SCSI
+        AssignedTo: linux-scsi@vger.kernel.org
+        ReportedBy: sgunderson@bigfoot.com
+        Regression: No
 
 
-Acked-by: Mike Christie <michaelc@cs.wisc.edu>
---
+Hi,
+
+I just bought a LSI SAS3081E-R which I use against a Supermicro backpla=
+ne to
+drive ten Seagate SATA disks (7200.11, 750GB and 1.5GB). I'm using the
+standard Linux Fusion MPT device driver (CONFIG_FUSION_SAS) under Linux
+2.6.30-rc6. Everything seems to work pretty well, with one exception: W=
+hen I
+use SMART against the drives (say, smartctl -a /dev/sda) the kernel com=
+plains
+with:
+
+  [  811.091916] sd 0:0:0:0: [sda] Sense Key : Recovered Error [current=
+]
+[descriptor]
+  [  811.099807] Descriptor sense data with sense descriptors (in hex):
+  [  811.106175]         72 01 00 1d 00 00 00 0e 09 0c 00 00 00 00 00 0=
+0
+  [  811.113262]         00 4f 00 c2 00 50
+  [  811.117379] sd 0:0:0:0: [sda] Add. Sense: ATA pass through informa=
+tion
+available
+
+I've tried upgrading to the newest firmware (1.28.02.00, 05-MAY-2009), =
+but
+all that changed is that the hex dump was added to the error message.
+
+Whenever this happens, it appears like all the disks =E2=80=9Chiccup=E2=
+=80=9D and the kernel
+loses contact with the controller for a small while. If too many of the=
+se
+happen at once, eventually disks start falling off RAIDs, and the entir=
+e
+machine goes down. It looks to me as if these messages should simply no=
+t be
+treated as errors by the kernel -- smartctl explicitly asks for a respo=
+nse even
+if the command doesn't fail (by setting CK_COND), so the response proba=
+bly
+shouldn't be taken as an error.
+
+--=20
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Demail
+------- You are receiving this mail because: -------
+You are the assignee for the bug.--
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
 the body of a message to majordomo@vger.kernel.org
