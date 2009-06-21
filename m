@@ -1,32 +1,23 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13594] SMART responses for SATA disks on SAS get interpreted as
- errors
-Date: Sun, 21 Jun 2009 20:53:37 GMT
-Message-ID: <200906212053.n5LKrbJM004461@demeter.kernel.org>
-References: <bug-13594-11613@http.bugzilla.kernel.org/>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [Bug 13594] SMART responses for SATA disks on SAS get interpreted
+ as errors
+Date: Sun, 21 Jun 2009 16:53:29 -0400
+Message-ID: <4A3E9DC9.3000007@interlog.com>
+References: <bug-13594-11613@http.bugzilla.kernel.org/> <200906211907.n5LJ7D51030300@demeter.kernel.org>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:49066 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750780AbZFUUxe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Jun 2009 16:53:34 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5LKrbOV004462
-	for <linux-scsi@vger.kernel.org>; Sun, 21 Jun 2009 20:53:37 GMT
-In-Reply-To: <bug-13594-11613@http.bugzilla.kernel.org/>
+Received: from firefly.infotech.no ([82.134.31.146]:50381 "EHLO
+	elrond.bb.infotech.no" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751694AbZFUUxf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Jun 2009 16:53:35 -0400
+In-Reply-To: <200906211907.n5LJ7D51030300@demeter.kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=13594
-
-
-
-
-
---- Comment #5 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2009-06-21 20:53:36 ---
-Reply-To: dgilbert@interlog.com
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
 bugzilla-daemon@bugzilla.kernel.org wrote:
 > http://bugzilla.kernel.org/show_bug.cgi?id=13594
@@ -103,8 +94,3 @@ given the disk has spun up once since power up could
 be accomplished from RAM or flash.
 
 Doug Gilbert
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
