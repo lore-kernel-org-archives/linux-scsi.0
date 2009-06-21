@@ -1,23 +1,34 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 13594] New: SMART responses for SATA disks on SAS get
- interpreted as errors
-Date: Sun, 21 Jun 2009 13:47:51 -0500
-Message-ID: <1245610071.4328.232.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13594] SMART responses for SATA disks on SAS get interpreted as
+ errors
+Date: Sun, 21 Jun 2009 18:48:00 GMT
+Message-ID: <200906211848.n5LIm0oJ023534@demeter.kernel.org>
 References: <bug-13594-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:44576 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752770AbZFUSrx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 21 Jun 2009 14:47:53 -0400
+Received: from demeter.kernel.org ([140.211.167.39]:36758 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753352AbZFUSr5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Jun 2009 14:47:57 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5LIm0OI023535
+	for <linux-scsi@vger.kernel.org>; Sun, 21 Jun 2009 18:48:00 GMT
 In-Reply-To: <bug-13594-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=3D13594
+
+
+
+
+
+--- Comment #1 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org> =
+ 2009-06-21 18:47:59 ---
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Sun, 2009-06-21 at 17:26 +0000, bugzilla-daemon@bugzilla.kernel.org
 wrote:
@@ -99,8 +110,10 @@ as REQ_QUIET, but it won't affect this problem.
 
 James
 
-
---
+--=20
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Demail
+------- You are receiving this mail because: -------
+You are the assignee for the bug.--
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
 the body of a message to majordomo@vger.kernel.org
