@@ -1,20 +1,20 @@
 From: bugzilla-daemon@bugzilla.kernel.org
 Subject: [Bug 13594] SMART responses for SATA disks on SAS get interpreted as
  errors
-Date: Sun, 21 Jun 2009 18:48:00 GMT
-Message-ID: <200906211848.n5LIm0oJ023534@demeter.kernel.org>
+Date: Sun, 21 Jun 2009 18:55:07 GMT
+Message-ID: <200906211855.n5LIt7iU026590@demeter.kernel.org>
 References: <bug-13594-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:36758 "EHLO
+Received: from demeter.kernel.org ([140.211.167.39]:41578 "EHLO
 	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753352AbZFUSr5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Jun 2009 14:47:57 -0400
+	with ESMTP id S1752730AbZFUSzF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Jun 2009 14:55:05 -0400
 Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5LIm0OI023535
-	for <linux-scsi@vger.kernel.org>; Sun, 21 Jun 2009 18:48:00 GMT
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5LIt7Zk026591
+	for <linux-scsi@vger.kernel.org>; Sun, 21 Jun 2009 18:55:07 GMT
 In-Reply-To: <bug-13594-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -26,89 +26,79 @@ http://bugzilla.kernel.org/show_bug.cgi?id=3D13594
 
 
 
---- Comment #1 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org> =
- 2009-06-21 18:47:59 ---
+--- Comment #2 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org> =
+ 2009-06-21 18:55:06 ---
 Reply-To: James.Bottomley@HansenPartnership.com
 
-On Sun, 2009-06-21 at 17:26 +0000, bugzilla-daemon@bugzilla.kernel.org
-wrote:
-> http://bugzilla.kernel.org/show_bug.cgi?id=3D13594
+On Sun, 2009-06-21 at 13:47 -0500, James Bottomley wrote:
+> >   [  811.091916] sd 0:0:0:0: [sda] Sense Key : Recovered Error [cur=
+rent]
+> > [descriptor]
+> >   [  811.099807] Descriptor sense data with sense descriptors (in h=
+ex):
+> >   [  811.106175]         72 01 00 1d 00 00 00 0e 09 0c 00 00 00 00 =
+00 00
+> >   [  811.113262]         00 4f 00 c2 00 50
+> >   [  811.117379] sd 0:0:0:0: [sda] Add. Sense: ATA pass through inf=
+ormation
+> > available
 >=20
->            Summary: SMART responses for SATA disks on SAS get interpr=
-eted
->                     as errors
->            Product: IO/Storage
->            Version: 2.5
->     Kernel Version: 2.6.30-rc6
->           Platform: All
->         OS/Version: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: SCSI
->         AssignedTo: linux-scsi@vger.kernel.org
->         ReportedBy: sgunderson@bigfoot.com
->         Regression: No
+> This is a message the kernel prints out on all recovered error return=
+s
+> (except those marked REQ_QUIET).  It's purely informational and doesn=
+'t
+> affect return processing of the command at all, so the kernel is
+> actually treating this as a successful completion not an error.
 >=20
+> > I've tried upgrading to the newest firmware (1.28.02.00, 05-MAY-200=
+9), but
+> > all that changed is that the hex dump was added to the error messag=
+e.
+> >=20
+> > Whenever this happens, it appears like all the disks =E2=80=9Chiccu=
+p=E2=80=9D and the kernel
+> > loses contact with the controller for a small while. If too many of=
+ these
+> > happen at once, eventually disks start falling off RAIDs, and the e=
+ntire
+> > machine goes down. It looks to me as if these messages should simpl=
+y not be
+> > treated as errors by the kernel -- smartctl explicitly asks for a r=
+esponse even
+> > if the command doesn't fail (by setting CK_COND), so the response p=
+robably
+> > shouldn't be taken as an error.
 >=20
-> Hi,
->=20
-> I just bought a LSI SAS3081E-R which I use against a Supermicro backp=
-lane to
-> drive ten Seagate SATA disks (7200.11, 750GB and 1.5GB). I'm using th=
-e
-> standard Linux Fusion MPT device driver (CONFIG_FUSION_SAS) under Lin=
-ux
-> 2.6.30-rc6. Everything seems to work pretty well, with one exception:=
- When I
-> use SMART against the drives (say, smartctl -a /dev/sda) the kernel c=
-omplains
-> with:
->=20
->   [  811.091916] sd 0:0:0:0: [sda] Sense Key : Recovered Error [curre=
-nt]
-> [descriptor]
->   [  811.099807] Descriptor sense data with sense descriptors (in hex=
-):
->   [  811.106175]         72 01 00 1d 00 00 00 0e 09 0c 00 00 00 00 00=
- 00
->   [  811.113262]         00 4f 00 c2 00 50
->   [  811.117379] sd 0:0:0:0: [sda] Add. Sense: ATA pass through infor=
-mation
-> available
-
-This is a message the kernel prints out on all recovered error returns
-(except those marked REQ_QUIET).  It's purely informational and doesn't
-affect return processing of the command at all, so the kernel is
-actually treating this as a successful completion not an error.
-
-> I've tried upgrading to the newest firmware (1.28.02.00, 05-MAY-2009)=
-, but
-> all that changed is that the hex dump was added to the error message.
->=20
-> Whenever this happens, it appears like all the disks =E2=80=9Chiccup=E2=
-=80=9D and the kernel
-> loses contact with the controller for a small while. If too many of t=
-hese
-> happen at once, eventually disks start falling off RAIDs, and the ent=
-ire
-> machine goes down. It looks to me as if these messages should simply =
-not be
-> treated as errors by the kernel -- smartctl explicitly asks for a res=
-ponse even
-> if the command doesn't fail (by setting CK_COND), so the response pro=
-bably
-> shouldn't be taken as an error.
-
-So this sounds like the bug ... however, for the LSI card, this bug wil=
+> So this sounds like the bug ... however, for the LSI card, this bug w=
+ill
+> be in the SAT layer in the fusion firmware.  I can shut the kernel up=
+ by
+> making the recovered error processing clause look for 01/00/1D as wel=
 l
-be in the SAT layer in the fusion firmware.  I can shut the kernel up b=
-y
-making the recovered error processing clause look for 01/00/1D as well
-as REQ_QUIET, but it won't affect this problem.
+> as REQ_QUIET, but it won't affect this problem.
+
+Actually quieting the message is trivially easy, try this.
 
 James
+
+---
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f3c4089..a0235c9 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -774,7 +774,8 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsi=
+gned int
+good_bytes)
+      * is what gets returned to the user
+      */
+     if (sense_valid && sshdr.sense_key =3D=3D RECOVERED_ERROR) {
+-        if (!(req->cmd_flags & REQ_QUIET))
++        if (!(req->cmd_flags & REQ_QUIET) &&
++            !(sshdr.asc =3D=3D 0x00 && sshdr.ascq =3D=3D 0x1d))
+             scsi_print_sense("", cmd);
+         result =3D 0;
+         /* BLOCK_PC may have set error */
 
 --=20
 Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Demail
