@@ -1,32 +1,24 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13594] SMART responses for SATA disks on SAS get interpreted as
- errors
-Date: Sun, 21 Jun 2009 19:07:13 GMT
-Message-ID: <200906211907.n5LJ7D51030300@demeter.kernel.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug 13594] SMART responses for SATA disks on SAS get
+ interpreted as errors
+Date: Sun, 21 Jun 2009 14:07:08 -0500
+Message-ID: <1245611228.4328.239.camel@mulgrave.site>
 References: <bug-13594-11613@http.bugzilla.kernel.org/>
+	 <200906211858.n5LIwS5j027520@demeter.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:47663 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752132AbZFUTHL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Jun 2009 15:07:11 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5LJ7Dhp030301
-	for <linux-scsi@vger.kernel.org>; Sun, 21 Jun 2009 19:07:13 GMT
-In-Reply-To: <bug-13594-11613@http.bugzilla.kernel.org/>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:37822 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752132AbZFUTHI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 21 Jun 2009 15:07:08 -0400
+In-Reply-To: <200906211858.n5LIwS5j027520@demeter.kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=13594
-
-
-
-
-
---- Comment #4 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2009-06-21 19:07:13 ---
-Reply-To: James.Bottomley@HansenPartnership.com
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org, "Moore, Eric" <Eric.Moore@lsi.com>
 
 On Sun, 2009-06-21 at 18:58 +0000, bugzilla-daemon@bugzilla.kernel.org
 wrote:
@@ -69,7 +61,4 @@ but at least devices wouldn't get errored).
 
 James
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+
