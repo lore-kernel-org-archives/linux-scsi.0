@@ -1,30 +1,80 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: New IDE maintainer (was Re: cmd64x: irq 14: nobody cared -
- system  	is dreadfully slow)
-Date: Mon, 22 Jun 2009 18:32:18 +0100
-Message-ID: <20090622183218.15d340d5@lxorguk.ukuu.org.uk>
-References: <20090621.141950.160759111.davem@davemloft.net>
-	<4A3FB956.6060401@garzik.org>
-	<20090622181100.43a56309@lxorguk.ukuu.org.uk>
-	<200906221921.21709.arnd@arndb.de>
+From: "Abhijeet Joglekar (abjoglek)" <abjoglek@cisco.com>
+Subject: RE: [PATCH] remove redundant BUG_ON
+Date: Mon, 22 Jun 2009 11:15:08 -0700
+Message-ID: <9E88C8678BF34240A8C61D4078A3D251017146FC@xmb-sjc-23e.amer.cisco.com>
+References: <4A3FC55E.80108@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <200906221921.21709.arnd@arndb.de>
-Sender: linux-ide-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Jeff Garzik <jeff@garzik.org>, Greg Freemyer <greg.freemyer@gmail.com>, David Miller <davem@davemloft.net>, bzolnier@gmail.com, elendil@planet.nl, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sj-iport-6.cisco.com ([171.71.176.117]:15856 "EHLO
+	sj-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752242AbZFVSPG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jun 2009 14:15:06 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <4A3FC55E.80108@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Roel Kluin <roel.kluin@gmail.com>
+Cc: linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-> Actually, m68k, m32r and h8300 currently can't use libata at all
-> for one reason or another, mostly missing support for dma-mapping.h
+> -----Original Message-----
+> From: Roel Kluin [mailto:roel.kluin@gmail.com] 
+> Sent: Monday, June 22, 2009 10:55 AM
+> To: Abhijeet Joglekar (abjoglek)
+> Cc: linux-scsi@vger.kernel.org; Andrew Morton
+> Subject: [PATCH] remove redundant BUG_ON
+> 
+> sg_count is unsigned. If negative, a wrap causes the second 
+> BUG_ON to trigger.
+> 
+> scsi_dma_map may return -ENOMEM, sg_count should be int to catch that.
+> 
+> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+> ---
+> Please use this one instead.
+> 
+> diff --git a/drivers/scsi/fnic/fnic_scsi.c 
+> b/drivers/scsi/fnic/fnic_scsi.c index eabf365..22a7cd5 100644
+> --- a/drivers/scsi/fnic/fnic_scsi.c
+> +++ b/drivers/scsi/fnic/fnic_scsi.c
+> @@ -260,7 +260,6 @@ static inline int 
+> fnic_queue_wq_copy_desc(struct fnic *fnic,
+>  	char msg[2];
+>  
+>  	if (sg_count) {
+> -		BUG_ON(sg_count < 0);
+>  		BUG_ON(sg_count > FNIC_MAX_SG_DESC_CNT);
+>  
+>  		/* For each SGE, create a device desc entry */ 
+> @@ -344,7 +343,7 @@ int fnic_queuecommand(struct scsi_cmnd 
+> *sc, void (*done)(struct scsi_cmnd *))
+>  	struct fnic *fnic;
+>  	struct vnic_wq_copy *wq;
+>  	int ret;
+> -	u32 sg_count;
+> +	int sg_count;
+>  	unsigned long flags;
+>  	unsigned long ptr;
+>  
+>
 
-That wants fixing and your ifdef patches looked a route to beat it into
-some kind of shape
+Roel,
 
-> side, it should be possible to convert almost any non-PCI ATA
-> chip to use drivers/ata/pata_platform.c or pata_of_platform.c.
+The fix looks good. If dma_map_sg() would have failed, bad things would
+happen since sg_count was u32. Good catch!
 
-The ioc4 and the ppc ones are a bit harder as they have custom DMA
-descriptor tables and stuff. The rest I agree.
+It will be better to change the sg_count parameter passed to
+fnic_queue_wq_copy_desc to int too, so that it is consistent between the
+2 functions. Do you want to add that to your patch or you want me to
+send a patch for that?
+
+The BUG_ON(sg_count < 0) can be dropped even though sg_count is an int
+now, since fnic_queuecommand() checks for sg_count less than zero after
+call to dma_map_sg.
+
+Thanks
+-- abhijeet
+
+
