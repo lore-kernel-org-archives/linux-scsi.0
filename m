@@ -1,48 +1,42 @@
-From: Roel Kluin <roel.kluin@gmail.com>
-Subject: [PATCH] remove redundant BUG_ON
-Date: Mon, 22 Jun 2009 19:54:38 +0200
-Message-ID: <4A3FC55E.80108@gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] remove redundant BUG_ON
+Date: Mon, 22 Jun 2009 11:02:58 -0500
+Message-ID: <4A3FAB32.1020704@cs.wisc.edu>
+References: <4A3FC2D7.60400@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f210.google.com ([209.85.219.210]:37625 "EHLO
-	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750866AbZFVPyD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jun 2009 11:54:03 -0400
-Received: by ewy6 with SMTP id 6so4809222ewy.37
-        for <linux-scsi@vger.kernel.org>; Mon, 22 Jun 2009 08:54:06 -0700 (PDT)
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:54027 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752397AbZFVQDm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Jun 2009 12:03:42 -0400
+In-Reply-To: <4A3FC2D7.60400@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: abjoglek@cisco.com
-Cc: linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: Roel Kluin <roel.kluin@gmail.com>
+Cc: abjoglek@cisco.com, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-sg_count is unsigned. If negative, a wrap causes the second BUG_ON to trigger.
+Roel Kluin wrote:
+> sg_count is unsigned so if negative a wrap occurs and the second BUG_ON
+> catches it.
+> 
+> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+> ---
+> diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+> index eabf365..c57cff4 100644
+> --- a/drivers/scsi/fnic/fnic_scsi.c
+> +++ b/drivers/scsi/fnic/fnic_scsi.c
+> @@ -260,7 +260,6 @@ static inline int fnic_queue_wq_copy_desc(struct fnic *fnic,
+>  	char msg[2];
+>  
+>  	if (sg_count) {
+> -		BUG_ON(sg_count < 0);
+>  		BUG_ON(sg_count > FNIC_MAX_SG_DESC_CNT);
+>  
 
-scsi_dma_map may return -ENOMEM, sg_count should be int to catch that.
-
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
----
-Please use this one instead.
-
-diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index eabf365..22a7cd5 100644
---- a/drivers/scsi/fnic/fnic_scsi.c
-+++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -260,7 +260,6 @@ static inline int fnic_queue_wq_copy_desc(struct fnic *fnic,
- 	char msg[2];
- 
- 	if (sg_count) {
--		BUG_ON(sg_count < 0);
- 		BUG_ON(sg_count > FNIC_MAX_SG_DESC_CNT);
- 
- 		/* For each SGE, create a device desc entry */
-@@ -344,7 +343,7 @@ int fnic_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
- 	struct fnic *fnic;
- 	struct vnic_wq_copy *wq;
- 	int ret;
--	u32 sg_count;
-+	int sg_count;
- 	unsigned long flags;
- 	unsigned long ptr;
- 
+I think they both could go. The shost sg tablesize is set to 
+FNIC_MAX_SG_DESC_CNT and fnic uses scsi_dma_map, so the block and scsi 
+layer should be doing the right thing. If we are worried about them, 
+then maybe we should add BUG_ONs in the common code to check for all 
+drivers.
