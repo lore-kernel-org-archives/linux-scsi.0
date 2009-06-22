@@ -1,28 +1,61 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: New IDE maintainer
-Date: Sun, 21 Jun 2009 17:20:52 -0700 (PDT)
-Message-ID: <20090621.172052.96417973.davem@davemloft.net>
-References: <20090621.155756.100422570.davem@davemloft.net>
-	<20090621.161343.181101055.davem@davemloft.net>
-	<20090622100021.a40aa1fd.sfr@canb.auug.org.au>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: New IDE maintainer (was Re: cmd64x: irq 14: nobody cared -
+	system is dreadfully slow)
+Date: Sun, 21 Jun 2009 18:53:26 -0600
+Message-ID: <20090622005326.GQ19977@parisc-linux.org>
+References: <20090621.141950.160759111.davem@davemloft.net> <20090621.155756.100422570.davem@davemloft.net> <20090621.161343.181101055.davem@davemloft.net> <200906220145.03923.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20090622100021.a40aa1fd.sfr@canb.auug.org.au>
+Content-Disposition: inline
+In-Reply-To: <200906220145.03923.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: sfr@canb.auug.org.au
-Cc: bzolnier@gmail.com, elendil@planet.nl, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: David Miller <davem@davemloft.net>, elendil@planet.nl, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Date: Mon, 22 Jun 2009 10:00:21 +1000
-
->> I've created a new IDE development tree at:
->> 
->> 	master.kernel.org:/pub/scm/linux/kernel/git/davem/ide-2.6.git
+On Mon, Jun 22, 2009 at 01:45:03AM +0200, Bartlomiej Zolnierkiewicz wrote:
+> On Monday 22 June 2009 01:13:43 David Miller wrote:
+> > From: David Miller <davem@davemloft.net>
+> > Date: Sun, 21 Jun 2009 15:57:56 -0700 (PDT)
+> > 
+> > > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > > Date: Mon, 22 Jun 2009 00:34:22 +0200
+> > > 
+> > >> Lets get over this quickly, since you seem to have such a great
+> > >> insight into running IDE layer here is a little proposition..
+> > >> 
+> > >> ACK?  [ If not than can we please get back with the program? ]
+> > > 
+> > > Acked-by: David S. Miller <davem@davemloft.net>
+> > 
+> > I'm going to treat IDE as pure legacy, rather than as competition
+> > with the PATA drivers which is what people whould be moving over to.
+> > 
+> > And more importantly I refuse to apply any driver patch that isn't
+> > actually tested on said hardware.
+> > 
+> > ide: Take over as maintainer.
 > 
-> So, do I immediately switch linux-next to this tree?  The current tree I
-> am using is empty (relative to Linus' tree).
+> Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> 
+> You have my full support (don't hesitate to ping me if you need some
+> help) and I hope that the last few years of my of work would make your
+> job relatively easy and painless.
+> 
+> I would also like to use this occasion and thank all the people who
+> have been contributing to the project during my reign.  Thanks!!
 
-If there's nothing in Bart's tree currently, I don't see why not.
+Thanks, Bart.
+
+It isn't easy to be maintainer of a subsystem that is being obsoleted
+by another.  It's even less easy to gracefully hand over maintenance,
+as you have done.  Personally, I'd love it if you could contribute to
+the ATA drivers in the future.  I think there are a number of ways they
+could stand to be improved.
+
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
