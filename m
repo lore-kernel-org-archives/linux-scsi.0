@@ -1,61 +1,44 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: New IDE maintainer (was Re: cmd64x: irq 14: nobody cared -
-	system is dreadfully slow)
-Date: Sun, 21 Jun 2009 18:53:26 -0600
-Message-ID: <20090622005326.GQ19977@parisc-linux.org>
-References: <20090621.141950.160759111.davem@davemloft.net> <20090621.155756.100422570.davem@davemloft.net> <20090621.161343.181101055.davem@davemloft.net> <200906220145.03923.bzolnier@gmail.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: New IDE maintainer (was Re: cmd64x: irq 14: nobody cared - system
+	is dreadfully slow)
+Date: Sun, 21 Jun 2009 23:39:04 -0400
+Message-ID: <87f94c370906212039sa23d49fh305d8f0d58a48d1f@mail.gmail.com>
+References: <20090621.141950.160759111.davem@davemloft.net>
+	 <200906220034.22430.bzolnier@gmail.com>
+	 <20090621.155756.100422570.davem@davemloft.net>
+	 <20090621.161343.181101055.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200906220145.03923.bzolnier@gmail.com>
+In-Reply-To: <20090621.161343.181101055.davem@davemloft.net>
 Sender: linux-ide-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: David Miller <davem@davemloft.net>, elendil@planet.nl, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: bzolnier@gmail.com, elendil@planet.nl, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jun 22, 2009 at 01:45:03AM +0200, Bartlomiej Zolnierkiewicz wrote:
-> On Monday 22 June 2009 01:13:43 David Miller wrote:
-> > From: David Miller <davem@davemloft.net>
-> > Date: Sun, 21 Jun 2009 15:57:56 -0700 (PDT)
-> > 
-> > > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > Date: Mon, 22 Jun 2009 00:34:22 +0200
-> > > 
-> > >> Lets get over this quickly, since you seem to have such a great
-> > >> insight into running IDE layer here is a little proposition..
-> > >> 
-> > >> ACK?  [ If not than can we please get back with the program? ]
-> > > 
-> > > Acked-by: David S. Miller <davem@davemloft.net>
-> > 
-> > I'm going to treat IDE as pure legacy, rather than as competition
-> > with the PATA drivers which is what people whould be moving over to.
-> > 
-> > And more importantly I refuse to apply any driver patch that isn't
-> > actually tested on said hardware.
-> > 
-> > ide: Take over as maintainer.
-> 
-> Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
-> You have my full support (don't hesitate to ping me if you need some
-> help) and I hope that the last few years of my of work would make your
-> job relatively easy and painless.
-> 
-> I would also like to use this occasion and thank all the people who
-> have been contributing to the project during my reign.  Thanks!!
+> I'm going to treat IDE as pure legacy, rather than as competition
+> with the PATA drivers which is what people whould be moving over to.
 
-Thanks, Bart.
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
+in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
 
-It isn't easy to be maintainer of a subsystem that is being obsoleted
-by another.  It's even less easy to gracefully hand over maintenance,
-as you have done.  Personally, I'd love it if you could contribute to
-the ATA drivers in the future.  I think there are a number of ways they
-could stand to be improved.
+What impact does that on Linux and its growing popularity in arm
+platforms?  I had assumed that most arm platforms were long term users
+of drivers/ide, but I have no facts to back that up.
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Greg
+--=20
+Greg Freemyer
+Head of EDD Tape Extraction and Processing team
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+=46irst 99 Days Litigation White Paper -
+http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.p=
+df
+
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
