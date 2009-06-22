@@ -1,37 +1,38 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: New IDE maintainer (was Re: cmd64x: irq 14: nobody cared -
- system 	is dreadfully slow)
-Date: Mon, 22 Jun 2009 18:11:00 +0100
-Message-ID: <20090622181100.43a56309@lxorguk.ukuu.org.uk>
-References: <20090621.141950.160759111.davem@davemloft.net>
-	<200906220034.22430.bzolnier@gmail.com>
-	<20090621.155756.100422570.davem@davemloft.net>
-	<20090621.161343.181101055.davem@davemloft.net>
-	<87f94c370906212039sa23d49fh305d8f0d58a48d1f@mail.gmail.com>
-	<4A3FB956.6060401@garzik.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: New IDE maintainer (was Re: cmd64x: irq 14: nobody cared - system
+ =?iso-8859-1?q?=09is_dreadfully?= slow)
+Date: Mon, 22 Jun 2009 19:21:20 +0200
+Message-ID: <200906221921.21709.arnd@arndb.de>
+References: <20090621.141950.160759111.davem@davemloft.net> <4A3FB956.6060401@garzik.org> <20090622181100.43a56309@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <4A3FB956.6060401@garzik.org>
-Sender: sparclinux-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Greg Freemyer <greg.freemyer@gmail.com>, David Miller <davem@davemloft.net>, bzolnier@gmail.com, elendil@planet.nl, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.171]:63611 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756091AbZFVRVa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jun 2009 13:21:30 -0400
+In-Reply-To: <20090622181100.43a56309@lxorguk.ukuu.org.uk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, Greg Freemyer <greg.freemyer@gmail.com>, David Miller <davem@davemloft.net>, bzolnier@gmail.com, elendil@planet.nl, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> There are a handful of IDE drivers not yet ported over to libata, all 
-> !x86 drivers; maybe there's an odd ARM platform or two in there, I 
-> haven't checked recently.
+On Monday 22 June 2009, Alan Cox wrote:
+> sgiioc4 is another obvious "modern machine" case. The rest are pretty
+> obscure (eg mac68K drivers and IDE VLB drivers most of which don't
+> actually work in the old IDE code even though there is code)
 
-There are several drivers that are not supported in libata (and several
-only in libata, and several that work better in one than the other for
-reasons nobody can figure sometimes)
+Actually, m68k, m32r and h8300 currently can't use libata at all
+for one reason or another, mostly missing support for dma-mapping.h
 
-Biggest legacy hanger on is the older PowerMac boxes because both people
-who planned to do the driver had the mac they were using simply die of
-old age on them.
+Microblaze and the upcoming S+Core also lack DMA support right
+now, but that should get rectified soon.
 
-sgiioc4 is another obvious "modern machine" case. The rest are pretty
-obscure (eg mac68K drivers and IDE VLB drivers most of which don't
-actually work in the old IDE code even though there is code)
+You could argue that still all of these fall into the 'obscure'
+category, of course. With just a little effort on the architecture
+side, it should be possible to convert almost any non-PCI ATA
+chip to use drivers/ata/pata_platform.c or pata_of_platform.c.
 
+	Arnd <><
