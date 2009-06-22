@@ -1,45 +1,52 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH update 2] SCSI: explain the hidden scsi_wait_scan
-	Kconfig variable
-Date: Mon, 22 Jun 2009 05:02:30 -0600
-Message-ID: <20090622110229.GR19977@parisc-linux.org>
-References: <4A384FE4.9090703@gmail.com> <20090617021254.GQ19977@parisc-linux.org> <tkrat.ad6f8fb712020451@s5r6.in-berlin.de> <1245338486.7586.13.camel@mulgrave.site> <20090618165926.GA13229@uranus.ravnborg.org> <tkrat.da2728358fccf96e@s5r6.in-berlin.de> <20090622095701.72c22150@lxorguk.ukuu.org.uk>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13594] SMART responses for SATA disks on SAS get interpreted as
+ errors
+Date: Mon, 22 Jun 2009 12:04:31 GMT
+Message-ID: <200906221204.n5MC4Vo6017700@demeter.kernel.org>
+References: <bug-13594-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:47139 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751228AbZFVLC2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jun 2009 07:02:28 -0400
-Content-Disposition: inline
-In-Reply-To: <20090622095701.72c22150@lxorguk.ukuu.org.uk>
+Received: from demeter.kernel.org ([140.211.167.39]:34600 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751022AbZFVME2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jun 2009 08:04:28 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5MC4Vd6017701
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Jun 2009 12:04:31 GMT
+In-Reply-To: <bug-13594-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, Sam Ravnborg <sam@ravnborg.org>, Changli Gao <xiaosuo@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, Jun 22, 2009 at 09:57:01AM +0100, Alan Cox wrote:
-> On Thu, 18 Jun 2009 21:03:23 +0200 (CEST)
-> Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
-> 
-> > People keep sending patches to expose CONFIG_SCSI_WAIT_SCAN as a tunable
-> > item.  These patches aren't accepted upstream, so let's stop the ongoing
-> > irritation of people due to the unconditionally installed module and its
-> > Kconfig symbol.
-> 
-> How about the other possibility. People keepmaking it tunable because it
-> makes sense for it to be tunable. Far better IMHO to make it tunable "if
-> EMBEDDED"
+http://bugzilla.kernel.org/show_bug.cgi?id=13594
 
-It doesn't make sense for it to be tunable.
 
-All it does is control whether or not scsi_wait_scan.ko is built.
-Everyone who's complained about it has been of the form "I turned off
-all modules, but this module gets built anyway".  For them, the answer
-is simple: Don't run "make modules_install".
+
+
+
+--- Comment #7 from Matthew Wilcox <matthew@wil.cx>  2009-06-22 12:04:31 ---
+On Sun, Jun 21, 2009 at 04:53:29PM -0400, Douglas Gilbert wrote:
+> As for the hiccup, I have noticed that with SAS (SCSI)
+> disks from Seagate there is a curious sound and a pause
+> before the response to LOG SENSE SCSI command (the
+> type the smartmontools uses on SCSI disks).
+>
+> Another annoyance is that the disk must be ready (i.e.
+> spun up) before MODE SENSE and LOG SENSE work, haven't
+> Seagate heard of flash :-)
+> SCSI standards permit that (i.e. only
+> a small number of commands have to work when the disk
+> is not ready) but you would think accessing metadata
+> given the disk has spun up once since power up could
+> be accomplished from RAM or flash.
+
+We've experienced similar problems at Intel with an LSI card and Intel
+SSDs (SATA, not SAS).  This issue got pushed into the 'investigate later'
+category, as we were able to just disable smartd.  I'll try and get some
+more information on this later.
 
 -- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
