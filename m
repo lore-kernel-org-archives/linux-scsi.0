@@ -1,31 +1,23 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13594] SMART responses for SATA disks on SAS get interpreted as
- errors
-Date: Mon, 22 Jun 2009 12:04:31 GMT
-Message-ID: <200906221204.n5MC4Vo6017700@demeter.kernel.org>
-References: <bug-13594-11613@http.bugzilla.kernel.org/>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [Bug 13594] SMART responses for SATA disks on SAS get
+	interpreted as errors
+Date: Mon, 22 Jun 2009 06:04:28 -0600
+Message-ID: <20090622120428.GS19977@parisc-linux.org>
+References: <bug-13594-11613@http.bugzilla.kernel.org/> <200906211907.n5LJ7D51030300@demeter.kernel.org> <4A3E9DC9.3000007@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:34600 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751022AbZFVME2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jun 2009 08:04:28 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5MC4Vd6017701
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Jun 2009 12:04:31 GMT
-In-Reply-To: <bug-13594-11613@http.bugzilla.kernel.org/>
+Received: from palinux.external.hp.com ([192.25.206.14]:32880 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751133AbZFVMEZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jun 2009 08:04:25 -0400
+Content-Disposition: inline
+In-Reply-To: <4A3E9DC9.3000007@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dgilbert@interlog.com>
+Cc: bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13594
-
-
-
-
-
---- Comment #7 from Matthew Wilcox <matthew@wil.cx>  2009-06-22 12:04:31 ---
 On Sun, Jun 21, 2009 at 04:53:29PM -0400, Douglas Gilbert wrote:
 > As for the hiccup, I have noticed that with SAS (SCSI)
 > disks from Seagate there is a curious sound and a pause
@@ -47,6 +39,7 @@ category, as we were able to just disable smartd.  I'll try and get some
 more information on this later.
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
