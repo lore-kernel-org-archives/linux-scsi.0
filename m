@@ -1,43 +1,37 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: New IDE maintainer (was Re: cmd64x: irq 14: nobody cared - system
- 	is dreadfully slow)
-Date: Mon, 22 Jun 2009 13:03:18 -0400
-Message-ID: <4A3FB956.6060401@garzik.org>
-References: <20090621.141950.160759111.davem@davemloft.net>	 <200906220034.22430.bzolnier@gmail.com>	 <20090621.155756.100422570.davem@davemloft.net>	 <20090621.161343.181101055.davem@davemloft.net> <87f94c370906212039sa23d49fh305d8f0d58a48d1f@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: New IDE maintainer (was Re: cmd64x: irq 14: nobody cared -
+ system 	is dreadfully slow)
+Date: Mon, 22 Jun 2009 18:11:00 +0100
+Message-ID: <20090622181100.43a56309@lxorguk.ukuu.org.uk>
+References: <20090621.141950.160759111.davem@davemloft.net>
+	<200906220034.22430.bzolnier@gmail.com>
+	<20090621.155756.100422570.davem@davemloft.net>
+	<20090621.161343.181101055.davem@davemloft.net>
+	<87f94c370906212039sa23d49fh305d8f0d58a48d1f@mail.gmail.com>
+	<4A3FB956.6060401@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <87f94c370906212039sa23d49fh305d8f0d58a48d1f@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: David Miller <davem@davemloft.net>, bzolnier@gmail.com, elendil@planet.nl, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <4A3FB956.6060401@garzik.org>
+Sender: sparclinux-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Greg Freemyer <greg.freemyer@gmail.com>, David Miller <davem@davemloft.net>, bzolnier@gmail.com, elendil@planet.nl, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Greg Freemyer wrote:
->> I'm going to treat IDE as pure legacy, rather than as competition
->> with the PATA drivers which is what people whould be moving over to.
-> 
->> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> What impact does that on Linux and its growing popularity in arm
-> platforms?  I had assumed that most arm platforms were long term users
-> of drivers/ide, but I have no facts to back that up.
+> There are a handful of IDE drivers not yet ported over to libata, all 
+> !x86 drivers; maybe there's an odd ARM platform or two in there, I 
+> haven't checked recently.
 
-libata already has several ARM drivers and does work on that platform in 
-general.  A great many platforms are handled by the generic 
-pata_platform driver.
+There are several drivers that are not supported in libata (and several
+only in libata, and several that work better in one than the other for
+reasons nobody can figure sometimes)
 
-There are a handful of IDE drivers not yet ported over to libata, all 
-!x86 drivers; maybe there's an odd ARM platform or two in there, I 
-haven't checked recently.
+Biggest legacy hanger on is the older PowerMac boxes because both people
+who planned to do the driver had the mac they were using simply die of
+old age on them.
 
-If there's a problem or missing functionality, just speak up...
-
-	Jeff
-
-
-
+sgiioc4 is another obvious "modern machine" case. The rest are pretty
+obscure (eg mac68K drivers and IDE VLB drivers most of which don't
+actually work in the old IDE code even though there is code)
 
