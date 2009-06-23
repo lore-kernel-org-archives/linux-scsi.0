@@ -1,60 +1,51 @@
-From: Roel Kluin <roel.kluin@gmail.com>
-Subject: [PATCH] fnic: remove redundant BUG_ONs and fix checks on unsigned
-Date: Tue, 23 Jun 2009 01:06:40 +0200
-Message-ID: <4A400E80.9020107@gmail.com>
-References: <4A3FC55E.80108@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Andy Whitcroft <apw@canonical.com>
+Subject: [PATCH 1/1] Reduce AACRAID hardware queue size
+Date: Tue, 23 Jun 2009 12:25:06 +0100
+Message-ID: <1245756306-29023-2-git-send-email-apw@canonical.com>
+References: <1245756306-29023-1-git-send-email-apw@canonical.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:33842 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758842AbZFVVGE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jun 2009 17:06:04 -0400
-Received: by ey-out-2122.google.com with SMTP id d26so506472eyd.37
-        for <linux-scsi@vger.kernel.org>; Mon, 22 Jun 2009 14:06:05 -0700 (PDT)
-In-Reply-To: <4A3FC55E.80108@gmail.com>
+Received: from adelie.canonical.com ([91.189.90.139]:32806 "EHLO
+	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752751AbZFWLZP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jun 2009 07:25:15 -0400
+In-Reply-To: <1245756306-29023-1-git-send-email-apw@canonical.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: abjoglek@cisco.com
-Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, Andrew Morton <akpm@linux-foundation.org>
+To: Adaptec OEM Raid Solutions <aacraid@adaptec.com>
+Cc: Andy Whitcroft <apw@canonical.com>, Mathias Urlichs <matthias@urlichs.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The shost sg tablesize is set to FNIC_MAX_SG_DESC_CNT and fnic uses
-scsi_dma_map, so both BUG_ONs can be removed.
+From: Mathias Urlichs <matthias@urlichs.de>
 
-scsi_dma_map may return -ENOMEM, sg_count should be int to catch that.
+BugLink: http://bugzilla.kernel.org/show_bug.cgi?id=11120
+BugLink: http://bugs.launchpad.net/bugs/249964
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+Reduce the hardware queue size for the AACRAID controller.  This controloler
+suffers adapter aborts and scsi resets under high load otherwise:
+
+    aacraid: Host adapter abort request (0,0,2,0)
+    aacraid: Host adapter abort request (0,0,3,0)
+    aacraid: Host adapter reset request. SCSI hang ?
+    aacraid: Host adapter abort request (0,0,0,0)
+
+Signed-Off-By: Mathias Urlichs <matthias@urlichs.de>
+Signed-off-by: Andy Whitcroft <apw@canonical.com>
 ---
-diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index eabf365..bfc9969 100644
---- a/drivers/scsi/fnic/fnic_scsi.c
-+++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -245,7 +245,7 @@ static inline int fnic_queue_wq_copy_desc(struct fnic *fnic,
- 					  struct vnic_wq_copy *wq,
- 					  struct fnic_io_req *io_req,
- 					  struct scsi_cmnd *sc,
--					  u32 sg_count)
-+					  int sg_count)
- {
- 	struct scatterlist *sg;
- 	struct fc_rport *rport = starget_to_rport(scsi_target(sc->device));
-@@ -260,9 +260,6 @@ static inline int fnic_queue_wq_copy_desc(struct fnic *fnic,
- 	char msg[2];
+ drivers/scsi/aacraid/aacraid.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index cdbdec9..0d5d036 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -24,7 +24,7 @@
+ #define AAC_MAX_LUN		(8)
  
- 	if (sg_count) {
--		BUG_ON(sg_count < 0);
--		BUG_ON(sg_count > FNIC_MAX_SG_DESC_CNT);
--
- 		/* For each SGE, create a device desc entry */
- 		desc = io_req->sgl_list;
- 		for_each_sg(scsi_sglist(sc), sg, sg_count, i) {
-@@ -344,7 +341,7 @@ int fnic_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
- 	struct fnic *fnic;
- 	struct vnic_wq_copy *wq;
- 	int ret;
--	u32 sg_count;
-+	int sg_count;
- 	unsigned long flags;
- 	unsigned long ptr;
+ #define AAC_MAX_HOSTPHYSMEMPAGES (0xfffff)
+-#define AAC_MAX_32BIT_SGBCOUNT	((unsigned short)256)
++#define AAC_MAX_32BIT_SGBCOUNT	((unsigned short)127)
  
+ /*
+  * These macros convert from physical channels to virtual channels
+-- 
+1.6.3.rc3.199.g24398
+
