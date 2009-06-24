@@ -1,65 +1,34 @@
-From: Abhijeet Joglekar <abjoglek@cisco.com>
-Subject: [PATCH] fnic: use DMA_BIT_MASK(nn) instead of deprecated
-	DMA_nnBIT_MASK
-Date: Wed, 24 Jun 2009 07:42:25 -0700
-Message-ID: <20090624144151.9087.71898.stgit@feynman.nuovasystems.com>
+From: Ramya Desai <ramya.desai@gmail.com>
+Subject: Asynchronous Mass storage driver
+Date: Wed, 24 Jun 2009 21:40:15 +0530
+Message-ID: <3e7aae30906240910p18cc23e9v10e5cf5b7b6cd91a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.nuovasystems.com ([67.91.200.194]:6965 "EHLO
-	feynman.nuovasystems.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752468AbZFXP0Q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Jun 2009 11:26:16 -0400
+Received: from qw-out-2122.google.com ([74.125.92.24]:12365 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752631AbZFXQKN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Jun 2009 12:10:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: abjoglek@cisco.com, robert.w.love@intel.com, jeykholt@cisco.com
+To: USB list <linux-usb@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Robert Love reported warning while building fnic_main.c:
-drivers/scsi/fnic/fnic_main.c:478: warning: `DMA_nnBIT_MASK' is deprecated.
+Dear Experts,
 
-Replaced use of DMA_nnBIT_MASK by DMA_BIT_MASK(nn)
+I am trying to develop an asynchronous mass storage driver for my custom device.
+I am using the default mass storage driver as my basis.
 
-Signed-off-by: Abhijeet Joglekar <abjoglek@cisco.com>
----
- drivers/scsi/fnic/fnic_main.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+My first question, is the completion routine the first one to be
+called if the request finishes?
 
+I wanted to my command submit to USB stack (submitURB()) code in the
+driver context and look for the another command from the upper layer.
+To do so I wanted to move the rest of the code to completion routine.
+If I return USB_STOR_TRANSPORT_GOOD in completion routine, where this
+return is going to?
 
-diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
-index a840728..2c266c0 100644
---- a/drivers/scsi/fnic/fnic_main.c
-+++ b/drivers/scsi/fnic/fnic_main.c
-@@ -473,16 +473,16 @@ static int __devinit fnic_probe(struct pci_dev *pdev,
- 	 * limitation for the device.  Try 40-bit first, and
- 	 * fail to 32-bit.
- 	 */
--	err = pci_set_dma_mask(pdev, DMA_40BIT_MASK);
-+	err = pci_set_dma_mask(pdev, DMA_BIT_MASK(40));
- 	if (err) {
--		err = pci_set_dma_mask(pdev, DMA_32BIT_MASK);
-+		err = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
- 		if (err) {
- 			shost_printk(KERN_ERR, fnic->lport->host,
- 				     "No usable DMA configuration "
- 				     "aborting\n");
- 			goto err_out_release_regions;
- 		}
--		err = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
-+		err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
- 		if (err) {
- 			shost_printk(KERN_ERR, fnic->lport->host,
- 				     "Unable to obtain 32-bit DMA "
-@@ -490,7 +490,7 @@ static int __devinit fnic_probe(struct pci_dev *pdev,
- 			goto err_out_release_regions;
- 		}
- 	} else {
--		err = pci_set_consistent_dma_mask(pdev, DMA_40BIT_MASK);
-+		err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(40));
- 		if (err) {
- 			shost_printk(KERN_ERR, fnic->lport->host,
- 				     "Unable to obtain 40-bit DMA "
+Is there any Asynchronous mass storage reference code available?
 
-
+Thanks and regards,
+RD
