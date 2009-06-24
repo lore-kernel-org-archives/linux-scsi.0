@@ -1,34 +1,42 @@
-From: Ramya Desai <ramya.desai@gmail.com>
-Subject: Asynchronous Mass storage driver
-Date: Wed, 24 Jun 2009 21:40:15 +0530
-Message-ID: <3e7aae30906240910p18cc23e9v10e5cf5b7b6cd91a@mail.gmail.com>
+From: James Smart <James.Smart-iH1Dq9VlAzfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: how to do fc_remote_port_delete correctly
+Date: Wed, 24 Jun 2009 12:29:30 -0400
+Message-ID: <4A42546A.4080603@emulex.com>
+References: <4A4172FA.70008@cisco.com> <4A423ADE.80306@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.24]:12365 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752631AbZFXQKN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Jun 2009 12:10:13 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <4A423ADE.80306-laKkSmNT4hbQT0dZR+AlfA@public.gmane.org>
+List-Unsubscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://www.open-fcoe.org/pipermail/devel>
+List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: James Smart <James.Smart-iH1Dq9VlAzfQT0dZR+AlfA@public.gmane.org>
+Cc: "devel-s9riP+hp16TNLxjTenLetw@public.gmane.org" <devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: USB list <linux-usb@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Dear Experts,
+James Smart wrote:
+> You never do set it to NULL. This is the role of the transport, and it 
+> will do so after calling the devloss_tmo_callbk(), which is the 
+> "end-of-life" indicator for the rport.
+>
+> If you are changing it - it can cause problems as the transport still 
+> has the rport active, may make other calls, etc until 
+> devloss_tmo_callbk() would occur.
+>   
+Actually, it can cause other problems if you're changing dd_data.  The 
+transport will set it when it allocates the rport. As the rport can also 
+be used as a container for the scsi tgt id bindings, and later reused if 
+the same device comes back post devloss_tmo (in which case, it "appears" 
+as a new rport to the LLDD). In this case, if you are NULL-ing the 
+dd_data value, you've hosed the structure for the later use.  Let the 
+tansport manage the dd_data value, you can manage the contents pointed 
+to by dd_data.
 
-I am trying to develop an asynchronous mass storage driver for my custom device.
-I am using the default mass storage driver as my basis.
-
-My first question, is the completion routine the first one to be
-called if the request finishes?
-
-I wanted to my command submit to USB stack (submitURB()) code in the
-driver context and look for the another command from the upper layer.
-To do so I wanted to move the rest of the code to completion routine.
-If I return USB_STOR_TRANSPORT_GOOD in completion routine, where this
-return is going to?
-
-Is there any Asynchronous mass storage reference code available?
-
-Thanks and regards,
-RD
+-- james s
