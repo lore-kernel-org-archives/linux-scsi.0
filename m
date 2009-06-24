@@ -1,7 +1,7 @@
 From: James Smart <James.Smart-iH1Dq9VlAzfQT0dZR+AlfA@public.gmane.org>
 Subject: Re: how to do fc_remote_port_delete correctly
-Date: Wed, 24 Jun 2009 12:29:30 -0400
-Message-ID: <4A42546A.4080603@emulex.com>
+Date: Wed, 24 Jun 2009 12:30:52 -0400
+Message-ID: <4A4254BC.6090302@emulex.com>
 References: <4A4172FA.70008@cisco.com> <4A423ADE.80306@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,6 +21,7 @@ To: James Smart <James.Smart-iH1Dq9VlAzfQT0dZR+AlfA@public.gmane.org>
 Cc: "devel-s9riP+hp16TNLxjTenLetw@public.gmane.org" <devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
+
 James Smart wrote:
 > You never do set it to NULL. This is the role of the transport, and it 
 > will do so after calling the devloss_tmo_callbk(), which is the 
@@ -29,6 +30,7 @@ James Smart wrote:
 > If you are changing it - it can cause problems as the transport still 
 > has the rport active, may make other calls, etc until 
 > devloss_tmo_callbk() would occur.
+>
 >   
 Actually, it can cause other problems if you're changing dd_data.  The 
 transport will set it when it allocates the rport. As the rport can also 
