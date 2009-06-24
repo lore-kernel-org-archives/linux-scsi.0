@@ -1,39 +1,38 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH] zalon: fix oops on attach failure
-Date: Wed, 24 Jun 2009 19:55:22 +0000
-Message-ID: <1245873322.4022.385.camel@mulgrave.site>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 1/3] bnx2i remove not so useful global variable bnx2i_reg_devices
+Date: Wed, 24 Jun 2009 15:00:18 -0500
+Message-ID: <4A4285D2.5000705@cs.wisc.edu>
+References: <1245805860.9829.50.camel@anilgv-desktop>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-parisc-owner@vger.kernel.org>
-Sender: linux-parisc-owner@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, Parisc List <linux-parisc@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:51209 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751679AbZFXUAY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Jun 2009 16:00:24 -0400
+In-Reply-To: <1245805860.9829.50.camel@anilgv-desktop>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Anil Veerabhadrappa <anilgv@broadcom.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, mchan@broadcom.com
 
-I recently discovered on my zalon that if the attachment fails because
-of a bus misconfiguration (I scrapped my HVD array, so the card is now
-unterminated) then the system oopses.  The reason is that if
-ncr_attach() returns NULL (signalling failure) that NULL is passed by
-the goto failed straight into ncr_detach() which oopses.
+On 06/23/2009 08:11 PM, Anil Veerabhadrappa wrote:
+>> From a8267738e9ca5c73ad6c0d89f17cf864bfc908c8 Mon Sep 17 00:00:00 2001
+> From: Anil Veerabhadrappa<anilgv@broadcom.com>
+> Date: Tue, 23 Jun 2009 13:56:29 -0700
+> Subject: [PATCH]     bnx2i - remove global variable bnx2i_reg_devices
+>
+>      * Removed bnx2i_reg_devices as this counter is not really
+>        used in a meaningful way
+>
+>      Cc: Mike Christie<michaelc@cs.wisc.edu>
+>
+> Signed-off-by: Michael Chan<mchan@broadcom.com>
+> Signed-off-by: Anil Veerabhadrappa<anilgv@broadcom.com>
 
-The fix is just to return -ENODEV in this case.
+Thanks for finishing up this cleanup from the review.
 
-James
+All patches
 
----
-
-diff --git a/drivers/scsi/zalon.c b/drivers/scsi/zalon.c
-index 97f3158..27e84e4 100644
---- a/drivers/scsi/zalon.c
-+++ b/drivers/scsi/zalon.c
-@@ -134,7 +134,7 @@ zalon_probe(struct parisc_device *dev)
- 
- 	host = ncr_attach(&zalon7xx_template, unit, &device);
- 	if (!host)
--		goto fail;
-+		return -ENODEV;
- 
- 	if (request_irq(dev->irq, ncr53c8xx_intr, IRQF_SHARED, "zalon", host)) {
- 	  dev_printk(KERN_ERR, &dev->dev, "irq problem with %d, detaching\n ",
-
-
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
