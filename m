@@ -1,163 +1,148 @@
-From: Neil Brown <neilb@suse.de>
-Subject: REQUEST for new 'topology' metrics to be moved out of
-	the 'queue' sysfs directory.
-Date: Thu, 25 Jun 2009 13:58:31 +1000
-Message-ID: <19010.62951.886231.96622@notabene.brown>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Joe Eykholt <jeykholt@cisco.com>
+Subject: sd_ref_mutex and cpu_add_remove_lock deadlock
+Date: Wed, 24 Jun 2009 21:06:44 -0700
+Message-ID: <4A42F7D4.8070102@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Mike Snitzer <snitzer@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Linus Torvalds <torvalds@linux-foundation.org>, Alasdair G Kergon <agk@redhat.com>, jens.axboe@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sj-iport-5.cisco.com ([171.68.10.87]:31652 "EHLO
+	sj-iport-5.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750779AbZFYEGm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jun 2009 00:06:42 -0400
+Received: from sj-core-2.cisco.com (sj-core-2.cisco.com [171.71.177.254])
+	by sj-dkim-1.cisco.com (8.12.11/8.12.11) with ESMTP id n5P46jsi026444
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Jun 2009 21:06:45 -0700
+Received: from airfoil.local ([10.200.1.69])
+	by sj-core-2.cisco.com (8.13.8/8.14.3) with ESMTP id n5P46i8m029865
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Jun 2009 04:06:45 GMT
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
+
+Has anyone seen this?
+
+I'm getting a hang due to three threads in a deadly
+embrace involving two mutexes.
+
+A user process doing a close on /dev/sdx has the sd_ref_mutex
+and is trying to get cpu_add_remove_lock.
+
+Another process is doing a /sys write to destroy an fcoe
+instance.  It is in destroy_workqueue() which holds the
+cpu_add_remove_lock() waiting for a work item to complete.
+
+The third thread is running the work item, and waiting on
+the sd_ref_mutex.
+
+To summarize:
+	Worker thread wants sd_ref_mutex
+	Close thread has sd_ref_mutex and wants cpu_add_remove_lock
+	Destroy thread has cpu_add_remove_lock and waits
+		for worker_thread to exit.
+
+The stacks are shown below.
+
+I'm not sure what the best solution would be or which
+locking rule is being broken here.
+
+Also, it seems to me there's a possible deadlock where
+sd_remove() has the sd_ref_mutex locked and is doing a
+put_device().  The release function for this device is
+scsi_disc_release(), which also takes the sd_ref_mutex().
+Maybe it's known that this can't be the last put_device().
+
+This is based on the open-fcoe.org fcoe-next.git tree, which is
+fairly up-to-date.
+
+This first process may not be involved, but
+
+# cat /proc/3727/stack
+[<ffffffff812a5830>] scsi_disk_get_from_dev+0x1a/0x49
+	wants sd_ref_mutex
+[<ffffffff812a5d15>] sd_shutdown+0x12/0x117
+[<ffffffff812a5f47>] sd_remove+0x51/0x8a
+[<ffffffff8128d2da>] __device_release_driver+0x80/0xc9
+[<ffffffff8128d3ee>] device_release_driver+0x1e/0x2b
+[<ffffffff8128c993>] bus_remove_device+0xa8/0xc9
+[<ffffffff8128b092>] device_del+0x138/0x1a1
+[<ffffffff812a0790>] __scsi_remove_device+0x44/0x81
+[<ffffffff812a07f3>] scsi_remove_device+0x26/0x33
+[<ffffffff812a08a5>] __scsi_remove_target+0x93/0xd7
+[<ffffffff812a094f>] __remove_child+0x1e/0x25
+[<ffffffff8128a8ee>] device_for_each_child+0x38/0x6f
+[<ffffffff812a0924>] scsi_remove_target+0x3b/0x48
+[<ffffffffa0048e14>] fc_starget_delete+0x21/0x25 [scsi_transport_fc]
+[<ffffffffa0048f0e>] fc_rport_final_delete+0xf6/0x188 [scsi_transport_fc]
+[<ffffffff81052588>] worker_thread+0x1fa/0x30a
+[<ffffffff810569c1>] kthread+0x88/0x90
+[<ffffffff8100cbfa>] child_rip+0xa/0x20
+[<ffffffffffffffff>] 0xffffffffffffffff
 
 
-Hi,
- I have (belatedly, I admit) been looking at the new 'topology'
- metrics that were introduced for 2.6.31.
- I have a few questions about them which I have been discussing with
- Martin, but there is one issue that I feel fairly strongly about and
- would like to see changed before it gets into a -final release.
- Hence this email to try to garner understanding and consensus.
+# cat /proc/4230/stack
+[<ffffffff81042a6a>] cpu_maps_update_begin+0x12/0x14
+	wants cpu_add_remove_lock
+[<ffffffff81052c7c>] destroy_workqueue+0x2b/0x9e
+[<ffffffff81297d5b>] scsi_host_dev_release+0x5a/0xbd
+[<ffffffff8128a80d>] device_release+0x49/0x75
+[<ffffffff811d03b8>] kobject_release+0x51/0x67
+[<ffffffff811d1169>] kref_put+0x43/0x4f
+[<ffffffff811d02c1>] kobject_put+0x47/0x4b
+[<ffffffff8128a1be>] put_device+0x12/0x14
+[<ffffffffa004726b>] fc_rport_dev_release+0x18/0x24 [scsi_transport_fc]
+[<ffffffff8128a80d>] device_release+0x49/0x75
+[<ffffffff811d03b8>] kobject_release+0x51/0x67
+[<ffffffff811d1169>] kref_put+0x43/0x4f
+[<ffffffff811d02c1>] kobject_put+0x47/0x4b
+[<ffffffff8128a1be>] put_device+0x12/0x14
+[<ffffffff8129da8c>] scsi_target_dev_release+0x1d/0x21
+[<ffffffff8128a80d>] device_release+0x49/0x75
+[<ffffffff811d03b8>] kobject_release+0x51/0x67
+[<ffffffff811d1169>] kref_put+0x43/0x4f
+[<ffffffff811d02c1>] kobject_put+0x47/0x4b
+[<ffffffff8128a1be>] put_device+0x12/0x14
+[<ffffffff812a0441>] scsi_device_dev_release_usercontext+0x118/0x124
+[<ffffffff81053627>] execute_in_process_context+0x2a/0x70
+[<ffffffff812a0327>] scsi_device_dev_release+0x17/0x19
+[<ffffffff8128a80d>] device_release+0x49/0x75
+[<ffffffff811d03b8>] kobject_release+0x51/0x67
+[<ffffffff811d1169>] kref_put+0x43/0x4f
+[<ffffffff811d02c1>] kobject_put+0x47/0x4b
+[<ffffffff8128a1be>] put_device+0x12/0x14
+[<ffffffff81296ded>] scsi_device_put+0x3d/0x42
+[<ffffffff812a588f>] scsi_disk_put+0x30/0x41
+		has sd_ref_mutex
+[<ffffffff812a66fb>] sd_release+0x4d/0x54
+[<ffffffff810f916d>] __blkdev_put+0xa7/0x16e
+[<ffffffff810f923f>] blkdev_put+0xb/0xd
+[<ffffffff810f9278>] blkdev_close+0x37/0x3c
+[<ffffffff810d5de6>] __fput+0xdf/0x186
+[<ffffffff810d5ea5>] fput+0x18/0x1a
+[<ffffffff810d3016>] filp_close+0x59/0x63
+[<ffffffff810d30c5>] sys_close+0xa5/0xe4
+[<ffffffff8100baeb>] system_call_fastpath+0x16/0x1b
+[<ffffffffffffffff>] 0xffffffffffffffff
 
- The various topology metrics are exposed to user-space through sysfs
- attributes in the 'queue' subdirectory of the block device
- (e.g. .../sda/queue).
- I think this is a poor choice and would like to find a better
- choice.
+# cat /proc/4236/stack
+[<ffffffff81052b59>] flush_cpu_workqueue+0x7b/0x87
+[<ffffffff81052bcf>] cleanup_workqueue_thread+0x6a/0xb8
+[<ffffffff81052cb4>] destroy_workqueue+0x63/0x9e
+		has cpu_add_remove_lock
+[<ffffffffa0049604>] fc_remove_host+0x148/0x171 [scsi_transport_fc]
+[<ffffffffa0073efe>] fcoe_if_destroy+0x183/0x1eb [fcoe]
+[<ffffffffa0073f9b>] fcoe_destroy+0x35/0x76 [fcoe]
+[<ffffffff81054dc8>] param_attr_store+0x25/0x35
+[<ffffffff81054e1d>] module_attr_store+0x21/0x25
+[<ffffffff8112461e>] sysfs_write_file+0xe4/0x119
+[<ffffffff810d53d8>] vfs_write+0xab/0x105
+[<ffffffff810d54f6>] sys_write+0x47/0x6e
+[<ffffffff8100baeb>] system_call_fastpath+0x16/0x1b
+[<ffffffffffffffff>] 0xffffffffffffffff
 
- To explain why, it probably helps to review the current situation.
- Before 2.6.30, 'queue' contains:
-   hw_sector_size	max_hw_sectors_kb  nr_requests	  rq_affinity
-   iosched/		max_sectors_kb	   read_ahead_kb  scheduler
-   iostats		nomerges	   rotational
 
- Of these:
+	Thanks,
+	Joe
 
-   max_hw_sectors_kb, nr_requests, rq_affinity, iosched/,
-   max_sectors_kb scheduler nomerges rotational
 
- are really only relevant to the elevator code and those devices that
- used that code (ide, scsi, etc).
- They are not relevant for dm or md (md has it's own separate 'md'
- directory, and before 2.6.30, the '/queue' subdirectory did not even
- appear in dm or md devices).
 
- Of the others:
-   hw_sector_size   - is applicable to all block devices, and could
-                      reasonably be placed one level up in the device
-                      directory (along side 'size').
-   read_ahead_kb    - a duplicate of bdi/read_ahead_kb
-   iostats          - is a switch to enable or disable accounting of
-                      statistics that are reported in the 'stat'
-                      file (one level up)
-
- So most of '/queue' is specific to one class of devices (admittedly a
- very large class).  The others could be argued to be aberrations.
-
- Adding a number of extra fields such as minimum_io_size,
- optimal_io_size etc to '/queue' seems to increase the number of
- aberrations and enforces md and dm device to have a /queue which is
- largely irrelevant.
-
- One approach that we could take would be to hide all those fields
- in 'queue' that are not relevant to the current device, and let
- 'queue' be a 'dumping ground' for each block device to place whatever
- sysfs attributes they want (thus md would move all of md/* to
- queue/*, and leave 'md' as a symlink to 'queue').
-
- I don't like this approach because it does not make best use of the
- name space.  If 'md' and 'queue' have different directories, they are
- each free to create new attributes without risk of collision between
- different drivers - not that the collision would be a technical
- problem but it could be confusing to users.
-
- So, where to put these new fields?
-
-   They could go in the device directory, along side 'size' and 'ro'.
-   Like those fields, the new ones give guidance to filesystems on how
-   to use the device.  Whether or not this is a good thing depends a
-   bit on how many fields we are talking about.  One or two might be
-   OK.  4 or more might look messy.
-   There are currently 4 fields: logical_block_size,
-   physical_block_size, minimum_io_size, optimal_io_size.
-   I have suggested to Martin that 2 are enough.  While I don't
-   particularly want to debate that in this thread, it could be
-   relevant so I'll outline my idea below.
-
-   They could go in 'bdi' along with read_ahead_kb.  read_ahead_kb
-   gives guidance on optimal read sizes.  The topology fields give
-   guidance on optimal write sizes.  There is a synergy there.  And
-   these fields are undeniably info about a backing device.
-   NFS has it's own per-filesystem bdi so we would not want to impose
-   fields on NFS that weren't at all relevant.  NFS has 'rsize' and
-   'wsize' which are somewhat related.  So I feel somewhat positive
-   about this possibility.  My only concern is that 'read_ahead_kb' is
-   more about reading *files*, where as the *_block_size and *_io_size
-   are about writing to the *device*.  I'm not sure how important a
-   difference this is.
-
-   They could go in a new subdirectory of the block device, just like
-   the integrity fields. e.g 'topology/'. or 'metrics/'.  This would
-   be my preferred approach if there do turn out to be the full 4
-   fields.
-
-Thanks for your attention.  Comments most welcome.
-
-NeilBrown
-
-----------------------
-Alternate implementation with only two fields.
-According to Documentation/ABI/testing/sysfs-block, both
-physical_block_size and minimum_io_size are the smallest unit of IO
-that doesn't require read-modify-write.  The first is thought to
-relate to drives with 4K blocks.  The second to RAID5 arrays.
-But that doesn't make sense as it stands: you cannot have two things
-that are both the smallest.
-
-Also, minimum_io_size and optimal_io_size are both described as a
-"preferred" for IO - presumably writes, not reads.  Again, we cannot
-have two values that are both preferred.  There is again some
-suggestion that one is for disks and the other is for RAID, but I
-cannot see how a mkfs would choose between them.
-
-My conclusion is that there are two issues of importance.
-1/ avoiding read-modify-write as that can affect correctness (When a
-  write error happens, you can lose unrelated data).
-2/ throughput.
-
-For each of these issues, there are a number of sizes that are
-relevant.
-e.g as you increase the request size, the performance can increase,
-but there a key points where a small increase in size can give a big
-increase in performance.  These sizes might include block size, chunk
-size, stripe size, and cache size.
-
-So I suggested two fields, each of which can store multiple values:
-
-safe_write_size:  512 4096 327680
-preferred_write_size: 4096 65536 327680 10485760
-
-The guidance for using these is simple:
- When choosing a size where atomicity of writes is important, choose
- the largest size from safe_write_size which is practical (or a
- multiple there-of).
-
- When choosing a size which doesn't require atomicity, but where
- throughput is important, choose a multiple of the largest size from
- preferred_write_size which is practical.
-
-The smallest safe_write_size would be taken as the logical_block_size.
-
-If we just have these two fields, I would put them in the top level
-directory for the block device.
