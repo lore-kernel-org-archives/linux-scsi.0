@@ -1,77 +1,58 @@
-From: Joe Eykholt <jeykholt@cisco.com>
-Subject: Re: [PATCH 6/6] fnic: Patch MAINTAINERS, scsi Makefile, scsi Kconfig
-Date: Thu, 25 Jun 2009 12:04:42 -0700
-Message-ID: <4A43CA4A.9050609@cisco.com>
-References: <20090418012941.24787.58754.stgit@feynman.nuovasystems.com>	 <20090418013322.24787.53673.stgit@feynman.nuovasystems.com> <1245949235.4170.63.camel@mulgrave.site>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: REQUEST for new 'topology' metrics to be moved out
+	of the 'queue' sysfs directory.
+Date: Thu, 25 Jun 2009 21:34:02 +0200
+Message-ID: <20090625193402.GA31415@kernel.dk>
+References: <19010.62951.886231.96622@notabene.brown>
+	<yq11vp8spxo.fsf@sermon.lab.mkp.net>
+	<125b48b7ffc99a496fbdd512f38cada5.squirrel@neil.brown.name>
+	<yq1k530qkm7.fsf@sermon.lab.mkp.net>
+	<alpine.LFD.2.01.0906251045450.3605@localhost.localdomain>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-2.cisco.com ([171.71.176.71]:11150 "EHLO
-	sj-iport-2.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752005AbZFYTEo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jun 2009 15:04:44 -0400
-In-Reply-To: <1245949235.4170.63.camel@mulgrave.site>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <alpine.LFD.2.01.0906251045450.3605@localhost.localdomain>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Alasdair G Kergon <agk@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Abhijeet Joglekar <abjoglek@cisco.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-James Bottomley wrote:
-> On Fri, 2009-04-17 at 18:33 -0700, Abhijeet Joglekar wrote:
->> Patch MAINTAINERS file, add fnic module to scsi Makefile and Kconfig
->>
->> Signed-off-by: Abhijeet Joglekar <abjoglek@cisco.com>
->> Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
->> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
->> ---
->>  MAINTAINERS           |    8 ++++++++
->>  drivers/scsi/Kconfig  |   11 +++++++++++
->>  drivers/scsi/Makefile |    1 +
->>  3 files changed, 20 insertions(+), 0 deletions(-)
->>
->>
->> diff --git a/MAINTAINERS b/MAINTAINERS
->> index ebaf77e..405f574 100644
->> --- a/MAINTAINERS
->> +++ b/MAINTAINERS
->> @@ -1167,6 +1167,14 @@ P:	Nils Faerber (port to kernel 2.4)
->>  M:	Nils Faerber <nils@kernelconcepts.de>
->>  S:	Maintained
->>  
->> +CISCO FCOE HBA DRIVER
->> +P:	Abhijeet Joglekar
->> +M:	abjoglek@cisco.com
->> +P:	Joe Eykholt
->> +M:	jeykholt@cisco.com
->> +L:	linux-scsi@vger.kernel.org
->> +S:	Supported
->> +
->>  CODA FILE SYSTEM
->>  P:	Jan Harkes
->>  M:	jaharkes@cs.cmu.edu
->> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
->> index 876cd20..d45f3ad 100644
->> --- a/drivers/scsi/Kconfig
->> +++ b/drivers/scsi/Kconfig
->> @@ -628,6 +628,17 @@ config FCOE
->>  	---help---
->>  	  Fibre Channel over Ethernet module
->>  
->> +config FCOE_FNIC
->> +	tristate "Cisco FNIC Driver"
->> +	depends on PCI && X86
+On Thu, Jun 25 2009, Linus Torvalds wrote:
 > 
-> Why is this marked X86 only?  Surely as a PCIe card it should work on
-> any architecture?
+> 
+> On Thu, 25 Jun 2009, Martin K. Petersen wrote:
+> > 
+> > Neil> So I asked git why it as added, and it pointed to
+> > Neil>   commit 1308835ffffe6d61ad1f48c5c381c9cc47f683ec
+> > 
+> > Neil> which suggests that it was added so that user space could tell the
+> > Neil> kernel whether the device was rotational, rather than the other
+> > Neil> way around.
+> > 
+> > There's an option to do it via udev for broken devices that don't report
+> > it.  But both SCSI and ATA have a setting that gets queried and the
+> > queue flag set accordingly.
+> 
+> .. except few devices actually set it. 
+> 
+> That flag is _definitely_ all about the user being able to override it.
 
-It isn't a standard PCIe card.  Currently that device is only used
-in the Cisco UCS systems in a proprietary form-factor.
+Most certainly, the idea was to add udev rules to set it for drives.
+Fortunately newer drives to work right without a need for such rules,
+but it should be handy for the ones released last year and earlier.
 
-Mainly we don't want to test-build on all the other architectures
-since it won't be usable on them.
+Most user space will not care what the setting is, it's mostly for
+internal use. CFQ uses it, as does btrfs to decide allocation policy.
 
-	Regards,
-	Joe
-
-
+-- 
+Jens Axboe
