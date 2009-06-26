@@ -1,47 +1,88 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [dm-devel] REQUEST for new 'topology' metrics to be moved out
-	of the 'queue' sysfs directory.
-Date: Fri, 26 Jun 2009 15:49:54 +0200
-Message-ID: <20090626134954.GS23611@kernel.dk>
-References: <19010.62951.886231.96622@notabene.brown> <yq11vp8spxo.fsf@sermon.lab.mkp.net> <125b48b7ffc99a496fbdd512f38cada5.squirrel@neil.brown.name> <20090625194015.GB31415@kernel.dk> <19012.49673.454853.975682@notabene.brown> <20090626125037.GO23611@kernel.dk> <7c458f2470811a877dd60203b9bbb7ac.squirrel@neil.brown.name> <771af936681abb7ddc2191eb5b6b68d0.squirrel@neil.brown.name>
+From: Peter Jones <pjones@redhat.com>
+Subject: Re: [PATCH 0/3] scsi_dh: Make scsi device handler modules automatically
+ inserted
+Date: Fri, 26 Jun 2009 09:56:10 -0400
+Message-ID: <4A44D37A.10903@redhat.com>
+References: <20090427180609.22758.93035.sendpatchset@chandra-ubuntu>	 <4A369320.2080202@redhat.com> <1245365306.4286.27.camel@mulgrave.site> <4A3BDFE8.3090003@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <771af936681abb7ddc2191eb5b6b68d0.squirrel@neil.brown.name>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, Alasdair G Kergon <agk@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, device-mapper development <dm-devel@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.redhat.com ([66.187.237.31]:58202 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754378AbZFZN4R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Jun 2009 09:56:17 -0400
+In-Reply-To: <4A3BDFE8.3090003@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Chandra Seetharaman <sekharan@us.ibm.com>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, hare@suse.de
 
-On Fri, Jun 26 2009, NeilBrown wrote:
-> On Fri, June 26, 2009 11:16 pm, NeilBrown wrote:
-> > On Fri, June 26, 2009 10:50 pm, Jens Axboe wrote:
-> >> On Fri, Jun 26 2009, Neil Brown wrote:
-> >
-> >>> But for now, please please please can we revert the change which made
-> >>> 'queue' appear in md and dm devices, (and loop and ...) and put these
-> >>> generic values somewhere ... generic?
-> >>
-> >> No we cannot, not without a time machine. 2.6.30 is released, so it's
-> >> too late to revert things like that, even if we wanted.
-> >
-> > Drat... for some reason I was thinking that it only came in in 2.6.31-rc.
-> > However it is only documented in ABI/testing, not ABI/stable ... if there
-> > is any value in that distinction, then it should be possible to move it??
-> >
+James, I think Chandra and I have responded to most if not all of your points, 
+and would appreciate your thoughts on what we've said.
+
+Peter Jones wrote:
+> On 06/18/2009 06:48 PM, James Bottomley wrote:
+>> On Mon, 2009-06-15 at 14:29 -0400, Peter Jones wrote:
+>>> On 04/27/2009 02:06 PM, Chandra Seetharaman wrote:
+>>>> Hello,
+>>>>
+>>>> Currently, SCSI targets doesn't have modalias support. It wasn't an issue
+>>>> until SCSI device handler came along.
+>>>>
+>>>> We want the SCSI device handler modules to be insmodded automatically
+>>>> when the specific SCSI targets are probed and found.
+>>>>
+>>>> This set of patches adds the modalias support for SCSI targets and
+>>>> also makes the relevant changes to SCSI device handler modules to 
+>>>> make use of it.
+>>>>
+>>>> Applies cleanly on 2.6.30-rc3 and is tested on the same.
+>>>>
+>>>> Please review and consider this for inclusion.
+>>>>
+>>>> Originally sent on March 17 2009 (http://marc.info/?l=linux-scsi&m=123734001009654&w=2).
+>>>>
+>>>> Resending after testing on 2.6.30-rc3 and with an ack from Hannes.
+>>> Was there ever any followup to this?
+>> OK, since I've forgotten where we are, let me summarise what I think the
+>> situation is (correct me if I misstate any of the facts):
+>>
+>> This code adds no functional value to the kernel because dm already
+>> autoloads the correct handlers based on the inquiry strings
 > 
-> No, wait.  I was right.  The addition of 'queue' to md/dm devices
-> happened post-2.6.30.   So are the additions of physical_block_size etc.
-> So there is still time to put these in a properly generic place.
+> I don't agree here.  It adds functional value to the entire system by making the
+> loading of device drivers use the same method no matter which kernel subsystem
+> the driver is part of.  This is a very tangible benefit in terms of maintainability.
+> 
+>> The only value it adds is that by overloading the module table with the
+>> inquiry strings, mkinitrd pulls in the correct dm handlers for the state
+>> the system was in.
+> 
+> You keep on saying this, and to me it seems very strange.  The patch does no
+> "overloading" of vendor strings -- it uses them just like the PCI vendor/device ID or
+> USB idVendor/idDevice.  Fundamentally they are the same thing: an identifier to
+> tell us what device we're looking at.  There's no overloading here, it's just
+> hooking them up to the kernel's generalized mechanism for loading modules based on
+> this kind of data.
+> 
+>> the unaddressed problems are:
+>>
+>> The kernel now tries to load the dm handler for the device dynamically
+>> whether or not the user is actually deploying multi-path (previously dm
+>> does this and if it's not loaded, that doesn't happen).  It's entirely
+>> unclear whether this would interfere with proprietary multipath handlers
+>> or even cause problems in single path systems which were designed that
+>> way.
+> 
+> I just don't see how this is a real concern -- the whole point of the drivers
+> which we're autoloading here is to work with specific hardware that's designed to
+> work in this fashion.  What's more, if that hardware is being used for single-path,
+> and the driver is loaded and it decides to reconfigure to prefer a path that's not
+> plugged in, surely that's a bug in the device handler driver, and should be fixed
+> there, rather than blocking the auto-loading of such drivers?
+> 
 
-Yes you are right, the commit date had me fooled.
-
-> Do you have a good reason for them going in /queue?
-
-Do you have a good reason for moving them? Im my opinion that makes the
-separation between ->make_request_fn and ->request_fn devices bigger.
 
 -- 
-Jens Axboe
-
+   Peter
