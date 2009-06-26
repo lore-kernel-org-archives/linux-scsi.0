@@ -1,43 +1,43 @@
-From: Amit Kumar Sharma <amitsharma.9@samsung.com>
-Subject: ATA vs SCSI interface
-Date: Fri, 26 Jun 2009 08:26:15 +0530
-Message-ID: <874A78DF4E46449393EE406F0D13C043@sisodomain.com>
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:59103 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752390AbZFZCzw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jun 2009 22:55:52 -0400
-Received: from epmmp1 (mailout3.samsung.com [203.254.224.33])
- by mailout1.samsung.com
- (iPlanet Messaging Server 5.2 Patch 2 (built Jul 14 2004))
- with ESMTP id <0KLT005WZS51PB@mailout1.samsung.com> for
- linux-scsi@vger.kernel.org; Fri, 26 Jun 2009 11:55:49 +0900 (KST)
-Received: from amitksharma ([107.108.214.35])
- by mmp1.samsung.com (iPlanet Messaging Server 5.2 Patch 2 (built Jul 14 2004))
- with ESMTPA id <0KLT00LBDS505D@mmp1.samsung.com> for
- linux-scsi@vger.kernel.org; Fri, 26 Jun 2009 11:55:49 +0900 (KST)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [dm-devel] REQUEST for new 'topology' metrics to be moved out  of the 'queue' sysfs directory.
+Date: Fri, 26 Jun 2009 21:58:29 +1000
+Message-ID: <19012.47077.328965.919868@notabene.brown>
+References: <19010.62951.886231.96622@notabene.brown>
+	<yq11vp8spxo.fsf@sermon.lab.mkp.net>
+	<125b48b7ffc99a496fbdd512f38cada5.squirrel@neil.brown.name>
+	<yq1k530qkm7.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: message from Martin K. Petersen on Thursday June 25
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, Alasdair G Kergon <agk@redhat.com>, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, device-mapper development <dm-devel@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hi Guys,
+On Thursday June 25, martin.petersen@oracle.com wrote:
+> >>>>> "Neil" == NeilBrown  <neilb@suse.de> writes:
+> 
+> And just to make it clear: I completely agree with your argument that
+> which knob to choose is I/O size dependent.  My beef with your proposal
+> is that I believe the length of the list should be 2.
 
-I am new to storage , I need clarification between 
-sg0--1(scsi) and sda-- b(ATA)
+0, 1, or infinity are the only credible sizes for this sort of list.
 
-I want to implement microcode for firmware download.Which 
-interface is correct for SSD ATA or SCSI.
+However I feel I've written enough on this particular issue (the
+particular meaning of the various fields, not the directory location
+which I still feel strongly about).
 
-In my opinion if I will use Scsi interface sg_ioctl , I can 
-download firmware and my code will be independent to kernel 
-version.But if I use ATA_ioctl, I have to made changes for 
-adding support of microcode in ATA_ioctl because From the 
-code it looks like it will not support DMA_TO_DEVICE.
+Providing the fields are clearly and unambiguously documented so that
+it I can use the documentation to verify the implementation (in md at
+least), I will be satisfied.  And if the names of the files actually
+match the documented meaning (so e.g. s/io/write/) I might even be
+happy.
 
-Please provide inputs to clarify understanding.
+I'm looking forward to seeing how you justify the name
+"physical_block_size" in a way the encompasses possibilities like a
+device that stripes over a heterogeneous set of disk drives ;-)
 
-Thanks
-Amit 
-
-
+Thanks,
+NeilBrown
