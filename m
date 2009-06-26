@@ -1,101 +1,104 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: REQUEST for new 'topology' metrics to be moved out of
-	the 'queue' sysfs directory.
-Date: Fri, 26 Jun 2009 10:48:03 -0400
-Message-ID: <yq1ws6znja4.fsf@sermon.lab.mkp.net>
-References: <19010.62951.886231.96622@notabene.brown>
-	<yq11vp8spxo.fsf@sermon.lab.mkp.net>
-	<125b48b7ffc99a496fbdd512f38cada5.squirrel@neil.brown.name>
-	<yq1k530qkm7.fsf@sermon.lab.mkp.net>
-	<19012.47077.328965.919868@notabene.brown>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [patch 1/1] FC transport: Locking fix for common-code FC pass-through
+ patch
+Date: Fri, 26 Jun 2009 11:19:27 -0400
+Message-ID: <4A44E6FF.40304@emulex.com>
+References: <20090626143042.117419000@de.ibm.com> <20090626143517.548984000@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <19012.47077.328965.919868@notabene.brown> (Neil Brown's message
-	of "Fri, 26 Jun 2009 21:58:29 +1000")
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Neil Brown <neilb@suse.de>
-Cc: Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-fsdevel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Alasdair G Kergon <agk@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emulex.emulex.com ([138.239.112.1]:53854 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1749667AbZFZPT3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jun 2009 11:19:29 -0400
+In-Reply-To: <20090626143517.548984000@de.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>, "schwidefsky@de.ibm.com" <schwidefsky@de.ibm.com>, "heiko.carstens@de.ibm.com" <heiko.carstens@de.ibm.com>
 
->>>>> "Neil" == Neil Brown <neilb@suse.de> writes:
+I had tried to remind James that he needed this patch when he pulled in 
+the pass-thru code.
 
-Neil> Providing the fields are clearly and unambiguously documented so
-Neil> that it I can use the documentation to verify the implementation
-Neil> (in md at least), I will be satisfied.
+Acked-by: James Smart <james.smart@emulex.com>
 
-The current sysfs documentation says:
+-- james s
 
-/sys/block/<disk>/queue/minimum_io_size:
-[...] For RAID arrays it is often the stripe chunk size.
-
-/sys/block/<disk>/queue/optimal_io_size:
-[...] For RAID devices it is usually the stripe width or the internal
-block size.
-
-The latter should be "internal track size".  But in the context of MD I
-think those two definitions are crystal clear.
-
-
-As far as making the application of these values more obvious I propose
-the following:
-
-What:		/sys/block/<disk>/queue/minimum_io_size
-Date:		April 2009
-Contact:	Martin K. Petersen <martin.petersen@oracle.com>
-Description:
-		Storage devices may report a granularity or minimum I/O
-		size which is the device's preferred unit of I/O.
-		Requests smaller than this may incur a significant
-		performance penalty.
-
-		For disk drives this value corresponds to the physical
-		block size. For RAID devices it is usually the stripe
-		chunk size.
-
-		A properly aligned multiple of minimum_io_size is the
-		preferred request size for workloads where a high number
-		of I/O operations is desired.
-
-
-What:		/sys/block/<disk>/queue/optimal_io_size
-Date:		April 2009
-Contact:	Martin K. Petersen <martin.petersen@oracle.com>
-Description:
-		Storage devices may report an optimal transfer length or
-		streaming I/O size which is the device's preferred unit
-		of sustained I/O.  This value is a multiple of the
-		device's minimum_io_size.
-
-		optimal_io_size is rarely reported for disk drives. For
-		RAID devices it is usually the stripe width or the
-		internal track size.
-
-		A properly aligned multiple of optimal_io_size is the
-		preferred request size for workloads where sustained
-		throughput is desired.
-
-After contemplating for a bit I think I prefer to keep them I/O
-direction agnostic.  Granted, the potential penalties mostly apply to
-writes.  But I think the application of the values apply to reads as
-well.  They will in a hw RAID context for sure.
-
-
-Neil> I'm looking forward to seeing how you justify the name
-Neil> "physical_block_size" in a way the encompasses possibilities like
-Neil> a device that stripes over a heterogeneous set of disk drives ;-)
-
-I explained that in my mails yesterday.  But that is of no concern to
-MD.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Christof Schmitt wrote:
+> From: Christof Schmitt <christof.schmitt@de.ibm.com>
+>
+> Fix this:
+> ------------[ cut here ]------------
+> Badness at block/blk-core.c:244
+> CPU: 0 Tainted: G        W  2.6.31-rc1-00004-gd3a263a #3
+> Process zfcp_wq (pid: 901, task: 000000002fb7a038, ksp: 000000002f02bc78)
+> Krnl PSW : 0704300180000000 00000000002141ba (blk_remove_plug+0xb2/0xb8)
+>            R:0 T:1 IO:1 EX:1 Key:0 M:1 W:0 P:0 AS:0 CC:3 PM:0 EA:3
+> Krnl GPRS: 0000000000000001 0000000000000001 0000000022811440 0000000022811798
+>            000000000027ff4e 0000000000000000 0000000000000000 000000002f00f000
+>            070000000006a0f4 000000002af70000 000000002af2a800 00000000228d1c00
+>            0000000022811440 000000000050c708 000000002f02bca8 000000002f02bc80
+> Krnl Code: 00000000002141b0: b9140022		lgfr	%r2,%r2
+>            00000000002141b4: 07fe		bcr	15,%r14
+>            00000000002141b6: a7f40001		brc	15,2141b8
+>           >00000000002141ba: a7f4ffbe		brc	15,214136
+>            00000000002141be: 0707		bcr	0,%r7
+>            00000000002141c0: ebaff0680024	stmg %r10,%r15,104(%r15)
+>            00000000002141c6: c0d00017c2a9	larl	%r13,50c718
+>            00000000002141cc: a7f13fc0		tmll	%r15,16320
+> Call Trace:
+> ([<000000000050e7d8>] C.272.16122+0x88/0x110)
+>  [<00000000002141ec>] __blk_run_queue+0x2c/0x154
+>  [<000000000028013a>] fc_remote_port_add+0x85e/0x95c
+>  [<000000000037596e>] zfcp_scsi_rport_work+0xe6/0x148
+>  [<000000000006908c>] worker_thread+0x25c/0x318
+>  [<000000000006f10c>] kthread+0x94/0x9c
+>  [<000000000001c2b2>] kernel_thread_starter+0x6/0xc
+>  [<000000000001c2ac>] kernel_thread_starter+0x0/0xc
+> INFO: lockdep is turned off.
+> Last Breaking-Event-Address:
+>  [<00000000002141b6>] blk_remove_plug+0xae/0xb8
+>
+> The FC pass-through support triggers the WARN_ON(!irqs_disabled()) in
+> blk_plug_device. Since blk_plug_device requires being called with
+> disabled interrupts, use spin_lock_irqsave in fc_bsg_goose_queue to
+> disable the interrupts before calling into the block layer.
+>
+> Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
+> ---
+>
+>  drivers/scsi/scsi_transport_fc.c |    5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+>
+> diff -urpN linux-2.6/drivers/scsi/scsi_transport_fc.c linux-2.6-patched/drivers/scsi/scsi_transport_fc.c
+> --- linux-2.6/drivers/scsi/scsi_transport_fc.c	2009-06-26 09:56:55.000000000 +0200
+> +++ linux-2.6-patched/drivers/scsi/scsi_transport_fc.c	2009-06-26 09:57:06.000000000 +0200
+> @@ -3670,13 +3670,14 @@ static void
+>  fc_bsg_goose_queue(struct fc_rport *rport)
+>  {
+>  	int flagset;
+> +	unsigned long flags;
+>  
+>  	if (!rport->rqst_q)
+>  		return;
+>  
+>  	get_device(&rport->dev);
+>  
+> -	spin_lock(rport->rqst_q->queue_lock);
+> +	spin_lock_irqsave(rport->rqst_q->queue_lock, flags);
+>  	flagset = test_bit(QUEUE_FLAG_REENTER, &rport->rqst_q->queue_flags) &&
+>  		  !test_bit(QUEUE_FLAG_REENTER, &rport->rqst_q->queue_flags);
+>  	if (flagset)
+> @@ -3684,7 +3685,7 @@ fc_bsg_goose_queue(struct fc_rport *rpor
+>  	__blk_run_queue(rport->rqst_q);
+>  	if (flagset)
+>  		queue_flag_clear(QUEUE_FLAG_REENTER, rport->rqst_q);
+> -	spin_unlock(rport->rqst_q->queue_lock);
+> +	spin_unlock_irqrestore(rport->rqst_q->queue_lock, flags);
+>  
+>  	put_device(&rport->dev);
+>  }
+>
+>
+>   
