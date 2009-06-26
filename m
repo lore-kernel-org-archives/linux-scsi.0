@@ -1,104 +1,62 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [patch 1/1] FC transport: Locking fix for common-code FC pass-through
- patch
-Date: Fri, 26 Jun 2009 11:19:27 -0400
-Message-ID: <4A44E6FF.40304@emulex.com>
-References: <20090626143042.117419000@de.ibm.com> <20090626143517.548984000@de.ibm.com>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: FC transport: Calling fc_remote_port_add for online port
+Date: Fri, 26 Jun 2009 17:23:03 +0200
+Message-ID: <20090626152303.GA21058@schmichrtp.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:53854 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1749667AbZFZPT3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jun 2009 11:19:29 -0400
-In-Reply-To: <20090626143517.548984000@de.ibm.com>
+Received: from mtagate3.de.ibm.com ([195.212.29.152]:33294 "EHLO
+	mtagate3.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750699AbZFZPXO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jun 2009 11:23:14 -0400
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate3.de.ibm.com (8.14.3/8.13.8) with ESMTP id n5QFN4TP114494
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2009 15:23:04 GMT
+Received: from d12av01.megacenter.de.ibm.com (d12av01.megacenter.de.ibm.com [9.149.165.212])
+	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n5QFN3AS2256988
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2009 17:23:03 +0200
+Received: from d12av01.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av01.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n5QFN32C014442
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2009 17:23:03 +0200
+Received: from schmichrtp.de.ibm.com (schmichrtp.mainz.de.ibm.com [9.155.23.82])
+	by d12av01.megacenter.de.ibm.com (8.12.11.20060308/8.12.11) with SMTP id n5QFN3UH014439
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2009 17:23:03 +0200
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christof Schmitt <christof.schmitt@de.ibm.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>, "schwidefsky@de.ibm.com" <schwidefsky@de.ibm.com>, "heiko.carstens@de.ibm.com" <heiko.carstens@de.ibm.com>
+To: linux-scsi@vger.kernel.org
 
-I had tried to remind James that he needed this patch when he pulled in 
-the pass-thru code.
+When a LLD calls fc_remote_port_add for a port that is already in the
+state FC_PORTSTATE_ONLINE, the FC transport class will create a new
+fc_rport struct and sysfs will show two entries for the same port.
 
-Acked-by: James Smart <james.smart@emulex.com>
+How should this be handled? Does the LLD have to track the state and
+only call fc_remote_port add for new ports and ports in the state
+FC_PORTSTATE_BLOCKED or FC_PORTTYPE_NOTPRESENT?
 
--- james s
+Or should the FC transport class allow that a LLD can call
+fc_remote_port_add at any time? The patch does this change in the FC
+transport class.
 
-Christof Schmitt wrote:
-> From: Christof Schmitt <christof.schmitt@de.ibm.com>
->
-> Fix this:
-> ------------[ cut here ]------------
-> Badness at block/blk-core.c:244
-> CPU: 0 Tainted: G        W  2.6.31-rc1-00004-gd3a263a #3
-> Process zfcp_wq (pid: 901, task: 000000002fb7a038, ksp: 000000002f02bc78)
-> Krnl PSW : 0704300180000000 00000000002141ba (blk_remove_plug+0xb2/0xb8)
->            R:0 T:1 IO:1 EX:1 Key:0 M:1 W:0 P:0 AS:0 CC:3 PM:0 EA:3
-> Krnl GPRS: 0000000000000001 0000000000000001 0000000022811440 0000000022811798
->            000000000027ff4e 0000000000000000 0000000000000000 000000002f00f000
->            070000000006a0f4 000000002af70000 000000002af2a800 00000000228d1c00
->            0000000022811440 000000000050c708 000000002f02bca8 000000002f02bc80
-> Krnl Code: 00000000002141b0: b9140022		lgfr	%r2,%r2
->            00000000002141b4: 07fe		bcr	15,%r14
->            00000000002141b6: a7f40001		brc	15,2141b8
->           >00000000002141ba: a7f4ffbe		brc	15,214136
->            00000000002141be: 0707		bcr	0,%r7
->            00000000002141c0: ebaff0680024	stmg %r10,%r15,104(%r15)
->            00000000002141c6: c0d00017c2a9	larl	%r13,50c718
->            00000000002141cc: a7f13fc0		tmll	%r15,16320
-> Call Trace:
-> ([<000000000050e7d8>] C.272.16122+0x88/0x110)
->  [<00000000002141ec>] __blk_run_queue+0x2c/0x154
->  [<000000000028013a>] fc_remote_port_add+0x85e/0x95c
->  [<000000000037596e>] zfcp_scsi_rport_work+0xe6/0x148
->  [<000000000006908c>] worker_thread+0x25c/0x318
->  [<000000000006f10c>] kthread+0x94/0x9c
->  [<000000000001c2b2>] kernel_thread_starter+0x6/0xc
->  [<000000000001c2ac>] kernel_thread_starter+0x0/0xc
-> INFO: lockdep is turned off.
-> Last Breaking-Event-Address:
->  [<00000000002141b6>] blk_remove_plug+0xae/0xb8
->
-> The FC pass-through support triggers the WARN_ON(!irqs_disabled()) in
-> blk_plug_device. Since blk_plug_device requires being called with
-> disabled interrupts, use spin_lock_irqsave in fc_bsg_goose_queue to
-> disable the interrupts before calling into the block layer.
->
-> Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
-> ---
->
->  drivers/scsi/scsi_transport_fc.c |    5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
->
-> diff -urpN linux-2.6/drivers/scsi/scsi_transport_fc.c linux-2.6-patched/drivers/scsi/scsi_transport_fc.c
-> --- linux-2.6/drivers/scsi/scsi_transport_fc.c	2009-06-26 09:56:55.000000000 +0200
-> +++ linux-2.6-patched/drivers/scsi/scsi_transport_fc.c	2009-06-26 09:57:06.000000000 +0200
-> @@ -3670,13 +3670,14 @@ static void
->  fc_bsg_goose_queue(struct fc_rport *rport)
->  {
->  	int flagset;
-> +	unsigned long flags;
->  
->  	if (!rport->rqst_q)
->  		return;
->  
->  	get_device(&rport->dev);
->  
-> -	spin_lock(rport->rqst_q->queue_lock);
-> +	spin_lock_irqsave(rport->rqst_q->queue_lock, flags);
->  	flagset = test_bit(QUEUE_FLAG_REENTER, &rport->rqst_q->queue_flags) &&
->  		  !test_bit(QUEUE_FLAG_REENTER, &rport->rqst_q->queue_flags);
->  	if (flagset)
-> @@ -3684,7 +3685,7 @@ fc_bsg_goose_queue(struct fc_rport *rpor
->  	__blk_run_queue(rport->rqst_q);
->  	if (flagset)
->  		queue_flag_clear(QUEUE_FLAG_REENTER, rport->rqst_q);
-> -	spin_unlock(rport->rqst_q->queue_lock);
-> +	spin_unlock_irqrestore(rport->rqst_q->queue_lock, flags);
->  
->  	put_device(&rport->dev);
->  }
->
->
->   
+Thoughts, comments?
+
+--
+Christof Schmitt
+
+---
+ drivers/scsi/scsi_transport_fc.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+--- a/drivers/scsi/scsi_transport_fc.c	2009-06-23 14:41:20.000000000 +0200
++++ b/drivers/scsi/scsi_transport_fc.c	2009-06-23 15:22:21.000000000 +0200
+@@ -2580,9 +2580,7 @@ fc_remote_port_add(struct Scsi_Host *sho
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 
+ 	list_for_each_entry(rport, &fc_host->rports, peers) {
+-
+-		if ((rport->port_state == FC_PORTSTATE_BLOCKED) &&
+-			(rport->channel == channel)) {
++		if (rport->channel == channel) {
+ 
+ 			switch (fc_host->tgtid_bind_type) {
+ 			case FC_TGTID_BIND_BY_WWPN:
