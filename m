@@ -1,77 +1,42 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [dm-devel] mechanism for multipath to pass information to
-	hardware handler
-Date: Fri, 26 Jun 2009 17:03:36 -0700
-Message-ID: <1246061016.14164.45.camel@chandra-ubuntu>
-References: <1245863681.8709.135.camel@eddie-laptop>
-	 <1246043447.3925.64.camel@mulgrave.site>
-	 <1246045509.14164.33.camel@chandra-ubuntu>
-	 <1246046154.3925.80.camel@mulgrave.site>
-Reply-To: sekharan@linux.vnet.ibm.com
+From: Takahiro Yasui <tyasui@redhat.com>
+Subject: Re: [PATCH] scsi_devinfo: update Hitachi entries
+Date: Fri, 26 Jun 2009 20:18:54 -0400
+Message-ID: <4A45656E.4050903@redhat.com>
+References: <4A2405FD.3000901@redhat.com>	 <1243875275.4203.19.camel@mulgrave.int.hansenpartnership.com>	 <4A241229.5050009@redhat.com> <1243886776.4203.33.camel@mulgrave.int.hansenpartnership.com> <4A26A787.6020903@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-2022-JP
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:45669 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752209AbZF0ABQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jun 2009 20:01:16 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e35.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n5QNrr7w000606
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2009 17:53:53 -0600
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n5R01Ivs243566
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2009 18:01:18 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n5R01ItB012480
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2009 18:01:18 -0600
-In-Reply-To: <1246046154.3925.80.camel@mulgrave.site>
+Received: from mx2.redhat.com ([66.187.237.31]:48584 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751646AbZF0ASz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Jun 2009 20:18:55 -0400
+In-Reply-To: <4A26A787.6020903@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, asson_ronald <asson_ronald@emc.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Mike Christie <mchristi@redhat.com>, "Benoit, Arthur" <Benoit_Arthur@emc.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-
-On Fri, 2009-06-26 at 14:55 -0500, James Bottomley wrote:
-> On Fri, 2009-06-26 at 12:45 -0700, Chandra Seetharaman wrote:
-> > Yes, Mike Christie and I were aware of this and it was one of the issue
-> > we were trying to resolve before we pushed scsi_dh interface upstream.
-> > (It is little complicated as we need the parameters to be set per
-> > vendor-product tuple).
-> > 
-> > The original code I ported to scsi_dh interface was from Ed Goggin(who
-> > was working for EMC then). IIRC, he was also aware of this issue.
-> > 
-> > When we pushed scsi_dh interface, we did get few of the EMC folks (on
-> > Cc) to review/test the code and they did, and this issue was not seen as
-> > a problem. 
-> > 
-> > We wanted to get back to that issue sometime later, got busy with other
-> > things, and it disappeared from my list of things-to-do as the
-> > regression was not seen as an issue (till now :)... I will get back to
-> > it.
+On 06/03/09 12:40, Takahiro Yasui wrote:
+> http://marc.info/?l=linux-scsi&m=114366299120761&w=2
+>> - Blacklist flags are not used to do special handling if needed.
+>> - If the device does NOT support the REPORT_LUNS scan, we won't
+>>   see any LUN at all, as we don't even look for LUN 1 then.
 > 
-> One way around this might simply be to make the device_handlers create a
-> sysfs interface for additional parameters.  Then the multipath command
-
-Yes, having a per device interface is one of the options we considered.
-Once we have that defined we can either use sysfs or a scsi_dh_8() API
-to achieve the same.
-
-But we wanted to have it per vendor-product instead of per device, I
-don't recall the problems associated with it. Mike(C), do you recall ?
-
-> can feed them (or in a pinch, users relying on the features can pass
-> them in manually).  Right at the moment having no possible work around
-> does appear to be an issue.
-
-I will try to roll up a patch soon.
+> In kernel 2.6.16,  sequential_lun_scan() had a argument, lun0_res,
+> and lun >=1 was not recognized when lun0 was not attached. Therefore,
+> it seems that BLIST_ATTACH_PQ3 was necessary to pretend lun0 exists.
 > 
-> James
+> But if those two are the only reason to be solved, I don't think
+> BLIST_ATTACH_PQ3 is necessary for storages which can handle REPORT_LUNS.
 > 
-> 
-> --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://www.redhat.com/mailman/listinfo/dm-devel
+> As you mentioned, leaving BLIST_ATTACH_PQ3 in the flag does not change
+> the original behaviour, but I hope the BLIST_ATTACH_PQ3 flag is removed
+> from OPEN-E so that lun0 is not installed when a storage returns PQ3 as
+> other storages.
 
+I will evaluate BLIST_ATTACH_PQ3 flags on our storages, and post
+the result here. Please give me some time.
+
+Thanks,
+Taka
