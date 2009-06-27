@@ -1,124 +1,101 @@
-From: Jaswinder Singh Rajput <jaswinder@kernel.org>
-Subject: Re: [PATCH] SCSI: userspace cannot use scsi_command_size_tbl,
- COMMAND_SIZE and scsi_device_type
-Date: Sat, 27 Jun 2009 23:26:28 +0530
-Message-ID: <1246125388.32198.14.camel@hpdv5.satnam>
-References: <1246122359.32198.7.camel@hpdv5.satnam>
-	 <1246123628.3990.19.camel@mulgrave.site>
+From: "Karen Xie" <kxie@chelsio.com>
+Subject: RE: [PATCH 2.6.30-rc] cxgb3i -- fixed connection error when vlan is enabled
+Date: Sat, 27 Jun 2009 11:13:18 -0700
+Message-ID: <8A71B368A89016469F72CD08050AD33403F4AFA9@maui.asicdesigners.com>
+References: <200906262217.n5QMHTXg006358@localhost.localdomain><4A465C47.8050100@cs.wisc.edu> <1246125325.3990.29.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:40375 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754769AbZF0R4q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 27 Jun 2009 13:56:46 -0400
-In-Reply-To: <1246123628.3990.19.camel@mulgrave.site>
+Received: from stargate.chelsio.com ([67.207.112.58]:32343 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751062AbZF0SPi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Jun 2009 14:15:38 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Sam Ravnborg <sam@ravnborg.org>, Boaz Harrosh <bharrosh@panasas.com>, Benny Halevy <bhalevy@panasas.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Matthew Wilcox <matthew@wil.cx>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
 
-On Sat, 2009-06-27 at 12:27 -0500, James Bottomley wrote:
-> All SCSI patches should be cc'd to the SCSI list
-> 
-> On Sat, 2009-06-27 at 22:35 +0530, Jaswinder Singh Rajput wrote:
-> > userspace cannot use scsi_command_size_tbl, COMMAND_SIZE
-> > and scsi_device_type defined in kernel
-> > 
-> > fix the following 'make headers_check' warnings:
-> > 
-> >   usr/include/scsi/scsi.h:159: userspace cannot call function or variable defined in the kernel
-> >   usr/include/scsi/scsi.h:285: userspace cannot call function or variable defined in the kernel
-> > 
-> > Signed-off-by: Jaswinder Singh Rajput <jaswinderrajput@gmail.com>
+James & Mike,
+
+Yes, I will cc netdev list next time if there is anything related to the networking.
+
+James, thanks for fixing up the patch. I was using a older tree sorry about it.
+
+Thanks,
+Karen
+
+
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
+Sent: Sat 6/27/2009 10:55 AM
+To: Mike Christie
+Cc: open-iscsi@googlegroups.com; linux-scsi@vger.kernel.org; Karen Xie
+Subject: Re: [PATCH 2.6.30-rc] cxgb3i -- fixed connection error when vlan is enabled
+ 
+On Sat, 2009-06-27 at 12:52 -0500, Mike Christie wrote:
+> On 06/26/2009 05:17 PM, kxie@chelsio.com wrote:
+> > [PATCH 2.6.30-rc] cxgb3i -- fixed connection error when vlan is enabled
+> >
+> > From: Karen Xie<kxie@chelsio.com>
+> >
+> > There is a bug when VLAN is configured on the cxgb3 interface, the iscsi
+> > conn. would be denied with message "cxgb3i: NOT going through cxgbi device."
+> >
+> > This patch added code to get the real egress net_device when vlan is configured.
+> >
+> > Signed-off-by: Karen Xie<kxie@chelsio.com>
 > > ---
-> >  include/scsi/scsi.h |   13 +++++++------
-> >  1 files changed, 7 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-> > index 084478e..7ba5acf 100644
-> > --- a/include/scsi/scsi.h
-> > +++ b/include/scsi/scsi.h
-> > @@ -156,9 +156,6 @@ scsi_varlen_cdb_length(const void *hdr)
-> >  	return ((struct scsi_varlen_cdb_hdr *)hdr)->additional_cdb_length + 8;
-> >  }
-> >  
-> > -extern const unsigned char scsi_command_size_tbl[8];
-> > -#define COMMAND_SIZE(opcode) scsi_command_size_tbl[((opcode) >> 5) & 7]
-> > -
-> >  static inline unsigned
-> >  scsi_command_size(const unsigned char *cmnd)
-> >  {
-> > @@ -166,6 +163,13 @@ scsi_command_size(const unsigned char *cmnd)
-> >  		scsi_varlen_cdb_length(cmnd) : COMMAND_SIZE(cmnd[0]);
+> >
+> >   drivers/scsi/cxgb3i/cxgb3i_iscsi.c |    4 ++++
+> >   1 files changed, 4 insertions(+), 0 deletions(-)
+> >
+> >
+> > diff --git a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
+> > index 04a4374..60013a4 100644
+> > --- a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
+> > +++ b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
+> > @@ -13,6 +13,7 @@
+> >
+> >   #include<linux/inet.h>
+> >   #include<linux/crypto.h>
+> > +#include<linux/if_vlan.h>
+> >   #include<net/tcp.h>
+> >   #include<scsi/scsi_cmnd.h>
+> >   #include<scsi/scsi_device.h>
+> > @@ -183,6 +184,9 @@ static struct cxgb3i_hba *cxgb3i_hba_find_by_netdev(struct net_device *ndev)
+> >   	struct cxgb3i_adapter *snic;
+> >   	int i;
+> >
+> > +	if (ndev->priv_flags&  IFF_802_1Q_VLAN)
+> > +		ndev = vlan_dev_real_dev(ndev);
+> > +
+> >   	read_lock(&cxgb3i_snic_rwlock);
+> >   	list_for_each_entry(snic,&cxgb3i_snic_list, list_head) {
+> >   		for (i = 0; i<  snic->hba_cnt; i++) {
+> >
 > 
-> Even a simple eyeball inspection of this patch shows that the removal of
-> COMMAND_SIZE above causes this inline function to fail to compile.
+> It looks ok, but when touching network stuff you might want to cc the 
+> netdev list in the future. Well, maybe for non-trivial stuff at least. 
+> This might be fine.
 > 
-> If you can't be bothered even to read your own patches or at the very
-> least compile test them, what makes you think I should bother reading
-> anything you send in?
-> 
+> Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
 
-oops I am sorry, actually it should be RFC I want to check whether I
-need to cover more member under __KERNEL__
+Thanks, but actually this patch gives a rejection here because of a
+commit made by Herbert Xu which is already in mainline:
 
-[RFC][PATCH] SCSI: userspace cannot use scsi_command_size_tbl, scsi_device_type and friends
+commit f00a3328bf9ecff46abd68a421693ba71cd16fc8
+Author: Herbert Xu <herbert@gondor.apana.org.au>
+Date:   Sat May 30 13:40:04 2009 +1000
 
-userspace cannot use scsi_command_size_tbl and scsi_device_type defined in kernel
-as well as its friends :
+    [SCSI] cxgb3i: Include net/dst.h for struct dst_cache
 
-- SCSI_MAX_VARLEN_CDB_SIZE
-- COMMAND_SIZE
-- struct scsi_varlen_cdb_hdr
-- scsi_varlen_cdb_length()
-- scsi_command_size()
+It's simple enough to fix up, so I did it, but next time could you
+(Karen) check your patches against the relevant trees to make sure
+they're up to date.
 
-fix the following 'make headers_check' warnings:
-
-  usr/include/scsi/scsi.h:159: userspace cannot call function or variable defined in the kernel
-  usr/include/scsi/scsi.h:285: userspace cannot call function or variable defined in the kernel
-
-Signed-off-by: Jaswinder Singh Rajput <jaswinderrajput@gmail.com>
----
- include/scsi/scsi.h |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 084478e..5ac0157 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -134,6 +134,7 @@ struct scsi_cmnd;
- #define	ATA_16		      0x85	/* 16-byte pass-thru */
- #define	ATA_12		      0xa1	/* 12-byte pass-thru */
- 
-+#ifdef __KERNEL__
- /*
-  *	SCSI command lengths
-  */
-@@ -166,6 +167,9 @@ scsi_command_size(const unsigned char *cmnd)
- 		scsi_varlen_cdb_length(cmnd) : COMMAND_SIZE(cmnd[0]);
- }
- 
-+/* Returns a human-readable name for the device */
-+extern const char * scsi_device_type(unsigned type);
-+#endif
- /*
-  *  SCSI Architecture Model (SAM) Status codes. Taken from SAM-3 draft
-  *  T10/1561-D Revision 4 Draft dated 7th November 2002.
-@@ -281,9 +285,6 @@ enum scsi_protocol {
- 	SCSI_PROTOCOL_UNSPEC = 0xf, /* No specific protocol */
- };
- 
--/* Returns a human-readable name for the device */
--extern const char * scsi_device_type(unsigned type);
--
- /*
-  * standard mode-select header prepended to all mode-select commands
-  */
--- 
-1.6.0.6
+James
 
 
 
