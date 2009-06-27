@@ -1,84 +1,66 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: mechanism for multipath to pass information to	hardware
-	handler
-Date: Sat, 27 Jun 2009 12:48:26 -0500
-Message-ID: <4A465B6A.5070507@cs.wisc.edu>
-References: <1245863681.8709.135.camel@eddie-laptop>	
-	<1246043447.3925.64.camel@mulgrave.site>	
-	<1246045509.14164.33.camel@chandra-ubuntu>	
-	<1246046154.3925.80.camel@mulgrave.site>
-	<1246061016.14164.45.camel@chandra-ubuntu>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+Subject: Re: [PATCH 2.6.30-rc] cxgb3i -- fixed connection error when vlan
+ is enabled
+Date: Sat, 27 Jun 2009 12:52:07 -0500
+Message-ID: <4A465C47.8050100@cs.wisc.edu>
+References: <200906262217.n5QMHTXg006358@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1246061016.14164.45.camel@chandra-ubuntu>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: sekharan@linux.vnet.ibm.com
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, asson_ronald <asson_ronald@emc.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, device-mapper development <dm-devel@redhat.com>, Mike Christie <mchristi@redhat.com>, "Benoit,
-	Arthur" <Benoit_Arthur@emc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:60754 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755661AbZF0RwO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 27 Jun 2009 13:52:14 -0400
+In-Reply-To: <200906262217.n5QMHTXg006358@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: open-iscsi@googlegroups.com
+Cc: linux-scsi@vger.kernel.org, kxie@chelsio.com, James.Bottomley@HansenPartnership.com
 
-On 06/26/2009 07:03 PM, Chandra Seetharaman wrote:
-> On Fri, 2009-06-26 at 14:55 -0500, James Bottomley wrote:
->> On Fri, 2009-06-26 at 12:45 -0700, Chandra Seetharaman wrote:
->>> Yes, Mike Christie and I were aware of this and it was one of the issue
->>> we were trying to resolve before we pushed scsi_dh interface upstream.
->>> (It is little complicated as we need the parameters to be set per
->>> vendor-product tuple).
->>>
->>> The original code I ported to scsi_dh interface was from Ed Goggin(who
->>> was working for EMC then). IIRC, he was also aware of this issue.
->>>
->>> When we pushed scsi_dh interface, we did get few of the EMC folks (on
->>> Cc) to review/test the code and they did, and this issue was not seen as
->>> a problem.
->>>
->>> We wanted to get back to that issue sometime later, got busy with other
->>> things, and it disappeared from my list of things-to-do as the
->>> regression was not seen as an issue (till now :)... I will get back to
->>> it.
->> One way around this might simply be to make the device_handlers create a
->> sysfs interface for additional parameters.  Then the multipath command
+On 06/26/2009 05:17 PM, kxie@chelsio.com wrote:
+> [PATCH 2.6.30-rc] cxgb3i -- fixed connection error when vlan is enabled
 >
-> Yes, having a per device interface is one of the options we considered.
-> Once we have that defined we can either use sysfs or a scsi_dh_8() API
-> to achieve the same.
+> From: Karen Xie<kxie@chelsio.com>
 >
-> But we wanted to have it per vendor-product instead of per device, I
-> don't recall the problems associated with it. Mike(C), do you recall ?
+> There is a bug when VLAN is configured on the cxgb3 interface, the iscsi
+> conn. would be denied with message "cxgb3i: NOT going through cxgbi device."
+>
+> This patch added code to get the real egress net_device when vlan is configured.
+>
+> Signed-off-by: Karen Xie<kxie@chelsio.com>
+> ---
+>
+>   drivers/scsi/cxgb3i/cxgb3i_iscsi.c |    4 ++++
+>   1 files changed, 4 insertions(+), 0 deletions(-)
+>
+>
+> diff --git a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
+> index 04a4374..60013a4 100644
+> --- a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
+> +++ b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
+> @@ -13,6 +13,7 @@
+>
+>   #include<linux/inet.h>
+>   #include<linux/crypto.h>
+> +#include<linux/if_vlan.h>
+>   #include<net/tcp.h>
+>   #include<scsi/scsi_cmnd.h>
+>   #include<scsi/scsi_device.h>
+> @@ -183,6 +184,9 @@ static struct cxgb3i_hba *cxgb3i_hba_find_by_netdev(struct net_device *ndev)
+>   	struct cxgb3i_adapter *snic;
+>   	int i;
+>
+> +	if (ndev->priv_flags&  IFF_802_1Q_VLAN)
+> +		ndev = vlan_dev_real_dev(ndev);
+> +
+>   	read_lock(&cxgb3i_snic_rwlock);
+>   	list_for_each_entry(snic,&cxgb3i_snic_list, list_head) {
+>   		for (i = 0; i<  snic->hba_cnt; i++) {
 >
 
-I do not think you want the interface to be per vendor-product in the 
-kernel. You might want some devices with some feature on and some with 
-it off. In userspace we can decide if it is should be per vendor-product 
-or per device, and then have multipath set things up. The kernel 
-interface should probably be more generic.
+It looks ok, but when touching network stuff you might want to cc the 
+netdev list in the future. Well, maybe for non-trivial stuff at least. 
+This might be fine.
 
-
->> can feed them (or in a pinch, users relying on the features can pass
->> them in manually).  Right at the moment having no possible work around
->> does appear to be an issue.
->
-> I will try to roll up a patch soon.
->> James
->>
->>
->> --
->> dm-devel mailing list
->> dm-devel@redhat.com
->> https://www.redhat.com/mailman/listinfo/dm-devel
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
