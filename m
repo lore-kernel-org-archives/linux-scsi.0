@@ -1,46 +1,37 @@
-From: "Michael Chan" <mchan@broadcom.com>
-Subject: Re: [PATCH 1/3] bnx2i remove not so useful global variable
- bnx2i_reg_devices
-Date: Sun, 28 Jun 2009 08:46:59 -0700
-Message-ID: <C27F8246C663564A84BB7AB343977242178EE7808C@IRVEXCHCCR01.corp.ad.broadcom.com>
-References: <1246199631.4190.7.camel@mulgrave.site>
-Mime-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 42/62] drivers/scsi/bnx2i/bnx2i_hwi.c: Remove unnecessary semicolons
+Date: Sun, 28 Jun 2009 09:26:47 -0700
+Message-ID: <cc702ae6f0259b9e501e89cc38e8b6663b056d04.1246173682.git.joe@perches.com>
+References: <cover.1246173664.git.joe@perches.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1351 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753368AbZF1Pr2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Jun 2009 11:47:28 -0400
-In-Reply-To: <1246199631.4190.7.camel@mulgrave.site>
-Content-Language: en-US
+Received: from 136-022.dsl.LABridge.com ([206.117.136.22]:1153 "EHLO
+	mail.perches.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757184AbZF1Q16 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Jun 2009 12:27:58 -0400
+In-Reply-To: <cover.1246173664.git.joe@perches.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@HansenPartnership.com>, Anil Veerabhadrappa <anilgv@broadcom.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>
+To: linux-kernel@vger.kernel.org
+Cc: trivial@kernel.org, Andrew Morton <akpm@linux-foundation.org>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/scsi/bnx2i/bnx2i_hwi.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> On Tue, 2009-06-23 at 18:11 -0700, Anil Veerabhadrappa wrote:
-> > >From a8267738e9ca5c73ad6c0d89f17cf864bfc908c8 Mon Sep 17
-> 00:00:00 2001
-> > From: Anil Veerabhadrappa <anilgv@broadcom.com>
-> > Date: Tue, 23 Jun 2009 13:56:29 -0700
-> > Subject: [PATCH]     bnx2i - remove global variable
-> bnx2i_reg_devices
-> >
-> >     * Removed bnx2i_reg_devices as this counter is not really
-> >       used in a meaningful way
-> >     Cc: Mike Christie <michaelc@cs.wisc.edu>
-> >
-> > Signed-off-by: Michael Chan <mchan@broadcom.com>
-> > Signed-off-by: Anil Veerabhadrappa <anilgv@broadcom.com>
->
-> Tell me what these signoffs mean:  The first signoff by Michael Chan
-> implies it's his patch, but it has your authorship information.
->
-
-Sorry, Anil should have put his signoff first.  Do we need to re-spin
-the pacthes?
+diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
+index 906cef5..41e1b0e 100644
+--- a/drivers/scsi/bnx2i/bnx2i_hwi.c
++++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
+@@ -1340,7 +1340,7 @@ static int bnx2i_process_login_resp(struct iscsi_session *session,
+ 	resp_hdr->opcode = login->op_code;
+ 	resp_hdr->flags = login->response_flags;
+ 	resp_hdr->max_version = login->version_max;
+-	resp_hdr->active_version = login->version_active;;
++	resp_hdr->active_version = login->version_active;
+ 	resp_hdr->hlength = 0;
+ 
+ 	hton24(resp_hdr->dlength, login->data_length);
+-- 
+1.6.3.1.10.g659a0.dirty
 
