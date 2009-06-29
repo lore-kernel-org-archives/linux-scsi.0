@@ -1,39 +1,85 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [BUG] Linux-2.6.31-rc1 Fails To Recognize Some USB Disks
-Date: Sun, 28 Jun 2009 23:21:36 -0400
-Message-ID: <yq1zlbrn2rj.fsf@sermon.lab.mkp.net>
-References: <4A4472DF.1050900@turknet.net.tr>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [dm-devel] [PATCH]: create sysfs file,	dh_state for SCSI devices
+ even if they	are not in the inteernal lists
+Date: Mon, 29 Jun 2009 09:40:32 +0200
+Message-ID: <4A486FF0.7040209@suse.de>
+References: <1246069888.14164.53.camel@chandra-ubuntu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet11.oracle.com ([148.87.113.123]:29685 "EHLO
-	rgminet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751906AbZF2DV7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Jun 2009 23:21:59 -0400
-In-Reply-To: <4A4472DF.1050900@turknet.net.tr> (Tarkan Erimer's message of
-	"Fri, 26 Jun 2009 10:03:59 +0300")
+Received: from cantor.suse.de ([195.135.220.2]:38436 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751182AbZF2Hka (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Jun 2009 03:40:30 -0400
+In-Reply-To: <1246069888.14164.53.camel@chandra-ubuntu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tarkan Erimer <tarkan.erimer@turknet.net.tr>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>
+To: sekharan@linux.vnet.ibm.com, device-mapper development <dm-devel@redhat.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mario Mech <mech@meteo.uni-koeln.de>
 
->>>>> "Tarkan" == Tarkan Erimer <tarkan.erimer@turknet.net.tr> writes:
+Chandra Seetharaman wrote:
+> Create the sysfs file, dh_state even if the new SCSI device is not
+> in the any of the device handler's internal lists.
+>=20
+> Signed-Off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+> ---
+>  drivers/scsi/device_handler/scsi_dh.c |   11 ++++-------
+>  1 file changed, 4 insertions(+), 7 deletions(-)
+>=20
+> Index: linux-2.6.31-rc1/drivers/scsi/device_handler/scsi_dh.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux-2.6.31-rc1.orig/drivers/scsi/device_handler/scsi_dh.c
+> +++ linux-2.6.31-rc1/drivers/scsi/device_handler/scsi_dh.c
+> @@ -304,18 +304,15 @@ static int scsi_dh_notifier(struct notif
+>  	sdev =3D to_scsi_device(dev);
+> =20
+>  	if (action =3D=3D BUS_NOTIFY_ADD_DEVICE) {
+> +		err =3D device_create_file(dev, &scsi_dh_state_attr);
+> +		/* don't care about err */
+>  		devinfo =3D device_handler_match(NULL, sdev);
+> -		if (!devinfo)
+> -			goto out;
+> -
+> -		err =3D scsi_dh_handler_attach(sdev, devinfo);
+> -		if (!err)
+> -			err =3D device_create_file(dev, &scsi_dh_state_attr);
+> +		if (devinfo)
+> +			err =3D scsi_dh_handler_attach(sdev, devinfo);
+>  	} else if (action =3D=3D BUS_NOTIFY_DEL_DEVICE) {
+>  		device_remove_file(dev, &scsi_dh_state_attr);
+>  		scsi_dh_handler_detach(sdev, NULL);
+>  	}
+> -out:
+>  	return err;
+>  }
+> =20
+>=20
+>=20
+> --
+> dm-devel mailing list
+> dm-devel@redhat.com
+> https://www.redhat.com/mailman/listinfo/dm-devel
+NACK.
 
-Tarkan> Hi, I just tried to plug a "Western Digital, My Book Series" USB
-Tarkan> disk on 2.6.31-rc1. But, it failed to recognize it by saying
-Tarkan> "READ CAPACITY failed". The same disk works fine with =<
-Tarkan> 2.6.30.
+This will create sysfs attributes even if the attach()
+failed for other reason like a generic error. So we'll end
+up with device handler attributes and no device handler attached.
 
-Can you please mail us the output of...
+Not a good idea.
 
-# sg_inq /dev/sdb
-# sg_readcap /dev/sdb
-# sg_readcap -l /dev/sdb
+Cheers,
 
-... for that WD drive?
-
-You may have to install the sg3_utils package.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
