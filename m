@@ -1,35 +1,26 @@
 From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: [PATCH] firewire: sbp2: add support for disks >2 TB (and CBSs >12
+Subject: [PATCH] ieee1394: sbp2: add support for disks >2 TB (and CBSs >12
  bytes)
-Date: Mon, 29 Jun 2009 22:01:22 +0200 (CEST)
-Message-ID: <tkrat.a60470e5bddd2db4@s5r6.in-berlin.de>
+Date: Mon, 29 Jun 2009 22:02:06 +0200 (CEST)
+Message-ID: <tkrat.518b97167f27772a@s5r6.in-berlin.de>
 References: <85681F9DCBFF144DA59C70D83EBC1DA2E1EDE7@EIOISER.ioi.com.tw>
  <49FEFF7A.3090603@s5r6.in-berlin.de>
  <1241448686.3315.27.camel@mulgrave.int.hansenpartnership.com>
  <4A4908C4.1070705@s5r6.in-berlin.de>
+ <tkrat.a60470e5bddd2db4@s5r6.in-berlin.de>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; CHARSET=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:56706 "EHLO
+Received: from einhorn.in-berlin.de ([192.109.42.8]:56712 "EHLO
 	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752304AbZF2UBf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2009 16:01:35 -0400
-In-Reply-To: <4A4908C4.1070705@s5r6.in-berlin.de>
+	with ESMTP id S1757474AbZF2UCM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2009 16:02:12 -0400
+In-Reply-To: <tkrat.a60470e5bddd2db4@s5r6.in-berlin.de>
 Content-Disposition: INLINE
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux1394-devel@lists.sourceforge.net
 Cc: linux-scsi@vger.kernel.org, Ronald <Ronald@ioi.com.tw>
-
-I wrote:
-> I need to fix the SBP-2 drivers to set the limit correctly.  This will 
-> be a little more than one-liners though, I guess, because we need to 
-> check a target capability datum before we set the length limit.
-
-No, we don't need to check anything.  The transport allows for
-arbitrarily sized command descriptor blocks.
-
----------- 8< ----------
 
 We forgot to set Scsi_Host.max_cmd_len.  Therefore SCSI core sent at
 most 12 bytes long commands to FireWire targets.  Among else, this
@@ -37,16 +28,16 @@ prevented support of disks larger than 2 TB.
 
 Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
 ---
- drivers/firewire/sbp2.c |    6 ++++++
+ drivers/ieee1394/sbp2.c |    6 ++++++
  1 file changed, 6 insertions(+)
 
-Index: b/drivers/firewire/sbp2.c
+Index: b/drivers/ieee1394/sbp2.c
 ===================================================================
---- a/drivers/firewire/sbp2.c
-+++ b/drivers/firewire/sbp2.c
-@@ -1146,6 +1146,12 @@ static int sbp2_probe(struct device *dev
- 	if (fw_device_enable_phys_dma(device) < 0)
- 		goto fail_shost_put;
+--- a/drivers/ieee1394/sbp2.c
++++ b/drivers/ieee1394/sbp2.c
+@@ -881,6 +881,12 @@ static struct sbp2_lu *sbp2_alloc_device
+ 
+ 	shost->hostdata[0] = (unsigned long)lu;
  
 +	/*
 +	 * SBP-2 does not impose limits on the CDB length.  Targets may have
@@ -54,14 +45,12 @@ Index: b/drivers/firewire/sbp2.c
 +	 */
 +	shost->max_cmd_len = SCSI_MAX_VARLEN_CDB_SIZE;
 +
- 	if (scsi_add_host(shost, &unit->device) < 0)
- 		goto fail_shost_put;
- 
-
+ 	if (!scsi_add_host(shost, &ud->device)) {
+ 		lu->shost = shost;
+ 		return lu;
 
 -- 
 Stefan Richter
 -=====-==--= -==- ===-=
 http://arcgraph.de/sr/
-
 
