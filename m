@@ -1,37 +1,57 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: can't access LUN >2TB with aic7xxx, Infortrend EonStor and
-	2.6.31-rc1
-Date: Mon, 29 Jun 2009 08:56:29 -0600
-Message-ID: <20090629145629.GP5480@parisc-linux.org>
-References: <20090629130835.GA3657@mother.pipebreaker.pl> <1246285984.3838.9.camel@mulgrave.site>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: Re: aha152x_cs: non-functional + locking error
+Date: Mon, 29 Jun 2009 08:07:56 -0700
+Message-ID: <4A48D8CC.8000900@xenotime.net>
+References: <4A452126.7040003@xenotime.net> <20090628202814.GA8498@norbit.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:57796 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759848AbZF2O40 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2009 10:56:26 -0400
-Content-Disposition: inline
-In-Reply-To: <1246285984.3838.9.camel@mulgrave.site>
+Received: from xenotime.net ([72.52.64.118]:56949 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752324AbZF2PIE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Jun 2009 11:08:04 -0400
+Received: from ::ffff:98.108.130.97 ([98.108.130.97]) by xenotime.net for <linux-scsi@vger.kernel.org>; Mon, 29 Jun 2009 08:07:57 -0700
+In-Reply-To: <20090628202814.GA8498@norbit.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Tomasz Torcz <tomek@pipebreaker.pl>, linux-scsi@vger.kernel.org
+To: =?ISO-8859-1?Q?=22J=FCrgen_E=2E_Fischer=22?= <jef@norbit.de>
+Cc: scsi <linux-scsi@vger.kernel.org>, fischer@norbit.de
 
-On Mon, Jun 29, 2009 at 09:33:03AM -0500, James Bottomley wrote:
-> +++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-> @@ -1241,6 +1241,7 @@ ahd_linux_register_host(struct ahd_softc *ahd, struct scsi_host_template *templa
->  	host->max_lun = AHD_NUM_LUNS;
->  	host->max_channel = 0;
->  	host->sg_tablesize = AHD_NSEG;
-> +	host->max_cmd_len = 32;
+J=FCrgen E. Fischer wrote:
+> Hi Randy,
+>=20
+> On Fri, 26. Jun 2009 at 12:27:34 -0700, Randy Dunlap wrote:
+>> When I try to use aha152x_cs on any recent kernel, I get messages li=
+ke
+>=20
+>> (scsi2:4:0) cannot abort running or disconnected command
+>> (scsi2:4:0) cannot reset current device
+>=20
+>> so I enabled lots of debugging (in 2.6.30) and get (end of message l=
+og):
+>=20
+> IIRC that might trigger lockups.
 
-James and I are discussing this off-list, but 32 is clearly not correct
-for aic79xx as the tag number will overwrite the command (or possibly
-vice versa).  We're just picking over the various options at the moment.
+It's non-functional for me without debugging as well.
+But not due to locking errors.
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+
+>> Does anyone successfully use aha152x_cs now?
+>=20
+> Just occasionally, when I need to scan something.  I tried 2.6.30 usi=
+ng that
+> scanner and an old disk.  Still works for me.
+
+ Thanks.
+
+--=20
+~Randy
+LPC 2009, Sept. 23-25, Portland, Oregon
+http://linuxplumbersconf.org/2009/
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
