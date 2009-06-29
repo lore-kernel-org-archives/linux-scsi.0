@@ -1,45 +1,60 @@
-From: Tomasz Torcz <tomek@pipebreaker.pl>
-Subject: Re: can't access LUN >2TB with aic7xxx, Infortrend EonStor and
-	2.6.31-rc1
-Date: Mon, 29 Jun 2009 18:13:41 +0200
-Message-ID: <20090629161341.GB3657@mother.pipebreaker.pl>
-References: <20090629130835.GA3657@mother.pipebreaker.pl> <20090629133431.GM5480@parisc-linux.org> <20090629134602.GN5480@parisc-linux.org>
+From: Ferenc Wagner <wferi@niif.hu>
+Subject: Re: [PATCH] scsi: fix documentation of scsi_mod.scan defaults
+Date: Mon, 29 Jun 2009 19:32:20 +0200
+Message-ID: <878wjbhrob.fsf@tac.ki.iif.hu>
+References: <87ws70m8yw.fsf@tac.ki.iif.hu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 193-34-3-65.chelmnet.pl ([193.34.3.65]:59359 "EHLO
-	mother.pipebreaker.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753488AbZF2QNk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2009 12:13:40 -0400
-Content-Disposition: inline
-In-Reply-To: <20090629134602.GN5480@parisc-linux.org>
+Received: from tac.ki.iif.hu ([193.6.222.43]:36763 "EHLO tac.ki.iif.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753039AbZF2Rc0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Jun 2009 13:32:26 -0400
+Received: from wferi by tac.ki.iif.hu with local (Exim 4.69)
+	(envelope-from <wferi@niif.hu>)
+	id 1MLKiK-00052Z-Mj
+	for linux-scsi@vger.kernel.org; Mon, 29 Jun 2009 19:32:20 +0200
+In-Reply-To: <87ws70m8yw.fsf@tac.ki.iif.hu> (Ferenc Wagner's message of "Thu,
+	25 Jun 2009 21:03:51 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, tomek@pipebreaker.pl
+To: linux-scsi@vger.kernel.org
 
-On Mon, Jun 29, 2009 at 07:46:03AM -0600, Matthew Wilcox wrote:
-> > 
-> > It's possible the aic7xxx hardware does support 16 byte commands.  If so,
-> > this is an easy fix.  If it doesn't, you could try replacing the card
-> > with one that does (for example, the LSI 8xx and 10xx cards all support
-> > 16 byte commands).
-> 
-> The aic79xx is a little more tricky ... it seems it has different cases to
-> support 12, 16 and >16 byte CDBs, but it's not clear that the >16 byte CDB case is implemented.  Let's be conservative for now and bump it up to 16 bytes instead of 32.
-> 
-> 
-> diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
-> index 75b2331..3853f33 100644
-> --- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-> +++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+Ferenc Wagner <wferi@niif.hu> writes:
 
+> Signed-off-by: Ferenc Wagner <wferi@niif.hu>
+> ---
+>  Documentation/kernel-parameters.txt |    9 +++++----
+>  1 files changed, 5 insertions(+), 4 deletions(-)
+>
+> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+> index 92e1ab8..848035b 100644
+> --- a/Documentation/kernel-parameters.txt
+> +++ b/Documentation/kernel-parameters.txt
+> @@ -2144,10 +2144,11 @@ and is between 256 and 4096 characters. It is defined in the file
+>  			S390-tools package, available for download at
+>  			http://www-128.ibm.com/developerworks/linux/linux390/s390-tools-1.5.4.html
+>  
+> -	scsi_mod.scan=	[SCSI] sync (default) scans SCSI busses as they are
+> -			discovered.  async scans them in kernel threads,
+> -			allowing boot to proceed.  none ignores them, expecting
+> -			user space to do the scan.
+> +	scsi_mod.scan=	[SCSI] sync scans SCSI busses as they are discovered.
+> +			async scans them in kernel threads, allowing boot to
+> +			proceed.  none ignores them, expecting user space to
+> +			do the scan.  Default is async if CONFIG_SCSI_SCAN_ASYNC
+> +			is defined, sync otherwise.
+>  
+>  	security=	[SECURITY] Choose a security module to enable at boot.
+>  			If this boot parameter is not specified, only the first
+> -- 
+> 1.5.6.5
 
-  Thanks for the patch, I will rebuild driver and test tomorrow.
+Hi,
 
-
+Please somebody educate me...  Why are my two documentation patches
+(this and and other in <87pre3ixyy.fsf@tac.ki.iif.hu> from 20 May)
+ignored?  Am I totally off the map?
 -- 
-Tomasz Torcz                "Funeral in the morning, IDE hacking
-xmpp: zdzichubg@chrome.pl    in the afternoon and evening." - Alan Cox
-
+Thanks,
+Feri.
