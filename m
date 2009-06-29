@@ -1,59 +1,97 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [dm-devel] REQUEST for new 'topology' metrics to be moved out
-	of the 'queue' sysfs directory.
-Date: Mon, 29 Jun 2009 13:41:21 +0200
-Message-ID: <20090629114121.GH23611@kernel.dk>
-References: <yq11vp8spxo.fsf@sermon.lab.mkp.net> <125b48b7ffc99a496fbdd512f38cada5.squirrel@neil.brown.name> <20090625194015.GB31415@kernel.dk> <19012.49673.454853.975682@notabene.brown> <20090626125037.GO23611@kernel.dk> <f0d53a7338e1be4e7bdcbe09223c6f73.squirrel@neil.brown.name> <20090626132940.GR23611@kernel.dk> <19014.4447.248248.63960@notabene.brown> <20090629101841.GF23611@kernel.dk> <b0aa07ac85efd6040501e4ea875176a3.squirrel@neil.brown.name>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: SG_DXFER_TO_FROM_DEV does not copy user buffer to driver buffer
+ in 	linux 2.6.28 and later?
+Date: Mon, 29 Jun 2009 13:41:20 +0200
+Message-ID: <4A48A860.5010803@interlog.com>
+References: <42a6d9690906281750i65c5c3ccy6bfac5e1055bae77@mail.gmail.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:56873 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750755AbZF2LlS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Jun 2009 07:41:18 -0400
-Content-Disposition: inline
-In-Reply-To: <b0aa07ac85efd6040501e4ea875176a3.squirrel@neil.brown.name>
+Received: from firefly.infotech.no ([82.134.31.146]:53813 "EHLO
+	elrond.bb.infotech.no" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752934AbZF2LlW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2009 07:41:22 -0400
+In-Reply-To: <42a6d9690906281750i65c5c3ccy6bfac5e1055bae77@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, Alasdair G Kergon <agk@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, device-mapper development <dm-devel@redhat.com>
+To: zhou sf <sxzzsf@gmail.com>
+Cc: linux-scsi@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-On Mon, Jun 29 2009, NeilBrown wrote:
-> On Mon, June 29, 2009 8:18 pm, Jens Axboe wrote:
-> > On Sat, Jun 27 2009, Neil Brown wrote:
-> >> > There's no such thing as first or second class block devices. The fact
-> >> > that drivers using ->make_request_fn directly do not utilize the full
-> >> > scope of the queue isn't a very interesting fact, imho.
-> >>
-> >>  Your phrase "drivers using ->make_request_fn directly" seems to
-> >>  suggest you are looking at things very differently to me.
-> >>
-> >>  From my perspective, all drivers use ->make_request_fn equally.
-> >>  Some set it to "__make_request", some to "md_make_request", others to
-> >>  "dm_request" or "loop_make_request" etc.
-> >
-> > Neil, will you please stop these silly games. Stop trying to invent
-> > differences based on interpretations of what you read into my replies.
+The semantics of SG_DXFER_TO_FROM_DEV were:
+   - copy user space buffer to kernel (LLD) buffer
+   - do SCSI command which is assumed to be of the DATA_IN
+     (data from device) variety. This would overwrite
+     some or all of the kernel buffer
+   - copy kernel (LLD) buffer back to the user space.
+
+The idea was to detect short reads by filling the original
+user space buffer with some marker bytes ("0xec" it would
+seem in this report). The "resid" value is a better way
+of detecting short reads but that was only added this century
+and requires co-operation from the LLD.
+
+There were major plumbing changes in the sg driver around
+lk 2.6.28 and it looks like the above nuance was lost.
+Perhaps the block layer does support the above "double
+shuffle".
+
+
+Doug Gilbert
+cc-ed to Tomo for comments
+
+
+zhou sf wrote:
+> Test with the following program, and dump the data buf at queuecommand
+> of the driver, found the data is something like:
+> "00 00 00 00 ff 53 4d 42 2e 00 00 00 00 80 01 c0 00 00 00 00 00 00 00
+> 00 00 00 00 00 02 20 4a ..."
+> While before 2.6.28, it is "ec ec ec ec ..." as expected.
 > 
 > 
-> We do seem to be having trouble communicating don't we :-(
-> Be assured that it is not my intention to play games, silly or otherwise.
+> #include <string.h>
+> #include <fcntl.h>
+> #include <sys/ioctl.h>
+> #include <scsi/sg.h>
 > 
-> Maybe I should just try sending you patches.  Maybe that will
-> make my meaning clearer.
+> int main(int argc, char* argv[])
+> {
+>        int fd;
+>        sg_io_hdr_t io_hdr;
+>        int ret;
 > 
-> For the moment, I'm much more interested in the other question,
-> that of whether I can avoid having a 'queue' directory introduced into
-> md/dm/etc device directories in sysfs.
-
-We already talked about this, several times. My answer is that it seems
-pointless to begin with internally, and externally it just makes the API
-worse since tools then have to know which device type they are talking
-to.
-
-So I still see absolutely zero point in making such a change, quite the
-opposite.
-
--- 
-Jens Axboe
+>        unsigned char sensebuf[32], cdb[16], outbuf[256];
+> 
+>        if ((argc!=2) || (fd = open(argv[1], O_RDWR)) < 0) {
+>                return -1;
+>        }
+> 
+>        memset(&io_hdr, 0, sizeof(sg_io_hdr_t));
+>        memset(cdb, 0, sizeof(cdb));
+>        memset(outbuf, 0xec, sizeof(outbuf));
+>        memset(sensebuf, 0xec, sizeof(sensebuf));
+> 
+>        io_hdr.interface_id = 'S';
+> 
+>        io_hdr.cmdp = cdb;
+>        io_hdr.cmd_len = sizeof(cdb);
+> 
+>        io_hdr.sbp = sensebuf;
+>        io_hdr.mx_sb_len = sizeof(sensebuf);
+> 
+>        io_hdr.dxferp = outbuf;
+>        io_hdr.dxfer_len = sizeof(outbuf);
+>        io_hdr.dxfer_direction = SG_DXFER_TO_FROM_DEV;
+> 
+>        io_hdr.timeout = 20000;
+> 
+>        ret = ioctl(fd, SG_IO, &io_hdr);
+>        return 0;
+> }
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
