@@ -1,50 +1,37 @@
-From: Drew <drew.kay@gmail.com>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: can't access LUN >2TB with aic7xxx, Infortrend EonStor and
 	2.6.31-rc1
-Date: Mon, 29 Jun 2009 07:54:42 -0700
-Message-ID: <c268e4660906290754m2e30d7ecs180fd2a45843646c@mail.gmail.com>
-References: <20090629130835.GA3657@mother.pipebreaker.pl> <20090629133431.GM5480@parisc-linux.org>
-	<c268e4660906290640k3364aeaey30d37b884a2ce1c6@mail.gmail.com>
-	<20090629134739.GO5480@parisc-linux.org>
+Date: Mon, 29 Jun 2009 08:56:29 -0600
+Message-ID: <20090629145629.GP5480@parisc-linux.org>
+References: <20090629130835.GA3657@mother.pipebreaker.pl> <1246285984.3838.9.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yx0-f188.google.com ([209.85.210.188]:33299 "EHLO
-	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759961AbZF2OzA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2009 10:55:00 -0400
-Received: by yxe26 with SMTP id 26so1332502yxe.33
-        for <linux-scsi@vger.kernel.org>; Mon, 29 Jun 2009 07:55:03 -0700 (PDT)
-In-Reply-To: <20090629134739.GO5480@parisc-linux.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:57796 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759848AbZF2O40 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2009 10:56:26 -0400
+Content-Disposition: inline
+In-Reply-To: <1246285984.3838.9.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Tomasz Torcz <tomek@pipebreaker.pl>, linux-scsi@vger.kernel.org
 
->> Would you not also have to partition the drive using GPT partitions?
->> LVM aside, I thought any partition over 2TB had to be GPT.
->
-> If you choose to partition the device at all -- I often create filesy=
-stems
-> directly on the block device. =C2=A0Regardless, you need the SCSI com=
-mand
-> to be able to get to the device before you can start worrying about
-> partitioning schemes.
+On Mon, Jun 29, 2009 at 09:33:03AM -0500, James Bottomley wrote:
+> +++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+> @@ -1241,6 +1241,7 @@ ahd_linux_register_host(struct ahd_softc *ahd, struct scsi_host_template *templa
+>  	host->max_lun = AHD_NUM_LUNS;
+>  	host->max_channel = 0;
+>  	host->sg_tablesize = AHD_NSEG;
+> +	host->max_cmd_len = 32;
 
-That's a given. I threw out the GPT issue because once the OP gets the
-hardware seeing the drive/lun they will, if they weren't already aware
-of it, run smack into the 2TB partition limit. Just trying to think a
-couple of steps ahead.
+James and I are discussing this off-list, but 32 is clearly not correct
+for aic79xx as the tag number will overwrite the command (or possibly
+vice versa).  We're just picking over the various options at the moment.
 
-
---=20
-Drew
-
-"Nothing in life is to be feared. It is only to be understood."
---Marie Curie
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
