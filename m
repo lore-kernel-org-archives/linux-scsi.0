@@ -1,101 +1,67 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [PATCH]: create sysfs file, dh_state for SCSI
-	devices even if they	are not in the inteernal lists
-Date: Mon, 29 Jun 2009 12:30:30 -0700
-Message-ID: <1246303830.15941.17.camel@chandra-ubuntu>
-References: <1246069888.14164.53.camel@chandra-ubuntu>
-	<4A486FF0.7040209@suse.de>
-Reply-To: sekharan@linux.vnet.ibm.com,
-	device-mapper development <dm-devel@redhat.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: [PATCH] firewire: sbp2: add support for disks >2 TB (and CBSs >12
+ bytes)
+Date: Mon, 29 Jun 2009 22:01:22 +0200 (CEST)
+Message-ID: <tkrat.a60470e5bddd2db4@s5r6.in-berlin.de>
+References: <85681F9DCBFF144DA59C70D83EBC1DA2E1EDE7@EIOISER.ioi.com.tw>
+ <49FEFF7A.3090603@s5r6.in-berlin.de>
+ <1241448686.3315.27.camel@mulgrave.int.hansenpartnership.com>
+ <4A4908C4.1070705@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <4A486FF0.7040209@suse.de>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: device-mapper development <dm-devel@redhat.com>
-Cc: Mario Mech <mech@meteo.uni-koeln.de>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: TEXT/PLAIN; CHARSET=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:56706 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752304AbZF2UBf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2009 16:01:35 -0400
+In-Reply-To: <4A4908C4.1070705@s5r6.in-berlin.de>
+Content-Disposition: INLINE
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux1394-devel@lists.sourceforge.net
+Cc: linux-scsi@vger.kernel.org, Ronald <Ronald@ioi.com.tw>
+
+I wrote:
+> I need to fix the SBP-2 drivers to set the limit correctly.  This will 
+> be a little more than one-liners though, I guess, because we need to 
+> check a target capability datum before we set the length limit.
+
+No, we don't need to check anything.  The transport allows for
+arbitrarily sized command descriptor blocks.
+
+---------- 8< ----------
+
+We forgot to set Scsi_Host.max_cmd_len.  Therefore SCSI core sent at
+most 12 bytes long commands to FireWire targets.  Among else, this
+prevented support of disks larger than 2 TB.
+
+Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+---
+ drivers/firewire/sbp2.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+Index: b/drivers/firewire/sbp2.c
+===================================================================
+--- a/drivers/firewire/sbp2.c
++++ b/drivers/firewire/sbp2.c
+@@ -1146,6 +1146,12 @@ static int sbp2_probe(struct device *dev
+ 	if (fw_device_enable_phys_dma(device) < 0)
+ 		goto fail_shost_put;
+ 
++	/*
++	 * SBP-2 does not impose limits on the CDB length.  Targets may have
++	 * limits, but this is going to be reported at the command set level.
++	 */
++	shost->max_cmd_len = SCSI_MAX_VARLEN_CDB_SIZE;
++
+ 	if (scsi_add_host(shost, &unit->device) < 0)
+ 		goto fail_shost_put;
+ 
 
 
-On Mon, 2009-06-29 at 09:40 +0200, Hannes Reinecke wrote:
-> Chandra Seetharaman wrote:
-> > Create the sysfs file, dh_state even if the new SCSI device is not
-> > in the any of the device handler's internal lists.
-> > 
-> > Signed-Off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> > ---
-> >  drivers/scsi/device_handler/scsi_dh.c |   11 ++++-------
-> >  1 file changed, 4 insertions(+), 7 deletions(-)
-> > 
-> > Index: linux-2.6.31-rc1/drivers/scsi/device_handler/scsi_dh.c
-> > ===================================================================
-> > --- linux-2.6.31-rc1.orig/drivers/scsi/device_handler/scsi_dh.c
-> > +++ linux-2.6.31-rc1/drivers/scsi/device_handler/scsi_dh.c
-> > @@ -304,18 +304,15 @@ static int scsi_dh_notifier(struct notif
-> >  	sdev = to_scsi_device(dev);
-> >  
-> >  	if (action == BUS_NOTIFY_ADD_DEVICE) {
-> > +		err = device_create_file(dev, &scsi_dh_state_attr);
-> > +		/* don't care about err */
-> >  		devinfo = device_handler_match(NULL, sdev);
-> > -		if (!devinfo)
-> > -			goto out;
-> > -
-> > -		err = scsi_dh_handler_attach(sdev, devinfo);
-> > -		if (!err)
-> > -			err = device_create_file(dev, &scsi_dh_state_attr);
-> > +		if (devinfo)
-> > +			err = scsi_dh_handler_attach(sdev, devinfo);
-> >  	} else if (action == BUS_NOTIFY_DEL_DEVICE) {
-> >  		device_remove_file(dev, &scsi_dh_state_attr);
-> >  		scsi_dh_handler_detach(sdev, NULL);
-> >  	}
-> > -out:
-> >  	return err;
-> >  }
-> >  
-> > 
-> > 
-> > --
-> > dm-devel mailing list
-> > dm-devel@redhat.com
-> > https://www.redhat.com/mailman/listinfo/dm-devel
-> NACK.
-> 
-> This will create sysfs attributes even if the attach()
-> failed for other reason like a generic error. So we'll end
-> up with device handler attributes and no device handler attached.
+-- 
+Stefan Richter
+-=====-==--= -==- ===-=
+http://arcgraph.de/sr/
 
-we do not have to worry about if attach failed or succeeded. We will
-have "detached" if there is no device handler is attached to a device. 
 
-Basically, existence of this file simply means that scsi_dh module is
-active, only the contents of this file will indicate if any device
-handler is attached or not.
-
-We are just creating the file dh_state for each SCSI device that exists
-and that is the only way non-in-built devices can be attached to a
-handler by the end-user.
-
-Do note that we do create this file for all the existing scsi devices
-when the scsi_dh module is inserted (see scsi_dh_init()).
-
-> 
-> Not a good idea.
-
-I do not agree, and we do need to have this fix for dh_state file to be
-functionally useful.
-
-> 
-> Cheers,
-> 
-> Hannes
