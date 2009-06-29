@@ -1,56 +1,44 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: [PATCH] ieee1394: sbp2: add support for disks >2 TB (and CBSs >12
- bytes)
-Date: Mon, 29 Jun 2009 22:02:06 +0200 (CEST)
-Message-ID: <tkrat.518b97167f27772a@s5r6.in-berlin.de>
-References: <85681F9DCBFF144DA59C70D83EBC1DA2E1EDE7@EIOISER.ioi.com.tw>
- <49FEFF7A.3090603@s5r6.in-berlin.de>
- <1241448686.3315.27.camel@mulgrave.int.hansenpartnership.com>
- <4A4908C4.1070705@s5r6.in-berlin.de>
- <tkrat.a60470e5bddd2db4@s5r6.in-berlin.de>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; CHARSET=us-ascii
+From: Gwendal Grignou <gwendal@google.com>
+Subject: [PATCH] Allow ATA_ passthrough command through sg.
+Date: Mon, 29 Jun 2009 14:24:25 -0700
+Message-ID: <1246310665-31727-1-git-send-email-gwendal@google.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:56712 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757474AbZF2UCM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2009 16:02:12 -0400
-In-Reply-To: <tkrat.a60470e5bddd2db4@s5r6.in-berlin.de>
-Content-Disposition: INLINE
+Received: from smtp-out.google.com ([216.239.33.17]:6640 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752581AbZF2VYc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2009 17:24:32 -0400
+In-Reply-To: <>
+References: <>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux1394-devel@lists.sourceforge.net
-Cc: linux-scsi@vger.kernel.org, Ronald <Ronald@ioi.com.tw>
+To: jens.axboe@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Gwendal Grignou <gwendal@google.com>
 
-We forgot to set Scsi_Host.max_cmd_len.  Therefore SCSI core sent at
-most 12 bytes long commands to FireWire targets.  Among else, this
-prevented support of disks larger than 2 TB.
+We can already send ATA specific commands using /dev/sd device files.
+This patch allow to use /dev/sg device files as well.
 
-Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Signed-off-by: Gwendal Grignou <gwendal@google.com>
 ---
- drivers/ieee1394/sbp2.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+ block/scsi_ioctl.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-Index: b/drivers/ieee1394/sbp2.c
-===================================================================
---- a/drivers/ieee1394/sbp2.c
-+++ b/drivers/ieee1394/sbp2.c
-@@ -881,6 +881,12 @@ static struct sbp2_lu *sbp2_alloc_device
- 
- 	shost->hostdata[0] = (unsigned long)lu;
- 
-+	/*
-+	 * SBP-2 does not impose limits on the CDB length.  Targets may have
-+	 * limits, but this is going to be reported at the command set level.
-+	 */
-+	shost->max_cmd_len = SCSI_MAX_VARLEN_CDB_SIZE;
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 82a0ca2..93fa53e 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -186,6 +186,12 @@ void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
+ 	__set_bit(GPCMD_LOAD_UNLOAD, filter->write_ok);
+ 	__set_bit(GPCMD_SET_STREAMING, filter->write_ok);
+ 	__set_bit(GPCMD_SET_READ_AHEAD, filter->write_ok);
 +
- 	if (!scsi_add_host(shost, &ud->device)) {
- 		lu->shost = shost;
- 		return lu;
-
++	/* ATA Passthrough */
++	__set_bit(ATA_12, filter->read_ok);
++	__set_bit(ATA_12, filter->write_ok);
++	__set_bit(ATA_16, filter->read_ok);
++	__set_bit(ATA_16, filter->write_ok);
+ }
+ EXPORT_SYMBOL_GPL(blk_set_cmd_filter_defaults);
+ 
 -- 
-Stefan Richter
--=====-==--= -==- ===-=
-http://arcgraph.de/sr/
+1.5.4.3
 
