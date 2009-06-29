@@ -1,65 +1,39 @@
-From: zhou sf <sxzzsf@gmail.com>
-Subject: SG_DXFER_TO_FROM_DEV does not copy user buffer to driver buffer in
-	linux 2.6.28 and later?
-Date: Mon, 29 Jun 2009 08:50:14 +0800
-Message-ID: <42a6d9690906281750i65c5c3ccy6bfac5e1055bae77@mail.gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [BUG] Linux-2.6.31-rc1 Fails To Recognize Some USB Disks
+Date: Sun, 28 Jun 2009 23:21:36 -0400
+Message-ID: <yq1zlbrn2rj.fsf@sermon.lab.mkp.net>
+References: <4A4472DF.1050900@turknet.net.tr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gx0-f226.google.com ([209.85.217.226]:42602 "EHLO
-	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753671AbZF2AuL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Jun 2009 20:50:11 -0400
-Received: by gxk26 with SMTP id 26so3309288gxk.13
-        for <linux-scsi@vger.kernel.org>; Sun, 28 Jun 2009 17:50:14 -0700 (PDT)
+Received: from rcsinet11.oracle.com ([148.87.113.123]:29685 "EHLO
+	rgminet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751906AbZF2DV7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Jun 2009 23:21:59 -0400
+In-Reply-To: <4A4472DF.1050900@turknet.net.tr> (Tarkan Erimer's message of
+	"Fri, 26 Jun 2009 10:03:59 +0300")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Tarkan Erimer <tarkan.erimer@turknet.net.tr>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>
 
-Test with the following program, and dump the data buf at queuecommand
-of the driver, found the data is something like:
-"00 00 00 00 ff 53 4d 42 2e 00 00 00 00 80 01 c0 00 00 00 00 00 00 00
-00 00 00 00 00 02 20 4a ..."
-While before 2.6.28, it is "ec ec ec ec ..." as expected.
+>>>>> "Tarkan" == Tarkan Erimer <tarkan.erimer@turknet.net.tr> writes:
 
+Tarkan> Hi, I just tried to plug a "Western Digital, My Book Series" USB
+Tarkan> disk on 2.6.31-rc1. But, it failed to recognize it by saying
+Tarkan> "READ CAPACITY failed". The same disk works fine with =<
+Tarkan> 2.6.30.
 
-#include <string.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <scsi/sg.h>
+Can you please mail us the output of...
 
-int main(int argc, char* argv[])
-{
-       int fd;
-       sg_io_hdr_t io_hdr;
-       int ret;
+# sg_inq /dev/sdb
+# sg_readcap /dev/sdb
+# sg_readcap -l /dev/sdb
 
-       unsigned char sensebuf[32], cdb[16], outbuf[256];
+... for that WD drive?
 
-       if ((argc!=2) || (fd = open(argv[1], O_RDWR)) < 0) {
-               return -1;
-       }
+You may have to install the sg3_utils package.
 
-       memset(&io_hdr, 0, sizeof(sg_io_hdr_t));
-       memset(cdb, 0, sizeof(cdb));
-       memset(outbuf, 0xec, sizeof(outbuf));
-       memset(sensebuf, 0xec, sizeof(sensebuf));
+-- 
+Martin K. Petersen	Oracle Linux Engineering
 
-       io_hdr.interface_id = 'S';
-
-       io_hdr.cmdp = cdb;
-       io_hdr.cmd_len = sizeof(cdb);
-
-       io_hdr.sbp = sensebuf;
-       io_hdr.mx_sb_len = sizeof(sensebuf);
-
-       io_hdr.dxferp = outbuf;
-       io_hdr.dxfer_len = sizeof(outbuf);
-       io_hdr.dxfer_direction = SG_DXFER_TO_FROM_DEV;
-
-       io_hdr.timeout = 20000;
-
-       ret = ioctl(fd, SG_IO, &io_hdr);
-       return 0;
-}
