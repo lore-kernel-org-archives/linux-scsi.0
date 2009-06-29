@@ -1,57 +1,82 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: aha152x_cs: non-functional + locking error
-Date: Mon, 29 Jun 2009 08:07:56 -0700
-Message-ID: <4A48D8CC.8000900@xenotime.net>
-References: <4A452126.7040003@xenotime.net> <20090628202814.GA8498@norbit.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [dm-devel] [PATCH]: create sysfs file, dh_state for SCSI
+ devices even if they	are not in the inteernal lists
+Date: Mon, 29 Jun 2009 11:09:03 -0500
+Message-ID: <1246291743.3838.13.camel@mulgrave.site>
+References: <1246069888.14164.53.camel@chandra-ubuntu>
+	 <4A486FF0.7040209@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([72.52.64.118]:56949 "HELO xenotime.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752324AbZF2PIE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Jun 2009 11:08:04 -0400
-Received: from ::ffff:98.108.130.97 ([98.108.130.97]) by xenotime.net for <linux-scsi@vger.kernel.org>; Mon, 29 Jun 2009 08:07:57 -0700
-In-Reply-To: <20090628202814.GA8498@norbit.de>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50691 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753429AbZF2QJF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Jun 2009 12:09:05 -0400
+In-Reply-To: <4A486FF0.7040209@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?ISO-8859-1?Q?=22J=FCrgen_E=2E_Fischer=22?= <jef@norbit.de>
-Cc: scsi <linux-scsi@vger.kernel.org>, fischer@norbit.de
+To: device-mapper development <dm-devel@redhat.com>
+Cc: sekharan@linux.vnet.ibm.com, Mario Mech <mech@meteo.uni-koeln.de>, linux-scsi <linux-scsi@vger.kernel.org>
 
-J=FCrgen E. Fischer wrote:
-> Hi Randy,
->=20
-> On Fri, 26. Jun 2009 at 12:27:34 -0700, Randy Dunlap wrote:
->> When I try to use aha152x_cs on any recent kernel, I get messages li=
-ke
->=20
->> (scsi2:4:0) cannot abort running or disconnected command
->> (scsi2:4:0) cannot reset current device
->=20
->> so I enabled lots of debugging (in 2.6.30) and get (end of message l=
-og):
->=20
-> IIRC that might trigger lockups.
+On Mon, 2009-06-29 at 09:40 +0200, Hannes Reinecke wrote:
+> Chandra Seetharaman wrote:
+> > Create the sysfs file, dh_state even if the new SCSI device is not
+> > in the any of the device handler's internal lists.
+> > 
+> > Signed-Off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+> > ---
+> >  drivers/scsi/device_handler/scsi_dh.c |   11 ++++-------
+> >  1 file changed, 4 insertions(+), 7 deletions(-)
+> > 
+> > Index: linux-2.6.31-rc1/drivers/scsi/device_handler/scsi_dh.c
+> > ===================================================================
+> > --- linux-2.6.31-rc1.orig/drivers/scsi/device_handler/scsi_dh.c
+> > +++ linux-2.6.31-rc1/drivers/scsi/device_handler/scsi_dh.c
+> > @@ -304,18 +304,15 @@ static int scsi_dh_notifier(struct notif
+> >  	sdev = to_scsi_device(dev);
+> >  
+> >  	if (action == BUS_NOTIFY_ADD_DEVICE) {
+> > +		err = device_create_file(dev, &scsi_dh_state_attr);
+> > +		/* don't care about err */
+> >  		devinfo = device_handler_match(NULL, sdev);
+> > -		if (!devinfo)
+> > -			goto out;
+> > -
+> > -		err = scsi_dh_handler_attach(sdev, devinfo);
+> > -		if (!err)
+> > -			err = device_create_file(dev, &scsi_dh_state_attr);
+> > +		if (devinfo)
+> > +			err = scsi_dh_handler_attach(sdev, devinfo);
+> >  	} else if (action == BUS_NOTIFY_DEL_DEVICE) {
+> >  		device_remove_file(dev, &scsi_dh_state_attr);
+> >  		scsi_dh_handler_detach(sdev, NULL);
+> >  	}
+> > -out:
+> >  	return err;
+> >  }
+> >  
+> > 
+> > 
+> > --
+> > dm-devel mailing list
+> > dm-devel@redhat.com
+> > https://www.redhat.com/mailman/listinfo/dm-devel
+> NACK.
+> 
+> This will create sysfs attributes even if the attach()
+> failed for other reason like a generic error. So we'll end
+> up with device handler attributes and no device handler attached.
+> 
+> Not a good idea.
 
-It's non-functional for me without debugging as well.
-But not due to locking errors.
+It strikes me that what is really being reinvented here is driver
+attachment with driver attribute files ...
+
+Now all of this could be avoided if we had multiple attachment of
+drivers ... 
+
+James
 
 
->> Does anyone successfully use aha152x_cs now?
->=20
-> Just occasionally, when I need to scan something.  I tried 2.6.30 usi=
-ng that
-> scanner and an old disk.  Still works for me.
-
- Thanks.
-
---=20
-~Randy
-LPC 2009, Sept. 23-25, Portland, Oregon
-http://linuxplumbersconf.org/2009/
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
