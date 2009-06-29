@@ -1,40 +1,31 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13572] hdparm -W1 /dev/sda causes oops and hard lockup
-Date: Mon, 29 Jun 2009 21:37:05 GMT
-Message-ID: <200906292137.n5TLb5kJ018762@demeter.kernel.org>
-References: <bug-13572-11613@http.bugzilla.kernel.org/>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] Allow ATA_ passthrough command through sg.
+Date: Mon, 29 Jun 2009 23:20:45 +0100
+Message-ID: <20090629232045.14a426b6@lxorguk.ukuu.org.uk>
+References: <1246310665-31727-1-git-send-email-gwendal@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:37427 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752496AbZF2VhD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2009 17:37:03 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n5TLb5HN018763
-	for <linux-scsi@vger.kernel.org>; Mon, 29 Jun 2009 21:37:05 GMT
-In-Reply-To: <bug-13572-11613@http.bugzilla.kernel.org/>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:36575 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752771AbZF2WTZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2009 18:19:25 -0400
+In-Reply-To: <1246310665-31727-1-git-send-email-gwendal@google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+Cc: jens.axboe@oracle.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Gwendal Grignou <gwendal@google.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13572
+On Mon, 29 Jun 2009 14:24:25 -0700
+Gwendal Grignou <gwendal@google.com> wrote:
 
+> We can already send ATA specific commands using /dev/sd device files.
+> This patch allow to use /dev/sg device files as well.
 
-Andrew Morton <akpm@linux-foundation.org> changed:
+That seems a very very bad idea. The point of the filters is only to
+allow through commands that are safe for all users with read or write
+permission to use.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |akpm@linux-foundation.org
-         AssignedTo|linux-scsi@vger.kernel.org  |minyard@acm.org
+Backdooring it with arbitary passthrough ATA12/ATA16 commands doesn't
+seem very wise.
 
-
-
-
---- Comment #3 from Andrew Morton <akpm@linux-foundation.org>  2009-06-29 21:37:03 ---
-Assigning this to Corey.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
