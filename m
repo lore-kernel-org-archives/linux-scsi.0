@@ -1,63 +1,101 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Linux doesn't support bigger than 2TB IEEE-1394 disk
-Date: Mon, 29 Jun 2009 20:32:36 +0200
-Message-ID: <4A4908C4.1070705@s5r6.in-berlin.de>
-References: <85681F9DCBFF144DA59C70D83EBC1DA2E1EDE7@EIOISER.ioi.com.tw>	 <49FEFF7A.3090603@s5r6.in-berlin.de> <1241448686.3315.27.camel@mulgrave.int.hansenpartnership.com>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: Re: [PATCH]: create sysfs file, dh_state for SCSI
+	devices even if they	are not in the inteernal lists
+Date: Mon, 29 Jun 2009 12:30:30 -0700
+Message-ID: <1246303830.15941.17.camel@chandra-ubuntu>
+References: <1246069888.14164.53.camel@chandra-ubuntu>
+	<4A486FF0.7040209@suse.de>
+Reply-To: sekharan@linux.vnet.ibm.com,
+	device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:55991 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753057AbZF2SdA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2009 14:33:00 -0400
-In-Reply-To: <1241448686.3315.27.camel@mulgrave.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <4A486FF0.7040209@suse.de>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: device-mapper development <dm-devel@redhat.com>
+Cc: Mario Mech <mech@meteo.uni-koeln.de>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Ronald <Ronald@ioi.com.tw>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux1394-user@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-James Bottomley wrote on 2009-05-04:
-> On Mon, 2009-05-04 at 16:45 +0200, Stefan Richter wrote:
->> Ronald wrote at linux1394-user:
->>> Linux doesn't support bigger than 2TB IEEE-1394 disk.
->>>
->>> Will Linux have new driver for this issue?
->> (Adding Cc: linux-scsi)
->>
->> As far as I can tell, Linux does support IEEE 1394 disks of any size. 
->> However, if I'm not mistaken, disks larger than 2 TB require that the 
->> READ CAPACITY (16) command is used to check the disk's capacity, rather 
->> than the usual READ CAPACITY (10) command.  Somebody correct me if I'm 
->> wrong.
->>
->> By far most firmwares of IEEE 1394/ SBP-2 chipsets implement only the 
->> RBC (Reduced Block Commands) command set specification, or at least 
->> claim so in their INQUIRY response.  If I understood correctly, the 
->> Linux SCSI stack will never send READ CAPACITY (16) to them since this 
->> command is not included in RBC.
+
+On Mon, 2009-06-29 at 09:40 +0200, Hannes Reinecke wrote:
+> Chandra Seetharaman wrote:
+> > Create the sysfs file, dh_state even if the new SCSI device is not
+> > in the any of the device handler's internal lists.
+> > 
+> > Signed-Off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+> > ---
+> >  drivers/scsi/device_handler/scsi_dh.c |   11 ++++-------
+> >  1 file changed, 4 insertions(+), 7 deletions(-)
+> > 
+> > Index: linux-2.6.31-rc1/drivers/scsi/device_handler/scsi_dh.c
+> > ===================================================================
+> > --- linux-2.6.31-rc1.orig/drivers/scsi/device_handler/scsi_dh.c
+> > +++ linux-2.6.31-rc1/drivers/scsi/device_handler/scsi_dh.c
+> > @@ -304,18 +304,15 @@ static int scsi_dh_notifier(struct notif
+> >  	sdev = to_scsi_device(dev);
+> >  
+> >  	if (action == BUS_NOTIFY_ADD_DEVICE) {
+> > +		err = device_create_file(dev, &scsi_dh_state_attr);
+> > +		/* don't care about err */
+> >  		devinfo = device_handler_match(NULL, sdev);
+> > -		if (!devinfo)
+> > -			goto out;
+> > -
+> > -		err = scsi_dh_handler_attach(sdev, devinfo);
+> > -		if (!err)
+> > -			err = device_create_file(dev, &scsi_dh_state_attr);
+> > +		if (devinfo)
+> > +			err = scsi_dh_handler_attach(sdev, devinfo);
+> >  	} else if (action == BUS_NOTIFY_DEL_DEVICE) {
+> >  		device_remove_file(dev, &scsi_dh_state_attr);
+> >  		scsi_dh_handler_detach(sdev, NULL);
+> >  	}
+> > -out:
+> >  	return err;
+> >  }
+> >  
+> > 
+> > 
+> > --
+> > dm-devel mailing list
+> > dm-devel@redhat.com
+> > https://www.redhat.com/mailman/listinfo/dm-devel
+> NACK.
 > 
-> That's true ... but not quite the way we work.  There's a standard
-> defined return for READ CAPACITY(10) which means ... I have more
-> sectors, please use READ CAPACITY (16).  If we get that return, we'll
-> try again with READ CAPACITY (16) regardless of whether the device says
-> it's only RBC or not.
+> This will create sysfs attributes even if the attach()
+> failed for other reason like a generic error. So we'll end
+> up with device handler attributes and no device handler attached.
 
-I obviously missed one other fact:
+we do not have to worry about if attach failed or succeeded. We will
+have "detached" if there is no device handler is attached to a device. 
 
-Initiator drivers need to tell the Linux SCSI core what the maximum 
-length of commands is that the driver is able to send to targets.  Alas 
-our SBP-2 drivers do not specifiy a value for this (struct 
-Scsi_Host.max_cmd_len) and hence the core will send at most 12 bytes 
-long command blocks.  But for disks > 2TB, we need 16 bytes long command 
-blocks.
+Basically, existence of this file simply means that scsi_dh module is
+active, only the contents of this file will indicate if any device
+handler is attached or not.
 
-I need to fix the SBP-2 drivers to set the limit correctly.  This will 
-be a little more than one-liners though, I guess, because we need to 
-check a target capability datum before we set the length limit.
+We are just creating the file dh_state for each SCSI device that exists
+and that is the only way non-in-built devices can be attached to a
+handler by the end-user.
 
-Stay tuned.
--- 
-Stefan Richter
--=====-==--= -==- ===-=
-http://arcgraph.de/sr/
+Do note that we do create this file for all the existing scsi devices
+when the scsi_dh module is inserted (see scsi_dh_init()).
+
+> 
+> Not a good idea.
+
+I do not agree, and we do need to have this fix for dh_state file to be
+functionally useful.
+
+> 
+> Cheers,
+> 
+> Hannes
