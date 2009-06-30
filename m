@@ -1,60 +1,59 @@
-From: Gwendal Grignou <gwendal@google.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
 Subject: Re: [PATCH] Allow ATA_ passthrough command through sg.
-Date: Mon, 29 Jun 2009 16:39:03 -0700
-Message-ID: <e7510f760906291639p1a7bb104n43470817fdb9593b@mail.gmail.com>
-References: <1246310665-31727-1-git-send-email-gwendal@google.com>
-	 <20090629232045.14a426b6@lxorguk.ukuu.org.uk>
-	 <4A494DB4.2060908@garzik.org>
+Date: Tue, 30 Jun 2009 02:21:37 +0200
+Message-ID: <4A495A91.6010803@interlog.com>
+References: <> <1246310665-31727-1-git-send-email-gwendal@google.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.45.13]:9548 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751721AbZF2XjF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2009 19:39:05 -0400
-In-Reply-To: <4A494DB4.2060908@garzik.org>
+Received: from firefly.infotech.no ([82.134.31.146]:56243 "EHLO
+	elrond.bb.infotech.no" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752819AbZF3AVs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2009 20:21:48 -0400
+In-Reply-To: <1246310665-31727-1-git-send-email-gwendal@google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: Gwendal Grignou <gwendal@google.com>
+Cc: jens.axboe@oracle.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-Sorry for the noise: I thought I needed that change to send ATA
-passthrough commands as root. The change is indeed useless and
-dangerous.
+Strange, my utilities and packages like smartmontools
+have been sending them through for at least three years.
 
-Gwendal.
+I presume this patch allows non-root users to send these
+commands. Might there be security implications if ATA
+WRITE commands are sent through? Non-root users would
+still need permissions on the sg device node (e.g.
+/dev/sg1).
 
-On Mon, Jun 29, 2009 at 4:26 PM, Jeff Garzik<jeff@garzik.org> wrote:
-> Alan Cox wrote:
->>
->> On Mon, 29 Jun 2009 14:24:25 -0700
->> Gwendal Grignou <gwendal@google.com> wrote:
->>
->>> We can already send ATA specific commands using /dev/sd device file=
-s.
->>> This patch allow to use /dev/sg device files as well.
->>
->> That seems a very very bad idea. The point of the filters is only to
->> allow through commands that are safe for all users with read or writ=
-e
->> permission to use.
->>
->> Backdooring it with arbitary passthrough ATA12/ATA16 commands doesn'=
-t
->> seem very wise.
->
-> Indeed. =A0This pretty much defeats the filter for all ATA commands, =
-including
-> ones that can brick your drive.
->
-> =A0 =A0 =A0 =A0Jeff
->
->
->
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Doug Gilbert
+
+
+Gwendal Grignou wrote:
+> We can already send ATA specific commands using /dev/sd device files.
+> This patch allow to use /dev/sg device files as well.
+> 
+> Signed-off-by: Gwendal Grignou <gwendal@google.com>
+> ---
+>  block/scsi_ioctl.c |    6 ++++++
+>  1 files changed, 6 insertions(+), 0 deletions(-)
+> 
+> diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+> index 82a0ca2..93fa53e 100644
+> --- a/block/scsi_ioctl.c
+> +++ b/block/scsi_ioctl.c
+> @@ -186,6 +186,12 @@ void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
+>  	__set_bit(GPCMD_LOAD_UNLOAD, filter->write_ok);
+>  	__set_bit(GPCMD_SET_STREAMING, filter->write_ok);
+>  	__set_bit(GPCMD_SET_READ_AHEAD, filter->write_ok);
+> +
+> +	/* ATA Passthrough */
+> +	__set_bit(ATA_12, filter->read_ok);
+> +	__set_bit(ATA_12, filter->write_ok);
+> +	__set_bit(ATA_16, filter->read_ok);
+> +	__set_bit(ATA_16, filter->write_ok);
+>  }
+>  EXPORT_SYMBOL_GPL(blk_set_cmd_filter_defaults);
+>  
+
