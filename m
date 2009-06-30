@@ -1,59 +1,93 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] Allow ATA_ passthrough command through sg.
-Date: Tue, 30 Jun 2009 02:21:37 +0200
-Message-ID: <4A495A91.6010803@interlog.com>
-References: <> <1246310665-31727-1-git-send-email-gwendal@google.com>
-Reply-To: dgilbert@interlog.com
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [dm-devel] [PATCH]: create sysfs file, dh_state for SCSI	devices
+ even if they	are not in the inteernal lists
+Date: Tue, 30 Jun 2009 08:39:22 +0200
+Message-ID: <4A49B31A.1060304@suse.de>
+References: <1246069888.14164.53.camel@chandra-ubuntu>	<4A486FF0.7040209@suse.de> <1246291743.3838.13.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from firefly.infotech.no ([82.134.31.146]:56243 "EHLO
-	elrond.bb.infotech.no" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752819AbZF3AVs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2009 20:21:48 -0400
-In-Reply-To: <1246310665-31727-1-git-send-email-gwendal@google.com>
+Received: from cantor.suse.de ([195.135.220.2]:47826 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750788AbZF3GjV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Jun 2009 02:39:21 -0400
+In-Reply-To: <1246291743.3838.13.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gwendal Grignou <gwendal@google.com>
-Cc: jens.axboe@oracle.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: Mario Mech <mech@meteo.uni-koeln.de>, linux-scsi <linux-scsi@vger.kernel.org>, sekharan@linux.vnet.ibm.com
 
-Strange, my utilities and packages like smartmontools
-have been sending them through for at least three years.
+James Bottomley wrote:
+> On Mon, 2009-06-29 at 09:40 +0200, Hannes Reinecke wrote:
+>> Chandra Seetharaman wrote:
+>>> Create the sysfs file, dh_state even if the new SCSI device is not
+>>> in the any of the device handler's internal lists.
+>>>
+>>> Signed-Off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+>>> ---
+>>>  drivers/scsi/device_handler/scsi_dh.c |   11 ++++-------
+>>>  1 file changed, 4 insertions(+), 7 deletions(-)
+>>>
+>>> Index: linux-2.6.31-rc1/drivers/scsi/device_handler/scsi_dh.c
+>>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>>> --- linux-2.6.31-rc1.orig/drivers/scsi/device_handler/scsi_dh.c
+>>> +++ linux-2.6.31-rc1/drivers/scsi/device_handler/scsi_dh.c
+>>> @@ -304,18 +304,15 @@ static int scsi_dh_notifier(struct notif
+>>>  	sdev =3D to_scsi_device(dev);
+>>> =20
+>>>  	if (action =3D=3D BUS_NOTIFY_ADD_DEVICE) {
+>>> +		err =3D device_create_file(dev, &scsi_dh_state_attr);
+>>> +		/* don't care about err */
+>>>  		devinfo =3D device_handler_match(NULL, sdev);
+>>> -		if (!devinfo)
+>>> -			goto out;
+>>> -
+>>> -		err =3D scsi_dh_handler_attach(sdev, devinfo);
+>>> -		if (!err)
+>>> -			err =3D device_create_file(dev, &scsi_dh_state_attr);
+>>> +		if (devinfo)
+>>> +			err =3D scsi_dh_handler_attach(sdev, devinfo);
+>>>  	} else if (action =3D=3D BUS_NOTIFY_DEL_DEVICE) {
+>>>  		device_remove_file(dev, &scsi_dh_state_attr);
+>>>  		scsi_dh_handler_detach(sdev, NULL);
+>>>  	}
+>>> -out:
+>>>  	return err;
+>>>  }
+>>> =20
+>>>
+>>>
+>> NACK.
+>>
+>> This will create sysfs attributes even if the attach()
+>> failed for other reason like a generic error. So we'll end
+>> up with device handler attributes and no device handler attached.
+>>
+>> Not a good idea.
+>=20
+> It strikes me that what is really being reinvented here is driver
+> attachment with driver attribute files ...
+>=20
+> Now all of this could be avoided if we had multiple attachment of
+> drivers ...=20
+>=20
+I heard you.
 
-I presume this patch allows non-root users to send these
-commands. Might there be security implications if ATA
-WRITE commands are sent through? Non-root users would
-still need permissions on the sg device node (e.g.
-/dev/sg1).
+If you find someone to fix the blasted iSCSI I/O stall for me ...
 
-Doug Gilbert
+Cheers,
 
-
-Gwendal Grignou wrote:
-> We can already send ATA specific commands using /dev/sd device files.
-> This patch allow to use /dev/sg device files as well.
-> 
-> Signed-off-by: Gwendal Grignou <gwendal@google.com>
-> ---
->  block/scsi_ioctl.c |    6 ++++++
->  1 files changed, 6 insertions(+), 0 deletions(-)
-> 
-> diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-> index 82a0ca2..93fa53e 100644
-> --- a/block/scsi_ioctl.c
-> +++ b/block/scsi_ioctl.c
-> @@ -186,6 +186,12 @@ void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
->  	__set_bit(GPCMD_LOAD_UNLOAD, filter->write_ok);
->  	__set_bit(GPCMD_SET_STREAMING, filter->write_ok);
->  	__set_bit(GPCMD_SET_READ_AHEAD, filter->write_ok);
-> +
-> +	/* ATA Passthrough */
-> +	__set_bit(ATA_12, filter->read_ok);
-> +	__set_bit(ATA_12, filter->write_ok);
-> +	__set_bit(ATA_16, filter->read_ok);
-> +	__set_bit(ATA_16, filter->write_ok);
->  }
->  EXPORT_SYMBOL_GPL(blk_set_cmd_filter_defaults);
->  
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
