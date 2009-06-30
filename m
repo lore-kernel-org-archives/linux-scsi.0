@@ -1,81 +1,59 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: [PATCH update] ieee1394: sbp2: add support for disks >2 TB (and 16
- bytes long CDBs)
-Date: Tue, 30 Jun 2009 20:28:31 +0200 (CEST)
-Message-ID: <tkrat.fe83450160362e84@s5r6.in-berlin.de>
-References: <85681F9DCBFF144DA59C70D83EBC1DA2E1EDE7@EIOISER.ioi.com.tw>
- <49FEFF7A.3090603@s5r6.in-berlin.de>
- <1241448686.3315.27.camel@mulgrave.int.hansenpartnership.com>
- <4A4908C4.1070705@s5r6.in-berlin.de>
- <tkrat.a60470e5bddd2db4@s5r6.in-berlin.de>
- <tkrat.518b97167f27772a@s5r6.in-berlin.de>
- <tkrat.90ae964a94712510@s5r6.in-berlin.de>
+From: Yinghai Lu <yinghai@kernel.org>
+Subject: Re: mptsas, msi and the dl585 g2
+Date: Tue, 30 Jun 2009 11:35:45 -0700
+Message-ID: <4A4A5B01.9040200@kernel.org>
+References: <20090630180300.GA9971@ldl.fc.hp.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; CHARSET=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:39053 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752067AbZF3S2h (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jun 2009 14:28:37 -0400
-In-Reply-To: <tkrat.90ae964a94712510@s5r6.in-berlin.de>
-Content-Disposition: INLINE
+Received: from hera.kernel.org ([140.211.167.34]:50147 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752634AbZF3Sf6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Jun 2009 14:35:58 -0400
+In-Reply-To: <20090630180300.GA9971@ldl.fc.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux1394-devel@lists.sourceforge.net
-Cc: linux-scsi@vger.kernel.org, Ronald <Ronald@ioi.com.tw>
+To: dann frazier <dannf@hp.com>
+Cc: linux-scsi@vger.kernel.org, kadesai@lsi.com
 
-Increase the command ORB data structure to transport up to 16 bytes long
-CDBs (instead of 12 bytes), and tell the SCSI mid layer about it.  This
-is notably necessary for READ CAPACITY(16) and friends, i.e. support of
-large disks.
+dann frazier wrote:
+> hey,
+>  I'm finding problems when booting a dl585g2 w/ an LSISAS1068
+> controller. In brief, this system system stopped booting once MSI
+> became disabled by default in mptbase. Passing the parameter
+> 'mpt_msi_enable_sas=1' to mptbase allows it to work again (tested w/
+> 2.6.30).
+> 
+>  The symptom is that the system starts up, and we see the following:
+> 
+> ======== SNIP =========
+> [    6.941489] hub 3-2:1.0: USB hub found
+> [    6.943705] hub 3-2:1.0: 7 ports detected
+> [    6.992639] Copyright (c) 1999-2008 LSI Corporation
+> [    7.014262] Fusion MPT SAS Host driver 3.04.07
+> [    7.021685] mptsas 0000:42:01.0: PCI INT A -> GSI 24 (level, low) -> IRQ 24
+> [    7.026597] usb 1-6.3: new full speed USB device using ehci_hcd and address 3
+> [    7.071143] mptbase: ioc0: Initiating bringup
+> [    7.102198] usb 1-6.3: New USB device found, idVendor=0e34, idProduct=0204
+> [    7.119107] usb 1-6.3: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+> [    7.128171] usb 1-6.3: Product: iPort/USB I2C Host Adapter
+> [    7.160994] usb 1-6.3: Manufacturer: Silicon Labs
+> [    7.171468] usb 1-6.3: SerialNumber: 0001248
+> [    7.174931] usb 1-6.3: configuration #1 chosen from 1 choice
+> [    7.360010] ioc0: LSISAS1068 B0: Capabilities={Initiator}
+> [   40.581020] mptbase: ioc0: Initiating recovery
+> [   71.190560] Clocksource tsc unstable (delta = 4398041105588 ns)
+> [   81.190160] mptbase: ioc0: Initiating recovery
+> ======== SNIP =========
+> 
+> These "Initiating recovery" messages are printed periodically, and the
+> system never recovers.
 
-Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
----
- drivers/ieee1394/sbp2.c |    1 +
- drivers/ieee1394/sbp2.h |    8 +++++++-
- 2 files changed, 8 insertions(+), 1 deletion(-)
+Dann, that could be : ioapic routing in ACPI DSDT is not right somehow.
 
-Index: b/drivers/ieee1394/sbp2.c
-===================================================================
---- a/drivers/ieee1394/sbp2.c
-+++ b/drivers/ieee1394/sbp2.c
-@@ -880,6 +880,7 @@ static struct sbp2_lu *sbp2_alloc_device
- 	}
- 
- 	shost->hostdata[0] = (unsigned long)lu;
-+	shost->max_cmd_len = SBP2_MAX_CDB_SIZE;
- 
- 	if (!scsi_add_host(shost, &ud->device)) {
- 		lu->shost = shost;
-Index: b/drivers/ieee1394/sbp2.h
-===================================================================
---- a/drivers/ieee1394/sbp2.h
-+++ b/drivers/ieee1394/sbp2.h
-@@ -25,6 +25,12 @@
- #define SBP2_DEVICE_NAME		"sbp2"
- 
- /*
-+ * There is no transport protocol limit to the CDB length,  but we implement
-+ * a fixed length only.  16 bytes is enough for disks larger than 2 TB.
-+ */
-+#define SBP2_MAX_CDB_SIZE		16
-+
-+/*
-  * SBP-2 specific definitions
-  */
- 
-@@ -51,7 +57,7 @@ struct sbp2_command_orb {
- 	u32 data_descriptor_hi;
- 	u32 data_descriptor_lo;
- 	u32 misc;
--	u8 cdb[12];
-+	u8 cdb[SBP2_MAX_CDB_SIZE];
- } __attribute__((packed));
- 
- #define SBP2_LOGIN_REQUEST		0x0
+please try to move the card to other slot to get some luck.
+or pci=routeirq could help too sometimes.
 
--- 
-Stefan Richter
--=====-==--= -==- ====-
-http://arcgraph.de/sr/
 
+YH
