@@ -1,99 +1,76 @@
-From: dann frazier <dannf@hp.com>
-Subject: mptsas, msi and the dl585 g2
-Date: Tue, 30 Jun 2009 12:03:00 -0600
-Message-ID: <20090630180300.GA9971@ldl.fc.hp.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: [PATCH update] firewire: sbp2: add support for disks >2 TB (and 16
+ bytes long CDBs)
+Date: Tue, 30 Jun 2009 20:27:59 +0200 (CEST)
+Message-ID: <tkrat.90ae964a94712510@s5r6.in-berlin.de>
+References: <85681F9DCBFF144DA59C70D83EBC1DA2E1EDE7@EIOISER.ioi.com.tw>
+ <49FEFF7A.3090603@s5r6.in-berlin.de>
+ <1241448686.3315.27.camel@mulgrave.int.hansenpartnership.com>
+ <4A4908C4.1070705@s5r6.in-berlin.de>
+ <tkrat.a60470e5bddd2db4@s5r6.in-berlin.de>
+ <tkrat.518b97167f27772a@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; CHARSET=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0009.atlanta.hp.com ([15.192.0.46]:28056 "EHLO
-	g5t0009.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751781AbZF3SDD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jun 2009 14:03:03 -0400
-Content-Disposition: inline
+Received: from einhorn.in-berlin.de ([192.109.42.8]:39048 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752063AbZF3S2W (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jun 2009 14:28:22 -0400
+In-Reply-To: <tkrat.518b97167f27772a@s5r6.in-berlin.de>
+Content-Disposition: INLINE
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: yinghai@kernel.org, kadesai@lsi.com
+To: linux1394-devel@lists.sourceforge.net
+Cc: linux-scsi@vger.kernel.org, Ronald <Ronald@ioi.com.tw>
 
-hey,
- I'm finding problems when booting a dl585g2 w/ an LSISAS1068
-controller. In brief, this system system stopped booting once MSI
-became disabled by default in mptbase. Passing the parameter
-'mpt_msi_enable_sas=1' to mptbase allows it to work again (tested w/
-2.6.30).
+Increase the command ORB data structure to transport up to 16 bytes long
+CDBs (instead of 12 bytes), and tell the SCSI mid layer about it.  This
+is notably necessary for READ CAPACITY(16) and friends, i.e. support of
+large disks.
 
- The symptom is that the system starts up, and we see the following:
+Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+---
+ drivers/firewire/sbp2.c |   10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-======== SNIP =========
-[    6.941489] hub 3-2:1.0: USB hub found
-[    6.943705] hub 3-2:1.0: 7 ports detected
-[    6.992639] Copyright (c) 1999-2008 LSI Corporation
-[    7.014262] Fusion MPT SAS Host driver 3.04.07
-[    7.021685] mptsas 0000:42:01.0: PCI INT A -> GSI 24 (level, low) -> IRQ 24
-[    7.026597] usb 1-6.3: new full speed USB device using ehci_hcd and address 3
-[    7.071143] mptbase: ioc0: Initiating bringup
-[    7.102198] usb 1-6.3: New USB device found, idVendor=0e34, idProduct=0204
-[    7.119107] usb 1-6.3: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-[    7.128171] usb 1-6.3: Product: iPort/USB I2C Host Adapter
-[    7.160994] usb 1-6.3: Manufacturer: Silicon Labs
-[    7.171468] usb 1-6.3: SerialNumber: 0001248
-[    7.174931] usb 1-6.3: configuration #1 chosen from 1 choice
-[    7.360010] ioc0: LSISAS1068 B0: Capabilities={Initiator}
-[   40.581020] mptbase: ioc0: Initiating recovery
-[   71.190560] Clocksource tsc unstable (delta = 4398041105588 ns)
-[   81.190160] mptbase: ioc0: Initiating recovery
-======== SNIP =========
-
-These "Initiating recovery" messages are printed periodically, and the
-system never recovers.
-
-I bisected it down to this change which went into 2.6.29-rc1:
-
-commit e382968ba618e016ff7922dff9a6140c2f9108c8
-Author: Kashyap, Desai <kashyap.desai@lsi.com>
-Date:   Thu Jan 8 14:27:16 2009 +0530
-
-    [SCSI] mpt fusion: Add separate msi enable disable for FC,SPI,SAS
-    
-    Added support for MSI enable/disable for different buses FC,SPI,SAS
-    instead of having single MSI enable/disable feature.
-    
-    Signed-off-by: Kashyap Desai <kadesai@lsi.com>
-    Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-
-However, this change wasn't as innocuous as the description suggests.
-The intention there was not to turn off MSI on SAS - but it did due to
-a typo (it misunderstands the 3rd param to module_param, which is not
-the default value).
-
-To fix this, there were two proposed changes:
-  http://lkml.org/lkml/2009/2/18/259
-
-One was to fix the typo, leaving msi enabled by default - the other
-was to force MSI off. We went with leaving it off:
-
-commit 5ce7868e159a3ee4ddf95f8522643991fea97cf2
-Author: Yinghai Lu <yinghai@kernel.org>
-Date:   Wed Feb 18 11:25:32 2009 -0800
-
-    [SCSI] mpt: fix disable lsi sas to use msi as default
-    
-    Impact: fix bug
-    
-    the third param in module_param(,,) is perm instead of default value.
-    we still need to assign default at first.  Also, the default is now
-    zero not one, so fix the parameter text to reflect that.
-    
-    Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-    Acked-by: Kashyap Desai <kadesai@lsi.com>
-    Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-
-There was also some related discussion about adding a quirk for the
-8132 Bridge (which is the bridge in the 585 G2):
-  http://lkml.indiana.edu/hypermail/linux/kernel/0902.2/01050.html
-This change went in - I don't really understand the relevance since
-our problem looks like its because we aren't even trying to use
-MSI. But, I thought I'd point it out just in case.
+Index: b/drivers/firewire/sbp2.c
+===================================================================
+--- a/drivers/firewire/sbp2.c
++++ b/drivers/firewire/sbp2.c
+@@ -201,6 +201,12 @@ static struct fw_device *target_device(s
+ #define SBP2_CYCLE_LIMIT		(0xc8 << 12)	/* 200 125us cycles */
+ 
+ /*
++ * There is no transport protocol limit to the CDB length,  but we implement
++ * a fixed length only.  16 bytes is enough for disks larger than 2 TB.
++ */
++#define SBP2_MAX_CDB_SIZE		16
++
++/*
+  * The default maximum s/g segment size of a FireWire controller is
+  * usually 0x10000, but SBP-2 only allows 0xffff. Since buffers have to
+  * be quadlet-aligned, we set the length limit to 0xffff & ~3.
+@@ -312,7 +318,7 @@ struct sbp2_command_orb {
+ 		struct sbp2_pointer next;
+ 		struct sbp2_pointer data_descriptor;
+ 		__be32 misc;
+-		u8 command_block[12];
++		u8 command_block[SBP2_MAX_CDB_SIZE];
+ 	} request;
+ 	struct scsi_cmnd *cmd;
+ 	scsi_done_fn_t done;
+@@ -1146,6 +1152,8 @@ static int sbp2_probe(struct device *dev
+ 	if (fw_device_enable_phys_dma(device) < 0)
+ 		goto fail_shost_put;
+ 
++	shost->max_cmd_len = SBP2_MAX_CDB_SIZE;
++
+ 	if (scsi_add_host(shost, &unit->device) < 0)
+ 		goto fail_shost_put;
+ 
 
 -- 
-dann frazier
+Stefan Richter
+-=====-==--= -==- ====-
+http://arcgraph.de/sr/
+
