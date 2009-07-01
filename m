@@ -1,71 +1,85 @@
-From: Joe Jin <joe.jin@oracle.com>
-Subject: kexec kernel failed to restart aacraid device
-Date: Wed, 1 Jul 2009 08:54:04 +0800
-Message-ID: <20090701005404.GA29923@joejin-pc.cn.oracle.com>
+From: Tomasz Torcz <tomek@pipebreaker.pl>
+Subject: Re: can't access LUN >2TB with aic7xxx, Infortrend EonStor and
+	2.6.31-rc1
+Date: Wed, 1 Jul 2009 08:10:11 +0200
+Message-ID: <20090701061011.GG3657@mother.pipebreaker.pl>
+References: <20090629130835.GA3657@mother.pipebreaker.pl> <20090629133431.GM5480@parisc-linux.org> <20090629134602.GN5480@parisc-linux.org> <20090630094046.GE3657@mother.pipebreaker.pl> <1246376899.3816.60.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet12.oracle.com ([141.146.126.234]:61523 "EHLO
-	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764324AbZGAAyK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jun 2009 20:54:10 -0400
+Received: from 193-34-3-65.chelmnet.pl ([193.34.3.65]:55185 "EHLO
+	mother.pipebreaker.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752709AbZGAGKJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jul 2009 02:10:09 -0400
 Content-Disposition: inline
+In-Reply-To: <1246376899.3816.60.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: aacraid@adaptec.com, mark_salyzyn@adaptec.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, joe.jin@oracle.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, tomek@pipebreaker.pl
 
-Hi,
+On Tue, Jun 30, 2009 at 03:48:19PM +0000, James Bottomley wrote:
+> On Tue, 2009-06-30 at 11:40 +0200, Tomasz Torcz wrote:
+> >   I did a rebuild and driver is not happy with above changes. Take a look
+> > (I have one RAID5 LUN exported which consist 8x500GB, so about 3.5 TB big):
+> 
+> Actually, looks like a simple thinko in the aic7xxx core code ... it
+> should be indexing of the saved tag not the original tag.  Can you try
+> this as a fresh patch?
+> 
+> James
+> 
+> ---
+> 
+> diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
+> index e6f2bb7..56e431e 100644
+> --- a/drivers/scsi/aic7xxx/aic7xxx_core.c
+> +++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
+> @@ -593,7 +593,7 @@ ahc_swap_with_next_hscb(struct ahc_softc *ahc, struct scb *scb)
+>  	memcpy(q_hscb, scb->hscb, sizeof(*scb->hscb));
+>  	if ((scb->flags & SCB_CDB32_PTR) != 0) {
+>  		q_hscb->shared_data.cdb_ptr =
+> -		    ahc_htole32(ahc_hscb_busaddr(ahc, q_hscb->tag)
+> +		    ahc_htole32(ahc_hscb_busaddr(ahc, saved_tag)
+>  			      + offsetof(struct hardware_scb, cdb32));
+>  	}
+>  	q_hscb->tag = saved_tag;
+> diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+> index fd2b978..2d069de 100644
+> --- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
+> +++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+> @@ -1115,6 +1115,7 @@ ahc_linux_register_host(struct ahc_softc *ahc, struct scsi_host_template *templa
+>  	host->max_lun = AHC_NUM_LUNS;
+>  	host->max_channel = (ahc->features & AHC_TWIN) ? 1 : 0;
+>  	host->sg_tablesize = AHC_NSEG;
+> +	host->max_cmd_len = 32;
+>  	ahc_lock(ahc, &s);
+>  	ahc_set_unit(ahc, ahc_linux_unit++);
+>  	ahc_unlock(ahc, &s);
 
-When try to kdump via sysrq-trigger, found kernel hung when 
-try to restart aacraid device, kernel print below messages:
 
-  Loading aacraid.ko
-  AAC0:  adapter kernel faile to start, init status = 0.
-
-Normally startup, got following message what related the devices:
-
-  Adaptec aacraid driver 1.1-5[2461]
-  AAC0: kernel 4.2-0[8208] Jul  6 2006
-  AAC0: monitor 4.2-0[8208]
-  AAC0: bios 4.2-0[8208]
-  AAC0: serial C36FA5
-  AAC0: Non-DASD support enabled.
-
-
-Device info from lspci:
-     
-02:03.0 0104: 9005:0285 (rev 01)                                                            
-        Subsystem: 9005:0286
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B- 
-        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=slow >TAbort- <TAbort- <MAbort- >SERR- <PERR- 
-        Latency: 64 (250ns min, 250ns max), Cache Line Size: 64 bytes                       
-        Interrupt: pin A routed to IRQ 177                                                  
-        Region 0: Memory at f8000000 (32-bit, prefetchable) [size=64M]
-        Expansion ROM at fc9f0000 [disabled] [size=32K]                                     
-        Capabilities: [80] Power Management version 2
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)  
-                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+  Still not good:
+sd 6:0:0:0: Attached scsi generic sg2 type 0
+sd 6:0:0:1: Attached scsi generic sg3 type 0
+sd 6:0:0:0: [sdc] Spinning up disk...
+sd 6:0:0:1: [sdd] Spinning up disk........ready
+sd 6:0:0:0: [sdc] Very big device. Trying to use READ CAPACITY(16).
+(scsi6:A:0:0): No or incomplete CDB sent to device.
+(scsi6:A:0:0): Protocol violation in Message-in phase.  Attempting to abort.
+(scsi6:A:0:0): Abort Tag Message Sent
+(scsi6:A:0:0): SCB 2 - Abort Tag Completed.
+(scsi6:A:0:0): No or incomplete CDB sent to device.
+(scsi6:A:0:0): Protocol violation in Message-in phase.  Attempting to abort.
+(scsi6:A:0:0): Abort Tag Message Sent
+(scsi6:A:0:0): SCB 3 - Abort Tag Completed.
 
 
-Readed driver's codes found if ignore restart device at _aac_rx_init():
+ ... and so on.
+ Maybe this HBA is too old? Newest BIOS for it is from year 2000. I've checked
+another controller, sym53c8xx driven, it shows 3,5TB briefly before reverting to 2TB,
+so array itself is reporting OK.
 
-Changed
-	if ((((status & 0x0c) != 0x0c) || aac_reset_devices || reset_devices) && 
-		!aac_rx_restart_adapter(dev, 0))
-
-to 
-	if ((aac_reset_devices || reset_devices) && 
-		!aac_rx_restart_adapter(dev, 0))
-
-and get rid of reset_devices from kdump command line, kexec kernel could
-bootup kernel normally, kdump would dump vmcore, looked like it caused by 
-aac_rx_restart_adapter() could not restart devices, it made kdump kernel 
-could not go on.
-
-Any idea will appreciate~
-
-Thanks,
-Joe
-
+-- 
+Tomasz Torcz              ,,If you try to upissue this patchset I shall be seeking
+xmpp: zdzichubg@chrome.pl   an IP-routable hand grenade.'' -- Andrew Morton (LKML)
 
