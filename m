@@ -1,50 +1,56 @@
-From: Jean Delvare <jdelvare@suse.de>
-Subject: Re: [PATCH] Add BLIST_REPORTLUN2 to EMC SYMMETRIX
-Date: Thu, 2 Jul 2009 10:23:28 +0200
-Message-ID: <200907021023.29092.jdelvare@suse.de>
-References: <200907012018.13695.jdelvare@suse.de> <1246476812.3894.56.camel@mulgrave.site>
+From: Eddie Williams <Eddie.Williams@steeleye.com>
+Subject: Re: [PATCH 0/3] scsi_dh: Add ability to set parameters for scsi
+ device handler
+Date: Thu, 02 Jul 2009 10:07:39 -0400
+Message-ID: <1246543659.6393.31.camel@eddie-laptop>
+References: <20090702031308.28354.73353.sendpatchset@chandra-ubuntu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:52869 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753579AbZGBIX1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jul 2009 04:23:27 -0400
-In-Reply-To: <1246476812.3894.56.camel@mulgrave.site>
-Content-Disposition: inline
+Received: from p02c12o144.mxlogic.net ([208.65.145.77]:36530 "EHLO
+	p02c12o144.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752393AbZGBOIL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jul 2009 10:08:11 -0400
+In-Reply-To: <20090702031308.28354.73353.sendpatchset@chandra-ubuntu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org, Kurt Garloff <garloff@suse.de>, Hannes Reinecke <hare@suse.de>
+To: Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org, dm-devel@redhat.com, michaelc@cs.wisc.edu, agk@redhat.com, James.Bottomley@HansenPartnership.com, Benoit_Arthur@emc.com, asson_ronald@emc.com, berthiaume_wayne@emc.com
 
-Le mercredi 01 juillet 2009, James Bottomley a =E9crit=A0:
-> On Wed, 2009-07-01 at 20:18 +0200, Jean Delvare wrote:
-> > From: Kurt Garloff <garloff@suse.de>
-> >=20
-> > All EMC SYMMETRIX support REPORT_LUNS, even if configured to report
-> > SCSI-2 for whatever reason.
-> >=20
-> > Signed-off-by: Kurt Garloff <garloff@suse.de>
-> > Signed-off-by: Hannes Reinecke <hare@suse.de>
-> > Signed-off-by: Jean Delvare <jdelvare@suse.de>
-> > ---
-> > We have this fix in our SLES10 kernel for over a year now, I guess
-> > it's about time to get it upstream so that everyone benefits.
-> >=20
-> > Patch already sent on:
-> >  * 2009-05-29
->=20
-> The SCSI mailing list doesn't find it.
 
-Indeed. Very strange, as my mailer is positive it did send it. Must
-have been lost on the road... sorry.
+Yes, hopefully this afternoon (I head to the doctor in a few minutes -
+back pain).  If I can not do it today then I wont be able to do it until
+Tuesday (July 7th) as I will be on vacation for a long weekend.
 
---=20
-Jean Delvare
-Suse L3
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Eddie
+On Wed, 2009-07-01 at 20:13 -0700, Chandra Seetharaman wrote:
+> Hello,
+> 
+> Last week, Eddie Williams reported a regression w.r.t scsi_dh
+> (http://www.redhat.com/archives/dm-devel/2009-June/msg00285.html).
+> Parameter setting part of dm multipath handler has been removed
+> when we moved to scsi device handler.
+> 
+> This set of patches adds an new interface to scsi_dh and uses it.
+> 
+> This patch set applies on 2.6.31-rc1 and the following 2 patches:
+> 	(1) http://patchwork.kernel.org/patch/32646/raw/
+> 	(2) http://patchwork.kernel.org/patch/32647/raw/
+> 
+> This interface part of the patch has been tested.
+> 
+> Eddie,
+> 
+> If you can test it on an EMC storage and respond with your
+> findings it will be of great help.
+> 
+> Thanks,
+> 
+> chandra
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
