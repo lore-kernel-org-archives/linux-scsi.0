@@ -1,21 +1,25 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: "lindar_liu" <lindar_liu@usish.com>
 Subject: Re: [RFC][PATCH 5/5] Add pm8001 SAS/SATA HBA driver resend
-Date: Wed, 1 Jul 2009 20:14:20 -0600
-Message-ID: <20090702021420.GG5480@parisc-linux.org>
-References: <7070AF0E3911400C93DCB795F4E5CE09@usish.com.cn>
+Date: Thu, 2 Jul 2009 10:30:34 +0800
+Message-ID: <C99FE528BF0A4B669B2DE199C3E2D810@usish.com.cn>
+References: <7070AF0E3911400C93DCB795F4E5CE09@usish.com.cn> <20090702021420.GG5480@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:37229 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753138AbZGBCOS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jul 2009 22:14:18 -0400
-Content-Disposition: inline
-In-Reply-To: <7070AF0E3911400C93DCB795F4E5CE09@usish.com.cn>
+Received: from usish.com ([210.5.144.203]:55194 "EHLO sr-smtp.usish.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753094AbZGBCsS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Jul 2009 22:48:18 -0400
+In-Reply-To: <20090702021420.GG5480@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jack wang <jack_wang@usish.com>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, jeff@garzik.org, lindar_liu@usish.com, tom_peng@usish.com
+To: 'Matthew Wilcox' <matthew@wil.cx>, 'jack wang' <jack_wang@usish.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, jeff@garzik.org, tom_peng@usish.com
+
+
+Re: [RFC][PATCH 5/5] Add pm8001 SAS/SATA HBA driver resend
 
 On Thu, Jul 02, 2009 at 09:43:57AM +0800, jack wang wrote:
 > diff --git a/drivers/scsi/pm8001/Kconfig b/drivers/scsi/pm8001/Kconfig
@@ -35,7 +39,7 @@ On Thu, Jul 02, 2009 at 09:43:57AM +0800, jack wang wrote:
 
 Not really enough here to justify a separate Kconfig file.  How about
 putting this bit in drivers/scsi/Kconfig instead of in its own file?
-
+[lindar] ok,we will address it when next send.
 > diff --git a/drivers/scsi/pm8001/Makefile b/drivers/scsi/pm8001/Makefile
 > new file mode 100644
 > index 0000000..6e668ae
@@ -67,7 +71,8 @@ putting this bit in drivers/scsi/Kconfig instead of in its own file?
 > +# distributing the Program and assumes all risks associated with its
 > +# exercise of rights under this Agreement, including but not limited to
 > +# the risks and costs of program errors, damage to or loss of data,
-> +# programs or equipment, and unavailability or interruption of operations.
+> +# programs or equipment, and unavailability or interruption of
+operations.
 > +
 > +# DISCLAIMER OF LIABILITY
 > +# NEITHER RECIPIENT NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY
@@ -75,7 +80,8 @@ putting this bit in drivers/scsi/Kconfig instead of in its own file?
 > +# DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED AND
 > +# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
 > +# TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-> +# USE OR DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS GRANTED
+> +# USE OR DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS
+GRANTED
 > +# HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES
 > +
 > +# You should have received a copy of the GNU General Public License
@@ -86,7 +92,7 @@ putting this bit in drivers/scsi/Kconfig instead of in its own file?
 
 I'm not sure you need a copyright notice in the Makefile.  I don't think
 what you have here is even copyrightable:
-
+[lindar] ok,we will address it when next send.
 > +obj-$(CONFIG_SCSI_PM8001) += pm8001.o
 > +pm8001-y += pm8001_init.o \
 > +	     pm8001_sas.o  \
@@ -95,7 +101,7 @@ what you have here is even copyrightable:
 > \ No newline at end of file
 
 And you should look into putting a newline at the end of files.
-
+[lindar] ok,we will address it when next send.
 > +++ b/drivers/scsi/pm8001/pm8001_chips.h
 > +#define READ_LE_32(ADDR32, DMA_ADDR, OFFSET)	\
 > +	(*((u32 *)ADDR32)) = (*((u32 *)(((u8 *)DMA_ADDR) + (OFFSET))))
@@ -108,7 +114,7 @@ And you should look into putting a newline at the end of files.
 
 Don't these macros assume that the processor is little-endian?  Have you
 tested this driver on a big-endian platform, like powerpc, for example?
-
+[lindar] ok,we will address it when next send.
 > +/**
 > + * pm8001_ctl_verify_adapter - validates chip_number passed from
 > application
@@ -129,7 +135,7 @@ tested this driver on a big-endian platform, like powerpc, for example?
 
 Is this a debugging printk left in, or do you really intend this to be
 emitted to the kernel log?
-
+[lindar] ok,we will address it when next send.
 > +		if (pm8001_ha->id != chip_number)
 > +			continue;
 > +		*ppm8001_ha = pm8001_ha;
@@ -260,18 +266,24 @@ emitted to the kernel log?
 Umm ... you probably don't need lock_kernel here.  And ioctls are
 generally discouraged.  We've been encouraging people to use SG_IO to
 send commands down like this.
-
+[lindar] ok,we will address it when next send.
 > +++ b/drivers/scsi/pm8001/pm8001_defs.h
 > +#define PCI_VENDOR_ID_PMC_Sierra	0x11f8
 > +#define PCI_DEVICE_ID_8001		0x8001
 
 It should be in all caps ... and it should be in include/linux/pci_ids.h,
 between PCI_VENDOR_ID_COMPEX and PCI_VENDOR_ID_RP.
-
+[lindar] ok,we will address it when next send.
 There's undoubtably more things to comment on ...
 
+[lindar] Thanks for your comments.
 -- 
 Matthew Wilcox				Intel Open Source Technology Centre
 "Bill, look, we understand that you're interested in selling us this
 operating system, but compare it to ours.  We can't possibly take such
 a retrograde step."
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
