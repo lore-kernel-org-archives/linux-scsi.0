@@ -1,61 +1,50 @@
-From: Madhavi Manchala <madhavi.lscsi@gmail.com>
-Subject: when the eh_strategy_handler function gets invoked
-Date: Thu, 2 Jul 2009 13:26:31 +0530
-Message-ID: <97a757510907020056o302aa969xf6f11198d47fde43@mail.gmail.com>
+From: Jean Delvare <jdelvare@suse.de>
+Subject: Re: [PATCH] Add BLIST_REPORTLUN2 to EMC SYMMETRIX
+Date: Thu, 2 Jul 2009 10:23:28 +0200
+Message-ID: <200907021023.29092.jdelvare@suse.de>
+References: <200907012018.13695.jdelvare@suse.de> <1246476812.3894.56.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-px0-f190.google.com ([209.85.216.190]:52616 "EHLO
-	mail-px0-f190.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751988AbZGBH42 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jul 2009 03:56:28 -0400
-Received: by pxi28 with SMTP id 28so1367580pxi.33
-        for <linux-scsi@vger.kernel.org>; Thu, 02 Jul 2009 00:56:31 -0700 (PDT)
+Received: from cantor.suse.de ([195.135.220.2]:52869 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753579AbZGBIX1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jul 2009 04:23:27 -0400
+In-Reply-To: <1246476812.3894.56.camel@mulgrave.site>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org, Kurt Garloff <garloff@suse.de>, Hannes Reinecke <hare@suse.de>
 
-Dear All,
+Le mercredi 01 juillet 2009, James Bottomley a =E9crit=A0:
+> On Wed, 2009-07-01 at 20:18 +0200, Jean Delvare wrote:
+> > From: Kurt Garloff <garloff@suse.de>
+> >=20
+> > All EMC SYMMETRIX support REPORT_LUNS, even if configured to report
+> > SCSI-2 for whatever reason.
+> >=20
+> > Signed-off-by: Kurt Garloff <garloff@suse.de>
+> > Signed-off-by: Hannes Reinecke <hare@suse.de>
+> > Signed-off-by: Jean Delvare <jdelvare@suse.de>
+> > ---
+> > We have this fix in our SLES10 kernel for over a year now, I guess
+> > it's about time to get it upstream so that everyone benefits.
+> >=20
+> > Patch already sent on:
+> >  * 2009-05-29
+>=20
+> The SCSI mailing list doesn't find it.
 
-I'm developing a USB class driver for UAS device. I have modified the
-storage driver code as per my custom driver requirements. As a part of
-this, I have registered to the SCSI layer through following snippet in
-the storage_probe function. I have seen the code in one of the SAS
-driver's implementation.
+Indeed. Very strange, as my mailer is positive it did send it. Must
+have been lost on the road... sorry.
 
-/*
- * Attach transport template to SCSI layer
- * which shall be used for executing tasks and
- * task management functions.
- */
-transport_template = domain_attach_transport(&transport_functions);
-if (!transport_template)
-       goto BadDevice;
-	
-struct scsi_transport_template *
-domain_attach_transport(struct domain_function_template *dft)
-{
-       struct scsi_transport_template *stt = attach_transport();
-
-       if (!stt)
-               return stt;
-
-       i = to_uas_internal(stt);
-       i->dft = dft;
-       stt->create_work_queue = 1;
-       stt->eh_timed_out = uas_scsi_timed_out;
-       stt->eh_strategy_handler = uas_scsi_recover_host;
-
-       return stt;
-}
-
-I would like to know when the eh_strategy_handler
-(uas_scsi_recover_host) function gets invoked.
-
-When I canceled the read/write operation from/to host to the device or
-vice-versa. Still, the function, eh_strategy_handler
-(uas_scsi_recover_host), is not invoked.
-
-Thanks and Regards,
-Madhavi M
+--=20
+Jean Delvare
+Suse L3
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
