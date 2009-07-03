@@ -1,71 +1,65 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCHSET] block: fix merge of requests with different
-	failfast settings
-Date: Fri, 3 Jul 2009 12:54:31 +0200
-Message-ID: <20090703105431.GN23611@kernel.dk>
-References: <1246610898-22350-1-git-send-email-tj@kernel.org>
+From: dann frazier <dannf@hp.com>
+Subject: Re: mptsas, msi and the dl585 g2
+Date: Fri, 3 Jul 2009 16:57:09 -0600
+Message-ID: <20090703225708.GA30664@ldl.fc.hp.com>
+References: <20090630180300.GA9971@ldl.fc.hp.com>
+ <4A4A5B01.9040200@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:41176 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753409AbZGCKy2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Jul 2009 06:54:28 -0400
+Received: from g5t0007.atlanta.hp.com ([15.192.0.44]:13639 "EHLO
+	g5t0007.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751061AbZGCW5d (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jul 2009 18:57:33 -0400
 Content-Disposition: inline
-In-Reply-To: <1246610898-22350-1-git-send-email-tj@kernel.org>
+In-Reply-To: <4A4A5B01.9040200@kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Niel Lambrechts <niel.lambrechts@gmail.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-scsi@vger.kernel.org, kadesai@lsi.com
 
-On Fri, Jul 03 2009, Tejun Heo wrote:
-> Hello,
+On Tue, Jun 30, 2009 at 11:35:45AM -0700, Yinghai Lu wrote:
+> dann frazier wrote:
+> > hey,
+> >  I'm finding problems when booting a dl585g2 w/ an LSISAS1068
+> > controller. In brief, this system system stopped booting once MSI
+> > became disabled by default in mptbase. Passing the parameter
+> > 'mpt_msi_enable_sas=1' to mptbase allows it to work again (tested w/
+> > 2.6.30).
+> > 
+> >  The symptom is that the system starts up, and we see the following:
+> > 
+> > ======== SNIP =========
+> > [    6.941489] hub 3-2:1.0: USB hub found
+> > [    6.943705] hub 3-2:1.0: 7 ports detected
+> > [    6.992639] Copyright (c) 1999-2008 LSI Corporation
+> > [    7.014262] Fusion MPT SAS Host driver 3.04.07
+> > [    7.021685] mptsas 0000:42:01.0: PCI INT A -> GSI 24 (level, low) -> IRQ 24
+> > [    7.026597] usb 1-6.3: new full speed USB device using ehci_hcd and address 3
+> > [    7.071143] mptbase: ioc0: Initiating bringup
+> > [    7.102198] usb 1-6.3: New USB device found, idVendor=0e34, idProduct=0204
+> > [    7.119107] usb 1-6.3: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+> > [    7.128171] usb 1-6.3: Product: iPort/USB I2C Host Adapter
+> > [    7.160994] usb 1-6.3: Manufacturer: Silicon Labs
+> > [    7.171468] usb 1-6.3: SerialNumber: 0001248
+> > [    7.174931] usb 1-6.3: configuration #1 chosen from 1 choice
+> > [    7.360010] ioc0: LSISAS1068 B0: Capabilities={Initiator}
+> > [   40.581020] mptbase: ioc0: Initiating recovery
+> > [   71.190560] Clocksource tsc unstable (delta = 4398041105588 ns)
+> > [   81.190160] mptbase: ioc0: Initiating recovery
+> > ======== SNIP =========
+> > 
+> > These "Initiating recovery" messages are printed periodically, and the
+> > system never recovers.
 > 
-> Block layer didn't consider failfast status while merging requests and
-> it led to premature failure of normal (non-failfast) IOs.  Niel
-> Lambrechts could trigger the problem semi-reliably on ext4 when
-> resuming from STR.  ext4 uses readahead when reading inodes and
-> combined with the deterministic extra SATA PHY exception cycle during
-> resume on the specific configuration, non-readahead inode read would
-> fail causing ext4 errors.  Please read the following thread for
-> details.
+> Dann, that could be : ioapic routing in ACPI DSDT is not right somehow.
 > 
->   http://lkml.org/lkml/2009/5/23/21
-> 
-> This patchset contains the following four patches to fix the problem.
-> 
->  0001-block-don-t-merge-requests-of-different-failfast-se.patch
->  0002-block-use-the-same-failfast-bits-for-bio-and-reques.patch
->  0003-block-implement-mixed-merge-of-different-failfast-r.patch
->  0004-scsi-block-update-SCSI-to-handle-mixed-merge-failur.patch
-> 
-> 0001 disallows merge between requests with different failfast
-> settings.  This one is the quick fix and should go into 2.6.31 and
-> later to -stable as the bug is pretty serious and may lead to data
-> loss.
-> 
-> 0002 preps for later changes.
-> 
-> 0003-0004 implements and applies mixed merge.  Requests of different
-> failfast settings are merged as before but failure handling is updated
-> such that parts which shouldn't fail without retrial are properly
-> retried.
-> 
-> I spent quite some time thinking about and testing it but I'd really
-> like more pairs of eyes on this patchset as dangerous bugs can go
-> unnoticed for quite a while in this area (anyone knows when the
-> failfast bug was introduced?).
+> please try to move the card to other slot to get some luck.
+> or pci=routeirq could help too sometimes.
 
-It must have been several releases ago. So while the bug is indeed very
-nasty, I don't think there's been much fallout from it.
-
-> Jens, I think the best way to merge this is to first push 0001 to
-> Linus's tree and then pull it into for-next and then apply the rest on
-> top of them.
-
-Yeah I'll do that, #1 for 2.6.31 and the rest for .32. Thanks for
-finding and fixing this bug!
+For the record, I tried moving the card to the other PCI-X slot and
+the pci=routeirq boot param, but neither helped.
 
 -- 
-Jens Axboe
+dann frazier
 
