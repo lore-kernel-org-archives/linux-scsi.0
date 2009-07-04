@@ -1,69 +1,46 @@
-From: Yinghai Lu <yinghai@kernel.org>
-Subject: Re: mptsas, msi and the dl585 g2
-Date: Sat, 04 Jul 2009 12:30:36 -0700
-Message-ID: <4A4FADDC.30606@kernel.org>
-References: <20090630180300.GA9971@ldl.fc.hp.com> <4A4A5B01.9040200@kernel.org> <20090703225708.GA30664@ldl.fc.hp.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH] scsi_transport_fc: fix kernel-doc param name
+Date: Sat, 4 Jul 2009 13:10:41 -0700
+Message-ID: <20090704131041.47b0da3b.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:54231 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752047AbZGDTbH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 4 Jul 2009 15:31:07 -0400
-In-Reply-To: <20090703225708.GA30664@ldl.fc.hp.com>
+Received: from acsinet11.oracle.com ([141.146.126.233]:61020 "EHLO
+	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752403AbZGDUKz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Jul 2009 16:10:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dann frazier <dannf@hp.com>
-Cc: linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: scsi <linux-scsi@vger.kernel.org>
+Cc: jejb <James.Bottomley@HansenPartnership.com>, akpm <akpm@linux-foundation.org>
 
-dann frazier wrote:
-> On Tue, Jun 30, 2009 at 11:35:45AM -0700, Yinghai Lu wrote:
->> dann frazier wrote:
->>> hey,
->>>  I'm finding problems when booting a dl585g2 w/ an LSISAS1068
->>> controller. In brief, this system system stopped booting once MSI
->>> became disabled by default in mptbase. Passing the parameter
->>> 'mpt_msi_enable_sas=1' to mptbase allows it to work again (tested w/
->>> 2.6.30).
->>>
->>>  The symptom is that the system starts up, and we see the following:
->>>
->>> ======== SNIP =========
->>> [    6.941489] hub 3-2:1.0: USB hub found
->>> [    6.943705] hub 3-2:1.0: 7 ports detected
->>> [    6.992639] Copyright (c) 1999-2008 LSI Corporation
->>> [    7.014262] Fusion MPT SAS Host driver 3.04.07
->>> [    7.021685] mptsas 0000:42:01.0: PCI INT A -> GSI 24 (level, low) -> IRQ 24
->>> [    7.026597] usb 1-6.3: new full speed USB device using ehci_hcd and address 3
->>> [    7.071143] mptbase: ioc0: Initiating bringup
->>> [    7.102198] usb 1-6.3: New USB device found, idVendor=0e34, idProduct=0204
->>> [    7.119107] usb 1-6.3: New USB device strings: Mfr=1, Product=2, SerialNumber=3
->>> [    7.128171] usb 1-6.3: Product: iPort/USB I2C Host Adapter
->>> [    7.160994] usb 1-6.3: Manufacturer: Silicon Labs
->>> [    7.171468] usb 1-6.3: SerialNumber: 0001248
->>> [    7.174931] usb 1-6.3: configuration #1 chosen from 1 choice
->>> [    7.360010] ioc0: LSISAS1068 B0: Capabilities={Initiator}
->>> [   40.581020] mptbase: ioc0: Initiating recovery
->>> [   71.190560] Clocksource tsc unstable (delta = 4398041105588 ns)
->>> [   81.190160] mptbase: ioc0: Initiating recovery
->>> ======== SNIP =========
->>>
->>> These "Initiating recovery" messages are printed periodically, and the
->>> system never recovers.
->> Dann, that could be : ioapic routing in ACPI DSDT is not right somehow.
->>
->> please try to move the card to other slot to get some luck.
->> or pci=routeirq could help too sometimes.
-> 
-> For the record, I tried moving the card to the other PCI-X slot and
-> the pci=routeirq boot param, but neither helped.
-> 
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-so 2.6.22.1 works on that system with pci=nomsi?
+Change function parameter name in kernel-doc to match the function's
+actual parameter name, to fix 2 kernel-doc warnings.
 
-maybe your BIOS is too new, you may try the old BIOS.
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ drivers/scsi/scsi_transport_fc.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-updating BIOS is not always a option to deployed systems. maybe sustaining team could break sth.
+--- lnx-2631-rc2.orig/drivers/scsi/scsi_transport_fc.c
++++ lnx-2631-rc2/drivers/scsi/scsi_transport_fc.c
+@@ -3432,7 +3432,7 @@ fc_bsg_jobdone(struct fc_bsg_job *job)
+ 
+ /**
+  * fc_bsg_softirq_done - softirq done routine for destroying the bsg requests
+- * @req:        BSG request that holds the job to be destroyed
++ * @rq:        BSG request that holds the job to be destroyed
+  */
+ static void fc_bsg_softirq_done(struct request *rq)
+ {
 
-YH
+
+
+
+---
+~Randy
+LPC 2009, Sept. 23-25, Portland, Oregon
+http://linuxplumbersconf.org/2009/
