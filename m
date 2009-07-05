@@ -1,54 +1,45 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13716] New: The AIC-7892P controller does not work any more
-Date: Sun, 5 Jul 2009 19:23:18 GMT
-Message-ID: <bug-13716-11613@http.bugzilla.kernel.org/>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [Bug 13716] New: The AIC-7892P controller does not work any
+	more
+Date: Sun, 5 Jul 2009 13:51:26 -0600
+Message-ID: <20090705195126.GT5480@parisc-linux.org>
+References: <bug-13716-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:58302 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752674AbZGETXP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Jul 2009 15:23:15 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n65JNI7b018017
-	for <linux-scsi@vger.kernel.org>; Sun, 5 Jul 2009 19:23:18 GMT
+Received: from palinux.external.hp.com ([192.25.206.14]:48755 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752067AbZGETvX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Jul 2009 15:51:23 -0400
+Content-Disposition: inline
+In-Reply-To: <bug-13716-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13716
+On Sun, Jul 05, 2009 at 07:23:18PM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+> http://bugzilla.kernel.org/show_bug.cgi?id=13716
+> 
+> The usual probe fails with an error message saying that no IRQ could be
+> assigned to the controller, possibly due to a corrupt MP table.
+> 
+> The controller works fine with 2.6.30.1 and below.
+> 
+> This is how the adapter is normally initialized (messages from 2.6.29.6):
+>     aic7xxx 0000:01:03.0: PCI INT A -> GSI 28 (level, low) -> IRQ 28
+>     scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 7.0
+>     <Adaptec aic7892 Ultra160 SCSI adapter>
+>     aic7892: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
+> 
+> With 2.6.31-rc1, the kernel freezes with an error message and tries to restart
+> the controller periodically, which always fails.
 
-           Summary: The AIC-7892P controller does not work any more
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: 2.6.31-rc1. 2.6.31-rc1-git10
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: high
-          Priority: P1
-         Component: Other
-        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
-        ReportedBy: andrej@podzimek.org
-        Regression: Yes
-
-
-The usual probe fails with an error message saying that no IRQ could be
-assigned to the controller, possibly due to a corrupt MP table.
-
-The controller works fine with 2.6.30.1 and below.
-
-This is how the adapter is normally initialized (messages from 2.6.29.6):
-    aic7xxx 0000:01:03.0: PCI INT A -> GSI 28 (level, low) -> IRQ 28
-    scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 7.0
-    <Adaptec aic7892 Ultra160 SCSI adapter>
-    aic7892: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
-
-With 2.6.31-rc1, the kernel freezes with an error message and tries to restart
-the controller periodically, which always fails.
+That sounds like you have an interrupt routing problem, not a problem
+with the AIC driver.  Can you bisect this down to a particular commit?
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
