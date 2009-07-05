@@ -1,22 +1,31 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 13716] New: The AIC-7892P controller does not work any
- more
-Date: Sun, 05 Jul 2009 14:54:16 -0500
-Message-ID: <1246823656.4158.20.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13716] The AIC-7892P controller does not work any more
+Date: Sun, 5 Jul 2009 19:54:23 GMT
+Message-ID: <200907051954.n65JsNpA023078@demeter.kernel.org>
 References: <bug-13716-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:39894 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752191AbZGETyR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Jul 2009 15:54:17 -0400
+Received: from demeter.kernel.org ([140.211.167.39]:43368 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752725AbZGETyU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Jul 2009 15:54:20 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n65JsNPv023079
+	for <linux-scsi@vger.kernel.org>; Sun, 5 Jul 2009 19:54:23 GMT
 In-Reply-To: <bug-13716-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=13716
+
+
+
+
+
+--- Comment #2 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2009-07-05 19:54:23 ---
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Sun, 2009-07-05 at 19:23 +0000, bugzilla-daemon@bugzilla.kernel.org
 wrote:
@@ -64,4 +73,7 @@ Thanks,
 
 James
 
-
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
