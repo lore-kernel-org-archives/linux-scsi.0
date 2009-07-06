@@ -1,158 +1,194 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] block: fix sg SG_DXFER_TO_FROM_DEV regression
-Date: Mon, 6 Jul 2009 16:10:27 +0900
-Message-ID: <20090706161004D.fujita.tomonori@lab.ntt.co.jp>
+From: "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>
+Subject: Soft lockup during device discovery on 2.6.31-rc1
+Date: Mon, 6 Jul 2009 18:58:13 +0530
+Message-ID: <0D1E8821739E724A86F4D16902CE275C141A31150B@inbmail01.lsi.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:43553 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752634AbZGFHKj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Jul 2009 03:10:39 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Language: en-US
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: "'dm-devel@redhat.com'" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: linux-scsi@vger.kernel.org, dgilbert@interlog.com, sxzzsf@gmail.com
 
-I overlooked SG_DXFER_TO_FROM_DEV support when I converted sg to use
-the block layer mapping API (2.6.28).
 
-Douglas Gilbert explained SG_DXFER_TO_FROM_DEV:
+Hi,
 
-http://www.spinics.net/lists/linux-scsi/msg37135.html
+I am seeing Soft lockup during device discovery on 2.6.31-rc1. I am havin=
+g 256 Volumes with 2 paths to each controller and  DM multipath configure=
+d for these Volumes. As soon as device discovery starts I am seeing below=
+ traces in syslog.
 
-=
-The semantics of SG_DXFER_TO_FROM_DEV were:
-   - copy user space buffer to kernel (LLD) buffer
-   - do SCSI command which is assumed to be of the DATA_IN
-     (data from device) variety. This would overwrite
-     some or all of the kernel buffer
-   - copy kernel (LLD) buffer back to the user space.
 
-The idea was to detect short reads by filling the original
-user space buffer with some marker bytes ("0xec" it would
-seem in this report). The "resid" value is a better way
-of detecting short reads but that was only added this century
-and requires co-operation from the LLD.
-=
+Regards,
+Vijay
 
-This patch changes the block layer mapping API to support this
-semantics. This simply adds another field to struct rq_map_data and
-enables __bio_copy_iov() to copy data from user space even with READ
-requests.
-
-It's better to add the flags field and kills null_mapped and the new
-from_user fields in struct rq_map_data but that approach makes it
-difficult to send this patch to stable trees because st and osst
-drivers use struct rq_map_data (they were converted to use the block
-layer in 2.6.29 and 2.6.30). Well, I should clean up the block layer
-mapping API.
-
-zhou sf reported this regiression and tested this patch:
-
-http://www.spinics.net/lists/linux-scsi/msg37128.html
-http://www.spinics.net/lists/linux-scsi/msg37168.html
-
-Reported-by: zhou sf <sxzzsf@gmail.com>
-Tested-by: zhou sf <sxzzsf@gmail.com>
-Cc: stable@kernel.org
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/scsi/sg.c      |    4 ++++
- fs/bio.c               |   22 ++++++++++++----------
- include/linux/blkdev.h |    1 +
- 3 files changed, 17 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index ef142fd..02e2db0 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1656,6 +1656,10 @@ static int sg_start_req(Sg_request *srp, unsigned char *cmd)
- 		md->nr_entries = req_schp->k_use_sg;
- 		md->offset = 0;
- 		md->null_mapped = hp->dxferp ? 0 : 1;
-+		if (dxfer_dir == SG_DXFER_TO_FROM_DEV)
-+			md->from_user = 1;
-+		else
-+			md->from_user = 0;
- 	}
- 
- 	if (iov_count) {
-diff --git a/fs/bio.c b/fs/bio.c
-index 1486b19..7673800 100644
---- a/fs/bio.c
-+++ b/fs/bio.c
-@@ -705,14 +705,13 @@ static struct bio_map_data *bio_alloc_map_data(int nr_segs, int iov_count,
- }
- 
- static int __bio_copy_iov(struct bio *bio, struct bio_vec *iovecs,
--			  struct sg_iovec *iov, int iov_count, int uncopy,
--			  int do_free_page)
-+			  struct sg_iovec *iov, int iov_count,
-+			  int to_user, int from_user, int do_free_page)
- {
- 	int ret = 0, i;
- 	struct bio_vec *bvec;
- 	int iov_idx = 0;
- 	unsigned int iov_off = 0;
--	int read = bio_data_dir(bio) == READ;
- 
- 	__bio_for_each_segment(bvec, bio, i, 0) {
- 		char *bv_addr = page_address(bvec->bv_page);
-@@ -727,13 +726,14 @@ static int __bio_copy_iov(struct bio *bio, struct bio_vec *iovecs,
- 			iov_addr = iov[iov_idx].iov_base + iov_off;
- 
- 			if (!ret) {
--				if (!read && !uncopy)
--					ret = copy_from_user(bv_addr, iov_addr,
--							     bytes);
--				if (read && uncopy)
-+				if (to_user)
- 					ret = copy_to_user(iov_addr, bv_addr,
- 							   bytes);
- 
-+				if (from_user)
-+					ret = copy_from_user(bv_addr, iov_addr,
-+							     bytes);
-+
- 				if (ret)
- 					ret = -EFAULT;
- 			}
-@@ -770,7 +770,8 @@ int bio_uncopy_user(struct bio *bio)
- 
- 	if (!bio_flagged(bio, BIO_NULL_MAPPED))
- 		ret = __bio_copy_iov(bio, bmd->iovecs, bmd->sgvecs,
--				     bmd->nr_sgvecs, 1, bmd->is_our_pages);
-+				     bmd->nr_sgvecs, bio_data_dir(bio) == READ,
-+				     0, bmd->is_our_pages);
- 	bio_free_map_data(bmd);
- 	bio_put(bio);
- 	return ret;
-@@ -875,8 +876,9 @@ struct bio *bio_copy_user_iov(struct request_queue *q,
- 	/*
- 	 * success
- 	 */
--	if (!write_to_vm && (!map_data || !map_data->null_mapped)) {
--		ret = __bio_copy_iov(bio, bio->bi_io_vec, iov, iov_count, 0, 0);
-+	if ((!write_to_vm && (!map_data || !map_data->null_mapped)) ||
-+	    (map_data && map_data->from_user)) {
-+		ret = __bio_copy_iov(bio, bio->bi_io_vec, iov, iov_count, 0, 1, 0);
- 		if (ret)
- 			goto cleanup;
- 	}
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 49ae079..7e9c417 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -723,6 +723,7 @@ struct rq_map_data {
- 	int nr_entries;
- 	unsigned long offset;
- 	int null_mapped;
-+	int from_user;
- };
- 
- struct req_iterator {
--- 
-1.6.0.6
-
+syslog snippet.
+------------------------
+Jul  2 16:41:55 localhost kernel: Modules linked in: dm_round_robin scsi_=
+dh_rdac ipv6 autofs4 hidp rfcomm l2cap bluetooth rfkill sunrpc dm_multipa=
+th scsi_dh video output sbs sbshc battery acpi_memhotplug ac parport_pc l=
+p parport sr_mod cdrom joydev sg dcdbas serio_raw rtc_cmos rtc_core rtc_l=
+ib button qla2xxx lpfc scsi_transport_fc ata_piix libata bnx2 pcspkr dm_s=
+napshot dm_zero dm_mirror dm_region_hash dm_log dm_mod shpchp megaraid_sa=
+s sd_mod scsi_mod ext3 jbd uhci_hcd ohci_hcd ehci_hcd [last unloaded: fre=
+q_table]
+Jul  2 16:41:55 localhost kernel: Pid: 15631, comm: async/7 Tainted: G   =
+   D    2.6.31-rc1 #1 PowerEdge R710
+Jul  2 16:41:55 localhost kernel: RIP: 0010:[<ffffffff812d303d>]  [<fffff=
+fff812d303d>] lock_kernel+0x24/0x39
+Jul  2 16:41:55 localhost kernel: RSP: 0018:ffff88009a9fdd98  EFLAGS: 000=
+00283
+Jul  2 16:41:55 localhost kernel: RAX: 000000000000403e RBX: ffff8800910f=
+e400 RCX: ffff88001631d2b8
+Jul  2 16:41:55 localhost kernel: RDX: 0000000000000000 RSI: 000000000000=
+0001 RDI: ffff88001631d1c0
+Jul  2 16:41:55 localhost kernel: RBP: ffffffff8100c2ce R08: 800000000000=
+0000 R09: 0410085000000010
+Jul  2 16:41:55 localhost kernel: R10: 00014a511e9cd9e0 R11: ffffffff8112=
+299e R12: ffff88009a9fdd10
+Jul  2 16:41:55 localhost kernel: R13: ffff88009a9fddd0 R14: 000000300000=
+0020 R15: ffffffff811574d5
+Jul  2 16:41:55 localhost kernel: FS:  0000000000000000(0000) GS:ffff8800=
+2804b000(0000) knlGS:0000000000000000
+Jul  2 16:41:55 localhost kernel: CS:  0010 DS: 0018 ES: 0018 CR0: 000000=
+008005003b
+Jul  2 16:41:55 localhost kernel: CR2: 00007f3f77c60000 CR3: 00000000aa7f=
+c000 CR4: 00000000000006f0
+Jul  2 16:41:55 localhost kernel: DR0: 0000000000000000 DR1: 000000000000=
+0000 DR2: 0000000000000000
+Jul  2 16:41:55 localhost kernel: DR3: 0000000000000000 DR6: 00000000ffff=
+0ff0 DR7: 0000000000000400
+Jul  2 16:41:55 localhost kernel: Call Trace:
+Jul  2 16:41:55 localhost kernel:  [<ffffffff810d81c5>] ? __blkdev_get+0x=
+1d/0x32a
+Jul  2 16:41:55 localhost kernel:  [<ffffffff810d7d07>] ? bdget+0x105/0x1=
+0d
+Jul  2 16:41:55 localhost kernel:  [<ffffffff810ff7ce>] ? register_disk+0=
+xaf/0x10a
+Jul  2 16:41:55 localhost kernel:  [<ffffffff8114e2ba>] ? add_disk+0xaa/0=
+x105
+Jul  2 16:41:55 localhost kernel:  [<ffffffffa008bba6>] ? sd_probe_async+=
+0x120/0x1d9 [sd_mod]
+Jul  2 16:41:55 localhost kernel:  [<ffffffff81054b70>] ? async_thread+0x=
+0/0x1ea
+Jul  2 16:41:55 localhost kernel:  [<ffffffff81054c70>] ? async_thread+0x=
+100/0x1ea
+Jul  2 16:41:55 localhost kernel:  [<ffffffff810353ff>] ? default_wake_fu=
+nction+0x0/0x9
+Jul  2 16:41:55 localhost kernel:  [<ffffffff81050416>] ? kthread+0x84/0x=
+8e
+Jul  2 16:41:55 localhost kernel:  [<ffffffff8100c93a>] ? child_rip+0xa/0=
+x20
+Jul  2 16:41:55 localhost kernel:  [<ffffffffa005f82e>] ? scsi_request_fn=
++0x0/0x48e [scsi_mod]
+Jul  2 16:41:55 localhost kernel:  [<ffffffff81050392>] ? kthread+0x0/0x8=
+e
+Jul  2 16:41:55 localhost kernel:  [<ffffffff8100c930>] ? child_rip+0x0/0=
+x20
+Jul  2 16:41:55 localhost kernel: BUG: soft lockup - CPU#1 stuck for 61s!=
+ [async/33:15657]
+Jul  2 16:41:55 localhost kernel: Modules linked in: dm_round_robin scsi_=
+dh_rdac ipv6 autofs4 hidp rfcomm l2cap bluetooth rfkill sunrpc dm_multipa=
+th scsi_dh video output sbs sbshc battery acpi_memhotplug ac parport_pc l=
+p parport sr_mod cdrom joydev sg dcdbas serio_raw rtc_cmos rtc_core rtc_l=
+ib button qla2xxx lpfc scsi_transport_fc ata_piix libata bnx2 pcspkr dm_s=
+napshot dm_zero dm_mirror dm_region_hash dm_log dm_mod shpchp megaraid_sa=
+s sd_mod scsi_mod ext3 jbd uhci_hcd ohci_hcd ehci_hcd [last unloaded: fre=
+q_table]
+Jul  2 16:41:55 localhost kernel: CPU 1:
+Jul  2 16:41:55 localhost kernel: Modules linked in: dm_round_robin scsi_=
+dh_rdac ipv6 autofs4 hidp rfcomm l2cap bluetooth rfkill sunrpc dm_multipa=
+th scsi_dh video output sbs sbshc battery acpi_memhotplug ac parport_pc l=
+p parport sr_mod cdrom joydev sg dcdbas serio_raw rtc_cmos rtc_core rtc_l=
+ib button qla2xxx lpfc scsi_transport_fc ata_piix libata bnx2 pcspkr dm_s=
+napshot dm_zero dm_mirror dm_region_hash dm_log dm_mod shpchp megaraid_sa=
+s sd_mod scsi_mod ext3 jbd uhci_hcd ohci_hcd ehci_hcd [last unloaded: fre=
+q_table]
+Jul  2 16:41:55 localhost kernel: Pid: 15657, comm: async/33 Tainted: G  =
+    D    2.6.31-rc1 #1 PowerEdge R710
+Jul  2 16:41:55 localhost kernel: RIP: 0010:[<ffffffff8105cc16>]  [<fffff=
+fff8105cc16>] smp_call_function_many+0x1a4/0x1b5
+Jul  2 16:41:55 localhost kernel: RSP: 0018:ffff88000a227d10  EFLAGS: 000=
+00202
+Jul  2 16:41:55 localhost kernel: RAX: 00000000000000ff RBX: ffff88002807=
+23a0 RCX: 0000000000000001
+Jul  2 16:41:55 localhost kernel: RDX: ffff88001634d250 RSI: 000000000000=
+00ff RDI: 00000000000000c0
+Jul  2 16:41:55 localhost kernel: RBP: ffffffff8100c42e R08: 000000000000=
+003f R09: ffffffff815e2358
+Jul  2 16:41:55 localhost kernel: R10: 7fffffffffffffff R11: 000000000000=
+0000 R12: ffff88001634d250
+Jul  2 16:41:55 localhost kernel: R13: 0000000000000282 R14: ffff88001634=
+d250 R15: 000000010000000e
+Jul  2 16:41:55 localhost kernel: FS:  0000000000000000(0000) GS:ffff8800=
+28065000(0000) knlGS:0000000000000000
+Jul  2 16:41:55 localhost kernel: CS:  0010 DS: 0018 ES: 0018 CR0: 000000=
+008005003b
+Jul  2 16:41:55 localhost kernel: CR2: 00007f3f77360d70 CR3: 00000000b820=
+8000 CR4: 00000000000006e0
+Jul  2 16:41:55 localhost kernel: DR0: 0000000000000000 DR1: 000000000000=
+0000 DR2: 0000000000000000
+Jul  2 16:41:55 localhost kernel: DR3: 0000000000000000 DR6: 00000000ffff=
+0ff0 DR7: 0000000000000400
+Jul  2 16:41:55 localhost kernel: Call Trace:
+Jul  2 16:41:55 localhost kernel:  [<ffffffff810d3283>] ? invalidate_bh_l=
+ru+0x0/0x41
+Jul  2 16:41:55 localhost kernel:  [<ffffffff810d3283>] ? invalidate_bh_l=
+ru+0x0/0x41
+Jul  2 16:41:55 localhost kernel:  [<ffffffff8105cc47>] ? smp_call_functi=
+on+0x20/0x24
+Jul  2 16:41:55 localhost kernel:  [<ffffffff81041906>] ? on_each_cpu+0x1=
+0/0x22
+Jul  2 16:41:55 localhost kernel:  [<ffffffff810d76b3>] ? kill_bdev+0x1b/=
+0x30
+Jul  2 16:41:55 localhost kernel:  [<ffffffff810d8085>] ? __blkdev_put+0x=
+54/0x151
+Jul  2 16:41:55 localhost kernel:  [<ffffffff810ff7df>] ? register_disk+0=
+xc0/0x10a
+Jul  2 16:41:55 localhost kernel:  [<ffffffff8114e2ba>] ? add_disk+0xaa/0=
+x105
+Jul  2 16:41:55 localhost kernel:  [<ffffffffa008bba6>] ? sd_probe_async+=
+0x120/0x1d9 [sd_mod]
+Jul  2 16:41:55 localhost kernel:  [<ffffffff81054b70>] ? async_thread+0x=
+0/0x1ea
+Jul  2 16:41:55 localhost kernel:  [<ffffffff81054c70>] ? async_thread+0x=
+100/0x1ea
+Jul  2 16:41:55 localhost kernel:  [<ffffffff810353ff>] ? default_wake_fu=
+nction+0x0/0x9
+Jul  2 16:41:55 localhost kernel:  [<ffffffff81050416>] ? kthread+0x84/0x=
+8e
+Jul  2 16:41:55 localhost kernel:  [<ffffffff8100c93a>] ? child_rip+0xa/0=
+x20
+Jul  2 16:41:55 localhost kernel:  [<ffffffffa005f82e>] ? scsi_request_fn=
++0x0/0x48e [scsi_mod]
+Jul  2 16:41:55 localhost kernel:  [<ffffffff81050392>] ? kthread+0x0/0x8=
+e
+Jul  2 16:41:55 localhost kernel:  [<ffffffff8100c930>] ? child_rip+0x0/0=
+x20
+Jul  2 16:41:55 localhost kernel: BUG: soft lockup - CPU#2 stuck for 61s!=
+ [async/82:15713]
+Jul  2 16:41:55 localhost kernel: Modules linked in: dm_round_robin scsi_=
+dh_rdac ipv6 autofs4 hidp rfcomm l2cap bluetooth rfkill sunrpc dm_multipa=
+th scsi_dh video output sbs sbshc battery acpi_memhotplug ac parport_pc l=
+p parport sr_mod cdrom joydev sg dcdbas serio_raw rtc_cmos rtc_core rtc_l=
+ib button qla2xxx lpfc scsi_transport_fc ata_piix libata bnx2 pcspkr dm_s=
+napshot dm_zero dm_mirror dm_region_hash dm_log dm_mod shpchp megaraid_sa=
+s sd_mod scsi_mod ext3 jbd uhci_hcd ohci_hcd ehci_hcd [last unloaded: fre=
+q_table]
+Jul  2 16:41:55 localhost kernel: CPU 2:
+Jul  2 16:41:55 localhost kernel: Modules linked in: dm_round_robin scsi_=
+dh_rdac ipv6 autofs4 hidp rfcomm l2cap bluetooth rfkill sunrpc dm_multipa=
+th scsi_dh video output sbs sbshc battery acpi_memhotplug ac parport_pc l=
+p parport sr_mod cdrom joydev sg dcdbas serio_raw rtc_cmos rtc_core rtc_l=
+ib button qla2xxx lpfc scsi_transport_fc ata_piix libata
