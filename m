@@ -1,47 +1,65 @@
-From: Eddie Williams <Eddie.Williams@steeleye.com>
-Subject: Re: [PATCH 0/3] scsi_dh: Add ability to set parameters for scsi
- device handler
-Date: Tue, 07 Jul 2009 08:34:42 -0400
-Message-ID: <1246970082.6646.9.camel@eddie-laptop>
-References: <20090702031308.28354.73353.sendpatchset@chandra-ubuntu>
-	 <1246563299.8018.9.camel@eddie-laptop>
-	 <1246566564.8018.21.camel@eddie-laptop>
-	 <1246567622.7381.7.camel@chandra-ubuntu>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [2.6.27.25] Hang in SCSI sync cache when a disk is removed--?
+Date: Tue, 07 Jul 2009 08:58:46 -0500
+Message-ID: <1246975126.4522.5.camel@mulgrave.site>
+References: <1246551772.9022.7192.camel@psmith-ubeta.netezza.com>
+	 <20090702174151.GA17414@linux.vnet.ibm.com>
+	 <1246903453.9022.7246.camel@psmith-ubeta.netezza.com>
+	 <20090707062543.GA2459@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p02c12o145.mxlogic.net ([208.65.145.78]:45704 "EHLO
-	p02c12o145.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754729AbZGGMeo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jul 2009 08:34:44 -0400
-In-Reply-To: <1246567622.7381.7.camel@chandra-ubuntu>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33812 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755740AbZGGN6w (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jul 2009 09:58:52 -0400
+In-Reply-To: <20090707062543.GA2459@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sekharan@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, dm-devel@redhat.com, michaelc@cs.wisc.edu, agk@redhat.com, James.Bottomley@HansenPartnership.com, Benoit_Arthur@emc.com, asson_ronald@emc.com, berthiaume_wayne@emc.com
+To: Mike Anderson <andmike@linux.vnet.ibm.com>
+Cc: Paul Smith <paul@mad-scientist.net>, linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, "Moore, Eric" <Eric.Moore@lsi.com>
 
-
-I was testing with the SLES 11 kernel.  Initially I was using
-2.6.27.19-5 and also verified the same issue with their errata kernel
-2.6.27.23-0.1.
-
-Eddie
-On Thu, 2009-07-02 at 13:47 -0700, Chandra Seetharaman wrote:
-> On Thu, 2009-07-02 at 16:29 -0400, Eddie Williams wrote:
-> > On Thu, 2009-07-02 at 15:34 -0400, Eddie Williams wrote:
-> > > I have tried to set this up but have run into a problem probably due to
-> > > my error.  It has been a while since I have had to build kernels...
-> > > 
-> > > I pulled 2.6.31-rc1, applied the two patches below and then applied the
-> > > 3 patches for the interface.  The new kernel loads fine but when a
-> > > trespass command is sent I get an panic.  I am looking though how I
-> > > built the kernel and perhaps build with your 3 patches to see if it
-> > > happened before.  
+On Mon, 2009-07-06 at 23:25 -0700, Mike Anderson wrote:
+> Paul Smith <paul@mad-scientist.net> wrote:
 > > 
-> > I backed out the 3 patches with the same panic.
-> > 
-> Which version of the kernel were you originally testing with ? (when you
-> found the feature was gone).
 > 
+> I was expecting a little more output from the error handler thread, but
+> the log does show a few things.
+> 
+> It would be good if in the failing case you could provide a sysrq "t"
+> output so I could understand where the reset handler is waiting.
+> 
+> It appears there are a few things going on.
+> 1.) The dm deactivate calling blk_abort_queue is leading to error handler
+> activation. Similar to a previously described issue.
+> http://permalink.gmane.org/gmane.linux.kernel.device-mapper.devel/8543
+> 	- This kernel does not have DID_TRANSPORT_DISRUPTED so that
+> 	  avoidance method cannot be used.
+> 2.) The task aborts are completing, but the tur is most likely being
+> failed with a response of DID_BUS_BUSY leading to continued recovery.
+> 3.) We appear to be inside mpt_HardResetHandler, but need more info to
+> understand where in the call chain.
+
+Actually, isn't the problem much simpler?
+
+The mptsas driver calls sas_port_delete() when the event occurs.  This
+deletes the rphy and invokes scsi_remove_target().  It looks like the
+device had a write back cache, so part of scsi_remove_target() goes to
+scsi_remove_device() which triggers sd_remove() which tries to flush the
+cache with SYNCHRONIZE CACHE.
+
+This is the point at which the hang occurs.  It seems that the mptsas
+goes out to lunch when it sees a command to a device on a deleted port.
+The remainder of the log is error handling trying to get the attention
+of the mptsas firmware back again.
+
+This is a pretty huge problem because any set of commands can be racing
+with surprise ejection ... there's no way we can gate it in the mid
+layer.  The behaviour we expect is that after surprise ejection, a
+driver/device will automatically error (with something like
+DID_NO_CONNECT) all commands for the ejected device.
+
+James
+
 
