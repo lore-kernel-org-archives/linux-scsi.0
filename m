@@ -1,107 +1,194 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: REQUEST for new 'topology' metrics to be moved out of
-	the 'queue' sysfs directory.
-Date: Tue, 07 Jul 2009 01:29:37 -0400
-Message-ID: <yq163e55ada.fsf@sermon.lab.mkp.net>
-References: <19010.62951.886231.96622@notabene.brown>
-	<yq11vp8spxo.fsf@sermon.lab.mkp.net>
-	<125b48b7ffc99a496fbdd512f38cada5.squirrel@neil.brown.name>
-	<yq1k530qkm7.fsf@sermon.lab.mkp.net>
-	<19012.47077.328965.919868@notabene.brown>
-	<yq1ws6znja4.fsf@sermon.lab.mkp.net>
-	<19026.43290.340555.774690@notabene.brown>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Mike Anderson <andmike@linux.vnet.ibm.com>
+Subject: Re: [2.6.27.25] Hang in SCSI sync cache when a disk is removed--?
+Date: Mon, 6 Jul 2009 23:25:44 -0700
+Message-ID: <20090707062543.GA2459@linux.vnet.ibm.com>
+References: <1246551772.9022.7192.camel@psmith-ubeta.netezza.com> <20090702174151.GA17414@linux.vnet.ibm.com> <1246903453.9022.7246.camel@psmith-ubeta.netezza.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <19026.43290.340555.774690@notabene.brown> (Neil Brown's message
-	of "Tue, 7 Jul 2009 11:47:06 +1000")
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Neil Brown <neilb@suse.de>
-Cc: Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-fsdevel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Alasdair G Kergon <agk@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:45276 "EHLO
+	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756108AbZGGGZo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jul 2009 02:25:44 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e33.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n676NX2Y003085
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Jul 2009 00:23:33 -0600
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n676PjP6209032
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Jul 2009 00:25:45 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n676PiGc032281
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Jul 2009 00:25:45 -0600
+Content-Disposition: inline
+In-Reply-To: <1246903453.9022.7246.camel@psmith-ubeta.netezza.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Paul Smith <paul@mad-scientist.net>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>
 
->>>>> "Neil" == Neil Brown <neilb@suse.de> writes:
+Paul Smith <paul@mad-scientist.net> wrote:
+> 
 
->> What: /sys/block/<disk>/queue/minimum_io_size Date: April 2009
->> Contact: Martin K. Petersen <martin.petersen@oracle.com> Description:
->> Storage devices may report a granularity or minimum I/O size which is
->> the device's preferred unit of I/O.  Requests smaller than this may
->> incur a significant performance penalty.
->> 
->> For disk drives this value corresponds to the physical block
->> size. For RAID devices it is usually the stripe chunk size.
+I was expecting a little more output from the error handler thread, but
+the log does show a few things.
 
-Neil> These two paragraphs are contradictory.  There is no sense in
-Neil> which a RAID chunk size is a preferred minimum I/O size.
+It would be good if in the failing case you could provide a sysrq "t"
+output so I could understand where the reset handler is waiting.
 
-Maybe not for MD.  This is not just about MD.
+It appears there are a few things going on.
+1.) The dm deactivate calling blk_abort_queue is leading to error handler
+activation. Similar to a previously described issue.
+http://permalink.gmane.org/gmane.linux.kernel.device-mapper.devel/8543
+	- This kernel does not have DID_TRANSPORT_DISRUPTED so that
+	  avoidance method cannot be used.
+2.) The task aborts are completing, but the tur is most likely being
+failed with a response of DID_BUS_BUSY leading to continued recovery.
+3.) We appear to be inside mpt_HardResetHandler, but need more info to
+understand where in the call chain.
 
-This is a hint that says "Please don't send me random I/Os smaller than
-this.  And please align to a multiple of this value".
+T
+> kernel log output:
+> ------------------
+> Jul  6 13:31:18  user.info kernel: mptbase: ioc0: LogInfo(0x31170000): Originator={PL}, Code={IO Device Missing Delay Retry}, SubCode(0x0000)
+> Jul  6 13:31:18  user.info kernel: mptbase: ioc1: LogInfo(0x31170000): Originator={PL}, Code={IO Device Missing Delay Retry}, SubCode(0x0000)
+> Jul  6 13:31:27  user.info kernel: mptbase: ioc1: LogInfo(0x31170000): Originator={PL}, Code={IO Device Missing Delay Retry}, SubCode(0x0000)
+> Jul  6 13:31:27  user.info kernel: mptbase: ioc0: LogInfo(0x31170000): Originator={PL}, Code={IO Device Missing Delay Retry}, SubCode(0x0000)
+> Jul  6 13:31:35  user.info kernel: mptbase: ioc1: LogInfo(0x31170000): Originator={PL}, Code={IO Device Missing Delay Retry}, SubCode(0x0000)
+> Jul  6 13:31:35  user.info kernel: sd 3:0:1:0: [sdn] Result: hostbyte=0x02 driverbyte=0x00
+> Jul  6 13:31:35  user.warn kernel: device-mapper: multipath: Failing path 8:208.
+> Jul  6 13:31:35  daemon.notice multipathd: 8:208: mark as failed
+> Jul  6 13:31:35  daemon.notice multipathd: encl1Slot2: remaining active paths: 1
+> Jul  6 13:31:43  user.info kernel: mptbase: ioc0: LogInfo(0x31170000): Originator={PL}, Code={IO Device Missing Delay Retry}, SubCode(0x0000)
+> Jul  6 13:31:43  user.info kernel: sd 2:0:1:0: [sdb] <6>mptscsih: ioc0: attempting task abort! (sc=ffff8804623e4b40)
+> Jul  6 13:31:43  user.info kernel: sd 2:0:1:0: [sdb] CDB: cdb[0]=0x12: 12 01 80 00 fe 00
+> Jul  6 13:31:43  user.info kernel: mptscsih: ioc0: task abort: SUCCESS (sc=ffff8804623e4b40)
+> Jul  6 13:31:43  user.warn kernel: Result: hostbyte=0x02 driverbyte=0x00
+> Jul  6 13:31:43  user.warn kernel: device-mapper: multipath: Failing path 8:16.
+> Jul  6 13:31:43  daemon.notice multipathd: 8:16: mark as failed
+> Jul  6 13:31:43  daemon.notice multipathd: encl1Slot2: remaining active paths: 0
+> Jul  6 13:31:51  user.info kernel: mptbase: ioc1: LogInfo(0x31170000): Originator={PL}, Code={IO Device Missing Delay Retry}, SubCode(0x0000)
+> Jul  6 13:31:51  user.info kernel: mptbase: ioc0: LogInfo(0x31170000): Originator={PL}, Code={IO Device Missing Delay Retry}, SubCode(0x0000)
+> Jul  6 13:31:51  user.info kernel: mptscsih: ioc0: attempting task abort! (sc=ffff880463a6b680)
+> Jul  6 13:31:51  user.info kernel: sd 2:0:1:0: [sdb] CDB: 
+> Jul  6 13:31:51  user.info kernel: cdb[0]=0x12
+> Jul  6 13:31:51  user.info kernel: : 12
+> Jul  6 13:31:51  user.info kernel:  01
+> Jul  6 13:31:51  user.info kernel:  80 00
+> Jul  6 13:31:51  user.info kernel:  fe 00
+> Jul  6 13:31:51  user.info kernel: 
+> Jul  6 13:31:51  user.info kernel: mptscsih: ioc0: task abort: SUCCESS (sc=ffff880463a6b680)
+> Jul  6 13:31:59  daemon.notice multipathd: sdn: readsector0 checker reports path is down
+> Jul  6 13:31:59  user.info kernel: mptbase: ioc1: LogInfo(0x31170000): Originator={PL}, Code={IO Device Missing Delay Retry}, SubCode(0x0000)
+> Jul  6 13:31:59  user.info kernel: mptbase: ioc0: LogInfo(0x31170000): Originator={PL}, Code={IO Device Missing Delay Retry}, SubCode(0x0000)
+> Jul  6 13:31:59  user.info kernel: mptscsih: ioc0: attempting target reset! (sc=ffff8804623e4b40)
+> Jul  6 13:31:59  user.info kernel: sd 2:0:1:0: [sdb] CDB: cdb[0]=0x12
+> Jul  6 13:31:59  user.info kernel: : 12
+> Jul  6 13:31:59  user.info kernel:  01 80
+> Jul  6 13:31:59  user.info kernel:  00 fe
+> Jul  6 13:31:59  user.info kernel:  00
+> Jul  6 13:31:59  user.info kernel: 
+> Jul  6 13:31:59  user.info kernel: mptscsih: ioc0: target reset: SUCCESS (sc=ffff8804623e4b40)
+> Jul  6 13:32:07  user.info kernel: mptbase: ioc0: LogInfo(0x31170000): Originator={PL}, Code={IO Device Missing Delay Retry}, SubCode(0x0000)
+> Jul  6 13:32:07  user.info kernel: mptscsih: ioc0: attempting bus reset! (sc=ffff8804623e4b40)
+> Jul  6 13:32:07  user.info kernel: sd 2:0:1:0: [sdb] CDB: 
+> Jul  6 13:32:07  user.info kernel: cdb[0]=0x12
+> Jul  6 13:32:07  user.info kernel: : 12
+> Jul  6 13:32:07  user.info kernel:  01
+> Jul  6 13:32:07  user.info kernel:  80 00
+> Jul  6 13:32:07  user.info kernel:  fe
+> Jul  6 13:32:07  user.info kernel:  00
+> Jul  6 13:32:11  user.info kernel: mptscsih: ioc0: bus reset: SUCCESS (sc=ffff8804623e4b40)
+> Jul  6 13:32:23  user.info kernel: mptbase: ioc0: LogInfo(0x31170000): Originator={PL}, Code={IO Device Missing Delay Retry}, SubCode(0x0000)
+> Jul  6 13:32:31  user.info kernel: mptbase: ioc0: LogInfo(0x31170000): Originator={PL}, Code={IO Device Missing Delay Retry}, SubCode(0x0000)
+> Jul  6 13:32:31  user.info kernel: mptscsih: ioc0: attempting host reset! (sc=ffff8804623e4b40)
+> Jul  6 13:32:42  user.info kernel: mptscsih: ioc0: host reset: SUCCESS (sc=ffff8804623e4b40)
+> Jul  6 13:32:43  user.info kernel: mptbase: ioc0: LogInfo(0x30030501): Originator={IOP}, Code={Invalid Page}, SubCode(0x0501)
+> Jul  6 13:32:43  user.info kernel: mptsas: ioc0: removing ssp device: fw_channel 0, fw_id 27, phy 1, sas_addr 0x5000c5000d298821
+> Jul  6 13:32:43  user.debug kernel:  phy-2:2:79: mptsas: ioc0: delete phy 1, phy-obj (0xffff88046a5e6800)
+> Jul  6 13:32:43  user.debug kernel:  port-2:2:1: mptsas: ioc0: delete port 1, sas_addr (0x5000c5000d298821)
+> Jul  6 13:32:43  user.notice kernel: sd 2:0:1:0: [sdb] Synchronizing SCSI cache
+> Jul  6 13:32:52  user.info kernel: sd 2:0:1:0: Device offlined - not ready after error recovery
+> Jul  6 13:32:53  user.info kernel: sd 2:0:1:0: [sdb] md: super_written gets error=-5, uptodate=0
+> Jul  6 13:32:53  user.alert kernel: raid1: Disk failure on dm-13, disabling device.
+> Jul  6 13:32:53  user.alert kernel: raid1: Operation continuing on 1 devices.
+> Jul  6 13:32:53  daemon.notice multipathd: sdb: readsector0 checker reports path is down
+> Jul  6 13:32:53  user.warn kernel: Result: hostbyte=0x01 driverbyte=0x00
+> Jul  6 13:32:53  user.info kernel: mptbase: ioc0: LogInfo(0x30030501): Originator={IOP}, Code={Invalid Page}, SubCode(0x0501)
+> Jul  6 13:32:53  user.warn kernel: RAID1 conf printout:
+> Jul  6 13:32:53  user.warn kernel:  --- wd:1 rd:2
+> Jul  6 13:32:53  user.warn kernel:  disk 0, wo:0, o:1, dev:dm-6
+> Jul  6 13:32:53  user.warn kernel:  disk 1, wo:1, o:0, dev:dm-13
+> Jul  6 13:32:53  user.warn kernel: RAID1 conf printout:
+> Jul  6 13:32:53  user.warn kernel:  --- wd:1 rd:2
+> Jul  6 13:32:53  user.warn kernel:  disk 0, wo:0, o:1, dev:dm-6
+> Jul  6 13:32:55  daemon.notice multipathd: sdn: readsector0 checker reports path is down
+> Jul  6 13:32:55  user.info kernel: mptbase: ioc1: LogInfo(0x31170000): Originator={PL}, Code={IO Device Missing Delay Retry}, SubCode(0x0000)
+> Jul  6 13:33:02  user.info kernel: mptscsih: ioc1: attempting task abort! (sc=ffff880461f6a280)
+> Jul  6 13:33:02  user.info kernel: sd 3:0:1:0: CDB: 
+> Jul  6 13:33:02  user.info kernel: cdb[0]=0x12
+> Jul  6 13:33:02  user.info kernel: :
+> Jul  6 13:33:02  user.info kernel:  12
+> Jul  6 13:33:02  user.info kernel:  00 00
+> Jul  6 13:33:02  user.info kernel:  00 24
+> Jul  6 13:33:02  user.info kernel:  00
+> Jul  6 13:33:02  user.info kernel: 
+> Jul  6 13:33:02  user.info kernel: mptbase: ioc1: LogInfo(0x31130000): Originator={PL}, Code={IO Not Yet Executed}, SubCode(0x0000)
+> Jul  6 13:33:02  user.info kernel: mptscsih: ioc1: task abort: SUCCESS (sc=ffff880461f6a280)
+> Jul  6 13:33:03  user.info kernel: mptbase: ioc1: LogInfo(0x31170000): Originator={PL}, Code={IO Device Missing Delay Retry}, SubCode(0x0000)
+> Jul  6 13:33:03  user.info kernel: mptscsih: ioc1: attempting task abort! (sc=ffff88046c04a000)
+> Jul  6 13:33:03  user.info kernel: sd 3:0:1:0: [sdn] CDB: 
+> Jul  6 13:33:03  user.info kernel: cdb[0]=0x12
+> Jul  6 13:33:03  user.info kernel: : 12
+> Jul  6 13:33:03  user.info kernel:  01
+> Jul  6 13:33:03  user.info kernel:  80 00
+> Jul  6 13:33:03  user.info kernel:  fe
+> Jul  6 13:33:03  user.info kernel:  00
+> Jul  6 13:33:03  user.info kernel: 
+> Jul  6 13:33:03  user.info kernel: mptscsih: ioc1: task abort: SUCCESS (sc=ffff88046c04a000)
+> Jul  6 13:33:04  user.err kernel: scsi 2:0:1:0: rejecting I/O to dead device
+> Jul  6 13:33:04  daemon.notice multipathd: sdb: readsector0 checker reports path is down
+> Jul  6 13:33:11  user.info kernel: mptbase: ioc1: LogInfo(0x31170000): Originator={PL}, Code={IO Device Missing Delay Retry}, SubCode(0x0000)
+> Jul  6 13:33:11  user.info kernel: mptscsih: ioc1: attempting task abort! (sc=ffff880463a6adc0)
+> Jul  6 13:33:11  user.info kernel: sd 3:0:1:0: [sdn] CDB: 
+> Jul  6 13:33:11  user.info kernel: cdb[0]=0x12
+> Jul  6 13:33:11  user.info kernel: : 12
+> Jul  6 13:33:11  user.info kernel:  01
+> Jul  6 13:33:11  user.info kernel:  80 00
+> Jul  6 13:33:11  user.info kernel:  fe
+> Jul  6 13:33:11  user.info kernel:  00
+> Jul  6 13:33:11  user.info kernel: mptscsih: ioc1: task abort: SUCCESS (sc=ffff880463a6adc0)
+> Jul  6 13:33:19  user.info kernel: mptbase: ioc1: LogInfo(0x31170000): Originator={PL}, Code={IO Device Missing Delay Retry}, SubCode(0x0000)
+> Jul  6 13:33:19  user.info kernel: mptscsih: ioc1: attempting target reset! (sc=ffff880461f6a280)
+> Jul  6 13:33:19  user.info kernel: sd 3:0:1:0: CDB: 
+> Jul  6 13:33:19  user.info kernel: cdb[0]=0x12
+> Jul  6 13:33:19  user.info kernel: : 12
+> Jul  6 13:33:19  user.info kernel:  00 00
+> Jul  6 13:33:19  user.info kernel:  00 24
+> Jul  6 13:33:19  user.info kernel:  00
+> Jul  6 13:33:19  user.info kernel: 
+> Jul  6 13:33:19  user.info kernel: mptscsih: ioc1: target reset: SUCCESS (sc=ffff880461f6a280)
+> Jul  6 13:33:27  user.info kernel: mptbase: ioc1: LogInfo(0x31170000): Originator={PL}, Code={IO Device Missing Delay Retry}, SubCode(0x0000)
+> Jul  6 13:33:27  user.info kernel: mptscsih: ioc1: attempting bus reset! (sc=ffff880461f6a280)
+> Jul  6 13:33:27  user.info kernel: sd 3:0:1:0: CDB: 
+> Jul  6 13:33:27  user.info kernel: cdb[0]=0x12
+> Jul  6 13:33:27  user.info kernel: :
+> Jul  6 13:33:27  user.info kernel:  12
+> Jul  6 13:33:27  user.info kernel:  00
+> Jul  6 13:33:27  user.info kernel:  24
+> Jul  6 13:33:27  user.info kernel:  00
+> Jul  6 13:33:27  user.info kernel: 
+> Jul  6 13:33:31  user.info kernel: mptscsih: ioc1: bus reset: SUCCESS (sc=ffff880461f6a280)
+> Jul  6 13:33:42  user.info kernel: mptbase: ioc1: LogInfo(0x31130000): Originator={PL}, Code={IO Not Yet Executed}, SubCode(0x0000)
+> Jul  6 13:33:42  user.info kernel: mptscsih: ioc1: attempting host reset! (sc=ffff880461f6a280)
+> Jul  6 13:33:42  user.info kernel: mptsas: ioc1: removing ssp device: fw_channel 0, fw_id 62, phy 1, sas_addr 0x5000c5000d298822
+> Jul  6 13:33:42  user.debug kernel:  phy-3:2:79: mptsas: ioc1: delete phy 1, phy-obj (0xffff88046de9dc00)
+> Jul  6 13:33:42  user.debug kernel:  port-3:2:1: mptsas: ioc1: delete port 1, sas_addr (0x5000c5000d298822)
+> Jul  6 13:33:42  user.notice kernel: sd 3:0:1:0: [sdn] Synchronizing SCSI cache
+> 
+> 
+> 
 
-I agree that for MD devices the alignment portion of that is the
-important one.  However, putting a lower boundary on the size *is* quite
-important for 4KB disk drives.  There are also HW RAID devices that
-choke on requests smaller than the chunk size.
-
-I appreciate the difficulty in filling out these hints in a way that
-makes sense for all the supported RAID levels in MD.  However, I really
-don't consider the hints particularly interesting in the isolated
-context of MD.  To me the hints are conduits for characteristics of the
-physical storage.  The question you should be asking yourself is: "What
-do I put in these fields to help the filesystem so that we get the most
-out of the underlying, slow hardware?".
-
-I think it is futile to keep spending time coming up with terminology
-that encompasses all current and future software and hardware storage
-devices with 100% accuracy.
-
-
-Neil> To some degree it is actually a 'maximum' preferred size for
-Neil> random IO.  If you do random IO is blocks larger than the chunk
-Neil> size then you risk causing more 'head contention' (at least with
-Neil> RAID0 - with RAID5 the tradeoff is more complex).
-
-Please elaborate.
-
-
-Neil> Also, you say "may" report.  If a device does not report, what
-Neil> happens to this file.  Is it not present, or empty, or contain a
-Neil> special "undefined" value?  I think the answer is that "512" is
-Neil> reported.
-
-The answer is physical_block_size.
-
-
-Neil> In this case, if a device does not report an optimal size, the
-Neil> file contains "0" - correct?  Should that be explicit?
-
-Now documented.
-
-
-Neil> I'd really like to see an example of how you expect filesystems to
-Neil> use this.  I can well imagine the VM or elevator using this to
-Neil> assemble IO requests in to properly aligned requests.  But I
-Neil> cannot imagine how e.g mkfs would use it.  Or am I
-Neil> misunderstanding and this is for programs that use O_DIRECT on the
-Neil> block device so they can optimise their request stream?
-
-The way it has been working so far (with the manual ioctl pokage) is
-that mkfs will align metadata as well as data on a minimum_io_size
-boundary.  And it will try to use the minimum_io_size as filesystem
-block size.  On Linux that's currently limited by the fact that we can't
-have blocks bigger than a page.  The filesystem can also report the
-optimal I/O size in statfs.  For XFS the stripe width also affects how
-the realtime/GRIO allocators work.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+-andmike
+--
+Michael Anderson
+andmike@linux.vnet.ibm.com
