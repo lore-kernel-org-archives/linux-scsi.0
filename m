@@ -1,51 +1,49 @@
-From: John Stoffel <john@stoffel.org>
-Subject: [PATCH 5/5] Make SCSI SG v4 driver enabled by default and remove EXPERIMENTAL dependency, since udev depends on BSG.
-Date: Tue,  7 Jul 2009 11:44:17 -0400
-Message-ID: <1246981457-21249-1-git-send-email-john@stoffel.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/3] scsi_dh: Make scsi device handler modules
+ automatically inserted
+Date: Tue, 07 Jul 2009 17:12:03 +0000
+Message-ID: <1246986723.6277.63.camel@mulgrave.site>
+References: <20090427180609.22758.93035.sendpatchset@chandra-ubuntu>
+	 <4A369320.2080202@redhat.com> <1245365306.4286.27.camel@mulgrave.site>
+	 <4A3BDFE8.3090003@redhat.com>  <4A44D37A.10903@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from Mycroft.westnet.com ([216.187.52.7]:35929 "EHLO
-	Mycroft.westnet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756789AbZGGPo0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jul 2009 11:44:26 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:58437 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754596AbZGGRMH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jul 2009 13:12:07 -0400
+In-Reply-To: <4A44D37A.10903@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, John Stoffel <john@stoffel.org>
+To: Peter Jones <pjones@redhat.com>
+Cc: Chandra Seetharaman <sekharan@us.ibm.com>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, hare@suse.de
 
-Signed-off-by: John Stoffel <john@stoffel.org>
----
- block/Kconfig |   11 +++++++----
- 1 files changed, 7 insertions(+), 4 deletions(-)
+On Fri, 2009-06-26 at 09:56 -0400, Peter Jones wrote:
+> James, I think Chandra and I have responded to most if not all of your points, 
+> and would appreciate your thoughts on what we've said.
 
-diff --git a/block/Kconfig b/block/Kconfig
-index e7d1278..55bbefc 100644
---- a/block/Kconfig
-+++ b/block/Kconfig
-@@ -45,9 +45,9 @@ config LBD
- 	  If unsure, say N.
- 
- config BLK_DEV_BSG
--	bool "Block layer SG support v4 (EXPERIMENTAL)"
--	depends on EXPERIMENTAL
--	---help---
-+	bool "Block layer SG support v4"
-+	default y
-+	help
- 	  Saying Y here will enable generic SG (SCSI generic) v4 support
- 	  for any block device.
- 
-@@ -57,7 +57,10 @@ config BLK_DEV_BSG
- 	  protocols (e.g. Task Management Functions and SMP in Serial
- 	  Attached SCSI).
- 
--	  If unsure, say N.
-+	  This option is required by recent UDEV versions to properly 
-+	  access device serial numbers, etc.
-+
-+	  If unsure, say Y.
- 
- config BLK_DEV_INTEGRITY
- 	bool "Block layer data integrity support"
--- 
-1.6.3.3
+Well, you didn't respond to the important one:
+
+You're seeking to change the binding of these helpers from manual to
+automatic.  This would mean that the modules are loaded in the single
+controller case, for which they may not be wanted and also when some
+multi path tool other than dm-mp is managing the device, in which case
+they may actively interfere with operations.  Your basic contention is
+that you "don't see any concern here".  When I ask what testing you've
+done for either of these, the studied silence eloquently illustrates
+"none".  A policy change like this can't be made without being
+incredibly sure we're not going to screw up existing installations.
+
+The second point I made speaks to the technical ugliness of this: what
+you're basically doing is open coding multiple binding for a device
+handler specific case.  If you can persuade me the policy above is
+correct, then technically all this should be done correctly via multiple
+binding in the generic device core ... before this interface nastiness
+you're constructing propagates outwards and becomes part of the user
+ABI.
+
+James
+
 
