@@ -1,12 +1,12 @@
 From: John Stoffel <john@stoffel.org>
 Subject: [PATCH 5/5] Make SCSI SG v4 driver enabled by default and remove EXPERIMENTAL dependency, since udev depends on BSG.
-Date: Tue,  7 Jul 2009 11:37:49 -0400
-Message-ID: <1246981069-21106-1-git-send-email-john@stoffel.org>
+Date: Tue,  7 Jul 2009 11:44:17 -0400
+Message-ID: <1246981457-21249-1-git-send-email-john@stoffel.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from Mycroft.westnet.com ([216.187.52.7]:35761 "EHLO
+Received: from Mycroft.westnet.com ([216.187.52.7]:35929 "EHLO
 	Mycroft.westnet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755203AbZGGPhy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jul 2009 11:37:54 -0400
+	with ESMTP id S1756789AbZGGPo0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jul 2009 11:44:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
