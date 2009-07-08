@@ -1,29 +1,45 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/3] scsi_dh: Make scsi device handler modules
-	automatically inserted
-Date: Wed, 8 Jul 2009 11:58:08 -0400
-Message-ID: <20090708155808.GA31204@infradead.org>
-References: <20090427180609.22758.93035.sendpatchset@chandra-ubuntu> <4A369320.2080202@redhat.com> <1245365306.4286.27.camel@mulgrave.site> <4A3BDFE8.3090003@redhat.com> <4A44D37A.10903@redhat.com> <1246986723.6277.63.camel@mulgrave.site> <4A538B13.8050809@redhat.com> <1246990464.6277.74.camel@mulgrave.site> <1246995401.9541.15.camel@chandra-ubuntu>
+From: Jaswinder Singh Rajput <jaswinder@kernel.org>
+Subject: [PATCH 28/44] includecheck fix: drivers/scsi, ibmvscsi.c
+Date: Wed, 08 Jul 2009 21:00:16 +0530
+Message-ID: <1247067016.4382.78.camel@ht.satnam>
+References: <1247063308.4382.12.camel@ht.satnam>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:40257 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751797AbZGHP6M (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2009 11:58:12 -0400
-Content-Disposition: inline
-In-Reply-To: <1246995401.9541.15.camel@chandra-ubuntu>
+Received: from hera.kernel.org ([140.211.167.34]:53164 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758542AbZGHQEB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Jul 2009 12:04:01 -0400
+In-Reply-To: <1247063308.4382.12.camel@ht.satnam>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sekharan@linux.vnet.ibm.com
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Peter Jones <pjones@redhat.com>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, hare@suse.de
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, scsi <linux-scsi@vger.kernel.org>, Sam Ravnborg <sam@ravnborg.org>, LKML <linux-kernel@vger.kernel.org>
 
-On Tue, Jul 07, 2009 at 12:36:41PM -0700, Chandra Seetharaman wrote:
-> I do not know of all the out-of-tree multipath solutions and how they
-> behave and at what layer they interact. In effect, I haven't tested
-> hardware handler with other multipath solutions.
 
-It doesn't matter anyway.  We've never cared about these out of tree
-problems and they'll have to find a way by themselves to deal with any
-changes we do to offer better multipath support upstream.
+fix the following 'make includecheck' warning:
+
+  drivers/scsi/ibmvscsi/ibmvscsi.c: asm/firmware.h is included more than once.
+
+Signed-off-by: Jaswinder Singh Rajput <jaswinderrajput@gmail.com>
+---
+ drivers/scsi/ibmvscsi/ibmvscsi.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index 9928704..d9b0e9d 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -73,7 +73,6 @@
+ #include <linux/of.h>
+ #include <asm/firmware.h>
+ #include <asm/vio.h>
+-#include <asm/firmware.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_host.h>
+-- 
+1.6.0.6
+
+
 
