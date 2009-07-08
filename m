@@ -1,57 +1,34 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: Performance degradation seen after using one list for hot/cold
- pages.
-Date: Wed, 8 Jul 2009 14:29:46 -0700
-Message-ID: <20090708142946.83c40331.akpm@linux-foundation.org>
-References: <70875432E21A4185AD2E007941B6A792@sisodomain.com>
-	<20090622164147.720683f8.kamezawa.hiroyu@jp.fujitsu.com>
-	<20090622100632.GB3981@csn.ul.ie>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [BUG] Linux-2.6.31-rc1-git9 Cannot Recognize Empty DVD Media
+Date: Wed, 08 Jul 2009 18:52:55 -0400
+Message-ID: <yq1my7eg52w.fsf@sermon.lab.mkp.net>
+References: <4A4CB4B4.5010307@turknet.net.tr>
+	<20090702130728.22af524c.akpm@linux-foundation.org>
+	<8db1092f0907080609w60e37ac0id49a44bd4796b425@mail.gmail.com>
+	<1247063244.4159.40.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20090622100632.GB3981@csn.ul.ie>
-Sender: owner-linux-mm@kvack.org
-To: Mel Gorman <mel@csn.ul.ie>
-Cc: kamezawa.hiroyu@jp.fujitsu.com, narayanan.g@samsung.com, linux-mm@kvack.org, cl@linux-foundation.org, kosaki.motohiro@jp.fujitsu.com, stable@kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rcsinet11.oracle.com ([148.87.113.123]:22372 "EHLO
+	rgminet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755076AbZGHWxa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2009 18:53:30 -0400
+In-Reply-To: <1247063244.4159.40.camel@mulgrave.site> (James Bottomley's
+	message of "Wed, 08 Jul 2009 09:27:24 -0500")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tarkan Erimer <tarkan.erimer@turknet.net.tr>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-(cc stable, linux-kernel and linux-scsi)
+>>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
 
-> On Mon, 22 Jun 2009 11:06:32 +0100 Mel Gorman <mel@csn.ul.ie> wrote:
-> [PATCH] page-allocator: Preserve PFN ordering when __GFP_COLD is set
-> 
-> The page allocator tries to preserve contiguous PFN ordering when returning
-> pages such that repeated callers to the allocator have a strong chance of
-> getting physically contiguous pages, particularly when external fragmentation
-> is low. However, of the bulk of the allocations have __GFP_COLD set as
-> they are due to aio_read() for example, then the PFNs are in reverse PFN
-> order. This can cause performance degration when used with IO
-> controllers that could have merged the requests.
-> 
-> This patch attempts to preserve the contiguous ordering of PFNs for
-> users of __GFP_COLD.
+James> You might also try this patch from martin petersen: it will print
+James> out the actual command that's causing the problems ... that might
+James> give a clue.
 
-Thanks.
+Any particular reason you didn't merge that patch, btw.?  It's been
+extremely useful on this end...
 
-I'll add the rather important text:
+-- 
+Martin K. Petersen	Oracle Linux Engineering
 
-  Fix a post-2.6.24 performance regression caused by
-  3dfa5721f12c3d5a441448086bee156887daa961 ("page-allocator: preserve PFN
-  ordering when __GFP_COLD is set").
-
-This was a pretty major screwup.
-
-This is why changing core MM is so worrisome - there's so much secret and
-subtle history to it, and performance dependencies are unobvious and quite
-indirect and the lag time to discover regressions is long.
-
-Narayanan, are you able to quantify the regression more clearly?  All I
-have is "2 MBps lower" which isn't very useful.  What is this as a
-percentage, and with what sort of disk controller?  Thanks.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
