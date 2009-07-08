@@ -1,61 +1,39 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [BUG] Linux-2.6.31-rc1-git9 Cannot Recognize Empty DVD Media
-Date: Wed, 8 Jul 2009 18:57:28 +0200
-Message-ID: <20090708165728.GU23611@kernel.dk>
-References: <4A4CB4B4.5010307@turknet.net.tr> <20090702130728.22af524c.akpm@linux-foundation.org> <8db1092f0907080609w60e37ac0id49a44bd4796b425@mail.gmail.com> <1247063244.4159.40.camel@mulgrave.site> <1247069178.5973.6.camel@desktop> <1247071445.4159.214.camel@mulgrave.site>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: [ANNOUNCE]: SCST Target driver support for Emulex lpfc FC/FCoE adapters
+Date: Wed, 08 Jul 2009 21:53:24 +0400
+Message-ID: <4A54DD14.8050100@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:37916 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752241AbZGHQ5a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Jul 2009 12:57:30 -0400
-Content-Disposition: inline
-In-Reply-To: <1247071445.4159.214.camel@mulgrave.site>
+Received: from moutng.kundenserver.de ([212.227.126.187]:59498 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755789AbZGHRxP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2009 13:53:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Daniel Walker <dwalker@fifo99.com>, Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tarkan Erimer <tarkan.erimer@turknet.net.tr>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>
+Cc: James Smart <James.Smart@Emulex.Com>
 
-On Wed, Jul 08 2009, James Bottomley wrote:
-> On Wed, 2009-07-08 at 09:06 -0700, Daniel Walker wrote:
-> > On Wed, 2009-07-08 at 09:27 -0500, James Bottomley wrote:
-> > > 
-> > > You might also try this patch from martin petersen:  it will print out
-> > > the actual command that's causing the problems ... that might give a
-> > > clue.
-> > > 
-> > > James
-> > 
-> > On the bugzilla entry ,
-> > 
-> > http://bugzilla.kernel.org/show_bug.cgi?id=13727
-> > 
-> > Thomas Meyer indicated it was (possibly) the following commit,
-> > 
-> > 018e0446890661504783f92388ecce7138c1566d
-> > 
-> > I added Jens to the CC ..
-> 
-> So thats:
-> 
-> commit 018e0446890661504783f92388ecce7138c1566d
-> Author: Jens Axboe <jens.axboe@oracle.com>
-> Date:   Fri Jun 26 16:27:10 2009 +0200
-> 
->     block: get rid of queue-private command filter
-> 
-> What this tends to suggest is that the command filter was blocking some
-> type of command sent from user space which is causing the problem, and
-> now we're letting it through.  Restoring the command filter will work
-> around the problem, but the root cause should be finding and fixing
-> whatever is issuing the commands in the first place.
+Hi All,
 
-There should be no functional change, since the filters were all the
-same. Perhaps blk_scsi_ioctl_init() isn't being run, a good start would
-be to stick a printk() in there and verify that it's actually being
-executed. I've been tricked by __init before.
+I'm glad to announce that SCST target driver support for Emulex lpfc 
+FC/FCoE adapters has been created and linked to the SCST project. Thanks 
+to the Emulex team for putting this together.
 
--- 
-Jens Axboe
+The driver allows for lpfc adapters to be placed in initiator and/or 
+target mode. Those in initiator mode will continue to function with the 
+SCSI subsystem as usual. A lpfc_scst helper module is then loaded that 
+binds that target mode adapters with the SCST subsystem for use as FCP 
+targets. NPIV is also supported, allowing virtual ports to be created 
+with individual SCST target instances bound to them.
 
+The lpfc SCST driver kit is part of the lpfcxxxx SourceForge project 
+located at https://sourceforge.net/projects/lpfcxxxx. You can find its 
+README and HOWTO in http://lpfcxxxx.sourceforge.net/README and 
+http://lpfcxxxx.sourceforge.net/HOWTO.lpfc correspondingly.
+
+SCST page of the Emulex lpfc target driver located at 
+http://scst.sourceforge.net/target_emulex.html.
+
+Vlad
