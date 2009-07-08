@@ -1,45 +1,37 @@
-From: Jaswinder Singh Rajput <jaswinder@kernel.org>
-Subject: [PATCH 27/44] includecheck fix: drivers/scsi, libfcoe.c
-Date: Wed, 08 Jul 2009 20:58:56 +0530
-Message-ID: <1247066936.4382.76.camel@ht.satnam>
-References: <1247063308.4382.12.camel@ht.satnam>
+From: Daniel Walker <dwalker@fifo99.com>
+Subject: Re: [BUG] Linux-2.6.31-rc1-git9 Cannot Recognize Empty DVD Media
+Date: Wed, 08 Jul 2009 09:06:18 -0700
+Message-ID: <1247069178.5973.6.camel@desktop>
+References: <4A4CB4B4.5010307@turknet.net.tr>
+	 <20090702130728.22af524c.akpm@linux-foundation.org>
+	 <8db1092f0907080609w60e37ac0id49a44bd4796b425@mail.gmail.com>
+	 <1247063244.4159.40.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:53173 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758492AbZGHQEG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Jul 2009 12:04:06 -0400
-In-Reply-To: <1247063308.4382.12.camel@ht.satnam>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760133AbZGHQJA@vger.kernel.org>
+In-Reply-To: <1247063244.4159.40.camel@mulgrave.site>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tarkan Erimer <tarkan.erimer@turknet.net.tr>, Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, scsi <linux-scsi@vger.kernel.org>, Sam Ravnborg <sam@ravnborg.org>, LKML <linux-kernel@vger.kernel.org>
 
+On Wed, 2009-07-08 at 09:27 -0500, James Bottomley wrote:
+> 
+> You might also try this patch from martin petersen:  it will print out
+> the actual command that's causing the problems ... that might give a
+> clue.
+> 
+> James
 
-fix the following 'make includecheck' warning:
+On the bugzilla entry ,
 
-  drivers/scsi/fcoe/libfcoe.c: linux/netdevice.h is included more than once.
+http://bugzilla.kernel.org/show_bug.cgi?id=13727
 
-Signed-off-by: Jaswinder Singh Rajput <jaswinderrajput@gmail.com>
----
- drivers/scsi/fcoe/libfcoe.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+Thomas Meyer indicated it was (possibly) the following commit,
 
-diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
-index f544340..c7d8ca4 100644
---- a/drivers/scsi/fcoe/libfcoe.c
-+++ b/drivers/scsi/fcoe/libfcoe.c
-@@ -29,7 +29,6 @@
- #include <linux/ethtool.h>
- #include <linux/if_ether.h>
- #include <linux/if_vlan.h>
--#include <linux/netdevice.h>
- #include <linux/errno.h>
- #include <linux/bitops.h>
- #include <net/rtnetlink.h>
--- 
-1.6.0.6
+018e0446890661504783f92388ecce7138c1566d
 
+I added Jens to the CC ..
 
-
+Daniel
