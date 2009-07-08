@@ -1,96 +1,30 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: REQUEST for new 'topology' metrics to be moved out
-	of the 'queue' sysfs directory.
-Date: Tue, 07 Jul 2009 18:06:53 -0400
-Message-ID: <4A53C6FD.3010603@tmr.com>
-References: <19010.62951.886231.96622@notabene.brown>	<yq11vp8spxo.fsf@sermon.lab.mkp.net>	<125b48b7ffc99a496fbdd512f38cada5.squirrel@neil.brown.name>	<yq1k530qkm7.fsf@sermon.lab.mkp.net>	<19012.47077.328965.919868@notabene.brown>	<yq1ws6znja4.fsf@sermon.lab.mkp.net>
-	<19026.43290.340555.774690@notabene.brown>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Maciej Rutecki <maciej.rutecki@gmail.com>
+Subject: Re: [BUG] Linux-2.6.31-rc1-git9 Cannot Recognize Empty DVD Media
+Date: Wed, 8 Jul 2009 15:09:44 +0200
+Message-ID: <8db1092f0907080609w60e37ac0id49a44bd4796b425@mail.gmail.com>
+References: <4A4CB4B4.5010307@turknet.net.tr>
+	 <20090702130728.22af524c.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <19026.43290.340555.774690@notabene.brown>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Neil Brown <neilb@suse.de>
-Cc: Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-fsdevel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Alasdair G Kergon <agk@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:60690 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755048AbZGHNJq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2009 09:09:46 -0400
+In-Reply-To: <20090702130728.22af524c.akpm@linux-foundation.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Tarkan Erimer <tarkan.erimer@turknet.net.tr>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Neil Brown wrote:
-> On Friday June 26, martin.petersen@oracle.com wrote:
->   
->> As far as making the application of these values more obvious I propose
->> the following:
->>
->> What:		/sys/block/<disk>/queue/minimum_io_size
->> Date:		April 2009
->> Contact:	Martin K. Petersen <martin.petersen@oracle.com>
->> Description:
->> 		Storage devices may report a granularity or minimum I/O
->> 		size which is the device's preferred unit of I/O.
->> 		Requests smaller than this may incur a significant
->> 		performance penalty.
->>
->> 		For disk drives this value corresponds to the physical
->> 		block size. For RAID devices it is usually the stripe
->> 		chunk size.
->>     
->
-> These two paragraphs are contradictory.  There is no sense in which a
-> RAID chunk size is a preferred minimum I/O size.
->
-> To some degree it is actually a 'maximum' preferred size for random
-> IO.  If you do random IO is blocks larger than the chunk size then you
-> risk causing more 'head contention' (at least with RAID0 - with RAID5
-> the tradeoff is more complex).
->
->   
-Actually this is allocation unit, and the array can be assumed to be a 
-series of sets of contiguous bytes of this size. Given LBA addressing, 
-array members which are not simple whole devices, etc, this doesn't 
-(can't) promise much for the physical layout. And any read which resides 
-entirely within a chunk would not have a performance penalty, although 
-write might, if it were not a multiple of the sector size of the array 
-member(s) involved.
+Similar issue on 2 machines. 2.6.31-rc1-git3 works ok. 2.6.31-rc2
+cannot recognize *any* DVD media with K3b. No messages in dmesg or
+syslog.
 
-> If you are talking about "alignment", then yes - the chunk size is an
-> appropriate size to align on.  But so are the block size and the
-> stripe size and none is, in general, any better than any other.
->
->   
-I would assume that a chunk, aligned on a chunk boundary, would be 
-allocated in a contiguous series of bytes on the underlying array 
-member. And that any i/o not aligned on a chunk boundary would be more 
-likely to access multiple array members.
-
-Feel free to clarify my assumptions.
-
-> Also, you say "may" report.  If a device does not report, what happens
-> to this file.  Is it not present, or empty, or contain a special
-> "undefined" value?
-> I think the answer is that "512" is reported.  It might be good to
-> explicitly document that.
->   
-> I'd really like to see an example of how you expect filesystems to use
-> this.
-> I can well imagine the VM or elevator using this to assemble IO
-> requests in to properly aligned requests.  But I cannot imagine how
-> e.g mkfs would use it.
-> Or am I misunderstanding and this is for programs that use O_DIRECT on
-> the block device so they can optimise their request stream?
->   
+Unfortunately I can't try bisection, because I don't have more time
+(work). I try do it at the end of week.
 
 -- 
-Bill Davidsen <davidsen@tmr.com>
-  Obscure bug of 2004: BASH BUFFER OVERFLOW - if bash is being run by a
-normal user and is setuid root, with the "vi" line edit mode selected,
-and the character set is "big5," an off-by-one error occurs during
-wildcard (glob) expansion.
+Maciej Rutecki
+http://www.maciek.unixy.pl
