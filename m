@@ -1,46 +1,57 @@
-From: Peter Jones <pjones@redhat.com>
-Subject: Re: [PATCH 0/3] scsi_dh: Make scsi device handler modules	automatically
- inserted
-Date: Wed, 08 Jul 2009 14:47:14 -0400
-Message-ID: <4A54E9B2.3030309@redhat.com>
-References: <4A369320.2080202@redhat.com> <1245365306.4286.27.camel@mulgrave.site> <4A3BDFE8.3090003@redhat.com> <4A44D37A.10903@redhat.com> <1246986723.6277.63.camel@mulgrave.site> <4A538B13.8050809@redhat.com> <1246990464.6277.74.camel@mulgrave.site> <1246995401.9541.15.camel@chandra-ubuntu> <20090708155808.GA31204@infradead.org> <4A54E65D.8050706@redhat.com> <20090708184039.GA11348@infradead.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: Performance degradation seen after using one list for hot/cold
+ pages.
+Date: Wed, 8 Jul 2009 14:29:46 -0700
+Message-ID: <20090708142946.83c40331.akpm@linux-foundation.org>
+References: <70875432E21A4185AD2E007941B6A792@sisodomain.com>
+	<20090622164147.720683f8.kamezawa.hiroyu@jp.fujitsu.com>
+	<20090622100632.GB3981@csn.ul.ie>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:37045 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755709AbZGHSrb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Jul 2009 14:47:31 -0400
-In-Reply-To: <20090708184039.GA11348@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20090622100632.GB3981@csn.ul.ie>
+Sender: owner-linux-mm@kvack.org
+To: Mel Gorman <mel@csn.ul.ie>
+Cc: kamezawa.hiroyu@jp.fujitsu.com, narayanan.g@samsung.com, linux-mm@kvack.org, cl@linux-foundation.org, kosaki.motohiro@jp.fujitsu.com, stable@kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: sekharan@linux.vnet.ibm.com, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, hare@suse.de
 
-On 07/08/2009 02:40 PM, Christoph Hellwig wrote:
-> On Wed, Jul 08, 2009 at 02:33:01PM -0400, Peter Jones wrote:
->> This behavior is conditional on the module parameter
->> scsi_mod.target_modalias_has_vendor, which has its default set by the
->> enabling or disabling of CONFIG_SCSI_TARGET_MODALIAS_WITH_ID .
-> 
-> Sorry, but that's really stupid.  If people have the arrays that have
-> device handlers there are two possible cases:
-> 
->  - just a single port configured on the array. In this case the device
->    handlers are useless but also completely unharmful.
->  - multiple ports configured on the array.  In this case we desperately
->    want the device handlers loaded early so that we do the right thing
->    for the inactive ports and avoid the horrible probing delays, not
->    matter if we actually do end up using multipath later or no.
-> 
-> No need to make this configurable.  If people really do not want the
-> handler (e.g. becuase the may end up beeing buggy for a new array
-> matching the old idea) they can just blacklist it in the modules
-> configuration.
+(cc stable, linux-kernel and linux-scsi)
 
-Which is what I had in mind when I wrote the original version of this,
-but which James does not agree with.
+> On Mon, 22 Jun 2009 11:06:32 +0100 Mel Gorman <mel@csn.ul.ie> wrote:
+> [PATCH] page-allocator: Preserve PFN ordering when __GFP_COLD is set
+> 
+> The page allocator tries to preserve contiguous PFN ordering when returning
+> pages such that repeated callers to the allocator have a strong chance of
+> getting physically contiguous pages, particularly when external fragmentation
+> is low. However, of the bulk of the allocations have __GFP_COLD set as
+> they are due to aio_read() for example, then the PFNs are in reverse PFN
+> order. This can cause performance degration when used with IO
+> controllers that could have merged the requests.
+> 
+> This patch attempts to preserve the contiguous ordering of PFNs for
+> users of __GFP_COLD.
 
--- 
-        Peter
+Thanks.
+
+I'll add the rather important text:
+
+  Fix a post-2.6.24 performance regression caused by
+  3dfa5721f12c3d5a441448086bee156887daa961 ("page-allocator: preserve PFN
+  ordering when __GFP_COLD is set").
+
+This was a pretty major screwup.
+
+This is why changing core MM is so worrisome - there's so much secret and
+subtle history to it, and performance dependencies are unobvious and quite
+indirect and the lag time to discover regressions is long.
+
+Narayanan, are you able to quantify the regression more clearly?  All I
+have is "2 MBps lower" which isn't very useful.  What is this as a
+percentage, and with what sort of disk controller?  Thanks.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
