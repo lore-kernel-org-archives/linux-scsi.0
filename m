@@ -1,47 +1,54 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: mptsas, msi and the dl585 g2
-Date: Thu, 09 Jul 2009 15:40:44 -0500
-Message-ID: <1247172044.3898.147.camel@mulgrave.site>
-References: <20090630180300.GA9971@ldl.fc.hp.com>
-	 <4A4A5B01.9040200@kernel.org> <20090703225708.GA30664@ldl.fc.hp.com>
-	 <4A4FADDC.30606@kernel.org> <20090709185945.GG2613@ldl.fc.hp.com>
-	 <4A564263.5010305@kernel.org> <4A564634.1020708@kernel.org>
-	 <4A564990.3060202@kernel.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: mptspi: Unexpected doorbell active!
+Date: Thu, 09 Jul 2009 22:42:08 +0200
+Message-ID: <4A565620.5060007@interlog.com>
+References: <4A54B611.2030802@interlog.com> <1247067320.4159.162.camel@mulgrave.site>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51974 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753970AbZGIUkt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jul 2009 16:40:49 -0400
-In-Reply-To: <4A564990.3060202@kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:40442 "EHLO elrond.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754511AbZGIUmN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Jul 2009 16:42:13 -0400
+In-Reply-To: <1247067320.4159.162.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: dann frazier <dannf@hp.com>, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, 2009-07-09 at 12:48 -0700, Yinghai Lu wrote:
-> [    4.333140]   PREFETCH window: 0x00000000d9f00000-0x00000000d9ffffff
-> are all directed to one 8132 PCI-X bridge.
+James Bottomley wrote:
+> On Wed, 2009-07-08 at 17:06 +0200, Douglas Gilbert wrote:
+>> Cute error message but it appears just before my machine
+>> locks solid. It looks like it is coming from a LSI 53c1030
+>> SPI controller which lspci says is PCI-X but is actually
+>> PCIe.
+>>
+>> I get that with 2 different tape drives (LTO-1 and LTO-3)
+>> whose true identities are hidden behind badge engineering,
+>> Tandberg data perhaps? Anyway both seem to have a major
+>> problem with the LOG SENSE command and the Tape Alert
+>> page in particular.
+>>
+>> The lockup occurs with both a Debian Lenny standard kernel
+>> (lk 2.6.26-2-686) and a kernel.org lk 2.6.30 .
 > 
-> the the IOAPIC for 9, 10, 11... falling that range...
+> So the problem has been around for a while ...
 > 
-> we need one better to allocate range for that pci-x bridge to aovide ioapic BAR allocated...
+>> There is nothing other than the 53c1030 and a single tape
+>> drive on the SCSI bus. So there is no good reason to lock
+>> up the machine for any SCSI related error.
 > 
-> anyway your BIOS sucks.
+> LSI just reworked the code that does this doorbell handling for the
+> 2.6.31 merge window could you see if 2.6.31-rc2 is still exhibiting the
+> problem?
 
-It's a sad and very annoying fact of life that most BIOSs suck.  If they
-didn't suck, our bios handling code wouldn't be a nasty mess of
-exceptions, work arounds and quirks.
+Yes it is.
 
-Can we fix this so that both the DL585 and the opteron multi root stuff
-can work?  There's a large population of DL585's out there, so we can't
-release 2.6.32 like this ... and I'd rather not have to choose between
-breaking the DL585's and breaking the Sun Opterons.
+The controller is a LSI20320IE and the main chip appears
+to be a LSI53C1020A A1.
 
-James
-
-
+Doug Gilbert
 
 
