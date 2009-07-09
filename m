@@ -1,45 +1,62 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 3/4] block: implement mixed merge of different failfast
- requests
-Date: Thu, 09 Jul 2009 12:17:29 +0300
-Message-ID: <4A55B5A9.2060705@panasas.com>
-References: <1246610898-22350-1-git-send-email-tj@kernel.org> <1246610898-22350-4-git-send-email-tj@kernel.org> <4A507203.8020001@panasas.com> <4A553E36.8060006@kernel.org>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: [PATCH] cciss: fix spinlock use
+Date: Thu, 09 Jul 2009 15:46:04 +0300
+Message-ID: <4A55E68C.1010205@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ip67-152-220-66.z220-152-67.customer.algx.net ([67.152.220.66]:15793
-	"EHLO daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756777AbZGIJRc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jul 2009 05:17:32 -0400
-In-Reply-To: <4A553E36.8060006@kernel.org>
+Received: from mx2.redhat.com ([66.187.237.31]:50595 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756397AbZGIMqK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Jul 2009 08:46:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, Linux Kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Niel Lambrechts <niel.lambrechts@gmail.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <axboe@kernel.dk>
+To: linux-scsi@vger.kernel.org
+Cc: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>, Prarit Bhargava <prarit@redhat.com>
 
-On 07/09/2009 03:47 AM, Tejun Heo wrote:
-> Hello,
-> 
-> Boaz Harrosh wrote:
->>> @@ -1165,6 +1165,7 @@ static int __make_request(struct request_queue *q, struct bio *bio)
->>>  	const unsigned short prio = bio_prio(bio);
->>>  	const int sync = bio_sync(bio);
->>>  	const int unplug = bio_unplug(bio);
->>> +	const unsigned int ff = bio->bi_rw & REQ_FAILFAST_MASK;
->> Perhaps a bio_fail_fast(bio)
->> and also an blk_failfast(rq).
-> 
-> Me not being a big fan of those simple accessors, I want to avoid
-> adding those especially the use of bio ones are mostly confined to
-> block layer proper.
-> 
+fail_all_cmds is called (only) from do_cciss_intr with 
+spinlock acquired.
+So when in an error-handling situation,
+fail_all_cmds() is called it attempts to *reacquire* the lock.
+This has been found and analysed by Prarit Bhargava.
 
-OK but at least take care of blk_noretry_request(), at the minimum
-kill it, and use req->cmd_flags & REQ_FAILFAST_MASK everywhere.
+This patch removes the spinlock lock/unlock from fail_all_cmds and adds a
+spin_unlock after the call to fail_all_cmds before return.  
 
-> Thanks.
-> 
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
 
-Thanks
-Boaz
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index c7a527c..b45776e 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -3181,6 +3181,7 @@ static irqreturn_t do_cciss_intr(int irq, void *dev_id)
+ 					       "cciss: controller cciss%d failed, stopping.\n",
+ 					       h->ctlr);
+ 					fail_all_cmds(h->ctlr);
++					spin_unlock_irqrestore(CCISS_LOCK(h->ctlr), flags);
+ 					return IRQ_HANDLED;
+ 				}
+ 
+@@ -4230,8 +4231,6 @@ static void fail_all_cmds(unsigned long ctlr)
+ 	printk(KERN_WARNING "cciss%d: controller not responding.\n", h->ctlr);
+ 	h->alive = 0;		/* the controller apparently died... */
+ 
+-	spin_lock_irqsave(CCISS_LOCK(ctlr), flags);
+-
+ 	pci_disable_device(h->pdev);	/* Make sure it is really dead. */
+ 
+ 	/* move everything off the request queue onto the completed queue */
+@@ -4256,7 +4255,6 @@ static void fail_all_cmds(unsigned long ctlr)
+ 			complete_scsi_command(c, 0, 0);
+ #endif
+ 	}
+-	spin_unlock_irqrestore(CCISS_LOCK(ctlr), flags);
+ 	return;
+ }
+ 
+-- 
+1.6.0.6
+
+
+
