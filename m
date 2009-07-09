@@ -1,39 +1,91 @@
-From: NARAYANAN GOPALAKRISHNAN <narayanan.g@samsung.com>
-Subject: Re: Re: Performance degradation seen after using one list for hot/cold
- pages.
-Date: Thu, 09 Jul 2009 04:54:10 +0000 (GMT)
-Message-ID: <23853191.513591247115250186.JavaMail.weblogic@epml10>
-Reply-To: narayanan.g@samsung.com
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] BNX2I: register given device with cnic if shost != NULL
+ in ep_connect()
+Date: Thu, 09 Jul 2009 01:21:11 -0500
+Message-ID: <4A558C57.30606@cs.wisc.edu>
+References: <1245805860.9829.50.camel@anilgv-desktop> <1247102461.9829.438.camel@anilgv-desktop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: base64
-Return-path: <owner-linux-mm@kvack.org>
-Content-return: prohibited
-MIME-version: 1.0
-Sender: owner-linux-mm@kvack.org
-To: Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mel@csn.ul.ie>
-Cc: "kamezawa.hiroyu@jp.fujitsu.com" <kamezawa.hiroyu@jp.fujitsu.com>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cl@linux-foundation.org" <cl@linux-foundation.org>, "kosaki.motohiro@jp.fujitsu.com" <kosaki.motohiro@jp.fujitsu.com>, "stable@kernel.org" <stable@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:58606 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751332AbZGIGVW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Jul 2009 02:21:22 -0400
+In-Reply-To: <1247102461.9829.438.camel@anilgv-desktop>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Anil Veerabhadrappa <anilgv@broadcom.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, mchan@broadcom.com
 
-DQo+IEknbGwgYWRkIHRoZSByYXRoZXIgaW1wb3J0YW50IHRleHQ6DQo+IA0KPiBGaXggYSBwb3N0
-LTIuNi4yNCBwZXJmb3JtYW5jZSByZWdyZXNzaW9uIGNhdXNlZCBieQ0KPiAzZGZhNTcyMWYxMmMz
-ZDVhNDQxNDQ4MDg2YmVlMTU2ODg3ZGFhOTYxICgicGFnZS1hbGxvY2F0b3I6IHByZXNlcnZlIFBG
-Tg0KPiBvcmRlcmluZyB3aGVuIF9fR0ZQX0NPTEQgaXMgc2V0IikuDQo+DQo+IFRoaXMgd2FzIGEg
-cHJldHR5IG1ham9yIHNjcmV3dXAuDQo+DQo+IFRoaXMgaXMgd2h5IGNoYW5naW5nIGNvcmUgTU0g
-aXMgc28gd29ycmlzb21lIC0gdGhlcmUncyBzbyBtdWNoIHNlY3JldCBhbmQNCj4gc3VidGxlIGhp
-c3RvcnkgdG8gaXQsIGFuZCBwZXJmb3JtYW5jZSBkZXBlbmRlbmNpZXMgYXJlIHVub2J2aW91cyBh
-bmQgcXVpdGUNCj4gaW5kaXJlY3QgYW5kIHRoZSBsYWcgdGltZSB0byBkaXNjb3ZlciByZWdyZXNz
-aW9ucyBpcyBsb25nLg0KPiANCj4gTmFyYXlhbmFuLCBhcmUgeW91IGFibGUgdG8gcXVhbnRpZnkg
-dGhlIHJlZ3Jlc3Npb24gbW9yZSBjbGVhcmx5PyAgQWxsIEkNCj4gaGF2ZSBpcyAiMiBNQnBzIGxv
-d2VyIiB3aGljaCBpc24ndCB2ZXJ5IHVzZWZ1bC4gIFdoYXQgaXMgdGhpcyBhcyBhDQo+IHBlcmNl
-bnRhZ2UsIGFuZCB3aXRoIHdoYXQgc29ydCBvZiBkaXNrIGNvbnRyb2xsZXI/ICBUaGFua3MuDQoN
-Ckl0IGlzIGFyb3VuZCAxNSUuIFRoZXJlIGlzIG5vIGRpc2sgY29udHJvbGxlciBhcyBvdXIgc2V0
-dXAgaXMgYmFzZWQgb24gU2Ftc3VuZyBPbmVOQU5EDQp1c2VkIGFzIGEgbWVtb3J5IG1hcHBlZCBk
-ZXZpY2Ugb24gYSBPTUFQMjQzMCBiYXNlZCBib2FyZC4NCg0KTmFyYXlhbmFuDQo=
+Anil Veerabhadrappa wrote:
+>     * When using iface, bnx2i was unable to offload further connections after
+>       all active sessions are logged out. bnx2i will unregister the device from
+>       cnic when the last connection is torn down. Next call to ep_connect()
+>       will fail because the device is not registered. This issue is not seen
+>       if shost == NULL is passed to ep_connect() call because in that case bnx2i
+>       will registers all known devices with cnic before doing a route look-up.
+>       When shost != NULL, bnx2i knows the device on which to offload the
+>       connection and has to register this device before attempting to offload
+>       the connection
+> 
+> Signed-off-by: Anil Veerabhadrappa <anilgv@broadcom.com>
+> Reviewed-by: Michael Chan <mchan@broadcom.com>
+> ---
+>  drivers/scsi/bnx2i/bnx2i_init.c  |    7 +++++--
+>  drivers/scsi/bnx2i/bnx2i_iscsi.c |    7 +++++--
+>  2 files changed, 10 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
+> index fd78540..0c4210d 100644
+> --- a/drivers/scsi/bnx2i/bnx2i_init.c
+> +++ b/drivers/scsi/bnx2i/bnx2i_init.c
+> @@ -185,14 +185,17 @@ void bnx2i_stop(void *handle)
+>   */
+>  void bnx2i_register_device(struct bnx2i_hba *hba)
+>  {
+> +	int rc;
+> +
+>  	if (test_bit(ADAPTER_STATE_GOING_DOWN, &hba->adapter_state) ||
+>  	    test_bit(BNX2I_CNIC_REGISTERED, &hba->reg_with_cnic)) {
+>  		return;
+>  	}
+>  
+> -	hba->cnic->register_device(hba->cnic, CNIC_ULP_ISCSI, hba);
+> +	rc = hba->cnic->register_device(hba->cnic, CNIC_ULP_ISCSI, hba);
+>  
+> -	set_bit(BNX2I_CNIC_REGISTERED, &hba->reg_with_cnic);
+> +	if (!rc)
+> +		set_bit(BNX2I_CNIC_REGISTERED, &hba->reg_with_cnic);
+>  }
+>  
+>  
+> diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> index f741219..98148f3 100644
+> --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> @@ -1653,15 +1653,18 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
+>  	struct iscsi_endpoint *ep;
+>  	int rc = 0;
+>  
+> -	if (shost)
+> +	if (shost) {
+>  		/* driver is given scsi host to work with */
+>  		hba = iscsi_host_priv(shost);
+> -	else
+> +		/* Register the device with cnic if not already done so */
+> +		bnx2i_register_device(hba);
+> +	} else
+>  		/*
+>  		 * check if the given destination can be reached through
+>  		 * a iscsi capable NetXtreme2 device
+>  		 */
+>  		hba = bnx2i_check_route(dst_addr);
+> +
+>  	if (!hba) {
+>  		rc = -ENOMEM;
+>  		goto check_busy;
 
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Do you want to do the test_bit(BNX2I_CNIC_REGISTERED, 
+&hba->reg_with_cnic) test here instead of down below. If it failed then 
+you might try to do a cm_create on a cnic that is not properly registered.
