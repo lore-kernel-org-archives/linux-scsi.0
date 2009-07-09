@@ -1,76 +1,98 @@
-From: "Anil Veerabhadrappa" <anilgv@broadcom.com>
-Subject: Re: [PATCH] BNX2I: register given device with cnic if shost !=
- NULL in ep_connect()
-Date: Thu, 9 Jul 2009 07:39:26 -0700
-Message-ID: <1247150366.9829.458.camel@anilgv-desktop>
-References: <C27F8246C663564A84BB7AB343977242178EE780AB@IRVEXCHCCR01.corp.ad.broadcom.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 3/5] reuse the original port when reenable the phy in a
+ port
+Date: Thu, 09 Jul 2009 10:04:41 -0500
+Message-ID: <1247151881.3898.43.camel@mulgrave.site>
+References: <7813BB8F7D624D168612B73E822A1ED9@usish.com.cn>
+	 <1247077767.4159.247.camel@mulgrave.site>
+	 <F09F16995B2840F690A3A7ABDFF58F95@usish.com.cn>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2934 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760669AbZGIOjk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Jul 2009 10:39:40 -0400
-In-Reply-To: <C27F8246C663564A84BB7AB343977242178EE780AB@IRVEXCHCCR01.corp.ad.broadcom.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41860 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755289AbZGIPEr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jul 2009 11:04:47 -0400
+In-Reply-To: <F09F16995B2840F690A3A7ABDFF58F95@usish.com.cn>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Chan <mchan@broadcom.com>
-Cc: 'Mike Christie' <michaelc@cs.wisc.edu>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>
+To: tom <tom_peng@usish.com>
+Cc: 'jack wang' <jack_wang@usish.com>, linux-scsi@vger.kernel.org, jeff@garzik.org, lindar_liu@usish.com, aoqingyun@usish.com
 
-On Thu, 2009-07-09 at 00:15 -0700, Michael Chan wrote:
-> Mike Christie wrote:
-> > Anil Veerabhadrappa wrote:
-> > > diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> > b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> > > index f741219..98148f3 100644
-> > > --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> > > +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> > > @@ -1653,15 +1653,18 @@ static struct iscsi_endpoint
-> > *bnx2i_ep_connect(struct Scsi_Host *shost,
-> > >     struct iscsi_endpoint *ep;
-> > >     int rc = 0;
-> > >
-> > > -   if (shost)
-> > > +   if (shost) {
-> > >             /* driver is given scsi host to work with */
-> > >             hba = iscsi_host_priv(shost);
-> > > -   else
-> > > +           /* Register the device with cnic if not already
-> > done so */
-> > > +           bnx2i_register_device(hba);
-> > > +   } else
-> > >             /*
-> > >              * check if the given destination can be reached through
-> > >              * a iscsi capable NetXtreme2 device
-> > >              */
-> > >             hba = bnx2i_check_route(dst_addr);
-> > > +
-> > >     if (!hba) {
-> > >             rc = -ENOMEM;
-> > >             goto check_busy;
-> >
-> > Do you want to do the test_bit(BNX2I_CNIC_REGISTERED,
-> > &hba->reg_with_cnic) test here instead of down below. If it
-> > failed then
-> > you might try to do a cm_create on a cnic that is not
-> > properly registered.
-> >
+On Thu, 2009-07-09 at 10:12 +0800, tom wrote:
+> On Wed, 2009-07-01 at 20:37 +0800, jack wang wrote:
+> > >From 24abd7f05d2293e03aacbdd9d620d6378ea5e2aa Mon Sep 17 00:00:00 2001
+> > From: Tom Peng <tom_peng@usish.com>
+> > Date: Wed, 1 Jul 2009 19:04:01 +0800
+> > Subject: [PATCH 3/5] reuse the original port when reenable the phy in a
+> port
+> > 
+> > Signed-off-by: Tom Peng <tom_peng@usish.com>
+> > Signed-off-by: Jack Wang <jack_wang@usish.com>
+> > Signed-off-by: Lindar Liu <lindar_liu@usish.com>
+> > ---
+> >  drivers/scsi/libsas/sas_port.c |   19 +++++++++++++++----
+> >  1 files changed, 15 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/libsas/sas_port.c
+> b/drivers/scsi/libsas/sas_port.c
+> > index e6ac59c..5aad165 100644
+> > --- a/drivers/scsi/libsas/sas_port.c
+> > +++ b/drivers/scsi/libsas/sas_port.c
+> > @@ -69,16 +69,27 @@ static void sas_form_port(struct asd_sas_phy *phy)
+> >  			SAS_DPRINTK("phy%d matched wide port%d\n", phy->id,
+> >  				    port->id);
+> >  			break;
+> > -		} else if (*(u64 *) port->sas_addr == 0 &&
+> > port->num_phys==0) {
+> > -			memcpy(port->sas_addr, phy->sas_addr,
+> > SAS_ADDR_SIZE);
+> > -			break;
+> >  		}
+> >  		spin_unlock(&port->phy_list_lock);
+> >  	}
+> > +	/* The phy does not match any port currently existed, create new one
+> > */
+> > +	if (i == sas_ha->num_phys) {
+> > +		for (i = 0; i < sas_ha->num_phys; i++) {
+> > +			port = sas_ha->sas_port[i];
+> > +			spin_lock(&port->phy_list_lock);
+> > +			if (*(u64 *)port->sas_addr == 0
+> > +				&& port->num_phys == 0) {
+> > +				memcpy(port->sas_addr, phy->sas_addr,
+> > +					SAS_ADDR_SIZE);
+> > +				break;
+> > +			}
+> > +			spin_unlock(&port->phy_list_lock);
+> > +		}
+> > +	}
 > 
-> Good idea.  cm_create() will properly be ok because there is no
-> hardware interaction.  bnx2i_send_conn_ofld_req() will fail if
-> the cnic is not properly registered because there will be no call
-> backs from the hardware events.
+> I don't understand why you need this.  It seems identical to the else
+> leg of the if in the for loop above it, so it wouldn't seem to add
+> anything to the code.
+> 
+> James
+> 
+> 
+> --
+> 
+> Hi James,
+> Just think one situation: a HBA has two wide ports, port 0 (phy0, phy1,
+> phy2, phy3) attached to expander A, port1 (phy4, phy5, phy6, phy7) attached
+> to expander B, supposed the cable of port0 was plugged out, port1 still
+> here. After a while, for some reason phy4(or phy5 phy6 phy7) linked down
+> then linked up, the code will added this phy to form a new port, it is
+> port0, rather than added this phy to port1.
+> 
+> I have tested this bug, use SMP utility phy_control to disable phy4
+> (expander B)and then enabled it, it formed new port: port0.
+> 
+> To fix this, we can detect all of the ports existed and if no any port
+> matched, we form new one.
 
-following 2 conditions needs to be satisfied to offload an iscsi
-connection,
-  1) device has to be registered with cnic
-  2) device has to support iscsi offload
+OK, get it now, sorry ... missed the else clause removal in the patch.
 
-  bnx2i_adapter_ready() will return success only if both conditions
-(which is flagged by ADAPTER_STATE_UP bit in hba->adapter_state) are
-met. bnx2i_ep_connect() will bailout if bnx2i_adapter_ready() does not
-return correct status and this guarantees bnx2i will not make any cnic
-calls on an unregistered device.
+James
 
 
