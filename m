@@ -1,83 +1,81 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [BUG] Linux-2.6.31-rc1-git9 Cannot Recognize Empty DVD Media
-Date: Thu, 9 Jul 2009 08:54:56 +0900
-Message-ID: <20090709085426U.fujita.tomonori@lab.ntt.co.jp>
-References: <1247071445.4159.214.camel@mulgrave.site>
-	<20090708165728.GU23611@kernel.dk>
-	<20090709084839G.fujita.tomonori@lab.ntt.co.jp>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] block: fix sg SG_DXFER_TO_FROM_DEV regression
+Date: Thu, 09 Jul 2009 02:19:22 +0200
+Message-ID: <4A55378A.7060808@interlog.com>
+References: <20090706161004D.fujita.tomonori@lab.ntt.co.jp>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:47915 "EHLO sh.osrg.net"
+Received: from smtp.infotech.no ([82.134.31.41]:33392 "EHLO elrond.infotech.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754173AbZGHXzh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Jul 2009 19:55:37 -0400
-In-Reply-To: <20090709084839G.fujita.tomonori@lab.ntt.co.jp>
+	id S1756503AbZGIAT2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Jul 2009 20:19:28 -0400
+In-Reply-To: <20090706161004D.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: fujita.tomonori@lab.ntt.co.jp
-Cc: jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, dwalker@fifo99.com, maciej.rutecki@gmail.com, akpm@linux-foundation.org, tarkan.erimer@turknet.net.tr, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: jens.axboe@oracle.com, linux-scsi@vger.kernel.org, sxzzsf@gmail.com
 
-On Thu, 9 Jul 2009 08:49:34 +0900
-FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-
-> On Wed, 8 Jul 2009 18:57:28 +0200
-> Jens Axboe <jens.axboe@oracle.com> wrote:
+FUJITA Tomonori wrote:
+> I overlooked SG_DXFER_TO_FROM_DEV support when I converted sg to use
+> the block layer mapping API (2.6.28).
 > 
-> > On Wed, Jul 08 2009, James Bottomley wrote:
-> > > On Wed, 2009-07-08 at 09:06 -0700, Daniel Walker wrote:
-> > > > On Wed, 2009-07-08 at 09:27 -0500, James Bottomley wrote:
-> > > > > 
-> > > > > You might also try this patch from martin petersen:  it will print out
-> > > > > the actual command that's causing the problems ... that might give a
-> > > > > clue.
-> > > > > 
-> > > > > James
-> > > > 
-> > > > On the bugzilla entry ,
-> > > > 
-> > > > http://bugzilla.kernel.org/show_bug.cgi?id=13727
-> > > > 
-> > > > Thomas Meyer indicated it was (possibly) the following commit,
-> > > > 
-> > > > 018e0446890661504783f92388ecce7138c1566d
-> > > > 
-> > > > I added Jens to the CC ..
-> > > 
-> > > So thats:
-> > > 
-> > > commit 018e0446890661504783f92388ecce7138c1566d
-> > > Author: Jens Axboe <jens.axboe@oracle.com>
-> > > Date:   Fri Jun 26 16:27:10 2009 +0200
-> > > 
-> > >     block: get rid of queue-private command filter
-> > > 
-> > > What this tends to suggest is that the command filter was blocking some
-> > > type of command sent from user space which is causing the problem, and
-> > > now we're letting it through.  Restoring the command filter will work
-> > > around the problem, but the root cause should be finding and fixing
-> > > whatever is issuing the commands in the first place.
-> > 
-> > There should be no functional change, since the filters were all the
-> > same. Perhaps blk_scsi_ioctl_init() isn't being run, a good start would
-> > be to stick a printk() in there and verify that it's actually being
-> > executed. I've been tricked by __init before.
+> Douglas Gilbert explained SG_DXFER_TO_FROM_DEV:
 > 
-> I can't find where you call blk_scsi_ioctl_init(). I've attached a fix
-> (not tested).
-> 
-> Jens, I'm not sure that I saw the above patch on any mailing list. If
-> you merged the patch without sending any mailing list, please don't do
-> that.
-> 
+> http://www.spinics.net/lists/linux-scsi/msg37135.html
 > 
 > =
-> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Subject: [PATCH] block: call blk_scsi_ioctl_init()
+> The semantics of SG_DXFER_TO_FROM_DEV were:
+>    - copy user space buffer to kernel (LLD) buffer
+>    - do SCSI command which is assumed to be of the DATA_IN
+>      (data from device) variety. This would overwrite
+>      some or all of the kernel buffer
+>    - copy kernel (LLD) buffer back to the user space.
 > 
-> Currently, blk_scsi_ioctl_init() is not called so
-> blk_default_cmd_filter isn't initalized. Some commands are not blocked
-> wrongly.
+> The idea was to detect short reads by filling the original
+> user space buffer with some marker bytes ("0xec" it would
+> seem in this report). The "resid" value is a better way
+> of detecting short reads but that was only added this century
+> and requires co-operation from the LLD.
+> =
+> 
+> This patch changes the block layer mapping API to support this
+> semantics. This simply adds another field to struct rq_map_data and
+> enables __bio_copy_iov() to copy data from user space even with READ
+> requests.
+> 
+> It's better to add the flags field and kills null_mapped and the new
+> from_user fields in struct rq_map_data but that approach makes it
+> difficult to send this patch to stable trees because st and osst
+> drivers use struct rq_map_data (they were converted to use the block
+> layer in 2.6.29 and 2.6.30). Well, I should clean up the block layer
+> mapping API.
+> 
+> zhou sf reported this regiression and tested this patch:
+> 
+> http://www.spinics.net/lists/linux-scsi/msg37128.html
+> http://www.spinics.net/lists/linux-scsi/msg37168.html
 
-Oops, it should have been "some commands are blocked wrongly".
+Wrote my own little test program and it gave the wrong
+result (as reported by zhou sf) in lk 2.6.30 . When
+this patch was applied, the expected result (i.e. a
+response with user supplied fill characters) was observed.
+
+Here is an INQUIRY response set up for a length of
+128 bytes with an 0xec fill character:
+
+$ ./sg_dxfer_to_from
+resid indicates that 96 bytes returned in response
+  00     00 00 05 02 5b 00 10 0a  4c 69 6e 75 78 20 20 20
+  10     73 63 73 69 5f 64 65 62  75 67 20 20 20 20 20 20
+  20     30 30 30 34 00 00 00 00  00 00 00 00 00 00 00 00
+  30     00 00 00 00 00 00 00 00  00 00 00 77 03 14 03 3d
+  40     0c 0f 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+  50     00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+  60     ec ec ec ec ec ec ec ec  ec ec ec ec ec ec ec ec
+  70     ec ec ec ec ec ec ec ec  ec ec ec ec ec ec ec ec
+
+
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
