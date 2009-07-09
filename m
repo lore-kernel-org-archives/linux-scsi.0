@@ -1,83 +1,99 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] BNX2I: register given device with cnic if shost != NULL
- in ep_connect()
-Date: Thu, 09 Jul 2009 12:43:29 -0500
-Message-ID: <4A562C41.7040600@cs.wisc.edu>
-References: <C27F8246C663564A84BB7AB343977242178EE780AB@IRVEXCHCCR01.corp.ad.broadcom.com> <1247150366.9829.458.camel@anilgv-desktop>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: [PATCH]: Rename REQ_COPY_USER to more descriptive REQ_HAS_TAIL_SPACE_FOR_PADDING
+Date: Thu, 09 Jul 2009 22:09:29 +0400
+Message-ID: <4A563259.5000601@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:40962 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752396AbZGIRnj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Jul 2009 13:43:39 -0400
-In-Reply-To: <1247150366.9829.458.camel@anilgv-desktop>
+Received: from moutng.kundenserver.de ([212.227.17.8]:64282 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753624AbZGISKr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jul 2009 14:10:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anil Veerabhadrappa <anilgv@broadcom.com>
-Cc: Michael Chan <mchan@broadcom.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: scst-devel@lists.sourceforge.net, Tejun Heo <tj@kernel.org>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>
 
-On 07/09/2009 09:39 AM, Anil Veerabhadrappa wrote:
-> On Thu, 2009-07-09 at 00:15 -0700, Michael Chan wrote:
->> Mike Christie wrote:
->>> Anil Veerabhadrappa wrote:
->>>> diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c
->>> b/drivers/scsi/bnx2i/bnx2i_iscsi.c
->>>> index f741219..98148f3 100644
->>>> --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
->>>> +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
->>>> @@ -1653,15 +1653,18 @@ static struct iscsi_endpoint
->>> *bnx2i_ep_connect(struct Scsi_Host *shost,
->>>>      struct iscsi_endpoint *ep;
->>>>      int rc = 0;
->>>>
->>>> -   if (shost)
->>>> +   if (shost) {
->>>>              /* driver is given scsi host to work with */
->>>>              hba = iscsi_host_priv(shost);
->>>> -   else
->>>> +           /* Register the device with cnic if not already
->>> done so */
->>>> +           bnx2i_register_device(hba);
->>>> +   } else
->>>>              /*
->>>>               * check if the given destination can be reached through
->>>>               * a iscsi capable NetXtreme2 device
->>>>               */
->>>>              hba = bnx2i_check_route(dst_addr);
->>>> +
->>>>      if (!hba) {
->>>>              rc = -ENOMEM;
->>>>              goto check_busy;
->>> Do you want to do the test_bit(BNX2I_CNIC_REGISTERED,
->>> &hba->reg_with_cnic) test here instead of down below. If it
->>> failed then
->>> you might try to do a cm_create on a cnic that is not
->>> properly registered.
->>>
->> Good idea.  cm_create() will properly be ok because there is no
->> hardware interaction.  bnx2i_send_conn_ofld_req() will fail if
->> the cnic is not properly registered because there will be no call
->> backs from the hardware events.
->
-> following 2 conditions needs to be satisfied to offload an iscsi
-> connection,
->    1) device has to be registered with cnic
->    2) device has to support iscsi offload
->
->    bnx2i_adapter_ready() will return success only if both conditions
-> (which is flagged by ADAPTER_STATE_UP bit in hba->adapter_state) are
-> met. bnx2i_ep_connect() will bailout if bnx2i_adapter_ready() does not
-> return correct status and this guarantees bnx2i will not make any cnic
-> calls on an unregistered device.
->
+Currently names of REQ_COPY_USER and __REQ_COPY_USER constants are confusing,
+because they actually mean that the buffer for the corresponding requests
+has space in the tail for padding in case of DMA padding restrictions.
 
-Ok then. It seems fine to me.
+This patch renames REQ_COPY_USER and __REQ_COPY_USER constants to more
+descriptive names REQ_HAS_TAIL_SPACE_FOR_PADDING and __REQ_HAS_TAIL_SPACE_FOR_PADDING
+correspondingly.
 
-Reviewed-by Mike Christie <michaelc@cs.wisc.edu>
+It's against 2.6.30.1, but if necessary, I can update it to any necessary
+kernel version.
 
-One other question though. Do you need the BNX2I_CNIC_REGISTERED tst in 
-ep_connect then? If not then maybe in separate patch for the next 
-feature window we can clean that up.
+Signed-off-by: Vladislav Bolkhovitin <vst@vlnb.net>
+
+ block/blk-map.c        |    6 +++---
+ block/blk-merge.c      |    2 +-
+ include/linux/blkdev.h |    4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
+
+diff -upkr linux-2.6.30.1/block/blk-map.c linux-2.6.30.1/block/blk-map.c
+--- linux-2.6.30.1/block/blk-map.c	2009-06-10 07:05:27.000000000 +0400
++++ linux-2.6.30.1/block/blk-map.c	2009-07-08 21:18:53.000000000 +0400
+@@ -154,7 +155,7 @@ int blk_rq_map_user(struct request_queue
+ 	}
+ 
+ 	if (!bio_flagged(bio, BIO_USER_MAPPED))
+-		rq->cmd_flags |= REQ_COPY_USER;
++		rq->cmd_flags |= REQ_HAS_TAIL_SPACE_FOR_PADDING;
+ 
+ 	rq->buffer = rq->data = NULL;
+ 	return 0;
+@@ -230,7 +231,7 @@ int blk_rq_map_user_iov(struct request_q
+ 	}
+ 
+ 	if (!bio_flagged(bio, BIO_USER_MAPPED))
+-		rq->cmd_flags |= REQ_COPY_USER;
++		rq->cmd_flags |= REQ_HAS_TAIL_SPACE_FOR_PADDING;
+ 
+ 	blk_queue_bounce(q, &bio);
+ 	bio_get(bio);
+@@ -309,7 +836,7 @@ int blk_rq_map_kern(struct request_queue
+ 		bio->bi_rw |= (1 << BIO_RW);
+ 
+ 	if (do_copy)
+-		rq->cmd_flags |= REQ_COPY_USER;
++		rq->cmd_flags |= REQ_HAS_TAIL_SPACE_FOR_PADDING;
+ 
+ 	blk_rq_bio_prep(q, rq, bio);
+ 	blk_queue_bounce(q, &rq->bio);
+diff -upkr linux-2.6.30.1/block/blk-merge.c linux-2.6.30.1/block/blk-merge.c
+--- linux-2.6.30.1/block/blk-merge.c	2009-06-10 07:05:27.000000000 +0400
++++ linux-2.6.30.1/block/blk-merge.c	2009-07-08 21:18:53.000000000 +0400
+@@ -198,7 +198,7 @@ new_segment:
+ 	} /* segments in rq */
+ 
+ 
+-	if (unlikely(rq->cmd_flags & REQ_COPY_USER) &&
++	if ((rq->cmd_flags & REQ_HAS_TAIL_SPACE_FOR_PADDING) &&
+ 	    (rq->data_len & q->dma_pad_mask)) {
+ 		unsigned int pad_len = (q->dma_pad_mask & ~rq->data_len) + 1;
+ 
+diff -upkr linux-2.6.30.1/include/linux/blkdev.h linux-2.6.30.1/include/linux/blkdev.h
+--- linux-2.6.30.1/include/linux/blkdev.h	2009-06-10 07:05:27.000000000 +0400
++++ linux-2.6.30.1/include/linux/blkdev.h	2009-07-08 21:18:53.000000000 +0400
+@@ -115,7 +115,7 @@ enum rq_flag_bits {
+ 	__REQ_RW_SYNC,		/* request is sync (sync write or read) */
+ 	__REQ_ALLOCED,		/* request came from our alloc pool */
+ 	__REQ_RW_META,		/* metadata io request */
+-	__REQ_COPY_USER,	/* contains copies of user pages */
++	__REQ_HAS_TAIL_SPACE_FOR_PADDING, /* has space for padding in the tail */
+ 	__REQ_INTEGRITY,	/* integrity metadata has been remapped */
+ 	__REQ_NOIDLE,		/* Don't anticipate more IO after this one */
+ 	__REQ_IO_STAT,		/* account I/O stat */
+@@ -143,7 +143,7 @@ enum rq_flag_bits {
+ #define REQ_RW_SYNC	(1 << __REQ_RW_SYNC)
+ #define REQ_ALLOCED	(1 << __REQ_ALLOCED)
+ #define REQ_RW_META	(1 << __REQ_RW_META)
+-#define REQ_COPY_USER	(1 << __REQ_COPY_USER)
++#define REQ_HAS_TAIL_SPACE_FOR_PADDING	(1 << __REQ_HAS_TAIL_SPACE_FOR_PADDING)
+ #define REQ_INTEGRITY	(1 << __REQ_INTEGRITY)
+ #define REQ_NOIDLE	(1 << __REQ_NOIDLE)
+ #define REQ_IO_STAT	(1 << __REQ_IO_STAT)
 
