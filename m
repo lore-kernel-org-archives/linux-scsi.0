@@ -1,89 +1,109 @@
-From: "Anil Veerabhadrappa" <anilgv-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH] BNX2I: register given device with cnic if shost != NULL in ep_connect()
-Date: Wed, 8 Jul 2009 18:21:01 -0700
-Message-ID: <1247102461.9829.438.camel@anilgv-desktop>
-References: <1245805860.9829.50.camel@anilgv-desktop>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: "tom" <tom_peng@usish.com>
+Subject: Re: [PATCH 3/5] reuse the original port when reenable the phy in a port
+Date: Thu, 9 Jul 2009 10:12:24 +0800
+Message-ID: <F09F16995B2840F690A3A7ABDFF58F95@usish.com.cn>
+References: <7813BB8F7D624D168612B73E822A1ED9@usish.com.cn> <1247077767.4159.247.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <grbounce-FC1hwAUAAAA0O9VQcsxVj1UPjHD9r3x_=glio-open-iscsi=m.gmane.org-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <1245805860.9829.50.camel@anilgv-desktop>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Post: <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://googlegroups.com/group/open-iscsi/subscribe>,
-	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org, mchan-dY08KVG/lbpWk0Htik3J/w@public.gmane.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from usish.com ([210.5.144.203]:46642 "EHLO sr-smtp.usish.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758149AbZGICam (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Jul 2009 22:30:42 -0400
+In-Reply-To: <1247077767.4159.247.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: 'James Bottomley' <James.Bottomley@HansenPartnership.com>, 'jack wang' <jack_wang@usish.com>
+Cc: linux-scsi@vger.kernel.org, jeff@garzik.org, lindar_liu@usish.com, aoqingyun@usish.com
 
 
+On Wed, 2009-07-01 at 20:37 +0800, jack wang wrote:
+> >From 24abd7f05d2293e03aacbdd9d620d6378ea5e2aa Mon Sep 17 00:00:00 2001
+> From: Tom Peng <tom_peng@usish.com>
+> Date: Wed, 1 Jul 2009 19:04:01 +0800
+> Subject: [PATCH 3/5] reuse the original port when reenable the phy in a
+port
+> 
+> Signed-off-by: Tom Peng <tom_peng@usish.com>
+> Signed-off-by: Jack Wang <jack_wang@usish.com>
+> Signed-off-by: Lindar Liu <lindar_liu@usish.com>
+> ---
+>  drivers/scsi/libsas/sas_port.c |   19 +++++++++++++++----
+>  1 files changed, 15 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/libsas/sas_port.c
+b/drivers/scsi/libsas/sas_port.c
+> index e6ac59c..5aad165 100644
+> --- a/drivers/scsi/libsas/sas_port.c
+> +++ b/drivers/scsi/libsas/sas_port.c
+> @@ -69,16 +69,27 @@ static void sas_form_port(struct asd_sas_phy *phy)
+>  			SAS_DPRINTK("phy%d matched wide port%d\n", phy->id,
+>  				    port->id);
+>  			break;
+> -		} else if (*(u64 *) port->sas_addr == 0 &&
+> port->num_phys==0) {
+> -			memcpy(port->sas_addr, phy->sas_addr,
+> SAS_ADDR_SIZE);
+> -			break;
+>  		}
+>  		spin_unlock(&port->phy_list_lock);
+>  	}
+> +	/* The phy does not match any port currently existed, create new one
+> */
+> +	if (i == sas_ha->num_phys) {
+> +		for (i = 0; i < sas_ha->num_phys; i++) {
+> +			port = sas_ha->sas_port[i];
+> +			spin_lock(&port->phy_list_lock);
+> +			if (*(u64 *)port->sas_addr == 0
+> +				&& port->num_phys == 0) {
+> +				memcpy(port->sas_addr, phy->sas_addr,
+> +					SAS_ADDR_SIZE);
+> +				break;
+> +			}
+> +			spin_unlock(&port->phy_list_lock);
+> +		}
+> +	}
 
-    * When using iface, bnx2i was unable to offload further connections after
-      all active sessions are logged out. bnx2i will unregister the device from
-      cnic when the last connection is torn down. Next call to ep_connect()
-      will fail because the device is not registered. This issue is not seen
-      if shost == NULL is passed to ep_connect() call because in that case bnx2i
-      will registers all known devices with cnic before doing a route look-up.
-      When shost != NULL, bnx2i knows the device on which to offload the
-      connection and has to register this device before attempting to offload
-      the connection
+I don't understand why you need this.  It seems identical to the else
+leg of the if in the for loop above it, so it wouldn't seem to add
+anything to the code.
 
-Signed-off-by: Anil Veerabhadrappa <anilgv-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Reviewed-by: Michael Chan <mchan-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
----
- drivers/scsi/bnx2i/bnx2i_init.c  |    7 +++++--
- drivers/scsi/bnx2i/bnx2i_iscsi.c |    7 +++++--
- 2 files changed, 10 insertions(+), 4 deletions(-)
+James
 
-diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
-index fd78540..0c4210d 100644
---- a/drivers/scsi/bnx2i/bnx2i_init.c
-+++ b/drivers/scsi/bnx2i/bnx2i_init.c
-@@ -185,14 +185,17 @@ void bnx2i_stop(void *handle)
-  */
- void bnx2i_register_device(struct bnx2i_hba *hba)
- {
-+	int rc;
-+
- 	if (test_bit(ADAPTER_STATE_GOING_DOWN, &hba->adapter_state) ||
- 	    test_bit(BNX2I_CNIC_REGISTERED, &hba->reg_with_cnic)) {
- 		return;
- 	}
- 
--	hba->cnic->register_device(hba->cnic, CNIC_ULP_ISCSI, hba);
-+	rc = hba->cnic->register_device(hba->cnic, CNIC_ULP_ISCSI, hba);
- 
--	set_bit(BNX2I_CNIC_REGISTERED, &hba->reg_with_cnic);
-+	if (!rc)
-+		set_bit(BNX2I_CNIC_REGISTERED, &hba->reg_with_cnic);
- }
- 
- 
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index f741219..98148f3 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -1653,15 +1653,18 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
- 	struct iscsi_endpoint *ep;
- 	int rc = 0;
- 
--	if (shost)
-+	if (shost) {
- 		/* driver is given scsi host to work with */
- 		hba = iscsi_host_priv(shost);
--	else
-+		/* Register the device with cnic if not already done so */
-+		bnx2i_register_device(hba);
-+	} else
- 		/*
- 		 * check if the given destination can be reached through
- 		 * a iscsi capable NetXtreme2 device
- 		 */
- 		hba = bnx2i_check_route(dst_addr);
-+
- 	if (!hba) {
- 		rc = -ENOMEM;
- 		goto check_busy;
--- 
-1.5.4.3
+
+--
+
+Hi James,
+Just think one situation: a HBA has two wide ports, port 0 (phy0, phy1,
+phy2, phy3) attached to expander A, port1 (phy4, phy5, phy6, phy7) attached
+to expander B, supposed the cable of port0 was plugged out, port1 still
+here. After a while, for some reason phy4(or phy5 phy6 phy7) linked down
+then linked up, the code will added this phy to form a new port, it is
+port0, rather than added this phy to port1.
+
+I have tested this bug, use SMP utility phy_control to disable phy4
+(expander B)and then enabled it, it formed new port: port0.
+
+To fix this, we can detect all of the ports existed and if no any port
+matched, we form new one.
+
+Best Regards
+
+****************************************************************************
+******************
+
+Tom Peng     Software Engineer
+
+Network & Storage Division, R & D Center
+
+Universal Scientific Industrial (Shanghai) Co., Ltd
+
+****************************************************************************
+********************
+
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
