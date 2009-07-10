@@ -1,110 +1,137 @@
-From: Eddie Williams <Eddie.Williams@steeleye.com>
-Subject: Re: [dm-devel] Re: [PATCH 0/3] scsi_dh: Add ability to set
- parameters for scsi device handler
-Date: Fri, 10 Jul 2009 09:21:37 -0400
-Message-ID: <1247232097.3591.13.camel@eddie-laptop>
-References: <20090702031308.28354.73353.sendpatchset@chandra-ubuntu>
-	 <1246563299.8018.9.camel@eddie-laptop>
-	 <1246566564.8018.21.camel@eddie-laptop>
-	 <1246567622.7381.7.camel@chandra-ubuntu>
-	 <1246970082.6646.9.camel@eddie-laptop>
-	 <1247169346.28322.0.camel@chandra-ubuntu>
-	 <1247174184.6367.237.camel@eddie-laptop>
-	 <1247191145.28322.10.camel@chandra-ubuntu>
+From: Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] x86/pci: insert ioapic resource before assign unassigned
+ resource for pci -v2
+Date: Fri, 10 Jul 2009 09:36:20 -0700
+Message-ID: <4A576E04.9070004@kernel.org>
+References: <20090630180300.GA9971@ldl.fc.hp.com>	 <4A4A5B01.9040200@kernel.org> <20090703225708.GA30664@ldl.fc.hp.com>	 <4A4FADDC.30606@kernel.org> <20090709185945.GG2613@ldl.fc.hp.com>	 <4A564263.5010305@kernel.org> <4A564634.1020708@kernel.org>	 <4A564990.3060202@kernel.org> <1247172044.3898.147.camel@mulgrave.site> <4A56641B.9050204@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p02c12o145.mxlogic.net ([208.65.145.78]:46612 "EHLO
-	p02c12o145.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751873AbZGJNVu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Jul 2009 09:21:50 -0400
-In-Reply-To: <1247191145.28322.10.camel@chandra-ubuntu>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <4A56641B.9050204@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
+To: Jesse Barnes <jbarnes@virtuousgeek.org>, Ingo Molnar <mingo@elte.hu>
+Cc: dann frazier <dannf@hp.com>, Thomas Gleixner <tglx@linutronix.de>, "H. Peter Anvin" <hpa@zytor.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org, Stephen Frost <sfrost@snowman.net>
 List-Id: linux-scsi@vger.kernel.org
-To: sekharan@linux.vnet.ibm.com
-Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, asson_ronald@emc.com, James.Bottomley@HansenPartnership.com, Benoit_Arthur@emc.com, agk@redhat.com
 
 
-I had taken the patches you sent earlier and tried them on the SLES 11.
-There were a couple of collisions but not much.  I am able to set the
-parameters in hardware handler with the patches.  This also now allows
-multipath to handle path failures correctly where reservations are
-involved, aka honor reservations set on trespass command.  I will do
-more testing but so far so good.
+Stephen reported that his DL585 G2 need noapic after 2.6.22 (?)
 
-I made one type cast change in scsi_dh_emc.c to avoid a warning
-	char *p = (char *)params;
+Dann bisected
+  --------------------------------------------------------------------
+  commit 30a18d6c3f1e774de656ebd8ff219d53e2ba4029
+  Date:   Tue Feb 19 03:21:20 2008 -0800
 
-I will look at your patches to make sure I reconciled the conflicts
-correctly.
+      x86: multi pci root bus with different io resource range, on
+      64-bit
+  --------------------------------------------------------------------
+caused the problem.
 
-Eddie
+it turns out that
+1. that AMD-based system has two HT chains.
+2. BIOS doesn't allocate resource for BAR 6 of devices under 8132 etc
+3. that multi-peer-root patche will try to split root resource to peer
+   root resources according to pci conf of NB
+4. pci assign unassigned code assign some range to pci-x bridge, but it
+   is overlapping BAR that are used by ioapic addr of io4 and 8132.
 
-On Thu, 2009-07-09 at 18:59 -0700, Chandra Seetharaman wrote:
-> Eddie,
-> 
-> Here is the set of patches ported to sles11.
-> 
-> It applies cleanly on linux-2.6.27.23-0.1
-> 
-> Anyways, you have to test the mainline version for it to be pushed
-> upstream. (this patch is just for verification purposes).
-> 
-> series:
-> sles11_scsi_dh_params
-> sles11_emc_parameters
-> sles11_parameters_fix_for_dmmpath
-> 
-> chandra
-> On Thu, 2009-07-09 at 17:16 -0400, Eddie Williams wrote:
-> > I have not tried to patch the 2.6.27-23 kernel.  Given that the patches
-> > were against 31-RC1 I assumed that there would be other changes I would
-> > need to pull in.  I have been looking at why the 31-RC1 was panicing as
-> > well as working with my EMC contacts to see if they already had a
-> > working 31-RC1 environment they could verify the patch in.
-> > Unfortunately I have been mostly in meetings...
-> > 
-> > I will give it a try.  I should have results in the morning.
-> > 
-> > Eddie
-> > 
-> > On Thu, 2009-07-09 at 12:55 -0700, Chandra Seetharaman wrote:
-> > > Did you try to port/apply my patches to the SLES11 tree and see if it
-> > > works ?
-> > > 
-> > > On Tue, 2009-07-07 at 08:34 -0400, Eddie Williams wrote:
-> > > > I was testing with the SLES 11 kernel.  Initially I was using
-> > > > 2.6.27.19-5 and also verified the same issue with their errata kernel
-> > > > 2.6.27.23-0.1.
-> > > > 
-> > > > Eddie
-> > > > On Thu, 2009-07-02 at 13:47 -0700, Chandra Seetharaman wrote:
-> > > > > On Thu, 2009-07-02 at 16:29 -0400, Eddie Williams wrote:
-> > > > > > On Thu, 2009-07-02 at 15:34 -0400, Eddie Williams wrote:
-> > > > > > > I have tried to set this up but have run into a problem probably due to
-> > > > > > > my error.  It has been a while since I have had to build kernels...
-> > > > > > > 
-> > > > > > > I pulled 2.6.31-rc1, applied the two patches below and then applied the
-> > > > > > > 3 patches for the interface.  The new kernel loads fine but when a
-> > > > > > > trespass command is sent I get an panic.  I am looking though how I
-> > > > > > > built the kernel and perhaps build with your 3 patches to see if it
-> > > > > > > happened before.  
-> > > > > > 
-> > > > > > I backed out the 3 patches with the same panic.
-> > > > > > 
-> > > > > Which version of the kernel were you originally testing with ? (when you
-> > > > > found the feature was gone).
-> > > > > 
-> > > > 
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > 
-> > 
-> > --
-> > dm-devel mailing list
-> > dm-devel@redhat.com
-> > https://www.redhat.com/mailman/listinfo/dm-devel
+the reason: at that point ioapic address are not inserted yet.
 
+aka that patch is not the cause, and it just uncover other problems.
+
+solution is trying to insert ioapic_resource early a little bit.
+
+v2: update comments
+
+Reported-by: Stephen Frost <sfrost@snowman.net>
+Reported-and-Tested-by: dann frazier <dannf@hp.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: stable@kernel.org
+
+---
+ arch/x86/include/asm/io_apic.h |    2 ++
+ arch/x86/kernel/apic/io_apic.c |   14 +++-----------
+ arch/x86/pci/i386.c            |    7 +++++++
+ 3 files changed, 12 insertions(+), 11 deletions(-)
+
+Index: linux-2.6/arch/x86/include/asm/io_apic.h
+===================================================================
+--- linux-2.6.orig/arch/x86/include/asm/io_apic.h
++++ linux-2.6/arch/x86/include/asm/io_apic.h
+@@ -161,6 +161,7 @@ extern int io_apic_set_pci_routing(struc
+ 		 struct io_apic_irq_attr *irq_attr);
+ extern int (*ioapic_renumber_irq)(int ioapic, int irq);
+ extern void ioapic_init_mappings(void);
++extern void ioapic_insert_resources(void);
+ 
+ extern struct IO_APIC_route_entry **alloc_ioapic_entries(void);
+ extern void free_ioapic_entries(struct IO_APIC_route_entry **ioapic_entries);
+@@ -180,6 +181,7 @@ extern void ioapic_write_entry(int apic,
+ #define io_apic_assign_pci_irqs 0
+ static const int timer_through_8259 = 0;
+ static inline void ioapic_init_mappings(void)	{ }
++static inline void ioapic_insert_resources(void) { }
+ 
+ static inline void probe_nr_irqs_gsi(void)	{ }
+ #endif
+Index: linux-2.6/arch/x86/kernel/apic/io_apic.c
+===================================================================
+--- linux-2.6.orig/arch/x86/kernel/apic/io_apic.c
++++ linux-2.6/arch/x86/kernel/apic/io_apic.c
+@@ -4181,28 +4181,20 @@ fake_ioapic_page:
+ 	}
+ }
+ 
+-static int __init ioapic_insert_resources(void)
++void __init ioapic_insert_resources(void)
+ {
+ 	int i;
+ 	struct resource *r = ioapic_resources;
+ 
+ 	if (!r) {
+-		if (nr_ioapics > 0) {
++		if (nr_ioapics > 0)
+ 			printk(KERN_ERR
+ 				"IO APIC resources couldn't be allocated.\n");
+-			return -1;
+-		}
+-		return 0;
++		return;
+ 	}
+ 
+ 	for (i = 0; i < nr_ioapics; i++) {
+ 		insert_resource(&iomem_resource, r);
+ 		r++;
+ 	}
+-
+-	return 0;
+ }
+-
+-/* Insert the IO APIC resources after PCI initialization has occured to handle
+- * IO APICS that are mapped in on a BAR in PCI space. */
+-late_initcall(ioapic_insert_resources);
+Index: linux-2.6/arch/x86/pci/i386.c
+===================================================================
+--- linux-2.6.orig/arch/x86/pci/i386.c
++++ linux-2.6/arch/x86/pci/i386.c
+@@ -35,6 +35,7 @@
+ #include <asm/pat.h>
+ #include <asm/e820.h>
+ #include <asm/pci_x86.h>
++#include <asm/io_apic.h>
+ 
+ 
+ static int
+@@ -227,6 +228,12 @@ void __init pcibios_resource_survey(void
+ 	pcibios_allocate_resources(1);
+ 
+ 	e820_reserve_resources_late();
++	/*
++	 * Insert the IO APIC resources after PCI initialization has
++	 * occured to handle IO APICS that are mapped in on a BAR in
++	 * PCI space, but before trying to assign unassigned pci res.
++	 */
++	ioapic_insert_resources();
+ }
+ 
+ /**
