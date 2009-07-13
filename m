@@ -1,55 +1,105 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 3/4] drivers/scsi: adjust NULL test
-Date: Mon, 13 Jul 2009 22:44:32 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0907132244090.12374@ask.diku.dk>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757224AbZGMUuP@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+From: Matthew Garrett <mjg@redhat.com>
+Subject: [PATCH 1/3] SCSI: Allow platform-specific code to be run against the SCSI tree
+Date: Mon, 13 Jul 2009 22:03:05 +0100
+Message-ID: <1247518987-10818-1-git-send-email-mjg@redhat.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, shaohua.li@intel.com, linux-ide@vger.kernel.org, Matthew Garrett <mjg@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Julia Lawall <julia@diku.dk>
+In certain cases (such as ACPI) we want to be able to associate
+platform-specific data against the SCSI device tree. Handling this
+properly requires the ability to run platform code at SCSI init time.
+This patch adds stub functions that can be overridden if the platform
+defines CONFIG_SCSI_PLATFORM.
 
-Due to the preceding dereference, cmnd cannot be NULL at the point of the
-WARN_ON.  Furthermore, it was earlier tested whether cmnd was NULL and the
-function was exited if that was the case.
-
-A simplified version of the semantic match that finds this problem is as
-follows: (http://www.emn.fr/x-info/coccinelle/)
-
-// <smpl>
-@r@
-expression x,E,E1;
-identifier f,l;
-position p1,p2;
-@@
-
-*x@p1->f = E1;
-... when != x = E
-    when != goto l;
-(
-*x@p2 == NULL
-|
-*x@p2 != NULL
-)
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
+Signed-off-by: Matthew Garrett <mjg@redhat.com>
 ---
- drivers/scsi/initio.c               |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+ drivers/scsi/Kconfig     |    4 ++++
+ drivers/scsi/scsi.c      |    6 ++++++
+ drivers/scsi/scsi_priv.h |    1 -
+ include/scsi/scsi.h      |   10 ++++++++++
+ 4 files changed, 20 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
-index 89a5948..359de22 100644
---- a/drivers/scsi/initio.c
-+++ b/drivers/scsi/initio.c
-@@ -2817,7 +2817,6 @@ static void i91uSCBPost(u8 * host_mem, u8 * cblk_mem)
- 	}
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 9c23122..7537d0b 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -34,6 +34,10 @@ config SCSI_DMA
+ 	bool
+ 	default n
  
- 	cmnd->result = cblk->tastat | (cblk->hastat << 16);
--	WARN_ON(cmnd == NULL);
- 	i91u_unmap_scb(host->pci_dev, cmnd);
- 	cmnd->scsi_done(cmnd);	/* Notify system DONE           */
- 	initio_release_scb(host, cblk);	/* Release SCB for current channel */
++config SCSI_PLATFORM
++	bool
++	default n
++
+ config SCSI_TGT
+ 	tristate "SCSI target support"
+ 	depends on SCSI && EXPERIMENTAL
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 2de5f3a..da02f64 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -1332,12 +1332,17 @@ static int __init init_scsi(void)
+ 	error = scsi_sysfs_register();
+ 	if (error)
+ 		goto cleanup_sysctl;
++	error = scsi_platform_register();
++	if (error)
++		goto cleanup_sysfs;
+ 
+ 	scsi_netlink_init();
+ 
+ 	printk(KERN_NOTICE "SCSI subsystem initialized\n");
+ 	return 0;
+ 
++cleanup_sysfs:
++	scsi_sysfs_unregister();
+ cleanup_sysctl:
+ 	scsi_exit_sysctl();
+ cleanup_hosts:
+@@ -1356,6 +1361,7 @@ cleanup_queue:
+ static void __exit exit_scsi(void)
+ {
+ 	scsi_netlink_exit();
++	scsi_platform_unregister();
+ 	scsi_sysfs_unregister();
+ 	scsi_exit_sysctl();
+ 	scsi_exit_hosts();
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 021e503..bce4a70 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -131,7 +131,6 @@ extern int scsi_sysfs_target_initialize(struct scsi_device *);
+ extern struct scsi_transport_template blank_transport_template;
+ extern void __scsi_remove_device(struct scsi_device *);
+ 
+-extern struct bus_type scsi_bus_type;
+ extern struct attribute_group *scsi_sysfs_shost_attr_groups[];
+ 
+ /* scsi_netlink.c */
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 084478e..f349c83 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -140,6 +140,16 @@ struct scsi_cmnd;
+ 
+ #define SCSI_MAX_VARLEN_CDB_SIZE 260
+ 
++#ifdef CONFIG_SCSI_PLATFORM
++extern int scsi_platform_register(void);
++extern void scsi_platform_unregister(void);
++#else
++static inline int scsi_platform_register(void) { return 0; };
++static inline void scsi_platform_unregister(void) { };
++#endif
++
++extern struct bus_type scsi_bus_type;
++
+ /* defined in T10 SCSI Primary Commands-2 (SPC2) */
+ struct scsi_varlen_cdb_hdr {
+ 	u8 opcode;        /* opcode always == VARIABLE_LENGTH_CMD */
+-- 
+1.6.2.5
+
