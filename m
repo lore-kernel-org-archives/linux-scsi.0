@@ -1,16 +1,20 @@
 From: John Stoffel <john@stoffel.org>
-Subject: [PATCH 5/5] Make SCSI SG v4 driver enabled by default and remove EXPERIMENTAL dependency, since udev depends on BSG.
-Date: Mon, 13 Jul 2009 15:39:33 -0400
-Message-ID: <1247513973-24899-1-git-send-email-john@stoffel.org>
+Subject: [PATCH] Make SCSI SG v4 driver enabled by default and remove EXPERIMENTAL dependency, since udev depends on BSG.
+Date: Mon, 13 Jul 2009 15:41:39 -0400
+Message-ID: <1247514099-25031-1-git-send-email-john@stoffel.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from Mycroft.westnet.com ([216.187.52.7]:54323 "EHLO
+Received: from Mycroft.westnet.com ([216.187.52.7]:54345 "EHLO
 	Mycroft.westnet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754813AbZGMTjx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2009 15:39:53 -0400
+	with ESMTP id S1754817AbZGMTlp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2009 15:41:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, John Stoffel <john@stoffel.org>
+
+Make Block Layer SG support v4 the default, since recent udev versions 
+depend on this to access serial numbers and other low level info properly.
+
 
 Signed-off-by: John Stoffel <john@stoffel.org>
 ---
