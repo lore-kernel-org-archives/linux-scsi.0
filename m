@@ -1,36 +1,55 @@
-From: Dave Jones <davej@redhat.com>
-Subject: Fix __LITTLE_ENDIAN definition warnings in qla2xxx
-Date: Mon, 13 Jul 2009 16:27:46 -0400
-Message-ID: <20090713202746.GA14479@redhat.com>
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH 3/4] drivers/scsi: adjust NULL test
+Date: Mon, 13 Jul 2009 22:44:32 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0907132244090.12374@ask.diku.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:57587 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755636AbZGMU1s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Jul 2009 16:27:48 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757224AbZGMUuP@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>
 
-On ppc64, gcc 4.4 spews lots of..
+From: Julia Lawall <julia@diku.dk>
 
-drivers/scsi/qla2xxx/qla_def.h:1485:7: warning: "__LITTLE_ENDIAN" is not defined
+Due to the preceding dereference, cmnd cannot be NULL at the point of the
+WARN_ON.  Furthermore, it was earlier tested whether cmnd was NULL and the
+function was exited if that was the case.
 
-Signed-off-by: Dave Jones <davej@redhat.com>
+A simplified version of the semantic match that finds this problem is as
+follows: (http://www.emn.fr/x-info/coccinelle/)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 00aa48d..9fde8bf 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -1482,7 +1482,7 @@ typedef union {
- 		uint8_t domain;
- 		uint8_t area;
- 		uint8_t al_pa;
--#elif __LITTLE_ENDIAN
-+#elif defined(__LITTLE_ENDIAN)
- 		uint8_t al_pa;
- 		uint8_t area;
- 		uint8_t domain;
+// <smpl>
+@r@
+expression x,E,E1;
+identifier f,l;
+position p1,p2;
+@@
+
+*x@p1->f = E1;
+... when != x = E
+    when != goto l;
+(
+*x@p2 == NULL
+|
+*x@p2 != NULL
+)
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+ drivers/scsi/initio.c               |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
+index 89a5948..359de22 100644
+--- a/drivers/scsi/initio.c
++++ b/drivers/scsi/initio.c
+@@ -2817,7 +2817,6 @@ static void i91uSCBPost(u8 * host_mem, u8 * cblk_mem)
+ 	}
+ 
+ 	cmnd->result = cblk->tastat | (cblk->hastat << 16);
+-	WARN_ON(cmnd == NULL);
+ 	i91u_unmap_scb(host->pci_dev, cmnd);
+ 	cmnd->scsi_done(cmnd);	/* Notify system DONE           */
+ 	initio_release_scb(host, cblk);	/* Release SCB for current channel */
