@@ -1,56 +1,51 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 06/13] zfcp: Use -EIO for SBAL allocation failures
-Date: Mon, 13 Jul 2009 15:06:07 +0200
-Message-ID: <20090713131043.454211000@de.ibm.com>
-References: <20090713130601.304914000@de.ibm.com>
+From: John Stoffel <john@stoffel.org>
+Subject: [PATCH 5/5] Make SCSI SG v4 driver enabled by default and remove EXPERIMENTAL dependency, since udev depends on BSG.
+Date: Mon, 13 Jul 2009 15:39:33 -0400
+Message-ID: <1247513973-24899-1-git-send-email-john@stoffel.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate7.de.ibm.com ([195.212.29.156]:37726 "EHLO
-	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755876AbZGMNL0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2009 09:11:26 -0400
-Content-Disposition: inline; filename=711-zfcp-sbal-alloc-failuer.diff
+Received: from Mycroft.westnet.com ([216.187.52.7]:54323 "EHLO
+	Mycroft.westnet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754813AbZGMTjx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2009 15:39:53 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Christof Schmitt <christof.schmitt@de.ibm.com>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, John Stoffel <john@stoffel.org>
 
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-
--ENOMEM is for memory allocation problems, -EIO for queue/SBAL
-allocation problems.
-
-Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
-Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
+Signed-off-by: John Stoffel <john@stoffel.org>
 ---
+ block/Kconfig |   11 +++++++----
+ 1 files changed, 7 insertions(+), 4 deletions(-)
 
- drivers/s390/scsi/zfcp_fsf.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
-
---- a/drivers/s390/scsi/zfcp_fsf.c	2009-07-13 13:46:05.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_fsf.c	2009-07-13 14:03:14.000000000 +0200
-@@ -1053,14 +1053,14 @@ static int zfcp_fsf_setup_ct_els_sbals(s
- 	bytes = zfcp_qdio_sbals_from_sg(req, SBAL_FLAGS0_TYPE_WRITE_READ,
- 					sg_req, max_sbals);
- 	if (bytes <= 0)
--		return -ENOMEM;
-+		return -EIO;
- 	req->qtcb->bottom.support.req_buf_length = bytes;
- 	req->sbale_curr = ZFCP_LAST_SBALE_PER_SBAL;
+diff --git a/block/Kconfig b/block/Kconfig
+index e7d1278..55bbefc 100644
+--- a/block/Kconfig
++++ b/block/Kconfig
+@@ -45,9 +45,9 @@ config LBD
+ 	  If unsure, say N.
  
- 	bytes = zfcp_qdio_sbals_from_sg(req, SBAL_FLAGS0_TYPE_WRITE_READ,
- 					sg_resp, max_sbals);
- 	if (bytes <= 0)
--		return -ENOMEM;
-+		return -EIO;
- 	req->qtcb->bottom.support.resp_buf_length = bytes;
+ config BLK_DEV_BSG
+-	bool "Block layer SG support v4 (EXPERIMENTAL)"
+-	depends on EXPERIMENTAL
+-	---help---
++	bool "Block layer SG support v4"
++	default y
++	help
+ 	  Saying Y here will enable generic SG (SCSI generic) v4 support
+ 	  for any block device.
  
- 	return 0;
-@@ -2559,7 +2559,6 @@ struct zfcp_fsf_req *zfcp_fsf_control_fi
- 	bytes = zfcp_qdio_sbals_from_sg(req, direction, fsf_cfdc->sg,
- 					FSF_MAX_SBALS_PER_REQ);
- 	if (bytes != ZFCP_CFDC_MAX_SIZE) {
--		retval = -ENOMEM;
- 		zfcp_fsf_req_free(req);
- 		goto out;
- 	}
+@@ -57,7 +57,10 @@ config BLK_DEV_BSG
+ 	  protocols (e.g. Task Management Functions and SMP in Serial
+ 	  Attached SCSI).
+ 
+-	  If unsure, say N.
++	  This option is required by recent UDEV versions to properly 
++	  access device serial numbers, etc.
++
++	  If unsure, say Y.
+ 
+ config BLK_DEV_INTEGRITY
+ 	bool "Block layer data integrity support"
+-- 
+1.6.3.3
 
