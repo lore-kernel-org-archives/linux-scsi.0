@@ -1,50 +1,40 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: [ANNOUNCE]: SCST target driver for QLocic 24xx adapters qla_isp 1.0.1
- released
-Date: Mon, 13 Jul 2009 15:55:27 +0400
-Message-ID: <4A5B20AF.80205@vlnb.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: [patch 03/13] zfcp: Return -ENOMEM for allocation failures in zfcp_fsf
+Date: Mon, 13 Jul 2009 15:06:04 +0200
+Message-ID: <20090713131043.044386000@de.ibm.com>
+References: <20090713130601.304914000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:63518 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755497AbZGMLzZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2009 07:55:25 -0400
+Received: from mtagate2.de.ibm.com ([195.212.17.162]:54802 "EHLO
+	mtagate2.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755821AbZGMNKo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2009 09:10:44 -0400
+Content-Disposition: inline; filename=708-zfcp-enomem.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>
-Cc: Stanislaw Gruszka <stf_xl@wp.pl>, Matthew Jacob <lydianconcepts@gmail.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Christof Schmitt <christof.schmitt@de.ibm.com>
 
-Hi All,
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-I'm glad to announce that SCST target driver for QLogic 24xx adapters 
-qla_isp version 1.0.1 released and can be downloaded from the SCST 
-download page, thanks to Stanislaw Gruszka and Matthew Jacob!
+When a fsf_req or a qtcb cannot be allocated return -ENOMEM instead of
+-EIO.
 
-Summary of changes between versions 1.0.0 and 1.0.1
----------------------------------------------------
+Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
+Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
+---
 
-- Rewritten DMA mappings code.
+ drivers/s390/scsi/zfcp_fsf.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-- Fixed resources leakage when disabling target during pending I/O 
-operations.
+--- a/drivers/s390/scsi/zfcp_fsf.c	2009-07-13 13:17:47.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_fsf.c	2009-07-13 13:17:49.000000000 +0200
+@@ -722,7 +722,7 @@ static struct zfcp_fsf_req *zfcp_fsf_req
+ 		req = zfcp_fsf_alloc_qtcb(pool);
+ 
+ 	if (unlikely(!req))
+-		return ERR_PTR(-EIO);
++		return ERR_PTR(-ENOMEM);
+ 
+ 	if (adapter->req_no == 0)
+ 		adapter->req_no++;
 
-- Fixed 64 bit Type 3 request breakage.
-
-- Recovery from not being able to push CTIO fix.
-
-- Various task management fixes.
-
-- Fixed OOPS when firmware provide bad VPIDX number.
-
-- Fixed 24xx startup problems.
-
-- In driver firmware images update.
-
-- Various compilation fixes for different gcc and Linux kernel versions.
-
-SCST page of the qla_isp target driver located at 
-http://scst.sourceforge.net/target_qla_isp.html.
-
-Vlad
