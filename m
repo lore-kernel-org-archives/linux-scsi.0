@@ -1,68 +1,83 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 12/13] zfcp: Fix wka port processing
-Date: Mon, 13 Jul 2009 15:06:13 +0200
-Message-ID: <20090713131044.264267000@de.ibm.com>
+Subject: [patch 05/13] zfcp: Use unchained mode for small ct and els requests
+Date: Mon, 13 Jul 2009 15:06:06 +0200
+Message-ID: <20090713131043.315770000@de.ibm.com>
 References: <20090713130601.304914000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate3.de.ibm.com ([195.212.29.152]:36212 "EHLO
-	mtagate3.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755848AbZGMNK4 (ORCPT
+Received: from mtagate4.de.ibm.com ([195.212.29.153]:42837 "EHLO
+	mtagate4.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755852AbZGMNK4 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2009 09:10:56 -0400
-Content-Disposition: inline; filename=719-zfcp-racy-wka.diff
+Content-Disposition: inline; filename=710-zfcp-unchained-mode.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Swen Schillig <swen@vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Christof Schmitt <christof.schmitt@de.ibm.com>
 
-From: Swen Schillig <swen@vnet.ibm.com>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-Under certain conditions it is possible that a WKA port ist not opened
-within the expected timeframe of half a second. In this situation
-the WKA port remains in the state OPENING preventing any succeding
-request to open the port. This led to unrecoverable remote ports.
-Fixing this by always setting an appropriate WKA port status before
-leaving the function and removing the timeout value here since it's 
-not needed here because the general timeout processing would deal
-with it if required.
+The ELS ADISC and the GID_PN requests sent from zfcp fit into
+unchained FSF requests. Change the FSF allocation logic to use
+unchained requests whenever possible where everything fits in one
+SBAL. This avoids acquiring more SBALs than necessary, especially
+during zfcp recovery when things might be stalled.
 
-Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
+Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 ---
 
- drivers/s390/scsi/zfcp_fc.c  |    8 +++-----
- drivers/s390/scsi/zfcp_fsf.c |    4 ++--
- 2 files changed, 5 insertions(+), 7 deletions(-)
+ drivers/s390/scsi/zfcp_fsf.c |   33 +++++++++++++++++++++++++--------
+ 1 file changed, 25 insertions(+), 8 deletions(-)
 
---- a/drivers/s390/scsi/zfcp_fc.c	2009-07-13 13:17:43.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_fc.c	2009-07-13 13:18:20.000000000 +0200
-@@ -79,11 +79,9 @@ static int zfcp_wka_port_get(struct zfcp
+--- a/drivers/s390/scsi/zfcp_fsf.c	2009-07-13 13:17:49.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_fsf.c	2009-07-13 13:17:55.000000000 +0200
+@@ -1010,6 +1010,23 @@ skip_fsfstatus:
+ 		send_ct->handler(send_ct->handler_data);
+ }
  
- 	mutex_unlock(&wka_port->mutex);
++static void zfcp_fsf_setup_ct_els_unchained(struct qdio_buffer_element *sbale,
++					    struct scatterlist *sg_req,
++					    struct scatterlist *sg_resp)
++{
++	sbale[0].flags |= SBAL_FLAGS0_TYPE_WRITE_READ;
++	sbale[2].addr   = sg_virt(sg_req);
++	sbale[2].length = sg_req->length;
++	sbale[3].addr   = sg_virt(sg_resp);
++	sbale[3].length = sg_resp->length;
++	sbale[3].flags |= SBAL_FLAGS_LAST_ENTRY;
++}
++
++static int zfcp_fsf_one_sbal(struct scatterlist *sg)
++{
++	return sg_is_last(sg) && sg->length <= PAGE_SIZE;
++}
++
+ static int zfcp_fsf_setup_ct_els_sbals(struct zfcp_fsf_req *req,
+ 				       struct scatterlist *sg_req,
+ 				       struct scatterlist *sg_resp,
+@@ -1020,16 +1037,16 @@ static int zfcp_fsf_setup_ct_els_sbals(s
+ 	int bytes;
  
--	wait_event_timeout(
--		wka_port->completion_wq,
--		wka_port->status == ZFCP_WKA_PORT_ONLINE ||
--		wka_port->status == ZFCP_WKA_PORT_OFFLINE,
--		HZ >> 1);
-+	wait_event(wka_port->completion_wq,
-+		   wka_port->status == ZFCP_WKA_PORT_ONLINE ||
-+		   wka_port->status == ZFCP_WKA_PORT_OFFLINE);
+ 	if (!(feat & FSF_FEATURE_ELS_CT_CHAINED_SBALS)) {
+-		if (sg_req->length > PAGE_SIZE || sg_resp->length > PAGE_SIZE ||
+-		    !sg_is_last(sg_req) || !sg_is_last(sg_resp))
++		if (!zfcp_fsf_one_sbal(sg_req) || !zfcp_fsf_one_sbal(sg_resp))
+ 			return -EOPNOTSUPP;
  
- 	if (wka_port->status == ZFCP_WKA_PORT_ONLINE) {
- 		atomic_inc(&wka_port->refcount);
---- a/drivers/s390/scsi/zfcp_fsf.c	2009-07-13 13:18:10.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_fsf.c	2009-07-13 13:18:20.000000000 +0200
-@@ -1627,10 +1627,10 @@ static void zfcp_fsf_open_wka_port_handl
- 	case FSF_ACCESS_DENIED:
- 		wka_port->status = ZFCP_WKA_PORT_OFFLINE;
- 		break;
--	case FSF_PORT_ALREADY_OPEN:
--		break;
- 	case FSF_GOOD:
- 		wka_port->handle = header->port_handle;
-+		/* fall through */
-+	case FSF_PORT_ALREADY_OPEN:
- 		wka_port->status = ZFCP_WKA_PORT_ONLINE;
+-		sbale[0].flags |= SBAL_FLAGS0_TYPE_WRITE_READ;
+-		sbale[2].addr   = sg_virt(sg_req);
+-		sbale[2].length = sg_req->length;
+-		sbale[3].addr   = sg_virt(sg_resp);
+-		sbale[3].length = sg_resp->length;
+-		sbale[3].flags |= SBAL_FLAGS_LAST_ENTRY;
++		zfcp_fsf_setup_ct_els_unchained(sbale, sg_req, sg_resp);
++		return 0;
++	}
++
++	/* use single, unchained SBAL if it can hold the request */
++	if (zfcp_fsf_one_sbal(sg_req) && zfcp_fsf_one_sbal(sg_resp)) {
++		zfcp_fsf_setup_ct_els_unchained(sbale, sg_req, sg_resp);
+ 		return 0;
  	}
- out:
+ 
 
