@@ -1,54 +1,54 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 01/13] zfcp: Fix invalid command order
-Date: Mon, 13 Jul 2009 15:06:02 +0200
-Message-ID: <20090713131042.748540000@de.ibm.com>
+Subject: [patch 10/13] zfcp: Add port only once to FC transport class
+Date: Mon, 13 Jul 2009 15:06:11 +0200
+Message-ID: <20090713131043.985315000@de.ibm.com>
 References: <20090713130601.304914000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate1.de.ibm.com ([195.212.17.161]:50284 "EHLO
+Received: from mtagate1.de.ibm.com ([195.212.17.161]:50329 "EHLO
 	mtagate1.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755816AbZGMNKo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2009 09:10:44 -0400
-Content-Disposition: inline; filename=702-zfcp-invalid-order.diff
+	with ESMTP id S1755823AbZGMNKp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2009 09:10:45 -0400
+Content-Disposition: inline; filename=716-zfcp-add-port-once.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Swen Schillig <swen@vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Christof Schmitt <christof.schmitt@de.ibm.com>
 
-From: Swen Schillig <swen@vnet.ibm.com>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-We should not modify the port status after triggering an ERP action
-for the port. It is not guaranteed which status is finally active
-when the ERP action is performed. This can lead to situations which
-are unwanted and hard to debug in case of a failure.
+When calling fc_remote_port_add make sure to not call it again before
+fc_remote_port_delete has been called. In other words, ensure to
+create a new fc_rport, then delete it, then create a new one again.
 
-Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
+Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 ---
 
- drivers/s390/scsi/zfcp_fsf.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/s390/scsi/zfcp_scsi.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_fsf.c linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c
---- linux-2.6/drivers/s390/scsi/zfcp_fsf.c	2009-07-12 21:08:41.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c	2009-07-12 21:08:56.000000000 +0200
-@@ -1731,15 +1731,16 @@ static void zfcp_fsf_close_physical_port
- 		zfcp_fsf_access_denied_port(req, port);
- 		break;
- 	case FSF_PORT_BOXED:
--		zfcp_erp_port_boxed(port, "fscpph2", req);
--		req->status |= ZFCP_STATUS_FSFREQ_ERROR |
--			       ZFCP_STATUS_FSFREQ_RETRY;
- 		/* can't use generic zfcp_erp_modify_port_status because
- 		 * ZFCP_STATUS_COMMON_OPEN must not be reset for the port */
- 		atomic_clear_mask(ZFCP_STATUS_PORT_PHYS_OPEN, &port->status);
- 		list_for_each_entry(unit, &port->unit_list_head, list)
- 			atomic_clear_mask(ZFCP_STATUS_COMMON_OPEN,
- 					  &unit->status);
-+		zfcp_erp_port_boxed(port, "fscpph2", req);
-+		req->status |= ZFCP_STATUS_FSFREQ_ERROR |
-+			       ZFCP_STATUS_FSFREQ_RETRY;
+--- a/drivers/s390/scsi/zfcp_scsi.c	2009-07-13 13:18:07.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_scsi.c	2009-07-13 13:18:14.000000000 +0200
+@@ -534,6 +534,9 @@ static void zfcp_scsi_rport_register(str
+ 	struct fc_rport_identifiers ids;
+ 	struct fc_rport *rport;
+ 
++	if (port->rport)
++		return;
 +
- 		break;
- 	case FSF_ADAPTER_STATUS_AVAILABLE:
- 		switch (header->fsf_status_qual.word[0]) {
+ 	ids.node_name = port->wwnn;
+ 	ids.port_name = port->wwpn;
+ 	ids.port_id = port->d_id;
+@@ -557,8 +560,10 @@ static void zfcp_scsi_rport_block(struct
+ {
+ 	struct fc_rport *rport = port->rport;
+ 
+-	if (rport)
++	if (rport) {
+ 		fc_remote_port_delete(rport);
++		port->rport = NULL;
++	}
+ }
+ 
+ void zfcp_scsi_schedule_rport_register(struct zfcp_port *port)
 
