@@ -1,16 +1,17 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 4/6] qla4xxx: Driver Fault Recovery
-Date: Mon, 13 Jul 2009 22:24:06 -0500
-Message-ID: <1247541848-30412-4-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 5/6] qla4xxx: Fix srb lookup in qla4xxx_eh_device_reset
+Date: Mon, 13 Jul 2009 22:24:07 -0500
+Message-ID: <1247541848-30412-5-git-send-email-michaelc@cs.wisc.edu>
 References: <1247541848-30412-1-git-send-email-michaelc@cs.wisc.edu>
  <1247541848-30412-2-git-send-email-michaelc@cs.wisc.edu>
  <1247541848-30412-3-git-send-email-michaelc@cs.wisc.edu>
+ <1247541848-30412-4-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:38064 "EHLO mx2.redhat.com"
+Received: from mx2.redhat.com ([66.187.237.31]:38067 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753251AbZGNDYP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Jul 2009 23:24:15 -0400
-In-Reply-To: <1247541848-30412-3-git-send-email-michaelc@cs.wisc.edu>
+	id S1753219AbZGNDYO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Jul 2009 23:24:14 -0400
+In-Reply-To: <1247541848-30412-4-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -18,57 +19,37 @@ Cc: Karen Higgins <karen.higgins@qlogic.com>, Mike Christie <michaelc@cs.wisc.ed
 
 From: Karen Higgins <karen.higgins@qlogic.com>
 
-Fixed driver bug where adapter recovery did not complete if there were
-outstanding commands detected on that host adapter.
+eh_device_reset may be called from scsi error handler or sg_reset, etc.
+When called from sg_reset, there will not be an associated srb.  The
+driver should lookup the corresponding device handle given information
+from the supplied cmd structure and should not assume that there exists
+an srb.
 
 Patch was made over scsi-rc-fixes.
 
 Signed-off-by: Karen Higgins <karen.higgins@qlogic.com>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/qla4xxx/ql4_os.c |   19 +++++++++----------
- 1 files changed, 9 insertions(+), 10 deletions(-)
+ drivers/scsi/qla4xxx/ql4_os.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 6841883..e1cc0d2 100644
+index e1cc0d2..40e3caf 100644
 --- a/drivers/scsi/qla4xxx/ql4_os.c
 +++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -921,18 +921,17 @@ static int qla4xxx_recover_adapter(struct scsi_qla_host *ha,
- 	/* Flush any pending ddb changed AENs */
- 	qla4xxx_process_aen(ha, FLUSH_DDB_CHANGED_AENS);
+@@ -1543,11 +1543,9 @@ static int qla4xxx_eh_device_reset(struct scsi_cmnd *cmd)
+ {
+ 	struct scsi_qla_host *ha = to_qla_host(cmd->device->host);
+ 	struct ddb_entry *ddb_entry = cmd->device->hostdata;
+-	struct srb *sp;
+ 	int ret = FAILED, stat;
  
-+	qla4xxx_flush_active_srbs(ha);
-+
- 	/* Reset the firmware.	If successful, function
- 	 * returns with ISP interrupts enabled.
- 	 */
--	if (status == QLA_SUCCESS) {
--		DEBUG2(printk("scsi%ld: %s - Performing soft reset..\n",
--			      ha->host_no, __func__));
--		qla4xxx_flush_active_srbs(ha);
--		if (ql4xxx_lock_drvr_wait(ha) == QLA_SUCCESS)
--			status = qla4xxx_soft_reset(ha);
--		else
--			status = QLA_ERROR;
--	}
-+	DEBUG2(printk("scsi%ld: %s - Performing soft reset..\n",
-+		      ha->host_no, __func__));
-+	if (ql4xxx_lock_drvr_wait(ha) == QLA_SUCCESS)
-+		status = qla4xxx_soft_reset(ha);
-+	else
-+		status = QLA_ERROR;
- 
- 	/* Flush any pending ddb changed AENs */
- 	qla4xxx_process_aen(ha, FLUSH_DDB_CHANGED_AENS);
-@@ -1661,7 +1660,7 @@ static int qla4xxx_eh_host_reset(struct scsi_cmnd *cmd)
- 	ha = (struct scsi_qla_host *) cmd->device->host->hostdata;
+-	sp = (struct srb *) cmd->SCp.ptr;
+-	if (!sp || !ddb_entry)
++	if (!ddb_entry)
+ 		return ret;
  
  	dev_info(&ha->pdev->dev,
--		   "scsi(%ld:%d:%d:%d): ADAPTER RESET ISSUED.\n", ha->host_no,
-+		   "scsi(%ld:%d:%d:%d): HOST RESET ISSUED.\n", ha->host_no,
- 		   cmd->device->channel, cmd->device->id, cmd->device->lun);
- 
- 	if (qla4xxx_wait_for_hba_online(ha) != QLA_SUCCESS) {
 -- 
 1.6.2.2
 
