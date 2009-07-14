@@ -1,50 +1,70 @@
 From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [PATCH]: Rename REQ_COPY_USER to more descriptive REQ_HAS_TAIL_SPACE_FOR_PADDING
-Date: Tue, 14 Jul 2009 20:34:43 +0400
-Message-ID: <4A5CB3A3.6000407@vlnb.net>
-References: <4A563259.5000601@vlnb.net> <20090709181713.GQ23611@kernel.dk> <4A56373C.4050409@vlnb.net>
+Subject: Re: [PATCH v2]: New implementation of scsi_execute_async()
+Date: Tue, 14 Jul 2009 22:24:56 +0400
+Message-ID: <4A5CCD78.6090709@vlnb.net>
+References: <4A563368.5040407@vlnb.net> <4A5CAFB5.1000901@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:52617 "EHLO
+Received: from moutng.kundenserver.de ([212.227.17.10]:50777 "EHLO
 	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754906AbZGNQfr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jul 2009 12:35:47 -0400
-In-Reply-To: <4A56373C.4050409@vlnb.net>
+	with ESMTP id S1755115AbZGNSYx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jul 2009 14:24:53 -0400
+In-Reply-To: <4A5CAFB5.1000901@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Tejun Heo <tj@kernel.org>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Tejun Heo <tj@kernel.org>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>, Joe Eykholt <jeykholt@cisco.com>
 
-Vladislav Bolkhovitin, on 07/09/2009 10:30 PM wrote:
-> Jens Axboe, on 07/09/2009 10:17 PM wrote:
->> On Thu, Jul 09 2009, Vladislav Bolkhovitin wrote:
->>> Currently names of REQ_COPY_USER and __REQ_COPY_USER constants are confusing,
->>> because they actually mean that the buffer for the corresponding requests
->>> has space in the tail for padding in case of DMA padding restrictions.
->> No, that's not what it means, the fact that there's padding room is a
->> side effect of the map type. So I'd suggest adding a comment above that
->> if {} in blk_rq_map_sg(), something that should have been there from the
->> beginning.
+Vladislav Bolkhovitin, on 07/14/2009 08:17 PM wrote:
+> This patch reimplements scsi_execute_async(). In the new version it's a lot less
+> hackish and also has additional features. Namely:
 > 
-> Can you elaborate a bit more about what REQ_COPY_USER should mean, please?
+> 1. Possibility to insert commands both in tail and in head of the queue.
 > 
-> As far as I can see from the sources, currently it's used to only to 
-> determine if there is the padding space. Maybe, the original meaning 
-> doesn't make sense anymore?
+> 2. Possibility to explicitly specify if the last SG element has space for padding.
+> 
+> This patch based on the previous patches posted by Tejun Heo. Comparing to them
+> it has the following improvements:
+> 
+> 1. It uses BIOs chaining instead of kmalloc()ing the whole bio.
+> 
+> 2. It uses SGs chaining instead of kmalloc()ing one big SG in case if direct
+> mapping failed (e.g. because of DMA alignment or padding).
+> 
+> 3. If direct mapping failed, if possible, it copies only the last SG element,
+> not the whole SG.
+> 
+> 4. When needed, copy_page() is used instead of memcpy() to copy the whole pages.
+> 
+> Also this patch adds and exports functions sg_copy() and sg_copy_elem(), which
+> cop one SG to another and one SG element to another respectively.
+> 
+> At the moment SCST is the only user of this functionality. It needs it, because
+> its target drivers, which are, basically, SCSI drivers, can deal only with SGs,
+> not with BIOs. But, according the latest discussions, there are other potential
+> users for of this functionality, so I'm sending this patch in a hope that it will be
+> also useful for them and eventually will be merged in the mainline kernel.
+> 
+> This patch requires previously sent patch with subject "[PATCH]: Rename REQ_COPY_USER
+> to more descriptive REQ_HAS_TAIL_SPACE_FOR_PADDING".
+> 
+> It's against 2.6.30.1, but if necessary, I can update it to any necessary
+> kernel version.
+> 
+> Signed-off-by: Vladislav Bolkhovitin <vst@vlnb.net>
+> 
+>  block/blk-map.c             |  408 ++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/scsi_lib.c     |  108 +++++++++++
+>  include/linux/blkdev.h      |    3 
+>  include/linux/scatterlist.h |    7 
+>  include/scsi/scsi_device.h  |   11 +
+>  lib/scatterlist.c           |  147 +++++++++++++++
+>  6 files changed, 683 insertions(+), 1 deletion(-)
 
-Jens,
+Oops, sorry, forgot to write the change log from v1. V2 has fixes 
+according to comments made by Joe Eykholt and Boaz Harrosh.
 
-Sorry for bothering you, but with use of the kernel-generated buffers, 
-like in the patch I sent in 
-http://groups.google.com/group/linux.kernel/browse_thread/thread/b5127eeadbef934e/5da7ec7b424d2f36?lnk=raot 
-name REQ_COPY_USER becomes quite misleading.
-
-For instance, for blk_rq_map_kern_sg() usage of REQ_COPY_USER the 
-buffers neither copied, nor from user. Plus, as I wrote above, in 2.6.30 
-REQ_COPY_USER used only to determine if there is the padding space in 
-the end. Hence, I suggested the rename.
-
-Thanks,
 Vlad
+
