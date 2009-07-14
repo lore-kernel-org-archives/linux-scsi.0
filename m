@@ -1,61 +1,44 @@
-From: Bo Liu <bo-liu@hotmail.com>
-Subject: ata1: failed to reset engine (errno=-95)
-Date: Tue, 14 Jul 2009 11:56:55 +0800
-Message-ID: <COL115-W38B10F5E215313909FF9799F230@phx.gbl>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 5/5] Make SCSI SG v4 driver enabled by default and remove
+ EXPERIMENTAL dependency, since udev depends on BSG.
+Date: Tue, 14 Jul 2009 09:38:12 +0300
+Message-ID: <4A5C27D4.5040204@panasas.com>
+References: <1247513973-24899-1-git-send-email-john@stoffel.org> <19035.36432.181354.977939@stoffel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from col0-omc4-s2.col0.hotmail.com ([65.55.34.204]:25042 "EHLO
-	col0-omc4-s2.col0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750793AbZGNECK (ORCPT
+Received: from ip67-152-220-66.z220-152-67.customer.algx.net ([67.152.220.66]:25530
+	"EHLO daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753705AbZGNGiQ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Jul 2009 00:02:10 -0400
+	Tue, 14 Jul 2009 02:38:16 -0400
+In-Reply-To: <19035.36432.181354.977939@stoffel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: John Stoffel <john@stoffel.org>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@kernel.org
 
+On 07/13/2009 10:43 PM, John Stoffel wrote:
+>>>>>> "John" == John Stoffel <john@stoffel.org> writes:
+> 
+> Dammit, I messed up here sending this patch.  I've just edited the
+> subject line and re-sent it with a bit more description.  I think this
+> patch is perfectly good to go into 2.6.31 right now, esp since it's
+> not changing code, just whether the code is turned on by default from
+> now on.
+> 
 
-Hi, ALL
- 
-      I patch these code for my 2.6.23 kernel.
- 
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1142,12 +1142,15 @@ static int ahci_reset_controller(struct ata_host *host)
-                        readl(mmio + HOST_CTL); /* flush */
-                }
- 
--               /* reset must complete within 1 second, or
-+               /*
-+                * to perform host reset, OS should set HOST_RESET
-+                * and poll until this bit is read to be "0".
-+                * reset must complete within 1 second, or
-                 * the hardware should be considered fried.
-                 */
--               ssleep(1);
-+               tmp = ata_wait_register(mmio + HOST_CTL, HOST_RESET,
-+                                       HOST_RESET, 10, 1000);
- 
--               tmp = readl(mmio + HOST_CTL);
-                if (tmp & HOST_RESET) {
-                        dev_printk(KERN_ERR, host->dev,
-                                   "controller reset failed (0x%x)\n", tmp);
+I would like it if you'd also CC stable@kernel.org on this patch. As this
+condition is already true for distros in the field.
 
- 
-      Then everything is ok, except the below error:
-      "ata1: failed to reset engine (errno=-95)."  
- 
-      Is someone know the reason? I think maybe i must patch more patches.But I don't know which.
-         
-      Thank you very much!
+[Though distros have enabled it for years and every one is using the distro's
+ .config when compiling their own Kernel, right?]
 
----
+> Thanks,
+> John
+> 
+> 
 
-Best regards
-
-
-Bo Liu
-_________________________________________________________________
-Invite your mail contacts to join your friends list with Windows Live Spaces. It's easy!
-http://spaces.live.com/spacesapi.aspx?wx_action=create&wx_url=/friends.aspx&mkt=en-us
+Thanks
+Boaz
