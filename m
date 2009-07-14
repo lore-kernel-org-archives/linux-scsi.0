@@ -1,34 +1,47 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: [PATCH] SCSI: lpfc, don't dereference NULL
-Date: Mon, 13 Jul 2009 23:25:54 +0200
-Message-ID: <1247520354-32145-1-git-send-email-jirislaby@gmail.com>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757451AbZGMVZ4@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, james.smart@emulex.com, linux-kernel@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
+From: michaelc@cs.wisc.edu
+Subject: [PATCH 1/6] libiscsi: disable bh in and abort handler.
+Date: Mon, 13 Jul 2009 22:24:03 -0500
+Message-ID: <1247541848-30412-1-git-send-email-michaelc@cs.wisc.edu>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.redhat.com ([66.187.237.31]:38047 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753213AbZGNDYM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Jul 2009 23:24:12 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-When kzalloc fails in lpfc_hba_alloc, don't dereference the NULL by
-lpfc_printf_log. Use dev_err instead.
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+The session lock can be held in the scsi eh thread or the completion
+paths run from the net softirq. This disables bhs in iscsi_eh_abort when
+taking the session lock.
+
+Patch was made over scsi-rc-fixes.
+
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/lpfc/lpfc_init.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+ drivers/scsi/libiscsi.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index fc67cc6..2452dc9 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -4130,8 +4130,7 @@ lpfc_hba_alloc(struct pci_dev *pdev)
- 	/* Allocate memory for HBA structure */
- 	phba = kzalloc(sizeof(struct lpfc_hba), GFP_KERNEL);
- 	if (!phba) {
--		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--				"1417 Failed to allocate hba struct.\n");
-+		dev_err(&pdev->dev, "failed to allocate hba struct\n");
- 		return NULL;
- 	}
- 
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 716cc34..a751f62 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -1974,10 +1974,10 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
+ 		 * good and have never sent us a successful tmf response
+ 		 * then sent more data for the cmd.
+ 		 */
+-		spin_lock(&session->lock);
++		spin_lock_bh(&session->lock);
+ 		fail_scsi_task(task, DID_ABORT);
+ 		conn->tmf_state = TMF_INITIAL;
+-		spin_unlock(&session->lock);
++		spin_unlock_bh(&session->lock);
+ 		iscsi_start_tx(conn);
+ 		goto success_unlocked;
+ 	case TMF_TIMEDOUT:
 -- 
-1.6.3.2
+1.6.2.2
+
