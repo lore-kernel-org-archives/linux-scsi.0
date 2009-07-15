@@ -1,50 +1,89 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH] SCSI: lpfc, don't dereference NULL
-Date: Wed, 15 Jul 2009 15:00:50 -0400
-Message-ID: <4A5E2762.8050502@emulex.com>
-References: <1247520354-32145-1-git-send-email-jirislaby@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+From: michaelc@cs.wisc.edu
+Subject: [PATCH 3/6] qla4xxx: add timeout handler
+Date: Wed, 15 Jul 2009 15:02:59 -0500
+Message-ID: <1247688182-15764-4-git-send-email-michaelc@cs.wisc.edu>
+References: <1247688182-15764-1-git-send-email-michaelc@cs.wisc.edu>
+ <1247688182-15764-2-git-send-email-michaelc@cs.wisc.edu>
+ <1247688182-15764-3-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:43055 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932214AbZGOTA5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2009 15:00:57 -0400
-In-Reply-To: <1247520354-32145-1-git-send-email-jirislaby@gmail.com>
+Received: from mx2.redhat.com ([66.187.237.31]:60922 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756299AbZGOUDI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Jul 2009 16:03:08 -0400
+In-Reply-To: <1247688182-15764-3-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-Thanks Jiri.
+From: Mike Christie <michaelc@cs.wisc.edu>
 
--- james s
+Recently dm-multipath began calling blk_abort_queue. This causes all the
+commands/request running on the path to have the timeout function called.
+If a path does go down, and the LLD returns DID_*, dm-multpiath will eventually
+get this error and begin to call the cmd timeout handler. qla4xxx currently
+does not set a timed out handler and so the default one could return
+BLK_EH_NOT_HANDLED and end up firing the scsi eh and stopping IO to all
+paths on the host when only one path is affected.
 
+For software and offload iscsi we have a timed out handler already.
+This patch adds a driver specific one to qla4xxx because there
+are some ddb->state and session->state and command completion races
+that are better handled in the LLD.
 
-Acked-By:  James Smart  <james.smart@emulex.com>
+This also handles the problem where if the session is down,
+we do not need the scsi eh to run until the transport code
+has tried to reconnect us.
 
+Patch was made over scsi-rc-fixes.
 
-Jiri Slaby wrote:
-> When kzalloc fails in lpfc_hba_alloc, don't dereference the NULL by
-> lpfc_printf_log. Use dev_err instead.
-> 
-> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-> ---
->  drivers/scsi/lpfc/lpfc_init.c |    3 +--
->  1 files changed, 1 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index fc67cc6..2452dc9 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -4130,8 +4130,7 @@ lpfc_hba_alloc(struct pci_dev *pdev)
->  	/* Allocate memory for HBA structure */
->  	phba = kzalloc(sizeof(struct lpfc_hba), GFP_KERNEL);
->  	if (!phba) {
-> -		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-> -				"1417 Failed to allocate hba struct.\n");
-> +		dev_err(&pdev->dev, "failed to allocate hba struct\n");
->  		return NULL;
->  	}
->  
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/scsi/qla4xxx/ql4_os.c |   17 +++++++++++++++++
+ 1 files changed, 17 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index ec9da6c..6841883 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -66,6 +66,7 @@ static int qla4xxx_sess_get_param(struct iscsi_cls_session *sess,
+ static int qla4xxx_host_get_param(struct Scsi_Host *shost,
+ 				  enum iscsi_host_param param, char *buf);
+ static void qla4xxx_recovery_timedout(struct iscsi_cls_session *session);
++static enum blk_eh_timer_return qla4xxx_eh_cmd_timed_out(struct scsi_cmnd *sc);
+ 
+ /*
+  * SCSI host template entry points
+@@ -89,6 +90,7 @@ static struct scsi_host_template qla4xxx_driver_template = {
+ 	.eh_device_reset_handler = qla4xxx_eh_device_reset,
+ 	.eh_target_reset_handler = qla4xxx_eh_target_reset,
+ 	.eh_host_reset_handler	= qla4xxx_eh_host_reset,
++	.eh_timed_out		= qla4xxx_eh_cmd_timed_out,
+ 
+ 	.slave_configure	= qla4xxx_slave_configure,
+ 	.slave_alloc		= qla4xxx_slave_alloc,
+@@ -124,6 +126,21 @@ static struct iscsi_transport qla4xxx_iscsi_transport = {
+ 
+ static struct scsi_transport_template *qla4xxx_scsi_transport;
+ 
++static enum blk_eh_timer_return qla4xxx_eh_cmd_timed_out(struct scsi_cmnd *sc)
++{
++	struct iscsi_cls_session *session;
++	struct ddb_entry *ddb_entry;
++
++	session = starget_to_session(scsi_target(sc->device));
++	ddb_entry = session->dd_data;
++
++	/* if we are not logged in then the LLD is going to clean up the cmd */
++	if (atomic_read(&ddb_entry->state) != DDB_STATE_ONLINE)
++		return BLK_EH_RESET_TIMER;
++	else
++		return BLK_EH_NOT_HANDLED;
++}
++
+ static void qla4xxx_recovery_timedout(struct iscsi_cls_session *session)
+ {
+ 	struct ddb_entry *ddb_entry = session->dd_data;
+-- 
+1.6.0.6
+
