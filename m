@@ -1,289 +1,273 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 6/6] qla4xxx: Remove hiwat code so scsi eh does not get escalated when we can make progress
-Date: Wed, 15 Jul 2009 15:03:02 -0500
-Message-ID: <1247688182-15764-7-git-send-email-michaelc@cs.wisc.edu>
-References: <1247688182-15764-1-git-send-email-michaelc@cs.wisc.edu>
- <1247688182-15764-2-git-send-email-michaelc@cs.wisc.edu>
- <1247688182-15764-3-git-send-email-michaelc@cs.wisc.edu>
- <1247688182-15764-4-git-send-email-michaelc@cs.wisc.edu>
- <1247688182-15764-5-git-send-email-michaelc@cs.wisc.edu>
- <1247688182-15764-6-git-send-email-michaelc@cs.wisc.edu>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: Re: [PATCH 0/3] scsi_dh: Make scsi device handler modules
+	automatically inserted
+Date: Wed, 15 Jul 2009 13:33:36 -0700
+Message-ID: <1247690016.9792.5.camel@chandra-ubuntu>
+References: <20090427180609.22758.93035.sendpatchset@chandra-ubuntu>
+	 <4A369320.2080202@redhat.com> <1245365306.4286.27.camel@mulgrave.site>
+	 <4A3BDFE8.3090003@redhat.com> <4A44D37A.10903@redhat.com>
+	 <1246986723.6277.63.camel@mulgrave.site> <4A538B13.8050809@redhat.com>
+	 <1246990464.6277.74.camel@mulgrave.site>
+	 <1246995401.9541.15.camel@chandra-ubuntu>
+	 <20090708155808.GA31204@infradead.org>  <4A54E65D.8050706@redhat.com>
+Reply-To: sekharan@linux.vnet.ibm.com
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:60940 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756326AbZGOUDK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Jul 2009 16:03:10 -0400
-In-Reply-To: <1247688182-15764-6-git-send-email-michaelc@cs.wisc.edu>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:45705 "EHLO
+	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932283AbZGOUah (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2009 16:30:37 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e33.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n6FKSLvV019746
+	for <linux-scsi@vger.kernel.org>; Wed, 15 Jul 2009 14:28:21 -0600
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n6FKUaiC214264
+	for <linux-scsi@vger.kernel.org>; Wed, 15 Jul 2009 14:30:36 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n6FKUYNQ024968
+	for <linux-scsi@vger.kernel.org>; Wed, 15 Jul 2009 14:30:35 -0600
+In-Reply-To: <4A54E65D.8050706@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Karen Higgins <karen.higgins@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, hare@suse.de, Peter Jones <pjones@redhat.com>
 
-From: Karen Higgins <karen.higgins@qlogic.com>
+James,
 
-Removed unnecessary hiwat code to free up the number available IOCBs.
-Eliminates unnecessary eh_ escalations due to inability to obtain IOCB
-pkt for marker.
+Please let us know which way you want us to proceed ?
 
-Patch was made over scsi-rc-fixes.
+We have been pursuing this for more than three months now.
 
-v2.
-- Remove define not used anymore and fix req_q_coun accounting.
+Thanks,
 
-Signed-off-by: Karen Higgins <karen.higgins@qlogic.com>
-[michaelc: ported patch from qlogic.com driver to upstream]
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/qla4xxx/ql4_def.h  |    2 -
- drivers/scsi/qla4xxx/ql4_iocb.c |  133 +++++++++++++++++---------------------
- drivers/scsi/qla4xxx/ql4_mbx.c  |   10 ---
- 3 files changed, 60 insertions(+), 85 deletions(-)
-
-diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-index 963e855..81b5f29 100644
---- a/drivers/scsi/qla4xxx/ql4_def.h
-+++ b/drivers/scsi/qla4xxx/ql4_def.h
-@@ -100,7 +100,6 @@
- #define MAX_SRBS		MAX_CMDS_TO_RISC
- #define MBOX_AEN_REG_COUNT	5
- #define MAX_INIT_RETRIES	5
--#define IOCB_HIWAT_CUSHION	16
- 
- /*
-  * Buffer sizes
-@@ -307,7 +306,6 @@ struct scsi_qla_host {
- 	uint32_t tot_ddbs;
- 
- 	uint16_t	iocb_cnt;
--	uint16_t	iocb_hiwat;
- 
- 	/* SRB cache. */
- #define SRB_MIN_REQ	128
-diff --git a/drivers/scsi/qla4xxx/ql4_iocb.c b/drivers/scsi/qla4xxx/ql4_iocb.c
-index 912a674..872d7af 100644
---- a/drivers/scsi/qla4xxx/ql4_iocb.c
-+++ b/drivers/scsi/qla4xxx/ql4_iocb.c
-@@ -10,9 +10,42 @@
- #include "ql4_dbg.h"
- #include "ql4_inline.h"
- 
--
- #include <scsi/scsi_tcq.h>
- 
-+static int
-+qla4xxx_space_in_req_ring(struct scsi_qla_host *ha, uint16_t req_cnt)
-+{
-+	uint16_t cnt;
-+
-+	/* Calculate number of free request entries. */
-+	if ((req_cnt + 2) >= ha->req_q_count) {
-+		cnt = (uint16_t) le32_to_cpu(ha->shadow_regs->req_q_out);
-+		if (ha->request_in < cnt)
-+			ha->req_q_count = cnt - ha->request_in;
-+		else
-+			ha->req_q_count = REQUEST_QUEUE_DEPTH -
-+						(ha->request_in - cnt);
-+	}
-+
-+	/* Check if room for request in request ring. */
-+	if ((req_cnt + 2) < ha->req_q_count)
-+		return 1;
-+	else
-+		return 0;
-+}
-+
-+static void qla4xxx_advance_req_ring_ptr(struct scsi_qla_host *ha)
-+{
-+	/* Advance request queue pointer */
-+	if (ha->request_in == (REQUEST_QUEUE_DEPTH - 1)) {
-+		ha->request_in = 0;
-+		ha->request_ptr = ha->request_ring;
-+	} else {
-+		ha->request_in++;
-+		ha->request_ptr++;
-+	}
-+}
-+
- /**
-  * qla4xxx_get_req_pkt - returns a valid entry in request queue.
-  * @ha: Pointer to host adapter structure.
-@@ -26,35 +59,18 @@
- static int qla4xxx_get_req_pkt(struct scsi_qla_host *ha,
- 			       struct queue_entry **queue_entry)
- {
--	uint16_t request_in;
--	uint8_t status = QLA_SUCCESS;
--
--	*queue_entry = ha->request_ptr;
-+	uint16_t req_cnt = 1;
- 
--	/* get the latest request_in and request_out index */
--	request_in = ha->request_in;
--	ha->request_out = (uint16_t) le32_to_cpu(ha->shadow_regs->req_q_out);
--
--	/* Advance request queue pointer and check for queue full */
--	if (request_in == (REQUEST_QUEUE_DEPTH - 1)) {
--		request_in = 0;
--		ha->request_ptr = ha->request_ring;
--	} else {
--		request_in++;
--		ha->request_ptr++;
--	}
--
--	/* request queue is full, try again later */
--	if ((ha->iocb_cnt + 1) >= ha->iocb_hiwat) {
--		/* restore request pointer */
--		ha->request_ptr = *queue_entry;
--		status = QLA_ERROR;
--	} else {
--		ha->request_in = request_in;
-+	if (qla4xxx_space_in_req_ring(ha, req_cnt)) {
-+		*queue_entry = ha->request_ptr;
- 		memset(*queue_entry, 0, sizeof(**queue_entry));
-+
-+		qla4xxx_advance_req_ring_ptr(ha);
-+		ha->req_q_count -= req_cnt;
-+		return QLA_SUCCESS;
- 	}
- 
--	return status;
-+	return QLA_ERROR;
- }
- 
- /**
-@@ -100,21 +116,14 @@ exit_send_marker:
- 	return status;
- }
- 
--static struct continuation_t1_entry* qla4xxx_alloc_cont_entry(
--	struct scsi_qla_host *ha)
-+static struct continuation_t1_entry *
-+qla4xxx_alloc_cont_entry(struct scsi_qla_host *ha)
- {
- 	struct continuation_t1_entry *cont_entry;
- 
- 	cont_entry = (struct continuation_t1_entry *)ha->request_ptr;
- 
--	/* Advance request queue pointer */
--	if (ha->request_in == (REQUEST_QUEUE_DEPTH - 1)) {
--		ha->request_in = 0;
--		ha->request_ptr = ha->request_ring;
--	} else {
--		ha->request_in++;
--		ha->request_ptr++;
--	}
-+	qla4xxx_advance_req_ring_ptr(ha);
- 
- 	/* Load packet defaults */
- 	cont_entry->hdr.entryType = ET_CONTINUE;
-@@ -197,13 +206,10 @@ int qla4xxx_send_command_to_isp(struct scsi_qla_host *ha, struct srb * srb)
- 	struct scsi_cmnd *cmd = srb->cmd;
- 	struct ddb_entry *ddb_entry;
- 	struct command_t3_entry *cmd_entry;
--
- 	int nseg;
- 	uint16_t tot_dsds;
- 	uint16_t req_cnt;
--
- 	unsigned long flags;
--	uint16_t cnt;
- 	uint32_t index;
- 	char tag[2];
- 
-@@ -217,6 +223,19 @@ int qla4xxx_send_command_to_isp(struct scsi_qla_host *ha, struct srb * srb)
- 
- 	index = (uint32_t)cmd->request->tag;
- 
-+	/*
-+	 * Check to see if adapter is online before placing request on
-+	 * request queue.  If a reset occurs and a request is in the queue,
-+	 * the firmware will still attempt to process the request, retrieving
-+	 * garbage for pointers.
-+	 */
-+	if (!test_bit(AF_ONLINE, &ha->flags)) {
-+		DEBUG2(printk("scsi%ld: %s: Adapter OFFLINE! "
-+			      "Do not issue command.\n",
-+			      ha->host_no, __func__));
-+		goto queuing_error;
-+	}
-+
- 	/* Calculate the number of request entries needed. */
- 	nseg = scsi_dma_map(cmd);
- 	if (nseg < 0)
-@@ -224,17 +243,7 @@ int qla4xxx_send_command_to_isp(struct scsi_qla_host *ha, struct srb * srb)
- 	tot_dsds = nseg;
- 
- 	req_cnt = qla4xxx_calc_request_entries(tot_dsds);
--
--	if (ha->req_q_count < (req_cnt + 2)) {
--		cnt = (uint16_t) le32_to_cpu(ha->shadow_regs->req_q_out);
--		if (ha->request_in < cnt)
--			ha->req_q_count = cnt - ha->request_in;
--		else
--			ha->req_q_count = REQUEST_QUEUE_DEPTH -
--				(ha->request_in - cnt);
--	}
--
--	if (ha->req_q_count < (req_cnt + 2))
-+	if (!qla4xxx_space_in_req_ring(ha, req_cnt))
- 		goto queuing_error;
- 
- 	/* total iocbs active */
-@@ -286,32 +295,10 @@ int qla4xxx_send_command_to_isp(struct scsi_qla_host *ha, struct srb * srb)
- 			break;
- 		}
- 
--
--	/* Advance request queue pointer */
--	ha->request_in++;
--	if (ha->request_in == REQUEST_QUEUE_DEPTH) {
--		ha->request_in = 0;
--		ha->request_ptr = ha->request_ring;
--	} else
--		ha->request_ptr++;
--
--
-+	qla4xxx_advance_req_ring_ptr(ha);
- 	qla4xxx_build_scsi_iocbs(srb, cmd_entry, tot_dsds);
- 	wmb();
- 
--	/*
--	 * Check to see if adapter is online before placing request on
--	 * request queue.  If a reset occurs and a request is in the queue,
--	 * the firmware will still attempt to process the request, retrieving
--	 * garbage for pointers.
--	 */
--	if (!test_bit(AF_ONLINE, &ha->flags)) {
--		DEBUG2(printk("scsi%ld: %s: Adapter OFFLINE! "
--			      "Do not issue command.\n",
--			      ha->host_no, __func__));
--		goto queuing_error;
--	}
--
- 	srb->cmd->host_scribble = (unsigned char *)srb;
- 
- 	/* update counters */
-diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index 051b0f5..09d6d4b 100644
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -385,16 +385,6 @@ int qla4xxx_get_firmware_status(struct scsi_qla_host * ha)
- 			      mbox_sts[0]));
- 		return QLA_ERROR;
- 	}
--
--	/* High-water mark of IOCBs */
--	ha->iocb_hiwat = mbox_sts[2];
--	if (ha->iocb_hiwat > IOCB_HIWAT_CUSHION)
--		ha->iocb_hiwat -= IOCB_HIWAT_CUSHION;
--	else
--		dev_info(&ha->pdev->dev, "WARNING!!!  You have less than %d "
--			   "firmware IOCBs available (%d).\n",
--			   IOCB_HIWAT_CUSHION, ha->iocb_hiwat);
--
- 	return QLA_SUCCESS;
- }
- 
--- 
-1.6.0.6
+chandra
+On Wed, 2009-07-08 at 14:33 -0400, Peter Jones wrote:
+> On 07/08/2009 11:58 AM, Christoph Hellwig wrote:
+> > On Tue, Jul 07, 2009 at 12:36:41PM -0700, Chandra Seetharaman wrote:
+> >> I do not know of all the out-of-tree multipath solutions and how they
+> >> behave and at what layer they interact. In effect, I haven't tested
+> >> hardware handler with other multipath solutions.
+> > 
+> > It doesn't matter anyway.  We've never cared about these out of tree
+> > problems and they'll have to find a way by themselves to deal with any
+> > changes we do to offer better multipath support upstream.
+> 
+> That's definitely how I feel about it, but James apparently disagrees.
+> Anyway, to alleviate some of his concerns, here's a different starting
+> point that maybe we could work from.  James, tell me how you feel about
+> this?
+> 
+> From: Peter Jones <pjones@redhat.com>
+> Date: Tue, 7 Jul 2009 15:08:00 -0400
+> Subject: [PATCH] Add scsi device and vendor IDs to scsi target modaliases.
+> 
+> This patch adds scsi device and vendor IDs to scsi target modaliases,
+> including the corresponding uevents and sysfs modalias file.
+> 
+> This behavior is conditional on the module parameter
+> scsi_mod.target_modalias_has_vendor, which has its default set by the
+> enabling or disabling of CONFIG_SCSI_TARGET_MODALIAS_WITH_ID .
+> ---
+>  drivers/scsi/Kconfig           |   10 +++++
+>  drivers/scsi/scsi_sysfs.c      |   72 ++++++++++++++++++++++++++++++++++++++-
+>  include/linux/string_helpers.h |    2 +
+>  include/scsi/scsi_device.h     |    1 -
+>  lib/string_helpers.c           |   32 ++++++++++++++++++
+>  5 files changed, 114 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+> index 9c23122..b18c329 100644
+> --- a/drivers/scsi/Kconfig
+> +++ b/drivers/scsi/Kconfig
+> @@ -239,6 +239,16 @@ config SCSI_LOGGING
+>  	  there should be no noticeable performance impact as long as you have
+>  	  logging turned off.
+> 
+> +config SCSI_TARGET_MODALIAS_WITH_ID
+> +	bool "Include vendor/device IDs in SCSI target modalias strings"
+> +	default n
+> +	depends on SCSI
+> +	help
+> +	  The SCSI subsystem can present modalias strings for SCSI target
+> +	  devices either with or without vendor and device ID data.
+> +	  This is experimental, and make cause undesirable interactions with
+> +	  some device management programs.
+> +
+>  config SCSI_SCAN_ASYNC
+>  	bool "Asynchronous SCSI scanning"
+>  	depends on SCSI
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index 91482f2..af4030c 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -10,6 +10,7 @@
+>  #include <linux/init.h>
+>  #include <linux/blkdev.h>
+>  #include <linux/device.h>
+> +#include <linux/string_helpers.h>
+> 
+>  #include <scsi/scsi.h>
+>  #include <scsi/scsi_device.h>
+> @@ -362,16 +363,80 @@ static int scsi_bus_match(struct device *dev, struct device_driver *gendrv)
+>  	return (sdp->inq_periph_qual == SCSI_INQ_PQ_CON)? 1: 0;
+>  }
+> 
+> +#ifdef CONFIG_SCSI_TARGET_MODALIAS_WITH_ID
+> +static unsigned int scsi_target_modalias_has_vendor = 1;
+> +#else
+> +static unsigned int scsi_target_modalias_has_vendor = 0;
+> +#endif
+> +
+> +module_param_named(target_modalias_has_vendor, scsi_target_modalias_has_vendor,
+> +		   uint, S_IRUGO|S_IWUSR);
+> +MODULE_PARAM_DESC(target_modalias_has_vendor, "control presense of vendor and device ID in scsi target modaliases");
+> +
+> +static ssize_t format_scsi_modalias(struct scsi_device *sdev, char *buffer,
+> +				    ssize_t len)
+> +{
+> +	int i = 0;
+> +
+> +	if (scsi_target_modalias_has_vendor) {
+> +		int j;
+> +		char vendor[9];
+> +		char *hex_vendor;
+> +		char model[17];
+> +		char *hex_model;
+> +	
+> +		strncpy(vendor, sdev->vendor, 8);
+> +		vendor[8] = '\0';
+> +		for (j = strlen(vendor) - 1; j >= 0; j--) {
+> +			if (vendor[j] != ' ')
+> +				break;
+> +			vendor[j] = '\0';
+> +		}
+> +		hex_vendor = string_to_hex(vendor);
+> +		if (!hex_vendor)
+> +			return -ENOMEM;
+> +	
+> +		strncpy(model, sdev->model, 16);
+> +		model[8] = '\0';
+> +		for (j = strlen(model) - 1; j >= 0; j--) {
+> +			if (model[j] != ' ')
+> +				break;
+> +			model[j] = '\0';
+> +		}
+> +		hex_model = string_to_hex(model);
+> +		if (!hex_model) {
+> +			kfree(hex_vendor);
+> +			return -ENOMEM;
+> +		}
+> +	
+> +		i = snprintf(buffer, len, "scsi:t-0x%02xv%.16sm%.32s",
+> +			sdev->type, hex_vendor, hex_model);
+> +		kfree(hex_vendor);
+> +		kfree(hex_model);
+> +	} else {
+> +		i = snprintf(buffer, len, "scsi:t-0x%02x" sdev->type);
+> +	}
+> +
+> +	return i;
+> +}
+> +
+>  static int scsi_bus_uevent(struct device *dev, struct kobj_uevent_env *env)
+>  {
+>  	struct scsi_device *sdev;
+> +	char buffer[501];
+> +	int rc;
+> 
+>  	if (dev->type != &scsi_dev_type)
+>  		return 0;
+> 
+>  	sdev = to_scsi_device(dev);
+> 
+> -	add_uevent_var(env, "MODALIAS=" SCSI_DEVICE_MODALIAS_FMT, sdev->type);
+> +	buffer[500] = '\0';
+> +	rc = format_scsi_modalias(sdev, buffer, 500);
+> +	if (rc < 0)
+> +		return rc;
+> +
+> +	add_uevent_var(env, "MODALIAS=%s", buffer);
+>  	return 0;
+>  }
+> 
+> @@ -680,8 +745,11 @@ static ssize_t
+>  sdev_show_modalias(struct device *dev, struct device_attribute *attr, char *buf)
+>  {
+>  	struct scsi_device *sdev;
+> +	ssize_t rc;
+> +
+>  	sdev = to_scsi_device(dev);
+> -	return snprintf (buf, 20, SCSI_DEVICE_MODALIAS_FMT "\n", sdev->type);
+> +	rc = format_scsi_modalias(sdev, buf, 500);
+> +	return rc;
+>  }
+>  static DEVICE_ATTR(modalias, S_IRUGO, sdev_show_modalias, NULL);
+> 
+> diff --git a/include/linux/string_helpers.h b/include/linux/string_helpers.h
+> index a3eb2f6..46a7594 100644
+> --- a/include/linux/string_helpers.h
+> +++ b/include/linux/string_helpers.h
+> @@ -13,4 +13,6 @@ enum string_size_units {
+>  int string_get_size(u64 size, enum string_size_units units,
+>  		    char *buf, int len);
+> 
+> +unsigned char *string_to_hex(const unsigned char *s);
+> +
+>  #endif
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index 3f566af..ffa7746 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -452,6 +452,5 @@ static inline int scsi_device_protection(struct scsi_device *sdev)
+> 
+>  #define MODULE_ALIAS_SCSI_DEVICE(type) \
+>  	MODULE_ALIAS("scsi:t-" __stringify(type) "*")
+> -#define SCSI_DEVICE_MODALIAS_FMT "scsi:t-0x%02x"
+> 
+>  #endif /* _SCSI_SCSI_DEVICE_H */
+> diff --git a/lib/string_helpers.c b/lib/string_helpers.c
+> index ab431d4..2ecd500 100644
+> --- a/lib/string_helpers.c
+> +++ b/lib/string_helpers.c
+> @@ -66,3 +66,35 @@ int string_get_size(u64 size, const enum string_size_units units,
+>  	return 0;
+>  }
+>  EXPORT_SYMBOL(string_get_size);
+> +
+> +/**
+> + * string_to_hex - convert a string to a series of hexidecimal values
+> + * @s:	The string to operate on
+> + *
+> + * This function returns a GFP_KERNEL allocated buffer filled with
+> + * the hexidecimal representation of the value of each character in @s .
+> + * Returns a pointer to the allocated string on success and NULL on error,
+> + * and the returned string is zero terminated.
+> + *
+> + */
+> +unsigned char *string_to_hex(const unsigned char *s)
+> +{
+> +	unsigned char *ret, *ptr;
+> +	static const unsigned char *hex = "0123456789ABCDEF";
+> +	int len;
+> +
+> +	len = strlen(s);
+> +
+> +	ret = ptr = kmalloc(len * 2 + 1, GFP_KERNEL);
+> +	if (!ret)
+> +		return NULL;
+> +
+> +	for (; *s; s++) {
+> +		*ptr++ = hex[(*s & 0xf0)>>4];
+> +		*ptr++ = hex[*s & 0x0f];
+> +	}
+> +	*ptr = '\0';
+> +
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL(string_to_hex);
+> -- 
+> 1.6.2.2
+> 
 
