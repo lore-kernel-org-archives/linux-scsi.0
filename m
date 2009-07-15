@@ -1,58 +1,62 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/4] block: use the same failfast bits for bio and	request
-Date: Wed, 15 Jul 2009 18:27:57 +0900
-Message-ID: <4A5DA11D.90401@kernel.org>
-References: <1246610898-22350-1-git-send-email-tj@kernel.org> <1246610898-22350-3-git-send-email-tj@kernel.org> <4A5071E5.8030908@panasas.com> <4A553DA4.4080408@kernel.org> <20090709133746.GA21929@infradead.org> <4A573FB9.2090202@kernel.org> <4A59D1AB.2040705@panasas.com>
+Subject: Re: [PATCH 3/4] block: implement mixed merge of different failfast
+ requests
+Date: Wed, 15 Jul 2009 18:41:53 +0900
+Message-ID: <4A5DA461.5010401@kernel.org>
+References: <1246610898-22350-1-git-send-email-tj@kernel.org> <1246610898-22350-4-git-send-email-tj@kernel.org> <4A507203.8020001@panasas.com> <4A553E36.8060006@kernel.org> <4A55B5A9.2060705@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:38814 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:33586 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752835AbZGOJ2S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Jul 2009 05:28:18 -0400
-In-Reply-To: <4A59D1AB.2040705@panasas.com>
+	id S1753219AbZGOJmN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Jul 2009 05:42:13 -0400
+In-Reply-To: <4A55B5A9.2060705@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <jens.axboe@oracle.com>, Linux Kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Niel Lambrechts <niel.lambrechts@gmail.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <axboe@kernel.dk>
-
-Hello, Boaz.
+Cc: Jens Axboe <jens.axboe@oracle.com>, Linux Kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Niel Lambrechts <niel.lambrechts@gmail.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <axboe@kernel.dk>
 
 Boaz Harrosh wrote:
->>> flags as bit positions generally only make sense if you use
->>> test/set/clear_bit, otherwise they just confuse things.
+> On 07/09/2009 03:47 AM, Tejun Heo wrote:
+>> Hello,
+>>
+>> Boaz Harrosh wrote:
+>>>> @@ -1165,6 +1165,7 @@ static int __make_request(struct request_queue *q, struct bio *bio)
+>>>>  	const unsigned short prio = bio_prio(bio);
+>>>>  	const int sync = bio_sync(bio);
+>>>>  	const int unplug = bio_unplug(bio);
+>>>> +	const unsigned int ff = bio->bi_rw & REQ_FAILFAST_MASK;
+>>> Perhaps a bio_fail_fast(bio)
+>>> and also an blk_failfast(rq).
+>> Me not being a big fan of those simple accessors, I want to avoid
+>> adding those especially the use of bio ones are mostly confined to
+>> block layer proper.
+>>
 > 
-> first please make a distinction between test/set/clear_bit and
-> test/__set/__clear_bit the former is not an option since it's not what
-> we need.
+> OK but at least take care of blk_noretry_request(), at the minimum
+> kill it, and use req->cmd_flags & REQ_FAILFAST_MASK everywhere.
 
-Block flags look like the way they do today because a while back they
-were accessed with atomic bitops (the versions w/o the underbars).
-Now that they're all inside spinlocks, it all became moot.
+Hmmm... looking at it now, looks like we can kill them all actually.
+There are a lot of inconsistencies in this space.
 
-> What can be more clear then rq_set_flags(req, QUEUE_FLAG_QUEUED) then
-> rq_clear_flags(req, QUEUE_FLAG_QUEUED) later.
+* BIO_RW_* are bit positions and accessed with liberal combination of
+  bio_rw_flagged() and manual bitops.
 
-req->cmd_flags |= QUEUE_FLAG_QUEUED / &= ~QUEUE_FLAG_QUEUED might not
-be as clear but should be sufficient, I suppose.
+* QUEUE_FLAG_* are bit positions and has rather large collection of
+  accessors.  The accessors have locking asserts.
 
-> That's why I suggested the set/clear_flags() variable size macro
-> which can  set/clear multiple bit-flags at same cost of masks, only
-> that the compiler calculates the mask in compile time.
-> 
-> This can also be good for the greps above. .eg:
-> test_flags(&rq->cmd_flags, REQ_FAILFAST_DEV, REQ_FAILFAST_TRANSPORT, REQ_FAILFAST_DRIVER);
-...
-> As said, yes, the the lower-case accessors for upper-case bits does nothing,
-> but use __set/__clear/test is a different matter that can also replace the
-> sugary need of these.
+* __REQ_* are bit positions but have counter part REQ_* bit masks
+  defined and there are whole bunch of simple specific accessors.
 
-Heh.. I don't know.  What about things like flags & mask == mask2
-test?  The vararg macros would work for most cases and I wouldn't be
-violently against them if they were already in place but I don't see
-much benefit of all those when people are already very accustomed to
-using c bitops to handle flags.
+I think all these can just be converted to bit masks (and I'll be
+happy with that) but whether that would be desirable is a different
+matter.  I think it would be best to hear what Jens' plan about flag
+cleanup is (who BTW is away till the end of the next week) before
+proceeding.
+
+Jens, can you please let us know what your plan is?
 
 Thanks.
 
