@@ -1,34 +1,32 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Pending patches
-Date: Wed, 15 Jul 2009 14:01:52 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0907151355440.3044-100000@iolanthe.rowland.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 0/6] iscsi bug fixes for 2.6.31-rc
+Date: Wed, 15 Jul 2009 13:58:25 -0500
+Message-ID: <4A5E26D1.4070209@cs.wisc.edu>
+References: <4A5BFB45.50004@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:58610 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755423AbZGOSBx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2009 14:01:53 -0400
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:48933 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932209AbZGOS62 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Jul 2009 14:58:28 -0400
+Received: from [10.15.94.199] ([65.122.67.201])
+	(authenticated bits=0)
+	by sabe.cs.wisc.edu (8.14.1/8.14.1) with ESMTP id n6FIwQax003183
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Wed, 15 Jul 2009 13:58:27 -0500
+In-Reply-To: <4A5BFB45.50004@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James:
+Mike Christie wrote:
+> The following patches were made over scsi-fix-fixes. They fix bugs in 
+> libiscsi and qla4xxx. Please apply for the next 2.6.31-rc if they are ok.
 
-Whatever happened to the 6-part patch series I submitted at the end of 
-May?
+James,
 
-0/6:	http://marc.info/?l=linux-scsi&m=124388632706196&w=2
-1/6:	http://marc.info/?l=linux-scsi&m=124388639906873&w=2
-2/6:	http://marc.info/?l=linux-scsi&m=124388664609269&w=2
-3/6:	http://marc.info/?l=linux-scsi&m=124388664009217&w=2
-4/6:	http://marc.info/?l=linux-scsi&m=124388742715268&w=2
-5/6:	http://marc.info/?l=linux-scsi&m=124388752015618&w=2
-6/6v2:	http://marc.info/?l=linux-scsi&m=124404339912876&w=2
+These patches have a bug.
 
-Is there any reason they haven't gotten into scsi-misc for the next 
-merge window?  It has been six weeks...
-
-Alan Stern
-
+I am going to fix up and resend.
