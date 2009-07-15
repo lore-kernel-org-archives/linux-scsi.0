@@ -1,75 +1,49 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 4/6] qla4xxx: Fix Driver Fault Recovery Completion
-Date: Wed, 15 Jul 2009 15:03:00 -0500
-Message-ID: <1247688182-15764-5-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 1/6] libiscsi: disable bh in and abort handler.
+Date: Wed, 15 Jul 2009 15:02:57 -0500
+Message-ID: <1247688182-15764-2-git-send-email-michaelc@cs.wisc.edu>
 References: <1247688182-15764-1-git-send-email-michaelc@cs.wisc.edu>
- <1247688182-15764-2-git-send-email-michaelc@cs.wisc.edu>
- <1247688182-15764-3-git-send-email-michaelc@cs.wisc.edu>
- <1247688182-15764-4-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:60935 "EHLO mx2.redhat.com"
+Received: from mx2.redhat.com ([66.187.237.31]:60920 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756302AbZGOUDJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Jul 2009 16:03:09 -0400
-In-Reply-To: <1247688182-15764-4-git-send-email-michaelc@cs.wisc.edu>
+	id S1756295AbZGOUDI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Jul 2009 16:03:08 -0400
+In-Reply-To: <1247688182-15764-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Karen Higgins <karen.higgins@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-From: Karen Higgins <karen.higgins@qlogic.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-Fixed driver bug where adapter recovery did not complete if there were
-outstanding commands detected on that host adapter.
+The session lock can be held in the scsi eh thread or the completion
+paths run from the net softirq. This disables bhs in iscsi_eh_abort when
+taking the session lock.
 
 Patch was made over scsi-rc-fixes.
 
-Signed-off-by: Karen Higgins <karen.higgins@qlogic.com>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/qla4xxx/ql4_os.c |   19 +++++++++----------
- 1 files changed, 9 insertions(+), 10 deletions(-)
+ drivers/scsi/libiscsi.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 6841883..e1cc0d2 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -921,18 +921,17 @@ static int qla4xxx_recover_adapter(struct scsi_qla_host *ha,
- 	/* Flush any pending ddb changed AENs */
- 	qla4xxx_process_aen(ha, FLUSH_DDB_CHANGED_AENS);
- 
-+	qla4xxx_flush_active_srbs(ha);
-+
- 	/* Reset the firmware.	If successful, function
- 	 * returns with ISP interrupts enabled.
- 	 */
--	if (status == QLA_SUCCESS) {
--		DEBUG2(printk("scsi%ld: %s - Performing soft reset..\n",
--			      ha->host_no, __func__));
--		qla4xxx_flush_active_srbs(ha);
--		if (ql4xxx_lock_drvr_wait(ha) == QLA_SUCCESS)
--			status = qla4xxx_soft_reset(ha);
--		else
--			status = QLA_ERROR;
--	}
-+	DEBUG2(printk("scsi%ld: %s - Performing soft reset..\n",
-+		      ha->host_no, __func__));
-+	if (ql4xxx_lock_drvr_wait(ha) == QLA_SUCCESS)
-+		status = qla4xxx_soft_reset(ha);
-+	else
-+		status = QLA_ERROR;
- 
- 	/* Flush any pending ddb changed AENs */
- 	qla4xxx_process_aen(ha, FLUSH_DDB_CHANGED_AENS);
-@@ -1661,7 +1660,7 @@ static int qla4xxx_eh_host_reset(struct scsi_cmnd *cmd)
- 	ha = (struct scsi_qla_host *) cmd->device->host->hostdata;
- 
- 	dev_info(&ha->pdev->dev,
--		   "scsi(%ld:%d:%d:%d): ADAPTER RESET ISSUED.\n", ha->host_no,
-+		   "scsi(%ld:%d:%d:%d): HOST RESET ISSUED.\n", ha->host_no,
- 		   cmd->device->channel, cmd->device->id, cmd->device->lun);
- 
- 	if (qla4xxx_wait_for_hba_online(ha) != QLA_SUCCESS) {
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 716cc34..a751f62 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -1974,10 +1974,10 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
+ 		 * good and have never sent us a successful tmf response
+ 		 * then sent more data for the cmd.
+ 		 */
+-		spin_lock(&session->lock);
++		spin_lock_bh(&session->lock);
+ 		fail_scsi_task(task, DID_ABORT);
+ 		conn->tmf_state = TMF_INITIAL;
+-		spin_unlock(&session->lock);
++		spin_unlock_bh(&session->lock);
+ 		iscsi_start_tx(conn);
+ 		goto success_unlocked;
+ 	case TMF_TIMEDOUT:
 -- 
 1.6.0.6
 
