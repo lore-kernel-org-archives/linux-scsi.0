@@ -1,58 +1,195 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: Re: [PATCH] fcoe: convert to %pM
-Date: Wed, 15 Jul 2009 15:06:15 -0700
-Message-ID: <1247695575.23392.5.camel@fritz>
-References: <1247671274.10754.5.camel@johannes.local>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 2/3] cciss: use only one scan thread
+Date: Wed, 15 Jul 2009 15:06:37 -0700
+Message-ID: <20090715150637.6f171759.akpm@linux-foundation.org>
+References: <20090714220239.22282.44414.stgit@bob.kio>
+	<20090714220250.22282.69385.stgit@bob.kio>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:5955 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754188AbZGOWGd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Jul 2009 18:06:33 -0400
-In-Reply-To: <1247671274.10754.5.camel@johannes.local>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:50405 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754265AbZGOWGp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Jul 2009 18:06:45 -0400
+In-Reply-To: <20090714220250.22282.69385.stgit@bob.kio>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Leech, Christopher" <christopher.leech@intel.com>
+To: Andrew Patterson <andrew.patterson@hp.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, mike.miller@hp.com, jens.axboe@oracle.com
 
-On Wed, 2009-07-15 at 08:21 -0700, Johannes Berg wrote:
-> print_mac is being deprecated, and %pM makes for smaller
-> code anyway.
+On Tue, 14 Jul 2009 16:02:50 -0600
+Andrew Patterson <andrew.patterson@hp.com> wrote:
+
+> cciss: use only one scan thread
 > 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-
-Thanks Johannes.
-
-Acked-by: Robert Love <robert.w.love@intel.com>
-
-> ---
->  drivers/scsi/fcoe/libfcoe.c |    6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
+> Replace the use of one scan kthread per controller with one per driver.
+> Use a queue to hold a list of controllers that need to be rescanned with
+> routines to add and remove controllers from the queue.
+> Fix locking and completion handling to prevent a hang during rmmod.
 > 
-> --- wireless-testing.orig/drivers/scsi/fcoe/libfcoe.c	2009-07-15 17:12:02.000000000 +0200
-> +++ wireless-testing/drivers/scsi/fcoe/libfcoe.c	2009-07-15 17:12:17.000000000 +0200
-> @@ -1104,7 +1104,6 @@ static void fcoe_ctlr_timeout(unsigned l
->  	struct fcoe_fcf *sel;
->  	struct fcoe_fcf *fcf;
->  	unsigned long next_timer = jiffies + msecs_to_jiffies(FIP_VN_KA_PERIOD);
-> -	DECLARE_MAC_BUF(buf);
->  	u8 send_ctlr_ka;
->  	u8 send_port_ka;
+>
+> ...
+>
+> --- a/drivers/block/cciss.c
+> +++ b/drivers/block/cciss.c
+> @@ -39,6 +39,7 @@
+>  #include <linux/hdreg.h>
+>  #include <linux/spinlock.h>
+>  #include <linux/compat.h>
+> +#include <linux/mutex.h>
+>  #include <asm/uaccess.h>
+>  #include <asm/io.h>
 >  
-> @@ -1128,9 +1127,8 @@ static void fcoe_ctlr_timeout(unsigned l
->  		fcf = sel;		/* the old FCF may have been freed */
->  		if (sel) {
->  			printk(KERN_INFO "libfcoe: host%d: FIP selected "
-> -			       "Fibre-Channel Forwarder MAC %s\n",
-> -			       fip->lp->host->host_no,
-> -			       print_mac(buf, sel->fcf_mac));
-> +			       "Fibre-Channel Forwarder MAC %pM\n",
-> +			       fip->lp->host->host_no, sel->fcf_mac);
->  			memcpy(fip->dest_addr, sel->fcf_mac, ETH_ALEN);
->  			fip->port_ka_time = jiffies +
->  					    msecs_to_jiffies(FIP_VN_KA_PERIOD);
-> 
-> 
+> @@ -155,6 +156,10 @@ static struct board_type products[] = {
+>  
+>  static ctlr_info_t *hba[MAX_CTLR];
+>  
+> +static struct task_struct *cciss_scan_thread;
+> +static struct mutex scan_mutex;
+> +static struct list_head scan_q;
+
+Both of the above can be initialised at compile-time.  This is a bit
+neater and prevents reviewers from having to run around checking that
+they got initialised early enough.
+
+>  static void do_cciss_request(struct request_queue *q);
+>  static irqreturn_t do_cciss_intr(int irq, void *dev_id);
+>  static int cciss_open(struct block_device *bdev, fmode_t mode);
+> @@ -189,6 +194,8 @@ static int sendcmd_withirq_core(ctlr_info_t *h, CommandList_struct *c,
+>  static int process_sendcmd_error(ctlr_info_t *h, CommandList_struct *c);
+>  
+>  static void fail_all_cmds(unsigned long ctlr);
+> +static int add_to_scan_list(struct ctlr_info *h);
+> +static void remove_from_scan_list(struct ctlr_info *h);
+
+These forward declarations are unneeded.
+
+>  static int scan_thread(void *data);
+>  static int check_for_unit_attention(ctlr_info_t *h, CommandList_struct *c);
+>  
+> @@ -3232,20 +3239,121 @@ static irqreturn_t do_cciss_intr(int irq, void *dev_id)
+>  	return IRQ_HANDLED;
+>  }
+>  
+> -static int scan_thread(void *data)
+> +/**
+> + * add_to_scan_list() - add controller to rescan queue
+> + * @h:		      Pointer to the controller.
+> + *
+> + * Adds the controller to the rescan queue if not already on the queue.
+> + *
+> + * returns 1 if added to the queue, 0 if skipped (could be on the
+> + * queue already, or the controller could be initializing or shutting
+> + * down).
+> + **/
+> +static int add_to_scan_list(struct ctlr_info *h)
+>  {
+> -	ctlr_info_t *h = data;
+> -	int rc;
+> -	DECLARE_COMPLETION_ONSTACK(wait);
+> -	h->rescan_wait = &wait;
+> +	struct ctlr_info *test_h;
+> +	int found = 0;
+> +	int ret = 0;
+> +
+> +	if (h->busy_initializing)
+> +		return 0;
+
+This looks pretty random and racy.
+
+For example, what stops busy_initializing from becoming true one
+picosecond after the test?
+
+> +	if (!mutex_trylock(&h->busy_shutting_down))
+> +		return 0;
+>  
+> -	for (;;) {
+> -		rc = wait_for_completion_interruptible(&wait);
+> -		if (kthread_should_stop())
+> +	mutex_lock(&scan_mutex);
+> +	list_for_each_entry(test_h, &scan_q, scan_list) {
+> +		if (test_h == h) {
+> +			found = 1;
+>  			break;
+> -		if (!rc)
+> +		}
+> +	}
+> +	if (!found && !h->busy_scanning) {
+> +		INIT_COMPLETION(h->scan_wait);
+> +		list_add_tail(&h->scan_list, &scan_q);
+> +		ret = 1;
+> +	}
+> +	mutex_unlock(&scan_mutex);
+> +	mutex_unlock(&h->busy_shutting_down);
+> +
+> +	return ret;
+> +}
+
+We already did init_completion(h->scan_wait) at startup time?  Doing
+the INIT_COMPLETION() here looks unusual and is hopefully unnecessary.
+
+> +/**
+> + * scan_thread() - kernel thread used to rescan controllers
+> + * @data:	 Ignored.
+> + *
+> + * A kernel thread used scan for drive topology changes on
+> + * controllers. The thread processes only one controller at a time
+> + * using a queue.  Controllers are added to the queue using
+> + * add_to_scan_list() and removed from the queue either after done
+> + * processing or using remove_from_scan_list().
+> + *
+> + * returns 0.
+> + **/
+> +static int scan_thread(void *data)
+> +{
+> +	struct ctlr_info *h;
+> +
+> +	set_current_state(TASK_INTERRUPTIBLE);
+> +	while (!kthread_should_stop()) {
+> +		mutex_lock(&scan_mutex);
+> +		if (list_empty(&scan_q)) {
+> +			h = NULL;
+> +		} else {
+> +			h = list_entry(scan_q.next,
+> +				       struct ctlr_info,
+> +				       scan_list);
+> +			list_del(&h->scan_list);
+> +			h->busy_scanning = 1;
+> +		}
+> +		mutex_unlock(&scan_mutex);
+> +
+> +		if (h) {
+> +			__set_current_state(TASK_RUNNING);
+>  			rebuild_lun_table(h, 0);
+> +			complete_all(&h->scan_wait);
+> +			mutex_lock(&scan_mutex);
+> +			h->busy_scanning = 0;
+> +			mutex_unlock(&scan_mutex);
+> +			set_current_state(TASK_INTERRUPTIBLE);
+> +		} else {
+> +			schedule();
+> +			set_current_state(TASK_INTERRUPTIBLE);
+> +			continue;
+> +		}
+>  	}
+> +
+> +	__set_current_state(TASK_RUNNING);
+>  	return 0;
+>  }
+
+This code is somewhat wrong.  Look:
+
+	set_current_state(TASK_INTERRUPTIBLE);
+	...
+		mutex_lock(&scan_mutex);
+
+now, we don't know what state the task is in.  If the mutex_lock()
+slept the we're in state TASK_RUNNING.  If the mutex_lock() didn't
+sleep then we're in state <mumble>.  Where
+<mumble>==TASK_INTERRUPTIBLE, but that's an implementation fluke.
+
+So I'd say that some rethinking/restructuring is needed here.
+
 
