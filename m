@@ -1,32 +1,50 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 0/6] iscsi bug fixes for 2.6.31-rc
-Date: Wed, 15 Jul 2009 13:58:25 -0500
-Message-ID: <4A5E26D1.4070209@cs.wisc.edu>
-References: <4A5BFB45.50004@cs.wisc.edu>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH] SCSI: lpfc, don't dereference NULL
+Date: Wed, 15 Jul 2009 15:00:50 -0400
+Message-ID: <4A5E2762.8050502@emulex.com>
+References: <1247520354-32145-1-git-send-email-jirislaby@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:48933 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932209AbZGOS62 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Jul 2009 14:58:28 -0400
-Received: from [10.15.94.199] ([65.122.67.201])
-	(authenticated bits=0)
-	by sabe.cs.wisc.edu (8.14.1/8.14.1) with ESMTP id n6FIwQax003183
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Jul 2009 13:58:27 -0500
-In-Reply-To: <4A5BFB45.50004@cs.wisc.edu>
+Received: from emulex.emulex.com ([138.239.112.1]:43055 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932214AbZGOTA5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2009 15:00:57 -0400
+In-Reply-To: <1247520354-32145-1-git-send-email-jirislaby@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-Mike Christie wrote:
-> The following patches were made over scsi-fix-fixes. They fix bugs in 
-> libiscsi and qla4xxx. Please apply for the next 2.6.31-rc if they are ok.
+Thanks Jiri.
 
-James,
+-- james s
 
-These patches have a bug.
 
-I am going to fix up and resend.
+Acked-By:  James Smart  <james.smart@emulex.com>
+
+
+Jiri Slaby wrote:
+> When kzalloc fails in lpfc_hba_alloc, don't dereference the NULL by
+> lpfc_printf_log. Use dev_err instead.
+> 
+> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+> ---
+>  drivers/scsi/lpfc/lpfc_init.c |    3 +--
+>  1 files changed, 1 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index fc67cc6..2452dc9 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -4130,8 +4130,7 @@ lpfc_hba_alloc(struct pci_dev *pdev)
+>  	/* Allocate memory for HBA structure */
+>  	phba = kzalloc(sizeof(struct lpfc_hba), GFP_KERNEL);
+>  	if (!phba) {
+> -		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+> -				"1417 Failed to allocate hba struct.\n");
+> +		dev_err(&pdev->dev, "failed to allocate hba struct\n");
+>  		return NULL;
+>  	}
+>  
