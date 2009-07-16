@@ -1,45 +1,42 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 0/3] scsi_dh: Make scsi device handler modules
- automatically inserted
-Date: Thu, 16 Jul 2009 01:16:39 +0000
-Message-ID: <1247706999.8632.8.camel@mulgrave.site>
-References: <20090427180609.22758.93035.sendpatchset@chandra-ubuntu>
-	 <4A369320.2080202@redhat.com> <1245365306.4286.27.camel@mulgrave.site>
-	 <4A3BDFE8.3090003@redhat.com> <4A44D37A.10903@redhat.com>
-	 <1246986723.6277.63.camel@mulgrave.site> <4A538B13.8050809@redhat.com>
-	 <1246990464.6277.74.camel@mulgrave.site>
-	 <1246995401.9541.15.camel@chandra-ubuntu>
-	 <20090708155808.GA31204@infradead.org>  <4A54E65D.8050706@redhat.com>
-	 <1247690016.9792.5.camel@chandra-ubuntu>
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: [PATCH 1/4] scsi: Allow hosts to be flagged as hotpluggable
+Date: Thu, 16 Jul 2009 02:26:42 +0100
+Message-ID: <20090716012642.GA1269@srcf.ucam.org>
+References: <1247701438-18266-1-git-send-email-mjg@redhat.com> <1247706748.8632.3.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:42090 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756860AbZGPBQn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Jul 2009 21:16:43 -0400
-In-Reply-To: <1247690016.9792.5.camel@chandra-ubuntu>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1247706748.8632.3.camel@mulgrave.site>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sekharan@linux.vnet.ibm.com
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, hare@suse.de, Peter Jones <pjones@redhat.com>
 
-On Wed, 2009-07-15 at 13:33 -0700, Chandra Seetharaman wrote:
-> James,
+On Thu, Jul 16, 2009 at 01:12:28AM +0000, James Bottomley wrote:
+> On Thu, 2009-07-16 at 00:43 +0100, Matthew Garrett wrote:
+> > Userspace may wish to make policy decisions based on whether a host
+> > supports device hotplug or not - for example, AHCI link power management
+> > disables hotplug, so may only be desirable on hotplug ports. Add
+> > support for marking hosts as hotpluggable in order to allow userspace to
+> > treat them appropriately.
 > 
-> Please let us know which way you want us to proceed ?
+> OK, so I don't really understand what the hotplug flag means.
+> 
+> You seem to be setting it unconditionally on most sata HBAs.  If it just
+> means "bus is hotpluggable", it should be set to 1 at initialisation and
+> the few non hot plug busses (like SPI) get to reset it.
 
-Yes, propose a mechanism that keeps manual binding but allows the dm-mp
-user an exception.  For the actual binding I still think it should be
-part of generic driver multiple binding.
+It's a tossup. PATA's not hotpluggable (in the general case), so I just 
+picked a default and went with it. Inverting it would be easy enough, I 
+guess.
 
-> We have been pursuing this for more than three months now.
+> However, by definition SATA (like SAS) is a hotplug bus ... why isn't it
+> set for some SATA controllers ... is it because the HBA itself does
+> something wrong when a hotplug event comes in?
 
-Well, the concerns I flagged at the outset haven't really changed ...
-they just seem finally to be better understood.
+Some older controllers don't provide direct access to the phy registers, 
+so there's no way to interpret hotplug events correctly.
 
-James
-
-
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
