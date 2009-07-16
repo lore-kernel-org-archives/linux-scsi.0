@@ -1,34 +1,47 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2]: New implementation of scsi_execute_async()
-Date: Thu, 16 Jul 2009 16:54:32 +0900
-Message-ID: <4A5EDCB8.1010003@kernel.org>
-References: <4A563368.5040407@vlnb.net> <4A5CAFB5.1000901@vlnb.net> <4A5D9C46.2000002@panasas.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13783] udev causes high cpu usage
+Date: Thu, 16 Jul 2009 07:56:47 GMT
+Message-ID: <200907160756.n6G7ul1i011389@demeter.kernel.org>
+References: <bug-13783-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:34261 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751299AbZGPHyw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Jul 2009 03:54:52 -0400
-In-Reply-To: <4A5D9C46.2000002@panasas.com>
+Received: from demeter.kernel.org ([140.211.167.39]:46853 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751911AbZGPH4s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jul 2009 03:56:48 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n6G7ulgn011390
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Jul 2009 07:56:47 GMT
+In-Reply-To: <bug-13783-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Vladislav Bolkhovitin <vst@vlnb.net>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>, Joe Eykholt <jeykholt@cisco.com>
+To: linux-scsi@vger.kernel.org
 
-Hello, Boaz.
+http://bugzilla.kernel.org/show_bug.cgi?id=13783
 
-Boaz Harrosh wrote:
-> It looks to me that perhaps you did not understand Tejun's code
-> His code, as I remember, was on the bio level, but here you
-> are duplicating what is done in bio level.
 
-I think he looked at my mess :-) and decided it would be cleaner to
-implement kernel sg mapping completely separately from user mapping.
-Maybe it is, I'm not sure.  I sure hope not tho.
+Kay Sievers <kay.sievers@vrfy.org> changed:
 
-Thanks.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |kay.sievers@vrfy.org
+
+
+
+
+--- Comment #5 from Kay Sievers <kay.sievers@vrfy.org>  2009-07-16 07:56:47 ---
+Something keeps generating media change events in a loop for the optical drive.
+
+If you keep "udevadm monitor" running, but kill udevd, do all events stop?
+
+The event for "sr" open()s the device. I guess, this causes a new change event
+for the SCSI LUN (which it shouldn't), and that causes a loop.
+
+Is there anything like HAL or DeviceKit-disks running which polls the optical
+drive?
 
 -- 
-tejun
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
