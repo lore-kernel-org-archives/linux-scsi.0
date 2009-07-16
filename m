@@ -1,112 +1,38 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [PATCH v2]: New implementation of scsi_execute_async()
-Date: Thu, 16 Jul 2009 22:17:18 +0400
-Message-ID: <4A5F6EAE.8020106@vlnb.net>
-References: <4A563368.5040407@vlnb.net> <4A5CAFB5.1000901@vlnb.net> <4A5EDC53.5050902@kernel.org>
+From: david@lang.hm
+Subject: Re: deterministic scsi order with async scan
+Date: Thu, 16 Jul 2009 11:31:13 -0700 (PDT)
+Message-ID: <alpine.DEB.1.10.0907161128550.9159@asgard>
+References: <alpine.DEB.1.10.0907151801040.9159@asgard> <20090716115703.GQ24310@parisc-linux.org> <alpine.DEB.1.10.0907161022540.9159@asgard> <20090716181521.GT24310@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:60163 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932416AbZGPSRL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jul 2009 14:17:11 -0400
-In-Reply-To: <4A5EDC53.5050902@kernel.org>
+Received: from mail.lang.hm ([64.81.33.126]:49145 "EHLO bifrost.lang.hm"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750839AbZGPSbS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Jul 2009 14:31:18 -0400
+In-Reply-To: <20090716181521.GT24310@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>, Joe Eykholt <jeykholt@cisco.com>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Hello, Tejun
+On Thu, 16 Jul 2009, Matthew Wilcox wrote:
 
-Tejun Heo, on 07/16/2009 11:52 AM wrote:
-> Hello, Vladislav.
-> 
-> Sorry about the delay.
-> 
-> Vladislav Bolkhovitin wrote:
->> This patch reimplements scsi_execute_async(). In the new version
->> it's a lot less hackish and also has additional features. Namely:
-> 
-> :-)
+> On Thu, Jul 16, 2009 at 10:23:45AM -0700, david@lang.hm wrote:
+>> hmm, in that case how can I troubleshoot why this system is detecting the
+>> two different PCI-E cards in different orders on different boots.
+>
+> I don't know.  Are the cards actually being detected in a different
+> order, or are the Linux drivers being bound to them in a different order?
 
-The "hackish" was not about your work, it was about the original 
-implementation, which was too often blamed as "hackish" ;-)
+I don't know, the end result is that what device is scsi1, scsi2 is 
+sometimes different when the machine boots. unfortunantly when they show 
+up in the wrong order the system can't find it's boot drive
 
->> 1. Possibility to insert commands both in tail and in head of the queue.
->>
->> 2. Possibility to explicitly specify if the last SG element has
->> space for padding.
->>
->> This patch based on the previous patches posted by Tejun
->> Heo. Comparing to them it has the following improvements:
->>
->> 1. It uses BIOs chaining instead of kmalloc()ing the whole bio.
->>
->> 2. It uses SGs chaining instead of kmalloc()ing one big SG in case
->> if direct mapping failed (e.g. because of DMA alignment or padding).
->>
->> 3. If direct mapping failed, if possible, it copies only the last SG
->> element, not the whole SG.
->>
->> 4. When needed, copy_page() is used instead of memcpy() to copy the
->> whole pages.
->>
->> Also this patch adds and exports functions sg_copy() and
->> sg_copy_elem(), which cop one SG to another and one SG element to
->> another respectively.
->>
->> At the moment SCST is the only user of this functionality. It needs
->> it, because its target drivers, which are, basically, SCSI drivers,
->> can deal only with SGs, not with BIOs. But, according the latest
->> discussions, there are other potential users for of this
->> functionality, so I'm sending this patch in a hope that it will be
->> also useful for them and eventually will be merged in the mainline
->> kernel.
->>
->> This patch requires previously sent patch with subject "[PATCH]:
->> Rename REQ_COPY_USER to more descriptive
->> REQ_HAS_TAIL_SPACE_FOR_PADDING".
-> 
-> The original patchset was focused more on unifying user and kernel and
-> user sg mapping handling.  It seems you implemented the kernel part
-> completely separately.  Wouldn't it be better to unify where possible?
+I guess that the fact that the bios is finding lilo and lilo is finding 
+the kernel to try to boot is probably indicating that the hardware is 
+being detected in the same order.
 
-I don't see a place where they can be unified from using the existing 
-user mapping functionality POV. And in your patchset it was the same. 
-Unifying in the opposite direction is possible, i.e. implementing 
-blk_rq_map_kern() via blk_rq_map_kern_sg(). But this will save a very 
-minor code piece (few tens LOCs). Would you like me to do it?
+> Are you using modules or are these drivers built-in?
 
-> Or is there some fundamental reason that can't be done that I missed?
-
-See above.
-
-> Also, code organization-wise, I think good part of the posted code
-> belongs to bio.c.
-
-Could you be more specific, please?
-
-> The tail-only copying is nice but I'm not entirely sure whether such
-> full-blown approach is necessary.  The tail padding was added
-> primarily for dumb ATAPI devices which want to transfer more bytes
-> than requested.  Having extra space at the end makes the driver's job
-> much easier as it can just overflow into the area.  Some controller do
-> have "drain after this" flag in the dma table but some simply can't
-> handle such situations properly without explicit overflow area.
-> 
-> So, being the horrid hack it is and highly unlikely to be used in
-> performance sensitive path, I think it would be better to keep the
-> implementation simple and dull.  It just isn't something worth
-> investing complexity over.  Of course, if you have a use case which
-> requires high performance tail padding, it's a different story.
-
-SCST allocates buffers in pages, so there is always a tail space, except 
-one relatively rare case of scst_local target driver, which allows usage 
-of the SCST-exported devices locally on the same host. For it the tail 
-spacing information is lost in the entrails of the block/SCSI 
-subsystems. So, why not to have the tail-only copying? Code-wise it's 
-quite simple, just few tens lines of code.
-
-Thanks,
-Vlad
+built-in
