@@ -1,47 +1,31 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13783] udev causes high cpu usage
-Date: Thu, 16 Jul 2009 07:56:47 GMT
-Message-ID: <200907160756.n6G7ul1i011389@demeter.kernel.org>
-References: <bug-13783-11613@http.bugzilla.kernel.org/>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 1/4] scsi: Allow hosts to be flagged as hotpluggable
+Date: Thu, 16 Jul 2009 08:59:02 +0100
+Message-ID: <20090716085902.782f3fd6@lxorguk.ukuu.org.uk>
+References: <1247701438-18266-1-git-send-email-mjg@redhat.com>
+	<1247706748.8632.3.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:46853 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751911AbZGPH4s (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jul 2009 03:56:48 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n6G7ulgn011390
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Jul 2009 07:56:47 GMT
-In-Reply-To: <bug-13783-11613@http.bugzilla.kernel.org/>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:40039 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753175AbZGPIE0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jul 2009 04:04:26 -0400
+In-Reply-To: <1247706748.8632.3.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Matthew Garrett <mjg@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13783
+> However, by definition SATA (like SAS) is a hotplug bus ... why isn't it
+> set for some SATA controllers ... is it because the HBA itself does
+> something wrong when a hotplug event comes in?
 
+A lot of older controllers emulate various forms of the IDE interfaces.
+They don't support detection/reporting of hotplug events to the OS. Some
+of them support "warm-plug" - where you tell the controller the device is
+going to go away, then remove it, then add a new one, then tell the
+controller. Often they need to execute code when told these things (eg to
+disable IORDY for PATA devices)
 
-Kay Sievers <kay.sievers@vrfy.org> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |kay.sievers@vrfy.org
-
-
-
-
---- Comment #5 from Kay Sievers <kay.sievers@vrfy.org>  2009-07-16 07:56:47 ---
-Something keeps generating media change events in a loop for the optical drive.
-
-If you keep "udevadm monitor" running, but kill udevd, do all events stop?
-
-The event for "sr" open()s the device. I guess, this causes a new change event
-for the SCSI LUN (which it shouldn't), and that causes a loop.
-
-Is there anything like HAL or DeviceKit-disks running which polls the optical
-drive?
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
