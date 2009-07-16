@@ -1,43 +1,33 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Pending patches
-Date: Thu, 16 Jul 2009 01:02:19 +0000
-Message-ID: <1247706139.8632.0.camel@mulgrave.site>
-References: <Pine.LNX.4.44L0.0907151355440.3044-100000@iolanthe.rowland.org>
+From: david@lang.hm
+Subject: deterministic scsi order with async scan
+Date: Wed, 15 Jul 2009 18:09:22 -0700 (PDT)
+Message-ID: <alpine.DEB.1.10.0907151801040.9159@asgard>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:45638 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756646AbZGPBCY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Jul 2009 21:02:24 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0907151355440.3044-100000@iolanthe.rowland.org>
+Received: from mail.lang.hm ([64.81.33.126]:33849 "EHLO bifrost.lang.hm"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756831AbZGPBJX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Jul 2009 21:09:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-On Wed, 2009-07-15 at 14:01 -0400, Alan Stern wrote:
-> James:
-> 
-> Whatever happened to the 6-part patch series I submitted at the end of 
-> May?
-> 
-> 0/6:	http://marc.info/?l=linux-scsi&m=124388632706196&w=2
-> 1/6:	http://marc.info/?l=linux-scsi&m=124388639906873&w=2
-> 2/6:	http://marc.info/?l=linux-scsi&m=124388664609269&w=2
-> 3/6:	http://marc.info/?l=linux-scsi&m=124388664009217&w=2
-> 4/6:	http://marc.info/?l=linux-scsi&m=124388742715268&w=2
-> 5/6:	http://marc.info/?l=linux-scsi&m=124388752015618&w=2
-> 6/6v2:	http://marc.info/?l=linux-scsi&m=124404339912876&w=2
-> 
-> Is there any reason they haven't gotten into scsi-misc for the next 
-> merge window?  It has been six weeks...
+is there any way to get deterministic device ordering with scsi async 
+scanning?
 
-According to the thread, there's no confirmation from the reporter that
-they actually fix the problem.
+currently (2.6.30) it seems that the various scsi busses are loaded in the 
+order that they are detected, which can vary from boot to boot depending 
+on how long it takes for the card to initialize.
 
-James
+would it be possible to detect the cards/drives, but not register them 
+until all the detection is complete so that they can be registered in a 
+deterministic order?
 
+having two drives on two different controllers swap positions from boot to 
+boot makes it very painful. yes I can make an initrd that fixes this up in 
+user space by examining each drive and creating links to re-order them, 
+but this is a lot of work to fix randomization that can be prevented in 
+the first place.
 
+David Lang
