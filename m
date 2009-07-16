@@ -1,56 +1,46 @@
-From: Tobias Klauser <klto@zhaw.ch>
-Subject: Re: [PATCH] fcoe: Use %pM conversion specifier
-Date: Thu, 16 Jul 2009 14:16:55 +0200
-Message-ID: <4A5F1A37.8090309@zhaw.ch>
-References: <1247735698-22060-1-git-send-email-klto@zhaw.ch>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Pending patches
+Date: Thu, 16 Jul 2009 10:07:31 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0907161005440.2891-100000@iolanthe.rowland.org>
+References: <1247706139.8632.0.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.zhaw.ch ([160.85.104.51]:42990 "EHLO mx2.zhaw.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755428AbZGPMQ6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Jul 2009 08:16:58 -0400
-In-Reply-To: <1247735698-22060-1-git-send-email-klto@zhaw.ch>
+Received: from iolanthe.rowland.org ([192.131.102.54]:34937 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932093AbZGPOHc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jul 2009 10:07:32 -0400
+In-Reply-To: <1247706139.8632.0.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, robert.w.love@intel.com, vasu.dev@intel.com, yi.zou@intel.com, christopher.leech@intel.com, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-I see this patch was already submitted by Johannes Berg just yesterday
-(message id: 1247671274.10754.5.camel () johannes ! local)
+On Thu, 16 Jul 2009, James Bottomley wrote:
 
-Sorry.
-
-On 07/16/2009 11:14 AM, Tobias Klauser wrote:
-> Use the %pM conversion specifier for printk instead of print_mac.
+> On Wed, 2009-07-15 at 14:01 -0400, Alan Stern wrote:
+> > James:
+> > 
+> > Whatever happened to the 6-part patch series I submitted at the end of 
+> > May?
+> > 
+> > 0/6:	http://marc.info/?l=linux-scsi&m=124388632706196&w=2
+> > 1/6:	http://marc.info/?l=linux-scsi&m=124388639906873&w=2
+> > 2/6:	http://marc.info/?l=linux-scsi&m=124388664609269&w=2
+> > 3/6:	http://marc.info/?l=linux-scsi&m=124388664009217&w=2
+> > 4/6:	http://marc.info/?l=linux-scsi&m=124388742715268&w=2
+> > 5/6:	http://marc.info/?l=linux-scsi&m=124388752015618&w=2
+> > 6/6v2:	http://marc.info/?l=linux-scsi&m=124404339912876&w=2
+> > 
+> > Is there any reason they haven't gotten into scsi-misc for the next 
+> > merge window?  It has been six weeks...
 > 
-> Signed-off-by: Tobias Klauser <klto@zhaw.ch>
-> ---
->  drivers/scsi/fcoe/libfcoe.c |    6 ++----
->  1 files changed, 2 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
-> index f544340..d6ed3f8 100644
-> --- a/drivers/scsi/fcoe/libfcoe.c
-> +++ b/drivers/scsi/fcoe/libfcoe.c
-> @@ -1104,7 +1104,6 @@ static void fcoe_ctlr_timeout(unsigned long arg)
->  	struct fcoe_fcf *sel;
->  	struct fcoe_fcf *fcf;
->  	unsigned long next_timer = jiffies + msecs_to_jiffies(FIP_VN_KA_PERIOD);
-> -	DECLARE_MAC_BUF(buf);
->  	u8 send_ctlr_ka;
->  	u8 send_port_ka;
->  
-> @@ -1128,9 +1127,8 @@ static void fcoe_ctlr_timeout(unsigned long arg)
->  		fcf = sel;		/* the old FCF may have been freed */
->  		if (sel) {
->  			printk(KERN_INFO "libfcoe: host%d: FIP selected "
-> -			       "Fibre-Channel Forwarder MAC %s\n",
-> -			       fip->lp->host->host_no,
-> -			       print_mac(buf, sel->fcf_mac));
-> +			       "Fibre-Channel Forwarder MAC %pM\n",
-> +			       fip->lp->host->host_no, sel->fcf_mac);
->  			memcpy(fip->dest_addr, sel->fcf_mac, ETH_ALEN);
->  			fip->port_ka_time = jiffies +
->  					    msecs_to_jiffies(FIP_VN_KA_PERIOD);
+> According to the thread, there's no confirmation from the reporter that
+> they actually fix the problem.
+
+Please reconsider them not as specific bug fixes but rather as general
+cleanups and improvements.  I.e., the sort of thing one would not send
+to Linus until the next merge window.
+
+Alan Stern
 
