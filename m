@@ -1,285 +1,765 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13311] mptsas: ioc0: removing ssp device, kernel oops
-Date: Thu, 16 Jul 2009 21:41:41 GMT
-Message-ID: <200907162141.n6GLffJH007212@demeter.kernel.org>
-References: <bug-13311-11613@http.bugzilla.kernel.org/>
+From: Paul Smith <paul@mad-scientist.net>
+Subject: Backport of: [SCSI] sg: fix races during device removal--OK?
+Date: Thu, 16 Jul 2009 18:28:38 -0400
+Message-ID: <1247783318.8762.134.camel@psmith-ubeta.netezza.com>
+Reply-To: paul@mad-scientist.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:42350 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932917AbZGPVll convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jul 2009 17:41:41 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n6GLffAf007213
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Jul 2009 21:41:41 GMT
-In-Reply-To: <bug-13311-11613@http.bugzilla.kernel.org/>
+Received: from mta.netezza.com ([12.148.248.132]:56675 "EHLO netezza.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933472AbZGPW2w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Jul 2009 18:28:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: Tony Battersby <tonyb@cybernetics.com>, Douglas Gilbert <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=3D13311
+Hi all.  We are using the current Linux 2.6.27.26 stable kernel on an
+embedded system.  We are seeing some SCSI issues, and the fix (log entry
+below) that went into 2.6.28.10 seems relevant.  We backported it to our
+version of the kernel, as included below.
+
+Most things applied without any issue but there were a few areas that
+had to be changed for 2.6.27; see the marked diffs for sg_release() and
+sg_common_write().
+
+I wonder if anyone has any comments on this: problems with the backport
+or other issues we might run into.
+
+Thanks!
+
+> commit c6517b7942fad663cc1cf3235cbe4207cf769332
+> Author: Tony Battersby <tonyb@cybernetics.com>
+> Date:   Wed Jan 21 14:45:50 2009 -0500
+> 
+>     [SCSI] sg: fix races during device removal
+> 
+>     sg has the following problems related to device removal:
+> 
+>     * opening a sg fd races with removing a device
+>     * closing a sg fd races with removing a device
+>     * /proc/scsi/sg/* access races with removing a device
+>     * command completion races with removing a device
+>     * command completion races with closing a sg fd
+>     * can rmmod sg with active commands
+> 
+>     These problems can cause kernel oopses, memory-use-after-free, or
+>     double-free errors.  This patch fixes these problems by using krefs
+>     to manage the lifetime of sg_device and sg_fd.
+> 
+>     Each command submitted to the midlevel holds a reference to sg_fd
+>     until the completion callback.  This ensures that sg_fd doesn't go
+>     away if the fd is closed with commands still outstanding.
+> 
+>     sg_fd gets the reference of sg_device (with scsi_device) and also
+>     makes sure that the sg module doesn't go away.
+> 
+>     /proc/scsi/sg/* functions don't play nicely with krefs because they
+>     give information about sg_fds which have been closed but not yet
+>     freed due to still having outstanding commands and sg_devices which
+>     have been removed but not yet freed due to still being referenced
+>     by one or more sg_fds.  To deal with this safely without removing
+>     functionality, /proc functions now access sg_device and sg_fd while
+>     holding a lock instead of using kref_get()/kref_put().
+
+Here's our backport:  
+
+diff -ur a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+--- a/drivers/scsi/sg.c	2009-07-16 16:35:47.000000000 -0400
++++ b/drivers/scsi/sg.c	2009-07-16 17:17:21.000000000 -0400
+@@ -103,6 +103,7 @@
+ #define SG_SECTOR_MSK (SG_SECTOR_SZ - 1)
+ 
+ static int sg_add(struct device *, struct class_interface *);
++static void sg_device_destroy(struct kref *kref);
+ static void sg_remove(struct device *, struct class_interface *);
+ 
+ static DEFINE_IDR(sg_index_idr);
+@@ -158,6 +159,8 @@
+ 	char next_cmd_len;	/* 0 -> automatic (def), >0 -> use on next write() */
+ 	char keep_orphan;	/* 0 -> drop orphan (def), 1 -> keep for read() */
+ 	char mmap_called;	/* 0 -> mmap() never called on this fd */
++	struct kref f_ref;
++	struct execute_work ew;
+ } Sg_fd;
+ 
+ typedef struct sg_device { /* holds the state of each scsi generic device */
+@@ -171,6 +174,7 @@
+ 	char sgdebug;		/* 0->off, 1->sense, 9->dump dev, 10-> all devs */
+ 	struct gendisk *disk;
+ 	struct cdev * cdev;	/* char_dev [sysfs: /sys/cdev/major/sg<n>] */
++	struct kref d_ref;
+ } Sg_device;
+ 
+ static int sg_fasync(int fd, struct file *filp, int mode);
+@@ -200,14 +204,15 @@
+ static struct page *sg_page_malloc(int rqSz, int lowDma, int *retSzp);
+ static void sg_page_free(struct page *page, int size);
+ static Sg_fd *sg_add_sfp(Sg_device * sdp, int dev);
+-static int sg_remove_sfp(Sg_device * sdp, Sg_fd * sfp);
+-static void __sg_remove_sfp(Sg_device * sdp, Sg_fd * sfp);
++static void sg_remove_sfp(struct kref *);
+ static Sg_request *sg_get_rq_mark(Sg_fd * sfp, int pack_id);
+ static Sg_request *sg_add_request(Sg_fd * sfp);
+ static int sg_remove_request(Sg_fd * sfp, Sg_request * srp);
+ static int sg_res_in_use(Sg_fd * sfp);
++static Sg_device *sg_lookup_dev(int dev);
+ static int sg_build_direct(Sg_request * srp, Sg_fd * sfp, int dxfer_len);
+ static Sg_device *sg_get_dev(int dev);
++static void sg_put_dev(Sg_device *sdp);
+ #ifdef CONFIG_SCSI_PROC_FS
+ static int sg_last_dev(void);
+ #endif
+@@ -244,22 +249,17 @@
+ 	nonseekable_open(inode, filp);
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_open: dev=%d, flags=0x%x\n", dev, flags));
+ 	sdp = sg_get_dev(dev);
+-	if ((!sdp) || (!sdp->device)) {
+-		unlock_kernel();
+-		return -ENXIO;
+-	}
+-	if (sdp->detached) {
+-		unlock_kernel();
+-		return -ENODEV;
++	if (IS_ERR(sdp)) {
++		retval = PTR_ERR(sdp);
++		sdp = NULL;
++		goto sg_put;
+ 	}
+ 
+ 	/* This driver's module count bumped by fops_get in <linux/fs.h> */
+ 	/* Prevent the device driver from vanishing while we sleep */
+ 	retval = scsi_device_get(sdp->device);
+-	if (retval) {
+-		unlock_kernel();
+-		return retval;
+-	}
++	if (retval)
++		goto sg_put;
+ 
+ 	if (!((flags & O_NONBLOCK) ||
+ 	      scsi_block_when_processing_errors(sdp->device))) {
+@@ -310,16 +310,20 @@
+ 	if ((sfp = sg_add_sfp(sdp, dev)))
+ 		filp->private_data = sfp;
+ 	else {
+-		if (flags & O_EXCL)
++		if (flags & O_EXCL) {
+ 			sdp->exclude = 0;	/* undo if error */
++			wake_up_interruptible(&sdp->o_excl_wait);
++		}
+ 		retval = -ENOMEM;
+ 		goto error_out;
+ 	}
+-	unlock_kernel();
+-	return 0;
+-
+-      error_out:
+-	scsi_device_put(sdp->device);
++	retval = 0;
++error_out:
++	if (retval)
++		scsi_device_put(sdp->device);
++sg_put:
++	if (sdp)
++		sg_put_dev(sdp);
+ 	unlock_kernel();
+ 	return retval;
+ }
+@@ -334,14 +338,13 @@ sg_release(struct inode *inode, struct file *filp)
+ 	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
+ 		return -ENXIO;
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_release: %s\n", sdp->disk->disk_name));
+-	sg_fasync(-1, filp, 0);	/* remove filp from async notification list */
+-	if (0 == sg_remove_sfp(sdp, sfp)) {	/* Returns 1 when sdp gone */
+-		if (!sdp->detached) {
+-			scsi_device_put(sdp->device);
+-		}
+-		sdp->exclude = 0;
+-		wake_up_interruptible(&sdp->o_excl_wait);
+-	}
++
++	sfp->closed = 1;
++
++	sdp->exclude = 0;
++	wake_up_interruptible(&sdp->o_excl_wait);
++
++	kref_put(&sfp->f_ref, sg_remove_sfp);
+ 	return 0;
+ }
+ 
+@@ -765,6 +768,7 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
+ 	hp->duration = jiffies_to_msecs(jiffies);
+ /* Now send everything of to mid-level. The next time we hear about this
+    packet is when sg_cmd_done() is called (i.e. a callback). */
++    kref_get(&sfp->f_ref); /* sg_cmd_done() does kref_put(). */
+ 	if (scsi_execute_async(sdp->device, cmnd, hp->cmd_len, data_dir, srp->data.buffer,
+ 				hp->dxfer_len, srp->data.k_use_sg, timeout,
+ 				SG_DEFAULT_RETRIES, srp, sg_cmd_done,
+@@ -1269,23 +1273,22 @@
+ sg_cmd_done(void *data, char *sense, int result, int resid)
+ {
+ 	Sg_request *srp = data;
+-	Sg_device *sdp = NULL;
++	Sg_device *sdp;
+ 	Sg_fd *sfp;
+ 	unsigned long iflags;
+ 	unsigned int ms;
++	int done = 1;
+ 
+-	if (NULL == srp) {
+-		printk(KERN_ERR "sg_cmd_done: NULL request\n");
++	if (WARN_ON(srp->done != 0))
+ 		return;
+-	}
++
+ 	sfp = srp->parentfp;
+-	if (sfp)
+-		sdp = sfp->parentdp;
+-	if ((NULL == sdp) || sdp->detached) {
+-		printk(KERN_INFO "sg_cmd_done: device detached\n");
++	if (WARN_ON(sfp == NULL))
+ 		return;
+-	}
+ 
++	sdp = sfp->parentdp;
++	if (unlikely(sdp->detached))
++		printk(KERN_INFO "sg_rq_end_io: device detached\n");
+ 
+ 	SCSI_LOG_TIMEOUT(4, printk("sg_cmd_done: %s, pack_id=%d, res=0x%x\n",
+ 		sdp->disk->disk_name, srp->header.pack_id, result));
+@@ -1321,33 +1324,26 @@
+ 	}
+ 	/* Rely on write phase to clean out srp status values, so no "else" */
+ 
+-	if (sfp->closed) {	/* whoops this fd already released, cleanup */
+-		SCSI_LOG_TIMEOUT(1, printk("sg_cmd_done: already closed, freeing ...\n"));
+-		sg_finish_rem_req(srp);
+-		srp = NULL;
+-		if (NULL == sfp->headrp) {
+-			SCSI_LOG_TIMEOUT(1, printk("sg_cmd_done: already closed, final cleanup\n"));
+-			if (0 == sg_remove_sfp(sdp, sfp)) {	/* device still present */
+-				scsi_device_put(sdp->device);
+-			}
+-			sfp = NULL;
+-		}
+-	} else if (srp && srp->orphan) {
++	write_lock_irqsave(&sfp->rq_list_lock, iflags);
++	if (unlikely(srp->orphan)) {
+ 		if (sfp->keep_orphan)
+ 			srp->sg_io_owned = 0;
+-		else {
+-			sg_finish_rem_req(srp);
+-			srp = NULL;
+-		}
++		else
++			done = 0;
+ 	}
+-	if (sfp && srp) {
+-		/* Now wake up any sg_read() that is waiting for this packet. */
+-		kill_fasync(&sfp->async_qp, SIGPOLL, POLL_IN);
+-		write_lock_irqsave(&sfp->rq_list_lock, iflags);
+-		srp->done = 1;
++	srp->done = done;
++	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
++
++	if (likely(done)) {
++		/* Now wake up any sg_read() that is waiting for this
++		 * packet.
++		 */
+ 		wake_up_interruptible(&sfp->read_wait);
+-		write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+-	}
++		kill_fasync(&sfp->async_qp, SIGPOLL, POLL_IN);
++	} else
++		sg_finish_rem_req(srp); /* call with srp->done == 0 */
++
++	kref_put(&sfp->f_ref, sg_remove_sfp);
+ }
+ 
+ static struct file_operations sg_fops = {
+@@ -1382,17 +1378,18 @@
+ 		printk(KERN_WARNING "kmalloc Sg_device failure\n");
+ 		return ERR_PTR(-ENOMEM);
+ 	}
+-	error = -ENOMEM;
++
+ 	if (!idr_pre_get(&sg_index_idr, GFP_KERNEL)) {
+ 		printk(KERN_WARNING "idr expansion Sg_device failure\n");
++		error = -ENOMEM;
+ 		goto out;
+ 	}
+ 
+ 	write_lock_irqsave(&sg_index_lock, iflags);
+-	error = idr_get_new(&sg_index_idr, sdp, &k);
+-	write_unlock_irqrestore(&sg_index_lock, iflags);
+ 
++	error = idr_get_new(&sg_index_idr, sdp, &k);
+ 	if (error) {
++		write_unlock_irqrestore(&sg_index_lock, iflags);
+ 		printk(KERN_WARNING "idr allocation Sg_device failure: %d\n",
+ 		       error);
+ 		goto out;
+@@ -1409,6 +1406,9 @@
+ 	init_waitqueue_head(&sdp->o_excl_wait);
+ 	sdp->sg_tablesize = min(q->max_hw_segments, q->max_phys_segments);
+ 	sdp->index = k;
++	kref_init(&sdp->d_ref);
++
++	write_unlock_irqrestore(&sg_index_lock, iflags);
+ 
+ 	error = 0;
+  out:
+@@ -1419,6 +1419,8 @@
+ 	return sdp;
+ 
+  overflow:
++	idr_remove(&sg_index_idr, k);
++	write_unlock_irqrestore(&sg_index_lock, iflags);
+ 	sdev_printk(KERN_WARNING, scsidp,
+ 		    "Unable to attach sg device type=%d, minor "
+ 		    "number exceeds %d\n", scsidp->type, SG_MAX_DEVS - 1);
+@@ -1508,49 +1510,46 @@
+ 	return error;
+ }
+ 
+-static void
+-sg_remove(struct device *cl_dev, struct class_interface *cl_intf)
++static void sg_device_destroy(struct kref *kref)
++{
++	struct sg_device *sdp = container_of(kref, struct sg_device, d_ref);
++	unsigned long flags;
++
++	/* CAUTION!  Note that the device can still be found via idr_find()
++	 * even though the refcount is 0.  Therefore, do idr_remove() BEFORE
++	 * any other cleanup.
++	 */
++
++	write_lock_irqsave(&sg_index_lock, flags);
++	idr_remove(&sg_index_idr, sdp->index);
++	write_unlock_irqrestore(&sg_index_lock, flags);
++
++	SCSI_LOG_TIMEOUT(3,
++		printk("sg_device_destroy: %s\n",
++			sdp->disk->disk_name));
++
++	put_disk(sdp->disk);
++	kfree(sdp);
++}
++
++static void sg_remove(struct device *cl_dev, struct class_interface *cl_intf)
+ {
+ 	struct scsi_device *scsidp = to_scsi_device(cl_dev->parent);
+ 	Sg_device *sdp = dev_get_drvdata(cl_dev);
+ 	unsigned long iflags;
+ 	Sg_fd *sfp;
+-	Sg_fd *tsfp;
+-	Sg_request *srp;
+-	Sg_request *tsrp;
+-	int delay;
+ 
+-	if (!sdp)
++	if (!sdp || sdp->detached)
+ 		return;
+ 
+-	delay = 0;
++	SCSI_LOG_TIMEOUT(3, printk("sg_remove: %s\n", sdp->disk->disk_name));
++
++	/* Need a write lock to set sdp->detached. */
+ 	write_lock_irqsave(&sg_index_lock, iflags);
+-	if (sdp->headfp) {
+-		sdp->detached = 1;
+-		for (sfp = sdp->headfp; sfp; sfp = tsfp) {
+-			tsfp = sfp->nextfp;
+-			for (srp = sfp->headrp; srp; srp = tsrp) {
+-				tsrp = srp->nextrp;
+-				if (sfp->closed || (0 == sg_srp_done(srp, sfp)))
+-					sg_finish_rem_req(srp);
+-			}
+-			if (sfp->closed) {
+-				scsi_device_put(sdp->device);
+-				__sg_remove_sfp(sdp, sfp);
+-			} else {
+-				delay = 1;
+-				wake_up_interruptible(&sfp->read_wait);
+-				kill_fasync(&sfp->async_qp, SIGPOLL,
+-					    POLL_HUP);
+-			}
+-		}
+-		SCSI_LOG_TIMEOUT(3, printk("sg_remove: dev=%d, dirty\n", sdp->index));
+-		if (NULL == sdp->headfp) {
+-			idr_remove(&sg_index_idr, sdp->index);
+-		}
+-	} else {	/* nothing active, simple case */
+-		SCSI_LOG_TIMEOUT(3, printk("sg_remove: dev=%d\n", sdp->index));
+-		idr_remove(&sg_index_idr, sdp->index);
++	sdp->detached = 1;
++	for (sfp = sdp->headfp; sfp; sfp = sfp->nextfp) {
++		wake_up_interruptible(&sfp->read_wait);
++		kill_fasync(&sfp->async_qp, SIGPOLL, POLL_HUP);
+ 	}
+ 	write_unlock_irqrestore(&sg_index_lock, iflags);
+ 
+@@ -1558,13 +1557,8 @@
+ 	device_destroy(sg_sysfs_class, MKDEV(SCSI_GENERIC_MAJOR, sdp->index));
+ 	cdev_del(sdp->cdev);
+ 	sdp->cdev = NULL;
+-	put_disk(sdp->disk);
+-	sdp->disk = NULL;
+-	if (NULL == sdp->headfp)
+-		kfree(sdp);
+ 
+-	if (delay)
+-		msleep(10);	/* dirty detach so delay device destruction */
++	sg_put_dev(sdp);
+ }
+ 
+ module_param_named(scatter_elem_sz, scatter_elem_sz, int, S_IRUGO | S_IWUSR);
+@@ -2248,22 +2242,6 @@
+ 	return resp;
+ }
+ 
+-#ifdef CONFIG_SCSI_PROC_FS
+-static Sg_request *
+-sg_get_nth_request(Sg_fd * sfp, int nth)
+-{
+-	Sg_request *resp;
+-	unsigned long iflags;
+-	int k;
+-
+-	read_lock_irqsave(&sfp->rq_list_lock, iflags);
+-	for (k = 0, resp = sfp->headrp; resp && (k < nth);
+-	     ++k, resp = resp->nextrp) ;
+-	read_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+-	return resp;
+-}
+-#endif
+-
+ /* always adds to end of list */
+ static Sg_request *
+ sg_add_request(Sg_fd * sfp)
+@@ -2339,22 +2317,6 @@
+ 	return res;
+ }
+ 
+-#ifdef CONFIG_SCSI_PROC_FS
+-static Sg_fd *
+-sg_get_nth_sfp(Sg_device * sdp, int nth)
+-{
+-	Sg_fd *resp;
+-	unsigned long iflags;
+-	int k;
+-
+-	read_lock_irqsave(&sg_index_lock, iflags);
+-	for (k = 0, resp = sdp->headfp; resp && (k < nth);
+-	     ++k, resp = resp->nextfp) ;
+-	read_unlock_irqrestore(&sg_index_lock, iflags);
+-	return resp;
+-}
+-#endif
+-
+ static Sg_fd *
+ sg_add_sfp(Sg_device * sdp, int dev)
+ {
+@@ -2369,6 +2331,7 @@
+ 	init_waitqueue_head(&sfp->read_wait);
+ 	rwlock_init(&sfp->rq_list_lock);
+ 
++	kref_init(&sfp->f_ref);
+ 	sfp->timeout = SG_DEFAULT_TIMEOUT;
+ 	sfp->timeout_user = SG_DEFAULT_TIMEOUT_USER;
+ 	sfp->force_packid = SG_DEF_FORCE_PACK_ID;
+@@ -2396,15 +2359,54 @@
+ 	sg_build_reserve(sfp, bufflen);
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_add_sfp:   bufflen=%d, k_use_sg=%d\n",
+ 			   sfp->reserve.bufflen, sfp->reserve.k_use_sg));
++
++	kref_get(&sdp->d_ref);
++	__module_get(THIS_MODULE);
+ 	return sfp;
+ }
+ 
+-static void
+-__sg_remove_sfp(Sg_device * sdp, Sg_fd * sfp)
++static void sg_remove_sfp_usercontext(struct work_struct *work)
++{
++	struct sg_fd *sfp = container_of(work, struct sg_fd, ew.work);
++	struct sg_device *sdp = sfp->parentdp;
++
++	/* Cleanup any responses which were never read(). */
++	while (sfp->headrp)
++		sg_finish_rem_req(sfp->headrp);
++
++	if (sfp->reserve.bufflen > 0) {
++		SCSI_LOG_TIMEOUT(6,
++			printk("sg_remove_sfp:    bufflen=%d, k_use_sg=%d\n",
++				(int) sfp->reserve.bufflen,
++				(int) sfp->reserve.k_use_sg));
++		sg_remove_scat(&sfp->reserve);
++	}
++
++	SCSI_LOG_TIMEOUT(6,
++		printk("sg_remove_sfp: %s, sfp=0x%p\n",
++			sdp->disk->disk_name,
++			sfp));
++	kfree(sfp);
++
++	scsi_device_put(sdp->device);
++	sg_put_dev(sdp);
++	module_put(THIS_MODULE);
++}
++
++static void sg_remove_sfp(struct kref *kref)
+ {
++	struct sg_fd *sfp = container_of(kref, struct sg_fd, f_ref);
++	struct sg_device *sdp = sfp->parentdp;
+ 	Sg_fd *fp;
+ 	Sg_fd *prev_fp;
++	unsigned long iflags;
+ 
++	/* CAUTION!  Note that sfp can still be found by walking sdp->headfp
++	 * even though the refcount is now 0.  Therefore, unlink sfp from
++	 * sdp->headfp BEFORE doing any other cleanup.
++	 */
++
++	write_lock_irqsave(&sg_index_lock, iflags);
+ 	prev_fp = sdp->headfp;
+ 	if (sfp == prev_fp)
+ 		sdp->headfp = prev_fp->nextfp;
+@@ -2417,54 +2419,10 @@
+ 			prev_fp = fp;
+ 		}
+ 	}
+-	if (sfp->reserve.bufflen > 0) {
+-		SCSI_LOG_TIMEOUT(6, 
+-			printk("__sg_remove_sfp:    bufflen=%d, k_use_sg=%d\n",
+-			(int) sfp->reserve.bufflen, (int) sfp->reserve.k_use_sg));
+-		sg_remove_scat(&sfp->reserve);
+-	}
+-	sfp->parentdp = NULL;
+-	SCSI_LOG_TIMEOUT(6, printk("__sg_remove_sfp:    sfp=0x%p\n", sfp));
+-	kfree(sfp);
+-}
+-
+-/* Returns 0 in normal case, 1 when detached and sdp object removed */
+-static int
+-sg_remove_sfp(Sg_device * sdp, Sg_fd * sfp)
+-{
+-	Sg_request *srp;
+-	Sg_request *tsrp;
+-	int dirty = 0;
+-	int res = 0;
+-
+-	for (srp = sfp->headrp; srp; srp = tsrp) {
+-		tsrp = srp->nextrp;
+-		if (sg_srp_done(srp, sfp))
+-			sg_finish_rem_req(srp);
+-		else
+-			++dirty;
+-	}
+-	if (0 == dirty) {
+-		unsigned long iflags;
++	write_unlock_irqrestore(&sg_index_lock, iflags);
++	wake_up_interruptible(&sdp->o_excl_wait);
+ 
+-		write_lock_irqsave(&sg_index_lock, iflags);
+-		__sg_remove_sfp(sdp, sfp);
+-		if (sdp->detached && (NULL == sdp->headfp)) {
+-			idr_remove(&sg_index_idr, sdp->index);
+-			kfree(sdp);
+-			res = 1;
+-		}
+-		write_unlock_irqrestore(&sg_index_lock, iflags);
+-	} else {
+-		/* MOD_INC's to inhibit unloading sg and associated adapter driver */
+-		/* only bump the access_count if we actually succeeded in
+-		 * throwing another counter on the host module */
+-		scsi_device_get(sdp->device);	/* XXX: retval ignored? */	
+-		sfp->closed = 1;	/* flag dirty state on this fd */
+-		SCSI_LOG_TIMEOUT(1, printk("sg_remove_sfp: worrisome, %d writes pending\n",
+-				  dirty));
+-	}
+-	return res;
++	execute_in_process_context(sg_remove_sfp_usercontext, &sfp->ew);
+ }
+ 
+ static int
+@@ -2553,19 +2511,38 @@
+ }
+ #endif
+ 
+-static Sg_device *
+-sg_get_dev(int dev)
++/* must be called with sg_index_lock held */
++static Sg_device *sg_lookup_dev(int dev)
+ {
+-	Sg_device *sdp;
+-	unsigned long iflags;
++	return idr_find(&sg_index_idr, dev);
++}
+ 
+-	read_lock_irqsave(&sg_index_lock, iflags);
+-	sdp = idr_find(&sg_index_idr, dev);
+-	read_unlock_irqrestore(&sg_index_lock, iflags);
++static Sg_device *sg_get_dev(int dev)
++{
++	struct sg_device *sdp;
++	unsigned long flags;
++
++	read_lock_irqsave(&sg_index_lock, flags);
++	sdp = sg_lookup_dev(dev);
++	if (!sdp)
++		sdp = ERR_PTR(-ENXIO);
++	else if (sdp->detached) {
++		/* If sdp->detached, then the refcount may already be 0, in
++		 * which case it would be a bug to do kref_get().
++		 */
++		sdp = ERR_PTR(-ENODEV);
++	} else
++		kref_get(&sdp->d_ref);
++	read_unlock_irqrestore(&sg_index_lock, flags);
+ 
+ 	return sdp;
+ }
+ 
++static void sg_put_dev(struct sg_device *sdp)
++{
++	kref_put(&sdp->d_ref, sg_device_destroy);
++}
++
+ #ifdef CONFIG_SCSI_PROC_FS
+ 
+ static struct proc_dir_entry *sg_proc_sgp = NULL;
+@@ -2822,8 +2799,10 @@
+ 	struct sg_proc_deviter * it = (struct sg_proc_deviter *) v;
+ 	Sg_device *sdp;
+ 	struct scsi_device *scsidp;
++	unsigned long iflags;
+ 
+-	sdp = it ? sg_get_dev(it->index) : NULL;
++	read_lock_irqsave(&sg_index_lock, iflags);
++	sdp = it ? sg_lookup_dev(it->index) : NULL;
+ 	if (sdp && (scsidp = sdp->device) && (!sdp->detached))
+ 		seq_printf(s, "%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
+ 			      scsidp->host->host_no, scsidp->channel,
+@@ -2834,6 +2813,7 @@
+ 			      (int) scsi_device_online(scsidp));
+ 	else
+ 		seq_printf(s, "-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\n");
++	read_unlock_irqrestore(&sg_index_lock, iflags);
+ 	return 0;
+ }
+ 
+@@ -2847,16 +2827,20 @@
+ 	struct sg_proc_deviter * it = (struct sg_proc_deviter *) v;
+ 	Sg_device *sdp;
+ 	struct scsi_device *scsidp;
++	unsigned long iflags;
+ 
+-	sdp = it ? sg_get_dev(it->index) : NULL;
++	read_lock_irqsave(&sg_index_lock, iflags);
++	sdp = it ? sg_lookup_dev(it->index) : NULL;
+ 	if (sdp && (scsidp = sdp->device) && (!sdp->detached))
+ 		seq_printf(s, "%8.8s\t%16.16s\t%4.4s\n",
+ 			   scsidp->vendor, scsidp->model, scsidp->rev);
+ 	else
+ 		seq_printf(s, "<no active device>\n");
++	read_unlock_irqrestore(&sg_index_lock, iflags);
+ 	return 0;
+ }
+ 
++/* must be called while holding sg_index_lock */
+ static void sg_proc_debug_helper(struct seq_file *s, Sg_device * sdp)
+ {
+ 	int k, m, new_interface, blen, usg;
+@@ -2866,7 +2850,8 @@
+ 	const char * cp;
+ 	unsigned int ms;
+ 
+-	for (k = 0; (fp = sg_get_nth_sfp(sdp, k)); ++k) {
++	for (k = 0, fp = sdp->headfp; fp != NULL; ++k, fp = fp->nextfp) {
++		read_lock(&fp->rq_list_lock); /* irqs already disabled */
+ 		seq_printf(s, "   FD(%d): timeout=%dms bufflen=%d "
+ 			   "(res)sgat=%d low_dma=%d\n", k + 1,
+ 			   jiffies_to_msecs(fp->timeout),
+@@ -2876,7 +2861,9 @@
+ 		seq_printf(s, "   cmd_q=%d f_packid=%d k_orphan=%d closed=%d\n",
+ 			   (int) fp->cmd_q, (int) fp->force_packid,
+ 			   (int) fp->keep_orphan, (int) fp->closed);
+-		for (m = 0; (srp = sg_get_nth_request(fp, m)); ++m) {
++		for (m = 0, srp = fp->headrp;
++				srp != NULL;
++				++m, srp = srp->nextrp) {
+ 			hp = &srp->header;
+ 			new_interface = (hp->interface_id == '\0') ? 0 : 1;
+ 			if (srp->res_used) {
+@@ -2913,6 +2900,7 @@
+ 		}
+ 		if (0 == m)
+ 			seq_printf(s, "     No requests active\n");
++		read_unlock(&fp->rq_list_lock);
+ 	}
+ }
+ 
+@@ -2925,39 +2913,34 @@
+ {
+ 	struct sg_proc_deviter * it = (struct sg_proc_deviter *) v;
+ 	Sg_device *sdp;
++	unsigned long iflags;
+ 
+ 	if (it && (0 == it->index)) {
+ 		seq_printf(s, "max_active_device=%d(origin 1)\n",
+ 			   (int)it->max);
+ 		seq_printf(s, " def_reserved_size=%d\n", sg_big_buff);
+ 	}
+-	sdp = it ? sg_get_dev(it->index) : NULL;
+-	if (sdp) {
+-		struct scsi_device *scsidp = sdp->device;
+ 
+-		if (NULL == scsidp) {
+-			seq_printf(s, "device %d detached ??\n", 
+-				   (int)it->index);
+-			return 0;
+-		}
++	read_lock_irqsave(&sg_index_lock, iflags);
++	sdp = it ? sg_lookup_dev(it->index) : NULL;
++	if (sdp && sdp->headfp) {
++		struct scsi_device *scsidp = sdp->device;
+ 
+-		if (sg_get_nth_sfp(sdp, 0)) {
+-			seq_printf(s, " >>> device=%s ",
+-				sdp->disk->disk_name);
+-			if (sdp->detached)
+-				seq_printf(s, "detached pending close ");
+-			else
+-				seq_printf
+-				    (s, "scsi%d chan=%d id=%d lun=%d   em=%d",
+-				     scsidp->host->host_no,
+-				     scsidp->channel, scsidp->id,
+-				     scsidp->lun,
+-				     scsidp->host->hostt->emulated);
+-			seq_printf(s, " sg_tablesize=%d excl=%d\n",
+-				   sdp->sg_tablesize, sdp->exclude);
+-		}
++		seq_printf(s, " >>> device=%s ", sdp->disk->disk_name);
++		if (sdp->detached)
++			seq_printf(s, "detached pending close ");
++		else
++			seq_printf
++			    (s, "scsi%d chan=%d id=%d lun=%d   em=%d",
++			     scsidp->host->host_no,
++			     scsidp->channel, scsidp->id,
++			     scsidp->lun,
++			     scsidp->host->hostt->emulated);
++		seq_printf(s, " sg_tablesize=%d excl=%d\n",
++			   sdp->sg_tablesize, sdp->exclude);
+ 		sg_proc_debug_helper(s, sdp);
+ 	}
++	read_unlock_irqrestore(&sg_index_lock, iflags);
+ 	return 0;
+ }
+ 
 
 
-
-
-
---- Comment #6 from Mike Loseke <mike.tummy@gmail.com>  2009-07-16 21:4=
-1:39 ---
-Sorry for the delay in getting back on this.
-
-On this system, the IO errors may not be completely unexpected.  The
-disk is being made available via a Promise RAID and a few times now
-we've had both controllers reset which seems to cause these kernel
-Oops' in some cases (sometimes, not always, and not on two hosts
-connected to the Promise like this during the same reset event).
-We're actively working with Promise on the controller reset issue.
-
-I do have some more dmesg/log output for another Oops that happened
-today - what's the best way to present that information here?
-
-Mike
-
-
-On Tue, Jun 9, 2009 at 3:53 PM, <bugzilla-daemon@bugzilla.kernel.org> w=
-rote:
-> http://bugzilla.kernel.org/show_bug.cgi?id=3D13311
->
->
->
->
->
-> --- Comment #5 from Andrew Morton <akpm@linux-foundation.org> =C2=A02=
-009-06-09 21:53:09 ---
-> On Tue, 9 Jun 2009 15:27:05 -0600
-> Mike Loseke <mike.tummy@gmail.com> wrote:
->
->> On Thu, May 28, 2009 at 2:00 AM, Andrew Morton
->> <akpm@linux-foundation.org> wrote:
->> >
->> > (switched to email. __Please respond via emailed reply-to-all, not=
- via the
->> > bugzilla web interface).
->> >
->> > On Thu, 14 May 2009 18:17:10 GMT bugzilla-daemon@bugzilla.kernel.o=
-rg wrote:
->> >
->> > > http://bugzilla.kernel.org/show_bug.cgi?id=3D13311
->> > >
->> > > __ __ __ __ __ __Summary: mptsas: ioc0: removing ssp device, ker=
-nel oops
->> >
->> > I'd have thought that the severity of this problem is not matched =
-by
->> > the response.
->> >
->> > > __ __ __ __ __ __Product: SCSI Drivers
->> > > __ __ __ __ __ __Version: 2.5
->> > > __ __ Kernel Version: 2.6.27.21
->> >
->> > Is it reproducible? __If so, is there any change that it can be re=
-tested
->> > under a 2.6.29-based kernel?
->>
->> We've put a 2.6.29 kernel on these two systems and experienced anoth=
-er
->> kernel oops yesterday. =C2=A0So far, we haven't been able to reprodu=
-ce it
->> on demand, but it has occurred under a heavier system load each time
->> (load average of 16 with 2,000 blocks/sec every 5 seconds writes to
->> the devices attached using the mptsas driver.
->>
->> The oops from yesterday isn't identical to the previous oops, but th=
-e
->> end result is the same where the system has to be rebooted. =C2=A0I'=
-ve
->> attached that the log capture of the oops.
->>
->> The system is identical to the original specs, just the kernel has c=
-hanged:
->>
->> # cat /proc/version
->> Linux version 2.6.29.4-0.1-default (root@tile01-primary) (gcc versio=
-n
->> 4.3.2 [gcc-4_3-branch revision 141291] (SUSE Linux) ) #1 SMP Tue May
->> 26 22:50:58 CDT 2009
->>
->> Hopefully this is helpful.
->>
->
-> So we have two issues here. =C2=A0One is the IO errors - are they une=
-xpected?
->
-> The other of course is that mptscsih_bus_reset() oopsed when trying t=
-o
-> handle those errors.
->
->
->> Jun =C2=A08 17:06:10 tile01-secondary kernel: mptbase: ioc0: LogInfo=
-(0x31140000): Originator=3D{PL}, Code=3D{IO Executed}, SubCode(0x0000)
->> Jun =C2=A08 17:06:10 tile01-secondary kernel: sd 2:0:0:0: [sda] Unha=
-ndled error code
->> Jun =C2=A08 17:06:10 tile01-secondary kernel: sd 2:0:0:0: [sda] Resu=
-lt: hostbyte=3DDID_NO_CONNECT driverbyte=3DDRIVER_OK,SUGGEST_OK
->> Jun =C2=A08 17:06:10 tile01-secondary kernel: end_request: I/O error=
-, dev sda, sector 207
->> Jun =C2=A08 17:06:10 tile01-secondary kernel: device-mapper: multipa=
-th: Failing path 8:0.
->> Jun =C2=A08 17:06:10 tile01-secondary kernel: mptbase: ioc0: LogInfo=
-(0x31140000): Originator=3D{PL}, Code=3D{IO Executed}, SubCode(0x0000)
->> Jun =C2=A08 17:06:10 tile01-secondary kernel: sd 2:0:0:0: [sda] Unha=
-ndled error code
->> Jun =C2=A08 17:06:10 tile01-secondary kernel: sd 2:0:0:0: [sda] Resu=
-lt: hostbyte=3DDID_NO_CONNECT driverbyte=3DDRIVER_OK,SUGGEST_OK
->> Jun =C2=A08 17:06:10 tile01-secondary kernel: end_request: I/O error=
-, dev sda, sector 65679
->> Jun =C2=A08 17:06:10 tile01-secondary kernel: mptbase: ioc0: LogInfo=
-(0x31140000): Originator=3D{PL}, Code=3D{IO Executed}, SubCode(0x0000)
->> Jun =C2=A08 17:06:10 tile01-secondary kernel: mptbase: ioc0: LogInfo=
-(0x31140000): Originator=3D{PL}, Code=3D{IO Executed}, SubCode(0x0000)
->> Jun =C2=A08 17:06:10 tile01-secondary kernel: mptbase: ioc0: LogInfo=
-(0x31140000): Originator=3D{PL}, Code=3D{IO Executed}, SubCode(0x0000)
->> Jun =C2=A08 17:06:10 tile01-secondary kernel: mptbase: ioc0: LogInfo=
-(0x31140000): Originator=3D{PL}, Code=3D{IO Executed}, SubCode(0x0000)
->> Jun =C2=A08 17:06:10 tile01-secondary kernel: mptbase: ioc0: LogInfo=
-(0x31140000): Originator=3D{PL}, Code=3D{IO Executed}, SubCode(0x0000)
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: mptscsih: ioc0: attemp=
-ting task abort! (sc=3Dffff88021e08e880)
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: scsi 2:0:0:0: [sda] CD=
-B: Write(10): 2a 00 00 00 f0 87 00 04 00 00
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: mptscsih: ioc0: task a=
-bort: SUCCESS (sc=3Dffff88021e08e880)
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: mptscsih: ioc0: attemp=
-ting task abort! (sc=3Dffff880106684dc0)
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: scsi 2:0:0:0: [sda] CD=
-B: Write(10): 2a 00 00 00 f4 87 00 04 00 00
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: mptscsih: ioc0: task a=
-bort: SUCCESS (sc=3Dffff880106684dc0)
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: mptscsih: ioc0: attemp=
-ting task abort! (sc=3Dffff8803b0a131c0)
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: scsi 2:0:0:0: [sda] CD=
-B: Write(10): 2a 00 00 00 f8 87 00 04 00 00
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: mptscsih: ioc0: task a=
-bort: SUCCESS (sc=3Dffff8803b0a131c0)
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: mptscsih: ioc0: attemp=
-ting task abort! (sc=3Dffff8803b0a13ec0)
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: scsi 2:0:0:0: [sda] CD=
-B: Write(10): 2a 00 00 00 fc 87 00 00 08 00
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: mptscsih: ioc0: task a=
-bort: SUCCESS (sc=3Dffff8803b0a13ec0)
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: mptscsih: ioc0: attemp=
-ting task abort! (sc=3Dffff8803b0a13cc0)
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: scsi 2:0:0:0: [sda] CD=
-B: Write(10): 2a 00 00 00 fc 8f 00 04 00 00
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: mptscsih: ioc0: task a=
-bort: SUCCESS (sc=3Dffff8803b0a13cc0)
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: mptscsih: ioc0: attemp=
-ting bus reset! (sc=3Dffff88021e08e880)
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: scsi 2:0:0:0: [sda] CD=
-B: Write(10): 2a 00 00 00 f0 87 00 04 00 00
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: BUG: unable to handle =
-kernel NULL pointer dereference at (null)
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: IP: [<ffffffffa008cc98=
->] mptscsih_bus_reset+0x97/0xfa [mptscsih]
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: PGD 82944c067 PUD 82e4=
-e9067 PMD 0
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: Oops: 0000 [#1] SMP
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: last sysfs file: /sys/=
-kernel/uevent_seqnum
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: CPU 1
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: Modules linked in: rei=
-serfs dm_round_robin ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 xt_sta=
-te nf_conntrack xt_tcpudp iptable_filter dm_multipath scsi_dh ip_tables=
- iscsi_trgt crc32c x_tables 8021q garp stp bonding ipv6 cpufreq_conserv=
-ative cpufreq_userspace cpufreq_powersave powernow_k8 ext3 jbd mbcache =
-loop dm_mod qla4xxx scsi_transport_iscsi qla3xxx rtc_cmos i2c_nforce2 r=
-tc_core rtc_lib shpchp forcedeth pcspkr joydev serio_raw mptctl pci_hot=
-plug i2c_core button sr_mod sg cdrom usbhid hid ohci_hcd ehci_hcd sd_mo=
-d crc_t10dif usbcore edd xfs exportfs fan 3w_9xxx ide_pci_generic amd74=
-xx ide_core ata_generic thermal processor thermal_sys hwmon sata_nv mpt=
-sas mptscsih mptbase scsi_transport_sas pata_amd libata scsi_mod
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: Pid: 175, comm: scsi_e=
-h_2 Not tainted 2.6.29.4-0.1-default #1 H8DM3-2
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: RIP: 0010:[<ffffffffa0=
-08cc98>] =C2=A0[<ffffffffa008cc98>] mptscsih_bus_reset+0x97/0xfa [mptsc=
-sih]
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: RSP: 0018:ffff88083354=
-ddb0 =C2=A0EFLAGS: 00010203
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: RAX: ffff8804359cb002 =
-RBX: ffff88043368a560 RCX: ffff88021e08e880
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: RDX: 0000000000000000 =
-RSI: 0000000000000004 RDI: ffff88043368a560
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: RBP: ffff88083354dde0 =
-R08: 0000000000000002 R09: 0000000000000000
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: R10: ffffffff80d7e600 =
-R11: 0000000000000010 R12: ffff88021e08e880
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: R13: ffff8804335a3000 =
-R14: ffff8804335a3008 R15: ffff88083354dee0
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: FS: =C2=A000007f66c712=
-2740(0000) GS:ffff88043596edc0(0000) knlGS:0000000000000000
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: CS: =C2=A00010 DS: 001=
-8 ES: 0018 CR0: 000000008005003b
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: CR2: 0000000000000000 =
-CR3: 000000082d955000 CR4: 00000000000006e0
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: DR0: 0000000000000000 =
-DR1: 0000000000000000 DR2: 0000000000000000
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: DR3: 0000000000000000 =
-DR6: 00000000ffff0ff0 DR7: 0000000000000400
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: Process scsi_eh_2 (pid=
-: 175, threadinfo ffff88083354c000, task ffff8808331082c0)
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: Stack:
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: =C2=A0ffff8804337b4810=
- 0000000000000000 ffff88021e08e880 0000000000002003
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: =C2=A0ffff8804359cb000=
- 0000000000000000 ffff88083354de00 ffffffffa00034ee
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: =C2=A0ffff88021e08e880=
- 0000000000000000 ffff88083354de60 ffffffffa000441f
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: Call Trace:
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: =C2=A0[<ffffffffa00034=
-ee>] scsi_try_bus_reset+0x52/0xde [scsi_mod]
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: =C2=A0[<ffffffffa00044=
-1f>] scsi_eh_ready_devs+0x4c3/0x737 [scsi_mod]
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: =C2=A0[<ffffffffa0004b=
-fe>] scsi_error_handler+0x37d/0x51b [scsi_mod]
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: =C2=A0[<ffffffff8022f2=
-ea>] ? __wake_up_common+0x46/0x76
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: =C2=A0[<ffffffffa00048=
-81>] ? scsi_error_handler+0x0/0x51b [scsi_mod]
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: =C2=A0[<ffffffff802519=
-52>] kthread+0x49/0x76
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: =C2=A0[<ffffffff8020d0=
-3a>] child_rip+0xa/0x20
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: =C2=A0[<ffffffff802519=
-09>] ? kthread+0x0/0x76
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: =C2=A0[<ffffffff8020d0=
-30>] ? child_rip+0x0/0x20
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: Code: 00 48 83 f8 ff 7=
-4 0a 48 ff c0 48 89 83 b0 00 00 00 49 8b 04 24 48 89 df be 04 00 00 00 =
-48 8b 90 88 00 00 00 41 8a 85 98 00 00 00 <48> 8b 12 3c 01 19 c0 45 31 =
-c9 45 31 c0 83 e0 1e 31 c9 0f b6 52
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: RIP =C2=A0[<ffffffffa0=
-08cc98>] mptscsih_bus_reset+0x97/0xfa [mptscsih]
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: =C2=A0RSP <ffff8808335=
-4ddb0>
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: CR2: 0000000000000000
->> Jun =C2=A08 17:06:11 tile01-secondary kernel: ---[ end trace 54f83dc=
-c0f7b0b26 ]---
->>
->>
->
-> --
-> Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Dema=
-il
-> ------- You are receiving this mail because: -------
-> You reported the bug.
->
-
---=20
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Demail
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
