@@ -1,46 +1,72 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Pending patches
-Date: Thu, 16 Jul 2009 10:07:31 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0907161005440.2891-100000@iolanthe.rowland.org>
-References: <1247706139.8632.0.camel@mulgrave.site>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH 1/4] scsi: Allow hosts to be flagged as hotpluggable
+Date: Thu, 16 Jul 2009 16:30:13 +0200
+Message-ID: <4A5F3975.70503@s5r6.in-berlin.de>
+References: <1247701438-18266-1-git-send-email-mjg@redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:34937 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932093AbZGPOHc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jul 2009 10:07:32 -0400
-In-Reply-To: <1247706139.8632.0.camel@mulgrave.site>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1247701438-18266-1-git-send-email-mjg@redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Matthew Garrett <mjg@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Thu, 16 Jul 2009, James Bottomley wrote:
+Matthew Garrett wrote:
+> Userspace may wish to make policy decisions based on whether a host
+> supports device hotplug or not - for example, AHCI link power management
+> disables hotplug, so may only be desirable on hotplug ports. Add
+> support for marking hosts as hotpluggable in order to allow userspace to
+> treat them appropriately.
+[...]
+> --- a/include/scsi/scsi_host.h
+> +++ b/include/scsi/scsi_host.h
+> @@ -421,6 +421,7 @@ struct scsi_host_template {
+>  	 */
+>  	unsigned unchecked_isa_dma:1;
+>  
+> +
+>  	/*
+>  	 * True if this host adapter can make good use of clustering.
+>  	 * I originally thought that if the tablesize was large that it
+> @@ -447,6 +448,11 @@ struct scsi_host_template {
+>  	unsigned ordered_tag:1;
+>  
+>  	/*
+> +	 * True if host supports hotplugging
+> +	 */
+> +	unsigned hotpluggable:1;
+> +
 
-> On Wed, 2009-07-15 at 14:01 -0400, Alan Stern wrote:
-> > James:
-> > 
-> > Whatever happened to the 6-part patch series I submitted at the end of 
-> > May?
-> > 
-> > 0/6:	http://marc.info/?l=linux-scsi&m=124388632706196&w=2
-> > 1/6:	http://marc.info/?l=linux-scsi&m=124388639906873&w=2
-> > 2/6:	http://marc.info/?l=linux-scsi&m=124388664609269&w=2
-> > 3/6:	http://marc.info/?l=linux-scsi&m=124388664009217&w=2
-> > 4/6:	http://marc.info/?l=linux-scsi&m=124388742715268&w=2
-> > 5/6:	http://marc.info/?l=linux-scsi&m=124388752015618&w=2
-> > 6/6v2:	http://marc.info/?l=linux-scsi&m=124404339912876&w=2
-> > 
-> > Is there any reason they haven't gotten into scsi-misc for the next 
-> > merge window?  It has been six weeks...
-> 
-> According to the thread, there's no confirmation from the reporter that
-> they actually fix the problem.
+The comment should specify what the actual effects of the flag are.
 
-Please reconsider them not as specific bug fixes but rather as general
-cleanups and improvements.  I.e., the sort of thing one would not send
-to Linus until the next merge window.
+(Provides the default for Scsi_Host.hotpluggable?)
 
-Alan Stern
+> +	/*
+>  	 * Countdown for host blocking with no commands outstanding.
+>  	 */
+>  	unsigned int max_host_blocked;
+> @@ -622,6 +628,9 @@ struct Scsi_Host {
+>  	/* Asynchronous scan in progress */
+>  	unsigned async_scan:1;
+>  
+> +	/* 1 if hotpluggable, 0 if not */
+> +	unsigned hotpluggable:1;
+> +
 
+Ditto here.
+
+(Is used by power management infrastructure to decide over runtime PM
+policy?  I.e. don't enter power states which would prevent the port from
+detecting/ reporting hotplug events?)
+
+>  	/*
+>  	 * Optional work queue to be utilized by the transport
+>  	 */
+
+
+-- 
+Stefan Richter
+-=====-==--= -=== =----
+http://arcgraph.de/sr/
