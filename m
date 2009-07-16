@@ -1,50 +1,60 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 2/3] cciss: use only one scan thread
-Date: Wed, 15 Jul 2009 21:33:48 -0700
-Message-ID: <20090715213348.0805073f.akpm@linux-foundation.org>
+From: Andrew Patterson <andrew.patterson@hp.com>
+Subject: Re: [PATCH 0/3] cciss rmmod/scan-thread fixes
+Date: Thu, 16 Jul 2009 05:45:42 +0000
+Message-ID: <1247723142.25954.86.camel@grinch>
 References: <20090714220239.22282.44414.stgit@bob.kio>
-	<20090714220250.22282.69385.stgit@bob.kio>
-	<20090715150637.6f171759.akpm@linux-foundation.org>
-	<1247717759.25954.75.camel@grinch>
+	 <20090715150809.8fd350b9.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753368AbZGPEd7@vger.kernel.org>
-In-Reply-To: <1247717759.25954.75.camel@grinch>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757531AbZGPFpt@vger.kernel.org>
+In-Reply-To: <20090715150809.8fd350b9.akpm@linux-foundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Patterson <andrew.patterson@hp.com>
+To: Andrew Morton <akpm@linux-foundation.org>
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, mike.miller@hp.com, jens.axboe@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 16 Jul 2009 04:15:59 +0000 Andrew Patterson <andrew.patterson@hp.com> wrote:
-
-> > > +}
+On Wed, 2009-07-15 at 15:08 -0700, Andrew Morton wrote:
+> On Tue, 14 Jul 2009 16:02:40 -0600
+> Andrew Patterson <andrew.patterson@hp.com> wrote:
+> 
+> > The following series fixes several problems causing hangs while
+> > rmmoding the cciss driver. In the process of fixing these hangs, I
+> > also reworked the the logical drive scanning kernel thread to use one
+> > thread per driver rather than one thread per controller. I also added
+> > a sysfs attribute to kick off a controller scan.
 > > 
-> > We already did init_completion(h->scan_wait) at startup time?  Doing
-> > the INIT_COMPLETION() here looks unusual and is hopefully unnecessary.
+> >  .../ABI/testing/sysfs-bus-pci-devices-cciss        |    7 +
+> >  drivers/block/cciss.c                              |  198 ++++++++++++++++++--
+> >  drivers/block/cciss.h                              |    7 +
+> >  3 files changed, 188 insertions(+), 24 deletions(-)
+> > 
+> > Andrew Patterson (3):
+> >       cciss: remove logical drive sysfs entries during driver cleanup.
+> >       cciss: use only one scan thread
+> >       cciss: kick off logical drive topology rescan through sysfs
 > > 
 > 
-> I am following the text in the "Linux Device Drivers 3rd Edition section
-> 5.4:
-> 
-> "A completion is normally a one-shot device; it is used once then
-> discarded. It is possible, however, to reuse completion structures if
-> proper care is taken. If complete_all is not used, a completion
-> structure can be reused without any problems as long as there is no
-> ambiguity about what event is being signalled. If you use complete_all,
-> however, you must reinitialize the completion structure before reusing
-> it. The macro:
-> 
-> INIT_COMPLETION(struct completion c);
-> 
-> can be used to quickly perform this reinitialization."
-> 
-> It there are better way to do this? INIT_COMPLETION() currently just
-> sets done = 0.
+> So I assume that these are intended to fix the problem which
+> cciss-fix-the-termination-of-the-scanning-thread.patch didn't fix?
 
-OK, I'd assumed that a full wait_for_completion()/complete() operation
-would leave the completion in ready-to-use-again state.
+Correct. As well as a lot of the race conditions during cleanup.
 
-But wait_for_completion_interruptible() can indeed leave
-completion.done in a non-zero state if it was interrupted by a signal.
-hm.  Perhaps so the caller can run wait_for_completion*() again.
+> 
+> Once we get this all sorted out, which kernel version(s) are we
+> targetting and why?
+
+The current problems this patchset tries to solve is that rmmod of the
+module hangs along with logical hot remove.
+
+I was hoping to get these in as soon as possible. It looks like the
+sysfs additions and the scan_thread patches initially went into 2.6.30
+(if my limited git-fu is telling me correctly), so I can't call this a
+regression.  I guess 2.6.32 then.
+
+> 
+> Thanks.
+> 
+-- 
+Andrew Patterson
+Hewlett-Packard
