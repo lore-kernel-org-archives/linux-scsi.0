@@ -1,41 +1,47 @@
-From: Peter Jones <pjones@redhat.com>
-Subject: Re: [PATCH 0/3] scsi_dh: Make scsi device handler modules automatically
- inserted
-Date: Fri, 17 Jul 2009 10:14:28 -0400
-Message-ID: <4A608744.9020002@redhat.com>
-References: <20090427180609.22758.93035.sendpatchset@chandra-ubuntu>	 <4A369320.2080202@redhat.com> <1245365306.4286.27.camel@mulgrave.site>	 <4A3BDFE8.3090003@redhat.com> <4A44D37A.10903@redhat.com>	 <1246986723.6277.63.camel@mulgrave.site> <4A538B13.8050809@redhat.com>	 <1246990464.6277.74.camel@mulgrave.site>	 <1246995401.9541.15.camel@chandra-ubuntu>	 <20090708155808.GA31204@infradead.org>  <4A54E65D.8050706@redhat.com>	 <1247690016.9792.5.camel@chandra-ubuntu>	 <1247706999.8632.8.camel@mulgrave.site>	 <1247792476.670.20.camel@chandra-ubuntu> <1247804349.6606.631.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13783] udev causes high cpu usage
+Date: Fri, 17 Jul 2009 15:36:26 GMT
+Message-ID: <200907171536.n6HFaQCg012815@demeter.kernel.org>
+References: <bug-13783-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:41170 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934642AbZGQOOr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Jul 2009 10:14:47 -0400
-In-Reply-To: <1247804349.6606.631.camel@mulgrave.site>
+Received: from demeter.kernel.org ([140.211.167.39]:47436 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933496AbZGQPg0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jul 2009 11:36:26 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n6HFaQcE012816
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2009 15:36:26 GMT
+In-Reply-To: <bug-13783-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: sekharan@linux.vnet.ibm.com, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, hare@suse.de
+To: linux-scsi@vger.kernel.org
 
-On 07/17/2009 12:19 AM, James Bottomley wrote:
-> On Thu, 2009-07-16 at 18:01 -0700, Chandra Seetharaman wrote:
->> On Thu, 2009-07-16 at 01:16 +0000, James Bottomley wrote:
->>> On Wed, 2009-07-15 at 13:33 -0700, Chandra Seetharaman wrote:
->>>> James,
->>>>
->>>> Please let us know which way you want us to proceed ?
->>> Yes, propose a mechanism that keeps manual binding but allows the dm-mp
->>> user an exception. 
->> James, this is the current behavior. We wanted to make the binding
->> automatic, hence the patches.
-> 
-> OK, well then no ... I'm not breaking an unknown number of enterprise
-> configurations by forcing a binding where none is wanted or needed.
-> Find a way to do what you want while not breaking anyone else.
+http://bugzilla.kernel.org/show_bug.cgi?id=13783
 
-And what about the patch I sent you that makes the uevent modalias
-change depend on a config option?  You've still not commented on it.
+
+
+
+
+--- Comment #8 from Andreas Fackler <AndreasFackler@web.de>  2009-07-17 15:36:25 ---
+Thank you for your suggestion! It worked, more or less:
+
+After I entered "hal-disable-polling --device /dev/scd0", the events
+immediately stopped (or maybe I didn't wait long enough), but they reappeared
+after a reboot, although the file
+"/etc/hal/fdi/information/media-check-disable-storage_model_DVD_RW_AD_7560S.fdi"
+had been created. So I entered the exact same command "hal-disable-polling
+--device /dev/scd0" again, which created the additional file
+"/etc/hal/fdi/information/media-check-disable-storage_model_Optiarc_DVD_RW_AD_7560S.fdi"
+and in fact ended the events permanently, even after a reboot.
+
+Except if I open the DVD drive: Then events are fired wildly (not just one or
+two) and the cpu usage rises to about 30% for a few seconds, until it stops
+again. The same thing happens when I close the drive. I don't know whether this
+is normal?
 
 -- 
-        Peter
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
