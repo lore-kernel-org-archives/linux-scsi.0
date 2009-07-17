@@ -1,57 +1,40 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13783] udev causes high cpu usage
-Date: Fri, 17 Jul 2009 11:43:25 GMT
-Message-ID: <200907171143.n6HBhPBW011180@demeter.kernel.org>
-References: <bug-13783-11613@http.bugzilla.kernel.org/>
+From: "Mukker, Atul" <Atul.Mukker@lsi.com>
+Subject: Recommended HBA management interfaces
+Date: Fri, 17 Jul 2009 07:16:03 -0600
+Message-ID: <6C678488C5CEE74F813A4D1948FD2DC7A998698F@cosmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:58200 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934411AbZGQLn0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jul 2009 07:43:26 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n6HBhPBk011181
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2009 11:43:25 GMT
-In-Reply-To: <bug-13783-11613@http.bugzilla.kernel.org/>
+Received: from exprod7og113.obsmtp.com ([64.18.2.179]:54325 "EHLO
+	exprod7og113.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933374AbZGQN0f convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jul 2009 09:26:35 -0400
+Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
+	by mail0.lsil.com (8.12.11/8.12.11) with ESMTP id n6HDGDuI012514
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2009 06:16:13 -0700 (PDT)
+Received: from coscas01.lsi.com (coscas01.co.lsil.com [172.21.36.60])
+	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id n6HDG7aq021478
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2009 06:16:15 -0700
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=3D13783
+Hi All,
 
+We would like expert comments on the following questions regarding management of HBA from applications.
 
+Traditionally, our drivers create a character device node, whose file_operations are then used by the management applications to transfer HBA specific commands. In addition to being quirky, this interface has a few limitations which we would like to remove, most important being able to seamlessly handle asynchronous events with data transfer.
 
+1. What is (are) the other standard/recommended interfaces which applications can use to transfer HBA specific commands and data.
 
+2. How should an LLD implement interfaces to transmit asynchronous information to the management applications? The requirement is to be able to transmit data buffer as well as notifications for events.
 
---- Comment #7 from Kay Sievers <kay.sievers@vrfy.org>  2009-07-17 11:4=
-3:24 ---
-On Thu, Jul 16, 2009 at 19:26, <bugzilla-daemon@bugzilla.kernel.org> wr=
-ote:
-> http://bugzilla.kernel.org/show_bug.cgi?id=3D13783
+3. The interface should be able to work even if no SCSI devices are exported to the kernel.
 
-> --- Comment #6 from Andreas Fackler <AndreasFackler@web.de> =C2=A0200=
-9-07-16 17:26:37 ---
-> Yes, if I stop either udevd or hald-addon-storage, no more events are=
- generated
-> and cpu usage goes back to normal.
+4. Should work seamlessly across vmware and xen kernels.
 
-Just to double check:
-
-Killing the hal addon alone makes the event loop stop?
-
-There is a binary: "hal-disable-polling", which can be used to
-permanently disable the polling of the device. If you use that and
-reboot the box, the issue goes away?
-
-Thanks!
-
---=20
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Demail
-------- You are receiving this mail because: -------
-You are the assignee for the bug.--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks
+Atul Mukker
+LSI Corp.
