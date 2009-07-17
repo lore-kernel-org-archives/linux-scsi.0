@@ -1,55 +1,58 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13783] udev causes high cpu usage
-Date: Fri, 17 Jul 2009 15:58:14 GMT
-Message-ID: <200907171558.n6HFwEPh016658@demeter.kernel.org>
-References: <bug-13783-11613@http.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/3] scsi_dh: Make scsi device handler modules
+ automatically inserted
+Date: Fri, 17 Jul 2009 11:45:29 -0500
+Message-ID: <1247849129.3911.5.camel@mulgrave.site>
+References: <20090427180609.22758.93035.sendpatchset@chandra-ubuntu>
+	 <4A369320.2080202@redhat.com> <1245365306.4286.27.camel@mulgrave.site>
+	 <4A3BDFE8.3090003@redhat.com> <4A44D37A.10903@redhat.com>
+	 <1246986723.6277.63.camel@mulgrave.site> <4A538B13.8050809@redhat.com>
+	 <1246990464.6277.74.camel@mulgrave.site>
+	 <1246995401.9541.15.camel@chandra-ubuntu>
+	 <20090708155808.GA31204@infradead.org>  <4A54E65D.8050706@redhat.com>
+	 <1247690016.9792.5.camel@chandra-ubuntu>
+	 <1247706999.8632.8.camel@mulgrave.site>
+	 <1247792476.670.20.camel@chandra-ubuntu>
+	 <1247804349.6606.631.camel@mulgrave.site>  <4A608744.9020002@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:58695 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934700AbZGQP6P (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jul 2009 11:58:15 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n6HFwEKx016659
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2009 15:58:14 GMT
-In-Reply-To: <bug-13783-11613@http.bugzilla.kernel.org/>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47151 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S964848AbZGQQpd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Jul 2009 12:45:33 -0400
+In-Reply-To: <4A608744.9020002@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Peter Jones <pjones@redhat.com>
+Cc: sekharan@linux.vnet.ibm.com, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, hare@suse.de
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13783
+On Fri, 2009-07-17 at 10:14 -0400, Peter Jones wrote:
+> On 07/17/2009 12:19 AM, James Bottomley wrote:
+> > On Thu, 2009-07-16 at 18:01 -0700, Chandra Seetharaman wrote:
+> >> On Thu, 2009-07-16 at 01:16 +0000, James Bottomley wrote:
+> >>> On Wed, 2009-07-15 at 13:33 -0700, Chandra Seetharaman wrote:
+> >>>> James,
+> >>>>
+> >>>> Please let us know which way you want us to proceed ?
+> >>> Yes, propose a mechanism that keeps manual binding but allows the dm-mp
+> >>> user an exception. 
+> >> James, this is the current behavior. We wanted to make the binding
+> >> automatic, hence the patches.
+> > 
+> > OK, well then no ... I'm not breaking an unknown number of enterprise
+> > configurations by forcing a binding where none is wanted or needed.
+> > Find a way to do what you want while not breaking anyone else.
+> 
+> And what about the patch I sent you that makes the uevent modalias
+> change depend on a config option?  You've still not commented on it.
+
+A config option isn't right, but a runtime one might be if nothing else
+comes along, I suppose.  The uevent modalias still needs to go via
+multiple binding.
+
+James
 
 
-
-
-
---- Comment #9 from Kay Sievers <kay.sievers@vrfy.org>  2009-07-17 15:58:14 ---
-On Fri, Jul 17, 2009 at 17:36, <bugzilla-daemon@bugzilla.kernel.org> wrote:
-> http://bugzilla.kernel.org/show_bug.cgi?id=13783
->
-> So I entered the exact same command "hal-disable-polling
-> --device /dev/scd0" again, which created the additional file
-> "/etc/hal/fdi/information/media-check-disable-storage_model_Optiarc_DVD_RW_AD_7560S.fdi"
-> and in fact ended the events permanently, even after a reboot.
-
-Ah good.
-
-> Except if I open the DVD drive: Then events are fired wildly (not just one or
-> two) and the cpu usage rises to about 30% for a few seconds, until it stops
-> again. The same thing happens when I close the drive. I don't know whether this
-> is normal?
-
-I guess something goes crazy with the media-changed detection.
-Sometimes not-tested-in-such-setup/broken firmware for optical drives
-does not like us.
-
-We have seen similar behavior on some drives with HAL checking for the
-"eject button pressed" events.
-
-In some rare cases there are updates for the drive firmware available.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
