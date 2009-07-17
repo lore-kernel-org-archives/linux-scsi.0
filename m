@@ -1,117 +1,48 @@
-From: "Abhijeet Joglekar (abjoglek)" <abjoglek@cisco.com>
-Subject: RE: [PATCH] fnic: clean up
-Date: Fri, 17 Jul 2009 10:14:14 -0700
-Message-ID: <9E88C8678BF34240A8C61D4078A3D25101A2500A@xmb-sjc-23e.amer.cisco.com>
-References: <4A5E4648.5020006@gmail.com> <4A5F0DAE.5010800@gmail.com>
+From: Peter Jones <pjones@redhat.com>
+Subject: Re: [PATCH 0/3] scsi_dh: Make scsi device handler modules automatically
+ inserted
+Date: Fri, 17 Jul 2009 13:13:57 -0400
+Message-ID: <4A60B155.6070207@redhat.com>
+References: <20090427180609.22758.93035.sendpatchset@chandra-ubuntu>	 <4A369320.2080202@redhat.com> <1245365306.4286.27.camel@mulgrave.site>	 <4A3BDFE8.3090003@redhat.com> <4A44D37A.10903@redhat.com>	 <1246986723.6277.63.camel@mulgrave.site> <4A538B13.8050809@redhat.com>	 <1246990464.6277.74.camel@mulgrave.site>	 <1246995401.9541.15.camel@chandra-ubuntu>	 <20090708155808.GA31204@infradead.org>  <4A54E65D.8050706@redhat.com>	 <1247690016.9792.5.camel@chandra-ubuntu>	 <1247706999.8632.8.camel@mulgrave.site>	 <1247792476.670.20.camel@chandra-ubuntu>	 <1247804349.6606.631.camel@mulgrave.site>  <4A608744.9020002@redhat.com> <1247849129.3911.5.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-6.cisco.com ([171.71.176.117]:61591 "EHLO
-	sj-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934773AbZGQROP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jul 2009 13:14:15 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <4A5F0DAE.5010800@gmail.com>
+Received: from mx2.redhat.com ([66.187.237.31]:54181 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934774AbZGQROS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Jul 2009 13:14:18 -0400
+In-Reply-To: <1247849129.3911.5.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roel Kluin <roel.kluin@gmail.com>
-Cc: "Joe Eykholt (jeykholt)" <jeykholt@cisco.com>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: sekharan@linux.vnet.ibm.com, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, hare@suse.de
 
-> -----Original Message-----
-> From: Roel Kluin [mailto:roel.kluin@gmail.com] 
-> Sent: Thursday, July 16, 2009 4:23 AM
-> To: Abhijeet Joglekar (abjoglek)
-> Cc: Joe Eykholt (jeykholt); linux-scsi@vger.kernel.org; Andrew Morton
-> Subject: [PATCH] fnic: clean up
+On 07/17/2009 12:45 PM, James Bottomley wrote:
+> On Fri, 2009-07-17 at 10:14 -0400, Peter Jones wrote:
+>> On 07/17/2009 12:19 AM, James Bottomley wrote:
+>>> On Thu, 2009-07-16 at 18:01 -0700, Chandra Seetharaman wrote:
+>>>> On Thu, 2009-07-16 at 01:16 +0000, James Bottomley wrote:
+>>>>> On Wed, 2009-07-15 at 13:33 -0700, Chandra Seetharaman wrote:
+>>>>>> James,
+>>>>>>
+>>>>>> Please let us know which way you want us to proceed ?
+>>>>> Yes, propose a mechanism that keeps manual binding but allows the dm-mp
+>>>>> user an exception. 
+>>>> James, this is the current behavior. We wanted to make the binding
+>>>> automatic, hence the patches.
+>>> OK, well then no ... I'm not breaking an unknown number of enterprise
+>>> configurations by forcing a binding where none is wanted or needed.
+>>> Find a way to do what you want while not breaking anyone else.
+>> And what about the patch I sent you that makes the uevent modalias
+>> change depend on a config option?  You've still not commented on it.
 > 
-> In fnic_abort_cmd() and  fnic_device_reset() assign `rport' 
-> earlier to make FNIC_SCSI_DBG() calls cleaner.
-> 
-> In fnic_clean_pending_aborts() `rport' is not used.
-> 
-> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-> ---
-> thanks abhijeet, is this ackable?
+> A config option isn't right, but a runtime one might be if nothing else
+> comes along, I suppose.  The uevent modalias still needs to go via
+> multiple binding.
 
+Please read the patch.  It provides a runtime option, and the config
+option is used to specify the default setting.
 
-Yes, this looks good. 
-
-thanks
--- abhijeet
-
- 
-> diff --git a/drivers/scsi/fnic/fnic_scsi.c 
-> b/drivers/scsi/fnic/fnic_scsi.c index bfc9969..c04b7e8 100644
-> --- a/drivers/scsi/fnic/fnic_scsi.c
-> +++ b/drivers/scsi/fnic/fnic_scsi.c
-> @@ -1265,11 +1265,10 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
->  	lp = shost_priv(sc->device->host);
->  
->  	fnic = lport_priv(lp);
-> -	FNIC_SCSI_DBG(KERN_DEBUG,
-> -		      fnic->lport->host,
-> -		      "Abort Cmd called FCID 0x%x, LUN 0x%x TAG %d\n",
-> -		      
-> (starget_to_rport(scsi_target(sc->device)))->port_id,
-> -		      sc->device->lun, sc->request->tag);
-> +	rport = starget_to_rport(scsi_target(sc->device));
-> +	FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
-> +			"Abort Cmd called FCID 0x%x, LUN 0x%x TAG %d\n",
-> +			rport->port_id, sc->device->lun, 
-> sc->request->tag);
->  
->  	if (lp->state != LPORT_ST_READY || !(lp->link_up)) {
->  		ret = FAILED;
-> @@ -1318,7 +1317,6 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
->  	 * port is up, then send abts to the remote port to terminate
->  	 * the IO. Else, just locally terminate the IO in the firmware
->  	 */
-> -	rport = starget_to_rport(scsi_target(sc->device));
->  	if (fc_remote_port_chkready(rport) == 0)
->  		task_req = FCPIO_ITMF_ABT_TASK;
->  	else
-> @@ -1437,7 +1435,6 @@ static int 
-> fnic_clean_pending_aborts(struct fnic *fnic,
->  	unsigned long flags;
->  	int ret = 0;
->  	struct scsi_cmnd *sc;
-> -	struct fc_rport *rport;
->  	struct scsi_lun fc_lun;
->  	struct scsi_device *lun_dev = lr_sc->device;
->  	DECLARE_COMPLETION_ONSTACK(tm_done);
-> @@ -1477,7 +1474,6 @@ static int 
-> fnic_clean_pending_aborts(struct fnic *fnic,
->  
->  		/* Now queue the abort command to firmware */
->  		int_to_scsilun(sc->device->lun, &fc_lun);
-> -		rport = starget_to_rport(scsi_target(sc->device));
->  
->  		if (fnic_queue_abort_io_req(fnic, tag,
->  					    FCPIO_ITMF_ABT_TASK_TERM,
-> @@ -1547,18 +1543,16 @@ int fnic_device_reset(struct scsi_cmnd *sc)
->  	lp = shost_priv(sc->device->host);
->  
->  	fnic = lport_priv(lp);
-> -	FNIC_SCSI_DBG(KERN_DEBUG,
-> -		      fnic->lport->host,
-> -		      "Device reset called FCID 0x%x, LUN 0x%x\n",
-> -		      
-> (starget_to_rport(scsi_target(sc->device)))->port_id,
-> -		      sc->device->lun);
->  
-> +	rport = starget_to_rport(scsi_target(sc->device));
-> +	FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
-> +			"Device reset called FCID 0x%x, LUN 0x%x\n",
-> +			rport->port_id, sc->device->lun);
->  
->  	if (lp->state != LPORT_ST_READY || !(lp->link_up))
->  		goto fnic_device_reset_end;
->  
->  	/* Check if remote port up */
-> -	rport = starget_to_rport(scsi_target(sc->device));
->  	if (fc_remote_port_chkready(rport))
->  		goto fnic_device_reset_end;
->  
-> 
+-- 
+        Peter
