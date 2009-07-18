@@ -1,48 +1,40 @@
-From: Peter Jones <pjones@redhat.com>
-Subject: Re: [PATCH 0/3] scsi_dh: Make scsi device handler modules automatically
- inserted
-Date: Fri, 17 Jul 2009 13:13:57 -0400
-Message-ID: <4A60B155.6070207@redhat.com>
-References: <20090427180609.22758.93035.sendpatchset@chandra-ubuntu>	 <4A369320.2080202@redhat.com> <1245365306.4286.27.camel@mulgrave.site>	 <4A3BDFE8.3090003@redhat.com> <4A44D37A.10903@redhat.com>	 <1246986723.6277.63.camel@mulgrave.site> <4A538B13.8050809@redhat.com>	 <1246990464.6277.74.camel@mulgrave.site>	 <1246995401.9541.15.camel@chandra-ubuntu>	 <20090708155808.GA31204@infradead.org>  <4A54E65D.8050706@redhat.com>	 <1247690016.9792.5.camel@chandra-ubuntu>	 <1247706999.8632.8.camel@mulgrave.site>	 <1247792476.670.20.camel@chandra-ubuntu>	 <1247804349.6606.631.camel@mulgrave.site>  <4A608744.9020002@redhat.com> <1247849129.3911.5.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 9872] Driver 'sd' needs updating - please use bus_type methods
+Date: Sat, 18 Jul 2009 12:34:59 GMT
+Message-ID: <200907181234.n6ICYxjw004666@demeter.kernel.org>
+References: <bug-9872-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:54181 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934774AbZGQROS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Jul 2009 13:14:18 -0400
-In-Reply-To: <1247849129.3911.5.camel@mulgrave.site>
+Received: from demeter.kernel.org ([140.211.167.39]:34649 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750911AbZGRMe7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Jul 2009 08:34:59 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n6ICYxqj004667
+	for <linux-scsi@vger.kernel.org>; Sat, 18 Jul 2009 12:34:59 GMT
+In-Reply-To: <bug-9872-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: sekharan@linux.vnet.ibm.com, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, hare@suse.de
+To: linux-scsi@vger.kernel.org
 
-On 07/17/2009 12:45 PM, James Bottomley wrote:
-> On Fri, 2009-07-17 at 10:14 -0400, Peter Jones wrote:
->> On 07/17/2009 12:19 AM, James Bottomley wrote:
->>> On Thu, 2009-07-16 at 18:01 -0700, Chandra Seetharaman wrote:
->>>> On Thu, 2009-07-16 at 01:16 +0000, James Bottomley wrote:
->>>>> On Wed, 2009-07-15 at 13:33 -0700, Chandra Seetharaman wrote:
->>>>>> James,
->>>>>>
->>>>>> Please let us know which way you want us to proceed ?
->>>>> Yes, propose a mechanism that keeps manual binding but allows the dm-mp
->>>>> user an exception. 
->>>> James, this is the current behavior. We wanted to make the binding
->>>> automatic, hence the patches.
->>> OK, well then no ... I'm not breaking an unknown number of enterprise
->>> configurations by forcing a binding where none is wanted or needed.
->>> Find a way to do what you want while not breaking anyone else.
->> And what about the patch I sent you that makes the uevent modalias
->> change depend on a config option?  You've still not commented on it.
-> 
-> A config option isn't right, but a runtime one might be if nothing else
-> comes along, I suppose.  The uevent modalias still needs to go via
-> multiple binding.
+http://bugzilla.kernel.org/show_bug.cgi?id=9872
 
-Please read the patch.  It provides a runtime option, and the config
-option is used to specify the default setting.
+
+Pacho Ramos <pacho@condmat1.ciencias.uniovi.es> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |pacho@condmat1.ciencias.uni
+                   |                            |ovi.es
+
+
+
+
+--- Comment #6 from Pacho Ramos <pacho@condmat1.ciencias.uniovi.es>  2009-07-18 12:34:56 ---
+I still get this with kernel-2.6.30 :-/
 
 -- 
-        Peter
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
