@@ -1,40 +1,65 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 9872] Driver 'sd' needs updating - please use bus_type methods
-Date: Sat, 18 Jul 2009 12:34:59 GMT
-Message-ID: <200907181234.n6ICYxjw004666@demeter.kernel.org>
-References: <bug-9872-11613@http.bugzilla.kernel.org/>
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH] drivers/scsi: possible double spin_lock_irqsave
+Date: Sat, 18 Jul 2009 17:22:41 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0907181722060.26792@ask.diku.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:34649 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750911AbZGRMe7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Jul 2009 08:34:59 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n6ICYxqj004667
-	for <linux-scsi@vger.kernel.org>; Sat, 18 Jul 2009 12:34:59 GMT
-In-Reply-To: <bug-9872-11613@http.bugzilla.kernel.org/>
+Received: from mgw1.diku.dk ([130.225.96.91]:50537 "EHLO mgw1.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752501AbZGRPXU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 18 Jul 2009 11:23:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=9872
+From: Julia Lawall <julia@diku.dk>
 
+If both the test on rport and the call to get_device fail, then the lock is
+already held.  The re-lock is thus moved up into the two branches.
 
-Pacho Ramos <pacho@condmat1.ciencias.uniovi.es> changed:
+On the other hand if kref_put should not be called with the lock held then
+something else should be done.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |pacho@condmat1.ciencias.uni
-                   |                            |ovi.es
+The semantic match that finds this problem is as follows:
+(http://www.emn.fr/x-info/coccinelle/)
 
+// <smpl>
+@@
+expression lock1,lock2;
+expression flags;
+@@
 
+*spin_lock_irqsave(lock1,flags)
+... when != flags
+*spin_lock_irqsave(lock2,flags)
+// </smpl>
 
+Signed-off-by: Julia Lawall <julia@diku.dk>
 
---- Comment #6 from Pacho Ramos <pacho@condmat1.ciencias.uniovi.es>  2009-07-18 12:34:56 ---
-I still get this with kernel-2.6.30 :-/
+---
+ drivers/scsi/ibmvscsi/ibmvfc.c      |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 166d964..d2b88bd 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -4278,15 +4278,16 @@ static void ibmvfc_rport_add_thread(struct work_struct *work)
+ 				if (!rport) {
+ 					spin_unlock_irqrestore(vhost->host->host_lock, flags);
+ 					ibmvfc_tgt_add_rport(tgt);
++					spin_lock_irqsave(vhost->host->host_lock, flags);
+ 				} else if (get_device(&rport->dev)) {
+ 					spin_unlock_irqrestore(vhost->host->host_lock, flags);
+ 					tgt_dbg(tgt, "Setting rport roles\n");
+ 					fc_remote_port_rolechg(rport, tgt->ids.roles);
+ 					put_device(&rport->dev);
++					spin_lock_irqsave(vhost->host->host_lock, flags);
+ 				}
+ 
+ 				kref_put(&tgt->kref, ibmvfc_release_tgt);
+-				spin_lock_irqsave(vhost->host->host_lock, flags);
+ 				break;
+ 			}
+ 		}
