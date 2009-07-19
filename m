@@ -1,263 +1,161 @@
 From: James Smart <James.Smart@Emulex.Com>
-Subject: [Patch 4/8] lpfc 8.3.4: Fix a pair of FCoE issues
-Date: Sun, 19 Jul 2009 10:01:21 -0400
-Message-ID: <1248012081.15009.28.camel@ogier>
+Subject: [Patch 3/8] lpfc 8.3.4: Various SLI3 fixes
+Date: Sun, 19 Jul 2009 10:01:16 -0400
+Message-ID: <1248012076.15009.26.camel@ogier>
 Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:34685 "EHLO
+Received: from emulex.emulex.com ([138.239.112.1]:34682 "EHLO
 	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754524AbZGSOBX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jul 2009 10:01:23 -0400
+	with ESMTP id S1754515AbZGSOBR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jul 2009 10:01:17 -0400
 Received: from xcm.ad.emulex.com (xcm.emulex.com [138.239.112.69])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id n6JE1NNM021587
-	for <linux-scsi@vger.kernel.org>; Sun, 19 Jul 2009 07:01:23 -0700 (PDT)
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id n6JE1HWr021582
+	for <linux-scsi@vger.kernel.org>; Sun, 19 Jul 2009 07:01:18 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Fix a pair of FCoE issues
+Various SLI3 fixes
 
-- Fix Region 23 FCoE Parameters not being read correctly
-- Fix race condition when there are FCoE events during FCF table read
+- Fix for firmware dump failure
+- Fix inband remote management
 
 Signed-off-by: James Smart <James.Smart@emulex.com>
 
 ---
 
- drivers/scsi/lpfc/lpfc.h         |    3 +
- drivers/scsi/lpfc/lpfc_crtn.h    |    1 
- drivers/scsi/lpfc/lpfc_hbadisc.c |   77 ++++++++++++++++++++++++++++++++++++++
- drivers/scsi/lpfc/lpfc_init.c    |    9 +++-
- drivers/scsi/lpfc/lpfc_sli.c     |    7 +++
- 5 files changed, 92 insertions(+), 5 deletions(-)
+ drivers/scsi/lpfc/lpfc.h      |    1 +
+ drivers/scsi/lpfc/lpfc_init.c |    3 ---
+ drivers/scsi/lpfc/lpfc_mem.c  |   41 +++++++++++++++++++++++++++++------------
+ drivers/scsi/lpfc/lpfc_sli.c  |    2 +-
+ 4 files changed, 31 insertions(+), 16 deletions(-)
 
 --- a/drivers/scsi/lpfc/lpfc.h
 +++ b/drivers/scsi/lpfc/lpfc.h
-@@ -526,6 +526,7 @@ struct lpfc_hba {
- #define ELS_XRI_ABORT_EVENT	0x40
- #define ASYNC_EVENT		0x80
- #define LINK_DISABLED		0x100 /* Link disabled by user */
-+#define FCF_DISC_INPROGRESS	0x200 /* FCF discovery in progress */
- 	struct lpfc_dmabuf slim2p;
+@@ -685,6 +685,7 @@ struct lpfc_hba {
+ 	struct pci_pool *lpfc_mbuf_pool;
+ 	struct pci_pool *lpfc_hrb_pool;	/* header receive buffer pool */
+ 	struct pci_pool *lpfc_drb_pool; /* data receive buffer pool */
++	struct pci_pool *lpfc_hbq_pool;	/* SLI3 hbq buffer pool */
+ 	struct lpfc_dma_pool lpfc_mbuf_safety_pool;
  
- 	MAILBOX_t *mbox;
-@@ -767,6 +768,8 @@ struct lpfc_hba {
- /* Maximum number of events that can be outstanding at any time*/
- #define LPFC_MAX_EVT_COUNT 512
- 	atomic_t fast_event_count;
-+	uint32_t fcoe_eventtag;
-+	uint32_t fcoe_eventtag_at_fcf_scan;
- 	struct lpfc_fcf fcf;
- 	uint8_t fc_map[3];
- 	uint8_t valid_vlan;
---- a/drivers/scsi/lpfc/lpfc_crtn.h
-+++ b/drivers/scsi/lpfc/lpfc_crtn.h
-@@ -189,6 +189,7 @@ void lpfc_unreg_vfi(struct lpfcMboxq *, uint16_t);
- void lpfc_reg_fcfi(struct lpfc_hba *, struct lpfcMboxq *);
- void lpfc_unreg_fcfi(struct lpfcMboxq *, uint16_t);
- void lpfc_resume_rpi(struct lpfcMboxq *, struct lpfc_nodelist *);
-+int lpfc_check_pending_fcoe_event(struct lpfc_hba *, uint8_t);
- 
- void lpfc_config_hbq(struct lpfc_hba *, uint32_t, struct lpfc_hbq_init *,
- 	uint32_t , LPFC_MBOXQ_t *);
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -61,6 +61,7 @@ static uint8_t lpfcAlpaArray[] = {
- 
- static void lpfc_disc_timeout_handler(struct lpfc_vport *);
- static void lpfc_disc_flush_list(struct lpfc_vport *vport);
-+static void lpfc_unregister_fcfi_cmpl(struct lpfc_hba *, LPFC_MBOXQ_t *);
- 
- void
- lpfc_terminate_rport_io(struct fc_rport *rport)
-@@ -1009,9 +1010,15 @@ lpfc_mbx_cmpl_reg_fcfi(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
- 	spin_lock_irqsave(&phba->hbalock, flags);
- 	phba->fcf.fcf_flag |= FCF_REGISTERED;
- 	spin_unlock_irqrestore(&phba->hbalock, flags);
-+	/* If there is a pending FCoE event, restart FCF table scan. */
-+	if (lpfc_check_pending_fcoe_event(phba, 1)) {
-+		mempool_free(mboxq, phba->mbox_mem_pool);
-+		return;
-+	}
- 	if (vport->port_state != LPFC_FLOGI) {
- 		spin_lock_irqsave(&phba->hbalock, flags);
- 		phba->fcf.fcf_flag |= (FCF_DISCOVERED | FCF_IN_USE);
-+		phba->hba_flag &= ~FCF_DISC_INPROGRESS;
- 		spin_unlock_irqrestore(&phba->hbalock, flags);
- 		lpfc_initial_flogi(vport);
- 	}
-@@ -1199,6 +1206,7 @@ lpfc_register_fcf(struct lpfc_hba *phba)
- 	/* The FCF is already registered, start discovery */
- 	if (phba->fcf.fcf_flag & FCF_REGISTERED) {
- 		phba->fcf.fcf_flag |= (FCF_DISCOVERED | FCF_IN_USE);
-+		phba->hba_flag &= ~FCF_DISC_INPROGRESS;
- 		spin_unlock_irqrestore(&phba->hbalock, flags);
- 		if (phba->pport->port_state != LPFC_FLOGI)
- 			lpfc_initial_flogi(phba->pport);
-@@ -1388,6 +1396,60 @@ lpfc_match_fcf_conn_list(struct lpfc_hba *phba,
- }
- 
- /**
-+ * lpfc_check_pending_fcoe_event - Check if there is pending fcoe event.
-+ * @phba: pointer to lpfc hba data structure.
-+ * @unreg_fcf: Unregister FCF if FCF table need to be re-scaned.
-+ *
-+ * This function check if there is any fcoe event pending while driver
-+ * scan FCF entries. If there is any pending event, it will restart the
-+ * FCF saning and return 1 else return 0.
-+ */
-+int
-+lpfc_check_pending_fcoe_event(struct lpfc_hba *phba, uint8_t unreg_fcf)
-+{
-+	LPFC_MBOXQ_t *mbox;
-+	int rc;
-+	/*
-+	 * If the Link is up and no FCoE events while in the
-+	 * FCF discovery, no need to restart FCF discovery.
-+	 */
-+	if ((phba->link_state  >= LPFC_LINK_UP) &&
-+		(phba->fcoe_eventtag == phba->fcoe_eventtag_at_fcf_scan))
-+		return 0;
-+
-+	spin_lock_irq(&phba->hbalock);
-+	phba->fcf.fcf_flag &= ~FCF_AVAILABLE;
-+	spin_unlock_irq(&phba->hbalock);
-+
-+	if (phba->link_state >= LPFC_LINK_UP)
-+		lpfc_sli4_read_fcf_record(phba, LPFC_FCOE_FCF_GET_FIRST);
-+
-+	if (unreg_fcf) {
-+		spin_lock_irq(&phba->hbalock);
-+		phba->fcf.fcf_flag &= ~FCF_REGISTERED;
-+		spin_unlock_irq(&phba->hbalock);
-+		mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
-+		if (!mbox) {
-+			lpfc_printf_log(phba, KERN_ERR,
-+				LOG_DISCOVERY|LOG_MBOX,
-+				"2610 UNREG_FCFI mbox allocation failed\n");
-+			return 1;
-+		}
-+		lpfc_unreg_fcfi(mbox, phba->fcf.fcfi);
-+		mbox->vport = phba->pport;
-+		mbox->mbox_cmpl = lpfc_unregister_fcfi_cmpl;
-+		rc = lpfc_sli_issue_mbox(phba, mbox, MBX_NOWAIT);
-+		if (rc == MBX_NOT_FINISHED) {
-+			lpfc_printf_log(phba, KERN_ERR, LOG_DISCOVERY|LOG_MBOX,
-+				"2611 UNREG_FCFI issue mbox failed\n");
-+			mempool_free(mbox, phba->mbox_mem_pool);
-+		}
-+	}
-+
-+	return 1;
-+}
-+
-+/**
-  * lpfc_mbx_cmpl_read_fcf_record - Completion handler for read_fcf mbox.
-  * @phba: pointer to lpfc hba data structure.
-  * @mboxq: pointer to mailbox object.
-@@ -1419,6 +1481,12 @@ lpfc_mbx_cmpl_read_fcf_record(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
- 	unsigned long flags;
- 	uint16_t vlan_id;
- 
-+	/* If there is pending FCoE event restart FCF table scan */
-+	if (lpfc_check_pending_fcoe_event(phba, 0)) {
-+		lpfc_sli4_mbox_cmd_free(phba, mboxq);
-+		return;
-+	}
-+
- 	/* Get the first SGE entry from the non-embedded DMA memory. This
- 	 * routine only uses a single SGE.
- 	 */
-@@ -1823,6 +1891,7 @@ lpfc_mbx_process_link_up(struct lpfc_hba *phba, READ_LA_VAR *la)
- 			goto out;
- 		}
- 	} else {
-+		vport->port_state = LPFC_VPORT_UNKNOWN;
- 		/*
- 		 * Add the driver's default FCF record at FCF index 0 now. This
- 		 * is phase 1 implementation that support FCF index 0 and driver
-@@ -1858,6 +1927,12 @@ lpfc_mbx_process_link_up(struct lpfc_hba *phba, READ_LA_VAR *la)
- 		 * The driver is expected to do FIP/FCF. Call the port
- 		 * and get the FCF Table.
- 		 */
-+		spin_lock_irq(&phba->hbalock);
-+		if (phba->hba_flag & FCF_DISC_INPROGRESS) {
-+			spin_unlock_irq(&phba->hbalock);
-+			return;
-+		}
-+		spin_unlock_irq(&phba->hbalock);
- 		rc = lpfc_sli4_read_fcf_record(phba,
- 					LPFC_FCOE_FCF_GET_FIRST);
- 		if (rc)
-@@ -4414,7 +4489,7 @@ lpfc_read_fcoe_param(struct lpfc_hba *phba,
- 	fcoe_param_hdr = (struct lpfc_fip_param_hdr *)
- 		buff;
- 	fcoe_param = (struct lpfc_fcoe_params *)
--		buff + sizeof(struct lpfc_fip_param_hdr);
-+		(buff + sizeof(struct lpfc_fip_param_hdr));
- 
- 	if ((fcoe_param_hdr->parm_version != FIPP_VERSION) ||
- 		(fcoe_param_hdr->length != FCOE_PARAM_LENGTH))
+ 	mempool_t *mbox_mem_pool;
 --- a/drivers/scsi/lpfc/lpfc_init.c
 +++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -2829,6 +2829,7 @@ lpfc_sli4_async_link_evt(struct lpfc_hba *phba,
- 	att_type = lpfc_sli4_parse_latt_type(phba, acqe_link);
- 	if (att_type != AT_LINK_DOWN && att_type != AT_LINK_UP)
- 		return;
-+	phba->fcoe_eventtag = acqe_link->event_tag;
- 	pmb = (LPFC_MBOXQ_t *)mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
- 	if (!pmb) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
-@@ -2916,6 +2917,7 @@ lpfc_sli4_async_fcoe_evt(struct lpfc_hba *phba,
- 	uint8_t event_type = bf_get(lpfc_acqe_fcoe_event_type, acqe_fcoe);
- 	int rc;
+@@ -527,9 +527,6 @@ lpfc_config_port_post(struct lpfc_hba *phba)
+ 	/* Set up error attention (ERATT) polling timer */
+ 	mod_timer(&phba->eratt_poll, jiffies + HZ * LPFC_ERATT_POLL_INTERVAL);
  
-+	phba->fcoe_eventtag = acqe_fcoe->event_tag;
- 	switch (event_type) {
- 	case LPFC_FCOE_EVENT_TYPE_NEW_FCF:
- 		lpfc_printf_log(phba, KERN_ERR, LOG_DISCOVERY,
-@@ -2923,11 +2925,12 @@ lpfc_sli4_async_fcoe_evt(struct lpfc_hba *phba,
- 			acqe_fcoe->fcf_index,
- 			acqe_fcoe->event_tag);
- 		/*
--		 * If the current FCF is in discovered state,
--		 * do nothing.
-+		 * If the current FCF is in discovered state, or
-+		 * FCF discovery is in progress do nothing.
- 		 */
- 		spin_lock_irq(&phba->hbalock);
--		if (phba->fcf.fcf_flag & FCF_DISCOVERED) {
-+		if ((phba->fcf.fcf_flag & FCF_DISCOVERED) ||
-+		   (phba->hba_flag & FCF_DISC_INPROGRESS)) {
- 			spin_unlock_irq(&phba->hbalock);
- 			break;
- 		}
+-	/* Check if the port is disabled */
+-	lpfc_sli_read_serdes_param(phba);
+-
+ 	if (phba->hba_flag & LINK_DISABLED) {
+ 		lpfc_printf_log(phba,
+ 			KERN_ERR, LOG_INIT,
+--- a/drivers/scsi/lpfc/lpfc_mem.c
++++ b/drivers/scsi/lpfc/lpfc_mem.c
+@@ -110,17 +110,28 @@ lpfc_mem_alloc(struct lpfc_hba *phba, int align)
+ 						sizeof(struct lpfc_nodelist));
+ 	if (!phba->nlp_mem_pool)
+ 		goto fail_free_mbox_pool;
+-	phba->lpfc_hrb_pool = pci_pool_create("lpfc_hrb_pool",
++
++	if (phba->sli_rev == LPFC_SLI_REV4) {
++		phba->lpfc_hrb_pool = pci_pool_create("lpfc_hrb_pool",
+ 					      phba->pcidev,
+ 					      LPFC_HDR_BUF_SIZE, align, 0);
+-	if (!phba->lpfc_hrb_pool)
+-		goto fail_free_nlp_mem_pool;
+-	phba->lpfc_drb_pool = pci_pool_create("lpfc_drb_pool",
++		if (!phba->lpfc_hrb_pool)
++			goto fail_free_nlp_mem_pool;
++
++		phba->lpfc_drb_pool = pci_pool_create("lpfc_drb_pool",
+ 					      phba->pcidev,
+ 					      LPFC_DATA_BUF_SIZE, align, 0);
+-	if (!phba->lpfc_drb_pool)
+-		goto fail_free_hbq_pool;
+-
++		if (!phba->lpfc_drb_pool)
++			goto fail_free_hrb_pool;
++		phba->lpfc_hbq_pool = NULL;
++	} else {
++		phba->lpfc_hbq_pool = pci_pool_create("lpfc_hbq_pool",
++			phba->pcidev, LPFC_BPL_SIZE, align, 0);
++		if (!phba->lpfc_hbq_pool)
++			goto fail_free_nlp_mem_pool;
++		phba->lpfc_hrb_pool = NULL;
++		phba->lpfc_drb_pool = NULL;
++	}
+ 	/* vpi zero is reserved for the physical port so add 1 to max */
+ 	longs = ((phba->max_vpi + 1) + BITS_PER_LONG - 1) / BITS_PER_LONG;
+ 	phba->vpi_bmask = kzalloc(longs * sizeof(unsigned long), GFP_KERNEL);
+@@ -132,7 +143,7 @@ lpfc_mem_alloc(struct lpfc_hba *phba, int align)
+  fail_free_dbq_pool:
+ 	pci_pool_destroy(phba->lpfc_drb_pool);
+ 	phba->lpfc_drb_pool = NULL;
+- fail_free_hbq_pool:
++ fail_free_hrb_pool:
+ 	pci_pool_destroy(phba->lpfc_hrb_pool);
+ 	phba->lpfc_hrb_pool = NULL;
+  fail_free_nlp_mem_pool:
+@@ -176,11 +187,17 @@ lpfc_mem_free(struct lpfc_hba *phba)
+ 
+ 	/* Free HBQ pools */
+ 	lpfc_sli_hbqbuf_free_all(phba);
+-	pci_pool_destroy(phba->lpfc_drb_pool);
++	if (phba->lpfc_drb_pool)
++		pci_pool_destroy(phba->lpfc_drb_pool);
+ 	phba->lpfc_drb_pool = NULL;
+-	pci_pool_destroy(phba->lpfc_hrb_pool);
++	if (phba->lpfc_hrb_pool)
++		pci_pool_destroy(phba->lpfc_hrb_pool);
+ 	phba->lpfc_hrb_pool = NULL;
+ 
++	if (phba->lpfc_hbq_pool)
++		pci_pool_destroy(phba->lpfc_hbq_pool);
++	phba->lpfc_hbq_pool = NULL;
++
+ 	/* Free NLP memory pool */
+ 	mempool_destroy(phba->nlp_mem_pool);
+ 	phba->nlp_mem_pool = NULL;
+@@ -380,7 +397,7 @@ lpfc_els_hbq_alloc(struct lpfc_hba *phba)
+ 	if (!hbqbp)
+ 		return NULL;
+ 
+-	hbqbp->dbuf.virt = pci_pool_alloc(phba->lpfc_hrb_pool, GFP_KERNEL,
++	hbqbp->dbuf.virt = pci_pool_alloc(phba->lpfc_hbq_pool, GFP_KERNEL,
+ 					  &hbqbp->dbuf.phys);
+ 	if (!hbqbp->dbuf.virt) {
+ 		kfree(hbqbp);
+@@ -405,7 +422,7 @@ lpfc_els_hbq_alloc(struct lpfc_hba *phba)
+ void
+ lpfc_els_hbq_free(struct lpfc_hba *phba, struct hbq_dmabuf *hbqbp)
+ {
+-	pci_pool_free(phba->lpfc_hrb_pool, hbqbp->dbuf.virt, hbqbp->dbuf.phys);
++	pci_pool_free(phba->lpfc_hbq_pool, hbqbp->dbuf.virt, hbqbp->dbuf.phys);
+ 	kfree(hbqbp);
+ 	return;
+ }
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -11536,6 +11536,7 @@ lpfc_sli4_read_fcf_record(struct lpfc_hba *phba, uint16_t fcf_index)
- 	uint32_t alloc_len, req_len;
- 	struct lpfc_mbx_read_fcf_tbl *read_fcf;
+@@ -4702,13 +4702,13 @@ lpfc_sli_issue_mbox_s3(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmbox,
  
-+	phba->fcoe_eventtag_at_fcf_scan = phba->fcoe_eventtag;
- 	mboxq = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
- 	if (!mboxq) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-@@ -11587,8 +11588,12 @@ lpfc_sli4_read_fcf_record(struct lpfc_hba *phba, uint16_t fcf_index)
- 	if (rc == MBX_NOT_FINISHED) {
- 		lpfc_sli4_mbox_cmd_free(phba, mboxq);
- 		error = -EIO;
--	} else
-+	} else {
-+		spin_lock_irq(&phba->hbalock);
-+		phba->hba_flag |= FCF_DISC_INPROGRESS;
-+		spin_unlock_irq(&phba->hbalock);
- 		error = 0;
-+	}
- 	return error;
- }
- 
+ 	spin_lock_irqsave(&phba->hbalock, drvr_flag);
+ 	if (!pmbox) {
++		phba->sli.sli_flag &= ~LPFC_SLI_MBOX_ACTIVE;
+ 		/* processing mbox queue from intr_handler */
+ 		if (unlikely(psli->sli_flag & LPFC_SLI_ASYNC_MBX_BLK)) {
+ 			spin_unlock_irqrestore(&phba->hbalock, drvr_flag);
+ 			return MBX_SUCCESS;
+ 		}
+ 		processing_queue = 1;
+-		phba->sli.sli_flag &= ~LPFC_SLI_MBOX_ACTIVE;
+ 		pmbox = lpfc_mbox_get(phba);
+ 		if (!pmbox) {
+ 			spin_unlock_irqrestore(&phba->hbalock, drvr_flag);
 
 
