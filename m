@@ -1,48 +1,66 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 11646] QLA2xxx: Kernel deadlock on high load somewhere after
- 2.6.20
-Date: Sun, 19 Jul 2009 14:25:32 GMT
-Message-ID: <200907191425.n6JEPWko012516@demeter.kernel.org>
-References: <bug-11646-11613@http.bugzilla.kernel.org/>
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH 6/10] drivers/scsi: Move a dereference below a NULL test
+Date: Sun, 19 Jul 2009 17:27:20 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0907191726590.16542@ask.diku.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:59055 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754248AbZGSOZc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jul 2009 10:25:32 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n6JEPWFv012517
-	for <linux-scsi@vger.kernel.org>; Sun, 19 Jul 2009 14:25:32 GMT
-In-Reply-To: <bug-11646-11613@http.bugzilla.kernel.org/>
+Received: from mgw1.diku.dk ([130.225.96.91]:47159 "EHLO mgw1.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754596AbZGSP1X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 19 Jul 2009 11:27:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11646
+From: Julia Lawall <julia@diku.dk>
 
+If the NULL test is necessary, then the dereference should be moved below
+the NULL test.  I have additionally added a return if the NULL tests
+succeeds, because it is not clear that the rest of the function, which is
+for debugging only, makes sense in this case.
 
-Somsak Sriprayoonsakul <somsaks@gmail.com> changed:
+The semantic patch that makes this change is as follows:
+(http://www.emn.fr/x-info/coccinelle/)
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |somsaks@gmail.com
+// <smpl>
+@@
+type T;
+expression E,E1;
+identifier i,fld;
+statement S;
+@@
 
+- T i = E->fld;
++ T i;
+  ... when != E=E1
+      when != i
+  if (E == NULL||...) S
++ i = E->fld;
+// </smpl>
 
+Signed-off-by: Julia Lawall <julia@diku.dk>
 
+---
+ drivers/scsi/fd_mcs.c               |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
---- Comment #27 from Somsak Sriprayoonsakul <somsaks@gmail.com>  2009-07-19 14:25:27 ---
-Hi, we are having about the same problem with about the same log, and we found
-something similar with workaround posted at
-
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/268242
-
-Could this possibly be the same bug?
-
-Anyway, we have add pci=nomsi as suggested in above bug report. Will report
-here again if it help (or not).
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+diff --git a/drivers/scsi/fd_mcs.c b/drivers/scsi/fd_mcs.c
+index 85bd54c..eff35cf 100644
+--- a/drivers/scsi/fd_mcs.c
++++ b/drivers/scsi/fd_mcs.c
+@@ -1127,11 +1127,13 @@ static void fd_mcs_print_info(Scsi_Cmnd * SCpnt)
+ 	unsigned int imr;
+ 	unsigned int irr;
+ 	unsigned int isr;
+-	struct Scsi_Host *shpnt = SCpnt->host;
++	struct Scsi_Host *shpnt;
+ 
+ 	if (!SCpnt || !SCpnt->host) {
+ 		printk("fd_mcs: cannot provide detailed information\n");
++		return;
+ 	}
++	shpnt = SCpnt->host;
+ 
+ 	printk("%s\n", fd_mcs_info(SCpnt->host));
+ 	print_banner(SCpnt->host);
