@@ -1,125 +1,169 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: Recommended HBA management interfaces
-Date: Mon, 20 Jul 2009 12:57:46 -0400
-Message-ID: <4A64A20A.5080908@emulex.com>
-References: <6C678488C5CEE74F813A4D1948FD2DC7A998698F@cosmail02.lsi.com> <4A609A55.9040404@linux.vnet.ibm.com> <6C678488C5CEE74F813A4D1948FD2DC7A99EFDC7@cosmail02.lsi.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [PATCH]: New implementation of scsi_execute_async()
+Date: Mon, 20 Jul 2009 21:54:43 +0400
+Message-ID: <4A64AF63.6050300@vlnb.net>
+References: <4A563368.5040407@vlnb.net> <4A59DF14.7060807@panasas.com> <4A5CAF66.3090909@vlnb.net> <4A5D9117.2060205@panasas.com> <4A5F6DC2.5040008@vlnb.net> <4A6304C7.3070200@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:35361 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752082AbZGTQ5w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2009 12:57:52 -0400
-In-Reply-To: <6C678488C5CEE74F813A4D1948FD2DC7A99EFDC7@cosmail02.lsi.com>
+Received: from moutng.kundenserver.de ([212.227.126.186]:49355 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752595AbZGTRzq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2009 13:55:46 -0400
+In-Reply-To: <4A6304C7.3070200@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Mukker, Atul" <Atul.Mukker@lsi.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>
 
-FYI - netlink (and sysfs, and I believe debugfs) do not exist with 
-vmware drivers...   Additionally, with netlink, many of the distros no 
-longer include libnl by default in their install images.  Even 
-interfaces that you think exist on vmware, may have very different 
-semantical behavior (almost all of the transport stuff either doesn't 
-exist or is only partially implemented).
-
-One big caveat I'd give you:  It's not so much the interface being used, 
-but rather, what are you doing over the interface.  One of the goals of 
-the community is to present a consistent management paradigm for like 
-things.  Thus, if what you are doing is generic, you should do it in a 
-generic manner so that all drivers for like hardware can utilize it.  
-This was the motivation for the protocol transports. Interestingly, even 
-the transports use different interfaces for different things. It all 
-depends on what it is.
-
-Lastly, some things are considered bad practice from a kernel safety 
-point of view. Example: driver-specific ioctls passing around user-space 
-buffer pointers.  In these cases, it doesn't matter what interface you 
-pick, they'll be rejected.
-
--- james s
-
-
-Mukker, Atul wrote:
-> Thanks Brian. Netlink seems to be appropriate for our purpose as well, almost too good :-)
->
-> That make me think, what's the catch? The SCSI drivers are not heavy usage of this interface for one.
->
-> Are the other caveats associated with it?
->
-> Best regards,
-> Atul Mukker
->
->   
->> -----Original Message-----
->> From: Brian King [mailto:brking@linux.vnet.ibm.com]
->> Sent: Friday, July 17, 2009 11:36 AM
->> To: Mukker, Atul
->> Cc: linux-scsi@vger.kernel.org
->> Subject: Re: Recommended HBA management interfaces
+Boaz Harrosh, on 07/19/2009 03:34 PM wrote:
+> On 07/16/2009 09:13 PM, Vladislav Bolkhovitin wrote:
+>> Boaz Harrosh, on 07/15/2009 12:19 PM wrote:
+>>>>>>  block/blk-map.c            |  536 +++++++++++++++++++++++++++++++++++++++++++++
+>>>>>>  drivers/scsi/scsi_lib.c    |  108 ++++++++-
+>>>>>>  include/linux/blkdev.h     |    6 
+>>>>>>  include/scsi/scsi_device.h |   11 
+>>>>>>  4 files changed, 660 insertions(+), 1 deletion(-)
+>>>>>>
+>>>>> The scsi bits are not needed and just add complexity. 
+>>>>> allocate the request, call blk_rq_map_kern_sg() and
+>>>>> blk_execute_xxx directly from your driver. Since you exacly
+>>>>> know your code path lots of if(s) and flags are saved and that ugly
+>>>>> scsi_io_context allocation.
+>>>> Are you against any helper functions? scsi_lib.c has only scsi_execute_async(),
+>>>> which is a small helper function, which only hides internal machinery details.
+>>>> All the flags it has are needed and can't be avoided, especially
+>>>> SCSI_ASYNC_EXEC_FLAG_HAS_TAIL_SPACE_FOR_PADDING
+>>> Yes I'm sure. This will not be accepted. Just do it directly in the driver
+>>> like all other ULD's and block layer users. Use direct blk API. All these little
+>>> things and flags you are talking about are block specific, there is no single thing
+>>> SCSI about them.
+>> Hmm, I don't understand. What's wrong in this small helper function? Are 
+>> you against any helper functions, so, all users of, e.g., for_each_sg() 
+>> must instead open code the corresponding functionality?
 >>
->> Mukker, Atul wrote:
->>     
->>> Hi All,
+>> Do you want me to move scsi_execute_async() from scsi_lib.c to 
+>> scst_lib.c and rename it to scst_execute_async()? This is the maximum I 
+>> can do, because I need this functionality. But it will make all other 
+>> possible users to duplicate it.
+
+OK, I'll do. But people who will miss it, will blame you by pretty bad
+words!
+
+> Yes that's what I want, and if you can not save some of it's complexity
+> by, for example, merging of scsi_io_context with the request structure you
+> already have at scst level, or save the double-chained-callbacks at the end,
+> then you've done something wrong.
+
+Are you sure??
+
+As I already wrote, in SCST sense allocated on-demand only. It is done
+for performance reasons, because the sense is needed _very_ rarely and
+the buffer for it is quite big, so it's better to save those allocating,
+zeroing and CPU cache trashing. The fact that Linux SCSI ML requires
+sense buffer preallocation is for me something rather to be fixed.
+Pass-through SCST backend is used relatively rarely as well, so it's
+better to keep the sense preallocation for it in the separate code path.
+Then, if there is the sense preallocation, it doesn't matter to alloc
+with it few bytes more.
+
+Is it getting clearer now?
+
+>> Does flag SCSI_ASYNC_EXEC_FLAG_AT_HEAD have nothing to do to SCSI, really?
+>>
+> 
+> Exactly, it's just a parameter at the call to blk_execute_nowait() with it's
+> own defines already. Nothing SCSI.
+
+Well, going this way we can go too far.. Like, to assertion that SCSI
+HEAD OF QUEUE task attribute is a property of the Linux block layer as well.
+
+>>>> The allocation of scsi_io_context is unavoidable, because sense buffer should
+>>>> be allocated anyway.
+>>>>  
+>>> NO!, driver needs to do it's job and provide a sense buffer and call blk API
+>>> just like all the other drivers. this has nothing to do with SCSI.
+>> What job should a driver do? As I wrote, for SCST allocation of the 
+>> sense buffer is necessary in any case (in SCST sense is allocated on 
+>> demand only), so it doesn't matter to allocate few bytes more, if it 
+>> allows to hide unneeded low level details. The same, I guess, should be 
+>> true for all other possible users of this functionality.
+>>
+> 
+> Easiest, as all users do is: If you already have your scst request or
+> command, or what ever you call it. So add a sense_buffer array embedded
+> there, end of story no allocation needed.
+> 
+> How can you be a scsi-target and return the proper errors upstream,
+> without digging into sense-buffer and error returns to produce the
+> correct report.
+
+Most SCST backends don't deal with senses at all and generate them only
+at the latest stage of the commands processing to deliver errors (e.g.,
+file read errors) to initiators.
+
+>>>>>> +/**
+>>>>>> + * blk_rq_unmap_kern_sg - "unmaps" data buffers in the request
+>>>>>> + * @req:	request to unmap
+>>>>>> + * @do_copy:	sets copy data between buffers, if needed, or not
+>>>>>> + *
+>>>>>> + * Description:
+>>>>>> + *    It frees all additional buffers allocated for SG->BIO mapping.
+>>>>>> + */
+>>>>>> +void blk_rq_unmap_kern_sg(struct request *req, int do_copy)
+>>>>>> +{
+>>>>>> +	struct scatterlist *hdr = (struct scatterlist *)req->end_io_data;
+>>>>>> +
+>>>>> You can't use req->end_io_data  here! req->end_io_data is reserved for
+>>>>> blk_execute_async callers. It can not be used for private block use.
+>>>> Why? I see blk_execute_rq() happily uses it. Plus, I implemented stacking of
+>>>> it in scsi_execute_async().
+>>>>
+>>> As I said users of blk_execute_rq_nowait() blk_execute_rq is a user of
+>>> blk_execute_rq_nowait just as the other guy.
 >>>
->>> We would like expert comments on the following questions regarding
->>> management of HBA from applications.
+>>> "implemented stacking" is exactly the disaster I'm talking about.
+>>> Also it totaly breaks the blk API. Now I need to to specific code
+>>> when mapping with this API as opposed to other mappings when I execute
 >>>
->>> Traditionally, our drivers create a character device node, whose
->>> file_operations are then used by the management applications to
->>> transfer HBA specific commands. In addition to being quirky, this
->>> interface has a few limitations which we would like to remove, most
->>> important being able to seamlessly handle asynchronous events with
->>> data transfer.
->>>
->>> 1. What is (are) the other standard/recommended interfaces which
->>> applications can use to transfer HBA specific commands and data.
->>>       
->> Depends on what the commands look like. With ipr, the commands that
->> the management application need to send to the HBA look sufficiently
->> like SCSI that I was able to report an sg device node for the adapter
->> and use SG_IO to send these commands.
+>>>> Do you have better suggestion?
+>>> I have not look at it deeply but you'll need another system. Perhaps
+>>> like map_user/unmap_user where you give unmap_user the original bio.
+>>> Each user of map_user needs to keep a pointer to the original bio
+>>> on mapping. Maybe some other options as well. You can use the bio's
+>>> private data pointer, when building the first bio from scatter-list.
+>> I can't see how *well documented* stacking of end_io_data can be/lead to 
+>> any problem. All the possible alternatives I can see are worse:
 >>
->> sysfs, debugfs, and configfs are options as well.
+>> 1. Add in struct request one more field, like "void *blk_end_io_data" 
+>> and use it.
 >>
+>> 2. Duplicate code of bio's allocation and chaining 
+>> (__blk_rq_map_kern_sg()) for the copy case with additional code for 
+>> allocation and copying of the copy buffers on per-bio basis and use 
+>> bio->bi_private to track the copy info. Tejun Heo used this approach, 
+>> but he had only one bio without any chaining. With the chaining this 
+>> approach becomes terribly overcomplicated and ugly with *NO* real gain.
 >>
->>     
->>> 2. How should an LLD implement interfaces to transmit asynchronous
->>> information to the management applications? The requirement is to be
->>> able to transmit data buffer as well as notifications for events.
->>>       
->> I've had good success with netlink. In my use I only send a notification
->> to userspace and let the application send some commands to figure out
->> what happened, but netlink does allow to send data as well. It makes it
->> very
->> easy to have multiple concurrent readers of the data, which I've found
->> very
->> useful.
+>> Do you like any of them? If not, I'd like to see _practical_ suggestions.
 >>
->>     
->>> 3. The interface should be able to work even if no SCSI devices are
->>> exported to the kernel.
->>>       
->> netlink allows this.
->>
->>     
->>> 4. Should work seamlessly across vmware and xen kernels.
->>>       
->> netlink should work here too.
->>
->> -Brian
->>
->> --
->> Brian King
->> Linux on Power Virtualization
->> IBM Linux Technology Center
->>
->>     
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->   
+> 
+> Again all this is not needed and should be dropped it is already done
+> by bio bouncing. All you need to do is add the pages to bios, chain when
+> full, and call blk_make_request.
+
+Can you show me a place where the bio bouncing, i.e.
+blk_queue_bounce(), does bouncing of misaligned buffers?
+
+I don't see such places. Instead, I see that all users of the block API,
+who cares about the alignment (sg, st, sr, etc.), directly or indirectly
+take care about it, by, e.g., switching to copying functions, before
+calling blk_queue_bounce(). See blk_rq_map_user_iov(), for instance.
+This is exactly what I implemented: handling of misaligned buffers on
+the layer upper blk_queue_bounce().
+
+Thanks,
+Vlad
+
+
