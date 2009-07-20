@@ -1,8 +1,8 @@
 From: Jing Huang <huangj@brocade.com>
-Subject: [PATCH 0/5] bfa: Brocade BFA FC SCSI driver (overview)
-Date: Sun, 19 Jul 2009 23:20:58 -0700
-Message-ID: <200907200620.n6K6Kw2O011121@swe57.brocade.com>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752134AbZGTGad@vger.kernel.org>
+Subject: [PATCH 5/5] bfa: Brocade BFA FC SCSI driver (maint)
+Date: Sun, 19 Jul 2009 23:27:43 -0700
+Message-ID: <200907200627.n6K6RhpX011701@swe57.brocade.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752297AbZGTGax@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: kgudipat@brocade.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rvadivel@brocade.com, vravindr@brocade.com, xmzhang@brocade.com
@@ -10,28 +10,27 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Jing Huang <huangj@brocade.com>
 
-In this submission, we completed all the pening works in our last submission
-in April, including:
-1) Added support of Brocade PCIe FCOE HBA.
-2) Cleaned up FC state machine code.
-3) Completed implementing code review comments received from the open source
-community.
-
-It contains a serial of 5 patches generated using 2.6.30.1 kernel. Here is
-a brief description of each patch:
-
-[PATCH 1/5]: SCSI LLD driver code, module init/exit, PCI and SCSI host entry
-points, interrupt handler, and sysfs interface etc. 
-
-[PATCH 2/5]: Hardware/FW access code and FC state machines.
-
-[PATCH 3/5]: Common header files shared by linux driver specific,
-hardware/FW access code, FC state machines.
-
-[PATCH 4/5]: Updated Kconfig and Makefile for driver/scsi, and Makefile
-for bfa driver 
-
-[PATCH 5/5]: Updated MAINTAINER file.
+This patch contains updated MAINTAINERS file.
 
 Signed-off-by: Jing Huang <huangj@brocade.com>
 ---
+ MAINTAINERS |    7 +++++++
+ 1 files changed, 7 insertions(+)
+
+diff -urpN orig/MAINTAINERS patch/MAINTAINERS
+--- orig/MAINTAINERS	2009-07-19 17:48:16.000000000 -0700
++++ patch/MAINTAINERS	2009-07-19 17:48:16.000000000 -0700
+@@ -1254,6 +1254,13 @@ L:	netdev@vger.kernel.org
+ S:	Supported
+ F:	drivers/net/tg3.*
+ 
++BROCADE BFA FC SCSI DRIVER
++P:	Jing Huang
++M:	huangj@brocade.com
++L:	linux-scsi@vger.kernel.org
++S:	Supported
++F:	drivers/scsi/bfa/
++
+ BSG (block layer generic sg v4 driver)
+ P:	FUJITA Tomonori
+ M:	fujita.tomonori@lab.ntt.co.jp
