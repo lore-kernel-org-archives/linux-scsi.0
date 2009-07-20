@@ -1,59 +1,132 @@
 From: Eddie Williams <Eddie.Williams@steeleye.com>
-Subject: Re: [PATCH 2/3] scsi_dh: Provide set_params interface in emc
+Subject: Re: [PATCH 0/3] scsi_dh: Add ability to set parameters for scsi
  device handler
-Date: Mon, 20 Jul 2009 09:00:13 -0400
-Message-ID: <1248094813.6307.10.camel@eddie-laptop>
+Date: Mon, 20 Jul 2009 09:05:19 -0400
+Message-ID: <1248095119.6307.17.camel@eddie-laptop>
 References: <20090702031308.28354.73353.sendpatchset@chandra-ubuntu>
-	 <20090702031320.28354.96958.sendpatchset@chandra-ubuntu>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p02c12o142.mxlogic.net ([208.65.145.75]:59222 "EHLO
-	p02c12o142.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752351AbZGTNAT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2009 09:00:19 -0400
-In-Reply-To: <20090702031320.28354.96958.sendpatchset@chandra-ubuntu>
+Received: from p02c12o144.mxlogic.net ([208.65.145.77]:38276 "EHLO
+	p02c12o144.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752421AbZGTNFY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2009 09:05:24 -0400
+In-Reply-To: <20090702031308.28354.73353.sendpatchset@chandra-ubuntu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Chandra Seetharaman <sekharan@us.ibm.com>
 Cc: linux-scsi@vger.kernel.org, dm-devel@redhat.com, michaelc@cs.wisc.edu, agk@redhat.com, James.Bottomley@HansenPartnership.com, Benoit_Arthur@emc.com, asson_ronald@emc.com, berthiaume_wayne@emc.com
 
+
+Your patch set works well but the scsi_dh_emc.c in rc1 does not.  I
+applied your patches to the SLES 11 (2.6.27.23) and I am able to set the
+parameter with reservations being handled correctly.  As noted in an
+earlier email when I tested the 2.6.31-rc1 kernel with and without your
+patches I would see a panic.  I compared the scsi_dh_emc.c in rc1 with
+SLES 11.  There are a couple of differences.  The panic is resolved with
+the changes from SLES 11.  I am not sure if these are changes made to
+SLES 11 and not made to the upstream kernel or whether there was a patch
+to the upstream kernel after 2.6.27 that broke this.  Here are the
+changes when applied to rc1 that resolves the panic and allowed me to
+test your patches.
+
+*** linux-2.6.31-rc1/drivers/scsi/device_handler/scsi_dh_emc.c
+2009-07-20 08:37:14.000000000 -0400
+--- linux-2.6.31-rc1.0.3/drivers/scsi/device_handler/scsi_dh_emc.c
+2009-07-20 08:42:36.000000000 -0400
+***************
+*** 176,182 ****
+  		err = SCSI_DH_DEV_TEMP_BUSY;
+  		goto out;
+  	}
+! 	if (csdev->buffer[4] > 2) {
+  		/* Invalid buffer format */
+  		sdev_printk(KERN_NOTICE, sdev,
+  			    "%s: invalid VPD page 0xC0 format\n",
+--- 176,182 ----
+  		err = SCSI_DH_DEV_TEMP_BUSY;
+  		goto out;
+  	}
+! 	if (csdev->buffer[4] < 0 || csdev->buffer[4] > 2) {
+  		/* Invalid buffer format */
+  		sdev_printk(KERN_NOTICE, sdev,
+  			    "%s: invalid VPD page 0xC0 format\n",
+***************
+*** 272,278 ****
+  	int len = 0;
+  
+  	rq = blk_get_request(sdev->request_queue,
+! 			(cmd == MODE_SELECT) ? WRITE : READ, GFP_NOIO);
+  	if (!rq) {
+  		sdev_printk(KERN_INFO, sdev, "get_req: blk_get_request failed");
+  		return NULL;
+--- 272,278 ----
+  	int len = 0;
+  
+  	rq = blk_get_request(sdev->request_queue,
+! 			(cmd != INQUIRY) ? WRITE : READ, GFP_NOIO);
+  	if (!rq) {
+  		sdev_printk(KERN_INFO, sdev, "get_req: blk_get_request failed");
+  		return NULL;
+***************
+*** 286,299 ****
+--- 286,302 ----
+  		len = sizeof(short_trespass);
+  		rq->cmd_flags |= REQ_RW;
+  		rq->cmd[1] = 0x10;
++ 		rq->cmd[4] = len;
+  		break;
+  	case MODE_SELECT_10:
+  		len = sizeof(long_trespass);
+  		rq->cmd_flags |= REQ_RW;
+  		rq->cmd[1] = 0x10;
++ 		rq->cmd[8] = len;
+  		break;
+  	case INQUIRY:
+  		len = CLARIION_BUFFER_SIZE;
++ 		rq->cmd[4] = len;
+  		memset(buffer, 0, len);
+  		break;
+  	default:
+***************
+*** 301,307 ****
+  		break;
+  	}
+  
+- 	rq->cmd[4] = len;
+  	rq->cmd_type = REQ_TYPE_BLOCK_PC;
+  	rq->cmd_flags |= REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
+  			 REQ_FAILFAST_DRIVER;
+--- 304,309 ----
+
 On Wed, 2009-07-01 at 20:13 -0700, Chandra Seetharaman wrote:
-> Handle the parameters provided by user thru multipath.
+> Hello,
 > 
-> This handler expects only 2 parameters and their value can either be 0 or 1.
+> Last week, Eddie Williams reported a regression w.r.t scsi_dh
+> (http://www.redhat.com/archives/dm-devel/2009-June/msg00285.html).
+> Parameter setting part of dm multipath handler has been removed
+> when we moved to scsi device handler.
 > 
-> This code originates from the old dm-emc.c file. Appropriate changes have
-> been made to make it work in the new design.
+> This set of patches adds an new interface to scsi_dh and uses it.
 > 
-> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> ---
->  drivers/scsi/device_handler/scsi_dh_emc.c |   56 ++++++++++++++++++++++++++++++
->  1 file changed, 56 insertions(+)
+> This patch set applies on 2.6.31-rc1 and the following 2 patches:
+> 	(1) http://patchwork.kernel.org/patch/32646/raw/
+> 	(2) http://patchwork.kernel.org/patch/32647/raw/
 > 
-> Index: linux-2.6.31-rc1/drivers/scsi/device_handler/scsi_dh_emc.c
-> ===================================================================
-> --- linux-2.6.31-rc1.orig/drivers/scsi/device_handler/scsi_dh_emc.c
-> +++ linux-2.6.31-rc1/drivers/scsi/device_handler/scsi_dh_emc.c
-> @@ -561,6 +561,61 @@ done:
->  
->  	return result;
->  }
-> +/*
-> + * params - parameters in the following format
-> + *      "no_of_params\0param1\0param2\0param3\0...\0"
-> + *      for example, string for 2 parameters with value 10 and 21
-> + *      is specified as "2\010\021\0".
-> + */
-> +static int clariion_set_params(struct scsi_device *sdev, const char *params)
-> +{
-> +	struct clariion_dh_data *csdev = get_clariion_data(sdev);
-> +	unsigned int hr = 0, st = 0, argc;
-> +	char *p = params;
-
-This throws a compiler warning resolved with a type cast:
-	char *p = (char *)params;
-
-
+> This interface part of the patch has been tested.
+> 
+> Eddie,
+> 
+> If you can test it on an EMC storage and respond with your
+> findings it will be of great help.
+> 
+> Thanks,
+> 
+> chandra
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
