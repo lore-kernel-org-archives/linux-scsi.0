@@ -1,169 +1,155 @@
 From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [PATCH]: New implementation of scsi_execute_async()
-Date: Mon, 20 Jul 2009 21:54:43 +0400
-Message-ID: <4A64AF63.6050300@vlnb.net>
-References: <4A563368.5040407@vlnb.net> <4A59DF14.7060807@panasas.com> <4A5CAF66.3090909@vlnb.net> <4A5D9117.2060205@panasas.com> <4A5F6DC2.5040008@vlnb.net> <4A6304C7.3070200@panasas.com>
+Subject: Re: [PATCH v2]: New implementation of scsi_execute_async()
+Date: Mon, 20 Jul 2009 21:56:18 +0400
+Message-ID: <4A64AFC2.9030603@vlnb.net>
+References: <4A563368.5040407@vlnb.net> <4A5CAFB5.1000901@vlnb.net> <4A5D9C46.2000002@panasas.com> <4A5F6E24.3080800@vlnb.net> <4A630508.1020802@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:49355 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752595AbZGTRzq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2009 13:55:46 -0400
-In-Reply-To: <4A6304C7.3070200@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753523AbZGTR5b@vger.kernel.org>
+In-Reply-To: <4A630508.1020802@panasas.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>, Joe Eykholt <jeykholt@cisco.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Boaz Harrosh, on 07/19/2009 03:34 PM wrote:
-> On 07/16/2009 09:13 PM, Vladislav Bolkhovitin wrote:
->> Boaz Harrosh, on 07/15/2009 12:19 PM wrote:
->>>>>>  block/blk-map.c            |  536 +++++++++++++++++++++++++++++++++++++++++++++
->>>>>>  drivers/scsi/scsi_lib.c    |  108 ++++++++-
->>>>>>  include/linux/blkdev.h     |    6 
->>>>>>  include/scsi/scsi_device.h |   11 
->>>>>>  4 files changed, 660 insertions(+), 1 deletion(-)
->>>>>>
->>>>> The scsi bits are not needed and just add complexity. 
->>>>> allocate the request, call blk_rq_map_kern_sg() and
->>>>> blk_execute_xxx directly from your driver. Since you exacly
->>>>> know your code path lots of if(s) and flags are saved and that ugly
->>>>> scsi_io_context allocation.
->>>> Are you against any helper functions? scsi_lib.c has only scsi_execute_async(),
->>>> which is a small helper function, which only hides internal machinery details.
->>>> All the flags it has are needed and can't be avoided, especially
->>>> SCSI_ASYNC_EXEC_FLAG_HAS_TAIL_SPACE_FOR_PADDING
->>> Yes I'm sure. This will not be accepted. Just do it directly in the driver
->>> like all other ULD's and block layer users. Use direct blk API. All these little
->>> things and flags you are talking about are block specific, there is no single thing
->>> SCSI about them.
->> Hmm, I don't understand. What's wrong in this small helper function? Are 
->> you against any helper functions, so, all users of, e.g., for_each_sg() 
->> must instead open code the corresponding functionality?
->>
->> Do you want me to move scsi_execute_async() from scsi_lib.c to 
->> scst_lib.c and rename it to scst_execute_async()? This is the maximum I 
->> can do, because I need this functionality. But it will make all other 
->> possible users to duplicate it.
-
-OK, I'll do. But people who will miss it, will blame you by pretty bad
-words!
-
-> Yes that's what I want, and if you can not save some of it's complexity
-> by, for example, merging of scsi_io_context with the request structure you
-> already have at scst level, or save the double-chained-callbacks at the end,
-> then you've done something wrong.
-
-Are you sure??
-
-As I already wrote, in SCST sense allocated on-demand only. It is done
-for performance reasons, because the sense is needed _very_ rarely and
-the buffer for it is quite big, so it's better to save those allocating,
-zeroing and CPU cache trashing. The fact that Linux SCSI ML requires
-sense buffer preallocation is for me something rather to be fixed.
-Pass-through SCST backend is used relatively rarely as well, so it's
-better to keep the sense preallocation for it in the separate code path.
-Then, if there is the sense preallocation, it doesn't matter to alloc
-with it few bytes more.
-
-Is it getting clearer now?
-
->> Does flag SCSI_ASYNC_EXEC_FLAG_AT_HEAD have nothing to do to SCSI, really?
+Boaz Harrosh, on 07/19/2009 03:35 PM wrote:
+> On 07/16/2009 09:15 PM, Vladislav Bolkhovitin wrote:
+>> Boaz Harrosh, on 07/15/2009 01:07 PM wrote:
+>>> On 07/14/2009 07:17 PM, Vladislav Bolkhovitin wrote:
+> <snip>
+>>>> +struct blk_kern_sg_hdr {
+>>>> +	struct scatterlist *orig_sgp;
+>>>> +	union {
+>>>> +		struct sg_table new_sg_table;
+>>>> +		struct scatterlist *saved_sg;
+>>>> +	};
+>>> There is a struct scatterlist * inside struct sg_table
+>>> just use that. No need for a union. (It's not like your saving
+>>> space). In the tail case nents == 1.
+>>> (orig_nents==0 and loose the tail_only)
+>> This will uncover internal details of SG-chaining implementation, which 
+>> you wanted to hide. Or didn't?
 >>
 > 
-> Exactly, it's just a parameter at the call to blk_execute_nowait() with it's
-> own defines already. Nothing SCSI.
+> Are you commenting on the remove of tail_only, or the reuse of
+> ->new_sg_table.sgl instead of ->saved_sg. The later makes tons of sense
+> to me.
+> 
+> if you want to keep the "tail_only" and not hack with nents && orig_nents
+> that's fine.
 
-Well, going this way we can go too far.. Like, to assertion that SCSI
-HEAD OF QUEUE task attribute is a property of the Linux block layer as well.
+Yes, this is exactly what's done.
 
->>>> The allocation of scsi_io_context is unavoidable, because sense buffer should
->>>> be allocated anyway.
->>>>  
->>> NO!, driver needs to do it's job and provide a sense buffer and call blk API
->>> just like all the other drivers. this has nothing to do with SCSI.
->> What job should a driver do? As I wrote, for SCST allocation of the 
->> sense buffer is necessary in any case (in SCST sense is allocated on 
->> demand only), so it doesn't matter to allocate few bytes more, if it 
->> allows to hide unneeded low level details. The same, I guess, should be 
->> true for all other possible users of this functionality.
+>>>> +	while (hbio != NULL) {
+>>>> +		bio = hbio;
+>>>> +		hbio = hbio->bi_next;
+>>>> +		bio->bi_next = NULL;
+>>>> +
+>>>> +		blk_queue_bounce(q, &bio);
+>>> I do not understand. If you are bouncing on the bio level.
+>>> why do you need to do all the alignment checks and
+>>> sg-bouncing + tail handling all this is done again on the bio
+>>> level.
+>> blk_queue_bounce() does another and completely independent level of 
+>> bouncing for pages allocated in the not accessible by the device area.
 >>
 > 
-> Easiest, as all users do is: If you already have your scst request or
-> command, or what ever you call it. So add a sense_buffer array embedded
-> there, end of story no allocation needed.
+> No! you miss-understood. blk_queue_bounce() does all the bouncing,
+> high-mem, alignment, padding, draining, all of them.
+
+Sorry, Boaz, but looks like it is you who don't have the whole picture.
+See the end of my previous e-mail.
+
+> The code you took from Tejun was meant to go at the bio level. Here
+> you are already taken care of.
 > 
-> How can you be a scsi-target and return the proper errors upstream,
-> without digging into sense-buffer and error returns to produce the
-> correct report.
+> All you need to do is:
+> 	loop on all pages
+> 		add_pc_page();
+> 		when bio is full
+> 			chain a new bio 
+> 	and so on.
 
-Most SCST backends don't deal with senses at all and generate them only
-at the latest stage of the commands processing to deliver errors (e.g.,
-file read errors) to initiators.
+Isn't it what __blk_rq_map_kern_sg() does?
 
->>>>>> +/**
->>>>>> + * blk_rq_unmap_kern_sg - "unmaps" data buffers in the request
->>>>>> + * @req:	request to unmap
->>>>>> + * @do_copy:	sets copy data between buffers, if needed, or not
->>>>>> + *
->>>>>> + * Description:
->>>>>> + *    It frees all additional buffers allocated for SG->BIO mapping.
->>>>>> + */
->>>>>> +void blk_rq_unmap_kern_sg(struct request *req, int do_copy)
->>>>>> +{
->>>>>> +	struct scatterlist *hdr = (struct scatterlist *)req->end_io_data;
->>>>>> +
->>>>> You can't use req->end_io_data  here! req->end_io_data is reserved for
->>>>> blk_execute_async callers. It can not be used for private block use.
->>>> Why? I see blk_execute_rq() happily uses it. Plus, I implemented stacking of
->>>> it in scsi_execute_async().
->>>>
->>> As I said users of blk_execute_rq_nowait() blk_execute_rq is a user of
->>> blk_execute_rq_nowait just as the other guy.
+> Then at the end call blk_make_request() which will do the bouncing and
+> the merging. No need for all the copy/tail_only etc.. this is done by
+> lower levels for you already.
+
+It is _not_ done. See the end of my previous e-mail.
+
+> If you do that then Tejun is right you should do an:
+> 	bio_map_sg()
+> and not:
+> 	blk_map_sg()
+> 
+>>> It looks to me that perhaps you did not understand Tejun's code
+>>> His code, as I remember, was on the bio level, but here you
+>>> are duplicating what is done in bio level.
 >>>
->>> "implemented stacking" is exactly the disaster I'm talking about.
->>> Also it totaly breaks the blk API. Now I need to to specific code
->>> when mapping with this API as opposed to other mappings when I execute
+>>> But maybe I don't understand. Tejun?
 >>>
->>>> Do you have better suggestion?
->>> I have not look at it deeply but you'll need another system. Perhaps
->>> like map_user/unmap_user where you give unmap_user the original bio.
->>> Each user of map_user needs to keep a pointer to the original bio
->>> on mapping. Maybe some other options as well. You can use the bio's
->>> private data pointer, when building the first bio from scatter-list.
->> I can't see how *well documented* stacking of end_io_data can be/lead to 
->> any problem. All the possible alternatives I can see are worse:
+>>>> +	req->cmd_len = cmd_len;
+>>>> +	memset(req->cmd, 0, BLK_MAX_CDB); /* ATAPI hates garbage after CDB */
+>>>> +	memcpy(req->cmd, cmd, req->cmd_len);
+>>> Does not support large commands.
+>> Will be fixed.
 >>
->> 1. Add in struct request one more field, like "void *blk_end_io_data" 
->> and use it.
->>
->> 2. Duplicate code of bio's allocation and chaining 
->> (__blk_rq_map_kern_sg()) for the copy case with additional code for 
->> allocation and copying of the copy buffers on per-bio basis and use 
->> bio->bi_private to track the copy info. Tejun Heo used this approach, 
->> but he had only one bio without any chaining. With the chaining this 
->> approach becomes terribly overcomplicated and ugly with *NO* real gain.
->>
->> Do you like any of them? If not, I'd like to see _practical_ suggestions.
+>> (BTW, the SCSI layer assumes large CDBs as single big buffers, but all 
+>> SCSI transports I checked transfer large CDBs in 2 different parts: the 
+>> first 16 bytes and the rest. I.e. they deal with 2 different buffers. 
+>> So, the target side (SCST) deals with 2 buffers for large CDBs as well. 
+>> Having only one req->cmd will force SCST to merge those 2 buffers into a 
+>> single buffer. 
+>> So, scs[i,t]_execute_async() will have to make an 
+>> allocation for this as well.)
 >>
 > 
-> Again all this is not needed and should be dropped it is already done
-> by bio bouncing. All you need to do is add the pages to bios, chain when
-> full, and call blk_make_request.
+> Yep, allocation of command buffer if command_size > 16
 
-Can you show me a place where the bio bouncing, i.e.
-blk_queue_bounce(), does bouncing of misaligned buffers?
+...which in the majority of cases (if not in all, very possibly) isn't
+needed and can be avoided, because the low level drivers then will split 
+it again on 16 bytes and the rest to deliver to the target. But it isn't 
+related to this our discussion, except as a one more reason to have the 
+scsi_io_context allocation.
 
-I don't see such places. Instead, I see that all users of the block API,
-who cares about the alignment (sg, st, sr, etc.), directly or indirectly
-take care about it, by, e.g., switching to copying functions, before
-calling blk_queue_bounce(). See blk_rq_map_user_iov(), for instance.
-This is exactly what I implemented: handling of misaligned buffers on
-the layer upper blk_queue_bounce().
+>>>> +/**
+>>>> + * sg_copy_elem - copy one SG element to another
+>>>> + * @dst_sg:	destination SG element
+>>>> + * @src_sg:	source SG element
+>>>> + * @copy_len:	maximum amount of data to copy. If 0, then copy all.
+>>>> + * @d_km_type:	kmap_atomic type for the destination SG
+>>>> + * @s_km_type:	kmap_atomic type for the source SG
+>>>> + *
+>>>> + * Description:
+>>>> + *    Data from the source SG element will be copied to the destination SG
+>>>> + *    element. Returns number of bytes copied. Can switch to the next dst_sg
+>>>> + *    element, so, to copy to strictly only one dst_sg element, it must be
+>>>> + *    either last in the chain, or copy_len == dst_sg->length.
+>>>> + */
+>>>> +int sg_copy_elem(struct scatterlist *dst_sg, struct scatterlist *src_sg,
+>>>> +		 size_t copy_len, enum km_type d_km_type,
+>>>> +		 enum km_type s_km_type)
+>>>> +{
+>>>> +	size_t dst_len = dst_sg->length, dst_offs = dst_sg->offset;
+>>>> +
+>>>> +	return __sg_copy_elem(&dst_sg, &dst_len, &dst_offs, src_sg,
+>>>> +		copy_len, d_km_type, s_km_type);
+>>>> +}
+>>>> +EXPORT_SYMBOL(sg_copy_elem);
+>>> Is not sg_copy_elem a copy of an sg with one element. Why do we need
+>>> two exports.
+>> Perhaps, yes.
+>>
+>>> I would pass a nents count to below and discard this one.
+>> Perhaps, yes, but only for possible future use. I don't see any use of 
+>> it at the moment.
+>>
+> 
+> Why? for example the use of not having another export.
+
+It can be handled without nents by use of copy_len.
 
 Thanks,
 Vlad
-
-
