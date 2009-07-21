@@ -1,84 +1,101 @@
 From: Andrew Patterson <andrew.patterson@hp.com>
-Subject: [PATCH 2 2/4] cciss: use mutex instead of flag to indicate busy
-	initializing
-Date: Tue, 21 Jul 2009 13:55:27 -0600
-Message-ID: <20090721195527.20740.1301.stgit@bob.kio>
+Subject: [PATCH 2 4/4] cciss: kick off logical drive topology rescan through
+	sysfs
+Date: Tue, 21 Jul 2009 13:55:38 -0600
+Message-ID: <20090721195537.20740.30943.stgit@bob.kio>
 References: <20090721195517.20740.18994.stgit@bob.kio>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0008.atlanta.hp.com ([15.192.0.45]:45647 "EHLO
-	g5t0008.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756029AbZGUTz3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2009 15:55:29 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756095AbZGUTzs@vger.kernel.org>
 In-Reply-To: <20090721195517.20740.18994.stgit@bob.kio>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, mike.miller@hp.com, jens.axboe@oracle.com
+List-Id: linux-scsi@vger.kernel.org
 
-cciss: use mutex instead of flag to indicate busy initializing
+cciss: kick off logical drive topology rescan through sysfs
 
-Convert busy_initializing from simple integer flag to mutex, so we
-can use it to block and thus avoid some race conditions.
+Added /sys/bus/pci/devices/<dev>/ccissX/rescan sysfs entry used
+to kick off a rescan that discovers logical drive topology changes.
 
 Acked-by: Mike Miller <mike.miller@hp.com>
 Signed-off-by: Andrew Patterson <andrew.patterson@hp.com>
 ---
 
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci-devices-cciss b/Documentation/ABI/testing/sysfs-bus-pci-devices-cciss
+index 0a92a7c..4050606 100644
+--- a/Documentation/ABI/testing/sysfs-bus-pci-devices-cciss
++++ b/Documentation/ABI/testing/sysfs-bus-pci-devices-cciss
+@@ -31,3 +31,10 @@ Date:		March 2009
+ Kernel Version: 2.6.30
+ Contact:	iss_storagedev@hp.com
+ Description:	A symbolic link to /sys/block/cciss!cXdY
++
++Where:		/sys/bus/pci/devices/<dev>/ccissX/rescan
++Date:		July 2009
++Kernel Version:	2.6.31
++Contact:	iss_storagedev@hp.com
++Description:	Kicks of a rescan of the controller to discovery logical
++		drive topology changes.
 diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index 970c896..085ab11 100644
+index 0ce90c0..12f0638 100644
 --- a/drivers/block/cciss.c
 +++ b/drivers/block/cciss.c
-@@ -751,7 +751,7 @@ static int cciss_open(struct block_device *bdev, fmode_t mode)
- 	printk(KERN_DEBUG "cciss_open %s\n", bdev->bd_disk->disk_name);
- #endif				/* CCISS_DEBUG */
+@@ -194,6 +194,7 @@ static int sendcmd_withirq_core(ctlr_info_t *h, CommandList_struct *c,
+ static int process_sendcmd_error(ctlr_info_t *h, CommandList_struct *c);
  
--	if (host->busy_initializing || drv->busy_configuring)
-+	if (mutex_is_locked(&host->busy_initializing) || drv->busy_configuring)
- 		return -EBUSY;
- 	/*
- 	 * Root is allowed to open raw volume zero even if it's not configured
-@@ -3915,7 +3915,8 @@ static int __devinit cciss_init_one(struct pci_dev *pdev,
- 	if (i < 0)
- 		return -1;
+ static void fail_all_cmds(unsigned long ctlr);
++static int add_to_scan_list(struct ctlr_info *h);
+ static int scan_thread(void *data);
+ static int check_for_unit_attention(ctlr_info_t *h, CommandList_struct *c);
  
--	hba[i]->busy_initializing = 1;
-+	mutex_init(&hba[i]->busy_initializing);
-+	mutex_lock(&hba[i]->busy_initializing);
- 	INIT_HLIST_HEAD(&hba[i]->cmpQ);
- 	INIT_HLIST_HEAD(&hba[i]->reqQ);
+@@ -459,9 +460,19 @@ static void __devinit cciss_procinit(int i)
+ #define to_hba(n) container_of(n, struct ctlr_info, dev)
+ #define to_drv(n) container_of(n, drive_info_struct, dev)
  
-@@ -4034,7 +4035,7 @@ static int __devinit cciss_init_one(struct pci_dev *pdev,
+-static struct device_type cciss_host_type = {
+-	.name		= "cciss_host",
+-};
++static ssize_t host_store_rescan(struct device *dev,
++				 struct device_attribute *attr,
++				 const char *buf, size_t count)
++{
++	struct ctlr_info *h = to_hba(dev);
++
++	add_to_scan_list(h);
++	wake_up_process(cciss_scan_thread);
++	wait_for_completion_interruptible(&h->scan_wait);
++
++	return count;
++}
++DEVICE_ATTR(rescan, S_IWUSR, NULL, host_store_rescan);
  
- 	hba[i]->cciss_max_sectors = 2048;
+ static ssize_t dev_show_unique_id(struct device *dev,
+ 				 struct device_attribute *attr,
+@@ -565,6 +576,25 @@ static ssize_t dev_show_rev(struct device *dev,
+ }
+ DEVICE_ATTR(rev, S_IRUGO, dev_show_rev, NULL);
  
--	hba[i]->busy_initializing = 0;
-+	mutex_unlock(&hba[i]->busy_initializing);
- 
- 	rebuild_lun_table(hba[i], 1);
- 	hba[i]->cciss_scan_thread = kthread_run(scan_thread, hba[i],
-@@ -4062,7 +4063,7 @@ clean2:
- clean1:
- 	cciss_destroy_hba_sysfs_entry(hba[i]);
- clean0:
--	hba[i]->busy_initializing = 0;
-+	mutex_unlock(&hba[i]->busy_initializing);
- 	/* cleanup any queues that may have been initialized */
- 	for (j=0; j <= hba[i]->highest_lun; j++){
- 		drive_info_struct *drv = &(hba[i]->drv[j]);
-diff --git a/drivers/block/cciss.h b/drivers/block/cciss.h
-index 06a5db2..bf1699c 100644
---- a/drivers/block/cciss.h
-+++ b/drivers/block/cciss.h
-@@ -107,7 +107,7 @@ struct ctlr_info
- 	int			nr_allocs;
- 	int			nr_frees; 
- 	int			busy_configuring;
--	int			busy_initializing;
-+	struct mutex		busy_initializing;
- 
- 	/* This element holds the zero based queue number of the last
- 	 * queue to be started.  It is used for fairness.
-
++static struct attribute *cciss_host_attrs[] = {
++	&dev_attr_rescan.attr,
++	NULL
++};
++
++static struct attribute_group cciss_host_attr_group = {
++	.attrs = cciss_host_attrs,
++};
++
++static struct attribute_group *cciss_host_attr_groups[] = {
++	&cciss_host_attr_group,
++	NULL
++};
++
++static struct device_type cciss_host_type = {
++	.name		= "cciss_host",
++	.groups		= cciss_host_attr_groups,
++};
++
+ static struct attribute *cciss_dev_attrs[] = {
+ 	&dev_attr_unique_id.attr,
+ 	&dev_attr_model.attr,
