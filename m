@@ -1,99 +1,42 @@
-From: Roel Kluin <roel.kluin@gmail.com>
-Subject: [PATCH] cleanup FlashPoint_HardwareResetHostAdapter()
-Date: Tue, 21 Jul 2009 13:38:12 +0200
-Message-ID: <4A65A8A4.2000506@gmail.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: Recommended HBA management interfaces
+Date: Tue, 21 Jul 2009 08:29:22 -0400
+Message-ID: <4A65B4A2.70402@emulex.com>
+References: <6C678488C5CEE74F813A4D1948FD2DC7A998698F@cosmail02.lsi.com> <4A609A55.9040404@linux.vnet.ibm.com> <6C678488C5CEE74F813A4D1948FD2DC7A99EFDC7@cosmail02.lsi.com> <4A64A20A.5080908@emulex.com> <6C678488C5CEE74F813A4D1948FD2DC7A99EFE16@cosmail02.lsi.com> <4A64C0BD.5040503@emulex.com> <6C678488C5CEE74F813A4D1948FD2DC7A99EFE88@cosmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f226.google.com ([209.85.219.226]:38527 "EHLO
-	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753640AbZGULgA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2009 07:36:00 -0400
-Received: by ewy26 with SMTP id 26so2956316ewy.37
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2009 04:35:59 -0700 (PDT)
+Received: from emulex.emulex.com ([138.239.112.1]:62094 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751072AbZGUM31 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2009 08:29:27 -0400
+In-Reply-To: <6C678488C5CEE74F813A4D1948FD2DC7A99EFE88@cosmail02.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: "Mukker, Atul" <Atul.Mukker@lsi.com>
+Cc: Brian King <brking@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-cleanups for FlashPoint_HardwareResetHostAdapter()
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
----
-This shouldn't cause semantics.
 
-diff --git a/drivers/scsi/FlashPoint.c b/drivers/scsi/FlashPoint.c
-index b898d38..b917975 100644
---- a/drivers/scsi/FlashPoint.c
-+++ b/drivers/scsi/FlashPoint.c
-@@ -1212,32 +1212,25 @@ static unsigned long FlashPoint_HardwareResetHostAdapter(struct sccb_mgr_info
- 
- 	ioport = pCardInfo->si_baseaddr;
- 
--	for (thisCard = 0; thisCard <= MAX_CARDS; thisCard++) {
--
--		if (thisCard == MAX_CARDS) {
--
--			return FAILURE;
--		}
-+	for (thisCard = 0; thisCard < MAX_CARDS; thisCard++) {
- 
- 		if (FPT_BL_Card[thisCard].ioPort == ioport) {
- 
- 			CurrCard = &FPT_BL_Card[thisCard];
- 			FPT_SccbMgrTableInitCard(CurrCard, thisCard);
- 			break;
--		}
- 
--		else if (FPT_BL_Card[thisCard].ioPort == 0x00) {
-+		} else if (FPT_BL_Card[thisCard].ioPort == 0x00) {
- 
- 			FPT_BL_Card[thisCard].ioPort = ioport;
- 			CurrCard = &FPT_BL_Card[thisCard];
- 
--			if (FPT_mbCards)
--				for (i = 0; i < FPT_mbCards; i++) {
--					if (CurrCard->ioPort ==
--					    FPT_nvRamInfo[i].niBaseAddr)
--						CurrCard->pNvRamInfo =
--						    &FPT_nvRamInfo[i];
--				}
-+			for (i = 0; i < FPT_mbCards; i++) {
-+				if (CurrCard->ioPort ==
-+						FPT_nvRamInfo[i].niBaseAddr)
-+					CurrCard->pNvRamInfo =
-+						&FPT_nvRamInfo[i];
-+			}
- 			FPT_SccbMgrTableInitCard(CurrCard, thisCard);
- 			CurrCard->cardIndex = thisCard;
- 			CurrCard->cardInfo = pCardInfo;
-@@ -1245,23 +1238,23 @@ static unsigned long FlashPoint_HardwareResetHostAdapter(struct sccb_mgr_info
- 			break;
- 		}
- 	}
-+	if (thisCard == MAX_CARDS)
-+		return FAILURE;
- 
- 	pCurrNvRam = CurrCard->pNvRamInfo;
- 
--	if (pCurrNvRam) {
-+	if (pCurrNvRam)
- 		ScamFlg = pCurrNvRam->niScamConf;
--	} else {
-+	else
- 		ScamFlg =
- 		    (unsigned char)FPT_utilEERead(ioport, SCAM_CONFIG / 2);
--	}
- 
- 	FPT_BusMasterInit(ioport);
- 	FPT_XbowInit(ioport, ScamFlg);
- 
- 	FPT_autoLoadDefaultMap(ioport);
- 
--	for (i = 0, id = 0x01; i != pCardInfo->si_id; i++, id <<= 1) {
--	}
-+	id = 0x01 << pCardInfo->si_id;
- 
- 	WR_HARPOON(ioport + hp_selfid_0, id);
- 	WR_HARPOON(ioport + hp_selfid_1, 0x00);
+Mukker, Atul wrote:
+> The management protocol involves significant amount of binary data transfer involving multiple applications, so sysfs and friends are not useful for this particular application. But I gather from your (and Brian's) email that mid-layer SG extension should be used for this particular purpose.
+> 
+> As for asynchronous notifications, netlink seems to be the de-facto choice (or it's mid-layer extensions). But didn't you mention earlier, vmware would not support this?
+
+I answered from a purely linux perspective.  VMware is not Linux. VMware 
+attempts to emulate the linux driver/midlayer api's, but emulation is done in 
+their own way, with their own semantics, for their own purposes.. Anyone that 
+believes they just drop a linux driver into vmware and it works w/o change has 
+a screw loose. It may appear to work, and some subsystems may be better than 
+others, but there are very subtle and critical differences.  As for all the 
+ancillary interfaces such as sysfs, sgio, and transports: a) they have a hard 
+time keeping up with the pace of the linux kernel; b) many of the interfaces 
+are anti their hypervisor management model. Dependence on user-space utils, 
+sysfs, etc doesn't work with a cos-less environment.  Netlink and sockets 
+opens up security holes, and hypervisor-level socket support brings all kinds 
+of headaches and memory issues. Netlink is not supported. Sysfs isn't 
+supported. Even portions of the transports/midlayer are only partially 
+implemented.  Unfortunately, vmware interfaces need to be taken up with vmware.
+
+-- james s
