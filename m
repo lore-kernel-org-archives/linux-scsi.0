@@ -1,78 +1,222 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [PATCH 2/3] scsi_dh: Provide set_params interface in emc
-	device handler
-Date: Mon, 20 Jul 2009 18:02:00 -0700
-Message-ID: <1248138120.10481.37.camel@chandra-ubuntu>
-References: <20090702031308.28354.73353.sendpatchset@chandra-ubuntu>
-	 <20090702031320.28354.96958.sendpatchset@chandra-ubuntu>
-	 <1248094813.6307.10.camel@eddie-laptop>
-Reply-To: sekharan@linux.vnet.ibm.com
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH]: New implementation of scsi_execute_async()
+Date: Tue, 21 Jul 2009 11:03:38 +0300
+Message-ID: <4A65765A.8040203@panasas.com>
+References: <4A563368.5040407@vlnb.net> <4A59DF14.7060807@panasas.com> <4A5CAF66.3090909@vlnb.net> <4A5D9117.2060205@panasas.com> <4A5F6DC2.5040008@vlnb.net> <4A6304C7.3070200@panasas.com> <4A64AF63.6050300@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e37.co.us.ibm.com ([32.97.110.158]:41651 "EHLO
-	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751141AbZGUA7K (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2009 20:59:10 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e37.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id n6L0vx5M029286
-	for <linux-scsi@vger.kernel.org>; Mon, 20 Jul 2009 18:57:59 -0600
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n6L0wlUA254114
-	for <linux-scsi@vger.kernel.org>; Mon, 20 Jul 2009 18:58:47 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n6L0wkQH025548
-	for <linux-scsi@vger.kernel.org>; Mon, 20 Jul 2009 18:58:46 -0600
-In-Reply-To: <1248094813.6307.10.camel@eddie-laptop>
+Received: from ip67-152-220-66.z220-152-67.customer.algx.net ([67.152.220.66]:28373
+	"EHLO daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752070AbZGUIDr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Jul 2009 04:03:47 -0400
+In-Reply-To: <4A64AF63.6050300@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eddie Williams <Eddie.Williams@steeleye.com>
-Cc: linux-scsi@vger.kernel.org, dm-devel@redhat.com, michaelc@cs.wisc.edu, agk@redhat.com, James.Bottomley@HansenPartnership.com, Benoit_Arthur@emc.com, asson_ronald@emc.com, berthiaume_wayne@emc.com
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>
 
+On 07/20/2009 08:54 PM, Vladislav Bolkhovitin wrote:
+> Boaz Harrosh, on 07/19/2009 03:34 PM wrote:
+>> On 07/16/2009 09:13 PM, Vladislav Bolkhovitin wrote:
+>>> Boaz Harrosh, on 07/15/2009 12:19 PM wrote:
+>>>>>>>  block/blk-map.c            |  536 +++++++++++++++++++++++++++++++++++++++++++++
+>>>>>>>  drivers/scsi/scsi_lib.c    |  108 ++++++++-
+>>>>>>>  include/linux/blkdev.h     |    6 
+>>>>>>>  include/scsi/scsi_device.h |   11 
+>>>>>>>  4 files changed, 660 insertions(+), 1 deletion(-)
+>>>>>>>
+>>>>>> The scsi bits are not needed and just add complexity. 
+>>>>>> allocate the request, call blk_rq_map_kern_sg() and
+>>>>>> blk_execute_xxx directly from your driver. Since you exacly
+>>>>>> know your code path lots of if(s) and flags are saved and that ugly
+>>>>>> scsi_io_context allocation.
+>>>>> Are you against any helper functions? scsi_lib.c has only scsi_execute_async(),
+>>>>> which is a small helper function, which only hides internal machinery details.
+>>>>> All the flags it has are needed and can't be avoided, especially
+>>>>> SCSI_ASYNC_EXEC_FLAG_HAS_TAIL_SPACE_FOR_PADDING
+>>>> Yes I'm sure. This will not be accepted. Just do it directly in the driver
+>>>> like all other ULD's and block layer users. Use direct blk API. All these little
+>>>> things and flags you are talking about are block specific, there is no single thing
+>>>> SCSI about them.
+>>> Hmm, I don't understand. What's wrong in this small helper function? Are 
+>>> you against any helper functions, so, all users of, e.g., for_each_sg() 
+>>> must instead open code the corresponding functionality?
+>>>
+>>> Do you want me to move scsi_execute_async() from scsi_lib.c to 
+>>> scst_lib.c and rename it to scst_execute_async()? This is the maximum I 
+>>> can do, because I need this functionality. But it will make all other 
+>>> possible users to duplicate it.
+> 
+> OK, I'll do. But people who will miss it, will blame you by pretty bad
+> words!
+> 
 
-I will reroll the patch with this fix and ported to the latest RC.
-On Mon, 2009-07-20 at 09:00 -0400, Eddie Williams wrote:
-> On Wed, 2009-07-01 at 20:13 -0700, Chandra Seetharaman wrote:
-> > Handle the parameters provided by user thru multipath.
-> > 
-> > This handler expects only 2 parameters and their value can either be 0 or 1.
-> > 
-> > This code originates from the old dm-emc.c file. Appropriate changes have
-> > been made to make it work in the new design.
-> > 
-> > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> > ---
-> >  drivers/scsi/device_handler/scsi_dh_emc.c |   56 ++++++++++++++++++++++++++++++
-> >  1 file changed, 56 insertions(+)
-> > 
-> > Index: linux-2.6.31-rc1/drivers/scsi/device_handler/scsi_dh_emc.c
-> > ===================================================================
-> > --- linux-2.6.31-rc1.orig/drivers/scsi/device_handler/scsi_dh_emc.c
-> > +++ linux-2.6.31-rc1/drivers/scsi/device_handler/scsi_dh_emc.c
-> > @@ -561,6 +561,61 @@ done:
-> >  
-> >  	return result;
-> >  }
-> > +/*
-> > + * params - parameters in the following format
-> > + *      "no_of_params\0param1\0param2\0param3\0...\0"
-> > + *      for example, string for 2 parameters with value 10 and 21
-> > + *      is specified as "2\010\021\0".
-> > + */
-> > +static int clariion_set_params(struct scsi_device *sdev, const char *params)
-> > +{
-> > +	struct clariion_dh_data *csdev = get_clariion_data(sdev);
-> > +	unsigned int hr = 0, st = 0, argc;
-> > +	char *p = params;
-> 
-> This throws a compiler warning resolved with a type cast:
-> 	char *p = (char *)params;
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Bring them on. I'm ready
 
+>> Yes that's what I want, and if you can not save some of it's complexity
+>> by, for example, merging of scsi_io_context with the request structure you
+>> already have at scst level, or save the double-chained-callbacks at the end,
+>> then you've done something wrong.
+> 
+> Are you sure??
+> 
+> As I already wrote, in SCST sense allocated on-demand only. It is done
+> for performance reasons, because the sense is needed _very_ rarely and
+> the buffer for it is quite big, so it's better to save those allocating,
+> zeroing and CPU cache trashing. The fact that Linux SCSI ML requires
+> sense buffer preallocation is for me something rather to be fixed.
+> Pass-through SCST backend is used relatively rarely as well, so it's
+> better to keep the sense preallocation for it in the separate code path.
+> Then, if there is the sense preallocation, it doesn't matter to alloc
+> with it few bytes more.
+> 
+> Is it getting clearer now?
+> 
+
+Yes it is now clear to me that scst is a mess. you cannot have more then
+can_queue commands in-filght. 256 allocated mem_cache buffers of size 64-bytes
+or size 96+64 bytes does not matter performance. It's the number of allocations
+that count not the size of allocation, usually. If you want you can have a bigger
+mem_cache in the scsi-pass-through case to hold a special-with-sense scst-command-
+structure.
+
+All drivers that care about sense find a way.
+
+BTW you can call blk_execute_nowait without a sense buffer at all, it is optional.
+
+>>> Does flag SCSI_ASYNC_EXEC_FLAG_AT_HEAD have nothing to do to SCSI, really?
+>>>
+>> Exactly, it's just a parameter at the call to blk_execute_nowait() with it's
+>> own defines already. Nothing SCSI.
+> 
+> Well, going this way we can go too far.. Like, to assertion that SCSI
+> HEAD OF QUEUE task attribute is a property of the Linux block layer as well.
+> 
+
+No "SCSI HEAD OF QUEUE task attribute" is a scsi attribute, none-scsi block
+devices will not understand what it is. It is executed by the scsi-device.
+Your flag will work for all block devices exactly because it is a parameter
+to the block layer.
+
+If you are implementing the scsi protocol to the letter then you must make sure
+all subsystems comply for example pass the proper flag to the Linux block subsystem.
+
+Hell look at your own code. And answer a simple question what does
+SCSI_ASYNC_EXEC_FLAG_AT_HEAD do, and how does it do it:
+
++	blk_execute_rq_nowait(req->q, NULL, req,
++		flags & SCSI_ASYNC_EXEC_FLAG_AT_HEAD, scsi_end_async);
+
+I'd say it's just a bit carrier to a boolean parameter at the call to
+blk_execute_rq_nowait
+
+>>>>> The allocation of scsi_io_context is unavoidable, because sense buffer should
+>>>>> be allocated anyway.
+>>>>>  
+>>>> NO!, driver needs to do it's job and provide a sense buffer and call blk API
+>>>> just like all the other drivers. this has nothing to do with SCSI.
+>>> What job should a driver do? As I wrote, for SCST allocation of the 
+>>> sense buffer is necessary in any case (in SCST sense is allocated on 
+>>> demand only), so it doesn't matter to allocate few bytes more, if it 
+>>> allows to hide unneeded low level details. The same, I guess, should be 
+>>> true for all other possible users of this functionality.
+>>>
+>> Easiest, as all users do is: If you already have your scst request or
+>> command, or what ever you call it. So add a sense_buffer array embedded
+>> there, end of story no allocation needed.
+>>
+>> How can you be a scsi-target and return the proper errors upstream,
+>> without digging into sense-buffer and error returns to produce the
+>> correct report.
+> 
+> Most SCST backends don't deal with senses at all and generate them only
+> at the latest stage of the commands processing to deliver errors (e.g.,
+> file read errors) to initiators.
+> 
+
+Sense at the block-layer is optional just don't use it if you don't need
+it.
+
+>>>>>>> +/**
+>>>>>>> + * blk_rq_unmap_kern_sg - "unmaps" data buffers in the request
+>>>>>>> + * @req:	request to unmap
+>>>>>>> + * @do_copy:	sets copy data between buffers, if needed, or not
+>>>>>>> + *
+>>>>>>> + * Description:
+>>>>>>> + *    It frees all additional buffers allocated for SG->BIO mapping.
+>>>>>>> + */
+>>>>>>> +void blk_rq_unmap_kern_sg(struct request *req, int do_copy)
+>>>>>>> +{
+>>>>>>> +	struct scatterlist *hdr = (struct scatterlist *)req->end_io_data;
+>>>>>>> +
+>>>>>> You can't use req->end_io_data  here! req->end_io_data is reserved for
+>>>>>> blk_execute_async callers. It can not be used for private block use.
+>>>>> Why? I see blk_execute_rq() happily uses it. Plus, I implemented stacking of
+>>>>> it in scsi_execute_async().
+>>>>>
+>>>> As I said users of blk_execute_rq_nowait() blk_execute_rq is a user of
+>>>> blk_execute_rq_nowait just as the other guy.
+>>>>
+>>>> "implemented stacking" is exactly the disaster I'm talking about.
+>>>> Also it totaly breaks the blk API. Now I need to to specific code
+>>>> when mapping with this API as opposed to other mappings when I execute
+>>>>
+>>>>> Do you have better suggestion?
+>>>> I have not look at it deeply but you'll need another system. Perhaps
+>>>> like map_user/unmap_user where you give unmap_user the original bio.
+>>>> Each user of map_user needs to keep a pointer to the original bio
+>>>> on mapping. Maybe some other options as well. You can use the bio's
+>>>> private data pointer, when building the first bio from scatter-list.
+>>> I can't see how *well documented* stacking of end_io_data can be/lead to 
+>>> any problem. All the possible alternatives I can see are worse:
+>>>
+>>> 1. Add in struct request one more field, like "void *blk_end_io_data" 
+>>> and use it.
+>>>
+>>> 2. Duplicate code of bio's allocation and chaining 
+>>> (__blk_rq_map_kern_sg()) for the copy case with additional code for 
+>>> allocation and copying of the copy buffers on per-bio basis and use 
+>>> bio->bi_private to track the copy info. Tejun Heo used this approach, 
+>>> but he had only one bio without any chaining. With the chaining this 
+>>> approach becomes terribly overcomplicated and ugly with *NO* real gain.
+>>>
+>>> Do you like any of them? If not, I'd like to see _practical_ suggestions.
+>>>
+>> Again all this is not needed and should be dropped it is already done
+>> by bio bouncing. All you need to do is add the pages to bios, chain when
+>> full, and call blk_make_request.
+> 
+> Can you show me a place where the bio bouncing, i.e.
+> blk_queue_bounce(), does bouncing of misaligned buffers?
+> 
+
+It's there look harder
+
+> I don't see such places. Instead, I see that all users of the block API,
+> who cares about the alignment (sg, st, sr, etc.), directly or indirectly
+> take care about it, by, e.g., switching to copying functions, before
+> calling blk_queue_bounce(). See blk_rq_map_user_iov(), for instance.
+> This is exactly what I implemented: handling of misaligned buffers on
+> the layer upper blk_queue_bounce().
+> 
+
+Read the code again, I agree it is a grate mess but ...
+
+For example what about filesystems they just put buffers on a bio and call
+generic_make_request. sg st sr all do grate stupid things because of historical
+reasons.
+
+See the old scsi_execute_async of scsi_lib.c where was that alignment and
+padding? there was not! did it work?
+
+Look at blk_map_kern, where is alignment and padding handling? does it work?
+
+> Thanks,
+> Vlad
+> 
+> 
+
+Boaz
