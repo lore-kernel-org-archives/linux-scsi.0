@@ -1,44 +1,43 @@
 From: giridhar.malavali@qlogic.com
-Subject: [PATCH 5/9] qla2xxx: Process DPC requests within valid Fabric topologies.
-Date: Tue, 21 Jul 2009 12:03:41 -0700
-Message-ID: <1248203025-507-6-git-send-email-giridhar.malavali@qlogic.com>
+Subject: [PATCH 6/9] qla2xxx: Fix endian issues on PPC platfrom for NPIV.
+Date: Tue, 21 Jul 2009 12:03:42 -0700
+Message-ID: <1248203025-507-7-git-send-email-giridhar.malavali@qlogic.com>
 References: <1248203025-507-1-git-send-email-giridhar.malavali@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:37730 "EHLO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:37733 "EHLO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755502AbZGUTDt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Jul 2009 15:03:49 -0400
+	id S1755503AbZGUTDu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Jul 2009 15:03:50 -0400
 In-Reply-To: <1248203025-507-1-git-send-email-giridhar.malavali@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Lalit Chandivade <lalit.chandivade@qlogic.com>
+Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Lalit Chandivade <lalit.chandivade@qlogic.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-If vports are created and topology is changed to Loop only, the
-driver continuously gets a LIP reset occurred and keeps trying to
-enable the vport.  Only manage requests during F_Port.
+VP IDX need to be converted to proper endian for NPIV
+to work on PPC platforms.
 
 Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_mid.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ drivers/scsi/qla2xxx/qla_mbx.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index cd78c50..6238be3 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -250,6 +250,9 @@ qla2x00_do_dpc_vp(scsi_qla_host_t *vha)
- 	struct qla_hw_data *ha = vha->hw;
- 	scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
- 
-+	if (!(ha->current_topology & ISP_CFG_F))
-+		return 0;
-+
- 	if (test_and_clear_bit(VP_IDX_ACQUIRED, &vha->vp_flags)) {
- 		/* VP acquired. complete port configuration */
- 		if (atomic_read(&base_vha->loop_state) == LOOP_READY) {
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index fe69f30..8fcd99e 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -2746,7 +2746,8 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
+ 	if (rptid_entry->format == 0) {
+ 		DEBUG15(printk("%s:format 0 : scsi(%ld) number of VPs setup %d,"
+ 			" number of VPs acquired %d\n", __func__, vha->host_no,
+-			MSB(rptid_entry->vp_count), LSB(rptid_entry->vp_count)));
++			MSB(le16_to_cpu(rptid_entry->vp_count)),
++			LSB(le16_to_cpu(rptid_entry->vp_count))));
+ 		DEBUG15(printk("%s primary port id %02x%02x%02x\n", __func__,
+ 			rptid_entry->port_id[2], rptid_entry->port_id[1],
+ 			rptid_entry->port_id[0]));
 -- 
 1.6.2.rc1.30.gd43c
 
