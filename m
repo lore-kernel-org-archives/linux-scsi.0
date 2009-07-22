@@ -1,68 +1,76 @@
-From: rohan a <info1686@gmail.com>
-Subject: Re: SCSI command (SP-OUT) failing on SLES 9 32-bit
-Date: Wed, 22 Jul 2009 18:56:22 +0530
-Message-ID: <7a7c22420907220626t11f510b7q835add0d5b7ecc94@mail.gmail.com>
-References: <7a7c22420907142137o4253dfb5gcd72176cd6a38beb@mail.gmail.com>
-	 <7a7c22420907142326t3b8d4f5fqaf3813cb456186ec@mail.gmail.com>
-	 <7a7c22420907150803v4f4ae9dn9eff41b5d5a7edf6@mail.gmail.com>
-	 <1247670563.4236.16.camel@mulgrave.site> <4A645FCE.5030506@suse.de>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Unusual unusual device Sony-Ericsson W760i
+Date: Wed, 22 Jul 2009 11:31:21 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0907221121450.2935-100000@iolanthe.rowland.org>
+References: <4A670DD7.6050002@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gx0-f213.google.com ([209.85.217.213]:44001 "EHLO
-	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752472AbZGVN0Y convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jul 2009 09:26:24 -0400
-In-Reply-To: <4A645FCE.5030506@suse.de>
+Received: from iolanthe.rowland.org ([192.131.102.54]:60363 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752669AbZGVPbV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jul 2009 11:31:21 -0400
+In-Reply-To: <4A670DD7.6050002@canonical.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: Stefan Bader <stefan.bader@canonical.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
 
-Hi,
-       Thanks for a reply.
-I have 2 SLES 9 32-bit machines, on one I am using an FC HBA card and
-another a SCSI HBA card to connect LTO-4 standalone drives and drive
-based encryption is not working in both cases.
+This is really a question for the SCSI people, not a USB matter.  
+Therefore I am forwarding it to the linux-scsi list.
 
-Thanks
+On Wed, 22 Jul 2009, Stefan Bader wrote:
 
-On Mon, Jul 20, 2009 at 5:45 PM, Hannes Reinecke<hare@suse.de> wrote:
-> James Bottomley wrote:
->> On Wed, 2009-07-15 at 20:33 +0530, rohan a wrote:
->>> Hi guys,
->>>
->>> Any suggestions...please help
->>
->> I know of no kernel bug that could be causing this. =A0The SLES9 ker=
-nel is
->> just too old though for me to remember clearly. =A0I'd suggest you f=
-ile a
->> support incident with SUSE ... they'll debug and fix this on the old=
-er
->> kernels; we really only deal with the new kernel and one or two back
->> revisions here on linux-scsi.
->>
-> You did that on purpose.
-> The 'they' is actually me :-(
->
-> Actually, there already _is_ a bug, so no need to open another one.
-> Which HBA are you using?
->
-> Cheers,
->
-> Hannes
-> --
-> Dr. Hannes Reinecke =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 zSeries & Sto=
-rage
-> hare@suse.de =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0+49 9=
-11 74053 688
-> SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-> GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Summary: This phone provides two luns which represent the internal memory and
+> the other an optional memory-stick. While the memory stick suffers "only" from
+> the capacity bug, the internal memory seems to return the "no sense" errors
+> even for sectors farther away from the end.
+> 
+> I am currently a bit lacking ideas how to proceed with that. Any ideas would be
+> welcome.
+> 
+> More detail:
+> 
+> Kernel versions: 2.6.28 but also confirmed to be the same on a recent mainline
+> kernel (2.6.31)
+> 
+> All the information has been gathered on this bug report and it is confirmed
+> with two different phones of the same model.
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/400652
+> 
+> T:  Bus=02 Lev=01 Prnt=01 Port=00 Cnt=01 Dev#= 11 Spd=12  MxCh= 0
+> D:  Ver= 2.00 Cls=00(>ifc ) Sub=00 Prot=00 MxPS=64 #Cfgs=  1
+> P:  Vendor=0fce ProdID=e0c6 Rev= 0.00
+> S:  Manufacturer=Sony Ericsson
+> S:  Product=Memory Stick
+> S:  SerialNumber=3570670227111290
+> C:* #Ifs= 1 Cfg#= 2 Atr=80 MxPwr=500mA
+> I:* If#= 0 Alt= 0 #EPs= 2 Cls=08(stor.) Sub=06 Prot=50 Driver=usb-storage
+> E:  Ad=05(O) Atr=02(Bulk) MxPS=  64 Ivl=0ms
+> E:  Ad=85(I) Atr=02(Bulk) MxPS=  64 Ivl=0ms
+> 
+> LUN#0 (internal memory) returns 0x1d51c(120093) when queried for capacity. The
+> usbmon trace[1] however shows, that the read request of 8 sectors starting from
+> 0x1d508(120072) fails with the known no-sense error and is repeated infinitely.
+> 
+> Preventing vol_id from checking for raid meta-data lets the device detection
+> finish. Unfortunately calling fdisk causes the end of device area to be
+> accessed and I forgot that those values are in /sys as well. But the size of
+> 119992 sounds like there is some gap between the end of the defined partition
+> and the end of the device.
+> 
+> This feels a bit like some sort of host protected area, if SCSI knows such a
+> thing (I don't think so). In the end I am lacking a good clue how this device
+> might be handled. SINGLE_LUN does not work as it is LUN#0 which behaves that
+> way and people will want to access the internal storage anyways. All other
+> quirk options seem to be not matching that case (beside of FIX_CAPACITY). So I
+> would be thankful for any hint possible.
+> 
+> Please cc me on replies as I am not subscribed. Thanks
+> 
+> - Stefan
+> 
+> 
+> [1] Usbmon output of bus 2 while plugging and unplugging the phone on an
+> umpatched kernel: http://launchpadlibrarian.net/29196150/normal-usbmon-2u.txt
+
