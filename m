@@ -1,76 +1,110 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Unusual unusual device Sony-Ericsson W760i
-Date: Wed, 22 Jul 2009 11:31:21 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0907221121450.2935-100000@iolanthe.rowland.org>
-References: <4A670DD7.6050002@canonical.com>
+From: Jeff Kirsher <jeffrey.t.kirsher-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [net-next-2.6 PATCH 1/5] vlan: adds fcoe offload
+	related	net_device_ops and updates fcoe_ddp_xid field
+Date: Wed, 22 Jul 2009 16:28:20 -0700
+Message-ID: <20090722232759.26937.78765.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:60363 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752669AbZGVPbV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jul 2009 11:31:21 -0400
-In-Reply-To: <4A670DD7.6050002@canonical.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Unsubscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://www.open-fcoe.org/pipermail/devel>
+List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jeff Kirsher <jeffrey.t.kirsher-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, gospo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, devel-s9riP+hp16TNLxjTenLetw@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: Stefan Bader <stefan.bader@canonical.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
 
-This is really a question for the SCSI people, not a USB matter.  
-Therefore I am forwarding it to the linux-scsi list.
+From: Vasu Dev <vasu.dev-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On Wed, 22 Jul 2009, Stefan Bader wrote:
+Adds fcoe offload related net_device_ops functions vlan_dev_fcoe_ddp_setup
+and vlan_dev_fcoe_ddp_done, their implementation simply calls real eth device
+net_device_ops for FCoE DDP setup and done operations.
 
-> Summary: This phone provides two luns which represent the internal memory and
-> the other an optional memory-stick. While the memory stick suffers "only" from
-> the capacity bug, the internal memory seems to return the "no sense" errors
-> even for sectors farther away from the end.
-> 
-> I am currently a bit lacking ideas how to proceed with that. Any ideas would be
-> welcome.
-> 
-> More detail:
-> 
-> Kernel versions: 2.6.28 but also confirmed to be the same on a recent mainline
-> kernel (2.6.31)
-> 
-> All the information has been gathered on this bug report and it is confirmed
-> with two different phones of the same model.
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/400652
-> 
-> T:  Bus=02 Lev=01 Prnt=01 Port=00 Cnt=01 Dev#= 11 Spd=12  MxCh= 0
-> D:  Ver= 2.00 Cls=00(>ifc ) Sub=00 Prot=00 MxPS=64 #Cfgs=  1
-> P:  Vendor=0fce ProdID=e0c6 Rev= 0.00
-> S:  Manufacturer=Sony Ericsson
-> S:  Product=Memory Stick
-> S:  SerialNumber=3570670227111290
-> C:* #Ifs= 1 Cfg#= 2 Atr=80 MxPwr=500mA
-> I:* If#= 0 Alt= 0 #EPs= 2 Cls=08(stor.) Sub=06 Prot=50 Driver=usb-storage
-> E:  Ad=05(O) Atr=02(Bulk) MxPS=  64 Ivl=0ms
-> E:  Ad=85(I) Atr=02(Bulk) MxPS=  64 Ivl=0ms
-> 
-> LUN#0 (internal memory) returns 0x1d51c(120093) when queried for capacity. The
-> usbmon trace[1] however shows, that the read request of 8 sectors starting from
-> 0x1d508(120072) fails with the known no-sense error and is repeated infinitely.
-> 
-> Preventing vol_id from checking for raid meta-data lets the device detection
-> finish. Unfortunately calling fdisk causes the end of device area to be
-> accessed and I forgot that those values are in /sys as well. But the size of
-> 119992 sounds like there is some gap between the end of the defined partition
-> and the end of the device.
-> 
-> This feels a bit like some sort of host protected area, if SCSI knows such a
-> thing (I don't think so). In the end I am lacking a good clue how this device
-> might be handled. SINGLE_LUN does not work as it is LUN#0 which behaves that
-> way and people will want to access the internal storage anyways. All other
-> quirk options seem to be not matching that case (beside of FIX_CAPACITY). So I
-> would be thankful for any hint possible.
-> 
-> Please cc me on replies as I am not subscribed. Thanks
-> 
-> - Stefan
-> 
-> 
-> [1] Usbmon output of bus 2 while plugging and unplugging the phone on an
-> umpatched kernel: http://launchpadlibrarian.net/29196150/normal-usbmon-2u.txt
+Updates VLAN netdev field value for fcoe_ddp_xid from real eth device netdev.
 
+Above changes are required for fcoe DDP offload working on a VLAN interface.
+
+Signed-off-by: Vasu Dev <vasu.dev-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+---
+
+ net/8021q/vlan_dev.c |   39 +++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 39 insertions(+), 0 deletions(-)
+
+diff --git a/net/8021q/vlan_dev.c b/net/8021q/vlan_dev.c
+index 96bad8f..6e695ac 100644
+--- a/net/8021q/vlan_dev.c
++++ b/net/8021q/vlan_dev.c
+@@ -561,6 +561,33 @@ static int vlan_dev_neigh_setup(struct net_device *dev, struct neigh_parms *pa)
+ 	return err;
+ }
+ 
++#if defined(CONFIG_FCOE) || defined(CONFIG_FCOE_MODULE)
++static int vlan_dev_fcoe_ddp_setup(struct net_device *dev, u16 xid,
++				   struct scatterlist *sgl, unsigned int sgc)
++{
++	struct net_device *real_dev = vlan_dev_info(dev)->real_dev;
++	const struct net_device_ops *ops = real_dev->netdev_ops;
++	int rc = 0;
++
++	if (ops->ndo_fcoe_ddp_setup)
++		rc = ops->ndo_fcoe_ddp_setup(real_dev, xid, sgl, sgc);
++
++	return rc;
++}
++
++static int vlan_dev_fcoe_ddp_done(struct net_device *dev, u16 xid)
++{
++	struct net_device *real_dev = vlan_dev_info(dev)->real_dev;
++	const struct net_device_ops *ops = real_dev->netdev_ops;
++	int len = 0;
++
++	if (ops->ndo_fcoe_ddp_done)
++		len = ops->ndo_fcoe_ddp_done(real_dev, xid);
++
++	return len;
++}
++#endif
++
+ static void vlan_dev_change_rx_flags(struct net_device *dev, int change)
+ {
+ 	struct net_device *real_dev = vlan_dev_info(dev)->real_dev;
+@@ -635,6 +662,10 @@ static int vlan_dev_init(struct net_device *dev)
+ 	if (is_zero_ether_addr(dev->broadcast))
+ 		memcpy(dev->broadcast, real_dev->broadcast, dev->addr_len);
+ 
++#if defined(CONFIG_FCOE) || defined(CONFIG_FCOE_MODULE)
++	dev->fcoe_ddp_xid = real_dev->fcoe_ddp_xid;
++#endif
++
+ 	if (real_dev->features & NETIF_F_HW_VLAN_TX) {
+ 		dev->header_ops      = real_dev->header_ops;
+ 		dev->hard_header_len = real_dev->hard_header_len;
+@@ -715,6 +746,10 @@ static const struct net_device_ops vlan_netdev_ops = {
+ 	.ndo_change_rx_flags	= vlan_dev_change_rx_flags,
+ 	.ndo_do_ioctl		= vlan_dev_ioctl,
+ 	.ndo_neigh_setup	= vlan_dev_neigh_setup,
++#if defined(CONFIG_FCOE) || defined(CONFIG_FCOE_MODULE)
++	.ndo_fcoe_ddp_setup	= vlan_dev_fcoe_ddp_setup,
++	.ndo_fcoe_ddp_done	= vlan_dev_fcoe_ddp_done,
++#endif
+ };
+ 
+ static const struct net_device_ops vlan_netdev_accel_ops = {
+@@ -731,6 +766,10 @@ static const struct net_device_ops vlan_netdev_accel_ops = {
+ 	.ndo_change_rx_flags	= vlan_dev_change_rx_flags,
+ 	.ndo_do_ioctl		= vlan_dev_ioctl,
+ 	.ndo_neigh_setup	= vlan_dev_neigh_setup,
++#if defined(CONFIG_FCOE) || defined(CONFIG_FCOE_MODULE)
++	.ndo_fcoe_ddp_setup	= vlan_dev_fcoe_ddp_setup,
++	.ndo_fcoe_ddp_done	= vlan_dev_fcoe_ddp_done,
++#endif
+ };
+ 
+ void vlan_setup(struct net_device *dev)
