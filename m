@@ -1,52 +1,71 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13783] udev causes high cpu usage
-Date: Thu, 23 Jul 2009 00:22:54 GMT
-Message-ID: <200907230022.n6N0MsaH001657@demeter.kernel.org>
-References: <bug-13783-11613@http.bugzilla.kernel.org/>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: Regression impacts ServeRAID II on IBM xSeries 5500
+Date: Thu, 23 Jul 2009 11:02:10 +0900
+Message-ID: <20090723110118N.fujita.tomonori@lab.ntt.co.jp>
+References: <4A6172F0.60707@davidnewall.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:36948 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751406AbZGWAWy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jul 2009 20:22:54 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n6N0MsFB001658
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2009 00:22:54 GMT
-In-Reply-To: <bug-13783-11613@http.bugzilla.kernel.org/>
+Received: from sh.osrg.net ([192.16.179.4]:35636 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750847AbZGWCCU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Jul 2009 22:02:20 -0400
+In-Reply-To: <4A6172F0.60707@davidnewall.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: davidn@davidnewall.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13783
+Sorry for the delay,
+
+On Sat, 18 Jul 2009 16:30:00 +0930
+David Newall <davidn@davidnewall.com> wrote:
+
+> Hello Fujita-san,
+> 
+> This is my first time reporting a regression.  I hope I'm doing it right.
+> 
+> According to "git bisect," your patch
+> 10db10d144c0248f285242f79daf6b9de6b00a62 is the first bad commit before
+> a regression which affects my ServeRAID II controller.  I get segfault
+> running ipssend, which is the program used to interrogate and configure
+> the SCSI RAID controller.
+> 
+>     ipssend[5949]: segfault at 20202020 ip b7ece8b1 sp bfce1d1c error 6 in libc-2.9.so[b7e55000+15c000]
+
+Can I get 'ipssend' source code? I'm not sure what ipssend does (I
+guess, it issues some special commands via sg).
 
 
-Andrew Morton <akpm@linux-foundation.org> changed:
+> Here's what git output on the final bisect:
+> 
+>     commit 10db10d144c0248f285242f79daf6b9de6b00a62
+>     Author: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+>     Date:   Fri Aug 29 12:32:18 2008 +0200
+> 
+>         sg: convert the indirect IO path to use the block layer
+>         
+>         This patch converts the indirect IO path (including mmap IO and old
+>         struct sg_header) to use the block layer functions (blk_get_request,
+>         blk_execute_rq_nowait, blk_rq_map_user, etc) instead of
+>         scsi_execute_async().
+>         
+>         [Jens: fixed compile error with SCSI logging enabled]
+>         
+>         Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+>         Signed-off-by: Douglas Gilbert <dougg@torque.net>
+>         Cc: Mike Christie <michaelc@cs.wisc.edu>
+>         Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+>         Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |akpm@linux-foundation.org
+Very sorry about that.
 
 
+>     :040000 040000 a2b5d80fb0a666b49d4bdfc2de3aa15c9d8b1ec7 84a927a0964a616313deb410a1da60dd22e2dc13 M    drivers
+>       
+> 
+> My machine and assistance is at your disposal.  Rather than guess what
+> information you want: what can I tell you?
 
-
---- Comment #10 from Andrew Morton <akpm@linux-foundation.org>  2009-07-23 00:22:52 ---
-(In reply to comment #9)
-> I guess something goes crazy with the media-changed detection.
-> Sometimes not-tested-in-such-setup/broken firmware for optical drives
-> does not like us.
-
-Seems a reasonable guess.
-
-Do we know which device driver is being used for that drive?
-
-In the ubuntu report at least three people are seeing the same problem.  Is
-there a common point where we can address this?  Maybe a blacklist?  Or are we
-dealing with three separate low-level drivers?
-
-Thanks.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+What kernel version do you use, the latest git tree?
