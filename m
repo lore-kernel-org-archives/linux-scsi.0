@@ -1,71 +1,96 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: Regression impacts ServeRAID II on IBM xSeries 5500
-Date: Thu, 23 Jul 2009 11:02:10 +0900
-Message-ID: <20090723110118N.fujita.tomonori@lab.ntt.co.jp>
-References: <4A6172F0.60707@davidnewall.com>
+From: "Michael Chan" <mchan@broadcom.com>
+Subject: [PATCH] cnic: Fix ISCSI_KEVENT_IF_DOWN message handling.
+Date: Wed, 22 Jul 2009 20:01:55 -0700
+Message-ID: <1248318115-14214-1-git-send-email-mchan@broadcom.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:35636 "EHLO sh.osrg.net"
+Received: from mms2.broadcom.com ([216.31.210.18]:4767 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750847AbZGWCCU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Jul 2009 22:02:20 -0400
-In-Reply-To: <4A6172F0.60707@davidnewall.com>
+	id S1752344AbZGWCze (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Jul 2009 22:55:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: davidn@davidnewall.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+To: davem@davemloft.net, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
+Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, Michael Chan <mchan@broadcom.com>
 
-Sorry for the delay,
+When a net device goes down or when the bnx2i driver is unloaded,
+the code was not generating the ISCSI_KEVENT_IF_DOWN message
+properly and this could cause the userspace driver to crash.
 
-On Sat, 18 Jul 2009 16:30:00 +0930
-David Newall <davidn@davidnewall.com> wrote:
+This is fixed by sending the message properly in the shutdown path.
+cnic_uio_stop() is also added to send the message when bnx2i is
+unregistering.
 
-> Hello Fujita-san,
-> 
-> This is my first time reporting a regression.  I hope I'm doing it right.
-> 
-> According to "git bisect," your patch
-> 10db10d144c0248f285242f79daf6b9de6b00a62 is the first bad commit before
-> a regression which affects my ServeRAID II controller.  I get segfault
-> running ipssend, which is the program used to interrogate and configure
-> the SCSI RAID controller.
-> 
->     ipssend[5949]: segfault at 20202020 ip b7ece8b1 sp bfce1d1c error 6 in libc-2.9.so[b7e55000+15c000]
+Signed-off-by: Michael Chan <mchan@broadcom.com>
+---
+ drivers/net/cnic.c |   23 +++++++++++++++++++++--
+ 1 files changed, 21 insertions(+), 2 deletions(-)
 
-Can I get 'ipssend' source code? I'm not sure what ipssend does (I
-guess, it issues some special commands via sg).
+diff --git a/drivers/net/cnic.c b/drivers/net/cnic.c
+index 4d1515f..4869d77 100644
+--- a/drivers/net/cnic.c
++++ b/drivers/net/cnic.c
+@@ -227,7 +227,7 @@ static int cnic_send_nlmsg(struct cnic_local *cp, u32 type,
+ 	}
+ 
+ 	rcu_read_lock();
+-	ulp_ops = rcu_dereference(cp->ulp_ops[CNIC_ULP_ISCSI]);
++	ulp_ops = rcu_dereference(cnic_ulp_tbl[CNIC_ULP_ISCSI]);
+ 	if (ulp_ops)
+ 		ulp_ops->iscsi_nl_send_msg(cp->dev, msg_type, buf, len);
+ 	rcu_read_unlock();
+@@ -319,6 +319,20 @@ static int cnic_abort_prep(struct cnic_sock *csk)
+ 	return 0;
+ }
+ 
++static void cnic_uio_stop(void)
++{
++	struct cnic_dev *dev;
++
++	read_lock(&cnic_dev_lock);
++	list_for_each_entry(dev, &cnic_dev_list, list) {
++		struct cnic_local *cp = dev->cnic_priv;
++
++		if (cp->cnic_uinfo)
++			cnic_send_nlmsg(cp, ISCSI_KEVENT_IF_DOWN, NULL);
++	}
++	read_unlock(&cnic_dev_lock);
++}
++
+ int cnic_register_driver(int ulp_type, struct cnic_ulp_ops *ulp_ops)
+ {
+ 	struct cnic_dev *dev;
+@@ -390,6 +404,9 @@ int cnic_unregister_driver(int ulp_type)
+ 	}
+ 	read_unlock(&cnic_dev_lock);
+ 
++	if (ulp_type == CNIC_ULP_ISCSI)
++		cnic_uio_stop();
++
+ 	rcu_assign_pointer(cnic_ulp_tbl[ulp_type], NULL);
+ 
+ 	mutex_unlock(&cnic_lock);
+@@ -632,7 +649,6 @@ static void cnic_free_resc(struct cnic_dev *dev)
+ 	int i = 0;
+ 
+ 	if (cp->cnic_uinfo) {
+-		cnic_send_nlmsg(cp, ISCSI_KEVENT_IF_DOWN, NULL);
+ 		while (cp->uio_dev != -1 && i < 15) {
+ 			msleep(100);
+ 			i++;
+@@ -1057,6 +1073,9 @@ static void cnic_ulp_stop(struct cnic_dev *dev)
+ 	struct cnic_local *cp = dev->cnic_priv;
+ 	int if_type;
+ 
++	if (cp->cnic_uinfo)
++		cnic_send_nlmsg(cp, ISCSI_KEVENT_IF_DOWN, NULL);
++
+ 	rcu_read_lock();
+ 	for (if_type = 0; if_type < MAX_CNIC_ULP_TYPE; if_type++) {
+ 		struct cnic_ulp_ops *ulp_ops;
+-- 
+1.5.6.GIT
 
 
-> Here's what git output on the final bisect:
-> 
->     commit 10db10d144c0248f285242f79daf6b9de6b00a62
->     Author: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
->     Date:   Fri Aug 29 12:32:18 2008 +0200
-> 
->         sg: convert the indirect IO path to use the block layer
->         
->         This patch converts the indirect IO path (including mmap IO and old
->         struct sg_header) to use the block layer functions (blk_get_request,
->         blk_execute_rq_nowait, blk_rq_map_user, etc) instead of
->         scsi_execute_async().
->         
->         [Jens: fixed compile error with SCSI logging enabled]
->         
->         Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
->         Signed-off-by: Douglas Gilbert <dougg@torque.net>
->         Cc: Mike Christie <michaelc@cs.wisc.edu>
->         Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
->         Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
-
-Very sorry about that.
-
-
->     :040000 040000 a2b5d80fb0a666b49d4bdfc2de3aa15c9d8b1ec7 84a927a0964a616313deb410a1da60dd22e2dc13 M    drivers
->       
-> 
-> My machine and assistance is at your disposal.  Rather than guess what
-> information you want: what can I tell you?
-
-What kernel version do you use, the latest git tree?
