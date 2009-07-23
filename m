@@ -1,84 +1,52 @@
-From: Jeff Kirsher <jeffrey.t.kirsher-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [net-next-2.6 PATCH 5/5] fcoe: Use NETIF_F_FCOE_MTU
-	flag to set up	max frame size (lport->mfs)
-Date: Wed, 22 Jul 2009 16:29:57 -0700
-Message-ID: <20090722232956.26937.24429.stgit@localhost.localdomain>
-References: <20090722232759.26937.78765.stgit@localhost.localdomain>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13783] udev causes high cpu usage
+Date: Thu, 23 Jul 2009 00:22:54 GMT
+Message-ID: <200907230022.n6N0MsaH001657@demeter.kernel.org>
+References: <bug-13783-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-In-Reply-To: <20090722232759.26937.78765.stgit-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
-List-Unsubscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
-	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://www.open-fcoe.org/pipermail/devel>
-List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
-	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-To: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jeff Kirsher <jeffrey.t.kirsher-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, gospo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, devel-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:36948 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751406AbZGWAWy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jul 2009 20:22:54 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n6N0MsFB001658
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2009 00:22:54 GMT
+In-Reply-To: <bug-13783-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-From: Yi Zou <yi.zou-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+http://bugzilla.kernel.org/show_bug.cgi?id=13783
 
-Add a define of FCOE_MTU as 2158 bytes and use FCOE_MTU when the LLD is found
-to support NETIF_F_FCOE_MTU. The lport->mfs is then calculated out of the
-2158 FCOE_MTU. Otherwise, we stick with the netdev->mtu, i.e., LAN MTU. Also,
-change the notification on NETDEV_CHANGEMTU event to bypass changing mfs when
-LAN MTU is changed if NETIF_F_FCOE_MTU is supported.
 
-Signed-off-by: Yi Zou <yi.zou-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
----
+Andrew Morton <akpm@linux-foundation.org> changed:
 
- drivers/scsi/fcoe/fcoe.c |   11 +++++++++--
- drivers/scsi/fcoe/fcoe.h |    4 ++++
- 2 files changed, 13 insertions(+), 2 deletions(-)
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |akpm@linux-foundation.org
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 0a5609b..e0a885c 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -291,8 +291,13 @@ static int fcoe_netdev_config(struct fc_lport *lp, struct net_device *netdev)
- 	 * user-configured limit.  If the MFS is too low, fcoe_link_ok()
- 	 * will return 0, so do this first.
- 	 */
--	mfs = fc->real_dev->mtu - (sizeof(struct fcoe_hdr) +
--				   sizeof(struct fcoe_crc_eof));
-+	mfs = fc->real_dev->mtu;
-+	if (fc->phys_dev->features & NETIF_F_FCOE_MTU) {
-+		mfs = FCOE_MTU;
-+		printk(KERN_DEBUG "fcoe:%s supports FCOE_MTU of %d bytes\n",
-+		       netdev->name, mfs);
-+	}
-+	mfs -= (sizeof(struct fcoe_hdr) + sizeof(struct fcoe_crc_eof));
- 	if (fc_set_mfs(lp, mfs))
- 		return -EINVAL;
- 
-@@ -1420,6 +1425,8 @@ static int fcoe_device_notification(struct notifier_block *notifier,
- 	case NETDEV_CHANGE:
- 		break;
- 	case NETDEV_CHANGEMTU:
-+		if (fc->phys_dev->features & NETIF_F_FCOE_MTU)
-+			break;
- 		mfs = fc->real_dev->mtu -
- 			(sizeof(struct fcoe_hdr) +
- 			 sizeof(struct fcoe_crc_eof));
-diff --git a/drivers/scsi/fcoe/fcoe.h b/drivers/scsi/fcoe/fcoe.h
-index 0d724fa..be9735d 100644
---- a/drivers/scsi/fcoe/fcoe.h
-+++ b/drivers/scsi/fcoe/fcoe.h
-@@ -64,6 +64,10 @@ do {                                                            	\
- 			   printk(KERN_INFO "fcoe: %s" fmt,	\
- 				  netdev->name, ##args);)
- 
-+/* Max MTU for FCoE: 14 (FCoE header) + 24 (FC header) + 2112 (max FC payload)
-+ * + 4 (FC CRC) + 4 (FCoE trailer) =  2158 bytes */
-+#define FCOE_MTU	2158
-+
- /*
-  * this percpu struct for fcoe
-  */
+
+
+
+--- Comment #10 from Andrew Morton <akpm@linux-foundation.org>  2009-07-23 00:22:52 ---
+(In reply to comment #9)
+> I guess something goes crazy with the media-changed detection.
+> Sometimes not-tested-in-such-setup/broken firmware for optical drives
+> does not like us.
+
+Seems a reasonable guess.
+
+Do we know which device driver is being used for that drive?
+
+In the ubuntu report at least three people are seeing the same problem.  Is
+there a common point where we can address this?  Maybe a blacklist?  Or are we
+dealing with three separate low-level drivers?
+
+Thanks.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
