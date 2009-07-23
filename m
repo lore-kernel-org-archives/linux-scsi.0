@@ -1,49 +1,48 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13783] udev causes high cpu usage
-Date: Thu, 23 Jul 2009 07:58:18 GMT
-Message-ID: <200907230758.n6N7wI20031999@demeter.kernel.org>
-References: <bug-13783-11613@http.bugzilla.kernel.org/>
+From: Robert Love <robert.w.love@intel.com>
+Subject: Re: [Open-FCoE] [net-next-2.6 PATCH 5/5] fcoe: Use
+ NETIF_F_FCOE_MTU flag to set up	max frame size (lport->mfs)
+Date: Thu, 23 Jul 2009 11:27:28 -0700
+Message-ID: <1248373648.23392.24.camel@fritz>
+References: <20090722232759.26937.78765.stgit@localhost.localdomain>
+	 <20090722232956.26937.24429.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:40197 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752036AbZGWH6S (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2009 03:58:18 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n6N7wIpZ032000
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2009 07:58:18 GMT
-In-Reply-To: <bug-13783-11613@http.bugzilla.kernel.org/>
+Received: from mga01.intel.com ([192.55.52.88]:53994 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752266AbZGWS13 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Jul 2009 14:27:29 -0400
+In-Reply-To: <20090722232956.26937.24429.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: davem@davemloft.net, Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Cc: linux-scsi@vger.kernel.org, netdev@vger.kernel.org, gospo@redhat.com, devel@open-fcoe.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13783
+On Wed, 2009-07-22 at 16:29 -0700, Jeff Kirsher wrote:
+> From: Yi Zou <yi.zou@intel.com>
+> 
+> Add a define of FCOE_MTU as 2158 bytes and use FCOE_MTU when the LLD is found
+> to support NETIF_F_FCOE_MTU. The lport->mfs is then calculated out of the
+> 2158 FCOE_MTU. Otherwise, we stick with the netdev->mtu, i.e., LAN MTU. Also,
+> change the notification on NETDEV_CHANGEMTU event to bypass changing mfs when
+> LAN MTU is changed if NETIF_F_FCOE_MTU is supported.
+> 
+> Signed-off-by: Yi Zou <yi.zou@intel.com>
+> Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+> ---
+
+Hi Dave,
+
+Please don't apply this patch to net-next. The other 4 patches in this
+series should be fine without it. If this patch is applied to net-next
+it means that most/all of the other fcoe features (that will go through
+linux-scsi) become dependent on this patch.
+
+I was hoping to push the other fcoe features as-is and then push this
+patch through linux-scsi after the other 4 patches in this series had
+been merged by you.
+
+Thanks, //Rob
 
 
-
-
-
---- Comment #11 from Andreas Fackler <AndreasFackler@web.de>  2009-07-23 07:58:16 ---
-lspci -v and lshw say the SATA controller uses the ahci driver. They don't list
-any drivers or modules belonging to the optical drive, and it seems to be the
-same in the files Christian Mallwitz posted.
-My blacklist files are just the Ubuntu defaults.
-Here is what dmesg says:
-
-[    1.500033] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[    1.513385] ata2.00: ATAPI: Optiarc DVD RW AD-7560S, SX07, max UDMA/100,
-ATAPI AN
-[    1.527733] ata2.00: configured for UDMA/100
-[    1.545118] scsi 1:0:0:0: CD-ROM            Optiarc  DVD RW AD-7560S  SX07
-PQ: 0 ANSI: 5
-[    1.550572] sr0: scsi3-mmc drive: 24x/24x writer dvd-ram cd/rw xa/form2 cdda
-tray
-[    1.550575] Uniform CD-ROM driver Revision: 3.20
-[    1.550642] sr 1:0:0:0: Attached scsi CD-ROM sr0
-[    1.550691] sr 1:0:0:0: Attached scsi generic sg1 type 5
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
