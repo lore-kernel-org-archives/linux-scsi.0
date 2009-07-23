@@ -1,96 +1,49 @@
-From: "Michael Chan" <mchan@broadcom.com>
-Subject: [PATCH] cnic: Fix ISCSI_KEVENT_IF_DOWN message handling.
-Date: Wed, 22 Jul 2009 20:01:55 -0700
-Message-ID: <1248318115-14214-1-git-send-email-mchan@broadcom.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13783] udev causes high cpu usage
+Date: Thu, 23 Jul 2009 07:58:18 GMT
+Message-ID: <200907230758.n6N7wI20031999@demeter.kernel.org>
+References: <bug-13783-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4767 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752344AbZGWCze (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Jul 2009 22:55:34 -0400
+Received: from demeter.kernel.org ([140.211.167.39]:40197 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752036AbZGWH6S (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2009 03:58:18 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n6N7wIpZ032000
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2009 07:58:18 GMT
+In-Reply-To: <bug-13783-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: davem@davemloft.net, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, Michael Chan <mchan@broadcom.com>
+To: linux-scsi@vger.kernel.org
 
-When a net device goes down or when the bnx2i driver is unloaded,
-the code was not generating the ISCSI_KEVENT_IF_DOWN message
-properly and this could cause the userspace driver to crash.
+http://bugzilla.kernel.org/show_bug.cgi?id=13783
 
-This is fixed by sending the message properly in the shutdown path.
-cnic_uio_stop() is also added to send the message when bnx2i is
-unregistering.
 
-Signed-off-by: Michael Chan <mchan@broadcom.com>
----
- drivers/net/cnic.c |   23 +++++++++++++++++++++--
- 1 files changed, 21 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/cnic.c b/drivers/net/cnic.c
-index 4d1515f..4869d77 100644
---- a/drivers/net/cnic.c
-+++ b/drivers/net/cnic.c
-@@ -227,7 +227,7 @@ static int cnic_send_nlmsg(struct cnic_local *cp, u32 type,
- 	}
- 
- 	rcu_read_lock();
--	ulp_ops = rcu_dereference(cp->ulp_ops[CNIC_ULP_ISCSI]);
-+	ulp_ops = rcu_dereference(cnic_ulp_tbl[CNIC_ULP_ISCSI]);
- 	if (ulp_ops)
- 		ulp_ops->iscsi_nl_send_msg(cp->dev, msg_type, buf, len);
- 	rcu_read_unlock();
-@@ -319,6 +319,20 @@ static int cnic_abort_prep(struct cnic_sock *csk)
- 	return 0;
- }
- 
-+static void cnic_uio_stop(void)
-+{
-+	struct cnic_dev *dev;
-+
-+	read_lock(&cnic_dev_lock);
-+	list_for_each_entry(dev, &cnic_dev_list, list) {
-+		struct cnic_local *cp = dev->cnic_priv;
-+
-+		if (cp->cnic_uinfo)
-+			cnic_send_nlmsg(cp, ISCSI_KEVENT_IF_DOWN, NULL);
-+	}
-+	read_unlock(&cnic_dev_lock);
-+}
-+
- int cnic_register_driver(int ulp_type, struct cnic_ulp_ops *ulp_ops)
- {
- 	struct cnic_dev *dev;
-@@ -390,6 +404,9 @@ int cnic_unregister_driver(int ulp_type)
- 	}
- 	read_unlock(&cnic_dev_lock);
- 
-+	if (ulp_type == CNIC_ULP_ISCSI)
-+		cnic_uio_stop();
-+
- 	rcu_assign_pointer(cnic_ulp_tbl[ulp_type], NULL);
- 
- 	mutex_unlock(&cnic_lock);
-@@ -632,7 +649,6 @@ static void cnic_free_resc(struct cnic_dev *dev)
- 	int i = 0;
- 
- 	if (cp->cnic_uinfo) {
--		cnic_send_nlmsg(cp, ISCSI_KEVENT_IF_DOWN, NULL);
- 		while (cp->uio_dev != -1 && i < 15) {
- 			msleep(100);
- 			i++;
-@@ -1057,6 +1073,9 @@ static void cnic_ulp_stop(struct cnic_dev *dev)
- 	struct cnic_local *cp = dev->cnic_priv;
- 	int if_type;
- 
-+	if (cp->cnic_uinfo)
-+		cnic_send_nlmsg(cp, ISCSI_KEVENT_IF_DOWN, NULL);
-+
- 	rcu_read_lock();
- 	for (if_type = 0; if_type < MAX_CNIC_ULP_TYPE; if_type++) {
- 		struct cnic_ulp_ops *ulp_ops;
+
+
+--- Comment #11 from Andreas Fackler <AndreasFackler@web.de>  2009-07-23 07:58:16 ---
+lspci -v and lshw say the SATA controller uses the ahci driver. They don't list
+any drivers or modules belonging to the optical drive, and it seems to be the
+same in the files Christian Mallwitz posted.
+My blacklist files are just the Ubuntu defaults.
+Here is what dmesg says:
+
+[    1.500033] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    1.513385] ata2.00: ATAPI: Optiarc DVD RW AD-7560S, SX07, max UDMA/100,
+ATAPI AN
+[    1.527733] ata2.00: configured for UDMA/100
+[    1.545118] scsi 1:0:0:0: CD-ROM            Optiarc  DVD RW AD-7560S  SX07
+PQ: 0 ANSI: 5
+[    1.550572] sr0: scsi3-mmc drive: 24x/24x writer dvd-ram cd/rw xa/form2 cdda
+tray
+[    1.550575] Uniform CD-ROM driver Revision: 3.20
+[    1.550642] sr 1:0:0:0: Attached scsi CD-ROM sr0
+[    1.550691] sr 1:0:0:0: Attached scsi generic sg1 type 5
+
 -- 
-1.5.6.GIT
-
-
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
