@@ -1,60 +1,49 @@
-From: David Newall <davidn@davidnewall.com>
-Subject: Re: Regression impacts ServeRAID II on IBM xSeries 5500
-Date: Sat, 25 Jul 2009 00:59:05 +0930
-Message-ID: <4A69D341.8030908@davidnewall.com>
-References: <4A6172F0.60707@davidnewall.com> <20090723110118N.fujita.tomonori@lab.ntt.co.jp>
+From: Dave Jones <davej@redhat.com>
+Subject: [PATCH] Don't export scsi kernel variables in userspace headers.
+Date: Fri, 24 Jul 2009 22:10:26 -0400
+Message-ID: <20090725021026.GA6942@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hawking.rebel.net.au ([203.20.69.83]:52583 "EHLO
-	hawking.rebel.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752977AbZGXP3J (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Jul 2009 11:29:09 -0400
-In-Reply-To: <20090723110118N.fujita.tomonori@lab.ntt.co.jp>
+Received: from mx2.redhat.com ([66.187.237.31]:34991 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751324AbZGYCK3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Jul 2009 22:10:29 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org
 
-FUJITA Tomonori wrote:
-> Sorry for the delay,
->   
+Found with make headers_check
 
-No problem. I appreciate your time.
+/usr/include/scsi/scsi.h:159: userspace cannot call function or variable defined in the kernel
+/usr/include/scsi/scsi.h:285: userspace cannot call function or variable defined in the kernel
 
-> On Sat, 18 Jul 2009 16:30:00 +0930
-> David Newall <davidn@davidnewall.com> wrote:
->   
->> According to "git bisect," your patch
->> 10db10d144c0248f285242f79daf6b9de6b00a62 is the first bad commit before
->> a regression which affects my ServeRAID II controller.  I get segfault
->> running ipssend, which is the program used to interrogate and configure
->> the SCSI RAID controller.
->>
->>     ipssend[5949]: segfault at 20202020 ip b7ece8b1 sp bfce1d1c error 6 in libc-2.9.so[b7e55000+15c000]
->>     
->
-> Can I get 'ipssend' source code? I'm not sure what ipssend does (I
-> guess, it issues some special commands via sg).
->   
+Signed-off-by: Dave Jones <davej@redhat.com>
 
-It's provided by IBM with their ServeRAID CD, and not available in
-source as far as I can discover. The RAID hardware uses Adaptec chips
-and I think ipssend was written by them.
-
-
->> My machine and assistance is at your disposal.  Rather than guess what
->> information you want: what can I tell you?
->>     
->
-> What kernel version do you use, the latest git tree?
-
-I was running Ubuntu's 2.6.28-13-server, but have reverted to their
-2.6.27-10-server, that being the latest Ubuntu-provided version on which
-ipssend works. The patch which apparently introduced the regression is
-for 2.6.27-rc9, which is quite old. The regression was a year ago, and
-although I've found quite a few people who have the same problem, I
-haven't found any indication of the problem having been previously
-reported or bisected, so it's likely the latest version still has the
-problem. I am happy to try the latest version of you want.
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 084478e..689570e 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -156,7 +156,9 @@ scsi_varlen_cdb_length(const void *hdr)
+ 	return ((struct scsi_varlen_cdb_hdr *)hdr)->additional_cdb_length + 8;
+ }
+ 
++#ifdef __KERNEL__
+ extern const unsigned char scsi_command_size_tbl[8];
++#endif
+ #define COMMAND_SIZE(opcode) scsi_command_size_tbl[((opcode) >> 5) & 7]
+ 
+ static inline unsigned
+@@ -281,8 +283,10 @@ enum scsi_protocol {
+ 	SCSI_PROTOCOL_UNSPEC = 0xf, /* No specific protocol */
+ };
+ 
++#ifdef __KERNEL__
+ /* Returns a human-readable name for the device */
+ extern const char * scsi_device_type(unsigned type);
++#endif
+ 
+ /*
+  * standard mode-select header prepended to all mode-select commands
