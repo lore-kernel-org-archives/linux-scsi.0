@@ -1,49 +1,60 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13783] udev causes high cpu usage
-Date: Sat, 25 Jul 2009 03:33:52 GMT
-Message-ID: <200907250333.n6P3Xqk5020041@demeter.kernel.org>
-References: <bug-13783-11613@http.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:37000 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751996AbZGYDdw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Jul 2009 23:33:52 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n6P3XqFU020042
-	for <linux-scsi@vger.kernel.org>; Sat, 25 Jul 2009 03:33:52 GMT
-In-Reply-To: <bug-13783-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Jing Huang <huangj@brocade.com>
+Subject: [PATCH 0/14] bfa: Brocade BFA FC SCSI driver (overview)
+Date: Fri, 24 Jul 2009 22:23:03 -0700
+Message-ID: <200907250523.n6P5N3UH021315@swe57.brocade.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753660AbZGYFXH@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rvadivel@brocade.com, vravindr@brocade.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13783
+From: Jing Huang <huangj@brocade.com>
 
+After two unsuccessful submissions, I am retrying by further reducing the size
+of each individual patch.
 
-Tejun Heo <tj@kernel.org> changed:
+In this submission, we completed all the pening works in our last submission
+in April, including:
+1) Added support of Brocade PCIe FCOE HBA.
+2) Cleaned up FC state machine code.
+3) Completed implementing code review comments received from the open source
+community.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |tj@kernel.org
+It contains a serial of 14 patches generated using 2.6.30.1 kernel. Here is
+a brief description of each patch:
 
+[PATCH 1/14]: SCSI LLD driver code, module init/exit, PCI and SCSI host entry
+points, interrupt handler, and sysfs interface etc. 
 
+[PATCH 2/14]: Hardware/FW access code. part-1
 
+[PATCH 3/14]: Hardware/FW access code. part-2
 
---- Comment #12 from Tejun Heo <tj@kernel.org>  2009-07-25 03:33:49 ---
-Hmmm... interesting.  Can someone please strace the polling process and see
-what's going on?  Attaching strace to the hal-addon-storage should do the
-trick, Kay, right?  It could be that TUR result is alternating.  The problem
-probably is that windows doesn't use TUR while polling for media presence while
-we do.  There are drives which completely check out after being polled for a
-while and this bug report looks like another strain of the same problem.  I'll
-try to implement media presence polling inside kernel and use only
-GET_EVENT_STATUS_NOTIFICATION as windows does.  Please cc anyone with
-reproducible problem cases here.
+[PATCH 4/14]: Hardware/FW access code. part-3
 
-Thanks.
+[PATCH 5/14]: Hardware/FW access code. part-4
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+[PATCH 6/14]: FC state machines. part-1
+
+[PATCH 7/14]: FC state machines. part-2
+
+[PATCH 8/14]: FC state machines. part-3
+
+[PATCH 9/14]: FC state machines. part-3
+
+[PATCH 10/14]: Common header files shared by linux driver,
+hardware/FW access code, FC state machines. part-1
+
+[PATCH 11/14]: Common header files shared by linux driver,
+hardware/FW access code, FC state machines. part-2
+
+[PATCH 12/14]: Common header files shared by linux driver,
+hardware/FW access code, FC state machines. part-3
+
+[PATCH 13/14]: Updated Kconfig and Makefile for driver/scsi, and Makefile
+for bfa driver 
+
+[PATCH 14/14]: Updated MAINTAINER file.
+
+Signed-off-by: Jing Huang <huangj@brocade.com>
+---
