@@ -1,18 +1,22 @@
-From: Joe Eykholt <jre@nuovasystems.com>
+From: Joe Eykholt <jeykholt-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
 Subject: 3-way deadlock during fc_remove_host
-Date: Sat, 25 Jul 2009 15:26:19 -0700
-Message-ID: <4A6B868B.2000708@nuovasystems.com>
+Date: Sat, 25 Jul 2009 15:26:42 -0700
+Message-ID: <4A6B86A2.6040604@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-5.cisco.com ([171.68.10.87]:53204 "EHLO
-	sj-iport-5.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752237AbZGYW0W (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Jul 2009 18:26:22 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Unsubscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://www.open-fcoe.org/pipermail/devel>
+List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "devel-s9riP+hp16TNLxjTenLetw@public.gmane.org" <devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>
 
 I could use some insight about this problem.  I have a hang involving
 three threads.
@@ -116,4 +120,3 @@ please let me know.
 
 	Thanks,
 	Joe
-
