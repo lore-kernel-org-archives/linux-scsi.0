@@ -1,36 +1,51 @@
-From: Jing Huang <huangj@brocade.com>
-Subject: [PATCH 14/14] bfa: Brocade BFA FC SCSI driver (maint)
-Date: Fri, 24 Jul 2009 23:26:09 -0700
-Message-ID: <200907250626.n6P6Q98A026194@swe57.brocade.com>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755116AbZGYG0N@vger.kernel.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] scsi: remove superfluous NULL pointer check from scsi_kill_request()
+Date: Sun, 26 Jul 2009 16:29:25 +0200
+Message-ID: <200907261629.26529.bzolnier@gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751897AbZGYOee@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rvadivel@brocade.com, vravindr@brocade.com
+To: James.Bottomley@hansenpartnership.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Dan Carpenter <error27@gmail.com>, corbet@lwn.net, eteo@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-From: Jing Huang <huangj@brocade.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] scsi: remove superfluous NULL pointer check from scsi_kill_request()
 
-This patch contains updated MAINTAINERS file.
+>From Dan's list:
 
-Signed-off-by: Jing Huang <huangj@brocade.com>
+drivers/scsi/scsi_lib.c +1365 scsi_kill_request(9) warning: variable derefenced in initializer 'cmd'
+drivers/scsi/scsi_lib.c +1365 scsi_kill_request(9) warning: variable derefenced before check 'cmd'
+
+We dereference cmd (and possible OOPS if cmd == NULL) before starting
+the request so just remove the superfluous debugging code altogether.
+
+Reported-by: Dan Carpenter <error27@gmail.com>
+Cc: corbet@lwn.net
+Cc: eteo@redhat.com
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- MAINTAINERS |    7 +++++++
- 1 files changed, 7 insertions(+)
+ drivers/scsi/scsi_lib.c |    6 ------
+ 1 file changed, 6 deletions(-)
 
-diff -urpN orig/MAINTAINERS patch/MAINTAINERS
---- orig/MAINTAINERS	2009-07-21 15:34:07.000000000 -0700
-+++ patch/MAINTAINERS	2009-07-21 15:34:07.000000000 -0700
-@@ -1254,6 +1254,13 @@ L:	netdev@vger.kernel.org
- S:	Supported
- F:	drivers/net/tg3.*
+Index: b/drivers/scsi/scsi_lib.c
+===================================================================
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1365,12 +1365,6 @@ static void scsi_kill_request(struct req
  
-+BROCADE BFA FC SCSI DRIVER
-+P:	Jing Huang
-+M:	huangj@brocade.com
-+L:	linux-scsi@vger.kernel.org
-+S:	Supported
-+F:	drivers/scsi/bfa/
-+
- BSG (block layer generic sg v4 driver)
- P:	FUJITA Tomonori
- M:	fujita.tomonori@lab.ntt.co.jp
+ 	blk_start_request(req);
+ 
+-	if (unlikely(cmd == NULL)) {
+-		printk(KERN_CRIT "impossible request in %s.\n",
+-				 __func__);
+-		BUG();
+-	}
+-
+ 	scsi_init_cmd_errh(cmd);
+ 	cmd->result = DID_NO_CONNECT << 16;
+ 	atomic_inc(&cmd->device->iorequest_cnt);
