@@ -1,35 +1,63 @@
-From: Roel Kluin <roel.kluin@gmail.com>
-Subject: [PATCH] eata: Buffer overflow
-Date: Sun, 26 Jul 2009 01:05:24 +0200
-Message-ID: <4A6B8FB4.2030603@gmail.com>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: [PATCH] Do not set DMA mask to 32 bit first if adapter only supports 31
+Date: Sun, 26 Jul 2009 12:25:05 +0200
+Message-ID: <200907261225.07806.eike-kernel@sf-tec.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:40235 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752186AbZGYXCt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Jul 2009 19:02:49 -0400
-Received: by ey-out-2122.google.com with SMTP id 9so643490eyd.37
-        for <linux-scsi@vger.kernel.org>; Sat, 25 Jul 2009 16:02:48 -0700 (PDT)
+Received: from mail.sf-mail.de ([62.27.20.61]:52967 "EHLO mail.sf-mail.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753352AbZGZKb7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 26 Jul 2009 06:31:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ballabio_dario@emc.com, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: aacraid@adaptec.com
+Cc: linux-scsi@vger.kernel.org
 
-allows i == MAX_INT_PARAM, which is out of range
-
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+Signed-off-by: Rolf Eike Beer <eike-kernel@sf-tec.de>
 ---
-diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
-index c7076ce..3c5abf7 100644
---- a/drivers/scsi/eata.c
-+++ b/drivers/scsi/eata.c
-@@ -1509,7 +1509,7 @@ static int option_setup(char *str)
- 	char *cur = str;
- 	int i = 1;
+ drivers/scsi/aacraid/linit.c |   14 ++++++++------
+ 1 files changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 9b97c3e..7e0d05a 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -1082,6 +1082,7 @@ static int __devinit aac_probe_one(struct pci_dev *pdev,
+ 	struct list_head *insert = &aac_devices;
+ 	int error = -ENODEV;
+ 	int unique_id = 0;
++	u64 dmamask;
  
--	while (cur && isdigit(*cur) && i <= MAX_INT_PARAM) {
-+	while (cur && isdigit(*cur) && i < MAX_INT_PARAM) {
- 		ints[i++] = simple_strtoul(cur, NULL, 0);
+ 	list_for_each_entry(aac, &aac_devices, entry) {
+ 		if (aac->id > unique_id)
+@@ -1095,17 +1096,18 @@ static int __devinit aac_probe_one(struct pci_dev *pdev,
+ 		goto out;
+ 	error = -ENODEV;
  
- 		if ((cur = strchr(cur, ',')) != NULL)
+-	if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) ||
+-			pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32)))
+-		goto out_disable_pdev;
+ 	/*
+ 	 * If the quirk31 bit is set, the adapter needs adapter
+ 	 * to driver communication memory to be allocated below 2gig
+ 	 */
+ 	if (aac_drivers[index].quirks & AAC_QUIRK_31BIT)
+-		if (pci_set_dma_mask(pdev, DMA_BIT_MASK(31)) ||
+-				pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(31)))
+-			goto out_disable_pdev;
++		dmamask = DMA_BIT_MASK(31);
++	else
++		dmamask = DMA_BIT_MASK(32);
++
++	if (pci_set_dma_mask(pdev, dmamask) ||
++			pci_set_consistent_dma_mask(pdev, dmamask))
++		goto out_disable_pdev;
+ 
+ 	pci_set_master(pdev);
+ 
+-- 
+1.6.0.2
+
