@@ -1,74 +1,43 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Patch RFC 14/37] scsi: aacraid semaphore cleanup
-Date: Sun, 26 Jul 2009 16:11:31 -0400
-Message-ID: <1248639091.4766.4.camel@mulgrave.site>
-References: <20090726081459.455111897@linutronix.de>
-	 <20090726081555.073502498@linutronix.de>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] Don't export scsi kernel variables in userspace
+	headers.
+Date: Sun, 26 Jul 2009 16:14:24 -0600
+Message-ID: <20090726221424.GA3711@parisc-linux.org>
+References: <20090725021026.GA6942@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:57000 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753214AbZGZULg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 26 Jul 2009 16:11:36 -0400
-In-Reply-To: <20090726081555.073502498@linutronix.de>
+Received: from palinux.external.hp.com ([192.25.206.14]:57472 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753998AbZGZWOY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Jul 2009 18:14:24 -0400
+Content-Disposition: inline
+In-Reply-To: <20090725021026.GA6942@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Dave Jones <davej@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-cc linux-scsi added
+On Fri, Jul 24, 2009 at 10:10:26PM -0400, Dave Jones wrote:
+> +++ b/include/scsi/scsi.h
+> @@ -156,7 +156,9 @@ scsi_varlen_cdb_length(const void *hdr)
+>  	return ((struct scsi_varlen_cdb_hdr *)hdr)->additional_cdb_length + 8;
+>  }
+>  
+> +#ifdef __KERNEL__
+>  extern const unsigned char scsi_command_size_tbl[8];
+> +#endif
+>  #define COMMAND_SIZE(opcode) scsi_command_size_tbl[((opcode) >> 5) & 7]
+>  
+>  static inline unsigned
 
-On Sun, 2009-07-26 at 08:18 +0000, Thomas Gleixner wrote:
-> plain text document attachment
-> (driver-scsi-aacraid-sema-cleanup.patch)
-> The usage of these "mutex"es is non obvious and probably completions
-> in some places. Make it them semaphores.
+Probably should move that #endif down -- it's not like userspace can
+use the COMMAND_SIZE macro (should headers_check also check for this?)
 
--ENOCONTEXT on this ... I assume this is just a global
-s/init_MUTEX/semaphore_init/?
+Also scsi_command_size() isn't usable by userspace either, since it uses
+COMMAND_SIZE.
 
-I think both are really just mutexes; no need for a counting semaphore.
-There's no stack declaration issues (the fibs are long lived entities)
-that would necessitate a completion.
-
-James
-
-
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> ---
->  drivers/scsi/aacraid/commctrl.c |    2 +-
->  drivers/scsi/aacraid/commsup.c  |    2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> Index: linux-2.6-tip/drivers/scsi/aacraid/commctrl.c
-> ===================================================================
-> --- linux-2.6-tip.orig/drivers/scsi/aacraid/commctrl.c
-> +++ linux-2.6-tip/drivers/scsi/aacraid/commctrl.c
-> @@ -190,7 +190,7 @@ static int open_getadapter_fib(struct aa
->  		/*
->  		 *	Initialize the mutex used to wait for the next AIF.
->  		 */
-> -		init_MUTEX_LOCKED(&fibctx->wait_sem);
-> +		semaphore_init_locked(&fibctx->wait_sem);
->  		fibctx->wait = 0;
->  		/*
->  		 *	Initialize the fibs and set the count of fibs on
-> Index: linux-2.6-tip/drivers/scsi/aacraid/commsup.c
-> ===================================================================
-> --- linux-2.6-tip.orig/drivers/scsi/aacraid/commsup.c
-> +++ linux-2.6-tip/drivers/scsi/aacraid/commsup.c
-> @@ -124,7 +124,7 @@ int aac_fib_setup(struct aac_dev * dev)
->  		fibptr->hw_fib_va = hw_fib;
->  		fibptr->data = (void *) fibptr->hw_fib_va->data;
->  		fibptr->next = fibptr+1;	/* Forward chain the fibs */
-> -		init_MUTEX_LOCKED(&fibptr->event_wait);
-> +		semaphore_init_locked(&fibptr->event_wait);
->  		spin_lock_init(&fibptr->event_lock);
->  		hw_fib->header.XferState = cpu_to_le32(0xffffffff);
->  		hw_fib->header.SenderSize = cpu_to_le16(dev->max_fib_size);
-> 
-
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
