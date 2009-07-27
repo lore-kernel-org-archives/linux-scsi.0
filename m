@@ -1,38 +1,58 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [BISECTED] Re: [BUG] Linux-2.6.31-rc1 Fails To Recognize Some USB Disks
-Date: Mon, 27 Jul 2009 11:55:58 -0400
-Message-ID: <yq1bpn66rxt.fsf@sermon.lab.mkp.net>
-References: <4A4472DF.1050900@turknet.net.tr>
-	<yq1zlbrn2rj.fsf@sermon.lab.mkp.net> <4A4878AC.3050208@turknet.net.tr>
-	<yq1fxdji03l.fsf@sermon.lab.mkp.net> <4A69932E.90906@turknet.net.tr>
-	<yq1fxcmnpqa.fsf@sermon.lab.mkp.net> <4A69D093.8020108@turknet.net.tr>
-	<yq1hbwykj80.fsf@sermon.lab.mkp.net>
-	<20090727020611.GC3711@parisc-linux.org>
-	<yq18wiakfq4.fsf@sermon.lab.mkp.net> <4A6D64DC.3020001@panasas.com>
-	<yq1ocr66vy6.fsf@sermon.lab.mkp.net> <4A6DBEEB.5020302@panasas.com>
-	<yq1fxci6tmc.fsf@sermon.lab.mkp.net> <4A6DCA7F.4080006@panasas.com>
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH 7/12] drivers/scsi/aacraid: Correct redundant test
+Date: Mon, 27 Jul 2009 18:14:29 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0907271814120.2682@ask.diku.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet12.oracle.com ([141.146.126.234]:50085 "EHLO
-	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751266AbZG0P4Z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jul 2009 11:56:25 -0400
-In-Reply-To: <4A6DCA7F.4080006@panasas.com> (Boaz Harrosh's message of "Mon,
-	27 Jul 2009 18:40:47 +0300")
+Received: from mgw2.diku.dk ([130.225.96.92]:44077 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750764AbZG0QRu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Jul 2009 12:17:50 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Matthew Wilcox <matthew@wil.cx>, Tarkan Erimer <tarkan.erimer@turknet.net.tr>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: aacraid@adaptec.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
->>>>> "Boaz" == Boaz Harrosh <bharrosh@panasas.com> writes:
+From: Julia Lawall <julia@diku.dk>
 
-Boaz> if (sdev->scsi_level > SCSI_2)
-Boaz> 	 sdev-> sdev_target->scsi_level = sdev-> scsi_level = SCSI_2;
+dev was tested for NULL a few lines before, followed by a return, and there
+is no intervening modification of its value.
 
-Beautiful!
+A simplified version of the semantic match that finds this problem is as
+follows: (http://www.emn.fr/x-info/coccinelle/)
 
-The suck of USB strikes back.
+// <smpl>
+@r exists@
+local idexpression x;
+expression E;
+@@
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+if (x == NULL || ...) { ... when forall
+   return ...; }
+... when != \(x=E\|x--\|x++\|--x\|++x\|x-=E\|x+=E\|x|=E\|x&=E\|&x\)
+(
+*x == NULL
+|
+*x != NULL
+)
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+ drivers/scsi/aacraid/commsup.c      |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index 956261f..bfbb0f7 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -817,7 +817,7 @@ static void aac_handle_aif(struct aac_dev * dev, struct fib * fibptr)
+ 			 * see an AifEnConfigChange AIF come through.
+ 			 */
+ 
+-			if ((dev != NULL) && (dev->scsi_host_ptr != NULL)) {
++			if (dev->scsi_host_ptr != NULL) {
+ 				device = scsi_device_lookup(dev->scsi_host_ptr,
+ 					CONTAINER_TO_CHANNEL(container),
+ 					CONTAINER_TO_ID(container),
