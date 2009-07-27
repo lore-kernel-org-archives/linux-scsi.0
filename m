@@ -1,42 +1,673 @@
-From: "Moger, Babu" <Babu.Moger@lsi.com>
-Subject: [PATCH] dm mpath: Skip calling activate_path if the path is already
- failed
-Date: Mon, 27 Jul 2009 11:35:30 -0600
-Message-ID: <E463DF2B2E584B4A82673F53D62C2EF46F252765@cosmail01.lsi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og113.obsmtp.com ([64.18.2.179]:45510 "EHLO
-	exprod7og113.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752542AbZG0SeF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jul 2009 14:34:05 -0400
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Jayamohan Kallickal <jayamohank-i5Eg4PDOvn3+uv41P6q33AC/G2K4zDHf@public.gmane.org>
+Subject: [PATCH 4/6] RFC: beiscsi: Firmware Commands to chip
+Date: Mon, 27 Jul 2009 12:55:21 -0700
+Message-ID: <1248724523-10999-5-git-send-email-jayamohank@serverengines.com>
+References: <1248724523-10999-1-git-send-email-jayamohank@serverengines.com> <1248724523-10999-2-git-send-email-jayamohank@serverengines.com> <1248724523-10999-3-git-send-email-jayamohank@serverengines.com> <1248724523-10999-4-git-send-email-jayamohank@serverengines.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Return-path: <grbounce-FC1hwAUAAAA0O9VQcsxVj1UPjHD9r3x_=glio-open-iscsi=m.gmane.org-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <1248724523-10999-4-git-send-email-jayamohank-i5Eg4PDOvn3+uv41P6q33AC/G2K4zDHf@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Post: <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://googlegroups.com/group/open-iscsi/subscribe>,
+	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Jayamohan Kallickal <jayamohank-i5Eg4PDOvn3+uv41P6q33AC/G2K4zDHf@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "'dm-devel@redhat.com'" <'dm-devel@redhat.com'>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-This patch adds a check to skip failed paths while calling activate_path. It is not required to call activate_path for failed paths. 
 
-Signed-off-by: Babu Moger <babu.moger@lsi.com>
+  These files contain code for all supported Firmware
+  commands to the chip. These routines are mostly accessed
+  from be_main.c.
+
+Signed-off-by: Jayamohan Kallickal <jayamohank-i5Eg4PDOvn3+uv41P6q33AC/G2K4zDHf@public.gmane.org>
 ---
+ drivers/scsi/beiscsi/be_mgmt.c |  369 ++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/beiscsi/be_mgmt.h |  260 ++++++++++++++++++++++++++++
+ 2 files changed, 629 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/scsi/beiscsi/be_mgmt.c
+ create mode 100644 drivers/scsi/beiscsi/be_mgmt.h
 
-
---- linux-2.6.31-rc3/drivers/md/dm-mpath.c.orig	2009-07-27 10:30:39.000000000 -0500
-+++ linux-2.6.31-rc3/drivers/md/dm-mpath.c	2009-07-27 10:35:50.000000000 -0500
-@@ -454,6 +454,10 @@ static void process_queued_ios(struct wo
- 		m->pg_init_count++;
- 		m->pg_init_required = 0;
- 		list_for_each_entry(tmp, &pgpath->pg->pgpaths, list) {
-+			/* Skip failed paths */
-+			if (!tmp->is_active)
-+				continue;
-+			
- 			if (queue_work(kmpath_handlerd, &tmp->activate_path))
- 				m->pg_init_in_progress++;
- 		}
-
-
-
-
-
+diff --git a/drivers/scsi/beiscsi/be_mgmt.c b/drivers/scsi/beiscsi/be_mgmt.c
+new file mode 100644
+index 0000000..7494349
+--- /dev/null
++++ b/drivers/scsi/beiscsi/be_mgmt.c
+@@ -0,0 +1,369 @@
++/*
++ * Copyright (C) 2005 - 2009 ServerEngines
++ * All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.  The full GNU General
++ * Public License is included in this distribution in the file called COPYING.
++ *
++ * Written by: Jayamohan Kallickal (jayamohank-i5Eg4PDOvn3+uv41P6q33AC/G2K4zDHf@public.gmane.org)
++ *
++ * Contact Information:
++ * linux-drivers-i5Eg4PDOvn3+uv41P6q33AC/G2K4zDHf@public.gmane.org
++ *
++ * ServerEngines
++ * 209 N. Fair Oaks Ave
++ * Sunnyvale, CA 94085
++ *
++ */
++
++#include "be_mgmt.h"
++#include "be_iscsi.h"
++
++/* All the mbox stuff */
++
++unsigned char mgmt_get_fw_config(struct be_ctrl_info *ctrl,
++				struct beiscsi_hba *phba)
++{
++	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
++	struct be_fw_cfg *req = embedded_payload(wrb);
++	int status = 0;
++
++	spin_lock(&ctrl->mbox_lock);
++	memset(wrb, 0, sizeof(*wrb));
++
++	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
++
++	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_COMMON,
++			OPCODE_COMMON_QUERY_FIRMWARE_CONFIG, sizeof(*req));
++
++	status = be_mbox_notify(ctrl);
++	if (!status) {
++		struct be_fw_cfg *pfw_cfg;
++		pfw_cfg = (struct be_fw_cfg *)req;
++		phba->fw_config.phys_port = pfw_cfg->phys_port;
++		phba->fw_config.iscsi_icd_start =
++					pfw_cfg->ulp[0].icd_base;
++		phba->fw_config.iscsi_icd_count =
++					pfw_cfg->ulp[0].icd_count;
++		phba->fw_config.iscsi_cid_start =
++					pfw_cfg->ulp[0].sq_base;
++		phba->fw_config.iscsi_cid_count =
++					pfw_cfg->ulp[0].sq_count;
++	} else {
++		dev_warn(&phba->pcidev->dev,
++			"Failed in mgmt_get_fw_config \n");
++	}
++
++	spin_unlock(&ctrl->mbox_lock);
++	return status;
++}
++unsigned char mgmt_check_supported_fw(struct be_ctrl_info *ctrl)
++{
++	struct be_dma_mem nonemb_cmd;
++	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
++	struct be_mgmt_controller_attributes *req;
++	struct be_sge *sge = nonembedded_sgl(wrb);
++	int status = 0;
++
++	nonemb_cmd.va =
++	    pci_alloc_consistent(ctrl->pdev,
++			    sizeof(struct be_mgmt_controller_attributes),
++							&nonemb_cmd.dma);
++	if (nonemb_cmd.va == NULL) {
++		SE_DEBUG(DBG_LVL_1,
++		"Failed to allocate memory for mgmt_check_supported_fw"
++			"\n");
++		return -1;
++	}
++	nonemb_cmd.size = sizeof(struct be_mgmt_controller_attributes);
++	req = nonemb_cmd.va;
++	spin_lock(&ctrl->mbox_lock);
++	memset(wrb, 0, sizeof(*wrb));
++	be_wrb_hdr_prepare(wrb, sizeof(*req), false, 1);
++	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_COMMON,
++			OPCODE_COMMON_GET_CNTL_ATTRIBUTES, sizeof(*req));
++	sge->pa_hi = cpu_to_le32(upper_32_bits(nonemb_cmd.dma));
++	sge->pa_lo = cpu_to_le32(nonemb_cmd.dma & 0xFFFFFFFF);
++	sge->len = cpu_to_le32(nonemb_cmd.size);
++
++	status = be_mbox_notify(ctrl);
++	if (!status) {
++		struct be_mgmt_controller_attributes_resp *resp = nonemb_cmd.va;
++		SE_DEBUG(DBG_LVL_8, "Firmware version of CMD: %s\n",
++			resp->params.hba_attribs.flashrom_version_string);
++		SE_DEBUG(DBG_LVL_8, "Firmware version is : %s\n",
++			resp->params.hba_attribs.firmware_version_string);
++		SE_DEBUG(DBG_LVL_8,
++			"Developer Build, not performing version check...\n");
++
++	} else {
++		SE_DEBUG(DBG_LVL_1,
++				" Failed in mgmt_check_supported_fw\n");
++	}
++	if (nonemb_cmd.va)
++		pci_free_consistent(ctrl->pdev, nonemb_cmd.size,
++				nonemb_cmd.va, nonemb_cmd.dma);
++
++	spin_unlock(&ctrl->mbox_lock);
++	return status;
++}
++
++unsigned char mgmt_set_fragnum_bits(struct beiscsi_hba *phba,
++					unsigned int num_bits)
++{
++	struct be_ctrl_info *ctrl = &phba->ctrl;
++	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
++	struct fragnum_bits_for_sgl_cra_in *req = embedded_payload(wrb);
++	int status = 0;
++
++	spin_lock(&ctrl->mbox_lock);
++	memset(wrb, 0, sizeof(*wrb));
++
++	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
++
++	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_COMMON,
++			OPCODE_COMMON_ISCSI_SET_FRAGNUM_BITS_FOR_SGL_CRA,
++							sizeof(*req));
++	req->num_bits = num_bits;
++	status = be_mbox_notify(ctrl);
++	if (status)
++		dev_warn(&phba->pcidev->dev,
++				" mgmt_set_fragnum_bits , FAILED\n");
++
++	 spin_unlock(&ctrl->mbox_lock);
++	return status;
++
++}
++unsigned char
++mgmt_modify_eq_delay(struct beiscsi_hba *phba,
++		unsigned int eq_id, unsigned int new_delay)
++{
++	struct be_ctrl_info *ctrl = &phba->ctrl;
++	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
++	struct be_eq_delay_params_in *req = embedded_payload(wrb);
++	int status = 0;
++
++	spin_lock(&ctrl->mbox_lock);
++	memset(wrb, 0, sizeof(*wrb));
++
++	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
++
++	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_COMMON,
++			OPCODE_COMMON_MODIFY_EQ_DELAY, sizeof(*req));
++
++	req->num_eq = 1;
++	req->delay[0].eq_id = eq_id;
++	req->delay[0].phase = 0;
++	req->delay[0].delay_multiplier = new_delay;
++
++	status = be_mbox_notify(ctrl);
++	if (status)
++		dev_warn(&phba->pcidev->dev,
++				" mgmt_modify_eq_delay , FAILED\n");
++
++	spin_unlock(&ctrl->mbox_lock);
++	return status;
++
++}
++unsigned char mgmt_epfw_cleanup(struct beiscsi_hba *phba, unsigned short chute)
++{
++	struct be_ctrl_info *ctrl = &phba->ctrl;
++	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
++	struct iscsi_cleanup_req *req = embedded_payload(wrb);
++	int status = 0;
++
++	spin_lock(&ctrl->mbox_lock);
++	memset(wrb, 0, sizeof(*wrb));
++
++	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
++
++	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
++			OPCODE_COMMON_ISCSI_CLEANUP, sizeof(*req));
++
++	req->chute = chute;
++	req->hdr_ring_id = 0;
++	req->data_ring_id = 0;
++
++	status = be_mbox_notify(ctrl);
++	if (status)
++		dev_warn(&phba->pcidev->dev,
++				" mgmt_epfw_cleanup , FAILED\n");
++
++	spin_unlock(&ctrl->mbox_lock);
++	return status;
++}
++
++unsigned char mgmt_invalidate_icds(struct beiscsi_hba *phba,
++				unsigned int icd, unsigned int cid)
++{
++	struct be_dma_mem nonemb_cmd;
++	struct be_ctrl_info *ctrl = &phba->ctrl;
++	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
++	struct be_sge *sge = nonembedded_sgl(wrb);
++	struct invalidate_commands_params_in *req;
++	int status = 0;
++
++	nonemb_cmd.va = pci_alloc_consistent(ctrl->pdev,
++			sizeof(struct invalidate_commands_params_in),
++						&nonemb_cmd.dma);
++	if (nonemb_cmd.va == NULL) {
++		SE_DEBUG(DBG_LVL_1,
++			"Failed to allocate memory for"
++			"mgmt_check_supported_fw \n");
++		return -1;
++	}
++	nonemb_cmd.size = sizeof(struct invalidate_commands_params_in);
++	req = nonemb_cmd.va;
++	spin_lock(&ctrl->mbox_lock);
++	memset(wrb, 0, sizeof(*wrb));
++
++	be_wrb_hdr_prepare(wrb, sizeof(*req), false, 1);
++
++	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
++			OPCODE_COMMON_ISCSI_ERROR_RECOVERY_INVALIDATE_COMMANDS,
++								sizeof(*req));
++	req->ref_handle = 0;
++	req->cleanup_type = CMD_ISCSI_COMMAND_INVALIDATE;
++	req->icd_count = 0;
++	req->table[req->icd_count].icd = icd;
++	req->table[req->icd_count].cid = cid;
++	sge->pa_hi = cpu_to_le32(upper_32_bits(nonemb_cmd.dma));
++	sge->pa_lo = cpu_to_le32(nonemb_cmd.dma & 0xFFFFFFFF);
++	sge->len = cpu_to_le32(nonemb_cmd.size);
++
++	status = be_mbox_notify(ctrl);
++	if (status)
++		SE_DEBUG(DBG_LVL_1, "ICDS Invalidation Failed\n");
++
++	spin_unlock(&ctrl->mbox_lock);
++	if (nonemb_cmd.va)
++		pci_free_consistent(ctrl->pdev, nonemb_cmd.size,
++					nonemb_cmd.va, nonemb_cmd.dma);
++	return status;
++}
++
++unsigned char mgmt_invalidate_connection(struct beiscsi_hba *phba,
++				struct beiscsi_endpoint *beiscsi_ep,
++				unsigned short cid,
++				unsigned short issue_reset,
++				unsigned short savecfg_flag)
++{
++	struct be_ctrl_info *ctrl = &phba->ctrl;
++	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
++	struct iscsi_invalidate_connection_params_in *req =
++						embedded_payload(wrb);
++	int status = 0;
++
++	spin_lock(&ctrl->mbox_lock);
++	memset(wrb, 0, sizeof(*wrb));
++
++	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
++
++	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI_INI,
++			OPCODE_ISCSI_INI_DRIVER_INVALIDATE_CONNECTION,
++							sizeof(*req));
++	req->session_handle = beiscsi_ep->fw_handle;
++	req->cid = cid;
++	if (issue_reset)
++		req->cleanup_type = CMD_ISCSI_CONNECTION_ISSUE_TCP_RST;
++	else
++		req->cleanup_type = CMD_ISCSI_CONNECTION_INVALIDATE;
++	req->save_cfg = savecfg_flag;
++	status = be_mbox_notify(ctrl);
++	if (status)
++		SE_DEBUG(DBG_LVL_1, "Invalidation Failed\n");
++
++	spin_unlock(&ctrl->mbox_lock);
++	return status;
++}
++
++unsigned char mgmt_upload_connection(struct beiscsi_hba *phba,
++				unsigned short cid, unsigned int upload_flag)
++{
++
++	struct be_ctrl_info *ctrl = &phba->ctrl;
++	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
++	struct tcp_upload_params_in *req = embedded_payload(wrb);
++	int status = 0;
++
++	spin_lock(&ctrl->mbox_lock);
++	memset(wrb, 0, sizeof(*wrb));
++
++	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
++	be_cmd_hdr_prepare(&req->hdr, CMD_COMMON_TCP_UPLOAD,
++				OPCODE_COMMON_TCP_UPLOAD, sizeof(*req));
++	req->id = (unsigned short)cid;
++	req->upload_type = (unsigned char)upload_flag;
++	status = be_mbox_notify(ctrl);
++	if (status)
++		SE_DEBUG(DBG_LVL_1, "mgmt_upload_connection Failed\n");
++
++	spin_unlock(&ctrl->mbox_lock);
++	return status;
++
++}
++
++unsigned int mgmt_open_connection(struct beiscsi_hba *phba, __be32 s_addr,
++					__be16 sin_port, unsigned short cid)
++{
++	struct hwi_controller_ws *phwc;
++	struct hwi_context_memory *phwi_context;
++	struct be_ctrl_info *ctrl = &phba->ctrl;
++	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
++	struct tcp_connect_and_offload_in *req = embedded_payload(wrb);
++	unsigned short def_hdr_id;
++	unsigned short def_data_id;
++	struct phys_addr template_address = { 0, 0 };
++	struct phys_addr *ptemplate_address;
++	int status = 0;
++
++	phwc = GET_HWI_CONTROLLER_WS(phba);
++	phwi_context = phwc->phwic;
++	def_hdr_id = (unsigned short)HWI_GET_DEF_HDRQ_ID(phba);
++	def_data_id = (unsigned short)HWI_GET_DEF_BUFQ_ID(phba);
++
++	ptemplate_address = &template_address;
++	ISCSI_GET_PDU_TEMPLATE_ADDRESS(phba, ptemplate_address);
++	spin_lock(&ctrl->mbox_lock);
++	memset(wrb, 0, sizeof(*wrb));
++
++	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
++	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
++			OPCODE_COMMON_ISCSI_TCP_CONNECT_AND_OFFLOAD,
++							sizeof(*req));
++
++	req->ip_address.ip_type = 1;
++	req->ip_address.ip_address[0] = s_addr & 0x000000ff;
++	req->ip_address.ip_address[1] = (s_addr & 0x0000ff00) >> 8;
++	req->ip_address.ip_address[2] = (s_addr & 0x00ff0000) >> 16;
++	req->ip_address.ip_address[3] = (s_addr & 0xff000000) >> 24;
++	req->tcp_port = sin_port;
++	req->cid = cid;
++	req->cq_id = phwi_context->be_cq.id;
++	req->defq_id = def_hdr_id;
++	req->hdr_ring_id = def_hdr_id;
++	req->data_ring_id = def_data_id;
++	req->do_offload = 1;
++
++	req->dataout_template_pa.lo = ptemplate_address->lo;
++	req->dataout_template_pa.hi = ptemplate_address->hi;
++	status = be_mbox_notify(ctrl);
++	if (!status) {
++		struct iscsi_endpoint *ep;
++		struct beiscsi_endpoint *beiscsi_ep;
++		struct tcp_connect_and_offload_out *ptcpcnct_out =
++							embedded_payload(wrb);
++		ep = (struct iscsi_endpoint *)phba->ep_array[ptcpcnct_out->cid];
++		beiscsi_ep = ep->dd_data;
++		beiscsi_ep->fw_handle = 0;
++		beiscsi_ep->cid_vld = 1;
++		SE_DEBUG(DBG_LVL_8, "mgmt_open_connection Success\n");
++	} else {
++		SE_DEBUG(DBG_LVL_1, "mgmt_open_connection Failed\n");
++	}
++	spin_unlock(&ctrl->mbox_lock);
++	return status;
++
++}
+diff --git a/drivers/scsi/beiscsi/be_mgmt.h b/drivers/scsi/beiscsi/be_mgmt.h
+new file mode 100644
+index 0000000..bcad26e
+--- /dev/null
++++ b/drivers/scsi/beiscsi/be_mgmt.h
+@@ -0,0 +1,260 @@
++/*
++ * Copyright (C) 2005 - 2009 ServerEngines
++ * All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.  The full GNU General
++ * Public License is included in this distribution in the file called COPYING.
++ *
++ * Written by: Jayamohan Kallickal (jayamohank-i5Eg4PDOvn3+uv41P6q33AC/G2K4zDHf@public.gmane.org)
++ *
++ * Contact Information:
++ * linux-drivers-i5Eg4PDOvn3+uv41P6q33AC/G2K4zDHf@public.gmane.org
++ *
++ * ServerEngines
++ * 209 N. Fair Oaks Ave
++ * Sunnyvale, CA 94085
++ *
++ */
++
++#ifndef _BEISCSI_MGMT_
++#define _BEISCSI_MGMT_
++
++#include <linux/types.h>
++#include <linux/list.h>
++#include "be_iscsi.h"
++#include "be_main.h"
++
++/* Pseudo amap definition in which each bit of the actual structure is defined
++ * as a byte: used to calculate offset/shift/mask of each field
++ */
++struct amap_mcc_sge {
++	u8 pa_lo[32];		/* dword 0 */
++	u8 pa_hi[32];		/* dword 1 */
++	u8 length[32];		/* DWORD 2 */
++} __packed;
++
++/* Pseudo amap definition in which each bit of the actual structure is defined
++ * as a byte: used to calculate offset/shift/mask of each field
++ */
++struct amap_mcc_wrb_payload {
++	union {
++		struct amap_mcc_sge sgl[19];
++		u8 embedded[59 * 32];	/* DWORDS 57 to 115 */
++	} u;
++} __packed;
++
++/* Pseudo amap definition in which each bit of the actual structure is defined
++ * as a byte: used to calculate offset/shift/mask of each field
++ */
++struct amap_mcc_wrb {
++	u8 embedded;		/* DWORD 0 */
++	u8 rsvd0[2];		/* DWORD 0 */
++	u8 sge_count[5];	/* DWORD 0 */
++	u8 rsvd1[16];		/* DWORD 0 */
++	u8 special[8];		/* DWORD 0 */
++	u8 payload_length[32];
++	u8 tag[64];		/* DWORD 2 */
++	u8 rsvd2[32];		/* DWORD 4 */
++	struct amap_mcc_wrb_payload payload;
++
++};
++
++struct mcc_sge {
++	u32 pa_lo;		/* dword 0 */
++	u32 pa_hi;		/* dword 1 */
++	u32 length;		/* DWORD 2 */
++} __packed;
++
++struct mcc_wrb_payload {
++	union {
++		struct mcc_sge sgl[19];
++		u32 embedded[59];	/* DWORDS 57 to 115 */
++	} u;
++} __packed;
++
++#define MCC_WRB_EMBEDDED_MASK                0x00000001
++
++struct mcc_wrb {
++	u32 dw[0];		/* DWORD 0 */
++	u32 payload_length;
++	u32 tag[2];		/* DWORD 2 */
++	u32 rsvd2[1];		/* DWORD 4 */
++	struct mcc_wrb_payload payload;
++
++};
++
++unsigned char mgmt_modify_eq_delay(struct beiscsi_hba *phba,
++			unsigned int eq_id, unsigned int new_delay);
++unsigned char mgmt_epfw_cleanup(struct beiscsi_hba *phba, unsigned short chute);
++
++unsigned int mgmt_open_connection(struct beiscsi_hba *phba,
++				__be32 s_addr, __be16 sin_port,
++					unsigned short cid);
++
++unsigned char mgmt_upload_connection(struct beiscsi_hba *phba,
++			unsigned short cid, unsigned int upload_flag);
++
++unsigned char mgmt_invalidate_icds(struct beiscsi_hba *phba,
++				unsigned int icd, unsigned int cid);
++
++
++
++struct iscsi_invalidate_connection_params_in {
++	struct be_cmd_req_hdr hdr;
++	unsigned int session_handle;
++	unsigned short cid;
++	unsigned short unused;
++	unsigned short cleanup_type;
++	unsigned short save_cfg;
++} __packed;
++
++struct iscsi_invalidate_connection_params_out {
++	unsigned int session_handle;
++	unsigned short cid;
++	unsigned short unused;
++} __packed;
++
++union iscsi_invalidate_connection_params {
++	struct iscsi_invalidate_connection_params_in request;
++	struct iscsi_invalidate_connection_params_out response;
++} __packed;
++
++
++struct invalidate_command_table {
++	unsigned short icd;
++	unsigned short cid;
++} __packed;
++
++
++struct invalidate_commands_params_in {
++	struct be_cmd_req_hdr hdr;
++	unsigned int ref_handle;
++	unsigned int icd_count;
++	struct invalidate_command_table table[128];
++	unsigned short cleanup_type;
++	unsigned short unused;
++} __packed;
++
++struct invalidate_commands_params_out {
++	unsigned int ref_handle;
++	unsigned int icd_count;
++	unsigned int icd_status[128];
++} __packed;
++
++union invalidate_commands_params {
++	struct invalidate_commands_params_in request;
++	struct invalidate_commands_params_out response;
++} __packed;
++
++
++struct mgmt_hba_attributes {
++	u8 flashrom_version_string[32];
++	u8 manufacturer_name[32];
++	u32 supported_modes;
++	u8 seeprom_version_lo;
++	u8 seeprom_version_hi;
++	u8 rsvd0[2];
++	u32 fw_cmd_data_struct_version;
++	u32 ep_fw_data_struct_version;
++	u32 future_reserved[12];
++	u32 default_extended_timeout;
++	u8 controller_model_number[32];
++	u8 controller_description[64];
++	u8 controller_serial_number[32];
++	u8 ip_version_string[32];
++	u8 firmware_version_string[32];
++	u8 bios_version_string[32];
++	u8 redboot_version_string[32];
++	u8 driver_version_string[32];
++	u8 fw_on_flash_version_string[32];
++	u32 functionalities_supported;
++	u16 max_cdblength;
++	u8 asic_revision;
++	u8 generational_guid[16];
++	u8 hba_port_count;
++	u16 default_link_down_timeout;
++	u8 iscsi_ver_min_max;
++	u8 multifunction_device;
++	u8 cache_valid;
++	u8 hba_status;
++	u8 max_domains_supported;
++	u8 phy_port;
++	u32 firmware_post_status;
++	u32 hba_mtu[8];
++	u32 future_u32[4];
++} __packed;
++
++struct mgmt_controller_attributes {
++	struct mgmt_hba_attributes hba_attribs;
++	u16 pci_vendor_id;
++	u16 pci_device_id;
++	u16 pci_sub_vendor_id;
++	u16 pci_sub_system_id;
++	u8 pci_bus_number;
++	u8 pci_device_number;
++	u8 pci_function_number;
++	u8 interface_type;
++	u64 unique_identifier;
++	u8 netfilters;
++	u8 rsvd0[3];
++	u8 future_u32[4];
++} __packed;
++
++struct be_mgmt_controller_attributes {
++	struct be_cmd_req_hdr hdr;
++	struct mgmt_controller_attributes params;
++} __packed;
++
++struct be_mgmt_controller_attributes_resp {
++	struct be_cmd_resp_hdr hdr;
++	struct mgmt_controller_attributes params;
++} __packed;
++
++/* configuration management */
++
++#define GET_MGMT_CONTROLLER_WS(phba)    (phba->pmgmt_ws)
++
++/* MGMT CMD flags */
++
++#define MGMT_CMDH_FREE                (1<<0)
++
++
++
++/*  --- MGMT_ERROR_CODES --- */
++/*  Error Codes returned in the status field of the CMD response header */
++#define MGMT_STATUS_SUCCESS 0	/* The CMD completed without errors */
++#define MGMT_STATUS_FAILED 1	/* Error status in the Status field of */
++					/* the CMD_RESPONSE_HEADER  */
++
++
++#define ISCSI_GET_PDU_TEMPLATE_ADDRESS(pc, pa) {\
++    pa->lo = phba->init_mem[ISCSI_MEM_GLOBAL_HEADER].mem_array[0].\
++					bus_address.u.a32.address_lo;  \
++    pa->hi = phba->init_mem[ISCSI_MEM_GLOBAL_HEADER].mem_array[0].\
++					bus_address.u.a32.address_hi;  \
++}
++
++
++
++unsigned char
++	mgmt_set_fragnum_bits(struct beiscsi_hba *phba, unsigned int num_bits);
++
++struct beiscsi_endpoint {
++	struct beiscsi_hba *phba;
++	struct beiscsi_sess *sess;
++	struct beiscsi_conn *conn;
++	unsigned long dst_addr;
++	unsigned short ep_cid;
++	unsigned int fw_handle;
++	u16 dst_tcpport;
++	u16 cid_vld;
++};
++
++unsigned char mgmt_invalidate_connection(struct beiscsi_hba *phba,
++			struct beiscsi_endpoint *beiscsi_ep,
++			unsigned short cid,
++			unsigned short issue_reset,
++			unsigned short savecfg_flag);
++#endif
+-- 
+1.6.3
