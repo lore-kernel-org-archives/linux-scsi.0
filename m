@@ -1,34 +1,42 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] cnic: Fix ISCSI_KEVENT_IF_DOWN message handling.
-Date: Mon, 27 Jul 2009 11:26:10 -0700 (PDT)
-Message-ID: <20090727.112610.226306367.davem@davemloft.net>
-References: <1248318115-14214-1-git-send-email-mchan@broadcom.com>
+From: "Moger, Babu" <Babu.Moger@lsi.com>
+Subject: [PATCH] dm mpath: Skip calling activate_path if the path is already
+ failed
+Date: Mon, 27 Jul 2009 11:35:30 -0600
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF46F252765@cosmail01.lsi.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38376
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751634AbZG0S0D (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Jul 2009 14:26:03 -0400
-In-Reply-To: <1248318115-14214-1-git-send-email-mchan@broadcom.com>
+Received: from exprod7og113.obsmtp.com ([64.18.2.179]:45510 "EHLO
+	exprod7og113.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752542AbZG0SeF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jul 2009 14:34:05 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: mchan@broadcom.com
-Cc: James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
+To: "'dm-devel@redhat.com'" <'dm-devel@redhat.com'>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-From: "Michael Chan" <mchan@broadcom.com>
-Date: Wed, 22 Jul 2009 20:01:55 -0700
+This patch adds a check to skip failed paths while calling activate_path. It is not required to call activate_path for failed paths. 
 
-> When a net device goes down or when the bnx2i driver is unloaded,
-> the code was not generating the ISCSI_KEVENT_IF_DOWN message
-> properly and this could cause the userspace driver to crash.
-> 
-> This is fixed by sending the message properly in the shutdown path.
-> cnic_uio_stop() is also added to send the message when bnx2i is
-> unregistering.
-> 
-> Signed-off-by: Michael Chan <mchan@broadcom.com>
+Signed-off-by: Babu Moger <babu.moger@lsi.com>
+---
 
-Applied.
+
+--- linux-2.6.31-rc3/drivers/md/dm-mpath.c.orig	2009-07-27 10:30:39.000000000 -0500
++++ linux-2.6.31-rc3/drivers/md/dm-mpath.c	2009-07-27 10:35:50.000000000 -0500
+@@ -454,6 +454,10 @@ static void process_queued_ios(struct wo
+ 		m->pg_init_count++;
+ 		m->pg_init_required = 0;
+ 		list_for_each_entry(tmp, &pgpath->pg->pgpaths, list) {
++			/* Skip failed paths */
++			if (!tmp->is_active)
++				continue;
++			
+ 			if (queue_work(kmpath_handlerd, &tmp->activate_path))
+ 				m->pg_init_in_progress++;
+ 		}
+
+
+
+
+
