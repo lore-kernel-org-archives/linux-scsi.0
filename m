@@ -1,11 +1,9 @@
 From: Jayamohan Kallickal <jayamohank-i5Eg4PDOvn3+uv41P6q33AC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH 5/6] RFC: beiscsi: Makefile and Kconfig
-Date: Mon, 27 Jul 2009 12:55:22 -0700
-Message-ID: <1248724523-10999-6-git-send-email-jayamohank@serverengines.com>
-References: <1248724523-10999-1-git-send-email-jayamohank@serverengines.com> <1248724523-10999-2-git-send-email-jayamohank@serverengines.com> <1248724523-10999-3-git-send-email-jayamohank@serverengines.com> <1248724523-10999-4-git-send-email-jayamohank@serverengines.com> <1248724523-10999-5-git-send-email-jayamohank@serverengines.com>
+Subject: RFC: be iscsi driver
+Date: Mon, 27 Jul 2009 12:55:17 -0700
+Message-ID: <1248724523-10999-1-git-send-email-jayamohank@serverengines.com>
 Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Return-path: <grbounce-FC1hwAUAAAA0O9VQcsxVj1UPjHD9r3x_=glio-open-iscsi=m.gmane.org-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <1248724523-10999-5-git-send-email-jayamohank-i5Eg4PDOvn3+uv41P6q33AC/G2K4zDHf@public.gmane.org>
 Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Post: <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
@@ -16,43 +14,39 @@ Cc: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Jayamohan Kallickal <jay
 List-Id: linux-scsi@vger.kernel.org
 
 
-  The Makefile and Kconfig for beiscsi driver
+Hi
 
-Signed-off-by: Jayamohan Kallickal <jayamohank-i5Eg4PDOvn3+uv41P6q33AC/G2K4zDHf@public.gmane.org>
+   I am sending the  open-iscsi based storage driver for ServerEngines
+10 Gbps Adapter for review. The Adapter is Multi-Function device that
+provides NIC/iSCSI/FCOE Functionality.
+
+   The driver works in Full Hardware Offload mode utilizing the hooks provided
+   by open-iscsi layer.
+
+   This patch is made against the latest linus tree, 2.6.31-rc4.
+        
+   The series of  patches are described below:
+
+   [PATCH 1/6]: This file contains all routines for Initiallization/Teardown, 
+   registering with upper layers, IO Handling, allocation/free etc.
+
+   [PATCH 2/6]: These are the low level routines to talk to the chip for 
+   management commands.
+
+   [PATCH 3/6]: The iscsi hooks to interact with open-iscsi layer.
+
+   [PATCH 4/6]: The Firmware Commands that are used for Management action
+   like setup /tear down a connection etc.
+
+   [PATCH 5/6]: The Makefile and Kconfig for beiscsi driver.
+
+   [PATCH 6/6]: The modified MAINTAINERS file with beiscsi added.
+
+
+Thank You
+
+Jayamohan Kallickal
+
+Signed-off-by:  Jayamohan Kallickal <jayamohank-i5Eg4PDOvn3+uv41P6q33AC/G2K4zDHf@public.gmane.org>
+
 ---
- drivers/scsi/beiscsi/Kconfig  |    8 ++++++++
- drivers/scsi/beiscsi/Makefile |    8 ++++++++
- 2 files changed, 16 insertions(+), 0 deletions(-)
- create mode 100644 drivers/scsi/beiscsi/Kconfig
- create mode 100644 drivers/scsi/beiscsi/Makefile
-
-diff --git a/drivers/scsi/beiscsi/Kconfig b/drivers/scsi/beiscsi/Kconfig
-new file mode 100644
-index 0000000..2952fcd
---- /dev/null
-+++ b/drivers/scsi/beiscsi/Kconfig
-@@ -0,0 +1,8 @@
-+config BE2ISCSI
-+	tristate "ServerEngines' 10Gbps iSCSI - BladeEngine 2"
-+	depends on PCI && SCSI
-+	select SCSI_ISCSI_ATTRS
-+
-+	help
-+	This driver implements the iSCSI functionality for ServerEngines'
-+	10Gbps Storage adapter - BladeEngine 2.
-diff --git a/drivers/scsi/beiscsi/Makefile b/drivers/scsi/beiscsi/Makefile
-new file mode 100644
-index 0000000..c11f443
---- /dev/null
-+++ b/drivers/scsi/beiscsi/Makefile
-@@ -0,0 +1,8 @@
-+#
-+# Makefile to build the iSCSI driver for ServerEngine's BladeEngine.
-+#
-+#
-+
-+obj-$(CONFIG_BE2ISCSI) += be2iscsi.o
-+
-+be2iscsi-y := be_iscsi.o be_main.o be_mgmt.o be_cmds.o
--- 
-1.6.3
