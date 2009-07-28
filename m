@@ -1,44 +1,83 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH] fc_transport:  Correct max fc_host attribute count
-Date: Tue, 28 Jul 2009 12:30:01 -0400
-Message-ID: <1248798601.22058.2.camel@ogier>
-Reply-To: James.Smart@Emulex.Com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] scsi_transport_sas: Write outside array bounds
+Date: Tue, 28 Jul 2009 16:39:05 +0000
+Message-ID: <1248799145.3855.237.camel@mulgrave.site>
+References: <4A6ED0ED.1090707@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:58068 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754830AbZG1QaC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Jul 2009 12:30:02 -0400
-Received: from xcm.ad.emulex.com (xcm.emulex.com [138.239.112.69])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id n6SGU20T009185
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Jul 2009 09:30:02 -0700 (PDT)
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:56402 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750841AbZG1QjK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Jul 2009 12:39:10 -0400
+In-Reply-To: <4A6ED0ED.1090707@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Roel Kluin <roel.kluin@gmail.com>
+Cc: linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-Correct max possible fc_host attribute count
+On Tue, 2009-07-28 at 12:20 +0200, Roel Kluin wrote:
+> SETUP_PORT_ATTRIBUTE increments count, making the write out of bounds (array of
+> size 1)
+> 
+> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+> ---
+> Credits to Parfait (http://research.sun.com/projects/parfait/)
+> 
+> I suspect this isn't the only location where count shouldn't be incremented,
+> Somebody should review this function.
+> 
+> diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+> index 0895d3c..c784ae4 100644
+> --- a/drivers/scsi/scsi_transport_sas.c
+> +++ b/drivers/scsi/scsi_transport_sas.c
+> @@ -1693,9 +1693,10 @@ sas_attach_transport(struct sas_function_template *ft)
+>  
+>  	count = 0;
+>  	SETUP_PORT_ATTRIBUTE(num_phys);
+> -	i->host_attrs[count] = NULL;
+>  
+>  	count = 0;
+> +	i->host_attrs[count] = NULL;
+> +
+>  	SETUP_PHY_ATTRIBUTE(initiator_port_protocols);
+>  	SETUP_PHY_ATTRIBUTE(target_port_protocols);
+>  	SETUP_PHY_ATTRIBUTE(device_type);
 
- Signed-off-by: James Smart <james.smart@emulex.com>
+If you're going to use mechanical checkers for this type of thing, it
+would really help me if you'd actually think about what the code is
+trying to do before sending a patch.
 
- ---
+In this case, as you can see all of the SETUP_X are using count to step
+through an array and when we're finished we add a NULL to the end.  For
+the case of SETUP_PORT_ATTR, the array is i->port_attrs, so the bug here
+is apparently that the NULL is going in the wrong array.  Trying to put
+a NULL at the zero element is manifestly wrong because sas_internal is
+zero allocated.
 
- scsi_transport_fc.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Actually, as a final weirdness, we have a duplicate initialisation of
+this anyway, so the correct patch is below.
 
+James
 
-diff -upNr a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
---- a/drivers/scsi/scsi_transport_fc.c	2009-06-29 10:31:11.000000000 -0400
-+++ b/drivers/scsi/scsi_transport_fc.c	2009-07-28 12:26:19.000000000 -0400
-@@ -291,7 +291,7 @@ static void fc_scsi_scan_rport(struct wo
- #define FC_STARGET_NUM_ATTRS 	3
- #define FC_RPORT_NUM_ATTRS	10
- #define FC_VPORT_NUM_ATTRS	9
--#define FC_HOST_NUM_ATTRS	21
-+#define FC_HOST_NUM_ATTRS	22
+---
+
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index 0895d3c..fd47cb1 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -1692,10 +1692,6 @@ sas_attach_transport(struct sas_function_template *ft)
+ 	i->f = ft;
  
- struct fc_internal {
- 	struct scsi_transport_template t;
+ 	count = 0;
+-	SETUP_PORT_ATTRIBUTE(num_phys);
+-	i->host_attrs[count] = NULL;
+-
+-	count = 0;
+ 	SETUP_PHY_ATTRIBUTE(initiator_port_protocols);
+ 	SETUP_PHY_ATTRIBUTE(target_port_protocols);
+ 	SETUP_PHY_ATTRIBUTE(device_type);
 
 
