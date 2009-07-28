@@ -1,38 +1,57 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: Regression impacts ServeRAID II on IBM xSeries 5500
-Date: Tue, 28 Jul 2009 11:42:07 +0900
-Message-ID: <20090728114207C.fujita.tomonori@lab.ntt.co.jp>
-References: <4A6172F0.60707@davidnewall.com>
-	<20090723110118N.fujita.tomonori@lab.ntt.co.jp>
-	<4A69D341.8030908@davidnewall.com>
+From: Jayamohan Kallickal <jayamohank@serverengines.com>
+Subject: RFC: beiscsi driver
+Date: Tue, 28 Jul 2009 12:41:04 +0530
+Message-ID: <20090728071054.GA13299@serverengines.com>
+Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752886AbZG1DM2@vger.kernel.org>
-In-Reply-To: <4A69D341.8030908@davidnewall.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: davidn@davidnewall.com
-Cc: fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from segment-124-30.sify.net ([124.30.166.146]:46423 "EHLO
+	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753238AbZG1HKw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Jul 2009 03:10:52 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: jayamohank@serverengines.com
 
-On Sat, 25 Jul 2009 00:59:05 +0930
-David Newall <davidn@davidnewall.com> wrote:
 
-> >> My machine and assistance is at your disposal.  Rather than guess what
-> >> information you want: what can I tell you?
-> >>     
-> >
-> > What kernel version do you use, the latest git tree?
-> 
-> I was running Ubuntu's 2.6.28-13-server, but have reverted to their
-> 2.6.27-10-server, that being the latest Ubuntu-provided version on which
-> ipssend works. The patch which apparently introduced the regression is
-> for 2.6.27-rc9, which is quite old. The regression was a year ago, and
-> although I've found quite a few people who have the same problem, I
-> haven't found any indication of the problem having been previously
-> reported or bisected, so it's likely the latest version still has the
-> problem. I am happy to try the latest version of you want.
+Hi
 
-I merged lots of changes to sg in 2.6.28. I fixed several bugs due to
-it (the last one was merged in 2.6.31-rc3). Can you try the
-2.6.31-rc4?
+   I am sending the  open-iscsi based storage driver for ServerEngines
+  10 Gbps Adapter for review. The Adapter is Multi-Function device that
+  provides NIC/iSCSI/FCOE Functionality.
+
+  The driver works in Full Hardware Offload mode utilizing the hooks provided by
+  open-iscsi layer.
+
+  This patch is made against the latest linus tree, 2.6.31-rc4.
+ 
+  The series of  patches are describe below:
+
+  [PATCH 1/6]: This file contains all routines for Initiallization/Teardown, 
+  registering with upper layers, IO Handling, allocation/free etc.
+
+  [PATCH 2/6]: These are the low level routines to talk to the chip for 
+  Management commands.
+
+  [PATCH 3/6]: The iscsi hooks to interact with open-iscsi layer.
+
+  [PATCH 4/6]: The Firmware Commands that are used for Management action
+  like setup /tear down a connection etc.
+
+  [PATCH 5/6]: The Makefile and Kconfig for beiscsi driver.
+
+  [PATCH 6/6]: The modified MAINTAINERS file with beiscsi added.
+
+
+Thank You
+
+Jayamohan Kallickal
+
+Signed-off-by:  Jayamohan Kallickal <jayamohank@serverengines.com>
+
+---
+
