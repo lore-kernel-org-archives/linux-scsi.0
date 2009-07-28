@@ -1,46 +1,38 @@
-From: Jayamohan Kallickal <jayamohank-i5Eg4PDOvn3+uv41P6q33AC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH 6/6] RFC: beiscsi: modified MAINTAINERS
-Date: Mon, 27 Jul 2009 12:55:23 -0700
-Message-ID: <1248724523-10999-7-git-send-email-jayamohank@serverengines.com>
-References: <1248724523-10999-1-git-send-email-jayamohank@serverengines.com> <1248724523-10999-2-git-send-email-jayamohank@serverengines.com> <1248724523-10999-3-git-send-email-jayamohank@serverengines.com> <1248724523-10999-4-git-send-email-jayamohank@serverengines.com> <1248724523-10999-5-git-send-email-jayamohank@serverengines.com> <1248724523-10999-6-git-send-email-jayamohank@serverengines.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Return-path: <grbounce-FC1hwAUAAAA0O9VQcsxVj1UPjHD9r3x_=glio-open-iscsi=m.gmane.org-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <1248724523-10999-6-git-send-email-jayamohank-i5Eg4PDOvn3+uv41P6q33AC/G2K4zDHf@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Post: <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://googlegroups.com/group/open-iscsi/subscribe>,
-	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Jayamohan Kallickal <jayamohank-i5Eg4PDOvn3+uv41P6q33AC/G2K4zDHf@public.gmane.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: Regression impacts ServeRAID II on IBM xSeries 5500
+Date: Tue, 28 Jul 2009 11:42:07 +0900
+Message-ID: <20090728114207C.fujita.tomonori@lab.ntt.co.jp>
+References: <4A6172F0.60707@davidnewall.com>
+	<20090723110118N.fujita.tomonori@lab.ntt.co.jp>
+	<4A69D341.8030908@davidnewall.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752886AbZG1DM2@vger.kernel.org>
+In-Reply-To: <4A69D341.8030908@davidnewall.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: davidn@davidnewall.com
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+On Sat, 25 Jul 2009 00:59:05 +0930
+David Newall <davidn@davidnewall.com> wrote:
 
- The modified MAINTAINERS file for  adding beiscsi driver
+> >> My machine and assistance is at your disposal.  Rather than guess what
+> >> information you want: what can I tell you?
+> >>     
+> >
+> > What kernel version do you use, the latest git tree?
+> 
+> I was running Ubuntu's 2.6.28-13-server, but have reverted to their
+> 2.6.27-10-server, that being the latest Ubuntu-provided version on which
+> ipssend works. The patch which apparently introduced the regression is
+> for 2.6.27-rc9, which is quite old. The regression was a year ago, and
+> although I've found quite a few people who have the same problem, I
+> haven't found any indication of the problem having been previously
+> reported or bisected, so it's likely the latest version still has the
+> problem. I am happy to try the latest version of you want.
 
-Signed-off-by: Jayamohan Kallickal <jayamohank-i5Eg4PDOvn3+uv41P6q33AC/G2K4zDHf@public.gmane.org>
----
- MAINTAINERS |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index ebc2691..9bd8a71 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -5253,6 +5253,14 @@ W:	http://www.serverengines.com
- S:	Supported
- F:	drivers/net/benet/
- 
-+SERVER ENGINES 10Gbps iSCSI - BladeEngine 2 DRIVER
-+P:	Jayamohan Kallickal
-+M:	jayamohank-i5Eg4PDOvn3+uv41P6q33AC/G2K4zDHf@public.gmane.org
-+L:	linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-+W:	http://www.serverengines.com
-+S:	Supported
-+F:	drivers/scsi/beiscsi/
-+
- SFC NETWORK DRIVER
- P:	Steve Hodgson
- P:	Ben Hutchings
--- 
-1.6.3
+I merged lots of changes to sg in 2.6.28. I fixed several bugs due to
+it (the last one was merged in 2.6.31-rc3). Can you try the
+2.6.31-rc4?
