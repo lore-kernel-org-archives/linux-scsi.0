@@ -1,37 +1,44 @@
-From: Roel Kluin <roel.kluin@gmail.com>
-Subject: [PATCH] u14-34f: Buffer overflow
-Date: Tue, 28 Jul 2009 15:45:48 +0200
-Message-ID: <4A6F010C.2080605@gmail.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: [PATCH] fc_transport:  Correct max fc_host attribute count
+Date: Tue, 28 Jul 2009 12:30:01 -0400
+Message-ID: <1248798601.22058.2.camel@ogier>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f226.google.com ([209.85.219.226]:57782 "EHLO
-	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754142AbZG1NnC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Jul 2009 09:43:02 -0400
-Received: by ewy26 with SMTP id 26so24331ewy.37
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Jul 2009 06:43:01 -0700 (PDT)
+Received: from emulex.emulex.com ([138.239.112.1]:58068 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754830AbZG1QaC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Jul 2009 12:30:02 -0400
+Received: from xcm.ad.emulex.com (xcm.emulex.com [138.239.112.69])
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id n6SGU20T009185
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Jul 2009 09:30:02 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ballabio_dario@emc.com, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-This allows i == MAX_INT_PARAM, which is out of range for ints[]
+Correct max possible fc_host attribute count
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
----
-Found with Parfait, http://research.sun.com/projects/parfait/
+ Signed-off-by: James Smart <james.smart@emulex.com>
 
-diff --git a/drivers/scsi/u14-34f.c b/drivers/scsi/u14-34f.c
-index 54023d4..26e8e0e 100644
---- a/drivers/scsi/u14-34f.c
-+++ b/drivers/scsi/u14-34f.c
-@@ -1070,7 +1070,7 @@ static int option_setup(char *str) {
-    char *cur = str;
-    int i = 1;
+ ---
+
+ scsi_transport_fc.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+
+diff -upNr a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+--- a/drivers/scsi/scsi_transport_fc.c	2009-06-29 10:31:11.000000000 -0400
++++ b/drivers/scsi/scsi_transport_fc.c	2009-07-28 12:26:19.000000000 -0400
+@@ -291,7 +291,7 @@ static void fc_scsi_scan_rport(struct wo
+ #define FC_STARGET_NUM_ATTRS 	3
+ #define FC_RPORT_NUM_ATTRS	10
+ #define FC_VPORT_NUM_ATTRS	9
+-#define FC_HOST_NUM_ATTRS	21
++#define FC_HOST_NUM_ATTRS	22
  
--   while (cur && isdigit(*cur) && i <= MAX_INT_PARAM) {
-+   while (cur && isdigit(*cur) && i < MAX_INT_PARAM) {
-       ints[i++] = simple_strtoul(cur, NULL, 0);
- 
-       if ((cur = strchr(cur, ',')) != NULL) cur++;
+ struct fc_internal {
+ 	struct scsi_transport_template t;
+
+
