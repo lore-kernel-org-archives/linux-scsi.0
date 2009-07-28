@@ -1,68 +1,58 @@
-From: rohan a <info1686@gmail.com>
-Subject: Re: SCSI command (SP-OUT) failing on SLES 9 32-bit
-Date: Tue, 28 Jul 2009 16:27:01 +0530
-Message-ID: <7a7c22420907280357p71c495f8x9923227eef000391@mail.gmail.com>
-References: <7a7c22420907142137o4253dfb5gcd72176cd6a38beb@mail.gmail.com>
-	 <7a7c22420907142326t3b8d4f5fqaf3813cb456186ec@mail.gmail.com>
-	 <7a7c22420907150803v4f4ae9dn9eff41b5d5a7edf6@mail.gmail.com>
-	 <1247670563.4236.16.camel@mulgrave.site> <4A645FCE.5030506@suse.de>
-	 <7a7c22420907220626t11f510b7q835add0d5b7ecc94@mail.gmail.com>
+From: Roel Kluin <roel.kluin@gmail.com>
+Subject: [PATCH] fc_transport: Write outside array bounds
+Date: Tue, 28 Jul 2009 14:40:03 +0200
+Message-ID: <4A6EF1A3.6040607@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752968AbZG1LEO@vger.kernel.org>
-In-Reply-To: <7a7c22420907220626t11f510b7q835add0d5b7ecc94@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ew0-f226.google.com ([209.85.219.226]:57716 "EHLO
+	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753935AbZG1MhP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Jul 2009 08:37:15 -0400
+Received: by ewy26 with SMTP id 26so3934711ewy.37
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Jul 2009 05:37:15 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-Hi all/Hannes,
+If it's possible to turn on all the optional attributes, there are more
+attributes than the length of array i->private_host_attrs[], so the last one
+will be out-of-bounds. (There is a BUG_ON there, but it's after the write,
+rather than before).
 
-Any help/suggestions?
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+Found with Parfait, http://research.sun.com/projects/parfait/
 
+in fc_attach_transport()
+...
+count=0;
+14 x SETUP_HOST_ATTRIBUTE_RD()
+if (ft->vport_create)
+	2 x SETUP_HOST_ATTRIBUTE_RD_NS()
+1 x SETUP_HOST_ATTRIBUTE_RW()
+1 - 4 x SETUP_PRIVATE_HOST_ATTRIBUTE_RW()
 
-On Wed, Jul 22, 2009 at 6:56 PM, rohan a<info1686@gmail.com> wrote:
-> Hi,
-> =A0 =A0 =A0 Thanks for a reply.
-> I have 2 SLES 9 32-bit machines, on one I am using an FC HBA card and
-> another a SCSI HBA card to connect LTO-4 standalone drives and drive
-> based encryption is not working in both cases.
->
-> Thanks
->
-> On Mon, Jul 20, 2009 at 5:45 PM, Hannes Reinecke<hare@suse.de> wrote:
->> James Bottomley wrote:
->>> On Wed, 2009-07-15 at 20:33 +0530, rohan a wrote:
->>>> Hi guys,
->>>>
->>>> Any suggestions...please help
->>>
->>> I know of no kernel bug that could be causing this. =A0The SLES9 ke=
-rnel is
->>> just too old though for me to remember clearly. =A0I'd suggest you =
-file a
->>> support incident with SUSE ... they'll debug and fix this on the ol=
-der
->>> kernels; we really only deal with the new kernel and one or two bac=
-k
->>> revisions here on linux-scsi.
->>>
->> You did that on purpose.
->> The 'they' is actually me :-(
->>
->> Actually, there already _is_ a bug, so no need to open another one.
->> Which HBA are you using?
->>
->> Cheers,
->>
->> Hannes
->> --
->> Dr. Hannes Reinecke =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 zSeries & St=
-orage
->> hare@suse.de =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0+49 =
-911 74053 688
->> SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
->> GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
->>
->
+all these definitions set private_host_attrs[count] (21 elements)
+and increase the index count thereafter.
+
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 292c02f..8092e56 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -2123,8 +2123,12 @@ fc_attach_transport(struct fc_function_template *ft)
+ 		SETUP_PRIVATE_HOST_ATTRIBUTE_RW(issue_lip);
+ 	if (ft->vport_create)
+ 		SETUP_PRIVATE_HOST_ATTRIBUTE_RW(vport_create);
+-	if (ft->vport_delete)
+-		SETUP_PRIVATE_HOST_ATTRIBUTE_RW(vport_delete);
++	if (ft->vport_delete) {
++		if(count < FC_HOST_NUM_ATTRS)
++			SETUP_PRIVATE_HOST_ATTRIBUTE_RW(vport_delete);
++		else
++			count++;
++	}
+ 
+ 	BUG_ON(count > FC_HOST_NUM_ATTRS);
+ 
