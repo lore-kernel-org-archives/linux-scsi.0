@@ -1,74 +1,61 @@
 From: giridhar.malavali@qlogic.com
-Subject: [PATCH 02/14] qla2xxx: Correctly handle 'global port-unavailable' AEN.
-Date: Wed, 29 Jul 2009 11:03:51 -0700
-Message-ID: <1248890643-761-3-git-send-email-giridhar.malavali@qlogic.com>
-References: <1248890643-761-1-git-send-email-giridhar.malavali@qlogic.com>
+Subject: [PATCH 00/14] qla2xxx: fixes for 2.6.31-rc3 [8.03.01-k5/K6/K7]
+Date: Wed, 29 Jul 2009 11:03:49 -0700
+Message-ID: <1248890643-761-1-git-send-email-giridhar.malavali@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:35910 "EHLO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:35908 "EHLO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750947AbZG2SEE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1751195AbZG2SEE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 29 Jul 2009 14:04:04 -0400
-In-Reply-To: <1248890643-761-1-git-send-email-giridhar.malavali@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-Treat a global port-unavailable PORT_UPDATE (8014h) AEN as a
-loop-down event.  For this case, within the FCoE domain, the
-'logical' interface has been terminated, but the driver will
-not receive the classic LOOP_DOWN AEN.
+Please apply...
 
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_isr.c |   30 +++++++++++++++++++++++++++++-
- 1 files changed, 29 insertions(+), 1 deletions(-)
+Andrew Vasquez (3):
+  qla2xxx: Correctly handle 'global port-unavailable' AEN.
+  qla2xxx: Fix endian issues on PPC platfrom for NPIV.
+  qla2xxx: ISP21xx/22xx do not support FDMI registrations.  (fixed)
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index f966d54..417a9b9 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -599,8 +599,36 @@ skip_rio:
- 
- 	case MBA_PORT_UPDATE:		/* Port database update */
- 		/* Only handle SCNs for our Vport index. */
--		if (vha->vp_idx && vha->vp_idx != (mb[3] & 0xff))
-+		if (mb[1] != 0xffff &&
-+		    vha->vp_idx && vha->vp_idx != (mb[3] & 0xff))
-+			break;
-+
-+		/* Global event -- port logout or port unavailable. */
-+		if (mb[1] == 0xffff && mb[2] == 0x7) {
-+			DEBUG2(printk("scsi(%ld): Asynchronous PORT UPDATE.\n",
-+			    vha->host_no));
-+			DEBUG(printk(KERN_INFO
-+			    "scsi(%ld): Port unavailable %04x %04x %04x.\n",
-+			    vha->host_no, mb[1], mb[2], mb[3]));
-+
-+			if (atomic_read(&vha->loop_state) != LOOP_DOWN) {
-+				atomic_set(&vha->loop_state, LOOP_DOWN);
-+				atomic_set(&vha->loop_down_timer,
-+				    LOOP_DOWN_TIME);
-+				vha->device_flags |= DFLG_NO_CABLE;
-+				qla2x00_mark_all_devices_lost(vha, 1);
-+			}
-+
-+			if (vha->vp_idx) {
-+				atomic_set(&vha->vp_state, VP_FAILED);
-+				fc_vport_set_state(vha->fc_vport,
-+				    FC_VPORT_FAILED);
-+			}
-+
-+			vha->flags.management_server_logged_in = 0;
-+			ha->link_data_rate = PORT_SPEED_UNKNOWN;
- 			break;
-+		}
- 
- 		/*
- 		 * If PORT UPDATE is global (received LIP_OCCURRED/LIP_RESET
--- 
-1.6.2.rc1.30.gd43c
+Anirban Chakraborty (2):
+  qla2xxx: Fix to ensure driver works in sinlge queue mode if
+    multiqueue fails.
+  qla2xxx: Fix a bug that clears the interrupt status register for the
+    base queue
+
+Giridhar Malavali (3):
+  qla2xxx: Update version number to 8.03.01-k5
+  qla2xxx: Update version number to 8.03.01-k6
+  qla2xxx: Update version number to 8.03.01-k7
+
+Lalit Chandivade (1):
+  qla2xxx: Process DPC requests within valid Fabric topologies.
+
+Ravi Anand (1):
+  qla2xxx: Modified the driver to pass the residaul UNDERRUN status
+
+Santosh Vernekar (3):
+  qla2xxx: Skip RSCN processing if the event is global and vp_idx index
+  qla2xxx: Mark all devices as lost when fc port is marked
+  qla2xxx: Handle RSCN's per master/slave vn-port basis.
+
+Shyam Sundar (1):
+  qla2xxx: Corrected one of the IOCB structure to be 64 bytes size
+
+ drivers/scsi/qla2xxx/qla_attr.c    |    4 +-
+ drivers/scsi/qla2xxx/qla_def.h     |    1 +
+ drivers/scsi/qla2xxx/qla_fw.h      |    2 +-
+ drivers/scsi/qla2xxx/qla_gs.c      |    4 ++
+ drivers/scsi/qla2xxx/qla_init.c    |    5 +--
+ drivers/scsi/qla2xxx/qla_iocb.c    |    2 +-
+ drivers/scsi/qla2xxx/qla_isr.c     |   55 +++++++++++++++++++++++++++++++++--
+ drivers/scsi/qla2xxx/qla_mbx.c     |    7 ++--
+ drivers/scsi/qla2xxx/qla_mid.c     |    3 ++
+ drivers/scsi/qla2xxx/qla_os.c      |   21 +++++++++++--
+ drivers/scsi/qla2xxx/qla_version.h |    2 +-
+ 11 files changed, 87 insertions(+), 19 deletions(-)
 
