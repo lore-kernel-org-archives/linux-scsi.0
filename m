@@ -1,45 +1,65 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH] ALUA: send STPG if explicit and implicit is supported
-Date: Tue, 28 Jul 2009 23:08:06 -0500
-Message-ID: <1248840486-4014-1-git-send-email-michaelc@cs.wisc.edu>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] cnic: Fix ISCSI_KEVENT_IF_DOWN message handling.
+Date: Wed, 29 Jul 2009 02:50:31 -0500
+Message-ID: <4A6FFF47.1040107@cs.wisc.edu>
+References: <1248318115-14214-1-git-send-email-mchan@broadcom.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:53192 "EHLO mx2.redhat.com"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:41822 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750701AbZG2EIM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Jul 2009 00:08:12 -0400
+	id S1750809AbZG2Hum (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Jul 2009 03:50:42 -0400
+In-Reply-To: <1248318115-14214-1-git-send-email-mchan@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, hare@suse.de
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+To: Michael Chan <mchan@broadcom.com>
+Cc: davem@davemloft.net, James.Bottomley@HansenPartnership.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+Michael Chan wrote:
+> When a net device goes down or when the bnx2i driver is unloaded,
+> the code was not generating the ISCSI_KEVENT_IF_DOWN message
+> properly and this could cause the userspace driver to crash.
+> 
+> This is fixed by sending the message properly in the shutdown path.
+> cnic_uio_stop() is also added to send the message when bnx2i is
+> unregistering.
+> 
+> Signed-off-by: Michael Chan <mchan@broadcom.com>
+> ---
+>  drivers/net/cnic.c |   23 +++++++++++++++++++++--
+>  1 files changed, 21 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/cnic.c b/drivers/net/cnic.c
+> index 4d1515f..4869d77 100644
+> --- a/drivers/net/cnic.c
+> +++ b/drivers/net/cnic.c
+> @@ -227,7 +227,7 @@ static int cnic_send_nlmsg(struct cnic_local *cp, u32 type,
+>  	}
+>  
+>  	rcu_read_lock();
+> -	ulp_ops = rcu_dereference(cp->ulp_ops[CNIC_ULP_ISCSI]);
+> +	ulp_ops = rcu_dereference(cnic_ulp_tbl[CNIC_ULP_ISCSI]);
+>  	if (ulp_ops)
+>  		ulp_ops->iscsi_nl_send_msg(cp->dev, msg_type, buf, len);
+>  	rcu_read_unlock();
+> @@ -319,6 +319,20 @@ static int cnic_abort_prep(struct cnic_sock *csk)
+>  	return 0;
+>  }
+>  
+> +static void cnic_uio_stop(void)
+> +{
+> +	struct cnic_dev *dev;
+> +
+> +	read_lock(&cnic_dev_lock);
+> +	list_for_each_entry(dev, &cnic_dev_list, list) {
+> +		struct cnic_local *cp = dev->cnic_priv;
+> +
+> +		if (cp->cnic_uinfo)
+> +			cnic_send_nlmsg(cp, ISCSI_KEVENT_IF_DOWN, NULL);
 
-alua_activate only sends a STPG if only explicit is suppored.
-As a result, for EMC targets that support both we end up doing
-a implicit failover when X commands are finally sent to
-the other SP.
-
-This patch does a AND on the h->tpgs, so we do a explicit failover
-right away.
-
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/device_handler/scsi_dh_alua.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index dba154c..b5cdefa 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -663,7 +663,7 @@ static int alua_activate(struct scsi_device *sdev)
- 			goto out;
- 	}
- 
--	if (h->tpgs == TPGS_MODE_EXPLICIT && h->state != TPGS_STATE_OPTIMIZED)
-+	if (h->tpgs & TPGS_MODE_EXPLICIT && h->state != TPGS_STATE_OPTIMIZED)
- 		err = alua_stpg(sdev, TPGS_STATE_OPTIMIZED, h);
- 
- out:
--- 
-1.6.2.2
-
+I don't think you can call this with the cnic_dev_lock held. They have 
+the same sleeping restrictions as a spin_lock right? If so, the problem 
+is that iscsi_nl_send_ms calls iscsi_offload_mesg which uses GFP_NOIO 
+and can sleep.
