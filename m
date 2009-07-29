@@ -1,63 +1,54 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] sd: Avoid sending extended inquiry to legacy devices
-Date: Wed, 29 Jul 2009 14:06:53 -0400
-Message-ID: <yq1ljm75poi.fsf@sermon.lab.mkp.net>
+From: "Michael Chan" <mchan-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Subject: [PATCH] iscsi: Use GFP_ATOMIC in iscsi_offload_mesg().
+Date: Wed, 29 Jul 2009 11:49:52 -0700
+Message-ID: <1248893392.16148.262.camel@HP1>
+References: <C27F8246C663564A84BB7AB343977242178EE780E1@IRVEXCHCCR01.corp.ad.broadcom.com> <4A70058F.50403@cs.wisc.edu>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet11.oracle.com ([141.146.126.233]:22155 "EHLO
-	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752516AbZG2SHB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jul 2009 14:07:01 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <grbounce-FC1hwAUAAAA0O9VQcsxVj1UPjHD9r3x_=glio-open-iscsi=m.gmane.org-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <4A70058F.50403-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Post: <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://googlegroups.com/group/open-iscsi/subscribe>,
+	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Cc: "davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org" <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org" <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org
 
 
-Some USB devices crash when we send them an inquiry with the EVPD bit
-set, regardless of page requested (i.e. including page 0).
+Changing to GFP_ATOMIC because the only caller in cnic/bnx2i may
+be calling this function while holding spin_lock.
 
-We only need the extended inquiry to gain access to VPD pages 0xB0 and
-0xB1.  These appeared in SBC2 and SBC3 respectively, so we can restrict
-sending the extended inquiry to devices reporting SPC3 or higher.
+This problem was discovered by Mike Christie.
 
-This fixes bugzilla.kernel.org #13657.
-
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-
+Signed-off-by: Michael Chan <mchan-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
 ---
+ drivers/scsi/scsi_transport_iscsi.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 5616cd7..9b703fd 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1840,6 +1840,13 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp)
- 	kfree(buffer);
- }
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 783e33c..b47240c 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -990,7 +990,7 @@ int iscsi_offload_mesg(struct Scsi_Host *shost,
+ 	struct iscsi_uevent *ev;
+ 	int len = NLMSG_SPACE(sizeof(*ev) + data_size);
  
-+static int sd_try_extended_inquiry(struct scsi_device *sdp)
-+{
-+	if (sdp->scsi_level > SCSI_SPC_2)
-+		return 1;
-+	return 0;
-+}
-+
- /**
-  *	sd_revalidate_disk - called the first time a new disk is seen,
-  *	performs disk spin up, read_capacity, etc.
-@@ -1877,8 +1884,12 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	 */
- 	if (sdkp->media_present) {
- 		sd_read_capacity(sdkp, buffer);
--		sd_read_block_limits(sdkp);
--		sd_read_block_characteristics(sdkp);
-+
-+		if (sd_try_extended_inquiry(sdp)) {
-+			sd_read_block_limits(sdkp);
-+			sd_read_block_characteristics(sdkp);
-+		}
-+
- 		sd_read_write_protect_flag(sdkp, buffer);
- 		sd_read_cache_type(sdkp, buffer);
- 		sd_read_app_tag_own(sdkp, buffer);
-
+-	skb = alloc_skb(len, GFP_NOIO);
++	skb = alloc_skb(len, GFP_ATOMIC);
+ 	if (!skb) {
+ 		printk(KERN_ERR "can not deliver iscsi offload message:OOM\n");
+ 		return -ENOMEM;
+@@ -1012,7 +1012,7 @@ int iscsi_offload_mesg(struct Scsi_Host *shost,
+ 
+ 	memcpy((char *)ev + sizeof(*ev), data, data_size);
+ 
+-	return iscsi_multicast_skb(skb, ISCSI_NL_GRP_UIP, GFP_NOIO);
++	return iscsi_multicast_skb(skb, ISCSI_NL_GRP_UIP, GFP_ATOMIC);
+ }
+ EXPORT_SYMBOL_GPL(iscsi_offload_mesg);
+ 
+-- 
+1.5.6.GIT
