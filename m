@@ -1,62 +1,56 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: consistent use of __u8 in scsi/scsi.h
-Date: Wed, 29 Jul 2009 16:37:36 +0000
-Message-ID: <1248885456.3900.48.camel@mulgrave.site>
-References: <20090729111114.GA15239@redhat.com>
-	 <1248875763.3900.1.camel@mulgrave.site>
-	 <20090729162844.GA22561@merkur.ravnborg.org>
+Subject: SCSI git trees
+Date: Wed, 29 Jul 2009 17:07:36 +0000
+Message-ID: <1248887256.3900.78.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54962 "EHLO
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47303 "EHLO
 	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750983AbZG2Qhi (ORCPT
+	by vger.kernel.org with ESMTP id S1754726AbZG2RHj (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Jul 2009 12:37:38 -0400
-In-Reply-To: <20090729162844.GA22561@merkur.ravnborg.org>
+	Wed, 29 Jul 2009 13:07:39 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by bedivere.hansenpartnership.com (Postfix) with ESMTP id A4A358EE0F6
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2009 10:07:39 -0700 (PDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+	by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id XAlD-GS6KjDw for <linux-scsi@vger.kernel.org>;
+	Wed, 29 Jul 2009 10:07:39 -0700 (PDT)
+Received: from [192.168.10.224] (newmulgrave.ext.hansenpartnership.com [192.168.10.224])
+	by bedivere.hansenpartnership.com (Postfix) with ESMTP id 363808EE00E
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2009 10:07:39 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sam Ravnborg <sam@ravnborg.org>
-Cc: "Michael S. Tsirkin" <mst@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, 2009-07-29 at 18:28 +0200, Sam Ravnborg wrote:
-> On Wed, Jul 29, 2009 at 08:56:03AM -0500, James Bottomley wrote:
-> > On Wed, 2009-07-29 at 14:11 +0300, Michael S. Tsirkin wrote:
-> > > scsi/scsi.h is exported to userspace, so it should
-> > > use __u8 instead of u8 as other userspace-visible headers do.
-> > 
-> > Actually, can we just put a hold on this until we decide what we're
-> > doing with exporting include/scsi.
-> > 
-> > Arguments so far are
-> > 
-> >      1. Don't export and let glibc supply the headers (as it does now)
-> >      2. Move headers to be exported to include/linux
-> >      3. Take over include/scsi export from glibc: this will necessitate
-> >         comparing our current headers and those of glibc and moving
-> >         stuff around.
-> 
-> 2 + 3...
-> Let include/scsi be kernel internal stuff.
-> And have the exported headers in include/linux.
+It seems I got unsubscribed from linux-scsi last week while I was on
+holiday and I've likely missed a slew of patches, it seems like an
+appropriate time to remind everyone how the SCSI trees work.
 
-I don't quite understand what you're saying here.  I think 2 and 3 are
-either/or options.  Either we move the exported files to include/linux
-or we export from include/scsi.
+---
 
-I have to say I don't like option 2 because the breakage is visible to
-user level programs (unless we can persuade glibc people to #include
-<linux/scsi.h> in scsi/scsi.h).
+There are two git based scsi trees:
 
-> This is how net/ handle their headers.
-> 
-> I did a quick diff of the glibc provided scsi.h and kernel scsi.h.
-> >From a quick look it seems that we have more in the kernel version
-> than the glibc version - and no obvious conflicts.
-> 
-> But agree with Boaz that we should do this in one go.
+http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git
+
+called the scsi-misc tree for patches being collected for the next merge
+window.  And
+
+http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+
+called scsi-fixes for bug fixes collected for current linux head.
+
+Both trees are kept rebasable (no merge points) with all patches head at
+the tree head (so you can use gitweb to see what's in them easily). Each
+of the trees sends email to the author and all of the signoff chains
+when a patch is added, so if you sent a patch in and haven't received an
+email (and don't see it in either of the trees) I don't have it.
+
+All trees feed into linux-next and all patches in scsi-misc/scsi-fixes
+will be tested in linux-next for a few days before being passed on to
+Linus (so no more patches get added at that point).
 
 James
-
 
