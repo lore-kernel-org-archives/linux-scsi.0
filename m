@@ -1,39 +1,41 @@
 From: giridhar.malavali@qlogic.com
-Subject: [PATCH 04/14] qla2xxx: Mark all devices as lost when fc port is marked
-Date: Wed, 29 Jul 2009 11:03:53 -0700
-Message-ID: <1248890643-761-5-git-send-email-giridhar.malavali@qlogic.com>
+Subject: [PATCH 13/14] qla2xxx: ISP21xx/22xx do not support FDMI registrations.  (fixed)
+Date: Wed, 29 Jul 2009 11:04:02 -0700
+Message-ID: <1248890643-761-14-git-send-email-giridhar.malavali@qlogic.com>
 References: <1248890643-761-1-git-send-email-giridhar.malavali@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:35914 "EHLO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:35947 "EHLO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751213AbZG2SEE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Jul 2009 14:04:04 -0400
+	id S1751887AbZG2SEG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Jul 2009 14:04:06 -0400
 In-Reply-To: <1248890643-761-1-git-send-email-giridhar.malavali@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Santosh Vernekar <santosh.vernekar@qlogic.com>
+Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Santosh Vernekar <santosh.vernekar@qlogic.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-lost.
 Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_isr.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/scsi/qla2xxx/qla_gs.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 00f23d2..63e7cdc 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -639,6 +639,7 @@ skip_rio:
- 				atomic_set(&vha->vp_state, VP_FAILED);
- 				fc_vport_set_state(vha->fc_vport,
- 				    FC_VPORT_FAILED);
-+				qla2x00_mark_all_devices_lost(vha, 1);
- 			}
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 917534b..4647015 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -1674,6 +1674,10 @@ int
+ qla2x00_fdmi_register(scsi_qla_host_t *vha)
+ {
+ 	int rval;
++       struct qla_hw_data *ha = vha->hw;
++
++	if (IS_QLA2100(ha) || IS_QLA2200(ha))
++		return QLA_FUNCTION_FAILED;
  
- 			vha->flags.management_server_logged_in = 0;
+ 	rval = qla2x00_mgmt_svr_login(vha);
+ 	if (rval)
 -- 
 1.6.2.rc1.30.gd43c
 
