@@ -1,103 +1,68 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: [2.6.31-rc PATCH] libfc: fix a circular locking warning during
-	sending RRQ
-Date: Tue, 28 Jul 2009 17:33:37 -0700
-Message-ID: <20090729003337.32137.98812.stgit@localhost.localdomain>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] scsi_transport_sas: Write outside array bounds
+Date: Tue, 28 Jul 2009 22:50:54 -0400
+Message-ID: <4A6FB90E.7070003@garzik.org>
+References: <4A6ED0ED.1090707@gmail.com>	 <1248799145.3855.237.camel@mulgrave.site>  <4A6F5B2F.7020905@garzik.org> <1248816695.3855.346.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:55293 "EHLO mga02.intel.com"
+Received: from srv5.dvmed.net ([207.36.208.214]:42398 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750895AbZG2Adh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Jul 2009 20:33:37 -0400
+	id S1751146AbZG2Cu5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Jul 2009 22:50:57 -0400
+In-Reply-To: <1248816695.3855.346.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
-Cc: Vasu Dev <vasu.dev@intel.com>, Robert Love <robert.w.love@intel.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Roel Kluin <roel.kluin@gmail.com>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-From: Vasu Dev <vasu.dev@intel.com>
+James Bottomley wrote:
+> On Tue, 2009-07-28 at 16:10 -0400, Jeff Garzik wrote:
+>> James Bottomley wrote:
+>>> In this case, as you can see all of the SETUP_X are using count to step
+>>> through an array and when we're finished we add a NULL to the end.  For
+>>> the case of SETUP_PORT_ATTR, the array is i->port_attrs, so the bug here
+>>> is apparently that the NULL is going in the wrong array.  Trying to put
+>>> a NULL at the zero element is manifestly wrong because sas_internal is
+>>> zero allocated.
+>>>
+>>> Actually, as a final weirdness, we have a duplicate initialisation of
+>>> this anyway, so the correct patch is below.
+>>>
+>>> James
+>>>
+>>> ---
+>>>
+>>> diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+>>> index 0895d3c..fd47cb1 100644
+>>> --- a/drivers/scsi/scsi_transport_sas.c
+>>> +++ b/drivers/scsi/scsi_transport_sas.c
+>>> @@ -1692,10 +1692,6 @@ sas_attach_transport(struct sas_function_template *ft)
+>>>  	i->f = ft;
+>>>  
+>>>  	count = 0;
+>>> -	SETUP_PORT_ATTRIBUTE(num_phys);
+>>> -	i->host_attrs[count] = NULL;
+>>> -
+>>> -	count = 0;
+>>>  	SETUP_PHY_ATTRIBUTE(initiator_port_protocols);
+>>>  	SETUP_PHY_ATTRIBUTE(target_port_protocols);
+>>>  	SETUP_PHY_ATTRIBUTE(device_type);
+>> er, eh?
+>>
+>> It's not a duplicate initialization, as port attributes != phy 
+>> attributes.  Different macro, same counter variable.
+>>
+>> Your fix seems quite strange - num_phy attribute goes away?
+> 
+> Look in the actual file.  About 20 lines down you'll find a duplicate
+> port setup for num_phys.
 
-Currently the fc_exch_rrq is called with fc_exch's ex_lock held.
-The fc_exch_rrq allocates new exch and that requires taking
-ex_lock again after EM lock. This locking order causes warning,
-see more details on this warning at :-
+Indeed... sorry for the noise!
 
- http://www.open-fcoe.org/pipermail/devel/2009-July/003251.html
+	Jeff
 
-This patch fixes this by dropping the ex_lock before calling
-fc_exch_rrq().
 
-The fc_exch_rrq needs to grab ex_lock lock again to schedule
-RRQ retry and in the meanwhile fc_exch_reset could occur before
-ex_lock is grabbed inside fc_exch_rrq. So to handle this case,
-this patch adds additional check to detect fc_exch_reset after
-ex_lock acquired and in case the fc_exch_reset occurred then
-abandons the RRQ retry and releases the exch.
 
-Signed-off-by: Vasu Dev <vasu.dev@intel.com>
-Signed-off-by: Robert Love <robert.w.love@intel.com>
----
-
- drivers/scsi/libfc/fc_exch.c |   23 +++++++++++++++--------
- 1 files changed, 15 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 2bc22be..145ab9b 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -415,9 +415,9 @@ static void fc_exch_timeout(struct work_struct *work)
- 	e_stat = ep->esb_stat;
- 	if (e_stat & ESB_ST_COMPLETE) {
- 		ep->esb_stat = e_stat & ~ESB_ST_REC_QUAL;
-+		spin_unlock_bh(&ep->ex_lock);
- 		if (e_stat & ESB_ST_REC_QUAL)
- 			fc_exch_rrq(ep);
--		spin_unlock_bh(&ep->ex_lock);
- 		goto done;
- 	} else {
- 		resp = ep->resp;
-@@ -1624,14 +1624,14 @@ static void fc_exch_rrq(struct fc_exch *ep)
- 	struct fc_lport *lp;
- 	struct fc_els_rrq *rrq;
- 	struct fc_frame *fp;
--	struct fc_seq *rrq_sp;
- 	u32 did;
- 
- 	lp = ep->lp;
- 
- 	fp = fc_frame_alloc(lp, sizeof(*rrq));
- 	if (!fp)
--		return;
-+		goto retry;
-+
- 	rrq = fc_frame_payload_get(fp, sizeof(*rrq));
- 	memset(rrq, 0, sizeof(*rrq));
- 	rrq->rrq_cmd = ELS_RRQ;
-@@ -1647,13 +1647,20 @@ static void fc_exch_rrq(struct fc_exch *ep)
- 		       fc_host_port_id(lp->host), FC_TYPE_ELS,
- 		       FC_FC_FIRST_SEQ | FC_FC_END_SEQ | FC_FC_SEQ_INIT, 0);
- 
--	rrq_sp = fc_exch_seq_send(lp, fp, fc_exch_rrq_resp, NULL, ep,
--				  lp->e_d_tov);
--	if (!rrq_sp) {
--		ep->esb_stat |= ESB_ST_REC_QUAL;
--		fc_exch_timer_set_locked(ep, ep->r_a_tov);
-+	if (fc_exch_seq_send(lp, fp, fc_exch_rrq_resp, NULL, ep, lp->e_d_tov))
-+		return;
-+
-+retry:
-+	spin_lock_bh(&ep->ex_lock);
-+	if (ep->state & (FC_EX_RST_CLEANUP | FC_EX_DONE)) {
-+		spin_unlock_bh(&ep->ex_lock);
-+		/* drop hold for rec qual */
-+		fc_exch_release(ep);
- 		return;
- 	}
-+	ep->esb_stat |= ESB_ST_REC_QUAL;
-+	fc_exch_timer_set_locked(ep, ep->r_a_tov);
-+	spin_unlock_bh(&ep->ex_lock);
- }
- 
- 
 
