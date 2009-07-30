@@ -1,95 +1,135 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 15/22] libfc: Remove the FC_EM_DBG macro
-Date: Wed, 29 Jul 2009 17:05:05 -0700
-Message-ID: <20090730000505.24658.35834.stgit@localhost.localdomain>
+Subject: [PATCH 17/22] fcoe: modifies fcoe_hostlist_lock uses as prep work to
+	add shared offload EM
+Date: Wed, 29 Jul 2009 17:05:15 -0700
+Message-ID: <20090730000515.24658.72918.stgit@localhost.localdomain>
 References: <20090730000345.24658.24830.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:6930 "EHLO mga01.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:6680 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755444AbZG3AFE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Jul 2009 20:05:04 -0400
+	id S1755463AbZG3AFP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Jul 2009 20:05:15 -0400
 In-Reply-To: <20090730000345.24658.24830.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
-Cc: Robert Love <robert.w.love@intel.com>
+Cc: Vasu Dev <vasu.dev@intel.com>, Robert Love <robert.w.love@intel.com>
 
-Currently there is a 1:1 relationship between the lport
-and exchange manager. This macro takes an EM as an argument
-and determines the lport from it. However, later patches
-will use an EM list per lport, so we will no longer have
-this 1:1 relationship- this macro must change.
+From: Vasu Dev <vasu.dev@intel.com>
 
-The FC_EM_DBG macro is rarely used. There are four callers,
-two can use FC_LPORT_DBG instead and two can be removed
-since they're not necessary. This patch makes those changes
-and removes the macro.
+Modifies fcoe_hostlist_lock uses such that a new EM allocation in
+fcoe_em_config and adding new fcoe_softc using fcoe_hostlist_add
+are atomic, this is to ensure that a shared offload EM gets allocated
+only once per eth device for its all lports.
 
+Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_exch.c |   13 ++++++-------
- include/scsi/libfc.h         |    6 ------
- 2 files changed, 6 insertions(+), 13 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |   26 ++++++++++++++++++--------
+ 1 files changed, 18 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index f1fa2b1..3ad7f88 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -1129,7 +1129,7 @@ static void fc_exch_recv_req(struct fc_lport *lp, struct fc_exch_mgr *mp,
- 			lp->tt.lport_recv(lp, sp, fp);
- 		fc_exch_release(ep);	/* release from lookup */
- 	} else {
--		FC_EM_DBG(mp, "exch/seq lookup failed: reject %x\n", reject);
-+		FC_LPORT_DBG(lp, "exch/seq lookup failed: reject %x\n", reject);
- 		fc_frame_free(fp);
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index ebf2e20..86410b9 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -419,6 +419,8 @@ static int fcoe_shost_config(struct fc_lport *lp, struct Scsi_Host *shost,
+  * fcoe_em_config() - allocates em for this lport
+  * @lp: the port that em is to allocated for
+  *
++ * Called with write fcoe_hostlist_lock held.
++ *
+  * Returns : 0 on success
+  */
+ static inline int fcoe_em_config(struct fc_lport *lp)
+@@ -607,6 +609,13 @@ static int fcoe_if_create(struct net_device *netdev)
+ 		goto out_lp_destroy;
  	}
- }
-@@ -1235,13 +1235,12 @@ static void fc_exch_recv_resp(struct fc_exch_mgr *mp, struct fc_frame *fp)
- 	struct fc_seq *sp;
  
- 	sp = fc_seq_lookup_orig(mp, fp);	/* doesn't hold sequence */
--	if (!sp) {
-+
-+	if (!sp)
- 		atomic_inc(&mp->stats.xid_not_found);
--		FC_EM_DBG(mp, "seq lookup failed\n");
--	} else {
-+	else
- 		atomic_inc(&mp->stats.non_bls_resp);
--		FC_EM_DBG(mp, "non-BLS response to sequence");
--	}
-+
- 	fc_frame_free(fp);
- }
++	/*
++	 * fcoe_em_alloc() and fcoe_hostlist_add() both
++	 * need to be atomic under fcoe_hostlist_lock
++	 * since fcoe_em_alloc() looks for an existing EM
++	 * instance on host list updated by fcoe_hostlist_add().
++	 */
++	write_lock(&fcoe_hostlist_lock);
+ 	/* lport exch manager allocation */
+ 	rc = fcoe_em_config(lp);
+ 	if (rc) {
+@@ -617,6 +626,7 @@ static int fcoe_if_create(struct net_device *netdev)
  
-@@ -1950,7 +1949,7 @@ void fc_exch_recv(struct fc_lport *lp, struct fc_exch_mgr *mp,
- 			fc_exch_recv_req(lp, mp, fp);
- 		break;
- 	default:
--		FC_EM_DBG(mp, "dropping invalid frame (eof %x)", fr_eof(fp));
-+		FC_LPORT_DBG(lp, "dropping invalid frame (eof %x)", fr_eof(fp));
- 		fc_frame_free(fp);
- 		break;
+ 	/* add to lports list */
+ 	fcoe_hostlist_add(lp);
++	write_unlock(&fcoe_hostlist_lock);
+ 
+ 	lp->boot_time = jiffies;
+ 
+@@ -1720,6 +1730,8 @@ int fcoe_reset(struct Scsi_Host *shost)
+  * fcoe_hostlist_lookup_softc() - find the corresponding lport by a given device
+  * @dev: this is currently ptr to net_device
+  *
++ * Called with fcoe_hostlist_lock held.
++ *
+  * Returns: NULL or the located fcoe_softc
+  */
+ static struct fcoe_softc *
+@@ -1727,14 +1739,10 @@ fcoe_hostlist_lookup_softc(const struct net_device *dev)
+ {
+ 	struct fcoe_softc *fc;
+ 
+-	read_lock(&fcoe_hostlist_lock);
+ 	list_for_each_entry(fc, &fcoe_hostlist, list) {
+-		if (fc->real_dev == dev) {
+-			read_unlock(&fcoe_hostlist_lock);
++		if (fc->real_dev == dev)
+ 			return fc;
+-		}
  	}
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index b381b1c..f1bde91 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -88,12 +88,6 @@ do {									\
- 				(pkt)->lp->host->host_no,		\
- 				pkt->rport->port_id, ##args))
+-	read_unlock(&fcoe_hostlist_lock);
+ 	return NULL;
+ }
  
--#define FC_EM_DBG(em, fmt, args...)					\
--	FC_CHECK_LOGGING(FC_EM_LOGGING,					\
--			 printk(KERN_INFO "host%u: em: " fmt,		\
--				(em)->lp->host->host_no,		\
--				##args))
--
- #define FC_EXCH_DBG(exch, fmt, args...)					\
- 	FC_CHECK_LOGGING(FC_EXCH_LOGGING,				\
- 			 printk(KERN_INFO "host%u: xid %4x: " fmt,	\
+@@ -1748,7 +1756,9 @@ struct fc_lport *fcoe_hostlist_lookup(const struct net_device *netdev)
+ {
+ 	struct fcoe_softc *fc;
+ 
++	read_lock(&fcoe_hostlist_lock);
+ 	fc = fcoe_hostlist_lookup_softc(netdev);
++	read_unlock(&fcoe_hostlist_lock);
+ 
+ 	return (fc) ? fc->ctlr.lp : NULL;
+ }
+@@ -1757,6 +1767,8 @@ struct fc_lport *fcoe_hostlist_lookup(const struct net_device *netdev)
+  * fcoe_hostlist_add() - Add a lport to lports list
+  * @lp: ptr to the fc_lport to be added
+  *
++ * Called with write fcoe_hostlist_lock held.
++ *
+  * Returns: 0 for success
+  */
+ int fcoe_hostlist_add(const struct fc_lport *lp)
+@@ -1766,9 +1778,7 @@ int fcoe_hostlist_add(const struct fc_lport *lp)
+ 	fc = fcoe_hostlist_lookup_softc(fcoe_netdev(lp));
+ 	if (!fc) {
+ 		fc = lport_priv(lp);
+-		write_lock_bh(&fcoe_hostlist_lock);
+ 		list_add_tail(&fc->list, &fcoe_hostlist);
+-		write_unlock_bh(&fcoe_hostlist_lock);
+ 	}
+ 	return 0;
+ }
+@@ -1783,9 +1793,9 @@ int fcoe_hostlist_remove(const struct fc_lport *lp)
+ {
+ 	struct fcoe_softc *fc;
+ 
++	write_lock_bh(&fcoe_hostlist_lock);
+ 	fc = fcoe_hostlist_lookup_softc(fcoe_netdev(lp));
+ 	BUG_ON(!fc);
+-	write_lock_bh(&fcoe_hostlist_lock);
+ 	list_del(&fc->list);
+ 	write_unlock_bh(&fcoe_hostlist_lock);
+ 
 
