@@ -1,54 +1,54 @@
 From: "Anil Veerabhadrappa" <anilgv@broadcom.com>
-Subject: [PATCH 1/2] bnx2i : Fix CMDSN jump issue seen during cable pull
- test
-Date: Wed, 29 Jul 2009 21:49:48 -0700
-Message-ID: <1248929388.26650.349.camel@anilgv-desktop>
-References: <1245805860.9829.50.camel@anilgv-desktop>
+Subject: [PATCH 2/2] bnx2i : Fix "cid #n not valid" issue
+Date: Wed, 29 Jul 2009 21:50:11 -0700
+Message-ID: <1248929411.26650.350.camel@anilgv-desktop>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mms2.broadcom.com ([216.31.210.18]:4780 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750776AbZG3Et4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Jul 2009 00:49:56 -0400
-In-Reply-To: <1245805860.9829.50.camel@anilgv-desktop>
+	id S1750975AbZG3EuP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Jul 2009 00:50:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, mchan@broadcom.com
 
 
-    * Without the fix bnx2i would fail tt->xmit_task() when link is down
-    * libiscsi would have already incremented session->cmdsn before calling
-      bnx2i's xmit_task() entry point and will just return the command to
-      SCSI-ML when xmit_task() fails. libiscsi does not retract the session->cmdsn
-      as the command was never sent on wire
-    * It is generally good idea for LLD, bnx2i to accept the scsi cmnd/nopout
-      and let upper layer timeout and go though normal session recovery process
-    * When link is down, unsolicited nopout will not be accepted by bnx2i and
-      connection will never enter recovery state. This fix is required for MPIO
-      to work corectly
+    * when bnx2i_adapter_ready() fails, connection handle(cid) = 0 is
+      wrongly freed because 'cid' is not yet allocated for the endpoint
+    * Fix is to initialize bnx2i_ep->ep_iscsi_cid to '-1' in bnx2i_alloc_ep()
+      and not in bnx2i_ep_connect() to avoid releasing invalid 'cid'
+    * There is already a check in bnx2i_free_iscsi_cid() not to free
+      invalid iscsi connection handle (-1)
 
 Signed-off-by: Anil Veerabhadrappa <anilgv@broadcom.com>
 ---
- drivers/scsi/bnx2i/bnx2i_iscsi.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
+ drivers/scsi/bnx2i/bnx2i_iscsi.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index f741219..9535bb6 100644
+index 9535bb6..08d0bfc 100644
 --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
 +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -1160,9 +1160,6 @@ static int bnx2i_task_xmit(struct iscsi_task *task)
- 	struct bnx2i_cmd *cmd = task->dd_data;
- 	struct iscsi_cmd *hdr = (struct iscsi_cmd *) task->hdr;
+@@ -387,6 +387,7 @@ static struct iscsi_endpoint *bnx2i_alloc_ep(struct bnx2i_hba *hba)
+ 	bnx2i_ep = ep->dd_data;
+ 	INIT_LIST_HEAD(&bnx2i_ep->link);
+ 	bnx2i_ep->state = EP_STATE_IDLE;
++	bnx2i_ep->ep_iscsi_cid = (u16) -1;
+ 	bnx2i_ep->hba = hba;
+ 	bnx2i_ep->hba_age = hba->age;
+ 	hba->ofld_conns_active++;
+@@ -1678,8 +1679,6 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
+ 		goto net_if_down;
+ 	}
  
--	if (test_bit(ADAPTER_STATE_LINK_DOWN, &hba->adapter_state))
--		return -ENOTCONN;
--
- 	if (!bnx2i_conn->is_bound)
- 		return -ENOTCONN;
- 
+-	bnx2i_ep->state = EP_STATE_IDLE;
+-	bnx2i_ep->ep_iscsi_cid = (u16) -1;
+ 	bnx2i_ep->num_active_cmds = 0;
+ 	iscsi_cid = bnx2i_alloc_iscsi_cid(hba);
+ 	if (iscsi_cid == -1) {
 -- 
 1.5.4.3
 
