@@ -1,17 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 10/22] libfc: fix WARNING from fc_seq_start_next on closed
-	exchanges
-Date: Wed, 29 Jul 2009 17:04:38 -0700
-Message-ID: <20090730000438.24658.13.stgit@localhost.localdomain>
+Subject: [PATCH 13/22] libfc: fix: cancel rport retry timer
+Date: Wed, 29 Jul 2009 17:04:54 -0700
+Message-ID: <20090730000454.24658.922.stgit@localhost.localdomain>
 References: <20090730000345.24658.24830.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:23834 "EHLO mga01.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:62139 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755353AbZG3AEi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Jul 2009 20:04:38 -0400
+	id S1755354AbZG3AEy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Jul 2009 20:04:54 -0400
 In-Reply-To: <20090730000345.24658.24830.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,32 +19,47 @@ Cc: Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>
 
 From: Joe Eykholt <jeykholt@cisco.com>
 
-We saw periodic messages like:
+The timer for rport retries wasn't getting canceled, and
+would occasionally go off after the module was unloaded.
 
-WARNING: at drivers/scsi/libfc/fc_exch.c:825 fc_seq_start_next+0x30/0x4b
+Add logic to cancel the timer in fc_rport_work().
 
-This was due to trying to allocate a sequence in a request handler
-when the exchange had been reset.
-
-Delete the WARN_ON.
+Since we cancel the timer before deleting the rdata,
+it is no longer necessary to do a get_device() for the pending timer.
 
 Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_exch.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+ drivers/scsi/libfc/fc_rport.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index e6d82d7..cab5499 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -822,7 +822,6 @@ struct fc_seq *fc_seq_start_next(struct fc_seq *sp)
- 	struct fc_exch *ep = fc_seq_exch(sp);
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index a86df0b..90cc90d 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -276,6 +276,7 @@ static void fc_rport_work(struct work_struct *work)
+ 		mutex_unlock(&rdata->rp_mutex);
+ 		if (rport_ops->event_callback)
+ 			rport_ops->event_callback(lport, rport, event);
++		cancel_delayed_work_sync(&rdata->retry_work);
+ 		if (trans_state == FC_PORTSTATE_ROGUE)
+ 			put_device(&rport->dev);
+ 		else {
+@@ -433,7 +434,6 @@ static void fc_rport_timeout(struct work_struct *work)
+ 	}
  
- 	spin_lock_bh(&ep->ex_lock);
--	WARN_ON((ep->esb_stat & ESB_ST_COMPLETE) != 0);
- 	sp = fc_seq_start_next_locked(sp);
- 	spin_unlock_bh(&ep->ex_lock);
+ 	mutex_unlock(&rdata->rp_mutex);
+-	put_device(&rport->dev);
+ }
  
+ /**
+@@ -494,7 +494,6 @@ static void fc_rport_error_retry(struct fc_rport *rport, struct fc_frame *fp)
+ 		/* no additional delay on exchange timeouts */
+ 		if (PTR_ERR(fp) == -FC_EX_TIMEOUT)
+ 			delay = 0;
+-		get_device(&rport->dev);
+ 		schedule_delayed_work(&rdata->retry_work, delay);
+ 		return;
+ 	}
 
