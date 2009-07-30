@@ -1,14 +1,14 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 2/6] mpt2sas: Raid 10 Value is showing as Raid 1E in /va/log/messages
-Date: Thu, 30 Jul 2009 18:22:48 +0530
-Message-ID: <20090730125241.GC20582@lsi.com>
+Subject: [PATCH 3/6] mpt2sas: When activating a inactive volume, hidden raid components disapper
+Date: Thu, 30 Jul 2009 18:23:57 +0530
+Message-ID: <20090730125351.GD20582@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og124.obsmtp.com ([64.18.2.26]:40658 "EHLO
-	exprod7og124.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751326AbZG3NNc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jul 2009 09:13:32 -0400
+Received: from exprod7og112.obsmtp.com ([64.18.2.177]:43700 "EHLO
+	exprod7og112.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751643AbZG3NOk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jul 2009 09:14:40 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,209 +16,179 @@ To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
 
-Add support to obtain manufacturing page 10 at driver load time. The driver will display RAID10 string when the volume type is RAID1E,
-when there is a even drive count, and the manufacturing page 10 GenericFlags0 field has bit 2 is set.
+When a volume is activated, the driver will recieve a pair of ir config change events to remove the foreign volume, then add the native.
+In the process of the removal event, the hidden raid componet is removed from the parent.
+When the disks is added back, the adding of the port fails becuase there is no instance of the device in its parent.
+To fix this issue, the driver needs to call mpt2sas_transport_update_links() prior to calling _scsih_add_device.
+In addition, we added sanity checks on volume add and removal to ignore events for foreign volumes.
+
 ---
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 Signed-off-by: Eric Moore <Eric.moore@lsi.com>
 ---
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index f0ffbf6..86b737c 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1482,6 +1482,8 @@ _base_display_ioc_capabilities(struct MPT2SAS_ADAPTER *ioc)
- 	   (ioc->bios_pg3.BiosVersion & 0x0000FF00) >> 8,
- 	    ioc->bios_pg3.BiosVersion & 0x000000FF);
- 
-+	_base_display_dell_branding(ioc);
-+
- 	printk(MPT2SAS_INFO_FMT "Protocol=(", ioc->name);
- 
- 	if (ioc->facts.ProtocolFlags & MPI2_IOCFACTS_PROTOCOL_SCSI_INITIATOR) {
-@@ -1494,8 +1496,6 @@ _base_display_ioc_capabilities(struct MPT2SAS_ADAPTER *ioc)
- 		i++;
- 	}
- 
--	_base_display_dell_branding(ioc);
--
- 	i = 0;
- 	printk("), ");
- 	printk("Capabilities=(");
-@@ -1567,6 +1567,9 @@ _base_static_config_pages(struct MPT2SAS_ADAPTER *ioc)
- 	u32 iounit_pg1_flags;
- 
- 	mpt2sas_config_get_manufacturing_pg0(ioc, &mpi_reply, &ioc->manu_pg0);
-+	if (ioc->ir_firmware)
-+		mpt2sas_config_get_manufacturing_pg10(ioc, &mpi_reply,
-+		    &ioc->manu_pg10);
- 	mpt2sas_config_get_bios_pg2(ioc, &mpi_reply, &ioc->bios_pg2);
- 	mpt2sas_config_get_bios_pg3(ioc, &mpi_reply, &ioc->bios_pg3);
- 	mpt2sas_config_get_ioc_pg8(ioc, &mpi_reply, &ioc->ioc_pg8);
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index 51962bd..a10c37b 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -197,6 +197,38 @@ struct MPT2SAS_TARGET {
-  * @block: device is in SDEV_BLOCK state
-  * @tlr_snoop_check: flag used in determining whether to disable TLR
-  */
-+
-+/* OEM Identifiers */
-+#define MFG10_OEM_ID_INVALID                   (0x00000000)
-+#define MFG10_OEM_ID_DELL                      (0x00000001)
-+#define MFG10_OEM_ID_FSC                       (0x00000002)
-+#define MFG10_OEM_ID_SUN                       (0x00000003)
-+#define MFG10_OEM_ID_IBM                       (0x00000004)
-+
-+/* GENERIC Flags 0*/
-+#define MFG10_GF0_OCE_DISABLED                 (0x00000001)
-+#define MFG10_GF0_R1E_DRIVE_COUNT              (0x00000002)
-+#define MFG10_GF0_R10_DISPLAY                  (0x00000004)
-+#define MFG10_GF0_SSD_DATA_SCRUB_DISABLE       (0x00000008)
-+#define MFG10_GF0_SINGLE_DRIVE_R0              (0x00000010)
-+
-+/* OEM Specific Flags will come from OEM specific header files */
-+typedef struct _MPI2_CONFIG_PAGE_MAN_10 {
-+    MPI2_CONFIG_PAGE_HEADER Header;                                 /* 00h */
-+    U8                      OEMIdentifier;                          /* 04h */
-+    U8                      Reserved1;                              /* 05h */
-+    U16                     Reserved2;                              /* 08h */
-+    U32                     Reserved3;                              /* 0Ch */
-+    U32                     GenericFlags0;                          /* 10h */
-+    U32                     GenericFlags1;                          /* 14h */
-+    U32                     Reserved4;                              /* 18h */
-+    U32                     OEMSpecificFlags0;                      /* 1Ch */
-+    U32                     OEMSpecificFlags1;                      /* 20h */
-+    U32                     Reserved5[18];                          /* 24h-60h*/
-+} MPI2_CONFIG_PAGE_MAN_10,
-+  MPI2_POINTER PTR_MPI2_CONFIG_PAGE_MAN_10,
-+  Mpi2ManufacturingPage10_t, MPI2_POINTER pMpi2ManufacturingPage10_t;
-+
- struct MPT2SAS_DEVICE {
- 	struct MPT2SAS_TARGET *sas_target;
- 	unsigned int	lun;
-@@ -461,6 +493,7 @@ typedef void (*MPT_ADD_SGE)(void *paddr, u32 flags_length, dma_addr_t dma_addr);
-  * @facts: static facts data
-  * @pfacts: static port facts data
-  * @manu_pg0: static manufacturing page 0
-+ * @manu_pg10: static manufacturing page 10
-  * @bios_pg2: static bios page 2
-  * @bios_pg3: static bios page 3
-  * @ioc_pg8: static ioc page 8
-@@ -663,6 +696,7 @@ struct MPT2SAS_ADAPTER {
- 	dma_addr_t	diag_buffer_dma[MPI2_DIAG_BUF_TYPE_COUNT];
- 	u8		diag_buffer_status[MPI2_DIAG_BUF_TYPE_COUNT];
- 	u32		unique_id[MPI2_DIAG_BUF_TYPE_COUNT];
-+	Mpi2ManufacturingPage10_t manu_pg10;
- 	u32		product_specific[MPI2_DIAG_BUF_TYPE_COUNT][23];
- 	u32		diagnostic_flags[MPI2_DIAG_BUF_TYPE_COUNT];
- };
-@@ -774,7 +808,6 @@ int mpt2sas_config_get_volume_handle(struct MPT2SAS_ADAPTER *ioc, u16 pd_handle,
-     u16 *volume_handle);
- int mpt2sas_config_get_volume_wwid(struct MPT2SAS_ADAPTER *ioc, u16 volume_handle,
-     u64 *wwid);
--
- /* ctl shared API */
- extern struct device_attribute *mpt2sas_host_attrs[];
- extern struct device_attribute *mpt2sas_dev_attrs[];
-@@ -802,3 +835,5 @@ extern struct sas_function_template mpt2sas_transport_functions;
- extern struct scsi_transport_template *mpt2sas_transport_template;
- 
- #endif /* MPT2SAS_BASE_H_INCLUDED */
-+int mpt2sas_config_get_manufacturing_pg10(struct MPT2SAS_ADAPTER *ioc,
-+    Mpi2ConfigReply_t *mpi_reply, Mpi2ManufacturingPage10_t *config_page);
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_config.c b/drivers/scsi/mpt2sas/mpt2sas_config.c
-index 3a03fec..e9665ef 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_config.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_config.c
-@@ -419,6 +419,69 @@ mpt2sas_config_get_manufacturing_pg0(struct MPT2SAS_ADAPTER *ioc,
- }
- 
- /**
-+ * mpt2sas_config_get_manufacturing_pg10 - obtain manufacturing page 10
-+ * @ioc: per adapter object
-+ * @mpi_reply: reply mf payload returned from firmware
-+ * @config_page: contents of the config page
-+ * Context: sleep.
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+int
-+mpt2sas_config_get_manufacturing_pg10(struct MPT2SAS_ADAPTER *ioc,
-+    Mpi2ConfigReply_t *mpi_reply, Mpi2ManufacturingPage10_t *config_page)
-+{
-+	Mpi2ConfigRequest_t mpi_request;
-+	int r;
-+	struct config_request mem;
-+
-+	mutex_lock(&ioc->config_cmds.mutex);
-+	memset(config_page, 0, sizeof(Mpi2ManufacturingPage10_t));
-+	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
-+	mpi_request.Function = MPI2_FUNCTION_CONFIG;
-+	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_HEADER;
-+	mpi_request.Header.PageType = MPI2_CONFIG_PAGETYPE_MANUFACTURING;
-+	mpi_request.Header.PageNumber = 10;
-+	mpi_request.Header.PageVersion = MPI2_MANUFACTURING0_PAGEVERSION;
-+	mpt2sas_base_build_zero_len_sge(ioc, &mpi_request.PageBufferSGE);
-+	r = _config_request(ioc, &mpi_request, mpi_reply,
-+	    MPT2_CONFIG_PAGE_DEFAULT_TIMEOUT);
-+	if (r)
-+		goto out;
-+
-+	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_READ_CURRENT;
-+	mpi_request.Header.PageVersion = mpi_reply->Header.PageVersion;
-+	mpi_request.Header.PageNumber = mpi_reply->Header.PageNumber;
-+	mpi_request.Header.PageType = mpi_reply->Header.PageType;
-+	mpi_request.Header.PageLength = mpi_reply->Header.PageLength;
-+	mem.config_page_sz = le16_to_cpu(mpi_reply->Header.PageLength) * 4;
-+	if (mem.config_page_sz > ioc->config_page_sz) {
-+		r = _config_alloc_config_dma_memory(ioc, &mem);
-+		if (r)
-+			goto out;
-+	} else {
-+		mem.config_page_dma = ioc->config_page_dma;
-+		mem.config_page = ioc->config_page;
-+	}
-+	ioc->base_add_sg_single(&mpi_request.PageBufferSGE,
-+	    MPT2_CONFIG_COMMON_SGLFLAGS | mem.config_page_sz,
-+	    mem.config_page_dma);
-+	r = _config_request(ioc, &mpi_request, mpi_reply,
-+	    MPT2_CONFIG_PAGE_DEFAULT_TIMEOUT);
-+	if (!r)
-+		memcpy(config_page, mem.config_page,
-+		    min_t(u16, mem.config_page_sz,
-+		    sizeof(Mpi2ManufacturingPage10_t)));
-+
-+	if (mem.config_page_sz > ioc->config_page_sz)
-+		_config_free_config_dma_memory(ioc, &mem);
-+
-+ out:
-+	mutex_unlock(&ioc->config_cmds.mutex);
-+	return r;
-+}
-+
-+/**
-  * mpt2sas_config_get_bios_pg2 - obtain bios page 2
-  * @ioc: per adapter object
-  * @mpi_reply: reply mf payload returned from firmware
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index fba2e71..cf58d69 100644
+index cf58d69..1ab6b2c 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -1501,7 +1501,13 @@ _scsih_slave_configure(struct scsi_device *sdev)
+@@ -4195,12 +4195,6 @@ _scsih_sas_volume_add(struct MPT2SAS_ADAPTER *ioc,
+ 	u16 handle = le16_to_cpu(element->VolDevHandle);
+ 	int rc;
+ 
+-#if 0 /* RAID_HACKS */
+-	if (le32_to_cpu(event_data->Flags) &
+-	    MPI2_EVENT_IR_CHANGE_FLAGS_FOREIGN_CONFIG)
+-		return;
+-#endif
+-
+ 	mpt2sas_config_get_volume_wwid(ioc, handle, &wwid);
+ 	if (!wwid) {
+ 		printk(MPT2SAS_ERR_FMT
+@@ -4255,12 +4249,6 @@ _scsih_sas_volume_delete(struct MPT2SAS_ADAPTER *ioc,
+ 	unsigned long flags;
+ 	struct MPT2SAS_TARGET *sas_target_priv_data;
+ 
+-#if 0 /* RAID_HACKS */
+-	if (le32_to_cpu(event_data->Flags) &
+-	    MPI2_EVENT_IR_CHANGE_FLAGS_FOREIGN_CONFIG)
+-		return;
+-#endif
+-
+ 	spin_lock_irqsave(&ioc->raid_device_lock, flags);
+ 	raid_device = _scsih_raid_device_find_by_handle(ioc, handle);
+ 	spin_unlock_irqrestore(&ioc->raid_device_lock, flags);
+@@ -4373,14 +4361,38 @@ _scsih_sas_pd_add(struct MPT2SAS_ADAPTER *ioc,
+ 	struct _sas_device *sas_device;
+ 	unsigned long flags;
+ 	u16 handle = le16_to_cpu(element->PhysDiskDevHandle);
++	Mpi2ConfigReply_t mpi_reply;
++	Mpi2SasDevicePage0_t sas_device_pg0;
++	u32 ioc_status;
+ 
+ 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+ 	sas_device = _scsih_sas_device_find_by_handle(ioc, handle);
+ 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+-	if (sas_device)
++	if (sas_device) {
+ 		sas_device->hidden_raid_component = 1;
+-	else
+-		_scsih_add_device(ioc, handle, 0, 1);
++		return;
++	}
++
++	if ((mpt2sas_config_get_sas_device_pg0(ioc, &mpi_reply, &sas_device_pg0,
++	    MPI2_SAS_DEVICE_PGAD_FORM_HANDLE, handle))) {
++		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
++		    ioc->name, __FILE__, __LINE__, __func__);
++		return;
++	}
++
++	ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
++	    MPI2_IOCSTATUS_MASK;
++	if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
++		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
++		    ioc->name, __FILE__, __LINE__, __func__);
++		return;
++	}
++
++	mpt2sas_transport_update_links(ioc,
++	    le16_to_cpu(sas_device_pg0.ParentDevHandle),
++	    handle, sas_device_pg0.PhyNum, MPI2_SAS_NEG_LINK_RATE_1_5);
++
++	_scsih_add_device(ioc, handle, 0, 1);
+ }
+ 
+ #ifdef CONFIG_SCSI_MPT2SAS_LOGGING
+@@ -4480,12 +4492,15 @@ _scsih_sas_ir_config_change_event(struct MPT2SAS_ADAPTER *ioc, u8 VF_ID,
+ {
+ 	Mpi2EventIrConfigElement_t *element;
+ 	int i;
++	u8 foreign_config;
+ 
+ #ifdef CONFIG_SCSI_MPT2SAS_LOGGING
+ 	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
+ 		_scsih_sas_ir_config_change_event_debug(ioc, event_data);
+ 
+ #endif
++	foreign_config = (le32_to_cpu(event_data->Flags) &
++	    MPI2_EVENT_IR_CHANGE_FLAGS_FOREIGN_CONFIG) ? 1 : 0;
+ 
+ 	element = (Mpi2EventIrConfigElement_t *)&event_data->ConfigElement[0];
+ 	for (i = 0; i < event_data->NumElements; i++, element++) {
+@@ -4493,11 +4508,13 @@ _scsih_sas_ir_config_change_event(struct MPT2SAS_ADAPTER *ioc, u8 VF_ID,
+ 		switch (element->ReasonCode) {
+ 		case MPI2_EVENT_IR_CHANGE_RC_VOLUME_CREATED:
+ 		case MPI2_EVENT_IR_CHANGE_RC_ADDED:
+-			_scsih_sas_volume_add(ioc, element);
++			if (!foreign_config)
++				_scsih_sas_volume_add(ioc, element);
  			break;
- 		case MPI2_RAID_VOL_TYPE_RAID1E:
- 			qdepth = MPT2SAS_RAID_QUEUE_DEPTH;
--			r_level = "RAID1E";
-+			if (ioc->manu_pg10.OEMIdentifier &&
-+			    (ioc->manu_pg10.GenericFlags0 &
-+			    MFG10_GF0_R10_DISPLAY) &&
-+			    !(raid_device->num_pds % 2))
-+				r_level = "RAID10";
-+			else
-+				r_level = "RAID1E";
+ 		case MPI2_EVENT_IR_CHANGE_RC_VOLUME_DELETED:
+ 		case MPI2_EVENT_IR_CHANGE_RC_REMOVED:
+-			_scsih_sas_volume_delete(ioc, element);
++			if (!foreign_config)
++				_scsih_sas_volume_delete(ioc, element);
  			break;
- 		case MPI2_RAID_VOL_TYPE_RAID1:
- 			qdepth = MPT2SAS_RAID_QUEUE_DEPTH;
+ 		case MPI2_EVENT_IR_CHANGE_RC_PD_CREATED:
+ 			_scsih_sas_pd_hide(ioc, element);
+@@ -4616,6 +4633,9 @@ _scsih_sas_ir_physical_disk_event(struct MPT2SAS_ADAPTER *ioc, u8 VF_ID,
+ 	u32 state;
+ 	struct _sas_device *sas_device;
+ 	unsigned long flags;
++	Mpi2ConfigReply_t mpi_reply;
++	Mpi2SasDevicePage0_t sas_device_pg0;
++	u32 ioc_status;
+ 
+ 	if (event_data->ReasonCode != MPI2_EVENT_IR_PHYSDISK_RC_STATE_CHANGED)
+ 		return;
+@@ -4632,22 +4652,40 @@ _scsih_sas_ir_physical_disk_event(struct MPT2SAS_ADAPTER *ioc, u8 VF_ID,
+ 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+ 
+ 	switch (state) {
+-#if 0
+-	case MPI2_RAID_PD_STATE_OFFLINE:
+-		if (sas_device)
+-			_scsih_remove_device(ioc, handle);
+-		break;
+-#endif
+ 	case MPI2_RAID_PD_STATE_ONLINE:
+ 	case MPI2_RAID_PD_STATE_DEGRADED:
+ 	case MPI2_RAID_PD_STATE_REBUILDING:
+ 	case MPI2_RAID_PD_STATE_OPTIMAL:
+-		if (sas_device)
++		if (sas_device) {
+ 			sas_device->hidden_raid_component = 1;
+-		else
+-			_scsih_add_device(ioc, handle, 0, 1);
++			return;
++		}
++
++		if ((mpt2sas_config_get_sas_device_pg0(ioc, &mpi_reply,
++		    &sas_device_pg0, MPI2_SAS_DEVICE_PGAD_FORM_HANDLE,
++		    handle))) {
++			printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
++			    ioc->name, __FILE__, __LINE__, __func__);
++			return;
++		}
++
++		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
++		    MPI2_IOCSTATUS_MASK;
++		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
++			printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
++			    ioc->name, __FILE__, __LINE__, __func__);
++			return;
++		}
++
++		mpt2sas_transport_update_links(ioc,
++		    le16_to_cpu(sas_device_pg0.ParentDevHandle),
++		    handle, sas_device_pg0.PhyNum, MPI2_SAS_NEG_LINK_RATE_1_5);
++
++		_scsih_add_device(ioc, handle, 0, 1);
++
+ 		break;
+ 
++	case MPI2_RAID_PD_STATE_OFFLINE:
+ 	case MPI2_RAID_PD_STATE_NOT_CONFIGURED:
+ 	case MPI2_RAID_PD_STATE_NOT_COMPATIBLE:
+ 	case MPI2_RAID_PD_STATE_HOT_SPARE:
