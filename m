@@ -1,63 +1,57 @@
-From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Subject: Re: [PATCH] iscsi: Use GFP_ATOMIC in iscsi_offload_mesg().
-Date: Wed, 29 Jul 2009 20:40:50 -0500
-Message-ID: <4A70FA22.7010706@cs.wisc.edu>
-References: <C27F8246C663564A84BB7AB343977242178EE780E1@IRVEXCHCCR01.corp.ad.broadcom.com> <4A70058F.50403@cs.wisc.edu> <1248893392.16148.262.camel@HP1>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: "Anil Veerabhadrappa" <anilgv@broadcom.com>
+Subject: [PATCH 1/2] bnx2i : Fix CMDSN jump issue seen during cable pull
+ test
+Date: Wed, 29 Jul 2009 21:49:48 -0700
+Message-ID: <1248929388.26650.349.camel@anilgv-desktop>
+References: <1245805860.9829.50.camel@anilgv-desktop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <grbounce-FC1hwAUAAAA0O9VQcsxVj1UPjHD9r3x_=glio-open-iscsi=m.gmane.org-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <1248893392.16148.262.camel@HP1>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Post: <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://googlegroups.com/group/open-iscsi/subscribe>,
-	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Cc: "davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org" <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mms2.broadcom.com ([216.31.210.18]:4780 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750776AbZG3Et4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Jul 2009 00:49:56 -0400
+In-Reply-To: <1245805860.9829.50.camel@anilgv-desktop>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, mchan@broadcom.com
 
 
-On 07/29/2009 01:49 PM, Michael Chan wrote:
-> Changing to GFP_ATOMIC because the only caller in cnic/bnx2i may
-> be calling this function while holding spin_lock.
->
-> This problem was discovered by Mike Christie.
->
-> Signed-off-by: Michael Chan<mchan-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-> ---
->   drivers/scsi/scsi_transport_iscsi.c |    4 ++--
->   1 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index 783e33c..b47240c 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -990,7 +990,7 @@ int iscsi_offload_mesg(struct Scsi_Host *shost,
->   	struct iscsi_uevent *ev;
->   	int len = NLMSG_SPACE(sizeof(*ev) + data_size);
->
-> -	skb = alloc_skb(len, GFP_NOIO);
-> +	skb = alloc_skb(len, GFP_ATOMIC);
->   	if (!skb) {
->   		printk(KERN_ERR "can not deliver iscsi offload message:OOM\n");
->   		return -ENOMEM;
-> @@ -1012,7 +1012,7 @@ int iscsi_offload_mesg(struct Scsi_Host *shost,
->
->   	memcpy((char *)ev + sizeof(*ev), data, data_size);
->
-> -	return iscsi_multicast_skb(skb, ISCSI_NL_GRP_UIP, GFP_NOIO);
-> +	return iscsi_multicast_skb(skb, ISCSI_NL_GRP_UIP, GFP_ATOMIC);
->   }
->   EXPORT_SYMBOL_GPL(iscsi_offload_mesg);
->
+    * Without the fix bnx2i would fail tt->xmit_task() when link is down
+    * libiscsi would have already incremented session->cmdsn before calling
+      bnx2i's xmit_task() entry point and will just return the command to
+      SCSI-ML when xmit_task() fails. libiscsi does not retract the session->cmdsn
+      as the command was never sent on wire
+    * It is generally good idea for LLD, bnx2i to accept the scsi cmnd/nopout
+      and let upper layer timeout and go though normal session recovery process
+    * When link is down, unsolicited nopout will not be accepted by bnx2i and
+      connection will never enter recovery state. This fix is required for MPIO
+      to work corectly
 
-Using GFP_NOIO and changing the locking is my preference normally,  but 
-if the locking changes are going to be a problem, then this is ok with 
-me since we can fail allocations in other parts of the code.
+Signed-off-by: Anil Veerabhadrappa <anilgv@broadcom.com>
+---
+ drivers/scsi/bnx2i/bnx2i_iscsi.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
-Acked-by: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+index f741219..9535bb6 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -1160,9 +1160,6 @@ static int bnx2i_task_xmit(struct iscsi_task *task)
+ 	struct bnx2i_cmd *cmd = task->dd_data;
+ 	struct iscsi_cmd *hdr = (struct iscsi_cmd *) task->hdr;
+ 
+-	if (test_bit(ADAPTER_STATE_LINK_DOWN, &hba->adapter_state))
+-		return -ENOTCONN;
+-
+ 	if (!bnx2i_conn->is_bound)
+ 		return -ENOTCONN;
+ 
+-- 
+1.5.4.3
 
-Dave Miller probably wants to take this in his tree since it fixes a bug 
-with this patch
-http://git.kernel.org/?p=linux/kernel/git/davem/net-2.6.git;a=commit;h=6d7760a88c25057c2c2243e5dfe2d731064bd31d
+
+
+
