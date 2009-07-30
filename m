@@ -1,70 +1,46 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 00/22] Open-FCoE Features for 2.6.32
-Date: Wed, 29 Jul 2009 17:03:45 -0700
-Message-ID: <20090730000345.24658.24830.stgit@localhost.localdomain>
+Subject: [PATCH 01/22] fcoe: Fix validation of mac address when checking for
+	spma support
+Date: Wed, 29 Jul 2009 17:03:50 -0700
+Message-ID: <20090730000350.24658.42303.stgit@localhost.localdomain>
+References: <20090730000345.24658.24830.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:13181 "EHLO mga01.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:41968 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752935AbZG3ADo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Jul 2009 20:03:44 -0400
+	id S1755245AbZG3ADu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Jul 2009 20:03:50 -0400
+In-Reply-To: <20090730000345.24658.24830.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+Cc: Yi Zou <yi.zou@intel.com>, Robert Love <robert.w.love@intel.com>
 
-The following series contains the first set of features for libfc, libfcoe and fcoe.
+From: Yi Zou <yi.zou@intel.com>
 
-The largest change is to share an Exchange Manager amongst virtual interfaces (VLANs) on a physical interface. This will change will also help with NPIV support which should come in a later patch set.
+Fix this bug of validating the wrong mac address while checking for SAN MAC
+address support from LLD as we should check ha->addr not ctlr.ctl_src_addr.
 
-Other than that, there are a lot of miscellaneous fixes and improvements to all three modules.
-
+Signed-off-by: Yi Zou <yi.zou@intel.com>
+Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
-Joe Eykholt (10):
-      libfc: fix: cancel rport retry timer
-      libfc: fc_rport_logoff should not drop the lock
-      libfc: rename rport state "NONE" to "DELETE".
-      libfc: fix WARNING from fc_seq_start_next on closed exchanges
-      libfc: in fc_lport_destroy, flush rports after turning off link
-      libfc: stop login after fabric logoff
-      libfc: rename lport NONE state to DISABLED
-      fcoe: stop delivery of received frames before doing lport_destroy()
-      libfc: change debug messages to give host number.
-      libfc: remove extra semicolons from debug macros
+ drivers/scsi/fcoe/fcoe.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Robert Love (1):
-      libfc: Remove the FC_EM_DBG macro
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 0a5609b..b7dfc6e 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -329,7 +329,7 @@ static int fcoe_netdev_config(struct fc_lport *lp, struct net_device *netdev)
+ 	rcu_read_lock();
+ 	for_each_dev_addr(netdev, ha) {
+ 		if ((ha->type == NETDEV_HW_ADDR_T_SAN) &&
+-		    (is_valid_ether_addr(fc->ctlr.ctl_src_addr))) {
++		    (is_valid_ether_addr(ha->addr))) {
+ 			memcpy(fc->ctlr.ctl_src_addr, ha->addr, ETH_ALEN);
+ 			fc->ctlr.spma = 1;
+ 			break;
 
-Vasu Dev (5):
-      fcoe: removes phys_dev and renames real_dev to netdev.
-      fcoe, libfc: adds offload EM per eth device with only single xid range per EM
-      fcoe: modifies fcoe_hostlist_lock uses as prep work to add shared offload EM
-      fcoe, fnic, libfc: modifies current code paths to use EM anchor list
-      fcoe, libfc: adds exchange manager(EM) anchor list per lport and related APIs
-
-Yi Zou (6):
-      libfc: Remove page flags check for sglist
-      libfc: Remove FC_FRAME_SG_LEN in fc_fcp_send_data
-      fcoe: Remove ifdef for NETIF_F_FCOE_CRC and NETIF_F_FSO
-      fcoe: Call dev_ethtool_get_settings() in fcoe_link_ok
-      libfcoe: Set fip_flags according to fcf and lport's capability of SPMA support
-      fcoe: Fix validation of mac address when checking for spma support
-
-
- drivers/scsi/fcoe/fcoe.c      |  250 +++++++++++++++++++-----------
- drivers/scsi/fcoe/fcoe.h      |    8 -
- drivers/scsi/fcoe/libfcoe.c   |   14 +-
- drivers/scsi/fnic/fnic_fcs.c  |    2 
- drivers/scsi/fnic/fnic_main.c |   20 +-
- drivers/scsi/libfc/fc_exch.c  |  337 ++++++++++++++++++++++-------------------
- drivers/scsi/libfc/fc_fcp.c   |   29 ----
- drivers/scsi/libfc/fc_lport.c |   61 ++++++-
- drivers/scsi/libfc/fc_rport.c |   83 ++++++----
- include/scsi/fc_frame.h       |    7 -
- include/scsi/libfc.h          |  126 +++++++--------
- 11 files changed, 518 insertions(+), 419 deletions(-)
-
--- 
-//Rob
