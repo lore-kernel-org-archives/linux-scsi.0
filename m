@@ -1,178 +1,220 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 11/22] libfc: rename rport state "NONE" to "DELETE".
-Date: Wed, 29 Jul 2009 17:04:43 -0700
-Message-ID: <20090730000443.24658.69933.stgit@localhost.localdomain>
+Subject: [PATCH 14/22] fcoe,
+	libfc: adds exchange manager(EM) anchor list per lport and related
+	APIs
+Date: Wed, 29 Jul 2009 17:05:00 -0700
+Message-ID: <20090730000459.24658.80908.stgit@localhost.localdomain>
 References: <20090730000345.24658.24830.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49533 "EHLO mga02.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:39498 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755344AbZG3AEn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Jul 2009 20:04:43 -0400
+	id S1755423AbZG3AE7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Jul 2009 20:04:59 -0400
 In-Reply-To: <20090730000345.24658.24830.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
-Cc: Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>
+Cc: Vasu Dev <vasu.dev@intel.com>, Robert Love <robert.w.love@intel.com>
 
-From: Joe Eykholt <jeykholt@cisco.com>
+From: Vasu Dev <vasu.dev@intel.com>
 
-State RPORT_ST_NONE was intented to be an invalid state (0), never used.
-This was a misguided attempt to be sure it was always initialized.
-Having an extra state meaning nothing requires switch statements to
-have a case covering that state.
+Adds EM list using a anchor struct fc_exch_mgr_anchor, anchor is used
+to allow same EM instance sharing across more than one lport on a eth
+device, this implementation is per discussed design posted at
+http://www.open-fcoe.org/pipermail/devel/2009-June/002566.html.
 
-State NONE has been used instead to mean the remote port is being deleted.
-Changing the name to RPORT_ST_DELETE.
+The shared EM is required for multiple lports on eth device when
+using multiple VLANs or NPIV.
 
-Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
+Adds fc_exch_mgr_add API to add a EM to the lport and fc_exch_mgr_del
+API to delete previously added EM.
+
+Also adds function fc_exch_mgr_destroy() to destroy allocated EM.
+The kref is added to the EM to keep track of EM usage count, the EM is
+destroyed when no longer in use upon kref reaching to zero.
+
+The caller can specify match function to fc_exch_mgr_add, this
+will be used in determining exchange allocation from its EM or not.
+
+Moved calling of fcoe_em_config below fcoe_libfc_config calling,
+so that list head lp->ema_list is initialized before configuring
+EM.
+
+Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_rport.c |   28 ++++++++++++++--------------
- include/scsi/libfc.h          |    2 +-
- 2 files changed, 15 insertions(+), 15 deletions(-)
+ drivers/scsi/fcoe/fcoe.c      |   14 ++++++------
+ drivers/scsi/libfc/fc_exch.c  |   48 +++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/libfc/fc_lport.c |    1 +
+ include/scsi/libfc.h          |   24 +++++++++++++++++++++
+ 4 files changed, 80 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 7162385..bf7364f 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -77,13 +77,13 @@ static void fc_rport_error_retry(struct fc_rport *, struct fc_frame *);
- static void fc_rport_work(struct work_struct *);
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 14a4017..719a99d 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -603,18 +603,18 @@ static int fcoe_if_create(struct net_device *netdev)
+ 		goto out_netdev_cleanup;
+ 	}
  
- static const char *fc_rport_state_names[] = {
--	[RPORT_ST_NONE] = "None",
- 	[RPORT_ST_INIT] = "Init",
- 	[RPORT_ST_PLOGI] = "PLOGI",
- 	[RPORT_ST_PRLI] = "PRLI",
- 	[RPORT_ST_RTV] = "RTV",
- 	[RPORT_ST_READY] = "Ready",
- 	[RPORT_ST_LOGO] = "LOGO",
-+	[RPORT_ST_DELETE] = "Delete",
+-	/* lport exch manager allocation */
+-	rc = fcoe_em_config(lp);
++	/* Initialize the library */
++	rc = fcoe_libfc_config(lp, &fcoe_libfc_fcn_templ);
+ 	if (rc) {
+-		FCOE_NETDEV_DBG(netdev, "Could not configure the EM for the "
++		FCOE_NETDEV_DBG(netdev, "Could not configure libfc for the "
+ 				"interface\n");
+-		goto out_netdev_cleanup;
++		goto out_lp_destroy;
+ 	}
+ 
+-	/* Initialize the library */
+-	rc = fcoe_libfc_config(lp, &fcoe_libfc_fcn_templ);
++	/* lport exch manager allocation */
++	rc = fcoe_em_config(lp);
+ 	if (rc) {
+-		FCOE_NETDEV_DBG(netdev, "Could not configure libfc for the "
++		FCOE_NETDEV_DBG(netdev, "Could not configure the EM for the "
+ 				"interface\n");
+ 		goto out_lp_destroy;
+ 	}
+diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+index cab5499..f1fa2b1 100644
+--- a/drivers/scsi/libfc/fc_exch.c
++++ b/drivers/scsi/libfc/fc_exch.c
+@@ -55,6 +55,7 @@ static struct kmem_cache *fc_em_cachep;        /* cache for exchanges */
+  */
+ struct fc_exch_mgr {
+ 	enum fc_class	class;		/* default class for sequences */
++	struct kref	kref;		/* exchange mgr reference count */
+ 	spinlock_t	em_lock;	/* exchange manager lock,
+ 					   must be taken before ex_lock */
+ 	u16		last_xid;	/* last allocated exchange ID */
+@@ -84,6 +85,12 @@ struct fc_exch_mgr {
  };
+ #define	fc_seq_exch(sp) container_of(sp, struct fc_exch, seq)
  
- static void fc_rport_rogue_destroy(struct device *dev)
-@@ -326,8 +326,8 @@ int fc_rport_logoff(struct fc_rport *rport)
++struct fc_exch_mgr_anchor {
++	struct list_head ema_list;
++	struct fc_exch_mgr *mp;
++	bool (*match)(struct fc_frame *);
++};
++
+ static void fc_exch_rrq(struct fc_exch *);
+ static void fc_seq_ls_acc(struct fc_seq *);
+ static void fc_seq_ls_rjt(struct fc_seq *, enum fc_els_rjt_reason,
+@@ -1729,6 +1736,47 @@ reject:
+ 	fc_frame_free(fp);
+ }
  
- 	FC_RPORT_DBG(rport, "Remove port\n");
++struct fc_exch_mgr_anchor *fc_exch_mgr_add(struct fc_lport *lport,
++					   struct fc_exch_mgr *mp,
++					   bool (*match)(struct fc_frame *))
++{
++	struct fc_exch_mgr_anchor *ema;
++
++	ema = kmalloc(sizeof(*ema), GFP_ATOMIC);
++	if (!ema)
++		return ema;
++
++	ema->mp = mp;
++	ema->match = match;
++	/* add EM anchor to EM anchors list */
++	list_add_tail(&ema->ema_list, &lport->ema_list);
++	kref_get(&mp->kref);
++	return ema;
++}
++EXPORT_SYMBOL(fc_exch_mgr_add);
++
++static void fc_exch_mgr_destroy(struct kref *kref)
++{
++	struct fc_exch_mgr *mp = container_of(kref, struct fc_exch_mgr, kref);
++
++	/*
++	 * The total exch count must be zero
++	 * before freeing exchange manager.
++	 */
++	WARN_ON(mp->total_exches != 0);
++	mempool_destroy(mp->ep_pool);
++	kfree(mp);
++}
++
++void fc_exch_mgr_del(struct fc_exch_mgr_anchor *ema)
++{
++	/* remove EM anchor from EM anchors list */
++	list_del(&ema->ema_list);
++	kref_put(&ema->mp->kref, fc_exch_mgr_destroy);
++	kfree(ema);
++}
++EXPORT_SYMBOL(fc_exch_mgr_del);
++
+ struct fc_exch_mgr *fc_exch_mgr_alloc(struct fc_lport *lp,
+ 				      enum fc_class class,
+ 				      u16 min_xid, u16 max_xid)
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index a430335..ca8ea26 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -1618,6 +1618,7 @@ int fc_lport_init(struct fc_lport *lport)
+ 	if (lport->link_supported_speeds & FC_PORTSPEED_10GBIT)
+ 		fc_host_supported_speeds(lport->host) |= FC_PORTSPEED_10GBIT;
  
--	if (rdata->rp_state == RPORT_ST_NONE) {
--		FC_RPORT_DBG(rport, "Port in NONE state, not removing\n");
-+	if (rdata->rp_state == RPORT_ST_DELETE) {
-+		FC_RPORT_DBG(rport, "Port in Delete state, not removing\n");
- 		mutex_unlock(&rdata->rp_mutex);
- 		goto out;
- 	}
-@@ -335,10 +335,10 @@ int fc_rport_logoff(struct fc_rport *rport)
- 	fc_rport_enter_logo(rport);
- 
- 	/*
--	 * Change the state to NONE so that we discard
-+	 * Change the state to Delete so that we discard
- 	 * the response.
- 	 */
--	fc_rport_state_enter(rport, RPORT_ST_NONE);
-+	fc_rport_state_enter(rport, RPORT_ST_DELETE);
- 
- 	mutex_unlock(&rdata->rp_mutex);
- 
-@@ -405,7 +405,7 @@ static void fc_rport_timeout(struct work_struct *work)
- 		break;
- 	case RPORT_ST_READY:
- 	case RPORT_ST_INIT:
--	case RPORT_ST_NONE:
-+	case RPORT_ST_DELETE:
- 		break;
- 	}
- 
-@@ -433,14 +433,14 @@ static void fc_rport_error(struct fc_rport *rport, struct fc_frame *fp)
- 	case RPORT_ST_PRLI:
- 	case RPORT_ST_LOGO:
- 		rdata->event = RPORT_EV_FAILED;
--		fc_rport_state_enter(rport, RPORT_ST_NONE);
-+		fc_rport_state_enter(rport, RPORT_ST_DELETE);
- 		queue_work(rport_event_queue,
- 			   &rdata->event_work);
- 		break;
- 	case RPORT_ST_RTV:
- 		fc_rport_enter_ready(rport);
- 		break;
--	case RPORT_ST_NONE:
-+	case RPORT_ST_DELETE:
- 	case RPORT_ST_READY:
- 	case RPORT_ST_INIT:
- 		break;
-@@ -652,7 +652,7 @@ static void fc_rport_prli_resp(struct fc_seq *sp, struct fc_frame *fp,
- 	} else {
- 		FC_RPORT_DBG(rport, "Bad ELS response for PRLI command\n");
- 		rdata->event = RPORT_EV_FAILED;
--		fc_rport_state_enter(rport, RPORT_ST_NONE);
-+		fc_rport_state_enter(rport, RPORT_ST_DELETE);
- 		queue_work(rport_event_queue, &rdata->event_work);
- 	}
- 
-@@ -703,7 +703,7 @@ static void fc_rport_logo_resp(struct fc_seq *sp, struct fc_frame *fp,
- 	} else {
- 		FC_RPORT_DBG(rport, "Bad ELS response for LOGO command\n");
- 		rdata->event = RPORT_EV_LOGO;
--		fc_rport_state_enter(rport, RPORT_ST_NONE);
-+		fc_rport_state_enter(rport, RPORT_ST_DELETE);
- 		queue_work(rport_event_queue, &rdata->event_work);
- 	}
- 
-@@ -1012,7 +1012,7 @@ static void fc_rport_recv_plogi_req(struct fc_rport *rport,
- 			     "- ignored for now\n", rdata->rp_state);
- 		/* XXX TBD - should reset */
- 		break;
--	case RPORT_ST_NONE:
-+	case RPORT_ST_DELETE:
- 	default:
- 		FC_RPORT_DBG(rport, "Received PLOGI in unexpected "
- 			     "state %d\n", rdata->rp_state);
-@@ -1238,7 +1238,7 @@ static void fc_rport_recv_prlo_req(struct fc_rport *rport, struct fc_seq *sp,
- 	FC_RPORT_DBG(rport, "Received PRLO request while in state %s\n",
- 		     fc_rport_state(rport));
- 
--	if (rdata->rp_state == RPORT_ST_NONE) {
-+	if (rdata->rp_state == RPORT_ST_DELETE) {
- 		fc_frame_free(fp);
- 		return;
- 	}
-@@ -1271,13 +1271,13 @@ static void fc_rport_recv_logo_req(struct fc_rport *rport, struct fc_seq *sp,
- 	FC_RPORT_DBG(rport, "Received LOGO request while in state %s\n",
- 		     fc_rport_state(rport));
- 
--	if (rdata->rp_state == RPORT_ST_NONE) {
-+	if (rdata->rp_state == RPORT_ST_DELETE) {
- 		fc_frame_free(fp);
- 		return;
- 	}
- 
- 	rdata->event = RPORT_EV_LOGO;
--	fc_rport_state_enter(rport, RPORT_ST_NONE);
-+	fc_rport_state_enter(rport, RPORT_ST_DELETE);
- 	queue_work(rport_event_queue, &rdata->event_work);
- 
- 	lport->tt.seq_els_rsp_send(sp, ELS_LS_ACC, NULL);
++	INIT_LIST_HEAD(&lport->ema_list);
+ 	return 0;
+ }
+ EXPORT_SYMBOL(fc_lport_init);
 diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index b5c9b28..04db7a9 100644
+index 04db7a9..b381b1c 100644
 --- a/include/scsi/libfc.h
 +++ b/include/scsi/libfc.h
-@@ -147,13 +147,13 @@ enum fc_disc_event {
- };
+@@ -348,6 +348,7 @@ static inline bool fc_fcp_is_read(const struct fc_fcp_pkt *fsp)
+  */
  
- enum fc_rport_state {
--	RPORT_ST_NONE = 0,
- 	RPORT_ST_INIT,		/* initialized */
- 	RPORT_ST_PLOGI,		/* waiting for PLOGI completion */
- 	RPORT_ST_PRLI,		/* waiting for PRLI completion */
- 	RPORT_ST_RTV,		/* waiting for RTV completion */
- 	RPORT_ST_READY,		/* ready for use */
- 	RPORT_ST_LOGO,		/* port logout sent */
-+	RPORT_ST_DELETE,	/* port being deleted */
- };
+ struct fc_exch_mgr;
++struct fc_exch_mgr_anchor;
  
- enum fc_rport_trans_state {
+ /*
+  * Sequence.
+@@ -709,6 +710,7 @@ struct fc_lport {
+ 	/* Associations */
+ 	struct Scsi_Host	*host;
+ 	struct fc_exch_mgr	*emp;
++	struct list_head	ema_list;
+ 	struct fc_rport		*dns_rp;
+ 	struct fc_rport		*ptp_rp;
+ 	void			*scsi_priv;
+@@ -964,6 +966,28 @@ int fc_elsct_init(struct fc_lport *lp);
+ int fc_exch_init(struct fc_lport *lp);
+ 
+ /*
++ * Adds Exchange Manager (EM) mp to lport.
++ *
++ * Adds specified mp to lport using struct fc_exch_mgr_anchor,
++ * the struct fc_exch_mgr_anchor allows same EM sharing by
++ * more than one lport with their specified match function,
++ * the match function is used in allocating exchange from
++ * added mp.
++ */
++struct fc_exch_mgr_anchor *fc_exch_mgr_add(struct fc_lport *lport,
++					   struct fc_exch_mgr *mp,
++					   bool (*match)(struct fc_frame *));
++
++/*
++ * Deletes Exchange Manager (EM) from lport by removing
++ * its anchor ema from lport.
++ *
++ * If removed anchor ema was the last user of its associated EM
++ * then also destroys associated EM.
++ */
++void fc_exch_mgr_del(struct fc_exch_mgr_anchor *ema);
++
++/*
+  * Allocates an Exchange Manager (EM).
+  *
+  * The EM manages exchanges for their allocation and
 
