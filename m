@@ -1,57 +1,93 @@
-From: "Anil Veerabhadrappa" <anilgv@broadcom.com>
-Subject: [PATCH 2/2] bnx2i : Fix "cid #n not valid" issue
-Date: Wed, 29 Jul 2009 21:50:11 -0700
-Message-ID: <1248929411.26650.350.camel@anilgv-desktop>
+From: rohan a <info1686@gmail.com>
+Subject: Re: SCSI command (SP-OUT) failing on SLES 9 32-bit
+Date: Thu, 30 Jul 2009 11:06:59 +0530
+Message-ID: <7a7c22420907292236x1b528153pe22e53473c22626a@mail.gmail.com>
+References: <7a7c22420907142137o4253dfb5gcd72176cd6a38beb@mail.gmail.com>
+	 <7a7c22420907142326t3b8d4f5fqaf3813cb456186ec@mail.gmail.com>
+	 <7a7c22420907150803v4f4ae9dn9eff41b5d5a7edf6@mail.gmail.com>
+	 <1247670563.4236.16.camel@mulgrave.site> <4A645FCE.5030506@suse.de>
+	 <7a7c22420907220626t11f510b7q835add0d5b7ecc94@mail.gmail.com>
+	 <7a7c22420907280357p71c495f8x9923227eef000391@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4780 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750975AbZG3EuP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Jul 2009 00:50:15 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751420AbZG3FhB@vger.kernel.org>
+In-Reply-To: <7a7c22420907280357p71c495f8x9923227eef000391@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, mchan@broadcom.com
+
+Hi,
+      I checked var/log/messages
+These are the errors reported:
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D
+kernel: mptbase: ioc0: IOCStatus(0x0003): Invalid SGL
+kernel: mptbase: ioc0: LogInfo(0x11070000): F/W: DMA Error
+kernel: mptbase: ioc0: LogInfo(0x11070000): F/W: DMA Error
+kernel: mptbase: ioc0: IOCStatus(0x004b): SCSI IOC Terminated
+kernel: st0: Error with sense data: Current st0: sense key Unit Attenti=
+on
+kernel: Additional sense: Scsi bus reset occurred
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+Thanks
 
 
-    * when bnx2i_adapter_ready() fails, connection handle(cid) = 0 is
-      wrongly freed because 'cid' is not yet allocated for the endpoint
-    * Fix is to initialize bnx2i_ep->ep_iscsi_cid to '-1' in bnx2i_alloc_ep()
-      and not in bnx2i_ep_connect() to avoid releasing invalid 'cid'
-    * There is already a check in bnx2i_free_iscsi_cid() not to free
-      invalid iscsi connection handle (-1)
-
-Signed-off-by: Anil Veerabhadrappa <anilgv@broadcom.com>
----
- drivers/scsi/bnx2i/bnx2i_iscsi.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index 9535bb6..08d0bfc 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -387,6 +387,7 @@ static struct iscsi_endpoint *bnx2i_alloc_ep(struct bnx2i_hba *hba)
- 	bnx2i_ep = ep->dd_data;
- 	INIT_LIST_HEAD(&bnx2i_ep->link);
- 	bnx2i_ep->state = EP_STATE_IDLE;
-+	bnx2i_ep->ep_iscsi_cid = (u16) -1;
- 	bnx2i_ep->hba = hba;
- 	bnx2i_ep->hba_age = hba->age;
- 	hba->ofld_conns_active++;
-@@ -1678,8 +1679,6 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
- 		goto net_if_down;
- 	}
- 
--	bnx2i_ep->state = EP_STATE_IDLE;
--	bnx2i_ep->ep_iscsi_cid = (u16) -1;
- 	bnx2i_ep->num_active_cmds = 0;
- 	iscsi_cid = bnx2i_alloc_iscsi_cid(hba);
- 	if (iscsi_cid == -1) {
--- 
-1.5.4.3
-
-
-
-
+On 7/28/09, rohan a <info1686@gmail.com> wrote:
+> Hi all/Hannes,
+>
+> Any help/suggestions?
+>
+>
+> On Wed, Jul 22, 2009 at 6:56 PM, rohan a<info1686@gmail.com> wrote:
+> > Hi,
+> >       Thanks for a reply.
+> > I have 2 SLES 9 32-bit machines, on one I am using an FC HBA card a=
+nd
+> > another a SCSI HBA card to connect LTO-4 standalone drives and driv=
+e
+> > based encryption is not working in both cases.
+> >
+> > Thanks
+> >
+> > On Mon, Jul 20, 2009 at 5:45 PM, Hannes Reinecke<hare@suse.de> wrot=
+e:
+> >> James Bottomley wrote:
+> >>> On Wed, 2009-07-15 at 20:33 +0530, rohan a wrote:
+> >>>> Hi guys,
+> >>>>
+> >>>> Any suggestions...please help
+> >>>
+> >>> I know of no kernel bug that could be causing this.  The SLES9 ke=
+rnel is
+> >>> just too old though for me to remember clearly.  I'd suggest you =
+file a
+> >>> support incident with SUSE ... they'll debug and fix this on the =
+older
+> >>> kernels; we really only deal with the new kernel and one or two b=
+ack
+> >>> revisions here on linux-scsi.
+> >>>
+> >> You did that on purpose.
+> >> The 'they' is actually me :-(
+> >>
+> >> Actually, there already _is_ a bug, so no need to open another one=
+=2E
+> >> Which HBA are you using?
+> >>
+> >> Cheers,
+> >>
+> >> Hannes
+> >> --
+> >> Dr. Hannes Reinecke                   zSeries & Storage
+> >> hare@suse.de                          +49 911 74053 688
+> >> SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+> >> GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+> >>
+> >
+>
