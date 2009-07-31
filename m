@@ -1,55 +1,30 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Pending patches
-Date: Fri, 31 Jul 2009 15:05:58 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0907311503140.2643-100000@iolanthe.rowland.org>
-References: <1247706139.8632.0.camel@mulgrave.site>
+From: david@lang.hm
+Subject: bad performance on 3 of 20 boxes with 3ware card
+Date: Fri, 31 Jul 2009 15:02:37 -0700 (PDT)
+Message-ID: <alpine.DEB.1.10.0907311459220.28013@asgard.lang.hm>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:43604 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752827AbZGaTF6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Jul 2009 15:05:58 -0400
-In-Reply-To: <1247706139.8632.0.camel@mulgrave.site>
+Received: from mail.lang.hm ([64.81.33.126]:59264 "EHLO bifrost.lang.hm"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753226AbZGaWCk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 31 Jul 2009 18:02:40 -0400
+Received: from asgard.lang.hm (asgard.lang.hm [10.0.0.100])
+	by bifrost.lang.hm (8.13.4/8.13.4/Debian-3) with ESMTP id n6VM2biQ004791
+	for <linux-scsi@vger.kernel.org>; Fri, 31 Jul 2009 15:02:37 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Thu, 16 Jul 2009, Alan Stern wrote:
+I hae 20 identical boxes (2x 4-core cpus, 64G ram, 16x1TB SATA drives on 
+07:00.0 RAID bus controller: 3ware Inc 9650SE SATA-II RAID (rev 01) raid 
+6) running linux 2.6.30
 
-> On Thu, 16 Jul 2009, James Bottomley wrote:
-> 
-> > On Wed, 2009-07-15 at 14:01 -0400, Alan Stern wrote:
-> > > James:
-> > > 
-> > > Whatever happened to the 6-part patch series I submitted at the end of 
-> > > May?
-> > > 
-> > > 0/6:	http://marc.info/?l=linux-scsi&m=124388632706196&w=2
-> > > 1/6:	http://marc.info/?l=linux-scsi&m=124388639906873&w=2
-> > > 2/6:	http://marc.info/?l=linux-scsi&m=124388664609269&w=2
-> > > 3/6:	http://marc.info/?l=linux-scsi&m=124388664009217&w=2
-> > > 4/6:	http://marc.info/?l=linux-scsi&m=124388742715268&w=2
-> > > 5/6:	http://marc.info/?l=linux-scsi&m=124388752015618&w=2
-> > > 6/6v2:	http://marc.info/?l=linux-scsi&m=124404339912876&w=2
-> > > 
-> > > Is there any reason they haven't gotten into scsi-misc for the next 
-> > > merge window?  It has been six weeks...
-> > 
-> > According to the thread, there's no confirmation from the reporter that
-> > they actually fix the problem.
-> 
-> Please reconsider them not as specific bug fixes but rather as general
-> cleanups and improvements.  I.e., the sort of thing one would not send
-> to Linus until the next merge window.
+on 3 of the 20 I seem to have a max write speed of ~5MB/sec (as opposed to 
+>100 MB/sec)
 
-James, I haven't heard anything back about this.  It's very 
-discouraging to submit serious patches only to have them ignored for 
-two months.
+any pointers on how I can identify what is different about these three 
+boxes?
 
-Would it help if I rewrote the changelogs?  Is there anything else I 
-can do to bring these into consideration?
-
-Alan Stern
+David Lang
 
