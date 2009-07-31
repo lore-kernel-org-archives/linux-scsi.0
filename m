@@ -1,39 +1,43 @@
 From: giridhar.malavali@qlogic.com
-Subject: [PATCH 12/12] qla2xxx: Update version number to 8.03.01-k5
-Date: Fri, 31 Jul 2009 15:09:34 -0700
-Message-ID: <1249078174-1957-13-git-send-email-giridhar.malavali@qlogic.com>
+Subject: [PATCH 08/12] qla2xxx: Pad IOCB structure for size requirements.
+Date: Fri, 31 Jul 2009 15:09:30 -0700
+Message-ID: <1249078174-1957-9-git-send-email-giridhar.malavali@qlogic.com>
 References: <1249078174-1957-1-git-send-email-giridhar.malavali@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:36810 "EHLO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:36799 "EHLO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752845AbZGaWJn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 31 Jul 2009 18:09:43 -0400
+	id S1753203AbZGaWJl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 31 Jul 2009 18:09:41 -0400
 In-Reply-To: <1249078174-1957-1-git-send-email-giridhar.malavali@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
+Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Shyam Sundar <shyam.sundar@qlogic.com>
 
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+From: Shyam Sundar <shyam.sundar@qlogic.com>
 
+One byte added to make the IOCB structure satisfy
+size requirements.
+
+Signed-off-by: Shyam Sundar <shyam.sundar@qlogic.com>
 Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_version.h |    2 +-
+ drivers/scsi/qla2xxx/qla_fw.h |    2 +-
  1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
-index 8436970..87a884e 100644
---- a/drivers/scsi/qla2xxx/qla_version.h
-+++ b/drivers/scsi/qla2xxx/qla_version.h
-@@ -7,7 +7,7 @@
- /*
-  * Driver version
-  */
--#define QLA2XXX_VERSION      "8.03.01-k4"
-+#define QLA2XXX_VERSION      "8.03.01-k5"
+diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
+index dfde2dd..66a8da5 100644
+--- a/drivers/scsi/qla2xxx/qla_fw.h
++++ b/drivers/scsi/qla2xxx/qla_fw.h
+@@ -1126,7 +1126,7 @@ struct vp_config_entry_24xx {
+ 	uint16_t id;
+ 	uint16_t reserved_4;
+ 	uint16_t hopct;
+-	uint8_t reserved_5;
++	uint8_t reserved_5[2];
+ };
  
- #define QLA_DRIVER_MAJOR_VER	8
- #define QLA_DRIVER_MINOR_VER	3
+ #define VP_RPT_ID_IOCB_TYPE	0x32	/* Report ID Acquisition entry. */
 -- 
 1.6.2.rc1.30.gd43c
 
