@@ -1,43 +1,55 @@
-From: Allan Wind <allan_wind@lifeintegrity.com>
-Subject: Re: LSISAS1068E + WDC WD2002FYPS: I/O error & Sense Key
-Date: Fri, 31 Jul 2009 14:40:23 -0400
-Message-ID: <20090731184023.GT3211@lifeintegrity.com>
-References: <20090727060322.GB27002@lifeintegrity.com> <4A70A64A.2070605@gmail.com> <20090729200714.GA20706@lifeintegrity.com> <4A70D57B.6030301@gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Pending patches
+Date: Fri, 31 Jul 2009 15:05:58 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0907311503140.2643-100000@iolanthe.rowland.org>
+References: <1247706139.8632.0.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4A70D57B.6030301@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:43604 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752827AbZGaTF6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Jul 2009 15:05:58 -0400
+In-Reply-To: <1247706139.8632.0.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On 2009-07-29T17:04:27, Robert Hancock wrote:
-> On 07/29/2009 02:07 PM, Allan Wind wrote:
->> On 2009-07-29T13:43:06, Robert Hancock wrote:
->>> On 07/27/2009 12:03 AM, Allan Wind wrote:
->>>> I have a pair of Western Digital RE4-GP (WD2002FYPS) in RAID1 configuration
->>>> using Linux 2.6.30.3 and seeing the following:
->>>>
->>>> [ 4907.485324] end_request: I/O error, dev sdb, sector 3907028974
->>> Are there no error messages before this point? Can you post the full
->>> dmesg output from bootup?
->>
->> Thanks for looking into this, Robert.  I do not see any relevant error
->> message before this point, but made the entire 82k dmesg available here:
->> http://lifeintegrity.com/~allan/dmesg
->
-> It seems like some request failed but apparently that mptsas driver  
-> isn't dumping out what happened for some reason. There are some of those  
-> "recovered error" indications but they're not near the I/O error report,  
-> so I'm not sure what's going on. CCing linux-scsi.
+On Thu, 16 Jul 2009, Alan Stern wrote:
 
-Is there any data I can help with to advance this issue?
+> On Thu, 16 Jul 2009, James Bottomley wrote:
+> 
+> > On Wed, 2009-07-15 at 14:01 -0400, Alan Stern wrote:
+> > > James:
+> > > 
+> > > Whatever happened to the 6-part patch series I submitted at the end of 
+> > > May?
+> > > 
+> > > 0/6:	http://marc.info/?l=linux-scsi&m=124388632706196&w=2
+> > > 1/6:	http://marc.info/?l=linux-scsi&m=124388639906873&w=2
+> > > 2/6:	http://marc.info/?l=linux-scsi&m=124388664609269&w=2
+> > > 3/6:	http://marc.info/?l=linux-scsi&m=124388664009217&w=2
+> > > 4/6:	http://marc.info/?l=linux-scsi&m=124388742715268&w=2
+> > > 5/6:	http://marc.info/?l=linux-scsi&m=124388752015618&w=2
+> > > 6/6v2:	http://marc.info/?l=linux-scsi&m=124404339912876&w=2
+> > > 
+> > > Is there any reason they haven't gotten into scsi-misc for the next 
+> > > merge window?  It has been six weeks...
+> > 
+> > According to the thread, there's no confirmation from the reporter that
+> > they actually fix the problem.
+> 
+> Please reconsider them not as specific bug fixes but rather as general
+> cleanups and improvements.  I.e., the sort of thing one would not send
+> to Linus until the next merge window.
 
+James, I haven't heard anything back about this.  It's very 
+discouraging to submit serious patches only to have them ignored for 
+two months.
 
-/Allan
--- 
-Allan Wind
-Life Integrity, LLC
-<http://lifeintegrity.com>
+Would it help if I rewrote the changelogs?  Is there anything else I 
+can do to bring these into consideration?
+
+Alan Stern
 
