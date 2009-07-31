@@ -1,50 +1,29 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: linux-next: scsi-rc-fixes tree build failure
-Date: Fri, 31 Jul 2009 09:31:59 +1000
-Message-ID: <20090731093159.32960632.sfr@canb.auug.org.au>
-References: <20090730181345.cec774b2.sfr@canb.auug.org.au>
-	<1248961882.3880.4.camel@mulgrave.site>
-	<1248965603.3880.64.camel@mulgrave.site>
+From: Madhukar G <madhukar.linux@gmail.com>
+Subject: Understanding SAS
+Date: Fri, 31 Jul 2009 17:26:18 +0530
+Message-ID: <e79524560907310456x7b2cf0c0h7e0453ceb55982fd@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Fri__31_Jul_2009_09_31_59_+1000_H8j8xJ+LiYKJEi6i"
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <1248965603.3880.64.camel@mulgrave.site>
-Sender: linux-next-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, Tom Peng <tom_peng@usish.com>, Jack Wang <jack_wang@usish.com>, Lindar Liu <lindar_liu@usish.com>, Kevin Ao <aoqingyun@usish.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yw0-f183.google.com ([209.85.211.183]:50539 "EHLO
+	mail-yw0-f183.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750804AbZGaL4S (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Jul 2009 07:56:18 -0400
+Received: by ywh13 with SMTP id 13so1633244ywh.15
+        for <linux-scsi@vger.kernel.org>; Fri, 31 Jul 2009 04:56:18 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
---Signature=_Fri__31_Jul_2009_09_31_59_+1000_H8j8xJ+LiYKJEi6i
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi All,
 
-Hi James,
-
-On Thu, 30 Jul 2009 09:53:23 -0500 James Bottomley <James.Bottomley@HansenP=
-artnership.com> wrote:
->
-> This fixes it on my ppc64 box, so I'll fold it into the original patch
-> and put it back into the tree.
+I'm understanding SAS architecture for adaptec controller. I'm using
+the source adp94xx for the same. I was able to understand all the
+infomation unit flow but i'm stuck with one problem. I was not able to
+trace when task management IU shall be invoked.
+Do i need any special app to test task management IU?
+Is SCSI layer responsible for invoking task management IU?
 
 Thanks.
-
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
-
---Signature=_Fri__31_Jul_2009_09_31_59_+1000_H8j8xJ+LiYKJEi6i
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkpyLW8ACgkQjjKRsyhoI8xWzgCbBjGLp82Pc9pCewU4D9aGvdSr
-YlQAnitc616arNZFMsq7URJzYauOpTh5
-=5VIW
------END PGP SIGNATURE-----
-
---Signature=_Fri__31_Jul_2009_09_31_59_+1000_H8j8xJ+LiYKJEi6i--
+madhukar
