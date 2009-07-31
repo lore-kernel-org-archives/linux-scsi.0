@@ -1,30 +1,59 @@
-From: david@lang.hm
-Subject: bad performance on 3 of 20 boxes with 3ware card
-Date: Fri, 31 Jul 2009 15:02:37 -0700 (PDT)
-Message-ID: <alpine.DEB.1.10.0907311459220.28013@asgard.lang.hm>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+From: giridhar.malavali@qlogic.com
+Subject: [PATCH 00/12] qla2xxx: fixes for 2.6.31-rc3 [8.03.01-k5]
+Date: Fri, 31 Jul 2009 15:09:22 -0700
+Message-ID: <1249078174-1957-1-git-send-email-giridhar.malavali@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.lang.hm ([64.81.33.126]:59264 "EHLO bifrost.lang.hm"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753226AbZGaWCk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 31 Jul 2009 18:02:40 -0400
-Received: from asgard.lang.hm (asgard.lang.hm [10.0.0.100])
-	by bifrost.lang.hm (8.13.4/8.13.4/Debian-3) with ESMTP id n6VM2biQ004791
-	for <linux-scsi@vger.kernel.org>; Fri, 31 Jul 2009 15:02:37 -0700
+Received: from vpn.pathscale.com ([198.186.3.75]:36775 "EHLO mx.mv.qlogic.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751889AbZGaWJf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 31 Jul 2009 18:09:35 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-I hae 20 identical boxes (2x 4-core cpus, 64G ram, 16x1TB SATA drives on 
-07:00.0 RAID bus controller: 3ware Inc 9650SE SATA-II RAID (rev 01) raid 
-6) running linux 2.6.30
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-on 3 of the 20 I seem to have a max write speed of ~5MB/sec (as opposed to 
->100 MB/sec)
+Please apply...
 
-any pointers on how I can identify what is different about these three 
-boxes?
+Andrew Vasquez (3):
+  qla2xxx: Correctly handle 'global port-unavailable' AEN.
+  qla2xxx: Fix endian issues on PPC platfrom for NPIV.
+  qla2xxx: ISP21xx/22xx do not support FDMI registrations.
 
-David Lang
+Anirban Chakraborty (2):
+  qla2xxx: Fix to ensure driver works in sinlge queue mode if
+    multiqueue fails.
+  qla2xxx: Fix a bug that clears the interrupt status register for the
+    base queue
+
+Giridhar Malavali (1):
+  qla2xxx: Update version number to 8.03.01-k5
+
+Lalit Chandivade (1):
+  qla2xxx: Process DPC requests within valid Fabric topologies.
+
+Ravi Anand (1):
+  qla2xxx: Pass the command's data residual to upper-layer callers.
+
+Santosh Vernekar (3):
+  qla2xxx: Skip RSCN processing on vha if event is global.
+  qla2xxx: Mark all devices lost on loss of fc port.
+  qla2xxx: Handle RSCN's per master/slave vn-port basis.
+
+Shyam Sundar (1):
+  qla2xxx: Pad IOCB structure for size requirements.
+
+ drivers/scsi/qla2xxx/qla_attr.c    |    4 +-
+ drivers/scsi/qla2xxx/qla_def.h     |    1 +
+ drivers/scsi/qla2xxx/qla_fw.h      |    2 +-
+ drivers/scsi/qla2xxx/qla_gs.c      |    4 ++
+ drivers/scsi/qla2xxx/qla_init.c    |    5 +--
+ drivers/scsi/qla2xxx/qla_iocb.c    |    2 +-
+ drivers/scsi/qla2xxx/qla_isr.c     |   55 +++++++++++++++++++++++++++++++++--
+ drivers/scsi/qla2xxx/qla_mbx.c     |    7 ++--
+ drivers/scsi/qla2xxx/qla_mid.c     |    3 ++
+ drivers/scsi/qla2xxx/qla_os.c      |   21 +++++++++++--
+ drivers/scsi/qla2xxx/qla_version.h |    2 +-
+ 11 files changed, 87 insertions(+), 19 deletions(-)
 
