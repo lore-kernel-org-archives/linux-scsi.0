@@ -1,42 +1,36 @@
-From: giridhar.malavali@qlogic.com
-Subject: [PATCH 11/12] qla2xxx: ISP21xx/22xx do not support FDMI registrations.
-Date: Fri, 31 Jul 2009 15:09:33 -0700
-Message-ID: <1249078174-1957-12-git-send-email-giridhar.malavali@qlogic.com>
-References: <1249078174-1957-1-git-send-email-giridhar.malavali@qlogic.com>
+From: adam radford <aradford@gmail.com>
+Subject: Re: bad performance on 3 of 20 boxes with 3ware card
+Date: Fri, 31 Jul 2009 16:44:35 -0700
+Message-ID: <b1bc6a000907311644j1ece02faifaede6c9b8eb2d05@mail.gmail.com>
+References: <alpine.DEB.1.10.0907311459220.28013@asgard.lang.hm>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:36799 "EHLO mx.mv.qlogic.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753223AbZGaWJm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 31 Jul 2009 18:09:42 -0400
-In-Reply-To: <1249078174-1957-1-git-send-email-giridhar.malavali@qlogic.com>
+Received: from mail-gx0-f213.google.com ([209.85.217.213]:63365 "EHLO
+	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751355AbZGaXof (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Jul 2009 19:44:35 -0400
+Received: by gxk9 with SMTP id 9so4236693gxk.13
+        for <linux-scsi@vger.kernel.org>; Fri, 31 Jul 2009 16:44:35 -0700 (PDT)
+In-Reply-To: <alpine.DEB.1.10.0907311459220.28013@asgard.lang.hm>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
+To: david@lang.hm
+Cc: linux-scsi@vger.kernel.org
 
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+On Fri, Jul 31, 2009 at 3:02 PM, <david@lang.hm> wrote:
+> I hae 20 identical boxes (2x 4-core cpus, 64G ram, 16x1TB SATA drives on
+> 07:00.0 RAID bus controller: 3ware Inc 9650SE SATA-II RAID (rev 01) raid 6)
+> running linux 2.6.30
+>
+> on 3 of the 20 I seem to have a max write speed of ~5MB/sec (as opposed to
+>>
+>> 100 MB/sec)
+>
+> any pointers on how I can identify what is different about these three
+> boxes?
 
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_gs.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+Do you have cache OFF on the 3 slow boxes ?
 
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index 917534b..4647015 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -1674,6 +1674,10 @@ int
- qla2x00_fdmi_register(scsi_qla_host_t *vha)
- {
- 	int rval;
-+       struct qla_hw_data *ha = vha->hw;
-+
-+	if (IS_QLA2100(ha) || IS_QLA2200(ha))
-+		return QLA_FUNCTION_FAILED;
- 
- 	rval = qla2x00_mgmt_svr_login(vha);
- 	if (rval)
--- 
-1.6.2.rc1.30.gd43c
-
+-Adam
