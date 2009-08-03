@@ -1,97 +1,67 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: SCSI git trees
-Date: Mon, 3 Aug 2009 22:27:31 +0200
-Message-ID: <20090803202731.GR12579@kernel.dk>
-References: <1248887256.3900.78.camel@mulgrave.site> <19063.9181.620137.814464@stoffel.org> <1249325826.3943.207.camel@mulgrave.site> <19063.14027.208148.82667@stoffel.org>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: FCP target reset
+Date: Mon, 3 Aug 2009 16:38:32 -0400
+Message-ID: <4A774AC8.8080805@emulex.com>
+References: <20090803162302.GA9872@schmichrtp.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:51080 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751664AbZHCU1b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 3 Aug 2009 16:27:31 -0400
-Content-Disposition: inline
-In-Reply-To: <19063.14027.208148.82667@stoffel.org>
+Received: from emulex.emulex.com ([138.239.112.1]:53158 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932068AbZHCUif (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2009 16:38:35 -0400
+In-Reply-To: <20090803162302.GA9872@schmichrtp.de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Stoffel <john@stoffel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, Aug 03 2009, John Stoffel wrote:
-> >>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
-> 
-> James> On Mon, 2009-08-03 at 13:52 -0400, John Stoffel wrote:
-> >> >>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
-> >> 
-> James> It seems I got unsubscribed from linux-scsi last week while I was on
-> James> holiday and I've likely missed a slew of patches, it seems like an
-> James> appropriate time to remind everyone how the SCSI trees work.
-> >> 
-> James> ---
-> >> 
-> James> There are two git based scsi trees:
-> >> 
-> James> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git
-> >> 
-> James> called the scsi-misc tree for patches being collected for the
-> James> next merge window.  And
-> >> 
-> >> I don't see my patch to block/Kconfig to make BLK_DEV_BSG be enabled
-> >> by default.  Is this going to be pushed for 2.6.32-rc1 when the merge
-> >> window opens up?  
-> >> 
-> >> I've attached the patch, just to make sure.  Let me know if I should
-> >> send it in properly.
-> >> 
-> >> Thanks!
-> >> John
-> >> 
-> >> 
-> >> Make Block Layer SG support v4 the default, since recent udev versions
-> >> depend on this to access serial numbers and other low level info
-> >> properly.
-> >> 
-> >> This should be backported to older kernels as well, since most distros
-> >> have
-> >> enabled this for a long time.
-> >> 
-> >> Signed-off-by: John Stoffel <john@stoffel.org>
-> >> ---
-> >> block/Kconfig |   11 +++++++----
-> >> 1 files changed, 7 insertions(+), 4 deletions(-)
-> >> 
-> >> diff --git a/block/Kconfig b/block/Kconfig
-> >> index e7d1278..55bbefc 100644
-> >> --- a/block/Kconfig
-> >> +++ b/block/Kconfig
-> 
-> James> Actually, this one isn't really SCSI; it's block (Jens cc'd).
-> 
-> Thanks for the cc to Jens.  I'd argue that it is SCSI, since it's
-> about enbabling the Generic SCSI v4 stuff.  But hey, I'd be happy to
-> see this enabled by default no matter how it goes into the kernel.
-> 
-> James> It's Jens call on the backport, but my feeling is that removing
-> James> a feature from experimental is really an enhancement not a bug
-> James> fix, so it's not really eligible under the backport rules.
-> 
-> Sure, I can understand this, but since the feature has been around for
-> quite a while, and since most (as I understand it, but haven't
-> confirmed) distros enable it by default, I think the risk is low.
-> 
-> But again, it's not clear to me whether you think A) this should go
-> into 2.6.32 and B) whether it will go through your tree or if I should
-> try to push it through Jens.
-> 
-> I await the discussion.  It's really a trivial change, and its makes a
-> huge difference to people using Udev to manage devices properly.
+Just because a newer rev of the spec doesn't do something does not mean that 
+all the targets/environments stopped using it...  Target Reset was a mandatory 
+item for FCP-2 compliance, which is what most of the stuff in the field is at. 
+   So, I recommend that the header be updated with the older definition - It 
+can be flagged any way you desire (/* Deprecated as of FCP-3 */).
 
-Principally, I completely agree with James assessment that it doesn't
-meet normal stable rules as such. It's not fixing a bug or oops, it's a
-feature addition. But since this is rather trivial and bsg has been
-around for ages (and is on in distro kernels), I'm OK with making an
-exception in this case.
+As for use in LLD's - there's nothing else (TMF-wise) that works at the I_T 
+nexus level to map to the shost eh_target_reset_handler.  Thus, I'd continue 
+to use it for the entrypoint. You can always choose to not implement the entry 
+point, but my recommendation is to support it if possible. It's much better 
+than having to resort to a "bus" or "adapter" reset after a lun reset fails.
 
--- 
-Jens Axboe
+-- james s
 
+Christof Schmitt wrote:
+> While trying to replace the Fibre Channel protocol definitions in
+> zfcp with the definitions in include/scsi/fc i came across the FCP
+> target reset flag.
+> 
+>>From what i understand, older versions of the FCP standard defined the
+> target reset flag, but newer versions do not. Adhering to the newer
+> standard, the file include/scsi/fc/fc_fcp.h does not define the target
+> reset.
+> 
+> Does this mean that FC device drivers should not issue target resets
+> any more?
+> 
+> Some FC device drivers in Linux define the flag:
+> 
+> grep -r FCP_TARGET_RESET *
+> drivers/s390/scsi/zfcp_dbf.h:	zfcp_scsi_dbf_event(flag == FCP_TARGET_RESET ? "trst" : "lrst", tag, 1,
+> drivers/s390/scsi/zfcp_def.h:#define FCP_TARGET_RESET	0x20
+> drivers/s390/scsi/zfcp_scsi.c:	return zfcp_task_mgmt_function(scpnt, FCP_TARGET_RESET);
+> drivers/scsi/lpfc/lpfc_scsi.c: FCP_TARGET_RESET);
+> drivers/scsi/lpfc/lpfc_scsi.c: FCP_TARGET_RESET);
+> drivers/scsi/lpfc/lpfc_scsi.h:#define  FCP_TARGET_RESET    0x20	/* bit 5 */
+> 
+> If the target reset is not required, i would remove it from zfcp. If
+> it is still required, would adding it to include/scsi/fc/fc_fcp.h make
+> sense, probably flagged as "obsolete"?
+> 
+> --
+> Christof Schmitt
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
