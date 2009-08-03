@@ -1,25 +1,24 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: SCSI git trees
-Date: Mon, 3 Aug 2009 11:09:11 -0700
-Message-ID: <20090803110911.37044826.randy.dunlap@oracle.com>
+Date: Mon, 03 Aug 2009 18:57:05 +0000
+Message-ID: <1249325826.3943.207.camel@mulgrave.site>
 References: <1248887256.3900.78.camel@mulgrave.site>
-	<19063.9181.620137.814464@stoffel.org>
+	 <19063.9181.620137.814464@stoffel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet11.oracle.com ([141.146.126.233]:37726 "EHLO
-	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751935AbZHCSJT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2009 14:09:19 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50345 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752931AbZHCS5J (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2009 14:57:09 -0400
 In-Reply-To: <19063.9181.620137.814464@stoffel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: John Stoffel <john@stoffel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>
 
-On Mon, 3 Aug 2009 13:52:29 -0400 John Stoffel wrote:
-
+On Mon, 2009-08-03 at 13:52 -0400, John Stoffel wrote:
 > >>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
 > 
 > James> It seems I got unsubscribed from linux-scsi last week while I was on
@@ -34,12 +33,7 @@ On Mon, 3 Aug 2009 13:52:29 -0400 John Stoffel wrote:
 > 
 > James> called the scsi-misc tree for patches being collected for the
 > James> next merge window.  And
-
-James,
-Would it help you for patchwork to capture linux-scsi patches?
-either patchwork.kernel.org or patchwork.ozlabs.org
-
-
+> 
 > I don't see my patch to block/Kconfig to make BLK_DEV_BSG be enabled
 > by default.  Is this going to be pushed for 2.6.32-rc1 when the merge
 > window opens up?  
@@ -68,40 +62,12 @@ either patchwork.kernel.org or patchwork.ozlabs.org
 > index e7d1278..55bbefc 100644
 > --- a/block/Kconfig
 > +++ b/block/Kconfig
-> @@ -45,9 +45,9 @@ config LBD
->           If unsure, say N.
-> 
->  config BLK_DEV_BSG
-> -       bool "Block layer SG support v4 (EXPERIMENTAL)"
-> -       depends on EXPERIMENTAL
-> -       ---help---
-> +       bool "Block layer SG support v4"
-> +       default y
-> +       help
->           Saying Y here will enable generic SG (SCSI generic) v4
-> 	  support
->           for any block device.
-> 
-> @@ -57,7 +57,10 @@ config BLK_DEV_BSG
->           protocols (e.g. Task Management Functions and SMP in Serial
->           Attached SCSI).
-> 
-> -         If unsure, say N.
-> +         This option is required by recent UDEV versions to properly
-> +         access device serial numbers, etc.
-> +
-> +         If unsure, say Y.
-> 
->  config BLK_DEV_INTEGRITY
->         bool "Block layer data integrity support"
-> -- 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Actually, this one isn't really SCSI; it's block (Jens cc'd).  It's Jens
+call on the backport, but my feeling is that removing a feature from
+experimental is really an enhancement not a bug fix, so it's not really
+eligible under the backport rules.
+
+James
 
 
----
-~Randy
-LPC 2009, Sept. 23-25, Portland, Oregon
-http://linuxplumbersconf.org/2009/
