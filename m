@@ -1,94 +1,46 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: SCSI git trees
-Date: Mon, 3 Aug 2009 15:13:15 -0400
-Message-ID: <19063.14027.208148.82667@stoffel.org>
-References: <1248887256.3900.78.camel@mulgrave.site>
-	<19063.9181.620137.814464@stoffel.org>
-	<1249325826.3943.207.camel@mulgrave.site>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: [RESEND] [PATCH 0/3] scsi_dh: Add ability to set parameters for scsi device handler
+Date: Mon, 03 Aug 2009 12:42:26 -0700
+Message-ID: <20090803194226.5738.82973.sendpatchset@chandra-ubuntu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from Mycroft.westnet.com ([216.187.52.7]:58717 "EHLO
-	mycroft.westnet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753531AbZHCTNW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2009 15:13:22 -0400
-In-Reply-To: <1249325826.3943.207.camel@mulgrave.site>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:44733 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753399AbZHCTip (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2009 15:38:45 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e34.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id n73JZ114030305
+	for <linux-scsi@vger.kernel.org>; Mon, 3 Aug 2009 13:35:01 -0600
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n73JcgfT116148
+	for <linux-scsi@vger.kernel.org>; Mon, 3 Aug 2009 13:38:42 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n73JcegC004761
+	for <linux-scsi@vger.kernel.org>; Mon, 3 Aug 2009 13:38:42 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: John Stoffel <john@stoffel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>
+To: linux-scsi@vger.kernel.org
+Cc: dm-devel@redhat.com, michaelc@cs.wisc.edu, agk@redhat.com, James.Bottomley@HansenPartnership.com, Benoit_Arthur@emc.com, asson_ronald@emc.com, berthiaume_wayne@emc.com, Eddie.Williams@steeleye.com, Chandra Seetharaman <sekharan@us.ibm.com>
 
->>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
+Hello,
 
-James> On Mon, 2009-08-03 at 13:52 -0400, John Stoffel wrote:
->> >>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
->> 
-James> It seems I got unsubscribed from linux-scsi last week while I was on
-James> holiday and I've likely missed a slew of patches, it seems like an
-James> appropriate time to remind everyone how the SCSI trees work.
->> 
-James> ---
->> 
-James> There are two git based scsi trees:
->> 
-James> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git
->> 
-James> called the scsi-misc tree for patches being collected for the
-James> next merge window.  And
->> 
->> I don't see my patch to block/Kconfig to make BLK_DEV_BSG be enabled
->> by default.  Is this going to be pushed for 2.6.32-rc1 when the merge
->> window opens up?  
->> 
->> I've attached the patch, just to make sure.  Let me know if I should
->> send it in properly.
->> 
->> Thanks!
->> John
->> 
->> 
->> Make Block Layer SG support v4 the default, since recent udev versions
->> depend on this to access serial numbers and other low level info
->> properly.
->> 
->> This should be backported to older kernels as well, since most distros
->> have
->> enabled this for a long time.
->> 
->> Signed-off-by: John Stoffel <john@stoffel.org>
->> ---
->> block/Kconfig |   11 +++++++----
->> 1 files changed, 7 insertions(+), 4 deletions(-)
->> 
->> diff --git a/block/Kconfig b/block/Kconfig
->> index e7d1278..55bbefc 100644
->> --- a/block/Kconfig
->> +++ b/block/Kconfig
+On June 24 2009, Eddie Williams reported a regression w.r.t scsi_dh
+(http://www.redhat.com/archives/dm-devel/2009-June/msg00285.html).
+Parameter setting part of dm multipath handler has been removed
+when we moved to scsi device handler.
 
-James> Actually, this one isn't really SCSI; it's block (Jens cc'd).
+I posted a patchset on Jul 1 2009 to fix the problems
+(http://marc.info/?l=dm-devel&m=124653672208890&w=2). Eddie tested
+the patchset and reported success.
 
-Thanks for the cc to Jens.  I'd argue that it is SCSI, since it's
-about enbabling the Generic SCSI v4 stuff.  But hey, I'd be happy to
-see this enabled by default no matter how it goes into the kernel.
+Here is the same patchset (with one change from char * to const char *).
 
-James> It's Jens call on the backport, but my feeling is that removing
-James> a feature from experimental is really an enhancement not a bug
-James> fix, so it's not really eligible under the backport rules.
+This patch set applies on 2.6.31-rc3 and the following 2 patches:
+	(1) http://patchwork.kernel.org/patch/32646/raw/
+	(2) http://patchwork.kernel.org/patch/32647/raw/
 
-Sure, I can understand this, but since the feature has been around for
-quite a while, and since most (as I understand it, but haven't
-confirmed) distros enable it by default, I think the risk is low.
-
-But again, it's not clear to me whether you think A) this should go
-into 2.6.32 and B) whether it will go through your tree or if I should
-try to push it through Jens.
-
-I await the discussion.  It's really a trivial change, and its makes a
-huge difference to people using Udev to manage devices properly.
+Interface part of the patch has also been tested by me.
 
 Thanks,
-John
 
-
+chandra
 
