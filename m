@@ -1,56 +1,94 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: FCP target reset
-Date: Mon, 3 Aug 2009 18:23:03 +0200
-Message-ID: <20090803162302.GA9872@schmichrtp.de.ibm.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 1/6] RFC: beiscsi : handles core routines
+Date: Mon, 03 Aug 2009 11:57:13 -0500
+Message-ID: <4A7716E9.9060307@cs.wisc.edu>
+References: <20090728071251.GA13581@serverengines.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate4.uk.ibm.com ([195.212.29.137]:41681 "EHLO
-	mtagate4.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755398AbZHCQXP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2009 12:23:15 -0400
-Received: from d06nrmr1707.portsmouth.uk.ibm.com (d06nrmr1707.portsmouth.uk.ibm.com [9.149.39.225])
-	by mtagate4.uk.ibm.com (8.14.3/8.13.8) with ESMTP id n73GN3ZU074324
-	for <linux-scsi@vger.kernel.org>; Mon, 3 Aug 2009 16:23:03 GMT
-Received: from d06av03.portsmouth.uk.ibm.com (d06av03.portsmouth.uk.ibm.com [9.149.37.213])
-	by d06nrmr1707.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n73GN3jU1523760
-	for <linux-scsi@vger.kernel.org>; Mon, 3 Aug 2009 17:23:03 +0100
-Received: from d06av03.portsmouth.uk.ibm.com (loopback [127.0.0.1])
-	by d06av03.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n73GN3Ma008658
-	for <linux-scsi@vger.kernel.org>; Mon, 3 Aug 2009 17:23:03 +0100
-Received: from schmichrtp.de.ibm.com (dyn-9-155-23-82.mainz.de.ibm.com [9.155.23.82] (may be forged))
-	by d06av03.portsmouth.uk.ibm.com (8.12.11.20060308/8.12.11) with SMTP id n73GN3Ih008651
-	for <linux-scsi@vger.kernel.org>; Mon, 3 Aug 2009 17:23:03 +0100
-Content-Disposition: inline
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:34242 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755445AbZHCQ5X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 Aug 2009 12:57:23 -0400
+In-Reply-To: <20090728071251.GA13581@serverengines.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jayamohan Kalickal <jayamohank@serverengines.com>
+Cc: linux-scsi@vger.kernel.org, Jens.Axboe@oracle.com
 
-While trying to replace the Fibre Channel protocol definitions in
-zfcp with the definitions in include/scsi/fc i came across the FCP
-target reset flag.
+Hey Jens,
 
->From what i understand, older versions of the FCP standard defined the
-target reset flag, but newer versions do not. Adhering to the newer
-standard, the file include/scsi/fc/fc_fcp.h does not define the target
-reset.
+Is your block napi code going to go upstream soon? Does it need more 
+testing or users?
 
-Does this mean that FC device drivers should not issue target resets
-any more?
+This driver is just using a normal old work queue for the completion 
+path, so I wanted to see about having Jay convert it to your code.
 
-Some FC device drivers in Linux define the flag:
 
-grep -r FCP_TARGET_RESET *
-drivers/s390/scsi/zfcp_dbf.h:	zfcp_scsi_dbf_event(flag == FCP_TARGET_RESET ? "trst" : "lrst", tag, 1,
-drivers/s390/scsi/zfcp_def.h:#define FCP_TARGET_RESET	0x20
-drivers/s390/scsi/zfcp_scsi.c:	return zfcp_task_mgmt_function(scpnt, FCP_TARGET_RESET);
-drivers/scsi/lpfc/lpfc_scsi.c: FCP_TARGET_RESET);
-drivers/scsi/lpfc/lpfc_scsi.c: FCP_TARGET_RESET);
-drivers/scsi/lpfc/lpfc_scsi.h:#define  FCP_TARGET_RESET    0x20	/* bit 5 */
 
-If the target reset is not required, i would remove it from zfcp. If
-it is still required, would adding it to include/scsi/fc/fc_fcp.h make
-sense, probably flagged as "obsolete"?
-
---
-Christof Schmitt
+On 07/28/2009 02:13 AM, Jayamohan Kallickal wrote:
+> + */
+> +irqreturn_t be_isr(int irq, void *dev_id)
+> +{
+> +	struct beiscsi_hba *phba = NULL;
+> +	struct hwi_controller_ws *phwi_controller;
+> +	struct hwi_context_memory *phwi_context;
+> +	struct be_eq_entry *eqe = NULL;
+> +	struct be_queue_info *eq;
+> +	unsigned long flags, index;
+> +	unsigned int num_eq_processed;
+> +
+> +	phba = (struct beiscsi_hba *)dev_id;
+> +	phwi_controller = GET_HWI_CONTROLLER_WS(phba);
+> +	phwi_context = phwi_controller->phwic;
+> +	spin_lock_irqsave(&phba->isr_lock, flags);
+> +
+> +	eq =&phwi_context->be_eq.q;
+> +	index = 0;
+> +	eqe = queue_tail_node(eq);
+> +	if (!eqe)
+> +		SE_DEBUG(DBG_LVL_1, "eqe is NULL\n");
+> +
+> +	num_eq_processed = 0;
+> +	while (eqe->
+> +	       dw[offsetof(struct amap_eq_entry, valid) /
+> +		  32]&  EQE_VALID_MASK) {
+> +		switch ((u32)
+> +			(eqe->
+> +			 dw[offsetof(struct amap_eq_entry, major_code) /
+> +			    32]&  EQE_MAJORCODE_MASK)) {
+> +		case EQ_MAJOR_CODE_COMPLETION:
+> +			/* Determine which CQ to process. */
+> +			if (((eqe->
+> +			      dw[offsetof(struct amap_eq_entry, resource_id) /
+> +				 32]&  EQE_RESID_MASK)>>  16) ==
+> +			    phwi_context->be_cq.id) {
+> +				SE_DEBUG(DBG_LVL_8, "\t\t todo_cq is set\n");
+> +				phba->todo_cq = 1;
+> +			} else {
+> +				SE_DEBUG(DBG_LVL_1,
+> +					 "\t\t Invalid CQ to process\n");
+> +			}
+> +			break;
+> +
+> +		default:
+> +			SE_DEBUG(DBG_LVL_1,
+> +			 "Unexpected struct eq_entry major_code: 0x%x\n",
+> +			  (eqe->dw[offsetof(struct amap_eq_entry, major_code) /
+> +				     32]&  EQE_MAJORCODE_MASK));
+> +		}
+> +
+> +		/* Mark this struct eq_entry as invalid */
+> +		AMAP_SET_BITS(struct amap_eq_entry, valid, eqe, 0);
+> +		queue_tail_inc(eq);
+> +		eqe = queue_tail_node(eq);
+> +
+> +		num_eq_processed++;
+> +	}
+> +	spin_unlock_irqrestore(&phba->isr_lock, flags);
+> +	queue_work(phba->wq,&phba->work_cqs);
+> +	hwi_ring_eq_db(phba, phwi_context->be_eq.q.id, 0,
+> +			/* clear interrupt */
+> +			num_eq_processed, 1, 1);
+> +	return IRQ_HANDLED;
