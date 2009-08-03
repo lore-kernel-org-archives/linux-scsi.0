@@ -1,65 +1,54 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13873] QLA2xxx driver causes kernel oops with a qla2200
-Date: Mon, 3 Aug 2009 02:37:00 GMT
-Message-ID: <200908030237.n732b0hn029983@demeter.kernel.org>
-References: <bug-13873-11613@http.bugzilla.kernel.org/>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: Question about LS120 floppies
+Date: Sun, 02 Aug 2009 20:42:43 -0600
+Message-ID: <4A764EA3.5050708@gmail.com>
+References: <4A4BC762.3090104@lwfinger.net>	<4A4C441B.6050808@gmail.com>	<4A4CBD9E.4070404@lwfinger.net> <20090702181240.747e4063@lxorguk.ukuu.org.uk> <4A4D48A6.2060204@gmail.com> <4A761EED.4030606@lwfinger.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:35864 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753243AbZHCChA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Aug 2009 22:37:00 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n732b0m8029984
-	for <linux-scsi@vger.kernel.org>; Mon, 3 Aug 2009 02:37:00 GMT
-In-Reply-To: <bug-13873-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4A761EED.4030606@lwfinger.net>
+Sender: linux-ide-owner@vger.kernel.org
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Roland Hughes <roland@logikalsolutions.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13873
+On 08/02/2009 05:19 PM, Larry Finger wrote:
+> Robert Hancock wrote:
+>> Yes, definitely a lot of uninformed speculation on that thread. The
+>> floppy driver has nothing to do with any IDE/ATA drive like this, and if
+>> OpenSUSE is using libata drivers then attempting to load the IDE floppy
+>> driver is also useless.
+>>
+>> It would be useful if the reporter could verify that the drive is at all
+>> functional with that media under any OS. That "Cannot read medium -
+>> unknown format" is being reported by the drive itself in response to a
+>> "read capacity" request, not the driver. So unless there's some magic
+>> that the driver needs to do to get the drive to recognize the disc, it
+>> seems like a hardware problem.
+>
+> Since the last posting on this thread, I have acquired the hardware
+> from Roland Hughes. He reports that it worked with Ubuntu Hardy,
+> FreeDOS and Windows XP. I am assuming that the hardware is OK, but it
+> certainly is strange. I don't know the details for all commands, but
+> the command to get the capacity is 0x23 rather than the standard 0x25.
+>
+> Will it be possible to make such strange hardware work under libata?
+> Is there a document that shows how to implement quirky devices? I
+> found the scsi_static_device_list[] entries, but also saw the
+> admonition not to add to that list.
 
+Well, it looks like there is some specific code for this drive in 
+drivers/ide/ide-floppy.c that uses READ FORMAT CAPACITIES, which "allows 
+the Host to request a list of the possible format capacities
+for an installed writable media" instead of READ CAPACITY. The code in 
+the sd driver (which gets used under libata) doesn't do that. However 
+from my reading of the MMC spec (which is where READ FORMAT CAPACITIES 
+is defined), it seems like READ CAPACITY should still work. (But then I 
+wouldn't be surprised if the manufacturer used the SCSI/MMC standards as 
+toilet paper..)
 
-
-
-
---- Comment #4 from Thomas <tageorgiou@gmail.com>  2009-08-03 02:37:00 ---
-The same io hanging just happened again, but this time, no calltrace was
-printed.  It appears the HBA (qla2200) is crashing?
-[  925.960038] qla2xxx 0000:06:02.0: scsi(0:41:0): Abort command issued -- 1
-80c 2002.                                                        
-[  936.970054] qla2xxx 0000:06:02.0: scsi(0:41:0): Abort command issued -- 1
-80c 2002.                                                        
-[  936.970109] qla2xxx 0000:06:02.0: scsi(0:41:0): DEVICE RESET ISSUED.         
-[  936.970197] qla2xxx 0000:06:02.0: scsi(0:41:0): DEVICE RESET SUCCEEDED.      
-[  947.980052] qla2xxx 0000:06:02.0: scsi(0:41:0): Abort command issued -- 1
-80c 2002.
-[  947.980061] qla2xxx 0000:06:02.0: scsi(0:41:0): TARGET RESET ISSUED.
-[  947.980923] qla2xxx 0000:06:02.0: scsi(0:41:0): TARGET RESET SUCCEEDED.
-[  947.980935] qla2xxx 0000:06:02.0: scsi(0:41:0): TARGET RESET ISSUED.
-[  947.981039] qla2xxx 0000:06:02.0: scsi(0:41:0): TARGET RESET SUCCEEDED.
-[  947.981059] qla2xxx 0000:06:02.0: scsi(0:41:0): TARGET RESET ISSUED.
-[  977.980056] qla2xxx 0000:06:02.0: Mailbox command timeout occurred. Issuing
-ISP abort.
-[  977.980064] qla2xxx 0000:06:02.0: Performing ISP error recovery - ha=
-ffff88019a657800.
-[  978.980036]  rport-0:0-0: blocked FC remote port time out: removing target
-and saving binding
-[ 1008.060024] qla2xxx 0000:06:02.0: Failed mailbox send register test
-[ 1008.060031] qla2xxx 0000:06:02.0: qla2x00_abort_isp: **** FAILED ****
-[ 1008.060042] qla2xxx 0000:06:02.0: scsi(0:41:0): TARGET RESET FAILED: Task
-management failed.
-[ 1008.080761]  rport-0:0-1: blocked FC remote port time out: removing target
-and saving binding
-[ 1038.080082]  rport-0:0-2: blocked FC remote port time out: removing target
-and saving binding
-[ 1038.081903] qla2xxx 0000:06:02.0: Mailbox command timeout occurred. Issuing
-ISP abort.
-[ 1038.081909] qla2xxx 0000:06:02.0: Performing ISP error recovery - ha=
-ffff88019a657800.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Supposedly LS-120 disks are pre-formatted, so the "cannot read medium - 
+unknown format" error is rather bizarre. It would definitely be useful 
+to verify that this drive is at all functional under an older distro 
+using the IDE drivers, or WinXP before spending too much time on it..
