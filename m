@@ -1,43 +1,106 @@
-From: Sage Weil <sage@newdream.net>
-Subject: [PATCH] ibmvscsi: avoid unnecessary use of kzalloc_pool
-Date: Mon,  3 Aug 2009 13:54:47 -0700
-Message-ID: <1249332888-13440-2-git-send-email-sage@newdream.net>
-References: <1249332888-13440-1-git-send-email-sage@newdream.net>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: SCSI git trees
+Date: Mon, 3 Aug 2009 17:00:02 -0400
+Message-ID: <19063.20434.94571.192897@stoffel.org>
+References: <1248887256.3900.78.camel@mulgrave.site>
+	<19063.9181.620137.814464@stoffel.org>
+	<1249325826.3943.207.camel@mulgrave.site>
+	<19063.14027.208148.82667@stoffel.org>
+	<20090803202731.GR12579@kernel.dk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cobra.newdream.net ([66.33.216.30]:34203 "EHLO
-	cobra.newdream.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751520AbZHCUzF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2009 16:55:05 -0400
-In-Reply-To: <1249332888-13440-1-git-send-email-sage@newdream.net>
+Received: from Mycroft.westnet.com ([216.187.52.7]:59882 "EHLO
+	mycroft.westnet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751688AbZHCVAJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2009 17:00:09 -0400
+In-Reply-To: <20090803202731.GR12579@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Sage Weil <sage@newdream.net>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: John Stoffel <john@stoffel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-The allocated struct is manually zeroed after allocation, so avoid using
-the (broken) kzalloc mempool (which does not re-zero previously used items
-when they are returned to the pool).
+>>>>> "Jens" == Jens Axboe <jens.axboe@oracle.com> writes:
 
-CC: linux-scsi@vger.kernel.org
-CC: James Bottomley <James.Bottomley@HansenPartnership.com>
-Signed-off-by: Sage Weil <sage@newdream.net>
----
- drivers/scsi/ibmvscsi/ibmvfc.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Jens> On Mon, Aug 03 2009, John Stoffel wrote:
+>> >>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
+>> 
+James> On Mon, 2009-08-03 at 13:52 -0400, John Stoffel wrote:
+>> >> >>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
+>> >> 
+James> It seems I got unsubscribed from linux-scsi last week while I was on
+James> holiday and I've likely missed a slew of patches, it seems like an
+James> appropriate time to remind everyone how the SCSI trees work.
+>> >> 
+James> ---
+>> >> 
+James> There are two git based scsi trees:
+>> >> 
+James> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git
+>> >> 
+James> called the scsi-misc tree for patches being collected for the
+James> next merge window.  And
+>> >> 
+>> >> I don't see my patch to block/Kconfig to make BLK_DEV_BSG be enabled
+>> >> by default.  Is this going to be pushed for 2.6.32-rc1 when the merge
+>> >> window opens up?  
+>> >> 
+>> >> I've attached the patch, just to make sure.  Let me know if I should
+>> >> send it in properly.
+>> >> 
+>> >> Thanks!
+>> >> John
+>> >> 
+>> >> 
+>> >> Make Block Layer SG support v4 the default, since recent udev versions
+>> >> depend on this to access serial numbers and other low level info
+>> >> properly.
+>> >> 
+>> >> This should be backported to older kernels as well, since most distros
+>> >> have
+>> >> enabled this for a long time.
+>> >> 
+>> >> Signed-off-by: John Stoffel <john@stoffel.org>
+>> >> ---
+>> >> block/Kconfig |   11 +++++++----
+>> >> 1 files changed, 7 insertions(+), 4 deletions(-)
+>> >> 
+>> >> diff --git a/block/Kconfig b/block/Kconfig
+>> >> index e7d1278..55bbefc 100644
+>> >> --- a/block/Kconfig
+>> >> +++ b/block/Kconfig
+>> 
+James> Actually, this one isn't really SCSI; it's block (Jens cc'd).
+>> 
+>> Thanks for the cc to Jens.  I'd argue that it is SCSI, since it's
+>> about enbabling the Generic SCSI v4 stuff.  But hey, I'd be happy to
+>> see this enabled by default no matter how it goes into the kernel.
+>> 
+James> It's Jens call on the backport, but my feeling is that removing
+James> a feature from experimental is really an enhancement not a bug
+James> fix, so it's not really eligible under the backport rules.
+>> 
+>> Sure, I can understand this, but since the feature has been around for
+>> quite a while, and since most (as I understand it, but haven't
+>> confirmed) distros enable it by default, I think the risk is low.
+>> 
+>> But again, it's not clear to me whether you think A) this should go
+>> into 2.6.32 and B) whether it will go through your tree or if I should
+>> try to push it through Jens.
+>> 
+>> I await the discussion.  It's really a trivial change, and its makes a
+>> huge difference to people using Udev to manage devices properly.
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 166d964..bb2c696 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -4217,7 +4217,7 @@ static int ibmvfc_alloc_mem(struct ibmvfc_host *vhost)
- 	if (!vhost->trace)
- 		goto free_disc_buffer;
- 
--	vhost->tgt_pool = mempool_create_kzalloc_pool(IBMVFC_TGT_MEMPOOL_SZ,
-+	vhost->tgt_pool = mempool_create_kmalloc_pool(IBMVFC_TGT_MEMPOOL_SZ,
- 						      sizeof(struct ibmvfc_target));
- 
- 	if (!vhost->tgt_pool) {
--- 
-1.5.6.5
+Jens> Principally, I completely agree with James assessment that it
+Jens> doesn't meet normal stable rules as such. It's not fixing a bug
+Jens> or oops, it's a feature addition. But since this is rather
+Jens> trivial and bsg has been around for ages (and is on in distro
+Jens> kernels), I'm OK with making an exception in this case.
 
+So you'd be happy to see it pushed to stable@kernel.org for back
+porting, as well as sending it into the 2.6.32 tree when it opens?
+What about 2.6.31?  Just trying to nail down the flow here.
+
+Thanks,
+John
