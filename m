@@ -1,39 +1,54 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 1/6] RFC: beiscsi : handles core routines
-Date: Mon, 03 Aug 2009 17:18:31 -0500
-Message-ID: <4A776237.6020302@cs.wisc.edu>
-References: <20090728071251.GA13581@serverengines.com> <4A7716E9.9060307@cs.wisc.edu> <20090803204131.GV12579@kernel.dk>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] lpfc: Read buffer overflow
+Date: Mon, 3 Aug 2009 16:42:23 -0700
+Message-ID: <20090803164223.6aa6555b.akpm@linux-foundation.org>
+References: <4A754999.90208@gmail.com>
+	<4A76FC0D.7080005@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:45449 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752927AbZHCWSl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 3 Aug 2009 18:18:41 -0400
-In-Reply-To: <20090803204131.GV12579@kernel.dk>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:55193 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932329AbZHCXm0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2009 19:42:26 -0400
+In-Reply-To: <4A76FC0D.7080005@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Jayamohan Kalickal <jayamohank@serverengines.com>, linux-scsi@vger.kernel.org
+To: James Smart <James.Smart@Emulex.Com>
+Cc: roel.kluin@gmail.com, linux-scsi@vger.kernel.org
 
-Jens Axboe wrote:
-> On Mon, Aug 03 2009, Mike Christie wrote:
->> Hey Jens,
->>
->> Is your block napi code going to go upstream soon? Does it need more  
->> testing or users?
->>
->> This driver is just using a normal old work queue for the completion  
->> path, so I wanted to see about having Jay convert it to your code.
-> 
-> I plan to include the core bits for 2.6.32, so should be heading to
-> mainline soon(ish) :-)
-> 
+On Mon, 3 Aug 2009 11:02:37 -0400
+James Smart <James.Smart@Emulex.Com> wrote:
 
-Thanks.
+> Roel Kluin wrote:
+> > Check whether index is within bounds before testing the element.
+> >
+> > Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+> > ---
+> > diff --git a/drivers/scsi/lpfc/lpfc_vport.c b/drivers/scsi/lpfc/lpfc_vport.c
+> > index e0b4992..ade2df6 100644
+> > --- a/drivers/scsi/lpfc/lpfc_vport.c
+> > +++ b/drivers/scsi/lpfc/lpfc_vport.c
+> > @@ -762,7 +762,7 @@ lpfc_destroy_vport_work_array(struct lpfc_hba *phba, struct lpfc_vport **vports)
+> >  	int i;
+> >  	if (vports == NULL)
+> >  		return;
+> > -	for (i = 0; vports[i] != NULL && i <= phba->max_vports; i++)
+> > +	for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++)
+> >  		scsi_host_put(lpfc_shost_from_vport(vports[i]));
+> >  	kfree(vports);
+> >  }
+>
+> NACK -  the vports array is created such that it is sized for 
+> phba->max_vports + 1.
 
-Jay, please look at Jens's block tree
-http://git.kernel.org/?p=linux/kernel/git/axboe/linux-2.6-block.git;a=summary
-In that tree there is a blk-iopoll branch that you will want to use to 
-convert your completion handling to.
+(top-posting repaired so that I can feasibly reply to the email, dammit)
+
+There's no need to allocate the extra slot in the vports array if we're
+also retaining its size.  I'd suggest that we merge Roel's patch and
+then reduce the size of vports[].
+
+What prevents the loop in lpfc_create_vport_work_array() from wandering
+off the end of vports[], btw?
+
