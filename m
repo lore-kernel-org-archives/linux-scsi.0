@@ -1,94 +1,58 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 1/6] RFC: beiscsi : handles core routines
-Date: Mon, 03 Aug 2009 11:57:13 -0500
-Message-ID: <4A7716E9.9060307@cs.wisc.edu>
-References: <20090728071251.GA13581@serverengines.com>
+From: Joe Eykholt <jeykholt@cisco.com>
+Subject: Re: [PATCH] lpfc: Read buffer overflow
+Date: Mon, 03 Aug 2009 10:15:22 -0700
+Message-ID: <4A771B2A.9050307@cisco.com>
+References: <4A754999.90208@gmail.com> <4A76FC0D.7080005@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:34242 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755445AbZHCQ5X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 3 Aug 2009 12:57:23 -0400
-In-Reply-To: <20090728071251.GA13581@serverengines.com>
+Received: from sj-iport-2.cisco.com ([171.71.176.71]:20296 "EHLO
+	sj-iport-2.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751307AbZHCRPY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2009 13:15:24 -0400
+In-Reply-To: <4A76FC0D.7080005@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jayamohan Kalickal <jayamohank@serverengines.com>
-Cc: linux-scsi@vger.kernel.org, Jens.Axboe@oracle.com
+To: James Smart <James.Smart@Emulex.Com>
+Cc: Roel Kluin <roel.kluin@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-Hey Jens,
+James Smart wrote:
+> NACK -  the vports array is created such that it is sized for 
+> phba->max_vports + 1.
 
-Is your block napi code going to go upstream soon? Does it need more 
-testing or users?
+It's not an off-by-one problem, it's a look-before-leaping problem.
 
-This driver is just using a normal old work queue for the completion 
-path, so I wanted to see about having Jay convert it to your code.
+	Regards,
+	Joe
 
+> 
+> -- james s
+> 
+> Roel Kluin wrote:
+>> Check whether index is within bounds before testing the element.
+>>
+>> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+>> ---
+>> diff --git a/drivers/scsi/lpfc/lpfc_vport.c 
+>> b/drivers/scsi/lpfc/lpfc_vport.c
+>> index e0b4992..ade2df6 100644
+>> --- a/drivers/scsi/lpfc/lpfc_vport.c
+>> +++ b/drivers/scsi/lpfc/lpfc_vport.c
+>> @@ -762,7 +762,7 @@ lpfc_destroy_vport_work_array(struct lpfc_hba 
+>> *phba, struct lpfc_vport **vports)
+>>      int i;
+>>      if (vports == NULL)
+>>          return;
+>> -    for (i = 0; vports[i] != NULL && i <= phba->max_vports; i++)
+>> +    for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++)
+>>          scsi_host_put(lpfc_shost_from_vport(vports[i]));
+>>      kfree(vports);
+>>  }
+>>
+>>   
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-
-On 07/28/2009 02:13 AM, Jayamohan Kallickal wrote:
-> + */
-> +irqreturn_t be_isr(int irq, void *dev_id)
-> +{
-> +	struct beiscsi_hba *phba = NULL;
-> +	struct hwi_controller_ws *phwi_controller;
-> +	struct hwi_context_memory *phwi_context;
-> +	struct be_eq_entry *eqe = NULL;
-> +	struct be_queue_info *eq;
-> +	unsigned long flags, index;
-> +	unsigned int num_eq_processed;
-> +
-> +	phba = (struct beiscsi_hba *)dev_id;
-> +	phwi_controller = GET_HWI_CONTROLLER_WS(phba);
-> +	phwi_context = phwi_controller->phwic;
-> +	spin_lock_irqsave(&phba->isr_lock, flags);
-> +
-> +	eq =&phwi_context->be_eq.q;
-> +	index = 0;
-> +	eqe = queue_tail_node(eq);
-> +	if (!eqe)
-> +		SE_DEBUG(DBG_LVL_1, "eqe is NULL\n");
-> +
-> +	num_eq_processed = 0;
-> +	while (eqe->
-> +	       dw[offsetof(struct amap_eq_entry, valid) /
-> +		  32]&  EQE_VALID_MASK) {
-> +		switch ((u32)
-> +			(eqe->
-> +			 dw[offsetof(struct amap_eq_entry, major_code) /
-> +			    32]&  EQE_MAJORCODE_MASK)) {
-> +		case EQ_MAJOR_CODE_COMPLETION:
-> +			/* Determine which CQ to process. */
-> +			if (((eqe->
-> +			      dw[offsetof(struct amap_eq_entry, resource_id) /
-> +				 32]&  EQE_RESID_MASK)>>  16) ==
-> +			    phwi_context->be_cq.id) {
-> +				SE_DEBUG(DBG_LVL_8, "\t\t todo_cq is set\n");
-> +				phba->todo_cq = 1;
-> +			} else {
-> +				SE_DEBUG(DBG_LVL_1,
-> +					 "\t\t Invalid CQ to process\n");
-> +			}
-> +			break;
-> +
-> +		default:
-> +			SE_DEBUG(DBG_LVL_1,
-> +			 "Unexpected struct eq_entry major_code: 0x%x\n",
-> +			  (eqe->dw[offsetof(struct amap_eq_entry, major_code) /
-> +				     32]&  EQE_MAJORCODE_MASK));
-> +		}
-> +
-> +		/* Mark this struct eq_entry as invalid */
-> +		AMAP_SET_BITS(struct amap_eq_entry, valid, eqe, 0);
-> +		queue_tail_inc(eq);
-> +		eqe = queue_tail_node(eq);
-> +
-> +		num_eq_processed++;
-> +	}
-> +	spin_unlock_irqrestore(&phba->isr_lock, flags);
-> +	queue_work(phba->wq,&phba->work_cqs);
-> +	hwi_ring_eq_db(phba, phwi_context->be_eq.q.id, 0,
-> +			/* clear interrupt */
-> +			num_eq_processed, 1, 1);
-> +	return IRQ_HANDLED;
