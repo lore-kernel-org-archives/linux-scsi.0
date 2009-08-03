@@ -1,115 +1,97 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [dm-devel] [PATCH]: create sysfs file, dh_state for SCSI
-	devices even if they	are not in the inteernal lists
-Date: Mon, 03 Aug 2009 12:51:39 -0700
-Message-ID: <1249329099.31433.23.camel@chandra-ubuntu>
-References: <1246069888.14164.53.camel@chandra-ubuntu>
-	 <4A486FF0.7040209@suse.de>  <1246303830.15941.17.camel@chandra-ubuntu>
-Reply-To: sekharan@linux.vnet.ibm.com
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: SCSI git trees
+Date: Mon, 3 Aug 2009 22:27:31 +0200
+Message-ID: <20090803202731.GR12579@kernel.dk>
+References: <1248887256.3900.78.camel@mulgrave.site> <19063.9181.620137.814464@stoffel.org> <1249325826.3943.207.camel@mulgrave.site> <19063.14027.208148.82667@stoffel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:55092 "EHLO
-	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754607AbZHCTsK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2009 15:48:10 -0400
-Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com [9.17.195.107])
-	by e32.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id n73JhnQO004482
-	for <linux-scsi@vger.kernel.org>; Mon, 3 Aug 2009 13:43:49 -0600
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n73JlsqF172226
-	for <linux-scsi@vger.kernel.org>; Mon, 3 Aug 2009 13:47:57 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n73Jlqqu011254
-	for <linux-scsi@vger.kernel.org>; Mon, 3 Aug 2009 13:47:54 -0600
-In-Reply-To: <1246303830.15941.17.camel@chandra-ubuntu>
+Received: from brick.kernel.dk ([93.163.65.50]:51080 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751664AbZHCU1b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 Aug 2009 16:27:31 -0400
+Content-Disposition: inline
+In-Reply-To: <19063.14027.208148.82667@stoffel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: device-mapper development <dm-devel@redhat.com>, Mario Mech <mech@meteo.uni-koeln.de>, linux-scsi <linux-scsi@vger.kernel.org>
+To: John Stoffel <john@stoffel.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi Hannes,
+On Mon, Aug 03 2009, John Stoffel wrote:
+> >>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
+> 
+> James> On Mon, 2009-08-03 at 13:52 -0400, John Stoffel wrote:
+> >> >>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
+> >> 
+> James> It seems I got unsubscribed from linux-scsi last week while I was on
+> James> holiday and I've likely missed a slew of patches, it seems like an
+> James> appropriate time to remind everyone how the SCSI trees work.
+> >> 
+> James> ---
+> >> 
+> James> There are two git based scsi trees:
+> >> 
+> James> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git
+> >> 
+> James> called the scsi-misc tree for patches being collected for the
+> James> next merge window.  And
+> >> 
+> >> I don't see my patch to block/Kconfig to make BLK_DEV_BSG be enabled
+> >> by default.  Is this going to be pushed for 2.6.32-rc1 when the merge
+> >> window opens up?  
+> >> 
+> >> I've attached the patch, just to make sure.  Let me know if I should
+> >> send it in properly.
+> >> 
+> >> Thanks!
+> >> John
+> >> 
+> >> 
+> >> Make Block Layer SG support v4 the default, since recent udev versions
+> >> depend on this to access serial numbers and other low level info
+> >> properly.
+> >> 
+> >> This should be backported to older kernels as well, since most distros
+> >> have
+> >> enabled this for a long time.
+> >> 
+> >> Signed-off-by: John Stoffel <john@stoffel.org>
+> >> ---
+> >> block/Kconfig |   11 +++++++----
+> >> 1 files changed, 7 insertions(+), 4 deletions(-)
+> >> 
+> >> diff --git a/block/Kconfig b/block/Kconfig
+> >> index e7d1278..55bbefc 100644
+> >> --- a/block/Kconfig
+> >> +++ b/block/Kconfig
+> 
+> James> Actually, this one isn't really SCSI; it's block (Jens cc'd).
+> 
+> Thanks for the cc to Jens.  I'd argue that it is SCSI, since it's
+> about enbabling the Generic SCSI v4 stuff.  But hey, I'd be happy to
+> see this enabled by default no matter how it goes into the kernel.
+> 
+> James> It's Jens call on the backport, but my feeling is that removing
+> James> a feature from experimental is really an enhancement not a bug
+> James> fix, so it's not really eligible under the backport rules.
+> 
+> Sure, I can understand this, but since the feature has been around for
+> quite a while, and since most (as I understand it, but haven't
+> confirmed) distros enable it by default, I think the risk is low.
+> 
+> But again, it's not clear to me whether you think A) this should go
+> into 2.6.32 and B) whether it will go through your tree or if I should
+> try to push it through Jens.
+> 
+> I await the discussion.  It's really a trivial change, and its makes a
+> huge difference to people using Udev to manage devices properly.
 
-Can you comment on this please.
+Principally, I completely agree with James assessment that it doesn't
+meet normal stable rules as such. It's not fixing a bug or oops, it's a
+feature addition. But since this is rather trivial and bsg has been
+around for ages (and is on in distro kernels), I'm OK with making an
+exception in this case.
 
-If you are convinced with my justification, please send an ACK.
-
-Thanks & Regards,
-
-chandra
-On Mon, 2009-06-29 at 12:30 -0700, Chandra Seetharaman wrote:
-> On Mon, 2009-06-29 at 09:40 +0200, Hannes Reinecke wrote:
-> > Chandra Seetharaman wrote:
-> > > Create the sysfs file, dh_state even if the new SCSI device is not
-> > > in the any of the device handler's internal lists.
-> > > 
-> > > Signed-Off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> > > ---
-> > >  drivers/scsi/device_handler/scsi_dh.c |   11 ++++-------
-> > >  1 file changed, 4 insertions(+), 7 deletions(-)
-> > > 
-> > > Index: linux-2.6.31-rc1/drivers/scsi/device_handler/scsi_dh.c
-> > > ===================================================================
-> > > --- linux-2.6.31-rc1.orig/drivers/scsi/device_handler/scsi_dh.c
-> > > +++ linux-2.6.31-rc1/drivers/scsi/device_handler/scsi_dh.c
-> > > @@ -304,18 +304,15 @@ static int scsi_dh_notifier(struct notif
-> > >  	sdev = to_scsi_device(dev);
-> > >  
-> > >  	if (action == BUS_NOTIFY_ADD_DEVICE) {
-> > > +		err = device_create_file(dev, &scsi_dh_state_attr);
-> > > +		/* don't care about err */
-> > >  		devinfo = device_handler_match(NULL, sdev);
-> > > -		if (!devinfo)
-> > > -			goto out;
-> > > -
-> > > -		err = scsi_dh_handler_attach(sdev, devinfo);
-> > > -		if (!err)
-> > > -			err = device_create_file(dev, &scsi_dh_state_attr);
-> > > +		if (devinfo)
-> > > +			err = scsi_dh_handler_attach(sdev, devinfo);
-> > >  	} else if (action == BUS_NOTIFY_DEL_DEVICE) {
-> > >  		device_remove_file(dev, &scsi_dh_state_attr);
-> > >  		scsi_dh_handler_detach(sdev, NULL);
-> > >  	}
-> > > -out:
-> > >  	return err;
-> > >  }
-> > >  
-> > > 
-> > > 
-> > > --
-> > > dm-devel mailing list
-> > > dm-devel@redhat.com
-> > > https://www.redhat.com/mailman/listinfo/dm-devel
-> > NACK.
-> > 
-> > This will create sysfs attributes even if the attach()
-> > failed for other reason like a generic error. So we'll end
-> > up with device handler attributes and no device handler attached.
-> 
-> we do not have to worry about if attach failed or succeeded. We will
-> have "detached" if there is no device handler is attached to a device. 
-> 
-> Basically, existence of this file simply means that scsi_dh module is
-> active, only the contents of this file will indicate if any device
-> handler is attached or not.
-> 
-> We are just creating the file dh_state for each SCSI device that exists
-> and that is the only way non-in-built devices can be attached to a
-> handler by the end-user.
-> 
-> Do note that we do create this file for all the existing scsi devices
-> when the scsi_dh module is inserted (see scsi_dh_init()).
-> 
-> > 
-> > Not a good idea.
-> 
-> I do not agree, and we do need to have this fix for dh_state file to be
-> functionally useful.
-> 
-> > 
-> > Cheers,
-> > 
-> > Hannes
+-- 
+Jens Axboe
 
