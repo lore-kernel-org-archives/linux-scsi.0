@@ -1,44 +1,104 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH] lpfc: Read buffer overflow
-Date: Mon, 3 Aug 2009 11:02:37 -0400
-Message-ID: <4A76FC0D.7080005@emulex.com>
-References: <4A754999.90208@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: 2.6.31-rc5: Reported regressions 2.6.29 -> 2.6.30
+Date: Mon, 3 Aug 2009 08:16:39 -0700
+Message-ID: <43e72e890908030816n187cda20keda2c9ba1b15a89c@mail.gmail.com>
+References: <upey9ZSfnaF.A.-oE.rpgdKB@chimera>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:47322 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932181AbZHCPDP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2009 11:03:15 -0400
-In-Reply-To: <4A754999.90208@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <upey9ZSfnaF.A.-oE.rpgdKB@chimera>
+Sender: linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, rootkit85-whZMOeQn8C0@public.gmane.org
+Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Roel Kluin <roel.kluin@gmail.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-NACK -  the vports array is created such that it is sized for 
-phba->max_vports + 1.
+Here are the wireless ones:
 
--- james s
+On Sun, Aug 2, 2009 at 12:06 PM, Rafael J. Wysocki<rjw-KKrjLPT3xs0@public.gmane.org> wrote:
 
-Roel Kluin wrote:
-> Check whether index is within bounds before testing the element.
+> Unresolved regressions
+> ----------------------
 >
-> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-> ---
-> diff --git a/drivers/scsi/lpfc/lpfc_vport.c b/drivers/scsi/lpfc/lpfc_vport.c
-> index e0b4992..ade2df6 100644
-> --- a/drivers/scsi/lpfc/lpfc_vport.c
-> +++ b/drivers/scsi/lpfc/lpfc_vport.c
-> @@ -762,7 +762,7 @@ lpfc_destroy_vport_work_array(struct lpfc_hba *phba, struct lpfc_vport **vports)
->  	int i;
->  	if (vports == NULL)
->  		return;
-> -	for (i = 0; vports[i] != NULL && i <= phba->max_vports; i++)
-> +	for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++)
->  		scsi_host_put(lpfc_shost_from_vport(vports[i]));
->  	kfree(vports);
->  }
->
->   
+> Bug-Entry =C2=A0 =C2=A0 =C2=A0 : http://bugzilla.kernel.org/show_bug.=
+cgi?id=3D13898
+> Subject =C2=A0 =C2=A0 =C2=A0 =C2=A0 : Intel 3945ABG - problems on 2.6=
+=2E30.X
+> Submitter =C2=A0 =C2=A0 =C2=A0 : dienet <dienet-IjDXvh/HVVUAvxtiuMwx3w@public.gmane.org>
+> Date =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0: 2009-07-31 15:17 (3 d=
+ays old)
+> References =C2=A0 =C2=A0 =C2=A0: http://marc.info/?l=3Dlinux-kernel&m=
+=3D124905346729959&w=3D4
+
+
+> Bug-Entry =C2=A0 =C2=A0 =C2=A0 : http://bugzilla.kernel.org/show_bug.=
+cgi?id=3D13638
+> Subject =C2=A0 =C2=A0 =C2=A0 =C2=A0 : rt2870 driver is broken for (so=
+me) cards
+> Submitter =C2=A0 =C2=A0 =C2=A0 : jakob gruber <jakob.gruber@kabelnet.=
+at>
+> Date =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0: 2009-06-27 17:33 (37 =
+days old)
+
+
+
+> Bug-Entry =C2=A0 =C2=A0 =C2=A0 : http://bugzilla.kernel.org/show_bug.=
+cgi?id=3D13581
+> Subject =C2=A0 =C2=A0 =C2=A0 =C2=A0 : ath9k doesn't work with newer k=
+ernels
+> Submitter =C2=A0 =C2=A0 =C2=A0 : Matteo <rootkit85-whZMOeQn8C0@public.gmane.org>
+> Date =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0: 2009-06-19 12:04 (45 =
+days old)
+
+Issue looks more like a the user has rfkill enabled rather than a
+driver issue. Waiting on user feedback since 2009-07-27.
+
+> Bug-Entry =C2=A0 =C2=A0 =C2=A0 : http://bugzilla.kernel.org/show_bug.=
+cgi?id=3D13362
+> Subject =C2=A0 =C2=A0 =C2=A0 =C2=A0 : rt2x00: slow wifi with correct =
+basic rate bitmap
+> Submitter =C2=A0 =C2=A0 =C2=A0 : Alejandro Riveira <ariveira-Re5JQEeQqe8@public.gmane.org=
+m>
+> Date =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0: 2009-05-22 13:32 (73 =
+days old)
+
+
+
+> Bug-Entry =C2=A0 =C2=A0 =C2=A0 : http://bugzilla.kernel.org/show_bug.=
+cgi?id=3D13337
+> Subject =C2=A0 =C2=A0 =C2=A0 =C2=A0 : [post 2.6.29 regression] hang d=
+uring suspend of b44/b43 modules
+> Submitter =C2=A0 =C2=A0 =C2=A0 : Tomas Janousek <tomi-YoqI/XImC7s@public.gmane.org>
+> Date =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0: 2009-05-18 10:59 (77 =
+days old)
+> Handled-By =C2=A0 =C2=A0 =C2=A0: Johannes Berg <johannes@sipsolutions=
+=2Enet>
+> Patch =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 : http://patchwork.kernel.or=
+g/patch/37837/
+
+
+> Bug-Entry =C2=A0 =C2=A0 =C2=A0 : http://bugzilla.kernel.org/show_bug.=
+cgi?id=3D13319
+> Subject =C2=A0 =C2=A0 =C2=A0 =C2=A0 : Page allocation failures with b=
+43 and p54usb
+> Submitter =C2=A0 =C2=A0 =C2=A0 : Larry Finger <Larry.Finger@lwfinger.=
+net>
+> Date =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0: 2009-04-29 21:01 (96 =
+days old)
+> References =C2=A0 =C2=A0 =C2=A0: http://marc.info/?l=3Dlinux-kernel&m=
+=3D124103897101088&w=3D4
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0http://=
+lkml.org/lkml/2009/6/7/136
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0http://=
+lkml.org/lkml/2009/7/26/213
+> Handled-By =C2=A0 =C2=A0 =C2=A0: Johannes Berg <johannes@sipsolutions=
+=2Enet>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0David R=
+ientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Patch =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 : http://patchwork.kernel.or=
+g/patch/37655/
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
