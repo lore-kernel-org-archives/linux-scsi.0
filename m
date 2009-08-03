@@ -1,102 +1,74 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: 2.6.31-rc5: Reported regressions from 2.6.30
-Date: Mon, 3 Aug 2009 17:36:29 +0200
-Message-ID: <200908031736.30745.rjw@sisk.pl>
-References: <Su1q3S6JjyO.A.jeB.hcgdKB@chimera> <alpine.LFD.2.01.0908021456430.3352@localhost.localdomain>
+From: Allan Wind <allan_wind@lifeintegrity.com>
+Subject: Re: LSISAS1068E + WDC WD2002FYPS: I/O error & Sense Key
+Date: Mon, 3 Aug 2009 12:06:29 -0400
+Message-ID: <20090803160629.GA2011@lifeintegrity.com>
+References: <20090727060322.GB27002@lifeintegrity.com> <4A70A64A.2070605@gmail.com> <20090729200714.GA20706@lifeintegrity.com> <4A70D57B.6030301@gmail.com> <20090731184023.GT3211@lifeintegrity.com> <20090803050853.GA26430@lifeintegrity.com> <1249310093.3943.11.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755304AbZHCPgT@vger.kernel.org>
-In-Reply-To: <alpine.LFD.2.01.0908021456430.3352@localhost.localdomain>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from static-173-48-39-13.bstnma.fios.verizon.net ([173.48.39.13]:54090
+	"EHLO lifeintegrity.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755195AbZHCQGa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2009 12:06:30 -0400
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.sourceforge.net>, Mikael Pettersson <mikpe@it.uu.se>
+In-Reply-To: <1249310093.3943.11.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Monday 03 August 2009, Linus Torvalds wrote:
+On 2009-08-03T09:34:53, James Bottomley wrote:
+> On Mon, 2009-08-03 at 01:08 -0400, Allan Wind wrote:
+> >
+> > The above complains about sector 3907028974 which is exactly 
+> > 19566 sectors greater than the size of the raid array according 
+> > to parted.  In other words it appears to be an access to the last 
+> > sector of the array.
 > 
-> On Sun, 2 Aug 2009, Rafael J. Wysocki wrote:
-> > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13896
-> > Subject		: 2.6.31-rc4 broke expect and gcc's testsuite
-> > Submitter	: Mikael Pettersson <mikpe@it.uu.se>
-> > Date		: 2009-07-29 11:00 (5 days old)
-> > References	: http://marc.info/?l=linux-kernel&m=124885806406520&w=4
+> If it's a read beyond the end of a partition, then it's possible it got
+> rejected in the partition checking logic before ever reaching the I/O
+> controller (which would explain why no messages from the fusion in the
+> log).
 > 
-> I bet this is the same tty bug that got fixed by Ogawa in commit 
-> e043e42bdb. -rc5 has that fix. Mikael?
+> However, I don't think the analysis is correct.  Parted says
 > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13842
-> > Subject		: Oops when writing to /sys/block/ram0/queue/max_sectors_kb
-> > Submitter	: Jens Rosenboom <jens@mcbone.net>
-> > Date		: 2009-07-23 15:30 (11 days old)
-> > References	: http://marc.info/?l=linux-kernel&m=124836574403032&w=4
 > 
-> Commit a4e7d46407d73f35d217013b363b79a8f8eafcaa fixed this one.
+> > Number  Start   End          Size         File system  Name  Flags
+> >  1      34s     19565s       19532s                          bios_grub
+> >  2      19566s  3907029134s  3907009569s  ext3               raid
 > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13826
-> > Subject		: thinkpad boots with backlight low
-> > Submitter	: Pavel Machek <pavel@ucw.cz>
-> > Date		: 2009-07-15 15:13 (19 days old)
-> > References	: http://marc.info/?l=linux-kernel&m=124756359126830&w=4
-> > Handled-By	: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> 
-> This should be commit 59fe4fe34d7afdf63208124f313be9056feaa2f4.
-> 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13815
-> > Subject		: emacs -nw compilation doesn't show the error message
-> > Submitter	: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
-> > Date		: 2009-07-23 06:22 (11 days old)
-> > First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=d945cb9cce20ac7143c2de8d88b187f62db99bdc
-> 
-> Same old pty bug, same fix: commit e043e42bdb.
-> 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13813
-> > Subject		: Hangups in n_tty_read()
-> > Submitter	: Johannes Weiner <hannes@cmpxchg.org>
-> > Date		: 2009-07-16 18:48 (18 days old)
-> > References	: http://marc.info/?l=linux-kernel&m=124777019920579&w=4
-> 
-> Hmm. Worth testing that same fix, although the symptoms here are not 
-> exactly the same.
-> 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13812
-> > Subject		: Ooops on uplug
-> > Submitter	: Daniel Mack <daniel@caiaq.de>
-> > Date		: 2009-07-20 17:51 (14 days old)
-> > References	: http://marc.info/?l=linux-kernel&m=124811234302786&w=4
-> > Handled-By	: Alan Stern <stern@rowland.harvard.edu>
-> > 		  Alan Cox <alan@linux.intel.com>
-> 
-> Commit c56d3000861 should fix this.
-> 
-> > Regressions with patches
-> > ------------------------
-> > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13891
-> > Subject		: PCI resources allocation problem on HP nx6325
-> > Submitter	: Rafael J. Wysocki <rjw@sisk.pl>
-> > Date		: 2009-08-02 13:37 (1 days old)
-> > Handled-By	: Linus Torvalds <torvalds@linux-foundation.org>
-> > Patch		: http://patchwork.kernel.org/patch/38774/
-> 
-> Ok, this is committed as 79896cf42f6a96d7e14f2dc3473443d68d74031d.
-> 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13825
-> > Subject		: eeepc-laptop: fix hot-unplug on resume
-> > Submitter	: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-> > Date		: 2009-06-29 13:12 (35 days old)
-> > References	: http://lkml.org/lkml/2009/6/29/150
-> > Handled-By	: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-> > Patch		: http://patchwork.kernel.org/patch/32926/
-> 
-> commit 7334546a52c6764df120459509b1f803a073eacc
+> So the absolute sector number 3907028974 is within partition 2.
 
-Thanks a lot!
+I was actually trying to make a different point.  Namely that it 
+was curious that the error message complains about sector
+3907028974 which is exactly the size of the array + 19566, or in 
+other words 1 sector past the end of array:
 
-All closed except for http://bugzilla.kernel.org/show_bug.cgi?id=13813.
+/dev/sdb2
+start: 19566
+end: 3907029134
+size: 3907029134 - 19566 + 1 = 3907009568
 
-Best,
-Rafael
+/dev/md0
+start: 0
+end: 3907009407
+size: 3907009407 - 0 + 1 = 3907009408
+
+If dm maps linear to the disk sectors:
+
+dm  /dev/sdb2
+0   19566
+1   19567
+...
+3907009406 3907028972
+3907009407 3907028973
+
+What dm sector would map to physical sector 3907028974?
+
+
+/Allan
+-- 
+Allan Wind
+Life Integrity, LLC
+<http://lifeintegrity.com>
+
