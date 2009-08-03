@@ -1,48 +1,39 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH] ibmvscsi: avoid unnecessary use of kzalloc_pool
-Date: Mon, 03 Aug 2009 16:19:48 -0500
-Message-ID: <4A775474.8000705@linux.vnet.ibm.com>
-References: <1249332888-13440-1-git-send-email-sage@newdream.net> <1249332888-13440-2-git-send-email-sage@newdream.net>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 1/6] RFC: beiscsi : handles core routines
+Date: Mon, 03 Aug 2009 17:18:31 -0500
+Message-ID: <4A776237.6020302@cs.wisc.edu>
+References: <20090728071251.GA13581@serverengines.com> <4A7716E9.9060307@cs.wisc.edu> <20090803204131.GV12579@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753922AbZHCVTv@vger.kernel.org>
-In-Reply-To: <1249332888-13440-2-git-send-email-sage@newdream.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sage Weil <sage@newdream.net>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:45449 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752927AbZHCWSl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 Aug 2009 18:18:41 -0400
+In-Reply-To: <20090803204131.GV12579@kernel.dk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Jayamohan Kalickal <jayamohank@serverengines.com>, linux-scsi@vger.kernel.org
 
-Acked-by: Brian King <brking@linux.vnet.ibm.com>
+Jens Axboe wrote:
+> On Mon, Aug 03 2009, Mike Christie wrote:
+>> Hey Jens,
+>>
+>> Is your block napi code going to go upstream soon? Does it need more  
+>> testing or users?
+>>
+>> This driver is just using a normal old work queue for the completion  
+>> path, so I wanted to see about having Jay convert it to your code.
+> 
+> I plan to include the core bits for 2.6.32, so should be heading to
+> mainline soon(ish) :-)
+> 
 
-Sage Weil wrote:
-> The allocated struct is manually zeroed after allocation, so avoid using
-> the (broken) kzalloc mempool (which does not re-zero previously used items
-> when they are returned to the pool).
-> 
-> CC: linux-scsi@vger.kernel.org
-> CC: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Signed-off-by: Sage Weil <sage@newdream.net>
-> ---
->  drivers/scsi/ibmvscsi/ibmvfc.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-> index 166d964..bb2c696 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-> @@ -4217,7 +4217,7 @@ static int ibmvfc_alloc_mem(struct ibmvfc_host *vhost)
->  	if (!vhost->trace)
->  		goto free_disc_buffer;
-> 
-> -	vhost->tgt_pool = mempool_create_kzalloc_pool(IBMVFC_TGT_MEMPOOL_SZ,
-> +	vhost->tgt_pool = mempool_create_kmalloc_pool(IBMVFC_TGT_MEMPOOL_SZ,
->  						      sizeof(struct ibmvfc_target));
-> 
->  	if (!vhost->tgt_pool) {
+Thanks.
 
-
--- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
+Jay, please look at Jens's block tree
+http://git.kernel.org/?p=linux/kernel/git/axboe/linux-2.6-block.git;a=summary
+In that tree there is a blk-iopoll branch that you will want to use to 
+convert your completion handling to.
