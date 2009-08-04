@@ -1,65 +1,62 @@
-From: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
-Subject: Re: [PATCH 10/12] qla2xxx: Fix a bug that clears the interrupt status register for the base queue
-Date: Tue, 4 Aug 2009 15:12:47 -0700
-Message-ID: <D45F4542-D099-4B13-9A16-040F0C37ABA3@qlogic.com>
-References: <1249078174-1957-1-git-send-email-giridhar.malavali@qlogic.com> <1249078174-1957-11-git-send-email-giridhar.malavali@qlogic.com> <1249419733.3939.47.camel@mulgrave.site>
-Mime-Version: 1.0 (Apple Message framework v935.3)
-Content-Type: text/plain; charset="US-ASCII"; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
+From: David VomLehn <dvomlehn@cisco.com>
+Subject: [PATCH 0/7] initdev:kernel:Introduction to initdev synchronization
+	patchset
+Date: Tue, 4 Aug 2009 15:14:59 -0700
+Message-ID: <20090804221459.GA9085@cuplxvomd02.corp.sa.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:32920 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754885AbZHDWMq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Aug 2009 18:12:46 -0400
-In-Reply-To: <1249419733.3939.47.camel@mulgrave.site>
+Received: from sj-iport-1.cisco.com ([171.71.176.70]:61134 "EHLO
+	sj-iport-1.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755237AbZHDWO6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Aug 2009 18:14:58 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: akpm@linux-foundation.org, linux-usb@vger.kernel.org, greg@kroah.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, arjan@infradead.org
 
+The kernel command line parameters "ip", "root", and "console" take devices
+as arguments. These are termed "init devices" since devices specified by
+these parameters are used during kernel initialization. Some init devices
+take a long time to be discovered and made ready for use, USB devices being
+a prime example. This patch provides two, related, functionalities:
 
-On Aug 4, 2009, at 2:02 PM, James Bottomley wrote:
+o	Wait for device setup. Provides synchronization between use of
+	init devices and their setup so that attempts to use them can be
+	delayed until the devices are ready.
+o	Prompt device wait termination. Terminates waits for device
+	discovery as soon as it is know that no more devices remain to be
+	discovered. For example, consider an embedded device that may or
+	may not have a USB console. As soon as all USB devices have been
+	discovered, there is no more need to wait for a console that isn't
+	attached, and a headless system boot can continue.
 
-> On Fri, 2009-07-31 at 15:09 -0700, giridhar.malavali@qlogic.com wrote:
->> From: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
->>
->> The interrupt handler clears the interrupt status register for  
->> response updates in the
->> base queue while working in the multique mode. This could lead to  
->> missing interrupt for
->> async events, mail box completions etc. as these are also handled  
->> in the base queue.
->> The fix ensures that the interrupt bit is not cleared for response  
->> updates in the ISR
->> when the driver is working in multiqueue mode.
->>
->> Signed-off-by: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
->> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
->> ---
->> drivers/scsi/qla2xxx/qla_isr.c |    3 ++-
->> 1 files changed, 2 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/ 
->> qla_isr.c
->> index 40014f3..175b20b 100644
->> --- a/drivers/scsi/qla2xxx/qla_isr.c
->> +++ b/drivers/scsi/qla2xxx/qla_isr.c
->> @@ -1769,7 +1769,8 @@ qla24xx_msix_rsp_q(int irq, void *dev_id)
->>
->> 	vha = qla25xx_get_host(rsp);
->> 	qla24xx_process_response_queue(vha, rsp);
->> -	WRT_REG_DWORD(&reg->hccr, HCCRX_CLR_RISC_INT);
->> +	if (!ha->mqenable)
->> +		WRT_REG_DWORD(&reg->hccr, HCCRX_CLR_RISC_INT);
->>
->> 	spin_unlock_irq(&ha->hardware_lock);
->
-> Assuming this is the only thing that clears the interrupt line, isn't
-> this asking for a re-interrupt in a posted write scenario?  Don't you
-> want to do a read to flush the posted write before enabling  
-> interrupts?
->
-I will add a read to flush the posted write and resend the patch.
-Thanks,
-Anirban
+This patch supports device discovery on USB and SCSI buses but provides a
+framework for other bus types. Where possible, specific device types can
+be specified so that, for example, waiting on a console does not prevent
+mounting a root filesystem.
+
+A secondary consequence of this patch is that the only remaining use of the
+rootwait kernel parameter is to wait for a root device that is not plugged
+in at boot.
+
+This introduction is followed by 7 small-ish patches. It would be possible
+to combine these but this patch touches the console, networking, and block
+device areas and it is hoped that splitting the changes into smaller,
+targeted chunks will make it easier for people in those areas to review it.
+1	Basic initdev infrastructure
+2	USB device discovery notification
+3	Wait for console
+4	Wait for network devices
+5	USB and SCSI block device notification
+6	Additional SCSI block device notification for asynchronous function
+7	Wait for block device used for root
+
+(Many thanks to Alan Stern, who said we could solve this without offensive
+timeouts and then set about doing the integration into core USB and SCSI
+code)
+
+Signed-off-by: David VomLehn <dvomlehn@cisco.com>
+---
 
