@@ -1,46 +1,57 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: FCP target reset
-Date: Tue, 04 Aug 2009 11:20:25 -0500
-Message-ID: <1249402825.3939.7.camel@mulgrave.site>
-References: <20090803162302.GA9872@schmichrtp.de.ibm.com>
-	 <4A774AC8.8080805@emulex.com> <4A7847E4.8090304@interlog.com>
-	 <4A785BED.7070608@emulex.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: John Stoffel <john@stoffel.org>
+Subject: [PATCH] Make SCSI SG v4 driver enabled by default and remove EXPERIMENTAL dependency, since udev depends on BSG.
+Date: Tue,  4 Aug 2009 12:36:39 -0400
+Message-ID: <1249403799-1725-1-git-send-email-john@stoffel.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43176 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932770AbZHDQU2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Aug 2009 12:20:28 -0400
-In-Reply-To: <4A785BED.7070608@emulex.com>
+Received: from Mycroft.westnet.com ([216.187.52.7]:33068 "EHLO
+	mycroft.westnet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932990AbZHDQgy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Aug 2009 12:36:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: "dgilbert@interlog.com" <dgilbert@interlog.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: axboe@kernel.dk
+Cc: jens.axboe@oracle.com, John Stoffel <john@stoffel.org>, linux-scsi@vger.kernel.org
 
-On Tue, 2009-08-04 at 12:03 -0400, James Smart wrote:
-> 
-> Douglas Gilbert wrote:
-> > It looks like "target reset" is being phased out of SCSI
-> > terminology and being partially replaced by "hard reset".
-> 
-> Well, there's still an "I_T Nexus Reset" within the TMF area, which FCP-4 
-> provides no mapping for, but does define how to create a I_T Nexus loss event.
-> 
-> Headache is there's history... SPI BDRs did full target resets and killed i/o 
-> for all initiators. Target Reset and FCP-2 gave same kind of semantic. FCP-3 
-> and later tried to make initiators better citizens and isolate reset semantics 
-> if possible. Unfortunately, there's lots of users that equate FC to SCSI, SCSI 
-> to SPI, and assume SPI-like semantics. So changing things just to be 
-> standard-compliant always seems to upset someone (and it's usually the most 
-> critical someone).
+Make Block Layer SG support v4 the default, since recent udev versions 
+depend on this to access serial numbers and other low level info properly.
 
-The headache with dropping TDR is going to be SCSI-2 reservations.  They
-need some type of reset to trigger release.  LUN reset will do it, but
-it's a new addition and we don't currently have a SG_SCSI_RESET_XXX
-allocated to it so there's no way userland can request it at the moment.
+This should be backported to older kernels as well, since most distros have
+enabled this for a long time.
 
-James
+Signed-off-by: John Stoffel <john@stoffel.org>
+---
+ block/Kconfig |   11 +++++++----
+ 1 files changed, 7 insertions(+), 4 deletions(-)
 
+diff --git a/block/Kconfig b/block/Kconfig
+index e7d1278..55bbefc 100644
+--- a/block/Kconfig
++++ b/block/Kconfig
+@@ -45,9 +45,9 @@ config LBD
+ 	  If unsure, say N.
+ 
+ config BLK_DEV_BSG
+-	bool "Block layer SG support v4 (EXPERIMENTAL)"
+-	depends on EXPERIMENTAL
+-	---help---
++	bool "Block layer SG support v4"
++	default y
++	help
+ 	  Saying Y here will enable generic SG (SCSI generic) v4 support
+ 	  for any block device.
+ 
+@@ -57,7 +57,10 @@ config BLK_DEV_BSG
+ 	  protocols (e.g. Task Management Functions and SMP in Serial
+ 	  Attached SCSI).
+ 
+-	  If unsure, say N.
++	  This option is required by recent UDEV versions to properly 
++	  access device serial numbers, etc.
++
++	  If unsure, say Y.
+ 
+ config BLK_DEV_INTEGRITY
+ 	bool "Block layer data integrity support"
+-- 
+1.6.3.3
 
