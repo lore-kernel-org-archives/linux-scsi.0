@@ -1,76 +1,34 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] lpfc: Read buffer overflow
-Date: Tue, 04 Aug 2009 00:31:18 +0000
-Message-ID: <1249345878.3943.240.camel@mulgrave.site>
-References: <4A754999.90208@gmail.com> <4A76FC0D.7080005@emulex.com>
-	 <20090803164223.6aa6555b.akpm@linux-foundation.org>
+From: Madhukar G <madhukar.linux@gmail.com>
+Subject: Re: Re: Understanding SAS
+Date: Tue, 4 Aug 2009 11:58:02 +0530
+Message-ID: <e79524560908032328s4b71ff6fn30c66ebcdf60f4a6@mail.gmail.com>
+References: <e79524560907310456x7b2cf0c0h7e0453ceb55982fd@mail.gmail.com>
+	 <1249050405.3922.11.camel@mulgrave.site>
+	 <200908010930500463303@usish.com>
+	 <e79524560907312238u53517348sf9b6b118b9066eb2@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:36042 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754757AbZHDAbX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2009 20:31:23 -0400
-In-Reply-To: <20090803164223.6aa6555b.akpm@linux-foundation.org>
+Received: from mail-gx0-f213.google.com ([209.85.217.213]:35492 "EHLO
+	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932428AbZHDG2E (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Aug 2009 02:28:04 -0400
+Received: by gxk9 with SMTP id 9so6556953gxk.13
+        for <linux-scsi@vger.kernel.org>; Mon, 03 Aug 2009 23:28:03 -0700 (PDT)
+In-Reply-To: <e79524560907312238u53517348sf9b6b118b9066eb2@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: James Smart <James.Smart@Emulex.Com>, roel.kluin@gmail.com, linux-scsi@vger.kernel.org
+To: Wang Jinpu <jack_wang@usish.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 2009-08-03 at 16:42 -0700, Andrew Morton wrote:
-> On Mon, 3 Aug 2009 11:02:37 -0400
-> James Smart <James.Smart@Emulex.Com> wrote:
-> 
-> > Roel Kluin wrote:
-> > > Check whether index is within bounds before testing the element.
-> > >
-> > > Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-> > > ---
-> > > diff --git a/drivers/scsi/lpfc/lpfc_vport.c b/drivers/scsi/lpfc/lpfc_vport.c
-> > > index e0b4992..ade2df6 100644
-> > > --- a/drivers/scsi/lpfc/lpfc_vport.c
-> > > +++ b/drivers/scsi/lpfc/lpfc_vport.c
-> > > @@ -762,7 +762,7 @@ lpfc_destroy_vport_work_array(struct lpfc_hba *phba, struct lpfc_vport **vports)
-> > >  	int i;
-> > >  	if (vports == NULL)
-> > >  		return;
-> > > -	for (i = 0; vports[i] != NULL && i <= phba->max_vports; i++)
-> > > +	for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++)
-> > >  		scsi_host_put(lpfc_shost_from_vport(vports[i]));
-> > >  	kfree(vports);
-> > >  }
-> >
-> > NACK -  the vports array is created such that it is sized for 
-> > phba->max_vports + 1.
-> 
-> (top-posting repaired so that I can feasibly reply to the email, dammit)
-> 
-> There's no need to allocate the extra slot in the vports array if we're
-> also retaining its size.  I'd suggest that we merge Roel's patch and
-> then reduce the size of vports[].
+> Thank you for the reply. Is there any way i can test this sequence. I
+> would like to explicitly set SAS_TASK_STATE_ABORTED and further
+> invoking error handlers.
+>
 
-I'd suggest not:
+Does this mean that i do not require any application to invoke error
+handlers (task frames / task IU).
 
-jejb@mulgrave:~/git/linux-2.6/drivers/scsi/lpfc> git grep 'max_vports && vports'|wc -l
-17
-
-Assuming this secures agreement as a patch, I don't really want to wade
-through another 16 patches for the remaining ones.  You definitely can't
-reduce the vport array length until they're all fixed.
-
-What I hear is that it's not a problem, but it's a possible
-micro-optimisation.  Assuming the maintainer agrees, it's far better
-just to fix everything at once.  However, I'm equally happy to leave it
-as is since there's no actual problem given the allocation definition.
-
-> What prevents the loop in lpfc_create_vport_work_array() from wandering
-> off the end of vports[], btw?
-
-We refuse to create any vports beyond this number ... the iterator
-counts the number of created vports (it's actually a firmware limited
-number, I believe).
-
-James
-
-
+Thanks.
+madhukar
