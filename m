@@ -1,57 +1,33 @@
-From: John Stoffel <john@stoffel.org>
-Subject: [PATCH] Make SCSI SG v4 driver enabled by default and remove EXPERIMENTAL dependency, since udev depends on BSG.
-Date: Tue,  4 Aug 2009 12:36:39 -0400
-Message-ID: <1249403799-1725-1-git-send-email-john@stoffel.org>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: SCSI git trees
+Date: Tue, 4 Aug 2009 12:37:25 -0400
+Message-ID: <19064.25541.671065.230388@stoffel.org>
+References: <1248887256.3900.78.camel@mulgrave.site>
+	<19063.9181.620137.814464@stoffel.org>
+	<1249325826.3943.207.camel@mulgrave.site>
+	<19063.14027.208148.82667@stoffel.org>
+	<20090803202731.GR12579@kernel.dk>
+	<19063.20434.94571.192897@stoffel.org>
+	<20090803210426.GY12579@kernel.dk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from Mycroft.westnet.com ([216.187.52.7]:33068 "EHLO
+Received: from Mycroft.westnet.com ([216.187.52.7]:33080 "EHLO
 	mycroft.westnet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932990AbZHDQgy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Aug 2009 12:36:54 -0400
+	with ESMTP id S932972AbZHDQha (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Aug 2009 12:37:30 -0400
+In-Reply-To: <20090803210426.GY12579@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: axboe@kernel.dk
-Cc: jens.axboe@oracle.com, John Stoffel <john@stoffel.org>, linux-scsi@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: John Stoffel <john@stoffel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Make Block Layer SG support v4 the default, since recent udev versions 
-depend on this to access serial numbers and other low level info properly.
 
-This should be backported to older kernels as well, since most distros have
-enabled this for a long time.
+Hi Jens,
 
-Signed-off-by: John Stoffel <john@stoffel.org>
----
- block/Kconfig |   11 +++++++----
- 1 files changed, 7 insertions(+), 4 deletions(-)
+I've just sent you a copy of the patch, to both axboe@kernel.dk and
+this address.  Let me know if you want me to re-spin it or not.
 
-diff --git a/block/Kconfig b/block/Kconfig
-index e7d1278..55bbefc 100644
---- a/block/Kconfig
-+++ b/block/Kconfig
-@@ -45,9 +45,9 @@ config LBD
- 	  If unsure, say N.
- 
- config BLK_DEV_BSG
--	bool "Block layer SG support v4 (EXPERIMENTAL)"
--	depends on EXPERIMENTAL
--	---help---
-+	bool "Block layer SG support v4"
-+	default y
-+	help
- 	  Saying Y here will enable generic SG (SCSI generic) v4 support
- 	  for any block device.
- 
-@@ -57,7 +57,10 @@ config BLK_DEV_BSG
- 	  protocols (e.g. Task Management Functions and SMP in Serial
- 	  Attached SCSI).
- 
--	  If unsure, say N.
-+	  This option is required by recent UDEV versions to properly 
-+	  access device serial numbers, etc.
-+
-+	  If unsure, say Y.
- 
- config BLK_DEV_INTEGRITY
- 	bool "Block layer data integrity support"
--- 
-1.6.3.3
-
+Thanks!
+John
