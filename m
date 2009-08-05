@@ -1,14 +1,14 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 3/11] mpt2sas: [Resend] Return immediately if host is under recovery
-Date: Wed, 5 Aug 2009 11:41:06 +0530
-Message-ID: <20090805061106.GD13733@lsi.com>
+Subject: [PATCH 4/11] mpt2sas: [Resend] Code cleanup for _scsih_link_change function
+Date: Wed, 5 Aug 2009 11:42:08 +0530
+Message-ID: <20090805061208.GE13733@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og109.obsmtp.com ([64.18.2.171]:51058 "EHLO
-	exprod7og109.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755327AbZHEGcK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Aug 2009 02:32:10 -0400
+Received: from exprod7og116.obsmtp.com ([64.18.2.219]:46899 "EHLO
+	exprod7og116.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755362AbZHEGdI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Aug 2009 02:33:08 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,319 +16,131 @@ To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
 
-1 removed ioc->ioc_reset_in_progress flag, replaced with ioc->shost_recovery.
-2. return SCSI_MLQUEUE_DEVICE_BUSY from _qcmd when sas_target_priv_data->tm_busy is set
+Function name changed.
+_scsih_link_change is now mpt2sas_transport_update_links.
+Added check for shost->recovery before processing.
+
 ---
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 Signed-off-by: Eric Moore <Eric.moore@lsi.com>
 ---
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 458ce80..1525a0a 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -94,7 +94,7 @@ _base_fault_reset_work(struct work_struct *work)
- 	int rc;
- 
- 	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
--	if (ioc->ioc_reset_in_progress)
-+	if (ioc->shost_recovery)
- 		goto rearm_timer;
- 	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
- 
-@@ -3465,20 +3465,13 @@ mpt2sas_base_hard_reset_handler(struct MPT2SAS_ADAPTER *ioc, int sleep_flag,
- 	    __func__));
- 
- 	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
--	if (ioc->ioc_reset_in_progress) {
-+	if (ioc->shost_recovery) {
- 		spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
- 		printk(MPT2SAS_ERR_FMT "%s: busy\n",
- 		    ioc->name, __func__);
- 		return -EBUSY;
- 	}
--	ioc->ioc_reset_in_progress = 1;
- 	ioc->shost_recovery = 1;
--	if (ioc->shost->shost_state == SHOST_RUNNING) {
--		/* set back to SHOST_RUNNING in mpt2sas_scsih.c */
--		scsi_host_set_state(ioc->shost, SHOST_RECOVERY);
--		printk(MPT2SAS_INFO_FMT "putting controller into "
--		    "SHOST_RECOVERY\n", ioc->name);
--	}
- 	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
- 
- 	_base_reset_handler(ioc, MPT2_IOC_PRE_RESET);
-@@ -3498,7 +3491,7 @@ mpt2sas_base_hard_reset_handler(struct MPT2SAS_ADAPTER *ioc, int sleep_flag,
- 	    ioc->name, __func__, ((r == 0) ? "SUCCESS" : "FAILED")));
- 
- 	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
--	ioc->ioc_reset_in_progress = 0;
-+	ioc->shost_recovery = 0;
- 	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
- 
- 	if (!r)
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index f6d3cfa..1e8792f 100644
+index 1e8792f..51962bd 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_base.h
 +++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -432,7 +432,7 @@ typedef void (*MPT_ADD_SGE)(void *paddr, u32 flags_length, dma_addr_t dma_addr);
-  * @fw_event_list: list of fw events
-  * @aen_event_read_flag: event log was read
-  * @broadcast_aen_busy: broadcast aen waiting to be serviced
-- * @ioc_reset_in_progress: host reset in progress
-+ * @shost_recovery: host reset in progress
-  * @ioc_reset_in_progress_lock:
-  * @ioc_link_reset_in_progress: phy/hard reset in progress
-  * @ignore_loginfos: ignore loginfos during task managment
-@@ -545,7 +545,6 @@ struct MPT2SAS_ADAPTER {
- 	 /* misc flags */
- 	int		aen_event_read_flag;
- 	u8		broadcast_aen_busy;
--	u8		ioc_reset_in_progress;
- 	u8		shost_recovery;
- 	spinlock_t 	ioc_reset_in_progress_lock;
- 	u8		ioc_link_reset_in_progress;
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-index 14e473d..c2a5101 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-@@ -1963,7 +1963,6 @@ _ctl_ioctl_main(struct file *file, unsigned int cmd, void __user *arg)
- {
- 	enum block_state state;
- 	long ret = -EINVAL;
--	unsigned long flags;
- 
- 	state = (file->f_flags & O_NONBLOCK) ? NON_BLOCKING :
- 	    BLOCKING;
-@@ -1989,13 +1988,8 @@ _ctl_ioctl_main(struct file *file, unsigned int cmd, void __user *arg)
- 		    !ioc)
- 			return -ENODEV;
- 
--		spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
--		if (ioc->shost_recovery) {
--			spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock,
--			    flags);
-+		if (ioc->shost_recovery)
- 			return -EAGAIN;
--		}
--		spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
- 
- 		if (_IOC_SIZE(cmd) == sizeof(struct mpt2_ioctl_command)) {
- 			uarg = arg;
-@@ -2098,7 +2092,6 @@ _ctl_compat_mpt_command(struct file *file, unsigned cmd, unsigned long arg)
- 	struct mpt2_ioctl_command karg;
- 	struct MPT2SAS_ADAPTER *ioc;
- 	enum block_state state;
--	unsigned long flags;
- 
- 	if (_IOC_SIZE(cmd) != sizeof(struct mpt2_ioctl_command32))
- 		return -EINVAL;
-@@ -2113,13 +2106,8 @@ _ctl_compat_mpt_command(struct file *file, unsigned cmd, unsigned long arg)
- 	if (_ctl_verify_adapter(karg32.hdr.ioc_number, &ioc) == -1 || !ioc)
- 		return -ENODEV;
- 
--	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
--	if (ioc->shost_recovery) {
--		spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock,
--		    flags);
-+	if (ioc->shost_recovery)
- 		return -EAGAIN;
--	}
--	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
- 
- 	memset(&karg, 0, sizeof(struct mpt2_ioctl_command));
- 	karg.hdr.ioc_number = karg32.hdr.ioc_number;
+@@ -796,7 +796,7 @@ int mpt2sas_transport_add_host_phy(struct MPT2SAS_ADAPTER *ioc, struct _sas_phy
+     *mpt2sas_phy, Mpi2SasPhyPage0_t phy_pg0, struct device *parent_dev);
+ int mpt2sas_transport_add_expander_phy(struct MPT2SAS_ADAPTER *ioc, struct _sas_phy
+     *mpt2sas_phy, Mpi2ExpanderPage1_t expander_pg1, struct device *parent_dev);
+-void mpt2sas_transport_update_phy_link_change(struct MPT2SAS_ADAPTER *ioc, u16 handle,
++void mpt2sas_transport_update_links(struct MPT2SAS_ADAPTER *ioc, u16 handle,
+    u16 attached_handle, u8 phy_number, u8 link_rate);
+ extern struct sas_function_template mpt2sas_transport_functions;
+ extern struct scsi_transport_template *mpt2sas_transport_template;
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index ef35b8a..245b7a6 100644
+index 245b7a6..19d44c0 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -1785,17 +1785,18 @@ mpt2sas_scsih_issue_tm(struct MPT2SAS_ADAPTER *ioc, u16 handle, uint lun,
- 	u32 ioc_state;
- 	unsigned long timeleft;
- 	u8 VF_ID = 0;
--	unsigned long flags;
+@@ -3120,25 +3120,6 @@ _scsih_io_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 VF_ID, u32 reply)
+ }
  
--	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
--	if (ioc->tm_cmds.status != MPT2_CMD_NOT_USED ||
--	    ioc->shost_recovery) {
--		spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
-+	if (ioc->tm_cmds.status != MPT2_CMD_NOT_USED) {
-+		printk(MPT2SAS_INFO_FMT "%s: tm_cmd busy!!!\n",
-+		    __func__, ioc->name);
-+		return;
-+	}
-+
-+	if (ioc->shost_recovery) {
- 		printk(MPT2SAS_INFO_FMT "%s: host reset in progress!\n",
- 		    __func__, ioc->name);
- 		return;
- 	}
--	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
- 
- 	ioc_state = mpt2sas_base_get_iocstate(ioc, 0);
- 	if (ioc_state & MPI2_DOORBELL_USED) {
-@@ -2553,7 +2554,6 @@ _scsih_qcmd(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
- 	Mpi2SCSIIORequest_t *mpi_request;
- 	u32 mpi_control;
- 	u16 smid;
--	unsigned long flags;
- 
- 	scmd->scsi_done = done;
- 	sas_device_priv_data = scmd->device->hostdata;
-@@ -2572,13 +2572,10 @@ _scsih_qcmd(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
- 	}
- 
- 	/* see if we are busy with task managment stuff */
--	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
--	if (sas_target_priv_data->tm_busy ||
--	    ioc->shost_recovery || ioc->ioc_link_reset_in_progress) {
--		spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
-+	if (sas_target_priv_data->tm_busy)
-+		return SCSI_MLQUEUE_DEVICE_BUSY;
-+	else if (ioc->shost_recovery || ioc->ioc_link_reset_in_progress)
- 		return SCSI_MLQUEUE_HOST_BUSY;
--	}
--	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
- 
- 	if (scmd->sc_data_direction == DMA_FROM_DEVICE)
- 		mpi_control = MPI2_SCSIIO_CONTROL_READ;
-@@ -3497,6 +3494,9 @@ _scsih_expander_remove(struct MPT2SAS_ADAPTER *ioc, u16 handle)
- 	struct _sas_node *sas_expander;
- 	unsigned long flags;
- 
-+	if (ioc->shost_recovery)
-+		return;
-+
- 	spin_lock_irqsave(&ioc->sas_node_lock, flags);
- 	sas_expander = mpt2sas_scsih_expander_find_by_handle(ioc, handle);
- 	spin_unlock_irqrestore(&ioc->sas_node_lock, flags);
-@@ -3668,6 +3668,8 @@ _scsih_remove_device(struct MPT2SAS_ADAPTER *ioc, u16 handle)
- 		mutex_unlock(&ioc->tm_cmds.mutex);
- 		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "issue target reset "
- 		    "done: handle(0x%04x)\n", ioc->name, device_handle));
-+		if (ioc->shost_recovery)
-+			goto out;
- 	}
- 
- 	/* SAS_IO_UNIT_CNTR - send REMOVE_DEVICE */
-@@ -3833,6 +3835,8 @@ _scsih_sas_topology_change_event(struct MPT2SAS_ADAPTER *ioc, u8 VF_ID,
- 			    "expander event\n", ioc->name));
- 			return;
- 		}
-+		if (ioc->shost_recovery)
-+			return;
- 		if (event_data->PHY[i].PhyStatus &
- 		    MPI2_EVENT_SAS_TOPO_PHYSTATUS_VACANT)
- 			continue;
-@@ -5166,13 +5170,10 @@ _firmware_event_work(struct work_struct *work)
- 	}
- 	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
- 
--	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
- 	if (ioc->shost_recovery) {
--		spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
- 		_scsih_fw_event_requeue(ioc, fw_event, 1000);
- 		return;
- 	}
--	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
- 
- 	switch (fw_event->event) {
- 	case MPI2_EVENT_SAS_TOPOLOGY_CHANGE_LIST:
-@@ -5374,6 +5375,8 @@ _scsih_expander_node_remove(struct MPT2SAS_ADAPTER *ioc,
- 			if (!sas_device)
- 				continue;
- 			_scsih_remove_device(ioc, sas_device->handle);
-+			if (ioc->shost_recovery)
-+				return;
- 			goto retry_device_search;
- 		}
- 	}
-@@ -5395,6 +5398,8 @@ _scsih_expander_node_remove(struct MPT2SAS_ADAPTER *ioc,
- 			if (!expander_sibling)
- 				continue;
- 			_scsih_expander_remove(ioc, expander_sibling->handle);
-+			if (ioc->shost_recovery)
-+				return;
- 			goto retry_expander_search;
- 		}
- 	}
+ /**
+- * _scsih_link_change - process phy link changes
+- * @ioc: per adapter object
+- * @handle: phy handle
+- * @attached_handle: valid for devices attached to link
+- * @phy_number: phy number
+- * @link_rate: new link rate
+- * Context: user.
+- *
+- * Return nothing.
+- */
+-static void
+-_scsih_link_change(struct MPT2SAS_ADAPTER *ioc, u16 handle, u16 attached_handle,
+-   u8 phy_number, u8 link_rate)
+-{
+-	mpt2sas_transport_update_phy_link_change(ioc, handle, attached_handle,
+-	    phy_number, link_rate);
+-}
+-
+-/**
+  * _scsih_sas_host_refresh - refreshing sas host object contents
+  * @ioc: per adapter object
+  * @update: update link information
+@@ -3182,7 +3163,8 @@ _scsih_sas_host_refresh(struct MPT2SAS_ADAPTER *ioc, u8 update)
+ 			    le16_to_cpu(sas_iounit_pg0->PhyData[i].
+ 				ControllerDevHandle);
+ 			if (update)
+-				_scsih_link_change(ioc,
++				mpt2sas_transport_update_links(
++				    ioc,
+ 				    ioc->sas_hba.phy[i].handle,
+ 				    le16_to_cpu(sas_iounit_pg0->PhyData[i].
+ 				    AttachedDevHandle), i,
+@@ -3852,9 +3834,10 @@ _scsih_sas_topology_change_event(struct MPT2SAS_ADAPTER *ioc, u8 VF_ID,
+ 		case MPI2_EVENT_SAS_TOPO_RC_TARG_ADDED:
+ 			if (!parent_handle) {
+ 				if (phy_number < ioc->sas_hba.num_phys)
+-					_scsih_link_change(ioc,
+-					   ioc->sas_hba.phy[phy_number].handle,
+-					   handle, phy_number, link_rate_);
++					mpt2sas_transport_update_links(
++					ioc,
++					ioc->sas_hba.phy[phy_number].handle,
++					handle, phy_number, link_rate_);
+ 			} else {
+ 				spin_lock_irqsave(&ioc->sas_node_lock, flags);
+ 				sas_expander =
+@@ -3864,11 +3847,12 @@ _scsih_sas_topology_change_event(struct MPT2SAS_ADAPTER *ioc, u8 VF_ID,
+ 				    flags);
+ 				if (sas_expander) {
+ 					if (phy_number < sas_expander->num_phys)
+-						_scsih_link_change(ioc,
+-						   sas_expander->
+-						   phy[phy_number].handle,
+-						   handle, phy_number,
+-						   link_rate_);
++						mpt2sas_transport_update_links(
++						ioc,
++						sas_expander->
++						phy[phy_number].handle,
++						handle, phy_number,
++						link_rate_);
+ 				}
+ 			}
+ 			if (reason_code == MPI2_EVENT_SAS_TOPO_RC_PHY_CHANGED) {
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_transport.c b/drivers/scsi/mpt2sas/mpt2sas_transport.c
-index 686695b..7507c17 100644
+index 7507c17..5e562fc 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_transport.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_transport.c
-@@ -140,11 +140,18 @@ _transport_set_identify(struct MPT2SAS_ADAPTER *ioc, u16 handle,
- 	u32 device_info;
- 	u32 ioc_status;
+@@ -792,7 +792,7 @@ mpt2sas_transport_add_expander_phy(struct MPT2SAS_ADAPTER *ioc, struct _sas_phy
+ }
+ 
+ /**
+- * mpt2sas_transport_update_phy_link_change - refreshing phy link changes and attached devices
++ * mpt2sas_transport_update_links - refreshing phy link changes
+  * @ioc: per adapter object
+  * @handle: handle to sas_host or expander
+  * @attached_handle: attached device handle
+@@ -802,13 +802,19 @@ mpt2sas_transport_add_expander_phy(struct MPT2SAS_ADAPTER *ioc, struct _sas_phy
+  * Returns nothing.
+  */
+ void
+-mpt2sas_transport_update_phy_link_change(struct MPT2SAS_ADAPTER *ioc,
++mpt2sas_transport_update_links(struct MPT2SAS_ADAPTER *ioc,
+     u16 handle, u16 attached_handle, u8 phy_number, u8 link_rate)
+ {
+ 	unsigned long flags;
+ 	struct _sas_node *sas_node;
+ 	struct _sas_phy *mpt2sas_phy;
  
 +	if (ioc->shost_recovery) {
 +		printk(MPT2SAS_INFO_FMT "%s: host reset in progress!\n",
 +		    __func__, ioc->name);
-+		return -EFAULT;
++		return;
 +	}
 +
- 	if ((mpt2sas_config_get_sas_device_pg0(ioc, &mpi_reply, &sas_device_pg0,
- 	    MPI2_SAS_DEVICE_PGAD_FORM_HANDLE, handle))) {
- 		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
-+
- 		    ioc->name, __FILE__, __LINE__, __func__);
--		return -1;
-+		return -ENXIO;
- 	}
- 
- 	ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
-@@ -153,7 +160,7 @@ _transport_set_identify(struct MPT2SAS_ADAPTER *ioc, u16 handle,
- 		printk(MPT2SAS_ERR_FMT "handle(0x%04x), ioc_status(0x%04x)"
- 		    "\nfailure at %s:%d/%s()!\n", ioc->name, handle, ioc_status,
- 		     __FILE__, __LINE__, __func__);
--		return -1;
-+		return -EIO;
- 	}
- 
- 	memset(identify, 0, sizeof(identify));
-@@ -288,21 +295,17 @@ _transport_expander_report_manufacture(struct MPT2SAS_ADAPTER *ioc,
- 	void *psge;
- 	u32 sgl_flags;
- 	u8 issue_reset = 0;
--	unsigned long flags;
- 	void *data_out = NULL;
- 	dma_addr_t data_out_dma;
- 	u32 sz;
- 	u64 *sas_address_le;
- 	u16 wait_state_count;
- 
--	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
--	if (ioc->ioc_reset_in_progress) {
--		spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
-+	if (ioc->shost_recovery) {
- 		printk(MPT2SAS_INFO_FMT "%s: host reset in progress!\n",
- 		    __func__, ioc->name);
- 		return -EFAULT;
- 	}
--	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
- 
- 	mutex_lock(&ioc->transport_cmds.mutex);
- 
-@@ -1025,7 +1028,6 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 	void *psge;
- 	u32 sgl_flags;
- 	u8 issue_reset = 0;
--	unsigned long flags;
- 	dma_addr_t dma_addr_in = 0;
- 	dma_addr_t dma_addr_out = 0;
- 	u16 wait_state_count;
-@@ -1045,14 +1047,11 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 		return -EINVAL;
- 	}
- 
--	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
--	if (ioc->ioc_reset_in_progress) {
--		spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
-+	if (ioc->shost_recovery) {
- 		printk(MPT2SAS_INFO_FMT "%s: host reset in progress!\n",
- 		    __func__, ioc->name);
- 		return -EFAULT;
- 	}
--	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
- 
- 	rc = mutex_lock_interruptible(&ioc->transport_cmds.mutex);
- 	if (rc)
+ 	spin_lock_irqsave(&ioc->sas_node_lock, flags);
+ 	sas_node = _transport_sas_node_find_by_handle(ioc, handle);
+ 	spin_unlock_irqrestore(&ioc->sas_node_lock, flags);
