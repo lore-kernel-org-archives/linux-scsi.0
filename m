@@ -1,49 +1,43 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: BUG in dma-mapping.h:218 // MESH SCSI driver not working
-Date: Wed, 05 Aug 2009 11:11:50 +1000
-Message-ID: <1249434710.18245.48.camel@pasglop>
-References: <1248915149.1509.29.camel@pasglop> <4A7553E7.6030804@scarlet.be>
-	<1249254817.18245.1.camel@pasglop>
-	<20090805100424U.fujita.tomonori@lab.ntt.co.jp>
+From: "Kashyap, Desai" <kashyap.desai@lsi.com>
+Subject: [PATCH 0/11] mpt2sas: Discription patch
+Date: Wed, 5 Aug 2009 11:01:07 +0530
+Message-ID: <20090805053107.GA13733@lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <20090805100424U.fujita.tomonori@lab.ntt.co.jp>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@HansenPartnership.com, linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org, stef.simoens@scarlet.be
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exprod7og108.obsmtp.com ([64.18.2.169]:42160 "EHLO
+	exprod7og108.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932902AbZHEFwW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Aug 2009 01:52:22 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-On Wed, 2009-08-05 at 10:04 +0900, FUJITA Tomonori wrote:
-> 
-> Looks like that READ CAPACITY fails. We use kmalloc'ed buffer for READ
-> CAPACITY so I'm not sure about an alignment issue that you mentioned
-> in this thread earlier.
-> 
-> You said your machine with a MESH appears to work. Did you confirm it?
-> 
-Not yet. It's a fishy machine that needs other patches to get back to
-working condition, I haven't had time yet (everybody's sick at home so
-I've been mostly off the office and the machine is there).
 
-I'm pretty sure the MESH will have issues though if the DMA buffers
-aren't at least 16 (or maybe it's 32) bytes aligned. I don't think it's
-a cache alignment issue, I suspect it's an issue with the DBDMA engine
-queue on those chips though (it -could- be cache coherency bugs too,
-never know with those old Apple home made chipsets).
+MPT2SAS driver bug fixes. Please consider it for 2.6.32.
 
-I remember we had problems in the past with IDENTIFY iirc, which would
-work normally as kmalloc() would return something cache line aligned...
-until one enabled SLAB debugging.
+"Previous Power cycling cascaded expanders causes kernel panic patch "
+is divided into small sub patches considering James comment.
 
-Cheers,
-Ben.
+Patch 1/11 is kernel panic fix and required to port back to stable kernel.
+
+[PATCH 1/11] mpt2sas: Power cycling cascaded expanders causes kernel panic
+[PATCH 2/11] mpt2sas: Host Reset code cleanup 
+[PATCH 3/11] mpt2sas: Return immediately if host is under recovery.
+[PATCH 4/11] mpt2sas: Code cleanup for _scsih_link_change function
+[PATCH 5/11] mpt2sas: Attempt only 2 config_request retry.
+[PATCH 6/11] mpt2sas: Added proper error handling for _scsih_expander_add.
+
+[PATCH 7/11] mpt2sas: Raid 10 Value is showing as Raid 1E in /va/log/messages
+[PATCH 8/11] mpt2sas: When activating a inactive volume, hidden raid
+		     components disapper.
+[PATCH 9/11] mpt2sas: During Full port cable breaks get sas iounit config
+		     page0 timeout
+[PATCH 10/11] mpt2sas: OS is not going into standby mode.
+[PATCH 11/11] mpt2sas: Bump driver version 01.100.06.00
+---
+Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
+Signed-off-by: Eric Moore <Eric.moore@lsi.com>
+---
