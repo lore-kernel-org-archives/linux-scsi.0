@@ -1,97 +1,41 @@
 From: akpm@linux-foundation.org
-Subject: [patch 05/11] drivers/scsi/fnic/fnic_scsi.c: clean up
-Date: Thu, 06 Aug 2009 16:09:23 -0700
-Message-ID: <200908062309.n76N9Nug011526@imap1.linux-foundation.org>
+Subject: [patch 07/11] scsi/eata: fix buffer overflow
+Date: Thu, 06 Aug 2009 16:09:25 -0700
+Message-ID: <200908062309.n76N9PoG011532@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:34418 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:40127 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756855AbZHFXJ5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Aug 2009 19:09:57 -0400
+	by vger.kernel.org with ESMTP id S1756887AbZHFXKH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Aug 2009 19:10:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, abjoglek@cisco.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, ballabio_dario@emc.com, mike@i-Connect.Net
 
 From: Roel Kluin <roel.kluin@gmail.com>
 
-In fnic_abort_cmd() and fnic_device_reset() assign `rport' earlier to make
-FNIC_SCSI_DBG() calls cleaner.
-
-In fnic_clean_pending_aborts() `rport' is not used.
+Allows i == MAX_INT_PARAM, which is out of range.
 
 Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Abhijeet Joglekar <abjoglek@cisco.com>
+Cc: Michael Neuffer <mike@i-Connect.Net>
+Cc: Dario Ballabio <ballabio_dario@emc.com>
+Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/fnic/fnic_scsi.c |   22 ++++++++--------------
- 1 file changed, 8 insertions(+), 14 deletions(-)
+ drivers/scsi/eata.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/fnic/fnic_scsi.c~drivers-scsi-fnic-fnic_scsic-clean-up drivers/scsi/fnic/fnic_scsi.c
---- a/drivers/scsi/fnic/fnic_scsi.c~drivers-scsi-fnic-fnic_scsic-clean-up
-+++ a/drivers/scsi/fnic/fnic_scsi.c
-@@ -1265,11 +1265,10 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
- 	lp = shost_priv(sc->device->host);
+diff -puN drivers/scsi/eata.c~scsi-eata-fix-buffer-overflow drivers/scsi/eata.c
+--- a/drivers/scsi/eata.c~scsi-eata-fix-buffer-overflow
++++ a/drivers/scsi/eata.c
+@@ -1509,7 +1509,7 @@ static int option_setup(char *str)
+ 	char *cur = str;
+ 	int i = 1;
  
- 	fnic = lport_priv(lp);
--	FNIC_SCSI_DBG(KERN_DEBUG,
--		      fnic->lport->host,
--		      "Abort Cmd called FCID 0x%x, LUN 0x%x TAG %d\n",
--		      (starget_to_rport(scsi_target(sc->device)))->port_id,
--		      sc->device->lun, sc->request->tag);
-+	rport = starget_to_rport(scsi_target(sc->device));
-+	FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
-+			"Abort Cmd called FCID 0x%x, LUN 0x%x TAG %d\n",
-+			rport->port_id, sc->device->lun, sc->request->tag);
+-	while (cur && isdigit(*cur) && i <= MAX_INT_PARAM) {
++	while (cur && isdigit(*cur) && i < MAX_INT_PARAM) {
+ 		ints[i++] = simple_strtoul(cur, NULL, 0);
  
- 	if (lp->state != LPORT_ST_READY || !(lp->link_up)) {
- 		ret = FAILED;
-@@ -1318,7 +1317,6 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
- 	 * port is up, then send abts to the remote port to terminate
- 	 * the IO. Else, just locally terminate the IO in the firmware
- 	 */
--	rport = starget_to_rport(scsi_target(sc->device));
- 	if (fc_remote_port_chkready(rport) == 0)
- 		task_req = FCPIO_ITMF_ABT_TASK;
- 	else
-@@ -1437,7 +1435,6 @@ static int fnic_clean_pending_aborts(str
- 	unsigned long flags;
- 	int ret = 0;
- 	struct scsi_cmnd *sc;
--	struct fc_rport *rport;
- 	struct scsi_lun fc_lun;
- 	struct scsi_device *lun_dev = lr_sc->device;
- 	DECLARE_COMPLETION_ONSTACK(tm_done);
-@@ -1477,7 +1474,6 @@ static int fnic_clean_pending_aborts(str
- 
- 		/* Now queue the abort command to firmware */
- 		int_to_scsilun(sc->device->lun, &fc_lun);
--		rport = starget_to_rport(scsi_target(sc->device));
- 
- 		if (fnic_queue_abort_io_req(fnic, tag,
- 					    FCPIO_ITMF_ABT_TASK_TERM,
-@@ -1547,18 +1543,16 @@ int fnic_device_reset(struct scsi_cmnd *
- 	lp = shost_priv(sc->device->host);
- 
- 	fnic = lport_priv(lp);
--	FNIC_SCSI_DBG(KERN_DEBUG,
--		      fnic->lport->host,
--		      "Device reset called FCID 0x%x, LUN 0x%x\n",
--		      (starget_to_rport(scsi_target(sc->device)))->port_id,
--		      sc->device->lun);
- 
-+	rport = starget_to_rport(scsi_target(sc->device));
-+	FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
-+			"Device reset called FCID 0x%x, LUN 0x%x\n",
-+			rport->port_id, sc->device->lun);
- 
- 	if (lp->state != LPORT_ST_READY || !(lp->link_up))
- 		goto fnic_device_reset_end;
- 
- 	/* Check if remote port up */
--	rport = starget_to_rport(scsi_target(sc->device));
- 	if (fc_remote_port_chkready(rport))
- 		goto fnic_device_reset_end;
- 
+ 		if ((cur = strchr(cur, ',')) != NULL)
 _
