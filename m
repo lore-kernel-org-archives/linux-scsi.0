@@ -1,77 +1,97 @@
 From: akpm@linux-foundation.org
-Subject: [patch 02/11] scsi: gdth.c use unaligned access helpers
-Date: Thu, 06 Aug 2009 16:09:20 -0700
-Message-ID: <200908062309.n76N9Ktt011395@imap1.linux-foundation.org>
+Subject: [patch 05/11] drivers/scsi/fnic/fnic_scsi.c: clean up
+Date: Thu, 06 Aug 2009 16:09:23 -0700
+Message-ID: <200908062309.n76N9Nug011526@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:34347 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:34418 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756868AbZHFXJz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Aug 2009 19:09:55 -0400
+	by vger.kernel.org with ESMTP id S1756855AbZHFXJ5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Aug 2009 19:09:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com, bharrosh@panasas.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, abjoglek@cisco.com
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
+From: Roel Kluin <roel.kluin@gmail.com>
 
-Remove two now unnecessary local vars.
+In fnic_abort_cmd() and fnic_device_reset() assign `rport' earlier to make
+FNIC_SCSI_DBG() calls cleaner.
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>
+In fnic_clean_pending_aborts() `rport' is not used.
+
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Abhijeet Joglekar <abjoglek@cisco.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/gdth.c |   23 ++++++++++-------------
- 1 file changed, 10 insertions(+), 13 deletions(-)
+ drivers/scsi/fnic/fnic_scsi.c |   22 ++++++++--------------
+ 1 file changed, 8 insertions(+), 14 deletions(-)
 
-diff -puN drivers/scsi/gdth.c~scsi-gdthc-use-unaligned-access-helpers drivers/scsi/gdth.c
---- a/drivers/scsi/gdth.c~scsi-gdthc-use-unaligned-access-helpers
-+++ a/drivers/scsi/gdth.c
-@@ -131,6 +131,7 @@
- #include <asm/system.h>
- #include <asm/io.h>
- #include <asm/uaccess.h>
-+#include <asm/unaligned.h>
- #include <linux/spinlock.h>
- #include <linux/blkdev.h>
- #include <linux/scatterlist.h>
-@@ -2429,8 +2430,8 @@ static int gdth_fill_cache_cmd(gdth_ha_s
- {
-     register gdth_cmd_str *cmdp;
-     struct gdth_cmndinfo *cmndinfo = gdth_cmnd_priv(scp);
--    ulong32 cnt, blockcnt;
--    ulong64 no, blockno;
-+    ulong32 blockcnt;
-+    ulong64 blockno;
-     int i, cmd_index, read_write, sgcnt, mode64;
+diff -puN drivers/scsi/fnic/fnic_scsi.c~drivers-scsi-fnic-fnic_scsic-clean-up drivers/scsi/fnic/fnic_scsi.c
+--- a/drivers/scsi/fnic/fnic_scsi.c~drivers-scsi-fnic-fnic_scsic-clean-up
++++ a/drivers/scsi/fnic/fnic_scsi.c
+@@ -1265,11 +1265,10 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
+ 	lp = shost_priv(sc->device->host);
  
-     cmdp = ha->pccb;
-@@ -2498,19 +2499,15 @@ static int gdth_fill_cache_cmd(gdth_ha_s
+ 	fnic = lport_priv(lp);
+-	FNIC_SCSI_DBG(KERN_DEBUG,
+-		      fnic->lport->host,
+-		      "Abort Cmd called FCID 0x%x, LUN 0x%x TAG %d\n",
+-		      (starget_to_rport(scsi_target(sc->device)))->port_id,
+-		      sc->device->lun, sc->request->tag);
++	rport = starget_to_rport(scsi_target(sc->device));
++	FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
++			"Abort Cmd called FCID 0x%x, LUN 0x%x TAG %d\n",
++			rport->port_id, sc->device->lun, sc->request->tag);
  
-     if (read_write) {
-         if (scp->cmd_len == 16) {
--            memcpy(&no, &scp->cmnd[2], sizeof(ulong64));
--            blockno = be64_to_cpu(no);
--            memcpy(&cnt, &scp->cmnd[10], sizeof(ulong32));
--            blockcnt = be32_to_cpu(cnt);
-+		blockno = get_unaligned_be64(&scp->cmnd[2]);
-+		blockcnt = get_unaligned_be32(&scp->cmnd[10]);
-         } else if (scp->cmd_len == 10) {
--            memcpy(&no, &scp->cmnd[2], sizeof(ulong32));
--            blockno = be32_to_cpu(no);
--            memcpy(&cnt, &scp->cmnd[7], sizeof(ushort));
--            blockcnt = be16_to_cpu(cnt);
-+		blockno = get_unaligned_be32(&scp->cmnd[2]);
-+		blockcnt = get_unaligned_be16(&scp->cmnd[7]);
-         } else {
--            memcpy(&no, &scp->cmnd[0], sizeof(ulong32));
--            blockno = be32_to_cpu(no) & 0x001fffffUL;
--            blockcnt= scp->cmnd[4]==0 ? 0x100 : scp->cmnd[4];
-+		blockno = get_unaligned_be32(&scp->cmnd[2]);
-+		blockno &= 0x001fffffUL;
-+		blockcnt = scp->cmnd[4] == 0 ? 0x100 : scp->cmnd[4];
-         }
-         if (mode64) {
-             cmdp->u.cache64.BlockNo = blockno;
+ 	if (lp->state != LPORT_ST_READY || !(lp->link_up)) {
+ 		ret = FAILED;
+@@ -1318,7 +1317,6 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
+ 	 * port is up, then send abts to the remote port to terminate
+ 	 * the IO. Else, just locally terminate the IO in the firmware
+ 	 */
+-	rport = starget_to_rport(scsi_target(sc->device));
+ 	if (fc_remote_port_chkready(rport) == 0)
+ 		task_req = FCPIO_ITMF_ABT_TASK;
+ 	else
+@@ -1437,7 +1435,6 @@ static int fnic_clean_pending_aborts(str
+ 	unsigned long flags;
+ 	int ret = 0;
+ 	struct scsi_cmnd *sc;
+-	struct fc_rport *rport;
+ 	struct scsi_lun fc_lun;
+ 	struct scsi_device *lun_dev = lr_sc->device;
+ 	DECLARE_COMPLETION_ONSTACK(tm_done);
+@@ -1477,7 +1474,6 @@ static int fnic_clean_pending_aborts(str
+ 
+ 		/* Now queue the abort command to firmware */
+ 		int_to_scsilun(sc->device->lun, &fc_lun);
+-		rport = starget_to_rport(scsi_target(sc->device));
+ 
+ 		if (fnic_queue_abort_io_req(fnic, tag,
+ 					    FCPIO_ITMF_ABT_TASK_TERM,
+@@ -1547,18 +1543,16 @@ int fnic_device_reset(struct scsi_cmnd *
+ 	lp = shost_priv(sc->device->host);
+ 
+ 	fnic = lport_priv(lp);
+-	FNIC_SCSI_DBG(KERN_DEBUG,
+-		      fnic->lport->host,
+-		      "Device reset called FCID 0x%x, LUN 0x%x\n",
+-		      (starget_to_rport(scsi_target(sc->device)))->port_id,
+-		      sc->device->lun);
+ 
++	rport = starget_to_rport(scsi_target(sc->device));
++	FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
++			"Device reset called FCID 0x%x, LUN 0x%x\n",
++			rport->port_id, sc->device->lun);
+ 
+ 	if (lp->state != LPORT_ST_READY || !(lp->link_up))
+ 		goto fnic_device_reset_end;
+ 
+ 	/* Check if remote port up */
+-	rport = starget_to_rport(scsi_target(sc->device));
+ 	if (fc_remote_port_chkready(rport))
+ 		goto fnic_device_reset_end;
+ 
 _
