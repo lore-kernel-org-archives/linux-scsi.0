@@ -1,42 +1,78 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 1/3] block: add blk-iopoll, a NAPI like approach for
- block devices
-Date: Thu, 6 Aug 2009 22:32:57 +0100
-Message-ID: <20090806223257.0c33cf15@lxorguk.ukuu.org.uk>
-References: <1249588685-4662-1-git-send-email-jens.axboe@oracle.com>
-	<1249588685-4662-2-git-send-email-jens.axboe@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: akpm@linux-foundation.org
+Subject: [patch 03/11] scsi: annotate gdth_rdcap_data, gdth_rdcap16_data endianness
+Date: Thu, 06 Aug 2009 16:09:21 -0700
+Message-ID: <200908062309.n76N9MuY011451@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:37740 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756297AbZHFVdD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Aug 2009 17:33:03 -0400
-In-Reply-To: <1249588685-4662-2-git-send-email-jens.axboe@oracle.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:38854 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756265AbZHFXJv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Aug 2009 19:09:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, jeff@garzik.org, Jens Axboe <jens.axboe@oracle.com>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, harvey.harrison@gmail.com, bharrosh@panasas.com
 
-> doing the command completion when the irq occurs, schedule a dedicated
-> softirq in the hopes that we will complete more IO when the iopoll
-> handler is invoked. Devices have a budget of commands assigned, and will
-> stay in polled mode as long as they continue to consume their budget
-> from the iopoll softirq handler. If they do not, the device is set back
-> to interrupt completion mode.
+From: Harvey Harrison <harvey.harrison@gmail.com>
 
-This seems a little odd for pure ATA except for NCQ commands. Normal ATA
-is notoriously completion/reissue latency sensitive [to the point I
-suspect we should be dequeuing 2 commands from SCSI and loading the next
-in the completion handler as soon as we recover the result task file and
-see no error rather than going up and down the stack)
+It would be easy to get rid of the typedefs too, but I kept this
+minimal.
 
-What do the numbers look like ?
+Noticed by sparse:
+drivers/scsi/gdth.c:2395:31: warning: incorrect type in assignment (different base types)
+drivers/scsi/gdth.c:2395:31:    expected unsigned int [unsigned] [assigned] [usertype] last_block_no
+drivers/scsi/gdth.c:2395:31:    got restricted __be32 [usertype] <noident>
+drivers/scsi/gdth.c:2396:27: warning: incorrect type in assignment (different base types)
+drivers/scsi/gdth.c:2396:27:    expected unsigned int [unsigned] [assigned] [usertype] block_length
+drivers/scsi/gdth.c:2396:27:    got restricted __be32 [usertype] <noident>
+drivers/scsi/gdth.c:2406:33: warning: incorrect type in assignment (different base types)
+drivers/scsi/gdth.c:2406:33:    expected unsigned long long [unsigned] [usertype] last_block_no
+drivers/scsi/gdth.c:2406:33:    got restricted __be64 [usertype] <noident>
+drivers/scsi/gdth.c:2407:33: warning: incorrect type in assignment (different base types)
+drivers/scsi/gdth.c:2407:33:    expected unsigned int [unsigned] [usertype] block_length
+drivers/scsi/gdth.c:2407:33:    got restricted __be32 [usertype] <noident>
 
-> This patch holds the core bits for blk-iopoll, device driver support
-> sold separately.
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
-You've been at Oracle too long ;) You'll be telling me its not a
-supported configuration next.
+ drivers/scsi/gdth.c |    2 +-
+ drivers/scsi/gdth.h |    8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-Alan
+diff -puN drivers/scsi/gdth.c~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness drivers/scsi/gdth.c
+--- a/drivers/scsi/gdth.c~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness
++++ a/drivers/scsi/gdth.c
+@@ -2391,7 +2391,7 @@ static int gdth_internal_cache_cmd(gdth_
+       case READ_CAPACITY:
+         TRACE2(("Read capacity hdrive %d\n",t));
+         if (ha->hdr[t].size > (ulong64)0xffffffff)
+-            rdc.last_block_no = 0xffffffff;
++            rdc.last_block_no = cpu_to_be32(0xffffffff);
+         else
+             rdc.last_block_no = cpu_to_be32(ha->hdr[t].size-1);
+         rdc.block_length  = cpu_to_be32(SECTOR_SIZE);
+diff -puN drivers/scsi/gdth.h~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness drivers/scsi/gdth.h
+--- a/drivers/scsi/gdth.h~scsi-annotate-gdth_rdcap_data-gdth_rdcap16_data-endianness
++++ a/drivers/scsi/gdth.h
+@@ -968,14 +968,14 @@ typedef struct {
+ 
+ /* READ_CAPACITY data format */
+ typedef struct {
+-    ulong32     last_block_no;
+-    ulong32     block_length;
++	__be32 last_block_no;
++	__be32 block_length;
+ } PACKED gdth_rdcap_data;
+ 
+ /* READ_CAPACITY (16) data format */
+ typedef struct {
+-    ulong64     last_block_no;
+-    ulong32     block_length;
++	__be64 last_block_no;
++	__be32 block_length;
+ } PACKED gdth_rdcap16_data;
+ 
+ /* REQUEST_SENSE data format */
+_
