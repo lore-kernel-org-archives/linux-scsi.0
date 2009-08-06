@@ -1,12 +1,12 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Subject: [PATCH 2/3] libata: add support for blk-iopoll
-Date: Thu,  6 Aug 2009 21:58:04 +0200
-Message-ID: <1249588685-4662-3-git-send-email-jens.axboe@oracle.com>
+Subject: [PATCH 3/3] mptfusion: add support for blk-iopoll
+Date: Thu,  6 Aug 2009 21:58:05 +0200
+Message-ID: <1249588685-4662-4-git-send-email-jens.axboe@oracle.com>
 References: <1249588685-4662-1-git-send-email-jens.axboe@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:59759 "EHLO kernel.dk"
+Received: from brick.kernel.dk ([93.163.65.50]:59756 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756584AbZHFT6G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1756512AbZHFT6G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 6 Aug 2009 15:58:06 -0400
 In-Reply-To: <1249588685-4662-1-git-send-email-jens.axboe@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,148 +14,188 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: Eric.Moore@lsi.com, jeff@garzik.org, Jens Axboe <jens.axboe@oracle.com>
 
-This adds basic support to libata, and specific support for ahci.
-
 Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
 ---
- drivers/ata/ahci.c     |   53 +++++++++++++++++++++++++++++++++++++++++++++--
- include/linux/libata.h |    2 +
- 2 files changed, 52 insertions(+), 3 deletions(-)
+ drivers/message/fusion/mptbase.c |   99 ++++++++++++++++++++++++++++++++-----
+ drivers/message/fusion/mptbase.h |    3 +
+ 2 files changed, 88 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 958c1fa..9dda8ca 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -45,6 +45,7 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_cmnd.h>
- #include <linux/libata.h>
-+#include <linux/blk-iopoll.h>
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 5d0ba4f..24549d6 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -114,6 +114,9 @@ module_param_call(mpt_fwfault_debug, param_set_int, param_get_int,
+ MODULE_PARM_DESC(mpt_fwfault_debug, "Enable detection of Firmware fault"
+ 	" and halt Firmware on fault - (default=0)");
  
- #define DRV_NAME	"ahci"
- #define DRV_VERSION	"3.0"
-@@ -2053,7 +2054,7 @@ static void ahci_error_intr(struct ata_port *ap, u32 irq_stat)
- 		ata_port_abort(ap);
++static int mpt_iopoll_w = 32;
++module_param(mpt_iopoll_w, int, 0);
++MODULE_PARM_DESC(mpt_iopoll_w, " blk iopoll budget (default=32");
+ 
+ 
+ #ifdef MFCNT
+@@ -515,6 +518,44 @@ mpt_reply(MPT_ADAPTER *ioc, u32 pa)
+ 	mb();
  }
  
--static void ahci_port_intr(struct ata_port *ap)
-+static int ahci_port_intr(struct ata_port *ap)
++static void mpt_irq_disable(MPT_ADAPTER *ioc)
++{
++	CHIPREG_WRITE32(&ioc->chip->IntMask, 0xFFFFFFFF);
++	CHIPREG_WRITE32(&ioc->chip->IntStatus, 0);
++	CHIPREG_READ32(&ioc->chip->IntStatus);
++}
++
++static void mpt_irq_enable(MPT_ADAPTER *ioc)
++{
++	CHIPREG_WRITE32(&ioc->chip->IntMask, MPI_HIM_DIM);
++}
++
++static inline void __mpt_handle_irq(MPT_ADAPTER *ioc, u32 pa)
++{
++	if (pa & MPI_ADDRESS_REPLY_A_BIT)
++		mpt_reply(ioc, pa);
++	else
++		mpt_turbo_reply(ioc, pa);
++}
++
++static int mpt_handle_irq(MPT_ADAPTER *ioc, unsigned int budget)
++{
++	int nr = 0;
++	u32 pa;
++
++	/*
++	 *  Drain the reply FIFO!
++	 */
++	while ((pa = CHIPREG_READ32_dmasync(&ioc->chip->ReplyFifo)) != 0xffffffff) {
++		nr++;
++		__mpt_handle_irq(ioc, pa);
++		if (nr == budget)
++			break;
++	}
++
++	return nr;
++}
++
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+ /**
+  *	mpt_interrupt - MPT adapter (IOC) specific interrupt handler.
+@@ -536,23 +577,48 @@ static irqreturn_t
+ mpt_interrupt(int irq, void *bus_id)
  {
- 	void __iomem *port_mmio = ahci_port_base(ap);
- 	struct ata_eh_info *ehi = &ap->link.eh_info;
-@@ -2083,7 +2084,7 @@ static void ahci_port_intr(struct ata_port *ap)
+ 	MPT_ADAPTER *ioc = bus_id;
+-	u32 pa = CHIPREG_READ32_dmasync(&ioc->chip->ReplyFifo);
++	int nr = 0;
++
++	if (!blk_iopoll_enabled)
++		nr = mpt_handle_irq(ioc, -1U);
++	else if (blk_iopoll_sched_prep(&ioc->iopoll)) {
++		mpt_irq_disable(ioc);
++		ioc->iopoll.data =CHIPREG_READ32_dmasync(&ioc->chip->ReplyFifo);
++		blk_iopoll_sched(&ioc->iopoll);
++		nr = 1;
++	} else {
++		/*
++		 * Not really handled, but it will be by iopoll.
++		 */
++		nr = 1;
++	}
  
- 	if (unlikely(status & PORT_IRQ_ERROR)) {
- 		ahci_error_intr(ap, status);
--		return;
-+		return 0;
- 	}
+-	if (pa == 0xFFFFFFFF)
+-		return IRQ_NONE;
++	if (nr)
++		return IRQ_HANDLED;
  
- 	if (status & PORT_IRQ_SDB_FIS) {
-@@ -2124,7 +2125,43 @@ static void ahci_port_intr(struct ata_port *ap)
- 		ehi->err_mask |= AC_ERR_HSM;
- 		ehi->action |= ATA_EH_RESET;
- 		ata_port_freeze(ap);
-+		rc = 0;
- 	}
-+
-+	return rc;
+-	/*
+-	 *  Drain the reply FIFO!
+-	 */
+-	do {
+-		if (pa & MPI_ADDRESS_REPLY_A_BIT)
+-			mpt_reply(ioc, pa);
+-		else
+-			mpt_turbo_reply(ioc, pa);
+-		pa = CHIPREG_READ32_dmasync(&ioc->chip->ReplyFifo);
+-	} while (pa != 0xFFFFFFFF);
++	return IRQ_NONE;
 +}
-+
-+static void ap_irq_disable(struct ata_port *ap)
+ 
+-	return IRQ_HANDLED;
++static int mpt_iopoll(struct blk_iopoll *iop, int budget)
 +{
-+	void __iomem *port_mmio = ahci_port_base(ap);
++	MPT_ADAPTER *ioc = container_of(iop, MPT_ADAPTER, iopoll);
++	int ret = 0;
++	u32 pa;
 +
-+	writel(0, port_mmio + PORT_IRQ_MASK);
-+}
++	pa = iop->data;
++	iop->data = 0xffffffff;
++	if (pa != 0xffffffff) {
++		__mpt_handle_irq(ioc, pa);
++		ret = 1;
++	}
 +
-+static void ap_irq_enable(struct ata_port *ap)
-+{
-+	void __iomem *port_mmio = ahci_port_base(ap);
-+	struct ahci_port_priv *pp = ap->private_data;
-+
-+	writel(pp->intr_mask, port_mmio + PORT_IRQ_MASK);
-+}
-+
-+static int ahci_iopoll(struct blk_iopoll *iop, int budget)
-+{
-+	struct ata_port *ap = container_of(iop, struct ata_port, iopoll);
-+	unsigned long flags;
-+	int ret;
-+
-+	spin_lock_irqsave(&ap->host->lock, flags);
-+	ret = ahci_port_intr(ap);
-+	spin_unlock_irqrestore(&ap->host->lock, flags);
-+
++	ret += mpt_handle_irq(ioc, budget - ret);
 +	if (ret < budget) {
 +		blk_iopoll_complete(iop);
-+		ap_irq_enable(ap);
++		mpt_irq_enable(ioc);
 +	}
 +
 +	return ret;
  }
  
- static irqreturn_t ahci_interrupt(int irq, void *dev_instance)
-@@ -2157,7 +2194,12 @@ static irqreturn_t ahci_interrupt(int irq, void *dev_instance)
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+@@ -2091,6 +2157,7 @@ mpt_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	/* Clear any lingering interrupt */
+ 	CHIPREG_WRITE32(&ioc->chip->IntStatus, 0);
  
- 		ap = host->ports[i];
- 		if (ap) {
--			ahci_port_intr(ap);
-+			if (!blk_iopoll_enabled)
-+				ahci_port_intr(ap);
-+			else if (blk_iopoll_sched_prep(&ap->iopoll)) {
-+				ap_irq_disable(ap);
-+				blk_iopoll_sched(&ap->iopoll);
-+			}
- 			VPRINTK("port %u\n", i);
- 		} else {
- 			VPRINTK("port %u (no irq)\n", i);
-@@ -2299,6 +2341,7 @@ static int ahci_port_resume(struct ata_port *ap)
- 	else
- 		ahci_pmp_detach(ap);
++	blk_iopoll_disable(&ioc->iopoll);
+ 	free_irq(ioc->pci_irq, ioc);
+ 	if (ioc->msi_enable)
+ 		pci_disable_msi(ioc->pcidev);
+@@ -2358,6 +2425,8 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
+ 				ret = -EBUSY;
+ 				goto out;
+ 			}
++			blk_iopoll_init(&ioc->iopoll, mpt_iopoll_w, mpt_iopoll);
++			blk_iopoll_enable(&ioc->iopoll);
+ 			irq_allocated = 1;
+ 			ioc->pci_irq = ioc->pcidev->irq;
+ 			pci_set_master(ioc->pcidev);		/* ?? */
+@@ -2578,6 +2647,7 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
  
-+	blk_iopoll_enable(&ap->iopoll);
- 	return 0;
- }
+  out:
+ 	if ((ret != 0) && irq_allocated) {
++		blk_iopoll_disable(&ioc->iopoll);
+ 		free_irq(ioc->pci_irq, ioc);
+ 		if (ioc->msi_enable)
+ 			pci_disable_msi(ioc->pcidev);
+@@ -2786,6 +2856,7 @@ mpt_adapter_dispose(MPT_ADAPTER *ioc)
+ 	mpt_adapter_disable(ioc);
  
-@@ -2421,6 +2464,8 @@ static int ahci_port_start(struct ata_port *ap)
- 
- 	ap->private_data = pp;
- 
-+	blk_iopoll_init(&ap->iopoll, 32, ahci_iopoll);
-+
- 	/* engage engines, captain */
- 	return ahci_port_resume(ap);
- }
-@@ -2434,6 +2479,8 @@ static void ahci_port_stop(struct ata_port *ap)
- 	rc = ahci_deinit_port(ap, &emsg);
- 	if (rc)
- 		ata_port_printk(ap, KERN_WARNING, "%s (%d)\n", emsg, rc);
-+
-+	blk_iopoll_disable(&ap->iopoll);
- }
- 
- static int ahci_configure_dma_masks(struct pci_dev *pdev, int using_dac)
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 7cfed24..14bba58 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -37,6 +37,7 @@
- #include <scsi/scsi_host.h>
- #include <linux/acpi.h>
- #include <linux/cdrom.h>
+ 	if (ioc->pci_irq != -1) {
++		blk_iopoll_disable(&ioc->iopoll);
+ 		free_irq(ioc->pci_irq, ioc);
+ 		if (ioc->msi_enable)
+ 			pci_disable_msi(ioc->pcidev);
+diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
+index 1c8514d..954a59f 100644
+--- a/drivers/message/fusion/mptbase.h
++++ b/drivers/message/fusion/mptbase.h
+@@ -52,6 +52,7 @@
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
+ #include <linux/mutex.h>
 +#include <linux/blk-iopoll.h>
  
- /*
-  * Define if arch has non-standard setup.  This is a _PCI_ standard
-@@ -761,6 +762,7 @@ struct ata_port {
- #endif
- 	/* owned by EH */
- 	u8			sector_buf[ATA_SECT_SIZE] ____cacheline_aligned;
-+	struct blk_iopoll	iopoll;
- };
+ #include "lsi/mpi_type.h"
+ #include "lsi/mpi.h"		/* Fusion MPI(nterface) basic defs */
+@@ -763,6 +764,8 @@ typedef struct _MPT_ADAPTER
+ 	struct workqueue_struct *reset_work_q;
+ 	struct delayed_work	 fault_reset_work;
  
- /* The following initializer overrides a method to NULL whether one of
++	struct blk_iopoll	iopoll;
++
+ 	u8			sg_addr_size;
+ 	u8			in_rescan;
+ 	u8			SGE_size;
 -- 
 1.6.3.2.306.g4f4fa
 
