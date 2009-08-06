@@ -1,82 +1,42 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 3/3] drivers/scsi: Add kmalloc NULL tests
-Date: Thu, 06 Aug 2009 21:20:04 +0000
-Message-ID: <1249593604.10463.18.camel@mulgrave.site>
-References: <Pine.LNX.4.64.0908062205190.19100@ask.diku.dk>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 1/3] block: add blk-iopoll, a NAPI like approach for
+ block devices
+Date: Thu, 6 Aug 2009 22:32:57 +0100
+Message-ID: <20090806223257.0c33cf15@lxorguk.ukuu.org.uk>
+References: <1249588685-4662-1-git-send-email-jens.axboe@oracle.com>
+	<1249588685-4662-2-git-send-email-jens.axboe@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:34666 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756232AbZHFVUJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Aug 2009 17:20:09 -0400
-In-Reply-To: <Pine.LNX.4.64.0908062205190.19100@ask.diku.dk>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:37740 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756297AbZHFVdD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Aug 2009 17:33:03 -0400
+In-Reply-To: <1249588685-4662-2-git-send-email-jens.axboe@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Julia Lawall <julia@diku.dk>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, jeff@garzik.org, Jens Axboe <jens.axboe@oracle.com>
 
-On Thu, 2009-08-06 at 22:06 +0200, Julia Lawall wrote:
-> From: Julia Lawall <julia@diku.dk>
-> 
-> Check that the result of kmalloc is not NULL before passing it to other
-> functions.
-> 
-> The semantic match that finds this problem is as follows:
-> (http://coccinelle.lip6.fr/)
-> 
-> // <smpl>
-> @@
-> expression *x;
-> identifier f;
-> constant char *C;
-> @@
-> 
-> x = \(kmalloc\|kcalloc\|kzalloc\)(...);
-> ... when != x == NULL
->     when != x != NULL
->     when != (x || ...)
-> (
-> kfree(x)
-> |
-> f(...,C,...,x,...)
-> |
-> *f(...,x,...)
-> |
-> *x->f
-> )
-> // </smpl>
-> 
-> Signed-off-by: Julia Lawall <julia@diku.dk>
-> 
-> ---
->  drivers/scsi/sr.c                   |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-> index cce0fe4..3fbf42e 100644
-> --- a/drivers/scsi/sr.c
-> +++ b/drivers/scsi/sr.c
-> @@ -211,6 +211,8 @@ static int sr_media_change(struct cdrom_device_info *cdi, int slot)
->  	}
->  
->  	sshdr =  kzalloc(sizeof(*sshdr), GFP_KERNEL);
-> +	if (!sshdr)
-> +		return -ENOMEM;
+> doing the command completion when the irq occurs, schedule a dedicated
+> softirq in the hopes that we will complete more IO when the iopoll
+> handler is invoked. Devices have a budget of commands assigned, and will
+> stay in polled mode as long as they continue to consume their budget
+> from the iopoll softirq handler. If they do not, the device is set back
+> to interrupt completion mode.
 
-this isn't necessary; sr_test_unit_ready is designed to take a NULL
-pointer for sshdr ... it's just slightly less useful when this happens,
-but it still returns some status.
+This seems a little odd for pure ATA except for NCQ commands. Normal ATA
+is notoriously completion/reissue latency sensitive [to the point I
+suspect we should be dequeuing 2 commands from SCSI and loading the next
+in the completion handler as soon as we recover the result task file and
+see no error rather than going up and down the stack)
 
-James
+What do the numbers look like ?
 
+> This patch holds the core bits for blk-iopoll, device driver support
+> sold separately.
 
->  	retval = sr_test_unit_ready(cd->device, sshdr);
->  	if (retval || (scsi_sense_valid(sshdr) &&
->  		       /* 0x3a is medium not present */
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+You've been at Oracle too long ;) You'll be telling me its not a
+supported configuration next.
 
+Alan
