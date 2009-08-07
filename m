@@ -1,39 +1,51 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: Alan Jenkins <sourcejedi.lkml@googlemail.com>
 Subject: Re: [PATCH 2/7 v3] initdev:kernel:USB init device discovery
- notification
-Date: Fri, 7 Aug 2009 11:44:50 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0908071142260.3063-100000@iolanthe.rowland.org>
+	notification
+Date: Fri, 7 Aug 2009 18:17:51 +0100
+Message-ID: <9b2b86520908071017h606e595fr4488d6ff61cb337c@mail.gmail.com>
 References: <9b2b86520908070832p2d1658b0t8b1d89d1a034bb9a@mail.gmail.com>
+	 <Pine.LNX.4.44L0.0908071142260.3063-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:55487 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753216AbZHGPou (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Aug 2009 11:44:50 -0400
-In-Reply-To: <9b2b86520908070832p2d1658b0t8b1d89d1a034bb9a@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: Alan Jenkins <sourcejedi.lkml@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754455AbZHGRRy@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.0908071142260.3063-100000@iolanthe.rowland.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
 Cc: David VomLehn <dvomlehn@cisco.com>, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-usb@vger.kernel.org, greg@kroah.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, arjan@infradead.org
+List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 7 Aug 2009, Alan Jenkins wrote:
+On 8/7/09, Alan Stern <stern@rowland.harvard.edu> wrote:
+> On Fri, 7 Aug 2009, Alan Jenkins wrote:
+>
+>> > +/* The mask of possible USB boot devices depends on what drivers and
+>> > + * options have been configured into the kernel.  There are too many
+>> > + * USB network config options to list here, so just assume it is always
+>> > + * possible to have a USB network device.
+>> > + */
+>>
+>> That could be fixed though.  Make the "USB Network Adaptors" menu into
+>> an option.  Then you just have e.g. "CONFIG_NETDEV_USB", plus the two
+>> class devices outside the menu (CONFIG_USB_ACM and CONFIG_USB_WDM).
 
-> > +/* The mask of possible USB boot devices depends on what drivers and
-> > + * options have been configured into the kernel.  There are too many
-> > + * USB network config options to list here, so just assume it is always
-> > + * possible to have a USB network device.
-> > + */
-> 
-> That could be fixed though.  Make the "USB Network Adaptors" menu into
-> an option.  Then you just have e.g. "CONFIG_NETDEV_USB", plus the two
-> class devices outside the menu (CONFIG_USB_ACM and CONFIG_USB_WDM).
+Oops, scratch WDM.  It doesn't actually provide a network device
+(otherwise it would depend on NET).
 
-That could be done.  It might even meet with the approval of the
-networking maintainer, independent of this patch series.
+> That could be done.  It might even meet with the approval of the
+> networking maintainer, independent of this patch series.
+>
+> But what if somebody adds yet another networking class driver outside
+> the menu?
 
-But what if somebody adds yet another networking class driver outside
-the menu?
+Hmm.
 
-Alan Stern
+Ok, how about a single (hidden) USB_HAS_NETDEV.  NETDEV_USB and
+USB_ACM select USB_HAS_NETDEV.
 
+Textual juxtaposition or simple copy+paste inside class/Kconfig should
+help it get picked up.  And I'd add a comment pointing the bewildered
+to the definition of usb_initdev_mask.
+
+I'll write a patch for your inspection this evening.
+
+Alan
