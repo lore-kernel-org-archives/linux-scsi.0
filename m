@@ -1,63 +1,89 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: QLA2200 causes kernel bug
-Date: Fri, 7 Aug 2009 14:11:50 -0700
-Message-ID: <20090807211150.GL18590@plap4-2.local>
-References: <6e4c20e70908060828xd4a6a8fh801e1d456c39a5f@mail.gmail.com> <20090806164925.GO2453@plap4-2.local> <6e4c20e70908061012y3fa907aduca4f706cf5ccaa5a@mail.gmail.com> <6e4c20e70908062040x39d8d0b3p90e674ec5925c5ac@mail.gmail.com> <20090807070147.GA13292@plap4-2.local> <6e4c20e70908071219v56f52c2te3b331a229fe9706@mail.gmail.com>
+From: Roland Dreier <rdreier@cisco.com>
+Subject: Re: sg_reset can trigger a NULL pointer dereference in the SRP  initiator
+Date: Fri, 07 Aug 2009 14:14:03 -0700
+Message-ID: <adatz0jcoo4.fsf@cisco.com>
+References: <e2e108260908060039x7718577yf932d8a9188fe0cb@mail.gmail.com>
+	<4A7A949B.60408@panasas.com> <ada1vnohmc0.fsf@cisco.com>
+	<e2e108260908070131r49dd2d37s8bb36c9365d991e8@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:4077 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752656AbZHGVLu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Aug 2009 17:11:50 -0400
-Content-Disposition: inline
-In-Reply-To: <6e4c20e70908071219v56f52c2te3b331a229fe9706@mail.gmail.com>
+Received: from sj-iport-6.cisco.com ([171.71.176.117]:21818 "EHLO
+	sj-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753030AbZHGVOE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Aug 2009 17:14:04 -0400
+In-Reply-To: <e2e108260908070131r49dd2d37s8bb36c9365d991e8@mail.gmail.com>
+	(Bart Van Assche's message of "Fri, 7 Aug 2009 10:31:18 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Thomas Georgiou <tageorgiou@gmail.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Bart Van Assche <bart.vanassche@gmail.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, OpenIB <general@lists.openfabrics.org>, Vladislav Bolkhovitin <vst@vlnb.net>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, 07 Aug 2009, Thomas Georgiou wrote:
 
-> I am not sure what is happening at 1840.
-> 
-> The current topology is royal (the machine in this backtrace)
-> connected via 2 fibre channel connections directly to a Powervault
-> 224F jbod.  This is then connected via 2 connections again to another
-> 224F, which is then connected to another machine, fiord (which also
-> has had problems).
-> 
-> I had royal connected to one 224f with 2 connections and did not
-> connect that jbod to anything else, and it worked with no problems for
-> the time it was connected like that (2 days).
-> 
+ > A fix like the one below ?
 
-Ok, so it looks like there's two problems, first, I'd suggest you talk
-with your JBOD vendor to see if this daisychained configuration is
-supported?  Is the JBOD acting as a mini-hub in this configuration?
-Either way, as can be seen from the logs, your storage device is
-continually LIP/LIP-resetting causing intermitent and visiblity/loss
-to your storage, often times for long enough to have the midlayer
-begin its reaping of scsi-devices.  Given the low-seed value
-for dev-loss-tmo (set via your qlport_down_retry usage), after
-numerous LIPs you run into the second issue: the BUG_ON() triggering
-within the FC-transport -- deferred execution of rport reaping in
-fc_timeout_deleted_rport().
+I think this gets us part of the way, but not quite.
 
-> I have also tried connecting fiord and royal to two powervault 51f
-> switches in a redundant configuration and then the switches to the
-> 224Fs.  This also generated problems and was where most of the
-> backtraces in the bug reports came from.
+ > --- linux-2.6.30.4/drivers/infiniband/ulp/srp/ib_srp-orig.c	2009-08-03
+ > 12:13:11.000000000 +0200
+ > +++ linux-2.6.30.4/drivers/infiniband/ulp/srp/ib_srp.c	2009-08-07
+ > 10:23:27.000000000 +0200
+ > @@ -1371,16 +1371,27 @@ out:
+ >  	return -1;
+ >  }
+ > 
+ > +/**
+ > + * Look up the struct srp_request that has been associated with the specified
+ > + * SCSI command by srp_queuecommand().
+ > + *
+ > + * Returns 0 upon success and -1 upon failure.
+ > + */
+ >  static int srp_find_req(struct srp_target_port *target,
+ >  			struct scsi_cmnd *scmnd,
+ >  			struct srp_request **req)
+ >  {
+ > -	if (scmnd->host_scribble == (void *) -1L)
+ > -		return -1;
+ > +	/*
+ > +	 * The code below will only work if SRP_RQ_SIZE is a power of two,
+ > +	 * so check this first.
+ > +	 */
+ > +	BUILD_BUG_ON((SRP_RQ_SIZE ^ (SRP_RQ_SIZE - 1))
+ > +		     != (SRP_RQ_SIZE | (SRP_RQ_SIZE - 1)));
 
-Just for completeness, could you gather a similar set of driver logs
-with error-logging enabled within this configuration?
+could this be BUILD_BUG_ON(!is_power_of_2(SRP_RQ_SIZE)) ?
+ > 
+ > -	*req = &target->req_ring[(long) scmnd->host_scribble];
+ > +	*req = &target->req_ring[(long)scmnd->host_scribble
+ > +				 & (SRP_RQ_SIZE - 1)];
+ > 
+ > -	return 0;
+ > +	return (*req)->scmnd == scmnd ? 0 : -1;
+ >  }
+ > 
+ >  static int srp_abort(struct scsi_cmnd *scmnd)
+ > @@ -1423,8 +1434,15 @@ static int srp_reset_device(struct scsi_
+ > 
+ >  	if (target->qp_in_error)
+ >  		return FAILED;
+ > -	if (srp_find_req(target, scmnd, &req))
+ > -		return FAILED;
+ > +	if (srp_find_req(target, scmnd, &req)) {
+ > +		/*
+ > +		 * scmnd has not yet been queued -- queue it now. This can
+ > +		 * happen e.g. when a SG_SCSI_RESET ioctl has been issued.
+ > +		 */
+ > +		if (srp_queuecommand(scmnd, scmnd->scsi_done)
+ > +		    || srp_find_req(target, scmnd, &req))
+ > +			return FAILED;
 
-> I have set qlport_down_retry=1 for faster failover.
+I don't think we can just pass the command to srp_queuecommand() here.
+For one thing queuecommand requires some locking, and second, we don't
+actually want to queue the command -- in fact I'm not sure it is set up
+properly with an opcode etc to execute the command.
 
-Increasing it may help to avoid problem (2).
+What I think needs to happen is we need to allocate a request for the
+command the same way srp_queuecommand() does, and in fact maybe that
+code could be factored out to avoid duplication.
 
-> Should I unset
-> it?  A constant stream of RESETs is not expected.
-
-Regards,
-Andrew Vasquez
+ -R .
