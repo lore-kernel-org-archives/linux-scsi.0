@@ -1,41 +1,47 @@
-From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 9/9] mpt2sas: Bump driver version 01.100.04.00
-Date: Fri, 7 Aug 2009 19:39:59 +0530
-Message-ID: <20090807140953.GJ5807@lsi.com>
+From: Alan Jenkins <sourcejedi.lkml@googlemail.com>
+Subject: Re: [PATCH 2/7 v3] initdev:kernel:USB init device discovery
+	notification
+Date: Fri, 7 Aug 2009 16:32:52 +0100
+Message-ID: <9b2b86520908070832p2d1658b0t8b1d89d1a034bb9a@mail.gmail.com>
+References: <20090804221506.GA9256@cuplxvomd02.corp.sa.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og116.obsmtp.com ([64.18.2.219]:50566 "EHLO
-	exprod7og116.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932503AbZHGOcA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Aug 2009 10:32:00 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752842AbZHGPc4@vger.kernel.org>
+In-Reply-To: <20090804221506.GA9256@cuplxvomd02.corp.sa.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: David VomLehn <dvomlehn@cisco.com>
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-usb@vger.kernel.org, greg@kroah.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, arjan@infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com, stable@kernel.org
 
+On 8/4/09, David VomLehn <dvomlehn@cisco.com> wrote:
+> From: Alan Stern <stern@rowland.harvard.edu>
+>
+> Use init device discovery infrastructure to provide notification of
+> availability of USB devices.
+>
+> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+> Signed-off-by: David VomLehn <dvomlehn@cisco.com>
+> ---
+>  drivers/usb/core/hub.c |   26 ++++++++++++++++++++++++++
+>  1 files changed, 26 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/usb/core/hub.c b/drivers/usb/core/hub.c
+> index be86ae3..08baee0 100644
+> --- a/drivers/usb/core/hub.c
+> +++ b/drivers/usb/core/hub.c
+> @@ -37,6 +37,20 @@
+>  #endif
+>  #endif
+>
+> +/* The mask of possible USB boot devices depends on what drivers and
+> + * options have been configured into the kernel.  There are too many
+> + * USB network config options to list here, so just assume it is always
+> + * possible to have a USB network device.
+> + */
 
-Bump version to 01.100.04.00
----
+That could be fixed though.  Make the "USB Network Adaptors" menu into
+an option.  Then you just have e.g. "CONFIG_NETDEV_USB", plus the two
+class devices outside the menu (CONFIG_USB_ACM and CONFIG_USB_WDM).
 
-Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
-Signed-off-by: Eric Moore <Eric.moore@lsi.com>
----
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index 22b7150..8627ae2 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -69,10 +69,10 @@
- #define MPT2SAS_DRIVER_NAME		"mpt2sas"
- #define MPT2SAS_AUTHOR	"LSI Corporation <DL-MPTFusionLinux@lsi.com>"
- #define MPT2SAS_DESCRIPTION	"LSI MPT Fusion SAS 2.0 Device Driver"
--#define MPT2SAS_DRIVER_VERSION		"01.100.03.00"
-+#define MPT2SAS_DRIVER_VERSION		"01.100.04.00"
- #define MPT2SAS_MAJOR_VERSION		01
- #define MPT2SAS_MINOR_VERSION		100
--#define MPT2SAS_BUILD_VERSION		03
-+#define MPT2SAS_BUILD_VERSION		04
- #define MPT2SAS_RELEASE_VERSION		00
- 
- /*
+Alan
