@@ -1,37 +1,50 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: Re: [PATCH] drivers/scsi: Check NULL for kmalloc() return
-Date: Fri, 7 Aug 2009 21:56:48 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0908072155260.8253@ask.diku.dk>
-References: <20090807183953.GA22286@fencepost.gnu.org>
- <Pine.LNX.4.64.0908072054080.8253@ask.diku.dk> <20090807194429.GA23615@fencepost.gnu.org>
+From: Alan Jenkins <sourcejedi.lkml@googlemail.com>
+Subject: Re: [PATCH 2/7 v3] initdev:kernel:USB init device discovery notification
+Date: Fri, 07 Aug 2009 21:09:40 +0100
+Message-ID: <4A7C8A04.3060005@googlemail.com>
+References: <9b2b86520908070832p2d1658b0t8b1d89d1a034bb9a@mail.gmail.com> <Pine.LNX.4.44L0.0908071142260.3063-100000@iolanthe.rowland.org> <9b2b86520908071017h606e595fr4488d6ff61cb337c@mail.gmail.com> <20090807174209.GB30450@cuplxvomd02.corp.sa.net>
+Reply-To: alan-jenkins@tuffmail.co.uk
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mgw1.diku.dk ([130.225.96.91]:38908 "EHLO mgw1.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933185AbZHGT4u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Aug 2009 15:56:50 -0400
-In-Reply-To: <20090807194429.GA23615@fencepost.gnu.org>
+Received: from ey-out-2122.google.com ([74.125.78.24]:8170 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933562AbZHGUJo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Aug 2009 16:09:44 -0400
+In-Reply-To: <20090807174209.GB30450@cuplxvomd02.corp.sa.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Davidlohr Bueso A." <dave@gnu.org>
-Cc: kraxel@bytesex.org, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: David VomLehn <dvomlehn@cisco.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-usb@vger.kernel.org, greg@kroah.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, arjan@infradead.org
 
-On Fri, 7 Aug 2009, Davidlohr Bueso A. wrote:
+David VomLehn wrote:
+> On Fri, Aug 07, 2009 at 06:17:51PM +0100, Alan Jenkins wrote:
+>   
+>> On 8/7/09, Alan Stern <stern@rowland.harvard.edu> wrote:
+>>     
+>>> On Fri, 7 Aug 2009, Alan Jenkins wrote:
+>>>
+>>>       
+>>>>> +/* The mask of possible USB boot devices depends on what drivers and
+>>>>> + * options have been configured into the kernel.  There are too many
+>>>>> + * USB network config options to list here, so just assume it is always
+>>>>> + * possible to have a USB network device.
+>>>>> + */
+>>>>>           
+>>>> That could be fixed though.  Make the "USB Network Adaptors" menu into
+>>>> an option.
 
-> On Fri, Aug 07, 2009 at 08:54:44PM +0200, Julia Lawall wrote:
-> > On Fri, 7 Aug 2009, Davidlohr Bueso A. wrote:
-> > 
-> > > Verify that ch->dt is not NULL before using it:
-> > > ch-dt[elem] = value;
-> > 
-> > It looks like buffer should be freed as well?
-> 
-> The way I see it, this is done in ch_remove()
+> I remember thinking about this and seem to recall that Alan Stern and I
+> tossed this idea around, but didn't act on it. Such a thing holds potential
+> for avoiding an unnecessary delay during boot. Whether it actually makes
+> things faster in a given configuration will depend on that configuration's
+> critical path, but I would welcome such a patch on the basis that it's
+> unlikely to hurt and could improve boot times in some circumstances.
+>   
 
-I don't see that at all.  buffer appears to be a variable that is local to 
-ch_readconfig and is passed down to other functions, but never saved 
-anywhere.  Furthermore buffer is freed in the normal exit of the function, 
-so it seems likely that it should be freed on an early exit as well.
+Bother, I see why this doesn't work now.  There are all the USB
+*wireless* network drivers outside the menu.
 
-julia
+Thanks anyway
+Alan
