@@ -1,54 +1,76 @@
-From: Thomas Georgiou <tageorgiou@gmail.com>
-Subject: Re: QLA2200 causes kernel bug
-Date: Thu, 6 Aug 2009 23:40:55 -0400
-Message-ID: <6e4c20e70908062040x39d8d0b3p90e674ec5925c5ac@mail.gmail.com>
-References: <6e4c20e70908060828xd4a6a8fh801e1d456c39a5f@mail.gmail.com>
-	 <20090806164925.GO2453@plap4-2.local>
-	 <6e4c20e70908061012y3fa907aduca4f706cf5ccaa5a@mail.gmail.com>
+From: Julia Lawall <julia@diku.dk>
+Subject: Re: [PATCH 3/3] drivers/scsi: Add kmalloc NULL tests
+Date: Fri, 7 Aug 2009 06:39:39 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0908070639020.1956@ask.diku.dk>
+References: <Pine.LNX.4.64.0908062205190.19100@ask.diku.dk>
+ <1249593604.10463.18.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f177.google.com ([209.85.211.177]:42454 "EHLO
-	mail-yw0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756968AbZHGDkz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Aug 2009 23:40:55 -0400
-Received: by ywh7 with SMTP id 7so1798302ywh.21
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Aug 2009 20:40:55 -0700 (PDT)
-In-Reply-To: <6e4c20e70908061012y3fa907aduca4f706cf5ccaa5a@mail.gmail.com>
+Received: from mgw1.diku.dk ([130.225.96.91]:39891 "EHLO mgw1.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751916AbZHGEjl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Aug 2009 00:39:41 -0400
+In-Reply-To: <1249593604.10463.18.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-Here is a new log with error logging enabled:
-http://www.tjhsst.edu/~2010tgeorgio/fclogs/dmesg4.log
+On Thu, 6 Aug 2009, James Bottomley wrote:
 
-The enclosures do not have conflicting scsi ids.
+> On Thu, 2009-08-06 at 22:06 +0200, Julia Lawall wrote:
+> > From: Julia Lawall <julia@diku.dk>
+> > 
+> > Check that the result of kmalloc is not NULL before passing it to other
+> > functions.
+> > 
+> > The semantic match that finds this problem is as follows:
+> > (http://coccinelle.lip6.fr/)
+> > 
+> > // <smpl>
+> > @@
+> > expression *x;
+> > identifier f;
+> > constant char *C;
+> > @@
+> > 
+> > x = \(kmalloc\|kcalloc\|kzalloc\)(...);
+> > ... when != x == NULL
+> >     when != x != NULL
+> >     when != (x || ...)
+> > (
+> > kfree(x)
+> > |
+> > f(...,C,...,x,...)
+> > |
+> > *f(...,x,...)
+> > |
+> > *x->f
+> > )
+> > // </smpl>
+> > 
+> > Signed-off-by: Julia Lawall <julia@diku.dk>
+> > 
+> > ---
+> >  drivers/scsi/sr.c                   |    2 ++
+> >  1 files changed, 2 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+> > index cce0fe4..3fbf42e 100644
+> > --- a/drivers/scsi/sr.c
+> > +++ b/drivers/scsi/sr.c
+> > @@ -211,6 +211,8 @@ static int sr_media_change(struct cdrom_device_info *cdi, int slot)
+> >  	}
+> >  
+> >  	sshdr =  kzalloc(sizeof(*sshdr), GFP_KERNEL);
+> > +	if (!sshdr)
+> > +		return -ENOMEM;
+> 
+> this isn't necessary; sr_test_unit_ready is designed to take a NULL
+> pointer for sshdr ... it's just slightly less useful when this happens,
+> but it still returns some status.
 
-On Thu, Aug 6, 2009 at 1:12 PM, Thomas Georgiou<tageorgiou@gmail.com> w=
-rote:
-> Here is the dmesg log: http://www.tjhsst.edu/~2010tgeorgio/fclogs/dme=
-sg3.log
-> Here is the complete syslog file, with more junk in it:
-> http://www.tjhsst.edu/~2010tgeorgio/fclogs/messages3.log
-> I will reboot the server and enable error logging.
->
-> Could this issues be caused by enclosures have conflicting scsi ids?
->
-> On Thu, Aug 6, 2009 at 12:49 PM, Andrew
-> Vasquez<andrew.vasquez@qlogic.com> wrote:
->> Thomas, could you forward the full messages file? =A0I'm interested =
-in
->> seeing what series of events led up to the BUG_ON(). =A0The snippets
->> here and in the bugzilla only document the failing point BUG_ON().
->> Also, could you get a test run with the driver error-logging enabled
->> as well:
->>
->> =A0 =A0 =A0 =A0$ modprobe -v qla2xxx ql2xextended_error_logging=3D1
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+OK, I agree.  Thanks.
+
+julia
