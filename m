@@ -1,70 +1,57 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 1/3] block: add blk-iopoll, a NAPI like approach for
-	block devices
-Date: Fri, 7 Aug 2009 08:37:45 +0200
-Message-ID: <20090807063745.GQ12579@kernel.dk>
-References: <1249588685-4662-1-git-send-email-jens.axboe@oracle.com> <1249588685-4662-2-git-send-email-jens.axboe@oracle.com> <20090806223257.0c33cf15@lxorguk.ukuu.org.uk>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: QLA2200 causes kernel bug
+Date: Fri, 7 Aug 2009 00:01:47 -0700
+Message-ID: <20090807070147.GA13292@plap4-2.local>
+References: <6e4c20e70908060828xd4a6a8fh801e1d456c39a5f@mail.gmail.com> <20090806164925.GO2453@plap4-2.local> <6e4c20e70908061012y3fa907aduca4f706cf5ccaa5a@mail.gmail.com> <6e4c20e70908062040x39d8d0b3p90e674ec5925c5ac@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755596AbZHGGhr@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from avexch1.qlogic.com ([198.70.193.115]:18294 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755154AbZHGHBr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Aug 2009 03:01:47 -0400
 Content-Disposition: inline
-In-Reply-To: <20090806223257.0c33cf15@lxorguk.ukuu.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, jeff@garzik.org
+In-Reply-To: <6e4c20e70908062040x39d8d0b3p90e674ec5925c5ac@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Thomas Georgiou <tageorgiou@gmail.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, Aug 06 2009, Alan Cox wrote:
-> > doing the command completion when the irq occurs, schedule a dedicated
-> > softirq in the hopes that we will complete more IO when the iopoll
-> > handler is invoked. Devices have a budget of commands assigned, and will
-> > stay in polled mode as long as they continue to consume their budget
-> > from the iopoll softirq handler. If they do not, the device is set back
-> > to interrupt completion mode.
+On Thu, 06 Aug 2009, Thomas Georgiou wrote:
+
+> Here is a new log with error logging enabled:
+> http://www.tjhsst.edu/~2010tgeorgio/fclogs/dmesg4.log
 > 
-> This seems a little odd for pure ATA except for NCQ commands. Normal ATA
-> is notoriously completion/reissue latency sensitive [to the point I
-> suspect we should be dequeuing 2 commands from SCSI and loading the next
-> in the completion handler as soon as we recover the result task file and
-> see no error rather than going up and down the stack)
-
-Yes certainly, it's only for devices that do queuing. If they don't,
-then we will always have just the one command to complete. So not much
-to poll! As to pre-prep for extra latency intensive devices, have you
-tried experimenting with just pretending that non-ncq devices in libata
-have a queue depth of 2? That should ensure that the first command
-available upon completion of the existing command is already prepped.
-Not sure how much time that would save, I would hope that our prep phase
-isn't too slow to begin with (or that would be the place to fix :-)
-
-> What do the numbers look like ?
-
-On a slow box (with many cores), the benefits are quite huge:
-
-
-blocksize       blk-iopoll      IOPS    IRQ/sec         Commands/IRQ
---------------------------------------------------------------------
-512b            0               25168   ~19500          1,3
-512b            1               30355     ~750          40
-4096b           0               25612   ~21500          1,2
-4096b           1               30231    ~1200          25
-
-I suspect there's some cache interaction going on here too, but the
-numbers do look very good. On a faster box (and different architecture),
-on a test that does 50k IOPS, they perform identically but the iopoll
-approach uses less CPU. The interrupt rate drops from 55k ints/sec to
-39-40k ints/sec for that case.
-
-These are all synthetic IO only benchmarks, I hope to have some numbers
-for some mixed benchmarks soon too.
-
-> > This patch holds the core bits for blk-iopoll, device driver support
-> > sold separately.
+> The enclosures do not have conflicting scsi ids.
 > 
-> You've been at Oracle too long ;) You'll be telling me its not a
-> supported configuration next.
 
-;-)
+Could you let me know what's going on at timestamp - 1840:
 
--- 
-Jens Axboe
+	[  883.659657] bonnie++ used greatest stack depth: 3472 bytes left
+	[ 1840.109135] scsi(1): Asynchronous LIP RESET (f8f7).
+	[ 1840.109141] qla2xxx 0000:0a:01.0: LIP reset occurred (f8f7).
+	[ 1840.109477] scsi(1): qla2x00_reset_marker()
+	[ 1840.150025] scsi(1): fcport-0 - port retry count: 0 remaining
+	[ 1840.150030] scsi(1): fcport-1 - port retry count: 0 remaining
+	[ 1840.150034] scsi(1): fcport-2 - port retry count: 0 remaining
+	[ 1840.150037] scsi(1): fcport-3 - port retry count: 0 remaining
+	...
+	[ 1840.150113] scsi(1): fcport-26 - port retry count: 0 remaining
+	[ 1840.150116] scsi(1): fcport-27 - port retry count: 0 remaining
+	[ 1840.203564] scsi(1): LIP occurred (f7f7).
+	[ 1840.203569] qla2xxx 0000:0a:01.0: LIP occurred (f7f7).
+	[ 1840.234308] scsi(1): Asynchronous PORT UPDATE.
+	[ 1840.234313] scsi(1): Port database changed b88f 0000 003f.
+	[ 1841.100044]  rport-1:0-0: blocked FC remote port time out: removing target and saving binding
+	[ 1841.100101] qla2x00_mailbox_command(1): **** FAILED. mbx0=4006, mbx1=12, mbx2=ffff, cmd=71 ****
+	[ 1841.100107] qla2x00_fabric_logout(1): failed=102 mbx1=12.
+
+there's seems to be a great deal of fabric disruptions occuring on the
+fibre.  This seems to be occurring on both 22xx ports.  It also
+appears that you've set port-down-timeout (dev-loss-tmo) to 0 seconds
+(for faster failovers)?
+
+Could you describe the topology?  Would it be possible to isolate the
+faults, I take it the constant stream of RESETs are not expected?
+
+-- av
