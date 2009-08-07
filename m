@@ -1,80 +1,39 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 1/3] block: add blk-iopoll, a NAPI like approach for
-	block  devices
-Date: Fri, 7 Aug 2009 13:31:47 +0200
-Message-ID: <20090807113146.GX12579@kernel.dk>
-References: <1249588685-4662-1-git-send-email-jens.axboe@oracle.com> <1249588685-4662-2-git-send-email-jens.axboe@oracle.com> <20090806223257.0c33cf15@lxorguk.ukuu.org.uk> <20090807063745.GQ12579@kernel.dk> <4A7BE80A.6080808@garzik.org> <20090807085004.GV12579@kernel.dk> <20090807110517.GW12579@kernel.dk>
+From: "Kashyap, Desai" <kashyap.desai@lsi.com>
+Subject: [PATCH 0/9] mpt2sas : Discription patch
+Date: Fri, 7 Aug 2009 19:31:47 +0530
+Message-ID: <20090807140147.GA5807@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757593AbZHGLbs@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exprod7og126.obsmtp.com ([64.18.2.206]:46532 "EHLO
+	exprod7og126.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757475AbZHGOW5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Aug 2009 10:22:57 -0400
 Content-Disposition: inline
-In-Reply-To: <20090807110517.GW12579@kernel.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Eric.Moore@lsi.com
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-On Fri, Aug 07 2009, Jens Axboe wrote:
-> On Fri, Aug 07 2009, Jens Axboe wrote:
-> > > I'm not NAK'ing...  just inserting some relevant NAPI field experience,  
-> > > and hoping for some numbers that better measure the costs/benefits.
-> > 
-> > Appreciate you looking over this, and I'll certainly be posting some
-> > more numbers on this. It'll largely depend on both storage, controller,
-> > and worload.
-> 
-> Here's a quick set of numbers, beating with random reads on a drive.
-> Average of three runs for each, stddev is very low so confidence in the
-> numbers should be high.
-> 
-> With iopoll=0 (disabled), stock:
-> 
-> blocksize       IOPS    ints/sec        usr     sys
-> ------------------------------------------------------
-> 4k              48401   ~30500          3.36%   27.26%
-> 
-> clat (usec): min=1052, max=21615, avg=10541.48, stdev=243.48
-> clat (usec): min=1066, max=22040, avg=10543.69, stdev=242.05
-> clat (usec): min=1057, max=23237, avg=10529.04, stdev=239.30
-> 
-> 
-> With iopoll=1
-> 
-> blocksize       IOPS    ints/sec        usr     sys
-> ------------------------------------------------------
-> 4k              48452   ~29000          3.37%   26.47%
-> 
-> 
-> clat (usec): min=1178, max=21662, avg=10542.72, stdev=247.87
-> clat (usec): min=1074, max=21783, avg=10534.14, stdev=240.54
-> clat (usec): min=1102, max=22123, avg=10509.42, stdev=225.73
-
-Lets raise the bar a bit, this time using 8k reads on the faster box.
-
-iopoll=0
-
-blocksize       IOPS    ints/sec        usr     sys
-------------------------------------------------------
-8k              64050   ~76000          4.12%   45.01%
-
-clat (usec): min=1326, max=18994, avg=7967.54, stdev=214.12
-clat (usec): min=1325, max=25404, avg=7968.06, stdev=239.87
-clat (usec): min=1273, max=21414, avg=7963.43, stdev=231.27
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
 
-iopoll=1
+MPT2SAS driver bug fixes. Please consider it for 2.6.31.
 
-blocksize       IOPS    ints/sec        usr     sys
-------------------------------------------------------
-8k              64162   ~55000          4.07%   42.32%
-
-clat (usec): min=1380, max=19681, avg=7960.31, stdev=197.41
-clat (usec): min=1370, max=37508, avg=7954.61, stdev=210.35
-clat (usec): min=1332, max=23383, avg=7947.99, stdev=209.60
-
-Again, purely a synthetic IO benchmark, but the sys reduction is
-interesting.
+All these patches are recreated after James B suggestion.
+This patch set is bug fix and required to port back to stable kernel.
 
 
--- 
-Jens Axboe
+[PATCH 1/9] mpt2sas: Introduced check for enclosure_handle to avoid crash 
+[PATCH 2/9] mpt2sas: Expander Add oops saying "Already part of another port"
+[PATCH 3/9] mpt2sas: Raid 10 Value is showing as Raid 1E in /va/log/messages
+[PATCH 4/9] mpt2sas: Config request and diag reset deadlock
+[PATCH 5/9] mpt2sas: Excessive log info causes sas iounit page time out
+[PATCH 6/9] mpt2sas: Remove loop inside config request
+
+[PATCH 7/9] mpt2sas: crash due to Watchdog is active while OS in standby mode
+[PATCH 8/9] mpt2sas: pdev drv data points to NULL while OS resume from
+		hibernate mode.
+[PATCH 9/9] mpt2sas: Bump driver version 01.100.04.00
+---
+Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
+Signed-off-by: Eric Moore <Eric.moore@lsi.com>
+---
