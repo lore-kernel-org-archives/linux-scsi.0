@@ -1,47 +1,39 @@
-From: Alan Jenkins <sourcejedi.lkml@googlemail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: [PATCH 2/7 v3] initdev:kernel:USB init device discovery
-	notification
-Date: Fri, 7 Aug 2009 16:32:52 +0100
-Message-ID: <9b2b86520908070832p2d1658b0t8b1d89d1a034bb9a@mail.gmail.com>
-References: <20090804221506.GA9256@cuplxvomd02.corp.sa.net>
+ notification
+Date: Fri, 7 Aug 2009 11:44:50 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0908071142260.3063-100000@iolanthe.rowland.org>
+References: <9b2b86520908070832p2d1658b0t8b1d89d1a034bb9a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752842AbZHGPc4@vger.kernel.org>
-In-Reply-To: <20090804221506.GA9256@cuplxvomd02.corp.sa.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: David VomLehn <dvomlehn@cisco.com>
-Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-usb@vger.kernel.org, greg@kroah.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, arjan@infradead.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:55487 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753216AbZHGPou (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Aug 2009 11:44:50 -0400
+In-Reply-To: <9b2b86520908070832p2d1658b0t8b1d89d1a034bb9a@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Jenkins <sourcejedi.lkml@googlemail.com>
+Cc: David VomLehn <dvomlehn@cisco.com>, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-usb@vger.kernel.org, greg@kroah.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, arjan@infradead.org
 
-On 8/4/09, David VomLehn <dvomlehn@cisco.com> wrote:
-> From: Alan Stern <stern@rowland.harvard.edu>
->
-> Use init device discovery infrastructure to provide notification of
-> availability of USB devices.
->
-> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-> Signed-off-by: David VomLehn <dvomlehn@cisco.com>
-> ---
->  drivers/usb/core/hub.c |   26 ++++++++++++++++++++++++++
->  1 files changed, 26 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/usb/core/hub.c b/drivers/usb/core/hub.c
-> index be86ae3..08baee0 100644
-> --- a/drivers/usb/core/hub.c
-> +++ b/drivers/usb/core/hub.c
-> @@ -37,6 +37,20 @@
->  #endif
->  #endif
->
-> +/* The mask of possible USB boot devices depends on what drivers and
-> + * options have been configured into the kernel.  There are too many
-> + * USB network config options to list here, so just assume it is always
-> + * possible to have a USB network device.
-> + */
+On Fri, 7 Aug 2009, Alan Jenkins wrote:
 
-That could be fixed though.  Make the "USB Network Adaptors" menu into
-an option.  Then you just have e.g. "CONFIG_NETDEV_USB", plus the two
-class devices outside the menu (CONFIG_USB_ACM and CONFIG_USB_WDM).
+> > +/* The mask of possible USB boot devices depends on what drivers and
+> > + * options have been configured into the kernel.  There are too many
+> > + * USB network config options to list here, so just assume it is always
+> > + * possible to have a USB network device.
+> > + */
+> 
+> That could be fixed though.  Make the "USB Network Adaptors" menu into
+> an option.  Then you just have e.g. "CONFIG_NETDEV_USB", plus the two
+> class devices outside the menu (CONFIG_USB_ACM and CONFIG_USB_WDM).
 
-Alan
+That could be done.  It might even meet with the approval of the
+networking maintainer, independent of this patch series.
+
+But what if somebody adds yet another networking class driver outside
+the menu?
+
+Alan Stern
+
