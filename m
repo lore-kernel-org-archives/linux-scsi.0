@@ -1,100 +1,101 @@
-From: Bart Van Assche <bart.vanassche@gmail.com>
-Subject: Re: sg_reset can trigger a NULL pointer dereference in the SRP
-	initiator
-Date: Fri, 7 Aug 2009 10:31:18 +0200
-Message-ID: <e2e108260908070131r49dd2d37s8bb36c9365d991e8@mail.gmail.com>
-References: <e2e108260908060039x7718577yf932d8a9188fe0cb@mail.gmail.com>
-	 <4A7A949B.60408@panasas.com> <ada1vnohmc0.fsf@cisco.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 1/3] block: add blk-iopoll, a NAPI like approach for	block
+ devices
+Date: Fri, 07 Aug 2009 04:38:34 -0400
+Message-ID: <4A7BE80A.6080808@garzik.org>
+References: <1249588685-4662-1-git-send-email-jens.axboe@oracle.com> <1249588685-4662-2-git-send-email-jens.axboe@oracle.com> <20090806223257.0c33cf15@lxorguk.ukuu.org.uk> <20090807063745.GQ12579@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:63552 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757150AbZHGIbT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Aug 2009 04:31:19 -0400
-Received: by ewy10 with SMTP id 10so1374219ewy.37
-        for <linux-scsi@vger.kernel.org>; Fri, 07 Aug 2009 01:31:18 -0700 (PDT)
-In-Reply-To: <ada1vnohmc0.fsf@cisco.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:44816 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757090AbZHGIio (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Aug 2009 04:38:44 -0400
+In-Reply-To: <20090807063745.GQ12579@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <rdreier@cisco.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, OpenIB <general@lists.openfabrics.org>, Vladislav Bolkhovitin <vst@vlnb.net>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Eric.Moore@lsi.com
 
-On Thu, Aug 6, 2009 at 7:41 PM, Roland Dreier<rdreier@cisco.com> wrote:
->
-> =A0> Specifically scmnd->host_scribble can just be Zero.
->
-> I see at last, thanks!
->
-> The issue is that SRP is using host_scribble to hold an index, and in=
-dex
-> 0 is valid for us.
->
-> I guess the fix is a bit complex, but basically we should use
-> host_scribble to point to the request, and if we don't find a request=
- in
-> reset_device we should allocate one.
+Jens Axboe wrote:
+> On Thu, Aug 06 2009, Alan Cox wrote:
+>>> doing the command completion when the irq occurs, schedule a dedicated
+>>> softirq in the hopes that we will complete more IO when the iopoll
+>>> handler is invoked. Devices have a budget of commands assigned, and will
+>>> stay in polled mode as long as they continue to consume their budget
+>>> from the iopoll softirq handler. If they do not, the device is set back
+>>> to interrupt completion mode.
+>> This seems a little odd for pure ATA except for NCQ commands. Normal ATA
+>> is notoriously completion/reissue latency sensitive [to the point I
+>> suspect we should be dequeuing 2 commands from SCSI and loading the next
+>> in the completion handler as soon as we recover the result task file and
+>> see no error rather than going up and down the stack)
+> 
+> Yes certainly, it's only for devices that do queuing. If they don't,
+> then we will always have just the one command to complete. So not much
+> to poll! As to pre-prep for extra latency intensive devices, have you
+> tried experimenting with just pretending that non-ncq devices in libata
+> have a queue depth of 2? That should ensure that the first command
+> available upon completion of the existing command is already prepped.
+> Not sure how much time that would save, I would hope that our prep phase
+> isn't too slow to begin with (or that would be the place to fix :-)
+> 
+>> What do the numbers look like ?
+> 
+> On a slow box (with many cores), the benefits are quite huge:
+> 
+> 
+> blocksize       blk-iopoll      IOPS    IRQ/sec         Commands/IRQ
+> --------------------------------------------------------------------
+> 512b            0               25168   ~19500          1,3
+> 512b            1               30355     ~750          40
+> 4096b           0               25612   ~21500          1,2
+> 4096b           1               30231    ~1200          25
+> 
+> I suspect there's some cache interaction going on here too, but the
+> numbers do look very good. On a faster box (and different architecture),
+> on a test that does 50k IOPS, they perform identically but the iopoll
+> approach uses less CPU. The interrupt rate drops from 55k ints/sec to
+> 39-40k ints/sec for that case.
 
-A fix like the one below ?
+It's easy to move work from one place to another, so I would definitely 
+expect that IRQ/sec drops...  but these are the more relevant numbers, IMO:
 
---- linux-2.6.30.4/drivers/infiniband/ulp/srp/ib_srp-orig.c	2009-08-03
-12:13:11.000000000 +0200
-+++ linux-2.6.30.4/drivers/infiniband/ulp/srp/ib_srp.c	2009-08-07
-10:23:27.000000000 +0200
-@@ -1371,16 +1371,27 @@ out:
- 	return -1;
- }
+* CPU usage before/after
+* latency before/after
 
-+/**
-+ * Look up the struct srp_request that has been associated with the sp=
-ecified
-+ * SCSI command by srp_queuecommand().
-+ *
-+ * Returns 0 upon success and -1 upon failure.
-+ */
- static int srp_find_req(struct srp_target_port *target,
- 			struct scsi_cmnd *scmnd,
- 			struct srp_request **req)
- {
--	if (scmnd->host_scribble =3D=3D (void *) -1L)
--		return -1;
-+	/*
-+	 * The code below will only work if SRP_RQ_SIZE is a power of two,
-+	 * so check this first.
-+	 */
-+	BUILD_BUG_ON((SRP_RQ_SIZE ^ (SRP_RQ_SIZE - 1))
-+		     !=3D (SRP_RQ_SIZE | (SRP_RQ_SIZE - 1)));
+Also, and even for storage where command queueing is _possible_, there 
+is a problem case we saw with NAPI:  sometimes the combination of a fast 
+computer and an under-100%-utilization workload can imply repeated cycles of
 
--	*req =3D &target->req_ring[(long) scmnd->host_scribble];
-+	*req =3D &target->req_ring[(long)scmnd->host_scribble
-+				 & (SRP_RQ_SIZE - 1)];
+	spin lock
+	irq disable
+	blk_iopoll_sched()
+	spin unlock
 
--	return 0;
-+	return (*req)->scmnd =3D=3D scmnd ? 0 : -1;
- }
+	spin lock
+	handle a single command completion
+	spin unlock
+	blk_iopoll_complete()
 
- static int srp_abort(struct scsi_cmnd *scmnd)
-@@ -1423,8 +1434,15 @@ static int srp_reset_device(struct scsi_
+which not only erases the benefit, but winds up being more costly, both 
+in terms of CPU usage and in terms of latency.
 
- 	if (target->qp_in_error)
- 		return FAILED;
--	if (srp_find_req(target, scmnd, &req))
--		return FAILED;
-+	if (srp_find_req(target, scmnd, &req)) {
-+		/*
-+		 * scmnd has not yet been queued -- queue it now. This can
-+		 * happen e.g. when a SG_SCSI_RESET ioctl has been issued.
-+		 */
-+		if (srp_queuecommand(scmnd, scmnd->scsi_done)
-+		    || srp_find_req(target, scmnd, &req))
-+			return FAILED;
-+	}
- 	if (srp_send_tsk_mgmt(target, req, SRP_TSK_LUN_RESET))
- 		return FAILED;
- 	if (req->tsk_status)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This makes measuring the problem much more difficult; the interesting 
+case I am highlighting does not occur when using a benchmarking tool to 
+keep a storage device at 100% utilization.
+
+We don't want to optimize for the 100%-load case at the expense of the 
+_common case_, which is IMO utilization below 100%.  Servers are not 
+100% busy all the time, which opens the possibility that a 
+split-completion scheme such as the one presented can actually use 
+_more_ CPU than the current, unmodified 2.6.31-rc kernel.
+
+I'm not NAK'ing...  just inserting some relevant NAPI field experience, 
+and hoping for some numbers that better measure the costs/benefits.
+
+	Jeff
+
+
+
