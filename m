@@ -1,131 +1,99 @@
 From: Jens Axboe <jens.axboe@oracle.com>
 Subject: Re: [PATCH 1/3] block: add blk-iopoll, a NAPI like approach for
 	block  devices
-Date: Fri, 7 Aug 2009 10:50:04 +0200
-Message-ID: <20090807085004.GV12579@kernel.dk>
-References: <1249588685-4662-1-git-send-email-jens.axboe@oracle.com> <1249588685-4662-2-git-send-email-jens.axboe@oracle.com> <20090806223257.0c33cf15@lxorguk.ukuu.org.uk> <20090807063745.GQ12579@kernel.dk> <4A7BE80A.6080808@garzik.org>
+Date: Fri, 7 Aug 2009 13:05:17 +0200
+Message-ID: <20090807110517.GW12579@kernel.dk>
+References: <1249588685-4662-1-git-send-email-jens.axboe@oracle.com> <1249588685-4662-2-git-send-email-jens.axboe@oracle.com> <20090806223257.0c33cf15@lxorguk.ukuu.org.uk> <20090807063745.GQ12579@kernel.dk> <4A7BE80A.6080808@garzik.org> <20090807085004.GV12579@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:40363 "EHLO kernel.dk"
+Received: from brick.kernel.dk ([93.163.65.50]:37002 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755187AbZHGIuE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Aug 2009 04:50:04 -0400
+	id S1757308AbZHGLFQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Aug 2009 07:05:16 -0400
 Content-Disposition: inline
-In-Reply-To: <4A7BE80A.6080808@garzik.org>
+In-Reply-To: <20090807085004.GV12579@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
 Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Eric.Moore@lsi.com
 
-On Fri, Aug 07 2009, Jeff Garzik wrote:
-> Jens Axboe wrote:
->> On Thu, Aug 06 2009, Alan Cox wrote:
->>>> doing the command completion when the irq occurs, schedule a dedicated
->>>> softirq in the hopes that we will complete more IO when the iopoll
->>>> handler is invoked. Devices have a budget of commands assigned, and will
->>>> stay in polled mode as long as they continue to consume their budget
->>>> from the iopoll softirq handler. If they do not, the device is set back
->>>> to interrupt completion mode.
->>> This seems a little odd for pure ATA except for NCQ commands. Normal ATA
->>> is notoriously completion/reissue latency sensitive [to the point I
->>> suspect we should be dequeuing 2 commands from SCSI and loading the next
->>> in the completion handler as soon as we recover the result task file and
->>> see no error rather than going up and down the stack)
->>
->> Yes certainly, it's only for devices that do queuing. If they don't,
->> then we will always have just the one command to complete. So not much
->> to poll! As to pre-prep for extra latency intensive devices, have you
->> tried experimenting with just pretending that non-ncq devices in libata
->> have a queue depth of 2? That should ensure that the first command
->> available upon completion of the existing command is already prepped.
->> Not sure how much time that would save, I would hope that our prep phase
->> isn't too slow to begin with (or that would be the place to fix :-)
->>
->>> What do the numbers look like ?
->>
->> On a slow box (with many cores), the benefits are quite huge:
->>
->>
->> blocksize       blk-iopoll      IOPS    IRQ/sec         Commands/IRQ
->> --------------------------------------------------------------------
->> 512b            0               25168   ~19500          1,3
->> 512b            1               30355     ~750          40
->> 4096b           0               25612   ~21500          1,2
->> 4096b           1               30231    ~1200          25
->>
->> I suspect there's some cache interaction going on here too, but the
->> numbers do look very good. On a faster box (and different architecture),
->> on a test that does 50k IOPS, they perform identically but the iopoll
->> approach uses less CPU. The interrupt rate drops from 55k ints/sec to
->> 39-40k ints/sec for that case.
->
-> It's easy to move work from one place to another, so I would definitely  
-> expect that IRQ/sec drops...  but these are the more relevant numbers, 
-> IMO:
->
-> * CPU usage before/after
-> * latency before/after
+On Fri, Aug 07 2009, Jens Axboe wrote:
+> > I'm not NAK'ing...  just inserting some relevant NAPI field experience,  
+> > and hoping for some numbers that better measure the costs/benefits.
+> 
+> Appreciate you looking over this, and I'll certainly be posting some
+> more numbers on this. It'll largely depend on both storage, controller,
+> and worload.
 
-As I mentioned in the 0/3 email, latency for my tests were as good or
-better than the original an CPU usage was lower. The former must largely
-be due to decreased latency in commands successfully retired in addition
-to the one that triggered the IRQ, since the latency for the first
-command should be a little higher. Since we use softirq completion for
-the command in the FIRST place anyway, it probably wont make any
-difference (and this latency for the first command should be almost
-immeasurably from the non-iopoll path).
+Here's a quick set of numbers, beating with random reads on a drive.
+Average of three runs for each, stddev is very low so confidence in the
+numbers should be high.
 
-> Also, and even for storage where command queueing is _possible_, there  
-> is a problem case we saw with NAPI:  sometimes the combination of a fast  
-> computer and an under-100%-utilization workload can imply repeated cycles 
-> of
->
-> 	spin lock
-> 	irq disable
-> 	blk_iopoll_sched()
-> 	spin unlock
->
-> 	spin lock
-> 	handle a single command completion
-> 	spin unlock
-> 	blk_iopoll_complete()
->
-> which not only erases the benefit, but winds up being more costly, both  
-> in terms of CPU usage and in terms of latency.
+With iopoll=0 (disabled), stock:
 
-It's clear that if you always only retire a single command AND you need
-to lock at both ends, then it'll never be a win. I guess we could detect
-such cases and be more cautious about when to enter iopoll, if that is
-an issue. The ahci case looks like what you describe and I'm not seeing
-any issues on the laptop, but I do concede that this is something to
-look out for. If you look at the mpt conversion, we don't get cache line
-bouncing on a lock there. As I also wrote, ahci is only really
-interesting for test purposes, I don't envision a lot of real world win
-there. But it widens the scope for testing :-)
+blocksize       IOPS    ints/sec        usr     sys
+------------------------------------------------------
+4k              48401   ~30500          3.36%   27.26%
 
-> This makes measuring the problem much more difficult; the interesting  
-> case I am highlighting does not occur when using a benchmarking tool to  
-> keep a storage device at 100% utilization.
+clat (usec): min=1052, max=21615, avg=10541.48, stdev=243.48
+clat (usec): min=1066, max=22040, avg=10543.69, stdev=242.05
+clat (usec): min=1057, max=23237, avg=10529.04, stdev=239.30
 
-Of course not, that case is primarily interesting to gauge potential
-best case wins.
 
-> We don't want to optimize for the 100%-load case at the expense of the  
-> _common case_, which is IMO utilization below 100%.  Servers are not  
-> 100% busy all the time, which opens the possibility that a  
-> split-completion scheme such as the one presented can actually use  
-> _more_ CPU than the current, unmodified 2.6.31-rc kernel.
+With iopoll=1
 
-Depends, if the common case doesn't really suffer, then it doesn't
-matter. Graceful load handling is important.
+blocksize       IOPS    ints/sec        usr     sys
+------------------------------------------------------
+4k              48452   ~29000          3.37%   26.47%
 
-> I'm not NAK'ing...  just inserting some relevant NAPI field experience,  
-> and hoping for some numbers that better measure the costs/benefits.
 
-Appreciate you looking over this, and I'll certainly be posting some
-more numbers on this. It'll largely depend on both storage, controller,
-and worload.
+clat (usec): min=1178, max=21662, avg=10542.72, stdev=247.87
+clat (usec): min=1074, max=21783, avg=10534.14, stdev=240.54
+clat (usec): min=1102, max=22123, avg=10509.42, stdev=225.73
+
+The system utilization numbers are significant, I can say that for these
+three runs, the iopoll=0 numbers were 27.25%, 27.28%, and 27.26%. For
+iopoll=1, they were 26.44%, 26.26%, and 26.36%. The usr numbers were
+equally stable. The latencies numbers are too close to call here.
+
+
+On a slower box, I get:
+
+
+iopoll=0
+
+blocksize       IOPS    ints/sec        usr     sys
+------------------------------------------------------
+4k              13100   ~12000          3.37%   19.70%
+
+clat (msec): min=7, max=99, avg=78.32, stdev= 1.89
+clat (msec): min=6, max=96, avg=77.00, stdev= 1.89
+clat (msec): min=8, max=111, avg=78.27, stdev= 1.84
+
+iopoll=1
+
+blocksize       IOPS    ints/sec        usr     sys
+------------------------------------------------------
+4k              13745   ~400            3.30%   19.74%
+
+
+clat (msec): min=8, max=91, avg=73.33, stdev= 1.66
+clat (msec): min=7, max=90, avg=72.94, stdev= 1.64
+clat (msec): min=6, max=103, avg=73.11, stdev= 1.77
+
+Now, 13K iops isn't very much, so there isn't a huge performance
+difference here and system utilization is practically identical. If we
+were to hit 100k+ iops, I'm sure things would look different. If you
+look at the IO completion latencies, they are actually better. This box
+is a bit special, in that the 13k iops is purely limited by the softirq
+that runs the completion. The controller only generates irqs on a single
+CPU, so the softirqs all happen there (unless you use IO affinity by
+setting rq_affinity=1, in which case you can reach 30k IOPS with the
+same drive).
+
+Anyway, just a first stack of numbers. Both of these are with using the
+mpt sas controller.
 
 -- 
 Jens Axboe
