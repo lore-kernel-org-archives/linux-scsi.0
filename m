@@ -1,70 +1,41 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH] ipr: Read buffer overflow
-Date: Fri, 07 Aug 2009 17:16:11 -0500
-Message-ID: <4A7CA7AB.4010103@linux.vnet.ibm.com>
-References: <4A7CA52C.9030407@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Jiri Slaby <jirislaby@gmail.com>
+Subject: [PATCH] SCSI: pcmcia, fix buf overflow
+Date: Sat,  8 Aug 2009 11:36:06 +0200
+Message-ID: <1249724166-1150-1-git-send-email-jirislaby@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:52979 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752766AbZHGWQR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Aug 2009 18:16:17 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e36.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id n77MEYPj014453
-	for <linux-scsi@vger.kernel.org>; Fri, 7 Aug 2009 16:14:34 -0600
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n77MGDX4262452
-	for <linux-scsi@vger.kernel.org>; Fri, 7 Aug 2009 16:16:13 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n77MGDxM008881
-	for <linux-scsi@vger.kernel.org>; Fri, 7 Aug 2009 16:16:13 -0600
-In-Reply-To: <4A7CA52C.9030407@gmail.com>
+Received: from server1.wserver.cz ([82.113.45.157]:58265 "EHLO
+	server1.wserver.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933770AbZHHJf6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Aug 2009 05:35:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roel Kluin <roel.kluin@gmail.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
 
-Roel Kluin wrote:
-> If `sglist->num_dma_sg' is zero we write ioadl[-1]
-> 
-> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-> ---
-> Is it possible for sglist->num_dma_sg to be 0?
+In nsp_cs_config there is a wrong struct nsp_cs_configdata allocation.
+It allocates only sizeof(pointer to nsp_cs_configdata) for a whole
+structure. Add a dereference to the sizeof to allocate
+sizeof(nsp_cs_configdata).
 
-No. Its not possible. The code in ipr_update_ioa_ucode ensures this.
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
+---
+ drivers/scsi/pcmcia/nsp_cs.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Thanks,
-
-Brian
-
-> 
-> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-> index 5f04550..736ad07 100644
-> --- a/drivers/scsi/ipr.c
-> +++ b/drivers/scsi/ipr.c
-> @@ -3004,8 +3004,9 @@ static void ipr_build_ucode_ioadl(struct ipr_cmnd *ipr_cmd,
->  			cpu_to_be32(sg_dma_address(&scatterlist[i]));
->  	}
-> 
-> -	ioadl[i-1].flags_and_data_len |=
-> -		cpu_to_be32(IPR_IOADL_FLAGS_LAST);
-> +	if (i != 0)
-> +		ioadl[i-1].flags_and_data_len |=
-> +			cpu_to_be32(IPR_IOADL_FLAGS_LAST);
->  }
-> 
->  /**
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
+index 70b60ad..e32c344 100644
+--- a/drivers/scsi/pcmcia/nsp_cs.c
++++ b/drivers/scsi/pcmcia/nsp_cs.c
+@@ -1713,7 +1713,7 @@ static int nsp_cs_config(struct pcmcia_device *link)
+ 
+ 	nsp_dbg(NSP_DEBUG_INIT, "in");
+ 
+-	cfg_mem = kzalloc(sizeof(cfg_mem), GFP_KERNEL);
++	cfg_mem = kzalloc(sizeof(*cfg_mem), GFP_KERNEL);
+ 	if (!cfg_mem)
+ 		return -ENOMEM;
+ 	cfg_mem->data = data;
 -- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
-
+1.6.3.3
 
