@@ -1,38 +1,33 @@
-From: Roel Kluin <roel.kluin@gmail.com>
-Subject: [PATCH] sym53c8xx: Read buffer overflow
-Date: Sun, 09 Aug 2009 16:16:47 +0200
-Message-ID: <4A7EDA4F.6080402@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] sym53c8xx: Read buffer overflow
+Date: Sun, 09 Aug 2009 10:37:41 -0400
+Message-ID: <1249828661.4556.3.camel@mulgrave.site>
+References: <4A7EDA4F.6080402@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:44679 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753553AbZHIONE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Aug 2009 10:13:04 -0400
-Received: by ewy10 with SMTP id 10so2501567ewy.37
-        for <linux-scsi@vger.kernel.org>; Sun, 09 Aug 2009 07:13:04 -0700 (PDT)
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54389 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754018AbZHIOhq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Aug 2009 10:37:46 -0400
+In-Reply-To: <4A7EDA4F.6080402@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: Roel Kluin <roel.kluin@gmail.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-Prevent read from div_10M[-1] when no clock divisor was greater.
+On Sun, 2009-08-09 at 16:16 +0200, Roel Kluin wrote:
+> Prevent read from div_10M[-1] when no clock divisor was greater.
+> 
+> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+> ---
+> Can this happen?
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
----
-Can this happen?
+No: The low values are only possible for lower periods.  125 is the min
+period this chip would ever accept (u160) and in order to support that
+it has to have a master clock at 160MHz.
 
-diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
-index 297deb8..230add3 100644
---- a/drivers/scsi/sym53c8xx_2/sym_hipd.c
-+++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c
-@@ -542,6 +542,9 @@ sym_getsync(struct sym_hcb *np, u_char dt, u_char sfac, u_char *divp, u_char *fa
- 	while (div-- > 0)
- 		if (kpc >= (div_10M[div] << 2)) break;
- 
-+	if (div < 0)
-+		return -1;
-+
- 	/*
- 	 *  Calculate the lowest clock factor that allows an output 
- 	 *  speed not faster than the period, and the max output speed.
+James
+
+
