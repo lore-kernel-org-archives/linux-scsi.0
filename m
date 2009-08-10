@@ -1,173 +1,207 @@
 From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH 7/7] Improvements to the device and target code
-Date: Mon, 10 Aug 2009 11:09:00 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0908101106450.3208-100000@iolanthe.rowland.org>
+Subject: [PATCH 5/7] Add construction flags to scsi_device structure
+Date: Mon, 10 Aug 2009 11:08:36 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0908101105050.3208-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:59397 "HELO
+Received: from iolanthe.rowland.org ([192.131.102.54]:59393 "HELO
 	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753155AbZHJPI7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Aug 2009 11:08:59 -0400
+	with SMTP id S1755098AbZHJPIf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Aug 2009 11:08:35 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-This patch (as1278) makes some minor improvements and clean-ups to the
-device- and target-handling functions in scsi_scan.c and scsi_sysfs.c:
+This patch (as1250b) adds extra flags to the scsi_device structure, to
+keep track of what parts have been constructed.  These flags are used
+in the destructor routines to determine which fields need to be torn
+down.  This allows all the slave_destroy() and
+transport_destroy_device() calls to be moved to a single place in
+scsi_device_dev_release_user_context() instead of appearing in
+multiple locations throughout the source.
 
-	Two uninformative error messages in scsi_sysfs_add_sdev()
-	are made more explicit, and a uniform scheme is adopted for
-	early exits.
-
-	__scsi_remove_target() is simplified by replacing reap_ref
-	operations with calls to get_device()/put_device().
-
-	An unnecessary local variable is eliminated from
-	scsi_remove_target().
-
-	Some code having nothing to do with sysfs is moved out of
-	scsi_sysfs_device_initialize() into its caller,
-	scsi_alloc_sdev().
+This also simplifies the destructors.  There's no need for a separate
+scsi_destroy_sdev() routine; __scsi_remove_device() can handle
+everything.  The error paths are more robust because now it's easy to
+verify that all the destructors are called along every pathway.
 
 Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
 
 ---
 
-Index: usb-2.6/drivers/scsi/scsi_sysfs.c
+Index: usb-2.6/include/scsi/scsi_device.h
 ===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_sysfs.c
-+++ usb-2.6/drivers/scsi/scsi_sysfs.c
-@@ -850,23 +850,25 @@ int scsi_sysfs_add_sdev(struct scsi_devi
- 	struct scsi_target *starget = sdev->sdev_target;
+--- usb-2.6.orig/include/scsi/scsi_device.h
++++ usb-2.6/include/scsi/scsi_device.h
+@@ -146,6 +146,13 @@ struct scsi_device {
+ 	unsigned last_sector_bug:1;	/* do not use multisector accesses on
+ 					   SD_LAST_BUGGY_SECTORS */
  
- 	if ((error = scsi_device_set_state(sdev, SDEV_RUNNING)) != 0)
--		return error;
-+		goto out;
- 
- 	error = scsi_target_add(starget);
- 	if (error)
--		return error;
-+		goto out;
- 
- 	error = device_add(&sdev->sdev_gendev);
- 	if (error) {
--		printk(KERN_INFO "error 1\n");
--		return error;
-+		sdev_printk(KERN_INFO, sdev,
-+				"failed to add device: %d\n", error);
-+		goto out;
- 	}
- 	sdev->did_device_add = 1;
- 
- 	error = device_add(&sdev->sdev_dev);
- 	if (error) {
--		printk(KERN_INFO "error 2\n");
--		return error;
-+		sdev_printk(KERN_INFO, sdev,
-+				"failed to add class device: %d\n", error);
-+		goto out;
- 	}
- 	sdev->did_add_sdev_dev = 1;
- 
-@@ -889,7 +891,6 @@ int scsi_sysfs_add_sdev(struct scsi_devi
- 		goto out;
- 
- 	error = bsg_register_queue(rq, &sdev->sdev_gendev, NULL, NULL);
--
- 	if (error)
- 		sdev_printk(KERN_INFO, sdev,
- 			    "Failed to register bsg queue, errno=%d\n", error);
-@@ -954,8 +955,8 @@ static void __scsi_remove_target(struct 
- 	unsigned long flags;
- 	struct scsi_device *sdev;
- 
-+	get_device(&starget->dev);
- 	spin_lock_irqsave(shost->host_lock, flags);
--	starget->reap_ref++;
-  restart:
- 	list_for_each_entry(sdev, &shost->__devices, siblings) {
- 		if (sdev->channel != starget->channel ||
-@@ -968,7 +969,7 @@ static void __scsi_remove_target(struct 
- 		goto restart;
- 	}
- 	spin_unlock_irqrestore(shost->host_lock, flags);
--	scsi_target_reap(starget);
-+	put_device(&starget->dev);
- }
- 
- static int __remove_child (struct device * dev, void * data)
-@@ -988,16 +989,14 @@ static int __remove_child (struct device
-  */
- void scsi_remove_target(struct device *dev)
- {
--	struct device *rdev;
--
- 	if (scsi_is_target_device(dev)) {
- 		__scsi_remove_target(to_scsi_target(dev));
- 		return;
- 	}
- 
--	rdev = get_device(dev);
-+	get_device(dev);
- 	device_for_each_child(dev, NULL, __remove_child);
--	put_device(rdev);
-+	put_device(dev);
- }
- EXPORT_SYMBOL(scsi_remove_target);
- 
-@@ -1048,10 +1047,6 @@ static struct device_type scsi_dev_type 
- 
- void scsi_sysfs_device_initialize(struct scsi_device *sdev)
- {
--	unsigned long flags;
--	struct Scsi_Host *shost = sdev->host;
--	struct scsi_target  *starget = sdev->sdev_target;
--
- 	device_initialize(&sdev->sdev_gendev);
- 	sdev->sdev_gendev.bus = &scsi_bus_type;
- 	sdev->sdev_gendev.type = &scsi_dev_type;
-@@ -1063,13 +1058,7 @@ void scsi_sysfs_device_initialize(struct
- 	sdev->sdev_dev.class = &sdev_class;
- 	dev_set_name(&sdev->sdev_dev, "%d:%d:%d:%d",
- 		     sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
--	sdev->scsi_level = starget->scsi_level;
--	transport_setup_device(&sdev->sdev_gendev);
--	spin_lock_irqsave(shost->host_lock, flags);
--	starget->reap_ref++;
--	list_add_tail(&sdev->same_target_siblings, &starget->devices);
--	list_add_tail(&sdev->siblings, &shost->__devices);
--	spin_unlock_irqrestore(shost->host_lock, flags);
-+	sdev->scsi_level = sdev->sdev_target->scsi_level;
- }
- 
- int scsi_is_sdev_device(const struct device *dev)
++			/* Keep track of how much has been constructed */
++	unsigned did_slave_alloc:1;
++	unsigned did_device_add:1;
++	unsigned did_add_sdev_dev:1;
++	unsigned did_bsg_register_queue:1;
++	unsigned did_transport_add_device:1;
++
+ 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
+ 	struct list_head event_list;	/* asserted events */
+ 	struct work_struct event_work;
 Index: usb-2.6/drivers/scsi/scsi_scan.c
 ===================================================================
 --- usb-2.6.orig/drivers/scsi/scsi_scan.c
 +++ usb-2.6/drivers/scsi/scsi_scan.c
-@@ -241,6 +241,7 @@ static struct scsi_device *scsi_alloc_sd
- 	int display_failure_msg = 1, ret;
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
- 	extern void scsi_evt_thread(struct work_struct *work);
-+	unsigned long flags;
+@@ -311,13 +311,12 @@ static struct scsi_device *scsi_alloc_sd
+ 			goto out_device_destroy;
+ 		}
+ 	}
++	sdev->did_slave_alloc = 1;
  
- 	sdev = kzalloc(sizeof(*sdev) + shost->transportt->device_size,
- 		       GFP_ATOMIC);
-@@ -299,6 +300,14 @@ static struct scsi_device *scsi_alloc_sd
+ 	return sdev;
  
- 	scsi_sysfs_device_initialize(sdev);
+ out_device_destroy:
+-	scsi_device_set_state(sdev, SDEV_DEL);
+-	transport_destroy_device(&sdev->sdev_gendev);
+-	put_device(&sdev->sdev_gendev);
++	__scsi_remove_device(sdev);
+ out:
+ 	if (display_failure_msg)
+ 		printk(ALLOC_FAILURE_MSG, __func__);
+@@ -940,15 +939,6 @@ static int scsi_add_lun(struct scsi_devi
+ 	return SCSI_SCAN_LUN_PRESENT;
+ }
  
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	starget->reap_ref++;
-+	list_add_tail(&sdev->same_target_siblings, &starget->devices);
-+	list_add_tail(&sdev->siblings, &shost->__devices);
-+	spin_unlock_irqrestore(shost->host_lock, flags);
+-static inline void scsi_destroy_sdev(struct scsi_device *sdev)
+-{
+-	scsi_device_set_state(sdev, SDEV_DEL);
+-	if (sdev->host->hostt->slave_destroy)
+-		sdev->host->hostt->slave_destroy(sdev);
+-	transport_destroy_device(&sdev->sdev_gendev);
+-	put_device(&sdev->sdev_gendev);
+-}
+-
+ #ifdef CONFIG_SCSI_LOGGING
+ /** 
+  * scsi_inq_str - print INQUIRY data from min to max index, strip trailing whitespace
+@@ -1126,7 +1116,7 @@ static int scsi_probe_and_add_lun(struct
+ 			}
+ 		}
+ 	} else
+-		scsi_destroy_sdev(sdev);
++		__scsi_remove_device(sdev);
+  out:
+ 	return res;
+ }
+@@ -1487,7 +1477,7 @@ static int scsi_report_lun_scan(struct s
+ 		/*
+ 		 * the sdev we used didn't appear in the report luns scan
+ 		 */
+-		scsi_destroy_sdev(sdev);
++		__scsi_remove_device(sdev);
+ 	return ret;
+ }
+ 
+@@ -1699,7 +1689,7 @@ static void scsi_sysfs_add_devices(struc
+ 	shost_for_each_device(sdev, shost) {
+ 		if (!scsi_host_scan_allowed(shost) ||
+ 		    scsi_sysfs_add_sdev(sdev) != 0)
+-			scsi_destroy_sdev(sdev);
++			__scsi_remove_device(sdev);
+ 	}
+ }
+ 
+@@ -1932,7 +1922,7 @@ void scsi_free_host_dev(struct scsi_devi
+ {
+ 	BUG_ON(sdev->id != sdev->host->this_id);
+ 
+-	scsi_destroy_sdev(sdev);
++	scsi_remove_device(sdev);
+ }
+ EXPORT_SYMBOL(scsi_free_host_dev);
+ 
+Index: usb-2.6/drivers/scsi/scsi_sysfs.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/scsi_sysfs.c
++++ usb-2.6/drivers/scsi/scsi_sysfs.c
+@@ -317,6 +317,11 @@ static void scsi_device_dev_release_user
+ 		kfree(evt);
+ 	}
+ 
++	if (sdev->did_slave_alloc && sdev->host->hostt->slave_destroy)
++		sdev->host->hostt->slave_destroy(sdev);
 +
-+	transport_setup_device(&sdev->sdev_gendev);
++	transport_destroy_device(&sdev->sdev_gendev);
 +
- 	if (shost->hostt->slave_alloc) {
- 		ret = shost->hostt->slave_alloc(sdev);
- 		if (ret) {
+ 	if (sdev->request_queue) {
+ 		sdev->request_queue->queuedata = NULL;
+ 		/* user context needed to free queue */
+@@ -857,11 +862,15 @@ int scsi_sysfs_add_sdev(struct scsi_devi
+ 		printk(KERN_INFO "error 1\n");
+ 		return error;
+ 	}
++	sdev->did_device_add = 1;
++
+ 	error = device_add(&sdev->sdev_dev);
+ 	if (error) {
+ 		printk(KERN_INFO "error 2\n");
+-		goto clean_device;
++		__scsi_remove_device(sdev);
++		return error;
+ 	}
++	sdev->did_add_sdev_dev = 1;
+ 
+ 	/* take a reference for the sdev_dev; this is
+ 	 * released by the sdev_class .release */
+@@ -894,6 +903,7 @@ int scsi_sysfs_add_sdev(struct scsi_devi
+ 	/* we're treating error on bsg register as non-fatal, so pretend
+ 	 * nothing went wrong */
+ 	error = 0;
++	sdev->did_bsg_register_queue = 1;
+ 
+ 	/* add additional host specific attributes */
+ 	if (sdev->host->hostt->sdev_attrs) {
+@@ -908,17 +918,9 @@ int scsi_sysfs_add_sdev(struct scsi_devi
+ 	}
+ 
+ 	transport_add_device(&sdev->sdev_gendev);
++	sdev->did_transport_add_device = 1;
+  out:
+ 	return error;
+-
+- clean_device:
+-	scsi_device_set_state(sdev, SDEV_CANCEL);
+-
+-	device_del(&sdev->sdev_gendev);
+-	transport_destroy_device(&sdev->sdev_gendev);
+-	put_device(&sdev->sdev_gendev);
+-
+-	return error;
+ }
+ 
+ void __scsi_remove_device(struct scsi_device *sdev)
+@@ -928,14 +930,15 @@ void __scsi_remove_device(struct scsi_de
+ 	if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
+ 		return;
+ 
+-	bsg_unregister_queue(sdev->request_queue);
+-	device_unregister(&sdev->sdev_dev);
+-	transport_remove_device(dev);
+-	device_del(dev);
++	if (sdev->did_transport_add_device)
++		transport_remove_device(dev);
++	if (sdev->did_bsg_register_queue)
++		bsg_unregister_queue(sdev->request_queue);
++	if (sdev->did_add_sdev_dev)
++		device_unregister(&sdev->sdev_dev);
++	if (sdev->did_device_add)
++		device_del(dev);
+ 	scsi_device_set_state(sdev, SDEV_DEL);
+-	if (sdev->host->hostt->slave_destroy)
+-		sdev->host->hostt->slave_destroy(sdev);
+-	transport_destroy_device(dev);
+ 	put_device(dev);
+ }
+ 
 
