@@ -1,26 +1,30 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: [PATCH 1/3] SCSI: Allow platform-specific code to be run
-	against the SCSI tree
-Date: Mon, 10 Aug 2009 14:38:15 +0100
-Message-ID: <20090810133815.GB22763@srcf.ucam.org>
-References: <1247518987-10818-1-git-send-email-mjg@redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: 2.6.31-rc5-git5: Reported regressions from 2.6.30
+Date: Mon, 10 Aug 2009 09:30:43 -0500
+Message-ID: <1249914643.4089.3.camel@mulgrave.site>
+References: <AuPdDySr74O.A.5LC.Pj1fKB@chimera>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1247518987-10818-1-git-send-email-mjg@redhat.com>
+In-Reply-To: <AuPdDySr74O.A.5LC.Pj1fKB@chimera>
 Sender: linux-acpi-owner@vger.kernel.org
-Cc: linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, shaohua.li@intel.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.sourceforge.net>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jul 13, 2009 at 10:03:05PM +0100, Matthew Garrett wrote:
-> In certain cases (such as ACPI) we want to be able to associate
-> platform-specific data against the SCSI device tree. Handling this
-> properly requires the ability to run platform code at SCSI init time.
-> This patch adds stub functions that can be overridden if the platform
-> defines CONFIG_SCSI_PLATFORM.
+On Sun, 2009-08-09 at 22:36 +0200, Rafael J. Wysocki wrote:
+> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=13716
+> Subject         : The AIC-7892P controller does not work any more
+> Submitter       : Andrej Podzimek <andrej@podzimek.org>
+> Date            : 2009-07-05 19:23 (36 days old)
 
-James, any thoughts on this?
+This one sounds like an IRQ routing error, so probably ACPI, but we've
+been totally unsuccessful at getting any further information out of the
+submitter.  Use your own time judgement on this, but if he hasn't been
+responding to you either for 36 days, I'd suggest closing this as
+unresponsive.
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+James
+
+
