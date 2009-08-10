@@ -1,84 +1,38 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Bugs in scsi_vpd_inquiry()
-Date: Mon, 10 Aug 2009 08:58:11 -0600
-Message-ID: <20090810145810.GA31442@parisc-linux.org>
-References: <Pine.LNX.4.44L0.0908101027160.3208-100000@iolanthe.rowland.org>
+From: Matthew Garrett <mjg@redhat.com>
+Subject: Re: [PATCH 1/3] SCSI: Allow platform-specific code to be run
+	against the SCSI tree
+Date: Mon, 10 Aug 2009 15:58:09 +0100
+Message-ID: <20090810145809.GD24956@srcf.ucam.org>
+References: <1247518987-10818-1-git-send-email-mjg@redhat.com> <20090810133815.GB22763@srcf.ucam.org> <1249916125.4089.4.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:42879 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751227AbZHJO6K (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Aug 2009 10:58:10 -0400
+Return-path: <linux-acpi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0908101027160.3208-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1249916125.4089.4.camel@mulgrave.site>
+Sender: linux-acpi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org, shaohua.li@intel.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Matthew Wilcox <willy@linux.intel.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, Aug 10, 2009 at 10:41:42AM -0400, Alan Stern wrote:
-> Martin and Matthew:
+On Mon, Aug 10, 2009 at 02:55:25PM +0000, James Bottomley wrote:
+> On Mon, 2009-08-10 at 14:38 +0100, Matthew Garrett wrote:
+> > On Mon, Jul 13, 2009 at 10:03:05PM +0100, Matthew Garrett wrote:
+> > > In certain cases (such as ACPI) we want to be able to associate
+> > > platform-specific data against the SCSI device tree. Handling this
+> > > properly requires the ability to run platform code at SCSI init time.
+> > > This patch adds stub functions that can be overridden if the platform
+> > > defines CONFIG_SCSI_PLATFORM.
+> > 
+> > James, any thoughts on this?
 > 
-> Since you guys added scsi_vpd_inquiry() and scsi_get_vpd_page() plus
-> sd_read_block_limits() and sd_read_block_characteristics(), I'm
-> directing these questions to you.
-> 
-> Is there some reason for not accounting for the 4 header bytes in the 
-> allocation length value stored in the CDB?  Or is this simply a bug?
+> Sorry, I'd thought this had all moved to libata so I'd stopped paying
+> attention ... why are extra bits in SCSI necessary?
 
-Um, we do.
-
-unsigned char *scsi_get_vpd_page(struct scsi_device *sdev, u8 page)
-        unsigned char *buf = kmalloc(259, GFP_KERNEL);
-        result = scsi_vpd_inquiry(sdev, buf, 0, 255);
-        for (i = 0; i < buf[3]; i++)
-                if (buf[i + 4] == page)
-                        goto found;
-        buf = kmalloc(len + 4, GFP_KERNEL);
-        result = scsi_vpd_inquiry(sdev, buf, page, len);
-
-Now ... we do seem to be passing the len instead of len + 4 to the
-device as the buffer size, so there does appear to be a minor bug here,
-but it's not as horrific as you make it out to be.
-
-> Were you aware that SCSI-2 defines the allocation length to be a single 
-> byte?  cmd[3] is specified as "Reserved" in the spec.  Hence the value 
-> of "len" should be capped at 255 if sdev->scsi_level <= SCSI_2, right?
-
-and 'Reserved' in SCSI-2 means:
-
-"A reserved bit, field, or byte shall be set to zero, or in accordance
-with a future extension to this standard." (7.1.1)
-
-> Why does scsi_get_vpd_page() retrieve page 0 first, rather than 
-> directly asking for the page in question?  Is this some sort of 
-> play-it-safe approach, to avoid sending devices commands they may not 
-> support?
-
-I think we had an example of a device which crashed when asked for pages
-that it didn't support.
-
-> Have you considered that plenty of low-budget USB mass-storage devices
-> don't implement VPD properly?  I've got a flash drive right here which
-
-I've noticed you whining about it, yes.
-
-> totally ignores the "page" byte in the INQUIRY command; it always
-> responds with the normal INQUIRY data.  Thus expecting the response
-
-I don't think you mean the 'page' byte.  I think you mean the 'EVPD'
-bit.
-
-> data always to be accurate may not be a good idea.  I'm considering
-> adding a "restrict_to_MS_usb" flag to the host template, to indicate
-> that commands shouldn't be sent unless some version of Windows uses
-> them when talking to USB devices -- do you think that could work?
-
-Not really my area of expertise.
+They're SCSI as far as the device tree is concerned, so the glue 
+callbacks have to be registered from the SCSI layer. The only 
+implementation so far is for ACPI and only covers libata, but it could 
+potentially also be used to tie bay devices to the ofw tree on 
+openfirmware systems.
 
 -- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Matthew Garrett | mjg59@srcf.ucam.org
