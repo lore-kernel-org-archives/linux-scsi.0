@@ -1,33 +1,31 @@
-From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
-Subject: Re: 2.6.31-rc5-git5: Reported regressions from 2.6.30
-Date: Mon, 10 Aug 2009 16:52:53 +0200
-Message-ID: <200908101652.53558.rjw@sisk.pl>
-References: <AuPdDySr74O.A.5LC.Pj1fKB@chimera> <1249914643.4089.3.camel@mulgrave.site>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/3] SCSI: Allow platform-specific code to be run
+ against the SCSI tree
+Date: Mon, 10 Aug 2009 14:55:25 +0000
+Message-ID: <1249916125.4089.4.camel@mulgrave.site>
+References: <1247518987-10818-1-git-send-email-mjg@redhat.com>
+	 <20090810133815.GB22763@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-2"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1249914643.4089.3.camel-0iu6Cu4xQGLYCGPCin2YbQ@public.gmane.org>
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Adrian Bunk <bunk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752840AbZHJOza@vger.kernel.org>
+In-Reply-To: <20090810133815.GB22763@srcf.ucam.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org, shaohua.li@intel.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Monday 10 August 2009, James Bottomley wrote:
-> On Sun, 2009-08-09 at 22:36 +0200, Rafael J. Wysocki wrote:
-> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=13716
-> > Subject         : The AIC-7892P controller does not work any more
-> > Submitter       : Andrej Podzimek <andrej-+Hii8LNHG6Ng9hUCZPvPmw@public.gmane.org>
-> > Date            : 2009-07-05 19:23 (36 days old)
+On Mon, 2009-08-10 at 14:38 +0100, Matthew Garrett wrote:
+> On Mon, Jul 13, 2009 at 10:03:05PM +0100, Matthew Garrett wrote:
+> > In certain cases (such as ACPI) we want to be able to associate
+> > platform-specific data against the SCSI device tree. Handling this
+> > properly requires the ability to run platform code at SCSI init time.
+> > This patch adds stub functions that can be overridden if the platform
+> > defines CONFIG_SCSI_PLATFORM.
 > 
-> This one sounds like an IRQ routing error, so probably ACPI, but we've
-> been totally unsuccessful at getting any further information out of the
-> submitter.  Use your own time judgement on this, but if he hasn't been
-> responding to you either for 36 days, I'd suggest closing this as
-> unresponsive.
+> James, any thoughts on this?
 
-Thanks, I've closed it.
+Sorry, I'd thought this had all moved to libata so I'd stopped paying
+attention ... why are extra bits in SCSI necessary?
 
-Best,
-Rafael
+James
