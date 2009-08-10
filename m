@@ -1,115 +1,82 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: Bugs in scsi_vpd_inquiry()
-Date: Mon, 10 Aug 2009 16:13:40 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0908101518020.4223-100000@iolanthe.rowland.org>
-References: <yq17hxbfvf9.fsf@sermon.lab.mkp.net>
+Date: Mon, 10 Aug 2009 16:49:21 -0400
+Message-ID: <yq13a7zfl7y.fsf@sermon.lab.mkp.net>
+References: <Pine.LNX.4.44L0.0908101518020.4223-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:43409 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751987AbZHJUNj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Aug 2009 16:13:39 -0400
-In-Reply-To: <yq17hxbfvf9.fsf@sermon.lab.mkp.net>
+Received: from acsinet11.oracle.com ([141.146.126.233]:63775 "EHLO
+	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752904AbZHJUtk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Aug 2009 16:49:40 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0908101518020.4223-100000@iolanthe.rowland.org>
+	(Alan Stern's message of "Mon, 10 Aug 2009 16:13:40 -0400 (EDT)")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Matthew Wilcox <willy@linux.intel.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Matthew Wilcox <matthew@wil.cx>, Matthew Wilcox <willy@linux.intel.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, 10 Aug 2009, Martin K. Petersen wrote:
+>>>>> "Alan" == Alan Stern <stern@rowland.harvard.edu> writes:
 
-> >>>>> "Alan" == Alan Stern <stern@rowland.harvard.edu> writes:
-> 
-> Alan,
-> 
-> >> > data always to be accurate may not be a good idea.  I'm considering
-> >> > adding a "restrict_to_MS_usb" flag to the host template, to
-> >> > indicate that commands shouldn't be sent unless some version of
-> >> > Windows uses them when talking to USB devices -- do you think that
-> >> > could work?
-> >> 
-> >> Not really my area of expertise.
-> 
-> Alan> Okay.  Maybe Martin has some thoughts on it.
-> 
-> First of all we're not going to send EVPD=1 out to devices reporting
-> SCSI_SPC_2 or lower anymore, making some of this discussion moot in the
-> short term.
+>> First of all we're not going to send EVPD=1 out to devices reporting
+>> SCSI_SPC_2 or lower anymore, making some of this discussion moot in
+>> the short term.
 
-Ah.  Has this change been posted anywhere yet?
+Alan> Ah.  Has this change been posted anywhere yet?
 
-> But as I have alluded to in the past we do have a conflict brewing
-> because the switch to drives with 4KB physical blocks will mean USB
-> bridges will have to get smarter.
+ffd4bc2a984fab40ed969163efdff321490e8032
 
-If only all the existing bridges could be made smarter too!  :-)
 
->  And that in turn will mean adhering
-> (*gasp*) to the standard instead of firmware writers flipping bits until
-> Windows stops crashing.  Windows 7 does in fact query drives about
-> alignment, block sizes, etc.  But I'm not sure how true that is for the
-> Windows USB storage stack.
+Alan> Does Vista also do this querying?  I've got access to a machine
+Alan> running Vista, so I can test the USB storage stack behavior.
 
-Does Vista also do this querying?  I've got access to a machine running 
-Vista, so I can test the USB storage stack behavior.  But I don't have 
-access to any machines with Windows 7.
+Dunno.
 
-> Originally I was in favor of just considering any USB device suspect and
-> only send it a limited command set.  But the 4KB switch means that it is
-> imperative that we get the alignment reported correctly.  Performance is
-> totally and absolutely going to tank without it.  Enough that users will
-> complain loudly.
-> 
-> Consequently, I'm no longer a fan of the reduced command set approach.
-> Because in 12 months that MS command set *will* include stuff that
-> causes existing USB devices to crash, catch fire, or eat your breakfast.
 
-How will Windows 7 deal with all those old buggy USB devices?  (You 
-probably don't have any idea...)
+Alan> How will Windows 7 deal with all those old buggy USB devices?
+Alan> (You probably don't have any idea...)
 
-> And then we're back to finding heuristics for USB device brain damage.
-> Blindly clamping the SCSI rev. in scsiglue.c will have to be replaced
-> with something smarter.  And I really think that's what needs to be
-> fixed.
+Nope :)
 
-I generally agree.  But finding a solution won't be easy.
 
-> Please note that I'm not trying to weasel out of changing stuff in SCSI.
-> But it's USB devices that deviate wildly from the spec, so I think we
-> should keep as much of the workaround stuff in the USB stack as
-> possible.  And the current SCSI rev. mechanism is a reasonable way to
-> limit what we send out in sd.c.
-> 
-> So I'd prefer an approach where the USB stack sets the SCSI level
-> according to how much it trusts the attached device.
-> 
-> Is there a USB rev. or something else you can key off of and combine
-> with the device-reported SCSI rev. to come up with a better heuristic?
-> Something which doesn't depend on being SCSIly correct.
+Alan> No, there isn't.  There are USB device IDs, but they are assigned
+Alan> more or less randomly by the manufacturers -- they don't form a
+Alan> nicely increasing sequence of revision numbers.
 
-No, there isn't.  There are USB device IDs, but they are assigned more 
-or less randomly by the manufacturers -- they don't form a nicely 
-increasing sequence of revision numbers.
+But let's assume for a second that USB drives with 4KB physical blocks
+will be USB 3.0.  I think that's a likely scenario.  Couldn't we do
+something like?
 
-Even worse, the device-reported SCSI rev. is completely independent of
-the ID for the bridge chip, which is where the failures seem to occur.  
-(Although it's hard to be certain which component is failing.)
+   /* Dumb down SCSI level for USB 1.1 and 2.0 devices */
+   if (le16_to_cpu(udev->descriptor.bcdUSB) <= 0x0200 
+       && sdev->scsi_level > SCSI_2)
+          sdev->sdev_target->scsi_level = sdev->scsi_level = SCSI_2;
 
-> Do we have any way of identifying the devices that caused the SCSI
-> rev. to be clamped for USB in the first place?  Any way of collecting
-> that data over a couple of kernel release cycles?
+I'm sure that won't catch all devices.  But it would at least be a step
+in the right direction.  And if that breaks we can revisit.
 
-Some of them are listed in the email archives.  Searching through some
-old records I came across this example:
 
-	http://marc.info/?l=linux-scsi&m=110895748728466&w=2
+Alan> Even worse, the device-reported SCSI rev. is completely
+Alan> independent of the ID for the bridge chip, which is where the
+Alan> failures seem to occur.  (Although it's hard to be certain which
+Alan> component is failing.)
 
-Unfortunately this thread doesn't contain the original bug report with
-the USB device ID; I think the files were put up on a web server that 
-doesn't exist any more.
+If the bridge doesn't provide the SCSI rev. where does it come from?  Or
+are you saying there's a USB "target" chip and then a USB-SATA bridge
+chip behind it?
 
-I'm not keen on the idea of collecting more failure data by changing
-the driver so as to cause failures!
 
-Alan Stern
+Alan> I'm not keen on the idea of collecting more failure data by
+Alan> changing the driver so as to cause failures!
 
+I wasn't thinking a hard fail.  More like a:
+
+  printk(KERN_ERR "Please mail this info to linux-scsi@vger...");
+
+and have that sit in Fedora/Ubuntu for 6 months.
+
+But if there's nothing we can key off of then there's no point.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
