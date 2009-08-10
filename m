@@ -1,47 +1,66 @@
 From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH 0/7] Improvements, clean-ups, and fixes to target and LUN
- lifecycle
-Date: Mon, 10 Aug 2009 11:07:46 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0908101044230.3208-100000@iolanthe.rowland.org>
+Subject: [PATCH 2/7] Make starget->reap_ref count number of underlying devices
+Date: Mon, 10 Aug 2009 11:08:05 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0908101101120.3208-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:44293 "HELO
+Received: from iolanthe.rowland.org ([192.131.102.54]:44297 "HELO
 	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755032AbZHJPHq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Aug 2009 11:07:46 -0400
+	with SMTP id S1753516AbZHJPIE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Aug 2009 11:08:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-James:
+This patch (as1248) changes the meaning of starget->reap_ref.  Now it
+serves to count the number of underlying devices beneath the target,
+plus one when we want to prevent an empty target from being reaped.
 
-These patches are revised and simplified versions of work posted
-before.  They are intended not primarily as fixes for reported bugs but
-rather as general clean-ups and improvements; as such I would expect
-them to be held in scsi-misc until the next merge window (or maybe the
-one after next, since the next one is getting close).
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
 
-Unlike the earlier patch series, these do not cause any semantic
-changes in behavior -- unless you consider elimination of various
-use-before-initialize, use-after-free, and memory-leak bugs to be
-semantic changes.  :-)
+---
 
-Briefly, the changes implemented by this series are:
-
-	1/7: Merge scsi_target_reap_usercontext with scsi_target_reap.
-	2/7: Make starget->reap_ref count the number of underlying
-		devices.
-	3/7: Add an STARGET_NEW state for use before 
-		hostt->target_alloc has been called.
-	4/7: Fix miscellaneous bugs and infelicities in the
-		target-handling code.
-	5/7: Add extra flags to scsi_device to keep track of which
-		parts have been constructed.
-	6/7: Fix miscellaneous bugs in the device-handling code.
-	7/7: Minor improvements and clean-ups for that target- and
-		device-handling code.
-
-Alan Stern
+Index: usb-2.6/drivers/scsi/scsi_scan.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/scsi_scan.c
++++ usb-2.6/drivers/scsi/scsi_scan.c
+@@ -483,14 +483,13 @@ void scsi_target_reap(struct scsi_target
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	state = starget->state;
+-	empty = --starget->reap_ref == 0 &&
+-		list_empty(&starget->devices) ? 1 : 0;
++	empty = --starget->reap_ref == 0;
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 
+ 	if (!empty)
+ 		return;
+ 
+-	BUG_ON(state == STARGET_DEL);
++	BUG_ON(state == STARGET_DEL || !list_empty(&starget->devices));
+ 	starget->state = STARGET_DEL;
+ 	if (state == STARGET_RUNNING) {
+ 		transport_remove_device(&starget->dev);
+Index: usb-2.6/drivers/scsi/scsi_sysfs.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/scsi_sysfs.c
++++ usb-2.6/drivers/scsi/scsi_sysfs.c
+@@ -302,7 +302,6 @@ static void scsi_device_dev_release_user
+ 	starget = to_scsi_target(parent);
+ 
+ 	spin_lock_irqsave(sdev->host->host_lock, flags);
+-	starget->reap_ref++;
+ 	list_del(&sdev->siblings);
+ 	list_del(&sdev->same_target_siblings);
+ 	list_del(&sdev->starved_entry);
+@@ -1089,6 +1088,7 @@ void scsi_sysfs_device_initialize(struct
+ 	sdev->scsi_level = starget->scsi_level;
+ 	transport_setup_device(&sdev->sdev_gendev);
+ 	spin_lock_irqsave(shost->host_lock, flags);
++	starget->reap_ref++;
+ 	list_add_tail(&sdev->same_target_siblings, &starget->devices);
+ 	list_add_tail(&sdev->siblings, &shost->__devices);
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
 
