@@ -1,80 +1,76 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Bugs in scsi_vpd_inquiry()
-Date: Mon, 10 Aug 2009 17:14:38 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0908101707230.4223-100000@iolanthe.rowland.org>
-References: <yq13a7zfl7y.fsf@sermon.lab.mkp.net>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH 1/2] [Target_Core_Mod/Persistent_Reservations]: Add Specify
+ Initiator Port Capable (SPEC_I_PT=1) support
+Date: Mon, 10 Aug 2009 17:27:10 -0400
+Message-ID: <4A8090AE.1090701@interlog.com>
+References: <1249793770.11105.235.camel@haakon2.linux-iscsi.org>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:48082 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753216AbZHJVOi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Aug 2009 17:14:38 -0400
-In-Reply-To: <yq13a7zfl7y.fsf@sermon.lab.mkp.net>
+Received: from smtp.infotech.no ([82.134.31.41]:39787 "EHLO elrond.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753368AbZHJV1Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Aug 2009 17:27:16 -0400
+In-Reply-To: <1249793770.11105.235.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, SCSI development list <linux-scsi@vger.kernel.org>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, James Smart <James.Smart@Emulex.Com>, Philipp Reisner <philipp.reisner@linbit.com>
 
-On Mon, 10 Aug 2009, Martin K. Petersen wrote:
-
-> >>>>> "Alan" == Alan Stern <stern@rowland.harvard.edu> writes:
+Nicholas A. Bellinger wrote:
+> Hello,
 > 
-> >> First of all we're not going to send EVPD=1 out to devices reporting
-> >> SCSI_SPC_2 or lower anymore, making some of this discussion moot in
-> >> the short term.
+> This patch adds exhaustive support for handling SPEC_I_PT=1 processing of fabric dependent
+> TransportIDs in PROUT SA REGISTER ops containing SCSI Initiator port/device identifiers as
+> defined by spc4r17.
+
+[snip]
+
+> Here is what it looks like in action doing a PROUT SA REGISTER with SPEC_I_PT: from a
+> local initiator port (debian) for a remote initiator port (opensuse) using sg_persist
+> from an Open-iSCSI Initiator:
 > 
-> Alan> Ah.  Has this change been posted anywhere yet?
-> 
-> ffd4bc2a984fab40ed969163efdff321490e8032
+> 	initiator# sg_persist -vvv --out --device /dev/sde --register --param-rk=0 --param-sark=0x1234ffff -T 5 -X  05,0,33,32,69,71,6E,2E,31,39,39,36,2D,30,34,2E,64,65,2E,73,75,73,65,3A,30,31,3A,31,36,36,31,66,39,65,65,37,62,35,00
+> 	number of tranport-ids decoded from command line (or stdin): 1
+> 	  Decode given transport-ids:
+> 	      Transport Id of initiator:
+> 	        iSCSI name: iqn.1996-04.de.suse:01:1661f9ee7b5
+> 	open /dev/sde with flags=0x800
+> 	    inquiry cdb: 12 00 00 00 24 00
+> 	      duration=4 ms
+> 	  LIO-ORG  IBLOCK  3.0
+> 	  Peripheral device type: disk
+> 	open /dev/sde with flags=0x802
+> 	    Persistent Reservation Out cmd: 5f 00 05 00 00 00 00 00 44 00
+> 	    Persistent Reservation Out parameters:
+> 	 00     00 00 00 00 00 00 00 00  00 00 00 00 12 34 ff ff    .............4..
+> 	 10     00 00 00 00 08 00 00 00  00 00 00 28 05 00 33 32    ...........(..32
+> 	 20     69 71 6e 2e 31 39 39 36  2d 30 34 2e 64 65 2e 73    iqn.1996-04.de.s
+> 	 30     75 73 65 3a 30 31 3a 31  36 36 31 66 39 65 65 37    use:01:1661f9ee7
+> 	 40     62 35 00 00                                         b5..
+> 	      duration=12 ms
+> 	PR out: command (Register) successful
 
-Looks good, thanks.
+[snip]
 
-> But let's assume for a second that USB drives with 4KB physical blocks
-> will be USB 3.0.  I think that's a likely scenario.  Couldn't we do
-> something like?
-> 
->    /* Dumb down SCSI level for USB 1.1 and 2.0 devices */
->    if (le16_to_cpu(udev->descriptor.bcdUSB) <= 0x0200 
->        && sdev->scsi_level > SCSI_2)
->           sdev->sdev_target->scsi_level = sdev->scsi_level = SCSI_2;
-> 
-> I'm sure that won't catch all devices.  But it would at least be a step
-> in the right direction.  And if that breaks we can revisit.
+The additional length field in the TransportID above is a bit
+strange.vRefer to spc4r20.pdf table 406 on page 482. I would
+interpretvthe above additional length as 3332h which is
+possible but notvprobable. Looking at the data I think the
+additional lengthvshould be 24h (22h round up to 24h because
+of the "multiplevof 4" rule).
 
-That's a good idea.  At least it won't break any existing devices, 
-although some new ones may fail.
+Looks like sg_persist needs a better way of representing
+TransportIDs that contain iSCSI names. Possibilities might be:
+   ... -X 05,0,0,24,iqn.1996-04.de.suse:01:1661f9ee7b5
+or
+   ... -X 05,0,iqn.1996-04.de.suse:01:1661f9ee7b5
 
+Both variants could trigger on "iqn" (is "IQN" allowable)?
+In the latter case sg_persist could work out the iSCSI name
+length, round it up if necessary and insert it in the
+transportID.
 
-> Alan> Even worse, the device-reported SCSI rev. is completely
-> Alan> independent of the ID for the bridge chip, which is where the
-> Alan> failures seem to occur.  (Although it's hard to be certain which
-> Alan> component is failing.)
-> 
-> If the bridge doesn't provide the SCSI rev. where does it come from?  Or
-> are you saying there's a USB "target" chip and then a USB-SATA bridge
-> chip behind it?
-
-There's the bridge chip and the drive itself.  The drive provides the 
-INQUIRY data and the chip provides the USB identifiers.
-
-The same bridge chip can be used with lots of different drives.  In
-fact, you can buy a USB-(S)ATA converter and plug it into whatever
-drives you have lying around.
-
-> Alan> I'm not keen on the idea of collecting more failure data by
-> Alan> changing the driver so as to cause failures!
-> 
-> I wasn't thinking a hard fail.  More like a:
-> 
->   printk(KERN_ERR "Please mail this info to linux-scsi@vger...");
-> 
-> and have that sit in Fedora/Ubuntu for 6 months.
-> 
-> But if there's nothing we can key off of then there's no point.
-
-About the only thing to key off of is failure of the device when we 
-send it a REPORT LUNS command.  :-(
-
-Alan Stern
-
+Doug Gilbert
