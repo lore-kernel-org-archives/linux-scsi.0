@@ -1,33 +1,38 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: Bugs in scsi_vpd_inquiry()
-Date: Mon, 10 Aug 2009 18:52:17 -0400
-Message-ID: <yq1tz0fe0ym.fsf@sermon.lab.mkp.net>
-References: <Pine.LNX.4.44L0.0908101119460.3208-100000@iolanthe.rowland.org>
-	<yq17hxbfvf9.fsf@sermon.lab.mkp.net> <4A8096EF.6010508@interlog.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [patch 04/11] scsi: add __init/__exit macros to ibmvstgt.c
+Date: Tue, 11 Aug 2009 08:52:06 +0900
+Message-ID: <20090811085112K.fujita.tomonori@lab.ntt.co.jp>
+References: <200908062309.n76N9Mft011503@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet12.oracle.com ([148.87.113.124]:25774 "EHLO
-	rgminet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754132AbZHJWxc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Aug 2009 18:53:32 -0400
-In-Reply-To: <4A8096EF.6010508@interlog.com> (Douglas Gilbert's message of
-	"Mon, 10 Aug 2009 17:53:51 -0400")
+Received: from sh.osrg.net ([192.16.179.4]:45964 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751009AbZHJXxB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Aug 2009 19:53:01 -0400
+In-Reply-To: <200908062309.n76N9Mft011503@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Alan Stern <stern@rowland.harvard.edu>, Matthew Wilcox <matthew@wil.cx>, Matthew Wilcox <willy@linux.intel.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: akpm@linux-foundation.org
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, peterhuewe@gmx.de, James.Bottomley@SteelEye.com, fujita.tomonori@lab.ntt.co.jp, sfr@canb.auug.org.au
 
->>>>> "Doug" == Douglas Gilbert <dgilbert@interlog.com> writes:
+On Thu, 06 Aug 2009 16:09:22 -0700
+akpm@linux-foundation.org wrote:
 
-Doug> It would be interesting to know if Windows 7 is pushing UAS (USB
-Doug> attached SCSI) [latest draft at www.t10.org is uas-r02.pdf].
+> From: Peter Huewe <peterhuewe@gmx.de>
+> 
+> Add the __init and __exit macros to the module_init / module_exit
+> functions from drivers/scsi/ibmvscsi/ibmvstgt.c
+> 
+> Signed-off-by: Peter Huewe <peterhuewe@gmx.de>
+> Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Cc: Stephen Rothwell <sfr@canb.auug.org.au>
+> Cc: James Bottomley <James.Bottomley@SteelEye.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> ---
 
-I'll see what I can dig up...
+Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-In any case UAS is a transport class.  Sure, it would provide us with
-another "can't-be-completely-brain-dead" heuristic.  But we're still at
-the firmware writer's whim when it comes to SPC/SBC-level commands.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Thanks,
