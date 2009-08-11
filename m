@@ -1,45 +1,40 @@
-From: rick.brown@oit.gatech.edu
-Subject: more arrays for scsi_dh_rdac.c
-Date: Tue, 11 Aug 2009 09:38:04 -0400 (EDT)
-Message-ID: <1416234192.1340021249997884445.JavaMail.root@mail6.gatech.edu>
-References: <981814294.1338791249997612929.JavaMail.root@mail6.gatech.edu>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Bugs in scsi_vpd_inquiry()
+Date: Tue, 11 Aug 2009 10:35:45 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0908111034360.2562-100000@iolanthe.rowland.org>
+References: <yq1y6pre160.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from deliverator11.gatech.edu ([130.207.165.83]:42805 "EHLO
-	deliverator11.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752798AbZHKODY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Aug 2009 10:03:24 -0400
-Received: from deliverator1.ecc.gatech.edu (deliverator1.ecc.gatech.edu [130.207.185.171])
-	(using TLSv1 with cipher ADH-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by deliverator11.gatech.edu (Postfix) with ESMTP id 853D6180379
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2009 09:39:12 -0400 (EDT)
-Received: from deliverator1.ecc.gatech.edu (localhost [127.0.0.1])
-	by localhost (Postfix) with SMTP id 9D1BB2DC0FE
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2009 09:38:10 -0400 (EDT)
-Received: from mail6.gatech.edu (bigip.ecc.gatech.edu [130.207.185.140])
-	by deliverator1.ecc.gatech.edu (Postfix) with ESMTP id B6E322DC284
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2009 09:38:08 -0400 (EDT)
-Received: from mail6.gatech.edu (localhost [127.0.0.1])
-	by mail6.gatech.edu (Postfix) with ESMTP id 9A35C225B4C
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2009 09:38:08 -0400 (EDT)
-In-Reply-To: <981814294.1338791249997612929.JavaMail.root@mail6.gatech.edu>
+Received: from iolanthe.rowland.org ([192.131.102.54]:49120 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754001AbZHKOfx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Aug 2009 10:35:53 -0400
+In-Reply-To: <yq1y6pre160.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Please consider adding the following two devices to the devlist in scsi_dc_rdac.c
+On Mon, 10 Aug 2009, Martin K. Petersen wrote:
 
-{"STK", "FLEXLINE 380"},
-{"SUN", "CSM_100_R_FC"},
+> >>>>> "Alan" == Alan Stern <stern@rowland.harvard.edu> writes:
+> 
+> Alan,
+> 
+> >> If the bridge doesn't provide the SCSI rev. where does it come from?
+> >> Or are you saying there's a USB "target" chip and then a USB-SATA
+> >> bridge chip behind it?
+> 
+> Alan> There's the bridge chip and the drive itself.  The drive provides
+> Alan> the INQUIRY data and the chip provides the USB identifiers.
+> 
+> But the drive is ATA.  It must be the bridge that translates whatever
+> the drive reports in IDENTIFY DEVICE into something that makes sense in
+> the SPC/SBC universe.
 
-The Flexline 380 is also now known as the Sun StorageTek 6540, and the CSM_100_R_FC is also known as the Sun StorEdge 6130 - both are rebranded LSI arrays. 
- 
--- 
-Rick Brown
-Office of Information Technology
-Georgia Institute of Technology
-258 4th Street N.W.  Atlanta, GA  30332-0715
+Right.  The drive provides the data, and the bridge massages it into
+the form of an INQUIRY response and sends it back to the host.
+
+Alan Stern
 
