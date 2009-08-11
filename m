@@ -1,98 +1,54 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Bugs in scsi_vpd_inquiry()
-Date: Tue, 11 Aug 2009 11:38:03 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0908111136350.2562-100000@iolanthe.rowland.org>
-References: <1250004438.4301.36.camel@mulgrave.site>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 4/7 ver 2] Fix various bugs in the target code
+Date: Tue, 11 Aug 2009 10:48:36 -0500
+Message-ID: <1250005716.4301.39.camel@mulgrave.site>
+References: <Pine.LNX.4.44L0.0908111130220.2562-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:47082 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751976AbZHKPiD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Aug 2009 11:38:03 -0400
-In-Reply-To: <1250004438.4301.36.camel@mulgrave.site>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41416 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751822AbZHKPsi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Aug 2009 11:48:38 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0908111130220.2562-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Matthew Wilcox <willy@linux.intel.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Tue, 11 Aug 2009, James Bottomley wrote:
-
-> > > This is pointless and dangerous:  Some architectures will invalidate
-> > > caches for DMA not flush them, so it might not do what you think it
-> > > does.
-> > > 
-> > 
-> > Then you can't do that "after check" either. It's a simple minefield.
-> > What do you suggest?
+On Tue, 2009-08-11 at 11:32 -0400, Alan Stern wrote:
+> This patch (as1276b) fixes two bugs in the SCSI target code and
+> explains an obscure requirement:
 > 
-> Well, nothing really, like the original code.  Byzantine checking is
-> never a good idea.  You always assume that if a device told you it did
-> what you told it, it actually did.  If we find devices that fail this
-> simple premise, then we get into blacklists and other forms of
-> nastiness.
+> 	If we have to wait for an old target to disappear, instead of
+> 	calling flush_scheduled_work() the patch calls
+> 	schedule_timeout_uninterruptible(1).  After all, whatever is
+> 	pinning the old target might not have anything to do with a
+> 	workqueue.  Besides, flush_scheduled_work() is prone to
+> 	deadlocks and should never be used by drivers.
 
-Okay, then how about this?
+No for reasons already stated.
 
-Alan Stern
+> 	__scsi_add_device() called scsi_alloc_target() outside the
+> 	protection of the host's scan_mutex, meaning that it might
+> 	find an incompletely-initialized target or it might create
+> 	a duplicate target.
 
+It's not a bug .. it works.  I'd actually like to kill the scan mutex
+because it seems to be the source of quite a few async problems.  I
+certainly don't want to extend its tentacles into target allocation.
 
+> 	In scsi_sysfs_add_sdev(), the call to
+> 	transport_configure_device() for the target appears wrong,
+> 	since it will be called each time a device is added to the
+> 	target.  But this is unavoidable for SPI, so a comment is
+> 	added to explain the situation.
 
-Index: usb-2.6/drivers/scsi/scsi.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/scsi.c
-+++ usb-2.6/drivers/scsi/scsi.c
-@@ -980,7 +980,8 @@ static int scsi_vpd_inquiry(struct scsi_
- 							u8 page, unsigned len)
- {
- 	int result;
--	unsigned char cmd[16];
-+	int resid;
-+	unsigned char cmd[6];
- 
- 	cmd[0] = INQUIRY;
- 	cmd[1] = 1;		/* EVPD */
-@@ -994,12 +995,12 @@ static int scsi_vpd_inquiry(struct scsi_
- 	 * all the existing users tried this hard.
- 	 */
- 	result = scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buffer,
--				  len + 4, NULL, 30 * HZ, 3, NULL);
-+				  len, NULL, 30 * HZ, 3, &resid);
- 	if (result)
- 		return result;
- 
--	/* Sanity check that we got the page back that we asked for */
--	if (buffer[1] != page)
-+	/* Sanity check that we at least got the header */
-+	if (resid > len - 4)
- 		return -EIO;
- 
- 	return 0;
-@@ -1027,7 +1028,7 @@ unsigned char *scsi_get_vpd_page(struct 
- 		return NULL;
- 
- 	/* Ask for all the pages supported by this device */
--	result = scsi_vpd_inquiry(sdev, buf, 0, 255);
-+	result = scsi_vpd_inquiry(sdev, buf, 0, 255 + 4);
- 	if (result)
- 		goto fail;
- 
-@@ -1042,7 +1043,7 @@ unsigned char *scsi_get_vpd_page(struct 
- 	goto fail;
- 
-  found:
--	result = scsi_vpd_inquiry(sdev, buf, page, 255);
-+	result = scsi_vpd_inquiry(sdev, buf, page, 255 + 4);
- 	if (result)
- 		goto fail;
- 
-@@ -1056,7 +1057,7 @@ unsigned char *scsi_get_vpd_page(struct 
- 
- 	kfree(buf);
- 	buf = kmalloc(len + 4, GFP_KERNEL);
--	result = scsi_vpd_inquiry(sdev, buf, page, len);
-+	result = scsi_vpd_inquiry(sdev, buf, page, len + 4);
- 	if (result)
- 		goto fail;
- 
+There's no rule requiring configure to be called once, so no explanation
+is really necessary.  I also suspect the SPI case isn't unique.
+
+James
+
 
