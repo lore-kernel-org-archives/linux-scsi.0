@@ -1,46 +1,34 @@
-From: Bart Van Assche <bart.vanassche@gmail.com>
-Subject: Re: [PATCH 0/3]: blk-iopoll, a polled completion API for block
-	devices
-Date: Tue, 11 Aug 2009 16:59:18 +0200
-Message-ID: <e2e108260908110759w4fbbb5dejf852ba272fa29d75@mail.gmail.com>
-References: <1249588685-4662-1-git-send-email-jens.axboe@oracle.com>
-	 <e2e108260908110335tc500412mc6354359d85ae9b6@mail.gmail.com>
-	 <20090811143919.GU12579@kernel.dk>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 4/7] Fix various bugs in the target code
+Date: Tue, 11 Aug 2009 11:12:01 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0908111109470.2562-100000@iolanthe.rowland.org>
+References: <1249919600.4089.111.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755187AbZHKO7U@vger.kernel.org>
-In-Reply-To: <20090811143919.GU12579@kernel.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, jeff@garzik.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:41278 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752740AbZHKPMB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Aug 2009 11:12:01 -0400
+In-Reply-To: <1249919600.4089.111.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Tue, Aug 11, 2009 at 4:39 PM, Jens Axboe<jens.axboe@oracle.com> wrote:
-> On Tue, Aug 11 2009, Bart Van Assche wrote:
->> On Thu, Aug 6, 2009 at 9:58 PM, Jens Axboe <jens.axboe@oracle.com> wrote:
->> > Anyway, YMMV, I would appreciate some test results (and as usual, that
->> > even includes just saying that it boots and functions for you). If
->> > people feel adventurous, patches for other controllers will be happily
->> > queued up for testing. I may even be convinced to implement support
->> > for your controller of choice, if you have some fast storage hooked up
->> > and would like to experiment. Generally, adding support to a driver is
->> > not very hard and the two conversions included were also meant to serve
->> > as an inspiration.
->>
->> Sounds very interesting. Have you already considered patching the SRP
->> initiator ? During the SRP performance tests I ran CPU usage on the
->> initiator was more than 95% and on the target less than 10%.
->
-> No I haven't, if you point me at which srp files, I can take a look.
+On Mon, 10 Aug 2009, James Bottomley wrote:
 
-The relevant source files are:
-include/scsi/srp.h
-include/scsi/scsi_transport_srp.h
-drivers/infiniband/ulp/srp/ib_srp.h
-drivers/infiniband/ulp/srp/ib_srp.c
-drivers/scsi/scsi_transport_srp.c
-drivers/scsi/libsrp.c
-drivers/scsi/scsi_transport_srp_internal.h
+> > 	scsi_sysfs_add_sdev() would call transport_configure_device()
+> > 	for a target each time a new device was added under that
+> > 	target.  The call has been moved to scsi_target_add(), where
+> > 	it will be made only once.
+> 
+> That, unfortunately is an SPI required feature ... we can't actually
+> configure the target until we have a device because of the way SPI
+> parameters work.
 
-Bart.
+Would it be sufficient to call transport_configure_device() only the
+first time a device is added?
+
+Alan Stern
+
