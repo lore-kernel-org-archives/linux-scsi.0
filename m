@@ -1,35 +1,32 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 0/3]: blk-iopoll, a polled completion API for block
-	devices
-Date: Tue, 11 Aug 2009 16:39:19 +0200
-Message-ID: <20090811143919.GU12579@kernel.dk>
-References: <1249588685-4662-1-git-send-email-jens.axboe@oracle.com> <e2e108260908110335tc500412mc6354359d85ae9b6@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755013AbZHKOjW@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <e2e108260908110335tc500412mc6354359d85ae9b6@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, jeff@garzik.org
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Subject: qla2xxx: Missing patches
+Date: Tue, 11 Aug 2009 07:47:58 -0700
+Message-ID: <88B59324-9550-4715-AE0A-0A31A4D8BD1E@qlogic.com>
+Mime-Version: 1.0 (Apple Message framework v912)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from avexch1.qlogic.com ([198.70.193.115]:15232 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754935AbZHKOsA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Aug 2009 10:48:00 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Anirban Chakraborty <anirban.chakraborty@qlogic.com>, LinuxSCSI <linux-scsi@vger.kernel.org>
 
-On Tue, Aug 11 2009, Bart Van Assche wrote:
-> On Thu, Aug 6, 2009 at 9:58 PM, Jens Axboe <jens.axboe@oracle.com> wrote:
-> > Anyway, YMMV, I would appreciate some test results (and as usual, that
-> > even includes just saying that it boots and functions for you). If
-> > people feel adventurous, patches for other controllers will be happily
-> > queued up for testing. I may even be convinced to implement support
-> > for your controller of choice, if you have some fast storage hooked up
-> > and would like to experiment. Generally, adding support to a driver is
-> > not very hard and the two conversions included were also meant to serve
-> > as an inspiration.
-> 
-> Sounds very interesting. Have you already considered patching the SRP
-> initiator ? During the SRP performance tests I ran CPU usage on the
-> initiator was more than 95% and on the target less than 10%.
+Hi James,
 
-No I haven't, if you point me at which srp files, I can take a look.
+	Thanks for applying the patches. I see that couple of patches  
+mentioned below submitted by Anirban is missing. Can u please let me  
+know whether I re-send these patches.
 
--- 
-Jens Axboe
+[PATCH] qla2xxx: Fix a bug that clears the interrupt status register  
+for the base queue
+
+[PATCH] qla2xxx: Fix to ensure driver works in sinlge queue mode if  
+multiqueue fails
+
+Thanks,
+
+Giri
