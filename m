@@ -1,120 +1,133 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH]: create sysfs file, dh_state for SCSI	devices
-	even if they	are not in the inteernal lists
-Date: Tue, 11 Aug 2009 10:54:12 +0200
-Message-ID: <4A8131B4.6000605@suse.de>
-References: <1246069888.14164.53.camel@chandra-ubuntu>	
-	<4A486FF0.7040209@suse.de>
-	<1246303830.15941.17.camel@chandra-ubuntu>
-	<1249329099.31433.23.camel@chandra-ubuntu>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: Bugs in scsi_vpd_inquiry()
+Date: Tue, 11 Aug 2009 10:07:41 +0300
+Message-ID: <4A8118BD.6080403@panasas.com>
+References: <Pine.LNX.4.44L0.0908101027160.3208-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1249329099.31433.23.camel@chandra-ubuntu>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: sekharan@linux.vnet.ibm.com
-Cc: Mario Mech <mech@meteo.uni-koeln.de>, device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ip67-152-220-66.z220-152-67.customer.algx.net ([67.152.220.66]:24963
+	"EHLO daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751976AbZHKLzD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Aug 2009 07:55:03 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0908101027160.3208-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Matthew Wilcox <willy@linux.intel.com>, SCSI development list <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Chandra Seetharaman wrote:
-> Hi Hannes,
->=20
-> Can you comment on this please.
->=20
-> If you are convinced with my justification, please send an ACK.
->=20
-> Thanks & Regards,
->=20
-> chandra
-> On Mon, 2009-06-29 at 12:30 -0700, Chandra Seetharaman wrote:
->> On Mon, 2009-06-29 at 09:40 +0200, Hannes Reinecke wrote:
->>> Chandra Seetharaman wrote:
->>>> Create the sysfs file, dh_state even if the new SCSI device is not
->>>> in the any of the device handler's internal lists.
->>>>
->>>> Signed-Off-by: Chandra Seetharaman <sekharan@us.ibm.com>
->>>> ---
->>>>  drivers/scsi/device_handler/scsi_dh.c |   11 ++++-------
->>>>  1 file changed, 4 insertions(+), 7 deletions(-)
->>>>
->>>> Index: linux-2.6.31-rc1/drivers/scsi/device_handler/scsi_dh.c
->>>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->>>> --- linux-2.6.31-rc1.orig/drivers/scsi/device_handler/scsi_dh.c
->>>> +++ linux-2.6.31-rc1/drivers/scsi/device_handler/scsi_dh.c
->>>> @@ -304,18 +304,15 @@ static int scsi_dh_notifier(struct notif
->>>>  	sdev =3D to_scsi_device(dev);
->>>> =20
->>>>  	if (action =3D=3D BUS_NOTIFY_ADD_DEVICE) {
->>>> +		err =3D device_create_file(dev, &scsi_dh_state_attr);
->>>> +		/* don't care about err */
->>>>  		devinfo =3D device_handler_match(NULL, sdev);
->>>> -		if (!devinfo)
->>>> -			goto out;
->>>> -
->>>> -		err =3D scsi_dh_handler_attach(sdev, devinfo);
->>>> -		if (!err)
->>>> -			err =3D device_create_file(dev, &scsi_dh_state_attr);
->>>> +		if (devinfo)
->>>> +			err =3D scsi_dh_handler_attach(sdev, devinfo);
->>>>  	} else if (action =3D=3D BUS_NOTIFY_DEL_DEVICE) {
->>>>  		device_remove_file(dev, &scsi_dh_state_attr);
->>>>  		scsi_dh_handler_detach(sdev, NULL);
->>>>  	}
->>>> -out:
->>>>  	return err;
->>>>  }
->>>> =20
->>>>
->>>>
->>>> --
->>>> dm-devel mailing list
->>>> dm-devel@redhat.com
->>>> https://www.redhat.com/mailman/listinfo/dm-devel
->>> NACK.
->>>
->>> This will create sysfs attributes even if the attach()
->>> failed for other reason like a generic error. So we'll end
->>> up with device handler attributes and no device handler attached.
->> we do not have to worry about if attach failed or succeeded. We will
->> have "detached" if there is no device handler is attached to a device.=
-=20
->>
->> Basically, existence of this file simply means that scsi_dh module is
->> active, only the contents of this file will indicate if any device
->> handler is attached or not.
->>
->> We are just creating the file dh_state for each SCSI device that exist=
-s
->> and that is the only way non-in-built devices can be attached to a
->> handler by the end-user.
->>
->> Do note that we do create this file for all the existing scsi devices
->> when the scsi_dh module is inserted (see scsi_dh_init()).
->>
-Right. So you're changing the semantics from the 'dh_state' attribute
-to mean 'scsi_dh' is active, not 'a scsi_dh module has been attached'.
+On 08/10/2009 05:41 PM, Alan Stern wrote:
+> Martin and Matthew:
+> 
+> Since you guys added scsi_vpd_inquiry() and scsi_get_vpd_page() plus
+> sd_read_block_limits() and sd_read_block_characteristics(), I'm
+> directing these questions to you.
+> 
+> Is there some reason for not accounting for the 4 header bytes in the 
+> allocation length value stored in the CDB?  Or is this simply a bug?
+> 
+> Were you aware that SCSI-2 defines the allocation length to be a single 
+> byte?  cmd[3] is specified as "Reserved" in the spec.  Hence the value 
+> of "len" should be capped at 255 if sdev->scsi_level <= SCSI_2, right?
+> 
+> Why does scsi_get_vpd_page() retrieve page 0 first, rather than 
+> directly asking for the page in question?  Is this some sort of 
+> play-it-safe approach, to avoid sending devices commands they may not 
+> support?
+> 
+> Have you considered that plenty of low-budget USB mass-storage devices
+> don't implement VPD properly?  I've got a flash drive right here which
+> totally ignores the "page" byte in the INQUIRY command; it always
+> responds with the normal INQUIRY data.  Thus expecting the response
+> data always to be accurate may not be a good idea.  I'm considering
+> adding a "restrict_to_MS_usb" flag to the host template, to indicate
+> that commands shouldn't be sent unless some version of Windows uses
+> them when talking to USB devices -- do you think that could work?
+> 
+> Finally, what's your opinion on the proposed patch below?
+> 
+> Alan Stern
+> 
+> 
+> 
+> Index: usb-2.6/drivers/scsi/scsi.c
+> ===================================================================
+> --- usb-2.6.orig/drivers/scsi/scsi.c
+> +++ usb-2.6/drivers/scsi/scsi.c
+> @@ -969,7 +969,7 @@ EXPORT_SYMBOL(scsi_track_queue_full);
+>   * @sdev: The device to ask
+>   * @buffer: Where to put the result
+>   * @page: Which Vital Product Data to return
+> - * @len: The length of the buffer
+> + * @len: The length of the data (= buffer length - 4)
+>   *
+>   * This is an internal helper function.  You probably want to use
+>   * scsi_get_vpd_page instead.
+> @@ -982,6 +982,12 @@ static int scsi_vpd_inquiry(struct scsi_
+>  	int result;
+>  	unsigned char cmd[16];
+>  
+> +	len += 4;		/* Include room for the header bytes */
+> +
+> +	/* SCSI-2 and earlier allow only 1 byte for the allocation length */
+> +	if (sdev->scsi_level <= SCSI_2)
+> +		len = min(len, 255u);
+> +
+>  	cmd[0] = INQUIRY;
+>  	cmd[1] = 1;		/* EVPD */
+>  	cmd[2] = page;
+> @@ -994,7 +1000,7 @@ static int scsi_vpd_inquiry(struct scsi_
+>  	 * all the existing users tried this hard.
+>  	 */
+>  	result = scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buffer,
+> -				  len + 4, NULL, 30 * HZ, 3, NULL);
+> +				  len, NULL, 30 * HZ, 3, NULL);
+>  	if (result)
+>  		return result;
+>  
+> 
 
-Ok, that seems reasonable.
+This is certainly a bug. Otherwise I would get all my pages 4 bytes short
+and wonder why.
 
-Acked-by: Hannes Reinecke <hare@suse.de>
+I wish the bug would explain that stupid USB device Martin was fixing.
+"I die if evpd page=0 is read" is a very brain dead thing. But there
+is no overflow in current code, only underflow.
 
-Cheers,
+If you are at it could you please fix all the bugs in this code: ;-)
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+---
+git diff --stat -p drivers/scsi/scsi.c
+ drivers/scsi/scsi.c |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 2de5f3a..aca26a1 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -982,6 +982,14 @@ static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
+ 	int result;
+ 	unsigned char cmd[16];
+ 
++	buffer[1] = ~page;
++
++	len += 4;		/* Include room for the header bytes */
++
++	/* SCSI-2 and earlier allow only 1 byte for the allocation length */
++	if (sdev->scsi_level <= SCSI_2)
++		len = min(len, 255u);
++
+ 	cmd[0] = INQUIRY;
+ 	cmd[1] = 1;		/* EVPD */
+ 	cmd[2] = page;
+@@ -994,7 +1002,7 @@ static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
+ 	 * all the existing users tried this hard.
+ 	 */
+ 	result = scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buffer,
+-				  len + 4, NULL, 30 * HZ, 3, NULL);
++				  len, NULL, 30 * HZ, 3, NULL);
+ 	if (result)
+ 		return result;
+ 
