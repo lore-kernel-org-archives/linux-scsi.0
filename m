@@ -1,73 +1,102 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: Bugs in scsi_vpd_inquiry()
-Date: Tue, 11 Aug 2009 10:04:35 -0600
-Message-ID: <20090811160434.GD31442@parisc-linux.org>
-References: <20090810145810.GA31442@parisc-linux.org> <Pine.LNX.4.44L0.0908101119460.3208-100000@iolanthe.rowland.org>
+Date: Tue, 11 Aug 2009 12:14:24 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0908111212010.2562-100000@iolanthe.rowland.org>
+References: <1250006349.4301.46.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:38823 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752812AbZHKQEe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Aug 2009 12:04:34 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0908101119460.3208-100000@iolanthe.rowland.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:36700 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752890AbZHKQOY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Aug 2009 12:14:24 -0400
+In-Reply-To: <1250006349.4301.46.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Matthew Wilcox <willy@linux.intel.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Matthew Wilcox <willy@linux.intel.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, Aug 10, 2009 at 11:32:00AM -0400, Alan Stern wrote:
-> > > Is there some reason for not accounting for the 4 header bytes in the 
-> > > allocation length value stored in the CDB?  Or is this simply a bug?
-> > 
-> > Um, we do.
-> > 
-> > unsigned char *scsi_get_vpd_page(struct scsi_device *sdev, u8 page)
-> >         unsigned char *buf = kmalloc(259, GFP_KERNEL);
-> >         result = scsi_vpd_inquiry(sdev, buf, 0, 255);
-> >         for (i = 0; i < buf[3]; i++)
-> >                 if (buf[i + 4] == page)
-> >                         goto found;
-> >         buf = kmalloc(len + 4, GFP_KERNEL);
-> >         result = scsi_vpd_inquiry(sdev, buf, page, len);
-> 
-> I'm not referring to this routine; I'm talking about the code in 
-> scsi_vpd_inquiry() where the CDB is set.
+On Tue, 11 Aug 2009, James Bottomley wrote:
 
-You could have been a little clearer in your bug report.
+> Sort of, but it's not really doing it properly.  Lets do it like this.
+> This should also fix the > 255 length problem older devices might have.
 
-> > > Were you aware that SCSI-2 defines the allocation length to be a single 
-> > > byte?  cmd[3] is specified as "Reserved" in the spec.  Hence the value 
-> > > of "len" should be capped at 255 if sdev->scsi_level <= SCSI_2, right?
-> > 
-> > and 'Reserved' in SCSI-2 means:
-> > 
-> > "A reserved bit, field, or byte shall be set to zero, or in accordance
-> > with a future extension to this standard." (7.1.1)
-> 
-> Sure.  But what reason could there possibly be for making a field
-> non-zero when you know that the device won't be able to interpret the
-> value correctly?  The fact that sdev->scsi_level == SCSI_2 means
-> the device follows _this_ version of the standard, not a future 
-> extension.  Or am I missing something?
+Do you mind including also the residue check?
 
-Because with my misunderstanding of the allocation length to be the page
-length, we wouldn't ever request more than 255 bytes until the device
-said it supported a page which is more than 255 bytes long.  Since such
-a device must be outside the SCSI-2 spec, it was assumed to understand
-the meaning of the 'reserved' byte.  So that wasn't a bug.
+Alan Stern
 
-Now that we need to pass 259 to get 255 bytes, that would be a bug,
-so we need to take care of it.
 
-> (And there's no reason to be rude.  I'm trying to hold a civil
-> discussion.)
 
-It didn't feel like it.
+Index: usb-2.6/drivers/scsi/scsi.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/scsi.c
++++ usb-2.6/drivers/scsi/scsi.c
+@@ -980,7 +980,8 @@ static int scsi_vpd_inquiry(struct scsi_
+ 							u8 page, unsigned len)
+ {
+ 	int result;
+-	unsigned char cmd[16];
++	int resid;
++	unsigned char cmd[6];
+ 
+ 	cmd[0] = INQUIRY;
+ 	cmd[1] = 1;		/* EVPD */
+@@ -994,12 +995,12 @@ static int scsi_vpd_inquiry(struct scsi_
+ 	 * all the existing users tried this hard.
+ 	 */
+ 	result = scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buffer,
+-				  len + 4, NULL, 30 * HZ, 3, NULL);
++				  len, NULL, 30 * HZ, 3, &resid);
+ 	if (result)
+ 		return result;
+ 
+-	/* Sanity check that we got the page back that we asked for */
+-	if (buffer[1] != page)
++	/* Sanity check that we got the header and the page we asked for */
++	if (resid > len - 4 || buffer[1] != page)
+ 		return -EIO;
+ 
+ 	return 0;
+@@ -1021,13 +1022,14 @@ unsigned char *scsi_get_vpd_page(struct 
+ {
+ 	int i, result;
+ 	unsigned int len;
+-	unsigned char *buf = kmalloc(259, GFP_KERNEL);
++	const unsigned int init_vpd_len = 255;
++	unsigned char *buf = kmalloc(init_vpd_len, GFP_KERNEL);
+ 
+ 	if (!buf)
+ 		return NULL;
+ 
+ 	/* Ask for all the pages supported by this device */
+-	result = scsi_vpd_inquiry(sdev, buf, 0, 255);
++	result = scsi_vpd_inquiry(sdev, buf, 0, init_vpd_len);
+ 	if (result)
+ 		goto fail;
+ 
+@@ -1042,7 +1044,7 @@ unsigned char *scsi_get_vpd_page(struct 
+ 	goto fail;
+ 
+  found:
+-	result = scsi_vpd_inquiry(sdev, buf, page, 255);
++	result = scsi_vpd_inquiry(sdev, buf, page, init_vpd_len);
+ 	if (result)
+ 		goto fail;
+ 
+@@ -1050,12 +1052,12 @@ unsigned char *scsi_get_vpd_page(struct 
+ 	 * Some pages are longer than 255 bytes.  The actual length of
+ 	 * the page is returned in the header.
+ 	 */
+-	len = (buf[2] << 8) | buf[3];
+-	if (len <= 255)
++	len = ((buf[2] << 8) | buf[3]) + 4;
++	if (len <= init_vpd_len)
+ 		return buf;
+ 
+ 	kfree(buf);
+-	buf = kmalloc(len + 4, GFP_KERNEL);
++	buf = kmalloc(len, GFP_KERNEL);
+ 	result = scsi_vpd_inquiry(sdev, buf, page, len);
+ 	if (result)
+ 		goto fail;
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
