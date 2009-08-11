@@ -1,102 +1,149 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Bugs in scsi_vpd_inquiry()
-Date: Tue, 11 Aug 2009 10:27:18 -0500
-Message-ID: <1250004438.4301.36.camel@mulgrave.site>
-References: <Pine.LNX.4.44L0.0908111048570.2562-100000@iolanthe.rowland.org>
-	 <1250003601.4301.29.camel@mulgrave.site>  <4A818BBC.8090705@panasas.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH 3/7 ver 2] Add STARGET_NEW state
+Date: Tue, 11 Aug 2009 11:30:22 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0908111128560.2562-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:38747 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751844AbZHKP1V (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Aug 2009 11:27:21 -0400
-In-Reply-To: <4A818BBC.8090705@panasas.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:40095 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751222AbZHKPaV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Aug 2009 11:30:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>, Matthew Wilcox <willy@linux.intel.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Tue, 2009-08-11 at 18:18 +0300, Boaz Harrosh wrote:
-> On 08/11/2009 06:13 PM, James Bottomley wrote:
-> > On Tue, 2009-08-11 at 10:53 -0400, Alan Stern wrote:
-> >> On Tue, 11 Aug 2009, Boaz Harrosh wrote:
-> >>
-> >>> This is certainly a bug. Otherwise I would get all my pages 4 bytes short
-> >>> and wonder why.
-> >>>
-> >>> I wish the bug would explain that stupid USB device Martin was fixing.
-> >>> "I die if evpd page=0 is read" is a very brain dead thing. But there
-> >>> is no overflow in current code, only underflow.
-> >>>
-> >>> If you are at it could you please fix all the bugs in this code: ;-)
-> >>
-> >> The USB problem shouldn't affect anything thanks to Martin's other
-> >> changes (sd won't read VPD for devices with scsi_level <= SCSI_2).  So
-> >> how does this revised patch look?
-> >>
-> >> Alan Stern
-> >>
-> >>
-> >> Index: usb-2.6/drivers/scsi/scsi.c
-> >> ===================================================================
-> >> --- usb-2.6.orig/drivers/scsi/scsi.c
-> >> +++ usb-2.6/drivers/scsi/scsi.c
-> >> @@ -969,7 +969,7 @@ EXPORT_SYMBOL(scsi_track_queue_full);
-> >>   * @sdev: The device to ask
-> >>   * @buffer: Where to put the result
-> >>   * @page: Which Vital Product Data to return
-> >> - * @len: The length of the buffer
-> >> + * @len: The length of the data (= buffer length - 4)
-> > 
-> > Really, no.  The former is the correct (and universally used
-> > definition).  This one you propose is asking for confusion and misuse.
-> > 
-> 
-> This is what is done today Only documented
-> 
-> If you want to fix it to be the full buffer size the user code
-> should be fixed
+This patch (as1249c) adds an extra state, STARGET_NEW, to the SCSI
+target state model.  A target is in this state initially and changes
+over to STARGET_CREATED when the hostt->target_alloc() call has been
+made.
 
-Right.
+This simplifies target destruction.  There's no need for a separate
+scsi_target_destroy() function; everything can be handled within
+scsi_target_reap().  The error paths are more robust because now it's
+easy to verify that all the destructors are called along every
+pathway.
 
-> >>   *
-> >>   * This is an internal helper function.  You probably want to use
-> >>   * scsi_get_vpd_page instead.
-> >> @@ -980,7 +980,10 @@ static int scsi_vpd_inquiry(struct scsi_
-> >>  							u8 page, unsigned len)
-> >>  {
-> >>  	int result;
-> >> -	unsigned char cmd[16];
-> >> +	int resid;
-> >> +	unsigned char cmd[6];
-> >> +
-> >> +	len += 4;		/* Include room for the header bytes */
-> >>  
-> >>  	cmd[0] = INQUIRY;
-> >>  	cmd[1] = 1;		/* EVPD */
-> >> @@ -989,17 +992,19 @@ static int scsi_vpd_inquiry(struct scsi_
-> >>  	cmd[4] = len & 0xff;
-> >>  	cmd[5] = 0;		/* Control byte */
-> >>  
-> >> +	buffer[1] = ~page;
-> > 
-> > This is pointless and dangerous:  Some architectures will invalidate
-> > caches for DMA not flush them, so it might not do what you think it
-> > does.
-> > 
-> 
-> Then you can't do that "after check" either. It's a simple minefield.
-> What do you suggest?
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
 
-Well, nothing really, like the original code.  Byzantine checking is
-never a good idea.  You always assume that if a device told you it did
-what you told it, it actually did.  If we find devices that fail this
-simple premise, then we get into blacklists and other forms of
-nastiness.
+---
 
-James
+The revision gets rid of an unnecessary spin_lock/spin_unlock pair 
+surrounding the line where starget->state is changed from STARGET_NEW 
+to STARGET_CREATED.
 
+
+
+Index: usb-2.6/include/scsi/scsi_device.h
+===================================================================
+--- usb-2.6.orig/include/scsi/scsi_device.h
++++ usb-2.6/include/scsi/scsi_device.h
+@@ -211,7 +211,8 @@ struct scsi_dh_data {
+ 	sdev_printk(prefix, (scmd)->device, fmt, ##a)
+ 
+ enum scsi_target_state {
+-	STARGET_CREATED = 1,
++	STARGET_NEW = 1,
++	STARGET_CREATED,
+ 	STARGET_RUNNING,
+ 	STARGET_DEL,
+ };
+Index: usb-2.6/drivers/scsi/scsi_scan.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/scsi_scan.c
++++ usb-2.6/drivers/scsi/scsi_scan.c
+@@ -324,21 +324,6 @@ out:
+ 	return NULL;
+ }
+ 
+-static void scsi_target_destroy(struct scsi_target *starget)
+-{
+-	struct device *dev = &starget->dev;
+-	struct Scsi_Host *shost = dev_to_shost(dev->parent);
+-	unsigned long flags;
+-
+-	transport_destroy_device(dev);
+-	spin_lock_irqsave(shost->host_lock, flags);
+-	if (shost->hostt->target_destroy)
+-		shost->hostt->target_destroy(starget);
+-	list_del_init(&starget->siblings);
+-	spin_unlock_irqrestore(shost->host_lock, flags);
+-	put_device(dev);
+-}
+-
+ static void scsi_target_dev_release(struct device *dev)
+ {
+ 	struct device *parent = dev->parent;
+@@ -423,7 +408,7 @@ static struct scsi_target *scsi_alloc_ta
+ 	starget->can_queue = 0;
+ 	INIT_LIST_HEAD(&starget->siblings);
+ 	INIT_LIST_HEAD(&starget->devices);
+-	starget->state = STARGET_CREATED;
++	starget->state = STARGET_NEW;
+ 	starget->scsi_level = SCSI_2;
+ 	starget->max_target_blocked = SCSI_DEFAULT_TARGET_BLOCKED;
+  retry:
+@@ -439,15 +424,14 @@ static struct scsi_target *scsi_alloc_ta
+ 	transport_setup_device(dev);
+ 	if (shost->hostt->target_alloc) {
+ 		error = shost->hostt->target_alloc(starget);
+-
+-		if(error) {
+-			dev_printk(KERN_ERR, dev, "target allocation failed, error %d\n", error);
+-			/* don't want scsi_target_reap to do the final
+-			 * put because it will be under the host lock */
+-			scsi_target_destroy(starget);
++		if (error) {
++			dev_printk(KERN_ERR, dev,
++				"target allocation failed, error %d\n", error);
++			scsi_target_reap(starget);
+ 			return NULL;
+ 		}
+ 	}
++	starget->state = STARGET_CREATED;
+ 	get_device(dev);
+ 
+ 	return starget;
+@@ -456,8 +440,7 @@ static struct scsi_target *scsi_alloc_ta
+ 	found_target->reap_ref++;
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 	if (found_target->state != STARGET_DEL) {
+-		put_device(parent);
+-		kfree(starget);
++		scsi_target_reap(starget);
+ 		return found_target;
+ 	}
+ 	/* Unfortunately, we found a dying target; need to
+@@ -477,7 +460,8 @@ static struct scsi_target *scsi_alloc_ta
+  */
+ void scsi_target_reap(struct scsi_target *starget)
+ {
+-	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
++	struct device *dev = &starget->dev;
++	struct Scsi_Host *shost = dev_to_shost(dev->parent);
+ 	unsigned long flags;
+ 	enum scsi_target_state state;
+ 	int empty;
+@@ -493,10 +477,17 @@ void scsi_target_reap(struct scsi_target
+ 	BUG_ON(state == STARGET_DEL || !list_empty(&starget->devices));
+ 	starget->state = STARGET_DEL;
+ 	if (state == STARGET_RUNNING) {
+-		transport_remove_device(&starget->dev);
+-		device_del(&starget->dev);
++		transport_remove_device(dev);
++		device_del(dev);
+ 	}
+-	scsi_target_destroy(starget);
++
++	transport_destroy_device(dev);
++	spin_lock_irqsave(shost->host_lock, flags);
++	if (state != STARGET_NEW && shost->hostt->target_destroy)
++		shost->hostt->target_destroy(starget);
++	list_del_init(&starget->siblings);
++	spin_unlock_irqrestore(shost->host_lock, flags);
++	put_device(dev);
+ }
+ 
+ /**
 
