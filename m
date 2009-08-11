@@ -1,37 +1,45 @@
-From: Bart Van Assche <bart.vanassche@gmail.com>
-Subject: Re: [PATCH 0/3]: blk-iopoll, a polled completion API for block
-	devices
-Date: Tue, 11 Aug 2009 12:35:13 +0200
-Message-ID: <e2e108260908110335tc500412mc6354359d85ae9b6@mail.gmail.com>
-References: <1249588685-4662-1-git-send-email-jens.axboe@oracle.com>
+From: rick.brown@oit.gatech.edu
+Subject: more arrays for scsi_dh_rdac.c
+Date: Tue, 11 Aug 2009 09:38:04 -0400 (EDT)
+Message-ID: <1416234192.1340021249997884445.JavaMail.root@mail6.gatech.edu>
+References: <981814294.1338791249997612929.JavaMail.root@mail6.gatech.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:53795 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751670AbZHKMEK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Aug 2009 08:04:10 -0400
-Received: by ewy10 with SMTP id 10so3712908ewy.37
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2009 05:04:10 -0700 (PDT)
-In-Reply-To: <1249588685-4662-1-git-send-email-jens.axboe@oracle.com>
+Received: from deliverator11.gatech.edu ([130.207.165.83]:42805 "EHLO
+	deliverator11.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752798AbZHKODY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Aug 2009 10:03:24 -0400
+Received: from deliverator1.ecc.gatech.edu (deliverator1.ecc.gatech.edu [130.207.185.171])
+	(using TLSv1 with cipher ADH-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by deliverator11.gatech.edu (Postfix) with ESMTP id 853D6180379
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2009 09:39:12 -0400 (EDT)
+Received: from deliverator1.ecc.gatech.edu (localhost [127.0.0.1])
+	by localhost (Postfix) with SMTP id 9D1BB2DC0FE
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2009 09:38:10 -0400 (EDT)
+Received: from mail6.gatech.edu (bigip.ecc.gatech.edu [130.207.185.140])
+	by deliverator1.ecc.gatech.edu (Postfix) with ESMTP id B6E322DC284
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2009 09:38:08 -0400 (EDT)
+Received: from mail6.gatech.edu (localhost [127.0.0.1])
+	by mail6.gatech.edu (Postfix) with ESMTP id 9A35C225B4C
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2009 09:38:08 -0400 (EDT)
+In-Reply-To: <981814294.1338791249997612929.JavaMail.root@mail6.gatech.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, jeff@garzik.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, Aug 6, 2009 at 9:58 PM, Jens Axboe <jens.axboe@oracle.com> wrote:
-> Anyway, YMMV, I would appreciate some test results (and as usual, that
-> even includes just saying that it boots and functions for you). If
-> people feel adventurous, patches for other controllers will be happily
-> queued up for testing. I may even be convinced to implement support
-> for your controller of choice, if you have some fast storage hooked up
-> and would like to experiment. Generally, adding support to a driver is
-> not very hard and the two conversions included were also meant to serve
-> as an inspiration.
+Please consider adding the following two devices to the devlist in scsi_dc_rdac.c
 
-Sounds very interesting. Have you already considered patching the SRP
-initiator ? During the SRP performance tests I ran CPU usage on the
-initiator was more than 95% and on the target less than 10%.
+{"STK", "FLEXLINE 380"},
+{"SUN", "CSM_100_R_FC"},
 
-Bart.
+The Flexline 380 is also now known as the Sun StorageTek 6540, and the CSM_100_R_FC is also known as the Sun StorEdge 6130 - both are rebranded LSI arrays. 
+ 
+-- 
+Rick Brown
+Office of Information Technology
+Georgia Institute of Technology
+258 4th Street N.W.  Atlanta, GA  30332-0715
+
