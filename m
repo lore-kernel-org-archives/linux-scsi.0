@@ -1,42 +1,76 @@
-From: "Moger, Babu" <Babu.Moger@lsi.com>
-Subject: RE: more arrays for scsi_dh_rdac.c
-Date: Tue, 11 Aug 2009 10:30:33 -0600
-Message-ID: <E463DF2B2E584B4A82673F53D62C2EF474AEAF70@cosmail01.lsi.com>
-References: <981814294.1338791249997612929.JavaMail.root@mail6.gatech.edu>
- <1416234192.1340021249997884445.JavaMail.root@mail6.gatech.edu>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 12/14] scsi: use printk_once
+Date: Tue, 11 Aug 2009 11:40:13 -0500
+Message-ID: <1250008813.4301.55.camel@mulgrave.site>
+References: <1249847649-11631-1-git-send-email-marcin.slusarz@gmail.com>
+	 <1249847649-11631-13-git-send-email-marcin.slusarz@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og114.obsmtp.com ([64.18.2.215]:51724 "EHLO
-	exprod7og114.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754544AbZHKQax (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Aug 2009 12:30:53 -0400
-In-Reply-To: <1416234192.1340021249997884445.JavaMail.root@mail6.gatech.edu>
-Content-Language: en-US
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:52833 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752349AbZHKQkP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Aug 2009 12:40:15 -0400
+In-Reply-To: <1249847649-11631-13-git-send-email-marcin.slusarz@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "rick.brown@oit.gatech.edu" <rick.brown@oit.gatech.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "sekharan@linux.vnet.ibm.com" <sekharan@linux.vnet.ibm.com>
+To: Marcin Slusarz <marcin.slusarz@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-UmljaywgDQpMb29rcyBsaWtlIENoYW5kcmEgaXMgZ29pbmcgdG8gYWRkIHRoZXNlIHN0cmluZ3Mg
-aW4gc2NzaV9kaF9yZGFjLmMuDQoNCkNhbiB5b3UgcGxlYXNlIGNvbmZpcm0gdGhlIHNlY29uZCBz
-dHJpbmc/IFNob3VsZG4ndCBpdCBiZSByZWFkIGFzIHsiU1VOIiwgIkNTTTEwMF9SX0ZDIn0/DQog
-ICANCg0KVGhhbmtzDQpCYWJ1IE1vZ2VyIA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0t
-DQo+IEZyb206IGxpbnV4LXNjc2ktb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgt
-c2NzaS0NCj4gb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2Ygcmljay5icm93bkBv
-aXQuZ2F0ZWNoLmVkdQ0KPiBTZW50OiBUdWVzZGF5LCBBdWd1c3QgMTEsIDIwMDkgODozOCBBTQ0K
-PiBUbzogbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogbW9yZSBhcnJheXMg
-Zm9yIHNjc2lfZGhfcmRhYy5jDQo+IA0KPiBQbGVhc2UgY29uc2lkZXIgYWRkaW5nIHRoZSBmb2xs
-b3dpbmcgdHdvIGRldmljZXMgdG8gdGhlIGRldmxpc3QgaW4NCj4gc2NzaV9kY19yZGFjLmMNCj4g
-DQo+IHsiU1RLIiwgIkZMRVhMSU5FIDM4MCJ9LA0KPiB7IlNVTiIsICJDU01fMTAwX1JfRkMifSwN
-Cj4gDQo+IFRoZSBGbGV4bGluZSAzODAgaXMgYWxzbyBub3cga25vd24gYXMgdGhlIFN1biBTdG9y
-YWdlVGVrIDY1NDAsIGFuZCB0aGUNCj4gQ1NNXzEwMF9SX0ZDIGlzIGFsc28ga25vd24gYXMgdGhl
-IFN1biBTdG9yRWRnZSA2MTMwIC0gYm90aCBhcmUgcmVicmFuZGVkDQo+IExTSSBhcnJheXMuDQo+
-IA0KPiAtLQ0KPiBSaWNrIEJyb3duDQo+IE9mZmljZSBvZiBJbmZvcm1hdGlvbiBUZWNobm9sb2d5
-DQo+IEdlb3JnaWEgSW5zdGl0dXRlIG9mIFRlY2hub2xvZ3kNCj4gMjU4IDR0aCBTdHJlZXQgTi5X
-LiAgQXRsYW50YSwgR0EgIDMwMzMyLTA3MTUNCj4gDQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJlIGZy
-b20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1zY3NpIiBpbg0K
-PiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPiBN
-b3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1p
-bmZvLmh0bWwNCg==
+On Sun, 2009-08-09 at 21:54 +0200, Marcin Slusarz wrote:
+> Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
+> Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+> Cc: linux-scsi@vger.kernel.org
+> ---
+>  drivers/scsi/53c700.c             |    6 +-----
+>  drivers/scsi/cxgb3i/cxgb3i_init.c |    7 +------
+>  2 files changed, 2 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
+> index f5a9add..c5f4fa7 100644
+> --- a/drivers/scsi/53c700.c
+> +++ b/drivers/scsi/53c700.c
+> @@ -291,7 +291,6 @@ NCR_700_detect(struct scsi_host_template *tpnt,
+>  	__u8 *memory;
+>  	__u32 *script;
+>  	struct Scsi_Host *host;
+> -	static int banner = 0;
+>  	int j;
+>  
+>  	if(tpnt->sdev_attrs == NULL)
+> @@ -385,10 +384,7 @@ NCR_700_detect(struct scsi_host_template *tpnt,
+>  	else
+>  		hostdata->rev = (NCR_700_readb(host, CTEST7_REG)>>4) & 0x0f;
+>  	hostdata->fast = (NCR_700_readb(host, CTEST9_REG) == 0);
+> -	if (banner == 0) {
+> -		printk(KERN_NOTICE "53c700: Version " NCR_700_VERSION " By James.Bottomley@HansenPartnership.com\n");
+> -		banner = 1;
+> -	}
+> +	printk_once(KERN_NOTICE "53c700: Version " NCR_700_VERSION " By James.Bottomley@HansenPartnership.com\n");
+>  	printk(KERN_NOTICE "scsi%d: %s rev %d %s\n", host->host_no,
+>  	       hostdata->chip710 ? "53c710" :
+>  	       (hostdata->fast ? "53c700-66" : "53c700"),
+> diff --git a/drivers/scsi/cxgb3i/cxgb3i_init.c b/drivers/scsi/cxgb3i/cxgb3i_init.c
+> index 042d9bc..8c9285f 100644
+> --- a/drivers/scsi/cxgb3i/cxgb3i_init.c
+> +++ b/drivers/scsi/cxgb3i/cxgb3i_init.c
+> @@ -43,12 +43,7 @@ static struct cxgb3_client t3c_client = {
+>   */
+>  static void open_s3_dev(struct t3cdev *t3dev)
+>  {
+> -	static int vers_printed;
+> -
+> -	if (!vers_printed) {
+> -		printk(KERN_INFO "%s", version);
+> -		vers_printed = 1;
+> -	}
+> +	printk_once(KERN_INFO "%s", version);
+
+There's really no point to this beyond code churn.  Both patterns are
+correct uses so conversion buys us nothing.
+
+James
+
+
