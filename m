@@ -1,157 +1,592 @@
-From: Jaswinder Singh Rajput <jaswinderrajput@gmail.com>
-Subject: Re: [Fwd: Bug#539406: linux-image-2.6.30-1-alpha-smp: fails to load
-	fw for 1st scsi adapter]
-Date: Wed, 12 Aug 2009 14:42:48 +0530
-Message-ID: <aa5953d60908120212o63d0c914oeb1eeb0f01938af7@mail.gmail.com>
-References: <1250042330.23880.44.camel@localhost>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [PATCH]: Implementation of blk_rq_map_kern_sg() (aka New implementation
+ of scsi_execute_async() v3)
+Date: Wed, 12 Aug 2009 21:47:02 +0400
+Message-ID: <4A830016.5020304@vlnb.net>
+References: <4A563368.5040407@vlnb.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pz0-f196.google.com ([209.85.222.196]:37634 "EHLO
-	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932260AbZHLJMr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Aug 2009 05:12:47 -0400
-Received: by pzk34 with SMTP id 34so4044835pzk.4
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2009 02:12:48 -0700 (PDT)
-In-Reply-To: <1250042330.23880.44.camel@localhost>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754688AbZHLRsj@vger.kernel.org>
+In-Reply-To: <4A563368.5040407@vlnb.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: scst-devel@lists.sourceforge.net, Tejun Heo <tj@kernel.org>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>, Joe Eykholt <jeykholt@cisco.com>
 List-Id: linux-scsi@vger.kernel.org
-To: 539406@bugs.debian.org, ben@decadent.org.uk
-Cc: linux-scsi@vger.kernel.org, David.Woodhouse@intel.com
 
-Hello Ben,
+This patch implements function blk_rq_map_kern_sg(), which allows to map
+a kernel-originated SG vector to a block request. It is necessary to execute
+SCSI commands with from kernel going SG buffer. At the moment SCST is the only
+user of this functionality. It needs it, because its target drivers, which
+are, basically, SCSI drivers, can deal only with SGs, not with BIOs. But,
+according to the latest discussions, there can be other potential users for of
+this functionality, so I'm sending this patch in a hope that it will be
+also useful for them and eventually will be merged in the mainline kernel.
 
-On Wed, Aug 12, 2009 at 7:28 AM, Ben Hutchings<ben@decadent.org.uk> wro=
-te:
-> There is a bug in the firmware loading code in qla1280, as reported
-> below: it calls request_firmware() while holding a spinlock. =A0I thi=
-nk
-> that it needs to drop ha->host->host_lock around the call to
-> request_firmware() but I'm not sure that's correct.
->
+In the previous submissions this patch was called "New implementation of
+scsi_execute_async()", but since in this version scsi_execute_async() was
+removed from it by request of Boaz Harrosh the name was changed accordingly.
 
-Yes, you are right, we need to unlock while requesting firmware. But
-qla1280_mailbox_command() again needs the lock.
+Highlight of this implementations:
 
-I am sorry, currently I do not have access to this hardware, can you
-please test it.
+ - It uses BIOs chaining instead of kmalloc()'ing the whole bio.
 
-Thanks for your help,
---
-JSR
+ - It uses SGs chaining instead of kmalloc()'ing one big SG in case if direct
+mapping failed (e.g. because of DMA alignment or padding).
 
-> Ben.
->
-> -------- Forwarded Message --------
-> From: R. Scott Bailey <scott.bailey@eds.com>
-> Reply-to: "R. Scott Bailey" <scott.bailey@eds.com>, 539406@bugs.debia=
-n.org
-> To: Debian Bug Tracking System <submit@bugs.debian.org>
-> Subject: Bug#539406: linux-image-2.6.30-1-alpha-smp: fails to load fw=
- for 1st scsi adapter
-> Date: Fri, 31 Jul 2009 11:36:38 -0400
->
-> Package: linux-image-2.6.30-1-alpha-smp
-> Version: 2.6.30-2
-> Severity: important
->
-> Well, the firmware loading logic has been flaky on my system for a fe=
-w
-> releases now. I previously reported bug 527265 against 2.6.29, where =
-the
-> qla1040 firmware would not load at all, and that was resolved in a la=
-ter
-> 2.6.29 image.
->
-> In this release (2.6.30-2) I get new/different bad behavior. My syste=
-m
-> has three QLA1040 cards in it. In the attached console output from th=
-e boot,
-> notice that at time 23.256824, the first adapter (scsi0) is located,
-> generates a stack trace trying to load firmware, and fails to initial=
-ize
-> the card. (There goes my tape drive!) A little later, at 83.499957, t=
-he
-> second adapter is found and this time the firmware loads fine. Ditto =
-for
-> the third adapter after that.
->
-> -- Package-specific info:
->
-> -- System Information:
-> Debian Release: 5.0.2
-> Architecture: alpha
->
-> Kernel: Linux 2.6.29-2-alpha-smp (SMP w/1 CPU core)
-> Locale: LANG=3DC, LC_CTYPE=3DC (charmap=3DANSI_X3.4-1968)
-> Shell: /bin/sh linked to /bin/bash
->
-> Versions of packages linux-image-2.6.30-1-alpha-smp depends on:
-> ii =A0debconf [debconf-2.0] =A0 =A0 =A0 =A0 1.5.24 =A0 =A0 Debian con=
-figuration management sy
-> ii =A0initramfs-tools [linux-initra 0.92o =A0 =A0 =A0tools for genera=
-ting an initramfs
-> ii =A0module-init-tools =A0 =A0 =A0 =A0 =A0 =A0 3.4-1 =A0 =A0 =A0tool=
-s for managing Linux kernel mo
->
-> linux-image-2.6.30-1-alpha-smp recommends no packages.
->
-> Versions of packages linux-image-2.6.30-1-alpha-smp suggests:
-> ii =A0aboot =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A01.0~pre20040408-3 Linu=
-x bootloader for the SRM conso
-> ii =A0fdutils =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A05.5-20060227-3 =A0 =A0Li=
-nux floppy utilities
-> pn =A0linux-doc-2.6.30 =A0 =A0 =A0 <none> =A0 =A0 =A0 =A0 =A0 =A0(no =
-description available)
->
-> -- debconf information:
-> =A0linux-image-2.6.30-1-alpha-smp/postinst/depmod-error-initrd-2.6.30=
--1-alpha-smp: false
-> =A0linux-image-2.6.30-1-alpha-smp/postinst/create-kimage-link-2.6.30-=
-1-alpha-smp: true
-> =A0linux-image-2.6.30-1-alpha-smp/preinst/lilo-initrd-2.6.30-1-alpha-=
-smp: true
-> =A0linux-image-2.6.30-1-alpha-smp/preinst/abort-install-2.6.30-1-alph=
-a-smp:
-> =A0linux-image-2.6.30-1-alpha-smp/postinst/depmod-error-2.6.30-1-alph=
-a-smp: false
-> =A0linux-image-2.6.30-1-alpha-smp/prerm/removing-running-kernel-2.6.3=
-0-1-alpha-smp: true
-> =A0linux-image-2.6.30-1-alpha-smp/prerm/would-invalidate-boot-loader-=
-2.6.30-1-alpha-smp: true
-> =A0linux-image-2.6.30-1-alpha-smp/postinst/bootloader-test-error-2.6.=
-30-1-alpha-smp:
-> =A0linux-image-2.6.30-1-alpha-smp/preinst/initrd-2.6.30-1-alpha-smp:
-> =A0linux-image-2.6.30-1-alpha-smp/postinst/kimage-is-a-directory:
-> =A0shared/kernel-image/really-run-bootloader: true
-> =A0linux-image-2.6.30-1-alpha-smp/preinst/lilo-has-ramdisk:
-> =A0linux-image-2.6.30-1-alpha-smp/preinst/elilo-initrd-2.6.30-1-alpha=
--smp: true
-> =A0linux-image-2.6.30-1-alpha-smp/preinst/overwriting-modules-2.6.30-=
-1-alpha-smp: true
-> =A0linux-image-2.6.30-1-alpha-smp/postinst/bootloader-error-2.6.30-1-=
-alpha-smp:
-> =A0linux-image-2.6.30-1-alpha-smp/preinst/abort-overwrite-2.6.30-1-al=
-pha-smp:
-> =A0linux-image-2.6.30-1-alpha-smp/preinst/bootloader-initrd-2.6.30-1-=
-alpha-smp: true
-> =A0linux-image-2.6.30-1-alpha-smp/postinst/old-initrd-link-2.6.30-1-a=
-lpha-smp: true
-> =A0linux-image-2.6.30-1-alpha-smp/postinst/old-dir-initrd-link-2.6.30=
--1-alpha-smp: true
-> =A0linux-image-2.6.30-1-alpha-smp/postinst/old-system-map-link-2.6.30=
--1-alpha-smp: true
-> =A0linux-image-2.6.30-1-alpha-smp/preinst/failed-to-move-modules-2.6.=
-30-1-alpha-smp:
->
-> --
-> Ben Hutchings
-> Unix is many things to many people,
-> but it's never been everything to anybody.
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ - When needed, copy_page() is used instead of memcpy() to copy the whole pages faster.
+
+Also this patch adds and exports function sg_copy(), which copies one SG to
+another.
+
+Most of the changes since v2 were made based on the feedback from Boaz Harrosh
+and Joe Eykholt (thanks!).
+
+Change log since v2:
+
+ - scsi_execute_async() was moved from this patch inside SCST core (and gained
+support for large CDBs and bidirectional commands (compile tested only))
+
+ - With help from some reference counting magic blk_rq_map_kern_sg() doesn't use
+rq->end_io_data anymore and uses bio->bi_private instead.
+
+ - As a direct consequence of the bio->bi_private usage, the tail copy logic had to
+be removed to not conflict with blk_queue_bounce(), which also uses it.
+
+ - In sg_copy() new argument nents_to_copy was added
+
+ - Return value of sg_copy() was fixed
+
+ - This patch doesn't require anymore previously sent patch with subject 
+"[PATCH]: Rename REQ_COPY_USER to more descriptive REQ_HAS_TAIL_SPACE_FOR_PADDING".
+
+It's against 2.6.30.1, but if necessary, can be updated to any necessary
+kernel version.
+
+Signed-off-by: Vladislav Bolkhovitin <vst@vlnb.net>
+
+ block/blk-map.c             |  331 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/blkdev.h      |    3 
+ include/linux/scatterlist.h |    5 
+ lib/scatterlist.c           |  129 +++++++++++++++++
+ 4 files changed, 468 insertions(+)
+
+diff -upkr linux-2.6.30.1/block/blk-map.c linux-2.6.30.1/block/blk-map.c
+--- linux-2.6.30.1/block/blk-map.c	2009-07-10 21:13:25.000000000 +0400
++++ linux-2.6.30.1/block/blk-map.c	2009-08-12 20:01:43.000000000 +0400
+@@ -5,6 +5,7 @@
+ #include <linux/module.h>
+ #include <linux/bio.h>
+ #include <linux/blkdev.h>
++#include <linux/scatterlist.h>
+ #include <scsi/sg.h>		/* for struct sg_iovec */
+ 
+ #include "blk.h"
+@@ -272,6 +273,336 @@ int blk_rq_unmap_user(struct bio *bio)
+ }
+ EXPORT_SYMBOL(blk_rq_unmap_user);
+ 
++struct blk_kern_sg_work {
++	atomic_t bios_inflight;
++	struct sg_table sg_table;
++	struct scatterlist *src_sgl;
++};
++
++static void blk_free_kern_sg_work(struct blk_kern_sg_work *bw)
++{
++	sg_free_table(&bw->sg_table);
++	kfree(bw);
++	return;
++}
++
++static void blk_bio_map_kern_endio(struct bio *bio, int err)
++{
++	struct blk_kern_sg_work *bw = bio->bi_private;
++
++	if (bw != NULL) {
++		/* Decrement the bios in processing and, if zero, free */
++		BUG_ON(atomic_read(&bw->bios_inflight) <= 0);
++		if (atomic_dec_and_test(&bw->bios_inflight)) {
++			if ((bio_data_dir(bio) == READ) && (err == 0)) {
++				unsigned long flags;
++
++				local_irq_save(flags);	/* to protect KMs */
++				sg_copy(bw->src_sgl, bw->sg_table.sgl, 0, 0,
++					KM_BIO_DST_IRQ, KM_BIO_SRC_IRQ);
++				local_irq_restore(flags);
++			}
++			blk_free_kern_sg_work(bw);
++		}
++	}
++
++	bio_put(bio);
++	return;
++}
++
++static int blk_rq_copy_kern_sg(struct request *rq, struct scatterlist *sgl,
++			       int nents, struct blk_kern_sg_work **pbw,
++			       gfp_t gfp, gfp_t page_gfp)
++{
++	int res = 0, i;
++	struct scatterlist *sg;
++	struct scatterlist *new_sgl;
++	int new_sgl_nents;
++	size_t len = 0, to_copy;
++	struct blk_kern_sg_work *bw;
++
++	bw = kzalloc(sizeof(*bw), gfp);
++	if (bw == NULL)
++		goto out;
++
++	bw->src_sgl = sgl;
++
++	for_each_sg(sgl, sg, nents, i)
++		len += sg->length;
++	to_copy = len;
++
++	new_sgl_nents = PFN_UP(len);
++
++	res = sg_alloc_table(&bw->sg_table, new_sgl_nents, gfp);
++	if (res != 0)
++		goto out_free_bw;
++
++	new_sgl = bw->sg_table.sgl;
++
++	for_each_sg(new_sgl, sg, new_sgl_nents, i) {
++		struct page *pg;
++
++		pg = alloc_page(page_gfp);
++		if (pg == NULL)
++			goto err_free_new_sgl;
++
++		sg_assign_page(sg, pg);
++		sg->length = min_t(size_t, PAGE_SIZE, len);
++
++		len -= PAGE_SIZE;
++	}
++
++	if (rq_data_dir(rq) == WRITE) {
++		/*
++		 * We need to limit amount of copied data to to_copy, because
++		 * sgl might have the last element in sgl not marked as last in
++		 * SG chaining.
++		 */
++		sg_copy(new_sgl, sgl, 0, to_copy,
++			KM_USER0, KM_USER1);
++	}
++
++	*pbw = bw;
++	/*
++	 * REQ_COPY_USER name is misleading. It should be something like
++	 * REQ_HAS_TAIL_SPACE_FOR_PADDING.
++	 */
++	rq->cmd_flags |= REQ_COPY_USER;
++
++out:
++	return res;
++
++err_free_new_sgl:
++	for_each_sg(new_sgl, sg, new_sgl_nents, i) {
++		struct page *pg = sg_page(sg);
++		if (pg == NULL)
++			break;
++		__free_page(pg);
++	}
++	sg_free_table(&bw->sg_table);
++
++out_free_bw:
++	kfree(bw);
++	res = -ENOMEM;
++	goto out;
++}
++
++static int __blk_rq_map_kern_sg(struct request *rq, struct scatterlist *sgl,
++	int nents, struct blk_kern_sg_work *bw, gfp_t gfp)
++{
++	int res;
++	struct request_queue *q = rq->q;
++	int rw = rq_data_dir(rq);
++	int max_nr_vecs, i;
++	size_t tot_len;
++	bool need_new_bio;
++	struct scatterlist *sg, *prev_sg = NULL;
++	struct bio *bio = NULL, *hbio = NULL, *tbio = NULL;
++	int bios;
++
++	if (unlikely((sgl == NULL) || (sgl->length == 0) || (nents <= 0))) {
++		WARN_ON(1);
++		res = -EINVAL;
++		goto out;
++	}
++
++	/*
++	 * Let's keep each bio allocation inside a single page to decrease
++	 * probability of failure.
++	 */
++	max_nr_vecs =  min_t(size_t,
++		((PAGE_SIZE - sizeof(struct bio)) / sizeof(struct bio_vec)),
++		BIO_MAX_PAGES);
++
++	need_new_bio = true;
++	tot_len = 0;
++	bios = 0;
++	for_each_sg(sgl, sg, nents, i) {
++		struct page *page = sg_page(sg);
++		void *page_addr = page_address(page);
++		size_t len = sg->length, l;
++		size_t offset = sg->offset;
++
++		tot_len += len;
++		prev_sg = sg;
++
++		/*
++		 * Each segment must be aligned on DMA boundary and
++		 * not on stack. The last one may have unaligned
++		 * length as long as the total length is aligned to
++		 * DMA padding alignment.
++		 */
++		if (i == nents - 1)
++			l = 0;
++		else
++			l = len;
++		if (((sg->offset | l) & queue_dma_alignment(q)) ||
++		    (page_addr && object_is_on_stack(page_addr + sg->offset))) {
++			res = -EINVAL;
++			goto out_free_bios;
++		}
++
++		while (len > 0) {
++			size_t bytes;
++			int rc;
++
++			if (need_new_bio) {
++				bio = bio_kmalloc(gfp, max_nr_vecs);
++				if (bio == NULL) {
++					res = -ENOMEM;
++					goto out_free_bios;
++				}
++
++				if (rw == WRITE)
++					bio->bi_rw |= 1 << BIO_RW;
++
++				bios++;
++				bio->bi_private = bw;
++				bio->bi_end_io = blk_bio_map_kern_endio;
++
++				if (hbio == NULL)
++					hbio = tbio = bio;
++				else
++					tbio = tbio->bi_next = bio;
++			}
++
++			bytes = min_t(size_t, len, PAGE_SIZE - offset);
++
++			rc = bio_add_pc_page(q, bio, page, bytes, offset);
++			if (rc < bytes) {
++				if (unlikely(need_new_bio || (rc < 0))) {
++					if (rc < 0)
++						res = rc;
++					else
++						res = -EIO;
++					goto out_free_bios;
++				} else {
++					need_new_bio = true;
++					len -= rc;
++					offset += rc;
++					continue;
++				}
++			}
++
++			need_new_bio = false;
++			offset = 0;
++			len -= bytes;
++			page = nth_page(page, 1);
++		}
++	}
++
++	if (hbio == NULL) {
++		res = -EINVAL;
++		goto out_free_bios;
++	}
++
++	/* Total length must be aligned on DMA padding alignment */
++	if ((tot_len & q->dma_pad_mask) &&
++	    !(rq->cmd_flags & REQ_COPY_USER)) {
++		res = -EINVAL;
++		goto out_free_bios;
++	}
++
++	if (bw != NULL)
++		atomic_set(&bw->bios_inflight, bios);
++
++	while (hbio != NULL) {
++		bio = hbio;
++		hbio = hbio->bi_next;
++		bio->bi_next = NULL;
++
++		blk_queue_bounce(q, &bio);
++
++		res = blk_rq_append_bio(q, rq, bio);
++		if (unlikely(res != 0)) {
++			bio->bi_next = hbio;
++			hbio = bio;
++			/* We can have one or more bios bounced */
++			goto out_unmap_bios;
++		}
++	}
++
++	rq->buffer = rq->data = NULL;
++out:
++	return res;
++
++out_free_bios:
++	while (hbio != NULL) {
++		bio = hbio;
++		hbio = hbio->bi_next;
++		bio_put(bio);
++	}
++	goto out;
++
++out_unmap_bios:
++	blk_rq_unmap_kern_sg(rq, res);
++	goto out;
++}
++
++/**
++ * blk_rq_map_kern_sg - map kernel data to a request, for REQ_TYPE_BLOCK_PC
++ * @rq:		request to fill
++ * @sgl:	area to map
++ * @nents:	number of elements in @sgl
++ * @gfp:	memory allocation flags
++ *
++ * Description:
++ *    Data will be mapped directly if possible. Otherwise a bounce
++ *    buffer will be used.
++ */
++int blk_rq_map_kern_sg(struct request *rq, struct scatterlist *sgl,
++		       int nents, gfp_t gfp)
++{
++	int res;
++
++	res = __blk_rq_map_kern_sg(rq, sgl, nents, NULL, gfp);
++	if (unlikely(res != 0)) {
++		struct blk_kern_sg_work *bw = NULL;
++
++		res = blk_rq_copy_kern_sg(rq, sgl, nents, &bw,
++				gfp, rq->q->bounce_gfp | gfp);
++		if (unlikely(res != 0))
++			goto out;
++
++		res = __blk_rq_map_kern_sg(rq, bw->sg_table.sgl,
++				bw->sg_table.nents, bw, gfp);
++		if (res != 0) {
++			blk_free_kern_sg_work(bw);
++			goto out;
++		}
++	}
++
++	rq->buffer = rq->data = NULL;
++
++out:
++	return res;
++}
++EXPORT_SYMBOL(blk_rq_map_kern_sg);
++
++/**
++ * blk_rq_unmap_kern_sg - unmap a request with kernel sg
++ * @rq:		request to unmap
++ * @err:	non-zero error code
++ *
++ * Description:
++ *    Unmap a rq previously mapped by blk_rq_map_kern_sg(). Must be called
++ *    only in case of an error!
++ */
++void blk_rq_unmap_kern_sg(struct request *rq, int err)
++{
++	struct bio *bio = rq->bio;
++
++	while (bio) {
++		struct bio *b = bio;
++		bio = bio->bi_next;
++		b->bi_end_io(b, err);
++	}
++	rq->bio = 0;
++
++	return;
++}
++EXPORT_SYMBOL(blk_rq_unmap_kern_sg);
++
+ /**
+  * blk_rq_map_kern - map kernel data to a request, for REQ_TYPE_BLOCK_PC usage
+  * @q:		request queue where request should be inserted
+diff -upkr linux-2.6.30.1/include/linux/blkdev.h linux-2.6.30.1/include/linux/blkdev.h
+--- linux-2.6.30.1/include/linux/blkdev.h	2009-07-10 21:13:25.000000000 +0400
++++ linux-2.6.30.1/include/linux/blkdev.h	2009-08-12 19:48:06.000000000 +0400
+@@ -807,6 +809,9 @@ extern int blk_rq_map_kern(struct reques
+ extern int blk_rq_map_user_iov(struct request_queue *, struct request *,
+ 			       struct rq_map_data *, struct sg_iovec *, int,
+ 			       unsigned int, gfp_t);
++extern int blk_rq_map_kern_sg(struct request *rq, struct scatterlist *sgl,
++			      int nents, gfp_t gfp);
++extern void blk_rq_unmap_kern_sg(struct request *rq, int err);
+ extern int blk_execute_rq(struct request_queue *, struct gendisk *,
+ 			  struct request *, int);
+ extern void blk_execute_rq_nowait(struct request_queue *, struct gendisk *,
+diff -upkr linux-2.6.30.1/include/linux/scatterlist.h linux-2.6.30.1/include/linux/scatterlist.h
+--- linux-2.6.30.1/include/linux/scatterlist.h	2009-06-10 07:05:27.000000000 +0400
++++ linux-2.6.30.1/include/linux/scatterlist.h	2009-08-12 19:50:02.000000000 +0400
+@@ -3,6 +3,7 @@
+ 
+ #include <asm/types.h>
+ #include <asm/scatterlist.h>
++#include <asm/kmap_types.h>
+ #include <linux/mm.h>
+ #include <linux/string.h>
+ #include <asm/io.h>
+@@ -218,6 +219,10 @@ size_t sg_copy_from_buffer(struct scatte
+ size_t sg_copy_to_buffer(struct scatterlist *sgl, unsigned int nents,
+ 			 void *buf, size_t buflen);
+ 
++int sg_copy(struct scatterlist *dst_sg, struct scatterlist *src_sg,
++	    int nents_to_copy, size_t copy_len,
++	    enum km_type d_km_type, enum km_type s_km_type);
++
+ /*
+  * Maximum number of entries that will be allocated in one piece, if
+  * a list larger than this is required then chaining will be utilized.
+diff -upkr linux-2.6.30.1/lib/scatterlist.c linux-2.6.30.1/lib/scatterlist.c
+--- linux-2.6.30.1/lib/scatterlist.c	2009-06-10 07:05:27.000000000 +0400
++++ linux-2.6.30.1/lib/scatterlist.c	2009-08-12 19:56:04.000000000 +0400
+@@ -485,3 +485,132 @@ size_t sg_copy_to_buffer(struct scatterl
+ 	return sg_copy_buffer(sgl, nents, buf, buflen, 1);
+ }
+ EXPORT_SYMBOL(sg_copy_to_buffer);
++
++/*
++ * Can switch to the next dst_sg element, so, to copy to strictly only
++ * one dst_sg element, it must be either last in the chain, or
++ * copy_len == dst_sg->length.
++ */
++static int sg_copy_elem(struct scatterlist **pdst_sg, size_t *pdst_len,
++			size_t *pdst_offs, struct scatterlist *src_sg,
++			size_t copy_len,
++			enum km_type d_km_type, enum km_type s_km_type)
++{
++	int res = 0;
++	struct scatterlist *dst_sg;
++	size_t src_len, dst_len, src_offs, dst_offs;
++	struct page *src_page, *dst_page;
++
++	dst_sg = *pdst_sg;
++	dst_len = *pdst_len;
++	dst_offs = *pdst_offs;
++	dst_page = sg_page(dst_sg);
++
++	src_page = sg_page(src_sg);
++	src_len = src_sg->length;
++	src_offs = src_sg->offset;
++
++	do {
++		void *saddr, *daddr;
++		size_t n;
++
++		saddr = kmap_atomic(src_page +
++					 (src_offs >> PAGE_SHIFT), s_km_type) +
++				    (src_offs & ~PAGE_MASK);
++		daddr = kmap_atomic(dst_page +
++					(dst_offs >> PAGE_SHIFT), d_km_type) +
++				    (dst_offs & ~PAGE_MASK);
++
++		if (((src_offs & ~PAGE_MASK) == 0) &&
++		    ((dst_offs & ~PAGE_MASK) == 0) &&
++		    (src_len >= PAGE_SIZE) && (dst_len >= PAGE_SIZE) &&
++		    (copy_len >= PAGE_SIZE)) {
++			copy_page(daddr, saddr);
++			n = PAGE_SIZE;
++		} else {
++			n = min_t(size_t, PAGE_SIZE - (dst_offs & ~PAGE_MASK),
++					  PAGE_SIZE - (src_offs & ~PAGE_MASK));
++			n = min(n, src_len);
++			n = min(n, dst_len);
++			n = min_t(size_t, n, copy_len);
++			memcpy(daddr, saddr, n);
++		}
++		dst_offs += n;
++		src_offs += n;
++
++		kunmap_atomic(saddr, s_km_type);
++		kunmap_atomic(daddr, d_km_type);
++
++		res += n;
++		copy_len -= n;
++		if (copy_len == 0)
++			goto out;
++
++		src_len -= n;
++		dst_len -= n;
++		if (dst_len == 0) {
++			dst_sg = sg_next(dst_sg);
++			if (dst_sg == NULL)
++				goto out;
++			dst_page = sg_page(dst_sg);
++			dst_len = dst_sg->length;
++			dst_offs = dst_sg->offset;
++		}
++	} while (src_len > 0);
++
++out:
++	*pdst_sg = dst_sg;
++	*pdst_len = dst_len;
++	*pdst_offs = dst_offs;
++	return res;
++}
++
++/**
++ * sg_copy - copy one SG vector to another
++ * @dst_sg:	destination SG
++ * @src_sg:	source SG
++ * @nents_to_copy: maximum number of entries to copy
++ * @copy_len:	maximum amount of data to copy. If 0, then copy all.
++ * @d_km_type:	kmap_atomic type for the destination SG
++ * @s_km_type:	kmap_atomic type for the source SG
++ *
++ * Description:
++ *    Data from the source SG vector will be copied to the destination SG
++ *    vector. End of the vectors will be determined by sg_next() returning
++ *    NULL. Returns number of bytes copied.
++ */
++int sg_copy(struct scatterlist *dst_sg, struct scatterlist *src_sg,
++	    int nents_to_copy, size_t copy_len,
++	    enum km_type d_km_type, enum km_type s_km_type)
++{
++	int res = 0;
++	size_t dst_len, dst_offs;
++
++	if (copy_len == 0)
++		copy_len = 0x7FFFFFFF; /* copy all */
++
++	if (nents_to_copy == 0)
++		nents_to_copy = 0x7FFFFFFF; /* copy all */
++
++	dst_len = dst_sg->length;
++	dst_offs = dst_sg->offset;
++
++	do {
++		int copied = sg_copy_elem(&dst_sg, &dst_len, &dst_offs,
++				src_sg, copy_len, d_km_type, s_km_type);
++		copy_len -= copied;
++		res += copied;
++		if ((copy_len == 0) || (dst_sg == NULL))
++			goto out;
++
++		nents_to_copy--;
++		if (nents_to_copy == 0)
++			goto out;
++
++		src_sg = sg_next(src_sg);
++	} while (src_sg != NULL);
++
++out:
++	return res;
++}
++EXPORT_SYMBOL(sg_copy);
