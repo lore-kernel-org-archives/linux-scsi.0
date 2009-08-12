@@ -1,40 +1,62 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 4/7] Fix various bugs in the target code
-Date: Wed, 12 Aug 2009 14:31:58 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0908121421220.23954-100000@iolanthe.rowland.org>
-References: <1249919600.4089.111.camel@mulgrave.site>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: [PATCH] scsi_dh: add two SUN devices to the list of devices
+	supported by default
+Date: Wed, 12 Aug 2009 12:43:20 -0700
+Message-ID: <1250106200.20492.4.camel@chandra-ubuntu>
+Reply-To: sekharan@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:56688 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751880AbZHLSb6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Aug 2009 14:31:58 -0400
-In-Reply-To: <1249919600.4089.111.camel@mulgrave.site>
+Received: from e38.co.us.ibm.com ([32.97.110.159]:37462 "EHLO
+	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751893AbZHLTjY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Aug 2009 15:39:24 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e38.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id n7CJZjFw008307
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2009 13:35:45 -0600
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n7CJdCLd229612
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2009 13:39:15 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n7CJdCKH002442
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2009 13:39:12 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Linux SCSI Mailing list <linux-scsi@vger.kernel.org>, "rick.brown" <rick.brown@oit.gatech.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "Moger, Babu" <Babu.Moger@lsi.com>
 
-On Mon, 10 Aug 2009, James Bottomley wrote:
+Hello all,
 
-> > 	If we have to wait for an old target to disappear, instead of
-> > 	calling flush_scheduled_work() the patch calls
-> > 	schedule_timeout_uninterruptible(1).  After all, whatever is
-> > 	pinning the old target might not have anything to do with a
-> > 	workqueue.  Besides, flush_scheduled_work() is prone to
-> > 	deadlocks and should never be used by drivers.
-> 
-> I don't really buy this; it's not (yet) a documented restriction of
-> flush_scheduled_work() and we have a few drivers using it.  It only
-> deadlocks if you call it from a running workqueue.
+Yesterday, Rick has requested to add two of the sun devices to the list
+of devices supported by scsi_dh_rdac by default.
 
-Since you are so opposed to this patch, I will drop it from the series.
-You didn't comment on any of the first three patches in the series; 
-does that mean they are acceptable as is?
+This patch adds the support.
 
-And what about the following patches?  I'll redo them based on omitting 
-4/7; are there any parts of them you don't like?
+chandra
+----------------------
 
-Alan Stern
+Add two SUN devices to the devlist as requested in the mailing list.
+
+Reported-by: Rice Brown <rick.brown@oit.gatech.edu>
+Signed-Off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: Moger Babu <Babu.Moger@lsi.com>
+---
+ drivers/scsi/device_handler/scsi_dh_rdac.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+Index: linux-2.6.31-rc4/drivers/scsi/device_handler/scsi_dh_rdac.c
+===================================================================
+--- linux-2.6.31-rc4.orig/drivers/scsi/device_handler/scsi_dh_rdac.c
++++ linux-2.6.31-rc4/drivers/scsi/device_handler/scsi_dh_rdac.c
+@@ -633,6 +633,8 @@ static const struct scsi_dh_devlist rdac
+ 	{"DELL", "MD3000i"},
+ 	{"LSI", "INF-01-00"},
+ 	{"ENGENIO", "INF-01-00"},
++	{"STK", "FLEXLINE 380"},
++	{"SUN", "CSM100_R_FC"},
+ 	{NULL, NULL},
+ };
+ 
+
 
