@@ -1,12 +1,15 @@
-From: Bryan Donlan <bdonlan@gmail.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
 Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
 	slot is freed)
-Date: Thu, 13 Aug 2009 16:54:34 -0400
-Message-ID: <3e8340490908131354q167840fcv124ec56c92bbb830@mail.gmail.com>
-References: <200908122007.43522.ngupta@vflare.org> <Pine.LNX.4.64.0908122312380.25501@sister.anvils>
-	<20090813151312.GA13559@linux.intel.com> <20090813162621.GB1915@phenom2.trippelsdorf.de>
-	<alpine.DEB.1.10.0908130931400.28013@asgard.lang.hm> <87f94c370908131115r680a7523w3cdbc78b9e82373c@mail.gmail.com>
-	<alpine.DEB.1.10.0908131342460.28013@asgard.lang.hm>
+Date: Thu, 13 Aug 2009 17:28:24 -0400
+Message-ID: <87f94c370908131428u75dfe496x1b7d90b94833bf80@mail.gmail.com>
+References: <200908122007.43522.ngupta@vflare.org>
+	 <Pine.LNX.4.64.0908122312380.25501@sister.anvils>
+	 <20090813151312.GA13559@linux.intel.com>
+	 <20090813162621.GB1915@phenom2.trippelsdorf.de>
+	 <alpine.DEB.1.10.0908130931400.28013@asgard.lang.hm>
+	 <87f94c370908131115r680a7523w3cdbc78b9e82373c@mail.gmail.com>
+	 <alpine.DEB.1.10.0908131342460.28013@asgard.lang.hm>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
@@ -14,7 +17,7 @@ Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <alpine.DEB.1.10.0908131342460.28013@asgard.lang.hm>
 Sender: owner-linux-mm@kvack.org
 To: david@lang.hm
-Cc: Greg Freemyer <greg.freemyer@gmail.com>, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
+Cc: Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 On Thu, Aug 13, 2009 at 4:44 PM, <david@lang.hm> wrote:
@@ -69,11 +72,20 @@ rt
 to
 > the block layer so that it can maintain it's bitmap, and then the block
 > layer generating the requests to the drive below it?
+>
+> David Lang
 
-Perhaps an interface (ioctl, etc) can be added to ask a filesystem to
-discard all unused blocks in a certain range? (That is, have the
-filesystem validate the request under any necessary locks before
-passing it to the block IO layer)
+Yes, my thought.was that block layer would consume the discard/trim
+requests from the filesystem in realtime to maintain the bitmap, then
+at some later point in time when the system has extra resources it
+would generate the calls down to the lower layers and eventually the
+drive.
+
+I highlight the lower layers because mdraid is also going to have to
+be in the mix if raid5/6 is in use.  ie. At a minimum it will have to
+adjust the block range to align with the stripe boundaries.
+
+Greg
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
