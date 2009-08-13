@@ -1,43 +1,55 @@
-From: david@lang.hm
+From: Hugh Dickins <hugh.dickins@tiscali.co.uk>
 Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
  slot is freed)
-Date: Thu, 13 Aug 2009 09:33:39 -0700 (PDT)
-Message-ID: <alpine.DEB.1.10.0908130931400.28013@asgard.lang.hm>
-References: <200908122007.43522.ngupta@vflare.org> <Pine.LNX.4.64.0908122312380.25501@sister.anvils> <20090813151312.GA13559@linux.intel.com> <20090813162621.GB1915@phenom2.trippelsdorf.de>
+Date: Thu, 13 Aug 2009 18:19:32 +0100 (BST)
+Message-ID: <Pine.LNX.4.64.0908131746350.8831@sister.anvils>
+References: <200908122007.43522.ngupta@vflare.org>
+ <Pine.LNX.4.64.0908122312380.25501@sister.anvils> <20090813151312.GA13559@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20090813162621.GB1915@phenom2.trippelsdorf.de>
+In-Reply-To: <20090813151312.GA13559@linux.intel.com>
 Sender: owner-linux-mm@kvack.org
-To: Markus Trippelsdorf <markus@trippelsdorf.de>
-Cc: Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: Matthew Wilcox <willy@linux.intel.com>
+Cc: Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 13 Aug 2009, Markus Trippelsdorf wrote:
+On Thu, 13 Aug 2009, Matthew Wilcox wrote:
+> 
+> So TRIM isn't free, and there's a better way for the drive to find
+> out that the contents of a block no longer matter -- write some new
+> data to it.  So if we just swapped a page in, and we're going to swap
+> something else back out again soon, just write it to the same location
+> instead of to a fresh location.  You've saved a command, and you've
+> saved the drive some work, plus you've allowed other users to continue
+> accessing the drive in the meantime.
+> 
+> I am planning a complete overhaul of the discard work.  Users can send
+> down discard requests as frequently as they like.  The block layer will
+> cache them, and invalidate them if writes come through.  Periodically,
+> the block layer will send down a TRIM or an UNMAP (depending on the
+> underlying device) and get rid of the blocks that have remained unwanted
+> in the interim.
 
-> On Thu, Aug 13, 2009 at 08:13:12AM -0700, Matthew Wilcox wrote:
->> I am planning a complete overhaul of the discard work.  Users can send
->> down discard requests as frequently as they like.  The block layer will
->> cache them, and invalidate them if writes come through.  Periodically,
->> the block layer will send down a TRIM or an UNMAP (depending on the
->> underlying device) and get rid of the blocks that have remained unwanted
->> in the interim.
->
-> That is a very good idea. I've tested your original TRIM implementation on
-> my Vertex yesterday and it was awful ;-). The SSD needs hundreds of
-> milliseconds to digest a single TRIM command. And since your implementation
-> sends a TRIM for each extent of each deleted file, the whole system is
-> unusable after a short while.
-> An optimal solution would be to consolidate the discard requests, bundle
-> them and send them to the drive as infrequent as possible.
+Very interesting report, thanks a lot for it.  Certainly your
+good point about writes should dictate some change at the swap end.
 
-or queue them up and send them when the drive is idle (you would need to 
-keep track to make sure the space isn't re-used)
+I have assumed all along (even from just a block layer perspective)
+that discard would entail more overhead than I really want, just to
+say "forget about it": I never expected that discarding a page at a
+time would be a sensible way to proceed.
 
-as an example, if you would consider spinning down a drive you don't hurt 
-performance by sending accumulated trim commands.
+So at present swap tends to be discarding a 1MB range at a time.
+And even if we have to move the point of discard much closer to
+freeing swap, it would still be trying for such amounts - when
+a process is exiting, even given the accumulation you propose,
+I would not want to be trying to allocate lots of bios to pass
+the info down to you.
 
-David Lang
+So it looks as if we'd be duplicating work.
+And won't filesystems be discarding extents too?
+
+Hugh
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
