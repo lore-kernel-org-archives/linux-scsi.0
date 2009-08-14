@@ -1,125 +1,63 @@
 From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Subject: [net-next PATCH 01/12] vlan: adds fcoe offload related net_device_ops
-	and updates fcoe_ddp_xid field
-Date: Fri, 14 Aug 2009 15:41:07 -0700
-Message-ID: <20090814224106.1640.6910.stgit@localhost.localdomain>
+Subject: [net-next PATCH 02/12] ixgbe: updates vlan feature flags to enable
+	FCoE offloads on vlan interface
+Date: Fri, 14 Aug 2009 15:41:28 -0700
+Message-ID: <20090814224127.1640.84665.stgit@localhost.localdomain>
 References: <20090814223857.1640.26881.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from qmta05.emeryville.ca.mail.comcast.net ([76.96.30.48]:49301 "EHLO
-	QMTA05.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753864AbZHNWlZ (ORCPT
+Received: from qmta02.emeryville.ca.mail.comcast.net ([76.96.30.24]:58779 "EHLO
+	QMTA02.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757020AbZHNWl7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Aug 2009 18:41:25 -0400
+	Fri, 14 Aug 2009 18:41:59 -0400
 In-Reply-To: <20090814223857.1640.26881.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, gospo@redhat.com, Vasu Dev <vasu.dev@intel.com>, Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, gospo@redhat.com, Vasu Dev <vasu.dev@intel.com>, Yi Zou <yi.zou@intel.com>, Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>, Jeff Kirsher <jeffrey.t.kirsher@intel.com>
 
 From: Vasu Dev <vasu.dev@intel.com>
 
-Adds fcoe offload related net_device_ops functions vlan_dev_fcoe_ddp_setup
-and vlan_dev_fcoe_ddp_done, their implementation simply calls real eth device
-net_device_ops for FCoE DDP setup and done operations.
-
-Updates VLAN netdev field value for fcoe_ddp_xid from real eth device netdev.
-
-Above changes are required for fcoe DDP offload working on a VLAN interface.
+Updates netdev->vlan_features for NETIF_F_FCOE_CRC and NETIF_F_FSO, so that
+FCoE CRC and GSO offloads will get used for FCoE over ixgbe based vlan
+interface.
 
 Signed-off-by: Vasu Dev <vasu.dev@intel.com>
+Signed-off-by: Yi Zou <yi.zou@intel.com>
+Acked-by: Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
 Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
 ---
 
- net/8021q/vlan.c     |    3 +++
- net/8021q/vlan_dev.c |   39 +++++++++++++++++++++++++++++++++++++++
- 2 files changed, 42 insertions(+), 0 deletions(-)
+ drivers/net/ixgbe/ixgbe_dcb_nl.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/net/8021q/vlan.c b/net/8021q/vlan.c
-index a1f1630..e814794 100644
---- a/net/8021q/vlan.c
-+++ b/net/8021q/vlan.c
-@@ -391,6 +391,9 @@ static void vlan_transfer_features(struct net_device *dev,
- 	vlandev->features &= ~dev->vlan_features;
- 	vlandev->features |= dev->features & dev->vlan_features;
- 	vlandev->gso_max_size = dev->gso_max_size;
-+#if defined(CONFIG_FCOE) || defined(CONFIG_FCOE_MODULE)
-+	vlandev->fcoe_ddp_xid = dev->fcoe_ddp_xid;
-+#endif
- 
- 	if (old_features != vlandev->features)
- 		netdev_features_change(vlandev);
-diff --git a/net/8021q/vlan_dev.c b/net/8021q/vlan_dev.c
-index 96bad8f..6e695ac 100644
---- a/net/8021q/vlan_dev.c
-+++ b/net/8021q/vlan_dev.c
-@@ -561,6 +561,33 @@ static int vlan_dev_neigh_setup(struct net_device *dev, struct neigh_parms *pa)
- 	return err;
- }
- 
-+#if defined(CONFIG_FCOE) || defined(CONFIG_FCOE_MODULE)
-+static int vlan_dev_fcoe_ddp_setup(struct net_device *dev, u16 xid,
-+				   struct scatterlist *sgl, unsigned int sgc)
-+{
-+	struct net_device *real_dev = vlan_dev_info(dev)->real_dev;
-+	const struct net_device_ops *ops = real_dev->netdev_ops;
-+	int rc = 0;
-+
-+	if (ops->ndo_fcoe_ddp_setup)
-+		rc = ops->ndo_fcoe_ddp_setup(real_dev, xid, sgl, sgc);
-+
-+	return rc;
-+}
-+
-+static int vlan_dev_fcoe_ddp_done(struct net_device *dev, u16 xid)
-+{
-+	struct net_device *real_dev = vlan_dev_info(dev)->real_dev;
-+	const struct net_device_ops *ops = real_dev->netdev_ops;
-+	int len = 0;
-+
-+	if (ops->ndo_fcoe_ddp_done)
-+		len = ops->ndo_fcoe_ddp_done(real_dev, xid);
-+
-+	return len;
-+}
-+#endif
-+
- static void vlan_dev_change_rx_flags(struct net_device *dev, int change)
- {
- 	struct net_device *real_dev = vlan_dev_info(dev)->real_dev;
-@@ -635,6 +662,10 @@ static int vlan_dev_init(struct net_device *dev)
- 	if (is_zero_ether_addr(dev->broadcast))
- 		memcpy(dev->broadcast, real_dev->broadcast, dev->addr_len);
- 
-+#if defined(CONFIG_FCOE) || defined(CONFIG_FCOE_MODULE)
-+	dev->fcoe_ddp_xid = real_dev->fcoe_ddp_xid;
-+#endif
-+
- 	if (real_dev->features & NETIF_F_HW_VLAN_TX) {
- 		dev->header_ops      = real_dev->header_ops;
- 		dev->hard_header_len = real_dev->hard_header_len;
-@@ -715,6 +746,10 @@ static const struct net_device_ops vlan_netdev_ops = {
- 	.ndo_change_rx_flags	= vlan_dev_change_rx_flags,
- 	.ndo_do_ioctl		= vlan_dev_ioctl,
- 	.ndo_neigh_setup	= vlan_dev_neigh_setup,
-+#if defined(CONFIG_FCOE) || defined(CONFIG_FCOE_MODULE)
-+	.ndo_fcoe_ddp_setup	= vlan_dev_fcoe_ddp_setup,
-+	.ndo_fcoe_ddp_done	= vlan_dev_fcoe_ddp_done,
-+#endif
- };
- 
- static const struct net_device_ops vlan_netdev_accel_ops = {
-@@ -731,6 +766,10 @@ static const struct net_device_ops vlan_netdev_accel_ops = {
- 	.ndo_change_rx_flags	= vlan_dev_change_rx_flags,
- 	.ndo_do_ioctl		= vlan_dev_ioctl,
- 	.ndo_neigh_setup	= vlan_dev_neigh_setup,
-+#if defined(CONFIG_FCOE) || defined(CONFIG_FCOE_MODULE)
-+	.ndo_fcoe_ddp_setup	= vlan_dev_fcoe_ddp_setup,
-+	.ndo_fcoe_ddp_done	= vlan_dev_fcoe_ddp_done,
-+#endif
- };
- 
- void vlan_setup(struct net_device *dev)
+diff --git a/drivers/net/ixgbe/ixgbe_dcb_nl.c b/drivers/net/ixgbe/ixgbe_dcb_nl.c
+index 1c72657..116f12c 100644
+--- a/drivers/net/ixgbe/ixgbe_dcb_nl.c
++++ b/drivers/net/ixgbe/ixgbe_dcb_nl.c
+@@ -148,7 +148,10 @@ static u8 ixgbe_dcbnl_set_state(struct net_device *netdev, u8 state)
+ 				IXGBE_FCRETA_SIZE;
+ 			netdev->features |= NETIF_F_FCOE_CRC;
+ 			netdev->features |= NETIF_F_FSO;
++			netdev->vlan_features |= NETIF_F_FCOE_CRC;
++			netdev->vlan_features |= NETIF_F_FSO;
+ 			netdev->fcoe_ddp_xid = IXGBE_FCOE_DDP_MAX - 1;
++			netdev_features_change(netdev);
+ 		}
+ #endif /* IXGBE_FCOE */
+ 		ixgbe_init_interrupt_scheme(adapter);
+@@ -177,7 +180,10 @@ static u8 ixgbe_dcbnl_set_state(struct net_device *netdev, u8 state)
+ 				adapter->ring_feature[RING_F_FCOE].indices = 0;
+ 				netdev->features &= ~NETIF_F_FCOE_CRC;
+ 				netdev->features &= ~NETIF_F_FSO;
++				netdev->vlan_features &= ~NETIF_F_FCOE_CRC;
++				netdev->vlan_features &= ~NETIF_F_FSO;
+ 				netdev->fcoe_ddp_xid = 0;
++				netdev_features_change(netdev);
+ 			}
+ #endif /* IXGBE_FCOE */
+ 			ixgbe_init_interrupt_scheme(adapter);
 
