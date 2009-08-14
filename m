@@ -1,70 +1,55 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: Discard support
-Date: Fri, 14 Aug 2009 18:10:50 -0400
-Message-ID: <87f94c370908141510p1752183elf32c879c0510ebc4@mail.gmail.com>
-References: <200908122007.43522.ngupta@vflare.org>
-	 <alpine.DEB.1.10.0908130931400.28013@asgard.lang.hm>
-	 <87f94c370908131115r680a7523w3cdbc78b9e82373c@mail.gmail.com>
-	 <alpine.DEB.1.10.0908131342460.28013@asgard.lang.hm>
-	 <87f94c370908131428u75dfe496x1b7d90b94833bf80@mail.gmail.com>
-	 <46b8a8850908131520s747e045cnd8db9493e072939d@mail.gmail.com>
-	 <87f94c370908131719l7d84c5d0x2157cfeeb2451bce@mail.gmail.com>
-	 <46b8a8850908131758s781b07f6v2729483c0e50ae7a@mail.gmail.com>
-	 <87f94c370908141433h111f819j550467bf31c60776@mail.gmail.com>
-	 <adafxbu3vqt.fsf@cisco.com>
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Subject: [net-next PATCH 00/12] ixgbe/vlan/DCB patch set
+Date: Fri, 14 Aug 2009 15:40:49 -0700
+Message-ID: <20090814223857.1640.26881.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <adafxbu3vqt.fsf@cisco.com>
-Sender: owner-linux-mm@kvack.org
-To: Roland Dreier <rdreier@cisco.com>
-Cc: Richard Sharpe <realrichardsharpe@gmail.com>, david@lang.hm, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from qmta05.emeryville.ca.mail.comcast.net ([76.96.30.48]:49301 "EHLO
+	QMTA05.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752053AbZHNWlI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Aug 2009 18:41:08 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: davem@davemloft.net
+Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, gospo@redhat.com
 
-On Fri, Aug 14, 2009 at 5:56 PM, Roland Dreier<rdreier@cisco.com> wrote:
->
-> =A0> It seems to me that unmap is not all that different, why do we need =
-to
-> =A0> do it even close in time proximity to the deletes? =A0With a bitmap,=
- we
-> =A0> have total timing control of when the unmaps are forwarded down to t=
-he
-> =A0> device. =A0I like that timing control much better than a cache and
-> =A0> coalesce approach.
->
-> The trouble I see with a bitmap is the amount of memory it consumes. =A0I=
-t
-> seems that discards must be tracked on no bigger than 4KB sectors (and
-> possibly even 512 byte sectors). =A0But even with 4KB, then, say, a 32 TB
-> volume (just 16 * 2TB disks, or even lower end with thin provisioning)
-> requires 1 GB of bitmap memory. =A0Which is a lot just to store, let alon=
-e
-> walk over etc.
+Please merge net-2.6 then apply this set...
 
-Have the filesystem guys created any efficient extent tree tracking solutio=
-ns?
+---
 
-I mean a 16TB filesystem obviously has to track the freespace somehow
-that does not require 1GB of ram.  Can that logic be leveraged in
-block to track freespace?  That obviously assumes its not too cpu
-intensive to do so.
+Vasu Dev (2):
+      ixgbe: updates vlan feature flags to enable FCoE offloads on vlan interface
+      vlan: adds fcoe offload related net_device_ops and updates fcoe_ddp_xid field
 
-If a leaf in the extent tracking tree becomes big enough, it could
-even be sent down from the block layer and that leaf deleted.  ie. If
-a leaf of the tree grows to represent X contiguous blocks, then a
-discard could be sent down to the device and the leaf representing
-those free blocks deleted.
+Yi Zou (10):
+      ixgbe: Add support for dcbnl_rtnl_ops.setapp/getapp
+      dcbnl: Add implementations of dcbnl setapp/getapp commands
+      dcbnl: Add netlink attributes for setapp/getapp to dcbnl
+      dcbnl: Add support for setapp/getapp to netdev dcbnl_rtnl_ops
+      dcbnl: Add support for setapp/getapp commands to dcbnl
+      ixgbe: Add support for the net_device_ops.ndo_fcoe_control to 82599
+      vlan: Add support for net_devices_ops.ndo_fcoe_control to VLAN
+      net: Add ndo_fcoe_control to net_device_ops
+      ixgbe: Add support for NETIF_F_FCOE_MTU to 82599 devices
+      net: Add NETIF_F_FCOE_MTU to indicate support for a different MTU for FCoE
 
-The new topo info about block devices might be able to help optimize
-the minimum size of a coalesced discard.
 
-Greg
---
-Greg Freemyer
+ drivers/net/ixgbe/ixgbe.h        |    5 +
+ drivers/net/ixgbe/ixgbe_dcb_nl.c |   83 ++++++++++++-----
+ drivers/net/ixgbe/ixgbe_fcoe.c   |  184 ++++++++++++++++++++++++++++++++++++++
+ drivers/net/ixgbe/ixgbe_fcoe.h   |    4 +
+ drivers/net/ixgbe/ixgbe_main.c   |    9 +-
+ include/linux/dcbnl.h            |   18 ++++
+ include/linux/netdevice.h        |    5 +
+ include/net/dcbnl.h              |    2 
+ net/8021q/vlan.c                 |    3 +
+ net/8021q/vlan_dev.c             |   52 +++++++++++
+ net/dcb/dcbnl.c                  |  130 +++++++++++++++++++++++++++
+ 11 files changed, 469 insertions(+), 26 deletions(-)
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+Cheers,
+Jeff
