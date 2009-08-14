@@ -1,111 +1,219 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: [ANNOUNCE]: Version 1.0.1.1 of SCST core, target drivers for iSCSI
- (iSCSI-SCST), QLogic 22xx/23xx (qla2x00t) as well as fileio_tgt user space
- backend handler released
-Date: Fri, 14 Aug 2009 23:35:09 +0400
-Message-ID: <4A85BC6D.9070803@vlnb.net>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
+	slot is freed)
+Date: Fri, 14 Aug 2009 17:33:49 -0400
+Message-ID: <87f94c370908141433h111f819j550467bf31c60776__49310.2421788082$1250285710$gmane$org@mail.gmail.com>
+References: <200908122007.43522.ngupta@vflare.org>
+	 <20090813151312.GA13559@linux.intel.com>
+	 <20090813162621.GB1915@phenom2.trippelsdorf.de>
+	 <alpine.DEB.1.10.0908130931400.28013@asgard.lang.hm>
+	 <87f94c370908131115r680a7523w3cdbc78b9e82373c@mail.gmail.com>
+	 <alpine.DEB.1.10.0908131342460.28013@asgard.lang.hm>
+	 <87f94c370908131428u75dfe496x1b7d90b94833bf80@mail.gmail.com>
+	 <46b8a8850908131520s747e045cnd8db9493e072939d@mail.gmail.com>
+	 <87f94c370908131719l7d84c5d0x2157cfeeb2451bce@mail.gmail.com>
+	 <46b8a8850908131758s781b07f6v2729483c0e50ae7a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:65078 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932199AbZHNTfB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Aug 2009 15:35:01 -0400
+Received: from qw-out-2122.google.com ([74.125.92.24]:38311 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755883AbZHNVdt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Aug 2009 17:33:49 -0400
+In-Reply-To: <46b8a8850908131758s781b07f6v2729483c0e50ae7a@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scst-devel <scst-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Richard Sharpe <realrichardsharpe@gmail.com>, david@lang.hm, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.c>
 
-I'm glad to announce intermediate stable release 1.0.1.1 of SCST core, 
-target drivers for iSCSI (iSCSI-SCST), QLogic 22xx/23xx (qla2x00t) and 
-fileio_tgt user space backend handler.
+This inadvertently went just to me, replying to all:
 
-SCST is an alternative implementation of SCSI target subsystem for
-Linux. It provides unified, consistent interface between SCSI target
-drivers and Linux kernel as well as between Linux kernel and storage
-backend handlers, connecting target drivers with real or emulated
-storage backend.
+On Thu, Aug 13, 2009 at 8:58 PM, Richard
+Sharpe<realrichardsharpe@gmail.com> wrote:
+> On Thu, Aug 13, 2009 at 5:19 PM, Greg Freemyer<greg.freemyer@gmail.co=
+m> wrote:
+>> On Thu, Aug 13, 2009 at 6:20 PM, Richard
+>> Sharpe<realrichardsharpe@gmail.com> wrote:
+>>> On Thu, Aug 13, 2009 at 2:28 PM, Greg Freemyer<greg.freemyer@gmail.=
+com> wrote:
+>>>> On Thu, Aug 13, 2009 at 4:44 PM, <david@lang.hm> wrote:
+>>>>> On Thu, 13 Aug 2009, Greg Freemyer wrote:
+>>>>>
+>>>>>> On Thu, Aug 13, 2009 at 12:33 PM, <david@lang.hm> wrote:
+>>>>>>>
+>>>>>>> On Thu, 13 Aug 2009, Markus Trippelsdorf wrote:
+>>>>>>>
+>>>>>>>> On Thu, Aug 13, 2009 at 08:13:12AM -0700, Matthew Wilcox wrote=
+:
+>>>>>>>>>
+>>>>>>>>> I am planning a complete overhaul of the discard work. =A0Use=
+rs can send
+>>>>>>>>> down discard requests as frequently as they like. =A0The bloc=
+k layer will
+>>>>>>>>> cache them, and invalidate them if writes come through. =A0Pe=
+riodically,
+>>>>>>>>> the block layer will send down a TRIM or an UNMAP (depending =
+on the
+>>>>>>>>> underlying device) and get rid of the blocks that have remain=
+ed
+>>>>>>>>> unwanted
+>>>>>>>>> in the interim.
+>>>>>>>>
+>>>>>>>> That is a very good idea. I've tested your original TRIM imple=
+mentation
+>>>>>>>> on
+>>>>>>>> my Vertex yesterday and it was awful ;-). The SSD needs hundre=
+ds of
+>>>>>>>> milliseconds to digest a single TRIM command. And since your
+>>>>>>>> implementation
+>>>>>>>> sends a TRIM for each extent of each deleted file, the whole s=
+ystem is
+>>>>>>>> unusable after a short while.
+>>>>>>>> An optimal solution would be to consolidate the discard reques=
+ts, bundle
+>>>>>>>> them and send them to the drive as infrequent as possible.
+>>>>>>>
+>>>>>>> or queue them up and send them when the drive is idle (you woul=
+d need to
+>>>>>>> keep track to make sure the space isn't re-used)
+>>>>>>>
+>>>>>>> as an example, if you would consider spinning down a drive you =
+don't hurt
+>>>>>>> performance by sending accumulated trim commands.
+>>>>>>>
+>>>>>>> David Lang
+>>>>>>
+>>>>>> An alternate approach is the block layer maintain its own bitmap=
+ of
+>>>>>> used unused sectors / blocks. Unmap commands from the filesystem=
+ just
+>>>>>> cause the bitmap to be updated. =A0No other effect.
+>>>>>
+>>>>> how does the block layer know what blocks are unused by the files=
+ystem?
+>>>>>
+>>>>> or would it be a case of the filesystem generating discard/trim r=
+equests to
+>>>>> the block layer so that it can maintain it's bitmap, and then the=
+ block
+>>>>> layer generating the requests to the drive below it?
+>>>>>
+>>>>> David Lang
+>>>>
+>>>> Yes, my thought.was that block layer would consume the discard/tri=
+m
+>>>> requests from the filesystem in realtime to maintain the bitmap, t=
+hen
+>>>> at some later point in time when the system has extra resources it
+>>>> would generate the calls down to the lower layers and eventually t=
+he
+>>>> drive.
+>>>
+>>> Why should the block layer be forced to maintain something that is
+>>> probably of use for only a limited number of cases? For example, th=
+e
+>>> devices I work on already maintain their own mapping of HOST-visibl=
+e
+>>> LBAs to underlying storage, and I suspect that most such devices do=
+=2E
+>>> So, you are duplicating something that we already do, and there is =
+no
+>>> way that I am aware of to synchronise the two.
+>>>
+>>> All we really need, I believe is for the UNMAP requests to come dow=
+n
+>>> to us with writes barriered until we respond, and it is a relativel=
+y
+>>> cheap operation, although writes that are already in the cache and
+>>> uncommitted to disk present some issues if an UNMAP request comes d=
+own
+>>> for recently written blocks.
+>>>
+>>
+>> Richard,
+>>
+>> Quoting the original email I saw in this thread:
+>>
+>>>
+>>>The unfortunate thing about the TRIM command is that it's not NCQ, s=
+o
+>>>all NCQ commands have to finish, then we can send the TRIM command a=
+nd
+>>>wait for it to finish, then we can send NCQ commands again.
+>>>
+>>>So TRIM isn't free, and there's a better way for the drive to find
+>>>out that the contents of a block no longer matter -- write some new
+>>>data to it. =A0So if we just swapped a page in, and we're going to s=
+wap
+>>>something else back out again soon, just write it to the same locati=
+on
+>>>instead of to a fresh location. =A0You've saved a command, and you'v=
+e
+>>>saved the drive some work, plus you've allowed other users to contin=
+ue
+>>>accessing the drive in the meantime.
+>>>
+>>>I am planning a complete overhaul of the discard work. =A0Users can =
+send
+>>>down discard requests as frequently as they like. =A0The block layer=
+ will
+>>>cache them, and invalidate them if writes come through. =A0Periodica=
+lly,
+>>>the block layer will send down a TRIM or an UNMAP (depending on the
+>>>underlying device) and get rid of the blocks that have remained unwa=
+nted
+>>>in the interim.
+>>>
+>>>Thoughts on that are welcome.
+>>>>
+>>
+>> My thought was that a bitmap was a better solution than a cache of
+>> discard commands.
+>>
+>> One of the biggest reasons is that a bitmap can coalesce the unused
+>> areas into much larger discard ranges than a queue that will only ha=
+ve
+>> a limited number of discards to coalesce.
+>
+> OK, I misunderstood. For the work I did with an SSD company the UNMAP
+> requests were coming down as 1024 LBA DISCARDs/UNMAPs. If someone
+> deleted a multi-GB file that results in thousands of DISCARDS coming
+> down, which is a problem.
 
-SCST allows creation of sophisticated storage devices, which provide
-advanced functionality, like replication, thin provisioning,
-deduplication, high availability, automatic backup, etc. Another class
-of such devices are Virtual Tape Libraries (VTL) as well as other
-disk-based backup solutions. SCST created devices not limited by IP
-network interface only, but they can use any link supporting SCSI-style
-data exchange, including Fibre Channel, SAS and parallel SCSI. It might
-well be that your favorite storage appliance running SCST in the firmware.
+I think the ext4 implementation is sending down discards way smaller
+than 1024 sectors.  Ted Tso posted something a few months ago that he
+did a test and was seeing a massive number of them being sent from
+ext4 to block.  The rest of the stack was not in place, so he did not
+know the real performance impact.
 
-More info about SCST core and modules you can find on:
+> However, I wonder if we cannot make do with merging in the block
+> layer, especially with XFS or Ext4.
 
-   - SCST core: http://scst.sourceforge.net
+That's the cache and coalesce approach, right?  Just a personal thing,
+but we run
+things like defrag in the background during off hours.
 
-   - iSCSI target driver iSCSI-SCST:
-http://scst.sourceforge.net/target_iscsi.html
+It seems to me that unmap is not all that different, why do we need to
+do it even close in time proximity to the deletes?  With a bitmap, we
+have total timing control of when the unmaps are forwarded down to the
+device.  I like that timing control much better than a cache and
+coalesce approach.
 
-   - QLogic 22xx/23xx Fibre Channel target driver:
-http://scst.sourceforge.net/target_qla22xx_23xx.html
+>> And both Enterprise scsi and mdraid are desirous of larger discard r=
+anges.
+>
+> I also would like large discard ranges ... metadata updates in the
+> platform I am thinking of are transactional, and I would like to
+> reduce the number of transactions pushed through the metadata journal=
+=2E
+>
+> --
+> Regards,
+> Richard Sharpe
 
-   - fileio_tgt backend handler on
-http://scst.sourceforge.net/handler_fileio_tgt.html.
-
-SCST aims to be included in the mainline kernel. You can find the first
-iteration of SCST patches review in http://lkml.org/lkml/2008/12/10/245.
-
-Main coming features in the next major release 1.1.0 include persistent 
-reservations, automatic sessions reassignment on management actions 
-(i.e. connected initiators will see all the made configuration changes 
-in a PnP manner, without any reconnects) as well as new SYSFS-base 
-management interface.
-
-You can download SCST core and modules from
-http://scst.sourceforge.net/downloads.html.
-
-Summary of changes in SCST core between versions 1.0.0 and 1.0.1.1
-------------------------------------------------------------------
-
-  - Issues cased by change of cdb_len to unsigned fixed
-
-  - INIT ELEMENT STATUS WRANGE added to the list of known commands
-
-  - Possible miss of UCMD_STATE_ON_FREEING event in scst_user fixed
-
-  - Fix possible crash in scst_copy_sg()
-
-  - Races on scst_user devices cleanup fixed
-
-  - Incorrect errors reporting on scst_user devices unregistration fixed
-
-  - Possible double free in scst_user fixed
-
-  - 64-bit cleanups
-
-  - Other minor fixes and cleanups
-
-
-Summary of changes in iSCSI-SCST between versions 1.0.0 and 1.0.1.1
--------------------------------------------------------------------
-
-  - Fixes in handling of initiators.allow and initiators.deny files
-
-  - Wrong usage of parent request's fields in the response fixed.
-
-  - Unneeded mutex_lock(&scst_mutex) removed, because it can be done on
-    atomic or SIRQ context
-
-
-Summary of changes in qla2x00t between versions 1.0.0 and 1.0.1.1
------------------------------------------------------------------
-
-  - Fix possible crash with too fast target mode enabling/disabling or
-    module unload
-
-
-Summary of changes in fileio_tgt between versions 1.0.0 and 1.0.1.1
--------------------------------------------------------------------
-
-  - 64-bit cleanups
-
-  - Other minor fixes and cleanups
-
-Thanks to all who made it happen!
-Vlad
+Greg
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
