@@ -1,241 +1,116 @@
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Subject: [net-next PATCH 12/12] ixgbe: Add support for
-	dcbnl_rtnl_ops.setapp/getapp
-Date: Fri, 14 Aug 2009 15:45:19 -0700
-Message-ID: <20090814224519.1640.77731.stgit@localhost.localdomain>
-References: <20090814223857.1640.26881.stgit@localhost.localdomain>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
+	slot is freed)
+Date: Fri, 14 Aug 2009 18:54:11 -0400
+Message-ID: <87f94c370908141554ia447f5fo87c74d5d8c517c1c@mail.gmail.com>
+References: <200908122007.43522.ngupta@vflare.org>
+	 <Pine.LNX.4.64.0908122312380.25501@sister.anvils>
+	 <20090813151312.GA13559@linux.intel.com>
+	 <20090813162621.GB1915@phenom2.trippelsdorf.de>
+	 <alpine.DEB.1.10.0908130931400.28013@asgard.lang.hm>
+	 <87f94c370908131115r680a7523w3cdbc78b9e82373c@mail.gmail.com>
+	 <1250191095.3901.116.camel@mulgrave.site> <4A85DF1E.3050801@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20090814223857.1640.26881.stgit@localhost.localdomain>
-Sender: netdev-owner@vger.kernel.org
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, gospo@redhat.com, Yi Zou <yi.zou@intel.com>, Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>, Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <4A85DF1E.3050801@rtr.ca>
+Sender: owner-linux-mm@kvack.org
+To: Mark Lord <liml@rtr.ca>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, david@lang.hm, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Yi Zou <yi.zou@intel.com>
+On Fri, Aug 14, 2009 at 6:03 PM, Mark Lord<liml@rtr.ca> wrote:
+> James Bottomley wrote:
+>>
+>> On Thu, 2009-08-13 at 14:15 -0400, Greg Freemyer wrote:
+>>>
+>>> On Thu, Aug 13, 2009 at 12:33 PM, <david@lang.hm> wrote:
+>>>>
+>>>> On Thu, 13 Aug 2009, Markus Trippelsdorf wrote:
+>>>>
+>>>>> On Thu, Aug 13, 2009 at 08:13:12AM -0700, Matthew Wilcox wrote:
+>>>>>>
+>>>>>> I am planning a complete overhaul of the discard work. =A0Users can =
+send
+>>>>>> down discard requests as frequently as they like. =A0The block layer
+>>>>>> will
+>>>>>> cache them, and invalidate them if writes come through. =A0Periodica=
+lly,
+>>>>>> the block layer will send down a TRIM or an UNMAP (depending on the
+>>>>>> underlying device) and get rid of the blocks that have remained
+>>>>>> unwanted
+>>>>>> in the interim.
+>>>>>
+>>>>> That is a very good idea. I've tested your original TRIM implementati=
+on
+>>>>> on
+>>>>> my Vertex yesterday and it was awful ;-). The SSD needs hundreds of
+>>>>> milliseconds to digest a single TRIM command. And since your
+>>>>> implementation
+>>>>> sends a TRIM for each extent of each deleted file, the whole system i=
+s
+>>>>> unusable after a short while.
+>>>>> An optimal solution would be to consolidate the discard requests,
+>>>>> bundle
+>>>>> them and send them to the drive as infrequent as possible.
+>>>>
+>>>> or queue them up and send them when the drive is idle (you would need =
+to
+>>>> keep track to make sure the space isn't re-used)
+>>>>
+>>>> as an example, if you would consider spinning down a drive you don't
+>>>> hurt
+>>>> performance by sending accumulated trim commands.
+>>>>
+>>>> David Lang
+>>>
+>>> An alternate approach is the block layer maintain its own bitmap of
+>>> used unused sectors / blocks. Unmap commands from the filesystem just
+>>> cause the bitmap to be updated. =A0No other effect.
+>>>
+>>> (Big unknown: Where will the bitmap live between reboots? =A0Require DM
+>>> volumes so we can have a dedicated bitmap volume in the mix to store
+>>> the bitmap to? Maybe on mount, the filesystem has to be scanned to
+>>> initially populate the bitmap? =A0 Other options?)
+>>
+>> I wouldn't really have it live anywhere. =A0Discard is best effort; it's
+>> not required for fs integrity. =A0As long as we don't discard an in-use
+>> block we're free to do anything else (including forget to discard,
+>> rediscard a discarded block etc).
+>>
+>> It is theoretically possible to run all of this from user space using
+>> the fs mappings, a bit like a defrag command.
+>
+> ..
+>
+> Already a work-in-progress -- see my wiper.sh script on the hdparm page
+> at sourceforge. =A0Trimming 50+GB of free space on a 120GB Vertex
+> (over 100 million sectors) takes a *single* TRIM command,
+> and completes in only a couple of seconds.
+>
+> Cheers
+>
+Mark,
 
-Add support for dcbnl_rtnl_ops.setapp/getapp to set or get the current user
-priority bitmap for the given application protocol. Currently, 82599 only
-supports setapp/getapp for Fiber Channel over Ethernet (FCoE) protocol.
+What filesystems does your script support?  Running a tool like this
+in the middle of the night makes a lot of since to me even from the
+perspective of many / most enterprise users.
 
-Signed-off-by: Yi Zou <yi.zou@intel.com>
-Acked-by: Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
-Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
----
+How do prevent a race where a block becomes used between userspace
+asking status and it sending the discard request?
 
- drivers/net/ixgbe/ixgbe.h        |    4 ++
- drivers/net/ixgbe/ixgbe_dcb_nl.c |   60 ++++++++++++++++++++++++++++++++++++
- drivers/net/ixgbe/ixgbe_fcoe.c   |   64 ++++++++++++++++++++++++++++++++++++++
- drivers/net/ixgbe/ixgbe_fcoe.h   |    4 ++
- drivers/net/ixgbe/ixgbe_main.c   |    2 +
- 5 files changed, 134 insertions(+), 0 deletions(-)
+ps: I tried to pull wiper.sh straight from sourceforge, but I'm
+getting some crazy page asking all sorts of questions and not letting
+me bypass it.  I hope sourceforge is broken.  The other option is they
+meant to do this. :(
 
-diff --git a/drivers/net/ixgbe/ixgbe.h b/drivers/net/ixgbe/ixgbe.h
-index 3c25524..cc324f3 100644
---- a/drivers/net/ixgbe/ixgbe.h
-+++ b/drivers/net/ixgbe/ixgbe.h
-@@ -486,6 +486,10 @@ extern int ixgbe_fcoe_ddp_get(struct net_device *netdev, u16 xid,
-                               struct scatterlist *sgl, unsigned int sgc);
- extern int ixgbe_fcoe_ddp_put(struct net_device *netdev, u16 xid);
- extern int ixgbe_fcoe_control(struct net_device *netdev, u32 op);
-+#ifdef CONFIG_IXGBE_DCB
-+extern u8 ixgbe_fcoe_getapp(struct ixgbe_adapter *adapter);
-+extern u8 ixgbe_fcoe_setapp(struct ixgbe_adapter *adapter, u8 up);
-+#endif /* CONFIG_IXGBE_DCB */
- #endif /* IXGBE_FCOE */
- 
- #endif /* _IXGBE_H_ */
-diff --git a/drivers/net/ixgbe/ixgbe_dcb_nl.c b/drivers/net/ixgbe/ixgbe_dcb_nl.c
-index e05c62a..47d9dde 100644
---- a/drivers/net/ixgbe/ixgbe_dcb_nl.c
-+++ b/drivers/net/ixgbe/ixgbe_dcb_nl.c
-@@ -480,6 +480,64 @@ static void ixgbe_dcbnl_setpfcstate(struct net_device *netdev, u8 state)
- 	return;
- }
- 
-+/**
-+ * ixgbe_dcbnl_getapp - retrieve the DCBX application user priority
-+ * @netdev : the corresponding netdev
-+ * @idtype : identifies the id as ether type or TCP/UDP port number
-+ * @id: id is either ether type or TCP/UDP port number
-+ *
-+ * Returns : on success, returns a non-zero 802.1p user priority bitmap
-+ * otherwise returns 0 as the invalid user priority bitmap to indicate an
-+ * error.
-+ */
-+static u8 ixgbe_dcbnl_getapp(struct net_device *netdev, u8 idtype, u16 id)
-+{
-+	u8 rval = 0;
-+
-+	switch (idtype) {
-+	case DCB_APP_IDTYPE_ETHTYPE:
-+#ifdef IXGBE_FCOE
-+		if (id == ETH_P_FCOE)
-+			rval = ixgbe_fcoe_getapp(netdev_priv(netdev));
-+#endif
-+		break;
-+	case DCB_APP_IDTYPE_PORTNUM:
-+		break;
-+	default:
-+		break;
-+	}
-+	return rval;
-+}
-+
-+/**
-+ * ixgbe_dcbnl_setapp - set the DCBX application user priority
-+ * @netdev : the corresponding netdev
-+ * @idtype : identifies the id as ether type or TCP/UDP port number
-+ * @id: id is either ether type or TCP/UDP port number
-+ * @up: the 802.1p user priority bitmap
-+ *
-+ * Returns : 0 on success or 1 on error
-+ */
-+static u8 ixgbe_dcbnl_setapp(struct net_device *netdev,
-+                             u8 idtype, u16 id, u8 up)
-+{
-+	u8 rval = 1;
-+
-+	switch (idtype) {
-+	case DCB_APP_IDTYPE_ETHTYPE:
-+#ifdef IXGBE_FCOE
-+		if (id == ETH_P_FCOE)
-+			rval = ixgbe_fcoe_setapp(netdev_priv(netdev), up);
-+#endif
-+		break;
-+	case DCB_APP_IDTYPE_PORTNUM:
-+		break;
-+	default:
-+		break;
-+	}
-+	return rval;
-+}
-+
- struct dcbnl_rtnl_ops dcbnl_ops = {
- 	.getstate	= ixgbe_dcbnl_get_state,
- 	.setstate	= ixgbe_dcbnl_set_state,
-@@ -500,5 +558,7 @@ struct dcbnl_rtnl_ops dcbnl_ops = {
- 	.setnumtcs	= ixgbe_dcbnl_setnumtcs,
- 	.getpfcstate	= ixgbe_dcbnl_getpfcstate,
- 	.setpfcstate	= ixgbe_dcbnl_setpfcstate,
-+	.getapp		= ixgbe_dcbnl_getapp,
-+	.setapp		= ixgbe_dcbnl_setapp,
- };
- 
-diff --git a/drivers/net/ixgbe/ixgbe_fcoe.c b/drivers/net/ixgbe/ixgbe_fcoe.c
-index b67ed27..39336f0 100644
---- a/drivers/net/ixgbe/ixgbe_fcoe.c
-+++ b/drivers/net/ixgbe/ixgbe_fcoe.c
-@@ -27,6 +27,9 @@
- 
- 
- #include "ixgbe.h"
-+#ifdef CONFIG_IXGBE_DCB
-+#include "ixgbe_dcb_82599.h"
-+#endif /* CONFIG_IXGBE_DCB */
- #include <linux/if_ether.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_device.h>
-@@ -674,3 +677,64 @@ int ixgbe_fcoe_control(struct net_device *netdev, u32 op)
- out:
- 	return rc;
- }
-+
-+#ifdef CONFIG_IXGBE_DCB
-+/**
-+ * ixgbe_fcoe_getapp - retrieves current user priority bitmap for FCoE
-+ * @adapter : ixgbe adapter
-+ *
-+ * Finds out the corresponding user priority bitmap from the current
-+ * traffic class that FCoE belongs to. Returns 0 as the invalid user
-+ * priority bitmap to indicate an error.
-+ *
-+ * Returns : 802.1p user priority bitmap for FCoE
-+ */
-+u8 ixgbe_fcoe_getapp(struct ixgbe_adapter *adapter)
-+{
-+	int i;
-+	u8 tc;
-+	u32 up2tc;
-+
-+	up2tc = IXGBE_READ_REG(&adapter->hw, IXGBE_RTTUP2TC);
-+	for (i = 0; i < MAX_USER_PRIORITY; i++) {
-+		tc = (u8)(up2tc >> (i * IXGBE_RTTUP2TC_UP_SHIFT));
-+		tc &= (MAX_TRAFFIC_CLASS - 1);
-+		if (adapter->fcoe.tc == tc)
-+			return 1 << i;
-+	}
-+
-+	return 0;
-+}
-+
-+/**
-+ * ixgbe_fcoe_setapp - sets the user priority bitmap for FCoE
-+ * @adapter : ixgbe adapter
-+ * @up : 802.1p user priority bitmap
-+ *
-+ * Finds out the traffic class from the input user priority
-+ * bitmap for FCoE.
-+ *
-+ * Returns : 0 on success otherwise returns 1 on error
-+ */
-+u8 ixgbe_fcoe_setapp(struct ixgbe_adapter *adapter, u8 up)
-+{
-+	int i;
-+	u32 up2tc;
-+
-+	/* valid user priority bitmap must not be 0 */
-+	if (up) {
-+		/* from user priority to the corresponding traffic class */
-+		up2tc = IXGBE_READ_REG(&adapter->hw, IXGBE_RTTUP2TC);
-+		for (i = 0; i < MAX_USER_PRIORITY; i++) {
-+			if (up & (1 << i)) {
-+				up2tc >>= (i * IXGBE_RTTUP2TC_UP_SHIFT);
-+				up2tc &= (MAX_TRAFFIC_CLASS - 1);
-+				adapter->fcoe.tc = (u8)up2tc;
-+				return 0;
-+			}
-+		}
-+	}
-+
-+	return 1;
-+}
-+#endif /* CONFIG_IXGBE_DCB */
-diff --git a/drivers/net/ixgbe/ixgbe_fcoe.h b/drivers/net/ixgbe/ixgbe_fcoe.h
-index c5b5002..b5dee7b 100644
---- a/drivers/net/ixgbe/ixgbe_fcoe.h
-+++ b/drivers/net/ixgbe/ixgbe_fcoe.h
-@@ -46,6 +46,9 @@
- #define IXGBE_FCBUFF_MIN	4096	/* 4KB min */
- #define IXGBE_FCOE_DDP_MAX	512	/* 9 bits xid */
- 
-+/* Default traffic class to use for FCoE */
-+#define IXGBE_FCOE_DEFTC	3
-+
- /* fcerr */
- #define IXGBE_FCERR_BADCRC       0x00100000
- 
-@@ -59,6 +62,7 @@ struct ixgbe_fcoe_ddp {
- };
- 
- struct ixgbe_fcoe {
-+	u8 tc;
- 	spinlock_t lock;
- 	struct pci_pool *pool;
- 	struct ixgbe_fcoe_ddp ddp[IXGBE_FCOE_DDP_MAX];
-diff --git a/drivers/net/ixgbe/ixgbe_main.c b/drivers/net/ixgbe/ixgbe_main.c
-index 9738317..f4fc4ae 100644
---- a/drivers/net/ixgbe/ixgbe_main.c
-+++ b/drivers/net/ixgbe/ixgbe_main.c
-@@ -3801,6 +3801,8 @@ static int __devinit ixgbe_sw_init(struct ixgbe_adapter *adapter)
- 		adapter->flags |= IXGBE_FLAG_FCOE_CAPABLE;
- 		adapter->flags &= ~IXGBE_FLAG_FCOE_ENABLED;
- 		adapter->ring_feature[RING_F_FCOE].indices = 0;
-+		/* Default traffic class to use for FCoE */
-+		adapter->fcoe.tc = IXGBE_FCOE_DEFTC;
- #endif /* IXGBE_FCOE */
- 	}
- 
+Greg
+--=20
+Greg Freemyer
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
