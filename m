@@ -1,61 +1,46 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: [PATCH 4/9] mpt2sas: Config request and diag reset deadlock
-Date: Fri, 14 Aug 2009 18:19:18 +0530
-Message-ID: <0D1E8821739E724A86F4D16902CE275C14252F674E@inbmail01.lsi.com>
-References: <20090807140552.GE5807@lsi.com>
- <1250199417.3901.193.camel@mulgrave.site>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 1/7] mpt2sas : Rescan topology from Interrupt context
+ instead of work queue
+Date: Fri, 14 Aug 2009 14:59:40 +0000
+Message-ID: <1250261980.4021.7.camel@mulgrave.site>
+References: <20090814094253.GC29415@lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og112.obsmtp.com ([64.18.2.177]:41191 "EHLO
-	exprod7og112.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755433AbZHNMuU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Aug 2009 08:50:20 -0400
-In-Reply-To: <1250199417.3901.193.camel@mulgrave.site>
-Content-Language: en-US
+Received: from cantor2.suse.de ([195.135.220.15]:56904 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932268AbZHNO7t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Aug 2009 10:59:49 -0400
+In-Reply-To: <20090814094253.GC29415@lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "stable@kernel.org" <stable@kernel.org>
+To: "Kashyap, Desai" <kashyap.desai@lsi.com>
+Cc: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-James,
-
-I have recreated this patch. This patch was a miss because of difference in baseline on which I have created. Now it is created using
-2.6.31-rc6.
-
-
-
-- Kashyap
-
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of James Bottomley
-Sent: Friday, August 14, 2009 3:07 AM
-To: Desai, Kashyap
-Cc: linux-scsi@vger.kernel.org; Moore, Eric; Prakash, Sathya; stable@kernel.org
-Subject: Re: [PATCH 4/9] mpt2sas: Config request and diag reset deadlock
-
-On Fri, 2009-08-07 at 19:36 +0530, Kashyap, Desai wrote:
-> Moving the setting and clearing of the mutex's to
-> _config_request. There was a mutex deadlock when diag reset is called from
-> inside _config_request, so diag reset was moved to outside the mutexs.
+On Fri, 2009-08-14 at 15:13 +0530, Kashyap, Desai wrote:
+> Following host reset its possible that the controller firmware could
+> assign new handles for devices, as well as adding or deleting devices. There is
+> code in the driver that will rescan the topology folowing host reset; updating
+> device handles, and remove devices that are no longer responding. This patch
+> will improve the responsivness by moving this rescaning from the delayed hotplug
+> worker thread to immediately following the host reset.
+> 
 > ---
 > 
 > Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 > Signed-off-by: Eric Moore <Eric.moore@lsi.com>
 
-Signoffs go before the --- othewise git ignores them, please
+For the third time of asking, can you put the signoffs *before* the
+three dashes that tell the git importer to ignore the rest of the text
+before the patch?
 
-This patch doesn't apply.  The rest all do, so I have the other eight,
-please redo this one against scsi-rc-fixes-2.6.git.
-
-Thanks,
+Also, what exactly do these signoffs mean ... they're supposed to track
+author and whose hands these patches have been through.  If Eric wrote
+them, and you're just submitting them, I need a From: field at the
+beginning to change the git authorship (and also the order of signoff
+needs reversing).
 
 James
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
