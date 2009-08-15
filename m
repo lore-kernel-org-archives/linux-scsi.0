@@ -1,93 +1,118 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
-	slot is freed)
-Date: Fri, 14 Aug 2009 21:55:36 -0400
-Message-ID: <87f94c370908141855y44fe3c46xbfa155644a283ccb@mail.gmail.com>
-References: <200908122007.43522.ngupta@vflare.org>
-	 <87f94c370908131115r680a7523w3cdbc78b9e82373c@mail.gmail.com>
-	 <alpine.DEB.1.10.0908131342460.28013@asgard.lang.hm>
-	 <3e8340490908131354q167840fcv124ec56c92bbb830@mail.gmail.com>
-	 <4A85E0DC.9040101@rtr.ca>
-	 <f3177b9e0908141621j15ea96c0s26124d03fc2b0acf@mail.gmail.com>
-	 <20090814234539.GE27148@parisc-linux.org>
-	 <f3177b9e0908141719s658dc79eye92ab46558a97260@mail.gmail.com>
-	 <87f94c370908141730y3ddcb7bbj65d24b612fc0e96d@mail.gmail.com>
-	 <f3177b9e0908141738n5f99b85dx3de0f620180a4b46@mail.gmail.com>
+From: "Ed Lin" <ed.lin@promise.com>
+Subject: [PATCH] stex: Add reset code for st_yel
+Date: Fri, 14 Aug 2009 22:03:00 -0800
+Message-ID: <200908142202591084033@promise.com>
+Reply-To: ed.lin@promise.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qy0-f196.google.com ([209.85.221.196]:59567 "EHLO
-	mail-qy0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756391AbZHOBzg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Aug 2009 21:55:36 -0400
-In-Reply-To: <f3177b9e0908141738n5f99b85dx3de0f620180a4b46@mail.gmail.com>
+Received: from gateway.promise.com ([67.111.72.2]:31700 "EHLO
+	nanamew.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750787AbZHOFSb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Aug 2009 01:18:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Worley <worleys@gmail.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Mark Lord <liml@rtr.ca>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
+To: "James.Bottomley" <James.Bottomley@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, promise_linux <promise_linux@promise.com>
 
-On Fri, Aug 14, 2009 at 8:38 PM, Chris Worley<worleys@gmail.com> wrote:
-> On Fri, Aug 14, 2009 at 6:30 PM, Greg Freemyer<greg.freemyer@gmail.co=
-m> wrote:
->> On Fri, Aug 14, 2009 at 8:19 PM, Chris Worley<worleys@gmail.com> wro=
-te:
->>> On Fri, Aug 14, 2009 at 5:45 PM, Matthew Wilcox<matthew@wil.cx> wro=
-te:
->>>> On Fri, Aug 14, 2009 at 05:21:32PM -0600, Chris Worley wrote:
->>>>> Sooner is better than waiting to coalesce. =A0The longer an LBA i=
-s
->>>>> inactive, the better for any management scheme. =A0If you wait un=
-til
->>>>> it's reused, you might as well forgo the advantages of TRIM/UNMAP=
-=2E =A0If
->>>>> a the controller wants to coalesce, let it coalesce.
->>>>
->>>> I'm sorry, you're wrong. =A0There is a tradeoff point, and it's di=
-fferent
->>>> for each drive model. =A0Sending down a steady stream of tiny TRIM=
-s is
->>>> going to give terrible performance.
->>>
->>> Sounds like you might be using junk for a device?
->>>
->>> For junk, a little coalescing may be warranted... like in the I/O
->>> schedular, but no more than 100usecs wait before posting, or then y=
-ou
->>> effect high performing devices too.
->>>
->>> Chris
->>
->> Why?
->>
->> AIUI, on every write a high performing device allocates a new erase
->> block from its free lists, writes to it, and puts the now unused era=
-se
->> block on the free list.
->
-> So erase blocks are 512 bytes (if I write 512 bytes, an erase block i=
-s
-> now freed)? =A0Not true.
 
-Seriously, how do you  know?  Are you under NDA?
+Add reset related code for st_yel.
+1. Set the SS_H2I_INT_RESET bit.
+2. Wait for the SS_MU_OPERATIONAL flag. This is also part of
+   normal handshake process so move it to handshake routine.
+3. Continue handshake with the firmware.
 
-The write paper I read about typical SSD design described a partial
-erase block write as:
+Signed-off-by: Ed Lin <ed.lin@promise.com>
+---
 
-Internal logic/micro-controller performs:
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 8d2a95c..b57f92f 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -55,6 +55,7 @@ enum {
+ 	OIS	= 0x30,	/* MU_OUTBOUND_INTERRUPT_STATUS */
+ 	OIM	= 0x3c,	/* MU_OUTBOUND_INTERRUPT_MASK */
+ 
++	YIOA_STATUS				= 0x00,
+ 	YH2I_INT				= 0x20,
+ 	YINT_EN					= 0x34,
+ 	YI2H_INT				= 0x9c,
+@@ -108,6 +109,10 @@ enum {
+ 
+ 	SS_HEAD_HANDSHAKE			= 0x80,
+ 
++	SS_H2I_INT_RESET			= 0x100,
++
++	SS_MU_OPERATIONAL			= 0x80000000,
++
+ 	STEX_CDB_LENGTH				= 16,
+ 	STATUS_VAR_LEN				= 128,
+ 
+@@ -884,7 +889,7 @@ static void stex_ss_mu_intr(struct st_hba *hba)
+ 		tag = (u16)value;
+ 		if (unlikely(tag >= hba->host->can_queue)) {
+ 			printk(KERN_WARNING DRV_NAME
+-					"(%s): invalid tag\n", pci_name(hba->pdev));
++				"(%s): invalid tag\n", pci_name(hba->pdev));
+ 			continue;
+ 		}
+ 
+@@ -1040,16 +1045,28 @@ static int stex_ss_handshake(struct st_hba *hba)
+ 	void __iomem *base = hba->mmio_base;
+ 	struct st_msg_header *msg_h;
+ 	struct handshake_frame *h;
+-	__le32 *scratch = hba->scratch;
++	__le32 *scratch;
+ 	u32 data;
+ 	unsigned long before;
+ 	int ret = 0;
+ 
+-	h = (struct handshake_frame *)(hba->alloc_rq(hba));
+-	msg_h = (struct st_msg_header *)h - 1;
++	before = jiffies;
++	while ((readl(base + YIOA_STATUS) & SS_MU_OPERATIONAL) == 0) {
++		if (time_after(jiffies, before + MU_MAX_DELAY * HZ)) {
++			printk(KERN_ERR DRV_NAME
++				"(%s): firmware not operational\n",
++				pci_name(hba->pdev));
++			return -1;
++		}
++		rmb();
++		msleep(1);
++	}
++
++	msg_h = (struct st_msg_header *)hba->dma_mem;
+ 	msg_h->handle = cpu_to_le64(hba->dma_handle);
+ 	msg_h->flag = SS_HEAD_HANDSHAKE;
+ 
++	h = (struct handshake_frame *)(msg_h + 1);
+ 	h->rb_phy = cpu_to_le64(hba->dma_handle);
+ 	h->req_sz = cpu_to_le16(hba->rq_size);
+ 	h->req_cnt = cpu_to_le16(hba->rq_count+1);
+@@ -1205,6 +1222,13 @@ static void stex_hard_reset(struct st_hba *hba)
+ 			hba->pdev->saved_config_space[i]);
+ }
+ 
++static void stex_ss_reset(struct st_hba *hba)
++{
++	writel(SS_H2I_INT_RESET, hba->mmio_base + YH2I_INT);
++	readl(hba->mmio_base + YH2I_INT);
++	ssleep(5);
++}
++
+ static int stex_reset(struct scsi_cmnd *cmd)
+ {
+ 	struct st_hba *hba;
+@@ -1221,6 +1245,8 @@ static int stex_reset(struct scsi_cmnd *cmd)
+ 
+ 	if (hba->cardtype == st_shasta)
+ 		stex_hard_reset(hba);
++	else if (hba->cardtype == st_yel)
++		stex_ss_reset(hba);
+ 
+ 	if (hba->cardtype != st_yosemite) {
+ 		if (stex_handshake(hba)) {
 
-Read erase block, modify erase block, allocate new erase block, write
-new erase block, free now unused old erase block, old erase block
-added to a hardware erase queue the performs the actual erase in the
-background at the relatively slow speed of multiple milliseconds..
 
-The purpose of the trim/discard command being to allow the ssd to have
-enough free erase blocks ready to go that the writes don't have to
-stall while they wait for a erase block to pop out of the erase queue.
-
-Greg
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
