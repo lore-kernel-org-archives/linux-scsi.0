@@ -1,94 +1,55 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] stex: Add reset code for st_yel
-Date: Sat, 15 Aug 2009 07:10:26 -0400
-Message-ID: <4A8697A2.3050704@garzik.org>
-References: <200908142202591084033@promise.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
+  slot is freed)
+Date: Sat, 15 Aug 2009 07:59:36 -0500
+Message-ID: <1250341176.4159.2.camel@mulgrave.site>
+References: <200908122007.43522.ngupta@vflare.org>
+	 <20090813151312.GA13559@linux.intel.com>
+	 <20090813162621.GB1915@phenom2.trippelsdorf.de>
+	 <alpine.DEB.1.10.0908130931400.28013@asgard.lang.hm>
+	 <87f94c370908131115r680a7523w3cdbc78b9e82373c@mail.gmail.com>
+	 <alpine.DEB.1.10.0908131342460.28013@asgard.lang.hm>
+	 <3e8340490908131354q167840fcv124ec56c92bbb830@mail.gmail.com>
+	 <4A85E0DC.9040101@rtr.ca>
+	 <f3177b9e0908141621j15ea96c0s26124d03fc2b0acf@mail.gmail.com>
+	 <20090814234539.GE27148@parisc-linux.org>
+	 <f3177b9e0908141719s658dc79eye92ab46558a97260@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=GB2312
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:44378 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753116AbZHOLKc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 15 Aug 2009 07:10:32 -0400
-In-Reply-To: <200908142202591084033@promise.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <f3177b9e0908141719s658dc79eye92ab46558a97260@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Chris Worley <worleys@gmail.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Mark Lord <liml@rtr.ca>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Greg Freemyer <greg.freemyer@gmail.com>, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: ed.lin@promise.com
-Cc: "James.Bottomley" <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, promise_linux <promise_linux@promise.com>
 
-Ed Lin wrote:
-> Add reset related code for st_yel.
-> 1. Set the SS_H2I_INT_RESET bit.
-> 2. Wait for the SS_MU_OPERATIONAL flag. This is also part of
->    normal handshake process so move it to handshake routine.
-> 3. Continue handshake with the firmware.
+On Fri, 2009-08-14 at 18:19 -0600, Chris Worley wrote:
+> On Fri, Aug 14, 2009 at 5:45 PM, Matthew Wilcox<matthew@wil.cx> wrote:
+> > On Fri, Aug 14, 2009 at 05:21:32PM -0600, Chris Worley wrote:
+> >> Sooner is better than waiting to coalesce.  The longer an LBA is
+> >> inactive, the better for any management scheme.  If you wait until
+> >> it's reused, you might as well forgo the advantages of TRIM/UNMAP.  If
+> >> a the controller wants to coalesce, let it coalesce.
+> >
+> > I'm sorry, you're wrong.  There is a tradeoff point, and it's different
+> > for each drive model.  Sending down a steady stream of tiny TRIMs is
+> > going to give terrible performance.
 > 
-> Signed-off-by: Ed Lin <ed.lin@promise.com>
-> ---
+> Sounds like you might be using junk for a device?
 > 
-> diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-> index 8d2a95c..b57f92f 100644
-> --- a/drivers/scsi/stex.c
-> +++ b/drivers/scsi/stex.c
-> @@ -55,6 +55,7 @@ enum {
->  	OIS	= 0x30,	/* MU_OUTBOUND_INTERRUPT_STATUS */
->  	OIM	= 0x3c,	/* MU_OUTBOUND_INTERRUPT_MASK */
->  
-> +	YIOA_STATUS				= 0x00,
->  	YH2I_INT				= 0x20,
->  	YINT_EN					= 0x34,
->  	YI2H_INT				= 0x9c,
-> @@ -108,6 +109,10 @@ enum {
->  
->  	SS_HEAD_HANDSHAKE			= 0x80,
->  
-> +	SS_H2I_INT_RESET			= 0x100,
-> +
-> +	SS_MU_OPERATIONAL			= 0x80000000,
-> +
->  	STEX_CDB_LENGTH				= 16,
->  	STATUS_VAR_LEN				= 128,
->  
-> @@ -884,7 +889,7 @@ static void stex_ss_mu_intr(struct st_hba *hba)
->  		tag = (u16)value;
->  		if (unlikely(tag >= hba->host->can_queue)) {
->  			printk(KERN_WARNING DRV_NAME
-> -					"(%s): invalid tag\n", pci_name(hba->pdev));
-> +				"(%s): invalid tag\n", pci_name(hba->pdev));
->  			continue;
->  		}
->  
-> @@ -1040,16 +1045,28 @@ static int stex_ss_handshake(struct st_hba *hba)
->  	void __iomem *base = hba->mmio_base;
->  	struct st_msg_header *msg_h;
->  	struct handshake_frame *h;
-> -	__le32 *scratch = hba->scratch;
-> +	__le32 *scratch;
->  	u32 data;
->  	unsigned long before;
->  	int ret = 0;
->  
-> -	h = (struct handshake_frame *)(hba->alloc_rq(hba));
-> -	msg_h = (struct st_msg_header *)h - 1;
-> +	before = jiffies;
-> +	while ((readl(base + YIOA_STATUS) & SS_MU_OPERATIONAL) == 0) {
-> +		if (time_after(jiffies, before + MU_MAX_DELAY * HZ)) {
-> +			printk(KERN_ERR DRV_NAME
-> +				"(%s): firmware not operational\n",
-> +				pci_name(hba->pdev));
-> +			return -1;
-> +		}
-> +		rmb();
-> +		msleep(1);
-> +	}
+> For junk, a little coalescing may be warranted... like in the I/O
+> schedular, but no more than 100usecs wait before posting, or then you
+> effect high performing devices too.
 
-hmmmmm.  Is that rmb() really necessary?  It does not appear to be so.
+Um, I think you missed the original point in all of this at the
+beginning of the thread:  On ATA TRIM commands cannot be tagged.  This
+means you have to drain the outstanding NCQ commands (stalling the
+device) before you can send a TRIM.   If we do this for every discard,
+the performance impact will be pretty devastating, hence the need to
+coalesce.  It's nothing really to do with device characteristics, it's
+an ATA protocol problem.
 
-At worst, the rmb should occur immediately after the loop, no?
-
-ACK everything else.
-
-	Jeff
+James
 
 
