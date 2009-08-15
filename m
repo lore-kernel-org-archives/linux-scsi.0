@@ -1,84 +1,144 @@
-From: Chris Worley <worleys@gmail.com>
-Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
-	slot is freed)
-Date: Fri, 14 Aug 2009 18:38:47 -0600
-Message-ID: <f3177b9e0908141738n5f99b85dx3de0f620180a4b46@mail.gmail.com>
-References: <200908122007.43522.ngupta@vflare.org>
-	 <alpine.DEB.1.10.0908130931400.28013@asgard.lang.hm>
-	 <87f94c370908131115r680a7523w3cdbc78b9e82373c@mail.gmail.com>
-	 <alpine.DEB.1.10.0908131342460.28013@asgard.lang.hm>
-	 <3e8340490908131354q167840fcv124ec56c92bbb830@mail.gmail.com>
-	 <4A85E0DC.9040101@rtr.ca>
-	 <f3177b9e0908141621j15ea96c0s26124d03fc2b0acf@mail.gmail.com>
-	 <20090814234539.GE27148@parisc-linux.org>
-	 <f3177b9e0908141719s658dc79eye92ab46558a97260@mail.gmail.com>
-	 <87f94c370908141730y3ddcb7bbj65d24b612fc0e96d@mail.gmail.com>
+From: "Michael Chan" <mchan@broadcom.com>
+Subject: [PATCH 2/5] cnic: Refine registration with bnx2.
+Date: Fri, 14 Aug 2009 18:49:44 -0700
+Message-ID: <1250300987-18407-3-git-send-email-mchan@broadcom.com>
+References: <1250300987-18407-1-git-send-email-mchan@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <87f94c370908141730y3ddcb7bbj65d24b612fc0e96d@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Mark Lord <liml@rtr.ca>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mms3.broadcom.com ([216.31.210.19]:1456 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753781AbZHOBm4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Aug 2009 21:42:56 -0400
+In-Reply-To: <1250300987-18407-1-git-send-email-mchan@broadcom.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: davem@davemloft.net, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
+Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, Aug 14, 2009 at 6:30 PM, Greg Freemyer<greg.freemyer@gmail.com>=
- wrote:
-> On Fri, Aug 14, 2009 at 8:19 PM, Chris Worley<worleys@gmail.com> wrot=
-e:
->> On Fri, Aug 14, 2009 at 5:45 PM, Matthew Wilcox<matthew@wil.cx> wrot=
-e:
->>> On Fri, Aug 14, 2009 at 05:21:32PM -0600, Chris Worley wrote:
->>>> Sooner is better than waiting to coalesce. =A0The longer an LBA is
->>>> inactive, the better for any management scheme. =A0If you wait unt=
-il
->>>> it's reused, you might as well forgo the advantages of TRIM/UNMAP.=
- =A0If
->>>> a the controller wants to coalesce, let it coalesce.
->>>
->>> I'm sorry, you're wrong. =A0There is a tradeoff point, and it's dif=
-ferent
->>> for each drive model. =A0Sending down a steady stream of tiny TRIMs=
- is
->>> going to give terrible performance.
->>
->> Sounds like you might be using junk for a device?
->>
->> For junk, a little coalescing may be warranted... like in the I/O
->> schedular, but no more than 100usecs wait before posting, or then yo=
-u
->> effect high performing devices too.
->>
->> Chris
->
-> Why?
->
-> AIUI, on every write a high performing device allocates a new erase
-> block from its free lists, writes to it, and puts the now unused eras=
-e
-> block on the free list.
+Register and unregister with bnx2 during NETDEV_UP and NETDEV_DOWN
+events.  This simplifies the sequence of events and allows locking
+fixes in the next patch.
 
-So erase blocks are 512 bytes (if I write 512 bytes, an erase block is
-now freed)?  Not true.
+Signed-off-by: Michael Chan <mchan@broadcom.com>
+Reviewed-by: Benjamin Li <benli@broadcom.com>
+---
+ drivers/net/cnic.c |   49 ++++++++++++++++++++++++++++++++++++-------------
+ 1 files changed, 36 insertions(+), 13 deletions(-)
 
-> =A0That erase block becomes available for reuse
-> some milliseconds later.
->
-> As long as the SSD has enough free erase blocks to work with I see no
-> disadvantage in delaying a discard by minutes, hours or days in most
-> cases. =A0The exception is when the filesystem is almost full and the
-> SSD is short of erase blocks to work with.
+diff --git a/drivers/net/cnic.c b/drivers/net/cnic.c
+index ecde186..2db81f0 100644
+--- a/drivers/net/cnic.c
++++ b/drivers/net/cnic.c
+@@ -2393,21 +2393,45 @@ static int cnic_start_bnx2_hw(struct cnic_dev *dev)
+ 	return 0;
+ }
+ 
+-static int cnic_start_hw(struct cnic_dev *dev)
++static int cnic_register_netdev(struct cnic_dev *dev)
+ {
+ 	struct cnic_local *cp = dev->cnic_priv;
+ 	struct cnic_eth_dev *ethdev = cp->ethdev;
+ 	int err;
+ 
+-	if (test_bit(CNIC_F_CNIC_UP, &dev->flags))
+-		return -EALREADY;
++	if (!ethdev)
++		return -ENODEV;
++
++	if (ethdev->drv_state & CNIC_DRV_STATE_REGD)
++		return 0;
+ 
+ 	err = ethdev->drv_register_cnic(dev->netdev, cp->cnic_ops, dev);
+-	if (err) {
++	if (err)
+ 		printk(KERN_ERR PFX "%s: register_cnic failed\n",
+ 		       dev->netdev->name);
+-		goto err2;
+-	}
++
++	return err;
++}
++
++static void cnic_unregister_netdev(struct cnic_dev *dev)
++{
++	struct cnic_local *cp = dev->cnic_priv;
++	struct cnic_eth_dev *ethdev = cp->ethdev;
++
++	if (!ethdev)
++		return;
++
++	ethdev->drv_unregister_cnic(dev->netdev);
++}
++
++static int cnic_start_hw(struct cnic_dev *dev)
++{
++	struct cnic_local *cp = dev->cnic_priv;
++	struct cnic_eth_dev *ethdev = cp->ethdev;
++	int err;
++
++	if (test_bit(CNIC_F_CNIC_UP, &dev->flags))
++		return -EALREADY;
+ 
+ 	dev->regview = ethdev->io_base;
+ 	cp->chip_id = ethdev->chip_id;
+@@ -2438,18 +2462,13 @@ static int cnic_start_hw(struct cnic_dev *dev)
+ 	return 0;
+ 
+ err1:
+-	ethdev->drv_unregister_cnic(dev->netdev);
+ 	cp->free_resc(dev);
+ 	pci_dev_put(dev->pcidev);
+-err2:
+ 	return err;
+ }
+ 
+ static void cnic_stop_bnx2_hw(struct cnic_dev *dev)
+ {
+-	struct cnic_local *cp = dev->cnic_priv;
+-	struct cnic_eth_dev *ethdev = cp->ethdev;
+-
+ 	cnic_disable_bnx2_int_sync(dev);
+ 
+ 	cnic_reg_wr_ind(dev, BNX2_CP_SCRATCH + 0x20, 0);
+@@ -2461,8 +2480,6 @@ static void cnic_stop_bnx2_hw(struct cnic_dev *dev)
+ 	cnic_setup_5709_context(dev, 0);
+ 	cnic_free_irq(dev);
+ 
+-	ethdev->drv_unregister_cnic(dev->netdev);
+-
+ 	cnic_free_resc(dev);
+ }
+ 
+@@ -2646,6 +2663,10 @@ static int cnic_netdev_event(struct notifier_block *this, unsigned long event,
+ 		else if (event == NETDEV_UNREGISTER)
+ 			cnic_ulp_exit(dev);
+ 		else if (event == NETDEV_UP) {
++			if (cnic_register_netdev(dev) != 0) {
++				cnic_put(dev);
++				goto done;
++			}
+ 			mutex_lock(&cnic_lock);
+ 			if (!cnic_start_hw(dev))
+ 				cnic_ulp_start(dev);
+@@ -2672,6 +2693,7 @@ static int cnic_netdev_event(struct notifier_block *this, unsigned long event,
+ 			cnic_ulp_stop(dev);
+ 			cnic_stop_hw(dev);
+ 			mutex_unlock(&cnic_lock);
++			cnic_unregister_netdev(dev);
+ 		} else if (event == NETDEV_UNREGISTER) {
+ 			write_lock(&cnic_dev_lock);
+ 			list_del_init(&dev->list);
+@@ -2703,6 +2725,7 @@ static void cnic_release(void)
+ 		}
+ 
+ 		cnic_ulp_exit(dev);
++		cnic_unregister_netdev(dev);
+ 		list_del_init(&dev->list);
+ 		cnic_free_dev(dev);
+ 	}
+-- 
+1.5.6.GIT
 
-That "exception..." is another good reason why.
 
->
-> In that case it will want to get as many free erase blocks as it can
-> as fast as it can get them.
-
-Exactly.
-
-Chris
->
-> Greg
->
