@@ -1,163 +1,93 @@
-From: "Michael Chan" <mchan@broadcom.com>
-Subject: [PATCH 5/5] cnic: Fix locking in init/exit calls.
-Date: Fri, 14 Aug 2009 18:49:47 -0700
-Message-ID: <1250300987-18407-6-git-send-email-mchan@broadcom.com>
-References: <1250300987-18407-1-git-send-email-mchan@broadcom.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
+	slot is freed)
+Date: Fri, 14 Aug 2009 21:55:36 -0400
+Message-ID: <87f94c370908141855y44fe3c46xbfa155644a283ccb@mail.gmail.com>
+References: <200908122007.43522.ngupta@vflare.org>
+	 <87f94c370908131115r680a7523w3cdbc78b9e82373c@mail.gmail.com>
+	 <alpine.DEB.1.10.0908131342460.28013@asgard.lang.hm>
+	 <3e8340490908131354q167840fcv124ec56c92bbb830@mail.gmail.com>
+	 <4A85E0DC.9040101@rtr.ca>
+	 <f3177b9e0908141621j15ea96c0s26124d03fc2b0acf@mail.gmail.com>
+	 <20090814234539.GE27148@parisc-linux.org>
+	 <f3177b9e0908141719s658dc79eye92ab46558a97260@mail.gmail.com>
+	 <87f94c370908141730y3ddcb7bbj65d24b612fc0e96d@mail.gmail.com>
+	 <f3177b9e0908141738n5f99b85dx3de0f620180a4b46@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1250300987-18407-1-git-send-email-mchan@broadcom.com>
-Sender: netdev-owner@vger.kernel.org
-To: davem@davemloft.net, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qy0-f196.google.com ([209.85.221.196]:59567 "EHLO
+	mail-qy0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756391AbZHOBzg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Aug 2009 21:55:36 -0400
+In-Reply-To: <f3177b9e0908141738n5f99b85dx3de0f620180a4b46@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Chris Worley <worleys@gmail.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Mark Lord <liml@rtr.ca>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
 
-The slow path ulp_init and ulp_exit calls to the bnx2i driver
-are sleepable calls and therefore should not be protected using
-rcu_read_lock.  Fix it by using mutex and refcount during these
-calls.  cnic_unregister_driver() will now wait for the refcount
-to go to zero before completing the call.
+On Fri, Aug 14, 2009 at 8:38 PM, Chris Worley<worleys@gmail.com> wrote:
+> On Fri, Aug 14, 2009 at 6:30 PM, Greg Freemyer<greg.freemyer@gmail.co=
+m> wrote:
+>> On Fri, Aug 14, 2009 at 8:19 PM, Chris Worley<worleys@gmail.com> wro=
+te:
+>>> On Fri, Aug 14, 2009 at 5:45 PM, Matthew Wilcox<matthew@wil.cx> wro=
+te:
+>>>> On Fri, Aug 14, 2009 at 05:21:32PM -0600, Chris Worley wrote:
+>>>>> Sooner is better than waiting to coalesce. =A0The longer an LBA i=
+s
+>>>>> inactive, the better for any management scheme. =A0If you wait un=
+til
+>>>>> it's reused, you might as well forgo the advantages of TRIM/UNMAP=
+=2E =A0If
+>>>>> a the controller wants to coalesce, let it coalesce.
+>>>>
+>>>> I'm sorry, you're wrong. =A0There is a tradeoff point, and it's di=
+fferent
+>>>> for each drive model. =A0Sending down a steady stream of tiny TRIM=
+s is
+>>>> going to give terrible performance.
+>>>
+>>> Sounds like you might be using junk for a device?
+>>>
+>>> For junk, a little coalescing may be warranted... like in the I/O
+>>> schedular, but no more than 100usecs wait before posting, or then y=
+ou
+>>> effect high performing devices too.
+>>>
+>>> Chris
+>>
+>> Why?
+>>
+>> AIUI, on every write a high performing device allocates a new erase
+>> block from its free lists, writes to it, and puts the now unused era=
+se
+>> block on the free list.
+>
+> So erase blocks are 512 bytes (if I write 512 bytes, an erase block i=
+s
+> now freed)? =A0Not true.
 
-Signed-off-by: Michael Chan <mchan@broadcom.com>
-Reviewed-by: Benjamin Li <benli@broadcom.com>
----
- drivers/net/cnic.c    |   48 +++++++++++++++++++++++++++++++++++++++---------
- drivers/net/cnic_if.h |    1 +
- 2 files changed, 40 insertions(+), 9 deletions(-)
+Seriously, how do you  know?  Are you under NDA?
 
-diff --git a/drivers/net/cnic.c b/drivers/net/cnic.c
-index 4ff618a..74c3429 100644
---- a/drivers/net/cnic.c
-+++ b/drivers/net/cnic.c
-@@ -138,6 +138,16 @@ static struct cnic_dev *cnic_from_netdev(struct net_device *netdev)
- 	return NULL;
- }
- 
-+static inline void ulp_get(struct cnic_ulp_ops *ulp_ops)
-+{
-+	atomic_inc(&ulp_ops->ref_count);
-+}
-+
-+static inline void ulp_put(struct cnic_ulp_ops *ulp_ops)
-+{
-+	atomic_dec(&ulp_ops->ref_count);
-+}
-+
- static void cnic_ctx_wr(struct cnic_dev *dev, u32 cid_addr, u32 off, u32 val)
- {
- 	struct cnic_local *cp = dev->cnic_priv;
-@@ -358,6 +368,7 @@ int cnic_register_driver(int ulp_type, struct cnic_ulp_ops *ulp_ops)
- 	}
- 	read_unlock(&cnic_dev_lock);
- 
-+	atomic_set(&ulp_ops->ref_count, 0);
- 	rcu_assign_pointer(cnic_ulp_tbl[ulp_type], ulp_ops);
- 	mutex_unlock(&cnic_lock);
- 
-@@ -379,6 +390,8 @@ int cnic_register_driver(int ulp_type, struct cnic_ulp_ops *ulp_ops)
- int cnic_unregister_driver(int ulp_type)
- {
- 	struct cnic_dev *dev;
-+	struct cnic_ulp_ops *ulp_ops;
-+	int i = 0;
- 
- 	if (ulp_type >= MAX_CNIC_ULP_TYPE) {
- 		printk(KERN_ERR PFX "cnic_unregister_driver: Bad type %d\n",
-@@ -386,7 +399,8 @@ int cnic_unregister_driver(int ulp_type)
- 		return -EINVAL;
- 	}
- 	mutex_lock(&cnic_lock);
--	if (!cnic_ulp_tbl[ulp_type]) {
-+	ulp_ops = cnic_ulp_tbl[ulp_type];
-+	if (!ulp_ops) {
- 		printk(KERN_ERR PFX "cnic_unregister_driver: Type %d has not "
- 				    "been registered\n", ulp_type);
- 		goto out_unlock;
-@@ -411,6 +425,14 @@ int cnic_unregister_driver(int ulp_type)
- 
- 	mutex_unlock(&cnic_lock);
- 	synchronize_rcu();
-+	while ((atomic_read(&ulp_ops->ref_count) != 0) && (i < 20)) {
-+		msleep(100);
-+		i++;
-+	}
-+
-+	if (atomic_read(&ulp_ops->ref_count) != 0)
-+		printk(KERN_WARNING PFX "%s: Failed waiting for ref count to go"
-+					" to zero.\n", dev->netdev->name);
- 	return 0;
- 
- out_unlock:
-@@ -1161,19 +1183,23 @@ static void cnic_ulp_init(struct cnic_dev *dev)
- 	int i;
- 	struct cnic_local *cp = dev->cnic_priv;
- 
--	rcu_read_lock();
- 	for (i = 0; i < MAX_CNIC_ULP_TYPE_EXT; i++) {
- 		struct cnic_ulp_ops *ulp_ops;
- 
--		ulp_ops = rcu_dereference(cnic_ulp_tbl[i]);
--		if (!ulp_ops || !ulp_ops->cnic_init)
-+		mutex_lock(&cnic_lock);
-+		ulp_ops = cnic_ulp_tbl[i];
-+		if (!ulp_ops || !ulp_ops->cnic_init) {
-+			mutex_unlock(&cnic_lock);
- 			continue;
-+		}
-+		ulp_get(ulp_ops);
-+		mutex_unlock(&cnic_lock);
- 
- 		if (!test_and_set_bit(ULP_F_INIT, &cp->ulp_flags[i]))
- 			ulp_ops->cnic_init(dev);
- 
-+		ulp_put(ulp_ops);
- 	}
--	rcu_read_unlock();
- }
- 
- static void cnic_ulp_exit(struct cnic_dev *dev)
-@@ -1181,19 +1207,23 @@ static void cnic_ulp_exit(struct cnic_dev *dev)
- 	int i;
- 	struct cnic_local *cp = dev->cnic_priv;
- 
--	rcu_read_lock();
- 	for (i = 0; i < MAX_CNIC_ULP_TYPE_EXT; i++) {
- 		struct cnic_ulp_ops *ulp_ops;
- 
--		ulp_ops = rcu_dereference(cnic_ulp_tbl[i]);
--		if (!ulp_ops || !ulp_ops->cnic_exit)
-+		mutex_lock(&cnic_lock);
-+		ulp_ops = cnic_ulp_tbl[i];
-+		if (!ulp_ops || !ulp_ops->cnic_exit) {
-+			mutex_unlock(&cnic_lock);
- 			continue;
-+		}
-+		ulp_get(ulp_ops);
-+		mutex_unlock(&cnic_lock);
- 
- 		if (test_and_clear_bit(ULP_F_INIT, &cp->ulp_flags[i]))
- 			ulp_ops->cnic_exit(dev);
- 
-+		ulp_put(ulp_ops);
- 	}
--	rcu_read_unlock();
- }
- 
- static int cnic_cm_offload_pg(struct cnic_sock *csk)
-diff --git a/drivers/net/cnic_if.h b/drivers/net/cnic_if.h
-index d1bce27..a492357 100644
---- a/drivers/net/cnic_if.h
-+++ b/drivers/net/cnic_if.h
-@@ -290,6 +290,7 @@ struct cnic_ulp_ops {
- 	void (*iscsi_nl_send_msg)(struct cnic_dev *dev, u32 msg_type,
- 				  char *data, u16 data_size);
- 	struct module *owner;
-+	atomic_t ref_count;
- };
- 
- extern int cnic_register_driver(int ulp_type, struct cnic_ulp_ops *ulp_ops);
--- 
-1.5.6.GIT
+The write paper I read about typical SSD design described a partial
+erase block write as:
 
+Internal logic/micro-controller performs:
 
+Read erase block, modify erase block, allocate new erase block, write
+new erase block, free now unused old erase block, old erase block
+added to a hardware erase queue the performs the actual erase in the
+background at the relatively slow speed of multiple milliseconds..
+
+The purpose of the trim/discard command being to allow the ssd to have
+enough free erase blocks ready to go that the writes don't have to
+stall while they wait for a erase block to pop out of the erase queue.
+
+Greg
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
