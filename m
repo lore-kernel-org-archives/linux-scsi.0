@@ -1,52 +1,29 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH, RFC] xfs: batched discard support
-Date: Sun, 16 Aug 2009 09:00:35 -0400
-Message-ID: <4A8802F3.6010908@rtr.ca>
-References: <20090816004705.GA7347@infradead.org> <4A876255.10606@rtr.ca> <4A876CA9.20906@rtr.ca> <20090816022500.GA12392@infradead.org>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH] scsi: consistent use of __u8 in scsi/scsi.h
+Date: Sun, 16 Aug 2009 16:42:18 +0300
+Message-ID: <20090816134218.GA5224@redhat.com>
+References: <20090729111114.GA15239@redhat.com> <1248875763.3900.1.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:48737 "EHLO mail.rtr.ca"
+Received: from mx2.redhat.com ([66.187.237.31]:58151 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751329AbZHPNAf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 16 Aug 2009 09:00:35 -0400
-In-Reply-To: <20090816022500.GA12392@infradead.org>
+	id S1750805AbZHPNnf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 16 Aug 2009 09:43:35 -0400
+Content-Disposition: inline
+In-Reply-To: <1248875763.3900.1.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jens.axboe@oracle.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Christoph Hellwig wrote:
-> On Sat, Aug 15, 2009 at 10:19:21PM -0400, Mark Lord wrote:
->> Mark Lord wrote:
->>> Christoph Hellwig wrote:
->> ..
->>>> Mark, any chance to try it?  Just create an XFS filesystem, age it a
->>>> bit and then call the attached little trim.c program on the mountmoint
->>>> (or any file inside the filesystem for that matter)
->>> ..
->>>
->>> Looking at it now.  Thanks, Christoph!
->> ..
->>
->> Fails to work on 64-bit kernel w/ 32-bit userspace (no compat ioctl).
->> Rebuilding with 32-bit kernel now..
+On Wed, Jul 29, 2009 at 08:56:03AM -0500, James Bottomley wrote:
+> On Wed, 2009-07-29 at 14:11 +0300, Michael S. Tsirkin wrote:
+> > scsi/scsi.h is exported to userspace, so it should
+> > use __u8 instead of u8 as other userspace-visible headers do.
 > 
-> The actual ioctl is compatible, just add the
-> 
-> 	case XFS_IOC_TRIM:
-> 		return xfs_ioc_trim(mp, arg);
-> 
-> to xfs_file_compat_ioctl().  I'll add this to the next spin of the patch.
-..
+> Actually, can we just put a hold on this until we decide what we're
+> doing with exporting include/scsi.
 
-Okay, this gives me ENOSYS now --> discard/trim support is missing from
-the lower layers.
+Any update?
 
-What other patches do I need to make this work?
-
-The latest from Matthew's discard tree (May 2009) don't appear to be sufficient,
-even after updating them for 2.6.31-rc6.
-
-???
