@@ -1,27 +1,34 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 0/5] cnic: Bug fixes.
-Date: Sat, 15 Aug 2009 18:51:08 -0700 (PDT)
-Message-ID: <20090815.185108.240450562.davem@davemloft.net>
-References: <1250300987-18407-1-git-send-email-mchan@broadcom.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH, RFC] xfs: batched discard support
+Date: Sat, 15 Aug 2009 22:19:21 -0400
+Message-ID: <4A876CA9.20906@rtr.ca>
+References: <20090816004705.GA7347@infradead.org> <4A876255.10606@rtr.ca>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53690
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750803AbZHPBu5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 15 Aug 2009 21:50:57 -0400
-In-Reply-To: <1250300987-18407-1-git-send-email-mchan@broadcom.com>
+Received: from rtr.ca ([76.10.145.34]:49706 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753486AbZHPCTR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 15 Aug 2009 22:19:17 -0400
+In-Reply-To: <4A876255.10606@rtr.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: mchan@broadcom.com
-Cc: James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jens.axboe@oracle.com
 
-From: "Michael Chan" <mchan@broadcom.com>
-Date: Fri, 14 Aug 2009 18:49:42 -0700
+Mark Lord wrote:
+> Christoph Hellwig wrote:
+..
+>> Mark, any chance to try it?  Just create an XFS filesystem, age it a
+>> bit and then call the attached little trim.c program on the mountmoint
+>> (or any file inside the filesystem for that matter)
+> ..
+> 
+> Looking at it now.  Thanks, Christoph!
+..
 
-> This patchset fixes a panic on ia64 and some locking issues.
-> Please review.  Thanks.
+Fails to work on 64-bit kernel w/ 32-bit userspace (no compat ioctl).
+Rebuilding with 32-bit kernel now..
 
-Looks fine to me, applied to net-2.6
+
