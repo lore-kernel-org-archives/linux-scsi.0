@@ -1,40 +1,28 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
+From: Mark Lord <liml@rtr.ca>
 Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
- slot is freed)
-Date: Mon, 17 Aug 2009 00:05:28 +0100
-Message-ID: <4A8890B8.6070409@anonymous.org.uk>
-References: <200908122007.43522.ngupta@vflare.org>	<20090813151312.GA13559@linux.intel.com>	<20090813162621.GB1915@phenom2.trippelsdorf.de>	<alpine.DEB.1.10.0908130931400.28013@asgard.lang.hm>	<87f94c370908131115r680a7523w3cdbc78b9e82373c@mail.gmail.com>	<alpine.DEB.1.10.0908131342460.28013@asgard.lang.hm>	<3e8340490908131354q167840fcv124ec56c92bbb830@mail.gmail.com>	<4A85E0DC.9040101@rtr.ca>	<f3177b9e0908141621j15ea96c0s26124d03fc2b0acf@mail.gmail.com>	<20090814234539.GE27148@parisc-linux.org>	<f3177b9e0908141719s658dc79eye92ab46558a97260@mail.gmail.com>	<1250341176.4159.2.camel@mulgrave.site>	<4A86B69C.7090001@rtr.ca>	<1250344518.4159.4.camel@mulgrave.site>	<20090816150530.2bae6d1f@lxorguk.ukuu.org.uk>	<20090816083434.2ce69859@infradead.org> <20090816202905.59efa611@lxorguk.ukuu.org.uk>
+ 	slot is freed)
+Date: Sun, 16 Aug 2009 22:03:24 -0400
+Message-ID: <4A88BA6C.7050902@rtr.ca>
+References: <200908122007.43522.ngupta@vflare.org>	 <alpine.DEB.1.10.0908131342460.28013@asgard.lang.hm>	 <3e8340490908131354q167840fcv124ec56c92bbb830@mail.gmail.com>	 <4A85E0DC.9040101@rtr.ca>	 <f3177b9e0908141621j15ea96c0s26124d03fc2b0acf@mail.gmail.com>	 <20090814234539.GE27148@parisc-linux.org>	 <f3177b9e0908141719s658dc79eye92ab46558a97260@mail.gmail.com>	 <87f94c370908141730y3ddcb7bbj65d24b612fc0e96d@mail.gmail.com>	 <f3177b9e0908141738n5f99b85dx3de0f620180a4b46@mail.gmail.com>	 <4A86B605.5060701@rtr.ca> <f3177b9e0908161552o37c8f3b9k55806dd26864659@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090816202905.59efa611@lxorguk.ukuu.org.uk>
-Sender: linux-raid-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Arjan van de Ven <arjan@infradead.org>, James Bottomley <James.Bottomley@suse.de>, Mark Lord <liml@rtr.ca>, Chris Worley <worleys@gmail.com>, Matthew Wilcox <matthew@wil.cx>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Greg Freemyer <greg.freemyer@gmail.com>, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <f3177b9e0908161552o37c8f3b9k55806dd26864659@mail.gmail.com>
+Sender: owner-linux-mm@kvack.org
+To: Chris Worley <worleys@gmail.com>
+Cc: Greg Freemyer <greg.freemyer@gmail.com>, Matthew Wilcox <matthew@wil.cx>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 16/08/2009 20:29, Alan Cox wrote:
->> trim is mostly for ssd's though, and those tend to not have the "goes
->> for a hike" behavior as much......
-> 
-> Bench one.
-> 
->> I wonder if it's worse to batch stuff up, because then the trim itself
->> gets bigger and might take longer.....
-> 
-> They seem to implement a sort of async single threaded trim, which can
-> only have one outstanding trim at a time.
+Chris Worley wrote:
+..
+> The OS should not assume a dumb algorithm on the part of the drive.
+..
 
-I'm slightly out of my depth here, but: if a single TRIM is issued, 
-which apparently returns quickly, can one then revert to issuing 
-ordinary commands like reads and writes and have them complete as 
-quickly as they normally do, or does any following command have to wait 
-until the trim completes? This could be useful if it turned out we won't 
-stall these devices as long as we don't issue more than one TRIM every 
-few seconds; we could keep a TRIM coalesce queue down to being (say) 5 
-seconds long (or at least, a configurable small number of seconds).
+Welcome to the Real World.
 
-Cheers,
-
-John.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
