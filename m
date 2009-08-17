@@ -1,57 +1,221 @@
-From: jim owens <jowens@hp.com>
-Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
- slot is freed)
-Date: Mon, 17 Aug 2009 13:37:29 -0400
-Message-ID: <4A899559.8020200@hp.com>
-References: <3e8340490908131354q167840fcv124ec56c92bbb830@mail.gmail.com> <4A85E0DC.9040101@rtr.ca> <f3177b9e0908141621j15ea96c0s26124d03fc2b0acf@mail.gmail.com> <20090814234539.GE27148@parisc-linux.org> <f3177b9e0908141719s658dc79eye92ab46558a97260@mail.gmail.com> <1250341176.4159.2.camel@mulgrave.site> <4A86B69C.7090001@rtr.ca> <1250344518.4159.4.camel@mulgrave.site> <20090816150530.2bae6d1f@lxorguk.ukuu.org.uk> <20090816083434.2ce69859@infradead.org> <20090816154430.GE17958@mit.edu> <4A8841D7.10506@rtr.ca> <4A8843C3.3020409@rtr.ca> <4A8985B6.30103@tmr.com> <4A898BC4.70704@hp.com> <4A898FE4.1090104@tmr.com>
+From: "Moger, Babu" <Babu.Moger@lsi.com>
+Subject: [PATCH] scsi_dh: Adding more debug options for scsi rdac handler
+Date: Mon, 17 Aug 2009 11:46:58 -0600
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF474B7A493@cosmail01.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0015.houston.hp.com ([15.201.24.18]:12565 "EHLO
-	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757608AbZHQRhe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Aug 2009 13:37:34 -0400
-In-Reply-To: <4A898FE4.1090104@tmr.com>
+Received: from exprod7og105.obsmtp.com ([64.18.2.163]:47773 "EHLO
+	exprod7og105.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751313AbZHQRrd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Aug 2009 13:47:33 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Mark Lord <liml@rtr.ca>, Theodore Tso <tytso@mit.edu>, Arjan van de Ven <arjan@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, James Bottomley <James.Bottomley@suse.de>, Chris Worley <worleys@gmail.com>, Matthew Wilcox <matthew@wil.cx>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Greg Freemyer <greg.freemyer@gmail.com>, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
+To: Linux SCSI Mailing list <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
+Cc: "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>, "Stankey, Robert" <Robert.Stankey@lsi.com>, Chandra Seetharaman <sekharan@us.ibm.com>, "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>
 
-Bill Davidsen wrote:
-> jim owens wrote:
->> Bill Davidsen wrote:
->>>
->>> I assume that it really is artificial, rather than the device really 
->>> being ready for another operation (other than another TRIM). I lack 
->>> the hardware, but the test would be the time to complete a read, trim 
->>> and read, and two trim and read operations. Just my thought that the 
->>> TRIM in progress may only block the next TRIM, rather than other 
->>> operations.
->>
->> I don't know his test sequence but READ is not the likely command
->> before and after TRIM unless we are talking about TRIM being issued
->> only in delayed host garbage collection.  Filesystems send WRITES
->> during delete.
-> 
-> My idea is to test using a command which will definitely not need to 
-> prepare the media before completion, thus read. If TRIM doesn't block 
-> reads, then NCQ may allow reads to take place. Because of buffering slow 
-> reads hurt more than slow writes in terms of user perception.
-> 
+From: Babu Moger <babu.moger@lsi.com>
 
-The filesystem must send at least one unbuffered synchronous write
-before it can send a trim for those blocks so the drive will not
-release the blocks until we are certain they will not be needed again.
+Hi All,
+This patch adds more debugging options to scsi rdac device handler. This patch can considerably reduce the time taken to debug issues in big configurations also very helpful in addressing the support issues.
+Here are the summary of changes. 
+ - Added a bit mask "module parameter" rdac_logging with 2 bits for each type of logging.
+ - currently defined only two types of logging(failover and sense logging). Can be enhanced later if required.
+ - Only failover logging is enabled for now which is equivalent of current logging.
 
-AKA the metadata consistency problem for crash recovery.
+Signed-off-by: Babu Moger <babu.moger@lsi.com>
+Reviewed-by: Vijay Chauhan <vijay.chauhan@lsi.com>
+Reviewed-by: Bob Stankey <Robert.stankey@lsi.com>
 
-So non-delayed trim must at least be preceded by a write, but you
-are correct that reads could be after the trim if the filesystem
-does not have a multi-stage delete that requires a second synchronous
-write, or if the trim can be held until all filesystem writes occur.
+---
+--- linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2009-08-05 16:30:51.000000000 -0500
++++ linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-08-17 09:15:03.000000000 -0500
+@@ -135,6 +135,8 @@ struct rdac_controller {
+ 		struct rdac_pg_legacy legacy;
+ 		struct rdac_pg_expanded expanded;
+ 	} mode_select;
++	u8			index;
++	u8			array_name[31];
+ };
+ struct c8_inquiry {
+ 	u8	peripheral_info;
+@@ -198,6 +200,31 @@ static const char *lun_state[] =
+ static LIST_HEAD(ctlr_list);
+ static DEFINE_SPINLOCK(list_lock);
+ 
++/* 
++ * module parameter to enable rdac debug logging.
++ * 2 bits for each type of logging, only two types defined for now 
++ * Can be enhanced if required at later point
++ */
++static int rdac_logging = 1;
++module_param(rdac_logging, int, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(rdac_logging, "A bit mask of rdac logging levels, "
++		"Default is 1 - failover logging enabled, "
++		"set it to 0xF to enable all the logs");
++
++#define RDAC_LOG_FAILOVER	0
++#define RDAC_LOG_SENSE		2
++
++#define RDAC_LOG_BITS		2
++
++#define RDAC_LOG_LEVEL(SHIFT)  \
++        ((rdac_logging >> (SHIFT)) & ((1 << (RDAC_LOG_BITS)) - 1))
++
++#define RDAC_DEBUG(SHIFT, sdev, f, arg...) \
++do { \
++	if (unlikely(RDAC_LOG_LEVEL(SHIFT))) \
++		sdev_printk(KERN_INFO, sdev, RDAC_NAME ": " f "\n", ## arg); \
++} while (0);
++
+ static inline struct rdac_dh_data *get_rdac_data(struct scsi_device *sdev)
+ {
+ 	struct scsi_dh_data *scsi_dh_data = sdev->scsi_dh_data;
+@@ -324,6 +351,13 @@ static struct rdac_controller *get_contr
+ 	/* initialize fields of controller */
+ 	memcpy(ctlr->subsys_id, subsys_id, SUBSYS_ID_LEN);
+ 	memcpy(ctlr->slot_id, slot_id, SLOT_ID_LEN);
++
++	/* update the controller index */
++	if (slot_id[1] == 0x31)
++		ctlr->index = 0;
++	else
++		ctlr->index = 1;
++
+ 	kref_init(&ctlr->kref);
+ 	ctlr->use_ms10 = -1;
+ 	list_add(&ctlr->node, &ctlr_list);
+@@ -381,6 +415,26 @@ static int get_lun(struct scsi_device *s
+ 	return err;
+ }
+ 
++static int get_array_name(struct scsi_device *sdev, struct rdac_dh_data *h)
++{
++	int err, i;
++	struct c8_inquiry *inqp;
++
++	err = submit_inquiry(sdev, 0xC8, sizeof(struct c8_inquiry), h);
++	if (err == SCSI_DH_OK) {
++		inqp = &h->inq.c8;
++		if (inqp->page_code != 0xc8)
++			return SCSI_DH_NOSYS;
++
++		for(i=0; i<30; ++i) {
++			h->ctlr->array_name[i] = inqp->array_user_label[(2*i)+1];
++		}
++		h->ctlr->array_name[30] = '\0';
++	}
++			
++	return err;
++}
++
+ static int check_ownership(struct scsi_device *sdev, struct rdac_dh_data *h)
+ {
+ 	int err;
+@@ -450,13 +504,12 @@ static int mode_select_handle_sense(stru
+ {
+ 	struct scsi_sense_hdr sense_hdr;
+ 	int err = SCSI_DH_IO, ret;
++	struct rdac_dh_data *h = get_rdac_data(sdev);
+ 
+ 	ret = scsi_normalize_sense(sensebuf, SCSI_SENSE_BUFFERSIZE, &sense_hdr);
+ 	if (!ret)
+ 		goto done;
+ 
+-	err = SCSI_DH_OK;
+-
+ 	switch (sense_hdr.sense_key) {
+ 	case NO_SENSE:
+ 	case ABORTED_COMMAND:
+@@ -478,12 +531,15 @@ static int mode_select_handle_sense(stru
+ 			err = SCSI_DH_RETRY;
+ 		break;
+ 	default:
+-		sdev_printk(KERN_INFO, sdev,
+-			    "MODE_SELECT failed with sense %02x/%02x/%02x.\n",
+-			    sense_hdr.sense_key, sense_hdr.asc, sense_hdr.ascq);
++		break;
+ 	}
+ 
+ done:
++	RDAC_DEBUG(RDAC_LOG_FAILOVER, sdev, "array %s, ctlr %d, "
++		"MODE_SELECT returned with sense %02x/%02x/%02x",
++		(char *) h->ctlr->array_name, h->ctlr->index,
++		sense_hdr.sense_key, sense_hdr.asc, sense_hdr.ascq);
++		
+ 	return err;
+ }
+ 
+@@ -499,7 +555,9 @@ retry:
+ 	if (!rq)
+ 		goto done;
+ 
+-	sdev_printk(KERN_INFO, sdev, "%s MODE_SELECT command.\n",
++	RDAC_DEBUG(RDAC_LOG_FAILOVER, sdev, "array %s, ctlr %d, "
++		"%s MODE_SELECT command",
++		(char *) h->ctlr->array_name, h->ctlr->index,
+ 		(retry_cnt == RDAC_RETRY_COUNT) ? "queueing" : "retrying");
+ 
+ 	err = blk_execute_rq(q, NULL, rq, 1);
+@@ -509,8 +567,12 @@ retry:
+ 		if (err == SCSI_DH_RETRY && retry_cnt--)
+ 			goto retry;
+ 	}
+-	if (err == SCSI_DH_OK)
++	if (err == SCSI_DH_OK) {
+ 		h->state = RDAC_STATE_ACTIVE;
++		RDAC_DEBUG(RDAC_LOG_FAILOVER, sdev, "array %s, ctlr %d, "
++				"MODE_SELECT completed",
++				(char *) h->ctlr->array_name, h->ctlr->index);
++	}
+ 
+ done:
+ 	return err;
+@@ -525,12 +587,6 @@ static int rdac_activate(struct scsi_dev
+ 	if (err != SCSI_DH_OK)
+ 		goto done;
+ 
+-	if (!h->ctlr) {
+-		err = initialize_controller(sdev, h);
+-		if (err != SCSI_DH_OK)
+-			goto done;
+-	}
+-
+ 	if (h->ctlr->use_ms10 == -1) {
+ 		err = set_mode_select(sdev, h);
+ 		if (err != SCSI_DH_OK)
+@@ -559,6 +615,12 @@ static int rdac_check_sense(struct scsi_
+ 				struct scsi_sense_hdr *sense_hdr)
+ {
+ 	struct rdac_dh_data *h = get_rdac_data(sdev);
++		
++	RDAC_DEBUG(RDAC_LOG_SENSE, sdev, "array %s, ctlr %d, "
++			"command returned with sense %02x/%02x/%02x",
++			(char *) h->ctlr->array_name, h->ctlr->index,
++			sense_hdr->sense_key, sense_hdr->asc, sense_hdr->ascq);
++
+ 	switch (sense_hdr->sense_key) {
+ 	case NOT_READY:
+ 		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x01)
+@@ -678,6 +740,16 @@ static int rdac_bus_attach(struct scsi_d
+ 	if (err != SCSI_DH_OK)
+ 		goto failed;
+ 
++	if (!h->ctlr) {
++		err = initialize_controller(sdev, h);
++		if (err != SCSI_DH_OK)
++			goto failed;
++		
++		err = get_array_name(sdev, h);
++		if (err != SCSI_DH_OK)
++			goto failed;
++	}
++
+ 	if (!try_module_get(THIS_MODULE))
+ 		goto failed;
+ 
 
-How hard it will be to "send the trim last" will be different for
-each filesystem and some developers are already working on that.
 
-jim
+
