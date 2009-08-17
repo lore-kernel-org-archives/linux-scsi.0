@@ -1,61 +1,31 @@
-From: Bill Davidsen <davidsen@tmr.com>
+From: jim owens <jowens@hp.com>
 Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
  slot is freed)
-Date: Mon, 17 Aug 2009 12:37:38 -0400
-Message-ID: <4A898752.9000205@tmr.com>
-References: <200908122007.43522.ngupta@vflare.org>	 <20090813151312.GA13559@linux.intel.com>	 <20090813162621.GB1915@phenom2.trippelsdorf.de>	 <alpine.DEB.1.10.0908130931400.28013@asgard.lang.hm>	 <87f94c370908131115r680a7523w3cdbc78b9e82373c@mail.gmail.com>	 <alpine.DEB.1.10.0908131342460.28013@asgard.lang.hm>	 <3e8340490908131354q167840fcv124ec56c92bbb830@mail.gmail.com>	 <4A85E0DC.9040101@rtr.ca>	 <f3177b9e0908141621j15ea96c0s26124d03fc2b0acf@mail.gmail.com>	 <20090814234539.GE27148@parisc-linux.org>	 <f3177b9e0908141719s658dc79eye92ab46558a97260@mail.gmail.com>	 <1250341176.4159.2.camel@mulgrave.site> <4A86B69C.7090001@rtr.ca>	 <1250344518.4159.4.camel@mulgrave.site>	 <20090816150530.2bae6d1f@lxorguk.ukuu.org.uk>	 <20090816083434.2ce69859@infradead.org>	 <1250437927.3856.119.camel@mulg
- rave.site>  <4A8834B6.2070104@rtr.ca>	 <1250446047.3856.273.camel@mulgrave.site>  <4A884D9C.3060603@rtr.ca> <1250447052.3856.294.camel@mulgrave.site>
+Date: Mon, 17 Aug 2009 12:56:36 -0400
+Message-ID: <4A898BC4.70704@hp.com>
+References: <3e8340490908131354q167840fcv124ec56c92bbb830@mail.gmail.com> <4A85E0DC.9040101@rtr.ca> <f3177b9e0908141621j15ea96c0s26124d03fc2b0acf@mail.gmail.com> <20090814234539.GE27148@parisc-linux.org> <f3177b9e0908141719s658dc79eye92ab46558a97260@mail.gmail.com> <1250341176.4159.2.camel@mulgrave.site> <4A86B69C.7090001@rtr.ca> <1250344518.4159.4.camel@mulgrave.site> <20090816150530.2bae6d1f@lxorguk.ukuu.org.uk> <20090816083434.2ce69859@infradead.org> <20090816154430.GE17958@mit.edu> <4A8841D7.10506@rtr.ca> <4A8843C3.3020409@rtr.ca> <4A8985B6.30103@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1250447052.3856.294.camel@mulgrave.site>
-Sender: owner-linux-mm@kvack.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Mark Lord <liml@rtr.ca>, Arjan van de Ven <arjan@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Chris Worley <worleys@gmail.com>, Matthew Wilcox <matthew@wil.cx>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Greg Freemyer <greg.freemyer@gmail.com>, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4A8985B6.30103@tmr.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Mark Lord <liml@rtr.ca>, Theodore Tso <tytso@mit.edu>, Arjan van de Ven <arjan@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, James Bottomley <James.Bottomley@suse.de>, Chris Worley <worleys@gmail.com>, Matthew Wilcox <matthew@wil.cx>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Greg Freemyer <greg.freemyer@gmail.com>, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> On Sun, 2009-08-16 at 14:19 -0400, Mark Lord wrote:
->   
->> James Bottomley wrote:
->>     
->>> Heh, OS writers not having access to the devices is about par for the
->>> current course.
->>>       
->> ..
->>
->> Pity the Linux Foundation doesn't simply step in and supply hardware
->> to us for new tech like this.  Cheap for them, expensive for folks like me.
->>     
->
-> Um, to give a developer a selection of manufacturers' SSDs at retail
-> prices, you're talking several thousand dollars  ... in these lean
-> times, that would be two or three developers not getting travel
-> sponsorship per chosen SSD recipient.  It's not a worthwhile tradeoff.
->
-> The best the LF can likely do is try to explain to the manufacturers
-> that handing out samples at linux conferences (like plumbers) is in
-> their own interests.  It can also manage the handout if necessary
-> through its HW lending library.
->   
+Bill Davidsen wrote:
+> 
+> I assume that it really is artificial, rather than the device really 
+> being ready for another operation (other than another TRIM). I lack the 
+> hardware, but the test would be the time to complete a read, trim and 
+> read, and two trim and read operations. Just my thought that the TRIM in 
+> progress may only block the next TRIM, rather than other operations.
 
-Of install the hardware on a machine and give people access to the 
-machine in time slots. Faster than FedEx-ing the hardware, and 
-relatively fast to reinstall the OS from scratch. Testing of this type 
-doesn't need huge bandwidth.
+I don't know his test sequence but READ is not the likely command
+before and after TRIM unless we are talking about TRIM being issued
+only in delayed host garbage collection.  Filesystems send WRITES
+during delete.
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
+jim
 
-"You are disgraced professional losers. And by the way, give us our money back."
-    - Representative Earl Pomeroy,  Democrat of North Dakota
-on the A.I.G. executives who were paid bonuses  after a federal bailout.
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
