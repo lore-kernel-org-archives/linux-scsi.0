@@ -1,49 +1,43 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
- slot is freed)
-Date: Mon, 17 Aug 2009 19:24:02 +0000
-Message-ID: <1250537042.7858.46.camel@mulgrave.site>
-References: <f3177b9e0908141719s658dc79eye92ab46558a97260@mail.gmail.com>
-	 <1250341176.4159.2.camel@mulgrave.site> <4A86B69C.7090001@rtr.ca>
-	 <1250344518.4159.4.camel@mulgrave.site>
-	 <20090816150530.2bae6d1f@lxorguk.ukuu.org.uk>
-	 <20090816083434.2ce69859@infradead.org>
-	 <1250437927.3856.119.camel@mulgrave.site>
-	 <20090816165943.GA26983@infradead.org>
-	 <1250517372.3844.3.camel@mulgrave.site>
-	 <20090817141038.GB11966@parisc-linux.org>
-	 <20090817191250.GA1816@infradead.org>
+From: <Yanqing_Liu@Dell.com>
+Subject: [PATCH] add support for next generation of Dell PV array
+Date: Mon, 17 Aug 2009 14:31:42 -0500
+Message-ID: <D00AA2C108EC0346B503219C7565A66F9E2969@ausx3mpc138.aus.amer.dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20090817191250.GA1816@infradead.org>
-Sender: owner-linux-mm@kvack.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Matthew Wilcox <matthew@wil.cx>, Arjan van de Ven <arjan@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>, Chris Worley <worleys@gmail.com>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Greg Freemyer <greg.freemyer@gmail.com>, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ausc60pc101.us.dell.com ([143.166.85.206]:13463 "EHLO
+	ausc60pc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753902AbZHQTbn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Aug 2009 15:31:43 -0400
+Content-class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, dm-devel@redhat.com
 
-On Mon, 2009-08-17 at 15:12 -0400, Christoph Hellwig wrote:
-> On Mon, Aug 17, 2009 at 08:10:38AM -0600, Matthew Wilcox wrote:
-> > On Mon, Aug 17, 2009 at 08:56:12AM -0500, James Bottomley wrote:
-> > > The testing was initially done to see if the initial maximal discard
-> > > proposal from LSF09 was a viable approach (which it wasn't given the
-> > > time taken to UNMAP).
-> > 
-> > It would be nice if that feedback could be made public instead of it
-> > leaking out in dribs and drabs like this.
-> 
-> Yeah, I don't remember hearing about anything like this either.
-
-Well you were both in #storage when it got discussed on 4 May.  However,
-I'm hopeful that the array vendors will make a more direct statement of
-the capabilities shortly.
-
-James
+Hello,
 
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+This patch is to add DM support for next generation of Dell PowerVault
+storage array.
+
+
+Signed-off-by: Yanqing Liu <Yanqing_Liu@Dell.com>
+
+--- linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c.orig
+2009-08-05 16:30:51.000000000 -0500
++++ linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c
+2009-08-05 16:34:00.000000000 -0500
+@@ -631,6 +631,8 @@ static const struct scsi_dh_devlist rdac
+ 	{"SUN", "LCSM100_F"},
+ 	{"DELL", "MD3000"},
+ 	{"DELL", "MD3000i"},
++	{"DELL", "MD32xx"},
++	{"DELL", "MD32xxi"},
+ 	{"LSI", "INF-01-00"},
+ 	{"ENGENIO", "INF-01-00"},
+ 	{NULL, NULL},
+
+Thanks,
+Yanqing
