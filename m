@@ -1,89 +1,40 @@
-From: rick.brown@oit.gatech.edu
-Subject: Re: [PATCH] scsi_dh: add two SUN devices to the list of devices
- supported by default
-Date: Mon, 17 Aug 2009 15:48:00 -0400 (EDT)
-Message-ID: <1077051204.2661971250538480433.JavaMail.root@mail6.gatech.edu>
-References: <194845336.2661641250538435313.JavaMail.root@mail6.gatech.edu>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
+  slot is freed)
+Date: Mon, 17 Aug 2009 16:19:39 -0400
+Message-ID: <4A89BB5B.5060403@rtr.ca>
+References: <200908122007.43522.ngupta@vflare.org>	 <20090816083434.2ce69859@infradead.org>	 <1250437927.3856.119.camel@mulgrave.site> <4A8834B6.2070104@rtr.ca>	 <1250446047.3856.273.camel@mulgrave.site> <4A884D9C.3060603@rtr.ca>	 <1250447052.3856.294.camel@mulgrave.site> <4A898752.9000205@tmr.com>	 <87f94c370908171008t44ff64ack2153e740128278e@mail.gmail.com>	 <1250529575.7858.31.camel@mulgrave.site>	 <87f94c370908171121u5ee8016p253824b16851b48@mail.gmail.com> <1250536709.7858.43.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from deliverator3.ecc.gatech.edu ([130.207.185.173]:33864 "EHLO
-	deliverator3.ecc.gatech.edu" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755061AbZHQTsH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Aug 2009 15:48:07 -0400
-In-Reply-To: <194845336.2661641250538435313.JavaMail.root@mail6.gatech.edu>
+Received: from rtr.ca ([76.10.145.34]:55806 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757706AbZHQUTk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Aug 2009 16:19:40 -0400
+In-Reply-To: <1250536709.7858.43.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Babu Moger <Babu.Moger@lsi.com>
-Cc: sekharan@linux.vnet.ibm.com, Linux SCSI Mailing list <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Greg Freemyer <greg.freemyer@gmail.com>, Bill Davidsen <davidsen@tmr.com>, Arjan van de Ven <arjan@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Chris Worley <worleys@gmail.com>, Matthew Wilcox <matthew@wil.cx>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
 
-I have tested this patch and it works as expected.  
-
------ "Babu Moger" <Babu.Moger@lsi.com> wrote:
-
-> From: "Babu Moger" <Babu.Moger@lsi.com>
-> To: sekharan@linux.vnet.ibm.com, "Linux SCSI Mailing list" <linux-scsi@vger.kernel.org>, "rick.brown"
-> <rick.brown@oit.gatech.edu>, "James Bottomley" <James.Bottomley@HansenPartnership.com>
-> Sent: Wednesday, August 12, 2009 3:52:55 PM GMT -05:00 US/Canada Eastern
-> Subject: RE: [PATCH] scsi_dh: add two SUN devices to the list of devices supported by default
->
-> I have verified these devices. 
+James Bottomley wrote:
+> On Mon, 2009-08-17 at 14:21 -0400, Greg Freemyer wrote:
+>> On Mon, Aug 17, 2009 at 1:19 PM, James Bottomley<James.Bottomley@suse.de> wrote:
+>>> On Mon, 2009-08-17 at 13:08 -0400, Greg Freemyer wrote:
+..
+>>>> Non-coalescing is believed detrimental,
+>>> It is?  Why?
+>> For the only compliant SSD in the wild, Mark has shown it to be true
+>> via testing.
 > 
-> > -----Original Message-----
-> > From: Chandra Seetharaman [mailto:sekharan@us.ibm.com]
-> > Sent: Wednesday, August 12, 2009 2:43 PM
-> > To: Linux SCSI Mailing list; rick.brown; James Bottomley
-> > Cc: Moger, Babu
-> > Subject: [PATCH] scsi_dh: add two SUN devices to the list of
-> devices
-> > supported by default
-> > 
-> > Hello all,
-> > 
-> > Yesterday, Rick has requested to add two of the sun devices to the
-> list
-> > of devices supported by scsi_dh_rdac by default.
-> > 
-> > This patch adds the support.
-> > 
-> > chandra
-> > ----------------------
-> > 
-> > Add two SUN devices to the devlist as requested in the mailing
-> list.
-> > 
-> > Reported-by: Rice Brown <rick.brown@oit.gatech.edu>
-> > Signed-Off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> > Cc: Moger Babu <Babu.Moger@lsi.com>
-> 
->   Reviewed-by: Babu Moger <babu.moger@lsi.com>
-> 
-> > ---
-> >  drivers/scsi/device_handler/scsi_dh_rdac.c |    2 ++
-> >  1 file changed, 2 insertions(+)
->  
-> > Index: linux-2.6.31-rc4/drivers/scsi/device_handler/scsi_dh_rdac.c
-> > ===================================================================
-> > ---
-> linux-2.6.31-rc4.orig/drivers/scsi/device_handler/scsi_dh_rdac.c
-> > +++ linux-2.6.31-rc4/drivers/scsi/device_handler/scsi_dh_rdac.c
-> > @@ -633,6 +633,8 @@ static const struct scsi_dh_devlist rdac
-> >  	{"DELL", "MD3000i"},
-> >  	{"LSI", "INF-01-00"},
-> >  	{"ENGENIO", "INF-01-00"},
-> > +	{"STK", "FLEXLINE 380"},
-> > +	{"SUN", "CSM100_R_FC"},
-> >  	{NULL, NULL},
-> >  };
-> > 
-> >
+> He only said larger trims take longer.  As I said previously, if it's a
+> X+nY relationship, then we still benefit from accumulation up to some
+> value of n.
+..
 
--- 
-Rick Brown
-Office of Information Technology
-Georgia Institute of Technology
-258 4th Street N.W.  Atlanta, GA  30332-0715
-rick@gatech.edu
-(404) 894-6175
+Err, what I said was, "rm -rf /usr/src/linux" takes over half an hour
+with uncoalesced TRIM, and only a scant few seconds in total *with*
+coalesced TRIM.
+
+
