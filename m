@@ -1,56 +1,54 @@
-From: Mark Lord <liml@rtr.ca>
+From: James Bottomley <James.Bottomley@suse.de>
 Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
- 	slot is freed)
-Date: Mon, 17 Aug 2009 16:28:19 -0400
-Message-ID: <4A89BD63.8070103@rtr.ca>
-References: <200908122007.43522.ngupta@vflare.org>	 <1250344518.4159.4.camel@mulgrave.site>	 <20090816150530.2bae6d1f@lxorguk.ukuu.org.uk>	 <20090816083434.2ce69859@infradead.org>	 <1250437927.3856.119.camel@mulgrave.site> <4A8834B6.2070104@rtr.ca>	 <1250446047.3856.273.camel@mulgrave.site> <4A884D9C.3060603@rtr.ca>	 <1250447052.3856.294.camel@mulgrave.site> <4A898752.9000205@tmr.com> <87f94c370908171008t44ff64ack2153e740128278e@mail.gmail.com>
+ slot is freed)
+Date: Mon, 17 Aug 2009 15:28:12 -0500
+Message-ID: <1250540892.7858.59.camel@mulgrave.site>
+References: <200908122007.43522.ngupta@vflare.org>
+	 <20090816083434.2ce69859@infradead.org>
+	 <1250437927.3856.119.camel@mulgrave.site> <4A8834B6.2070104@rtr.ca>
+	 <1250446047.3856.273.camel@mulgrave.site> <4A884D9C.3060603@rtr.ca>
+	 <1250447052.3856.294.camel@mulgrave.site> <4A898752.9000205@tmr.com>
+	 <87f94c370908171008t44ff64ack2153e740128278e@mail.gmail.com>
+	 <1250529575.7858.31.camel@mulgrave.site>
+	 <87f94c370908171121u5ee8016p253824b16851b48@mail.gmail.com>
+	 <1250536709.7858.43.camel@mulgrave.site>  <4A89BB5B.5060403@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <87f94c370908171008t44ff64ack2153e740128278e@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, James Bottomley <James.Bottomley@suse.de>, Arjan van de Ven <arjan@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Chris Worley <worleys@gmail.com>, Matthew Wilcox <matthew@wil.cx>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <4A89BB5B.5060403@rtr.ca>
+Sender: owner-linux-mm@kvack.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Greg Freemyer <greg.freemyer@gmail.com>, Bill Davidsen <davidsen@tmr.com>, Arjan van de Ven <arjan@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Chris Worley <worleys@gmail.com>, Matthew Wilcox <matthew@wil.cx>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Greg Freemyer wrote:
-..
-> Mark, I don't believe your tool really addresses the mdraid situation,
-> do you agree.  ie. Since your bypassing most of the block stack,
-> mdraid has no way of snooping on / adjusting the discards you are
-> sending out.
-..
+On Mon, 2009-08-17 at 16:19 -0400, Mark Lord wrote:
+> James Bottomley wrote:
+> > On Mon, 2009-08-17 at 14:21 -0400, Greg Freemyer wrote:
+> >> On Mon, Aug 17, 2009 at 1:19 PM, James Bottomley<James.Bottomley@suse.de> wrote:
+> >>> On Mon, 2009-08-17 at 13:08 -0400, Greg Freemyer wrote:
+> ..
+> >>>> Non-coalescing is believed detrimental,
+> >>> It is?  Why?
+> >> For the only compliant SSD in the wild, Mark has shown it to be true
+> >> via testing.
+> > 
+> > He only said larger trims take longer.  As I said previously, if it's a
+> > X+nY relationship, then we still benefit from accumulation up to some
+> > value of n.
+> ..
+> 
+> Err, what I said was, "rm -rf /usr/src/linux" takes over half an hour
+> with uncoalesced TRIM, and only a scant few seconds in total *with*
+> coalesced TRIM.
 
-Taking care of mounted RAID / LVM filesystems requires in-kernel TRIM
-support, possibly exported via an ioctl().
+Yes, sorry, missed the Non- when I read that sentence.
 
-Taking care of unmounted RAID / LVM filesystems is possible in userland,
-but would also benefit from in-kernel support, where layouts are defined
-and known better than in userland.
+James
 
-The XFS_TRIM was an idea that Cristoph floated, as a concept for examination.
 
-I think something along those lines would be best, but perhaps with an
-interface at the VFS layer.  Something that permits a userland tool
-to work like this (below) might be nearly ideal:
-
-main() {
-	int fd = open(filesystem_device);
-	while (1) {
-		int g, ngroups = ioctl(fd, GET_NUMBER_OF_BLOCK_GROUPS);
-		for (g = 0; g < ngroups; ++g) {
-			ioctl(fd, TRIM_ALL_FREE_EXTENTS_OF_GROUP, g);
-		}
-		sleep(3600);
-	}
-}
-
-Not all filesystems have a "block group", or "allocation group" structure,
-but I suspect that it's an easy mapping in most cases.
-
-With this scheme, the kernel is absolved of the need to track/coallesce
-TRIM requests entirely.
-
-Something like that, perhaps.
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
