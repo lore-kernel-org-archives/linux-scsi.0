@@ -1,14 +1,14 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 25/27] zfcp: Handle failures during device allocation correctly
-Date: Tue, 18 Aug 2009 15:43:30 +0200
-Message-ID: <20090818135032.094912000@de.ibm.com>
+Subject: [patch 21/27] zfcp: Simplify and update ct/gs and els timeout handling
+Date: Tue, 18 Aug 2009 15:43:26 +0200
+Message-ID: <20090818135031.563825000@de.ibm.com>
 References: <20090818134305.841868000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate1.de.ibm.com ([195.212.17.161]:34183 "EHLO
-	mtagate1.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758953AbZHRNub (ORCPT
+Received: from mtagate2.de.ibm.com ([195.212.17.162]:47061 "EHLO
+	mtagate2.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758942AbZHRNub (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Aug 2009 09:50:31 -0400
-Content-Disposition: inline; filename=721-zfcp-device-allocation.diff
+Content-Disposition: inline; filename=725-zfcp-timeout-handling.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
@@ -16,147 +16,130 @@ Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.c
 
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-dev_set_name tries to allocate memory, so check the return value for
-allocation failures. After dev_set_name succeeds, call device_register
-as next step to be able to use put_device during error handling.
+The recommendation for a timeout of 2 * R_A_TOV is the same for ct/gs
+and els requests, so set it in the common function used for
+initializing both request types. Besides, the timer inside zfcp should
+only run longer than the timeout set for the channel, so 10 seconds
+more should be enough (instead of 60 seconds).
 
 Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 ---
 
- drivers/s390/scsi/zfcp_aux.c |   65 +++++++++++++++++++------------------------
- 1 file changed, 29 insertions(+), 36 deletions(-)
+ drivers/s390/scsi/zfcp_def.h |    5 -----
+ drivers/s390/scsi/zfcp_fc.c  |    3 ---
+ drivers/s390/scsi/zfcp_fsf.c |   15 ++++++---------
+ 3 files changed, 6 insertions(+), 17 deletions(-)
 
---- a/drivers/s390/scsi/zfcp_aux.c	2009-08-17 11:30:23.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_aux.c	2009-08-17 11:30:26.000000000 +0200
-@@ -274,6 +274,13 @@ struct zfcp_unit *zfcp_unit_enqueue(stru
- {
- 	struct zfcp_unit *unit;
+diff -urpN linux-2.6/drivers/s390/scsi/zfcp_def.h linux-2.6-patched/drivers/s390/scsi/zfcp_def.h
+--- linux-2.6/drivers/s390/scsi/zfcp_def.h	2009-08-17 09:53:16.000000000 +0200
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_def.h	2009-08-17 09:53:16.000000000 +0200
+@@ -73,9 +73,6 @@
  
-+	read_lock_irq(&zfcp_data.config_lock);
-+	if (zfcp_get_unit_by_lun(port, fcp_lun)) {
-+		read_unlock_irq(&zfcp_data.config_lock);
-+		return ERR_PTR(-EINVAL);
-+	}
-+	read_unlock_irq(&zfcp_data.config_lock);
+ /*************** FIBRE CHANNEL PROTOCOL SPECIFIC DEFINES ********************/
+ 
+-/* timeout for name-server lookup (in seconds) */
+-#define ZFCP_NS_GID_PN_TIMEOUT		10
+-
+ /* task attribute values in FCP-2 FCP_CMND IU */
+ #define SIMPLE_Q	0
+ #define HEAD_OF_Q	1
+@@ -319,7 +316,6 @@ struct ct_iu_gpn_ft_req {
+  * @resp: scatter-gather list for response
+  * @handler: handler function (called for response to the request)
+  * @handler_data: data passed to handler function
+- * @timeout: FSF timeout for this request
+  * @completion: completion for synchronization purposes
+  * @status: used to pass error status to calling function
+  */
+@@ -329,7 +325,6 @@ struct zfcp_send_ct {
+ 	struct scatterlist *resp;
+ 	void (*handler)(unsigned long);
+ 	unsigned long handler_data;
+-	int timeout;
+ 	struct completion *completion;
+ 	int status;
+ };
+diff -urpN linux-2.6/drivers/s390/scsi/zfcp_fc.c linux-2.6-patched/drivers/s390/scsi/zfcp_fc.c
+--- linux-2.6/drivers/s390/scsi/zfcp_fc.c	2009-08-17 09:53:14.000000000 +0200
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_fc.c	2009-08-17 09:53:16.000000000 +0200
+@@ -283,7 +283,6 @@ static int zfcp_fc_ns_gid_pn_request(str
+ 	gid_pn->ct.wka_port = &adapter->gs->ds;
+ 	gid_pn->ct.handler = zfcp_fc_ns_handler;
+ 	gid_pn->ct.handler_data = (unsigned long) &compl_rec;
+-	gid_pn->ct.timeout = ZFCP_NS_GID_PN_TIMEOUT;
+ 	gid_pn->ct.req = &gid_pn->req;
+ 	gid_pn->ct.resp = &gid_pn->resp;
+ 	sg_init_one(&gid_pn->req, &gid_pn->ct_iu_req,
+@@ -556,7 +555,6 @@ static int zfcp_fc_send_gpn_ft(struct zf
+ 	ct->wka_port = &adapter->gs->ds;
+ 	ct->handler = zfcp_fc_ns_handler;
+ 	ct->handler_data = (unsigned long)&compl_rec;
+-	ct->timeout = 10;
+ 	ct->req = &gpn_ft->sg_req;
+ 	ct->resp = gpn_ft->sg_resp;
+ 
+@@ -845,7 +843,6 @@ int zfcp_fc_execute_ct_fc_job(struct fc_
+ 
+ 	ct_fc_job->ct.req = job->request_payload.sg_list;
+ 	ct_fc_job->ct.resp = job->reply_payload.sg_list;
+-	ct_fc_job->ct.timeout = ZFCP_FSF_REQUEST_TIMEOUT;
+ 	ct_fc_job->ct.handler = zfcp_fc_generic_ct_handler;
+ 	ct_fc_job->ct.handler_data = (unsigned long) ct_fc_job;
+ 	ct_fc_job->ct.completion = NULL;
+diff -urpN linux-2.6/drivers/s390/scsi/zfcp_fsf.c linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c
+--- linux-2.6/drivers/s390/scsi/zfcp_fsf.c	2009-08-17 09:53:14.000000000 +0200
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c	2009-08-17 09:53:16.000000000 +0200
+@@ -1060,7 +1060,12 @@ static int zfcp_fsf_setup_ct_els_sbals(s
+ 					sg_resp, max_sbals);
+ 	if (bytes <= 0)
+ 		return -EIO;
 +
- 	unit = kzalloc(sizeof(struct zfcp_unit), GFP_KERNEL);
- 	if (!unit)
- 		return ERR_PTR(-ENOMEM);
-@@ -285,8 +292,11 @@ struct zfcp_unit *zfcp_unit_enqueue(stru
- 	unit->port = port;
- 	unit->fcp_lun = fcp_lun;
++	/* common settings for ct/gs and els requests */
+ 	req->qtcb->bottom.support.resp_buf_length = bytes;
++	req->qtcb->bottom.support.service_class = FSF_CLASS_3;
++	req->qtcb->bottom.support.timeout = 2 * R_A_TOV;
++	zfcp_fsf_start_timer(req, 2 * R_A_TOV + 10);
  
--	dev_set_name(&unit->sysfs_device, "0x%016llx",
--		     (unsigned long long) fcp_lun);
-+	if (dev_set_name(&unit->sysfs_device, "0x%016llx",
-+			 (unsigned long long) fcp_lun)) {
-+		kfree(unit);
-+		return ERR_PTR(-ENOMEM);
-+	}
- 	unit->sysfs_device.parent = &port->sysfs_device;
- 	unit->sysfs_device.release = zfcp_sysfs_unit_release;
- 	dev_set_drvdata(&unit->sysfs_device, unit);
-@@ -302,13 +312,6 @@ struct zfcp_unit *zfcp_unit_enqueue(stru
- 	unit->latencies.cmd.channel.min = 0xFFFFFFFF;
- 	unit->latencies.cmd.fabric.min = 0xFFFFFFFF;
- 
--	read_lock_irq(&zfcp_data.config_lock);
--	if (zfcp_get_unit_by_lun(port, fcp_lun)) {
--		read_unlock_irq(&zfcp_data.config_lock);
--		goto err_out_free;
--	}
--	read_unlock_irq(&zfcp_data.config_lock);
--
- 	if (device_register(&unit->sysfs_device)) {
- 		put_device(&unit->sysfs_device);
- 		return ERR_PTR(-EINVAL);
-@@ -317,7 +320,7 @@ struct zfcp_unit *zfcp_unit_enqueue(stru
- 	if (sysfs_create_group(&unit->sysfs_device.kobj,
- 			       &zfcp_sysfs_unit_attrs)) {
- 		device_unregister(&unit->sysfs_device);
--		return ERR_PTR(-EIO);
-+		return ERR_PTR(-EINVAL);
- 	}
- 
- 	zfcp_unit_get(unit);
-@@ -332,10 +335,6 @@ struct zfcp_unit *zfcp_unit_enqueue(stru
- 	zfcp_port_get(port);
- 
- 	return unit;
--
--err_out_free:
--	kfree(unit);
--	return ERR_PTR(-EINVAL);
+ 	return 0;
  }
+@@ -1096,12 +1101,9 @@ int zfcp_fsf_send_ct(struct zfcp_send_ct
  
- /**
-@@ -642,7 +641,13 @@ struct zfcp_port *zfcp_port_enqueue(stru
- 				     u32 status, u32 d_id)
+ 	req->handler = zfcp_fsf_send_ct_handler;
+ 	req->qtcb->header.port_handle = wka_port->handle;
+-	req->qtcb->bottom.support.service_class = FSF_CLASS_3;
+-	req->qtcb->bottom.support.timeout = ct->timeout;
+ 	req->data = ct;
+ 
+ 	zfcp_dbf_san_ct_request(req);
+-	zfcp_fsf_start_timer(req, ZFCP_FSF_REQUEST_TIMEOUT);
+ 
+ 	ret = zfcp_fsf_req_send(req);
+ 	if (ret)
+@@ -1176,7 +1178,6 @@ int zfcp_fsf_send_els(struct zfcp_send_e
  {
- 	struct zfcp_port *port;
--	int retval;
-+
-+	read_lock_irq(&zfcp_data.config_lock);
-+	if (zfcp_get_port_by_wwpn(adapter, wwpn)) {
-+		read_unlock_irq(&zfcp_data.config_lock);
-+		return ERR_PTR(-EINVAL);
-+	}
-+	read_unlock_irq(&zfcp_data.config_lock);
+ 	struct zfcp_fsf_req *req;
+ 	struct zfcp_qdio *qdio = els->adapter->qdio;
+-	struct fsf_qtcb_bottom_support *bottom;
+ 	int ret = -EIO;
  
- 	port = kzalloc(sizeof(struct zfcp_port), GFP_KERNEL);
- 	if (!port)
-@@ -663,31 +668,24 @@ struct zfcp_port *zfcp_port_enqueue(stru
- 	atomic_set_mask(status | ZFCP_STATUS_COMMON_REMOVE, &port->status);
- 	atomic_set(&port->refcount, 0);
+ 	spin_lock_bh(&qdio->req_q_lock);
+@@ -1196,16 +1197,12 @@ int zfcp_fsf_send_els(struct zfcp_send_e
+ 	if (ret)
+ 		goto failed_send;
  
--	dev_set_name(&port->sysfs_device, "0x%016llx",
--		     (unsigned long long)wwpn);
-+	if (dev_set_name(&port->sysfs_device, "0x%016llx",
-+			 (unsigned long long)wwpn)) {
-+		kfree(port);
-+		return ERR_PTR(-ENOMEM);
-+	}
- 	port->sysfs_device.parent = &adapter->ccw_device->dev;
--
- 	port->sysfs_device.release = zfcp_sysfs_port_release;
- 	dev_set_drvdata(&port->sysfs_device, port);
+-	bottom = &req->qtcb->bottom.support;
++	req->qtcb->bottom.support.d_id = els->d_id;
+ 	req->handler = zfcp_fsf_send_els_handler;
+-	bottom->d_id = els->d_id;
+-	bottom->service_class = FSF_CLASS_3;
+-	bottom->timeout = 2 * R_A_TOV;
+ 	req->data = els;
  
--	read_lock_irq(&zfcp_data.config_lock);
--	if (zfcp_get_port_by_wwpn(adapter, wwpn)) {
--		read_unlock_irq(&zfcp_data.config_lock);
--		goto err_out_free;
--	}
--	read_unlock_irq(&zfcp_data.config_lock);
--
- 	if (device_register(&port->sysfs_device)) {
- 		put_device(&port->sysfs_device);
--		goto err_out;
-+		return ERR_PTR(-EINVAL);
- 	}
+ 	zfcp_dbf_san_els_request(req);
  
--	retval = sysfs_create_group(&port->sysfs_device.kobj,
--				    &zfcp_sysfs_port_attrs);
--
--	if (retval) {
-+	if (sysfs_create_group(&port->sysfs_device.kobj,
-+			       &zfcp_sysfs_port_attrs)) {
- 		device_unregister(&port->sysfs_device);
--		goto err_out;
-+		return ERR_PTR(-EINVAL);
- 	}
- 
- 	zfcp_port_get(port);
-@@ -701,11 +699,6 @@ struct zfcp_port *zfcp_port_enqueue(stru
- 
- 	zfcp_adapter_get(adapter);
- 	return port;
--
--err_out_free:
--	kfree(port);
--err_out:
--	return ERR_PTR(-EINVAL);
- }
- 
- /**
+-	zfcp_fsf_start_timer(req, ZFCP_FSF_REQUEST_TIMEOUT);
+ 	ret = zfcp_fsf_req_send(req);
+ 	if (ret)
+ 		goto failed_send;
 
