@@ -1,14 +1,14 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 22/27] zfcp: Defer resource allocation to first ccw_set_online call
-Date: Tue, 18 Aug 2009 15:43:27 +0200
-Message-ID: <20090818135031.694162000@de.ibm.com>
+Subject: [patch 23/27] zfcp: Replace config semaphore with mutex
+Date: Tue, 18 Aug 2009 15:43:28 +0200
+Message-ID: <20090818135031.834931000@de.ibm.com>
 References: <20090818134305.841868000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate7.de.ibm.com ([195.212.29.156]:57178 "EHLO
-	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758948AbZHRNub (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Aug 2009 09:50:31 -0400
-Content-Disposition: inline; filename=cc.diff
+Received: from mtagate8.de.ibm.com ([195.212.29.157]:49735 "EHLO
+	mtagate8.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758986AbZHRNuf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Aug 2009 09:50:35 -0400
+Content-Disposition: inline; filename=727-zfcp-config-mutex.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
@@ -16,223 +16,307 @@ Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.c
 
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-So far, zfcp allocated all resources required for FCP
-adapters/subchannels when the device was discovered in the ccw_probe
-callback. If there are lots of unused FCP subchannels attached to a
-system, this is a waste of resources. To alleviate this, defer the
-resource allocation to the first call to ccw_set_online. To avoid
-disruptions during possible following calls to ccw_set_offline and
-then ccw_set_online, keep the adapter resources until the device is
-finally being removed via ccw_remove. While doing this, also manage
-the zfcp erp thread together with all other adapter resources in
-zfcp_adapter_enqueue/dequeue.
+The config semaphore is only used as a mutex, so replace it with a
+simple mutex.
 
 Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
---- a/drivers/s390/scsi/zfcp_aux.c	2009-08-18 14:21:55.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_aux.c	2009-08-18 14:21:55.000000000 +0200
-@@ -541,6 +541,9 @@ int zfcp_adapter_enqueue(struct ccw_devi
- 	rwlock_init(&adapter->erp_lock);
- 	rwlock_init(&adapter->abort_lock);
+---
+
+ drivers/s390/scsi/zfcp_aux.c   |   22 +++++++++++-----------
+ drivers/s390/scsi/zfcp_ccw.c   |   20 ++++++++++----------
+ drivers/s390/scsi/zfcp_def.h   |    3 +--
+ drivers/s390/scsi/zfcp_fc.c    |    4 ++--
+ drivers/s390/scsi/zfcp_sysfs.c |   16 ++++++++--------
+ 5 files changed, 32 insertions(+), 33 deletions(-)
+
+--- a/drivers/s390/scsi/zfcp_aux.c	2009-08-17 11:30:20.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_aux.c	2009-08-17 11:30:21.000000000 +0200
+@@ -84,7 +84,7 @@ static void __init zfcp_init_device_conf
+ 	struct zfcp_port *port;
+ 	struct zfcp_unit *unit;
  
-+	if (zfcp_erp_thread_setup(adapter))
-+		goto erp_thread_failed;
-+
- 	INIT_WORK(&adapter->stat_work, _zfcp_status_read_scheduler);
- 	INIT_WORK(&adapter->scan_work, _zfcp_fc_scan_ports_later);
+-	down(&zfcp_data.config_sema);
++	mutex_lock(&zfcp_data.config_mutex);
+ 	read_lock_irq(&zfcp_data.config_lock);
+ 	adapter = zfcp_get_adapter_by_busid(busid);
+ 	if (adapter)
+@@ -99,20 +99,20 @@ static void __init zfcp_init_device_conf
+ 	unit = zfcp_unit_enqueue(port, lun);
+ 	if (IS_ERR(unit))
+ 		goto out_unit;
+-	up(&zfcp_data.config_sema);
++	mutex_unlock(&zfcp_data.config_mutex);
+ 	ccw_device_set_online(adapter->ccw_device);
  
-@@ -561,6 +564,8 @@ int zfcp_adapter_enqueue(struct ccw_devi
+ 	zfcp_erp_wait(adapter);
+ 	flush_work(&unit->scsi_work);
+ 
+-	down(&zfcp_data.config_sema);
++	mutex_lock(&zfcp_data.config_mutex);
+ 	zfcp_unit_put(unit);
+ out_unit:
+ 	zfcp_port_put(port);
+ out_port:
+ 	zfcp_adapter_put(adapter);
+ out_adapter:
+-	up(&zfcp_data.config_sema);
++	mutex_unlock(&zfcp_data.config_mutex);
+ 	return;
+ }
+ 
+@@ -176,7 +176,7 @@ static int __init zfcp_module_init(void)
+ 	if (!zfcp_data.gid_pn_cache)
+ 		goto out_gid_cache;
+ 
+-	sema_init(&zfcp_data.config_sema, 1);
++	mutex_init(&zfcp_data.config_mutex);
+ 	rwlock_init(&zfcp_data.config_lock);
+ 
+ 	zfcp_data.scsi_transport_template =
+@@ -266,7 +266,7 @@ static void zfcp_sysfs_unit_release(stru
+  * @port: pointer to port where unit is added
+  * @fcp_lun: FCP LUN of unit to be enqueued
+  * Returns: pointer to enqueued unit on success, ERR_PTR on error
+- * Locks: config_sema must be held to serialize changes to the unit list
++ * Locks: config_mutex must be held to serialize changes to the unit list
+  *
+  * Sets up some unit internal structures and creates sysfs entry.
+  */
+@@ -356,7 +356,7 @@ void zfcp_unit_dequeue(struct zfcp_unit 
+ 
+ static int zfcp_allocate_low_mem_buffers(struct zfcp_adapter *adapter)
+ {
+-	/* must only be called with zfcp_data.config_sema taken */
++	/* must only be called with zfcp_data.config_mutex taken */
+ 	adapter->pool.erp_req =
+ 		mempool_create_kmalloc_pool(1, sizeof(struct zfcp_fsf_req));
+ 	if (!adapter->pool.erp_req)
+@@ -404,7 +404,7 @@ static int zfcp_allocate_low_mem_buffers
+ 
+ static void zfcp_free_low_mem_buffers(struct zfcp_adapter *adapter)
+ {
+-	/* zfcp_data.config_sema must be held */
++	/* zfcp_data.config_mutex must be held */
+ 	if (adapter->pool.erp_req)
+ 		mempool_destroy(adapter->pool.erp_req);
+ 	if (adapter->pool.scsi_req)
+@@ -491,7 +491,7 @@ static void zfcp_destroy_adapter_work_qu
+  * Enqueues an adapter at the end of the adapter list in the driver data.
+  * All adapter internal structures are set up.
+  * Proc-fs entries are also created.
+- * locks:	config_sema must be held to serialise changes to the adapter list
++ * locks: config_mutex must be held to serialize changes to the adapter list
+  */
+ int zfcp_adapter_enqueue(struct ccw_device *ccw_device)
+ {
+@@ -499,7 +499,7 @@ int zfcp_adapter_enqueue(struct ccw_devi
+ 
+ 	/*
+ 	 * Note: It is safe to release the list_lock, as any list changes
+-	 * are protected by the config_sema, which must be held to get here
++	 * are protected by the config_mutex, which must be held to get here
+ 	 */
+ 
+ 	adapter = kzalloc(sizeof(struct zfcp_adapter), GFP_KERNEL);
+@@ -630,7 +630,7 @@ static void zfcp_sysfs_port_release(stru
+  * @status: initial status for the port
+  * @d_id: destination id of the remote port to be enqueued
+  * Returns: pointer to enqueued port on success, ERR_PTR on error
+- * Locks: config_sema must be held to serialize changes to the port list
++ * Locks: config_mutex must be held to serialize changes to the port list
+  *
+  * All port internal structures are set up and the sysfs entry is generated.
+  * d_id is used to enqueue ports with a well known address like the Directory
+--- a/drivers/s390/scsi/zfcp_ccw.c	2009-08-17 11:30:20.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_ccw.c	2009-08-17 11:30:21.000000000 +0200
+@@ -21,12 +21,12 @@ static int zfcp_ccw_suspend(struct ccw_d
+ 	if (!adapter)
  		return 0;
  
- sysfs_failed:
-+	zfcp_erp_thread_kill(adapter);
-+erp_thread_failed:
- 	zfcp_fc_gs_destroy(adapter);
- generic_services_failed:
- 	zfcp_destroy_adapter_work_queue(adapter);
-@@ -602,6 +607,7 @@ void zfcp_adapter_dequeue(struct zfcp_ad
- 		return;
- 
- 	zfcp_fc_gs_destroy(adapter);
-+	zfcp_erp_thread_kill(adapter);
- 	zfcp_destroy_adapter_work_queue(adapter);
- 	zfcp_dbf_adapter_unregister(adapter->dbf);
- 	zfcp_free_low_mem_buffers(adapter);
---- a/drivers/s390/scsi/zfcp_ccw.c	2009-08-18 14:12:26.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_ccw.c	2009-08-18 14:21:55.000000000 +0200
-@@ -18,6 +18,9 @@ static int zfcp_ccw_suspend(struct ccw_d
- {
- 	struct zfcp_adapter *adapter = dev_get_drvdata(&cdev->dev);
- 
-+	if (!adapter)
-+		return 0;
-+
- 	down(&zfcp_data.config_sema);
+-	down(&zfcp_data.config_sema);
++	mutex_lock(&zfcp_data.config_mutex);
  
  	zfcp_erp_adapter_shutdown(adapter, 0, "ccsusp1", NULL);
-@@ -33,6 +36,9 @@ static int zfcp_ccw_activate(struct ccw_
- {
- 	struct zfcp_adapter *adapter = dev_get_drvdata(&cdev->dev);
- 
-+	if (!adapter)
-+		return 0;
-+
- 	zfcp_erp_modify_adapter_status(adapter, "ccresu1", NULL,
- 				       ZFCP_STATUS_COMMON_RUNNING, ZFCP_SET);
- 	zfcp_erp_adapter_reopen(adapter, ZFCP_STATUS_COMMON_ERP_FAILED,
-@@ -63,25 +69,14 @@ int zfcp_ccw_priv_sch(struct zfcp_adapte
-  * zfcp_ccw_probe - probe function of zfcp driver
-  * @ccw_device: pointer to belonging ccw device
-  *
-- * This function gets called by the common i/o layer and sets up the initial
-- * data structures for each fcp adapter, which was detected by the system.
-- * Also the sysfs files for this adapter will be created by this function.
-- * In addition the nameserver port will be added to the ports of the adapter
-- * and its sysfs representation will be created too.
-+ * This function gets called by the common i/o layer for each FCP
-+ * device found on the current system. This is only a stub to make cio
-+ * work: To only allocate adapter resources for devices actually used,
-+ * the allocation is deferred to the first call to ccw_set_online.
-  */
- static int zfcp_ccw_probe(struct ccw_device *ccw_device)
- {
--	int retval = 0;
--
--	down(&zfcp_data.config_sema);
--	if (zfcp_adapter_enqueue(ccw_device)) {
--		dev_err(&ccw_device->dev,
--			"Setting up data structures for the "
--			"FCP adapter failed\n");
--		retval = -EINVAL;
--	}
--	up(&zfcp_data.config_sema);
--	return retval;
-+	return 0;
- }
- 
- /**
-@@ -102,8 +97,11 @@ static void zfcp_ccw_remove(struct ccw_d
- 	LIST_HEAD(port_remove_lh);
- 
- 	ccw_device_set_offline(ccw_device);
-+
- 	down(&zfcp_data.config_sema);
- 	adapter = dev_get_drvdata(&ccw_device->dev);
-+	if (!adapter)
-+		goto out;
- 
- 	write_lock_irq(&zfcp_data.config_lock);
- 	list_for_each_entry_safe(port, p, &adapter->port_list_head, list) {
-@@ -129,6 +127,7 @@ static void zfcp_ccw_remove(struct ccw_d
- 	wait_event(adapter->remove_wq, atomic_read(&adapter->refcount) == 0);
- 	zfcp_adapter_dequeue(adapter);
- 
-+out:
- 	up(&zfcp_data.config_sema);
- }
- 
-@@ -136,22 +135,33 @@ static void zfcp_ccw_remove(struct ccw_d
-  * zfcp_ccw_set_online - set_online function of zfcp driver
-  * @ccw_device: pointer to belonging ccw device
-  *
-- * This function gets called by the common i/o layer and sets an adapter
-- * into state online. Setting an fcp device online means that it will be
-- * registered with the SCSI stack, that the QDIO queues will be set up
-- * and that the adapter will be opened (asynchronously).
-+ * This function gets called by the common i/o layer and sets an
-+ * adapter into state online.  The first call will allocate all
-+ * adapter resources that will be retained until the device is removed
-+ * via zfcp_ccw_remove.
-+ *
-+ * Setting an fcp device online means that it will be registered with
-+ * the SCSI stack, that the QDIO queues will be set up and that the
-+ * adapter will be opened.
-  */
- static int zfcp_ccw_set_online(struct ccw_device *ccw_device)
- {
- 	struct zfcp_adapter *adapter;
--	int retval;
-+	int ret = 0;
- 
- 	down(&zfcp_data.config_sema);
- 	adapter = dev_get_drvdata(&ccw_device->dev);
- 
--	retval = zfcp_erp_thread_setup(adapter);
--	if (retval)
--		goto out;
-+	if (!adapter) {
-+		ret = zfcp_adapter_enqueue(ccw_device);
-+		if (ret) {
-+			dev_err(&ccw_device->dev,
-+				"Setting up data structures for the "
-+				"FCP adapter failed\n");
-+			goto out;
-+		}
-+		adapter = dev_get_drvdata(&ccw_device->dev);
-+	}
- 
- 	/* initialize request counter */
- 	BUG_ON(!zfcp_reqlist_isempty(adapter));
-@@ -162,13 +172,11 @@ static int zfcp_ccw_set_online(struct cc
- 	zfcp_erp_adapter_reopen(adapter, ZFCP_STATUS_COMMON_ERP_FAILED,
- 				"ccsonl2", NULL);
  	zfcp_erp_wait(adapter);
-+out:
- 	up(&zfcp_data.config_sema);
--	flush_work(&adapter->scan_work);
--	return 0;
--
-- out:
+ 
 -	up(&zfcp_data.config_sema);
--	return retval;
-+	if (!ret)
-+		flush_work(&adapter->scan_work);
-+	return ret;
- }
++	mutex_unlock(&zfcp_data.config_mutex);
  
- /**
-@@ -184,10 +192,13 @@ static int zfcp_ccw_set_offline(struct c
- 
- 	down(&zfcp_data.config_sema);
- 	adapter = dev_get_drvdata(&ccw_device->dev);
-+	if (!adapter)
-+		goto out;
-+
- 	zfcp_erp_adapter_shutdown(adapter, 0, "ccsoff1", NULL);
- 	zfcp_erp_wait(adapter);
--	zfcp_erp_thread_kill(adapter);
- 	up(&zfcp_data.config_sema);
-+out:
  	return 0;
  }
+@@ -98,7 +98,7 @@ static void zfcp_ccw_remove(struct ccw_d
  
-@@ -244,6 +255,7 @@ static void zfcp_ccw_shutdown(struct ccw
+ 	ccw_device_set_offline(ccw_device);
+ 
+-	down(&zfcp_data.config_sema);
++	mutex_lock(&zfcp_data.config_mutex);
+ 	adapter = dev_get_drvdata(&ccw_device->dev);
+ 	if (!adapter)
+ 		goto out;
+@@ -128,7 +128,7 @@ static void zfcp_ccw_remove(struct ccw_d
+ 	zfcp_adapter_dequeue(adapter);
+ 
+ out:
+-	up(&zfcp_data.config_sema);
++	mutex_unlock(&zfcp_data.config_mutex);
+ }
+ 
+ /**
+@@ -149,7 +149,7 @@ static int zfcp_ccw_set_online(struct cc
+ 	struct zfcp_adapter *adapter;
+ 	int ret = 0;
+ 
+-	down(&zfcp_data.config_sema);
++	mutex_lock(&zfcp_data.config_mutex);
+ 	adapter = dev_get_drvdata(&ccw_device->dev);
+ 
+ 	if (!adapter) {
+@@ -173,7 +173,7 @@ static int zfcp_ccw_set_online(struct cc
+ 				"ccsonl2", NULL);
+ 	zfcp_erp_wait(adapter);
+ out:
+-	up(&zfcp_data.config_sema);
++	mutex_unlock(&zfcp_data.config_mutex);
+ 	if (!ret)
+ 		flush_work(&adapter->scan_work);
+ 	return ret;
+@@ -190,14 +190,14 @@ static int zfcp_ccw_set_offline(struct c
+ {
+ 	struct zfcp_adapter *adapter;
+ 
+-	down(&zfcp_data.config_sema);
++	mutex_lock(&zfcp_data.config_mutex);
+ 	adapter = dev_get_drvdata(&ccw_device->dev);
+ 	if (!adapter)
+ 		goto out;
+ 
+ 	zfcp_erp_adapter_shutdown(adapter, 0, "ccsoff1", NULL);
+ 	zfcp_erp_wait(adapter);
+-	up(&zfcp_data.config_sema);
++	mutex_unlock(&zfcp_data.config_mutex);
+ out:
+ 	return 0;
+ }
+@@ -251,12 +251,12 @@ static void zfcp_ccw_shutdown(struct ccw
+ {
+ 	struct zfcp_adapter *adapter;
+ 
+-	down(&zfcp_data.config_sema);
++	mutex_lock(&zfcp_data.config_mutex);
  	adapter = dev_get_drvdata(&cdev->dev);
  	zfcp_erp_adapter_shutdown(adapter, 0, "ccshut1", NULL);
  	zfcp_erp_wait(adapter);
-+	zfcp_erp_thread_kill(adapter);
- 	up(&zfcp_data.config_sema);
+ 	zfcp_erp_thread_kill(adapter);
+-	up(&zfcp_data.config_sema);
++	mutex_unlock(&zfcp_data.config_mutex);
  }
  
---- a/drivers/s390/scsi/zfcp_erp.c	2009-08-18 14:21:55.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_erp.c	2009-08-18 14:21:55.000000000 +0200
-@@ -150,6 +150,9 @@ static int zfcp_erp_required_act(int wan
- 		a_status = atomic_read(&adapter->status);
- 		if (a_status & ZFCP_STATUS_COMMON_ERP_INUSE)
- 			return 0;
-+		if (!(a_status & ZFCP_STATUS_COMMON_RUNNING) &&
-+		    !(a_status & ZFCP_STATUS_COMMON_OPEN))
-+			return 0; /* shutdown requested for closed adapter */
+ static struct ccw_driver zfcp_ccw_driver = {
+--- a/drivers/s390/scsi/zfcp_def.h	2009-08-17 11:30:18.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_def.h	2009-08-17 11:30:21.000000000 +0200
+@@ -604,8 +604,7 @@ struct zfcp_data {
+ 	rwlock_t                config_lock;        /* serialises changes
+ 						       to adapter/port/unit
+ 						       lists */
+-	struct semaphore        config_sema;        /* serialises configuration
+-						       changes */
++	struct mutex		config_mutex;
+ 	struct kmem_cache	*gpn_ft_cache;
+ 	struct kmem_cache	*qtcb_cache;
+ 	struct kmem_cache	*sr_buffer_cache;
+--- a/drivers/s390/scsi/zfcp_fc.c	2009-08-17 11:30:18.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_fc.c	2009-08-17 11:30:21.000000000 +0200
+@@ -613,7 +613,7 @@ static int zfcp_fc_eval_gpn_ft(struct zf
+ 		return -E2BIG;
  	}
  
- 	return need;
-@@ -1349,6 +1352,8 @@ void zfcp_erp_thread_kill(struct zfcp_ad
- {
- 	kthread_stop(adapter->erp_thread);
- 	adapter->erp_thread = NULL;
-+	WARN_ON(!list_empty(&adapter->erp_ready_head));
-+	WARN_ON(!list_empty(&adapter->erp_running_head));
+-	down(&zfcp_data.config_sema);
++	mutex_lock(&zfcp_data.config_mutex);
+ 
+ 	/* first entry is the header */
+ 	for (x = 1; x < max_entries && !last; x++) {
+@@ -647,7 +647,7 @@ static int zfcp_fc_eval_gpn_ft(struct zf
+ 	zfcp_erp_wait(adapter);
+ 	list_for_each_entry_safe(port, tmp, &adapter->port_list_head, list)
+ 		zfcp_fc_validate_port(port);
+-	up(&zfcp_data.config_sema);
++	mutex_unlock(&zfcp_data.config_mutex);
+ 	return ret;
  }
  
- /**
+--- a/drivers/s390/scsi/zfcp_sysfs.c	2009-08-17 11:29:48.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_sysfs.c	2009-08-17 11:30:21.000000000 +0200
+@@ -88,7 +88,7 @@ static ssize_t zfcp_sysfs_##_feat##_fail
+ 	unsigned long val;						       \
+ 	int retval = 0;							       \
+ 									       \
+-	down(&zfcp_data.config_sema);					       \
++	mutex_lock(&zfcp_data.config_mutex);				       \
+ 	if (atomic_read(&_feat->status) & ZFCP_STATUS_COMMON_REMOVE) {	       \
+ 		retval = -EBUSY;					       \
+ 		goto out;						       \
+@@ -105,7 +105,7 @@ static ssize_t zfcp_sysfs_##_feat##_fail
+ 				  _reopen_id, NULL);			       \
+ 	zfcp_erp_wait(_adapter);					       \
+ out:									       \
+-	up(&zfcp_data.config_sema);					       \
++	mutex_unlock(&zfcp_data.config_mutex);				       \
+ 	return retval ? retval : (ssize_t) count;			       \
+ }									       \
+ static ZFCP_DEV_ATTR(_feat, failed, S_IWUSR | S_IRUGO,			       \
+@@ -142,7 +142,7 @@ static ssize_t zfcp_sysfs_port_remove_st
+ 	int retval = 0;
+ 	LIST_HEAD(port_remove_lh);
+ 
+-	down(&zfcp_data.config_sema);
++	mutex_lock(&zfcp_data.config_mutex);
+ 	if (atomic_read(&adapter->status) & ZFCP_STATUS_COMMON_REMOVE) {
+ 		retval = -EBUSY;
+ 		goto out;
+@@ -173,7 +173,7 @@ static ssize_t zfcp_sysfs_port_remove_st
+ 	zfcp_port_put(port);
+ 	zfcp_port_dequeue(port);
+  out:
+-	up(&zfcp_data.config_sema);
++	mutex_unlock(&zfcp_data.config_mutex);
+ 	return retval ? retval : (ssize_t) count;
+ }
+ static ZFCP_DEV_ATTR(adapter, port_remove, S_IWUSR, NULL,
+@@ -207,7 +207,7 @@ static ssize_t zfcp_sysfs_unit_add_store
+ 	u64 fcp_lun;
+ 	int retval = -EINVAL;
+ 
+-	down(&zfcp_data.config_sema);
++	mutex_lock(&zfcp_data.config_mutex);
+ 	if (atomic_read(&port->status) & ZFCP_STATUS_COMMON_REMOVE) {
+ 		retval = -EBUSY;
+ 		goto out;
+@@ -226,7 +226,7 @@ static ssize_t zfcp_sysfs_unit_add_store
+ 	zfcp_erp_wait(unit->port->adapter);
+ 	zfcp_unit_put(unit);
+ out:
+-	up(&zfcp_data.config_sema);
++	mutex_unlock(&zfcp_data.config_mutex);
+ 	return retval ? retval : (ssize_t) count;
+ }
+ static DEVICE_ATTR(unit_add, S_IWUSR, NULL, zfcp_sysfs_unit_add_store);
+@@ -241,7 +241,7 @@ static ssize_t zfcp_sysfs_unit_remove_st
+ 	int retval = 0;
+ 	LIST_HEAD(unit_remove_lh);
+ 
+-	down(&zfcp_data.config_sema);
++	mutex_lock(&zfcp_data.config_mutex);
+ 	if (atomic_read(&port->status) & ZFCP_STATUS_COMMON_REMOVE) {
+ 		retval = -EBUSY;
+ 		goto out;
+@@ -282,7 +282,7 @@ static ssize_t zfcp_sysfs_unit_remove_st
+ 	zfcp_unit_put(unit);
+ 	zfcp_unit_dequeue(unit);
+ out:
+-	up(&zfcp_data.config_sema);
++	mutex_unlock(&zfcp_data.config_mutex);
+ 	return retval ? retval : (ssize_t) count;
+ }
+ static DEVICE_ATTR(unit_remove, S_IWUSR, NULL, zfcp_sysfs_unit_remove_store);
 
