@@ -1,95 +1,76 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
+From: Madhavi Manchala <madhavi.lscsi@gmail.com>
 Subject: Re: Bidirectional data transfers from SCSI layer
-Date: Tue, 18 Aug 2009 11:04:29 +0300
-Message-ID: <4A8A608D.9000909@panasas.com>
+Date: Tue, 18 Aug 2009 14:33:24 +0530
+Message-ID: <97a757510908180203h7c10c63fx19f436e72de25c5@mail.gmail.com>
 References: <97a757510908172322y7a42df80n5bf7f21fbca16e13@mail.gmail.com>
+	 <4A8A608D.9000909@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ip67-152-220-66.z220-152-67.customer.algx.net ([67.152.220.66]:28029
-	"EHLO daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751243AbZHRIEe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Aug 2009 04:04:34 -0400
-In-Reply-To: <97a757510908172322y7a42df80n5bf7f21fbca16e13@mail.gmail.com>
+Received: from wa-out-1112.google.com ([209.85.146.183]:29149 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750853AbZHRJDX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Aug 2009 05:03:23 -0400
+Received: by wa-out-1112.google.com with SMTP id j5so606756wah.21
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2009 02:03:24 -0700 (PDT)
+In-Reply-To: <4A8A608D.9000909@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Madhavi Manchala <madhavi.lscsi@gmail.com>
+To: Boaz Harrosh <bharrosh@panasas.com>
 Cc: linux-scsi@vger.kernel.org
 
-On 08/18/2009 09:22 AM, Madhavi Manchala wrote:
-> Dear All,
-> 
-> I have seen that SCSI supports bi-directional commands
-> DMA_BIDIRECTIONAL. However, I did not get such type of commands in my
-> mass storage driver. My device supports bi-directional data transfers.
-> My question is, how can I get such type of requests to my mass storage
-> driver? If so, how can I handle the IN and OUT buffers? Are there
-> separate buffers for both? Is there any support for the bi-directional
-> in the current SCSI implementation? I am currently using the 2.6.28
-> kernel code.
-> 
-> We have only one pointer for data buffer instead of two, one for data
-> OUT and one for data IN in command block. There is only one length
-> variable. How can we use the OUT and IN buffers? How can I pass
-> different IN length and OUT length to lower stack from SCSI layer?
-> 
-> Is there any thing need to be changed in the SCSI layer code to handle
-> the bi-directional data transfers?
-> 
-> Please point to me some links which shows the bi-directional data transfers.
-> 
-> Thanks in advance.
-> 
-> With Regards,
-> Madhavi M.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Tue, Aug 18, 2009 at 1:34 PM, Boaz Harrosh<bharrosh@panasas.com> wro=
+te:
 
-Bidi is fully supported since 2.6.25
+Dear Boaz,
 
-If you want example of how to issue bidi commands you can see these two files:
-block/bsg.c
-drivers/scsi/osd/osd_initiator.c
+Thanks for the information.
 
-Basically you allocate two struct request one for OUT one for IN. You map
-some memory on them and do "out_req->next_rq = in_req;" And you execute
-the out_req.
-These two request will go together as one bidi request.
+> drivers/scsi/osd/osd_initiator.c
 
-On the scsi-driver side you do:
+I did not find this file in my 2.6.28 sources.
 
-	if (scsi_bidi_cmnd(cmnd)) {
-		in_sgl = scsi_in(cmnd)->table.sgl;
-		in_nents = scsi_in(cmnd)->table.nents;
-		in_bytes = scsi_in(cmnd)->length;
+> On the scsi-driver side you do:
+>
+> =A0 =A0 =A0 =A0if (scsi_bidi_cmnd(cmnd)) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0in_sgl =3D scsi_in(cmnd)->table.sgl;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0in_nents =3D scsi_in(cmnd)->table.nent=
+s;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0in_bytes =3D scsi_in(cmnd)->length;
+>
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* Same thing for out */
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0out_sgl =3D scsi_out(cmnd)->table.sgl;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0...
+> =A0 =A0 =A0 =A0}
 
-		/* Same thing for out */
-		out_sgl = scsi_out(cmnd)->table.sgl;
-		...
-	}
+Do I need to modify the SCSI driver files to handle  the
+bi-directional comamnds or Is this already supported?
 
-scsi_in() and scsi_out() will return a pointer or NULL if the
-cmnd does not have a buffer in this direction. So for example
-scsi_in() is always used on receive regardless if it is a bidi
-or a uni_read.
+> What type of scsi-device are you using?
 
-NOTE: in bidi_commands
-	scsi_bidi_cmnd(cmnd) == true;
-	but
-	cmnd->sc_data_direction == DMA_TO_DEVICE;
-	DMA_BIDIRECTIONAL is *never* returned from scsi
-	and it means something else inside the DMA engines.
+I am working for USB Attached SCSI (UAS) device which supports
+bi-directional commands. I'm modifying USB Mass storage driver
+according to UAS requirements. Whenever there is command to process,
+SCSI layer sends scsi_cmnd structure pointer to UAS class driver (my
+driver - modified mass storage driver). But I did not find two data
+pointers and two data length variables (one IN and one OUT) in this
+structure to handle bi-directional data.
 
-For example driver that supports bidi see:
-drivers/scsi/iscsi_tcp.c
-drivers/scsi/scsi_debug.c
-(Search for "scsi_in" and "scsi_out")
+I found only one struct scsi_data_buffer pointer in scsi_cmnd
+structure. So, how do SCSI layer sends IN and OUT buffer pointers and
+their lengths to my class driver?
 
-What type of scsi-device are you using? what bidi commands?
+> what bidi commands?
 
-Have a good day
-Boaz
+I did not understand this. Could you please elaborate it? Are there
+any bidi commands like READ_10 or WRITE_10 which are specific to any
+device?
+
+Thanks and Regards,
+Madhavi M.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
