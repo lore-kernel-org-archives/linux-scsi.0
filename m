@@ -1,24 +1,24 @@
 From: Ric Wheeler <rwheeler@redhat.com>
 Subject: Re: mpt2sas logged messages
-Date: Tue, 18 Aug 2009 13:44:34 -0400
-Message-ID: <4A8AE882.7050105@redhat.com>
-References: <4A8AAA26.9090706@redhat.com> <20090818132518.GA4418@kroah.com>	 <4A8AB3DC.4060805@redhat.com> <20090818145710.GA6064@kroah.com>	 <4A8ACE7C.5080501@redhat.com> <1250611768.6971.6.camel@mulgrave.site>
+Date: Tue, 18 Aug 2009 13:45:23 -0400
+Message-ID: <4A8AE8B3.4060901@redhat.com>
+References: <4A8AAA26.9090706@redhat.com> <20090818132518.GA4418@kroah.com> <4A8AB3DC.4060805@redhat.com> <20090818145710.GA6064@kroah.com> <4A8ACE7C.5080501@redhat.com> <20090818164017.GA24305@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:44311 "EHLO mx2.redhat.com"
+Received: from mx2.redhat.com ([66.187.237.31]:60989 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752561AbZHRRmt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Aug 2009 13:42:49 -0400
-In-Reply-To: <1250611768.6971.6.camel@mulgrave.site>
+	id S1759435AbZHRRnf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Aug 2009 13:43:35 -0400
+In-Reply-To: <20090818164017.GA24305@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Greg KH <greg@kroah.com>, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, Tom Coughlan <coughlan@redhat.com>
+To: Greg KH <greg@kroah.com>
+Cc: linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, Tom Coughlan <coughlan@redhat.com>
 
-On 08/18/2009 12:09 PM, James Bottomley wrote:
-> On Tue, 2009-08-18 at 11:53 -0400, Ric Wheeler wrote:
+On 08/18/2009 12:40 PM, Greg KH wrote:
+> On Tue, Aug 18, 2009 at 11:53:32AM -0400, Ric Wheeler wrote:
 >> On 08/18/2009 10:57 AM, Greg KH wrote:
 >>> On Tue, Aug 18, 2009 at 09:59:56AM -0400, Ric Wheeler wrote:
 >>>
@@ -43,62 +43,18 @@ On 08/18/2009 12:09 PM, James Bottomley wrote:
 >>>>>> Aug 17 06:49:58 megadeth udevd-event[20447]: unable to create db file
 >>>>>> '/dev/.udev/db/\x2fdevices\x2fpci0000:00\x2f0000:00:04.0\x2f0000:17:00.0\x2f0000:18:0a.0\x2f0000:1f:00.0\x2fhost11\x2fport-11:0\x2fexpander-11:0\x2fport-11:0:0\x2fexpander-11:1\x2fport-11:1:0\x2fexpander-11:2\x2fport-11:2:17\x2fexpander-11:3\x2fport-11:3:1\x2fend_device-11:3:1\x2fbsg\x2fend_device-11:3:1':
 >>>>>> File name too long
->>>>>>
->>>>> Odd, what is the sysfs tree for this device?  You have expanders
->>>>> attached to ports attached to expanders?  How deep can you go?
->>>>>
->>>>> thanks,
->>>>>
->>>>> greg k-h
->>>>>
->>>> There are two dual-port SAS HBA's in the server that plug into the first of the
->>>> 5 SAS expansion shelves. Each shelf has two internal SAS loops and is daisy
->>>> chained to the next shelf....  This test is running with just the first 4
->>>> shelves active (although that fifth shelf is plugged in, just not used/active).
->>>>
->>>> Each of the 60 S-ATA disks sits behind a MUX card which lets it appear on both
->>>> loops.
->>>>
->>>> We could break up the shelves into two independent sets of devices which would
->>>> limit the tree depth.
->>>>
->>>> How can I get you the sysfs tree information in a useful way?
->>>>
->>> 'tree /sys/devices/'
->>> or
->>> 'find /sys/devices/'
->>> would be good.
->>>
->>> thanks,
->>>
->>> greg k-h
->>>
->>
->> Attached is the bzipped output from - the uncompressed output is quite
->> large. Note that this same server has CCIS controllers and fibre HBA's
->> as well,
 >
-> It's perfectly legal the way you have it, but I will say you have an
-> inefficient configuration.  The way a configuration like this is
-> supposed to look is that there should be a fanout expander at the top
-> going to the expander in each tray, for a routing depth of two for every
-> device.
+> Ok, it looks like the way that udev handles it's internal "database"
+> can't handle paths that are larger than a single filename size.
 >
-> The way you've got it:  expander daisy chained off the next expander
-> gives an unnecessary routing delay to the disks furthest away in the
-> chain.
+> Kay, I think this is all yours :)
 >
-> James
+> thanks,
+>
+> greg k-h
 
-I understand that this configuration is not optimal, but from what I saw with 
-some commercial arrays, this is not an uncommon config (up to 4 shelves) when 
-going for capacity over performance.
+Happy to try patches, also happy to try and work around this with a different 
+configuration :-)
 
-Do you have a particular SAS fanout expander in mind?  I suppose that we could 
-always add more hba's as well which would have other benefits...
-
-Thanks!
-
-Ric
-
+ric
 
