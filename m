@@ -1,33 +1,117 @@
-From: "Auld, Brian (LeftHand Networks)" <brian.auld@hp.com>
-Subject: device/volume info on transport removal
-Date: Tue, 18 Aug 2009 18:47:50 +0000
-Message-ID: <06C3D92ADC647D45918996C82BFB6B996C6325B79C@GVW0433EXB.americas.hpqcorp.net>
+From: "Ed Lin" <ed.lin@promise.com>
+Subject: [PATCH] stex: Add reset code for st_yel (v2)
+Date: Tue, 18 Aug 2009 12:15:14 -0700
+Message-ID: <200908181215122604236@promise.com>
+Reply-To: ed.lin@promise.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0029.austin.hp.com ([15.216.28.36]:37780 "EHLO
-	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751129AbZHRSsW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Aug 2009 14:48:22 -0400
-Received: from G6W0641.americas.hpqcorp.net (g6w0641.atlanta.hp.com [16.230.34.77])
-	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
-	(No client certificate requested)
-	by g1t0029.austin.hp.com (Postfix) with ESMTPS id 55F4A38441
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2009 18:48:24 +0000 (UTC)
-Content-Language: en-US
+Received: from gateway.promise.com ([67.111.72.2]:45126 "EHLO
+	nanamew.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750925AbZHRTP2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Aug 2009 15:15:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "James.Bottomley" <James.Bottomley@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, promise_linux <promise_linux@promise.com>
 
-I have a question about the lifetime of volume/disk info for SAN disks.
+
+Add reset related code for st_yel.
+1. Set the SS_H2I_INT_RESET bit.
+2. Wait for the SS_MU_OPERATIONAL flag. This is also part of
+   normal handshake process so move it to handshake routine.
+3. Continue handshake with the firmware.
+
+Signed-off-by: Ed Lin <ed.lin@promise.com>
+---
+
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 8d2a95c..09fa886 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -55,6 +55,7 @@ enum {
+ 	OIS	= 0x30,	/* MU_OUTBOUND_INTERRUPT_STATUS */
+ 	OIM	= 0x3c,	/* MU_OUTBOUND_INTERRUPT_MASK */
  
-Say my server has discovered a disk/volume on a SAN (iscsi or fc).  A connection is established at the transport layer.  Presumably disk information (eg. vpd inquiry data and the like) is saved in a layer (SBC disk layer?) above the transport.
++	YIOA_STATUS				= 0x00,
+ 	YH2I_INT				= 0x20,
+ 	YINT_EN					= 0x34,
+ 	YI2H_INT				= 0x9c,
+@@ -108,6 +109,10 @@ enum {
  
-What happens if the server explicitly logs out of the session for the above disk/volume using whatever initiator tools are available to them?  Does the disk/volume info remain for some time in the higher layer(s) or do all the data structures related to that disk/volume get unplugged/removed when the transport connection is taken away?  Of course, it goes without saying that no other objects in the OS (files, devices, mountpoints) are using the disk when the logout occurs.
-Thanks,
-Brian
+ 	SS_HEAD_HANDSHAKE			= 0x80,
  
-p.s. please include my email in the reply to or cc.
++	SS_H2I_INT_RESET			= 0x100,
++
++	SS_MU_OPERATIONAL			= 0x80000000,
++
+ 	STEX_CDB_LENGTH				= 16,
+ 	STATUS_VAR_LEN				= 128,
+ 
+@@ -884,7 +889,7 @@ static void stex_ss_mu_intr(struct st_hba *hba)
+ 		tag = (u16)value;
+ 		if (unlikely(tag >= hba->host->can_queue)) {
+ 			printk(KERN_WARNING DRV_NAME
+-					"(%s): invalid tag\n", pci_name(hba->pdev));
++				"(%s): invalid tag\n", pci_name(hba->pdev));
+ 			continue;
+ 		}
+ 
+@@ -1040,16 +1045,27 @@ static int stex_ss_handshake(struct st_hba *hba)
+ 	void __iomem *base = hba->mmio_base;
+ 	struct st_msg_header *msg_h;
+ 	struct handshake_frame *h;
+-	__le32 *scratch = hba->scratch;
++	__le32 *scratch;
+ 	u32 data;
+ 	unsigned long before;
+ 	int ret = 0;
+ 
+-	h = (struct handshake_frame *)(hba->alloc_rq(hba));
+-	msg_h = (struct st_msg_header *)h - 1;
++	before = jiffies;
++	while ((readl(base + YIOA_STATUS) & SS_MU_OPERATIONAL) == 0) {
++		if (time_after(jiffies, before + MU_MAX_DELAY * HZ)) {
++			printk(KERN_ERR DRV_NAME
++				"(%s): firmware not operational\n",
++				pci_name(hba->pdev));
++			return -1;
++		}
++		msleep(1);
++	}
++
++	msg_h = (struct st_msg_header *)hba->dma_mem;
+ 	msg_h->handle = cpu_to_le64(hba->dma_handle);
+ 	msg_h->flag = SS_HEAD_HANDSHAKE;
+ 
++	h = (struct handshake_frame *)(msg_h + 1);
+ 	h->rb_phy = cpu_to_le64(hba->dma_handle);
+ 	h->req_sz = cpu_to_le16(hba->rq_size);
+ 	h->req_cnt = cpu_to_le16(hba->rq_count+1);
+@@ -1205,6 +1221,13 @@ static void stex_hard_reset(struct st_hba *hba)
+ 			hba->pdev->saved_config_space[i]);
+ }
+ 
++static void stex_ss_reset(struct st_hba *hba)
++{
++	writel(SS_H2I_INT_RESET, hba->mmio_base + YH2I_INT);
++	readl(hba->mmio_base + YH2I_INT);
++	ssleep(5);
++}
++
+ static int stex_reset(struct scsi_cmnd *cmd)
+ {
+ 	struct st_hba *hba;
+@@ -1221,6 +1244,8 @@ static int stex_reset(struct scsi_cmnd *cmd)
+ 
+ 	if (hba->cardtype == st_shasta)
+ 		stex_hard_reset(hba);
++	else if (hba->cardtype == st_yel)
++		stex_ss_reset(hba);
+ 
+ 	if (hba->cardtype != st_yosemite) {
+ 		if (stex_handshake(hba)) {
 
 
