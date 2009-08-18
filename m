@@ -1,41 +1,57 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: RE: mpt2sas logged messages
-Date: Tue, 18 Aug 2009 11:13:10 -0500
-Message-ID: <1250611990.6971.9.camel@mulgrave.site>
-References: <660360F4F2570145BD872F298951B17AE303DAFA@cosmail03.lsi.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: mpt2sas logged messages
+Date: Tue, 18 Aug 2009 09:40:17 -0700
+Message-ID: <20090818164017.GA24305@kroah.com>
+References: <4A8AAA26.9090706@redhat.com>
+ <20090818132518.GA4418@kroah.com>
+ <4A8AB3DC.4060805@redhat.com>
+ <20090818145710.GA6064@kroah.com>
+ <4A8ACE7C.5080501@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:44767 "EHLO mx2.suse.de"
+Received: from kroah.org ([198.145.64.141]:41828 "EHLO coco.kroah.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759116AbZHRQNS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Aug 2009 12:13:18 -0400
-In-Reply-To: <660360F4F2570145BD872F298951B17AE303DAFA@cosmail03.lsi.com>
+	id S1759361AbZHRQlj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Aug 2009 12:41:39 -0400
+Content-Disposition: inline
+In-Reply-To: <4A8ACE7C.5080501@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsi.com>
-Cc: Ric Wheeler <rwheeler@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kay.sievers@vrfy.org" <kay.sievers@vrfy.org>, Greg KH <greg@kroah.com>, Tom Coughlan <coughlan@redhat.com>
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, Tom Coughlan <coughlan@redhat.com>
 
-On Tue, 2009-08-18 at 09:39 -0600, Moore, Eric wrote:
-> On Tuesday, August 18, 2009 7:19 AM,  Ric Wheeler wrote: 
-> > 
-> > The second is that the mpt2sas driver spews various messages like:
-> > 
-> > Aug 17 06:55:17 megadeth kernel: mpt2sas0: log_info(0x31120102): 
-> > originator(PL), code(0x12), sub_code(0x0102)
-> 
-> Ric - 
-> 
-> The code (0x12) means PL_LOGINFO_CODE_ABORT
-> The sub_code(0x102) means PL_LOGINFO_SUB_CODE_OPEN_FAILURE_PATHWAY_BLOCKED
+On Tue, Aug 18, 2009 at 11:53:32AM -0400, Ric Wheeler wrote:
+> On 08/18/2009 10:57 AM, Greg KH wrote:
+> > On Tue, Aug 18, 2009 at 09:59:56AM -0400, Ric Wheeler wrote:
+> >    
+> >> On 08/18/2009 09:25 AM, Greg KH wrote:
+> >>      
+> >>> On Tue, Aug 18, 2009 at 09:18:30AM -0400, Ric Wheeler wrote:
+> >>>        
+> >>>> We have a new toy to test very large&   slow storage with built up from 5
+> >>>> SAS expansion shelves (Promise Vtrak J-Class) with 60 S-ATA drives and
+> >>>> 16 SAS drives (the S-ATA drives each have a Promise Vtrak S-ATA MUX
+> >>>> adapter daughter card in the disk sled).
+> >>>>
+> >>>> The basic idea is to build a cheap&   slow test bed for file&   storage
+> >>>> system scalability. Collectively, we have about 120TB (raw) of capacity
+> >>>> to play with in one server.
+> >>>>
+> >>>> As we work through various issues, a couple of oddities popped out.
+> >>>>
+> >>>> The first is that udev grumbles during boot about "file name too long"
+> >>>> like the following:
+> >>>>
+> >>>> Aug 17 06:49:58 megadeth udevd-event[20447]: unable to create db file
+> >>>> '/dev/.udev/db/\x2fdevices\x2fpci0000:00\x2f0000:00:04.0\x2f0000:17:00.0\x2f0000:18:0a.0\x2f0000:1f:00.0\x2fhost11\x2fport-11:0\x2fexpander-11:0\x2fport-11:0:0\x2fexpander-11:1\x2fport-11:1:0\x2fexpander-11:2\x2fport-11:2:17\x2fexpander-11:3\x2fport-11:3:1\x2fend_device-11:3:1\x2fbsg\x2fend_device-11:3:1':
+> >>>> File name too long
 
-To translate this according to the SAS 1.1 specification, a pathway open
-failed because a timeout fired before the path could be established.
+Ok, it looks like the way that udev handles it's internal "database"
+can't handle paths that are larger than a single filename size.
 
-You can mitigate this by increasing the expander partial pathway timeout
-value. (or just move to a more efficient configuration).
+Kay, I think this is all yours :)
 
-James
+thanks,
 
-
+greg k-h
