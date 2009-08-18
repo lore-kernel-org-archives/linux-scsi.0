@@ -1,14 +1,14 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 09/27] zfcp: Replace fsf_req wait_queue with completion
-Date: Tue, 18 Aug 2009 15:43:14 +0200
-Message-ID: <20090818135029.922611000@de.ibm.com>
+Subject: [patch 11/27] zfcp: Remove the useless ZFCP_REQ_AUTO_CLEANUP flag
+Date: Tue, 18 Aug 2009 15:43:16 +0200
+Message-ID: <20090818135030.199935000@de.ibm.com>
 References: <20090818134305.841868000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate3.de.ibm.com ([195.212.29.152]:56317 "EHLO
-	mtagate3.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759008AbZHRNuj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Aug 2009 09:50:39 -0400
-Content-Disposition: inline; filename=710-zfcp-fsfreq-complete.diff
+Received: from mtagate8.de.ibm.com ([195.212.29.157]:49793 "EHLO
+	mtagate8.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755009AbZHRNuk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Aug 2009 09:50:40 -0400
+Content-Disposition: inline; filename=712-zfcp-useless-flag.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
@@ -16,142 +16,318 @@ Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.c
 
 From: Swen Schillig <swen@vnet.ibm.com>
 
-The combination wait_queue/wakeup in conjunction with the flag
-ZFCP_STATUS_FSFREQ_COMPLETED to signal the completion of an fsfreq
-was not race-safe and can be better solved by a completion.
+The flag ZFCP_REQ_AUTO_CLEANUP was useless as the
+ZFCP_STATUS_FSFREQ_CLEANUP flag is there for exactly the same purpose.
 
 Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 ---
 
- drivers/s390/scsi/zfcp_def.h  |    3 +--
- drivers/s390/scsi/zfcp_erp.c  |    3 +--
- drivers/s390/scsi/zfcp_fsf.c  |   26 ++++++--------------------
- drivers/s390/scsi/zfcp_scsi.c |    6 ++----
- 4 files changed, 10 insertions(+), 28 deletions(-)
+ drivers/s390/scsi/zfcp_fsf.c |   80 ++++++++++++++++++++++++-------------------
+ 1 file changed, 45 insertions(+), 35 deletions(-)
 
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_def.h linux-2.6-patched/drivers/s390/scsi/zfcp_def.h
---- linux-2.6/drivers/s390/scsi/zfcp_def.h	2009-08-12 10:05:31.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_def.h	2009-08-12 10:05:31.000000000 +0200
-@@ -248,7 +248,6 @@ enum zfcp_wka_status {
- 
- /* FSF request status (this does not have a common part) */
- #define ZFCP_STATUS_FSFREQ_TASK_MANAGEMENT	0x00000002
--#define ZFCP_STATUS_FSFREQ_COMPLETED		0x00000004
- #define ZFCP_STATUS_FSFREQ_ERROR		0x00000008
- #define ZFCP_STATUS_FSFREQ_CLEANUP		0x00000010
- #define ZFCP_STATUS_FSFREQ_ABORTSUCCEEDED	0x00000040
-@@ -532,7 +531,7 @@ struct zfcp_fsf_req {
- 	u8		       sbale_curr;     /* current SBALE during creation
- 						  of request */
- 	u8			sbal_response;	/* SBAL used in interrupt */
--	wait_queue_head_t      completion_wq;  /* can be used by a routine
-+	struct completion	completion;	/* can be used by a routine
- 						  to wait for completion */
- 	u32			status;	       /* status of this request */
- 	u32		       fsf_command;    /* FSF Command copy */
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_erp.c linux-2.6-patched/drivers/s390/scsi/zfcp_erp.c
---- linux-2.6/drivers/s390/scsi/zfcp_erp.c	2009-08-12 10:05:31.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_erp.c	2009-08-12 10:05:31.000000000 +0200
-@@ -485,8 +485,7 @@ static void zfcp_erp_strategy_check_fsfr
- 		}
- 		if (act->status & ZFCP_STATUS_ERP_TIMEDOUT)
- 			zfcp_rec_dbf_event_action("erscf_2", act);
--		if (act->fsf_req->status & (ZFCP_STATUS_FSFREQ_COMPLETED |
--					    ZFCP_STATUS_FSFREQ_DISMISSED))
-+		if (act->fsf_req->status & ZFCP_STATUS_FSFREQ_DISMISSED)
- 			act->fsf_req = NULL;
- 	} else
- 		act->fsf_req = NULL;
 diff -urpN linux-2.6/drivers/s390/scsi/zfcp_fsf.c linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c
---- linux-2.6/drivers/s390/scsi/zfcp_fsf.c	2009-08-12 10:05:31.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c	2009-08-12 10:05:31.000000000 +0200
-@@ -444,23 +444,11 @@ static void zfcp_fsf_req_complete(struct
+--- linux-2.6/drivers/s390/scsi/zfcp_fsf.c	2009-08-12 10:05:32.000000000 +0200
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c	2009-08-12 10:05:32.000000000 +0200
+@@ -13,8 +13,6 @@
+ #include "zfcp_ext.h"
+ #include "zfcp_dbf.h"
  
- 	if (req->erp_action)
- 		zfcp_erp_notify(req->erp_action, 0);
--	req->status |= ZFCP_STATUS_FSFREQ_COMPLETED;
- 
- 	if (likely(req->status & ZFCP_STATUS_FSFREQ_CLEANUP))
- 		zfcp_fsf_req_free(req);
- 	else
--	/* notify initiator waiting for the requests completion */
--	/*
--	 * FIXME: Race! We must not access fsf_req here as it might have been
--	 * cleaned up already due to the set ZFCP_STATUS_FSFREQ_COMPLETED
--	 * flag. It's an improbable case. But, we have the same paranoia for
--	 * the cleanup flag already.
--	 * Might better be handled using complete()?
--	 * (setting the flag and doing wakeup ought to be atomic
--	 *  with regard to checking the flag as long as waitqueue is
--	 *  part of the to be released structure)
--	 */
--		wake_up(&req->completion_wq);
-+		complete(&req->completion);
+-#define ZFCP_REQ_AUTO_CLEANUP	0x00000002
+-
+ static void zfcp_fsf_request_timeout_handler(unsigned long data)
+ {
+ 	struct zfcp_adapter *adapter = (struct zfcp_adapter *) data;
+@@ -703,8 +701,7 @@ static struct fsf_qtcb *zfcp_qtcb_alloc(
  }
  
- /**
-@@ -733,7 +721,7 @@ static struct zfcp_fsf_req *zfcp_fsf_req
- 
- 	INIT_LIST_HEAD(&req->list);
- 	init_timer(&req->timer);
--	init_waitqueue_head(&req->completion_wq);
-+	init_completion(&req->completion);
- 
- 	req->adapter = adapter;
- 	req->fsf_command = fsf_cmd;
-@@ -1309,8 +1297,7 @@ int zfcp_fsf_exchange_config_data_sync(s
- 	retval = zfcp_fsf_req_send(req);
- 	spin_unlock_bh(&adapter->req_q_lock);
- 	if (!retval)
--		wait_event(req->completion_wq,
--			   req->status & ZFCP_STATUS_FSFREQ_COMPLETED);
-+		wait_for_completion(&req->completion);
- 
- 	zfcp_fsf_req_free(req);
- 	return retval;
-@@ -1405,8 +1392,8 @@ int zfcp_fsf_exchange_port_data_sync(str
- 	spin_unlock_bh(&adapter->req_q_lock);
- 
- 	if (!retval)
--		wait_event(req->completion_wq,
--			   req->status & ZFCP_STATUS_FSFREQ_COMPLETED);
-+		wait_for_completion(&req->completion);
-+
- 	zfcp_fsf_req_free(req);
- 
- 	return retval;
-@@ -2572,8 +2559,7 @@ out:
- 	spin_unlock_bh(&adapter->req_q_lock);
- 
- 	if (!retval) {
--		wait_event(req->completion_wq,
--			   req->status & ZFCP_STATUS_FSFREQ_COMPLETED);
-+		wait_for_completion(&req->completion);
- 		return req;
+ static struct zfcp_fsf_req *zfcp_fsf_req_create(struct zfcp_adapter *adapter,
+-						u32 fsf_cmd, int req_flags,
+-						mempool_t *pool)
++						u32 fsf_cmd, mempool_t *pool)
+ {
+ 	struct qdio_buffer_element *sbale;
+ 	struct zfcp_qdio_queue *req_q = &adapter->req_q;
+@@ -761,9 +758,6 @@ static struct zfcp_fsf_req *zfcp_fsf_req
+ 		return ERR_PTR(-EIO);
  	}
- 	return ERR_PTR(retval);
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_scsi.c linux-2.6-patched/drivers/s390/scsi/zfcp_scsi.c
---- linux-2.6/drivers/s390/scsi/zfcp_scsi.c	2009-08-12 10:05:28.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_scsi.c	2009-08-12 10:05:31.000000000 +0200
-@@ -206,8 +206,7 @@ static int zfcp_scsi_eh_abort_handler(st
- 	if (!abrt_req)
- 		return FAILED;
  
--	wait_event(abrt_req->completion_wq,
--		   abrt_req->status & ZFCP_STATUS_FSFREQ_COMPLETED);
-+	wait_for_completion(&abrt_req->completion);
+-	if (likely(req_flags & ZFCP_REQ_AUTO_CLEANUP))
+-		req->status |= ZFCP_STATUS_FSFREQ_CLEANUP;
+-
+ 	return req;
+ }
  
- 	if (abrt_req->status & ZFCP_STATUS_FSFREQ_ABORTSUCCEEDED)
- 		dbf_tag = "okay";
-@@ -246,8 +245,7 @@ static int zfcp_task_mgmt_function(struc
- 	if (!fsf_req)
- 		return FAILED;
+@@ -818,7 +812,7 @@ int zfcp_fsf_status_read(struct zfcp_ada
+ 	if (zfcp_fsf_req_sbal_get(adapter))
+ 		goto out;
  
--	wait_event(fsf_req->completion_wq,
--		   fsf_req->status & ZFCP_STATUS_FSFREQ_COMPLETED);
-+	wait_for_completion(&fsf_req->completion);
+-	req = zfcp_fsf_req_create(adapter, FSF_QTCB_UNSOLICITED_STATUS, 0,
++	req = zfcp_fsf_req_create(adapter, FSF_QTCB_UNSOLICITED_STATUS,
+ 				  adapter->pool.status_read_req);
+ 	if (IS_ERR(req)) {
+ 		retval = PTR_ERR(req);
+@@ -925,7 +919,7 @@ struct zfcp_fsf_req *zfcp_fsf_abort_fcp_
+ 	if (zfcp_fsf_req_sbal_get(adapter))
+ 		goto out;
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_ABORT_FCP_CMND,
+-				  0, adapter->pool.scsi_abort);
++				  adapter->pool.scsi_abort);
+ 	if (IS_ERR(req)) {
+ 		req = NULL;
+ 		goto out;
+@@ -1081,13 +1075,14 @@ int zfcp_fsf_send_ct(struct zfcp_send_ct
+ 	if (zfcp_fsf_req_sbal_get(adapter))
+ 		goto out;
  
- 	if (fsf_req->status & ZFCP_STATUS_FSFREQ_TMFUNCFAILED) {
- 		zfcp_scsi_dbf_event_devreset("fail", tm_flags, unit, scpnt);
+-	req = zfcp_fsf_req_create(adapter, FSF_QTCB_SEND_GENERIC,
+-				  ZFCP_REQ_AUTO_CLEANUP, pool);
++	req = zfcp_fsf_req_create(adapter, FSF_QTCB_SEND_GENERIC, pool);
++
+ 	if (IS_ERR(req)) {
+ 		ret = PTR_ERR(req);
+ 		goto out;
+ 	}
+ 
++	req->status |= ZFCP_STATUS_FSFREQ_CLEANUP;
+ 	ret = zfcp_fsf_setup_ct_els_sbals(req, ct->req, ct->resp,
+ 					  FSF_MAX_SBALS_PER_REQ);
+ 	if (ret)
+@@ -1189,13 +1184,15 @@ int zfcp_fsf_send_els(struct zfcp_send_e
+ 	spin_lock_bh(&adapter->req_q_lock);
+ 	if (zfcp_fsf_req_sbal_get(adapter))
+ 		goto out;
+-	req = zfcp_fsf_req_create(adapter, FSF_QTCB_SEND_ELS,
+-				  ZFCP_REQ_AUTO_CLEANUP, NULL);
++
++	req = zfcp_fsf_req_create(adapter, FSF_QTCB_SEND_ELS, NULL);
++
+ 	if (IS_ERR(req)) {
+ 		ret = PTR_ERR(req);
+ 		goto out;
+ 	}
+ 
++	req->status |= ZFCP_STATUS_FSFREQ_CLEANUP;
+ 	ret = zfcp_fsf_setup_ct_els_sbals(req, els->req, els->resp, 2);
+ 
+ 	if (ret)
+@@ -1234,15 +1231,16 @@ int zfcp_fsf_exchange_config_data(struct
+ 	spin_lock_bh(&adapter->req_q_lock);
+ 	if (zfcp_fsf_req_sbal_get(adapter))
+ 		goto out;
+-	req = zfcp_fsf_req_create(adapter,
+-				  FSF_QTCB_EXCHANGE_CONFIG_DATA,
+-				  ZFCP_REQ_AUTO_CLEANUP,
++
++	req = zfcp_fsf_req_create(adapter, FSF_QTCB_EXCHANGE_CONFIG_DATA,
+ 				  adapter->pool.erp_req);
++
+ 	if (IS_ERR(req)) {
+ 		retval = PTR_ERR(req);
+ 		goto out;
+ 	}
+ 
++	req->status |= ZFCP_STATUS_FSFREQ_CLEANUP;
+ 	sbale = zfcp_qdio_sbale_req(req);
+ 	sbale[0].flags |= SBAL_FLAGS0_TYPE_READ;
+ 	sbale[1].flags |= SBAL_FLAGS_LAST_ENTRY;
+@@ -1278,8 +1276,8 @@ int zfcp_fsf_exchange_config_data_sync(s
+ 	if (zfcp_fsf_req_sbal_get(adapter))
+ 		goto out_unlock;
+ 
+-	req = zfcp_fsf_req_create(adapter, FSF_QTCB_EXCHANGE_CONFIG_DATA,
+-				  0, NULL);
++	req = zfcp_fsf_req_create(adapter, FSF_QTCB_EXCHANGE_CONFIG_DATA, NULL);
++
+ 	if (IS_ERR(req)) {
+ 		retval = PTR_ERR(req);
+ 		goto out_unlock;
+@@ -1331,14 +1329,16 @@ int zfcp_fsf_exchange_port_data(struct z
+ 	spin_lock_bh(&adapter->req_q_lock);
+ 	if (zfcp_fsf_req_sbal_get(adapter))
+ 		goto out;
++
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_EXCHANGE_PORT_DATA,
+-				  ZFCP_REQ_AUTO_CLEANUP,
+ 				  adapter->pool.erp_req);
++
+ 	if (IS_ERR(req)) {
+ 		retval = PTR_ERR(req);
+ 		goto out;
+ 	}
+ 
++	req->status |= ZFCP_STATUS_FSFREQ_CLEANUP;
+ 	sbale = zfcp_qdio_sbale_req(req);
+ 	sbale[0].flags |= SBAL_FLAGS0_TYPE_READ;
+ 	sbale[1].flags |= SBAL_FLAGS_LAST_ENTRY;
+@@ -1378,8 +1378,8 @@ int zfcp_fsf_exchange_port_data_sync(str
+ 	if (zfcp_fsf_req_sbal_get(adapter))
+ 		goto out_unlock;
+ 
+-	req = zfcp_fsf_req_create(adapter, FSF_QTCB_EXCHANGE_PORT_DATA, 0,
+-				  NULL);
++	req = zfcp_fsf_req_create(adapter, FSF_QTCB_EXCHANGE_PORT_DATA, NULL);
++
+ 	if (IS_ERR(req)) {
+ 		retval = PTR_ERR(req);
+ 		goto out_unlock;
+@@ -1500,15 +1500,15 @@ int zfcp_fsf_open_port(struct zfcp_erp_a
+ 	if (zfcp_fsf_req_sbal_get(adapter))
+ 		goto out;
+ 
+-	req = zfcp_fsf_req_create(adapter,
+-				  FSF_QTCB_OPEN_PORT_WITH_DID,
+-				  ZFCP_REQ_AUTO_CLEANUP,
++	req = zfcp_fsf_req_create(adapter, FSF_QTCB_OPEN_PORT_WITH_DID,
+ 				  adapter->pool.erp_req);
++
+ 	if (IS_ERR(req)) {
+ 		retval = PTR_ERR(req);
+ 		goto out;
+ 	}
+ 
++	req->status |= ZFCP_STATUS_FSFREQ_CLEANUP;
+ 	sbale = zfcp_qdio_sbale_req(req);
+         sbale[0].flags |= SBAL_FLAGS0_TYPE_READ;
+         sbale[1].flags |= SBAL_FLAGS_LAST_ENTRY;
+@@ -1571,13 +1571,14 @@ int zfcp_fsf_close_port(struct zfcp_erp_
+ 		goto out;
+ 
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_CLOSE_PORT,
+-				  ZFCP_REQ_AUTO_CLEANUP,
+ 				  adapter->pool.erp_req);
++
+ 	if (IS_ERR(req)) {
+ 		retval = PTR_ERR(req);
+ 		goto out;
+ 	}
+ 
++	req->status |= ZFCP_STATUS_FSFREQ_CLEANUP;
+ 	sbale = zfcp_qdio_sbale_req(req);
+ 	sbale[0].flags |= SBAL_FLAGS0_TYPE_READ;
+ 	sbale[1].flags |= SBAL_FLAGS_LAST_ENTRY;
+@@ -1646,15 +1647,15 @@ int zfcp_fsf_open_wka_port(struct zfcp_w
+ 	if (zfcp_fsf_req_sbal_get(adapter))
+ 		goto out;
+ 
+-	req = zfcp_fsf_req_create(adapter,
+-				  FSF_QTCB_OPEN_PORT_WITH_DID,
+-				  ZFCP_REQ_AUTO_CLEANUP,
++	req = zfcp_fsf_req_create(adapter, FSF_QTCB_OPEN_PORT_WITH_DID,
+ 				  adapter->pool.erp_req);
++
+ 	if (unlikely(IS_ERR(req))) {
+ 		retval = PTR_ERR(req);
+ 		goto out;
+ 	}
+ 
++	req->status |= ZFCP_STATUS_FSFREQ_CLEANUP;
+ 	sbale = zfcp_qdio_sbale_req(req);
+ 	sbale[0].flags |= SBAL_FLAGS0_TYPE_READ;
+ 	sbale[1].flags |= SBAL_FLAGS_LAST_ENTRY;
+@@ -1702,13 +1703,14 @@ int zfcp_fsf_close_wka_port(struct zfcp_
+ 		goto out;
+ 
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_CLOSE_PORT,
+-				  ZFCP_REQ_AUTO_CLEANUP,
+ 				  adapter->pool.erp_req);
++
+ 	if (unlikely(IS_ERR(req))) {
+ 		retval = PTR_ERR(req);
+ 		goto out;
+ 	}
+ 
++	req->status |= ZFCP_STATUS_FSFREQ_CLEANUP;
+ 	sbale = zfcp_qdio_sbale_req(req);
+ 	sbale[0].flags |= SBAL_FLAGS0_TYPE_READ;
+ 	sbale[1].flags |= SBAL_FLAGS_LAST_ENTRY;
+@@ -1793,13 +1795,14 @@ int zfcp_fsf_close_physical_port(struct 
+ 		goto out;
+ 
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_CLOSE_PHYSICAL_PORT,
+-				  ZFCP_REQ_AUTO_CLEANUP,
+ 				  adapter->pool.erp_req);
++
+ 	if (IS_ERR(req)) {
+ 		retval = PTR_ERR(req);
+ 		goto out;
+ 	}
+ 
++	req->status |= ZFCP_STATUS_FSFREQ_CLEANUP;
+ 	sbale = zfcp_qdio_sbale_req(req);
+ 	sbale[0].flags |= SBAL_FLAGS0_TYPE_READ;
+ 	sbale[1].flags |= SBAL_FLAGS_LAST_ENTRY;
+@@ -1965,13 +1968,14 @@ int zfcp_fsf_open_unit(struct zfcp_erp_a
+ 		goto out;
+ 
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_OPEN_LUN,
+-				  ZFCP_REQ_AUTO_CLEANUP,
+ 				  adapter->pool.erp_req);
++
+ 	if (IS_ERR(req)) {
+ 		retval = PTR_ERR(req);
+ 		goto out;
+ 	}
+ 
++	req->status |= ZFCP_STATUS_FSFREQ_CLEANUP;
+ 	sbale = zfcp_qdio_sbale_req(req);
+         sbale[0].flags |= SBAL_FLAGS0_TYPE_READ;
+         sbale[1].flags |= SBAL_FLAGS_LAST_ENTRY;
+@@ -2049,14 +2053,16 @@ int zfcp_fsf_close_unit(struct zfcp_erp_
+ 	spin_lock_bh(&adapter->req_q_lock);
+ 	if (zfcp_fsf_req_sbal_get(adapter))
+ 		goto out;
++
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_CLOSE_LUN,
+-				  ZFCP_REQ_AUTO_CLEANUP,
+ 				  adapter->pool.erp_req);
++
+ 	if (IS_ERR(req)) {
+ 		retval = PTR_ERR(req);
+ 		goto out;
+ 	}
+ 
++	req->status |= ZFCP_STATUS_FSFREQ_CLEANUP;
+ 	sbale = zfcp_qdio_sbale_req(req);
+ 	sbale[0].flags |= SBAL_FLAGS0_TYPE_READ;
+ 	sbale[1].flags |= SBAL_FLAGS_LAST_ENTRY;
+@@ -2353,14 +2359,16 @@ int zfcp_fsf_send_fcp_command_task(struc
+ 		atomic_inc(&adapter->qdio_outb_full);
+ 		goto out;
+ 	}
++
+ 	req = zfcp_fsf_req_create(adapter, FSF_QTCB_FCP_CMND,
+-				  ZFCP_REQ_AUTO_CLEANUP,
+ 				  adapter->pool.scsi_req);
++
+ 	if (IS_ERR(req)) {
+ 		retval = PTR_ERR(req);
+ 		goto out;
+ 	}
+ 
++	req->status |= ZFCP_STATUS_FSFREQ_CLEANUP;
+ 	zfcp_unit_get(unit);
+ 	req->unit = unit;
+ 	req->data = scsi_cmnd;
+@@ -2465,8 +2473,10 @@ struct zfcp_fsf_req *zfcp_fsf_send_fcp_c
+ 	spin_lock_bh(&adapter->req_q_lock);
+ 	if (zfcp_fsf_req_sbal_get(adapter))
+ 		goto out;
+-	req = zfcp_fsf_req_create(adapter, FSF_QTCB_FCP_CMND, 0,
++
++	req = zfcp_fsf_req_create(adapter, FSF_QTCB_FCP_CMND,
+ 				  adapter->pool.scsi_req);
++
+ 	if (IS_ERR(req)) {
+ 		req = NULL;
+ 		goto out;
+@@ -2537,7 +2547,7 @@ struct zfcp_fsf_req *zfcp_fsf_control_fi
+ 	if (zfcp_fsf_req_sbal_get(adapter))
+ 		goto out;
+ 
+-	req = zfcp_fsf_req_create(adapter, fsf_cfdc->command, 0, NULL);
++	req = zfcp_fsf_req_create(adapter, fsf_cfdc->command, NULL);
+ 	if (IS_ERR(req)) {
+ 		retval = -EPERM;
+ 		goto out;
 
