@@ -1,71 +1,33 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: mpt2sas logged messages
-Date: Tue, 18 Aug 2009 07:57:10 -0700
-Message-ID: <20090818145710.GA6064@kroah.com>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: mpt2sas logged messages
+Date: Tue, 18 Aug 2009 09:39:45 -0600
+Message-ID: <660360F4F2570145BD872F298951B17AE303DAFA@cosmail03.lsi.com>
 References: <4A8AAA26.9090706@redhat.com>
- <20090818132518.GA4418@kroah.com>
- <4A8AB3DC.4060805@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:35879 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758641AbZHRO7T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Aug 2009 10:59:19 -0400
-Content-Disposition: inline
-In-Reply-To: <4A8AB3DC.4060805@redhat.com>
+Received: from exprod7og121.obsmtp.com ([64.18.2.20]:41777 "EHLO
+	exprod7og121.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755625AbZHRPkN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Aug 2009 11:40:13 -0400
+In-Reply-To: <4A8AAA26.9090706@redhat.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ric Wheeler <rwheeler@redhat.com>
-Cc: linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, Tom Coughlan <coughlan@redhat.com>
+To: Ric Wheeler <rwheeler@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kay.sievers@vrfy.org" <kay.sievers@vrfy.org>, Greg KH <greg@kroah.com>
+Cc: Tom Coughlan <coughlan@redhat.com>
 
-On Tue, Aug 18, 2009 at 09:59:56AM -0400, Ric Wheeler wrote:
-> On 08/18/2009 09:25 AM, Greg KH wrote:
-> > On Tue, Aug 18, 2009 at 09:18:30AM -0400, Ric Wheeler wrote:
-> >>
-> >> We have a new toy to test very large&  slow storage with built up from 5
-> >> SAS expansion shelves (Promise Vtrak J-Class) with 60 S-ATA drives and
-> >> 16 SAS drives (the S-ATA drives each have a Promise Vtrak S-ATA MUX
-> >> adapter daughter card in the disk sled).
-> >>
-> >> The basic idea is to build a cheap&  slow test bed for file&  storage
-> >> system scalability. Collectively, we have about 120TB (raw) of capacity
-> >> to play with in one server.
-> >>
-> >> As we work through various issues, a couple of oddities popped out.
-> >>
-> >> The first is that udev grumbles during boot about "file name too long"
-> >> like the following:
-> >>
-> >> Aug 17 06:49:58 megadeth udevd-event[20447]: unable to create db file
-> >> '/dev/.udev/db/\x2fdevices\x2fpci0000:00\x2f0000:00:04.0\x2f0000:17:00.0\x2f0000:18:0a.0\x2f0000:1f:00.0\x2fhost11\x2fport-11:0\x2fexpander-11:0\x2fport-11:0:0\x2fexpander-11:1\x2fport-11:1:0\x2fexpander-11:2\x2fport-11:2:17\x2fexpander-11:3\x2fport-11:3:1\x2fend_device-11:3:1\x2fbsg\x2fend_device-11:3:1':
-> >> File name too long
-> >
-> > Odd, what is the sysfs tree for this device?  You have expanders
-> > attached to ports attached to expanders?  How deep can you go?
-> >
-> > thanks,
-> >
-> > greg k-h
+On Tuesday, August 18, 2009 7:19 AM,  Ric Wheeler wrote: 
 > 
-> There are two dual-port SAS HBA's in the server that plug into the first of the 
-> 5 SAS expansion shelves. Each shelf has two internal SAS loops and is daisy 
-> chained to the next shelf....  This test is running with just the first 4 
-> shelves active (although that fifth shelf is plugged in, just not used/active).
+> The second is that the mpt2sas driver spews various messages like:
 > 
-> Each of the 60 S-ATA disks sits behind a MUX card which lets it appear on both 
-> loops.
-> 
-> We could break up the shelves into two independent sets of devices which would 
-> limit the tree depth.
-> 
-> How can I get you the sysfs tree information in a useful way?
+> Aug 17 06:55:17 megadeth kernel: mpt2sas0: log_info(0x31120102): 
+> originator(PL), code(0x12), sub_code(0x0102)
 
-'tree /sys/devices/'
-or
-'find /sys/devices/'
-would be good.
+Ric - 
 
-thanks,
+The code (0x12) means PL_LOGINFO_CODE_ABORT
+The sub_code(0x102) means PL_LOGINFO_SUB_CODE_OPEN_FAILURE_PATHWAY_BLOCKED
 
-greg k-h
+Eric Moore
