@@ -1,164 +1,228 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 12/27] zfcp: Move workqueue to adapter struct
-Date: Tue, 18 Aug 2009 15:43:17 +0200
-Message-ID: <20090818135030.334246000@de.ibm.com>
+Subject: [patch 20/27] zfcp: Use kthread API for zfcp erp thread
+Date: Tue, 18 Aug 2009 15:43:25 +0200
+Message-ID: <20090818135031.423756000@de.ibm.com>
 References: <20090818134305.841868000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate4.de.ibm.com ([195.212.29.153]:57701 "EHLO
+Received: from mtagate4.de.ibm.com ([195.212.29.153]:57699 "EHLO
 	mtagate4.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758980AbZHRNuf (ORCPT
+	with ESMTP id S1758981AbZHRNuf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Aug 2009 09:50:35 -0400
-Content-Disposition: inline; filename=713-zfcp-work-queue.diff
+Content-Disposition: inline; filename=722-zfcp-kthread-api.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Swen Schillig <swen@vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Christof Schmitt <christof.schmitt@de.ibm.com>
 
-From: Swen Schillig <swen@vnet.ibm.com>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-Remove the global driver work queue and replace it with a workqueue
-local to the adapter. The usage of this workqueue makes this the
-correct place for the structure. In addition multiple adapters won't
-block each other due to the serialization of the queued work.
+Switch the creation of the zfcp erp thread from the deprecated
+kernel_thread API to the kthread API. This allows also the removal of
+some flags in zfcp since the kthread API handles thread creation and
+shutdown internally. To allow the usage of the kthread_stop function,
+replace the erp ready semaphore with a waitqueue for waiting until erp
+actions arrive on the ready queue.
 
-Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
+Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
---- a/drivers/s390/scsi/zfcp_aux.c	2009-08-17 12:41:58.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_aux.c	2009-08-17 12:41:58.000000000 +0200
-@@ -176,8 +176,6 @@ static int __init zfcp_module_init(void)
- 	if (!zfcp_data.gid_pn_cache)
- 		goto out_gid_cache;
+---
+
+ drivers/s390/scsi/zfcp_aux.c |    4 --
+ drivers/s390/scsi/zfcp_def.h |    6 +---
+ drivers/s390/scsi/zfcp_erp.c |   62 ++++++++++++++++---------------------------
+ 3 files changed, 27 insertions(+), 45 deletions(-)
+
+--- a/drivers/s390/scsi/zfcp_aux.c	2009-08-17 11:29:50.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_aux.c	2009-08-17 11:29:53.000000000 +0200
+@@ -529,7 +529,7 @@ int zfcp_adapter_enqueue(struct ccw_devi
+ 		goto generic_services_failed;
  
--	zfcp_data.work_queue = create_singlethread_workqueue("zfcp_wq");
--
- 	sema_init(&zfcp_data.config_sema, 1);
- 	rwlock_init(&zfcp_data.config_lock);
- 
-@@ -458,6 +456,27 @@ static void zfcp_print_sl(struct seq_fil
- 		   adapter->fsf_lic_version);
- }
- 
-+static int zfcp_setup_adapter_work_queue(struct zfcp_adapter *adapter)
-+{
-+	char name[TASK_COMM_LEN];
-+
-+	snprintf(name, sizeof(name), "zfcp_q_%s",
-+		 dev_name(&adapter->ccw_device->dev));
-+	adapter->work_queue = create_singlethread_workqueue(name);
-+
-+	if (adapter->work_queue)
-+		return 0;
-+	return -ENOMEM;
-+}
-+
-+static void zfcp_destroy_adapter_work_queue(struct zfcp_adapter *adapter)
-+{
-+	if (adapter->work_queue)
-+		destroy_workqueue(adapter->work_queue);
-+	adapter->work_queue = NULL;
-+
-+}
-+
- /**
-  * zfcp_adapter_enqueue - enqueue a new adapter to the list
-  * @ccw_device: pointer to the struct cc_device
-@@ -504,6 +523,9 @@ int zfcp_adapter_enqueue(struct ccw_devi
- 	if (zfcp_adapter_debug_register(adapter))
- 		goto debug_register_failed;
- 
-+	if (zfcp_setup_adapter_work_queue(adapter))
-+		goto work_queue_failed;
-+
  	init_waitqueue_head(&adapter->remove_wq);
- 	init_waitqueue_head(&adapter->erp_thread_wqh);
+-	init_waitqueue_head(&adapter->erp_thread_wqh);
++	init_waitqueue_head(&adapter->erp_ready_wq);
  	init_waitqueue_head(&adapter->erp_done_wqh);
-@@ -543,6 +565,8 @@ int zfcp_adapter_enqueue(struct ccw_devi
- 		return 0;
  
- sysfs_failed:
-+	zfcp_destroy_adapter_work_queue(adapter);
-+work_queue_failed:
- 	zfcp_adapter_debug_unregister(adapter);
- debug_register_failed:
- 	dev_set_drvdata(&ccw_device->dev, NULL);
-@@ -579,6 +603,7 @@ void zfcp_adapter_dequeue(struct zfcp_ad
- 	if (!retval)
- 		return;
+ 	INIT_LIST_HEAD(&adapter->port_list_head);
+@@ -541,8 +541,6 @@ int zfcp_adapter_enqueue(struct ccw_devi
+ 	rwlock_init(&adapter->erp_lock);
+ 	rwlock_init(&adapter->abort_lock);
  
-+	zfcp_destroy_adapter_work_queue(adapter);
- 	zfcp_adapter_debug_unregister(adapter);
- 	zfcp_qdio_free(adapter);
- 	zfcp_free_low_mem_buffers(adapter);
---- a/drivers/s390/scsi/zfcp_def.h	2009-08-17 12:41:58.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_def.h	2009-08-17 12:41:58.000000000 +0200
-@@ -485,6 +485,7 @@ struct zfcp_adapter {
- 	struct work_struct	scan_work;
- 	struct service_level	service_level;
- 	atomic_t		qdio_outb_full;	   /* queue full incidents */
-+	struct workqueue_struct	*work_queue;
- };
+-	sema_init(&adapter->erp_ready_sem, 0);
+-
+ 	INIT_WORK(&adapter->stat_work, _zfcp_status_read_scheduler);
+ 	INIT_WORK(&adapter->scan_work, _zfcp_fc_scan_ports_later);
  
- struct zfcp_port {
-@@ -573,7 +574,6 @@ struct zfcp_data {
- 	struct kmem_cache	*qtcb_cache;
- 	struct kmem_cache	*sr_buffer_cache;
- 	struct kmem_cache	*gid_pn_cache;
--	struct workqueue_struct	*work_queue;
- };
+--- a/drivers/s390/scsi/zfcp_def.h	2009-08-17 11:29:34.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_def.h	2009-08-17 11:29:53.000000000 +0200
+@@ -222,8 +222,6 @@ struct zfcp_ls_adisc {
+ #define ZFCP_STATUS_ADAPTER_QDIOUP		0x00000002
+ #define ZFCP_STATUS_ADAPTER_XCONFIG_OK		0x00000008
+ #define ZFCP_STATUS_ADAPTER_HOST_CON_INIT	0x00000010
+-#define ZFCP_STATUS_ADAPTER_ERP_THREAD_UP	0x00000020
+-#define ZFCP_STATUS_ADAPTER_ERP_THREAD_KILL	0x00000080
+ #define ZFCP_STATUS_ADAPTER_ERP_PENDING		0x00000100
+ #define ZFCP_STATUS_ADAPTER_LINK_UNPLUGGED	0x00000200
  
- /********************** ZFCP SPECIFIC DEFINES ********************************/
---- a/drivers/s390/scsi/zfcp_erp.c	2009-08-17 12:41:58.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_erp.c	2009-08-17 12:41:58.000000000 +0200
-@@ -875,7 +875,7 @@ static int zfcp_erp_port_strategy_open_c
- 			return zfcp_erp_open_ptp_port(act);
- 		if (!port->d_id) {
- 			zfcp_port_get(port);
--			if (!queue_work(zfcp_data.work_queue,
-+			if (!queue_work(adapter->work_queue,
- 					&port->gid_pn_work))
- 				zfcp_port_put(port);
- 			return ZFCP_ERP_CONTINUES;
---- a/drivers/s390/scsi/zfcp_fc.c	2009-08-17 12:41:58.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_fc.c	2009-08-17 12:41:58.000000000 +0200
-@@ -480,7 +480,7 @@ out:
- void zfcp_test_link(struct zfcp_port *port)
+@@ -481,10 +479,9 @@ struct zfcp_adapter {
+ 	atomic_t		status;	           /* status of this adapter */
+ 	struct list_head	erp_ready_head;	   /* error recovery for this
+ 						      adapter/devices */
++	wait_queue_head_t	erp_ready_wq;
+ 	struct list_head	erp_running_head;
+ 	rwlock_t		erp_lock;
+-	struct semaphore	erp_ready_sem;
+-	wait_queue_head_t	erp_thread_wqh;
+ 	wait_queue_head_t	erp_done_wqh;
+ 	struct zfcp_erp_action	erp_action;	   /* pending error recovery */
+         atomic_t                erp_counter;
+@@ -492,6 +489,7 @@ struct zfcp_adapter {
+ 						      actions */
+ 	u32			erp_low_mem_count; /* nr of erp actions waiting
+ 						      for memory */
++	struct task_struct	*erp_thread;
+ 	struct zfcp_wka_ports	*gs;		   /* generic services */
+ 	struct zfcp_dbf		*dbf;		   /* debug traces */
+ 	struct zfcp_adapter_mempool	pool;      /* Adapter memory pools */
+--- a/drivers/s390/scsi/zfcp_erp.c	2009-08-17 11:29:38.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_erp.c	2009-08-17 11:29:53.000000000 +0200
+@@ -9,6 +9,7 @@
+ #define KMSG_COMPONENT "zfcp"
+ #define pr_fmt(fmt) KMSG_COMPONENT ": " fmt
+ 
++#include <linux/kthread.h>
+ #include "zfcp_ext.h"
+ 
+ #define ZFCP_MAX_ERPS                   3
+@@ -75,7 +76,7 @@ static void zfcp_erp_action_ready(struct
+ 
+ 	list_move(&act->list, &act->adapter->erp_ready_head);
+ 	zfcp_dbf_rec_action("erardy1", act);
+-	up(&adapter->erp_ready_sem);
++	wake_up(&adapter->erp_ready_wq);
+ 	zfcp_dbf_rec_thread("erardy2", adapter->dbf);
+ }
+ 
+@@ -212,8 +213,7 @@ static int zfcp_erp_action_enqueue(int w
+ 	int retval = 1, need;
+ 	struct zfcp_erp_action *act = NULL;
+ 
+-	if (!(atomic_read(&adapter->status) &
+-	      ZFCP_STATUS_ADAPTER_ERP_THREAD_UP))
++	if (!adapter->erp_thread)
+ 		return -EIO;
+ 
+ 	need = zfcp_erp_required_act(want, adapter, port, unit);
+@@ -226,7 +226,7 @@ static int zfcp_erp_action_enqueue(int w
+ 		goto out;
+ 	++adapter->erp_total_count;
+ 	list_add_tail(&act->list, &adapter->erp_ready_head);
+-	up(&adapter->erp_ready_sem);
++	wake_up(&adapter->erp_ready_wq);
+ 	zfcp_dbf_rec_thread("eracte1", adapter->dbf);
+ 	retval = 0;
+  out:
+@@ -641,7 +641,8 @@ static int zfcp_erp_adapter_strat_fsf_xc
+ 		}
+ 
+ 		zfcp_dbf_rec_thread_lock("erasfx1", adapter->dbf);
+-		down(&adapter->erp_ready_sem);
++		wait_event(adapter->erp_ready_wq,
++			   !list_empty(&adapter->erp_ready_head));
+ 		zfcp_dbf_rec_thread_lock("erasfx2", adapter->dbf);
+ 		if (erp_action->status & ZFCP_STATUS_ERP_TIMEDOUT)
+ 			break;
+@@ -682,7 +683,8 @@ static int zfcp_erp_adapter_strategy_ope
+ 		return ZFCP_ERP_FAILED;
+ 
+ 	zfcp_dbf_rec_thread_lock("erasox1", adapter->dbf);
+-	down(&adapter->erp_ready_sem);
++	wait_event(adapter->erp_ready_wq,
++		   !list_empty(&adapter->erp_ready_head));
+ 	zfcp_dbf_rec_thread_lock("erasox2", adapter->dbf);
+ 	if (act->status & ZFCP_STATUS_ERP_TIMEDOUT)
+ 		return ZFCP_ERP_FAILED;
+@@ -1285,21 +1287,17 @@ static int zfcp_erp_thread(void *data)
+ 	struct list_head *next;
+ 	struct zfcp_erp_action *act;
+ 	unsigned long flags;
+-	int ignore;
+-
+-	daemonize("zfcperp%s", dev_name(&adapter->ccw_device->dev));
+-	/* Block all signals */
+-	siginitsetinv(&current->blocked, 0);
+-	atomic_set_mask(ZFCP_STATUS_ADAPTER_ERP_THREAD_UP, &adapter->status);
+-	wake_up(&adapter->erp_thread_wqh);
+-
+-	while (!(atomic_read(&adapter->status) &
+-		 ZFCP_STATUS_ADAPTER_ERP_THREAD_KILL)) {
+ 
++	for (;;) {
+ 		zfcp_dbf_rec_thread_lock("erthrd1", adapter->dbf);
+-		ignore = down_interruptible(&adapter->erp_ready_sem);
++		wait_event_interruptible(adapter->erp_ready_wq,
++			   !list_empty(&adapter->erp_ready_head) ||
++			   kthread_should_stop());
+ 		zfcp_dbf_rec_thread_lock("erthrd2", adapter->dbf);
+ 
++		if (kthread_should_stop())
++			break;
++
+ 		write_lock_irqsave(&adapter->erp_lock, flags);
+ 		next = adapter->erp_ready_head.next;
+ 		write_unlock_irqrestore(&adapter->erp_lock, flags);
+@@ -1313,9 +1311,6 @@ static int zfcp_erp_thread(void *data)
+ 		}
+ 	}
+ 
+-	atomic_clear_mask(ZFCP_STATUS_ADAPTER_ERP_THREAD_UP, &adapter->status);
+-	wake_up(&adapter->erp_thread_wqh);
+-
+ 	return 0;
+ }
+ 
+@@ -1327,18 +1322,17 @@ static int zfcp_erp_thread(void *data)
+  */
+ int zfcp_erp_thread_setup(struct zfcp_adapter *adapter)
  {
- 	zfcp_port_get(port);
--	if (!queue_work(zfcp_data.work_queue, &port->test_link_work))
-+	if (!queue_work(port->adapter->work_queue, &port->test_link_work))
- 		zfcp_port_put(port);
+-	int retval;
++	struct task_struct *thread;
+ 
+-	atomic_clear_mask(ZFCP_STATUS_ADAPTER_ERP_THREAD_UP, &adapter->status);
+-	retval = kernel_thread(zfcp_erp_thread, adapter, SIGCHLD);
+-	if (retval < 0) {
++	thread = kthread_run(zfcp_erp_thread, adapter, "zfcperp%s",
++			     dev_name(&adapter->ccw_device->dev));
++	if (IS_ERR(thread)) {
+ 		dev_err(&adapter->ccw_device->dev,
+ 			"Creating an ERP thread for the FCP device failed.\n");
+-		return retval;
++		return PTR_ERR(thread);
+ 	}
+-	wait_event(adapter->erp_thread_wqh,
+-		   atomic_read(&adapter->status) &
+-			ZFCP_STATUS_ADAPTER_ERP_THREAD_UP);
++
++	adapter->erp_thread = thread;
+ 	return 0;
  }
  
---- a/drivers/s390/scsi/zfcp_fsf.c	2009-08-17 12:41:58.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_fsf.c	2009-08-17 12:41:58.000000000 +0200
-@@ -305,7 +305,7 @@ static void zfcp_fsf_status_read_handler
- 	zfcp_fsf_req_free(req);
- 
- 	atomic_inc(&adapter->stat_miss);
--	queue_work(zfcp_data.work_queue, &adapter->stat_work);
-+	queue_work(adapter->work_queue, &adapter->stat_work);
+@@ -1353,16 +1347,8 @@ int zfcp_erp_thread_setup(struct zfcp_ad
+  */
+ void zfcp_erp_thread_kill(struct zfcp_adapter *adapter)
+ {
+-	atomic_set_mask(ZFCP_STATUS_ADAPTER_ERP_THREAD_KILL, &adapter->status);
+-	up(&adapter->erp_ready_sem);
+-	zfcp_dbf_rec_thread_lock("erthrk1", adapter->dbf);
+-
+-	wait_event(adapter->erp_thread_wqh,
+-		   !(atomic_read(&adapter->status) &
+-				ZFCP_STATUS_ADAPTER_ERP_THREAD_UP));
+-
+-	atomic_clear_mask(ZFCP_STATUS_ADAPTER_ERP_THREAD_KILL,
+-			  &adapter->status);
++	kthread_stop(adapter->erp_thread);
++	adapter->erp_thread = NULL;
  }
  
- static void zfcp_fsf_fsfstatus_qual_eval(struct zfcp_fsf_req *req)
---- a/drivers/s390/scsi/zfcp_scsi.c	2009-08-17 12:41:58.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_scsi.c	2009-08-17 12:41:58.000000000 +0200
-@@ -572,7 +572,7 @@ void zfcp_scsi_schedule_rport_register(s
- 	zfcp_port_get(port);
- 	port->rport_task = RPORT_ADD;
- 
--	if (!queue_work(zfcp_data.work_queue, &port->rport_work))
-+	if (!queue_work(port->adapter->work_queue, &port->rport_work))
- 		zfcp_port_put(port);
- }
- 
-@@ -581,7 +581,8 @@ void zfcp_scsi_schedule_rport_block(stru
- 	zfcp_port_get(port);
- 	port->rport_task = RPORT_DEL;
- 
--	if (port->rport && queue_work(zfcp_data.work_queue, &port->rport_work))
-+	if (port->rport && queue_work(port->adapter->work_queue,
-+				      &port->rport_work))
- 		return;
- 
- 	zfcp_port_put(port);
+ /**
 
