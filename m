@@ -1,14 +1,14 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 26/27] zfcp: Remove duplicated code for debug timestamps
-Date: Tue, 18 Aug 2009 15:43:31 +0200
-Message-ID: <20090818135032.224181000@de.ibm.com>
+Subject: [patch 07/27] zfcp: Implicitly close all wka ports
+Date: Tue, 18 Aug 2009 15:43:12 +0200
+Message-ID: <20090818135029.664135000@de.ibm.com>
 References: <20090818134305.841868000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate2.de.ibm.com ([195.212.17.162]:47073 "EHLO
-	mtagate2.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758964AbZHRNub (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Aug 2009 09:50:31 -0400
-Content-Disposition: inline; filename=705-zfcp-debug-timestamps.diff
+Received: from mtagate3.de.ibm.com ([195.212.29.152]:56312 "EHLO
+	mtagate3.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759007AbZHRNuj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Aug 2009 09:50:39 -0400
+Content-Disposition: inline; filename=708-zfcp-close-wka-ports.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
@@ -16,124 +16,83 @@ Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.c
 
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-The timestamp calculation used for s390dbf output is the same in a
-private zfcp function and in debug.c. Replace both with a common
-inline function.
+An adapter shutdown implicitly closes all open ports. Make sure to
+mark all WKA ports as offline, not only the directory server. Also
+make sure that no pending wka port work is running when the adapter is
+being removed.
 
 Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 ---
 
- arch/s390/include/asm/timex.h |    8 ++++++++
- arch/s390/kernel/debug.c      |    8 +-------
- arch/s390/kernel/time.c       |    1 +
- drivers/s390/scsi/zfcp_dbf.c  |   19 +++----------------
- 4 files changed, 13 insertions(+), 23 deletions(-)
+ drivers/s390/scsi/zfcp_aux.c |    1 +
+ drivers/s390/scsi/zfcp_erp.c |    2 +-
+ drivers/s390/scsi/zfcp_ext.h |    4 +---
+ drivers/s390/scsi/zfcp_fc.c  |   11 ++++++++++-
+ 4 files changed, 13 insertions(+), 5 deletions(-)
 
---- a/arch/s390/include/asm/timex.h	2009-08-17 11:08:55.000000000 +0200
-+++ b/arch/s390/include/asm/timex.h	2009-08-17 11:12:35.000000000 +0200
-@@ -88,6 +88,14 @@ int get_sync_clock(unsigned long long *c
- void init_cpu_timer(void);
- unsigned long long monotonic_clock(void);
+--- a/drivers/s390/scsi/zfcp_aux.c	2009-08-17 11:29:05.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_aux.c	2009-08-17 11:29:13.000000000 +0200
+@@ -555,6 +555,7 @@ void zfcp_adapter_dequeue(struct zfcp_ad
  
-+void tod_to_timeval(__u64, struct timespec *);
-+
-+static inline
-+void stck_to_timespec(unsigned long long stck, struct timespec *ts)
+ 	cancel_work_sync(&adapter->scan_work);
+ 	cancel_work_sync(&adapter->stat_work);
++	zfcp_fc_wka_ports_force_offline(adapter->gs);
+ 	zfcp_adapter_scsi_unregister(adapter);
+ 	sysfs_remove_group(&adapter->ccw_device->dev.kobj,
+ 			   &zfcp_sysfs_adapter_attrs);
+--- a/drivers/s390/scsi/zfcp_erp.c	2009-08-17 11:28:54.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_erp.c	2009-08-17 11:29:13.000000000 +0200
+@@ -714,7 +714,7 @@ static void zfcp_erp_adapter_strategy_cl
+ 	zfcp_qdio_close(adapter);
+ 	zfcp_fsf_req_dismiss_all(adapter);
+ 	adapter->fsf_req_seq_no = 0;
+-	zfcp_fc_wka_port_force_offline(&adapter->gs->ds);
++	zfcp_fc_wka_ports_force_offline(adapter->gs);
+ 	/* all ports and units are closed */
+ 	zfcp_erp_modify_adapter_status(adapter, "erascl1", NULL,
+ 				       ZFCP_STATUS_COMMON_OPEN, ZFCP_CLEAR);
+--- a/drivers/s390/scsi/zfcp_ext.h	2009-08-17 11:29:09.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_ext.h	2009-08-17 11:29:13.000000000 +0200
+@@ -104,12 +104,10 @@ extern int zfcp_fc_ns_gid_pn(struct zfcp
+ extern void zfcp_fc_plogi_evaluate(struct zfcp_port *, struct fsf_plogi *);
+ extern void zfcp_test_link(struct zfcp_port *);
+ extern void zfcp_fc_link_test_work(struct work_struct *);
+-extern void zfcp_fc_wka_port_force_offline(struct zfcp_wka_port *);
++extern void zfcp_fc_wka_ports_force_offline(struct zfcp_wka_ports *);
+ extern void zfcp_fc_wka_ports_init(struct zfcp_adapter *);
+ extern int zfcp_fc_execute_els_fc_job(struct fc_bsg_job *);
+ extern int zfcp_fc_execute_ct_fc_job(struct fc_bsg_job *);
+-extern void zfcp_fc_wka_port_force_offline(struct zfcp_wka_port *);
+-
+ 
+ /* zfcp_fsf.c */
+ extern int zfcp_fsf_open_port(struct zfcp_erp_action *);
+--- a/drivers/s390/scsi/zfcp_fc.c	2009-08-17 11:29:12.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_fc.c	2009-08-17 11:29:13.000000000 +0200
+@@ -132,7 +132,7 @@ static void zfcp_fc_wka_port_init(struct
+ 	INIT_DELAYED_WORK(&wka_port->work, zfcp_wka_port_offline);
+ }
+ 
+-void zfcp_fc_wka_port_force_offline(struct zfcp_wka_port *wka)
++static void zfcp_fc_wka_port_force_offline(struct zfcp_wka_port *wka)
+ {
+ 	cancel_delayed_work_sync(&wka->work);
+ 	mutex_lock(&wka->mutex);
+@@ -140,6 +140,15 @@ void zfcp_fc_wka_port_force_offline(stru
+ 	mutex_unlock(&wka->mutex);
+ }
+ 
++void zfcp_fc_wka_ports_force_offline(struct zfcp_wka_ports *gs)
 +{
-+	tod_to_timeval(stck - TOD_UNIX_EPOCH, ts);
++	zfcp_fc_wka_port_force_offline(&gs->ms);
++	zfcp_fc_wka_port_force_offline(&gs->ts);
++	zfcp_fc_wka_port_force_offline(&gs->ds);
++	zfcp_fc_wka_port_force_offline(&gs->as);
++	zfcp_fc_wka_port_force_offline(&gs->ks);
 +}
 +
- extern u64 sched_clock_base_cc;
- 
- #endif
---- a/arch/s390/kernel/debug.c	2009-08-17 11:08:54.000000000 +0200
-+++ b/arch/s390/kernel/debug.c	2009-08-17 11:11:22.000000000 +0200
-@@ -63,8 +63,6 @@ typedef struct
- } debug_sprintf_entry_t;
- 
- 
--extern void tod_to_timeval(uint64_t todval, struct timespec *xtime);
--
- /* internal function prototyes */
- 
- static int debug_init(void);
-@@ -1450,17 +1448,13 @@ debug_dflt_header_fn(debug_info_t * id, 
- 			 int area, debug_entry_t * entry, char *out_buf)
+ void zfcp_fc_wka_ports_init(struct zfcp_adapter *adapter)
  {
- 	struct timespec time_spec;
--	unsigned long long time;
- 	char *except_str;
- 	unsigned long caller;
- 	int rc = 0;
- 	unsigned int level;
- 
- 	level = entry->id.fields.level;
--	time = entry->id.stck;
--	/* adjust todclock to 1970 */
--	time -= 0x8126d60e46000000LL - (0x3c26700LL * 1000000 * 4096);
--	tod_to_timeval(time, &time_spec);
-+	stck_to_timespec(entry->id.stck, &time_spec);
- 
- 	if (entry->id.fields.exception)
- 		except_str = "*";
---- a/arch/s390/kernel/time.c	2009-08-17 11:08:55.000000000 +0200
-+++ b/arch/s390/kernel/time.c	2009-08-17 11:11:22.000000000 +0200
-@@ -90,6 +90,7 @@ void tod_to_timeval(__u64 todval, struct
- 	todval -= (sec * 1000000) << 12;
- 	xtime->tv_nsec = ((todval * 1000) >> 12);
- }
-+EXPORT_SYMBOL(tod_to_timeval);
- 
- void clock_comparator_work(void)
- {
---- a/drivers/s390/scsi/zfcp_dbf.c	2009-08-17 11:09:56.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_dbf.c	2009-08-17 11:11:22.000000000 +0200
-@@ -38,19 +38,6 @@ static void zfcp_dbf_hexdump(debug_info_
- 	}
- }
- 
--/* FIXME: this duplicate this code in s390 debug feature */
--static void zfcp_dbf_timestamp(unsigned long long stck, struct timespec *time)
--{
--	unsigned long long sec;
--
--	stck -= 0x8126d60e46000000LL - (0x3c26700LL * 1000000 * 4096);
--	sec = stck >> 12;
--	do_div(sec, 1000000);
--	time->tv_sec = sec;
--	stck -= (sec * 1000000) << 12;
--	time->tv_nsec = ((stck * 1000) >> 12);
--}
--
- static void zfcp_dbf_tag(char **p, const char *label, const char *tag)
- {
- 	int i;
-@@ -107,7 +94,7 @@ static int zfcp_dbf_view_header(debug_in
- 	char *p = out_buf;
- 
- 	if (strncmp(dump->tag, "dump", ZFCP_DBF_TAG_SIZE) != 0) {
--		zfcp_dbf_timestamp(entry->id.stck, &t);
-+		stck_to_timespec(entry->id.stck, &t);
- 		zfcp_dbf_out(&p, "timestamp", "%011lu:%06lu",
- 			     t.tv_sec, t.tv_nsec);
- 		zfcp_dbf_out(&p, "cpu", "%02i", entry->id.fields.cpuid);
-@@ -320,7 +307,7 @@ static void zfcp_dbf_hba_view_response(c
- 	zfcp_dbf_out(p, "fsf_command", "0x%08x", r->fsf_command);
- 	zfcp_dbf_out(p, "fsf_reqid", "0x%0Lx", r->fsf_reqid);
- 	zfcp_dbf_out(p, "fsf_seqno", "0x%08x", r->fsf_seqno);
--	zfcp_dbf_timestamp(r->fsf_issued, &t);
-+	stck_to_timespec(r->fsf_issued, &t);
- 	zfcp_dbf_out(p, "fsf_issued", "%011lu:%06lu", t.tv_sec, t.tv_nsec);
- 	zfcp_dbf_out(p, "fsf_prot_status", "0x%08x", r->fsf_prot_status);
- 	zfcp_dbf_out(p, "fsf_status", "0x%08x", r->fsf_status);
-@@ -976,7 +963,7 @@ static int zfcp_dbf_scsi_view_format(deb
- 		zfcp_dbf_out(&p, "old_fsf_reqid", "0x%0Lx", r->old_fsf_reqid);
- 	zfcp_dbf_out(&p, "fsf_reqid", "0x%0Lx", r->fsf_reqid);
- 	zfcp_dbf_out(&p, "fsf_seqno", "0x%08x", r->fsf_seqno);
--	zfcp_dbf_timestamp(r->fsf_issued, &t);
-+	stck_to_timespec(r->fsf_issued, &t);
- 	zfcp_dbf_out(&p, "fsf_issued", "%011lu:%06lu", t.tv_sec, t.tv_nsec);
- 
- 	if (strncmp(r->tag, "rslt", ZFCP_DBF_TAG_SIZE) == 0) {
+ 	struct zfcp_wka_ports *gs = adapter->gs;
 
