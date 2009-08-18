@@ -1,237 +1,50 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 03/27] zfcp: Only collect SCSI debug data for matching trace levels
-Date: Tue, 18 Aug 2009 15:43:08 +0200
-Message-ID: <20090818135029.144724000@de.ibm.com>
-References: <20090818134305.841868000@de.ibm.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: mpt2sas logged messages
+Date: Tue, 18 Aug 2009 08:55:00 -0500
+Message-ID: <1250603700.5008.7.camel@mulgrave.site>
+References: <4A8AAA26.9090706@redhat.com>  <20090818132518.GA4418@kroah.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate4.de.ibm.com ([195.212.29.153]:57740 "EHLO
-	mtagate4.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759003AbZHRNuj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Aug 2009 09:50:39 -0400
-Content-Disposition: inline; filename=702-zfcp-debug-data.diff
+Received: from cantor.suse.de ([195.135.220.2]:40399 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750865AbZHRNzH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Aug 2009 09:55:07 -0400
+In-Reply-To: <20090818132518.GA4418@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Christof Schmitt <christof.schmitt@de.ibm.com>
+To: Greg KH <greg@kroah.com>
+Cc: Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, Tom Coughlan <coughlan@redhat.com>
 
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
+On Tue, 2009-08-18 at 06:25 -0700, Greg KH wrote: 
+> On Tue, Aug 18, 2009 at 09:18:30AM -0400, Ric Wheeler wrote:
+> > 
+> > We have a new toy to test very large & slow storage with built up from 5 
+> > SAS expansion shelves (Promise Vtrak J-Class) with 60 S-ATA drives and 
+> > 16 SAS drives (the S-ATA drives each have a Promise Vtrak S-ATA MUX 
+> > adapter daughter card in the disk sled).
+> > 
+> > The basic idea is to build a cheap & slow test bed for file & storage 
+> > system scalability. Collectively, we have about 120TB (raw) of capacity 
+> > to play with in one server.
+> > 
+> > As we work through various issues, a couple of oddities popped out.
+> > 
+> > The first is that udev grumbles during boot about "file name too long" 
+> > like the following:
+> > 
+> > Aug 17 06:49:58 megadeth udevd-event[20447]: unable to create db file 
+> > '/dev/.udev/db/\x2fdevices\x2fpci0000:00\x2f0000:00:04.0\x2f0000:17:00.0\x2f0000:18:0a.0\x2f0000:1f:00.0\x2fhost11\x2fport-11:0\x2fexpander-11:0\x2fport-11:0:0\x2fexpander-11:1\x2fport-11:1:0\x2fexpander-11:2\x2fport-11:2:17\x2fexpander-11:3\x2fport-11:3:1\x2fend_device-11:3:1\x2fbsg\x2fend_device-11:3:1': 
+> > File name too long
+> 
+> Odd, what is the sysfs tree for this device?  You have expanders
+> attached to ports attached to expanders?  How deep can you go?
 
-The default trace level is to only trace failed SCSI commands. Thus it
-is not necessary to collect trace data for most SCSI commands since it
-will be thrown away later. Restructure the SCSI trace infrastructure
-to first check the trace level in a inline function and only do the
-expensive data collection for matching trace levels.
+In terms of tree depth, there's no real limit (although the deeper it
+goes, the slower the network).  The examples in the docs usually go
+about 4 expanders deep.
 
-Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
-Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
----
+James
 
- drivers/s390/scsi/zfcp_dbf.c  |   58 ++------------------------------------
- drivers/s390/scsi/zfcp_dbf.h  |   63 ++++++++++++++++++++++++++++++++++++++++++
- drivers/s390/scsi/zfcp_ext.h  |   11 ++-----
- drivers/s390/scsi/zfcp_fsf.c  |    1 
- drivers/s390/scsi/zfcp_scsi.c |    3 +-
- 5 files changed, 73 insertions(+), 63 deletions(-)
-
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_dbf.c linux-2.6-patched/drivers/s390/scsi/zfcp_dbf.c
---- linux-2.6/drivers/s390/scsi/zfcp_dbf.c	2009-08-12 10:05:28.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_dbf.c	2009-08-12 10:05:28.000000000 +0200
-@@ -921,13 +921,11 @@ static struct debug_view zfcp_san_dbf_vi
- 	NULL
- };
- 
--static void zfcp_scsi_dbf_event(const char *tag, const char *tag2, int level,
--				struct zfcp_adapter *adapter,
--				struct scsi_cmnd *scsi_cmnd,
--				struct zfcp_fsf_req *fsf_req,
--				unsigned long old_req_id)
-+void _zfcp_scsi_dbf_event(const char *tag, const char *tag2, int level,
-+			  struct zfcp_dbf *dbf, struct scsi_cmnd *scsi_cmnd,
-+			  struct zfcp_fsf_req *fsf_req,
-+			  unsigned long old_req_id)
- {
--	struct zfcp_dbf *dbf = adapter->dbf;
- 	struct zfcp_scsi_dbf_record *rec = &dbf->scsi_dbf_buf;
- 	struct zfcp_dbf_dump *dump = (struct zfcp_dbf_dump *)rec;
- 	unsigned long flags;
-@@ -999,54 +997,6 @@ static void zfcp_scsi_dbf_event(const ch
- 	spin_unlock_irqrestore(&dbf->scsi_dbf_lock, flags);
- }
- 
--/**
-- * zfcp_scsi_dbf_event_result - trace event for SCSI command completion
-- * @tag: tag indicating success or failure of SCSI command
-- * @level: trace level applicable for this event
-- * @adapter: adapter that has been used to issue the SCSI command
-- * @scsi_cmnd: SCSI command pointer
-- * @fsf_req: request used to issue SCSI command (might be NULL)
-- */
--void zfcp_scsi_dbf_event_result(const char *tag, int level,
--				struct zfcp_adapter *adapter,
--				struct scsi_cmnd *scsi_cmnd,
--				struct zfcp_fsf_req *fsf_req)
--{
--	zfcp_scsi_dbf_event("rslt", tag, level, adapter, scsi_cmnd, fsf_req, 0);
--}
--
--/**
-- * zfcp_scsi_dbf_event_abort - trace event for SCSI command abort
-- * @tag: tag indicating success or failure of abort operation
-- * @adapter: adapter thas has been used to issue SCSI command to be aborted
-- * @scsi_cmnd: SCSI command to be aborted
-- * @new_fsf_req: request containing abort (might be NULL)
-- * @old_req_id: identifier of request containg SCSI command to be aborted
-- */
--void zfcp_scsi_dbf_event_abort(const char *tag, struct zfcp_adapter *adapter,
--			       struct scsi_cmnd *scsi_cmnd,
--			       struct zfcp_fsf_req *new_fsf_req,
--			       unsigned long old_req_id)
--{
--	zfcp_scsi_dbf_event("abrt", tag, 1, adapter, scsi_cmnd, new_fsf_req,
--			    old_req_id);
--}
--
--/**
-- * zfcp_scsi_dbf_event_devreset - trace event for Logical Unit or Target Reset
-- * @tag: tag indicating success or failure of reset operation
-- * @flag: indicates type of reset (Target Reset, Logical Unit Reset)
-- * @unit: unit that needs reset
-- * @scsi_cmnd: SCSI command which caused this error recovery
-- */
--void zfcp_scsi_dbf_event_devreset(const char *tag, u8 flag,
--				  struct zfcp_unit *unit,
--				  struct scsi_cmnd *scsi_cmnd)
--{
--	zfcp_scsi_dbf_event(flag == FCP_TARGET_RESET ? "trst" : "lrst", tag, 1,
--			    unit->port->adapter, scsi_cmnd, NULL, 0);
--}
--
- static int zfcp_scsi_dbf_view_format(debug_info_t *id, struct debug_view *view,
- 				     char *out_buf, const char *in_buf)
- {
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_dbf.h linux-2.6-patched/drivers/s390/scsi/zfcp_dbf.h
---- linux-2.6/drivers/s390/scsi/zfcp_dbf.h	2009-08-12 10:05:28.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_dbf.h	2009-08-12 10:05:28.000000000 +0200
-@@ -22,7 +22,9 @@
- #ifndef ZFCP_DBF_H
- #define ZFCP_DBF_H
- 
-+#include "zfcp_ext.h"
- #include "zfcp_fsf.h"
-+#include "zfcp_def.h"
- 
- #define ZFCP_DBF_TAG_SIZE      4
- #define ZFCP_DBF_ID_SIZE       7
-@@ -237,4 +239,65 @@ struct zfcp_dbf {
- 	struct zfcp_scsi_dbf_record	scsi_dbf_buf;
- };
- 
-+static inline
-+void zfcp_scsi_dbf_event(const char *tag, const char *tag2, int level,
-+			 struct zfcp_adapter *adapter, struct scsi_cmnd *scmd,
-+			 struct zfcp_fsf_req *req, unsigned long old_id)
-+{
-+	struct zfcp_dbf *dbf = adapter->dbf;
-+
-+	if (level <= dbf->scsi_dbf->level)
-+		_zfcp_scsi_dbf_event(tag, tag2, level, dbf, scmd, req, old_id);
-+}
-+
-+/**
-+ * zfcp_scsi_dbf_event_result - trace event for SCSI command completion
-+ * @tag: tag indicating success or failure of SCSI command
-+ * @level: trace level applicable for this event
-+ * @adapter: adapter that has been used to issue the SCSI command
-+ * @scmd: SCSI command pointer
-+ * @fsf_req: request used to issue SCSI command (might be NULL)
-+ */
-+static inline
-+void zfcp_scsi_dbf_event_result(const char *tag, int level,
-+				struct zfcp_adapter *adapter,
-+				struct scsi_cmnd *scmd,
-+				struct zfcp_fsf_req *fsf_req)
-+{
-+	zfcp_scsi_dbf_event("rslt", tag, level, adapter, scmd, fsf_req, 0);
-+}
-+
-+/**
-+ * zfcp_scsi_dbf_event_abort - trace event for SCSI command abort
-+ * @tag: tag indicating success or failure of abort operation
-+ * @adapter: adapter thas has been used to issue SCSI command to be aborted
-+ * @scmd: SCSI command to be aborted
-+ * @new_req: request containing abort (might be NULL)
-+ * @old_id: identifier of request containg SCSI command to be aborted
-+ */
-+static inline
-+void zfcp_scsi_dbf_event_abort(const char *tag, struct zfcp_adapter *adapter,
-+			       struct scsi_cmnd *scmd,
-+			       struct zfcp_fsf_req *new_req,
-+			       unsigned long old_id)
-+{
-+	zfcp_scsi_dbf_event("abrt", tag, 1, adapter, scmd, new_req, old_id);
-+}
-+
-+/**
-+ * zfcp_scsi_dbf_event_devreset - trace event for Logical Unit or Target Reset
-+ * @tag: tag indicating success or failure of reset operation
-+ * @flag: indicates type of reset (Target Reset, Logical Unit Reset)
-+ * @unit: unit that needs reset
-+ * @scsi_cmnd: SCSI command which caused this error recovery
-+ */
-+static inline
-+void zfcp_scsi_dbf_event_devreset(const char *tag, u8 flag,
-+				  struct zfcp_unit *unit,
-+				  struct scsi_cmnd *scsi_cmnd)
-+{
-+	zfcp_scsi_dbf_event(flag == FCP_TARGET_RESET ? "trst" : "lrst", tag, 1,
-+			    unit->port->adapter, scsi_cmnd, NULL, 0);
-+}
-+
- #endif /* ZFCP_DBF_H */
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_ext.h linux-2.6-patched/drivers/s390/scsi/zfcp_ext.h
---- linux-2.6/drivers/s390/scsi/zfcp_ext.h	2009-08-12 10:04:57.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_ext.h	2009-08-12 10:05:28.000000000 +0200
-@@ -57,14 +57,9 @@ extern void zfcp_san_dbf_event_ct_respon
- extern void zfcp_san_dbf_event_els_request(struct zfcp_fsf_req *);
- extern void zfcp_san_dbf_event_els_response(struct zfcp_fsf_req *);
- extern void zfcp_san_dbf_event_incoming_els(struct zfcp_fsf_req *);
--extern void zfcp_scsi_dbf_event_result(const char *, int, struct zfcp_adapter *,
--				       struct scsi_cmnd *,
--				       struct zfcp_fsf_req *);
--extern void zfcp_scsi_dbf_event_abort(const char *, struct zfcp_adapter *,
--				      struct scsi_cmnd *, struct zfcp_fsf_req *,
--				      unsigned long);
--extern void zfcp_scsi_dbf_event_devreset(const char *, u8, struct zfcp_unit *,
--					 struct scsi_cmnd *);
-+extern void _zfcp_scsi_dbf_event(const char *, const char *, int,
-+				 struct zfcp_dbf *, struct scsi_cmnd *,
-+				 struct zfcp_fsf_req *, unsigned long);
- 
- /* zfcp_erp.c */
- extern void zfcp_erp_modify_adapter_status(struct zfcp_adapter *, char *,
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_fsf.c linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c
---- linux-2.6/drivers/s390/scsi/zfcp_fsf.c	2009-08-12 10:04:57.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c	2009-08-12 10:05:28.000000000 +0200
-@@ -11,6 +11,7 @@
- 
- #include <linux/blktrace_api.h>
- #include "zfcp_ext.h"
-+#include "zfcp_dbf.h"
- 
- #define ZFCP_REQ_AUTO_CLEANUP	0x00000002
- #define ZFCP_REQ_NO_QTCB	0x00000008
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_scsi.c linux-2.6-patched/drivers/s390/scsi/zfcp_scsi.c
---- linux-2.6/drivers/s390/scsi/zfcp_scsi.c	2009-08-12 10:05:27.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_scsi.c	2009-08-12 10:05:28.000000000 +0200
-@@ -9,8 +9,9 @@
- #define KMSG_COMPONENT "zfcp"
- #define pr_fmt(fmt) KMSG_COMPONENT ": " fmt
- 
--#include "zfcp_ext.h"
- #include <asm/atomic.h>
-+#include "zfcp_ext.h"
-+#include "zfcp_dbf.h"
- 
- static unsigned int default_depth = 32;
- module_param_named(queue_depth, default_depth, uint, 0600);
 
