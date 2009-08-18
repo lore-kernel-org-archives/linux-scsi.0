@@ -1,117 +1,120 @@
-From: "Ed Lin" <ed.lin@promise.com>
-Subject: [PATCH] stex: Add reset code for st_yel (v2)
-Date: Tue, 18 Aug 2009 12:15:14 -0700
-Message-ID: <200908181215122604236@promise.com>
-Reply-To: ed.lin@promise.com
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: mpt2sas logged messages
+Date: Tue, 18 Aug 2009 20:14:41 +0000
+Message-ID: <1250626481.6971.22.camel@mulgrave.site>
+References: <4A8AAA26.9090706@redhat.com> <20090818132518.GA4418@kroah.com>
+	 <4A8AB3DC.4060805@redhat.com> <20090818145710.GA6064@kroah.com>
+	 <4A8ACE7C.5080501@redhat.com> <1250611768.6971.6.camel@mulgrave.site>
+	 <4A8AE882.7050105@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gateway.promise.com ([67.111.72.2]:45126 "EHLO
-	nanamew.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750925AbZHRTP2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Aug 2009 15:15:28 -0400
+Received: from cantor.suse.de ([195.135.220.2]:54676 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751836AbZHRUOu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Aug 2009 16:14:50 -0400
+In-Reply-To: <4A8AE882.7050105@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James.Bottomley" <James.Bottomley@suse.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, promise_linux <promise_linux@promise.com>
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: Greg KH <greg@kroah.com>, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, Tom Coughlan <coughlan@redhat.com>
 
+On Tue, 2009-08-18 at 13:44 -0400, Ric Wheeler wrote:
+> On 08/18/2009 12:09 PM, James Bottomley wrote:
+> > On Tue, 2009-08-18 at 11:53 -0400, Ric Wheeler wrote:
+> >> On 08/18/2009 10:57 AM, Greg KH wrote:
+> >>> On Tue, Aug 18, 2009 at 09:59:56AM -0400, Ric Wheeler wrote:
+> >>>
+> >>>> On 08/18/2009 09:25 AM, Greg KH wrote:
+> >>>>
+> >>>>> On Tue, Aug 18, 2009 at 09:18:30AM -0400, Ric Wheeler wrote:
+> >>>>>
+> >>>>>> We have a new toy to test very large&    slow storage with built up from 5
+> >>>>>> SAS expansion shelves (Promise Vtrak J-Class) with 60 S-ATA drives and
+> >>>>>> 16 SAS drives (the S-ATA drives each have a Promise Vtrak S-ATA MUX
+> >>>>>> adapter daughter card in the disk sled).
+> >>>>>>
+> >>>>>> The basic idea is to build a cheap&    slow test bed for file&    storage
+> >>>>>> system scalability. Collectively, we have about 120TB (raw) of capacity
+> >>>>>> to play with in one server.
+> >>>>>>
+> >>>>>> As we work through various issues, a couple of oddities popped out.
+> >>>>>>
+> >>>>>> The first is that udev grumbles during boot about "file name too long"
+> >>>>>> like the following:
+> >>>>>>
+> >>>>>> Aug 17 06:49:58 megadeth udevd-event[20447]: unable to create db file
+> >>>>>> '/dev/.udev/db/\x2fdevices\x2fpci0000:00\x2f0000:00:04.0\x2f0000:17:00.0\x2f0000:18:0a.0\x2f0000:1f:00.0\x2fhost11\x2fport-11:0\x2fexpander-11:0\x2fport-11:0:0\x2fexpander-11:1\x2fport-11:1:0\x2fexpander-11:2\x2fport-11:2:17\x2fexpander-11:3\x2fport-11:3:1\x2fend_device-11:3:1\x2fbsg\x2fend_device-11:3:1':
+> >>>>>> File name too long
+> >>>>>>
+> >>>>> Odd, what is the sysfs tree for this device?  You have expanders
+> >>>>> attached to ports attached to expanders?  How deep can you go?
+> >>>>>
+> >>>>> thanks,
+> >>>>>
+> >>>>> greg k-h
+> >>>>>
+> >>>> There are two dual-port SAS HBA's in the server that plug into the first of the
+> >>>> 5 SAS expansion shelves. Each shelf has two internal SAS loops and is daisy
+> >>>> chained to the next shelf....  This test is running with just the first 4
+> >>>> shelves active (although that fifth shelf is plugged in, just not used/active).
+> >>>>
+> >>>> Each of the 60 S-ATA disks sits behind a MUX card which lets it appear on both
+> >>>> loops.
+> >>>>
+> >>>> We could break up the shelves into two independent sets of devices which would
+> >>>> limit the tree depth.
+> >>>>
+> >>>> How can I get you the sysfs tree information in a useful way?
+> >>>>
+> >>> 'tree /sys/devices/'
+> >>> or
+> >>> 'find /sys/devices/'
+> >>> would be good.
+> >>>
+> >>> thanks,
+> >>>
+> >>> greg k-h
+> >>>
+> >>
+> >> Attached is the bzipped output from - the uncompressed output is quite
+> >> large. Note that this same server has CCIS controllers and fibre HBA's
+> >> as well,
+> >
+> > It's perfectly legal the way you have it, but I will say you have an
+> > inefficient configuration.  The way a configuration like this is
+> > supposed to look is that there should be a fanout expander at the top
+> > going to the expander in each tray, for a routing depth of two for every
+> > device.
+> >
+> > The way you've got it:  expander daisy chained off the next expander
+> > gives an unnecessary routing delay to the disks furthest away in the
+> > chain.
+> >
+> > James
+> 
+> I understand that this configuration is not optimal, but from what I saw with 
+> some commercial arrays, this is not an uncommon config (up to 4 shelves) when 
+> going for capacity over performance.
 
-Add reset related code for st_yel.
-1. Set the SS_H2I_INT_RESET bit.
-2. Wait for the SS_MU_OPERATIONAL flag. This is also part of
-   normal handshake process so move it to handshake routine.
-3. Continue handshake with the firmware.
+The config is fine ... it's the way the daisy chain routing is done
+which isn't.  You can see that each shelf gets further away from the HBA
+by an expander as you go up.
 
-Signed-off-by: Ed Lin <ed.lin@promise.com>
----
+> Do you have a particular SAS fanout expander in mind?  I suppose that we could 
+> always add more hba's as well which would have other benefits...
 
-diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-index 8d2a95c..09fa886 100644
---- a/drivers/scsi/stex.c
-+++ b/drivers/scsi/stex.c
-@@ -55,6 +55,7 @@ enum {
- 	OIS	= 0x30,	/* MU_OUTBOUND_INTERRUPT_STATUS */
- 	OIM	= 0x3c,	/* MU_OUTBOUND_INTERRUPT_MASK */
- 
-+	YIOA_STATUS				= 0x00,
- 	YH2I_INT				= 0x20,
- 	YINT_EN					= 0x34,
- 	YI2H_INT				= 0x9c,
-@@ -108,6 +109,10 @@ enum {
- 
- 	SS_HEAD_HANDSHAKE			= 0x80,
- 
-+	SS_H2I_INT_RESET			= 0x100,
-+
-+	SS_MU_OPERATIONAL			= 0x80000000,
-+
- 	STEX_CDB_LENGTH				= 16,
- 	STATUS_VAR_LEN				= 128,
- 
-@@ -884,7 +889,7 @@ static void stex_ss_mu_intr(struct st_hba *hba)
- 		tag = (u16)value;
- 		if (unlikely(tag >= hba->host->can_queue)) {
- 			printk(KERN_WARNING DRV_NAME
--					"(%s): invalid tag\n", pci_name(hba->pdev));
-+				"(%s): invalid tag\n", pci_name(hba->pdev));
- 			continue;
- 		}
- 
-@@ -1040,16 +1045,27 @@ static int stex_ss_handshake(struct st_hba *hba)
- 	void __iomem *base = hba->mmio_base;
- 	struct st_msg_header *msg_h;
- 	struct handshake_frame *h;
--	__le32 *scratch = hba->scratch;
-+	__le32 *scratch;
- 	u32 data;
- 	unsigned long before;
- 	int ret = 0;
- 
--	h = (struct handshake_frame *)(hba->alloc_rq(hba));
--	msg_h = (struct st_msg_header *)h - 1;
-+	before = jiffies;
-+	while ((readl(base + YIOA_STATUS) & SS_MU_OPERATIONAL) == 0) {
-+		if (time_after(jiffies, before + MU_MAX_DELAY * HZ)) {
-+			printk(KERN_ERR DRV_NAME
-+				"(%s): firmware not operational\n",
-+				pci_name(hba->pdev));
-+			return -1;
-+		}
-+		msleep(1);
-+	}
-+
-+	msg_h = (struct st_msg_header *)hba->dma_mem;
- 	msg_h->handle = cpu_to_le64(hba->dma_handle);
- 	msg_h->flag = SS_HEAD_HANDSHAKE;
- 
-+	h = (struct handshake_frame *)(msg_h + 1);
- 	h->rb_phy = cpu_to_le64(hba->dma_handle);
- 	h->req_sz = cpu_to_le16(hba->rq_size);
- 	h->req_cnt = cpu_to_le16(hba->rq_count+1);
-@@ -1205,6 +1221,13 @@ static void stex_hard_reset(struct st_hba *hba)
- 			hba->pdev->saved_config_space[i]);
- }
- 
-+static void stex_ss_reset(struct st_hba *hba)
-+{
-+	writel(SS_H2I_INT_RESET, hba->mmio_base + YH2I_INT);
-+	readl(hba->mmio_base + YH2I_INT);
-+	ssleep(5);
-+}
-+
- static int stex_reset(struct scsi_cmnd *cmd)
- {
- 	struct st_hba *hba;
-@@ -1221,6 +1244,8 @@ static int stex_reset(struct scsi_cmnd *cmd)
- 
- 	if (hba->cardtype == st_shasta)
- 		stex_hard_reset(hba);
-+	else if (hba->cardtype == st_yel)
-+		stex_ss_reset(hba);
- 
- 	if (hba->cardtype != st_yosemite) {
- 		if (stex_handshake(hba)) {
+Not really ... I've never seen a real expander in the flesh.  I've got a
+set of experimental ones LSI gave me (as bare circuit boards).
+
+If you don't have the expanders, you can likely rig the first expander
+to act as a fanout since it must have table routed ports otherwise it
+wouldn't work in the daisy chain.
+
+Failing that, as you suggest, multiple HBAs subbing for the fanout
+expander would be fine as well.
+
+James
 
 
