@@ -1,14 +1,14 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 06/27] zfcp: Only issue one test link command per port
-Date: Tue, 18 Aug 2009 15:43:11 +0200
-Message-ID: <20090818135029.534319000@de.ibm.com>
+Subject: [patch 03/27] zfcp: Only collect SCSI debug data for matching trace levels
+Date: Tue, 18 Aug 2009 15:43:08 +0200
+Message-ID: <20090818135029.144724000@de.ibm.com>
 References: <20090818134305.841868000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate4.de.ibm.com ([195.212.29.153]:57748 "EHLO
+Received: from mtagate4.de.ibm.com ([195.212.29.153]:57740 "EHLO
 	mtagate4.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759005AbZHRNuj (ORCPT
+	with ESMTP id S1759003AbZHRNuj (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Aug 2009 09:50:39 -0400
-Content-Disposition: inline; filename=707-zfcp-one-test-link.diff
+Content-Disposition: inline; filename=702-zfcp-debug-data.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
@@ -16,63 +16,222 @@ Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.c
 
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-When the FCP channel returns a series of commands with the error
-status "test link", zfcp will send a series of ELS ADISC commands.
-This is technically no problem, but it is enough to only issue one
-test command per remote port. So, track whether a ELS ADISC command is
-already pending, and do not send a new one if there is already a
-pending command.
+The default trace level is to only trace failed SCSI commands. Thus it
+is not necessary to collect trace data for most SCSI commands since it
+will be thrown away later. Restructure the SCSI trace infrastructure
+to first check the trace level in a inline function and only do the
+expensive data collection for matching trace levels.
 
 Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 ---
 
- drivers/s390/scsi/zfcp_def.h |    1 +
- drivers/s390/scsi/zfcp_fc.c  |    9 +++++++++
- 2 files changed, 10 insertions(+)
+ drivers/s390/scsi/zfcp_dbf.c  |   58 ++------------------------------------
+ drivers/s390/scsi/zfcp_dbf.h  |   63 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/s390/scsi/zfcp_ext.h  |   11 ++-----
+ drivers/s390/scsi/zfcp_fsf.c  |    1 
+ drivers/s390/scsi/zfcp_scsi.c |    3 +-
+ 5 files changed, 73 insertions(+), 63 deletions(-)
 
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_def.h linux-2.6-patched/drivers/s390/scsi/zfcp_def.h
---- linux-2.6/drivers/s390/scsi/zfcp_def.h	2009-08-12 10:05:29.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_def.h	2009-08-12 10:05:30.000000000 +0200
-@@ -232,6 +232,7 @@ struct zfcp_ls_adisc {
+diff -urpN linux-2.6/drivers/s390/scsi/zfcp_dbf.c linux-2.6-patched/drivers/s390/scsi/zfcp_dbf.c
+--- linux-2.6/drivers/s390/scsi/zfcp_dbf.c	2009-08-12 10:05:28.000000000 +0200
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_dbf.c	2009-08-12 10:05:28.000000000 +0200
+@@ -921,13 +921,11 @@ static struct debug_view zfcp_san_dbf_vi
+ 	NULL
+ };
  
- /* remote port status */
- #define ZFCP_STATUS_PORT_PHYS_OPEN		0x00000001
-+#define ZFCP_STATUS_PORT_LINK_TEST		0x00000002
- 
- /* well known address (WKA) port status*/
- enum zfcp_wka_status {
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_fc.c linux-2.6-patched/drivers/s390/scsi/zfcp_fc.c
---- linux-2.6/drivers/s390/scsi/zfcp_fc.c	2009-08-12 10:04:57.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_fc.c	2009-08-12 10:05:30.000000000 +0200
-@@ -404,6 +404,7 @@ static void zfcp_fc_adisc_handler(unsign
- 	/* port is good, unblock rport without going through erp */
- 	zfcp_scsi_schedule_rport_register(port);
-  out:
-+	atomic_clear_mask(ZFCP_STATUS_PORT_LINK_TEST, &port->status);
- 	zfcp_port_put(port);
- 	kfree(adisc);
- }
-@@ -450,13 +451,21 @@ void zfcp_fc_link_test_work(struct work_
- 	port->rport_task = RPORT_DEL;
- 	zfcp_scsi_rport_work(&port->rport_work);
- 
-+	/* only issue one test command at one time per port */
-+	if (atomic_read(&port->status) & ZFCP_STATUS_PORT_LINK_TEST)
-+		goto out;
-+
-+	atomic_set_mask(ZFCP_STATUS_PORT_LINK_TEST, &port->status);
-+
- 	retval = zfcp_fc_adisc(port);
- 	if (retval == 0)
- 		return;
- 
- 	/* send of ADISC was not possible */
-+	atomic_clear_mask(ZFCP_STATUS_PORT_LINK_TEST, &port->status);
- 	zfcp_erp_port_forced_reopen(port, 0, "fcltwk1", NULL);
- 
-+out:
- 	zfcp_port_put(port);
+-static void zfcp_scsi_dbf_event(const char *tag, const char *tag2, int level,
+-				struct zfcp_adapter *adapter,
+-				struct scsi_cmnd *scsi_cmnd,
+-				struct zfcp_fsf_req *fsf_req,
+-				unsigned long old_req_id)
++void _zfcp_scsi_dbf_event(const char *tag, const char *tag2, int level,
++			  struct zfcp_dbf *dbf, struct scsi_cmnd *scsi_cmnd,
++			  struct zfcp_fsf_req *fsf_req,
++			  unsigned long old_req_id)
+ {
+-	struct zfcp_dbf *dbf = adapter->dbf;
+ 	struct zfcp_scsi_dbf_record *rec = &dbf->scsi_dbf_buf;
+ 	struct zfcp_dbf_dump *dump = (struct zfcp_dbf_dump *)rec;
+ 	unsigned long flags;
+@@ -999,54 +997,6 @@ static void zfcp_scsi_dbf_event(const ch
+ 	spin_unlock_irqrestore(&dbf->scsi_dbf_lock, flags);
  }
  
+-/**
+- * zfcp_scsi_dbf_event_result - trace event for SCSI command completion
+- * @tag: tag indicating success or failure of SCSI command
+- * @level: trace level applicable for this event
+- * @adapter: adapter that has been used to issue the SCSI command
+- * @scsi_cmnd: SCSI command pointer
+- * @fsf_req: request used to issue SCSI command (might be NULL)
+- */
+-void zfcp_scsi_dbf_event_result(const char *tag, int level,
+-				struct zfcp_adapter *adapter,
+-				struct scsi_cmnd *scsi_cmnd,
+-				struct zfcp_fsf_req *fsf_req)
+-{
+-	zfcp_scsi_dbf_event("rslt", tag, level, adapter, scsi_cmnd, fsf_req, 0);
+-}
+-
+-/**
+- * zfcp_scsi_dbf_event_abort - trace event for SCSI command abort
+- * @tag: tag indicating success or failure of abort operation
+- * @adapter: adapter thas has been used to issue SCSI command to be aborted
+- * @scsi_cmnd: SCSI command to be aborted
+- * @new_fsf_req: request containing abort (might be NULL)
+- * @old_req_id: identifier of request containg SCSI command to be aborted
+- */
+-void zfcp_scsi_dbf_event_abort(const char *tag, struct zfcp_adapter *adapter,
+-			       struct scsi_cmnd *scsi_cmnd,
+-			       struct zfcp_fsf_req *new_fsf_req,
+-			       unsigned long old_req_id)
+-{
+-	zfcp_scsi_dbf_event("abrt", tag, 1, adapter, scsi_cmnd, new_fsf_req,
+-			    old_req_id);
+-}
+-
+-/**
+- * zfcp_scsi_dbf_event_devreset - trace event for Logical Unit or Target Reset
+- * @tag: tag indicating success or failure of reset operation
+- * @flag: indicates type of reset (Target Reset, Logical Unit Reset)
+- * @unit: unit that needs reset
+- * @scsi_cmnd: SCSI command which caused this error recovery
+- */
+-void zfcp_scsi_dbf_event_devreset(const char *tag, u8 flag,
+-				  struct zfcp_unit *unit,
+-				  struct scsi_cmnd *scsi_cmnd)
+-{
+-	zfcp_scsi_dbf_event(flag == FCP_TARGET_RESET ? "trst" : "lrst", tag, 1,
+-			    unit->port->adapter, scsi_cmnd, NULL, 0);
+-}
+-
+ static int zfcp_scsi_dbf_view_format(debug_info_t *id, struct debug_view *view,
+ 				     char *out_buf, const char *in_buf)
+ {
+diff -urpN linux-2.6/drivers/s390/scsi/zfcp_dbf.h linux-2.6-patched/drivers/s390/scsi/zfcp_dbf.h
+--- linux-2.6/drivers/s390/scsi/zfcp_dbf.h	2009-08-12 10:05:28.000000000 +0200
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_dbf.h	2009-08-12 10:05:28.000000000 +0200
+@@ -22,7 +22,9 @@
+ #ifndef ZFCP_DBF_H
+ #define ZFCP_DBF_H
+ 
++#include "zfcp_ext.h"
+ #include "zfcp_fsf.h"
++#include "zfcp_def.h"
+ 
+ #define ZFCP_DBF_TAG_SIZE      4
+ #define ZFCP_DBF_ID_SIZE       7
+@@ -237,4 +239,65 @@ struct zfcp_dbf {
+ 	struct zfcp_scsi_dbf_record	scsi_dbf_buf;
+ };
+ 
++static inline
++void zfcp_scsi_dbf_event(const char *tag, const char *tag2, int level,
++			 struct zfcp_adapter *adapter, struct scsi_cmnd *scmd,
++			 struct zfcp_fsf_req *req, unsigned long old_id)
++{
++	struct zfcp_dbf *dbf = adapter->dbf;
++
++	if (level <= dbf->scsi_dbf->level)
++		_zfcp_scsi_dbf_event(tag, tag2, level, dbf, scmd, req, old_id);
++}
++
++/**
++ * zfcp_scsi_dbf_event_result - trace event for SCSI command completion
++ * @tag: tag indicating success or failure of SCSI command
++ * @level: trace level applicable for this event
++ * @adapter: adapter that has been used to issue the SCSI command
++ * @scmd: SCSI command pointer
++ * @fsf_req: request used to issue SCSI command (might be NULL)
++ */
++static inline
++void zfcp_scsi_dbf_event_result(const char *tag, int level,
++				struct zfcp_adapter *adapter,
++				struct scsi_cmnd *scmd,
++				struct zfcp_fsf_req *fsf_req)
++{
++	zfcp_scsi_dbf_event("rslt", tag, level, adapter, scmd, fsf_req, 0);
++}
++
++/**
++ * zfcp_scsi_dbf_event_abort - trace event for SCSI command abort
++ * @tag: tag indicating success or failure of abort operation
++ * @adapter: adapter thas has been used to issue SCSI command to be aborted
++ * @scmd: SCSI command to be aborted
++ * @new_req: request containing abort (might be NULL)
++ * @old_id: identifier of request containg SCSI command to be aborted
++ */
++static inline
++void zfcp_scsi_dbf_event_abort(const char *tag, struct zfcp_adapter *adapter,
++			       struct scsi_cmnd *scmd,
++			       struct zfcp_fsf_req *new_req,
++			       unsigned long old_id)
++{
++	zfcp_scsi_dbf_event("abrt", tag, 1, adapter, scmd, new_req, old_id);
++}
++
++/**
++ * zfcp_scsi_dbf_event_devreset - trace event for Logical Unit or Target Reset
++ * @tag: tag indicating success or failure of reset operation
++ * @flag: indicates type of reset (Target Reset, Logical Unit Reset)
++ * @unit: unit that needs reset
++ * @scsi_cmnd: SCSI command which caused this error recovery
++ */
++static inline
++void zfcp_scsi_dbf_event_devreset(const char *tag, u8 flag,
++				  struct zfcp_unit *unit,
++				  struct scsi_cmnd *scsi_cmnd)
++{
++	zfcp_scsi_dbf_event(flag == FCP_TARGET_RESET ? "trst" : "lrst", tag, 1,
++			    unit->port->adapter, scsi_cmnd, NULL, 0);
++}
++
+ #endif /* ZFCP_DBF_H */
+diff -urpN linux-2.6/drivers/s390/scsi/zfcp_ext.h linux-2.6-patched/drivers/s390/scsi/zfcp_ext.h
+--- linux-2.6/drivers/s390/scsi/zfcp_ext.h	2009-08-12 10:04:57.000000000 +0200
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_ext.h	2009-08-12 10:05:28.000000000 +0200
+@@ -57,14 +57,9 @@ extern void zfcp_san_dbf_event_ct_respon
+ extern void zfcp_san_dbf_event_els_request(struct zfcp_fsf_req *);
+ extern void zfcp_san_dbf_event_els_response(struct zfcp_fsf_req *);
+ extern void zfcp_san_dbf_event_incoming_els(struct zfcp_fsf_req *);
+-extern void zfcp_scsi_dbf_event_result(const char *, int, struct zfcp_adapter *,
+-				       struct scsi_cmnd *,
+-				       struct zfcp_fsf_req *);
+-extern void zfcp_scsi_dbf_event_abort(const char *, struct zfcp_adapter *,
+-				      struct scsi_cmnd *, struct zfcp_fsf_req *,
+-				      unsigned long);
+-extern void zfcp_scsi_dbf_event_devreset(const char *, u8, struct zfcp_unit *,
+-					 struct scsi_cmnd *);
++extern void _zfcp_scsi_dbf_event(const char *, const char *, int,
++				 struct zfcp_dbf *, struct scsi_cmnd *,
++				 struct zfcp_fsf_req *, unsigned long);
+ 
+ /* zfcp_erp.c */
+ extern void zfcp_erp_modify_adapter_status(struct zfcp_adapter *, char *,
+diff -urpN linux-2.6/drivers/s390/scsi/zfcp_fsf.c linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c
+--- linux-2.6/drivers/s390/scsi/zfcp_fsf.c	2009-08-12 10:04:57.000000000 +0200
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c	2009-08-12 10:05:28.000000000 +0200
+@@ -11,6 +11,7 @@
+ 
+ #include <linux/blktrace_api.h>
+ #include "zfcp_ext.h"
++#include "zfcp_dbf.h"
+ 
+ #define ZFCP_REQ_AUTO_CLEANUP	0x00000002
+ #define ZFCP_REQ_NO_QTCB	0x00000008
+diff -urpN linux-2.6/drivers/s390/scsi/zfcp_scsi.c linux-2.6-patched/drivers/s390/scsi/zfcp_scsi.c
+--- linux-2.6/drivers/s390/scsi/zfcp_scsi.c	2009-08-12 10:05:27.000000000 +0200
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_scsi.c	2009-08-12 10:05:28.000000000 +0200
+@@ -9,8 +9,9 @@
+ #define KMSG_COMPONENT "zfcp"
+ #define pr_fmt(fmt) KMSG_COMPONENT ": " fmt
+ 
+-#include "zfcp_ext.h"
+ #include <asm/atomic.h>
++#include "zfcp_ext.h"
++#include "zfcp_dbf.h"
+ 
+ static unsigned int default_depth = 32;
+ module_param_named(queue_depth, default_depth, uint, 0600);
 
