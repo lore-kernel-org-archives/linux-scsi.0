@@ -1,67 +1,78 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 2/2] bnx2i : Fix "cid #n not valid" issue
-Date: Tue, 18 Aug 2009 12:48:06 -0500
-Message-ID: <4A8AE956.502@cs.wisc.edu>
-References: <1248929411.26650.350.camel@anilgv-desktop>
+From: Kay Sievers <kay.sievers@vrfy.org>
+Subject: Re: mpt2sas logged messages
+Date: Tue, 18 Aug 2009 20:37:51 +0200
+Message-ID: <ac3eb2510908181137ne79d4d7he1731d240bca614c@mail.gmail.com>
+References: <4A8AAA26.9090706@redhat.com> <20090818132518.GA4418@kroah.com>
+	<4A8AB3DC.4060805@redhat.com> <20090818145710.GA6064@kroah.com>
+	<4A8ACE7C.5080501@redhat.com> <20090818164017.GA24305@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:38967 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932725AbZHRRsP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Aug 2009 13:48:15 -0400
-In-Reply-To: <1248929411.26650.350.camel@anilgv-desktop>
+Received: from an-out-0708.google.com ([209.85.132.248]:2201 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750779AbZHRSiF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Aug 2009 14:38:05 -0400
+Received: by an-out-0708.google.com with SMTP id d40so3503271and.1
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2009 11:38:06 -0700 (PDT)
+In-Reply-To: <20090818164017.GA24305@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: open-iscsi@googlegroups.com
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, mchan@broadcom.com
+To: Greg KH <greg@kroah.com>
+Cc: Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, Tom Coughlan <coughlan@redhat.com>
 
-On 07/29/2009 11:50 PM, Anil Veerabhadrappa wrote:
+On Tue, Aug 18, 2009 at 18:40, Greg KH<greg@kroah.com> wrote:
+> On Tue, Aug 18, 2009 at 11:53:32AM -0400, Ric Wheeler wrote:
+>> On 08/18/2009 10:57 AM, Greg KH wrote:
+>> > On Tue, Aug 18, 2009 at 09:59:56AM -0400, Ric Wheeler wrote:
+>> >
+>> >> On 08/18/2009 09:25 AM, Greg KH wrote:
+>> >>
+>> >>> On Tue, Aug 18, 2009 at 09:18:30AM -0400, Ric Wheeler wrote:
+>> >>>
+>> >>>> We have a new toy to test very large& =C2=A0 slow storage with =
+built up from 5
+>> >>>> SAS expansion shelves (Promise Vtrak J-Class) with 60 S-ATA dri=
+ves and
+>> >>>> 16 SAS drives (the S-ATA drives each have a Promise Vtrak S-ATA=
+ MUX
+>> >>>> adapter daughter card in the disk sled).
+>> >>>>
+>> >>>> The basic idea is to build a cheap& =C2=A0 slow test bed for fi=
+le& =C2=A0 storage
+>> >>>> system scalability. Collectively, we have about 120TB (raw) of =
+capacity
+>> >>>> to play with in one server.
+>> >>>>
+>> >>>> As we work through various issues, a couple of oddities popped =
+out.
+>> >>>>
+>> >>>> The first is that udev grumbles during boot about "file name to=
+o long"
+>> >>>> like the following:
+>> >>>>
+>> >>>> Aug 17 06:49:58 megadeth udevd-event[20447]: unable to create d=
+b file
+>> >>>> '/dev/.udev/db/\x2fdevices\x2fpci0000:00\x2f0000:00:04.0\x2f000=
+0:17:00.0\x2f0000:18:0a.0\x2f0000:1f:00.0\x2fhost11\x2fport-11:0\x2fexp=
+ander-11:0\x2fport-11:0:0\x2fexpander-11:1\x2fport-11:1:0\x2fexpander-1=
+1:2\x2fport-11:2:17\x2fexpander-11:3\x2fport-11:3:1\x2fend_device-11:3:=
+1\x2fbsg\x2fend_device-11:3:1':
+>> >>>> File name too long
 >
->      * when bnx2i_adapter_ready() fails, connection handle(cid) = 0 is
->        wrongly freed because 'cid' is not yet allocated for the endpoint
->      * Fix is to initialize bnx2i_ep->ep_iscsi_cid to '-1' in bnx2i_alloc_ep()
->        and not in bnx2i_ep_connect() to avoid releasing invalid 'cid'
->      * There is already a check in bnx2i_free_iscsi_cid() not to free
->        invalid iscsi connection handle (-1)
+> Ok, it looks like the way that udev handles it's internal "database"
+> can't handle paths that are larger than a single filename size.
 >
-> Signed-off-by: Anil Veerabhadrappa<anilgv@broadcom.com>
+> Kay, I think this is all yours :)
 
-This looks ok, but I think I got a review comment to change some of my 
-code to use the definitions in kernel.h. So below you would want to use 
-USHORT_MAX.
+Yeah, seems so. Linux can not have filenames longer than 256. We'll
+need to change the way we store the DEVPATH in a filename. I'll look
+into it.
 
-I am not sure if it will prevent the patch from getting merged or not 
-since it will work either way.
-
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
-
-
-
-> ---
->   drivers/scsi/bnx2i/bnx2i_iscsi.c |    3 +--
->   1 files changed, 1 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> index 9535bb6..08d0bfc 100644
-> --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> @@ -387,6 +387,7 @@ static struct iscsi_endpoint *bnx2i_alloc_ep(struct bnx2i_hba *hba)
->   	bnx2i_ep = ep->dd_data;
->   	INIT_LIST_HEAD(&bnx2i_ep->link);
->   	bnx2i_ep->state = EP_STATE_IDLE;
-> +	bnx2i_ep->ep_iscsi_cid = (u16) -1;
->   	bnx2i_ep->hba = hba;
->   	bnx2i_ep->hba_age = hba->age;
->   	hba->ofld_conns_active++;
-> @@ -1678,8 +1679,6 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
->   		goto net_if_down;
->   	}
->
-> -	bnx2i_ep->state = EP_STATE_IDLE;
-> -	bnx2i_ep->ep_iscsi_cid = (u16) -1;
->   	bnx2i_ep->num_active_cmds = 0;
->   	iscsi_cid = bnx2i_alloc_iscsi_cid(hba);
->   	if (iscsi_cid == -1) {
-
+Thanks,
+Kay
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
