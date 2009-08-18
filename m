@@ -1,47 +1,30 @@
-From: Madhavi Manchala <madhavi.lscsi@gmail.com>
-Subject: Re: Bidirectional data transfers from SCSI layer
-Date: Tue, 18 Aug 2009 19:12:11 +0530
-Message-ID: <97a757510908180642l48966e58g7c7705d2df60ccbc@mail.gmail.com>
-References: <97a757510908172322y7a42df80n5bf7f21fbca16e13@mail.gmail.com>
-	 <4A8A608D.9000909@panasas.com>
-	 <97a757510908180203h7c10c63fx19f436e72de25c5@mail.gmail.com>
-	 <4A8A7BB4.90102@panasas.com>
-	 <97a757510908180335u5c5f85b3r7d235440ba83c2cd@mail.gmail.com>
-	 <4A8A94A3.9010802@panasas.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: [patch 00/27] zfcp updates for 2.6.32
+Date: Tue, 18 Aug 2009 15:43:05 +0200
+Message-ID: <20090818134305.841868000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-px0-f196.google.com ([209.85.216.196]:35803 "EHLO
-	mail-px0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752547AbZHRNmM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Aug 2009 09:42:12 -0400
-Received: by pxi34 with SMTP id 34so1802098pxi.4
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2009 06:42:14 -0700 (PDT)
-In-Reply-To: <4A8A94A3.9010802@panasas.com>
+Received: from mtagate7.de.ibm.com ([195.212.29.156]:57144 "EHLO
+	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752543AbZHRNu2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Aug 2009 09:50:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com
 
-On Tue, Aug 18, 2009 at 5:16 PM, Boaz Harrosh<bharrosh@panasas.com> wrote:
+James,
 
-Dear Boaz,
+here is the series of zfcp updates for the 2.6.32 merge window. Most
+patches are concerned with code simplifications and minor
+improvements. With these patches, zfcp no longer uses the old
+kernel_thread API and no longer semaphores.
 
-Thanks again for the information.
+The last patch "zfcp: optimize zfcp_qdio_account" uses a new s390
+function that is introduced with the s390 patch "introduce
+get_clock_monotonic", see http://marc.info/?l=linux-s390&m=125024973232085&w=2
+The zfcp patch applies cleanly, but compilation on s390 fails without the
+s390 patch. This should be no problem for the linux-next tree, since
+linux-next also includes the s390 git tree.
 
-> No!. You miss understood. iscsi is just a scsi LLD (Low Level Driver)
-> just as usb/storage/scsiglue.c is an LLD. You only register with scsi.
->
-> scsi-ml has full support for bidi. Only the LLDs do not. except two
-> LLDs: iscsi and scsi_debug.
-
-I guess, iscsi you are referring to is nothing but
-drivers/scsi/iscsi_tcp.c. If so, do I need to modify
-drivers/usb/storage/scsiglue.c file in a way to handle bidirectional
-commands. The reference code for the modification is iscsi_tcp.c file.
-
-Please let me know whether my assumption is correct or not.
-
-Thanks and Regards,
-Madhavi M.
+--
+Christof Schmitt
