@@ -1,45 +1,67 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: mpt2sas logged messages
-Date: Tue, 18 Aug 2009 13:47:51 -0400
-Message-ID: <4A8AE947.5060403@redhat.com>
-References: <660360F4F2570145BD872F298951B17AE303DB55@cosmail03.lsi.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 2/2] bnx2i : Fix "cid #n not valid" issue
+Date: Tue, 18 Aug 2009 12:48:06 -0500
+Message-ID: <4A8AE956.502@cs.wisc.edu>
+References: <1248929411.26650.350.camel@anilgv-desktop>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:32801 "EHLO mx2.redhat.com"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:38967 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759020AbZHRRqG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Aug 2009 13:46:06 -0400
-In-Reply-To: <660360F4F2570145BD872F298951B17AE303DB55@cosmail03.lsi.com>
+	id S932725AbZHRRsP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Aug 2009 13:48:15 -0400
+In-Reply-To: <1248929411.26650.350.camel@anilgv-desktop>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsi.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kay.sievers@vrfy.org" <kay.sievers@vrfy.org>, Greg KH <greg@kroah.com>, Tom Coughlan <coughlan@redhat.com>
+To: open-iscsi@googlegroups.com
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, mchan@broadcom.com
 
-On 08/18/2009 01:02 PM, Moore, Eric wrote:
-> On Tuesday, August 18, 2009 10:13 AM,  James Bottomley wrote:
->>> The code (0x12) means PL_LOGINFO_CODE_ABORT
->>> The sub_code(0x102) means
->> PL_LOGINFO_SUB_CODE_OPEN_FAILURE_PATHWAY_BLOCKED
->>
->> To translate this according to the SAS 1.1 specification, a
->> pathway open
->> failed because a timeout fired before the path could be established.
->>
->> You can mitigate this by increasing the expander partial
->> pathway timeout
->> value. (or just move to a more efficient configuration).
->>
+On 07/29/2009 11:50 PM, Anil Veerabhadrappa wrote:
 >
-> I was telling Ric it was something else in seperate email.  The pathway was blocked due to two initiors establishing a connection to single port. That woudl be the case if he wasn't using a sata multiplexor.
+>      * when bnx2i_adapter_ready() fails, connection handle(cid) = 0 is
+>        wrongly freed because 'cid' is not yet allocated for the endpoint
+>      * Fix is to initialize bnx2i_ep->ep_iscsi_cid to '-1' in bnx2i_alloc_ep()
+>        and not in bnx2i_ep_connect() to avoid releasing invalid 'cid'
+>      * There is already a check in bnx2i_free_iscsi_cid() not to free
+>        invalid iscsi connection handle (-1)
 >
->
-> anyways, if the pathway timeout is the issue, then I believe you can set the pathway timeout value using Dougs smp tools, smp_phy_control , setting the --pptv command line option.
->
-> http://sg.danny.cz/sg/smp_utils.html
+> Signed-off-by: Anil Veerabhadrappa<anilgv@broadcom.com>
 
-Thanks, I will give that a try,
+This looks ok, but I think I got a review comment to change some of my 
+code to use the definitions in kernel.h. So below you would want to use 
+USHORT_MAX.
 
-ric
+I am not sure if it will prevent the patch from getting merged or not 
+since it will work either way.
+
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+
+
+
+> ---
+>   drivers/scsi/bnx2i/bnx2i_iscsi.c |    3 +--
+>   1 files changed, 1 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> index 9535bb6..08d0bfc 100644
+> --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> @@ -387,6 +387,7 @@ static struct iscsi_endpoint *bnx2i_alloc_ep(struct bnx2i_hba *hba)
+>   	bnx2i_ep = ep->dd_data;
+>   	INIT_LIST_HEAD(&bnx2i_ep->link);
+>   	bnx2i_ep->state = EP_STATE_IDLE;
+> +	bnx2i_ep->ep_iscsi_cid = (u16) -1;
+>   	bnx2i_ep->hba = hba;
+>   	bnx2i_ep->hba_age = hba->age;
+>   	hba->ofld_conns_active++;
+> @@ -1678,8 +1679,6 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
+>   		goto net_if_down;
+>   	}
+>
+> -	bnx2i_ep->state = EP_STATE_IDLE;
+> -	bnx2i_ep->ep_iscsi_cid = (u16) -1;
+>   	bnx2i_ep->num_active_cmds = 0;
+>   	iscsi_cid = bnx2i_alloc_iscsi_cid(hba);
+>   	if (iscsi_cid == -1) {
 
