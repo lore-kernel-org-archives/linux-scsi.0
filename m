@@ -1,430 +1,319 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: RE: [PATCH] scsi_dh: Adding more debug options for scsi
-	rdac	handler
-Date: Wed, 19 Aug 2009 15:37:54 -0700
-Message-ID: <1250721474.945.72.camel@chandra-ubuntu>
-References: <E463DF2B2E584B4A82673F53D62C2EF474B7A493@cosmail01.lsi.com>
-	 <1250647775.30799.36.camel@chandra-ubuntu>
-	 <E463DF2B2E584B4A82673F53D62C2EF474B7AD1D@cosmail01.lsi.com>
-Reply-To: sekharan@linux.vnet.ibm.com
+From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
+Subject: 2.6.31-rc6-git5: Reported regressions from 2.6.30
+Date: Wed, 19 Aug 2009 22:20:25 +0200 (CEST)
+Message-ID: <jCYznkTxcLB.A.EPH.eNIjKB@chimera>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e39.co.us.ibm.com ([32.97.110.160]:37471 "EHLO
-	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751528AbZHSWdg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Aug 2009 18:33:36 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e39.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id n7JMSVVl004227
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Aug 2009 16:28:31 -0600
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n7JMXVD8217514
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Aug 2009 16:33:31 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n7JMXVsx017201
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Aug 2009 16:33:31 -0600
-In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF474B7AD1D@cosmail01.lsi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: Adrian Bunk <bunk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Moger, Babu" <Babu.Moger@lsi.com>
-Cc: Linux SCSI Mailing list <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>, "Stankey, Robert" <Robert.Stankey@lsi.com>, "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>
+
+This message contains a list of some regressions from 2.6.30, for which=
+ there
+are no fixes in the mainline I know of.  If any of them have been fixed=
+ already,
+please let me know.
+
+If you know of any other unresolved regressions from 2.6.30, please let=
+ me know
+either and I'll add them to the list.  Also, please let me know if any =
+of the
+entries below are invalid.
+
+Each entry from the list will be sent additionally in an automatic repl=
+y to
+this message with CCs to the people involved in reporting and handling =
+the
+issue.
 
 
-On Wed, 2009-08-19 at 15:45 -0600, Moger, Babu wrote:
-> Hi Chandra,
->    Thanks for your comments. I will start working on incorporating yo=
-ur comments however I may need some clarifications. Please see my respo=
-nse inline..
-> - Babu
->=20
-> > -----Original Message-----
-> > From: Chandra Seetharaman [mailto:sekharan@us.ibm.com]
-> > Sent: Tuesday, August 18, 2009 9:10 PM
-> > To: Moger, Babu
-> > Cc: Linux SCSI Mailing list; device-mapper development; Chauhan, Vi=
-jay;
-> > Stankey, Robert; Dachepalli, Sudhir
-> > Subject: Re: [PATCH] scsi_dh: Adding more debug options for scsi rd=
-ac
-> > handler
-> >=20
-> > Hi Babu,
-> >=20
-> > Code looks good. But I have few comments...
-> >=20
-> > Generic:
-> >  - Is that all the debug stuff you want to add ?
-> >  - I would split this into few patches (since they
-> >      are can be independent and not related to
-> >      configurable logging, IMO)
-> >    1. Add the array_name and index and acquiring it.
-> >    2. Moving the initialization code to attach()
-> >    3. removal of SCSI_DH_OK in check_ownership() (more below).
-> >    4. Logging stuff.
-> >    (1) and (4) have dependency, but (2) and (3) are
-> >    totally independent of all this.
->=20
-> I am fine with this proposal. I will try to see if I can do it withou=
-t creating merging issues.
->       I think I can break it into three patches.=20
-> 	a) removal of SCSI_DH_OK in check_ownership() (more below).
-> 	b) moving the initialization code to attach()
->       c) combining 1 and 4.=20
-> 	What do you think?
+Listed regressions statistics:
 
-You can send (c) as a patchset of 2 (1 of 2 and 2 of 2); Even though it
-is dependent, they can be functionally separated, which is the idea.
+  Date          Total  Pending  Unresolved
+  ----------------------------------------
+  2009-08-20      102       32          29
+  2009-08-10       89       27          24
+  2009-08-02       76       36          28
+  2009-07-27       70       51          43
+  2009-07-07       35       25          21
+  2009-06-29       22       22          15
 
->=20
-> >=20
-> > Specific comments inline...
-> >=20
-> > On Mon, 2009-08-17 at 11:46 -0600, Moger, Babu wrote:
-> > > From: Babu Moger <babu.moger@lsi.com>
-> > >
-> > > Hi All,
-> > > This patch adds more debugging options to scsi rdac device handle=
-r.
-> > This patch can considerably reduce the time taken to debug issues i=
-n
-> > big configurations also very helpful in addressing the support issu=
-es.
-> > > Here are the summary of changes.
-> > >  - Added a bit mask "module parameter" rdac_logging with 2 bits f=
-or
-> > each type of logging.
-> >=20
-> > Why 2 bits ? isn't 1 bit sufficient ?
->=20
-> Right now 1 bit is sufficient. We thought it may be necessary in futu=
-re
-> in case we want to display only some messages(critical or info but no=
-t
-> all) in particular category. =20
 
-ok.
->=20
-> >=20
-> > >  - currently defined only two types of logging(failover and sense
-> > logging). Can be enhanced later if required.
-> > >  - Only failover logging is enabled for now which is equivalent o=
-f
-> > current logging.
-> > by default.
->=20
-> Ok. I will correct it.
->=20
-> >=20
-> > >
-> > > Signed-off-by: Babu Moger <babu.moger@lsi.com>
-> > > Reviewed-by: Vijay Chauhan <vijay.chauhan@lsi.com>
-> > > Reviewed-by: Bob Stankey <Robert.stankey@lsi.com>
-> > >
-> > > ---
-> > > --- linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c.o=
-rig
-> > 	2009-08-05 16:30:51.000000000 -0500
-> > > +++ linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c	2=
-009-
-> > 08-17 09:15:03.000000000 -0500
-> > > @@ -135,6 +135,8 @@ struct rdac_controller {
-> > >  		struct rdac_pg_legacy legacy;
-> > >  		struct rdac_pg_expanded expanded;
-> > >  	} mode_select;
-> > > +	u8			index;
-> > > +	u8			array_name[31];
-> >=20
-> > Can use a #define ?
->=20
-> If I understood your question correctly,  #define may not work well.
->  Reason is, if we have multiple arrays(which is very common) then we
->  cannot differentiate the two arrays.. So we have to have index and
->  array name separately for each array/controller..
+Unresolved regressions
+----------------------
 
-Sorry for not being clear. I meant to ask if we can use a #define
-instead of literal 31.
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14018
+Subject		: kernel freezes, inotify problem
+Submitter	: Christoph Thielecke <christoph.thielecke-Mmb7MZpHnFY@public.gmane.org>
+Date		: 2009-08-19 12:48 (1 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125068616818353&w=3D=
+4
+Handled-By	: Eric Paris <eparis-FjpueFixGhCM4zKIHC2jIg@public.gmane.org>
 
->=20
-> >=20
-> > >  };
-> > >  struct c8_inquiry {
-> > >  	u8	peripheral_info;
-> > > @@ -198,6 +200,31 @@ static const char *lun_state[] =3D
-> > >  static LIST_HEAD(ctlr_list);
-> > >  static DEFINE_SPINLOCK(list_lock);
-> > >
-> > > +/*
-> > > + * module parameter to enable rdac debug logging.
-> > > + * 2 bits for each type of logging, only two types defined for n=
-ow
-> > > + * Can be enhanced if required at later point
-> > > + */
-> > > +static int rdac_logging =3D 1;
-> > > +module_param(rdac_logging, int, S_IRUGO|S_IWUSR);
-> > > +MODULE_PARM_DESC(rdac_logging, "A bit mask of rdac logging level=
-s, "
-> > > +		"Default is 1 - failover logging enabled, "
-> > > +		"set it to 0xF to enable all the logs");
-> > > +
-> > > +#define RDAC_LOG_FAILOVER	0
-> > > +#define RDAC_LOG_SENSE		2
-> > > +
-> > > +#define RDAC_LOG_BITS		2
-> > > +
-> > > +#define RDAC_LOG_LEVEL(SHIFT)  \
-> > > +        ((rdac_logging >> (SHIFT)) & ((1 << (RDAC_LOG_BITS)) - 1=
-))
-> > > +
-> > > +#define RDAC_DEBUG(SHIFT, sdev, f, arg...) \
-> >=20
-> > instead of RDAC_DEBUG, we can say RDAC_LOG ?!
->=20
-> Sure.. I will do that..
->=20
-> >=20
-> > > +do { \
-> > > +	if (unlikely(RDAC_LOG_LEVEL(SHIFT))) \
-> > > +		sdev_printk(KERN_INFO, sdev, RDAC_NAME ": " f "\n", ##
-> > arg); \
-> > > +} while (0);
-> > > +
-> > >  static inline struct rdac_dh_data *get_rdac_data(struct scsi_dev=
-ice
-> > *sdev)
-> > >  {
-> > >  	struct scsi_dh_data *scsi_dh_data =3D sdev->scsi_dh_data;
-> > > @@ -324,6 +351,13 @@ static struct rdac_controller *get_contr
-> > >  	/* initialize fields of controller */
-> > >  	memcpy(ctlr->subsys_id, subsys_id, SUBSYS_ID_LEN);
-> > >  	memcpy(ctlr->slot_id, slot_id, SLOT_ID_LEN);
-> > > +
-> > > +	/* update the controller index */
-> > > +	if (slot_id[1] =3D=3D 0x31)
-> > > +		ctlr->index =3D 0;
-> > > +	else
-> > > +		ctlr->index =3D 1;
-> > > +
-> > >  	kref_init(&ctlr->kref);
-> > >  	ctlr->use_ms10 =3D -1;
-> > >  	list_add(&ctlr->node, &ctlr_list);
-> > > @@ -381,6 +415,26 @@ static int get_lun(struct scsi_device *s
-> > >  	return err;
-> > >  }
-> > >
-> > > +static int get_array_name(struct scsi_device *sdev, struct
-> > rdac_dh_data *h)
-> > > +{
-> > > +	int err, i;
-> > > +	struct c8_inquiry *inqp;
-> > > +
-> > > +	err =3D submit_inquiry(sdev, 0xC8, sizeof(struct c8_inquiry), h=
-);
-> > > +	if (err =3D=3D SCSI_DH_OK) {
-> > > +		inqp =3D &h->inq.c8;
-> > > +		if (inqp->page_code !=3D 0xc8)
-> > > +			return SCSI_DH_NOSYS;
-> > > +
-> > > +		for(i=3D0; i<30; ++i) {
-> > > +			h->ctlr->array_name[i] =3D inqp-
-> > >array_user_label[(2*i)+1];
-> > > +		}
-> >=20
-> > do not have to have { } for a single line loop.
->=20
-> Sure.. I will remove that..
->=20
-> >=20
-> > > +		h->ctlr->array_name[30] =3D '\0';
-> > > +	}
-> > > +
-> > > +	return err;
-> > > +}
-> > > +
-> > >  static int check_ownership(struct scsi_device *sdev, struct
-> > rdac_dh_data *h)
-> > >  {
-> > >  	int err;
-> > > @@ -450,13 +504,12 @@ static int mode_select_handle_sense(stru
-> > >  {
-> > >  	struct scsi_sense_hdr sense_hdr;
-> > >  	int err =3D SCSI_DH_IO, ret;
-> > > +	struct rdac_dh_data *h =3D get_rdac_data(sdev);
-> > >
-> > >  	ret =3D scsi_normalize_sense(sensebuf, SCSI_SENSE_BUFFERSIZE,
-> > &sense_hdr);
-> > >  	if (!ret)
-> > >  		goto done;
-> > >
-> > > -	err =3D SCSI_DH_OK;
-> > > -
-> >=20
-> > This is a change in behavior.
-> >=20
-> > Why is this needed ?
->=20
-> Setting the flag by default to SCSI_DH_OK might wrongly report the
-> command as success even though the command had failed. The switch=20
-> statement here only lists certain check conditions. If the target=20
-> returns the check conditions other than the listed here then this=20
-> function will return SCSI_DH_OK which is not correct.
 
-A Bug fix. Separate patch would be the right thing to do.
->=20
-> >=20
-> > >  	switch (sense_hdr.sense_key) {
-> > >  	case NO_SENSE:
-> > >  	case ABORTED_COMMAND:
-> > > @@ -478,12 +531,15 @@ static int mode_select_handle_sense(stru
-> > >  			err =3D SCSI_DH_RETRY;
-> > >  		break;
-> > >  	default:
-> > > -		sdev_printk(KERN_INFO, sdev,
-> > > -			    "MODE_SELECT failed with sense
-> > %02x/%02x/%02x.\n",
-> > > -			    sense_hdr.sense_key, sense_hdr.asc,
-> > sense_hdr.ascq);
-> > > +		break;
-> > >  	}
-> > >
-> > >  done:
-> > > +	RDAC_DEBUG(RDAC_LOG_FAILOVER, sdev, "array %s, ctlr %d, "
-> > > +		"MODE_SELECT returned with sense %02x/%02x/%02x",
-> > > +		(char *) h->ctlr->array_name, h->ctlr->index,
-> > > +		sense_hdr.sense_key, sense_hdr.asc, sense_hdr.ascq);
-> > > +
-> >=20
-> > May need to be moved above "done:", as the control comes to done wh=
-en
-> > scsi_normalize_sense() fails.
->=20
-> Sometimes we have seen target returning invalid sense. We need to cat=
-ch
-> that as well. That is the reason we moved this after done.
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14016
+Subject		: mm/ipw2200 regression
+Submitter	: Bartlomiej Zolnierkiewicz <bzolnier-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-08-15 16:56 (5 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125036437221408&w=3D=
+4
 
-We shouldn't be accessing sense_hdr data structure when
-scsi_normalize_sense() fails.
 
->=20
-> >=20
-> > >
-> > >  	return err;
-> > >  }
-> > >
-> > > @@ -499,7 +555,9 @@ retry:
-> > >  	if (!rq)
-> > >  		goto done;
-> > >
-> > > -	sdev_printk(KERN_INFO, sdev, "%s MODE_SELECT command.\n",
-> > > +	RDAC_DEBUG(RDAC_LOG_FAILOVER, sdev, "array %s, ctlr %d, "
-> > > +		"%s MODE_SELECT command",
-> > > +		(char *) h->ctlr->array_name, h->ctlr->index,
-> > >  		(retry_cnt =3D=3D RDAC_RETRY_COUNT) ? "queueing" : "retrying")=
-;
-> > >
-> > >  	err =3D blk_execute_rq(q, NULL, rq, 1);
-> > > @@ -509,8 +567,12 @@ retry:
-> > >  		if (err =3D=3D SCSI_DH_RETRY && retry_cnt--)
-> > >  			goto retry;
-> > >  	}
-> > > -	if (err =3D=3D SCSI_DH_OK)
-> > > +	if (err =3D=3D SCSI_DH_OK) {
-> > >  		h->state =3D RDAC_STATE_ACTIVE;
-> > > +		RDAC_DEBUG(RDAC_LOG_FAILOVER, sdev, "array %s, ctlr %d, "
-> > > +				"MODE_SELECT completed",
-> > > +				(char *) h->ctlr->array_name, h->ctlr->index);
-> > > +	}
-> > Don;t you think we need to have failure also reported ?
->=20
-> Failure will be anyway reported by the function mode_select_handle_se=
-nse. Did not want to print that again.
->=20
-ok
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14015
+Subject		: pty regressed again, breaking expect and gcc's testsuite
+Submitter	: Mikael Pettersson <mikpe-1zs4UD6AkMk@public.gmane.org>
+Date		: 2009-08-14 23:41 (6 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125029329805643&w=3D=
+4
 
-> >=20
-> > >
-> > >  done:
-> > >  	return err;
-> > > @@ -525,12 +587,6 @@ static int rdac_activate(struct scsi_dev
-> > >  	if (err !=3D SCSI_DH_OK)
-> > >  		goto done;
-> > >
-> > > -	if (!h->ctlr) {
-> > > -		err =3D initialize_controller(sdev, h);
-> > > -		if (err !=3D SCSI_DH_OK)
-> > > -			goto done;
-> > > -	}
-> > > -
-> >=20
-> > You can also move the set_mode_select block below.
->=20
-> Sure.. I will do that..
->=20
-> >=20
-> > >  	if (h->ctlr->use_ms10 =3D=3D -1) {
-> > >  		err =3D set_mode_select(sdev, h);
-> > >  		if (err !=3D SCSI_DH_OK)
-> > > @@ -559,6 +615,12 @@ static int rdac_check_sense(struct scsi_
-> > >  				struct scsi_sense_hdr *sense_hdr)
-> > >  {
-> > >  	struct rdac_dh_data *h =3D get_rdac_data(sdev);
-> > > +
-> > > +	RDAC_DEBUG(RDAC_LOG_SENSE, sdev, "array %s, ctlr %d, "
-> > > +			"command returned with sense %02x/%02x/%02x",
-> > > +			(char *) h->ctlr->array_name, h->ctlr->index,
-> > > +			sense_hdr->sense_key, sense_hdr->asc, sense_hdr-
-> > >ascq);
-> > > +
-> >=20
-> > It is not a "command", right ? Code comes here for any I/O failure.
-> > cut-n-paste problem :)
->=20
-> I was in a confusion about what will be the right word here. Ok.. I w=
-ill use "I/O"
 
-sounds good.
->=20
-> >=20
-> >=20
-> > >  	switch (sense_hdr->sense_key) {
-> > >  	case NOT_READY:
-> > >  		if (sense_hdr->asc =3D=3D 0x04 && sense_hdr->ascq =3D=3D 0x01)
-> > > @@ -678,6 +740,16 @@ static int rdac_bus_attach(struct scsi_d
-> > >  	if (err !=3D SCSI_DH_OK)
-> > >  		goto failed;
-> > >
-> > > +	if (!h->ctlr) {
-> >=20
-> > I do not think we need this check here.
->=20
-> You are right.. We don=E2=80=99t need this check here..
->=20
-> > > +		err =3D initialize_controller(sdev, h);
-> > > +		if (err !=3D SCSI_DH_OK)
-> > > +			goto failed;
-> > > +
-> > > +		err =3D get_array_name(sdev, h);
-> > > +		if (err !=3D SCSI_DH_OK)
-> > > +			goto failed;
-> > > +	}
-> > > +
-> > >  	if (!try_module_get(THIS_MODULE))
-> > >  		goto failed;
-> > >
-> > >
-> > >
-> > >
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-s=
-csi"
-> > in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.htm=
-l
->=20
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14014
+Subject		: kernel bug at shut down
+Submitter	: Norbert Preining <preining-DX+603jRYB8@public.gmane.org>
+Date		: 2009-08-14 9:11 (6 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125024112418870&w=3D=
+4
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14013
+Subject		: hd don't show up
+Submitter	: Tim Blechmann <tim-xpEK/MU0Hawdnm+yROfE0A@public.gmane.org>
+Date		: 2009-08-14 8:26 (6 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125023842514480&w=3D=
+4
+Handled-By	: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14012
+Subject		: latest git fried my x86_64 imac
+Submitter	: Justin P. Mattock <justinmattock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-08-13 07:20 (7 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125014080427090&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14011
+Subject		: Kernel paging request failed in kmem_cache_alloc
+Submitter	: Matthias Dahl <ml_kernel-Rk1lLwyeSiSCvTm3UDtA3g@public.gmane.org>
+Date		: 2009-08-10 22:26 (10 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D124993603825082&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14003
+Subject		: Infinite loop on bootup while handling DMAR
+Submitter	: Bernhard Rosenkraenzer <bero-9zdaV+82baBg9hUCZPvPmw@public.gmane.org>
+Date		: 2009-08-18 14:54 (2 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14002
+Subject		: WARNING: at net/ipv4/af_inet.c:154 inet_sock_destruct+0x164/=
+0x1c0()
+Submitter	: Ralf Hildebrandt <ralf.hildebrandt-jq1tPX9l7E6ELgA04lAiVw@public.gmane.org>
+Date		: 2009-08-18 12:37 (2 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D13987
+Subject		: Received NMI interrupt at resume
+Submitter	: Christian Casteyde <casteyde.christian-GANU6spQydw@public.gmane.org>
+Date		: 2009-08-15 07:55 (5 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D13960
+Subject		: rtl8187 not connect to wifi
+Submitter	: okias <d.okias-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-08-10 19:16 (10 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D13950
+Subject		: Oops when USB Serial disconnected while in use
+Submitter	: Bruno Pr=C3=A9mont <bonbons-ud5FBsm0p/xEiooADzr8i9i2O/JbrIOy@public.gmane.org>
+Date		: 2009-08-08 17:47 (12 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D124975432900466&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D13947
+Subject		: Libertas: Association request to the driver failed
+Submitter	: Daniel Mack <daniel-rDUAYElUppE@public.gmane.org>
+Date		: 2009-08-07 19:11 (13 days old)
+=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
+s/linux-2.6.git;a=3Dcommit;h=3D57921c312e8cef72ba35a4cfe870b376da0b1b87
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D124967234311481&w=3D=
+4
+Handled-By	: Roel Kluin <roel.kluin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D13943
+Subject		: WARNING: at net/mac80211/mlme.c:2292 with ath5k
+Submitter	: Fabio Comolli <fabio.comolli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-08-06 20:15 (14 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D124958978600600&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D13942
+Subject		: Troubles with AoE and uninitialized object
+Submitter	: Bruno Pr=C3=A9mont <bonbons-ud5FBsm0p/xEiooADzr8i9i2O/JbrIOy@public.gmane.org>
+Date		: 2009-08-04 10:12 (16 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D124938117104811&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D13941
+Subject		: x86 Geode issue
+Submitter	: Martin-=C3=89ric Racine <q-funk-X3B1VOXEql0@public.gmane.org>
+Date		: 2009-08-03 12:58 (17 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D124930434732481&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D13940
+Subject		: iwlagn and sky2 stopped working, ACPI-related
+Submitter	: Ricardo Jorge da Fonseca Marques Ferreira <storm@sys49152.n=
+et>
+Date		: 2009-08-07 22:33 (13 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D124968457731107&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D13935
+Subject		: 2.6.31-rcX breaks Apple MightyMouse (Bluetooth version)
+Submitter	: Adrian Ulrich <kernel-4ZM2p5qjiQGewZBzVTKGGg@public.gmane.org>
+Date		: 2009-08-08 22:08 (12 days old)
+=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
+s/linux-2.6.git;a=3Dcommit;h=3Dfa047e4f6fa63a6e9d0ae4d7749538830d14a343
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D13914
+Subject		: e1000e reports invalid NVM Checksum on 82566DM-2 (bisected)
+Submitter	:  <jsbronder-aBrp7R+bbdUdnm+yROfE0A@public.gmane.org>
+Date		: 2009-08-04 18:06 (16 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D13906
+Subject		: Huawei E169 GPRS connection causes Ooops
+Submitter	: Clemens Eisserer <linuxhippy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-08-04 09:02 (16 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D13899
+Subject		: Oops from tar, 2.6.31-rc5, 32 bit on quad core phenom.
+Submitter	: Gene Heskett <gene.heskett-H+0wwilmMs3R7s880joybQ@public.gmane.org>
+Date		: 2009-08-01 13:04 (19 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D124913190304149&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D13869
+Subject		: Radeon framebuffer (w/o KMS) corruption at boot.
+Submitter	: Duncan <1i5t5.duncan-j9pdmedNgrk@public.gmane.org>
+Date		: 2009-07-29 16:44 (22 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D13848
+Subject		: iwlwifi (4965) regression since 2.6.30
+Submitter	: Lukas Hejtmanek <xhejtman-8qz54MUs51PtwjQa/ONI9g@public.gmane.org>
+Date		: 2009-07-26 7:57 (25 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D124859658502866&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D13836
+Subject		: suspend script fails, related to stdout?
+Submitter	: Tomas M. <tmezzadra-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-07-17 21:24 (34 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D124785853811667&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D13819
+Subject		: system freeze when switching to console
+Submitter	: Reinette Chatre <reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Date		: 2009-07-23 17:57 (28 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D13809
+Subject		: oprofile: possible circular locking dependency detected
+Submitter	: Jerome Marchand <jmarchan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Date		: 2009-07-22 13:35 (29 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D13740
+Subject		: X server crashes with 2.6.31-rc2 when options are changed
+Submitter	: Michael S. Tsirkin <m.s.tsirkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-07-07 15:19 (44 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D13733
+Subject		: 2.6.31-rc2: irq 16: nobody cared
+Submitter	: Niel Lambrechts <niel.lambrechts-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-07-06 18:32 (45 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D124690524027166&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D13645
+Subject		: NULL pointer dereference at (null) (level2_spare_pgt)
+Submitter	: poornima nayak <mpnayak-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Date		: 2009-06-17 17:56 (64 days old)
+References	: http://lkml.org/lkml/2009/6/17/194
+
+
+Regressions with patches
+------------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14017
+Subject		: _end symbol missing from Symbol.map
+Submitter	: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+Date		: 2009-08-13 6:45 (7 days old)
+=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
+s/linux-2.6.git;a=3Dcommit;h=3D091e52c3551d3031343df24b573b770b4c6c72b6
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125014649102253&w=3D=
+4
+Handled-By	: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+Patch		: http://marc.info/?l=3Dlinux-kernel&m=3D125014649102253&w=3D4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D13948
+Subject		: ath5k broken after suspend-to-ram
+Submitter	: Johannes Stezenbach <js-FF7aIK3TAVNeoWH0uzbU5w@public.gmane.org>
+Date		: 2009-08-07 21:51 (13 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D124968192727854&w=3D=
+4
+Handled-By	: Nick Kossifidis <mickflemm-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Patch		: http://patchwork.kernel.org/patch/38550/
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D13946
+Subject		: x86 MCE malfunction on Thinkpad T42p
+Submitter	: Johannes Stezenbach <js-FF7aIK3TAVNeoWH0uzbU5w@public.gmane.org>
+Date		: 2009-08-07 17:09 (13 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D124966500232399&w=3D=
+4
+Handled-By	: Bartlomiej Zolnierkiewicz <bzolnier-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Patch		: http://patchwork.kernel.org/patch/37908/
+
+
+=46or details, please visit the bug entries and follow the links given =
+in
+references.
+
+As you can see, there is a Bugzilla entry for each of the listed regres=
+sions.
+There also is a Bugzilla entry used for tracking the regressions from 2=
+=2E6.30,
+unresolved as well as resolved, at:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=3D13615
+
+Please let me know if there are any Bugzilla entries that should be add=
+ed to
+the list in there.
+
+Thanks,
+Rafael
