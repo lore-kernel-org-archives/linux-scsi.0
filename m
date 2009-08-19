@@ -1,48 +1,50 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: device/volume info on transport removal
-Date: Tue, 18 Aug 2009 21:22:12 -0500
-Message-ID: <4A8B61D4.4040706@cs.wisc.edu>
-References: <06C3D92ADC647D45918996C82BFB6B996C6325B79C@GVW0433EXB.americas.hpqcorp.net>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: Bidirectional data transfers from SCSI layer
+Date: Wed, 19 Aug 2009 11:22:01 +0300
+Message-ID: <4A8BB629.2090207@panasas.com>
+References: <97a757510908172322y7a42df80n5bf7f21fbca16e13@mail.gmail.com>	 <4A8A608D.9000909@panasas.com>	 <97a757510908180203h7c10c63fx19f436e72de25c5@mail.gmail.com>	 <4A8A7BB4.90102@panasas.com>	 <97a757510908180335u5c5f85b3r7d235440ba83c2cd@mail.gmail.com>	 <4A8A94A3.9010802@panasas.com> <97a757510908180642l48966e58g7c7705d2df60ccbc@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:54333 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751272AbZHSCWS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Aug 2009 22:22:18 -0400
-In-Reply-To: <06C3D92ADC647D45918996C82BFB6B996C6325B79C@GVW0433EXB.americas.hpqcorp.net>
+Received: from mail-fx0-f228.google.com ([209.85.220.228]:40549 "EHLO
+	mail-fx0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751420AbZHSIWE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Aug 2009 04:22:04 -0400
+Received: by fxm28 with SMTP id 28so3922120fxm.17
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Aug 2009 01:22:05 -0700 (PDT)
+In-Reply-To: <97a757510908180642l48966e58g7c7705d2df60ccbc@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Auld, Brian (LeftHand Networks)" <brian.auld@hp.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Madhavi Manchala <madhavi.lscsi@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-On 08/18/2009 01:47 PM, Auld, Brian (LeftHand Networks) wrote:
-> I have a question about the lifetime of volume/disk info for SAN
-> disks.
->
-> Say my server has discovered a disk/volume on a SAN (iscsi or fc).  A
-> connection is established at the transport layer.  Presumably disk
-> information (eg. vpd inquiry data and the like) is saved in a layer
-> (SBC disk layer?) above the transport.
->
+On 08/18/2009 04:42 PM, Madhavi Manchala wrote:
+> On Tue, Aug 18, 2009 at 5:16 PM, Boaz Harrosh<bharrosh@panasas.com> wrote:
+> 
+> Dear Boaz,
+> 
+> Thanks again for the information.
+> 
+>> No!. You miss understood. iscsi is just a scsi LLD (Low Level Driver)
+>> just as usb/storage/scsiglue.c is an LLD. You only register with scsi.
+>>
+>> scsi-ml has full support for bidi. Only the LLDs do not. except two
+>> LLDs: iscsi and scsi_debug.
+> 
+> I guess, iscsi you are referring to is nothing but
+> drivers/scsi/iscsi_tcp.c. If so, do I need to modify
+> drivers/usb/storage/scsiglue.c file in a way to handle bidirectional
+> commands. The reference code for the modification is iscsi_tcp.c file.
+> 
 
-The scsi layer has info on the disk. Some of it is in /sys/block/sdX/device.
+Yes
+and also drivers/scsi/scsi_debug.c
 
-> What happens if the server explicitly logs out of the session for the
-> above disk/volume using whatever initiator tools are available to
-> them?  Does the disk/volume info remain for some time in the higher
-> layer(s) or do all the data structures related to that disk/volume
-> get unplugged/removed when the transport connection is taken away?
-> Of course, it goes without saying that no other objects in the OS
-> (files, devices, mountpoints) are using the disk when the logout
-> occurs.
+> Please let me know whether my assumption is correct or not.
+> 
+> Thanks and Regards,
+> Madhavi M.
 
-
-For iscsi, if you logged out of the session with a tool like iscsiadm
-then the disks would be removed from the OS.
-
-Same goes for FC I guess. If you were to remove the fc module like lpfc 
-or qla2xxx then the hba, ports and disks would go away. I am not sure if 
-there is a tool that allows you to remove just one port (for a vport you 
-can use the sysfs interface though).
+Good luck
+Boaz
