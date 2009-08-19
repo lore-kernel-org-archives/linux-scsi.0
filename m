@@ -1,271 +1,382 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: Re: [PATCH, RFC] xfs: batched discard support
-Date: Wed, 19 Aug 2009 22:39:16 +0200
-Message-ID: <20090819203916.GA25296@elte.hu>
-References: <20090816004705.GA7347@infradead.org>
+From: "Moger, Babu" <Babu.Moger@lsi.com>
+Subject: RE: [PATCH] scsi_dh: Adding more debug options for scsi rdac	handler
+Date: Wed, 19 Aug 2009 15:45:08 -0600
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF474B7AD1D@cosmail01.lsi.com>
+References: <E463DF2B2E584B4A82673F53D62C2EF474B7A493@cosmail01.lsi.com>
+ <1250647775.30799.36.camel@chandra-ubuntu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090816004705.GA7347@infradead.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Paul Mackerras <paulus@samba.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, liml@rtr.ca, jens.axboe@oracle.com
+Content-Type: text/plain; charset=Windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exprod7og123.obsmtp.com ([64.18.2.24]:35845 "EHLO
+	exprod7og123.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753167AbZHSVpe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Aug 2009 17:45:34 -0400
+In-Reply-To: <1250647775.30799.36.camel@chandra-ubuntu>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "sekharan@linux.vnet.ibm.com" <sekharan@linux.vnet.ibm.com>
+Cc: Linux SCSI Mailing list <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>, "Stankey, Robert" <Robert.Stankey@lsi.com>, "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>
 
+Hi Chandra,
+   Thanks for your comments. I will start working on incorporating your=
+ comments however I may need some clarifications. Please see my respons=
+e inline..
+- Babu
 
-* Christoph Hellwig <hch@infradead.org> wrote:
+> -----Original Message-----
+> From: Chandra Seetharaman [mailto:sekharan@us.ibm.com]
+> Sent: Tuesday, August 18, 2009 9:10 PM
+> To: Moger, Babu
+> Cc: Linux SCSI Mailing list; device-mapper development; Chauhan, Vija=
+y;
+> Stankey, Robert; Dachepalli, Sudhir
+> Subject: Re: [PATCH] scsi_dh: Adding more debug options for scsi rdac
+> handler
+>=20
+> Hi Babu,
+>=20
+> Code looks good. But I have few comments...
+>=20
+> Generic:
+>  - Is that all the debug stuff you want to add ?
+>  - I would split this into few patches (since they
+>      are can be independent and not related to
+>      configurable logging, IMO)
+>    1. Add the array_name and index and acquiring it.
+>    2. Moving the initialization code to attach()
+>    3. removal of SCSI_DH_OK in check_ownership() (more below).
+>    4. Logging stuff.
+>    (1) and (4) have dependency, but (2) and (3) are
+>    totally independent of all this.
 
-> Given that everyone is so big in the discard discussion 
-> I'd like to present what I had started to prepare for 
-> XFS.  I didn't plan to send it out until I get my hands 
-> onto a TRIM capable device (or at least get time to add 
-> support to qemu), and so far it's only been tested in 
-> dry-run mode.
-> 
-> The basic idea is to add an ioctl which walks the free 
-> space btrees in each allocation group and simply 
-> discard everythin that is free. [...]
+I am fine with this proposal. I will try to see if I can do it without =
+creating merging issues.
+      I think I can break it into three patches.=20
+	a) removal of SCSI_DH_OK in check_ownership() (more below).
+	b) moving the initialization code to attach()
+      c) combining 1 and 4.=20
+	What do you think?
 
-A general interface design question: you added a new 
-ioctl XFS_IOC_TRIM case. It's a sub-case of an 
-ugly-looking demultiplexing xfs_file_ioctl().
+>=20
+> Specific comments inline...
+>=20
+> On Mon, 2009-08-17 at 11:46 -0600, Moger, Babu wrote:
+> > From: Babu Moger <babu.moger@lsi.com>
+> >
+> > Hi All,
+> > This patch adds more debugging options to scsi rdac device handler.
+> This patch can considerably reduce the time taken to debug issues in
+> big configurations also very helpful in addressing the support issues=
+=2E
+> > Here are the summary of changes.
+> >  - Added a bit mask "module parameter" rdac_logging with 2 bits for
+> each type of logging.
+>=20
+> Why 2 bits ? isn't 1 bit sufficient ?
 
-What is your threshold for turning something into a 
-syscall? When are ioctls acceptable in your opinion?
+Right now 1 bit is sufficient. We thought it may be necessary in future=
+ in case we want to display only some messages(critical or info but not=
+ all) in particular category. =20
 
-I'm asking this because we are facing a similar problem 
-with perfcounters: we need to extend the ioctl 
-functionality there but introducing a new syscall looks 
-wasteful.
+>=20
+> >  - currently defined only two types of logging(failover and sense
+> logging). Can be enhanced later if required.
+> >  - Only failover logging is enabled for now which is equivalent of
+> current logging.
+> by default.
 
-So i'm torn about the 'syscall versus ioctl' issue, i'd 
-like to avoid making interface design mistakes and i'd 
-like to solicit some opinions about this. I've attached 
-the perfcounters ioctl patch below.
+Ok. I will correct it.
 
-Thanks,
+>=20
+> >
+> > Signed-off-by: Babu Moger <babu.moger@lsi.com>
+> > Reviewed-by: Vijay Chauhan <vijay.chauhan@lsi.com>
+> > Reviewed-by: Bob Stankey <Robert.stankey@lsi.com>
+> >
+> > ---
+> > --- linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c.ori=
+g
+> 	2009-08-05 16:30:51.000000000 -0500
+> > +++ linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c	200=
+9-
+> 08-17 09:15:03.000000000 -0500
+> > @@ -135,6 +135,8 @@ struct rdac_controller {
+> >  		struct rdac_pg_legacy legacy;
+> >  		struct rdac_pg_expanded expanded;
+> >  	} mode_select;
+> > +	u8			index;
+> > +	u8			array_name[31];
+>=20
+> Can use a #define ?
 
-	Ingo
+If I understood your question correctly,  #define may not work well. Re=
+ason is, if we have multiple arrays(which is very common) then we canno=
+t differentiate the two arrays.. So we have to have index and array nam=
+e separately for each array/controller..
 
------ Forwarded message from Peter Zijlstra <a.p.zijlstra@chello.nl> -----
+>=20
+> >  };
+> >  struct c8_inquiry {
+> >  	u8	peripheral_info;
+> > @@ -198,6 +200,31 @@ static const char *lun_state[] =3D
+> >  static LIST_HEAD(ctlr_list);
+> >  static DEFINE_SPINLOCK(list_lock);
+> >
+> > +/*
+> > + * module parameter to enable rdac debug logging.
+> > + * 2 bits for each type of logging, only two types defined for now
+> > + * Can be enhanced if required at later point
+> > + */
+> > +static int rdac_logging =3D 1;
+> > +module_param(rdac_logging, int, S_IRUGO|S_IWUSR);
+> > +MODULE_PARM_DESC(rdac_logging, "A bit mask of rdac logging levels,=
+ "
+> > +		"Default is 1 - failover logging enabled, "
+> > +		"set it to 0xF to enable all the logs");
+> > +
+> > +#define RDAC_LOG_FAILOVER	0
+> > +#define RDAC_LOG_SENSE		2
+> > +
+> > +#define RDAC_LOG_BITS		2
+> > +
+> > +#define RDAC_LOG_LEVEL(SHIFT)  \
+> > +        ((rdac_logging >> (SHIFT)) & ((1 << (RDAC_LOG_BITS)) - 1))
+> > +
+> > +#define RDAC_DEBUG(SHIFT, sdev, f, arg...) \
+>=20
+> instead of RDAC_DEBUG, we can say RDAC_LOG ?!
 
-Date: Wed, 19 Aug 2009 11:18:27 +0200
-From: Peter Zijlstra <a.p.zijlstra@chello.nl>
-To: Ingo Molnar <mingo@elte.hu>, Paul Mackerras <paulus@samba.org>
-Subject: [PATCH 4/4][RFC] perf_counter: Allow sharing of output channels
-Cc: Arnaldo Carvalho de Melo <acme@redhat.com>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	Mike Galbraith <efault@gmx.de>, linux-kernel@vger.kernel.org,
-	stephane eranian <eranian@googlemail.com>,
-	Peter Zijlstra <a.p.zijlstra@chello.nl>
+Sure.. I will do that..
 
-Provide the ability to configure a counter to send its output to
-another (already existing) counter's output stream.
+>=20
+> > +do { \
+> > +	if (unlikely(RDAC_LOG_LEVEL(SHIFT))) \
+> > +		sdev_printk(KERN_INFO, sdev, RDAC_NAME ": " f "\n", ##
+> arg); \
+> > +} while (0);
+> > +
+> >  static inline struct rdac_dh_data *get_rdac_data(struct scsi_devic=
+e
+> *sdev)
+> >  {
+> >  	struct scsi_dh_data *scsi_dh_data =3D sdev->scsi_dh_data;
+> > @@ -324,6 +351,13 @@ static struct rdac_controller *get_contr
+> >  	/* initialize fields of controller */
+> >  	memcpy(ctlr->subsys_id, subsys_id, SUBSYS_ID_LEN);
+> >  	memcpy(ctlr->slot_id, slot_id, SLOT_ID_LEN);
+> > +
+> > +	/* update the controller index */
+> > +	if (slot_id[1] =3D=3D 0x31)
+> > +		ctlr->index =3D 0;
+> > +	else
+> > +		ctlr->index =3D 1;
+> > +
+> >  	kref_init(&ctlr->kref);
+> >  	ctlr->use_ms10 =3D -1;
+> >  	list_add(&ctlr->node, &ctlr_list);
+> > @@ -381,6 +415,26 @@ static int get_lun(struct scsi_device *s
+> >  	return err;
+> >  }
+> >
+> > +static int get_array_name(struct scsi_device *sdev, struct
+> rdac_dh_data *h)
+> > +{
+> > +	int err, i;
+> > +	struct c8_inquiry *inqp;
+> > +
+> > +	err =3D submit_inquiry(sdev, 0xC8, sizeof(struct c8_inquiry), h);
+> > +	if (err =3D=3D SCSI_DH_OK) {
+> > +		inqp =3D &h->inq.c8;
+> > +		if (inqp->page_code !=3D 0xc8)
+> > +			return SCSI_DH_NOSYS;
+> > +
+> > +		for(i=3D0; i<30; ++i) {
+> > +			h->ctlr->array_name[i] =3D inqp-
+> >array_user_label[(2*i)+1];
+> > +		}
+>=20
+> do not have to have { } for a single line loop.
 
-[ compile tested only ]
+Sure.. I will remove that..
 
-Signed-off-by: Peter Zijlstra <a.p.zijlstra@chello.nl>
-Cc: stephane eranian <eranian@googlemail.com>
----
- include/linux/perf_counter.h |    5 ++
- kernel/perf_counter.c        |   83 +++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 85 insertions(+), 3 deletions(-)
+>=20
+> > +		h->ctlr->array_name[30] =3D '\0';
+> > +	}
+> > +
+> > +	return err;
+> > +}
+> > +
+> >  static int check_ownership(struct scsi_device *sdev, struct
+> rdac_dh_data *h)
+> >  {
+> >  	int err;
+> > @@ -450,13 +504,12 @@ static int mode_select_handle_sense(stru
+> >  {
+> >  	struct scsi_sense_hdr sense_hdr;
+> >  	int err =3D SCSI_DH_IO, ret;
+> > +	struct rdac_dh_data *h =3D get_rdac_data(sdev);
+> >
+> >  	ret =3D scsi_normalize_sense(sensebuf, SCSI_SENSE_BUFFERSIZE,
+> &sense_hdr);
+> >  	if (!ret)
+> >  		goto done;
+> >
+> > -	err =3D SCSI_DH_OK;
+> > -
+>=20
+> This is a change in behavior.
+>=20
+> Why is this needed ?
 
-Index: linux-2.6/include/linux/perf_counter.h
-===================================================================
---- linux-2.6.orig/include/linux/perf_counter.h
-+++ linux-2.6/include/linux/perf_counter.h
-@@ -216,6 +216,7 @@ struct perf_counter_attr {
- #define PERF_COUNTER_IOC_REFRESH	_IO ('$', 2)
- #define PERF_COUNTER_IOC_RESET		_IO ('$', 3)
- #define PERF_COUNTER_IOC_PERIOD		_IOW('$', 4, u64)
-+#define PERF_COUNTER_IOC_SET_OUTPUT	_IO ('$', 5)
- 
- enum perf_counter_ioc_flags {
- 	PERF_IOC_FLAG_GROUP		= 1U << 0,
-@@ -415,6 +416,9 @@ enum perf_callchain_context {
- 	PERF_CONTEXT_MAX		= (__u64)-4095,
- };
- 
-+#define PERF_FLAG_FD_NO_GROUP	(1U << 0)
-+#define PERF_FLAG_FD_OUTPUT	(1U << 1)
-+
- #ifdef __KERNEL__
- /*
-  * Kernel-internal data types and definitions:
-@@ -536,6 +540,7 @@ struct perf_counter {
- 	struct list_head		sibling_list;
- 	int				nr_siblings;
- 	struct perf_counter		*group_leader;
-+	struct perf_counter		*output;
- 	const struct pmu		*pmu;
- 
- 	enum perf_counter_active_state	state;
-Index: linux-2.6/kernel/perf_counter.c
-===================================================================
---- linux-2.6.orig/kernel/perf_counter.c
-+++ linux-2.6/kernel/perf_counter.c
-@@ -1686,6 +1686,11 @@ static void free_counter(struct perf_cou
- 			atomic_dec(&nr_task_counters);
- 	}
- 
-+	if (counter->output) {
-+		fput(counter->output->filp);
-+		counter->output = NULL;
-+	}
-+
- 	if (counter->destroy)
- 		counter->destroy(counter);
- 
-@@ -1971,6 +1976,8 @@ unlock:
- 	return ret;
- }
- 
-+int perf_counter_set_output(struct perf_counter *counter, int output_fd);
-+
- static long perf_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
- {
- 	struct perf_counter *counter = file->private_data;
-@@ -1994,6 +2001,9 @@ static long perf_ioctl(struct file *file
- 	case PERF_COUNTER_IOC_PERIOD:
- 		return perf_counter_period(counter, (u64 __user *)arg);
- 
-+	case PERF_COUNTER_IOC_SET_OUTPUT:
-+		return perf_counter_set_output(counter, arg);
-+
- 	default:
- 		return -ENOTTY;
- 	}
-@@ -2264,6 +2274,11 @@ static int perf_mmap(struct file *file, 
- 
- 	WARN_ON_ONCE(counter->ctx->parent_ctx);
- 	mutex_lock(&counter->mmap_mutex);
-+	if (counter->output) {
-+		ret = -EINVAL;
-+		goto unlock;
-+	}
-+
- 	if (atomic_inc_not_zero(&counter->mmap_count)) {
- 		if (nr_pages != counter->data->nr_pages)
- 			ret = -EINVAL;
-@@ -2649,6 +2664,7 @@ static int perf_output_begin(struct perf
- 			     struct perf_counter *counter, unsigned int size,
- 			     int nmi, int sample)
- {
-+	struct perf_counter *output_counter;
- 	struct perf_mmap_data *data;
- 	unsigned int offset, head;
- 	int have_lost;
-@@ -2658,13 +2674,17 @@ static int perf_output_begin(struct perf
- 		u64			 lost;
- 	} lost_event;
- 
-+	rcu_read_lock();
- 	/*
- 	 * For inherited counters we send all the output towards the parent.
- 	 */
- 	if (counter->parent)
- 		counter = counter->parent;
- 
--	rcu_read_lock();
-+	output_counter = rcu_dereference(counter->output);
-+	if (output_counter)
-+		counter = output_counter;
-+
- 	data = rcu_dereference(counter->data);
- 	if (!data)
- 		goto out;
-@@ -4214,6 +4234,57 @@ err_size:
- 	goto out;
- }
- 
-+int perf_counter_set_output(struct perf_counter *counter, int output_fd)
-+{
-+	struct perf_counter *output_counter = NULL;
-+	struct file *output_file = NULL;
-+	struct perf_counter *old_output;
-+	int fput_needed = 0;
-+	int ret = -EINVAL;
-+
-+	if (!output_fd)
-+		goto set;
-+
-+	output_file = fget_light(output_fd, &fput_needed);
-+	if (!output_file)
-+		return -EBADF;
-+
-+	if (output_file->f_op != &perf_fops)
-+		goto out;
-+
-+	output_counter = output_file->private_data;
-+
-+	/* Don't chain output fds */
-+	if (output_counter->output)
-+		goto out;
-+
-+	/* Don't set an output fd when we already have an output channel */
-+	if (counter->data)
-+		goto out;
-+
-+	atomic_long_inc(&output_file->f_count);
-+
-+set:
-+	mutex_lock(&counter->mmap_mutex);
-+	old_output = counter->output;
-+	rcu_assign_pointer(counter->output, output_counter);
-+	mutex_unlock(&counter->mmap_mutex);
-+
-+	if (old_output) {
-+		/*
-+		 * we need to make sure no existing perf_output_*()
-+		 * is still referencing this counter.
-+		 */
-+		synchronize_rcu();
-+		fput(old_output->filp);
-+	}
-+
-+	ret = 0;
-+out:
-+	fput_light(output_file, fput_needed);
-+	return ret;
-+}
-+
- /**
-  * sys_perf_counter_open - open a performance counter, associate it to a task/cpu
-  *
-@@ -4236,7 +4307,7 @@ SYSCALL_DEFINE5(perf_counter_open,
- 	int ret;
- 
- 	/* for future expandability... */
--	if (flags)
-+	if (flags & ~(PERF_FLAG_FD_NO_GROUP | PERF_FLAG_FD_OUTPUT))
- 		return -EINVAL;
- 
- 	ret = perf_copy_attr(attr_uptr, &attr);
-@@ -4264,7 +4335,7 @@ SYSCALL_DEFINE5(perf_counter_open,
- 	 * Look up the group leader (we will attach this counter to it):
- 	 */
- 	group_leader = NULL;
--	if (group_fd != -1) {
-+	if (group_fd != -1 && !(flags & PERF_FLAG_FD_NO_GROUP)) {
- 		ret = -EINVAL;
- 		group_file = fget_light(group_fd, &fput_needed);
- 		if (!group_file)
-@@ -4306,6 +4377,12 @@ SYSCALL_DEFINE5(perf_counter_open,
- 	if (!counter_file)
- 		goto err_free_put_context;
- 
-+	if (flags & PERF_FLAG_FD_OUTPUT) {
-+		ret = perf_counter_set_output(counter, group_fd);
-+		if (ret)
-+			goto err_free_put_context;
-+	}
-+
- 	counter->filp = counter_file;
- 	WARN_ON_ONCE(ctx->parent_ctx);
- 	mutex_lock(&ctx->mutex);
+Setting the flag by default to SCSI_DH_OK might wrongly report the comm=
+and as success even though the command had failed. The switch statement=
+ here only lists certain check conditions. If the target returns the ch=
+eck conditions other than the listed here then this function will retur=
+n SCSI_DH_OK which is not correct.
 
--- 
+>=20
+> >  	switch (sense_hdr.sense_key) {
+> >  	case NO_SENSE:
+> >  	case ABORTED_COMMAND:
+> > @@ -478,12 +531,15 @@ static int mode_select_handle_sense(stru
+> >  			err =3D SCSI_DH_RETRY;
+> >  		break;
+> >  	default:
+> > -		sdev_printk(KERN_INFO, sdev,
+> > -			    "MODE_SELECT failed with sense
+> %02x/%02x/%02x.\n",
+> > -			    sense_hdr.sense_key, sense_hdr.asc,
+> sense_hdr.ascq);
+> > +		break;
+> >  	}
+> >
+> >  done:
+> > +	RDAC_DEBUG(RDAC_LOG_FAILOVER, sdev, "array %s, ctlr %d, "
+> > +		"MODE_SELECT returned with sense %02x/%02x/%02x",
+> > +		(char *) h->ctlr->array_name, h->ctlr->index,
+> > +		sense_hdr.sense_key, sense_hdr.asc, sense_hdr.ascq);
+> > +
+>=20
+> May need to be moved above "done:", as the control comes to done when
+> scsi_normalize_sense() fails.
 
------ End forwarded message -----
+Sometimes we have seen target returning invalid sense. We need to catch=
+ that as well. That is the reason we moved this after done.
+
+>=20
+> >
+> >  	return err;
+> >  }
+> >
+> > @@ -499,7 +555,9 @@ retry:
+> >  	if (!rq)
+> >  		goto done;
+> >
+> > -	sdev_printk(KERN_INFO, sdev, "%s MODE_SELECT command.\n",
+> > +	RDAC_DEBUG(RDAC_LOG_FAILOVER, sdev, "array %s, ctlr %d, "
+> > +		"%s MODE_SELECT command",
+> > +		(char *) h->ctlr->array_name, h->ctlr->index,
+> >  		(retry_cnt =3D=3D RDAC_RETRY_COUNT) ? "queueing" : "retrying");
+> >
+> >  	err =3D blk_execute_rq(q, NULL, rq, 1);
+> > @@ -509,8 +567,12 @@ retry:
+> >  		if (err =3D=3D SCSI_DH_RETRY && retry_cnt--)
+> >  			goto retry;
+> >  	}
+> > -	if (err =3D=3D SCSI_DH_OK)
+> > +	if (err =3D=3D SCSI_DH_OK) {
+> >  		h->state =3D RDAC_STATE_ACTIVE;
+> > +		RDAC_DEBUG(RDAC_LOG_FAILOVER, sdev, "array %s, ctlr %d, "
+> > +				"MODE_SELECT completed",
+> > +				(char *) h->ctlr->array_name, h->ctlr->index);
+> > +	}
+> Don;t you think we need to have failure also reported ?
+
+=46ailure will be anyway reported by the function mode_select_handle_se=
+nse. Did not want to print that again.
+
+>=20
+> >
+> >  done:
+> >  	return err;
+> > @@ -525,12 +587,6 @@ static int rdac_activate(struct scsi_dev
+> >  	if (err !=3D SCSI_DH_OK)
+> >  		goto done;
+> >
+> > -	if (!h->ctlr) {
+> > -		err =3D initialize_controller(sdev, h);
+> > -		if (err !=3D SCSI_DH_OK)
+> > -			goto done;
+> > -	}
+> > -
+>=20
+> You can also move the set_mode_select block below.
+
+Sure.. I will do that..
+
+>=20
+> >  	if (h->ctlr->use_ms10 =3D=3D -1) {
+> >  		err =3D set_mode_select(sdev, h);
+> >  		if (err !=3D SCSI_DH_OK)
+> > @@ -559,6 +615,12 @@ static int rdac_check_sense(struct scsi_
+> >  				struct scsi_sense_hdr *sense_hdr)
+> >  {
+> >  	struct rdac_dh_data *h =3D get_rdac_data(sdev);
+> > +
+> > +	RDAC_DEBUG(RDAC_LOG_SENSE, sdev, "array %s, ctlr %d, "
+> > +			"command returned with sense %02x/%02x/%02x",
+> > +			(char *) h->ctlr->array_name, h->ctlr->index,
+> > +			sense_hdr->sense_key, sense_hdr->asc, sense_hdr-
+> >ascq);
+> > +
+>=20
+> It is not a "command", right ? Code comes here for any I/O failure.
+> cut-n-paste problem :)
+
+I was in a confusion about what will be the right word here. Ok.. I wil=
+l use "I/O"
+
+>=20
+>=20
+> >  	switch (sense_hdr->sense_key) {
+> >  	case NOT_READY:
+> >  		if (sense_hdr->asc =3D=3D 0x04 && sense_hdr->ascq =3D=3D 0x01)
+> > @@ -678,6 +740,16 @@ static int rdac_bus_attach(struct scsi_d
+> >  	if (err !=3D SCSI_DH_OK)
+> >  		goto failed;
+> >
+> > +	if (!h->ctlr) {
+>=20
+> I do not think we need this check here.
+
+You are right.. We don=92t need this check here..
+
+> > +		err =3D initialize_controller(sdev, h);
+> > +		if (err !=3D SCSI_DH_OK)
+> > +			goto failed;
+> > +
+> > +		err =3D get_array_name(sdev, h);
+> > +		if (err !=3D SCSI_DH_OK)
+> > +			goto failed;
+> > +	}
+> > +
+> >  	if (!try_module_get(THIS_MODULE))
+> >  		goto failed;
+> >
+> >
+> >
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-scs=
+i"
+> in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
