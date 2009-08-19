@@ -1,179 +1,293 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: PATCH: PMC-Sierra MaxRAID driver to support 6Gb/s SAS RAID
- controller
-Date: Tue, 18 Aug 2009 20:02:36 -0600
-Message-ID: <1250647356.18426.29.camel@mulgrave.site>
-References: <alpine.LNX.1.10.0908061701240.15176@rslab159.pmc-sierra.bc.ca>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: Re: [PATCH] scsi_dh: Adding more debug options for scsi rdac
+	handler
+Date: Tue, 18 Aug 2009 19:09:35 -0700
+Message-ID: <1250647775.30799.36.camel@chandra-ubuntu>
+References: <E463DF2B2E584B4A82673F53D62C2EF474B7A493@cosmail01.lsi.com>
+Reply-To: sekharan@linux.vnet.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50415 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751179AbZHSCCk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Aug 2009 22:02:40 -0400
-In-Reply-To: <alpine.LNX.1.10.0908061701240.15176@rslab159.pmc-sierra.bc.ca>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:48994 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751019AbZHSCFV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Aug 2009 22:05:21 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e32.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id n7J20k8L014268
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2009 20:00:47 -0600
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n7J25Hlw153752
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2009 20:05:17 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n7J25GLV029418
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2009 20:05:16 -0600
+In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF474B7A493@cosmail01.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
-Cc: linux-scsi@vger.kernel.org, gregkh@suse.de
+To: "Moger, Babu" <Babu.Moger@lsi.com>
+Cc: Linux SCSI Mailing list <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>, "Stankey, Robert" <Robert.Stankey@lsi.com>, "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>
 
-On Thu, 2009-08-06 at 17:16 -0700, Anil Ravindranath wrote:
-> Here is an updated driver patch which incorporates all the review inputs 
-> received so far.
-> Also, as per previous suggestions, signal is replaced with netlink to 
-> send event messages to user applications.
+Hi Babu,
 
-The basics all look OK to me.
+Code looks good. But I have few comments...
 
-> SIGNED-OFF-BY: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+Generic:
+ - Is that all the debug stuff you want to add ?
+ - I would split this into few patches (since they
+     are can be independent and not related to
+     configurable logging, IMO)
+   1. Add the array_name and index and acquiring it.
+   2. Moving the initialization code to attach()
+   3. removal of SCSI_DH_OK in check_ownership() (more below).
+   4. Logging stuff.
+   (1) and (4) have dependency, but (2) and (3) are
+   totally independent of all this.
 
-This should be Signed-off-by:
+Specific comments inline...
 
-> +/*
+On Mon, 2009-08-17 at 11:46 -0600, Moger, Babu wrote:
+> From: Babu Moger <babu.moger@lsi.com>
+> 
+> Hi All,
+> This patch adds more debugging options to scsi rdac device handler. This patch can considerably reduce the time taken to debug issues in big configurations also very helpful in addressing the support issues.
+> Here are the summary of changes. 
+>  - Added a bit mask "module parameter" rdac_logging with 2 bits for each type of logging.
 
-Docbook actually needs to start with /** (two asterisks)
+Why 2 bits ? isn't 1 bit sufficient ?
 
-> + * pmcraid_slave_alloc - Prepare for commands to a device
-> + * @scsi_dev: scsi device struct
-> + *
-> + * This function is called by mid-layer prior to sending any command to the new
-> + * device. Stores resource entry details of the device in scsi_device struct.
-> + * Queuecommand uses the resource handle and other details to fill up IOARCB
-> + * while sending commands to the device.
-> + *
-> + * Return value:
-> + *	  0 on success / -ENXIO if device does not exist
+>  - currently defined only two types of logging(failover and sense logging). Can be enhanced later if required.
+>  - Only failover logging is enabled for now which is equivalent of current logging.
+by default.
+
+> 
+> Signed-off-by: Babu Moger <babu.moger@lsi.com>
+> Reviewed-by: Vijay Chauhan <vijay.chauhan@lsi.com>
+> Reviewed-by: Bob Stankey <Robert.stankey@lsi.com>
+> 
+> ---
+> --- linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2009-08-05 16:30:51.000000000 -0500
+> +++ linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-08-17 09:15:03.000000000 -0500
+> @@ -135,6 +135,8 @@ struct rdac_controller {
+>  		struct rdac_pg_legacy legacy;
+>  		struct rdac_pg_expanded expanded;
+>  	} mode_select;
+> +	u8			index;
+> +	u8			array_name[31];
+
+Can use a #define ?
+
+>  };
+>  struct c8_inquiry {
+>  	u8	peripheral_info;
+> @@ -198,6 +200,31 @@ static const char *lun_state[] =
+>  static LIST_HEAD(ctlr_list);
+>  static DEFINE_SPINLOCK(list_lock);
+> 
+> +/* 
+> + * module parameter to enable rdac debug logging.
+> + * 2 bits for each type of logging, only two types defined for now 
+> + * Can be enhanced if required at later point
 > + */
-[...]
-
-There also appear to be a few write posting problems:
-
-> +/*
-> + * pmcraid_start_bist - starts BIST
-> + * @cmd: pointer to reset cmd
-> + * Return Value
-> + *   none
-> + */
-> +static void pmcraid_start_bist(struct pmcraid_cmd *cmd)
-> +{
-> +	struct pmcraid_instance *pinstance = cmd->drv_inst;
+> +static int rdac_logging = 1;
+> +module_param(rdac_logging, int, S_IRUGO|S_IWUSR);
+> +MODULE_PARM_DESC(rdac_logging, "A bit mask of rdac logging levels, "
+> +		"Default is 1 - failover logging enabled, "
+> +		"set it to 0xF to enable all the logs");
 > +
-> +	/* proceed with bist and wait for 2 seconds */
-> +	iowrite32(DOORBELL_IOA_START_BIST,
-> +		pinstance->int_regs.host_ioa_interrupt_reg);
-> +	pmcraid_info("doorbells after start bist: %x, intrs=%x\n",
-> +		      ioread32(pinstance->int_regs.host_ioa_interrupt_reg),
-> +		      ioread32(pinstance->int_regs.ioa_host_interrupt_reg));
+> +#define RDAC_LOG_FAILOVER	0
+> +#define RDAC_LOG_SENSE		2
 > +
-> +	cmd->u.time_left = msecs_to_jiffies(PMCRAID_BIST_TIMEOUT);
-> +	cmd->timer.data = (unsigned long)cmd;
-> +	cmd->timer.expires = jiffies + msecs_to_jiffies(PMCRAID_BIST_TIMEOUT);
-> +	cmd->timer.function = (void (*)(unsigned long))pmcraid_bist_done;
-> +	add_timer(&cmd->timer);
+> +#define RDAC_LOG_BITS		2
+> +
+> +#define RDAC_LOG_LEVEL(SHIFT)  \
+> +        ((rdac_logging >> (SHIFT)) & ((1 << (RDAC_LOG_BITS)) - 1))
+> +
+> +#define RDAC_DEBUG(SHIFT, sdev, f, arg...) \
 
-This is a classic posted write.  You're starting the timer with no
-guarantee that the START_BIST isn't held in the bus cache.
+instead of RDAC_DEBUG, we can say RDAC_LOG ?!
 
-[...]
-
-> +/*
-> + * pmcraid_isr_common - Common interrupt handler routine
-> + *
-> + * @pinstance: pointer to adapter instance
-> + * @intrs: active interrupts (contents of ioa_host_interrupt register)
-> + * @hrrq_id: Host RRQ index
-> + *
-> + * Return Value
-> + *	none
-> + */
-> +static void pmcraid_isr_common(
-> +	struct pmcraid_instance *pinstance,
-> +	u32 intrs,
-> +	int hrrq_id
-> +)
+> +do { \
+> +	if (unlikely(RDAC_LOG_LEVEL(SHIFT))) \
+> +		sdev_printk(KERN_INFO, sdev, RDAC_NAME ": " f "\n", ## arg); \
+> +} while (0);
+> +
+>  static inline struct rdac_dh_data *get_rdac_data(struct scsi_device *sdev)
+>  {
+>  	struct scsi_dh_data *scsi_dh_data = sdev->scsi_dh_data;
+> @@ -324,6 +351,13 @@ static struct rdac_controller *get_contr
+>  	/* initialize fields of controller */
+>  	memcpy(ctlr->subsys_id, subsys_id, SUBSYS_ID_LEN);
+>  	memcpy(ctlr->slot_id, slot_id, SLOT_ID_LEN);
+> +
+> +	/* update the controller index */
+> +	if (slot_id[1] == 0x31)
+> +		ctlr->index = 0;
+> +	else
+> +		ctlr->index = 1;
+> +
+>  	kref_init(&ctlr->kref);
+>  	ctlr->use_ms10 = -1;
+>  	list_add(&ctlr->node, &ctlr_list);
+> @@ -381,6 +415,26 @@ static int get_lun(struct scsi_device *s
+>  	return err;
+>  }
+> 
+> +static int get_array_name(struct scsi_device *sdev, struct rdac_dh_data *h)
 > +{
-> +	if (intrs & INTRS_CRITICAL_OP_IN_PROGRESS) {
-> +		iowrite32(intrs,
-> +			  pinstance->int_regs.ioa_host_interrupt_clr_reg);
-> +	} else {
-> +		/* valid hrrq, schedule tasklet to handle the response */
-> +		iowrite32(INTRS_HRRQ_VALID,
-> +			  pinstance->int_regs.ioa_host_interrupt_clr_reg);
-> +		tasklet_schedule(&(pinstance->isr_tasklet[hrrq_id]));
+> +	int err, i;
+> +	struct c8_inquiry *inqp;
+> +
+> +	err = submit_inquiry(sdev, 0xC8, sizeof(struct c8_inquiry), h);
+> +	if (err == SCSI_DH_OK) {
+> +		inqp = &h->inq.c8;
+> +		if (inqp->page_code != 0xc8)
+> +			return SCSI_DH_NOSYS;
+> +
+> +		for(i=0; i<30; ++i) {
+> +			h->ctlr->array_name[i] = inqp->array_user_label[(2*i)+1];
+> +		}
+
+do not have to have { } for a single line loop.
+
+> +		h->ctlr->array_name[30] = '\0';
 > +	}
+> +			
+> +	return err;
 > +}
-
-These clear interrupt register writes are also posted.
-
-> +/*
-> + * pmcraid_isr  - implements interrupt handling routine
-> + *
-> + * @irq: interrupt vector number
-> + * @dev_id: pointer hrrq_vector
-> + *
-> + * Return Value
-> + *	 IRQ_HANDLED if interrupt is handled or IRQ_NONE if ignored
-> + */
-> +static irqreturn_t pmcraid_isr(int irq, void *dev_id)
-> +{
-> +	struct pmcraid_isr_param *hrrq_vector;
-> +	struct pmcraid_instance *pinstance;
-> +	unsigned long lock_flags;
-> +	u32 intrs;
 > +
-> +	/* In case of legacy interrupt mode where interrupts are shared across
-> +	 * isrs, it may be possible that the current interrupt is not from IOA
-> +	 */
-> +	if (!dev_id) {
-> +		printk(KERN_INFO "%s(): NULL host pointer\n", __func__);
-> +		return IRQ_NONE;
+>  static int check_ownership(struct scsi_device *sdev, struct rdac_dh_data *h)
+>  {
+>  	int err;
+> @@ -450,13 +504,12 @@ static int mode_select_handle_sense(stru
+>  {
+>  	struct scsi_sense_hdr sense_hdr;
+>  	int err = SCSI_DH_IO, ret;
+> +	struct rdac_dh_data *h = get_rdac_data(sdev);
+> 
+>  	ret = scsi_normalize_sense(sensebuf, SCSI_SENSE_BUFFERSIZE, &sense_hdr);
+>  	if (!ret)
+>  		goto done;
+> 
+> -	err = SCSI_DH_OK;
+> -
+
+This is a change in behavior.
+
+Why is this needed ?
+
+>  	switch (sense_hdr.sense_key) {
+>  	case NO_SENSE:
+>  	case ABORTED_COMMAND:
+> @@ -478,12 +531,15 @@ static int mode_select_handle_sense(stru
+>  			err = SCSI_DH_RETRY;
+>  		break;
+>  	default:
+> -		sdev_printk(KERN_INFO, sdev,
+> -			    "MODE_SELECT failed with sense %02x/%02x/%02x.\n",
+> -			    sense_hdr.sense_key, sense_hdr.asc, sense_hdr.ascq);
+> +		break;
+>  	}
+> 
+>  done:
+> +	RDAC_DEBUG(RDAC_LOG_FAILOVER, sdev, "array %s, ctlr %d, "
+> +		"MODE_SELECT returned with sense %02x/%02x/%02x",
+> +		(char *) h->ctlr->array_name, h->ctlr->index,
+> +		sense_hdr.sense_key, sense_hdr.asc, sense_hdr.ascq);
+> +
+
+May need to be moved above "done:", as the control comes to done when
+scsi_normalize_sense() fails.
+
+> 		
+>  	return err;
+>  }
+> 
+> @@ -499,7 +555,9 @@ retry:
+>  	if (!rq)
+>  		goto done;
+> 
+> -	sdev_printk(KERN_INFO, sdev, "%s MODE_SELECT command.\n",
+> +	RDAC_DEBUG(RDAC_LOG_FAILOVER, sdev, "array %s, ctlr %d, "
+> +		"%s MODE_SELECT command",
+> +		(char *) h->ctlr->array_name, h->ctlr->index,
+>  		(retry_cnt == RDAC_RETRY_COUNT) ? "queueing" : "retrying");
+> 
+>  	err = blk_execute_rq(q, NULL, rq, 1);
+> @@ -509,8 +567,12 @@ retry:
+>  		if (err == SCSI_DH_RETRY && retry_cnt--)
+>  			goto retry;
+>  	}
+> -	if (err == SCSI_DH_OK)
+> +	if (err == SCSI_DH_OK) {
+>  		h->state = RDAC_STATE_ACTIVE;
+> +		RDAC_DEBUG(RDAC_LOG_FAILOVER, sdev, "array %s, ctlr %d, "
+> +				"MODE_SELECT completed",
+> +				(char *) h->ctlr->array_name, h->ctlr->index);
+> +	}
+Don;t you think we need to have failure also reported ?
+
+> 
+>  done:
+>  	return err;
+> @@ -525,12 +587,6 @@ static int rdac_activate(struct scsi_dev
+>  	if (err != SCSI_DH_OK)
+>  		goto done;
+> 
+> -	if (!h->ctlr) {
+> -		err = initialize_controller(sdev, h);
+> -		if (err != SCSI_DH_OK)
+> -			goto done;
+> -	}
+> -
+
+You can also move the set_mode_select block below.
+
+>  	if (h->ctlr->use_ms10 == -1) {
+>  		err = set_mode_select(sdev, h);
+>  		if (err != SCSI_DH_OK)
+> @@ -559,6 +615,12 @@ static int rdac_check_sense(struct scsi_
+>  				struct scsi_sense_hdr *sense_hdr)
+>  {
+>  	struct rdac_dh_data *h = get_rdac_data(sdev);
+> +		
+> +	RDAC_DEBUG(RDAC_LOG_SENSE, sdev, "array %s, ctlr %d, "
+> +			"command returned with sense %02x/%02x/%02x",
+> +			(char *) h->ctlr->array_name, h->ctlr->index,
+> +			sense_hdr->sense_key, sense_hdr->asc, sense_hdr->ascq);
+> +
+
+It is not a "command", right ? Code comes here for any I/O failure.
+cut-n-paste problem :)
+
+
+>  	switch (sense_hdr->sense_key) {
+>  	case NOT_READY:
+>  		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x01)
+> @@ -678,6 +740,16 @@ static int rdac_bus_attach(struct scsi_d
+>  	if (err != SCSI_DH_OK)
+>  		goto failed;
+> 
+> +	if (!h->ctlr) {
+
+I do not think we need this check here.
+> +		err = initialize_controller(sdev, h);
+> +		if (err != SCSI_DH_OK)
+> +			goto failed;
+> +		
+> +		err = get_array_name(sdev, h);
+> +		if (err != SCSI_DH_OK)
+> +			goto failed;
 > +	}
 > +
-> +	hrrq_vector = (struct pmcraid_isr_param *)dev_id;
-> +	pinstance = hrrq_vector->drv_inst;
-> +
-> +	/* Acquire the lock (currently host_lock) while processing interrupts.
-> +	 * This interval is small as most of the response processing is done by
-> +	 * tasklet without the lock.
-> +	 */
-> +	spin_lock_irqsave(pinstance->host->host_lock, lock_flags);
-> +	intrs = pmcraid_read_interrupts(pinstance);
-> +
-> +	if (unlikely((intrs & PMCRAID_PCI_INTERRUPTS) == 0)) {
-> +		spin_unlock_irqrestore(pinstance->host->host_lock, lock_flags);
-> +		return IRQ_NONE;
-> +	}
-> +
-> +	/* Any error interrupts including unit_check, initiate IOA reset.
-> +	 * In case of unit check indicate to reset_sequence that IOA unit
-> +	 * checked and prepare for a dump during reset sequence
-> +	 */
-> +	if (intrs & PMCRAID_ERROR_INTERRUPTS) {
-> +
-> +		if (intrs & INTRS_IOA_UNIT_CHECK)
-> +			pinstance->ioa_unit_check = 1;
-> +
-> +		iowrite32(intrs,
-> +			  pinstance->int_regs.ioa_host_interrupt_clr_reg);
-> +		pmcraid_err("ISR: error interrupts: %x initiating reset\n",
-> +			    intrs);
-> +		pmcraid_initiate_reset(pinstance);
-> +	} else {
-> +		pmcraid_isr_common(pinstance, intrs, hrrq_vector->hrrq_id);
-
-Because you call them here
-
-> +	}
-> +
-> +	spin_unlock_irqrestore(pinstance->host->host_lock, lock_flags);
-> +
-> +	return IRQ_HANDLED;
-
-And then return IRQ_HANDLED.  If the write is posted, the interrupt
-won't clear and there'll be an immediate reinterrupt.
-
-James
-
+>  	if (!try_module_get(THIS_MODULE))
+>  		goto failed;
+> 
+> 
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
