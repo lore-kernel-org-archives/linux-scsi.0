@@ -1,31 +1,40 @@
-From: John Dykstra <john.dykstra1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
 Subject: Re: 2.6.31-rc6-git5: Reported regressions from 2.6.30
-Date: Thu, 20 Aug 2009 20:52:51 +0000
-Message-ID: <1250801571.7176.10.camel@Maple>
-References: <jCYznkTxcLB.A.EPH.eNIjKB@chimera>
+Date: Thu, 20 Aug 2009 23:28:24 +0200
+Message-ID: <200908202328.24252.rjw@sisk.pl>
+References: <jCYznkTxcLB.A.EPH.eNIjKB@chimera> <1250801571.7176.10.camel@Maple>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <jCYznkTxcLB.A.EPH.eNIjKB@chimera>
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
-Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Adrian Bunk <bunk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755478AbZHTV1f@vger.kernel.org>
+In-Reply-To: <1250801571.7176.10.camel@Maple>
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Dykstra <john.dykstra1@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.sourceforge.net>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2009-08-19 at 22:20 +0200, Rafael J. Wysocki wrote:
-> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=14002
-> Subject         : WARNING: at net/ipv4/af_inet.c:154
-> inet_sock_destruct+0x164/0x1c0()
-> Submitter       : Ralf Hildebrandt <ralf.hildebrandt-jq1tPX9l7E6ELgA04lAiVw@public.gmane.org>
-> Date            : 2009-08-18 12:37 (2 days old)
+On Thursday 20 August 2009, John Dykstra wrote:
+> On Wed, 2009-08-19 at 22:20 +0200, Rafael J. Wysocki wrote:
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=14002
+> > Subject         : WARNING: at net/ipv4/af_inet.c:154
+> > inet_sock_destruct+0x164/0x1c0()
+> > Submitter       : Ralf Hildebrandt <ralf.hildebrandt@charite.de>
+> > Date            : 2009-08-18 12:37 (2 days old)
+> 
+> That looks similar to the WARNING discussed in [1].
+> 
+> There was no resolution to that thread.  However, [2] points out
+> possible other occurrences of the problem in 2.6.27, 28 and 29.
+> 
+> --  John
+> 
+> [1]  http://www.spinics.net/lists/netdev/msg103267.html
+> [2]  http://www.spinics.net/lists/netdev/msg104120.html
 
-That looks similar to the WARNING discussed in [1].
+Thanks for the information.
 
-There was no resolution to that thread.  However, [2] points out
-possible other occurrences of the problem in 2.6.27, 28 and 29.
+So I'll drop this from the list, since it most probably is not a recent thing.
 
---  John
-
-[1]  http://www.spinics.net/lists/netdev/msg103267.html
-[2]  http://www.spinics.net/lists/netdev/msg104120.html
+Best,
+Rafael
