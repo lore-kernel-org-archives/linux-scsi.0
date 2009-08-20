@@ -1,54 +1,171 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 4/7] qla4xxx: Removed residual from overrun debug print
-Date: Thu, 20 Aug 2009 15:11:00 -0500
-Message-ID: <1250799063-1843-5-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 3/7] libiscsi: handle immediate command rejections
+Date: Thu, 20 Aug 2009 15:10:59 -0500
+Message-ID: <1250799063-1843-4-git-send-email-michaelc@cs.wisc.edu>
 References: <1250799063-1843-1-git-send-email-michaelc@cs.wisc.edu>
  <1250799063-1843-2-git-send-email-michaelc@cs.wisc.edu>
  <1250799063-1843-3-git-send-email-michaelc@cs.wisc.edu>
- <1250799063-1843-4-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47170 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:12355 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755136AbZHTULL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1755196AbZHTULL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 20 Aug 2009 16:11:11 -0400
-In-Reply-To: <1250799063-1843-4-git-send-email-michaelc@cs.wisc.edu>
+In-Reply-To: <1250799063-1843-3-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Karen Higgins <karen.higgins@qlogic.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-The residual variable is only valid for udnerrun so do
-not print it out for the overrun case.
+If we sent multiple pdus as immediate the target could be
+rejecting some and we have just been dropping the rejection
+notification. This adds code to handle nop-out rejections,
+so if a nop-out was sent as a ping and rejected we do not
+mark the connection bad. Instead we just clean up the timers
+since we have pdu making a rount trip we know the connection
+is good.
 
-Signed-off-by: Karen Higgins <karen.higgins@qlogic.com>
-[Mike Christie: Fix coding style issues in patch]
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/qla4xxx/ql4_isr.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/libiscsi.c |  106 ++++++++++++++++++++++++++++++++++++++--------
+ 1 files changed, 87 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
-index 799120f..87ced2e 100644
---- a/drivers/scsi/qla4xxx/ql4_isr.c
-+++ b/drivers/scsi/qla4xxx/ql4_isr.c
-@@ -153,11 +153,11 @@ static void qla4xxx_status_entry(struct scsi_qla_host *ha,
- 	case SCS_DATA_UNDERRUN:
- 	case SCS_DATA_OVERRUN:
- 		if ((sts_entry->iscsiFlags & ISCSI_FLAG_RESIDUAL_OVER) ||
--			(sts_entry->completionStatus == SCS_DATA_OVERRUN)) {
--			DEBUG2(printk("scsi%ld:%d:%d:%d: %s: " "Data overrun, "
--				      "residual = 0x%x\n", ha->host_no,
-+		     (sts_entry->completionStatus == SCS_DATA_OVERRUN)) {
-+			DEBUG2(printk("scsi%ld:%d:%d:%d: %s: " "Data overrun\n",
-+				      ha->host_no,
- 				      cmd->device->channel, cmd->device->id,
--				      cmd->device->lun, __func__, residual));
-+				      cmd->device->lun, __func__));
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 3cef35b..957fe25 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -857,27 +857,102 @@ static void iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
+ 	}
+ }
  
- 			cmd->result = DID_ERROR << 16;
- 			break;
++static int iscsi_nop_out_rsp(struct iscsi_task *task,
++			     struct iscsi_nopin *nop, char *data, int datalen)
++{
++	struct iscsi_conn *conn = task->conn;
++	int rc = 0;
++
++	if (conn->ping_task != task) {
++		/*
++		 * If this is not in response to one of our
++		 * nops then it must be from userspace.
++		 */
++		if (iscsi_recv_pdu(conn->cls_conn, (struct iscsi_hdr *)nop,
++				   data, datalen))
++			rc = ISCSI_ERR_CONN_FAILED;
++	} else
++		mod_timer(&conn->transport_timer, jiffies + conn->recv_timeout);
++	iscsi_complete_task(task, ISCSI_TASK_COMPLETED);
++	return rc;
++}
++
+ static int iscsi_handle_reject(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 			       char *data, int datalen)
+ {
+ 	struct iscsi_reject *reject = (struct iscsi_reject *)hdr;
+ 	struct iscsi_hdr rejected_pdu;
++	int opcode, rc = 0;
+ 
+ 	conn->exp_statsn = be32_to_cpu(reject->statsn) + 1;
+ 
+-	if (reject->reason == ISCSI_REASON_DATA_DIGEST_ERROR) {
+-		if (ntoh24(reject->dlength) > datalen)
+-			return ISCSI_ERR_PROTO;
++	if (ntoh24(reject->dlength) > datalen ||
++	    ntoh24(reject->dlength) < sizeof(struct iscsi_hdr)) {
++		iscsi_conn_printk(KERN_ERR, conn, "Cannot handle rejected "
++				  "pdu. Invalid data length (pdu dlength "
++				  "%u, datalen %d\n", ntoh24(reject->dlength),
++				  datalen);
++		return ISCSI_ERR_PROTO;
++	}
++	memcpy(&rejected_pdu, data, sizeof(struct iscsi_hdr));
++	opcode = rejected_pdu.opcode & ISCSI_OPCODE_MASK;
+ 
+-		if (ntoh24(reject->dlength) >= sizeof(struct iscsi_hdr)) {
+-			memcpy(&rejected_pdu, data, sizeof(struct iscsi_hdr));
+-			iscsi_conn_printk(KERN_ERR, conn,
+-					  "pdu (op 0x%x) rejected "
+-					  "due to DataDigest error.\n",
+-					  rejected_pdu.opcode);
++	switch (reject->reason) {
++	case ISCSI_REASON_DATA_DIGEST_ERROR:
++		iscsi_conn_printk(KERN_ERR, conn,
++				  "pdu (op 0x%x itt 0x%x) rejected "
++				  "due to DataDigest error.\n",
++				  rejected_pdu.itt, opcode);
++		break;
++	case ISCSI_REASON_IMM_CMD_REJECT:
++		iscsi_conn_printk(KERN_ERR, conn,
++				  "pdu (op 0x%x itt 0x%x) rejected. Too many "
++				  "immediate commands.\n",
++				  rejected_pdu.itt, opcode);
++		/*
++		 * We only send one TMF at a time so if the target could not
++		 * handle it, then it should get fixed (RFC mandates that
++		 * a target can handle one immediate TMF per conn).
++		 *
++		 * For nops-outs, we could have sent more than one if
++		 * the target is sending us lots of nop-ins
++		 */
++		if (opcode != ISCSI_OP_NOOP_OUT)
++			return 0;
++
++		 if (rejected_pdu.itt == cpu_to_be32(ISCSI_RESERVED_TAG))
++			/*
++			 * nop-out in response to target's nop-out rejected.
++			 * Just resend.
++			 */
++			iscsi_send_nopout(conn,
++					  (struct iscsi_nopin*)&rejected_pdu);
++		else {
++			struct iscsi_task *task;
++			/*
++			 * Our nop as ping got dropped. We know the target
++			 * and transport are ok so just clean up
++			 */
++			task = iscsi_itt_to_task(conn, rejected_pdu.itt);
++			if (!task) {
++				iscsi_conn_printk(KERN_ERR, conn,
++						 "Invalid pdu reject. Could "
++						 "not lookup rejected task.\n");
++				rc = ISCSI_ERR_BAD_ITT;
++			} else
++				rc = iscsi_nop_out_rsp(task,
++					(struct iscsi_nopin*)&rejected_pdu,
++					NULL, 0);
+ 		}
++		break;
++	default:
++		iscsi_conn_printk(KERN_ERR, conn,
++				  "pdu (op 0x%x itt 0x%x) rejected. Reason "
++				  "code 0x%x\n", rejected_pdu.itt,
++				  rejected_pdu.opcode, reject->reason);
++		break;
+ 	}
+-	return 0;
++	return rc;
+ }
+ 
+ /**
+@@ -1038,15 +1113,8 @@ int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 		}
+ 		conn->exp_statsn = be32_to_cpu(hdr->statsn) + 1;
+ 
+-		if (conn->ping_task != task)
+-			/*
+-			 * If this is not in response to one of our
+-			 * nops then it must be from userspace.
+-			 */
+-			goto recv_pdu;
+-
+-		mod_timer(&conn->transport_timer, jiffies + conn->recv_timeout);
+-		iscsi_complete_task(task, ISCSI_TASK_COMPLETED);
++		rc = iscsi_nop_out_rsp(task, (struct iscsi_nopin*)hdr,
++				       data, datalen);
+ 		break;
+ 	default:
+ 		rc = ISCSI_ERR_BAD_OPCODE;
 -- 
 1.6.2.2
 
