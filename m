@@ -1,90 +1,49 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [cciss: PATCH 16/17] Add a "raid_level" attribute to each logical
-	drive in /sys
-Date: Thu, 20 Aug 2009 10:19:04 -0500
-Message-ID: <20090820151904.22833.91381.stgit@beardog.cce.hp.com>
+Subject: [cciss: PATCH 04/17] Remove some unused code in rebuild_lun_table()
+Date: Thu, 20 Aug 2009 10:18:02 -0500
+Message-ID: <20090820151802.22833.77536.stgit@beardog.cce.hp.com>
 References: <20090820151648.22833.14168.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0029.austin.hp.com ([15.216.28.36]:41488 "EHLO
-	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751594AbZHTPTC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Aug 2009 11:19:02 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754621AbZHTPSg@vger.kernel.org>
 In-Reply-To: <20090820151648.22833.14168.stgit@beardog.cce.hp.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, axboe@kernel.dk, andrew.patterson@hp.com, mikem@c18-ss-1-lb.cnet.com, scameron@beardog.cce.hp.com
+List-Id: linux-scsi@vger.kernel.org
 
-Add raid_level attribute to each logical drive at
-/sys/devices/<dev>/ccissX/cXdY/raid_level for controller X,
-logical drive Y
-
+Remove some unused code in rebuild_lun_table()
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
 
- .../ABI/testing/sysfs-bus-pci-devices-cciss        |    7 ++++++
- drivers/block/cciss.c                              |   24 ++++++++++++++++++++
- 2 files changed, 31 insertions(+), 0 deletions(-)
+ drivers/block/cciss.c |    8 --------
+ 1 files changed, 0 insertions(+), 8 deletions(-)
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-pci-devices-cciss b/Documentation/ABI/testing/sysfs-bus-pci-devices-cciss
-index 5a6c8d3..8d02602 100644
---- a/Documentation/ABI/testing/sysfs-bus-pci-devices-cciss
-+++ b/Documentation/ABI/testing/sysfs-bus-pci-devices-cciss
-@@ -45,3 +45,10 @@ Kernel Version: 2.6.31
- Contact:	iss_storagedev@hp.com
- Description:	Displays the 8-byte LUN ID used to address logical
- 		drive Y of controller X.
-+
-+Where:		/sys/bus/pci/devices/<dev>/ccissX/cXdY/raid_level
-+Date:		August 2009
-+Kernel Version: 2.6.31
-+Contact:	iss_storagedev@hp.com
-+Description:	Displays the RAID level of logical drive Y of
-+		controller X.
 diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index 373ef43..2ad089e 100644
+index 763535e..1d2d614 100644
 --- a/drivers/block/cciss.c
 +++ b/drivers/block/cciss.c
-@@ -603,6 +603,29 @@ static ssize_t cciss_show_lunid(struct device *dev,
- }
- DEVICE_ATTR(lunid, S_IRUGO, cciss_show_lunid, NULL);
+@@ -1707,7 +1707,6 @@ static void cciss_update_drive_info(int ctlr, int drv_index, int first_time)
+ 	unsigned long flags = 0;
+ 	int ret = 0;
+ 	drive_info_struct *drvinfo;
+-	int was_only_controller_node;
  
-+static ssize_t cciss_show_raid_level(struct device *dev,
-+				     struct device_attribute *attr, char *buf)
-+{
-+	drive_info_struct *drv = dev_get_drvdata(dev);
-+	struct ctlr_info *h = to_hba(drv->dev->parent);
-+	int raid;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(CCISS_LOCK(h->ctlr), flags);
-+	if (h->busy_configuring) {
-+		spin_unlock_irqrestore(CCISS_LOCK(h->ctlr), flags);
-+		return -EBUSY;
-+	}
-+	raid = drv->raid_level;
-+	spin_unlock_irqrestore(CCISS_LOCK(h->ctlr), flags);
-+	if (raid < 0 || raid > 5)
-+		raid = RAID_UNKNOWN;
-+
-+	return snprintf(buf, strlen(raid_label[raid]) + 7, "RAID %s\n",
-+			raid_label[raid]);
-+}
-+DEVICE_ATTR(raid_level, S_IRUGO, cciss_show_raid_level, NULL);
-+
- static struct attribute *cciss_host_attrs[] = {
- 	&dev_attr_rescan.attr,
- 	NULL
-@@ -629,6 +652,7 @@ static struct attribute *cciss_dev_attrs[] = {
- 	&dev_attr_vendor.attr,
- 	&dev_attr_rev.attr,
- 	&dev_attr_lunid.attr,
-+	&dev_attr_raid_level.attr,
- 	NULL
- };
+ 	/* Get information about the disk and modify the driver structure */
+ 	inq_buff = kmalloc(sizeof(InquiryData_struct), GFP_KERNEL);
+@@ -1715,13 +1714,6 @@ static void cciss_update_drive_info(int ctlr, int drv_index, int first_time)
+ 	if (inq_buff == NULL || drvinfo == NULL)
+ 		goto mem_msg;
  
-
+-	/* See if we're trying to update the "controller node"
+-	 * this will happen the when the first logical drive gets
+-	 * created by ACU.
+-	 */
+-	was_only_controller_node = (drv_index == 0 &&
+-				h->drv[0].raid_level == -1);
+-
+ 	/* testing to see if 16-byte CDBs are already being used */
+ 	if (h->cciss_read == CCISS_READ_16) {
+ 		cciss_read_capacity_16(h->ctlr, drv_index, 1,
