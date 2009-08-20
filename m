@@ -1,58 +1,59 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [cciss: PATCH 00/17] fix scan_thread, sysfs stuff,
-	LUN addressing problem
-Date: Thu, 20 Aug 2009 10:17:41 -0500
-Message-ID: <20090820151648.22833.14168.stgit@beardog.cce.hp.com>
+Subject: [cciss: PATCH 01/17] Remove sysfs entries for logical drives on
+	driver cleanup.
+Date: Thu, 20 Aug 2009 10:17:47 -0500
+Message-ID: <20090820151747.22833.36473.stgit@beardog.cce.hp.com>
+References: <20090820151648.22833.14168.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0026.austin.hp.com ([15.216.28.33]:42629 "EHLO
-	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750753AbZHTPRk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Aug 2009 11:17:40 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751385AbZHTPRu@vger.kernel.org>
+In-Reply-To: <20090820151648.22833.14168.stgit@beardog.cce.hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, axboe@kernel.dk, andrew.patterson@hp.com, mikem@c18-ss-1-lb.cnet.com, scameron@beardog.cce.hp.com
+List-Id: linux-scsi@vger.kernel.org
 
-The following series cleans up the broken scan_thread code,
-allows triggering of the scan_thread via sysfs, dynamically
-allocates the struct device for each logical drive as needed
-instead of all at once at driver init time, fixes a bug in
-logical drive addressing (seen on MSA2012), and adds lunid,
-raid_level, and usage_count attributes in sysfs for each
-logical drive.
+From: Andrew Patterson <andrew.patterson@hp.com>
 
+Sysfs entries for logical drives need to be removed when a drive is
+deleted during driver cleanup.
+
+Signed-off-by: Andrew Patterson <andrew.patterson@hp.com>
+Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+Acked-by: Mike Miller <mike.miller@hp.com>
 ---
 
-Andrew Patterson (3):
-      Allow triggering of rescan of logical drive topology via sysfs entry
-      Use one scan thread per controller and fix hang during rmmod
-      Remove sysfs entries for logical drives on driver cleanup.
+ drivers/block/cciss.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-Stephen M. Cameron (14):
-      Add usage_count attribute to each logical drive in /sys
-      Add a "raid_level" attribute to each logical drive in /sys
-      Add lunid attribute to each logical drive in /sys
-      Preserve all 8 bytes of LUN ID for logical drives.
-      Silence noisy per-disk messages output by cciss_read_capacity
-      Fix excessive gendisk freeing bug on driver unload.
-      Fix usage_count check in rebuild_lun_table when triggered via sysfs.
-      Clear all sysfs-exposed data for deleted logical drives.
-      Handle special case for sysfs attributes of the first logical drive.
-      Handle cases when cciss_add_disk fails.
-      Handle failure of blk_init_queue gracefully in cciss_add_disk.
-      Rearrange logical drive sysfs code to make the "changing a disk" path work.
-      Dynamically allocate struct device for each logical drive as needed.
-      Remove some unused code in rebuild_lun_table()
-
-
- .../ABI/testing/sysfs-bus-pci-devices-cciss        |   28 +
- drivers/block/cciss.c                              |  551 +++++++++++++++-----
- drivers/block/cciss.h                              |   11 
- 3 files changed, 461 insertions(+), 129 deletions(-)
-
--- 
--- steve
-
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index a52cc7f..970c896 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -1977,7 +1977,6 @@ static int rebuild_lun_table(ctlr_info_t *h, int first_time)
+ 			h->drv[i].busy_configuring = 1;
+ 			spin_unlock_irqrestore(CCISS_LOCK(h->ctlr), flags);
+ 			return_code = deregister_disk(h, i, 1);
+-			cciss_destroy_ld_sysfs_entry(&h->drv[i]);
+ 			h->drv[i].busy_configuring = 0;
+ 		}
+ 	}
+@@ -2118,6 +2117,7 @@ static int deregister_disk(ctlr_info_t *h, int drv_index,
+ 				 * indicate that this element of the drive
+ 				 * array is free.
+ 				 */
++	cciss_destroy_ld_sysfs_entry(drv);
+ 
+ 	if (clear_all) {
+ 		/* check to see if it was the last disk */
+@@ -4141,6 +4141,9 @@ static void __devexit cciss_remove_one(struct pci_dev *pdev)
+ 			if (q)
+ 				blk_cleanup_queue(q);
+ 		}
++		if (hba[i]->drv[j].raid_level != -1)
++			cciss_destroy_ld_sysfs_entry(&hba[i]->drv[j]);
++
+ 	}
+ 
+ #ifdef CONFIG_CISS_SCSI_TAPE
