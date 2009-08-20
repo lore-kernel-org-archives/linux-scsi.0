@@ -1,59 +1,106 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: mpt2sas logged messages
-Date: Thu, 20 Aug 2009 11:30:29 -0400
-Message-ID: <4A8D6C15.3060907@redhat.com>
-References: <4A8AAA26.9090706@redhat.com> <20090818132518.GA4418@kroah.com> 	<4A8AB3DC.4060805@redhat.com> <20090818145710.GA6064@kroah.com> 	<4A8ACE7C.5080501@redhat.com> <20090818164017.GA24305@kroah.com> 	<ac3eb2510908181137ne79d4d7he1731d240bca614c@mail.gmail.com> 	<4A8AF5E4.7000806@redhat.com> <ac3eb2510908191230r7687ba34k4b8f6987ffa97ab8@mail.gmail.com> 	<4A8D6929.7000407@redhat.com> <ac3eb2510908200820w7fef021bj7e4078ef47aa5816@mail.gmail.com>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH, RFC] xfs: batched discard support
+Date: Thu, 20 Aug 2009 17:43:41 +0200
+Message-ID: <200908201743.50167.eike-kernel@sf-tec.de>
+References: <20090816004705.GA7347@infradead.org> <4A8D5442.1000302@redhat.com> <4A8D5FDB.7080505@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: multipart/signed;
+  boundary="nextPart1495252.XOLBvpv6Aq";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13949 "EHLO mx1.redhat.com"
+Received: from mail.sf-mail.de ([62.27.20.61]:47513 "EHLO mail.sf-mail.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751515AbZHTPaa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Aug 2009 11:30:30 -0400
-In-Reply-To: <ac3eb2510908200820w7fef021bj7e4078ef47aa5816@mail.gmail.com>
+	id S1750924AbZHTPn5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Aug 2009 11:43:57 -0400
+In-Reply-To: <4A8D5FDB.7080505@rtr.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kay Sievers <kay.sievers@vrfy.org>
-Cc: Greg KH <greg@kroah.com>, linux-scsi@vger.kernel.org, Tom Coughlan <coughlan@redhat.com>
+To: Mark Lord <liml@rtr.ca>
+Cc: Ric Wheeler <rwheeler@redhat.com>, Ingo Molnar <mingo@elte.hu>, Christoph Hellwig <hch@infradead.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Paul Mackerras <paulus@samba.org>, Linus Torvalds <torvalds@linux-foundation.org>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jens.axboe@oracle.com, IDE/ATA development list <linux-ide@vger.kernel.org>, Neil Brown <neilb@suse.de>
 
-On 08/20/2009 11:20 AM, Kay Sievers wrote:
-> On Thu, Aug 20, 2009 at 17:18, Ric Wheeler<rwheeler@redhat.com>  wrote:
->> On 08/19/2009 03:30 PM, Kay Sievers wrote:
->>> On Tue, Aug 18, 2009 at 20:41, Ric Wheeler<rwheeler@redhat.com>    wrote:
->>>
->>>> I think that we can reconfigure the storage to avoid this but will be
->>>> happy
->>>> to restore this configuration if you have something that you want to test
->>>> later on...
->>>
->>> This hopefully addresses the issue:
->>>
->>> http://git.kernel.org/?p=linux/hotplug/udev.git;a=commit;h=2ffc9cc1917b1bb6fe86881a94a47dce9aa15168
->>>
->>> Thanks,
->>> Kay
->>
->> Hi Kay,
->>
->> This seems to resolve the issue on my test rig - no more "too long" error
->> messages during boot.
+--nextPart1495252.XOLBvpv6Aq
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+Mark Lord wrote:
+> Ric Wheeler wrote:
+> > Note that returning consistent data is critical for devices that are
+> > used in a RAID group since you will need each RAID block that is used to
+> > compute the parity to continue to return the same data until you
+> > overwrite it with new data :-)
+> >
+> > If we have a device that does not support this (or is misconfigured not
+> > to do this), we should not use those devices in an MD group & do discard
+> > against it...
 >
-> Great! Thanks a lot for the testing, and letting us know. It's a
-> pleasure when things work like this.
+> ..
 >
-> Kay
+> Well, that's a bit drastic.  But the RAID software should at least
+> not issue TRIM commands in ignorance of such.
+>
+> Would it still be okay to do the TRIMs when the entire parity stripe
+> (across all members) is being discarded?  (As opposed to just partial
+> data there being dropped)
 
-The pleasure is all mine - great to get such rapid fixes :-)
+I think there might be a related usecase that could benefit from=20
+TRIM/UNMAP/whatever support in file systems even if the physical devices do=
+=20
+not support that. I have a RAID5 at work with LVM over it. This week I dele=
+ted=20
+an old logical volume of some 200GB that has been moved to a different volu=
+me=20
+group, tomorrow I will start to replace all the disks in the raid with bigg=
+er=20
+ones. So if the LVM told the raid "hey, this space is totally garbage from =
+now=20
+on" the raid would not have to do any calculation when it has to rebuild th=
+at=20
+but could simply write fixed patterns to all disks (e.g. 0 to first data, 0=
+ to=20
+second data and 0 as "0 xor 0" to parity). With the knowledge that some of =
+the=20
+underlying devices would support "write all to zero" this operation could b=
+e=20
+speed up even more, with "write all fixed pattern" every unused chunk would=
+ go=20
+down to a single write operation (per disk) on rebuild regardless which par=
+ity=20
+algorithm is used.
 
-It has been a long time challenge for us to get developers on big systems, 
-especially big and complicated storage boxes which is why we decided to try and 
-build this box to help us stress scale in every way so we can track down exactly 
-this kind of issue in a timely way.
+And even if things are in use the RAID can benefit from such things. If we=
+=20
+just define that every unmapped space will always be 0 when read and I writ=
+e=20
+to a raid volume and the other part of the checksum calculation is unmapped=
+=20
+checksumming becomes easy as we already know half of the values before: 0. =
+So=20
+we can save the reads from the second data stripe and most of the calculati=
+on.
+"dd if=3D/dev/md0" on an unmapped space is more or less the same as "dd=20
+if=3D/dev/zero" than.
 
-It was not that expensive to build a 100+ TB box - 4 SAS expansion shelves, 60 
-2TB S-ATA disks and a couple of HBA's for a reasonable server. It won't be that 
-fast, but is much cheaper than buying a similar array from a real vendor...
+I only fear that these things are too obviously as I would be the first to=
+=20
+have this idea ;)
 
-ric
+Greetings,
 
+Eike
+
+--nextPart1495252.XOLBvpv6Aq
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+
+iEYEABECAAYFAkqNbzYACgkQXKSJPmm5/E5LNQCdFqJ/6Rb+l/1Jdd8GNwG86+MF
+g8sAmwXujLHOGE0WsLOAchKRWCzuayAG
+=PtAF
+-----END PGP SIGNATURE-----
+
+--nextPart1495252.XOLBvpv6Aq--
