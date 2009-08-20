@@ -1,155 +1,58 @@
-From: "jack wang" <jack_wang@usish.com>
-Subject: =?UTF-8?Q?=E7=AD=94=E5=A4=8D:_Re:_Performance_issues_with_?=
-	=?UTF-8?Q?Areca_1680_SAS_Controllers?=
-Date: Thu, 20 Aug 2009 08:56:51 +0800
-Message-ID: <5487F137A72C4E05BF673B6C96A2D859@usish.com.cn>
-References: <20090819140848.GW19938@edu.joroinen.fi> <200908192247543597389@usish.com> <20090819164029.GZ19938@edu.joroinen.fi>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH, RFC] xfs: batched discard support
+Date: Wed, 19 Aug 2009 21:05:52 -0400
+Message-ID: <20090820010552.GA22107@infradead.org>
+References: <20090816004705.GA7347@infradead.org> <20090819203916.GA25296@elte.hu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:56384 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750837AbZHTA5E convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Aug 2009 20:57:04 -0400
-In-Reply-To: <20090819164029.GZ19938@edu.joroinen.fi>
+Received: from bombadil.infradead.org ([18.85.46.34]:38192 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751179AbZHTBGV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Aug 2009 21:06:21 -0400
+Content-Disposition: inline
+In-Reply-To: <20090819203916.GA25296@elte.hu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?UTF-8?Q?'Pasi_K=C3=A4rkk=C3=A4inen'?= <pasik@iki.fi>
-Cc: 'Nick Cheng' <nick.cheng@areca.com.tw>, 'Andrew Morton' <akpm@linux-foundation.org>, 'Michael Fuckner' <michael@fuckner.net>, 'linux-kernel' <linux-kernel@vger.kernel.org>, 'linux-scsi' <linux-scsi@vger.kernel.org>, 'Erich Chen' <erich@areca.com.tw>
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Christoph Hellwig <hch@infradead.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Paul Mackerras <paulus@samba.org>, Linus Torvalds <torvalds@linux-foundation.org>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, liml@rtr.ca, jens.axboe@oracle.com
 
-> On Thu, Nov 20, 2008 at 03:39:40PM +0800, Nick Cheng wrote:
-> > Hi Michael,
-> > I will get around handling your issue.
-> > Thanks for your kindly patience,
-> > 
-> Hello,
-> Was this issue resolved? I'm seeing similar behaviour.. I think it's related
-> to flushing the controller cache?
-> Waiting a while (after the disk leds stop blinking) performance is back to
-> normal.. 
-> -- Pasi
+On Wed, Aug 19, 2009 at 10:39:16PM +0200, Ingo Molnar wrote:
+> A general interface design question: you added a new 
+> ioctl XFS_IOC_TRIM case. It's a sub-case of an 
+> ugly-looking demultiplexing xfs_file_ioctl().
+
+ioctl is per defintion a multiplexer.
+
+> What is your threshold for turning something into a 
+> syscall? When are ioctls acceptable in your opinion?
 > 
-> In my memory ??It's because the write cache is not enable??You can verify
-> it using sdparm 
-
-I'm using battery backed write-back write cache on Areca controller, and it's enabled.
-Or did you mean caches in each harddisk?
-
-[Jack] Yes , I mean the write cache of each HD.
-
-More information about my setup:
-
-- Areca 1680 24-port SAS RAID controller
-- Physical disks 1-4 are raid-10 for the OS (boot volume, /dev/sda)
-- Physical disks 5-18 are raid-60 for the data (/dev/sdb)
-
-I downloaded ltp-base-20090731.tgz from http://ltp.sf.net and compiled it. 
-
-from testcases/kernel/io/disktest/ I run:
-
-# echo 3 > /proc/sys/vm/drop_caches
-# ./disktest -w -K16 -B 4k -T 60 -pr -Ibd -PA /dev/sdb
-
-(sdb is the raid-60 data array).
-
-So the disktest benchmark is running 4 kB random writes using 16 threads and direct-IO
-(bypassing kernel caches) for 60 seconds.
-
-The test completes after 60 seconds, just like it should, but the disk leds will
-keep blinking for many minutes more.. 
-
-So basicly Areca controller is first caching the random write IOs and then flushing
-them from the cache (2 GB) to the disks.. 
-
-The problem is while Areca is doing the flushing _all_ IOs are really slow,
-including the other raid-10 array for the OS, which uses totally separate physical disks. 
-
-Opening another shell in screen takes at least 30 seconds, starting "top"
-takes forever etc.. 
-
-While Areca is flushing the caches (and all the IOs are slow), "iostat 1"
-doesn't show any "leftover" IOs from the benchmark. So the benchmark was
-really using direct IO, bypassing kernel caches.
-
-I tried with different io-schedulers (cfq,deadline,noop) but they didn't
-have big effect.. which makes sense, since the OS/kernel is not doing any
-big IO when the 'stalling' happens.
-
-Is there some way to make Areca NOT use all cpu-power for cache flushing? 
-
-OS is CentOS 5.3 x86_64 with linux-2.6.18-128 kernel.
-
--- Pasi
-
-> 2009-08-19 
+> I'm asking this because we are facing a similar problem 
+> with perfcounters: we need to extend the ioctl 
+> functionality there but introducing a new syscall looks 
+> wasteful.
 > 
-> 
-> 
-> Wang Jinpu 
-> > -----Original Message-----
-> > From: Andrew Morton [mailto:akpm@linux-foundation.org] 
-> > Sent: Thursday, November 20, 2008 9:18 AM
-> > To: Michael Fuckner
-> > Cc: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org; Nick Cheng;
-> > Erich Chen
-> > Subject: Re: Performance issues with Areca 1680 SAS Controllers
-> > 
-> > (cc's added)
-> > 
-> > On Wed, 19 Nov 2008 13:16:56 +0100
-> > Michael Fuckner <michael@fuckner.net> wrote:
-> > 
-> > > Hi,
-> > > 
-> > > I am using an Areca 1680-SAS-Controller with 16 SAS-HDD (Seagate 1TB
-> > > ST31000640SS). I set up a Raid6 with all 16 disks and formatted it with
-> > > XFS. The Controller has 512MB RAM and a BBU. The OS is installed to
-> > > another disk attached to the onboard AHCI controller.
-> > > 
-> > > After doing some IO, the areca raidset is slower compared to the rate 
-> > > directly
-> > > after boot.
-> > > 
-> > > 
-> > > [root@storage ~]# dd if=/dev/sdb1 of=/dev/null bs=1M count=50k
-> > iflag=direct
-> > > 51200+0 records in
-> > > 51200+0 records out
-> > > 53687091200 bytes (54 GB) copied, 59.6494 seconds, 900 MB/s
-> > > [root@storage ~]# mount /dev/sdb1 /data
-> > > [root@storage ~]# cd /data/
-> > > [root@storage data]# ./iozone -i 0 -i 1 -s 32g -r 16m -S 6144 -t 8 -+r
-> > > -o  >raid6_sync_t8.log
-> > > [root@storage data]# cd
-> > > [root@storage ~]# umount /data/
-> > > [root@storage ~]# dd if=/dev/sdb1 of=/dev/null bs=1M count=50k
-> > iflag=direct
-> > > 51200+0 records in
-> > > 51200+0 records out
-> > > 53687091200 bytes (54 GB) copied, 76.4036 seconds, 703 MB/s
-> > > 
-> > > I tested different Versions of Linux (Centos 5.2, OpenSUSE 11, Debian
-> > > Lenny) and Vanilla kernels 2.6.22-2.6.27, all show this behaviour.
-> > > 
-> > > Idea why the device slows down after IO- or better: how to keep the high
-> > > rate? Is this reproducible foer Areca SATA Controllers (Type 11XX and
-> > 12XX)
-> > > 
-> > > Regards,
-> > >    Michael!
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > Please read the FAQ at  http://www.tux.org/lkml/
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> __________ Information from ESET NOD32 Antivirus, version of virus signature database 4347 (20090819) __________
-> The message was checked by ESET NOD32 Antivirus.
-> http://www.eset.com
+> So i'm torn about the 'syscall versus ioctl' issue, i'd 
+> like to avoid making interface design mistakes and i'd 
+> like to solicit some opinions about this. I've attached 
+> the perfcounters ioctl patch below.
 
+Only add a syscall if it has _one_ clear defined purpose,
+which has kernel-wide meaning.
+
+Do not add an syscall that is just another multiplexer without
+structure. Most likely it will just be even worse than sys_ioctl.
+
+Also really don't bother adding a system call that is specific to
+one singler driver or filesystem.  Besides horrible logistics -
+you'd need some always built-in stub calling out to the possibly
+modular drivers/filesystem - it also simply doesn't make any semantical
+sense.  I can't say I like the ioctl use in perfcounters much,
+but adding a special syscalls instead would be even more horrible.
+
+
+As for the trim support this really just was an RFC to start bringing
+some code into play instead of the endless masturbation about hat code
+that doesn't exist happens on hardware most people don't have.  The
+interface will most ceetainly change and I hope we will have a common
+interface for all filesystems (or at least those that care).
