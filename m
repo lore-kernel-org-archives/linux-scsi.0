@@ -1,65 +1,40 @@
-From: =?utf-8?Q?Rog=C3=A9rio?= Brito <rbrito-qczF+2RCDl1fyO9Q7EP/yw@public.gmane.org>
-Subject: Re: [Bugme-new] [Bug 14020] New: Stack trace when running smartctl
- on an USB disk
-Date: Thu, 20 Aug 2009 19:07:40 -0300
-Message-ID: <20090820220740.GA767@ime.usp.br>
-References: <bug-14020-10286@http.bugzilla.kernel.org/>
- <20090820145830.4f745fc3.akpm@linux-foundation.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: O_DIRECT and barriers
+Date: Thu, 20 Aug 2009 18:12:21 -0400
+Message-ID: <20090820221221.GA14440@infradead.org>
+References: <1250697884-22288-1-git-send-email-jack@suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20090820145830.4f745fc3.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bugzilla-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org, bugme-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org
+In-Reply-To: <1250697884-22288-1-git-send-email-jack@suse.cz>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi, Andrew & Co.
+Btw, something semi-related I've been looking at recently:
 
-On Aug 20 2009, Andrew Morton wrote:
-> On Thu, 20 Aug 2009 02:13:27 GMT
-> bugzilla-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org wrote:
-> > Trying to see the status of a drive of mine that is in an USB enclo=
-sure, I
-> > issued the command:
-> >=20
-> >   # smartctl -d usbcypress -a /dev/sda
-> >=20
-> > What I got in return was:
-> >=20
-> > "task smartctl:1513 blocked for more than 120 seconds" with a subse=
-quent stack
-> > trace, listed below.
->=20
-> Yup, that's a bug.
+Currently O_DIRECT writes bypass all kernel caches, but there they do
+use the disk caches.  We currenly don't have any barrier support for
+them at all, which is really bad for data integrity in virtualized
+environments.  I've started thinking about how to implement this.
 
-Thanks for the confirmation.
+The simplest scheme would be to mark the last request of each
+O_DIRECT write as barrier requests.  This works nicely from the FS
+perspective and works with all hardware supporting barriers.  It's
+massive overkill though - we really only need to flush the cache
+after our request, and not before.  And for SCSI we would be much
+better just setting the FUA bit on the commands and not require a
+full cache flush at all.
 
-> I assume that smartctl never recovered?
+The next scheme would be to simply always do a cache flush after
+the direct I/O write has completed, but given that blkdev_issue_flush
+blocks until the command is done that would a) require everyone to
+use the end_io callback and b) spend a lot of time in that workque.
+This only requires one full cache flush, but it's still suboptimal.
 
-Yes, sorry for not mentioning this explicitly. smartctl hang there and
-was uninterruptible. :-(
+I have prototypes this for XFS, but I don't really like it.
 
-> I don't know if it's a scsi bug or a usb bug.  Probably the latter?
-
-Again, just reiterating, what I said before, even though I am not sure
-if I can reproduce it, I will try to.
-
-And if any further information about my hardware is needed, please, jus=
-t
-let me know.
-
-
-Thanks, Rog=C3=A9rio Brito.
-
---=20
-Rog=C3=A9rio Brito : rbrito@{mackenzie,ime.usp}.br : GPG key 1024D/7C2C=
-AEB8
-http://www.ime.usp.br/~rbrito : http://meusite.mackenzie.com.br/rbrito
-Projects: algorithms.berlios.de : lame.sf.net : vrms.alioth.debian.org
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The best scheme would be to get some highlevel FUA request in the
+block layer which gets emulated by a post-command cache flush.
