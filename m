@@ -1,248 +1,362 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 1/7] mpt2sas : [Resend]  Rescan topology from Interrupt context instead of work thread
-Date: Thu, 20 Aug 2009 13:20:54 +0530
-Message-ID: <20090820075046.GB17192@lsi.com>
+Subject: [PATCH 2/7] mpt2sas: [Resend] Prevent sending command to FW while Host Reset
+Date: Thu, 20 Aug 2009 13:22:00 +0530
+Message-ID: <20090820075153.GC17192@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og119.obsmtp.com ([64.18.2.16]:36339 "EHLO
-	exprod7og119.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750744AbZHTIMe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Aug 2009 04:12:34 -0400
+Received: from exprod7og107.obsmtp.com ([64.18.2.167]:33712 "EHLO
+	exprod7og107.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751732AbZHTINm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Aug 2009 04:13:42 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-Following host reset its possible that the controller firmware could
-assign new handles for devices, as well as adding or deleting devices. There is
-code in the driver that will rescan the topology folowing host reset; updating
-device handles, and remove devices that are no longer responding. This patch
-will improve the responsivness by moving this rescaning from the delayed hotplug
-worker thread to immediately following the host reset.
+
+This patch renames the flag for indicating host reset from
+ioc_reset_in_progress to shost_recovery. It also removes the spin locks
+surrounding the setting of this flag, which are unnecessary.   Sanity checks on
+the shost_recovery flag were added thru out the code so as to prevent sending
+firmware commands during host reset.  Also, the setting of the shost state to
+SHOST_RECOVERY was removed to prevent deadlocks, this is actually better
+handled by the shost_recovery flag.
 
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 Reviewed-by: Eric Moore <Eric.moore@lsi.com>
 ---
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 35a1386..cc5a8da 100644
+index cc5a8da..1cfb503 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -3536,5 +3536,8 @@ mpt2sas_base_hard_reset_handler(struct MPT2SAS_ADAPTER *ioc, int sleep_flag,
+@@ -94,7 +94,7 @@ _base_fault_reset_work(struct work_struct *work)
+ 	int rc;
+ 
  	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
- 	ioc->ioc_reset_in_progress = 0;
+-	if (ioc->ioc_reset_in_progress)
++	if (ioc->shost_recovery)
+ 		goto rearm_timer;
  	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
-+
-+	if (!r)
-+		_base_reset_handler(ioc, MPT2_IOC_RUNNING);
- 	return r;
- }
+ 
+@@ -3501,20 +3501,13 @@ mpt2sas_base_hard_reset_handler(struct MPT2SAS_ADAPTER *ioc, int sleep_flag,
+ 	    __func__));
+ 
+ 	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
+-	if (ioc->ioc_reset_in_progress) {
++	if (ioc->shost_recovery) {
+ 		spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
+ 		printk(MPT2SAS_ERR_FMT "%s: busy\n",
+ 		    ioc->name, __func__);
+ 		return -EBUSY;
+ 	}
+-	ioc->ioc_reset_in_progress = 1;
+ 	ioc->shost_recovery = 1;
+-	if (ioc->shost->shost_state == SHOST_RUNNING) {
+-		/* set back to SHOST_RUNNING in mpt2sas_scsih.c */
+-		scsi_host_set_state(ioc->shost, SHOST_RECOVERY);
+-		printk(MPT2SAS_INFO_FMT "putting controller into "
+-		    "SHOST_RECOVERY\n", ioc->name);
+-	}
+ 	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
+ 
+ 	_base_reset_handler(ioc, MPT2_IOC_PRE_RESET);
+@@ -3534,7 +3527,7 @@ mpt2sas_base_hard_reset_handler(struct MPT2SAS_ADAPTER *ioc, int sleep_flag,
+ 	    ioc->name, __func__, ((r == 0) ? "SUCCESS" : "FAILED")));
+ 
+ 	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
+-	ioc->ioc_reset_in_progress = 0;
++	ioc->shost_recovery = 0;
+ 	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
+ 
+ 	if (!r)
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index acdcff1..998a7b8 100644
+index 998a7b8..1582758 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_base.h
 +++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -119,6 +119,7 @@
- #define MPT2_IOC_PRE_RESET		1 /* prior to host reset */
- #define MPT2_IOC_AFTER_RESET		2 /* just after host reset */
- #define MPT2_IOC_DONE_RESET		3 /* links re-initialized */
-+#define MPT2_IOC_RUNNING		4 /* shost running */
- 
- /*
-  * logging format
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 2e9a444..471c3b6 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -103,7 +103,6 @@ struct sense_info {
- };
- 
- 
--#define MPT2SAS_RESCAN_AFTER_HOST_RESET (0xFFFF)
- /**
-  * struct fw_event_work - firmware event struct
-  * @list: link list framework
-@@ -2405,27 +2404,6 @@ _scsih_check_topo_delete_events(struct MPT2SAS_ADAPTER *ioc,
- }
- 
- /**
-- * _scsih_queue_rescan - queue a topology rescan from user context
-- * @ioc: per adapter object
-- *
-- * Return nothing.
-- */
--static void
--_scsih_queue_rescan(struct MPT2SAS_ADAPTER *ioc)
--{
--	struct fw_event_work *fw_event;
--
--	if (ioc->wait_for_port_enable_to_complete)
--		return;
--	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
--	if (!fw_event)
--		return;
--	fw_event->event = MPT2SAS_RESCAN_AFTER_HOST_RESET;
--	fw_event->ioc = ioc;
--	_scsih_fw_event_add(ioc, fw_event);
--}
--
--/**
-  * _scsih_flush_running_cmds - completing outstanding commands.
-  * @ioc: per adapter object
-  *
-@@ -2456,46 +2434,6 @@ _scsih_flush_running_cmds(struct MPT2SAS_ADAPTER *ioc)
- }
- 
- /**
-- * mpt2sas_scsih_reset_handler - reset callback handler (for scsih)
-- * @ioc: per adapter object
-- * @reset_phase: phase
-- *
-- * The handler for doing any required cleanup or initialization.
-- *
-- * The reset phase can be MPT2_IOC_PRE_RESET, MPT2_IOC_AFTER_RESET,
-- * MPT2_IOC_DONE_RESET
-- *
-- * Return nothing.
-- */
--void
--mpt2sas_scsih_reset_handler(struct MPT2SAS_ADAPTER *ioc, int reset_phase)
--{
--	switch (reset_phase) {
--	case MPT2_IOC_PRE_RESET:
--		dtmprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: "
--		    "MPT2_IOC_PRE_RESET\n", ioc->name, __func__));
--		_scsih_fw_event_off(ioc);
--		break;
--	case MPT2_IOC_AFTER_RESET:
--		dtmprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: "
--		    "MPT2_IOC_AFTER_RESET\n", ioc->name, __func__));
--		if (ioc->tm_cmds.status & MPT2_CMD_PENDING) {
--			ioc->tm_cmds.status |= MPT2_CMD_RESET;
--			mpt2sas_base_free_smid(ioc, ioc->tm_cmds.smid);
--			complete(&ioc->tm_cmds.done);
--		}
--		_scsih_fw_event_on(ioc);
--		_scsih_flush_running_cmds(ioc);
--		break;
--	case MPT2_IOC_DONE_RESET:
--		dtmprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: "
--		    "MPT2_IOC_DONE_RESET\n", ioc->name, __func__));
--		_scsih_queue_rescan(ioc);
--		break;
--	}
--}
--
--/**
-  * _scsih_setup_eedp - setup MPI request for EEDP transfer
-  * @scmd: pointer to scsi command object
-  * @mpi_request: pointer to the SCSI_IO reqest message frame
-@@ -5156,22 +5094,9 @@ static void
- _scsih_remove_unresponding_devices(struct MPT2SAS_ADAPTER *ioc)
+@@ -432,7 +432,7 @@ typedef void (*MPT_ADD_SGE)(void *paddr, u32 flags_length, dma_addr_t dma_addr);
+  * @fw_event_list: list of fw events
+  * @aen_event_read_flag: event log was read
+  * @broadcast_aen_busy: broadcast aen waiting to be serviced
+- * @ioc_reset_in_progress: host reset in progress
++ * @shost_recovery: host reset in progress
+  * @ioc_reset_in_progress_lock:
+  * @ioc_link_reset_in_progress: phy/hard reset in progress
+  * @ignore_loginfos: ignore loginfos during task managment
+@@ -545,7 +545,6 @@ struct MPT2SAS_ADAPTER {
+ 	 /* misc flags */
+ 	int		aen_event_read_flag;
+ 	u8		broadcast_aen_busy;
+-	u8		ioc_reset_in_progress;
+ 	u8		shost_recovery;
+ 	spinlock_t 	ioc_reset_in_progress_lock;
+ 	u8		ioc_link_reset_in_progress;
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+index 14e473d..c2a5101 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+@@ -1963,7 +1963,6 @@ _ctl_ioctl_main(struct file *file, unsigned int cmd, void __user *arg)
  {
- 	struct _sas_device *sas_device, *sas_device_next;
--	struct _sas_node *sas_expander, *sas_expander_next;
-+	struct _sas_node *sas_expander;
- 	struct _raid_device *raid_device, *raid_device_next;
+ 	enum block_state state;
+ 	long ret = -EINVAL;
 -	unsigned long flags;
  
--	_scsih_search_responding_sas_devices(ioc);
--	_scsih_search_responding_raid_devices(ioc);
--	_scsih_search_responding_expanders(ioc);
--
+ 	state = (file->f_flags & O_NONBLOCK) ? NON_BLOCKING :
+ 	    BLOCKING;
+@@ -1989,13 +1988,8 @@ _ctl_ioctl_main(struct file *file, unsigned int cmd, void __user *arg)
+ 		    !ioc)
+ 			return -ENODEV;
+ 
+-		spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
+-		if (ioc->shost_recovery) {
+-			spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock,
+-			    flags);
++		if (ioc->shost_recovery)
+ 			return -EAGAIN;
+-		}
+-		spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
+ 
+ 		if (_IOC_SIZE(cmd) == sizeof(struct mpt2_ioctl_command)) {
+ 			uarg = arg;
+@@ -2098,7 +2092,6 @@ _ctl_compat_mpt_command(struct file *file, unsigned cmd, unsigned long arg)
+ 	struct mpt2_ioctl_command karg;
+ 	struct MPT2SAS_ADAPTER *ioc;
+ 	enum block_state state;
+-	unsigned long flags;
+ 
+ 	if (_IOC_SIZE(cmd) != sizeof(struct mpt2_ioctl_command32))
+ 		return -EINVAL;
+@@ -2113,13 +2106,8 @@ _ctl_compat_mpt_command(struct file *file, unsigned cmd, unsigned long arg)
+ 	if (_ctl_verify_adapter(karg32.hdr.ioc_number, &ioc) == -1 || !ioc)
+ 		return -ENODEV;
+ 
 -	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
--	ioc->shost_recovery = 0;
--	if (ioc->shost->shost_state == SHOST_RECOVERY) {
--		printk(MPT2SAS_INFO_FMT "putting controller into "
--		    "SHOST_RUNNING\n", ioc->name);
--		scsi_host_set_state(ioc->shost, SHOST_RUNNING);
+-	if (ioc->shost_recovery) {
+-		spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock,
+-		    flags);
++	if (ioc->shost_recovery)
+ 		return -EAGAIN;
 -	}
 -	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
  
- 	list_for_each_entry_safe(sas_device, sas_device_next,
- 	    &ioc->sas_device_list, list) {
-@@ -5207,16 +5132,63 @@ _scsih_remove_unresponding_devices(struct MPT2SAS_ADAPTER *ioc)
- 		_scsih_raid_device_remove(ioc, raid_device);
- 	}
+ 	memset(&karg, 0, sizeof(struct mpt2_ioctl_command));
+ 	karg.hdr.ioc_number = karg32.hdr.ioc_number;
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 471c3b6..195f5e5 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -1785,17 +1785,18 @@ mpt2sas_scsih_issue_tm(struct MPT2SAS_ADAPTER *ioc, u16 handle, uint lun,
+ 	u32 ioc_state;
+ 	unsigned long timeleft;
+ 	u8 VF_ID = 0;
+-	unsigned long flags;
  
--	list_for_each_entry_safe(sas_expander, sas_expander_next,
--	    &ioc->sas_expander_list, list) {
-+ retry_expander_search:
-+	sas_expander = NULL;
-+	list_for_each_entry(sas_expander, &ioc->sas_expander_list, list) {
- 		if (sas_expander->responding) {
- 			sas_expander->responding = 0;
- 			continue;
- 		}
--		printk("\tremoving expander: handle(0x%04x), "
--		    " sas_addr(0x%016llx)\n", sas_expander->handle,
--		    (unsigned long long)sas_expander->sas_address);
- 		_scsih_expander_remove(ioc, sas_expander->handle);
-+		goto retry_expander_search;
+-	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
+-	if (ioc->tm_cmds.status != MPT2_CMD_NOT_USED ||
+-	    ioc->shost_recovery) {
+-		spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
++	if (ioc->tm_cmds.status != MPT2_CMD_NOT_USED) {
++		printk(MPT2SAS_INFO_FMT "%s: tm_cmd busy!!!\n",
++		    __func__, ioc->name);
++		return;
 +	}
-+}
 +
-+/**
-+ * mpt2sas_scsih_reset_handler - reset callback handler (for scsih)
-+ * @ioc: per adapter object
-+ * @reset_phase: phase
-+ *
-+ * The handler for doing any required cleanup or initialization.
-+ *
-+ * The reset phase can be MPT2_IOC_PRE_RESET, MPT2_IOC_AFTER_RESET,
-+ * MPT2_IOC_DONE_RESET
-+ *
-+ * Return nothing.
-+ */
-+void
-+mpt2sas_scsih_reset_handler(struct MPT2SAS_ADAPTER *ioc, int reset_phase)
-+{
-+	switch (reset_phase) {
-+	case MPT2_IOC_PRE_RESET:
-+		dtmprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: "
-+		    "MPT2_IOC_PRE_RESET\n", ioc->name, __func__));
-+		_scsih_fw_event_off(ioc);
-+		break;
-+	case MPT2_IOC_AFTER_RESET:
-+		dtmprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: "
-+		    "MPT2_IOC_AFTER_RESET\n", ioc->name, __func__));
-+		if (ioc->tm_cmds.status & MPT2_CMD_PENDING) {
-+			ioc->tm_cmds.status |= MPT2_CMD_RESET;
-+			mpt2sas_base_free_smid(ioc, ioc->tm_cmds.smid);
-+			complete(&ioc->tm_cmds.done);
-+		}
-+		_scsih_fw_event_on(ioc);
-+		_scsih_flush_running_cmds(ioc);
-+		break;
-+	case MPT2_IOC_DONE_RESET:
-+		dtmprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: "
-+		    "MPT2_IOC_DONE_RESET\n", ioc->name, __func__));
-+		_scsih_sas_host_refresh(ioc, 0);
-+		_scsih_search_responding_sas_devices(ioc);
-+		_scsih_search_responding_raid_devices(ioc);
-+		_scsih_search_responding_expanders(ioc);
-+		break;
-+	case MPT2_IOC_RUNNING:
-+		dtmprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: "
-+		    "MPT2_IOC_RUNNING\n", ioc->name, __func__));
-+		_scsih_remove_unresponding_devices(ioc);
-+		break;
++	if (ioc->shost_recovery) {
+ 		printk(MPT2SAS_INFO_FMT "%s: host reset in progress!\n",
+ 		    __func__, ioc->name);
+ 		return;
  	}
- }
+-	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
  
-@@ -5236,14 +5208,6 @@ _firmware_event_work(struct work_struct *work)
- 	unsigned long flags;
- 	struct MPT2SAS_ADAPTER *ioc = fw_event->ioc;
+ 	ioc_state = mpt2sas_base_get_iocstate(ioc, 0);
+ 	if (ioc_state & MPI2_DOORBELL_USED) {
+@@ -2553,7 +2554,6 @@ _scsih_qcmd(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
+ 	Mpi2SCSIIORequest_t *mpi_request;
+ 	u32 mpi_control;
+ 	u16 smid;
+-	unsigned long flags;
  
--	/* This is invoked by calling _scsih_queue_rescan(). */
--	if (fw_event->event == MPT2SAS_RESCAN_AFTER_HOST_RESET) {
--		_scsih_fw_event_free(ioc, fw_event);
--		_scsih_sas_host_refresh(ioc, 1);
--		_scsih_remove_unresponding_devices(ioc);
--		return;
+ 	scmd->scsi_done = done;
+ 	sas_device_priv_data = scmd->device->hostdata;
+@@ -2572,13 +2572,10 @@ _scsih_qcmd(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
+ 	}
+ 
+ 	/* see if we are busy with task managment stuff */
+-	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
+-	if (sas_target_priv_data->tm_busy ||
+-	    ioc->shost_recovery || ioc->ioc_link_reset_in_progress) {
+-		spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
++	if (sas_target_priv_data->tm_busy)
++		return SCSI_MLQUEUE_DEVICE_BUSY;
++	else if (ioc->shost_recovery || ioc->ioc_link_reset_in_progress)
+ 		return SCSI_MLQUEUE_HOST_BUSY;
 -	}
--
- 	/* the queue is being flushed so ignore this event */
- 	spin_lock_irqsave(&ioc->fw_event_lock, flags);
- 	if (ioc->fw_events_off || ioc->remove_host) {
+-	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
+ 
+ 	if (scmd->sc_data_direction == DMA_FROM_DEVICE)
+ 		mpi_control = MPI2_SCSIIO_CONTROL_READ;
+@@ -3374,6 +3371,9 @@ _scsih_expander_add(struct MPT2SAS_ADAPTER *ioc, u16 handle)
+ 	if (!handle)
+ 		return -1;
+ 
++	if (ioc->shost_recovery)
++		return -1;
++
+ 	if ((mpt2sas_config_get_expander_pg0(ioc, &mpi_reply, &expander_pg0,
+ 	    MPI2_SAS_EXPAND_PGAD_FORM_HNDL, handle))) {
+ 		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
+@@ -3510,6 +3510,9 @@ _scsih_expander_remove(struct MPT2SAS_ADAPTER *ioc, u16 handle)
+ 	struct _sas_node *sas_expander;
+ 	unsigned long flags;
+ 
++	if (ioc->shost_recovery)
++		return;
++
+ 	spin_lock_irqsave(&ioc->sas_node_lock, flags);
+ 	sas_expander = mpt2sas_scsih_expander_find_by_handle(ioc, handle);
+ 	spin_unlock_irqrestore(&ioc->sas_node_lock, flags);
+@@ -3681,6 +3684,8 @@ _scsih_remove_device(struct MPT2SAS_ADAPTER *ioc, u16 handle)
+ 		mutex_unlock(&ioc->tm_cmds.mutex);
+ 		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "issue target reset "
+ 		    "done: handle(0x%04x)\n", ioc->name, device_handle));
++		if (ioc->shost_recovery)
++			goto out;
+ 	}
+ 
+ 	/* SAS_IO_UNIT_CNTR - send REMOVE_DEVICE */
+@@ -3846,6 +3851,8 @@ _scsih_sas_topology_change_event(struct MPT2SAS_ADAPTER *ioc, u8 VF_ID,
+ 			    "expander event\n", ioc->name));
+ 			return;
+ 		}
++		if (ioc->shost_recovery)
++			return;
+ 		if (event_data->PHY[i].PhyStatus &
+ 		    MPI2_EVENT_SAS_TOPO_PHYSTATUS_VACANT)
+ 			continue;
+@@ -5217,13 +5224,10 @@ _firmware_event_work(struct work_struct *work)
+ 	}
+ 	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
+ 
+-	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
+ 	if (ioc->shost_recovery) {
+-		spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
+ 		_scsih_fw_event_requeue(ioc, fw_event, 1000);
+ 		return;
+ 	}
+-	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
+ 
+ 	switch (fw_event->event) {
+ 	case MPI2_EVENT_SAS_TOPOLOGY_CHANGE_LIST:
+@@ -5425,6 +5429,8 @@ _scsih_expander_node_remove(struct MPT2SAS_ADAPTER *ioc,
+ 			if (!sas_device)
+ 				continue;
+ 			_scsih_remove_device(ioc, sas_device->handle);
++			if (ioc->shost_recovery)
++				return;
+ 			goto retry_device_search;
+ 		}
+ 	}
+@@ -5446,6 +5452,8 @@ _scsih_expander_node_remove(struct MPT2SAS_ADAPTER *ioc,
+ 			if (!expander_sibling)
+ 				continue;
+ 			_scsih_expander_remove(ioc, expander_sibling->handle);
++			if (ioc->shost_recovery)
++				return;
+ 			goto retry_expander_search;
+ 		}
+ 	}
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_transport.c b/drivers/scsi/mpt2sas/mpt2sas_transport.c
+index 686695b..a53086d 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_transport.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_transport.c
+@@ -140,11 +140,18 @@ _transport_set_identify(struct MPT2SAS_ADAPTER *ioc, u16 handle,
+ 	u32 device_info;
+ 	u32 ioc_status;
+ 
++	if (ioc->shost_recovery) {
++		printk(MPT2SAS_INFO_FMT "%s: host reset in progress!\n",
++		    __func__, ioc->name);
++		return -EFAULT;
++	}
++
+ 	if ((mpt2sas_config_get_sas_device_pg0(ioc, &mpi_reply, &sas_device_pg0,
+ 	    MPI2_SAS_DEVICE_PGAD_FORM_HANDLE, handle))) {
+ 		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
++
+ 		    ioc->name, __FILE__, __LINE__, __func__);
+-		return -1;
++		return -ENXIO;
+ 	}
+ 
+ 	ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
+@@ -153,7 +160,7 @@ _transport_set_identify(struct MPT2SAS_ADAPTER *ioc, u16 handle,
+ 		printk(MPT2SAS_ERR_FMT "handle(0x%04x), ioc_status(0x%04x)"
+ 		    "\nfailure at %s:%d/%s()!\n", ioc->name, handle, ioc_status,
+ 		     __FILE__, __LINE__, __func__);
+-		return -1;
++		return -EIO;
+ 	}
+ 
+ 	memset(identify, 0, sizeof(identify));
+@@ -288,21 +295,17 @@ _transport_expander_report_manufacture(struct MPT2SAS_ADAPTER *ioc,
+ 	void *psge;
+ 	u32 sgl_flags;
+ 	u8 issue_reset = 0;
+-	unsigned long flags;
+ 	void *data_out = NULL;
+ 	dma_addr_t data_out_dma;
+ 	u32 sz;
+ 	u64 *sas_address_le;
+ 	u16 wait_state_count;
+ 
+-	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
+-	if (ioc->ioc_reset_in_progress) {
+-		spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
++	if (ioc->shost_recovery) {
+ 		printk(MPT2SAS_INFO_FMT "%s: host reset in progress!\n",
+ 		    __func__, ioc->name);
+ 		return -EFAULT;
+ 	}
+-	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
+ 
+ 	mutex_lock(&ioc->transport_cmds.mutex);
+ 
+@@ -806,6 +809,12 @@ mpt2sas_transport_update_phy_link_change(struct MPT2SAS_ADAPTER *ioc,
+ 	struct _sas_node *sas_node;
+ 	struct _sas_phy *mpt2sas_phy;
+ 
++	if (ioc->shost_recovery) {
++		printk(MPT2SAS_INFO_FMT "%s: host reset in progress!\n",
++			__func__, ioc->name);
++		return;
++	}
++
+ 	spin_lock_irqsave(&ioc->sas_node_lock, flags);
+ 	sas_node = _transport_sas_node_find_by_handle(ioc, handle);
+ 	spin_unlock_irqrestore(&ioc->sas_node_lock, flags);
+@@ -1025,7 +1034,6 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+ 	void *psge;
+ 	u32 sgl_flags;
+ 	u8 issue_reset = 0;
+-	unsigned long flags;
+ 	dma_addr_t dma_addr_in = 0;
+ 	dma_addr_t dma_addr_out = 0;
+ 	u16 wait_state_count;
+@@ -1045,14 +1053,11 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+ 		return -EINVAL;
+ 	}
+ 
+-	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
+-	if (ioc->ioc_reset_in_progress) {
+-		spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
++	if (ioc->shost_recovery) {
+ 		printk(MPT2SAS_INFO_FMT "%s: host reset in progress!\n",
+ 		    __func__, ioc->name);
+ 		return -EFAULT;
+ 	}
+-	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
+ 
+ 	rc = mutex_lock_interruptible(&ioc->transport_cmds.mutex);
+ 	if (rc)
