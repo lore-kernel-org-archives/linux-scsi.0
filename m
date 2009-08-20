@@ -1,67 +1,86 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 2/7] libiscsi: don't increment cmdsn if cmd is not sent
-Date: Thu, 20 Aug 2009 15:10:58 -0500
-Message-ID: <1250799063-1843-3-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 1/7] iscsi_tcp: Evaluate socket state in data_ready()
+Date: Thu, 20 Aug 2009 15:10:57 -0500
+Message-ID: <1250799063-1843-2-git-send-email-michaelc@cs.wisc.edu>
 References: <1250799063-1843-1-git-send-email-michaelc@cs.wisc.edu>
- <1250799063-1843-2-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32618 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:61684 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752436AbZHTULH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Aug 2009 16:11:07 -0400
-In-Reply-To: <1250799063-1843-2-git-send-email-michaelc@cs.wisc.edu>
+	id S1755089AbZHTULI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Aug 2009 16:11:08 -0400
+In-Reply-To: <1250799063-1843-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+From: Hannes Reinecke <hare@suse.de>
 
-We increment session->cmdsn at the top of iscsi_prep_scsi_cmd_pdu, but
-if the prep  ecb or prep bidi or init_task calls fails then we leave the
-session->cmdsn incremented. This moves the cmdsn manipulation to the end
-of the function when we know it has succeeded.
+The network core will call the state_change() callback
+prior to the data_ready() callback, which might cause
+us to lose a connection state change.
+So we have to evaluate the socket state at the end
+of the data_ready() callback, too.
 
-It also adds a session->cmdsn--; in queuecommand for if a driver like
-bnx2i tries to send a a task from that context but it fails. We do not
-have to do this in the xmit thread context because that code will retry
-the same task if the initial call fails.
-
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/libiscsi.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/iscsi_tcp.c |   28 +++++++++++++++++++++++++---
+ 1 files changed, 25 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 716cc34..3cef35b 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -301,8 +301,6 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
- 	hdr->flags = ISCSI_ATTR_SIMPLE;
- 	int_to_scsilun(sc->device->lun, (struct scsi_lun *)hdr->lun);
- 	memcpy(task->lun, hdr->lun, sizeof(task->lun));
--	hdr->cmdsn = task->cmdsn = cpu_to_be32(session->cmdsn);
--	session->cmdsn++;
- 	hdr->exp_statsn = cpu_to_be32(conn->exp_statsn);
- 	cmd_len = sc->cmd_len;
- 	if (cmd_len < ISCSI_CDB_SIZE)
-@@ -388,6 +386,8 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
- 		return -EIO;
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 518dbd9..c7e2ff2 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -99,6 +99,24 @@ static int iscsi_sw_tcp_recv(read_descriptor_t *rd_desc, struct sk_buff *skb,
+ 	return total_consumed;
+ }
  
- 	task->state = ISCSI_TASK_RUNNING;
-+	hdr->cmdsn = task->cmdsn = cpu_to_be32(session->cmdsn);
-+	session->cmdsn++;
++/**
++ * iscsi_sw_sk_state_check - check socket state
++ * @sk: socket
++ *
++ * If the socket is in CLOSE or CLOSE_WAIT we should
++ * not close the connection if there is still some
++ * data pending.
++ */
++static inline int iscsi_sw_sk_state_check(struct sock *sk)
++{
++	if ((sk->sk_state == TCP_CLOSE_WAIT ||
++	     sk->sk_state == TCP_CLOSE) &&
++	    !atomic_read(&sk->sk_rmem_alloc))
++		return -ECONNRESET;
++
++	return 0;
++}
++
+ static void iscsi_sw_tcp_data_ready(struct sock *sk, int flag)
+ {
+ 	struct iscsi_conn *conn = sk->sk_user_data;
+@@ -117,6 +135,12 @@ static void iscsi_sw_tcp_data_ready(struct sock *sk, int flag)
+ 	rd_desc.count = 1;
+ 	tcp_read_sock(sk, &rd_desc, iscsi_sw_tcp_recv);
  
- 	conn->scsicmd_pdus_cnt++;
- 	ISCSI_DBG_SESSION(session, "iscsi prep [%s cid %d sc %p cdb 0x%x "
-@@ -1497,6 +1497,7 @@ int iscsi_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
- 			}
- 		}
- 		if (session->tt->xmit_task(task)) {
-+			session->cmdsn--;
- 			reason = FAILURE_SESSION_NOT_READY;
- 			goto prepd_reject;
- 		}
++	if (iscsi_sw_sk_state_check(sk) < 0) {
++		ISCSI_SW_TCP_DBG(conn, "iscsi_tcp_data_ready: "
++				 "TCP_CLOSE|TCP_CLOSE_WAIT\n");
++		iscsi_conn_failure(conn, ISCSI_ERR_CONN_FAILED);
++	}
++
+ 	read_unlock(&sk->sk_callback_lock);
+ 
+ 	/* If we had to (atomically) map a highmem page,
+@@ -137,9 +161,7 @@ static void iscsi_sw_tcp_state_change(struct sock *sk)
+ 	conn = (struct iscsi_conn*)sk->sk_user_data;
+ 	session = conn->session;
+ 
+-	if ((sk->sk_state == TCP_CLOSE_WAIT ||
+-	     sk->sk_state == TCP_CLOSE) &&
+-	    !atomic_read(&sk->sk_rmem_alloc)) {
++	if (iscsi_sw_sk_state_check(sk) < 0) {
+ 		ISCSI_SW_TCP_DBG(conn, "iscsi_tcp_state_change: "
+ 				 "TCP_CLOSE|TCP_CLOSE_WAIT\n");
+ 		iscsi_conn_failure(conn, ISCSI_ERR_CONN_FAILED);
 -- 
 1.6.2.2
 
