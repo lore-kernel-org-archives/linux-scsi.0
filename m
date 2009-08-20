@@ -1,99 +1,31 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 6/7] iscsi_tcp: add new conn error to indicate tcp conn closed
-Date: Thu, 20 Aug 2009 15:11:02 -0500
-Message-ID: <1250799063-1843-7-git-send-email-michaelc@cs.wisc.edu>
-References: <1250799063-1843-1-git-send-email-michaelc@cs.wisc.edu>
- <1250799063-1843-2-git-send-email-michaelc@cs.wisc.edu>
- <1250799063-1843-3-git-send-email-michaelc@cs.wisc.edu>
- <1250799063-1843-4-git-send-email-michaelc@cs.wisc.edu>
- <1250799063-1843-5-git-send-email-michaelc@cs.wisc.edu>
- <1250799063-1843-6-git-send-email-michaelc@cs.wisc.edu>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25505 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755270AbZHTUL2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Aug 2009 16:11:28 -0400
-In-Reply-To: <1250799063-1843-6-git-send-email-michaelc@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+From: John Dykstra <john.dykstra1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: 2.6.31-rc6-git5: Reported regressions from 2.6.30
+Date: Thu, 20 Aug 2009 20:52:51 +0000
+Message-ID: <1250801571.7176.10.camel@Maple>
+References: <jCYznkTxcLB.A.EPH.eNIjKB@chimera>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <jCYznkTxcLB.A.EPH.eNIjKB@chimera>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
+Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Adrian Bunk <bunk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+On Wed, 2009-08-19 at 22:20 +0200, Rafael J. Wysocki wrote:
+> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=14002
+> Subject         : WARNING: at net/ipv4/af_inet.c:154
+> inet_sock_destruct+0x164/0x1c0()
+> Submitter       : Ralf Hildebrandt <ralf.hildebrandt-jq1tPX9l7E6ELgA04lAiVw@public.gmane.org>
+> Date            : 2009-08-18 12:37 (2 days old)
 
-If a target closed the connection, we will detect it in the
-state_changed or data_ready callout. This adds a new conn
-error value to use for this problem, so it is not confused
-with when the initiator throws a conn error and drops
-the connection.
+That looks similar to the WARNING discussed in [1].
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/iscsi_tcp.c |   23 +++++++++--------------
- include/scsi/iscsi_if.h  |    1 +
- 2 files changed, 10 insertions(+), 14 deletions(-)
+There was no resolution to that thread.  However, [2] points out
+possible other occurrences of the problem in 2.6.27, 28 and 29.
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index c7e2ff2..2b1b834 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -109,11 +109,14 @@ static int iscsi_sw_tcp_recv(read_descriptor_t *rd_desc, struct sk_buff *skb,
-  */
- static inline int iscsi_sw_sk_state_check(struct sock *sk)
- {
--	if ((sk->sk_state == TCP_CLOSE_WAIT ||
--	     sk->sk_state == TCP_CLOSE) &&
--	    !atomic_read(&sk->sk_rmem_alloc))
--		return -ECONNRESET;
-+	struct iscsi_conn *conn = (struct iscsi_conn*)sk->sk_user_data;
- 
-+	if ((sk->sk_state == TCP_CLOSE_WAIT || sk->sk_state == TCP_CLOSE) &&
-+	    !atomic_read(&sk->sk_rmem_alloc)) {
-+		ISCSI_SW_TCP_DBG(conn, "TCP_CLOSE|TCP_CLOSE_WAIT\n");
-+		iscsi_conn_failure(conn, ISCSI_ERR_TCP_CONN_CLOSE);
-+		return -ECONNRESET;
-+	}
- 	return 0;
- }
- 
-@@ -135,11 +138,7 @@ static void iscsi_sw_tcp_data_ready(struct sock *sk, int flag)
- 	rd_desc.count = 1;
- 	tcp_read_sock(sk, &rd_desc, iscsi_sw_tcp_recv);
- 
--	if (iscsi_sw_sk_state_check(sk) < 0) {
--		ISCSI_SW_TCP_DBG(conn, "iscsi_tcp_data_ready: "
--				 "TCP_CLOSE|TCP_CLOSE_WAIT\n");
--		iscsi_conn_failure(conn, ISCSI_ERR_CONN_FAILED);
--	}
-+	iscsi_sw_sk_state_check(sk);
- 
- 	read_unlock(&sk->sk_callback_lock);
- 
-@@ -161,11 +160,7 @@ static void iscsi_sw_tcp_state_change(struct sock *sk)
- 	conn = (struct iscsi_conn*)sk->sk_user_data;
- 	session = conn->session;
- 
--	if (iscsi_sw_sk_state_check(sk) < 0) {
--		ISCSI_SW_TCP_DBG(conn, "iscsi_tcp_state_change: "
--				 "TCP_CLOSE|TCP_CLOSE_WAIT\n");
--		iscsi_conn_failure(conn, ISCSI_ERR_CONN_FAILED);
--	}
-+	iscsi_sw_sk_state_check(sk);
- 
- 	tcp_conn = conn->dd_data;
- 	tcp_sw_conn = tcp_conn->dd_data;
-diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
-index 4426f00..d67dda2 100644
---- a/include/scsi/iscsi_if.h
-+++ b/include/scsi/iscsi_if.h
-@@ -262,6 +262,7 @@ enum iscsi_err {
- 	ISCSI_ERR_NO_SCSI_CMD		= ISCSI_ERR_BASE + 17,
- 	ISCSI_ERR_INVALID_HOST		= ISCSI_ERR_BASE + 18,
- 	ISCSI_ERR_XMIT_FAILED		= ISCSI_ERR_BASE + 19,
-+	ISCSI_ERR_TCP_CONN_CLOSE	= ISCSI_ERR_BASE + 20,
- };
- 
- /*
--- 
-1.6.2.2
+--  John
 
+[1]  http://www.spinics.net/lists/netdev/msg103267.html
+[2]  http://www.spinics.net/lists/netdev/msg104120.html
