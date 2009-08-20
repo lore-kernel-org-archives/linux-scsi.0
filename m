@@ -1,138 +1,122 @@
-From: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
-Subject: Re: Performance issues with Areca 1680 SAS Controllers
-Date: Thu, 20 Aug 2009 12:56:04 +0300
-Message-ID: <20090820095604.GT19938@edu.joroinen.fi>
-References: <20090819140848.GW19938@edu.joroinen.fi> <SERVER-ARECA8ldpyzy000025bc@areca.com.tw>
+From: "jack wang" <jack_wang@usish.com>
+Subject: Re: [PATCH 1/3] block: add blk-iopoll, a NAPI like approach forblock  devices
+Date: Thu, 20 Aug 2009 19:30:49 +0800
+Message-ID: <B021CBAD133A4E45A4BF6E6BDFDCA28F@usish.com.cn>
+References: <1249588685-4662-1-git-send-email-jens.axboe@oracle.com> <1249588685-4662-2-git-send-email-jens.axboe@oracle.com> <20090806223257.0c33cf15@lxorguk.ukuu.org.uk> <20090807063745.GQ12579@kernel.dk> <4A7BE80A.6080808@garzik.org> <20090807085004.GV12579@kernel.dk> <20090807110517.GW12579@kernel.dk> <20090807113146.GX12579@kernel.dk> <20090819190804.GP12579@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from edu.joroinen.fi ([194.89.68.130]:50999 "EHLO edu.joroinen.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752640AbZHTJ4E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Aug 2009 05:56:04 -0400
-Content-Disposition: inline
-In-Reply-To: <SERVER-ARECA8ldpyzy000025bc@areca.com.tw>
+Received: from sr-smtp.usish.com ([210.5.144.203]:53660 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753197AbZHTLba (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Aug 2009 07:31:30 -0400
+In-Reply-To: <20090819190804.GP12579@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Nick Cheng <nick.cheng@areca.com.tw>
-Cc: 'Andrew Morton' <akpm@linux-foundation.org>, 'Michael Fuckner' <michael@fuckner.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: 'Jens Axboe' <jens.axboe@oracle.com>, 'Jeff Garzik' <jeff@garzik.org>
+Cc: 'Alan Cox' <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Eric.Moore@lsi.com
 
-On Thu, Aug 20, 2009 at 09:54:27AM +0800, Nick Cheng wrote:
-> Hi Gentlemen,
-> We have worked it out with new firmware and driver.
-> You can download the latest F/W from
-> ftp://ftp.areca.com.tw/RaidCards/BIOS_Firmware/ARC1680/ and use the a=
-ttached
-> driver.
-> Please have a try.
-> Any comments are welcome.
+On Fri, Aug 07 2009, Jens Axboe wrote:
+> On Fri, Aug 07 2009, Jens Axboe wrote:
+> > On Fri, Aug 07 2009, Jens Axboe wrote:
+> > > > I'm not NAK'ing...  just inserting some relevant NAPI field
+experience,  
+> > > > and hoping for some numbers that better measure the costs/benefits.
+> > > 
+> > > Appreciate you looking over this, and I'll certainly be posting some
+> > > more numbers on this. It'll largely depend on both storage,
+controller,
+> > > and worload.
+> > 
+> > Here's a quick set of numbers, beating with random reads on a drive.
+> > Average of three runs for each, stddev is very low so confidence in the
+> > numbers should be high.
+> > 
+> > With iopoll=0 (disabled), stock:
+> > 
+> > blocksize       IOPS    ints/sec        usr     sys
+> > ------------------------------------------------------
+> > 4k              48401   ~30500          3.36%   27.26%
+> > 
+> > clat (usec): min=1052, max=21615, avg=10541.48, stdev=243.48
+> > clat (usec): min=1066, max=22040, avg=10543.69, stdev=242.05
+> > clat (usec): min=1057, max=23237, avg=10529.04, stdev=239.30
+> > 
+> > 
+> > With iopoll=1
+> > 
+> > blocksize       IOPS    ints/sec        usr     sys
+> > ------------------------------------------------------
+> > 4k              48452   ~29000          3.37%   26.47%
+> > 
+> > 
+> > clat (usec): min=1178, max=21662, avg=10542.72, stdev=247.87
+> > clat (usec): min=1074, max=21783, avg=10534.14, stdev=240.54
+> > clat (usec): min=1102, max=22123, avg=10509.42, stdev=225.73
+> 
+> Lets raise the bar a bit, this time using 8k reads on the faster box.
+> 
+> iopoll=0
+> 
+> blocksize       IOPS    ints/sec        usr     sys
+> ------------------------------------------------------
+> 8k              64050   ~76000          4.12%   45.01%
+> 
+> clat (usec): min=1326, max=18994, avg=7967.54, stdev=214.12
+> clat (usec): min=1325, max=25404, avg=7968.06, stdev=239.87
+> clat (usec): min=1273, max=21414, avg=7963.43, stdev=231.27
+> 
+> 
+> iopoll=1
+> 
+> blocksize       IOPS    ints/sec        usr     sys
+> ------------------------------------------------------
+> 8k              64162   ~55000          4.07%   42.32%
+> 
+> clat (usec): min=1380, max=19681, avg=7960.31, stdev=197.41
+> clat (usec): min=1370, max=37508, avg=7954.61, stdev=210.35
+> clat (usec): min=1332, max=23383, avg=7947.99, stdev=209.60
+> 
+> Again, purely a synthetic IO benchmark, but the sys reduction is
+> interesting.
 
-Thanks! I'll give it a try today and report back.
+Upping the ante a bit more, this time on a really fast box. Just to show
+that iopoll works well even on just about the fastest CPU you can throw
+at it.
 
--- Pasi
+iopoll=0
 
-> Thank you,
-> -----Original Message-----
-> From: Pasi K=E4rkk=E4inen [mailto:pasik@iki.fi]=20
-> Sent: Wednesday, August 19, 2009 10:09 PM
-> To: Nick Cheng
-> Cc: 'Andrew Morton'; 'Michael Fuckner'; linux-kernel@vger.kernel.org;
-> linux-scsi@vger.kernel.org; 'Erich Chen'
-> Subject: Re: Performance issues with Areca 1680 SAS Controllers
->=20
-> On Thu, Nov 20, 2008 at 03:39:40PM +0800, Nick Cheng wrote:
-> > Hi Michael,
-> > I will get around handling your issue.
-> > Thanks for your kindly patience,
-> >=20
->=20
-> Hello,
->=20
-> Was this issue resolved? I'm seeing similar behaviour.. I think it's =
-related
-> to flushing the controller cache?
->=20
-> Waiting a while (after the disk leds stop blinking) performance is ba=
-ck to
-> normal..=20
->=20
-> -- Pasi
->=20
-> > -----Original Message-----
-> > From: Andrew Morton [mailto:akpm@linux-foundation.org]=20
-> > Sent: Thursday, November 20, 2008 9:18 AM
-> > To: Michael Fuckner
-> > Cc: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org; Nick =
-Cheng;
-> > Erich Chen
-> > Subject: Re: Performance issues with Areca 1680 SAS Controllers
-> >=20
-> > (cc's added)
-> >=20
-> > On Wed, 19 Nov 2008 13:16:56 +0100
-> > Michael Fuckner <michael@fuckner.net> wrote:
-> >=20
-> > > Hi,
-> > >=20
-> > > I am using an Areca 1680-SAS-Controller with 16 SAS-HDD (Seagate =
-1TB
-> > > ST31000640SS). I set up a Raid6 with all 16 disks and formatted i=
-t with
-> > > XFS. The Controller has 512MB RAM and a BBU. The OS is installed =
-to
-> > > another disk attached to the onboard AHCI controller.
-> > >=20
-> > > After doing some IO, the areca raidset is slower compared to the =
-rate=20
-> > > directly
-> > > after boot.
-> > >=20
-> > >=20
-> > > [root@storage ~]# dd if=3D/dev/sdb1 of=3D/dev/null bs=3D1M count=3D=
-50k
-> > iflag=3Ddirect
-> > > 51200+0 records in
-> > > 51200+0 records out
-> > > 53687091200 bytes (54 GB) copied, 59.6494 seconds, 900 MB/s
-> > > [root@storage ~]# mount /dev/sdb1 /data
-> > > [root@storage ~]# cd /data/
-> > > [root@storage data]# ./iozone -i 0 -i 1 -s 32g -r 16m -S 6144 -t =
-8 -+r
-> > > -o  >raid6_sync_t8.log
-> > > [root@storage data]# cd
-> > > [root@storage ~]# umount /data/
-> > > [root@storage ~]# dd if=3D/dev/sdb1 of=3D/dev/null bs=3D1M count=3D=
-50k
-> > iflag=3Ddirect
-> > > 51200+0 records in
-> > > 51200+0 records out
-> > > 53687091200 bytes (54 GB) copied, 76.4036 seconds, 703 MB/s
-> > >=20
-> > > I tested different Versions of Linux (Centos 5.2, OpenSUSE 11, De=
-bian
-> > > Lenny) and Vanilla kernels 2.6.22-2.6.27, all show this behaviour=
-=2E
-> > >=20
-> > > Idea why the device slows down after IO- or better: how to keep t=
-he high
-> > > rate? Is this reproducible foer Areca SATA Controllers (Type 11XX=
- and
-> > 12XX)
-> > >=20
-> > > Regards,
-> > >    Michael!
-> >=20
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-ker=
-nel" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > Please read the FAQ at  http://www.tux.org/lkml/
+blocksize       IOPS    ints/sec        usr     sys
+------------------------------------------------------
+8k              64823   ~67000          4.75%   13.41%
+
+clat (usec): min=1430, max=15770, avg=7880.60, stdev=118.95
+clat (usec): min=1249, max=17810, avg=7887.34, stdev=120.39
+clat (usec): min=1729, max=15473, avg=7888.13, stdev=118.70
 
 
+iopoll=1
+
+blocksize       IOPS    ints/sec        usr     sys
+------------------------------------------------------
+8k              64825   ~65000         4.37%   11.39%
+
+clat (usec): min=1530, max=15195, avg=7910.01, stdev=111.43
+clat (usec): min=1495, max=16180, avg=7885.11, stdev=115.56
+clat (usec): min=1446, max=19733, avg=7890.46, stdev=139.05
+
+-- 
+Jens Axboe
+
+
+Hi Jens
+Could you tell me what tool do you use to get the IO benchmark?  
+Thanks
+Jack Wang
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
