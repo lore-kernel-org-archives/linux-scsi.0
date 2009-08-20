@@ -1,43 +1,29 @@
-From: Yinghai Lu <yhlu.kernel@gmail.com>
-Subject: Re: oops during scsi scanning disk setup
-Date: Thu, 20 Aug 2009 13:10:51 -0700
-Message-ID: <86802c440908201310v501c11afid4a8f041825f9d28@mail.gmail.com>
-References: <20090820180549.GD7542@arachsys.com>
-	 <20090820200104.GH11966@parisc-linux.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: michaelc@cs.wisc.edu
+Subject: iscsi update for 2.6.32
+Date: Thu, 20 Aug 2009 15:10:56 -0500
+Message-ID: <1250799063-1843-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gx0-f205.google.com ([209.85.217.205]:40154 "EHLO
-	mail-gx0-f205.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752051AbZHTUKu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Aug 2009 16:10:50 -0400
-Received: by gxk1 with SMTP id 1so197805gxk.17
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Aug 2009 13:10:51 -0700 (PDT)
-In-Reply-To: <20090820200104.GH11966@parisc-linux.org>
+Received: from mx1.redhat.com ([209.132.183.28]:26953 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752641AbZHTULE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Aug 2009 16:11:04 -0400
+Received: from int-mx04.intmail.prod.int.phx2.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.17])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id n7KKB4Yi016386
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Aug 2009 16:11:05 -0400
+Received: from localhost.localdomain (vpn-13-78.rdu.redhat.com [10.11.13.78])
+	by int-mx04.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id n7KKB3m1009110
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Aug 2009 16:11:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>, Jeff Garzik <jgarzik@redhat.com>, Ingo Molnar <mingo@elte.hu>
-Cc: Chris Webb <chris@arachsys.com>, linux-scsi@vger.kernel.org, Arjan van de Ven <arjan@infradead.org>
+To: linux-scsi@vger.kernel.org
 
-On Thu, Aug 20, 2009 at 1:01 PM, Matthew Wilcox<matthew@wil.cx> wrote:
-> On Thu, Aug 20, 2009 at 07:05:49PM +0100, Chris Webb wrote:
->> in Linux 2.6.30.4 x86-64 with async scsi bus scanning turned on. I've now
->> seen it again a couple of times with CONFIG_SCSI_SCAN_ASYNC turned off. The
->> machine locks up hard shortly after the oops.
->
-> ^^^ that option
->
->> I'm not quite clear how I can be in sd_probe_async when asynchronous bus
->> scanning is compiled out completely, but perhaps I'm misunderstanding how
->> this function is used.
->
-> ^^^ has nothing to do with sd_probe_async.
->
-> I wrote the code covered by the former, and it's really annoying me
-> that people keep reporting it as buggy, when it's actually the code in
-> kernel/async.c that's buggy.
+The following patches are for 2.6.32. They were made againsts
+scsi-misc. There is not really anything interesting. The only
+new feature is Erez's logging changes, that allow you do
+turn logging on at run time.
 
-anyway to disable that? should have something like fastboot=off or nofastboot
+There are some bug fixes which improve detection of when the
+target closes the connection on us, and a fix for the cmdsn
+management when using bnx2i.
 
-YH
+
