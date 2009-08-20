@@ -1,86 +1,30 @@
-From: Jing Huang <huangj@Brocade.COM>
-Subject: Request to include  Brocade BFA FC SCSI driver into Linux SCSI tree
-Date: Thu, 20 Aug 2009 15:22:16 -0700
-Message-ID: <B0A7AF226B49A14897036E9B3A68CFFECB1A935D74@HQ-EXCH-7.corp.brocade.com>
-References: <200908200654.n7K6shpn005971@swe57.brocade.com>
+From: adam radford <aradford@gmail.com>
+Subject: Re: Management Ioctls Revisited
+Date: Thu, 20 Aug 2009 15:28:01 -0700
+Message-ID: <b1bc6a000908201528w1642c3d3q8b6582a3bf8f61b6@mail.gmail.com>
+References: <b1bc6a000908191515yef38d4bxaeca8e6e3c761237@mail.gmail.com>
+	 <b1bc6a000908201152s154ca680h14741dbfdaedcd01@mail.gmail.com>
+	 <1250807022.4302.163.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq-exedge.brocade.com ([66.243.153.82]:34800 "EHLO
-	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752430AbZHTW1U convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Aug 2009 18:27:20 -0400
-In-Reply-To: <200908200654.n7K6shpn005971@swe57.brocade.com>
-Content-Language: en-US
+Received: from mail-yw0-f173.google.com ([209.85.211.173]:59789 "EHLO
+	mail-yw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754327AbZHTW2A (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Aug 2009 18:28:00 -0400
+Received: by ywh3 with SMTP id 3so344643ywh.22
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Aug 2009 15:28:01 -0700 (PDT)
+In-Reply-To: <1250807022.4302.163.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jing Huang <huangj@Brocade.COM>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ramkumar Vadivelu <rvadivel@Brocade.COM>, Vinodh Ravindran <vravindr@Brocade.COM>, Ashok Rajagopalan <arajagop@brocade.com>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Linus Torvalds <torvalds@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Mukker, Atul" <Atul.Mukker@lsi.com>, bruce.allen@aei.mpg.de, Christoph Hellwig <hch@infradead.org>
 
-Hi James,
+On Thu, Aug 20, 2009 at 3:23 PM, James Bottomley<James.Bottomley@suse.de> wrote:
 
-I resubmitted the bfa driver patches which include fixes for some code review comments provided by Sam Ravnborg on our July 20 submission.
+> Are you talking about a SCSI HBA or a RAID one?
 
-Here, on behalf of Brocade Communication System, Inc, I am requesting you to include the driver into the linux SCSI tree. We will continue to enhance the driver and fix issues reported from linux-scsi community and our internal test group as well.
+Hardware RAID HBA.
 
-Thanks and best regards.
-
-Jing Huang
-Brocade Communications Systems
-
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Jing Huang
-> Sent: Wednesday, August 19, 2009 11:55 PM
-> To: James.Bottomley@HansenPartnership.com
-> Cc: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org; Ramkumar
-> Vadivelu; Vinodh Ravindran
-> Subject: [PATCH 0/14] bfa: Brocade BFA FC SCSI driver (overview)
-> 
-> From: Jing Huang <huangj@brocade.com>
-> 
-> Resubmitting the patches after implemented some of the code review
-> comments
-> from Sam Ravnborg. Patches are generated using 2.6.31-rc6 kernel.
-> 
-> [PATCH 1/14]: SCSI LLD driver code, module init/exit, PCI and SCSI host
-> entry
-> points, interrupt handler, and sysfs interface etc.
-> 
-> [PATCH 2/14]: Hardware/FW access code. part-1
-> 
-> [PATCH 3/14]: Hardware/FW access code. part-2
-> 
-> [PATCH 4/14]: Hardware/FW access code. part-3
-> 
-> [PATCH 5/14]: Hardware/FW access code. part-4
-> 
-> [PATCH 6/14]: FC state machines. part-1
-> 
-> [PATCH 7/14]: FC state machines. part-2
-> 
-> [PATCH 8/14]: FC state machines. part-3
-> 
-> [PATCH 9/14]: FC state machines. part-3
-> 
-> [PATCH 10/14]: Common header files shared by linux driver,
-> hardware/FW access code, FC state machines. part-1
-> 
-> [PATCH 11/14]: Common header files shared by linux driver,
-> hardware/FW access code, FC state machines. part-2
-> 
-> [PATCH 12/14]: Common header files shared by linux driver,
-> hardware/FW access code, FC state machines. part-3
-> 
-> [PATCH 13/14]: Updated Kconfig and Makefile for driver/scsi, and Makefile
-> for bfa driver
-> 
-> [PATCH 14/14]: Updated MAINTAINER file.
-> 
-> Signed-off-by: Jing Huang <huangj@brocade.com>
-> ---
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-Adam
