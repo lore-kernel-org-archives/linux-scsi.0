@@ -1,73 +1,61 @@
-From: Chris Webb <chris@arachsys.com>
-Subject: Re: oops during scsi scanning disk setup
-Date: Fri, 21 Aug 2009 10:23:26 +0100
-Message-ID: <20090821092326.GF32115@arachsys.com>
-References: <20090820180549.GD7542@arachsys.com> <1250807161.4302.167.camel@mulgrave.site> <20090821081621.GB32115@arachsys.com> <20090821083356.GC32115@arachsys.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: O_DIRECT and barriers
+Date: Fri, 21 Aug 2009 13:40:10 +0200
+Message-ID: <20090821114010.GG12579@kernel.dk>
+References: <1250697884-22288-1-git-send-email-jack@suse.cz> <20090820221221.GA14440@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from alpha.arachsys.com ([91.203.57.7]:54408 "EHLO
-	alpha.arachsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755111AbZHUJ1i (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Aug 2009 05:27:38 -0400
+Received: from brick.kernel.dk ([93.163.65.50]:36671 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755044AbZHULkJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Aug 2009 07:40:09 -0400
 Content-Disposition: inline
-In-Reply-To: <20090821083356.GC32115@arachsys.com>
+In-Reply-To: <20090820221221.GA14440@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Chris Webb <chris@arachsys.com> writes:
+On Thu, Aug 20 2009, Christoph Hellwig wrote:
+> Btw, something semi-related I've been looking at recently:
+> 
+> Currently O_DIRECT writes bypass all kernel caches, but there they do
+> use the disk caches.  We currenly don't have any barrier support for
+> them at all, which is really bad for data integrity in virtualized
+> environments.  I've started thinking about how to implement this.
+> 
+> The simplest scheme would be to mark the last request of each
+> O_DIRECT write as barrier requests.  This works nicely from the FS
+> perspective and works with all hardware supporting barriers.  It's
+> massive overkill though - we really only need to flush the cache
+> after our request, and not before.  And for SCSI we would be much
+> better just setting the FUA bit on the commands and not require a
+> full cache flush at all.
+> 
+> The next scheme would be to simply always do a cache flush after
+> the direct I/O write has completed, but given that blkdev_issue_flush
+> blocks until the command is done that would a) require everyone to
+> use the end_io callback and b) spend a lot of time in that workque.
+> This only requires one full cache flush, but it's still suboptimal.
+> 
+> I have prototypes this for XFS, but I don't really like it.
+> 
+> The best scheme would be to get some highlevel FUA request in the
+> block layer which gets emulated by a post-command cache flush.
 
-> Reading through the disassembled code and comparing by hand against
-> disk_part_iter_next(), I think that might be line 144 of block/genhd.c,
-> where the ptbl->len dereference happens.
+I've talked to Chris about this in the past too, but I never got around
+to benchmarking FUA for O_DIRECT. It should be pretty easy to wire up
+without making too many changes, and we do have FUA support on most SATA
+drives too. Basically just a check in the driver for whether the
+request is O_DIRECT and a WRITE, ala:
 
-Sorry to follow up a third time, but I can now confirm this. I slipped -g into
-CFLAGS in the kernel Makefile and rebuilt genhd.o and then the entire vmlinux.
+        if (rq_data_dir(rq) == WRITE && rq_is_sync(rq))
+                WRITE_FUA;
 
-  # objdump -S genhd.o
-  [...]
-  0000000000000da3 <disk_part_iter_next>:
-   *
-   * CONTEXT:
-   * Don't care.
-   */
-  struct hd_struct *disk_part_iter_next(struct disk_part_iter *piter)
-  {
-       da3:       55                      push   %rbp
-       da4:       48 89 e5                mov    %rsp,%rbp
-       da7:       41 55                   push   %r13
-       da9:       41 54                   push   %r12
-       dab:       53                      push   %rbx
-       dac:       48 89 fb                mov    %rdi,%rbx
-       daf:       48 83 ec 08             sub    $0x8,%rsp
-          struct disk_part_tbl *ptbl;
-          int inc, end;
+I know that FUA is used by that other OS, so I think we should be golden
+on the hw support side.
 
-          /* put the last partition */
-          disk_put_part(piter->part);
-       db3:       48 8b 7f 08             mov    0x8(%rdi),%rdi
-  [...]
-       e01:       48 be ff ff ff ff 08    mov    $0x8ffffffff,%rsi
-       e08:       00 00 00 
-       e0b:       48 b9 00 00 00 00 08    mov    $0x800000000,%rcx
-       e12:       00 00 00 
-       e15:       eb 50                   jmp    e67 <disk_part_iter_next+0xc4>
-                          end = -1;
-                  else
-                          end = 0;
-         } else {
-                  inc = 1;
-                  end = ptbl->len;
-       e17:       8b 42 10                mov    0x10(%rdx),%eax
-       e1a:       41 bd 01 00 00 00       mov    $0x1,%r13d
-       e20:       eb db                   jmp    dfd <disk_part_iter_next+0x5a>
-  [...]
+-- 
+Jens Axboe
 
-  # addr2line -e vmlinux 0xffffffff803f0d77
-  /tmp/linux-2.6.30.4-p.tmp/block/genhd.c:144
-
-Cheers,
-
-Chris,
