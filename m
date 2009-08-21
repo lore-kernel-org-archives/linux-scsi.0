@@ -1,32 +1,50 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Management Ioctls Revisited
-Date: Thu, 20 Aug 2009 18:32:21 -0400
-Message-ID: <20090820223221.GA3482@infradead.org>
-References: <b1bc6a000908191515yef38d4bxaeca8e6e3c761237@mail.gmail.com> <b1bc6a000908201152s154ca680h14741dbfdaedcd01@mail.gmail.com> <1250807022.4302.163.camel@mulgrave.site> <b1bc6a000908201528w1642c3d3q8b6582a3bf8f61b6@mail.gmail.com>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: oops during scsi scanning disk setup
+Date: Thu, 20 Aug 2009 21:26:03 -0700
+Message-ID: <20090820212603.61f96fce@infradead.org>
+References: <20090820180549.GD7542@arachsys.com>
+	<20090820200104.GH11966@parisc-linux.org>
+	<86802c440908201310v501c11afid4a8f041825f9d28@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:60782 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754275AbZHTWc0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Aug 2009 18:32:26 -0400
-Content-Disposition: inline
-In-Reply-To: <b1bc6a000908201528w1642c3d3q8b6582a3bf8f61b6@mail.gmail.com>
+Received: from casper.infradead.org ([85.118.1.10]:47566 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750739AbZHUEXV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Aug 2009 00:23:21 -0400
+In-Reply-To: <86802c440908201310v501c11afid4a8f041825f9d28@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: adam radford <aradford@gmail.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, Linus Torvalds <torvalds@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Mukker, Atul" <Atul.Mukker@lsi.com>, bruce.allen@aei.mpg.de, Christoph Hellwig <hch@infradead.org>
+To: Yinghai Lu <yhlu.kernel@gmail.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Jeff Garzik <jgarzik@redhat.com>, Ingo Molnar <mingo@elte.hu>, Chris Webb <chris@arachsys.com>, linux-scsi@vger.kernel.org
 
-On Thu, Aug 20, 2009 at 03:28:01PM -0700, adam radford wrote:
-> On Thu, Aug 20, 2009 at 3:23 PM, James Bottomley<James.Bottomley@suse.de> wrote:
-> 
-> > Are you talking about a SCSI HBA or a RAID one?
-> 
-> Hardware RAID HBA.
+On Thu, 20 Aug 2009 13:10:51 -0700
+Yinghai Lu <yhlu.kernel@gmail.com> wrote:
 
-We would really like to avoid new homegrown interfaces.  But from your
-initial mail it sunds like you have a new driver that implement the same
-managment interface as the older 3ware drivers do, AND there is opensource
-userspace for it.  I don't think anyone in the right mind could say no
-to that with our current state of affairs.
+> On Thu, Aug 20, 2009 at 1:01 PM, Matthew Wilcox<matthew@wil.cx> wrote:
+> > On Thu, Aug 20, 2009 at 07:05:49PM +0100, Chris Webb wrote:
+> >> in Linux 2.6.30.4 x86-64 with async scsi bus scanning turned on.
+> >> I've now seen it again a couple of times with
+> >> CONFIG_SCSI_SCAN_ASYNC turned off. The machine locks up hard
+> >> shortly after the oops.
+> >
+> > ^^^ that option
+> >
+> >> I'm not quite clear how I can be in sd_probe_async when
+> >> asynchronous bus scanning is compiled out completely, but perhaps
+> >> I'm misunderstanding how this function is used.
+> >
+> > ^^^ has nothing to do with sd_probe_async.
+> >
+> > I wrote the code covered by the former, and it's really annoying me
+> > that people keep reporting it as buggy, when it's actually the code
+> > in kernel/async.c that's buggy.
+> 
+> anyway to disable that? should have something like fastboot=off or
+> nofastboot
+
+async is not (just) about boot, and it's really not optional.
+
+what exactly are you seeing?
 
