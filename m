@@ -1,36 +1,39 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [Bugme-new] [Bug 14020] New: Stack trace when running smartctl
- on an USB disk
-Date: Fri, 21 Aug 2009 10:04:29 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0908211003090.2912-100000@iolanthe.rowland.org>
-References: <20090820220740.GA767@ime.usp.br>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: O_DIRECT and barriers
+Date: Fri, 21 Aug 2009 10:20:08 -0400
+Message-ID: <20090821142008.GA30617@infradead.org>
+References: <1250697884-22288-1-git-send-email-jack@suse.cz> <20090820221221.GA14440@infradead.org> <20090821114010.GG12579@kernel.dk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:43309 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754626AbZHUOE1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Aug 2009 10:04:27 -0400
-In-Reply-To: <20090820220740.GA767@ime.usp.br>
+Received: from bombadil.infradead.org ([18.85.46.34]:53270 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755605AbZHUOUH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Aug 2009 10:20:07 -0400
+Content-Disposition: inline
+In-Reply-To: <20090821114010.GG12579@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?utf-8?Q?Rog=C3=A9rio?= Brito <rbrito@ime.usp.br>
-Cc: Andrew Morton <akpm@linux-foundation.org>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, bugzilla-daemon@bugzilla.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, 20 Aug 2009, [utf-8] Rog=C3=A9rio Brito wrote:
+On Fri, Aug 21, 2009 at 01:40:10PM +0200, Jens Axboe wrote:
+> I've talked to Chris about this in the past too, but I never got around
+> to benchmarking FUA for O_DIRECT. It should be pretty easy to wire up
+> without making too many changes, and we do have FUA support on most SATA
+> drives too. Basically just a check in the driver for whether the
+> request is O_DIRECT and a WRITE, ala:
+> 
+>         if (rq_data_dir(rq) == WRITE && rq_is_sync(rq))
+>                 WRITE_FUA;
+> 
+> I know that FUA is used by that other OS, so I think we should be golden
+> on the hw support side.
 
-> Again, just reiterating, what I said before, even though I am not sur=
-e
-> if I can reproduce it, I will try to.
+Just doing FUA should be pretty easy, in fact from my reading of the
+code we already use FUA for barriers if supported, that is only drain
+the queue, do a pre-flush for a barrier and then issue the actual
+barrier write as FUA.
 
-A usbmon trace showing what happens when you plug in the drive and=20
-when you run smartctl would help.
-
-Alan Stern
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I can play around with getting rid of the pre-flush and doing cache
+flush based emulation if FUA is not supported if you're fine with that.
