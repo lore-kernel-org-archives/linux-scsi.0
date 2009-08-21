@@ -1,43 +1,36 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: oops during scsi scanning disk setup
-Date: Fri, 21 Aug 2009 08:00:16 -0600
-Message-ID: <1250863216.3844.1.camel@mulgrave.site>
-References: <20090820180549.GD7542@arachsys.com>
-	 <1250807161.4302.167.camel@mulgrave.site>
-	 <20090821081621.GB32115@arachsys.com> <20090821083356.GC32115@arachsys.com>
-	 <20090821092326.GF32115@arachsys.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [Bugme-new] [Bug 14020] New: Stack trace when running smartctl
+ on an USB disk
+Date: Fri, 21 Aug 2009 10:04:29 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0908211003090.2912-100000@iolanthe.rowland.org>
+References: <20090820220740.GA767@ime.usp.br>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:43784 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754558AbZHUOA3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Aug 2009 10:00:29 -0400
-In-Reply-To: <20090821092326.GF32115@arachsys.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:43309 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754626AbZHUOE1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Aug 2009 10:04:27 -0400
+In-Reply-To: <20090820220740.GA767@ime.usp.br>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Webb <chris@arachsys.com>
-Cc: linux-scsi@vger.kernel.org
+To: =?utf-8?Q?Rog=C3=A9rio?= Brito <rbrito@ime.usp.br>
+Cc: Andrew Morton <akpm@linux-foundation.org>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, bugzilla-daemon@bugzilla.kernel.org
 
-On Fri, 2009-08-21 at 10:23 +0100, Chris Webb wrote:
-> Chris Webb <chris@arachsys.com> writes:
-> 
-> > Reading through the disassembled code and comparing by hand against
-> > disk_part_iter_next(), I think that might be line 144 of block/genhd.c,
-> > where the ptbl->len dereference happens.
-> 
-> Sorry to follow up a third time, but I can now confirm this. I slipped -g into
-> CFLAGS in the kernel Makefile and rebuilt genhd.o and then the entire vmlinux.
+On Thu, 20 Aug 2009, [utf-8] Rog=C3=A9rio Brito wrote:
 
-I suppose it makes sense:  That was the only dereference at offset 16 I
-could find in the code.  The thing which doesn't quite make sense is
-that disk_part_iter_init() also dereferences the same pointer
-successfully ... I suppose this could be a race with another thread to
-null out the gendisk part_tbl ... I'll have to think about it some more.
+> Again, just reiterating, what I said before, even though I am not sur=
+e
+> if I can reproduce it, I will try to.
 
-Thanks for the detective work,
+A usbmon trace showing what happens when you plug in the drive and=20
+when you run smartctl would help.
 
-James
+Alan Stern
 
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
