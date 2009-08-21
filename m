@@ -1,47 +1,32 @@
-From: Joel Becker <Joel.Becker@oracle.com>
-Subject: Re: O_DIRECT and barriers
-Date: Fri, 21 Aug 2009 15:45:18 -0700
-Message-ID: <20090821224518.GG4330__41793.1544747718$1250894774$gmane$org@mail.oracle.com>
-References: <1250697884-22288-1-git-send-email-jack@suse.cz>
- <20090820221221.GA14440@infradead.org>
- <20090821114010.GG12579@kernel.dk>
- <20090821135403.GA6208@shareable.org>
- <20090821142635.GB30617@infradead.org>
- <20090821220852.GM9529@mit.edu>
+From: Chris Webb <chris@arachsys.com>
+Subject: Re: oops during scsi scanning disk setup
+Date: Fri, 21 Aug 2009 23:59:50 +0100
+Message-ID: <20090821225950.GC10323@arachsys.com>
+References: <20090820180549.GD7542@arachsys.com> <1250807161.4302.167.camel@mulgrave.site> <20090821081621.GB32115@arachsys.com> <20090821083356.GC32115@arachsys.com> <20090821092326.GF32115@arachsys.com> <1250863216.3844.1.camel@mulgrave.site> <20090821145141.GR32115@arachsys.com> <1250869674.7363.89.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet12.oracle.com ([141.146.126.234]:21743 "EHLO
-	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932267AbZHUWpz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Aug 2009 18:45:55 -0400
+Received: from alpha.arachsys.com ([91.203.57.7]:52543 "EHLO
+	alpha.arachsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932736AbZHUXED (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Aug 2009 19:04:03 -0400
 Content-Disposition: inline
-In-Reply-To: <20090821220852.GM9529@mit.edu>
+In-Reply-To: <1250869674.7363.89.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Theodore Tso <tytso@mit.edu>, Christoph Hellwig <hch@infradead.org>, Jamie Lokier <jamie@shareable.org>, Jens Axboe <jens.axboe@oracle.com>, linux-fsdevel@vger.kernel.org, linux-scsi
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Aug 21, 2009 at 06:08:52PM -0400, Theodore Tso wrote:
-> http://ext4.wiki.kernel.org/index.php/Clarifying_Direct_IO's_Semantics
-> 
-> Comments are welcome, either on the wiki's talk page, or directly to
-> me, or to the linux-fsdevel or linux-ext4.
+James Bottomley <James.Bottomley@suse.de> writes:
 
-	In the section on perhaps not waiting for buffered fallback, we
-need to clarify that O_DIRECT reads need to know to look in the
-pagecache.  That is, if we decide that extending O_DIRECT writes without
-fsync can return before the data hits the storage, the caller shouldn't
-also have to call fsync() just to call read() of data they just wrote!
+> Can you try this as a partial fix?  (It should prevent the oops, but
+> you'll still lose the disk).
 
-Joel
+Hi James. Many thanks for this. Do you think it's worth adding a printk() to
+flag up when this happens so we can detect when this case happens and
+confirm the issue given how rare the crashes are, or is this difficult to
+arrange?
 
--- 
+Cheers,
 
-To spot the expert, pick the one who predicts the job will take the
-longest and cost the most.
-
-Joel Becker
-Principal Software Developer
-Oracle
-E-mail: joel.becker@oracle.com
-Phone: (650) 506-8127
+Chris.
