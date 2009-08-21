@@ -1,61 +1,85 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: O_DIRECT and barriers
-Date: Fri, 21 Aug 2009 13:40:10 +0200
-Message-ID: <20090821114010.GG12579@kernel.dk>
-References: <1250697884-22288-1-git-send-email-jack@suse.cz> <20090820221221.GA14440@infradead.org>
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: [PATCH, RFC] xfs: batched discard support
+Date: Fri, 21 Aug 2009 14:46:38 +0200
+Message-ID: <20090821124638.GC10263@elte.hu>
+References: <20090816004705.GA7347@infradead.org> <20090819203916.GA25296@elte.hu> <20090820010552.GA22107@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:36671 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755044AbZHULkJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Aug 2009 07:40:09 -0400
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20090820221221.GA14440@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+In-Reply-To: <20090820010552.GA22107@infradead.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>, Paul Mackerras <paulus@samba.org>, Linus Torvalds <torvalds@linux-foundation.org>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, liml@rtr.ca, jens.axboe@oracle.com
+List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Aug 20 2009, Christoph Hellwig wrote:
-> Btw, something semi-related I've been looking at recently:
+
+* Christoph Hellwig <hch@infradead.org> wrote:
+
+> On Wed, Aug 19, 2009 at 10:39:16PM +0200, Ingo Molnar wrote:
+> > A general interface design question: you added a new 
+> > ioctl XFS_IOC_TRIM case. It's a sub-case of an 
+> > ugly-looking demultiplexing xfs_file_ioctl().
 > 
-> Currently O_DIRECT writes bypass all kernel caches, but there they do
-> use the disk caches.  We currenly don't have any barrier support for
-> them at all, which is really bad for data integrity in virtualized
-> environments.  I've started thinking about how to implement this.
+> ioctl is per defintion a multiplexer.
+
+Yes, and? There's two variants of multiplexing:
+
+  - multiplex something rather straightforward and related
+  - multiplex unrelated fields, data, structures
+
+I consider the second one 'ugly', the first one 'ok-ish'. YMMV.
+
+> > What is your threshold for turning something into a syscall? 
+> > When are ioctls acceptable in your opinion?
+> > 
+> > I'm asking this because we are facing a similar problem with 
+> > perfcounters: we need to extend the ioctl functionality there 
+> > but introducing a new syscall looks wasteful.
+> > 
+> > So i'm torn about the 'syscall versus ioctl' issue, i'd like to 
+> > avoid making interface design mistakes and i'd like to solicit 
+> > some opinions about this. I've attached the perfcounters ioctl 
+> > patch below.
 > 
-> The simplest scheme would be to mark the last request of each
-> O_DIRECT write as barrier requests.  This works nicely from the FS
-> perspective and works with all hardware supporting barriers.  It's
-> massive overkill though - we really only need to flush the cache
-> after our request, and not before.  And for SCSI we would be much
-> better just setting the FUA bit on the commands and not require a
-> full cache flush at all.
+> Only add a syscall if it has _one_ clear defined purpose, which 
+> has kernel-wide meaning.
 > 
-> The next scheme would be to simply always do a cache flush after
-> the direct I/O write has completed, but given that blkdev_issue_flush
-> blocks until the command is done that would a) require everyone to
-> use the end_io callback and b) spend a lot of time in that workque.
-> This only requires one full cache flush, but it's still suboptimal.
+> Do not add an syscall that is just another multiplexer without 
+> structure. Most likely it will just be even worse than sys_ioctl.
 > 
-> I have prototypes this for XFS, but I don't really like it.
+> Also really don't bother adding a system call that is specific to 
+> one singler driver or filesystem.  Besides horrible logistics - 
+> you'd need some always built-in stub calling out to the possibly 
+> modular drivers/filesystem - it also simply doesn't make any 
+> semantical sense.  I can't say I like the ioctl use in 
+> perfcounters much, but adding a special syscalls instead would be 
+> even more horrible.
 > 
-> The best scheme would be to get some highlevel FUA request in the
-> block layer which gets emulated by a post-command cache flush.
+> As for the trim support this really just was an RFC to start 
+> bringing some code into play instead of the endless masturbation 
+> about hat code that doesn't exist happens on hardware most people 
+> don't have.  The interface will most ceetainly change and I hope 
+> we will have a common interface for all filesystems (or at least 
+> those that care).
 
-I've talked to Chris about this in the past too, but I never got around
-to benchmarking FUA for O_DIRECT. It should be pretty easy to wire up
-without making too many changes, and we do have FUA support on most SATA
-drives too. Basically just a check in the driver for whether the
-request is O_DIRECT and a WRITE, ala:
+Okay, i'm confused.
 
-        if (rq_data_dir(rq) == WRITE && rq_is_sync(rq))
-                WRITE_FUA;
+I'd like to understand the technical basis of your critisism and i'd 
+like to address any deficiencies of the perfcounters code. You said 
+you dont like the ioctl solution we have, but that you'd like a 
+separate syscall even less.
 
-I know that FUA is used by that other OS, so I think we should be golden
-on the hw support side.
+Perfcounters are a kernel-wide concept, encompassing 100% of all 
+Linux installations, not just some special hardware.
 
--- 
-Jens Axboe
+So by your own standard above they seem to be more than eligible for 
+system calls (i hope i'm not mis-stating it), as long as they are 
+cleanly structured. Yet you dont like the interface nor any future 
+pushing of the currently ioctl bits of the interface into syscalls.
 
+Is there any other interface form you'd like more?
+
+Thanks,
+
+	Ingo
