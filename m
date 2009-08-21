@@ -1,164 +1,84 @@
-From: Jamie Lokier <jamie@shareable.org>
-Subject: Re: O_DIRECT and barriers
-Date: Fri, 21 Aug 2009 16:24:59 +0100
-Message-ID: <20090821152459.GC6929@shareable.org>
-References: <1250697884-22288-1-git-send-email-jack@suse.cz> <20090820221221.GA14440@infradead.org> <20090821114010.GG12579@kernel.dk> <20090821135403.GA6208@shareable.org> <20090821142635.GB30617@infradead.org>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: oops during scsi scanning disk setup
+Date: Fri, 21 Aug 2009 09:47:54 -0600
+Message-ID: <1250869674.7363.89.camel@mulgrave.site>
+References: <20090820180549.GD7542@arachsys.com>
+	 <1250807161.4302.167.camel@mulgrave.site>
+	 <20090821081621.GB32115@arachsys.com> <20090821083356.GC32115@arachsys.com>
+	 <20090821092326.GF32115@arachsys.com>
+	 <1250863216.3844.1.camel@mulgrave.site>
+	 <20090821145141.GR32115@arachsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090821142635.GB30617@infradead.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:45917 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752187AbZHUPr6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Aug 2009 11:47:58 -0400
+In-Reply-To: <20090821145141.GR32115@arachsys.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Chris Webb <chris@arachsys.com>
+Cc: linux-scsi@vger.kernel.org
 
-Christoph Hellwig wrote:
-> On Fri, Aug 21, 2009 at 02:54:03PM +0100, Jamie Lokier wrote:
-> > I've been thinking about this too, and for optimal performance with
-> > VMs and also with databases, I think FUA is too strong.  (It's also
-> > too weak, on drives which don't have FUA).
+On Fri, 2009-08-21 at 15:51 +0100, Chris Webb wrote:
+> James Bottomley <James.Bottomley@suse.de> writes:
 > 
-> Why is FUA too strong?
-
-In measurements I've done, disabling a disk's write cache results in
-much slower ext3 filesystem writes than using barriers.  Others report
-similar results.  This is with disks that don't have NCQ; good NCQ may
-be better.
-
-Using FUA for all writes should be equivalent to writing with write
-cache disabled.
-
-A journalling filesystem or database tends to write like this:
-
-   (guest) WRITE
-   (guest) WRITE
-   (guest) WRITE
-   (guest) WRITE
-   (guest) WRITE
-   (guest) CACHE FLUSH
-   (guest) WRITE
-   (guest) CACHE FLUSH
-   (guest) WRITE
-   (guest) WRITE
-   (guest) WRITE
-
-When a guest does that, for integrity it can be mapped to this on the
-host with FUA:
-
-   (host) WRITE FUA
-   (host) WRITE FUA
-   (host) WRITE FUA
-   (host) WRITE FUA
-   (host) WRITE FUA
-   (host) WRITE FUA
-   (host) WRITE FUA
-   (host) WRITE FUA
-   (host) WRITE FUA
-
-or
-
-   (host) WRITE
-   (host) WRITE
-   (host) WRITE
-   (host) WRITE
-   (host) WRITE
-   (host) CACHE FLUSH
-   (host) WRITE
-   (host) CACHE FLUSH 
-   (host) WRITE
-   (host) WRITE
-   (host) WRITE
-
-We know from measurements that disabling the disk write cache is much
-slower than using barriers, at least with some disks.
-
-Assuming that WRITE FUA is equivalent to disabling write cache, we may
-expect the WRITE FUA version to run much slower than the CACHE FLUSH
-version.
-
-It's also too weak, of course, on drives which don't support FUA.
-Then you have to use CACHE FLUSH anyway, so the code should support
-that (or disable the write cache entirely, which also performs badly).
-If you don't handle drives without FUA, then you're back to "integrity
-sometimes, user must check type of hardware", which is something we're
-trying to get away from.  Integrity should not be a surprise when the
-application requests it.
-
-> > Fortunately there's already a sensible API for both: fdatasync (and
-> > aio_fsync) to mean flush, and O_DSYNC (or inferred from
-> > flush-after-one-write) to mean FUA.
+> > On Fri, 2009-08-21 at 10:23 +0100, Chris Webb wrote:
+> >
+> > > Sorry to follow up a third time, but I can now confirm this. I slipped -g into
+> > > CFLAGS in the kernel Makefile and rebuilt genhd.o and then the entire vmlinux.
+> > 
+> > I suppose it makes sense:  That was the only dereference at offset 16 I
+> > could find in the code.  The thing which doesn't quite make sense is
+> > that disk_part_iter_init() also dereferences the same pointer
+> > successfully ... I suppose this could be a race with another thread to
+> > null out the gendisk part_tbl ... I'll have to think about it some more.
 > 
-> I thought about this alot .  It would be sensible to only require
-> the FUA semantics if O_SYNC is specified.  But from looking around at
-> users of O_DIRECT no one seems to actually specify O_SYNC with it.
-
-O_DIRECT with true POSIX O_SYNC is a bad idea, because it flushes
-inode metadata (like mtime) too.  O_DIRECT|O_DSYNC is better.
-
-O_DIRECT without O_SYNC, O_DSYNC, fsync or fdatasync is asking for
-integrity problems when direct writes are converted to buffered writes
-- which applies to all or nearly all OSes according to their
-documentation (I've read a lot of them).
-
-I notice that all applications I looked at which use O_DIRECT don't
-attempt to determine when O_DIRECT will definitely result in direct
-writes; they simpy assume it can be used as a substituted for O_SYNC
-or O_DSYNC, as long as you follow the alignment rules.  Generally they
-leave it to the user to configure what they want, and often don't
-explain the drive integrity issue, except to say "depends on the OS,
-your mileage may vary, we can do nothing about it".
-
-Imho, integrity should not be something which depends on the user
-knowing the details of their hardware to decide application
-configuration options - at least, not out of the box.
-
-On a related note,
-http://publib.boulder.ibm.com/infocenter/systems/index.jsp?topic=/com.ibm.aix.genprogc/doc/genprogc/fileio.htm
-says:
-
-    Direct I/O and Data I/O Integrity Completion
-
-    Although direct I/O writes are done synchronously, they do not
-    provide synchronized I/O data integrity completion, as defined by
-    POSIX. Applications that need this feature should use O_DSYNC in
-    addition to O_DIRECT. O_DSYNC guarantees that all of the data and
-    enough of the metadata (for example, indirect blocks) have written
-    to the stable store to be able to retrieve the data after a system
-    crash. O_DIRECT only writes the data; it does not write the
-    metadata.
-
-That's another reason to use O_DIRECT|O_DSYNC in moderately portable code.
-
-> And on Linux where O_SYNC really means O_DYSNC that's pretty sensible -
-> if O_DIRECT bypasses the filesystem cache there is nothing else
-> left to sync for a non-extending write.
-
-Oh, O_SYNC means O_DSYNC?  I thought it was the other way around.
-Ugh, how messy.
-
-> That is until those pesky disk
-> write back caches come into play that no application writer wants or
-> should have to understand.
-
-As far as I can tell, they generally go out of their way to avoid
-understanding it, except as a vaguely uncomfortable awareness and pass
-the problem on to the application's user.
-
-Unfortunately just disabling the disk cache for O_DIRECT would make
-it's performance drop significantly, otherwise I'd say go for it.
-
-> > It turns out that applications needing integrity must use fdatasync or
-> > O_DSYNC (or O_SYNfC) *already* with O_DIRECT, because the kernel may
-> > choose to use buffered writes at any time, with no signal to the
-> > application.
+> Thanks! If it helps, I've only ever seen it following an iscsi login to a
+> target machine which is heavy loaded (e.g. RAID resync in this case),
+> presumably meaning that everything (including disk reads) happens a bit
+> slowly. Perhaps this increases the window for a race in some way?
 > 
-> The fallback was a relatively recent addition to the O_DIRECT semantics
-> for broken filesystems that can't handle holes very well.  Fortunately
-> enough we do force O_SYNC (that is Linux O_SYNC aka Posix O_DSYNC)
-> semantics for that already.
+> I've spent some time over the past week trying to reproduce it in a VM with
+> magic sysrq enabled so I could find out a bit more, but it subbornly refuses
+> to happen except on machines in a busy production cluster.
 
-Ok, so you're saying there's no _harm_ in specifying O_DSYNC with
-O_DIRECT either? :-)
+Actually, for that particular pointer to be NULL'd, I think the race
+must be between add_disk and del_gendisk, implying that your iSCSI
+cluster somehow shut down the link while it was busy.
 
--- Jamie
+I think that's an artifact of the fact that we don't get a reference to
+the disk in these operations, and the race window is much longer now we
+do sd async scanning.
+
+Can you try this as a partial fix?  (It should prevent the oops, but
+you'll still lose the disk).
+
+James
+
+---
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index b7b9fec..a89c421 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2021,6 +2021,7 @@ static void sd_probe_async(void *data, async_cookie_t cookie)
+ 
+ 	sd_printk(KERN_NOTICE, sdkp, "Attached SCSI %sdisk\n",
+ 		  sdp->removable ? "removable " : "");
++	put_device(&sdkp->dev);
+ }
+ 
+ /**
+@@ -2106,6 +2107,7 @@ static int sd_probe(struct device *dev)
+ 
+ 	get_device(&sdp->sdev_gendev);
+ 
++	get_device(&sdkp->dev);	/* prevent release before async_schedule */
+ 	async_schedule(sd_probe_async, sdkp);
+ 
+ 	return 0;
+
+
