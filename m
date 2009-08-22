@@ -1,88 +1,62 @@
-From: Jing Huang <huangj@Brocade.COM>
-Subject: RE: [PATCH 2/14] bfa: Brocade BFA FC SCSI driver (bfa part1)
-Date: Fri, 21 Aug 2009 18:58:14 -0700
-Message-ID: <B0A7AF226B49A14897036E9B3A68CFFECB1A935EAF@HQ-EXCH-7.corp.brocade.com>
-References: <200908200659.n7K6xqMZ006536@swe57.brocade.com>
- <200908211935.46316.eike-kernel@sf-tec.de>
+From: Theodore Tso <tytso@mit.edu>
+Subject: Re: O_DIRECT and barriers
+Date: Fri, 21 Aug 2009 22:06:07 -0400
+Message-ID: <20090822020607.GQ9529@mit.edu>
+References: <1250697884-22288-1-git-send-email-jack@suse.cz> <20090820221221.GA14440@infradead.org> <20090821114010.GG12579@kernel.dk> <20090821135403.GA6208@shareable.org> <20090821142635.GB30617@infradead.org> <20090821220852.GM9529@mit.edu> <20090822005613.GB22530@shareable.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq-exedge.brocade.com ([66.243.153.82]:43034 "EHLO
-	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933007AbZHVB6O convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Aug 2009 21:58:14 -0400
-In-Reply-To: <200908211935.46316.eike-kernel@sf-tec.de>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20090822005613.GB22530@shareable.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Jamie Lokier <jamie@shareable.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <jens.axboe@oracle.com>, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ramkumar Vadivelu <rvadivel@Brocade.COM>, Vinodh Ravindran <vravindr@Brocade.COM>
 
-Rolf Eike Beer wrote:
-> > +/*
-> > + * Copyright (c)  2005-2008 Brocade Communications Systems, Inc.
-> > + * All rights reserved
-> > + * www.brocade.com
+On Sat, Aug 22, 2009 at 01:56:13AM +0100, Jamie Lokier wrote:
+> AIX behaves like XFS according to documentation:
 > 
-> Shouldn't that be 2009?
+>     [ http://publib.boulder.ibm.com/infocenter/systems/index.jsp?topic=/com.ibm.aix.genprogc/doc/genprogc/fileio.htm ]
+> 
+>     Direct I/O and Data I/O Integrity Completion
+> 
+>     Although direct I/O writes are done synchronously, they do not
+>     provide synchronized I/O data integrity completion, as defined by
+>     POSIX. Applications that need this feature should use O_DSYNC in
+>     addition to O_DIRECT. O_DSYNC guarantees that all of the data and
+>     enough of the metadata (for example, indirect blocks) have written
+>     to the stable store to be able to retrieve the data after a system
+>     crash. O_DIRECT only writes the data; it does not write the
+>     metadata.
+> 
+> That's another reason to use O_DIRECT|O_DSYNC in moderately portable
+> code.
 
-Yes, It should be 2009. I will fix it.
+...or use fsync() when they need to guarantee that data has been
+atomically written, but not before.  This becomes critically important
+if the application is writing into a sparse file, or writing into
+uninitalized blocks that were allocated using fallocate(); otherwise,
+with O_DIRECT|O_DSYNC, the file system would have to do a commit
+operation after each write, which could be a performance disaster.
 
+> > http://ext4.wiki.kernel.org/index.php/Clarifying_Direct_IO's_Semantics
+> > 
+> > Comments are welcome, either on the wiki's talk page, or directly to
+> > me, or to the linux-fsdevel or linux-ext4.
 > 
-> > +char *
-> > +wwn2str(char *buf, int bufsize, u64 wwn)
-> > +{
-> > +	char *ptr;
-> > +	union {
-> > +	wwn_t           wwn;
-> > +	u8         byte[sizeof(wwn_t)];
-> > +	} w;
-> > +	int i = sizeof(wwn_t);
-> > +
-> > +	ptr = buf + bufsize;
-> > +	*--ptr = '\0';
-> > +	bufsize--;
-> > +
-> > +	w.wwn = wwn;
-> > +	while (i > 0) {
-> > +		i--;
-> > +		*--ptr = n2b(w.byte[i] & 0x0f);
-> > +		*--ptr = n2b((w.byte[i] >> 4) & 0x0f);
-> > +		if (i > 0)
-> > +			*--ptr = ':';
-> > +	}
-> > +
-> > +	return ptr;
-> > +}
-> 
-> I searched for 20 minutes and found nothing. Is there really no standard
-> function to printf a WWN? I mean, every FC driver needs this, no?
-> 
-> fnic:
-> -"%llx", wwn
-> 
-> ipr:
-> -"%08X%08X", be32_to_cpu(wwid[0]), be32_to_cpu(wwid[1])
-> 
-> lpfc:
-> -"%02x%02x%02x%02x%02x%02x%02x%02x", wwn[0], wwn[1], ...
-> -"%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", wwn[0], wwn[1], ...
-> -"0x%llx", cfg_soft_wwnn
-> 
-> qla2xxx:
-> -like lpfc, version 1. Harder to find as there it is called port_name and
-> node_name instead of wwpn or wwnn or wwn
-> 
-> Is there really nothing like this? Should be an easy job to write one and
-> convert all existing drivers over to use this, no? Would also add the
-> benefit
-> as that all drivers would print that in the same way.
-> 
-> Ei-printk("%WWN", wwn)-ke
+> I haven't read it yet.  One thing which comes to mind is it would be
+> good to summarise what other OSes as well as Linux do with O_DIRECT
+> w.r.t. data-finding metadata, preallocation, file extending, hole
+> filling, unaligned access and what alignment is required, block
+> devices vs. files and different filesystems and behaviour-modifying
+> mount options, file open for buffered I/O on another descriptor, file
+> has mapped pages, mlocked pages, and of course drive cache write
+> through or not.
 
-I am not aware of a standard function to print wwn. It would be nice if all the drivers print wwn in the same format. Regarding our implementation of wwpn to string conversion, we are making it unnecessarily complicated, I will fix it. 
+It's a wiki; contributions to define all of that is welcome.  :-)
 
-Thanks for the reviewing the code.
+We may want to carefully consider what we want to guarantee for all
+time to application writers, and what we might want to leave open to
+allow for performance optimizations by the kernel, though.
 
-Jing
+      	  	      		       	   	   - Ted
