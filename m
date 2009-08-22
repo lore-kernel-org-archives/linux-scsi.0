@@ -1,124 +1,92 @@
 From: Jamie Lokier <jamie@shareable.org>
 Subject: Re: O_DIRECT and barriers
-Date: Sat, 22 Aug 2009 01:50:06 +0100
-Message-ID: <20090822005006.GA22530@shareable.org>
-References: <1250697884-22288-1-git-send-email-jack@suse.cz> <20090820221221.GA14440@infradead.org> <20090821114010.GG12579@kernel.dk> <20090821135403.GA6208@shareable.org> <20090821142635.GB30617@infradead.org> <20090821152459.GC6929@shareable.org> <20090821174525.GA28861@infradead.org>
+Date: Sat, 22 Aug 2009 01:56:13 +0100
+Message-ID: <20090822005613.GB22530@shareable.org>
+References: <1250697884-22288-1-git-send-email-jack@suse.cz> <20090820221221.GA14440@infradead.org> <20090821114010.GG12579@kernel.dk> <20090821135403.GA6208@shareable.org> <20090821142635.GB30617@infradead.org> <20090821220852.GM9529@mit.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail2.shareable.org ([80.68.89.115]:47915 "EHLO
+Received: from mail2.shareable.org ([80.68.89.115]:41430 "EHLO
 	mail2.shareable.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932720AbZHVAuO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Aug 2009 20:50:14 -0400
+	with ESMTP id S932696AbZHVA4S (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Aug 2009 20:56:18 -0400
 Content-Disposition: inline
-In-Reply-To: <20090821174525.GA28861@infradead.org>
+In-Reply-To: <20090821220852.GM9529@mit.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Theodore Tso <tytso@mit.edu>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <jens.axboe@oracle.com>, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Christoph Hellwig wrote:
-> > O_DIRECT without O_SYNC, O_DSYNC, fsync or fdatasync is asking for
-> > integrity problems when direct writes are converted to buffered writes
-> > - which applies to all or nearly all OSes according to their
-> > documentation (I've read a lot of them).
+Theodore Tso wrote:
+> On Fri, Aug 21, 2009 at 10:26:35AM -0400, Christoph Hellwig wrote:
+> > > It turns out that applications needing integrity must use fdatasync or
+> > > O_DSYNC (or O_SYNC) *already* with O_DIRECT, because the kernel may
+> > > choose to use buffered writes at any time, with no signal to the
+> > > application.
+> > 
+> > The fallback was a relatively recent addition to the O_DIRECT semantics
+> > for broken filesystems that can't handle holes very well.  Fortunately
+> > enough we do force O_SYNC (that is Linux O_SYNC aka Posix O_DSYNC)
+> > semantics for that already.
 > 
-> It did not happen on IRIX where O_DIRECT originated that did not happen,
-
-IRIX has an unusually sane O_DIRECT - at least according to it's
-documentation.  This is write(2):
-
-     When attempting to write to a file with O_DIRECT or FDIRECT set,
-     the portion being written can not be locked in memory by any
-     process. In this case, -1 will be returned and errno will be set
-     to EBUSY.
-
-AIX however says this:
-
-     In order to avoid consistency issues between programs that use
-     Direct I/O and programs that use normal cached I/O, Direct I/O is
-     by default used in an exclusive use mode. If there are multiple
-     opens of a file and some of them are direct and others are not,
-     the file will stay in its normal cached access mode. Only when
-     the file is open exclusively by Direct I/O programs will the file
-     be placed in Direct I/O mode.
-
-     Similarly, if the file is mapped into virtual memory via the
-     shmat() or mmap() system calls, then file will stay in normal
-     cached mode.
-
-     The JFS or JFS2 will attempt to move the file into Direct I/O
-     mode any time the last conflicting. non-direct access is
-     eliminated (either by close(), munmap(), or shmdt()
-     subroutines). Changing the file from normal mode to Direct I/O
-     mode can be rather expensive since it requires writing all
-     modified pages to disk and removing all the file's pages from
-     memory.
-
-> neither does it happen on Linux when using XFS.  Then again at least on
-> Linux we provide O_SYNC (that is Linux O_SYNC, aka Posix O_DYSC)
-> semantics for that case.
-
-As Ted T'so pointer out, we don't.
-
-> > Imho, integrity should not be something which depends on the user
-> > knowing the details of their hardware to decide application
-> > configuration options - at least, not out of the box.
+> Um, actually, we don't.  If we did that, we would have to wait for a
+> journal commit to complete before allowing the write(2) to complete,
+> which would be especially painfully slow for ext3.
 > 
-> That is what I meant.  Only doing cache flushes/FUA for O_DIRECT|O_DSYNC
-> is not what users naively expect.
-
-Oh, I agree with that.  That comes from observing that quasi-portable
-code using O_DIRECT needs to use O_DSYNC too because several OSes and
-filesystems on those OSes revert to buffered writes under some
-circumstances, in which case you want O_DSYNC too.  That has nothing
-to do with hardware caches, but it's a lucky coincidence that
-fdatasync() would form a nice barrier function, and O_DIRECT|O_DSYNC
-would then make sense as an FUA equivalent.
-
-> And the wording in hour manpages also suggests this behaviour,
-> although it is not entirely clear:
+> This question recently came up on the ext4 developer's list, because
+> of a question of how direct I/O to an preallocated (uninitialized)
+> extent should be handled.  Are we supposed to guarantee synchronous
+> updates of the metadata by the time write(2) returns, or not?  One of
+> the ext4 developers (I can't remember if it was Mingming or Eric)
+> asked an XFS developer what they did in that case, and I believe the
+> answer they were given was that XFS started a commit, but did *not*
+> wait for the commit to complete before returning from the Direct I/O
+> write.  In fact, they were told (I believe this was from an SGI
+> engineer, but I don't remember the name; we can track that down if
+> it's important) that if an application wanted to guarantee metadata
+> would be updated for an extending write, they had to use fsync() or
+> O_SYNC/O_DSYNC.  
 > 
-> O_DIRECT (Since Linux 2.4.10)
-> 	Try to minimize cache effects of the I/O to and from this file.  In
-> 	general this will degrade performance, but it is useful in special
-> 	situations, such as when applications do their own caching.  File I/O
-> 	is done directly to/from user space buffers.  The I/O is synchronous,
-> 	that is,  at the completion of a read(2) or write(2), data is
-> 	guaranteed to have been transferred.  See NOTES below forfurther
-> 	discussion.
+> Perhaps they were given an incorrect answer, but it's clear the
+> semantics of exactly how Direct I/O works in edge cases isn't well
+> defined, or at least clearly and widely understood.
 
-Perhaps in the same way that fsync/fdatasync aren't clear on disk
-cache behaviour either.  On Linux and some other OSes.
+And that's not even a hardware cache issue, just whether filesystem
+metadata is written.
 
-> (And yeah, the whole wording is horrible, I will send an update once
-> we've sorted out the semantics, including caveats about older kernels)
+AIX behaves like XFS according to documentation:
 
-One thing it's unhelpful about is the performance.  O_DIRECT tends to
-improve performance for applications that do their own caching, it
-also improves performance in whole systems when caching when would
-cause memory pressure, and on Linux O_DIRECT is necessary for AIO
-which can improve performance.
+    [ http://publib.boulder.ibm.com/infocenter/systems/index.jsp?topic=/com.ibm.aix.genprogc/doc/genprogc/fileio.htm ]
 
-I have a 166MHz embedded device that I'm using O_DIRECT on to improve
-performance - from 1MB/s to 10MB/s.
+    Direct I/O and Data I/O Integrity Completion
 
-However if O_DIRECT is changed to force each write(2) through the disk
-cache separately, then it will no longer provide this performance
-boost at least with some kinds of disk.
+    Although direct I/O writes are done synchronously, they do not
+    provide synchronized I/O data integrity completion, as defined by
+    POSIX. Applications that need this feature should use O_DSYNC in
+    addition to O_DIRECT. O_DSYNC guarantees that all of the data and
+    enough of the metadata (for example, indirect blocks) have written
+    to the stable store to be able to retrieve the data after a system
+    crash. O_DIRECT only writes the data; it does not write the
+    metadata.
 
-That's why it's important not to change it casually.  Maybe it's the
-right thing to do, but then it will be important to provide another
-form of O_DIRECT which does not write through the disk cache, instead
-providing a barrier capability.
+That's another reason to use O_DIRECT|O_DSYNC in moderately portable
+code.
 
-(...After all, if we believed in integrity above everything then barriers
-would be enabled for ext3 by default, *ahem*.)
+> I have an early draft (for discussion only) what we think it means and
+> what is currently implemented in Linux, which I've put up, (again, let
+> me emphasisize) for *discussion* here:
+> 
+> http://ext4.wiki.kernel.org/index.php/Clarifying_Direct_IO's_Semantics
+> 
+> Comments are welcome, either on the wiki's talk page, or directly to
+> me, or to the linux-fsdevel or linux-ext4.
 
-Probably the best thing to do is look at what other OSes that are used
-by databases etc. do with O_DIRECT, and if it makes sense, copy it.
-
-What does IRIX do?  Does O_DIRECT on IRIX write through the drive's
-cache?  What about Solaris?
+I haven't read it yet.  One thing which comes to mind is it would be
+good to summarise what other OSes as well as Linux do with O_DIRECT
+w.r.t. data-finding metadata, preallocation, file extending, hole
+filling, unaligned access and what alignment is required, block
+devices vs. files and different filesystems and behaviour-modifying
+mount options, file open for buffered I/O on another descriptor, file
+has mapped pages, mlocked pages, and of course drive cache write
+through or not.
 
 -- Jamie
