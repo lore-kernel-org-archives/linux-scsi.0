@@ -1,92 +1,959 @@
-From: Jamie Lokier <jamie@shareable.org>
-Subject: Re: O_DIRECT and barriers
-Date: Sat, 22 Aug 2009 01:56:13 +0100
-Message-ID: <20090822005613.GB22530@shareable.org>
-References: <1250697884-22288-1-git-send-email-jack@suse.cz> <20090820221221.GA14440@infradead.org> <20090821114010.GG12579@kernel.dk> <20090821135403.GA6208@shareable.org> <20090821142635.GB30617@infradead.org> <20090821220852.GM9529@mit.edu>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: [GIT PULL] SCSI bug fixes for 2.6.31-rc7
+Date: Fri, 21 Aug 2009 20:28:45 -0500
+Message-ID: <1250904525.7363.351.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail2.shareable.org ([80.68.89.115]:41430 "EHLO
-	mail2.shareable.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932696AbZHVA4S (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Aug 2009 20:56:18 -0400
-Content-Disposition: inline
-In-Reply-To: <20090821220852.GM9529@mit.edu>
+Received: from cantor2.suse.de ([195.135.220.15]:60446 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933052AbZHVB3C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Aug 2009 21:29:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Theodore Tso <tytso@mit.edu>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <jens.axboe@oracle.com>, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-Theodore Tso wrote:
-> On Fri, Aug 21, 2009 at 10:26:35AM -0400, Christoph Hellwig wrote:
-> > > It turns out that applications needing integrity must use fdatasync or
-> > > O_DSYNC (or O_SYNC) *already* with O_DIRECT, because the kernel may
-> > > choose to use buffered writes at any time, with no signal to the
-> > > application.
-> > 
-> > The fallback was a relatively recent addition to the O_DIRECT semantics
-> > for broken filesystems that can't handle holes very well.  Fortunately
-> > enough we do force O_SYNC (that is Linux O_SYNC aka Posix O_DSYNC)
-> > semantics for that already.
-> 
-> Um, actually, we don't.  If we did that, we would have to wait for a
-> journal commit to complete before allowing the write(2) to complete,
-> which would be especially painfully slow for ext3.
-> 
-> This question recently came up on the ext4 developer's list, because
-> of a question of how direct I/O to an preallocated (uninitialized)
-> extent should be handled.  Are we supposed to guarantee synchronous
-> updates of the metadata by the time write(2) returns, or not?  One of
-> the ext4 developers (I can't remember if it was Mingming or Eric)
-> asked an XFS developer what they did in that case, and I believe the
-> answer they were given was that XFS started a commit, but did *not*
-> wait for the commit to complete before returning from the Direct I/O
-> write.  In fact, they were told (I believe this was from an SGI
-> engineer, but I don't remember the name; we can track that down if
-> it's important) that if an application wanted to guarantee metadata
-> would be updated for an extending write, they had to use fsync() or
-> O_SYNC/O_DSYNC.  
-> 
-> Perhaps they were given an incorrect answer, but it's clear the
-> semantics of exactly how Direct I/O works in edge cases isn't well
-> defined, or at least clearly and widely understood.
+This represents a set of bugfixes for the new mpt2sas driver only.
 
-And that's not even a hardware cache issue, just whether filesystem
-metadata is written.
+The patch is available from:
 
-AIX behaves like XFS according to documentation:
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
 
-    [ http://publib.boulder.ibm.com/infocenter/systems/index.jsp?topic=/com.ibm.aix.genprogc/doc/genprogc/fileio.htm ]
+The short changelog is
 
-    Direct I/O and Data I/O Integrity Completion
+Kashyap, Desai (9):
+      mpt2sas: fix config request and diag reset deadlock
+      mpt2sas: Bump driver version 01.100.04.00
+      mpt2sas: fix oops because drv data points to NULL on resume from hibernate
+      mpt2sas: fix crash due to Watchdog is active while OS in standby mode
+      mpt2sas: fix infinite loop inside config request
+      mpt2sas: Excessive log info causes sas iounit page time out
+      mpt2sas: Raid 10 Value is showing as Raid 1E in /va/log/messages
+      mpt2sas: Expander fix oops saying "Already part of another port"
+      mpt2sas: Introduced check for enclosure_handle to avoid crash
 
-    Although direct I/O writes are done synchronously, they do not
-    provide synchronized I/O data integrity completion, as defined by
-    POSIX. Applications that need this feature should use O_DSYNC in
-    addition to O_DIRECT. O_DSYNC guarantees that all of the data and
-    enough of the metadata (for example, indirect blocks) have written
-    to the stable store to be able to retrieve the data after a system
-    crash. O_DIRECT only writes the data; it does not write the
-    metadata.
+and the diffstat:
 
-That's another reason to use O_DIRECT|O_DSYNC in moderately portable
-code.
+ drivers/scsi/mpt2sas/mpt2sas_base.c   |   98 ++++++++++++++++++--------
+ drivers/scsi/mpt2sas/mpt2sas_base.h   |    6 +
+ drivers/scsi/mpt2sas/mpt2sas_config.c |   91 +++++++-----------------
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c  |  124 ++++++++++++++++++++++++----------
+ 4 files changed, 185 insertions(+), 134 deletions(-)
 
-> I have an early draft (for discussion only) what we think it means and
-> what is currently implemented in Linux, which I've put up, (again, let
-> me emphasisize) for *discussion* here:
-> 
-> http://ext4.wiki.kernel.org/index.php/Clarifying_Direct_IO's_Semantics
-> 
-> Comments are welcome, either on the wiki's talk page, or directly to
-> me, or to the linux-fsdevel or linux-ext4.
+The full patch set is attached below.
 
-I haven't read it yet.  One thing which comes to mind is it would be
-good to summarise what other OSes as well as Linux do with O_DIRECT
-w.r.t. data-finding metadata, preallocation, file extending, hole
-filling, unaligned access and what alignment is required, block
-devices vs. files and different filesystems and behaviour-modifying
-mount options, file open for buffered I/O on another descriptor, file
-has mapped pages, mlocked pages, and of course drive cache write
-through or not.
+James
 
--- Jamie
+---
+
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index f3da592..35a1386 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -119,6 +119,64 @@ _base_fault_reset_work(struct work_struct *work)
+ 	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
+ }
+ 
++/**
++ * mpt2sas_base_start_watchdog - start the fault_reset_work_q
++ * @ioc: pointer to scsi command object
++ * Context: sleep.
++ *
++ * Return nothing.
++ */
++void
++mpt2sas_base_start_watchdog(struct MPT2SAS_ADAPTER *ioc)
++{
++	unsigned long	 flags;
++
++	if (ioc->fault_reset_work_q)
++		return;
++
++	/* initialize fault polling */
++	INIT_DELAYED_WORK(&ioc->fault_reset_work, _base_fault_reset_work);
++	snprintf(ioc->fault_reset_work_q_name,
++	    sizeof(ioc->fault_reset_work_q_name), "poll_%d_status", ioc->id);
++	ioc->fault_reset_work_q =
++		create_singlethread_workqueue(ioc->fault_reset_work_q_name);
++	if (!ioc->fault_reset_work_q) {
++		printk(MPT2SAS_ERR_FMT "%s: failed (line=%d)\n",
++		    ioc->name, __func__, __LINE__);
++			return;
++	}
++	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
++	if (ioc->fault_reset_work_q)
++		queue_delayed_work(ioc->fault_reset_work_q,
++		    &ioc->fault_reset_work,
++		    msecs_to_jiffies(FAULT_POLLING_INTERVAL));
++	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
++}
++
++/**
++ * mpt2sas_base_stop_watchdog - stop the fault_reset_work_q
++ * @ioc: pointer to scsi command object
++ * Context: sleep.
++ *
++ * Return nothing.
++ */
++void
++mpt2sas_base_stop_watchdog(struct MPT2SAS_ADAPTER *ioc)
++{
++	unsigned long	 flags;
++	struct workqueue_struct *wq;
++
++	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
++	wq = ioc->fault_reset_work_q;
++	ioc->fault_reset_work_q = NULL;
++	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
++	if (wq) {
++		if (!cancel_delayed_work(&ioc->fault_reset_work))
++			flush_workqueue(wq);
++		destroy_workqueue(wq);
++	}
++}
++
+ #ifdef CONFIG_SCSI_MPT2SAS_LOGGING
+ /**
+  * _base_sas_ioc_info - verbose translation of the ioc status
+@@ -440,6 +498,10 @@ _base_sas_log_info(struct MPT2SAS_ADAPTER *ioc , u32 log_info)
+ 	if (sas_loginfo.dw.bus_type != 3 /*SAS*/)
+ 		return;
+ 
++	/* each nexus loss loginfo */
++	if (log_info == 0x31170000)
++		return;
++
+ 	/* eat the loginfos associated with task aborts */
+ 	if (ioc->ignore_loginfos && (log_info == 30050000 || log_info ==
+ 	    0x31140000 || log_info == 0x31130000))
+@@ -1109,7 +1171,6 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER *ioc)
+ 		}
+ 	}
+ 
+-	pci_set_drvdata(pdev, ioc->shost);
+ 	_base_mask_interrupts(ioc);
+ 	r = _base_enable_msix(ioc);
+ 	if (r)
+@@ -1132,7 +1193,6 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER *ioc)
+ 	ioc->pci_irq = -1;
+ 	pci_release_selected_regions(ioc->pdev, ioc->bars);
+ 	pci_disable_device(pdev);
+-	pci_set_drvdata(pdev, NULL);
+ 	return r;
+ }
+ 
+@@ -3191,7 +3251,6 @@ mpt2sas_base_free_resources(struct MPT2SAS_ADAPTER *ioc)
+ 	ioc->chip_phys = 0;
+ 	pci_release_selected_regions(ioc->pdev, ioc->bars);
+ 	pci_disable_device(pdev);
+-	pci_set_drvdata(pdev, NULL);
+ 	return;
+ }
+ 
+@@ -3205,7 +3264,6 @@ int
+ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
+ {
+ 	int r, i;
+-	unsigned long	 flags;
+ 
+ 	dinitprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
+ 	    __func__));
+@@ -3214,6 +3272,7 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
+ 	if (r)
+ 		return r;
+ 
++	pci_set_drvdata(ioc->pdev, ioc->shost);
+ 	r = _base_make_ioc_ready(ioc, CAN_SLEEP, SOFT_RESET);
+ 	if (r)
+ 		goto out_free_resources;
+@@ -3288,23 +3347,7 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
+ 	if (r)
+ 		goto out_free_resources;
+ 
+-	/* initialize fault polling */
+-	INIT_DELAYED_WORK(&ioc->fault_reset_work, _base_fault_reset_work);
+-	snprintf(ioc->fault_reset_work_q_name,
+-	    sizeof(ioc->fault_reset_work_q_name), "poll_%d_status", ioc->id);
+-	ioc->fault_reset_work_q =
+-		create_singlethread_workqueue(ioc->fault_reset_work_q_name);
+-	if (!ioc->fault_reset_work_q) {
+-		printk(MPT2SAS_ERR_FMT "%s: failed (line=%d)\n",
+-		    ioc->name, __func__, __LINE__);
+-			goto out_free_resources;
+-	}
+-	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
+-	if (ioc->fault_reset_work_q)
+-		queue_delayed_work(ioc->fault_reset_work_q,
+-		    &ioc->fault_reset_work,
+-		    msecs_to_jiffies(FAULT_POLLING_INTERVAL));
+-	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
++	mpt2sas_base_start_watchdog(ioc);
+ 	return 0;
+ 
+  out_free_resources:
+@@ -3312,6 +3355,7 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
+ 	ioc->remove_host = 1;
+ 	mpt2sas_base_free_resources(ioc);
+ 	_base_release_memory_pools(ioc);
++	pci_set_drvdata(ioc->pdev, NULL);
+ 	kfree(ioc->tm_cmds.reply);
+ 	kfree(ioc->transport_cmds.reply);
+ 	kfree(ioc->config_cmds.reply);
+@@ -3337,22 +3381,14 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
+ void
+ mpt2sas_base_detach(struct MPT2SAS_ADAPTER *ioc)
+ {
+-	unsigned long	 flags;
+-	struct workqueue_struct *wq;
+ 
+ 	dexitprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
+ 	    __func__));
+ 
+-	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
+-	wq = ioc->fault_reset_work_q;
+-	ioc->fault_reset_work_q = NULL;
+-	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
+-	if (!cancel_delayed_work(&ioc->fault_reset_work))
+-		flush_workqueue(wq);
+-	destroy_workqueue(wq);
+-
++	mpt2sas_base_stop_watchdog(ioc);
+ 	mpt2sas_base_free_resources(ioc);
+ 	_base_release_memory_pools(ioc);
++	pci_set_drvdata(ioc->pdev, NULL);
+ 	kfree(ioc->pfacts);
+ 	kfree(ioc->ctl_cmds.reply);
+ 	kfree(ioc->base_cmds.reply);
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index 286c185..acdcff1 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -69,10 +69,10 @@
+ #define MPT2SAS_DRIVER_NAME		"mpt2sas"
+ #define MPT2SAS_AUTHOR	"LSI Corporation <DL-MPTFusionLinux@lsi.com>"
+ #define MPT2SAS_DESCRIPTION	"LSI MPT Fusion SAS 2.0 Device Driver"
+-#define MPT2SAS_DRIVER_VERSION		"01.100.03.00"
++#define MPT2SAS_DRIVER_VERSION		"01.100.04.00"
+ #define MPT2SAS_MAJOR_VERSION		01
+ #define MPT2SAS_MINOR_VERSION		100
+-#define MPT2SAS_BUILD_VERSION		03
++#define MPT2SAS_BUILD_VERSION		04
+ #define MPT2SAS_RELEASE_VERSION		00
+ 
+ /*
+@@ -673,6 +673,8 @@ typedef void (*MPT_CALLBACK)(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 VF_ID,
+ 
+ /* base shared API */
+ extern struct list_head mpt2sas_ioc_list;
++void mpt2sas_base_start_watchdog(struct MPT2SAS_ADAPTER *ioc);
++void mpt2sas_base_stop_watchdog(struct MPT2SAS_ADAPTER *ioc);
+ 
+ int mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc);
+ void mpt2sas_base_detach(struct MPT2SAS_ADAPTER *ioc);
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_config.c b/drivers/scsi/mpt2sas/mpt2sas_config.c
+index 58cfb97..6ddee16 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_config.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_config.c
+@@ -236,17 +236,25 @@ _config_request(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigRequest_t
+ 	Mpi2ConfigRequest_t *config_request;
+ 	int r;
+ 	u8 retry_count;
+-	u8 issue_reset;
++	u8 issue_host_reset = 0;
+ 	u16 wait_state_count;
+ 
++	mutex_lock(&ioc->config_cmds.mutex);
+ 	if (ioc->config_cmds.status != MPT2_CMD_NOT_USED) {
+ 		printk(MPT2SAS_ERR_FMT "%s: config_cmd in use\n",
+ 		    ioc->name, __func__);
++		mutex_unlock(&ioc->config_cmds.mutex);
+ 		return -EAGAIN;
+ 	}
+ 	retry_count = 0;
+ 
+  retry_config:
++	if (retry_count) {
++		if (retry_count > 2) /* attempt only 2 retries */
++			return -EFAULT;
++		printk(MPT2SAS_INFO_FMT "%s: attempting retry (%d)\n",
++		    ioc->name, __func__, retry_count);
++	}
+ 	wait_state_count = 0;
+ 	ioc_state = mpt2sas_base_get_iocstate(ioc, 1);
+ 	while (ioc_state != MPI2_IOC_STATE_OPERATIONAL) {
+@@ -254,8 +262,8 @@ _config_request(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigRequest_t
+ 			printk(MPT2SAS_ERR_FMT
+ 			    "%s: failed due to ioc not operational\n",
+ 			    ioc->name, __func__);
+-			ioc->config_cmds.status = MPT2_CMD_NOT_USED;
+-			return -EFAULT;
++			r = -EFAULT;
++			goto out;
+ 		}
+ 		ssleep(1);
+ 		ioc_state = mpt2sas_base_get_iocstate(ioc, 1);
+@@ -271,8 +279,8 @@ _config_request(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigRequest_t
+ 	if (!smid) {
+ 		printk(MPT2SAS_ERR_FMT "%s: failed obtaining a smid\n",
+ 		    ioc->name, __func__);
+-		ioc->config_cmds.status = MPT2_CMD_NOT_USED;
+-		return -EAGAIN;
++		r = -EAGAIN;
++		goto out;
+ 	}
+ 
+ 	r = 0;
+@@ -292,9 +300,15 @@ _config_request(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigRequest_t
+ 		    ioc->name, __func__);
+ 		_debug_dump_mf(mpi_request,
+ 		    sizeof(Mpi2ConfigRequest_t)/4);
+-		if (!(ioc->config_cmds.status & MPT2_CMD_RESET))
+-			issue_reset = 1;
+-		goto issue_host_reset;
++		retry_count++;
++		if (ioc->config_cmds.smid == smid)
++			mpt2sas_base_free_smid(ioc, smid);
++		if ((ioc->shost_recovery) ||
++		    (ioc->config_cmds.status & MPT2_CMD_RESET))
++			goto retry_config;
++		issue_host_reset = 1;
++		r = -EFAULT;
++		goto out;
+ 	}
+ 	if (ioc->config_cmds.status & MPT2_CMD_REPLY_VALID)
+ 		memcpy(mpi_reply, ioc->config_cmds.reply,
+@@ -302,21 +316,13 @@ _config_request(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigRequest_t
+ 	if (retry_count)
+ 		printk(MPT2SAS_INFO_FMT "%s: retry completed!!\n",
+ 		    ioc->name, __func__);
++out:
+ 	ioc->config_cmds.status = MPT2_CMD_NOT_USED;
+-	return r;
+-
+- issue_host_reset:
+-	if (issue_reset)
++	mutex_unlock(&ioc->config_cmds.mutex);
++	if (issue_host_reset)
+ 		mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
+ 		    FORCE_BIG_HAMMER);
+-	ioc->config_cmds.status = MPT2_CMD_NOT_USED;
+-	if (!retry_count) {
+-		printk(MPT2SAS_INFO_FMT "%s: attempting retry\n",
+-		    ioc->name, __func__);
+-		retry_count++;
+-		goto retry_config;
+-	}
+-	return -EFAULT;
++	return r;
+ }
+ 
+ /**
+@@ -375,7 +381,6 @@ mpt2sas_config_get_manufacturing_pg0(struct MPT2SAS_ADAPTER *ioc,
+ 	int r;
+ 	struct config_request mem;
+ 
+-	mutex_lock(&ioc->config_cmds.mutex);
+ 	memset(config_page, 0, sizeof(Mpi2ManufacturingPage0_t));
+ 	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+ 	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+@@ -417,7 +422,6 @@ mpt2sas_config_get_manufacturing_pg0(struct MPT2SAS_ADAPTER *ioc,
+ 		_config_free_config_dma_memory(ioc, &mem);
+ 
+  out:
+-	mutex_unlock(&ioc->config_cmds.mutex);
+ 	return r;
+ }
+ 
+@@ -438,7 +442,6 @@ mpt2sas_config_get_bios_pg2(struct MPT2SAS_ADAPTER *ioc,
+ 	int r;
+ 	struct config_request mem;
+ 
+-	mutex_lock(&ioc->config_cmds.mutex);
+ 	memset(config_page, 0, sizeof(Mpi2BiosPage2_t));
+ 	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+ 	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+@@ -480,7 +483,6 @@ mpt2sas_config_get_bios_pg2(struct MPT2SAS_ADAPTER *ioc,
+ 		_config_free_config_dma_memory(ioc, &mem);
+ 
+  out:
+-	mutex_unlock(&ioc->config_cmds.mutex);
+ 	return r;
+ }
+ 
+@@ -501,7 +503,6 @@ mpt2sas_config_get_bios_pg3(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 	int r;
+ 	struct config_request mem;
+ 
+-	mutex_lock(&ioc->config_cmds.mutex);
+ 	memset(config_page, 0, sizeof(Mpi2BiosPage3_t));
+ 	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+ 	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+@@ -543,7 +544,6 @@ mpt2sas_config_get_bios_pg3(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 		_config_free_config_dma_memory(ioc, &mem);
+ 
+  out:
+-	mutex_unlock(&ioc->config_cmds.mutex);
+ 	return r;
+ }
+ 
+@@ -564,7 +564,6 @@ mpt2sas_config_get_iounit_pg0(struct MPT2SAS_ADAPTER *ioc,
+ 	int r;
+ 	struct config_request mem;
+ 
+-	mutex_lock(&ioc->config_cmds.mutex);
+ 	memset(config_page, 0, sizeof(Mpi2IOUnitPage0_t));
+ 	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+ 	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+@@ -606,7 +605,6 @@ mpt2sas_config_get_iounit_pg0(struct MPT2SAS_ADAPTER *ioc,
+ 		_config_free_config_dma_memory(ioc, &mem);
+ 
+  out:
+-	mutex_unlock(&ioc->config_cmds.mutex);
+ 	return r;
+ }
+ 
+@@ -627,7 +625,6 @@ mpt2sas_config_get_iounit_pg1(struct MPT2SAS_ADAPTER *ioc,
+ 	int r;
+ 	struct config_request mem;
+ 
+-	mutex_lock(&ioc->config_cmds.mutex);
+ 	memset(config_page, 0, sizeof(Mpi2IOUnitPage1_t));
+ 	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+ 	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+@@ -669,7 +666,6 @@ mpt2sas_config_get_iounit_pg1(struct MPT2SAS_ADAPTER *ioc,
+ 		_config_free_config_dma_memory(ioc, &mem);
+ 
+  out:
+-	mutex_unlock(&ioc->config_cmds.mutex);
+ 	return r;
+ }
+ 
+@@ -690,7 +686,6 @@ mpt2sas_config_set_iounit_pg1(struct MPT2SAS_ADAPTER *ioc,
+ 	int r;
+ 	struct config_request mem;
+ 
+-	mutex_lock(&ioc->config_cmds.mutex);
+ 	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+ 	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+ 	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_HEADER;
+@@ -732,7 +727,6 @@ mpt2sas_config_set_iounit_pg1(struct MPT2SAS_ADAPTER *ioc,
+ 		_config_free_config_dma_memory(ioc, &mem);
+ 
+  out:
+-	mutex_unlock(&ioc->config_cmds.mutex);
+ 	return r;
+ }
+ 
+@@ -753,7 +747,6 @@ mpt2sas_config_get_ioc_pg8(struct MPT2SAS_ADAPTER *ioc,
+ 	int r;
+ 	struct config_request mem;
+ 
+-	mutex_lock(&ioc->config_cmds.mutex);
+ 	memset(config_page, 0, sizeof(Mpi2IOCPage8_t));
+ 	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+ 	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+@@ -795,7 +788,6 @@ mpt2sas_config_get_ioc_pg8(struct MPT2SAS_ADAPTER *ioc,
+ 		_config_free_config_dma_memory(ioc, &mem);
+ 
+  out:
+-	mutex_unlock(&ioc->config_cmds.mutex);
+ 	return r;
+ }
+ 
+@@ -818,7 +810,6 @@ mpt2sas_config_get_sas_device_pg0(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 	int r;
+ 	struct config_request mem;
+ 
+-	mutex_lock(&ioc->config_cmds.mutex);
+ 	memset(config_page, 0, sizeof(Mpi2SasDevicePage0_t));
+ 	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+ 	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+@@ -863,7 +854,6 @@ mpt2sas_config_get_sas_device_pg0(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 		_config_free_config_dma_memory(ioc, &mem);
+ 
+  out:
+-	mutex_unlock(&ioc->config_cmds.mutex);
+ 	return r;
+ }
+ 
+@@ -886,7 +876,6 @@ mpt2sas_config_get_sas_device_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 	int r;
+ 	struct config_request mem;
+ 
+-	mutex_lock(&ioc->config_cmds.mutex);
+ 	memset(config_page, 0, sizeof(Mpi2SasDevicePage1_t));
+ 	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+ 	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+@@ -931,7 +920,6 @@ mpt2sas_config_get_sas_device_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 		_config_free_config_dma_memory(ioc, &mem);
+ 
+  out:
+-	mutex_unlock(&ioc->config_cmds.mutex);
+ 	return r;
+ }
+ 
+@@ -953,7 +941,6 @@ mpt2sas_config_get_number_hba_phys(struct MPT2SAS_ADAPTER *ioc, u8 *num_phys)
+ 	Mpi2ConfigReply_t mpi_reply;
+ 	Mpi2SasIOUnitPage0_t config_page;
+ 
+-	mutex_lock(&ioc->config_cmds.mutex);
+ 	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+ 	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+ 	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_HEADER;
+@@ -1002,7 +989,6 @@ mpt2sas_config_get_number_hba_phys(struct MPT2SAS_ADAPTER *ioc, u8 *num_phys)
+ 		_config_free_config_dma_memory(ioc, &mem);
+ 
+  out:
+-	mutex_unlock(&ioc->config_cmds.mutex);
+ 	return r;
+ }
+ 
+@@ -1026,8 +1012,6 @@ mpt2sas_config_get_sas_iounit_pg0(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 	Mpi2ConfigRequest_t mpi_request;
+ 	int r;
+ 	struct config_request mem;
+-
+-	mutex_lock(&ioc->config_cmds.mutex);
+ 	memset(config_page, 0, sz);
+ 	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+ 	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+@@ -1070,7 +1054,6 @@ mpt2sas_config_get_sas_iounit_pg0(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 		_config_free_config_dma_memory(ioc, &mem);
+ 
+  out:
+-	mutex_unlock(&ioc->config_cmds.mutex);
+ 	return r;
+ }
+ 
+@@ -1095,7 +1078,6 @@ mpt2sas_config_get_sas_iounit_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 	int r;
+ 	struct config_request mem;
+ 
+-	mutex_lock(&ioc->config_cmds.mutex);
+ 	memset(config_page, 0, sz);
+ 	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+ 	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+@@ -1138,7 +1120,6 @@ mpt2sas_config_get_sas_iounit_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 		_config_free_config_dma_memory(ioc, &mem);
+ 
+  out:
+-	mutex_unlock(&ioc->config_cmds.mutex);
+ 	return r;
+ }
+ 
+@@ -1161,7 +1142,6 @@ mpt2sas_config_get_expander_pg0(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 	int r;
+ 	struct config_request mem;
+ 
+-	mutex_lock(&ioc->config_cmds.mutex);
+ 	memset(config_page, 0, sizeof(Mpi2ExpanderPage0_t));
+ 	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+ 	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+@@ -1206,7 +1186,6 @@ mpt2sas_config_get_expander_pg0(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 		_config_free_config_dma_memory(ioc, &mem);
+ 
+  out:
+-	mutex_unlock(&ioc->config_cmds.mutex);
+ 	return r;
+ }
+ 
+@@ -1230,7 +1209,6 @@ mpt2sas_config_get_expander_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 	int r;
+ 	struct config_request mem;
+ 
+-	mutex_lock(&ioc->config_cmds.mutex);
+ 	memset(config_page, 0, sizeof(Mpi2ExpanderPage1_t));
+ 	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+ 	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+@@ -1277,7 +1255,6 @@ mpt2sas_config_get_expander_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 		_config_free_config_dma_memory(ioc, &mem);
+ 
+  out:
+-	mutex_unlock(&ioc->config_cmds.mutex);
+ 	return r;
+ }
+ 
+@@ -1300,7 +1277,6 @@ mpt2sas_config_get_enclosure_pg0(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 	int r;
+ 	struct config_request mem;
+ 
+-	mutex_lock(&ioc->config_cmds.mutex);
+ 	memset(config_page, 0, sizeof(Mpi2SasEnclosurePage0_t));
+ 	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+ 	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+@@ -1345,7 +1321,6 @@ mpt2sas_config_get_enclosure_pg0(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 		_config_free_config_dma_memory(ioc, &mem);
+ 
+  out:
+-	mutex_unlock(&ioc->config_cmds.mutex);
+ 	return r;
+ }
+ 
+@@ -1367,7 +1342,6 @@ mpt2sas_config_get_phy_pg0(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 	int r;
+ 	struct config_request mem;
+ 
+-	mutex_lock(&ioc->config_cmds.mutex);
+ 	memset(config_page, 0, sizeof(Mpi2SasPhyPage0_t));
+ 	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+ 	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+@@ -1413,7 +1387,6 @@ mpt2sas_config_get_phy_pg0(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 		_config_free_config_dma_memory(ioc, &mem);
+ 
+  out:
+-	mutex_unlock(&ioc->config_cmds.mutex);
+ 	return r;
+ }
+ 
+@@ -1435,7 +1408,6 @@ mpt2sas_config_get_phy_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 	int r;
+ 	struct config_request mem;
+ 
+-	mutex_lock(&ioc->config_cmds.mutex);
+ 	memset(config_page, 0, sizeof(Mpi2SasPhyPage1_t));
+ 	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+ 	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+@@ -1481,7 +1453,6 @@ mpt2sas_config_get_phy_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 		_config_free_config_dma_memory(ioc, &mem);
+ 
+  out:
+-	mutex_unlock(&ioc->config_cmds.mutex);
+ 	return r;
+ }
+ 
+@@ -1505,7 +1476,6 @@ mpt2sas_config_get_raid_volume_pg1(struct MPT2SAS_ADAPTER *ioc,
+ 	int r;
+ 	struct config_request mem;
+ 
+-	mutex_lock(&ioc->config_cmds.mutex);
+ 	memset(config_page, 0, sizeof(Mpi2RaidVolPage1_t));
+ 	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+ 	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+@@ -1548,7 +1518,6 @@ mpt2sas_config_get_raid_volume_pg1(struct MPT2SAS_ADAPTER *ioc,
+ 		_config_free_config_dma_memory(ioc, &mem);
+ 
+  out:
+-	mutex_unlock(&ioc->config_cmds.mutex);
+ 	return r;
+ }
+ 
+@@ -1572,7 +1541,6 @@ mpt2sas_config_get_number_pds(struct MPT2SAS_ADAPTER *ioc, u16 handle,
+ 	struct config_request mem;
+ 	u16 ioc_status;
+ 
+-	mutex_lock(&ioc->config_cmds.mutex);
+ 	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+ 	*num_pds = 0;
+ 	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+@@ -1620,7 +1588,6 @@ mpt2sas_config_get_number_pds(struct MPT2SAS_ADAPTER *ioc, u16 handle,
+ 		_config_free_config_dma_memory(ioc, &mem);
+ 
+  out:
+-	mutex_unlock(&ioc->config_cmds.mutex);
+ 	return r;
+ }
+ 
+@@ -1645,7 +1612,6 @@ mpt2sas_config_get_raid_volume_pg0(struct MPT2SAS_ADAPTER *ioc,
+ 	int r;
+ 	struct config_request mem;
+ 
+-	mutex_lock(&ioc->config_cmds.mutex);
+ 	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+ 	memset(config_page, 0, sz);
+ 	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+@@ -1687,7 +1653,6 @@ mpt2sas_config_get_raid_volume_pg0(struct MPT2SAS_ADAPTER *ioc,
+ 		_config_free_config_dma_memory(ioc, &mem);
+ 
+  out:
+-	mutex_unlock(&ioc->config_cmds.mutex);
+ 	return r;
+ }
+ 
+@@ -1711,7 +1676,6 @@ mpt2sas_config_get_phys_disk_pg0(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 	int r;
+ 	struct config_request mem;
+ 
+-	mutex_lock(&ioc->config_cmds.mutex);
+ 	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+ 	memset(config_page, 0, sizeof(Mpi2RaidPhysDiskPage0_t));
+ 	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+@@ -1754,7 +1718,6 @@ mpt2sas_config_get_phys_disk_pg0(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 		_config_free_config_dma_memory(ioc, &mem);
+ 
+  out:
+-	mutex_unlock(&ioc->config_cmds.mutex);
+ 	return r;
+ }
+ 
+@@ -1778,7 +1741,6 @@ mpt2sas_config_get_volume_handle(struct MPT2SAS_ADAPTER *ioc, u16 pd_handle,
+ 	struct config_request mem;
+ 	u16 ioc_status;
+ 
+-	mutex_lock(&ioc->config_cmds.mutex);
+ 	*volume_handle = 0;
+ 	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+ 	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+@@ -1842,7 +1804,6 @@ mpt2sas_config_get_volume_handle(struct MPT2SAS_ADAPTER *ioc, u16 pd_handle,
+ 		_config_free_config_dma_memory(ioc, &mem);
+ 
+  out:
+-	mutex_unlock(&ioc->config_cmds.mutex);
+ 	return r;
+ }
+ 
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 2a01a5f..2e9a444 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -2767,6 +2767,10 @@ _scsih_scsi_ioc_info(struct MPT2SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
+ 	char *desc_ioc_state = NULL;
+ 	char *desc_scsi_status = NULL;
+ 	char *desc_scsi_state = ioc->tmp_string;
++	u32 log_info = le32_to_cpu(mpi_reply->IOCLogInfo);
++
++	if (log_info == 0x31170000)
++		return;
+ 
+ 	switch (ioc_status) {
+ 	case MPI2_IOCSTATUS_SUCCESS:
+@@ -3426,7 +3430,7 @@ _scsih_expander_add(struct MPT2SAS_ADAPTER *ioc, u16 handle)
+ 	__le64 sas_address;
+ 	int i;
+ 	unsigned long flags;
+-	struct _sas_port *mpt2sas_port;
++	struct _sas_port *mpt2sas_port = NULL;
+ 	int rc = 0;
+ 
+ 	if (!handle)
+@@ -3518,12 +3522,20 @@ _scsih_expander_add(struct MPT2SAS_ADAPTER *ioc, u16 handle)
+ 		    &expander_pg1, i, handle))) {
+ 			printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
+ 			    ioc->name, __FILE__, __LINE__, __func__);
+-			continue;
++			rc = -1;
++			goto out_fail;
+ 		}
+ 		sas_expander->phy[i].handle = handle;
+ 		sas_expander->phy[i].phy_id = i;
+-		mpt2sas_transport_add_expander_phy(ioc, &sas_expander->phy[i],
+-		    expander_pg1, sas_expander->parent_dev);
++
++		if ((mpt2sas_transport_add_expander_phy(ioc,
++		    &sas_expander->phy[i], expander_pg1,
++		    sas_expander->parent_dev))) {
++			printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
++			    ioc->name, __FILE__, __LINE__, __func__);
++			rc = -1;
++			goto out_fail;
++		}
+ 	}
+ 
+ 	if (sas_expander->enclosure_handle) {
+@@ -3540,8 +3552,9 @@ _scsih_expander_add(struct MPT2SAS_ADAPTER *ioc, u16 handle)
+ 
+  out_fail:
+ 
+-	if (sas_expander)
+-		kfree(sas_expander->phy);
++	if (mpt2sas_port)
++		mpt2sas_transport_port_remove(ioc, sas_expander->sas_address,
++		    sas_expander->parent_handle);
+ 	kfree(sas_expander);
+ 	return rc;
+ }
+@@ -3663,12 +3676,11 @@ _scsih_add_device(struct MPT2SAS_ADAPTER *ioc, u16 handle, u8 phy_num, u8 is_pd)
+ 	sas_device->hidden_raid_component = is_pd;
+ 
+ 	/* get enclosure_logical_id */
+-	if (!(mpt2sas_config_get_enclosure_pg0(ioc, &mpi_reply, &enclosure_pg0,
+-	   MPI2_SAS_ENCLOS_PGAD_FORM_HANDLE,
+-	   sas_device->enclosure_handle))) {
++	if (sas_device->enclosure_handle && !(mpt2sas_config_get_enclosure_pg0(
++	   ioc, &mpi_reply, &enclosure_pg0, MPI2_SAS_ENCLOS_PGAD_FORM_HANDLE,
++	   sas_device->enclosure_handle)))
+ 		sas_device->enclosure_logical_id =
+ 		    le64_to_cpu(enclosure_pg0.EnclosureLogicalID);
+-	}
+ 
+ 	/* get device name */
+ 	sas_device->device_name = le64_to_cpu(sas_device_pg0.DeviceName);
+@@ -4250,12 +4262,6 @@ _scsih_sas_volume_add(struct MPT2SAS_ADAPTER *ioc,
+ 	u16 handle = le16_to_cpu(element->VolDevHandle);
+ 	int rc;
+ 
+-#if 0 /* RAID_HACKS */
+-	if (le32_to_cpu(event_data->Flags) &
+-	    MPI2_EVENT_IR_CHANGE_FLAGS_FOREIGN_CONFIG)
+-		return;
+-#endif
+-
+ 	mpt2sas_config_get_volume_wwid(ioc, handle, &wwid);
+ 	if (!wwid) {
+ 		printk(MPT2SAS_ERR_FMT
+@@ -4310,12 +4316,6 @@ _scsih_sas_volume_delete(struct MPT2SAS_ADAPTER *ioc,
+ 	unsigned long flags;
+ 	struct MPT2SAS_TARGET *sas_target_priv_data;
+ 
+-#if 0 /* RAID_HACKS */
+-	if (le32_to_cpu(event_data->Flags) &
+-	    MPI2_EVENT_IR_CHANGE_FLAGS_FOREIGN_CONFIG)
+-		return;
+-#endif
+-
+ 	spin_lock_irqsave(&ioc->raid_device_lock, flags);
+ 	raid_device = _scsih_raid_device_find_by_handle(ioc, handle);
+ 	spin_unlock_irqrestore(&ioc->raid_device_lock, flags);
+@@ -4428,14 +4428,38 @@ _scsih_sas_pd_add(struct MPT2SAS_ADAPTER *ioc,
+ 	struct _sas_device *sas_device;
+ 	unsigned long flags;
+ 	u16 handle = le16_to_cpu(element->PhysDiskDevHandle);
++	Mpi2ConfigReply_t mpi_reply;
++	Mpi2SasDevicePage0_t sas_device_pg0;
++	u32 ioc_status;
+ 
+ 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+ 	sas_device = _scsih_sas_device_find_by_handle(ioc, handle);
+ 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+-	if (sas_device)
++	if (sas_device) {
+ 		sas_device->hidden_raid_component = 1;
+-	else
+-		_scsih_add_device(ioc, handle, 0, 1);
++		return;
++	}
++
++	if ((mpt2sas_config_get_sas_device_pg0(ioc, &mpi_reply, &sas_device_pg0,
++	    MPI2_SAS_DEVICE_PGAD_FORM_HANDLE, handle))) {
++		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
++		    ioc->name, __FILE__, __LINE__, __func__);
++		return;
++	}
++
++	ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
++	    MPI2_IOCSTATUS_MASK;
++	if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
++		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
++		    ioc->name, __FILE__, __LINE__, __func__);
++		return;
++	}
++
++	_scsih_link_change(ioc,
++	    le16_to_cpu(sas_device_pg0.ParentDevHandle),
++	    handle, sas_device_pg0.PhyNum, MPI2_SAS_NEG_LINK_RATE_1_5);
++
++	_scsih_add_device(ioc, handle, 0, 1);
+ }
+ 
+ #ifdef CONFIG_SCSI_MPT2SAS_LOGGING
+@@ -4535,12 +4559,15 @@ _scsih_sas_ir_config_change_event(struct MPT2SAS_ADAPTER *ioc, u8 VF_ID,
+ {
+ 	Mpi2EventIrConfigElement_t *element;
+ 	int i;
++	u8 foreign_config;
+ 
+ #ifdef CONFIG_SCSI_MPT2SAS_LOGGING
+ 	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
+ 		_scsih_sas_ir_config_change_event_debug(ioc, event_data);
+ 
+ #endif
++	foreign_config = (le32_to_cpu(event_data->Flags) &
++	    MPI2_EVENT_IR_CHANGE_FLAGS_FOREIGN_CONFIG) ? 1 : 0;
+ 
+ 	element = (Mpi2EventIrConfigElement_t *)&event_data->ConfigElement[0];
+ 	for (i = 0; i < event_data->NumElements; i++, element++) {
+@@ -4548,11 +4575,13 @@ _scsih_sas_ir_config_change_event(struct MPT2SAS_ADAPTER *ioc, u8 VF_ID,
+ 		switch (element->ReasonCode) {
+ 		case MPI2_EVENT_IR_CHANGE_RC_VOLUME_CREATED:
+ 		case MPI2_EVENT_IR_CHANGE_RC_ADDED:
+-			_scsih_sas_volume_add(ioc, element);
++			if (!foreign_config)
++				_scsih_sas_volume_add(ioc, element);
+ 			break;
+ 		case MPI2_EVENT_IR_CHANGE_RC_VOLUME_DELETED:
+ 		case MPI2_EVENT_IR_CHANGE_RC_REMOVED:
+-			_scsih_sas_volume_delete(ioc, element);
++			if (!foreign_config)
++				_scsih_sas_volume_delete(ioc, element);
+ 			break;
+ 		case MPI2_EVENT_IR_CHANGE_RC_PD_CREATED:
+ 			_scsih_sas_pd_hide(ioc, element);
+@@ -4671,6 +4700,9 @@ _scsih_sas_ir_physical_disk_event(struct MPT2SAS_ADAPTER *ioc, u8 VF_ID,
+ 	u32 state;
+ 	struct _sas_device *sas_device;
+ 	unsigned long flags;
++	Mpi2ConfigReply_t mpi_reply;
++	Mpi2SasDevicePage0_t sas_device_pg0;
++	u32 ioc_status;
+ 
+ 	if (event_data->ReasonCode != MPI2_EVENT_IR_PHYSDISK_RC_STATE_CHANGED)
+ 		return;
+@@ -4687,22 +4719,40 @@ _scsih_sas_ir_physical_disk_event(struct MPT2SAS_ADAPTER *ioc, u8 VF_ID,
+ 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+ 
+ 	switch (state) {
+-#if 0
+-	case MPI2_RAID_PD_STATE_OFFLINE:
+-		if (sas_device)
+-			_scsih_remove_device(ioc, handle);
+-		break;
+-#endif
+ 	case MPI2_RAID_PD_STATE_ONLINE:
+ 	case MPI2_RAID_PD_STATE_DEGRADED:
+ 	case MPI2_RAID_PD_STATE_REBUILDING:
+ 	case MPI2_RAID_PD_STATE_OPTIMAL:
+-		if (sas_device)
++		if (sas_device) {
+ 			sas_device->hidden_raid_component = 1;
+-		else
+-			_scsih_add_device(ioc, handle, 0, 1);
++			return;
++		}
++
++		if ((mpt2sas_config_get_sas_device_pg0(ioc, &mpi_reply,
++		    &sas_device_pg0, MPI2_SAS_DEVICE_PGAD_FORM_HANDLE,
++		    handle))) {
++			printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
++			    ioc->name, __FILE__, __LINE__, __func__);
++			return;
++		}
++
++		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
++		    MPI2_IOCSTATUS_MASK;
++		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
++			printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
++			    ioc->name, __FILE__, __LINE__, __func__);
++			return;
++		}
++
++		_scsih_link_change(ioc,
++		    le16_to_cpu(sas_device_pg0.ParentDevHandle),
++		    handle, sas_device_pg0.PhyNum, MPI2_SAS_NEG_LINK_RATE_1_5);
++
++		_scsih_add_device(ioc, handle, 0, 1);
++
+ 		break;
+ 
++	case MPI2_RAID_PD_STATE_OFFLINE:
+ 	case MPI2_RAID_PD_STATE_NOT_CONFIGURED:
+ 	case MPI2_RAID_PD_STATE_NOT_COMPATIBLE:
+ 	case MPI2_RAID_PD_STATE_HOT_SPARE:
+@@ -5774,6 +5824,7 @@ _scsih_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
+ 	u32 device_state;
+ 
++	mpt2sas_base_stop_watchdog(ioc);
+ 	flush_scheduled_work();
+ 	scsi_block_requests(shost);
+ 	device_state = pci_choose_state(pdev, state);
+@@ -5816,6 +5867,7 @@ _scsih_resume(struct pci_dev *pdev)
+ 
+ 	mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP, SOFT_RESET);
+ 	scsi_unblock_requests(shost);
++	mpt2sas_base_start_watchdog(ioc);
+ 	return 0;
+ }
+ #endif /* CONFIG_PM */
+
+
