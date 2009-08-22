@@ -1,31 +1,37 @@
-From: Chris Webb <chris@arachsys.com>
-Subject: Re: oops during scsi scanning disk setup
-Date: Sat, 22 Aug 2009 16:50:37 +0100
-Message-ID: <20090822155037.GB28586@arachsys.com>
-References: <20090820180549.GD7542@arachsys.com> <1250807161.4302.167.camel@mulgrave.site> <20090821081621.GB32115@arachsys.com> <20090821083356.GC32115@arachsys.com> <20090821092326.GF32115@arachsys.com> <1250863216.3844.1.camel@mulgrave.site> <20090821145141.GR32115@arachsys.com> <1250869674.7363.89.camel@mulgrave.site> <20090822115535.GB1976@arachsys.com> <1250952965.18902.2.camel@mulgrave.site>
+From: Roel Kluin <roel.kluin@gmail.com>
+Subject: [PATCH] gdth: unmap ccb_phys when scsi_add_host() fails in gdth_eisa_probe_one()
+Date: Sat, 22 Aug 2009 19:05:52 +0200
+Message-ID: <4A902570.1080103@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from alpha.arachsys.com ([91.203.57.7]:39203 "EHLO
-	alpha.arachsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932723AbZHVPuh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Aug 2009 11:50:37 -0400
-Content-Disposition: inline
-In-Reply-To: <1250952965.18902.2.camel@mulgrave.site>
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:54017 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932997AbZHVRBB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Aug 2009 13:01:01 -0400
+Received: by ewy3 with SMTP id 3so1372983ewy.18
+        for <linux-scsi@vger.kernel.org>; Sat, 22 Aug 2009 10:01:02 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-James Bottomley <James.Bottomley@suse.de> writes:
+unmap ccb_phys as well when scsi_add_host() fails
 
-> Actually, if that works, I'll have the above backported as well.
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+Right?
 
-Hi James. That's much better; thanks! I certainly can't provoke any problems
-with it in a VM, although I couldn't really reproduce the problem with the
-original kernel in a test environment either. I'll push it to our clusters
-and see how things go over the next week or so.
-
-Cheers,
-
-Chris.
+diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+index 185e6bc..3111503 100644
+--- a/drivers/scsi/gdth.c
++++ b/drivers/scsi/gdth.c
+@@ -4903,7 +4903,7 @@ static int __init gdth_eisa_probe_one(ushort eisa_slot)
+ 
+ 	error = scsi_add_host(shp, NULL);
+ 	if (error)
+-		goto out_free_coal_stat;
++		goto out_free_ccb_phys;
+ 	list_add_tail(&ha->list, &gdth_instances);
+ 	gdth_timer_init();
+ 
