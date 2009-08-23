@@ -1,97 +1,175 @@
-From: =?ISO-8859-1?Q?Rog=E9rio_Brito?= <rbrito@ime.usp.br>
-Subject: Re: [Bugme-new] [Bug 14020] New: Stack trace when running smartctl on an USB disk
-Date: Sun, 23 Aug 2009 12:11:50 -0300
-Message-ID: <31690E3D-43A0-484D-9D65-C0003E033D1E@ime.usp.br>
-References: <Pine.LNX.4.44L0.0908222002110.9952-100000@netrider.rowland.org>
-Mime-Version: 1.0 (Apple Message framework v753.1)
-Content-Type: text/plain; charset=ISO-8859-1;
-	delsp=yes	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933772AbZHWPNY@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.0908222002110.9952-100000@netrider.rowland.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, bugzilla-daemon@bugzilla.kernel.org
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: [PATCH 1/2] qla1280: Unify common code in
+ qla1280_load_firmware_{dma,pio}()
+Date: Sun, 23 Aug 2009 16:34:42 +0100
+Message-ID: <1251041682.16001.247.camel@localhost>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:51298 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933746AbZHWPep (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 23 Aug 2009 11:34:45 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hi again, Alan.
+The verification and copying of metadata from the firmware is
+identical in the two functions, and can be done in their caller.
 
-(Sorry if this message seems messed up, but I am not using my regular =20
-mailer right now, unfortunately).
+As a side-effect, this fixes a leak when DUMP_IT_BACK is defined and
+request_firmware() fails.
 
-On 2009-08-22, at 21:17, Alan Stern wrote:
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+---
+ drivers/scsi/qla1280.c |   78 ++++++++++++++++++------------------------------
+ 1 files changed, 29 insertions(+), 49 deletions(-)
 
-> On Sat, 22 Aug 2009, Rog=E9rio Brito wrote:
->
->> The requested trace is attached to this message. Please let me =20
->> know if
->> you need more information.
->
-> The trace shows that something (presumably smartctl) sends a command
-> the drive doesn't understand.  The drive then violates the USB
-> mass-storage protocol, sending an invalid response.
+diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+index 8371d91..4951344 100644
+--- a/drivers/scsi/qla1280.c
++++ b/drivers/scsi/qla1280.c
+@@ -1632,33 +1632,13 @@ qla1280_chip_diag(struct scsi_qla_host *ha)
+ }
+ 
+ static int
+-qla1280_load_firmware_pio(struct scsi_qla_host *ha)
++qla1280_load_firmware_pio(struct scsi_qla_host *ha, const struct firmware *fw)
+ {
+-	const struct firmware *fw;
+ 	const __le16 *fw_data;
+ 	uint16_t risc_address, risc_code_size;
+ 	uint16_t mb[MAILBOX_REGISTER_COUNT], i;
+ 	int err;
+ 
+-	err = request_firmware(&fw, ql1280_board_tbl[ha->devnum].fwname,
+-			       &ha->pdev->dev);
+-	if (err) {
+-		printk(KERN_ERR "Failed to load image \"%s\" err %d\n",
+-		       ql1280_board_tbl[ha->devnum].fwname, err);
+-		return err;
+-	}
+-	if ((fw->size % 2) || (fw->size < 6)) {
+-		printk(KERN_ERR "Bogus length %zu in image \"%s\"\n",
+-		       fw->size, ql1280_board_tbl[ha->devnum].fwname);
+-		err = -EINVAL;
+-		goto out;
+-	}
+-	ha->fwver1 = fw->data[0];
+-	ha->fwver2 = fw->data[1];
+-	ha->fwver3 = fw->data[2];
+-	fw_data = (const __le16 *)&fw->data[0];
+-	ha->fwstart = __le16_to_cpu(fw_data[2]);
+-
+ 	/* Load RISC code. */
+ 	risc_address = ha->fwstart;
+ 	fw_data = (const __le16 *)&fw->data[6];
+@@ -1673,19 +1653,16 @@ qla1280_load_firmware_pio(struct scsi_qla_host *ha)
+ 		if (err) {
+ 			printk(KERN_ERR "scsi(%li): Failed to load firmware\n",
+ 					ha->host_no);
+-			goto out;
++			return err;
+ 		}
+ 	}
+-out:
+-	release_firmware(fw);
+-	return err;
++	return 0;
+ }
+ 
+ #define DUMP_IT_BACK 0		/* for debug of RISC loading */
+ static int
+-qla1280_load_firmware_dma(struct scsi_qla_host *ha)
++qla1280_load_firmware_dma(struct scsi_qla_host *ha, const struct firmware *fw)
+ {
+-	const struct firmware *fw;
+ 	const __le16 *fw_data;
+ 	uint16_t risc_address, risc_code_size;
+ 	uint16_t mb[MAILBOX_REGISTER_COUNT], cnt;
+@@ -1699,25 +1676,6 @@ qla1280_load_firmware_dma(struct scsi_qla_host *ha)
+ 		return -ENOMEM;
+ #endif
+ 
+-	err = request_firmware(&fw, ql1280_board_tbl[ha->devnum].fwname,
+-			       &ha->pdev->dev);
+-	if (err) {
+-		printk(KERN_ERR "Failed to load image \"%s\" err %d\n",
+-		       ql1280_board_tbl[ha->devnum].fwname, err);
+-		return err;
+-	}
+-	if ((fw->size % 2) || (fw->size < 6)) {
+-		printk(KERN_ERR "Bogus length %zu in image \"%s\"\n",
+-		       fw->size, ql1280_board_tbl[ha->devnum].fwname);
+-		err = -EINVAL;
+-		goto out;
+-	}
+-	ha->fwver1 = fw->data[0];
+-	ha->fwver2 = fw->data[1];
+-	ha->fwver3 = fw->data[2];
+-	fw_data = (const __le16 *)&fw->data[0];
+-	ha->fwstart = __le16_to_cpu(fw_data[2]);
+-
+ 	/* Load RISC code. */
+ 	risc_address = ha->fwstart;
+ 	fw_data = (const __le16 *)&fw->data[6];
+@@ -1799,7 +1757,6 @@ qla1280_load_firmware_dma(struct scsi_qla_host *ha)
+ #if DUMP_IT_BACK
+ 	pci_free_consistent(ha->pdev, 8000, tbuf, p_tbuf);
+ #endif
+-	release_firmware(fw);
+ 	return err;
+ }
+ 
+@@ -1838,19 +1795,42 @@ qla1280_start_firmware(struct scsi_qla_host *ha)
+ static int
+ qla1280_load_firmware(struct scsi_qla_host *ha)
+ {
++	const struct firmware *fw;
++	const __le16 *fw_data;
+ 	int err;
+ 
+ 	err = qla1280_chip_diag(ha);
+ 	if (err)
++		return err;
++
++	err = request_firmware(&fw, ql1280_board_tbl[ha->devnum].fwname,
++			       &ha->pdev->dev);
++	if (err) {
++		printk(KERN_ERR "Failed to load image \"%s\" err %d\n",
++		       ql1280_board_tbl[ha->devnum].fwname, err);
++		return err;
++	}
++	if ((fw->size % 2) || (fw->size < 6)) {
++		printk(KERN_ERR "Bogus length %zu in image \"%s\"\n",
++		       fw->size, ql1280_board_tbl[ha->devnum].fwname);
++		err = -EINVAL;
+ 		goto out;
++	}
++	ha->fwver1 = fw->data[0];
++	ha->fwver2 = fw->data[1];
++	ha->fwver3 = fw->data[2];
++	fw_data = (const __le16 *)&fw->data[0];
++	ha->fwstart = __le16_to_cpu(fw_data[2]);
++
+ 	if (IS_ISP1040(ha))
+-		err = qla1280_load_firmware_pio(ha);
++		err = qla1280_load_firmware_pio(ha, fw);
+ 	else
+-		err = qla1280_load_firmware_dma(ha);
++		err = qla1280_load_firmware_dma(ha, fw);
+ 	if (err)
+ 		goto out;
+ 	err = qla1280_start_firmware(ha);
+  out:
++	release_firmware(fw);
+ 	return err;
+ }
+ 
+-- 
+1.6.3.3
 
-Right.
 
-> The kernel waits
-> for a proper response but nothing more happens, so after 30 seconds =20
-> the
-> command times out and is aborted and the drive is reset.
-
-I'm not with the kernel sources here (so, I can't check the code), =20
-but is there any option to be able to log such invalid responses when =20
-the kernel gets one? Perhaps the verbose USB logging does that?
-
-> The command
-> then gets retried, and the same thing happens again.  The retries tak=
-e
-> so long that the kernel complains about smartctl being blocked for =20
-> more
-> than 120 seconds -- that's the reason for the stack dump.
-
-Right.
-
-Geeez, Alan, is there any vendor out there that gets the USB =20
-implementation according to the specs?
-
-This is the 3rd USB device that I sent you some message about where =20
-the kernel moans about something that it doesn't understand (I can =20
-get you the vendor and device ids when I get home).
-
-I will test with some other devices that I have, just to see what =20
-their response is. :-(
-
-> So the problem has several causes.  One is that the drive is buggy (i=
-t
-> doesn't respond with an error code in the proper way when it =20
-> receives a
-> command it doesn't understand).  Another is that smartctl is trying t=
-o
-> send commands in a form the drive can't handle.
-
-That's probably not smartctl, but the user (me) that is telling it to =20
-use a given command set to check if the USB adapter understands/=20
-allows pass-thru of the SMART protocol to the drive.
-
-> Finally, there's the
-> problem about all the retries taking too long.
-
-Is there anything that could be done about this?
-
-> Perhaps you can blame the kernel for spending too much time on =20
-> retries,
-> but the other two are the fault of the drive and smartctl.
-
-I understand the p-o-v of the kernel: some devices need a little bit =20
-more time on a retry, while others don't. There's no way to hardcode =20
-a once and for all behavior. It seems that an expensive solution to =20
-this would be to create (yet) another list of blacklisted devices =20
-(how many lists of quirks do we have in the kernel already---this is =20
-really causing some bloat, especially for some embedded devices). :-(
-
-OTOH, creating blacklists seem to not be the adequate (let alone =20
-"right") solution (see the ASUS/it87 monitoring cause) in many =20
-situations. :-/
-
-
-Thanks for your always kind messages, Rog=E9rio Brito.
