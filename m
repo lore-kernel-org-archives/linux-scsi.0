@@ -1,49 +1,31 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] gdth: unmap ccb_phys when scsi_add_host() fails in
- gdth_eisa_probe_one()
-Date: Mon, 24 Aug 2009 13:49:25 -0700
-Message-ID: <20090824134925.351095d1.akpm@linux-foundation.org>
-References: <4A902570.1080103@gmail.com>
+From: "Moger, Babu" <Babu.Moger@lsi.com>
+Subject: [PATCH] scsi_dh_rdac: Fix for returning correct mode select return
+ info
+Date: Mon, 24 Aug 2009 17:29:36 -0600
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF474BFD8F8@cosmail01.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:54438 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753494AbZHXU7G (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Aug 2009 16:59:06 -0400
-In-Reply-To: <4A902570.1080103@gmail.com>
+Received: from exprod7og124.obsmtp.com ([64.18.2.26]:59687 "EHLO
+	exprod7og124.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753494AbZHXX3m (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Aug 2009 19:29:42 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roel Kluin <roel.kluin@gmail.com>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, Achim Leubner <achim_leubner@adaptec.com>
+To: Linux SCSI Mailing list <linux-scsi@vger.kernel.org>
+Cc: device-mapper development <dm-devel@redhat.com>, Chandra Seetharaman <sekharan@us.ibm.com>, "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>, "Stankey, Robert" <Robert.Stankey@lsi.com>, "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>
 
-On Sat, 22 Aug 2009 19:05:52 +0200
-Roel Kluin <roel.kluin@gmail.com> wrote:
-
-> unmap ccb_phys as well when scsi_add_host() fails
-> 
-> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-> ---
-> Right?
-
-Partially.
-
-> diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-> index 185e6bc..3111503 100644
-> --- a/drivers/scsi/gdth.c
-> +++ b/drivers/scsi/gdth.c
-> @@ -4903,7 +4903,7 @@ static int __init gdth_eisa_probe_one(ushort eisa_slot)
->  
->  	error = scsi_add_host(shp, NULL);
->  	if (error)
-> -		goto out_free_coal_stat;
-> +		goto out_free_ccb_phys;
->  	list_add_tail(&ha->list, &gdth_instances);
->  	gdth_timer_init();
->  
-
-I suspect that we should also undo the effects of gdth_enable_int() if
-taking this path.
-
+VGhpcyBwYXRjaCBmaXhlcyB0aGUgcHJvYmxlbSB3aXRoIG1vZGVfc2VsZWN0X2hhbmRsZV9zZW5z
+ZSB3aGVuIHJldHVuaW5nIG1vZGUgc2VsZWN0IGNvbXBsZXRpb24gc3RhdHVzLiBJIGhhdmUgcmVt
+b3ZlZCB0aGUgZGVmYXVsdCBpbml0aWFsaXphdGlvbiBvZiByZXR1cm4gY29kZSB0byBTQ1NJX0RI
+X09LLiBOb3cgaXQgaXMgaW5pdGlhbGl6ZWQgdG8gIFNDU0lfREhfSU8uDQogDQpTaWduZWQtb2Zm
+LWJ5OiBCYWJ1IE1vZ2VyIDxiYWJ1Lm1vZ2VyQGxzaS5jb20+DQoNCi0tLQ0KLS0tIGxpbnV4LTIu
+Ni4zMS1yYzUvZHJpdmVycy9zY3NpL2RldmljZV9oYW5kbGVyL3Njc2lfZGhfcmRhYy5jLm9yaWcJ
+MjAwOS0wOC0yMiAwNjoyMDo0NS4wMDAwMDAwMDAgLTA1MDANCisrKyBsaW51eC0yLjYuMzEtcmM1
+L2RyaXZlcnMvc2NzaS9kZXZpY2VfaGFuZGxlci9zY3NpX2RoX3JkYWMuYwkyMDA5LTA4LTIyIDA2
+OjE4OjM2LjAwMDAwMDAwMCAtMDUwMA0KQEAgLTQ1NSw4ICs0NTUsNiBAQCBzdGF0aWMgaW50IG1v
+ZGVfc2VsZWN0X2hhbmRsZV9zZW5zZShzdHJ1DQogCWlmICghcmV0KQ0KIAkJZ290byBkb25lOw0K
+IA0KLQllcnIgPSBTQ1NJX0RIX09LOw0KLQ0KIAlzd2l0Y2ggKHNlbnNlX2hkci5zZW5zZV9rZXkp
+IHsNCiAJY2FzZSBOT19TRU5TRToNCiAJY2FzZSBBQk9SVEVEX0NPTU1BTkQ6DQoNCg0K
