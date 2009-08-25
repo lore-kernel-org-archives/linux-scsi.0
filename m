@@ -1,32 +1,107 @@
 From: "Moger, Babu" <Babu.Moger@lsi.com>
-Subject: [PATCH 0/3] scsi_dh_rdac: Adding more debug options for scsi rdac
- handler
-Date: Mon, 24 Aug 2009 18:08:44 -0600
-Message-ID: <E463DF2B2E584B4A82673F53D62C2EF474BFD90A@cosmail01.lsi.com>
+Subject: [PATCH 1/3] scsi_dh_rdac: Adding more debug options for
+ scsi rdac handler
+Date: Mon, 24 Aug 2009 18:11:46 -0600
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF474BFD90E@cosmail01.lsi.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og106.obsmtp.com ([64.18.2.165]:39128 "EHLO
-	exprod7og106.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753692AbZHYAI6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Aug 2009 20:08:58 -0400
+Content-Transfer-Encoding: quoted-printable
+Return-path: <dm-devel-bounces@redhat.com>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
 To: Linux SCSI Mailing list <linux-scsi@vger.kernel.org>
-Cc: "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>, Chandra Seetharaman <sekharan@us.ibm.com>, "Stankey, Robert" <Robert.Stankey@lsi.com>, device-mapper development <dm-devel@redhat.com>
+Cc: device-mapper development <dm-devel@redhat.com>, "Chauhan,
+	Vijay" <Vijay.Chauhan@lsi.com>, "Stankey, Robert" <Robert.Stankey@lsi.com>
+List-Id: linux-scsi@vger.kernel.org
 
-SGkgQWxsLA0KVGhlc2UgcGF0Y2hlcyBhZGQgbW9yZSBkZWJ1Z2dpbmcgb3B0aW9ucyB0byBzY3Np
-IHJkYWMgZGV2aWNlIGhhbmRsZXIuIA0KVGhpcyBjYW4gY29uc2lkZXJhYmx5IHJlZHVjZSB0aGUg
-dGltZSB0YWtlbiB0byBkZWJ1ZyBpc3N1ZXMgaW4gYmlnIA0KY29uZmlndXJhdGlvbnMgYW5kIGFs
-c28gdmVyeSBoZWxwZnVsIGluIGFkZHJlc3NpbmcgdGhlIHN1cHBvcnQgaXNzdWVzLg0KSGVyZSBh
-cmUgdGhlIHN1bW1hcnkgb2YgY2hhbmdlcy4gDQogLSBBZGRlZCBhIGJpdCBtYXNrICJtb2R1bGUg
-cGFyYW1ldGVyIiByZGFjX2xvZ2dpbmcgd2l0aCAyIGJpdHMgZm9yIA0KICAgZWFjaCB0eXBlIG9m
-IGxvZ2dpbmcuDQogLSBjdXJyZW50bHkgZGVmaW5lZCBvbmx5IHR3byB0eXBlcyBvZiBsb2dnaW5n
-KGZhaWxvdmVyIGFuZCBzZW5zZSBsb2dnaW5nKS4NCiAgIENhbiBiZSBlbmhhbmNlZCBsYXRlciBp
-ZiByZXF1aXJlZC4NCiAtIEJ5IGRlZmF1bHQgb25seSBmYWlsb3ZlciBsb2dnaW5nIGlzIGVuYWJs
-ZWQgd2hpY2ggaXMgZXF1aXZhbGVudCBvZiANCiAgIGN1cnJlbnQgbG9nZ2luZy4NCg0KIFRoYW5r
-cyB0byBDaGFuZHJhIFNlZXRoYXJhbWFuLCBWaWpheSBDaGF1aGFuIGFuZCBCb2IgU3RhbmtleSBm
-b3IgdGhlaXIgdXNlZnVsIGNvbW1lbnRzLg0KIFRoaXMgY29kZSBoYXMgYmVlbiB0ZXN0ZWQgb24g
-Mi42LjI3LXJjNS4NCg0KLVRoYW5rcw0KQmFidSBNb2dlciANCg0K
+Adding the code to read the debug information during activate. This patch=
+ collects the information about storage and controllers during rdac_activ=
+ate.
+=20
+Signed-off-by: Babu Moger <babu.moger@lsi.com>
+
+---
+--- linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2009=
+-08-24 11:54:41.000000000 -0500
++++ linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-08-2=
+4 12:08:33.000000000 -0500
+@@ -112,6 +112,7 @@ struct c9_inquiry {
+=20
+ #define SUBSYS_ID_LEN	16
+ #define SLOT_ID_LEN	2
++#define ARRAY_LABEL_LEN	31
+=20
+ struct c4_inquiry {
+ 	u8	peripheral_info;
+@@ -135,6 +136,8 @@ struct rdac_controller {
+ 		struct rdac_pg_legacy legacy;
+ 		struct rdac_pg_expanded expanded;
+ 	} mode_select;
++	u8			index;
++	u8			array_name[ARRAY_LABEL_LEN];
+ };
+ struct c8_inquiry {
+ 	u8	peripheral_info;
+@@ -324,6 +327,13 @@ static struct rdac_controller *get_contr
+ 	/* initialize fields of controller */
+ 	memcpy(ctlr->subsys_id, subsys_id, SUBSYS_ID_LEN);
+ 	memcpy(ctlr->slot_id, slot_id, SLOT_ID_LEN);
++
++	/* update the controller index */
++	if (slot_id[1] =3D=3D 0x31)
++		ctlr->index =3D 0;
++	else
++		ctlr->index =3D 1;
++
+ 	kref_init(&ctlr->kref);
+ 	ctlr->use_ms10 =3D -1;
+ 	list_add(&ctlr->node, &ctlr_list);
+@@ -381,6 +391,26 @@ static int get_lun(struct scsi_device *s
+ 	return err;
+ }
+=20
++static int get_array_name(struct scsi_device *sdev, struct rdac_dh_data =
+*h)
++{
++	int err, i;
++	struct c8_inquiry *inqp;
++
++	err =3D submit_inquiry(sdev, 0xC8, sizeof(struct c8_inquiry), h);
++	if (err =3D=3D SCSI_DH_OK) {
++		inqp =3D &h->inq.c8;
++		if (inqp->page_code !=3D 0xc8)
++			return SCSI_DH_NOSYS;
++
++		for(i=3D0; i<30; ++i)
++			h->ctlr->array_name[i] =3D inqp->array_user_label[(2*i)+1];
++
++		h->ctlr->array_name[30] =3D '\0';
++	}
++		=09
++	return err;
++}
++
+ static int check_ownership(struct scsi_device *sdev, struct rdac_dh_data=
+ *h)
+ {
+ 	int err;
+@@ -529,6 +559,10 @@ static int rdac_activate(struct scsi_dev
+ 		err =3D initialize_controller(sdev, h);
+ 		if (err !=3D SCSI_DH_OK)
+ 			goto done;
++
++		err =3D get_array_name(sdev, h);
++		if (err !=3D SCSI_DH_OK)
++			goto done;
+ 	}
+=20
+ 	if (h->ctlr->use_ms10 =3D=3D -1) {
