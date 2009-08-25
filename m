@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 37/64] libfc: simplify fc_lport_rport_callback
-Date: Tue, 25 Aug 2009 14:01:44 -0700
-Message-ID: <20090825210144.1553.17750.stgit@localhost.localdomain>
+Subject: [PATCH 33/64] libfc: fix rport event race between READY and LOGO
+Date: Tue, 25 Aug 2009 14:01:23 -0700
+Message-ID: <20090825210123.1553.33025.stgit@localhost.localdomain>
 References: <20090825205826.1553.94414.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:27829 "EHLO mga03.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:19979 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932105AbZHYVBn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Aug 2009 17:01:43 -0400
+	id S932176AbZHYVBV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Aug 2009 17:01:21 -0400
 In-Reply-To: <20090825205826.1553.94414.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,81 +19,34 @@ Cc: Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>
 
 From: Joe Eykholt <jeykholt@cisco.com>
 
-The lport rport callback can only be called for the dNS rport,
-since its the only rport who's ops point to that function.
+When a remote port becomes ready and a LOGO is received before
+the READY event is in rport_work waiting on the mutex, the
+event is changed to LOGO and the work queued, so both the
+calls to rport_work see the LOGO event, and both try to do
+the list_del(), causing a crash.
 
-Remove unnecessary checking and debug messages.
-Put the locking outside the switch statement as a simplification.
+Don't change the event if it is already set.
 
 Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_lport.c |   43 ++++++++++++++---------------------------
- 1 files changed, 15 insertions(+), 28 deletions(-)
+ drivers/scsi/libfc/fc_rport.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index 016f771..22c0f7b 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -146,44 +146,31 @@ static void fc_lport_rport_callback(struct fc_lport *lport,
- 	FC_LPORT_DBG(lport, "Received a %d event for port (%6x)\n", event,
- 		     rdata->ids.port_id);
- 
-+	mutex_lock(&lport->lp_mutex);
- 	switch (event) {
- 	case RPORT_EV_READY:
--		if (rdata->ids.port_id == FC_FID_DIR_SERV) {
--			mutex_lock(&lport->lp_mutex);
--			if (lport->state == LPORT_ST_DNS) {
--				lport->dns_rp = rdata;
--				fc_lport_enter_rpn_id(lport);
--			} else {
--				FC_LPORT_DBG(lport, "Received an READY event "
--					     "on port (%6x) for the directory "
--					     "server, but the lport is not "
--					     "in the DNS state, it's in the "
--					     "%d state", rdata->ids.port_id,
--					     lport->state);
--				lport->tt.rport_logoff(rdata);
--			}
--			mutex_unlock(&lport->lp_mutex);
--		} else
--			FC_LPORT_DBG(lport, "Received an event for port (%6x) "
--				     "which is not the directory server\n",
--				     rdata->ids.port_id);
-+		if (lport->state == LPORT_ST_DNS) {
-+			lport->dns_rp = rdata;
-+			fc_lport_enter_rpn_id(lport);
-+		} else {
-+			FC_LPORT_DBG(lport, "Received an READY event "
-+				     "on port (%6x) for the directory "
-+				     "server, but the lport is not "
-+				     "in the DNS state, it's in the "
-+				     "%d state", rdata->ids.port_id,
-+				     lport->state);
-+			lport->tt.rport_logoff(rdata);
-+		}
- 		break;
- 	case RPORT_EV_LOGO:
- 	case RPORT_EV_FAILED:
- 	case RPORT_EV_STOP:
--		if (rdata->ids.port_id == FC_FID_DIR_SERV) {
--			mutex_lock(&lport->lp_mutex);
--			lport->dns_rp = NULL;
--			mutex_unlock(&lport->lp_mutex);
--
--		} else
--			FC_LPORT_DBG(lport, "Received an event for port (%6x) "
--				     "which is not the directory server\n",
--				     rdata->ids.port_id);
-+		lport->dns_rp = NULL;
- 		break;
- 	case RPORT_EV_NONE:
- 		break;
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index a1794a3..cbf6c9f 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -1267,9 +1267,7 @@ static void fc_rport_recv_logo_req(struct fc_rport_priv *rdata,
+ 		return;
  	}
-+	mutex_unlock(&lport->lp_mutex);
- }
  
- /**
+-	rdata->event = RPORT_EV_LOGO;
+-	fc_rport_state_enter(rdata, RPORT_ST_DELETE);
+-	queue_work(rport_event_queue, &rdata->event_work);
++	fc_rport_enter_delete(rdata, RPORT_EV_LOGO);
+ 
+ 	lport->tt.seq_els_rsp_send(sp, ELS_LS_ACC, NULL);
+ 	fc_frame_free(fp);
 
