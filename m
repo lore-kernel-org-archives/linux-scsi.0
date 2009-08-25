@@ -1,120 +1,134 @@
-From: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
-Subject: Re: scsi_wait_scan not working (2.6.30.5)
-Date: Tue, 25 Aug 2009 22:01:20 +0200
-Message-ID: <200908252201.20797.a.miskiewicz@gmail.com>
-References: <200908252124.22562.a.miskiewicz@gmail.com> <200908252144.11155.a.miskiewicz@gmail.com> <1251229652.7539.10.camel@mulgrave.site>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH 00/64] libfc, libfcoe and fcoe updates for scsi-misc
+Date: Tue, 25 Aug 2009 13:58:26 -0700
+Message-ID: <20090825205826.1553.94414.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:53656 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751410AbZHYUBY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Aug 2009 16:01:24 -0400
-Received: by bwz19 with SMTP id 19so2129726bwz.37
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2009 13:01:25 -0700 (PDT)
-In-Reply-To: <1251229652.7539.10.camel@mulgrave.site>
+Received: from mga01.intel.com ([192.55.52.88]:38970 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752638AbZHYU6Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Aug 2009 16:58:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, Arjan van de Ven <arjan@infradead.org>
+To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-On Tuesday 25 of August 2009, you wrote:
-> On Tue, 2009-08-25 at 21:44 +0200, Arkadiusz Miskiewicz wrote:
-> > On Tuesday 25 of August 2009, James Bottomley wrote:
-> > > On Tue, 2009-08-25 at 21:24 +0200, Arkadiusz Miskiewicz wrote:
-> > > > What could be the reason for scsi_wait_scan not waiting untill =
-all
-> > > > disks are found?
-> > > >
-> > > > I'm testing 2.6.30.5 on hardware with LSI Logic / Symbios Logic
-> > > > MegaRAID 530 SCSI 320-0X RAID controller and modprobe scsi_wait=
-_scan
-> > > > finishes earlier than disks are found.
-> > > >
-> > > > My initrd (romfs) does:
-> > > > insmod /lib/modules/2.6.30.5-0.3/kernel/drivers/scsi/scsi_mod.k=
-o
-> > > > insmod
-> > > > /lib/modules/2.6.30.5-0.3/kernel/drivers/scsi/megaraid/megaraid=
-_mm.ko
-> > > > insmod
-> > > > /lib/modules/2.6.30.5-0.3/kernel/drivers/scsi/megaraid/megaraid=
-_mbox.
-> > > >ko insmod /lib/modules/2.6.30.5-0.3/kernel/lib/crc-t10dif.ko
-> > > > insmod /lib/modules/2.6.30.5-0.3/kernel/drivers/scsi/sd_mod.ko
-> > > > insmod
-> > > > /lib/modules/2.6.30.5-0.3/kernel/drivers/scsi/scsi_wait_scan.ko
-> > > > insmod /lib/modules/2.6.30.5-0.3/kernel/fs/exportfs/exportfs.ko
-> > > > insmod /lib/modules/2.6.30.5-0.3/kernel/fs/xfs/xfs.ko
-> > > > if [ "${ROOT##/dev/}" !=3D "${ROOT}" ]; then
-> > > > rootnr=3D"$(busybox awk -v rootnode=3D"${ROOT##/dev/}" '$4 =3D=3D=
- rootnode {
-> > > > print 256 * $1 + $2 }' /proc/partitions)"
-> > > > if [ -n "$rootnr" ]; then
-> > > > echo "$rootnr" > /proc/sys/kernel/real-root-dev
-> > > > fi
-> > > >
-> > > >
-> > > > Now if I add sleep few seconds or /bin/sh at the end of this in=
-itrd,
-> > > > then boot and then disks are detected properly and rootfs is mo=
-unted
-> > > > properly (after I exit from sh in case when /bin/sh is used).
-> > > >
-> > > > The question remains - why scsi_wait_scan doesn't wait?
-> > >
-> > > It's caused by the sd async patches.  What's happening is wait_sc=
-an is
-> > > waiting until all the scans are complete, but now sd attachment m=
-ay not
-> > > be completed by the time that happens.  So, although you have a s=
-canned
-> > > disk, you can't mount it without and attached sd driver.
-> > >
-> > > Hopefully when
-> > > all initrds are configured to wait until root appears, this probl=
-em
-> > > will go away.
-> >
-> > Uh, ugly. I'll disable SCSI_SCAN_ASYNC here then.
->
-> That won't actually help: the sd async scan is a separate mechanism n=
-ot
-> tied to that variable
+These patches are targeting the 2.6.32 merge window.
 
-I assume there is no configurable way to disable this?
+There are three main focuses in this patch series. First,
+there are contributions that modify the stack for VLANs
+and prepare for NPIV. For both of those technologies resources
+need to be shared between VLANs on a physical port or
+VN_Ports on an N_Port. Second, there are improvements to
+the discovery and remote port layers. Discovery is now much
+more graceful (ADISC) and there is a cleaner division between
+fc_rports that are used by the FC transport and libfc's
+internal remote port tracking structures. Third, there is
+a performance optomization for the exchange manager where
+per-CPU exchange ID (XID) pools are created so that each CPU
+is not contending for a shared lock when trying to acquire a
+new XID.
 
->
-> > Anyway what's the point of scsi_wait_scan module if initrd is still
-> > required to wait until root appears? (unless current behaviour is b=
-roken
-> > behaviour meant to be fixed?)
->
-> It was supposed to be an interim measure until the ditributions got
-> their act together for initrd booting by waiting for the root disk to
-> appear.  It's just been "interim" for a bit longer than expected.
+Other than these primary changes there are other smaller
+contributions. A user-tunable DDP limit has been added.
+There are various improvements to the debug logging macros
+and uses of them. FC headers are exported for user space
+tools. The fcoe create/destroy path has been improved.
 
-Isn't kernel better place for this?
+---
 
-Handling that in userspace is very complicated for such setups like fs =
-on top=20
-of software raid where raid is assembled by UUID of devices etc, etc.=20
-Userspace will need to handle all weird cases to figure out what device=
-s are=20
-needed (eg. parse mdadm config) to be able to wait for thsese and then =
-go into=20
-next step.
+Chris Leech (15):
+      fcoe: use rtnl mutex in place of hostlist lock
+      fcoe: Fix module ref count bug by adding NETDEV UNREGISTER handling
+      fcoe: move the host-list add/remove to keep out VN_Ports
+      fcoe: add mutex to protect create and destroy
+      fcoe: split out per interface setup
+      fcoe: fcoe_interface create, destroy and refcounting
+      fcoe: remove fcoe_interface->priv pointer
+      fcoe: move offload exchange manager pointer from fcoe_port to fcoe_interface
+      fcoe: move FIP controller from fcoe_port to fcoe_interface
+      fcoe: move packet handlers from fcoe_port to fcoe_interface
+      fcoe: move netdev to fcoe_interface
+      fcoe: Introduce and allocate fcoe_interface structure, 1:1 with net_device
+      fcoe: interface changes to fcoe_if_create and fcoe_if_destroy
+      fcoe: fix missing error check in call to fcoe_if_init
+      libfcoe: fcoe_ctlr_destroy use cancel_work_sync instead of flush_work
 
-Are major distros actually handling this well?
+Joe Eykholt (41):
+      fcoe: flush per-cpu thread work when destroying interface
+      libfc: don't swap OX_ID and RX_ID when sending BA_RJT
+      libfc: send GPN_ID in reaction to single-port RSCNs.
+      libfc: fix handling of incoming Discover Address (ADISC) requests
+      libfc: use ADISC to verify rport login state
+      libfc: LOGO response code had extraeous enter_rtv
+      libfc: re-login to remote ports that send us LOGO
+      libfc: fix rport error handling for login-required and invalid ops
+      libfc: correctly handle incoming PLOGI request.
+      libfc: improve debug messages for ELS response handlers
+      libfc: fix: rport_recv_req needs disc_mutex when calling rport_lookup
+      libfc: move remote port lookup for ELS requests into fc_rport.c.
+      libfc: don't do discovery before callback is set
+      libfc: clean up point-to-point discovery code.
+      libfc: discovery gpn_ft parse bug
+      libfc: discovery retry should clear pending first.
+      libfc: fix: empty zone causes endless discovery retries.
+      libfc: handle discovery failure more correctly.
+      libfc: rearrange code in fc_disc_gpn_ft_resp()
+      libfc: discovery restart sequence error fix
+      libfc: do not log off rports before or after discovery
+      libfc: move rport_lookup into fc_rport.c
+      libfc: change to make remote port callback optional
+      libfc: have rport_create do a lookup for pre-existing rports first
+      libfc: make rport module maintain the rport list
+      libfc: simplify fc_lport_rport_callback
+      libfc: rport debug messages were printing pointer values
+      libfc: remove unused disc->delay element
+      libfc: eliminate disc->event
+      libfc: fix rport event race between READY and LOGO
+      libfc: don't create dummy (rogue) remote ports
+      libfc: rename rport event CREATED to READY
+      libfc: rearrange code in fc_rport_work
+      libfc: make rport structure optional
+      libfc: change elsct to use FC_ID instead of rdata
+      libfc: make fc_rport_priv the primary rport interface.
+      libfc: fix RPORT_TO_PRIV and PRIV_TO_RPORT() macros.
+      libfc: change interface for rport_create
+      libfc: prepare to split off struct fc_rport_priv from fc_rport_libfc_priv
+      fcoe: remove unnecessary list and lock initializations.
+      fcoe: libfcoe: extra semicolon in CHECK_LOGGING macros causes compile error
 
-> James
+Robert Love (5):
+      libfc: Always reset remote port roles when receiving PRLI
+      libfc: Initialize fc_rport_identifiers inside fc_rport_create
+      libfc: Export FC headers
+      libfc: Fix misleading debug statement
+      fcoe: Add format spacing to FCOE_NETDEV_DBG debug macro
 
---=20
-Arkadiusz Mi=B6kiewicz        PLD/Linux Team
-arekm / maven.pl            http://ftp.pld-linux.org/
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Vasu Dev (2):
+      fcoe, libfc: fully makes use of per cpu exch pool and then removes em_lock
+      fcoe, libfc: adds per cpu exch pool within exchange manager(EM)
+
+Yi Zou (1):
+      fcoe: Add sysfs parameter to fcoe for minimum DDP read I/O size
+
+
+ drivers/scsi/fcoe/fcoe.c      |  948 ++++++++++++++++++++----------------
+ drivers/scsi/fcoe/fcoe.h      |   32 +
+ drivers/scsi/fcoe/libfcoe.c   |   10 
+ drivers/scsi/libfc/fc_disc.c  |  523 ++++++++------------
+ drivers/scsi/libfc/fc_elsct.c |   49 ++
+ drivers/scsi/libfc/fc_exch.c  |  286 +++++++----
+ drivers/scsi/libfc/fc_fcp.c   |    2 
+ drivers/scsi/libfc/fc_lport.c |  222 ++------
+ drivers/scsi/libfc/fc_rport.c | 1091 +++++++++++++++++++++++++----------------
+ include/scsi/Kbuild           |    1 
+ include/scsi/fc/Kbuild        |    4 
+ include/scsi/fc/fc_gs.h       |    1 
+ include/scsi/fc_encode.h      |   60 ++
+ include/scsi/libfc.h          |  122 +++--
+ 14 files changed, 1824 insertions(+), 1527 deletions(-)
+ create mode 100644 include/scsi/fc/Kbuild
+
+-- 
+//Rob
