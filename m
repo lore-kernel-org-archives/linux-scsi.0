@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 21/64] fcoe: move the host-list add/remove to keep out VN_Ports
-Date: Tue, 25 Aug 2009 14:00:18 -0700
-Message-ID: <20090825210018.1553.74393.stgit@localhost.localdomain>
+Subject: [PATCH 23/64] fcoe: use rtnl mutex in place of hostlist lock
+Date: Tue, 25 Aug 2009 14:00:28 -0700
+Message-ID: <20090825210028.1553.67220.stgit@localhost.localdomain>
 References: <20090825205826.1553.94414.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:31537 "EHLO mga02.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:41749 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932134AbZHYVAP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Aug 2009 17:00:15 -0400
+	id S932133AbZHYVA1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Aug 2009 17:00:27 -0400
 In-Reply-To: <20090825205826.1553.94414.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,120 +19,153 @@ Cc: Chris Leech <christopher.leech@intel.com>, Robert Love <robert.w.love@intel.
 
 From: Chris Leech <christopher.leech@intel.com>
 
-We only want the FCoE create and destroy routines to deal with top level
-N_Ports, the VN_Ports are tracked on the vport list (see scsi_transport_fc).
+This just cuts down on the number of locks we're dealing with, and
+eliminates the need to take another lock in the netdev notifier.
 
 Signed-off-by: Chris Leech <christopher.leech@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/fcoe.c |   31 +++++++++++++++++++------------
- 1 files changed, 19 insertions(+), 12 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |   37 +++++++++++--------------------------
+ 1 files changed, 11 insertions(+), 26 deletions(-)
 
 diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 43added..c9a0346 100644
+index c0264a9..ac481ad 100644
 --- a/drivers/scsi/fcoe/fcoe.c
 +++ b/drivers/scsi/fcoe/fcoe.c
-@@ -616,9 +616,6 @@ static void fcoe_if_destroy(struct fc_lport *lport)
- 	/* Logout of the fabric */
- 	fc_fabric_logoff(lport);
+@@ -58,8 +58,8 @@ MODULE_PARM_DESC(ddp_min, "Minimum I/O size in bytes for "	\
+ DEFINE_MUTEX(fcoe_config_mutex);
  
--	/* Remove the instance from fcoe's list */
--	fcoe_hostlist_remove(lport);
--
- 	/* Cleanup the fc_lport */
- 	fc_lport_destroy(lport);
- 	fc_fcp_destroy(lport);
-@@ -757,11 +754,13 @@ static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
+ /* fcoe host list */
++/* must only by accessed under the RTNL mutex */
+ LIST_HEAD(fcoe_hostlist);
+-DEFINE_RWLOCK(fcoe_hostlist_lock);
+ DEFINE_PER_CPU(struct fcoe_percpu_s, fcoe_percpu);
  
- 	/*
- 	 * fcoe_em_alloc() and fcoe_hostlist_add() both
--	 * need to be atomic under fcoe_hostlist_lock
-+	 * need to be atomic with respect to other changes to the hostlist
- 	 * since fcoe_em_alloc() looks for an existing EM
- 	 * instance on host list updated by fcoe_hostlist_add().
-+	 *
-+	 * This is currently handled through the fcoe_config_mutex begin held.
- 	 */
--	write_lock(&fcoe_hostlist_lock);
-+
- 	/* lport exch manager allocation */
- 	rc = fcoe_em_config(lport);
- 	if (rc) {
-@@ -770,10 +769,6 @@ static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
- 		goto out_lp_destroy;
- 	}
- 
--	/* add to lports list */
--	fcoe_hostlist_add(lport);
--	write_unlock(&fcoe_hostlist_lock);
--
- 	dev_hold(netdev);
- 	fcoe_interface_get(fcoe);
- 	return lport;
-@@ -1713,6 +1708,8 @@ static int fcoe_destroy(const char *buffer, struct kernel_param *kp)
- 		rc = -ENODEV;
- 		goto out_putdev;
- 	}
-+	/* Remove the instance from fcoe's list */
-+	fcoe_hostlist_remove(lport);
- 	port = lport_priv(lport);
- 	fcoe = port->fcoe;
- 	fcoe_if_destroy(lport);
-@@ -1782,6 +1779,9 @@ static int fcoe_create(const char *buffer, struct kernel_param *kp)
- 	/* Make this the "master" N_Port */
- 	fcoe->ctlr.lp = lport;
- 
-+	/* add to lports list */
-+	fcoe_hostlist_add(lport);
-+
- 	/* start FIP Discovery and FLOGI */
- 	lport->boot_time = jiffies;
- 	fc_fabric_login(lport);
-@@ -1954,8 +1954,6 @@ struct fc_lport *fcoe_hostlist_lookup(const struct net_device *netdev)
-  * fcoe_hostlist_add() - Add a lport to lports list
-  * @lp: ptr to the fc_lport to be added
+ /* Function Prototypes */
+@@ -527,8 +527,6 @@ bool fcoe_oem_match(struct fc_frame *fp)
+  * fcoe_em_config() - allocates em for this lport
+  * @lp: the fcoe that em is to allocated for
   *
 - * Called with write fcoe_hostlist_lock held.
 - *
-  * Returns: 0 for success
+  * Returns : 0 on success
   */
- int fcoe_hostlist_add(const struct fc_lport *lport)
-@@ -1963,12 +1961,14 @@ int fcoe_hostlist_add(const struct fc_lport *lport)
+ static inline int fcoe_em_config(struct fc_lport *lp)
+@@ -1539,7 +1537,6 @@ static int fcoe_device_notification(struct notifier_block *notifier,
+ 	u32 mfs;
+ 	int rc = NOTIFY_OK;
+ 
+-	write_lock(&fcoe_hostlist_lock);
+ 	list_for_each_entry(fcoe, &fcoe_hostlist, list) {
+ 		if (fcoe->netdev == netdev) {
+ 			lp = fcoe->ctlr.lp;
+@@ -1586,7 +1583,6 @@ static int fcoe_device_notification(struct notifier_block *notifier,
+ 		fcoe_clean_pending_queue(lp);
+ 	}
+ out:
+-	write_unlock(&fcoe_hostlist_lock);
+ 	return rc;
+ }
+ 
+@@ -1643,16 +1639,14 @@ static int fcoe_destroy(const char *buffer, struct kernel_param *kp)
+ 		goto out_nodev;
+ 	}
+ 
+-	write_lock(&fcoe_hostlist_lock);
++	rtnl_lock();
+ 	fcoe = fcoe_hostlist_lookup_port(netdev);
+ 	if (!fcoe) {
+-		write_unlock(&fcoe_hostlist_lock);
++		rtnl_unlock();
+ 		rc = -ENODEV;
+ 		goto out_putdev;
+ 	}
+ 	list_del(&fcoe->list);
+-	write_unlock(&fcoe_hostlist_lock);
+-	rtnl_lock();
+ 	fcoe_interface_cleanup(fcoe);
+ 	rtnl_unlock();
+ 	fcoe_if_destroy(fcoe->ctlr.lp);
+@@ -1870,9 +1864,8 @@ int fcoe_reset(struct Scsi_Host *shost)
+  * fcoe_hostlist_lookup_port() - find the corresponding lport by a given device
+  * @dev: this is currently ptr to net_device
+  *
+- * Called with fcoe_hostlist_lock held.
+- *
+  * Returns: NULL or the located fcoe_port
++ * Locking: must be called with the RNL mutex held
+  */
+ static struct fcoe_interface *
+ fcoe_hostlist_lookup_port(const struct net_device *dev)
+@@ -1891,15 +1884,13 @@ fcoe_hostlist_lookup_port(const struct net_device *dev)
+  * @netdev: ptr to net_device
+  *
+  * Returns: 0 for success
++ * Locking: must be called with the RTNL mutex held
+  */
+-struct fc_lport *fcoe_hostlist_lookup(const struct net_device *netdev)
++static struct fc_lport *fcoe_hostlist_lookup(const struct net_device *netdev)
+ {
+ 	struct fcoe_interface *fcoe;
+ 
+-	read_lock(&fcoe_hostlist_lock);
+ 	fcoe = fcoe_hostlist_lookup_port(netdev);
+-	read_unlock(&fcoe_hostlist_lock);
+-
+ 	return (fcoe) ? fcoe->ctlr.lp : NULL;
+ }
+ 
+@@ -1908,20 +1899,19 @@ struct fc_lport *fcoe_hostlist_lookup(const struct net_device *netdev)
+  * @lp: ptr to the fc_lport to be added
+  *
+  * Returns: 0 for success
++ * Locking: must be called with the RTNL mutex held
+  */
+-int fcoe_hostlist_add(const struct fc_lport *lport)
++static int fcoe_hostlist_add(const struct fc_lport *lport)
+ {
  	struct fcoe_interface *fcoe;
  	struct fcoe_port *port;
  
-+	write_lock_bh(&fcoe_hostlist_lock);
+-	write_lock_bh(&fcoe_hostlist_lock);
  	fcoe = fcoe_hostlist_lookup_port(fcoe_netdev(lport));
  	if (!fcoe) {
  		port = lport_priv(lport);
  		fcoe = port->fcoe;
  		list_add_tail(&fcoe->list, &fcoe_hostlist);
  	}
-+	write_unlock_bh(&fcoe_hostlist_lock);
+-	write_unlock_bh(&fcoe_hostlist_lock);
  	return 0;
  }
  
-@@ -2045,14 +2045,21 @@ static void __exit fcoe_exit(void)
+@@ -1979,7 +1969,6 @@ static void __exit fcoe_exit(void)
  {
  	unsigned int cpu;
  	struct fcoe_interface *fcoe, *tmp;
-+	LIST_HEAD(local_list);
+-	LIST_HEAD(local_list);
+ 	struct fcoe_port *port;
  
  	mutex_lock(&fcoe_config_mutex);
- 
+@@ -1987,18 +1976,14 @@ static void __exit fcoe_exit(void)
  	fcoe_dev_cleanup();
  
  	/* releases the associated fcoe hosts */
--	list_for_each_entry_safe(fcoe, tmp, &fcoe_hostlist, list)
-+	write_lock_bh(&fcoe_hostlist_lock);
-+	list_splice_init(&fcoe_hostlist, &local_list);
-+	write_unlock_bh(&fcoe_hostlist_lock);
-+
-+	list_for_each_entry_safe(fcoe, tmp, &local_list, list) {
-+		list_del(&fcoe->list);
- 		fcoe_if_destroy(fcoe->ctlr.lp);
-+	}
+-	write_lock_bh(&fcoe_hostlist_lock);
+-	list_splice_init(&fcoe_hostlist, &local_list);
+-	write_unlock_bh(&fcoe_hostlist_lock);
+-
+-	list_for_each_entry_safe(fcoe, tmp, &local_list, list) {
++	rtnl_lock();
++	list_for_each_entry_safe(fcoe, tmp, &fcoe_hostlist, list) {
+ 		list_del(&fcoe->list);
+ 		port = lport_priv(fcoe->ctlr.lp);
+-		rtnl_lock();
+ 		fcoe_interface_cleanup(fcoe);
+-		rtnl_unlock();
+ 		schedule_work(&port->destroy_work);
+ 	}
++	rtnl_unlock();
  
  	unregister_hotcpu_notifier(&fcoe_cpu_notifier);
  
