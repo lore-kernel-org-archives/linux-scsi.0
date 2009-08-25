@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 13/64] fcoe: move netdev to fcoe_interface
-Date: Tue, 25 Aug 2009 13:59:35 -0700
-Message-ID: <20090825205935.1553.86574.stgit@localhost.localdomain>
+Subject: [PATCH 18/64] fcoe: fcoe_interface create, destroy and refcounting
+Date: Tue, 25 Aug 2009 14:00:02 -0700
+Message-ID: <20090825210002.1553.38887.stgit@localhost.localdomain>
 References: <20090825205826.1553.94414.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:54975 "EHLO mga01.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:12102 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756228AbZHYU7q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Aug 2009 16:59:46 -0400
+	id S932112AbZHYVAA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Aug 2009 17:00:00 -0400
 In-Reply-To: <20090825205826.1553.94414.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,242 +19,220 @@ Cc: Chris Leech <christopher.leech@intel.com>, Robert Love <robert.w.love@intel.
 
 From: Chris Leech <christopher.leech@intel.com>
 
-The network interface needs to be shared between all NPIV VN_Ports, therefor
-it should be tracked in the fcoe_interface and not for each SCSI host in
-fcoe_port.
+Up to this point the fcoe_instance structure was simply kzalloc/kfreed.  This
+patch introduces create and destroy functions as well as kref based reference
+counting.  The create function will grow as the initialization code is moved
+there.
 
 Signed-off-by: Chris Leech <christopher.leech@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/fcoe.c |   61 ++++++++++++++++++++++++++--------------------
- drivers/scsi/fcoe/fcoe.h |    9 +++----
- 2 files changed, 38 insertions(+), 32 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |   97 +++++++++++++++++++++++++++++++++++++---------
+ drivers/scsi/fcoe/fcoe.h |    1 
+ 2 files changed, 79 insertions(+), 19 deletions(-)
 
 diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 0ae54b2..44c963c 100644
+index 7f14c63..d1d6b3b 100644
 --- a/drivers/scsi/fcoe/fcoe.c
 +++ b/drivers/scsi/fcoe/fcoe.c
-@@ -165,7 +165,7 @@ static int fcoe_fip_recv(struct sk_buff *skb, struct net_device *dev,
-  */
- static void fcoe_fip_send(struct fcoe_ctlr *fip, struct sk_buff *skb)
- {
--	skb->dev = fcoe_from_ctlr(fip)->netdev;
-+	skb->dev = fcoe_from_ctlr(fip)->fcoe->netdev;
- 	dev_queue_xmit(skb);
- }
+@@ -139,6 +139,58 @@ static struct scsi_host_template fcoe_shost_template = {
+ };
  
-@@ -180,13 +180,16 @@ static void fcoe_fip_send(struct fcoe_ctlr *fip, struct sk_buff *skb)
-  */
- static void fcoe_update_src_mac(struct fcoe_ctlr *fip, u8 *old, u8 *new)
- {
+ /**
++ * fcoe_interface_create()
++ * @netdev: network interface
++ *
++ * Returns: pointer to a struct fcoe_interface or NULL on error
++ */
++static struct fcoe_interface *fcoe_interface_create(struct net_device *netdev)
++{
 +	struct fcoe_interface *fcoe;
- 	struct fcoe_port *port;
- 
- 	port = fcoe_from_ctlr(fip);
-+	fcoe = port->fcoe;
 +
- 	rtnl_lock();
- 	if (!is_zero_ether_addr(old))
--		dev_unicast_delete(port->netdev, old);
--	dev_unicast_add(port->netdev, new);
-+		dev_unicast_delete(fcoe->netdev, old);
-+	dev_unicast_add(fcoe->netdev, new);
- 	rtnl_unlock();
- }
- 
-@@ -229,6 +232,7 @@ static int fcoe_lport_config(struct fc_lport *lp)
- void fcoe_netdev_cleanup(struct fcoe_port *port)
- {
- 	u8 flogi_maddr[ETH_ALEN];
-+	struct fcoe_interface *fcoe = port->fcoe;
- 
- 	/* Don't listen for Ethernet packets anymore */
- 	dev_remove_pack(&port->fcoe_packet_type);
-@@ -237,12 +241,12 @@ void fcoe_netdev_cleanup(struct fcoe_port *port)
- 	/* Delete secondary MAC addresses */
- 	rtnl_lock();
- 	memcpy(flogi_maddr, (u8[6]) FC_FCOE_FLOGI_MAC, ETH_ALEN);
--	dev_unicast_delete(port->netdev, flogi_maddr);
-+	dev_unicast_delete(fcoe->netdev, flogi_maddr);
- 	if (!is_zero_ether_addr(port->ctlr.data_src_addr))
--		dev_unicast_delete(port->netdev, port->ctlr.data_src_addr);
-+		dev_unicast_delete(fcoe->netdev, port->ctlr.data_src_addr);
- 	if (port->ctlr.spma)
--		dev_unicast_delete(port->netdev, port->ctlr.ctl_src_addr);
--	dev_mc_delete(port->netdev, FIP_ALL_ENODE_MACS, ETH_ALEN, 0);
-+		dev_unicast_delete(fcoe->netdev, port->ctlr.ctl_src_addr);
-+	dev_mc_delete(fcoe->netdev, FIP_ALL_ENODE_MACS, ETH_ALEN, 0);
- 	rtnl_unlock();
- }
- 
-@@ -271,14 +275,16 @@ static int fcoe_netdev_config(struct fc_lport *lp, struct net_device *netdev)
- {
- 	u32 mfs;
- 	u64 wwnn, wwpn;
-+	struct fcoe_interface *fcoe;
- 	struct fcoe_port *port;
- 	u8 flogi_maddr[ETH_ALEN];
- 	struct netdev_hw_addr *ha;
- 
- 	/* Setup lport private data to point to fcoe softc */
- 	port = lport_priv(lp);
-+	fcoe = port->fcoe;
- 	port->ctlr.lp = lp;
--	port->netdev = netdev;
++	fcoe = kzalloc(sizeof(*fcoe), GFP_KERNEL);
++	if (!fcoe) {
++		FCOE_NETDEV_DBG(netdev, "Could not allocate fcoe structure\n");
++		return NULL;
++	}
++
++	kref_init(&fcoe->kref);
 +	fcoe->netdev = netdev;
++
++	return fcoe;
++}
++
++/**
++ * fcoe_interface_release() - fcoe_port kref release function
++ * @kref: embedded reference count in an fcoe_interface struct
++ */
++static void fcoe_interface_release(struct kref *kref)
++{
++	struct fcoe_interface *fcoe;
++
++	fcoe = container_of(kref, struct fcoe_interface, kref);
++	kfree(fcoe);
++}
++
++/**
++ * fcoe_interface_get()
++ * @fcoe:
++ */
++static inline void fcoe_interface_get(struct fcoe_interface *fcoe)
++{
++	kref_get(&fcoe->kref);
++}
++
++/**
++ * fcoe_interface_put()
++ * @fcoe:
++ */
++static inline void fcoe_interface_put(struct fcoe_interface *fcoe)
++{
++	kref_put(&fcoe->kref, fcoe_interface_release);
++}
++
++/**
+  * fcoe_fip_recv - handle a received FIP frame.
+  * @skb: the receive skb
+  * @dev: associated &net_device
+@@ -558,7 +610,7 @@ static void fcoe_if_destroy(struct fc_lport *lport)
+ 	/* Release the net_device and Scsi_Host */
+ 	dev_put(netdev);
+ 	scsi_host_put(lport->host);
+-	kfree(fcoe);		/* TODO, should be refcounted */
++	fcoe_interface_put(fcoe);
+ }
  
- 	/* Do not support for bonding device */
- 	if ((netdev->priv_flags & IFF_MASTER_ALB) ||
-@@ -434,9 +440,10 @@ bool fcoe_oem_match(struct fc_frame *fp)
+ /*
+@@ -604,8 +656,8 @@ static struct libfc_function_template fcoe_libfc_fcn_templ = {
+ };
+ 
+ /**
+- * fcoe_if_create() - this function creates the fcoe interface
+- * @netdev: pointer the associated netdevice
++ * fcoe_if_create() - this function creates the fcoe port
++ * @fcoe: fcoe_interface structure to create an fc_lport instance on
+  * @parent: device pointer to be the parent in sysfs for the SCSI host
+  *
+  * Creates fc_lport struct and scsi_host for lport, configures lport
+@@ -613,30 +665,23 @@ static struct libfc_function_template fcoe_libfc_fcn_templ = {
+  *
+  * Returns : The allocated fc_lport or an error pointer
   */
- static inline int fcoe_em_config(struct fc_lport *lp)
+-static struct fc_lport *fcoe_if_create(struct net_device *netdev,
++static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
+ 				       struct device *parent)
  {
+ 	int rc;
+ 	struct fc_lport *lport = NULL;
+ 	struct fcoe_port *port;
 -	struct fcoe_interface *fcoe;
- 	struct fcoe_port *port = lport_priv(lp);
--	struct fcoe_port *oldfc = NULL;
-+	struct fcoe_port *oldport = NULL;
-+	struct fcoe_interface *fcoe = port->fcoe;
-+	struct fcoe_interface *oldfcoe = NULL;
- 	struct net_device *old_real_dev, *cur_real_dev;
- 	u16 min_xid = FCOE_MIN_XID;
- 	u16 max_xid = FCOE_MAX_XID;
-@@ -454,20 +461,20 @@ static inline int fcoe_em_config(struct fc_lport *lp)
- 	 * Reuse existing offload em instance in case
- 	 * it is already allocated on real eth device
- 	 */
--	if (port->netdev->priv_flags & IFF_802_1Q_VLAN)
--		cur_real_dev = vlan_dev_real_dev(port->netdev);
-+	if (fcoe->netdev->priv_flags & IFF_802_1Q_VLAN)
-+		cur_real_dev = vlan_dev_real_dev(fcoe->netdev);
- 	else
--		cur_real_dev = port->netdev;
-+		cur_real_dev = fcoe->netdev;
- 
--	list_for_each_entry(fcoe, &fcoe_hostlist, list) {
--		oldfc = fcoe->priv;
--		if (oldfc->netdev->priv_flags & IFF_802_1Q_VLAN)
--			old_real_dev = vlan_dev_real_dev(oldfc->netdev);
-+	list_for_each_entry(oldfcoe, &fcoe_hostlist, list) {
-+		oldport = oldfcoe->priv;
-+		if (oldfcoe->netdev->priv_flags & IFF_802_1Q_VLAN)
-+			old_real_dev = vlan_dev_real_dev(oldfcoe->netdev);
- 		else
--			old_real_dev = oldfc->netdev;
-+			old_real_dev = oldfcoe->netdev;
- 
- 		if (cur_real_dev == old_real_dev) {
--			port->oem = oldfc->oem;
-+			port->oem = oldport->oem;
- 			break;
- 		}
- 	}
-@@ -476,7 +483,7 @@ static inline int fcoe_em_config(struct fc_lport *lp)
- 		if (!fc_exch_mgr_add(lp, port->oem, fcoe_oem_match)) {
- 			printk(KERN_ERR "fcoe_em_config: failed to add "
- 			       "offload em:%p on interface:%s\n",
--			       port->oem, port->netdev->name);
-+			       port->oem, fcoe->netdev->name);
- 			return -ENOMEM;
- 		}
- 	} else {
-@@ -486,7 +493,7 @@ static inline int fcoe_em_config(struct fc_lport *lp)
- 		if (!port->oem) {
- 			printk(KERN_ERR "fcoe_em_config: failed to allocate "
- 			       "em for offload exches on interface:%s\n",
--			       port->netdev->name);
-+			       fcoe->netdev->name);
- 			return -ENOMEM;
- 		}
- 	}
-@@ -499,7 +506,7 @@ static inline int fcoe_em_config(struct fc_lport *lp)
- skip_oem:
- 	if (!fc_exch_mgr_alloc(lp, FC_CLASS_3, min_xid, max_xid, NULL)) {
- 		printk(KERN_ERR "fcoe_em_config: failed to "
--		       "allocate em on interface %s\n", port->netdev->name);
-+		       "allocate em on interface %s\n", fcoe->netdev->name);
- 		return -ENOMEM;
- 	}
- 
-@@ -514,7 +521,7 @@ static void fcoe_if_destroy(struct fc_lport *lport)
- {
- 	struct fcoe_port *port = lport_priv(lport);
- 	struct fcoe_interface *fcoe = port->fcoe;
--	struct net_device *netdev = port->netdev;
+ 	struct Scsi_Host *shost;
 +	struct net_device *netdev = fcoe->netdev;
  
- 	FCOE_NETDEV_DBG(netdev, "Destroying interface\n");
+ 	FCOE_NETDEV_DBG(netdev, "Create Interface\n");
  
-@@ -1194,7 +1201,7 @@ int fcoe_xmit(struct fc_lport *lp, struct fc_frame *fp)
- 	skb_reset_network_header(skb);
- 	skb->mac_len = elen;
- 	skb->protocol = htons(ETH_P_FCOE);
--	skb->dev = port->netdev;
-+	skb->dev = port->fcoe->netdev;
- 
- 	/* fill up mac and fcoe headers */
- 	eh = eth_hdr(skb);
-@@ -1480,7 +1487,7 @@ static int fcoe_device_notification(struct notifier_block *notifier,
- 	read_lock(&fcoe_hostlist_lock);
- 	list_for_each_entry(fcoe, &fcoe_hostlist, list) {
- 		port = fcoe->priv;
--		if (port->netdev == netdev) {
-+		if (fcoe->netdev == netdev) {
- 			lp = port->ctlr.lp;
- 			break;
- 		}
-@@ -1709,7 +1716,7 @@ MODULE_PARM_DESC(destroy, "Destroy fcoe fcoe");
- int fcoe_link_ok(struct fc_lport *lp)
- {
- 	struct fcoe_port *port = lport_priv(lp);
--	struct net_device *dev = port->netdev;
-+	struct net_device *dev = port->fcoe->netdev;
- 	struct ethtool_cmd ecmd = { ETHTOOL_GSET };
- 
- 	if ((dev->flags & IFF_UP) && netif_carrier_ok(dev) &&
-@@ -1810,7 +1817,7 @@ fcoe_hostlist_lookup_port(const struct net_device *dev)
- 	struct fcoe_interface *fcoe;
- 
- 	list_for_each_entry(fcoe, &fcoe_hostlist, list) {
--		if (fcoe->priv->netdev == dev)
-+		if (fcoe->netdev == dev)
- 			return fcoe;
+-	fcoe = kzalloc(sizeof(*fcoe), GFP_KERNEL);
+-	if (!fcoe) {
+-		FCOE_NETDEV_DBG(netdev, "Could not allocate fcoe structure\n");
+-		rc = -ENOMEM;
+-		goto out;
+-	}
+-
+ 	shost = libfc_host_alloc(&fcoe_shost_template,
+ 				 sizeof(struct fcoe_port));
+ 	if (!shost) {
+ 		FCOE_NETDEV_DBG(netdev, "Could not allocate host structure\n");
+ 		rc = -ENOMEM;
+-		goto out_kfree_port;
++		goto out;
  	}
- 	return NULL;
+ 	lport = shost_priv(shost);
+ 	port = lport_priv(lport);
+@@ -708,7 +753,7 @@ static struct fc_lport *fcoe_if_create(struct net_device *netdev,
+ 		fcoe_ctlr_link_up(&fcoe->ctlr);
+ 
+ 	dev_hold(netdev);
+-
++	fcoe_interface_get(fcoe);
+ 	return lport;
+ 
+ out_lp_destroy:
+@@ -717,8 +762,6 @@ out_netdev_cleanup:
+ 	fcoe_netdev_cleanup(port);
+ out_host_put:
+ 	scsi_host_put(lport->host);
+-out_kfree_port:
+-	kfree(fcoe);
+ out:
+ 	return ERR_PTR(rc);
+ }
+@@ -1620,6 +1663,8 @@ static int fcoe_ethdrv_put(const struct net_device *netdev)
+ static int fcoe_destroy(const char *buffer, struct kernel_param *kp)
+ {
+ 	struct net_device *netdev;
++	struct fcoe_interface *fcoe;
++	struct fcoe_port *port;
+ 	struct fc_lport *lport;
+ 	int rc;
+ 
+@@ -1634,6 +1679,8 @@ static int fcoe_destroy(const char *buffer, struct kernel_param *kp)
+ 		rc = -ENODEV;
+ 		goto out_putdev;
+ 	}
++	port = lport_priv(lport);
++	fcoe = port->fcoe;
+ 	fcoe_if_destroy(lport);
+ 	fcoe_ethdrv_put(netdev);
+ 	rc = 0;
+@@ -1653,6 +1700,7 @@ out_nodev:
+ static int fcoe_create(const char *buffer, struct kernel_param *kp)
+ {
+ 	int rc;
++	struct fcoe_interface *fcoe;
+ 	struct fc_lport *lport;
+ 	struct net_device *netdev;
+ 
+@@ -1668,15 +1716,26 @@ static int fcoe_create(const char *buffer, struct kernel_param *kp)
+ 	}
+ 	fcoe_ethdrv_get(netdev);
+ 
+-	lport = fcoe_if_create(netdev, &netdev->dev);
++	fcoe = fcoe_interface_create(netdev);
++	if (!fcoe) {
++		rc = -ENOMEM;
++		goto out_putdev;
++	}
++
++	lport = fcoe_if_create(fcoe, &netdev->dev);
+ 	if (IS_ERR(lport)) {
+ 		printk(KERN_ERR "fcoe: Failed to create interface (%s)\n",
+ 		       netdev->name);
+ 		fcoe_ethdrv_put(netdev);
+ 		rc = -EIO;
+-		goto out_putdev;
++		goto out_free;
+ 	}
+-	rc = 0;
++
++	dev_put(netdev);
++	return 0;
++
++out_free:
++	fcoe_interface_put(fcoe);
+ out_putdev:
+ 	dev_put(netdev);
+ out_nodev:
 diff --git a/drivers/scsi/fcoe/fcoe.h b/drivers/scsi/fcoe/fcoe.h
-index 060a6dc..3b3886e 100644
+index 673e70e..ff22928 100644
 --- a/drivers/scsi/fcoe/fcoe.h
 +++ b/drivers/scsi/fcoe/fcoe.h
-@@ -82,6 +82,7 @@ struct fcoe_interface {
- 	/* This will be removed once all the shared values are
- 	 * moved out of fcoe_port */
- 	struct fcoe_port *priv;
-+	struct net_device *netdev;
+@@ -84,6 +84,7 @@ struct fcoe_interface {
+ 	struct packet_type  fip_packet_type;
+ 	struct fcoe_ctlr ctlr;
+ 	struct fc_exch_mgr *oem;		/* offload exchange manager */
++	struct kref kref;
  };
  
  /*
-@@ -90,7 +91,6 @@ struct fcoe_interface {
-  */
- struct fcoe_port {
- 	struct fcoe_interface *fcoe;
--	struct net_device *netdev;
- 	struct fc_exch_mgr *oem;		/* offload exchange manger */
- 	struct packet_type  fcoe_packet_type;
- 	struct packet_type  fip_packet_type;
-@@ -100,12 +100,11 @@ struct fcoe_port {
- 	struct fcoe_ctlr ctlr;
- };
- 
--#define fcoe_from_ctlr(port) container_of(port, struct fcoe_port, ctlr)
-+#define fcoe_from_ctlr(fip) container_of(fip, struct fcoe_port, ctlr)
- 
--static inline struct net_device *fcoe_netdev(
--	const struct fc_lport *lp)
-+static inline struct net_device *fcoe_netdev(const struct fc_lport *lp)
- {
--	return ((struct fcoe_port *)lport_priv(lp))->netdev;
-+	return ((struct fcoe_port *)lport_priv(lp))->fcoe->netdev;
- }
- 
- #endif /* _FCOE_H_ */
 
