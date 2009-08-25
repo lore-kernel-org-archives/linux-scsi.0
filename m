@@ -1,16 +1,17 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 56/64] libfc: correctly handle incoming PLOGI request.
-Date: Tue, 25 Aug 2009 14:03:26 -0700
-Message-ID: <20090825210326.1553.56939.stgit@localhost.localdomain>
+Subject: [PATCH 61/64] libfc: fix handling of incoming Discover Address
+	(ADISC) requests
+Date: Tue, 25 Aug 2009 14:03:52 -0700
+Message-ID: <20090825210352.1553.44434.stgit@localhost.localdomain>
 References: <20090825205826.1553.94414.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:19707 "EHLO mga02.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:1612 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932216AbZHYVDY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Aug 2009 17:03:24 -0400
+	id S932228AbZHYVDv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Aug 2009 17:03:51 -0400
 In-Reply-To: <20090825205826.1553.94414.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,303 +20,166 @@ Cc: Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>
 
 From: Joe Eykholt <jeykholt@cisco.com>
 
-libfc receives PLOGIs from switches which are trying to discover what
-kind of devices are present, and from other initiators to find out
-if we're a target.
+The local port facility has been replying to ADISC requests without
+looking to see if the remote port is logged in.  This is incorrect.
+An ADISC request requires PLOGI first.  It should be rejected if
+the sending remote port is not logged in.
 
-As an initiator, some argue we don't need to handle incoming PLOGI
-requests, and we currently reject them from unknown remote ports,
-but accept them is we're in the middle of a PLOGI to the remote port.
+This is like other incoming requests that require login, all of
+which should be handled in the remote port module.
 
-For eventual target implementations, we want to handle them always.
-
-For incoming PLOGI, don't fail if the rport_priv doesn't exist.
-Just create it and go become READY without going through PRLI.  If
-PRLI occurs, then our roles will be set and we'll become READY again.
-
-Also, allow incoming PRLI in RTV state.
+Move the ADISC request handling from fc_lport.c to fc_rport.c.
 
 Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_rport.c |  185 +++++++++++++++++++++--------------------
- 1 files changed, 93 insertions(+), 92 deletions(-)
+ drivers/scsi/libfc/fc_lport.c |   53 -----------------------------------------
+ drivers/scsi/libfc/fc_rport.c |   48 +++++++++++++++++++++++++++++++++++++
+ 2 files changed, 48 insertions(+), 53 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index d014b28..e121ff9 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -63,7 +63,7 @@ static void fc_rport_enter_rtv(struct fc_rport_priv *);
- static void fc_rport_enter_ready(struct fc_rport_priv *);
- static void fc_rport_enter_logo(struct fc_rport_priv *);
- 
--static void fc_rport_recv_plogi_req(struct fc_rport_priv *,
-+static void fc_rport_recv_plogi_req(struct fc_lport *,
- 				    struct fc_seq *, struct fc_frame *);
- static void fc_rport_recv_prli_req(struct fc_rport_priv *,
- 				   struct fc_seq *, struct fc_frame *);
-@@ -576,15 +576,7 @@ static void fc_rport_plogi_resp(struct fc_seq *sp, struct fc_frame *fp,
- 			csp_seq = cssp_seq;
- 		rdata->max_seq = csp_seq;
- 		rdata->maxframe_size = fc_plogi_get_maxframe(plp, lport->mfs);
--
--		/*
--		 * If the rport is one of the well known addresses
--		 * we skip PRLI and RTV and go straight to READY.
--		 */
--		if (rdata->ids.port_id >= FC_FID_DOM_MGR)
--			fc_rport_enter_ready(rdata);
--		else
--			fc_rport_enter_prli(rdata);
-+		fc_rport_enter_prli(rdata);
- 	} else
- 		fc_rport_error_retry(rdata, fp);
- 
-@@ -763,6 +755,15 @@ static void fc_rport_enter_prli(struct fc_rport_priv *rdata)
- 	} *pp;
- 	struct fc_frame *fp;
- 
-+	/*
-+	 * If the rport is one of the well known addresses
-+	 * we skip PRLI and RTV and go straight to READY.
-+	 */
-+	if (rdata->ids.port_id >= FC_FID_DOM_MGR) {
-+		fc_rport_enter_ready(rdata);
-+		return;
-+	}
-+
- 	FC_RPORT_DBG(rdata, "Port entered PRLI state from %s state\n",
- 		     fc_rport_state(rdata));
- 
-@@ -929,6 +930,15 @@ void fc_rport_recv_req(struct fc_seq *sp, struct fc_frame *fp,
- 	els_data.explan = ELS_EXPL_NONE;
- 	els_data.reason = ELS_RJT_NONE;
- 
-+	op = fc_frame_payload_op(fp);
-+	switch (op) {
-+	case ELS_PLOGI:
-+		fc_rport_recv_plogi_req(lport, sp, fp);
-+		return;
-+	default:
-+		break;
-+	}
-+
- 	fh = fc_frame_header_get(fp);
- 	s_id = ntoh24(fh->fh_s_id);
- 
-@@ -944,11 +954,7 @@ void fc_rport_recv_req(struct fc_seq *sp, struct fc_frame *fp,
- 	mutex_lock(&rdata->rp_mutex);
- 	mutex_unlock(&lport->disc.disc_mutex);
- 
--	op = fc_frame_payload_op(fp);
- 	switch (op) {
--	case ELS_PLOGI:
--		fc_rport_recv_plogi_req(rdata, sp, fp);
--		break;
- 	case ELS_PRLI:
- 		fc_rport_recv_prli_req(rdata, sp, fp);
- 		break;
-@@ -977,48 +983,56 @@ void fc_rport_recv_req(struct fc_seq *sp, struct fc_frame *fp,
- 
- /**
-  * fc_rport_recv_plogi_req() - Handle incoming Port Login (PLOGI) request
-- * @rdata: private remote port data
-+ * @lport: local port
-  * @sp: current sequence in the PLOGI exchange
-  * @fp: PLOGI request frame
-  *
-- * Locking Note: The rport lock is exected to be held before calling
-- * this function.
-+ * Locking Note: The rport lock is held before calling this function.
-  */
--static void fc_rport_recv_plogi_req(struct fc_rport_priv *rdata,
-+static void fc_rport_recv_plogi_req(struct fc_lport *lport,
- 				    struct fc_seq *sp, struct fc_frame *rx_fp)
- {
--	struct fc_lport *lport = rdata->local_port;
-+	struct fc_disc *disc;
-+	struct fc_rport_priv *rdata;
- 	struct fc_frame *fp = rx_fp;
- 	struct fc_exch *ep;
- 	struct fc_frame_header *fh;
- 	struct fc_els_flogi *pl;
- 	struct fc_seq_els_data rjt_data;
--	u32 sid;
--	u64 wwpn;
--	u64 wwnn;
--	enum fc_els_rjt_reason reject = 0;
--	u32 f_ctl;
--	rjt_data.fp = NULL;
-+	u32 sid, f_ctl;
- 
-+	rjt_data.fp = NULL;
- 	fh = fc_frame_header_get(fp);
-+	sid = ntoh24(fh->fh_s_id);
- 
--	FC_RPORT_DBG(rdata, "Received PLOGI request while in state %s\n",
--		     fc_rport_state(rdata));
-+	FC_RPORT_ID_DBG(lport, sid, "Received PLOGI request\n");
- 
--	sid = ntoh24(fh->fh_s_id);
- 	pl = fc_frame_payload_get(fp, sizeof(*pl));
- 	if (!pl) {
--		FC_RPORT_DBG(rdata, "Received PLOGI too short\n");
--		WARN_ON(1);
--		/* XXX TBD: send reject? */
--		fc_frame_free(fp);
--		return;
-+		FC_RPORT_ID_DBG(lport, sid, "Received PLOGI too short\n");
-+		rjt_data.reason = ELS_RJT_PROT;
-+		rjt_data.explan = ELS_EXPL_INV_LEN;
-+		goto reject;
-+	}
-+
-+	disc = &lport->disc;
-+	mutex_lock(&disc->disc_mutex);
-+	rdata = lport->tt.rport_create(lport, sid);
-+	if (!rdata) {
-+		mutex_unlock(&disc->disc_mutex);
-+		rjt_data.reason = ELS_RJT_UNAB;
-+		rjt_data.explan = ELS_EXPL_INSUF_RES;
-+		goto reject;
- 	}
--	wwpn = get_unaligned_be64(&pl->fl_wwpn);
--	wwnn = get_unaligned_be64(&pl->fl_wwnn);
-+
-+	mutex_lock(&rdata->rp_mutex);
-+	mutex_unlock(&disc->disc_mutex);
-+
-+	rdata->ids.port_name = get_unaligned_be64(&pl->fl_wwpn);
-+	rdata->ids.node_name = get_unaligned_be64(&pl->fl_wwnn);
- 
- 	/*
--	 * If the session was just created, possibly due to the incoming PLOGI,
-+	 * If the rport was just created, possibly due to the incoming PLOGI,
- 	 * set the state appropriately and accept the PLOGI.
- 	 *
- 	 * If we had also sent a PLOGI, and if the received PLOGI is from a
-@@ -1030,72 +1044,58 @@ static void fc_rport_recv_plogi_req(struct fc_rport_priv *rdata,
- 	 */
- 	switch (rdata->rp_state) {
- 	case RPORT_ST_INIT:
--		FC_RPORT_DBG(rdata, "Received PLOGI, wwpn %llx state INIT "
--			     "- reject\n", (unsigned long long)wwpn);
--		reject = ELS_RJT_UNSUP;
-+		FC_RPORT_DBG(rdata, "Received PLOGI in INIT state\n");
- 		break;
- 	case RPORT_ST_PLOGI:
--		FC_RPORT_DBG(rdata, "Received PLOGI in PLOGI state %d\n",
--			     rdata->rp_state);
--		if (wwpn < lport->wwpn)
--			reject = ELS_RJT_INPROG;
-+		FC_RPORT_DBG(rdata, "Received PLOGI in PLOGI state\n");
-+		if (rdata->ids.port_name < lport->wwpn) {
-+			mutex_unlock(&rdata->rp_mutex);
-+			rjt_data.reason = ELS_RJT_INPROG;
-+			rjt_data.explan = ELS_EXPL_NONE;
-+			goto reject;
-+		}
- 		break;
- 	case RPORT_ST_PRLI:
- 	case RPORT_ST_READY:
--		FC_RPORT_DBG(rdata, "Received PLOGI in logged-in state %d "
--			     "- ignored for now\n", rdata->rp_state);
--		/* XXX TBD - should reset */
- 		break;
- 	case RPORT_ST_DELETE:
- 	default:
--		FC_RPORT_DBG(rdata, "Received PLOGI in unexpected "
--			     "state %d\n", rdata->rp_state);
--		fc_frame_free(fp);
--		return;
--		break;
-+		FC_RPORT_DBG(rdata, "Received PLOGI in unexpected state %d\n",
-+			     rdata->rp_state);
-+		fc_frame_free(rx_fp);
-+		goto out;
- 	}
- 
--	if (reject) {
--		rjt_data.reason = reject;
--		rjt_data.explan = ELS_EXPL_NONE;
--		lport->tt.seq_els_rsp_send(sp, ELS_LS_RJT, &rjt_data);
--		fc_frame_free(fp);
--	} else {
--		fp = fc_frame_alloc(lport, sizeof(*pl));
--		if (fp == NULL) {
--			fp = rx_fp;
--			rjt_data.reason = ELS_RJT_UNAB;
--			rjt_data.explan = ELS_EXPL_NONE;
--			lport->tt.seq_els_rsp_send(sp, ELS_LS_RJT, &rjt_data);
--			fc_frame_free(fp);
--		} else {
--			sp = lport->tt.seq_start_next(sp);
--			WARN_ON(!sp);
--			rdata->ids.port_name = wwpn;
--			rdata->ids.node_name = wwnn;
--
--			/*
--			 * Get session payload size from incoming PLOGI.
--			 */
--			rdata->maxframe_size =
--				fc_plogi_get_maxframe(pl, lport->mfs);
--			fc_frame_free(rx_fp);
--			fc_plogi_fill(lport, fp, ELS_LS_ACC);
--
--			/*
--			 * Send LS_ACC.	 If this fails,
--			 * the originator should retry.
--			 */
--			f_ctl = FC_FC_EX_CTX | FC_FC_LAST_SEQ;
--			f_ctl |= FC_FC_END_SEQ | FC_FC_SEQ_INIT;
--			ep = fc_seq_exch(sp);
--			fc_fill_fc_hdr(fp, FC_RCTL_ELS_REP, ep->did, ep->sid,
--				       FC_TYPE_ELS, f_ctl, 0);
--			lport->tt.seq_send(lport, sp, fp);
--			if (rdata->rp_state == RPORT_ST_PLOGI)
--				fc_rport_enter_prli(rdata);
--		}
--	}
-+	/*
-+	 * Get session payload size from incoming PLOGI.
-+	 */
-+	rdata->maxframe_size = fc_plogi_get_maxframe(pl, lport->mfs);
-+	fc_frame_free(rx_fp);
-+
-+	/*
-+	 * Send LS_ACC.	 If this fails, the originator should retry.
-+	 */
-+	sp = lport->tt.seq_start_next(sp);
-+	if (!sp)
-+		goto out;
-+	fp = fc_frame_alloc(lport, sizeof(*pl));
-+	if (!fp)
-+		goto out;
-+
-+	fc_plogi_fill(lport, fp, ELS_LS_ACC);
-+	f_ctl = FC_FC_EX_CTX | FC_FC_LAST_SEQ | FC_FC_END_SEQ | FC_FC_SEQ_INIT;
-+	ep = fc_seq_exch(sp);
-+	fc_fill_fc_hdr(fp, FC_RCTL_ELS_REP, ep->did, ep->sid,
-+		       FC_TYPE_ELS, f_ctl, 0);
-+	lport->tt.seq_send(lport, sp, fp);
-+	fc_rport_enter_prli(rdata);
-+out:
-+	mutex_unlock(&rdata->rp_mutex);
-+	return;
-+
-+reject:
-+	lport->tt.seq_els_rsp_send(sp, ELS_LS_RJT, &rjt_data);
-+	fc_frame_free(fp);
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index 3f2f723..bd2f771 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -452,56 +452,6 @@ static void fc_lport_recv_rnid_req(struct fc_seq *sp, struct fc_frame *in_fp,
  }
  
  /**
-@@ -1138,6 +1138,7 @@ static void fc_rport_recv_prli_req(struct fc_rport_priv *rdata,
+- * fc_lport_recv_adisc_req() - Handle received Address Discovery Request
+- * @lport: Fibre Channel local port recieving the ADISC
+- * @sp: current sequence in the ADISC exchange
+- * @fp: ADISC request frame
+- *
+- * Locking Note: The lport lock is expected to be held before calling
+- * this function.
+- */
+-static void fc_lport_recv_adisc_req(struct fc_seq *sp, struct fc_frame *in_fp,
+-				    struct fc_lport *lport)
+-{
+-	struct fc_frame *fp;
+-	struct fc_exch *ep = fc_seq_exch(sp);
+-	struct fc_els_adisc *req, *rp;
+-	struct fc_seq_els_data rjt_data;
+-	size_t len;
+-	u32 f_ctl;
+-
+-	FC_LPORT_DBG(lport, "Received ADISC request while in state %s\n",
+-		     fc_lport_state(lport));
+-
+-	req = fc_frame_payload_get(in_fp, sizeof(*req));
+-	if (!req) {
+-		rjt_data.fp = NULL;
+-		rjt_data.reason = ELS_RJT_LOGIC;
+-		rjt_data.explan = ELS_EXPL_NONE;
+-		lport->tt.seq_els_rsp_send(sp, ELS_LS_RJT, &rjt_data);
+-	} else {
+-		len = sizeof(*rp);
+-		fp = fc_frame_alloc(lport, len);
+-		if (fp) {
+-			rp = fc_frame_payload_get(fp, len);
+-			memset(rp, 0, len);
+-			rp->adisc_cmd = ELS_LS_ACC;
+-			rp->adisc_wwpn = htonll(lport->wwpn);
+-			rp->adisc_wwnn = htonll(lport->wwnn);
+-			hton24(rp->adisc_port_id,
+-			       fc_host_port_id(lport->host));
+-			sp = lport->tt.seq_start_next(sp);
+-			f_ctl = FC_FC_EX_CTX | FC_FC_LAST_SEQ;
+-			f_ctl |= FC_FC_END_SEQ | FC_FC_SEQ_INIT;
+-			fc_fill_fc_hdr(fp, FC_RCTL_ELS_REP, ep->did, ep->sid,
+-				       FC_TYPE_ELS, f_ctl, 0);
+-			lport->tt.seq_send(lport, sp, fp);
+-		}
+-	}
+-	fc_frame_free(in_fp);
+-}
+-
+-/**
+  * fc_lport_recv_logo_req() - Handle received fabric LOGO request
+  * @lport: Fibre Channel local port recieving the LOGO
+  * @sp: current sequence in the LOGO exchange
+@@ -849,9 +799,6 @@ static void fc_lport_recv_req(struct fc_lport *lport, struct fc_seq *sp,
+ 		case ELS_RNID:
+ 			recv = fc_lport_recv_rnid_req;
+ 			break;
+-		case ELS_ADISC:
+-			recv = fc_lport_recv_adisc_req;
+-			break;
+ 		}
  
- 	switch (rdata->rp_state) {
- 	case RPORT_ST_PRLI:
-+	case RPORT_ST_RTV:
- 	case RPORT_ST_READY:
- 		reason = ELS_RJT_NONE;
+ 		recv(sp, fp, lport);
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index c33e258..03ea674 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -1012,6 +1012,50 @@ static void fc_rport_enter_adisc(struct fc_rport_priv *rdata)
+ }
+ 
+ /**
++ * fc_rport_recv_adisc_req() - Handle incoming Address Discovery (ADISC) Request
++ * @rdata: remote port private
++ * @sp: current sequence in the ADISC exchange
++ * @in_fp: ADISC request frame
++ *
++ * Locking Note:  Called with the lport and rport locks held.
++ */
++static void fc_rport_recv_adisc_req(struct fc_rport_priv *rdata,
++				    struct fc_seq *sp, struct fc_frame *in_fp)
++{
++	struct fc_lport *lport = rdata->local_port;
++	struct fc_frame *fp;
++	struct fc_exch *ep = fc_seq_exch(sp);
++	struct fc_els_adisc *adisc;
++	struct fc_seq_els_data rjt_data;
++	u32 f_ctl;
++
++	FC_RPORT_DBG(rdata, "Received ADISC request\n");
++
++	adisc = fc_frame_payload_get(in_fp, sizeof(*adisc));
++	if (!adisc) {
++		rjt_data.fp = NULL;
++		rjt_data.reason = ELS_RJT_PROT;
++		rjt_data.explan = ELS_EXPL_INV_LEN;
++		lport->tt.seq_els_rsp_send(sp, ELS_LS_RJT, &rjt_data);
++		goto drop;
++	}
++
++	fp = fc_frame_alloc(lport, sizeof(*adisc));
++	if (!fp)
++		goto drop;
++	fc_adisc_fill(lport, fp);
++	adisc = fc_frame_payload_get(fp, sizeof(*adisc));
++	adisc->adisc_cmd = ELS_LS_ACC;
++	sp = lport->tt.seq_start_next(sp);
++	f_ctl = FC_FC_EX_CTX | FC_FC_LAST_SEQ | FC_FC_END_SEQ | FC_FC_SEQ_INIT;
++	fc_fill_fc_hdr(fp, FC_RCTL_ELS_REP, ep->did, ep->sid,
++		       FC_TYPE_ELS, f_ctl, 0);
++	lport->tt.seq_send(lport, sp, fp);
++drop:
++	fc_frame_free(in_fp);
++}
++
++/**
+  * fc_rport_recv_els_req() - handle a validated ELS request.
+  * @lport: Fibre Channel local port
+  * @sp: current sequence in the PLOGI exchange
+@@ -1062,6 +1106,9 @@ static void fc_rport_recv_els_req(struct fc_lport *lport,
+ 	case ELS_PRLO:
+ 		fc_rport_recv_prlo_req(rdata, sp, fp);
  		break;
++	case ELS_ADISC:
++		fc_rport_recv_adisc_req(rdata, sp, fp);
++		break;
+ 	case ELS_RRQ:
+ 		els_data.fp = fp;
+ 		lport->tt.seq_els_rsp_send(sp, ELS_RRQ, &els_data);
+@@ -1111,6 +1158,7 @@ void fc_rport_recv_req(struct fc_seq *sp, struct fc_frame *fp,
+ 		break;
+ 	case ELS_PRLI:
+ 	case ELS_PRLO:
++	case ELS_ADISC:
+ 	case ELS_RRQ:
+ 	case ELS_REC:
+ 		fc_rport_recv_els_req(lport, sp, fp);
 
