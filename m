@@ -1,58 +1,69 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 02/64] libfc: Fix misleading debug statement
-Date: Tue, 25 Aug 2009 13:58:37 -0700
-Message-ID: <20090825205837.1553.62204.stgit@localhost.localdomain>
+Subject: [PATCH 03/64] fcoe: libfcoe: extra semicolon in CHECK_LOGGING macros
+	causes compile error
+Date: Tue, 25 Aug 2009 13:58:42 -0700
+Message-ID: <20090825205842.1553.22006.stgit@localhost.localdomain>
 References: <20090825205826.1553.94414.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:11254 "EHLO mga09.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:20642 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755565AbZHYU6f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Aug 2009 16:58:35 -0400
+	id S1756137AbZHYU6k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Aug 2009 16:58:40 -0400
 In-Reply-To: <20090825205826.1553.94414.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
-Cc: Robert Love <robert.w.love@intel.com>
+Cc: Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>
 
-The statement reads, "Exchange timed out, notifying the upper layer",
-however, this statement is printed whenever the timer is armed. This
-is confusing to someone debugging the code because every time an
-exchange is initialized, there is an incorrect statement stating that
-the timer has already timed out. This patch changes the statement to
-read, "Exchange timer armed" which is more accurate.
+From: Joe Eykholt <jeykholt@cisco.com>
 
-This patch also adds a debug statement in the timeout handler to
-properly indicate that the exchange has timed out.
+If using code like this:
+	if (foo)
+		FCOE_DBG("foo\n);
+	else
+		FCOE_DBG("bar\n");
 
+one gets compile errors because FCOE_DBG expands with its own semicolon,
+making one too many for the if-statement.
+
+Remove the offending semicolon in fcoe.h and also a similar case
+in libfcoe.c.
+
+Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_exch.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+ drivers/scsi/fcoe/fcoe.h    |    2 +-
+ drivers/scsi/fcoe/libfcoe.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 11ddd11..40c3427 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -326,7 +326,7 @@ static inline void fc_exch_timer_set_locked(struct fc_exch *ep,
- 	if (ep->state & (FC_EX_RST_CLEANUP | FC_EX_DONE))
- 		return;
+diff --git a/drivers/scsi/fcoe/fcoe.h b/drivers/scsi/fcoe/fcoe.h
+index 68b9f85..65120e2 100644
+--- a/drivers/scsi/fcoe/fcoe.h
++++ b/drivers/scsi/fcoe/fcoe.h
+@@ -53,7 +53,7 @@ do {                                                            	\
+ 		do {							\
+ 			CMD;						\
+ 		} while (0);						\
+-} while (0);
++} while (0)
  
--	FC_EXCH_DBG(ep, "Exchange timed out, notifying the upper layer\n");
-+	FC_EXCH_DBG(ep, "Exchange timer armed\n");
+ #define FCOE_DBG(fmt, args...)						\
+ 	FCOE_CHECK_LOGGING(FCOE_LOGGING,				\
+diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
+index 4db719d..d0b5208 100644
+--- a/drivers/scsi/fcoe/libfcoe.c
++++ b/drivers/scsi/fcoe/libfcoe.c
+@@ -69,7 +69,7 @@ do {                                                            	\
+ 		do {							\
+ 			CMD;						\
+ 		} while (0);						\
+-} while (0);
++} while (0)
  
- 	if (schedule_delayed_work(&ep->timeout_work,
- 				  msecs_to_jiffies(timer_msec)))
-@@ -412,6 +412,8 @@ static void fc_exch_timeout(struct work_struct *work)
- 	u32 e_stat;
- 	int rc = 1;
- 
-+	FC_EXCH_DBG(ep, "Exchange timed out\n");
-+
- 	spin_lock_bh(&ep->ex_lock);
- 	if (ep->state & (FC_EX_RST_CLEANUP | FC_EX_DONE))
- 		goto unlock;
+ #define LIBFCOE_DBG(fmt, args...)					\
+ 	LIBFCOE_CHECK_LOGGING(LIBFCOE_LOGGING,				\
 
