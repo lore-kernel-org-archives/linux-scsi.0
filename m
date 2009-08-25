@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 25/64] libfc: change interface for rport_create
-Date: Tue, 25 Aug 2009 14:00:39 -0700
-Message-ID: <20090825210039.1553.84260.stgit@localhost.localdomain>
+Subject: [PATCH 28/64] libfc: change elsct to use FC_ID instead of rdata
+Date: Tue, 25 Aug 2009 14:00:55 -0700
+Message-ID: <20090825210055.1553.61332.stgit@localhost.localdomain>
 References: <20090825205826.1553.94414.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:31588 "EHLO mga02.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:39182 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932105AbZHYVAi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Aug 2009 17:00:38 -0400
+	id S932180AbZHYVAy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Aug 2009 17:00:54 -0400
 In-Reply-To: <20090825205826.1553.94414.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,219 +19,273 @@ Cc: Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>
 
 From: Joe Eykholt <jeykholt@cisco.com>
 
-The interface for lport->tt.rport_create() takes a fc_disc_port arg,
-which is unnatural for most calls.   The only reason for this was
-to avoid passing in the local port as an argument, but otherwise
-added to complexity.
+tt.elsct_send is used by both FCP and by the rport state machine.
+After further patches, these two modules will use different
+structures for the remote port.
 
-Simplify by just using lport and fc_rport_identifiers.
+So, change elsct_send to use the FC_ID instead of the fc_rport_priv
+as its argument.  It currently only uses the FC_ID anyway.
+
+For CT requests the destination FC_ID is still implicitly 0xfffffc.
+After further patches the did arg on CT requests will be used to
+specify the FC_ID being inquired about for GPN_ID or other queries.
 
 Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_disc.c  |   31 ++++++++++++-------------------
- drivers/scsi/libfc/fc_lport.c |   26 ++++++++++++--------------
- drivers/scsi/libfc/fc_rport.c |   17 +++++++++--------
- include/scsi/libfc.h          |    5 ++---
- 4 files changed, 35 insertions(+), 44 deletions(-)
+ drivers/scsi/libfc/fc_disc.c  |    2 +-
+ drivers/scsi/libfc/fc_elsct.c |   11 ++++++-----
+ drivers/scsi/libfc/fc_fcp.c   |    2 +-
+ drivers/scsi/libfc/fc_lport.c |   12 ++++++------
+ drivers/scsi/libfc/fc_rport.c |    8 ++++----
+ include/scsi/fc_encode.h      |   26 +++++---------------------
+ include/scsi/libfc.h          |    2 +-
+ 7 files changed, 24 insertions(+), 39 deletions(-)
 
 diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
-index 4c8d893..ecc625c 100644
+index 448ffc3..4b1f9fa 100644
 --- a/drivers/scsi/libfc/fc_disc.c
 +++ b/drivers/scsi/libfc/fc_disc.c
-@@ -428,13 +428,7 @@ static int fc_disc_new_target(struct fc_disc *disc,
- 		if (!rport) {
- 			rport = lport->tt.rport_lookup(lport, ids->port_id);
- 			if (!rport) {
--				struct fc_disc_port dp;
--				dp.lp = lport;
--				dp.ids.port_id = ids->port_id;
--				dp.ids.port_name = ids->port_name;
--				dp.ids.node_name = ids->node_name;
--				dp.ids.roles = ids->roles;
--				rport = lport->tt.rport_create(&dp);
-+				rport = lport->tt.rport_create(lport, ids);
- 			}
- 			if (!rport)
- 				error = -ENOMEM;
-@@ -578,7 +572,7 @@ static int fc_disc_gpn_ft_parse(struct fc_disc *disc, void *buf, size_t len)
- 	size_t plen;
- 	size_t tlen;
- 	int error = 0;
--	struct fc_disc_port dp;
-+	struct fc_rport_identifiers ids;
- 	struct fc_rport *rport;
- 	struct fc_rport_priv *rdata;
- 
-@@ -621,15 +615,14 @@ static int fc_disc_gpn_ft_parse(struct fc_disc *disc, void *buf, size_t len)
- 	 * After the first time through the loop, things return to "normal".
- 	 */
- 	while (plen >= sizeof(*np)) {
--		dp.lp = lport;
--		dp.ids.port_id = ntoh24(np->fp_fid);
--		dp.ids.port_name = ntohll(np->fp_wwpn);
--		dp.ids.node_name = -1;
--		dp.ids.roles = FC_RPORT_ROLE_UNKNOWN;
--
--		if ((dp.ids.port_id != fc_host_port_id(lport->host)) &&
--		    (dp.ids.port_name != lport->wwpn)) {
--			rport = lport->tt.rport_create(&dp);
-+		ids.port_id = ntoh24(np->fp_fid);
-+		ids.port_name = ntohll(np->fp_wwpn);
-+		ids.node_name = -1;
-+		ids.roles = FC_RPORT_ROLE_UNKNOWN;
-+
-+		if (ids.port_id != fc_host_port_id(lport->host) &&
-+		    ids.port_name != lport->wwpn) {
-+			rport = lport->tt.rport_create(lport, &ids);
- 			if (rport) {
- 				rdata = rport->dd_data;
- 				rdata->ops = &fc_disc_rport_ops;
-@@ -640,7 +633,7 @@ static int fc_disc_gpn_ft_parse(struct fc_disc *disc, void *buf, size_t len)
- 			} else
- 				printk(KERN_WARNING "libfc: Failed to allocate "
- 				       "memory for the newly discovered port "
--				       "(%6x)\n", dp.ids.port_id);
-+				       "(%6x)\n", ids.port_id);
- 		}
- 
- 		if (np->fp_flags & FC_NS_FID_LAST) {
-@@ -781,7 +774,7 @@ static void fc_disc_single(struct fc_disc *disc, struct fc_disc_port *dp)
- 	if (dp->ids.port_id == fc_host_port_id(lport->host))
- 		goto out;
- 
--	new_rport = lport->tt.rport_create(dp);
-+	new_rport = lport->tt.rport_create(lport, &dp->ids);
- 	if (new_rport) {
- 		rdata = new_rport->dd_data;
- 		rdata->ops = &fc_disc_rport_ops;
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index f7f328f..a78161c 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -211,20 +211,19 @@ static void fc_lport_ptp_setup(struct fc_lport *lport,
- 			       u32 remote_fid, u64 remote_wwpn,
- 			       u64 remote_wwnn)
- {
--	struct fc_disc_port dp;
-+	struct fc_rport_identifiers ids;
- 
--	dp.lp = lport;
--	dp.ids.port_id = remote_fid;
--	dp.ids.port_name = remote_wwpn;
--	dp.ids.node_name = remote_wwnn;
--	dp.ids.roles = FC_RPORT_ROLE_UNKNOWN;
-+	ids.port_id = remote_fid;
-+	ids.port_name = remote_wwpn;
-+	ids.node_name = remote_wwnn;
-+	ids.roles = FC_RPORT_ROLE_UNKNOWN;
- 
- 	if (lport->ptp_rp) {
- 		lport->tt.rport_logoff(lport->ptp_rp);
- 		lport->ptp_rp = NULL;
- 	}
- 
--	lport->ptp_rp = lport->tt.rport_create(&dp);
-+	lport->ptp_rp = lport->tt.rport_create(lport, &ids);
- 
- 	lport->tt.rport_login(lport->ptp_rp);
- 
-@@ -1307,20 +1306,19 @@ static void fc_lport_enter_dns(struct fc_lport *lport)
- {
- 	struct fc_rport *rport;
- 	struct fc_rport_priv *rdata;
--	struct fc_disc_port dp;
-+	struct fc_rport_identifiers ids;
- 
--	dp.ids.port_id = FC_FID_DIR_SERV;
--	dp.ids.port_name = -1;
--	dp.ids.node_name = -1;
--	dp.ids.roles = FC_RPORT_ROLE_UNKNOWN;
--	dp.lp = lport;
-+	ids.port_id = FC_FID_DIR_SERV;
-+	ids.port_name = -1;
-+	ids.node_name = -1;
-+	ids.roles = FC_RPORT_ROLE_UNKNOWN;
- 
- 	FC_LPORT_DBG(lport, "Entered DNS state from %s state\n",
- 		     fc_lport_state(lport));
- 
- 	fc_lport_state_enter(lport, LPORT_ST_DNS);
- 
--	rport = lport->tt.rport_create(&dp);
-+	rport = lport->tt.rport_create(lport, &ids);
- 	if (!rport)
+@@ -526,7 +526,7 @@ static void fc_disc_gpn_ft_req(struct fc_disc *disc)
+ 	if (!fp)
  		goto err;
  
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 5f8f437..2fbc94a 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -93,7 +93,8 @@ static void fc_rport_rogue_destroy(struct device *dev)
- 	kfree(rport);
+-	if (lport->tt.elsct_send(lport, NULL, fp,
++	if (lport->tt.elsct_send(lport, 0, fp,
+ 				 FC_NS_GPN_FT,
+ 				 fc_disc_gpn_ft_resp,
+ 				 disc, lport->e_d_tov))
+diff --git a/drivers/scsi/libfc/fc_elsct.c b/drivers/scsi/libfc/fc_elsct.c
+index 2b8a3bb..5e8b011 100644
+--- a/drivers/scsi/libfc/fc_elsct.c
++++ b/drivers/scsi/libfc/fc_elsct.c
+@@ -32,7 +32,7 @@
+  * fc_elsct_send - sends ELS/CT frame
+  */
+ static struct fc_seq *fc_elsct_send(struct fc_lport *lport,
+-				    struct fc_rport_priv *rdata,
++				    u32 did,
+ 				    struct fc_frame *fp,
+ 				    unsigned int op,
+ 				    void (*resp)(struct fc_seq *,
+@@ -41,16 +41,17 @@ static struct fc_seq *fc_elsct_send(struct fc_lport *lport,
+ 				    void *arg, u32 timer_msec)
+ {
+ 	enum fc_rctl r_ctl;
+-	u32 did = FC_FID_NONE;
+ 	enum fc_fh_type fh_type;
+ 	int rc;
+ 
+ 	/* ELS requests */
+ 	if ((op >= ELS_LS_RJT) && (op <= ELS_AUTH_ELS))
+-		rc = fc_els_fill(lport, rdata, fp, op, &r_ctl, &did, &fh_type);
+-	else
++		rc = fc_els_fill(lport, did, fp, op, &r_ctl, &fh_type);
++	else {
+ 		/* CT requests */
+-		rc = fc_ct_fill(lport, fp, op, &r_ctl, &did, &fh_type);
++		rc = fc_ct_fill(lport, fp, op, &r_ctl, &fh_type);
++		did = FC_FID_DIR_SERV;
++	}
+ 
+ 	if (rc)
+ 		return NULL;
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index a622096..59a4408 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -1308,7 +1308,7 @@ static void fc_fcp_rec(struct fc_fcp_pkt *fsp)
+ 	fc_fill_fc_hdr(fp, FC_RCTL_ELS_REQ, rport->port_id,
+ 		       fc_host_port_id(rp->local_port->host), FC_TYPE_ELS,
+ 		       FC_FC_FIRST_SEQ | FC_FC_END_SEQ | FC_FC_SEQ_INIT, 0);
+-	if (lp->tt.elsct_send(lp, rport->dd_data, fp, ELS_REC, fc_fcp_rec_resp,
++	if (lp->tt.elsct_send(lp, rport->port_id, fp, ELS_REC, fc_fcp_rec_resp,
+ 			      fsp, jiffies_to_msecs(FC_SCSI_REC_TOV))) {
+ 		fc_fcp_pkt_hold(fsp);		/* hold while REC outstanding */
+ 		return;
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index 3c15abd..aa605d2 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -1217,7 +1217,7 @@ static void fc_lport_enter_scr(struct fc_lport *lport)
+ 		return;
+ 	}
+ 
+-	if (!lport->tt.elsct_send(lport, NULL, fp, ELS_SCR,
++	if (!lport->tt.elsct_send(lport, FC_FID_FCTRL, fp, ELS_SCR,
+ 				  fc_lport_scr_resp, lport, lport->e_d_tov))
+ 		fc_lport_error(lport, fp);
+ }
+@@ -1258,7 +1258,7 @@ static void fc_lport_enter_rft_id(struct fc_lport *lport)
+ 		return;
+ 	}
+ 
+-	if (!lport->tt.elsct_send(lport, NULL, fp, FC_NS_RFT_ID,
++	if (!lport->tt.elsct_send(lport, FC_FID_DIR_SERV, fp, FC_NS_RFT_ID,
+ 				  fc_lport_rft_id_resp,
+ 				  lport, lport->e_d_tov))
+ 		fc_lport_error(lport, fp);
+@@ -1287,7 +1287,7 @@ static void fc_lport_enter_rpn_id(struct fc_lport *lport)
+ 		return;
+ 	}
+ 
+-	if (!lport->tt.elsct_send(lport, NULL, fp, FC_NS_RPN_ID,
++	if (!lport->tt.elsct_send(lport, FC_FID_DIR_SERV, fp, FC_NS_RPN_ID,
+ 				  fc_lport_rpn_id_resp,
+ 				  lport, lport->e_d_tov))
+ 		fc_lport_error(lport, fp);
+@@ -1443,8 +1443,8 @@ static void fc_lport_enter_logo(struct fc_lport *lport)
+ 		return;
+ 	}
+ 
+-	if (!lport->tt.elsct_send(lport, NULL, fp, ELS_LOGO, fc_lport_logo_resp,
+-				  lport, lport->e_d_tov))
++	if (!lport->tt.elsct_send(lport, FC_FID_FLOGI, fp, ELS_LOGO,
++				  fc_lport_logo_resp, lport, lport->e_d_tov))
+ 		fc_lport_error(lport, fp);
  }
  
--struct fc_rport *fc_rport_rogue_create(struct fc_disc_port *dp)
-+struct fc_rport *fc_rport_rogue_create(struct fc_lport *lport,
-+				       struct fc_rport_identifiers *ids)
+@@ -1567,7 +1567,7 @@ void fc_lport_enter_flogi(struct fc_lport *lport)
+ 	if (!fp)
+ 		return fc_lport_error(lport, fp);
+ 
+-	if (!lport->tt.elsct_send(lport, NULL, fp, ELS_FLOGI,
++	if (!lport->tt.elsct_send(lport, FC_FID_FLOGI, fp, ELS_FLOGI,
+ 				  fc_lport_flogi_resp, lport, lport->e_d_tov))
+ 		fc_lport_error(lport, fp);
+ }
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index 13d3d75..20371b4 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -593,7 +593,7 @@ static void fc_rport_enter_plogi(struct fc_rport_priv *rdata)
+ 	}
+ 	rdata->e_d_tov = lport->e_d_tov;
+ 
+-	if (!lport->tt.elsct_send(lport, rdata, fp, ELS_PLOGI,
++	if (!lport->tt.elsct_send(lport, rport->port_id, fp, ELS_PLOGI,
+ 				  fc_rport_plogi_resp, rdata, lport->e_d_tov))
+ 		fc_rport_error_retry(rdata, fp);
+ 	else
+@@ -747,7 +747,7 @@ static void fc_rport_enter_prli(struct fc_rport_priv *rdata)
+ 		return;
+ 	}
+ 
+-	if (!lport->tt.elsct_send(lport, rdata, fp, ELS_PRLI,
++	if (!lport->tt.elsct_send(lport, rport->port_id, fp, ELS_PRLI,
+ 				  fc_rport_prli_resp, rdata, lport->e_d_tov))
+ 		fc_rport_error_retry(rdata, fp);
+ 	else
+@@ -845,7 +845,7 @@ static void fc_rport_enter_rtv(struct fc_rport_priv *rdata)
+ 		return;
+ 	}
+ 
+-	if (!lport->tt.elsct_send(lport, rdata, fp, ELS_RTV,
++	if (!lport->tt.elsct_send(lport, rport->port_id, fp, ELS_RTV,
+ 				     fc_rport_rtv_resp, rdata, lport->e_d_tov))
+ 		fc_rport_error_retry(rdata, fp);
+ 	else
+@@ -876,7 +876,7 @@ static void fc_rport_enter_logo(struct fc_rport_priv *rdata)
+ 		return;
+ 	}
+ 
+-	if (!lport->tt.elsct_send(lport, rdata, fp, ELS_LOGO,
++	if (!lport->tt.elsct_send(lport, rport->port_id, fp, ELS_LOGO,
+ 				  fc_rport_logo_resp, rdata, lport->e_d_tov))
+ 		fc_rport_error_retry(rdata, fp);
+ 	else
+diff --git a/include/scsi/fc_encode.h b/include/scsi/fc_encode.h
+index 3ede1ab..24bf764 100644
+--- a/include/scsi/fc_encode.h
++++ b/include/scsi/fc_encode.h
+@@ -79,8 +79,9 @@ static inline struct fc_ct_req *fc_ct_hdr_fill(const struct fc_frame *fp,
+ /**
+  * fc_ct_fill - Fill in a name service request frame
+  */
+-static inline int fc_ct_fill(struct fc_lport *lport, struct fc_frame *fp,
+-		      unsigned int op, enum fc_rctl *r_ctl, u32 *did,
++static inline int fc_ct_fill(struct fc_lport *lport,
++		      struct fc_frame *fp,
++		      unsigned int op, enum fc_rctl *r_ctl,
+ 		      enum fc_fh_type *fh_type)
  {
- 	struct fc_rport *rport;
- 	struct fc_rport_priv *rdata;
-@@ -105,10 +106,10 @@ struct fc_rport *fc_rport_rogue_create(struct fc_disc_port *dp)
- 	rdata = RPORT_TO_PRIV(rport);
+ 	struct fc_ct_req *ct;
+@@ -110,7 +111,6 @@ static inline int fc_ct_fill(struct fc_lport *lport, struct fc_frame *fp,
+ 		return -EINVAL;
+ 	}
+ 	*r_ctl = FC_RCTL_DD_UNSOL_CTL;
+-	*did = FC_FID_DIR_SERV;
+ 	*fh_type = FC_TYPE_CT;
+ 	return 0;
+ }
+@@ -250,53 +250,37 @@ static inline void fc_scr_fill(struct fc_lport *lport, struct fc_frame *fp)
+  * fc_els_fill - Fill in an ELS  request frame
+  */
+ static inline int fc_els_fill(struct fc_lport *lport,
+-		       struct fc_rport_priv *rdata,
++		       u32 did,
+ 		       struct fc_frame *fp, unsigned int op,
+-		       enum fc_rctl *r_ctl, u32 *did, enum fc_fh_type *fh_type)
++		       enum fc_rctl *r_ctl, enum fc_fh_type *fh_type)
+ {
+-	struct fc_rport *rport = PRIV_TO_RPORT(rdata);
+-
+ 	switch (op) {
+ 	case ELS_PLOGI:
+ 		fc_plogi_fill(lport, fp, ELS_PLOGI);
+-		*did = rport->port_id;
+ 		break;
  
- 	rport->dd_data = rdata;
--	rport->port_id = dp->ids.port_id;
--	rport->port_name = dp->ids.port_name;
--	rport->node_name = dp->ids.node_name;
--	rport->roles = dp->ids.roles;
-+	rport->port_id = ids->port_id;
-+	rport->port_name = ids->port_name;
-+	rport->node_name = ids->node_name;
-+	rport->roles = ids->roles;
- 	rport->maxframe_size = FC_MIN_MAX_PAYLOAD;
- 	/*
- 	 * Note: all this libfc rogue rport code will be removed for
-@@ -118,14 +119,14 @@ struct fc_rport *fc_rport_rogue_create(struct fc_disc_port *dp)
- 	rport->dev.release = fc_rport_rogue_destroy;
+ 	case ELS_FLOGI:
+ 		fc_flogi_fill(lport, fp);
+-		*did = FC_FID_FLOGI;
+ 		break;
  
- 	mutex_init(&rdata->rp_mutex);
--	rdata->local_port = dp->lp;
-+	rdata->local_port = lport;
- 	rdata->trans_state = FC_PORTSTATE_ROGUE;
- 	rdata->rp_state = RPORT_ST_INIT;
- 	rdata->event = RPORT_EV_NONE;
- 	rdata->flags = FC_RP_FLAGS_REC_SUPPORTED;
- 	rdata->ops = NULL;
--	rdata->e_d_tov = dp->lp->e_d_tov;
--	rdata->r_a_tov = dp->lp->r_a_tov;
-+	rdata->e_d_tov = lport->e_d_tov;
-+	rdata->r_a_tov = lport->r_a_tov;
- 	INIT_DELAYED_WORK(&rdata->retry_work, fc_rport_timeout);
- 	INIT_WORK(&rdata->event_work, fc_rport_work);
- 	/*
+ 	case ELS_LOGO:
+ 		fc_logo_fill(lport, fp);
+-		*did = FC_FID_FLOGI;
+-		/*
+-		 * if rport is valid then it
+-		 * is port logo, therefore
+-		 * set did to rport id.
+-		 */
+-		if (rdata)
+-			*did = rport->port_id;
+ 		break;
+ 
+ 	case ELS_RTV:
+ 		fc_rtv_fill(lport, fp);
+-		*did = rport->port_id;
+ 		break;
+ 
+ 	case ELS_REC:
+ 		fc_rec_fill(lport, fp);
+-		*did = rport->port_id;
+ 		break;
+ 
+ 	case ELS_PRLI:
+ 		fc_prli_fill(lport, fp);
+-		*did = rport->port_id;
+ 		break;
+ 
+ 	case ELS_SCR:
+ 		fc_scr_fill(lport, fp);
+-		*did = FC_FID_FCTRL;
+ 		break;
+ 
+ 	default:
 diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index aa21951..d888cbe 100644
+index df57cb7..2473167 100644
 --- a/include/scsi/libfc.h
 +++ b/include/scsi/libfc.h
-@@ -227,8 +227,6 @@ struct fc_rport_libfc_priv {
- #define RPORT_TO_PRIV(x)						\
- 	(struct fc_rport_libfc_priv *)((void *)x + sizeof(struct fc_rport));
- 
--struct fc_rport *fc_rport_rogue_create(struct fc_disc_port *);
--
- static inline void fc_rport_set_name(struct fc_rport *rport, u64 wwpn, u64 wwnn)
- {
- 	rport->node_name = wwnn;
-@@ -569,7 +567,8 @@ struct libfc_function_template {
- 	/*
- 	 * Create a remote port
+@@ -424,7 +424,7 @@ struct libfc_function_template {
+ 	 * STATUS: OPTIONAL
  	 */
--	struct fc_rport *(*rport_create)(struct fc_disc_port *);
-+	struct fc_rport *(*rport_create)(struct fc_lport *,
-+					 struct fc_rport_identifiers *);
- 
- 	/*
- 	 * Initiates the RP state machine. It is called from the LP module.
+ 	struct fc_seq *(*elsct_send)(struct fc_lport *lport,
+-				     struct fc_rport_priv *,
++				     u32 did,
+ 				     struct fc_frame *fp,
+ 				     unsigned int op,
+ 				     void (*resp)(struct fc_seq *,
 
