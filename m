@@ -1,60 +1,41 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: scsi_wait_scan not working (2.6.30.5)
-Date: Tue, 25 Aug 2009 19:28:49 +0000
-Message-ID: <1251228529.7539.8.camel@mulgrave.site>
-References: <200908252124.22562.a.miskiewicz@gmail.com>
+From: Charlie Brady <charlieb-dm-devel@budge.apana.org.au>
+Subject: [PATCH] scsi_dh_rdac: Add support for Sun StorageTek
+	2510 and 2530
+Date: Tue, 25 Aug 2009 15:40:07 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0908251534340.21130@e-smith.charlieb.ott.istop.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:57942 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756064AbZHYT2y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Aug 2009 15:28:54 -0400
-In-Reply-To: <200908252124.22562.a.miskiewicz@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: linux-scsi@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
-Cc: linux-scsi@vger.kernel.org, Arjan van de Ven <arjan@infradead.org>
-
-On Tue, 2009-08-25 at 21:24 +0200, Arkadiusz Miskiewicz wrote:
-> What could be the reason for scsi_wait_scan not waiting untill all disks are 
-> found?
-> 
-> I'm testing 2.6.30.5 on hardware with LSI Logic / Symbios Logic MegaRAID 530 
-> SCSI 320-0X RAID controller and modprobe scsi_wait_scan finishes earlier than 
-> disks are found.
-> 
-> My initrd (romfs) does:
-> insmod /lib/modules/2.6.30.5-0.3/kernel/drivers/scsi/scsi_mod.ko
-> insmod /lib/modules/2.6.30.5-0.3/kernel/drivers/scsi/megaraid/megaraid_mm.ko
-> insmod /lib/modules/2.6.30.5-0.3/kernel/drivers/scsi/megaraid/megaraid_mbox.ko
-> insmod /lib/modules/2.6.30.5-0.3/kernel/lib/crc-t10dif.ko
-> insmod /lib/modules/2.6.30.5-0.3/kernel/drivers/scsi/sd_mod.ko
-> insmod /lib/modules/2.6.30.5-0.3/kernel/drivers/scsi/scsi_wait_scan.ko
-> insmod /lib/modules/2.6.30.5-0.3/kernel/fs/exportfs/exportfs.ko
-> insmod /lib/modules/2.6.30.5-0.3/kernel/fs/xfs/xfs.ko
-> if [ "${ROOT##/dev/}" != "${ROOT}" ]; then
-> rootnr="$(busybox awk -v rootnode="${ROOT##/dev/}" '$4 == rootnode { print 256 
-> * $1 + $2 }' /proc/partitions)"
-> if [ -n "$rootnr" ]; then
-> echo "$rootnr" > /proc/sys/kernel/real-root-dev
-> fi
-> 
-> 
-> Now if I add sleep few seconds or /bin/sh at the end of this initrd, then boot 
-> and then disks are detected properly and rootfs is mounted properly (after I 
-> exit from sh in case when /bin/sh is used).
-> 
-> The question remains - why scsi_wait_scan doesn't wait?
-
-It's caused by the sd async patches.  What's happening is wait_scan is
-waiting until all the scans are complete, but now sd attachment may not
-be completed by the time that happens.  So, although you have a scanned
-disk, you can't mount it without and attached sd driver. Hopefully when
-all initrds are configured to wait until root appears, this problem will
-go away.
-
-James
 
 
+Both these storage arrays can use RDAC when configured with 'linux' as the 
+initiator.
+
+http://www.sun.com/storage/disk_systems/workgroup/2510/
+http://www.sun.com/storage/disk_systems/workgroup/2530/
+
+Signed-off-by: Charlie Brady <charlieb@budge.apana.org.au>
+
+--- linux-2.6/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-08-25 14:56:42.000000000 -0400
++++ linux-2.6/drivers/scsi/device_handler/scsi_dh_rdac.c.sun	2009-08-25 15:22:56.000000000 -0400
+@@ -628,6 +628,8 @@
+  	{"SGI", "IS"},
+  	{"STK", "OPENstorage D280"},
+  	{"SUN", "CSM200_R"},
++	{"SUN", "LCSM100_I"},
++	{"SUN", "LCSM100_S"},
+  	{"SUN", "LCSM100_F"},
+  	{"DELL", "MD3000"},
+  	{"DELL", "MD3000i"},
