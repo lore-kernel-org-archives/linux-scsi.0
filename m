@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 18/64] fcoe: fcoe_interface create, destroy and refcounting
-Date: Tue, 25 Aug 2009 14:00:02 -0700
-Message-ID: <20090825210002.1553.38887.stgit@localhost.localdomain>
+Subject: [PATCH 20/64] fcoe: add mutex to protect create and destroy
+Date: Tue, 25 Aug 2009 14:00:13 -0700
+Message-ID: <20090825210013.1553.13730.stgit@localhost.localdomain>
 References: <20090825205826.1553.94414.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:12102 "EHLO mga11.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:31537 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932112AbZHYVAA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Aug 2009 17:00:00 -0400
+	id S1756199AbZHYVAL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Aug 2009 17:00:11 -0400
 In-Reply-To: <20090825205826.1553.94414.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,220 +19,135 @@ Cc: Chris Leech <christopher.leech@intel.com>, Robert Love <robert.w.love@intel.
 
 From: Chris Leech <christopher.leech@intel.com>
 
-Up to this point the fcoe_instance structure was simply kzalloc/kfreed.  This
-patch introduces create and destroy functions as well as kref based reference
-counting.  The create function will grow as the initialization code is moved
-there.
+Rather than rely on the hostlist_lock to be held while creating exchange
+managers, serialize fcoe instance creation and destruction with a mutex.
+This will allow the hostlist addition to be moved out of fcoe_if_create(),
+which will simplify NPIV support.
 
 Signed-off-by: Chris Leech <christopher.leech@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/fcoe.c |   97 +++++++++++++++++++++++++++++++++++++---------
- drivers/scsi/fcoe/fcoe.h |    1 
- 2 files changed, 79 insertions(+), 19 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |   40 +++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 39 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 7f14c63..d1d6b3b 100644
+index 63aeeca..43added 100644
 --- a/drivers/scsi/fcoe/fcoe.c
 +++ b/drivers/scsi/fcoe/fcoe.c
-@@ -139,6 +139,58 @@ static struct scsi_host_template fcoe_shost_template = {
- };
+@@ -55,6 +55,8 @@ module_param_named(ddp_min, fcoe_ddp_min, uint, S_IRUGO | S_IWUSR);
+ MODULE_PARM_DESC(ddp_min, "Minimum I/O size in bytes for "	\
+ 		 "Direct Data Placement (DDP).");
  
- /**
-+ * fcoe_interface_create()
-+ * @netdev: network interface
-+ *
-+ * Returns: pointer to a struct fcoe_interface or NULL on error
-+ */
-+static struct fcoe_interface *fcoe_interface_create(struct net_device *netdev)
-+{
-+	struct fcoe_interface *fcoe;
++DEFINE_MUTEX(fcoe_config_mutex);
 +
-+	fcoe = kzalloc(sizeof(*fcoe), GFP_KERNEL);
-+	if (!fcoe) {
-+		FCOE_NETDEV_DBG(netdev, "Could not allocate fcoe structure\n");
-+		return NULL;
-+	}
-+
-+	kref_init(&fcoe->kref);
-+	fcoe->netdev = netdev;
-+
-+	return fcoe;
-+}
-+
-+/**
-+ * fcoe_interface_release() - fcoe_port kref release function
-+ * @kref: embedded reference count in an fcoe_interface struct
-+ */
-+static void fcoe_interface_release(struct kref *kref)
-+{
-+	struct fcoe_interface *fcoe;
-+
-+	fcoe = container_of(kref, struct fcoe_interface, kref);
-+	kfree(fcoe);
-+}
-+
-+/**
-+ * fcoe_interface_get()
-+ * @fcoe:
-+ */
-+static inline void fcoe_interface_get(struct fcoe_interface *fcoe)
-+{
-+	kref_get(&fcoe->kref);
-+}
-+
-+/**
-+ * fcoe_interface_put()
-+ * @fcoe:
-+ */
-+static inline void fcoe_interface_put(struct fcoe_interface *fcoe)
-+{
-+	kref_put(&fcoe->kref, fcoe_interface_release);
-+}
-+
-+/**
-  * fcoe_fip_recv - handle a received FIP frame.
-  * @skb: the receive skb
-  * @dev: associated &net_device
-@@ -558,7 +610,7 @@ static void fcoe_if_destroy(struct fc_lport *lport)
- 	/* Release the net_device and Scsi_Host */
- 	dev_put(netdev);
- 	scsi_host_put(lport->host);
--	kfree(fcoe);		/* TODO, should be refcounted */
-+	fcoe_interface_put(fcoe);
+ /* fcoe host list */
+ LIST_HEAD(fcoe_hostlist);
+ DEFINE_RWLOCK(fcoe_hostlist_lock);
+@@ -811,6 +813,7 @@ static int __init fcoe_if_init(void)
+ int __exit fcoe_if_exit(void)
+ {
+ 	fc_release_transport(scsi_transport_fcoe_sw);
++	scsi_transport_fcoe_sw = NULL;
+ 	return 0;
  }
  
- /*
-@@ -604,8 +656,8 @@ static struct libfc_function_template fcoe_libfc_fcn_templ = {
- };
- 
- /**
-- * fcoe_if_create() - this function creates the fcoe interface
-- * @netdev: pointer the associated netdevice
-+ * fcoe_if_create() - this function creates the fcoe port
-+ * @fcoe: fcoe_interface structure to create an fc_lport instance on
-  * @parent: device pointer to be the parent in sysfs for the SCSI host
-  *
-  * Creates fc_lport struct and scsi_host for lport, configures lport
-@@ -613,30 +665,23 @@ static struct libfc_function_template fcoe_libfc_fcn_templ = {
-  *
-  * Returns : The allocated fc_lport or an error pointer
-  */
--static struct fc_lport *fcoe_if_create(struct net_device *netdev,
-+static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
- 				       struct device *parent)
- {
- 	int rc;
- 	struct fc_lport *lport = NULL;
- 	struct fcoe_port *port;
--	struct fcoe_interface *fcoe;
- 	struct Scsi_Host *shost;
-+	struct net_device *netdev = fcoe->netdev;
- 
- 	FCOE_NETDEV_DBG(netdev, "Create Interface\n");
- 
--	fcoe = kzalloc(sizeof(*fcoe), GFP_KERNEL);
--	if (!fcoe) {
--		FCOE_NETDEV_DBG(netdev, "Could not allocate fcoe structure\n");
--		rc = -ENOMEM;
--		goto out;
--	}
--
- 	shost = libfc_host_alloc(&fcoe_shost_template,
- 				 sizeof(struct fcoe_port));
- 	if (!shost) {
- 		FCOE_NETDEV_DBG(netdev, "Could not allocate host structure\n");
- 		rc = -ENOMEM;
--		goto out_kfree_port;
-+		goto out;
- 	}
- 	lport = shost_priv(shost);
- 	port = lport_priv(lport);
-@@ -708,7 +753,7 @@ static struct fc_lport *fcoe_if_create(struct net_device *netdev,
- 		fcoe_ctlr_link_up(&fcoe->ctlr);
- 
- 	dev_hold(netdev);
--
-+	fcoe_interface_get(fcoe);
- 	return lport;
- 
- out_lp_destroy:
-@@ -717,8 +762,6 @@ out_netdev_cleanup:
- 	fcoe_netdev_cleanup(port);
- out_host_put:
- 	scsi_host_put(lport->host);
--out_kfree_port:
--	kfree(fcoe);
- out:
- 	return ERR_PTR(rc);
- }
-@@ -1620,6 +1663,8 @@ static int fcoe_ethdrv_put(const struct net_device *netdev)
- static int fcoe_destroy(const char *buffer, struct kernel_param *kp)
- {
- 	struct net_device *netdev;
-+	struct fcoe_interface *fcoe;
-+	struct fcoe_port *port;
+@@ -1686,6 +1689,19 @@ static int fcoe_destroy(const char *buffer, struct kernel_param *kp)
  	struct fc_lport *lport;
  	int rc;
  
-@@ -1634,6 +1679,8 @@ static int fcoe_destroy(const char *buffer, struct kernel_param *kp)
++	mutex_lock(&fcoe_config_mutex);
++#ifdef CONFIG_FCOE_MODULE
++	/*
++	 * Make sure the module has been initialized, and is not about to be
++	 * removed.  Module paramter sysfs files are writable before the
++	 * module_init function is called and after module_exit.
++	 */
++	if (THIS_MODULE->state != MODULE_STATE_LIVE) {
++		rc = -ENODEV;
++		goto out_nodev;
++	}
++#endif
++
+ 	netdev = fcoe_if_to_netdev(buffer);
+ 	if (!netdev) {
  		rc = -ENODEV;
- 		goto out_putdev;
- 	}
-+	port = lport_priv(lport);
-+	fcoe = port->fcoe;
- 	fcoe_if_destroy(lport);
- 	fcoe_ethdrv_put(netdev);
- 	rc = 0;
-@@ -1653,6 +1700,7 @@ out_nodev:
- static int fcoe_create(const char *buffer, struct kernel_param *kp)
- {
- 	int rc;
-+	struct fcoe_interface *fcoe;
- 	struct fc_lport *lport;
- 	struct net_device *netdev;
- 
-@@ -1668,15 +1716,26 @@ static int fcoe_create(const char *buffer, struct kernel_param *kp)
- 	}
- 	fcoe_ethdrv_get(netdev);
- 
--	lport = fcoe_if_create(netdev, &netdev->dev);
-+	fcoe = fcoe_interface_create(netdev);
-+	if (!fcoe) {
-+		rc = -ENOMEM;
-+		goto out_putdev;
-+	}
-+
-+	lport = fcoe_if_create(fcoe, &netdev->dev);
- 	if (IS_ERR(lport)) {
- 		printk(KERN_ERR "fcoe: Failed to create interface (%s)\n",
- 		       netdev->name);
- 		fcoe_ethdrv_put(netdev);
- 		rc = -EIO;
--		goto out_putdev;
-+		goto out_free;
- 	}
--	rc = 0;
-+
-+	dev_put(netdev);
-+	return 0;
-+
-+out_free:
-+	fcoe_interface_put(fcoe);
+@@ -1705,6 +1721,7 @@ static int fcoe_destroy(const char *buffer, struct kernel_param *kp)
  out_putdev:
  	dev_put(netdev);
  out_nodev:
-diff --git a/drivers/scsi/fcoe/fcoe.h b/drivers/scsi/fcoe/fcoe.h
-index 673e70e..ff22928 100644
---- a/drivers/scsi/fcoe/fcoe.h
-+++ b/drivers/scsi/fcoe/fcoe.h
-@@ -84,6 +84,7 @@ struct fcoe_interface {
- 	struct packet_type  fip_packet_type;
- 	struct fcoe_ctlr ctlr;
- 	struct fc_exch_mgr *oem;		/* offload exchange manager */
-+	struct kref kref;
- };
++	mutex_unlock(&fcoe_config_mutex);
+ 	return rc;
+ }
  
- /*
+@@ -1722,6 +1739,19 @@ static int fcoe_create(const char *buffer, struct kernel_param *kp)
+ 	struct fc_lport *lport;
+ 	struct net_device *netdev;
+ 
++	mutex_lock(&fcoe_config_mutex);
++#ifdef CONFIG_FCOE_MODULE
++	/*
++	 * Make sure the module has been initialized, and is not about to be
++	 * removed.  Module paramter sysfs files are writable before the
++	 * module_init function is called and after module_exit.
++	 */
++	if (THIS_MODULE->state != MODULE_STATE_LIVE) {
++		rc = -ENODEV;
++		goto out_nodev;
++	}
++#endif
++
+ 	netdev = fcoe_if_to_netdev(buffer);
+ 	if (!netdev) {
+ 		rc = -ENODEV;
+@@ -1768,6 +1798,7 @@ out_free:
+ out_putdev:
+ 	dev_put(netdev);
+ out_nodev:
++	mutex_unlock(&fcoe_config_mutex);
+ 	return rc;
+ }
+ 
+@@ -1971,6 +2002,8 @@ static int __init fcoe_init(void)
+ 	int rc = 0;
+ 	struct fcoe_percpu_s *p;
+ 
++	mutex_lock(&fcoe_config_mutex);
++
+ 	for_each_possible_cpu(cpu) {
+ 		p = &per_cpu(fcoe_percpu, cpu);
+ 		skb_queue_head_init(&p->fcoe_rx_list);
+@@ -1991,13 +2024,14 @@ static int __init fcoe_init(void)
+ 	if (rc)
+ 		goto out_free;
+ 
++	mutex_unlock(&fcoe_config_mutex);
+ 	return 0;
+ 
+ out_free:
+ 	for_each_online_cpu(cpu) {
+ 		fcoe_percpu_thread_destroy(cpu);
+ 	}
+-
++	mutex_unlock(&fcoe_config_mutex);
+ 	return rc;
+ }
+ module_init(fcoe_init);
+@@ -2012,6 +2046,8 @@ static void __exit fcoe_exit(void)
+ 	unsigned int cpu;
+ 	struct fcoe_interface *fcoe, *tmp;
+ 
++	mutex_lock(&fcoe_config_mutex);
++
+ 	fcoe_dev_cleanup();
+ 
+ 	/* releases the associated fcoe hosts */
+@@ -2025,5 +2061,7 @@ static void __exit fcoe_exit(void)
+ 
+ 	/* detach from scsi transport */
+ 	fcoe_if_exit();
++
++	mutex_unlock(&fcoe_config_mutex);
+ }
+ module_exit(fcoe_exit);
 
