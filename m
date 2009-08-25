@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 55/64] libfc: improve debug messages for ELS response handlers
-Date: Tue, 25 Aug 2009 14:03:21 -0700
-Message-ID: <20090825210321.1553.98526.stgit@localhost.localdomain>
+Subject: [PATCH 58/64] libfc: re-login to remote ports that send us LOGO
+Date: Tue, 25 Aug 2009 14:03:36 -0700
+Message-ID: <20090825210336.1553.3151.stgit@localhost.localdomain>
 References: <20090825205826.1553.94414.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:49473 "EHLO mga09.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:34695 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932137AbZHYVDT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Aug 2009 17:03:19 -0400
+	id S932161AbZHYVDe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Aug 2009 17:03:34 -0400
 In-Reply-To: <20090825205826.1553.94414.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,201 +19,65 @@ Cc: Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>
 
 From: Joe Eykholt <jeykholt@cisco.com>
 
-Improve lport and rport debug messages to indicate whether
-the response is LS_ACC, LS_RJT, closed, or timeout.
+After a quick link flap, a target was seen to send us a LOGO.
+Apparently, it saw an RSCN reporting that we had dropped out of the
+fabric after we had logged back into it.
+
+This is likely in larger fabrics (more than 2 FC switches) after
+a quick link flap at the initiator.  Each link transition causes
+an port-specific RSCN to the target.  After the link comes back up,
+the initiator successfully discovers and does a PLOGI to the target
+before the target sees the first RSCN reporting the initiator is gone,
+and it sends a LOGO.  The target may see a subsequent RSCN saying the
+port is back, but probably wouldn't send a PLOGI and leaves it
+up to the initiator to re-login.
+
+An RSCN can be delayed by the switches due to software layers but a
+PLOGI is forwarded in hardware causing the PLOGI to beat the RSCN.
+
+If a remote port is in the discovered set and sends a LOGO, re-login to it.
 
 Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_elsct.c |   38 ++++++++++++++++++++++++++++++++++++++
- drivers/scsi/libfc/fc_lport.c |   20 ++++++++++----------
- drivers/scsi/libfc/fc_rport.c |    8 ++++----
- include/scsi/libfc.h          |    5 +++++
- 4 files changed, 57 insertions(+), 14 deletions(-)
+ drivers/scsi/libfc/fc_rport.c |   13 +++++++++++--
+ 1 files changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_elsct.c b/drivers/scsi/libfc/fc_elsct.c
-index 5e8b011..d655924 100644
---- a/drivers/scsi/libfc/fc_elsct.c
-+++ b/drivers/scsi/libfc/fc_elsct.c
-@@ -70,3 +70,41 @@ int fc_elsct_init(struct fc_lport *lport)
- 	return 0;
- }
- EXPORT_SYMBOL(fc_elsct_init);
-+
-+/**
-+ * fc_els_resp_type() - return string describing ELS response for debug.
-+ * @fp: frame pointer with possible error code.
-+ */
-+const char *fc_els_resp_type(struct fc_frame *fp)
-+{
-+	const char *msg;
-+	if (IS_ERR(fp)) {
-+		switch (-PTR_ERR(fp)) {
-+		case FC_NO_ERR:
-+			msg = "response no error";
-+			break;
-+		case FC_EX_TIMEOUT:
-+			msg = "response timeout";
-+			break;
-+		case FC_EX_CLOSED:
-+			msg = "response closed";
-+			break;
-+		default:
-+			msg = "response unknown error";
-+			break;
-+		}
-+	} else {
-+		switch (fc_frame_payload_op(fp)) {
-+		case ELS_LS_ACC:
-+			msg = "accept";
-+			break;
-+		case ELS_LS_RJT:
-+			msg = "reject";
-+			break;
-+		default:
-+			msg = "response unknown ELS";
-+			break;
-+		}
-+	}
-+	return msg;
-+}
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index d3f4e0c..3f2f723 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -1006,13 +1006,13 @@ static void fc_lport_rft_id_resp(struct fc_seq *sp, struct fc_frame *fp,
- 	struct fc_frame_header *fh;
- 	struct fc_ct_hdr *ct;
- 
-+	FC_LPORT_DBG(lport, "Received a RFT_ID %s\n", fc_els_resp_type(fp));
-+
- 	if (fp == ERR_PTR(-FC_EX_CLOSED))
- 		return;
- 
- 	mutex_lock(&lport->lp_mutex);
- 
--	FC_LPORT_DBG(lport, "Received a RFT_ID response\n");
--
- 	if (lport->state != LPORT_ST_RFT_ID) {
- 		FC_LPORT_DBG(lport, "Received a RFT_ID response, but in state "
- 			     "%s\n", fc_lport_state(lport));
-@@ -1060,13 +1060,13 @@ static void fc_lport_rpn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
- 	struct fc_frame_header *fh;
- 	struct fc_ct_hdr *ct;
- 
-+	FC_LPORT_DBG(lport, "Received a RPN_ID %s\n", fc_els_resp_type(fp));
-+
- 	if (fp == ERR_PTR(-FC_EX_CLOSED))
- 		return;
- 
- 	mutex_lock(&lport->lp_mutex);
- 
--	FC_LPORT_DBG(lport, "Received a RPN_ID response\n");
--
- 	if (lport->state != LPORT_ST_RPN_ID) {
- 		FC_LPORT_DBG(lport, "Received a RPN_ID response, but in state "
- 			     "%s\n", fc_lport_state(lport));
-@@ -1112,13 +1112,13 @@ static void fc_lport_scr_resp(struct fc_seq *sp, struct fc_frame *fp,
- 	struct fc_lport *lport = lp_arg;
- 	u8 op;
- 
-+	FC_LPORT_DBG(lport, "Received a SCR %s\n", fc_els_resp_type(fp));
-+
- 	if (fp == ERR_PTR(-FC_EX_CLOSED))
- 		return;
- 
- 	mutex_lock(&lport->lp_mutex);
- 
--	FC_LPORT_DBG(lport, "Received a SCR response\n");
--
- 	if (lport->state != LPORT_ST_SCR) {
- 		FC_LPORT_DBG(lport, "Received a SCR response, but in state "
- 			     "%s\n", fc_lport_state(lport));
-@@ -1333,13 +1333,13 @@ static void fc_lport_logo_resp(struct fc_seq *sp, struct fc_frame *fp,
- 	struct fc_lport *lport = lp_arg;
- 	u8 op;
- 
-+	FC_LPORT_DBG(lport, "Received a LOGO %s\n", fc_els_resp_type(fp));
-+
- 	if (fp == ERR_PTR(-FC_EX_CLOSED))
- 		return;
- 
- 	mutex_lock(&lport->lp_mutex);
- 
--	FC_LPORT_DBG(lport, "Received a LOGO response\n");
--
- 	if (lport->state != LPORT_ST_LOGO) {
- 		FC_LPORT_DBG(lport, "Received a LOGO response, but in state "
- 			     "%s\n", fc_lport_state(lport));
-@@ -1415,13 +1415,13 @@ static void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
- 	unsigned int e_d_tov;
- 	u16 mfs;
- 
-+	FC_LPORT_DBG(lport, "Received a FLOGI %s\n", fc_els_resp_type(fp));
-+
- 	if (fp == ERR_PTR(-FC_EX_CLOSED))
- 		return;
- 
- 	mutex_lock(&lport->lp_mutex);
- 
--	FC_LPORT_DBG(lport, "Received a FLOGI response\n");
--
- 	if (lport->state != LPORT_ST_FLOGI) {
- 		FC_LPORT_DBG(lport, "Received a FLOGI response, but in state "
- 			     "%s\n", fc_lport_state(lport));
 diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 02200b2..d014b28 100644
+index 04e9846..dc97c60 100644
 --- a/drivers/scsi/libfc/fc_rport.c
 +++ b/drivers/scsi/libfc/fc_rport.c
-@@ -544,7 +544,7 @@ static void fc_rport_plogi_resp(struct fc_seq *sp, struct fc_frame *fp,
+@@ -1340,6 +1340,8 @@ static void fc_rport_recv_logo_req(struct fc_lport *lport,
+ 	struct fc_rport_priv *rdata;
+ 	u32 sid;
  
- 	mutex_lock(&rdata->rp_mutex);
- 
--	FC_RPORT_DBG(rdata, "Received a PLOGI response\n");
-+	FC_RPORT_DBG(rdata, "Received a PLOGI %s\n", fc_els_resp_type(fp));
- 
- 	if (rdata->rp_state != RPORT_ST_PLOGI) {
- 		FC_RPORT_DBG(rdata, "Received a PLOGI response, but in state "
-@@ -651,7 +651,7 @@ static void fc_rport_prli_resp(struct fc_seq *sp, struct fc_frame *fp,
- 
- 	mutex_lock(&rdata->rp_mutex);
- 
--	FC_RPORT_DBG(rdata, "Received a PRLI response\n");
-+	FC_RPORT_DBG(rdata, "Received a PRLI %s\n", fc_els_resp_type(fp));
- 
- 	if (rdata->rp_state != RPORT_ST_PRLI) {
- 		FC_RPORT_DBG(rdata, "Received a PRLI response, but in state "
-@@ -717,7 +717,7 @@ static void fc_rport_logo_resp(struct fc_seq *sp, struct fc_frame *fp,
- 
- 	mutex_lock(&rdata->rp_mutex);
- 
--	FC_RPORT_DBG(rdata, "Received a LOGO response\n");
-+	FC_RPORT_DBG(rdata, "Received a LOGO %s\n", fc_els_resp_type(fp));
- 
- 	if (rdata->rp_state != RPORT_ST_LOGO) {
- 		FC_RPORT_DBG(rdata, "Received a LOGO response, but in state "
-@@ -801,7 +801,7 @@ static void fc_rport_rtv_resp(struct fc_seq *sp, struct fc_frame *fp,
- 
- 	mutex_lock(&rdata->rp_mutex);
- 
--	FC_RPORT_DBG(rdata, "Received a RTV response\n");
-+	FC_RPORT_DBG(rdata, "Received a RTV %s\n", fc_els_resp_type(fp));
- 
- 	if (rdata->rp_state != RPORT_ST_RTV) {
- 		FC_RPORT_DBG(rdata, "Received a RTV response, but in state "
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index 265f106..e18e5ce 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -1084,4 +1084,9 @@ void fc_destroy_exch_mgr(void);
- int fc_setup_rport(void);
- void fc_destroy_rport(void);
- 
-+/*
-+ * Internal libfc functions.
-+ */
-+const char *fc_els_resp_type(struct fc_frame *);
++	lport->tt.seq_els_rsp_send(sp, ELS_LS_ACC, NULL);
 +
- #endif /* _LIBFC_H_ */
+ 	fh = fc_frame_header_get(fp);
+ 	sid = ntoh24(fh->fh_s_id);
+ 
+@@ -1349,13 +1351,20 @@ static void fc_rport_recv_logo_req(struct fc_lport *lport,
+ 		mutex_lock(&rdata->rp_mutex);
+ 		FC_RPORT_DBG(rdata, "Received LOGO request while in state %s\n",
+ 			     fc_rport_state(rdata));
+-		fc_rport_enter_delete(rdata, RPORT_EV_LOGO);
++
++		/*
++		 * If the remote port was created due to discovery,
++		 * log back in.  It may have seen a stale RSCN about us.
++		 */
++		if (rdata->rp_state != RPORT_ST_DELETE && rdata->disc_id)
++			fc_rport_enter_plogi(rdata);
++		else
++			fc_rport_enter_delete(rdata, RPORT_EV_LOGO);
+ 		mutex_unlock(&rdata->rp_mutex);
+ 	} else
+ 		FC_RPORT_ID_DBG(lport, sid,
+ 				"Received LOGO from non-logged-in port\n");
+ 	mutex_unlock(&lport->disc.disc_mutex);
+-	lport->tt.seq_els_rsp_send(sp, ELS_LS_ACC, NULL);
+ 	fc_frame_free(fp);
+ }
+ 
 
