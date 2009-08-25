@@ -1,7 +1,7 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 20/64] fcoe: add mutex to protect create and destroy
-Date: Tue, 25 Aug 2009 14:00:13 -0700
-Message-ID: <20090825210013.1553.13730.stgit@localhost.localdomain>
+Subject: [PATCH 21/64] fcoe: move the host-list add/remove to keep out VN_Ports
+Date: Tue, 25 Aug 2009 14:00:18 -0700
+Message-ID: <20090825210018.1553.74393.stgit@localhost.localdomain>
 References: <20090825205826.1553.94414.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -9,8 +9,8 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga02.intel.com ([134.134.136.20]:31537 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756199AbZHYVAL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Aug 2009 17:00:11 -0400
+	id S932134AbZHYVAP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Aug 2009 17:00:15 -0400
 In-Reply-To: <20090825205826.1553.94414.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,135 +19,121 @@ Cc: Chris Leech <christopher.leech@intel.com>, Robert Love <robert.w.love@intel.
 
 From: Chris Leech <christopher.leech@intel.com>
 
-Rather than rely on the hostlist_lock to be held while creating exchange
-managers, serialize fcoe instance creation and destruction with a mutex.
-This will allow the hostlist addition to be moved out of fcoe_if_create(),
-which will simplify NPIV support.
+We only want the FCoE create and destroy routines to deal with top level
+N_Ports, the VN_Ports are tracked on the vport list (see scsi_transport_fc).
 
 Signed-off-by: Chris Leech <christopher.leech@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/fcoe.c |   40 +++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 39 insertions(+), 1 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |   31 +++++++++++++++++++------------
+ 1 files changed, 19 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 63aeeca..43added 100644
+index 43added..c9a0346 100644
 --- a/drivers/scsi/fcoe/fcoe.c
 +++ b/drivers/scsi/fcoe/fcoe.c
-@@ -55,6 +55,8 @@ module_param_named(ddp_min, fcoe_ddp_min, uint, S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(ddp_min, "Minimum I/O size in bytes for "	\
- 		 "Direct Data Placement (DDP).");
+@@ -616,9 +616,6 @@ static void fcoe_if_destroy(struct fc_lport *lport)
+ 	/* Logout of the fabric */
+ 	fc_fabric_logoff(lport);
  
-+DEFINE_MUTEX(fcoe_config_mutex);
-+
- /* fcoe host list */
- LIST_HEAD(fcoe_hostlist);
- DEFINE_RWLOCK(fcoe_hostlist_lock);
-@@ -811,6 +813,7 @@ static int __init fcoe_if_init(void)
- int __exit fcoe_if_exit(void)
- {
- 	fc_release_transport(scsi_transport_fcoe_sw);
-+	scsi_transport_fcoe_sw = NULL;
- 	return 0;
- }
- 
-@@ -1686,6 +1689,19 @@ static int fcoe_destroy(const char *buffer, struct kernel_param *kp)
- 	struct fc_lport *lport;
- 	int rc;
- 
-+	mutex_lock(&fcoe_config_mutex);
-+#ifdef CONFIG_FCOE_MODULE
-+	/*
-+	 * Make sure the module has been initialized, and is not about to be
-+	 * removed.  Module paramter sysfs files are writable before the
-+	 * module_init function is called and after module_exit.
-+	 */
-+	if (THIS_MODULE->state != MODULE_STATE_LIVE) {
-+		rc = -ENODEV;
-+		goto out_nodev;
-+	}
-+#endif
-+
- 	netdev = fcoe_if_to_netdev(buffer);
- 	if (!netdev) {
- 		rc = -ENODEV;
-@@ -1705,6 +1721,7 @@ static int fcoe_destroy(const char *buffer, struct kernel_param *kp)
- out_putdev:
- 	dev_put(netdev);
- out_nodev:
-+	mutex_unlock(&fcoe_config_mutex);
- 	return rc;
- }
- 
-@@ -1722,6 +1739,19 @@ static int fcoe_create(const char *buffer, struct kernel_param *kp)
- 	struct fc_lport *lport;
- 	struct net_device *netdev;
- 
-+	mutex_lock(&fcoe_config_mutex);
-+#ifdef CONFIG_FCOE_MODULE
-+	/*
-+	 * Make sure the module has been initialized, and is not about to be
-+	 * removed.  Module paramter sysfs files are writable before the
-+	 * module_init function is called and after module_exit.
-+	 */
-+	if (THIS_MODULE->state != MODULE_STATE_LIVE) {
-+		rc = -ENODEV;
-+		goto out_nodev;
-+	}
-+#endif
-+
- 	netdev = fcoe_if_to_netdev(buffer);
- 	if (!netdev) {
- 		rc = -ENODEV;
-@@ -1768,6 +1798,7 @@ out_free:
- out_putdev:
- 	dev_put(netdev);
- out_nodev:
-+	mutex_unlock(&fcoe_config_mutex);
- 	return rc;
- }
- 
-@@ -1971,6 +2002,8 @@ static int __init fcoe_init(void)
- 	int rc = 0;
- 	struct fcoe_percpu_s *p;
- 
-+	mutex_lock(&fcoe_config_mutex);
-+
- 	for_each_possible_cpu(cpu) {
- 		p = &per_cpu(fcoe_percpu, cpu);
- 		skb_queue_head_init(&p->fcoe_rx_list);
-@@ -1991,13 +2024,14 @@ static int __init fcoe_init(void)
- 	if (rc)
- 		goto out_free;
- 
-+	mutex_unlock(&fcoe_config_mutex);
- 	return 0;
- 
- out_free:
- 	for_each_online_cpu(cpu) {
- 		fcoe_percpu_thread_destroy(cpu);
- 	}
+-	/* Remove the instance from fcoe's list */
+-	fcoe_hostlist_remove(lport);
 -
-+	mutex_unlock(&fcoe_config_mutex);
- 	return rc;
+ 	/* Cleanup the fc_lport */
+ 	fc_lport_destroy(lport);
+ 	fc_fcp_destroy(lport);
+@@ -757,11 +754,13 @@ static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
+ 
+ 	/*
+ 	 * fcoe_em_alloc() and fcoe_hostlist_add() both
+-	 * need to be atomic under fcoe_hostlist_lock
++	 * need to be atomic with respect to other changes to the hostlist
+ 	 * since fcoe_em_alloc() looks for an existing EM
+ 	 * instance on host list updated by fcoe_hostlist_add().
++	 *
++	 * This is currently handled through the fcoe_config_mutex begin held.
+ 	 */
+-	write_lock(&fcoe_hostlist_lock);
++
+ 	/* lport exch manager allocation */
+ 	rc = fcoe_em_config(lport);
+ 	if (rc) {
+@@ -770,10 +769,6 @@ static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
+ 		goto out_lp_destroy;
+ 	}
+ 
+-	/* add to lports list */
+-	fcoe_hostlist_add(lport);
+-	write_unlock(&fcoe_hostlist_lock);
+-
+ 	dev_hold(netdev);
+ 	fcoe_interface_get(fcoe);
+ 	return lport;
+@@ -1713,6 +1708,8 @@ static int fcoe_destroy(const char *buffer, struct kernel_param *kp)
+ 		rc = -ENODEV;
+ 		goto out_putdev;
+ 	}
++	/* Remove the instance from fcoe's list */
++	fcoe_hostlist_remove(lport);
+ 	port = lport_priv(lport);
+ 	fcoe = port->fcoe;
+ 	fcoe_if_destroy(lport);
+@@ -1782,6 +1779,9 @@ static int fcoe_create(const char *buffer, struct kernel_param *kp)
+ 	/* Make this the "master" N_Port */
+ 	fcoe->ctlr.lp = lport;
+ 
++	/* add to lports list */
++	fcoe_hostlist_add(lport);
++
+ 	/* start FIP Discovery and FLOGI */
+ 	lport->boot_time = jiffies;
+ 	fc_fabric_login(lport);
+@@ -1954,8 +1954,6 @@ struct fc_lport *fcoe_hostlist_lookup(const struct net_device *netdev)
+  * fcoe_hostlist_add() - Add a lport to lports list
+  * @lp: ptr to the fc_lport to be added
+  *
+- * Called with write fcoe_hostlist_lock held.
+- *
+  * Returns: 0 for success
+  */
+ int fcoe_hostlist_add(const struct fc_lport *lport)
+@@ -1963,12 +1961,14 @@ int fcoe_hostlist_add(const struct fc_lport *lport)
+ 	struct fcoe_interface *fcoe;
+ 	struct fcoe_port *port;
+ 
++	write_lock_bh(&fcoe_hostlist_lock);
+ 	fcoe = fcoe_hostlist_lookup_port(fcoe_netdev(lport));
+ 	if (!fcoe) {
+ 		port = lport_priv(lport);
+ 		fcoe = port->fcoe;
+ 		list_add_tail(&fcoe->list, &fcoe_hostlist);
+ 	}
++	write_unlock_bh(&fcoe_hostlist_lock);
+ 	return 0;
  }
- module_init(fcoe_init);
-@@ -2012,6 +2046,8 @@ static void __exit fcoe_exit(void)
+ 
+@@ -2045,14 +2045,21 @@ static void __exit fcoe_exit(void)
+ {
  	unsigned int cpu;
  	struct fcoe_interface *fcoe, *tmp;
++	LIST_HEAD(local_list);
  
-+	mutex_lock(&fcoe_config_mutex);
-+
+ 	mutex_lock(&fcoe_config_mutex);
+ 
  	fcoe_dev_cleanup();
  
  	/* releases the associated fcoe hosts */
-@@ -2025,5 +2061,7 @@ static void __exit fcoe_exit(void)
- 
- 	/* detach from scsi transport */
- 	fcoe_if_exit();
+-	list_for_each_entry_safe(fcoe, tmp, &fcoe_hostlist, list)
++	write_lock_bh(&fcoe_hostlist_lock);
++	list_splice_init(&fcoe_hostlist, &local_list);
++	write_unlock_bh(&fcoe_hostlist_lock);
 +
-+	mutex_unlock(&fcoe_config_mutex);
- }
- module_exit(fcoe_exit);
++	list_for_each_entry_safe(fcoe, tmp, &local_list, list) {
++		list_del(&fcoe->list);
+ 		fcoe_if_destroy(fcoe->ctlr.lp);
++	}
+ 
+ 	unregister_hotcpu_notifier(&fcoe_cpu_notifier);
+ 
 
