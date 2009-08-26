@@ -1,84 +1,100 @@
 From: Vasu Dev <vasu.dev@intel.com>
-Subject: [RFC PATCH 5/9] scsi: updates sdev to add queue_depth ramp up code
-Date: Wed, 26 Aug 2009 11:03:42 -0700
-Message-ID: <20090826180341.23396.63480.stgit@vi1.jf.intel.com>
+Subject: [RFC PATCH 7/9] scsi: add common queue_depth ramp up code
+Date: Wed, 26 Aug 2009 11:03:52 -0700
+Message-ID: <20090826180352.23396.92986.stgit@vi1.jf.intel.com>
 References: <20090826180234.23396.8148.stgit@vi1.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:49203 "EHLO mga01.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:16922 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752470AbZHZSDl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Aug 2009 14:03:41 -0400
+	id S1752482AbZHZSDu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Aug 2009 14:03:50 -0400
 In-Reply-To: <20090826180234.23396.8148.stgit@vi1.jf.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 
-Current FC HBA queue_depth ramp up code depends on :-
+Adds scsi_handle_queue_ramp_up to ramp up queue_depth on
+successful completion of IO. The scsi_handle_queue_ramp_up
+will do ramp up on all luns of a target, just same as
+ramp down done on all luns on a target.
 
-	1. last queue full time.
-	2. last queue ramp up time.
-	3. ramp up period (time interval)
+However ramp up is skipped if lapsed time since either
+last queue ramp up or down is less than LLD specified
+queue_ramp_up_period.
 
-The sdev already  has last_queue_full_time field to track last
-queue full time but stored value is truncated by last four bits.
-
-So this patch updates last_queue_full_time without truncating
-last 4 bits to store complete value and then updates its only
-current usages in scsi_track_queue_full to ignore last four bits
-to keep current usages same. This will allow same
-last_queue_full_time used by scsi_track_queue_full and queue_depth
-ramp up code.
-
-Adds additional new sdev fields for above 2 and 3 items.
+The ramp up is also skipped in case the change_queue_depth
+is not supported by LLD.
 
 Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 ---
 
- drivers/scsi/scsi.c        |   10 ++++++++--
- include/scsi/scsi_device.h |    6 +++---
- 2 files changed, 11 insertions(+), 5 deletions(-)
+ drivers/scsi/scsi_error.c |   38 ++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 38 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index b6e0307..bffaa9c 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -937,10 +937,16 @@ EXPORT_SYMBOL(scsi_adjust_queue_depth);
-  */
- int scsi_track_queue_full(struct scsi_device *sdev, int depth)
- {
--	if ((jiffies >> 4) == sdev->last_queue_full_time)
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 7d1b862..08490c7 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -331,6 +331,42 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
+ 	}
+ }
+ 
++static void scsi_handle_queue_ramp_up(struct scsi_device *sdev)
++{
++	struct scsi_host_template *sht = sdev->host->hostt;
++	struct scsi_device *tmp_sdev;
++
++	if (!sht->change_queue_depth)
++		return;
++
++	if (time_before(jiffies,
++	    sdev->last_queue_ramp_up + sdev->queue_ramp_up_period))
++		return;
++
++	if (time_before(jiffies,
++	    sdev->last_queue_full_time + sdev->queue_ramp_up_period))
++		return;
 +
 +	/*
-+	 * Don't let QUEUE_FULLs on the same
-+	 * jiffies count, they could all be from
-+	 * same event.
++	 * Walk all devices of a target and do
++	 * ramp up on them.
 +	 */
-+	if ((jiffies >> 4) == (sdev->last_queue_full_time >> 4))
- 		return 0;
- 
--	sdev->last_queue_full_time = (jiffies >> 4);
-+	sdev->last_queue_full_time = jiffies;
- 	if (sdev->last_queue_full_depth != depth) {
- 		sdev->last_queue_full_count = 1;
- 		sdev->last_queue_full_depth = depth;
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 9af48cb..041d4f9 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -83,9 +83,9 @@ struct scsi_device {
- 	unsigned short queue_depth;	/* How deep of a queue we want */
- 	unsigned short last_queue_full_depth; /* These two are used by */
- 	unsigned short last_queue_full_count; /* scsi_track_queue_full() */
--	unsigned long last_queue_full_time;/* don't let QUEUE_FULLs on the same
--					   jiffie count on our counter, they
--					   could all be from the same event. */
-+	unsigned long last_queue_full_time;	/* last queue full time */
-+	unsigned long queue_ramp_up_period;	/* ramp up period in jiffies */
-+	unsigned long last_queue_ramp_up;	/* last queue ramp up time */
- 
- 	unsigned int id, lun, channel;
- 
++	shost_for_each_device(tmp_sdev, sdev->host) {
++		if ((tmp_sdev->channel != sdev->channel) ||
++		    (tmp_sdev->id != sdev->id))
++			continue;
++		/*
++		 * We do not know max queue_depth supported by the
++		 * device, so pass the existing queue_depth and let
++		 * device adjust the queue_depth on ramp up change
++		 * event.
++		 */
++		sht->change_queue_depth(tmp_sdev, tmp_sdev->queue_depth,
++					SCSI_QDEPTH_RAMP_UP);
++		sdev->last_queue_ramp_up = jiffies;
++	}
++}
++
+ static void scsi_handle_queue_full(struct scsi_device *sdev)
+ {
+ 	struct scsi_host_template *sht = sdev->host->hostt;
+@@ -392,6 +428,7 @@ static int scsi_eh_completed_normally(struct scsi_cmnd *scmd)
+ 	 */
+ 	switch (status_byte(scmd->result)) {
+ 	case GOOD:
++		scsi_handle_queue_ramp_up(scmd->device);
+ 	case COMMAND_TERMINATED:
+ 		return SUCCESS;
+ 	case CHECK_CONDITION:
+@@ -1421,6 +1458,7 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
+ 		 */
+ 		return ADD_TO_MLQUEUE;
+ 	case GOOD:
++		scsi_handle_queue_ramp_up(scmd->device);
+ 	case COMMAND_TERMINATED:
+ 		return SUCCESS;
+ 	case TASK_ABORTED:
 
