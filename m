@@ -1,102 +1,325 @@
 From: Vasu Dev <vasu.dev@intel.com>
-Subject: [RFC PATCH 0/9] RFC: handle queue_depth adjustments because of
-	QUEUE_FULLs in scsi_error.c
-Date: Wed, 26 Aug 2009 11:03:13 -0700
-Message-ID: <20090826180234.23396.8148.stgit@vi1.jf.intel.com>
+Subject: [RFC PATCH 4/9] drivers: convert fc drivers calling
+	scsi_track_queue_full
+Date: Wed, 26 Aug 2009 11:03:36 -0700
+Message-ID: <20090826180336.23396.16802.stgit@vi1.jf.intel.com>
+References: <20090826180234.23396.8148.stgit@vi1.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:17258 "EHLO mga11.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:41513 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752245AbZHZSDN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Aug 2009 14:03:13 -0400
+	id S1752447AbZHZSDf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Aug 2009 14:03:35 -0400
+In-Reply-To: <20090826180234.23396.8148.stgit@vi1.jf.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 
-First four patches are from Mike Christie's original RFC at:-
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-http://www.spinics.net/lists/linux-scsi/msg35959.html
-http://www.spinics.net/lists/linux-scsi/msg35962.html
-http://www.spinics.net/lists/linux-scsi/msg35961.html
-http://www.spinics.net/lists/linux-scsi/msg35963.html
-http://www.spinics.net/lists/linux-scsi/msg35964.html
+This converts the fc drivers that were using scsi_track_queue_full
+to track the queue full from the change_queue_depth callback.
 
-Above four patches adds ramp down code and I appended ramp
-up code in following patches and tested this entire
-series with libfc/fcoe. This series works fine without any
-regression and also queue_depth adjustment works for both
-ramp down and ramp up.
+I have not yet tested the qla2xxx or lpfc parts.
 
-Above patches are updated to scsi-misc -rc7 plus recently
-submitted 64 fcoe patches series by Rob
-"[PATCH 00/64] libfc, libfcoe and fcoe updates for scsi-misc"
-This series also applies cleanly to scsi-misc -rc7.
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 
-I'd appreciate review comments for added more patches for
-ramp up.
-
-I'll post my final patches to this list skipping fcoe list,
-this as per Rob Love suggestion since mostly scsi changes
-by this series beyond fcoe/libfc. However Rob agreed to
-review/Ack fcoe/libfc changes at this list.
-
-Mike, I'll be able to post my ramp up patches only once
-you send final patches for ramp down on which my patches
-depends. As I said your patches are tested for libfc,
-so most common code is already tested and they are
-good go as far as libfc goes.
-
+--
+Adds check to ignore SCSI_QDEPTH_QFULL in case the
+ql2xqfulltracking is not set.
 Signed-off-by: Vasu Dev <vasu.dev@intel.com>
-
 ---
 
-Mike Christie (4):
-      drivers: convert fc drivers calling scsi_track_queue_full
-      drivers: convert drivers setting the change_queue_depth callback
-      scsi error: have scsi-ml call change_queue_depth to handle QUEUE_FULL
-      scsi-ml: modify change_queue_depth to take in reason why it is being called
+ drivers/scsi/libfc/fc_fcp.c    |   28 ++++++---------
+ drivers/scsi/lpfc/lpfc_scsi.c  |   75 ++++++++++++++++++++++------------------
+ drivers/scsi/qla2xxx/qla_isr.c |   32 -----------------
+ drivers/scsi/qla2xxx/qla_os.c  |   32 +++++++++++++++--
+ include/scsi/libfc.h           |    2 +
+ 5 files changed, 82 insertions(+), 87 deletions(-)
 
-Vasu Dev (5):
-      libfc: adds queue_depth ramp up to libfc
-      fcoe, libfc: fix an libfc issue with queue ramp down in libfc
-      scsi: add common queue_depth ramp up code
-      scsi: adds sdev->queue_ramp_up_period to sysfs
-      scsi: updates sdev to add queue_depth ramp up code
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index 59a4408..4037685 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -1814,21 +1814,6 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
+ 			sc_cmd->result = DID_OK << 16;
+ 			if (fsp->scsi_resid)
+ 				CMD_RESID_LEN(sc_cmd) = fsp->scsi_resid;
+-		} else if (fsp->cdb_status == QUEUE_FULL) {
+-			struct scsi_device *tmp_sdev;
+-			struct scsi_device *sdev = sc_cmd->device;
+-
+-			shost_for_each_device(tmp_sdev, sdev->host) {
+-				if (tmp_sdev->id != sdev->id)
+-					continue;
+-
+-				if (tmp_sdev->queue_depth > 1) {
+-					scsi_track_queue_full(tmp_sdev,
+-							      tmp_sdev->
+-							      queue_depth - 1);
+-				}
+-			}
+-			sc_cmd->result = (DID_OK << 16) | fsp->cdb_status;
+ 		} else {
+ 			/*
+ 			 * transport level I/O was ok but scsi
+@@ -2062,9 +2047,18 @@ int fc_slave_alloc(struct scsi_device *sdev)
+ }
+ EXPORT_SYMBOL(fc_slave_alloc);
+ 
+-int fc_change_queue_depth(struct scsi_device *sdev, int qdepth)
++int fc_change_queue_depth(struct scsi_device *sdev, int qdepth, int reason)
+ {
+-	scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), qdepth);
++	switch (reason) {
++	case SCSI_QDEPTH_SYSFS_REQ:
++		scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), qdepth);
++		break;
++	case SCSI_QDEPTH_QFULL:
++		scsi_track_queue_full(sdev, qdepth);
++		break;
++	default:
++		return -EOPNOTSUPP;
++	}
+ 	return sdev->queue_depth;
+ }
+ EXPORT_SYMBOL(fc_change_queue_depth);
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 61d0897..2d39d84 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -2189,7 +2189,6 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
+ 	struct scsi_cmnd *cmd = lpfc_cmd->pCmd;
+ 	int result;
+ 	struct scsi_device *tmp_sdev;
+-	int depth = 0;
+ 	unsigned long flags;
+ 	struct lpfc_fast_path_event *fast_path_evt;
+ 	struct Scsi_Host *shost = cmd->device->host;
+@@ -2388,39 +2387,6 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
+ 	}
+ 
+ 	/*
+-	 * Check for queue full.  If the lun is reporting queue full, then
+-	 * back off the lun queue depth to prevent target overloads.
+-	 */
+-	if (result == SAM_STAT_TASK_SET_FULL && pnode &&
+-	    NLP_CHK_NODE_ACT(pnode)) {
+-		pnode->last_q_full_time = jiffies;
+-
+-		shost_for_each_device(tmp_sdev, shost) {
+-			if (tmp_sdev->id != scsi_id)
+-				continue;
+-			depth = scsi_track_queue_full(tmp_sdev,
+-					tmp_sdev->queue_depth - 1);
+-		}
+-		/*
+-		 * The queue depth cannot be lowered any more.
+-		 * Modify the returned error code to store
+-		 * the final depth value set by
+-		 * scsi_track_queue_full.
+-		 */
+-		if (depth == -1)
+-			depth = shost->cmd_per_lun;
+-
+-		if (depth) {
+-			lpfc_printf_vlog(vport, KERN_WARNING, LOG_FCP,
+-					 "0711 detected queue full - lun queue "
+-					 "depth adjusted to %d.\n", depth);
+-			lpfc_send_sdev_queuedepth_change_event(phba, vport,
+-				pnode, 0xFFFFFFFF,
+-				depth+1, depth);
+-		}
+-	}
+-
+-	/*
+ 	 * If there is a thread waiting for command completion
+ 	 * wake up the thread.
+ 	 */
+@@ -3551,6 +3517,45 @@ lpfc_slave_configure(struct scsi_device *sdev)
+ 	return 0;
+ }
+ 
++static int lpfc_change_queue_depth(struct scsi_device *sdev, int queue_depth,
++				   int reason)
++{
++	struct Scsi_Host *shost = sdev->host;
++	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
++	struct lpfc_hba *phba = vport->phba;
++	struct lpfc_rport_data *rdata = sdev->hostdata;
++	struct lpfc_nodelist *pnode = rdata->pnode;
++	int depth;
++
++	if (reason != SCSI_QDEPTH_QFULL)
++		return -EOPNOTSUPP;
++
++	if (!pnode || !NLP_CHK_NODE_ACT(pnode))
++		return -EINVAL;
++
++	pnode->last_q_full_time = jiffies;
++
++	depth = scsi_track_queue_full(sdev, queue_depth);
++	/*
++	 * The queue depth cannot be lowered any more.
++	 * Modify the returned error code to store
++	 * the final depth value set by
++	 * scsi_track_queue_full.
++	 */
++	if (depth == -1)
++		depth = shost->cmd_per_lun;
++
++	if (depth) {
++		lpfc_printf_vlog(vport, KERN_WARNING, LOG_FCP,
++				 "0711 detected queue full - lun queue "
++				 "depth adjusted to %d.\n", depth);
++		lpfc_send_sdev_queuedepth_change_event(phba, vport,
++						       pnode, 0xFFFFFFFF,
++						       depth + 1, depth);
++	}
++	return sdev->queue_depth;
++}
++
+ /**
+  * lpfc_slave_destroy - slave_destroy entry point of SHT data structure
+  * @sdev: Pointer to scsi_device.
+@@ -3574,6 +3579,7 @@ struct scsi_host_template lpfc_template = {
+ 	.eh_device_reset_handler = lpfc_device_reset_handler,
+ 	.eh_target_reset_handler = lpfc_target_reset_handler,
+ 	.eh_bus_reset_handler	= lpfc_bus_reset_handler,
++	.change_queue_depth	= lpfc_change_queue_depth,
+ 	.slave_alloc		= lpfc_slave_alloc,
+ 	.slave_configure	= lpfc_slave_configure,
+ 	.slave_destroy		= lpfc_slave_destroy,
+@@ -3596,6 +3602,7 @@ struct scsi_host_template lpfc_vport_template = {
+ 	.eh_device_reset_handler = lpfc_device_reset_handler,
+ 	.eh_target_reset_handler = lpfc_target_reset_handler,
+ 	.eh_bus_reset_handler	= lpfc_bus_reset_handler,
++	.change_queue_depth	= lpfc_change_queue_depth,
+ 	.slave_alloc		= lpfc_slave_alloc,
+ 	.slave_configure	= lpfc_slave_configure,
+ 	.slave_destroy		= lpfc_slave_destroy,
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 74fa6f9..66fda3a 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -836,20 +836,6 @@ qla2x00_adjust_sdev_qdepth_up(struct scsi_device *sdev, void *data)
+ 	    sdev->queue_depth));
+ }
+ 
+-static void
+-qla2x00_adjust_sdev_qdepth_down(struct scsi_device *sdev, void *data)
+-{
+-	fc_port_t *fcport = data;
+-
+-	if (!scsi_track_queue_full(sdev, sdev->queue_depth - 1))
+-		return;
+-
+-	DEBUG2(qla_printk(KERN_INFO, fcport->vha->hw,
+-	    "scsi(%ld:%d:%d:%d): Queue depth adjusted-down to %d.\n",
+-	    fcport->vha->host_no, sdev->channel, sdev->id, sdev->lun,
+-	    sdev->queue_depth));
+-}
+-
+ static inline void
+ qla2x00_ramp_up_queue_depth(scsi_qla_host_t *vha, struct req_que *req,
+ 								srb_t *sp)
+@@ -1176,13 +1162,6 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 			    "scsi(%ld): QUEUE FULL status detected "
+ 			    "0x%x-0x%x.\n", vha->host_no, comp_status,
+ 			    scsi_status));
+-
+-			/* Adjust queue depth for all luns on the port. */
+-			if (!ql2xqfulltracking)
+-				break;
+-			fcport->last_queue_full = jiffies;
+-			starget_for_each_device(cp->device->sdev_target,
+-			    fcport, qla2x00_adjust_sdev_qdepth_down);
+ 			break;
+ 		}
+ 		if (lscsi_status != SS_CHECK_CONDITION)
+@@ -1233,17 +1212,6 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 				    "scsi(%ld): QUEUE FULL status detected "
+ 				    "0x%x-0x%x.\n", vha->host_no, comp_status,
+ 				    scsi_status));
+-
+-				/*
+-				 * Adjust queue depth for all luns on the
+-				 * port.
+-				 */
+-				if (!ql2xqfulltracking)
+-					break;
+-				fcport->last_queue_full = jiffies;
+-				starget_for_each_device(
+-				    cp->device->sdev_target, fcport,
+-				    qla2x00_adjust_sdev_qdepth_down);
+ 				break;
+ 			}
+ 			if (lscsi_status != SS_CHECK_CONDITION)
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index d7b2713..a11c8ad 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -137,7 +137,7 @@ static int qla2xxx_eh_target_reset(struct scsi_cmnd *);
+ static int qla2xxx_eh_bus_reset(struct scsi_cmnd *);
+ static int qla2xxx_eh_host_reset(struct scsi_cmnd *);
+ 
+-static int qla2x00_change_queue_depth(struct scsi_device *, int);
++static int qla2x00_change_queue_depth(struct scsi_device *, int, int);
+ static int qla2x00_change_queue_type(struct scsi_device *, int);
+ 
+ struct scsi_host_template qla2xxx_driver_template = {
+@@ -1222,10 +1222,36 @@ qla2xxx_slave_destroy(struct scsi_device *sdev)
+ 	sdev->hostdata = NULL;
+ }
+ 
++static void qla2x00_handle_queue_full(struct scsi_device *sdev, int qdepth)
++{
++	fc_port_t *fcport = (struct fc_port *) sdev->hostdata;
++
++	fcport->last_queue_full = jiffies;
++
++	if (!scsi_track_queue_full(sdev, qdepth))
++		return;
++
++	DEBUG2(qla_printk(KERN_INFO, fcport->vha->hw,
++		"scsi(%ld:%d:%d:%d): Queue depth adjusted-down to %d.\n",
++		fcport->vha->host_no, sdev->channel, sdev->id, sdev->lun,
++		sdev->queue_depth));
++}
++
+ static int
+-qla2x00_change_queue_depth(struct scsi_device *sdev, int qdepth)
++qla2x00_change_queue_depth(struct scsi_device *sdev, int qdepth, int reason)
+ {
+-	scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), qdepth);
++	switch (reason) {
++	case SCSI_QDEPTH_SYSFS_REQ:
++		scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), qdepth);
++		break;
++	case SCSI_QDEPTH_QFULL:
++		if (!ql2xqfulltracking)
++			qla2x00_handle_queue_full(sdev, qdepth);
++		break;
++	default:
++		return EOPNOTSUPP;
++	}
++
+ 	return sdev->queue_depth;
+ }
+ 
+diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
+index 65dc9aa..9874ea7 100644
+--- a/include/scsi/libfc.h
++++ b/include/scsi/libfc.h
+@@ -919,7 +919,7 @@ int fc_slave_alloc(struct scsi_device *sdev);
+ /*
+  * Adjust the queue depth.
+  */
+-int fc_change_queue_depth(struct scsi_device *sdev, int qdepth);
++int fc_change_queue_depth(struct scsi_device *sdev, int qdepth, int reason);
+ 
+ /*
+  * Change the tag type.
 
-
- drivers/ata/libata-scsi.c             |    6 ++-
- drivers/ata/sata_nv.c                 |    2 -
- drivers/message/fusion/mptscsih.c     |    8 +++-
- drivers/message/fusion/mptscsih.h     |    3 +
- drivers/scsi/3w-9xxx.c                |    5 ++
- drivers/scsi/3w-xxxx.c                |    5 ++
- drivers/scsi/53c700.c                 |    5 ++
- drivers/scsi/aacraid/linit.c          |    6 ++-
- drivers/scsi/arcmsr/arcmsr_hba.c      |    5 ++
- drivers/scsi/fcoe/fcoe.c              |    2 -
- drivers/scsi/hptiop.c                 |    5 ++
- drivers/scsi/ibmvscsi/ibmvfc.c        |    7 +++
- drivers/scsi/ibmvscsi/ibmvscsi.c      |    7 +++
- drivers/scsi/ipr.c                    |    7 +++
- drivers/scsi/libfc/fc_fcp.c           |   47 ++++++++++-----------
- drivers/scsi/libsas/sas_scsi_host.c   |    6 ++-
- drivers/scsi/lpfc/lpfc_scsi.c         |   75 ++++++++++++++++++---------------
- drivers/scsi/megaraid/megaraid_mbox.c |    7 +++
- drivers/scsi/mpt2sas/mpt2sas_scsih.c  |   10 +++-
- drivers/scsi/qla2xxx/qla_isr.c        |   32 --------------
- drivers/scsi/qla2xxx/qla_os.c         |   32 +++++++++++++-
- drivers/scsi/scsi.c                   |   10 ++++
- drivers/scsi/scsi_error.c             |   64 ++++++++++++++++++++++++++++
- drivers/scsi/scsi_scan.c              |    1 
- drivers/scsi/scsi_sysfs.c             |   41 +++++++++++++++++-
- include/linux/libata.h                |    2 -
- include/scsi/libfc.h                  |    2 -
- include/scsi/libsas.h                 |    3 +
- include/scsi/scsi_device.h            |    8 ++--
- include/scsi/scsi_host.h              |    9 ++++
- 30 files changed, 295 insertions(+), 127 deletions(-)
-
--- 
-Signature
