@@ -1,68 +1,102 @@
-From: "Moger, Babu" <Babu.Moger@lsi.com>
-Subject: RE: [PATCH] scsi_dh_rdac: Add support for Sun StorageTek
-	2510 and 2530
-Date: Wed, 26 Aug 2009 12:01:16 -0600
-Message-ID: <E463DF2B2E584B4A82673F53D62C2EF474BFDEFA@cosmail01.lsi.com>
-References: <Pine.LNX.4.64.0908251534340.21130@e-smith.charlieb.ott.istop.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Vasu Dev <vasu.dev@intel.com>
+Subject: [RFC PATCH 0/9] RFC: handle queue_depth adjustments because of
+	QUEUE_FULLs in scsi_error.c
+Date: Wed, 26 Aug 2009 11:03:13 -0700
+Message-ID: <20090826180234.23396.8148.stgit@vi1.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <Pine.LNX.4.64.0908251534340.21130@e-smith.charlieb.ott.istop.com>
-Content-Language: en-US
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:17258 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752245AbZHZSDN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Aug 2009 14:03:13 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 
-Charlie,
+First four patches are from Mike Christie's original RFC at:-
 
-   Patch looks good. However, I am seeing one more in this series({"SUN",=
- "LCSM100_E"}). You can add this as well..
+http://www.spinics.net/lists/linux-scsi/msg35959.html
+http://www.spinics.net/lists/linux-scsi/msg35962.html
+http://www.spinics.net/lists/linux-scsi/msg35961.html
+http://www.spinics.net/lists/linux-scsi/msg35963.html
+http://www.spinics.net/lists/linux-scsi/msg35964.html
 
--Babu Moger
+Above four patches adds ramp down code and I appended ramp
+up code in following patches and tested this entire
+series with libfc/fcoe. This series works fine without any
+regression and also queue_depth adjustment works for both
+ramp down and ramp up.
 
-> -----Original Message-----
-> From: dm-devel-bounces@redhat.com [mailto:dm-devel-bounces@redhat.com]
-> On Behalf Of Charlie Brady
-> Sent: Tuesday, August 25, 2009 2:40 PM
-> To: linux-scsi@vger.kernel.org; dm-devel@redhat.com
-> Subject: [dm-devel] [PATCH] scsi_dh_rdac: Add support for Sun
-> StorageTek 2510 and 2530
->=20
->=20
-> Both these storage arrays can use RDAC when configured with 'linux' as
-> the
-> initiator.
->=20
-> http://www.sun.com/storage/disk_systems/workgroup/2510/
-> http://www.sun.com/storage/disk_systems/workgroup/2530/
->=20
-> Signed-off-by: Charlie Brady <charlieb@budge.apana.org.au>
->=20
-> --- linux-2.6/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-08-25
-> 14:56:42.000000000 -0400
-> +++ linux-2.6/drivers/scsi/device_handler/scsi_dh_rdac.c.sun	2009-
-> 08-25 15:22:56.000000000 -0400
-> @@ -628,6 +628,8 @@
->   	{"SGI", "IS"},
->   	{"STK", "OPENstorage D280"},
->   	{"SUN", "CSM200_R"},
-> +	{"SUN", "LCSM100_I"},
-> +	{"SUN", "LCSM100_S"},
->   	{"SUN", "LCSM100_F"},
->   	{"DELL", "MD3000"},
->   	{"DELL", "MD3000i"},
->=20
-> --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://www.redhat.com/mailman/listinfo/dm-devel
+Above patches are updated to scsi-misc -rc7 plus recently
+submitted 64 fcoe patches series by Rob
+"[PATCH 00/64] libfc, libfcoe and fcoe updates for scsi-misc"
+This series also applies cleanly to scsi-misc -rc7.
+
+I'd appreciate review comments for added more patches for
+ramp up.
+
+I'll post my final patches to this list skipping fcoe list,
+this as per Rob Love suggestion since mostly scsi changes
+by this series beyond fcoe/libfc. However Rob agreed to
+review/Ack fcoe/libfc changes at this list.
+
+Mike, I'll be able to post my ramp up patches only once
+you send final patches for ramp down on which my patches
+depends. As I said your patches are tested for libfc,
+so most common code is already tested and they are
+good go as far as libfc goes.
+
+Signed-off-by: Vasu Dev <vasu.dev@intel.com>
+
+---
+
+Mike Christie (4):
+      drivers: convert fc drivers calling scsi_track_queue_full
+      drivers: convert drivers setting the change_queue_depth callback
+      scsi error: have scsi-ml call change_queue_depth to handle QUEUE_FULL
+      scsi-ml: modify change_queue_depth to take in reason why it is being called
+
+Vasu Dev (5):
+      libfc: adds queue_depth ramp up to libfc
+      fcoe, libfc: fix an libfc issue with queue ramp down in libfc
+      scsi: add common queue_depth ramp up code
+      scsi: adds sdev->queue_ramp_up_period to sysfs
+      scsi: updates sdev to add queue_depth ramp up code
+
+
+ drivers/ata/libata-scsi.c             |    6 ++-
+ drivers/ata/sata_nv.c                 |    2 -
+ drivers/message/fusion/mptscsih.c     |    8 +++-
+ drivers/message/fusion/mptscsih.h     |    3 +
+ drivers/scsi/3w-9xxx.c                |    5 ++
+ drivers/scsi/3w-xxxx.c                |    5 ++
+ drivers/scsi/53c700.c                 |    5 ++
+ drivers/scsi/aacraid/linit.c          |    6 ++-
+ drivers/scsi/arcmsr/arcmsr_hba.c      |    5 ++
+ drivers/scsi/fcoe/fcoe.c              |    2 -
+ drivers/scsi/hptiop.c                 |    5 ++
+ drivers/scsi/ibmvscsi/ibmvfc.c        |    7 +++
+ drivers/scsi/ibmvscsi/ibmvscsi.c      |    7 +++
+ drivers/scsi/ipr.c                    |    7 +++
+ drivers/scsi/libfc/fc_fcp.c           |   47 ++++++++++-----------
+ drivers/scsi/libsas/sas_scsi_host.c   |    6 ++-
+ drivers/scsi/lpfc/lpfc_scsi.c         |   75 ++++++++++++++++++---------------
+ drivers/scsi/megaraid/megaraid_mbox.c |    7 +++
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c  |   10 +++-
+ drivers/scsi/qla2xxx/qla_isr.c        |   32 --------------
+ drivers/scsi/qla2xxx/qla_os.c         |   32 +++++++++++++-
+ drivers/scsi/scsi.c                   |   10 ++++
+ drivers/scsi/scsi_error.c             |   64 ++++++++++++++++++++++++++++
+ drivers/scsi/scsi_scan.c              |    1 
+ drivers/scsi/scsi_sysfs.c             |   41 +++++++++++++++++-
+ include/linux/libata.h                |    2 -
+ include/scsi/libfc.h                  |    2 -
+ include/scsi/libsas.h                 |    3 +
+ include/scsi/scsi_device.h            |    8 ++--
+ include/scsi/scsi_host.h              |    9 ++++
+ 30 files changed, 295 insertions(+), 127 deletions(-)
+
+-- 
+Signature
