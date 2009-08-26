@@ -1,52 +1,65 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: [PATCH 0/7] mpt2sas : [Resend] Discription patch
-Date: Wed, 26 Aug 2009 18:50:19 +0530
-Message-ID: <0D1E8821739E724A86F4D16902CE275C14254A4854@inbmail01.lsi.com>
-References: <20090820074914.GA17192@lsi.com>
+From: Chris Webb <chris@arachsys.com>
+Subject: Re: scsi_wait_scan not working (2.6.30.5)
+Date: Wed, 26 Aug 2009 15:34:31 +0100
+Message-ID: <20090826143431.GA4368@arachsys.com>
+References: <200908252124.22562.a.miskiewicz@gmail.com> <1251228529.7539.8.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og103.obsmtp.com ([64.18.2.159]:59815 "EHLO
-	exprod7og103.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756732AbZHZNU0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Aug 2009 09:20:26 -0400
-In-Reply-To: <20090820074914.GA17192@lsi.com>
-Content-Language: en-US
+Received: from alpha.arachsys.com ([91.203.57.7]:47058 "EHLO
+	alpha.arachsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750770AbZHZOiy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Aug 2009 10:38:54 -0400
+Content-Disposition: inline
+In-Reply-To: <1251228529.7539.8.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>, linux-scsi@vger.kernel.org, Arjan van de Ven <arjan@infradead.org>
 
-James,
+James Bottomley <James.Bottomley@suse.de> writes:
 
-Any observation for these patches?
+> It's caused by the sd async patches.  What's happening is wait_scan is
+> waiting until all the scans are complete, but now sd attachment may not
+> be completed by the time that happens.  So, although you have a scanned
+> disk, you can't mount it without and attached sd driver. Hopefully when
+> all initrds are configured to wait until root appears, this problem will
+> go away.
 
-Thanks,
-Kashyap
+This change has been causing me some puzzlement working out the right way to do
+things in our infrastructure management code. Imagine I want a shell function
+which takes a host and target name and returns a device node name, ready to
+use. (In practice the login and logout functions would do reference counting to
+avoid multiple logins to the same target for different consumers, and set up
+device mapper targets and so on, but we can ignore that here.)
 
------Original Message-----
-From: Kashyap, Desai [mailto:kashyap.desai@lsi.com] 
-Sent: Thursday, August 20, 2009 1:19 PM
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com; Moore, Eric; Prakash, Sathya
-Subject: [PATCH 0/7] mpt2sas : [Resend] Discription patch
+Previously, because iscsiadm --login does the equivalent of
 
+  echo - - -  > /sys/class/scsi_host/hostX/scan
 
-MPT2SAS driver changes. Please consider it for next update.
-patch is taken using 2.6.31-rc6.
+it was sufficient for me to do udevadm settle and then something like
 
+  shopt -s nullglob
+  local SESSION TARGET SESSION BLOCK KERNEL
+  for SESSION in /sys/class/scsi_host/host*/device/session*; do
+    for TARGET in $SESSION/iscsi_session/*/targetname; do
+      [ "`< "$TARGET"`" = "$1" ] || continue
+      for BLOCK in "$SESSION"/target*/*/block/*; do
+        KERNEL=${BLOCK##*/}
+        echo /dev/$KERNEL
+        return $SUCCESS
+      done
+    done
+  done
+  return $EMISSING
 
-[PATCH 1/7] mpt2sas: Rescan topology from Interrupt context instead of
-worker thread context 
-[PATCH 2/7] mpt2sas: Prevent sending command to FW while Host Reset. 
-[PATCH 3/7] mpt2sas: Removed wrapper funtions _scsih_link_change.
-[PATCH 4/7] mpt2sas: setting SDEV into RUNNING state from Interrupt context 
-[PATCH 5/7] mpt2sas: Raid 10 Volume is showing as Raid 1E in dmesg
-[PATCH 6/7] mpt2sas: cleanup interrupt routine and config_request
-optimization. 
-[PATCH 7/7] mpt2sas: Bump driver version 01.100.06.00
+to find my block device. Now I can't do that, and it's not obvious what the
+official way is to block until the outstanding async sd attachment has
+completed. Maybe I'm going about this completely the wrong way? Polling in a
+loop with a sleep isn't very nice, and clearly can't be how people are meant to
+do this, but everything else I've come up with is worse or more intrusive to
+the system.
 
-Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
-Reviewed-by: Eric Moore <Eric.moore@lsi.com>
----
+Cheers,
+
+Chris.
