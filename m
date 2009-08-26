@@ -1,160 +1,150 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 1/5] SCSI: Add support for 32-byte CDBs
-Date: Wed, 26 Aug 2009 15:16:31 +0300
-Message-ID: <4A95279F.5090105@panasas.com>
-References: <1251267481-24135-1-git-send-email-martin.petersen@oracle.com> <1251267481-24135-2-git-send-email-martin.petersen@oracle.com>
+Subject: Re: [PATCH 4/5] sd: Support disks formatted with DIF Type 2
+Date: Wed, 26 Aug 2009 15:26:27 +0300
+Message-ID: <4A9529F3.9070504@panasas.com>
+References: <1251267481-24135-1-git-send-email-martin.petersen@oracle.com> <1251267481-24135-5-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ip67-152-220-67.z220-152-67.customer.algx.net ([67.152.220.67]:35495
+Received: from ip67-152-220-67.z220-152-67.customer.algx.net ([67.152.220.67]:48307
 	"EHLO daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932158AbZHZMQc (ORCPT
+	by vger.kernel.org with ESMTP id S932158AbZHZM02 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Aug 2009 08:16:32 -0400
-In-Reply-To: <1251267481-24135-2-git-send-email-martin.petersen@oracle.com>
+	Wed, 26 Aug 2009 08:26:28 -0400
+In-Reply-To: <1251267481-24135-5-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, Ihab.Hamadi@emulex.com, James.Smart@emulex.com, linux-scsi@vger.kernel.org
 
-On 08/26/2009 09:17 AM, Martin K. Petersen wrote:
-> DIF Type 2 drives require 32-byte commands.  Add a suitable flag to
-> struct scsi_device that will cause scsi_setup_fs_cmnd() to allocate a
-> bigger command buffer.
+On 08/26/2009 09:18 AM, Martin K. Petersen wrote:
+> Disks formatted with DIF Type 2 reject READ/WRITE 6/10/12/16 commands
+> when protection is enabled.  Only the 32-byte variants are supported.
+> 
+> Implement support for issusing 32-byte READ/WRITE and enable support for
+> Type 2 drives in the protection type detection logic.
 > 
 > Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 > ---
->  drivers/scsi/scsi_lib.c    |   36 +++++++++++++++++++++++++++++++++++-
->  include/scsi/scsi.h        |    1 +
->  include/scsi/scsi_device.h |    1 +
->  3 files changed, 37 insertions(+), 1 deletions(-)
+>  drivers/scsi/sd.c   |   55 ++++++++++++++++++++++++++++++++++++++-------------
+>  include/scsi/scsi.h |    3 ++
+>  2 files changed, 44 insertions(+), 14 deletions(-)
 > 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 662024d..fc752b5 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -67,6 +67,9 @@ static struct scsi_host_sg_pool scsi_sg_pools[] = {
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 36e2333..a26371f 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -413,6 +413,7 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+>  	sector_t threshold;
+>  	unsigned int this_count = blk_rq_sectors(rq);
+>  	int ret, host_dif;
+> +	unsigned char protect;
 >  
->  struct kmem_cache *scsi_sdb_cache;
->  
-> +struct kmem_cache *cdb_cache;
-> +mempool_t *cdb_pool;
+>  	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
+>  		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
+> @@ -545,13 +546,41 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+>  	/* Set RDPROTECT/WRPROTECT if disk is formatted with DIF */
+>  	host_dif = scsi_host_dif_capable(sdp->host, sdkp->protection_type);
+>  	if (host_dif)
+> -		SCpnt->cmnd[1] = 1 << 5;
+> +		protect = 1 << 5;
+>  	else
+> -		SCpnt->cmnd[1] = 0;
+> -
+> -	if (block > 0xffffffff) {
+> +		protect = 0;
 > +
->  static void scsi_run_queue(struct request_queue *q);
->  
->  /*
-> @@ -642,6 +645,10 @@ static void __scsi_release_buffers(struct scsi_cmnd *cmd, int do_bidi_check)
->  
->  	if (scsi_prot_sg_count(cmd))
->  		scsi_free_sgtable(cmd->prot_sdb);
+> +	if (host_dif == SD_DIF_TYPE2_PROTECTION) {
+> +		BUG_ON(rq->cmd_len != SCSI_EXT_CDB_SIZE);
+
+This is not nice you check on the rq->cmd_len but proceed to use
+the SCpnt->cmnd. Better ask for SCpnt->cmd_len, just for consistency
+
+> +		SCpnt->cmnd[0] = VARIABLE_LENGTH_CMD;
+> +		SCpnt->cmnd[7] = 0x18;
+> +		SCpnt->cmnd[9] = (rq_data_dir(rq) == READ) ? READ_32 : WRITE_32;
+> +		SCpnt->cmnd[10] = protect | (blk_fua_rq(rq) ? 0x8 : 0);
 > +
-> +	if (cmd->cmd_len == SCSI_EXT_CDB_SIZE)
-> +		mempool_free(cmd->cmnd, cdb_pool);
+> +		/* LBA */
+> +		SCpnt->cmnd[12] = sizeof(block) > 4 ? (unsigned char) (block >> 56) & 0xff : 0;
+> +		SCpnt->cmnd[13] = sizeof(block) > 4 ? (unsigned char) (block >> 48) & 0xff : 0;
+> +		SCpnt->cmnd[14] = sizeof(block) > 4 ? (unsigned char) (block >> 40) & 0xff : 0;
+> +		SCpnt->cmnd[15] = sizeof(block) > 4 ? (unsigned char) (block >> 32) & 0xff : 0;
+> +		SCpnt->cmnd[16] = (unsigned char) (block >> 24) & 0xff;
+> +		SCpnt->cmnd[17] = (unsigned char) (block >> 16) & 0xff;
+> +		SCpnt->cmnd[18] = (unsigned char) (block >> 8) & 0xff;
+> +		SCpnt->cmnd[19] = (unsigned char) block & 0xff;
 > +
-
-This will not work. The cmd->cmnd might happen to be form an upper
-layer through bsg or blk_execute_xxx and might just be SCSI_EXT_CDB_SIZE.
-
-We could say to maybe:
-	if (cmd->cmnd != cmd->req->cmd)
-
-which means scsi allocated the buffer and not use the block supplied one
-but that might be dangerous and will need a fat comment that states that
-scsi drivers must use the scsi_cmnd pointer and not the request's.
-Alternatively you could:
-
-	if ((cmd->cmd_len == SCSI_EXT_CDB_SIZE) && blk_fs_request(cmnd->req))
-
-since variable length can only come BLOCK_PC currently. But this will need to change
-again later when ULDs might want to issue other commands that are SCSI_EXT_CDB_SIZE
-in the future, which again might be dangerous.
-
-or use an extra flag. You could use the first "fat comment" option above, all the drivers
-I know do only use the scsi_cmnd->cmnd pointer.
-
->  }
+> +		/* Expected Indirect LBA */
+> +		SCpnt->cmnd[20] = (unsigned char) (block >> 24) & 0xff;
+> +		SCpnt->cmnd[21] = (unsigned char) (block >> 16) & 0xff;
+> +		SCpnt->cmnd[22] = (unsigned char) (block >> 8) & 0xff;
+> +		SCpnt->cmnd[23] = (unsigned char) block & 0xff;
+> +
+> +		/* Transfer length */
+> +		SCpnt->cmnd[28] = (unsigned char) (this_count >> 24) & 0xff;
+> +		SCpnt->cmnd[29] = (unsigned char) (this_count >> 16) & 0xff;
+> +		SCpnt->cmnd[30] = (unsigned char) (this_count >> 8) & 0xff;
+> +		SCpnt->cmnd[31] = (unsigned char) this_count & 0xff;
+> +	} else if (block > 0xffffffff) {
+>  		SCpnt->cmnd[0] += READ_16 - READ_6;
+> -		SCpnt->cmnd[1] |= blk_fua_rq(rq) ? 0x8 : 0;
+> +		SCpnt->cmnd[1] = protect | (blk_fua_rq(rq) ? 0x8 : 0);
+>  		SCpnt->cmnd[2] = sizeof(block) > 4 ? (unsigned char) (block >> 56) & 0xff : 0;
+>  		SCpnt->cmnd[3] = sizeof(block) > 4 ? (unsigned char) (block >> 48) & 0xff : 0;
+>  		SCpnt->cmnd[4] = sizeof(block) > 4 ? (unsigned char) (block >> 40) & 0xff : 0;
+> @@ -572,7 +601,7 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+>  			this_count = 0xffff;
 >  
->  /*
-> @@ -1109,7 +1116,18 @@ int scsi_setup_fs_cmnd(struct scsi_device *sdev, struct request *req)
->  	if (unlikely(!cmd))
->  		return BLKPREP_DEFER;
+>  		SCpnt->cmnd[0] += READ_10 - READ_6;
+> -		SCpnt->cmnd[1] |= blk_fua_rq(rq) ? 0x8 : 0;
+> +		SCpnt->cmnd[1] = protect | (blk_fua_rq(rq) ? 0x8 : 0);
+>  		SCpnt->cmnd[2] = (unsigned char) (block >> 24) & 0xff;
+>  		SCpnt->cmnd[3] = (unsigned char) (block >> 16) & 0xff;
+>  		SCpnt->cmnd[4] = (unsigned char) (block >> 8) & 0xff;
+> @@ -1271,22 +1300,20 @@ void sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer)
 >  
-> -	memset(cmd->cmnd, 0, BLK_MAX_CDB);
-> +	if (sdev->use_32_for_rw) {
-> +		req->cmd = mempool_alloc(cdb_pool, GFP_ATOMIC);
+>  	sdkp->protection_type = type;
+>  
+> -	switch (type) {
+> -	case SD_DIF_TYPE1_PROTECTION:
+> -	case SD_DIF_TYPE3_PROTECTION:
+> -		break;
+> -
+> -	default:
+> +	if (type > SD_DIF_TYPE3_PROTECTION) {
+>  		sd_printk(KERN_ERR, sdkp, "formatted with unsupported "	\
+>  			  "protection type %u. Disabling disk!\n", type);
+>  		sdkp->capacity = 0;
+>  		return;
+>  	}
+>  
+> -	if (scsi_host_dif_capable(sdp->host, type))
+> +	if (scsi_host_dif_capable(sdp->host, type)) {
+>  		sd_printk(KERN_NOTICE, sdkp,
+>  			  "Enabling DIF Type %u protection\n", type);
+> -	else
 > +
-
-James could we get that live-lock problem we had when not
-atomically allocating the scsi_cmnd, (when sense was separated
-out)
-
-> +		if (unlikely(!req->cmd))
-> +			return BLKPREP_DEFER;
-> +
-> +		cmd->cmnd = req->cmd;
-> +		cmd->cmd_len = req->cmd_len = SCSI_EXT_CDB_SIZE;
-> +		memset(cmd->cmnd, 0, cmd->cmd_len);
+> +		if (type == SD_DIF_TYPE2_PROTECTION)
+> +			sdp->use_32_for_rw = 1;
 > +	} else
-> +		memset(cmd->cmnd, 0, BLK_MAX_CDB);
-> +
->  	return scsi_init_io(cmd, GFP_ATOMIC);
+>  		sd_printk(KERN_NOTICE, sdkp,
+>  			  "Disabling DIF Type %u protection\n", type);
 >  }
->  EXPORT_SYMBOL(scsi_setup_fs_cmnd);
-> @@ -1745,6 +1763,19 @@ int __init scsi_init_queue(void)
->  		}
->  	}
->  
-> +	cdb_cache = kmem_cache_create("scsi_cdb_32", SCSI_EXT_CDB_SIZE,
-> +				      0, 0, NULL);
-> +	if (!cdb_cache) {
-> +		printk(KERN_ERR "SCSI: can't init scsi cdb cache\n");
-> +		goto cleanup_sdb;
-> +	}
-> +
-> +	cdb_pool = mempool_create_slab_pool(SG_MEMPOOL_SIZE, cdb_cache);
-> +	if (!cdb_pool) {
-> +		printk(KERN_ERR "SCSI: can't init scsi cdb pool\n");
-> +		goto cleanup_sdb;
-> +	}
-> +
->  	return 0;
->  
->  cleanup_sdb:
-> @@ -1771,6 +1802,9 @@ void scsi_exit_queue(void)
->  		mempool_destroy(sgp->pool);
->  		kmem_cache_destroy(sgp->slab);
->  	}
-> +
-> +	mempool_destroy(cdb_pool);
-> +	kmem_cache_destroy(cdb_cache);
->  }
->  
->  /**
 > diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-> index 084478e..a7ae10a 100644
+> index a7ae10a..847de86 100644
 > --- a/include/scsi/scsi.h
 > +++ b/include/scsi/scsi.h
-> @@ -138,6 +138,7 @@ struct scsi_cmnd;
->   *	SCSI command lengths
->   */
+> @@ -129,6 +129,9 @@ struct scsi_cmnd;
+>  #define MI_REPORT_TARGET_PGS  0x0a
+>  /* values for maintenance out */
+>  #define MO_SET_TARGET_PGS     0x0a
+> +/* values for variable length command */
+> +#define READ_32		      0x09
+> +#define WRITE_32	      0x0b
 >  
-> +#define SCSI_EXT_CDB_SIZE 32
->  #define SCSI_MAX_VARLEN_CDB_SIZE 260
->  
->  /* defined in T10 SCSI Primary Commands-2 (SPC2) */
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index 3f566af..de2966b 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -129,6 +129,7 @@ struct scsi_device {
->  				 * this device */
->  	unsigned expecting_cc_ua:1; /* Expecting a CHECK_CONDITION/UNIT_ATTN
->  				     * because we did a bus reset. */
-> +	unsigned use_32_for_rw:1; /* use 32-byte read / write (DIF Type 2) */
->  	unsigned use_10_for_rw:1; /* first try 10-byte read / write */
->  	unsigned use_10_for_ms:1; /* first try 10-byte mode sense/select */
->  	unsigned skip_ms_page_8:1;	/* do not use MODE SENSE page 0x08 */
-
+>  /* Values for T10/04-262r7 */
+>  #define	ATA_16		      0x85	/* 16-byte pass-thru */
 
 Boaz
