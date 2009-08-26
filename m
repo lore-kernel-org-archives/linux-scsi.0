@@ -1,31 +1,54 @@
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: 2.6.31-rc7-git2: Reported regressions 2.6.29 -> 2.6.30
-Date: Wed, 26 Aug 2009 10:47:13 +0200
-Message-ID: <b170af450908260147o60427997ne6b9872198893c41@mail.gmail.com>
-References: <JuOd1ZASH0B.A.YGB.0zGlKB@chimera>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: DIF/DIX updates for 2.6.32
+Date: Wed, 26 Aug 2009 14:54:22 +0300
+Message-ID: <4A95226E.8030504@panasas.com>
+References: <1251267481-24135-1-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <JuOd1ZASH0B.A.YGB.0zGlKB@chimera>
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
-Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ip67-152-220-67.z220-152-67.customer.algx.net ([67.152.220.67]:35094
+	"EHLO daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753834AbZHZMJh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Aug 2009 08:09:37 -0400
+In-Reply-To: <1251267481-24135-1-git-send-email-martin.petersen@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, Ihab.Hamadi@emulex.com, James.Smart@emulex.com, linux-scsi@vger.kernel.org
 
-2009/8/25 Rafael J. Wysocki <rjw-KKrjLPT3xs0@public.gmane.org>:
-> Bug-Entry =C2=A0 =C2=A0 =C2=A0 : http://bugzilla.kernel.org/show_bug.=
-cgi?id=3D13514
-> Subject =C2=A0 =C2=A0 =C2=A0 =C2=A0 : acer_wmi causes stack corruptio=
-n
-> Submitter =C2=A0 =C2=A0 =C2=A0 : Rus <harbour-K87ZgELTUEPsG83rWm+8vg@public.gmane.org>
-> Date =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0: 2009-06-12 08:13 (75 =
-days old)
+On 08/26/2009 09:17 AM, Martin K. Petersen wrote:
+> Updates to the DIF/DIX code for 2.6.32:
+> 
+>  - Add support for 32-byte CDBs to SCSI layer
+> 
+>  - Deprecate the DIX CONVERT ops
+> 
+>  - Detach pure DIF support from CONFIG_BLK_DEV_INTEGRITY
+> 
+>  - Add support for DIF Type 2 devices in sd
+> 
+>  - Add DIF Type 2 support to scsi_debug
+> 
 
-It has patch, just Len doesn't seem to... don't know, read the topic?
-http://patchwork.kernel.org/patch/29082/
+Hi Martin.
 
-Can we ping Len somehow to push this patch directly to Linus's tree?
+I have not followed your work very closely so please forgive me if
+I'm asking dumb questions. I've meant to be asking you about something
+for a while.
 
---=20
-Rafa=C5=82 Mi=C5=82ecki
+With an sd disk supporting DIF/DIX, do you have this problems?
+http://thread.gmane.org/gmane.linux.kernel.device-mapper.devel/5392
+[Desynchronizing dm-raid1]
+
+I know that we also have the above problem with iscsi and data-digest
+such that when we come to sign the data it might change on us before
+the target receives it.
+
+(Personally I'm working on a Mirror system over osd's and will have to
+ test for this problem as well. I anticipate a need to copy the data
+ before submission like the dm-raid1 does)
+
+Best regards
+Boaz
