@@ -1,86 +1,44 @@
 From: Vasu Dev <vasu.dev@intel.com>
-Subject: [RFC PATCH 2/9] scsi error: have scsi-ml call change_queue_depth to
-	handle QUEUE_FULL
-Date: Wed, 26 Aug 2009 11:03:25 -0700
-Message-ID: <20090826180325.23396.68819.stgit@vi1.jf.intel.com>
+Subject: [RFC PATCH 9/9] libfc: adds queue_depth ramp up to libfc
+Date: Wed, 26 Aug 2009 11:04:03 -0700
+Message-ID: <20090826180403.23396.61277.stgit@vi1.jf.intel.com>
 References: <20090826180234.23396.8148.stgit@vi1.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:57189 "EHLO mga09.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:34213 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752434AbZHZSDZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Aug 2009 14:03:25 -0400
+	id S1752437AbZHZSEB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Aug 2009 14:04:01 -0400
 In-Reply-To: <20090826180234.23396.8148.stgit@vi1.jf.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+Increases queue_depth by one on fc_change_queue_depth call back
+with reason SCSI_QDEPTH_RAMP_UP.
 
-This has scsi-ml call the change_queue_depth functions when
-we get a QUEUE_FULL. It will only change the queue depth if
-change_queue_depth is set because the LLD may have to
-modify some internal resources, so I thought this would
-be the safest route.
-
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 ---
 
- drivers/scsi/scsi_error.c |   26 +++++++++++++++++++++++++-
- 1 files changed, 25 insertions(+), 1 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 877204d..7d1b862 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -331,6 +331,27 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
- 	}
- }
- 
-+static void scsi_handle_queue_full(struct scsi_device *sdev)
-+{
-+	struct scsi_host_template *sht = sdev->host->hostt;
-+	struct scsi_device *tmp_sdev;
-+
-+	if (!sht->change_queue_depth)
-+		return;
-+
-+	shost_for_each_device(tmp_sdev, sdev->host) {
-+		if (tmp_sdev->id != sdev->id)
-+			continue;
-+		/*
-+		 * We do not know the number of commands that were at
-+		 * the device when we got the queue full so we start
-+		 * from the highest possible value and work our way down.
-+		 */
-+		sht->change_queue_depth(tmp_sdev, tmp_sdev->queue_depth - 1,
-+					SCSI_QDEPTH_QFULL);
-+	}
-+}
-+
- /**
-  * scsi_eh_completed_normally - Disposition a eh cmd on return from LLD.
-  * @scmd:	SCSI cmd to examine.
-@@ -387,8 +408,10 @@ static int scsi_eh_completed_normally(struct scsi_cmnd *scmd)
- 		 * let issuer deal with this, it could be just fine
- 		 */
- 		return SUCCESS;
--	case BUSY:
- 	case QUEUE_FULL:
-+		scsi_handle_queue_full(scmd->device);
-+		/* fall through */
-+	case BUSY:
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index dda4162..92e8a1b 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -2054,6 +2054,11 @@ int fc_change_queue_depth(struct scsi_device *sdev, int qdepth, int reason)
+ 	case SCSI_QDEPTH_QFULL:
+ 		scsi_track_queue_full(sdev, qdepth);
+ 		break;
++	case SCSI_QDEPTH_RAMP_UP:
++		if (qdepth + 1 <= FC_FCP_DFLT_QUEUE_DEPTH)
++			scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev),
++						qdepth + 1);
++		break;
  	default:
- 		return FAILED;
+ 		return -EOPNOTSUPP;
  	}
-@@ -1384,6 +1407,7 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 	 */
- 	switch (status_byte(scmd->result)) {
- 	case QUEUE_FULL:
-+		scsi_handle_queue_full(scmd->device);
- 		/*
- 		 * the case of trying to send too many commands to a
- 		 * tagged queueing device.
 
