@@ -1,142 +1,65 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 4/5] sd: Support disks formatted with DIF Type 2
-Date: Wed, 26 Aug 2009 02:18:00 -0400
-Message-ID: <1251267481-24135-5-git-send-email-martin.petersen@oracle.com>
-References: <1251267481-24135-1-git-send-email-martin.petersen@oracle.com>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: O_DIRECT and barriers
+Date: Wed, 26 Aug 2009 16:34:55 +1000
+Message-ID: <20090826063455.GA2417__29985.3109675043$1251269500$gmane$org@discord.disaster>
+References: <1250697884-22288-1-git-send-email-jack@suse.cz> <20090820221221.GA14440@infradead.org> <20090821114010.GG12579@kernel.dk> <20090821135403.GA6208@shareable.org> <20090821142635.GB30617@infradead.org> <20090821220852.GM9529@mit.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet12.oracle.com ([148.87.113.124]:48961 "EHLO
-	rgminet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755987AbZHZGSW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Aug 2009 02:18:22 -0400
-In-Reply-To: <1251267481-24135-1-git-send-email-martin.petersen@oracle.com>
+Received: from bld-mail13.adl6.internode.on.net ([150.101.137.98]:36528 "EHLO
+	mail.internode.on.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756830AbZHZGul (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Aug 2009 02:50:41 -0400
+Content-Disposition: inline
+In-Reply-To: <20090821220852.GM9529@mit.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, Ihab.Hamadi@emulex.com, James.Smart@emulex.com, linux-scsi@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Theodore Tso <tytso@mit.edu>, Christoph Hellwig <hch@infradead.org>, Jamie Lokier <jamie@shareable.org>, Jens Axboe <jens.axboe@oracle.com>, linux-fsdevel@vger.kernel.org, linux-scsi
 
-Disks formatted with DIF Type 2 reject READ/WRITE 6/10/12/16 commands
-when protection is enabled.  Only the 32-byte variants are supported.
+On Fri, Aug 21, 2009 at 06:08:52PM -0400, Theodore Tso wrote:
+> On Fri, Aug 21, 2009 at 10:26:35AM -0400, Christoph Hellwig wrote:
+> > > It turns out that applications needing integrity must use fdatasync or
+> > > O_DSYNC (or O_SYNC) *already* with O_DIRECT, because the kernel may
+> > > choose to use buffered writes at any time, with no signal to the
+> > > application.
+> > 
+> > The fallback was a relatively recent addition to the O_DIRECT semantics
+> > for broken filesystems that can't handle holes very well.  Fortunately
+> > enough we do force O_SYNC (that is Linux O_SYNC aka Posix O_DSYNC)
+> > semantics for that already.
+> 
+> Um, actually, we don't.  If we did that, we would have to wait for a
+> journal commit to complete before allowing the write(2) to complete,
+> which would be especially painfully slow for ext3.
+> 
+> This question recently came up on the ext4 developer's list, because
+> of a question of how direct I/O to an preallocated (uninitialized)
+> extent should be handled.  Are we supposed to guarantee synchronous
+> updates of the metadata by the time write(2) returns, or not?  One of
+> the ext4 developers (I can't remember if it was Mingming or Eric)
+> asked an XFS developer what they did in that case, and I believe the
+> answer they were given was that XFS started a commit, but did *not*
+> wait for the commit to complete before returning from the Direct I/O
+> write.  In fact, they were told (I believe this was from an SGI
+> engineer, but I don't remember the name; we can track that down if
+> it's important) that if an application wanted to guarantee metadata
+> would be updated for an extending write, they had to use fsync() or
+> O_SYNC/O_DSYNC.  
 
-Implement support for issusing 32-byte READ/WRITE and enable support for
-Type 2 drives in the protection type detection logic.
+That would have been Eric asking me. My answer that O_DIRECT does
+not imply any new data integrity guarantees associated with a
+write(2) call - it just avoids system caches. You get the same
+guarantees of resiliency as a non-O_DIRECT write(2) call at
+completion - it may or may notbe there if you crash. If you want
+some guarantee of integrity, then you need to use O_DSYNC, O_SYNC or
+call f[data]sync(2) just like all other IO.
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
----
- drivers/scsi/sd.c   |   55 ++++++++++++++++++++++++++++++++++++++-------------
- include/scsi/scsi.h |    3 ++
- 2 files changed, 44 insertions(+), 14 deletions(-)
+Also, note that direct IO is not necessarily synchronous - you can
+do asynchronous direct IO.....
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 36e2333..a26371f 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -413,6 +413,7 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
- 	sector_t threshold;
- 	unsigned int this_count = blk_rq_sectors(rq);
- 	int ret, host_dif;
-+	unsigned char protect;
- 
- 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
- 		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
-@@ -545,13 +546,41 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
- 	/* Set RDPROTECT/WRPROTECT if disk is formatted with DIF */
- 	host_dif = scsi_host_dif_capable(sdp->host, sdkp->protection_type);
- 	if (host_dif)
--		SCpnt->cmnd[1] = 1 << 5;
-+		protect = 1 << 5;
- 	else
--		SCpnt->cmnd[1] = 0;
--
--	if (block > 0xffffffff) {
-+		protect = 0;
-+
-+	if (host_dif == SD_DIF_TYPE2_PROTECTION) {
-+		BUG_ON(rq->cmd_len != SCSI_EXT_CDB_SIZE);
-+		SCpnt->cmnd[0] = VARIABLE_LENGTH_CMD;
-+		SCpnt->cmnd[7] = 0x18;
-+		SCpnt->cmnd[9] = (rq_data_dir(rq) == READ) ? READ_32 : WRITE_32;
-+		SCpnt->cmnd[10] = protect | (blk_fua_rq(rq) ? 0x8 : 0);
-+
-+		/* LBA */
-+		SCpnt->cmnd[12] = sizeof(block) > 4 ? (unsigned char) (block >> 56) & 0xff : 0;
-+		SCpnt->cmnd[13] = sizeof(block) > 4 ? (unsigned char) (block >> 48) & 0xff : 0;
-+		SCpnt->cmnd[14] = sizeof(block) > 4 ? (unsigned char) (block >> 40) & 0xff : 0;
-+		SCpnt->cmnd[15] = sizeof(block) > 4 ? (unsigned char) (block >> 32) & 0xff : 0;
-+		SCpnt->cmnd[16] = (unsigned char) (block >> 24) & 0xff;
-+		SCpnt->cmnd[17] = (unsigned char) (block >> 16) & 0xff;
-+		SCpnt->cmnd[18] = (unsigned char) (block >> 8) & 0xff;
-+		SCpnt->cmnd[19] = (unsigned char) block & 0xff;
-+
-+		/* Expected Indirect LBA */
-+		SCpnt->cmnd[20] = (unsigned char) (block >> 24) & 0xff;
-+		SCpnt->cmnd[21] = (unsigned char) (block >> 16) & 0xff;
-+		SCpnt->cmnd[22] = (unsigned char) (block >> 8) & 0xff;
-+		SCpnt->cmnd[23] = (unsigned char) block & 0xff;
-+
-+		/* Transfer length */
-+		SCpnt->cmnd[28] = (unsigned char) (this_count >> 24) & 0xff;
-+		SCpnt->cmnd[29] = (unsigned char) (this_count >> 16) & 0xff;
-+		SCpnt->cmnd[30] = (unsigned char) (this_count >> 8) & 0xff;
-+		SCpnt->cmnd[31] = (unsigned char) this_count & 0xff;
-+	} else if (block > 0xffffffff) {
- 		SCpnt->cmnd[0] += READ_16 - READ_6;
--		SCpnt->cmnd[1] |= blk_fua_rq(rq) ? 0x8 : 0;
-+		SCpnt->cmnd[1] = protect | (blk_fua_rq(rq) ? 0x8 : 0);
- 		SCpnt->cmnd[2] = sizeof(block) > 4 ? (unsigned char) (block >> 56) & 0xff : 0;
- 		SCpnt->cmnd[3] = sizeof(block) > 4 ? (unsigned char) (block >> 48) & 0xff : 0;
- 		SCpnt->cmnd[4] = sizeof(block) > 4 ? (unsigned char) (block >> 40) & 0xff : 0;
-@@ -572,7 +601,7 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
- 			this_count = 0xffff;
- 
- 		SCpnt->cmnd[0] += READ_10 - READ_6;
--		SCpnt->cmnd[1] |= blk_fua_rq(rq) ? 0x8 : 0;
-+		SCpnt->cmnd[1] = protect | (blk_fua_rq(rq) ? 0x8 : 0);
- 		SCpnt->cmnd[2] = (unsigned char) (block >> 24) & 0xff;
- 		SCpnt->cmnd[3] = (unsigned char) (block >> 16) & 0xff;
- 		SCpnt->cmnd[4] = (unsigned char) (block >> 8) & 0xff;
-@@ -1271,22 +1300,20 @@ void sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer)
- 
- 	sdkp->protection_type = type;
- 
--	switch (type) {
--	case SD_DIF_TYPE1_PROTECTION:
--	case SD_DIF_TYPE3_PROTECTION:
--		break;
--
--	default:
-+	if (type > SD_DIF_TYPE3_PROTECTION) {
- 		sd_printk(KERN_ERR, sdkp, "formatted with unsupported "	\
- 			  "protection type %u. Disabling disk!\n", type);
- 		sdkp->capacity = 0;
- 		return;
- 	}
- 
--	if (scsi_host_dif_capable(sdp->host, type))
-+	if (scsi_host_dif_capable(sdp->host, type)) {
- 		sd_printk(KERN_NOTICE, sdkp,
- 			  "Enabling DIF Type %u protection\n", type);
--	else
-+
-+		if (type == SD_DIF_TYPE2_PROTECTION)
-+			sdp->use_32_for_rw = 1;
-+	} else
- 		sd_printk(KERN_NOTICE, sdkp,
- 			  "Disabling DIF Type %u protection\n", type);
- }
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index a7ae10a..847de86 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -129,6 +129,9 @@ struct scsi_cmnd;
- #define MI_REPORT_TARGET_PGS  0x0a
- /* values for maintenance out */
- #define MO_SET_TARGET_PGS     0x0a
-+/* values for variable length command */
-+#define READ_32		      0x09
-+#define WRITE_32	      0x0b
- 
- /* Values for T10/04-262r7 */
- #define	ATA_16		      0x85	/* 16-byte pass-thru */
+Cheers,
+
+Dave.
 -- 
-1.6.0.6
-
+Dave Chinner
+david@fromorbit.com
