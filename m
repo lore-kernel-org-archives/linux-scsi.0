@@ -1,262 +1,142 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 3/5] sd: Detach DIF from block integrity infrastructure
-Date: Wed, 26 Aug 2009 02:17:59 -0400
-Message-ID: <1251267481-24135-4-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 4/5] sd: Support disks formatted with DIF Type 2
+Date: Wed, 26 Aug 2009 02:18:00 -0400
+Message-ID: <1251267481-24135-5-git-send-email-martin.petersen@oracle.com>
 References: <1251267481-24135-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet11.oracle.com ([141.146.126.233]:36048 "EHLO
-	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755970AbZHZGSR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Aug 2009 02:18:17 -0400
+Received: from rcsinet12.oracle.com ([148.87.113.124]:48961 "EHLO
+	rgminet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755987AbZHZGSW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Aug 2009 02:18:22 -0400
 In-Reply-To: <1251267481-24135-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@hansenpartnership.com, dgilbert@interlog.com, Ihab.Hamadi@emulex.com, James.Smart@emulex.com, linux-scsi@vger.kernel.org
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-So far we have only issued DIF commands if CONFIG_BLK_DEV_INTEGRITY is
-enabled.  However, communication between initiator and target should be
-independent of protection information DMA.  There are DIF-only host
-adapters coming out that will be able to take advantage of this.
+Disks formatted with DIF Type 2 reject READ/WRITE 6/10/12/16 commands
+when protection is enabled.  Only the 32-byte variants are supported.
 
-Move the relevant DIF bits to sd.c.
+Implement support for issusing 32-byte READ/WRITE and enable support for
+Type 2 drives in the protection type detection logic.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/scsi/sd.c        |   61 +++++++++++++++++++++++++++++++--------------
- drivers/scsi/sd.h        |    4 ---
- drivers/scsi/sd_dif.c    |   53 ----------------------------------------
- include/scsi/scsi_host.h |   15 ++++++++---
- 4 files changed, 53 insertions(+), 80 deletions(-)
+ drivers/scsi/sd.c   |   55 ++++++++++++++++++++++++++++++++++++++-------------
+ include/scsi/scsi.h |    3 ++
+ 2 files changed, 44 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index b7b9fec..36e2333 100644
+index 36e2333..a26371f 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -370,6 +370,31 @@ static void scsi_disk_put(struct scsi_disk *sdkp)
- 	mutex_unlock(&sd_ref_mutex);
- }
+@@ -413,6 +413,7 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 	sector_t threshold;
+ 	unsigned int this_count = blk_rq_sectors(rq);
+ 	int ret, host_dif;
++	unsigned char protect;
  
-+static void sd_prot_op(struct scsi_cmnd *scmd, unsigned int dif)
-+{
-+	unsigned int prot_op = SCSI_PROT_NORMAL;
-+	unsigned int dix = scsi_prot_sg_count(scmd);
+ 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
+ 		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
+@@ -545,13 +546,41 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 	/* Set RDPROTECT/WRPROTECT if disk is formatted with DIF */
+ 	host_dif = scsi_host_dif_capable(sdp->host, sdkp->protection_type);
+ 	if (host_dif)
+-		SCpnt->cmnd[1] = 1 << 5;
++		protect = 1 << 5;
+ 	else
+-		SCpnt->cmnd[1] = 0;
+-
+-	if (block > 0xffffffff) {
++		protect = 0;
 +
-+	if (scmd->sc_data_direction == DMA_FROM_DEVICE) {
-+		if (dif && dix)
-+			prot_op = SCSI_PROT_READ_PASS;
-+		else if (dif && !dix)
-+			prot_op = SCSI_PROT_READ_STRIP;
-+		else if (!dif && dix)
-+			prot_op = SCSI_PROT_READ_INSERT;
-+	} else {
-+		if (dif && dix)
-+			prot_op = SCSI_PROT_WRITE_PASS;
-+		else if (dif && !dix)
-+			prot_op = SCSI_PROT_WRITE_INSERT;
-+		else if (!dif && dix)
-+			prot_op = SCSI_PROT_WRITE_STRIP;
-+	}
++	if (host_dif == SD_DIF_TYPE2_PROTECTION) {
++		BUG_ON(rq->cmd_len != SCSI_EXT_CDB_SIZE);
++		SCpnt->cmnd[0] = VARIABLE_LENGTH_CMD;
++		SCpnt->cmnd[7] = 0x18;
++		SCpnt->cmnd[9] = (rq_data_dir(rq) == READ) ? READ_32 : WRITE_32;
++		SCpnt->cmnd[10] = protect | (blk_fua_rq(rq) ? 0x8 : 0);
 +
-+	scsi_set_prot_op(scmd, prot_op);
-+	scsi_set_prot_type(scmd, dif);
-+}
++		/* LBA */
++		SCpnt->cmnd[12] = sizeof(block) > 4 ? (unsigned char) (block >> 56) & 0xff : 0;
++		SCpnt->cmnd[13] = sizeof(block) > 4 ? (unsigned char) (block >> 48) & 0xff : 0;
++		SCpnt->cmnd[14] = sizeof(block) > 4 ? (unsigned char) (block >> 40) & 0xff : 0;
++		SCpnt->cmnd[15] = sizeof(block) > 4 ? (unsigned char) (block >> 32) & 0xff : 0;
++		SCpnt->cmnd[16] = (unsigned char) (block >> 24) & 0xff;
++		SCpnt->cmnd[17] = (unsigned char) (block >> 16) & 0xff;
++		SCpnt->cmnd[18] = (unsigned char) (block >> 8) & 0xff;
++		SCpnt->cmnd[19] = (unsigned char) block & 0xff;
 +
- /**
-  *	sd_init_command - build a scsi (read or write) command from
-  *	information in the request structure.
-@@ -578,8 +603,7 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
++		/* Expected Indirect LBA */
++		SCpnt->cmnd[20] = (unsigned char) (block >> 24) & 0xff;
++		SCpnt->cmnd[21] = (unsigned char) (block >> 16) & 0xff;
++		SCpnt->cmnd[22] = (unsigned char) (block >> 8) & 0xff;
++		SCpnt->cmnd[23] = (unsigned char) block & 0xff;
++
++		/* Transfer length */
++		SCpnt->cmnd[28] = (unsigned char) (this_count >> 24) & 0xff;
++		SCpnt->cmnd[29] = (unsigned char) (this_count >> 16) & 0xff;
++		SCpnt->cmnd[30] = (unsigned char) (this_count >> 8) & 0xff;
++		SCpnt->cmnd[31] = (unsigned char) this_count & 0xff;
++	} else if (block > 0xffffffff) {
+ 		SCpnt->cmnd[0] += READ_16 - READ_6;
+-		SCpnt->cmnd[1] |= blk_fua_rq(rq) ? 0x8 : 0;
++		SCpnt->cmnd[1] = protect | (blk_fua_rq(rq) ? 0x8 : 0);
+ 		SCpnt->cmnd[2] = sizeof(block) > 4 ? (unsigned char) (block >> 56) & 0xff : 0;
+ 		SCpnt->cmnd[3] = sizeof(block) > 4 ? (unsigned char) (block >> 48) & 0xff : 0;
+ 		SCpnt->cmnd[4] = sizeof(block) > 4 ? (unsigned char) (block >> 40) & 0xff : 0;
+@@ -572,7 +601,7 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 			this_count = 0xffff;
  
- 	/* If DIF or DIX is enabled, tell HBA how to handle request */
- 	if (host_dif || scsi_prot_sg_count(SCpnt))
--		sd_dif_op(SCpnt, host_dif, scsi_prot_sg_count(SCpnt),
--			  sdkp->protection_type);
-+		sd_prot_op(SCpnt, host_dif);
- 
- 	/*
- 	 * We shouldn't disconnect in the middle of a sector, so with a dumb
-@@ -1238,34 +1262,33 @@ void sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer)
- 	u8 type;
- 
- 	if (scsi_device_protection(sdp) == 0 || (buffer[12] & 1) == 0)
--		type = 0;
--	else
--		type = ((buffer[12] >> 1) & 7) + 1; /* P_TYPE 0 = Type 1 */
-+		return;
-+
-+	type = ((buffer[12] >> 1) & 7) + 1; /* P_TYPE 0 = Type 1 */
-+
-+	if (type == sdkp->protection_type || !sdkp->first_scan)
-+		return;
+ 		SCpnt->cmnd[0] += READ_10 - READ_6;
+-		SCpnt->cmnd[1] |= blk_fua_rq(rq) ? 0x8 : 0;
++		SCpnt->cmnd[1] = protect | (blk_fua_rq(rq) ? 0x8 : 0);
+ 		SCpnt->cmnd[2] = (unsigned char) (block >> 24) & 0xff;
+ 		SCpnt->cmnd[3] = (unsigned char) (block >> 16) & 0xff;
+ 		SCpnt->cmnd[4] = (unsigned char) (block >> 8) & 0xff;
+@@ -1271,22 +1300,20 @@ void sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer)
  
  	sdkp->protection_type = type;
  
- 	switch (type) {
--	case SD_DIF_TYPE0_PROTECTION:
- 	case SD_DIF_TYPE1_PROTECTION:
- 	case SD_DIF_TYPE3_PROTECTION:
- 		break;
- 
--	case SD_DIF_TYPE2_PROTECTION:
--		sd_printk(KERN_ERR, sdkp, "formatted with DIF Type 2 "	\
--			  "protection which is currently unsupported. "	\
--			  "Disabling disk!\n");
--		goto disable;
+-	switch (type) {
+-	case SD_DIF_TYPE1_PROTECTION:
+-	case SD_DIF_TYPE3_PROTECTION:
+-		break;
 -
- 	default:
--		sd_printk(KERN_ERR, sdkp, "formatted with unknown "	\
--			  "protection type %d. Disabling disk!\n", type);
--		goto disable;
-+		sd_printk(KERN_ERR, sdkp, "formatted with unsupported "	\
-+			  "protection type %u. Disabling disk!\n", type);
-+		sdkp->capacity = 0;
-+		return;
- 	}
- 
--	return;
--
--disable:
--	sdkp->capacity = 0;
-+	if (scsi_host_dif_capable(sdp->host, type))
-+		sd_printk(KERN_NOTICE, sdkp,
-+			  "Enabling DIF Type %u protection\n", type);
-+	else
-+		sd_printk(KERN_NOTICE, sdkp,
-+			  "Disabling DIF Type %u protection\n", type);
- }
- 
- static void read_capacity_error(struct scsi_disk *sdkp, struct scsi_device *sdp,
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 8474b5b..ce1f5f8 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -101,16 +101,12 @@ struct sd_dif_tuple {
- 
- #ifdef CONFIG_BLK_DEV_INTEGRITY
- 
--extern void sd_dif_op(struct scsi_cmnd *, unsigned int, unsigned int, unsigned int);
- extern void sd_dif_config_host(struct scsi_disk *);
- extern int sd_dif_prepare(struct request *rq, sector_t, unsigned int);
- extern void sd_dif_complete(struct scsi_cmnd *, unsigned int);
- 
- #else /* CONFIG_BLK_DEV_INTEGRITY */
- 
--static inline void sd_dif_op(struct scsi_cmnd *cmd, unsigned int a, unsigned int b, unsigned int c)
--{
--}
- static inline void sd_dif_config_host(struct scsi_disk *disk)
- {
- }
-diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
-index 84224dd..88da977 100644
---- a/drivers/scsi/sd_dif.c
-+++ b/drivers/scsi/sd_dif.c
-@@ -320,15 +320,6 @@ void sd_dif_config_host(struct scsi_disk *sdkp)
- 		dif = 0; dix = 1;
- 	}
- 
--	if (type) {
--		if (dif)
--			sd_printk(KERN_NOTICE, sdkp,
--				  "Enabling DIF Type %d protection\n", type);
--		else
--			sd_printk(KERN_NOTICE, sdkp,
--				  "Disabling DIF Type %d protection\n", type);
--	}
--
- 	if (!dix)
+-	default:
++	if (type > SD_DIF_TYPE3_PROTECTION) {
+ 		sd_printk(KERN_ERR, sdkp, "formatted with unsupported "	\
+ 			  "protection type %u. Disabling disk!\n", type);
+ 		sdkp->capacity = 0;
  		return;
- 
-@@ -360,50 +351,6 @@ void sd_dif_config_host(struct scsi_disk *sdkp)
- }
- 
- /*
-- * DIF DMA operation magic decoder ring.
-- */
--void sd_dif_op(struct scsi_cmnd *scmd, unsigned int dif, unsigned int dix, unsigned int type)
--{
--	int prot_op;
--
--	prot_op = SCSI_PROT_NORMAL;
--
--	BUG_ON(dif && (scmd->cmnd[0] == READ_6 || scmd->cmnd[0] == WRITE_6));
--
--	switch (scmd->cmnd[0]) {
--	case READ_6:
--	case READ_10:
--	case READ_12:
--	case READ_16:
--		if (dif && dix)
--			prot_op = SCSI_PROT_READ_PASS;
--		else if (dif && !dix)
--			prot_op = SCSI_PROT_READ_STRIP;
--		else if (!dif && dix)
--			prot_op = SCSI_PROT_READ_INSERT;
--
--		break;
--
--	case WRITE_6:
--	case WRITE_10:
--	case WRITE_12:
--	case WRITE_16:
--		if (dif && dix)
--			prot_op = SCSI_PROT_WRITE_PASS;
--		else if (dif && !dix)
--			prot_op = SCSI_PROT_WRITE_INSERT;
--		else if (!dif && dix)
--			prot_op = SCSI_PROT_WRITE_STRIP;
--
--		break;
--	}
--
--	scsi_set_prot_op(scmd, prot_op);
--	if (dif)
--		scsi_set_prot_type(scmd, type);
--}
--
--/*
-  * The virtual start sector is the one that was originally submitted
-  * by the block layer.	Due to partitioning, MD/DM cloning, etc. the
-  * actual physical start sector is likely to be different.  Remap
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index b62a097..6e728b1 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -798,9 +798,15 @@ static inline unsigned int scsi_host_get_prot(struct Scsi_Host *shost)
- static inline unsigned int scsi_host_dif_capable(struct Scsi_Host *shost, unsigned int target_type)
- {
- 	switch (target_type) {
--	case 1: return shost->prot_capabilities & SHOST_DIF_TYPE1_PROTECTION;
--	case 2: return shost->prot_capabilities & SHOST_DIF_TYPE2_PROTECTION;
--	case 3: return shost->prot_capabilities & SHOST_DIF_TYPE3_PROTECTION;
-+	case 1:
-+		if (shost->prot_capabilities & SHOST_DIF_TYPE1_PROTECTION)
-+			return target_type;
-+	case 2:
-+		if (shost->prot_capabilities & SHOST_DIF_TYPE2_PROTECTION)
-+			return target_type;
-+	case 3:
-+		if (shost->prot_capabilities & SHOST_DIF_TYPE3_PROTECTION)
-+			return target_type;
  	}
  
- 	return 0;
-@@ -808,13 +814,14 @@ static inline unsigned int scsi_host_dif_capable(struct Scsi_Host *shost, unsign
- 
- static inline unsigned int scsi_host_dix_capable(struct Scsi_Host *shost, unsigned int target_type)
- {
-+#if defined(CONFIG_BLK_DEV_INTEGRITY)
- 	switch (target_type) {
- 	case 0: return shost->prot_capabilities & SHOST_DIX_TYPE0_PROTECTION;
- 	case 1: return shost->prot_capabilities & SHOST_DIX_TYPE1_PROTECTION;
- 	case 2: return shost->prot_capabilities & SHOST_DIX_TYPE2_PROTECTION;
- 	case 3: return shost->prot_capabilities & SHOST_DIX_TYPE3_PROTECTION;
- 	}
--
-+#endif
- 	return 0;
+-	if (scsi_host_dif_capable(sdp->host, type))
++	if (scsi_host_dif_capable(sdp->host, type)) {
+ 		sd_printk(KERN_NOTICE, sdkp,
+ 			  "Enabling DIF Type %u protection\n", type);
+-	else
++
++		if (type == SD_DIF_TYPE2_PROTECTION)
++			sdp->use_32_for_rw = 1;
++	} else
+ 		sd_printk(KERN_NOTICE, sdkp,
+ 			  "Disabling DIF Type %u protection\n", type);
  }
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index a7ae10a..847de86 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -129,6 +129,9 @@ struct scsi_cmnd;
+ #define MI_REPORT_TARGET_PGS  0x0a
+ /* values for maintenance out */
+ #define MO_SET_TARGET_PGS     0x0a
++/* values for variable length command */
++#define READ_32		      0x09
++#define WRITE_32	      0x0b
  
+ /* Values for T10/04-262r7 */
+ #define	ATA_16		      0x85	/* 16-byte pass-thru */
 -- 
 1.6.0.6
 
