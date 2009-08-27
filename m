@@ -1,62 +1,86 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 5/5] scsi_debug: Implement support for DIF Type 2
-Date: Thu, 27 Aug 2009 17:47:28 +0300
-Message-ID: <4A969C80.5090604@panasas.com>
-References: <1251267481-24135-1-git-send-email-martin.petersen@oracle.com>	 <1251267481-24135-6-git-send-email-martin.petersen@oracle.com>	 <4A952D54.5010102@panasas.com> <yq1ab1l91zy.fsf@sermon.lab.mkp.net>	 <4A965366.7080409@panasas.com> <1251380478.6426.11.camel@mulgrave.site>	 <4A96962A.8050208@panasas.com> <1251383413.6426.22.camel@mulgrave.site>
+From: Jamie Lokier <jamie@shareable.org>
+Subject: Re: O_DIRECT and barriers
+Date: Thu, 27 Aug 2009 15:50:51 +0100
+Message-ID: <20090827145051.GC31453@shareable.org>
+References: <1250697884-22288-1-git-send-email-jack@suse.cz> <20090820221221.GA14440@infradead.org> <20090821114010.GG12579@kernel.dk> <20090821135403.GA6208@shareable.org> <20090821142635.GB30617@infradead.org> <20090821220852.GM9529@mit.edu> <20090826063455.GA2417@discord.disaster> <20090826150102.GB22027@shareable.org> <20090826184700.GD6997@mit.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ip67-152-220-67.z220-152-67.customer.algx.net ([67.152.220.67]:40751
-	"EHLO daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751139AbZH0Or2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Aug 2009 10:47:28 -0400
-In-Reply-To: <1251383413.6426.22.camel@mulgrave.site>
+Received: from mail2.shareable.org ([80.68.89.115]:50889 "EHLO
+	mail2.shareable.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751469AbZH0OvC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Aug 2009 10:51:02 -0400
+Content-Disposition: inline
+In-Reply-To: <20090826184700.GD6997@mit.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+To: Theodore Tso <tytso@mit.edu>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <jens.axboe@oracle.com>, linux-fsdevel@vger.kernel.org, linux-scsi@
 
-On 08/27/2009 05:30 PM, James Bottomley wrote:
-> On Thu, 2009-08-27 at 17:20 +0300, Boaz Harrosh wrote:
->> On 08/27/2009 04:41 PM, James Bottomley wrote:
->>>
->>> The general rule is not to confuse coding styles, so the correct way to
->>> add stuff is to use the existing conventions in the file.  You can
->>> optionally convert the entire style if necessary.  However, for these
->>> get_cpu_be macros, there's no real benefit other than saving typing, so
->>> a global conversion effort simply isn't worth it.
->>>
->>
->> This is not right. The get_cpu_be macros are ten fold faster and smaller
->> on all the platforms we ever use. I'm talking about 16-96 to 1 for a 64 bit
->> operation.
+Theodore Tso wrote:
+> On Wed, Aug 26, 2009 at 04:01:02PM +0100, Jamie Lokier wrote:
+> >   1. If the automatic O_SYNC fallback mentioned by Christopher is
+> >      currently implemented at all, even in a subset of filesystems,
+> >      then I think it should be removed.
 > 
-> Assembly comparisons didn't bear this out the last time I looked; what
-> changed?
-> 
+> Could you clarify what you meant by "it" above?  I'm not sure I
+> understood what you were referring to.
 
-I'm not sure what test you made. But for instance on x86_64 which has unaligned
-cpu support, the get_unaligned_be64 is a simple SWAB instructions as opposed to
-8 "or" + 8 "shift". Not to mention BE systems which do nothing (memcpy)
+I meant the automatic O_SYNC fallback, in other words, if O_DIRECT
+falls back to buffered writing, Chris said it automatically did
+O_SYNC, and you followed up by saying it doesn't :-)
 
->> Not to mention the heart attack it gives me every time. Is that index go down
->> or up? the shifts go bigger or smaller? even just for that I would wrap them,
->> triple check, and never use anything else. But the stronger fact of the matter
->> is that I don't think there is a single used ARCH that does shifts anymore.
-> 
-> OK, but for those of us who read the standards, they explicitly specify
-> byte offset fields for everything, so cmnd[n] does map exactly to that,
-> so I find the fully folded out form easier to read and compare with the
-> relevant standard text.
-> 
-> That's why I'm not mandating anything other than keep the styles
-> consistent per file.  You're free to use whatever you like in your
-> files.
-> 
-> James
-> 
-> 
+All I'm saying is if there's _some_ code doing O_SYNC writing when
+O_DIRECT falls back to buffered, it should be ripped out.  Leave the
+syncing to explicit fsync calls from userspace.
 
-Boaz
+> >   4. On drives which need it, fdatasync/fsync must trigger a drive
+> >      cache flush even when there is no dirty page cache to write,
+> >      because dirty pages may have been written in the background
+> >      already, and because O_DIRECT writes dirty the drive cache but
+> >      not the page cache.
+> > 
+> 
+> I agree we *should* do this, but we're going to take a pretty serious
+> performance hit when we do.  Mac OS chickened out and added an
+> F_FULLSYNC option:
+
+I know about that one.  (I've done quite a lot of research on O_DIRECT
+and fsync behaviours).  It's really unfortunate that they didn't
+provide F_FULLDATASYNC, which is what a database or VM would ideally
+use.
+
+I think Vxfs provides a whole suite of mount options to adjust what
+O_SYNC and fdatasync actually do.
+
+> The concern is that there are GUI programers that want to update state
+> files after every window resize or move, and after click on a web
+> browser.  These GUI programmers then get cranky when changes get lost
+> after proprietary video drivers cause the laptop to lock up.  If we
+> make fsync() too burdensome, then fewer and fewer applications will
+> use it.  Evidently the MacOS developers decided the few applications
+> who really cared about doing device cache flushes were much smaller
+> than the fast number of applications that need a lightweight file
+> flush.  Should we do the same?  
+
+If fsync is cheap but doesn't commit changes properly - what's the
+point in encouraging applications to use it?  Without drive cache
+flushes, they will still lose changes occasionally.
+
+(Btw, don't blame proprietary video drivers.  I see too many lockups
+with open source video drivers too.)
+
+> It seems like an awful cop-out, but having seen, up front and
+> personal, how "agressively stupid" some desktop programmers can be[1],
+> I can **certainly** understand why Apple chose the F_FULLSYNC route.
+
+I did see a few of those threads, and I think your solution was genius.
+Genius at keeping people quiet that is :-)
+
+But it's also a good default.  fsync() isn't practical in shell
+scripts or Makefiles, although that's really because "mv" lacks the
+fsync option...
+
+Personally I side with "want some kind of full-system asynchronous
+transactionality please".  (Possibly aka. O_PONIES :-)
+
+-- Jamie
