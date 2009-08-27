@@ -1,137 +1,65 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: Persistent Reservations + SCSI Initiator Port TransportIDs
-Date: Thu, 27 Aug 2009 05:59:43 -0700
-Message-ID: <1251377983.26147.446.camel@haakon2.linux-iscsi.org>
-References: <1251374308.26147.430.camel@haakon2.linux-iscsi.org>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 5/5] scsi_debug: Implement support for DIF Type 2
+Date: Thu, 27 Aug 2009 09:41:18 -0400
+Message-ID: <1251380478.6426.11.camel@mulgrave.site>
+References: <1251267481-24135-1-git-send-email-martin.petersen@oracle.com>
+	 <1251267481-24135-6-git-send-email-martin.petersen@oracle.com>
+	 <4A952D54.5010102@panasas.com> <yq1ab1l91zy.fsf@sermon.lab.mkp.net>
+	 <4A965366.7080409@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from n15a.bullet.mail.mud.yahoo.com ([68.142.207.125]:22839 "HELO
-	n15a.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752525AbZH0M7n (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Aug 2009 08:59:43 -0400
-In-Reply-To: <1251374308.26147.430.camel@haakon2.linux-iscsi.org>
+Received: from cantor2.suse.de ([195.135.220.15]:45066 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750747AbZH0Nl0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Aug 2009 09:41:26 -0400
+In-Reply-To: <4A965366.7080409@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-iscsi-target-dev@googlegroups.com
-Cc: Douglas Gilbert <dgilbert@interlog.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
-On Thu, 2009-08-27 at 04:58 -0700, Nicholas A. Bellinger wrote:
-> Hi Guys,
+On Thu, 2009-08-27 at 12:35 +0300, Boaz Harrosh wrote:
+> On 08/27/2009 09:58 AM, Martin K. Petersen wrote:
+> >>>>>> "Boaz" == Boaz Harrosh <bharrosh@panasas.com> writes:
+> > 
+> >>> + *lba = (u64)cmd[19] | (u64)cmd[18] << 8 |
+> >>> + (u64)cmd[17] << 16 | (u64)cmd[16] << 24 |
+> >>> + (u64)cmd[15] << 32 | (u64)cmd[14] << 40 |
+> >>> + (u64)cmd[13] << 48 | (u64)cmd[12] << 56;
+> > 
+> > Boaz> get_unaligned_be64()
+> > 
+> > As you noticed further down in that patch I do generally use the
+> > get_unaligned_* macros in "my own" code.
+> > 
+> > However, when I update somebody else's code I try to match the existing
+> > style.  And in this case rest of get_data_transfer_info() is using
+> > explicit shifts and to me it looks absolutely horrendous to mix the two.
+> > 
+> > I generally avoid mixing cleanups and new functionality.  I don't have a
+> > problem with switching over to the macros, but in that case I think the
+> > whole function should be updated.  And that should be an orthogonal
+> > patch.
+> > 
 > 
-> After making the ISID lower case conversion specification commit to
-> fabric dependent code in iscsi_target_mod.ko earlier this morning:
-> 
-> http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=commitdiff;h=c00b09d52bb164a4c420f5ef8697e966c13dbd5e
-> 
-> I started thinking a bit more and thought perhaps doing the lower case
-> conversion for ISIDs received as part of the iSCSI Initiator Port
-> TransportID (InitiatorName w/ ISID) when handling PROUT REGISTER
-> +SPEC_I_PT=1 and PROUT REGISTER_AND_MOVE in generic target_core_mod.ko
-> PR code might also be in order, here is what I was thinking:
-> 
-> diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-> index 252f1af..7715996 100644
-> --- a/drivers/target/target_core_pr.c
-> +++ b/drivers/target/target_core_pr.c
-> @@ -1101,7 +1101,7 @@ static int core_scsi3_decode_spec_i_port(
->                                         &dest_iport[0], 64);    
->                         spin_unlock(&dest_node_acl->nacl_sess_lock);
->                         
-> -                       if (strcmp(dest_iport, iport_ptr)) {
-> +                       if (strcmp(dest_iport, tolower(iport_ptr))) {
->                                 printk(KERN_ERR "SPC-3 SPEC_I_PT: dest_iport:"
->                                         " %s and iport_ptr: %s do not match!\n",
->                                         dest_iport, iport_ptr);
-> @@ -2853,7 +2853,7 @@ static int core_scsi3_emulate_pro_register_and_move(
->                                         &dest_iport[0], 64);
->                 spin_unlock(&dest_node_acl->nacl_sess_lock);
->  
-> -               if (strcmp(dest_iport, iport_ptr)) {
-> +               if (strcmp(dest_iport, tolower(iport_ptr))) {
->                         printk(KERN_ERR "SPC-3 PR REGISTER_AND_MOVE:"
->                                 " dest_iport: %s and iport_ptr: %s do not"
->                                 " match!\n", dest_iport, iport_ptr);
-> 
-> 
-> What this code does for the iSCSI fabric case with a received iSCSI Initiator Port TransportID
-> (InitiatorName w/ ISID) is compare the extracted ISID (iport_ptr) against the ISID from the
-> running iSCSI session if one exists (dest_iport) for a Initiator ACL located from the InitiatorName
-> value in the iSCSI Initiator Port TransportID that is getting processed.
-> 
-> Obviously, I want to keep the target_core_mod PR code as fabric independent as possible
-> for future fabric module developments, and since there are currently no other SCSI fabric
-> TransportIDs that function the same way as the iSCSI Initator Port TransportID (see below),
-> and I think it should be safe to add tolower() for the above case to prevent any potential future
-> issues with with ISID comparision in the above two PROUT cases where the initiators might not
-> always be using sg_persist.  ;-)
-> 
-> Also, note that other SCSI fabrics beside iSCSI would have iport_ptr set to NULL and function
-> in the same manner as if the iSCSI Initiator Device TransportID (InitiatorName w/o ISID) was
-> received by NOT explictly checking for an existing active I_T Nexus (which is what the iSCSI
-> Initiator Port TransportID is intended to be used for) before processing the received PROUT
-> operation.
+> I don't know. For me it is like checkpatch. I do not submit code over 80
+> chars even if surrounding code does. "The new code rule".
 
-Ok, after a bit more consideration I think the better place for doing
-the lower case conversion of the received ISID from the iSCSI Initiator
-Port TransportID is in the iSCSI fabric module dependent API call (in
-struct target_core_fabric_ops->tpg_parse_pr_out_transport_id()) that
-does the fabric dependent parsing of the received TransportID, instead
-of in generic target_core_mod PR code mentioned above.
+I'd take that as a guideline rather than a rule ... Especially when
+lindent will generate 80 column long function templates over tens of
+lines squashing about five letters per line ...
 
-Here is the patch that is working as expected when the iSCSI Initiator
-is passing upper case or mixed case ISID values in the received iSCSI
-Initiator Port TransportIDs during PROUT REGISTER+SPEC_I_PT=1 and PROUT
-REGISTER_AND_MOVE ops using the new user friendly sg_persist -X support.
+> I generally agree with what you say but I think there is a balance.
+> Personally, I think this is over the balance point, but it's your call.
 
-Any comments welcome,
+The general rule is not to confuse coding styles, so the correct way to
+add stuff is to use the existing conventions in the file.  You can
+optionally convert the entire style if necessary.  However, for these
+get_cpu_be macros, there's no real benefit other than saving typing, so
+a global conversion effort simply isn't worth it.
 
---nab
-
-diff --git a/drivers/lio-core/iscsi_target_tpg.c b/drivers/lio-core/iscsi_target_tpg.c
-index 15648a5..38302a4 100644
---- a/drivers/lio-core/iscsi_target_tpg.c
-+++ b/drivers/lio-core/iscsi_target_tpg.c
-@@ -36,6 +36,7 @@
- #include <linux/spinlock.h>
- #include <linux/smp_lock.h>
- #include <linux/in.h>
-+#include <linux/ctype.h>
- #include <net/sock.h>
- #include <net/tcp.h>
- #include <scsi/scsi.h>
-@@ -248,6 +249,7 @@ extern char *lio_tpg_parse_pr_out_transport_id(
- {
-        char *p;
-        u32 tid_len, padding;
-+       int i;
-        u16 add_len;
-        u8 format_code = (buf[0] & 0xc0);
-        /*
-@@ -306,6 +308,20 @@ extern char *lio_tpg_parse_pr_out_transport_id(
-                p += 5; /* Skip over ",i,0x" seperator */
- 
-                *port_nexus_ptr = p;    
-+               /*
-+                * Go ahead and do the lower case conversion of the received
-+                * 12 ASCII characters representing the ISID in the TransportID
-+                * for comparision with the running iSCSI session's ISID in
-+                * iscsi_target.c:lio_sess_get_initiator_wwn()
-+                */
-+               for (i = 0; i < 12; i++) {
-+                       if (isdigit(*p)) {
-+                               p++;
-+                               continue;
-+                       }
-+                       *p = tolower(*p);
-+                       p++;
-+               }
-        }
- 
-        return (char *)&buf[4];
-
-
+James
 
 
