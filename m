@@ -1,49 +1,64 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: DIF/DIX updates for 2.6.32
-Date: Thu, 27 Aug 2009 12:49:42 +0300
-Message-ID: <4A9656B6.5060100@panasas.com>
-References: <1251267481-24135-1-git-send-email-martin.petersen@oracle.com>	<4A95226E.8030504@panasas.com> <yq1my5l934u.fsf@sermon.lab.mkp.net>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: Re: [RFC PATCH 9/9] libfc: adds queue_depth ramp up to libfc
+Date: Thu, 27 Aug 2009 12:19:58 +0200
+Message-ID: <20090827101957.GA5125@schmichrtp>
+References: <20090826180234.23396.8148.stgit@vi1.jf.intel.com> <20090826180403.23396.61277.stgit@vi1.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ip67-152-220-67.z220-152-67.customer.algx.net ([67.152.220.67]:4373
-	"EHLO daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752002AbZH0Jtl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Aug 2009 05:49:41 -0400
-In-Reply-To: <yq1my5l934u.fsf@sermon.lab.mkp.net>
+Received: from mtagate6.uk.ibm.com ([195.212.29.139]:37805 "EHLO
+	mtagate6.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752411AbZH0KUW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Aug 2009 06:20:22 -0400
+Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
+	by mtagate6.uk.ibm.com (8.14.3/8.13.8) with ESMTP id n7RAK99h434786
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2009 10:20:14 GMT
+Received: from d06av03.portsmouth.uk.ibm.com (d06av03.portsmouth.uk.ibm.com [9.149.37.213])
+	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n7RAJxXj1060952
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2009 11:19:59 +0100
+Received: from d06av03.portsmouth.uk.ibm.com (loopback [127.0.0.1])
+	by d06av03.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n7RAJw5e017711
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2009 11:19:59 +0100
+Content-Disposition: inline
+In-Reply-To: <20090826180403.23396.61277.stgit@vi1.jf.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-scsi@vger.kernel.org
+To: Vasu Dev <vasu.dev@intel.com>
+Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 
-On 08/27/2009 09:34 AM, Martin K. Petersen wrote:
->>>>>> "Boaz" == Boaz Harrosh <bharrosh@panasas.com> writes:
+On Wed, Aug 26, 2009 at 11:04:03AM -0700, Vasu Dev wrote:
+> Increases queue_depth by one on fc_change_queue_depth call back
+> with reason SCSI_QDEPTH_RAMP_UP.
 > 
-> Boaz> I know that we also have the above problem with iscsi and
-> Boaz> data-digest such that when we come to sign the data it might
-> Boaz> change on us before the target receives it.
+> Signed-off-by: Vasu Dev <vasu.dev@intel.com>
+> ---
 > 
-> Yep, I have the same problem.  I talked to Andrew Morton a couple of
-> months ago and he said that modifying pages in flight is "a feature" as
-> far as ext[234] is concerned.
+>  drivers/scsi/libfc/fc_fcp.c |    5 +++++
+>  1 files changed, 5 insertions(+), 0 deletions(-)
 > 
+> diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+> index dda4162..92e8a1b 100644
+> --- a/drivers/scsi/libfc/fc_fcp.c
+> +++ b/drivers/scsi/libfc/fc_fcp.c
+> @@ -2054,6 +2054,11 @@ int fc_change_queue_depth(struct scsi_device *sdev, int qdepth, int reason)
+>  	case SCSI_QDEPTH_QFULL:
+>  		scsi_track_queue_full(sdev, qdepth);
+>  		break;
+> +	case SCSI_QDEPTH_RAMP_UP:
+> +		if (qdepth + 1 <= FC_FCP_DFLT_QUEUE_DEPTH)
+> +			scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev),
+> +						qdepth + 1);
+> +		break;
+>  	default:
+>  		return -EOPNOTSUPP;
+>  	}
 
-As you might know, I have a filesystem copied from the ext2 code base.
-I'm experimenting with altering the behavior so that pages written to
-while been IOed will page fault, then sleep, until IO is done.
-Clearly this is a good "feature" until such systems like mirror or signed-
-data that are forced to reallocate-copy all IO do to the 2% optimization
-that thing gives you.
+Overall the approach looks good to me.
 
-At the final outcome I hope for a VFS support on a flip of a flag or
-something. So under laying device can turn that "feature" off when it
-means grate performance gains in it's operations.
+I am trying to find out how this applies to the zfcp driver. Is the
+approach in fc_change_queue_depth a good example for a driver that
+does not have to adjust internal resources when changing the queue
+depth?
 
-If any one has thought about that problem, and as some preliminary strategies,
-please I'm all hears. I've just started on this subject and currently I do not
-have a clue.
-
-Thanks
-Boaz
+--
+Christof Schmitt
