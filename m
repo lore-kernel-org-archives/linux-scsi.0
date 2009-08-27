@@ -1,64 +1,52 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: Re: [RFC PATCH 9/9] libfc: adds queue_depth ramp up to libfc
-Date: Thu, 27 Aug 2009 12:19:58 +0200
-Message-ID: <20090827101957.GA5125@schmichrtp>
-References: <20090826180234.23396.8148.stgit@vi1.jf.intel.com> <20090826180403.23396.61277.stgit@vi1.jf.intel.com>
+Subject: Re: [RFC PATCH 1/9] scsi-ml: modify change_queue_depth to take in
+	reason why it is being called
+Date: Thu, 27 Aug 2009 12:21:36 +0200
+Message-ID: <20090827102135.GB5125@schmichrtp>
+References: <20090826180234.23396.8148.stgit@vi1.jf.intel.com> <20090826180320.23396.70657.stgit@vi1.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate6.uk.ibm.com ([195.212.29.139]:37805 "EHLO
-	mtagate6.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752411AbZH0KUW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Aug 2009 06:20:22 -0400
-Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
-	by mtagate6.uk.ibm.com (8.14.3/8.13.8) with ESMTP id n7RAK99h434786
-	for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2009 10:20:14 GMT
-Received: from d06av03.portsmouth.uk.ibm.com (d06av03.portsmouth.uk.ibm.com [9.149.37.213])
-	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n7RAJxXj1060952
-	for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2009 11:19:59 +0100
-Received: from d06av03.portsmouth.uk.ibm.com (loopback [127.0.0.1])
-	by d06av03.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n7RAJw5e017711
-	for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2009 11:19:59 +0100
+Received: from mtagate3.de.ibm.com ([195.212.17.163]:33835 "EHLO
+	mtagate3.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752227AbZH0KVf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Aug 2009 06:21:35 -0400
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate3.de.ibm.com (8.13.1/8.13.1) with ESMTP id n7RALb5p028906
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2009 10:21:37 GMT
+Received: from d12av01.megacenter.de.ibm.com (d12av01.megacenter.de.ibm.com [9.149.165.212])
+	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n7RALa332601140
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2009 12:21:36 +0200
+Received: from d12av01.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av01.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n7RALaZr015988
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2009 12:21:36 +0200
 Content-Disposition: inline
-In-Reply-To: <20090826180403.23396.61277.stgit@vi1.jf.intel.com>
+In-Reply-To: <20090826180320.23396.70657.stgit@vi1.jf.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Vasu Dev <vasu.dev@intel.com>
 Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 
-On Wed, Aug 26, 2009 at 11:04:03AM -0700, Vasu Dev wrote:
-> Increases queue_depth by one on fc_change_queue_depth call back
-> with reason SCSI_QDEPTH_RAMP_UP.
+On Wed, Aug 26, 2009 at 11:03:20AM -0700, Vasu Dev wrote:
+> --- a/include/scsi/scsi_host.h
+> +++ b/include/scsi/scsi_host.h
+> @@ -43,6 +43,13 @@ struct blk_queue_tags;
+>  #define DISABLE_CLUSTERING 0
+>  #define ENABLE_CLUSTERING 1
 > 
-> Signed-off-by: Vasu Dev <vasu.dev@intel.com>
-> ---
-> 
->  drivers/scsi/libfc/fc_fcp.c |    5 +++++
->  1 files changed, 5 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-> index dda4162..92e8a1b 100644
-> --- a/drivers/scsi/libfc/fc_fcp.c
-> +++ b/drivers/scsi/libfc/fc_fcp.c
-> @@ -2054,6 +2054,11 @@ int fc_change_queue_depth(struct scsi_device *sdev, int qdepth, int reason)
->  	case SCSI_QDEPTH_QFULL:
->  		scsi_track_queue_full(sdev, qdepth);
->  		break;
-> +	case SCSI_QDEPTH_RAMP_UP:
-> +		if (qdepth + 1 <= FC_FCP_DFLT_QUEUE_DEPTH)
-> +			scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev),
-> +						qdepth + 1);
-> +		break;
->  	default:
->  		return -EOPNOTSUPP;
->  	}
+> +enum {
+> +	SCSI_QDEPTH_SYSFS_REQ,	/* user requested change through sysfs */
+> +	SCSI_QDEPTH_QFULL,	/* scsi-ml requested due to queue full */
+> +	SCSI_QDEPTH_RAMP_UP,	/* scsi-ml requested due to threshhold event */
+> +	SCSI_QDEPTH_RAMP_DOWN, 	/* LLD/class requested due to lld/class event */
+> +};
+> +
+>  struct scsi_host_template {
+>  	struct module *module;
+>  	const char *name;
 
-Overall the approach looks good to me.
-
-I am trying to find out how this applies to the zfcp driver. Is the
-approach in fc_change_queue_depth a good example for a driver that
-does not have to adjust internal resources when changing the queue
-depth?
+I did not find SCSI_QDEPTH_RAMP_DOWN being used. Would a LLD use this
+internally when changing the queue depth?
 
 --
 Christof Schmitt
