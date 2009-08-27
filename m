@@ -1,52 +1,65 @@
-From: Chris Mason <chris.mason@oracle.com>
-Subject: Re: DIF/DIX updates for 2.6.32
-Date: Thu, 27 Aug 2009 16:05:01 -0400
-Message-ID: <20090827200501.GA4940@think>
-References: <1251267481-24135-1-git-send-email-martin.petersen@oracle.com>
- <4A95226E.8030504@panasas.com>
- <yq1my5l934u.fsf@sermon.lab.mkp.net>
- <4A9656B6.5060100@panasas.com>
- <1251380803.6426.16.camel@mulgrave.site>
- <4A969AD4.7070309@panasas.com>
- <1251384706.6426.29.camel@mulgrave.site>
- <yq1ws4p6n4u.fsf@sermon.lab.mkp.net>
+From: Vasu Dev <vasu.dev@linux.intel.com>
+Subject: Re: [RFC PATCH 9/9] libfc: adds queue_depth ramp up to libfc
+Date: Thu, 27 Aug 2009 13:56:31 -0700
+Message-ID: <1251406591.14954.19.camel@vi2.jf.intel.com>
+References: <20090826180234.23396.8148.stgit@vi1.jf.intel.com>
+	 <20090826180403.23396.61277.stgit@vi1.jf.intel.com>
+	 <20090827101957.GA5125@schmichrtp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet11.oracle.com ([141.146.126.233]:62248 "EHLO
-	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752378AbZH0UGB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Aug 2009 16:06:01 -0400
-Content-Disposition: inline
-In-Reply-To: <yq1ws4p6n4u.fsf@sermon.lab.mkp.net>
+Received: from mga06.intel.com ([134.134.136.21]:46573 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752716AbZH0U4a (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Aug 2009 16:56:30 -0400
+In-Reply-To: <20090827101957.GA5125@schmichrtp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, Jeff Moyer <jmoyer@redhat.com>, Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org
+To: Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: Vasu Dev <vasu.dev@intel.com>, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 
-On Thu, Aug 27, 2009 at 04:02:41PM -0400, Martin K. Petersen wrote:
-> >>>>> "James" == James Bottomley <James.Bottomley@suse.de> writes:
+On Thu, 2009-08-27 at 12:19 +0200, Christof Schmitt wrote:
+> On Wed, Aug 26, 2009 at 11:04:03AM -0700, Vasu Dev wrote:
+> > Increases queue_depth by one on fc_change_queue_depth call back
+> > with reason SCSI_QDEPTH_RAMP_UP.
+> > 
+> > Signed-off-by: Vasu Dev <vasu.dev@intel.com>
+> > ---
+> > 
+> >  drivers/scsi/libfc/fc_fcp.c |    5 +++++
+> >  1 files changed, 5 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+> > index dda4162..92e8a1b 100644
+> > --- a/drivers/scsi/libfc/fc_fcp.c
+> > +++ b/drivers/scsi/libfc/fc_fcp.c
+> > @@ -2054,6 +2054,11 @@ int fc_change_queue_depth(struct scsi_device *sdev, int qdepth, int reason)
+> >  	case SCSI_QDEPTH_QFULL:
+> >  		scsi_track_queue_full(sdev, qdepth);
+> >  		break;
+> > +	case SCSI_QDEPTH_RAMP_UP:
+> > +		if (qdepth + 1 <= FC_FCP_DFLT_QUEUE_DEPTH)
+> > +			scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev),
+> > +						qdepth + 1);
+> > +		break;
+> >  	default:
+> >  		return -EOPNOTSUPP;
+> >  	}
 > 
-> >> This is not an option on a mirror system, and the performance
-> >> gain/lose is dependent on the round trip speed. If for every digest
-> >> error I have an error recovery cycle, delays, and stalls. Then no it
-> >> is not better. Not to mention some iscsi-targets that reset and the
-> >> all session must be re-established.
+> Overall the approach looks good to me.
 > 
-> James> Your suggestion of putting processes to sleep while I/O is
-> James> pending will degrade performance for everyone; that's not really
-> James> an acceptable tradeoff for improving one corner case.
+> I am trying to find out how this applies to the zfcp driver. Is the
+> approach in fc_change_queue_depth a good example for a driver that
+> does not have to adjust internal resources when changing the queue
+> depth?
 > 
-[ changing pages in flight ]
 
-> 
-> In my opinion ext[234] should simply be fixed.  If there's a significant
-> performance hit on those filesystems we could make the wait conditional
-> on a block_device flag.
+Yes, this is the case with libfc also since libfc also doesn't make any
+additional resource adjustments on this call back. However If needed
+then this call back can be used to make additional resource adjustments
+also as needed by lpfc driver in lpfc_change_queue_depth.
 
-I agree here.  It is pretty trivial in the filesystem to wait for pages
-in flight, and it shouldn't be the job of the lower layers to double
-buffer 100% of the time.
+	Vasu
 
--chris
 
