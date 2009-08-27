@@ -1,41 +1,77 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: Re: [PATCH 06/64] libfc: Export FC headers
-Date: Thu, 27 Aug 2009 12:27:39 +0200
-Message-ID: <20090827102739.GC5125@schmichrtp>
-References: <20090825205826.1553.94414.stgit@localhost.localdomain> <20090825205858.1553.17654.stgit@localhost.localdomain>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Persistent Reservations + SCSI Initiator Port TransportIDs
+Date: Thu, 27 Aug 2009 04:58:28 -0700
+Message-ID: <1251374308.26147.430.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate4.de.ibm.com ([195.212.17.164]:32955 "EHLO
-	mtagate4.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750885AbZH0K1j (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Aug 2009 06:27:39 -0400
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate4.de.ibm.com (8.13.1/8.13.1) with ESMTP id n7RAReRa023728
-	for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2009 10:27:40 GMT
-Received: from d12av04.megacenter.de.ibm.com (d12av04.megacenter.de.ibm.com [9.149.165.229])
-	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n7RARei02621484
-	for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2009 12:27:40 +0200
-Received: from d12av04.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av04.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n7RARdSC029918
-	for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2009 12:27:40 +0200
-Content-Disposition: inline
-In-Reply-To: <20090825205858.1553.17654.stgit@localhost.localdomain>
+Received: from smtp125.sbc.mail.sp1.yahoo.com ([69.147.65.184]:26983 "HELO
+	smtp125.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751981AbZH0L62 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Aug 2009 07:58:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Robert Love <robert.w.love@intel.com>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dgilbert@interlog.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, Aug 25, 2009 at 01:58:58PM -0700, Robert Love wrote:
-> Export fc_els.h, fc_fs.h, fc_gs.h and fc_ns.h so that they
-> may be used by applications.
-> 
-> This will be needed for FC Passthrough applications like fcping,
-> but could be used by other applications.
+Hi Guys,
 
-Are there already plans to implement tools like fcping? I have heard
-people thinking about the idea, but i am not aware of a project
-working on this.
+After making the ISID lower case conversion specification commit to
+fabric dependent code in iscsi_target_mod.ko earlier this morning:
 
---
-Christof Schmitt
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=commitdiff;h=c00b09d52bb164a4c420f5ef8697e966c13dbd5e
+
+I started thinking a bit more and thought perhaps doing the lower case
+conversion for ISIDs received as part of the iSCSI Initiator Port
+TransportID (InitiatorName w/ ISID) when handling PROUT REGISTER
++SPEC_I_PT=1 and PROUT REGISTER_AND_MOVE in generic target_core_mod.ko
+PR code might also be in order, here is what I was thinking:
+
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index 252f1af..7715996 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -1101,7 +1101,7 @@ static int core_scsi3_decode_spec_i_port(
+                                        &dest_iport[0], 64);    
+                        spin_unlock(&dest_node_acl->nacl_sess_lock);
+                        
+-                       if (strcmp(dest_iport, iport_ptr)) {
++                       if (strcmp(dest_iport, tolower(iport_ptr))) {
+                                printk(KERN_ERR "SPC-3 SPEC_I_PT: dest_iport:"
+                                        " %s and iport_ptr: %s do not match!\n",
+                                        dest_iport, iport_ptr);
+@@ -2853,7 +2853,7 @@ static int core_scsi3_emulate_pro_register_and_move(
+                                        &dest_iport[0], 64);
+                spin_unlock(&dest_node_acl->nacl_sess_lock);
+ 
+-               if (strcmp(dest_iport, iport_ptr)) {
++               if (strcmp(dest_iport, tolower(iport_ptr))) {
+                        printk(KERN_ERR "SPC-3 PR REGISTER_AND_MOVE:"
+                                " dest_iport: %s and iport_ptr: %s do not"
+                                " match!\n", dest_iport, iport_ptr);
+
+
+What this code does for the iSCSI fabric case with a received iSCSI Initiator Port TransportID
+(InitiatorName w/ ISID) is compare the extracted ISID (iport_ptr) against the ISID from the
+running iSCSI session if one exists (dest_iport) for a Initiator ACL located from the InitiatorName
+value in the iSCSI Initiator Port TransportID that is getting processed.
+
+Obviously, I want to keep the target_core_mod PR code as fabric independent as possible
+for future fabric module developments, and since there are currently no other SCSI fabric
+TransportIDs that function the same way as the iSCSI Initator Port TransportID (see below),
+and I think it should be safe to add tolower() for the above case to prevent any potential future
+issues with with ISID comparision in the above two PROUT cases where the initiators might not
+always be using sg_persist.  ;-)
+
+Also, note that other SCSI fabrics beside iSCSI would have iport_ptr set to NULL and function
+in the same manner as if the iSCSI Initiator Device TransportID (InitiatorName w/o ISID) was
+received by NOT explictly checking for an existing active I_T Nexus (which is what the iSCSI
+Initiator Port TransportID is intended to be used for) before processing the received PROUT
+operation.
+
+Any thoughts on this..?
+
+--nab
+
