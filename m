@@ -1,51 +1,49 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 5/5] scsi_debug: Implement support for DIF Type 2
-Date: Thu, 27 Aug 2009 12:35:34 +0300
-Message-ID: <4A965366.7080409@panasas.com>
-References: <1251267481-24135-1-git-send-email-martin.petersen@oracle.com>	<1251267481-24135-6-git-send-email-martin.petersen@oracle.com>	<4A952D54.5010102@panasas.com> <yq1ab1l91zy.fsf@sermon.lab.mkp.net>
+Subject: Re: DIF/DIX updates for 2.6.32
+Date: Thu, 27 Aug 2009 12:49:42 +0300
+Message-ID: <4A9656B6.5060100@panasas.com>
+References: <1251267481-24135-1-git-send-email-martin.petersen@oracle.com>	<4A95226E.8030504@panasas.com> <yq1my5l934u.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ip67-152-220-67.z220-152-67.customer.algx.net ([67.152.220.67]:38873
+Received: from ip67-152-220-67.z220-152-67.customer.algx.net ([67.152.220.67]:4373
 	"EHLO daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752141AbZH0Jfk (ORCPT
+	by vger.kernel.org with ESMTP id S1752002AbZH0Jtl (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Aug 2009 05:35:40 -0400
-In-Reply-To: <yq1ab1l91zy.fsf@sermon.lab.mkp.net>
+	Thu, 27 Aug 2009 05:49:41 -0400
+In-Reply-To: <yq1my5l934u.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Andrew Morton <akpm@linux-foundation.org>
 Cc: linux-scsi@vger.kernel.org
 
-On 08/27/2009 09:58 AM, Martin K. Petersen wrote:
+On 08/27/2009 09:34 AM, Martin K. Petersen wrote:
 >>>>>> "Boaz" == Boaz Harrosh <bharrosh@panasas.com> writes:
 > 
->>> + *lba = (u64)cmd[19] | (u64)cmd[18] << 8 |
->>> + (u64)cmd[17] << 16 | (u64)cmd[16] << 24 |
->>> + (u64)cmd[15] << 32 | (u64)cmd[14] << 40 |
->>> + (u64)cmd[13] << 48 | (u64)cmd[12] << 56;
+> Boaz> I know that we also have the above problem with iscsi and
+> Boaz> data-digest such that when we come to sign the data it might
+> Boaz> change on us before the target receives it.
 > 
-> Boaz> get_unaligned_be64()
-> 
-> As you noticed further down in that patch I do generally use the
-> get_unaligned_* macros in "my own" code.
-> 
-> However, when I update somebody else's code I try to match the existing
-> style.  And in this case rest of get_data_transfer_info() is using
-> explicit shifts and to me it looks absolutely horrendous to mix the two.
-> 
-> I generally avoid mixing cleanups and new functionality.  I don't have a
-> problem with switching over to the macros, but in that case I think the
-> whole function should be updated.  And that should be an orthogonal
-> patch.
+> Yep, I have the same problem.  I talked to Andrew Morton a couple of
+> months ago and he said that modifying pages in flight is "a feature" as
+> far as ext[234] is concerned.
 > 
 
-I don't know. For me it is like checkpatch. I do not submit code over 80
-chars even if surrounding code does. "The new code rule".
+As you might know, I have a filesystem copied from the ext2 code base.
+I'm experimenting with altering the behavior so that pages written to
+while been IOed will page fault, then sleep, until IO is done.
+Clearly this is a good "feature" until such systems like mirror or signed-
+data that are forced to reallocate-copy all IO do to the 2% optimization
+that thing gives you.
 
-I generally agree with what you say but I think there is a balance.
-Personally, I think this is over the balance point, but it's your call.
+At the final outcome I hope for a VFS support on a flip of a flag or
+something. So under laying device can turn that "feature" off when it
+means grate performance gains in it's operations.
+
+If any one has thought about that problem, and as some preliminary strategies,
+please I'm all hears. I've just started on this subject and currently I do not
+have a clue.
 
 Thanks
 Boaz
