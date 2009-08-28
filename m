@@ -1,47 +1,32 @@
 From: "Moger, Babu" <Babu.Moger@lsi.com>
-Subject: [PATCH][RESUBMIT] scsi_dh_rdac: Fix for returning
- correct mode select cmd return info
-Date: Fri, 28 Aug 2009 08:18:39 -0600
-Message-ID: <E463DF2B2E584B4A82673F53D62C2EF474C65F39@cosmail01.lsi.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+Subject: [PATCH 0/3][RESUBMIT] scsi_dh_rdac: Adding more debug options for
+ scsi rdac handler
+Date: Fri, 28 Aug 2009 08:22:17 -0600
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF474C65F3C@cosmail01.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <dm-devel-bounces@redhat.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exprod7og118.obsmtp.com ([64.18.2.8]:50801 "EHLO
+	exprod7og118.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751254AbZH1OWZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Aug 2009 10:22:25 -0400
 Content-Language: en-US
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
-Cc: "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>, "'dm-devel@redhat.com'" <dm-devel@redhat.com>, "Chauhan,
-	Vijay" <Vijay.Chauhan@lsi.com>, "Stankey, Robert" <Robert.Stankey@lsi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "'sekharan@linux.vnet.ibm.com'" <sekharan@linux.vnet.ibm.com>, "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>, "Stankey, Robert" <Robert.Stankey@lsi.com>, "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>
 
-The function mode_select_handle_sense returns SCSI_DH_OK even when there =
-is a sense code which is incorrect. Removing it so that it returns SCSI_D=
-H_IO when there is sense that is not handled by this function.
+Hi All,
+These patches add more debugging options to scsi rdac device handler. This can considerably reduce the time taken to debug issues in big configurations and also very helpful in addressing the support issues.
+Here is the summary of changes. 
+- Added a bit mask "module parameter" rdac_logging with 2 bits for each type of logging.
+ - currently defined only two types of logging(failover and sense logging). Can be enhanced later if required.
+- By default only failover logging is enabled which is equivalent of current logging.
+
+Thanks to Chandra, Vijay and Bob for their useful comments. This code has been tested on 2.6.31-rc5.
 
 Signed-off-by: Babu Moger <babu.moger@lsi.com>
 Reviewed-by: Vijay Chauhan <vijay.chauhan@lsi.com>
 Reviewed-by: Bob Stankey <Robert.stankey@lsi.com>
 
----
---- linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2009=
--08-22 06:20:45.000000000 -0500
-+++ linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-08-2=
-2 06:18:36.000000000 -0500
-@@ -455,8 +455,6 @@ static int mode_select_handle_sense(stru
- 	if (!ret)
- 		goto done;
-=20
--	err =3D SCSI_DH_OK;
--
- 	switch (sense_hdr.sense_key) {
- 	case NO_SENSE:
- 	case ABORTED_COMMAND:
