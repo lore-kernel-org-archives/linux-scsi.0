@@ -1,73 +1,60 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: Re: [PATCH 06/64] libfc: Export FC headers
-Date: Fri, 28 Aug 2009 09:58:49 -0700
-Message-ID: <1251478729.3384.127.camel@fritz>
-References: <20090825205826.1553.94414.stgit@localhost.localdomain>
-	 <20090825205858.1553.17654.stgit@localhost.localdomain>
-	 <20090827102739.GC5125@schmichrtp>  <1251394937.3384.72.camel@fritz>
-	 <1251448366.4339.8.camel@swen.mainz.de.ibm.com>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: Re: [PATCH][RESUBMIT] scsi_dh_rdac: Fix for returning correct mode
+	select cmd return info
+Date: Fri, 28 Aug 2009 10:50:51 -0700
+Message-ID: <1251481851.20333.3.camel@chandra-ubuntu>
+References: <E463DF2B2E584B4A82673F53D62C2EF474C65F39@cosmail01.lsi.com>
+Reply-To: sekharan@linux.vnet.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:42819 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751377AbZH1Q6r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Aug 2009 12:58:47 -0400
-In-Reply-To: <1251448366.4339.8.camel@swen.mainz.de.ibm.com>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:39733 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751227AbZH1Ruu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Aug 2009 13:50:50 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e35.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id n7SHfUnq017711
+	for <linux-scsi@vger.kernel.org>; Fri, 28 Aug 2009 11:41:30 -0600
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n7SHonLP188090
+	for <linux-scsi@vger.kernel.org>; Fri, 28 Aug 2009 11:50:50 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n7SHonBe023679
+	for <linux-scsi@vger.kernel.org>; Fri, 28 Aug 2009 11:50:49 -0600
+In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF474C65F39@cosmail01.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "swen@vnet.ibm.com" <swen@vnet.ibm.com>
-Cc: Christof Schmitt <christof.schmitt@de.ibm.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "; christopher.leech"@intel.com
+To: "Moger, Babu" <Babu.Moger@lsi.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'dm-devel@redhat.com'" <dm-devel@redhat.com>, "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>, "Stankey, Robert" <Robert.Stankey@lsi.com>, "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>
 
-On Fri, 2009-08-28 at 01:32 -0700, Swen Schillig wrote:
-> On Thu, 2009-08-27 at 10:42 -0700, Robert Love wrote:
-> > On Thu, 2009-08-27 at 03:27 -0700, Christof Schmitt wrote:
-> > > On Tue, Aug 25, 2009 at 01:58:58PM -0700, Robert Love wrote:
-> > > > Export fc_els.h, fc_fs.h, fc_gs.h and fc_ns.h so that they
-> > > > may be used by applications.
-> > > > 
-> > > > This will be needed for FC Passthrough applications like fcping,
-> > > > but could be used by other applications.
-> > > 
-> > > Are there already plans to implement tools like fcping? I have heard
-> > > people thinking about the idea, but i am not aware of a project
-> > > working on this.
-> > > 
-> > Yeah, we have an implementation in our fcoe-utils package. You can
-> > download that package here- git://open-fcoe.org/openfc/fcoe-utils.git.
-> > 
-> > //Rob
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> Hi Rob
-> 
-> Are there any plans to extend your fcoe-utils package with some more
-> tools or functionality ?
-> Maybe something like fctrace, ...
-> 
-There aren't any specific plans for new user space tools at the moment.
-Most of our time is being spent on adding functionality to libfc,
-libfcoe and fcoe. We're also making some improvements to the other tools
-in fcoe-utils that you might not care about as much. fcoeadm (interacts
-with fcoe.ko) and fcoemon (DCB monitoring ans fcoe system service
-daemon) are the primary applications in that package.
 
-Regarding other applications- Chris Leech is working on patches to add
-more registration commands (to the directory server) to libfc and to
-test those changes he has a modified fcping to do directory server
-queries, using FC passthrough. We'll probably check that tool in too.
-
-> If so, would you be interested in code contributions in this area ?
-> Not sure about legal so far, but will see.
+On Fri, 2009-08-28 at 08:18 -0600, Moger, Babu wrote:
+> The function mode_select_handle_sense returns SCSI_DH_OK even when there is a sense code which is incorrect. Removing it so that it returns SCSI_DH_IO when there is sense that is not handled by this function.
 > 
-I would definitely be interested contributions. fctrace would be great.
-Also, if you want to patch fcping or another application so that it
-works with ZFCP I'd be glad to accept those patches too.
+> Signed-off-by: Babu Moger <babu.moger@lsi.com>
+> Reviewed-by: Vijay Chauhan <vijay.chauhan@lsi.com>
+> Reviewed-by: Bob Stankey <Robert.stankey@lsi.com>
 
-//Rob
+Reviewed-by: Chandra Seetharaman <sekharan@us.ibm.com>
+
+> 
+> ---
+> --- linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2009-08-22 06:20:45.000000000 -0500
+> +++ linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-08-22 06:18:36.000000000 -0500
+> @@ -455,8 +455,6 @@ static int mode_select_handle_sense(stru
+>  	if (!ret)
+>  		goto done;
+> 
+> -	err = SCSI_DH_OK;
+> -
+>  	switch (sense_hdr.sense_key) {
+>  	case NO_SENSE:
+>  	case ABORTED_COMMAND:
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
