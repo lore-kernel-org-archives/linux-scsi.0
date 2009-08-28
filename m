@@ -1,49 +1,41 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] zfcp: Test kmalloc failure in scsi_get_vpd_page()
-Date: Thu, 27 Aug 2009 23:45:31 +0000
-Message-ID: <1251416731.27356.8.camel@mulgrave.site>
-References: <4A92BE18.50208@gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 4/6] RFC: beiscsi: iscsi hook in and handling code
+Date: Fri, 28 Aug 2009 00:00:56 -0500
+Message-ID: <4A976488.3020708@cs.wisc.edu>
+References: <20090827221905.bf8a1508@mailhost.serverengines.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:37111 "EHLO mx1.suse.de"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:51607 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751911AbZH0Xpg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Aug 2009 19:45:36 -0400
-In-Reply-To: <4A92BE18.50208@gmail.com>
+	id S1751160AbZH1FBC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Aug 2009 01:01:02 -0400
+In-Reply-To: <20090827221905.bf8a1508@mailhost.serverengines.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roel Kluin <roel.kluin@gmail.com>
-Cc: linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: Jayamohan Kalickal <jayamohank@serverengines.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 2009-08-24 at 18:21 +0200, Roel Kluin wrote:
-> kmalloc() may fail, so test whether it succeeded.
+Jayamohan Kalickal wrote:
+>   > +
+>   > + cls_session =
+>   > +  iscsi_session_setup(&beiscsi_iscsi_transport, shost, cmds_max,
+>   
+>   
+>   
+>   Was there any limit on the number of commands per session? What about
+>   per port/scsi_host?
+>      The maximum number of commands is the queuedepth. Yes , we have a limit per port(scsi_host ) as well.  Am I required to specify them here. I haven't understood the comment.
 > 
-> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-> ---
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index 2de5f3a..34fdde0 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -1056,6 +1056,9 @@ unsigned char *scsi_get_vpd_page(struct scsi_device *sdev, u8 page)
->  
->  	kfree(buf);
->  	buf = kmalloc(len + 4, GFP_KERNEL);
-> +	if (!buf)
-> +		return NULL;
-> +
 
-Firstly, this won't actually apply ... you should be developing against
-either the SCSI trees or linux-next to get the latest versions in git.
+I was actually just asking because I was curious and because I was 
+wondering about what was going on below.
 
-Secondly it's not really right for the most common use cases, which
-don't usually want the whole vpd buffer anyway.  I don't really see a
-simple way of fixing it without altering the interface, though.
+The host limit should just get set in scsi_host_template->can_queue (you 
+did this already). Then nelow you do not want to set the 
+shost->can_queue to cmds_max.
 
-James
-
----
-
-
-
+Did the queuedepth comment mean you have a per session limit too? If so 
+then you at least want to do a min(cmds_max, your_max_queue_depth) to 
+make sure the iscsi layer does not send more commands than you can handle.
