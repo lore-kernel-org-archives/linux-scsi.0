@@ -1,42 +1,44 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: RE: [PATCH 1/3][RESUBMIT] scsi_dh_rdac: changes to collect
-	the	debug information during rdac_activate
-Date: Fri, 28 Aug 2009 18:06:04 -0700
-Message-ID: <1251507964.26079.6.camel@chandra-ubuntu>
-References: <E463DF2B2E584B4A82673F53D62C2EF474C65F3D@cosmail01.lsi.com>
-	 <1251482228.20333.9.camel@chandra-ubuntu>
-	 <E463DF2B2E584B4A82673F53D62C2EF474C66194@cosmail01.lsi.com>
-Reply-To: sekharan@linux.vnet.ibm.com
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 8221] RACE: Lock is expected before calling
+ ips_removeq_scb_head, but in some call chains not held!
+Date: Sat, 29 Aug 2009 09:14:44 GMT
+Message-ID: <200908290914.n7T9Eixh001275@demeter.kernel.org>
+References: <bug-8221-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:55953 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751038AbZH2BGA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Aug 2009 21:06:00 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e31.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id n7T10L6G030621
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Aug 2009 19:00:21 -0600
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n7T16293252740
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Aug 2009 19:06:02 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n7T161Ak007266
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Aug 2009 19:06:02 -0600
-In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF474C66194@cosmail01.lsi.com>
+Received: from demeter.kernel.org ([140.211.167.39]:47618 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750727AbZH2JOm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Aug 2009 05:14:42 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n7T9Eipj001276
+	for <linux-scsi@vger.kernel.org>; Sat, 29 Aug 2009 09:14:44 GMT
+In-Reply-To: <bug-8221-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moger, Babu" <Babu.Moger@lsi.com>
-Cc: Linux SCSI Mailing list <linux-scsi@vger.kernel.org>, 'device mapper development' <dm-devel@redhat.com>, "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>, "Stankey, Robert" <Robert.Stankey@lsi.com>, "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>
+To: linux-scsi@vger.kernel.org
 
-Looks good, except for this one line
-> +		h->ctlr->array_name[ARRAY_LABEL_LEN-1] = '\0';
+http://bugzilla.kernel.org/show_bug.cgi?id=8221
 
-should be array_name instead.
 
-Thanks
+Roland Kletzing <devzero@web.de> changed:
 
-chandra
-<snip>
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |devzero@web.de
 
+
+
+
+--- Comment #1 from Roland Kletzing <devzero@web.de>  2009-08-29 09:14:43 ---
+Hello Ding, 
+
+i`m curious how this report sits here unnoticed for so long. does that still
+apply? i yes, can you please bring that up on linux-scsi mailinglist ?
+thank you.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
