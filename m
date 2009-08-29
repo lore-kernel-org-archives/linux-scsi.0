@@ -1,204 +1,36 @@
-From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH 2/2] cciss: convert to ->proc_fops
-Date: Sat, 29 Aug 2009 22:35:34 +0400
-Message-ID: <20090829183534.GB30818@x200.localdomain>
-References: <20090829183431.GA30818@x200.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:63491 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752354AbZH2Sff (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Aug 2009 14:35:35 -0400
-Received: by ey-out-2122.google.com with SMTP id 25so600527eya.19
-        for <linux-scsi@vger.kernel.org>; Sat, 29 Aug 2009 11:35:35 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20090829183431.GA30818@x200.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 0/7] discard support revisited
+Date: Sat, 29 Aug 2009 19:03:32 -0400
+Message-ID: <20090829230332.017137693@bombadil.infradead.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: liml@rtr.ca, jens.axboe@oracle.com, matthew@wil.cx, dwmw2@infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org
 
-Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
----
+I've started working on discard support a little bit more, and I think
+it's time to get an overview over the state we're in right now.  This
+patchswt is what I needed to get the batched discard support in XFS
+properly working.  Many patches are just forward ported from Matthew's
+SSD tree and I hope quilt mail didn't lose the attributions.
 
- This is an example patch of how conversion will look like.
+There are however a few significant changes:
 
- drivers/block/cciss_scsi.c |  124 +++++++++++++++++++++------------------------
- 1 file changed, 58 insertions(+), 66 deletions(-)
+ - blkdev_issue_discard is now a lot more generic - it grows a flags
+   argument to control if we issue a barrier discard request or not
+   or if we wait or not.  That is needed for the batched discard support
+   in XFS which wants to wait just like the ioctl interface.
+ - I have implemented support for sending WRITE SAME requests with the
+   unmap bit set in sd.  This has been tested with a qemu-based backed
+   only so far, but we'll get some real array coverage soon.
+ - there is a new patch to allow larger discard requests.
+ - the last patch is just my old batched discard patch for xfs ported
+   to work ontop of this series.
 
---- a/drivers/block/cciss_scsi.c
-+++ b/drivers/block/cciss_scsi.c
-@@ -30,10 +30,13 @@
- 
- #include <linux/timer.h>
- #include <linux/completion.h>
-+#include <linux/proc_fs.h>
-+#include <linux/seq_file.h>
- #include <linux/slab.h>
- #include <linux/string.h>
- 
- #include <asm/atomic.h>
-+#include <asm/uaccess.h>
- 
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_device.h>
-@@ -52,13 +55,7 @@ static int fill_cmd(CommandList_struct *c, __u8 cmd, int ctlr, void *buff,
- static CommandList_struct *cmd_alloc(ctlr_info_t *h, int get_from_pool);
- static void cmd_free(ctlr_info_t *h, CommandList_struct *c, int got_from_pool);
- 
--static int cciss_scsi_proc_info(
--		struct Scsi_Host *sh,
--		char *buffer, /* data buffer */
--		char **start, 	   /* where data in buffer starts */
--		off_t offset,	   /* offset from start of imaginary file */
--		int length, 	   /* length of data in buffer */
--		int func);	   /* 0 == read, 1 == write */
-+static const struct file_operations cciss_scsi_proc_fops;
- 
- static int cciss_scsi_queue_command (struct scsi_cmnd *cmd,
- 		void (* done)(struct scsi_cmnd *));
-@@ -80,7 +77,7 @@ static struct scsi_host_template cciss_driver_template = {
- 	.module			= THIS_MODULE,
- 	.name			= "cciss",
- 	.proc_name		= "cciss",
--	.proc_info		= cciss_scsi_proc_info,
-+	.proc_fops		= &cciss_scsi_proc_fops,
- 	.queuecommand		= cciss_scsi_queue_command,
- 	.can_queue		= SCSI_CCISS_CAN_QUEUE,
- 	.this_id		= 7,
-@@ -1281,39 +1278,9 @@ out:
- 	return;
- }
- 
--static int
--is_keyword(char *ptr, int len, char *verb)  // Thanks to ncr53c8xx.c
--{
--	int verb_len = strlen(verb);
--	if (len >= verb_len && !memcmp(verb,ptr,verb_len))
--		return verb_len;
--	else
--		return 0;
--}
--
--static int
--cciss_scsi_user_command(int ctlr, int hostno, char *buffer, int length)
-+static int cciss_scsi_proc_show(struct seq_file *m, void *v)
- {
--	int arg_len;
--
--	if ((arg_len = is_keyword(buffer, length, "rescan")) != 0)
--		cciss_update_non_disk_devices(ctlr, hostno);
--	else
--		return -EINVAL;
--	return length;
--}
--
--
--static int
--cciss_scsi_proc_info(struct Scsi_Host *sh,
--		char *buffer, /* data buffer */
--		char **start, 	   /* where data in buffer starts */
--		off_t offset,	   /* offset from start of imaginary file */
--		int length, 	   /* length of data in buffer */
--		int func)	   /* 0 == read, 1 == write */
--{
--
--	int buflen, datalen;
-+	struct Scsi_Host *sh = m->private;
- 	ctlr_info_t *ci;
- 	int i;
- 	int cntl_num;
-@@ -1325,21 +1292,19 @@ cciss_scsi_proc_info(struct Scsi_Host *sh,
- 
- 	cntl_num = ci->ctlr;	/* Get our index into the hba[] array */
- 
--	if (func == 0) {	/* User is reading from /proc/scsi/ciss*?/?*  */
--		buflen = sprintf(buffer, "cciss%d: SCSI host: %d\n",
--				cntl_num, sh->host_no);
--
--		/* this information is needed by apps to know which cciss
--		   device corresponds to which scsi host number without
--		   having to open a scsi target device node.  The device
--		   information is not a duplicate of /proc/scsi/scsi because
--		   the two may be out of sync due to scsi hotplug, rather
--		   this info is for an app to be able to use to know how to
--		   get them back in sync. */
--
--		for (i=0;i<ccissscsi[cntl_num].ndevices;i++) {
--			struct cciss_scsi_dev_t *sd = &ccissscsi[cntl_num].dev[i];
--			buflen += sprintf(&buffer[buflen], "c%db%dt%dl%d %02d "
-+	seq_printf(m, "cciss%d: SCSI host: %d\n", cntl_num, sh->host_no);
-+
-+	/* this information is needed by apps to know which cciss
-+	   device corresponds to which scsi host number without
-+	   having to open a scsi target device node.  The device
-+	   information is not a duplicate of /proc/scsi/scsi because
-+	   the two may be out of sync due to scsi hotplug, rather
-+	   this info is for an app to be able to use to know how to
-+	   get them back in sync. */
-+
-+	for (i=0;i<ccissscsi[cntl_num].ndevices;i++) {
-+		struct cciss_scsi_dev_t *sd = &ccissscsi[cntl_num].dev[i];
-+		seq_printf(m, "c%db%dt%dl%d %02d "
- 				"0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
- 				sh->host_no, sd->bus, sd->target, sd->lun,
- 				sd->devtype,
-@@ -1347,19 +1312,46 @@ cciss_scsi_proc_info(struct Scsi_Host *sh,
- 				sd->scsi3addr[2], sd->scsi3addr[3],
- 				sd->scsi3addr[4], sd->scsi3addr[5],
- 				sd->scsi3addr[6], sd->scsi3addr[7]);
--		}
--		datalen = buflen - offset;
--		if (datalen < 0) { 	/* they're reading past EOF. */
--			datalen = 0;
--			*start = buffer+buflen;	
--		} else
--			*start = buffer + offset;
--		return(datalen);
--	} else 	/* User is writing to /proc/scsi/cciss*?/?*  ... */
--		return cciss_scsi_user_command(cntl_num, sh->host_no,
--			buffer, length);	
-+	}
-+	return 0;
- } 
- 
-+static int cciss_scsi_proc_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, cciss_scsi_proc_show, PDE(inode)->data);
-+}
-+
-+static ssize_t cciss_scsi_proc_write(struct file *file, const char __user *buf,
-+				     size_t count, loff_t *pos)
-+{
-+	struct Scsi_Host *sh = PDE(file->f_path.dentry->d_inode)->data;
-+	ctlr_info_t *ci;
-+	char cmd[sizeof("rescan") - 1];
-+
-+	if (count < sizeof(cmd))
-+		return -EINVAL;
-+	if (copy_from_user(cmd, buf, sizeof(cmd)))
-+		return -EFAULT;
-+	if (!memcmp(cmd, "rescan", sizeof(cmd)))
-+		return -EINVAL;
-+
-+	ci = (ctlr_info_t *) sh->hostdata[0];
-+	if (ci == NULL)  /* This really shouldn't ever happen. */
-+		return -EINVAL;
-+	cciss_update_non_disk_devices(ci->ctlr, sh->host_no);
-+
-+	return count;
-+}
-+
-+static const struct file_operations cciss_scsi_proc_fops = {
-+	.owner		= THIS_MODULE,
-+	.open		= cciss_scsi_proc_open,
-+	.read		= seq_read,
-+	.llseek		= seq_lseek,
-+	.release	= single_release,
-+	.write		= cciss_scsi_proc_write,
-+};
-+
- /* cciss_scatter_gather takes a struct scsi_cmnd, (cmd), and does the pci 
-    dma mapping  and fills in the scatter gather entries of the 
-    cciss command, cp. */
+I would really love to see some progress on this in the 2.6.32 circle.
+We should at least get the block layer bits in that allow implementing
+a somewhat useful discard function.  I would also love to see the
+actual scsi and libata implementations in so that we can start playing
+around with it.  But given the speed up the current TRIM implementations
+and the expectations for WRITE SAME we should make sure the exact
+TRIM tracking is not actually enabled anywhere by default for now.
