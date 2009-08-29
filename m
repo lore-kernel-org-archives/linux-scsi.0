@@ -1,259 +1,240 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 2/7] block: use blkdev_issue_discard in blk_ioctl_discard
-Date: Sat, 29 Aug 2009 19:03:34 -0400
-Message-ID: <20090829231121.385741993@bombadil.infradead.org>
+Subject: [PATCH 7/7] xfs: add batches discard support
+Date: Sat, 29 Aug 2009 19:03:39 -0400
+Message-ID: <20090829231122.495453860@bombadil.infradead.org>
 References: <20090829230332.017137693@bombadil.infradead.org>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752809AbZH2XLc@vger.kernel.org>
-Content-Disposition: inline; filename=discard-unify-code
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752864AbZH2XMo@vger.kernel.org>
+Content-Disposition: inline; filename=xfs-add-trim-support-2
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: liml@rtr.ca, jens.axboe@oracle.com, matthew@wil.cx, dwmw2@infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-blk_ioctl_discard duplicates large amounts of code from blkdev_issue_discard,
-the only difference between the two is that blkdev_issue_discard needs to
-send a barrier discard request and blk_ioctl_discard a non-barrier one,
-and blk_ioctl_discard needs to wait on the request.  To facilitates this
-add a flags argument to blkdev_issue_discard to control both aspects of the
-behaviour.  This will be very useful later on for using the waiting
-funcitonality for other callers.
+Add support for discarding all currently unused space by an ioctl.  Only
+intended as demonstration and not for merging.
 
-Based on an earlier patch from Matthew Wilcox <matthew@wil.cx>.
+Use the following small tool to exercise it:
+
+
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <sys/ioctl.h>
+
+#define XFS_IOC_TRIM                 _IOR ('X', 126, uint32_t)
+
+
+int main(int argc, char **argv)
+{
+	int minsize = 4096;
+	int fd;
+
+	if (argc != 2) {
+		fprintf(stderr, "usage: %s mountpoint\n", argv[0]);
+		return 1;
+	}
+
+	fd = open(argv[1], O_RDONLY);
+	if (fd < 0) {
+		perror("open");
+		return 1;
+	}
+
+	if (ioctl(fd, XFS_IOC_TRIM, &minsize)) {
+		if (errno == EOPNOTSUPP)
+			fprintf(stderr, "TRIM not supported\n");
+		else
+			perror("XFS_IOC_TRIM");
+		return 1;
+	}
+
+	return 0;
+}
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6/block/blk-barrier.c
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_ioctl.c
 ===================================================================
---- linux-2.6.orig/block/blk-barrier.c	2009-08-29 16:49:43.067370900 -0300
-+++ linux-2.6/block/blk-barrier.c	2009-08-29 17:43:30.407344330 -0300
-@@ -348,6 +348,9 @@ static void blkdev_discard_end_io(struct
- 		clear_bit(BIO_UPTODATE, &bio->bi_flags);
- 	}
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_ioctl.c	2009-08-29 15:53:27.319844716 -0300
++++ linux-2.6/fs/xfs/linux-2.6/xfs_ioctl.c	2009-08-29 16:51:56.271867967 -0300
+@@ -1274,6 +1274,31 @@ xfs_ioc_getbmapx(
+ 	return 0;
+ }
  
-+	if (bio->bi_private)
-+		complete(bio->bi_private);
++STATIC int
++xfs_ioc_trim(
++	struct xfs_mount	*mp,
++	__uint32_t		*argp)
++{
++	xfs_agnumber_t		agno;
++	int			error = 0;
++	__uint32_t		minlen;
 +
- 	bio_put(bio);
- }
- 
-@@ -357,21 +360,20 @@ static void blkdev_discard_end_io(struct
-  * @sector:	start sector
-  * @nr_sects:	number of sectors to discard
-  * @gfp_mask:	memory allocation flags (for bio_alloc)
-+ * @flags:	DISCARD_FL_* flags to control behaviour
-  *
-  * Description:
-- *    Issue a discard request for the sectors in question. Does not wait.
-+ *    Issue a discard request for the sectors in question.
-  */
--int blkdev_issue_discard(struct block_device *bdev,
--			 sector_t sector, sector_t nr_sects, gfp_t gfp_mask)
-+int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
-+		sector_t nr_sects, gfp_t gfp_mask, int flags)
- {
--	struct request_queue *q;
--	struct bio *bio;
-+	DECLARE_COMPLETION_ONSTACK(wait);
-+	struct request_queue *q = bdev_get_queue(bdev);
-+	int type = flags & DISCARD_FL_BARRIER ?
-+		DISCARD_BARRIER : DISCARD_NOBARRIER;
- 	int ret = 0;
- 
--	if (bdev->bd_disk == NULL)
--		return -ENXIO;
--
--	q = bdev_get_queue(bdev);
- 	if (!q)
- 		return -ENXIO;
- 
-@@ -379,12 +381,14 @@ int blkdev_issue_discard(struct block_de
- 		return -EOPNOTSUPP;
- 
- 	while (nr_sects && !ret) {
--		bio = bio_alloc(gfp_mask, 0);
-+		struct bio *bio = bio_alloc(gfp_mask, 0);
- 		if (!bio)
- 			return -ENOMEM;
- 
- 		bio->bi_end_io = blkdev_discard_end_io;
- 		bio->bi_bdev = bdev;
-+		if (flags & DISCARD_FL_WAIT)
-+			bio->bi_private = &wait;
- 
- 		bio->bi_sector = sector;
- 
-@@ -396,10 +400,13 @@ int blkdev_issue_discard(struct block_de
- 			bio->bi_size = nr_sects << 9;
- 			nr_sects = 0;
- 		}
++	if (!capable(CAP_SYS_ADMIN))
++		return -EPERM;
++	if (get_user(minlen, argp))
++		return -EFAULT;
 +
- 		bio_get(bio);
--		submit_bio(DISCARD_BARRIER, bio);
-+		submit_bio(type, bio);
++	down_read(&mp->m_peraglock);
++	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
++		error = -xfs_trim_extents(mp, agno, minlen);
++		if (error)
++			break;
++	}
++	up_read(&mp->m_peraglock);
 +
-+		if (flags & DISCARD_FL_WAIT)
-+			wait_for_completion(&wait);
++	return error;
++}
++
+ /*
+  * Note: some of the ioctl's return positive numbers as a
+  * byte count indicating success, such as readlink_by_handle.
+@@ -1523,6 +1548,9 @@ xfs_file_ioctl(
+ 		error = xfs_errortag_clearall(mp, 1);
+ 		return -error;
  
--		/* Check if it failed immediately */
- 		if (bio_flagged(bio, BIO_EOPNOTSUPP))
- 			ret = -EOPNOTSUPP;
- 		else if (!bio_flagged(bio, BIO_UPTODATE))
-Index: linux-2.6/block/ioctl.c
-===================================================================
---- linux-2.6.orig/block/ioctl.c	2009-08-29 16:49:43.075370172 -0300
-+++ linux-2.6/block/ioctl.c	2009-08-29 16:49:52.743341374 -0300
-@@ -112,22 +112,9 @@ static int blkdev_reread_part(struct blo
- 	return res;
- }
- 
--static void blk_ioc_discard_endio(struct bio *bio, int err)
--{
--	if (err) {
--		if (err == -EOPNOTSUPP)
--			set_bit(BIO_EOPNOTSUPP, &bio->bi_flags);
--		clear_bit(BIO_UPTODATE, &bio->bi_flags);
--	}
--	complete(bio->bi_private);
--}
--
- static int blk_ioctl_discard(struct block_device *bdev, uint64_t start,
- 			     uint64_t len)
- {
--	struct request_queue *q = bdev_get_queue(bdev);
--	int ret = 0;
--
- 	if (start & 511)
- 		return -EINVAL;
- 	if (len & 511)
-@@ -137,40 +124,8 @@ static int blk_ioctl_discard(struct bloc
- 
- 	if (start + len > (bdev->bd_inode->i_size >> 9))
- 		return -EINVAL;
--
--	if (!q->prepare_discard_fn)
--		return -EOPNOTSUPP;
--
--	while (len && !ret) {
--		DECLARE_COMPLETION_ONSTACK(wait);
--		struct bio *bio;
--
--		bio = bio_alloc(GFP_KERNEL, 0);
--
--		bio->bi_end_io = blk_ioc_discard_endio;
--		bio->bi_bdev = bdev;
--		bio->bi_private = &wait;
--		bio->bi_sector = start;
--
--		if (len > queue_max_hw_sectors(q)) {
--			bio->bi_size = queue_max_hw_sectors(q) << 9;
--			len -= queue_max_hw_sectors(q);
--			start += queue_max_hw_sectors(q);
--		} else {
--			bio->bi_size = len << 9;
--			len = 0;
--		}
--		submit_bio(DISCARD_NOBARRIER, bio);
--
--		wait_for_completion(&wait);
--
--		if (bio_flagged(bio, BIO_EOPNOTSUPP))
--			ret = -EOPNOTSUPP;
--		else if (!bio_flagged(bio, BIO_UPTODATE))
--			ret = -EIO;
--		bio_put(bio);
--	}
--	return ret;
-+	return blkdev_issue_discard(bdev, start, len, GFP_KERNEL,
-+				    DISCARD_FL_WAIT);
- }
- 
- static int put_ushort(unsigned long arg, unsigned short val)
-Index: linux-2.6/fs/btrfs/extent-tree.c
-===================================================================
---- linux-2.6.orig/fs/btrfs/extent-tree.c	2009-08-29 16:49:43.079341766 -0300
-+++ linux-2.6/fs/btrfs/extent-tree.c	2009-08-29 16:49:52.743341374 -0300
-@@ -1511,7 +1511,8 @@ static int remove_extent_backref(struct 
- static void btrfs_issue_discard(struct block_device *bdev,
- 				u64 start, u64 len)
- {
--	blkdev_issue_discard(bdev, start >> 9, len >> 9, GFP_KERNEL);
-+	blkdev_issue_discard(bdev, start >> 9, len >> 9, GFP_KERNEL,
-+			     DISCARD_FL_BARRIER);
- }
- #endif
- 
-Index: linux-2.6/fs/gfs2/rgrp.c
-===================================================================
---- linux-2.6.orig/fs/gfs2/rgrp.c	2009-08-29 16:49:43.139342340 -0300
-+++ linux-2.6/fs/gfs2/rgrp.c	2009-08-29 16:49:52.747373241 -0300
-@@ -857,7 +857,8 @@ static void gfs2_rgrp_send_discards(stru
- 					goto start_new_extent;
- 				if ((start + nr_sects) != blk) {
- 					rv = blkdev_issue_discard(bdev, start,
--							    nr_sects, GFP_NOFS);
-+							    nr_sects, GFP_NOFS,
-+							    DISCARD_FL_BARRIER);
- 					if (rv)
- 						goto fail;
- 					nr_sects = 0;
-@@ -871,7 +872,8 @@ start_new_extent:
- 		}
++	case XFS_IOC_TRIM:
++		return xfs_ioc_trim(mp, arg);
++
+ 	default:
+ 		return -ENOTTY;
  	}
- 	if (nr_sects) {
--		rv = blkdev_issue_discard(bdev, start, nr_sects, GFP_NOFS);
-+		rv = blkdev_issue_discard(bdev, start, nr_sects, GFP_NOFS,
-+					 DISCARD_FL_BARRIER);
- 		if (rv)
- 			goto fail;
- 	}
-Index: linux-2.6/include/linux/blkdev.h
+Index: linux-2.6/fs/xfs/xfs_alloc.c
 ===================================================================
---- linux-2.6.orig/include/linux/blkdev.h	2009-08-29 16:49:43.147343148 -0300
-+++ linux-2.6/include/linux/blkdev.h	2009-08-29 17:43:19.767342397 -0300
-@@ -977,15 +977,18 @@ static inline struct request *blk_map_qu
+--- linux-2.6.orig/fs/xfs/xfs_alloc.c	2009-08-29 15:53:27.355845733 -0300
++++ linux-2.6/fs/xfs/xfs_alloc.c	2009-08-29 16:59:20.451343922 -0300
+@@ -2609,6 +2609,96 @@ error0:
+ 	return error;
  }
  
- extern int blkdev_issue_flush(struct block_device *, sector_t *);
--extern int blkdev_issue_discard(struct block_device *,
--				sector_t sector, sector_t nr_sects, gfp_t);
-+#define DISCARD_FL_WAIT		0x01	/* wait for completion */
-+#define DISCARD_FL_BARRIER	0x02	/* issue DISCARD_BARRIER request */
-+extern int blkdev_issue_discard(struct block_device *, sector_t sector,
-+		sector_t nr_sects, gfp_t, int flags);
++STATIC int
++xfs_trim_extent(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	xfs_agblock_t		fbno,
++	xfs_extlen_t		flen)
++{
++	xfs_daddr_t		blkno = XFS_AGB_TO_DADDR(mp, agno, fbno);
++	sector_t		nblks = XFS_FSB_TO_BB(mp, flen);
++	int			error;
++
++	xfs_fs_cmn_err(CE_NOTE, mp, "discarding sectors [0x%llx-0x%llx]",
++			blkno, nblks);
++
++	error = -blkdev_issue_discard(mp->m_ddev_targp->bt_bdev, blkno, nblks,
++				      GFP_NOFS, DISCARD_FL_WAIT);
++	if (error && error != EOPNOTSUPP)
++		xfs_fs_cmn_err(CE_NOTE, mp, "discard failed, error %d", error);
++	return error;
++}
++
++/*
++ * Notify the underlying block device about our free extent map.
++ *
++ * This walks all free extents above a minimum threshold and notifies the
++ * underlying device that these blocks are unused.  That information is
++ * useful for SSDs or thinly provisioned storage in high end arrays or
++ * virtualization scenarios.
++ */
++int
++xfs_trim_extents(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	xfs_extlen_t		minlen)	/* minimum extent size to bother */
++{
++	struct xfs_btree_cur	*cur;	/* cursor for the by-block btree */
++	struct xfs_buf		*agbp;	/* AGF buffer pointer */
++	xfs_agblock_t		bno;	/* block the for next search */
++	xfs_agblock_t		fbno;	/* start block of found extent */
++	xfs_extlen_t		flen;	/* length of found extent */
++	int			error;
++	int			i;
++
++	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
++	if (error)
++		return error;
++
++	bno = 0;
++	for (;;) {
++		cur = xfs_allocbt_init_cursor(mp, NULL, agbp, agno,
++					      XFS_BTNUM_BNO);
++
++		error = xfs_alloc_lookup_ge(cur, bno, minlen, &i);
++		if (error)
++			goto error0;
++		if (!i) {
++			/*
++			 * No more free extents found: done.
++			 */
++			xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++			break;
++		}
++
++		error = xfs_alloc_get_rec(cur, &fbno, &flen, &i);
++		if (error)
++			goto error0;
++		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
++
++		/*
++		 * Pass if the freespace extent isn't long enough to bother.
++		 */
++		if (flen >= minlen) {
++			error = xfs_trim_extent(mp, agno, fbno, flen);
++			if (error) {
++				xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++				break;
++			}
++		}
++
++		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++		bno = fbno + flen;
++	}
++
++out:
++	xfs_buf_relse(agbp);
++	return error;
++error0:
++	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
++	goto out;
++}
  
- static inline int sb_issue_discard(struct super_block *sb,
- 				   sector_t block, sector_t nr_blocks)
- {
- 	block <<= (sb->s_blocksize_bits - 9);
- 	nr_blocks <<= (sb->s_blocksize_bits - 9);
--	return blkdev_issue_discard(sb->s_bdev, block, nr_blocks, GFP_KERNEL);
-+	return blkdev_issue_discard(sb->s_bdev, block, nr_blocks, GFP_KERNEL,
-+				    DISCARD_FL_BARRIER);
- }
- 
- extern int blk_verify_command(unsigned char *cmd, fmode_t has_write_perm);
-Index: linux-2.6/mm/swapfile.c
+ /*
+  * AG Busy list management
+Index: linux-2.6/fs/xfs/xfs_alloc.h
 ===================================================================
---- linux-2.6.orig/mm/swapfile.c	2009-08-29 16:49:43.151342120 -0300
-+++ linux-2.6/mm/swapfile.c	2009-08-29 16:49:52.755377749 -0300
-@@ -161,7 +161,8 @@ static int discard_swap(struct swap_info
- 		}
+--- linux-2.6.orig/fs/xfs/xfs_alloc.h	2009-08-29 15:53:27.371844485 -0300
++++ linux-2.6/fs/xfs/xfs_alloc.h	2009-08-29 16:51:56.271867967 -0300
+@@ -215,4 +215,7 @@ xfs_free_extent(
+ 	xfs_fsblock_t	bno,	/* starting block number of extent */
+ 	xfs_extlen_t	len);	/* length of extent */
  
- 		err = blkdev_issue_discard(si->bdev, start_block,
--						nr_blocks, GFP_KERNEL);
-+						nr_blocks, GFP_KERNEL,
-+						DISCARD_FL_BARRIER);
- 		if (err)
- 			break;
++int xfs_trim_extents(struct xfs_mount *mp, xfs_agnumber_t agno,
++	xfs_extlen_t minlen);
++
+ #endif	/* __XFS_ALLOC_H__ */
+Index: linux-2.6/fs/xfs/xfs_fs.h
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_fs.h	2009-08-29 15:53:27.391844445 -0300
++++ linux-2.6/fs/xfs/xfs_fs.h	2009-08-29 16:51:56.279865211 -0300
+@@ -475,6 +475,7 @@ typedef struct xfs_handle {
+ #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
+ #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
+ #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
++#define XFS_IOC_TRIM		     _IOR ('X', 126, __uint32_t)
+ /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
  
-@@ -200,7 +201,8 @@ static void discard_swap_cluster(struct 
- 			start_block <<= PAGE_SHIFT - 9;
- 			nr_blocks <<= PAGE_SHIFT - 9;
- 			if (blkdev_issue_discard(si->bdev, start_block,
--							nr_blocks, GFP_NOIO))
-+							nr_blocks, GFP_NOIO,
-+							DISCARD_FL_BARRIER))
- 				break;
- 		}
  
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_ioctl32.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_ioctl32.c	2009-08-29 15:53:27.339845024 -0300
++++ linux-2.6/fs/xfs/linux-2.6/xfs_ioctl32.c	2009-08-29 16:51:56.283864672 -0300
+@@ -563,6 +563,7 @@ xfs_file_compat_ioctl(
+ 	case XFS_IOC_GOINGDOWN:
+ 	case XFS_IOC_ERROR_INJECTION:
+ 	case XFS_IOC_ERROR_CLEARALL:
++	case XFS_IOC_TRIM:
+ 		return xfs_file_ioctl(filp, cmd, p);
+ #ifndef BROKEN_X86_ALIGNMENT
+ 	/* These are handled fine if no alignment issues */
