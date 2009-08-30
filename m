@@ -1,45 +1,78 @@
-From: Bart Van Assche <bart.vanassche@gmail.com>
-Subject: [PATCH 2.6.30] libsrp: fix memory leak in srp_ring_free()
-Date: Sun, 30 Aug 2009 12:36:48 +0200
-Message-ID: <e2e108260908300336p777654bbw2f0b1eef9b6858c@mail.gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 4/7] sd: add support for WRITE SAME (16) with unmap bit
+Date: Sun, 30 Aug 2009 15:12:09 +0400
+Message-ID: <4A9A5E89.7070204@ru.mvista.com>
+References: <20090829230332.017137693@bombadil.infradead.org> <20090829231121.713422216@bombadil.infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:47764 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752871AbZH3Kgr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Aug 2009 06:36:47 -0400
-Received: by ewy2 with SMTP id 2so3260053ewy.17
-        for <linux-scsi@vger.kernel.org>; Sun, 30 Aug 2009 03:36:48 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753322AbZH3LMT@vger.kernel.org>
+In-Reply-To: <20090829231121.713422216@bombadil.infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, liml@rtr.ca, jens.axboe@oracle.com, matthew@wil.cx, dwmw2@infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <tomof@acm.org>
 
-This patch fixes a memory leak in the libsrp function srp_ring_free().
-It is not documented whether or not this function should free the ring
-pointer itself. But the source code of the callers of this function
-(srp_target_alloc() and srp_target_free()) makes it clear that
-srp_ring_free() should deallocate the ring pointer itself. Furthermore,
-the patch below makes srp_ring_free() deallocate all memory allocated by
-srp_ring_alloc().
+Hello.
 
-This patch affects the ibmvstgt driver, which is the only in-tree driver
-that calls the srp_ring_free() function (indirectly).
+Christoph Hellwig wrote:
 
-Signed-off-by: Bart Van Assche <bart.vanassche@gmail.com>
-Cc: James Bottomley <James.Bottomley@suse.de>
-Cc: FUJITA Tomonori <tomof@acm.org>
+> Add a prepare_discard function to sd that sends a WRITE SAME request with
+> the unmap bit set to the device if it advertises thin provisioning support.
+>
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>
+> Index: linux-2.6/drivers/scsi/sd.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/scsi/sd.c	2009-08-29 19:19:36.067371669 -0300
+> +++ linux-2.6/drivers/scsi/sd.c	2009-08-29 19:26:20.723754241 -0300
+> @@ -911,6 +911,50 @@ static void sd_prepare_flush(struct requ
+>  	rq->cmd_len = 10;
+>  }
+>  
+> +static int sd_prepare_discard(struct request_queue *q, struct request *rq,
+> +		struct bio *bio)
+> +{
+> +	struct scsi_device *sdp = q->queuedata;
+> +	struct page *page = alloc_page(GFP_KERNEL);
+> +
+> +	if (!page)
+> +		return -ENOMEM;
+> +
+> +	rq->cmd_type = REQ_TYPE_BLOCK_PC;
+> +	rq->timeout = SD_TIMEOUT;
+> +	rq->cmd[0] = WRITE_SAME_16;
+> +	rq->cmd[1] = 0x8; /* UNMAP bit */
+> +	rq->cmd[2] = sizeof(bio->bi_sector) > 4 ?
+> +			(unsigned char) (bio->bi_sector >> 56) & 0xff : 0;
+> +	rq->cmd[3] = sizeof(bio->bi_sector) > 4 ?
+> +			(unsigned char) (bio->bi_sector >> 48) & 0xff : 0;
+> +	rq->cmd[4] = sizeof(bio->bi_sector) > 4 ?
+> +			(unsigned char) (bio->bi_sector >> 40) & 0xff : 0;
+> +	rq->cmd[5] = sizeof(bio->bi_sector) > 4 ?
+> +			(unsigned char) (bio->bi_sector >> 32) & 0xff : 0;
+> +	rq->cmd[6] = (unsigned char) (bio->bi_sector >> 24) & 0xff;
+> +	rq->cmd[7] = (unsigned char) (bio->bi_sector >> 16) & 0xff;
+> +	rq->cmd[8] = (unsigned char) (bio->bi_sector >> 8) & 0xff;
+> +	rq->cmd[9] = (unsigned char) bio->bi_sector & 0xff;
+> +	rq->cmd[10] = (unsigned char) (bio_sectors(bio) >> 24) & 0xff;
+> +	rq->cmd[11] = (unsigned char) (bio_sectors(bio) >> 16) & 0xff;
+> +	rq->cmd[12] = (unsigned char) (bio_sectors(bio) >> 8) & 0xff;
+> +	rq->cmd[13] = (unsigned char) bio_sectors(bio) & 0xff;
+> +	rq->cmd[14] = 0;
+> +	rq->cmd[15] = 0;
+> +	rq->cmd_len = 16;
+> +
+> +	printk(KERN_INFO "umap, lba = 0x%lld, len = %d\n",
+>   
 
-diff -uprN orig/linux-2.6.30/drivers/scsi/libsrp.c
-linux-2.6.30/drivers/scsi/libsrp.c
---- orig/linux-2.6.30/drivers/scsi/libsrp.c	2009-06-10 05:05:27.000000000 +0200
-+++ linux-2.6.30/drivers/scsi/libsrp.c	2009-08-30 11:53:26.000000000 +0200
-@@ -124,6 +124,7 @@ static void srp_ring_free(struct device
- 		dma_free_coherent(dev, size, ring[i]->buf, ring[i]->dma);
- 		kfree(ring[i]);
- 	}
-+	kfree(ring);
- }
+   So, is it hex or decimal? :-)
 
- int srp_target_alloc(struct srp_target *target, struct device *dev,
+> +	       bio->bi_sector, bio_sectors(bio));
+>   
+
+   Since bio->bi_sector can either be 4 or 8 bytes, you need a cast to 
+unsigned long long here.
+
+MBR, Sergei
