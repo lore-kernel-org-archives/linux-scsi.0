@@ -1,70 +1,97 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 0/7] discard support revisited
-Date: Sat, 29 Aug 2009 17:37:19 -0600
-Message-ID: <20090829233718.GD22870@parisc-linux.org>
-References: <20090829230332.017137693@bombadil.infradead.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH 4/7] sd: add support for WRITE SAME (16) with unmap bit
+Date: Sat, 29 Aug 2009 20:43:27 -0400
+Message-ID: <4A99CB2F.9000000@interlog.com>
+References: <20090829230332.017137693@bombadil.infradead.org> <20090829231121.713422216@bombadil.infradead.org>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090829230332.017137693@bombadil.infradead.org>
+In-Reply-To: <20090829231121.713422216@bombadil.infradead.org>
 Sender: linux-ide-owner@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, liml@rtr.ca, jens.axboe@oracle.com, dwmw2@infradead.org
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, liml@rtr.ca, jens.axboe@oracle.com, matthew@wil.cx, dwmw2@infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Aug 29, 2009 at 07:03:32PM -0400, Christoph Hellwig wrote:
-> I've started working on discard support a little bit more, and I think
-> it's time to get an overview over the state we're in right now.  This
-> patchswt is what I needed to get the batched discard support in XFS
-> properly working.  Many patches are just forward ported from Matthew's
-> SSD tree and I hope quilt mail didn't lose the attributions.
-
-Funny, I was working on forward-porting my patches this morning.
-
->  - blkdev_issue_discard is now a lot more generic - it grows a flags
->    argument to control if we issue a barrier discard request or not
->    or if we wait or not.  That is needed for the batched discard support
->    in XFS which wants to wait just like the ioctl interface.
-
-Seems fine.
-
->  - I have implemented support for sending WRITE SAME requests with the
->    unmap bit set in sd.  This has been tested with a qemu-based backed
->    only so far, but we'll get some real array coverage soon.
-
-I think we're going to need to figure out whether we should be sending
-UNMAP or WRITE SAME ... probably need to dive back into the T10 poostorm
-to see what's going on.
-
->  - there is a new patch to allow larger discard requests.
->  - the last patch is just my old batched discard patch for xfs ported
->    to work ontop of this series.
+Christoph Hellwig wrote:
+> Add a prepare_discard function to sd that sends a WRITE SAME request with
+> the unmap bit set to the device if it advertises thin provisioning support.
 > 
-> I would really love to see some progress on this in the 2.6.32 circle.
-> We should at least get the block layer bits in that allow implementing
-> a somewhat useful discard function.  I would also love to see the
-> actual scsi and libata implementations in so that we can start playing
-> around with it.  But given the speed up the current TRIM implementations
-> and the expectations for WRITE SAME we should make sure the exact
-> TRIM tracking is not actually enabled anywhere by default for now.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: linux-2.6/drivers/scsi/sd.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/scsi/sd.c	2009-08-29 19:19:36.067371669 -0300
+> +++ linux-2.6/drivers/scsi/sd.c	2009-08-29 19:26:20.723754241 -0300
+> @@ -911,6 +911,50 @@ static void sd_prepare_flush(struct requ
+>  	rq->cmd_len = 10;
+>  }
+>  
+> +static int sd_prepare_discard(struct request_queue *q, struct request *rq,
+> +		struct bio *bio)
+> +{
+> +	struct scsi_device *sdp = q->queuedata;
+> +	struct page *page = alloc_page(GFP_KERNEL);
+> +
+> +	if (!page)
+> +		return -ENOMEM;
+> +
+> +	rq->cmd_type = REQ_TYPE_BLOCK_PC;
+> +	rq->timeout = SD_TIMEOUT;
+> +	rq->cmd[0] = WRITE_SAME_16;
+> +	rq->cmd[1] = 0x8; /* UNMAP bit */
+> +	rq->cmd[2] = sizeof(bio->bi_sector) > 4 ?
+> +			(unsigned char) (bio->bi_sector >> 56) & 0xff : 0;
+> +	rq->cmd[3] = sizeof(bio->bi_sector) > 4 ?
+> +			(unsigned char) (bio->bi_sector >> 48) & 0xff : 0;
+> +	rq->cmd[4] = sizeof(bio->bi_sector) > 4 ?
+> +			(unsigned char) (bio->bi_sector >> 40) & 0xff : 0;
+> +	rq->cmd[5] = sizeof(bio->bi_sector) > 4 ?
+> +			(unsigned char) (bio->bi_sector >> 32) & 0xff : 0;
+> +	rq->cmd[6] = (unsigned char) (bio->bi_sector >> 24) & 0xff;
+> +	rq->cmd[7] = (unsigned char) (bio->bi_sector >> 16) & 0xff;
+> +	rq->cmd[8] = (unsigned char) (bio->bi_sector >> 8) & 0xff;
+> +	rq->cmd[9] = (unsigned char) bio->bi_sector & 0xff;
+> +	rq->cmd[10] = (unsigned char) (bio_sectors(bio) >> 24) & 0xff;
+> +	rq->cmd[11] = (unsigned char) (bio_sectors(bio) >> 16) & 0xff;
+> +	rq->cmd[12] = (unsigned char) (bio_sectors(bio) >> 8) & 0xff;
+> +	rq->cmd[13] = (unsigned char) bio_sectors(bio) & 0xff;
+> +	rq->cmd[14] = 0;
+> +	rq->cmd[15] = 0;
+> +	rq->cmd_len = 16;
+> +
+> +	printk(KERN_INFO "umap, lba = 0x%lld, len = %d\n",
+> +	       bio->bi_sector, bio_sectors(bio));
+> +
+> +	bio->bi_size = 0;
+> +	if (bio_add_pc_page(q, bio, page, sdp->sector_size, 0) <
+> +			sdp->sector_size)
+> +		return -EIO;
+> +
+> +	return 0;
+> +}
+> +
+>  static void sd_rescan(struct device *dev)
+>  {
+>  	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
+> @@ -1369,6 +1413,9 @@ static int read_capacity_16(struct scsi_
+>  		sd_printk(KERN_NOTICE, sdkp,
+>  			  "physical block alignment offset: %u\n", alignment);
+>  
+> +	if (buffer[14] & 0x80)
+> +		sdkp->thin_provisioning = 1;
+> +
 
-Jens had some objections to the block layer bits last time I posted
-these.  I forget what they were now (this would have been around May
-2nd, I think).  What I've done instead in my current patchset (which
-undoubtedly has bugs because it isn't tested, because I'm not supposed
-to be working on the weekends) is to make sd_prep_fn() call a new method
-in the scsi_host_template.  That should translate the discard request
-into a BLOCK_PC ATA_16 command, and we'll all be happy.
+So you are checking the TPE bit (Thin Provisioning Enabled) but
+not the TPRZ bit (Thin Provisioning Read Zeros). Shouldn't
+there also be a sdkp->thin_provisioning_read_zeros bit defined
+in struct scsi_disk?
 
-It goes a little something like this:
-http://git.kernel.org/?p=linux/kernel/git/willy/ssd.git;a=shortlog;h=trim-20090829
+Is your application well defined when TPRZ==0 ?
 
-Right now, the test tool is telling me 'Operation not supported', and
-I haven't tried to figure out why yet.
+Doug Gilbert
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+
+
