@@ -1,83 +1,93 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: scsi_wait_scan not working (2.6.30.5)
-Date: Sun, 30 Aug 2009 13:21:59 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0908301304550.10608-100000@netrider.rowland.org>
-References: <200908301012.51126.a.miskiewicz@gmail.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 0/7] discard support revisited
+Date: Sun, 30 Aug 2009 15:17:19 -0500
+Message-ID: <1251663439.10135.159.camel@mulgrave.site>
+References: <20090829230332.017137693@bombadil.infradead.org>
+	 <20090829233718.GD22870@parisc-linux.org>
+	 <20090830021534.GA14706@infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:40157 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753452AbZH3RV5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Aug 2009 13:21:57 -0400
-In-Reply-To: <200908301012.51126.a.miskiewicz@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20090830021534.GA14706@infradead.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, liml@rtr.ca, jens.axboe@oracle.com, dwmw2@infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, Arjan van de Ven <arjan@infradead.org>
 
-On Sun, 30 Aug 2009, Arkadiusz Miskiewicz wrote:
+On Sat, 2009-08-29 at 22:15 -0400, Christoph Hellwig wrote:
+> On Sat, Aug 29, 2009 at 05:37:19PM -0600, Matthew Wilcox wrote:
+> > >  - I have implemented support for sending WRITE SAME requests with the
+> > >    unmap bit set in sd.  This has been tested with a qemu-based backed
+> > >    only so far, but we'll get some real array coverage soon.
+> > 
+> > I think we're going to need to figure out whether we should be sending
+> > UNMAP or WRITE SAME ... probably need to dive back into the T10 poostorm
+> > to see what's going on.
 
-> with sleep
+Actually, I've been keeping an eye on that
+
+> Good question.  Latest I had heard was that at least one array vendor
+> prefers the WRITE SAME.  To me it looks like the much saner interface
+> for the OS, so unless there are arrays that strongly prefer UNMAP or
+> we need to make use of the multiple extends feature in it I'd go with
+> WRITE SAME as first choice.
+
+So, since their respective names are on the proposals, it's no real
+secret that EMC are pushing WRITE_SAME and Netapp UNMAP, but they are
+both working together on this.  I've already communicated to T10 via
+intermediaries that we'd like only a single implementation for this,
+please.  However, failing that, the current situation where we know from
+an inquiry that the array supports thin provisioning, but don't know
+whether it supports WRITE_SAME or UNMAP until we get a command failure
+is unacceptable.
+
+If we could get some good solid implementation evidence that WRITE_SAME
+is much easier for an OS than UNMAP, that might help with the T10
+deliberations.
+
+> > > I would really love to see some progress on this in the 2.6.32 circle.
+> > > We should at least get the block layer bits in that allow implementing
+> > > a somewhat useful discard function.  I would also love to see the
+> > > actual scsi and libata implementations in so that we can start playing
+> > > around with it.  But given the speed up the current TRIM implementations
+> > > and the expectations for WRITE SAME we should make sure the exact
+> > > TRIM tracking is not actually enabled anywhere by default for now.
+> > 
+> > Jens had some objections to the block layer bits last time I posted
+> > these.  I forget what they were now (this would have been around May
+> > 2nd, I think).  What I've done instead in my current patchset (which
+> > undoubtedly has bugs because it isn't tested, because I'm not supposed
+> > to be working on the weekends) is to make sd_prep_fn() call a new method
+> > in the scsi_host_template.  That should translate the discard request
+> > into a BLOCK_PC ATA_16 command, and we'll all be happy.
+> > 
+> > It goes a little something like this:
+> > http://git.kernel.org/?p=linux/kernel/git/willy/ssd.git;a=shortlog;h=trim-20090829
+> > 
+> > Right now, the test tool is telling me 'Operation not supported', and
+> > I haven't tried to figure out why yet.
 > 
-> Aug 30 11:11:52 rhea kernel: [    6.950127] console [netcon0] enabled                                                                                        
-> Aug 30 11:11:52 rhea kernel: [   13.116253] netconsole: network logging started                                                                              
-> Aug 30 11:11:52 rhea kernel: [   13.145344] SCSI subsystem initialized                                                                                       
-> Aug 30 11:11:52 rhea kernel: [   13.160103] megaraid cmm: 2.20.2.7 (Release Date: Sun Jul 16 00:01:03 EST 2006)                                              
-> Aug 30 11:11:52 rhea kernel: [   13.187529] megaraid: 2.20.5.1 (Release Date: Thu Nov 16 15:32:35 EST 2006)                                                  
-> Aug 30 11:11:52 rhea kernel: [   13.209685] megaraid: probe new device 0x1000:0x0407:0x1000:0x0530: bus 2:slot 3:func 0                                      
-> Aug 30 11:11:52 rhea kernel: [   13.241872]   alloc irq_desc for 27 on cpu 0 node 0                                                                          
-> Aug 30 11:11:52 rhea kernel: [   13.241876]   alloc kstat_irqs on cpu 0 node 0                                                                               
-> Aug 30 11:11:52 rhea kernel: [   13.241885] megaraid 0000:02:03.0: PCI INT A -> GSI 27 (level, low) -> IRQ 27                                                
-> Aug 30 11:11:52 rhea kernel: [   13.286708] megaraid: fw version:[414G] bios version:[A100]                                                                  
-> Aug 30 11:11:52 rhea kernel: [   13.305284] scsi0 : LSI Logic MegaRAID driver                                                                                
-> Aug 30 11:11:52 rhea kernel: [   13.322942] scsi[0]: scanning scsi channel 0 [Phy 0] for non-raid devices                                                    
-> Aug 30 11:11:52 rhea kernel: [   13.355882] Driver 'sd' needs updating - please use bus_type methods                                                         
-> Aug 30 11:11:52 rhea kernel: [   13.379162] wait_scan_init: BEFORE wait_for_device_probe                                                                     
-> Aug 30 11:11:52 rhea kernel: [   13.397928] wait_scan_init: AFTER wait_for_device_probe                                                                      
-> Aug 30 11:11:52 rhea kernel: [   13.417739] wait_scan_init: BEFORE scsi_complete_async_scans                                                                 
-> Aug 30 11:11:52 rhea kernel: [   13.438822] wait_scan_init: AFTER scsi_complete_async_scans                                                                  
-> Aug 30 11:11:52 rhea kernel: [   13.459688] wait_scan_init: BEFORE async_synchronize_full                                                                    
-> Aug 30 11:11:52 rhea kernel: [   13.479998] wait_scan_init: AFTER wait_for_device_probe                                                                      
+> Queue flag and handling the discard in the prep function is much better
+> than the prepare function, yes.  I don't like the prep_fn callout to the
+> host a lot.
 
-Note here that the wait finished before most of the probing was done.
+Me neither.  I'm sort of OK with a transformed operation, callout for
+the ULD, but I really don't see why a disk only function should go
+through the host template.
 
-> Aug 30 11:11:52 rhea kernel: [   13.902193] scsi 0:0:6:0: Processor         ESG-SHV  SCA HSBP M29     1.08 PQ: 0 ANSI: 2                                     
-> Aug 30 11:11:52 rhea kernel: [   15.930664] scsi[0]: scanning scsi channel 1 [Phy 1] for non-raid devices                                                    
-> Aug 30 11:11:52 rhea kernel: [   19.706530] scsi[0]: scanning scsi channel 2 [virtual] for logical drives                                                    
-> Aug 30 11:11:52 rhea kernel: [   19.727104] scsi 0:2:0:0: Direct-Access     MegaRAID LD 0 RAID5  280G 414G PQ: 0 ANSI: 2                                     
-> Aug 30 11:11:52 rhea kernel: [   19.757564] sd_probe: BEFORE async_schedule                                                                                  
-> Aug 30 11:11:52 rhea kernel: [   19.770091] sd_probe: AFTER async_schedule                                                                                   
-> Aug 30 11:11:52 rhea kernel: [   19.782507] sd_probe_async: ENTERED                                                                                          
-> Aug 30 11:11:52 rhea kernel: [   19.793223] sd 0:2:0:0: [sda] 574218240 512-byte hardware sectors: (293 GB/273 GiB)                                          
-> Aug 30 11:11:52 rhea kernel: [   19.816173] sd 0:2:0:0: [sda] Write Protect is off                                                                           
-> Aug 30 11:11:52 rhea kernel: [   19.830525] sd 0:2:0:0: [sda] Mode Sense: 00 00 00 00                                                                        
-> Aug 30 11:11:52 rhea kernel: [   19.830549] sd 0:2:0:0: [sda] Asking for cache data failed                                                                   
-> Aug 30 11:11:52 rhea kernel: [   19.846978] sd 0:2:0:0: [sda] Assuming drive cache: write through                                                            
-> Aug 30 11:11:52 rhea kernel: [   19.865496] sd 0:2:0:0: [sda] Asking for cache data failed                                                                   
-> Aug 30 11:11:52 rhea kernel: [   19.881920] sd 0:2:0:0: [sda] Assuming drive cache: write through                                                            
-> Aug 30 11:11:52 rhea kernel: [   19.900198]  sda: sda1 sda2 sda3                                                                                             
-> Aug 30 11:11:52 rhea kernel: [   19.924019] sd 0:2:0:0: [sda] Attached SCSI disk                                                                             
-> Aug 30 11:11:52 rhea kernel: [   23.113336] eth0: no IPv6 routers present                                                                                    
-> Aug 30 11:11:52 rhea kernel: [   23.754010] SGI XFS with ACLs, security attributes, large block/inode numbers, no debug enabled                              
-> Aug 30 11:11:52 rhea kernel: [   23.786463] SGI XFS Quota Management subsystem                                                                               
-> Aug 30 11:11:52 rhea kernel: [   23.915852] XFS mounting filesystem sda2                                                                                     
-> Aug 30 11:11:52 rhea kernel: [   24.050956] Ending clean XFS mount for filesystem: sda2                                                                      
-> Aug 30 11:11:52 rhea kernel: [   24.051050] VFS: Mounted root (xfs filesystem) readonly on device 8:2.  
+>  If we go with WRITE SAME as prefered discard option for
+> scsi translating it to TRIM should be relatively easy, it uses the same
+> LBA/length encoding as the regular WRITE_16, except that the payload is
+> just a single sector.  That should be not too hard to implement in the
+> SAT layer.
 
-Okay, this problem is not the one that patch you found was intended to
-solve.  It may be caused by excessively long delays in the megaraid
-driver, or maybe megaraid uses extra kernel threads for its probing; I
-can't tell.
+So the last ATA data set management with TRIM proposal I saw had a set
+of discontiguous ranges, very like UNMAP.  It's certainly possible to do
+the transformation, you just have to drop the sector buffer and add one
+for the ranges (then reverse it in the back translation for the
+completion) but it's not pretty.
 
-Even more debugging info would help.  Keep the new printk statements
-and try adding similar printks to the beginning and end of
-scsi_prep_async_scan() and scsi_finish_async_scan() in scsi_scan.c.  
-That should tell us the relative timing of the async routines and the
-wait routines.
+James
 
-In the end, I suspect you'll need to ask the author or maintainer of
-the megaraid driver for help solving this.
-
-Alan Stern
 
