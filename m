@@ -1,78 +1,56 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 4/7] sd: add support for WRITE SAME (16) with unmap bit
-Date: Sun, 30 Aug 2009 15:12:09 +0400
-Message-ID: <4A9A5E89.7070204@ru.mvista.com>
-References: <20090829230332.017137693@bombadil.infradead.org> <20090829231121.713422216@bombadil.infradead.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] zfcp: Test kmalloc failure in scsi_get_vpd_page()
+Date: Sun, 30 Aug 2009 14:45:58 +0300
+Message-ID: <4A9A6676.8050304@panasas.com>
+References: <4A92BE18.50208@gmail.com> <1251416731.27356.8.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753322AbZH3LMT@vger.kernel.org>
-In-Reply-To: <20090829231121.713422216@bombadil.infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, liml@rtr.ca, jens.axboe@oracle.com, matthew@wil.cx, dwmw2@infradead.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ip67-152-220-67.z220-152-67.customer.algx.net ([67.152.220.67]:16024
+	"EHLO daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753236AbZH3LqD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 30 Aug 2009 07:46:03 -0400
+In-Reply-To: <1251416731.27356.8.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Roel Kluin <roel.kluin@gmail.com>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-Hello.
+On 08/28/2009 02:45 AM, James Bottomley wrote:
+> On Mon, 2009-08-24 at 18:21 +0200, Roel Kluin wrote:
+>> kmalloc() may fail, so test whether it succeeded.
+>>
+>> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+>> ---
+>> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+>> index 2de5f3a..34fdde0 100644
+>> --- a/drivers/scsi/scsi.c
+>> +++ b/drivers/scsi/scsi.c
+>> @@ -1056,6 +1056,9 @@ unsigned char *scsi_get_vpd_page(struct scsi_device *sdev, u8 page)
+>>  
+>>  	kfree(buf);
+>>  	buf = kmalloc(len + 4, GFP_KERNEL);
+>> +	if (!buf)
+>> +		return NULL;
+>> +
+> 
+> Firstly, this won't actually apply ... you should be developing against
+> either the SCSI trees or linux-next to get the latest versions in git.
+> 
+> Secondly it's not really right for the most common use cases, which
+> don't usually want the whole vpd buffer anyway.  I don't really see a
+> simple way of fixing it without altering the interface, though.
+> 
 
-Christoph Hellwig wrote:
+"most common use cases" do not have pages bigger then 255. Can you think
+of any? For these few places that anticipate pages bigger then 255 I don't
+see much choice, we just freed 255 bytes and tried a new size, say 317, which
+failed with GFP_KERNEL, In such a busy system, better fail with NULL then BUG,
+No? In any way caller must check for NULL because of the first allocation.
 
-> Add a prepare_discard function to sd that sends a WRITE SAME request with
-> the unmap bit set to the device if it advertises thin provisioning support.
->
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
->
-> Index: linux-2.6/drivers/scsi/sd.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/scsi/sd.c	2009-08-29 19:19:36.067371669 -0300
-> +++ linux-2.6/drivers/scsi/sd.c	2009-08-29 19:26:20.723754241 -0300
-> @@ -911,6 +911,50 @@ static void sd_prepare_flush(struct requ
->  	rq->cmd_len = 10;
->  }
->  
-> +static int sd_prepare_discard(struct request_queue *q, struct request *rq,
-> +		struct bio *bio)
-> +{
-> +	struct scsi_device *sdp = q->queuedata;
-> +	struct page *page = alloc_page(GFP_KERNEL);
-> +
-> +	if (!page)
-> +		return -ENOMEM;
-> +
-> +	rq->cmd_type = REQ_TYPE_BLOCK_PC;
-> +	rq->timeout = SD_TIMEOUT;
-> +	rq->cmd[0] = WRITE_SAME_16;
-> +	rq->cmd[1] = 0x8; /* UNMAP bit */
-> +	rq->cmd[2] = sizeof(bio->bi_sector) > 4 ?
-> +			(unsigned char) (bio->bi_sector >> 56) & 0xff : 0;
-> +	rq->cmd[3] = sizeof(bio->bi_sector) > 4 ?
-> +			(unsigned char) (bio->bi_sector >> 48) & 0xff : 0;
-> +	rq->cmd[4] = sizeof(bio->bi_sector) > 4 ?
-> +			(unsigned char) (bio->bi_sector >> 40) & 0xff : 0;
-> +	rq->cmd[5] = sizeof(bio->bi_sector) > 4 ?
-> +			(unsigned char) (bio->bi_sector >> 32) & 0xff : 0;
-> +	rq->cmd[6] = (unsigned char) (bio->bi_sector >> 24) & 0xff;
-> +	rq->cmd[7] = (unsigned char) (bio->bi_sector >> 16) & 0xff;
-> +	rq->cmd[8] = (unsigned char) (bio->bi_sector >> 8) & 0xff;
-> +	rq->cmd[9] = (unsigned char) bio->bi_sector & 0xff;
-> +	rq->cmd[10] = (unsigned char) (bio_sectors(bio) >> 24) & 0xff;
-> +	rq->cmd[11] = (unsigned char) (bio_sectors(bio) >> 16) & 0xff;
-> +	rq->cmd[12] = (unsigned char) (bio_sectors(bio) >> 8) & 0xff;
-> +	rq->cmd[13] = (unsigned char) bio_sectors(bio) & 0xff;
-> +	rq->cmd[14] = 0;
-> +	rq->cmd[15] = 0;
-> +	rq->cmd_len = 16;
-> +
-> +	printk(KERN_INFO "umap, lba = 0x%lld, len = %d\n",
->   
+> James
+> 
 
-   So, is it hex or decimal? :-)
-
-> +	       bio->bi_sector, bio_sectors(bio));
->   
-
-   Since bio->bi_sector can either be 4 or 8 bytes, you need a cast to 
-unsigned long long here.
-
-MBR, Sergei
+Boaz
