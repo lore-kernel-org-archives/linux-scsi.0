@@ -1,32 +1,59 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/7] sd: add support for WRITE SAME (16) with unmap bit
-Date: Sat, 29 Aug 2009 21:05:00 -0400
-Message-ID: <20090830010500.GA24395@infradead.org>
-References: <20090829230332.017137693@bombadil.infradead.org> <20090829231121.713422216@bombadil.infradead.org> <4A99CB2F.9000000@interlog.com>
+Subject: Re: [PATCH 0/7] discard support revisited
+Date: Sat, 29 Aug 2009 22:15:34 -0400
+Message-ID: <20090830021534.GA14706@infradead.org>
+References: <20090829230332.017137693@bombadil.infradead.org> <20090829233718.GD22870@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4A99CB2F.9000000@interlog.com>
+In-Reply-To: <20090829233718.GD22870@parisc-linux.org>
 Sender: linux-ide-owner@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, liml@rtr.ca, jens.axboe@oracle.com, matthew@wil.cx, dwmw2@infradead.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, liml@rtr.ca, jens.axboe@oracle.com, dwmw2@infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Aug 29, 2009 at 08:43:27PM -0400, Douglas Gilbert wrote:
->>  +	if (buffer[14] & 0x80)
->> +		sdkp->thin_provisioning = 1;
->> +
->
-> So you are checking the TPE bit (Thin Provisioning Enabled) but
-> not the TPRZ bit (Thin Provisioning Read Zeros). Shouldn't
-> there also be a sdkp->thin_provisioning_read_zeros bit defined
-> in struct scsi_disk?
->
-> Is your application well defined when TPRZ==0 ?
+On Sat, Aug 29, 2009 at 05:37:19PM -0600, Matthew Wilcox wrote:
+> >  - I have implemented support for sending WRITE SAME requests with the
+> >    unmap bit set in sd.  This has been tested with a qemu-based backed
+> >    only so far, but we'll get some real array coverage soon.
+> 
+> I think we're going to need to figure out whether we should be sending
+> UNMAP or WRITE SAME ... probably need to dive back into the T10 poostorm
+> to see what's going on.
 
-Filesystems do not care if these blocks are in a defined state, as
-they must never return the content of uninitilized blocks to userspace.
-Now if we do want to support discard through raid arrays we might start
-to care, and will have check the TPRZ bit.
+Good question.  Latest I had heard was that at least one array vendor
+prefers the WRITE SAME.  To me it looks like the much saner interface
+for the OS, so unless there are arrays that strongly prefer UNMAP or
+we need to make use of the multiple extends feature in it I'd go with
+WRITE SAME as first choice.
 
+> > I would really love to see some progress on this in the 2.6.32 circle.
+> > We should at least get the block layer bits in that allow implementing
+> > a somewhat useful discard function.  I would also love to see the
+> > actual scsi and libata implementations in so that we can start playing
+> > around with it.  But given the speed up the current TRIM implementations
+> > and the expectations for WRITE SAME we should make sure the exact
+> > TRIM tracking is not actually enabled anywhere by default for now.
+> 
+> Jens had some objections to the block layer bits last time I posted
+> these.  I forget what they were now (this would have been around May
+> 2nd, I think).  What I've done instead in my current patchset (which
+> undoubtedly has bugs because it isn't tested, because I'm not supposed
+> to be working on the weekends) is to make sd_prep_fn() call a new method
+> in the scsi_host_template.  That should translate the discard request
+> into a BLOCK_PC ATA_16 command, and we'll all be happy.
+> 
+> It goes a little something like this:
+> http://git.kernel.org/?p=linux/kernel/git/willy/ssd.git;a=shortlog;h=trim-20090829
+> 
+> Right now, the test tool is telling me 'Operation not supported', and
+> I haven't tried to figure out why yet.
+
+Queue flag and handling the discard in the prep function is much better
+than the prepare function, yes.  I don't like the prep_fn callout to the
+host a lot.  If we go with WRITE SAME as prefered discard option for
+scsi translating it to TRIM should be relatively easy, it uses the same
+LBA/length encoding as the regular WRITE_16, except that the payload is
+just a single sector.  That should be not too hard to implement in the
+SAT layer.
