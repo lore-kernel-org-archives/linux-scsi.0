@@ -1,112 +1,74 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 4/4] [LIO-Target/ConfigFS]: Add ALUA secondary access state
-	attributes for saving/reading metadata
-Date: Mon, 31 Aug 2009 01:28:20 -0700
-Message-ID: <1251707300.4136.45.camel@haakon2.linux-iscsi.org>
+Subject: [PATCH 0/4]: Add ALUA primary/secondary access state/status
+	metadata support
+Date: Mon, 31 Aug 2009 01:29:21 -0700
+Message-ID: <1251707361.4136.47.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from n21.bullet.mail.mud.yahoo.com ([68.142.206.160]:26001 "HELO
-	n21.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752689AbZHaI3i (ORCPT
+Received: from smtp105.sbc.mail.gq1.yahoo.com ([67.195.14.108]:29563 "HELO
+	smtp105.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752724AbZHaI3j (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Aug 2009 04:29:38 -0400
+	Mon, 31 Aug 2009 04:29:39 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 Cc: Douglas Gilbert <dgilbert@interlog.com>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Alasdair G Kergon <agk@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Hello,
+Greeting SCSI and multipath folks,
 
-This patch adds the following new configfs attributes for each LIO-Target/ConfigFS allocated
-Port/LUN in /sys/kernel/config/target/iscsi/$TIQN/tpgt_$TPGT/lun/lun_$LUN_ID/:
+This patch series to TCM/LIO v3.1 kernel code in lio-core-2.6.git adds support for struct file ALUA metadata
+of primary/secondary access state/status to /var/target/alua/, which allows the ALUA metadata to be loaded
+into configfs attributes at TCM + fabric bringup time to reinstate the last saved ALUA metadata across target
+power loss, reboots, et al.
 
-*) 'alua_tg_pt_status' Used for setting ALUA secondary access state for Port/LUN
-*) 'alua_tg_pt_write_md'  Used for allowing configuration to enable/disable
-   the writing of ALUA target port group secondary access state/status to struct file.
-   Does not affect ALUA fabric level operation
+Here is what an example running layout of metadata in /var/target/alua looks like:
 
-The reason why only dump state and status is because these are the only ALUA attributes
-that can be changed during both in-band via MO SET_TARGET_PORT_GROUPs (explict) and out-of-band
-via configfs (implict).
+    target:/mnt/sdb/lio-core-2.6.git# tree /var/target/alua/
+    /var/target/alua/
+    |-- iSCSI  # These are for fabric dependent Port/LUN ALUA secondary access metadata
+    |   |-- iqn.2003-01.org.linux-iscsi.target.i686:sn.cff3eedbd2fd+1
+    |   |   `-- lun_0
+    |   `-- iqn.2003-01.org.linux-iscsi.target.i686:sn.e475ed6fcdd0+1
+    |       `-- lun_0
+    |  # These are for TCM storage object target port group ALUA primary access metadata
+    |-- tpgs_41ee70ff-4fbe-4fb8-a690-b3c65639db10
+    |-- tpgs_96eb8120-f0fc-40ce-b673-8ac302aa6b4e
+    `-- tpgs_a97e4ce21c0711de829b000c2943d57b
+        |-- lio_alua_east
+        `-- lio_alua_west
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/lio-core/iscsi_target_configfs.c |   54 ++++++++++++++++++++++++++++++
- 1 files changed, 54 insertions(+), 0 deletions(-)
+This patch series includes new EXPORT_SYMBOL() calls to target_core_alua.c that add generic configfs
+store/show handlers for fabric dependent configfs attribute code, as well as the modification to
+LIO-Target/ConfigFS to use these generic handlers.  Also, code has been added for calling filp_open() ->
+vfs_writev() -> flip_close() for updating the actual struct file in both primary/secondary access state
+transitions for both explict (via MO SET_TARGET_PORT_GROUPS) and implict (via configfs) ALUA operations.
 
-diff --git a/drivers/lio-core/iscsi_target_configfs.c b/drivers/lio-core/iscsi_target_configfs.c
-index 1230b74..81e382f 100644
---- a/drivers/lio-core/iscsi_target_configfs.c
-+++ b/drivers/lio-core/iscsi_target_configfs.c
-@@ -466,9 +466,63 @@ static ssize_t lio_target_port_store_attr_alua_tg_pt_offline(
- 
- LIO_PORT_ATTR(alua_tg_pt_offline, S_IRUGO | S_IWUSR);
- 
-+/*
-+ * alua_tg_pt_status
-+ */
-+static ssize_t lio_target_port_show_attr_alua_tg_pt_status(
-+	struct se_lun_s *lun,
-+	char *page)
-+{
-+	if (!(lun->lun_sep))
-+		return -ENODEV;
-+
-+	return core_alua_show_secondary_status(lun, page);
-+}
-+
-+static ssize_t lio_target_port_store_attr_alua_tg_pt_status(
-+	struct se_lun_s *lun,
-+	const char *page,
-+	size_t count)
-+{
-+	if (!(lun->lun_sep))
-+		return -ENODEV;	
-+
-+	return core_alua_store_secondary_status(lun, page, count);
-+}
-+
-+LIO_PORT_ATTR(alua_tg_pt_status, S_IRUGO | S_IWUSR);
-+
-+/*
-+ * alua_tg_pt_write_md
-+ */
-+static ssize_t lio_target_port_show_attr_alua_tg_pt_write_md(
-+	struct se_lun_s *lun,
-+	char *page)
-+{
-+	if (!(lun->lun_sep))
-+		return -ENODEV;
-+
-+	return core_alua_show_secondary_write_metadata(lun, page);
-+}
-+
-+static ssize_t lio_target_port_store_attr_alua_tg_pt_write_md(
-+	struct se_lun_s *lun,
-+	const char *page,
-+	size_t count)
-+{
-+	if (!(lun->lun_sep))
-+		return -ENODEV;
-+
-+	return core_alua_store_secondary_write_metadata(lun, page, count);
-+}
-+
-+LIO_PORT_ATTR(alua_tg_pt_write_md, S_IRUGO | S_IWUSR);
-+
- static struct configfs_attribute *lio_target_port_attrs[] = {
- 	&lio_target_port_alua_tg_pt_gp.attr,
- 	&lio_target_port_alua_tg_pt_offline.attr,
-+	&lio_target_port_alua_tg_pt_status.attr,
-+	&lio_target_port_alua_tg_pt_write_md.attr,
- 	NULL,
- };
- 
--- 
-1.5.4.1
+[PATCH 1/4] [Target_Core_Mod/ALUA]: Add support for saving primary port metadata across target power loss
+[PATCH 2/4] [Target_Core_Mod/ALUA]: Add support for saving secondary fabric port metadata across target power loss
+[PATCH 3/4] [Target_Core_Mod]: Add alua mutex initialization in core_alloc_port()
+[PATCH 4/4] [LIO-Target/ConfigFS]: Add ALUA secondary access state attributes for saving/reading metadata
 
+ drivers/lio-core/iscsi_target_configfs.c |   54 +++++++
+ drivers/target/target_core_alua.c        |  232 +++++++++++++++++++++++++++++-
+ drivers/target/target_core_configfs.c    |   75 ++++++++++-
+ drivers/target/target_core_device.c      |    1 +
+ include/target/target_core_alua.h        |   17 ++-
+ include/target/target_core_base.h        |    7 +
+ 6 files changed, 378 insertions(+), 8 deletions(-)
 
+The userspace commits to make it all go can be found here:
 
+http://git.kernel.org/?p=linux/storage/lio/lio-utils.git;a=commitdiff;h=3dbe22aa3941dbf0126490e95e50a2f536721f3e
+http://git.kernel.org/?p=linux/storage/lio/lio-utils.git;a=commitdiff;h=494e2f6d1163227602d2336cd65d57bf2cf07e78
+http://git.kernel.org/?p=linux/storage/lio/lio-utils.git;a=commitdiff;h=e632383be4ac3634325551b8fbc152bb2d2f5fc2
+http://git.kernel.org/?p=linux/storage/lio/lio-utils.git;a=commitdiff;h=4917f200458845468db33b6abd30c1a0cc64fbba
+http://git.kernel.org/?p=linux/storage/lio/lio-utils.git;a=commitdiff;h=c0d26101ee33aaf284b7b86391cf7c70c9859816
+http://git.kernel.org/?p=linux/storage/lio/lio-utils.git;a=commitdiff;h=fa48c904073a878b36e0b92eda28faebea55aafc
+
+Any comments or questions are welcome!
+
+--nab
 
