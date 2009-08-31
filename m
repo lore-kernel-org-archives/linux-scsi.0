@@ -1,80 +1,52 @@
-From: Alok Kataria <akataria@vmware.com>
-Subject: Re: [PATCH] SCSI driver for VMware's virtual HBA.
-Date: Mon, 31 Aug 2009 14:54:16 -0700
-Message-ID: <1251755656.16169.52.camel@ank32.eng.vmware.com>
-References: <1251415060.16297.58.camel@ank32.eng.vmware.com>
-	 <200908280803.52025.eike-kernel@sf-tec.de>
-	 <1251739571.16169.17.camel@ank32.eng.vmware.com>
-	 <200908312051.26264.eike-kernel@sf-tec.de>
-Reply-To: akataria@vmware.com
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: MD/RAID time out writing superblock
+Date: Mon, 31 Aug 2009 19:45:37 -0400
+Message-ID: <4A9C60A1.50303@rtr.ca>
+References: <004e01ca25e4$c11a54e0$434efea0$@ca> <9cfb6af689a7010df166fdebb1ef516b.squirrel@neil.brown.name> <4A948A82.4080901@redhat.com> <b585ed9f13649050bbc984869d081315.squirrel@neil.brown.name> <4A94905F.7050705@redhat.com> <005101ca25f4$09006830$1b013890$@ca> <4A94A0E6.4020401@redhat.com> <005401ca25ff$9ac91cc0$d05b5640$@ca> <4A950FA6.4020408@redhat.com> <92cb16daad8278b0aa98125b9e1d057a@localhost> <4A95573A.6090404@redhat.com> <1571f45804875514762f60c0097171e6@localhost> <d086b110526f8bac2f562850dfc70b03@localhost> <4A970154.2020507@redhat.com> <4A9B8583.9050601@kernel.org> <4A9BC033.9000909@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-outbound-2.vmware.com ([65.115.85.73]:59500 "EHLO
-	smtp-outbound-2.vmware.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751105AbZHaVyO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Aug 2009 17:54:14 -0400
-In-Reply-To: <200908312051.26264.eike-kernel@sf-tec.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4A9BC033.9000909@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Mark Lord <mlord@pobox.com>
+Cc: Tejun Heo <tj@kernel.org>, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Robert Love <robert.w.love@intel.com>, Randy Dunlap <randy.dunlap@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Dmitry Torokhov <dtor@vmware.com>, Maxime Austruy <maustruy@vmware.com>
 
+Mark Lord wrote:
+> Tejun Heo wrote:
+>> Ric Wheeler wrote:
+> ..
+>>> The drive might take a longer time like this when doing error handling
+>>> (sector remapping, etc), but then I would expect to see your remapped
+>>> sector count grow.
+>>
+>> Yes, this is a possibility and according to the spec, libata EH should
+>> be retrying flushes a few times before giving up but I'm not sure
+>> whether keeping retrying for several minutes is a good idea either.
+>> Is it?
+> ..
+> 
+> Libata will retry only when the FLUSH returns an error,
+> and the next FLUSH will continue after the point where
+> the first attempt failed.
+> 
+> But if the drive can still auto-relocate sectors, then the
+> first FLUSH won't actually fail.. it will simply take longer
+> than normal.
+> 
+> A couple of those, and we're into the tens of seconds range
+> for time.
+> 
+> Still, it would be good to actually produce an error like that
+> to examine under controlled circumstances.
+> 
+> Hmm.. I had a drive here that gave symptoms like that.
+> Eventually, I discovered that drive had run out of relocatable
+> sectors, too.  Mmm.. I'll see if I can get it back (loaned it out)
+> and perhaps we can recreate this specific scenario on it..
+..
 
-On Mon, 2009-08-31 at 11:51 -0700, Rolf Eike Beer wrote:
-> Alok Kataria wrote:
-> > Hi Eike,
-> 
-> > > > +static int __devinit pvscsi_probe(struct pci_dev *pdev,
-> > > > +				  const struct pci_device_id *id)
-> > > > +{
-> > > > +	struct pvscsi_adapter *adapter;
-> > > > +	struct Scsi_Host *host;
-> > > > +	unsigned long base, i;
-> > > > +	int error;
-> > > > +
-> > > > +	error = -ENODEV;
-> > > > +
-> > > > +	if (pci_enable_device(pdev))
-> > > > +		return error;
-> > >
-> > > As always I suggest having a look on devres (see Documentation/driver-
-> > > model/devres.txt) which could simplify your error handling here and your
-> > > release function a lot. You only need to make sure it doesn't hurt if all
-> > > the PCI resources are freed after the scsi ones as you would end up
-> > > cleaning the scsi ones by hand and afterwards devres would throw all it
-> > > handles (which will probably be most of your PCI stuff) away itself.
-> >
-> > I took a quick look, but would prefer not to change this right now. Will
-> > do this as a incremental change later. Hope that is fine.
-> 
-> Just a suggestion ;)
-> 
-> > > > +	adapter->dev  = pdev;
-> > > > +	adapter->host = host;
-> > > > +
-> > > > +	spin_lock_init(&adapter->hw_lock);
-> > > > +
-> > > > +	host->max_channel = 0;
-> > > > +	host->max_id      = 16;
-> > > > +	host->max_lun     = 1;
-> > > > +
-> > > > +	pci_read_config_byte(pdev, PCI_CLASS_REVISION, &adapter->rev);
-> > >
-> > > That's in pdev->revision anyway, isn't it?
-> >
-> > Yep, though, its needed in pvscsi_info, so will keep this in adapter
-> > too.
-> 
-> Yes, but you don't need to do pci_read_config_byte() but simply copying that 
-> over from pdev->revision.
+I checked today, and that drive is no longer available.
 
-Oh..yes, will take care of that in the next revision.  
-
-Thanks,
-Alok
-> 
-> Eike
-
+-ml
