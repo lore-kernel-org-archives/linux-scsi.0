@@ -1,156 +1,283 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] [Target_Core_Mod/ALUA]: Add ALUA Transition state usage +
-	optional delay
-Date: Mon, 31 Aug 2009 01:24:37 -0700
-Message-ID: <1251707077.4136.35.camel@haakon2.linux-iscsi.org>
+Subject: [PATCH 1/4] [Target_Core_Mod/ALUA]: Add support for saving primary
+	port metadata across target power loss
+Date: Mon, 31 Aug 2009 01:25:59 -0700
+Message-ID: <1251707159.4136.38.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp105.sbc.mail.gq1.yahoo.com ([67.195.14.108]:29548 "HELO
-	smtp105.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752441AbZHaI3Z (ORCPT
+Received: from smtp107.sbc.mail.gq1.yahoo.com ([67.195.14.110]:30582 "HELO
+	smtp107.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752608AbZHaI33 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Aug 2009 04:29:25 -0400
+	Mon, 31 Aug 2009 04:29:29 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 Cc: Douglas Gilbert <dgilbert@interlog.com>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Alasdair G Kergon <agk@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Greeting SCSI and multipath folks,
+Hello,
 
-This patch updates lio-core-2.6.git code to support a optional millisecond delay of
-ALUA primary and secondary access state transition via explict (via MO SET_TARGET_PORT_GROUPS)
-and implict (via configfs) ALUA operations.
+This patch adds core_alua_update_tpg_primary_metadata() for saving ALUA target port group
+primary access state and status in core_alua_do_transition_tg_pt() to struct file on a per
+TCM storage object basis /var/target/alua/tpgs_$T10_UNIT_SERIAL/$TG_PT_GP_NAME.  The writing to
+each struct file is protected by t10_alua_tg_pt_gp_t->tg_pt_gp_md_mutex.
 
-This was something that Hannes had asked me doing about at LSF 09', and is now available
-in LIO v3.1, and is intended to be used for debugging scsi_dh_alua and other
-ALUA client side code during ALUA_ACCESS_STATE_TRANSITION.
+This patch updates core_alua_do_port_transition() to allocate a local scope buffer of
+t10_alua_tg_pt_gp_t->tg_pt_gp_md_buf_len (1024 hardcoded default), and that is then
+passed into core_alua_do_transition_tg_pt() for actual ALUA primary state transition, and
+freed upon core_alua_do_port_transition() return.  The following ALUA metadata key=value pairs
+that are written to struct file for both implict and explict ALUA transitions operations are:
 
-This patch updates core_alua_do_transition_tg_pt() to set the current primary
-target port group ALUA access state to ALUA_ACCESS_STATE_TRANSITION for the
-passed t10_alua_tg_pt_gp_t, and then optionally wait for tg_pt_gp_trans_delay_msecs
-before successfully completing the transition to the new ALUA primary access state.
+*) tg_pt_gp_id=  Used for cross checking ID when being loaded during bringup
+*) alua_access_state=  ALUA primary access state
+*) alua_access_status=  ALUA primary access status
 
-By default, the transition delay is disabled in the ALUA_DEFAULT_TRANS_DELAY_MSECS
-constant, and is intended to add debugging for initiator side ALUA transition
-scenarios.
+This patch also makes the following changes to storage object ALUA configfs attributes
+in /sys/kernel/config/target/core/$HBA/$DEV/alua/$TG_PT_GP_NAME:
 
-This patch adds a new configfs attribute for this delay in milliseconds located at:
+*) Make 'alua_access_status' writeable for processing key=value from struct file
+*) Add 'alua_write_metadata' attribute for allowing configuration to enable/disable
+   the writing of ALUA target port group primary access state/status to struct file.
+   Does not affect ALUA fabric level operation
 
-/sys/kernel/config/target/core/$HBA/$DEV/alua/$TG_PT_GP_NAME/trans_delay_msecs
+The reason why only dump state and status is because these are the only ALUA attributes
+that can be changed during both in-band via MO SET_TARGET_PORT_GROUPs (explict) and out-of-band
+via configfs (implict), while the other ALUA attributes can only be changed from configfs operations
+and not via in-band means.
 
-This patch also updates core_alua_set_tg_pt_secondary_state() to optionally
-wait for the same target port group trans_delay_msecs value with the 'Offline'
-ALUA secondary access state transition of the fabric dependent SCSI target port.
-
-The userspace commit can be found here:
-
-http://git.kernel.org/?p=linux/storage/lio/lio-utils.git;a=commitdiff;h=0b77cc113ef20e26fd58df8d8711a463a0b24070
+Note that this patch expects the other attributes (alua_access_type, nonop_delay_msecs, preferred)
+in /sys/kernel/config/target/core/$HBA/$DEV/alua/$TG_PT_GP_NAME that *cannot* be changed via
+explict ALUA with MO SET_TARGET_PORT_GROUPS to still need to be saved using tcm_dump.py
+from userspace to make those configuration changes persistent across target power loss and reboots.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_alua.c     |   57 +++++++++++++++++++++++++++++++--
- drivers/target/target_core_configfs.c |   21 ++++++++++++
- include/target/target_core_alua.h     |   11 ++++++
- include/target/target_core_base.h     |    1 +
- 4 files changed, 87 insertions(+), 3 deletions(-)
+ drivers/target/target_core_alua.c     |   89 ++++++++++++++++++++++++++++++++-
+ drivers/target/target_core_configfs.c |   75 +++++++++++++++++++++++++++-
+ include/target/target_core_alua.h     |    2 +-
+ include/target/target_core_base.h     |    5 ++
+ 4 files changed, 167 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index b970c50..0845436 100644
+index 0845436..4b92663 100644
 --- a/drivers/target/target_core_alua.c
 +++ b/drivers/target/target_core_alua.c
-@@ -625,12 +625,21 @@ int core_alua_do_transition_tg_pt(
- 	se_port_t *port;
- 	t10_alua_tg_pt_gp_member_t *mem;
- 	int old_state = 0;
--
-+	/*
-+	 * Save the old primary ALUA access state, and set the current state
-+	 * to ALUA_ACCESS_STATE_TRANSITION.
-+	 */
- 	old_state = atomic_read(&tg_pt_gp->tg_pt_gp_alua_access_state);
--	atomic_set(&tg_pt_gp->tg_pt_gp_alua_access_state, new_state);
-+	atomic_set(&tg_pt_gp->tg_pt_gp_alua_access_state,
-+			ALUA_ACCESS_STATE_TRANSITION);
- 	tg_pt_gp->tg_pt_gp_alua_access_status = (explict) ?
- 				ALUA_STATUS_ALTERED_BY_EXPLICT_STPG :
- 				ALUA_STATUS_ALTERED_BY_IMPLICT_ALUA;
-+	/*
-+	 * Check for the optional ALUA primary state transition delay
-+	 */
-+	if (tg_pt_gp->tg_pt_gp_trans_delay_msecs != 0) 
-+		msleep_interruptible(tg_pt_gp->tg_pt_gp_trans_delay_msecs);
+@@ -613,10 +613,66 @@ int core_alua_check_nonop_delay(
+ }
+ EXPORT_SYMBOL(core_alua_check_nonop_delay);
  
- 	spin_lock(&tg_pt_gp->tg_pt_gp_lock);
- 	list_for_each_entry(mem, &tg_pt_gp->tg_pt_gp_mem_list,
-@@ -674,6 +683,10 @@ int core_alua_do_transition_tg_pt(
- 		smp_mb__after_atomic_dec();
++/*
++ * Called with tg_pt_gp->tg_pt_gp_md_mutex held
++ */
++int core_alua_update_tpg_primary_metadata(
++	t10_alua_tg_pt_gp_t *tg_pt_gp,
++	int primary_state,
++	unsigned char *md_buf)
++{
++	se_subsystem_dev_t *su_dev = tg_pt_gp->tg_pt_gp_su_dev;
++	t10_wwn_t *wwn = &su_dev->t10_wwn;
++	struct file *file;
++	struct iovec iov[1];
++	mm_segment_t old_fs;
++	char path[512];
++	int flags = O_RDWR | O_CREAT | O_TRUNC;
++	int len, ret;
++
++	memset(iov, 0, sizeof(struct iovec));
++	memset(path, 0, 512);
++
++	len = snprintf(md_buf, tg_pt_gp->tg_pt_gp_md_buf_len,
++			"tg_pt_gp_id=%hu\n"
++			"alua_access_state=0x%02x\n"
++			"alua_access_status=0x%02x\n",
++			tg_pt_gp->tg_pt_gp_id, primary_state,
++			tg_pt_gp->tg_pt_gp_alua_access_status);
++
++	snprintf(path, 512, "/var/target/alua/tpgs_%s/%s",
++		&wwn->unit_serial[0],
++		config_item_name(&tg_pt_gp->tg_pt_gp_group.cg_item));
++	file = filp_open(path, flags, 0600);
++	if (IS_ERR(file) || !file || !file->f_dentry) {
++		printk(KERN_ERR "filp_open(%s) for ALUA metadata failed\n",
++			path);
++		return -1;
++	}
++	
++	iov[0].iov_base = &md_buf[0];
++	iov[0].iov_len = len;
++
++	old_fs = get_fs();
++	set_fs(get_ds());
++	ret = vfs_writev(file, &iov[0], 1, &file->f_pos);
++	set_fs(old_fs);
++
++	if (ret < 0) {
++		printk("Error writing ALUA metadata file: %s\n", path);	
++		filp_close(file, NULL);
++		return -1;
++	}
++	filp_close(file, NULL);
++
++	return 0;
++}
++
+ int core_alua_do_transition_tg_pt(
+ 	t10_alua_tg_pt_gp_t *tg_pt_gp,
+ 	se_port_t *l_port,
+ 	se_node_acl_t *nacl,
++	unsigned char *md_buf,
+ 	int new_state,
+ 	int explict)
+ {
+@@ -684,6 +740,24 @@ int core_alua_do_transition_tg_pt(
  	}
  	spin_unlock(&tg_pt_gp->tg_pt_gp_lock);
-+	/*
-+	 * Set the current primary ALUA access state to the requested new state
-+	 */
-+	atomic_set(&tg_pt_gp->tg_pt_gp_alua_access_state, new_state);
- 
- 	printk(KERN_INFO "Successful %s ALUA transition TG PT Group: %s ID: %hu"
- 		" from primary access state: %s to %s\n", (explict) ? "explict" :
-@@ -806,6 +819,7 @@ int core_alua_set_tg_pt_secondary_state(
- 	int offline)
- {
- 	struct t10_alua_tg_pt_gp_s *tg_pt_gp;
-+	int trans_delay_msecs;
- 
- 	spin_lock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
- 	tg_pt_gp = tg_pt_gp_mem->tg_pt_gp;
-@@ -815,6 +829,7 @@ int core_alua_set_tg_pt_secondary_state(
- 				" transition\n");
- 		return -1;
- 	}
-+	trans_delay_msecs = tg_pt_gp->tg_pt_gp_trans_delay_msecs;
  	/*
- 	 * Set the secondary ALUA target port access state to OFFLINE
- 	 * or release the previously secondary state for se_port_t
-@@ -827,13 +842,17 @@ int core_alua_set_tg_pt_secondary_state(
- 	port->sep_tg_pt_secondary_stat = (explict) ?
- 			ALUA_STATUS_ALTERED_BY_EXPLICT_STPG :
- 			ALUA_STATUS_ALTERED_BY_IMPLICT_ALUA;
--	spin_unlock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
++	 * Update the ALUA metadata buf that has been allocated in
++	 * core_alua_do_port_transition(), this metadata will be written
++	 * to struct file.
++	 *
++	 * Note that there is the case where we do not want to update the
++	 * metadata when the saved metadata is being parsed in userspace
++	 * when setting the existing port access state and access status.
++	 *
++	 * Also note that the failure to write out the ALUA metadata to
++	 * struct file does NOT affect the actual ALUA transition.
++	 */
++	if (tg_pt_gp->tg_pt_gp_write_metadata) {
++		mutex_lock(&tg_pt_gp->tg_pt_gp_md_mutex);
++		core_alua_update_tpg_primary_metadata(tg_pt_gp,
++					new_state, md_buf);
++		mutex_unlock(&tg_pt_gp->tg_pt_gp_md_mutex);
++	}
++	/*
+ 	 * Set the current primary ALUA access state to the requested new state
+ 	 */
+ 	atomic_set(&tg_pt_gp->tg_pt_gp_alua_access_state, new_state);
+@@ -712,11 +786,18 @@ int core_alua_do_port_transition(
+ 	t10_alua_lu_gp_t *lu_gp;
+ 	t10_alua_lu_gp_member_t *lu_gp_mem, *local_lu_gp_mem;
+ 	t10_alua_tg_pt_gp_t *tg_pt_gp;
++	unsigned char *md_buf;
+ 	int primary;
  
- 	printk(KERN_INFO "Successful %s ALUA transition TG PT Group: %s ID: %hu"
- 		" to secondary access state: %s\n", (explict) ? "explict" :
- 		"implict", config_item_name(&tg_pt_gp->tg_pt_gp_group.cg_item),
- 		tg_pt_gp->tg_pt_gp_id, (offline) ? "OFFLINE" : "ONLINE");
+ 	if (core_alua_check_transition(new_state, &primary) != 0)
+ 		return -1;
  
-+	spin_unlock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
++	md_buf = kzalloc(l_tg_pt_gp->tg_pt_gp_md_buf_len, GFP_KERNEL);
++	if (!(md_buf)) {
++		printk("Unable to allocate buf for ALUA metadata\n");
++		return -1;
++	}
 +
-+	if (trans_delay_msecs != 0)
-+		msleep_interruptible(trans_delay_msecs);	
-+
+ 	local_lu_gp_mem = l_dev->dev_alua_lu_gp_mem;
+ 	spin_lock(&local_lu_gp_mem->lu_gp_mem_lock);
+ 	lu_gp = local_lu_gp_mem->lu_gp;
+@@ -734,9 +815,10 @@ int core_alua_do_port_transition(
+ 		 * success.
+ 		 */
+ 		core_alua_do_transition_tg_pt(l_tg_pt_gp, l_port, l_nacl,
+-					new_state, explict);
++					md_buf, new_state, explict);
+ 		atomic_dec(&lu_gp->lu_gp_ref_cnt);
+ 		smp_mb__after_atomic_dec();
++		kfree(md_buf);
+ 		return 0;
+ 	}
+ 	/*
+@@ -787,7 +869,7 @@ int core_alua_do_port_transition(
+ 			 * success.
+ 			 */
+ 			core_alua_do_transition_tg_pt(tg_pt_gp, port,
+-					nacl, new_state, explict);
++					nacl, md_buf, new_state, explict);
+ 
+ 			spin_lock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+ 			atomic_dec(&tg_pt_gp->tg_pt_gp_ref_cnt);
+@@ -809,6 +891,7 @@ int core_alua_do_port_transition(
+ 
+ 	atomic_dec(&lu_gp->lu_gp_ref_cnt);
+ 	smp_mb__after_atomic_dec();
++	kfree(md_buf);
  	return 0;
  }
  
-@@ -1106,6 +1125,7 @@ t10_alua_tg_pt_gp_t *core_alua_allocate_tg_pt_gp(
- 	 * Set the default Active/NonOptimized Delay in milliseconds
- 	 */
- 	tg_pt_gp->tg_pt_gp_nonop_delay_msecs = ALUA_DEFAULT_NONOP_DELAY_MSECS;
-+	tg_pt_gp->tg_pt_gp_trans_delay_msecs = ALUA_DEFAULT_TRANS_DELAY_MSECS;
- 
- 	if (def_group) {
- 		spin_lock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
-@@ -1573,6 +1593,37 @@ ssize_t core_alua_store_nonop_delay_msecs(
- 	return count;
+@@ -1111,9 +1194,11 @@ t10_alua_tg_pt_gp_t *core_alua_allocate_tg_pt_gp(
+ 	}
+ 	INIT_LIST_HEAD(&tg_pt_gp->tg_pt_gp_list);
+ 	INIT_LIST_HEAD(&tg_pt_gp->tg_pt_gp_mem_list);
++	mutex_init(&tg_pt_gp->tg_pt_gp_md_mutex);
+ 	spin_lock_init(&tg_pt_gp->tg_pt_gp_lock);
+ 	atomic_set(&tg_pt_gp->tg_pt_gp_ref_cnt, 0);
+ 	tg_pt_gp->tg_pt_gp_su_dev = su_dev;
++	tg_pt_gp->tg_pt_gp_md_buf_len = ALUA_MD_BUF_LEN;
+ 	atomic_set(&tg_pt_gp->tg_pt_gp_alua_access_state,
+ 		ALUA_ACCESS_STATE_ACTIVE_OPTMIZED);
+ 	/*
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index 360fa92..3982796 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -2222,7 +2222,41 @@ static ssize_t target_core_alua_tg_pt_gp_show_attr_alua_access_status(
+ 		core_alua_dump_status(tg_pt_gp->tg_pt_gp_alua_access_status));
  }
  
-+ssize_t core_alua_show_trans_delay_msecs(
-+	t10_alua_tg_pt_gp_t *tg_pt_gp,
-+	char *page)
+-SE_DEV_ALUA_TG_PT_ATTR_RO(alua_access_status);
++static ssize_t target_core_alua_tg_pt_gp_store_attr_alua_access_status(
++	struct t10_alua_tg_pt_gp_s *tg_pt_gp,
++	const char *page,
++	size_t count)
 +{
-+	return sprintf(page, "%d\n", tg_pt_gp->tg_pt_gp_trans_delay_msecs);
++	unsigned long tmp;
++	int new_status, ret;
++	
++	if (!(tg_pt_gp->tg_pt_gp_valid_id)) {
++		printk(KERN_ERR "Unable to do set ALUA access status on non"
++			" valid tg_pt_gp ID: %hu\n",
++			tg_pt_gp->tg_pt_gp_valid_id);
++		return -EINVAL;		
++	}
++
++	ret = strict_strtoul(page, 0, &tmp);
++	if (ret < 0) {
++		printk(KERN_ERR "Unable to extract new ALUA access status"
++				" from %s\n", page);
++		return -EINVAL;
++	}
++	new_status = (int)tmp;
++
++	if ((new_status != ALUA_STATUS_NONE) &&
++	    (new_status != ALUA_STATUS_ALTERED_BY_EXPLICT_STPG) &&
++	    (new_status != ALUA_STATUS_ALTERED_BY_IMPLICT_ALUA)) {
++		printk(KERN_ERR "Illegal ALUA access status: 0x%02x\n", new_status);
++		return -EINVAL;
++	}
++
++	tg_pt_gp->tg_pt_gp_alua_access_status = new_status;
++	return count;
 +}
 +
-+ssize_t core_alua_store_trans_delay_msecs(
-+	t10_alua_tg_pt_gp_t *tg_pt_gp,
++SE_DEV_ALUA_TG_PT_ATTR(alua_access_status, S_IRUGO | S_IWUSR);
+ 
+ /*
+  * alua_access_type
+@@ -2245,6 +2279,44 @@ static ssize_t target_core_alua_tg_pt_gp_store_attr_alua_access_type(
+ SE_DEV_ALUA_TG_PT_ATTR(alua_access_type, S_IRUGO | S_IWUSR);
+ 
+ /*
++ * alua_write_metadata
++ */
++static ssize_t target_core_alua_tg_pt_gp_show_attr_alua_write_metadata(
++	struct t10_alua_tg_pt_gp_s *tg_pt_gp,
++	char *page)
++{
++	return sprintf(page, "%d\n", tg_pt_gp->tg_pt_gp_write_metadata);
++}
++
++static ssize_t target_core_alua_tg_pt_gp_store_attr_alua_write_metadata(
++	struct t10_alua_tg_pt_gp_s *tg_pt_gp,
 +	const char *page,
 +	size_t count)
 +{
@@ -159,105 +286,79 @@ index b970c50..0845436 100644
 +
 +	ret = strict_strtoul(page, 0, &tmp);
 +	if (ret < 0) {
-+		printk(KERN_ERR "Unable to extract trans_delay_msecs\n");
++		printk(KERN_ERR "Unable to extract alua_write_metadata\n");	
 +		return -EINVAL;
 +	}
-+	if (tmp > ALUA_MAX_TRANS_DELAY_MSECS) {
-+		printk(KERN_ERR "Passed trans_delay_msecs: %lu, exceeds"
-+			" ALUA_MAX_TRANS_DELAY_MSECS: %d\n", tmp,
-+			ALUA_MAX_TRANS_DELAY_MSECS);
++
++	if ((tmp != 0) && (tmp != 1)) {
++		printk(KERN_ERR "Illegal value for alua_write_metadata:"
++			" %lu\n", tmp);
 +		return -EINVAL;
 +	}
-+	tg_pt_gp->tg_pt_gp_trans_delay_msecs = (int)tmp;
++	tg_pt_gp->tg_pt_gp_write_metadata = (int)tmp;
 +
 +	return count;
 +}
 +
- ssize_t core_alua_show_preferred_bit(
- 	t10_alua_tg_pt_gp_t *tg_pt_gp,
- 	char *page)
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 3fed78c..360fa92 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -2266,6 +2266,26 @@ static ssize_t target_core_alua_tg_pt_gp_store_attr_nonop_delay_msecs(
- SE_DEV_ALUA_TG_PT_ATTR(nonop_delay_msecs, S_IRUGO | S_IWUSR);
- 
- /*
-+ * trans_delay_msecs
-+ */
-+static ssize_t target_core_alua_tg_pt_gp_show_attr_trans_delay_msecs(
-+	struct t10_alua_tg_pt_gp_s *tg_pt_gp,
-+	char *page)
-+{
-+	return core_alua_show_trans_delay_msecs(tg_pt_gp, page);
-+}
++SE_DEV_ALUA_TG_PT_ATTR(alua_write_metadata, S_IRUGO | S_IWUSR);
 +
-+static ssize_t target_core_alua_tg_pt_gp_store_attr_trans_delay_msecs(
-+	struct t10_alua_tg_pt_gp_s *tg_pt_gp,
-+	const char *page,
-+	size_t count)
-+{
-+	return core_alua_store_trans_delay_msecs(tg_pt_gp, page, count);	
-+}
 +
-+SE_DEV_ALUA_TG_PT_ATTR(trans_delay_msecs, S_IRUGO | S_IWUSR);
 +
 +/*
-  * preferred
+  * nonop_delay_msecs
   */
- 
-@@ -2387,6 +2407,7 @@ static struct configfs_attribute *target_core_alua_tg_pt_gp_attrs[] = {
+ static ssize_t target_core_alua_tg_pt_gp_show_attr_nonop_delay_msecs(
+@@ -2406,6 +2478,7 @@ static struct configfs_attribute *target_core_alua_tg_pt_gp_attrs[] = {
+ 	&target_core_alua_tg_pt_gp_alua_access_state.attr,
  	&target_core_alua_tg_pt_gp_alua_access_status.attr,
  	&target_core_alua_tg_pt_gp_alua_access_type.attr,
++	&target_core_alua_tg_pt_gp_alua_write_metadata.attr,
  	&target_core_alua_tg_pt_gp_nonop_delay_msecs.attr,
-+	&target_core_alua_tg_pt_gp_trans_delay_msecs.attr,
+ 	&target_core_alua_tg_pt_gp_trans_delay_msecs.attr,
  	&target_core_alua_tg_pt_gp_preferred.attr,
- 	&target_core_alua_tg_pt_gp_tg_pt_gp_id.attr,
- 	&target_core_alua_tg_pt_gp_members.attr,
 diff --git a/include/target/target_core_alua.h b/include/target/target_core_alua.h
-index 825c2a8..0229e18 100644
+index 0229e18..7aa3b5d 100644
 --- a/include/target/target_core_alua.h
 +++ b/include/target/target_core_alua.h
-@@ -45,6 +45,13 @@
-  */
- #define ALUA_DEFAULT_NONOP_DELAY_MSECS			100
- #define ALUA_MAX_NONOP_DELAY_MSECS			10000 /* 10 seconds */
-+/*
-+ * Used for implict and explict ALUA transitional delay, that is disabled
-+ * by default, and is intended to be used for debugging client side ALUA code.
-+ */
-+#define ALUA_DEFAULT_TRANS_DELAY_MSECS			0
-+#define ALUA_MAX_TRANS_DELAY_MSECS			30000 /* 30 seconds */
-+
- 
- extern se_global_t *se_global;
- 
-@@ -104,6 +111,10 @@ extern ssize_t core_alua_show_nonop_delay_msecs(struct t10_alua_tg_pt_gp_s *,
- 						char *);
- extern ssize_t core_alua_store_nonop_delay_msecs(struct t10_alua_tg_pt_gp_s *,
- 					const char *, size_t);
-+extern ssize_t core_alua_show_trans_delay_msecs(struct t10_alua_tg_pt_gp_s *,
-+					char *);
-+extern ssize_t core_alua_store_trans_delay_msecs(struct t10_alua_tg_pt_gp_s *,
-+					const char *, size_t);
- extern ssize_t core_alua_show_preferred_bit(struct t10_alua_tg_pt_gp_s *, char *);
- extern ssize_t core_alua_store_preferred_bit(struct t10_alua_tg_pt_gp_s *,
- 				const char *, size_t);
+@@ -66,7 +66,7 @@ extern int core_alua_check_transition(int, int *);
+ extern int core_alua_check_nonop_delay(struct se_cmd_s *);
+ extern int core_alua_do_transition_tg_pt(struct t10_alua_tg_pt_gp_s *,
+ 				struct se_port_s *, struct se_node_acl_s *,
+-				int, int);
++				unsigned char *, int, int);
+ extern int core_alua_do_port_transition(struct t10_alua_tg_pt_gp_s *,
+ 				struct se_device_s *, struct se_port_s *,
+ 				struct se_node_acl_s *, int, int);
 diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 3a97d1e..8bf7877 100644
+index 8bf7877..d166606 100644
 --- a/include/target/target_core_base.h
 +++ b/include/target/target_core_base.h
-@@ -267,6 +267,7 @@ typedef struct t10_alua_tg_pt_gp_s {
- 	int	tg_pt_gp_alua_access_status;
- 	int	tg_pt_gp_alua_access_type;
+@@ -77,6 +77,8 @@
+ #define PR_APTPL_MAX_TPORT_LEN			256
+ /* Used by t10_reservation_template_s->pr_aptpl_buf_len */
+ #define PR_APTPL_BUF_LEN			8192
++/* Used by t10_alua_tg_pt_gp_t->tg_pt_gp_md_buf_len */
++#define ALUA_MD_BUF_LEN				1024
+ 
+ /* used by PSCSI and iBlock Transport drivers */
+ #define READ_BLOCK_LEN          		6
+@@ -269,10 +271,13 @@ typedef struct t10_alua_tg_pt_gp_s {
  	int	tg_pt_gp_nonop_delay_msecs;
-+	int	tg_pt_gp_trans_delay_msecs;
+ 	int	tg_pt_gp_trans_delay_msecs;
  	int	tg_pt_gp_pref;
++	int	tg_pt_gp_write_metadata;
++	u32	tg_pt_gp_md_buf_len;
  	u32	tg_pt_gp_members;
  	atomic_t tg_pt_gp_alua_access_state;
+ 	atomic_t tg_pt_gp_ref_cnt;
+ 	spinlock_t tg_pt_gp_lock;
++	struct mutex tg_pt_gp_md_mutex;
+ 	struct se_subsystem_dev_s *tg_pt_gp_su_dev;
+ 	struct config_group tg_pt_gp_group;
+ 	struct list_head tg_pt_gp_list;
 -- 
 1.5.4.1
+
 
 
 
