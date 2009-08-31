@@ -1,174 +1,82 @@
-From: Jesper Juhl <jj@chaosbits.net>
-Subject: [PATCH] scsi_error size reduction and readability improvement
-Date: Mon, 31 Aug 2009 00:51:34 +0200 (CEST)
-Message-ID: <alpine.LNX.2.00.0908310044090.18745@swampdragon.chaosbits.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: MD/RAID time out writing superblock
+Date: Mon, 31 Aug 2009 17:10:43 +0900
+Message-ID: <4A9B8583.9050601@kernel.org>
+References: <004e01ca25e4$c11a54e0$434efea0$@ca>    <9cfb6af689a7010df166fdebb1ef516b.squirrel@neil.brown.name>    <4A948A82.4080901@redhat.com> <b585ed9f13649050bbc984869d081315.squirrel@neil.brown.name> <4A94905F.7050705@redhat.com> <005101ca25f4$09006830$1b013890$@ca> <4A94A0E6.4020401@redhat.com> <005401ca25ff$9ac91cc0$d05b5640$@ca> <4A950FA6.4020408@redhat.com> <92cb16daad8278b0aa98125b9e1d057a@localhost> <4A95573A.6090404@redhat.com> <1571f45804875514762f60c0097171e6@localhost> <d086b110526f8bac2f562850dfc70b03@localhost> <4A970154.2020507@redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754231AbZH3Wve@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, Mike Anderson <andmike@us.ibm.com>, "David S. Miller" <davem@davemloft.net>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4A970154.2020507@redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: Andrei Tanas <andrei@tanas.ca>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
 
+Ric Wheeler wrote:
+> On 08/27/2009 05:22 PM, Andrei Tanas wrote:
+>> Hello,
+>>
+>> This is about the same problem that I wrote two days ago (md gets an
+>> error
+>> while writing superblock and fails a hard drive).
+>>
+>> I've tried to figure out what's really going on, and as far as I can
+>> tell,
+>> the disk doesn't really fail (as confirmed by multiple tests), it
+>> times out
+>> trying to execute ATA_CMD_FLUSH_EXT ("at2.00 cmd ea..." in the log)
+>> command. The reason for this I believe is that md_super_write queues the
+>> write comand with BIO_RW_SYNCIO flag.
+>> As I wrote before, with 32MB cache it is conceivable that it will take
+>> the
+>> drive longer than 30 seconds (defined by SD_TIMEOUT in scsi/sd.h) to
+>> flush
+>> its buffers.
+>>
+>> Changing safe_mode_delay to more conservative 2 seconds should definitely
+>> help, but is it really necessary to write the superblock synchronously
+>> when
+>> array changes status from active to active-idle?
+>>
+>> [90307.328266] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+>> frozen
+>> [90307.328275] ata2.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+>> [90307.328277]          res 40/00:01:01:4f:c2/00:00:00:00:00/00 Emask 0x4
+>> (timeout)
+>> [90307.328280] ata2.00: status: { DRDY }
+>> [90307.328288] ata2: hard resetting link
+>> [90313.218511] ata2: link is slow to respond, please be patient (ready=0)
+>> [90317.377711] ata2: SRST failed (errno=-16)
+>> [90317.377720] ata2: hard resetting link
+>> [90318.251720] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>> [90318.338026] ata2.00: configured for UDMA/133
+>> [90318.338062] ata2: EH complete
+>> [90318.370625] end_request: I/O error, dev sdb, sector 1953519935
+>> [90318.370632] md: super_written gets error=-5, uptodate=0
+>>
+>>    
+> 
+> 30 seconds is a very long time for a drive to respond, but I think that
+> your explanation fits the facts pretty well...
 
-Make scsi_error.c a bit easier to read by cutting down on the number of 
-long lines of pointer derefs. Also decrease object size a bit;
-  $ size drivers/scsi/scsi_error.o*
-     text    data     bss     dec     hex filename
-     6755       6       6    6767    1a6f drivers/scsi/scsi_error.o
-     6767       6       6    6779    1a7b drivers/scsi/scsi_error.o.orig
+Even with 32MB cache, 30secs should be more than enough.  It's not
+like the drive is gonna do random write on those.  It's likely to make
+only very few number of strokes over the platter and it really
+shouldn't take very long.  I'm yet to see an actual case where a
+properly functioning drive timed out flush because the flush itself
+took long enough.
 
-Signed-off-by: Jesper Juhl <jj@chaosbits.net>
----
+> The drive might take a longer time like this when doing error handling
+> (sector remapping, etc), but then I would expect to see your remapped
+> sector count grow.
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index a168935..094fe8a 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -124,14 +124,15 @@ int scsi_eh_scmd_add(struct scsi_cmnd *scmd, int eh_flag)
- enum blk_eh_timer_return scsi_times_out(struct request *req)
- {
- 	struct scsi_cmnd *scmd = req->special;
-+	struct Scsi_Host *shost = scmd->device->host;
- 	enum blk_eh_timer_return rtn = BLK_EH_NOT_HANDLED;
- 
- 	scsi_log_completion(scmd, TIMEOUT_ERROR);
- 
--	if (scmd->device->host->transportt->eh_timed_out)
--		rtn = scmd->device->host->transportt->eh_timed_out(scmd);
--	else if (scmd->device->host->hostt->eh_timed_out)
--		rtn = scmd->device->host->hostt->eh_timed_out(scmd);
-+	if (shost->transportt->eh_timed_out)
-+		rtn = shost->transportt->eh_timed_out(scmd);
-+	else if (shost->hostt->eh_timed_out)
-+		rtn = shost->hostt->eh_timed_out(scmd);
- 
- 	if (unlikely(rtn == BLK_EH_NOT_HANDLED &&
- 		     !scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD))) {
-@@ -414,24 +415,24 @@ static void scsi_eh_done(struct scsi_cmnd *scmd)
-  */
- static int scsi_try_host_reset(struct scsi_cmnd *scmd)
- {
-+	struct Scsi_Host *shost = scmd->device->host;
- 	unsigned long flags;
- 	int rtn;
- 
- 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Snd Host RST\n",
- 					  __func__));
- 
--	if (!scmd->device->host->hostt->eh_host_reset_handler)
-+	if (!shost->hostt->eh_host_reset_handler)
- 		return FAILED;
- 
--	rtn = scmd->device->host->hostt->eh_host_reset_handler(scmd);
-+	rtn = shost->hostt->eh_host_reset_handler(scmd);
- 
- 	if (rtn == SUCCESS) {
--		if (!scmd->device->host->hostt->skip_settle_delay)
-+		if (!shost->hostt->skip_settle_delay)
- 			ssleep(HOST_RESET_SETTLE_TIME);
--		spin_lock_irqsave(scmd->device->host->host_lock, flags);
--		scsi_report_bus_reset(scmd->device->host,
--				      scmd_channel(scmd));
--		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
-+		spin_lock_irqsave(shost->host_lock, flags);
-+		scsi_report_bus_reset(shost, scmd_channel(scmd));
-+		spin_unlock_irqrestore(shost->host_lock, flags);
- 	}
- 
- 	return rtn;
-@@ -443,24 +444,24 @@ static int scsi_try_host_reset(struct scsi_cmnd *scmd)
-  */
- static int scsi_try_bus_reset(struct scsi_cmnd *scmd)
- {
-+	struct Scsi_Host *shost = scmd->device->host;
- 	unsigned long flags;
- 	int rtn;
- 
- 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Snd Bus RST\n",
- 					  __func__));
- 
--	if (!scmd->device->host->hostt->eh_bus_reset_handler)
-+	if (!shost->hostt->eh_bus_reset_handler)
- 		return FAILED;
- 
--	rtn = scmd->device->host->hostt->eh_bus_reset_handler(scmd);
-+	rtn = shost->hostt->eh_bus_reset_handler(scmd);
- 
- 	if (rtn == SUCCESS) {
--		if (!scmd->device->host->hostt->skip_settle_delay)
-+		if (!shost->hostt->skip_settle_delay)
- 			ssleep(BUS_RESET_SETTLE_TIME);
--		spin_lock_irqsave(scmd->device->host->host_lock, flags);
--		scsi_report_bus_reset(scmd->device->host,
--				      scmd_channel(scmd));
--		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
-+		spin_lock_irqsave(shost->host_lock, flags);
-+		scsi_report_bus_reset(shost, scmd_channel(scmd));
-+		spin_unlock_irqrestore(shost->host_lock, flags);
- 	}
- 
- 	return rtn;
-@@ -484,18 +485,19 @@ static void __scsi_report_device_reset(struct scsi_device *sdev, void *data)
-  */
- static int scsi_try_target_reset(struct scsi_cmnd *scmd)
- {
-+	struct Scsi_Host *shost = scmd->device->host;
- 	unsigned long flags;
- 	int rtn;
- 
--	if (!scmd->device->host->hostt->eh_target_reset_handler)
-+	if (!shost->hostt->eh_target_reset_handler)
- 		return FAILED;
- 
--	rtn = scmd->device->host->hostt->eh_target_reset_handler(scmd);
-+	rtn = shost->hostt->eh_target_reset_handler(scmd);
- 	if (rtn == SUCCESS) {
--		spin_lock_irqsave(scmd->device->host->host_lock, flags);
-+		spin_lock_irqsave(shost->host_lock, flags);
- 		__starget_for_each_device(scsi_target(scmd->device), NULL,
- 					  __scsi_report_device_reset);
--		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
-+		spin_unlock_irqrestore(shost->host_lock, flags);
- 	}
- 
- 	return rtn;
-@@ -513,12 +515,13 @@ static int scsi_try_target_reset(struct scsi_cmnd *scmd)
-  */
- static int scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
- {
-+	struct Scsi_Host *shost = scmd->device->host;
- 	int rtn;
- 
--	if (!scmd->device->host->hostt->eh_device_reset_handler)
-+	if (!shost->hostt->eh_device_reset_handler)
- 		return FAILED;
- 
--	rtn = scmd->device->host->hostt->eh_device_reset_handler(scmd);
-+	rtn = shost->hostt->eh_device_reset_handler(scmd);
- 	if (rtn == SUCCESS)
- 		__scsi_report_device_reset(scmd->device, NULL);
- 	return rtn;
-@@ -526,10 +529,12 @@ static int scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
- 
- static int __scsi_try_to_abort_cmd(struct scsi_cmnd *scmd)
- {
--	if (!scmd->device->host->hostt->eh_abort_handler)
-+	struct Scsi_Host *shost = scmd->device->host;
-+
-+	if (!shost->hostt->eh_abort_handler)
- 		return FAILED;
- 
--	return scmd->device->host->hostt->eh_abort_handler(scmd);
-+	return shost->hostt->eh_abort_handler(scmd);
- }
- 
- /**
+Yes, this is a possibility and according to the spec, libata EH should
+be retrying flushes a few times before giving up but I'm not sure
+whether keeping retrying for several minutes is a good idea either.
+Is it?
 
-
-
+Thanks.
 
 -- 
-Jesper Juhl <jj@chaosbits.net>             http://www.chaosbits.net/
-Plain text mails only, please      http://www.expita.com/nomime.html
-Don't top-post  http://www.catb.org/~esr/jargon/html/T/top-post.html
+tejun
