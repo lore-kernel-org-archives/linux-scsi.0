@@ -1,38 +1,96 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 3/4] [Target_Core_Mod]: Add alua mutex initialization in
-	core_alloc_port()
-Date: Mon, 31 Aug 2009 01:27:33 -0700
-Message-ID: <1251707253.4136.42.camel@haakon2.linux-iscsi.org>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: MD/RAID time out writing superblock
+Date: Mon, 31 Aug 2009 08:04:26 -0400
+Message-ID: <4A9BBC4A.6070708@redhat.com>
+References: <004e01ca25e4$c11a54e0$434efea0$@ca>    <9cfb6af689a7010df166fdebb1ef516b.squirrel@neil.brown.name>    <4A948A82.4080901@redhat.com> <b585ed9f13649050bbc984869d081315.squirrel@neil.brown.name> <4A94905F.7050705@redhat.com> <005101ca25f4$09006830$1b013890$@ca> <4A94A0E6.4020401@redhat.com> <005401ca25ff$9ac91cc0$d05b5640$@ca> <4A950FA6.4020408@redhat.com> <92cb16daad8278b0aa98125b9e1d057a@localhost> <4A95573A.6090404@redhat.com> <1571f45804875514762f60c0097171e6@localhost> <d086b110526f8bac2f562850dfc70b03@localhost> <4A970154.2020507@redhat.com> <4A9B8583.9050601@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752799AbZHaI36@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
-Cc: Douglas Gilbert <dgilbert@interlog.com>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Alasdair G Kergon <agk@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4A9B8583.9050601@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Andrei Tanas <andrei@tanas.ca>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+On 08/31/2009 04:10 AM, Tejun Heo wrote:
+> Ric Wheeler wrote:
+>    
+>> On 08/27/2009 05:22 PM, Andrei Tanas wrote:
+>>      
+>>> Hello,
+>>>
+>>> This is about the same problem that I wrote two days ago (md gets an
+>>> error
+>>> while writing superblock and fails a hard drive).
+>>>
+>>> I've tried to figure out what's really going on, and as far as I can
+>>> tell,
+>>> the disk doesn't really fail (as confirmed by multiple tests), it
+>>> times out
+>>> trying to execute ATA_CMD_FLUSH_EXT ("at2.00 cmd ea..." in the log)
+>>> command. The reason for this I believe is that md_super_write queues the
+>>> write comand with BIO_RW_SYNCIO flag.
+>>> As I wrote before, with 32MB cache it is conceivable that it will take
+>>> the
+>>> drive longer than 30 seconds (defined by SD_TIMEOUT in scsi/sd.h) to
+>>> flush
+>>> its buffers.
+>>>
+>>> Changing safe_mode_delay to more conservative 2 seconds should definitely
+>>> help, but is it really necessary to write the superblock synchronously
+>>> when
+>>> array changes status from active to active-idle?
+>>>
+>>> [90307.328266] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+>>> frozen
+>>> [90307.328275] ata2.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+>>> [90307.328277]          res 40/00:01:01:4f:c2/00:00:00:00:00/00 Emask 0x4
+>>> (timeout)
+>>> [90307.328280] ata2.00: status: { DRDY }
+>>> [90307.328288] ata2: hard resetting link
+>>> [90313.218511] ata2: link is slow to respond, please be patient (ready=0)
+>>> [90317.377711] ata2: SRST failed (errno=-16)
+>>> [90317.377720] ata2: hard resetting link
+>>> [90318.251720] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>>> [90318.338026] ata2.00: configured for UDMA/133
+>>> [90318.338062] ata2: EH complete
+>>> [90318.370625] end_request: I/O error, dev sdb, sector 1953519935
+>>> [90318.370632] md: super_written gets error=-5, uptodate=0
+>>>
+>>>
+>>>        
+>> 30 seconds is a very long time for a drive to respond, but I think that
+>> your explanation fits the facts pretty well...
+>>      
+> Even with 32MB cache, 30secs should be more than enough.  It's not
+> like the drive is gonna do random write on those.  It's likely to make
+> only very few number of strokes over the platter and it really
+> shouldn't take very long.  I'm yet to see an actual case where a
+> properly functioning drive timed out flush because the flush itself
+> took long enough.
+>
+>    
 
-This patch updates core_alloc_port() to call mutex_init() for the
-mutex protecting the ALUA secondary access state/status metadata.
+I agree - vendors put a lot of pressure on drive manufacturers to finish 
+up (even during error recovery) in much less than 30 seconds. The push 
+was always for something closer to 15 seconds iirc.
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_device.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+>> The drive might take a longer time like this when doing error handling
+>> (sector remapping, etc), but then I would expect to see your remapped
+>> sector count grow.
+>>      
+> Yes, this is a possibility and according to the spec, libata EH should
+> be retrying flushes a few times before giving up but I'm not sure
+> whether keeping retrying for several minutes is a good idea either.
+> Is it?
+>
+> Thanks.
+>
+>    
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index a088960..a3572ed 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -611,6 +611,7 @@ se_port_t *core_alloc_port(se_device_t *dev)
- 	INIT_LIST_HEAD(&port->sep_list);
- 	atomic_set(&port->sep_tg_pt_secondary_offline, 0);
- 	spin_lock_init(&port->sep_alua_lock);
-+	mutex_init(&port->sep_tg_pt_md_mutex);
- 
- 	spin_lock(&dev->se_port_lock);
- 	if (dev->dev_port_count == 0x0000ffff) {
--- 
-1.5.4.1
+I don't think that retrying for minutes is a good idea. I wonder if this 
+could be caused by power issues or cable issues to the drive?
+
+Ric
+
