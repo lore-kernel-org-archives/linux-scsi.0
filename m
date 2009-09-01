@@ -1,166 +1,96 @@
-From: Vitaly Bordug <vitb@kernel.crashing.org>
-Subject: [PATCH] mptbase: use resource_size_t instead of unsigned long and
- u32
-Date: Wed, 2 Sep 2009 01:08:37 +0400
-Message-ID: <20090902010837.5c83cff5@vitb-lp>
+From: Vasu Dev <vasu.dev@linux.intel.com>
+Subject: Re: [RFC PATCH 0/9] RFC: handle queue_depth adjustments because of
+ QUEUE_FULLs in scsi_error.c
+Date: Tue, 01 Sep 2009 15:57:33 -0700
+Message-ID: <1251845853.27437.69.camel@vi2.jf.intel.com>
+References: <20090826180234.23396.8148.stgit@vi1.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:47887 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751102AbZIAVH7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2009 17:07:59 -0400
+Received: from mga05.intel.com ([192.55.52.89]:19664 "EHLO
+	fmsmga101.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755292AbZIAW5b (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2009 18:57:31 -0400
+In-Reply-To: <20090826180234.23396.8148.stgit@vi1.jf.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eric Moore <Eric.Moore@lsi.com>
-Cc: DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org
+To: michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org
 
-From: Yuri Tikhonov <yur@emcraft.com>
+On Wed, 2009-08-26 at 11:03 -0700, Vasu Dev wrote:
+> First four patches are from Mike Christie's original RFC at:-
+> 
+> http://www.spinics.net/lists/linux-scsi/msg35959.html
+> http://www.spinics.net/lists/linux-scsi/msg35962.html
+> http://www.spinics.net/lists/linux-scsi/msg35961.html
+> http://www.spinics.net/lists/linux-scsi/msg35963.html
+> http://www.spinics.net/lists/linux-scsi/msg35964.html
+> 
+> Above four patches adds ramp down code and I appended ramp
+> up code in following patches and tested this entire
+> series with libfc/fcoe. This series works fine without any
+> regression and also queue_depth adjustment works for both
+> ramp down and ramp up.
+> 
+> Above patches are updated to scsi-misc -rc7 plus recently
+> submitted 64 fcoe patches series by Rob
+> "[PATCH 00/64] libfc, libfcoe and fcoe updates for scsi-misc"
+> This series also applies cleanly to scsi-misc -rc7.
+> 
+> I'd appreciate review comments for added more patches for
+> ramp up.
+> 
+> I'll post my final patches to this list skipping fcoe list,
+> this as per Rob Love suggestion since mostly scsi changes
+> by this series beyond fcoe/libfc. However Rob agreed to
+> review/Ack fcoe/libfc changes at this list.
+> 
+> Mike, I'll be able to post my ramp up patches only once
+> you send final patches for ramp down on which my patches
+> depends. As I said your patches are tested for libfc,
+> so most common code is already tested and they are
+> good go as far as libfc goes.
+> 
 
-    Use resource_size_t for pci_resource_start()/pci_resource_len()
-    return values. This makes mptbase driver work correctly on 32
-    bit systems with 64 bit resources (e.g. PPC440SPe).
+Hey Mike, 
 
-    Do some minor cleanups in mpt_mapresources().
+	I'd like to get final patches of this series out this week to
+get them into next merge window but not sure how to get final patches
+out with your first four RFC patches in this series on which rest all
+patches depends. Please help me on this.
 
-    Signed-off-by: Yuri Tikhonov <yur@emcraft.com>
-    Signed-off-by: Ilya Yanok <yanok@emcraft.com>
-    Signed-off-by: Vitaly Bordug <vitb@kernel.crashing.org>
----
+I see following ways to get final patches out:-
 
- drivers/message/fusion/mptbase.c |   38
- ++++++++++++++++++++++++++------------
- drivers/message/fusion/mptbase.h |    5 +++-- 2 files changed, 29
- insertions(+), 14 deletions(-)
+ 1. You post your first four as final patches and then I post mine.
 
+ 2. I've tested this series for libfc, so I can trim your patches to
+only scsi-ml and libfc changes excluding lpfc and qla changes for now
+since this is all I can test before I send out final patches. I suppose
+it should be okay to post your RFC patches by me with my verification
+with libfc and your approval as these RFC patches author.
 
-diff --git a/drivers/message/fusion/mptbase.c
-b/drivers/message/fusion/mptbase.c index 5d0ba4f..d47bd46 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -1590,11 +1590,12 @@ static int
- mpt_mapresources(MPT_ADAPTER *ioc)
- {
- 	u8		__iomem *mem;
-+	u8		__iomem *port;
- 	int		 ii;
--	unsigned long	 mem_phys;
--	unsigned long	 port;
--	u32		 msize;
--	u32		 psize;
-+	resource_size_t	 mem_phys;
-+	resource_size_t	 port_phys;
-+	resource_size_t	 msize;
-+	resource_size_t	 psize;
- 	u8		 revision;
- 	int		 r = -ENODEV;
- 	struct pci_dev *pdev;
-@@ -1653,13 +1654,13 @@ mpt_mapresources(MPT_ADAPTER *ioc)
- 	}
- 
- 	mem_phys = msize = 0;
--	port = psize = 0;
-+	port_phys = psize = 0;
- 	for (ii = 0; ii < DEVICE_COUNT_RESOURCE; ii++) {
- 		if (pci_resource_flags(pdev, ii) &
-PCI_BASE_ADDRESS_SPACE_IO) { if (psize)
- 				continue;
- 			/* Get I/O space! */
--			port = pci_resource_start(pdev, ii);
-+			port_phys = pci_resource_start(pdev, ii);
- 			psize = pci_resource_len(pdev, ii);
- 		} else {
- 			if (msize)
-@@ -1669,11 +1670,8 @@ mpt_mapresources(MPT_ADAPTER *ioc)
- 			msize = pci_resource_len(pdev, ii);
- 		}
- 	}
--	ioc->mem_size = msize;
- 
--	mem = NULL;
- 	/* Get logical ptr for PciMem0 space */
--	/*mem = ioremap(mem_phys, msize);*/
- 	mem = ioremap(mem_phys, msize);
- 	if (mem == NULL) {
- 		printk(MYIOC_s_ERR_FMT ": ERROR - Unable to map
-adapter" @@ -1681,14 +1679,24 @@ mpt_mapresources(MPT_ADAPTER *ioc)
- 		return -EINVAL;
- 	}
- 	ioc->memmap = mem;
--	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "mem = %p, mem_phys =
-%lx\n",
--	    ioc->name, mem, mem_phys));
-+	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "mem=%p,
-mem_phys=%llx\n",
-+	    ioc->name, mem, (u64)mem_phys));
- 
- 	ioc->mem_phys = mem_phys;
- 	ioc->chip = (SYSIF_REGS __iomem *)mem;
- 
- 	/* Save Port IO values in case we need to do downloadboot */
--	ioc->pio_mem_phys = port;
-+	port = ioremap(port_phys, psize);
-+	if (port == NULL) {
-+		printk(MYIOC_s_ERR_FMT ": ERROR - Unable to map
-adapter"
-+			" port!\n", ioc->name);
-+		return -EINVAL;
-+	}
-+	ioc->portmap = port;
-+	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "port=%p,
-port_phys=%llx\n",
-+	    ioc->name, port, (u64)port_phys));
-+
-+	ioc->pio_mem_phys = port_phys;
- 	ioc->pio_chip = (SYSIF_REGS __iomem *)port;
- 
- 	return 0;
-@@ -1949,6 +1957,7 @@ mpt_attach(struct pci_dev *pdev, const struct
-pci_device_id *id) list_del(&ioc->list);
- 		if (ioc->alt_ioc)
- 			ioc->alt_ioc->alt_ioc = NULL;
-+		iounmap(ioc->portmap);
- 		iounmap(ioc->memmap);
- 		if (r != -5)
- 			pci_release_selected_regions(pdev, ioc->bars);
-@@ -2792,6 +2801,11 @@ mpt_adapter_dispose(MPT_ADAPTER *ioc)
- 		ioc->pci_irq = -1;
- 	}
- 
-+	if (ioc->portmap != NULL) {
-+		iounmap(ioc->portmap);
-+		ioc->portmap = NULL;
-+	}
-+
- 	if (ioc->memmap != NULL) {
- 		iounmap(ioc->memmap);
- 		ioc->memmap = NULL;
-diff --git a/drivers/message/fusion/mptbase.h
-b/drivers/message/fusion/mptbase.h index 1c8514d..66bf190 100644
---- a/drivers/message/fusion/mptbase.h
-+++ b/drivers/message/fusion/mptbase.h
-@@ -604,8 +604,8 @@ typedef struct _MPT_ADAPTER
- 	SYSIF_REGS __iomem	*chip;		/* == c8817000
-(mmap) */ SYSIF_REGS __iomem	*pio_chip;	/* Programmed IO
-(downloadboot) */ u8			 bus_type;
--	u32			 mem_phys;	/* == f4020000
-(mmap) */
--	u32			 pio_mem_phys;	/* Programmed
-IO (downloadboot) */
-+	resource_size_t		 mem_phys;	/* ==
-f4020000 (mmap) */
-+	resource_size_t		 pio_mem_phys;	/*
-Programmed IO (downloadboot) */ int
-mem_size;	/* mmap memory size */ int
-number_of_buses; int			 devices_per_bus;
-@@ -659,6 +659,7 @@ typedef struct _MPT_ADAPTER
- 	int			bars;		/* bitmask of
-BAR's that must be configured */ int			msi_enable;
- 	u8			__iomem *memmap;	/* mmap
-address */
-+	u8			__iomem *portmap;	/* mmap
-address */ struct Scsi_Host	*sh;		/* Scsi Host
-pointer */ SpiCfgData		spi_data;	/* Scsi config.
-data */ RaidCfgData		raid_data;	/* Raid config.
-data */
+	Let me know which way you would like to proceed, In any case patches
+needs to be updated for recent comments.
+
+	Thanks
+	Vasu
+> 
+> ---
+> 
+> Mike Christie (4):
+>       drivers: convert fc drivers calling scsi_track_queue_full
+>       drivers: convert drivers setting the change_queue_depth callback
+>       scsi error: have scsi-ml call change_queue_depth to handle QUEUE_FULL
+>       scsi-ml: modify change_queue_depth to take in reason why it is being called
+> 
+> Vasu Dev (5):
+>       libfc: adds queue_depth ramp up to libfc
+>       fcoe, libfc: fix an libfc issue with queue ramp down in libfc
+>       scsi: add common queue_depth ramp up code
+>       scsi: adds sdev->queue_ramp_up_period to sysfs
+>       scsi: updates sdev to add queue_depth ramp up code
+> 
+
+> 
+
