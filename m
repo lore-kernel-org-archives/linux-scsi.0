@@ -1,45 +1,86 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: MD/RAID time out writing superblock
-Date: Tue, 01 Sep 2009 09:47:31 -0400
-Message-ID: <4A9D25F3.2030207@redhat.com>
-References: <004e01ca25e4$c11a54e0$434efea0$@ca> <9cfb6af689a7010df166fdebb1ef516b.squirrel@neil.brown.name> <4A948A82.4080901@redhat.com> <b585ed9f13649050bbc984869d081315.squirrel@neil.brown.name> <4A94905F.7050705@redhat.com> <005101ca25f4$09006830$1b013890$@ca> <4A94A0E6.4020401@redhat.com> <005401ca25ff$9ac91cc0$d05b5640$@ca> <4A950FA6.4020408@redhat.com> <92cb16daad8278b0aa98125b9e1d057a@localhost> <4A95573A.6090404@redhat.com> <1571f45804875514762f60c0097171e6@localhost> <d086b110526f8bac2f562850dfc70b03@localhost> <4A970154.2020507@redhat.com> <4A9B8583.9050601@kernel.org> <4A9BC033.9000909@pobox.com> <4A9C60A1.50303@rtr.ca> <640f6103c45b6cba6f84f887bde227e4@localhost> <4A9D1E7D.1050104@rtr.ca> <4A9D2204.1000608@kernel.org>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH] SCSI driver for VMware's virtual HBA.
+Date: Tue, 01 Sep 2009 09:17:53 -0500
+Message-ID: <1251814673.3864.44.camel@mulgrave.site>
+References: <1251415060.16297.58.camel@ank32.eng.vmware.com>
+	 <1251739735.16169.20.camel@ank32.eng.vmware.com>
+	 <1251741624.18828.83.camel@mulgrave.site>
+	 <e2e108260909010412p41fae86ckb6df5cd8a81e3c37@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49698 "EHLO mx1.redhat.com"
+Received: from cantor.suse.de ([195.135.220.2]:41453 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754768AbZIANtO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Sep 2009 09:49:14 -0400
-In-Reply-To: <4A9D2204.1000608@kernel.org>
+	id S1754596AbZIAOSB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Sep 2009 10:18:01 -0400
+In-Reply-To: <e2e108260909010412p41fae86ckb6df5cd8a81e3c37@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Mark Lord <liml@rtr.ca>, Andrei Tanas <andrei@tanas.ca>, Mark Lord <mlord@pobox.com>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: akataria@vmware.com, Robert Love <robert.w.love@intel.com>, Randy Dunlap <randy.dunlap@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Dmitry Torokhov <dtor@vmware.com>, Rolf Eike Beer <eike-kernel@sf-tec.de>, Maxime Austruy <maustruy@vmware.com>
 
-On 09/01/2009 09:30 AM, Tejun Heo wrote:
-> Hello,
->
-> Mark Lord wrote:
->>> Mine errored out again with exactly the same symptoms, this time after
->>> only
->>> few days and with the "tunable" set to 2 sec. I got a warranty
->>> replacement
->>> but haven't shipped this one yet. Let me know if you want it.
->> ..
->>
->> Not me.  But perhaps Tejun ?
->
-> I think you're much more qualified than me on the subject. :-)
->
-> Anyone else?  Ric, are you interested with playing the drive?
->
+On Tue, 2009-09-01 at 13:12 +0200, Bart Van Assche wrote:
+> On Mon, Aug 31, 2009 at 8:00 PM, James Bottomley
+> <James.Bottomley@suse.de> wrote:
+> >
+> > On Mon, 2009-08-31 at 10:28 -0700, Alok Kataria wrote:
+> > > VMware PVSCSI driver - v2.
+> >
+> > OK, so the first thing that springs to mind is that we already have one
+> > of these things: the ibmvscsi ... is there no way we can share code
+> > between this and the other PV drivers?
+> 
+> Good question. But shouldn't the ibmvscsi driver be refactored before
+> considering sharing ibmvscsi code with other paravirtualized drivers ?
 
-No thanks....
+Not really, that would make it a chicken and egg problem.  The question
+was meant to direct attention to the issue of whether we should share
+code for PV drivers or not. I think the answer to this one is yes; the
+next thing is how to do it.
 
-I would suggest that Andrei install the new drive and watch it for a few days to 
-make sure that it does not fail in the same way. If it does, you might want to 
-look at the power supply/cables/etc?
+The one thing I'm not really keen on having is half a dozen totally
+different virtual SCSI drivers for our half a dozen virtualisation
+solutions.  Apart from the coding waste, each will have new and
+different bugs and a much smaller pool of users to find them.
 
-ric
+The IBM vscsi operates slightly differently from the way newer PV
+drivers may be expected to operate, but the SRP abstraction does look
+like a reasonable one for a PV driver.
+
+> A quote from the ibmvscsi.c source code:
+> 
+>  * TODO: This is currently pretty tied to the IBM i/pSeries hypervisor
+>  * interfaces.  It would be really nice to abstract this above an RDMA
+>  * layer.
+> 
+> Splitting the ibmvscsi.c driver in an SRP initiator and an RDMA driver
+> would make the following possible:
+> - Reuse the existing SRP initiator (ib_srp). Currently there are two
+> SRP initiators present in the Linux kernel -- one that uses the RDMA
+> verbs API (ib_srp) and one that only works with IBM's i/pSeries
+> hypervisor (ibmvscsi).
+> - Reuse the ib_ipoib kernel module to provide an IP stack on top of
+> the new RDMA driver instead of having to maintain a separate network
+> driver for this hardware (ibmveth).
+
+So the RDMA piece is what I'm not sure about.  For a protocol
+abstraction, SRP makes a lot of sense.  For a hypervisor interface, it's
+not really clear that RDMA is the best way to go.  In fact, some more
+minimal DMA ring implementation seems to be the way most hypervisors are
+set up, but it's still possible to run a nice SRP abstraction over them.
+
+> More information about the architecture the ibmvscsi and the ibmveth
+> drivers have been developed for can be found in the following paper:
+> D. Boutcher and D. Engebretsen, Linux Virtualization on IBM POWER5
+> Systems, Proceedings of the Linux Symposium, Vol. 1, July 2004, pp.
+> 113-120 (http://www.kernel.org/doc/mirror/ols2004v1.pdf).
+
+The other piece of this is that it's not clear that SCSI is actually the
+best layer for this abstration.  For a simple, fast storage interface,
+nbd is probably the easiest abstraction to do (the disadvantage being
+the lack of ioctl support, so it really only does storage).
+
+James
+
 
