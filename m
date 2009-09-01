@@ -1,28 +1,49 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] SCSI driver for VMware's virtual HBA.
-Date: Tue, 1 Sep 2009 14:38:37 -0400
-Message-ID: <20090901183837.GA22551@infradead.org>
-References: <1251415060.16297.58.camel@ank32.eng.vmware.com> <adaws4iod8k.fsf@cisco.com> <20090901161651.GO22870@parisc-linux.org> <200909010933.50571.dtor@vmware.com> <1251823925.3864.216.camel@mulgrave.site> <adaocpuo9vs.fsf@cisco.com> <1251826804.12482.47.camel@mulgrave.site> <1251827676.16169.152.camel@ank32.eng.vmware.com>
+From: Vitaly Bordug <vitb@kernel.crashing.org>
+Subject: [PATCH] mptsas: fix dma alignment
+Date: Wed, 2 Sep 2009 01:03:31 +0400
+Message-ID: <20090902010331.37889a2c@vitb-lp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:51325 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751395AbZIASip (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2009 14:38:45 -0400
-Content-Disposition: inline
-In-Reply-To: <1251827676.16169.152.camel@ank32.eng.vmware.com>
+Received: from mail-out.m-online.net ([212.18.0.9]:37876 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752128AbZIAVCv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2009 17:02:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alok Kataria <akataria@vmware.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, Roland Dreier <rdreier@cisco.com>, Dmitry Torokhov <dtor@vmware.com>, Matthew Wilcox <matthew@wil.cx>, Bart Van Assche <bvanassche@acm.org>, Robert Love <robert.w.love@intel.com>, Randy Dunlap <randy.dunlap@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Rolf Eike Beer <eike-kernel@sf-tec.de>, Maxime Austruy <maustruy@vmware.com>
+To: Eric Moore <Eric.Moore@lsi.com>
+Cc: DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org
 
-On Tue, Sep 01, 2009 at 05:54:36PM +0000, Alok Kataria wrote:
-> Also note that, the way all these things are implemented for each of the
-> hypervisor devices will differ and getting every hv-vendor to agree on a
-> common set of things is not very attractive proposition ( atleast, this
-> I can say from my past experiences).
 
-virtio is shared by three or four hypervisors depending on how you
-count it, with others under development.
+From: Yuri Tikhonov <yur@emcraft.com>
 
+fusion mptsas: fix dma alignment
+
+     Since the 465ff.. commit from James Bottomley relaxes the default
+     SCSI DMA alignment from 512 bytes to 4 bytes, then, in the mptsas
+     driver, we should explicitly set the alignment to the workable
+     512 bytes value.
+
+    Signed-off-by: Ilya Yanok <yanok@emcraft.com>
+    Signed-off-by: Yuri Tikhonov <yur@emcraft.com>
+    Signed-off-by: Sergei Poselenov <sposelenov@emcraft.com>
+    Signed-off-by: Vitaly Bordug <vitb@kernel.crashing.org>
+---
+
+ drivers/message/fusion/mptsas.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+
+diff --git a/drivers/message/fusion/mptsas.c
+b/drivers/message/fusion/mptsas.c index 55ff252..2334f26 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -1843,6 +1843,7 @@ mptsas_slave_alloc(struct scsi_device *sdev)
+ 	return -ENXIO;
+ 
+  out:
++	blk_queue_update_dma_alignment(sdev->request_queue, 511);
+ 	vdevice->vtarget->num_luns++;
+ 	sdev->hostdata = vdevice;
+ 	return 0;
