@@ -1,69 +1,33 @@
-From: Alok Kataria <akataria@vmware.com>
-Subject: Re: [PATCH] SCSI driver for VMware's virtual HBA.
-Date: Tue, 01 Sep 2009 09:59:34 -0700
-Message-ID: <1251824374.16169.128.camel@ank32.eng.vmware.com>
-References: <1251415060.16297.58.camel@ank32.eng.vmware.com>
-	 <adaws4iod8k.fsf@cisco.com> <20090901161651.GO22870@parisc-linux.org>
-	 <200909010933.50571.dtor@vmware.com>
-	 <1251823925.3864.216.camel@mulgrave.site>
-Reply-To: akataria@vmware.com
+From: Bart Van Assche <bart.vanassche@gmail.com>
+Subject: Re: scsi traffic sniffing
+Date: Tue, 1 Sep 2009 19:13:48 +0200
+Message-ID: <e2e108260909011013v72988aa4ged4d1841767883a6@mail.gmail.com>
+References: <48e952f40908312312w7765c2a1q3a4f022967735288@mail.gmail.com>
+	 <48e952f40908312313u75e4d00cr3d934f1dbdd1cca9@mail.gmail.com>
+	 <48e952f40908312313y372d5009mc0197dff49d3b778@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-outbound-2.vmware.com ([65.115.85.73]:40029 "EHLO
-	smtp-outbound-2.vmware.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754584AbZIAQ7c (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2009 12:59:32 -0400
-In-Reply-To: <1251823925.3864.216.camel@mulgrave.site>
+Received: from mail-ew0-f206.google.com ([209.85.219.206]:38534 "EHLO
+	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751102AbZIARNr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2009 13:13:47 -0400
+Received: by ewy2 with SMTP id 2so128835ewy.17
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Sep 2009 10:13:48 -0700 (PDT)
+In-Reply-To: <48e952f40908312313y372d5009mc0197dff49d3b778@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Dmitry Torokhov <dtor@vmware.com>, Matthew Wilcox <matthew@wil.cx>, Roland Dreier <rdreier@cisco.com>, Bart Van Assche <bvanassche@acm.org>, Robert Love <robert.w.love@intel.com>, Randy Dunlap <randy.dunlap@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Rolf Eike Beer <eike-kernel@sf-tec.de>, Maxime Austruy <maustruy@vmware.com>
+To: Jonathan Nell <crtrn13@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2009-09-01 at 09:52 -0700, James Bottomley wrote:
-> On Tue, 2009-09-01 at 09:33 -0700, Dmitry Torokhov wrote:
-> > On Tuesday 01 September 2009 09:16:51 am Matthew Wilcox wrote:
-> > > On Tue, Sep 01, 2009 at 09:12:43AM -0700, Roland Dreier wrote:
-> > > > I'm not really sure we should be trying to force drivers to share just
-> > > > because they are paravirtualized -- if there is real commonality, then
-> > > > sure put it in common code, but different hypervisors are probably as
-> > > > different as different hardware.
-> > > 
-> > > I really disagree.  This kind of virtualised drivers are pretty much
-> > > communication protocols, and not hardware.  As such, why design a new one?
-> > > If there's an infelicity in the ibmvscsi protocol, it makes sense to
-> > > design a new one.  But being different for the sake of being different
-> > > is just a way to generate a huge amount of make-work.
-> > > 
-> > 
-> > The same thing can be said about pretty much anything. We don't have
-> > single SCSI, network, etc driver handling every devices in their
-> > respective class, I don't see why it would be different here.
-> > A hypervisor presents the same interface to the guest OS (whether
-> > it is Linux, Solaris or another OS) much like a piece of silicone
-> > does and it may very well be different form other hypervisors.
-> 
-> Nobody said you had to have the exact same driver for every hypervisor.
-> What people are suggesting is that we look at commonalities in the
-> interfaces both from a control plane point of view (transport class) and
-> from a code sharing point of view (libscsivirt).  However, all the
-> hypervisor interfaces I've seen are basically DMA rings ... they really
-> do seem to be very similar across hypervisors, so it does seem there
-> could be a lot of shared commonality.  I'm not going to insist on RDMA
-> emulation, but perhaps you lot should agree on what a guest to
-> hypervisor DMA interface looks like.
+On Tue, Sep 1, 2009 at 8:13 AM, Jonathan Nell <crtrn13@gmail.com> wrote:
+> Is there any way to sniff the traffic of a scsi device? I need to
+> debug a firmware update and need to see the traffic being passed to
+> the drive
 
-Which is this other hypervisor driver that you are talking about,
-ibmvscsi is using RDMA emulation and I don't think you mean that. 
+One possible approach is to access the device via iSCSI and to capture
+the iSCSI traffic with a network analyzer, e.g. Wireshark. You will
+have to install and configure iSCSI target software before you can do
+this.
 
-And anyways how large is the DMA code that we are worrying about here ?
-Only about 300-400 LOC ? I don't think we might want to over-design for
-such small gains.
-
-Alok
-> 
-> James
-> 
-> 
-
+Bart.
