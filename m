@@ -1,49 +1,46 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [RFC][PATCH 5/5] Add pm8001 SAS/SATA HBA driver resend
-Date: Tue, 01 Sep 2009 09:41:09 -0500
-Message-ID: <1251816069.3864.77.camel@mulgrave.site>
-References: <7070AF0E3911400C93DCB795F4E5CE09@usish.com.cn>
-	 <20090702021420.GG5480@parisc-linux.org>
-	 <C99FE528BF0A4B669B2DE199C3E2D810@usish.com.cn>
+From: Grant Grundler <grundler@google.com>
+Subject: Re: scsi traffic sniffing
+Date: Tue, 1 Sep 2009 09:06:50 -0700
+Message-ID: <da824cf30909010906q677e59e8v17dbd3d54cd2614d@mail.gmail.com>
+References: <48e952f40908312312w7765c2a1q3a4f022967735288@mail.gmail.com>
+	 <48e952f40908312313u75e4d00cr3d934f1dbdd1cca9@mail.gmail.com>
+	 <48e952f40908312313y372d5009mc0197dff49d3b778@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:45266 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754559AbZIAOlN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2009 10:41:13 -0400
-In-Reply-To: <C99FE528BF0A4B669B2DE199C3E2D810@usish.com.cn>
+Received: from smtp-out.google.com ([216.239.33.17]:35229 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751550AbZIAQGx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2009 12:06:53 -0400
+Received: from zps76.corp.google.com (zps76.corp.google.com [172.25.146.76])
+	by smtp-out.google.com with ESMTP id n81G6sof004871
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Sep 2009 17:06:55 +0100
+Received: from pzk36 (pzk36.prod.google.com [10.243.19.164])
+	by zps76.corp.google.com with ESMTP id n81G5fZE022434
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Sep 2009 09:06:52 -0700
+Received: by pzk36 with SMTP id 36so103438pzk.7
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Sep 2009 09:06:51 -0700 (PDT)
+In-Reply-To: <48e952f40908312313y372d5009mc0197dff49d3b778@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: lindar_liu <lindar_liu@usish.com>
-Cc: 'Matthew Wilcox' <matthew@wil.cx>, 'jack wang' <jack_wang@usish.com>, linux-scsi@vger.kernel.org, jeff@garzik.org, tom_peng@usish.com
+To: Jonathan Nell <crtrn13@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, 2009-07-02 at 10:30 +0800, lindar_liu wrote:
-> Re: [RFC][PATCH 5/5] Add pm8001 SAS/SATA HBA driver resend
-> 
-> On Thu, Jul 02, 2009 at 09:43:57AM +0800, jack wang wrote:
-> > diff --git a/drivers/scsi/pm8001/Kconfig b/drivers/scsi/pm8001/Kconfig
-> > new file mode 100644
-> > index 0000000..4db6021
-> > --- /dev/null
-> > +++ b/drivers/scsi/pm8001/Kconfig
-> > @@ -0,0 +1,48 @@
-> > + config SCSI_PM8001
-> > + 	tristate "PMC-Sierra SPC 8001 SAS/SATA Based Host Adapter driver"
-> > + 	depends on PCI && SCSI
-> > + 	select SCSI_SAS_LIBSAS
-> > + 	help
-> > +		This driver supports PMC-Sierra PCIE SAS/SATA 8x6G SPC 8001
-> > chip
-> > +		based host adapters.
-> 
-> Not really enough here to justify a separate Kconfig file.  How about
-> putting this bit in drivers/scsi/Kconfig instead of in its own file?
-> [lindar] ok,we will address it when next send.
+On Mon, Aug 31, 2009 at 11:13 PM, Jonathan Nell<crtrn13@gmail.com> wrote:
+> Is there any way to sniff the traffic of a scsi device? I need to
+> debug a firmware update and need to see the traffic being passed to
+> the drive
 
-So is there a "next send" of this driver?
+The ideal tool is a protocol analyzer for whatever transport the SCSI
+device is attached to.
+Here's the slide deck from a talk I once gave at OLS outlining the HW
+debug tools:
+    http://iou.parisc-linux.org/ols_2001/slides/generated/
 
-James
+(and "SCSI" in that slide deck often means Parallel SCSI transport.)
 
+Using the scsi_logging hooks described by Stefan Richter are often enough
+to understand where in the process something is failing.
 
+hth,
+grant
