@@ -1,37 +1,50 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: SCSI reference
-Date: Tue, 01 Sep 2009 13:28:30 +0200
-Message-ID: <4A9D055E.7070400@s5r6.in-berlin.de>
-References: <48e952f40909010010m1ebbbd95ra72fd42e0de3fbc6@mail.gmail.com> <1C3EB236F2AE4177B8C5F7236DEEF81D@usish.com.cn>
+From: Andrei Tanas <andrei@tanas.ca>
+Subject: Re: MD/RAID time out writing superblock
+Date: Tue, 01 Sep 2009 09:07:11 -0400
+Message-ID: <640f6103c45b6cba6f84f887bde227e4@localhost>
+References: <004e01ca25e4$c11a54e0$434efea0$@ca> <9cfb6af689a7010df166fdebb1ef516b.squirrel@neil.brown.name> <4A948A82.4080901@redhat.com> <b585ed9f13649050bbc984869d081315.squirrel@neil.brown.name> <4A94905F.7050705@redhat.com> <005101ca25f4$09006830$1b013890$@ca> <4A94A0E6.4020401@redhat.com> <005401ca25ff$9ac91cc0$d05b5640$@ca> <4A950FA6.4020408@redhat.com> <92cb16daad8278b0aa98125b9e1d057a@localhost> <4A95573A.6090404@redhat.com> <1571f45804875514762f60c0097171e6@localhost> <d086b110526f8bac2f562850dfc70b03@localhost> <4A970154.2020507@redhat.com> <4A9B8583.9050601@kernel.org> <4A9BC033.9000909@pobox.com> <4A9C60A1.50303@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:60057 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753721AbZIAL3D (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2009 07:29:03 -0400
-In-Reply-To: <1C3EB236F2AE4177B8C5F7236DEEF81D@usish.com.cn>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4A9C60A1.50303@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Mark Lord <mlord@pobox.com>, Tejun Heo <tj@kernel.org>, Ric Wheeler <rwheeler@redhat.com>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: jack wang <jack_wang@usish.com>
-Cc: 'Jonathan Nell' <crtrn13@gmail.com>, linux-scsi@vger.kernel.org
 
-jack wang wrote:
-[Jonathan Nell wrote]
->> I'm new to this scsi stuff. Is there any good online reference where I
->> can look up CDBs and the format of responses etc.
->> For e.g. I know that  0x43 is READ_TOC but I have no idea how to
->> construct the CDB and what format to response is.
+>>>> The drive might take a longer time like this when doing error handling
+>>>> (sector remapping, etc), but then I would expect to see your remapped
+>>>> sector count grow.
+>>>
+>>> Yes, this is a possibility and according to the spec, libata EH should
+>>> be retrying flushes a few times before giving up but I'm not sure
+>>> whether keeping retrying for several minutes is a good idea either.
+>>> Is it?
+>> ..
+>> 
+>> Libata will retry only when the FLUSH returns an error,
+>> and the next FLUSH will continue after the point where
+>> the first attempt failed.
+>> 
+>> But if the drive can still auto-relocate sectors, then the
+>> first FLUSH won't actually fail.. it will simply take longer
+>> than normal.
+>> 
+>> A couple of those, and we're into the tens of seconds range
+>> for time.
+>> 
+>> Still, it would be good to actually produce an error like that
+>> to examine under controlled circumstances.
+>> 
+>> Hmm.. I had a drive here that gave symptoms like that.
+>> Eventually, I discovered that drive had run out of relocatable
+>> sectors, too.  Mmm.. I'll see if I can get it back (loaned it out)
+>> and perhaps we can recreate this specific scenario on it..
+> ..
 > 
-> You should look into t10.org to get SAM SPC SBC specs first , All SCSI
-> command & response format could be found there
-[...]
+> I checked today, and that drive is no longer available.
 
-To add to that:  If you are not quite satisfied with what you can find 
-at http://www.t10.org/ftp/t10/drafts/ nowadays, have a look at 
-http://web.archive.org/web/*/http://www.t10.org/ftp/t10/drafts/.
--- 
-Stefan Richter
--=====-==--= =--= ----=
-http://arcgraph.de/sr/
+Mine errored out again with exactly the same symptoms, this time after only
+few days and with the "tunable" set to 2 sec. I got a warranty replacement
+but haven't shipped this one yet. Let me know if you want it.
