@@ -1,51 +1,60 @@
-From: Andrei Tanas <andrei@tanas.ca>
-Subject: Re: MD/RAID time out writing superblock
-Date: Tue, 01 Sep 2009 10:18:06 -0400
-Message-ID: <419cca21f9440d50bf6c95716ffc5402@localhost>
-References: <004e01ca25e4$c11a54e0$434efea0$@ca> <9cfb6af689a7010df166fdebb1ef516b.squirrel@neil.brown.name> <4A948A82.4080901@redhat.com> <b585ed9f13649050bbc984869d081315.squirrel@neil.brown.name> <4A94905F.7050705@redhat.com> <005101ca25f4$09006830$1b013890$@ca> <4A94A0E6.4020401@redhat.com> <005401ca25ff$9ac91cc0$d05b5640$@ca> <4A950FA6.4020408@redhat.com> <92cb16daad8278b0aa98125b9e1d057a@localhost> <4A95573A.6090404@redhat.com> <1571f45804875514762f60c0097171e6@localhost> <d086b110526f8bac2f562850dfc70b03@localhost> <4A970154.2020507@redhat.com> <4A9B8583.9050601@kernel.org> <4A9BC033.9000909@pobox.com> <4A9C60A1.50303@rtr.ca> <640f6103c45b6cba6f84f887bde227e4@localhost> <4A9D1E7D.1050104@rtr.ca> <4A9D2204.1000608@kernel.org> <4A9D25F3.2030207@redhat.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH] SCSI driver for VMware's virtual HBA.
+Date: Tue, 01 Sep 2009 09:23:32 -0500
+Message-ID: <1251815012.3864.55.camel@mulgrave.site>
+References: <1251415060.16297.58.camel@ank32.eng.vmware.com>
+	 <1251739735.16169.20.camel@ank32.eng.vmware.com>
+	 <1251741624.18828.83.camel@mulgrave.site>
+	 <1251755593.16169.51.camel@ank32.eng.vmware.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tanas.ca ([206.248.136.31]:60187 "EHLO tanas.ca"
+Received: from cantor2.suse.de ([195.135.220.15]:35245 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932066AbZIAOSJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Sep 2009 10:18:09 -0400
-In-Reply-To: <4A9D25F3.2030207@redhat.com>
+	id S1754921AbZIAOXn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Sep 2009 10:23:43 -0400
+In-Reply-To: <1251755593.16169.51.camel@ank32.eng.vmware.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ric Wheeler <rwheeler@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Mark Lord <liml@rtr.ca>, Mark Lord <mlord@pobox.com>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>
+To: akataria@vmware.com
+Cc: Robert Love <robert.w.love@intel.com>, Randy Dunlap <randy.dunlap@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Dmitry Torokhov <dtor@vmware.com>, Rolf Eike Beer <eike-kernel@sf-tec.de>, Maxime Austruy <maustruy@vmware.com>, Bhavesh Davda <bhavesh@vmware.com>
 
-On Tue, 01 Sep 2009 09:47:31 -0400, Ric Wheeler <rwheeler@redhat.com>
-wrote:
->>>> Mine errored out again with exactly the same symptoms, this time after
->>>> only
->>>> few days and with the "tunable" set to 2 sec. I got a warranty
->>>> replacement
->>>> but haven't shipped this one yet. Let me know if you want it.
->>> ..
->>>
->>> Not me.  But perhaps Tejun ?
->>
->> I think you're much more qualified than me on the subject. :-)
->>
->> Anyone else?  Ric, are you interested with playing the drive?
+On Mon, 2009-08-31 at 14:53 -0700, Alok Kataria wrote:
+> Hi James, 
 > 
-> No thanks....
+> Thanks for your comments. 
 > 
-> I would suggest that Andrei install the new drive and watch it for a few
-> days to 
-> make sure that it does not fail in the same way. If it does, you might
-want
-> to look at the power supply/cables/etc?
+> On Mon, 2009-08-31 at 11:00 -0700, James Bottomley wrote:
+> > On Mon, 2009-08-31 at 10:28 -0700, Alok Kataria wrote:
+> > > VMware PVSCSI driver - v2.
+> > 
+> > OK, so the first thing that springs to mind is that we already have one
+> > of these things: the ibmvscsi ... is there no way we can share code
+> > between this and the other PV drivers?
+> 
+> I took a quick look at the ibmvscsi driver, and there are lot of
+> differences between the two, mainly the ABI that is shared between the
+> hypervisor and driver differ.
 
-The drive is the second member of RAID1 array, as far as I understand, both
-drives should be experiencing very similar access patterns, and they are
-the same model with the same firmware, and manufactured on the same day,
-but only one of them showed these symptoms, so there must be something
-"special" about it.
-By now I think that MD made the right "decision" failing the drive and
-removing it from the array, so I guess let's leave it at that.
+Well, that's pretty abstractable, surely?  However, there is an
+interesting question of what the best hypervisor interface actually is.
 
-Andrei.
+>  Also the ibmvscsi driver seems to offer a
+> lot of other features as well, like the SRP. 
+
+SRP is the protocol transfer abstraction.  It's just a way of packaging
+up SCSI commands for transfer over a DMA protocol (OK, so it was
+envisaged that the DMA protocol would be RDMA, but a hypervisor
+interface is also a DMA protocol).
+
+> The pvscsi driver is a simple SCSI adapter driver and is basically no
+> different than any other SCSI driver written for a particular HBA.
+
+Well, it is really ... hopefully all the hypervisor interfaces won't
+decide to be completely incompatible, so there's a good chance of code
+sharing between them.
+
+James
+
+
