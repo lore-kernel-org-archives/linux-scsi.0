@@ -1,55 +1,62 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] SCSI driver for VMware's virtual HBA.
-Date: Tue, 1 Sep 2009 13:12:24 +0200
-Message-ID: <e2e108260909010412p41fae86ckb6df5cd8a81e3c37@mail.gmail.com>
-References: <1251415060.16297.58.camel@ank32.eng.vmware.com>
-	 <1251739735.16169.20.camel@ank32.eng.vmware.com>
-	 <1251741624.18828.83.camel@mulgrave.site>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: scsi traffic sniffing
+Date: Tue, 01 Sep 2009 13:19:44 +0200
+Message-ID: <4A9D0350.2010201@s5r6.in-berlin.de>
+References: <48e952f40908312312w7765c2a1q3a4f022967735288@mail.gmail.com>	 <48e952f40908312313u75e4d00cr3d934f1dbdd1cca9@mail.gmail.com>	 <48e952f40908312313y372d5009mc0197dff49d3b778@mail.gmail.com> <d364733c0909010340t57499a38y4c0bd949e5ba63a6@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:58190 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752817AbZIALMX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2009 07:12:23 -0400
-In-Reply-To: <1251741624.18828.83.camel@mulgrave.site>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:60004 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753960AbZIALTt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2009 07:19:49 -0400
+In-Reply-To: <d364733c0909010340t57499a38y4c0bd949e5ba63a6@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: akataria@vmware.com, Robert Love <robert.w.love@intel.com>, Randy Dunlap <randy.dunlap@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Dmitry Torokhov <dtor@vmware.com>, Rolf Eike Beer <eike-kernel@sf-tec.de>, Maxime Austruy <maustruy@vmware.com>
+To: =?UTF-8?B?6LCi57qy?= <xiegang112@gmail.com>
+Cc: Jonathan Nell <crtrn13@gmail.com>, linux-scsi@vger.kernel.org
 
-On Mon, Aug 31, 2009 at 8:00 PM, James Bottomley
-<James.Bottomley@suse.de> wrote:
->
-> On Mon, 2009-08-31 at 10:28 -0700, Alok Kataria wrote:
-> > VMware PVSCSI driver - v2.
->
-> OK, so the first thing that springs to mind is that we already have one
-> of these things: the ibmvscsi ... is there no way we can share code
-> between this and the other PV drivers?
+=E8=B0=A2=E7=BA=B2 wrote:
+> On Tue, Sep 1, 2009 at 2:13 PM, Jonathan Nell<crtrn13@gmail.com> wrot=
+e:
+>> Is there any way to sniff the traffic of a scsi device? I need to
+>> debug a firmware update and need to see the traffic being passed to
+>> the drive
+> You may hook the queue_command function of the scsi host. It can snif=
+f
+> all scsi request to scsi host driver.
 
-Good question. But shouldn't the ibmvscsi driver be refactored before
-considering sharing ibmvscsi code with other paravirtualized drivers ?
-A quote from the ibmvscsi.c source code:
+Actually you can switch on logging of commands and status (though not o=
+f=20
+data) at runtime by something like
+# echo $BITMASK > /sys/module/scsi_mod/parameters/scsi_logging_level
+or
+# echo $BITMASK > /proc/sys/dev/scsi/logging_level
+provided that the kernel's SCSI core was compiled with=20
+CONFIG_SCSI_LOGGING=3Dy.
 
- * TODO: This is currently pretty tied to the IBM i/pSeries hypervisor
- * interfaces.  It would be really nice to abstract this above an RDMA
- * layer.
+Bitmask values can be constructed as in=20
+linux/drivers/scsi/scsi_logging.h.  Long ago I made a note that 9216 as=
+=20
+bitmask was useful for my purposes, but don't ask me what that means.
 
-Splitting the ibmvscsi.c driver in an SRP initiator and an RDMA driver
-would make the following possible:
-- Reuse the existing SRP initiator (ib_srp). Currently there are two
-SRP initiators present in the Linux kernel -- one that uses the RDMA
-verbs API (ib_srp) and one that only works with IBM's i/pSeries
-hypervisor (ibmvscsi).
-- Reuse the ib_ipoib kernel module to provide an IP stack on top of
-the new RDMA driver instead of having to maintain a separate network
-driver for this hardware (ibmveth).
+=46or data logging, you have to modify the SCSI low-level driver or SCS=
+I=20
+core indeed.
 
-More information about the architecture the ibmvscsi and the ibmveth
-drivers have been developed for can be found in the following paper:
-D. Boutcher and D. Engebretsen, Linux Virtualization on IBM POWER5
-Systems, Proceedings of the Linux Symposium, Vol. 1, July 2004, pp.
-113-120 (http://www.kernel.org/doc/mirror/ols2004v1.pdf).
-
-Bart.
+However, all this applies only if the firmware updater actually runs on=
+=20
+a Linux initiator, not e.g. on an MS Windows initiator.  In the latter=20
+case, you need a debug driver which hooks into Windows' SCSI stack, or=20
+some sort of bus analyzer.
+--=20
+Stefan Richter
+-=3D=3D=3D=3D=3D-=3D=3D--=3D =3D--=3D ----=3D
+http://arcgraph.de/sr/
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
