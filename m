@@ -1,84 +1,48 @@
-From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 5/6] mptsas : FW event thread and scsi mid layer deadlock in SYNCHRONIZE CACHE command
-Date: Wed, 2 Sep 2009 11:46:33 +0530
-Message-ID: <20090902061622.GF20211@lsi.com>
+From: Jonathan Nell <crtrn13@gmail.com>
+Subject: Re: scsi traffic sniffing
+Date: Wed, 2 Sep 2009 09:48:35 +0300
+Message-ID: <48e952f40909012348y4c86773am3096a32e3dc25218@mail.gmail.com>
+References: <48e952f40908312312w7765c2a1q3a4f022967735288@mail.gmail.com>
+	 <48e952f40908312313u75e4d00cr3d934f1dbdd1cca9@mail.gmail.com>
+	 <48e952f40908312313y372d5009mc0197dff49d3b778@mail.gmail.com>
+	 <d364733c0909010340t57499a38y4c0bd949e5ba63a6@mail.gmail.com>
+	 <d364733c0909012012s1c75434au6a2230e07af4241c@mail.gmail.com>
+	 <48e952f40909012120y1d56bb6bha18330fa3266ed64@mail.gmail.com>
+	 <d364733c0909012149sb5f780cia8acdc305535d376@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og113.obsmtp.com ([64.18.2.179]:59714 "EHLO
-	exprod7og113.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932179AbZIBGiv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2009 02:38:51 -0400
-Content-Disposition: inline
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:62020 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751706AbZIBGse (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2009 02:48:34 -0400
+Received: by fxm17 with SMTP id 17so564594fxm.37
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Sep 2009 23:48:36 -0700 (PDT)
+In-Reply-To: <d364733c0909012149sb5f780cia8acdc305535d376@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
+To: =?GB2312?B?0Lu42Q==?= <xiegang112@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
+>>>
+>>> I developed a tool to dump all the SCSI cmds to SCSI device. The idea
+>>> is, every SCSI host controller driver should give the queue_command
+>>> fucntion. This is the entrance for SCSI request to SCSI host
+>>> controller driver. I replace this function with my own dump methord
+>>> and after dump, I restore this function.
+>>>
+>>> I do't know if it's what you need.
+>>
+>> That would be great! Could you send the code to me? How does your tool
+>> hook into queue_command?
 
-Normally In HBA reset path MPT driver will flush existing work in current work
-queue (mpt/0) . This is just a dummy activity for MPT driver point of
-view, since HBA reset will turn off Work queue events.
+> The code could be found at
+> http://blog.chinaunix.net/u/15278/showart_1966962.html. You need do
+> some modification according your kernel.
+> It's very simple to hook the queue_command. I just backup the original
+> function pointer somewhere and after dump, I restore it. Pls refer the
+> code for detail.
+>
 
-It means we will simply returns from work queue without doing anything.
-But for the case where Work is already done (half the way), we have to have
-that work to be done.
-
-Considering above condition we stuck forever since Deadlock in scsi midlayer
-and MPT driver. sd_sync_cache() will wait forever since HBA is not in
-Running state, and it will never come into Running state since
-sd_sync_cache() is called from HBA reset context.
-Now new code will not wait for half cooked work to be finished
-before returning from HBA reset.
-
-Once we are out of HBA reset, EH thread will change host state to running from
-recovery and work waiting for running state of HBA will be finished.
-New code is turning ON firmware event from another special work called
-Rescan toplogy.
-
-Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
----
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index 02a18df..83873e3 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -325,7 +325,6 @@ mptsas_cleanup_fw_event_q(MPT_ADAPTER *ioc)
- {
- 	struct fw_event_work *fw_event, *next;
- 	struct mptsas_target_reset_event *target_reset_list, *n;
--	u8	flush_q;
- 	MPT_SCSI_HOST	*hd = shost_priv(ioc->sh);
- 
- 	/* flush the target_reset_list */
-@@ -345,15 +344,10 @@ mptsas_cleanup_fw_event_q(MPT_ADAPTER *ioc)
- 	     !ioc->fw_event_q || in_interrupt())
- 		return;
- 
--	flush_q = 0;
- 	list_for_each_entry_safe(fw_event, next, &ioc->fw_event_list, list) {
- 		if (cancel_delayed_work(&fw_event->work))
- 			mptsas_free_fw_event(ioc, fw_event);
--		else
--			flush_q = 1;
- 	}
--	if (flush_q)
--		flush_workqueue(ioc->fw_event_q);
- }
- 
- 
-@@ -1279,7 +1273,6 @@ mptsas_ioc_reset(MPT_ADAPTER *ioc, int reset_phase)
- 		}
- 		mptsas_cleanup_fw_event_q(ioc);
- 		mptsas_queue_rescan(ioc);
--		mptsas_fw_event_on(ioc);
- 		break;
- 	default:
- 		break;
-@@ -1599,6 +1592,7 @@ mptsas_firmware_event_work(struct work_struct *work)
- 		mptsas_scan_sas_topology(ioc);
- 		ioc->in_rescan = 0;
- 		mptsas_free_fw_event(ioc, fw_event);
-+		mptsas_fw_event_on(ioc);
- 		return;
- 	}
- 
+This is great - thanks! I assume I can just modify this slightly to
+dump the data as well (and not just the cmd)?
