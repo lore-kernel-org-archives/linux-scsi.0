@@ -1,134 +1,137 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: [PATCH 4/8] be2iscsi : handles core routines
-Date: Wed, 2 Sep 2009 10:04:29 -0400
-Message-ID: <19102.31597.873088.731026@stoffel.org>
-References: <20090902041134.GA19137@serverengines.com>
-	<4A9DFF0C.2080802@cs.wisc.edu>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH] SCSI driver for VMware's virtual HBA.
+Date: Wed, 02 Sep 2009 10:06:07 -0500
+Message-ID: <1251903967.3892.177.camel@mulgrave.site>
+References: <1251415060.16297.58.camel@ank32.eng.vmware.com>
+	 <adaws4iod8k.fsf@cisco.com> <20090901161651.GO22870@parisc-linux.org>
+	 <200909010933.50571.dtor@vmware.com>
+	 <1251823925.3864.216.camel@mulgrave.site>
+	 <1251824374.16169.128.camel@ank32.eng.vmware.com>
+	 <1251825949.12482.34.camel@mulgrave.site>
+	 <1251826877.16169.141.camel@ank32.eng.vmware.com>
+	 <1251828950.13303.31.camel@mulgrave.site>
+	 <1251860141.8844.20.camel@ank32.eng.vmware.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from Mycroft.westnet.com ([216.187.52.7]:37981 "EHLO
-	mycroft.westnet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752322AbZIBOEf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2009 10:04:35 -0400
-In-Reply-To: <4A9DFF0C.2080802@cs.wisc.edu>
+Received: from cantor2.suse.de ([195.135.220.15]:44056 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751405AbZIBPGQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Sep 2009 11:06:16 -0400
+In-Reply-To: <1251860141.8844.20.camel@ank32.eng.vmware.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Jayamohan Kalickal <jayamohank@serverengines.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>
+To: akataria@vmware.com
+Cc: Dmitry Torokhov <dtor@vmware.com>, Matthew Wilcox <matthew@wil.cx>, Roland Dreier <rdreier@cisco.com>, Bart Van Assche <bvanassche@acm.org>, Robert Love <robert.w.love@intel.com>, Randy Dunlap <randy.dunlap@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Rolf Eike Beer <eike-kernel@sf-tec.de>, Maxime Austruy <maustruy@vmware.com>
 
->>>>> "Mike" == Mike Christie <michaelc@cs.wisc.edu> writes:
+On Tue, 2009-09-01 at 19:55 -0700, Alok Kataria wrote:
+> On Tue, 2009-09-01 at 11:15 -0700, James Bottomley wrote:
+> > On Tue, 2009-09-01 at 10:41 -0700, Alok Kataria wrote:
+> > > > lguest uses the sg_ring abstraction.  Xen and KVM were certainly looking
+> > > > at this too.
+> > > 
+> > > I don't see the sg_ring abstraction that you are talking about. Can you
+> > > please give me some pointers. 
+> > 
+> > it's in drivers/lguest ... apparently it's vring now and the code is in
+> > driver/virtio
+> > 
+> > > Also regarding Xen and KVM I think they are using the xenbus/vbus
+> > > interface, which is quite different than what we do here. 
+> > 
+> > Not sure about Xen ... KVM uses virtio above.
+> > 
+> > > > 
+> > > > > And anyways how large is the DMA code that we are worrying about here ?
+> > > > > Only about 300-400 LOC ? I don't think we might want to over-design for
+> > > > > such small gains.
+> > > > 
+> > > > So even if you have different DMA code, the remaining thousand or so
+> > > > lines would be in common.  That's a worthwhile improvement.
+> 
+> I don't see how, the rest of the code comprises of IO/MMIO  space & ring
+> processing which is very different in each of the implementations. What
+> is left is the setup and initialization code which obviously depends on
+> the implementation of the driver data structures. 
 
-Mike> On 09/01/2009 11:11 PM, Jayamohan Kallickal wrote:
->> This file handles initiallization/teardown, allocation/free as well
->> as IO/Management flows.
->> 
->> Signed-off-by: Jayamohan Kallickal<jayamohank@serverengines.com>
->> Signed-off-by: Mike Christie<michaelc@cs.wisc.edu>
+Are there benchmarks comparing the two approaches?
+
+> > > And not just that, different HV-vendors can have different features,
+> > > like say XYZ can come up tomorrow and implement the multiple rings
+> > > interface so the feature set doesn't remain common and we will have less
+> > > code to share in the not so distant future.
+> > 
+> > Multiple rings is really just a multiqueue abstraction.  That's fine,
+> > but it needs a standard multiqueue control plane.
+> > 
+> > The desire to one up the competition by adding a new whiz bang feature
+> > to which you code a special interface is very common in the storage
+> > industry.  The counter pressure is that consumers really like these
+> > things standardised.  That's what the transport class abstraction is all
+> > about.
+> > 
+> > We also seem to be off on a tangent about hypervisor interfaces.  I'm
+> > actually more interested in the utility of an SRP abstraction or at
+> > least something SAM based.  It seems that in your driver you don't quite
+> > do the task management functions as SAM requests, but do them over your
+> > own protocol abstractions.
+> 
+> Okay,  I think I need to take a step back here and understand what
+> actually are you asking for.
+> 
+> 1. What do you mean by the "transport class abstraction" ? 
+> Do you mean that the way we communicate with the hypervisor needs to be
+> standardized ?
+
+Not really.  Transport classes are designed to share code and provide a
+uniform control plane when the underlying implementation is different.
+
+> 2. Are you saying that we should use the virtio ring mechanism to handle
+> our request and completion rings ? 
+
+That's an interesting question.  Virtio is currently the standard linux
+guest<=>hypervisor communication mechanism, but if you have comparative
+benchmarks showing that virtual hardware emulation is faster, it doesn't
+need to remain so.
+
+>   We can not do that. Our backend expects that each slot on the ring is
+> in a particular format. Where as vring expects that each slot on the
+> vring is in the vring_desc format.
+
+Your backend is a software server, surely?
+
+> 3. Also, the way we communicate with the hypervisor backend is that the
+> driver writes to our device IO registers in a particular format. The
+> format that we follow is to first write the command on the
+> COMMAND_REGISTER and then write a stream of data words in the
+> DATA_REGISTER, which is a normal device interface.
+> The reason I make this point is to highlight we are not making any
+> hypercalls instead we communicate with the hypervisor by writing to
+> IO/Memory mapped regions.  So from that perspective the driver has no
+> knowledge that its is talking to a software backend (aka device
+> emulation) instead it is very similar to how a driver talks to a silicon
+> device.  The backend expects things in a certain way and we cannot
+> really change that interface ( i.e. the ABI shared between Device driver
+> and Device Emulation).
+> 
+> So sharing code with vring or virtio is not something that works well
+> with our backend. The VMware PVSCSI driver is simply a virtual HBA and
+> shouldn't be looked at any differently.
+> 
+> Is their anything else that you are asking us to standardize ?
+
+I'm not really asking you to standardise anything (yet).  I was more
+probing for why you hadn't included any of the SCSI control plane
+interfaces and what lead you do produce a different design from the
+current patterns in virtual I/O.  I think what I'm hearing is "Because
+we didn't look at how modern SCSI drivers are constructed" and "Because
+we didn't look at how virtual I/O is currently done in Linux".  That's
+OK (it's depressingly familiar in drivers), but now we get to figure out
+what, if anything, makes sense from a SCSI control plane to a hypervisor
+interface and whether this approach to hypervisor interfaces is better
+or worse than virtio.
+
+James
 
 
-Mike> I think the driver is looking ok now. I sent Jay patches to fix the 
-Mike> iscsi issues and to do coding style/api-use fix ups. My only concern is 
-Mike> this function below which seems to be a memory hog and not very 
-Mike> resilient to memory allocation failures.
-
-Mike> The memory requirements are due to how the HW is designed (Jay can fill 
-Mike> in more details if needed), so I think we are stuck.
-
-Mike> The memory allocation failure handling could be improved, but I am not 
-Mike> sure if it is required for the initial upstream merge. It could handle 
-Mike> the failures by trying to allocate less memory when a larger allocation 
-Mike> fails. Today, it will just fail the operation, clean itself up and then 
-Mike> fail the module loading.
-
-Mike> If others are ok with this for now and there are no other issues then 
-Mike> please go ahead and merge. I do not have any other issues with it. I am 
-Mike> not a expert on pci api stuff though, but I think Rolfe had got a lot of 
-Mike> those issues.
-
-It would be good to at least put a comment in the code to say *why*
-the hardware needs this much memory and what it's really looking for.
-
->> +static int beiscsi_alloc_mem(struct beiscsi_hba *phba)
->> +{
->> +	struct be_mem_descriptor *mem_descr;
->> +	dma_addr_t bus_add;
->> +	unsigned int num_size, i, j;
->> +
->> +	phba->phwi_ctrlr = kmalloc(phba->params.hwi_ws_sz, GFP_KERNEL);
->> +	if (!phba->phwi_ctrlr)
->> +		return -ENOMEM;
->> +
->> +	phba->init_mem = kcalloc(SE_MEM_MAX, sizeof(struct be_mem_descriptor),
->> +				 GFP_KERNEL);
->> +	if (!phba->init_mem) {
->> +		kfree(phba->phwi_ctrlr);
->> +		return -ENOMEM;
->> +	}
->> +
->> +	mem_descr = phba->init_mem;
->> +	for (i = 0; i<  SE_MEM_MAX; i++) {
->> +		j = 0;
->> +
->> +		num_size = phba->mem_req[i];
->> +		while (num_size) {
->> +			if (j>= BEISCSI_MAX_FRAGS_INIT) {
->> +				SE_DEBUG(DBG_LVL_1,
->> +				 "Memory Fragment exceeded %d for"
->> +				 "index=%d. Failing to Load thedriver\n",
->> +				 BEISCSI_MAX_FRAGS_INIT, i);
->> +				goto free_mem;
->> +			}
->> +
->> +			if (num_size>= 131072) {
-
-This magic number should be defined somewhere!
-
->> +				mem_descr->mem_array[j].virtual_address =
->> +				    pci_alloc_consistent(phba->pcidev,
->> +						 131072,&bus_add);
-
-Same here...
-
->> +				if (!mem_descr->mem_array[j].virtual_address) {
->> +					SE_DEBUG(DBG_LVL_1, "Memory too"
->> +					"fragmented to Load the driver");
->> +					goto free_mem;
->> +				} else {
->> +					mem_descr->mem_array[j].bus_address.u.
->> +					    a64.address = (__u64) bus_add;
->> +					mem_descr->mem_array[j].size = 131072;
-
-And here...
-
->> +					memset(mem_descr->mem_array[j].
->> +					       virtual_address, 0, 131072);
-
-And here...
-
->> +					j++;
->> +					num_size -= 131072;
->> +				}
->> +			} else {
->> +				mem_descr->mem_array[j].virtual_address =
->> +				    pci_alloc_consistent(phba->pcidev,
->> +						 num_size,&bus_add);
->> +				if (!mem_descr->mem_array[j].virtual_address) {
->> +					SE_DEBUG(DBG_LVL_1,
->> +					"Memory too fragmented to Load driver");
->> +					goto free_mem;
->> +				} else {
->> +					mem_descr->mem_array[j].bus_address.u.
->> +					    a64.address = (__u64) bus_add;
->> +					mem_descr->mem_array[j].size = num_size;
->> +					memset(mem_descr->mem_array[j].
->> +					       virtual_address, 0, num_size);
->> +					j++;
->> +					num_size -= num_size;
->> +				}
->> +			}
-Mike> --
-Mike> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-Mike> the body of a message to majordomo@vger.kernel.org
-Mike> More majordomo info at  http://vger.kernel.org/majordomo-info.html
