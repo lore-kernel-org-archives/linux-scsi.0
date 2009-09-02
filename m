@@ -1,89 +1,128 @@
 From: "Moger, Babu" <Babu.Moger@lsi.com>
-Subject: [PATCH 2/3][RESUBMIT] scsi_dh_rdac: move the init code from
- rdac_activate to rdac_bus_attach
-Date: Wed, 2 Sep 2009 17:13:13 -0600
-Message-ID: <E463DF2B2E584B4A82673F53D62C2EF474CCCE68@cosmail01.lsi.com>
+Subject: [PATCH 3/3][RESUBMIT] scsi_dh_rdac: changes for rdac debug logging
+Date: Wed, 2 Sep 2009 17:13:20 -0600
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF474CCCE69@cosmail01.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og111.obsmtp.com ([64.18.2.175]:47565 "EHLO
+Received: from exprod7og111.obsmtp.com ([64.18.2.175]:47603 "EHLO
 	exprod7og111.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752156AbZIBXNQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2009 19:13:16 -0400
+	with ESMTP id S1753588AbZIBXNY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2009 19:13:24 -0400
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 Cc: 'device mapper development' <dm-devel@redhat.com>, "'sekharan@linux.vnet.ibm.com'" <sekharan@linux.vnet.ibm.com>, "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>, "Stankey, Robert" <Robert.Stankey@lsi.com>, "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>
 
-Moving the initialization code from rdac_activate to rdac_bus_attach which is more efficient.
-We don't have to collect all these information during every activate.
+Patch to add debugging stuff for rdac device handler. 
+- Added a bit mask "module parameter" rdac_logging with 2 bits for each type of logging.
+- currently defined only two types of logging(failover and sense logging). Can be enhanced later if required.
+- By default only failover logging is enabled which is equivalent of current logging.
 
 Signed-off-by: Babu Moger <babu.moger@lsi.com>
 Reviewed-by: Vijay Chauhan <vijay.chauhan@lsi.com>
 Reviewed-by: Bob Stankey <Robert.stankey@lsi.com>
 
 ---
-
---- linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2009-09-02 10:06:46.000000000 -0500
-+++ linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-09-02 10:08:06.000000000 -0500
-@@ -539,23 +539,11 @@ static int rdac_activate(struct scsi_dev
- {
- 	struct rdac_dh_data *h = get_rdac_data(sdev);
- 	int err = SCSI_DH_OK;
--	char array_name[ARRAY_LABEL_LEN];
+--- linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2009-08-31 15:16:54.000000000 -0500
++++ linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-08-31 15:18:31.000000000 -0500
+@@ -201,6 +201,31 @@ static const char *lun_state[] =
+ static LIST_HEAD(ctlr_list);
+ static DEFINE_SPINLOCK(list_lock);
  
- 	err = check_ownership(sdev, h);
- 	if (err != SCSI_DH_OK)
++/* 
++ * module parameter to enable rdac debug logging.
++ * 2 bits for each type of logging, only two types defined for now 
++ * Can be enhanced if required at later point
++ */
++static int rdac_logging = 1;
++module_param(rdac_logging, int, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(rdac_logging, "A bit mask of rdac logging levels, "
++		"Default is 1 - failover logging enabled, "
++		"set it to 0xF to enable all the logs");
++
++#define RDAC_LOG_FAILOVER	0
++#define RDAC_LOG_SENSE		2
++
++#define RDAC_LOG_BITS		2
++
++#define RDAC_LOG_LEVEL(SHIFT)  \
++        ((rdac_logging >> (SHIFT)) & ((1 << (RDAC_LOG_BITS)) - 1))
++
++#define RDAC_LOG(SHIFT, sdev, f, arg...) \
++do { \
++	if (unlikely(RDAC_LOG_LEVEL(SHIFT))) \
++		sdev_printk(KERN_INFO, sdev, RDAC_NAME ": " f "\n", ## arg); \
++} while (0);
++
+ static inline struct rdac_dh_data *get_rdac_data(struct scsi_device *sdev)
+ {
+ 	struct scsi_dh_data *scsi_dh_data = sdev->scsi_dh_data;
+@@ -469,6 +494,7 @@ static int mode_select_handle_sense(stru
+ {
+ 	struct scsi_sense_hdr sense_hdr;
+ 	int err = SCSI_DH_IO, ret;
++	struct rdac_dh_data *h = get_rdac_data(sdev);
+ 
+ 	ret = scsi_normalize_sense(sensebuf, SCSI_SENSE_BUFFERSIZE, &sense_hdr);
+ 	if (!ret)
+@@ -497,11 +523,14 @@ static int mode_select_handle_sense(stru
+ 			err = SCSI_DH_RETRY;
+ 		break;
+ 	default:
+-		sdev_printk(KERN_INFO, sdev,
+-			    "MODE_SELECT failed with sense %02x/%02x/%02x.\n",
+-			    sense_hdr.sense_key, sense_hdr.asc, sense_hdr.ascq);
++		break;
+ 	}
+ 
++	RDAC_LOG(RDAC_LOG_FAILOVER, sdev, "array %s, ctlr %d, "
++		"MODE_SELECT returned with sense %02x/%02x/%02x",
++		(char *) h->ctlr->array_name, h->ctlr->index,
++		sense_hdr.sense_key, sense_hdr.asc, sense_hdr.ascq);
++
+ done:
+ 	return err;
+ }
+@@ -518,7 +547,9 @@ retry:
+ 	if (!rq)
  		goto done;
  
--	if (!h->ctlr) {
--		err = initialize_controller(sdev, h, array_name);
--		if (err != SCSI_DH_OK)
--			goto done;
--	}
--
--	if (h->ctlr->use_ms10 == -1) {
--		err = set_mode_select(sdev, h);
--		if (err != SCSI_DH_OK)
--			goto done;
--	}
- 	if (h->lun_state == RDAC_LUN_UNOWNED)
- 		err = send_mode_select(sdev, h);
+-	sdev_printk(KERN_INFO, sdev, "%s MODE_SELECT command.\n",
++	RDAC_LOG(RDAC_LOG_FAILOVER, sdev, "array %s, ctlr %d, "
++		"%s MODE_SELECT command",
++		(char *) h->ctlr->array_name, h->ctlr->index,
+ 		(retry_cnt == RDAC_RETRY_COUNT) ? "queueing" : "retrying");
+ 
+ 	err = blk_execute_rq(q, NULL, rq, 1);
+@@ -528,8 +559,12 @@ retry:
+ 		if (err == SCSI_DH_RETRY && retry_cnt--)
+ 			goto retry;
+ 	}
+-	if (err == SCSI_DH_OK)
++	if (err == SCSI_DH_OK) {
+ 		h->state = RDAC_STATE_ACTIVE;
++		RDAC_LOG(RDAC_LOG_FAILOVER, sdev, "array %s, ctlr %d, "
++				"MODE_SELECT completed",
++				(char *) h->ctlr->array_name, h->ctlr->index);
++	}
+ 
  done:
-@@ -695,12 +683,20 @@ static int rdac_bus_attach(struct scsi_d
- 	if (err != SCSI_DH_OK)
- 		goto failed;
- 
--	err = check_ownership(sdev, h);
-+	err = initialize_controller(sdev, h, array_name);
- 	if (err != SCSI_DH_OK)
- 		goto failed;
- 
-+	err = check_ownership(sdev, h);
-+	if (err != SCSI_DH_OK)
-+		goto clean_ctlr;
+ 	return err;
+@@ -567,6 +602,12 @@ static int rdac_check_sense(struct scsi_
+ 				struct scsi_sense_hdr *sense_hdr)
+ {
+ 	struct rdac_dh_data *h = get_rdac_data(sdev);
++		
++	RDAC_LOG(RDAC_LOG_SENSE, sdev, "array %s, ctlr %d, "
++			"I/O returned with sense %02x/%02x/%02x",
++			(char *) h->ctlr->array_name, h->ctlr->index,
++			sense_hdr->sense_key, sense_hdr->asc, sense_hdr->ascq);
 +
-+	err = set_mode_select(sdev, h);
-+	if (err != SCSI_DH_OK)
-+		goto clean_ctlr;
-+
- 	if (!try_module_get(THIS_MODULE))
--		goto failed;
-+		goto clean_ctlr;
- 
- 	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
- 	sdev->scsi_dh_data = scsi_dh_data;
-@@ -712,6 +708,9 @@ static int rdac_bus_attach(struct scsi_d
- 
- 	return 0;
- 
-+clean_ctlr:
-+	kref_put(&h->ctlr->kref, release_controller);
-+	
- failed:
- 	kfree(scsi_dh_data);
- 	sdev_printk(KERN_ERR, sdev, "%s: not attached\n",
+ 	switch (sense_hdr->sense_key) {
+ 	case NOT_READY:
+ 		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x01)
 
 
