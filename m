@@ -1,34 +1,41 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 0/6] mptsas : Discription patch
-Date: Wed, 2 Sep 2009 11:42:22 +0530
-Message-ID: <20090902061212.GA20211@lsi.com>
+Subject: [PATCH 1/6] mptsas : Sanity check for phyinfo is added
+Date: Wed, 2 Sep 2009 11:43:36 +0530
+Message-ID: <20090902061328.GB20211@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og102.obsmtp.com ([64.18.2.157]:51233 "EHLO
-	exprod7og102.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755754AbZIBGes (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2009 02:34:48 -0400
+Received: from exprod7og108.obsmtp.com ([64.18.2.169]:37561 "EHLO
+	exprod7og108.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755893AbZIBGgr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2009 02:36:47 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
+Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com, stable@kernel.org
 
 
-Discription patch
-Patches are based on 2.6.31-rc8.
-Patch 1,2 and 3 needs to go into stable kernel also.
-Please consider this patch set for next kernel update.
-
-[PATCH 1/6] mptsas : Sanity check for phyinfo is added.
-[PATCH 2/6] mptsas : NULL pointer on big endian systems causing Expander
-		     not to tear off
-[PATCH 3/6] mptsas : PAE Kernel more than 4 GB kernel panic
-[PATCH 4/6] mptsas : Send DID_NO_CONNECT for pending IOs of removed dev
-[PATCH 5/6] mptsas : FW event thread and scsi mid layer deadlock in
-		     SYNCHRONIZE CACHE command
-[PATCH 6/6] mptsas : Bump version to 3.04.12
+Check for phyinfo->phy before calling sas_port_delete_phy.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index 21bd78e..f744f0f 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -852,7 +852,13 @@ mptsas_setup_wide_ports(MPT_ADAPTER *ioc, struct mptsas_portinfo *port_info)
+ 		port_details->num_phys--;
+ 		port_details->phy_bitmask &= ~ (1 << phy_info->phy_id);
+ 		memset(&phy_info->attached, 0, sizeof(struct mptsas_devinfo));
+-		sas_port_delete_phy(port_details->port, phy_info->phy);
++		if (phy_info->phy) {
++			devtprintk(ioc, dev_printk(KERN_DEBUG,
++				&phy_info->phy->dev, MYIOC_s_FMT
++				"delete phy %d, phy-obj (0x%p)\n", ioc->name,
++				phy_info->phy_id, phy_info->phy));
++			sas_port_delete_phy(port_details->port, phy_info->phy);
++		}
+ 		phy_info->port_details = NULL;
+ 	}
+ 
