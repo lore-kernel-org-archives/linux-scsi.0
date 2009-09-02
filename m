@@ -1,61 +1,33 @@
-From: Jing Huang <huangj@Brocade.COM>
-Subject: RE: [PATCH 1/14] bfa: Brocade BFA FC SCSI driver (bfad)
-Date: Wed, 2 Sep 2009 13:02:07 -0700
-Message-ID: <B0A7AF226B49A14897036E9B3A68CFFECB1AA834E5@HQ-EXCH-7.corp.brocade.com>
-References: <200908280754.n7S7sUMB030191@blc-10-6.brocade.com>
- <20090902124135.aa55f0be.akpm@linux-foundation.org>
+From: Allan Wind <allan_wind@lifeintegrity.com>
+Subject: Re: MD/RAID time out writing superblock
+Date: Wed, 2 Sep 2009 17:58:41 -0400
+Message-ID: <20090902215841.GA12441@lifeintegrity.com>
+References: <4A950FA6.4020408@redhat.com> <92cb16daad8278b0aa98125b9e1d057a@localhost> <4A95573A.6090404@redhat.com> <1571f45804875514762f60c0097171e6@localhost> <d086b110526f8bac2f562850dfc70b03@localhost> <4A970154.2020507@redhat.com> <4A9B8583.9050601@kernel.org> <4A9BC033.9000909@pobox.com> <4A9C60A1.50303@rtr.ca> <640f6103c45b6cba6f84f887bde227e4@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq-exedge.brocade.com ([66.243.153.82]:21438 "EHLO
-	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753462AbZIBUCG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2009 16:02:06 -0400
-In-Reply-To: <20090902124135.aa55f0be.akpm@linux-foundation.org>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <640f6103c45b6cba6f84f887bde227e4@localhost>
+Sender: linux-ide-owner@vger.kernel.org
+To: IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ramkumar Vadivelu <rvadivel@Brocade.COM>, Vinodh Ravindran <vravindr@Brocade.COM>
 
-> These patches seem to have been posted a lot of times.  Is anyone
-> paying attention?
-> 
-> > +BFA_TRC_FILE(LDRV, BFAD);
-> > +
-> > +static DEFINE_MUTEX(bfad_mutex);
-> > +int bfad_scan_done;
-> > +
-> > +LIST_HEAD(bfad_list);
-> > +
-> > +static int      bfad_inst;
-> > +int             supported_fc4s;
-> > +
-> > +char           *host_name;
-> > +char           *os_name;
-> > +char           *os_patch;
-> > +int             num_rports;
-> > +int             num_ios;
-> > +int             num_tms;
-> > +int             num_fcxps;
-> > +int             num_ufbufs;
-> > +int             reqq_size;
-> > +int             rspq_size;
-> > +int             num_sgpgs;
-> > +int             rport_del_timeout = BFA_FCS_RPORT_DEF_DEL_TIMEOUT;
-> > +int             bfa_lun_queue_depth = BFAD_LUN_QUEUE_DEPTH;
-> > +int             bfa_io_max_sge = BFAD_IO_MAX_SGE;
-> > +int             log_level = BFA_LOG_WARNING;
-> > +int             ioc_auto_recover = BFA_TRUE;
-> > +int             ipfc_enable = BFA_FALSE;
-> > +int             ipfc_mtu = -1;
-> > +int             linkup_delay = -1;
-> 
-> eek.  These are all kernel-wide global symbols and many of them are
-> very inappropriately named.  They should either be made static or given
-> a subsystem-specific prefix such as "bfad_".
-> 
+On 2009-09-01T09:07:11, Andrei Tanas wrote:
+> Mine errored out again with exactly the same symptoms, this time after only
+> few days and with the "tunable" set to 2 sec. I got a warranty replacement
+> but haven't shipped this one yet. Let me know if you want it.
 
-Thanks Andrew. I will fix this and resubmit.
+How do you set it to 2 sec?  I have a raid 1 array of two new WDC 
+2 TB drives that fail on the 2nd drive all the time.  Disabling 
+NCQ might have helped but it is hard to tell.  It was stable for 
+a week, but probably failed 10 times over the weekend.  I either 
+need to add a 3rd drive to get any protection from hardware 
+failure, or use lvm to mirror the two drives instead of md :-(
+
+
+/Allan
+-- 
+Allan Wind
+Life Integrity, LLC
+<http://lifeintegrity.com>
 
