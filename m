@@ -1,33 +1,44 @@
-From: Allan Wind <allan_wind@lifeintegrity.com>
-Subject: Re: MD/RAID time out writing superblock
-Date: Wed, 2 Sep 2009 17:58:41 -0400
-Message-ID: <20090902215841.GA12441@lifeintegrity.com>
-References: <4A950FA6.4020408@redhat.com> <92cb16daad8278b0aa98125b9e1d057a@localhost> <4A95573A.6090404@redhat.com> <1571f45804875514762f60c0097171e6@localhost> <d086b110526f8bac2f562850dfc70b03@localhost> <4A970154.2020507@redhat.com> <4A9B8583.9050601@kernel.org> <4A9BC033.9000909@pobox.com> <4A9C60A1.50303@rtr.ca> <640f6103c45b6cba6f84f887bde227e4@localhost>
+From: "Moger, Babu" <Babu.Moger@lsi.com>
+Subject: [PATCH 0/3][RESUBMIT] scsi_dh_rdac: Adding more debug
+ options for scsi rdac handler
+Date: Wed, 2 Sep 2009 17:12:21 -0600
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF474CCCE66@cosmail01.lsi.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <640f6103c45b6cba6f84f887bde227e4@localhost>
-Sender: linux-ide-owner@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Language: en-US
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Cc: "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "Chauhan,
+	Vijay" <Vijay.Chauhan@lsi.com>, "Stankey, Robert" <Robert.Stankey@lsi.com>, "'sekharan@linux.vnet.ibm.com'" <sekharan@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2009-09-01T09:07:11, Andrei Tanas wrote:
-> Mine errored out again with exactly the same symptoms, this time after only
-> few days and with the "tunable" set to 2 sec. I got a warranty replacement
-> but haven't shipped this one yet. Let me know if you want it.
+Hi All,
+These patches add more debugging options to scsi rdac device handler. Thi=
+s can considerably reduce the time taken to=20
+debug issues in big configurations and also very helpful in addressing th=
+e support issues.
+Here is the summary of changes.=20
+- Added a bit mask "module parameter" rdac_logging with 2 bits for each t=
+ype of logging.
+- currently defined only two types of logging(failover and sense logging)=
+. Can be enhanced later if required.
+- By default only failover logging is enabled which is equivalent of curr=
+ent logging.
 
-How do you set it to 2 sec?  I have a raid 1 array of two new WDC 
-2 TB drives that fail on the 2nd drive all the time.  Disabling 
-NCQ might have helped but it is hard to tell.  It was stable for 
-a week, but probably failed 10 times over the weekend.  I either 
-need to add a 3rd drive to get any protection from hardware 
-failure, or use lvm to mirror the two drives instead of md :-(
+Thanks to Chandra, Vijay and Bob for their useful comments. This code has=
+ been tested on 2.6.31-rc5.
 
-
-/Allan
--- 
-Allan Wind
-Life Integrity, LLC
-<http://lifeintegrity.com>
-
+Signed-off-by: Babu Moger <babu.moger@lsi.com>
+Reviewed-by: Vijay Chauhan <vijay.chauhan@lsi.com>
+Reviewed-by: Bob Stankey <Robert.stankey@lsi.com>
