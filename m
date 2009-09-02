@@ -1,54 +1,134 @@
-From: Jonathan Nell <crtrn13@gmail.com>
-Subject: Re: scsi traffic sniffing
-Date: Wed, 2 Sep 2009 15:05:21 +0300
-Message-ID: <48e952f40909020505m7efce7fdif79e4b0b6327f53e@mail.gmail.com>
-References: <48e952f40908312312w7765c2a1q3a4f022967735288@mail.gmail.com>
-	 <48e952f40908312313y372d5009mc0197dff49d3b778@mail.gmail.com>
-	 <d364733c0909010340t57499a38y4c0bd949e5ba63a6@mail.gmail.com>
-	 <d364733c0909012012s1c75434au6a2230e07af4241c@mail.gmail.com>
-	 <48e952f40909012120y1d56bb6bha18330fa3266ed64@mail.gmail.com>
-	 <d364733c0909012149sb5f780cia8acdc305535d376@mail.gmail.com>
-	 <48e952f40909012348y4c86773am3096a32e3dc25218@mail.gmail.com>
-	 <d364733c0909020021v4b6b3b61pa6a387836a7c927d@mail.gmail.com>
-	 <48e952f40909020050n4135c37br9d927ab61c8bbd65@mail.gmail.com>
-	 <d364733c0909020103m41d6781fjad30be856b5f610c@mail.gmail.com>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: [PATCH 4/8] be2iscsi : handles core routines
+Date: Wed, 2 Sep 2009 10:04:29 -0400
+Message-ID: <19102.31597.873088.731026@stoffel.org>
+References: <20090902041134.GA19137@serverengines.com>
+	<4A9DFF0C.2080802@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:60222 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751081AbZIBMFU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2009 08:05:20 -0400
-Received: by bwz19 with SMTP id 19so651954bwz.37
-        for <linux-scsi@vger.kernel.org>; Wed, 02 Sep 2009 05:05:21 -0700 (PDT)
-In-Reply-To: <d364733c0909020103m41d6781fjad30be856b5f610c@mail.gmail.com>
+Received: from Mycroft.westnet.com ([216.187.52.7]:37981 "EHLO
+	mycroft.westnet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752322AbZIBOEf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2009 10:04:35 -0400
+In-Reply-To: <4A9DFF0C.2080802@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Jayamohan Kalickal <jayamohank@serverengines.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>
 
->> Hmmm kills my pc when loaded into my kernel (2.6.30)... What kernel
->> version did you last use this with?
-> O, it's my bad. I don't update the codes.
-> Pls try the new attached. It works on the =A0RHEL5 2.6.18-128.el5.
+>>>>> "Mike" == Mike Christie <michaelc@cs.wisc.edu> writes:
 
-Thanks Xie but still causes a system crash unfortunately...
+Mike> On 09/01/2009 11:11 PM, Jayamohan Kallickal wrote:
+>> This file handles initiallization/teardown, allocation/free as well
+>> as IO/Management flows.
+>> 
+>> Signed-off-by: Jayamohan Kallickal<jayamohank@serverengines.com>
+>> Signed-off-by: Mike Christie<michaelc@cs.wisc.edu>
 
-=2E..I think that maybe the easiest way would be to rebuild the kernel
-with aptly-placed prink()s.
-But where's the best place to dump? I inserted into
-scsi_lib.c:scsi_execute() and that does dump commands, but doesn't
-seem to give me what I want. Just to clarify, I am running a dvd-drive
-firmware update in a vmware VM (windows xp guest). I have the
-dvd-drive (/dev/sr1) connected in the VM as a scsi device. I would
-like to print out ALL traffic to /dev/sr1 - whether generated in the
-VM or not - and i need both the cmds and the data in both directions.
-I'm just not familiar with the scsi kernel code and there's quite a
-lot of things going on there so if anyone could tell me where the best
-place to put my printk()s in the kernel code would be - that would be
-great!
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Mike> I think the driver is looking ok now. I sent Jay patches to fix the 
+Mike> iscsi issues and to do coding style/api-use fix ups. My only concern is 
+Mike> this function below which seems to be a memory hog and not very 
+Mike> resilient to memory allocation failures.
+
+Mike> The memory requirements are due to how the HW is designed (Jay can fill 
+Mike> in more details if needed), so I think we are stuck.
+
+Mike> The memory allocation failure handling could be improved, but I am not 
+Mike> sure if it is required for the initial upstream merge. It could handle 
+Mike> the failures by trying to allocate less memory when a larger allocation 
+Mike> fails. Today, it will just fail the operation, clean itself up and then 
+Mike> fail the module loading.
+
+Mike> If others are ok with this for now and there are no other issues then 
+Mike> please go ahead and merge. I do not have any other issues with it. I am 
+Mike> not a expert on pci api stuff though, but I think Rolfe had got a lot of 
+Mike> those issues.
+
+It would be good to at least put a comment in the code to say *why*
+the hardware needs this much memory and what it's really looking for.
+
+>> +static int beiscsi_alloc_mem(struct beiscsi_hba *phba)
+>> +{
+>> +	struct be_mem_descriptor *mem_descr;
+>> +	dma_addr_t bus_add;
+>> +	unsigned int num_size, i, j;
+>> +
+>> +	phba->phwi_ctrlr = kmalloc(phba->params.hwi_ws_sz, GFP_KERNEL);
+>> +	if (!phba->phwi_ctrlr)
+>> +		return -ENOMEM;
+>> +
+>> +	phba->init_mem = kcalloc(SE_MEM_MAX, sizeof(struct be_mem_descriptor),
+>> +				 GFP_KERNEL);
+>> +	if (!phba->init_mem) {
+>> +		kfree(phba->phwi_ctrlr);
+>> +		return -ENOMEM;
+>> +	}
+>> +
+>> +	mem_descr = phba->init_mem;
+>> +	for (i = 0; i<  SE_MEM_MAX; i++) {
+>> +		j = 0;
+>> +
+>> +		num_size = phba->mem_req[i];
+>> +		while (num_size) {
+>> +			if (j>= BEISCSI_MAX_FRAGS_INIT) {
+>> +				SE_DEBUG(DBG_LVL_1,
+>> +				 "Memory Fragment exceeded %d for"
+>> +				 "index=%d. Failing to Load thedriver\n",
+>> +				 BEISCSI_MAX_FRAGS_INIT, i);
+>> +				goto free_mem;
+>> +			}
+>> +
+>> +			if (num_size>= 131072) {
+
+This magic number should be defined somewhere!
+
+>> +				mem_descr->mem_array[j].virtual_address =
+>> +				    pci_alloc_consistent(phba->pcidev,
+>> +						 131072,&bus_add);
+
+Same here...
+
+>> +				if (!mem_descr->mem_array[j].virtual_address) {
+>> +					SE_DEBUG(DBG_LVL_1, "Memory too"
+>> +					"fragmented to Load the driver");
+>> +					goto free_mem;
+>> +				} else {
+>> +					mem_descr->mem_array[j].bus_address.u.
+>> +					    a64.address = (__u64) bus_add;
+>> +					mem_descr->mem_array[j].size = 131072;
+
+And here...
+
+>> +					memset(mem_descr->mem_array[j].
+>> +					       virtual_address, 0, 131072);
+
+And here...
+
+>> +					j++;
+>> +					num_size -= 131072;
+>> +				}
+>> +			} else {
+>> +				mem_descr->mem_array[j].virtual_address =
+>> +				    pci_alloc_consistent(phba->pcidev,
+>> +						 num_size,&bus_add);
+>> +				if (!mem_descr->mem_array[j].virtual_address) {
+>> +					SE_DEBUG(DBG_LVL_1,
+>> +					"Memory too fragmented to Load driver");
+>> +					goto free_mem;
+>> +				} else {
+>> +					mem_descr->mem_array[j].bus_address.u.
+>> +					    a64.address = (__u64) bus_add;
+>> +					mem_descr->mem_array[j].size = num_size;
+>> +					memset(mem_descr->mem_array[j].
+>> +					       virtual_address, 0, num_size);
+>> +					j++;
+>> +					num_size -= num_size;
+>> +				}
+>> +			}
+Mike> --
+Mike> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+Mike> the body of a message to majordomo@vger.kernel.org
+Mike> More majordomo info at  http://vger.kernel.org/majordomo-info.html
