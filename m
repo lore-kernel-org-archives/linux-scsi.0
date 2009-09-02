@@ -1,117 +1,68 @@
-From: Alok Kataria <akataria@vmware.com>
-Subject: Re: [PATCH] SCSI driver for VMware's virtual HBA.
-Date: Tue, 01 Sep 2009 19:55:41 -0700
-Message-ID: <1251860141.8844.20.camel@ank32.eng.vmware.com>
-References: <1251415060.16297.58.camel@ank32.eng.vmware.com>
-	 <adaws4iod8k.fsf@cisco.com> <20090901161651.GO22870@parisc-linux.org>
-	 <200909010933.50571.dtor@vmware.com>
-	 <1251823925.3864.216.camel@mulgrave.site>
-	 <1251824374.16169.128.camel@ank32.eng.vmware.com>
-	 <1251825949.12482.34.camel@mulgrave.site>
-	 <1251826877.16169.141.camel@ank32.eng.vmware.com>
-	 <1251828950.13303.31.camel@mulgrave.site>
-Reply-To: akataria@vmware.com
+From: =?UTF-8?B?6LCi57qy?= <xiegang112@gmail.com>
+Subject: Re: scsi traffic sniffing
+Date: Wed, 2 Sep 2009 11:12:35 +0800
+Message-ID: <d364733c0909012012s1c75434au6a2230e07af4241c@mail.gmail.com>
+References: <48e952f40908312312w7765c2a1q3a4f022967735288@mail.gmail.com>
+	 <48e952f40908312313u75e4d00cr3d934f1dbdd1cca9@mail.gmail.com>
+	 <48e952f40908312313y372d5009mc0197dff49d3b778@mail.gmail.com>
+	 <d364733c0909010340t57499a38y4c0bd949e5ba63a6@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-outbound-1.vmware.com ([65.115.85.69]:37473 "EHLO
-	smtp-outbound-1.vmware.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751978AbZIBCzj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2009 22:55:39 -0400
-In-Reply-To: <1251828950.13303.31.camel@mulgrave.site>
+Received: from mail-vw0-f195.google.com ([209.85.212.195]:56262 "EHLO
+	mail-vw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755595AbZIBDMd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2009 23:12:33 -0400
+Received: by vws33 with SMTP id 33so522349vws.33
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Sep 2009 20:12:35 -0700 (PDT)
+In-Reply-To: <d364733c0909010340t57499a38y4c0bd949e5ba63a6@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Dmitry Torokhov <dtor@vmware.com>, Matthew Wilcox <matthew@wil.cx>, Roland Dreier <rdreier@cisco.com>, Bart Van Assche <bvanassche@acm.org>, Robert Love <robert.w.love@intel.com>, Randy Dunlap <randy.dunlap@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Rolf Eike Beer <eike-kernel@sf-tec.de>, Maxime Austruy <maustruy@vmware.com>
+To: Jonathan Nell <crtrn13@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2009-09-01 at 11:15 -0700, James Bottomley wrote:
-> On Tue, 2009-09-01 at 10:41 -0700, Alok Kataria wrote:
-> > > lguest uses the sg_ring abstraction.  Xen and KVM were certainly looking
-> > > at this too.
-> > 
-> > I don't see the sg_ring abstraction that you are talking about. Can you
-> > please give me some pointers. 
-> 
-> it's in drivers/lguest ... apparently it's vring now and the code is in
-> driver/virtio
-> 
-> > Also regarding Xen and KVM I think they are using the xenbus/vbus
-> > interface, which is quite different than what we do here. 
-> 
-> Not sure about Xen ... KVM uses virtio above.
-> 
-> > > 
-> > > > And anyways how large is the DMA code that we are worrying about here ?
-> > > > Only about 300-400 LOC ? I don't think we might want to over-design for
-> > > > such small gains.
-> > > 
-> > > So even if you have different DMA code, the remaining thousand or so
-> > > lines would be in common.  That's a worthwhile improvement.
+On Tue, Sep 1, 2009 at 6:40 PM, =E8=B0=A2=E7=BA=B2<xiegang112@gmail.com=
+> wrote:
+> On Tue, Sep 1, 2009 at 2:13 PM, Jonathan Nell<crtrn13@gmail.com> wrot=
+e:
+>> Is there any way to sniff the traffic of a scsi device? I need to
+>> debug a firmware update and need to see the traffic being passed to
+>> the drive
+> You may hook the queue_command function of the scsi host. It can snif=
+f
+> all scsi request to scsi host driver.
+> Thanks,
 
-I don't see how, the rest of the code comprises of IO/MMIO  space & ring
-processing which is very different in each of the implementations. What
-is left is the setup and initialization code which obviously depends on
-the implementation of the driver data structures. 
+I developed a tool to dump all the SCSI cmds to SCSI device. The idea
+is, every SCSI host controller driver should give the queue_command
+fucntion. This is the entrance for SCSI request to SCSI host
+controller driver. I replace this function with my own dump methord
+and after dump, I restore this function.
 
-> > 
-> > And not just that, different HV-vendors can have different features,
-> > like say XYZ can come up tomorrow and implement the multiple rings
-> > interface so the feature set doesn't remain common and we will have less
-> > code to share in the not so distant future.
-> 
-> Multiple rings is really just a multiqueue abstraction.  That's fine,
-> but it needs a standard multiqueue control plane.
-> 
-> The desire to one up the competition by adding a new whiz bang feature
-> to which you code a special interface is very common in the storage
-> industry.  The counter pressure is that consumers really like these
-> things standardised.  That's what the transport class abstraction is all
-> about.
-> 
-> We also seem to be off on a tangent about hypervisor interfaces.  I'm
-> actually more interested in the utility of an SRP abstraction or at
-> least something SAM based.  It seems that in your driver you don't quite
-> do the task management functions as SAM requests, but do them over your
-> own protocol abstractions.
-
-Okay,  I think I need to take a step back here and understand what
-actually are you asking for.
-
-1. What do you mean by the "transport class abstraction" ? 
-Do you mean that the way we communicate with the hypervisor needs to be
-standardized ?
-
-2. Are you saying that we should use the virtio ring mechanism to handle
-our request and completion rings ? 
-  We can not do that. Our backend expects that each slot on the ring is
-in a particular format. Where as vring expects that each slot on the
-vring is in the vring_desc format.
-
-3. Also, the way we communicate with the hypervisor backend is that the
-driver writes to our device IO registers in a particular format. The
-format that we follow is to first write the command on the
-COMMAND_REGISTER and then write a stream of data words in the
-DATA_REGISTER, which is a normal device interface.
-The reason I make this point is to highlight we are not making any
-hypercalls instead we communicate with the hypervisor by writing to
-IO/Memory mapped regions.  So from that perspective the driver has no
-knowledge that its is talking to a software backend (aka device
-emulation) instead it is very similar to how a driver talks to a silicon
-device.  The backend expects things in a certain way and we cannot
-really change that interface ( i.e. the ABI shared between Device driver
-and Device Emulation).
-
-So sharing code with vring or virtio is not something that works well
-with our backend. The VMware PVSCSI driver is simply a virtual HBA and
-shouldn't be looked at any differently.
-
-Is their anything else that you are asking us to standardize ?
+I do't know if it's what you need.
 
 Thanks,
-Alok
-> 
-> James
-> 
-> 
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.h=
+tml
+>>
+>
+>
+>
+> --
+> Xie Gang
+>
 
+
+
+--=20
+Xie Gang
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
