@@ -1,63 +1,54 @@
-From: Xie Gang <xiegang112@gmail.com>
-Subject: Re: scsi traffic sniffing
-Date: Wed, 2 Sep 2009 15:21:20 +0800
-Message-ID: <d364733c0909020021v4b6b3b61pa6a387836a7c927d@mail.gmail.com>
-References: <48e952f40908312312w7765c2a1q3a4f022967735288@mail.gmail.com>
-	 <48e952f40908312313u75e4d00cr3d934f1dbdd1cca9@mail.gmail.com>
-	 <48e952f40908312313y372d5009mc0197dff49d3b778@mail.gmail.com>
-	 <d364733c0909010340t57499a38y4c0bd949e5ba63a6@mail.gmail.com>
-	 <d364733c0909012012s1c75434au6a2230e07af4241c@mail.gmail.com>
-	 <48e952f40909012120y1d56bb6bha18330fa3266ed64@mail.gmail.com>
-	 <d364733c0909012149sb5f780cia8acdc305535d376@mail.gmail.com>
-	 <48e952f40909012348y4c86773am3096a32e3dc25218@mail.gmail.com>
+From: =?utf-8?Q?Rog=C3=A9rio?= Brito <rbrito@ime.usp.br>
+Subject: Re: [Bugme-new] [Bug 14020] New: Stack trace when running smartctl
+ on an USB disk
+Date: Wed, 2 Sep 2009 04:27:26 -0300
+Message-ID: <20090902072726.GA3183@ime.usp.br>
+References: <Pine.LNX.4.44L0.0908222002110.9952-100000@netrider.rowland.org>
+ <Pine.LNX.4.44L0.0909010942590.2816-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:40717 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751987AbZIBHVT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2009 03:21:19 -0400
-Received: by ewy2 with SMTP id 2so517974ewy.17
-        for <linux-scsi@vger.kernel.org>; Wed, 02 Sep 2009 00:21:21 -0700 (PDT)
-In-Reply-To: <48e952f40909012348y4c86773am3096a32e3dc25218@mail.gmail.com>
+Received: from smtpout12.uol.com.br ([200.221.4.203]:39162 "EHLO
+	smtp.uol.com.br" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755926AbZIBH1a (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2009 03:27:30 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by socom12.uol.com.br (Postfix) with ESMTP id 756D89B
+	for <linux-scsi@vger.kernel.org>; Wed,  2 Sep 2009 04:27:29 -0300 (BRT)
+Received: from chagas.nectar.ath.cx (unknown [187.22.248.83])
+	by socom12.uol.com.br (Postfix) with ESMTPA id 519A498
+	for <linux-scsi@vger.kernel.org>; Wed,  2 Sep 2009 04:27:27 -0300 (BRT)
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0909010942590.2816-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jonathan Nell <crtrn13@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, bugzilla-daemon@bugzilla.kernel.org, linux-usb@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>
 
-On Wed, Sep 2, 2009 at 2:48 PM, Jonathan Nell<crtrn13@gmail.com> wrote:
->>>>
->>>> I developed a tool to dump all the SCSI cmds to SCSI device. The idea
->>>> is, every SCSI host controller driver should give the queue_command
->>>> fucntion. This is the entrance for SCSI request to SCSI host
->>>> controller driver. I replace this function with my own dump methord
->>>> and after dump, I restore this function.
->>>>
->>>> I do't know if it's what you need.
->>>
->>> That would be great! Could you send the code to me? How does your tool
->>> hook into queue_command?
->
->> The code could be found at
->> http://blog.chinaunix.net/u/15278/showart_1966962.html. You need do
->> some modification according your kernel.
->> It's very simple to hook the queue_command. I just backup the original
->> function pointer somewhere and after dump, I restore it. Pls refer the
->> code for detail.
->>
->
-> This is great - thanks! I assume I can just modify this slightly to
-> dump the data as well (and not just the cmd)?
-Of course, when you get the scsi cmd, you can get the request where
-data lives in.
-BTW, I don't use this driver under heavey load. There might be some
-performance issue. You can kick off the filter part.
+Hi, People.
 
-Thanks,
-Gang
->
+On Sep 01 2009, Alan Stern wrote:
+> Should this bug report be closed out?
+
+Please, just wait a little bit more. I'm just getting recovered from
+being ill (my health is not very good, unfortunately).
+
+That with some network (and e-mail) outages made things difficult. I'm
+just getting back now.
+
+I'm going to test the suggestion from Douglas right now.
 
 
+Thanks, Rog=C3=A9rio Brito.
 
--- 
-Xie Gang
+--=20
+Rog=C3=A9rio Brito : rbrito@{mackenzie,ime.usp}.br : GPG key 1024D/7C2C=
+AEB8
+http://www.ime.usp.br/~rbrito : http://meusite.mackenzie.com.br/rbrito
+Projects: algorithms.berlios.de : lame.sf.net : vrms.alioth.debian.org
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
