@@ -1,61 +1,55 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 3/6] mptsas : PAE Kernel more than 4 GB kernel panic
-Date: Wed, 2 Sep 2009 11:44:57 +0530
-Message-ID: <20090902061446.GD20211@lsi.com>
+Subject: [PATCH 4/6] mptsas : Send DID_NO_CONNECT for pending IOs of removed device
+Date: Wed, 2 Sep 2009 11:45:53 +0530
+Message-ID: <20090902061543.GE20211@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og117.obsmtp.com ([64.18.2.6]:43092 "EHLO
-	exprod7og117.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755909AbZIBGiL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2009 02:38:11 -0400
+Received: from exprod7og112.obsmtp.com ([64.18.2.177]:58544 "EHLO
+	exprod7og112.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755897AbZIBGiO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2009 02:38:14 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com, stable@kernel.org
+Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
 
-This patch is solving problem for PAE kernel DMA operation.
-On PAE system dma_addr and unsigned long will have different
-values.
-Now dma_addr is not type casted using unsigned long.
+
+Driver is modified to return DID_NO_CONNECT for all pending I/O
+requests for bus type SAS, if it founds the target is removed at
+the firmware level.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 8ab7b37..76fa2ee 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -1015,9 +1015,9 @@ mpt_add_sge_64bit(void *pAddr, u32 flagslength, dma_addr_t dma_addr)
- {
- 	SGESimple64_t *pSge = (SGESimple64_t *) pAddr;
- 	pSge->Address.Low = cpu_to_le32
--			(lower_32_bits((unsigned long)(dma_addr)));
-+			(lower_32_bits(dma_addr));
- 	pSge->Address.High = cpu_to_le32
--			(upper_32_bits((unsigned long)dma_addr));
-+			(upper_32_bits(dma_addr));
- 	pSge->FlagsLength = cpu_to_le32
- 			((flagslength | MPT_SGE_FLAGS_64_BIT_ADDRESSING));
- }
-@@ -1038,8 +1038,8 @@ mpt_add_sge_64bit_1078(void *pAddr, u32 flagslength, dma_addr_t dma_addr)
- 	u32 tmp;
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+index 0e402eb..c295786 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -628,6 +628,16 @@ mptscsih_io_done(MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf, MPT_FRAME_HDR *mr)
+ 		return 1;
+ 	}
  
- 	pSge->Address.Low = cpu_to_le32
--			(lower_32_bits((unsigned long)(dma_addr)));
--	tmp = (u32)(upper_32_bits((unsigned long)dma_addr));
-+			(lower_32_bits(dma_addr));
-+	tmp = (u32)(upper_32_bits(dma_addr));
++	if (ioc->bus_type == SAS) {
++		VirtDevice *vdevice = sc->device->hostdata;
++
++		if (!vdevice || !vdevice->vtarget ||
++		    vdevice->vtarget->deleted) {
++			sc->result = DID_NO_CONNECT << 16;
++			goto out;
++		}
++	}
++
+ 	sc->host_scribble = NULL;
+ 	sc->result = DID_OK << 16;		/* Set default reply as OK */
+ 	pScsiReq = (SCSIIORequest_t *) mf;
+@@ -892,7 +902,7 @@ mptscsih_io_done(MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf, MPT_FRAME_HDR *mr)
+ #endif
  
- 	/*
- 	 * 1078 errata workaround for the 36GB limitation
-@@ -1101,7 +1101,7 @@ mpt_add_chain_64bit(void *pAddr, u8 next, u16 length, dma_addr_t dma_addr)
- 		pChain->NextChainOffset = next;
- 
- 		pChain->Address.Low = cpu_to_le32(tmp);
--		tmp = (u32)(upper_32_bits((unsigned long)dma_addr));
-+		tmp = (u32)(upper_32_bits(dma_addr));
- 		pChain->Address.High = cpu_to_le32(tmp);
- }
+ 	} /* end of address reply case */
+-
++out:
+ 	/* Unmap the DMA buffers, if any. */
+ 	scsi_dma_unmap(sc);
  
