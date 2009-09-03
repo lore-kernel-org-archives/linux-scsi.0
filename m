@@ -1,66 +1,120 @@
-From: Dmitry Torokhov <dtor@vmware.com>
-Subject: Re: [PATCH] SCSI driver for VMware's virtual HBA.
-Date: Thu, 3 Sep 2009 14:41:00 -0700
-Message-ID: <200909031441.00406.dtor@vmware.com>
-References: <1251415060.16297.58.camel@ank32.eng.vmware.com> <200909031331.03037.dtor@vmware.com> <4AA03370.4080905@gmail.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH] SCSI driver for VMware's virtual HBA - V3.
+Date: Thu, 03 Sep 2009 16:52:31 -0500
+Message-ID: <4AA03A9F.2040500@linux.vnet.ibm.com>
+References: <1252006675.18725.20.camel@ank32.eng.vmware.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756504AbZICVk7@vger.kernel.org>
-In-Reply-To: <4AA03370.4080905@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ric Wheeler <ricwheeler@gmail.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, Alok Kataria <akataria@vmware.com>, Matthew Wilcox <matthew@wil.cx>, Roland Dreier <rdreier@cisco.com>, Bart Van Assche <bvanassche@acm.org>, Robert Love <robert.w.love@intel.com>, Randy Dunlap <randy.dunlap@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Rolf Eike Beer <eike-kernel@sf-tec.de>, Maxime Austruy <maustruy@vmware.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:47119 "EHLO e3.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756211AbZICVwd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Sep 2009 17:52:33 -0400
+In-Reply-To: <1252006675.18725.20.camel@ank32.eng.vmware.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: akataria@vmware.com
+Cc: James Bottomley <James.Bottomley@suse.de>, Rolf Eike Beer <eike-kernel@sf-tec.de>, Matthew Wilcox <matthew@wil.cx>, Roland Dreier <rdreier@cisco.com>, Bart Van Assche <bvanassche@acm.org>, Robert Love <robert.w.love@intel.com>, Randy Dunlap <randy.dunlap@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, pv-drivers@vmware.com
 
-On Thursday 03 September 2009 02:21:52 pm Ric Wheeler wrote:
-> On 09/03/2009 04:31 PM, Dmitry Torokhov wrote:
-> > On Thursday 03 September 2009 01:03:02 pm James Bottomley wrote:
-> >    
-> >>>> I'm not really asking you to standardise anything (yet).  I was more
-> >>>> probing for why you hadn't included any of the SCSI control plane
-> >>>> interfaces and what lead you do produce a different design from the
-> >>>> current patterns in virtual I/O.  I think what I'm hearing is "Because
-> >>>> we didn't look at how modern SCSI drivers are constructed" and "Because
-> >>>> we didn't look at how virtual I/O is currently done in Linux".  That's
-> >>>> OK (it's depressingly familiar in drivers),
-> >>>>          
-> >>> I am sorry that's not the case, the reason we have different design as I
-> >>> have mentioned above is because we want a generic mechanism which works
-> >>> for all/most of the GOS's out their and doesn't need to be specific to
-> >>> Linux.
-> >>>        
-> >> Slightly confused now ... you're saying you did look at the transport
-> >> class and virtio?  But you chose not to do a virtio like interface (for
-> >> reasons which I'm still not clear on) ...
-> >>      
-> > Virtio is Linux-specific and is not available on older kernels which
-> > our hypervisor/PVSCSI combination does support. Even if we were to use
-> > virtio-like schema in the hypervisor code we would have to re-implement
-> > much of the virtio code for kernels earlier than those shipped in '07
-> > and do the same for other operating systems for no apparent benefit.
-> > The PCI device abstraction is self-contained and works well on Windows,
-> > Linux and other guest operating systems and so it was chosen.
-> >
-> >    
-> 
-> Several arguments have a history of never winning when you try to get a 
-> new bit of code in linux.
-> 
-> Number one in the bad justifications is that your design is good because 
-> it avoids being "linux specific" closely followed by needing to backport :-)
+Alok Kataria wrote:
+> +
+> +struct pvscsi_adapter {
+> +	char			*mmioBase;
+> +	unsigned int		irq;
+> +	u8			rev;
+> +	bool			use_msi;
+> +	bool			use_msix;
+> +	bool			use_msg;
+> +
+> +	spinlock_t		hw_lock;
 
-That is true when you talking about implementing particular kernel features.
-Here however our discussion shifted into the realm of how and why we
-implemented the back-end the way we did and in this particular case argument
-of being OS- and kernel-agnostic is a valid one.
+Why not just use host_lock in the scsi_host structure?
 
-The device is being presented to the guest operating system as a PCI device
-with particular functionality and is being handled as an ordinary device
-implemented in silicon. You may argue whether it was the optimal solution or
-whether there are better ways to do the same but the device is in the wild
-and is to stay.
+
+> +
+> +/*
+> + * Map all data buffers for a command into PCI space and
+> + * setup the scatter/gather list if needed.
+> + */
+> +static void pvscsi_map_buffers(struct pvscsi_adapter *adapter,
+> +			       struct pvscsi_ctx *ctx,
+> +			       struct scsi_cmnd *cmd, PVSCSIRingReqDesc *e)
+> +{
+> +	unsigned count;
+> +	unsigned bufflen = scsi_bufflen(cmd);
+> +	struct scatterlist *sg;
+> +
+> +	e->dataLen = bufflen;
+> +	e->dataAddr = 0;
+> +	if (bufflen == 0)
+> +		return;
+> +
+> +	sg = scsi_sglist(cmd);
+> +	count = scsi_sg_count(cmd);
+> +	if (count != 0) {
+> +		int segs = pci_map_sg(adapter->dev, sg, count,
+> +				      cmd->sc_data_direction);
+
+Should use scsi_dma_map here instead.
+
+> +		if (segs > 1) {
+> +			pvscsi_create_sg(ctx, sg, segs);
+> +
+> +			e->flags |= PVSCSI_FLAG_CMD_WITH_SG_LIST;
+> +			ctx->sglPA = pci_map_single(adapter->dev, ctx->sgl,
+> +						    SGL_SIZE, PCI_DMA_TODEVICE);
+> +			e->dataAddr = ctx->sglPA;
+> +		} else
+> +			e->dataAddr = sg_dma_address(sg);
+> +	} else {
+> +		/*
+> +		 * In case there is no S/G list, scsi_sglist points
+> +		 * directly to the buffer.
+> +		 */
+> +		ctx->dataPA = pci_map_single(adapter->dev, sg, bufflen,
+> +					     cmd->sc_data_direction);
+> +		e->dataAddr = ctx->dataPA;
+> +	}
+> +}
+> +
+> +static void pvscsi_unmap_buffers(const struct pvscsi_adapter *adapter,
+> +				 struct pvscsi_ctx *ctx)
+> +{
+> +	struct scsi_cmnd *cmd;
+> +	unsigned bufflen;
+> +
+> +	cmd = ctx->cmd;
+> +	bufflen = scsi_bufflen(cmd);
+> +
+> +	if (bufflen != 0) {
+> +		unsigned count = scsi_sg_count(cmd);
+> +
+> +		if (count != 0) {
+> +			pci_unmap_sg(adapter->dev, scsi_sglist(cmd), count,
+> +				     cmd->sc_data_direction);
+
+Use scsi_dma_unmap here instead.
+
+> +			if (ctx->sglPA) {
+> +				pci_unmap_single(adapter->dev, ctx->sglPA,
+> +						 SGL_SIZE, PCI_DMA_TODEVICE);
+> +				ctx->sglPA = 0;
+> +			}
+> +		} else
+> +			pci_unmap_single(adapter->dev, ctx->dataPA, bufflen,
+> +					 cmd->sc_data_direction);
+> +	}
+> +	if (cmd->sense_buffer)
+> +		pci_unmap_single(adapter->dev, ctx->sensePA,
+> +				 SCSI_SENSE_BUFFERSIZE, PCI_DMA_FROMDEVICE);
+> +}
+> +
+
 
 -- 
-Dmitry
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
+
+
