@@ -1,98 +1,183 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [PATCH]: Implementation of blk_rq_map_kern_sg() (aka New implementation
-  of scsi_execute_async() v3)
-Date: Thu, 03 Sep 2009 20:34:58 +0400
-Message-ID: <4A9FF032.2020000@vlnb.net>
-References: <4A563368.5040407@vlnb.net> <4A830016.5020304@vlnb.net> <20090815082220.GJ12579@kernel.dk>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: Re: [PATCH 1/3][RESUBMIT] scsi_dh_rdac: changes to collect the
+	rdac debug information during the initialization
+Date: Thu, 03 Sep 2009 10:13:16 -0700
+Message-ID: <1251997996.22527.3.camel@chandra-ubuntu>
+References: <E463DF2B2E584B4A82673F53D62C2EF474CCCE67@cosmail01.lsi.com>
+Reply-To: sekharan@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755992AbZICQfm@vger.kernel.org>
-In-Reply-To: <20090815082220.GJ12579@kernel.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel@lists.sourceforge.net, Tejun Heo <tj@kernel.org>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Joe Eykholt <jeykholt@cisco.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e38.co.us.ibm.com ([32.97.110.159]:59075 "EHLO
+	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752267AbZICRNS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Sep 2009 13:13:18 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e38.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id n83H9Vle026874
+	for <linux-scsi@vger.kernel.org>; Thu, 3 Sep 2009 11:09:31 -0600
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n83HDFFg063882
+	for <linux-scsi@vger.kernel.org>; Thu, 3 Sep 2009 11:13:18 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n83HDAvM005052
+	for <linux-scsi@vger.kernel.org>; Thu, 3 Sep 2009 11:13:12 -0600
+In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF474CCCE67@cosmail01.lsi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Moger, Babu" <Babu.Moger@lsi.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, 'device mapper development' <dm-devel@redhat.com>, "'sekharan@linux.vnet.ibm.com'" <sekharan@linux.vnet.ibm.com>, "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>, "Stankey, Robert" <Robert.Stankey@lsi.com>, "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>
 
-Jens Axboe, on 08/15/2009 12:22 PM wrote:
-> On Wed, Aug 12 2009, Vladislav Bolkhovitin wrote:
->> This patch implements function blk_rq_map_kern_sg(), which allows to map
->> a kernel-originated SG vector to a block request. It is necessary to execute
->> SCSI commands with from kernel going SG buffer. At the moment SCST is the only
->> user of this functionality. It needs it, because its target drivers, which
->> are, basically, SCSI drivers, can deal only with SGs, not with BIOs. But,
->> according to the latest discussions, there can be other potential users for of
->> this functionality, so I'm sending this patch in a hope that it will be
->> also useful for them and eventually will be merged in the mainline kernel.
->>
->> In the previous submissions this patch was called "New implementation of
->> scsi_execute_async()", but since in this version scsi_execute_async() was
->> removed from it by request of Boaz Harrosh the name was changed accordingly.
+Babu,
+
+There is a small issue with this patch.
+
+array_name is a local variable in rdac_attach() and is initialized
+there, but the array_name used in initialize_controller() which is
+called from rdac_activate is never initialized.
+
+I see that it is fixed in the 2/3. But this patch is incorrect.
+
+One thing you can do is to swap 1/3 and 2/3. Then you will not have this
+issue.
+
+regards,
+
+chandra
+On Wed, 2009-09-02 at 17:12 -0600, Moger, Babu wrote:
+> Adding the code to read the debug information during initialization. This patch collects the information about storage and controllers during rdac_activate.
 > 
-> Generally this patch looks great, I just have one little thing I'd like
-> to point out:
+> Signed-off-by: Babu Moger <babu.moger@lsi.com>
+> Reviewed-by: Vijay Chauhan <vijay.chauhan@lsi.com>
+> Reviewed-by: Bob Stankey <Robert.stankey@lsi.com>
 > 
->> +	while (hbio != NULL) {
->> +		bio = hbio;
->> +		hbio = hbio->bi_next;
->> +		bio->bi_next = NULL;
->> +
->> +		blk_queue_bounce(q, &bio);
->> +
->> +		res = blk_rq_append_bio(q, rq, bio);
->> +		if (unlikely(res != 0)) {
->> +			bio->bi_next = hbio;
->> +			hbio = bio;
->> +			/* We can have one or more bios bounced */
->> +			goto out_unmap_bios;
->> +		}
->> +	}
+> ---
 > 
-> Constructs like this are always dangerous, because of how mempools work.
-> __blk_queue_bounce() will internally do:
+> --- linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2009-09-02 09:49:23.000000000 -0500
+> +++ linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-09-02 10:04:40.000000000 -0500
+> @@ -112,6 +112,7 @@ struct c9_inquiry {
 > 
->         bio = bio_alloc(GFP_NOIO, cnt);
+>  #define SUBSYS_ID_LEN	16
+>  #define SLOT_ID_LEN	2
+> +#define ARRAY_LABEL_LEN	31
 > 
-> so you could potentially enter a deadlock if a) you are the only one
-> allocating a bio currently, and b) the alloc fails and we wait for a bio
-> to be returned to the pool. This is highly unlikely and requires other
-> conditions to be dire, but it is a problem. This is not restricted to
-> the swap out path, the problem is purely lack of progress. So the golden
-> rule is always that you either allocate these units from a private pool
-> (which is hard for bouncing, since it does both page and bio allocations
-> from a mempool), or that you always ensure that a previously allocated
-> bio is in flight before attempting a new alloc.
+>  struct c4_inquiry {
+>  	u8	peripheral_info;
+> @@ -135,6 +136,8 @@ struct rdac_controller {
+>  		struct rdac_pg_legacy legacy;
+>  		struct rdac_pg_expanded expanded;
+>  	} mode_select;
+> +	u8	index;
+> +	u8	array_name[ARRAY_LABEL_LEN];
+>  };
+>  struct c8_inquiry {
+>  	u8	peripheral_info;
+> @@ -303,7 +306,8 @@ static void release_controller(struct kr
+>  	kfree(ctlr);
+>  }
+> 
+> -static struct rdac_controller *get_controller(u8 *subsys_id, u8 *slot_id)
+> +static struct rdac_controller *get_controller(u8 *subsys_id, u8 *slot_id,
+> +						char *array_name)
+>  {
+>  	struct rdac_controller *ctlr, *tmp;
+> 
+> @@ -324,6 +328,14 @@ static struct rdac_controller *get_contr
+>  	/* initialize fields of controller */
+>  	memcpy(ctlr->subsys_id, subsys_id, SUBSYS_ID_LEN);
+>  	memcpy(ctlr->slot_id, slot_id, SLOT_ID_LEN);
+> +	memcpy(ctlr->array_name, array_name, ARRAY_LABEL_LEN);
+> +
+> +	/* update the controller index */
+> +	if (slot_id[1] == 0x31)
+> +		ctlr->index = 0;
+> +	else
+> +		ctlr->index = 1;
+> +
+>  	kref_init(&ctlr->kref);
+>  	ctlr->use_ms10 = -1;
+>  	list_add(&ctlr->node, &ctlr_list);
+> @@ -363,9 +375,10 @@ done:
+>  	return err;
+>  }
+> 
+> -static int get_lun(struct scsi_device *sdev, struct rdac_dh_data *h)
+> +static int get_lun_info(struct scsi_device *sdev, struct rdac_dh_data *h,
+> +			char *array_name)
+>  {
+> -	int err;
+> +	int err, i;
+>  	struct c8_inquiry *inqp;
+> 
+>  	err = submit_inquiry(sdev, 0xC8, sizeof(struct c8_inquiry), h);
+> @@ -377,6 +390,11 @@ static int get_lun(struct scsi_device *s
+>  		    inqp->page_id[2] != 'i' || inqp->page_id[3] != 'd')
+>  			return SCSI_DH_NOSYS;
+>  		h->lun = inqp->lun[7]; /* Uses only the last byte */
+> +
+> +		for(i=0; i<ARRAY_LABEL_LEN-1; ++i)
+> +			*(array_name+i) = inqp->array_user_label[(2*i)+1];
+> +
+> +		*(array_name+ARRAY_LABEL_LEN-1) = '\0';
+>  	}
+>  	return err;
+>  }
+> @@ -410,7 +428,7 @@ static int check_ownership(struct scsi_d
+>  }
+> 
+>  static int initialize_controller(struct scsi_device *sdev,
+> -				 struct rdac_dh_data *h)
+> +				 struct rdac_dh_data *h, char *array_name)
+>  {
+>  	int err;
+>  	struct c4_inquiry *inqp;
+> @@ -418,7 +436,8 @@ static int initialize_controller(struct 
+>  	err = submit_inquiry(sdev, 0xC4, sizeof(struct c4_inquiry), h);
+>  	if (err == SCSI_DH_OK) {
+>  		inqp = &h->inq.c4;
+> -		h->ctlr = get_controller(inqp->subsys_id, inqp->slot_id);
+> +		h->ctlr = get_controller(inqp->subsys_id, inqp->slot_id,
+> +					array_name);
+>  		if (!h->ctlr)
+>  			err = SCSI_DH_RES_TEMP_UNAVAIL;
+>  	}
+> @@ -520,13 +539,14 @@ static int rdac_activate(struct scsi_dev
+>  {
+>  	struct rdac_dh_data *h = get_rdac_data(sdev);
+>  	int err = SCSI_DH_OK;
+> +	char array_name[ARRAY_LABEL_LEN];
+> 
+>  	err = check_ownership(sdev, h);
+>  	if (err != SCSI_DH_OK)
+>  		goto done;
+> 
+>  	if (!h->ctlr) {
+> -		err = initialize_controller(sdev, h);
+> +		err = initialize_controller(sdev, h, array_name);
+>  		if (err != SCSI_DH_OK)
+>  			goto done;
+>  	}
+> @@ -656,6 +676,7 @@ static int rdac_bus_attach(struct scsi_d
+>  	struct rdac_dh_data *h;
+>  	unsigned long flags;
+>  	int err;
+> +	char array_name[ARRAY_LABEL_LEN];
+> 
+>  	scsi_dh_data = kzalloc(sizeof(struct scsi_device_handler *)
+>  			       + sizeof(*h) , GFP_KERNEL);
+> @@ -670,7 +691,7 @@ static int rdac_bus_attach(struct scsi_d
+>  	h->lun = UNINITIALIZED_LUN;
+>  	h->state = RDAC_STATE_ACTIVE;
+> 
+> -	err = get_lun(sdev, h);
+> +	err = get_lun_info(sdev, h, array_name);
+>  	if (err != SCSI_DH_OK)
+>  		goto failed;
+> 
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Sorry for the late reply, I was on vacation.
-
-I see your concerns. Since all the bios in __blk_rq_map_kern_sg() at 
-first all allocated and only then submitted for I/O, bio_alloc() in 
-__blk_queue_bounce() potentially can deadlock, if it's called with 
-GFP_NOIO (i.e. with __GFP_WAIT) and its mempool gets empty. The fact 
-that __blk_rq_map_kern_sg() allocates originally bios using 
-bio_kmalloc() doesn't fundamentally change that, only low the failure 
-probability. (Just to make sure I understand everything correctly.)
-
-Potentially this can be a problem, since SCST nearly always uses 
-GFP_KERNEL as the mask, i.e. has __GFP_WAIT set, although, I agree, the 
-deadlock is very unlikely.
-
-To address it and other similar cases, which, I guess, should exist, I 
-see the following 2 ways:
-
-1. Increase BIO_POOL_SIZE from current 2 to a bigger value to be large 
-enough to satisfy such full requests allocations for the maximum 
-requests. In ideal, for the worst case it should be something like for 
-2MB * NR_CPUS much data, which is 2MB / (BIO_MAX_PAGES * PAGE_SIZE) * 
-NR_CPUS = 2NR_CPUS with 4K pages. But on practice, possibly something 
-like 10-20 should be sufficient?
-
-2. Modify blk_queue_bounce() that it can fail with bounce buffers 
-allocation and graciously process that in __blk_rq_map_kern_sg() and all 
-other similar places.
-
-Which way would you prefer? Or do you think the probability for such 
-deadlock is so low, so it doesn't worth the effort to do anything with it?
-
-Thanks a lot for review!
-Vlad
