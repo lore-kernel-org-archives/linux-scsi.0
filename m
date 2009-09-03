@@ -1,61 +1,175 @@
-From: Vasu Dev <vasu.dev@intel.com>
-Subject: [PATCH 10/10] zfcp: Adapt change_queue_depth for queue full tracking
-Date: Thu, 03 Sep 2009 15:23:20 -0700
-Message-ID: <20090903222320.24946.11461.stgit@vi1.jf.intel.com>
-References: <20090903221910.24946.39993.stgit@vi1.jf.intel.com>
+From: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+Subject: Re: PATCH: PMC-Sierra MaxRAID driver to support 6Gb/s SAS RAID
+ controller (fwd)
+Date: Thu, 3 Sep 2009 16:43:16 -0700 (PDT)
+Message-ID: <alpine.LNX.1.10.0909031637330.11364@rslab159.pmc-sierra.bc.ca>
+References: <alpine.LNX.1.10.0909021704370.3751@rslab159.pmc-sierra.bc.ca> <4A9FDBE4.2090008@linux.vnet.ibm.com> <alpine.LNX.1.10.0909030959100.11364@rslab159.pmc-sierra.bc.ca> <4AA03620.70904@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:54507 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932405AbZICWXS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Sep 2009 18:23:18 -0400
-In-Reply-To: <20090903221910.24946.39993.stgit@vi1.jf.intel.com>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:36957 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751729AbZIDAhV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Sep 2009 20:37:21 -0400
+In-Reply-To: <4AA03620.70904@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, James Smart <james.smart@emulex.com>, Mike Christie <michaelc@cs.wisc.edu>, Robert Love <robert.w.love@intel.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, gregkh@suse.de, anil_ravindranath@pmc-sierra.com
 
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-Adapt the change_queue_depth callback in zfcp for the new reason
-parameter. Simply pass each call back to the SCSI midlayer, there are
-no resource adjustments necessary for zfcp.
 
-Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
-Signed-off-by: Vasu Dev <vasu.dev@intel.com>
----
+On Thu, 3 Sep 2009, Brian King wrote:
 
- drivers/s390/scsi/zfcp_scsi.c |   16 ++++++++++++++--
- 1 files changed, 14 insertions(+), 2 deletions(-)
+> Anil Ravindranath wrote:
+> > Hi Brian,
+> > 
+> > 
+> > On Thu, 3 Sep 2009, Brian King wrote:
+> > 
+> >> Anil,
+> >>
+> >> Taking a quick scan through the driver, I would suggest you audit your
+> >> logging. Looks like there is a lot of dev_err, where sdev_printk might be
+> >> better,
+> > 
+> > I hope I am understanding this correct...
+> > 
+> > I don't see a difference in using dev_err Vs. sdev_printk. B'coz both call
+> > dev_printk except the prefix of KERN_ERR. But I guess even if we use
+> > sdev_printk we will use KERN_ERR anyways. Also both refer "Generic device
+> > interface".
+> > 
+> > #define dev_err(dev, format, arg...)            \   
+> >         dev_printk(KERN_ERR , dev , format , ## arg)
+> > 
+> > #define sdev_printk(prefix, sdev, fmt, a...)    \
+> >         dev_printk(prefix, &(sdev)->sdev_gendev, fmt, ##a)
+> 
+> The difference is the dev pointer that gets passed to dev_printk. When calling
+> sdev_printk, the dev pointer for the scsi device gets passed, so the printk
+> ends up getting prefixed with the SCSI location: 0:0:0:0, for example where
+> you have SCSI Host:Bus:Target:LUN. The dev_err calls I see in the driver
+> generally pass the dev pointer of the PCI device, resulting in the PCI location
+> of the adapter being logged. Its just a matter of scoping the printk to the
+> device.
+>
 
-diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-index bdff1bf..287ebb8 100644
---- a/drivers/s390/scsi/zfcp_scsi.c
-+++ b/drivers/s390/scsi/zfcp_scsi.c
-@@ -31,9 +31,21 @@ char *zfcp_get_fcp_sns_info_ptr(struct fcp_rsp_iu *fcp_rsp_iu)
- static int zfcp_scsi_change_queue_depth(struct scsi_device *sdev, int depth,
- 					int reason)
- {
--	if (reason != SCSI_QDEPTH_DEFAULT)
-+	switch (reason) {
-+	case SCSI_QDEPTH_DEFAULT:
-+		scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), depth);
-+		break;
-+	case SCSI_QDEPTH_QFULL:
-+		scsi_track_queue_full(sdev, depth);
-+		break;
-+	case SCSI_QDEPTH_RAMP_UP:
-+		if (depth <= default_depth)
-+			scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev),
-+						depth);
-+		break;
-+	default:
- 		return -EOPNOTSUPP;
--	scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), depth);
-+	}
- 	return sdev->queue_depth;
- }
+Sure. We will make this change wherever its applicable like places where 
+we need scsi device location in the prints.
  
+> > 
+> > struct scsi_device {
+> > 
+> > struct device           sdev_gendev;
+> >  
+> > }
+> > 
+> >  and pmcraid_info where sdev_info might be better, etc.
+> > Where/what is this sdev_info?
+> 
+> There isn't one... I meant to say dev_info, sdev_printk, scmd_printk, etc... 
+> 
 
+We will change this accordingly wherever applicable. There will be places 
+where we still want to call pmcraid_info prints which we want to 
+control using debug flag parameter.
+
+> 
+> >>> +
+> >>> +/**
+> >>> + * pmcraid_eh_abort_handler - entry point for aborting a single task on errors
+> >>> + *
+> >>> + * @scsi_cmd:   scsi command struct given by mid-layer. When this is called
+> >>> + *		mid-layer ensures that no other commands are queued. This
+> >>> + *		never gets called under interrupt, but a separate eh thread.
+> >>> + *
+> >>> + * Return value:
+> >>> + *	 SUCCESS / FAILED
+> >>> + */
+> >>> +static int pmcraid_eh_abort_handler(struct scsi_cmnd *scsi_cmd)
+> >>> +{
+> >>> +	struct pmcraid_instance *pinstance;
+> >>> +	struct pmcraid_cmd *cmd;
+> >>> +	struct pmcraid_resource_entry *res;
+> >>> +	unsigned long host_lock_flags;
+> >>> +	unsigned long pending_lock_flags;
+> >>> +	struct pmcraid_cmd *cancel_cmd = NULL;
+> >>> +	int cmd_found = 0;
+> >>> +	int rc = FAILED;
+> >>> +
+> >>> +	pinstance =
+> >>> +		(struct pmcraid_instance *)scsi_cmd->device->host->hostdata;
+> >>> +
+> >>> +	dev_err(&pinstance->pdev->dev,
+> >>> +		"I/O command timed out, aborting it.\n");
+> 
+> This is an example of where using:
+> 
+> sdev_printk(KERN_ERR, scsi_cmd->device, "I/O command timed out, aborting it.\n");
+> 
+> Would help isolate the command timeout issue down to the device level rather than
+> just the adapter level.
+> 
+> >>> +
+> >>> +	res = scsi_cmd->device->hostdata;
+> >>> +
+> >>> +	if (res == NULL)
+> >>> +		return rc;
+> >>> +
+> >>> +	/* If we are currently going through reset/reload, return failed.
+> >>> +	 * This will force the mid-layer to eventually call
+> >>> +	 * pmcraid_eh_host_reset which will then go to sleep and wait for the
+> >>> +	 * reset to complete
+> >>> +	 */
+> >>> +	spin_lock_irqsave(pinstance->host->host_lock, host_lock_flags);
+> >>> +
+> >>> +	if (pinstance->ioa_reset_in_progress ||
+> >>> +	    pinstance->ioa_state == IOA_STATE_DEAD) {
+> >>> +		spin_unlock_irqrestore(pinstance->host->host_lock,
+> >>> +				       host_lock_flags);
+> >>> +		return rc;
+> >>> +	}
+> >>> +
+> >>> +	/* loop over pending cmd list to find cmd corresponding to this
+> >>> +	 * scsi_cmd. Note that this command might not have been completed
+> >>> +	 * already. locking: all pending commands are protected with
+> >>> +	 * pending_pool_lock.
+> >>> +	 */
+> >>> +	spin_lock_irqsave(&pinstance->pending_pool_lock, pending_lock_flags);
+> >>> +	list_for_each_entry(cmd, &pinstance->pending_cmd_pool, free_list) {
+> >>> +
+> >>> +		if (cmd->scsi_cmd == scsi_cmd) {
+> >>> +			cmd_found = 1;
+> >>> +			break;
+> >>> +		}
+> >>> +	}
+> >>> +
+> >>> +	spin_unlock_irqrestore(&pinstance->pending_pool_lock,
+> >>> +				pending_lock_flags);
+> >>> +
+> >>> +	/* If the command to be aborted was given to IOA and still pending with
+> >>> +	 * it, send ABORT_TASK to abort this and wait for its completion
+> >>> +	 */
+> >>> +	if (cmd_found)
+> >>> +		cancel_cmd = pmcraid_abort_cmd(cmd);
+> >>> +
+> >>> +	spin_unlock_irqrestore(pinstance->host->host_lock,
+> >>> +			       host_lock_flags);
+> >>> +
+> >>> +	if (cancel_cmd) {
+> >>> +		cancel_cmd->u.res = cmd->scsi_cmd->device->hostdata;
+> >>> +		rc = pmcraid_abort_complete(cancel_cmd);
+> >>> +	}
+> >>> +
+> >>> +	return cmd_found ? rc : SUCCESS;
+> >>> +}
+> 
+> 
+> -- 
+> Brian King
+> Linux on Power Virtualization
+> IBM Linux Technology Center
+> 
+> 
+> 
