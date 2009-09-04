@@ -1,39 +1,42 @@
-From: Alok Kataria <akataria@vmware.com>
-Subject: Re: [PATCH] SCSI driver for VMware's virtual HBA - V3.
-Date: Fri, 04 Sep 2009 09:51:53 -0700
-Message-ID: <1252083113.29197.21.camel@ank32.eng.vmware.com>
-References: <1252006675.18725.20.camel@ank32.eng.vmware.com>
-	 <4AA0DDA4.3030104@redhat.com>
-Reply-To: akataria@vmware.com
+From: Jaswinder Singh Rajput <jaswinder@kernel.org>
+Subject: [PATCH] ibmvscsi: includecheck fix
+Date: Fri, 04 Sep 2009 23:26:18 +0530
+Message-ID: <1252086978.6385.4.camel@ht.satnam>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-outbound-2.vmware.com ([65.115.85.73]:35627 "EHLO
-	smtp-outbound-2.vmware.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754165AbZIDQvv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Sep 2009 12:51:51 -0400
-In-Reply-To: <4AA0DDA4.3030104@redhat.com>
+Received: from hera.kernel.org ([140.211.167.34]:35593 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757173AbZIDR7q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Sep 2009 13:59:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gerd Hoffmann <kraxel@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "pv-drivers@vmware.com" <pv-drivers@vmware.com>
+To: Robert Jennings <rcj@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, Paul Mackerras <paulus@samba.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Benjamin
 
-Hi Gerd,
 
-On Fri, 2009-09-04 at 02:28 -0700, Gerd Hoffmann wrote:
-> Hi,
-> 
-> > SCSI driver for VMware's virtual HBA.
-> 
-> Is the source code for the backend side available somewhere too?
+fix the following 'make includecheck' warning:
 
-Nope, the device emulation code is not open sourced. 
+  drivers/scsi/ibmvscsi/ibmvscsi.c: asm/firmware.h is included more than once.
 
-Alok
+Signed-off-by: Jaswinder Singh Rajput <jaswinderrajput@gmail.com>
+---
+ drivers/scsi/ibmvscsi/ibmvscsi.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-> 
-> cheers,
->    Gerd
-> 
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index 9928704..d9b0e9d 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -73,7 +73,6 @@
+ #include <linux/of.h>
+ #include <asm/firmware.h>
+ #include <asm/vio.h>
+-#include <asm/firmware.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_host.h>
+-- 
+1.6.0.6
+
 
