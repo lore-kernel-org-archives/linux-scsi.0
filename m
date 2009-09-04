@@ -1,27 +1,159 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: DIF/DIX updates for 2.6.32
-Date: Fri,  4 Sep 2009 04:36:29 -0400
-Message-ID: <1252053394-24886-1-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 2/5] SCSI: Deprecate SCSI_PROT_*_CONVERT operations
+Date: Fri,  4 Sep 2009 04:36:31 -0400
+Message-ID: <1252053394-24886-3-git-send-email-martin.petersen@oracle.com>
+References: <1252053394-24886-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet12.oracle.com ([148.87.113.124]:43729 "EHLO
-	rgminet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756606AbZIDIgi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Sep 2009 04:36:38 -0400
-Received: from acsinet15.oracle.com (acsinet15.oracle.com [141.146.126.227])
-	by rgminet12.oracle.com (Switch-3.3.1/Switch-3.3.1) with ESMTP id n848aSqk010375
+Received: from rcsinet11.oracle.com ([148.87.113.123]:17427 "EHLO
+	rgminet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756649AbZIDIgl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Sep 2009 04:36:41 -0400
+Received: from rgminet15.oracle.com (rcsinet15.oracle.com [148.87.113.117])
+	by rgminet11.oracle.com (Switch-3.3.1/Switch-3.3.1) with ESMTP id n848bEQx021495
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Fri, 4 Sep 2009 08:36:29 GMT
-Received: from abhmt010.oracle.com (abhmt010.oracle.com [141.146.116.19])
-	by acsinet15.oracle.com (Switch-3.3.1/Switch-3.3.1) with ESMTP id n848afLq007348
+	for <linux-scsi@vger.kernel.org>; Fri, 4 Sep 2009 08:37:15 GMT
+Received: from abhmt005.oracle.com (abhmt005.oracle.com [141.146.116.14])
+	by rgminet15.oracle.com (Switch-3.3.1/Switch-3.3.1) with ESMTP id n848afdj016399
 	for <linux-scsi@vger.kernel.org>; Fri, 4 Sep 2009 08:36:41 GMT
+In-Reply-To: <1252053394-24886-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Updates to DIF/DIX for 2.6.32.  Only changes since last post are:
+The checksum format is orthogonal to whether the protection information
+is being passed on beyond the HBA or not.  It is perfectly valid to use
+a non-T10 CRC with WRITE_STRIP and READ_INSERT.
 
- - Add a flag to control deallocation of 32-byte CDBs
+Consequently it no longer makes sense to explicitly refer to the
+conversion in the protection operation.  Update sd_dif and lpfc
+accordingly.
 
- - Removed stray BUG_ON() in sd.c
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+---
+ drivers/scsi/lpfc/lpfc_scsi.c |   15 +++------------
+ drivers/scsi/sd_dif.c         |   20 ++++----------------
+ include/scsi/scsi_cmnd.h      |    4 ----
+ 3 files changed, 7 insertions(+), 32 deletions(-)
 
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index da59c4f..ad75e19 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -56,8 +56,6 @@ static char *dif_op_str[] = {
+ 	"SCSI_PROT_WRITE_INSERT",
+ 	"SCSI_PROT_READ_PASS",
+ 	"SCSI_PROT_WRITE_PASS",
+-	"SCSI_PROT_READ_CONVERT",
+-	"SCSI_PROT_WRITE_CONVERT"
+ };
+ static void
+ lpfc_release_scsi_buf_s4(struct lpfc_hba *phba, struct lpfc_scsi_buf *psb);
+@@ -1131,13 +1129,11 @@ lpfc_sc_to_sli_prof(struct scsi_cmnd *sc)
+ 			ret_prof = LPFC_PROF_A1;
+ 			break;
+ 
+-		case SCSI_PROT_READ_CONVERT:
+-		case SCSI_PROT_WRITE_CONVERT:
++		case SCSI_PROT_READ_PASS:
++		case SCSI_PROT_WRITE_PASS:
+ 			ret_prof = LPFC_PROF_AST1;
+ 			break;
+ 
+-		case SCSI_PROT_READ_PASS:
+-		case SCSI_PROT_WRITE_PASS:
+ 		case SCSI_PROT_NORMAL:
+ 		default:
+ 			printk(KERN_ERR "Bad op/guard:%d/%d combination\n",
+@@ -1157,8 +1153,6 @@ lpfc_sc_to_sli_prof(struct scsi_cmnd *sc)
+ 			ret_prof = LPFC_PROF_C1;
+ 			break;
+ 
+-		case SCSI_PROT_READ_CONVERT:
+-		case SCSI_PROT_WRITE_CONVERT:
+ 		case SCSI_PROT_READ_INSERT:
+ 		case SCSI_PROT_WRITE_STRIP:
+ 		case SCSI_PROT_NORMAL:
+@@ -1209,8 +1203,7 @@ lpfc_get_cmd_dif_parms(struct scsi_cmnd *sc, uint16_t *apptagmask,
+ 	static int cnt;
+ 
+ 	if (protcnt && (op == SCSI_PROT_WRITE_STRIP ||
+-				op == SCSI_PROT_WRITE_PASS ||
+-				op == SCSI_PROT_WRITE_CONVERT)) {
++				op == SCSI_PROT_WRITE_PASS)) {
+ 
+ 		cnt++;
+ 		spt = page_address(sg_page(scsi_prot_sglist(sc))) +
+@@ -1501,8 +1494,6 @@ lpfc_prot_group_type(struct lpfc_hba *phba, struct scsi_cmnd *sc)
+ 	case SCSI_PROT_WRITE_STRIP:
+ 	case SCSI_PROT_READ_PASS:
+ 	case SCSI_PROT_WRITE_PASS:
+-	case SCSI_PROT_WRITE_CONVERT:
+-	case SCSI_PROT_READ_CONVERT:
+ 		ret = LPFC_PG_TYPE_DIF_BUF;
+ 		break;
+ 	default:
+diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
+index 82f14a9..84224dd 100644
+--- a/drivers/scsi/sd_dif.c
++++ b/drivers/scsi/sd_dif.c
+@@ -364,15 +364,9 @@ void sd_dif_config_host(struct scsi_disk *sdkp)
+  */
+ void sd_dif_op(struct scsi_cmnd *scmd, unsigned int dif, unsigned int dix, unsigned int type)
+ {
+-	int csum_convert, prot_op;
++	int prot_op;
+ 
+-	prot_op = 0;
+-
+-	/* Convert checksum? */
+-	if (scsi_host_get_guard(scmd->device->host) != SHOST_DIX_GUARD_CRC)
+-		csum_convert = 1;
+-	else
+-		csum_convert = 0;
++	prot_op = SCSI_PROT_NORMAL;
+ 
+ 	BUG_ON(dif && (scmd->cmnd[0] == READ_6 || scmd->cmnd[0] == WRITE_6));
+ 
+@@ -382,10 +376,7 @@ void sd_dif_op(struct scsi_cmnd *scmd, unsigned int dif, unsigned int dix, unsig
+ 	case READ_12:
+ 	case READ_16:
+ 		if (dif && dix)
+-			if (csum_convert)
+-				prot_op = SCSI_PROT_READ_CONVERT;
+-			else
+-				prot_op = SCSI_PROT_READ_PASS;
++			prot_op = SCSI_PROT_READ_PASS;
+ 		else if (dif && !dix)
+ 			prot_op = SCSI_PROT_READ_STRIP;
+ 		else if (!dif && dix)
+@@ -398,10 +389,7 @@ void sd_dif_op(struct scsi_cmnd *scmd, unsigned int dif, unsigned int dix, unsig
+ 	case WRITE_12:
+ 	case WRITE_16:
+ 		if (dif && dix)
+-			if (csum_convert)
+-				prot_op = SCSI_PROT_WRITE_CONVERT;
+-			else
+-				prot_op = SCSI_PROT_WRITE_PASS;
++			prot_op = SCSI_PROT_WRITE_PASS;
+ 		else if (dif && !dix)
+ 			prot_op = SCSI_PROT_WRITE_INSERT;
+ 		else if (!dif && dix)
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index d4a6a80..609875c 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -235,10 +235,6 @@ enum scsi_prot_operations {
+ 	/* OS-HBA: Protected, HBA-Target: Protected */
+ 	SCSI_PROT_READ_PASS,
+ 	SCSI_PROT_WRITE_PASS,
+-
+-	/* OS-HBA: Protected, HBA-Target: Protected, checksum conversion */
+-	SCSI_PROT_READ_CONVERT,
+-	SCSI_PROT_WRITE_CONVERT,
+ };
+ 
+ static inline void scsi_set_prot_op(struct scsi_cmnd *scmd, unsigned char op)
+-- 
+1.6.0.6
 
