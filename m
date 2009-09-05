@@ -1,48 +1,45 @@
-From: Jayamohan Kallickal <jayamohank@serverengines.com>
-Subject: [PATCH 8/8] be2iscsi: modified MAINTAINERS
-Date: Sat, 5 Sep 2009 07:41:07 +0530
-Message-ID: <20090905021058.GA12453@serverengines.com>
-Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 2.6.30] libsrp: fix memory leak in srp_ring_free()
+Date: Sat, 5 Sep 2009 18:20:53 +0900
+Message-ID: <20090905182034M.fujita.tomonori@lab.ntt.co.jp>
+References: <e2e108260908300336p777654bbw2f0b1eef9b6858c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from segment-124-30.sify.net ([124.30.166.146]:51691 "EHLO
-	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S934567AbZIECLE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Sep 2009 22:11:04 -0400
-Content-Disposition: inline
+Received: from sh.osrg.net ([192.16.179.4]:35306 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754525AbZIEJVF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 5 Sep 2009 05:21:05 -0400
+In-Reply-To: <e2e108260908300336p777654bbw2f0b1eef9b6858c@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu
+To: bart.vanassche@gmail.com
+Cc: James.Bottomley@suse.de, linux-scsi@vger.kernel.org, tomof@acm.org
 
-The modified MAINTAINERS file for  adding be2iscsi driver
+On Sun, 30 Aug 2009 12:36:48 +0200
+Bart Van Assche <bart.vanassche@gmail.com> wrote:
 
-Signed-off-by: Jayamohan Kallickal <jayamohank@serverengines.com>
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- MAINTAINERS |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+> This patch fixes a memory leak in the libsrp function srp_ring_free().
+> It is not documented whether or not this function should free the ring
+> pointer itself. But the source code of the callers of this function
+> (srp_target_alloc() and srp_target_free()) makes it clear that
+> srp_ring_free() should deallocate the ring pointer itself. Furthermore,
+> the patch below makes srp_ring_free() deallocate all memory allocated by
+> srp_ring_alloc().
+> 
+> This patch affects the ibmvstgt driver, which is the only in-tree driver
+> that calls the srp_ring_free() function (indirectly).
+> 
+> Signed-off-by: Bart Van Assche <bart.vanassche@gmail.com>
+> Cc: James Bottomley <James.Bottomley@suse.de>
+> Cc: FUJITA Tomonori <tomof@acm.org>
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 60299a9..4299f6b 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -4518,6 +4518,14 @@ F:	drivers/ata/
- F:	include/linux/ata.h
- F:	include/linux/libata.h
- 
-+SERVER ENGINES 10Gbps iSCSI - BladeEngine 2 DRIVER
-+P:     Jayamohan Kallickal
-+M:     jayamohank@serverengines.com
-+L:     linux-scsi@vger.kernel.org
-+W:     http://www.serverengines.com
-+S:     Supported
-+F:     drivers/scsi/be2iscsi/
-+
- SERVER ENGINES 10Gbps NIC - BladeEngine 2 DRIVER
- M:	Sathya Perla <sathyap@serverengines.com>
- M:	Subbu Seetharaman <subbus@serverengines.com>
--- 
-1.6.4
+Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
+Better to add:
+
+Cc: stable@kernel.org
+
+
+Thanks,
