@@ -1,107 +1,86 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH 2/8] libiscsi, bnx2i: make bound ep check common
-Date: Sat, 5 Sep 2009 07:35:33 +0530
-Message-ID: <20090905020522.GA11803@serverengines.com>
+From: Jayamohan Kallickal <jayamohank@serverengines.com>
+Subject: [PATCH 3/8] scsi layer and be2iscsi Makefile/Kconfig
+Date: Sat, 5 Sep 2009 07:36:35 +0530
+Message-ID: <20090905020626.GA11848@serverengines.com>
 Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from segment-124-30.sify.net ([124.30.166.146]:51349 "EHLO
+Received: from segment-124-30.sify.net ([124.30.166.146]:51392 "EHLO
 	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S934489AbZIECFa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Sep 2009 22:05:30 -0400
+	by vger.kernel.org with ESMTP id S934176AbZIECGd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Sep 2009 22:06:33 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu
 
-bnx2i currently has a check for if a ep is properly bound, so if
-iscsi_queuecommand/xmit_task is called while there is no ep
-we will not queue IO.
-
-be2iscsi sends IO from queuecommand/xmit_task like how bnx2i does
-and needs a similar test. This patch has us just use the suspend_bit
-test for this.
-
-When ep_poll has succeeed iscsid will call conn_bind, the LLD will
-then call iscsi_conn_bind which will clear the suspend bit.
-When ep_disconnect is called (or if there is a conn error) we set
-the suspend bit. For the ep_disconnect case I am adding a helper
-in this patch that will take the session lock to make sure
-iscsi_queuecommand/xmit_task is not running and it will set
-the suspend bit.
+The modified Makefile and Kconfig to add be2iscsi
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: Jayamohan Kallickal <jayamohank@serverengines.com>
 ---
- drivers/scsi/libiscsi.c |   33 +++++++++++++++++++++++++++++++++
- include/scsi/libiscsi.h |    1 +
- 2 files changed, 34 insertions(+), 0 deletions(-)
+ drivers/scsi/Kconfig           |    1 +
+ drivers/scsi/Makefile          |    1 +
+ drivers/scsi/be2iscsi/Kconfig  |    8 ++++++++
+ drivers/scsi/be2iscsi/Makefile |    8 ++++++++
+ 4 files changed, 18 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/scsi/be2iscsi/Kconfig
+ create mode 100644 drivers/scsi/be2iscsi/Makefile
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index fc95919..cf54773 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -1502,6 +1502,12 @@ int iscsi_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
- 		goto fault;
- 	}
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 9c23122..aed7c50 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -366,6 +366,7 @@ config ISCSI_TCP
  
-+	if (test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx)) {
-+		reason = FAILURE_SESSION_IN_RECOVERY;
-+		sc->result = DID_REQUEUE;
-+		goto fault;
-+	}
+ source "drivers/scsi/cxgb3i/Kconfig"
+ source "drivers/scsi/bnx2i/Kconfig"
++source "drivers/scsi/be2iscsi/Kconfig"
+ 
+ config SGIWD93_SCSI
+ 	tristate "SGI WD93C93 SCSI Driver"
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 25429ea..e9389ac 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -130,6 +130,7 @@ obj-$(CONFIG_SCSI_MVSAS)	+= mvsas/
+ obj-$(CONFIG_PS3_ROM)		+= ps3rom.o
+ obj-$(CONFIG_SCSI_CXGB3_ISCSI)	+= libiscsi.o libiscsi_tcp.o cxgb3i/
+ obj-$(CONFIG_SCSI_BNX2_ISCSI)	+= libiscsi.o bnx2i/
++obj-$(CONFIG_BE2ISCSI)		+= libiscsi.o be2iscsi/
+ 
+ obj-$(CONFIG_ARM)		+= arm/
+ 
+diff --git a/drivers/scsi/be2iscsi/Kconfig b/drivers/scsi/be2iscsi/Kconfig
+new file mode 100644
+index 0000000..2952fcd
+--- /dev/null
++++ b/drivers/scsi/be2iscsi/Kconfig
+@@ -0,0 +1,8 @@
++config BE2ISCSI
++	tristate "ServerEngines' 10Gbps iSCSI - BladeEngine 2"
++	depends on PCI && SCSI
++	select SCSI_ISCSI_ATTRS
 +
- 	if (iscsi_check_cmdsn_window_closed(conn)) {
- 		reason = FAILURE_WINDOW_CLOSED;
- 		goto reject;
-@@ -1740,6 +1746,33 @@ static void fail_scsi_tasks(struct iscsi_conn *conn, unsigned lun,
- 	}
- }
- 
-+/**
-+ * iscsi_suspend_queue - suspend iscsi_queuecommand
-+ * @conn: iscsi conn to stop queueing IO on
-+ *
-+ * This grabs the session lock to make sure no one is in
-+ * xmit_task/queuecommand, and then sets suspend to prevent
-+ * new commands from being queued. This only needs to be called
-+ * by offload drivers that need to sync a path like ep disconnect
-+ * with the iscsi_queuecommand/xmit_task. To start IO again libiscsi
-+ * will call iscsi_start_tx and iscsi_unblock_session when in FFP.
-+ */
-+void iscsi_suspend_queue(struct iscsi_conn *conn)
-+{
-+	spin_lock_bh(&conn->session->lock);
-+	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
-+	spin_unlock_bh(&conn->session->lock);
-+}
-+EXPORT_SYMBOL_GPL(iscsi_suspend_queue);
++	help
++	This driver implements the iSCSI functionality for ServerEngines'
++	10Gbps Storage adapter - BladeEngine 2.
+diff --git a/drivers/scsi/be2iscsi/Makefile b/drivers/scsi/be2iscsi/Makefile
+new file mode 100644
+index 0000000..c11f443
+--- /dev/null
++++ b/drivers/scsi/be2iscsi/Makefile
+@@ -0,0 +1,8 @@
++#
++# Makefile to build the iSCSI driver for ServerEngine's BladeEngine.
++#
++#
 +
-+/**
-+ * iscsi_suspend_tx - suspend iscsi_data_xmit
-+ * @conn: iscsi conn tp stop processing IO on.
-+ *
-+ * This function sets the suspend bit to prevent iscsi_data_xmit
-+ * from sending new IO, and if work is queued on the xmit thread
-+ * it will wait for it to be completed.
-+ */
- void iscsi_suspend_tx(struct iscsi_conn *conn)
- {
- 	struct Scsi_Host *shost = conn->session->host;
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index 439c8b7..887e57e 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -390,6 +390,7 @@ extern void iscsi_session_failure(struct iscsi_session *session,
- extern int iscsi_conn_get_param(struct iscsi_cls_conn *cls_conn,
- 				enum iscsi_param param, char *buf);
- extern void iscsi_suspend_tx(struct iscsi_conn *conn);
-+extern void iscsi_suspend_queue(struct iscsi_conn *conn);
- extern void iscsi_conn_queue_work(struct iscsi_conn *conn);
- 
- #define iscsi_conn_printk(prefix, _c, fmt, a...) \
++obj-$(CONFIG_BE2ISCSI) += be2iscsi.o
++
++be2iscsi-y := be_iscsi.o be_main.o be_mgmt.o be_cmds.o
 -- 
 1.6.4
 
