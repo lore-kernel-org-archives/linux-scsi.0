@@ -1,46 +1,46 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14118] USB storage: "No sense [current]" when connecting
-Date: Sat, 5 Sep 2009 20:53:47 GMT
-Message-ID: <200909052053.n85KrkGO017880@demeter.kernel.org>
-References: <bug-14118-11613@http.bugzilla.kernel.org/>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: [Bugme-new] [Bug 14118] New: USB storage: "No sense [current]"
+ when connecting
+Date: Sat, 5 Sep 2009 17:18:16 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0909051705350.6891-100000@netrider.rowland.org>
+References: <20090905135342.002b40b4.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:53083 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751797AbZIEUxo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Sep 2009 16:53:44 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n85Krlvs017881
-	for <linux-scsi@vger.kernel.org>; Sat, 5 Sep 2009 20:53:47 GMT
-In-Reply-To: <bug-14118-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20090905135342.002b40b4.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Mantas =?UTF-8?Q?Mikul=C4=97nas?= <grawity-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bugzilla-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14118
+On Sat, 5 Sep 2009, Andrew Morton wrote:
 
+> OK, I reassigned it to scsi, but I expect it would help the scsi guys
+> if someone could add a new summary of what they think the actual bug is.
 
+Okay, here's a quick summary.  This USB mass storage device has a bug: 
+It doesn't like to access the last 16 or so sectors of LUN 0.  When 
+asked to read from those sectors it returns no data and Check Condition 
+set.  Then in response to REQUEST SENSE it returns no information 
+(SK=0, ASC=ASCQ=0).
 
+This causes the SCSI midlayer to reissue the read request, with the 
+same result.  We enter an unending loop because each READ is a new 
+request with a new timeout.  That's the real problem -- the bug in the 
+phone wouldn't matter much if SCSI would just give up and fail the READ 
+after a couple of retries.
 
+There are a few more details in comment #4.  Note that recently people
+have been encountering more and more devices with this same kind of bug
+(READ fails, REQUEST SENSE returns nothing).
 
---- Comment #7 from Andrew Morton <akpm@linux-foundation.org>  2009-09-05 20:53:45 ---
-On Sat, 5 Sep 2009 16:40:06 -0400 (EDT) Alan Stern <stern@rowland.harvard.edu>
-wrote:
+My suggestion for a fix: Don't call scsi_requeue_command() if the 
+current command made zero forward progress.  But this will have to be 
+elaborated and made reliable.
 
-> > > The second problem has nothing to do with USB; it is a bug in the SCSI
-> > > layer.  If the module parameter doesn't fix everything, I suggest this
-> > > bug report be reassigned to James Bottomley rather than Greg
-> > > Kroah-Hartman and the component be changed from USB to SCSI.
-> > 
-> > Should I edit the bug myself? (If yes, what address do I reassign it to?)
-> 
-> Maybe we can prevail upon Andrew Morton to reassign it for you.
+Alan Stern
 
-OK, I reassigned it to scsi, but I expect it would help the scsi guys
-if someone could add a new summary of what they think the actual bug is.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
